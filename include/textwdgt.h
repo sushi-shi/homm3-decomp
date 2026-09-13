@@ -42,6 +42,11 @@ public:
     virtual void draw() const;
     // Dreamcast textwdgt.cpp:257: empty Dim overrides widget dimming.
     virtual void dim() const;
+
+    // Original spelling SetColor(new_color), TextWdgt.h:78..81 (dc 0x1652f4).
+    // Main calls this canonical header helper at textwdgt.cpp:152; retail
+    // expands its single member store in the WIDGET_SET_COLOR arm.
+    void setColor(font::TColor newColor);
     // Slot 13, the ONE virtual textWidget introduces (its vtable
     // 0x642db0 is 14 wide against widget's 13). Retail body 0x57c6d0 is a
     // /Gy header COMDAT far outside textwdgt.obj's band: it takes one
@@ -51,20 +56,14 @@ public:
     // operator= call; textEntryWidget::SetText(const char*) (dc 0x1635dc)
     // overrides exactly this slot at 0x5bb950. The claim-only retail VA home
     // lives in singleselectionwindow.cpp, whose object owns the DC COMDAT.
-    VA(0x0057C6D0, 0xAC)  // textWidget vtable slot 13 + DC header COMDAT, dc 0x1473f8
-    virtual void setText(const char* newText) { m_text = newText; }
+        virtual void setText(const char* newText);
 
     // E:\gamedcs\TextWdgt.h:67; DC emits this header helper out of line,
     // while Complete folds the c_str() access into its callers.
     // Before normalization (function): textWidget::GetText.
     // Class-inline as in TextWdgt.h:67. Removing the unsupported forceinline
     // qualifier is byte-neutral across the affected widget/name-edit callers.
-    const char* getText() { return m_text.c_str(); }
-
-    // Original spelling SetColor(new_color), TextWdgt.h:78..81 (dc 0x1652f4).
-    // Main calls this canonical header helper at textwdgt.cpp:152; retail
-    // expands its single member store in the WIDGET_SET_COLOR arm.
-    void setColor(font::TColor newColor) { m_color = newColor; }
+    const char* getText();
 };
 
 class Bitmap816;
@@ -125,5 +124,19 @@ public:
 // CODEVIEW(E:\gamedcs\textwdgt.cpp:257, dc 0x165034) void textWidget::Dim() const;
 // CODEVIEW(E:\gamedcs\TextWdgt.h:78, dc 0x1652f4) void textWidget::SetColor(font::TColor new_color);
 // CODEVIEW(E:\gamedcs\textwdgt.cpp:42, dc 0x1652fc) void* textWidget::`scalar deleting destructor'(unsigned __flags);
+
+
+// Header definitions follow their recorded source-line order; class declarations
+// retain the independently recorded member order and retail layout.
+
+// textwdgt.h:64 (Dreamcast source body).
+VA(0x0057C6D0, 0xAC)  // textWidget vtable slot 13 + DC header COMDAT, dc 0x1473f8
+inline     void textWidget::setText(const char* newText) { m_text = newText; }
+
+// textwdgt.h:67 (Dreamcast source body).
+inline const char* textWidget::getText() { return m_text.c_str(); }
+
+// textwdgt.h:78 (Dreamcast source body).
+inline void textWidget::setColor(font::TColor newColor) { m_color = newColor; }
 
 #endif  /* HOMM3_TEXTWDGT_H */

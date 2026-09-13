@@ -1,11 +1,11 @@
 // terrain.h - E:\gamedcs\terrain.h
-//
+
 // MODELLED FROM RETAIL BYTES + DC CODEVIEW (2026-08-08). Only the part
 // of retail's terrain.h that is byte-proven is here: the ten file-scope
 // terrain masks at its lines 70-79. Everything else the real header
 // declares (a terrain roster, whatever else lives at lines 1-69) is NOT
 // recoverable from the evidence and is deliberately absent.
-//
+
 // WHY THIS HEADER EXISTS AT ALL. The DC CodeView corpus attributes
 // twenty static-initializer funclets in each of 78 game compilands to
 // `E:\gamedcs\terrain.h` lines 70-79 - ten file-scope objects with
@@ -14,7 +14,7 @@
 // functions.csv`). Retail carries exactly that: every game obj ends in
 // a cinit tail of ten near-identical ~95 B funclets, e.g. iconwdgt at
 // 0xeb360..0xeb72f and initialize at 0xebd10..0xec0de.
-//
+
 // WHAT THE OBJECTS ARE (byte-proven). Each funclet is one inlined
 // `std::bitset<10>` construction, in the shape of the VC6 Dinkumware
 // header this toolchain ships:
@@ -34,7 +34,7 @@
 //   0x3ff/0x1ff/0xff/0x7f/0x3f/0x1f/0xf/7/3/1. The K == 0 funclet has
 //   neither instruction, exactly as `if ((_P %= _Nb) != 0)` predicts.
 // So object number K is `std::bitset<10>(1) << K`.
-//
+
 // WHAT THEY ARE CALLED, AND WHICH K IS WHICH (proven, not assumed).
 // The DC corpus names ten per-module statics of type 0x2D65 =
 // `std::bitset<10,unsigned long>`: k{Dirt,Sand,Grass,Snow,Swamp,Rough,
@@ -56,21 +56,21 @@
 // ten-element orderings is 1 in 10!.
 // Hence: mask K belongs to terrain K, and the declaration order at
 // lines 70-79 is the TTerrainType order.
-//
+
 // NOT const: the DC dump types every one of them as the bare class
 // 0x2D65, and it does emit LF_MODIFIER `const` on data it has (e.g.
 // kMaxRunLength/kOpaqueRunCode in the sprite modules), so the absence
 // is evidence. They are plain file-scope statics.
-//
+
 // NO DATA() CLAIMS: these are per-TU statics, so each including TU owns
 // a different ten-dword .bss run. There is no single address to claim,
 // and the initializer funclets are the cinit excluded class - never
 // claimed as functions either.
-//
+
 // The shift amounts below are written as literals on purpose.  The shared
 // enum now lives in lightweight terrain_type.h; keeping it separate prevents
 // an enum-only consumer from acquiring this header's ten dynamic statics.
-//
+
 // WHICH TUs GET THIS HEADER - decided by retail bytes, not by the DC
 // file column. Scanning config/retail-functions.tsv for the size run
 // [89, 96, 97, 95, 95, 95, 95, 95, 95, 95] finds the ten-funclet tail in
@@ -91,7 +91,7 @@
 // font, hero, inputmgr, misc, monframeinfo, strip, textntry, textwdgt,
 // widget, window, winfile, winmgr. Do not add it to a NO unit to chase
 // a score.
-//
+
 // MEASURED EFFECT of the sixteen additions (each one measured on its
 // own, `homm3 build --fast`): initialize_game_data 94.0741 -> 100.0000;
 // every other function in every other widened unit unchanged to seven
@@ -105,25 +105,15 @@
 #include <bitset>
 
 // E:\gamedcs\terrain.h:70-79
-// Before normalization: kDirtMask.
 static std::bitset<10> g_dirtMask = std::bitset<10>(1) << 0;          // eTerrainDirt
-// Before normalization: kSandMask.
 static std::bitset<10> g_sandMask = std::bitset<10>(1) << 1;          // eTerrainSand
-// Before normalization: kGrassMask.
 static std::bitset<10> g_grassMask = std::bitset<10>(1) << 2;         // eTerrainGrass
-// Before normalization: kSnowMask.
 static std::bitset<10> g_snowMask = std::bitset<10>(1) << 3;          // eTerrainSnow
-// Before normalization: kSwampMask.
 static std::bitset<10> g_swampMask = std::bitset<10>(1) << 4;         // eTerrainSwamp
-// Before normalization: kRoughMask.
 static std::bitset<10> g_roughMask = std::bitset<10>(1) << 5;         // eTerrainRough
-// Before normalization: kSubterraneanMask.
 static std::bitset<10> g_subterraneanMask = std::bitset<10>(1) << 6;  // eTerrainSubterranean
-// Before normalization: kLavaMask.
 static std::bitset<10> g_lavaMask = std::bitset<10>(1) << 7;          // eTerrainLava
-// Before normalization: kWaterMask.
 static std::bitset<10> g_waterMask = std::bitset<10>(1) << 8;         // eTerrainWater
-// Before normalization: kRockMask.
 static std::bitset<10> g_rockMask = std::bitset<10>(1) << 9;          // eTerrainRock
 
 #endif  // HOMM3_TERRAIN_H

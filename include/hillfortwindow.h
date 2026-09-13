@@ -31,7 +31,12 @@ extern const float g_afUpgradeCostFactor[7];
 //   * Recalculate 0x4e7eb0 walks the slot row with `lea ebx,[this+0x90]` /
 //     `add ebx,0x50` and touches every member below through it, and clears
 //     totalCost with `lea edi,[this+0x27c]` / `mov ecx,7` / `rep stosd`.
+static void updateHillFort(unsigned char firstUpdate);
+
 class THillFortWindow : public heroWindow {
+    // DC UpdateHillFort lines 777..778 calls private Recalculate, expanded by retail.
+    friend void updateHillFort(unsigned char firstUpdate);
+
 public:
     // Dreamcast THillFortWindow::EWidgetIDs (fieldlist 0x5200), verbatim.
     // Retail corroborates the anchors: the constructor builds 0xc8/0xc9/
@@ -159,7 +164,9 @@ public:
     // Before normalization (function): THillFortWindow::DoModal.
     void doModal();
 
+private:
     // Before normalization: slot.
+
     TUpgradeSlot m_slot[armyGroup::ARMY_GROUP_SLOT_COUNT];   // +0x4c
     // Before normalization: totalCost.
     long m_totalCost[armyGroup::ARMY_GROUP_SLOT_COUNT];      // +0x27c
@@ -167,16 +174,15 @@ public:
     int m_upgradeAllButtonState;                             // +0x298
     // Before normalization: RolloverWidget.
     widget* m_rolloverWidget;                                // +0x29c
+    // Before normalization (function): THillFortWindow::HandleClick.
+    void handleClick(message& msg);
 
     // Before normalization (function): THillFortWindow::Recalculate.
     void recalculate(unsigned char drawDimmedButtons);
     // Before normalization (function): THillFortWindow::UpgradeSlot.
     // Before normalization (locals): show_message.
     void upgradeSlot(int which, unsigned char showMessage);
-    // Before normalization (function): THillFortWindow::HandleClick.
-    void handleClick(message& msg);
 
-private:
     // DC fieldlist 0x5209 marks these helpers private; the callback calls them.
     friend int hillFortWindowHandler(message& msg);
     // Original: UpgradeAll, hillfortwindow.cpp:500.

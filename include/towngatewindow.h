@@ -12,7 +12,12 @@
 // Retail's proven base is eight bytes wider and its VC6 vector is four bytes
 // wider, placing the same fields at +0x60/+0x70/+0x74/+0x78. advManager's
 // stack instance spans exactly 0x7c bytes, proving the canonical total size.
+static void townGateSliderCallback(int state, heroWindow* parentWindow);
+
 class TTownGateWindow : public CAdvPopup {
+    // DC callback 0x169ba8 and retail 0x5c2980 access this window directly.
+    friend void townGateSliderCallback(int state, heroWindow* parentWindow);
+
 public:
     // Dreamcast CodeView publishes this nested enum in full. Complete's
     // constructor independently uses every value in the same roles.
@@ -36,6 +41,8 @@ public:
     };
 
     // Before normalization: Towns.
+
+private:
     std::vector<int> m_towns;
     // Before normalization: topTown.
     int m_topTown;
@@ -44,20 +51,25 @@ public:
     // Before normalization: adventure_spell.
     bool m_adventureSpell;
 
+public:
     // Before normalization (locals): adventure_spell.
     TTownGateWindow(bool adventureSpell);
     virtual ~TTownGateWindow();
     // Before normalization (function): TTownGateWindow::AddTown.
     // Before normalization (locals): new_town.
     void addTown(int newTown);
-    // Before normalization (function): TTownGateWindow::UpdateTownLocator.
-    void updateTownLocator(int i);
-    // Before normalization (function): TTownGateWindow::UpdateTownLocators.
-    void updateTownLocators();
+
     // Before normalization (function): TTownGateWindow::DoModal.
     void doModal();
     // Before normalization (function): TTownGateWindow::WindowHandler.
     virtual int windowHandler(message& msg);
+
+private:
+    // Before normalization (function): TTownGateWindow::UpdateTownLocators.
+    void updateTownLocators();
+    // Before normalization (function): TTownGateWindow::UpdateTownLocator.
+
+    void updateTownLocator(int i);
 };
 SIZE(TTownGateWindow, 0x7c);
 

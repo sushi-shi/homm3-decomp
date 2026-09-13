@@ -46,6 +46,13 @@ enum EBitmapGreenBits {
 
 class Bitmap16Bit : public resource {
 public:
+    // Slot 0 is the scalar deleting destructor: heroWindow deletes its
+    // background through [vptr]+flag 1. Slot 2 reports the resource's
+    // total in-memory extent: the 0x38-byte object plus DataSize.
+    virtual ~Bitmap16Bit();
+    void clear();
+
+private:
     // Before normalization: DataSize.
     int m_dataSize;
     // Before normalization: ImageSize.
@@ -61,76 +68,19 @@ public:
     // Before normalization: referenced.
     unsigned char m_referenced;
 
-    // Slot 0 is the scalar deleting destructor: heroWindow deletes its
-    // background through [vptr]+flag 1. Slot 2 reports the resource's
-    // total in-memory extent: the 0x38-byte object plus DataSize.
-    virtual ~Bitmap16Bit();
-    void clear();
+public:
     // Before normalization (function): Bitmap16Bit::GetSize.
     virtual unsigned int getSize() const;
 
     Bitmap16Bit(int w, int h);
     Bitmap16Bit(const char* name, int w, int h);
-    // Header accessors (DC Bitmap16.h:111-113, 150/156). They are kept
-    // inline because Complete's ResourceManager expands them into its
-    // bitmap-remap blit rather than calling the emitted DC copies.
-    // Before normalization (function): Bitmap16Bit::GetWidth.
-    int getWidth() const { return m_width; }
-    // Before normalization (function): Bitmap16Bit::GetHeight.
-    int getHeight() const { return m_height; }
-    // Before normalization (function): Bitmap16Bit::GetPitch.
-    int getPitch() const { return m_pitch; }
-    // Dreamcast Bitmap16.h:151/157 returns the address in one expression:
-    // map plus y byte-pitches, then x pixels. Keep that expression intact;
-    // a union scratch is exact standalone but changes nested expansions.
-    // Direct reinterpret-cast control is byte-identical in Underlay, Ground
-    // and the clipped scaler; the void casts do not cause the inline gap.
-    VA(0x004efff0, 0x19)  // COMDAT owner (kb.obj emits ?GetMap@Bitmap16Bit@@QAEPAGHH@Z), body in bitmap16.h
-    unsigned short* getMap(int x, int y)
-    {
-        return static_cast<unsigned short*>(static_cast<void*>(
-            static_cast<unsigned char*>(static_cast<void*>(m_map))
-            + y * m_pitch)) + x;
-    }
-    // Before normalization (function): Bitmap16Bit::GetMap.
-    const unsigned short* getMap(int x, int y) const
-    {
-        return static_cast<const unsigned short*>(static_cast<const void*>(
-            static_cast<const unsigned char*>(static_cast<const void*>(m_map))
-            + y * m_pitch)) + x;
-    }
-    // DC bitmap16.cpp:262. wingraph's mode-change path (0x601bfe) is the
-    // caller and hands it `mask == 0x7e0 ? 6 : 5`, which is what the DC
-    // roster names old_green_bits.
-    // Before normalization (function): Bitmap16Bit::Remap.
-    // Before normalization (locals): old_green_bits.
-    void remap(int oldGreenBits);
     void reference(int w, int h, int pitch, unsigned short* data);
-    // Before normalization (function): Bitmap16Bit::Darken.
-    void darken(int x, int y, int w, int h);
-    // DC bitmap16.cpp:778; UpdateGrid's seven pushes and retail target
-    // 0x44e6a0 independently preserve this masked darken overload.
-    // Before normalization (function): Bitmap16Bit::Darken.
-    void darken(int x, int y, int w, int h, Bitmap816* mask,
-                int sx, int sy);
-    // Retail 0x44e4c0, thiscall (x, y, w, h, color). TWO independent
-    // callers pin it: textWidget::Draw's back-colour fill, and
-    // heroWindowManager::FadeToBlack (0x6030e0), whose five-argument push
-    // run is the DC signature verbatim.
-    // Before normalization (function): Bitmap16Bit::FillRect.
-    void fillRect(int x, int y, int w, int h, unsigned short color);
     // Before normalization (function): Bitmap16Bit::Draw.
     void draw(int srcX, int srcY, int srcWidth, int srcHeight, unsigned short* dst, int dstX, int dstY, int dstWidth, int dstHeight, int dstPitch, bool flipped) const;
     // DC Bitmap16.h:162 header forwarding overload. ResourceManager's
     // graphics remappers expand this wrapper into their retail bodies.
-    VA(0x004f0010, 0x3B)  // COMDAT owner + anchor-callee the 0x44e2b0 raw Draw, body in bitmap16.h
-    void draw(int srcX, int srcY, int srcWidth, int srcHeight,
-              Bitmap16Bit* dst, int dstX, int dstY, bool flipped) const
-    {
-        draw(srcX, srcY, srcWidth, srcHeight, dst->getMap(0, 0),
-             dstX, dstY, dst->getWidth(), dst->getHeight(), dst->getPitch(),
-             flipped);
-    }
+        void draw(int srcX, int srcY, int srcWidth, int srcHeight,
+              Bitmap16Bit* dst, int dstX, int dstY, bool flipped) const;
     // Before normalization (function): Bitmap16Bit::Grab.
     void grab(const unsigned short* src, int srcX, int srcY, int srcWidth, int srcHeight, int srcPitch);
     // DC Bitmap16.h:168, retained at dc 0x4cb1c. This header forwarding
@@ -138,23 +88,55 @@ public:
     // six-argument Grab. Complete's ShootAnimatedMissile expands it into
     // the retained raw call at 0x0044e3f0.
     // Before normalization (function): Bitmap16Bit::Grab.
-    void grab(const Bitmap16Bit* src, int srcX, int srcY)
-    {
-        grab(src->getMap(0, 0), srcX, srcY, src->getWidth(), src->getHeight(),
-             src->getPitch());
-    }
+    void grab(const Bitmap16Bit* src, int srcX, int srcY);
+    // Retail 0x44e4c0, thiscall (x, y, w, h, color). TWO independent
+    // callers pin it: textWidget::Draw's back-colour fill, and
+    // heroWindowManager::FadeToBlack (0x6030e0), whose five-argument push
+    // run is the DC signature verbatim.
+    // Before normalization (function): Bitmap16Bit::FillRect.
+    void fillRect(int x, int y, int w, int h, unsigned short color);
     // Retail bodies 0x44e540 / 0x44e780, both reached from
     // coloredBorderFrame::Draw (0x4501e0): its five-argument push run is
     // the DC signature verbatim, and the truncating `mov dx, [ecx+0x30]`
     // load off an int member is what fixes the 16-bit colour parameter.
     // Before normalization (function): Bitmap16Bit::FrameRect.
     void frameRect(int x, int y, int w, int h, unsigned short color);
+    // Before normalization (function): Bitmap16Bit::Darken.
+    void darken(int x, int y, int w, int h);
+    // DC bitmap16.cpp:778; UpdateGrid's seven pushes and retail target
+    // 0x44e6a0 independently preserve this masked darken overload.
+    // Before normalization (function): Bitmap16Bit::Darken.
+    void darken(int x, int y, int w, int h, Bitmap816* mask,
+                int sx, int sy);
     // Before normalization (function): Bitmap16Bit::Colorize.
     void colorize(int x, int y, int width, int height, unsigned short color);
     // The float overload, DC bitmap16.cpp:873. advManager::ViewPuzzle is the
     // retail caller that proves the (hue, saturation) pair as raw dwords.
     // Before normalization (function): Bitmap16Bit::Colorize.
     void colorize(int x, int y, int w, int h, float hue, float saturation);
+    // Header accessors (DC Bitmap16.h:111-113, 150/156). They are kept
+    // inline because Complete's ResourceManager expands them into its
+    // bitmap-remap blit rather than calling the emitted DC copies.
+    // Before normalization (function): Bitmap16Bit::GetWidth.
+    int getWidth() const;
+    // Before normalization (function): Bitmap16Bit::GetHeight.
+    int getHeight() const;
+    // Before normalization (function): Bitmap16Bit::GetPitch.
+    int getPitch() const;
+    // Dreamcast Bitmap16.h:151/157 returns the address in one expression:
+    // map plus y byte-pitches, then x pixels. Keep that expression intact;
+    // a union scratch is exact standalone but changes nested expansions.
+    // Direct reinterpret-cast control is byte-identical in Underlay, Ground
+    // and the clipped scaler; the void casts do not cause the inline gap.
+        unsigned short* getMap(int x, int y);
+    // Before normalization (function): Bitmap16Bit::GetMap.
+    const unsigned short* getMap(int x, int y) const;
+    // DC bitmap16.cpp:262. wingraph's mode-change path (0x601bfe) is the
+    // caller and hands it `mask == 0x7e0 ? 6 : 5`, which is what the DC
+    // roster names old_green_bits.
+    // Before normalization (function): Bitmap16Bit::Remap.
+    // Before normalization (locals): old_green_bits.
+    void remap(int oldGreenBits);
 };
 SIZE(Bitmap16Bit, 0x38);
 
@@ -210,5 +192,52 @@ DATA(0x00694d68) extern unsigned long g_colorMaskBlue;
 // --- Bitmap816 ---
 // CODEVIEW(E:\gamedcs\Bitmap816.h:71, dc 0x5256c) int Bitmap816::GetPitch();
 // CODEVIEW(E:\gamedcs\Bitmap816.h:98, dc 0x52570) unsigned char* Bitmap816::GetMap(int x, int y);
+
+
+// Header definitions follow their recorded source-line order; class declarations
+// retain the independently recorded member order and retail layout.
+
+// bitmap16.h:111 (Dreamcast source body).
+inline int Bitmap16Bit::getWidth() const { return m_width; }
+
+// bitmap16.h:112 (Dreamcast source body).
+inline int Bitmap16Bit::getHeight() const { return m_height; }
+
+// bitmap16.h:113 (Dreamcast source body).
+inline int Bitmap16Bit::getPitch() const { return m_pitch; }
+
+// bitmap16.h:150 (Dreamcast source body).
+VA(0x004efff0, 0x19)  // COMDAT owner (kb.obj emits ?GetMap@Bitmap16Bit@@QAEPAGHH@Z), body in bitmap16.h
+inline     unsigned short* Bitmap16Bit::getMap(int x, int y)
+    {
+        return static_cast<unsigned short*>(static_cast<void*>(
+            static_cast<unsigned char*>(static_cast<void*>(m_map))
+            + y * m_pitch)) + x;
+    }
+
+// bitmap16.h:156 (Dreamcast source body).
+inline const unsigned short* Bitmap16Bit::getMap(int x, int y) const
+    {
+        return static_cast<const unsigned short*>(static_cast<const void*>(
+            static_cast<const unsigned char*>(static_cast<const void*>(m_map))
+            + y * m_pitch)) + x;
+    }
+
+// bitmap16.h:162 (Dreamcast source body).
+VA(0x004f0010, 0x3B)  // COMDAT owner + anchor-callee the 0x44e2b0 raw Draw, body in bitmap16.h
+inline     void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
+              Bitmap16Bit* dst, int dstX, int dstY, bool flipped) const
+    {
+        draw(srcX, srcY, srcWidth, srcHeight, dst->getMap(0, 0),
+             dstX, dstY, dst->getWidth(), dst->getHeight(), dst->getPitch(),
+             flipped);
+    }
+
+// bitmap16.h:168 (Dreamcast source body).
+inline void Bitmap16Bit::grab(const Bitmap16Bit* src, int srcX, int srcY)
+    {
+        grab(src->getMap(0, 0), srcX, srcY, src->getWidth(), src->getHeight(),
+             src->getPitch());
+    }
 
 #endif  /* HOMM3_BITMAP16_H */

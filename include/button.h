@@ -47,8 +47,11 @@ void setPlayerPaletteColors(TPalette24& pal, int whichPlayer);
 // teardown, so retail uses VC6's own STL, not DC's STLport). Total 104.
 // No SIZE assert: the clang arm's host STL sizes differ.
 class button : public widget {
-public:
+    // DC textButton::Draw and retail 0x456ca0 directly read private Text.
+    friend class textButton;
+
     // Before normalization: buttonIcon.
+private:
     CSprite* m_buttonIcon;
     // Before normalization: normalFrame.
     int m_normalFrame;
@@ -56,67 +59,38 @@ public:
     int m_selectedFrame;
     // Before normalization: disabled_frame.
     int m_disabledFrame;
+
+public:
     // Before normalization: field_40; reference member button::highlightedFrame.
     int m_highlightedFrame;
     // Before normalization: endDialog.
+
+private:
     unsigned char m_endDialog;
     // Before normalization: hotKeyCodes.
     std::vector<int> m_hotKeyCodes;
     // Before normalization: Text.
     std::string m_text;
 
+public:
     // homm2 BUTTON.cpp's REPEAT_DELAY_TICKS, verbatim value.
     enum EButtonConstants {
         BUTTON_REPEAT_DELAY_TICKS = 60
     };
 
-    // Dreamcast ?click_sample@button@@2PAVsample@@A; retail .bss
-    // 0x694da4 (defined in button.cpp).
-    // Before normalization: click_sample.
-    static sample* s_clickSample;
-
-    // Original button.cpp helpers: SetPalette:104 and initialize:115.
-    void setPalette(const char* paletteName);
+    button();
     void initialize(int x, int y, int w, int h, int id, const char* image,
                     int normal, int selected, unsigned char end,
                     int hotkey, int style);
 
-    button();
-    button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
-    // Before normalization (function): button::Select.
-    int select(message& msg);
-    // Original: button::Deselect; button.cpp:401, dc 0x57854.
-    int deselect(message& msg);
+    // Original button.cpp helpers: SetPalette:104 and initialize:115.
+    void setPalette(const char* paletteName);
 
-    // Dreamcast homes SetText and set_hotkey in Button.h itself; the
-    // wrapper is inlined at its retail call sites. The old 0x404200 mapping
-    // was disproven by that body's `ret 0xc`: it is the three-argument
-    // vector<int>::insert implementation, not this one-argument member.
-    // Before normalization (function): button::SetText.
-    // Before normalization (locals): new_text.
-    void setText(const char* newText) { m_text = newText; }
-    // Dreamcast button.h:99 (dc 0x669f4, 6 B SH4: one store). A free
-    // /Ob2 candidate site wherever a caller uses it - see
-    // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
-    // sequence is reproduced only with this setter in its six loops.
-    // Before normalization (function): button::set_disabled_frame.
-    void setDisabledFrame(long frame) { m_disabledFrame = frame; }
-    // Original: button::set_hotkey. An earlier reconstruction flattened
-    // push_back into insert and introduced a pointer local to steer caller
-    // register allocation. The positive source call below supersedes that
-    // hypothesis; each caller's expansion must be matched with this helper.
-    VA(0x004e1370, 0x1AF)
-    void setHotkey(int code)
-    {
-        // Dreamcast button.h:105 is a single vector<int>::push_back call.
-        // Retail corroborates that body in hero.obj's retained COMDAT and
-        // in SetSleepImage and the marketplace-caller expansions.
-        m_hotKeyCodes.push_back(code);
-    }
-    // Dreamcast button.h:120-122: the separate vector<int>::clear wrapper.
-    // TAdvMenu::SetSleepImage retains this call in its source line table.
-    // Before normalization (function): button::clear_hotkeys.
-    void clearHotkeys() { m_hotKeyCodes.clear(); }
+    // Dreamcast ?click_sample@button@@2PAVsample@@A; retail .bss
+    // 0x694da4 (defined in button.cpp).
+    // Before normalization: click_sample.
+    static sample* s_clickSample;
+    button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
 
     // Before normalization (function): button::Main.
     virtual int main(message& msg);  // slot 2, retail 0x456190
@@ -132,6 +106,33 @@ public:
     virtual void dim() const;   // slot 8, folded retail 0x5bc690
 
     virtual ~button();  // retail 0x4560f0
+    // Before normalization (function): button::Select.
+    int select(message& msg);
+    // Original: button::Deselect; button.cpp:401, dc 0x57854.
+    int deselect(message& msg);
+    // Dreamcast button.h:99 (dc 0x669f4, 6 B SH4: one store). A free
+    // /Ob2 candidate site wherever a caller uses it - see
+    // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
+    // sequence is reproduced only with this setter in its six loops.
+    // Before normalization (function): button::set_disabled_frame.
+    void setDisabledFrame(long frame);
+    // Original: button::set_hotkey. An earlier reconstruction flattened
+    // push_back into insert and introduced a pointer local to steer caller
+    // register allocation. The positive source call below supersedes that
+    // hypothesis; each caller's expansion must be matched with this helper.
+        void setHotkey(int code);
+    // Dreamcast button.h:120-122: the separate vector<int>::clear wrapper.
+    // TAdvMenu::SetSleepImage retains this call in its source line table.
+    // Before normalization (function): button::clear_hotkeys.
+    void clearHotkeys();
+
+    // Dreamcast homes SetText and set_hotkey in Button.h itself; the
+    // wrapper is inlined at its retail call sites. The old 0x404200 mapping
+    // was disproven by that body's `ret 0xc`: it is the three-argument
+    // vector<int>::insert implementation, not this one-argument member.
+    // Before normalization (function): button::SetText.
+    // Before normalization (locals): new_text.
+    void setText(const char* newText);
 
     // widget slot 12, overridden at 0x456a10 - the only override of it
     // in the image. Placeholder name inherited from widget.h.
@@ -147,11 +148,6 @@ public:
 // [this+0x68]). Total 112.
 class textButton : public button {
 public:
-    // Before normalization: Font.
-    font* m_font;
-    // Before normalization: textColor.
-    font::TColor m_textColor;
-
     // Before normalization (locals): text_, font_name, new_color.
     textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor newColor);
 
@@ -159,6 +155,12 @@ public:
     virtual void draw() const;    // slot 4, retail 0x456ca0
 
     virtual ~textButton();  // retail 0x456bf0
+
+private:
+    // Before normalization: Font.
+    font* m_font;
+    // Before normalization: textColor.
+    font::TColor m_textColor;
 };
 
 // DC gives only a forward ref. The dtor (retail 0x456db0) tears down
@@ -178,5 +180,28 @@ public:
 
     virtual ~type_func_button();  // retail 0x456db0
 };
+
+
+// Header definitions follow their recorded source-line order; class declarations
+// retain the independently recorded member order and retail layout.
+
+// button.h:78 (Dreamcast source body).
+inline void button::setText(const char* newText) { m_text = newText; }
+
+// button.h:99 (Dreamcast source body).
+inline void button::setDisabledFrame(long frame) { m_disabledFrame = frame; }
+
+// button.h:104 (Dreamcast source body).
+VA(0x004e1370, 0x1AF)
+inline     void button::setHotkey(int code)
+    {
+        // Dreamcast button.h:105 is a single vector<int>::push_back call.
+        // Retail corroborates that body in hero.obj's retained COMDAT and
+        // in SetSleepImage and the marketplace-caller expansions.
+        m_hotKeyCodes.push_back(code);
+    }
+
+// button.h:120 (Dreamcast source body).
+inline void button::clearHotkeys() { m_hotKeyCodes.clear(); }
 
 #endif  /* HOMM3_BUTTON_H */

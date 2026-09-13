@@ -531,6 +531,10 @@ SIZE(CPlayerDeadMsg, 0x18);
 // extent and every PC offset while copying the two skill bands into a hero.
 class CHeroLevelUpdateMsg : public CNetMsg {
 public:
+    int m_hero;                    // +0x14
+    signed char m_ssLevel[28];     // +0x18
+    signed char m_stats[4];        // +0x34
+    int m_numSSs;                  // +0x38
     // DC netmsg.h:488 (dc 0x9cb78): DoCombat expands this header body.
     CHeroLevelUpdateMsg(int hero, int numSSs,
                         signed char* ssLevel,
@@ -542,11 +546,6 @@ public:
         memcpy(m_stats, stats, sizeof(m_stats));
         m_numSSs = numSSs;
     }
-
-    int m_hero;                    // +0x14
-    signed char m_ssLevel[28];     // +0x18
-    signed char m_stats[4];        // +0x34
-    int m_numSSs;                  // +0x38
 };
 SIZE(CHeroLevelUpdateMsg, 0x3c);
 

@@ -353,6 +353,7 @@ public:
 // constructor/destructor in dxplay.h:244/257.
 class CDPlayAddressElement {
 public:
+    GUID m_guid;              // +0x00
     CDPlayAddressElement(const GUID* guid, const void* data,
         unsigned long dataSize)
     {
@@ -366,8 +367,6 @@ public:
     {
         delete [] m_data;
     }
-
-    GUID m_guid;              // +0x00
     char* m_data;            // +0x10
     unsigned long m_dataSize; // +0x14
 };
@@ -378,6 +377,20 @@ public:
 // IsHost is slot 36 (+0x90), exactly the indirect call emitted by the main
 // menu and oldmain. Retail bodies also prove the complete base data layout.
 class CDPlay {
+    // DC free enumeration callbacks 0x8bba4..0x8bc28 call these protected virtuals.
+    friend int __stdcall enumSession(const DPSESSIONDESC2* dpSessionDesc, unsigned long* lpdwTimeOut, unsigned long flags, void* context);
+    friend int __stdcall enumConnectionsCallback(const GUID* lpguidSP, void* connection, unsigned long connectionSize, const DPNAME* name, unsigned long flags, void* context);
+    friend int __stdcall enumGroupsCallback(unsigned long dpid, unsigned long playerType, const DPNAME* name, unsigned long flags, void* context);
+    friend int __stdcall enumPlayersCallback(unsigned long dpid, unsigned long playerType, const DPNAME* name, unsigned long flags, void* context);
+
+protected:
+    // Protected (not private): CDPlayLobby's own methods write m_lpDP, m_hRes,
+    // m_isHost and the array pointers directly, exactly as retail does.
+    // Retail's vtable slots 30, 31, and 36 prove the GUID and IsHost
+    // offsets. The intervening names are Dreamcast CodeView's and agree
+    // with the PC methods; DPCAPS stays opaque until a retail body needs it.
+    char m_caps[0x28];                  // +0x04
+
 public:
     CDPlay();
     virtual ~CDPlay();
@@ -505,8 +518,11 @@ public:
         unsigned long fromId, unsigned long toId,
         unsigned long* numMessages, unsigned long* numBytes);
 
-
 protected:
+    // Before normalization: m_lpDP.
+    void* m_dp;                       // +0x2c
+    GUID m_guid;                        // +0x30
+
     // E:\gamedcs\dxplay.h:434
     VA(0x00496cc0, 0x5)  // anchor-vtable CDPlay slot42 +0xa8 (ReceiveMsg), dc 0x8bf14
     virtual unsigned char receiveMsg(unsigned long from, unsigned long to, CDPlayMsg* msg)
@@ -559,7 +575,6 @@ protected:
     // Before normalization (function): CDPlay::SysMsgDestroyPlayerOrGroup.
     virtual unsigned char sysMsgDestroyPlayerOrGroup(
         DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId);
-public:
     // The DirectPlay enum trampolines are file-scope callbacks that forward to
     // these virtuals through the lpContext object; keep them reachable without
     // reordering (vtable slots 58-61 are unchanged).
@@ -577,17 +592,6 @@ public:
         const GUID* serviceProvider, void* connection,
         unsigned long connectionSize, const DPNAME* name,
         unsigned long flags);
-
-protected:
-    // Protected (not private): CDPlayLobby's own methods write m_lpDP, m_hRes,
-    // m_isHost and the array pointers directly, exactly as retail does.
-    // Retail's vtable slots 30, 31, and 36 prove the GUID and IsHost
-    // offsets. The intervening names are Dreamcast CodeView's and agree
-    // with the PC methods; DPCAPS stays opaque until a retail body needs it.
-    char m_caps[0x28];                  // +0x04
-    // Before normalization: m_lpDP.
-    void* m_dp;                       // +0x2c
-    GUID m_guid;                        // +0x30
     long m_res;                        // +0x40, DC long / SDK HRESULT
     // Before normalization: m_pSessionArray.
     CAutoArray<CDPlaySession>* m_sessionArray;       // +0x44
@@ -612,6 +616,9 @@ SIZE(CDPlay, 0x58);
 // zero-offset CDPlay base.  The two trailing pointers retain their DC offsets
 // in retail, so this is also the complete PC layout needed by CDPlayHeroes.
 class CDPlayLobby : public CDPlay {
+    // DC free enumeration callbacks 0x8bba4..0x8bc28 call these protected virtuals.
+    friend int __stdcall enumAddressCallback(const GUID* guidDataType, unsigned long dataSize, const void* data, void* context);
+
 public:
     CDPlayLobby();
     virtual ~CDPlayLobby();
@@ -633,10 +640,6 @@ public:
     // Before normalization (function): CDPlayLobby::CreateSerialConnection.
     CDPlayConnection* createSerialConnection(
         char* name, struct _DPCOMPORTADDRESS* comportInfo);
-    // Before normalization (function): CDPlayLobby::TestLobbied.
-    // DC public ?TestLobbied@CDPlayLobby@@QAA_NXZ proves bool; the
-    // procedure record renders its storage as unsigned char. Retail uses AL.
-    bool testLobbied();
     // Before normalization (function): CDPlayLobby::GetConnectionSettings.
     DPLCONNECTION* getConnectionSettings(
         unsigned long appId, unsigned long* size);
@@ -645,6 +648,10 @@ public:
         unsigned long appId, DPLCONNECTION* connection);
     // Before normalization (function): CDPlayLobby::Connect.
     unsigned char connect();
+    // Before normalization (function): CDPlayLobby::TestLobbied.
+    // DC public ?TestLobbied@CDPlayLobby@@QAA_NXZ proves bool; the
+    // procedure record renders its storage as unsigned char. Retail uses AL.
+    bool testLobbied();
     // Before normalization (function): CDPlayLobby::EnumLobbyConnections.
     virtual unsigned char enumLobbyConnections(
         CAutoArray<CDPlayConnection>* connections);
@@ -674,21 +681,20 @@ public:
     virtual unsigned char getIPAddress(
         unsigned long playerId, char* ipAddress);
 
-protected:
-    // Before normalization (function): CDPlayLobby::HandleSystemLobbyMsg.
-    virtual unsigned char handleSystemLobbyMsg(
-        unsigned long appId, CDPlayMsg* message);
-public:
-    // Reachable by the EnumAddress file-scope callback (vtable slot unchanged).
-    // Before normalization (function): CDPlayLobby::AddAddressEnum.
-    virtual unsigned char addAddressEnum(
-        const GUID* type, unsigned long size, const void* data);
-
 private:
     // Before normalization: m_lpLobby.
     void* m_lobby;                         // +0x58
     // Before normalization: m_pAddressArray.
     CAutoArray<CDPlayAddressElement>* m_addressArray; // +0x5c
+
+protected:
+    // Before normalization (function): CDPlayLobby::HandleSystemLobbyMsg.
+    virtual unsigned char handleSystemLobbyMsg(
+        unsigned long appId, CDPlayMsg* message);
+    // Reachable by the EnumAddress file-scope callback (vtable slot unchanged).
+    // Before normalization (function): CDPlayLobby::AddAddressEnum.
+    virtual unsigned char addAddressEnum(
+        const GUID* type, unsigned long size, const void* data);
 };
 SIZE(CDPlayLobby, 0x60);
 

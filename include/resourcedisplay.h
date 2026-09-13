@@ -50,7 +50,11 @@ public:
     // bytes and the widget array; NH3API confirms the PC +0x34/+0x38 offsets.
     char m_paddingBeforeResourceWidgets[3];
     // Before normalization: ResourceWidgets.
+
+private:
     textWidget* m_resourceWidgets[7];
+
+public:
     // Before normalization: ResourceIconWidgets (earlier reconstruction: resourceBorders).
     border* m_resourceIconWidgets[7];
     // Before normalization: BackgroundWidget (earlier reconstruction: resourceBackground).

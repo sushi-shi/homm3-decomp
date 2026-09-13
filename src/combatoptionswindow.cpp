@@ -1,5 +1,4 @@
 // combatoptionswindow.cpp - E:\gamedcs\combatoptionswindow.cpp (compiland combatoptionswindow.obj)
-// HAND-OWNED after admission - retail-byte claims with Dreamcast CodeView prototypes.
 #include <va.h>
 #include "combatoptionswindow.h"
 #include "border.h"
@@ -19,24 +18,11 @@
 
 // Source-private in the Dreamcast compiland. Retail's constructor stores the
 // active dialog here and its destructor clears it before widget teardown.
-// Before normalization: gpCombatOptionsWindow.
 DATA(0x00694f90) static TCombatOptionsWindow* g_combatOptionsWindow;
 
 DATA(0x006a55ac) THelpText g_combatOptionsHelp[39];
 
-// genrltxt.txt rows this dialog labels itself with. They are consumed
-// nowhere else in the image, so no EGeneralTextIndex name is coined for
-// them; the retail index is the evidence and the comment is the role:
-//   393 window title            394/395/396 left-column group headings
-//   397/398 right-column group headings
-//   399..401,152,402 the five auto-combat labels (creatures, spells,
-//                    catapult, ballista, first aid tent)
-//   403/404 creature-info verbose/compact
-//   405/406/407 grid, movement shadow, mouse shadow
-//   578 spell book animation
-
-// E:\gamedcs\combatoptionswindow.cpp:60
-VA(0x0046e3b0, 0x1320)  // combatManager caller + cmpopbck.pcx + vtable/global stores, dc 0x66c48
+VA(0x0046e3b0, 0x1320)  // dc 0x66c48
 TCombatOptionsWindow::TCombatOptionsWindow()
     : heroWindow(159, 84, 481, 431, 0x12)
 {
@@ -59,12 +45,6 @@ TCombatOptionsWindow::TCombatOptionsWindow()
     accept->setHotkey(1);
     m_widgets.push_back(accept);
 
-    // The loop variable is the SLOT, not the x: retail keeps the raw 0..9 in
-    // its frame slot and adds the id base at the use (`add edx,0xca`), while
-    // the x lives in the linear-function-test-replaced derived induction
-    // variable (`add edi,0x13`, `cmp edi,0xdb`). Walking x directly and
-    // counting the slot by hand makes the slot a SECONDARY induction
-    // variable, which VC6 folds the id base into (`mov [ebp-0x10],0xca`).
     for (int musicSlot = 0; musicSlot < 10; ++musicSlot)
         m_widgets.push_back(new iconWidget(
             29 + musicSlot * 19, 303, 18, 36,
@@ -221,12 +201,9 @@ TCombatOptionsWindow::TCombatOptionsWindow()
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
 }
 
-// Retail emits the generated wrapper immediately after the constructor;
-// Dreamcast appends it to the compiland.
 VA_COMPGEN(0x0046f6d0, 0x21, SCALAR_DELETING_DTOR, TCombatOptionsWindow)
 
-// E:\gamedcs\combatoptionswindow.cpp:180
-VA(0x0046f700, 0x75)  // vtable/global/widget teardown, dc 0x679ac
+VA(0x0046f700, 0x75)  // dc 0x679ac
 TCombatOptionsWindow::~TCombatOptionsWindow()
 {
     g_combatOptionsWindow = 0;
@@ -248,8 +225,7 @@ int TCombatOptionsWindow::convertID2HelpID(int id) const
     return -1;
 }
 
-// E:\gamedcs\combatoptionswindow.cpp:214
-VA(0x0046f780, 0x28)  // handler address-take + WritePrefs tail, dc 0x67a40
+VA(0x0046f780, 0x28)  // dc 0x67a40
 void TCombatOptionsWindow::doModal()
 {
     m_prefsChanged = 0;
@@ -304,32 +280,63 @@ void TCombatOptionsWindow::highlightMouseShadow()
 // Its original source position is after the handler.
 static void updateCombatOptions(int firstUpdate);
 
-// E:\gamedcs\combatoptionswindow.cpp:278, DC 0x67b7c.
-//
-// The select/deselect command switch follows DC line 314's source group and
-// retail's sub eax,12 / dec eax dispatch. Twelve dispatch/flag states yield
-// four reproduced objects: that inner switch raises 85.9186% to 96.4205%;
-// case order and byte/bool flags are neutral. An outer message switch changes
-// the layout (85.8977%), so retain the existing retail key/widget guard and
-// DC's select-before-deselect source order. All four exact siblings are flat.
-//
-// Preference writes belong to each option case, not to UpdateCombatOptions.
-// DC lines 605/606, 613/614 and 621/622 separately set the local redraw flag
-// and the window member at +0x44; the other cases join those tails. Retail
-// corroborates the same member at +0x4c, with separate ECX/EDX/EAX reloads
-// after the grid/movement/mouse messages. Restoring all fifteen member stores
-// closes the remaining mismatch. UpdateCombatOptions takes int and only
-// conditionally redraws (DC 651..654); it has no preference-member store.
-// Keep its ordinary definition after this handler, where DC records it.
-//
-// The former shared-store reconstruction caused VC6 to merge those case
-// tails, which falsely looked like an unreachable register-allocation limit.
-// Splitting only three update calls, flattening highlight helpers, hoisting
-// a constant-one local, entry accessor/VERIFY controls, and moving the accept
-// id into the dense switch did not fix that false source model. Earlier goto
-// and audio-label controls are also superseded: keep the local redraw/exit
-// scopes and each audio-error exit, as DC records at 627..639. No pragma,
-// inline override, copied helper body or validation padding is required.
+// E:\gamedcs\combatoptionswindow.cpp:278
+
+// NOT A MEMBER-OFFSET BUG (checked 2026-09-06): the `[ecx+0x6ac]` against
+// retail's `[ecx+0x704]` that a census flagged here is the SWITCH INDEX
+// TABLE - `mov dl, byte ptr [ecx + <fn>+0x704]` / `jmp [4*edx + <fn>+0x6c4]`
+// - based off the function's own end, which retail places 0x58 later than
+// ours because retail's body is that much longer.  No TCombatOptionsWindow
+// member is involved.
+
+// Residual (83.4%): the tail-block class, in both directions. Retail parks
+// the translate-command and audio-unavailable arms at the tail and reaches
+// them with `je`, where our CL hoists each to its single goto site; and
+// retail expands every case's own `GetWidget(id)->send_message(...)` plus
+// the `bPrefsChanged = 1` and shares only the DrawWindow tail, where our CL
+// tail-merges the case bodies through a shared push sequence. The same
+// class, mirrored, is CampaignWindowHandler's residual - two independent
+// functions in this window family now show our SP3 CL taking the opposite
+// tail-block placement from retail's, which is the standing
+// compiler-generation suspect (match skill, "merged-return blocks"). The
+// last register row is the right-click arm's `return`: retail spends the
+// hoisted `mov eax,ebx` where ours re-materialises the immediate.
+// The constant 1 is NOT a source variable - it is VC6's own B8 hoist into
+// EBX. An earlier `register int one = MESSAGE_DISPATCH_CONSUME;` stood in
+// for it; with the highlight helpers landed the hoist happens by itself and
+// the plain literals score identically, so the crutch is gone.
+// An accessor-bearing conventional release VERIFY at entry is byte-flat
+// (2026-08-21): `(void)gpCombatOptionsWindow->Widgets.size()` leaves
+// 83.35985 and the same 28-vs-27 partial branch census/two polarities.
+// Validation mass therefore cannot select retail's tail phase here.
+// Four direct source-shape probes now bound the two tail classes as well
+// (2026-08-21). Giving SHOW_GRID/MOVEMENT_SHADOW/MOUSE_SHADOW private
+// `UpdateCombatOptions` returns leaves the two missing GetWidget/send_message
+// pairs merged and falls to 80.0076; open-coding those three helper bodies is
+// byte-flat at 83.35985. Making DIALOG_RETURN_SPLIT_ACCEPT an outlier `case`
+// in the dense switch adds four branches and falls to 77.4735. Finally, the
+// positive audio-enabled spelling (`if (volume || ds) { ... } else goto`) is
+// byte-identical to the retained negative guard. The two polarity flips and
+// the three-way widget-tail merge are therefore not source-addressable here.
+// WHY retail's cross-jumper declined, read off the bytes (2026-09-05): the
+// SHOW_GRID / MOVEMENT_SHADOW / MOUSE_SHADOW arms are NOT identical in
+// retail.  Each reloads gpCombatOptionsWindow after `send_message` into a
+// DIFFERENT register - `mov ecx,[0x694f90]` at 0x46f95f, `mov edx,...` at
+// 0x46f990, `mov eax,...` at 0x46f9c1 - before the shared
+// `mov byte ptr [reg+0x4c], bl`.  Three differing tails cannot be merged, so
+// the merge we perform is downstream of an ALLOCATOR divergence, not of a
+// statement shape: no arm spelling can suppress it while all three arms
+// allocate the same register here.  This is behaviour-catalog D7 and it is
+// the same class as hero::THeroScreenWindow::WindowHandler's six help arms
+// and game::ValidateVictoryLossConditions' shared `je`.
+// Goto audit: Replacing consume jumps with direct returns scores
+// 81.7140% versus 83.3598%; other dispatch joins are unchanged by this probe.
+// DC 0x67b7c initializes an exit flag, records preference changes within the
+// selected case, and tests both before the redraw/message tails (lines 627-639).
+// Restoring those scopes and each audio-error dialog removes all nine gotos,
+// raising 83.3598% to 85.9186%. Keeping the shared audio label within this
+// recovered dispatcher falls to 77.2424%; the per-arm error exits are retained.
+// Older flattened-dispatch measurements above do not describe this source.
 VA(0x0046f7b0, 0x72A)  // DoModal address-take + complete message CFG, dc 0x67b7c
 int combatOptionsWindowHandler(message& msg)
 {

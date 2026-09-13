@@ -70,12 +70,8 @@ enum EResourceType {
 // Windows-only filters cite each retained body's retail vtable slot.
 class resource {
 public:
-    // Before normalization: Name.
-    char m_name[13];
-    // Before normalization: resType.
-    EResourceType m_resType;
-    // Before normalization: ReferenceCount.
-    int m_referenceCount;
+    resource(const char* newName, EResourceType newType);
+    virtual ~resource();         // slot 0
 
     // Original: resource::get_resType / get_Name; resrce.h:33/34.
     EResourceType getResType() const { return m_resType; }
@@ -92,9 +88,19 @@ public:
             --m_referenceCount;
         return m_referenceCount;
     }
+    // Original: resource::GetReferenceCount, recovered by upstream access pass.
+    // DC type 0x185c proves the declaration; body source location is unrecovered.
+    int getReferenceCount() const;
 
-    resource(const char* newName, EResourceType newType);
-    virtual ~resource();         // slot 0
+private:
+    // Before normalization: Name.
+    char m_name[13];
+    // Before normalization: resType.
+    EResourceType m_resType;
+    // Before normalization: ReferenceCount.
+    int m_referenceCount;
+
+public:
     // Before normalization (function): resource::Dispose.
     virtual void dispose();      // slot 1, base body 0x55d0f0
     // Before normalization (function): resource::GetSize.

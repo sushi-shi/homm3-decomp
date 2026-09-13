@@ -5,7 +5,7 @@
 // size@0x10, total 0x14) and retail confirms the seven-slot virtual order -
 // ~/scalar-deleting, Add, Get, Put, Delete, Insert, GetCount - in four
 // admitted vtables.
-//
+
 // UNIFIED 2026-09-05. This template was carried TWICE, once in dxplay.h and
 // once in multiplayerwindow.h, with a per-TU macro keeping the two apart -
 // and the two bodies genuinely disagreed: opposite Insert algorithms,
@@ -49,7 +49,6 @@ public:
         destroy(1);
     }
 
-    // Before normalization (function): CAutoArray::Destroy.
     void destroy(unsigned char deleteData = 1)
     {
         for (unsigned long i = 0; i < m_size; ++i) {
@@ -73,7 +72,6 @@ public:
     // an element loop cannot produce) sharing the `if (pArray)` guard with
     // the delete, and the tail stores through the VIRTUAL Put - `call
     // [vfptr+0xc]`, slot 3 - after the count has already been bumped.
-    // Before normalization (function): CAutoArray::Add.
     virtual unsigned char add(T* element)
     {
         if (m_allocSize <= m_size) {
@@ -89,7 +87,6 @@ public:
         return put(m_size - 1, element);
     }
 
-    // Before normalization (function): CAutoArray::Get.
     virtual T* get(unsigned long elementNbr)
     {
         if (elementNbr >= m_size)
@@ -97,7 +94,6 @@ public:
         return m_array[elementNbr];
     }
 
-    // Before normalization (function): CAutoArray::Put.
     virtual unsigned char put(unsigned long elementNbr, T* element)
     {
         if (elementNbr >= m_size)
@@ -107,7 +103,6 @@ public:
     }
 
     // Original: CAutoArray<CDPlaySession>::Delete; array.h:113, dc 0x103150.
-    // deleteElement avoids the C++ keyword produced by lowercasing Delete.
     virtual unsigned char deleteElement(unsigned long elementNbr)
     {
         if (elementNbr >= m_size)
@@ -118,7 +113,6 @@ public:
         return 1;
     }
 
-    // Before normalization (function): CAutoArray::Insert.
     virtual unsigned char insert(unsigned long nextElementNbr, T* element)
     {
         if (nextElementNbr >= m_size)
@@ -131,17 +125,12 @@ public:
         return 1;
     }
 
-    // Before normalization (function): CAutoArray::GetCount.
     virtual unsigned long getCount() { return m_size; }
 
 protected:
-    // Before normalization: step.
     unsigned long m_step;       // +0x04
-    // Before normalization: pArray.
     T** m_array;               // +0x08
-    // Before normalization: allocSize.
     unsigned long m_allocSize;  // +0x0c
-    // Before normalization: size.
     unsigned long m_size;       // +0x10
 };
 

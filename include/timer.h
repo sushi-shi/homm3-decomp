@@ -11,38 +11,14 @@
 class CTimer
 {
 public:
+    void start();
+
+    void stop();
     // Dreamcast timer.h:33; oldmain's debug-only startup arm is the retail
     // consumer that proves this trivial header boundary at GlobalTimer+13.
-    void enable()
-    {
-        m_enabled = 1;
-    }
+    void enable();
 
-    CTimer(unsigned char enabled)
-        : m_startTime(0), m_stopTime(0), m_elapsedTime(0),
-          m_isRunning(0), m_enabled(enabled)
-    {
-    }
-
-    void start()
-    {
-        if (m_enabled) {
-            m_startTime = timeGetTime();
-            m_isRunning = 1;
-        }
-    }
-
-    void stop()
-    {
-        if (m_isRunning && m_enabled) {
-            m_stopTime = timeGetTime();
-            m_isRunning = 0;
-            if (m_stopTime > m_startTime)
-                m_elapsedTime = m_stopTime - m_startTime;
-            else
-                m_elapsedTime = 0;
-        }
-    }
+    CTimer(unsigned char enabled);
 
 private:
     // Before normalization: startTime.
@@ -60,5 +36,44 @@ SIZE(CTimer, 16);
 
 // Before normalization: GlobalTimer.
 extern CTimer g_globalTimer;
+
+
+// Header definitions follow their recorded source-line order; class declarations
+// retain the independently recorded member order and retail layout.
+
+// timer.h:33 (Dreamcast source body).
+inline void CTimer::enable()
+    {
+        m_enabled = 1;
+    }
+
+// timer.h:39 (Dreamcast source body).
+inline CTimer::CTimer(unsigned char enabled)
+        : m_startTime(0), m_stopTime(0), m_elapsedTime(0),
+          m_isRunning(0), m_enabled(enabled)
+    {
+    }
+
+// timer.h:49 (Dreamcast source body).
+inline void CTimer::start()
+    {
+        if (m_enabled) {
+            m_startTime = timeGetTime();
+            m_isRunning = 1;
+        }
+    }
+
+// timer.h:60 (Dreamcast source body).
+inline void CTimer::stop()
+    {
+        if (m_isRunning && m_enabled) {
+            m_stopTime = timeGetTime();
+            m_isRunning = 0;
+            if (m_stopTime > m_startTime)
+                m_elapsedTime = m_stopTime - m_startTime;
+            else
+                m_elapsedTime = 0;
+        }
+    }
 
 #endif  // HOMM3_TIMER_H

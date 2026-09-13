@@ -81,18 +81,8 @@ public:
     // DC ai_spellvalue.h:99, dc 0x114bdc (philai.obj). AI_set_hero_bonuses
     // (0x527760) reads this initial pool for the well/spring valuations.
     long getMana() const { return m_mana; }
-    // DC ai_spellvalue.h:114 - the one-store setter, inlined at both
-    // type_school_artifact::get_value call sites in retail.
-    // Before normalization (function): type_spellvalue::set_power.
-    void setPower(long arg) { m_power = arg; }
-    // DC ai_spellvalue.h:119, dc 0x114be0 (philai.obj). The same consumer
-    // reseeds the valuer from hero::mana through this setter.
-    void setMana(long arg) { m_mana = arg; }
-    // DC ai_spellvalue.h:124 - the one-store setter, inlined at every
-    // retail call site (dc 0x27c74 is the 4-byte out-of-line copy).
-    // combatManager::do_combat_ai writes the side's whole combat value
-    // here before asking for a spell value.
-    void setStackValue(long arg) { m_stackValue = arg; }
+    // Before normalization (function): type_spellvalue::get_best_spell_value.
+    long getBestSpellValue(long bits) const;
     // E:\gamedcs\philai.cpp:1699 (dc 0x10fe64) - the what-if probe:
     // bump power/duration/mana, re-ask get_best_spell_value, restore,
     // return the delta against the caller's baseline.  DEFINED in
@@ -105,10 +95,26 @@ public:
 
     // Before normalization (function): type_spellvalue::get_raw_spell_value.
     long getRawSpellValue(SpellID spell) const;
-    // Before normalization (function): type_spellvalue::get_best_spell_value.
-    long getBestSpellValue(long bits) const;
+    // DC ai_spellvalue.h:114 - the one-store setter, inlined at both
+    // type_school_artifact::get_value call sites in retail.
+    // Before normalization (function): type_spellvalue::set_power.
+    void setPower(long arg) { m_power = arg; }
+    // DC ai_spellvalue.h:119, dc 0x114be0 (philai.obj). The same consumer
+    // reseeds the valuer from hero::mana through this setter.
+    void setMana(long arg) { m_mana = arg; }
+    // DC ai_spellvalue.h:124 - the one-store setter, inlined at every
+    // retail call site (dc 0x27c74 is the 4-byte out-of-line copy).
+    // combatManager::do_combat_ai writes the side's whole combat value
+    // here before asking for a spell value.
+    void setStackValue(long arg) { m_stackValue = arg; }
 
 protected:
+    // E:\\gamedcs\\philai.cpp:1610. Complete expands this one-call helper
+    // into the constructor, but the Dreamcast member boundary and local
+    // inventory remain authoritative source-shape evidence.
+    // Before normalization (function): type_spellvalue::fill_creature_value_list.
+    void fillCreatureValueList();
+
     // `mastery` is the Dreamcast TSkillMastery; that enum has no
     // retail-proven spelling in this tree yet, and hero::get_spell_level
     // - the only producer at every call site - already returns int, so
@@ -117,19 +123,14 @@ protected:
     long getDamageSpellValue(SpellID spell, int mastery,
                                 // Before normalization (locals): times_castable, combat_value.
                                 long timesCastable, long combatValue) const;
-    // Before normalization (function): type_spellvalue::get_mass_damage_spell_value.
-    long getMassDamageSpellValue(SpellID spell, int mastery,
-                                     // Before normalization (locals): times_castable.
-                                     long timesCastable) const;
     // Before normalization (function): type_spellvalue::get_enchantment_value.
     long getEnchantmentValue(SpellID spell, int mastery,
                                // Before normalization (locals): times_castable.
                                long timesCastable) const;
-    // E:\\gamedcs\\philai.cpp:1610. Complete expands this one-call helper
-    // into the constructor, but the Dreamcast member boundary and local
-    // inventory remain authoritative source-shape evidence.
-    // Before normalization (function): type_spellvalue::fill_creature_value_list.
-    void fillCreatureValueList();
+    // Before normalization (function): type_spellvalue::get_mass_damage_spell_value.
+    long getMassDamageSpellValue(SpellID spell, int mastery,
+                                     // Before normalization (locals): times_castable.
+                                     long timesCastable) const;
 
     // Before normalization: our_hero.
     const hero* m_ourHero;   // +0x00

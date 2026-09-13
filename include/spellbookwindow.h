@@ -96,19 +96,18 @@ public:
 
     class TSpellbookEntry {
     public:
-        // Before normalization: Id.
-        SpellID m_id;
-        // Before normalization: School.
-        TSpellSchool m_school;
-        // Before normalization: Mastery.
-        TSkillMastery m_mastery;
-
         TSpellbookEntry(SpellID id, TSpellSchool school,
                         TSkillMastery mastery)
             : m_id(id), m_school(school), m_mastery(mastery)
         {
         }
         bool operator<(const TSpellbookEntry& y) const;
+        // Before normalization: Id.
+        SpellID m_id;
+        // Before normalization: School.
+        TSpellSchool m_school;
+        // Before normalization: Mastery.
+        TSkillMastery m_mastery;
     };
 
     TSpellbookWindow(const hero& h, const armyGroup* g,
@@ -118,8 +117,6 @@ public:
     virtual int open(int newPriority, unsigned char update);
     // Before normalization (function): TSpellbookWindow::Close.
     virtual void close(unsigned char update);
-    // Before normalization (function): TSpellbookWindow::WindowHandler.
-    virtual int windowHandler(message& msg);
 
     // E:\gamedcs\SpellbookWindow.h:222
     void setSchool(TSpellSchool school)
@@ -160,21 +157,10 @@ public:
         gotoPage(m_page + 1);
     }
     static void reset();
+    // Before normalization (function): TSpellbookWindow::WindowHandler.
+    virtual int windowHandler(message& msg);
 
 private:
-    // Before normalization: LastPage.
-    static int s_lastPage;
-    // Before normalization: LastContext.
-    static TSpellContext s_lastContext;
-    // Before normalization: LastSchool.
-    static TSpellSchool s_lastSchool;
-
-    // Before normalization (function): TSpellbookWindow::get_spell_description.
-    std::string getSpellDescription(SpellID spell,
-                                      // Before normalization (locals): current_hero.
-                                      const hero* currentHero,
-                                      unsigned char rollover);
-
     // Before normalization: AllowedContext.
     const TSpellContext m_allowedContext;       // +0x60
     // Before normalization: Hero.
@@ -207,6 +193,19 @@ private:
     iconWidget* m_schoolTabsWidget;              // +0xc4
     // Before normalization: RolloverWidget.
     bitmapBackedTextWidget* m_rolloverWidget;    // +0xc8
+    // Before normalization: LastContext.
+    static TSpellContext s_lastContext;
+    // Before normalization: LastSchool.
+    static TSpellSchool s_lastSchool;
+
+    // Before normalization: LastPage.
+    static int s_lastPage;
+
+    // Before normalization (function): TSpellbookWindow::get_spell_description.
+    std::string getSpellDescription(SpellID spell,
+                                      // Before normalization (locals): current_hero.
+                                      const hero* currentHero,
+                                      unsigned char rollover);
 
     int convertID2HelpID(int id) const;
     static int getPositionFromSchool(unsigned schoolMask);

@@ -1,7 +1,6 @@
 // textscroller.h - prototypes of textscroller.cpp, the Complete-era
 // compiland that owns the scenario-description scroller.
-// HAND-OWNED after admission.
-//
+
 // PROVISIONAL UNIT NAME. The Dreamcast roster has no module between
 // text.obj and textntry.obj, and no DC compiland declares either class
 // below, so the 0x5b9f80..0x5ba8cf block is Complete-only: its own

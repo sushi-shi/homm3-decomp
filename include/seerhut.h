@@ -204,6 +204,11 @@ class TSeerHut : private TSeerData {
     friend class NewfullMap;
     friend class TAdventureMapWindow;
 
+private:
+    // Before normalization: NameIndex.
+
+    signed char m_nameIndex;
+
     // Dreamcast preserves this private source boundary. Complete replaces
     // the VMU-era text lookup inside it, but retail expands the revised body
     // into DoSeerEvent's no-quest arm.
@@ -222,8 +227,6 @@ class TSeerHut : private TSeerData {
     inline int getRewardType();
 
 public:
-    // Before normalization: NameIndex.
-    signed char m_nameIndex;
     // Original: CompletedByPlayer (Dreamcast TSeerHut +0x11).
     // DC save 0x12d8c0 writes the old object in member order. Retail load
     // 0x574a90's version<28 arm reads artifact + reward, then preserves
@@ -313,6 +316,8 @@ public:
     // 0x573fd0, the SeerHutList twin of TQuestGuard::save and reached the
     // same way from NewfullMap::Save. Declared separately because the
     // seer and guard records each own their serialization interface.
+
+private:
     int save(TAbstractFile* outfile);
 
 };

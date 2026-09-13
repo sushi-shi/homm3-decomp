@@ -181,7 +181,11 @@ public:
     // Before normalization: terrain.
     long m_terrain;                    // +0x10
     // Before normalization: mana.
+
+protected:
     long m_mana;                       // +0x14
+
+public:
     // DC original: can_cast_spells (previous reconstruction: can_cast).
     unsigned char m_canCastSpells;          // +0x18, natural padding to +0x1c
     // DC original: total_combat_value (previous reconstruction:
@@ -200,13 +204,21 @@ public:
     // the DC's STLport is 12), and the semantics above corroborate it
     // independently.
     // Before normalization: tactics_advantage.
+
+protected:
     long m_tacticsAdvantage;          // +0x20
+
+public:
     // DC original: current_hero (previous reconstruction: my_hero).
     hero* m_currentHero;                   // +0x24
     // DC original: current_army (previous reconstruction: my_army).
     armyGroup* m_currentArmy;              // +0x28
     // Before normalization: enemy_hero.
+
+protected:
     hero* m_enemyHero;                // +0x2c
+
+public:
     // DC original: wall_archery_penalty (previous reconstruction: wall_penalty).
     unsigned char m_wallArcheryPenalty;      // +0x30, natural padding at +0x31
     // DC original: wall_speed_limit (previous reconstruction: penalty_distance).
@@ -220,16 +232,22 @@ public:
     type_AI_combat_data(const type_AI_combat_data& other);
     // Before normalization (function): type_AI_combat_data::initialize_creatures.
     // Before normalization (locals): base_modifier, enemy_hero.
+
+protected:
     void initializeCreatures(double baseModifier, const hero* enemyHero);
     // Before normalization (function): type_AI_combat_data::check_wall_archery_penalty.
     // Before normalization (locals): enemy_town.
     void checkWallArcheryPenalty(const town* enemyTown);
     // Before normalization (function): type_AI_combat_data::get_catagory.
     type_speed_catagory getCatagory(TCreatureType creature, long speed) const;
+
+public:
     // Before normalization (function): type_AI_combat_data::adjust_army.
     // Before normalization (locals): dismiss_hero.
     void adjustArmy(unsigned char dismissHero);
     // Before normalization (function): type_AI_combat_data::get_fastest_speed.
+
+protected:
     long getFastestSpeed() const;
     // Before normalization (function): type_AI_combat_data::get_next_chain_lightning_target.
     long getNextChainLightningTarget(long excluded,
@@ -273,16 +291,24 @@ public:
                     unsigned char shootersBlocked) const;
     // Before normalization (function): type_AI_combat_data::get_final_melee_value.
     long getFinalMeleeValue() const;
+
+public:
     // DC ai_combat.h:245-246, dc 0x2c6a4; original get_mana.
     long getMana() const { return m_mana; }
     // Before normalization (function): type_AI_combat_data::get_army.
+
+protected:
     armyGroup* getArmy() const { return m_currentArmy; }
+
+public:
     // Before normalization (function): type_AI_combat_data::get_total.
     // DC ai_combat.h:255-256, 0x2c6ac: load this+24 and return. Retail
     // expands the corresponding this+0x1c load in chooseMelee. Vector
     // cardinality is creatures.size(), not this game accessor.
     long getTotal() const { return m_totalCombatValue; }
     // Before normalization (function): type_AI_combat_data::get_hero.
+
+protected:
     hero* getHero() const { return m_currentHero; }
     // Before normalization (function): type_AI_combat_data::cast_chain_lightning.
     void castChainLightning(type_spell_choice& choice,
@@ -329,6 +355,8 @@ public:
     void doMeleeCombat(type_AI_combat_data& defender);
     // Before normalization (function): type_AI_combat_data::do_general_melee.
     void doGeneralMelee(type_AI_combat_data& defender);
+
+public:
     // Before normalization (function): type_AI_combat_data::simulate_combat.
     void simulateCombat(type_AI_combat_data& defender);
     // Before normalization (function): type_AI_combat_data::do_aftermath.

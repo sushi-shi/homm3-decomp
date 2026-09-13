@@ -46,15 +46,15 @@ public:
 
     enum { NWIDGETS = 10 };
 
-    TMainMenu();
-    virtual ~TMainMenu();
-    // Before normalization (function): TMainMenu::DoModal.
-    void doModal();
-
     // DC TMainMenu field list 0x46fa records bShowCDMessage as public;
     // the mainmenu.cpp-local handler accesses it without a friend boundary.
     // Before normalization: bShowCDMessage.
     unsigned char m_showCdMessage;
+
+    TMainMenu();
+    virtual ~TMainMenu();
+    // Before normalization (function): TMainMenu::DoModal.
+    void doModal();
 
 private:
     // Before normalization: pad_4d.

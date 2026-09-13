@@ -83,47 +83,49 @@ public:
 
     // DC ai_player.h:263 (dc 0x37dec). Complete inlines the helper into
     // AI_initialize; retail leaves exactly the team-word store.
-    void init(short newTeam) { m_team = newTeam; }
-    long getMagusHutValue() const { return m_magusHutValue; }
-    static float getAttackBonus(short player);  // 0x428710
+    void init(short newTeam);
+
+    void buyCreatures(hero* currentHero, town* currentTown);  // 0x42ba60
+    void buyMageGuild(hero* currentHero, town* currentTown); // 0x42beb0
+    void calculateDemand();                      // 0x428740
+    void clearMagusHutValue();
+    void endTurn();                              // 0x428dd0
+    long getMagusHutValue() const;
     // DC ai_player.h:278 (dc 0x37df8, ?...@@QBANW4EGameResource@@@Z);
     // inlined into type_income_artifact::get_value, whose by-value double
     // return temp at [ebp-8] is what the retail bytes home under /Op.
-    double getResourceValue(enum EGameResource resource) const
-    {
-        return m_resourceValue[resource];
-    }
-    static void setAttackBonuses(float computerBonus,
-                                   float humanBonus)
-    {
-        s_attackComputerBonus = computerBonus;
-        s_attackHumanBonus = humanBonus;
-    }
-    void calculateDemand();                      // 0x428740
-    void endTurn();                              // 0x428dd0
-    void makeGift(long playerId);               // 0x429110
+    double getResourceValue(enum EGameResource resource) const;
+
+    bool hireHeroes();
+
     void startTurn();                            // 0x4297c0
     void resetMagusHutValue();                 // 0x429ab0
-    void calculateReserve();                     // 0x429ad0
-    long getTotalValue(long basicValue, int* cost);  // 0x42a150
-    void buyCreatures(hero* currentHero, town* currentTown);  // 0x42ba60
-    void buyMageGuild(hero* currentHero, town* currentTown); // 0x42beb0
+
+    void tradeResources(const int* cost, long number);
+    static float getAttackBonus(short player);  // 0x428710
+    static void setAttackBonuses(float computerBonus,
+                                   float humanBonus);
+
 protected:
-    // DC ?purchase_buildings@type_AI_player@@IAAXXZ: ordinary protected
-    // helper; the prohibited-creature array belongs to its body.
-    void purchaseBuildings();
-public:
+    bool buildMarkets(int* supply);
+
+    void calculateReserve();                     // 0x429ad0
+    bool canTradeResources(const int* cost, int* supply,
+                             std::vector<long>& tradeQty);
+
+    bool checkTradeSupply(const int* cost, long number, int* supply,
+                            std::vector<long>& tradeQty);
+    void doResourceTrade(int* supply);
+    long getTotalValue(long basicValue, int* cost);  // 0x42a150
+
+    void makeGift(long playerId);               // 0x429110
     // DC LF_ONEMETHOD protected; retail 0x42ae00 (the per-town pricing
     // pass purchase_buildings drives).
     unsigned char purchaseBuilding(unsigned char* prohibitedCreatures);
-    bool hireHeroes();
-    bool checkTradeSupply(const int* cost, long number, int* supply,
-                            std::vector<long>& tradeQty);
-    bool canTradeResources(const int* cost, int* supply,
-                             std::vector<long>& tradeQty);
-    void tradeResources(const int* cost, long number);
-    bool buildMarkets(int* supply);
-    void doResourceTrade(int* supply);
+
+    // DC ?purchase_buildings@type_AI_player@@IAAXXZ: ordinary protected
+    // helper; the prohibited-creature array belongs to its body.
+    void purchaseBuildings();
 
 private:
     static float s_attackComputerBonus;
@@ -138,6 +140,11 @@ extern type_AI_player g_aiPlayers[8];
 // Dreamcast records this exact 12-byte value object, and retail's
 // constructor at 0x4286b0 writes the same four fields at 0/4/8/10.
 struct type_creature_source {
+public:
+    // ai_player.h:299 initializes these three fields; line 300 copies
+    // the pointed-to amount. The decorated DC public retains bool (_N).
+        type_creature_source(TCreatureType newType, short* newAmount,
+                         bool isFree);
     // Before normalization: type.
     TCreatureType m_type;
     // Before normalization: ptr.
@@ -146,16 +153,6 @@ struct type_creature_source {
     short m_number;
     // Before normalization: is_free.
     unsigned char m_isFree;
-
-    // ai_player.h:299 initializes these three fields; line 300 copies
-    // the pointed-to amount. The decorated DC public retains bool (_N).
-    VA(0x004286b0, 0x21)  // DC signature/layout + retail stores; dc 0x37e08
-    type_creature_source(TCreatureType newType, short* newAmount,
-                         bool isFree)
-        : m_type(newType), m_ptr(newAmount), m_isFree(isFree)
-    {
-        m_number = *newAmount;
-    }
 };
 SIZE(type_creature_source, 12);
 
@@ -186,23 +183,27 @@ protected:
 
     // Before normalization (function): type_AI_creature_swapper::get_alignments.
     void getAlignments();
+
+public:
+    type_AI_creature_swapper();
+
+protected:
     // Before normalization (function): type_AI_creature_swapper::add_creatures.
     void addCreatures(TCreatureType type, short amount, short slot);
+    // Before normalization (function): type_AI_creature_swapper::choose_weakest_army.
+    // Before normalization (locals): is_shooter, check_alignments.
+    long chooseWeakestArmy(unsigned char isShooter, unsigned char checkAlignments);
     // Before normalization (function): type_AI_creature_swapper::do_best_swap.
     // Before normalization (locals): can_take_all.
     long doBestSwap(bool canTakeAll);
     // Before normalization (function): type_AI_creature_swapper::dump_extra_creature.
     void dumpExtraCreature();
-    // Before normalization (function): type_AI_creature_swapper::choose_weakest_army.
-    // Before normalization (locals): is_shooter, check_alignments.
-    long chooseWeakestArmy(unsigned char isShooter, unsigned char checkAlignments);
     // Before normalization (function): type_AI_creature_swapper::value_of_adding_army.
     long valueOfAddingArmy(TCreatureType type, short count,
                               // Before normalization (locals): must_replace_creature.
                               short& slot, unsigned char mustReplaceCreature);
 
 public:
-    type_AI_creature_swapper();
     // Before normalization (function): type_AI_creature_swapper::do_swap.
     // Before normalization (locals): current_hero, source_army, second_hero,
     // new_has_angelic_alliance.
@@ -219,25 +220,11 @@ public:
     // Original: type_AI_creature_swapper::get_army_increase.
     // E:\gamedcs\ai_player.h:307, dc 0x114bd8: returns army_value_increase
     // at +0x18. The former getArmyValueIncrease spelling obscured this identity.
-    long getArmyIncrease() const { return m_armyValueIncrease; }
+    long getArmyIncrease() const;
 };
 SIZE(type_AI_creature_swapper, 0x20);
 
 class type_AI_creature_purchaser : public type_AI_creature_swapper {
-protected:
-    // Before normalization: player_id.
-    long m_playerId;
-    // Before normalization: funds.
-    long* m_funds;
-    // Before normalization: subtract_cost_mode.
-    unsigned char m_subtractCostMode;
-    // Before normalization: creatures.
-    std::vector<type_creature_source> m_creatures;
-
-    // Before normalization (function): type_AI_creature_purchaser::do_best_purchase.
-    // Before normalization (locals): trade_allowed.
-    long doBestPurchase(unsigned char tradeAllowed);
-
 public:
     type_AI_creature_purchaser(long player,
                                // Before normalization (locals): current_generator, current_town,
@@ -252,6 +239,21 @@ public:
     // No retail out-of-line body (set(town) ends 0x42d418, next row
     // 0x42d420); every caller inlines its clear + one push_back.
     void set(TCreatureType newType, short* newAmount);
+
+protected:
+    // Before normalization (function): type_AI_creature_purchaser::do_best_purchase.
+    // Before normalization (locals): trade_allowed.
+    long doBestPurchase(unsigned char tradeAllowed);
+    // Before normalization: player_id.
+    long m_playerId;
+    // Before normalization: funds.
+    long* m_funds;
+    // Before normalization: subtract_cost_mode.
+    unsigned char m_subtractCostMode;
+    // Before normalization: creatures.
+    std::vector<type_creature_source> m_creatures;
+
+public:
     // Before normalization (function): type_AI_creature_purchaser::do_purchase.
     // Before normalization (locals): new_army, new_morale, new_adjacent_army, new_funds,
     // allow_trade, new_has_angelic_alliance.
@@ -268,7 +270,7 @@ public:
                             unsigned char newHasAngelicAlliance);
 
     // Before normalization (function): type_AI_creature_purchaser::set_subtract_mode.
-    void setSubtractMode(unsigned char arg) { m_subtractCostMode = arg; }
+    void setSubtractMode(unsigned char arg);
 };
 SIZE(type_AI_creature_purchaser, 0x3c);
 
@@ -1246,5 +1248,47 @@ public:
 // CODEVIEW(E:\gamedcs\ai_player.cpp:146, dc 0x2deac) void type_town_threat_checker::mark_towns(hero* enemy_hero, searchArray* search_array);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:179, dc 0x2dfa0) unsigned char type_town_threat_checker::is_marked(const town* our_town);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:186, dc 0x2dfa4) void type_town_threat_checker::mark_town(town* our_town);
+
+
+// Header definitions follow their recorded source-line order; class declarations
+// retain the independently recorded member order and retail layout.
+
+// ai_player.h:263 (Dreamcast source body).
+inline void type_AI_player::init(short newTeam) { m_team = newTeam; }
+
+// ai_player.h:268 (Dreamcast source body).
+inline long type_AI_player::getMagusHutValue() const { return m_magusHutValue; }
+
+// ai_player.h:273 (Dreamcast source body).
+inline void type_AI_player::clearMagusHutValue() { m_magusHutValue = 0; }
+
+// ai_player.h:278 (Dreamcast source body).
+inline double type_AI_player::getResourceValue(enum EGameResource resource) const
+    {
+        return m_resourceValue[resource];
+    }
+
+// ai_player.h:284 (Dreamcast source body).
+inline void type_AI_player::setAttackBonuses(float computerBonus,
+                                   float humanBonus)
+    {
+        s_attackComputerBonus = computerBonus;
+        s_attackHumanBonus = humanBonus;
+    }
+
+// ai_player.h:299 (Dreamcast source body).
+VA(0x004286b0, 0x21)  // DC signature/layout + retail stores; dc 0x37e08
+inline     type_creature_source::type_creature_source(TCreatureType newType, short* newAmount,
+                         bool isFree)
+        : m_type(newType), m_ptr(newAmount), m_isFree(isFree)
+    {
+        m_number = *newAmount;
+    }
+
+// ai_player.h:307 (Dreamcast source body).
+inline long type_AI_creature_swapper::getArmyIncrease() const { return m_armyValueIncrease; }
+
+// ai_player.h:313 (Dreamcast source body).
+inline void type_AI_creature_purchaser::setSubtractMode(unsigned char arg) { m_subtractCostMode = arg; }
 
 #endif  /* HOMM3_AI_PLAYER_H */

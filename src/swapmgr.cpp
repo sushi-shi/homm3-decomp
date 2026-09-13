@@ -25,14 +25,11 @@
 #include "textresource.h"
 #include "textwdgt.h"
 
-// Before normalization: gUnnamed6a3d08.
 // Dreamcast names the sparse widget-id lookup gStatNames. Retail folds its
 // biased view into the indexed address 0x6a51c4, so only the admitted case
 // values (115..118 and 145) are valid consumers of this base.
-// Before normalization: gStatNames.
 DATA(0x006a3d08) static int g_unnamed6a3d08;
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
-// Before normalization: gpSwapManager.
 DATA(0x006a51c4) extern const char* g_statNames[];
 DATA(0x006a3d30) swapManager* g_swapManager;
 
@@ -677,20 +674,16 @@ TSwapWindow::TSwapWindow(hero** heroes)
     }
 }
 
-// E:\gamedcs\swapmgr.cpp:196
-// Before normalization (locals): sChat.
-VA(0x005ae370, 0x1D)  // anchor-callee + vtable-forward, dc 0x15f13c
+VA(0x005ae370, 0x1D)  // dc 0x15f13c
 void CSwapManagerChatEdit::sendChat(const char* chat, int toWho)
 {
     ::sendChat(chat, toWho);
     sendChatCleanup();
 }
 
-// E:\gamedcs\swapmgr.cpp:454 - vtable slot 0.
 VA_COMPGEN(0x005ae390, 0x21, SCALAR_DELETING_DTOR, TSwapWindow)
 
-// E:\gamedcs\swapmgr.cpp:457
-VA(0x005ae3c0, 0x6B)  // inherited widget ownership + heroWindow dtor, dc 0x15c320
+VA(0x005ae3c0, 0x6B)  // dc 0x15c320
 TSwapWindow::~TSwapWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -699,8 +692,7 @@ TSwapWindow::~TSwapWindow()
     }
 }
 
-// E:\gamedcs\swapmgr.cpp:465
-VA(0x005ae430, 0xCB)  // dc-bracket forced + body corroborates, dc 0x15c384
+VA(0x005ae430, 0xCB)  // dc 0x15c384
 void TSwapWindow::updateArrows()
 {
     if (!m_leftArrow)
@@ -780,12 +772,7 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
     g_swapManager = this;
     m_netMsgHandler = 0;
 }
-// E:\gamedcs\swapmgr.cpp:617
-// Dreamcast proves the single message local, the six BroadcastMessage
-// statement boundaries, and the four limit(GetMorale/GetLuck)+3 expressions.
-// Complete shifts this widget band by two and VC6 inlines both message's
-// constructor and the shared reference-returning limit helper.
-VA(0x005ae5b0, 0x19B)  // ctor/Open bracket + full DC statement roster, dc 0x15c534
+VA(0x005ae5b0, 0x19B)  // dc 0x15c534
 void swapManager::reset()
 {
     message msg;
@@ -866,7 +853,6 @@ int swapManager::open(int newPriority)
     msg.m_codeY = kSwapRefreshRight;
     m_parent->broadcastMessage(msg);
 
-    // Before normalization (locals): iHero, iSkill.
     for (int hero = 0; hero < 2; hero++) {
         // DC line 698 is one portrait-update statement. Retail passes the
         // portrait pointer directly to the five-argument overload; the local
@@ -944,12 +930,7 @@ int swapManager::open(int newPriority)
     return 0;
 }
 
-// E:\gamedcs\swapmgr.cpp:518
-// The exact Open/Close bracket and five-case retail jump table identify this
-// handler. Dreamcast proves the case/helper order and common DestroyMsg tail;
-// Complete expands GetOtherHero, HandleHeroUpdateMsg and OnGiveMeStuffMsg.
-// Before normalization (locals): pNetMsg.
-VA(0x005aeb00, 0x213)  // anchor-bracket + switch/callee roster, dc 0x15f228
+VA(0x005aeb00, 0x213)  // dc 0x15f228
 CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
 {
     switch (netMsg->m_subType)
@@ -1000,9 +981,7 @@ CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
     return 0;
 }
 
-// E:\gamedcs\swapmgr.cpp:789
-
-VA(0x005aed20, 0x9B)  // exact retail teardown, dc 0x15ca44
+VA(0x005aed20, 0x9B)  // dc 0x15ca44
 void swapManager::close()
 {
     if (g_heroScreenDraggedArtifact.m_artifactId != -1)
@@ -1021,7 +1000,6 @@ void swapManager::close()
     g_advManager->enableButtons();
     g_advManager->reseed(0, 0);
 }
-// E:\gamedcs\swapmgr.cpp:816
 VA(0x005aedc0, 0x140)
 void swapManager::drawSelector()
 {
@@ -1105,16 +1083,7 @@ inline void swapManager::updateArtifactWidget(long id, TArtifact artifact)
     m_parent->broadcastMessage(msg);
 }
 
-// E:\gamedcs\swapmgr.cpp:940
-// Dreamcast proves the artifact local, helper boundary and paired paint order.
-// Complete narrows the local from the older record copy to its used id and
-// adds the nineteen-position combination-artifact occupancy walk also present
-// in THeroScreenWindow::update_slot; retail independently proves the direct
-// dword load, slot-class tables, reverse scan and two widget-id bands.
-// Complete changes the first widget band but preserves Dreamcast's +0x1b
-// second band.  Retail proves that immediate independently in both arms.
-// Before normalization (locals): iHero.
-VA(0x005aef00, 0x24C)  // dc-order + typed retail body, dc 0x15cd2c
+VA(0x005aef00, 0x24C)  // dc 0x15cd2c
 void swapManager::updateSlot(int hero, TArtifactSlot slot)
 {
     int artifact = m_heroes[hero]->getArtifact(TArtifactSlot(slot)).m_artifactId;
@@ -1135,7 +1104,7 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
                     artifact = 0x91;
                     break;
                 }
-                if (m_heroes[hero]->m_equipped[i].m_artifactId == ARTIFACT_NONE
+                if (m_heroes[hero]->getArtifact(TArtifactSlot(i)).m_artifactId == ARTIFACT_NONE
                     && --remaining == 0)
                     break;
             }
@@ -1179,7 +1148,6 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
 // UpdateSlot walk. Complete /Ob2 expands it into both known retail callers.
 void swapManager::updateAllSlots()
 {
-    // Before normalization (locals): iHero.
     for (int hero = 0; hero < 2; ++hero)
         for (int slot = const_first_artifact_slot;
              slot < kNumArtifactSlots + 1;
@@ -1194,7 +1162,6 @@ void swapManager::updateAllSlots()
 // Dreamcast preserves this source helper boundary; Complete /Ob2 expands its
 // sole call into UpdateBackpack, where the parameterized subscript is what
 // produces retail's stride-eight induction variable.
-// Before normalization (locals): iHero.
 void swapManager::updateBackpackItem(int hero, int i)
 {
     message msg;
@@ -1219,9 +1186,7 @@ void swapManager::updateBackpackItem(int hero, int i)
     m_parent->broadcastMessage(msg);
 }
 
-// E:\gamedcs\swapmgr.cpp:1004
-// Before normalization (locals): iHero.
-VA(0x005af150, 0x157)  // anchor-callee + helper-inline, dc 0x15cea4
+VA(0x005af150, 0x157)  // dc 0x15cea4
 void swapManager::updateBackpack(int hero)
 {
     message msg;
@@ -1247,18 +1212,7 @@ void swapManager::updateBackpack(int hero)
     m_parent->broadcastMessage(msg);
 }
 
-// E:\gamedcs\swapmgr.cpp:1031
-// Dreamcast proves the five-parameter ABI, absence of source locals, selection
-// field assignment order, paired refresh broadcasts, ViewMon/CanModHero
-// helper boundaries, compound split condition and common final Reset. Retail
-// independently fixes the Complete widget ids and inlines ViewMon/CanModHero.
-// Residual (91.1894%): VC6 emits 39 blocks against retail's 35 because its
-// two nested bool returns cross-jump through shared materialization blocks.
-// Branch-local/result locals and explicit false-arm Reset returns were
-// measured byte-flat; one shared helper result reaches 35 blocks but scores
-// 91.0132%, so the DC-proven no-local statement shape remains authoritative.
-// Before normalization (locals): iHero, iMonster, bRightMouse, bShift.
-VA(0x005af2b0, 0x2DD)  // roster bracket + DC statement/CFG shape, dc 0x15cf54
+VA(0x005af2b0, 0x2DD)  // dc 0x15cf54
 void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned char shift)
 {
     if (rightMouse)
@@ -1329,7 +1283,6 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned 
 // why-branch finds no applicable source mutation and why-reg's model finds no
 // binding divergence; restoring CanModHero's older direct returns is the
 // negative control and lowers this caller to 87.81%.
-// Before normalization (locals): right_click, our_hero, old_artifact.
 VA(0x005af590, 0x3F7)  // Main roster/callees + full retail body, dc 0x15d150
 void swapManager::handleArtifactClick(long side, long id, unsigned char rightClick)
 {
@@ -1441,7 +1394,6 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
     }
 }
 
-
 // E:\gamedcs\swapmgr.cpp:1168
 // The exact UpdateBackpack/SendHeroUpdate bracket fixes this third handler at
 // 0x5af990. Dreamcast supplies the two locals, helper boundaries and branch
@@ -1451,7 +1403,6 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
 // get_backpack_error argument chain; why-reg's model caps it as front-end
 // handle state.  Naming the string temporary is the negative control and
 // drops this function to 97.86% without repairing the transpose.
-// Before normalization (locals): right_click, our_hero, old_artifact.
 VA(0x005af990, 0x251)  // roster bracket + body/callees, dc 0x15d2e0
 void swapManager::handleBackpackClick(long side, long id, unsigned char rightClick)
 {
@@ -1489,8 +1440,7 @@ void swapManager::handleBackpackClick(long side, long id, unsigned char rightCli
     }
 }
 
-// E:\gamedcs\swapmgr.cpp:1208
-VA(0x005afbf0, 0x17A)  // full retail body + dc signature/order, dc 0x15d440
+VA(0x005afbf0, 0x17A)  // dc 0x15d440
 void swapManager::sendHeroUpdate()
 {
     if (g_networkActive69954c && m_humanPlayerTrade && m_givingToAlly) {
@@ -2367,15 +2317,7 @@ CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* pNetMsg)
 
 #endif  // @carcass
 
-// Dreamcast lines 2033..2041 prove the initial seven-slot nonempty-troop
-// count. Complete never consumes the count; VC6 removes its body but retains
-// the induction walk visible at the retail entry.  The exact source keeps the
-// source-army pointer declaration after that loop, so its direct hero access
-// carries retail's numTroops pointer; predeclaring it swaps EBX/EDI and scores
-// 91.55%.  Flattening the source!=destination scope changes the same-army
-// semantics and scores 90.98%. Reversing the two recovered loop tests is
-// byte-flat, so the Dreamcast order remains the source ratchet.
-VA(0x005b0da0, 0x141)  // anchor-global, dc 0x15e8bc
+VA(0x005b0da0, 0x141)  // dc 0x15e8bc
 void swapManager::swapMons()
 {
     int nonemptyTroops = 0;
@@ -2493,7 +2435,6 @@ inline void swapManager::onChatUpdate()
 // Dreamcast proves two snapshot assignments followed by the popup guard and
 // UpdateBackpack(0/1), Update, DrawSwapWin helper order. Retail independently
 // proves Complete's 0x492-byte hero layout and expands this entire boundary.
-// Before normalization (locals): pNetMsg.
 void swapManager::handleHeroUpdateMsg(CNetMsg* netMsg)
 {
     CHeroUpdateMsg* update = static_cast<CHeroUpdateMsg*>(netMsg);

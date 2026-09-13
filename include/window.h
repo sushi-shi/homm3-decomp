@@ -129,17 +129,22 @@ public:
     // Before normalization: Widgets.
     std::vector<widget*> m_widgets;
     // Before normalization: focusId.
+
+protected:
     int m_focusId;
     // Before normalization: background.
+
+private:
     Bitmap16Bit* m_background;
+
+public:
     // Before normalization: field_48; reference member heroWindow::sleepCount.
     int m_sleepCount;
 
     heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType);
-    // Before normalization (function): heroWindow::AddWidget.
-    void addWidget(widget* newWidget, int newPriority);
-    // Before normalization (function): heroWindow::RemoveWidget.
-    void removeWidget(widget* killWidget);
+
+    // Before normalization (function): heroWindow::CenterWindow.
+    void centerWindow(int centerX, int centerY);
     // Before normalization (function): heroWindow::BroadcastMessage.
     // DC window.cpp:381: BroadcastMessage(message& msg).
     int broadcastMessage(message& msg);
@@ -149,26 +154,34 @@ public:
     int widgetSetStatus(int id, int status);
     // Before normalization (function): heroWindow::WidgetClearStatus.
     int widgetClearStatus(int id, int status);
+    widget* findWidgetPtr(int mx, int my) const;
+    int findWidget(int mx, int my) const;
+    // Before normalization (function): heroWindow::AddWidget.
+    void addWidget(widget* newWidget, int newPriority);
+    // Before normalization (function): heroWindow::RemoveWidget.
+    void removeWidget(widget* killWidget);
     // Before normalization (function): heroWindow::GetWidget.
     widget* getWidget(int id);
-    // Before normalization (function): heroWindow::SaveBackground.
-    int saveBackground();
-    // Before normalization (function): heroWindow::RestoreBackground.
-    void restoreBackground(unsigned char update);
-    // Before normalization (function): heroWindow::CenterWindow.
-    void centerWindow(int centerX, int centerY);
-    int findWidget(int mx, int my) const;
-    widget* findWidgetPtr(int mx, int my) const;
     // Before normalization (function): heroWindow::SetFocus.
     void setFocus(int id);
+
+protected:
     // DC: protected STATIC (no vfptr slot). /Gr makes it fastcall, which
     // is exactly the TDialogHandler shape DoModal hands to DoDialog.
     // Before normalization (function): heroWindow::HeroWindowHandler.
+
     static int heroWindowHandler(message& msg);
+
+private:
+    // Before normalization (function): heroWindow::SaveBackground.
+
+    int saveBackground();
+    // Before normalization (function): heroWindow::RestoreBackground.
+    void restoreBackground(unsigned char update);
+
+public:
     // Before normalization (function): heroWindow::SleepAllWidgets.
     void sleepAllWidgets(unsigned char sleep);
-    // Before normalization (function): heroWindow::delete_widgets.
-    void deleteWidgets();
 
     virtual ~heroWindow();                            // slot 0, retail 0x5fea80
     // Before normalization (function): heroWindow::Open.
@@ -200,8 +213,16 @@ public:
     // resolve.
     // Before normalization (function): heroWindow::DoModal.
     virtual int doModal(unsigned char fadeIn);        // slot 6, retail 0x5ff460
+
+protected:
+    // Before normalization (function): heroWindow::delete_widgets.
+
+    void deleteWidgets();
     // Before normalization (function): heroWindow::AddWidgetsToMessageStream.
+
     virtual void addWidgetsToMessageStream();         // slot 7, retail 0x5ff570
+
+public:
     // Slot 8 is NOT pure - 0x5ff5f0 is a real heroWindow body in
     // window.obj's own band (reconstructed 2026-08-08, once widget's
     // 13th slot was modelled). It runs widget::sleep over the whole
@@ -236,9 +257,6 @@ public:
     int m_rolloverId;   // +0x4c, -1 in the ctor, latched by ProcessHover
 
     CHeroWindowEx(int winX, int winY, int winWidth, int winHeight, unsigned winType);
-    // Before normalization (function): CHeroWindowEx::SetHelpText.
-    // Before normalization (locals): pHelpText.
-    void setHelpText(THelpText* helpText, int start, int stop, unsigned char copyText);
 
     // Window.h:210, dc 0x2dcc. Dreamcast's public signature and retail's
     // shared slot-3 forwarder both prove this header-inline override.
@@ -257,13 +275,16 @@ public:
     virtual unsigned char processHover(int mouseX, int mouseY);         // slot 10
     // Before normalization (function): CHeroWindowEx::ProcessRightSelect.
     virtual unsigned char processRightSelect(int id);                   // slot 11
+    // Before normalization (function): CHeroWindowEx::SetHelpText.
+    // Before normalization (locals): pHelpText.
+    void setHelpText(THelpText* helpText, int start, int stop, unsigned char copyText);
+
 protected:
     // Before normalization (function): CHeroWindowEx::OnWidgetDeselect.
     // Before normalization (locals): bExitFlag.
     // DC public ?OnWidgetDeselect@CHeroWindowEx@@MAAHHAA_N@Z proves
     // protected virtual access and bool&, also shared by its overrides.
     virtual int onWidgetDeselect(int id, bool& exitFlag);  // slot 12
-public:
     // Before normalization (function): CHeroWindowEx::GetRolloverWidget.
     virtual textWidget* getRolloverWidget();                            // slot 13
 };

@@ -16,15 +16,10 @@
 struct LegacyCampaignHero : public type_obscuring_object {
     // Before normalization: mana.
     short m_mana;                              // +0x018
-    // Before normalization: id.
     int m_id;                                  // +0x01a
-    // Before normalization: owner.
     signed char m_owner;                       // +0x01e
-    // Before normalization: name.
     char m_name[13];                           // +0x01f
-    // Before normalization: heroClass.
     int m_heroClass;                           // +0x02c
-    // Before normalization: portrait.
     unsigned char m_portrait;                  // +0x030
     // Previously field_031; packed Dreamcast member sequence.
     // Original: targetX.
@@ -33,7 +28,6 @@ struct LegacyCampaignHero : public type_obscuring_object {
     int m_targetY; // +0x035
     // Original: targetZ.
     short m_targetZ; // +0x039
-    // Before normalization: lastMagicSchoolLevel.
     short m_lastMagicSchoolLevel;              // +0x03b
     // Previously field_03d; packed Dreamcast member sequence.
     // Original: target_distance.
@@ -54,9 +48,7 @@ struct LegacyCampaignHero : public type_obscuring_object {
     int m_maxMobility; // +0x045
     // Original: currMobility.
     int m_currMobility; // +0x049
-    // Before normalization: experience.
     int m_experience;                          // +0x04d
-    // Before normalization: level.
     short m_level;                             // +0x051
     // Previously field_053; packed Dreamcast member sequence.
     // Original: TrainingGroundFlags.
@@ -87,17 +79,11 @@ struct LegacyCampaignHero : public type_obscuring_object {
     unsigned long m_shrine2Flags; // +0x083
     // Original: Shrine3Flags.
     unsigned long m_shrine3Flags; // +0x087
-    // Before normalization: levelSeed.
     unsigned char m_levelSeed;                 // +0x08b
-    // Before normalization: lastWisdom.
     unsigned char m_lastWisdom;                // +0x08c
-    // Before normalization: army.
     armyGroup m_army;                          // +0x08d
-    // Before normalization: skillLevel.
     signed char m_skillLevel[28];              // +0x0c5
-    // Before normalization: skillOrder.
     unsigned char m_skillOrder[28];            // +0x0e1
-    // Before normalization: skillCount.
     int m_skillCount;                          // +0x0fd
     // Previously field_101; packed Dreamcast member sequence.
     // Original: flags.
@@ -122,19 +108,12 @@ struct LegacyCampaignHero : public type_obscuring_object {
     unsigned char m_isSleeping; // +0x11c
     // Original: bounty.
     long m_bounty; // +0x11d
-    // Before normalization: townSpecialGrantedMask.
     std::bitset<48> m_townSpecialGrantedMask;  // +0x121
-    // Before normalization: equipped.
     type_artifact m_equipped[18];              // +0x129
-    // Before normalization: backpack.
     type_artifact m_backpack[64];              // +0x1b9
-    // Before normalization: backpackCount.
     signed char m_backpackCount;               // +0x3b9
-    // Before normalization: inSpellbook.
     unsigned char m_inSpellbook[70];           // +0x3ba
-    // Before normalization: availableSpells.
     unsigned char m_availableSpells[70];       // +0x400
-    // Before normalization: stats.
     signed char m_stats[4];                    // +0x446
     // Previously field_44a; packed Dreamcast member sequence.
     // Original: aggression.
@@ -194,7 +173,6 @@ struct LegacyCampaignMapTraits {
 SIZE(LegacyCampaignMapTraits, 27);
 
 struct LegacyCampaignSave {
-    // Before normalization: currentMap.
     signed char m_currentMap;                   // +0x0000
     // +0x0001 and +0x0576 are the CAMPAIGN ORDINAL and the BRIEFING CHOICE
     // in that order, not the reverse: retail's pre-v28 arm sign-extends the
@@ -203,16 +181,12 @@ struct LegacyCampaignSave {
     // SCampaign+0x04 is the subscript the same arm shifts by 5 to index
     // scenarioDays/scenarioScores/legacyCampaignScenarioIndices at
     // 0x48a465 - i.e. it is currentCampaign.
-    // Before normalization: currentCampaign.
     signed char m_currentCampaign;              // +0x0001
-    // Before normalization: isCheater.
     unsigned char m_isCheater;                  // +0x0002
     // Original: bSecretActive, bCustomCampaign; previously field_0003.
     unsigned char m_secretActive;
     unsigned char m_customCampaign;
-    // Before normalization: numScenarios.
     int m_numScenarios;                         // +0x0005
-    // Before normalization: campaignFilename.
     // Dreamcast CampaignFilename[61], bScenarioChoosable[8], bMapChoosable[32].
     // The former 101-byte array incorrectly combined all three declarations.
     char m_campaignFilename[61];                // +0x0009
@@ -220,24 +194,17 @@ struct LegacyCampaignSave {
     unsigned char m_mapChoosable[32];            // +0x004e
     // Retail SCampaign::Load copies this byte directly into the current
     // record's bool. An unsigned-char source makes VC6 insert test/setne.
-    // Before normalization: scenarioCompleted.
     bool m_scenarioCompleted[8][32];            // +0x006e
-    // Before normalization: scenarioDays.
     short m_scenarioDays[8][32];                // +0x016e
-    // Before normalization: scenarioScores.
     short m_scenarioScores[8][32];              // +0x036e
-    // Before normalization: campaignCompleted.
     // Dreamcast bCampaignCompleted has eight slots; field_0575 was the last.
     // Retail promotion copies only the seven built-in campaign flags.
     unsigned char m_campaignCompleted[8];       // +0x056e
-    // Before normalization: briefingChoice.
     int m_briefingChoice;                       // +0x0576
     // Original: map_traits and carryover_artifact; previously field_057a.
     LegacyCampaignMapTraits m_mapTraits[8][32]; // +0x057a
     LegacyCampaignArtifactRequirement m_carryoverArtifact; // +0x207a
-    // Before normalization: carryOverHeroes.
     LegacyCampaignHero m_carryOverHeroes[2][8]; // +0x207f
-    // Before normalization: carryOverHeroCounts.
     signed char m_carryOverHeroCounts[2];       // +0x669f
     // Original: assigned_carryover; previously field_66a1.
     signed char m_assignedCarryover[8];          // +0x66a1

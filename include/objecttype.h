@@ -1,6 +1,9 @@
-// objecttype.h - Complete object-template records shared with map loading
-// and the random-map generator. Private registries and filters stay in
-// objecttype.cpp, where their retail tables and function bodies are owned.
+// objecttype.h - the Complete-only image-name registry shared by
+// TObjectType::GetImageName and TObjectType::setImageName.
+
+// Kept out of advmgr_objects.h deliberately: objecttype.cpp is the only
+// consumer, and advmgr_objects.h reaches nine compilands through game.h and
+// mapcell.h.
 #ifndef HOMM3_OBJECTTYPE_H
 #define HOMM3_OBJECTTYPE_H
 

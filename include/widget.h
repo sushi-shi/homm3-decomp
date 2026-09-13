@@ -98,11 +98,15 @@ public:
     // Before normalization: height.
     short m_height;
     // Before normalization: RollOver.
+
+protected:
     char* m_rollOver;
     // Before normalization: RightClick.
     char* m_rightClick;
     // Before normalization: freeText.
     unsigned char m_freeText;
+
+public:
     // Sleep nesting depth; see the CORRECTION note above. Name is the
     // house ordinal placeholder - the role is proven, the spelling is
     // not attested anywhere we may read.
@@ -182,25 +186,15 @@ public:
         WIDGET_SET_FOCUS = 64
     };
 
-    // Dreamcast: protected static widget* last_hover_widget
-    // (?last_hover_widget@widget@@1PAV1@A); retail .bss 0x6aac68,
-    // cleared by the dtor when the dying widget is the hoveree.
-    // Before normalization: last_hover_widget.
-    static widget* s_lastHoverWidget;
-
     // Retail body 0x5fe410 (dc 0x196bd4) - the default ctor really is
     // emitted; it is not an inlined-away static.
     widget();
     widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle);
-    // Before normalization (locals): _x, _y, _w, _h, _id, _style.
-    void initialize(int x, int y, int w, int h, int id, int style);
-    // Before normalization (function): widget::send_message.
-    int sendMessage(widget::ECommands command, int extra);
-    // Before normalization (function): widget::set_help_text.
-    void setHelpText(const char* text, const char* rclick, unsigned char copyText);
     // Keep the retail virtual slot order as one block. CodeView's header
     // bodies at 144/147 and 186/187 precede the text/status helpers below.
     virtual ~widget();                                      // slot 0
+    // Before normalization (locals): _x, _y, _w, _h, _id, _style.
+    void initialize(int x, int y, int w, int h, int id, int style);
     virtual int open(int newPriority, heroWindow* parent);  // slot 1
     // DC Main(message&) is shared by the widget overrides; retail passes
     // the same address through slot 2.
@@ -212,15 +206,27 @@ public:
     // Original Draw, zBufferDraw and Dim have const receivers in CodeView.
     // These hooks write to the destination bitmap through its pointer.
     virtual void draw() const = 0;                                // slot 4
-    VA(0x004021d0, 0x5)  // vtable slot 5 + exact height read, retail-only
-    virtual int getRealHeight() const { return m_height; }          // slot 5
-    VA(0x004021e0, 0x5)  // vtable slot 6 + exact width read, retail-only
-    virtual int getRealWidth() const { return m_width; }            // slot 6
+        virtual int getRealHeight() const;          // slot 5
+        virtual int getRealWidth() const;            // slot 6
     virtual void processHover();                           // slot 7
     virtual void dim() const;                                     // slot 8
     virtual void enable(unsigned char on);                  // slot 9
-    virtual void onSetFocus() {}                            // slot 10
-    virtual void onKillFocus() {}                           // slot 11
+    // Before normalization (function): widget::set_help_text.
+    void setHelpText(const char* text, const char* rclick, unsigned char copyText);
+    // Before normalization (function): widget::send_message.
+    int sendMessage(widget::ECommands command, int extra);
+    virtual void onSetFocus();                            // slot 10
+    virtual void onKillFocus();                           // slot 11
+
+protected:
+    // Dreamcast: protected static widget* last_hover_widget
+    // (?last_hover_widget@widget@@1PAV1@A); retail .bss 0x6aac68,
+    // cleared by the dtor when the dying widget is the hoveree.
+    // Before normalization: last_hover_widget.
+
+    static widget* s_lastHoverWidget;
+
+public:
     // Slot 12. DECLARED ONLY, exactly like Close: retail's body is the
     // empty `ret 4` that ICF folded to the shared 0x485d80, so it has
     // no claimable home, and leaving it undefined here is also what
@@ -228,22 +234,75 @@ public:
     // of an /Ob2-inlined nothing.
     virtual void vslot12(int on);                          // slot 12
 
+    // Dreamcast header inlines used by mode-switch paths.
+    void hide();
+    void show();
+
     // Dreamcast Widget.h:231. Retail callers reduce it to the +0x20
     // RollOver load, so no out-of-line body survives.
     // Before normalization (function): widget::get_help_text.
-    const char* getHelpText() const { return m_rollOver; }
+    const char* getHelpText() const;
     // Dreamcast Widget.h:236 header inline. CampaignBriefHandler folds this
     // exact RightClick-or-RollOver choice into its retail body.
-    const char* getRclickText() const
-    {
-        return m_rightClick ? m_rightClick : m_rollOver;
-    }
+    const char* getRclickText() const;
+    // DC-attested header inline (E:\gamedcs\Widget.h:263). Most retail
+    // callers fold this body into their owning function; the one COMDAT
+    // copy the linker retained (0x5629b0) is claimed in sacrifice_window.cpp.
+        void setVisible(unsigned char arg);
     // DC-attested name (?sleep@widget@@QAAX_N@Z, E:\gamedcs\Widget.h:244)
     // on a RETAIL-ONLY body: DC's inline is the WIDGET_ASLEEP status-bit
     // send_message, retail's is the nest counter below. Header-inline
     // in both builds - retail's only call site is heroWindow's slot-8
     // body 0x5ff5f0, where /Ob2 expands it in full.
-    void sleep(unsigned char on)
+    void sleep(unsigned char on);
+    // Non-virtual on DC and in retail: heroWindow::RemoveWidget calls
+    // it DIRECTLY (0x5bc690 - a /Gy header-COMDAT the link kept from an
+    // earlier obj, ICF-folded with other empty bodies). Declared only;
+    // no local definition, so calls stay extern.
+    // Before normalization (function): widget::Close.
+    static void clearHoverWidget();
+    void close();
+
+
+};
+SIZE(widget, 48);
+
+// CODEVIEW(E:\gamedcs\widget.cpp:106, dc 0x196bd4) void widget::widget();
+// CODEVIEW(E:\gamedcs\widget.cpp:152, dc 0x196c6c) void widget::initialize(int _x, int _y, int _w, int _h, int _id, int _style);
+// CODEVIEW(E:\gamedcs\widget.cpp:235, dc 0x196ccc) void widget::Close();
+
+
+// Header definitions follow their recorded source-line order; class declarations
+// retain the independently recorded member order and retail layout.
+
+// widget.h:144 (Dreamcast source body).
+VA(0x004021d0, 0x5)  // vtable slot 5 + exact height read, retail-only
+inline     int widget::getRealHeight() const { return m_height; }
+
+// widget.h:147 (Dreamcast source body).
+VA(0x004021e0, 0x5)  // vtable slot 6 + exact width read, retail-only
+inline     int widget::getRealWidth() const { return m_width; }
+
+// widget.h:186 (Dreamcast source body).
+inline void widget::onSetFocus() {}
+
+// widget.h:187 (Dreamcast source body).
+inline void widget::onKillFocus() {}
+
+// widget.h:225 (Dreamcast source body).
+inline void widget::clearHoverWidget() { s_lastHoverWidget = 0; }
+
+// widget.h:231 (Dreamcast source body).
+inline const char* widget::getHelpText() const { return m_rollOver; }
+
+// widget.h:236 (Dreamcast source body).
+inline const char* widget::getRclickText() const
+    {
+        return m_rightClick ? m_rightClick : m_rollOver;
+    }
+
+// widget.h:244 (Dreamcast source body).
+inline void widget::sleep(unsigned char on)
     {
         if (on) {
             if (m_sleepCount++ == 0)
@@ -254,39 +313,26 @@ public:
         }
     }
 
-    // Dreamcast header inlines used by mode-switch paths.
-    void hide()
+// widget.h:251 (Dreamcast source body).
+inline void widget::hide()
     {
         sendMessage(WIDGET_CLEAR_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
     }
-    void show()
+
+// widget.h:257 (Dreamcast source body).
+inline void widget::show()
     {
         sendMessage(WIDGET_SET_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
     }
-    // DC-attested header inline (E:\gamedcs\Widget.h:263). Most retail
-    // callers fold this body into their owning function; the one COMDAT
-    // copy the linker retained (0x5629b0) is claimed in sacrifice_window.cpp.
-    VA(0x005629b0, 0x22)  // hd-crossbuild; Widget.h:263, dc 0x56df8
-    void setVisible(unsigned char arg)
+
+// widget.h:263 (Dreamcast source body).
+VA(0x005629b0, 0x22)  // hd-crossbuild; Widget.h:263, dc 0x56df8
+inline     void widget::setVisible(unsigned char arg)
     {
         if (arg)
             sendMessage(WIDGET_SET_STATUS, WIDGET_DRAWN);
         else
             sendMessage(WIDGET_CLEAR_STATUS, WIDGET_DRAWN);
     }
-    // Non-virtual on DC and in retail: heroWindow::RemoveWidget calls
-    // it DIRECTLY (0x5bc690 - a /Gy header-COMDAT the link kept from an
-    // earlier obj, ICF-folded with other empty bodies). Declared only;
-    // no local definition, so calls stay extern.
-    // Before normalization (function): widget::Close.
-    void close();
-
-
-};
-SIZE(widget, 48);
-
-// CODEVIEW(E:\gamedcs\widget.cpp:106, dc 0x196bd4) void widget::widget();
-// CODEVIEW(E:\gamedcs\widget.cpp:152, dc 0x196c6c) void widget::initialize(int _x, int _y, int _w, int _h, int _id, int _style);
-// CODEVIEW(E:\gamedcs\widget.cpp:235, dc 0x196ccc) void widget::Close();
 
 #endif  /* HOMM3_WIDGET_H */

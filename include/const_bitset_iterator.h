@@ -23,6 +23,7 @@ public:
         return m_bits != other.m_bits || m_position != other.m_position;
     }
     size_t position() const { return m_position; }
+
 private:
     const std::bitset<N>* m_bits;
     size_t m_position;

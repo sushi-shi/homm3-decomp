@@ -37,28 +37,37 @@
 // Seven compact army slots, consumed only by initialize_army_display.
 // Retail's sole reference is 0x5309df and the 56-byte extent closes at the
 // next initialized datum (0x6823f0).
-// Before normalization: gQuickTownArmyPositions.
 DATA(0x006823b8) static int g_quickTownArmyPositions[7][2] = {
     {45, 84}, {81, 84}, {117, 84}, {27, 132},
     {63, 132}, {99, 132}, {135, 132}
 };
 
 // E:\gamedcs\quicktownwindow.cpp:39
-// EXACT: resource[0] drives the silo scan; resource[1] and resource[2]
-// hold its outputs. The former separate current local invented a fourth
-// dword and prevented retail's alias-sensitive counter reload. DC's typed
-// resource[3] location, its indexed stores and both icon consumers prove
-// the shared array, independently corroborated by retail. Five source states
-// emit two objects; both retained objects reproduce, with all seven module
-// functions exact after the correction. For/while and separate/prefix count
-// increment are byte-identical; the separated source follows DC85/86.
-// Keep all seven HasBuilding and canonical push_back calls. In the preceding
-// 24-state boundary family, restoring only the fort calls gave 94.9246;
-// restoring the four insert substitutes too held 98.8368. The former refusal
-// of the fort source calls on score alone was misleading. All six exact
-// siblings survive both corrections. No inliner pin or dummy call is used.
-// Before normalization (locals): view_level, town_size_name, hall_level, silo_income,
-// resource_count, castle_level, this_garrison.
+// Residual (98.8368%): all 36 branches and the single return agree, and what
+// is left is SEVEN BYTES, all inside the silo resource scan - see the note on
+// that loop. Every other instruction in the body now matches retail; the
+// remaining unified-diff rows are branch displacements and relocation
+// addends, neither of which is scored.
+// Superseded verdicts - they were measured against the 96.31 spelling and are
+// WRONG at the landed one: "evaluating the name accessor directly at the call
+// site 95.50%" is now +0.39 (see the name widget below) and "a named c_str
+// local 93.71". Still true: an EGameResource loop induction variable changes
+// nothing, and inline_depth(1) is byte-identical.
+// FIXED 2026-08-14, 96.3088 -> 98.4193, EXACTLY the titrated ceiling: the /Ob2
+// budget divisor solved in mainmenu.cpp. This constructor wanted FOUR more
+// inline-candidate call sites (xx_nop ladder: k=0 96.3088, k=4/5/6 all
+// 98.4193) and takes them the same way mainmenu and quickherowindow do - the
+// LAST FOUR widget insertions respelled from `push_back(x)` to
+// `insert(end(), x)`, which is two candidate sites instead of one, behind a
+// `std::vector<widget*>*` local. The local is what makes the pair byte-neutral:
+// the same four conversions naming `Widgets` directly are 94.9930, while the
+// local on its own is byte-flat at 96.3088. Position obeys the placement law
+// recorded in systemoptionswindow (extra sites only bite when they sit after
+// the widget list's last push_back): any four or more of the LATE insertions
+// reach the plateau, converting all ten is 89.6790. Also measured: the
+// systemoptionswindow registration guard is a real +2 here (97.6509) and nests
+// to +4 (98.2053) but never reaches the ceiling, and guard + two inserts is
+// 98.3983.
 VA(0x00530120, 0x67D)  // townqvbk/itpt literals + town helpers, dc 0x117e48
 TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TViewLevel viewLevel)
     : heroWindow(200, 200, 194, 186, 0x12)
@@ -185,8 +194,7 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
     }
 }
 
-// E:\gamedcs\quicktownwindow.cpp:149
-VA(0x005307d0, 0x145)  // garrison quick-view caller + literal, dc 0x1183b8
+VA(0x005307d0, 0x145)  // dc 0x1183b8
 TQuickTownWindow::TQuickTownWindow(const garrison* thisGarrison,
                                    TQuickTownWindow::TViewLevel viewLevel)
     : heroWindow(200, 200, 188, 182, 0x12)
@@ -204,11 +212,9 @@ TQuickTownWindow::TQuickTownWindow(const garrison* thisGarrison,
     }
 }
 
-// Retail emits the generated wrapper between the two constructors.
 VA_COMPGEN(0x005307a0, 0x21, SCALAR_DELETING_DTOR, TQuickTownWindow)
 
-// E:\gamedcs\quicktownwindow.cpp:170
-VA(0x00530920, 0x6B)  // vtable 0x6406f4 + heroWindow dtor, dc 0x1184c4
+VA(0x00530920, 0x6B)  // dc 0x1184c4
 TQuickTownWindow::~TQuickTownWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -217,25 +223,8 @@ TQuickTownWindow::~TQuickTownWindow()
     }
 }
 
-// E:\gamedcs\quicktownwindow.cpp:177
-// EXACT 2026-08-13 (82.95 -> 97.97 -> 98.57 -> 100.0). Each view-level arm
-// inserts its text widget directly; merging the pointer before push_back
-// merges the two allocation-failure edges too early. Coordinates advance only
-// for occupied army slots, packing the displayed stacks rather than preserving
-// garrison holes. Finally, std::ends is chained to the preceding insertion so
-// VC6 carries the returned stream in EAX. Retail also proves WHITE (4), not
-// PRIMARY (1), for both quantity labels. Dreamcast's numArmies and
-// quantity_text local names are retained in the exact source. DC types
-// quantity_text as char[256] and formats with sprintf; the PC body instead
-// constructs an ostrstream, inserts numbers/text, obtains str(), unfreezes
-// it and runs stream destruction. Those retained calls/EH paths prove the
-// platform change; replacing this stream with DC's buffer would remove them.
-// The source audit's destructor correlation gap does not alter the exact
-// delete loop or the byte-proven scalar deleting wrapper above.
-VA(0x00530990, 0x303)  // cprsmall.def + seven-slot coordinate table, dc 0x118564
+VA(0x00530990, 0x303)  // dc 0x118564
 void TQuickTownWindow::initializeArmyDisplay(
-    // Before normalization (locals): army_group, view_level, widget_id, current_army,
-    // quantity_text.
     const armyGroup& currentArmyGroup, TQuickTownWindow::TViewLevel viewLevel)
 {
     int numArmies = currentArmyGroup.getNumArmies();
@@ -243,10 +232,6 @@ void TQuickTownWindow::initializeArmyDisplay(
         return;
 
     int widgetId = ARMY_1_SPRITE_ID;
-    // DC lines 187/192/202/215 index armies and numTroops by the same
-    // slot; army_pos advances only for occupied slots (line 248).
-    // Neither a flat int* across coordinate rows nor a cross-member
-    // currentArmy[7] access represents those declared arrays.
     int displaySlot = 0;
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
         int creature = currentArmyGroup.m_armies[slot];
@@ -287,9 +272,7 @@ void TQuickTownWindow::initializeArmyDisplay(
     }
 }
 
-// E:\gamedcs\quicktownwindow.cpp:254
-// Before normalization (locals): new_x, new_y.
-VA(0x00530ca0, 0x84)  // clamps the 800x600-centered origin, dc 0x118794
+VA(0x00530ca0, 0x84)  // dc 0x118794
 void TQuickTownWindow::center(long newX, long newY)
 {
     m_x = limit(m_width / 2, newX,
@@ -298,8 +281,7 @@ void TQuickTownWindow::center(long newX, long newY)
               WINDOW_SCREEN_HEIGHT - m_height / 2 - 1) - m_height / 2;
 }
 
-// E:\gamedcs\quicktownwindow.cpp:260
-VA(0x00530d30, 0xD)  // retail ICF representative for all quick-view wrappers
+VA(0x00530d30, 0xD)
 void TQuickTownWindow::quickWindowWait()
 {
     g_windowManager->doQuickView(this);

@@ -39,7 +39,7 @@ DATA(0x00682378) static int g_armyPos[7][2] = {
 // calls, and widget push_back operations. Complete replaces quantity_text's
 // 100-byte sprintf buffer with an owning ostrstream; the per-arm textWidget
 // constructions and freeze(false) follow retail's EH lifetimes.
-//
+
 // Restoring those constructor scopes removes the former unclaimed helper,
 // whose only justification was caller-budget manipulation. The resulting
 // ostrstream construction expands basic_ostream and retains basic_ios::init
@@ -49,36 +49,19 @@ DATA(0x00682378) static int g_armyPos[7][2] = {
 // candidates emit init; none of the helper candidates do. Ordinary push_back
 // gives 94.1662% here, versus 92.7752% for insert(end(), value). Removing the
 // old mana pin is byte-flat in both contexts, so it is not retained.
-//
-// Binding the real widget vector by reference recovers 96.8447% and
-// retail's retained string::_Tidy at the mana full-expression cleanup.
-// All 111 CFG flows, 54 branches and 59 named calls now agree (the two
-// vector COMDAT names are folded retail representatives). A 40-state family
-// emitted 32 objects and reproduced ten retained states. Coordinate-value
-// captures did not improve the peak; split stream-output/terminator forms
-// scored lower. Allocation still precedes formatString, and the owning
-// ostrstream, separate quantity-widget arms and freeze(false) remain intact.
-// Residual: reserve's temporary stack home (-0x18 versus -0x14), primary-stat
-// address induction and downstream register choices. No current inlining
-// mismatch remains; the init helper and both destructors remain exact.
-// Canonical getPrimarySkill's direct member expressions subsequently raise
-// this to 97.5654%; its retained body stays exact and two other callers close.
-// The primary-stat address induction is therefore sensitive to the accessor's
-// source expression, even when its standalone bytes are unchanged.
-// A follow-up with that accessor tested 40 index-declaration, signed-bound
-// and POINT-capture states (eight reproduced objects), without improvement.
-// Retail compares the coordinate induction pointer with skillLoc+16/+32;
-// the best candidate still keeps an integer index for those comparisons.
-// Twelve prefix/postfix/compound counter-update states also reproduce one
-// unchanged object; counter-update spelling does not explain this residual.
-//
+
+// Residual (94.1662%): the first source difference is reserve's temporary
+// stack home (-0x18 versus -0x14); primary-stat addressing and register roles
+// also differ. The mana string's _Tidy now expands where retail calls it,
+// contributing four extra CFG blocks and three branches. Keep its meaningful
+// temporary lifetime rather than adding an inliner gate. The init helper and
+// both window destructors are independently exact.
+
 // Retained failed probes from the earlier context: sharing the troop-text
 // push after the arms loses their separate cleanup regions; indexed/shared
 // ostrstream construction scored 75.28%, a pointer primary-stat loop 85.31%,
 // a named mana string with a depth-zero destructor 85.07%, and a depth-zero
 // whole mana expression 86.54%. Those pins were diagnostics, not source.
-// Before normalization (locals): view_level, widget_id, disguise_creature,
-// current_army, town_type, current_count, quantity_text.
 VA(0x0052ead0, 0x8C8)  // heroqvbk.pcx + vtable/allocation block, dc 0x1170bc
 TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
     : heroWindow(200, 200, 194, 186, 0x12)
@@ -133,7 +116,6 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
     }
 
     if (viewLevel >= ViewSome && thisHero->m_army.getNumArmies() > 0) {
-        // Before normalization (locals): disguise_creature, current_army, town_type.
         int disguiseCreature = CREATURE_NONE;
         if (thisHero->m_disguiseLevel != TQuickHeroWindow::DisguiseInvalid &&
             thisHero->m_disguiseLevel <= TQuickHeroWindow::DisguiseAdvanced) {
@@ -222,8 +204,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
 
 VA_COMPGEN(0x0052f3a0, 0x21, SCALAR_DELETING_DTOR, TQuickHeroWindow)
 
-// E:\gamedcs\quickherowindow.cpp:214
-VA(0x0052f3d0, 0x6B)  // scalar-dtor callee + vtable 0x6406a8, dc 0x1177b4
+VA(0x0052f3d0, 0x6B)  // dc 0x1177b4
 TQuickHeroWindow::~TQuickHeroWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -232,13 +213,6 @@ TQuickHeroWindow::~TQuickHeroWindow()
     }
 }
 
-// Retail's ostrstream construction in the window constructor retains this
-// protected basic_ios<char>::init(streambuf*, bool) body: streambuf/tie/fill
-// stores at +0x28/+0x2c/+0x30, then ios_base::_Init, conditional clear(badbit),
-// and conditional _Addstd. It appears naturally when the disguise scans keep
-// their constructor scopes. Extracting those scans into the former single-use
-// helper instead retains the enclosing basic_ostream constructor and does
-// not emit this 71-byte specialization.
 VA_COMPGEN(0x0052f440, 0x47, BASIC_IOS_INIT, char)
 
 // E:\gamedcs\quickherowindow.cpp:221

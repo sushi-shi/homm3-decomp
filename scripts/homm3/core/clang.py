@@ -28,7 +28,7 @@ compilers agree on the mangled name, and nothing more:
 THE INCLUDE MIRROR. VC6 ships its headers UPPERCASE (`BITSET`, `VECTOR`,
 `STRING`) and its STL predates the standard it targets, so on a
 case-sensitive filesystem clang cannot even open `<bitset>`, and once it
-can, seven headers do not parse. `mirror()` generates a symlink farm under
+can, several headers still need compatibility fixes. `mirror()` generates a symlink farm under
 lowercase names and replaces exactly the files that need a conformance fix
 (see PATCHES - each entry states what cl accepts and clang does not). The
 real toolchain headers are never touched: only cl reads those, and only
@@ -57,7 +57,7 @@ MIRROR = common.HOMM3_DIR / "build/gen/msvc-include"
 STAMP = MIRROR / ".mirror-stamp"
 
 #: Bumped whenever PATCHES changes, so an existing mirror regenerates.
-PATCH_VERSION = 5
+PATCH_VERSION = 7
 
 TARGET = "i686-pc-windows-msvc"
 MSC_VER = "1200"
@@ -159,6 +159,7 @@ def _qualify_ios_enumerators(names):
     return apply
 
 
+
 #: {mirror file name: rewrite}. Every entry states, in its rewrite's
 #: docstring, what cl accepts that clang does not.
 PATCHES = {
@@ -189,7 +190,7 @@ def mirror() -> Path | None:
     """The generated lowercase, conformance-patched VC6 include tree.
 
     Regenerated whenever the toolchain root or PATCH_VERSION changes; the
-    symlinks cost nothing and the patched copies are 7 small files."""
+    symlinks cost nothing and only headers requiring conformance fixes are copied."""
     root = msvc_dir() / "include"
     if not root.is_dir():
         return None

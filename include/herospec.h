@@ -1,5 +1,5 @@
 // herospec.h - the secondary-skill domain and the hero specialty table.
-//
+
 // A dedicated domain header shared by Hero.h, Army.h and the AI headers.
 // Dreamcast CodeView records one TSkillMastery enum across those interfaces;
 // keeping it here prevents the former per-subsystem int/enum twins from
@@ -96,7 +96,6 @@ enum THeroAbilityKind {
 };
 
 struct THeroSpecificAbility {
-    // Before normalization: type.
     int m_type;                   // +0x00 - a THeroAbilityKind
     // +0x04 under TWO domains. hero::GetMobility reads it as a CREATURE
     // for kind 1 and hands it to UpgradedCreatureType, which takes a
@@ -106,9 +105,7 @@ struct THeroSpecificAbility {
     // because herospec.h does not include armygrp.h and several TUs
     // (advmgr.cpp, findpath.cpp) reach this header before it.
     union {
-        // Before normalization: skill.
         TSecondarySkill m_skill;       // +0x04 - valid for kind 0
-        // Before normalization: creature.
         enum TCreatureType m_creature; // +0x04 - valid for kind 1
     };
     // +0x08/+0x0c/+0x10, the FLAT creature bonuses kinds 4 and 7 add.
@@ -117,20 +114,15 @@ struct THeroSpecificAbility {
     // BOTH damage bounds. Sliced out of the pad only in this view, so
     // findpath.cpp and game.cpp keep their declarator count unchanged;
     // SIZE below is unaffected. NH3API supplies the spellings.
-    // Before normalization: creatureAttackBonus.
     int m_creatureAttackBonus;    // +0x08
-    // Before normalization: creatureDefenseBonus.
     int m_creatureDefenseBonus;   // +0x0c
-    // Before normalization: creatureDamageBonus.
     int m_creatureDamageBonus;    // +0x10
     // +0x14 / +0x18, sliced out of the pad 2026-08-20 by game::ViewArmy
     // (0x4c6c50) - the only reader of either. For kind 6 the record
     // names TWO creatures it will upgrade, the one at +0x04 and this
     // second one, and +0x18 is what both become. Elaborated enum for the
     // reason the union above is: herospec.h does not include armygrp.h.
-    // Before normalization: upgradeAlternateSubject.
     enum TCreatureType m_upgradeAlternateSubject;  // +0x14
-    // Before normalization: upgradeResult.
     enum TCreatureType m_upgradeResult;            // +0x18
     // +0x1c, the one-line specialty label. Retail's own 17-byte getter at
     // 0x4d7220 is nothing but `return akHeroSpecificAbilities[id].<+0x1c>;`,
@@ -142,7 +134,6 @@ struct THeroSpecificAbility {
     // / GetSpecificAbilityTextShort) owns which offset is an INFERENCE -
     // only "the 17-byte retail getter returns +0x1c" is proof, so the
     // name here is role-derived.
-    // Before normalization: shortText.
     const char* m_shortText;      // +0x1c
     // +0x20, the MIDDLE of the three consecutive herospec.txt columns
     // InitializeHeroSpecificAbilitiesTable (0x4d71a0) copies into every row -
@@ -150,14 +141,12 @@ struct THeroSpecificAbility {
     // spreadsheet line. Nothing in the admitted surface reads it, so the name
     // is role-derived from its position between the short label and the long
     // description; the pad it replaces was the same four bytes.
-    // Before normalization: mediumText.
     const char* m_mediumText;     // +0x20
     // +0x24, the LONG description the note above predicted. Landed
     // 2026-08-20 by the consumer it names: THeroScreenWindow::
     // WindowHandler's specialty arm strcpy's exactly this displacement
     // into gText before the describe dialog. Sliced only in hero.obj's
     // view so no other compiland's declarator count moves.
-    // Before normalization: longText.
     const char* m_longText;       // +0x24
 };
 SIZE(THeroSpecificAbility, 40);
@@ -176,7 +165,6 @@ SIZE(THeroSpecificAbility, 40);
 // reference begins (0x679c80 - 0x678420 = 6240 = 156 * 40) - and its own
 // entry guard demands at least 158 spreadsheet rows, the two header lines
 // plus those 156.
-// Before normalization: akHeroSpecificAbilities.
 extern const THeroSpecificAbility (&g_heroSpecificAbilities)[156];
 
 #endif  /* HOMM3_HEROSPEC_H */

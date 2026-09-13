@@ -22,13 +22,6 @@ public:
         MOBILE_HERO_CELL_Y = 8
     };
 
-    // Before normalization: obscuring_hero.
-    hero* m_obscuringHero;
-    // Before normalization: obscuring_boat.
-    boat* m_obscuringBoat;
-    // Before normalization: mobile_hero.
-    hero* m_mobileHero;
-
     // Ordinary DC constructor; body stays in advmgr.cpp before its callers.
     type_cell_adjuster();
     ~type_cell_adjuster();
@@ -37,6 +30,15 @@ public:
     NewmapCell* getTriggerCell(NewmapCell* mapCell, int x, int y);
     // Before normalization (function): type_cell_adjuster::restore_cell.
     void restoreCell();
+
+protected:
+    // Before normalization: obscuring_hero.
+
+    hero* m_obscuringHero;
+    // Before normalization: obscuring_boat.
+    boat* m_obscuringBoat;
+    // Before normalization: mobile_hero.
+    hero* m_mobileHero;
 };
 SIZE(type_cell_adjuster, 0xc);
 

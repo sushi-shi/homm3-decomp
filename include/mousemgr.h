@@ -29,6 +29,9 @@ struct IDirectDrawSurface;
 // SPointerSprite bootstrap view is retired.
 
 class mouseManager : public baseManager {
+    // DC wingraph.cpp:1789 and retail 0x601a00 call private LoadFrame.
+    friend unsigned char ddSetFullScreenStatus(int newStatus);
+
 public:
     // DC CodeView enum mouseManager::EPointerSet, verbatim (the kb.cpp
     // roster attests GetSet() returning it). field_4c holds the
@@ -97,17 +100,52 @@ public:
     // Before normalization (function): mouseManager::Main.
     virtual int main(message& msg);      // slot 2, folded onto 0x4ec560
     virtual ~mouseManager();
-    void mouseCoords(int& x, int& y);
-    // DC mousemgr.cpp:934; ordinary helper used by Update and ShowPointer.
-    void getPointerPosition();
+
+    // Before normalization (function): mouseManager::HidePointer.
+    void hidePointer();
+    // Before normalization (function): mouseManager::ShowPointer.
+    void showPointer(bool restore);
+    // Before normalization (function): mouseManager::ShowSystemCursor.
+    // Before normalization (locals): show_it.
+    void showSystemCursor(bool showIt);
+
     // Before normalization (function): mouseManager::SetPointer.
     // Before normalization (locals): new_frame, new_set.
     void setPointer(int newFrame, EPointerSet newSet);
+    void mouseCoords(int& x, int& y);
     // Before normalization (function): mouseManager::Update.
     // Before normalization (locals): bForceIt.
     void update(bool forceIt);
+    // Before normalization (function): mouseManager::CheckUpdate.
+    void checkUpdate();
+    // E:\gamedcs\MouseMgr.h:210/215. Dreamcast emits these header helpers
+    // in kb.obj/adventuremapwindow.obj; Complete folds both into direct loads.
+    // DC MouseMgr.h:189-200 (Enable/Disable) returns DisableCount without
+    // mutating it in this build. SetPointer discards both results.
+    int enable();
+    int disable();
+
+    // Before normalization (function): mouseManager::Reset.
+    void reset();                 // 0x50cc80
+    // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this
+    // source helper while Complete's /Ob2 lowers it to the field_68 test.
+    // Before normalization (function): mouseManager::IsVis.
+    unsigned char isVis() const;
+
+    int getFrame() const;
+    EPointerSet getSet() const;
+
+private:
+    // DC MouseMgr.h:204/205, dc 0xff774: header-inline busy test.
+
+    bool isBusy() const;
+    // Before normalization (function): mouseManager::LoadFrame.
+    // Before normalization (locals): new_frame.
+
+    void loadFrame(int newFrame);
     // Before normalization (function): mouseManager::SaveAndDraw.
     // Before normalization (locals): dst_surface, save_surface, dst_rect.
+
     void saveAndDraw(IDirectDrawSurface* dstSurface,
                      IDirectDrawSurface* saveSurface,
                      const RECT& dstRect, int x, int y);
@@ -115,40 +153,9 @@ public:
     void restoreUnderlying(IDirectDrawSurface* surface,
                            // Before normalization (locals): dst_rect.
                            const RECT& dstRect);
-    // Before normalization (function): mouseManager::HidePointer.
-    void hidePointer();
-    // Before normalization (function): mouseManager::ShowPointer.
-    void showPointer(bool restore);
-    // E:\gamedcs\MouseMgr.h:210/215. Dreamcast emits these header helpers
-    // in kb.obj/adventuremapwindow.obj; Complete folds both into direct loads.
-    // DC MouseMgr.h:189-200 (Enable/Disable) returns DisableCount without
-    // mutating it in this build. SetPointer discards both results.
-    int enable() { return m_disableCount; }
-    int disable() { return m_disableCount; }
-    // DC MouseMgr.h:204/205, dc 0xff774: header-inline busy test.
-    bool isBusy() const { return m_busy != 0; }
-    int getFrame() const
-    {
-        return m_frame;
-    }
-    EPointerSet getSet() const
-    {
-        return m_set;
-    }
-    // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this
-    // source helper while Complete's /Ob2 lowers it to the field_68 test.
-    // Before normalization (function): mouseManager::IsVis.
-    unsigned char isVis() const { return m_hideCount == 0; }
-    // Before normalization (function): mouseManager::CheckUpdate.
-    void checkUpdate();
-    // Before normalization (function): mouseManager::LoadFrame.
-    // Before normalization (locals): new_frame.
-    void loadFrame(int newFrame);
-    // Before normalization (function): mouseManager::Reset.
-    void reset();                 // 0x50cc80
-    // Before normalization (function): mouseManager::ShowSystemCursor.
-    // Before normalization (locals): show_it.
-    void showSystemCursor(bool showIt);
+    // DC mousemgr.cpp:934; ordinary helper used by Update and ShowPointer.
+
+    void getPointerPosition();
 };
 
 // Retail .bss 0x699260 (DC ?gpMouseManager@@3PAVmouseManager@@A).
@@ -191,5 +198,33 @@ extern IDirectDrawSurface* g_ddsMouseScratchSurface;  // 0x6aaccc
 // CODEVIEW(E:\gamedcs\mousemgr.cpp:1120, dc 0xff708) void mouseManager::ShowSystemCursor(unsigned char show_it);
 // CODEVIEW(E:\gamedcs\MouseMgr.h:204, dc 0xff774) unsigned char mouseManager::isBusy();
 // CODEVIEW(E:\gamedcs\mousemgr.cpp:332, dc 0xff818) void* mouseManager::`scalar deleting destructor'(unsigned __flags);
+
+
+// Header definitions follow their recorded source-line order; class declarations
+// retain the independently recorded member order and retail layout.
+
+// mousemgr.h:189 (Dreamcast source body).
+inline int mouseManager::enable() { return m_disableCount; }
+
+// mousemgr.h:197 (Dreamcast source body).
+inline int mouseManager::disable() { return m_disableCount; }
+
+// mousemgr.h:204 (Dreamcast source body).
+inline bool mouseManager::isBusy() const { return m_busy != 0; }
+
+// mousemgr.h:210 (Dreamcast source body).
+inline int mouseManager::getFrame() const
+    {
+        return m_frame;
+    }
+
+// mousemgr.h:215 (Dreamcast source body).
+inline mouseManager::EPointerSet mouseManager::getSet() const
+    {
+        return m_set;
+    }
+
+// mousemgr.h:221 (Dreamcast source body).
+inline unsigned char mouseManager::isVis() const { return m_hideCount == 0; }
 
 #endif  /* HOMM3_MOUSEMGR_H */
