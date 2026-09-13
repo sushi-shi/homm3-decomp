@@ -470,7 +470,9 @@ public:
     }
     // Before normalization (function): ExtraInfoUnion::GetScholarPrimarySkill.
     TPrimarySkill getScholarPrimarySkill() const
-    { return primarySkillFromInt(m_scholarInfo.m_primary); }
+    {
+        return primarySkillFromInt(m_scholarInfo.m_primary);
+    }
     // Before normalization (function): ExtraInfoUnion::GetScholarSecondarySkill.
     TSecondarySkill getScholarSecondarySkill() const
     {

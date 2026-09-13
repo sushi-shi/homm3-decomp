@@ -217,14 +217,18 @@ public:
     // constructor in place: CAdvMgrNetMsgHandler's constructor remains a
     // call, followed by the derived vptr and resource-display stores.
     CTownNetMsgHandler(TResourceDisplay* display)
-    { m_resourceDisplay = display; }
+    {
+        m_resourceDisplay = display;
+    }
     // Four bytes on the Dreamcast and no retail row of its own, so it
     // is a header one-liner every caller expands: DoHall 0x5d27b0
     // emits the bare `mov [handler+0xc], bar` at both of its two
     // hand-over sites.
     // Before normalization (function): CTownNetMsgHandler::SetResourceDisplay.
     void setResourceDisplay(TResourceDisplay* display)
-    { m_resourceDisplay = display; }
+    {
+        m_resourceDisplay = display;
+    }
     // Before normalization (function): CTownNetMsgHandler::HandleGiftMsg.
     // Before normalization (locals): pNetMsg.
     void handleGiftMsg(CNetMsg* netMsg);
