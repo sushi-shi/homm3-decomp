@@ -157,6 +157,7 @@ public:
     CTeamAlignmentDlg(unsigned char newGameMode);  // retail 0x5764d0
     // Before normalization (function): CTeamAlignmentDlg::CreateWin.
     unsigned char createWin();
+
 protected:
     // Before normalization (function): CTeamAlignmentDlg::GetTeams.
     void getTeams();

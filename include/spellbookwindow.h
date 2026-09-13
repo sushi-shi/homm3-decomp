@@ -95,7 +95,6 @@ public:
 
     class TSpellbookEntry {
     public:
-
         TSpellbookEntry(SpellID id, TSpellSchool school,
                         int mastery)
             : m_id(id), m_school(school), m_mastery(mastery)
@@ -138,8 +137,8 @@ public:
     static void reset();
     // Before normalization (function): TSpellbookWindow::WindowHandler.
     virtual int windowHandler(message* msg);
-private:
 
+private:
     // Before normalization: AllowedContext.
     const TSpellContext m_allowedContext;       // +0x60
     // Before normalization: Hero.

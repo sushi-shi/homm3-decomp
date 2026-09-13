@@ -30,7 +30,6 @@ public:
 // TU (only forward-declared in the shared header).
 class CDPlayAddressElement {
 public:
-
     GUID m_guid;              // +0x00
     // Before normalization: m_pData.
     char* m_data;            // +0x10

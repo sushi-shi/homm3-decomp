@@ -74,7 +74,6 @@ enum TRawRowUnrollEntry {
 
 class CSpriteFrame : public resource {
 public:
-
     CSpriteFrame(const char* name, int w, int h, unsigned char* data,
                  int csize, TEncodingMethod encoding);
     CSpriteFrame(const char* name, int w, int h, unsigned char* data,
@@ -86,8 +85,8 @@ public:
     static TBlendMask s_div2mask;
     // Before normalization: div4mask.
     static unsigned short s_div4mask;
-private:
 
+private:
     // Before normalization: DataSize.
     int m_dataSize;
     // Before normalization: ImageSize.
@@ -110,6 +109,7 @@ private:
     int m_pitch;
     // Before normalization: map.
     unsigned char* m_map;
+
 public:
     // Before normalization (function): CSpriteFrame::GetSize.
     virtual unsigned int getSize() const;
@@ -218,6 +218,7 @@ public:
     // Before normalization (function): CSpriteFrame::SetPixelFormat.
     static void setPixelFormat(unsigned rmask, unsigned gmask,
                                unsigned bmask);
+
 private:
     // Before normalization (function): CSpriteFrame::DrawCreatureImpl.
     void drawCreatureImpl(int sx, int sy, int sw, int sh,

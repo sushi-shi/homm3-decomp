@@ -33,6 +33,7 @@ public:
     {
         return getVersionInfo("ProductVersion", productVersion);
     }
+
 private:
     // Before normalization (function): TFileVersionInfo::GetVersionInfo.
     unsigned char getVersionInfo(const char* name, std::string* buffer);

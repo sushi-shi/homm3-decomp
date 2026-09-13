@@ -79,6 +79,7 @@ public:
     // by the byte-proven eight-byte CAdvPopup widening; the constructor and
     // modal/callback bodies independently corroborate every used offset.
     // Before normalization: current_hero.
+
 protected:
     hero* m_currentHero;                       // +0x60
     // Before normalization: purchase_button.
@@ -97,8 +98,8 @@ protected:
     std::vector<widget*> m_selectionWidgets;    // +0xd8
     // Before normalization: purchase_widgets.
     std::vector<widget*> m_purchaseWidgets;     // +0xe8
-public:
 
+public:
     // Retail 0x5ef500. `bTownUniversity` is the retail-added third
     // parameter the Dreamcast pair does not have, and both image-wide
     // call sites name it: the map object's visit (0x4aa526) passes 0,
@@ -120,16 +121,17 @@ public:
     // through widget::parentWindow; Complete keeps that exact relationship.
     // Before normalization (function): type_university_window::skill_click.
     void skillClick(TSecondarySkill skill);
-protected:
 
+protected:
     // Before normalization (function): type_university_window::handle_widget_hover.
     // Before normalization (locals): current_widget.
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
+
 public:
     // Before normalization (function): type_university_window::ExitDialog.
     virtual int exitDialog(message* msg);  // slot 14
-protected:
 
+protected:
     // Before normalization (function): type_university_window::set_selection_mode.
     void setSelectionMode();
     // Before normalization (function): type_university_window::update_skill_button.

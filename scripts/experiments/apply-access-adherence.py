@@ -155,6 +155,28 @@ def remove_empty_access_labels(text: str) -> str:
     return text
 
 
+def format_access_label_spacing(text: str) -> str:
+    """Separate access sections before the label, never after it."""
+    labels = re.compile(r"^[ \t]*(?:public|private|protected):[^\n]*\n", re.M)
+    masked = mask_lexical_noise(text)
+    for label in reversed(list(labels.finditer(masked))):
+        if text[label.start():label.end()].rstrip().endswith("\\"):
+            continue
+        gap = re.match(r"(?:[ \t]*\n)+", text[label.end():])
+        if gap:
+            text = text[:label.end()] + text[label.end() + gap.end():]
+        preceding = re.search(r"(?:^[ \t]*\n)+\Z", text[:label.start()], re.M)
+        start = preceding.start() if preceding else label.start()
+        code = masked[:start].rstrip().splitlines()
+        previous = code[-1].strip() if code else ""
+        # The first label follows the class opening directly. Directives are
+        # boundaries; do not insert whitespace into a macro continuation.
+        separator = ("\n" if previous and not previous.endswith(("{", "\\"))
+                     and not previous.startswith("#") else "")
+        text = text[:start] + separator + text[label.start():]
+    return text
+
+
 def remove_redundant_access_labels(text: str) -> str:
     """Remove repeated access in one brace scope; branch directives are barriers."""
     text = remove_empty_access_labels(text)
@@ -186,7 +208,7 @@ def remove_redundant_access_labels(text: str) -> str:
             access[-1] = current
     for start, end in reversed(edits):
         text = text[:start] + text[end:]
-    return text
+    return format_access_label_spacing(text)
 
 
 def apply_file(path: str, inserts: list[tuple[int, bool, str]]):

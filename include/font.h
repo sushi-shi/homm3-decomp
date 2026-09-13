@@ -134,11 +134,13 @@ public:
     // on this+0x103c as a member initializer (unwind state 1, funclet
     // 0x62b4d8 destroys exactly this subobject).
     // Before normalization: palette.
+
 private:
     TPalette16 m_palette;
     // DC LF_MEMBER `Data`.
     // Before normalization: data.
     void* m_data;
+
 public:
     // The glyph payload's byte count, byte-proven by GetSize below: the
     // whole class is 0x1260 and the only member past `data` is the dword
@@ -179,11 +181,12 @@ public:
     int getCharacterWidth(unsigned char currChar) const;
     // Before normalization (function): font::get_string_width.
     long getStringWidth(const char* arg);
-private:
 
+private:
     // Before normalization (function): font::DrawStringExecute.
     // Before normalization (locals): color_scheme.
     void drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, int colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
+
 public:
     // Retail 0x4b5b90, font.obj's tail. The `fs.abc[' ']` triple it reads
     // at this+0x1bc/0x1c0/0x1c4 is what types the receiver as a font and

@@ -11,7 +11,6 @@
 class CTimer
 {
 public:
-
     void start()
     {
         if (m_enabled) {
@@ -44,8 +43,8 @@ public:
           m_isRunning(0), m_enabled(enabled)
     {
     }
-private:
 
+private:
     // Before normalization: startTime.
     unsigned long m_startTime;
     // Before normalization: stopTime.

@@ -39,6 +39,7 @@ public:
     };
 
     // Before normalization: Towns.
+
 private:
     std::vector<int> m_towns;
     // Before normalization: topTown.
@@ -47,8 +48,8 @@ private:
     int m_selectedTown;
     // Before normalization: adventure_spell.
     bool m_adventureSpell;
-public:
 
+public:
     // Before normalization (locals): adventure_spell.
     TTownGateWindow(bool adventureSpell);
     virtual ~TTownGateWindow();
@@ -56,8 +57,10 @@ public:
     // Before normalization (locals): new_town.
     void addTown(int newTown);
     // Before normalization (function): TTownGateWindow::UpdateTownLocator.
+
 private:
     void updateTownLocator(int i);
+
 public:
     // Before normalization (function): TTownGateWindow::UpdateTownLocators.
     // DC callback 0x169ba8 calls this private method; retail 0x5c2980 agrees.
@@ -66,6 +69,7 @@ public:
     void doModal();
     // Before normalization (function): TTownGateWindow::WindowHandler.
     virtual int windowHandler(message* msg);
+
 private:
     void updateTownLocators();
 };

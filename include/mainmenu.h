@@ -56,6 +56,7 @@ public:
 
     // Before normalization: bShowCDMessage.
     unsigned char m_showCdMessage;
+
 private:
     // Before normalization: pad_4d.
     // The preceding byte field and following four-byte field establish

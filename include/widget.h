@@ -98,12 +98,14 @@ public:
     // Before normalization: height.
     short m_height;
     // Before normalization: RollOver.
+
 protected:
     char* m_rollOver;
     // Before normalization: RightClick.
     char* m_rightClick;
     // Before normalization: freeText.
     unsigned char m_freeText;
+
 public:
     // Sleep nesting depth; see the CORRECTION note above. Name is the
     // house ordinal placeholder - the role is proven, the spelling is
@@ -280,13 +282,14 @@ public:
     virtual void onSetFocus() {}                            // slot 10
     // Before normalization (function): widget::OnKillFocus.
     virtual void onKillFocus() {}                           // slot 11
-protected:
 
+protected:
     // Dreamcast: protected static widget* last_hover_widget
     // (?last_hover_widget@widget@@1PAV1@A); retail .bss 0x6aac68,
     // cleared by the dtor when the dying widget is the hoveree.
     // Before normalization: last_hover_widget.
     static widget* s_lastHoverWidget;
+
 public:
     // Slot 12. DECLARED ONLY, exactly like Close: retail's body is the
     // empty `ret 4` that ICF folded to the shared 0x485d80, so it has

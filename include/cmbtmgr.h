@@ -494,6 +494,7 @@ public:
         // Before normalization: spriteName.
         const char* m_spriteName;
     };
+
 private:
     // Before normalization: ObstacleInfo.
     static const TObstacleInfo s_obstacleInfo[];
@@ -534,8 +535,8 @@ private:
     };
     // Before normalization: sElevationOverlay.
     static const SElevationOverlay s_elevationOverlay[34];
-public:
 
+public:
     // Retail writes only name/hitpoints here; Dreamcast CodeView supplies
     // the intervening field identities and confirms the 36-byte extent.
     struct TWallTraits {
@@ -561,10 +562,11 @@ public:
         short m_tailPadding;
     };
     // Before normalization: akWallTraits.
+
 private:
     static TWallTraits s_wallTraits[9][18];
-public:
 
+public:
     // Dreamcast CodeView records this exact nested type and the public static
     // `combatManager::wallTargets` member. Retail independently proves the
     // 0xc-byte row, all five fields, and the eight-row extent. Keeping the
@@ -1360,8 +1362,10 @@ public:
     // start at +0x13d78. This byte aligns the records, as in Dreamcast.
     char m_paddingBeforeArchers[0x1];
     // Before normalization: archers.
+
 private:
     TArcher m_archers[3];               // +0x13d78; armySlot at +0x20
+
 public:
     // "Move order is reversed for this combat": find_move_order
     // (0x41f179) reads it through the gpCombatManager GLOBAL - not
@@ -1424,8 +1428,10 @@ public:
     // The battle's packed adventure-map coordinate. GetBackgroundName
     // passes it by value to advManager::MoreTreesNear.
     // Before normalization: mapPoint.
+
 private:
     type_point m_mapPoint;              // +0x13ff0
+
 public:
     // Before normalization: combatCellGridBitmap.
     Bitmap816* m_combatCellGridBitmap;   // +0x13ff4
@@ -1653,6 +1659,7 @@ public:
     unsigned char hexIsBlocked(int index) const;
     // Before normalization (function): combatManager::IsInMoat.
     unsigned char isInMoat(int hex, int* index);
+
 private:
     // Before normalization (function): combatManager::LoadIcons.
     void loadIcons();
@@ -1660,6 +1667,7 @@ private:
     void freeIcons();
     // Before normalization (function): combatManager::DoorCanBeLowered.
     unsigned char doorCanBeLowered() const;
+
 public:
     // Complete-only moat damage worker; its sole caller passes the entered
     // hex, moving stack and a byte sound-control flag.
@@ -1698,11 +1706,13 @@ public:
     void removeObstacle(int index);
     // Before normalization (function): combatManager::PlaceAllObstacles.
     void placeAllObstacles();
+
 private:
     // Before normalization (function): combatManager::SetupAdjacencyArray.
     void setupAdjacencyArray();
     // Before normalization (function): combatManager::UpdateArmyGroup.
     void updateArmyGroup(int whichSide);
+
 public:
     // Before normalization (function): combatManager::PlaceLargeObstacle.
     // Before normalization (locals): terrain_mask, special_terrain_mask.
@@ -1734,12 +1744,14 @@ public:
     void updateCombatArea();                                  // 0x493780
     // Before normalization (function): combatManager::HandleCombatPlayerDrop.
     unsigned char handleCombatPlayerDrop(unsigned long dpid, message* msg);
+
 private:
     // Complete's nullary adapter at 0x474ba0 selects the acting stack and
     // forwards it to the one-argument body at 0x474bf0. UpdateGrid is its
     // only retail caller; DC retains the nullary source signature.
     // Before normalization (function): combatManager::is_computer_action.
     unsigned char isComputerAction();
+
 public:
     // Complete's large overload has a force-refresh flag absent from the DC
     // signature. The small wrapper passes zero; the spell animation path
@@ -1897,11 +1909,13 @@ public:
     {
         return index % COMBAT_GRID_ROW_STRIDE;
     }
+
 private:
     // Before normalization (function): combatManager::ComputeExtent.
     void computeExtent(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits, int isFlipped,
                        unsigned char saveBiggestExtent);
+
 public:
     // Dreamcast's spells.cpp helper. CastSpell calls this boundary while
     // placing Fire Wall segments; retail VC6 expands it into the row-parity
@@ -2023,8 +2037,10 @@ public:
     // retail-supported source hypothesis: bytes do not distinguish it from
     // an unrecorded inline wrapper, and no original friend syntax survives.
     friend void army::rangeAttack();
+
 private:
     void keepAttack(int towerPos);                           // 0x465ad0
+
 public:
     // Retail-only tower AI helper. Its body/callers prove the signature
     // but no roster row supplies a name, so it retains an address ordinal.
@@ -2134,6 +2150,7 @@ public:
         else
             m_creatureEffect[group][index] = 1;
     }
+
 private:
     // Before normalization (function): combatManager::choose_to_run.
     // Before normalization (locals): our_army, enemy_attacks, search_array.
@@ -2154,6 +2171,7 @@ private:
     unsigned char moveToward(const army* currentArmy, long targetHex,
                               const long* enemyAttacks,
                               unsigned char considerWaiting);  // 0x41f580
+
 public:
     // The moat twin of mark_firewalls, retail-only: 0x421590 walks the
     // eleven gMoatColumns entries and subtracts the moat's
@@ -2172,6 +2190,7 @@ public:
     // Before normalization (locals): best_value.
     unsigned char chooseCyclopsAction(long bestValue, long side,
                                         type_AI_combat_parameters* estimate);
+
 private:
                                                               // 0x420260
     // Before normalization (function): combatManager::choose_creature_spell.
@@ -2252,6 +2271,7 @@ private:
         // Before normalization (locals): current_army, best_value.
         const army* currentArmy, long& bestValue,
         type_AI_combat_parameters& estimate);                 // 0x420f00
+
 public:
     // Before normalization (function): combatManager::berserk_attack.
     // Before normalization (locals): current_army.
@@ -2357,6 +2377,7 @@ public:
     // through gpCombatManager with (army::combatSide, hex).
     // Before normalization (function): combatManager::is_outside_placement_boundry.
     unsigned char isOutsidePlacementBoundry(int group, int index);
+
 private:
     // Before normalization (function): combatManager::automate_catapult.
     unsigned char automateCatapult();                         // 0x473c00
@@ -2417,6 +2438,7 @@ private:
     // Before normalization (function): combatManager::simulate_melee_attack.
     void simulateMeleeAttack(army* currentArmy, army* target,
                                long ourGroup);                  // 0x4227a0
+
 public:
     // 0x474bf0. `ret 4` proves the retail body takes the acting stack
     // that the DC roster's nullary prototype omits; the body reaches
@@ -2571,9 +2593,11 @@ public:
     // there already; declared here because AddArmy calls it.
     // Before normalization (function): combatManager::ComputeMaxExtent.
     void computeMaxExtent();
+
 private:
     // Before normalization (function): combatManager::get_surrender_cost.
     long getSurrenderCost();                                 // 0x477a00
+
 public:
     // The three cells a WALL spell occupies, in the order
     // ValidSpellTarget (0x5a39c0) walks them: the aimed hex, then the
@@ -2709,6 +2733,7 @@ public:
     // Before normalization (function): combatManager::display_failure_reason.
     void displayFailureReason(SpellID spell, const char* msg,
                                 long hex);                     // 0x5a2c60
+
 private:
     // The refusal text display_failure_reason shows; DC spells.cpp:1807
     // returns it by value, and retail's callers pass the hidden return
@@ -2716,6 +2741,7 @@ private:
     // Before normalization (function): combatManager::get_failure_reason.
     std::string getFailureReason(SpellID spell, const char* msg,
                                    long hex);                  // 0x5a2880
+
 public:
     // The two spells.obj area collectors that fill a vector of HEXES -
     // the inner halves of the two vector<army*> collectors declared far
@@ -2928,6 +2954,7 @@ public:
                                    long creatureSpell);
     // Before normalization (function): combatManager::find_animate_dead_target.
     army* findAnimateDeadTarget(int armyGroup, int targetIndex);
+
 private:
     // 0x5a3950, the selector in front of the two rows above: it bounds the
     // hex against the 187-cell grid, routes Resurrection and the gated
@@ -2940,6 +2967,7 @@ private:
                             // Before normalization (locals): first_target, creature_spell.
                             unsigned char firstTarget,
                             long creatureSpell);   // 0x5a3950
+
 public:
     // WHO cast the spell ShowSpellMessage is about to announce. The DC
     // roster calls the parameter `bIsMonsterSpell`, but retail's body
@@ -3095,6 +3123,7 @@ public:
     unsigned char nextArmy(unsigned char checkingForBadMorale);
     // Before normalization (function): combatManager::SetNextArmy.
     void setNextArmy(int group, int index);
+
 private:
     // DC ?LoadArmies@combatManager@@AAAX_N@Z - PRIVATE on the Dreamcast
     // (`A` access), which costs nothing here and is recorded rather than
@@ -3102,6 +3131,7 @@ private:
     // Before normalization (function): combatManager::LoadArmies.
     // Before normalization (locals): is_surrounded.
     void loadArmies(unsigned char isSurrounded);
+
 public:
     // THE TWO UNNAMED TURN-SCAN HELPERS, 0x464d40 (525 B) and 0x464f50
     // (291 B). Neither has a counterpart anywhere in the DC cmbtmgr.obj
@@ -3184,6 +3214,7 @@ public:
     // command-TU declaration view.
     // Before normalization (function): combatManager::CombatMessage.
     void combatMessage(int command);
+
 private:
     // Before normalization (function): combatManager::get_tower_string.
     std::string getTowerString(TWallSection wall, long archers,

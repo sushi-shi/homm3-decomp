@@ -1429,6 +1429,7 @@ public:
     // combatManager can read this tail without making the Dreamcast-private
     // data public; friendship is the source-level access that preserves both.
     friend class combatManager;
+
 private:
     // Before normalization (function): army::attack_wall.
     void attackWall(TWallTargetId wall, long levelsDestroyed);

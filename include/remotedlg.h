@@ -79,6 +79,7 @@ public:
     void tickAnimation();
     // Before normalization (function): CAnimatedDlg::DrawSprite.
     void drawSprite();
+
 protected:
     unsigned long m_lastTick;    // +0x58
     int m_spriteX;               // +0x5c
@@ -104,7 +105,6 @@ SIZE(CAnimatedDlg, 0x78);
 // slot 3 replaced by this class's deleting destructor and message handler.
 class CWaitForReadyPlayersDlg : public CAnimatedDlg {
 public:
-
     // Before normalization: startTime.
     unsigned long m_startTime;             // +0x78
     // Before normalization: lastMsg.
@@ -117,6 +117,7 @@ public:
     virtual int handleMessage(message& msg);  // slot 3
     // Before normalization (function): CWaitForReadyPlayersDlg::AllPlayersReady.
     bool allPlayersReady();
+
 protected:
     // Before normalization: playerReady.
     unsigned char m_playerReady[8];         // +0x90
@@ -152,7 +153,6 @@ SIZE(CWaitForReadyPlayersDlg, 0x98);
 // DrawWindow (0x554e90).
 class CLevelPickWaitDlg : public CAnimatedDlg {
 public:
-
     int m_fromWho;                        // +0x78
     CNetMsgHandlerPause m_netMsgHandler;  // +0x7c
     // Public: advManager::DoCombat re-runs the local CheckLevel when the
@@ -163,8 +163,8 @@ public:
     void waitForLevels(int fromWho);
     // Before normalization (function): CLevelPickWaitDlg::handle_message.
     virtual int handleMessage(message& msg);  // slot 3
-protected:
 
+protected:
     // Before normalization (function): CLevelPickWaitDlg::OnPlayerDrop.
     // Before normalization (locals): pNetMsg.
     int onPlayerDrop(CNetMsg* netMsg, message& msg);
@@ -266,7 +266,6 @@ SIZE(CCombatInitMsg, 0xb40);
 // by those three bodies.
 class CWaitForRemoteBattleDlg : public CAnimatedDlg {
 public:
-
     int m_playerPos;                         // +0x78
     // Before normalization: m_pCombatInitMsg.
     CCombatInitMsg* m_combatInitMsgPointer;        // +0x7c (DC name)
@@ -283,13 +282,13 @@ public:
     void wait(int playerPos);
     // Before normalization (function): CWaitForRemoteBattleDlg::handle_message.
     virtual int handleMessage(message& msg);  // slot 3
-protected:
 
+protected:
     // Before normalization (function): CWaitForRemoteBattleDlg::OnPlayerDrop.
     // Before normalization (locals): pNetMsg.
     int onPlayerDrop(CNetMsg* netMsg, message& msg);
-public:
 
+public:
     // Public tail: advManager::DoCombat reads the received flag and
     // hands the payload message straight to ReceiveHeroTownData.
     // Access-only change - no member moved, no declarator added.
@@ -360,8 +359,8 @@ public:
     void saveScreen();
     // Before normalization (function): CGameTransferSmack::RestoreScreen.
     void restoreScreen();
-protected:
 
+protected:
     int m_x;                     // +0x00
     int m_y;                     // +0x04
     int m_lastFrame;             // +0x08
@@ -399,8 +398,8 @@ public:
     virtual void calcDimensions(const char* text, font* currentFont,
                                 int& winX, int& winY,
                                 int& winWidth, int& winHeight);  // slot 12
-protected:
 
+protected:
     unsigned char m_sending;     // +0x6c
 };
 SIZE(CGameTransferDlg, 0x70);

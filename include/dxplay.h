@@ -317,8 +317,8 @@ public:
     virtual unsigned char getReceiveQueueSize(
         unsigned long fromId, unsigned long toId,
         unsigned long* numMessages, unsigned long* numBytes);
-protected:
 
+protected:
     // Before normalization (function): CDPlay::ReceiveMsg.
     virtual unsigned char receiveMsg(
         unsigned long fromId, unsigned long toId, CDPlayMsg* message);
@@ -367,6 +367,7 @@ protected:
     // Before normalization (function): CDPlay::SysMsgDestroyPlayerOrGroup.
     virtual unsigned char sysMsgDestroyPlayerOrGroup(
         DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId);
+
 public:
     // The DirectPlay enum trampolines are file-scope callbacks that forward to
     // these virtuals through the lpContext object; keep them reachable without
@@ -385,6 +386,7 @@ public:
     // offsets. The intervening names are Dreamcast CodeView's and agree
     // with the PC methods; DPCAPS stays opaque until a retail body needs it.
     char m_caps[0x28];                  // +0x04
+
 protected:
     // Before normalization: m_lpDP.
     void* m_dp;                       // +0x2c
@@ -487,18 +489,19 @@ public:
     // Before normalization (function): CDPlayLobby::GetIPAddress.
     virtual unsigned char getIPAddress(
         unsigned long playerId, char* ipAddress);
-protected:
 
+protected:
     // Before normalization (function): CDPlayLobby::HandleSystemLobbyMsg.
     virtual unsigned char handleSystemLobbyMsg(
         unsigned long appId, CDPlayMsg* message);
+
 public:
     // Reachable by the EnumAddress file-scope callback (vtable slot unchanged).
     // Before normalization (function): CDPlayLobby::AddAddressEnum.
     // DC 0x8bba4 and retail 0x499e20 directly call this protected virtual.
     friend int __stdcall enumAddressCallback(const GUID* guidDataType, unsigned long dataSize, const void* data, void* context);
-protected:
 
+protected:
     // Before normalization: m_lpLobby.
     void* m_lobby;                         // +0x58
     // Before normalization: m_pAddressArray.
@@ -514,7 +517,6 @@ SIZE(CDPlayLobby, 0x60);
 // Destroy(), which frees pData and clears the pair.
 class CDPlayMsg {
 public:
-
     // Before normalization: pData.
     unsigned char* m_data;
     // Before normalization: dataSize.
@@ -572,7 +574,6 @@ inline unsigned char CDPlayMsg::destroy()
 // owned connection buffer at +0x10 and the trivial non-virtual destructor.
 class CDPlayConnection {
 public:
-
     // Before normalization: guidSP.
     GUID m_guidSp;                       // +0x00
     // Before normalization: pConnection.
@@ -609,7 +610,6 @@ SIZE(CDPlayConnection, 0x98);
 // layout and disjoint member sets, and this is the union.
 class CDPlaySession {
 public:
-
     // Before normalization: dwFlags.
     unsigned long m_flags;      // +0x00
     // Before normalization: guidInstance.

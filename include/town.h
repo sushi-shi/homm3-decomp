@@ -433,8 +433,10 @@ public:
     // Spelled 14 rather than TOWN_DWELLING_SLOTS because ETownConstants
     // is declared below this class; the .cpp uses the named constant.
     // Before normalization: generatorBonus.
+
 protected:
     int m_generatorBonus[14];
+
 public:
     // Three 64-bit building bitfields, all read as pairs of dwords by
     // retail's __int64 lowering (the DC's own set_mask/
@@ -808,8 +810,8 @@ public:
     // slot-int precedent) - an enum return would need a cast.
     // Before normalization (function): town::UpgradedDwellingID.
     static int upgradedDwellingID(int id);
-protected:
 
+protected:
     // DC public ?const_horde_effects@town@@1PAY03Utype_horde_effect@@A
     // - a protected static type_horde_effect[?][4]. Retail .data
     // 0x6887a0, nine 4-entry rows of 8 bytes (0x6887a0..0x6888c0);

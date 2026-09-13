@@ -179,6 +179,7 @@ public:
     // Before normalization (locals): new_hero, cur_player.
     type_sacrifice_window(hero* newHero, int curPlayer);
     // Before normalization: current_hero.
+
 private:
     hero* m_currentHero;
     // Before normalization: holding_artifact.
@@ -194,12 +195,14 @@ private:
     unsigned char m_canSacrificeArtifacts;
     // Before normalization: can_sacrifice_creatures.
     unsigned char m_canSacrificeCreatures;   // +0x76
+
 public:
     // Before normalization: pad_77.
     // The preceding byte field and following four-byte field establish
     // this alignment gap; the reference layout retains the same boundary.
     unsigned char m_paddingBeforeTotalExperience;
     // Before normalization: total_experience.
+
 private:
     long m_totalExperience;                   // +0x78
     // Before normalization: experience_widget.
@@ -210,6 +213,7 @@ private:
     textWidget* m_currentArtifactValue;       // +0x84
     // Before normalization: creature_name_widget.
     textWidget* m_creatureNameWidget;         // +0x88
+
 public:
     // +0x8c: handle_widget_hover 0x5653f0 reads it and dispatches slot 13
     // (textWidget::SetText) through it - the same rollover pointer
@@ -247,6 +251,7 @@ public:
     virtual int doModal(unsigned char fadeIn);                 // slot 6
     // Before normalization (function): type_sacrifice_window::ExitDialog.
     virtual int exitDialog(message* msg);                      // slot 14
+
 private:
     // Before normalization (function): type_sacrifice_window::add_artifact.
     unsigned char addArtifact(type_artifact artifact, long source);
@@ -468,6 +473,7 @@ public:
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
     // Before normalization (function): type_skeleton_window::WindowHandler.
     virtual int windowHandler(message* msg);                   // slot 9
+
 private:
     // Before normalization (function): type_skeleton_window::create_creature_icons.
     void createCreatureIcons(

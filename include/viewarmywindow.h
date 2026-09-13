@@ -76,6 +76,7 @@ public:
     // retail keeps this four-byte field at +0x60. Upgrade below is int.
     TCreatureType m_armyType;
     // Before normalization: ArmySize.
+
 private:
     int m_armySize;
     // Before normalization: morale.
@@ -94,6 +95,7 @@ private:
     unsigned char m_showingDismissButton;
     // Before normalization: ShowingOkButton.
     unsigned char m_showingOkButton;
+
 public:
     // Before normalization: pad_97.
     // The preceding byte field and following four-byte field establish
@@ -104,6 +106,7 @@ public:
     // group_alignments, army_type.
     TViewArmyWindow(const army* thisArmy, int x0, int y0,
                     unsigned char showOk);
+
 private:
     // Before normalization: Influence.
     int m_influence[3];
@@ -113,6 +116,7 @@ private:
     textWidget* m_rolloverWidget;
     // Before normalization: SpriteWidget.
     iconWidget* m_spriteWidget;
+
 public:
     // TEN arguments in retail (`ret 0x28`), not the Dreamcast's nine:
     // the trailing unsigned char is the alignment-grouping byte, passed
@@ -133,6 +137,7 @@ public:
     void quickView();
     // Before normalization (function): TViewArmyWindow::WindowHandler.
     virtual int windowHandler(message* msg);
+
 private:
     // The four row builders the one-army constructor CALLS rather than
     // inlines, located 2026-08-14 from its own reloc census: the ctor's

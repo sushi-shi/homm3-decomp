@@ -99,6 +99,7 @@ struct type_monster_data {
     long m_value;               // +0x3c
     // Before normalization: total_hit_points.
     long m_totalValue;         // +0x40
+
 public:
     // Before normalization (function): type_monster_data::get_spell_damage.
     // Before normalization (locals): casting_hero, target_hero.
@@ -186,8 +187,10 @@ public:
     // Before normalization: terrain.
     long m_terrain;                    // +0x10
     // Before normalization: mana.
+
 protected:
     long m_mana;                       // +0x14
+
 public:
     // DC original: can_cast_spells (previous reconstruction: can_cast).
     unsigned char m_canCastSpells;          // +0x18, natural padding to +0x1c
@@ -207,16 +210,20 @@ public:
     // the DC's STLport is 12), and the semantics above corroborate it
     // independently.
     // Before normalization: tactics_advantage.
+
 protected:
     long m_tacticsAdvantage;          // +0x20
+
 public:
     // DC original: current_hero (previous reconstruction: my_hero).
     hero* m_currentHero;                   // +0x24
     // DC original: current_army (previous reconstruction: my_army).
     armyGroup* m_currentArmy;              // +0x28
     // Before normalization: enemy_hero.
+
 protected:
     hero* m_enemyHero;                // +0x2c
+
 public:
     // DC original: wall_archery_penalty (previous reconstruction: wall_penalty).
     unsigned char m_wallArcheryPenalty;      // +0x30, natural padding at +0x31
@@ -242,6 +249,7 @@ public:
     long getTotal() const { return m_totalCombatValue; }
     // Before normalization (function): type_AI_combat_data::simulate_combat.
     void simulateCombat(type_AI_combat_data& defender);
+
 protected:
     // Before normalization (function): type_AI_combat_data::cast_area_effect.
     void castAreaEffect(type_spell_choice& choice, type_AI_combat_data& defender,

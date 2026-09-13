@@ -57,7 +57,6 @@ public:
 // from the same-sized paletteHiColor raw record embedded in Bitmap816.
 class TPalette24 : public resource {
 public:
-
     TPalette24();
     TPalette24(const unsigned char* data);
     TPalette24(const TRGBA* rgba);
@@ -92,8 +91,8 @@ private:
     static unsigned int s_greenMask;
     // Before normalization: blue_mask.
     static unsigned int s_blueMask;
-public:
 
+public:
     union {
         // Before normalization: data.
         unsigned short m_data[256];
@@ -164,6 +163,7 @@ public:
     // Before normalization (locals): hue_adjust, saturation_adjust, value_adjust.
     void adjustHSV(float hue, float hueAdjust, float saturationAdjust,
                    float valueAdjust);
+
 private:
     // DC palette.cpp:210 (dc 0x10a910). Retail keeps NO out-of-line copy -
     // /Ob2 expanded it into each of its constructor call sites - but the

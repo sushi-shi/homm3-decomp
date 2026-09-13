@@ -55,6 +55,7 @@ class button : public widget {
     // therefore needs friendship, with no intervening text accessor.
     friend class textButton;
     // Before normalization: buttonIcon.
+
 private:
     CSprite* m_buttonIcon;
     // Before normalization: normalFrame.
@@ -63,18 +64,20 @@ private:
     int m_selectedFrame;
     // Before normalization: disabled_frame.
     int m_disabledFrame;
+
 public:
     // Before normalization: field_40; reference member button::highlightedFrame.
     int m_highlightedFrame;
     // Before normalization: endDialog.
+
 private:
     unsigned char m_endDialog;
     // Before normalization: hotKeyCodes.
     std::vector<int> m_hotKeyCodes;
     // Before normalization: Text.
     std::string m_text;
-public:
 
+public:
     // homm2 BUTTON.cpp's REPEAT_DELAY_TICKS, verbatim value.
     enum EButtonConstants {
         BUTTON_REPEAT_DELAY_TICKS = 60
@@ -166,7 +169,6 @@ public:
 // [this+0x68]). Total 112.
 class textButton : public button {
 public:
-
     // Before normalization (locals): text_, font_name, new_color.
     textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, int newColor);
 
@@ -174,6 +176,7 @@ public:
     virtual void draw();    // slot 4, retail 0x456ca0
 
     virtual ~textButton();  // retail 0x456bf0
+
 private:
     // Before normalization: Font.
     font* m_font;

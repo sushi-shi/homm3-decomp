@@ -23,6 +23,7 @@ public:
     // DC Bitmap816.h:98/99 (0x52570), expanded in masked Darken.
     // Before normalization (function): Bitmap816::GetMap.
     unsigned char* getMap(int x, int y) { return m_map + m_pitch * y + x; }
+
 private:
     // DC names both dwords; retail vtable slot 2 reads DataSize directly
     // and adds the fixed 0x56c-byte object extent.
@@ -44,6 +45,7 @@ private:
     int m_pitch;   // +0x2c
     // Before normalization: map.
     unsigned char* m_map;  // +0x30
+
 public:
     // Before normalization: p16.
     TPalette16 m_p16;
@@ -90,9 +92,11 @@ public:
     int getWidth() const { return m_width; }
     // Before normalization (function): Bitmap816::GetHeight.
     int getHeight() const { return m_height; }
+
 private:
     int importPCXFile(const char* filename, int rbits, int rshift,
         int gbits, int gshift, int bbits, int bshift);
+
 public:
     // Before normalization (function): Bitmap816::GetSize.
     virtual unsigned int getSize() const;

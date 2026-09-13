@@ -40,8 +40,8 @@ public:
     virtual ~TAdventureOptionsWindow();
     // Before normalization (function): TAdventureOptionsWindow::WindowHandler.
     virtual int windowHandler(message* msg);
-private:
 
+private:
     // Before normalization: RolloverWidget.
     textWidget* m_rolloverWidget;
     int convertID2HelpID(int id) const;

@@ -113,6 +113,7 @@ public:
     // side's whole combat value here before asking for a spell value.
     // Before normalization (function): type_spellvalue::set_stack_value.
     void setStackValue(long arg) { m_stackValue = arg; }
+
 protected:
     // E:\\gamedcs\\philai.cpp:1610. Complete expands this one-call helper
     // into the constructor, but the Dreamcast member boundary and local
@@ -149,6 +150,7 @@ protected:
     long m_mana;              // +0x10
     // Before normalization: list.
     std::vector<type_creature_value> m_list;  // +0x14
+
 public:
     // Non-trivial solely because of list. Keeping the empty body inline
     // preserves the compiler-generated expansion at each use while giving

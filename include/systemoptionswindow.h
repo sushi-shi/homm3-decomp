@@ -107,6 +107,7 @@ public:
     // Before normalization (function): TSystemOptionsWindow::UpdateSystemOptions.
     // Before normalization (locals): bFirstUpdate.
     void updateSystemOptions(unsigned char firstUpdate);
+
 private:
     // Before normalization: quickCombatSave.
     int m_quickCombatSave;           // +0x64

@@ -418,6 +418,7 @@ public:
     // Before normalization (function): TTownScreenWindow::set_bonus_display.
     // Before normalization (locals): pTown.
     void setBonusDisplay(town* currentTown);
+
 private:
     // Before normalization (function): TTownScreenWindow::UpdateTownLocator.
     void updateTownLocator(int i);
@@ -590,6 +591,7 @@ public:
     type_garrison_base_window(hero* inHero, int garrisonOwner,
                               armyGroup* garrisonArmy);
     virtual ~type_garrison_base_window();
+
 protected:
     // Before normalization (function): type_garrison_base_window::WindowHandler.
     virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5d0910
@@ -837,6 +839,7 @@ public:
     virtual ~TCastleWindow();
     // Before normalization (function): TCastleWindow::WindowHandler.
     virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5dcf80
+
 private:
     // +0x68..+0x87, DC `SpriteWidget`: the eight dwelling animations.
     // The constructor fills all eight BEFORE pushing any of them - the
@@ -1148,6 +1151,7 @@ public:
     // picked a creature yet.
     // Before normalization (function): townManager::DoPortalOfSummoning.
     void doPortalOfSummoning();
+
 private:
     // Retail 0x5d2f90 (dc 0x174d1c). Necropolis' creature converter.
     // Before normalization (function): townManager::DoSkeletonTransformer.
@@ -1159,6 +1163,7 @@ private:
     // writes the status line for it.
     // Before normalization (function): townManager::select_army.
     void selectArmy(strip* fromStrip, int slot, unsigned char isOwnerCell);
+
 public:
     // Retail 0x5d2da0, retail-only - the Dreamcast townmgr roster runs
     // straight from GetBuildingInfo to Main with nothing between them.
@@ -1185,6 +1190,7 @@ public:
     // chooser, then the hire onto the town and the page rebuild.
     // Before normalization (function): townManager::DoTownTavern.
     void doTownTavern();
+
 private:
     // Retail 0x5d30d0 (dc 0x174da0). The town hall button, and the
     // Grail offer that stands in front of it.

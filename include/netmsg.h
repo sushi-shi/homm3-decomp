@@ -217,6 +217,7 @@ public:
     void setMessage(CNetMsg* netMsg) { m_netMsg = netMsg; }
 
     // Before normalization: m_pNetMsg.
+
 protected:
     CNetMsg* m_netMsg;
 };
@@ -256,7 +257,6 @@ SIZE(CCombatMainMsg, 0x28);
 // extent and every PC offset while copying the two skill bands into a hero.
 class CHeroLevelUpdateMsg : public CNetMsg {
 public:
-
     int m_hero;                    // +0x14
     signed char m_ssLevel[28];     // +0x18
     signed char m_stats[4];        // +0x34

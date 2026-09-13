@@ -30,8 +30,8 @@ public:
     NewmapCell* getTriggerCell(NewmapCell* mapCell, int x, int y);
     // Before normalization (function): type_cell_adjuster::restore_cell.
     void restoreCell();
-protected:
 
+protected:
     // Before normalization: obscuring_hero.
     hero* m_obscuringHero;
     // Before normalization: obscuring_boat.

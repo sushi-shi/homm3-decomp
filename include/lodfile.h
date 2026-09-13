@@ -88,6 +88,7 @@ private:
     void find(unsigned begin, unsigned end, const char* itemName);
     // Before normalization (locals): item_name.
     void* getDataPtr(const char* itemName);
+
 public:
     // Before normalization: numEntries.
     int m_numEntries;

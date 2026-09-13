@@ -160,6 +160,7 @@ public:
     virtual unsigned char ignoreKey(message* msg);  // slot 16, retail 0x5bba20
     // Before normalization (function): textEntryWidget::SetAutoDraw.
     virtual void setAutoDraw(unsigned char b);   // slot 17, retail 0x5bbac0
+
 protected:
     // Before normalization (function): textEntryWidget::SaveBackground.
     virtual void saveBackground() const;         // slot 18, retail 0x5bba70

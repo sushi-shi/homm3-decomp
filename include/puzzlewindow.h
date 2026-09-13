@@ -110,6 +110,7 @@ public:
     int updatePuzzle(int full);
     // Before normalization (function): TPuzzleWindow::WindowHandler.
     virtual int windowHandler(message* msg);
+
 private:
     // Before normalization: puzzleResourceBar.
     TResourceDisplay* m_puzzleResourceBar;

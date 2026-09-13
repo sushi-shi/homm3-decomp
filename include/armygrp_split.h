@@ -42,11 +42,13 @@ public:
     signed char m_minimumTransfer; // +0x78
     // Before normalization: sourceMustKeep.
     signed char m_sourceMustKeep;  // +0x79
+
 private:
     // Before normalization: pad_7a.
     // The retail constructor places the two keep-army bytes at
     // +0x78/+0x79 and the creature dword at +0x7c; these bytes align that word.
     char m_paddingBeforeCreature[2];
+
 public:
     // Before normalization: creature.
     TCreatureType m_creature;      // +0x7c

@@ -67,7 +67,6 @@ enum EResourceType {
 //                     return their fixed extent plus owned data bytes
 class resource {
 public:
-
     resource(const char* newName, EResourceType newType);
     virtual ~resource();         // slot 0
 
@@ -87,6 +86,7 @@ public:
     // callers test the reference-count field through this inline boundary.
     // Before normalization (function): resource::GetReferenceCount.
     int getReferenceCount() const { return m_referenceCount; }
+
 private:
     // Before normalization: Name.
     char m_name[13];
@@ -94,6 +94,7 @@ private:
     EResourceType m_resType;
     // Before normalization: ReferenceCount.
     int m_referenceCount;
+
 public:
     // Before normalization (function): resource::Dispose.
     virtual void dispose();      // slot 1, base body 0x55d0f0

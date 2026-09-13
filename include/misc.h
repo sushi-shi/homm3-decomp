@@ -67,6 +67,7 @@ class TPickANumber {
     // Before normalization: low.
 protected:
     int m_low;
+
 public:
     // Before normalization: count.
     int m_count;

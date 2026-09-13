@@ -135,8 +135,8 @@ struct type_AI_combat_parameters {
     // Before normalization: enemy_side.
     // Original Dreamcast type_AI_combat_parameters::enemy_group; retail field role agrees.
     long m_enemyGroup;            // +0x24
-public:
 
+public:
     type_AI_combat_parameters(const combatManager* combat, long side);
     // Before normalization (function): type_AI_combat_parameters::get_exchange_effect.
     // Before normalization (locals): current_army.
@@ -180,8 +180,10 @@ struct type_AI_attack_hex_chooser {
     // Before normalization: attack_army.
     const army* m_attackArmy;    // +0x00
     // Before normalization: speed.
+
 protected:
     long m_speed;                 // +0x04
+
 public:
     // Before normalization: enemy_army.
     const army* m_enemyArmy;     // +0x08
@@ -194,10 +196,12 @@ public:
     // Before normalization: our_troops.
     long m_ourTroops;            // +0x18
     // Before normalization: best_value.
+
 protected:
     long m_bestValue;            // +0x1c
     // Before normalization: best_hex.
     long m_bestHex;              // +0x20
+
 public:
     // Before normalization: field_24; reference member type_AI_attack_hex_chooser::best_attack_time.
     long m_bestAttackTime;              // +0x24
@@ -222,6 +226,7 @@ public:
     long getBestHex() const { return m_bestHex; }
     // Before normalization (function): type_AI_attack_hex_chooser::get_hex_value.
     long getHexValue() const { return m_bestValue; }
+
 protected:
     // Before normalization (function): type_AI_attack_hex_chooser::check_adjacent_hexes.
     // Before normalization (locals): enemy_hex, start_direction, stop_direction.
@@ -242,8 +247,10 @@ struct type_AI_spellcaster {
     // Before normalization: our_hero.
     hero* m_ourHero;             // +0x04 combat->[0x53cc + side*4]
     // Before normalization: enemy_hero.
+
 protected:
     hero* m_enemyHero;           // +0x08 combat->[0x53cc + enemy_side*4]
+
 public:
     // Before normalization: side.
     long m_side;                  // +0x0c
@@ -318,6 +325,7 @@ public:
     // 0x420f00 twin question in the first place.
     // Before normalization (function): type_AI_spellcaster::get_ogre_mage_value.
     long getOgreMageValue(const army* target);
+
 protected:
     // dc 0x425a8. "Is anything left on the other side that can still
     // fight?" - the answer lands in field_1c and it is what the two
@@ -337,6 +345,7 @@ protected:
     // that fits, so the name is provisional.
     // Before normalization: worst_enemies.
     type_AI_enemy_data m_worstEnemies[20];  // +0x2d0
+
 public:
     // Retail-only SoD helper at 0x43c620. Its only caller is ai.cpp's
     // Faerie Dragon chooser, whose three pushes prove (hex, five times
@@ -344,6 +353,7 @@ public:
     // the role follows the creature-specific caller and retail spell logic.
     // Before normalization (function): type_AI_spellcaster::get_faerie_dragon_spell_value.
     long getFaerieDragonSpellValue(long hex, long power, SpellID spell);
+
 protected:
     // Before normalization (function): type_AI_spellcaster::consider_chain_lightning.
     void considerChainLightning(type_spell_choice* choice);
@@ -512,9 +522,11 @@ protected:
     // pointer-to-member-function, which is one code address wide.
     typedef long (type_AI_spellcaster::*TEnchantValue)(const army*,
                                                        type_enchant_data);
+
 public:
     // Before normalization (function): type_AI_spellcaster::cast_spell.
     unsigned char castSpell(unsigned char retreating);
+
 protected:
     // Before normalization (function): type_AI_spellcaster::consider_area_effect.
     void considerAreaEffect(type_spell_choice* choice);

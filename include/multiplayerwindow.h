@@ -398,6 +398,7 @@ public:
     virtual int onWidgetDeselect(int id, bool& exitFlag);
     // Before normalization (function): TMultiPlayerWindow::GetRolloverWidget.
     virtual textWidget* getRolloverWidget();
+
 private:
     // Before normalization: hotSeat.
     widget* m_hotSeat;                        // +0xc8 (DC button*)

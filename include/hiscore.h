@@ -147,6 +147,7 @@ class THighScoreWindow : public heroWindow {
     // record contains no category/clock accessors. Retail 0x4ea1d0 agrees.
     friend void updateCreatures();
     friend int highScoreWindowHandler(message& msg);
+
 public:
     // The two family selectors and the reset control the constructor gives
     // ids 1001/1002/1003, and the three cases HighScoreWindowHandler's
@@ -162,8 +163,10 @@ public:
     // Before normalization: CreatureFrames.
     int m_creatureFrames[2][11];
     // Before normalization: bIsStandard.
+
 private:
     unsigned char m_isStandard;
+
 public:
     // Before normalization: pad_fd.
     // The preceding byte field and following four-byte field establish
@@ -176,6 +179,7 @@ public:
     void doModal();
     // Before normalization (function): THighScoreWindow::Update.
     void update();
+
 private:
     // Before normalization: iCreatureFrame.
     int m_creatureFrame;

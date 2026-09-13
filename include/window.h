@@ -129,11 +129,14 @@ public:
     // Before normalization: Widgets.
     std::vector<widget*> m_widgets;
     // Before normalization: focusId.
+
 protected:
     int m_focusId;
     // Before normalization: background.
+
 private:
     Bitmap16Bit* m_background;
+
 public:
     // Before normalization: field_48; reference member heroWindow::sleepCount.
     int m_sleepCount;
@@ -159,16 +162,19 @@ public:
     widget* getWidget(int id);
     // Before normalization (function): heroWindow::SetFocus.
     void setFocus(int id);
+
 protected:
     // DC: protected STATIC (no vfptr slot). /Gr makes it fastcall, which
     // is exactly the TDialogHandler shape DoModal hands to DoDialog.
     // Before normalization (function): heroWindow::HeroWindowHandler.
     static int heroWindowHandler(message& msg);
+
 private:
     // Before normalization (function): heroWindow::SaveBackground.
     int saveBackground();
     // Before normalization (function): heroWindow::RestoreBackground.
     void restoreBackground(unsigned char update);
+
 public:
     // Before normalization (function): heroWindow::SleepAllWidgets.
     void sleepAllWidgets(unsigned char sleep);
@@ -203,11 +209,13 @@ public:
     // resolve.
     // Before normalization (function): heroWindow::DoModal.
     virtual int doModal(unsigned char fadeIn);        // slot 6, retail 0x5ff460
+
 protected:
     // Before normalization (function): heroWindow::delete_widgets.
     void deleteWidgets();
     // Before normalization (function): heroWindow::AddWidgetsToMessageStream.
     virtual void addWidgetsToMessageStream();         // slot 7, retail 0x5ff570
+
 public:
     // Slot 8 is NOT pure - 0x5ff5f0 is a real heroWindow body in
     // window.obj's own band (reconstructed 2026-08-08, once widget's
@@ -257,6 +265,7 @@ public:
     // Before normalization (function): CHeroWindowEx::SetHelpText.
     // Before normalization (locals): pHelpText.
     void setHelpText(THelpText* helpText, int start, int stop, unsigned char copyText);
+
 protected:
     // Before normalization (function): CHeroWindowEx::OnWidgetDeselect.
     // Before normalization (locals): bExitFlag.

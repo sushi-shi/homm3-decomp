@@ -161,6 +161,7 @@ public:
     void fadeToBlack(int speed, unsigned char expectFadein);
     // Before normalization (function): heroWindowManager::FadeFromBlack.
     void fadeFromBlack(int speed);
+
 private:
     // The window list, byte-proven by RemoveWindow (located
     // 2026-08-06 by homm3.analysis.dc_callgraph): headWindow@0x50,
@@ -169,6 +170,7 @@ private:
     heroWindow* m_headWindow;
     // Before normalization: tailWindow.
     heroWindow* m_tailWindow;
+
 public:
     // Before normalization: lastActive.
     heroWindow* m_lastActive;

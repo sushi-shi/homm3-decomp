@@ -165,6 +165,7 @@ private:
     unsigned char m_limitReached;
     // Before normalization: cellData.
     pathCell* m_cellData;
+
 public:
     // Dreamcast fieldlist: valid_rectangle at +0x28. Init fills the bounds;
     // the constructor leaves them uninitialized. Preserve the aggregate so
@@ -312,6 +313,7 @@ public:
     }
     // Before normalization (function): searchArray::set_rectangle.
     void setRectangle(tagRECT& rect) { m_validRectangle = rect; }
+
 private:
     // DC publics prove ordinary private methods returning bool/void/bool.
     // Findpath.cpp:1136, 1172, 1187; none has a retained retail body.

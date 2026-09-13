@@ -170,6 +170,7 @@ struct type_artifact {
         memcpy(&m_artifactId, &id, sizeof m_artifactId);
         m_extra = extraValue;
     }
+
 public:
     // Before normalization (function): type_artifact::get_rollover_text.
     void getRolloverText(char* buffer) const;
@@ -195,10 +196,12 @@ struct type_obscuring_object {
     // Before normalization: z.
     short m_z;                              // +0x04 (DC mapZ)
     // Before normalization: valid.
+
 private:
     unsigned char m_valid;                  // +0x06
     // Before normalization: obscured_location.
     type_point m_obscuredLocation;         // +0x07
+
 public:
     // Before normalization: pad_0b.
     // Retail packs the four-byte location at +0x07 and keeps the type
@@ -207,8 +210,10 @@ public:
     // Before normalization: obscuredType.
     TAdventureObjectType m_obscuredType;    // +0x0c (DC type)
     // Before normalization: was_trigger.
+
 private:
     unsigned char m_wasTrigger;            // +0x10
+
 public:
     // Before normalization: pad_11.
     // Dreamcast proves a one-byte was_trigger at +0x10 and extra_info
@@ -268,10 +273,12 @@ public:
     // Before normalization (function): type_obscuring_object::restore_cell.
     void restoreCell();
     bool save(void* outfile);
+
 protected:
     // Before normalization (function): type_obscuring_object::obscure_cell.
     // Before normalization (locals): new_type.
     void obscureCell(TAdventureObjectType newType, long id);
+
 private:
     // Before normalization: extra_info.
     unsigned long m_extraInfo;             // +0x14
@@ -772,8 +779,10 @@ public:
     // Before normalization: field_129; reference member hero::visionsPower.
     int m_visionsPower;                      // +0x129
     // Before normalization: equipped.
+
 private:
     type_artifact m_equipped[19];
+
 public:
     // One byte per artifact slot class. remove_artifact decrements the
     // component's class after dismantling a combination artifact, except
@@ -781,6 +790,7 @@ public:
     // Before normalization: artifactSlotCounts.
     unsigned char m_artifactSlotCounts[15]; // +0x1c5
     // Before normalization: backpack.
+
 private:
     type_artifact m_backpack[64];
     // +0x3d4, a cached backpack count. hero::get_number_in_backpack
@@ -789,6 +799,7 @@ private:
     // both the offset and the SIGNED char width. Name provisional.
     // Before normalization: backpackCount.
     signed char m_backpackCount;          // +0x3d4
+
 public:
     // Per-hero sex copied from THeroTraits during initialize. The retail
     // build added this four-byte field ahead of the custom-name state.
@@ -854,6 +865,7 @@ public:
     // keeps the dword.
     // Before normalization (function): hero::SetPrimarySkill.
     void setPrimarySkill(int skill, int amount) { m_stats[skill] = amount; }
+
 private:
     // Before normalization: in_spellbook.
     unsigned char m_inSpellbook[NUM_SPELLS];     // +0x3ea
@@ -865,6 +877,7 @@ private:
     // and by 0x4e6120, which adds artifact bonuses into the same band.
     // Before normalization: stats.
     signed char m_stats[4];                       // +0x476
+
 public:
     // +0x47a. AI_value_of_combat (0x42730f) reads this as a float,
     // widens it to double and uses it as the attacking side's combat
@@ -959,6 +972,7 @@ public:
             return value;
         return skill >= 2 ? 1 : 0;
     }
+
 private:
     // +0x47e..0x491. Dreamcast names the same five-dword tail in this
     // order; retail independently proves every dword boundary through the
@@ -976,8 +990,8 @@ private:
     long m_valueOfSpring;
     // Before normalization: value_of_well.
     long m_valueOfWell;
-public:
 
+public:
     // Retail level-update messages carry the raw four-byte skill band,
     // including values outside GetPrimarySkill's clamped gameplay range.
     // Bulk-copy boundary names provisional; bodies precede their callers.
@@ -1004,10 +1018,12 @@ public:
     long getEquippedArtifacts(unsigned char countWarMachines);
     long getNumberInBackpack(unsigned char countWarMachines);
     void addSpell(int whichSpell);
+
 private:
     // 0x4d95d0 - rebuilds available_spells after artifact changes.
     // Before normalization (function): hero::update_spell_list.
     void updateSpellList();
+
 public:
     // Complete campaign carryover collector; customcampaign.cpp owns the
     // retail-proven expansion and the provisional name.
@@ -1164,10 +1180,12 @@ public:
     // 0x4e5e10 - tests whether a packed map point is inside Visions range.
     // Before normalization (function): hero::IsInIdentifyRange.
     unsigned char isInIdentifyRange(const type_point* location);
+
 private:
     // 0x4e5ce0 - checks terrain, passability and blocking trigger objects.
     // Before normalization (function): hero::can_land.
     unsigned char canLand() const;
+
 public:
     // 0x4e5de0, RETAIL-ONLY (no DC row): the clamped field_129 getter
     // hero::IsInIdentifyRange inlines. ORDINAL PLACEHOLDER name.

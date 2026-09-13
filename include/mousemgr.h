@@ -146,6 +146,7 @@ public:
     {
         return m_set;
     }
+
 private:
     // DC MouseMgr.h:204/205, dc 0xff774: header-inline busy test.
     bool isBusy() const { return m_busy != 0; }
@@ -160,6 +161,7 @@ private:
                            const RECT& dstRect);
     // DC mousemgr.cpp:934; the ordinary helper used by Update/ShowPointer.
     void getPointerPosition();
+
 public:
     // Before normalization (function): mouseManager::LoadFrame.
     // Before normalization (locals): new_frame.
@@ -171,6 +173,7 @@ public:
     void showSystemCursor(unsigned char showIt);
     // Before normalization (function): mouseManager::Reset.
     void reset();                 // 0x50cc80
+
 private:
     void loadFrame(int newFrame);
 };

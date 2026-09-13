@@ -78,14 +78,17 @@ public:
     virtual ~TCombatOptionsWindow();
     // Before normalization (function): TCombatOptionsWindow::DoModal.
     void doModal();
+
 private:
     // Before normalization: RolloverWidget.
     textWidget* m_rolloverWidget;   // +0x50
     int convertID2HelpID(int id) const;
+
 public:
     // DC CombatOptionsWindowHandler (0x67b7c) directly calls these private
     // methods; retail 0x46f7b0 expands them. Preserve the callback friendship.
     friend int combatOptionsWindowHandler(message& msg);
+
 private:
     // Before normalization (function): TCombatOptionsWindow::HighlightCombatSpeed.
     void highlightCombatSpeed();

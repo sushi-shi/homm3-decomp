@@ -60,7 +60,6 @@ enum creature_seqid {
 // slot 1 = Dispose (0x55d1a0), slot 2 = resource size (0x47bd50).
 class CSprite : public resource {
 public:
-
     CSprite(const char* name, int sprtype, int w, int h);
 
     virtual ~CSprite();      // slot 0
@@ -78,9 +77,11 @@ public:
     void allocateSeq(int seqnum, int numFrames);
     // Before normalization (function): CSprite::AddFrame.
     int addFrame(int seqnum, CSpriteFrame* frame);
+
 private:
     // Before normalization: s.
     CSequence** m_s;
+
 public:
     // Before normalization: p.
     TPalette16* m_p;
@@ -88,6 +89,7 @@ public:
     // it by passing p24+0x1c (the resource head) to the raw palette ctor.
     // Before normalization: p24.
     TPalette24* m_p24;
+
 private:
     // Before normalization: numSequences.
     int m_numSequences;
@@ -97,6 +99,7 @@ private:
     int m_width;
     // Before normalization: Height.
     int m_height;
+
 public:
     // Before normalization (function): CSprite::Dispose.
     virtual void dispose();  // slot 1, retail body 0x55d1a0

@@ -339,6 +339,7 @@ union ExtraInfoUnion {
     type_fountain_info m_fountainInfo;
     // Before normalization: cell_visited_info.
     type_cell_visited_info m_cellVisitedInfo;
+
 public:
     // Before normalization: pyramid_info.
     type_pyramid_info m_pyramidInfo;
@@ -1355,8 +1356,10 @@ public:
     // DC member name at +0x64; retail's independently proven 8-byte base
     // shift places it at +0x6c, exactly where animate_bottom_view reads it.
     // Before normalization: animateInBackground.
+
 private:
     unsigned char m_animateInBackground;
+
 public:
     // Before normalization: pad_06d.
     // Dreamcast places three alignment bytes after animate_in_background.
@@ -1375,8 +1378,10 @@ public:
     class bitmapBorder* m_heroLocators[5];
     // ClearBottomView (0x403ee0) owns and clears the pointer at +0x98.
     // Before normalization: bottomView.
+
 private:
     class type_bottom_view_window* m_bottomView;
+
 public:
     // Complete-only owned popup state: Open constructs it and Close deletes
     // it; the ctor initializes the pointer before installing this vtable.
@@ -1461,6 +1466,7 @@ public:
     void drawChatText(unsigned char update);
     // Before normalization (function): TAdventureMapWindow::UpdateButtons.
     void updateButtons(unsigned char draw, unsigned char update);
+
 private:
     int convertID2HelpID(int id) const;
 };
@@ -1778,8 +1784,10 @@ public:
     // Before normalization: bottomViewType.
     EBottomViewType m_bottomViewType;
     // Before normalization: bottomViewOverride.
+
 private:
     EBottomViewType m_bottomViewOverride;  // +0x398
+
 public:
     // Before normalization: bottomViewDeadline.
     unsigned long m_bottomViewDeadline;    // +0x39c
@@ -1942,6 +1950,7 @@ public:
     void bvResMsg(const char* message, int resourceType, int quantity);
     // Before normalization (function): advManager::BVMessage.
     void bvMessage(const char* message);
+
 private:
     // Before normalization (function): advManager::UpdBottomViewHero.
     // Before normalization (locals): force_update.
@@ -2418,6 +2427,7 @@ private:
     bool monstersSellOut(class hero* currentHero, NewmapCell* cell,
                            type_point point, bool wantToFight,
                            bool humanPlayer);
+
 public:
     // Before normalization (function): advManager::ReceiveHeroTownData.
     // Before normalization (locals): pCombatInitMsg.
@@ -2502,6 +2512,7 @@ public:
     // Before normalization (function): advManager::VWCompleteDraw.
     void vwCompleteDraw(int startX, int startY, int z, int drawwidth,
                         int drawheight);
+
 private:
     // human_player is spelled bool: the body forwards it dword-wide to a
     // dozen bool-parameter handlers, and an unsigned char here makes VC6
@@ -2548,6 +2559,7 @@ private:
     // Before normalization (locals): current_hero, human_player.
     void doEventLithTwoWay(class hero* currentHero, NewmapCell* cell,
                                bool humanPlayer);
+
 public:
     // Before normalization (function): advManager::DrawAdventureCursor.
     void drawAdventureCursor();
@@ -2744,6 +2756,7 @@ public:
     int inMapArea(int x, int y);
     // Before normalization (function): advManager::GetRouteArrayPtr.
     unsigned short* getRouteArrayPtr(int x, int y, int z);
+
 private:
     // Before normalization (function): advManager::garrison_quick_view.
     void garrisonQuickView(int id, int x, int y);
@@ -2770,6 +2783,7 @@ private:
     // Before normalization (locals): current_hero.
     static int getLikeModifier(class hero* currentHero,
                                  enum TCreatureType creature);
+
 public:
     // cursor.obj's 0x480000; ai_player's attempt_step (0x42fc50) calls it
     // to gate the HidePointer that precedes an AI move. The DC census
@@ -2854,6 +2868,7 @@ public:
     void onClaimShipYard(class CMapChange* change);
     // Before normalization (function): advManager::OnHideHero.
     void onHideHero(class CMapChange* change);
+
 private:
     // events.obj's 0x49e2e0 (events.cpp:317, dc 0x903b4). `ret 0xc` =
     // three stack arguments, matching the DC prototype; the shipyard arm

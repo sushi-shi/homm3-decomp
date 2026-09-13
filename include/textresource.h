@@ -331,8 +331,8 @@ public:
     }
     // Before normalization (function): TSpreadsheetResource::GetRow.
     const TStringVector& getRow(int r) const { return *m_spreadsheet[r]; }
-private:
 
+private:
     // Before normalization: Spreadsheet.
     TArray m_spreadsheet;  // +0x1c (_First +0x20, _Last +0x24)
     // Before normalization: Data.
@@ -367,6 +367,7 @@ public:
     // DC-private backing vector. Callers use GetText or operator[];
     // retail expands the indexing at the same +0x20 vector pointer.
     // Before normalization: Text.
+
 private:
     TTextArray m_text;  // +0x1c (_First +0x20)
     // Before normalization: Data.

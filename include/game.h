@@ -283,12 +283,14 @@ public:
     // Before normalization: randomDwellings.
     std::vector<RandomDwellingData> m_randomDwellings; // +0xc0
     // Before normalization: cellData.
+
 private:
     NewmapCell* m_cellData;
     // Before normalization: Size.
     int m_size;
     // Before normalization: HasTwoLevels.
     unsigned char m_hasTwoLevels;
+
 public:
     // +0xdc, and it is a MEMBER, not the pad `game` used to carry after
     // worldMap: NewfullMap::NewfullMap (0x4fd060) hands `this+0xdc` to the
@@ -344,8 +346,8 @@ public:
     // the same movzx/inc shape, 2026-08-20).
     // Before normalization (function): NewfullMap::GetNumLevels.
     int getNumLevels() { return m_hasTwoLevels + 1; }
-private:
 
+private:
     // DC MapCell.h:847/850: const zCell precedes mutable zCell. Both are
     // private header helpers. The mutable helper's 82 SH4 bytes are not a
     // second x86 size: its arithmetic emits the same 49 bytes as 0x408770.
@@ -357,6 +359,7 @@ private:
     {
         return m_cellData + x + y * m_size + z * m_size * m_size;
     }
+
 public:
     // Before normalization (function): NewfullMap::Load.
     int load(TAbstractFile* infile, int size, unsigned char twoLayers,
@@ -369,11 +372,13 @@ public:
     // Before normalization (function): NewfullMap::Read.
     int read(TAbstractFile* infile, int size, unsigned char twoLayers,
              int mapVersion);
+
 private:
     int readMapObjects(TAbstractFile* infile, int mapVersion);
     // `ret 4`: ONE argument, unlike readMapObjects' two - the save stream
     // carries no map version.
     int loadMapObjects(TAbstractFile* infile);
+
 public:
     // 0x4fd950, `ret 8`. One of the four retail-only rows this compiland's
     // span audit already flags as having no Dreamcast counterpart; Load
@@ -409,6 +414,7 @@ public:
     // DC mapcell.cpp:3449, f1b1c: the serialized object is a reference.
     int saveObject(TAbstractFile* outfile, CObject& tempObject);
     int loadObject(TAbstractFile* infile, CObject* object);
+
 private:
     // Before normalization (function): NewfullMap::Init.
     void init(int size, unsigned char twoLayers);
@@ -420,13 +426,16 @@ private:
     // the per-cell upgrade pass.
     int loadMapLayer(TAbstractFile* infile, int size, int layer,
                      int saveVersion);
+
 public:
     int readTreasureData(TAbstractFile* infile, TreasureData* treasure);
     int saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox);
     int saveTreasureData(TAbstractFile* outfile, TreasureData* treasure);
     int saveMonsterData(TAbstractFile* outfile, MonsterData* monster);
+
 private:
     int saveMapLayer(TAbstractFile* outfile, int size, int layer);
+
 public:
     int loadBlackBoxList(TAbstractFile* infile, int saveVersion);
     int loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
@@ -479,9 +488,11 @@ public:
     int readMineData(TAbstractFile* infile, CObject* object);
     int readAbandonedMineData(TAbstractFile* infile, CObject* object);
     int loadTreasureList(TAbstractFile* infile);
+
 private:
     // Before normalization (function): NewfullMap::calc_cell_extra.
     void calcCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
+
 public:
     // Retail-only helper at 0x505d20, the +0x24-slot twin of 0x505d60
     // below: same walk over the +0xb0 CMapObjectData vector, same two
@@ -1900,10 +1911,12 @@ public:
     // Before normalization: mapZ.
     unsigned char m_mapZ;         // +0x56
     // Before normalization: playerOwner.
+
 protected:
     char m_playerOwner;           // +0x57
     // Before normalization: town_id.
     char m_townId;               // +0x58
+
 public:
     // Before normalization: pad_59.
     // Dreamcast ends its members with town_id at +0x58 and rounds
@@ -2210,7 +2223,6 @@ SIZE(playerData, 360);
 // define the class.)
 class game {
 public:
-
     static int saveString(
         void* outfile,
         std::basic_string<char, std::char_traits<char>, std::allocator<char> >* value);
@@ -2479,10 +2491,12 @@ public:
     // Before normalization: lithExitPools.
     std::vector<type_point> m_lithExitPools[8];  // +0x4e6fc
     // Before normalization: whirlpools.
+
 private:
     std::vector<type_point> m_whirlpools;        // +0x4e77c
     // Before normalization: undergroundGateExits.
     std::vector<type_point> m_undergroundGateExits; // +0x4e78c
+
 public:
     // One reciprocal exit index per entry above.  Dreamcast names the
     // std::vector<long> operator[] calls in match_underground_gates, while
@@ -2694,6 +2708,7 @@ public:
     // helpers. Complete replaces the void* gz stream with TAbstractFile*;
     // its two-register /Gr ABI does not contradict the static membership.
     static int __fastcall loadString(TAbstractFile* infile, std::string& s);
+
 private:
     // Before normalization (function): game::LoadRumours.
     int loadRumours(TAbstractFile* infile);       // 0x4bbe40
@@ -2703,6 +2718,7 @@ private:
     int loadSignPool(TAbstractFile* infile);      // 0x4b9070
     // Before normalization (function): game::SaveSignPool.
     int saveSignPool(TAbstractFile* outfile);     // 0x4b9270
+
 public:
     // Before normalization (function): game::IsHumanTeam.
     inline bool isHumanTeam(int teamNum) const;
@@ -2857,9 +2873,11 @@ public:
     void checkForTownEvent();                                 // 0x4cda10
     // Before normalization (function): game::IsHuman.
     bool isHuman(int gamePos) const;             // 0x4ce940
+
 private:
     // Before normalization (function): game::LoadMinePool.
     int loadMinePool(TAbstractFile* infile, int saveVersion);
+
 public:
     // Retail 0x4ced40, exact but PROVISIONALLY NAMED. readMonsterData ends by
     // handing it the monster's stream identifier and the cell's packed point;
@@ -2869,10 +2887,12 @@ public:
     // Before normalization (function): game::record_monster_identifier.
     void recordMonsterIdentifier(int identifier, type_point point);
     // Before normalization (function): game::LoadGarrisonPool.
+
 private:
     int loadGarrisonPool(TAbstractFile* infile, int saveVersion);
     // Before normalization (function): game::LoadTownPool.
     int loadTownPool(TAbstractFile* infile, int saveVersion);
+
 public:
     // Before normalization (function): game::LoadGame.
     // Before normalization (locals): bIsOrigData, bIsQuickLoad.
@@ -2884,6 +2904,7 @@ public:
                            unsigned char campaignWinMode,
                            unsigned char compressIt,
                            unsigned char xferFile);
+
 private:
     // Before normalization (function): game::Load.
     int load(TAbstractFile* infile);              // 0x4bcda0
@@ -2905,6 +2926,7 @@ private:
     int saveObeliskPool(TAbstractFile* outfile);
     // Before normalization (function): game::SaveTownPool.
     int saveTownPool(TAbstractFile* outfile);
+
 public:
     // 0x4bf780 (dc 0xaa7e0).
     // Before normalization (function): game::ValidateVictoryLossConditions.
@@ -2945,6 +2967,7 @@ public:
     void processOnMapHeroes();
     // Before normalization (function): game::InitRandomArtifacts.
     void initRandomArtifacts();
+
 private:
     // Raw LF_FIELDLIST 0x3edc orders this shared pair as written. Its
     // private access flag is DC-only: retail decorates both as public QAEX.
@@ -2952,6 +2975,7 @@ private:
     void matchUndergroundGates();
     // Before normalization (function): game::randomize_university.
     void randomizeUniversity(NewmapCell* cell);
+
 public:
     // Before normalization (function): game::set_recruits.
     void setRecruits(int player);
@@ -2970,6 +2994,7 @@ public:
                      NewSMapHeader* mapHeader, TAbstractFile* infile);
     // Before normalization (function): game::ResetGame.
     void resetGame(int difficulty, int version, NewSMapHeader* mapHeader);
+
 private:
     // Before normalization (function): game::Save.
     int save(TAbstractFile* outfile);             // 0x4be3f0
@@ -2979,6 +3004,7 @@ private:
     void setMapRumour();
     // Before normalization (function): game::SetSpecialRumour.
     void setSpecialRumour();
+
 public:
     // DC game.h:865. Keep the body ahead of the two helpers that call it,
     // matching the original header's definition order. The events compiland
@@ -3150,6 +3176,7 @@ public:
     // Before normalization (function): game::GetNumThievesGuilds.
     // Before normalization (locals): iWhichPlayer.
     int getNumThievesGuilds(int whichPlayer);
+
 private:
     // 0x49dc60 (dc 0x8ebc4, event_record.cpp:1426). game::Save's last
     // operation and the only guarded one in its tail: it writes the
@@ -3173,6 +3200,7 @@ private:
     // the Dreamcast xref graph records.
     // Before normalization (function): game::setup_shipyards.
     void setupShipyards();
+
 public:
     // Retail 0x4c6c50 (dc 0xb1c8c). The army/creature info panel the
     // town page opens over a troop slot; declared here for

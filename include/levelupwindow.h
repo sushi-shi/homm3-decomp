@@ -62,6 +62,7 @@ public:
     int m_leftSkill;   // +0x60 retail (+0x58 DC)
     // Before normalization: right_skill.
     int m_rightSkill;  // +0x64 retail (+0x5c DC)
+
 private:
     // Before normalization: Selected.
     int m_selected;     // +0x68 retail (+0x60 DC)

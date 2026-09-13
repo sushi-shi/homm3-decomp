@@ -65,8 +65,8 @@ public:
 
     // Before normalization (function): CDiffMaker::MakeDiff.
     CDiffFile* makeDiff(unsigned long& diffSize);
-protected:
 
+protected:
     // Before normalization (function): CDiffMaker::CountSameBytes.
     int countSameBytes(int oldOffset, int newOffset);
     // Before normalization (function): CDiffMaker::FindNextSame.

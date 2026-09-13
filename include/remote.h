@@ -78,8 +78,8 @@ public:
     void setAbortPopupMsg(CNetMsg* netMsg);
     // Before normalization (function): CNetMsgHandler::SetInPopup.
     void setInPopup(unsigned char b) { m_inPopup = b; }
-protected:
 
+protected:
     // A pure virtual may still have an out-of-line definition. Retail's
     // vtable keeps _purecall in slot 3, while two direct base-qualified
     // dispatcher calls land on that definition at 0x557920.
@@ -120,7 +120,6 @@ SIZE(CNetMsgHandler, 0x0c);
 // in the 0x557exx run with the rest of the class.
 class CNetMsgHandlerPause : public CNetMsgHandler {
 public:
-
     // Before normalization: m_pNetMsgHandlerSave.
     CNetMsgHandler* m_netMsgHandlerSave;  // +0x0c
     CNetMsgHandlerPause();
@@ -234,6 +233,7 @@ public:
     CNetMsgHandler* getNetMsgHandler();
     // Before normalization (function): CDPlayHeroes::HandlePlayerDrop.
     void handlePlayerDrop(unsigned long dpid);
+
 protected:
     // Before normalization (function): CDPlayHeroes::QueueMsg.
     // Before normalization (locals): pNetMsg.
@@ -258,6 +258,7 @@ protected:
                                   bool, bool);
 
     // Before normalization: dpMsg.
+
 public:
     CDPlayMsg m_dpMsg;                       // +0x60
     // Before normalization: msgQueue.
@@ -269,6 +270,7 @@ public:
     // Before normalization: currMessageId.
     unsigned long m_currMessageId;           // +0xec
     // Before normalization: m_pNetMsgHandler.
+
 protected:
     CNetMsgHandler* m_netMsgHandler; // +0xf0
 };
@@ -335,6 +337,7 @@ public:
     void playerEnterMsg(const char* format, ...);
 
     // Before normalization: msgArray.
+
 protected:
     CChatStr* m_msgArray;       // +0x00
     // Before normalization: currMsg.
@@ -347,12 +350,14 @@ protected:
     unsigned long m_pauseTime;  // +0x10
     // Before normalization: changed.
     unsigned char m_changed;    // +0x14
+
 public:
     // Before normalization: pad_15.
     // Dreamcast places changed at +0x14 and lastWidget at +0x18,
     // matching retail. These three bytes align the pointer.
     char m_paddingBeforeLastWidget[3];
     // Before normalization: lastWidget.
+
 protected:
     textWidget* m_lastWidget;   // +0x18
     // Before normalization: maxLines.
@@ -361,6 +366,7 @@ protected:
     int m_position;             // +0x20
     // Before normalization: chatKilled.
     unsigned char m_chatKilled; // +0x24
+
 public:
     // Before normalization: pad_25.
     // Retail retains chatKilled at +0x24 and adds the sample handle
@@ -372,8 +378,10 @@ public:
     // Before normalization: g_chatMemSample.
     ds_memsample* m_chatMemSample; // +0x28
     // Before normalization: isSysMsg.
+
 protected:
     unsigned char m_isSysMsg;        // +0x2c
+
 public:
     // Before normalization: pad_2d.
     // The PC isSysMsg byte moves to +0x2c after the new handle.
@@ -405,6 +413,7 @@ public:
     unsigned char chatChanged() { return m_changed || m_chatKilled; }
     // Before normalization (function): CChatManager::HasOldChat.
     unsigned char hasOldChat();
+
 protected:
     // Before normalization: g_chatSample.
     sample* m_chatSample;        // +0x30
@@ -468,6 +477,7 @@ public:
     {
         return m_currDuration != 0 && !g_unk69774c;
     }
+
 protected:
     unsigned long m_lastWarned;
     unsigned long m_turnStartTime;
