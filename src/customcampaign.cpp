@@ -2256,7 +2256,7 @@ void TCampaignBrief::MapTextStruct::play()
         strip->fillRect(0, 0, strip->getWidth(), strip->getHeight(), 0);
         g_bigFont->drawBoundedString(m_subtitles.c_str(), strip, 0, 0,
                                      strip->getWidth(), strip->getHeight(),
-                                     g_campaignSubtitleColor,
+                                     font::TColor(g_campaignSubtitleColor),
                                      font::CENTER_JUSTIFIED, -1);
     }
 

@@ -24,8 +24,8 @@ class TDimensionDoorWindow : public CAdvPopup {
 public:
     TDimensionDoorWindow();
     virtual ~TDimensionDoorWindow();
-    virtual int windowHandler(message* msg);
-    virtual int exitDialog(message* msg);
+    virtual int windowHandler(message& msg);
+    virtual int exitDialog(message& msg);
 
 private:
     textWidget* m_rolloverWidget;
@@ -39,8 +39,8 @@ class TSkuttleBoatWindow : public CAdvPopup {
 public:
     TSkuttleBoatWindow();
     virtual ~TSkuttleBoatWindow();
-    virtual int windowHandler(message* msg);
-    virtual int exitDialog(message* msg);
+    virtual int windowHandler(message& msg);
+    virtual int exitDialog(message& msg);
 
 private:
     textWidget* m_rolloverWidget;

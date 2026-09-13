@@ -31,10 +31,10 @@ void advManager::checkCastSpell()
 
     hero* currentHero = g_game->getCurrHero();
     {
-        TSpellbookWindow spellbook(currentHero, 0,
+        TSpellbookWindow spellBookWindow(*currentHero, 0,
                                    TSpellbookWindow::eContextAdventure,
                                    currentHero->getSpecialTerrain());
-        spellbook.doModal(0);
+        spellBookWindow.doModal(0);
     }
 
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
@@ -44,15 +44,13 @@ void advManager::checkCastSpell()
     if (objectType == CURSED_GROUND) {
         if (g_spellTraits[g_windowManager->m_dialogReturn].m_level > 1) {
             normalDialog(
-                g_generalText->getText(
-                    GENERAL_TEXT_CURSED_GROUND_HIGH_LEVEL_SPELL),
+                (*g_generalText)[GENERAL_TEXT_CURSED_GROUND_HIGH_LEVEL_SPELL],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
             castSpell(g_windowManager->m_dialogReturn);
         }
     } else if (objectType == GARRISON) {
-        normalDialog(g_generalText->getText(
-                         GENERAL_TEXT_GARRISON_ADVENTURE_SPELL),
+        normalDialog((*g_generalText)[GENERAL_TEXT_GARRISON_ADVENTURE_SPELL],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     } else {
         castSpell(g_windowManager->m_dialogReturn);
@@ -61,10 +59,19 @@ void advManager::checkCastSpell()
     updBottomView(1, 1, 1);
 }
 
-VA(0x0041c490, 0x404)  // dc 0x21a2c
-void advManager::castSpell(int whichSpell)
+
+// E:\gamedcs\advspells.cpp:93
+// The dispatcher, and the ONE place every adventure spell is charged from.
+// Ten ascending cases through a jump table; four of the arms are Dreamcast
+// handlers retail has no body for, expanded here because each has exactly
+// this one call site - which is what makes 1028 bytes out of the DC's 344.
+// Each arm re-derives its own `who` because each inlined handler opens with
+// its own game::GetCurrHero, and the two ViewWorld arms hand their own case
+// value to both ViewWorld and GetManaCost.
+VA(0x0041c490, 0x404)  // linkorder + anchor-callee hero::Fly / get_spell_level, dc 0x21a2c
+void advManager::castSpell(SpellID whichSpell)
 {
-    hero* who = g_game->getHero(g_currentPlayer->m_currHeroId);
+    hero* who = g_game->getCurrHero();
     if (who == 0)
         return;
 
@@ -86,8 +93,7 @@ void advManager::castSpell(int whichSpell)
                                    "view.wav"),
                       -1, 3);
         viewWorld(SPELL_VIEW_EARTH, level);
-        who->useSpell(who->getManaCost(SPELL_VIEW_EARTH, 0,
-                                       who->getSpecialTerrain()));
+        who->useSpell(who->getManaCost(SPELL_VIEW_EARTH));
         break;
     case SPELL_DISGUISE:
         disguise(level);
@@ -97,8 +103,7 @@ void advManager::castSpell(int whichSpell)
                                    "view.wav"),
                       -1, 3);
         viewWorld(SPELL_VIEW_AIR, level);
-        who->useSpell(who->getManaCost(SPELL_VIEW_AIR, 0,
-                                       who->getSpecialTerrain()));
+        who->useSpell(who->getManaCost(SPELL_VIEW_AIR));
         break;
     case SPELL_FLY:
         flight(level);
@@ -146,52 +151,51 @@ void advManager::castSpell(int whichSpell)
 // actual successful cell test while preserving search order and refusal
 // side effects; no new helper is inferred from that flag.
 VA(0x0041c8a0, 0x54D)  // anchor-callee hero::find_summonable_boat + game::CreateBoat, dc 0x21b84
-void advManager::summonBoat(int level)
+void advManager::summonBoat(TSkillMastery level)
 {
-    const SSpellTraits* traits = &g_spellTraits[SPELL_SUMMON_BOAT];
+    const SSpellTraits& traits = g_spellTraits[SPELL_SUMMON_BOAT];
 
-    hero* who = g_game->getHero(g_currentPlayer->m_currHeroId);
+    hero* who = g_game->getCurrHero();
     if (who == 0)
         return;
 
-    if (getCell(who->getLocation())->m_groundSet == eTerrainWater) {
+    type_point point(who->m_x, who->m_y, who->m_z);
+    if (getCell(point)->m_groundSet == eTerrainWater) {
         if (g_game->isLocalHuman(who->m_owner)) {
             sprintf(g_text,
-                    g_generalText->getText(
-                        GENERAL_TEXT_SUMMON_BOAT_ALREADY_AT_SEA_FORMAT),
+                    (*g_generalText)[GENERAL_TEXT_SUMMON_BOAT_ALREADY_AT_SEA_FORMAT],
                     who->m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         return;
     }
 
-    int destX;
-    int destY;
+    int x;
+    int y;
     int direction;
     bool foundWater = false;
     for (direction = 0; direction < MAP_DIRECTION_COUNT; direction++) {
-        destX = who->m_x + g_normalDirTable[direction].m_x;
-        destY = who->m_y + g_normalDirTable[direction].m_y;
-        if (destX >= 0 && destX < g_mapWidth && destY >= 0
-            && destY < g_mapHeight) {
-            NewmapCell* cell = getCell(type_point(destX, destY, who->m_z));
-            if (cell->m_typeValue == 0 && cell->m_groundSet == eTerrainWater)
-                {
-                    foundWater = true;
-                    break;
-                }
+        x = who->m_x + g_normalDirTable[direction].m_x;
+        y = who->m_y + g_normalDirTable[direction].m_y;
+        if (x >= 0 && x < g_mapWidth && y >= 0
+            && y < g_mapHeight) {
+            NewmapCell* cell = getCell(type_point(x, y, who->m_z));
+            if (cell->m_typeValue == 0 && cell->m_groundSet == eTerrainWater) {
+                foundWater = true;
+                break;
+            }
         }
     }
     if (!foundWater) {
         if (g_game->isLocalHuman(who->m_owner)) {
             normalDialog(
-                g_generalText->getText(GENERAL_TEXT_SUMMON_BOAT_NO_WATER),
+                (*g_generalText)[GENERAL_TEXT_SUMMON_BOAT_NO_WATER],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         return;
 
     }
-    if (random(1, 100) <= traits->m_masteryBonus[level]) {
+    if (sRandom(1, 100) <= traits.m_masteryBonus[level]) {
         boat* theBoat = who->findSummonableBoat();
         if (theBoat != 0) {
             theBoat->restoreCell();
@@ -202,61 +206,49 @@ void advManager::summonBoat(int level)
                 && theBoat->m_x < m_radarOrigin.m_x + 19
                 && theBoat->m_y >= m_radarOrigin.m_y
                 && theBoat->m_y < m_radarOrigin.m_y + 17) {
-                int oldX = theBoat->m_x - m_radarOrigin.m_x;
-                int oldY = theBoat->m_y - m_radarOrigin.m_y;
-                SLimitData oldLimits(32 * oldX - 32, 32 * oldY - 32,
-                                     32 * (oldX + 3), 32 * (oldY + 2));
-                oldLimits.clip(g_advMapViewLimits);
-                g_windowManager->saveFizzleSourceX(
-                    oldLimits.m_minX, oldLimits.m_minY, oldLimits.width(),
-                    oldLimits.height());
+                SLimitData boatLimits(32 * (theBoat->m_x - m_radarOrigin.m_x) - 32, 32 * (theBoat->m_y - m_radarOrigin.m_y) - 32,
+                                      32 * ((theBoat->m_x - m_radarOrigin.m_x) + 3), 32 * ((theBoat->m_y - m_radarOrigin.m_y) + 2));
+                boatLimits.clip(g_advMapViewLimits);
+                g_windowManager->saveFizzleSourceX(boatLimits);
                 completeDraw(0);
-                g_windowManager->fizzleForwardX(
-                    oldLimits.m_minX, oldLimits.m_minY, oldLimits.width(),
-                    oldLimits.height(), -1);
+                g_windowManager->fizzleForwardX(boatLimits, -1);
             }
-            theBoat->m_x = destX;
-            theBoat->m_y = destY;
+            theBoat->m_x = x;
+            theBoat->m_y = y;
             theBoat->m_z = who->m_z;
             theBoat->obscureCell();
         } else {
-            if (level < 2
-                || g_game->createBoat(destX, destY, who->m_z, who->m_owner, 0, 0)
+            if (level < eMasteryAdvanced
+                || g_game->createBoat(x, y, who->m_z, who->m_owner, 0, 0)
                        < 0) {
                 if (g_game->isLocalHuman(who->m_owner)) {
                     normalDialog(
-                        g_generalText->getText(
-                            GENERAL_TEXT_SUMMON_BOAT_NONE_AVAILABLE),
+                        (*g_generalText)[GENERAL_TEXT_SUMMON_BOAT_NONE_AVAILABLE],
                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 }
                 return;
             }
         }
 
-        int cellX = destX - m_radarOrigin.m_x;
-        int cellY = destY - m_radarOrigin.m_y;
-        SLimitData limits(32 * cellX - 32, 32 * cellY - 32,
-                          32 * (cellX + 3), 32 * (cellY + 2));
-        limits.clip(g_advMapViewLimits);
+        SLimitData boatLimits(((x - m_radarOrigin.m_x) - 1) * 32, ((y - m_radarOrigin.m_y) - 1) * 32,
+                              ((x - m_radarOrigin.m_x) + 3) * 32, ((y - m_radarOrigin.m_y) + 2) * 32);
+        boatLimits.clip(g_advMapViewLimits);
 
-        SAMPLE2 sample = loadPlaySample(traits->m_sample);
-        g_windowManager->saveFizzleSourceX(limits.m_minX, limits.m_minY,
-                                           limits.width(), limits.height());
+        SAMPLE2 sample = loadPlaySample(traits.m_sample);
+        g_windowManager->saveFizzleSourceX(boatLimits);
         completeDraw(0);
-        g_windowManager->fizzleForwardX(limits.m_minX, limits.m_minY,
-                                        limits.width(), limits.height(), -1);
+        g_windowManager->fizzleForwardX(boatLimits, -1);
         updateScreen(0, 0);
         reseed(0, 0);
         waitEndSample(sample, -1);
     } else if (g_game->isLocalHuman(who->m_owner)) {
         sprintf(g_text,
-                g_generalText->getText(GENERAL_TEXT_SUMMON_BOAT_FAILED_FORMAT),
+                (*g_generalText)[GENERAL_TEXT_SUMMON_BOAT_FAILED_FORMAT],
                 who->m_name);
         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 
-    who->useSpell(who->getManaCost(SPELL_SUMMON_BOAT, 0,
-                                   who->getSpecialTerrain()));
+    who->useSpell(who->getManaCost(SPELL_SUMMON_BOAT));
 }
 
 // E:\gamedcs\advspells.cpp:328
@@ -268,34 +260,35 @@ void advManager::summonBoat(int level)
 // DC records const traits by reference, GetCurrHero, GetManaCost's one-
 // argument facade, and rectangle-based fizzle calls. Complete calls the X
 // pixel path; WinMgr.h:193..200 independently proves its reference overloads.
-// Those canonical boundaries are restored. The 64-state family emitted
-// sixteen distinct objects in its first 60 states and four in the remainder;
-// ten retained results reproduced. These helper corrections keep 98.4651%.
-// The DC positive selection scope lacks Complete's cancelled-target dialog.
-// Moving that dialog into an else arm changes retail's fall-through block
-// order and scores 77.5116%; retain the PC early cancellation path.
-// DC's TSkillMastery parameter also replaces the stale int stand-in; the old
-// header explanation cited an AI typedef conflict that has already been fixed.
+// These source calls, SRandom and text[], and the recorded skuttle_window
+// and boat_limits locals are restored. Direct coordinate differences in
+// the rectangle constructor close the remaining EBX/EDI schedule: the
+// ten-state joint Scuttle/TownGate family emitted eight objects, all
+// reproduced, with Scuttle at 100. Cached cell coordinates keep 98.4651;
+// cached pixel coordinates fall to 84.8977. All other TU scores survive.
+// Complete has an early cancelled-target dialog absent from the port.
+// Nesting cancellation in an else changes retail fall-through and loses
+// the earlier match (77.5116); retain the PC early cancellation path.
 VA(0x0041cdf0, 0x29D)  // anchor-vtable TSkuttleBoatWindow ctor/dtor, dc 0x22054
 void advManager::skuttleBoat(TSkillMastery level)
 {
     const SSpellTraits& traits = g_spellTraits[SPELL_SCUTTLE_BOAT];
 
     {
-        TSkuttleBoatWindow window;
-        window.doModal(0);
+        TSkuttleBoatWindow skuttleWindow;
+        skuttleWindow.doModal(0);
     }
 
     if (g_windowManager->m_dialogReturn == 0) {
         normalDialog(
-            g_generalText->getText(GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET),
+            (*g_generalText)[GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET],
             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
 
     hero* who = g_game->getCurrHero();
 
-    if (random(1, 100)
+    if (sRandom(1, 100)
         <= g_spellTraits[SPELL_SCUTTLE_BOAT].m_masteryBonus[level]) {
         // The CONST get_map_center overload is the one retail calls here
         // (?get_map_center@advManager@@QBE...); /OPT:ICF folded the pair onto
@@ -308,24 +301,24 @@ void advManager::skuttleBoat(TSkillMastery level)
         // The fizzle covers the boat's sprite footprint: one cell of slack
         // left and above, three cells wide and two deep, in 32-pixel map
         // cells relative to the current radar origin.
-        int cellX = theBoat.m_x - m_radarOrigin.m_x;
-        int cellY = theBoat.m_y - m_radarOrigin.m_y;
-        SLimitData limits(32 * cellX - 32, 32 * cellY - 32,
-                          32 * (cellX + 3), 32 * (cellY + 2));
-        limits.clip(g_advMapViewLimits);
+        SLimitData boatLimits(
+            32 * (theBoat.m_x - m_radarOrigin.m_x) - 32,
+            32 * (theBoat.m_y - m_radarOrigin.m_y) - 32,
+            32 * (theBoat.m_x - m_radarOrigin.m_x + 3),
+            32 * (theBoat.m_y - m_radarOrigin.m_y + 2));
+        boatLimits.clip(g_advMapViewLimits);
 
         SAMPLE2 sample = loadPlaySample(traits.m_sample);
-        g_windowManager->saveFizzleSourceX(limits);
+        g_windowManager->saveFizzleSourceX(boatLimits);
         completeDraw(0);
-        g_windowManager->fizzleForwardX(limits, -1);
+        g_windowManager->fizzleForwardX(boatLimits, -1);
         theBoat.m_allocated = 0;
         reseed(0, 0);
         waitEndSample(sample, -1);
     } else {
         if (g_game->isLocalHuman(who->m_owner)) {
             sprintf(g_text,
-                    g_generalText->getText(
-                        GENERAL_TEXT_SCUTTLE_BOAT_FAILED_FORMAT),
+                    (*g_generalText)[GENERAL_TEXT_SCUTTLE_BOAT_FAILED_FORMAT],
                     who->m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -334,29 +327,40 @@ void advManager::skuttleBoat(TSkillMastery level)
     who->useSpell(who->getManaCost(SPELL_SCUTTLE_BOAT));
 }
 
-VA(0x0041d090, 0x2C6)  // dc 0x2225c
-void advManager::dimensionDoor(int level)
+// E:\gamedcs\advspells.cpp:397
+// The order-map over advspells.obj's seven retail bodies is settled by
+// three constructor calls, not by size: 0x41cdf0 builds a
+// TSkuttleBoatWindow, THIS body builds a TDimensionDoorWindow and 0x41d360
+// builds a TTownGateWindow, which fixes SkuttleBoat / DimensionDoor /
+// TownGate against the Dreamcast's own advspells.cpp line order. The four
+// small DC handlers between TownGate and TeleportTo (Identify 220 B,
+// WaterWalk 122 B, Disguise 90 B, Flight 236 B) have no retail slot at all
+// and no gap to hide in: their 668 bytes are what makes CastSpell 1028
+// against the DC's 344, and 0x41c490 calls hero::Fly - Flight's own body -
+// with no out-of-line Flight anywhere in the image.
+// DC398 names GetCurrHero, DC414 the one-argument get_spell_level,
+// DC425..427 the scoped doorWin, and DC462 one-argument GetManaCost.
+// The traits reference and mastery parameter retain their recorded types;
+// TSpellTraits is the older source name for SSpellTraits.
+VA(0x0041d090, 0x2C6)  // anchor-vtable TDimensionDoorWindow ctor/dtor + anchor-callee TeleportTo, dc 0x2225c
+void advManager::dimensionDoor(TSkillMastery level)
 {
-    const SSpellTraits* traits = &g_spellTraits[SPELL_DIMENSION_DOOR];
-    hero* who = g_currentPlayer->m_currHeroId != -1
-                    ? &g_game->m_heroes[g_currentPlayer->m_currHeroId]
-                    : 0;
+    const SSpellTraits& traits = g_spellTraits[SPELL_DIMENSION_DOOR];
+    hero* who = g_game->getCurrHero();
     if (who->m_movePoints <= 0) {
         if (g_game->isLocalHuman(who->m_owner)) {
             normalDialog(
-                g_generalText->getText(GENERAL_TEXT_SPELL_NEEDS_MOVEMENT),
+                (*g_generalText)[GENERAL_TEXT_SPELL_NEEDS_MOVEMENT],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         return;
     }
 
-    TSkillMastery mastery = who->getSpellLevel(SPELL_DIMENSION_DOOR,
-                                                 who->getSpecialTerrain());
-    if (who->m_dWalkSpellsCast >= traits->m_masteryBonus[mastery]) {
+    TSkillMastery mastery = who->getSpellLevel(SPELL_DIMENSION_DOOR);
+    if (who->m_dWalkSpellsCast >= traits.m_masteryBonus[mastery]) {
         if (g_game->isLocalHuman(who->m_owner)) {
             sprintf(g_text,
-                    g_generalText->getText(
-                        GENERAL_TEXT_DIMENSION_DOOR_LIMIT_FORMAT),
+                    (*g_generalText)[GENERAL_TEXT_DIMENSION_DOOR_LIMIT_FORMAT],
                     who->m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -364,8 +368,8 @@ void advManager::dimensionDoor(int level)
     }
 
     {
-        TDimensionDoorWindow window;
-        window.doModal(0);
+        TDimensionDoorWindow doorWin;
+        doorWin.doModal(0);
     }
 
     type_point destination = get_mouse_map_point();
@@ -377,19 +381,17 @@ void advManager::dimensionDoor(int level)
                 && cell->m_groundSet == eTerrainWater)) {
             if (g_game->isLocalHuman(who->m_owner)) {
                 normalDialog(
-                    g_generalText->getText(
-                        GENERAL_TEXT_DIMENSION_DOOR_BLOCKED),
+                    (*g_generalText)[GENERAL_TEXT_DIMENSION_DOOR_BLOCKED],
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             }
             updateRadar(1, 1, 0, 0, 0);
         } else {
-            teleportTo(who, destination, traits->m_sample, 0, 1, 0);
+            teleportTo(who, destination, traits.m_sample, 0, 1, 0);
         }
         who->m_movePoints -= level == eMasteryExpert ? 200 : 300;
         if (who->m_movePoints < 0)
             who->m_movePoints = 0;
-        who->useSpell(who->getManaCost(SPELL_DIMENSION_DOOR, 0,
-                                       who->getSpecialTerrain()));
+        who->useSpell(who->getManaCost(SPELL_DIMENSION_DOOR));
         m_advWindow->updateHeroLocator(-1, 1, 1);
         reseed(0, 0);
         ++who->m_dWalkSpellsCast;
@@ -398,7 +400,7 @@ void advManager::dimensionDoor(int level)
 
     updateRadar(1, 1, 0, 0, 0);
     normalDialog(
-        g_generalText->getText(GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET),
+        (*g_generalText)[GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET],
         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
@@ -424,14 +426,20 @@ void advManager::dimensionDoor(int level)
 // and one-argument GetManaCost. The joint helper family restores them without
 // moving the 99.0386% result. DistanceSquared now retains its proven const-
 // reference interface (struct.h:120, dc 0x22fe4); both callers pass the local
-// town location directly. Its dy-before-dx body and the nested town-location
-// scope remain intact. Flattening the squared differences scored 95.20%,
-// swapping receivers 98.22%, and moving dx evaluation first changed the proven
-// local homes (98.21%). The first x-extraction schedule remains unresolved.
-// A further 16-state family (four objects, all reproduced) restores DC line
-// 549 nearest-distance initialization before line 552 heroLocation, the
-// numeric_limits<int>::max call, and the nested team/visitor tests without
-// closing that residual. ScuttleBoat's nested failure guard is also neutral.
+// town location directly. The final 24-state helper/caller family emits
+// six objects and reproduces all six. X-before-Y locals in the canonical
+// DistanceSquared helper close all seven scored advspells functions.
+// Its DC121/124/122 line entries are nonmonotonic and record no named
+// locals; the earlier assumption that Y-first was proven was incorrect.
+// Y-first leaves four stack displacements at 99.9914; direct arithmetic
+// inside the same helper gives 95.7232. Both source calls remain intact.
+// Negative controls isolate the max facade: using its template selector
+// directly returns TownGate to 91.81, while changing only text[] to the
+// older accessor leaves the bytes unchanged. Retain both proven boundaries.
+// DC549 initializes nearest distance before DC552 heroLocation; DC564
+// stores closest_distance_2 before DC565 stores closest_town.
+// Original local names: TGWindow, closest_town, closest_distance_2,
+// hero_loc, town_loc; normalized below without changing their scopes.
 VA(0x0041d360, 0x5C8)  // anchor-vtable TTownGateWindow ctor/dtor, dc 0x22510
 void advManager::townGate(TSkillMastery level)
 {
@@ -443,7 +451,7 @@ void advManager::townGate(TSkillMastery level)
     if (who->m_movePoints < cost) {
         if (g_game->isLocalHuman(who->m_owner)) {
             normalDialog(
-                g_generalText->getText(GENERAL_TEXT_SPELL_NEEDS_MOVEMENT),
+                (*g_generalText)[GENERAL_TEXT_SPELL_NEEDS_MOVEMENT],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         return;
@@ -457,7 +465,7 @@ void advManager::townGate(TSkillMastery level)
     if (numTowns == 0) {
         if (g_game->isLocalHuman(who->m_owner)) {
             normalDialog(
-                g_generalText->getText(GENERAL_TEXT_TOWN_PORTAL_NO_TOWN),
+                (*g_generalText)[GENERAL_TEXT_TOWN_PORTAL_NO_TOWN],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         return;
@@ -466,40 +474,40 @@ void advManager::townGate(TSkillMastery level)
     if ((who->m_flags & 0x40000) != 0) {
         if (g_game->isLocalHuman(who->m_owner)) {
             normalDialog(
-                g_generalText->getText(GENERAL_TEXT_SPELL_NOT_FROM_BOAT),
+                (*g_generalText)[GENERAL_TEXT_SPELL_NOT_FROM_BOAT],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         return;
     }
 
     int selectedTown;
-    if (level >= 2) {
-        TTownGateWindow window(1);
+    if (level >= eMasteryAdvanced) {
+        TTownGateWindow tgWindow(1);
         for (unsigned i = 0; i < g_game->m_towns.size(); i++) {
             if (g_game->onSameTeam(who->m_owner, g_game->m_towns[i].m_owner)) {
                 if (g_game->getTown(i)->m_visitingHeroId == -1) {
-                    window.addTown(i);
+                    tgWindow.addTown(i);
                 }
             }
         }
-        window.doModal();
+        tgWindow.doModal();
         selectedTown = g_windowManager->m_dialogReturn;
     } else {
-        int nearest = -1;
-        int nearestDistance = (std::numeric_limits<int>::max)();
-        type_point heroLocation = who->getLocation();
+        int closestTown = -1;
+        int closestDistance2 = (std::numeric_limits<int>::max)();
+        type_point heroLoc = who->getLocation();
         for (unsigned i = 0; i < g_game->m_towns.size(); i++) {
             if (g_game->onSameTeam(who->m_owner, g_game->m_towns[i].m_owner)) {
-                type_point townLocation = g_game->getTown(i)->getLocation();
-                if (heroLocation.distanceSquared(townLocation)
-                    < nearestDistance) {
-                    nearest = i;
-                    nearestDistance
-                        = heroLocation.distanceSquared(townLocation);
+                type_point townLoc = g_game->getTown(i)->getLocation();
+                if (heroLoc.distanceSquared(townLoc)
+                    < closestDistance2) {
+                    closestDistance2
+                        = heroLoc.distanceSquared(townLoc);
+                    closestTown = i;
                 }
             }
         }
-        selectedTown = nearest;
+        selectedTown = closestTown;
     }
 
     if (selectedTown == -1)
@@ -509,8 +517,7 @@ void advManager::townGate(TSkillMastery level)
     if (destination->m_visitingHeroId != -1) {
         if (g_game->isLocalHuman(who->m_owner)) {
             normalDialog(
-                g_generalText->getText(
-                    GENERAL_TEXT_TOWN_PORTAL_TOWN_OCCUPIED),
+                (*g_generalText)[GENERAL_TEXT_TOWN_PORTAL_TOWN_OCCUPIED],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         return;
@@ -519,7 +526,7 @@ void advManager::townGate(TSkillMastery level)
     teleportTo(who, destination->getLocation(), traits.m_sample, 0, 1, 0);
     destination->giveSpells(0);
     who->m_movePoints -= cost;
-    who->m_movePoints = cppMax(who->m_movePoints, 0);
+    who->m_movePoints = ::max(who->m_movePoints, 0);
     who->useSpell(who->getManaCost(SPELL_TOWN_PORTAL));
     m_advWindow->updateHeroLocator(-1, 1, 1);
     if (g_game->m_mapHeader.m_victoryCondition.checkForArtifactTransportWin(
@@ -532,19 +539,16 @@ void advManager::townGate(TSkillMastery level)
 // Visions. Raises the caster's own visions level, posts the confirmation
 // line and charges the mana; the sample runs across all of it.
 DC_ONLY(0x228e8, 0xDC)
-void advManager::identify(int level)
+void advManager::identify(TSkillMastery level)
 {
-    hero* who = g_currentPlayer->m_currHeroId != -1
-                    ? &g_game->m_heroes[g_currentPlayer->m_currHeroId]
-                    : 0;
+    hero* who = g_game->getCurrHero();
     SAMPLE2 sample = loadPlaySample(g_spellTraits[SPELL_VISIONS].m_sample);
     who->m_visionsPower = level;
     if (g_game->isLocalHuman(who->m_owner)) {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_VISIONS_CAST),
+        normalDialog((*g_generalText)[GENERAL_TEXT_VISIONS_CAST],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
-    who->useSpell(who->getManaCost(SPELL_VISIONS, 0,
-                                   who->getSpecialTerrain()));
+    who->useSpell(who->getManaCost(SPELL_VISIONS));
     waitEndSample(sample, -1);
 }
 
@@ -553,35 +557,29 @@ void advManager::identify(int level)
 // wearing the boots (artifact 0x5a), and nothing happens; aboard a boat the
 // helper answers no and the spell runs.
 DC_ONLY(0x229c4, 0x7A)
-void advManager::waterWalk(int level)
+void advManager::waterWalk(TSkillMastery level)
 {
     const SSpellTraits* traits = &g_spellTraits[SPELL_WATER_WALK];
-    hero* who = g_currentPlayer->m_currHeroId != -1
-                    ? &g_game->m_heroes[g_currentPlayer->m_currHeroId]
-                    : 0;
+    hero* who = g_game->getCurrHero();
     if (who->canWalkOnWater(0))
         return;
 
     SAMPLE2 sample = loadPlaySample(traits->m_sample);
     who->walkOnWater(level);
     reseed(0, 0);
-    who->useSpell(who->getManaCost(SPELL_WATER_WALK, 0,
-                                   who->getSpecialTerrain()));
+    who->useSpell(who->getManaCost(SPELL_WATER_WALK));
     waitEndSample(sample, -1);
 }
 
 // E:\gamedcs\advspells.cpp:654
 // Disguise. The shortest of the four: set the level, charge, wait.
 DC_ONLY(0x22a40, 0x5A)
-void advManager::disguise(int level)
+void advManager::disguise(TSkillMastery level)
 {
-    hero* who = g_currentPlayer->m_currHeroId != -1
-                    ? &g_game->m_heroes[g_currentPlayer->m_currHeroId]
-                    : 0;
+    hero* who = g_game->getCurrHero();
     SAMPLE2 sample = loadPlaySample(g_spellTraits[SPELL_DISGUISE].m_sample);
     who->m_disguiseLevel = level;
-    who->useSpell(who->getManaCost(SPELL_DISGUISE, 0,
-                                   who->getSpecialTerrain()));
+    who->useSpell(who->getManaCost(SPELL_DISGUISE));
     waitEndSample(sample, -1);
 }
 
@@ -591,18 +589,16 @@ void advManager::disguise(int level)
 // retail re-reads the boat bit for that second test rather than reusing the
 // one IsFlying already made. hero::Fly charges the mana itself.
 DC_ONLY(0x22a9c, 0xEC)
-void advManager::flight(int level)
+void advManager::flight(TSkillMastery level)
 {
     const SSpellTraits* traits = &g_spellTraits[SPELL_FLY];
-    hero* who = g_currentPlayer->m_currHeroId != -1
-                    ? &g_game->m_heroes[g_currentPlayer->m_currHeroId]
-                    : 0;
+    hero* who = g_game->getCurrHero();
     if (who->isFlying(0))
         return;
 
     if ((who->m_flags & 0x40000) != 0) {
         normalDialog(
-            g_generalText->getText(GENERAL_TEXT_SPELL_NOT_WHILE_ON_BOAT),
+            (*g_generalText)[GENERAL_TEXT_SPELL_NOT_WHILE_ON_BOAT],
             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
@@ -625,7 +621,8 @@ void advManager::teleportTo(hero* who, type_point destination,
                             unsigned char drawChanges,
                             unsigned char isReplay)
 {
-    int savedCompleteDraw = g_completeDrawEnabled;
+    // Before normalization (locals): bOldShowIt.
+    int oldShowIt = g_completeDrawEnabled;
     if (!drawChanges)
         g_completeDrawEnabled = 0;
 
@@ -635,16 +632,16 @@ void advManager::teleportTo(hero* who, type_point destination,
         g_game->recordTeleport(who, destination);
     }
 
-    NewmapCell* destinationCell = getCell(destination);
+    NewmapCell* newCell = getCell(destination);
     getCell(who->getLocation());
 
-    unsigned char wasMobile = m_curHeroMobile;
+    unsigned char wasMobilized = m_curHeroMobile;
     setHeroContext(who->m_id, 0, 0, drawChanges);
 
-    SAMPLE2 sample;
-    sample.m_playSample = 0;
+    SAMPLE2 teleportSample;
+    teleportSample.m_playSample = 0;
     if (drawChanges || g_currentPlayer->isLocalHuman()) {
-        sample = loadPlaySample(sampleName);
+        teleportSample = loadPlaySample(sampleName);
         completeDraw(0);
         if (drawChanges && !g_currentPlayer->isLocalHuman()) {
             if ((g_unnamed698790 == 0
@@ -688,8 +685,8 @@ void advManager::teleportTo(hero* who, type_point destination,
             g_windowManager->saveFizzleSourceX(8, 8, 0x250, 0x220);
             g_advManager->redrawAdvScreen(0, 0);
             g_windowManager->fizzleForwardX(8, 8, 0x250, 0x220, -1);
-            if (sample.m_playSample != 0)
-                waitEndSample(sample, -1);
+            if (teleportSample.m_playSample != 0)
+                waitEndSample(teleportSample, -1);
         }
     } else {
         m_drawCursor = 0;
@@ -697,17 +694,15 @@ void advManager::teleportTo(hero* who, type_point destination,
             who->obscureCell();
     }
 
-    if (!wasMobile)
+    if (!wasMobilized)
         demobilizeCurrHero(0, drawChanges);
 
     if (g_completeDrawEnabled) {
-        setEnvironmentOrigin(type_point(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
-                                        m_radarOrigin.m_z),
-                             1);
+        setEnvironmentOrigin(getMapCenter(), 1);
     }
 
-    if (destinationCell->m_groundSet != m_lastTerrain && g_completeDrawEnabled) {
-        m_lastTerrain = destinationCell->m_groundSet;
+    if (newCell->m_groundSet != m_lastTerrain && g_completeDrawEnabled) {
+        m_lastTerrain = newCell->m_groundSet;
         g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
     }
 
@@ -718,7 +713,7 @@ void advManager::teleportTo(hero* who, type_point destination,
         forceNewHover();
     }
 
-    g_completeDrawEnabled = savedCompleteDraw;
+    g_completeDrawEnabled = oldShowIt;
 }
 
 #if 0  // @carcass: remaining untouched bodies (continued)

@@ -35,7 +35,7 @@ public:
 
     TAdventureOptionsWindow();
     virtual ~TAdventureOptionsWindow();
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
 
 private:
     textWidget* m_rolloverWidget;

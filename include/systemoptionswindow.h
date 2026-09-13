@@ -96,7 +96,7 @@ public:
     TSystemOptionsWindow();
     virtual ~TSystemOptionsWindow();
     void doModal();
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
     void updateSystemOptions(unsigned char firstUpdate);
 
 private:

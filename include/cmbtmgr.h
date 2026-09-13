@@ -995,8 +995,8 @@ public:
     // Adjacency table [cell][direction] of int16 cell indexes (-1 =
     // off-grid); path.cpp's whole direction system reads it. Slots
     // 6/7 are resolved to real directions by facing first.
-    short m_adjacentCells[187][6];  // +0x13468
-    unsigned char m_saveBiggestExtent;  // +0x13d2c
+    short m_adjacentCells[187][6];      // +0x13468
+    bool m_saveBiggestExtent;        // +0x13d2c
     // Dreamcast SaveBiggestExtent is one byte before the LimitToExtent
     // dword; retail preserves this alignment boundary at +0x13d2c/30.
     char m_paddingBeforeLimitToExtent[0x3];
@@ -1206,7 +1206,7 @@ public:
     int checkApplyBadMorale(int group, int index);
     void checkApplyGoodMorale(int group, int index);
     void spellEffect(int effect, army* targetArmy, int delay,
-                     unsigned char doWince);
+                     bool doWince);
     unsigned char shotIsNotOptimal(const army* attacker,
                                    const army* defender) const;
     unsigned char shotIsThroughWall(const army* shooter, int sourceIndex,
@@ -1268,19 +1268,22 @@ public:
     // Fly's two Complete-era header folds. The retail viewport never scrolls,
     // so ScrollTo is supplied as a TU inline there; UpdateCombatArea expands
     // to UpdateScreen, matching drawing.cpp's retained inline copy.
+    // DC drawing.cpp:679/680 preserves the coordinate facade.
+    bool scrollTo(int x, int y, int width, int height, bool draw,
+                  bool doscrollX, bool doscrollY);
     bool scrollTo(SLimitData extent, bool draw,
                   bool doscrollX, bool doscrollY);
     // Dreamcast's LF_FIELDLIST fixes this complete renderer band (entries
     // 197..212). Keep even the helpers which Complete inlines away: their
     // declaration order and source boundaries are compiler-state evidence.
-    void drawFrame(unsigned char update,
-                   unsigned char limitCreatureEffect,
-                   unsigned char limitDraw, int delay,
-                   unsigned char refreshBackground,
-                   unsigned char doDelayTil);
+    void drawFrame(bool update,
+                   bool limitCreatureEffect,
+                   bool limitDraw, int delay,
+                   bool refreshBackground,
+                   bool doDelayTil);
     int drawArcher(const CSprite* sprite, int sequence, int frame,
                    int x, int y, SLimitData* limits,
-                   unsigned char isFlipped, unsigned char colorRow);
+                   bool isFlipped, unsigned char colorRow);
     // DC header inline (cmbtmgr.h:1460, dc 0x27ec8, 18 B). Its S_PUB32
     // identity is ?ValidHex@combatManager@@SA_NH@Z: static bool. No retail
     // body; place_shooter (0x422060) carries two copies of it, one on
@@ -1309,17 +1312,17 @@ public:
     void cycleCombatScreen();
     int drawCreature(const CSprite* sprite, int sequence, int frame,
                      int x, int y, struct SLimitData* limitData,
-                     int id, unsigned char isFlipped, int color);
+                     int id, bool isFlipped, int color);
     int drawCreatureAlpha(const CSprite* sprite, int sequence, int frame,
                           int x, int y, SLimitData* limits,
-                          unsigned char isFlipped, int color);
+                          bool isFlipped, int color);
     int drawCombatHero(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits,
-                       unsigned char isFlipped);
+                       bool isFlipped);
     int drawSpriteObject(const CSprite* sprite, int frame, int x, int y,
-                         unsigned char isFlipped);
+                         bool isFlipped);
     int drawSpellEffect(const CSprite* sprite, int frame, int x, int y,
-                        unsigned char isFlipped, unsigned char isAlpha);
+                        bool isFlipped, bool isAlpha);
     int drawWall(const Bitmap816* image, int x, int y, int width, int height,
                  int destX, int destY);
     int drawObject(const Bitmap816* image, int x, int y);
@@ -1334,7 +1337,7 @@ public:
 private:
     void computeExtent(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits, int isFlipped,
-                       unsigned char saveBiggestExtent);
+                       bool saveBiggestExtent);
 
 public:
     // Dreamcast's spells.cpp helper. CastSpell calls this boundary while
@@ -1688,7 +1691,7 @@ public:
                  int angleDistortMax, int segmentLength,
                  int distortAlways);
     void spellEffect(int effect, int hex, int delay,
-                     unsigned char leaveLastFrame);  // 0x496a10
+                     bool leaveLastFrame);          // 0x496a10
     // 0x59fde0 (68 B), the Enchanter's shot resolution army::
     // animate_missile hands its volley to instead of a missile flight
     // (three stack arguments: the launch point and the target stack).

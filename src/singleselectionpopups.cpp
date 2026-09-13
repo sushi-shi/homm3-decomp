@@ -478,7 +478,7 @@ void CSingleSelPopup::add(widget* w)
 }
 // E:\gamedcs\singleselectionpopups.h:75
 DC_ONLY(0x12efc0, 0x1C)   // inlined / thunk
-int CSingleSelPopup::exitDialog(message* msg)
+int CSingleSelPopup::exitDialog(message& msg)
 {
     // @stub
 }

@@ -71,7 +71,7 @@ public:
     void showPointer(bool restore);
     void setPointer(int newFrame, EPointerSet newSet);
     void mouseCoords(int& x, int& y);
-    void update(unsigned char forceIt);
+    void update(bool forceIt);
     void checkUpdate();
     // E:\gamedcs\MouseMgr.h:210/215. Dreamcast emits these header helpers
     // in kb.obj/adventuremapwindow.obj; Complete folds both into direct loads.
@@ -110,8 +110,8 @@ public:
     // DC wingraph.cpp:1789 directly calls LoadFrame after GetFrame;
     // retail 0x601a00 retains that call. Preserve this specific friend.
     friend unsigned char ddSetFullScreenStatus(int newStatus);
-    void showSystemCursor(unsigned char showIt);
-    void reset();  // 0x50cc80
+    void showSystemCursor(bool showIt);
+    void reset();                 // 0x50cc80
 
 private:
     void loadFrame(int newFrame);

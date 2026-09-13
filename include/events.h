@@ -68,7 +68,7 @@ public:
 };
 
 unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
-                              armyGroup* defendingArmy, town* defendingTown,
+                              armyGroup& defendingArmy, town* defendingTown,
                               NewmapCell* cell);
 // Dreamcast ai_player.cpp:2817 proves the enemy reference parameter.
 void splitArmies(hero* currentHero, const hero* enemyHero,

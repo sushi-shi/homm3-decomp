@@ -70,7 +70,7 @@ void stopMouseThread();
 // SetupThievesGuild and GetCategoryStats rank heroes with it.
 long aiApproximateStrength(const hero* currentHero);
 long aiApproximateStrength(const hero* currentHero,
-                             const armyGroup* currentArmy);
+                             const armyGroup& currentArmy);
 // The scoreboard's statistics pair, defined (with their claims) after
 // SetupThievesGuild in link order; declared here so the builder above
 // them can call both.
@@ -939,21 +939,21 @@ void TTownScreenWindow::updateTownLocator(int i)
     if (i >= player->m_numTowns) {
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
         msg.m_extra = 0;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_extra = widget::WIDGET_ACTIVE;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
         return;
     }
 
     int townId = player->m_townIds[i + m_topTown];
     msg.m_codeX = widget::WIDGET_SET_STATUS;
     msg.m_extra = widget::WIDGET_ACTIVE;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
     msg.m_extra = g_game->getTown(townId)->getPortraitFrame(true);
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     if (i + m_topTown != g_unnamed6aaa50)
         return;
@@ -961,11 +961,11 @@ void TTownScreenWindow::updateTownLocator(int i)
     msg.m_codeX = widget::WIDGET_SET_STATUS;
     msg.m_codeY = 0xa3;
     msg.m_extra = widget::WIDGET_DRAWN;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     msg.m_codeX = 0x35;
     msg.m_extra = (i << 5) + 0x1ae;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 }
 
 VA(0x005c5aa0, 0x95)  // dc 0x16af58
@@ -1308,7 +1308,7 @@ void townManager::updateTownInfo()
     msg.m_extra = frame;
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
     msg.m_codeY = 0x9e;
-    m_townWindow->broadcastMessage(&msg);
+    m_townWindow->broadcastMessage(msg);
 
     frame = 3;
     if (m_townToView->m_built & g_bitNumber[CASTLE_FORT_ID])
@@ -1319,14 +1319,14 @@ void townManager::updateTownInfo()
         frame = 2;
     msg.m_extra = frame;
     msg.m_codeY = 0x9f;
-    m_townWindow->broadcastMessage(&msg);
+    m_townWindow->broadcastMessage(msg);
 
     sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
             m_townToView->getGoldIncome(1));
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0xa0;
     msg.m_extraText = g_text;
-    m_townWindow->broadcastMessage(&msg);
+    m_townWindow->broadcastMessage(msg);
 
     static_cast<TTownScreenWindow*>(m_townWindow)->setBonusDisplay(m_townToView);
 }
@@ -1470,28 +1470,28 @@ void townManager::setupTown(unsigned char fade)
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 149;
     msg.m_extraText = g_text;
-    m_townWindow->broadcastMessage(&msg);
+    m_townWindow->broadcastMessage(msg);
 
     strcpy(g_text, g_generalText->getText(51));
     msg.m_codeY = 151;
     msg.m_extraText = g_text;
-    m_townWindow->broadcastMessage(&msg);
+    m_townWindow->broadcastMessage(msg);
 
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
     msg.m_codeY = 150;
     msg.m_extra = m_townToView->getPortraitFrame(false);
-    m_townWindow->broadcastMessage(&msg);
+    m_townWindow->broadcastMessage(msg);
 
     msg.m_codeX = widget::WIDGET_SET_STATUS;
     msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
     msg.m_codeY = 154;
-    m_townWindow->broadcastMessage(&msg);
+    m_townWindow->broadcastMessage(msg);
 
     g_game->getLocalPlayer();
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 148;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    m_townWindow->broadcastMessage(&msg);
+    m_townWindow->broadcastMessage(msg);
 
     if (!fade)
         m_townWindow->drawWindow(0, 148, 150);
@@ -2209,7 +2209,7 @@ void townManager::setCommandAndText(message* msg)
     textMessage.m_codeX = widget::WIDGET_SET_TEXT;
     textMessage.m_codeY = 0x97;
     textMessage.m_extraText = m_statusText;
-    m_townWindow->broadcastMessage(&textMessage);
+    m_townWindow->broadcastMessage(textMessage);
     m_townWindow->drawWindow(0, 0x97, 0x97);
     g_windowManager->updateScreen(7, 0x22b, 0x2de, 0x13);
 }
@@ -2514,19 +2514,29 @@ void TThievesGuildWindow::setRolloverText(int codeY)
     g_windowManager->updateScreen(m_x + 8, m_y + 0x22c, 0x2e0, 0x12);
 }
 
-VA(0x005c9930, 0x2AC)  // dc 0x16e43c
-int TThievesGuildWindow::windowHandler(message* msg)
+// The thieves' guild's message handler, reconstructed 2026-08-25 from the
+// prior lane's decode. Right-clicks (WIDGET_RIGHT_SELECT) on a rank cell open a
+// NormalDialog headed by the matching gStatDesc column; right-clicks on
+// a hero or creature portrait open that unit's detail view, but only for the
+// local player's own column (owners[player] == GetLocalPlayerGamePos()). Mouse
+// moves refresh the rollover line through the window manager's hover latch.
+// The two big-value portrait rows dispatch through a second compressed switch;
+// the creature row hands game::ViewArmy a whole armyGroup out of the same
+// 0x6aa660 storage SetRolloverText reads one slot from.
+// E:\gamedcs\townmgr.cpp:4154
+VA(0x005c9930, 0x2AC)  // anchor-vtable 0x643764 slot 9 + anchor-callee(SetRolloverText 0x5c9710 + ViewArmy/HeroView/ConvertToHover) + arity(ret 4), dc 0x16e43c
+int TThievesGuildWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    switch (msg->m_id) {
+    switch (msg.m_id) {
     case MESSAGE_WIDGET:
-        if (msg->m_codeX == widget::WIDGET_RIGHT_SELECT) {
-            if (msg->m_codeY <= 37) {
-                if (msg->m_codeY < 30) {
-                    switch (msg->m_codeY) {
+        if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+            if (msg.m_codeY <= 37) {
+                if (msg.m_codeY < 30) {
+                    switch (msg.m_codeY) {
                     case RANK_A0: case RANK_A1: case RANK_A2: case RANK_A3:
                     case RANK_A4: case RANK_A5: case RANK_A6: case RANK_A7:
                         normalDialog(g_statDesc[0], 4, -1, -1, -1, 0,
@@ -2549,17 +2559,17 @@ int TThievesGuildWindow::windowHandler(message* msg)
                     return MESSAGE_DISPATCH_CONSUME;
                 }
             } else {
-                switch (msg->m_codeY) {
+                switch (msg.m_codeY) {
                 case HERO_P0: case HERO_P1: case HERO_P2: case HERO_P3:
                 case HERO_P4: case HERO_P5: case HERO_P6: case HERO_P7:
-                    if (g_game->getLocalPlayerGamePos() == m_owners[msg->m_codeY - HERO_P0])
-                        heroView(g_heroWidgetMap[msg->m_codeY], 1, 0, 1);
+                    if (g_game->getLocalPlayerGamePos() == m_owners[msg.m_codeY - HERO_P0])
+                        heroView(g_heroWidgetMap[msg.m_codeY], 1, 0, 1);
                     return MESSAGE_DISPATCH_CONSUME;
                 case CREATURE_P0: case CREATURE_P1: case CREATURE_P2:
                 case CREATURE_P3: case CREATURE_P4: case CREATURE_P5:
                 case CREATURE_P6: case CREATURE_P7:
-                    if (g_game->getLocalPlayerGamePos() == m_owners[msg->m_codeY - CREATURE_P0]) {
-                        int player = msg->m_codeY - CREATURE_P0;
+                    if (g_game->getLocalPlayerGamePos() == m_owners[msg.m_codeY - CREATURE_P0]) {
+                        int player = msg.m_codeY - CREATURE_P0;
                         g_game->viewArmy(g_creatureArmies[player],
                                          g_creatureWidgetMap1[player + CREATURE_P0],
                                          0, 0, 0x77, 0x14, 0, 1);
@@ -2571,10 +2581,10 @@ int TThievesGuildWindow::windowHandler(message* msg)
         break;
 
     case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(*msg);
-        if (msg->m_codeY != g_windowManager->m_lastHover) {
-            g_windowManager->m_lastHover = msg->m_codeY;
-            setRolloverText(msg->m_codeY);
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY != g_windowManager->m_lastHover) {
+            g_windowManager->m_lastHover = msg.m_codeY;
+            setRolloverText(msg.m_codeY);
         }
         break;
     }
@@ -3015,27 +3025,27 @@ void TMageGuildWindow::setRolloverText(int codeY)
 // which is the B18 class and not source-addressable). The Holy Grail text
 // row is corrected to 715 above; the remaining bytes are those two.
 VA(0x005ce370, 0x1F0)  // anchor-vtable 0x6437dc slot 9 + anchor-callee(SetRolloverText 0x5ce1c0, whose sole caller this is) + arity(ret 4), dc 0x171118
-int TMageGuildWindow::windowHandler(message* msg)
+int TMageGuildWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    switch (msg->m_id) {
+    switch (msg.m_id) {
     case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(*msg);
-        if (msg->m_codeY != g_windowManager->m_lastHover) {
-            g_windowManager->m_lastHover = msg->m_codeY;
-            setRolloverText(msg->m_codeY);
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY != g_windowManager->m_lastHover) {
+            g_windowManager->m_lastHover = msg.m_codeY;
+            setRolloverText(msg.m_codeY);
         }
         break;
 
     case MESSAGE_WIDGET:
-        switch (msg->m_codeX) {
+        switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
         case widget::WIDGET_RIGHT_SELECT: {
-            int qualifier = msg->m_qualifier & MESSAGE_MODIFIER_RIGHT;
-            int id = msg->m_codeY;
+            int qualifier = msg.m_qualifier & MESSAGE_MODIFIER_RIGHT;
+            int id = msg.m_codeY;
             // The frame run (10..35) and the scroll run (40..65), thirty
             // slots each and the same thirty spells; anything else
             // leaves the slot at the sentinel and the arm does nothing.
@@ -3283,13 +3293,13 @@ type_garrison_base_window::type_garrison_base_window(hero* inHero,
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = BACKGROUND_ID;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     g_townManager->m_divideStatus = 0;
     msg.m_codeX = widget::WIDGET_SET_STATUS;
     msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
     msg.m_codeY = DIVIDE_BUTTON_ID;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     g_townManager->m_garrisonStrip = new strip(m_x + 28, m_y + 126, 0, 161,
                                          garrisonOwner, garrisonOwner, 0,
@@ -3412,7 +3422,7 @@ void type_garrison_base_window::setCommandAndText(message* msg)
     textMessage.m_id = MESSAGE_WIDGET;
     textMessage.m_codeX = widget::WIDGET_SET_TEXT;
     textMessage.m_codeY = 0xc9;
-    broadcastMessage(&textMessage);
+    broadcastMessage(textMessage);
     drawWindow(0, 0xc8, 0xc9);
     g_windowManager->updateScreen(m_x + 7, m_y + 0x171, 0x217, 0x13);
 }
@@ -3449,20 +3459,20 @@ void type_garrison_base_window::setCommandAndText(message* msg)
 // selectedStrip/slot reads and the DIVIDE arm's two Draw calls) plus the
 // jump-table and byte-table reloc addends, which cost nothing.
 VA(0x005d0910, 0x228)  // anchor-vtable 0x643818 slot 9 + anchor-callee(SetCommandAndText 0x5d05f0 + DoCommand) + arity(ret 4), dc 0x172cf4
-int type_garrison_base_window::windowHandler(message* msg)
+int type_garrison_base_window::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
     type_garrison_base_window* win =
-        static_cast<type_garrison_base_window*>(msg->m_window);
+        static_cast<type_garrison_base_window*>(msg.m_window);
 
-    switch (msg->m_id) {
+    switch (msg.m_id) {
     case MESSAGE_WIDGET:
-        switch (msg->m_codeX) {
+        switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
-            switch (msg->m_codeY) {
+            switch (msg.m_codeY) {
             case TOP_SLOT_FIRST_ID + 0:
             case TOP_SLOT_FIRST_ID + 1:
             case TOP_SLOT_FIRST_ID + 2:
@@ -3478,13 +3488,13 @@ int type_garrison_base_window::windowHandler(message* msg)
             case BOTTOM_SLOT_FIRST_ID + 5:
             case BOTTOM_SLOT_FIRST_ID + 6:
                 g_townManager->doCommand(g_townManager->m_command, 1, win);
-                win->setCommandAndText(msg);
+                win->setCommandAndText(&msg);
                 return 1;
             }
             break;
 
         case widget::WIDGET_RIGHT_SELECT:
-            switch (msg->m_codeY) {
+            switch (msg.m_codeY) {
             case TOP_SLOT_FIRST_ID + 0:
             case TOP_SLOT_FIRST_ID + 1:
             case TOP_SLOT_FIRST_ID + 2:
@@ -3493,7 +3503,7 @@ int type_garrison_base_window::windowHandler(message* msg)
             case TOP_SLOT_FIRST_ID + 5:
             case TOP_SLOT_FIRST_ID + 6:
                 g_townManager->m_currStrip = g_townManager->m_garrisonStrip;
-                g_townManager->m_currIndex = msg->m_codeY - TOP_SLOT_FIRST_ID;
+                g_townManager->m_currIndex = msg.m_codeY - TOP_SLOT_FIRST_ID;
                 break;
 
             case BOTTOM_SLOT_FIRST_ID + 0:
@@ -3504,7 +3514,7 @@ int type_garrison_base_window::windowHandler(message* msg)
             case BOTTOM_SLOT_FIRST_ID + 5:
             case BOTTOM_SLOT_FIRST_ID + 6:
                 g_townManager->m_currStrip = g_townManager->m_heroStrip;
-                g_townManager->m_currIndex = msg->m_codeY - BOTTOM_SLOT_FIRST_ID;
+                g_townManager->m_currIndex = msg.m_codeY - BOTTOM_SLOT_FIRST_ID;
                 break;
 
             default:
@@ -3523,7 +3533,7 @@ int type_garrison_base_window::windowHandler(message* msg)
             return 1;
 
         case widget::WIDGET_DESELECT:
-            if (msg->m_codeY == DIVIDE_BUTTON_ID) {
+            if (msg.m_codeY == DIVIDE_BUTTON_ID) {
                 townManager* mgr = g_townManager;
                 enum TCreatureType creature;
                 {
@@ -3539,12 +3549,12 @@ int type_garrison_base_window::windowHandler(message* msg)
         break;
 
     case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(*msg);
-        if (msg->m_codeY != win->m_lastHover
-            || msg->m_qualifier != win->m_lastQualifier) {
-            win->m_lastHover = msg->m_codeY;
-            win->m_lastQualifier = msg->m_qualifier;
-            win->setCommandAndText(msg);
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY != win->m_lastHover
+            || msg.m_qualifier != win->m_lastQualifier) {
+            win->m_lastHover = msg.m_codeY;
+            win->m_lastQualifier = msg.m_qualifier;
+            win->setCommandAndText(&msg);
         }
         return 1;
     }
@@ -3751,7 +3761,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     hero* visitor = g_game->getHero(g_townManager->m_townToView->m_visitingHeroId);
     if (g_game->m_players[g_game->getLocalPlayerGamePos()].m_resources[6] < cost
@@ -3759,10 +3769,10 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_codeY = BUY_BUTTON_ID;
         msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_extra = widget::WIDGET_ACTIVE;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
     }
 
     m_field68 = 0;
@@ -3826,25 +3836,26 @@ void TBlacksmithWindow::setRolloverText(int id)
 // The animation tick is the fort page's, to the instruction - including
 // the reference-returning `_cpp_max` the top of this file explains.
 
-VA(0x005d1c60, 0xC2)  // dc 0x173bc8
-int TBlacksmithWindow::windowHandler(message* msg)
+// E:\gamedcs\townmgr.cpp:5323
+VA(0x005d1c60, 0xC2)  // anchor-vtable 0x6438cc slot 9 + arity + the two text call edges, dc 0x173bc8
+int TBlacksmithWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    switch (msg->m_id) {
+    switch (msg.m_id) {
     case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(*msg);
-        if (msg->m_codeY != m_lastHover) {
-            m_lastHover = msg->m_codeY;
-            setRolloverText(msg->m_codeY);
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY != m_lastHover) {
+            m_lastHover = msg.m_codeY;
+            setRolloverText(msg.m_codeY);
         }
         return 1;
 
     case MESSAGE_WIDGET:
-        if (msg->m_codeX == widget::WIDGET_RIGHT_SELECT)
-            setRightClickText(msg->m_codeY);
+        if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT)
+            setRightClickText(msg.m_codeY);
         break;
     }
 
@@ -3996,10 +4007,10 @@ TShipWindow::TShipWindow(int type)
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_codeY = BUY_BUTTON_ID;
         msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_extra = widget::WIDGET_ACTIVE;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
     }
 }
 
@@ -4018,19 +4029,27 @@ TShipWindow::~TShipWindow()
 // its own - the blacksmith keeps its own at +0x60, this dialog uses the
 // global one.
 
-VA(0x005d25a0, 0x17A)  // dc 0x1746dc
-int TShipWindow::windowHandler(message* msg)
+// E:\gamedcs\townmgr.cpp:5486
+VA(0x005d25a0, 0x17A)  // anchor-vtable 0x643908 slot 9 + arity + boatIcon/boatFrame edges, dc 0x1746dc
+int TShipWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    switch (msg->m_id) {
+    switch (msg.m_id) {
     case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(*msg);
-        if (msg->m_codeY != g_windowManager->m_lastHover) {
-            g_windowManager->m_lastHover = msg->m_codeY;
-            switch (msg->m_codeY) {
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY != g_windowManager->m_lastHover) {
+            g_windowManager->m_lastHover = msg.m_codeY;
+            switch (msg.m_codeY) {
+            // The text-to-button pairing is retail's, traced through the
+            // dispatch rather than assumed: `sub esi,0x7801 / je L1` sends
+            // CANCEL to the block that reads [rows + 0x960] = row 600, and
+            // `dec esi / je L2` sends BUY to [rows + 0x95c] = row 599. The
+            // arms are laid out in the REVERSE of their case values, which
+            // is this sunk-body switch's own convention and not a source
+            // order - swapping the two case labels is byte-flat.
             case CANCEL_BUTTON_ID:
                 strcpy(g_text, g_generalText->getText(600));
                 break;
@@ -5402,7 +5421,7 @@ void townManager::redrawTownScreen()
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x97;
     msg.m_extraText = m_statusText;
-    m_townWindow->broadcastMessage(&msg);
+    m_townWindow->broadcastMessage(msg);
 
     // The armyGroup integer roster crosses to DrawIcons' CodeView
     // TCreatureType domain through the same four-byte representation.
@@ -5733,7 +5752,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 1;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    window->broadcastMessage(&msg);
+    window->broadcastMessage(msg);
 
     CSprite* icons = ResourceManager::getSprite("Resource.def");
     int iconWidth = icons->getWidth();
@@ -5764,22 +5783,22 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
         msg.m_codeY = TBuyBuildWindow::BUY_BUTTON_ID;
-        window->broadcastMessage(&msg);
+        window->broadcastMessage(msg);
         msg.m_codeY = 8;
-        window->broadcastMessage(&msg);
+        window->broadcastMessage(msg);
         msg.m_codeY = TBuyBuildWindow::CANCEL_BUTTON_ID;
-        window->broadcastMessage(&msg);
+        window->broadcastMessage(msg);
         msg.m_codeY = 9;
-        window->broadcastMessage(&msg);
+        window->broadcastMessage(msg);
         msg.m_codeY = 0;
-        window->broadcastMessage(&msg);
+        window->broadcastMessage(msg);
         g_windowManager->doQuickView(window);
     } else {
         if (infoOnly) {
             msg.m_codeX = widget::WIDGET_SET_STATUS;
             msg.m_codeY = TBuyBuildWindow::BUY_BUTTON_ID;
             msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
-            window->broadcastMessage(&msg);
+            window->broadcastMessage(msg);
         }
         window->doModal(0);
         if (g_windowManager->m_dialogReturn == TBuyBuildWindow::BUY_BUTTON_ID) {
@@ -5834,18 +5853,18 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
 
 // E:\gamedcs\townmgr.cpp:7513
 VA(0x005d6810, 0xFB)  // anchor-vtable 0x643944 slot 9 + arity, dc 0x1799bc
-int TBuyBuildWindow::windowHandler(message* msg)
+int TBuyBuildWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    if (msg->m_id == MESSAGE_MOUSE_MOVE) {
-        g_windowManager->convertToHover(*msg);
-        if (msg->m_codeY != g_windowManager->m_lastHover) {
-            g_windowManager->m_lastHover = msg->m_codeY;
+    if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY != g_windowManager->m_lastHover) {
+            g_windowManager->m_lastHover = msg.m_codeY;
 
-            switch (msg->m_codeY) {
+            switch (msg.m_codeY) {
             case BUY_BUTTON_ID:
                 sprintf(g_text, g_generalText->getText(596),
                         getBuildingName(g_townManager->m_townToView->m_type,
@@ -6104,7 +6123,7 @@ void townManager::setupMage(heroWindow* mageWin)
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    mageWin->broadcastMessage(&msg);
+    mageWin->broadcastMessage(msg);
 
     for (int level = 0; level < 5; level++) {
         for (int slot = 0; slot < 6; slot++) {
@@ -6130,20 +6149,20 @@ void townManager::setupMage(heroWindow* mageWin)
                             : widget::WIDGET_SET_STATUS;
             msg.m_codeY = 10 + level * 6 + slot;
             msg.m_extra = widget::WIDGET_DRAWN;
-            mageWin->broadcastMessage(&msg);
+            mageWin->broadcastMessage(msg);
 
             if (state == MAGE_SLOT_EMPTY) {
                 msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
                 msg.m_codeY = 10 + level * 6 + slot;
                 msg.m_extra = state;
-                mageWin->broadcastMessage(&msg);
+                mageWin->broadcastMessage(msg);
             }
 
             if (state) {
                 msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
                 msg.m_extra = widget::WIDGET_DRAWN;
                 msg.m_codeY = 40 + level * 6 + slot;
-                mageWin->broadcastMessage(&msg);
+                mageWin->broadcastMessage(msg);
             } else {
                 msg.m_codeY = 40 + level * 6 + slot;
                 msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
@@ -6152,7 +6171,7 @@ void townManager::setupMage(heroWindow* mageWin)
                     msg.m_extra = 70;
                 else
                     msg.m_extra = m_townToView->m_mageGuildSpells[level][slot];
-                mageWin->broadcastMessage(&msg);
+                mageWin->broadcastMessage(msg);
             }
         }
     }
@@ -6310,7 +6329,7 @@ void TTavernWindow::setRolloverText(int codeY)
 // spelling reached it: the value is a call result, so why-reg's
 // creation-order lever does not apply.
 VA(0x005d7b30, 0x2E1)  // anchor-vtable 0x643980 slot 9 + anchor-callee(SetRolloverText 0x5d7920 + TThievesGuildWindow ctor) + arity(ret 4), dc 0x17aa28
-int TTavernWindow::windowHandler(message* msg)
+int TTavernWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -6318,20 +6337,20 @@ int TTavernWindow::windowHandler(message* msg)
 
     playerData* player = g_game->getLocalPlayer();
 
-    switch (msg->m_id) {
+    switch (msg.m_id) {
     case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(*msg);
-        if (msg->m_codeY != m_lastHover || msg->m_qualifier != m_lastQualifier) {
-            m_lastHover = msg->m_codeY;
-            m_lastQualifier = msg->m_qualifier;
-            setRolloverText(msg->m_codeY);
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY != m_lastHover || msg.m_qualifier != m_lastQualifier) {
+            m_lastHover = msg.m_codeY;
+            m_lastQualifier = msg.m_qualifier;
+            setRolloverText(msg.m_codeY);
         }
         break;
 
     case MESSAGE_WIDGET:
-        switch (msg->m_codeX) {
+        switch (msg.m_codeX) {
         case widget::WIDGET_DESELECT:
-            switch (msg->m_codeY) {
+            switch (msg.m_codeY) {
             case THIEVES_GUILD_BUTTON_ID:
                 g_thievesGuildWindow = new TThievesGuildWindow(-1);
                 if (!g_thievesGuildWindow)
@@ -6344,24 +6363,24 @@ int TTavernWindow::windowHandler(message* msg)
 
             case HIRE_BUTTON_ID:
             case CANCEL_BUTTON_ID:
-                g_windowManager->m_dialogReturn = msg->m_codeY;
-                msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
+                g_windowManager->m_dialogReturn = msg.m_codeY;
+                msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
                 return MESSAGE_DISPATCH_FORWARD;
             }
             break;
 
         case widget::WIDGET_SELECT:
         case widget::WIDGET_RIGHT_SELECT:
-            if (msg->m_codeY >= RECRUIT_0_ID && msg->m_codeY <= RECRUIT_1_ID) {
-                m_selectedRecruit = msg->m_codeY - RECRUIT_0_ID;
+            if (msg.m_codeY >= RECRUIT_0_ID && msg.m_codeY <= RECRUIT_1_ID) {
+                m_selectedRecruit = msg.m_codeY - RECRUIT_0_ID;
                 if (player->m_recruits[m_selectedRecruit] != -1) {
-                    msg->m_codeX = widget::WIDGET_SET_STATUS;
-                    msg->m_codeY = m_selectedRecruit + 8;
-                    msg->m_extra = widget::WIDGET_DRAWN;
+                    msg.m_codeX = widget::WIDGET_SET_STATUS;
+                    msg.m_codeY = m_selectedRecruit + 8;
+                    msg.m_extra = widget::WIDGET_DRAWN;
                     broadcastMessage(msg);
 
-                    msg->m_codeX = widget::WIDGET_CLEAR_STATUS;
-                    msg->m_codeY = 9 - m_selectedRecruit;
+                    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+                    msg.m_codeY = 9 - m_selectedRecruit;
                     broadcastMessage(msg);
 
                     g_tavernHero = &g_game->m_heroes[player->m_recruits[m_selectedRecruit]];
@@ -6376,12 +6395,12 @@ int TTavernWindow::windowHandler(message* msg)
                         g_text[end - 1] = 0;
                     }
 
-                    msg->m_codeX = widget::WIDGET_SET_TEXT;
-                    msg->m_codeY = 7;
-                    msg->m_extraText = g_text;
+                    msg.m_codeX = widget::WIDGET_SET_TEXT;
+                    msg.m_codeY = 7;
+                    msg.m_extraText = g_text;
                     broadcastMessage(msg);
 
-                    if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) {
+                    if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
                         videoPause();
                         heroView(player->m_recruits[m_selectedRecruit], 1, 0, 1);
                         videoResume();
@@ -6596,7 +6615,7 @@ void TThievesGuildWindow::setRolloverText(int codeY)
 
 // E:\gamedcs\townmgr.cpp:4154
 DC_ONLY(0x16e43c, 0x28E)
-int TThievesGuildWindow::windowHandler(message* msg)
+int TThievesGuildWindow::windowHandler(message& msg)
 {
     // @stub
 }
@@ -6659,7 +6678,7 @@ void type_garrison_base_window::viewArmy()
 
 // E:\gamedcs\townmgr.cpp:5027
 DC_ONLY(0x172cf4, 0x240)
-int type_garrison_base_window::windowHandler(message* msg)
+int type_garrison_base_window::windowHandler(message& msg)
 {
     // @stub
 }
@@ -6722,7 +6741,7 @@ void TBlacksmithWindow::setRolloverText(int codeY)
 
 // E:\gamedcs\townmgr.cpp:5323
 DC_ONLY(0x173bc8, 0x116)
-int TBlacksmithWindow::windowHandler(message* msg)
+int TBlacksmithWindow::windowHandler(message& msg)
 {
     // @stub
 }
@@ -6757,7 +6776,7 @@ void TShipWindow::setRolloverText(int codeY)
 
 // E:\gamedcs\townmgr.cpp:5486
 DC_ONLY(0x1746dc, 0x11E)
-int TShipWindow::windowHandler(message* msg)
+int TShipWindow::windowHandler(message& msg)
 {
     // @stub
 }
@@ -6858,7 +6877,7 @@ void TTownMenu::~TTownMenu()
 
 // E:\gamedcs\townmgr.cpp:7048
 DC_ONLY(0x178638, 0x128)
-int TTownMenu::windowHandler(message* msg)
+int TTownMenu::windowHandler(message& msg)
 {
     // @stub
 }
@@ -6939,7 +6958,7 @@ void TBuyBuildWindow::setRightClickText()
 
 // E:\gamedcs\townmgr.cpp:7513
 DC_ONLY(0x1799bc, 0xA8)
-int TBuyBuildWindow::windowHandler(message* msg)
+int TBuyBuildWindow::windowHandler(message& msg)
 {
     // @stub
 }
@@ -6981,7 +7000,7 @@ void TTavernWindow::setRolloverText(int codeY)
 
 // E:\gamedcs\townmgr.cpp:7903
 DC_ONLY(0x17aa28, 0x314)
-int TTavernWindow::windowHandler(message* msg)
+int TTavernWindow::windowHandler(message& msg)
 {
     // @stub
 }
@@ -7074,20 +7093,20 @@ unsigned char doTavern()
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    g_unnamed6aa9ec->broadcastMessage(&msg);
+    g_unnamed6aa9ec->broadcastMessage(msg);
 
     msg.m_extraText = g_text;
     if (g_currentPlayer->isLocalHuman()) {
         sprintf(g_text, g_generalText->getText(217), g_game->m_currentRumour);
         msg.m_codeX = widget::WIDGET_SET_TEXT;
         msg.m_codeY = 2;
-        g_unnamed6aa9ec->broadcastMessage(&msg);
+        g_unnamed6aa9ec->broadcastMessage(msg);
     }
 
     playerData* player = g_game->getLocalPlayer();
     sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), g_heroGoldCost);
     msg.m_codeY = 4;
-    g_unnamed6aa9ec->broadcastMessage(&msg);
+    g_unnamed6aa9ec->broadcastMessage(msg);
 
     if (player->m_recruits[0] == -1) {
         g_tavernHero = 0;
@@ -7100,7 +7119,7 @@ unsigned char doTavern()
         msg.m_extraText =
             g_heroTraits[g_game->getHero(player->m_recruits[0])->m_portrait]
                 .m_largePortraitName;
-        g_unnamed6aa9ec->broadcastMessage(&msg);
+        g_unnamed6aa9ec->broadcastMessage(msg);
     }
 
     if (player->m_recruits[1] == -1) {
@@ -7110,7 +7129,7 @@ unsigned char doTavern()
         msg.m_extraText =
             g_heroTraits[g_game->getHero(player->m_recruits[1])->m_portrait]
                 .m_largePortraitName;
-        g_unnamed6aa9ec->broadcastMessage(&msg);
+        g_unnamed6aa9ec->broadcastMessage(msg);
         if (g_tavernHero == 0)
             g_tavernHero = &g_game->m_heroes[player->m_recruits[1]];
     }
@@ -7128,7 +7147,7 @@ unsigned char doTavern()
         msg.m_codeX = widget::WIDGET_SET_TEXT;
         msg.m_codeY = 7;
         msg.m_extraText = g_text;
-        g_unnamed6aa9ec->broadcastMessage(&msg);
+        g_unnamed6aa9ec->broadcastMessage(msg);
     }
 
     if (player->m_resources[6] < g_heroGoldCost || g_tavernHero == 0
@@ -7138,7 +7157,7 @@ unsigned char doTavern()
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_codeY = TTavernWindow::HIRE_BUTTON_ID;
         msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
-        g_unnamed6aa9ec->broadcastMessage(&msg);
+        g_unnamed6aa9ec->broadcastMessage(msg);
     }
 
     if (g_currentPlayer->isLocalHuman())
@@ -7375,7 +7394,7 @@ void TCastleWindow::recruit(int i)
 
 // E:\gamedcs\townmgr.cpp:8851
 DC_ONLY(0x17f818, 0x4F0)
-int TCastleWindow::windowHandler(message* msg)
+int TCastleWindow::windowHandler(message& msg)
 {
     // @stub
 }
@@ -8180,7 +8199,7 @@ void TCastleWindow::setRolloverText(message* msg)
     textMessage.m_codeX = widget::WIDGET_SET_TEXT;
     textMessage.m_codeY = 0x8a;
     textMessage.m_extraText = g_text;
-    broadcastMessage(&textMessage);
+    broadcastMessage(textMessage);
     drawWindow(0, 0x89, 0x8a);
     g_windowManager->updateScreen(10, 0x22c, 0x2d6, 0x13);
 }
@@ -8229,28 +8248,29 @@ void TCastleWindow::recruit(int i)
 // The fort page's handler, slot 9 of vtable 0x6439bc. Three jobs: the
 // rollover line, the row clicks, and the dwelling animations.
 
-VA(0x005dcf80, 0x401)  // dc 0x17f818
-int TCastleWindow::windowHandler(message* msg)
+// E:\gamedcs\townmgr.cpp:8851
+VA(0x005dcf80, 0x401)  // anchor-vtable 0x6439bc slot 9 + arity, dc 0x17f818
+int TCastleWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    switch (msg->m_id) {
+    switch (msg.m_id) {
     case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(*msg);
-        if (msg->m_codeY != g_townManager->m_lastHover
-            || msg->m_qualifier != g_townManager->m_lastQualifier) {
-            g_townManager->m_lastHover = msg->m_codeY;
-            g_townManager->m_lastQualifier = msg->m_qualifier;
-            setRolloverText(msg);
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY != g_townManager->m_lastHover
+            || msg.m_qualifier != g_townManager->m_lastQualifier) {
+            g_townManager->m_lastHover = msg.m_codeY;
+            g_townManager->m_lastQualifier = msg.m_qualifier;
+            setRolloverText(&msg);
         }
         return 1;
 
     case MESSAGE_WIDGET:
-        if (msg->m_codeX == widget::WIDGET_SELECT
-            || msg->m_codeX == widget::WIDGET_RIGHT_SELECT) {
-            switch (msg->m_codeY) {
+        if (msg.m_codeX == widget::WIDGET_SELECT
+            || msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+            switch (msg.m_codeY) {
             case ROW_FRAME_ID:
             case ROW_FRAME_ID + 1:
             case ROW_FRAME_ID + 2:
@@ -8258,7 +8278,7 @@ int TCastleWindow::windowHandler(message* msg)
             case ROW_FRAME_ID + 4:
             case ROW_FRAME_ID + 5:
             case ROW_FRAME_ID + 6:
-                recruit(msg->m_codeY - ROW_FRAME_ID);
+                recruit(msg.m_codeY - ROW_FRAME_ID);
                 break;
 
             case ROW_STAT_LABEL_1_ID:
@@ -8268,7 +8288,7 @@ int TCastleWindow::windowHandler(message* msg)
             case ROW_STAT_LABEL_1_ID + 4:
             case ROW_STAT_LABEL_1_ID + 5:
             case ROW_STAT_LABEL_1_ID + 6:
-                recruit(msg->m_codeY - ROW_STAT_LABEL_1_ID);
+                recruit(msg.m_codeY - ROW_STAT_LABEL_1_ID);
                 break;
 
             case ROW_STAT_LABEL_2_ID:
@@ -8278,7 +8298,7 @@ int TCastleWindow::windowHandler(message* msg)
             case ROW_STAT_LABEL_2_ID + 4:
             case ROW_STAT_LABEL_2_ID + 5:
             case ROW_STAT_LABEL_2_ID + 6:
-                recruit(msg->m_codeY - ROW_STAT_LABEL_2_ID);
+                recruit(msg.m_codeY - ROW_STAT_LABEL_2_ID);
                 break;
 
             case ROW_STAT_LABEL_3_ID:
@@ -8288,7 +8308,7 @@ int TCastleWindow::windowHandler(message* msg)
             case ROW_STAT_LABEL_3_ID + 4:
             case ROW_STAT_LABEL_3_ID + 5:
             case ROW_STAT_LABEL_3_ID + 6:
-                recruit(msg->m_codeY - ROW_STAT_LABEL_3_ID);
+                recruit(msg.m_codeY - ROW_STAT_LABEL_3_ID);
                 break;
 
             case ROW_STAT_LABEL_4_ID:
@@ -8298,7 +8318,7 @@ int TCastleWindow::windowHandler(message* msg)
             case ROW_STAT_LABEL_4_ID + 4:
             case ROW_STAT_LABEL_4_ID + 5:
             case ROW_STAT_LABEL_4_ID + 6:
-                recruit(msg->m_codeY - ROW_STAT_LABEL_4_ID);
+                recruit(msg.m_codeY - ROW_STAT_LABEL_4_ID);
                 break;
 
             case ROW_STAT_LABEL_5_ID:
@@ -8308,7 +8328,7 @@ int TCastleWindow::windowHandler(message* msg)
             case ROW_STAT_LABEL_5_ID + 4:
             case ROW_STAT_LABEL_5_ID + 5:
             case ROW_STAT_LABEL_5_ID + 6:
-                recruit(msg->m_codeY - ROW_STAT_LABEL_5_ID);
+                recruit(msg.m_codeY - ROW_STAT_LABEL_5_ID);
                 break;
 
             case ROW_STAT_LABEL_6_ID:
@@ -8318,7 +8338,7 @@ int TCastleWindow::windowHandler(message* msg)
             case ROW_STAT_LABEL_6_ID + 4:
             case ROW_STAT_LABEL_6_ID + 5:
             case ROW_STAT_LABEL_6_ID + 6:
-                recruit(msg->m_codeY - ROW_STAT_LABEL_6_ID);
+                recruit(msg.m_codeY - ROW_STAT_LABEL_6_ID);
                 break;
 
             case ROW_FRAME_ID + ROW_SUMMONING_OFFSET:
@@ -8358,8 +8378,8 @@ int TCastleWindow::windowHandler(message* msg)
             case RESOURCE_TEXT_ID + 7:
                 strcpy(g_text, g_adventureWindowHelp[
                            g_unnamed642e70[
-                               msg->m_codeY - RESOURCE_TEXT_ID]].m_rclick);
-                if (msg->m_codeX == widget::WIDGET_RIGHT_SELECT)
+                               msg.m_codeY - RESOURCE_TEXT_ID]].m_rclick);
+                if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT)
                     normalDialog(g_text, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 else
                     normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -8374,8 +8394,8 @@ int TCastleWindow::windowHandler(message* msg)
             case RESOURCE_BORDER_ID + 6:
                 strcpy(g_text, g_adventureWindowHelp[
                            g_unnamed642e70[
-                               msg->m_codeY - RESOURCE_BORDER_ID]].m_rclick);
-                if (msg->m_codeX == widget::WIDGET_RIGHT_SELECT)
+                               msg.m_codeY - RESOURCE_BORDER_ID]].m_rclick);
+                if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT)
                     normalDialog(g_text, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 else
                     normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -8442,7 +8462,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    wellWin->broadcastMessage(&msg);
+    wellWin->broadcastMessage(msg);
 
     int i;
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
@@ -8454,7 +8474,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
         msg.m_codeY = i + 1;
         msg.m_extra = DWELLING_0_ID + m_currentDwellingIdOff[i];
-        wellWin->broadcastMessage(&msg);
+        wellWin->broadcastMessage(msg);
     }
 
     msg.m_id = MESSAGE_WIDGET;
@@ -8464,14 +8484,14 @@ void townManager::setupWell(TCastleWindow* wellWin)
                                        DWELLING_0_ID + m_currentDwellingIdOff[i]));
         msg.m_codeY = i + 9;
         msg.m_extraText = g_text;
-        wellWin->broadcastMessage(&msg);
+        wellWin->broadcastMessage(msg);
         if (m_townToView->m_active
             & g_bitNumber[DWELLING_0_ID + m_currentDwellingIdOff[i]]) {
             sprintf(g_text, "%s %d", g_generalText->getText(0xda),
                     m_townToView->m_population[m_currentDwellingIdOff[i]]);
             msg.m_codeY = i + 0x21;
             msg.m_extraText = g_text;
-            wellWin->broadcastMessage(&msg);
+            wellWin->broadcastMessage(msg);
         }
         msg.m_codeY = i + 0x19;
         TCreatureType rowCreature =
@@ -8484,7 +8504,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
             creatureName = "";
         strcpy(g_text, creatureName);
         msg.m_extraText = g_text;
-        wellWin->broadcastMessage(&msg);
+        wellWin->broadcastMessage(msg);
     }
 
     if (wellWin->m_use8) {
@@ -8492,7 +8512,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
                 g_townManager->m_townToView->m_summoningPopulation);
         msg.m_codeY = 0x28;
         msg.m_extraText = g_text;
-        wellWin->broadcastMessage(&msg);
+        wellWin->broadcastMessage(msg);
 
         msg.m_codeY = 0x20;
         const char* summonName;
@@ -8504,7 +8524,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
             summonName = "";
         strcpy(g_text, summonName);
         msg.m_extraText = g_text;
-        wellWin->broadcastMessage(&msg);
+        wellWin->broadcastMessage(msg);
     }
 
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
@@ -8915,7 +8935,7 @@ void getCategoryStats(int whichCat, long* value, signed char* index)
                 for (int t = 0; t < g_game->m_players[i].m_numTowns; t++) {
                     town* thisTown = g_game->getTown(g_game->m_players[i].m_townIds[t]);
                     if (thisTown->hasGarrison())
-                        strength += aiApproximateStrength(0, &thisTown->getArmy());
+                        strength += aiApproximateStrength(0, thisTown->getArmy());
                 }
                 value[i] = strength;
                 break;

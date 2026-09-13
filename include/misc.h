@@ -76,4 +76,7 @@ long fileSize(char* filename);
 // CODEVIEW(..\stlport\stl_bvector.h:647, dc 0xfe520) std::vector<bool,std::allocator<bool> >::vector<bool,std::allocator<bool> >(int __first, int __last, const std::allocator<bool>* __a);
 // CODEVIEW(..\stlport\stl_bvector.h:653, dc 0xfe55c) std::vector<bool,std::allocator<bool> >::_M_initialize_dispatch(int __n, int __x, __true_type __formal);
 
+// DC misc.cpp SRandom; consumed by adventure spell probability checks.
+int sRandom(int lower, int upper);
+
 #endif  /* HOMM3_MISC_H */

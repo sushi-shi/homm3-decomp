@@ -2261,3 +2261,153 @@ the structures the replay admits. What it found:
   guard, an arm, the loop or the tail) also changes `paintPoint`'s
   retained calls, and the trigger is not monotone in the number of set
   calls. Open.
+
+  shape of gap as `refreshRmgLinePoint`.
+
+
+### University constructor: source ownership recovers the missing expansion
+
+`type_university_window::type_university_window` (0x5ef500) is exact with
+ordinary, canonical `setHotkey` and `push_back` calls. The earlier 88.1533%
+object had a cached skill-record reference. A passive C2 trace reproduced
+that object: caller `cb=3046`, initial budget 6092; the final hotkey's nested
+three-argument integer-vector insertion had `cb=469` but received 427.
+The named call stream confirmed that this insertion was retained where
+retail expanded it. The later widget-vector insertions already expanded;
+the historical last-rollover-only diagnosis was stale.
+
+Direct `m_skills[i]` accesses recover that expansion at 95.2402% without
+changing helper declarations or flattening their bodies. The remaining
+retail pointer temporaries require typed background and button locals. Two
+additional source facts close the constructor: reread the input university's
+skill for the button constructor, and save the second background in the
+existing `widget* newWidget` before its two insertions. Dreamcast line groups
+147 and 199..201 corroborate these operations; the separate `back()` calls
+at 188/248/256 are preserved at their own sites.
+
+The owning function records the finite source-family controls. The result
+is 145 matching CFG blocks and 154 positional calls. Integer/pointer-vector
+`size`, `_Ucopy`, `_Ufill` and empty `_Destroy` spellings differ because
+retail folded byte-identical helper bodies; comparing those bodies resolves
+the call alignment. A cached record is therefore a source hypothesis, not
+a harmless simplification when diagnosing the caller's inline budget.
+
+
+### Combat creature captions: argument lifetimes affect a later expansion
+
+`TCombatCreatureSubWindow::TCombatCreatureSubWindow` (0x46ceb0) is exact
+with named text-resource results before the six caption `sprintf` calls.
+DC573/578/583/588/593/598 records the resource accessor followed by
+formatting. The local spellings are inferred; no named locals survive.
+A passive trace of the earlier direct-argument form reproduces its C2
+object: caller `cb=2146`, initial budget 4292. In the compact spell loop,
+the first nested `vector::size` receives 36 against its cost of 42 and
+remains a call, whereas retail expands it.
+
+The 64-state argument family preserves every allocation expression and
+canonical `push_back`. Five or six captures recover the exact expansion;
+fewer leave the extra call. All seven distinct objects were reproduced.
+The retained six-caption form matches 130 CFG blocks and all instructions,
+with 105 positional calls after verifying the existing STL ICF aliases.
+
+Naming the allocated caption widgets also crosses that inline boundary,
+but is a different source hypothesis: its allocation temporaries occupy
+EBP+1c instead of retail EBP+18. All 64 result combinations and a 47-state
+scope follow-up stop short of exact. A near-100 score here therefore needs
+raw stack-operand review; recovery of the helper expansion alone is not
+proof that the allocation source is right.
+
+### File-local class bodies and C1 inline eligibility
+
+`highScoreManager::addScoreToHighScore` (0x4e91d0) remains exact with a
+canonical `CHSInputDlg(40)` whose constructor body is inside the class defined
+in hiscore.cpp. Dreamcast places every method of that class and CHighScoreEdit
+in hiscore.cpp, with no header owner or external authored consumer. The class
+body supplies implicit inline eligibility; no explicit `inline` declaration
+or duplicate class view is needed. DC301 forwards the caller's character limit
+to the edit constructor, independently of the widget vector's reserve count.
+
+The ordinary out-of-class constructor control drops the caller to 48.6331%.
+Its passive VC6 trace reproduces the C2 object: callee flags `0x52a` lack the
+saved-body bit `0x40`, so it never reaches the caller's inline-budget test.
+Restoring the file-local class body recovers the exact expansion while keeping
+the resource accessor and `maxChars` forwarding. This is an eligibility
+problem, not a request to pad or shrink the caller. In-class placement is an
+evidence-backed source hypothesis; the DC method-origin records do not recover
+the missing class braces themselves.
+
+The smaller ordinary `CHSInputDlg::onOK` and `THighScoreWindow::doModal`
+helpers auto-inline in their retail callers without an explicit keyword.
+
+### Repeated source calls survive a lower matching score
+
+InitializeArtifactTraits has four independently attributed vector subscripts
+at DC artifact.cpp:153/155/157/159, each reading the class character before
+the R/J/N/T test. The C++ reconstruction cached that character once. Restoring
+resource[21][0] in all four tests preserves those source calls; Complete's
+column 21 replaces the port's column 20 after its added equipment slot.
+
+The two-form control reproduces 81.9921% with the cache and 80.8218% with
+the source calls, preserving all seven exact artifact siblings. The lower
+score does not contradict the recorded calls. The recovered form is retained
+and the prior peak remains available for further work.
+
+A byte-verified passive trace separates the change from the unresolved
+boundaries. The outer initializer stays at cb=1056 and initial budget=2112;
+the helper rises from cb=330 to 351 and its child budget falls from 65 to 64.
+The bitset proxy assignment still costs 43 against 23 remaining, while the
+nested _Tidy and equality bodies are rejected at budgets 6 and 4. Restoring
+the source calls alone does not reproduce retail's expansions.
+
+Removing the existing explicit bitset<19> class instantiation is another
+independent control: the initializer stays at 80.8218% and _Tidy remains
+available, but the retained set body disappears. The old comment attributing
+the declaration's necessity to _Tidy was obsolete. Its original presence
+remains unproven; the live proxy-to-set decision remains the unresolved lead.
+Keep these source boundaries and their order separate from the constructor's
+large-body eligibility requirement.
+
+### Caller lifetime changes can leave nested decisions unchanged
+
+TCampaignWindow's constructor (0x45ea40) currently expands SCampaign's
+header-owned constructor where retail calls it. Forty-eight meaningful
+reset-scope, widget-result and registration-pointer variants produce 24
+objects, with ten reproduced elites; none exceeds 84.3047%. All seven exact
+siblings hold. Four further assignment-form variants produce two reproduced
+objects: explicit operator= is flat, and binding the temporary through a const
+reference reaches only 81.8376%.
+
+Passive traces reproduce the authored object and one named-widget variant.
+The caller's cb rises from 1403 to 1451, and its initial budget from 2806 to
+2902. SCampaign's cb226 constructor fits both. Its child budget rises from
+198 to 205, but the final vector<int> constructor still costs 51 against only
+1 or 8 remaining. The vector<widget*>::reserve expansion likewise retains
+size(), whose cb42 exceeds its remaining 27 or 28. These caller-local changes
+move the budgets without changing the disputed decisions. They provide no
+reason to alter the canonical constructor's ownership or generated assignment
+and destructor, and none of the alternative bindings is retained.
+
+### Ordinary helpers can preserve callers while adding retained candidate bodies
+
+`strip::DrawNumber` and `strip::DrawSelector` were declared ordinary in the
+class, but their definitions had acquired `inline` solely to suppress object
+emission. Dreamcast places both bodies in `strip.cpp` (124 and 253), and retail
+expands their calls inside `DrawIcons`. A 12-state control also removes copied
+message initialization and obsolete portrait casts. All five tracked functions
+retain their scores across every state. Removing both `inline` keywords
+preserves their bytes and relocations while adding two standalone candidate
+bodies without changing the expansions.
+Keep the ordinary definitions and original source order; candidate retention
+alone does not establish a standalone retail address or justify a claim.
+
+The same pass restores `heroWindow::BroadcastMessage(message&)` and its
+Dreamcast-proven `GetWidget(m_focusId)` call at window.cpp:391. The two-state
+getter control preserves all existing function instructions. Updating 352
+reference call sites in 19 sources and rebuilding 90 affected TUs preserves
+all existing function bytes across the complete 152-object comparison. Three
+window EH labels change spelling; the raw code, EH data and relocation
+section/offset/type/storage destinations remain identical. The reference
+parameter and canonical helper require neither pasted search code nor an
+inlining directive. Complete's body has no counterpart to Dreamcast's
+combat-over branch at line 413; that platform difference stays documented
+beside the owning function.

@@ -10,6 +10,15 @@
 // line where a single-TU spelling let /Ob2 expand them. The compiland's
 // real name is unknown (alphabetically it sits between cursor and
 // customcampaign); the unit name is provisional.
+// Closure: the verified 0x4827b0..0x483b40 bracket contains fourteen
+// game/template bodies, all exact, plus the excluded guard/atexit initializer
+// at 0x483920. The Complete-only class has no Dreamcast procedure roster.
+// Cursor's SendMapChange ends at 0x4823b1; the left guard at 0x4823c0 and
+// ten terrain-bitset initializers end at 0x4827af. The right ten-bitset run
+// spans 0x483b40..0x483f0f, immediately before customcampaign's streambuf
+// adapters at 0x483f10/0x483f30 and crossover-hero functions. The generated
+// DC-anchor map brackets this whole Complete addition between cursor and
+// customcampaign; the body/vtable/callback evidence above resolves it.
 #include <va.h>
 #include <algorithm>
 #include <direct.h>
@@ -191,7 +200,7 @@ void TCustomCampaignWindow::updateList()
 
     for (i = 0; i < CAMPAIGN_LIST_ROWS
                 && i < m_campaignHeaders.size() + m_firstVisible; i++) {
-        TCampaignBrief::CampaignHeaderStruct* header =
+        TCampaignBrief::CampaignHeaderStruct* const header =
             m_campaignHeaders[m_firstVisible + i];
         m_nameWidgets[i]->setText(header->getCampaignName().c_str());
         m_countWidgets[i]->setText(
@@ -199,11 +208,11 @@ void TCustomCampaignWindow::updateList()
                                        "%i"),
                           header->getNumMaps()).c_str());
         if (i == m_selected) {
-            m_nameWidgets[i]->m_color = font::WHITE_HIGHLIGHT;
-            m_countWidgets[i]->m_color = font::WHITE_HIGHLIGHT;
+            m_nameWidgets[i]->setColor(font::WHITE_HIGHLIGHT);
+            m_countWidgets[i]->setColor(font::WHITE_HIGHLIGHT);
         } else {
-            m_nameWidgets[i]->m_color = font::WHITE;
-            m_countWidgets[i]->m_color = font::WHITE_HIGHLIGHT;
+            m_nameWidgets[i]->setColor(font::WHITE);
+            m_countWidgets[i]->setColor(font::WHITE_HIGHLIGHT);
         }
         m_nameWidgets[i]->show();
         m_countWidgets[i]->show();

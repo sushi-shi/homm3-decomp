@@ -71,7 +71,7 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    g_castleWindow->broadcastMessage(&msg);
+    g_castleWindow->broadcastMessage(msg);
 
     for (i = 0; i < g_numOfTownSpecStrScreen[m_townToView->m_type]; ++i) {
         g_castleBuildOrder[i] = g_townSpecStructScreen[m_townToView->m_type][i];
@@ -208,7 +208,7 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
     for (i = 0; i < g_numOfTownSpecStrScreen[m_townToView->m_type]; ++i) {
         msg.m_codeY = CASTLE_BUILD_ICON_FIRST_ID + i;
         msg.m_extra = g_castleBuildOrder[i];
-        g_castleWindow->broadcastMessage(&msg);
+        g_castleWindow->broadcastMessage(msg);
     }
 
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -216,7 +216,7 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
         msg.m_codeY = CASTLE_BUILD_NAME_FIRST_ID + i;
         msg.m_extraText =
             getBuildingName(m_townToView->m_type, g_castleBuildOrder[i]);
-        g_castleWindow->broadcastMessage(&msg);
+        g_castleWindow->broadcastMessage(msg);
     }
 
     for (i = 0; i < g_numOfTownSpecStrScreen[m_townToView->m_type]; ++i) {
@@ -232,7 +232,7 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
             msg.m_codeX = widget::WIDGET_SET_STATUS;
             msg.m_codeY = CASTLE_BUILD_BUTTON_FIRST_ID + i;
             msg.m_extra = widget::WIDGET_DRAWN;
-            g_castleWindow->broadcastMessage(&msg);
+            g_castleWindow->broadcastMessage(msg);
             msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
             msg.m_extra = state;
         } else {
@@ -240,7 +240,7 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
             msg.m_codeY = CASTLE_BUILD_BUTTON_FIRST_ID + i;
             msg.m_extra = widget::WIDGET_DRAWN;
         }
-        g_castleWindow->broadcastMessage(&msg);
+        g_castleWindow->broadcastMessage(msg);
 
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
         msg.m_codeY = CASTLE_BUILD_FRAME_FIRST_ID + i;
@@ -252,7 +252,7 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
             msg.m_extra = 2;
         else
             msg.m_extra = 3;
-        g_castleWindow->broadcastMessage(&msg);
+        g_castleWindow->broadcastMessage(msg);
     }
 }
 
@@ -278,38 +278,39 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
 // infoOnly local, text-band arm first. why-reg: bindings agree at every
 // first def; why-branch: D8/D13 named, its one mutation flat.
 VA(0x00461AB0, 0x767)  // THallWindow vtable 0x6437a0 slot 9, dc 0x5c884
-int THallWindow::windowHandler(message* msg)
+int THallWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
     int building = CASTLE_BUILDING_NONE;
+    int closeRequested = 0;
     int hover = 0;
 
-    if (msg->m_id == MESSAGE_MOUSE_MOVE || msg->m_id == MESSAGE_WIDGET) {
-        if (msg->m_id == MESSAGE_MOUSE_MOVE) {
-            g_windowManager->convertToHover(*msg);
+    if (msg.m_id == MESSAGE_MOUSE_MOVE || msg.m_id == MESSAGE_WIDGET) {
+        if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+            g_windowManager->convertToHover(msg);
             hover = 1;
         }
 
-        if (msg->m_codeY >= CASTLE_BUILD_NAME_FIRST_ID
-            && msg->m_codeY < CASTLE_BUILD_NAME_FIRST_ID + CASTLE_HALL_SLOT_COUNT) {
-            building = msg->m_codeY - CASTLE_BUILD_NAME_FIRST_ID;
-        } else if (msg->m_codeY >= CASTLE_BUILD_ICON_FIRST_ID
-                   && msg->m_codeY < CASTLE_BUILD_ICON_FIRST_ID + CASTLE_HALL_SLOT_COUNT) {
-            building = msg->m_codeY - CASTLE_BUILD_ICON_FIRST_ID;
-        } else if (msg->m_codeY >= CASTLE_BUILD_BUTTON_FIRST_ID
-                   && msg->m_codeY < CASTLE_BUILD_BUTTON_FIRST_ID + CASTLE_HALL_SLOT_COUNT) {
-            building = msg->m_codeY - CASTLE_BUILD_BUTTON_FIRST_ID;
+        if (msg.m_codeY >= CASTLE_BUILD_NAME_FIRST_ID
+            && msg.m_codeY < CASTLE_BUILD_NAME_FIRST_ID + CASTLE_HALL_SLOT_COUNT) {
+            building = msg.m_codeY - CASTLE_BUILD_NAME_FIRST_ID;
+        } else if (msg.m_codeY >= CASTLE_BUILD_ICON_FIRST_ID
+                   && msg.m_codeY < CASTLE_BUILD_ICON_FIRST_ID + CASTLE_HALL_SLOT_COUNT) {
+            building = msg.m_codeY - CASTLE_BUILD_ICON_FIRST_ID;
+        } else if (msg.m_codeY >= CASTLE_BUILD_BUTTON_FIRST_ID
+                   && msg.m_codeY < CASTLE_BUILD_BUTTON_FIRST_ID + CASTLE_HALL_SLOT_COUNT) {
+            building = msg.m_codeY - CASTLE_BUILD_BUTTON_FIRST_ID;
         }
         if (building != CASTLE_BUILDING_NONE)
             building = g_castleBuildOrder[building];
 
         if (hover) {
-            if (g_townManager->m_lastHover == msg->m_codeY)
+            if (g_townManager->m_lastHover == msg.m_codeY)
                 return MESSAGE_DISPATCH_CONSUME;
-            g_townManager->m_lastHover = msg->m_codeY;
+            g_townManager->m_lastHover = msg.m_codeY;
 
             switch (building) {
             case MAGE_GUILD_ID:
@@ -384,7 +385,7 @@ int THallWindow::windowHandler(message* msg)
                 break;
 
             case CASTLE_BUILDING_NONE:
-                switch (msg->m_codeY) {
+                switch (msg.m_codeY) {
                 case CASTLE_RESOURCE_TEXT_0_ID:
                 case CASTLE_RESOURCE_TEXT_1_ID:
                 case CASTLE_RESOURCE_TEXT_2_ID:
@@ -394,7 +395,7 @@ int THallWindow::windowHandler(message* msg)
                 case CASTLE_RESOURCE_TEXT_6_ID:
                 case CASTLE_RESOURCE_TEXT_7_ID:
                     strcpy(g_text, g_adventureWindowHelp[
-                        g_hallHelpIndices[msg->m_codeY - CASTLE_RESOURCE_TEXT_FIRST_ID]].m_text);
+                        g_hallHelpIndices[msg.m_codeY - CASTLE_RESOURCE_TEXT_FIRST_ID]].m_text);
                     break;
                 case CASTLE_RESOURCE_BORDER_0_ID:
                 case CASTLE_RESOURCE_BORDER_1_ID:
@@ -404,7 +405,7 @@ int THallWindow::windowHandler(message* msg)
                 case CASTLE_RESOURCE_BORDER_5_ID:
                 case CASTLE_RESOURCE_BORDER_6_ID:
                     strcpy(g_text, g_adventureWindowHelp[
-                        g_hallHelpIndices[msg->m_codeY - CASTLE_RESOURCE_BORDER_FIRST_ID]].m_text);
+                        g_hallHelpIndices[msg.m_codeY - CASTLE_RESOURCE_BORDER_FIRST_ID]].m_text);
                     break;
                 case EXIT_BUTTON_ID:
                     strcpy(g_text, g_hallInfo[8]);
@@ -416,10 +417,10 @@ int THallWindow::windowHandler(message* msg)
                 break;
             }
 
-            msg->m_id = MESSAGE_WIDGET;
-            msg->m_codeX = widget::WIDGET_SET_TEXT;
-            msg->m_codeY = CASTLE_ROLLOVER_TEXT_ID;
-            msg->m_extraText = g_text;
+            msg.m_id = MESSAGE_WIDGET;
+            msg.m_codeX = widget::WIDGET_SET_TEXT;
+            msg.m_codeY = CASTLE_ROLLOVER_TEXT_ID;
+            msg.m_extraText = g_text;
             g_townManager->m_hallWindow->broadcastMessage(msg);
             g_townManager->m_hallWindow->drawWindow(
                 0, CASTLE_ROLLOVER_DRAW_FIRST_ID, CASTLE_ROLLOVER_TEXT_ID);
@@ -428,18 +429,17 @@ int THallWindow::windowHandler(message* msg)
         }
     }
 
-    if (msg->m_id == MESSAGE_WIDGET) {
-        switch (msg->m_codeX) {
+    if (msg.m_id == MESSAGE_WIDGET) {
+        switch (msg.m_codeX) {
         case widget::WIDGET_DESELECT:
-            if (msg->m_codeY == EXIT_BUTTON_ID) {
-                msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
-                return MESSAGE_DISPATCH_FORWARD;
+            if (msg.m_codeY == EXIT_BUTTON_ID) {
+                closeRequested = 1;
             }
             break;
 
         case widget::WIDGET_SELECT:
         case widget::WIDGET_RIGHT_SELECT: {
-            int quickView = (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) != 0;
+            int quickView = (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) != 0;
             switch (building) {
             case MAGE_GUILD_ID:
             case MAGE_GUILD2_ID:
@@ -485,19 +485,16 @@ int THallWindow::windowHandler(message* msg)
                     if (g_townManager->m_townObjects[i]->m_objId == building)
                         break;
                 }
-                if (g_townManager->buyBuild(building,
+                closeRequested = g_townManager->buyBuild(building,
                         g_townManager->m_townToView->hasBuilding(building, true)
                             || !(g_townManager->m_canBuildMask & g_bitNumber[building])
                             || !(g_townManager->m_canBuyMask & g_bitNumber[building]),
-                        quickView)) {
-                    msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
-                    return MESSAGE_DISPATCH_FORWARD;
-                }
+                        quickView);
                 break;
             }
 
             case CASTLE_BUILDING_NONE:
-                switch (msg->m_codeY) {
+                switch (msg.m_codeY) {
                 case CASTLE_RESOURCE_BORDER_0_ID:
                 case CASTLE_RESOURCE_BORDER_1_ID:
                 case CASTLE_RESOURCE_BORDER_2_ID:
@@ -506,9 +503,14 @@ int THallWindow::windowHandler(message* msg)
                 case CASTLE_RESOURCE_BORDER_5_ID:
                 case CASTLE_RESOURCE_BORDER_6_ID:
                     strcpy(g_text, g_adventureWindowHelp[
-                        g_hallHelpIndices[msg->m_codeY - CASTLE_RESOURCE_BORDER_FIRST_ID]].m_rclick);
-                    normalDialog(g_text, quickView ? 4 : 1,
-                                 -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                        g_hallHelpIndices[msg.m_codeY - CASTLE_RESOURCE_BORDER_FIRST_ID]].m_rclick);
+                    if (quickView) {
+                        normalDialog(g_text, 4,
+                                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                    } else {
+                        normalDialog(g_text, 1,
+                                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                    }
                     break;
                 case CASTLE_RESOURCE_TEXT_0_ID:
                 case CASTLE_RESOURCE_TEXT_1_ID:
@@ -519,9 +521,14 @@ int THallWindow::windowHandler(message* msg)
                 case CASTLE_RESOURCE_TEXT_6_ID:
                 case CASTLE_RESOURCE_TEXT_7_ID:
                     strcpy(g_text, g_adventureWindowHelp[
-                        g_hallHelpIndices[msg->m_codeY - CASTLE_RESOURCE_TEXT_FIRST_ID]].m_rclick);
-                    normalDialog(g_text, quickView ? 4 : 1,
-                                 -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                        g_hallHelpIndices[msg.m_codeY - CASTLE_RESOURCE_TEXT_FIRST_ID]].m_rclick);
+                    if (quickView) {
+                        normalDialog(g_text, 4,
+                                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                    } else {
+                        normalDialog(g_text, 1,
+                                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                    }
                     break;
                 }
                 break;
@@ -531,5 +538,9 @@ int THallWindow::windowHandler(message* msg)
         }
     }
 
+    if (closeRequested) {
+        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
     return MESSAGE_DISPATCH_CONSUME;
 }

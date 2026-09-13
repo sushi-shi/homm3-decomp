@@ -8,6 +8,7 @@
 #include "game.h"
 #include "iconwdgt.h"
 #include "inputmgr.h"
+#include "homm3_minmax.h"
 #include "kb.h"
 #include "textresource.h"
 #include "textwdgt.h"
@@ -41,20 +42,6 @@ void type_combat_sub_window::~type_combat_sub_window()
     // @stub
 }
 
-// E:\gamedcs\combatcontrolsubwindow.cpp:136
-DC_ONLY(0x64f60, 0x4)
-void type_combat_sub_window::setRollover()
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:140
-DC_ONLY(0x64f64, 0x4)
-void type_combat_sub_window::setRolloverButtons()
-{
-    // @stub
-}
-
 // E:\gamedcs\combatcontrolsubwindow.cpp:148
 DC_ONLY(0x64f68, 0x64)
 void type_combat_sub_window::disableAllButtons()
@@ -76,23 +63,10 @@ void TCombatControlSubWindow::~TCombatControlSubWindow()
     // @stub
 }
 
-// E:\gamedcs\combatcontrolsubwindow.cpp:227
-DC_ONLY(0x65270, 0x4)
-void TCombatControlSubWindow::setRolloverButtons()
-{
-    // @stub
-}
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:249
 DC_ONLY(0x65274, 0x24)
 void TCombatControlSubWindow::setRollover(const char* new_text)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:261
-DC_ONLY(0x65298, 0x10)
-void TCombatControlSubWindow::disableAllButtons()
 {
     // @stub
 }
@@ -250,18 +224,56 @@ type_combat_sub_window::~type_combat_sub_window()
 // base call, a LOCAL vector<widget*> that the tail loop drains into the
 // inherited Widgets, and a bare operator delete for the local's storage -
 // with three differences that the bytes fix.
+//
+// THE TAIL LOOP PUSHES UNCONDITIONALLY AND ONLY GUARDS AddWidget. Retail
+// hands push_back the iterator itself (`push edi`, no copy through a
+// local) and only then tests the element, where the placement bar's loop
+// wraps both calls in one `if`. Two loops, two shapes, both transcribed.
+//
+// rolloverWidget IS THE BASE'S MEMBER AT +0x34 and its declared type is a
+// bitmapBackedTextWidget*: retail reloads it out of +0x34 into a stack
+// temporary for push_back, which only the derived-to-widget* conversion
+// can explain. Same test as TBottomViewNewTurn::backdrop.
+//
+// The two arrows' handlers are ADDRESS-TAKEN ONLY. They were absent from the
+// original carve but are now promoted at 0x472df0/0x472e40 in combatwindow.obj
+// under their Dreamcast-attested static TCombatWindow names.
+//
+// Exact after restoring the canonical setDisabledFrame calls. DC191
+// names the setter, and DC199 calls the same retained r10 address. The
+// 24-state setter/max family emits sixteen objects; all ten retained elites
+// reproduce. The up-arrow setter alone closes 96.3990 to 100; restoring only
+// the down-arrow setter is byte-flat. Both proven source calls are retained.
+// The old direct stores had changed scheduling inside the adjacent setHotkey
+// expansions. Moving those stores before/after the hotkeys was a failed
+// hypothesis (90.91/92.72), not proof that the setter boundary was irrelevant.
+// Original vector local new_widgets; its scope and lifetime are unchanged.
+
+// DC136/140 and their retained publics prove these empty virtual methods.
+// Retail base-table slots 1/2 fold to 0x485d80 (ret 4) and 0x5bc7e0
+// (ret 8). Keep the bodies and original long arguments (JJ), despite
+// the generated carcass prototypes having lost both parameters.
+DC_ONLY(0x64f60, 0x4)
+void type_combat_sub_window::setRollover(const char*)
+{
+}
+
+DC_ONLY(0x64f64, 0x4)
+void type_combat_sub_window::setRolloverButtons(long, long)
+{
+}
 
 VA(0x0046bc30, 0x26D)  // dc 0x64fcc
 TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
     : type_combat_sub_window(parent, "cbar.pcx")
 {
-    std::vector<widget*> widgets;
+    std::vector<widget*> newWidgets;
 
     m_rolloverWidget = new bitmapBackedTextWidget(214, 7, 400, 32, "",
         "smalfont.fnt", "cRollovr.pcx", font::PRIMARY, 0x7d5, 1, 8);
     m_rolloverWidget->setHelpText(g_combatSubWindowHelp[4].m_text,
         g_combatSubWindowHelp[4].m_rclick, 1);
-    widgets.push_back(m_rolloverWidget);
+    newWidgets.push_back(m_rolloverWidget);
 
     m_logScrollUpButton = new type_func_button(624, 5, 18, 17, 0x7d6,
         "ComSlide.def", TCombatWindow::scrollUp, 0, 1);
@@ -269,7 +281,7 @@ TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
         g_combatSubWindowHelp[5].m_rclick, 1);
     m_logScrollUpButton->setDisabledFrame(1);
     m_logScrollUpButton->setHotkey(KEYCODE_KP_8);
-    widgets.push_back(m_logScrollUpButton);
+    newWidgets.push_back(m_logScrollUpButton);
 
     m_logScrollDownButton = new type_func_button(624, 24, 18, 17, 0x7d7,
         "ComSlide.def", TCombatWindow::scrollDown, 2, 3);
@@ -277,9 +289,9 @@ TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
         g_combatSubWindowHelp[5].m_rclick, 1);
     m_logScrollDownButton->setHotkey(KEYCODE_KP_2);
     m_logScrollDownButton->setDisabledFrame(3);
-    widgets.push_back(m_logScrollDownButton);
+    newWidgets.push_back(m_logScrollDownButton);
 
-    for (widget** it = widgets.begin(); it != widgets.end(); ++it) {
+    for (widget** it = newWidgets.begin(); it != newWidgets.end(); ++it) {
         m_widgets.push_back(*it);
         if (*it)
             addWidget(*it, -1);
@@ -300,7 +312,16 @@ TCombatControlSubWindow::~TCombatControlSubWindow()
 {
 }
 
-VA(0x0046bf50, 0x32)  // dc 0x65274
+// DC227..246 retains an empty derived override with the same JJ ABI.
+// Retail control-table slot 2 shares the base method's ret-8 fold.
+DC_ONLY(0x65270, 0x4)
+void TCombatControlSubWindow::setRolloverButtons(long, long)
+{
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:249
+// Before normalization (locals): new_text.
+VA(0x0046bf50, 0x32)  // vtable 0x63d420 slot 1 + rollover widget at +0x34, dc 0x65274
 void TCombatControlSubWindow::setRollover(const char* newText)
 {
     m_rolloverWidget->setText(newText);
@@ -322,6 +343,16 @@ void type_combat_sub_window::disableAllButtons()
     m_parentWindow->drawWindow(0, WINDOW_ALL_WIDGETS_LOW,
                              WINDOW_ALL_WIDGETS_HIGH);
     g_windowManager->updateScreen(m_x, m_y, m_width, m_height);
+}
+
+// DC271 calls the ordinary base implementation. Retail control-table
+// slot 3 shares its 0x46bf90 body after the call expands and ICF folds it.
+// Retain the override and canonical source call instead of only inheriting
+// the base slot. The base body is visible here, as in the original TU.
+DC_ONLY(0x65298, 0x10)
+void TCombatControlSubWindow::disableAllButtons()
+{
+    type_combat_sub_window::disableAllButtons();
 }
 
 // The battlefield-placement bar: two buttons over the family base, and
@@ -390,7 +421,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
     m_portrait = new bitmapBorder(10, 6, 58, 64, 0x835, 0, 0x800);
     m_widgets.push_back(m_portrait);
 
-    sprintf(g_text, "%s:", g_generalText->getText(381));
+    sprintf(g_text, "%s:", (*g_generalText)[381]);
     m_widgets.push_back(new textWidget(
         9, 75, 60, 12, g_text, "tiny.fnt", font::WHITE,
         0x836, 0, 0, 8));
@@ -399,7 +430,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         0x837, 2, 0, 8);
     m_widgets.push_back(m_attackText);
 
-    sprintf(g_text, "%s:", g_generalText->getText(382));
+    sprintf(g_text, "%s:", (*g_generalText)[382]);
     m_widgets.push_back(new textWidget(
         9, 87, 60, 12, g_text, "tiny.fnt", font::WHITE,
         0x838, 0, 0, 8));
@@ -408,7 +439,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         0x839, 2, 0, 8);
     m_widgets.push_back(m_defenseText);
 
-    sprintf(g_text, "%s:", g_generalText->getText(383));
+    sprintf(g_text, "%s:", (*g_generalText)[383]);
     m_widgets.push_back(new textWidget(
         9, 99, 60, 12, g_text, "tiny.fnt", font::WHITE,
         0x83a, 0, 0, 8));
@@ -417,7 +448,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         0x83b, 2, 0, 8);
     m_widgets.push_back(m_powerText);
 
-    sprintf(g_text, "%s:", g_generalText->getText(384));
+    sprintf(g_text, "%s:", (*g_generalText)[384]);
     m_widgets.push_back(new textWidget(
         9, 111, 60, 12, g_text, "tiny.fnt", font::WHITE,
         0x83c, 0, 0, 8));
@@ -426,7 +457,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         0x83d, 2, 0, 8);
     m_widgets.push_back(m_knowledgeText);
 
-    sprintf(g_text, "%s:", g_generalText->getText(385));
+    sprintf(g_text, "%s:", (*g_generalText)[385]);
     m_widgets.push_back(new textWidget(
         9, 131, 60, 12, g_text, "tiny.fnt", font::PRIMARY,
         0x83e, 0, 0, 8));
@@ -435,7 +466,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         iconWidget::ICON_STYLE_PLAIN);
     m_widgets.push_back(m_moraleIcon);
 
-    sprintf(g_text, "%s:", g_generalText->getText(386));
+    sprintf(g_text, "%s:", (*g_generalText)[386]);
     m_widgets.push_back(new textWidget(
         9, 143, 60, 12, g_text, "tiny.fnt", font::PRIMARY,
         0x840, 0, 0, 8));
@@ -505,7 +536,7 @@ void TCombatHeroSubWindow::update(const hero& info, const hero* otherHero,
     m_luckIcon->setIconFrame(
         mutableInfo.getLuck(otherHero, onCursedGround, 1) + 3);
 
-    sprintf(buffer, "%s\n%d/%d", g_generalText->getText(388), info.m_mana,
+    sprintf(buffer, "%s\n%d/%d", (*g_generalText)[388], info.m_mana,
             mutableInfo.getMaxMana());
     m_manaText->setText(buffer);
 }
@@ -565,12 +596,25 @@ void TCombatHeroSubWindow::unShow()
 // spellText append. Retail fixes the Complete-only compact-stat labels,
 // every widget argument, the three-iteration standing-spell loops, and the
 // full derived layout at +0x34..+0x6c.
-// CODEGEN WALL (99.13%): the reserve, full-stat arm, and its spell loop are
-// structurally exact. The residual starts at the compact arm's converted
-// iconWidget*-to-widget* push_back, where retail selects one extra null-aware
-// vector-size block. Negative control: folding each DC-separated member
-// assignment into push_back drops this constructor to 97.27% and also loses
-// the exact reserve/full-arm lowering, so the source-proven split stays.
+// Exact with named text-resource arguments at DC573/578/583/588/593/598.
+// The local names are inferred; DC records the operator[] then sprintf
+// order, but no local names. Capturing each caption before formatting
+// preserves that order and all allocation/member/push_back boundaries.
+// All 130 retail blocks and 105 positional calls agree (STL empty-body,
+// pointer-size and pointer/int _Ufill names are existing ICF aliases).
+//
+// Negative controls: the original direct resource arguments retain one
+// extra vector::size call in the compact spell-icon append (99.1290%).
+// A 64-state argument-capture family emitted seven objects, all reproduced:
+// five or six named arguments recover the exact expansion, fewer do not.
+// The consistent six-caption form is retained. A separate 64-state typed
+// caption-result family and 47-state scope follow-up reach only 99.9957%:
+// they restore that expansion but put allocation temporaries at EBP+1c
+// instead of retail EBP+18. Their 64 and 17 objects are not adopted.
+// Earlier 54-state compact conversion/loop-birth controls also leave the
+// size call unresolved. Folding DC-separated member assignments into
+// push_back loses the exact reserve/full-arm lowering (97.27%); keep the
+// canonical vector interface and both proven loop bodies.
 VA(0x0046ceb0, 0xCD1)  // roster order + vtable 0x63d444 + CCrPop/SpellInf, dc 0x65dbc
 TCombatCreatureSubWindow::TCombatCreatureSubWindow(
     int x, int y, int w, int h, heroWindow* parent, int viewLevel)
@@ -581,19 +625,21 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
     if (viewLevel == 1) {
         m_backgroundWidget = new bitmapBorder(
             0, 0, 78, 288, 0x898, "CCrPop.pcx", 0x800);
-        // DEPTH LADDER + the named-vector reference (docs/vc6/inliner.md 6b):
-        // this ONE append of the nineteen is `insert(end(), x)` through a
-        // named reference.  99.1290 -> 99.2793 for the rung, 99.2844 with the
-        // reference; every other site is byte-flat and a greedy second round
-        // finds nothing.
-        std::vector<widget*>& widgets = m_widgets;
-        widgets.insert(widgets.end(), m_backgroundWidget);
+        // DC567 assigns the member; DC568 calls push_back. The former
+        // insert(end(), value) through a one-use vector reference skipped
+        // that source boundary for a phase gain (99.2844). Six reproduced
+        // boundary controls restore push_back and DC573 text operator[]:
+        // both direct and reference receivers give 99.1290, with all 23
+        // exact siblings unchanged. Keep the canonical calls; HIST records
+        // the old insert result while the remaining inline decision is open.
+        m_widgets.push_back(m_backgroundWidget);
         m_creatureIcon = new iconWidget(
             10, 6, 58, 64, 0x899, "TwCrPort.def", 0, 0, 0, 0,
             iconWidget::ICON_STYLE_PLAIN);
         m_widgets.push_back(m_creatureIcon);
 
-        sprintf(g_text, "%s:", g_generalText->getText(381));
+        const char* attackName = (*g_generalText)[381];
+        sprintf(g_text, "%s:", attackName);
         m_widgets.push_back(new textWidget(
             9, 75, 60, 12, g_text, "tiny.fnt", font::WHITE,
             0x89a, 0, 0, 8));
@@ -602,7 +648,8 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             0x89b, 2, 0, 8);
         m_widgets.push_back(m_attackText);
 
-        sprintf(g_text, "%s:", g_generalText->getText(382));
+        const char* defenseName = (*g_generalText)[382];
+        sprintf(g_text, "%s:", defenseName);
         m_widgets.push_back(new textWidget(
             9, 87, 60, 12, g_text, "tiny.fnt", font::WHITE,
             0x89c, 0, 0, 8));
@@ -611,7 +658,8 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             0x89d, 2, 0, 8);
         m_widgets.push_back(m_defenseText);
 
-        sprintf(g_text, "%s:", g_generalText->getText(387));
+        const char* damageName = (*g_generalText)[387];
+        sprintf(g_text, "%s:", damageName);
         m_widgets.push_back(new textWidget(
             9, 99, 60, 12, g_text, "tiny.fnt", font::WHITE,
             0x89e, 0, 0, 8));
@@ -620,7 +668,8 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             0x89f, 2, 0, 8);
         m_widgets.push_back(m_damageText);
 
-        sprintf(g_text, "%s:", g_generalText->getText(390));
+        const char* speedName = (*g_generalText)[390];
+        sprintf(g_text, "%s:", speedName);
         m_widgets.push_back(new textWidget(
             9, 111, 60, 12, g_text, "tiny.fnt", font::WHITE,
             0x8a0, 0, 0, 8));
@@ -629,7 +678,8 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             0x8a1, 2, 0, 8);
         m_widgets.push_back(m_speedText);
 
-        sprintf(g_text, "%s:", g_generalText->getText(385));
+        const char* moraleName = (*g_generalText)[385];
+        sprintf(g_text, "%s:", moraleName);
         m_widgets.push_back(new textWidget(
             9, 131, 60, 12, g_text, "tiny.fnt", font::WHITE,
             0x8a2, 0, 0, 8));
@@ -638,7 +688,8 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             iconWidget::ICON_STYLE_PLAIN);
         m_widgets.push_back(m_moraleIcon);
 
-        sprintf(g_text, "%s:", g_generalText->getText(386));
+        const char* luckName = (*g_generalText)[386];
+        sprintf(g_text, "%s:", luckName);
         m_widgets.push_back(new textWidget(
             9, 143, 60, 12, g_text, "tiny.fnt", font::WHITE,
             0x8a4, 0, 0, 8));
@@ -753,7 +804,7 @@ TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
 // attack 87.5934; `defense` computed before `attack` 85.9959; `traits`
 // after the whole attack/defense block 86.1826.
 VA(0x0046dc30, 0x2C2)  // roster order + "%d(%d)" pair + the three spell icons, dc 0x66648
-void TCombatCreatureSubWindow::update(const army* info, const hero* owner)
+void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
 {
     char buffer[64];
 
@@ -761,56 +812,56 @@ void TCombatCreatureSubWindow::update(const army* info, const hero* owner)
         owner != 0 ? owner->m_owner : g_game->getLocalPlayerGamePos());
 
     if (m_viewLevel == 1) {
-        m_creatureIcon->setIconFrame(info->m_creatureType + 2);
-        const TCreatureTypeTraits& traits =
-            g_creatureTypeTraits[info->m_creatureType];
+        m_creatureIcon->setIconFrame(info.m_creatureType + 2);
+        const TCreatureTypeTraits& normalTraits =
+            g_creatureTypeTraits[info.m_creatureType];
 
-        unsigned char canShoot = info->canShoot(0);
-        long attack = info->getAdjustedAttack(0, canShoot);
-        long defense = info->getAdjustedDefense(0, 1);
+        unsigned char canShoot = info.canShoot(0);
+        long attack = info.getAdjustedAttack(0, canShoot);
+        int defense = info.getAdjustedDefense(0, 1);
         if (canShoot)
-            attack = std::_cpp_max(attack, info->getAdjustedAttack(0, 0));
+            attack = ::max(attack, info.getAdjustedAttack(0, 0));
 
-        sprintf(buffer, "%d(%d)", traits.m_attackSkill, attack);
+        sprintf(buffer, "%d(%d)", normalTraits.m_attackSkill, attack);
         m_attackText->setText(buffer);
-        sprintf(buffer, "%d(%d)", traits.m_defenseSkill, defense);
+        sprintf(buffer, "%d(%d)", normalTraits.m_defenseSkill, defense);
         m_defenseText->setText(buffer);
 
-        if (info->m_monInfo.m_damageLowBound != info->m_monInfo.m_damageHighBound) {
-            sprintf(buffer, "%d-%d", info->m_monInfo.m_damageLowBound,
-                    info->m_monInfo.m_damageHighBound);
+        if (info.m_monInfo.m_damageLowBound != info.m_monInfo.m_damageHighBound) {
+            sprintf(buffer, "%d-%d", info.m_monInfo.m_damageLowBound,
+                    info.m_monInfo.m_damageHighBound);
         } else {
-            sprintf(buffer, "%d", info->m_monInfo.m_damageLowBound);
+            sprintf(buffer, "%d", info.m_monInfo.m_damageLowBound);
         }
         m_damageText->setText(buffer);
 
-        sprintf(buffer, "%d", info->m_monInfo.m_hitPoints);
+        sprintf(buffer, "%d", info.m_monInfo.m_hitPoints);
         m_speedText->setText(buffer);
 
-        m_moraleIcon->setIconFrame(info->getMorale(1) + 3);
-        m_luckIcon->setIconFrame(info->getLuck(1) + 3);
+        m_moraleIcon->setIconFrame(info.getMorale(1) + 3);
+        m_luckIcon->setIconFrame(info.getLuck(1) + 3);
 
-        int count = info->m_numTroopsToShowOverride;
+        int count = info.m_numTroopsToShowOverride;
         if (count == -1)
-            count = info->m_numTroops;
+            count = info.m_numTroops;
         sprintf(buffer, "%d", count);
         m_countText->setText(buffer);
     }
 
-    unsigned int spell = std::_cpp_max(
-        0, static_cast<int>(info->m_spellInfluenceQueue.size()) - 3);
-    for (int icon = 0; icon < 3; ++icon, ++spell) {
-        int frame;
-        if (spell < info->m_spellInfluenceQueue.size()) {
-            frame = info->m_spellInfluenceQueue[spell] + 1;
+    // Before normalization (locals): iSpell, iIcon.
+    unsigned int spell = ::max(
+        0, static_cast<int>(info.m_spellInfluenceQueue.size()) - 3);
+    for (int icon = 0; icon < 3; ++icon) {
+        if (spell < info.m_spellInfluenceQueue.size()) {
+            m_spellIcons[icon]->setIconFrame(info.m_spellInfluenceQueue[spell] + 1);
         } else {
-            frame = 0;
+            m_spellIcons[icon]->setIconFrame(0);
         }
-        m_spellIcons[icon]->setIconFrame(frame);
+        ++spell;
     }
 
-    if (info->m_spellInfluenceQueue.size() == 0)
-        m_spellText->setText(g_generalText->getText(675));
+    if (info.m_spellInfluenceQueue.size() == 0)
+        m_spellText->setText((*g_generalText)[675]);
     else
         m_spellText->setText("");
 }

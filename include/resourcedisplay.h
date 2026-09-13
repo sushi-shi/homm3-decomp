@@ -52,13 +52,13 @@ private:
     textWidget* m_resourceWidgets[7];
 
 public:
-    border* m_resourceBorders[7];
-    bitmapBorder* m_resourceBackground;
-    textWidget* m_statusWidget;
+    border* m_resourceIconWidgets[7];
+    bitmapBorder* m_backgroundWidget;
+    textWidget* m_dayWidget;
 
-    TResourceDisplay(heroWindow* parent, unsigned char isSmall);
+    TResourceDisplay(heroWindow* parent, bool isSmall);
     virtual ~TResourceDisplay();
-    void update(unsigned char draw, unsigned char update);
+    void update(bool draw, bool update);
     void clear();
 };
 SIZE(TResourceDisplay, 0x78);

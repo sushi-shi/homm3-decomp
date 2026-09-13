@@ -9,12 +9,11 @@
 #include "game.h"
 #include "kb.h"
 #include "message.h"
+#include "smackmgr.h"
 #include "soundmgr.h"
 #include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"
-
-void videoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8);
 
 // Source-private in the Dreamcast compiland. Retail's constructor stores the
 // active dialog here and its destructor clears it before destroying the base.
@@ -33,14 +32,15 @@ DATA(0x00694e2c) static TCampaignWindow* g_campaignWindow;
 // register-visible and is what the handler's EBX is: the inlined `this` is
 // loaded once from gpCampaignWindow ahead of the sweep and reused by every
 // GetWidget in it, where a direct global load would be reloaded per call.
-// Spelled `inline` so no out-of-line copy is emitted here either.
-inline void TCampaignWindow::hideText()
+// DC line 81 calls widget::hide; keep the ordinary helper and its source
+// calls. Complete adds a null guard: both retail handler expansions test
+// GetWidget's result before sending WIDGET_CLEAR_STATUS (DC has no guard).
+void TCampaignWindow::hideText()
 {
     for (int line = PREVIEW_FIRST_ID; line <= PREVIEW_LAST_ID; ++line) {
         widget* text = getWidget(line);
         if (text)
-            text->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            text->hide();
     }
 }
 
@@ -389,54 +389,60 @@ DATA(0x0066cad8) static int g_lastCampaignHoverId;
 VA(0x0045f2f0, 0x26C)  // DoModal address-take + Complete video/widget CFG, dc 0x5bd94
 int campaignWindowHandler(message& msg)
 {
-    do {
-        int id;
+    int exitFlag = 0;
 
-        if (g_binkDirty) {
-            g_campaignWindow->drawWindow(0, 0x80, 0x86);
-            g_windowManager->updateScreen(g_binkX, g_binkY,
-                g_binkUpdateWidth, g_binkUpdateHeight);
-        }
-
-        if (msg.m_id == MESSAGE_WIDGET) {
-            if (msg.m_codeX != widget::WIDGET_DESELECT)
-                return MESSAGE_DISPATCH_CONSUME;
-            id = msg.m_codeY;
-            if (id < TCampaignWindow::CAMPAIGN_FIRST_ID)
-                return MESSAGE_DISPATCH_CONSUME;
-            if (id > TCampaignWindow::CAMPAIGN_LAST_ID) {
-                if (id != DIALOG_RETURN_CANCEL)
-                    return MESSAGE_DISPATCH_CONSUME;
-                break;
-            } else {
+    if (g_binkDirty) {
+        g_campaignWindow->drawWindow(0, 0x80, 0x86);
+        g_windowManager->updateScreen(g_binkX, g_binkY,
+            g_binkUpdateWidth, g_binkUpdateHeight);
+    }
+    if (msg.m_id == MESSAGE_WIDGET) {
+        if (msg.m_codeX == widget::WIDGET_DESELECT) {
+            int id = msg.m_codeY;
+            switch (id) {
+            case TCampaignWindow::CAMPAIGN_FIRST_ID:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 1:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 2:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 3:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 4:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 5:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 6:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 7:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 8:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 9:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 10:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 11:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 12:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 13:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 14:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 15:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 16:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 17:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 18:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 19:
                 g_game->m_campaign.selectCampaign(
                     id - TCampaignWindow::CAMPAIGN_FIRST_ID,
                     g_campaignFileNames[
                         id - TCampaignWindow::CAMPAIGN_FIRST_ID]);
                 g_binkPaused = 1;
                 _BinkPause(g_binkVideo, 1);
+                // Fall through: selection and cancel both close the dialog.
+            case DIALOG_RETURN_CANCEL:
+                exitFlag = 1;
                 break;
             }
         }
-
-        if (msg.m_id == MESSAGE_KEY_DOWN) {
-            switch (msg.m_codeX) {
-            case TCampaignWindow::DIALOG_CLOSE_KEY:
-                msg.m_codeY = DIALOG_RETURN_CANCEL;
-                break;
-            default:
-                return MESSAGE_DISPATCH_CONSUME;
-            }
+    } else if (msg.m_id == MESSAGE_KEY_DOWN) {
+        switch (msg.m_codeX) {
+        case TCampaignWindow::DIALOG_CLOSE_KEY:
+            exitFlag = 1;
+            msg.m_codeY = DIALOG_RETURN_CANCEL;
             break;
         }
-
-        if (msg.m_id != MESSAGE_MOUSE_MOVE)
-            return MESSAGE_DISPATCH_CONSUME;
-
-        {
-            int hoverID = g_campaignWindow->findWidget(msg.m_mouseX, msg.m_mouseY);
-            if (hoverID == g_lastCampaignHoverId)
-                return MESSAGE_DISPATCH_CONSUME;
+    } else if (msg.m_id == MESSAGE_MOUSE_MOVE)
+    {
+        int hoverID = g_campaignWindow->findWidget(msg.m_mouseX, msg.m_mouseY);
+        if (hoverID != g_lastCampaignHoverId) {
             g_lastCampaignHoverId = hoverID;
 
             if (hoverID >= TCampaignWindow::CAMPAIGN_FIRST_ID
@@ -451,9 +457,7 @@ int campaignWindowHandler(message& msg)
                         - TCampaignWindow::CAMPAIGN_FIRST_ID];
                 g_campaignWindow->hideText();
                 g_campaignWindow->getWidget(hoverID
-                        - g_campaignWindow->m_firstCampaign - 7)->sendMessage(
-                    widget::WIDGET_SET_STATUS,
-                    widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+                        - g_campaignWindow->m_firstCampaign - 7)->show();
                 memcpy(&g_binkVideo, preview->m_binkState, 12 * sizeof(int));
                 g_binkPaused = 0;
                 _BinkPause(g_binkVideo, 0);
@@ -474,10 +478,9 @@ int campaignWindowHandler(message& msg)
             g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
                 WINDOW_SCREEN_HEIGHT);
         }
-
+    }
+    if (!exitFlag)
         return MESSAGE_DISPATCH_CONSUME;
-    } while (0);
-
     msg.m_id = MESSAGE_WIDGET;
     g_windowManager->m_dialogReturn = msg.m_codeY;
     msg.m_codeY = widget::WIDGET_END_DIALOG;

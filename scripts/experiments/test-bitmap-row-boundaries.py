@@ -74,8 +74,8 @@ signatures24 = ['void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned
     'void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,\n']
 bodies16 = '\n'.join(body(s16, sig) for sig in signatures16)
 bodies24 = '\n'.join(body(s24, sig) for sig in signatures24)
-helpers16 = s16[s16.index('union TFloatLongBits'):s16.index('#if 0')]
-helpers24 = s24[s24.index('static __forceinline long ftol'):s24.index('#if 0')]
+helpers16 = body(s16, 'static long ftol(double d)')
+helpers24 = s24[s24.index('static long ftol'):s24.index('#if 0')]
 
 
 def win32_helpers(source):

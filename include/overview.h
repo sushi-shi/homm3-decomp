@@ -105,7 +105,7 @@ class TOverviewWindow : public CAdvPopup {
 public:
     TOverviewWindow();
     virtual ~TOverviewWindow();
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
 
     void updateFlaggableIcons();
 

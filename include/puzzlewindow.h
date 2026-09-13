@@ -38,7 +38,7 @@ public:
     TPuzzleWindow(int puzzlenum);
     virtual ~TPuzzleWindow();
     int updatePuzzle(int full);
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
 
 private:
     TResourceDisplay* m_puzzleResourceBar;

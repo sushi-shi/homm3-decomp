@@ -829,26 +829,26 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
         unsigned char restore = 0;
         if (is(1u << 29)) {
             memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
-            TPalette16 tinted(m_stdIcon->getPalette()->m_data);
+            TPalette16 tinted(m_stdIcon->getPalette());
             tinted.adjustHSV(0, m_paletteEffect, m_paletteEffect + 1.0f,
                              m_paletteEffect + 1.0f);
             memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
             restore = 1;
         } else if (is(1u << 30)) {
             memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
-            TPalette16 tinted(m_stdIcon->getPalette()->m_data);
+            TPalette16 tinted(m_stdIcon->getPalette());
             tinted.adjustSaturation(m_paletteEffect);
             memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
             restore = 1;
         } else if (m_spellInfluence[SPELL_STONE] > 0) {
             memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
-            TPalette16 tinted(m_stdIcon->getPalette()->m_data);
+            TPalette16 tinted(m_stdIcon->getPalette());
             tinted.gray();
             memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
             restore = 1;
         } else if (is(1u << 23)) {
             memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
-            TPalette16 tinted(m_stdIcon->getPalette()->m_data);
+            TPalette16 tinted(m_stdIcon->getPalette());
             tinted.adjustHSV(0.67f, 1.0f, 2.0f, 2.0f);
             memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
             restore = 1;
@@ -932,7 +932,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
                     DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), x);
             g_tinyFont->drawBoundedString(
                 countText, g_windowManager->m_screenBitmap, numboxX,
-                numboxY, 0x1e, 0xf, 4, 1, -1);
+                numboxY, 0x1e, 0xf, font::WHITE, 1, -1);
         }
     }
 
@@ -1393,7 +1393,7 @@ void army::animateMissile(army* armyToAttack)
                        g_windowManager->m_screenBitmap->getWidth(),
                        g_windowManager->m_screenBitmap->getHeight(),
                        g_windowManager->m_screenBitmap->getPitch());
-            unsigned char flipped = targetX < startX;
+            bool flipped = targetX < startX;
             m_missileIcon->draw(0, missileFrame, 0, 0, width, height,
                               g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
                               g_windowManager->m_screenBitmap->getWidth(),

@@ -29,8 +29,8 @@ public:
     type_university_skill_button(long x, long y, long width, long height,
                                  long newId, const char* image,
                                  TSecondarySkill newSkill);
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    virtual bool handleClick(bool downClick,
+                                       bool rightClick);
     void setSkill(TSecondarySkill newSkill, unsigned char newClick);
 };
 SIZE(type_university_skill_button, 0x50);
@@ -85,13 +85,15 @@ public:
                            unsigned char townUniversity);
     virtual int doModal(unsigned char fade);  // slot 6
 
+    // DC message-reference override; retail slot 9 folds at 0x5666f0.
+    virtual int windowHandler(message& msg);
     void skillClick(TSecondarySkill skill);
 
 protected:
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
 
 public:
-    virtual int exitDialog(message* msg);  // slot 14
+    virtual int exitDialog(message& msg);  // slot 14
 
 protected:
     void setSelectionMode();

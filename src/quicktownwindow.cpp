@@ -1,12 +1,8 @@
 // quicktownwindow.cpp - E:\gamedcs\quicktownwindow.cpp (compiland quicktownwindow.obj)
 #include "includes.h"
 #include <va.h>
-// The hall, silo and fort tests are town::HasBuilding calls in the
-// Dreamcast body (dc 0x117e48, seven `jsr @r11` with r5 = 11/12/13,
-// 15, 7/8/9); see town.h for why the inline's visibility is scoped.
-// Only the hall and silo four are spelled as calls here - the ctor's
-// /Ob2 budget admits five expansions and the fort chain would be the
-// sixth; the sweep is at the chain.
+// DC's retained HasBuilding callee (r11) serves all seven hall, silo and
+// fort tests. Keep every source call and the ordinary canonical town body.
 #include <stdio.h>
 #include <string>
 #include <strstream>
@@ -61,8 +57,7 @@ VA(0x00530120, 0x67D)  // townqvbk/itpt literals + town helpers, dc 0x117e48
 TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TViewLevel viewLevel)
     : heroWindow(200, 200, 194, 186, 0x12)
 {
-    std::vector<widget*>* widgets = &m_widgets;
-    widgets->reserve(NWIDGETS);
+    m_widgets.reserve(NWIDGETS);
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 194, 186, BACKGROUND_ID, "townqvbk.pcx", 0x800);
@@ -70,9 +65,9 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
         thisTown->m_owner != -1
             ? thisTown->m_owner
             : g_game->getLocalPlayerGamePos());
-    widgets->push_back(background);
+    m_widgets.push_back(background);
 
-    widgets->push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         12, 13, 58, 64, PORTRAIT_ID, "itpt.def",
         thisTown->getPortraitFrame(false), 0, 0, 0, 0x10));
 
@@ -87,7 +82,7 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
     // VC6's `c_str()` is `_Ptr == 0 ? "" : _Ptr`, i.e. exactly the ternary we
     // used to write by hand - spelling the ternary inline measures identically
     // (98.8368), and the accessor is the honest form of it.
-    widgets->push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         75, 12, 107, 16, thisTown->m_name.c_str(), "smalfont.fnt",
         font::WHITE, NAME_ID, 0, 0, 8));
 
@@ -104,139 +99,76 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
     townSizeName = g_townSizeNames[hallLevel];
 
     if (viewLevel >= ViewAll) {
-        widgets->push_back(new iconWidget(
+        m_widgets.push_back(new iconWidget(
             76, 42, 34, 34, HALL_LEVEL_ID, "itmtls.def", hallLevel,
             0, 0, 0, 0x10));
 
         if (thisTown->m_garrisonHeroId != -1) {
-            widgets->push_back(new bitmapBorder(
+            m_widgets.push_back(new bitmapBorder(
                 158, 86, 22, 30, GARRISON_HERO_ID, "townqkgh.pcx",
                 0x800));
         }
 
         if (thisTown->hasBuilding(MARKETPLACE_SILO_ID, 1)) {
             int* siloIncome = thisTown->getSiloIncome();
-            // Dreamcast names this exact local EGameResource[3] (CodeView
-            // type 0x3fa1); retail independently proves three dword slots.
-            // Residual note (2026-08-14) for this scan, blocks B37-B39 of the
-            // constructor's 6 differing blocks: retail runs THREE induction
-            // values - the index in ECX (it addresses the source as
-            // `cmp [eax+4*ecx],0`, i.e. it does NOT strength-reduce
-            // silo_income), the destination pointer in EDX, and the count in
-            // EDI. We run FOUR: VC6 additionally strength-reduces
-            // silo_income[current] into a walking pointer in EAX and compares
-            // `[eax]`. This is the TPalette24 "which side gets indexed" family
-            // with the roles mirrored, but no source spelling reaches it here.
-            // Byte-flat at 96.3088: this form, `!= 0` spelled out, the store
-            // and increment split, `current` declared outside the for, and the
-            // while form. Strictly worse: a destination pointer walk 95.3088,
-            // the same with a separate count 95.6070, and `< GOLD + 1` as the
-            // bound 95.4737. Constructor block B4 is separately the
-            // vector<T*>::_Destroy under-expansion characterised in
-            // mainmenu.cpp.
-            // 2026-08-14: this loop is now the WHOLE residual - seven bytes,
-            // and the ROOT is one bit, whether `current` is enregistered.
-            // Retail homes it in memory at [ebp-0x28] (which is `resource[-1]`,
-            // i.e. the slot directly below the array) and reloads it after the
-            // aliasing `mov [edx],ecx`; a memory-homed index is not a register
-            // induction variable, which is precisely why retail does NOT
-            // strength-reduce `silo_income[current]` and we do. Everything
-            // downstream - the missing `add eax,4`, the 4-byte shift of the
-            // whole `resource[]` slice ([ebp-0x24] vs our [ebp-0x28]) - falls
-            // out of that one decision, so there is exactly ONE thing to find
-            // here, not three. Re-swept 2026-08-14 at the 98.84 spelling, all
-            // byte-flat: `int* next` walking the destination, `&current` taken
-            // into a pointer used as the index (folded away), the income read
-            // hoisted into a local, the while form, store-then-increment,
-            // `unsigned` count, `*(resource + resource_count++)`,
-            // `*(silo_income + current)`, an EGameResource induction variable,
-            // an EGameResource array, and both together. A function-scope
-            // `current` and an `int&` alias are also byte-flat at 98.8368%.
-            // An explicit nested block with `int current;` immediately before
-            // the `for (current = WOOD; ...)` is likewise byte-flat, so the
-            // home is not recovered by the ordinary VC6 block-scope lever.
-            // Strictly worse:
-            // `resource[++resource_count]` with a -1 seed 97.4860, re-reading
-            // `thisTown->get_silo_income()` in the test 97.2123, `> 0` for the
-            // implicit test 98.7316, and `int resource[4]`/`[7]` 98.4351.
-            // Marking `current` volatile over-homes every use and falls to
-            // 97.4088%, bounding the other side of the memory-home wall.
+            // DC resource is sp+0x5c; after the prologue's 68-byte SP
+            // decrement this is r14+24, precisely the loop counter slot.
+            // DC85 increments count; DC86 stores through r14+24+4*count;
+            // DC88 reloads resource[0]. Icon arguments read r14+28/+32.
+            // Retail does the same at ebp-0x28/-0x24/-0x20. The loop counter
+            // is part of the declared array, not a separate local below it.
+            // Its enum ordinal advance needs the explicit standard-C++ cast;
+            // the resulting increment and all array accesses match retail.
             EGameResource resource[3];
             int resourceCount = 0;
-            for (int current = WOOD; current <= GOLD; current++) {
-                if (siloIncome[current]) {
-                    // Complete iterates integer ordinals; DC proves the
-                    // destination array's EGameResource ABI.
-                    resource[resourceCount++] = static_cast<EGameResource>(current) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+            for (resource[0] = WOOD; resource[0] <= GOLD;
+                 resource[0] = static_cast<EGameResource>(resource[0] + 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */) {
+                if (siloIncome[resource[0]]) {
+                    ++resourceCount;
+                    resource[resourceCount] = resource[0];
                 }
             }
 
-            // NAMED, not pushed straight from the `new` expression: 98.4193 ->
-            // 98.4509. Retail homes the raw `operator new` result of all three
-            // of these in the DEAD `thisTown` parameter slot [ebp+0x8] - the
-            // same slot the inlined insert materialises its `widget* const&`
-            // temp in - where the unnamed form takes a separate [ebp-0x1c].
-            // That is the armygrp `widget* const&` lever with the sign
-            // reversed: here retail wants the raw pointer and the reference
-            // target COALESCED. Naming exactly these three is what does it;
-            // naming any single one is +0.011, naming the early four
-            // (portrait/name/hall/garrison) is NEGATIVE at 98.3895, and naming
-            // all nine is 98.4035. An `AppendTownWidget` depth-0 adapter in the
-            // armygrp shape does not: by reference it is byte-flat at every
-            // inline_depth (0/1/2/default), by value it costs 0.46, and on all
-            // three sites it collapses to 72-73.
+            // DC94/95,97/98 and104/105 separate each allocation from its
+            // push_back. Retail also homes these raw new results in the dead
+            // thisTown parameter slot used by the converted widget pointer.
+            // Named bonus objects recover that home; moving every allocation
+            // into push_back or naming unrelated early widgets was worse.
             if (resourceCount == DOUBLE_RESOURCE_BONUS) {
                 iconWidget* firstBonus = new iconWidget(
                     15, 86, 20, 18, RESOURCE_BONUS_ID, "smalres.def",
-                    resource[0], 0, 0, 0, 0x10);
-                widgets->push_back(firstBonus);
+                    resource[1], 0, 0, 0, 0x10);
+                m_widgets.push_back(firstBonus);
                 iconWidget* secondBonus = new iconWidget(
                     15, 98, 20, 18, RESOURCE_BONUS_ID, "smalres.def",
-                    resource[1], 0, 0, 0, 0x10);
-                widgets->insert(widgets->end(), secondBonus);
+                    resource[2], 0, 0, 0, 0x10);
+                m_widgets.push_back(secondBonus);
             } else if (resourceCount == SINGLE_RESOURCE_BONUS) {
                 iconWidget* singleBonus = new iconWidget(
                     15, 92, 22, 18, RESOURCE_BONUS_ID, "smalres.def",
-                    resource[0], 0, 0, 0, 0x10);
-                widgets->insert(widgets->end(), singleBonus);
+                    resource[1], 0, 0, 0, 0x10);
+                m_widgets.push_back(singleBonus);
             }
         }
 
         sprintf(g_text, "%d", thisTown->getGoldIncome(1));
-        widgets->insert(widgets->end(), new textWidget(
+        m_widgets.push_back(new textWidget(
             153, 65, 27, 11, g_text, "tiny.fnt", font::WHITE,
             GOLD_PER_DAY_ID, 1, 0, 8));
     }
 
-    // THE FORT CHAIN IS REFUSED THE HasBuilding SPELLING, on measurement
-    // alone. The Dreamcast body calls town::HasBuilding at all seven sites
-    // here (dc 0x117e48, r5 = 11/12/13, 15, 7/8/9), and the expansion is
-    // byte-identical to the mask test, so only the /Ob2 candidate-site count
-    // arbitrates - and this ctor's budget admits exactly FIVE. Sweeping the
-    // total with the silo site always on (2026-08-19):
-    //   hall 3 fort 0 (4 sites) 98.8368   hall 3 fort 2 (6 sites) 94.4561
-    //   hall 3 fort 1 (5 sites) 98.8368   hall 3 fort 3 (7 sites) 94.9246
-    //   hall 0 fort 3 (4 sites) 98.8368   hall 2 fort 3 (6 sites) 94.4561
-    //   hall 2 fort 2 (5 sites) 98.8368   hall 1 fort 3 (5 sites) 98.8368
-    // The cliff is the COUNT and nothing else - which group supplies the
-    // sites does not move a single digit. Landing five would mean splitting
-    // this if/else-if chain into one call and two mask tests, which is a
-    // spelling no author wrote, so the whole fort group carries the mask
-    // form and the hall+silo groups carry the calls: four sites, the max,
-    // and no chain spelled two ways. This is the integration's own finding -
-    // the hall/silo sites scored 98.4193 in the lane that landed them and
-    // 94.9246 once merged onto the tree that had already reached 98.8368 by
-    // the c_str and divisor work, which is what a shared budget looks like.
+    // DC116/118/120 reuses HasBuilding through r11 with ids7/8/9 and
+    // checkIncluded=0. Retail reads the built mask through these expansions.
     int castleLevel;
-    if (thisTown->m_built & g_bitNumber[CASTLE_FORT_ID])
+    if (thisTown->hasBuilding(CASTLE_FORT_ID, 0))
         castleLevel = 0;
-    else if (thisTown->m_built & g_bitNumber[CASTLE_CITADEL_ID])
+    else if (thisTown->hasBuilding(CASTLE_CITADEL_ID, 0))
         castleLevel = 1;
-    else if (thisTown->m_built & g_bitNumber[CASTLE_CASTLE_ID])
+    else if (thisTown->hasBuilding(CASTLE_CASTLE_ID, 0))
         castleLevel = 2;
     else
         castleLevel = 3;
-    widgets->insert(widgets->end(), new iconWidget(
+    m_widgets.push_back(new iconWidget(
         114, 42, 34, 34, CASTLE_LEVEL_ID, "itmcls.def", castleLevel,
         0, 0, 0, 0x10));
 

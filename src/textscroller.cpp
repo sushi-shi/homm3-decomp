@@ -85,7 +85,7 @@ type_text_scroller::type_text_scroller(const char* text, int x, int y,
 
     m_textSlider = new type_text_slider(
         this->m_x + m_width - 16, this->m_y, 16, m_height, -1,
-        cppMax<int>(1, m_textLines.size() - m_lineImages.size() + 1),
+        max(1, m_textLines.size() - m_lineImages.size() + 1),
         0, graphics, m_lineImages.size(), 1, this);
     textFont->dispose();
 }
@@ -186,8 +186,8 @@ void type_text_scroller::refresh(int firstLine)
 // primary (`push 1`), where retail calls the forwarder itself.  The whole
 // budget ladder was swept: `erase(begin(), end())` in place of `clear()`
 // 73.40, a direct two-argument `insert(end(), X)` 97.03, a direct
-// three-argument `insert(end(), 1, X)` 39.40.  The remaining knob is a
-// statement pin, which this tree does not admit.
+// three-argument `insert(end(), 1, X)` 39.40. These controls leave the
+// source of the caller's different expansion decision unresolved.
 // The padding loop's push_back lowers to vector<string>::insert(pos, n, value)
 // here where retail calls insert(pos, value) - the two-argument overload that
 // returns an iterator.  Spelling the site as that overload directly
@@ -202,6 +202,21 @@ void type_text_scroller::refresh(int firstLine)
 // conversion, a named per-iteration string, and signed padding indices.
 // push_back remains 99.4444%; direct insert remains 97.0317%, with no sibling
 // movement. No source change from this family is retained.
+// A passive C2 trace reproduces the unchanged object: the insert forwarder
+// has cb 64 and fits the push_back child budget 68. Four actual padding/refresh
+// loop-scope combinations are flat (one object), as are eighteen refresh
+// element-access/lifetime forms (twelve objects, ten reproduced elites).
+// Four further padding-construction forms produce four reproduced objects:
+// copy initialization stays at 99.4444%; default construction followed by either
+// operator= or assign scores 98.8095%, moves the EH-live transition ahead of
+// assignment, and still calls the wrong insert overload. All siblings are
+// unchanged. Keep the per-iteration temporary's constructor/assign/destructor
+// path and canonical push_back; none of these alternatives is retained.
+// Twelve further states (93d6a3b51ac327888fe5) cross the constructor max
+// correction with named/const string values and const references that extend
+// the padding temporary's lifetime. Ten objects and eight reproduced elites
+// remain at 99.4444%; neither explicit nor implicit reference initialization
+// recovers retail's retained insert forwarder. No padding edit is retained.
 VA(0x005BA6E0, 0x1EF)  // anchor-callee (font::FillLinesVector) + slider slots, retail-only
 void type_text_scroller::setText(const char* text)
 {

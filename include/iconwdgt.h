@@ -59,28 +59,17 @@ public:
     // move. Scoping the names to iconWidget keeps them collision-free
     // for the lane that eventually does add them, once
     // recruitUnit::Update is closed.
-    enum ESpriteResType {
-        SPRITE_RES_SPRITE = 64,
-        SPRITE_RES_SPRITEDEF = 65,
-        SPRITE_RES_CREATURE = 66,
-        SPRITE_RES_ADVOBJ = 67,
-        SPRITE_RES_HERO = 68,
-        SPRITE_RES_TILESET = 69,
-        SPRITE_RES_POINTER = 70,
-        SPRITE_RES_INTERFACE = 71,
-        SPRITE_RES_SPRITEFRAME = 72,
-        SPRITE_RES_COMBAT_HERO = 73
-    };
+
 
     CSprite* m_sprite;
     int m_frame;
     int m_seqId;
-    unsigned char m_isFlipped;
+    bool m_isFlipped;
     int m_postPostWalkSequence;
     unsigned short m_backColor;
 
     iconWidget(int x, int y, int w, int h, int id, const char* image,
-               int frame, int sequence, unsigned char flipped,
+               int frame, int sequence, bool flipped,
                unsigned backColor, int style);
     virtual ~iconWidget();  // retail 0x4ea7b0
     virtual int main(message& msg);
@@ -88,8 +77,8 @@ public:
     virtual void draw() const;
     virtual int getRealHeight() const;
     virtual int getRealWidth() const;
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    virtual bool handleClick(bool downClick,
+                                       bool rightClick);
 
     void setIconFrame(int newFrame);
     void setIconSequence(int newSequence);

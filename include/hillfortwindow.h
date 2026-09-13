@@ -27,7 +27,11 @@ extern const float g_afUpgradeCostFactor[7];
 //   * Recalculate 0x4e7eb0 walks the slot row with `lea ebx,[this+0x90]` /
 //     `add ebx,0x50` and touches every member below through it, and clears
 //     totalCost with `lea edi,[this+0x27c]` / `mov ecx,7` / `rep stosd`.
+static void updateHillFort(unsigned char update);
+
 class THillFortWindow : public heroWindow {
+    // Recovered UpdateHillFort calls this window's private Recalculate.
+    friend void updateHillFort(unsigned char update);
 public:
     // Dreamcast THillFortWindow::EWidgetIDs (fieldlist 0x5200), verbatim.
     // Retail corroborates the anchors: the constructor builds 0xc8/0xc9/
@@ -124,7 +128,7 @@ public:
         char m_resourceCost[12];  // +0x14
         long m_cost[7];             // +0x20
         int m_resourceIndex;        // +0x3c
-        int m_type;                 // +0x40 (TCreatureType domain)
+        TCreatureType m_type;                 // +0x40 (TCreatureType domain)
         int m_count;                // +0x44
         int m_level;                // +0x48
         int m_state;                // +0x4c
@@ -158,6 +162,13 @@ private:
     void handleClick(message& msg);
     void recalculate(unsigned char drawDimmedButtons);
     void upgradeSlot(int which, unsigned char showMessage);
+private:
+    // DC fieldlist 0x5209 marks these helpers private; the callback calls them.
+    friend int hillFortWindowHandler(message& msg);
+    // Original: UpgradeAll, hillfortwindow.cpp:500.
+    void upgradeAll();
+    // Original: GetCreatureType, HillFortWindow.h:170; const receiver proven.
+    TCreatureType getCreatureType(int slotnum) const { return m_slot[slotnum].m_type; }
 };
 SIZE(THillFortWindow, 0x2a0);
 

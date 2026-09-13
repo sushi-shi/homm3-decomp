@@ -24,12 +24,19 @@ SSpellTraits g_spellTraits[81];
 struct hero {
     bool artifacts[140];
     float resistanceFactor;
-    int resistanceCalls;
-    hero() : resistanceFactor(0.75f), resistanceCalls(0) {
+    mutable int resistanceCalls;
+    int watchedArtifact;
+    mutable int watchedChecks;
+    hero() : resistanceFactor(0.75f), resistanceCalls(0),
+             watchedArtifact(-1), watchedChecks(0) {
         std::memset(artifacts, 0, sizeof(artifacts));
     }
-    unsigned char isWieldingArtifact(int id) const { return artifacts[id]; }
-    float getMagicResistanceFactor() {
+    unsigned char isWieldingArtifact(int id) const {
+        if (id == watchedArtifact)
+            ++watchedChecks;
+        return artifacts[id];
+    }
+    float getMagicResistanceFactor() const {
         ++resistanceCalls;
         return resistanceFactor;
     }
@@ -97,6 +104,40 @@ bool check(Chance chance) {
             return false;
         target.artifacts[pendants[i]] = false;
     }
+
+    // Retail's Blind and death-spell guards share zero-return tails, but
+    // preserve their different short-circuit order. Blind checks its pendant
+    // before either creature immunity; the death spells test the trait first.
+    const int guardedSpells[] = {SPELL_BLIND, SPELL_DEATH_RIPPLE,
+                                SPELL_DESTROY_UNDEAD};
+    const int guardedPendants[] = {ARTIFACT_PENDANT_OF_SECOND_SIGHT,
+                                  ARTIFACT_PENDANT_OF_LIFE,
+                                  ARTIFACT_PENDANT_OF_DEATH};
+    const TCreatureType guardedCreatures[] = {CREATURE_GRIFFIN,
+        CREATURE_TROGLODYTE, CREATURE_INFERNAL_TROGLODYTE};
+    for (int group = 0; group < 3; ++group)
+        for (int creature = 0; creature < 3; ++creature)
+            for (int undead = 0; undead < 2; ++undead)
+                for (int present = 0; present < 2; ++present)
+                    for (int worn = 0; worn < 2; ++worn) {
+                        resetTraits();
+                        hero guardedTarget;
+                        guardedTarget.watchedArtifact = guardedPendants[group];
+                        guardedTarget.artifacts[guardedPendants[group]] = worn != 0;
+                        g_creatureTypeTraits[guardedCreatures[creature]].m_attributes =
+                            undead ? g_ctaUndead : 0x10;
+                        bool traitReject = group == 0 ? undead || creature != 0
+                            : group == 1 ? undead != 0 : undead == 0;
+                        bool reject = traitReject || (present && worn);
+                        float expected = reject ? 0.0f : present ? 0.75f : 1.0f;
+                        int checks = present && (group == 0 || !traitReject);
+                        if (!near(chance(guardedSpells[group],
+                                        guardedCreatures[creature], 0,
+                                        present ? &guardedTarget : 0), expected)
+                            || guardedTarget.watchedChecks != checks
+                            || guardedTarget.resistanceCalls != (present && !reject))
+                            return false;
+                    }
 
     // Retail +0x2bd branches to zero for the trait independently of hero.
     resetTraits();

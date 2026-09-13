@@ -300,7 +300,7 @@ void combatManager::close()
 
 // Declared file-locally rather than by pulling border.h/button.h in: an
 // extern declaration is include-set inert where a whole header is not.
-void setPlayerPaletteColors(palette* pal, int whichPlayer);
+void setPlayerPaletteColors(unsigned short* pal, int whichPlayer);
 
 VA(0x00463370, 0x18D)  // dc 0x5ddc0
 void combatManager::loadIcons()
@@ -2644,7 +2644,9 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 
     const int deltaX = destX - startX;
     int deltaY = destY - startY;
-    unsigned char flipped = deltaX < 0;
+    // DC records flipped as a lowered byte; retail forwards it directly to
+    // CSprite's public _N parameter. An unsigned char adds test/setne.
+    bool flipped = deltaX < 0;
     const int distance = static_cast<int>(sqrt(static_cast<double>(
         deltaY * deltaY + deltaX * deltaX)));
     const int nframes = (distance + 15) / 31;
@@ -2797,7 +2799,9 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
 
     int deltaX = destX - startX;
     int deltaY = destY - startY;
-    unsigned char flipped = deltaX < 0;
+    // DC records flipped as a lowered byte; retail forwards it directly to
+    // CSprite's public _N parameter. An unsigned char adds test/setne.
+    bool flipped = deltaX < 0;
     int nframes = (static_cast<int>(sqrt(static_cast<double>(
                        deltaY * deltaY + deltaX * deltaX))) + 20) / 40;
     int addX;
