@@ -333,13 +333,7 @@ void advManager::doEventLeanTo(hero* current_hero, NewmapCell* cell, unsigned ch
     // @stub
 }
 
-// E:\gamedcs\events.cpp:2101.  DoEventLibrary was HELD BACK here at
-// 93.47% and is now LANDED EXACT further down this file - see the note
-// over its body.  The residual was never scheduling: the four +2 awards
-// are four inlined hero::AdjustPrimarySkill calls, which the Dreamcast
-// line table (dc 0x93bf8, source lines 2120..2123) names outright. The
-// five spellings rejected on the way are recorded at the landed body so
-// that no later lane re-titrates them.
+// E:\gamedcs\events.cpp:2101
 
 // E:\gamedcs\events.cpp:2140
 DC_ONLY(0x93d34, 0x7A)
@@ -615,17 +609,7 @@ unsigned char advManager::monstersSellOut(hero* current_hero, NewmapCell* cell, 
     // @stub
 }
 
-// E:\gamedcs\events.cpp:3805
-// ARITY CORRECTION 2026-08-14: BOTH modifiers are STATIC members.
-// Retail 0x4a75c0 is a plain `ret` that takes the hero in ECX and the
-// creature type in EDX - /Gr fastcall, which a non-static member cannot
-// be - and the Dreamcast still scopes the row to advManager, so static
-// is the only spelling that satisfies both. The DC parameter counts
-// agree once read that way: get_like_modifier reports 2 (its two real
-// arguments) and get_force_modifier reports 1, which cannot include a
-// `this` because retail's 0x4a76c0 does take a float argument.
-// The declarator below therefore wants `static` when it lands.
-// RETAIL_LOCATED(0x004a75c0, 0xFD)  // anchor-global, dc 0x97144
+// E:\gamedcs\events.cpp:3805, dc 0x97144
 int advManager::getLikeModifier(hero* current_hero, TCreatureType creature)
 {
     // @stub
@@ -2651,27 +2635,7 @@ static void addReward(std::string& text, const std::string& alternate,
     showRewards(text, rewards, 8);
 }
 
-// E:\gamedcs\events.cpp:852.  Pandora's Box's shared payout: walk the
-// record's ten reward classes, collecting up to eight icon lines per
-// extended_dialog page through add_reward/show_rewards, and apply each
-// reward as it is reported. The cell parameter is never read; retail
-// keeps it (`ret 0x18`), so this does too. Returns whether anything at
-// all was paid out.
-// DC events.cpp:856 constructs msg from text; lines 955..1046 pass
-// format_string temporaries directly to add_reward. Together with its
-// restored helper boundary, these remove all five old inline-depth pins.
-// Retail returns the saved byte after string cleanup, agreeing with DC's
-// unsigned-char signature; bool added a setne and extended its lifetime.
-// Residual (94.71%): positive-morale show_rewards still calls where retail
-// expands it, and later insert/clear expansion and temporary slots differ.
-// Controls: moving show_rewards before add_reward, using a shared signed
-// loop index, and spelling the pending-message temporary explicitly are
-// byte-flat. Caching the secondary-skill byte loses retail's repeated test.
-// Restoring game.h's DC skill/artifact element types removes the consumer
-// casts and reaches 94.7895% (2026-09-08). addReward keeps its DC enum ABI;
-// resource-index arithmetic crosses to that enum locally at the addReward
-// calls. The former shared conversion wrapper had no recovered boundary.
-// File-byte widening belongs to readBlackBox/loadBlackBox.
+// E:\gamedcs\events.cpp:852
 VA(0x0049fa90, 0x106B)  // dc-bracket forced, ret 0x18=p7 + format_string reward text, dc 0x9138c
 unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     NewmapCell* cell, type_point point, unsigned char humanPlayer,
@@ -4691,21 +4655,7 @@ void advManager::doEventSiren(hero* currentHero, NewmapCell* cell,
     currentHero->m_flags |= 0x100000;
 }
 
-// E:\gamedcs\events.cpp:3133.  The customised spell scroll: the editor
-// record may add a message and guardians ahead of the scroll itself. The
-// Dreamcast publishes the locals - treasure, the {SPELL_SCROLL, spell}
-// artifact record, and the `text` string of the message-less human arm,
-// whose default-ctor-then-assign spelling is what keeps _Tidy and
-// assign(str,0,npos) out of line. The AI guard arm jumps back into the
-// combat preparation, and both exits carry their own EraseAndFizzle
-// expansion - the guarded one keeps FizzleCenter as a call, the plain
-// one folds it.
-// [2026-08-27] Residual (97.4451%): six head instructions - retail
-// interleaves the cell-deref and fullMap load chains 1:1 (cell, fullMap,
-// extraInfo, _First) where our CL serializes the accessor's chain first;
-// everything after the prologue matches. Tried and rejected: spell
-// declared before treasure (97.42), the treasure address written longhand
-// (94.64 - the accessor-tell cuts the other way here).
+// E:\gamedcs\events.cpp:3133
 VA(0x004a5a80, 0x41E)  // dc-bracket forced, ret 0x10=p5, dc 0x95b54
 void advManager::doCustomSpellScroll(hero* currentHero, NewmapCell* cell,
                                      type_point point, bool humanPlayer)
@@ -5115,7 +5065,6 @@ TCreatureType upgradedCreatureType(TCreatureType type);
 TCreatureType downgradedCreatureType(TCreatureType type);
 int isBaseCreature(TCreatureType type);
 
-// retail wrote. The former two-arg type_artifact ctor historically measured
 VA(0x004a6b30, 0x12A)  // dc 0x96994
 void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
                                       bool humanPlayer)
@@ -6891,27 +6840,7 @@ void advManager::generatorEvent(hero* who, NewmapCell* eventCell, type_point poi
 // file-locally, the armyGroup-overload precedent above.
 void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount);
 
-// E:\gamedcs\events.cpp:5661.  The shared creature-bank fight-and-loot:
-// pick the strongest guardian for the report, reseed from the cell's
-// coordinates, fight in the bank's surround layout, then pay the record
-// out - joiner stack, artifacts, all seven resources - and stamp the
-// cell's emptied bit. cText is never read; retail keeps the parameter
-// (`ret 0x14`), so this does too. The Dreamcast publishes every local.
-// [2026-08-27] Residual (89.3406%): a whole-body esi/edi/ebx 3-cycle -
-// retail creates the traits-base/best pseudo first (ESI), then this
-// (EDI), then bank (EBX); ours runs bank, best, this. why-reg's model
-// confirms slots and order agree with only the bindings permuted and its
-// creation-order edit is copy-propagated (C1 handle-state class). The
-// call structure, both insert-overload families, the expanded ", "
-// append and the seed CSE all match; tried and rejected: a named seed
-// local (byte-flat), the model's best/leader store swap (+0).
-// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP - measured and
-// rejected.  The DC block names `artifact` (0x4d49) at FUNCTION scope,
-// between `resource` and `reward_text`, where this body declares
-// `type_artifact art;` inside the artifact-giving loop.  Hoisting it out of
-// the loop - the shape that took type_record_shroud::load 84 -> 100 - costs
-// 91.5889 -> 90.9513 here: retail re-runs the defaulting ctor per iteration.
-// Every other name in that block is a rename this body already carries.
+// E:\gamedcs\events.cpp:5661
 VA(0x004abdc0, 0x6D0)  // anchor-callee ExtraInfoUnion::get_creature_bank, ret 0x14=p6, dc 0x9a898
 int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text, type_point point, unsigned char humanPlayer)
 {

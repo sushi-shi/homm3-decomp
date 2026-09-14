@@ -159,8 +159,6 @@ protected:
     unsigned long m_lastStopped; // +14, SDK m_dwLastStopped.
     unsigned long m_lastLoaded;  // +18, SDK m_dwLastLoaded.
     CImmDevice* m_immDevice;      // +1c, SDK m_pImmDevice; GetDevice 0x1470.
-    // Reset at 0x6b20 zeros 0x48 bytes and points axes/directions at the
-    // following arrays. The old version has no embedded m_Envelope.
     FEELIT_EFFECT m_effect;       // +20, SDK m_Effect (API field spellings).
     unsigned long m_axes[2];     // +68, SDK m_dwaAxes.
     long m_directions[2];        // +70, SDK m_laDirections.
@@ -247,7 +245,6 @@ DATA(0x00696d60)
 extern std::map<CImmEnclosure*, RECT> g_immEffectEntries;
 // Retail 0x4b6260 passes 0x696d70 to ClientToScreen, which owns both
 // LONG coordinates. 0x4b6950 and 0x4b6a50 consume its x/y at +0/+4.
-// Former split names: gImmWindowX / gImmWindowY (g_immWindowX/Y).
 DATA(0x00696d70) extern POINT g_immWindowOrigin;
 DATA(0x00696d7c) extern HWND g_immWindow;
 

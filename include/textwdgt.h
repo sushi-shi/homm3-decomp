@@ -38,9 +38,7 @@ public:
     // Class-inline as in TextWdgt.h:67. Removing the unsupported forceinline
     // qualifier is byte-neutral across the affected widget/name-edit callers.
     const char* getText() { return m_text.c_str(); }
-    // Original spelling SetColor(new_color), TextWdgt.h:78..81 (dc 0x1652f4).
-    // Main calls this canonical header helper at textwdgt.cpp:152; retail
-    // expands its single member store in the WIDGET_SET_COLOR arm.
+    // E:\gamedcs\TextWdgt.h:78, dc 0x1652f4
     void setColor(font::TColor newColor) { m_color = newColor; }
 };
 

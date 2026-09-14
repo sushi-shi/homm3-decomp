@@ -340,19 +340,7 @@ unsigned int Bitmap24Bit::getSize() const
     return m_dataSize + sizeof(Bitmap24Bit);
 }
 
-// E:\gamedcs\bitmap24.cpp:349. Dreamcast proves the three normalization
-// statements, BGR channel locals, h/s/v scopes, both named conversion-helper
-// boundaries, nested hue/value/saturation arms and two GetPitch boundaries.
-// Complete preserves that source shape for an arbitrary rectangular region;
-// retail additionally proves the value-before-saturation order and the
-// bright-low-saturation correction arm shared with TPalette24. Exact since
-// 2026-09-01: all 65 blocks, 1,528 bytes and stack homes match. The negative
-// control with named float/double union temporaries expands the frame from
-// retail's 0x60 to 0xec and falls to 99.57085%.
-// Row-boundary residual (95.7470%): a relative byte displacement advances
-// after each row; only visited pointers are formed. Next/last guards score
-// 94.0790/93.2895%, unchecked 100%. DC hue/value/saturation scopes remain;
-// native tests compare the rectangle with independently indexed row visits.
+// E:\gamedcs\bitmap24.cpp:349
 VA(0x0044f190, 0x5F8)  // source-order bracket + inlined HSV helpers, dc 0x52aa8
 void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
                             float hueAdjust, float saturationAdjust,

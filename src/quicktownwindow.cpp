@@ -71,17 +71,6 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
         12, 13, 58, 64, PORTRAIT_ID, "itpt.def",
         thisTown->getPortraitFrame(false), 0, 0, 0, 0x10));
 
-    // 98.4509 -> 98.8368 (2026-08-14). `c_str()` AT THE CALL SITE, not a
-    // `const char* town_name = cName.begin()` local ahead of the statement.
-    // MSVC evaluates `new T(args)` as allocate-then-evaluate-args, so retail's
-    // `mov ecx,[esi+0xc8]; test ecx,ecx; jne; mov ecx,OFFSET ""` sits AFTER
-    // the `operator new` call, inside the non-null arm; a preceding local
-    // forces the load ahead of the allocation and pins it in EDI across it.
-    // This is the DECLARATION-POSITION lever from armygrp ??0TSplitWindow
-    // applied to a scalar: where the value is spelled decides the schedule.
-    // VC6's `c_str()` is `_Ptr == 0 ? "" : _Ptr`, i.e. exactly the ternary we
-    // used to write by hand - spelling the ternary inline measures identically
-    // (98.8368), and the accessor is the honest form of it.
     m_widgets.push_back(new textWidget(
         75, 12, 107, 16, thisTown->m_name.c_str(), "smalfont.fnt",
         font::WHITE, NAME_ID, 0, 0, 8));

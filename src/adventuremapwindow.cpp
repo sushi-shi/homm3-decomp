@@ -40,7 +40,7 @@ DATA(0x0065f224)
 const char* TCheatCode::s_b = "nopqrstuvwxyzabcdefghijklm";
 
 // Retail's gosolo handler at 0x4022e0 calls Dinkumware's string assignment
-// at 0x404150. The shared <string> body now expands here and remains emitted
+// at 0x404150. The shared <string> body expands here and remains emitted
 // in advmgr, whose retail callers also use it; its enrollment lives there.
 
 #if 0  // @carcass
@@ -504,25 +504,7 @@ void CAdventurMapChatEdit::sendChat(const char* chat, int toWho)
     sendChatCleanup();
 }
 
-// E:\gamedcs\adventuremapwindow.cpp:63. The procedure record types the sole
-// parameter as an lvalue reference and names the one surviving local
-// TCheatCode. More importantly, SH4 keeps an optimized register flag: r8 is
-// initialized to zero, every ordinary cheat arm sets it, line 209 tests it
-// before the common chat/latch tail, and Phisher Price deliberately leaves it
-// clear while sharing one Redraw after Remap/Saturate. Restoring that source
-// shape makes the Complete CFG exact through the graphics branch and moves
-// 53.5182% -> 90.35%. The negative control (early returns and unconditional
-// tail) restores 53.5182%; a depth-1 pin at the assignment is byte-flat and
-// depth zero suppresses the required outer operator= inline (80.38%). The
-// remaining residual is the two nested basic_string::_Tidy calls retail keeps
-// out of line; do not flatten the proven flag to chase that compiler midpoint.
-// The Neo arm's experience increment is a NAMED LOCAL: retail calls
-// GetExperienceIncrement first and only then pushes GiveExperience's two
-// constant arguments, which the folded single-expression call cannot produce
-// (VC6 sinks the constants ahead of the nested call). 91.3705 -> 92.2340.
-// Tried and rejected at that plateau: naming `(*gpGeneralText)[261]` in a
-// `const char*` before the assignment to hold retail's ESI copy of the
-// string pointer - byte-flat at 92.2340.
+// E:\gamedcs\adventuremapwindow.cpp:63
 VA(0x00402450, 0x5D3)  // anchor-global, dc 0x3b0
 void checkAdvCheatCode(std::string& chatString)
 {
@@ -1401,13 +1383,7 @@ void TAdventureMapWindow::drawChatText(unsigned char update)
             m_chatTextWidget->m_width, m_chatTextWidget->m_height);
 }
 
-// Complete merges the DC TAdvMenu controls into TAdventureMapWindow.
-// DC SetAdvWinButtonPalette uses its receiver for GetWidget (0x1240),
-// not gpAdvManager. Retail UpdateButtons reloads gpAdvManager+0x44 for
-// each expansion at 0x403f74..0x404083: that is the caller's receiver.
-// Keep the ordinary member and those ten source calls; the former static
-// helper moved receiver selection inside the wrong source boundary.
-// Original: TAdvMenu::SetAdvWinButtonPalette; adventuremapwindow.cpp:1273, dc 0x1238.
+// E:\gamedcs\adventuremapwindow.cpp:1273, dc 0x1238
 void TAdventureMapWindow::setAdvWinButtonPalette(int id, int player)
 {
     widget* w = getWidget(id);
@@ -1669,9 +1645,6 @@ void widget::sleep(unsigned char go_to_sleep)
 }
 
 // E:\gamedcs\button.h:104
-// DC_ONLY(0x2e10, 0x20). The former retail mapping to 0x404200 was false:
-// that 521-byte body returns with `ret 0xc` and is the three-argument
-// Dinkumware vector<int>::insert implementation called by this inline.
 void button::setHotkey(int code)
 {
     // @stub

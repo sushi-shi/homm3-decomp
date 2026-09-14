@@ -526,15 +526,6 @@ extern unsigned char g_cloudType[256];
 // of every GetMapExtra result. Its role is proved by those xrefs; no public
 // retail name survives, so the spelling remains provisional.
 
-// ADDRESS CORRECTED 2026-08-20, and the old one was refuted by this note's
-// own witness. The claim read 0x0069ccc4 for as long as it has existed, but
-// GetCloudLookup (0x40f8c0, exact) relocates DIR32 against 0x69ccbc SIX
-// times and never references 0x69ccc4 at all; advManager::UpdateRadar
-// relocates the same address independently. Eight bytes high, caught while
-// decoding UpdateRadar. The reloc-name-only rule is why nothing scored
-// differently for it - an unclaimed data extern still pairs, so a wrong
-// data address is invisible to the ratchet and shows up only when someone
-// reads the relocations.
 DATA(0x0069ccbc) extern unsigned char g_mapVisibilityBit;
 
 // DC publishes this as `int gbInViewWorld`; retail corroborates the role:
@@ -704,13 +695,6 @@ public:
     // UpdateResourceDisplay (0x403f00) calls through this +0x5c field.
     class TResourceDisplay* m_resourceDisplay;
     class bitmapBackedTextWidget* m_rolloverTextWidget;  // +0x60
-    // DC names these topHero/topTown (member offsets 88/92). Retail moved
-    // RolloverWidget ahead of the pair, so the DC->retail shift here is
-    // +12 rather than the +8 that holds above; DoHeroKnob (0x403220) and
-    // DoTownKnob (0x403280) settle the result directly - the hero knob
-    // scrolls +0x64 against `playerData::numHeroes - 5` and the town knob
-    // scrolls +0x68 against `playerData::numTowns - 5`. animateInBackground
-    // at +0x6c below is unmoved, so the pair exactly fills the old pad.
     int m_topHero;
     int m_topTown;
 
@@ -959,10 +943,8 @@ public:
     int m_lastHoverY;  // +0xf0
     int m_scrollX;  // +0xf4, DC advManager::scrollX
     int m_scrollY;  // +0xf8, DC advManager::scrollY
-    // Dreamcast original animFrame/animCtr at +0x110/+0x114;
-    // NH3API confirms retail +0xfc/+0x100 after scrollX/scrollY.
-    // The constructor zeros both. Retail increments and uses the second
-    // for animation modulo, so the former name at +0x100 was shifted.
+    // The constructor zeros both animation counters. The second drives the
+    // frame-selection modulo.
     int m_animFrame;  // +0xfc
     int m_animCtr;  // +0x100
     // +0x104. UpdateScreen skips both the frame increment and timer catch-up
@@ -1473,11 +1455,6 @@ public:
     void setRolloverText(NewmapCell* testCell, int rx, int ry);
     NewmapCell* getCell(type_point point);
     void castSpell(SpellID whichSpell);
-    // advspells.obj's four adventure-spell handlers, retail 0x41c8a0 /
-    // 0x41cdf0 / 0x41d090 / 0x41d360 (dc 0x21b84 / 0x22054 / 0x2225c /
-    // 0x22510). SkuttleBoat and TownGate retain the DC-proven mastery enum.
-    // Its former AI int typedef has been removed; there is one canonical
-    // TSkillMastery definition in herospec.h.
     void summonBoat(TSkillMastery level);
     void skuttleBoat(TSkillMastery level);
     void dimensionDoor(TSkillMastery level);
@@ -1515,7 +1492,6 @@ public:
     e_looping_sound_id getSoundId(int x, int y, int z);
     void disableButtons();
     void enableButtons();
-    // Original: advManager::MouseInScrollZone (advmgr.cpp:10756, dc 0x1ccf8).
     int mouseInScrollZone();
     void processMapChangeNew(class CMapChange* change);
     void viewWorld(int whatToDraw, int level);
@@ -1525,7 +1501,6 @@ public:
 
 private:
     void garrisonQuickView(int id, int x, int y);
-    // Original: advManager::get_garrison_cursor (advmgr.cpp:4514, dc 0xf23c).
     type_adventure_cursor getGarrisonCursor(NewmapCell* currCell);
     type_adventure_cursor getNormalCursor(NewmapCell* currCell);
     static int getForceModifier(float strengthRatio);

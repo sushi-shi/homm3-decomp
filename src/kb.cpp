@@ -952,25 +952,6 @@ inline void showCredits()
 // retail calls it. DoLoadGame's campaign PickLoadGame (62, budget 129) also
 // expands where retail calls it. Keep these source helpers canonical.
 
-// Historical controls: backward-goto campaign-continue loops duplicated
-// constructor/video/brief bodies; while/break recovered the single copies.
-// Forcing nested progress calls out of line once raised an older candidate
-// to 84.3222% but contradicted their retained retail bodies; those diagnostic
-// pins were rejected. The two campaign-end calls are now present, so the
-// former missing-call diagnosis and wrapper-admission advice were stale.
-// Structured completion/cancel exits raise 77.4155% to 78.4499% and remove
-// two gotos. campaignScored preserves the already-scored map's shared end
-// action and resets on every runGame reentry. A cancelled campaign picker
-// breaks its own loop; only a non-cancelled selection starts the next game.
-// Bool and unsigned-char completion results reproduce the same winner; int
-// changes the caller's layout. An explicit replay loop with playGame and
-// backToMenu results falls to 59.9903--60.0568%, so the two restart edges
-// remain. All nested campaign-window lifetimes and ordinary helpers stay.
-// Replay scopes with the videoPaused aftermath inside the loop, preserving
-// campaignScored and translating menu reentry to an inner break, score
-// 59.0584..59.7480% with bool/byte/int play or skip results and for/while/do
-// headers. Rechecked after the playback edits: all are below 78.4499%, as
-// are the older two-result replay scopes (59.9903..60.0568%).
 VA(0x004ee3e0, 0x1C04)
 int oldmain()
 {
@@ -1053,14 +1034,6 @@ int oldmain()
         if (g_showIntro || g_firstTimeThrough) {
             if (videoPlay(28, 0, 0, 800, 600)
                 && videoPlay(29, 0, 0, 800, 600)) {
-                // INLINE BOUNDARY: oldmain -> KbFn_004EE1B0. Retail emits
-                // the call at oldmain+0x416 to the separate 0x4ee1b0 body;
-                // the two preceding VideoPlay calls and the introrim.pcx
-                // argument fix the site. The old negative control (gate
-                // removed -> VC6 flattened all ten of the helper's calls
-                // into oldmain and emitted no 0x4ee1b0 candidate) no longer
-                // reproduces: the site is byte-flat without a pin, so the
-                // pin came out (2026-09-06, polish lane 50).
                 kbFn004EE1B0(
                     30,
                     DATA_COMPGEN(0x0067f718, oldMainIntroFrame,
@@ -1612,13 +1585,6 @@ static int doNewGame()
     g_inSetupDialog = 0;
     return g_windowManager->m_dialogReturn != TGameTypeWindow::QUIT_ID;
 }
-
-// CORRECTION 2026-09-06: the note that used to stand here read "Retail's
-// kb.obj emits that COMDAT and ours does not, so some kb.cpp body still to be
-// reconstructed calls it". It outlived its cause - this object now emits
-// ?Draw@CSprite@@QAEXHHHHHHPAVBitmap16Bit@@HHEE@Z, byte-identical to retail's
-// 0x4f0050 through the eleven-argument tail call and the `ret 0x2c`, so the
-// claim above pairs it with no call site to hunt.
 
 // E:\gamedcs\kb.cpp:1962. Dreamcast proves the helper boundary and nested
 // TCampaignWindow/TCampaignBrief lifetimes. Complete adds the campaign-set

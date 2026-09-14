@@ -12,11 +12,8 @@
 // byte at +0x5c, followed by alignment to the 0x60-byte object size.
 class CAdvPopup : public CHeroWindowEx {
 protected:
-    // Previously field_50; original Dreamcast name: exitId.
     int m_exitId;
-    // Previously misidentified as exitId; original: exitCodeX.
     int m_exitCodeX;
-    // Previously misidentified as exitCodeX; original: exitCommand.
     int m_exitCommand;
     // Complete-only: ctor 0x41b040 saves the handler's popup state and
     // dtor 0x41b120 restores it. This byte does not overlap exitCommand.

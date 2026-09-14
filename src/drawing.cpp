@@ -55,11 +55,6 @@ DATA(0x006989ec) int g_processingCombatAction;
 //   0x494f40 ret 0xc  DrawOccupant(int, int, int)            3  OK
 //   0x495090 ret 0x20 DrawArcher(7)                          7  +1
 
-// Ten of eleven agree. The two rows once attributed to DrawObstacleAt and
-// DrawWallAt were a stale order-only map: their bodies instead preserve the
-// complete DC callee sets of DrawWallAt and DrawOccupant respectively. That
-// correction leaves DrawArcher as the sole Complete signature extension.
-
 // 0x495090's extra argument is decoded: a byte that selects table index 0
 // vs 0x60 in the 16-bit table at [0x6aacb0 + 0x1c], i.e. a colour row.
 // Its only retail caller is the siege-wall/archer pass at 0x494c20, matching
@@ -340,27 +335,7 @@ bool combatManager::showCreatureSpellError(
     return false;
 }
 
-// E:\gamedcs\drawing.cpp:326. The Complete body preserves every shared DC
-// statement group and expands get_creature_spell_message for its five added
-// caster types.
-// DC lines 358/369/371/386/391/396/421/445 positively retain army::GetName.
-// Preserve that inline wrapper and its canonical GetArmyName callee. Flattening
-// the source calls had raised this body to 92.7545%, but that score alone does
-// not contradict the recorded helper boundary. Restoring both callers first
-// gave 90.2999%; GetArmyName's conditional return inside its existing else
-// reaches 94.5176% with every wrapper retained. The early-return/if helper
-// control gives 91.2017%, early-return/conditional 92.8143%. Restoring the
-// wall-loop message scope (DC 431/433/434) raises this to 96.8698%; placing
-// Complete's Faerie Dragon null arm first reaches 98.0662%. The six-state
-// family reproduces all six candidates, preserving every exact sibling.
-// The last lookup differences were semantic: First Aid uses the manager's
-// acting side, also proven by DC 445, so its product can be shared with
-// getCurrentArmy. This reaches 99.98826%. Retail's ranged-message row is
-// 297, not 41; that correction and the wall comparison operand order make
-// all 2958 bytes outside relocation operands exact, with all 180 relocation
-// sites aligned. All 128 blocks and named call targets agree. Canonical
-// GetName, GetArmyName and getCreatureSpellMessage boundaries remain intact.
-// E:\gamedcs\drawing.cpp:326
+// E:\gamedcs\drawing.cpp:326, dc 0x838f0
 VA(0x00492840, 0xB8E)  // retail CFG/calls + DC source shape, dc 0x838f0
 void combatManager::combatMessage(int command)
 {
@@ -1057,8 +1032,6 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 // does not move its remaining priority-loop reload schedule. All 28 exact
 // siblings survive. Reversing the canonical GetHexIndex sum was byte-flat
 // across drawing, cmbtmgr and spells (two states, one reproduced object).
-// Historical half-chain/separate-store probes predated
-// shared helper recovery and do not describe the current allocator state.
 // DrawObstacle, DrawObstacleAt, DrawDeadOccupants and both GetHexIndex source
 // calls remain canonical. GetHexIndex is a static header member; the audit's
 // unmatched call-name lead does not denote an absent source call.
@@ -1076,9 +1049,6 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 // E:\gamedcs\drawing.cpp:1141
 VA(0x00494440, 0x7d5)  // anchor-global + retail arity, dc 0x84e2c
 void combatManager::drawFrame(bool update,
-                              // Before normalization (locals): bLimitCreatureEffect, bLimitDraw,
-                              // iDelay, bRefreshBackground, bDoDelayTil, temp_limits,
-                              // xStart, xChange, xStop, hex_index.
                               bool limitCreatureEffect,
                               bool limitDraw, int delay,
                               bool refreshBackground,
@@ -1486,7 +1456,6 @@ int combatManager::drawArcher(const CSprite* sprite, int sequence, int frame,
 VA(0x004951b0, 0xfd)  // dc 0x85a48
 int combatManager::drawCreature(const CSprite* sprite, int sequence, int frame,
                                 int x, int y, SLimitData* limits, int id,
-                                // Before normalization (locals): iColor.
                                 bool isFlipped, int color)
 {
     SLimitData computedLimits;

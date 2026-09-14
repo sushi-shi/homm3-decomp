@@ -68,7 +68,7 @@ protected:
 public:
     int m_currentPlayerId;
 
-    // Original: type_town_threat_checker; ai_player.cpp:89, dc 0x2dd40.
+    // E:\gamedcs\ai_player.cpp:89, dc 0x2dd40
     type_town_threat_checker(int newPlayer) { m_currentPlayerId = newPlayer; }
     void checkTowns();
     virtual void clearMarks() const;
@@ -129,9 +129,6 @@ void type_town_threat_checker::markTowns(hero* enemyHero,
     }
 }
 
-// The original member now lives in town.h, including the type_point
-// constructor call shown by DC Town.h:312. canTakeTown uses that canonical
-// by-value helper; the former file-local getLocation clone is removed.
 VA(0x00428410, 0x160)  // dc 0x2dc00
 unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown)
 {
@@ -258,7 +255,7 @@ void type_town_threat_checker::markTown(town* ourTown) const
 }
 class type_garrison_purchaser : public type_town_threat_checker {
 public:
-    // Original: type_garrison_purchaser; ai_player.cpp:195, dc 0x2dfb8.
+    // E:\gamedcs\ai_player.cpp:195, dc 0x2dfb8
     type_garrison_purchaser(int newPlayer)
         : type_town_threat_checker(newPlayer) {}
     virtual void clearMarks() const;
@@ -342,18 +339,9 @@ void type_AI_player::calculateDemand()
         }
     }
 
-    // Historical set_creature_type probe: changing its in-place write
-    // to a value-returning wrapper moved calculate_demand from 86.38 to
-    // 86.13 by shifting a temporary home and three registers. The scoped
-    // representation copy below keeps the operation without inventing a
-    // source helper to steer that compiler decision.
     std::vector<type_creature_value> creatures(145);
     int creatureIndex;
     for (creatureIndex = 0; creatureIndex < 145; creatureIndex++) {
-        // Keep this ordinal copy in the owning loop. The former
-        // set_creature_type wrapper was a reconstruction bridge, not a
-        // CodeView helper. memcpy preserves the integer representation
-        // without narrowing the admitted values through an enum cast.
         {
             int value = creatureIndex;
             memcpy(&creatures[creatureIndex].m_type, &value,
@@ -532,18 +520,6 @@ void type_AI_player::endTurn()
 // reaches 87.31% and fixes the entry register roles previously described as
 // an unreachable compiler-state wall.
 
-// DC's list.clear() boundary is retained. Expanding it to erase(begin,end)
-// measured 87.31%, but loses the evidenced wrapper; clear() currently keeps
-// an extra nested _Destroy call and measures 86.52%. The two formatted
-// string sites likewise use DC's operator= directly. The artificial
-// assignFormattedAiMessage wrapper (formerly assign_formatted_ai_message)
-// was removed byte-flat; all three assignment calls select retail's assign,
-// never append. Older named-format-temporary and broader inline-depth probes
-// did not recover the allocation, and release-elided entry carriers were
-// byte-flat. No such probes are retained.
-// Residual (86.52%): resource/recipient address scheduling and register
-// allocation, plus the nested _Destroy call inside clear. The two insertion
-// call names differ through the type_artifact/type_dialog_resource ICF pair.
 VA(0x00429110, 0x6AC)  // linkorder, dc 0x2ea20
 void type_AI_player::makeGift(long playerId)
 {
@@ -731,9 +707,6 @@ void type_AI_player::resetMagusHutValue()
     m_magusHutValue = findMagusHutValue(m_team, 0);
 }
 
-// Tried and rejected 2026-09-06: retail homes the sort's `_Last` at
-// [ebp-0x14] where we keep it in EDI; naming `creatures.end()` in an
-// iterator local, and naming both iterators, are byte-flat.
 VA(0x00429ad0, 0x280)  // anchor-callee, dc 0x2f280
 void type_AI_player::calculateReserve()
 {
@@ -884,12 +857,6 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
 
 #if 0  // @carcass
 
-// RESOLVED, 0x429d50: end_turn's prohibited-creature buffer, the retail
-// production/dwelling scans, and both Complete-only Easy-policy phases prove
-// fill_prohibited_array. The adjacent sum_player_dwellings helper is inlined
-// twice in retail. See the live 99.90% body above; no unclaimed row remains in
-// this ai_player span.
-
 // value_of_dwelling (dc 0x2f4b0) promoted to VA(0x0042b520) in RVA order above.
 // value_of_dwelling_upgrade (dc 0x2f548) promoted to VA(0x0042b5b0) above.
 
@@ -1033,35 +1000,6 @@ void type_AI_player::tradeResources(const int* cost, long number)
 }
 
 // E:\gamedcs\ai_player.cpp:1474
-// Prices whether the surplus resources can cover every shortfall: markets
-// (built, or buildable while wood production holds) set the trade
-// efficiency; base_cost[j]/unit_cost[j] accumulate, per trade_qty
-// candidate, the market value of what candidate j still lacks and its
-// per-unit price; market_value totals what selling the surplus earns. The
-// largest affordable candidate is refined by whole units of unit_cost and
-// the supply shortfalls are relaxed to what that quantity leaves out.
-// Dreamcast lines 1477-1494 and retail agree on a retained player pointer,
-// signed town loop, HasBuilding(..., true), and the by-value min(int,int)
-// wrapper. The old unsigned loop and repeated player address calculation
-// were not compiler-state residuals. Restoring the signed loop measures
-// 76.16% from 76.66%; retaining player then reaches 78.22%; the min wrapper
-// and named double efficiency reach 82.50%. Restoring HasBuilding and the
-// retail zero guard on the second supply arm reaches 82.61%.
-// Retail 0x42a66d loads the float efficiency once and widens it into the
-// qword home later used by fmul. Dreamcast also names a double efficiency.
-// The former const double& bound a conversion temporary; it did not reread
-// the float table at each multiply as its old comment claimed.
-// Residual (82.61%): the first insertion retains two extra vector::size
-// calls (its count expression and first size guard) where retail expands
-// them. The player pointer still occupies a register instead of retail's
-// reusable stack home. Later long-vector helper names differ through ICF.
-// Prior controls: declaring markets/flag first and hoisting townIndex did
-// not recover the player's stack home. Inlining the efficiency expression
-// into the multiply is retail-false: it replaces the one-time widened load
-// with a per-iteration float read. The vector-size comparisons below remain
-// unsigned, independently of the signed town-count comparison.
-// The old return-site inline-depth pin is unnecessary: removing it is
-// byte-flat, and both final vector destructors remain calls naturally.
 VA(0x0042a580, 0x5BE)  // retail link order + arity, dc 0x305b4
 bool type_AI_player::canTradeResources(const int* cost, int* supply,
                                          std::vector<long>& tradeQty)
@@ -1097,8 +1035,6 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
     int i;
     for (i = 0; i < 7; ++i) {
         if (supply[i] > 0) {
-            // Preserve the ordinal's representation at the consuming call;
-            // the former gameResourceFromInt wrapper had no source identity.
             EGameResource resource;
             {
                 int ordinal = i;
@@ -1709,9 +1645,7 @@ static int __cdecl maxBuyableCreatures(
 }
 
 // E:\gamedcs\ai_player.cpp:1838, dc 0x31094.
-// Ordinary protected purchase_buildings boundary (DC public ...@@IAAXXZ),
-// called by end_turn at DC line 439.
-// Complete expands it in 0x428dd0 and extends the prohibited flag table to 145.
+// Complete extends the prohibited-creature table to 145 entries.
 DC_ONLY(0x31094, 0x60)
 void type_AI_player::purchaseBuildings()
 {
@@ -2005,10 +1939,6 @@ void aiArrangeArmy(armyGroup& current_army)
 {
     // @stub
 }
-
-// split_army (dc 0x325bc) promoted to VA(0x0042dd70) in RVA order below:
-// split_armies (0x42db20) calls it at 0x42dc72/0x42dd32, matching the DC
-// bsr=2 census exactly.
 
 // split_armies (dc 0x32670) is claimed in retail-RVA order below.
 
@@ -2673,10 +2603,6 @@ void type_AI_creature_swapper::doSwap(hero* currentHero,
     aiArrangeArmy(*m_army);
 }
 
-// doSwap's retained copy is enrolled on its canonical definition above.
-// Its real callers govern emission; the former address-taking global was
-// reconstruction scaffolding.
-
 // E:\gamedcs\ai_player.cpp:2209. The two 56-byte locals, six helper
 // boundaries, and positive-value loop come from the Dreamcast dossier.
 // Complete adds the Angelic-Alliance byte used by the three philai callers;
@@ -3010,12 +2936,6 @@ void type_AI_creature_purchaser::set(town* currentTown)
     }
 }
 
-// The single-candidate overload (dc 0x31ffc, ai_player.cpp:2524). No retail
-// out-of-line body exists - set(town) ends at 0x42d418 and the next carve row
-// is 0x42d420 - so every retail caller expands it (buy_creatures 0x42bx: the
-// erase(begin,end) + one insert(end, source) pair). DC has two parameters
-// and passes literal false to type_creature_source at line 2526; the former
-// third parameter had no evidence and its sole caller always passed zero.
 void type_AI_creature_purchaser::set(TCreatureType newType,
                                      short* newAmount)
 {
@@ -3027,7 +2947,7 @@ void type_AI_creature_purchaser::set(TCreatureType newType,
 // DC proves the method, signature, and the add_creatures/value_of_adding_army
 // edges. Retail proves the Complete purchaser tail: two independent cost
 // arrays, optional resource trading, a seven-resource affordability cap, and
-// the three-quarter cap on the cost penalty used to choose the best source.
+// the three-quarter cap on the cost penalty that selects the best source.
 // DC's parameter is an unsigned char, not C++ bool. Residual (97.27%): 217
 // of 219 instructions agree; the remaining delta is VC6 stack-slot coloring
 // around the best-source state (`why-reg` distance 70), after equivalent
@@ -3423,11 +3343,7 @@ static void markDangerZones(const hero* ourHero, hero* enemyHero,
     }
 }
 
-// E:\gamedcs\ai_player.cpp:3013, dc 0x329f8.
-// CodeView line 3030 calls GetHero then mark_danger_zones inside the player
-// and hero loops. Retail 0x5263ac/0x5263af passes dangerZones in EDX and
-// currentHero in ECX to 0x42de50 at 0x5263b1. The old claim incorrectly
-// attached that complete census to the inner three-argument helper.
+// E:\gamedcs\ai_player.cpp:3013, dc 0x329f8
 VA(0x0042de50, 0x25c)  // outer census + MoveHero caller, dc 0x329f8
 void aiMarkDangerZones(hero* currentHero, long* dangerZones)
 {
@@ -4317,24 +4233,7 @@ static unsigned char checkMoveSpell(hero* currentHero,
     return 1;
 }
 
-// E:\gamedcs\ai_player.cpp:4000. Dreamcast proves the helper boundary,
-// parameters, nine named locals and the nested destination search. Complete
-// retains that shape but adds the cursed-ground guard, uses its extra
-// pathCell flag as the entry gate, tests last_can_stop in the search, and
-// widens the platform-sized teleport window from 6x5 to 9x8 map squares.
-// The old note read "VC6 moves destination_index's initial store across
-// best_savings's store" and treated that as bounded.  It was a SOURCE ORDER
-// fact, not an optimizer one: retail emits `mov [ebp-8],-1` INSIDE the
-// get_location() expansion, i.e. before best_savings, and declaring
-// `destination_index = -1;` AHEAD of the get_location call reproduces it
-// (99.9658 -> 99.9756, the one-sided instruction gone).  Measured and
-// rejected: moving BOTH stores ahead of the call, 99.9722.
-// Residual (99.9756%): one register choice - EDX rather than EAX for the
-// final UseSpell argument, six masked rows - plus the delinked retail
-// operand naming data_2604fc+0 where the candidate object names
-// const_thresholds-4.  Those relocation spellings have the same effective
-// indexed address; do not model that stripped-image symbol-name limitation
-// by changing the proven six-long table in source.
+// E:\gamedcs\ai_player.cpp:4000
 DATA(0x00660500) static const long g_constThresholds[6] = {
     1000, 150, 100, 75, 50, 25
 };
@@ -4475,9 +4374,6 @@ static __forceinline void checkGatePurchase(type_point point)
 {
     int townId = g_game->getTownId(point.m_x, point.m_y, point.m_z);
     if (townId >= 0) {
-        // check_gate_purchase -> game::GetTown: Dreamcast line 4161 and both
-        // Complete expansions retain this call. The 2026-09-09 whole-TU
-        // control retains the same code without the former depth pin.
         town* currentTown = g_game->getTown(townId);
         if (!currentTown->hasBuilding(EXTRA_1_ID, true))
             currentTown->buyBuilding(EXTRA_1_ID);
@@ -4537,13 +4433,6 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
     if (path[0].m_startAtTrigger) {
         g_advManager->mobilizeCurrHero(0, 0, 1);
         type_point point = currentHero->getLocation();
-        // Complete's can-stop arm retains NewfullMap::cell and constructs a
-        // fresh get_location temporary for DoAIEvent. This site used to
-        // carry an `inline_depth(0)` pin because without it VC6 expanded
-        // cell and emitted only five of retail's six point ctors. That is no
-        // longer true: removing the pin is AI_AttemptMove 84.83158 ->
-        // 85.92281, a new MAX, with no other row moving (2026-09-06, polish
-        // lane 50 - the whole-TU per-pin sweep).
         NewmapCell* cell =
             g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
         g_advManager->doAIEvent(cell, currentHero,
@@ -5079,26 +4968,6 @@ long type_knowledge_artifact::getValue(const hero* owner, unsigned char, unsigne
     return owner->getValueOfKnowledge() * m_bonus;
 }
 
-// Residual (85.8871%): logic byte-exact ((1.0f - GetNecromancyFactor(0)) * 100.0f,
-// then min(effect,bonus) / effect=min(effect,0)+bonus, army*effect/250). The delta
-// is register scheduling: retail delays `push esi` past the skillLevel early-out
-// while our SP3 CL pushes esi in the prologue; the /250
-// sign-correction also keeps the quotient in edx where ours uses eax. The 1.0f
-// and 100.0f literals pool as __real@ COMDATs vs retail's const_23b6e0/const_23ac68
-// (cosmetic reloc-name difference). Register-homing class.
-// Dreamcast retains the local `long effect`. Retail's unequipped arm at
-// 0x43268b copies BOTH min inputs to parameter homes before selecting their
-// addresses, so its arguments are temporaries rather than the direct member
-// and local references used by DC's std::min. The existing int min(int,int)
-// wrapper reproduces those copies with the recovered long local (85.8871%).
-// Keeping long effect with std::_cpp_min<long> and a cast bonus gives 82.56%
-// and spills effect before the equipped branch; direct reference arguments
-// give 79.92% and omit retail's bonus copy. The previous int necro plus two
-// converted std::_cpp_min<long> arguments was byte-identical to the wrapper.
-// A 15-state effect/product-lifetime family (two emitted objects) also
-// leaves 85.8871%: function/block effect scopes, reversed multiplication,
-// named product/quotient, and reusing effect do not reproduce the late ESI
-// save. Both DC-proven early guards and the long effect local remain.
 // E:\gamedcs\ai_player.cpp:5152
 VA(0x00432640, 0x97)  // artifact get_value cluster order-map + get_AI_value, dc 0x36450
 long type_necromancy_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char) const

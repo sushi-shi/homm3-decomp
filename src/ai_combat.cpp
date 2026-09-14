@@ -1,20 +1,5 @@
 // ai_combat.cpp - E:\gamedcs\ai_combat.cpp (compiland ai_combat.obj)
 
-// NAME CORRECTION (2026-08-07): the carcass tied 0x4253e0 to the DC row
-// has_creature. The body is get_mass_damage_value(choice, casting_hero)
-// - it returns a long accumulated over the whole monster vector through
-// the get_spell_damage chain and takes two stack args (ret 8), which
-// has_creature (unsigned char, one arg) cannot be. The HD-crossbuild
-// name map (evidence/retail-hd-name-map.csv) and IDA's mangled roster
-// (evidence/ida/functions.csv) independently carry
-// ?get_mass_damage_value@type_AI_combat_data@@...AAUtype_spell_choice@@PBVhero@@@Z
-// at exactly 0x4253e0, and the same two sources name the three carve
-// rows the carcass left unclaimed inside this span
-// (0x425510 get_enchantment_value(choice,defender),
-//  0x4258a0 cast_enchantment(choice,hero,increase),
-//  0x425b10 cast_enchantment(choice,defender)). has_creature itself has
-// no retail row - /Ob2 inlined it away.
-
 // NEW LEVER (2026-08-07, byte-proven here by AI_quick_combat and
 // AI_auto_combat): under /GX the scope-exit destructor sequence keeps
 // the EH state variable live across every call a destructor makes,
@@ -45,13 +30,6 @@
 #include "town.h"
 #include "includes.h"
 
-// DC includes.h min/max (0x2da4/0x1ef28) return int by value after
-// calling the reference-returning selectors. Retail 0x4249a1's two argument
-// homes agree. The old templates returned references to their own parameter
-// copies: conflating these two layers was not a valid source reconstruction.
-// The eight-state ownership/valuation-helper family leaves every score fixed
-// except getResurrectionValue's initial 100 -> 92.9310. Naming its capped
-// result below restores 100 without the dangling reference or another wrapper.
 #include "homm3_minmax.h"
 
 // The mutually exclusive AI-dispatch family encoded in SSpellTraits::field_c.
@@ -91,9 +69,6 @@ DATA(0x006604d0) static double g_defenseEstimates[5] = {
     0.5, 0.5, 1.0, 1.25, 1.25
 };
 
-// value_of_experience is retained at 0x527710 in philai.cpp. Its canonical
-// reference-qualified declaration replaces the former provisional
-// get_experience_value_modifier name and pointer view.
 float valueOfExperience(const hero* currentHero, const armyGroup& currentArmy);
 
 VA(0x00423c80, 0x79)  // dc 0x29978
@@ -259,20 +234,6 @@ type_AI_combat_data::type_AI_combat_data(const hero* newHero, const armyGroup* n
 // before the tactics stores; retail likewise copies both dwords at entry.
 // Preserve that initializer and the actual vector begin/end sort interface.
 
-// Residual (83.4275%): recovering std::vector ownership lowered the old
-// 91.9548% CUR, whose HIST is retained. Sort now over-expands its nested
-// _Unguarded_partition (retail call at +0x4e3), so the separately claimed
-// 100-byte helper is not emitted. The older register/stack-color difference
-// remains too. No new suppression or private-field container adapter is used.
-// Nine initialization/iterator states plus 72 classifier-interface states
-// bound the present recovery: assignment after tactics 82.6704%, early
-// separate assignment 82.0885%, declaration initializer 83.4275%. Direct
-// arguments, vector reference and named iterators do not restore the call;
-// neither do getCatagory's const receiver, ordinary definition or original
-// source order. All other scored functions in both header consumers hold.
-// Earlier controls (under the synthetic vector) also failed: direct traits
-// subscripts, enemy alias, loop-index hoisting, store-order swaps and a
-// guessed army VERIFY. Those scores are not bounds on this corrected owner.
 VA(0x00424120, 0x66E)  // dc-callgraph unique, dc 0x29f58
 void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* enemyHero)
 {
@@ -449,10 +410,7 @@ void type_AI_combat_data::adjustArmy(unsigned char dismissHero)
     }
 }
 
-// E:\gamedcs\ai_combat.cpp:437. Line 444 explicitly calls includes.h's
-// max (dc 0x1ef28). That wrapper owns the operand copies; calling the
-// reference selector directly is the negative control (78.0638%, missing
-// retail's second operand home). Preserve the wrapper and canonical selector.
+// E:\gamedcs\ai_combat.cpp:437
 VA(0x00424960, 0x65)  // dc 0x2a644
 long type_AI_combat_data::getFastestSpeed() const
 {
@@ -726,7 +684,6 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI
             return;
         // retail copies the whole 0x24-byte record with one rep movsd
         // (0x4256b7) and compares the ourChoice value after the second pass
-        // Before normalization (locals): our_choice.
         type_spell_choice ourChoice = choice;
         defender.getEnchantmentValue(choice, m_currentHero);
         if (choice.m_mastery != eMasteryAdvanced)
@@ -760,18 +717,6 @@ void type_AI_combat_data::castEnchantment(type_spell_choice& choice, const hero*
 }
 
 // E:\gamedcs\ai_combat.cpp:871
-// LOCATED: the body dispatches on choice->spell == 0x23 and calls
-// 0x4258a0 five times with (choice, this->my_hero, 0/1) - the
-// defender-side cast_enchantment, not cast_mass_damage_spell.
-// RECONSTRUCTED BUT UNSCORED: the labels overload-group dedup
-// (scripts/homm3/build/labels.py) pairs a claim group against the base
-// object's mangled group only when the counts match, and the sibling
-// three-argument cast_enchantment at 0x4258a0 is still @stub - so
-// neither pairs and objdiff reports 0. Hand-verified against
-// `sema disasm 0x425b10`: same CFG and same five call sites; our body
-// is 0xa0 vs retail's 0xb4 because retail tail-DUPLICATES four
-// epilogues our SP3 CL merges (the merged-return residual class
-// already recorded for path.obj / kbwin AppWndProc).
 VA(0x00425b10, 0xB4)  // dc 0x2af04
 void type_AI_combat_data::castEnchantment(type_spell_choice& choice, type_AI_combat_data& defender)
 {
@@ -796,7 +741,6 @@ void type_AI_combat_data::castEnchantment(type_spell_choice& choice, type_AI_com
     }
 }
 
-// Before normalization: get_summoning_value, ai_combat.cpp:907, dc 0x2afb8.
 // The const receiver and reference choice are positive CodeView facts.
 // DC912 dispatches 38/39 to resurrection and 60/66..69 to no-op exits;
 // 924 scans downward, 926 gets the value, 927 compares strictly, and
@@ -825,7 +769,6 @@ void type_AI_combat_data::getSummoningValue(type_spell_choice& choice) const
     }
 }
 
-// Before normalization: cast_summoning, ai_combat.cpp:941, dc 0x2b038.
 // DC943 has the same no-op/resurrection dispatch and 955 calls the
 // selected monster's cast_resurrection. Preserve this ordinary boundary
 // even though retail expands it and retains no separate body.
@@ -846,29 +789,6 @@ void type_AI_combat_data::castSummoning(type_spell_choice& choice)
 }
 
 // E:\gamedcs\ai_combat.cpp:965
-// Retail decides Complete's spell gates and dispatch classes. DC supplies
-// real helper calls, signatures and mass-damage dataflow, corroborated by the
-// retail expansions rather than inferred from the candidate's source labels.
-// Exact after restoring DC988's SpellIsAvailable, DC1033's const
-// get_summoning_value, and DC1072's cast_summoning calls. The pasted value
-// loop had enlarged this caller and changed its unrelated mass-damage
-// expansions. Restoring the value helper alone or both helpers reaches
-// 100%; restoring only castSummoning falls to 79.8398% (range) or 79.8008%
-// (switch). The availability accessor alone is byte-flat at 86.7910%.
-// Eighteen source states emit eighteen objects, with ten reproduced
-// finalists. Both complete DC switches and range forms match; retain the
-// switches and all three proven calls. Every other score in ai_combat and
-// ai_player holds. The exact body has retail's 23 named calls at the same
-// offsets, including the now-correct two mass-damage expansion decisions.
-// The 48 mass-boundary and 96 Familiar-boundary states are documented beside
-// the canonical helpers above; min/max and valuation qualifiers do not fix
-// those nested decisions by themselves. Both mass fences and the caller-specific clone
-// are gone. The prior 93.0273% HIST used the wrong uncapped damage carry.
-// Earlier allocator-only probes (before native vector/dataflow recovery)
-// were byte-flat at 87.0391: register mastery, a dead mastery initializer,
-// hoisted/reordered spell and mastery declarations, a named Familiar mana
-// share, swapped bestManaCost/mastery declarations, and dropping register
-// from spellPower. They are historical controls, not bounds on this source.
 VA(0x00425bd0, 0x593)  // anchor-global, dc 0x2b094
 void type_AI_combat_data::castSpell(
     type_AI_combat_data& defender,
@@ -1233,7 +1153,6 @@ void type_AI_combat_data::simulateCombat(type_AI_combat_data& defender)
 }
 
 // E:\gamedcs\ai_combat.cpp:1398
-// Before normalization: do_eagle_eye. DC marks this free helper static.
 static void doEagleEye(hero* winner, hero* loser)
 {
     if (winner->m_skillLevel[g_secondarySkillEagleEye] > 0
@@ -1256,14 +1175,11 @@ static void doEagleEye(hero* winner, hero* loser)
 }
 
 // E:\gamedcs\ai_combat.cpp:1424
-// SIGNATURE CORRECTION: the DC prototype's `short amount` does not
-// survive the bytes. The second (edx) argument is an armyGroup the
+// The DC `short amount` prototype does not survive retail bytes. The second
+// (edx) argument is an armyGroup the
 // body walks slot by slot - armies[i] at [esi], numTroops[i] at
 // [esi+0x1c], esi stepping by 4 over seven iterations (0x426e36
 // .. 0x426e89) - i.e. the losing side's stacks.
-// Before normalization (function): create_skeletons.
-// Before normalization (locals): current_hero, dead_army, skeleton_hit_points,
-// skeleton_hit_points_f, hit_points.
 VA(0x00426df0, 0xED)  // corroborates (hd-crossbuild + ida), dc 0x2bd6c
 void createSkeletons(const hero* currentHero, const armyGroup* deadArmy, armyGroup& destination)
 {
@@ -1292,21 +1208,7 @@ void createSkeletons(const hero* currentHero, const armyGroup* deadArmy, armyGro
     destination.add(skeleton, total, -1);
 }
 
-// E:\gamedcs\ai_combat.cpp:1440
-// DC dc0x2be54 proves the reference defender, mutable town pointer and
-// UCHAR retreated. Its line1497 calls the static do_eagle_eye helper above;
-// retaining the original static linkage and both SpellIsAvailable calls
-// preserves all 40 exact scores. The older forced-inline 70.8963% result
-// did not justify pasting the helper into this caller. A single conjunction
-// in the static helper is a measured 89.0061% control; ordered guards and
-// the first-success return reproduce the retail expansion exactly.
-// PC differs in necromancy: createSkeletons takes the defeated army pointer
-// (0x426df0 reads both creature types and counts), whereas DC takes a short
-// amount. Thus DC1448 defender_troop_count/get_creature_total feeding that
-// old amount has no PC counterpart; do not manufacture a redundant count.
-// The hero +0x430 field is the 70-entry available-spells table (AddSpell
-// 0x4d9330 writes the +0x3ea/+0x430 pair), not the former noWallPenalty view.
-// Before normalization (locals): enemy_town.
+// E:\gamedcs\ai_combat.cpp:1440, dc 0x2be54
 VA(0x00426ee0, 0x1D8)  // anchor-global, dc 0x2be54
 void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemyTown)
 {
@@ -1366,8 +1268,6 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
 // EH-bearing: the two stack-local type_AI_combat_data objects give the
 // function a /GX frame (push -1 / push <ehfuncinfo> / mov eax,fs:[0])
 // and the two `mov [ebp-4], state` writes between the constructors.
-// Before normalization (locals): attacking_hero, defending_hero, defending_army, defending_town,
-// attacker_modifier, defender_modifier.
 VA(0x004270c0, 0x149)  // anchor-global, dc 0x2c004
 unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup& defendingArmy, town* defendingTown, NewmapCell* cell)
 {
@@ -1389,8 +1289,6 @@ unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup&
 
 // E:\gamedcs\ai_combat.cpp:1539
 // EH-bearing, same shape as AI_quick_combat.
-// Before normalization (locals): attacking_hero, defending_hero, attacking_army, defending_army,
-// defending_town, attacker_modifier, defender_modifier.
 VA(0x00427210, 0x113)  // anchor-global, dc 0x2c140
 void aiAutoCombat(hero* attackingHero, hero* defendingHero, armyGroup& attackingArmy, armyGroup& defendingArmy, const town* defendingTown, NewmapCell* cell)
 {

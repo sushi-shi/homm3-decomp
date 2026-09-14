@@ -12,13 +12,13 @@ namespace {
 // CodeView field pStr; each loader owns its own private string class.
 class TAutoStrPtr {
 public:
-    // Original: `anonymous namespace'::TAutoStrPtr::TAutoStrPtr; herodefs.cpp:391, dc 0xd60d4.
+    // E:\gamedcs\herodefs.cpp:391, dc 0xd60d4
     TAutoStrPtr() : m_string(0) {}
-    // Original: `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr; herodefs.cpp:394, dc 0xd60dc.
+    // E:\gamedcs\herodefs.cpp:394, dc 0xd60dc
     ~TAutoStrPtr() { delete[] m_string; }
-    // Original: `anonymous namespace'::TAutoStrPtr::set; herodefs.cpp:396, dc 0xd60f4.
+    // E:\gamedcs\herodefs.cpp:396, dc 0xd60f4
     void set(char* value) { m_string = value; }
-    // Original: `anonymous namespace'::TAutoStrPtr::get; herodefs.cpp:398, dc 0xd60f8.
+    // E:\gamedcs\herodefs.cpp:398, dc 0xd60f8
     char* get() const { return m_string; }
 
 private:
@@ -171,25 +171,7 @@ unsigned char initializeSSkillTraitsTable()
 
 #if 0  // @carcass -- withdrawn inlined helpers and cinit rows
 
-// ----------------------------------------------------------------------
-// CLAIMS WITHDRAWN 2026-08-07 - MISATTRIBUTION (cinit excluded class).
-// The seven claims below had been order-mapped onto herodefs.obj's
-// file-scope initializer block, which occupies 0x4e6d60..0x4e714f:
-//   0x4e6d60  32 B  guard byte 0x6abaa0 + push <vslot> + call _atexit
-//   0x4e6d80  89 B  \
-//   0x4e6de0  96 B   |
-//   0x4e6e40  97 B   |  ten identical bitset<10> set loops, distinguished
-//   0x4e6eb0  95 B   |  only by the trailing `[bss] = (bits & MASK) << N`
-//   0x4e6f10  95 B   |  with MASK/N stepping 0x3ff/0, 0x1ff/1, 0xff/2,
-//   0x4e6f70  95 B   |  0x7f/3, 0x3f/4, 0x1f/5, 0xf/6, 7/7, 3/8, 1/9
-//   0x4e6fd0  95 B   |
-//   0x4e7030  95 B   |
-//   0x4e7090  95 B   |
-//   0x4e70f0  95 B  /
-// That is the run the DC roster names as ten `$E4xx` STATIC rows from
-// E:\gamedcs\terrain.h:70..79 - per-TU file-scope dynamic initializers,
-// 900 occurrences image-wide, exactly ten per TU. Identical class to the
-// withdrawn exec 0x4b0660, findpath 0x4b1090 and fly 0x4b4420.
+// E:\gamedcs\terrain.h:70
 
 // Where the seven really went. The three Initialize*Traits rows are
 // DC `static` with exactly one call site each - their Table function -

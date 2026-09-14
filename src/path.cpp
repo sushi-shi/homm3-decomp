@@ -1,22 +1,3 @@
-// path.cpp - E:\gamedcs\path.cpp (compiland path.obj)
-// 9 functions in link order; retail drops GetBestDirection (no carve
-// row fits between OppositeDirection and the cinit cluster - the
-// combat move choice lives in the ai_* units).
-// The shared bounds-check exits are expansions of combatManager::ValidHex,
-// attested at Dreamcast path.cpp:31, :52 and :279. Calling the canonical
-// inline reproduces retail's merged failure block without source gotos.
-// The old labelled guards matched too, but did not establish original gotos.
-// Negative control: nesting the successful body under if (validHex(...))
-// sinks the failure block and lowers FindPath to 78.8679% and
-// GetAdjacentCellIndexNoArmy to 74.1667%; the early-return helper form is exact.
-// Second family lever, byte-proven here and worth trying anywhere
-// `creatureId & 1` appears (cmbtmgr, ai_tactical, army): retail
-// computes the two-hex test as a BYTE-typed value and reuses it -
-// `unsigned char twoHex = creatureId & 1;` then `twoHex ? a : b`.
-// Writing `(creatureId & 1) ? a : b` twice makes our CL CSE it as a
-// DWORD (`and eax,1` / `and esi,0xffffff40`) where retail works in
-// AL/CL (`and al,1` / `and cl,0x40`); that one change took
-// GetAttackMask 70.44% -> exact with nothing else touched.
 #include "terrain.h"
 #include <va.h>
 #include "army.h"

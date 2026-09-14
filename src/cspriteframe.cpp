@@ -365,17 +365,6 @@ inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
 // other codes denote a repeated palette index.  Raw/tile and adventure-object
 // encodings dispatch to their specialized renderers before this path.
 
-// Earlier exact (1125 B): the DC-attested dword line table is declared at function
-// scope but assigned only inside the positive render guard.  Together with a
-// block-scoped row destination, this gives retail's one-slot frame, delayed
-// map load, parameter-home reuse, and all 88 exact CFG blocks.
-// Row-boundary residual (98.6225%): visited pointers use integral
-// byte displacements; only the integer advances after the final row. The
-// earlier guarded/break form scored 91.6247%. DC decoder/helper scopes
-// and pixel arithmetic remain intact, including reverse/raw source walks.
-// All eight combined gains independently reproduce (13 whole-TU parents).
-// A further 60 counter/direct-cursor/header-lifetime states emit one object.
-// Here all 88 blocks agree; initial row-home stores still cross the loop guard.
 VA(0x0047c570, 0x465)  // unique PC/DC renderer identity; retail byte verdict
 void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
                         unsigned short* dst, int dx, int dy, int dw, int dh,
@@ -815,16 +804,6 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
 // literal palette indexes; control five optionally draws the caller's flag
 // colour, and the remaining controls are transparent in this renderer.
 
-// Earlier exact (1099 B): unsigned cell-line arithmetic, split packet load/increment,
-// and a block-scoped row destination reproduce retail's logical shift,
-// packet schedule, and dead-hflip parameter-home reuse in both direction arms.
-// DC locals retain read-only palette/aCellOffset views (0x76060 dossier).
-// The Rust gate also compiles this body directly and differentials generated
-// and installed DEF streams; retail bytes remain the match verdict.
-// Row-boundary residual (96.6247%): visited pointers use integral
-// byte displacements; only the integer advances after the final row. The
-// earlier guarded/break form scored 84.9227%. DC decoder/helper scopes
-// and pixel arithmetic remain intact, including reverse/raw source walks.
 VA(0x0047d0a0, 0x44B) // retail packed-cell decoder + DC source identity
 void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                                   unsigned short* dst, int dx, int dy, int dw,
@@ -1834,7 +1813,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
 
 // E:\gamedcs\cspriteframe.cpp:3365
 // The tileset shadow pass: same packed-cell walk as DrawTile above, with the
-// palette write replaced by a blend of what is already on the destination.
+// palette write becomes a blend of what is already on the destination.
 // Nothing here reads `pal` - the parameter survives because CSprite's two
 // wrappers (0x47bfa0, 0x47bff0) pass it - and nothing reads the raw encoding
 // either, which is why the body opens by returning on eEncodeRaw instead of

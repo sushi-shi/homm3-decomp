@@ -27,17 +27,6 @@ void setPlayerPaletteColors(unsigned short* pal, int whichPlayer);
 void setPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
 void setPlayerPaletteColors(TPalette24& pal, int whichPlayer);
 
-// The widget base lives in widget.h (owner: widget.obj). Button's
-// vtables (0x63bb54/0x63bb88/0x63bbbc) have 13 slots because WIDGET
-// has 13 - they introduce nothing. (Correction 2026-08-08: the earlier
-// note here read them as "widget's 12 plus one button-introduced
-// virtual". widget's own vtable 0x243c90 is 13 entries wide -
-// heroWindow's table starts at 0x243c90 + 13*4 - and 0x456a10 is
-// button's OVERRIDE of widget slot 12, its whole body being an
-// explicit `widget::_vslot12(arg)` call.) Overrides with retail bodies
-// outside the button band: zBufferDraw (slot 3, 0x5bc7e0) and Dim
-// (slot 8, 0x5bc690) - homes unproven.
-
 // Layout PROVEN by the retail ctor 0x455ef0 (member stores) and dtor
 // 0x4560f0 (member teardown): buttonIcon@0x30, normalFrame@0x34,
 // selectedFrame@0x38, disabled_frame@0x3c (ctor seeds 2), field_40@0x40
@@ -81,7 +70,7 @@ public:
     void setPalette(const char* paletteName);
     button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
     int select(message& msg);
-    // Original: button::Deselect; button.cpp:401, dc 0x57854.
+    // E:\gamedcs\button.cpp:401, dc 0x57854
     int deselect(message& msg);
     // Dreamcast homes SetText and set_hotkey in Button.h itself; the
     // wrapper is inlined at its retail call sites. The old 0x404200 mapping
@@ -104,7 +93,6 @@ public:
     virtual int main(message& msg);  // slot 2, retail 0x456190
 
     virtual int getRealWidth() const;  // slot 6, folded retail 0x4eab20
-    // Before normalization (function): button::GetRealHeight.
     virtual int getRealHeight() const; // slot 5, folded retail 0x4eab30
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     virtual void draw() const;  // slot 4, retail 0x456940

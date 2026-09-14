@@ -42,10 +42,6 @@ unsigned char army::findFlyerAttackCell(int target)
 #endif
 
 // E:\gamedcs\fly.cpp:76
-// The earlier 0x4b4420 claim was correctly withdrawn: it is a terrain.h
-// initializer. Retail simple_move independently calls 0x4b46c0, and the
-// following FlyTo/Fly/TeleportTo/Teleport shapes form the complete ordered
-// fly.obj block.
 
 // RECONSTRUCTED 2026-08-13. The 761 retail bytes are FOUR copies of the
 // same six-step adjacency scan, which is exactly the two private DC
@@ -69,18 +65,6 @@ unsigned char army::findFlyerAttackCell(int target)
 // the resulting stack, and the -1 pair is the "no target selected" case
 // that falls through to the literal reachability test.
 
-// CLOSED 2026-08-28 (100.00%). The old 89.1445 candidate was a local
-// maximum assembled from individually high-scoring substitutions: split raw
-// bounds instead of the cmbtmgr.h `static bool ValidHex`, a direct creatureId
-// bit test instead of `enemy->Is(1u << 0)`, two positive early returns instead
-// of the line-97/100/101 nested failure, and the line-84/86 literal arm placed
-// after the enemy arm instead of before its line-95 `else`. Restoring all four
-// Dreamcast source facts as one
-// coherent unit first reached 93.71, then 94.82, then exact. The final source
-// has one line-104 success return, and VC6 shares it across the selected-enemy
-// and literal-target arms exactly as retail does. The measured negative
-// controls below document why the isolated local maxima must not be
-// reintroduced.
 // E:\gamedcs\fly.cpp:35
 inline bool army::findFlyerAttackCell(int start, int target) const
 {

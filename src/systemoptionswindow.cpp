@@ -34,36 +34,7 @@ DATA(0x006a7584) THelpText g_systemOptionsHelp[48];
 //            combat, video subtitles, town outlines, spell book
 //            animation; 578 is shared with the combat options dialog)
 
-// E:\gamedcs\systemoptionswindow.cpp:43
-// Reproduced 99.3013% after recovering the complete UpdateSystemOptions
-// boundary (DC193) and the plain pointer-registration loop (DC121..127).
-// The former extra begin/end guard compensated for the pasted first-update
-// branch. With the complete ordinary helper it scores 85.4266%, while
-// the source-supported for loop reaches 99.3013%; a guarded do loop gives
-// 98.3416% and a named vector reference gives 98.5153% with the for loop.
-// Preserve the standard vector, MemError arm and both true helper callers.
-// Seventeen initial boundary states and twenty flag/accessor states showed
-// that the member dirty flag belongs before the handler's update call:
-// placing its extra conditional inside the helper prevents both expansions.
-// Thirty-three registration/owner states reproduce the joint improvement
-// from 96.3370%/94.3957% to 99.3013%/97.3386% for constructor/handler.
-// The TTextResource subscript calls are source facts and byte-neutral here.
-// Former constructor mismatch was confined to reserve's nested choices:
-// the verified C2 replay has root cb=4467/budget=8934, but reserve's depth-2
-// budget starts at 151. capacity(42) and _Ucopy(60) leave 49; _Destroy(49)
-// expands and size(42) is retained at budget zero. Retail calls _Destroy
-// and expands size instead. The rest of the instruction stream aligns at
-// +0x18 after reserve. Sixteen coordinate/initialization lifetime states
-// (eight objects, all reproduced) show the missing source lever: pass the
-// derived x expression directly at either or both volume constructors.
-// This removes a single-use local while keeping slot induction, all helper
-// calls and all widget values. Either direct-coordinate loop reaches 100%;
-// both named locals leave 99.3013%. The adopted form treats both loops alike.
-// Verified C2: root cb 4457/budget 8914 gives reserve budget 150; after
-// capacity/_Ucopy it has 48, so _Destroy(49) is called and size(42) expands.
-// Keep the original member initializer and plain pointer registration loop;
-// those source alternatives were independently crossed in the controls.
-// No standard-library code, dummy operation or inline pin is needed.
+// E:\gamedcs\systemoptionswindow.cpp:43, dc 0x15f588
 VA(0x005b1790, 0x187C)  // sole sysopbck.pcx reference + vtable block, dc 0x15f588
 TSystemOptionsWindow::TSystemOptionsWindow()
     : CAdvPopup(159, 56, 481, 487, 0x12), m_prefsChanged(0)
@@ -121,47 +92,6 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     // consumed in source order and we are out of PHASE with retail rather
     // than uniformly short of it, so the fix has to be real missing
     // statements - and nothing in the retail body evidences any.
-
-    // 2026-08-14, third pass. One real fix landed and one new hard datum.
-    // FIXED (88.2634 -> 88.3182): `bPrefsChanged` moved into the member
-    // initializer list. Retail stores `mov byte [esi+0x60],0` BEFORE the
-    // compiler's `mov [esi],vtbl`; a body assignment can only emit it after.
-    // Same lever that fixed TResourceDisplay's store order. Measured all four
-    // placements: bPrefsChanged-only in the list 88.3182, base 88.2634,
-    // quickCombatSave-only 88.1399, both 88.1198, body order swapped 88.1125 -
-    // so quickCombatSave genuinely belongs in the BODY and bPrefsChanged in
-    // the list, which is also the only combination that matches retail's
-    // member/vptr/member sandwich.
-    // The reserve expansion's missing out-of-line `call 0x404140` (the empty
-    // std::vector<widget*>::_Destroy) is SOLVED in mainmenu.cpp, and the
-    // starting-budget reading recorded here was right in direction but wrong in
-    // cause: it is not a smaller caller IL, it is the /Ob2 budget DIVISOR.
-    // `reserve` is candidate site k=0, so its interior gets
-    // (2*cb_ctor - cb_reserve)/n, and retail's constructor carries MORE
-    // inline-candidate call sites n than ours. Titrated with the xx_nop probe
-    // (k byte-inert free calls appended to the body): this constructor wants
-    // exactly TWO more sites - k=0 88.3182, k=1 89.8642, k=2 97.1839, k=3
-    // 95.8290, k=4 84.6273, k=6 77.0523. That +8.87 is the single largest
-    // available move on this function and it is NOT reachable by converting the
-    // push_backs: all 41 of them to insert(end(), x) is +41 sites and lands at
-    // 86.28, and a pointer local alone is 87.89. Do NOT re-test pragmas or
-    // vector rebinding - see mainmenu.cpp for the dead-end ledger.
-    // SUPPLIED 2026-08-14 (88.3182 -> 97.6237, i.e. PAST the xx_nop ceiling):
-    // the two sites are the hoisted-first registration guard at the bottom of
-    // this body. See the note there for the placement law and the ladder.
-    // Rejected +2 spellings, all measured the same day, because
-    // insert(end(), x) is NOT byte-neutral at these particular sites even
-    // though it is in mainmenu/gametypewindow/quickherowindow: the two
-    // slider-loop push_backs 88.1531, the first two top-level push_backs
-    // 87.7930, the last two 94.2323, the last two behind a pointer local
-    // 94.6031, the last one alone 87.4010.
-    // The second /Ob2 axis - the caller's own cb, which sets budget = 2 * cb -
-    // was swept here too, as pad statements ahead of `reserve`: at the landed
-    // site count it is flat from 0 to 8 statements (97.6237), dips at 16
-    // (97.2341), peaks at 24 (97.7860) and collapses past 40 (88.9218), and
-    // every k>=1 column of that sweep is capped below the k=0 one. Unlike
-    // gametypewindow, where mass+sites together reached exact, there is no
-    // (mass, sites) cell here that beats the slot-IV spelling below.
 
     // 2026-08-14, RE-TITRATED AT THE LANDED SPELLING, single-step this time.
     // The remaining residual is the same one levelupwindow carries: the LAST
@@ -778,15 +708,6 @@ int TSystemOptionsWindow::windowHandler(message& msg)
 }
 
 // E:\gamedcs\systemoptionswindow.cpp:667
-// Retail has no post-handler entry before the next compiland's unrelated
-// 0x5b3780 constructor; the helper is inlined at its call sites.
-
-// Before normalization (locals): bFirstUpdate.
-// DC668 constructs msg, 669 sets its id, 671 guards the first-update
-// network path, and 696 guards redraw with !firstUpdate. The dirty flag
-// is set by the handler's preference arms (DC624/625 etc.). Moving
-// that store back here suppresses expansion at both callers (96.5620%
-// constructor / 88.3110% handler under the former registration spelling).
 void TSystemOptionsWindow::updateSystemOptions(unsigned char firstUpdate)
 {
     message msg;

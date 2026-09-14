@@ -1,14 +1,7 @@
 // gzfile.cpp - the zlib-backed TAbstractFile every savegame, map and
 // campaign write goes through.
 
-// The TGzFile class and compiland are absent from the Dreamcast roster.
-// DC SaveGame calls gzopen/gzclose directly with a void* handle; Complete
-// supplies this TAbstractFile wrapper. Retail's object is the one opened by the
-// cinit at 0x4d6c30 and closed before the next unit's cinit at 0x4d6dc0,
-// which brackets exactly the eight bodies below: the constructor, the two
-// gz virtual slots, the destructor and the four compiler-generated
-// thunks the `throw TOpenFailure()` forces out. It sits one object behind
-// TGzInflateBuf's in the gametypewindow..hero link-order bracket.
+// Complete wraps gz files in TAbstractFile; Dreamcast calls gzopen/gzclose directly.
 
 // The class, its layout and its TOpenFailure tag are modelled in
 // gzfile.h off the retail bytes; this unit only supplies the bodies.

@@ -735,17 +735,8 @@ unsigned char initializeTentColorText()
     return 1;
 }
 
-// Help.txt is Arraytxt.txt's spreadsheet twin: one running row index
-// walks the file once, each window's help table takes its own run of
-// (rollover, right-click) column pairs, and TWO rows are skipped between
-// runs. FOURTEEN of the 23 destinations already carry a THelpText claim
-// at exactly these addresses from the consumer side - gAdventureWindowHelp,
-// gAdventureOptionsHelp, gCombatSubWindowHelp, gViewArmyHelp,
-// gSpellbookHelpText, gSacrificeWindowHelp, gMarketHelpText, gGiveHelpText,
-// gBuyArtHelpText, gSellArtHelpText, gSellCreaHelpText,
-// gUniversityWindowHelp and two more - and seven of those consumers'
-// element COUNTS match this loader's run lengths exactly. That is the
-// order-map's proof.
+// Read each window's run of rollover/right-click text pairs in file order,
+// skipping two rows between runs.
 
 VA(0x005b98b0, 0x405)  // dc 0x161ae4
 unsigned char initializeHelpText()

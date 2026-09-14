@@ -59,7 +59,6 @@ void advManager::checkCastSpell()
     updBottomView(1, 1, 1);
 }
 
-
 // E:\gamedcs\advspells.cpp:93
 // The dispatcher, and the ONE place every adventure spell is charged from.
 // Ten ascending cases through a jump table; four of the arms are Dreamcast
@@ -129,7 +128,7 @@ void advManager::castSpell(SpellID whichSpell)
 // advanced mastery and above, builds a new one.
 
 // The old-position visibility test is what the two SLimitData clips are
-// for: retail keeps the boat's former cell out of the fizzle when it is off
+// for: retail keeps the boat's previous cell out of the fizzle when it is off
 // the current view, which is why the first fizzle block carries no sample
 // and the second one does.
 
@@ -252,23 +251,6 @@ void advManager::summonBoat(TSkillMastery level)
 }
 
 // E:\gamedcs\advspells.cpp:328
-// The Scuttle Boat handler. TSkuttleBoatWindow picks the target; a
-// cancelled pick (dialogReturn 0) posts the same general-text row 732
-// DimensionDoor posts and charges nothing. Otherwise the mastery roll
-// decides, and BOTH outcomes fall through to the shared UseSpell tail -
-// retail charges the mana whether or not the boat actually sank.
-// DC records const traits by reference, GetCurrHero, GetManaCost's one-
-// argument facade, and rectangle-based fizzle calls. Complete calls the X
-// pixel path; WinMgr.h:193..200 independently proves its reference overloads.
-// These source calls, SRandom and text[], and the recorded skuttle_window
-// and boat_limits locals are restored. Direct coordinate differences in
-// the rectangle constructor close the remaining EBX/EDI schedule: the
-// ten-state joint Scuttle/TownGate family emitted eight objects, all
-// reproduced, with Scuttle at 100. Cached cell coordinates keep 98.4651;
-// cached pixel coordinates fall to 84.8977. All other TU scores survive.
-// Complete has an early cancelled-target dialog absent from the port.
-// Nesting cancellation in an else changes retail fall-through and loses
-// the earlier match (77.5116); retain the PC early cancellation path.
 VA(0x0041cdf0, 0x29D)  // anchor-vtable TSkuttleBoatWindow ctor/dtor, dc 0x22054
 void advManager::skuttleBoat(TSkillMastery level)
 {
@@ -621,7 +603,6 @@ void advManager::teleportTo(hero* who, type_point destination,
                             unsigned char drawChanges,
                             unsigned char isReplay)
 {
-    // Before normalization (locals): bOldShowIt.
     int oldShowIt = g_completeDrawEnabled;
     if (!drawChanges)
         g_completeDrawEnabled = 0;

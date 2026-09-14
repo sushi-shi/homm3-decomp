@@ -13,16 +13,13 @@ class ds_memsample;
 // channel/volume/loop at +0x28/+0x2c/+0x30, allocates data at +0x20, stores
 // its byte count at +0x24, and clears the handle at +0x1c.
 struct MemorySampleStructure {
-    // Original memHSample: the typed Miles handle stored by
-    // soundManager::memorySample 0x59a210, previously sample::field_1c.
+    // Miles handle assigned by soundManager::memorySample.
     ds_memsample* m_memSampleHandle;
     void* m_data;
     // NH3API size (size_t); retail getSize 0x566e90 adds this byte count
-    // to sizeof(sample). Previously sample::field_24.
+    // to sizeof(sample).
     unsigned int m_size;
-    // DC/NH3API memCindex, memVolume, memLooping. Retail playback uses
-    // these for the sound-channel range, volume, and AIL loop count.
-    // Previously sample::field_28, field_2c, field_30 respectively.
+    // Sound-channel range, volume, and AIL loop count for playback.
     int m_memCindex;
     int m_memVolume;
     int m_memLooping;

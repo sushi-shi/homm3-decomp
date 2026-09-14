@@ -32,8 +32,6 @@ struct BINK {
     // bounding fields (+0x0c and +0x30), including the rectangle stride/count.
     // The bundled newer SDK preserves these names/types but inserts stretch
     // dimensions and LastFrameNum earlier; its offsets do not apply here.
-    // Original spellings: FrameRate, FrameRateDiv, ReadError, OpenFlags,
-    // BinkType, Size, FrameSize, SndSize. Replaces synthetic pad_10.
     unsigned long m_frameRate;     // +0x10
     unsigned long m_frameRateDiv;  // +0x14
     unsigned long m_readError;     // +0x18

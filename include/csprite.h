@@ -158,8 +158,8 @@ public:
                          int dh, int dpitch, bool hflip,
                          bool alpha) const;
     void setPalette(const unsigned short* pal);
-    // Original: CSprite::SetPalette; CSprite.h:259, dc 0x744e4.
     // Complete expands this wrapper in ResetPalette.
+    // E:\gamedcs\CSprite.h:259, dc 0x744e4
     void setPalette(TPalette16& pal)
     {
         if (m_p)
@@ -316,7 +316,6 @@ public:
     // CSprite.h:450/451 (dc drawing.obj:0x8757c) preserves the same
     // bitmap forwarding boundary. The public suffix HH_N1@Z proves both
     // Boolean parameters; its four bitmap accessors remain source calls.
-    // Before normalization (function): CSprite::DrawSpellEffect.
     void drawSpellEffect(int seqnum, int framenum, int sx, int sy, int sw,
                          int sh, Bitmap16Bit* dst, int dx, int dy,
                          bool hflip, bool alpha) const

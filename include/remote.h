@@ -416,18 +416,6 @@ SIZE(CMessageKill, 0x4);
 class CNetMsgHandler {
 public:
     CNetMsgHandler();
-    // CORRECTION 2026-08-14, from retail's own vtable 0x640f14: it is FOUR
-    // slots wide, not three, and the shape is not the Dreamcast's. DC's
-    // field list introduces CheckHandleNet at vfptr offset 0,
-    // GetAbortPopupMsg at 4 and HandleNetMsg (PURE INTRO) at 8, with no
-    // virtual destructor at all. Retail put a virtual destructor in front
-    // of all three - slot 0 is the scalar deleting destructor 0x557810 -
-    // and kept the rest in the same relative order: CheckHandleNet
-    // (0x557860), GetAbortPopupMsg (0x557900), and _purecall (0x617d9a) in
-    // slot 3, which is what makes HandleNetMsg pure here too.
-    // A CALL SITE corroborates slot 0 independently: townManager::Close
-    // (0x5c71b0) deletes its CTownNetMsgHandler through vtable slot 0, so
-    // CheckHandleNet cannot live there.
     virtual ~CNetMsgHandler();  // slot 0
     virtual CNetMsg* checkHandleNet(unsigned char inPopup,
                                     unsigned char* msgReceived);  // slot 1

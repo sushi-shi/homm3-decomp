@@ -22,23 +22,6 @@
 // DoorCanBeLowered (0x63268), and FreeArmies
 // (0x5e3d8, whose only caller is Close).
 
-// Promoted 2026-09-01 after rechecking the address-takes and named VC6
-// publics: 0x62890/0x628b0 are the Eagle Eye set's ctor closure/dtor,
-// 0x62920/0x62930 are TArcher's ctor/dtor, and 0x66260 is
-// TPickANumber's owner dtor.
-// These are class special members, not anonymous STL tails.  The /MT calls
-// around the Dinkumware tree's shared sentinel independently prove the
-// cmbtmgr.obj profile; the TPickANumber row is the Complete lowering of the
-// destructor boundary Dreamcast records at includes.h:134 (dc 0x63a18).
-// Promoted 2026-08-24 from the retail-only class: 0x639e0, plus the four
-// ordinary helpers at 0x65f20, 0x693a0, 0x69440 and 0x69e50. None has a
-// DC cmbtmgr.obj counterpart, so the unattested functions retain bootstrap
-// or address-ordinal names; their retail bodies and callers now prove their
-// complete roles.
-// Promoted 2026-08-24 after NextArmy closed: its two adjacent retail-only
-// helpers at 0x64d40 and 0x64f50 retain address-ordinal names, but their
-// selected-stack fear check and strict move-order predicate are now fully
-// pinned by their bodies and sole caller.
 #include <math.h>
 #include <stdlib.h>
 
@@ -421,19 +404,6 @@ void combatManager::freeIcons()
 // array receiver were a score-neutral flattening. Fatal rules now preserve
 // these five names, types, declaration scopes/order and receiver boundary.
 
-// Residual (99.3528%, rechecked 2026-09-01): all 36 CFG blocks are
-// structurally exact; the only source-labelled difference is one comparison.
-// Retail tests the combat hero with
-// `cmp eax, esi` against the register still holding the zero it has just
-// stored into numArmies[side], where our CL emits `test eax, eax`.
-// Tried and rejected: `numArmies[side] = placed;` after `int placed = 0;`
-// to force the two zeroes to share; moving `int placed = 0;` below the two
-// pointer locals; reversing the predicate to `0 != combat_hero`; and swapping
-// the combat_hero/group declaration order (the last two re-measured
-// 2026-08-22). All are byte-identical. Both sides hold the same xor-esi zero
-// two instructions above the compare; C2 simply picks the literal-zero
-// `test` where retail picked the register compare, and the [ebp-8] spill
-// rides on the same choice. One instruction, C2 compare-selection state.
 VA(0x00463600, 0x3D8)  // anchor-callee, dc 0x5e09c
 void combatManager::loadArmies(unsigned char isSurrounded)
 {
@@ -641,17 +611,6 @@ void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* lef
 // expands; a generic int clamp instead widens too early and loses three
 // conditional branches.
 
-// Residual (current 95.6827%, banked MAX 95.7196%, rechecked 2026-09-01):
-// all 56 CFG blocks are exact; the old one-branch-short note was stale.
-// Restoring every DC-proven GetPrimarySkill/AdjustPrimarySkill boundary
-// leaves each of those source-labelled regions instruction-exact, but moves
-// the Fortress HasBuilding scratch-register schedule and accounts for the
-// small current-score dip. The other differences are scheduling only: the
-// mana load/store crosses the defendingTown null test, the two set::clear
-// calls reverse temporary address-push order, and LoadArmies' tail swaps
-// stack pseudos. The call multisets remain equal at 6 and 6, including both
-// set::erase calls, and the six-arm siege switch differs only in masked
-// relocation names.
 VA(0x00463c60, 0x43C)  // anchor-callee, dc 0x5e690
 void combatManager::initNonVisualVars()
 {
@@ -1077,7 +1036,6 @@ void combatManager::checkApplyGoodMorale(int group, int index)
     drawFrame(1, 0, 0, 0, 1, 0);
 }
 
-// of a frame slot in the former local clamp experiment. Tried and
 VA(0x00464b40, 0x1FB)  // dc 0x5f3c4
 int combatManager::checkApplyBadMorale(int group, int index)
 {
@@ -1246,9 +1204,6 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
 }
 
 // E:\gamedcs\cmbtmgr.cpp:2364
-// RECONSTRUCTED 2026-08-20 from the earlier lane's head survey, which
-// was right about the three stores and the +0x13d68 latch and stopped
-// one instruction short of the part that names everything else.
 
 // The body is a start-of-turn hook in two halves. The first is the
 // combination-artifact auto-cast: while the acting side's field_54b0
@@ -1288,27 +1243,6 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
 // but the pragma reaches it. inline_depth(1) and (2) were both
 // measured and both leave the expansion in place (75.8883, flat), so
 // only 0 works.
-
-// 87.51 -> 99.65 over two edits, 2026-08-20, REOPENING the note that
-// stood here. It read "a full expression is the narrowest scope the
-// pragma has" and banked the pin's price (the pinned statement's
-// temporary destructor de-inlined into a _Tidy CALL) as unavoidable.
-// That verdict predated the statement-split lever: NAMING the plural
-// arm's format_string result in its own unpinned statement moves the
-// temporary's destructor to the closing brace, outside the pin, and it
-// re-inlines exactly as retail has it (89.91 -> 97.77; branch stream
-// 44/44 and call multiset 27 = 27 from that edit alone). The second
-// edit is the pin's DEPTH: retail expands operator= one level and
-// CALLS the three-argument assign (`mov ecx,[npos] / push / push 0 /
-// push eax`), while the pin on `message = many` cut at operator=
-// itself; spelling operator='s own expansion - `result.assign(many,
-// 0, std::string::npos)` - under the same pin puts the cut at retail's
-// level (97.77 -> 99.65). npos spelled as the static member is what
-// buys retail's `mov ecx,[npos]` load. Tried and rejected: naming the
-// SINGULAR arm's temporary the same way (97.02 - that arm's natural
-// budget expansion already matches and the named local breaks its
-// push-eax argument form), and `const` on the named local (byte-flat
-// to the digit).
 
 // DREAMCAST SHAPE RESTORED 2026-08-30, byte-flat at 99.64975%. Raw NB11
 // records `result` as the sole non-optimized local inside the mana-drain
@@ -1396,7 +1330,7 @@ void combatManager::setNextArmy(int group, int index)
                         // a different point, not a spelling difference:
                         // the two arms are written identically.
                         // SPLIT: the temporary named in its own statement
-                        // so the pin no longer reaches its destructor -
+                        // so the pin misses its destructor -
                         // the dtor runs at the brace, outside the pinned
                         // statement, and stays inline as retail has it.
                         std::string many = formatString(
@@ -1428,10 +1362,6 @@ void combatManager::setNextArmy(int group, int index)
     getControl();
 }
 
-// DC CombatIsOver owns the twenty-slot scan at cmbtmgr.cpp:2439..2449,
-// including the two army::Is calls at dc 0x5fb82/0x5fb8c. Retail
-// 0x46585c..0x465881 expands those tests in the same scan. The former
-// SideIsWipedOut wrapper split this loop from its proven source owner.
 VA(0x00465830, 0x76)  // dc 0x5fb14
 unsigned char combatManager::combatIsOver() const
 {
@@ -1570,20 +1500,6 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
 // (army::range_attack, 0x4401c3) pushes `this->slot`, so the domain is
 // 0..20 and the value names the VICTIM, not the tower. The acting tower
 // is read separately, from the (actingSide, actingSlot) pair.
-
-// The two corrections:
-//   * 0x446660 / 0x446630 are army::MidX / army::MidY, not
-//     army::PlayAnimation. The real PlayAnimation is 0x446940 and takes
-//     three arguments where these take none; the `army_PlayAnimation`
-//     label on 0x446660 is a stale delinker working label, and the DC
-//     xref graph lists MidX and MidY among this body's callees and no
-//     PlayAnimation at all.
-//   * the 84-byte-stride table behind .data 0x67ff24 is gMonFrameInfo,
-//     already fully modelled in monframeinfo.h - the cell holds
-//     0x6998e0, which is monframeinfo.cpp's own sMonFrameInfoTable.
-//     cmbtmgr.h's TMissileStartInfo is a SECOND model of that same
-//     object and cannot serve here: +0x40 and +0x4c fall inside its
-//     `float angles[18]`.
 
 // The three-way gridIndex switch has NO default arm - retail leaves the
 // archer index uninitialised for any other hex - and its 0xfe -> 0 /
@@ -1809,7 +1725,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
             obstacle.m_duration = 0;
             obstacle.m_dispelEffect = -1;
             m_obstacles.push_back(obstacle);
-            // Removing this pin with the former copied vector wrappers and int
+            // Keep placeObstacle out of line at this call site.
             int obstacleSlot = m_obstacles.size() - 1;
 #pragma inline_depth(0)
             placeObstacle(&obstacle, obstacleSlot, hex, 2);
@@ -1846,16 +1762,6 @@ VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
 //     (89.8722 -> 91.5113 on that rewrite alone). The redundant
 //     `id < 0` re-test in front of place_obstacle survives it.
 
-// Retail expands std::vector<TObstacle>::insert here and calls its retained
-// 0x46aeb0 copy from PlaceObstacle. The grow branch uses the library's
-// _Ucopy/_Ufill and fill/copy_backward helpers over 0x18-byte records.
-// The former copied vector implementation used inline-depth pins inside
-// those library operations; their canonical bodies now come from <vector>.
-// Prior source probes: a return in the obstacle rejection loop introduced
-// a second cleanup path; retain break. Initialize landmineSlot from size()
-// before decrementing it; combining the subtraction changed scheduling.
-// The historical 98.1402% result used the copied container and does not
-// establish code generation for the restored standard-library interface.
 VA(0x00466290, 0x607)  // anchor-callee, dc 0x60538
 void combatManager::setupAndLoadObstacles()
 {
@@ -2495,51 +2401,6 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // halfway - the arc is half the horizontal span, which is what makes
 // `flatness` the right name for the coefficient rather than a height.
 
-// Residual (86.4031%): register binding and one homing choice. 318
-// instructions against retail's 320, branch sequences identical, and
-// the frame is 16 bytes smaller because retail spills the loop's
-// `bottom` to [ebp-0x64] where our CL keeps it in a register. The
-// inlined IsQuickCombat shows the same LEA-instead-of-fold schedule the
-// other two animators show, from the same source inline.
-// Tried and rejected, all re-measured on fuzzy: `deltaY` declared
-// before `deltaX` (84.48 -> 81.72 backwards; retail forms deltaX
-// first), the union's edges recomputed inline instead of named (84.48),
-// `bottom` volatile, and `right`/`bottom` swapped.
-// 2026-09-05: 89.3444 -> 90.5928 and the skeleton went IDENTICAL (37/37
-// blocks, zero flow-kind, size-only, target-shift or missing rows, against
-// 34-vs-35 with 26 flow-kind before). Retail splits the four pre-loop
-// initialisers around the loop's own guard: `step = 0` and `frame = 0` are
-// stored BEFORE the `cmp nframes,0 / jle`, and `travelX = 0` and
-// `remaining = nframes` in a two-instruction preheader AFTER it. A plain
-// `for` cannot express that - every initialiser is above the guard, and VC6
-// additionally hoists `remaining = nframes` to the front to sit next to the
-// nframes load. Writing the loop under an explicit `if (nframes > 0)` with
-// travelX/remaining scoped inside it, and `step` hoisted out, puts each store
-// on retail's side of the guard; VC6 folds the explicit test into the loop's
-// rotation guard, so no second compare is emitted.
-// Residual (90.5928%): register/scheduling only - every block boundary and
-// branch now agrees.
-// Residual (90.5938%), fully localised by polish lane 37: there is NO
-// structural difference left. All 37 blocks are exact, the 21 branches and
-// 12 calls agree, and the whole floating-point stream matches retail
-// instruction for instruction - `fild deltaY / fstp t1 / fild remaining /
-// fstp t2 / fld t2 / fmul flatness / fsubr t1 / fild step / fstp t1 /
-// fmul t1 / fdiv nframes_d` on both sides. Only the ebp DISPLACEMENTS
-// differ, and they differ because retail's frame is 0x9c against our 0x8c.
-// Retail's map is: `saved` at -0xa8 (0x38 bytes, as SIZE(Bitmap16Bit)
-// proves), then a TWELVE-BYTE HOLE at -0x70..-0x65 that nothing addresses,
-// then `bottom` at -0x64, the three doubles at -0x60/-0x58/-0x50 and the
-// dwords at -0x48/-0x44/-0x40. Ours packs the same seven slots into
-// -0x60..-0x40 with `bottom` at -0x40 and no hole. So the missing fact is a
-// 12-byte local retail allocates and never addresses through ebp - not a
-// spelling of anything already here. MEASURED AND REJECTED: promoting
-// `travelX`/`remaining` out of the `if (nframes > 0)` costs 1.25 (89.34);
-// promoting `right`/`bottom` to function scope or to the guard's block is
-// byte-flat at both placements; naming `deltaY - remaining * flatness` as a
-// `double drop` scores 91.02 but is SOURCE-FALSE - retail never stores that
-// subtraction (it keeps it on the FPU stack and multiplies the step temp
-// straight into it), so the named local buys its 0.43 with two instructions
-// retail has not got and is not a frame retail homes.
 VA(0x00467a00, 0x3AF)  // anchor-global, dc 0x614f0
 void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                                           int destY, const CSprite* missile)
@@ -2773,23 +2634,6 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 // GetMissileStartingPosition multiplies by further down this same TU.
 // Two constants, two spellings, both retail's.
 
-// Residual (91.7404%): register binding only - 416 instructions against
-// retail's 416, an identical frame-slot set, and branch/call/ret
-// mnemonic sequences that compare identical end to end. What is left is
-// a permutation (edx->ecx x11, eax->edx x4, ecx->eax x3, edx->ebx x3)
-// of which register carries which limit, plus two placement effects
-// that follow from it: retail frees EBX as push scratch across the
-// three blit calls where we keep it live, and retail's `right`/`bottom`
-// seed sits in the loop preheader where ours straddles the entry guard.
-// The inlined IsQuickCombat also takes both player-record addresses
-// with LEA here while folding the +0xe4 into the load in LowerDoor and
-// in the out-of-line const twin at 0x46a4a0 - one source inline, three
-// schedules, so that shape is not ours to spell.
-// Tried and rejected, each re-measured at the plateau: `(20 + d) / 40`
-// (identical bytes), a named `distance` local before the divide
-// (90.43), four scalar limits instead of the aggregate (91.22),
-// `right` before `bottom` (91.22), and an explicit (float) cast on the
-// angle expression (90.68).
 VA(0x00468220, 0x48F)  // anchor-global, dc 0x61e60
 void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                                  const float* angles, const CSprite* missile)
@@ -2986,13 +2830,7 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
     }
 }
 
-// PowEffect's prior local selector probe homed both operands and selected
-// their addresses; a by-value helper or inline ternary measured 93.3%.
-// The canonical cppMax reference selector now owns that shared body.
 // E:\gamedcs\cmbtmgr.cpp:4158
-// The whole combat animation frame pump: one spell effect's worth of
-// attack, wince, death and defend sequences played across every stack
-// at once, then the deaths resolved.
 
 // The body is NOT a switch - `spellEffect` is only ever compared with
 // -1 and used as a twelve-byte index into akSpellEffectTraits. What it
@@ -3629,13 +3467,6 @@ void combatManager::learnSpellFromEagleEye(int side)
 // The looted_artifacts parameter is a reference: DC's public mangling has
 // AAV (not PAV), despite an older roster rendering it as a pointer.
 
-// Historical probes: the former monolithic candidate's 0% was objdiff's
-// clamp (144 DELETE + 131 INSERT), not a rejected comparison. Removing
-// both appends scored 33.3711%. An equipped-insert pin and artificial
-// isUnlootableArtifact/lootEquippedSlot/lootBackpackSlot splits advanced
-// 0 -> 67.89 -> 84.56 -> 91.55 -> 100%. The splits changed VC6's inline
-// budget but had no independent source evidence; they are now removed.
-// These measurements predate restoring the canonical getters/push_back.
 VA(0x0046a070, 0x2D3)  // dc 0x63704
 void combatManager::lootDeadHero(int side,
                                  std::vector<type_artifact>& lootedArtifacts)
@@ -4468,18 +4299,6 @@ void std::__destroy_aux()
 
 #endif  // @carcass
 
-// Canonical Dinkumware std::vector<combatManager::TObstacle> helpers.
-// Retail _Ucopy/_Ufill use placement construction with a 0x18-byte stride;
-// The folded size() at 0x517750 is now enrolled against objecttype's retained
-// TImageInfo specialization, which shares the same 24-byte element stride.
-// Retail 0x46aeb0 is the count-insert called by placeObstacle (0x466010)
-// and castSpell (0x59fe30), whose receiver is the manager's TObstacle vector.
-// It sits directly before this TU's _Ucopy/_Ufill cluster. Both cmbtmgr and
-// spells emit the native specialization: all 740 retail bytes agree after
-// excluding its two independently verified operator new/delete relocations.
-// Twelve following alignment bytes are outside the admitted retail extent.
-// The former objecttype/TImageInfo claim was a same-stride ICF proxy without
-// a matching caller; retain the actual TObstacle owner and public STL API.
 VA_COMPGEN(0x0046aeb0, 0x2E4, VECTOR_INSERT_COUNT, TObstacle)
 VA_COMPGEN(0x0046b1a0, 0x3B, VECTOR_UCOPY, TObstacle)
 VA_COMPGEN(0x0046b1e0, 0x31, VECTOR_UFILL, TObstacle)

@@ -1,9 +1,3 @@
-// binkmanager.cpp - E:\gamedcs\binkmanager.cpp (compiland binkmanager.obj)
-// 8 functions in the DC roster, including the port-only pixel-format stub.
-// DC proves static BinkManager ownership; retain those declarations and use
-// the same members from smackmgr/campaignwindow. The old free restart name
-// had no definition. OpenBink's final argument is unsigned char (dc 0x50a84),
-// not the bool in the former class declaration; retail keeps its low byte.
 #include <string.h>   // GetBinkFilePtr's inline strcpy/strcat/_strcmpi
 #include <va.h>
 #include "binkmanager.h"
@@ -177,27 +171,7 @@ void BinkManager::restartBink()
     }
 }
 
-// E:\gamedcs\binkmanager.cpp:252 (dc 0x50a90) - the per-frame pump.
-// smackmgr.cpp's VideoNextFrame calls it by this static-member spelling.
-// Historical residual (92.9169%, before shared sound-header restoration): block LAYOUT only - every instruction pairs, the call
-// stream agrees 18 = 18 and the branch polarities match. Retail sinks the
-// not-ready tail BETWEEN the chained-track block and the end-of-playback
-// block (0x44dbed, before 0x44dbf8) where our CL parks it last, so three
-// guards land on a different block index. Measured: three separate
-// `gBinkDirty = 0; return;` bodies 85.88 (six exits against retail's four),
-// one shared `goto` 92.58 with the third guard's polarity inverted, folding
-// the last two guards into `||` 92.92, duplicating the third guard's tail
-// 89.43, and a `goto drawRects` that puts the label physically ahead of the
-// repaint tail is byte-flat at 92.92. A positive video/frameReady/!Wait
-// scope removes both remaining gotos at the same 92.9169%, as do nested
-// positive guards. DC supplies only the port stub; PC retail proves this
-// pump's behavior. Keep the ordinary closeBink call boundary.
-// Current header-owned serviceSounds expands its Miles/locking path here,
-// leaving this row at 0%. The 48-state pointer/guard/paused/frame-orientation
-// and playback-cleanup family produces two objects, with every score flat.
-// The native effect oracle covers all guard/track combinations and a sound
-// callback that changes the descriptor index; it rejects stale flag reads.
-// No guard rewrite, fake helper, alternate declaration or pin is adopted.
+// E:\gamedcs\binkmanager.cpp:252, dc 0x50a90
 VA(0x0044DAA0, 0x21A)  // dc-order-map + caller (smackmgr VideoNextFrame), dc 0x50a90
 void BinkManager::nextBinkFrame()
 {

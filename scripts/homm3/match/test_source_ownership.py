@@ -264,7 +264,7 @@ class OwnershipTest(unittest.TestCase):
         for suffix in (', dc 0xa8b74. PC adds the version.', '. PC adds the version.', ''):
             raw = '// E:\\gamedcs\\game.cpp:3266' + suffix + '\nvoid load() {}\n'
             self.assertEqual(origin_hint(raw, raw.index('load()')),
-                             ('game.cpp', 3266, ''))
+                             ('game.cpp', 3266, '0xa8b74' if 'dc ' in suffix else ''))
             raw += '\nvoid next() {}\n'
             self.assertEqual(origin_hint(raw, raw.index('next()')), ('', 0, ''))
         malformed = '// E:\\gamedcs\\game.cpp:3266abc\nvoid load() {}\n'
@@ -410,12 +410,14 @@ class OwnershipTest(unittest.TestCase):
         errors, _ = compare([a, b], [o, repeated], {}, {})
         self.assertTrue(any(e.startswith('DUPLICATE ') for e in errors))
 
-    def test_renamed_source_identity_stays_attached_and_is_not_a_waiver(self):
+    def test_source_identity_survives_naming_prose_cleanup_without_waiving_owner(self):
         from dataclasses import replace
         from homm3.match.source_ownership import origin_hint
-        raw = '// Original: Widget::Draw; Widget.h:100, dc 0x1000.\nvoid draw() {}\n'
+        raw = '// E:\\gamedcs\\Widget.h:100, dc 0x1000\nvoid draw() {}\n'
         hint = origin_hint(raw, raw.index('draw()'))
         self.assertEqual(hint, ('widget.h', 100, '0x1000'))
+        legacy = '// Original: Widget::Draw; Widget.h:100, dc 0x1000.\nvoid draw() {}\n'
+        self.assertEqual(origin_hint(legacy, legacy.index('draw()')), hint)
         d = replace(definition(file='src/wrong.cpp'), origin_file=hint[0],
                     origin_line=hint[1], dc_offset=hint[2])
         errors, _ = compare([d], [origin(name='Widget::Draw')], {}, {})

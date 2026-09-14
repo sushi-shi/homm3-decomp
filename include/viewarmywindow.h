@@ -44,7 +44,6 @@ public:
                     unsigned char showDismiss, unsigned char showOk,
                     unsigned char groupAlignments);
     virtual ~TViewArmyWindow();
-    // Before normalization: DoModal, QuickView, WindowHandler.
     void doModal();
     void quickView();
     virtual int windowHandler(message& msg);
@@ -86,73 +85,42 @@ private:
 
     // Original declaration order from both complete DC class records,
     // 0x1a93/0x4aff. Bodies and named source-call boundaries remain in the TU.
-    // Before normalization: create_background_widget, this_hero.
     void createBackgroundWidget(const hero* thisHero);
-    // Before normalization: create_name_widget.
     void createNameWidget(const char* name);
-    // Before normalization: create_portrait_widget, sprite_name, town_type.
     void createPortraitWidget(const char* spriteName, int townType, int count);
-    // Before normalization: create_attack_widget, normal_attack_skill, current_attack_skill.
     void createAttackWidget(int normalAttackSkill, int currentAttackSkill);
-    // Before normalization: create_defense_widget, normal_defense_skill, current_defense_skill.
     void createDefenseWidget(int normalDefenseSkill, int currentDefenseSkill);
-    // Before normalization: create_damage_widget, our_hero.
     void createDamageWidget(const TCreatureTypeTraits& traits, const hero* ourHero);
-    // Before normalization: create_shots_widget, normal_shots, current_shots.
     void createShotsWidget(const TCreatureTypeTraits& traits,
                            int normalShots, int currentShots);
-    // Before normalization: create_hitpoints_widget, normal_hitpoints, current_hitpoints.
     void createHitpointsWidget(int normalHitpoints, int currentHitpoints);
-    // Before normalization: create_hitpoints_left_widget, hitpoints_left.
     void createHitpointsLeftWidget(int hitpointsLeft);
-    // Before normalization: create_speed_widget, normal_speed, current_speed.
     void createSpeedWidget(int normalSpeed, int currentSpeed);
-    // Before normalization: create_morale_widget, new_morale.
     void createMoraleWidget(int newMorale);
-    // Before normalization: create_luck_widget, new_luck.
     void createLuckWidget(int newLuck);
-    // Before normalization: create_spell_influence_widgets, this_army.
     void createSpellInfluenceWidgets(const army* thisArmy);
-    // Before normalization: create_ok_widget.
     void createOkWidget();
-    // Before normalization: create_upgrade_widget.
     void createUpgradeWidget();
-    // Before normalization: create_dismiss_widget.
     void createDismissWidget();
-    // Before normalization: create_rollover_widget.
     void createRolloverWidget();
     int convertID2HelpID(int id) const;
 
-    // Before normalization: ArmyType. DC CodeView proves TCreatureType;
     // retail keeps this four-byte field at +0x60. Upgrade below is int.
     TCreatureType m_armyType;
-    // Before normalization: ArmySize.
     int m_armySize;
-    // Before normalization: morale.
     int m_morale;
-    // Before normalization: morale_help.
     std::string m_moraleHelp;
-    // Before normalization: luck.
     int m_luck;
-    // Before normalization: luck_help.
     std::string m_luckHelp;
-    // Before normalization: Upgrade.
     int m_upgrade;
-    // Before normalization: ShowingUpgradeButton.
     unsigned char m_showingUpgradeButton;
-    // Before normalization: ShowingDismissButton.
     unsigned char m_showingDismissButton;
-    // Before normalization: ShowingOkButton.
     unsigned char m_showingOkButton;
     // The three flag bytes leave one byte of natural four-byte alignment
     // before Influence. DC records 14 real members and no padding field.
-    // Before normalization: Influence.
     int m_influence[3];
-    // Before normalization: Duration.
     int m_duration[3];
-    // Before normalization: RolloverWidget.
     bitmapBackedTextWidget* m_rolloverWidget;
-    // Before normalization: SpriteWidget.
     iconWidget* m_spriteWidget;
 
 };

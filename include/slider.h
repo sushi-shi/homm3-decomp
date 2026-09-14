@@ -82,8 +82,7 @@ public:
     virtual void close();
 
     int getMaximum() const { return m_numStates; }
-    // Original: slider::get_state, ordinary declaration in CodeView type
-    // 0x2368. No procedure/source location or active caller is known;
+    // No procedure/source location or active caller is known;
     // retain the API without borrowing get_maximum's body position.
     int getState() const;
     int select(message* msg, unsigned char dragging);

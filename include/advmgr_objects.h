@@ -49,11 +49,6 @@ DATA(0x0069136c) extern int
 DATA(0x006912ec) extern char g_completeDrawFpsText[];
 DATA(0x00660388) extern char g_completeDrawFpsFormat[];
 
-// Renderer object access uses canonical NewmapCell::TObjectCell and
-// NewfullMap vectors. The former AdvMapCellObjectsView's +0xe vector
-// and AdvFullMapObjectsView's +4/+0x14/+0x24 pointers were the same
-// retail vector storage, not separate object types or padding fields.
-
 enum EGetSoundObjectIndex {
     GET_SOUND_BANK_0 = 0,
     GET_SOUND_BANK_1,

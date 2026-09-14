@@ -65,9 +65,7 @@ public:
     TCombatControlSubWindow(heroWindow* parent);
     virtual ~TCombatControlSubWindow();
     virtual void setRollover(const char* newText);
-    // Before normalization: set_rollover_buttons; retained DC public: JJ.
     virtual void setRolloverButtons(long first, long second);
-    // Before normalization: DisableAllButtons; DC271 delegates to the base.
     virtual void disableAllButtons();
 };
 SIZE(TCombatControlSubWindow, 0x40);

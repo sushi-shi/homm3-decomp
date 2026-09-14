@@ -269,9 +269,6 @@ enum EGeneralTextIndex {
     // stack is out of the fight" - and it takes the stack's name alone,
     // with no count. Gated for the reason GENERAL_TEXT_GOOD_MORALE is.
     GENERAL_TEXT_COMBAT_STACK_WIPED_OUT = 668,
-    // ModifySpellDamage's four message arms (spells.cpp, 0x5a78e0). Restored
-    // 2026-08-20: these were lost resolving a header conflict, then put back
-    // UNGATED - the view they used to sit behind is gone.
     GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_ONE = 545,
     GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY = 546,
     GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_ONE = 547,

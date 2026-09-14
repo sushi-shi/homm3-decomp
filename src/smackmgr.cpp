@@ -250,9 +250,6 @@ void videoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
 
 // Retail's 225-byte body follows this canonical helper chain:
 
-// keyword or per-site pragma was needed at that earlier exact checkpoint.
-// With the canonical sound header visible, the shared guard recovery below
-// reaches 38.1538%; serviceSounds still expands where retail retains calls.
 VA(0x005975f0, 0xE1)  // dc 0x14ac40
 void videoClose()
 {

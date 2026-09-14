@@ -166,37 +166,7 @@ int TQuestLogWindow::windowHandler(message& msg)
     return result;
 }
 
-// E:\gamedcs\questlogwindow.cpp:142
-// The Complete two-pool reconstruction moved 85.0157 -> 94.0047 when the
-// SeerHut helper's first quest read was named `thisQuest`: retail homes that
-// pointer across quest_type/quest_text_row, reducing reg_dist 150 -> 52 and
-// making all 38 CFG blocks exact.  Keep the final `&& quest` separate: the
-// virtual text calls may change the hut, and retail proves a fresh member
-// load after the visited-player test.  The remaining delta is register
-// scheduling inside otherwise exact 19-branch/1-ret flow, not permission to
-// flatten either QuestActiveforPlayer or UpdateQuestLocators.
-// Current residual (84.9444%, HIST 96.5463): the retained questTextRow
-// definition is now visible and VC6 expands it in the SeerHut predicate.
-// Retail calls it after questType. The current body has 41/38 blocks,
-// 20/19 branches and 12/13 calls; this precedes the old register-only delta.
-// A passive C2 trace reproduces the object: caller cb 348, budget 1000;
-// SeerHut predicate cb 91 receives budget 98, allowing the 47-byte-cost
-// row helper. The guard predicate receives 144 and expands questTexts.
-// Making UpdateQuestLocators ordinary preserves all eight TU scores.
-//
-// The 18-state shared-helper family and its 36-state type-order follow-up
-// each reproduced ten retained controls (18 and 36 distinct objects).
-// Replacing the predicates with a shared questTexts composition restores
-// the row call at 93.7917, but orders it BEFORE questType, unlike retail.
-// Explicit type/index-then-row locals match all 13 named calls but score
-// 82.6296..88.3056 and change the guard-loop order and other callers.
-// A header definition also over-inlines questTextRow in the previously
-// exact belong-to-player/resource setDefaultText bodies. Keeping it in this
-// TU while adding calls to questTexts instead retains extra calls in the
-// smaller seerhut/adventuremapwindow users. Thus neither visibility model
-// establishes the proposed shared composition; no shared-header alternative
-// is adopted. Do not restore the stale assertion that this is a mispaired
-// call or that the helper has no available definition.
+// E:\gamedcs\questlogwindow.cpp:142, dc 0x116ccc
 VA(0x0052e430, 0x27E)  // dc 0x116ccc; Complete adds QuestGuardList
 void doQuestLog(int player)
 {

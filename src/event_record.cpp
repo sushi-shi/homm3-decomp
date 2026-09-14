@@ -436,7 +436,7 @@ unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
             m_occupied = flag != 0;
         }
         {
-            // Previously labeled coord; these serialized values are hero IDs.
+            // These serialized values are hero IDs.
             short heroId;
             infile->read(&heroId, sizeof(heroId));
             m_previousOccupyingHero = heroId;
@@ -986,12 +986,6 @@ type_event_record_type type_record_shroud::getType() const
 {
     return RECORD_SHROUD;
 }
-// Residual (84.04%): the frame is one dword LARGER than retail's (0x14 vs
-// 0x10) and retail keeps the sign-extended count in EBX across the reserve
-// expansion where we home it at [ebp-0x10]; the instruction stream is
-// otherwise identical. Tried and rejected: hoisting `change` out of the
-// loop (byte-flat), `while (count-- > 0)` (83.24), and an indexed
-// `for (int i = 0; i < count; ++i)` (72.56).
 VA(0x0049bc90, 0x151)  // dc 0x8dcd8
 unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
 {
@@ -1092,15 +1086,6 @@ void game::recordClaimTown(long id, long newOwner)
     m_eventRecords.push_back(new type_record_claim_town(id, newOwner));
 }
 // E:\gamedcs\event_record.cpp:1061
-// Residual (88.70%): the inlined vector insert. Retail expands _Ufill's
-// single-element fill down to one _Construct call where we stop at a call
-// to _Ufill itself, and the two constructor arguments land in the opposite
-// scratch registers behind that. Tried and rejected: writing the site as
-// insert(end(), 1, x) rather than push_back (70.75).
-// advManager::EraseObj is the caller. Retail expands the whole chain: the
-// 0x18-byte allocation, the two vtable stores, the four field copies out of
-// the cell (evaluated right-to-left - objectIndex, extraInfo,
-// object_type_index) and the vector's insert.
 VA(0x0049c390, 0x1C2)  // anchor-vtable (constructs 0x63df1c), dc 0x8e0b8
 void game::recordEraseObject(NewmapCell* cell, type_point point)
 {

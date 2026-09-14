@@ -96,7 +96,6 @@ public:
     // WinMgr.h:193..200 (dc 0x70af0/0x70b40) proves the const-reference
     // rectangle overloads and their Width/Height calls. Complete uses the X
     // pixel path at the adventure-spell sites as well as in combat drawing.
-    // Original spellings FizzleForwardX and SaveFizzleSourceX.
     void fizzleForwardX(const SLimitData& limits, int fadeTime)
     {
         fizzleForwardX(limits.m_minX, limits.m_minY,

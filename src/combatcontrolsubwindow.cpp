@@ -63,7 +63,6 @@ void TCombatControlSubWindow::~TCombatControlSubWindow()
     // @stub
 }
 
-
 // E:\gamedcs\combatcontrolsubwindow.cpp:249
 DC_ONLY(0x65274, 0x24)
 void TCombatControlSubWindow::setRollover(const char* new_text)
@@ -320,7 +319,6 @@ void TCombatControlSubWindow::setRolloverButtons(long, long)
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:249
-// Before normalization (locals): new_text.
 VA(0x0046bf50, 0x32)  // vtable 0x63d420 slot 1 + rollover widget at +0x34, dc 0x65274
 void TCombatControlSubWindow::setRollover(const char* newText)
 {
@@ -625,13 +623,6 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
     if (viewLevel == 1) {
         m_backgroundWidget = new bitmapBorder(
             0, 0, 78, 288, 0x898, "CCrPop.pcx", 0x800);
-        // DC567 assigns the member; DC568 calls push_back. The former
-        // insert(end(), value) through a one-use vector reference skipped
-        // that source boundary for a phase gain (99.2844). Six reproduced
-        // boundary controls restore push_back and DC573 text operator[]:
-        // both direct and reference receivers give 99.1290, with all 23
-        // exact siblings unchanged. Keep the canonical calls; HIST records
-        // the old insert result while the remaining inline decision is open.
         m_widgets.push_back(m_backgroundWidget);
         m_creatureIcon = new iconWidget(
             10, 6, 58, 64, 0x899, "TwCrPort.def", 0, 0, 0, 0,
@@ -757,52 +748,6 @@ TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:688
 
-// Residual (90.3734%): the register-homing family.
-// Retail homes the `traits` reference in its own frame dword (frame 0x58
-// against our 0x54) and keeps `attack` in EBX; our CL does the exact
-// reverse, and the icon-pointer/iSpell pair in the spell loop swaps with
-// it.  Measured and rejected 2026-09-06: `traits` as a pointer instead of
-// a reference (byte-flat, 90.3734); declaring `traits` after the
-// attack/defense block (81.2490); declaring it above the SetIconFrame call
-// (83.6514). The formerly reported deque call discrepancy was an identity
-// error: both call const_iterator::_Add. The retail helper does not return
-// an iterator reference and matches this TU's emitted void helper exactly.
-// The const receiver IS the Dreamcast's own overload
-// (??A?$deque@W4SpellID@@...QBAABW4SpellID@@I@Z at dc 0x66804), and with
-// the polarity and comma-increment fixes below in place the non-const
-// `const_cast` spelling is byte-identical (90.3734), so the const form is
-// kept as the source-authentic one.
-// The full-stat arm is the `view_level == 1` one: it prints base(adjusted)
-// pairs for attack and defense out of the creature's own traits row, the
-// damage span, the hit points, the clamped morale and luck icons, and the
-// stack count (the override wins unless it is -1). Both arms then run the
-// three standing-spell icons over the LAST three entries of the stack's
-// spell-influence queue and set the overlay text.
-// Earlier residual (78.98%): the frame is one dword SHORT of retail's (0x54 vs
-// 0x58) - retail homes the traits row address at [ebp-4] and the second
-// get_adjusted_attack result at [ebp+0xc] where we keep both in registers -
-// The old iterator::operator+= diagnosis was the identity error corrected
-// above. Tried and rejected: a `const TCreatureTypeTraits*`
-// instead of the reference (byte-flat), naming the shooting attack in a
-// local (byte-flat), landing _cpp_max's result in a third local
-// (byte-flat), and an explicit `if (shootAttack > attack)` (76.77).
-// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP: it CONFIRMS this
-// source and rules the birth-order lever out.  The Dreamcast block names
-// exactly THREE locals - `defense` (int, sp+0x14), `normal_traits`
-// (CodeView 0x1a9c = L-VALUE REFERENCE to the traits row, sp+0x10) and
-// `buffer` - so the reference form, the named `defense` and the absence of
-// a homed `attack` are all source-authentic and already spelled here; the
-// DC statement order is 704 SetIconFrame, 709 traits+can_shoot, 712 attack,
-// 713 defense, 715 the shooting max, which is this body exactly.  The
-// remaining swap is therefore a C2 allocation choice over an identical
-// source: retail emits `lea ecx,[eax+4*edx] / mov [ebp-4],ecx` for the
-// traits row and `mov ebx,eax` for the first attack, and recycles the DEAD
-// `owner` home [ebp+0xc] for the can_shoot byte, where we hold the traits
-// row in EBX, home the attack at [ebp+0xc] and recycle [ebp+8].
-// Measured and rejected against 90.3734 (birth-order sweep): `traits`
-// declared between attack and defense 86.1411; after can_shoot and before
-// attack 87.5934; `defense` computed before `attack` 85.9959; `traits`
-// after the whole attack/defense block 86.1826.
 VA(0x0046dc30, 0x2C2)  // roster order + "%d(%d)" pair + the three spell icons, dc 0x66648
 void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
 {
@@ -848,7 +793,6 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
         m_countText->setText(buffer);
     }
 
-    // Before normalization (locals): iSpell, iIcon.
     unsigned int spell = ::max(
         0, static_cast<int>(info.m_spellInfluenceQueue.size()) - 3);
     for (int icon = 0; icon < 3; ++icon) {

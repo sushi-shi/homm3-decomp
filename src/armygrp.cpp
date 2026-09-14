@@ -89,45 +89,6 @@ unsigned char armyGroup::hasCreatures() const
     return 0;
 }
 
-// ===================================================================
-// TSplitWindow bracket RE-MAPPED 2026-08-07.  The carcass generator
-// paired seven DC rows with the seven retail slots 1:1 in order; the
-// bytes say the pairing slips by one from 0x449790 on, because TWO DC
-// rows (UpdateSplitArmy, SetRolloverText) have NO retail slot and one
-// retail slot (0x44a460) has no DC row.  Every correction below is
-// proven from the target bytes, not from the order:
-
-//   0x4496c0  ret with NO stack cleanup and ecx used as an INTEGER
-//     (`movsx edx,[gSplitWindow+0x78]; add edx,ecx`) - a /Gr FREE
-//     function of one int, so it cannot be the member
-//     UpdateSplitArmy(uchar) the old claim named (a member would use
-//     ecx as `this`, and it reads the window from the file-scope
-//     0x693878 instead).  It is SplitSliderCallback with
-//     UpdateSplitArmy inlined into it: the body sets
-//     w->f74 = w->b78 + state, w->f70 = w->f6c - w->f74, sprintf()s
-//     both counts and BroadcastMessage()s them.  DC 48 B + 128 B
-//     inlined = 176 vs retail 195 (1.11x); the standalone 48 B row
-//     alone would have been 4.06x, outside the band.
-//   0x449790  the CONSTRUCTOR, proven by its call site: SplitArmy at
-//     0x449eb1 does `new(0x80)` and then a THISCALL here with the
-//     three stack args (0xb1, 0x14, armies[srcIndex]) - exactly
-//     TSplitWindow(int x2, int y2, TCreatureType).  DC 1380 vs 1627
-//     (1.18x).
-//   0x449df0  `ret 4`, and the body is call-dtor / `test byte
-//     [ebp+8],1` / conditional operator delete / return this - the
-//     textbook scalar deleting destructor, which is the DC's own
-//     0x4fd54 row.  The old claim called it the three-argument ctor;
-//     a ctor with three args would be `ret 0xc`.
-//   0x44a180  `ret 4` with a message* arg, calls the base popup's
-//     slot-9 handler first and then dispatches on msg->type /
-//     msg->field_4 / control ids 0x7800..0x7802 - the window handler,
-//     with SetRolloverText inlined (DC 540 + 160 = 700 vs 735, 1.05x).
-//   0x44a460  NOT TSplitWindow::WindowHandler: no arguments, no
-//     `this`, `ret` with no cleanup, and it returns the address of the
-//     static bitset<9> at 0x693884 that GetMorale reads.  It is
-//     armygrp.cpp's static-set accessor, promoted out of this block
-//     below.  It has no DC row because the DC build linked STLport.
-
 VA(0x004496c0, 0xC3)  // dc 0x4db88
 void splitSliderCallback(int state, heroWindow*)
 {
@@ -308,14 +269,7 @@ inline void TSplitWindow::setRolloverText(int codeY)
     g_windowManager->updateScreen(m_x + 8, m_y + 0x138, 0x11a, 0x11);
 }
 
-// E:\gamedcs\armygrp.cpp:229
-// EXACT 2026-08-28 (99.9170 -> 70.4149 -> 94.9378 -> 100.0). Dreamcast line
-// 230 initializes the two state values consumed by the shared close/update
-// tails at lines 322-332; line 291 has one shared SetState after both edit
-// arms; and lines 313-318 keep the changed-hover work in a positive scope
-// with its own return. The former duplicated-tail spelling was a local
-// maximum, not source proof. UpdateSplitArmy and SetRolloverText retain their
-// CodeView-proven helper boundaries and inline into this exact retail body.
+// E:\gamedcs\armygrp.cpp:229, dc 0x4e428
 VA(0x0044a180, 0x2DF)  // dc 0x4e428 (+ 0x4e388 inlined)
 int TSplitWindow::windowHandler(message& msg)
 {
@@ -445,15 +399,6 @@ const std::bitset<9>& armyGrpFn0044A460()
 // retail +0xa7 is independent of the siege-weapon trait. These are behavior
 // corrections, verified separately from the byte similarity score.
 
-// Restore the separate IsWieldingArtifact calls attested by DC 379..486;
-// VC6 merges the shared pendant tail itself. Together with the corrected
-// scopes this removes all seven gotos and improves 88.5071% to 95.8839%.
-// Restoring the header IsMindSpell accessor called at DC 505 raises this
-// further to 96.6018%. Mask and shift accessor expressions emit the same
-// code, and all 95 header consumers were measured without collateral loss.
-// The same corrected behavior with the old pendant join scores 76.8554%;
-// a post-switch artifact selector scores 75.4607%. Initializing chance at
-// function entry gives 95.0429%; keep its assignment after the spell gates.
 VA(0x0044a4d0, 0x52E)  // linkorder, dc 0x4e644
 float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero* const castingHero, const hero* const targetHero)
 {
@@ -1226,21 +1171,6 @@ void armyGroup::mergeArmies(armyGroup* source)
 // alignments[9], angel_type, the GetArmyName calls and nested modifier scopes.
 // Complete's neutral alignment requires the ten-byte array below.
 
-// Retail 0x44b960 mutates the incoming morale home in the terrain arms with
-// the inverse sign, then subtracts currentMorale at the tail. Keep that
-// accumulator and the town-type load within each terrain arm. Values 0..2
-// and 3..5 select good/evil; 6..8 and out-of-range values leave it unchanged.
-// The Spirit temporary is assigned: the call at +0x6ce is string::assign,
-// despite the former append relocation scoring identically under masking.
-
-// Historical extraction controls: an invented terrain helper reached 96.07%
-// with a 0x50 frame and agreement through the Spirit condition. Its site
-// changed the nested _Tidy/_Eos decisions; splitting it could reach 96.53%
-// while duplicating a terrain strlen and changing the CFG. Those optimizer
-// observations do not establish an original helper. The Complete-only arms
-// stay in this caller, and all three DC GetArmyName calls remain canonical.
-// Named traits references materialize an address rather than retail's reused
-// creature-row offset; keep the individual table accesses.
 VA(0x0044b960, 0x859)  // retail-body signature, dc 0x4f708
 std::string armyGroup::getMoraleDescription(
     TCreatureType creature, int morale, const hero* ownerHero,
@@ -1419,25 +1349,10 @@ std::string armyGroup::getMoraleDescription(
 
 // E:\gamedcs\armygrp.cpp:1464. Retail Complete's body proves the added
 // creature argument and full-width magic-terrain mode; the older Dreamcast
-// prototype omits the former and calls the latter a boolean.
+// prototype omits the creature argument and calls the terrain mode a boolean.
 // Semantic transcription complete; residual 82.5689%. The bounded
 // variable-creature name lookup raised the body to 74.7874%; a function-wide
 // shared result regresses.
-
-// THE CURSED-GROUND ARM RETURNS THE LITERAL, no local at all (74.79 ->
-// 82.57, 2026-08-14). The EH cleanup transcript is what named it
-// (docs/vc6/eh-cleanup.md): retail's states run [0,1,0,2,0,3,0,4,0,5,0] -
-// state 0 is `result`, each temporary opens N and closes back to 0 - while
-// ours ran [reg,-1,1,2,1,3,1,4,1,5,1,6,1], one whole extra lifetime ahead of
-// everything else and every close landing on 1 instead of 0. That leading
-// region was the branch-local `std::string result` this arm used to build
-// and then COPY into the return object. Retail builds the return object
-// itself: `mov [esi],al / call _Tidy / <strlen> / call assign` with
-// esi = [ebp+8], which is `basic_string(const char*)` expanded straight onto
-// the NRV - i.e. `return gCursedGroundLuckText;`. The hourglass arm below
-// is the same shape from the other side: retail passes [ebp+8] as
-// format_string's hidden return slot, so `return format_string(...)` elides
-// too. The eh signal line is now absent from `diagnose` on this row.
 
 // What is left is a pure inline-depth divergence, 41 conditional branches
 // against retail's 33: retail CALLS basic_string::assign(const char*,
@@ -1508,23 +1423,6 @@ std::string armyGroup::getMoraleDescription(
 // to +3 sites in the two post-Dreamcast blocks above. GetLuck's twin
 // gate (dc 0x4f20c line 1101) is byte-flat too and stays exact.
 
-// Historical extraction probes for the former apply_luck_magic_terrain:
-// the arm now belongs directly to getLuckDescription. An inline-budget
-// improvement alone does not establish a helper boundary.
-// THE CALLER-SHRINK MOVES IT WITHOUT A PROBE (82.5689 -> 84.5060,
-// 2026-08-20).  The +4-site instrument above measures the /Ob2 DIVISOR;
-// `budget = clamp(2 * caller_cb, 1000, 35000)` has a numerator as well, and
-// lifting the clover arm into `apply_luck_magic_terrain` pushed it the
-// same direction with real code instead of padding.  Same lever, same round,
-// +12.20 on get_morale_description.  Two further doses measured on top of
-// this one and BOTH lose - the whole devil block -7.6 (-> 76.8563) and the
-// devil member pick alone as the thinner slice -6.4 (-> 78.1018) - so this
-// body, like its twin, peaked at the magic-terrain extraction in that
-// experiment.  The old +4-site probe has now been re-measured against this baseline
-// (2026-08-21): four `limit` candidates in the lifted clover helper regress
-// 84.5060 -> 74.7246.  The helper changed the budget phase; a hidden four-call
-// VERIFY family is not the remaining lever at the retained source shape.
-
 // [2026-08-21] +5.69 (84.5060 -> 90.1916) from the nine-town switch routing
 // below, and the two sides' instruction counts now agree exactly (332 = 332,
 // one `ret` each). What is left is a parameter-home family: retail spills
@@ -1566,11 +1464,8 @@ std::string armyGroup::getLuckDescription(
     if (ourHero)
         result = ourHero->getLuckDescription();
 
-    // The former applyLuckMagicTerrain wrapper was another inline-budget
-    // extraction. Keep its clover-field arm here: retail tests terrain 5
-    // at 0x44c2d4, selects the town at 0x44c312..0x44c31f, and appends at
-    // 0x44c346 before the enemy-group arm at 0x44c34e. DC 0x4fab4
-    // (armygrp.cpp:1464) has the older cursed-ground-only parameter.
+    // Complete adds the clover-field luck bonus before applying enemy-group
+    // modifiers. Dreamcast has only the cursed-ground terrain parameter.
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD
         && (g_game->m_f1f698 != 0 || !(creature == CREATURE_AIR_ELEMENTAL
             || creature == CREATURE_EARTH_ELEMENTAL

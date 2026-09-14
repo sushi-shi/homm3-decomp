@@ -140,31 +140,7 @@ int TAdventureOptionsWindow::convertID2HelpID(int id) const
     return helpID;
 }
 
-// E:\gamedcs\adventureoptionswindow.cpp:143
-// EXACT 2026-08-28 (99.9367 -> 99.8734 -> 100.0). The old near-match erased
-// Dreamcast's explicit exit-state carrier and duplicated its shared tail;
-// restoring closeDialog also selects retail's EAX/ECX argument staging for
-// the direct line-211 findWidget call. The attested const findWidget pair and
-// distinct gAdventureOptionsHelp identity are restored as well.
-//
-// SOURCE-SHAPE AUDIT 2026-09-01: convertID2HelpID now lives at its attested
-// out-of-class boundary, owns the two bounds, and retains DC's result-local
-// switch. Both call sites remain exact. Keeping the caller bounds as well as
-// the helper's DC negative guard duplicates two blocks (100.0 -> 97.4684);
-// the old header-resident immediate-return body was byte-exact but erased the
-// positive helper boundary and statement shape.
-//
-// Complete moves the campaign-side ShowScenInfo work from this handler into
-// advManager::DoAdventureOptions: retail forwards the selected code through
-// dialogReturn here, and the byte-exact outer switch handles VIEW_SCENARIO_ID
-// unconditionally. Dreamcast splits the same operation between this handler
-// (campaign) and the outer function (non-campaign). This is a paired retail
-// contradiction of the older helper location, not a score-based skew claim.
-// Retail also selects the rollover field for right-click help where Dreamcast
-// loads the other THelpText field; both are direct byte-level Complete changes.
-// DC's nested help/widget scopes preserve the common dispatch epilogue.
-// Restoring them removes all three gotos at 100%; duplicating returns instead
-// falls to 87.4684%. All four independent scope combinations are exact.
+// E:\gamedcs\adventureoptionswindow.cpp:143, dc 0x5204
 VA(0x00405730, 0x1FC)  // derived vtable slot 9, dc 0x5204
 int TAdventureOptionsWindow::windowHandler(message& msg)
 {

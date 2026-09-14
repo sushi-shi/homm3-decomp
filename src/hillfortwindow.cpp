@@ -34,18 +34,8 @@ DATA(0x00699194) static THillFortWindow* g_hillFortWindow;
 // aphlf4r/4g/4y string pool.
 DATA(0x0067f184) static int g_hillFortHoverId = -1;
 
-// Use game::GetCurrHero's canonical Game.h:991 body (dc 0x2ed4).
-// The former TU-local copy only existed while another lane owned game.h.
-// Recalculate/UpgradeSlot use the canonical Complete upgrade selector at
-// 0x529710 as well, including the base-map elemental exclusion.
-
-// Recalculate's DC lines 228/332 and UpgradeSlot's dc 0xd71d4 call
-// IsBaseCreature directly. Complete adds the base-map elemental guards at
-// 0x4e7f8d..0x4e7fbb, 0x4e8222..0x4e8240 and 0x4e858c..0x4e85ba.
-// Keep those guards at the call sites. The former CanUpgradeCreature wrapper
-// was introduced to influence VC6's load scheduling; that scheduling does not
-// establish a source helper boundary. Each query snapshots its type before
-// reading the map version, and keeps retail's low-byte test of the result.
+// Complete adds the base-map elemental exclusions to the IsBaseCreature
+// checks. Snapshot the creature type before reading the map version.
 
 // The three .rdata objects hillfortwindow.obj contributes, in retail's own
 // order: the per-slot upgrade-button icons indexed by TUpgradeSlot::state,
@@ -295,39 +285,6 @@ inline bool canAfford(const long* cost, const long* playerRes)
 // `totalID` the same way in the totals loop below - 83.4988, so the lever is
 // specific to the loop whose derived id feeds six different widget bands.
 
-// 2026-09-06, polish lane 36 (84.0331 -> 95.2727), the DC LOCAL-SCOPE SWEEP.
-// The Dreamcast procedure block declares SEVEN per-iteration id variables at
-// hillfortwindow.cpp:271..277, one statement each, computed unconditionally
-// BEFORE the `s.type != CREATURE_NONE && s.count > 0` gate at :279 - six of
-// them named in the CodeView local list (num_id sp+0x18, res_icon_id sp+0x14,
-// button_id sp+0x1c, res_cost_id sp+0x20, gold_icon_id sp+0x24, gold_cost_id
-// sp+0x28) and the seventh, the portrait id, register-allocated into r4 and
-// consumed at :284.  The SH4 constants close the identification exactly:
-// :271 K1, :272 K1+7, :273 K1+14 with K1 = CREATURE_PORTRAIT_1_ID = 205, then
-// :274 K2 = GOLD_COST_1_ID, :275 K2+7 = RES_ICON_1_ID, :276 K3 =
-// RES_COST_1_ID, :277 K3+21 = UPGRADE_BUTTON_1_ID.  Writing all seven and
-// DROPPING the carried `id` took the row 84.0331 -> 94.0227 in one edit (54
-// exact blocks, then 59 after the delink refresh); VC6 still CSEs them back
-// onto retail's single [ebp-8] home and re-derives `+0xe` from it, which is
-// why the earlier note's "reintroducing all six BESIDE the current i/reference
-// scores 79.60" measured something else - that probe kept `id`.
-// The state verdict is the DC's `CanAfford` call, not the hand-written loop:
-// :332 `if (!IsBaseCreature(...)) state = 0;` / :337 `else if (CanAfford(
-// s.cost, gpCurPlayer->resources)) state = 1;` / :345 `else state = 2;`,
-// worth a further 94.0227 -> 95.2727 and it retires the `goto have_state`.
-// That call needs `TUpgradeSlot::cost` to be `long[7]` - the DC CanAfford
-// takes `const long*` - so the whole `get_upgrade_cost` out-parameter family
-// (recruit.h/.cpp plus the four caller-local `cost` arrays in viewarmywindow,
-// game and philai) widened with it; that retype is byte-flat tree-wide, only
-// the mangled name moves (PAH -> PAJ).
-// The DC line table orders the entry clears szCount, szGoldCost,
-// szResourceCost, resourceIndex; that order is byte-flat against the previous
-// one, so the older note's "byte-proven" claim for the other order is only a
-// statement that both compile the same.
-// Residual (95.2727%): three size-only blocks and the SAME single anchor bias
-// the note above names - retail's slot cursor is `esi+0x90` (&slot[0].count),
-// ours `esi+0x8c` (&slot[0].type), shifting every `[ebx-N]` by four.  The
-// widget-id half of that bias is now GONE (both sides home 0xd4 at [ebp-8]).
 VA(0x004e7eb0, 0x64D)  // source/call order + DoModal/handler call sites, dc 0xd6bf8
 void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
 {
@@ -656,19 +613,6 @@ void THillFortWindow::handleClick(message& msg)
 }
 
 // E:\gamedcs\hillfortwindow.cpp:612
-// EXACT 2026-09-12 with the ordinary UpgradeAll/UpdateHillFort helpers,
-// typed GetCreatureType accessor, and the two original dispatch flags.
-// DC616 initializes the close flag; 645 sets it; 749 tests it before the
-// final stores at 751..754. DC649 initializes a scoped refresh flag, both
-// upgrade arms set it at 662/666, and 670 guards UpdateHillFort at 671.
-// The seven-state family emits three objects: bool/uchar/int if-chains all
-// reach 100%; outer switches score 90.4966%. All seven siblings stay exact.
-//
-// Historical 91.9430% early-return forms lost the deferred close scope.
-// Tail labels, moving the accept block and separate DIALOG_RETURN_OK cases
-// stayed at 91.56..91.94. A fake second predecessor reached 95.96 but changed
-// behavior and was rejected. Restoring the actual flags naturally puts the
-// closing block last and recovers both dialog-call register schedules.
 VA(0x004e8850, 0x369)  // DoModal address-take, dc 0xd7458
 int hillFortWindowHandler(message& msg)
 {

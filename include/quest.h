@@ -60,11 +60,6 @@ DATA(0x006a7b38) extern const char* g_seerName;
 DATA(0x0068320c) extern std::string (*g_questTextA)[52];
 DATA(0x00683210) extern std::string (*g_questTextB)[52];
 
-// The packed map position the defeat-monster quest carries at +0x44 and
-// compares field by field in slot 10. Retail reads the same signed 10/10/4
-// lanes as the shared type_point, and NH3API independently types both the
-// member and slot-10 argument as type_point. Keep the old local spelling as
-// an alias so the evidence correction does not obscure the quest discussion.
 typedef type_point TQuestPosition;
 
 // Retail's factory at 0x573240 switches on exactly these nine values. The
@@ -118,16 +113,6 @@ public:
     int m_limit;
 
     type_quest(unsigned char flags);
-
-    // THE VTABLE IS NOW MODELLED AT ITS REAL WIDTH (2026-08-20). The ten
-    // tables each hold FIFTEEN slots, and every declaration below sits at
-    // the index its own comment names, so a virtual call through this class
-    // emits retail's `call dword ptr [edx + 4*slot]`. The previous model
-    // declared only the nine attested methods back to back, which put every
-    // one of them at the wrong offset; that was invisible while nothing in
-    // the tree dispatched on a `type_quest*`, and stopped being invisible
-    // when the four TQuestGuard / TSeerHut text builders turned out to call
-    // slot 7. The layout is read straight off the ten tables:
 
     //   0x64174c 0056cbe0 004ec560 00617d9a 00485d80 00617d9a 00617d9a
     //            00617d9a 00617d9a 00617d9a 005bc7e0 005bc7e0 0056cd00

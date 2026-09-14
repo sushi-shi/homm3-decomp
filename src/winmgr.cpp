@@ -663,55 +663,6 @@ void heroWindowManager::saveFizzleSourceX(int startX, int startY, int width,
 // 0x80). Its field order differs between the two sites and that is source:
 // left/right/top/bottom inside the loop, left/top/right/bottom after it.
 
-// 2026-09-06, polish lane 36 (75.3882 -> 84.1098), the DC LOCAL-SCOPE SWEEP.
-// Fifteen Dreamcast locals, none of them named here before this pass, and
-// two of them carried the whole gap.  (1) THE PIXEL LOOP WALKS THREE
-// POINTERS, NOT ONE INDEX.  winmgr.cpp:1383/1384/1385 copy the three row
-// bases into per-row locals `d` (unsigned short*), `s` and `od` (both
-// `const unsigned short*`), and :1403/:1404/:1405 increment all three at the
-// foot of the pixel body while `x` runs in the for-header - our single `col`
-// subscript off three bases was the induction choice the old note below
-// blamed on registers.  Worth 75.3882 -> 76.8784 on its own.  (2) THE SIX
-// CHANNEL MASKINGS ARE SIX SOURCE STATEMENTS, :1389..:1394, in the order
-// from-red, to-red, from-green, to-green, from-blue, to-blue, feeding three
-// `const int` results at :1396/:1397/:1398 (`or`, `og` in the CodeView list,
-// the blue one register-allocated) that the store at :1402 re-masks and ORs.
-// Naming all nine instead of one nested expression: 76.8784 -> 84.1098.
-// Measured and rejected against 84.1098: the DC's GetMap statement ORDER
-// (destination, screen, field_4C, i.e. :1377/:1378/:1379) instead of ours -
-// 75.1882, so retail keeps our order; `const int alpha` - byte-flat;
-// `if (width > 0) if (height > 0)` for the merged guard - byte-flat.
-
-// Residual (84.11%): 25 of 27 blocks exact, 14/14 branches, 10/10 calls, one
-// register permutation left and it is the one the old note names - retail
-// materialises the literal zero in EBX (`xor ebx,ebx` at fn+0x25) where we
-// use ECX, and the whole EBX<->ECX/EDI transposition rides on that.  The two
-// size-only blocks are its consequences: retail LOADS `width` into ECX at the
-// `width > 0` guard and re-pushes that register into the Bitmap16Bit ctor
-// where we reload `[ebp+0x10]`, and it reloads `[ebp+0xc]` at the row-advance
-// where we keep `[ebp-0x40]` live.  Older sweep, still valid: all six
-// declaration orders of the three row pointers - 73.40 / 73.51 / 74.10 /
-// 74.22 / 75.38 / 75.39 - and reading `to` before `from` costs 2.9.
-// 2026-09-06, polish lane 38: the residual is now a pure register-homing
-// wall and the DC block adds nothing more.  Retail loads `width` into a
-// register at the guard (`mov ecx,[ebp+0x10] / cmp ecx,ebx`) and reuses that
-// register for the Bitmap16Bit ctor push, where our CL tests it in memory
-// (`cmp dword ptr [ebp+0x10],ecx`) and reloads it for the push; the shared
-// zero sits in EBX on retail and ECX here, born one step earlier.  Measured
-// against 84.1098: swapping the guard's operands (`height > 0 && width > 0`)
-// costs 0.98 (83.1333); nesting the two guards as separate ifs is BYTE-FLAT.
-// `homm3 vc6 why-reg` runs its whole 26-mutation catalog here (every decl
-// move, decl swap and un-naming in the blend loop) and NONE reduces the
-// 134-slot register distance - the best are +0, the rest +2..+287.  The one
-// DC name previously absent was `DEFAULT_FADE_TIME` (a `const int` for the 33);
-// retail materialises it as the immediate 0x21, so it is constant-propagated
-// exactly like SetEnvironmentOrigin's MAX_RANGE and is not reachable.
-// Boundary repair: only the screen has a nonzero horizontal origin. Skip
-// its unused final row advance; the two zero-origin temporary walks may
-// end one-past. Four-form family: final guard 84.7843%, next-row guard
-// 84.6392%, screen-row origin 82.8078%, unchecked control 84.1098%.
-// Three fresh relative-row forms reproduce three objects: integral byte
-// offsets score 82.0667%, multiplied row indices 77.6471%; retain the guard.
 VA(0x00602dc0, 0x2F7)  // anchor-import + exhaustive tail order, dc 0x19b8fc
 void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                                        int height, int fadeTime)
@@ -840,88 +791,6 @@ void heroWindowManager::releaseFizzleSource()
 // pointer instead of the delta. Frame layout, every mask/counter/timer
 // slot displacement and the whole post-loop tail are byte-identical.
 
-// CORRECTION 2026-08-14: the earlier claim that the BLOCK GRAPH agrees
-// too is WRONG, and it is why this keeps getting routed to the register
-// solver. `homm3 sema diff 0x6030e0` reports base 11 blocks vs target
-// 12, and `homm3 vc6 diagnose` classes the wall CONTROL-FLOW (flow
-// distance 1), not register-homing. The shape retail has and we do not:
-// its outer-pass head ENDS IN A JMP over a ONE-INSTRUCTION block that
-// falls into the row loop, so that instruction runs on every row
-// iteration except the first - a rotated row loop with a split update.
-// Ours falls straight through into a 4-instruction head, and our inner
-// pixel loop is 32i where retail's is 30i. Start from `why-branch`, not
-// `why-reg`. Corroboration from the allocator's own side, measured the
-// same day: why-reg --model reports the reference defines its THIRD
-// call-crossing pseudo at schedule slot 37 where ours defines it at 61
-// - retail hoists out of the row loop a value we create inside it. Its
-// verdict is CAPPED (C1 handle state), which is the wrong question.
-
-// INSTRUCTION-ACCOUNTED 2026-08-14, and it is ONE optimizer decision:
-// INDUCTION-VARIABLE ELIMINATION. Both sides spend the SAME 61
-// instructions on the nest, only distributed differently -
-//   base    B2 11i preheader | B3  4i row head | B4 32i pixel | B5 14i tail
-//   target  B2 12i preheader | B3  1i reload   | B4  4i head  | B5 30i pixel
-// Retail's row head is `mov eax,[pDst] / mov [xcount],0x190 /
-// sub eax,edi / mov [delta],eax`: it computes delta = pDst - pSrc ONCE
-// PER ROW, so the inner loop carries exactly ONE pointer induction
-// variable, edi = src, and stores through `mov [edx+edi-4],eax` - two
-// instructions. Ours keeps a real dst POINTER, spilled to [ebp-0x28],
-// and pays four (`mov ecx,[ebp-0x28] / mov [ecx],eax / add ecx,4 /
-// mov [ebp-0x28],ecx`). That is the whole 32i-vs-30i gap. The extra
-// target block B3 is the SAME decision seen from the other end: retail's
-// preheader already leaves the initial pSrc in EDI, so the row body's
-// `src = pSrc` reload is dead on the first iteration and VC6 rotates the
-// loop around it - one instruction, `mov edi,[ebp-0x14]`, plus the `jmp`
-// that makes the preheader 12i.
-// So the wall is not an inner-loop spelling and not a control-flow shape
-// to be re-spelled: VC6 eliminates one of two lockstep pointer IVs when
-// it chooses to, and picks the survivor itself. When it DOES build the
-// delta here it picks the wrong one (see `dst[x] = f(src[x])` below, the
-// store pointer survives). Rejected 2026-08-14, byte-identical to the
-// form below to four decimals: the inner loop as an explicit DOWN
-// counter `for (x = W/2; x > 0; x--)` with `*src++` and `*dst++`.
-// Rejected the same day, marginally WORSE (88.50/88.12): declaring pDst
-// BEFORE pSrc so the outer pointer pair takes retail's stack slots -
-// they do swap to [ebp-0x10] = pDst, [ebp-0x14] = pSrc, and it buys
-// nothing.
-// Tried and rejected 2026-08-14, both fades measured together:
-// stepping pSrc/pDst in the row loop's for-INCREMENT rather than at the
-// body tail (byte-identical, 88.51/88.14); the same with named
-// srcPitch/dstPitch locals (84.63/82.72); the row loop as an explicit
-// `while` (83.88/81.93). Tried and rejected earlier: `dst[x] =
-// f(src[x])` on both sides (VC6 does build the delta form there, but
-// picks the STORE pointer as the induction variable, 87.74%); the same
-// with the pointer pair declared dst-first (86.26%); `*dst++` for the
-// store (identical bytes to `dst[x]`); the fused
-// `((px & m) >> s) & m` expression with no named component temps
-// (77.60% - the three named temps below ARE load-bearing, they are what
-// orders the three `and`+`shr` pairs ahead of the three re-masks).
-// RE-TESTED ON THE /Ob2 AXES 2026-08-14, because a sibling lane found two
-// functions that only close at a specific (statement mass, candidate site
-// count) PAIR after each axis alone had been measured byte-flat. Both
-// fades were swept over the full grid: byte-inert statement mass
-// m = 0,1,2,3,4,6,8,20,60,120,200 crossed with k = 0,1,2,3,8,12,20,40
-// tail `xx_nop()` candidate sites (an empty file static, so each call
-// inlines to nothing yet still counts in the remaining/sites-to-come
-// divisor). Every cell is 88.5116 / 88.1358 to four decimals. The probe
-// is not inert by construction - the same insertion point with a single
-// `volatile int` mass statement moves FadeToBlack to 82.7965 - so the
-// harness reaches the function and the flat grid is a real negative.
-// This wall is on neither /Ob2 axis.
-// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP: none of the levers
-// that took FizzleForwardX 75.39 -> 84.11 transfer to this pair, and the
-// numbers are banked here so nobody re-runs them.  The DC block names
-// bmpFadeSource, the three `const unsigned int` masks (blue_mask_2 sp+0x28,
-// green_mask_2 sp+0x2c, red_mask_2 sp+0x3c), `dst` as an `unsigned int*` ROW
-// BASE advanced by GetPitch bytes, time1/next_fade_time, FADE_PERIOD and - in
-// FadeToBlack only - `r`, the FIRST channel result, stored at :1814 and
-// combined first at :1820, i.e. the DC computes RED, GREEN, BLUE in that
-// order.  Measured against 88.5116 / 88.1358 (FadeToBlack / FadeFromBlack):
-// red-first channel order 88.2674 / 87.8765; `*dst = ... ; dst++` instead of
-// `dst[x] = ...` BYTE-FLAT (unlike FizzleForwardX, where the same pointer
-// walk paid +1.49); both together 88.2674 / 87.8765; red-first MASK
-// declaration order 88.2674 / 87.8765; `const unsigned int` masks byte-flat;
-// swapping the deadline/started GameTime::Get() pair 87.2965 / 86.8827.
 VA(0x006030e0, 0x1F9)  // anchor-caller, dc 0x19c1bc
 void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
 {
@@ -986,9 +855,6 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
 // half-brightness frame and the full-brightness image is restored by
 // the Draw below rather than by a pass of its own.
 
-// Residual (88.14%): the same divergence FadeToBlack carries - see the
-// corrected note there. It is a CONTROL-FLOW wall (rotated row loop,
-// one block short), not the register swap the first note claimed.
 VA(0x006032e0, 0x1E5)  // anchor-caller, dc 0x19c3b8
 void heroWindowManager::fadeFromBlack(int speed)
 {

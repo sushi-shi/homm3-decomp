@@ -372,53 +372,14 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
 #if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:651
-// CLAIM WITHDRAWN 2026-08-20: 0x00406480 is NOT this method, and the row
-// goes back to unowned. Four independent checks agree and none of them
-// needs the DC:
-//   1. Size band. The DC body is 0x204 = 516 B (0x61cc - 0x5fc8) against
-//      retail's 0x59F = 1439 B. That is 2.79x, outside the 0.3-2.5 SH4
-//      -> x86 band this repo requires of every pairing, and it is the
-//      only row in the bracket that breaks it.
-//   2. The body is a COPY, not a handler. It opens `mov ebx,ecx / mov
-//      esi,[ebp+8] / mov ecx,6 / rep movsd` and then copies field after
-//      field at unaligned offsets (+0x18 word, +0x1a dword, +0x22 byte,
-//      +0x23 ...) with basic_string::_Copy/_Tidy/_Xlen and
-//      _Xran(invalid_string_position) along the way. It writes through
-//      ECX - and ECX here is the DESTINATION, so a CAdvMgrNetMsgHandler
-//      method would be writing 0x91+ bytes into a 12-byte object.
-//   3. It touches no message state at all: no gpGame, no IsHuman, no
-//      format_string, no extended_dialog, no general-text row - nothing
-//      the other three handlers in this bracket all share.
-//   4. Its two call sites in HandleNetMsg settle it. Both pass a
-//      computed 90-byte-stride record inside gpGame as ECX
-//      (`lea ecx,[ecx + 2*eax + 0x21620]`) and a message field as the
-//      source, i.e. `record = <field>`, which is an assignment operator
-//      for some 90-byte string-bearing record and not a handler call.
-// Leaving the address unowned until that record type is admitted.
 DC_ONLY(0x5fc8, 0x204)
 void CAdvMgrNetMsgHandler::handleGiftRequestMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
 
+// The retained source name handles a resource request (RS_GIFT_REQUEST).
 // E:\gamedcs\advmgr.cpp:677
-// OPEN ATTRIBUTION, deliberately NOT acted on by this lane. Withdrawing
-// the row above shortens the bracket by one, and the two surviving
-// handler bodies then read as the OTHER member of the pair each is
-// currently claimed as:
-//   * 0x00406a20 (this row) reads exactly CGiftRequestMsg - m_greedyGuy
-//     at +0x14 and m_resource at +0x18, no quantity anywhere - and
-//     formats general-text row 360, GENERAL_TEXT_AI_SINGLE_RESOURCE_
-//     REQUEST. That is the REQUEST handler.
-//   * 0x00406bf0, claimed and byte-exact as HandleTradeRequestMsg, reads
-//     CGiftMsg's full triple (+0x14/+0x18/+0x1c), formats row 359
-//     GENERAL_TEXT_AI_GIFT_RECEIVED and CREDITS the local player's
-//     resource. That is the GIFT handler.
-// Both sizes land in band under the swap (455/516 = 0.88 and 506/604 =
-// 0.84) where the current mapping needs the 2.79x row above. Acting on
-// it renames a function that is currently EXACT and rewrites its
-// baseline row, so it belongs to whoever owns the netmsg attribution -
-// recorded here rather than done here.
 #endif  // @carcass
 
 VA_COMPGEN(0x00406480, 0x59F, IMPLICIT_COPY_ASSIGN, hero)
@@ -449,10 +410,8 @@ void CAdvMgrNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
     resources.clear();
 }
 
-// The retained handler name receives RS_GIFT. Retail 0x406c2d reads
-// the donor at +0x14; 0x406cee/0x406cf1 and 0x406d5e/0x406d61 read
-// quantity/resource at +0x1c/+0x18, matching DC CGiftMsg, not the
-// two-hero CTradeRequestMsg. Former view fields: m_playerPos/m_amount.
+// The retained source name handles a gift (RS_GIFT), using its giver, resource,
+// and quantity payload.
 VA(0x00406bf0, 0x1FA)  // dc 0x6428
 void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
 {
@@ -504,16 +463,6 @@ void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
 // implicit vector and string defaults carry the two EH states;
 // advCommand and the moving-object pair share one or-edx,-1.
 
-// Residual (90.30%): the river/road fill form. Retail materializes TWO
-// fresh zero pseudos (xor eax / xor ecx, one per group) and stores
-// direct [esi+disp32]; our memsets share one fill pseudo and address
-// through a lea'd base. Tried and rejected: individual statements and
-// chained assignments (both 79.32 - they reuse the ebx zero), road as
-// a chain beside a river memset (87.94), &arr[1] vs arr+1 spellings
-// (no movement). why-reg v2 caps after its one model edit - the
-// creation-order lever is copy-propagated (C1 class); the downstream
-// lea/mov-ecx transpositions around the flagIcons/boatFlagIcons
-// rep-stosd pairs are the same cascade.
 VA(0x00406df0, 0x1DF)  // anchor-global, dc 0x66f4
 advManager::advManager()
 {
@@ -585,38 +534,8 @@ DATA(0x0065f67c) extern const char* const g_boatFrothIconNames[3];
 
 // E:\gamedcs\advmgr.cpp:837
 
-// 52.72 -> 97.80 (2026-08-20) ON TWO `#pragma inline_depth(0)` SITE PINS,
-// one per push_back. THE DIAGNOSIS BELOW WAS RIGHT AND THE CONCLUSION WAS
-// WRONG, so read this before trusting a "no known lever" verdict anywhere
-// else in the tree.
-
-// What the old note established, and it still stands: retail CALLS
-// ?insert@vector<resource*>@ at both push_back sites where our CL expanded
-// the whole grow path (capacity test, new, _Ucopy/_Ufill/_Destroy,
-// delete), and that expansion was most of our 59-vs-36 branch excess. It
-// also correctly established that the RE'd /Ob2 budget rule CANNOT produce
-// retail's refusal - budget = 2*cb(Open) is far above cb(insert), the only
-// prior charged site is the matching reserve, and rejections do not charge,
-// so a compliant SP3 C2 must accept these sites. The RTM-vs-SP3 C2 A/B came
-// out byte-identical, so it is not a generation wall either.
-
-// The error was inferring from "the model cannot explain retail's refusal"
-// that no lever exists. Reproducing the refusal never required explaining
-// it: `#pragma inline_depth(0)` is STATEMENT-granular in VC6, so pinning
-// the two push_back sites simply IMPOSES the call retail has. The model
-// question - what front-end site state makes retail refuse a site the
-// budget rule must accept - is still open and still interesting, but it is
-// no longer in the way of the match.
-
-// Everything the old note lists as tried-and-rejected was aimed at moving
-// the BUDGET, which is why none of it worked: the direct 3-arg insert
-// spelling (42.12), #pragma auto_inline(off) around an explicit member
-// instantiation (no effect - candidacy comes from the saved template body),
-// and dead-store doses of 100/200/300 statements (48.7/47.5/42.7,
-// non-monotonic, insert never flips). Do not retry those.
-
-// The identical fix cracked ShowRoute's type_point ctor, the other member
-// of this "site-local refusal" family (73.82 -> 79.97).
+// Retail calls vector<resource*>::insert at both push_back sites. Keep the
+// site-level inline pins on those calls.
 
 // Residual (97.80%): the tail of the same cascade, register/slot only.
 // The adventure screen setup. Retail's grouping is preserved: the route
@@ -789,15 +708,6 @@ int advManager::open(int newPriority)
     if (g_mpNetProtocol == MP_HOTSEAT) {
         g_unnamed6993dc = 1;
         g_completeDrawEnabled = g_currentPlayer->isLocalHuman();
-        // 2026-09-06, polish lane 35: this buffer is 256 bytes, not the
-        // 172 that used to sit here. The frame-delta sweep read it straight
-        // off the prologue - retail's `sub esp,0x11c` against our 0xc8 with
-        // an IDENTICAL homed-slot set (-4/-0xc/-0x10/-0x14/-0x18/-0x28) and
-        // the same `reversed` scratch at -0x28 - so the whole 84-byte gap
-        // sits between -0x28 and the bottom of the frame, which is this
-        // sprintf destination alone (retail leas [ebp-0x128] into it at
-        // +0x90c and +0x921). 172 -> 256 makes the frame retail's exactly
-        // and pays 97.9257 -> 97.9312.
         char text[256];
         sprintf(text, g_generalText->getText(14), g_currentPlayer->getName());
         g_windowManager->m_isWaitingForFadeIn = 0;
@@ -864,13 +774,6 @@ VA_COMPGEN(0x0057d160, 0x05, IMPLICIT_DTOR, CAdvMgrNetMsgHandler)
 // and viewarmywindow's create_upgrade_widget; per docs/vc6/inliner.md the
 // knob is caller body mass, not a vector spelling.
 
-// Tried and rejected: `erase(begin(), end())` spelled longhand instead of
-// clear() (83.93392 - byte-identical to clear(), the forwarder inlines
-// away and the budget accounting does not move); binding a
-// `std::vector<resource*>&` local to CachedGraphics so the address is
-// materialised once the way retail's does (83.80 - it does buy the pinned
-// register but costs more than it pays, because operator[] then indexes
-// through the reference where retail keeps indexing off ESI at +0xd4).
 VA(0x004077e0, 0x2D1)  // anchor-vtable, dc 0x74ec
 void advManager::close()
 {
@@ -999,21 +902,6 @@ type_point advManager::get_mouse_map_point() const
 }
 
 // E:\gamedcs\advmgr.cpp:1253
-// RECONSTRUCTED from the decode the previous lane banked here. The body is
-// `switch (advCommand)` over a jump table at VA 0x00408750 (fn+0xBD0, the
-// last 32 bytes of the function, preceded by two bytes of 8b ff alignment
-// filler), indexed by advCommand - 1 over the domain 1..8; default falls to
-// the epilogue at fn+0xBB0. The eight table entries read 0x57, 0x781,
-// 0x684, 0x88b, 0x95b, 0x64e, 0x9a, 0xa28, which is what pins both the case
-// SET and the body emission ORDER used below:
-//   1  fn+0x057  retarget the path at lastMapHover, FALLS THROUGH
-//   7  fn+0x09A  walk the route
-//   6  fn+0x64E  hero standing on a town -> get_obscured_town()->View(0)
-//   3  fn+0x684  town, currTownId != -1  -> town::View(0)
-//   2  fn+0x781  hero, currHeroId != -1  -> HeroView
-//   4  fn+0x88B  hero, currHeroId == -1  -> SetHeroContext
-//   5  fn+0x95B  town, currTownId == -1  -> SetTownContext
-//   8  fn+0xA28  shipyard                -> DoEventShipyard
 
 // Seven declarators were added for this body, all gated to advmgr.obj's own
 // view: advManager::MoveHero, advManager::DoEventShipyard,
@@ -1021,34 +909,6 @@ type_point advManager::get_mouse_map_point() const
 // the DC's zero-parameter spelling does not transfer), the EAdvCommand
 // domain enum, and the four .bss cells 0x6968e0 / 0x69777c / 0x698774 /
 // 0x699560. HeroView's existing gate was widened rather than duplicated.
-
-// Decode findings and source corrections:
-//   - DC lines 1310/1369 call HideRoute(1,0,1) and HideRoute(0,1,1).
-//     The canonical ordinary body is defined later in this TU and expands
-//     naturally at both sites. The former claim that later definitions
-//     cannot inline was false; pasted teardown bodies were unnecessary.
-//   - DC separates the header get_map_center (fixed viewport offsets)
-//     from the ordinary get_mouse_map_point (mouse offsets). Both source
-//     call boundaries are restored below; the former overload workaround
-//     conflated two distinct methods.
-//   - The `is_valid()` / `cell(x,y,z)` pair appears FIVE times with the
-//     zero-argument arm tail-merged onto the real one. No such function
-//     exists in the DC roster and NewfullMap::cell(type_point) already
-//     models a different, unguarded body, so these are written longhand -
-//     BUT LONGHAND MEANS THE HELPER'S BODY, INCLUDING ITS BY-VALUE
-//     PARAMETER (77.3765 -> 84.1883, 2026-08-21). Retail emits
-//     `mov ecx,[ebp-0x20] / mov dword ptr [ebp-0x20],ecx` before the first
-//     is_valid call: a dword SELF-store, i.e. a struct copy whose source
-//     and destination the allocator coalesced onto one slot. That is a
-//     by-value `type_point` parameter, and the fullMap load sitting
-//     BETWEEN the is_valid call and its `test al,al` is the helper's own
-//     `NewfullMap* map = manager->fullMap;` - exactly the shape of this
-//     file's DrawHeroCell static. Four sites converted (+6.81 combined);
-//     the fifth already carried the copy, and adding the map/valid locals
-//     there is byte-flat because its invalid arm returns `cellData`.
-//   - `advCommand != ADV_COMMAND_WALK_ROUTE` inside the WALK_ROUTE arm is
-//     provably false and retail still emits the compare - VC6 does not
-//     constant-propagate the switch value into an arm. Kept.
 
 // 77.1683 -> 77.3765 (2026-08-21): Dreamcast CodeView records a
 // function-scope `town* newTown`, and retail likewise materialises the
@@ -2816,10 +2676,6 @@ type_cell_adjuster::type_cell_adjuster()
 // dropped the count test retail folds, which is what put our body at 57
 // blocks / 32 branches against retail's 42 / 23.
 
-// Residual (93.21%): Dinkumware append inlining. Tried and rejected:
-// spelling the single-space appends as char appends (`+= ' '`) rather than
-// append(" ") - measured 61.45.
-
 // THE PREFIX ASSIGNS, IT DOES NOT APPEND (byte-flat, 2026-09-06, reloc
 // census). Retail's call at fn+0x8a is basic_string::assign(const char*,
 // size_type) where ours was append(const char*, size_type); the inlined
@@ -2961,24 +2817,6 @@ void setWitchHutHelpText(char* buffer, hero* currentHero,
 // the obscure_cell/restore_cell census is exactly 2x ours and why the
 // first copy is a STATEMENT, not a scope exit.
 
-// HISTORICAL 90.9026% plateau: cross-jumping of the visited-text arms
-// (formerly SET_VISITED_ROLLOVER / APPEND_VISIT_TEXT), plus one genuinely
-// missing sprintf. The call-sequence alignment (base 65 out-of-line calls
-// against retail's 66) localises it exactly, between anchors that resolve
-// identically on both sides:
-//   * the CREATURE_BANK..DERELICT_SHIP span: retail 3 sprintf, we 2;
-//   * the GetArmySizeName..SEER span: retail 5, we 4;
-//   * the TREE_OF_KNOWLEDGE..WITCH_HUT span: retail 4, we 5.
-// Net +1 for retail, which is the `_sprintf base x36 vs retail x37` row
-// predict-inline reports. These arms hold far more sprintf sites than
-// either side emits - our CL merges ten source sites down to six before
-// the first creature bank where retail merges them to nine - so the
-// per-span counts are a cross-jumping ledger, not a statement census, and
-// the two compiles simply pick different merge sets. The one remaining
-// non-cross-jump row is the QuestGuard string temporary: retail expands
-// basic_string::_Tidy there and calls operator delete, we call _Tidy,
-// which is an A8/A9 under-inline (budget), not a spelling.
-
 // CURRENT 2026-08-21 (93.938970%, from 90.902565%). Dreamcast CodeView's
 // function-scope roster is visited, player, iThisPlayer, currHero,
 // tempText[500], adjuster, playerbit, and infolevel. Restoring that roster
@@ -2990,22 +2828,6 @@ void setWitchHutHelpText(char* buffer, hero* currentHero,
 // carriers inline away and are byte-flat here; the four 3-parameter helper
 // calls regress because this retail caller uses its local player index while
 // QuickInfo's inlined copies use gNetLocalGamePos, so those arms stay direct.
-
-// The out-of-line call census is now exact (66 each). predict-inline's only
-// positional residue is the QuestGuard string teardown: our side calls _Tidy
-// and operator delete once, retail retains one fewer _Tidy call and calls
-// operator delete twice. Naming the returned string scores 93.931694 and is
-// rejected. Duplicating MONSTER's sprintf arms also supplies the historical
-// missing call but re-lays out the switch and falls to 93.674760; call counts
-// already agree after the carrier fix, so that older lead is closed.
-// The remaining destructor threshold does not respond to source-history
-// carriers (2026-08-21): release-elided diagnostic doses 1/2/4/8 at entry
-// and one beside QUEST_GUARD are all byte-flat at 93.938970 with the same
-// 184 branches, and routing the returned string through an inline
-// const-reference copier is byte-flat too. A conventional release VERIFY
-// carrier that evaluates `QuestGuardList.size()` at the actual case is also
-// byte-flat, so VERIFY-shaped source is possible but does not select retail's
-// object phase here.
 
 // The real-code branch deficit is now completely localized: ours has 184
 // conditionals before RET against retail's 188. Three are the retail-inlined
@@ -3098,9 +2920,6 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     const char* visitedFormat = DATA_COMPGEN(
         0x0066034c, rolloverVisitedFormat, " %s");
 
-    // The former SET_VISITED_ROLLOVER / APPEND_VISIT_TEXT macros expanded
-    // caller-local control flow. Keep each arm and its two sprintf sites
-    // explicit; no recovered shared helper replaces these statements.
     switch (cell->m_type) {
     case NOTHING:
     case ANCHOR_POINT:
@@ -3703,17 +3522,6 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
         setShrineHelpText(g_text, currHero, cell, Shrine3Info,
                           separator, separator);
         break;
-    // The former APPEND_VISIT_TEXT macro hid this split: only the
-    // `visited = ...` assignment is guarded and the sprintf/strcat run
-    // unconditionally. That reads like a bug and is NOT one to fix: retail
-    // really does emit those two calls outside the guard here, and bracing
-    // both arms was measured at 89.28 against the unbraced 89.82.
-    // RE-MEASURED 2026-09-06 on this lane's tree (the helpers routed, the
-    // globals corrected, the arm map read): the verdict holds, bracing both
-    // costs 96.9535 -> 96.6973.  It matters because the OBELISK arm's -0x30
-    // hangs off this selector - our OBELISK ends `mov [ebp+0x10],eax / jmp`
-    // straight into it, where retail keeps a `je` on the AND's own flags and
-    // its own copy of the visited sprintf.
     case SIREN:
         strcpy(g_text, g_adventureObjectNames[SIREN]);
         if (cell->m_isTrigger && currHero)
@@ -5021,12 +4829,6 @@ int getFlaggedObjectOwner(NewmapCell* thisCell)
     return owner;
 }
 
-// Keep game::GetHero, get_location, GetHflip and advManager::GetCell.
-// DC 0x11424 calls the latter, as do the five other drawing routines.
-// Its DC lines 7028/7029 call NewfullMap::cell(0,0,0) / cell(point).
-// The earlier 93.18% substitution probe used a flattened GetCell body;
-// it does not prove a semantic difference or justify local helper copies.
-// See docs/vc6/regalloc.md 6f for that historical probe.
 VA(0x0040fe30, 0x484)  // dc 0x11424
 void advManager::drawHeroPart(int part, TDrawParts& heroParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
@@ -5629,33 +5431,6 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
         // pointer table. Together those two source shapes raise the max from
         // 83.2068% to 85.2335% and restore `this` in EDI.
 
-        // Residual (85.2335%): the 42 conditional branches and sole return
-        // agree exactly. Retail uses a 0xfc frame, keeps objCell in EBX and
-        // spills `bit` at -0x38 across _Xran; ours uses 0xf8, keeps `bit` in
-        // EBX and homes objCell. Its type_point slots are -0x28/-0x34 versus
-        // ours -0x28/-0x38. Tried and rejected: signed offsets hoisted across
-        // the arms (79.2763), grouped switch with promoted int offsets
-        // (84.7451), function-scope numObj (byte-flat), and the DC pointer
-        // declaration order SprPtr/ObjCell/ObjType (byte-flat). The DC-backed
-        // final-loop `part`/`partHigh`/`partLow` spelling is also byte-flat and
-        // does not supply retail's missing frame dword. The DC-proven source
-        // types (`unsigned char` foundHero/foundBoat and signed `int numObj`)
-        // are retained above; both are byte-flat. Restoring the DC-attested
-        // static CObjectType::_getBitPos call with its
-        // `8 * (6-y) - x - 1` body is byte-flat here, but exposing the inline
-        // through the shared header regresses an unrelated exact function via
-        // include-set sensitivity, so the equivalent expression stays local.
-        // A semantics-preserving unnamed-yOffset spelling is byte-flat too;
-        // why-reg's apparent -75 automatic mutation used the already-shifted
-        // byte for y and was therefore not a valid candidate.
-        // [polish-45] Negative control for the draw arms, do not retry:
-        // promoting the THREE arms' own `drawY`/`drawX` to `int` (so the
-        // shift is the 32-bit `movsx ecx,dl / sar ecx,4` retail uses in the
-        // gbInViewWorld arm instead of this compile's byte shift homed at
-        // [ebp+0x13]) costs 85.2335 -> 83.4349.  Retail is NOT consistent
-        // across the arms - the later two already lower here exactly as
-        // retail does with the `signed char` spelling - so the divergence is
-        // per-arm codegen, not the declared type.
         signed char yOffset = offsets >> 4;
         offsets <<= 4;
         signed char xOffset = offsets >> 4;
@@ -6292,9 +6067,6 @@ NewmapCell* advManager::getCell(type_point point)
 }
 
 // E:\gamedcs\advmgr.cpp:7037
-// RECONSTRUCTED from the decode the previous lane banked on this stub.
-// bPartialUpdate is DEAD in retail - zero references in the body - and
-// updateFlag is read exactly once, at the very end.
 
 // All three of the decode's blockers are now declared: gUnnamed6aac3c's
 // DATA claim is hoisted above this function, the view-world tile scale at
@@ -6313,51 +6085,10 @@ NewmapCell* advManager::getCell(type_point point)
 // way - SIX bodies over 28 real labels, and every one of the 28 lands on a
 // TAdventureObjectType enumerator this tree already carries.
 
-// Two contradictions the decode flagged, both now settled:
-//   - gMapVisibilityBit's address was corrected in an earlier commit on
-//     this branch; this body relocates against the corrected 0x69ccbc and
-//     reads it as the BYTE advmgr.h declares.
-//   - soundmgr.h:191 says gbUnk691209 is read only as the second half of
-//     the sound-is-on guard. This body reads it twice as a radar/AI
-//     visibility gate, as do Main, SetHeroContext and StartLocalPlayerTurn.
-//     Left as an open annotation contradiction, not silently patched.
-
 // Retail's own inconsistency, transcribed rather than tidied: the row
 // advance uses the LIVE screenBitmap->Pitch while the writes inside a
 // pixel block use a hardcoded 0x640-byte stride.
 
-// Residual (90.65%): why-branch reports 164 vs 167 blocks and 94 vs 95
-// conditional branches - one compare site and three blocks short on a
-// 2881-byte body, i.e. structurally converged. Its D6 "reference has MORE
-// exits (2 rets vs 1)" line is an ARTIFACT, not a lever: both sides have
-// exactly one `ret 0x18`, and the second one the tool counts is the
-// trailing jump-table data being decoded as instructions. The guided
-// search moved fifteen catalogued D9/D10/D13 mutations (case-block order,
-// induction-variable width, rect-local width) and NONE changed the
-// distance; five made it worse. The destRow-preamble hypothesis recorded
-// here was TRIED 2026-08-20 and half-paid: the preamble as an if/else
-// chain (36/72 first, the 108 arm re-zeroing the phase counters over a
-// duplicated tail) measured 90.18 -> 90.65 and is kept below; the SAME
-// chain spelling for the in-loop row-advance measured 78.75 - that one
-// really is a switch - and is reverted. One compare site and ~3 blocks
-// remain, plus the jump-table-data ret artifact.  The Dreamcast xref graph
-// names one game::GetHero call here, and retail's opening x86 has both the
-// currHeroId == -1 null arm and a second test of the selected pointer.  Four
-// source-shape probes bounded that discrepancy on 2026-08-21: an accessor
-// inside the outer guard emitted 95 branches but fell to 88.90459%; an
-// unguarded accessor and its explicitly-spelled body both emitted 94 branches,
-// 165/167 blocks and scored 90.60734%; a single-use inline wrapper emitted the
-// same bytes.  VC6 proves the address arm non-null and removes retail's second
-// test in every accessor-shaped form.  The manual guarded address below remains
-// the score winner at 90.64954%, despite its one missing compare/~3 blocks.
-// The DC local roster is now audited too (2026-08-21). Function-scope
-// `ulX/ulY/brX/brY` recovers the 95th branch but adds a second real polarity
-// mismatch and scores 88.83211%; tail-scoped `brX/brY` scores 89.27523% and
-// leaves the branch deficit. Its attested 32-bit `playerBit` nearly ties at
-// 90.63027% and also recovers branch 95, but introduces the same extra
-// polarity mismatch. Finally, removing the unattested last-row/last-column
-// caches in favour of direct `< MAP_HEIGHT/MAP_WIDTH` loops scores 88.90550%
-// with several new CFG differences. All four were reverted.
 VA(0x00412c40, 0xB41)  // linkorder, dc 0x14bec
 void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsigned char partialUpdate, unsigned char viewMines, unsigned char viewHeros, unsigned char viewTowns)
 {
@@ -6762,17 +6493,6 @@ void advManager::updateRadar(unsigned char updateFlag, unsigned char partialUpda
 // other object-name loads all read cell+28 before indexing gQuickViewText.
 // Restoring the 32 subscripts is byte-flat on the selected parent, but
 // changes some alternative formatting results through natural compiler state.
-
-// ARENA's conditional format argument and BUOY/fountain's explicit branches
-// are source alternatives supported by the same visit semantics and DC
-// groups. One conditional argument can lower to two sprintf calls; neither
-// DC's groups nor retail's shared tail proves a unique C++ spelling.
-// The 64-state generator/fountain family produced 24 distinct objects;
-// its combined source-fact form scored 93.3711. Composing
-// the visit tails/guards in 16 states produced eight objects and recovered
-// 95.5740. The name-index/tail family produced twelve objects in 16 states.
-// These measurements supersede earlier isolated claims that the shared
-// tail could not be recovered. No diagnostic padding or inline pin is used.
 
 // Failed controls: direct ARENA mask accumulation on the final parent
 // changes natural inlining and falls to 91.7578. The garden expression and
@@ -7979,44 +7699,7 @@ void advManager::heroQuickView(int heroId, int x, int y,
 const char* getBuildingName(int townType, int buildingId);
 
 // E:\gamedcs\advmgr.cpp:9115
-// The resource/income wrapper probes below are historical. Those local
-// wrappers existed only to alter /Ob2 depth; use the same direct string
-// appends as the income-resource loop and retain one formatString helper.
-// 90.98338 -> 92.75378 -> 92.941086 (2026-08-21), after the two pinned
-// building-name appends had already raised the older 85.32 plateau. The
-// resource helper adds one source nesting level around the formatted-string
-// temporary. That makes VC6 CALL its `_Tidy` where the direct statement
-// expanded `_Tidy` and exposed one extra operator delete, and closes the
-// whole CFG: 55 branches, 3 returns and 100 blocks on both sides. The income
-// header helper similarly restores one of retail's two later `_Eos` calls.
-// Statement-local inline_depth(1) and (2) on the direct resource append are
-// byte-flat, so the helper depth rather than a pragma is the reachable lever.
 
-// Residual (92.941086%): flow is exact and base is 663 instructions against
-// retail's 662. Retail still calls `_Eos` after the income-loop separator
-// where this compile expands the terminator store, and the remaining aligned
-// regions differ by volatile-register scheduling. One- and two-level
-// one-call helpers at that separator are byte-flat, as is a helper carrying a
-// release-VERIFY-style discarded `text.size()` accessor. why-reg v2 now sees
-// the same first three callee-saved definitions and bindings on both sides;
-// this supersedes the earlier whole-body-rotation diagnosis. Reusing the DC
-// roster's one function-scope `long i` for all three non-building loops is
-// also byte-flat both before and after the resource helper, so the original
-// scoped counters remain.
-// 92.9384 -> 93.0865 (2026-09-06): the garrison-hero arm CLEARS the
-// separator flag.  Retail's `first` byte lives at [ebp+0x17] on both sides
-// and retail writes it five times (=1 at the head, =0 right after the
-// hero-name append, =0 in the army loop, =1 before the building loop, =0 in
-// the building loop) where this compile wrote it only four - so the town's
-// first army entry gets its ", " separator whenever a garrison hero was
-// named.  The store sits immediately after `append(const char*, size_type)`
-// for `hero->name` (retail fn+0x1f0), which places it inside the `if`.
-// Residual (93.0865%): the quick-info separator's own
-// `append(const char*, size_type)` expansion.  Retail keeps
-// `basic_string::_Eos` OUT of line at both of its sites and caches the
-// string's `_Len` at [ebp-0x18]; this compile expands `_Eos` and uses
-// [ebp-0x14].  Same /Ob2 depth class as the BVResMsg/BVMessage `_Tidy`
-// wall - the pin is measured catastrophic there and is not retried here.
 VA(0x004167a0, 0x7DB)  // anchor-callee, dc 0x19674
 void advManager::townQuickView(int townId, int x, int y,
                                unsigned char displayDropShadow)
@@ -8166,14 +7849,6 @@ void advManager::garrisonQuickView(int id, int x, int y)
 
     int identifyLevel = getIdentifyLevel(point);
 
-    // Residual (96.64%): one D8/D13 arm-placement flip - retail keeps the
-    // ViewAll constant arm inline after the condition chain (final term
-    // `jne` into the else chain), our CL uniformly jump-if-trues all three
-    // disjuncts and sinks the constant arm to the join. Tried and rejected:
-    // nested ternary (byte-identical), split `else if (identifyLevel ==
-    // eMasteryExpert)` (94.79 - the duplicated arm does not cross-jump),
-    // why-branch guided search (0 applicable mutations; flags the landing
-    // blocks as D3 jump-threading, not source-addressable).
     TQuickTownWindow::TViewLevel level;
     if (g_game->onSameTeam(thisGarrison->m_playerOwner, g_unnamed69778c)
         || m_debugViewAll || identifyLevel == eMasteryExpert)
@@ -8804,39 +8479,6 @@ void advManager::CheckLoadSample(e_looping_sound_id id_num)
 // je / dec` because a jump table needs the index sign-extended. Equality
 // against a short compares at 16 bits; a switch cannot.
 
-// Residual (94.51%): CROSS-JUMPER BLOCK SHARING, and the direction is ours.
-// Retail lays the CREATURE_GENERATOR_1 arm bodies out in exact source order
-// (0x21, 0x03, 0x15, 0x2e, 0x25, 0x09, 0x17, 0x32 ...); our compile omits the
-// 0x15/0x25/0x17 copies there and shares them with the identical-valued
-// blocks in the CREATURE_BANK switch, and does the same with 0x3c. Retail
-// keeps a private copy per arm. Same mnemonics, same values, one fewer
-// return on retail's side (71 vs our 72) - a C2 tail-merge choice with no
-// source lever, since the duplicate blocks are duplicate BY VALUE and no
-// spelling can make two `return LOOPING_SOUND_23;` differ.
-// Residual (96.90%): every branch and every return now agrees (16/16, 71/71)
-// and 74 of the 91 blocks are byte-exact; what is left is ARM LAYOUT inside
-// the object-type dispatch, which is a jump-table switch and therefore a
-// source-order question, not a spelling one.
-// 2026-09-06, polish lane 35: the GARRISON and CREATURE_GENERATOR_4 arms are
-// two-value probes whose miss returns LOOPING_SOUND_INVALID. Written as
-// `return LOOPING_SOUND_INVALID;` VC6 sees a two-constant select and folds
-// the second compare branchlessly - `dec ax / neg ax / sbb eax,eax /
-// and al,-0x1a / add eax,0x19` - at BOTH sites, costing two branches and
-// adding two returns. Retail branches: `cmp cx,1 / jne <shared tail>`, and
-// its `or eax,-1 / pop ebp / ret 0xc` block at +0x451 carries SIX jump
-// predecessors. Inverting the guard polarity is byte-flat (94.5074, measured)
-// because the fold does not care which way the compare runs; making the miss
-// an exit to the function's trailing INVALID return breaks that fold.
-// The original goto probe raised 94.5074 -> 96.9031, and our
-// shared block now carries the same six predecessors retail has.
-// An enclosing do/while(0) with switch continue preserves the invalid-index
-// skip over the terrain switch, but scores 24.7668% around dispatch and
-// 23.8079% around the whole calculation, versus 96.9031%. These scopes do
-// not preserve the retail lowering, even with all sound/helper results kept.
-// The trigger test owns the object switch and its else owns the terrain
-// switch. With that partition, both invalid-index arms use switch break;
-// the shared INVALID return preserves all 1504 compiled bytes and 101
-// relocations/addends at 96.9031%. Break without the else loses agreement.
 VA(0x00418620, 0x5E4)  // anchor-global, dc 0x1b5a8
 e_looping_sound_id advManager::getSoundId(int x, int y, int z)
 {
@@ -9284,13 +8926,6 @@ DATA(0x0063a66c) static const int g_scrollSpeedInc[3] = { 1, 2, 3 };
 DATA(0x00691674) extern unsigned long g_unnamed691674;
 
 // E:\gamedcs\advmgr.cpp:10624
-// Residual (97.82%): downstream scratch scheduling only - why-reg v2 finds
-// every first-definition binding agreeing (this=ESI, inc=EBX/EDI slots
-// identical) and the divergence past the B1 slice: retail folds the
-// MAP_WIDTH-10 cap into its load register (add) where ours needs a fresh
-// lea, and retail re-extracts radarOrigin.y after the x compare where our
-// scheduler hoists both extractions. Tried and rejected: bound-first
-// comparison spelling (97.43). vc6 diagnose: register-homing (B13/B2).
 VA(0x004195c0, 0x258)  // anchor-callee, dc 0x1c7e4
 void advManager::screenScroll(int dir, int changeMouse)
 {
@@ -9740,15 +9375,6 @@ void advManager::enableButtons()
                                widget::WIDGET_ACTIVE);
 }
 
-// DC 0x1dc24 names NewfullMap::cell at line 11138. Both cell lookups
-// use its canonical MapCell.h body; the former findAdjacentMapCell
-// surrogate copied that body to work around a since-removed TU-specific
-// declaration. Retail recomputes the same 38-byte-stride cell address.
-// Historical probes: flat cellData indexing emitted 191 instructions
-// versus retail's 177; restoring RECT, x/y, one mapCell pointer and the
-// accessor advanced 82.00565 -> 82.14124 -> 96.38418 -> 100%.
-// Keep width/height first in cppMin: the reverse operand order changed
-// VC6 scratch-register scheduling. Those scores predate this cleanup.
 VA(0x0041a460, 0x1FB)  // dc 0x1dc24
 unsigned char advManager::findAdjacentMonster(type_point point, type_point* result, type_point excluded)
 {
@@ -9904,14 +9530,6 @@ void advManager::viewPuzzle()
     if (!g_unnamed6aac3c) {
         redrawAdvScreen(1, 0);
         g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
-        // Two BLOCK-SCOPED points, and the tail one CONSTRUCTED (83.3125 ->
-        // 85.6339, 2026-08-21, frame 0x148 -> retail's 0x140 exactly). The
-        // single function-scope `centre` shared by the puzzle-origin block
-        // and this one held its slot live across the whole body; separate
-        // block-scoped locals coalesce. The ctor is the same lever that
-        // closed SetInitialMapOrigin: it merges the y|z bitfield word into
-        // one masked store where the named-int form the previous note
-        // reached for still emitted per-field read-modify-writes.
         type_point centre(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
                           m_radarOrigin.m_z);
         setEnvironmentOrigin(centre, 1);
