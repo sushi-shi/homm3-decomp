@@ -1,4 +1,7 @@
 module	dc_offset	finding_id	confidence	reason
+armygrp.obj	0x4ea38	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+armygrp.obj	0x4ea78	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+binkmanager.obj	0x50a7c	d7ac3c678eab	9	Dreamcast records mutable char*, but both Complete callers supply const descriptor fields and the function only reads the name; dropping const fails VC6 at the caller boundary.
 creaturetype.obj	0x718fc	497d6befbe75	10	Complete exact symbol encodes int; unsigned-char negative control changes the ABI identity and unbinds the retail claim.
 cursor.obj	0x7bee4	7e467e74ea56	10	Complete exact public symbol encodes mutable hero*; Dreamcast const hero* is an older interface.
 drawing.obj	0x8354c	c1649254e2e4	10	Complete exact private symbol encodes bool return; Dreamcast unsigned char is an older ABI.
@@ -14,15 +17,72 @@ dxplay.obj	0x8b568	63eb0c0c676f	10	Complete exact DirectPlay wrapper symbol enco
 dxplay.obj	0x8b69c	c1649254e2e4	9	Complete retail symbol encodes bool return; Dreamcast unsigned char is an older ABI.
 dxplay.obj	0x8bba4	72daff3befb0	10	Complete exact callback and DirectPlay callback ABI require const GUID*; Dreamcast records a reference.
 event_record.obj	0x8e1d0	8c1a69cf690c	10	Complete's exact public symbol encodes signed char for owner; Dreamcast records plain char in the older interface.
+event_record.obj	0x8c698	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+event_record.obj	0x8c8bc	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+event_record.obj	0x8cc1c	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+event_record.obj	0x8cf2c	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+event_record.obj	0x8d110	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+event_record.obj	0x8d338	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+event_record.obj	0x8d5a0	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+event_record.obj	0x8d860	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+event_record.obj	0x8db2c	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+event_record.obj	0x8dd88	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
 event_record.obj	0x8ebc4	9ca13b4f7bc6	10	Dreamcast serializes through gzwrite and records void*; Complete's exact private symbol and virtual-write body require TAbstractFile*.
 findpath.obj	0x9f034	244821371b7b	8	Dreamcast enum local requires a cast from Complete's retail-proven signed int bitfield; the source-model gate rejects that mismodeling.
+game.obj	0xa2e48	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+game.obj	0xa2fdc	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+game.obj	0xa3c68	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+game.obj	0xa3d50	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+game.obj	0xa410c	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+game.obj	0xa4548	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+game.obj	0xa46e8	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+game.obj	0xa4980	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+game.obj	0xa55a8	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+game.obj	0xa750c	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+game.obj	0xa75d0	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+game.obj	0xa77c8	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+game.obj	0xa83d0	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+game.obj	0xa8cd0	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+game.obj	0xb1110	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+game.obj	0xc1f64	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+hero.obj	0xcb698	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
 font.obj	0xa1e5c	3e52403f36e6	10	Complete exact forwarding into drawCursor(bool) requires the bool local; unsigned char adds a conversion absent from retail.
 hiscore.obj	0xd9190	3fade58c582f	10	Complete exact public symbol encodes bool&; Dreamcast unsigned char& is an older interface.
 inputmgr.obj	0xddd60	3d5058c1519f	10	Complete exact public symbol and both exact callers use message*; Dreamcast records message&.
 mousemgr.obj	0xfec54	717029497480	10	Complete exact public symbol encodes bool; Dreamcast unsigned char is lowered or from the older interface.
 mousemgr.obj	0xff3e0	96e5bf9b4297	10	Complete exact public symbol encodes bool; Dreamcast unsigned char is lowered or from the older interface.
 mousemgr.obj	0xff708	215a5abb57f9	10	Complete exact public symbol encodes bool; Dreamcast unsigned char is lowered or from the older interface.
+mapcell.obj	0xeb9a0	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xeba38	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xebd24	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xecdf8	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xecf98	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xed384	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xedbf8	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xede58	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xee020	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xee090	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xee1a4	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xee2e0	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xee410	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xeebdc	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xefbb8	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xeffec	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xf013c	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xf02a4	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xf0390	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xf0788	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xf0824	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xf1b1c	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xf1bf8	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xf1cd8	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xf22cc	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xf2784	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xf3018	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+mapcell.obj	0xf318c	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
+recruit.obj	0x11b028	e0859211368b	10	Complete's exact fastcall body consumes a full 32-bit creature index without byte extension and supports IDs through 150; Dreamcast records the older char domain.
 search.obj	0x12b988	b7a10adc58b5	10	Complete retained symbol encodes const pathCell*; Dreamcast const reference is an older source boundary.
+seerhut.obj	0x12d8c0	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
 slider.obj	0x14a380	3d5058c1519f	10	Complete exact widget API symbol encodes message*; Dreamcast records message&.
 slider.obj	0x14a508	3d5058c1519f	10	Complete exact widget API symbol encodes message*; Dreamcast records message&.
 smackmgr.obj	0x14ac3c	4d09cc013568	10	Complete exact VideoOpen symbol encodes eight int parameters; Dreamcast records the last two as unsigned char.
@@ -30,8 +90,177 @@ spelldefs.obj	0x14e39c	37a632789123	8	TSpellTraits is the older nominal name of 
 spells.obj	0x153d2c	bdf23f1dd15b	8	TSpellTraits is the older nominal name of Complete's shared SSpellTraits model; the recovered const-reference shape is already retained.
 spells.obj	0x153d2c	dcb74013b33f	10	Dreamcast marks sh const, but Complete's recovered edge-tiling loop mutates it.
 spells.obj	0x153d2c	ca8c1b91c341	10	Dreamcast marks dy const, but Complete's recovered edge-tiling loop mutates it.
+swapmgr.obj	0x15cd2c	06e5754fd35b	9	Dreamcast keeps a type_artifact local, while Complete's exact body immediately extracts and operates on the scalar artifact ID; this representation changed between versions.
 town.obj	0x168bb8	a6a00e7b7ca0	10	Const pointer return changes VC6's symbol to QBEQBDXZ; Complete exact retail identity is QBEPBDXZ.
+town.obj	0x165988	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
+adventuremapwindow.obj	0x11bc	6cd0e2de19de	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+adventuremapwindow.obj	0x11bc	e5af691971b2	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+advmgr.obj	0x110c0	a4b5eade292b	8	Dreamcast CodeView records the older/lowered unsigned-char local; Complete retains the semantic bool local required by its retail data flow.
+advmgr.obj	0x11238	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+advmgr.obj	0x12334	6dcfeb7b55e0	8	Dreamcast CodeView records the older/lowered unsigned-char local; Complete retains the semantic bool local required by its retail data flow.
+advmgr.obj	0x12334	ce91b321ded5	8	Dreamcast CodeView records the older/lowered unsigned-char local; Complete retains the semantic bool local required by its retail data flow.
+ai_combat.obj	0x2bad8	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+ai_player.obj	0x30334	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+ai_player.obj	0x305b4	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+ai_player.obj	0x309d4	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+ai_player.obj	0x3166c	ba63fc30d258	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+ai_player.obj	0x31f24	32f7a5a99b82	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+ai_player.obj	0x354bc	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+ai_player.obj	0x35ac8	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+army.obj	0x4be64	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+bitmap16.obj	0x51378	323c1c364093	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+bitmap816.obj	0x540a8	a47db56d95ba	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+palette.obj	0x10a854	aedc61e41e6a	10	Dreamcast records a reference copy constructor, but Complete's pointer-taking constructor is required by the exact loadFontData temporary-copy path; converting it to a reference drops that retail function to 93.67%.
+palette.obj	0x10a8a0	95d18d1398fb	10	Dreamcast records a reference return, but Complete's pointer-returning assignment is required by its retail palette-copy boundary.
+palette.obj	0x10a8a0	aa9480161449	10	Dreamcast records a reference parameter, but Complete's pointer-taking assignment is required by the exact loadFontData temporary-copy path; converting the palette boundary to references drops that retail function to 93.67%.
+palette.obj	0x10ba3c	a00eccf1aacc	10	Dreamcast records a reference copy constructor, while Complete callers and the retail-matching constructor boundary pass a pointer; the reference-family negative control regresses loadFontData.
+bitmap816.obj	0x541b0	a47db56d95ba	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+cmbtmgr.obj	0x619a8	8c506e9c2336	8	Dreamcast CodeView records the older/lowered unsigned-char local; Complete retains the semantic bool local required by its retail data flow.
+cmbtmgr.obj	0x61e60	8c506e9c2336	8	Dreamcast CodeView records the older/lowered unsigned-char local; Complete retains the semantic bool local required by its retail data flow.
+cmbtmgr.obj	0x63900	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+combatcontrolsubwindow.obj	0x65b40	f2b7312af553	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+combatresultswindow.obj	0x68364	bbdfa8da656d	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+csprite.obj	0x72664	047585729cd4	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+csprite.obj	0x72664	a47db56d95ba	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+csprite.obj	0x726f4	047585729cd4	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+diff.obj	0x823d8	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+drawing.obj	0x85a48	e83ba0b1acfc	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+drawing.obj	0x85c2c	e83ba0b1acfc	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+drawing.obj	0x85d00	6338d86b1573	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+drawing.obj	0x85d00	e83ba0b1acfc	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+drawing.obj	0x85e3c	e83ba0b1acfc	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+drawing.obj	0x866ac	2fa2e13ce67b	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+drawing.obj	0x86ea0	db299c5d5726	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+drawing.obj	0x8703c	3eef3ce7fc69	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x9028c	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+events.obj	0x902b0	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+events.obj	0x902fc	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+events.obj	0x90658	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x906d8	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x90814	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x908dc	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x90ad8	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x90d34	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x91104	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x91c18	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x91db8	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x922e8	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x923b0	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x92540	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x925fc	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x92814	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x92d40	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x92dec	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x92fa8	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x9312c	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x93298	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x93368	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x939bc	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x93b18	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x93bf8	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x93db0	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x93f6c	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x94088	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x941c8	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x94314	4608771dfff1	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x944d4	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x9459c	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x946b4	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x94760	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x949e0	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x94c8c	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x94d84	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x94ea4	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x9512c	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x951f4	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x953cc	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x95564	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x95650	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x957fc	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x95a34	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x95b54	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x95e14	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x95f18	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x960ac	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x961dc	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x962dc	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x963d8	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x964c4	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x96784	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x96994	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x96b14	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x96c18	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x96d54	9168d942fbee	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x96d54	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x96d54	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+events.obj	0x96eec	9168d942fbee	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x96eec	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x96eec	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+events.obj	0x97364	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x975a0	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x97628	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x9784c	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x97a9c	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x97b7c	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x97cac	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x97dc8	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x97fa4	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x980e8	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x9824c	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+findpath.obj	0x9ed40	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+game.obj	0xa4e80	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+game.obj	0xa5eb0	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+game.obj	0xa6114	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+game.obj	0xa6144	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+game.obj	0xaada4	b51eb5dfb792	8	Dreamcast CodeView records the older/lowered unsigned-char local; Complete retains the semantic bool local required by its retail data flow.
+game.obj	0xbbee4	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+game.obj	0xbbfcc	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+game.obj	0xbc2b8	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+game.obj	0xbc300	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+hero.obj	0xcab54	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+hero.obj	0xcad80	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+hero.obj	0xd5060	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+iconwdgt.obj	0xd96b8	a83b66e14665	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+iconwdgt.obj	0xd96b8	acf56eea17f1	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+iconwdgt.obj	0xd96b8	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+kb.obj	0xe1e58	a83b66e14665	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+kb.obj	0xe1e58	acf56eea17f1	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+kb.obj	0xe1e58	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+kb.obj	0xe29a8	40a23438897f	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+kb.obj	0xe29a8	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+remote.obj	0x11bb9c	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+remote.obj	0x11cddc	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+resourcedisplay.obj	0x120c54	51faced05fff	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+resourcemanager.obj	0x12173c	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+resourcemanager.obj	0x1221fc	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+sacrifice_window.obj	0x123f88	a83b66e14665	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+sacrifice_window.obj	0x123f88	acf56eea17f1	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+sacrifice_window.obj	0x123f88	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+sacrifice_window.obj	0x12416c	a83b66e14665	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+sacrifice_window.obj	0x12416c	acf56eea17f1	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+sacrifice_window.obj	0x12416c	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+sacrifice_window.obj	0x127598	a83b66e14665	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+sacrifice_window.obj	0x127598	acf56eea17f1	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+sacrifice_window.obj	0x127598	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+singleselectionwindow.obj	0x13ebc0	83dcc4265b83	8	Dreamcast CodeView records the older/lowered unsigned-char local; Complete retains the semantic bool local required by its retail data flow.
+singleselectionwindow.obj	0x13fd74	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+singleselectionwindow.obj	0x141410	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+singleselectionwindow.obj	0x14169c	7ac028e73b52	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+singleselectionwindow.obj	0x141a74	7ac028e73b52	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+singleselectionwindow.obj	0x1429e8	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+spellbookwindow.obj	0x14d290	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+town.obj	0x165d5c	51faced05fff	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+towngatewindow.obj	0x1690b0	5efb3e288d21	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+tradpost.obj	0x1895a8	eecebd66852a	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+tradpost.obj	0x18a550	eecebd66852a	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+university_window.obj	0x18e728	a83b66e14665	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+university_window.obj	0x18e728	acf56eea17f1	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+university_window.obj	0x18e728	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+victorylossconditions.obj	0x190244	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+victorylossconditions.obj	0x190340	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
+victorylossconditions.obj	0x19040c	c1649254e2e4	8	Dreamcast CodeView records the older/lowered unsigned-char return; Complete retains the semantic bool return required by its retail interface.
 victorylossconditions.obj	0x18fdc4	497d6befbe75	9	Complete retained symbol encodes int return; Dreamcast unsigned char is an older ABI.
+viewarmywindow.obj	0x190e78	cb5c1ae1e0c7	9	Dreamcast aliases the global traits as const&, while Complete needs a mutable value copy that is passed to the retail-proven hero adjustment helper.
 window.obj	0x197aec	c0cd1dc29cb9	10	Complete exact x86 body is the raw backward pointer loop; Dreamcast uses its platform STL reverse_iterator carrier.
 window.obj	0x197c08	241667ef5918	10	Complete exact body returns DoDialog's consumed int result; Dreamcast declares void.
 window.obj	0x197eb4	1c0f40a909d8	10	Complete exact handler passes the local to the bool& onWidgetDeselect interface; Dreamcast records unsigned char.

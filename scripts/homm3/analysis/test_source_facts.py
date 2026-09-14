@@ -31,7 +31,8 @@ class TypeFactsTest(unittest.TestCase):
 
     def test_string_defaults_preserve_custom_arguments_and_cv_layers(self):
         full = "std::basic_string<char, std::char_traits<char>, std::allocator<char> >"
-        for abbreviated in ("std::basic_string<char>",
+        for abbreviated in ("std::string",
+                            "std::basic_string<char>",
                             "std::basic_string<char, std::char_traits<char> >"):
             self.assertEqual(facts.type_differences(full, abbreviated), ([], []))
             self.assertEqual(facts.type_differences("Box<" + full + ">",
@@ -44,6 +45,9 @@ class TypeFactsTest(unittest.TestCase):
         self.assertEqual(facts.type_differences("const " + full + "&",
                                               "std::basic_string<char>*")[0],
                          ["qualifiers", "reference/pointer"])
+        self.assertEqual(
+            facts.type_differences("std::vector<long, std::allocator<long> >",
+                                   "std::vector<long>"), ([], []))
 
     def test_cv_layers_references_arrays_and_template_qualifiers(self):
         for a, b in (("const T &", "T const&"), ("const int [8][18]", "int const[8][18]"),

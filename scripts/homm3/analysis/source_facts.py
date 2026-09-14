@@ -190,6 +190,8 @@ def _base_type_key(text: str) -> str:
     allocators distinct, including in nested template arguments.
     """
     key = name_key(text).removeprefix("::")
+    if key == "std::string":
+        return "std::basicstring<char,std::chartraits<char>,std::allocator<char>>"
     head, opening, tail = key.partition("<")
     if not opening or not tail.endswith(">"):
         return key
@@ -213,6 +215,8 @@ def _base_type_key(text: str) -> str:
             arguments.append("std::chartraits<" + arguments[0] + ">")
         if len(arguments) == 2:
             arguments.append("std::allocator<" + arguments[0] + ">")
+    elif head == "std::vector" and len(arguments) == 1:
+        arguments.append("std::allocator<" + arguments[0] + ">")
     return head + "<" + ",".join(arguments) + ">"
 
 
