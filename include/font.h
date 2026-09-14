@@ -25,7 +25,11 @@ public:
     // constructor. Every name and offset below is the Dreamcast field
     // list verbatim; retail corroborates height@+5, baseyoffset@+6,
     // abc@+0x20 and Offset@+0xc20 by use.
-    struct TFontSpec {
+// Before normalization (type): font::TFontSpec.
+#ifndef FontSpec
+#define FontSpec TFontSpec
+#endif
+    struct FontSpec {
         // DC font::TFontSpec::myABC (LF_FIELDLIST 0x2372, size 12): the
         // Win32 ABC widths - `int abcA` (left side bearing, SIGNED: it is
         // the `field_0 < 0` leading-bearing test in DrawStringExecute),
@@ -59,7 +63,7 @@ public:
         // at font+0xc3c).
         unsigned long m_offset[256];
     };
-    SIZE(TFontSpec, 0x1020);
+    SIZE(FontSpec, 0x1020);
     // Glyph pixel encoding (byte-derived from DrawCharacter 0x4b51a0):
     // 0 draws nothing, SOLID takes the color slot, every other value
     // takes the shadow slot (palette.data[32]). Name is a bootstrap
@@ -82,7 +86,11 @@ public:
     // Dreamcast font::TColor, verbatim. Retail corroborates
     // CUSTOM_COLOR: DrawBoundedString's cursor path tests it with
     // `test ah,1` and clears it with `and ah,-2`.
-    enum TColor {
+// Before normalization (type): font::TColor.
+#ifndef Color
+#define Color TColor
+#endif
+    enum Color {
         LowestColor = 1,
         PRIMARY = 1,
         PRIMARY_HIGHLIGHT = 2,
@@ -103,14 +111,14 @@ public:
         CUSTOM_COLOR = 256
     };
     // DC LF_MEMBER `fs`, offset 28.
-    TFontSpec m_fs;
+    FontSpec m_fs;
 
 private:
     // DC LF_MEMBER `Palette`, offset 4156 = 0x103c, held BY VALUE - the
     // retail constructor 0x4b5070 runs TPalette16's default constructor
     // on this+0x103c as a member initializer (unwind state 1, funclet
     // 0x62b4d8 destroys exactly this subobject).
-    TPalette16 m_palette;
+    Palette16 m_palette;
     // DC LF_MEMBER `Data`.
     void* m_data;
 
@@ -120,13 +128,13 @@ public:
     // at 0x125c that the size query adds to it. DC has no such member -
     // its port left the resource size query on a different slot shape.
     int m_dataSize;
-    font(const char* name, const TFontSpec& fontspec, int dsize,
+    font(const char* name, const FontSpec& fontspec, int dsize,
          unsigned char* d);  // retail 0x4b5070
     virtual ~font();
     virtual unsigned int getSize() const;
-    void setPalette(const TPalette16& newPalette);
+    void setPalette(const Palette16& newPalette);
     void drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const;
-    void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, font::TColor colorScheme, unsigned justification, int cursorPos);
+    void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, font::Color colorScheme, unsigned justification, int cursorPos);
     int lineLength(const char* str, int boxWidth) const;
     int lineWidth(const char* text) const;
     int longestLineWidth(const char* str) const;
@@ -140,7 +148,7 @@ public:
     long getStringWidth(const char* arg) const;
 
 private:
-    void drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, font::TColor colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
+    void drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, font::Color colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
 
 public:
     // Retail 0x4b5b90, font.obj's tail. The `fs.abc[' ']` triple it reads
@@ -151,7 +159,7 @@ public:
                          std::vector<std::string>& result);
 private:
     // Original GetColor, font.cpp:56; ordinary member.
-    int getColor(font::TColor colorScheme, bool highlighted);
+    int getColor(font::Color colorScheme, bool highlighted);
 };
 
 // Retail .bss 0x698a08, a loaded `font*` that four bodies read (0x4514b1

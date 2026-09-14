@@ -26,7 +26,7 @@ DATA(0x0067f570) extern int g_unnamed67f570;
 DATA(0x006aa5f0) extern int g_unnamed6aa5f0;
 DATA(0x00699548) extern int g_unnamed699548;
 DATA(0x0069778c) extern int g_unnamed69778c;
-DATA(0x006994fc) extern townManager* g_townManager;
+DATA(0x006994fc) extern TownManager* g_townManager;
 DATA(0x00699500) extern executive* g_executive;
 
 // DC public ?included_buildings@town@@2PAY0CM@_JA; retail .bss
@@ -38,7 +38,7 @@ DATA(0x00699500) extern executive* g_executive;
 // Filled by initialize.cpp's create_included_masks; read by the
 // can_build/can_ever_build family (0x5c0d20..0x5c0f20).
 DATA(0x006a8bb8)
-__int64 town::s_includedBuildings[TOWN_TYPE_COUNT][TOWN_BUILDING_SLOTS];
+__int64 Town::s_includedBuildings[TOWN_TYPE_COUNT][TOWN_BUILDING_SLOTS];
 
 // The saved-game town name became a length-prefixed string at save
 // version 25; before it, thirteen fixed bytes.
@@ -63,7 +63,7 @@ const int g_townNameFixedLength = 13;
 // two locals' declaration order is byte-flat, measured.
 
 VA(0x005bcd60, 0x586)  // carcass promotion, dc 0x165628; anchor-callee armyGroup::load + LoadHeroId; callers game::Load and CCombatInitMsg::read
-int town::load(TAbstractFile* infile, int saveVersion)
+int Town::load(AbstractFile* infile, int saveVersion)
 {
     char charBuffer;
     unsigned char spellBuf[70];
@@ -177,7 +177,7 @@ int town::load(TAbstractFile* infile, int saveVersion)
 // char_buffer around its whole run. VC6 hands the recycled home to the
 // widest local that fits, and no declaration form observed here changes it.
 VA(0x005bd2f0, 0x402)  // carcass promotion, dc 0x165988; anchor-callee armyGroup::save; caller game::Save's town pool
-int town::save(TAbstractFile* outfile)
+int Town::save(AbstractFile* outfile)
 {
     char charBuffer;
     unsigned char spellBuf[70];
@@ -287,7 +287,7 @@ int town::save(TAbstractFile* outfile)
 }
 
 VA(0x005bd700, 0x47)  // dc 0x165d5c
-int town::getPortraitFrame(bool isSmall) const
+int Town::getPortraitFrame(bool isSmall) const
 {
     int frame;
     if (m_active & g_bitNumber[CASTLE_FORT_ID])
@@ -303,7 +303,7 @@ int town::getPortraitFrame(bool isSmall) const
 }
 
 VA(0x005bd750, 0x188)  // dc 0x165da4
-void town::setSummoningGenerator()
+void Town::setSummoningGenerator()
 {
     std::vector<int> generators;
     generator thisGenerator;
@@ -345,14 +345,14 @@ void town::setSummoningGenerator()
 
 // E:\gamedcs\town.cpp:779
 DC_ONLY(0x165da4, 0xFC)
-void town::setSummoningGenerator()
+void Town::setSummoningGenerator()
 {
     // @stub
 }
 
 // E:\gamedcs\town.cpp:798
 DC_ONLY(0x165ea0, 0x568)
-void town::applySpecialBuildingEffect(hero* townHero)
+void Town::applySpecialBuildingEffect(Hero* townHero)
 {
     // @stub
 }
@@ -360,7 +360,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
 #endif  // @carcass
 
 VA(0x005bd8e0, 0x551)  // dc 0x165ea0
-void town::applySpecialBuildingEffect(hero* townHero)
+void Town::applySpecialBuildingEffect(Hero* townHero)
 {
     if (m_type == TOWN_DUNGEON && m_manaVortexFull
         && hasBuilding(EXTRA_0_ID, 0)) {
@@ -437,7 +437,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
 }
 
 VA(0x005bde80, 0xD4)  // dc 0x166408
-town::town()
+Town::Town()
 {
     m_type = 0;
     m_pondAmount = 0;
@@ -452,7 +452,7 @@ town::town()
     m_mageLevel = 0;
     m_owner = -1;
     m_garrisonHeroId = -1;
-    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++)
+    for (int slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; slot++)
         m_garrison.m_armies[slot] = -1;
     m_summoningType = CREATURE_NONE;
     m_builtThisTurn = 0;
@@ -460,13 +460,13 @@ town::town()
 }
 
 VA(0x005bdf60, 0x76)  // dc 0x1664b0
-void town::initializeHordes()
+void Town::initializeHordes()
 {
     int creatureBase = 0;
     for (short townType = 0; townType < TOWN_TYPE_COUNT; townType++) {
         for (short entry = 0; entry < 4; entry += 2) {
             type_horde_effect* effect = &s_constHordeEffects[townType][entry];
-            TCreatureType creature = effect->m_creature;
+            CreatureType creature = effect->m_creature;
             type_horde_effect* upgrade = effect + 1;
             short slot;
             for (slot = 0; slot <= TOWN_DWELLING_COUNT; slot++) {
@@ -487,10 +487,10 @@ void town::initializeHordes()
 }
 
 VA(0x005bdfe0, 0x4E)  // dc 0x16654c
-int town::hasGarrison()
+int Town::hasGarrison()
 {
     if (m_visitingHeroId < 0) {
-        armyGroup* group;
+        ArmyGroup* group;
         if (m_garrisonHeroId < 0)
             group = &m_garrison;
         else
@@ -502,14 +502,14 @@ int town::hasGarrison()
 }
 
 VA(0x005be030, 0x1D3)  // dc 0x1665a0
-void town::giveSpells(hero* forceHero) const
+void Town::giveSpells(Hero* forceHero) const
 {
     if (!forceHero && m_visitingHeroId == -1 && m_garrisonHeroId == -1)
         return;
 
     int heroIndex = 0;
     while (heroIndex < (2 - (forceHero != 0))) {
-        hero* currentHero;
+        Hero* currentHero;
         if (forceHero) {
             currentHero = forceHero;
         } else {
@@ -526,7 +526,7 @@ void town::giveSpells(hero* forceHero) const
                 if (hasBuilding(MAGE_GUILD_ID, 1)) {
                     if (m_type == TOWN_CONFLUX
                         && (m_active & g_bitNumber[HOLY_GRAIL_ID])) {
-                        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+                        for (int spell = 0; spell < Hero::NUM_SPELLS; ++spell) {
                             if (!m_spells.test(spell)
                                 && g_spellTraits[spell].m_level
                                     < currentHero->m_skillLevel[
@@ -554,7 +554,7 @@ void town::giveSpells(hero* forceHero) const
 }
 
 VA(0x005be210, 0xC0)  // dc 0x166688
-void town::view(int alreadyFaded)
+void Town::view(int alreadyFaded)
 {
     int threshold = g_unnamed67f570 + 0x514;
     g_unnamed6aa5f0 = 1;
@@ -566,10 +566,10 @@ void town::view(int alreadyFaded)
     g_townManager->m_townToView = this;
     g_executive->callManager(g_townManager);
 
-    town* viewedTown = g_townManager->m_townToView;
+    Town* viewedTown = g_townManager->m_townToView;
     int heroId = viewedTown->m_visitingHeroId;
     if (heroId != -1) {
-        hero* visitingHero = g_game->getHero(heroId);
+        Hero* visitingHero = g_game->getHero(heroId);
         if (visitingHero->m_owner == g_unnamed69778c) {
             g_advManager->setHeroContext(visitingHero->m_id, 0, 0, 1);
             g_unnamed699548 = 0;
@@ -582,7 +582,7 @@ void town::view(int alreadyFaded)
 }
 
 VA(0x005be2d0, 0xB3)  // dc 0x166720
-void town::deallocate()
+void Town::deallocate()
 {
     playerData* player = &g_game->m_players[m_owner];
     int slot = -1;
@@ -602,15 +602,15 @@ void town::deallocate()
 }
 
 VA(0x005be390, 0xB7)  // dc 0x16682c
-void town::removeGarrisonHero()
+void Town::removeGarrisonHero()
 {
     if (m_garrisonHeroId < 0)
         return;
-    hero* garrisonHero = g_game->getHero(m_garrisonHeroId);
+    Hero* garrisonHero = g_game->getHero(m_garrisonHeroId);
     int player = m_owner;
     m_visitingHeroId = m_garrisonHeroId;
     m_garrisonHeroId = -1;
-    hero* placedHero = g_game->getHero(garrisonHero->m_id);
+    Hero* placedHero = g_game->getHero(garrisonHero->m_id);
     type_point point;
     point.m_x = m_mapX;
     point.m_y = m_mapY;
@@ -632,11 +632,11 @@ void town::removeGarrisonHero()
 // shared constructor closes this caller but contradicts netmsg.h:717-718 and
 // breaks exact playerData::add_garrison_hero, so that old 100% remains history.
 VA(0x005be450, 0x1AC)  // anchor-global, dc 0x166864
-void town::swapHeroes()
+void Town::swapHeroes()
 {
-    town* currentTown = this;
-    hero* garrisonHero = g_game->getHero(currentTown->m_garrisonHeroId);
-    hero* visitingHero = g_game->getHero(currentTown->m_visitingHeroId);
+    Town* currentTown = this;
+    Hero* garrisonHero = g_game->getHero(currentTown->m_garrisonHeroId);
+    Hero* visitingHero = g_game->getHero(currentTown->m_visitingHeroId);
 
     std::swap(currentTown->m_garrisonHeroId, currentTown->m_visitingHeroId);
 
@@ -661,7 +661,7 @@ void town::swapHeroes()
     }
 
     int player = currentTown->m_owner;
-    hero* placedHero = g_game->getHero(garrisonHero->m_id);
+    Hero* placedHero = g_game->getHero(garrisonHero->m_id);
     type_point point;
     point.m_x = currentTown->m_mapX;
     point.m_y = currentTown->m_mapY;
@@ -670,10 +670,10 @@ void town::swapHeroes()
 }
 
 VA(0x005be600, 0x32A)  // dc 0x166950
-void town::initializeSpells(const TownExtra* townSetup)
+void Town::initializeSpells(const TownExtra* townSetup)
 {
     std::bitset<70> prohibited;
-    for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+    for (int spell = 0; spell < Hero::NUM_SPELLS; ++spell) {
         // Complete builds this mask one bit at a time; retail 0x5be668
         // retains Dinkumware's set(position,bool), without a game adapter.
         prohibited.set(spell,
@@ -685,7 +685,7 @@ void town::initializeSpells(const TownExtra* townSetup)
              slot < g_mageGuildBaseSpellCounts[level - 1] + 1; ++slot) {
             int totalWeight = 0;
             int spell;
-            for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+            for (spell = 0; spell < Hero::NUM_SPELLS; ++spell) {
                 if (!prohibited[spell]
                     && g_spellTraits[spell].m_level == level) {
                     totalWeight +=
@@ -698,14 +698,14 @@ void town::initializeSpells(const TownExtra* townSetup)
                 }
             }
 
-            if (spell < hero::NUM_SPELLS)
+            if (spell < Hero::NUM_SPELLS)
                 continue;
             if (totalWeight == 0) {
                 m_mageGuildSpells[level - 1][slot] = -1;
                 continue;
             }
             int roll = random(1, totalWeight);
-            for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+            for (spell = 0; spell < Hero::NUM_SPELLS; ++spell) {
                 if (!prohibited[spell]
                     && g_spellTraits[spell].m_level == level) {
                     roll -= g_spellTraits[spell].m_townProbability[m_type];
@@ -740,7 +740,7 @@ void town::initializeSpells(const TownExtra* townSetup)
 }
 
 // E:\gamedcs\town.cpp:1206
-void town::setSpellsAvailable()
+void Town::setSpellsAvailable()
 {
     memset(m_mageGuildSpellCounts, 0, sizeof(m_mageGuildSpellCounts));
     for (int level = 1; level <= m_mageLevel; level++) {
@@ -756,7 +756,7 @@ void town::setSpellsAvailable()
 
 // E:\gamedcs\town.cpp:1226
 VA(0x005be930, 0x330)  // body (built-mask OR) + order-map, dc 0x166c08
-type_building_id town::createBuilding(type_building_id building)
+type_building_id Town::createBuilding(type_building_id building)
 {
     m_built |= g_bitNumber[building];
     m_built &= ~s_includedBuildings[m_type][building];
@@ -816,7 +816,7 @@ type_building_id town::createBuilding(type_building_id building)
 }
 
 VA(0x005bec60, 0x173)  // dc 0x166ed8
-void town::destroyExtraCapitol()
+void Town::destroyExtraCapitol()
 {
     if (isCapitol() && m_owner >= 0) {
         playerData* player = &g_game->m_players[m_owner];
@@ -825,7 +825,7 @@ void town::destroyExtraCapitol()
         for (int slot = 0; slot < townCount; ++slot) {
             const char& townId = player->m_townIds[slot];
             if (townId != m_id) {
-                town* otherTown = g_game->getTown(townId);
+                Town* otherTown = g_game->getTown(townId);
                 if (otherTown->isCapitol()) {
                     m_built &= ~g_bitNumber[HALL_CAPITOL_ID];
                     m_built |= g_bitNumber[HALL_CITY_ID];
@@ -849,7 +849,7 @@ void checkEndGame(int forceWin);
 
 // E:\gamedcs\town.cpp:1340
 VA(0x005bede0, 0x427)  // anchor-global, dc 0x166fc8
-type_building_id town::buildBuilding(int buildingId,
+type_building_id Town::buildBuilding(int buildingId,
                                      unsigned char setBuiltFlag,
                                      unsigned char applySpecialEffect)
 {
@@ -915,7 +915,7 @@ type_building_id town::buildBuilding(int buildingId,
 }
 
 VA(0x005bf210, 0x1A5)  // dc 0x1671cc
-void town::updateShipyard()
+void Town::updateShipyard()
 {
     if (m_active & g_bitNumber[DOCK_ID]) {
         type_point point;
@@ -941,7 +941,7 @@ void town::updateShipyard()
 }
 
 VA(0x005bf3c0, 0x11E)  // dc 0x167274
-unsigned char town::buyBuilding(type_building_id building)
+unsigned char Town::buyBuilding(type_building_id building)
 {
     if (m_owner < 0)
         return 0;
@@ -965,13 +965,13 @@ unsigned char town::buyBuilding(type_building_id building)
 }
 
 VA(0x005bf4e0, 0xC)  // dc 0x167378
-unsigned char town::canBuildDock() const
+unsigned char Town::canBuildDock() const
 {
     return m_dockSite != TOWN_DOCK_SITE_NONE;
 }
 
 VA(0x005bf4f0, 0x7A)  // dc 0x167388
-void town::calcNumLevelArchers(int* numArchers, int* archerLevel)
+void Town::calcNumLevelArchers(int* numArchers, int* archerLevel)
 {
     *archerLevel = 10;
     int level = 4;
@@ -983,7 +983,7 @@ void town::calcNumLevelArchers(int* numArchers, int* archerLevel)
 }
 
 VA(0x005bf570, 0x86)  // dc 0x1673dc
-long town::getCastleGrowthBonus(TCreatureType creature) const
+long Town::getCastleGrowthBonus(CreatureType creature) const
 {
     if (m_built & g_bitNumber[CASTLE_CASTLE_ID])
         return g_creatureTypeTraits[creature].m_growthRate;
@@ -993,7 +993,7 @@ long town::getCastleGrowthBonus(TCreatureType creature) const
 }
 
 VA(0x005bf600, 0xC6)  // dc 0x167458
-short town::getGoldIncome(unsigned char includeSilo) const
+short Town::getGoldIncome(unsigned char includeSilo) const
 {
     short income = 500;
     if (m_built & g_bitNumber[HALL_TOWN_ID])
@@ -1010,7 +1010,7 @@ short town::getGoldIncome(unsigned char includeSilo) const
 }
 
 VA(0x005bf6d0, 0x97)  // dc 0x1674d4
-int town::getHorde(long dwelling) const
+int Town::getHorde(long dwelling) const
 {
     if (!(m_active & g_bitNumber[DWELLING_0_ID + dwelling]))
         return MAX_BUILDING_TYPE;
@@ -1024,7 +1024,7 @@ int town::getHorde(long dwelling) const
 }
 
 VA(0x005bf770, 0x9E)  // dc 0x167544
-long town::getHordeBonus(long dwelling) const
+long Town::getHordeBonus(long dwelling) const
 {
     if (!(m_active & g_bitNumber[DWELLING_0_ID + dwelling]))
         return 0;
@@ -1039,7 +1039,7 @@ long town::getHordeBonus(long dwelling) const
 }
 
 VA(0x005bf810, 0xE2)
-long town::getAssembledLegionBonus(long dwelling)
+long Town::getAssembledLegionBonus(long dwelling)
 {
     long bonus = 0;
     if (m_owner >= 0 && g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
@@ -1058,12 +1058,12 @@ long town::getAssembledLegionBonus(long dwelling)
 }
 
 VA(0x005bf900, 0x258)  // dc 0x1675d4
-long town::getLegionBonus(long dwelling) const
+long Town::getLegionBonus(long dwelling) const
 {
     game* currentGame = g_game;
     int tier = dwelling % TOWN_DWELLING_COUNT + 1;
-    hero* garrisonHero = 0;
-    hero* visitingHero = 0;
+    Hero* garrisonHero = 0;
+    Hero* visitingHero = 0;
     int bonus = 0;
 
     if (m_garrisonHeroId >= 0)
@@ -1117,7 +1117,7 @@ long town::getLegionBonus(long dwelling) const
 }
 
 VA(0x005bfb60, 0x266)  // dc 0x167748
-short town::getGrowthRate(short dwelling) const
+short Town::getGrowthRate(short dwelling) const
 {
     long dwellingIndex = dwelling;
     if (!(m_active & g_bitNumber[DWELLING_0_ID + dwellingIndex]))
@@ -1126,7 +1126,7 @@ short town::getGrowthRate(short dwelling) const
         && (m_active & g_bitNumber[DWELLING_0_UPG_ID + dwellingIndex]))
         return 0;
 
-    TCreatureType creature = g_townDwellingCreatures[
+    CreatureType creature = g_townDwellingCreatures[
         m_type * TOWN_DWELLING_SLOTS + dwellingIndex];
     short growth = g_creatureTypeTraits[creature].m_growthRate;
     growth += getCastleGrowthBonus(creature);
@@ -1134,7 +1134,7 @@ short town::getGrowthRate(short dwelling) const
     if (m_owner >= 0) {
         long legionBonus = 0;
         if (g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
-            TCreatureType legionCreature = g_townDwellingCreatures[
+            CreatureType legionCreature = g_townDwellingCreatures[
                 m_type * TOWN_DWELLING_SLOTS + dwellingIndex];
             long legionGrowth =
                 g_creatureTypeTraits[legionCreature].m_growthRate;
@@ -1169,13 +1169,13 @@ short town::getGrowthRate(short dwelling) const
 }
 
 VA(0x005bfdd0, 0x74)  // dc 0x167848
-void town::increasePopulation(TCreatureType bonusCreature,
-                               TCreatureType alternateBonus, long bonusAmount)
+void Town::increasePopulation(CreatureType bonusCreature,
+                               CreatureType alternateBonus, long bonusAmount)
 {
     for (short dwelling = 0; dwelling < TOWN_DWELLING_SLOTS; dwelling++) {
         short growth = getGrowthRate(dwelling);
         if (growth > 0) {
-            TCreatureType creature =
+            CreatureType creature =
                 g_townDwellingCreatures[TOWN_DWELLING_SLOTS * m_type + dwelling];
             if (creature == bonusCreature || creature == alternateBonus)
                 growth += bonusAmount;
@@ -1187,7 +1187,7 @@ void town::increasePopulation(TCreatureType bonusCreature,
 }
 
 VA(0x005bfe50, 0x55)  // dc 0x167900
-void town::changeGeneratorBonus(TCreatureType creature, long change)
+void Town::changeGeneratorBonus(CreatureType creature, long change)
 {
     int slot;
     for (slot = 0; slot < TOWN_DWELLING_SLOTS; slot++) {
@@ -1209,9 +1209,9 @@ void extendedDialog(const char* text,
                      long x, long y, long timeout);
 const char* getBuildingName(int townType, int buildingId);
 
-void showBuildingRewards(const town* thisTown,
+void showBuildingRewards(const Town* thisTown,
                            std::vector<type_dialog_resource>* rewards);
-void showCreatureRewards(const town* thisTown,
+void showCreatureRewards(const Town* thisTown,
                            std::vector<type_dialog_resource>* rewards);
 
 // The reward dialog flushes in batches of eight rows (the extended
@@ -1242,7 +1242,7 @@ static const int g_rewardDialogBatch = 8;
 // member in the translation loop instead costs 90.8986 -> 89.1573; the cached
 // __int64 stands.
 VA(0x005bfeb0, 0x369)  // anchor-callgraph + arity (ret 4), dc 0x167c3c
-void town::giveEventReward(const TTownEvent* thisEvent)
+void Town::giveEventReward(const TownEvent* thisEvent)
 {
     __int64 mask = m_active;
     __int64 grantable = 0;
@@ -1309,7 +1309,7 @@ void town::giveEventReward(const TTownEvent* thisEvent)
 }
 
 VA(0x005c0220, 0x1DA)  // dc 0x167958
-void showBuildingRewards(const town* thisTown,
+void showBuildingRewards(const Town* thisTown,
                            std::vector<type_dialog_resource>* rewards)
 {
     std::string text;
@@ -1342,7 +1342,7 @@ void showBuildingRewards(const town* thisTown,
 // selects singular/plural by count, and drives the outer format by the first
 // reward's count.
 VA(0x005c0400, 0x26F)  // anchor-caller (give_event_reward), dc 0x167a8c
-void showCreatureRewards(const town* thisTown,
+void showCreatureRewards(const Town* thisTown,
                            std::vector<type_dialog_resource>* rewards)
 {
     std::string text;
@@ -1370,11 +1370,11 @@ void showCreatureRewards(const town* thisTown,
 // Forward declarations for the two bodies that follow their callers in
 // link order (check_shipyard_square's definition sits after
 // initialize_buildings at 0x5c0c90).
-void initializeBuildings(town* currentTown, const TownExtra* townSetup);
-unsigned char checkShipyardSquare(town* currentTown, long x, long y);
+void initializeBuildings(Town* currentTown, const TownExtra* townSetup);
+unsigned char checkShipyardSquare(Town* currentTown, long x, long y);
 
 VA(0x005c0670, 0x24E)  // dc 0x16842c
-void town::initialize(const TownExtra* townSetup)
+void Town::initialize(const TownExtra* townSetup)
 {
     m_type = townSetup->m_townType;
     m_owner = -1;
@@ -1382,7 +1382,7 @@ void town::initialize(const TownExtra* townSetup)
     g_game->claimTown(m_id, townSetup->m_playerOwner, 0, 0);
     if (townSetup->m_customArmies) {
 #pragma inline_depth(0)
-        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
+        for (int slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT;
              slot++) {
             (m_garrisonHeroId < 0 ? m_garrison
                                 : g_game->getHero(m_garrisonHeroId)->m_army)
@@ -1409,7 +1409,7 @@ void town::initialize(const TownExtra* townSetup)
         }
 #pragma inline_depth()
     } else {
-        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
+        for (int slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT;
              slot++) {
             getArmy().m_armies[slot] = -1;
             getArmy().m_numTroops[slot] = 0;
@@ -1438,7 +1438,7 @@ void town::initialize(const TownExtra* townSetup)
 }
 
 VA(0x005c08c0, 0x3CE)  // dc 0x167ff4
-void initializeBuildings(town* currentTown, const TownExtra* townSetup)
+void initializeBuildings(Town* currentTown, const TownExtra* townSetup)
 {
     int i;
     memset(currentTown->m_population, 0, sizeof(currentTown->m_population));
@@ -1447,7 +1447,7 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
     for (i = 0; i < MAX_BUILDING_TYPE; i++) {
         if (currentTown->m_built & g_bitNumber[i])
             currentTown->m_active |=
-                town::s_includedBuildings[currentTown->m_type][i];
+                Town::s_includedBuildings[currentTown->m_type][i];
     }
     currentTown->createBuilding(HALL_VILLAGE_ID);
 
@@ -1482,7 +1482,7 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
         __int64 toBuild = 0;
         for (i = 0; i < MAX_BUILDING_TYPE; i++) {
             if (townSetup->m_buildingBuiltMask & g_bitNumber[i])
-                toBuild |= town::s_includedBuildings[currentTown->m_type][
+                toBuild |= Town::s_includedBuildings[currentTown->m_type][
                         g_eventBuildingIds[currentTown->m_type][i]]
                     | g_bitNumber[g_eventBuildingIds[currentTown->m_type][i]];
         }
@@ -1521,7 +1521,7 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
 // its restoration and has no independent CodeView helper boundary.
 
 VA(0x005c0c90, 0x89)  // dc 0x167f68
-unsigned char checkShipyardSquare(town* currentTown, long x, long y)
+unsigned char checkShipyardSquare(Town* currentTown, long x, long y)
 {
     if (x >= 0) {
         if (x < g_mapWidth) {
@@ -1554,14 +1554,14 @@ unsigned char checkShipyardSquare(town* currentTown, long x, long y)
 #if 0  // @carcass
 DC_ONLY(0x168330, 0xFC)
 // Before normalization (function): initialize_army.
-void initializeArmy(town* current_town, const TownExtra* town_setup)
+void initializeArmy(Town* current_town, const TownExtra* town_setup)
 {
     // @stub
 }
 #endif  // @carcass
 
 // E:\gamedcs\town.cpp:2084
-void town::updateFullBuildingMask()
+void Town::updateFullBuildingMask()
 {
     m_active = m_built;
     for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
@@ -1572,7 +1572,7 @@ void town::updateFullBuildingMask()
 
 // E:\gamedcs\town.cpp:2097
 VA(0x005c0d20, 0x13D)  // anchor-global, dc 0x168504
-unsigned char town::canBuild(short buildingId) const
+unsigned char Town::canBuild(short buildingId) const
 {
     if (!g_game->m_towns[m_id].m_builtThisTurn) {
         int legalId = buildingId;
@@ -1597,7 +1597,7 @@ unsigned char town::canBuild(short buildingId) const
 VA(0x005c0e60, 0xC0)  // dc 0x16865c
 // Complete reads the full dword parameter and its exact symbol encodes int;
 // Dreamcast's older interface records short building_id.
-unsigned char town::canEverBuild(int buildingId) const
+unsigned char Town::canEverBuild(int buildingId) const
 {
     if (g_bitNumber[buildingId] & m_available) {
         if (buildingId == DOCK_ID)
@@ -1613,7 +1613,7 @@ unsigned char town::canEverBuild(int buildingId) const
 }
 
 VA(0x005c0f20, 0x156)  // dc 0x168714
-__int64 town::getBuildableMask() const
+__int64 Town::getBuildableMask() const
 {
     __int64 activeMask = getBuildingMask();
     __int64 mask = 0;
@@ -1637,7 +1637,7 @@ __int64 town::getBuildableMask() const
 }
 
 VA(0x005c1080, 0x64)  // dc 0x1688a0
-int* town::getBuildCostArray(type_building_id building) const
+int* Town::getBuildCostArray(type_building_id building) const
 {
     if (building < SPECIAL_BUILDING_ID)
         return s_neutralBuildingCosts[building];
@@ -1647,14 +1647,14 @@ int* town::getBuildCostArray(type_building_id building) const
 }
 
 VA(0x005c10f0, 0x8A)  // dc 0x1688f0
-void town::getBuildCost(type_building_id building, int* resources) const
+void Town::getBuildCost(type_building_id building, int* resources) const
 {
     memcpy(resources, getBuildCostArray(building),
            NUM_RESOURCES * sizeof(int));
 }
 
 VA(0x005c1180, 0xA9)  // dc 0x168910
-short town::getBuildCost(type_building_id building, EGameResource* types,
+short Town::getBuildCost(type_building_id building, EGameResource* types,
                          int* amounts) const
 {
     short count = 0;
@@ -1670,7 +1670,7 @@ short town::getBuildCost(type_building_id building, EGameResource* types,
 }
 
 VA(0x005c1230, 0x46)  // dc 0x168970
-type_horde_effect* town::getHordeEffect(type_building_id building) const
+type_horde_effect* Town::getHordeEffect(type_building_id building) const
 {
     short slot;
     for (slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
@@ -1683,13 +1683,13 @@ type_horde_effect* town::getHordeEffect(type_building_id building) const
 }
 
 VA(0x005c1280, 0x15)  // dc 0x1689dc
-int* town::getSiloIncome() const
+int* Town::getSiloIncome() const
 {
     return g_siloIncome[m_type];
 }
 
 VA(0x005c12a0, 0x39)  // dc 0x1689ec
-unsigned char town::isLegalBuilding(type_building_id building) const
+unsigned char Town::isLegalBuilding(type_building_id building) const
 {
     return (g_bitNumber[building] & m_available) != 0;
 }
@@ -1699,7 +1699,7 @@ unsigned char town::isLegalBuilding(type_building_id building) const
 // E:\gamedcs\town.cpp:2291
 DC_ONLY(0x168a10, 0x3E)
 // Before normalization (function): town::set_legal_buildings.
-void town::setLegalBuildings(__int64 disabled_buildings)
+void Town::setLegalBuildings(__int64 disabled_buildings)
 {
     // @stub
 }
@@ -1707,7 +1707,7 @@ void town::setLegalBuildings(__int64 disabled_buildings)
 // E:\gamedcs\town.cpp:2300
 DC_ONLY(0x168a50, 0x48)
 // Before normalization (function): town::is_disabled.
-unsigned char town::isDisabled(type_building_id building)
+unsigned char Town::isDisabled(type_building_id building)
 {
     // @stub
 }
@@ -1715,7 +1715,7 @@ unsigned char town::isDisabled(type_building_id building)
 #endif  // @carcass
 
 VA(0x005c12e0, 0xC9)  // dc 0x168a98
-void town::hire(hero* newHero, long playerId)
+void Town::hire(Hero* newHero, long playerId)
 {
     playerData* player = &g_game->m_players[playerId];
     int recruitSlot;
@@ -1726,7 +1726,7 @@ void town::hire(hero* newHero, long playerId)
     }
 
     player->m_resources[GOLD] -= g_heroGoldCost;
-    hero* hiredHero = g_game->getHero(heroId);
+    Hero* hiredHero = g_game->getHero(heroId);
     type_point point;
     point.m_x = m_mapX;
     point.m_y = m_mapY;
@@ -1737,9 +1737,9 @@ void town::hire(hero* newHero, long playerId)
 }
 
 VA(0x005c13b0, 0x83)  // dc 0x168b54
-void town::placeInMap(int heroId, long playerId, unsigned char resetFlags)
+void Town::placeInMap(int heroId, long playerId, unsigned char resetFlags)
 {
-    hero* newHero = g_game->getHero(heroId);
+    Hero* newHero = g_game->getHero(heroId);
     type_point point;
     point.m_x = m_mapX;
     point.m_y = m_mapY;
@@ -1748,19 +1748,19 @@ void town::placeInMap(int heroId, long playerId, unsigned char resetFlags)
 }
 
 VA(0x005c1440, 0xC)  // dc 0x168ba0
-TTerrainType town::getNativeTerrain() const
+TerrainType Town::getNativeTerrain() const
 {
     return g_nativeTerrains[m_type];
 }
 
 VA(0x005c1450, 0xC)  // dc 0x168bb8
-const char* town::getTypeName() const
+const char* Town::getTypeName() const
 {
     return g_unnamed6a74f4[m_type];
 }
 
 VA(0x005c1460, 0x38)  // dc 0x168bf8
-const armyGroup& town::getArmy() const
+const ArmyGroup& Town::getArmy() const
 {
     if (m_garrisonHeroId < 0)
         return m_garrison;
@@ -1768,7 +1768,7 @@ const armyGroup& town::getArmy() const
 }
 
 VA(0x005c14a0, 0x19)  // dc 0x168c20
-int town::upgradedDwellingID(int id)
+int Town::upgradedDwellingID(int id)
 {
     if (id == HORDE_ID)
         return HORDE_UPG_ID;
@@ -1800,16 +1800,16 @@ static void initializeBuildingCosts(int* costs,
 // (0x6a80f8 + 17*7*4 = 0x6a82dc, + 9*9*7*4 = 0x6a8bb8 = included_buildings,
 // + 9*44*8 = 0x6a9818, + 9*14*7*4 = 0x6aa5e0).
 DATA(0x006a80f8)
-int town::s_neutralBuildingCosts[SPECIAL_BUILDING_ID][NUM_RESOURCES];
+int Town::s_neutralBuildingCosts[SPECIAL_BUILDING_ID][NUM_RESOURCES];
 DATA(0x006a82dc)
-int town::s_specialBuildingCosts[9][9][NUM_RESOURCES];
+int Town::s_specialBuildingCosts[9][9][NUM_RESOURCES];
 DATA(0x006a9818)
-int town::s_dwellingCosts[9][14][NUM_RESOURCES];
+int Town::s_dwellingCosts[9][14][NUM_RESOURCES];
 
 VA(0x005c14c0, 0x1F6)
-unsigned char town::initializeBuildingCostsTables()
+unsigned char Town::initializeBuildingCostsTables()
 {
-    TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
+    SpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00688fb4, townBuildingSpreadsheetName, "building.txt"));
     if (!sheet)
         return 0;
@@ -1849,14 +1849,14 @@ unsigned char town::initializeBuildingCostsTables()
 // E:\gamedcs\Town.h:331
 DC_ONLY(0x168dfc, 0x28)
 // Before normalization (function): town::set_mask.
-void town::setMask(__int64 new_mask)
+void Town::setMask(__int64 new_mask)
 {
     // @stub
 }
 
 // E:\gamedcs\TownMgr.h:686
 DC_ONLY(0x168e24, 0x6)
-void townManager::setTown(town* m_townToView)
+void TownManager::setTown(Town* m_townToView)
 {
     // @stub
 }

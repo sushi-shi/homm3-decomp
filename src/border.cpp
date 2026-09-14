@@ -322,7 +322,7 @@ int bitmapBorder::main(message& msg)
         case WIDGET_SET_PALETTE: {
             const char* paletteName = msg.m_extraText;
             if (m_image) {
-                TPalette16* newPalette =
+                Palette16* newPalette =
                     ResourceManager::getPalette(paletteName);
                 if (newPalette) {
                     m_image->setPalette(newPalette->m_data);

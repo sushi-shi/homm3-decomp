@@ -37,13 +37,13 @@ type_event_record::type_event_record()
 VA_COMPGEN(0x0049a5b0, 0x23, SCALAR_DELETING_DTOR, type_event_record)
 
 VA(0x0049a5e0, 0x1D)  // dc 0x8c678
-unsigned char type_event_record::load(TAbstractFile* infile, int version)
+unsigned char type_event_record::load(AbstractFile* infile, int version)
 {
     return infile->read(&m_playerId, 1) == 1;
 }
 
 VA(0x0049a600, 0x1D)  // dc 0x8c698
-unsigned char type_event_record::save(TAbstractFile* outfile)
+unsigned char type_event_record::save(AbstractFile* outfile)
 {
     return outfile->write(&m_playerId, 1) == 1;
 }
@@ -85,7 +85,7 @@ void type_event_record::undo()
 // record_teleport. Dreamcast gives seven ordered source rows and proves that
 // line 100 obtains source through type_obscuring_object::get_location; retail
 // corroborates the same packed x/y/z loads at both inline sites.
-inline type_record_move_hero::type_record_move_hero(hero* currentHero,
+inline type_record_move_hero::type_record_move_hero(Hero* currentHero,
                                                     char direction,
                                                     type_point destination)
 {
@@ -128,7 +128,7 @@ type_event_record_type type_record_move_hero::getType() const
 }
 
 VA(0x0049a690, 0xB1)  // dc 0x8c7ec
-unsigned char type_record_move_hero::load(TAbstractFile* infile, int version)
+unsigned char type_record_move_hero::load(AbstractFile* infile, int version)
 {
     if (infile->read(&m_playerId, 1) != 1)
         return 0;
@@ -145,7 +145,7 @@ unsigned char type_record_move_hero::load(TAbstractFile* infile, int version)
 }
 
 VA(0x0049a750, 0x63)  // dc 0x8c8bc
-unsigned char type_record_move_hero::save(TAbstractFile* outfile)
+unsigned char type_record_move_hero::save(AbstractFile* outfile)
 {
     int heroId = m_currentHero->m_id;
     outfile->write(&m_playerId, 1);
@@ -200,7 +200,7 @@ void type_record_move_hero::undo()
 // NO RETAIL BODY: the complete construction is expanded into record_teleport.
 // Dreamcast line 204 proves this remains a derived-to-base delegation rather
 // than a flattened duplicate of type_record_move_hero's assignments.
-inline type_record_teleport::type_record_teleport(hero* currentHero,
+inline type_record_teleport::type_record_teleport(Hero* currentHero,
                                                   type_point destination)
     : type_record_move_hero(currentHero, currentHero->m_facing, destination)
 {
@@ -273,7 +273,7 @@ type_event_record* type_record_claim_mine::create()
 }
 
 VA(0x0049aa70, 0x71)  // dc 0x8cbb4
-unsigned char type_record_claim_mine::load(TAbstractFile* infile, int version)
+unsigned char type_record_claim_mine::load(AbstractFile* infile, int version)
 {
     if (infile->read(&m_playerId, 1) != 1)
         return 0;
@@ -286,7 +286,7 @@ unsigned char type_record_claim_mine::load(TAbstractFile* infile, int version)
 }
 
 VA(0x0049aaf0, 0x4A)  // dc 0x8cc1c
-unsigned char type_record_claim_mine::save(TAbstractFile* outfile)
+unsigned char type_record_claim_mine::save(AbstractFile* outfile)
 {
     outfile->write(&m_playerId, 1);
     outfile->write(&m_id, sizeof(m_id));
@@ -366,7 +366,7 @@ void type_record_claim_town::replay(unsigned char draw)
 {
     g_game->m_towns[m_id].m_owner = m_newOwner;
     if (draw) {
-        town& claimed = g_game->m_towns[m_id];
+        Town& claimed = g_game->m_towns[m_id];
         if (getMapExtra(claimed.m_mapX, claimed.m_mapY, claimed.m_mapZ)
             & g_mapVisibilityBit) {
             g_advManager->completeDraw(0);
@@ -419,7 +419,7 @@ type_event_record_type type_record_hide_boat::getType() const
 }
 
 VA(0x0049ad00, 0xE7)  // dc 0x8cedc
-unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
+unsigned char type_record_hide_boat::load(AbstractFile* infile, int version)
 {
     if (infile->read(&m_playerId, 1) != 1)
         return 0;
@@ -454,7 +454,7 @@ unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
 }
 
 VA(0x0049adf0, 0x8A)  // dc 0x8cf2c
-unsigned char type_record_hide_boat::save(TAbstractFile* outfile)
+unsigned char type_record_hide_boat::save(AbstractFile* outfile)
 {
     outfile->write(&m_playerId, 1);
     if (outfile->write(&m_currentBoat->m_id, 1) != 1)
@@ -534,7 +534,7 @@ type_event_record_type type_record_show_boat::getType() const
 }
 
 VA(0x0049af40, 0x51)  // dc 0x8d070
-unsigned char type_record_show_boat::load(TAbstractFile* infile, int version)
+unsigned char type_record_show_boat::load(AbstractFile* infile, int version)
 {
     if (!type_record_hide_boat::load(infile, version))
         return 0;
@@ -546,7 +546,7 @@ unsigned char type_record_show_boat::load(TAbstractFile* infile, int version)
 }
 
 VA(0x0049afa0, 0x9F)  // dc 0x8d110
-unsigned char type_record_show_boat::save(TAbstractFile* outfile)
+unsigned char type_record_show_boat::save(AbstractFile* outfile)
 {
     type_record_hide_boat::save(outfile);
     outfile->write(&m_location, sizeof(m_location));
@@ -622,7 +622,7 @@ type_event_record_type type_record_erase::getType() const
 }
 
 VA(0x0049b190, 0x8B)  // dc 0x8d2bc
-unsigned char type_record_erase::load(TAbstractFile* infile, int version)
+unsigned char type_record_erase::load(AbstractFile* infile, int version)
 {
     if (infile->read(&m_playerId, 1) != 1)
         return 0;
@@ -637,7 +637,7 @@ unsigned char type_record_erase::load(TAbstractFile* infile, int version)
 }
 
 VA(0x0049b220, 0x57)  // dc 0x8d338
-unsigned char type_record_erase::save(TAbstractFile* outfile)
+unsigned char type_record_erase::save(AbstractFile* outfile)
 {
     outfile->write(&m_playerId, 1);
     outfile->write(&m_location, sizeof(m_location));
@@ -673,7 +673,7 @@ void type_record_erase::undo()
 
 // E:\gamedcs\event_record.cpp:628
 DC_ONLY(0x8d4b0, 0x50)
-void type_record_hide_hero::type_record_hide_hero(hero* _hero, char _owner)
+void type_record_hide_hero::type_record_hide_hero(Hero* _hero, char _owner)
 {
     // @stub
 }
@@ -694,7 +694,7 @@ type_event_record_type type_record_hide_hero::getType()
 
 #endif  // @carcass
 
-inline type_record_hide_hero::type_record_hide_hero(hero* who, char newOwner,
+inline type_record_hide_hero::type_record_hide_hero(Hero* who, char newOwner,
                                                     unsigned char townGarrison)
 {
     // DC preserves this helper boundary; the two retail inline expansions
@@ -713,7 +713,7 @@ type_event_record* type_record_hide_hero::create()
 }
 
 VA(0x0049b430, 0xC8)  // dc 0x8d52c
-unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
+unsigned char type_record_hide_hero::load(AbstractFile* infile, int version)
 {
     if (infile->read(&m_playerId, 1) != 1)
         return 0;
@@ -735,7 +735,7 @@ unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
 }
 
 VA(0x0049b500, 0x61)  // dc 0x8d5a0
-unsigned char type_record_hide_hero::save(TAbstractFile* outfile)
+unsigned char type_record_hide_hero::save(AbstractFile* outfile)
 {
     outfile->write(&m_playerId, 1);
     outfile->write(&m_currentHero->m_id, sizeof(m_currentHero->m_id));
@@ -785,7 +785,7 @@ void type_record_hide_hero::undo()
 
 // E:\gamedcs\event_record.cpp:725
 DC_ONLY(0x8d708, 0xB6)
-void type_record_show_hero::type_record_show_hero(hero* _hero, char _owner, type_point _location, unsigned char _is_boat)
+void type_record_show_hero::type_record_show_hero(Hero* _hero, char _owner, type_point _location, unsigned char _is_boat)
 {
     // @stub
 }
@@ -806,7 +806,7 @@ type_event_record_type type_record_show_hero::getType()
 
 #endif  // @carcass
 
-inline type_record_show_hero::type_record_show_hero(hero* who, char newOwner,
+inline type_record_show_hero::type_record_show_hero(Hero* who, char newOwner,
                                                     type_point location,
                                                     unsigned char onBoat)
     : type_record_hide_hero(who, newOwner, 0)
@@ -825,7 +825,7 @@ type_event_record* type_record_show_hero::create()
 }
 
 VA(0x0049b6d0, 0x85)  // dc 0x8d7ec
-unsigned char type_record_show_hero::load(TAbstractFile* infile, int version)
+unsigned char type_record_show_hero::load(AbstractFile* infile, int version)
 {
     if (!type_record_hide_hero::load(infile, version))
         return 0;
@@ -840,7 +840,7 @@ unsigned char type_record_show_hero::load(TAbstractFile* infile, int version)
 }
 
 VA(0x0049b760, 0x95)  // dc 0x8d860
-unsigned char type_record_show_hero::save(TAbstractFile* outfile)
+unsigned char type_record_show_hero::save(AbstractFile* outfile)
 {
     type_record_hide_hero::save(outfile);
     outfile->write(&m_location, sizeof(m_location));
@@ -923,7 +923,7 @@ type_event_record_type type_record_player_death::getType() const
 }
 
 VA(0x0049ba40, 0x3D)  // dc 0x8daec
-unsigned char type_record_player_death::load(TAbstractFile* infile, int version)
+unsigned char type_record_player_death::load(AbstractFile* infile, int version)
 {
     if (infile->read(&m_playerId, 1) != 1)
         return 0;
@@ -932,7 +932,7 @@ unsigned char type_record_player_death::load(TAbstractFile* infile, int version)
 }
 
 VA(0x0049ba80, 0x30)  // dc 0x8db2c
-unsigned char type_record_player_death::save(TAbstractFile* outfile)
+unsigned char type_record_player_death::save(AbstractFile* outfile)
 {
     outfile->write(&m_playerId, 1);
     unsigned char ok = outfile->write(&m_extra, 1) == 1;
@@ -987,7 +987,7 @@ type_event_record_type type_record_shroud::getType() const
     return RECORD_SHROUD;
 }
 VA(0x0049bc90, 0x151)  // dc 0x8dcd8
-unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
+unsigned char type_record_shroud::load(AbstractFile* infile, int version)
 {
     if (infile->read(&m_playerId, 1) != 1)
         return 0;
@@ -1009,7 +1009,7 @@ unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
 }
 
 VA(0x0049bdf0, 0x66)  // dc 0x8dd88
-unsigned char type_record_shroud::save(TAbstractFile* outfile)
+unsigned char type_record_shroud::save(AbstractFile* outfile)
 {
     outfile->write(&m_playerId, 1);
     short count = m_changes.size();
@@ -1108,7 +1108,7 @@ void game::recordHideBoat(boat* currentBoat, unsigned char occupied,
 }
 
 VA(0x0049c720, 0x1DD)  // dc 0x8e148
-void game::recordHideHero(hero* who, char newOwner,
+void game::recordHideHero(Hero* who, char newOwner,
                             unsigned char townGarrison)
 {
     m_eventRecords.push_back(new type_record_hide_hero(who, newOwner,
@@ -1122,7 +1122,7 @@ void game::recordShowBoat(boat* currentBoat, type_point point)
 }
 
 VA(0x0049cb20, 0x226)  // dc 0x8e1d0
-void game::recordShowHero(hero* who, signed char player, type_point point,
+void game::recordShowHero(Hero* who, signed char player, type_point point,
                             unsigned char reset)
 {
     m_eventRecords.push_back(new type_record_show_hero(who, player, point,
@@ -1130,7 +1130,7 @@ void game::recordShowHero(hero* who, signed char player, type_point point,
 }
 
 VA(0x0049cd50, 0x1FA)  // dc 0x8e270
-void game::recordMove(hero* who, int direction, type_point destination)
+void game::recordMove(Hero* who, int direction, type_point destination)
 {
     m_eventRecords.push_back(new type_record_move_hero(who, direction,
                                                      destination));
@@ -1154,7 +1154,7 @@ void game::recordPlayerDeath(char player_id)
 #endif  // @carcass
 
 VA(0x0049cf50, 0x20B)  // dc 0x8e2f8
-void game::recordTeleport(hero* who, type_point destination)
+void game::recordTeleport(Hero* who, type_point destination)
 {
     m_eventRecords.push_back(new type_record_teleport(who, destination));
 }
@@ -1308,8 +1308,8 @@ void game::playRecordedEvents()
     int savedPlayer = g_netLocalGamePos;
     playerData* actingPlayer = g_currentPlayer;
 
-    town* currTown;
-    hero* currHero = g_game->getCurrHero();
+    Town* currTown;
+    Hero* currHero = g_game->getCurrHero();
 
     g_completeDrawMessageBypass = 1;
 
@@ -2228,7 +2228,7 @@ type_event_record* (*g_recordCreators[12])() = {
 };
 
 VA(0x0049dac0, 0x19C)  // dc 0x8ead0
-unsigned char game::loadRecordedEvents(TAbstractFile* infile, int version)
+unsigned char game::loadRecordedEvents(AbstractFile* infile, int version)
 {
     long count;
     if (infile->read(&count, sizeof(count)) != sizeof(count))
@@ -2253,7 +2253,7 @@ unsigned char game::loadRecordedEvents(TAbstractFile* infile, int version)
 }
 
 VA(0x0049dc60, 0x8C)  // dc 0x8ebc4
-unsigned char game::saveRecordedEvents(TAbstractFile* outfile)
+unsigned char game::saveRecordedEvents(AbstractFile* outfile)
 {
     long count = m_eventRecords.size();
     outfile->write(&count, 4);

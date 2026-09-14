@@ -58,7 +58,7 @@ void type_text_slider::close()
 VA(0x005B9FB0, 0x2FF)
 type_text_scroller::type_text_scroller(const char* text, int x, int y,
                                        int w, int h, const char* fontName,
-                                       font::TColor color,
+                                       font::Color color,
                                        slider::EGraphics graphics)
     : widget(x, y, w, h, -1, 1), m_fontFilename(fontName)
 {

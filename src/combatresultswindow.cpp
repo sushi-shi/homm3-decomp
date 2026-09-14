@@ -23,7 +23,7 @@
 
 // Source-private in the Dreamcast compiland. Retail's destructor is the only
 // body in this admitted subset that touches the active-window slot.
-DATA(0x00694fbc) static TCombatResultsWindow* g_combatResultsWindow;
+DATA(0x00694fbc) static CombatResultsWindow* g_combatResultsWindow;
 
 #ifdef min
 #undef min
@@ -116,20 +116,20 @@ DATA(0x00694fbc) static TCombatResultsWindow* g_combatResultsWindow;
 // ??0TCombatResultsWindow@@QAA@PBVhero@@0HH_NH@Z. The formal T_UCHAR
 // record is a lowered storage type; retail also consumes the flag as a byte.
 VA(0x004702d0, 0x176D)  // CPResult.pcx + vtable/global stores, dc 0x68364
-TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
-    const hero* defender, int mySide, int winningSide,
+CombatResultsWindow::CombatResultsWindow(const Hero* attacker,
+    const Hero* defender, int mySide, int winningSide,
     bool isSiege, int experience)
     : heroWindow(165, 19, 470, 561, 0x10)
 {
     g_combatResultsWindow = this;
 
     long amount;
-    TCreatureType type;
+    CreatureType type;
     int deadArmyTypes[2][20];
     int deadArmyNumTroops[2][20];
 
     // The hero whose result the window narrates.
-    const hero* const myHero = mySide == 0 ? attacker : defender;
+    const Hero* const myHero = mySide == 0 ? attacker : defender;
 
     int ttlDeadArmies[2];
     char text[100];
@@ -163,7 +163,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         // in the plural as soon as more than one stack is alive. The war
         // machine (0x95) never counts.
         amount = 0;
-        type = TCreatureType(0);
+        type = CreatureType(0);
         int numMons = 0;
         for (int slot = 0; slot < 20; slot++) {
             army& stack = g_combatManager->m_armies[0][slot];
@@ -173,7 +173,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
                 int value = stack.m_monInfo.m_aiValue;
                 if (value > amount) {
                     amount = value;
-                    type = TCreatureType(slot);
+                    type = CreatureType(slot);
                 }
             }
         }
@@ -203,7 +203,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             g_heroTraits[defender->m_portrait].m_largePortraitName, 0x800));
     } else {
         amount = 0;
-        type = TCreatureType(0);
+        type = CreatureType(0);
         int numMons = 0;
         for (int slot = 0; slot < 20; slot++) {
             army& stack = g_combatManager->m_armies[1][slot];
@@ -213,7 +213,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
                 int value = stack.m_monInfo.m_aiValue;
                 if (value > amount) {
                     amount = value;
-                    type = TCreatureType(slot);
+                    type = CreatureType(slot);
                 }
             }
         }
@@ -393,7 +393,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
 VA_COMPGEN(0x00471a40, 0x21, SCALAR_DELETING_DTOR, TCombatResultsWindow)
 
 VA(0x00471a70, 0x75)  // dc 0x69198
-TCombatResultsWindow::~TCombatResultsWindow()
+CombatResultsWindow::~CombatResultsWindow()
 {
     g_combatResultsWindow = 0;
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -403,7 +403,7 @@ TCombatResultsWindow::~TCombatResultsWindow()
 }
 
 VA(0x00471af0, 0x54)  // dc 0x69200
-int TCombatResultsWindow::open(int newPriority, unsigned char update)
+int CombatResultsWindow::open(int newPriority, unsigned char update)
 {
     int result = heroWindow::open(newPriority, 0);
     drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
@@ -415,14 +415,14 @@ int TCombatResultsWindow::open(int newPriority, unsigned char update)
 }
 
 VA(0x00471b50, 0x1B)  // dc 0x69244
-void TCombatResultsWindow::close(unsigned char update)
+void CombatResultsWindow::close(unsigned char update)
 {
     videoClose();
     heroWindow::close(update);
 }
 
 VA(0x00471b70, 0x14)  // dc 0x69268
-void TCombatResultsWindow::doModal()
+void CombatResultsWindow::doModal()
 {
     g_windowManager->doDialog(this, combatResultsWindowHandler, 0);
 }

@@ -4,7 +4,7 @@
 
 #include "armygrp.h"
 
-TCreatureType getElementalType(SpellID spell);
+CreatureType getElementalType(SpellID spell);
 
 // DrawBolt's Chain Lightning arm is the one bolt colour shaded
 // PROCEDURALLY instead of from a span table: it steps red and green

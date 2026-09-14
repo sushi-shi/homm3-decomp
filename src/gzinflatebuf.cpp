@@ -34,9 +34,12 @@
 #include "exceptions.h"
 #include "gzinflatebuf.h"
 
-class TGzInflateBuf::TDataError : public std::runtime_error {
+#ifndef GzInflateBuf
+#define GzInflateBuf TGzInflateBuf
+#endif
+class GzInflateBuf::DataError : public std::runtime_error {
 public:
-    TDataError();
+    DataError();
 };
 
 // Retail .rdata 0x63e6fc, immediately ahead of this unit's two vftables.
@@ -48,7 +51,7 @@ DATA(0x0063e6fc) static int g_gzMagic[2] = {0x1f, 0x8b};
 // 0x4d5fd0: refill next_in from the source streambuf when it is empty and
 // hand back the next byte, or -1 at end of source.
 VA(0x004d5fd0, 0x74)
-int TGzInflateBuf::getByte()
+int GzInflateBuf::getByte()
 {
     if (m_stream.avail_in == 0) {
         if (m_sourceEof)
@@ -99,7 +102,7 @@ int TGzInflateBuf::getByte()
 //    rejected for the inline structure it was measured in.
 
 VA(0x004d6050, 0x58A)  // anchor-vtable ??_7TGzInflateBuf@@6B@ + anchor-import @inflateInit2_@16, retail-only
-TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
+GzInflateBuf::GzInflateBuf(std::streambuf* newSource)
     : m_source(newSource),
       m_buffer(0),
       m_outBuffer(0),
@@ -110,7 +113,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
 {
     m_buffer = new unsigned char[0x400];
     if (m_buffer == 0)
-        throw TAllocationFailure();
+        throw AllocationFailure();
     std::auto_ptr<unsigned char> ownedBuffer(m_buffer);
     m_outBuffer = m_buffer + 0x200;
     setg(static_cast<char*>(static_cast<void*>(m_outBuffer)),
@@ -149,10 +152,10 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
     if (m_ok) {
         int method = readByte();
         if (method != Z_DEFLATED)
-            throw TDataError();
+            throw DataError();
         int flags = readByte();
         if ((flags & 0xe0) != 0)
-            throw TDataError();
+            throw DataError();
         for (int skip = 6; skip > 0; --skip)
             readByte();
         if ((flags & 4) != 0) {
@@ -178,7 +181,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
             readByte();
         }
         if (inflateInit2(&m_stream, -MAX_WBITS) == Z_MEM_ERROR)
-            throw TAllocationFailure();
+            throw AllocationFailure();
         m_inflating = 1;
     }
     ownedBuffer.release();
@@ -187,7 +190,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
 // 0x4d65e0: the message-less form. `std::runtime_error`'s inline string
 // constructor expands into it, which is the whole 175-byte body.
 VA(0x004d65e0, 0xAF)
-TGzInflateBuf::TDataError::TDataError()
+GzInflateBuf::DataError::DataError()
     : std::runtime_error(std::string())
 {
 }
@@ -202,7 +205,7 @@ VA_COMPGEN(0x004d67f0, 0x21, SCALAR_DELETING_DTOR, TGzInflateBuf)
 // the raw bytes still in next_in, or, when the member was never a gzip
 // member, the undrained tail of the output window.
 VA(0x004d6820, 0xF6)
-TGzInflateBuf::~TGzInflateBuf()
+GzInflateBuf::~GzInflateBuf()
 {
     if (m_stream.avail_in > 0) {
         m_source->pubseekoff(
@@ -246,7 +249,7 @@ TGzInflateBuf::~TGzInflateBuf()
 // 0x3c. An explicit refill-buffer local is byte-neutral; a separate CRC
 // byte-count local scores 81.3560% and does not resolve the trailer calls.
 VA(0x004d6920, 0x251)  // anchor-vtable ??_7TGzInflateBuf@@6B@ slot 4 + anchor-import @inflate@8, retail-only
-int TGzInflateBuf::underflow()
+int GzInflateBuf::underflow()
 {
     while (m_stream.avail_out > 0) {
         if (m_stream.avail_in <= 0 && m_sourceEof)
@@ -264,9 +267,9 @@ int TGzInflateBuf::underflow()
                 if (m_inflating) {
                     int status = inflate(&m_stream, Z_SYNC_FLUSH);
                     if (status == Z_MEM_ERROR)
-                        throw TAllocationFailure();
+                        throw AllocationFailure();
                     if (status == Z_DATA_ERROR)
-                        throw TDataError();
+                        throw DataError();
                     // This is the live z_stream output window's beginning.
                     // Retail +0x9b..+0xb3 loads next_out/avail_out and forms
                     // their sum minus 512, rather than loading m_outBuffer.
@@ -318,11 +321,11 @@ int TGzInflateBuf::underflow()
 
 // 0x4d6ba0: get_byte with the malformed-member throw attached.
 VA(0x004d6ba0, 0x81)
-int TGzInflateBuf::readByte()
+int GzInflateBuf::readByte()
 {
     int c = getByte();
     if (c == -1)
-        throw TDataError();
+        throw DataError();
     return c;
 }
 

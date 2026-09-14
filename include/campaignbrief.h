@@ -63,11 +63,19 @@ SIZE(CampaignScenarioPreview, 0x4d4);
 // decoded; their first parameter is the same opaque per-scenario record in
 // all three (it carries a byte vector at +0x18, an int row at +0x4c, a
 // vector at +0x70 and a five-dword bit block at +0x90).
-class TCampaignStartOption;
+// Before normalization (type): TCampaignStartOption.
+#ifndef CampaignStartOption
+#define CampaignStartOption TCampaignStartOption
+#endif
+class CampaignStartOption;
 
 // Retail Complete diverges from the Dreamcast class after heroWindow, but
 // fixes every field used by the campaign constructor and destructor.
-class TCampaignBrief : public heroWindow {
+// Before normalization (type): TCampaignBrief.
+#ifndef CampaignBrief
+#define CampaignBrief TCampaignBrief
+#endif
+class CampaignBrief : public heroWindow {
 public:
     struct ScenarioStruct;
     struct CampaignHeaderStruct;
@@ -119,7 +127,7 @@ public:
         std::vector<int> m_heroPlaceholders;
         std::bitset<145> m_crossoverCreatures;
         std::bitset<144> m_crossoverArtifacts;
-        TCampaignStartOption* m_options;
+        CampaignStartOption* m_options;
 
         ScenarioStruct();
         // Retail 0x487e40 (`ret 0xc`): reads one scenario record out of
@@ -127,7 +135,7 @@ public:
         // scenario count (the prerequisite bitmap's width) and the third
         // the campaign file version. Name provisional - no Dreamcast row
         // covers this Complete-only type.
-        void read(TAbstractFile* infile, int numScenarios,
+        void read(AbstractFile* infile, int numScenarios,
                   int campaignVersion);
         // Complete's campaign-map loader calls this on the selected
         // scenario record for each matching map hero placeholder.  The
@@ -135,7 +143,7 @@ public:
         // arguments are fixed by the 0x10-byte placeholder stride and the
         // 0x492-byte carry-over hero vector stride.
         void initializeCrossoverHero(HeroPlaceholderData* placeholder,
-                                     hero* sourceHero);
+                                     Hero* sourceHero);
         // Retail 0x487020, the placeholder half of the same pass: a map
         // hero placeholder with no carried hero behind it becomes a live
         // hero of the player's own alignment (or the carried record is
@@ -366,8 +374,8 @@ public:
     type_func_button* m_difficultyIncrButton;
     type_text_scroller* m_scroller;
 
-    TCampaignBrief(unsigned char newCampaign, unsigned char viewFromGame);
-    virtual ~TCampaignBrief();
+    CampaignBrief(unsigned char newCampaign, unsigned char viewFromGame);
+    virtual ~CampaignBrief();
     void addBonusIcons();
     void updateBonusIcons();
     void doModal();
@@ -390,10 +398,10 @@ private:
     void showTerritorySmacker(unsigned char evilPost);
     int convertID2HelpID(int id) const;
 };
-SIZE(TCampaignBrief::MapTextStruct, 0x18);
-SIZE(TCampaignBrief::ScenarioStruct, 0xa8);
-SIZE(TCampaignBrief::CampaignHeaderStruct, 0x5c);
-SIZE(TCampaignBrief, 0xb4);
+SIZE(CampaignBrief::MapTextStruct, 0x18);
+SIZE(CampaignBrief::ScenarioStruct, 0xa8);
+SIZE(CampaignBrief::CampaignHeaderStruct, 0x5c);
+SIZE(CampaignBrief, 0xb4);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\campaignbrief.cpp:202, dc 0x58244) void CampaignWait(int which);

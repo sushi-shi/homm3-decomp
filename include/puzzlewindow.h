@@ -10,12 +10,19 @@ struct type_point;
 
 class Bitmap816;
 class NewmapCell;
-class TResourceDisplay;
+#ifndef ResourceDisplay
+#define ResourceDisplay TResourceDisplay
+#endif
+class ResourceDisplay;
 
 // DC's 0x58-byte CAdvPopup grows to retail's proven 0x60-byte base. The
 // remaining fields translate directly: one piece-count byte, the resource
 // display pointer, 48 puzzle bitmaps, and the selected puzzle index.
-class TPuzzleWindow : public CAdvPopup {
+// Before normalization (type): TPuzzleWindow.
+#ifndef PuzzleWindow
+#define PuzzleWindow TPuzzleWindow
+#endif
+class PuzzleWindow : public CAdvPopup {
 public:
     enum {
         ACCEPT_ID = 0x7802,
@@ -35,19 +42,19 @@ public:
     // this alignment gap; the reference layout retains the same boundary.
     char m_paddingBeforePuzzleResourceBar[3];
 
-    TPuzzleWindow(int puzzlenum);
-    virtual ~TPuzzleWindow();
+    PuzzleWindow(int puzzlenum);
+    virtual ~PuzzleWindow();
     int updatePuzzle(int full);
     virtual int windowHandler(message& msg);
 
 private:
-    TResourceDisplay* m_puzzleResourceBar;
+    ResourceDisplay* m_puzzleResourceBar;
     Bitmap816* m_puzzlePieces[48];
     int m_puzWhich;
 
     int convertID2HelpID(int id) const;
 };
-SIZE(TPuzzleWindow, 0x12c);
+SIZE(PuzzleWindow, 0x12c);
 
 extern std::bitset<48> g_puzzlePiecesRemoved;
 extern short g_puzzlePieceOrder[];

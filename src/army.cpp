@@ -134,7 +134,7 @@ void army::setRetaliationCount()
 #endif  // @carcass
 
 VA(0x0043d540, 0x34)  // dc 0x43830
-void army::playSample(army::TSampleID id)
+void army::playSample(army::SampleID id)
 {
     if (!static_cast<const combatManager*>(g_combatManager)->isQuickCombat()
         && m_armySample[id]) {
@@ -143,7 +143,7 @@ void army::playSample(army::TSampleID id)
 }
 
 VA(0x0043d580, 0x37)  // dc 0x4386c
-void army::stopSample(army::TSampleID id)
+void army::stopSample(army::SampleID id)
 {
     if (!static_cast<const combatManager*>(g_combatManager)->isQuickCombat()
         && m_armySample[id]) {
@@ -241,7 +241,7 @@ void army::initClean()
 // No retail out-of-line copy survives, but the Dreamcast call graph proves
 // this member boundary in range_attack. VC6 folds the inline definition into
 // that caller.
-inline void army::waitSample(army::TSampleID which)
+inline void army::waitSample(army::SampleID which)
 {
     if (!static_cast<const combatManager*>(g_combatManager)
             ->isQuickCombat()
@@ -251,14 +251,14 @@ inline void army::waitSample(army::TSampleID which)
 }
 
 VA(0x0043d730, 0x17D)  // dc 0x439b0
-void army::initialize(TCreatureType type, long number, const hero* owner,
+void army::initialize(CreatureType type, long number, const Hero* owner,
                       long newGroup, long newIndex, long newGridIndex)
 {
     initClean();
     memcpy(&m_creatureType, &type, sizeof(m_creatureType));
     m_numTroops = number;
     m_drawPriority = 4;
-    TCreatureTypeTraits* traits = &m_monInfo;
+    CreatureTypeTraits* traits = &m_monInfo;
     *traits = g_creatureTypeTraits[type];
     traits->m_townType =
         (g_game->m_f1f698 == 0
@@ -304,10 +304,10 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
 }
 
 VA(0x0043d8b0, 0x135)  // dc 0x43d9c
-void army::init(int armyId, int newNumTroops, const hero* owner, int side,
+void army::init(int armyId, int newNumTroops, const Hero* owner, int side,
                 int inIndex, int gridIndex, int origPos)
 {
-    initialize(TCreatureType(armyId), newNumTroops, owner, side, inIndex,
+    initialize(CreatureType(armyId), newNumTroops, owner, side, inIndex,
                gridIndex);
     if (g_combatManager->validHex(m_gridIndex)) {
         hexcell* cell = &g_combatManager->m_cells[m_gridIndex];
@@ -573,9 +573,9 @@ void army::freeResources()
 #endif  // @carcass
 
 VA(0x0043df20, 0xDD)  // dc 0x44318
-void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
-                   const town* ownerTown, const hero* otherHero,
-                   const armyGroup* otherGroup, int magicTerrain)
+void army::setLuck(const Hero* ownerHero, const ArmyGroup* ownerGroup,
+                   const Town* ownerTown, const Hero* otherHero,
+                   const ArmyGroup* otherGroup, int magicTerrain)
 {
     int value = 0;
     if (magicTerrain != MAGIC_TERRAIN_CURSED_GROUND
@@ -619,9 +619,9 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
 
 // Complete extends the DC signature with a seventh, byte-wide alignment gate:
 VA(0x0043e000, 0x139)  // dc 0x443b4
-void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
-                     const town* ownerTown, const hero* otherHero,
-                     const armyGroup* otherGroup, int magicTerrain,
+void army::setMorale(const Hero* ownerHero, const ArmyGroup* ownerGroup,
+                     const Town* ownerTown, const Hero* otherHero,
+                     const ArmyGroup* otherGroup, int magicTerrain,
                      unsigned char groupAlignments)
 {
     int value = 0;
@@ -782,30 +782,30 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
         if (m_isAreaEffectTarget)
             highlight = 0x70;
 
-        TPalette16 saved;
+        Palette16 saved;
         unsigned char restore = 0;
         if (is(1u << 29)) {
             memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
-            TPalette16 tinted(m_stdIcon->getPalette());
+            Palette16 tinted(m_stdIcon->getPalette());
             tinted.adjustHSV(0, m_paletteEffect, m_paletteEffect + 1.0f,
                              m_paletteEffect + 1.0f);
             memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
             restore = 1;
         } else if (is(1u << 30)) {
             memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
-            TPalette16 tinted(m_stdIcon->getPalette());
+            Palette16 tinted(m_stdIcon->getPalette());
             tinted.adjustSaturation(m_paletteEffect);
             memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
             restore = 1;
         } else if (m_spellInfluence[SPELL_STONE] > 0) {
             memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
-            TPalette16 tinted(m_stdIcon->getPalette());
+            Palette16 tinted(m_stdIcon->getPalette());
             tinted.gray();
             memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
             restore = 1;
         } else if (is(1u << 23)) {
             memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
-            TPalette16 tinted(m_stdIcon->getPalette());
+            Palette16 tinted(m_stdIcon->getPalette());
             tinted.adjustHSV(0.67f, 1.0f, 2.0f, 2.0f);
             memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
             restore = 1;
@@ -2434,7 +2434,7 @@ long army::getAdjustedAttack(const army* enemy,
             || ((enemy->is(1u << 9)) && m_slayerLevel >= 3)) {
             attack += 8;
             if (g_combatManager->m_heroes[getControllingSide()]) {
-                hero* castingHero =
+                Hero* castingHero =
                     g_combatManager->m_heroes[getControllingSide()];
                 attack += castingHero->getHeroSpellBonus(55, m_monInfo.m_level, 8);
             }
@@ -2504,7 +2504,7 @@ inline double army::getDefenseDamageModifier(
     }
     if (m_spellInfluence[70])
         factor = factor * 0.5;
-    hero* controller = getController();
+    Hero* controller = getController();
     if (controller)
         factor = controller->getDefenseFactor() * factor;
     return factor;
@@ -2518,19 +2518,19 @@ inline double army::getDefenseDamageModifier(
 //   0x4426d0 (20 B)  heroes[combatSide]
 
 VA(0x00442690, 0x39)  // dc 0x47904
-hero* army::getController() const
+Hero* army::getController() const
 {
     return g_combatManager->m_heroes[getControllingSide()];
 }
 
 VA(0x004426d0, 0x14)  // dc 0x47924
-hero* army::getOwner() const
+Hero* army::getOwner() const
 {
     return g_combatManager->m_heroes[getOwningSide()];
 }
 
 // E:\gamedcs\army.cpp:2708, dc 0x47944
-unsigned char isNaturalEnemy(TCreatureType attacker, TCreatureType defender)
+unsigned char isNaturalEnemy(CreatureType attacker, CreatureType defender)
 {
     switch (attacker) {
     case CREATURE_ANGEL:
@@ -2624,7 +2624,7 @@ inline unsigned char army::canShoot(const army* excluded) const
         return 1;
     if (!(is(1u << 2)) || m_monInfo.m_numShots <= 0)
         return 0;
-    hero* controller = getController();
+    Hero* controller = getController();
     int canShoot = 1;
     if (!controller
         || !controller->isWieldingArtifact(ARTIFACT_BOW_OF_THE_SHARPSHOOTER)) {
@@ -2819,7 +2819,7 @@ int army::computeBaseDamage(unsigned char simulateOnly) const
     int low;
     int high;
     if (m_creatureType == ARMY_CREATURE_BALLISTA) {
-        const hero* shooter = getController();
+        const Hero* shooter = getController();
         low = (shooter->getPrimarySkill(0) + 1) * m_monInfo.m_damageLowBound;
         high = (shooter->getPrimarySkill(0) + 1) * m_monInfo.m_damageHighBound;
     } else {
@@ -2932,7 +2932,7 @@ int army::computeAttackerBonus(int baseDamage, unsigned char isShooting,
     }
 
     long total = bonus;
-    hero* controller =
+    Hero* controller =
         g_combatManager->m_heroes[getControllingSide()];
     if (controller != 0) {
         if (isShooting)
@@ -2971,7 +2971,7 @@ int army::computeAttackerDamageBonuses(int baseDamage,
                                         simulateOnly == 0, distance);
     switch (m_creatureType) {
     case ARMY_CREATURE_BALLISTA: {
-        hero* controlling =
+        Hero* controlling =
             g_combatManager->m_heroes[getControllingSide()];
         long mastery =
             controlling->m_skillLevel[eSecSkillBattlefieldBallistics];
@@ -3082,7 +3082,7 @@ double army::computeDefenderDamageReduction(unsigned char isShooting) const
     }
     if (m_spellInfluence[70])
         reduction *= 0.5;
-    hero* castingHero = g_combatManager->m_heroes[getControllingSide()];
+    Hero* castingHero = g_combatManager->m_heroes[getControllingSide()];
     if (castingHero)
         reduction *= castingHero->getDefenseFactor();
     return reduction;
@@ -3603,7 +3603,7 @@ static void drop_aura_links(army* self)
 // inline_depth(1) is byte-flat and is not retained.
 VA(0x004448f0, 0xB99)  // anchor-global, dc 0x499e8
 void army::setSpellInfluence(int spell, int power, int mastery,
-                             const hero* castingHero)
+                             const Hero* castingHero)
 {
     long rounds;
     switch (spell) {
@@ -4026,7 +4026,7 @@ unsigned char army::moveTo(int hex, unsigned char restore_facing)
 // own S_LDATA32 is `all_targets` (dc 0x4aa0c hands it to
 // choose_wall_target with the count 8).
 DATA(0x0063b820)
-static const TWallTargetId g_allTargets[WALL_TARGET_COUNT] = {
+static const WallTargetId g_allTargets[WALL_TARGET_COUNT] = {
     WALL_TARGET_0, WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_3,
     WALL_TARGET_4, WALL_TARGET_5, WALL_TARGET_6, WALL_TARGET_7
 };
@@ -4039,7 +4039,7 @@ static const TWallTargetId g_allTargets[WALL_TARGET_COUNT] = {
 // (dc 0x4aaac, `walls` with the count 4), replacing the bootstrap
 // invention `gRetargetableWalls` this table carried.
 DATA(0x0063b840)
-static const TWallTargetId g_walls[4] = {
+static const WallTargetId g_walls[4] = {
     WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_5, WALL_TARGET_4
 };
 
@@ -4052,11 +4052,11 @@ static const TWallTargetId g_walls[4] = {
 // which is what turns the `targets + count` limit into the bare
 // 0x63b850 the retail instruction carries.
 DC_ONLY(0x4a8c8, 0xB2)
-static TWallTargetId chooseWallTarget(TWallTargetId wall,
-                                        const TWallTargetId* targets,
+static WallTargetId chooseWallTarget(WallTargetId wall,
+                                        const WallTargetId* targets,
                                         long count)
 {
-    TWallTargetId chosen = wall;
+    WallTargetId chosen = wall;
     long best = 50;
     for (long i = 0; i < count; i++) {
         if (targets[i] == wall)
@@ -4090,12 +4090,12 @@ void army::attackWall(int targetGridIndex)
 {
     g_combatManager->m_lastMovedArmy = 0;
     g_combatManager->turnOffHighlighter(1);
-    TWallTargetId wall;
+    WallTargetId wall;
     {
         // GetTargetWallIndex returns int in Complete and an enum in Dreamcast.
-        wall = TWallTargetId(getTargetWallIndex(targetGridIndex));
+        wall = WallTargetId(getTargetWallIndex(targetGridIndex));
     }
-    hero* controller = getController();
+    Hero* controller = getController();
     long level;
     switch (m_creatureType) {
     case CREATURE_CATAPULT:
@@ -4130,7 +4130,7 @@ void army::attackWall(int targetGridIndex)
 // tower rows) take the row's +0x1 chance, 7 (the keep) takes +0x0,
 // 3 takes +0x2, and 1/2/4/5 plus everything out of range take +0x3.
 VA(0x00445ec0, 0x10C)  // dc 0x4aa3c
-void army::attackWall(TWallTargetId wall,
+void army::attackWall(WallTargetId wall,
                        const type_ballistics_traits& ballistics)
 {
     long levels;
@@ -4213,7 +4213,7 @@ void army::attackWall(TWallTargetId wall,
 // before the bounds expressions. Neither source class creates retail's four
 // extra frame slots; the residual remains allocator state.
 VA(0x00445fd0, 0x526)  // anchor-callee, dc 0x4aacc
-void army::attackWall(TWallTargetId wall, long levelsDestroyed)
+void army::attackWall(WallTargetId wall, long levelsDestroyed)
 {
     if (static_cast<const combatManager*>(g_combatManager)
             ->isQuickCombat()) {
@@ -4360,7 +4360,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
 }
 
 VA(0x00446500, 0x126)
-void army::cure(int level, int spellPower, const hero* castingHero)
+void army::cure(int level, int spellPower, const Hero* castingHero)
 {
     m_poisonPenalty = 1.0f;
     if (m_spellInfluence[SPELL_AGE])
@@ -5029,7 +5029,7 @@ unsigned char spellIsValidOnTarget(int spell, const army* target)
     case SPELL_PROTECTION_FROM_EARTH:
     case SPELL_ANTI_MAGIC:
     case SPELL_MAGIC_MIRROR: {
-        hero* enemyHero = g_combatManager->m_heroes[1 - side];
+        Hero* enemyHero = g_combatManager->m_heroes[1 - side];
         return enemyHero
                && enemyHero->isWieldingArtifact(ARTIFACT_SPELLBOOK);
     }
@@ -5091,7 +5091,7 @@ unsigned char spellIsValidOnTarget(int spell, const army* target)
         } else if (!(target->is(1u << 2)) || target->m_monInfo.m_numShots <= 0) {
             shoots = 0;
         } else {
-            hero* controller = target->getController();
+            Hero* controller = target->getController();
             shoots = 1;
             if (!controller
                 || !controller->isWieldingArtifact(
@@ -5644,7 +5644,7 @@ void combatManager::markCreatureEffect(int group, int index)
 
 // E:\gamedcs\TownMgr.h:745
 DC_ONLY(0x4cc8c, 0x10)
-TTerrainType townManager::getNativeTerrain(int type)
+TerrainType TownManager::getNativeTerrain(int type)
 {
     // @stub
 }

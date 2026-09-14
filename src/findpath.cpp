@@ -14,7 +14,7 @@
 
 // ai_player.cpp:4643. Kept local because findpath's narrow include set does
 // not otherwise depend on the ai_player class declarations.
-long aiGetShipCost(const hero* ourHero, type_point point);
+long aiGetShipCost(const Hero* ourHero, type_point point);
 
 VA(0x004b1330, 0x3B)  // dc 0x9ed40
 bool type_point::isValid() const
@@ -23,7 +23,7 @@ bool type_point::isValid() const
 }
 
 VA(0x004b1370, 0x62)  // dc 0x9ed88
-searchArray::searchArray()
+SearchArray::SearchArray()
 {
     m_cellData = 0;
     m_isMoatSlowed = 0;
@@ -41,7 +41,7 @@ searchArray::searchArray()
 }
 
 VA(0x004b13e0, 0x78)  // dc 0x9ee08
-searchArray::~searchArray()
+SearchArray::~SearchArray()
 {
     if (m_cellData)
         delete m_cellData;
@@ -52,7 +52,7 @@ searchArray::~searchArray()
 }
 
 VA(0x004b1460, 0x9F)  // dc 0x9ee34
-void searchArray::init()
+void SearchArray::init()
 {
     if (m_cellData)
         delete m_cellData;
@@ -70,7 +70,7 @@ void searchArray::init()
 }
 
 VA(0x004b1500, 0x2F)  // dc 0x9eee8
-void searchArray::close()
+void SearchArray::close()
 {
     if (m_cellData)
         delete m_cellData;
@@ -81,7 +81,7 @@ void searchArray::close()
 }
 
 VA(0x004b1530, 0x20F)  // dc 0x9ef20
-void searchArray::clear(long flyLevel, long startZ, long stopZ)
+void SearchArray::clear(long flyLevel, long startZ, long stopZ)
 {
     m_queue.clear();
     m_result.clear();
@@ -165,7 +165,7 @@ int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
     long road = cell->m_roadSet;
     if (hasNomad && terrain == eTerrainSand)
         terrain = eTerrainDirt;
-    TAdventureObjectType special = cell->getSpecialTerrain();
+    AdventureObjectType special = cell->getSpecialTerrain();
     long cost;
     if (road != 0 && endRoad != 0)
         cost = g_terrainCost[g_roadCostRow[road]][pathfinding];
@@ -210,7 +210,7 @@ int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
 }
 
 VA(0x004b18c0, 0x1A2)  // dc 0x9f184
-int getTerrainCost(hero* currentHero, type_point start, int direction, int moveLeft)
+int getTerrainCost(Hero* currentHero, type_point start, int direction, int moveLeft)
 {
     const int destX = start.m_x + g_stepDeltaX[4 * direction];
     const int destY = start.m_y + g_stepDeltaY[4 * direction];
@@ -263,7 +263,7 @@ int getTerrainCost(hero* currentHero, type_point start, int direction, int moveL
 // _Destroy retention in visitedPoints' grow arm. All interior queue-insert
 // calls, including the retained _Construct<pathCell>, now agree naturally.
 VA(0x004b1a70, 0x88D)  // anchor-bracket, dc 0x9f2a4
-void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
+void SearchArray::pushPoint(const pathCell& oldCell, pathCell& point,
                             int direction, int moveCost, int limit,
                             long barrierValue, type_point monster,
                             int isTrigger)
@@ -343,7 +343,7 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
         if (m_canCastTeleport || m_canSummonBoat || m_canCastFlight
                 || m_canCastWaterWalk) {
             NewmapCell* mapCell = g_game->getCell(point.m_point);
-            TAdventureObjectType special = mapCell->getSpecialTerrain();
+            AdventureObjectType special = mapCell->getSpecialTerrain();
             if (special == CURSED_GROUND || special == GARRISON)
                 point.m_magicForbidden = 1;
         }
@@ -488,7 +488,7 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
 // declarations regresses to 99.19779%; and DC's const srcCell cannot be
 // expressed without changing the still-non-const NewmapCell accessors.
 VA(0x004b2300, 0xA94)  // anchor-callee, dc 0x9f718
-void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
+void SearchArray::testPossibleDirections(Hero* currentHero, pathCell* source,
                                          long turnMobility, long maxMobility,
                                          unsigned char adjacentMonster,
                                          type_point monsterLocation,
@@ -655,7 +655,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         }
 
         if (destCell->m_type == HERO && destCell->m_isTrigger) {
-            hero* other = g_game->getHero(destCell->m_extraInfo);
+            Hero* other = g_game->getHero(destCell->m_extraInfo);
             if (other->obscuredIsTrigger() && other->m_obscuredType == SANCTUARY
                     && other->m_owner != currentHero->m_owner) {
                 blocked = 1;
@@ -812,7 +812,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
 // inline-away case (single-caller predicates on the combat grid).
 DC_ONLY(0xa02c8, 0xC6)
 // Before normalization (function): searchArray::valid_move_adjacent.
-unsigned char searchArray::validMoveAdjacent(const army* current_army, int hex)
+unsigned char SearchArray::validMoveAdjacent(const army* current_army, int hex)
 {
     // @stub
 }
@@ -820,7 +820,7 @@ unsigned char searchArray::validMoveAdjacent(const army* current_army, int hex)
 // E:\gamedcs\findpath.cpp:905
 DC_ONLY(0xa0390, 0x6C)
 // Before normalization (function): searchArray::valid_move_adjacent.
-unsigned char searchArray::validMoveAdjacent(const army* current_army, const army* enemy)
+unsigned char SearchArray::validMoveAdjacent(const army* current_army, const army* enemy)
 {
     // @stub
 }
@@ -834,7 +834,7 @@ unsigned char searchArray::validMoveAdjacent(const army* current_army, const arm
 // passed a negative and the limit collapses to zero for a bound stack.
 
 VA(0x004b2da0, 0x24B)  // anchor-global, dc 0xa03fc
-void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, long limit, unsigned char inPlacementPhase, long baseSpeed)
+void SearchArray::seedCombatPosition(const army* thisArmy, long currentGroup, long limit, unsigned char inPlacementPhase, long baseSpeed)
 {
     if (m_cellData == 0)
         init();
@@ -895,7 +895,7 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
 }
 
 VA(0x004b2ff0, 0x298)  // dc 0xa0630
-void searchArray::markTeleport(const army* currentArmy, long currentGroup)
+void SearchArray::markTeleport(const army* currentArmy, long currentGroup)
 {
     if (m_cellData == 0)
         init();
@@ -970,7 +970,7 @@ DATA(0x0063bcf4) const unsigned char g_innerMoatHexes[11] = {
 };
 
 VA(0x004b3290, 0x16F)  // dc 0xa0804
-void searchArray::setMoat(const army* currentArmy)
+void SearchArray::setMoat(const army* currentArmy)
 {
     memset(m_isMoatSlowed, 0, 187);
     unsigned char flying = static_cast<unsigned char>(static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 1);
@@ -996,7 +996,7 @@ void searchArray::setMoat(const army* currentArmy)
     }
     { for (int cell = 0; cell < 187; ++cell) {
         if (g_combatManager->m_cells[cell].m_attributes & 4) {
-            const combatManager::TObstacle* obstacle =
+            const combatManager::Obstacle* obstacle =
                 &g_combatManager->m_obstacles[g_combatManager->m_cells[cell].m_obstacleIndex];
             if (currentArmy->m_combatSide == obstacle->m_owner || obstacle->m_isVisible)
                 m_isMoatSlowed[cell] = 1;
@@ -1008,7 +1008,7 @@ void searchArray::setMoat(const army* currentArmy)
 }
 
 // E:\gamedcs\findpath.cpp:1136, dc 0xa0970
-bool searchArray::buildCombatPath(const army* currentArmy,
+bool SearchArray::buildCombatPath(const army* currentArmy,
                                  int startHex, int endHex, int destination)
 {
     if (!combatManager::validHex(destination))
@@ -1030,7 +1030,7 @@ bool searchArray::buildCombatPath(const army* currentArmy,
 }
 
 // E:\gamedcs\findpath.cpp:1172
-void searchArray::markEnemy(long hex, long cost)
+void SearchArray::markEnemy(long hex, long cost)
 {
     hexcell* combatCell = &g_combatManager->m_cells[hex];
     pathCell* cell = getHex(hex);
@@ -1049,7 +1049,7 @@ void searchArray::markEnemy(long hex, long cost)
 // hex this enemy stands on IS the destination", which is why retail's
 // caller consumes the result with `sete`/`test`/`jne` rather than with a
 // plain compare.
-bool searchArray::checkEnemyArmies(long hex, long cost,
+bool SearchArray::checkEnemyArmies(long hex, long cost,
                                   long currentGroup, long destination)
 {
     if (!combatManager::validHex(hex))
@@ -1116,7 +1116,7 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 // unclaimed synthetic labels do not prove a missing source statement.
 
 VA(0x004b3400, 0x787)  // anchor-global, dc 0xa0b18
-unsigned char searchArray::findCombatPath(const army* currentArmy,
+unsigned char SearchArray::findCombatPath(const army* currentArmy,
                                           long currentGroup, long destination,
                                           unsigned char inPlacementPhase,
                                           long limit, long baseSpeed)
@@ -1275,7 +1275,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
 }
 
 VA(0x004b3bb0, 0x35C)  // dc 0xa0f54
-void searchArray::pushCombatPoint(int index, int direction, int cost, int flightCost, int limit)
+void SearchArray::pushCombatPoint(int index, int direction, int cost, int flightCost, int limit)
 {
     if (!combatManager::validHex(index))
         return;
@@ -1318,14 +1318,14 @@ void searchArray::pushCombatPoint(int index, int direction, int cost, int flight
 }
 
 VA(0x004b3f10, 0xF)  // dc 0xa10b0
-void searchArray::lowerDoor()
+void SearchArray::lowerDoor()
 {
     m_isMoatSlowed[0x5f] = 0;
     m_isMoatSlowed[0x5e] = 0;
 }
 
 VA(0x004b3f20, 0x41)  // dc 0xa10c4
-long searchArray::getTravelTime(const army* currentArmy, long hex) const
+long SearchArray::getTravelTime(const army* currentArmy, long hex) const
 {
     pathCell* cell = m_cellData == 0 ? 0 : &m_cellData[hex];
     long speed = currentArmy->getSpeed();
@@ -1347,7 +1347,7 @@ unsigned char type_obscuring_object::obscuredIsTrigger()
 
 // E:\gamedcs\CmbtMgr.h:327
 DC_ONLY(0xa1144, 0x16)
-unsigned char combatManager::TObstacle::isVisible(int side)
+unsigned char combatManager::Obstacle::isVisible(int side)
 {
     // @stub
 }

@@ -52,8 +52,8 @@ VA_COMPGEN(0x0056bf30, 0xF4, IMPLICIT_DTOR, TSeerHutQuestText)
 // destinations reaches 98.7121% (98.6212% combined). All five siblings stay
 // exact. These meaningful local bindings do not explain the SIB choice.
 VA(0x0056c120, 0x2A3)  // anchor-string(seerhut.txt caller 0x56c3e0) + anchor-callee(basic_string::assign) + retail-only
-void loadSeerHutTextColumn(TSpreadsheetResource* sheet,
-                           TSeerHutTextColumn* column, int col)
+void loadSeerHutTextColumn(SpreadsheetResource* sheet,
+                           SeerHutTextColumn* column, int col)
 {
     column->m_name = sheet->getRow(1)[col];
 
@@ -68,8 +68,8 @@ void loadSeerHutTextColumn(TSpreadsheetResource* sheet,
     column->m_completion = sheet->getRow(47)[col];
 }
 
-DATA(0x0069e728) TSeerHutTextColumn g_seerHutTextA[3];
-DATA(0x0069f0e8) TSeerHutTextColumn g_seerHutTextB[3];
+DATA(0x0069e728) SeerHutTextColumn g_seerHutTextA[3];
+DATA(0x0069f0e8) SeerHutTextColumn g_seerHutTextB[3];
 DATA(0x0069faa8) std::vector<std::string> g_seerHutNames;
 
 // Both separator arms expand basic_string::append in full and the

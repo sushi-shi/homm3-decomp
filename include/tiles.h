@@ -33,8 +33,11 @@ enum ETileDirection {
     TILE_DIR_COUNT = 8
 };
 
-struct TPoint;
-extern TPoint g_tileDirections[TILE_DIR_COUNT];
+#ifndef Point
+#define Point TPoint
+#endif
+struct Point;
+extern Point g_tileDirections[TILE_DIR_COUNT];
 
 void __fastcall buildTileNeighbourMask(int width, int height, int x, int y,
                                        unsigned char* neighbourExists);

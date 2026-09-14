@@ -6,18 +6,26 @@
 
 class message;
 
-struct TMainMenuButtonRect {
+// Before normalization (type): TMainMenuButtonRect.
+#ifndef MainMenuButtonRect
+#define MainMenuButtonRect TMainMenuButtonRect
+#endif
+struct MainMenuButtonRect {
     short m_x;
     short m_y;
     short m_width;
     short m_height;
 };
-SIZE(TMainMenuButtonRect, 0x8);
+SIZE(MainMenuButtonRect, 0x8);
 
 // DC gives bShowCDMessage@68 and RolloverWidget@72. Retail's 8-byte-larger
 // heroWindow moves them to +0x4c/+0x50; the constructor stores +0x4c and
 // oldmain's two stack instances independently prove the 0x54 total size.
-class TMainMenu : public heroWindow {
+// Before normalization (type): TMainMenu.
+#ifndef MainMenu
+#define MainMenu TMainMenu
+#endif
+class MainMenu : public heroWindow {
 public:
     enum EGameCommandIDs {
         NEW_GAME_ID = 101,
@@ -39,8 +47,8 @@ public:
 
     enum { NWIDGETS = 10 };
 
-    TMainMenu();
-    virtual ~TMainMenu();
+    MainMenu();
+    virtual ~MainMenu();
     void doModal();
 
     friend int mainMenuHandler(message& msg);
@@ -53,7 +61,7 @@ private:
     char m_paddingBeforeRolloverWidget[3];
     widget* m_rolloverWidget;
 };
-SIZE(TMainMenu, 0x54);
+SIZE(MainMenu, 0x54);
 
 
 

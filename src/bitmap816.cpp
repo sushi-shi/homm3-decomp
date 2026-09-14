@@ -33,7 +33,7 @@ void Bitmap816::Bitmap816(const char* name, int rbits, int rshift, int gbits, in
 
 VA(0x0044f800, 0xCA)  // dc 0x53960
 Bitmap816::Bitmap816(const char* name, int w, int h, unsigned char* data,
-                     TPalette16* palette16, int dataSize)
+                     Palette16* palette16, int dataSize)
     : resource(name, RESOURCE_TYPE_BITMAP),
       m_imageSize(w * h), m_width(w), m_height(h), m_pitch(w), m_p16(palette16)
 {
@@ -80,7 +80,7 @@ Bitmap816::~Bitmap816()
 
 // E:\gamedcs\bitmap816.cpp:163
 DC_ONLY(0x53c5c, 0x104)
-void Bitmap816::import(int w, int h, unsigned char* data, TPalette16* p16, int size)
+void Bitmap816::import(int w, int h, unsigned char* data, Palette16* p16, int size)
 {
     // @stub
 }
@@ -300,7 +300,7 @@ void Bitmap816::setPalette(const unsigned short* pal)
 }
 
 VA(0x0044fe60, 0x16)  // dc 0x54294
-void Bitmap816::setPalette(TPalette24* pal24)
+void Bitmap816::setPalette(Palette24* pal24)
 {
     m_p24 = *pal24;
 }
@@ -308,6 +308,6 @@ void Bitmap816::setPalette(TPalette24* pal24)
 VA(0x0044fe80, 0x40)  // dc 0x5429c
 void Bitmap816::resetPalette()
 {
-    TPalette16 converted(m_p24);
+    Palette16 converted(m_p24);
     m_p16.m_colors = converted.m_colors;
 }

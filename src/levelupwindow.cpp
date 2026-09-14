@@ -28,7 +28,7 @@ DATA(0x00697784) extern unsigned long g_dialogDeadline697784;
 // Both are source-private in the DC levelupwindow compiland. Retail's ctor
 // stores its object through the first, and this handler is the only consumer
 // of the second.
-DATA(0x00699634) static TLevelUpWindow* g_levelUpWindow;
+DATA(0x00699634) static LevelUpWindow* g_levelUpWindow;
 DATA(0x0067fa34) static int g_lastImHoverId = -1;
 
 // Text tables read directly by the retail constructor. The shared four-entry
@@ -36,7 +36,7 @@ DATA(0x0067fa34) static int g_lastImHoverId = -1;
 DATA(0x006a7570) extern const char* g_skillMasteryNames[3];
 
 VA(0x004f8880, 0xE7E)  // dc 0xe8344
-TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
+LevelUpWindow::LevelUpWindow(Hero* thisHero, int gainedSkill,
                                int firstChoice, int secondChoice)
     : CAdvPopup(205, 65, 385, 470, 0x12),
       m_leftSkill(firstChoice), m_rightSkill(secondChoice), m_selected(0)
@@ -164,14 +164,14 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
 VA_COMPGEN(0x004f9700, 0x21, SCALAR_DELETING_DTOR, TLevelUpWindow)
 
 VA(0x004f9730, 0x4E)  // dc 0xe8c2c
-TLevelUpWindow::~TLevelUpWindow()
+LevelUpWindow::~LevelUpWindow()
 {
     deleteWidgets();
 }
 
 // E:\gamedcs\levelupwindow.cpp:170, dc 0xe8c64
 VA(0x004f9780, 0x440)  // vtable slot 9+linkorder, dc 0xe8c64
-int TLevelUpWindow::windowHandler(message& msg)
+int LevelUpWindow::windowHandler(message& msg)
 {
     if (!g_dialogDeadline697784) {
         int result = CAdvPopup::windowHandler(msg);

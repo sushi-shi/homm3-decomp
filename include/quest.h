@@ -29,7 +29,10 @@
 #include "armygrp.h"
 #include "artifact.h"  // TArtifact, used by the artifact-quest vector below
 
-class hero;
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero;
 
 // The two adventure-object names the TQuestGuard / TSeerHut text builders
 // read directly. Both are elements of advmgr.h's gAdventureObjectNames -
@@ -137,11 +140,11 @@ public:
     // returns a BYTE - the defeat-hero body ends `xor al,al` on its guard
     // path and the monster body `mov al,dl`. The hero is NOT const: the
     // artifact and resource leaves call hero::HasArtifact, which is not.
-    virtual unsigned char isSatisfied(hero* currentHero);
+    virtual unsigned char isSatisfied(Hero* currentHero);
     // Slot 3: take the quest's price off the hero. The base body at
     // 0x485d80 is a bare `ret 4`; the artifact leaf removes the artifacts
     // and the resource leaf debits the player's treasury. Provisional name.
-    virtual void takePayment(hero* currentHero);
+    virtual void takePayment(Hero* currentHero);
     unsigned char hasExpired() const;
     // Slots 4 and 5, IDENTIFIED 2026-08-21: the family's two dialog
     // entry points. Every leaf body is the same shape - take a string
@@ -164,7 +167,7 @@ public:
     // renaming either would touch forty reconstructed leaf bodies for no
     // byte, so the observation is banked here for the lane that closes the
     // two getters.
-    virtual void doProposalDialog(hero* currentHero);
+    virtual void doProposalDialog(Hero* currentHero);
     virtual void doProgressDialog();
     // Slot 6. Pure in the base and overridden everywhere.
     virtual std::string getRequirementText();
@@ -197,9 +200,9 @@ public:
     // h3m encodings (a byte hero id, a dword level). The base bodies agree:
     // 0x56cd00 reads a visited flag and two extra fields that 0x56ce50 does
     // not. `Load` / `LoadFromMap` are provisional names for that split.
-    virtual void load(TAbstractFile* file, int version);
-    virtual void loadFromMap(TAbstractFile* file);
-    virtual void save(TAbstractFile* file);
+    virtual void load(AbstractFile* file, int version);
+    virtual void loadFromMap(AbstractFile* file);
+    virtual void save(AbstractFile* file);
     // Slot 14, IDENTIFIED 2026-08-21: every leaf back-fills the three
     // strings above from columns 0/1/2 of its own text group, and only
     // where the string is still empty. NAME provisional.
@@ -271,13 +274,13 @@ public:
 
     type_experience_quest(unsigned char flags);
 
-    virtual unsigned char isSatisfied(hero* currentHero);
+    virtual unsigned char isSatisfied(Hero* currentHero);
     virtual std::string getRequirementText();
-    virtual void load(TAbstractFile* file, int version);
-    virtual void loadFromMap(TAbstractFile* file);
-    virtual void doProposalDialog(hero* currentHero);
+    virtual void load(AbstractFile* file, int version);
+    virtual void loadFromMap(AbstractFile* file);
+    virtual void doProposalDialog(Hero* currentHero);
     virtual void doProgressDialog();
-    virtual void save(TAbstractFile* file);
+    virtual void save(AbstractFile* file);
     virtual std::string getQuestDescription();
     virtual void setDefaultText();
 };
@@ -295,13 +298,13 @@ public:
     std::string skillRequirementText(
         const signed char (&skills)[4]);
 
-    virtual unsigned char isSatisfied(hero* currentHero);
-    virtual void doProposalDialog(hero* currentHero);
+    virtual unsigned char isSatisfied(Hero* currentHero);
+    virtual void doProposalDialog(Hero* currentHero);
     virtual void doProgressDialog();
     virtual std::string getRequirementText();
-    virtual void load(TAbstractFile* file, int version);
-    virtual void loadFromMap(TAbstractFile* file);
-    virtual void save(TAbstractFile* file);
+    virtual void load(AbstractFile* file, int version);
+    virtual void loadFromMap(AbstractFile* file);
+    virtual void save(AbstractFile* file);
     virtual std::string getQuestDescription();
     virtual void setDefaultText();
 };
@@ -314,13 +317,13 @@ public:
 
     type_defeat_hero_quest(unsigned char flags);
 
-    virtual unsigned char isSatisfied(hero* currentHero);
+    virtual unsigned char isSatisfied(Hero* currentHero);
     virtual int questType();
     virtual void notifyHeroDefeated(int heroId, int player);
-    virtual void load(TAbstractFile* file, int version);
-    virtual void doProposalDialog(hero* currentHero);
+    virtual void load(AbstractFile* file, int version);
+    virtual void doProposalDialog(Hero* currentHero);
     virtual void doProgressDialog();
-    virtual void save(TAbstractFile* file);
+    virtual void save(AbstractFile* file);
     virtual std::string getQuestDescription();
     virtual std::string getRequirementText();
     virtual void setDefaultText();
@@ -335,13 +338,13 @@ public:
 
     type_monster_quest(unsigned char flags);
 
-    virtual unsigned char isSatisfied(hero* currentHero);
+    virtual unsigned char isSatisfied(Hero* currentHero);
     virtual int questType();
-    virtual void load(TAbstractFile* file, int version);
-    virtual void doProposalDialog(hero* currentHero);
+    virtual void load(AbstractFile* file, int version);
+    virtual void doProposalDialog(Hero* currentHero);
     virtual void doProgressDialog();
     virtual void notifyMonsterDefeated(TQuestPosition where, int player);
-    virtual void save(TAbstractFile* file);
+    virtual void save(AbstractFile* file);
     virtual std::string getQuestDescription();
     virtual std::string getRequirementText();
     virtual void setDefaultText();
@@ -354,55 +357,55 @@ public:
 // exactly at the +0x40 payload slot every other leaf uses.
 class type_artifact_quest : public type_quest {
 public:
-    std::vector<TArtifact> m_artifacts;  // +0x40
+    std::vector<Artifact> m_artifacts;  // +0x40
 
     type_artifact_quest(unsigned char flags);
-    type_artifact_quest(unsigned char flags, TArtifact artifact, int textRow);
+    type_artifact_quest(unsigned char flags, Artifact artifact, int textRow);
 
     virtual int getAIValue(int player);
-    virtual unsigned char isSatisfied(hero* currentHero);
-    virtual void takePayment(hero* currentHero);
+    virtual unsigned char isSatisfied(Hero* currentHero);
+    virtual void takePayment(Hero* currentHero);
     // Retail-only 0x56ccb0 (seerhut.obj, 68 B, the row after ~type_quest):
     // `field_3c >= 0 && field_3c < today`, today being the game date's
     // (month * 4 + week - 5) * 7 + day. searchArray::enter_trigger asks it
     // before pricing a quest guard. Provisional name - no DC row carries
     // it; the deadline comparison seerhut.cpp spells inline is its body.
     unsigned char hasExpired() const;
-    virtual void doProposalDialog(hero* currentHero);
+    virtual void doProposalDialog(Hero* currentHero);
     virtual void doProgressDialog();
     virtual std::string getRequirementText();
-    virtual void save(TAbstractFile* file);
+    virtual void save(AbstractFile* file);
     virtual std::string getQuestDescription();
     virtual void setDefaultText();
-    virtual void load(TAbstractFile* file, int version);
-    virtual void loadFromMap(TAbstractFile* file);
+    virtual void load(AbstractFile* file, int version);
+    virtual void loadFromMap(AbstractFile* file);
 };
 
 // Quest type 6: parallel creature-type and creature-count vectors.
 class type_creature_quest : public type_quest {
 public:
     std::vector<int> m_counts;             // +0x40
-    std::vector<TCreatureType> m_types;    // +0x50
+    std::vector<CreatureType> m_types;    // +0x50
 
     type_creature_quest(unsigned char flags);
 
     virtual int getAIValue(int player);
-    virtual unsigned char isSatisfied(hero* currentHero);
-    virtual void takePayment(hero* currentHero);
+    virtual unsigned char isSatisfied(Hero* currentHero);
+    virtual void takePayment(Hero* currentHero);
     // Retail-only 0x56ccb0 (seerhut.obj, 68 B, the row after ~type_quest):
     // `field_3c >= 0 && field_3c < today`, today being the game date's
     // (month * 4 + week - 5) * 7 + day. searchArray::enter_trigger asks it
     // before pricing a quest guard. Provisional name - no DC row carries
     // it; the deadline comparison seerhut.cpp spells inline is its body.
     unsigned char hasExpired() const;
-    virtual void doProposalDialog(hero* currentHero);
+    virtual void doProposalDialog(Hero* currentHero);
     virtual void doProgressDialog();
     virtual std::string getRequirementText();
-    virtual void save(TAbstractFile* file);
+    virtual void save(AbstractFile* file);
     virtual std::string getQuestDescription();
     virtual void setDefaultText();
-    virtual void load(TAbstractFile* file, int version);
-    virtual void loadFromMap(TAbstractFile* file);
+    virtual void load(AbstractFile* file, int version);
+    virtual void loadFromMap(AbstractFile* file);
 };
 
 // Quest type 7: seven resource amounts, read as one 0x1c-byte block.
@@ -413,20 +416,20 @@ public:
     type_resource_quest(unsigned char flags);
 
     virtual int getAIValue(int player);
-    virtual unsigned char isSatisfied(hero* currentHero);
-    virtual void takePayment(hero* currentHero);
+    virtual unsigned char isSatisfied(Hero* currentHero);
+    virtual void takePayment(Hero* currentHero);
     // Retail-only 0x56ccb0 (seerhut.obj, 68 B, the row after ~type_quest):
     // `field_3c >= 0 && field_3c < today`, today being the game date's
     // (month * 4 + week - 5) * 7 + day. searchArray::enter_trigger asks it
     // before pricing a quest guard. Provisional name - no DC row carries
     // it; the deadline comparison seerhut.cpp spells inline is its body.
     unsigned char hasExpired() const;
-    virtual void doProposalDialog(hero* currentHero);
+    virtual void doProposalDialog(Hero* currentHero);
     virtual void doProgressDialog();
     virtual std::string getRequirementText();
-    virtual void load(TAbstractFile* file, int version);
-    virtual void loadFromMap(TAbstractFile* file);
-    virtual void save(TAbstractFile* file);
+    virtual void load(AbstractFile* file, int version);
+    virtual void loadFromMap(AbstractFile* file);
+    virtual void save(AbstractFile* file);
     virtual std::string getQuestDescription();
     virtual void setDefaultText();
 };
@@ -437,11 +440,11 @@ public:
 
     type_be_hero_quest(unsigned char flags);
 
-    virtual unsigned char isSatisfied(hero* currentHero);
+    virtual unsigned char isSatisfied(Hero* currentHero);
     virtual int questType();
-    virtual void load(TAbstractFile* file, int version);
-    virtual void loadFromMap(TAbstractFile* file);
-    virtual void doProposalDialog(hero* currentHero);
+    virtual void load(AbstractFile* file, int version);
+    virtual void loadFromMap(AbstractFile* file);
+    virtual void doProposalDialog(Hero* currentHero);
     virtual void doProgressDialog();
     virtual std::string getQuestDescription();
     virtual std::string getRequirementText();
@@ -454,14 +457,14 @@ public:
 
     type_belong_to_player_quest(unsigned char flags);
 
-    virtual unsigned char isSatisfied(hero* currentHero);
+    virtual unsigned char isSatisfied(Hero* currentHero);
     virtual int questType();
     virtual std::string getRequirementText();
     virtual std::string getQuestDescription();
-    virtual void load(TAbstractFile* file, int version);
-    virtual void doProposalDialog(hero* currentHero);
+    virtual void load(AbstractFile* file, int version);
+    virtual void doProposalDialog(Hero* currentHero);
     virtual void doProgressDialog();
-    virtual void save(TAbstractFile* file);
+    virtual void save(AbstractFile* file);
     virtual void setDefaultText();
 };
 

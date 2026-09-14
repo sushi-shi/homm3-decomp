@@ -81,7 +81,7 @@ public:
     char m_paddingAfterAutoDraw[1];
     textEntryWidget(int x, int y, int w, int h, int textSize,
                     const char* text, const char* fontName,
-                    font::TColor color, unsigned justification,
+                    font::Color color, unsigned justification,
                     const char* backgroundIcon, int backgroundFrame, int id,
                     int style, int readType, int insetX, int insetY);
     virtual ~textEntryWidget();

@@ -243,7 +243,7 @@ VA_COMPGEN(0x004b6c60, 0x157, IMPLICIT_COPY_CTOR, t_create_failure)
 // enclosure wrapper, then auto_ptr's own two stores - the EH frame is the
 // new-expression's, not the constructor body's.
 VA(0x004b6dc0, 0x74)
-TImmMouseEffect::TImmMouseEffect(const RECT* rect, long a, unsigned long b,
+ImmMouseEffect::ImmMouseEffect(const RECT* rect, long a, unsigned long b,
                                  unsigned long c, unsigned char d,
                                  unsigned char e)
     : m_impl(new force_feedback::t_enclosure(rect, a, b, c, d, e))
@@ -251,7 +251,7 @@ TImmMouseEffect::TImmMouseEffect(const RECT* rect, long a, unsigned long b,
 }
 
 VA(0x004b6e40, 0xE3)
-TImmMouseEffect::~TImmMouseEffect()
+ImmMouseEffect::~ImmMouseEffect()
 {
 }
 
@@ -259,14 +259,14 @@ TImmMouseEffect::~TImmMouseEffect()
 // slot +0x18 (`?Start@CImmEnclosure@@UAEHK@Z`) and slot +0x14
 // (`?Stop@CImmEnclosure@@UAEHXZ`) of the client vftable at 0x63e640.
 VA(0x004b6f30, 0x13)
-unsigned char TImmMouseEffect::start()
+unsigned char ImmMouseEffect::start()
 {
     unsigned char started = m_impl->m_enclosure->Start(0) != 0;
     return started;
 }
 
 VA(0x004b6f50, 0xB)
-void TImmMouseEffect::stop()
+void ImmMouseEffect::stop()
 {
     m_impl->m_enclosure->Stop();
 }

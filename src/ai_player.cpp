@@ -44,10 +44,10 @@ const unsigned short g_aiDayOfWeekSunday = 7;
 
 int aiResourceCost(long playerId, const int* resources);
 int aiResourceCost(const playerData* player, const int* resources);
-long aiGetSpellValue(const hero* ourHero, SpellID spell);
-bool considerHiring(long playerId, hero* candidate);
+long aiGetSpellValue(const Hero* ourHero, SpellID spell);
+bool considerHiring(long playerId, Hero* candidate);
 const std::bitset<9>& armyGrpFn0044A460();
-int canBuy(const town* currTown, int buildingId);
+int canBuy(const Town* currTown, int buildingId);
 double getTradeRatio(EGameResource source, EGameResource dest,
                        double efficiency);
 const unsigned int g_ctaShooter = 0x4;
@@ -63,7 +63,7 @@ std::vector<type_artifact_effect*> g_constArtifactEffects[144];
 // entries and the corresponding DC public names.
 class type_town_threat_checker {
 protected:
-    void markTowns(hero* enemyHero, searchArray* currentSearchArray);
+    void markTowns(Hero* enemyHero, SearchArray* currentSearchArray);
 
 public:
     int m_currentPlayerId;
@@ -72,8 +72,8 @@ public:
     type_town_threat_checker(int newPlayer) { m_currentPlayerId = newPlayer; }
     void checkTowns();
     virtual void clearMarks() const;
-    virtual unsigned char isMarked(const town* ourTown) const;
-    virtual void markTown(town* ourTown) const;
+    virtual unsigned char isMarked(const Town* ourTown) const;
+    virtual void markTown(Town* ourTown) const;
 };
 
 VA(0x004280e0, 0x171)  // dc 0x2dd64
@@ -87,7 +87,7 @@ void type_town_threat_checker::checkTowns()
             && !g_game->m_playerDisabled[playerId]) {
             for (int heroIndex = 0; heroIndex < player.m_numHeroes;
                  ++heroIndex) {
-                hero* enemyHero = g_game->getHero(player.m_heroes[heroIndex]);
+                Hero* enemyHero = g_game->getHero(player.m_heroes[heroIndex]);
                 long mobility = enemyHero->getMobility() + 800;
                 type_point start(enemyHero->m_x, enemyHero->m_y, enemyHero->m_z);
                 type_point target(-1, -1, -1);
@@ -110,13 +110,13 @@ void type_town_threat_checker::clearMarks() const
 }
 
 VA(0x004282b0, 0x157)  // dc 0x2deac
-void type_town_threat_checker::markTowns(hero* enemyHero,
-                                          searchArray* currentSearchArray)
+void type_town_threat_checker::markTowns(Hero* enemyHero,
+                                          SearchArray* currentSearchArray)
 {
     playerData& player = g_game->m_players[m_currentPlayerId];
 
     for (int townIndex = 0; townIndex < player.m_numTowns; ++townIndex) {
-        town* ourTown = g_game->getTown(player.m_townIds[townIndex]);
+        Town* ourTown = g_game->getTown(player.m_townIds[townIndex]);
         if (!isMarked(ourTown)) {
             type_point location(ourTown->m_mapX, ourTown->m_mapY,
                                 ourTown->m_mapZ);
@@ -130,10 +130,10 @@ void type_town_threat_checker::markTowns(hero* enemyHero,
 }
 
 VA(0x00428410, 0x160)  // dc 0x2dc00
-unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown)
+unsigned char canTakeTown(const Hero* attackingHero, const Town* defendingTown)
 {
-    armyGroup attackingArmy = attackingHero->m_army;
-    armyGroup defendingArmy = defendingTown->getArmy();
+    ArmyGroup attackingArmy = attackingHero->m_army;
+    ArmyGroup defendingArmy = defendingTown->getArmy();
     NewmapCell* cell = g_game->getCell(defendingTown->getLocation());
     type_AI_combat_data attacker(attackingHero, &attackingArmy, 1.25, 0,
                                  defendingTown, cell);
@@ -192,21 +192,21 @@ void type_town_threat_checker::clearMarks()
 
 // E:\gamedcs\ai_player.cpp:146
 DC_ONLY(0x2deac, 0xF2)
-void type_town_threat_checker::markTowns(hero* enemy_hero, searchArray* search_array)
+void type_town_threat_checker::markTowns(Hero* enemy_hero, SearchArray* search_array)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:179
 DC_ONLY(0x2dfa0, 0x4)
-unsigned char type_town_threat_checker::isMarked(const town* our_town)
+unsigned char type_town_threat_checker::isMarked(const Town* our_town)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:186
 DC_ONLY(0x2dfa4, 0x12)
-void type_town_threat_checker::markTown(town* our_town)
+void type_town_threat_checker::markTown(Town* our_town)
 {
     // @stub
 }
@@ -227,14 +227,14 @@ void type_garrison_purchaser::clearMarks()
 
 // E:\gamedcs\ai_player.cpp:209
 DC_ONLY(0x2dff0, 0x4)
-unsigned char type_garrison_purchaser::isMarked(const town* our_town)
+unsigned char type_garrison_purchaser::isMarked(const Town* our_town)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:217
 DC_ONLY(0x2dff4, 0xA0)
-void type_garrison_purchaser::markTown(town* our_town)
+void type_garrison_purchaser::markTown(Town* our_town)
 {
     // @stub
 }
@@ -249,7 +249,7 @@ long type_AI_player::getResourceValue(int* resources)
 #endif  // @carcass
 
 VA(0x00428570, 0x0D)  // dc 0x2dfa4
-void type_town_threat_checker::markTown(town* ourTown) const
+void type_town_threat_checker::markTown(Town* ourTown) const
 {
     ++ourTown->m_threateningHeroes;
 }
@@ -259,12 +259,12 @@ public:
     type_garrison_purchaser(int newPlayer)
         : type_town_threat_checker(newPlayer) {}
     virtual void clearMarks() const;
-    virtual unsigned char isMarked(const town* ourTown) const;
-    virtual void markTown(town* ourTown) const;
+    virtual unsigned char isMarked(const Town* ourTown) const;
+    virtual void markTown(Town* ourTown) const;
 };
 
 VA(0x00428580, 0x121)  // dc 0x2dff4
-void type_garrison_purchaser::markTown(town* ourTown) const
+void type_garrison_purchaser::markTown(Town* ourTown) const
 {
     type_AI_creature_purchaser purchaser(m_currentPlayerId, ourTown);
     playerData* player = &g_game->m_players[m_currentPlayerId];
@@ -322,7 +322,7 @@ void type_AI_player::calculateDemand()
     int buildingTownIndex;
     for (buildingTownIndex = 0; buildingTownIndex < player->m_numTowns;
          buildingTownIndex++) {
-        town* currentTown = g_game->getTown(
+        Town* currentTown = g_game->getTown(
             player->m_townIds[buildingTownIndex]);
         __int64 buildMask = currentTown->getBuildableMask();
         int building;
@@ -353,7 +353,7 @@ void type_AI_player::calculateDemand()
     int dwellingTownIndex;
     for (dwellingTownIndex = 0; dwellingTownIndex < player->m_numTowns;
          dwellingTownIndex++) {
-        town* currentTown = g_game->getTown(
+        Town* currentTown = g_game->getTown(
             player->m_townIds[dwellingTownIndex]);
         short* population = currentTown->m_population;
         for (int dwelling = 0; dwelling < 14; dwelling++, population++) {
@@ -393,7 +393,7 @@ void type_AI_player::calculateDemand()
     int marketTownIndex;
     for (marketTownIndex = 0; marketTownIndex < player->m_numTowns;
          marketTownIndex++) {
-        town* currentTown = g_game->getTown(
+        Town* currentTown = g_game->getTown(
             player->m_townIds[marketTownIndex]);
         if (currentTown->isLegalBuilding(MARKETPLACE_ID))
             markets++;
@@ -457,7 +457,7 @@ void type_AI_player::endTurn()
     short townIndex = 0;
     if (townIndex < player->m_numTowns) {
         while (true) {
-            town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
+            Town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
             if (currentTown->hasBuilding(MARKETPLACE_ID, 1)) {
                 for (short playerId = 0; playerId < 8; playerId++) {
                     if (!g_game->m_playerDisabled[playerId]
@@ -653,15 +653,15 @@ void type_AI_player::startTurn()
     playerData* player = &g_game->m_players[m_team];
 
     for (int i = 0; i < player->m_numHeroes; i++) {
-        hero* currentHero = g_game->getHero(player->m_heroes[i]);
+        Hero* currentHero = g_game->getHero(player->m_heroes[i]);
         currentHero->m_targetIsCritical = 0;
         currentHero->m_isSleeping = 0;
     }
 
     for (int j = 0; j < player->m_numTowns; j++) {
-        town* currentTown = g_game->getTown(player->m_townIds[j]);
+        Town* currentTown = g_game->getTown(player->m_townIds[j]);
         if (currentTown->m_garrisonHeroId >= 0) {
-            hero* currentHero = g_game->getHero(currentTown->m_garrisonHeroId);
+            Hero* currentHero = g_game->getHero(currentTown->m_garrisonHeroId);
             currentHero->m_targetIsCritical = 0;
             currentHero->m_isSleeping = 0;
         }
@@ -714,7 +714,7 @@ void type_AI_player::calculateReserve()
     memset(m_reservedFunds, 0, sizeof(m_reservedFunds));
     short dwelling;
     short* population;
-    town* currentTown;
+    Town* currentTown;
 
     for (short townIndex = 0; townIndex < player->m_numTowns; townIndex++) {
         currentTown = g_game->getTown(player->m_townIds[townIndex]);
@@ -769,11 +769,11 @@ static long sumPlayerDwellings(long playerId)
     long value = 0;
     playerData* player = &g_game->m_players[playerId];
     for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
-        town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
+        Town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
         for (int dwelling = 0; dwelling < 14; ++dwelling) {
             long growth = currentTown->getGrowthRate(dwelling);
             if (growth > 0) {
-                TCreatureType creature = g_townDwellingCreatures[
+                CreatureType creature = g_townDwellingCreatures[
                     currentTown->m_type * 14 + dwelling];
                 value += g_creatureTypeTraits[creature].m_aiValue * growth;
             }
@@ -794,12 +794,12 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
         income[i] = player->m_ai.m_turnProductionResource[i] * 7;
 
     for (i = 0; i < player->m_numTowns; ++i) {
-        town* currentTown = g_game->getTown(player->m_townIds[i]);
+        Town* currentTown = g_game->getTown(player->m_townIds[i]);
         short dwelling;
         for (dwelling = 0; dwelling < 14; ++dwelling) {
             short growth = currentTown->getGrowthRate(dwelling);
             if (growth > 0) {
-                TCreatureType creature = g_townDwellingCreatures[
+                CreatureType creature = g_townDwellingCreatures[
                     currentTown->m_type * 14 + dwelling];
                 getMonsterCost(creature, resources);
                 for (short resource = 0; resource < 7; ++resource) {
@@ -875,7 +875,7 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
 
 // E:\gamedcs\ai_player.cpp:1006
 DC_ONLY(0x2f8a0, 0xF8)
-int valueOfCastleUpgrade(town* current_town, int* extra_cost)
+int valueOfCastleUpgrade(Town* current_town, int* extra_cost)
 {
     // @stub
 }
@@ -1012,7 +1012,7 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
 
     for (int townIndex = 0; townIndex < player->m_numTowns;
          ++townIndex) {
-        town* currentTown = g_game->getTown(
+        Town* currentTown = g_game->getTown(
             player->m_townIds[townIndex]);
         if (currentTown->hasBuilding(MARKETPLACE_ID, true)
             || (canBuildMarket
@@ -1095,7 +1095,7 @@ bool type_AI_player::buildMarkets(int* supply)
     if (supply[0] < 0 || player->m_ai.m_turnProductionResource[0] <= 0)
         return false;
     for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
-        town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
+        Town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
         if (!(currentTown->m_active & g_bitNumber[MARKETPLACE_ID])
             && currentTown->canBuild(MARKETPLACE_ID)) {
             if (!canBuy(currentTown, MARKETPLACE_ID))
@@ -1113,7 +1113,7 @@ void type_AI_player::doResourceTrade(int* supply)
     int marketCount = 0;
     playerData* player = &g_game->m_players[m_team];
     for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
-        town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
+        Town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
         if (currentTown->m_active & g_bitNumber[MARKETPLACE_ID])
             ++marketCount;
     }
@@ -1163,24 +1163,24 @@ void type_AI_player::doResourceTrade(int* supply)
     calculateDemand();
 }
 
-long valueOfDwelling(town* currentTown, short dwelling,
+long valueOfDwelling(Town* currentTown, short dwelling,
                        unsigned char* prohibited, int* extraCost);
-long valueOfDwellingUpgrade(town* currentTown, short dwelling,
+long valueOfDwellingUpgrade(Town* currentTown, short dwelling,
                                int* extraCost);
-int valueOfCastleUpgrade(town* currentTown, int* extraCost);
-long valueOfHorde(town* currentTown, type_building_id building,
+int valueOfCastleUpgrade(Town* currentTown, int* extraCost);
+long valueOfHorde(Town* currentTown, type_building_id building,
                     unsigned char* prohibited, int* extraCost);
-long valueOfHordeUpgrade(town* currentTown, type_building_id building,
+long valueOfHordeUpgrade(Town* currentTown, type_building_id building,
                             unsigned char* prohibited, int* extraCost);
-long valueOfHall(town* currentTown, type_building_id building);
+long valueOfHall(Town* currentTown, type_building_id building);
 int aiResourceCost(const playerData* player, const int* resources);
-int canBuy(const town* currTown, int buildingId);
+int canBuy(const Town* currTown, int buildingId);
 
 // E:\gamedcs\ai_player.cpp:1045
 // Single-call-site static: /Ob2 folds it into value_of_building below,
 // which is itself folded into purchase_building - no retail body.
 DC_ONLY(0x2f998, 0x24)
-static long valueOfSilo(town* currentTown, playerData* player)
+static long valueOfSilo(Town* currentTown, playerData* player)
 {
     return 7 * aiResourceCost(player, currentTown->getSiloIncome());
 }
@@ -1192,7 +1192,7 @@ static long valueOfSilo(town* currentTown, playerData* player)
 // The faction switch keeps retail's source order (Stronghold's arm sits
 // between Tower's and Necropolis'). Single call site - no retail body.
 DC_ONLY(0x2fdac, 0x29c)
-static long valueOfBuilding(town* currentTown, type_building_id building,
+static long valueOfBuilding(Town* currentTown, type_building_id building,
                               unsigned char* prohibitedCreatures,
                               int* extraCost)
 {
@@ -1283,7 +1283,7 @@ static long valueOfBuilding(town* currentTown, type_building_id building,
         case TOWN_FORTRESS:
             if ((building == EXTRA_0_ID || building == EXTRA_1_ID)
                 && currentTown->m_threateningHeroes)
-                return static_cast<const town*>(currentTown)
+                return static_cast<const Town*>(currentTown)
                            ->getArmy().getAIValue() / 20;
             break;
         }
@@ -1308,7 +1308,7 @@ static long valueOfBuilding(town* currentTown, type_building_id building,
 // starts as bitNumber[building] alone, so a scan from 0 can only hit at
 // `building` - and this one is what the bytes say. 96.20 -> 97.32.
 DC_ONLY(0x30048, 0x106)
-static __int64 getRequirements(const town* currentTown,
+static __int64 getRequirements(const Town* currentTown,
                                 type_building_id building)
 {
     __int64 requirements = g_bitNumber[building];
@@ -1338,7 +1338,7 @@ static __int64 getRequirements(const town* currentTown,
 // E:\gamedcs\ai_player.cpp:1313
 // Single call site - no retail body.
 DC_ONLY(0x30150, 0x74)
-static void getFullCost(const town* currentTown, int* result,
+static void getFullCost(const Town* currentTown, int* result,
                           __int64 requirements)
 {
     for (int k = 0; k < MAX_BUILDING_TYPE; ++k) {
@@ -1393,14 +1393,14 @@ unsigned char type_AI_player::purchaseBuilding(
     long fullValue[MAX_BUILDING_TYPE];
     long basicValue[MAX_BUILDING_TYPE];
     long bestValue = 0;
-    town* bestTown = 0;
+    Town* bestTown = 0;
     int bestBuilding = MAX_BUILDING_TYPE;
     __int64 requirements;
     playerData* player = &g_game->m_players[m_team];
 
     for (short townIndex = 0; townIndex < player->m_numTowns;
          ++townIndex) {
-        town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
+        Town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
         __int64 buildMask = currentTown->getBuildableMask();
         if (g_game->m_towns[currentTown->m_id].m_builtThisTurn)
             continue;
@@ -1497,13 +1497,13 @@ unsigned char type_AI_player::purchaseBuilding(
 }
 
 VA(0x0042b520, 0x8b)  // dc 0x2f4b0
-long valueOfDwelling(town* currentTown, short dwelling, unsigned char* prohibited, int* extraCost)
+long valueOfDwelling(Town* currentTown, short dwelling, unsigned char* prohibited, int* extraCost)
 {
-    TCreatureType creature = g_townDwellingCreatures[
+    CreatureType creature = g_townDwellingCreatures[
         currentTown->m_type * 14 + dwelling];
     if (prohibited[creature])
         return -1;
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
+    const CreatureTypeTraits& traits = g_creatureTypeTraits[creature];
     long growth = traits.m_growthRate;
     if (g_game->m_day >= 5)
         growth = currentTown->getCastleGrowthBonus(creature) + 2 * growth;
@@ -1513,18 +1513,18 @@ long valueOfDwelling(town* currentTown, short dwelling, unsigned char* prohibite
 }
 
 VA(0x0042b5b0, 0xbe)  // dc 0x2f548
-long valueOfDwellingUpgrade(town* currentTown, short dwelling, int* extraCost)
+long valueOfDwellingUpgrade(Town* currentTown, short dwelling, int* extraCost)
 {
     short baseDwelling = dwelling - 7;
-    TCreatureType creature = g_townDwellingCreatures[
+    CreatureType creature = g_townDwellingCreatures[
         currentTown->m_type * 14 + baseDwelling];
-    TCreatureType upgraded = g_townDwellingCreatures[
+    CreatureType upgraded = g_townDwellingCreatures[
         currentTown->m_type * 14 + dwelling];
     long amount = currentTown->m_population[baseDwelling];
     if (g_game->m_day >= 5)
         amount += currentTown->getGrowthRate(baseDwelling);
-    const TCreatureTypeTraits& baseTraits = g_creatureTypeTraits[creature];
-    const TCreatureTypeTraits& upgradedTraits = g_creatureTypeTraits[upgraded];
+    const CreatureTypeTraits& baseTraits = g_creatureTypeTraits[creature];
+    const CreatureTypeTraits& upgradedTraits = g_creatureTypeTraits[upgraded];
     for (int i = 0; i < 7; i++)
         extraCost[i] += (upgradedTraits.m_cost[i]
                           - baseTraits.m_cost[i]) * amount;
@@ -1532,7 +1532,7 @@ long valueOfDwellingUpgrade(town* currentTown, short dwelling, int* extraCost)
 }
 
 VA(0x0042b670, 0x111)  // dc 0x2f8a0
-int valueOfCastleUpgrade(town* currentTown, int* extraCost)
+int valueOfCastleUpgrade(Town* currentTown, int* extraCost)
 {
     long value = 0;
     if (g_game->m_mapHeader.m_victoryCondition.m_type
@@ -1549,7 +1549,7 @@ int valueOfCastleUpgrade(town* currentTown, int* extraCost)
             if (currentTown->getGrowthRate(dwelling) > 0) {
                 int creature = g_townDwellingCreatures[
                     currentTown->m_type * 14 + dwelling];
-                const TCreatureTypeTraits* traits =
+                const CreatureTypeTraits* traits =
                     g_creatureTypeTraits + creature;
                 for (int i = 0; i < 7; ++i)
                     extraCost[i] += traits->m_cost[i];
@@ -1561,37 +1561,37 @@ int valueOfCastleUpgrade(town* currentTown, int* extraCost)
 }
 
 VA(0x0042b790, 0x62)  // dc 0x2f9bc
-long valueOfHorde(town* currentTown, type_building_id building, unsigned char* prohibited, int* extraCost)
+long valueOfHorde(Town* currentTown, type_building_id building, unsigned char* prohibited, int* extraCost)
 {
     type_horde_effect* horde = currentTown->getHordeEffect(building);
-    TCreatureType creature = horde->m_creature;
+    CreatureType creature = horde->m_creature;
     if (prohibited[creature])
         return -1;
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
+    const CreatureTypeTraits& traits = g_creatureTypeTraits[creature];
     for (int i = 0; i < 7; i++)
         extraCost[i] += horde->m_bonus * traits.m_cost[i];
     return traits.m_aiValue * horde->m_bonus;
 }
 
 VA(0x0042b800, 0xa2)  // dc 0x2fa88
-long valueOfHordeUpgrade(town* currentTown, type_building_id building, unsigned char* prohibited, int* extraCost)
+long valueOfHordeUpgrade(Town* currentTown, type_building_id building, unsigned char* prohibited, int* extraCost)
 {
     type_horde_effect* horde = currentTown->getHordeEffect(building);
     if (!horde)
         return -1;
     if (g_bitNumber[building - 1] & currentTown->m_built)
         return -1;
-    TCreatureType creature = horde->m_creature;
+    CreatureType creature = horde->m_creature;
     if (prohibited[creature])
         return -1;
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
+    const CreatureTypeTraits& traits = g_creatureTypeTraits[creature];
     for (int i = 0; i < 7; i++)
         extraCost[i] += horde->m_bonus * traits.m_cost[i];
     return traits.m_aiValue * horde->m_bonus;
 }
 
 VA(0x0042b8b0, 0x130)  // dc 0x2fb2c
-long valueOfHall(town* currentTown, type_building_id building)
+long valueOfHall(Town* currentTown, type_building_id building)
 {
     long value = 0;
     if (currentTown->m_threateningHeroes > 0)
@@ -1625,7 +1625,7 @@ long valueOfHall(town* currentTown, type_building_id building)
 
 // E:\gamedcs\ai_player.cpp:1808, dc 0x31030.
 static int __cdecl maxBuyableCreatures(
-    const long* funds, TCreatureType type, int limit)
+    const long* funds, CreatureType type, int limit)
 {
     int resources[7];
     getMonsterCost(type, resources);
@@ -1662,27 +1662,27 @@ void type_AI_player::purchaseBuildings()
 // against get_buildable_mask and prices each candidate through the
 // single-candidate set overload with the leftover supply as funds.
 VA(0x0042ba60, 0x447)  // retail callee set + arity, dc 0x310f4
-void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
+void type_AI_player::buyCreatures(Hero* currentHero, Town* currentTown)
 {
     playerData* player = &g_game->m_players[m_team];
     type_AI_creature_purchaser purchaser(currentHero->m_owner, currentTown);
 
-    hero* garrisonHero = 0;
+    Hero* garrisonHero = 0;
     if (currentTown->m_garrisonHeroId > -1)
         garrisonHero = g_game->getHero(currentTown->m_garrisonHeroId);
 
     unsigned char alliance = g_game->m_players[currentHero->m_owner]
         .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
     purchaser.doSwap(currentHero,
-                      const_cast<armyGroup*>(
-                          &static_cast<const town*>(currentTown)->getArmy()),
+                      const_cast<ArmyGroup*>(
+                          &static_cast<const Town*>(currentTown)->getArmy()),
                       garrisonHero, alliance);
 
     purchaser.setSubtractMode(0);
     purchaser.doPurchase(&currentHero->m_army,
                           currentHero->getMorale(0, 0, 1),
-                          const_cast<armyGroup*>(
-                              &static_cast<const town*>(currentTown)
+                          const_cast<ArmyGroup*>(
+                              &static_cast<const Town*>(currentTown)
                                    ->getArmy()),
                           player->m_resources, 1, alliance);
 
@@ -1706,8 +1706,8 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
                g_game->getTeam(g_netLocalGamePos)))
         return;
     short amount;
-    const TCreatureTypeTraits* traits;
-    TCreatureType creature;
+    const CreatureTypeTraits* traits;
+    CreatureType creature;
     long funds[7];
     long bestValue = 0;
     union {
@@ -1735,7 +1735,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
                 purchaser.set(creature, &amount);
                 long value = purchaser.getPurchaseValue(
                     &currentHero->m_army, morale,
-                    &static_cast<const town*>(currentTown)
+                    &static_cast<const Town*>(currentTown)
                          ->getArmy(),
                     funds, alliance);
                 if (value > bestValue) {
@@ -1753,15 +1753,15 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
             player->m_resources[resource] -= cost[resource];
         purchaser.set(currentTown);
         purchaser.doPurchase(&currentHero->m_army, morale,
-                              const_cast<armyGroup*>(
-                                  &static_cast<const town*>(
+                              const_cast<ArmyGroup*>(
+                                  &static_cast<const Town*>(
                                        currentTown)->getArmy()),
                               player->m_resources, 1, alliance);
     }
 }
 
 VA(0x0042beb0, 0x187)  // dc 0x31398
-void type_AI_player::buyMageGuild(hero* currentHero, town* currentTown)
+void type_AI_player::buyMageGuild(Hero* currentHero, Town* currentTown)
 {
     int building;
     building = currentTown->m_mageLevel;
@@ -1784,7 +1784,7 @@ void type_AI_player::buyMageGuild(hero* currentHero, town* currentTown)
         playerData* player = &g_game->m_players[m_team];
         for (int townIndex = 0; townIndex < player->m_numTowns;
              ++townIndex) {
-            town* otherTown = g_game->getTown(player->m_townIds[townIndex]);
+            Town* otherTown = g_game->getTown(player->m_townIds[townIndex]);
             int otherLevel = otherTown->m_mageLevel;
             if (otherLevel > building
                 && otherLevel < currentHero->m_skillLevel[eSecSkillWisdom] + 2
@@ -1806,7 +1806,7 @@ void type_AI_player::buyMageGuild(hero* currentHero, town* currentTown)
 // E:\gamedcs\ai_player.cpp:2022
 DC_ONLY(0x31514, 0xA8)
 // Before normalization (function): move_creatures.
-void moveCreatures(armyGroup* army, TCreatureType type, short amount)
+void moveCreatures(ArmyGroup* army, CreatureType type, short amount)
 {
     // @stub
 }
@@ -1820,7 +1820,7 @@ void type_AI_creature_swapper::type_AI_creature_swapper()
 
 // E:\gamedcs\ai_player.cpp:2074
 DC_ONLY(0x315d8, 0x92)
-void type_AI_creature_swapper::addCreatures(TCreatureType type, short amount, short slot)
+void type_AI_creature_swapper::addCreatures(CreatureType type, short amount, short slot)
 {
     // @stub
 }
@@ -1834,7 +1834,7 @@ long type_AI_creature_swapper::doBestSwap(unsigned char can_take_all)
 
 // E:\gamedcs\ai_player.cpp:2171
 DC_ONLY(0x317d4, 0x34)
-short calculateImprovement(const hero* current_hero, const hero* second_hero)
+short calculateImprovement(const Hero* current_hero, const Hero* second_hero)
 {
     // @stub
 }
@@ -1844,7 +1844,7 @@ short calculateImprovement(const hero* current_hero, const hero* second_hero)
 
 // E:\gamedcs\ai_player.cpp:2209
 DC_ONLY(0x31864, 0xC0)
-long type_AI_creature_swapper::getSwapValue(const hero* current_hero, const armyGroup* source_army, const hero* second_hero)
+long type_AI_creature_swapper::getSwapValue(const Hero* current_hero, const ArmyGroup* source_army, const Hero* second_hero)
 {
     // @stub
 }
@@ -1865,7 +1865,7 @@ long type_AI_creature_swapper::chooseWeakestArmy(unsigned char is_shooter, unsig
 
 // E:\gamedcs\ai_player.cpp:2350
 DC_ONLY(0x31af4, 0x346)
-long type_AI_creature_swapper::valueOfAddingArmy(TCreatureType type, short count, short* slot, unsigned char must_replace_creature)
+long type_AI_creature_swapper::valueOfAddingArmy(CreatureType type, short count, short* slot, unsigned char must_replace_creature)
 {
     // @stub
 }
@@ -1879,28 +1879,28 @@ void type_AI_creature_purchaser::type_AI_creature_purchaser(long player, generat
 
 // E:\gamedcs\ai_player.cpp:2483
 DC_ONLY(0x31ed4, 0x4E)
-void type_AI_creature_purchaser::type_AI_creature_purchaser(long player, town* current_town)
+void type_AI_creature_purchaser::type_AI_creature_purchaser(long player, Town* current_town)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2495
 DC_ONLY(0x31f24, 0x6E)
-void type_AI_creature_purchaser::type_AI_creature_purchaser(long player, TCreatureType type, short* amount, bool is_free)
+void type_AI_creature_purchaser::type_AI_creature_purchaser(long player, CreatureType type, short* amount, bool is_free)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2506
 DC_ONLY(0x31f94, 0x68)
-void type_AI_creature_purchaser::set(town* current_town)
+void type_AI_creature_purchaser::set(Town* current_town)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2524
 DC_ONLY(0x31ffc, 0x3A)
-void type_AI_creature_purchaser::set(TCreatureType type, short* amount)
+void type_AI_creature_purchaser::set(CreatureType type, short* amount)
 {
     // @stub
 }
@@ -1914,28 +1914,28 @@ long type_AI_creature_purchaser::doBestPurchase(unsigned char trade_allowed)
 
 // E:\gamedcs\ai_player.cpp:2626
 DC_ONLY(0x32288, 0x70)
-void type_AI_creature_purchaser::doPurchase(armyGroup* new_army, short new_morale, armyGroup* new_adjacent_army, long* new_funds, unsigned char allow_trade)
+void type_AI_creature_purchaser::doPurchase(ArmyGroup* new_army, short new_morale, ArmyGroup* new_adjacent_army, long* new_funds, unsigned char allow_trade)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2657
 DC_ONLY(0x322f8, 0xC2)
-long type_AI_creature_purchaser::getPurchaseValue(const armyGroup* new_army, short new_morale, const armyGroup* new_adjacent_army, const long* new_funds)
+long type_AI_creature_purchaser::getPurchaseValue(const ArmyGroup* new_army, short new_morale, const ArmyGroup* new_adjacent_army, const long* new_funds)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2692
 DC_ONLY(0x323bc, 0x72)
-void aiConsolidateArmy(armyGroup& current_army)
+void aiConsolidateArmy(ArmyGroup& current_army)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2718
 DC_ONLY(0x32430, 0x18A)
-void aiArrangeArmy(armyGroup& current_army)
+void aiArrangeArmy(ArmyGroup& current_army)
 {
     // @stub
 }
@@ -1944,7 +1944,7 @@ void aiArrangeArmy(armyGroup& current_army)
 
 // E:\gamedcs\ai_player.cpp:2952
 DC_ONLY(0x3285c, 0x36)
-void AI_arrange_army_for_combat(hero* current_hero, const hero* enemy_hero, const armyGroup* enemy)
+void AI_arrange_army_for_combat(Hero* current_hero, const Hero* enemy_hero, const ArmyGroup* enemy)
 {
     // @stub
 }
@@ -1955,7 +1955,7 @@ void AI_arrange_army_for_combat(hero* current_hero, const hero* enemy_hero, cons
 
 // E:\gamedcs\ai_player.cpp:3044
 DC_ONLY(0x32a84, 0x3AC)
-long markDestinations(hero* current_hero, long max_distance, searchArray* search_array, unsigned short* friendly_distances, type_search_type search_type)
+long markDestinations(Hero* current_hero, long max_distance, SearchArray* search_array, unsigned short* friendly_distances, type_search_type search_type)
 {
     // @stub
 }
@@ -1965,49 +1965,49 @@ long markDestinations(hero* current_hero, long max_distance, searchArray* search
 
 // E:\gamedcs\ai_player.cpp:3225
 DC_ONLY(0x33038, 0x3CA)
-long findAllDestinations(hero* current_hero, searchArray* search_array, std::vector<HeroDestination,std::allocator<HeroDestination>* destinations, long max_distance, unsigned char hiring_hero, unsigned char allow_spells, unsigned char explore_mode)
+long findAllDestinations(Hero* current_hero, SearchArray* search_array, std::vector<HeroDestination,std::allocator<HeroDestination>* destinations, long max_distance, unsigned char hiring_hero, unsigned char allow_spells, unsigned char explore_mode)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:3390
 DC_ONLY(0x33404, 0x450)
-void markStrategicMap(hero* current_hero, long* strategic_map, std::vector<HeroDestination,std::allocator<HeroDestination>* destinations)
+void markStrategicMap(Hero* current_hero, long* strategic_map, std::vector<HeroDestination,std::allocator<HeroDestination>* destinations)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:3498
 DC_ONLY(0x33854, 0x1F6)
-int netValueOfLocation(hero* current_hero, HeroDestination* destination, long* strategic_map, pathCell* path_cell, searchArray* search_array)
+int netValueOfLocation(Hero* current_hero, HeroDestination* destination, long* strategic_map, pathCell* path_cell, SearchArray* search_array)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:3573
 DC_ONLY(0x33a4c, 0x2AC)
-void unblockLith(hero* current_hero, HeroDestination* destination, long* best_distance)
+void unblockLith(Hero* current_hero, HeroDestination* destination, long* best_distance)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:3645
 DC_ONLY(0x33cf8, 0x46A)
-int aiChooseDestination(hero* current_hero, long max_distance, HeroDestination* best_point, long* best_raw_value, unsigned char allow_spells, unsigned char explore_mode)
+int aiChooseDestination(Hero* current_hero, long max_distance, HeroDestination* best_point, long* best_raw_value, unsigned char allow_spells, unsigned char explore_mode)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:3813
 DC_ONLY(0x34164, 0x90)
-void considerHidingMouse(hero* current_hero, int direction)
+void considerHidingMouse(Hero* current_hero, int direction)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:3832
 DC_ONLY(0x341f4, 0x1CE)
-unsigned char attemptStep(hero* current_hero, pathCell* path_cell, unsigned char bStandEnd, unsigned char first_step)
+unsigned char attemptStep(Hero* current_hero, pathCell* path_cell, unsigned char bStandEnd, unsigned char first_step)
 {
     // @stub
 }
@@ -2030,7 +2030,7 @@ void checkGatePurchase(type_point point)
 
 // E:\gamedcs\ai_player.cpp:4179
 DC_ONLY(0x34b08, 0x4B0)
-void aiAttemptMove(hero* current_hero, HeroDestination* best_point, long* best_raw_value, unsigned char explore_mode)
+void aiAttemptMove(Hero* current_hero, HeroDestination* best_point, long* best_raw_value, unsigned char explore_mode)
 {
     // @stub
 }
@@ -2042,14 +2042,14 @@ void aiAttemptMove(hero* current_hero, HeroDestination* best_point, long* best_r
 
 // E:\gamedcs\ai_player.cpp:4476
 DC_ONLY(0x354bc, 0x32E)
-unsigned char considerHiring(long player_id, hero* candidate)
+unsigned char considerHiring(long player_id, Hero* candidate)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:4565
 DC_ONLY(0x357ec, 0x9C)
-town* getShipyardTown(const playerData* player, long x, long y, long z)
+Town* getShipyardTown(const playerData* player, long x, long y, long z)
 {
     // @stub
 }
@@ -2063,14 +2063,14 @@ unsigned char getMapShipyard(const playerData* player, long x, long y, long z)
 
 // E:\gamedcs\ai_player.cpp:4607
 DC_ONLY(0x35910, 0xFE)
-void aiBuildShip(const hero* our_hero, long x, long y, long z)
+void aiBuildShip(const Hero* our_hero, long x, long y, long z)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:4643
 DC_ONLY(0x35a10, 0xB6)
-long aiGetShipCost(const hero* our_hero, type_point point)
+long aiGetShipCost(const Hero* our_hero, type_point point)
 {
     // @stub
 }
@@ -2174,7 +2174,7 @@ void type_duration_artifact::type_duration_artifact(long new_bonus)
 
 // E:\gamedcs\ai_player.cpp:5285
 DC_ONLY(0x36838, 0x44)
-void type_school_artifact::type_school_artifact(TSpellSchool new_school, long new_bonus)
+void type_school_artifact::type_school_artifact(SpellSchool new_school, long new_bonus)
 {
     // @stub
 }
@@ -2202,7 +2202,7 @@ void type_antiluck_artifact::type_antiluck_artifact()
 
 // E:\gamedcs\ai_player.cpp:5433
 DC_ONLY(0x36dd4, 0x54)
-void type_tome_artifact::type_tome_artifact(TSpellSchool new_school)
+void type_tome_artifact::type_tome_artifact(SpellSchool new_school)
 {
     // @stub
 }
@@ -2223,7 +2223,7 @@ void type_creature_growth_artifact::type_creature_growth_artifact(long new_level
 
 // E:\gamedcs\ai_player.cpp:5505
 DC_ONLY(0x3704c, 0x148)
-long type_creature_growth_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char exact)
+long type_creature_growth_artifact::getValue(const Hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
 }
@@ -2232,21 +2232,21 @@ long type_creature_growth_artifact::getValue(const hero* owner, unsigned char eq
 
 // E:\gamedcs\ai_player.cpp:5643
 DC_ONLY(0x37464, 0xAE)
-long aiGetEquipValue(type_artifact artifact, const hero* our_hero, unsigned char exact)
+long aiGetEquipValue(type_artifact artifact, const Hero* our_hero, unsigned char exact)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5708
 DC_ONLY(0x37588, 0x266)
-long getFullValue(const hero* our_hero)
+long getFullValue(const Hero* our_hero)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5792
 DC_ONLY(0x377f0, 0xA8)
-long removeNegativeArtifacts(hero* our_hero)
+long removeNegativeArtifacts(Hero* our_hero)
 {
     // @stub
 }
@@ -2255,14 +2255,14 @@ long removeNegativeArtifacts(hero* our_hero)
 
 // E:\gamedcs\ai_player.cpp:5940
 DC_ONLY(0x37a58, 0x74)
-void aiEquipArtifacts(hero* our_hero)
+void aiEquipArtifacts(Hero* our_hero)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5967
 DC_ONLY(0x37acc, 0xEE)
-void aiSwapArtifacts(hero* source, hero* dest)
+void aiSwapArtifacts(Hero* source, Hero* dest)
 {
     // @stub
 }
@@ -2297,42 +2297,42 @@ unsigned char type_point::operator!=(const type_point* arg)
 
 // E:\gamedcs\artifact.h:229
 DC_ONLY(0x37d88, 0x2C)
-unsigned char artifactAllowedInSlot(TArtifact artifact, TArtifactSlot slot)
+unsigned char artifactAllowedInSlot(Artifact artifact, ArtifactSlot slot)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.h:981
 DC_ONLY(0x37db4, 0x10)
-TSkillMastery hero::getSecondarySkill(TSecondarySkill skill)
+SkillMastery Hero::getSecondarySkill(SecondarySkill skill)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.h:991
 DC_ONLY(0x37dc4, 0x8)
-long hero::get_value_of_duration()
+long Hero::get_value_of_duration()
 {
     // @stub
 }
 
 // E:\gamedcs\hero.h:996
 DC_ONLY(0x37dcc, 0x8)
-long hero::getValueOfKnowledge()
+long Hero::getValueOfKnowledge()
 {
     // @stub
 }
 
 // E:\gamedcs\hero.h:1001
 DC_ONLY(0x37dd4, 0x8)
-long hero::getValueOfPower()
+long Hero::getValueOfPower()
 {
     // @stub
 }
 
 // E:\gamedcs\hero.h:1016
 DC_ONLY(0x37ddc, 0x10)
-unsigned char hero::isInSpellbook(SpellID spell)
+unsigned char Hero::isInSpellbook(SpellID spell)
 {
     // @stub
 }
@@ -2360,7 +2360,7 @@ double type_AI_player::getResourceValue(EGameResource resource)
 
 // E:\gamedcs\ai_player.h:299
 DC_ONLY(0x37e08, 0x16)
-void type_creature_source::type_creature_source(TCreatureType new_type, short* new_amount, bool _is_free)
+void type_creature_source::type_creature_source(CreatureType new_type, short* new_amount, bool _is_free)
 {
     // @stub
 }
@@ -2402,28 +2402,28 @@ void type_spellvalue::setPower(long arg)
 
 // E:\gamedcs\findpath.h:231
 DC_ONLY(0x37e4c, 0x18)
-long searchArray::getVisitedCount()
+long SearchArray::getVisitedCount()
 {
     // @stub
 }
 
 // E:\gamedcs\findpath.h:236
 DC_ONLY(0x37e64, 0x18)
-pathCell* searchArray::getVisitedCell(long index)
+pathCell* SearchArray::getVisitedCell(long index)
 {
     // @stub
 }
 
 // E:\gamedcs\findpath.h:247
 DC_ONLY(0x37e7c, 0x8)
-unsigned char searchArray::limitWasReached()
+unsigned char SearchArray::limitWasReached()
 {
     // @stub
 }
 
 // E:\gamedcs\findpath.h:257
 DC_ONLY(0x37e84, 0x12)
-void searchArray::setRectangle(tagRECT* rect)
+void SearchArray::setRectangle(tagRECT* rect)
 {
     // @stub
 }
@@ -2477,22 +2477,22 @@ void type_AI_creature_swapper::getAlignments()
 
 VA(0x0042c130, 0x146)  // dc 0x315d8
 void type_AI_creature_swapper::addCreatures(
-    TCreatureType type, short amount, short slot)
+    CreatureType type, short amount, short slot)
 {
-    TCreatureType oldType = m_army->m_armyTypes[slot];
+    CreatureType oldType = m_army->m_armyTypes[slot];
     m_armyValueIncrease += g_creatureTypeTraits[type].m_aiValue * amount;
     if (oldType != type && oldType != CREATURE_NONE) {
         m_armyValueIncrease -= g_creatureTypeTraits[oldType].m_aiValue
             * static_cast<short>(m_army->m_numTroops[slot]);
         short oldAmount = m_army->m_numTroops[slot];
 
-        armyGroup* destination = m_adjacentArmy;
+        ArmyGroup* destination = m_adjacentArmy;
         if (destination && !destination->add(oldType, oldAmount, -1)) {
             long weakestValue = -g_creatureTypeTraits[oldType].m_aiValue
                 * oldAmount;
             short weakestSlot = -1;
             for (short candidate = 0;
-                 candidate < armyGroup::ARMY_GROUP_SLOT_COUNT;
+                 candidate < ArmyGroup::ARMY_GROUP_SLOT_COUNT;
                  ++candidate) {
                 long value = -g_creatureTypeTraits[
                     destination->m_armyTypes[candidate]].m_aiValue
@@ -2521,8 +2521,8 @@ long type_AI_creature_swapper::doBestSwap(bool canTakeAll)
     short bestAmount = 0;
     getAlignments();
 
-    for (short source = 0; source < armyGroup::ARMY_GROUP_SLOT_COUNT; ++source) {
-        TCreatureType type = m_adjacentArmy->m_armyTypes[source];
+    for (short source = 0; source < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++source) {
+        CreatureType type = m_adjacentArmy->m_armyTypes[source];
         if (type == CREATURE_NONE)
             continue;
         short count = m_adjacentArmy->m_numTroops[source];
@@ -2555,7 +2555,7 @@ long type_AI_creature_swapper::doBestSwap(bool canTakeAll)
     if (bestValue <= 0)
         return bestValue;
 
-    TCreatureType swapType = m_adjacentArmy->m_armyTypes[bestSourceSlot];
+    CreatureType swapType = m_adjacentArmy->m_armyTypes[bestSourceSlot];
     if (static_cast<short>(m_adjacentArmy->m_numTroops[bestSourceSlot])
         == bestAmount)
         m_adjacentArmy->dismiss(bestSourceSlot);
@@ -2573,7 +2573,7 @@ long type_AI_creature_swapper::doBestSwap(bool canTakeAll)
 // buy_creatures expansion (97.7723 versus 95.2939 without the override).
 // That caller residual must be recovered through its natural compiler state.
 static short calculateImprovement(
-    const hero* currentHero, const hero* secondHero)
+    const Hero* currentHero, const Hero* secondHero)
 {
     short improvement =
         currentHero->getPrimarySkillTotal();
@@ -2586,9 +2586,9 @@ static short calculateImprovement(
 }
 
 VA(0x0042c3b0, 0xe3)  // dc 0x31808
-void type_AI_creature_swapper::doSwap(hero* currentHero,
-                                       armyGroup* sourceArmy,
-                                       hero* secondHero,
+void type_AI_creature_swapper::doSwap(Hero* currentHero,
+                                       ArmyGroup* sourceArmy,
+                                       Hero* secondHero,
                                        unsigned char newHasAngelicAlliance)
 {
     m_hasAngelicAlliance = newHasAngelicAlliance;
@@ -2615,11 +2615,11 @@ void type_AI_creature_swapper::doSwap(hero* currentHero,
 // 80.38%, so the source-false qualifier is rejected.
 VA(0x0042c4a0, 0x108)  // DC method/locals + Complete parameter, dc 0x31864
 long type_AI_creature_swapper::getSwapValue(
-    const hero* currentHero, const armyGroup* sourceArmy,
-    const hero* secondHero, unsigned char newHasAngelicAlliance)
+    const Hero* currentHero, const ArmyGroup* sourceArmy,
+    const Hero* secondHero, unsigned char newHasAngelicAlliance)
 {
-    armyGroup localArmy(currentHero->m_army);
-    armyGroup localSource(*sourceArmy);
+    ArmyGroup localArmy(currentHero->m_army);
+    ArmyGroup localSource(*sourceArmy);
     long value = 0;
 
     m_hasAngelicAlliance = newHasAngelicAlliance;
@@ -2643,15 +2643,15 @@ VA(0x0042c5b0, 0xD1)  // dc 0x31924
 void type_AI_creature_swapper::dumpExtraCreature()
 {
     if (!m_adjacentArmy
-        || m_adjacentArmy->getNumArmies() == armyGroup::ARMY_GROUP_SLOT_COUNT
+        || m_adjacentArmy->getNumArmies() == ArmyGroup::ARMY_GROUP_SLOT_COUNT
         || m_army->getNumArmies() == 1)
         return;
 
-    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-        TCreatureType type = m_army->m_armyTypes[slot];
+    for (int slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        CreatureType type = m_army->m_armyTypes[slot];
         if (type != CREATURE_NONE) {
             if (m_adjacentArmy->getNumArmies()
-                    == armyGroup::ARMY_GROUP_SLOT_COUNT
+                    == ArmyGroup::ARMY_GROUP_SLOT_COUNT
                 || m_army->getNumArmies() == 1)
                 return;
 
@@ -2663,7 +2663,7 @@ void type_AI_creature_swapper::dumpExtraCreature()
             if (valueOfAddingArmy(type, count, addSlot, false) <= 0) {
                 m_adjacentArmy->add(type, count, -1);
                 if (m_adjacentArmy->getNumArmies()
-                        == armyGroup::ARMY_GROUP_SLOT_COUNT
+                        == ArmyGroup::ARMY_GROUP_SLOT_COUNT
                     || m_army->getNumArmies() == 1)
                     return;
             } else {
@@ -2693,9 +2693,9 @@ long type_AI_creature_swapper::chooseWeakestArmy(
     long shooterCount = 0;
     int shooterSlot;
     for (shooterSlot = 0;
-         shooterSlot < armyGroup::ARMY_GROUP_SLOT_COUNT;
+         shooterSlot < ArmyGroup::ARMY_GROUP_SLOT_COUNT;
          ++shooterSlot) {
-        TCreatureType type = m_army->m_armyTypes[shooterSlot];
+        CreatureType type = m_army->m_armyTypes[shooterSlot];
         if (type != CREATURE_NONE
             && (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)) {
             ++shooterCount;
@@ -2708,13 +2708,13 @@ long type_AI_creature_swapper::chooseWeakestArmy(
     long weakestValue = 0;
 
     int slot;
-    for (slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-        TCreatureType type = m_army->m_armyTypes[slot];
+    for (slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        CreatureType type = m_army->m_armyTypes[slot];
         if (type == CREATURE_NONE)
             continue;
 
         int groupedAlignment;
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
+        const CreatureTypeTraits& traits = g_creatureTypeTraits[type];
         if (checkAlignments) {
             int alignment;
             if (g_game->m_f1f698 == 0
@@ -2771,10 +2771,10 @@ long type_AI_creature_swapper::chooseWeakestArmy(
 // restoring that declaration order is byte-flat at the recovered peak.
 VA(0x0042c830, 0x33F)  // DC method/callgraph + retail Complete body; dc 0x31af4
 long type_AI_creature_swapper::valueOfAddingArmy(
-    TCreatureType type, short count, short& slot,
+    CreatureType type, short count, short& slot,
     unsigned char mustReplaceCreature)
 {
-    const TCreatureTypeTraits* traits = &g_creatureTypeTraits[type];
+    const CreatureTypeTraits* traits = &g_creatureTypeTraits[type];
     long value = traits->m_aiValue * count;
     bool badMorale = false;
     long moraleArmyValue = 0;
@@ -2810,9 +2810,9 @@ long type_AI_creature_swapper::valueOfAddingArmy(
                            m_hasAngelicAlliance, 0)
                 + m_morale < minimumMorale) {
             int index;
-            for (index = 0; index < armyGroup::ARMY_GROUP_SLOT_COUNT;
+            for (index = 0; index < ArmyGroup::ARMY_GROUP_SLOT_COUNT;
                  ++index) {
-                TCreatureType current = m_army->m_armyTypes[index];
+                CreatureType current = m_army->m_armyTypes[index];
                 if (current != CREATURE_NONE
                     && !(g_creatureTypeTraits[current].m_attributes
                          & g_ctaNoMorale)
@@ -2834,8 +2834,8 @@ long type_AI_creature_swapper::valueOfAddingArmy(
 
     int slowestSpeed = 20;
     int index;
-    for (index = 0; index < armyGroup::ARMY_GROUP_SLOT_COUNT; ++index) {
-        TCreatureType current = m_army->m_armyTypes[index];
+    for (index = 0; index < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++index) {
+        CreatureType current = m_army->m_armyTypes[index];
         if (current != CREATURE_NONE) {
             slowestSpeed = min(
                 slowestSpeed, g_creatureTypeTraits[current].m_speed);
@@ -2852,7 +2852,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     }
 
     slot = -1;
-    for (index = 0; index < armyGroup::ARMY_GROUP_SLOT_COUNT; ++index) {
+    for (index = 0; index < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++index) {
         if (m_army->m_armyTypes[index] == type) {
             slot = index;
             if (mustReplaceCreature)
@@ -2863,7 +2863,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
 
     if (!badMorale && !mustReplaceCreature
         && (m_army->getNumArmies() < 6 || !m_adjacentArmy)) {
-        for (index = 0; index < armyGroup::ARMY_GROUP_SLOT_COUNT; ++index) {
+        for (index = 0; index < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++index) {
             if (m_army->m_armyTypes[index] == CREATURE_NONE) {
                 slot = index;
                 return value;
@@ -2887,7 +2887,7 @@ type_AI_creature_purchaser::type_AI_creature_purchaser(
     m_funds = 0;
     m_subtractCostMode = 1;
     for (short i = 0; i < 4; ++i) {
-        TCreatureType type = currentGenerator->m_type[i];
+        CreatureType type = currentGenerator->m_type[i];
         if (type != CREATURE_NONE) {
             m_creatures.push_back(type_creature_source(
                 type, &currentGenerator->m_population[i],
@@ -2898,7 +2898,7 @@ type_AI_creature_purchaser::type_AI_creature_purchaser(
 
 VA(0x0042ce30, 0x114)  // dc 0x31ed4
 type_AI_creature_purchaser::type_AI_creature_purchaser(
-    long player, town* currentTown)
+    long player, Town* currentTown)
 {
     m_funds = 0;
     m_playerId = player;
@@ -2911,7 +2911,7 @@ type_AI_creature_purchaser::type_AI_creature_purchaser(
 // push exactly one source carrying the supplied creature, amount and bool.
 VA(0x0042cf50, 0x25a)  // dc 0x31f24
 type_AI_creature_purchaser::type_AI_creature_purchaser(
-    long player, TCreatureType type, short* amount, bool isFree)
+    long player, CreatureType type, short* amount, bool isFree)
 {
     m_playerId = player;
     m_funds = 0;
@@ -2920,14 +2920,14 @@ type_AI_creature_purchaser::type_AI_creature_purchaser(
 }
 
 VA(0x0042d1b0, 0x268)  // dc 0x31f94
-void type_AI_creature_purchaser::set(town* currentTown)
+void type_AI_creature_purchaser::set(Town* currentTown)
 {
     m_creatures.clear();
     int dwelling = 0;
     int remaining = 14;
     short* population = currentTown->m_population;
     for (; remaining; ++dwelling, ++population, --remaining) {
-        TCreatureType type = g_townDwellingCreatures[
+        CreatureType type = g_townDwellingCreatures[
             currentTown->m_type * 14 + dwelling];
         short amount = *population;
         if (amount > 0) {
@@ -2936,7 +2936,7 @@ void type_AI_creature_purchaser::set(town* currentTown)
     }
 }
 
-void type_AI_creature_purchaser::set(TCreatureType newType,
+void type_AI_creature_purchaser::set(CreatureType newType,
                                      short* newAmount)
 {
     m_creatures.clear();
@@ -2973,7 +2973,7 @@ long type_AI_creature_purchaser::doBestPurchase(
 
     getAlignments();
     for (sourceIndex = 0; sourceIndex < m_creatures.size(); ++sourceIndex) {
-        TCreatureType type = m_creatures[sourceIndex].m_type;
+        CreatureType type = m_creatures[sourceIndex].m_type;
         short available = m_creatures[sourceIndex].m_number;
         if (available > 0) {
             long number;
@@ -3014,7 +3014,7 @@ long type_AI_creature_purchaser::doBestPurchase(
     }
 
     if (bestValue > 0) {
-        TCreatureType type = m_creatures[bestSource].m_type;
+        CreatureType type = m_creatures[bestSource].m_type;
         addCreatures(type, bestNumber, bestSlot);
         if (!m_creatures[bestSource].m_isFree) {
             getMonsterCost(type, resourceCost);
@@ -3030,7 +3030,7 @@ long type_AI_creature_purchaser::doBestPurchase(
 
 VA(0x0042d690, 0xE1)  // dc 0x32288
 void type_AI_creature_purchaser::doPurchase(
-    armyGroup* newArmy, short newMorale, armyGroup* newAdjacentArmy,
+    ArmyGroup* newArmy, short newMorale, ArmyGroup* newAdjacentArmy,
     long* newFunds, unsigned char allowTrade,
     unsigned char newHasAngelicAlliance)
 {
@@ -3064,12 +3064,12 @@ void type_AI_creature_purchaser::doPurchase(
 // either leave it unchanged or worsen it.
 VA(0x0042d780, 0xEF)  // DC method/locals + retail Complete tail; dc 0x322f8
 long type_AI_creature_purchaser::getPurchaseValue(
-    const armyGroup* newArmy, short newMorale,
-    const armyGroup* newAdjacentArmy, const long* newFunds,
+    const ArmyGroup* newArmy, short newMorale,
+    const ArmyGroup* newAdjacentArmy, const long* newFunds,
     unsigned char newHasAngelicAlliance)
 {
-    armyGroup localArmy(*newArmy);
-    armyGroup localAdjacentArmy;
+    ArmyGroup localArmy(*newArmy);
+    ArmyGroup localAdjacentArmy;
     long localFunds[7];
     memcpy(localFunds, newFunds, sizeof localFunds);
     long value = 0;
@@ -3079,7 +3079,7 @@ long type_AI_creature_purchaser::getPurchaseValue(
     m_funds = localFunds;
     m_hasAngelicAlliance = newHasAngelicAlliance;
 
-    armyGroup* localAdjacent = 0;
+    ArmyGroup* localAdjacent = 0;
     if (newAdjacentArmy) {
         localAdjacentArmy = *newAdjacentArmy;
         localAdjacent = &localAdjacentArmy;
@@ -3097,14 +3097,14 @@ long type_AI_creature_purchaser::getPurchaseValue(
 }
 
 VA(0x0042d870, 0x67)  // dc 0x323bc
-void aiConsolidateArmy(armyGroup& currentArmy)
+void aiConsolidateArmy(ArmyGroup& currentArmy)
 {
-    for (int first = 0; first < armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
+    for (int first = 0; first < ArmyGroup::ARMY_GROUP_SLOT_COUNT - 1;
          ++first) {
-        TCreatureType type = currentArmy.m_armyTypes[first];
+        CreatureType type = currentArmy.m_armyTypes[first];
         if (type != CREATURE_NONE) {
             for (int duplicate = first + 1;
-                duplicate < armyGroup::ARMY_GROUP_SLOT_COUNT;
+                duplicate < ArmyGroup::ARMY_GROUP_SLOT_COUNT;
                 ++duplicate) {
                 if (currentArmy.m_armyTypes[duplicate] == type) {
                     currentArmy.m_numTroops[first] +=
@@ -3117,12 +3117,12 @@ void aiConsolidateArmy(armyGroup& currentArmy)
 }
 
 VA(0x0042d8e0, 0x239)  // dc 0x32430
-void aiArrangeArmy(armyGroup& currentArmy)
+void aiArrangeArmy(ArmyGroup& currentArmy)
 {
     std::vector<type_creature_value> values;
     type_creature_value entry;
-    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-        TCreatureType type = currentArmy.m_armyTypes[i];
+    for (int i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        CreatureType type = currentArmy.m_armyTypes[i];
         if (type != CREATURE_NONE) {
             entry.m_type = type;
             entry.m_amount = static_cast<short>(currentArmy.m_numTroops[i]);
@@ -3140,7 +3140,7 @@ void aiArrangeArmy(armyGroup& currentArmy)
         if (g_creatureTypeTraits[entry.m_type].m_attributes & g_ctaShooter) {
             currentArmy.add(entry.m_type, entry.m_amount, slot);
             slot += 2;
-            if (slot >= armyGroup::ARMY_GROUP_SLOT_COUNT)
+            if (slot >= ArmyGroup::ARMY_GROUP_SLOT_COUNT)
                 slot = 1;
         }
     }
@@ -3156,7 +3156,7 @@ void aiArrangeArmy(armyGroup& currentArmy)
     }
 }
 
-long splitArmy(armyGroup* currentArmy, short index, short limit,
+long splitArmy(ArmyGroup* currentArmy, short index, short limit,
                 short openSlots);
 
 // E:\gamedcs\ai_player.cpp:2817
@@ -3181,10 +3181,10 @@ long splitArmy(armyGroup* currentArmy, short index, short limit,
 // Residual: consolidation reload scheduling and final split-loop homing;
 // keep the canonical aiConsolidateArmy boundary and reference local.
 VA(0x0042db20, 0x249)  // retail callee set + arity, dc 0x32670
-void splitArmies(hero* currentHero, const hero* enemyHero,
-                  const armyGroup& enemy)
+void splitArmies(Hero* currentHero, const Hero* enemyHero,
+                  const ArmyGroup& enemy)
 {
-    armyGroup& currentArmy = currentHero->m_army;
+    ArmyGroup& currentArmy = currentHero->m_army;
     aiConsolidateArmy(currentArmy);
 
     do {
@@ -3199,13 +3199,13 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
         if (enemyHero == 0)
             ratio = 1.0f;
         else
-            ratio = const_cast<hero*>(enemyHero)
+            ratio = const_cast<Hero*>(enemyHero)
                         ->getCombatValueModifier();
         ratio /= currentHero->getCombatValueModifier();
 
         int k;
         for (k = 0; k < 7; ++k) {
-            TCreatureType type = enemy.m_armyTypes[k];
+            CreatureType type = enemy.m_armyTypes[k];
             if (type == CREATURE_NONE)
                 continue;
             long value = static_cast<long>(
@@ -3221,7 +3221,7 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
 
         int slot;
         for (slot = 0; slot < 7; ++slot) {
-            TCreatureType type = currentArmy.m_armyTypes[slot];
+            CreatureType type = currentArmy.m_armyTypes[slot];
             if (type != CREATURE_NONE
                 && (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)) {
                 openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue * 5,
@@ -3241,7 +3241,7 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
         long walkerCount = 0;
         int m;
         for (m = 0; m < 7; ++m) {
-            TCreatureType type = currentArmy.m_armyTypes[m];
+            CreatureType type = currentArmy.m_armyTypes[m];
             if (type == CREATURE_NONE)
                 continue;
             if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
@@ -3264,7 +3264,7 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
         if (splitsNeeded < openSlots)
             openSlots = splitsNeeded;
         for (slot = 0; slot < 7; ++slot) {
-            TCreatureType type = currentArmy.m_armyTypes[slot];
+            CreatureType type = currentArmy.m_armyTypes[slot];
             if (type == CREATURE_NONE)
                 continue;
             if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
@@ -3283,10 +3283,10 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
 }
 
 VA(0x0042dd70, 0xdc)  // dc 0x325bc
-long splitArmy(armyGroup* currentArmy, short index, short limit,
+long splitArmy(ArmyGroup* currentArmy, short index, short limit,
                 short openSlots)
 {
-    TCreatureType type = currentArmy->m_armyTypes[index];
+    CreatureType type = currentArmy->m_armyTypes[index];
     int pieces = g_creatureTypeTraits[type].m_aiValue
         * currentArmy->m_numTroops[index] / limit;
     if (pieces > openSlots + 1)
@@ -3296,7 +3296,7 @@ long splitArmy(armyGroup* currentArmy, short index, short limit,
     if (pieces <= 1)
         return 0;
     int remaining = pieces;
-    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+    for (int slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
         if (currentArmy->m_armyTypes[slot] == CREATURE_NONE) {
             long per = currentArmy->m_numTroops[index] / remaining;
             currentArmy->add(type, per, slot);
@@ -3314,7 +3314,7 @@ long splitArmy(armyGroup* currentArmy, short index, short limit,
 // GetMobility, GetLocation, SeedPosition and the visited-cell accessors.
 // Retail expands this helper inside AI_mark_danger_zones at 0x42de50;
 // the outer player/hero census belongs to that two-argument wrapper.
-static void markDangerZones(const hero* ourHero, hero* enemyHero,
+static void markDangerZones(const Hero* ourHero, Hero* enemyHero,
                             long* dangerZones)
 {
     long value = aiValueOfCombat(
@@ -3345,7 +3345,7 @@ static void markDangerZones(const hero* ourHero, hero* enemyHero,
 
 // E:\gamedcs\ai_player.cpp:3013, dc 0x329f8
 VA(0x0042de50, 0x25c)  // outer census + MoveHero caller, dc 0x329f8
-void aiMarkDangerZones(hero* currentHero, long* dangerZones)
+void aiMarkDangerZones(Hero* currentHero, long* dangerZones)
 {
     for (int playerId = 0; playerId < 8; ++playerId) {
         const playerData& player = g_game->m_players[playerId];
@@ -3353,7 +3353,7 @@ void aiMarkDangerZones(hero* currentHero, long* dangerZones)
             && !g_game->m_playerDisabled[playerId]) {
             for (int heroIndex = 0; heroIndex < player.m_numHeroes;
                  ++heroIndex) {
-                hero* enemyHero = g_game->getHero(player.m_heroes[heroIndex]);
+                Hero* enemyHero = g_game->getHero(player.m_heroes[heroIndex]);
                 markDangerZones(currentHero, enemyHero, dangerZones);
             }
         }
@@ -3375,7 +3375,7 @@ void aiMarkDangerZones(hero* currentHero, long* dangerZones)
 // depth pin. Before the point-overload recovery, direct-map/no-pin measured
 // 93.7016%, and the typed temporary/no-artifact-pin measured 61.8460%.
 static void checkHolyGrail(
-    const hero* currentHero, const searchArray* currentSearchArray,
+    const Hero* currentHero, const SearchArray* currentSearchArray,
     std::vector<HeroDestination>& destinations,
     const unsigned short* friendlyDistances)
 {
@@ -3424,11 +3424,11 @@ static void checkHolyGrail(
 
 // E:\gamedcs\ai_player.cpp:3390
 static void markStrategicMap(
-    hero* currentHero, long* strategicMap,
+    Hero* currentHero, long* strategicMap,
     std::vector<HeroDestination>& destinations)
 {
     tagRECT rect;
-    searchArray currentSearchArray;
+    SearchArray currentSearchArray;
     HeroDestination point;
     short topX;
     unsigned char wasTrigger;
@@ -3502,7 +3502,7 @@ static void markStrategicMap(
 }
 
 // E:\gamedcs\ai_player.cpp:3573
-static void unblockLith(hero* currentHero,
+static void unblockLith(Hero* currentHero,
                                        HeroDestination& destination,
                                        long& bestDistance)
 {
@@ -3521,7 +3521,7 @@ static void unblockLith(hero* currentHero,
         return;
     }
     if (cell->m_type == TOWN) {
-        town* currentTown = g_game->getTown(cell->m_extraInfo);
+        Town* currentTown = g_game->getTown(cell->m_extraInfo);
         if (currentTown->m_owner == currentHero->m_owner) {
             if (wasOnMap)
                 currentHero->obscureCell();
@@ -3583,7 +3583,7 @@ static void unblockLith(hero* currentHero,
 // loop, and both together are byte-flat. No corresponding source rewrite
 // has yet recovered retail's fourth obscureCell call.
 VA(0x0042e0b0, 0xb6e)  // anchor-caller move_hero + order bracket, dc 0x33cf8
-int aiChooseDestination(hero* currentHero, long maxDistance,
+int aiChooseDestination(Hero* currentHero, long maxDistance,
                           HeroDestination& bestPoint,
                           long& bestRawValue,
                           unsigned char allowSpells,
@@ -3718,7 +3718,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
 
 // E:\gamedcs\Town.h:299
 DC_ONLY(0x37f50, 0x12)
-__int64 town::getBuildingMask()
+__int64 Town::getBuildingMask()
 {
     // @stub
 }
@@ -3780,11 +3780,11 @@ int game::getTeam(int playerNum)
 // caller mass. Recovered locals, helper boundaries, condition groups and the
 // unnamed get_location temporary are retained through the expected dips.
 // Forward prototypes: all three bodies sit later in RVA order.
-long markDestinations(hero* currentHero, long maxDistance,
-                       searchArray* currentSearchArray,
+long markDestinations(Hero* currentHero, long maxDistance,
+                       SearchArray* currentSearchArray,
                        unsigned short* friendlyDistances,
                        type_search_type searchType);
-long aiValueOfEvent(const hero* currentHero, type_point point,
+long aiValueOfEvent(const Hero* currentHero, type_point point,
                        long& moveCost);
 
 // Residual (96.9365%): all 81 CFG blocks agree in flow/instruction count;
@@ -3798,7 +3798,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
 // with the typed Grail temporary gives 91.0238%. The original two direct
 // point calls and typed temporary together give the current 96.9365%.
 VA(0x0042edd0, 0x79b)  // anchor-callee + arity, dc 0x33038
-long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
+long findAllDestinations(Hero* currentHero, SearchArray* currentSearchArray,
                            std::vector<HeroDestination>& destinations,
                            long maxDistance, unsigned char hiringHero,
                            unsigned char allowSpells,
@@ -3828,7 +3828,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
     int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
                                     currentHero->m_z);
     if (townId >= 0) {
-        town* currentTown = g_game->getTown(townId);
+        Town* currentTown = g_game->getTown(townId);
         if (currentTown->m_threateningHeroes > 0) {
             protectingTown = 1;
             if (currentTown->m_threateningHeroes > 1) {
@@ -3857,7 +3857,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
         if (protectingTown) {
             if (mapCell->m_type != HERO)
                 continue;
-            hero* other = g_game->getHero(mapCell->m_extraInfo);
+            Hero* other = g_game->getHero(mapCell->m_extraInfo);
             if (g_game->onSameTeam(other->m_owner, currentHero->m_owner))
                 continue;
             if (static_cast<int>(cell->m_cost) > currentHero->m_movePoints)
@@ -3934,13 +3934,13 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
 // plus the friend's remaining-target cost into the friendly-distance map,
 // clipped to the patrol radius. Returns the danger under the hero's feet.
 VA(0x0042f570, 0x40e)  // anchor-callee + arity, dc 0x32a84
-long markDestinations(hero* currentHero, long maxDistance,
-                       searchArray* currentSearchArray,
+long markDestinations(Hero* currentHero, long maxDistance,
+                       SearchArray* currentSearchArray,
                        unsigned short* friendlyDistances,
                        type_search_type searchType)
 {
     int mapCells = g_mapHeight * g_mapWidth;
-    searchArray friendlySearch;
+    SearchArray friendlySearch;
     long movePoints = currentHero->m_movePoints;
     long heroDanger;
     type_point point;
@@ -3957,7 +3957,7 @@ long markDestinations(hero* currentHero, long maxDistance,
                                movePoints, 0);
 
     for (int i = 0; i < g_currentPlayer->m_numHeroes; ++i) {
-        hero* friendly = g_game->getHero(g_currentPlayer->m_heroes[i]);
+        Hero* friendly = g_game->getHero(g_currentPlayer->m_heroes[i]);
         if (friendly == currentHero)
             continue;
         type_point friendPoint(friendly->m_x, friendly->m_y, friendly->m_z);
@@ -4019,9 +4019,9 @@ long markDestinations(hero* currentHero, long maxDistance,
 // value, and the hero's current path target scales the result by 1.5 (+20)
 // where anything else is scaled by Random(1,25)+75 percent.
 VA(0x0042f980, 0x2c9)  // anchor-callee unique (Random, FindAdjacentMonster), dc 0x33854
-int netValueOfLocation(hero* currentHero, HeroDestination* destination,
+int netValueOfLocation(Hero* currentHero, HeroDestination* destination,
                           long* strategicMap, pathCell* currentPathCell,
-                          searchArray* currentSearchArray)
+                          SearchArray* currentSearchArray)
 {
     type_point point = destination->m_point;
     NewmapCell* cell = g_advManager->getCell(point);
@@ -4079,23 +4079,23 @@ int netValueOfLocation(hero* currentHero, HeroDestination* destination,
     return result;
 }
 
-void aiSetHeroBonuses(hero* ourHero);
-void aiBuildShip(const hero* ourHero, long x, long y, long z);
+void aiSetHeroBonuses(Hero* ourHero);
+void aiBuildShip(const Hero* ourHero, long x, long y, long z);
 
-static void buildPath(hero* currentHero, searchArray* currentSearchArray,
+static void buildPath(Hero* currentHero, SearchArray* currentSearchArray,
                        std::vector<pathCell>& path,
                        HeroDestination& destination);
-static unsigned char checkMoveSpell(hero* currentHero,
+static unsigned char checkMoveSpell(Hero* currentHero,
                                       std::vector<pathCell>& path,
                                       long step, SpellID spell,
                                       unsigned char alreadyActive);
-static unsigned char attemptTeleport(hero* currentHero,
+static unsigned char attemptTeleport(Hero* currentHero,
                                       std::vector<pathCell>& path,
                                       long step);
 
 // E:\gamedcs\ai_player.cpp:3832
 VA(0x0042fc50, 0x285)  // dc 0x341f4
-unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
+unsigned char attemptStep(Hero* currentHero, pathCell* currentPathCell,
                            unsigned char standEnd, unsigned char firstStep)
 {
     type_point triggerPoint;
@@ -4169,7 +4169,7 @@ unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
     return eventCell == 0 && noMove == 0 && foughtBattle == 0;
 }
 
-static void buildPath(hero* currentHero, searchArray* currentSearchArray,
+static void buildPath(Hero* currentHero, SearchArray* currentSearchArray,
                        std::vector<pathCell>& path,
                        HeroDestination& destination)
 {
@@ -4199,7 +4199,7 @@ static void buildPath(hero* currentHero, searchArray* currentSearchArray,
     }
 }
 
-static unsigned char checkMoveSpell(hero* currentHero,
+static unsigned char checkMoveSpell(Hero* currentHero,
                                       std::vector<pathCell>& path,
                                       long step, SpellID spell,
                                       unsigned char alreadyActive)
@@ -4238,7 +4238,7 @@ DATA(0x00660500) static const long g_constThresholds[6] = {
     1000, 150, 100, 75, 50, 25
 };
 
-static unsigned char attemptTeleport(hero* currentHero,
+static unsigned char attemptTeleport(Hero* currentHero,
                                       std::vector<pathCell>& path,
                                       long step)
 {
@@ -4285,7 +4285,7 @@ static unsigned char attemptTeleport(hero* currentHero,
     // Dreamcast's local inventory is a lower bound and cannot expose an
     // optimizer-only pointer alias.
     game* currentGame = g_game;
-    TAdventureObjectType targetType =
+    AdventureObjectType targetType =
         currentGame->getCell(currentHero->getTarget())->m_type;
     if (targetType == MAGIC_WELL || targetType == MAGIC_SPRING)
         atManaSource = 1;
@@ -4374,7 +4374,7 @@ static __forceinline void checkGatePurchase(type_point point)
 {
     int townId = g_game->getTownId(point.m_x, point.m_y, point.m_z);
     if (townId >= 0) {
-        town* currentTown = g_game->getTown(townId);
+        Town* currentTown = g_game->getTown(townId);
         if (!currentTown->hasBuilding(EXTRA_1_ID, true))
             currentTown->buyBuilding(EXTRA_1_ID);
     }
@@ -4402,7 +4402,7 @@ static __forceinline void checkGatePurchase(type_point point)
 // That is the merged-return class (both predecessors are jumps) and the
 // duplicate cannot be spelled, because the block IS a destructor.
 VA(0x0042fee0, 0x6b8)  // anchor-caller move_hero + order bracket, dc 0x34b08
-void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
+void aiAttemptMove(Hero* currentHero, HeroDestination& bestPoint,
                     long& bestRawValue, unsigned char exploreMode)
 {
     long totalCost;
@@ -4526,12 +4526,12 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
 }
 
 VA(0x00430610, 0x384)  // dc 0x343c4
-static void buildPath(hero* currentHero, searchArray* currentSearchArray,
+static void buildPath(Hero* currentHero, SearchArray* currentSearchArray,
                        std::vector<pathCell>& path,
                        HeroDestination& destination);
 
 VA(0x004309a0, 0x103)  // dc 0x34508
-static unsigned char checkMoveSpell(hero* currentHero,
+static unsigned char checkMoveSpell(Hero* currentHero,
                                       std::vector<pathCell>& path,
                                       long step, SpellID spell,
                                       unsigned char alreadyActive);
@@ -4540,7 +4540,7 @@ static unsigned char checkMoveSpell(hero* currentHero,
 // source order above AI_AttemptMove; this redeclaration records VC6's later
 // retained emission slot.
 VA(0x00430ab0, 0x4c1)  // caller/callee/body bridge, dc 0x34630
-static unsigned char attemptTeleport(hero* currentHero,
+static unsigned char attemptTeleport(Hero* currentHero,
                                       std::vector<pathCell>& path,
                                       long step);
 
@@ -4552,7 +4552,7 @@ static unsigned char attemptTeleport(hero* currentHero,
 // control: CFG stays 77/77 exact but the caller frame is four bytes short
 // (99.97449%). The caller gates both recruit ids, so this helper has no
 // source-false null guard.
-static long totalArtifactValue(hero* candidate, long playerId)
+static long totalArtifactValue(Hero* candidate, long playerId)
 {
     long total = 0;
     long slot;
@@ -4563,7 +4563,7 @@ static long totalArtifactValue(hero* candidate, long playerId)
     }
     for (slot = 0; slot < 19; ++slot) {
         type_artifact equippedArtifact(
-            candidate->getArtifact(TArtifactSlot(slot)).m_artifactId);
+            candidate->getArtifact(ArtifactSlot(slot)).m_artifactId);
         total += aiGetValueOfArtifact(equippedArtifact, playerId);
     }
     return total;
@@ -4574,11 +4574,11 @@ static long totalArtifactValue(hero* candidate, long playerId)
 // The Dreamcast roster marks both coordinate lookups static, and its
 // AI_build_ship xrefs mark both calls inlined. Retail retains those two
 // source-level passes: owned town docks first, then claimed map shipyards.
-static town* getShipyardTown(const playerData* player, long x, long y,
+static Town* getShipyardTown(const playerData* player, long x, long y,
                                long z)
 {
     for (long i = 0; i < player->m_numTowns; ++i) {
-        town* currentTown = g_game->getTown(player->m_townIds[i]);
+        Town* currentTown = g_game->getTown(player->m_townIds[i]);
         if (currentTown->m_dockSite == x && currentTown->m_dockSiteY == y
             && currentTown->m_mapZ == z)
             return currentTown;
@@ -4604,13 +4604,13 @@ static unsigned char getMapShipyard(const playerData* player, long x,
 
 // E:\gamedcs\ai_player.cpp:4607
 VA(0x00430f80, 0x1d2)  // dc 0x35910
-void aiBuildShip(const hero* ourHero, long x, long y, long z)
+void aiBuildShip(const Hero* ourHero, long x, long y, long z)
 {
     if (ourHero->belongsToHuman() && !g_unk691209)
         return;
 
     playerData* player = &g_game->m_players[ourHero->m_owner];
-    town* shipyardTown = getShipyardTown(player, x, y, z);
+    Town* shipyardTown = getShipyardTown(player, x, y, z);
     if (!shipyardTown) {
         if (!getMapShipyard(player, x, y, z))
             return;
@@ -4628,10 +4628,10 @@ void aiBuildShip(const hero* ourHero, long x, long y, long z)
 }
 
 VA(0x00431160, 0x1f3)  // dc 0x35a10
-long aiGetShipCost(const hero* ourHero, type_point point)
+long aiGetShipCost(const Hero* ourHero, type_point point)
 {
     const playerData* player = &g_game->m_players[ourHero->m_owner];
-    town* shipyardTown =
+    Town* shipyardTown =
         getShipyardTown(player, point.m_x, point.m_y, point.m_z);
     int cost[7];
     memset(cost, 0, sizeof cost);
@@ -4652,8 +4652,8 @@ VA(0x00431360, 0x463)  // dc 0x35ac8
 bool type_AI_player::hireHeroes()
 {
     playerData* player = &g_game->m_players[m_team];
-    hero* first = 0;
-    hero* second = 0;
+    Hero* first = 0;
+    Hero* second = 0;
     if (player->m_numHeroes >= playerData::HERO_SLOT_COUNT)
         return false;
     if (player->m_resources[GOLD] < g_heroGoldCost)
@@ -4703,19 +4703,19 @@ bool type_AI_player::hireHeroes()
 // Local prototypes, the events.cpp pattern: value_of_hiring's body follows
 // consider_hiring below (retail 0x431bd0); AI_resource_cost is philai.obj's
 // long-id overload (philai.cpp:1040); CanBuy is castle.h's free checker.
-long valueOfHiring(town* currentTown, hero* candidate,
-                     searchArray* currentSearchArray);
+long valueOfHiring(Town* currentTown, Hero* candidate,
+                     SearchArray* currentSearchArray);
 int aiResourceCost(long playerId, const int* resources);
-int canBuy(const town* currTown, int buildingId);
+int canBuy(const Town* currTown, int buildingId);
 
 VA(0x00431800, 0x3c2)  // dc 0x354bc
-bool considerHiring(long playerId, hero* candidate)
+bool considerHiring(long playerId, Hero* candidate)
 {
     playerData& player = g_game->m_players[playerId];
     long total = totalArtifactValue(candidate, playerId);
     int slot;
-    for (slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-        TCreatureType type = candidate->m_army.m_armyTypes[slot];
+    for (slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        CreatureType type = candidate->m_army.m_armyTypes[slot];
         if (type != CREATURE_NONE) {
             const int* creatureCost = g_creatureTypeTraits[type].m_cost;
             double troops = candidate->m_army.m_numTroops[slot];
@@ -4726,8 +4726,8 @@ bool considerHiring(long playerId, hero* candidate)
         }
     }
 
-    town* bestTown = 0;
-    searchArray currentSearchArray;
+    Town* bestTown = 0;
+    SearchArray currentSearchArray;
     long bestValue = static_cast<long>(
         static_cast<double>(player.m_numHeroes)
         * player.m_ai.m_resourceValue[GOLD] * g_heroGoldCost);
@@ -4736,7 +4736,7 @@ bool considerHiring(long playerId, hero* candidate)
         return 0;
 
     for (int i = 0; i < player.m_numTowns; ++i) {
-        town* currentTown = g_game->getTown(player.m_townIds[i]);
+        Town* currentTown = g_game->getTown(player.m_townIds[i]);
         if (currentTown->m_visitingHeroId >= 0)
             continue;
         long value = total;
@@ -4792,13 +4792,13 @@ bool considerHiring(long playerId, hero* candidate)
 // two hero-counter initializers (99.70), unifying all three indices (98.20),
 // and block-scoping cell/monster_cell per loop (94.40).
 VA(0x00431bd0, 0x64b)  // anchor-callee (consider_hiring 0x432bce + AI_arrange_army 0x431d9d), dc 0x34fb8
-long valueOfHiring(town* currentTown, hero* candidate,
-                     searchArray* currentSearchArray)
+long valueOfHiring(Town* currentTown, Hero* candidate,
+                     SearchArray* currentSearchArray)
 {
     short playerId = currentTown->m_owner;
     playerData* player = &g_game->m_players[currentTown->m_owner];
-    armyGroup heroArmy = candidate->m_army;
-    armyGroup townArmy = static_cast<const town*>(currentTown)->getArmy();
+    ArmyGroup heroArmy = candidate->m_army;
+    ArmyGroup townArmy = static_cast<const Town*>(currentTown)->getArmy();
     type_AI_creature_purchaser purchaser(playerId, currentTown);
 
     candidate->m_turnExperienceToRvRatio = 0;
@@ -4856,7 +4856,7 @@ long valueOfHiring(town* currentTown, hero* candidate,
     long heroesTouched = 1;
     long bestHeroValue = 0;
     for (int heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
-        hero* other = g_game->getHero(player->m_heroes[heroIndex]);
+        Hero* other = g_game->getHero(player->m_heroes[heroIndex]);
         if (other->m_z == candidate->m_z) {
             pathCell* cell = currentSearchArray->getCell(
                 type_point(other->m_x, other->m_y, other->m_z), 0);
@@ -4927,7 +4927,7 @@ type_artifact_effect::~type_artifact_effect()
 }
 
 VA(0x00432510, 0x24)  // dc 0x36258
-long type_scouting_artifact::getValue(const hero* owner, unsigned char, unsigned char) const
+long type_scouting_artifact::getValue(const Hero* owner, unsigned char, unsigned char) const
 {
     return owner->m_maxMovePoints * m_bonus / 100;
 }
@@ -4939,13 +4939,13 @@ type_combat_artifact::type_combat_artifact(long newBonus)
 }
 
 VA(0x00432560, 0x32)  // dc 0x362b8
-long type_combat_artifact::getValue(const hero* owner, unsigned char, unsigned char) const
+long type_combat_artifact::getValue(const Hero* owner, unsigned char, unsigned char) const
 {
     return owner->m_army.getAIValue() * m_bonus / 100;
 }
 
 VA(0x004325a0, 0x40)  // dc 0x36320
-long type_might_artifact::getValue(const hero* owner, unsigned char, unsigned char exact) const
+long type_might_artifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
 {
     if (exact)
         return 0;
@@ -4953,7 +4953,7 @@ long type_might_artifact::getValue(const hero* owner, unsigned char, unsigned ch
 }
 
 VA(0x004325e0, 0x21)  // dc 0x36390
-long type_power_artifact::getValue(const hero* owner, unsigned char, unsigned char exact) const
+long type_power_artifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
 {
     if (exact)
         return 0;
@@ -4961,7 +4961,7 @@ long type_power_artifact::getValue(const hero* owner, unsigned char, unsigned ch
 }
 
 VA(0x00432610, 0x21)  // dc 0x363f0
-long type_knowledge_artifact::getValue(const hero* owner, unsigned char, unsigned char exact) const
+long type_knowledge_artifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
 {
     if (exact)
         return 0;
@@ -4970,7 +4970,7 @@ long type_knowledge_artifact::getValue(const hero* owner, unsigned char, unsigne
 
 // E:\gamedcs\ai_player.cpp:5152
 VA(0x00432640, 0x97)  // artifact get_value cluster order-map + get_AI_value, dc 0x36450
-long type_necromancy_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char) const
+long type_necromancy_artifact::getValue(const Hero* owner, unsigned char equipped, unsigned char) const
 {
     if (owner->m_skillLevel[12] == 0)
         return 0;
@@ -4989,13 +4989,13 @@ long type_necromancy_artifact::getValue(const hero* owner, unsigned char equippe
 }
 
 VA(0x004326e0, 0x38)  // dc 0x3652c
-long type_movement_artifact::getValue(const hero* owner, unsigned char, unsigned char) const
+long type_movement_artifact::getValue(const Hero* owner, unsigned char, unsigned char) const
 {
     return (owner->m_army.getAIValue() + 2500) * m_bonus / 100;
 }
 
 VA(0x00432720, 0x54)  // dc 0x3659c
-long type_spellcaster_artifact::getValue(const hero* owner, unsigned char, unsigned char) const
+long type_spellcaster_artifact::getValue(const Hero* owner, unsigned char, unsigned char) const
 {
     if (owner->getValueOfPower() == 0)
         return 0;
@@ -5012,7 +5012,7 @@ double aiValueOfMorale(long morale, long change);
 double aiValueOfLuck(long luck, long change);
 
 VA(0x00432780, 0x68)  // dc 0x3662c
-long type_morale_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char exact) const
+long type_morale_artifact::getValue(const Hero* owner, unsigned char equipped, unsigned char exact) const
 {
     if (exact)
         return 0;
@@ -5024,7 +5024,7 @@ long type_morale_artifact::getValue(const hero* owner, unsigned char equipped, u
 }
 
 VA(0x004327f0, 0x68)  // dc 0x36720
-long type_luck_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char exact) const
+long type_luck_artifact::getValue(const Hero* owner, unsigned char equipped, unsigned char exact) const
 {
     if (exact)
         return 0;
@@ -5036,7 +5036,7 @@ long type_luck_artifact::getValue(const hero* owner, unsigned char equipped, uns
 }
 
 VA(0x00432860, 0x21)  // dc 0x36814
-long type_duration_artifact::getValue(const hero* owner, unsigned char, unsigned char exact) const
+long type_duration_artifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
 {
     if (exact)
         return 0;
@@ -5044,7 +5044,7 @@ long type_duration_artifact::getValue(const hero* owner, unsigned char, unsigned
 }
 
 VA(0x00432890, 0x1b2)  // dc 0x3687c
-long type_school_artifact::getValue(const hero* owner, unsigned char equipped,
+long type_school_artifact::getValue(const Hero* owner, unsigned char equipped,
                                      unsigned char exact) const
 {
     if (exact)
@@ -5086,7 +5086,7 @@ long type_school_artifact::getValue(const hero* owner, unsigned char equipped,
 }
 
 VA(0x00432a50, 0xc3)  // dc 0x36a1c
-long type_antimagic_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char exact) const
+long type_antimagic_artifact::getValue(const Hero* owner, unsigned char equipped, unsigned char exact) const
 {
     long value;
     if (m_bonus == 0)
@@ -5106,7 +5106,7 @@ long type_antimagic_artifact::getValue(const hero* owner, unsigned char equipped
 }
 
 VA(0x00432b20, 0x78)  // dc 0x36afc
-long type_antimorale_artifact::getValue(const hero* owner, unsigned char, unsigned char exact) const
+long type_antimorale_artifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
 {
     long army = owner->m_army.getAIValue();
     long result = static_cast<long>(aiValueOfMorale(0, 2) * army);
@@ -5119,7 +5119,7 @@ long type_antimorale_artifact::getValue(const hero* owner, unsigned char, unsign
 }
 
 VA(0x00432ba0, 0x78)  // dc 0x36c90
-long type_antiluck_artifact::getValue(const hero* owner, unsigned char, unsigned char exact) const
+long type_antiluck_artifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
 {
     long army = owner->m_army.getAIValue();
     long result = static_cast<long>(aiValueOfLuck(0, 2) * army);
@@ -5132,7 +5132,7 @@ long type_antiluck_artifact::getValue(const hero* owner, unsigned char, unsigned
 }
 
 VA(0x00432c20, 0xf5)  // dc 0x36e28
-long type_tome_artifact::getValue(const hero* owner, unsigned char equipped,
+long type_tome_artifact::getValue(const Hero* owner, unsigned char equipped,
                                    unsigned char exact) const
 {
     if (exact)
@@ -5158,7 +5158,7 @@ long type_tome_artifact::getValue(const hero* owner, unsigned char equipped,
 }
 
 VA(0x00432d20, 0x49)  // dc 0x36f54
-long type_income_artifact::getValue(const hero* owner, unsigned char,
+long type_income_artifact::getValue(const Hero* owner, unsigned char,
                                      unsigned char) const
 {
     return static_cast<long>(
@@ -5166,7 +5166,7 @@ long type_income_artifact::getValue(const hero* owner, unsigned char,
 }
 
 VA(0x00432d70, 0x219)  // dc 0x3704c
-long type_creature_growth_artifact::getValue(const hero* owner,
+long type_creature_growth_artifact::getValue(const Hero* owner,
                                                unsigned char,
                                                unsigned char exact) const
 {
@@ -5178,7 +5178,7 @@ long type_creature_growth_artifact::getValue(const hero* owner,
         if (townId < 0)
             return 0;
 
-        town* currentTown = g_game->getTown(townId);
+        Town* currentTown = g_game->getTown(townId);
         if (!currentTown->hasBuilding(DWELLING_0_ID + m_bonus, 1))
             return 0;
         if (currentTown->m_garrisonHeroId != owner->m_id)
@@ -5187,19 +5187,19 @@ long type_creature_growth_artifact::getValue(const hero* owner,
         int dwelling = m_bonus;
         if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, 1))
             dwelling += TOWN_DWELLING_COUNT;
-        TCreatureType creature = g_townDwellingCreatures[
+        CreatureType creature = g_townDwellingCreatures[
             currentTown->m_type * TOWN_DWELLING_SLOTS + dwelling];
         return g_creatureTypeTraits[creature].m_aiValue * m_growthBonus;
     }
 
     for (int i = 0; i < player.m_numTowns; ++i) {
-        town* currentTown = g_game->getTown(player.m_townIds[i]);
+        Town* currentTown = g_game->getTown(player.m_townIds[i]);
         if (!currentTown->hasBuilding(DWELLING_0_ID + m_bonus, 1))
             continue;
         int dwelling = m_bonus;
         if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, 1))
             dwelling += TOWN_DWELLING_COUNT;
-        TCreatureType creature = g_townDwellingCreatures[
+        CreatureType creature = g_townDwellingCreatures[
             currentTown->m_type * TOWN_DWELLING_SLOTS + dwelling];
         value = max(
             value, g_creatureTypeTraits[creature].m_aiValue * m_growthBonus);
@@ -5218,7 +5218,7 @@ long type_creature_growth_artifact::getValue(const hero* owner,
 // Complete-only constructor and virtual definitions are reviewed in
 // config/win_only.tsv; class names remain provisional semantic names.
 VA(0x00432f90, 0xe4)  // vtable-slot 0x63b750 + get_raw_spell_value, retail-only
-long type_spell_artifact::getValue(const hero* owner, unsigned char equipped,
+long type_spell_artifact::getValue(const Hero* owner, unsigned char equipped,
                                     unsigned char exact) const
 {
     if (exact)
@@ -5238,7 +5238,7 @@ long type_spell_artifact::getValue(const hero* owner, unsigned char equipped,
 VA_COMPGEN(0x00433080, 0x21, SCALAR_DELETING_DTOR, type_combat_artifact)
 
 VA(0x004330b0, 0x73)
-long type_shooter_bonus_artifact::getValue(const hero* owner, unsigned char, unsigned char) const
+long type_shooter_bonus_artifact::getValue(const Hero* owner, unsigned char, unsigned char) const
 {
     long total = 0;
     for (int i = 0; i < 7; i++) {
@@ -5251,7 +5251,7 @@ long type_shooter_bonus_artifact::getValue(const hero* owner, unsigned char, uns
 
 VA(0x00433130, 0x26f)
 long type_angelic_alliance_artifact::getValue(
-    const hero* owner, unsigned char, unsigned char exact) const
+    const Hero* owner, unsigned char, unsigned char exact) const
 {
     std::bitset<9> alliedAlignments = armyGrpFn0044A460();
     playerData* player = &g_game->m_players[owner->m_owner];
@@ -5259,9 +5259,9 @@ long type_angelic_alliance_artifact::getValue(
     int heroIndex = 0;
 
     for (; heroIndex < player->m_numHeroes; ++heroIndex) {
-        hero* currentHero = g_game->getHero(player->m_heroes[heroIndex]);
+        Hero* currentHero = g_game->getHero(player->m_heroes[heroIndex]);
         for (int heroSlot = 0;
-             heroSlot < armyGroup::ARMY_GROUP_SLOT_COUNT;
+             heroSlot < ArmyGroup::ARMY_GROUP_SLOT_COUNT;
              ++heroSlot) {
             int creature = currentHero->m_army.m_armies[heroSlot];
             if (creature == CREATURE_NONE)
@@ -5279,11 +5279,11 @@ long type_angelic_alliance_artifact::getValue(
     }
 
     for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
-        const armyGroup& townArmy =
-            static_cast<const town*>(
+        const ArmyGroup& townArmy =
+            static_cast<const Town*>(
                 g_game->getTown(player->m_townIds[townIndex]))->getArmy();
         for (int townSlot = 0;
-             townSlot < armyGroup::ARMY_GROUP_SLOT_COUNT;
+             townSlot < ArmyGroup::ARMY_GROUP_SLOT_COUNT;
              ++townSlot) {
             int creature = townArmy.m_armies[townSlot];
             if (creature == CREATURE_NONE)
@@ -5319,7 +5319,7 @@ long type_angelic_alliance_artifact::getValue(
 // byte-flat. Keep the direct expression rather than manufacture a register
 // carrier.
 VA(0x004333a0, 0x174)  // vtable-slot 0x63b768 (provisional type), retail-only
-long type_undead_king_cloak_artifact::getValue(const hero* owner,
+long type_undead_king_cloak_artifact::getValue(const Hero* owner,
                                                 unsigned char equipped,
                                                 unsigned char) const
 {
@@ -5339,7 +5339,7 @@ long type_undead_king_cloak_artifact::getValue(const hero* owner,
         return owner->m_army.getAIValue() * necromancy / 250;
     }
 
-    TCreatureType creature;
+    CreatureType creature;
     switch (owner->m_skillLevel[12]) {
     case eMasteryBasic:
         creature = CREATURE_WALKING_DEAD;
@@ -5375,7 +5375,7 @@ long type_undead_king_cloak_artifact::getValue(const hero* owner,
 }
 
 VA(0x00433520, 0x5a)
-long type_elixir_of_life_artifact::getValue(const hero* owner, unsigned char, unsigned char) const
+long type_elixir_of_life_artifact::getValue(const Hero* owner, unsigned char, unsigned char) const
 {
     long total = 0;
     for (int i = 0; i < 7; i++) {
@@ -5388,12 +5388,12 @@ long type_elixir_of_life_artifact::getValue(const hero* owner, unsigned char, un
 
 VA(0x00433580, 0x13a)
 long type_statue_of_legion_artifact::getValue(
-    const hero* owner, unsigned char, unsigned char) const
+    const Hero* owner, unsigned char, unsigned char) const
 {
     long total = 0;
     playerData* player = &g_game->m_players[owner->m_owner];
     for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
-        const town* currentTown =
+        const Town* currentTown =
             g_game->getTown(player->m_townIds[townIndex]);
         for (int dwelling = 0; dwelling < TOWN_DWELLING_COUNT; ++dwelling) {
             if (!(currentTown->m_active
@@ -5406,7 +5406,7 @@ long type_statue_of_legion_artifact::getValue(
                 & g_bitNumber[DWELLING_0_UPG_ID + dwelling]) {
                 dwellingSlot += TOWN_DWELLING_COUNT;
             }
-            TCreatureType creature = g_townDwellingCreatures[
+            CreatureType creature = g_townDwellingCreatures[
                 currentTown->m_type * TOWN_DWELLING_SLOTS + dwellingSlot];
             long growth = g_creatureTypeTraits[creature].m_growthRate;
             growth += currentTown->getCastleGrowthBonus(creature);
@@ -5427,7 +5427,7 @@ long type_statue_of_legion_artifact::getValue(
 // CFG blocks are instruction-exact. An authentic inline first-aid helper was
 // tested and rejected (88.3639%).
 VA(0x004336c0, 0x320)  // anchor-callee unique (hero::GetFirstAidFactor), dc 0x37194
-long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned char equipped, unsigned char exact)
+long aiGetValueOfArtifact(type_artifact artifact, const Hero* owner, unsigned char equipped, unsigned char exact)
 {
     if (artifact.m_artifactId == ARTIFACT_NONE)
         return 0;
@@ -5460,14 +5460,14 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
         value += value * owner->m_skillLevel[20] / 2;
         long armyValue =
             owner->m_army.getAIValue()
-            * (const_cast<hero*>(owner)->getPrimarySkillTotal() + 40)
+            * (const_cast<Hero*>(owner)->getPrimarySkillTotal() + 40)
             / 40;
         return armyValue * value / (armyValue + value);
     }
 
     case ARTIFACT_AMMO_CART: {
-        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-            TCreatureType creature = owner->m_army.m_armyTypes[i];
+        for (int i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+            CreatureType creature = owner->m_army.m_armyTypes[i];
             if (creature != CREATURE_NONE
                 && (g_creatureTypeTraits[creature].m_attributes & g_ctaShooter)) {
                 value += g_creatureTypeTraits[creature].m_aiValue
@@ -5480,10 +5480,10 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
     case ARTIFACT_FIRST_AID_TENT: {
         int firstAid = static_cast<int>(
             owner->getFirstAidFactor() * 25.0f);
-        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-            TCreatureType creature = owner->m_army.m_armyTypes[i];
+        for (int i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+            CreatureType creature = owner->m_army.m_armyTypes[i];
             if (creature != CREATURE_NONE) {
-                const TCreatureTypeTraits& traits =
+                const CreatureTypeTraits& traits =
                     g_creatureTypeTraits[creature];
                 if (firstAid >= traits.m_hitPoints)
                     value = cppMax(value,
@@ -5530,12 +5530,12 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
 }
 
 VA(0x004339e0, 0xb8)  // dc 0x37464
-long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
+long aiGetEquipValue(type_artifact artifact, const Hero* ourHero,
                         unsigned char exact)
 {
     int slot;
     for (slot = 0; slot < 19; ++slot) {
-        if (const_cast<hero*>(ourHero)->heroFn004E2550(
+        if (const_cast<Hero*>(ourHero)->heroFn004E2550(
                 artifact.m_artifactId, slot)) {
             break;
         }
@@ -5547,10 +5547,10 @@ long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
         long replacedValue = 0;
         for (int equippedSlot = 0; equippedSlot < 19;
              ++equippedSlot) {
-            if (const_cast<hero*>(ourHero)->heroFn004E2840(
+            if (const_cast<Hero*>(ourHero)->heroFn004E2840(
                     artifact.m_artifactId, equippedSlot)) {
                 replacedValue = aiGetValueOfArtifact(
-                    ourHero->getArtifact(TArtifactSlot(equippedSlot)), ourHero, 1, exact);
+                    ourHero->getArtifact(ArtifactSlot(equippedSlot)), ourHero, 1, exact);
             }
         }
         value = cppMax(0L, value - replacedValue);
@@ -5566,7 +5566,7 @@ long aiGetValueOfArtifact(const type_artifact& artifact, long playerId)
     playerData* player = &g_game->m_players[playerId];
     long best = 10;
     for (int i = 0; i < player->m_numHeroes; ++i) {
-        hero* bestHero = g_game->getHero(player->m_heroes[i]);
+        Hero* bestHero = g_game->getHero(player->m_heroes[i]);
         long value = aiGetEquipValue(artifact, bestHero, 0);
         if (value > best)
             best = value;
@@ -5574,14 +5574,14 @@ long aiGetValueOfArtifact(const type_artifact& artifact, long playerId)
     return best;
 }
 
-long removeNegativeArtifacts(hero* ourHero);
-unsigned char addArtifact(hero* ourHero, type_artifact artifact,
-                           long* baseValue, hero* sourceHero,
+long removeNegativeArtifacts(Hero* ourHero);
+unsigned char addArtifact(Hero* ourHero, type_artifact artifact,
+                           long* baseValue, Hero* sourceHero,
                            long sourceSlot, long* sourceValue,
                            long bestChange);
 
 VA(0x00433b40, 0x6d)  // dc 0x37a58
-void aiEquipArtifacts(hero* ourHero)
+void aiEquipArtifacts(Hero* ourHero)
 {
     long baseValue = removeNegativeArtifacts(ourHero);
     type_artifact artifact;
@@ -5596,7 +5596,7 @@ void aiEquipArtifacts(hero* ourHero)
 }
 
 VA(0x00433bb0, 0xad)  // dc 0x377f0
-long removeNegativeArtifacts(hero* ourHero)
+long removeNegativeArtifacts(Hero* ourHero)
 {
     type_artifact artifact;
     long bestValue = getFullValue(ourHero);
@@ -5604,7 +5604,7 @@ long removeNegativeArtifacts(hero* ourHero)
         return bestValue;
 
     for (int slot = 0; slot < 17; ++slot) {
-        artifact = ourHero->getArtifact(TArtifactSlot(slot));
+        artifact = ourHero->getArtifact(ArtifactSlot(slot));
         if (artifact.m_artifactId != ARTIFACT_NONE) {
             ourHero->removeArtifact(slot);
             long value = getFullValue(ourHero);
@@ -5624,13 +5624,13 @@ long removeNegativeArtifacts(hero* ourHero)
 }
 
 VA(0x00433c60, 0x1b3)  // dc 0x37588
-long getFullValue(const hero* ourHero)
+long getFullValue(const Hero* ourHero)
 {
     type_spellvalue caster(ourHero);
     long value = 0;
 
-    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-        TCreatureType creature = ourHero->m_army.m_armyTypes[i];
+    for (int i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        CreatureType creature = ourHero->m_army.m_armyTypes[i];
         if (creature != CREATURE_NONE) {
             unsigned char hasAlliance;
             if (ourHero->m_owner >= 0)
@@ -5660,7 +5660,7 @@ long getFullValue(const hero* ourHero)
     value += caster.getBestSpellValue(SPELL_VALUE_SPECIAL);
 
     for (int slot = 0; slot < 19; ++slot) {
-        type_artifact artifact = ourHero->getArtifact(TArtifactSlot(slot));
+        type_artifact artifact = ourHero->getArtifact(ArtifactSlot(slot));
         if (artifact.m_artifactId != -1)
             value += aiGetValueOfArtifact(artifact, ourHero, 1, 1);
     }
@@ -5668,8 +5668,8 @@ long getFullValue(const hero* ourHero)
 }
 
 VA(0x00433e20, 0x1bf)  // dc 0x37898
-unsigned char addArtifact(hero* ourHero, type_artifact artifact,
-                           long* baseValue, hero* sourceHero,
+unsigned char addArtifact(Hero* ourHero, type_artifact artifact,
+                           long* baseValue, Hero* sourceHero,
                            long sourceSlot, long* sourceValue,
                            long bestChange)
 {
@@ -5677,7 +5677,7 @@ unsigned char addArtifact(hero* ourHero, type_artifact artifact,
         return 0;
 
     type_artifact oldArtifact;
-    int bestSlot = THeroScreenWindow::ARTIFACT_SLOT_COUNT;
+    int bestSlot = HeroScreenWindow::ARTIFACT_SLOT_COUNT;
     long bestValue;
     long bestSourceValue;
     unsigned char bestIsSwap;
@@ -5687,7 +5687,7 @@ unsigned char addArtifact(hero* ourHero, type_artifact artifact,
         if (!ourHero->heroFn004E2840(artifact.m_artifactId, slot))
             continue;
 
-        oldArtifact = ourHero->getArtifact(TArtifactSlot(slot));
+        oldArtifact = ourHero->getArtifact(ArtifactSlot(slot));
         long value = 0;
         unsigned char isSwap = 0;
         if (sourceValue)
@@ -5726,10 +5726,10 @@ unsigned char addArtifact(hero* ourHero, type_artifact artifact,
             break;
     }
 
-    if (bestSlot == THeroScreenWindow::ARTIFACT_SLOT_COUNT)
+    if (bestSlot == HeroScreenWindow::ARTIFACT_SLOT_COUNT)
         return 0;
 
-    oldArtifact = ourHero->getArtifact(TArtifactSlot(bestSlot));
+    oldArtifact = ourHero->getArtifact(ArtifactSlot(bestSlot));
     if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
         ourHero->removeArtifact(bestSlot);
         if (bestIsSwap) {
@@ -5745,14 +5745,14 @@ unsigned char addArtifact(hero* ourHero, type_artifact artifact,
 }
 
 VA(0x00433fe0, 0xf5)  // dc 0x37acc
-void aiSwapArtifacts(hero* source, hero* dest)
+void aiSwapArtifacts(Hero* source, Hero* dest)
 {
     type_artifact artifact;
     long sourceValue = removeNegativeArtifacts(source);
     long destValue = removeNegativeArtifacts(dest);
 
     for (int slot = 0; slot < 17; ++slot) {
-        artifact = source->getArtifact(TArtifactSlot(slot));
+        artifact = source->getArtifact(ArtifactSlot(slot));
         if (artifact.m_artifactId != ARTIFACT_NONE) {
             source->removeArtifact(slot);
             long newSourceValue = getFullValue(source);
@@ -5835,7 +5835,7 @@ inline type_duration_artifact::type_duration_artifact(long newBonus)
 {
 }
 
-inline type_school_artifact::type_school_artifact(TSpellSchool newSchool,
+inline type_school_artifact::type_school_artifact(SpellSchool newSchool,
                                                    long newBonus)
     : type_power_artifact(newBonus), m_school(newSchool)
 {
@@ -5854,7 +5854,7 @@ inline type_antiluck_artifact::type_antiluck_artifact()
 {
 }
 
-inline type_tome_artifact::type_tome_artifact(TSpellSchool newSchool)
+inline type_tome_artifact::type_tome_artifact(SpellSchool newSchool)
     : type_combat_artifact(0), m_school(newSchool)
 {
 }
@@ -5985,7 +5985,7 @@ static void initializeArtifactEffects()
                     effect = new type_duration_artifact(*definition++);
                     break;
                 case ARTIFACT_EFFECT_SCHOOL: {
-                    TSpellSchool school = (TSpellSchool)*definition++;
+                    SpellSchool school = (SpellSchool)*definition++;
                     effect = new type_school_artifact(
                         school, *definition++);
                     break;
@@ -6001,7 +6001,7 @@ static void initializeArtifactEffects()
                     break;
                 case ARTIFACT_EFFECT_TOME:
                     effect = new type_tome_artifact(
-                        (TSpellSchool)*definition++);
+                        (SpellSchool)*definition++);
                     break;
                 case ARTIFACT_EFFECT_INCOME: {
                     long amount = *definition++;
@@ -6615,7 +6615,7 @@ const type_point* std::vector<type_point,std::allocator<type_point> >::operator[
 
 // ..\stlport\stl_vector.h:204
 DC_ONLY(0x38b34, 0x24)
-const town* std::vector<town,std::allocator<town> >::operator[](unsigned __n)
+const Town* std::vector<Town,std::allocator<Town> >::operator[](unsigned __n)
 {
     // @stub
 }
@@ -6888,7 +6888,7 @@ const type_point* std::vector<type_point,std::allocator<type_point> >::begin()
 
 // ..\stlport\stl_vector.h:180
 DC_ONLY(0x390ac, 0x4)
-const town* std::vector<town,std::allocator<town> >::begin()
+const Town* std::vector<Town,std::allocator<Town> >::begin()
 {
     // @stub
 }

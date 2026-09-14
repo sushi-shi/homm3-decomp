@@ -28,7 +28,7 @@ DATA(0x00643b80) static const POINT g_buttonPositions[4] = {
 
 // DC public gUniversityWindowHelp is the two-row cancel/accept help table.
 // Retail reads its four pointers consecutively at 0x6a7dd8..0x6a7de4.
-DATA(0x006a7dd8) THelpText g_universityWindowHelp[2];
+DATA(0x006a7dd8) HelpText g_universityWindowHelp[2];
 
 // Source-owned format selected by the constructor for the university's
 // right-click description. The pointer is zero-fill storage until that setup.
@@ -39,7 +39,7 @@ DATA(0x006a7dec) static const char* g_universitySkillHelpFormat;
 // call site in skill_click (the call census reads `set_skill base x1 vs
 // retail x0`), which /Ob2 can only do from a visible body.
 DC_ONLY(0x18fad8, 0xA)
-void type_university_skill_button::setSkill(TSecondarySkill newSkill,
+void type_university_skill_button::setSkill(SecondarySkill newSkill,
                                              unsigned char newClick)
 {
     m_skill = newSkill;
@@ -53,7 +53,7 @@ void type_university_skill_button::setSkill(TSecondarySkill newSkill,
 DC_ONLY(0x18e6ac, 0x7C)
 type_university_skill_button::type_university_skill_button(
     long x, long y, long width, long height, long newId,
-    const char* image, TSecondarySkill newSkill)
+    const char* image, SecondarySkill newSkill)
     : iconWidget(x, y, width, height, newId, image,
                  newSkill * 3, 0, 0, 0, ICON_STYLE_PLAIN)
 {
@@ -102,7 +102,7 @@ void type_university_window::setSelectionMode()
 
 // E:\gamedcs\university_window.cpp:354
 DC_ONLY(0x18f52c, 0x2B6)
-void type_university_window::skillClick(TSecondarySkill skill)
+void type_university_window::skillClick(SecondarySkill skill)
 {
     // @stub
 }
@@ -135,7 +135,7 @@ void type_university_window::skillClick(TSecondarySkill skill)
 // verifying the six folded vector-helper aliases against their retail bodies.
 VA(0x005ef500, 0x1252)  // Univers1.pcx + two call-site modes, dc 0x18e790
 type_university_window::type_university_window(
-    hero* newHero, const type_university* university,
+    Hero* newHero, const type_university* university,
     unsigned char townUniversity)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
@@ -375,7 +375,7 @@ int type_university_window::doModal(unsigned char fade)
 }
 
 VA(0x005f0ac0, 0x2F2)  // dc 0x18f52c
-void type_university_window::skillClick(TSecondarySkill skill)
+void type_university_window::skillClick(SecondarySkill skill)
 {
     std::string helpText;
     unsigned int i;

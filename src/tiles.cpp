@@ -26,9 +26,9 @@
 // compiland's own dynamic initializer rather than from .data - which is why
 // the array is in .bss at all.
 DATA(0x006a80a8)
-TPoint g_tileDirections[TILE_DIR_COUNT] = {
-    TPoint(0, -1),  TPoint(1, -1),  TPoint(1, 0),   TPoint(1, 1),
-    TPoint(0, 1),   TPoint(-1, 1),  TPoint(-1, 0),  TPoint(-1, -1)
+Point g_tileDirections[TILE_DIR_COUNT] = {
+    Point(0, -1),  Point(1, -1),  Point(1, 0),   Point(1, 1),
+    Point(0, 1),   Point(-1, 1),  Point(-1, 0),  Point(-1, -1)
 };
 
 VA(0x005BC910, 0x7D)

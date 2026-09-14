@@ -8,6 +8,9 @@ from homm3.analysis.identifier_names import (
     confidence_for_function,
     lower_camel,
     apply_carcass_plan,
+    rewrite_code_identifiers,
+    restore_compgen_owner_spellings,
+    refresh_compatibility_macros,
 )
 
 
@@ -58,6 +61,68 @@ class IdentifierNamesTest(unittest.TestCase):
                 "// Before normalization (function): get_new_hero.\n"
                 "Thing getNewHero(HeroClass heroClass)\n",
             )
+
+    def test_type_rewrite_preserves_comments_literals_and_value_names(self):
+        source = (
+            "class town {}; // town stays as evidence\n"
+            "town* selected = new town;\n"
+            "int town = 3;\n"
+            "searchArray currentSearch;\n"
+            "void* town::`scalar deleting destructor'(unsigned flags);\n"
+            "std::pair<int, town> pair;\n"
+            "call(first, town, last);\n"
+            "draw(town * 2);\n"
+            "const char* label = \"town\";\n"
+            "TArtifact artifact;\n"
+        )
+        self.assertEqual(
+            rewrite_code_identifiers(
+                source, {"town": "Town", "searchArray": "SearchArray",
+                         "TArtifact": "Artifact"}, {"town", "searchArray"}),
+            "class Town {}; // town stays as evidence\n"
+            "Town* selected = new Town;\n"
+            "int town = 3;\n"
+            "SearchArray currentSearch;\n"
+            "void* Town::`scalar deleting destructor'(unsigned flags);\n"
+            "std::pair<int, Town> pair;\n"
+            "call(first, town, last);\n"
+            "draw(town * 2);\n"
+            "const char* label = \"town\";\n"
+            "Artifact artifact;\n",
+        )
+
+    def test_compgen_owner_keeps_recovered_compiler_spelling(self):
+        source = (
+            "VA_COMPGEN(0x401000, 0x21, SCALAR_DELETING_DTOR, Town)\n"
+            "VA_COMPGEN(0x402000, 0x21, VECTOR_DTOR, ResourcePtr)\n"
+        )
+        self.assertEqual(
+            restore_compgen_owner_spellings(
+                source, {"town": "Town", "TResourcePtr": "ResourcePtr"}),
+            "VA_COMPGEN(0x401000, 0x21, SCALAR_DELETING_DTOR, town)\n"
+            "VA_COMPGEN(0x402000, 0x21, VECTOR_DTOR, TResourcePtr)\n",
+        )
+
+    def test_compatibility_macros_are_idempotent(self):
+        source = (
+            "#ifndef ResourcePtr\n#define ResourcePtr ResourcePtr\n#endif\n"
+            "#ifndef ResourcePtr\n#define ResourcePtr TResourcePtr\n#endif\n"
+            "class ResourcePtr {};\n"
+        )
+        expected = (
+            "#ifndef ResourcePtr\n#define ResourcePtr TResourcePtr\n#endif\n"
+            "class ResourcePtr {};\n"
+        )
+        replacements = {"TResourcePtr": "ResourcePtr"}
+        self.assertEqual(refresh_compatibility_macros(source, replacements),
+                         expected)
+        self.assertEqual(refresh_compatibility_macros(expected, replacements),
+                         expected)
+
+    def test_elaborated_type_use_is_not_a_declaration(self):
+        source = "void f() {\nclass Town* town = 0;\n}\n"
+        self.assertEqual(
+            refresh_compatibility_macros(source, {"town": "Town"}), source)
 
 
 if __name__ == "__main__":

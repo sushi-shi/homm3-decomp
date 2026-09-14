@@ -103,7 +103,7 @@ inline button::~button()
 // The icon reload/disposal belongs to Main's separate SET_ICON_NAME arm.
 void button::setPalette(const char* paletteName)
 {
-    TPalette16* newPalette = ResourceManager::getPalette(paletteName);
+    Palette16* newPalette = ResourceManager::getPalette(paletteName);
     if (newPalette) {
         m_buttonIcon->setPalette(newPalette->m_data);
         newPalette->dispose();
@@ -436,7 +436,7 @@ VA_COMPGEN(0x00456a20, 0x21, SCALAR_DELETING_DTOR, textButton)
 
 // E:\gamedcs\button.cpp:508, dc 0x57ab4
 VA(0x00456a50, 0x193)  // linkorder bracket; initialize/GetSprite/GetFont callees byte-proven, dc 0x57ab4
-textButton::textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor newColor)
+textButton::textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::Color newColor)
     : button()
 {
     initialize(x, y, w, h, id, image, normal, selected, end, hotkey, style);
@@ -474,7 +474,7 @@ void textButton::draw() const
     else
         drawX = m_x + parent->m_x;
     m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
-                            drawX, drawY, m_width, m_height, font::TColor(color), 5, -1);
+                            drawX, drawY, m_width, m_height, font::Color(color), 5, -1);
 }
 
 VA(0x00456d30, 0x46)  // dc 0x57c4c
@@ -541,7 +541,7 @@ void button::setText(const char* new_text)
 
 // E:\gamedcs\CSprite.h:284
 DC_ONLY(0x57dbc, 0x24)
-TPalette24* CSprite::getPalette24()
+Palette24* CSprite::getPalette24()
 {
     // @stub
 }

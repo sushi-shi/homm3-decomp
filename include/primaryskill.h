@@ -5,7 +5,11 @@
 // Dreamcast LF_ENUM TPrimarySkill (enums.csv). The scholar's packed
 // primary lane and Random(0, 3) in retail RandomizeEvents corroborate
 // the four stat ordinals. Original enumerator spellings are retained.
-enum TPrimarySkill {
+// Before normalization (type): TPrimarySkill.
+#ifndef PrimarySkill
+#define PrimarySkill TPrimarySkill
+#endif
+enum PrimarySkill {
     ePriSkillAttack = 0,
     ePriSkillDefense = 1,
     ePriSkillPower = 2,

@@ -20,7 +20,11 @@ class type_text_scroller;
 // scroll origin at +0xec, the selection at +0xf0, the double-click
 // timestamp at +0xf4 (GameTime::Get) and the header vector at +0xf8.
 // Names INVENTED (no Dreamcast twin).
-class TCustomCampaignWindow : public CHeroWindowEx {
+// Before normalization (type): TCustomCampaignWindow.
+#ifndef CustomCampaignWindow
+#define CustomCampaignWindow TCustomCampaignWindow
+#endif
+class CustomCampaignWindow : public CHeroWindowEx {
 public:
     enum {
         CAMPAIGN_LIST_ROWS = 18
@@ -36,16 +40,16 @@ public:
     // LoadCampaignList binds insert's const T& straight to its
     // CampaignHeaderStruct* local (address-taken, memory-homed), which a
     // void* element would have copied through a temporary first.
-    std::vector<TCampaignBrief::CampaignHeaderStruct*> m_campaignHeaders;  // +0xf8
+    std::vector<CampaignBrief::CampaignHeaderStruct*> m_campaignHeaders;  // +0xf8
 
-    TCustomCampaignWindow();
-    virtual ~TCustomCampaignWindow();
+    CustomCampaignWindow();
+    virtual ~CustomCampaignWindow();
     virtual int onWidgetDeselect(int id, bool& exitFlag);
     void loadCampaignList();
     void updateList();
     bool acceptSelection();
 };
-SIZE(TCustomCampaignWindow, 0x108);
+SIZE(CustomCampaignWindow, 0x108);
 
 // Complete's custom-campaign list orders its header pointers through this
 // predicate. The predicate body is a separate retail helper; this owner
@@ -53,8 +57,8 @@ SIZE(TCustomCampaignWindow, 0x108);
 // specialization in customcampaign.obj.
 class CampaignHeaderPointerLess {
 public:
-    bool operator()(TCampaignBrief::CampaignHeaderStruct* left,
-                    TCampaignBrief::CampaignHeaderStruct* right) const;
+    bool operator()(CampaignBrief::CampaignHeaderStruct* left,
+                    CampaignBrief::CampaignHeaderStruct* right) const;
 };
 
 #endif // HOMM3_CUSTOMCAMPAIGNWINDOW_H

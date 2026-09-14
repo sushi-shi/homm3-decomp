@@ -14,7 +14,11 @@ class CSprite;
 
 class CSprite;
 class Bitmap816;
-enum TTownType;
+// Before normalization (type): TTownType.
+#ifndef TownType
+#define TownType TTownType
+#endif
+enum TownType;
 
 const char* getStartingResourceName(int town);
 const char* getStartingResourceDescription(int town);
@@ -71,12 +75,12 @@ class CNetMsgHandler;
 // inlined into the derived dialogs, and only handle_message (slot 3 of every
 // derived vtable, 0x575430) survives out of line. Adds one byte, gameMode,
 // at +0x54 - the first byte past the 0x54-byte TDialogBox base.
-class CSingleSelPopup : public TDialogBox {
+class CSingleSelPopup : public DialogBoxWindow {
 public:
     unsigned char m_gameMode;
 
     CSingleSelPopup(int type, unsigned char newGameMode)
-        : TDialogBox(type)
+        : DialogBoxWindow(type)
     {
         m_gameMode = newGameMode;
     }
@@ -140,7 +144,7 @@ public:
 class CTownDlg : public CSingleSelPopup {
 public:
     CTownDlg(unsigned char newGameMode);        // retail 0x575e10
-    unsigned char createWin(CSprite* town, int frame, TTownType townType);
+    unsigned char createWin(CSprite* town, int frame, TownType townType);
 };
 
 // The team-alignment picker adds a team-mask table at +0x58 and a count at
@@ -163,7 +167,11 @@ protected:
 // 0x641b14 names three of its four bodies outright (0x577090 scalar deleting
 // destructor, 0x577300 SetTotal, 0x577320 Advance); the constructor 0x576f00
 // and the repaint 0x577180 reach the rest.  Ordinal name.
-class TRandomMapProgress : public TProgressSink {
+// Before normalization (type): TRandomMapProgress.
+#ifndef RandomMapProgress
+#define RandomMapProgress TRandomMapProgress
+#endif
+class RandomMapProgress : public ProgressSink {
 public:
     std::vector<widget*> m_widgets;   // +0x0c
     heroWindow* m_window;             // +0x1c
@@ -178,8 +186,8 @@ public:
     // 0x28 bytes; 0x2c is an extent bound, not a proven retail sizeof.
     char m_pad28[4];
 
-    TRandomMapProgress(int totalSteps);
-    virtual ~TRandomMapProgress();
+    RandomMapProgress(int totalSteps);
+    virtual ~RandomMapProgress();
     virtual void setTotal(int totalSteps);
     virtual void advance(int amount);
     // Ordinal name, retained from the earlier singleselectionwindow.h model
@@ -187,6 +195,6 @@ public:
     void loadProgFn00577180();  // retail 0x577180
 };
 // Check this provisional view; exact retail extent remains unresolved.
-SIZE(TRandomMapProgress, 0x2c);
+SIZE(RandomMapProgress, 0x2c);
 
 #endif  /* HOMM3_SINGLESELECTIONPOPUPS_H */

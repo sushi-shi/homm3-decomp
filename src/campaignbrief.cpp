@@ -44,14 +44,14 @@ DATA(0x00694db0) static unsigned long g_campaignBriefFlashTime;
 // Dreamcast publishes the semantic table name. Complete's right-click path
 // independently fixes its THelpText stride and first-pointer use at this
 // address.
-DATA(0x006a59cc) extern THelpText g_campaignBriefHelp[];
+DATA(0x006a59cc) extern HelpText g_campaignBriefHelp[];
 
 void backupGameHeaders(game* dest, game* src);
 
 // Complete's five campaign-difficulty buttons take paired rollover/right-
 // click strings from this contiguous table. Retail fixes the five-row extent
 // by advancing from 0x006a6cb8 to 0x006a6ce0 in AddBonusIcons.
-DATA(0x006a6cb8) static THelpText g_campaignDifficultyHelp[5];
+DATA(0x006a6cb8) static HelpText g_campaignDifficultyHelp[5];
 
 // Both difficulty arrow buttons retain this shared message callback at
 // retail 0x00457cb0. Its source name is not yet independently recovered;
@@ -79,7 +79,7 @@ void showTerritorySmacker(unsigned char bEvil2Post)
 // description as a second widget message; Complete hands it to the
 // scroller (type_text_scroller::SetText, 0x5ba6e0) instead.
 DC_ONLY(0x58938, 0x6A)
-inline void TCampaignBrief::resetMapAndDescription(int which)
+inline void CampaignBrief::resetMapAndDescription(int which)
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
@@ -96,7 +96,7 @@ inline void TCampaignBrief::resetMapAndDescription(int which)
 // vector::size a NESTED candidate there, called out of line at both
 // loop tests (0x423110, the pointer-vector size COMDAT).
 DC_ONLY(0x589a4, 0x84)
-inline void TCampaignBrief::clearSelected()
+inline void CampaignBrief::clearSelected()
 {
     for (int i = 0; i < static_cast<int>(m_campaign->m_scenarios.size()); i++) {
         if (m_scenarios[i].m_available)
@@ -110,7 +110,7 @@ inline void TCampaignBrief::clearSelected()
 // button enable when the scenario's options record has no choice to
 // make, and the difficulty-button refresh.
 VA(0x00457990, 0x319)  // anchor-caller(TCampaignBrief ctor), dc 0x587c4
-void TCampaignBrief::select(int which)
+void CampaignBrief::select(int which)
 {
     if (!m_scenarios[which].m_available)
         return;
@@ -165,7 +165,7 @@ VA_COMPGEN(0x0054DEB0, 0x13, VECTOR_CAPACITY, Int)
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\campaignbrief.cpp:462
 DC_ONLY(0x58a28, 0x74)
-void TCampaignBrief::setupCurrentTerritory()
+void CampaignBrief::setupCurrentTerritory()
 {
     // @stub
 }
@@ -193,7 +193,7 @@ static int g_campaignBriefPlayerSlot;
 // candidate [ecx+eax+0x1f879], retail [eax+ecx+0x1f879]. Naming either the player
 // slot or the game receiver is byte-flat, so keep the canonical helper boundary.
 VA(0x00458010, 0x10F)  // handler caller + DC source identity, dc 0x58a9c
-void TCampaignBrief::updateAllyEnemyFlags()
+void CampaignBrief::updateAllyEnemyFlags()
 {
     int briefingChoice = g_game->m_campaign.m_briefingChoice;
     ScenarioStruct* scenario =
@@ -247,14 +247,14 @@ void ExtractCampaignMap(int* numPreReqs, unsigned char single_map_only, unsigned
 // three-argument `insert(end(), 1, value)` on the second arrow (77.52%); each
 // changes the whole /Ob2 frontier and destroys the otherwise exact CFG.
 VA(0x00458120, 0xC1C)  // anchor-caller(TCampaignBrief ctor), dc 0x58dac
-void TCampaignBrief::addBonusIcons()
+void CampaignBrief::addBonusIcons()
 {
     int i;
 
     m_widgets.push_back(new textWidget(
         476, 425, 194, 30, (*g_generalText)[72],
         DATA_COMPGEN(0x0065f2ec, campaignBonusMediumFont, "medfont.fnt"),
-        static_cast<font::TColor>(4), 242, 5, 0, 8));
+        static_cast<font::Color>(4), 242, 5, 0, 8));
 
     m_startBonusBorders[0] = new coloredBorderFrame(
         475, 454, 60, 66, 232, g_systemPalette->m_data[45], 0x400);
@@ -329,7 +329,7 @@ void TCampaignBrief::addBonusIcons()
         680, 425, 90, 30, (*g_generalText)[441],
         DATA_COMPGEN(0x0065f2ec, campaignDifficultyMediumFont,
                      "medfont.fnt"),
-        static_cast<font::TColor>(4), -1, 5, 0, 8));
+        static_cast<font::Color>(4), -1, 5, 0, 8));
 
     if (g_campaignBriefViewFromGame) {
         m_difficultyDecrButton = 0;
@@ -374,12 +374,12 @@ void TCampaignBrief::addBonusIcons()
 // `scenario` / `int i` declaration order (byte-flat) - the SIB flip is not
 // reachable from this loop's index scope because the third loop consumes `i`.
 VA(0x00458d40, 0x297)  // Select callee, dc-order-map after AddBonusIcons, dc 0x58c00
-void TCampaignBrief::updateBonusIcons()
+void CampaignBrief::updateBonusIcons()
 {
     ScenarioStruct* scenario = m_campaign->m_scenarios[m_selectedScenario];
     int i;
 
-    if (scenario->m_options->getCount() == TCampaignStartOption::CHOICE_COUNT_PAIR) {
+    if (scenario->m_options->getCount() == CampaignStartOption::CHOICE_COUNT_PAIR) {
         m_startBonusBorders[0]->m_x = 509;
         m_startBonusBorders[1]->m_x = 577;
     } else {
@@ -422,7 +422,7 @@ void TCampaignBrief::updateBonusIcons()
 }
 
 VA(0x00458fe0, 0x2C)
-std::string TCampaignBrief::ScenarioStruct::getBonusText(
+std::string CampaignBrief::ScenarioStruct::getBonusText(
     CampaignHeaderStruct* campaign, int option)
 {
     return m_options->getText(campaign, option);
@@ -430,7 +430,7 @@ std::string TCampaignBrief::ScenarioStruct::getBonusText(
 
 // Complete-only; see campaignbrief.h.
 VA(0x00459010, 0xB0)
-void TCampaignBrief::updateDifficultyButtons()
+void CampaignBrief::updateDifficultyButtons()
 {
     for (int i = 0; i < 5; i++) {
         if (i == g_game->m_setup.m_difficulty)
@@ -468,7 +468,7 @@ void TCampaignBrief::updateDifficultyButtons()
 // They only pay TOGETHER - 89.0593 / 90.0586 / 90.1377 / 90.9771 / 91.1880 as
 // they accumulate - and the fifth through ninth all fall back.
 VA(0x004590c0, 0x1319)  // anchor-caller/callee/string/vtable, dc 0x594b8
-TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
+CampaignBrief::CampaignBrief(unsigned char newCampaign,
                                unsigned char viewFromGame)
     : heroWindow(0, 0, 800, 600, 0)
 {
@@ -556,14 +556,14 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
         m_scenarios[availableIndex].m_available = bitMask[availableIndex];
     }
 
-    const TCampaignMapTraits& mapTraits =
+    const CampaignMapTraits& mapTraits =
         g_campaignMapTraits[m_campaign->m_regionMap];
     widgets.insert(widgets.end(), new bitmapBorder16(
                     0, 0, 800, 600, BACKGROUND_ID, mapTraits.m_imageName, 0x800));
 
     for (int regionIndex = 0;
          regionIndex < mapTraits.m_numRegions; ++regionIndex) {
-        const TCampaignMapTraits::TRegionTraits& region =
+        const CampaignMapTraits::RegionTraits& region =
             mapTraits.m_regionTraits[regionIndex];
         ScenarioStruct* scenario = m_campaign->m_scenarios[regionIndex];
         if (scenario->m_inflatedSize > 0) {
@@ -626,12 +626,12 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
         widgets.insert(widgets.end(), new textWidget(
                         481, 22, 246, 32, m_campaign->getCampaignName().c_str(),
                         DATA_COMPGEN(0x00660b24, campaignBriefBigFont, "bigfont.fnt"),
-                        static_cast<font::TColor>(8), CAMPAIGN_NAME_ID, 4, 0, 8));
+                        static_cast<font::Color>(8), CAMPAIGN_NAME_ID, 4, 0, 8));
     }
     widgets.insert(widgets.end(), new textWidget(
                     481, 63, 270, 108, (*g_generalText)[39],
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
-                    static_cast<font::TColor>(2), CAMPAIGN_DESCRIPTION_ID, 0, 0, 8));
+                    static_cast<font::Color>(2), CAMPAIGN_DESCRIPTION_ID, 0, 0, 8));
     if (m_campaign->getCampaignDescription().length() > 0) {
         widgets.insert(widgets.end(), new textWidget(
                         481, 86, 277, 120,
@@ -659,11 +659,11 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
                     481, 213, viewFromGame ? 217 : 281, 32,
                     m_scenarios[m_selectedScenario].m_mapName.c_str(),
                     DATA_COMPGEN(0x00660b24, campaignBriefBigFont, "bigfont.fnt"),
-                    static_cast<font::TColor>(8), MAP_NAME_ID, 4, 0, 8));
+                    static_cast<font::Color>(8), MAP_NAME_ID, 4, 0, 8));
     widgets.insert(widgets.end(), new textWidget(
                     481, 253, 270, 108, (*g_generalText)[497],
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
-                    static_cast<font::TColor>(2), CAMPAIGN_DESCRIPTION_ID, 0, 0, 8));
+                    static_cast<font::Color>(2), CAMPAIGN_DESCRIPTION_ID, 0, 0, 8));
     m_scroller = new type_text_scroller(
         m_scenarios[m_selectedScenario].m_mapDescription.c_str(),
         481, 278, 277, 108,
@@ -805,13 +805,13 @@ std::string SCampaign::getCampaignFileName() const
 }
 
 VA(0x0045a520, 0x134)
-std::string TCampaignBrief::CampaignHeaderStruct::getCampaignName() const
+std::string CampaignBrief::CampaignHeaderStruct::getCampaignName() const
 {
     return m_campaignName;
 }
 
 VA(0x0045a660, 0x134)
-std::string TCampaignBrief::CampaignHeaderStruct::getCampaignDescription() const
+std::string CampaignBrief::CampaignHeaderStruct::getCampaignDescription() const
 {
     return m_campaignDesc;
 }
@@ -879,7 +879,7 @@ VA_COMPGEN(0x0045DA40, 0x21, SCALAR_DELETING_DTOR,
            type_map_hero_identity)
 
 VA(0x0045afb0, 0x18F)  // dc 0x5a11c
-TCampaignBrief::~TCampaignBrief()
+CampaignBrief::~CampaignBrief()
 {
     if (g_saveHeader) {
         g_unk698760 = m_oldVolume;
@@ -904,14 +904,14 @@ TCampaignBrief::~TCampaignBrief()
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\campaignbrief.cpp:1054
 DC_ONLY(0x5a2b4, 0x54)
-int TCampaignBrief::convertID2HelpID(int id) const
+int CampaignBrief::convertID2HelpID(int id) const
 {
     // @stub
 }
 
 // E:\gamedcs\campaignbrief.cpp:1071
 DC_ONLY(0x5a308, 0x1A)
-void TCampaignBrief::doModal()
+void CampaignBrief::doModal()
 {
     // @stub
 }
@@ -921,7 +921,7 @@ void TCampaignBrief::doModal()
 // id groups. Complete expands it into CampaignBriefHandler, so no standalone
 // x86 row remains; retaining the call here lets VC6 make that natural /Ob2
 // decision from the real body and source order.
-int TCampaignBrief::convertID2HelpID(int id) const
+int CampaignBrief::convertID2HelpID(int id) const
 {
     if (id >= MAP_CONQUERED_1_ID && id <= MAP_CONQUERED_32_ID)
         return id - MAP_CONQUERED_1_ID;
@@ -933,7 +933,7 @@ int TCampaignBrief::convertID2HelpID(int id) const
 }
 
 VA(0x0045b1b0, 0x28)  // dc 0x5a308
-void TCampaignBrief::doModal()
+void CampaignBrief::doModal()
 {
     if (!m_campaign) {
         g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
@@ -957,7 +957,7 @@ void TCampaignBrief::doModal()
 VA(0x0045b1e0, 0x8DB)  // DoModal address-take + full retail CFG, dc 0x5a324
 static int campaignBriefHandler(message& msg)
 {
-    TCampaignBrief* brief = static_cast<TCampaignBrief*>(msg.m_window);
+    CampaignBrief* brief = static_cast<CampaignBrief*>(msg.m_window);
     int exitFlag = 0;
 
     if (g_campaignBriefReady) {
@@ -979,14 +979,14 @@ static int campaignBriefHandler(message& msg)
                 if (brief->m_scenarios[i].m_available) {
                     if (g_campaignBriefFlashLeft & 1) {
                         brief->getWidget(
-                            TCampaignBrief::MAP_SELECTED_1_ID + i)->hide();
+                            CampaignBrief::MAP_SELECTED_1_ID + i)->hide();
                         brief->getWidget(
-                            TCampaignBrief::MAP_ENABLED_1_ID + i)->hide();
+                            CampaignBrief::MAP_ENABLED_1_ID + i)->hide();
                     } else {
                         brief->getWidget(
-                            TCampaignBrief::MAP_SELECTED_1_ID + i)->show();
+                            CampaignBrief::MAP_SELECTED_1_ID + i)->show();
                         brief->getWidget(
-                            TCampaignBrief::MAP_ENABLED_1_ID + i)->show();
+                            CampaignBrief::MAP_ENABLED_1_ID + i)->show();
                     }
                 }
             }
@@ -1002,12 +1002,12 @@ static int campaignBriefHandler(message& msg)
 
     if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
         int id = msg.m_codeY;
-        if (id == TCampaignBrief::CHOICE_1_ID
-            || id == TCampaignBrief::CHOICE_2_ID
-            || id == TCampaignBrief::CHOICE_3_ID
-            || id == TCampaignBrief::CHOICE_1_HIGHLIGHT_ID
-            || id == TCampaignBrief::CHOICE_2_HIGHLIGHT_ID
-            || id == TCampaignBrief::CHOICE_3_HIGHLIGHT_ID
+        if (id == CampaignBrief::CHOICE_1_ID
+            || id == CampaignBrief::CHOICE_2_ID
+            || id == CampaignBrief::CHOICE_3_ID
+            || id == CampaignBrief::CHOICE_1_HIGHLIGHT_ID
+            || id == CampaignBrief::CHOICE_2_HIGHLIGHT_ID
+            || id == CampaignBrief::CHOICE_3_HIGHLIGHT_ID
             || (id >= 235 && id <= 239)) {
             widget* w = brief->getWidget(id);
             if (w) {
@@ -1016,7 +1016,7 @@ static int campaignBriefHandler(message& msg)
             }
         } else {
             id = brief->m_zBuffer[msg.m_mouseY * brief->m_width + msg.m_mouseX];
-            if (id && id > TCampaignBrief::BACKGROUND_ID && id < 243) {
+            if (id && id > CampaignBrief::BACKGROUND_ID && id < 243) {
                 int helpID = brief->convertID2HelpID(id);
                 if (helpID >= 0) {
                     if (helpID < 100) {
@@ -1041,11 +1041,11 @@ static int campaignBriefHandler(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
 
     switch (msg.m_codeY) {
-    case TCampaignBrief::RESTART_ID:
+    case CampaignBrief::RESTART_ID:
         exitFlag = 1;
         break;
 
-    case TCampaignBrief::VIDEO_ID:
+    case CampaignBrief::VIDEO_ID:
         g_soundManager->stopAllSamples(1);
         g_game->m_campaign.playScenarioPrologue(brief->m_campaign);
         brief->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
@@ -1053,89 +1053,89 @@ static int campaignBriefHandler(message& msg)
         g_soundManager->stopAllSamples(1);
         break;
 
-    case TCampaignBrief::MAP_ENABLED_1_ID + 0:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 1:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 2:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 3:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 4:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 5:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 6:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 7:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 8:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 9:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 10:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 11:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 12:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 13:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 14:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 15:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 16:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 17:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 18:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 19:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 20:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 21:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 22:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 23:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 24:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 25:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 26:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 27:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 28:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 29:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 30:
-    case TCampaignBrief::MAP_ENABLED_1_ID + 31:
+    case CampaignBrief::MAP_ENABLED_1_ID + 0:
+    case CampaignBrief::MAP_ENABLED_1_ID + 1:
+    case CampaignBrief::MAP_ENABLED_1_ID + 2:
+    case CampaignBrief::MAP_ENABLED_1_ID + 3:
+    case CampaignBrief::MAP_ENABLED_1_ID + 4:
+    case CampaignBrief::MAP_ENABLED_1_ID + 5:
+    case CampaignBrief::MAP_ENABLED_1_ID + 6:
+    case CampaignBrief::MAP_ENABLED_1_ID + 7:
+    case CampaignBrief::MAP_ENABLED_1_ID + 8:
+    case CampaignBrief::MAP_ENABLED_1_ID + 9:
+    case CampaignBrief::MAP_ENABLED_1_ID + 10:
+    case CampaignBrief::MAP_ENABLED_1_ID + 11:
+    case CampaignBrief::MAP_ENABLED_1_ID + 12:
+    case CampaignBrief::MAP_ENABLED_1_ID + 13:
+    case CampaignBrief::MAP_ENABLED_1_ID + 14:
+    case CampaignBrief::MAP_ENABLED_1_ID + 15:
+    case CampaignBrief::MAP_ENABLED_1_ID + 16:
+    case CampaignBrief::MAP_ENABLED_1_ID + 17:
+    case CampaignBrief::MAP_ENABLED_1_ID + 18:
+    case CampaignBrief::MAP_ENABLED_1_ID + 19:
+    case CampaignBrief::MAP_ENABLED_1_ID + 20:
+    case CampaignBrief::MAP_ENABLED_1_ID + 21:
+    case CampaignBrief::MAP_ENABLED_1_ID + 22:
+    case CampaignBrief::MAP_ENABLED_1_ID + 23:
+    case CampaignBrief::MAP_ENABLED_1_ID + 24:
+    case CampaignBrief::MAP_ENABLED_1_ID + 25:
+    case CampaignBrief::MAP_ENABLED_1_ID + 26:
+    case CampaignBrief::MAP_ENABLED_1_ID + 27:
+    case CampaignBrief::MAP_ENABLED_1_ID + 28:
+    case CampaignBrief::MAP_ENABLED_1_ID + 29:
+    case CampaignBrief::MAP_ENABLED_1_ID + 30:
+    case CampaignBrief::MAP_ENABLED_1_ID + 31:
         if (!g_campaignBriefViewFromGame)
-            brief->select(msg.m_codeY - TCampaignBrief::MAP_ENABLED_1_ID);
+            brief->select(msg.m_codeY - CampaignBrief::MAP_ENABLED_1_ID);
         break;
 
-    case TCampaignBrief::MAP_SELECTED_1_ID + 0:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 1:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 2:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 3:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 4:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 5:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 6:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 7:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 8:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 9:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 10:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 11:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 12:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 13:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 14:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 15:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 16:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 17:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 18:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 19:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 20:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 21:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 22:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 23:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 24:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 25:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 26:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 27:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 28:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 29:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 30:
-    case TCampaignBrief::MAP_SELECTED_1_ID + 31:
+    case CampaignBrief::MAP_SELECTED_1_ID + 0:
+    case CampaignBrief::MAP_SELECTED_1_ID + 1:
+    case CampaignBrief::MAP_SELECTED_1_ID + 2:
+    case CampaignBrief::MAP_SELECTED_1_ID + 3:
+    case CampaignBrief::MAP_SELECTED_1_ID + 4:
+    case CampaignBrief::MAP_SELECTED_1_ID + 5:
+    case CampaignBrief::MAP_SELECTED_1_ID + 6:
+    case CampaignBrief::MAP_SELECTED_1_ID + 7:
+    case CampaignBrief::MAP_SELECTED_1_ID + 8:
+    case CampaignBrief::MAP_SELECTED_1_ID + 9:
+    case CampaignBrief::MAP_SELECTED_1_ID + 10:
+    case CampaignBrief::MAP_SELECTED_1_ID + 11:
+    case CampaignBrief::MAP_SELECTED_1_ID + 12:
+    case CampaignBrief::MAP_SELECTED_1_ID + 13:
+    case CampaignBrief::MAP_SELECTED_1_ID + 14:
+    case CampaignBrief::MAP_SELECTED_1_ID + 15:
+    case CampaignBrief::MAP_SELECTED_1_ID + 16:
+    case CampaignBrief::MAP_SELECTED_1_ID + 17:
+    case CampaignBrief::MAP_SELECTED_1_ID + 18:
+    case CampaignBrief::MAP_SELECTED_1_ID + 19:
+    case CampaignBrief::MAP_SELECTED_1_ID + 20:
+    case CampaignBrief::MAP_SELECTED_1_ID + 21:
+    case CampaignBrief::MAP_SELECTED_1_ID + 22:
+    case CampaignBrief::MAP_SELECTED_1_ID + 23:
+    case CampaignBrief::MAP_SELECTED_1_ID + 24:
+    case CampaignBrief::MAP_SELECTED_1_ID + 25:
+    case CampaignBrief::MAP_SELECTED_1_ID + 26:
+    case CampaignBrief::MAP_SELECTED_1_ID + 27:
+    case CampaignBrief::MAP_SELECTED_1_ID + 28:
+    case CampaignBrief::MAP_SELECTED_1_ID + 29:
+    case CampaignBrief::MAP_SELECTED_1_ID + 30:
+    case CampaignBrief::MAP_SELECTED_1_ID + 31:
         if (!g_campaignBriefViewFromGame)
-            brief->select(msg.m_codeY - TCampaignBrief::MAP_SELECTED_1_ID);
+            brief->select(msg.m_codeY - CampaignBrief::MAP_SELECTED_1_ID);
         break;
 
-    case TCampaignBrief::CHOICE_1_ID:
-    case TCampaignBrief::CHOICE_2_ID:
-    case TCampaignBrief::CHOICE_3_ID:
-    case TCampaignBrief::CHOICE_1_HIGHLIGHT_ID:
-    case TCampaignBrief::CHOICE_2_HIGHLIGHT_ID:
-    case TCampaignBrief::CHOICE_3_HIGHLIGHT_ID:
+    case CampaignBrief::CHOICE_1_ID:
+    case CampaignBrief::CHOICE_2_ID:
+    case CampaignBrief::CHOICE_3_ID:
+    case CampaignBrief::CHOICE_1_HIGHLIGHT_ID:
+    case CampaignBrief::CHOICE_2_HIGHLIGHT_ID:
+    case CampaignBrief::CHOICE_3_HIGHLIGHT_ID:
         if (!g_campaignBriefViewFromGame) {
-            int choice = msg.m_codeY < TCampaignBrief::CHOICE_1_HIGHLIGHT_ID
-                             ? msg.m_codeY - TCampaignBrief::CHOICE_1_ID
+            int choice = msg.m_codeY < CampaignBrief::CHOICE_1_HIGHLIGHT_ID
+                             ? msg.m_codeY - CampaignBrief::CHOICE_1_ID
                              : msg.m_codeY
-                                   - TCampaignBrief::CHOICE_1_HIGHLIGHT_ID;
+                                   - CampaignBrief::CHOICE_1_HIGHLIGHT_ID;
             g_game->m_campaign.m_briefingChoice = choice;
             for (int i = 0; i < 3; ++i) {
                 brief->m_startBonusBorders[i]->setVisible(i == choice);
@@ -1197,7 +1197,7 @@ static int campaignBriefHandler(message& msg)
 }
 
 VA(0x0045bad0, 0x134)  // sole caller CampaignBriefHandler + member offset
-std::string TCampaignBrief::ScenarioStruct::getRegionDescription() const
+std::string CampaignBrief::ScenarioStruct::getRegionDescription() const
 {
     return m_regionDesc;
 }
@@ -1206,8 +1206,8 @@ VA(0x0045bc10, 0xC0)  // dc 0x5ab48
 std::string getCampaignName()
 {
     const char* fileName = g_game->m_campaign.getCampaignFileName().c_str();
-    TCampaignBrief::CampaignHeaderStruct* header =
-        new TCampaignBrief::CampaignHeaderStruct(fileName);
+    CampaignBrief::CampaignHeaderStruct* header =
+        new CampaignBrief::CampaignHeaderStruct(fileName);
 
     header->load();
     return header->getCampaignName();
@@ -1245,7 +1245,7 @@ void widget::show()
 
 // E:\gamedcs\game.h:234
 DC_ONLY(0x5ac3c, 0x44)
-void CMapHeaderData::TPlayerSlotAttributes::TPlayerSlotAttributes()
+void CMapHeaderData::PlayerSlotAttributes::PlayerSlotAttributes()
 {
     // @stub
 }
@@ -1280,14 +1280,14 @@ void CSingleSelPopup::~CSingleSelPopup()
 
 // E:\gamedcs\campaignbrief.cpp:192
 DC_ONLY(0x5ade8, 0x28)
-void TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
+void CampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
 {
     // @stub
 }
 
 // E:\gamedcs\campaignbrief.cpp:192
 DC_ONLY(0x5ae10, 0x44)
-void TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct()
+void CampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct()
 {
     // @stub
 }
@@ -1301,7 +1301,7 @@ void NewSMapHeader::~NewSMapHeader()
 
 // E:\gamedcs\campaignbrief.cpp:1007
 DC_ONLY(0x5ae80, 0x34)
-void* TCampaignBrief::`scalar deleting destructor'(unsigned __flags)
+void* CampaignBrief::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -1391,7 +1391,7 @@ VA_COMPGEN(0x0045d230, 0x38, VECTOR_UCOPY, type_map_hero_identity)
 // clears data/stream/status at 0x488681..0x488687, and returns with ret 4.
 // The four members default-construct (the empty
 VA(0x004885d0, 0xCB)  // anchor-caller(TCampaignBrief ctor), retail-only
-TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
+CampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
     const char* filename)
 {
     m_fileName = filename;
@@ -1423,7 +1423,7 @@ TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
 // by reference gives 67.27966. Neither changes the retained source choice.
 // E:\gamedcs\campaignbrief.cpp:192, dc 0x5ade8
 VA(0x004886a0, 0x132)  // anchor-caller(TCampaignBrief ctor), retail-only
-TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
+CampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
 {
     for (unsigned int i = 0; i < m_scenarios.size(); ++i)
         delete m_scenarios[i];

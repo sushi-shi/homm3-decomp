@@ -7,8 +7,14 @@
 #include "armygrp.h"
 #include "ai_tactical.h"
 
-class hero;
-class town;
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero;
+#ifndef Town
+#define Town town
+#endif
+class Town;
 class NewmapCell;
 
 // VC6's <new> declares `operator delete` WITHOUT an exception
@@ -66,7 +72,7 @@ enum type_speed_catagory {
 struct type_monster_data {
 public:
     long m_index;  // +0x00
-    TCreatureType m_type;  // +0x04
+    CreatureType m_type;  // +0x04
     long m_number;  // +0x08
     long m_originalNumber;  // +0x0c
     long m_speed;  // +0x10
@@ -80,20 +86,20 @@ public:
     type_speed_catagory m_catagory;  // +0x38
     long m_value;  // +0x3c
     long m_totalValue;  // +0x40
-    long getSpellDamage(SpellID spell, const hero* castingHero,
-                          const hero* targetHero, long damage) const;
+    long getSpellDamage(SpellID spell, const Hero* castingHero,
+                          const Hero* targetHero, long damage) const;
 
     long getEnchantmentValue(type_spell_choice& choice,
-                               const hero* castingHero,
-                               const hero* targetHero) const;
+                               const Hero* castingHero,
+                               const Hero* targetHero) const;
     long getResurrectionValue(type_spell_choice& choice,
-                                const hero* castingHero) const;
+                                const Hero* castingHero) const;
     // No retail row of its own - /Ob2 inlined every call site and
     // OPT:REF dropped the out-of-line COMDAT, so ai_combat.cpp defines
     // it `inline` (see the note there).
     void castEnchantment(long spellValue, unsigned char increase);
     void castResurrection(type_spell_choice& choice,
-                           const hero* castingHero);
+                           const Hero* castingHero);
     long takeDamage(long damage);
     bool operator<(const type_monster_data& arg) const
     {
@@ -158,22 +164,22 @@ protected:
     long m_tacticsAdvantage;  // +0x20
 
 public:
-    hero* m_currentHero;  // +0x24
-    armyGroup* m_currentArmy;  // +0x28
+    Hero* m_currentHero;  // +0x24
+    ArmyGroup* m_currentArmy;  // +0x28
 
 protected:
-    hero* m_enemyHero;  // +0x2c
+    Hero* m_enemyHero;  // +0x2c
 
 public:
     unsigned char m_wallArcheryPenalty;  // +0x30, natural padding at +0x31
     short m_wallSpeedLimit;  // +0x32
 
-    type_AI_combat_data(const hero* newHero, const armyGroup* newArmy,
-                        double baseModifier, const hero* enemyHero,
-                        const town* enemyTown, NewmapCell* mapCell);
+    type_AI_combat_data(const Hero* newHero, const ArmyGroup* newArmy,
+                        double baseModifier, const Hero* enemyHero,
+                        const Town* enemyTown, NewmapCell* mapCell);
     type_AI_combat_data(const type_AI_combat_data& other);
     void adjustArmy(unsigned char dismissHero);
-    void doAftermath(type_AI_combat_data& defender, town* enemyTown);
+    void doAftermath(type_AI_combat_data& defender, Town* enemyTown);
     void simulateCombat(type_AI_combat_data& defender);
 
 protected:
@@ -183,16 +189,16 @@ protected:
                               type_AI_combat_data& defender, long damage) const;
     void castDamageSpell(type_spell_choice& choice,
                            type_AI_combat_data& defender) const;
-    void castEnchantment(type_spell_choice& choice, const hero* castingHero,
+    void castEnchantment(type_spell_choice& choice, const Hero* castingHero,
                           unsigned char increase);
     void castEnchantment(type_spell_choice& choice, type_AI_combat_data& defender);
     void castMassDamageSpell(type_spell_choice& choice,
-                                const hero* castingHero);
+                                const Hero* castingHero);
     void getSummoningValue(type_spell_choice& choice) const;
     void castSummoning(type_spell_choice& choice);
     void castSpell(type_AI_combat_data& defender, type_speed_catagory round);
     void castSpells(type_AI_combat_data& defender, type_speed_catagory round);
-    void checkWallArcheryPenalty(const town* enemyTown);
+    void checkWallArcheryPenalty(const Town* enemyTown);
     bool chooseMelee(const type_AI_combat_data& enemy,
                       type_speed_catagory currentRound) const;
     void doMeleeCombat(type_speed_catagory attackerSpeed,
@@ -203,7 +209,7 @@ protected:
     void getAreaValue(type_spell_choice& choice,
                         const type_AI_combat_data& defender,
                         long damage, long extraTargets) const;
-    armyGroup* getArmy() const { return m_currentArmy; }
+    ArmyGroup* getArmy() const { return m_currentArmy; }
 
 public:
     // DC ai_combat.h:255-256, 0x2c6ac: load this+24 and return. Retail
@@ -216,45 +222,45 @@ protected:
                     unsigned char shootersBlocked) const;
     void getDamageSpellValue(type_spell_choice& choice,
                                 const type_AI_combat_data& defender) const;
-    type_speed_catagory getCatagory(TCreatureType creature, long speed) const;
+    type_speed_catagory getCatagory(CreatureType creature, long speed) const;
     void getChainLightningValue(type_spell_choice& choice,
                                    const type_AI_combat_data& defender,
                                    long damage) const;
     void getEnchantmentValue(type_spell_choice& choice,
-                               const hero* castingHero) const;
+                               const Hero* castingHero) const;
     void getEnchantmentValue(type_spell_choice& choice,
                                type_AI_combat_data& defender) const;
     long getFastestSpeed() const;
     long getFinalMeleeValue() const;
-    hero* getHero() const { return m_currentHero; }
+    Hero* getHero() const { return m_currentHero; }
     long getMassDamageValue(type_spell_choice& choice,
-                               const hero* castingHero) const;
+                               const Hero* castingHero) const;
     void getMassDamageValue(type_spell_choice& choice,
                                type_AI_combat_data& defender) const;
     long getNextChainLightningTarget(long excluded,
                                          const type_AI_combat_data& defender,
                                          long start, long damage) const;
-    unsigned char hasCreature(TCreatureType creature) const;
+    unsigned char hasCreature(CreatureType creature) const;
     void inflictDamage(long damage, long blockerSpeed);
     long inflictMeleeDamage(long damage, long start, long speedLimit);
-    void initializeCreatures(double baseModifier, const hero* enemyHero);
+    void initializeCreatures(double baseModifier, const Hero* enemyHero);
     void kill();
 };
 
-unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
-                              armyGroup& defendingArmy, town* defendingTown,
+unsigned char aiQuickCombat(Hero* attackingHero, Hero* defendingHero,
+                              ArmyGroup& defendingArmy, Town* defendingTown,
                               NewmapCell* cell);
-void aiAutoCombat(hero* attackingHero, hero* defendingHero,
-                    armyGroup& attackingArmy, armyGroup& defendingArmy,
-                    const town* defendingTown, NewmapCell* cell);
-long aiValueOfCombat(const hero* attackingHero,
-                        const hero* defendingHero,
-                        const armyGroup& defendingArmy,
-                        const town* defendingTown,
+void aiAutoCombat(Hero* attackingHero, Hero* defendingHero,
+                    ArmyGroup& attackingArmy, ArmyGroup& defendingArmy,
+                    const Town* defendingTown, NewmapCell* cell);
+long aiValueOfCombat(const Hero* attackingHero,
+                        const Hero* defendingHero,
+                        const ArmyGroup& defendingArmy,
+                        const Town* defendingTown,
                         NewmapCell* cell);
 
-long aiApproximateStrength(const hero* currentHero);
-long aiApproximateStrength(const hero* currentHero, const armyGroup& currentArmy);
+long aiApproximateStrength(const Hero* currentHero);
+long aiApproximateStrength(const Hero* currentHero, const ArmyGroup& currentArmy);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\ai_combat.cpp:1398, dc 0x2bcd8) void do_eagle_eye(hero* winner, hero* loser);

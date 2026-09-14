@@ -54,7 +54,7 @@ DATA(0x006823b8) static int g_quickTownArmyPositions[7][2] = {
 // to +4 (98.2053) but never reaches the ceiling, and guard + two inserts is
 // 98.3983.
 VA(0x00530120, 0x67D)  // townqvbk/itpt literals + town helpers, dc 0x117e48
-TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TViewLevel viewLevel)
+QuickTownWindow::QuickTownWindow(const Town* thisTown, QuickTownWindow::ViewLevel viewLevel)
     : heroWindow(200, 200, 194, 186, 0x12)
 {
     m_widgets.reserve(NWIDGETS);
@@ -169,8 +169,8 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
 }
 
 VA(0x005307d0, 0x145)  // dc 0x1183b8
-TQuickTownWindow::TQuickTownWindow(const garrison* thisGarrison,
-                                   TQuickTownWindow::TViewLevel viewLevel)
+QuickTownWindow::QuickTownWindow(const garrison* thisGarrison,
+                                   QuickTownWindow::ViewLevel viewLevel)
     : heroWindow(200, 200, 188, 182, 0x12)
 {
     m_widgets.push_back(new bitmapBorder(
@@ -189,7 +189,7 @@ TQuickTownWindow::TQuickTownWindow(const garrison* thisGarrison,
 VA_COMPGEN(0x005307a0, 0x21, SCALAR_DELETING_DTOR, TQuickTownWindow)
 
 VA(0x00530920, 0x6B)  // dc 0x1184c4
-TQuickTownWindow::~TQuickTownWindow()
+QuickTownWindow::~QuickTownWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -198,8 +198,8 @@ TQuickTownWindow::~TQuickTownWindow()
 }
 
 VA(0x00530990, 0x303)  // dc 0x118564
-void TQuickTownWindow::initializeArmyDisplay(
-    const armyGroup& currentArmyGroup, TQuickTownWindow::TViewLevel viewLevel)
+void QuickTownWindow::initializeArmyDisplay(
+    const ArmyGroup& currentArmyGroup, QuickTownWindow::ViewLevel viewLevel)
 {
     int numArmies = currentArmyGroup.getNumArmies();
     if (numArmies <= 0 || viewLevel < ViewArmyTypes)
@@ -207,7 +207,7 @@ void TQuickTownWindow::initializeArmyDisplay(
 
     int widgetId = ARMY_1_SPRITE_ID;
     int displaySlot = 0;
-    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+    for (int slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
         int creature = currentArmyGroup.m_armies[slot];
         if (creature == CREATURE_NONE)
             continue;
@@ -232,7 +232,7 @@ void TQuickTownWindow::initializeArmyDisplay(
                     quantityText.str(), "smalfont.fnt", font::WHITE, -1,
                     1, 0, 8));
             } else {
-                quantityText << armyGroup::getArmySizeName(count, 0)
+                quantityText << ArmyGroup::getArmySizeName(count, 0)
                               << std::ends;
                 m_widgets.push_back(new textWidget(
                     g_quickTownArmyPositions[displaySlot][0],
@@ -247,7 +247,7 @@ void TQuickTownWindow::initializeArmyDisplay(
 }
 
 VA(0x00530ca0, 0x84)  // dc 0x118794
-void TQuickTownWindow::center(long newX, long newY)
+void QuickTownWindow::center(long newX, long newY)
 {
     m_x = limit(m_width / 2, newX,
               WINDOW_SCREEN_WIDTH - m_width / 2 - 1) - m_width / 2;
@@ -256,7 +256,7 @@ void TQuickTownWindow::center(long newX, long newY)
 }
 
 VA(0x00530d30, 0xD)
-void TQuickTownWindow::quickWindowWait()
+void QuickTownWindow::quickWindowWait()
 {
     g_windowManager->doQuickView(this);
 }
@@ -264,7 +264,7 @@ void TQuickTownWindow::quickWindowWait()
 // E:\gamedcs\quicktownwindow.cpp:139
 #if 0  // @carcass -- represented by VA_COMPGEN above
 DC_ONLY(0x118848, 0x34)
-void* TQuickTownWindow::`scalar deleting destructor'(unsigned __flags)
+void* QuickTownWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

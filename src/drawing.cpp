@@ -188,7 +188,7 @@ static std::string getEstimatedDamage(const army* currentArmy,
     if (currentArmy->m_spellInfluence[41] || currentArmy->m_spellInfluence[42]) {
         low = high = currentArmy->computeBaseDamage(1);
     } else if (currentArmy->m_creatureType == CREATURE_BALLISTA) {
-        hero* controller = currentArmy->getController();
+        Hero* controller = currentArmy->getController();
         low *= controller->getPrimarySkill(0) + 1;
         high *= controller->getPrimarySkill(0) + 1;
     }
@@ -867,7 +867,7 @@ void combatManager::drawBackground()
     }
 
     if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE && m_moatOn) {
-        TWallTraits* traits =
+        WallTraits* traits =
             &s_wallTraits[m_defendingTown->m_type][WALL_TRAITS_ROW_MOAT];
         Bitmap816* bitmap = m_combatIcons[WALL_TRAITS_ROW_MOAT][0];
         if (bitmap) {
@@ -1104,7 +1104,7 @@ void combatManager::drawFrame(bool update,
         for (column = 1; column < COMBAT_GRID_LAST_COLUMN; column++) {
             hexcell& cell = m_cells[getHexIndex(column, row)];
             if (cell.m_attributes & 1) {
-                TObstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
+                Obstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
                 if (obstacle.m_shape->m_underlay) {
                     if (obstacle.m_isVisible
                             || (obstacle.m_owner == m_currentSide
@@ -1120,7 +1120,7 @@ void combatManager::drawFrame(bool update,
     }
 
     if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE) {
-        const TWallTraits& traits =
+        const WallTraits& traits =
             s_wallTraits[m_defendingTown->m_type][eWallSectionBackWall];
         drawObject(m_combatIcons[eWallSectionBackWall][0],
                    traits.m_x, traits.m_y);
@@ -1150,7 +1150,7 @@ void combatManager::drawFrame(bool update,
         if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE
                 && row == COMBAT_GATE_ROW
                 && m_drawbridgeState != DRAWBRIDGE_UP) {
-            const TWallTraits& traits =
+            const WallTraits& traits =
                 s_wallTraits[m_defendingTown->m_type][eWallSectionDoor];
             drawObject(m_combatIcons[eWallSectionDoor][m_drawbridgeState],
                        traits.m_x, traits.m_y);
@@ -1193,7 +1193,7 @@ void combatManager::drawFrame(bool update,
                 && row == COMBAT_GATE_ROW
                 && m_drawbridgeState == DRAWBRIDGE_DOWN
                 && m_combatIcons[eWallSectionDoorRope][1]) {
-            const TWallTraits& traits =
+            const WallTraits& traits =
                 s_wallTraits[m_defendingTown->m_type][eWallSectionDoorRope];
             drawObject(m_combatIcons[eWallSectionDoorRope][1],
                        traits.m_x, traits.m_y);
@@ -1244,7 +1244,7 @@ void combatManager::drawObstacleAt(int hexIndex)
 {
     hexcell& cell = m_cells[hexIndex];
     if (cell.m_attributes & 1) {
-        TObstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
+        Obstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
         if (!obstacle.m_shape->m_underlay) {
             if (obstacle.m_isVisible
                     || (obstacle.m_owner == m_currentSide
@@ -1260,10 +1260,10 @@ void combatManager::drawObstacleAt(int hexIndex)
 VA(0x00494c20, 0x31c)  // dc 0x85478
 void combatManager::drawWallAt(int hexIndex, int dx)
 {
-    const TWallTraits* const wtTable = s_wallTraits[m_defendingTown->m_type];
+    const WallTraits* const wtTable = s_wallTraits[m_defendingTown->m_type];
 
     for (int wall = eWallSectionDoor; wall < kNumWallSections; wall++) {
-        const TWallTraits& traits = wtTable[wall];
+        const WallTraits& traits = wtTable[wall];
         int wallHex = traits.m_hex;
         Bitmap816* image = m_combatIcons[wall][m_wallStanding[wall]];
         if (wallHex == -1 || !image)
@@ -1322,7 +1322,7 @@ void combatManager::drawWallAt(int hexIndex, int dx)
             if (wall == eWallSectionMainBuildingCover
                     || wall == eWallSectionLowerTowerCover
                     || wall == eWallSectionUpperTowerCover) {
-                TArcher* archer;
+                Archer* archer;
                 if (wall == eWallSectionMainBuildingCover)
                     archer = &m_archers[0];
                 else if (wall == eWallSectionLowerTowerCover)
@@ -1603,7 +1603,7 @@ int combatManager::drawCreatureAndHeroSubwindows()
 VA(0x00495730, 0x73)  // dc 0x85f70
 int combatManager::drawObstacle(const hexcell& cell)
 {
-    TObstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
+    Obstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
     int yOffset = 42 * (obstacle.m_shape->m_minRow - 1);
     return drawSpriteObject(
         obstacle.m_sprite,
@@ -1666,7 +1666,7 @@ VA(0x00495a10, 0x1d7)  // dc 0x861cc
 int combatManager::drawMoatOverlay(int index)
 {
     const hexcell& cell = m_cells[index];
-    const TWallTraits& traits =
+    const WallTraits& traits =
         s_wallTraits[m_defendingTown->m_type][WALL_TRAITS_ROW_MOAT];
     SLimitData moatExtent(cell.m_hexUlx, cell.m_hexUly + 36,
                            cell.m_hexUlx + 43, cell.m_hexUly + 41);
@@ -1744,7 +1744,7 @@ void combatManager::computeMaxExtent()
     }
 
     if (m_obstacles.size()) {
-        for (TObstacle* obstacle = m_obstacles.begin();
+        for (Obstacle* obstacle = m_obstacles.begin();
              obstacle != m_obstacles.end(); obstacle++) {
             CSprite* sprite = obstacle->m_sprite;
             if (sprite && sprite->getNumFrames(0) > 1) {
@@ -1762,7 +1762,7 @@ void combatManager::computeMaxExtent()
         if (m_archerEffect[archerIndex] && m_archers[archerIndex].m_sprite) {
             m_saveBiggestExtent = 1;
             m_computeExtentOnly = 1;
-            TArcher& archer = m_archers[archerIndex];
+            Archer& archer = m_archers[archerIndex];
             int drawX;
             if (!archer.m_facing) {
                 drawX = archer.m_x - archer.m_sprite->getWidth()
@@ -2060,7 +2060,7 @@ void combatManager::spellEffect(int effect, int hex, int delay,
     if (effect >= 83)
         return;
 
-    TSpellEffectTraits traits = g_spellEffectTraits[effect];
+    SpellEffectTraits traits = g_spellEffectTraits[effect];
     if (!traits.m_name)
         return;
 
@@ -2204,7 +2204,7 @@ SLimitData hexcell::limits(__$ReturnUdt)
 
 // E:\gamedcs\CombatControlSubWindow.h:148
 DC_ONLY(0x87344, 0x8)
-unsigned char TCombatHeroSubWindow::isShown()
+unsigned char CombatHeroSubWindow::isShown()
 {
     // @stub
 }

@@ -10,42 +10,62 @@ struct SoundHeaderStruct;
 // The four state-selected rows at retail 0x69e538 contain three
 // (count, LOD-index-list) pairs. The first serves sprites, the second
 // bitmaps, and the final pair serves the sound-header archives.
-struct TResourceArchiveList {
+// Before normalization (type): TResourceArchiveList.
+#ifndef ResourceArchiveList
+#define ResourceArchiveList TResourceArchiveList
+#endif
+struct ResourceArchiveList {
 public:
     int m_count;
     int* m_indices;
 };
 
-struct TResourceArchiveContext {
+// Before normalization (type): TResourceArchiveContext.
+#ifndef ResourceArchiveContext
+#define ResourceArchiveContext TResourceArchiveContext
+#endif
+struct ResourceArchiveContext {
 public:
-    TResourceArchiveList m_sprites;
-    TResourceArchiveList m_bitmaps;
-    TResourceArchiveList m_sounds;
+    ResourceArchiveList m_sprites;
+    ResourceArchiveList m_bitmaps;
+    ResourceArchiveList m_sounds;
 };
-SIZE(TResourceArchiveContext, 0x18);
+SIZE(ResourceArchiveContext, 0x18);
 
 // Dreamcast CodeView's function-local GetBitmap16 record (type 0x289c),
 // independently byte-proven by retail's three archive-header reads.
-struct TBitmapResourceHeader {
+// Before normalization (type): TBitmapResourceHeader.
+#ifndef BitmapResourceHeader
+#define BitmapResourceHeader TBitmapResourceHeader
+#endif
+struct BitmapResourceHeader {
 public:
     int m_dataSize;
     int m_width;
     int m_height;
 };
-SIZE(TBitmapResourceHeader, 0x0c);
+SIZE(BitmapResourceHeader, 0x0c);
 
-struct TResourceLODSlot;
-extern TResourceLODSlot g_resourceLodSlots[];
-extern TResourceArchiveContext g_resourceArchiveContexts[4];
+// Before normalization (type): TResourceLODSlot.
+#ifndef ResourceLODSlot
+#define ResourceLODSlot TResourceLODSlot
+#endif
+struct ResourceLODSlot;
+extern ResourceLODSlot g_resourceLodSlots[];
+extern ResourceArchiveContext g_resourceArchiveContexts[4];
 
 // Three retail descriptors at 0x69e500. Each points at one header array,
 // its count, and the Windows file handle used for the positioned read.
-struct TSoundHeaderDescriptor {
+// Before normalization (type): TSoundHeaderDescriptor.
+#ifndef SoundHeaderDescriptor
+#define SoundHeaderDescriptor TSoundHeaderDescriptor
+#endif
+struct SoundHeaderDescriptor {
 public:
     SoundHeaderStruct** m_sounds;
     int* m_count;
     HANDLE* m_file;
 };
-SIZE(TSoundHeaderDescriptor, 0x0c);
+SIZE(SoundHeaderDescriptor, 0x0c);
 
 #endif

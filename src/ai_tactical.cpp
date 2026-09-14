@@ -308,7 +308,7 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
 }
 
 VA(0x004360c0, 0xBC)  // dc 0x3ceb8
-type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attacker, const army* defender, const long* attackArray, searchArray* search, const type_AI_combat_parameters* combatData)
+type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attacker, const army* defender, const long* attackArray, SearchArray* search, const type_AI_combat_parameters* combatData)
 {
     m_data = combatData;
     m_attackArmy = attacker;
@@ -574,7 +574,7 @@ unsigned char type_AI_attack_hex_chooser::findAttackHex()
 // E:\gamedcs\ai_tactical.cpp:744 - dc 0x3d524. No retail slot: both
 // type_spell_choice ctors inline it whole (their bytes carry the five
 // stores), so /OPT:REF dropped the out-of-line copy.
-type_enchant_data::type_enchant_data(SpellID newSpell, TSkillMastery newMastery, long newPower, long newDuration)
+type_enchant_data::type_enchant_data(SpellID newSpell, SkillMastery newMastery, long newPower, long newDuration)
 {
     m_spell = newSpell;
     m_mastery = newMastery;
@@ -600,7 +600,7 @@ type_spell_choice::type_spell_choice()
 }
 
 VA(0x00436980, 0x35)  // dc 0x3d5b0
-type_spell_choice::type_spell_choice(SpellID newSpell, TSkillMastery newMastery, long newPower, long newDuration)
+type_spell_choice::type_spell_choice(SpellID newSpell, SkillMastery newMastery, long newPower, long newDuration)
     : type_enchant_data(newSpell, newMastery, newPower, newDuration)
 {
     m_value = 0;
@@ -751,7 +751,7 @@ unsigned char type_AI_spellcaster::shouldAttackNow(const army& enemy) const
 }
 
 VA(0x00436e30, 0x125)  // dc 0x3d96c
-long type_AI_spellcaster::getDamageValue(SpellID spell, long baseDamage, const hero* targetHero, const army* target) const
+long type_AI_spellcaster::getDamageValue(SpellID spell, long baseDamage, const Hero* targetHero, const army* target) const
 {
     unsigned char immune = static_cast<unsigned char>(static_cast<unsigned>(target->m_monInfo.m_attributes) >> 21);
     if ((immune & 1) || target->m_creatureType == CREATURE_ARROW_TOWER)
@@ -809,7 +809,7 @@ long type_AI_spellcaster::getDamageSpellValue(const army* enemy, type_enchant_da
 // declaration/argument lifetimes do not change either outcome.
 DC_ONLY(0x3dabc, 0x6E)
 long type_AI_spellcaster::getGroupDamageValue(SpellID spell, long baseDamage,
-                                                        long group, hero* targetHero) const
+                                                        long group, Hero* targetHero) const
 {
     long value = 0;
     long count = g_combatManager->m_numArmies[group];
@@ -839,7 +839,7 @@ long type_AI_spellcaster::getMassDamageEffect(long enemyDamage, long friendlyDam
 }
 
 VA(0x00437040, 0x141)  // dc 0x3db84
-long type_AI_spellcaster::getAreaEffectValue(SpellID spell, long baseDamage, TSkillMastery mastery, long hex) const
+long type_AI_spellcaster::getAreaEffectValue(SpellID spell, long baseDamage, SkillMastery mastery, long hex) const
 {
     long friendlyDamage = 0;
     long enemyDamage = 0;
@@ -890,7 +890,7 @@ inline void type_AI_spellcaster::considerAreaEffect(type_spell_choice* choice) c
 // next hex, and stop the moment it answers off-field. ClearEffects
 // wipes the marks before the walk starts.
 VA(0x00437190, 0x17D)  // dc 0x3dcc4
-long type_AI_spellcaster::getChainLightningValue(long power, TSkillMastery mastery, army* target) const
+long type_AI_spellcaster::getChainLightningValue(long power, SkillMastery mastery, army* target) const
 {
     long count = g_chainLightningTargets[mastery];
     long enemyDamage = 0;
@@ -1665,7 +1665,7 @@ long type_AI_spellcaster::getHasteValue(const army* ourArmy, type_enchant_data c
 
 VA(0x004396e0, 0x2BC)  // dc 0x3fde4
 long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
-    TSpellSchool school, long level, long duration, long amount) const
+    SpellSchool school, long level, long duration, long amount) const
 {
     if (!g_combatManager->canCastSpells(m_enemySide, 1))
         return 0;
@@ -1677,8 +1677,8 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
     long value = 0;
     unsigned char ranged = ourArmy->canShoot(0);
     long ourHits = ourArmy->getTotalHitPoints(0);
-    armyGroup* group = g_combatManager->m_armyGroups[m_enemySide];
-    for (long i = 0; i < hero::NUM_SPELLS; i++) {
+    ArmyGroup* group = g_combatManager->m_armyGroups[m_enemySide];
+    for (long i = 0; i < Hero::NUM_SPELLS; i++) {
         if ((school & g_spellTraits[i].m_schoolBits) == 0)
             continue;
         if ((g_spellTraits[i].m_flags & 0x200) == 0)
@@ -1691,7 +1691,7 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
             continue;
         if (!g_combatManager->validSpellTargetArmy(i, m_enemySide, ourArmy, 1, 0))
             continue;
-        TSkillMastery mastery = m_enemyHero->getSpellLevel(i, g_combatManager->m_magicTerrain);
+        SkillMastery mastery = m_enemyHero->getSpellLevel(i, g_combatManager->m_magicTerrain);
         long manaCost = m_enemyHero->getManaCost(
             i, group, g_combatManager->m_magicTerrain);
         if (manaCost > m_enemyHero->m_mana)
@@ -2721,7 +2721,7 @@ void type_AI_spellcaster::considerSummon(type_spell_choice& choice) const
     if (m_estimate.m_killsOnly) {
         choice.m_value = power * 1000;
     } else {
-        TCreatureType summoned = getElementalType(choice.m_spell);
+        CreatureType summoned = getElementalType(choice.m_spell);
         choice.m_value = g_creatureTypeTraits[summoned].m_aiValue * power;
     }
     choice.m_castNow = 1;
@@ -2908,7 +2908,7 @@ long type_AI_spellcaster::getOgreMageValue(const army* target) const
 {
     if (target->m_spellInfluence[43])
         return 0;
-    TSkillMastery mastery = eMasteryAdvanced;
+    SkillMastery mastery = eMasteryAdvanced;
     unsigned char expert = 0;
     switch (g_combatManager->m_magicTerrain) {
     case COMBAT_SPELL_RESTRICTION_ALL_EXPERT:
@@ -2948,7 +2948,7 @@ long type_AI_spellcaster::getCaliphValue(const army* target) const
     for (long spell = 10; spell < 70; spell++) {
         if (!isValidCaliphSpell(spell, target))
             continue;
-        TSkillMastery mastery = eMasteryAdvanced;
+        SkillMastery mastery = eMasteryAdvanced;
         unsigned char expert = 0;
         switch (g_combatManager->m_magicTerrain) {
         case COMBAT_SPELL_RESTRICTION_ALL_EXPERT:
@@ -2994,7 +2994,7 @@ VA(0x0043c620, 0x1DD)
 long type_AI_spellcaster::getFaerieDragonSpellValue(
         long hex, long power, SpellID spell)
 {
-    TSkillMastery mastery = eMasteryAdvanced;
+    SkillMastery mastery = eMasteryAdvanced;
     unsigned char expert = 0;
     switch (g_combatManager->m_magicTerrain) {
     case COMBAT_SPELL_RESTRICTION_ALL_EXPERT:
@@ -3124,7 +3124,7 @@ unsigned char type_AI_spellcaster::castSpell(unsigned char retreating)
     type_spell_choice best;
     long power = g_combatManager->m_spellPower[m_side];
     long duration = power;
-    const armyGroup* enemyGroup = g_combatManager->m_armyGroups[m_enemySide];
+    const ArmyGroup* enemyGroup = g_combatManager->m_armyGroups[m_enemySide];
     unsigned char inhibited = 0;
     if (m_ourHero->isWieldingArtifact(g_artifactRecantersCloak))
         inhibited = 1;
@@ -3137,7 +3137,7 @@ unsigned char type_AI_spellcaster::castSpell(unsigned char retreating)
         duration = m_ourHero->getSpellDurationBonus() + power;
     if (retreating)
         m_estimate.m_killsOnly = 1;
-    for (long spell = 0; spell < hero::NUM_SPELLS; spell++) {
+    for (long spell = 0; spell < Hero::NUM_SPELLS; spell++) {
         if (!m_ourHero->spellIsAvailable(spell))
             continue;
         if ((g_spellTraits[spell].m_flags & 1) == 0)
@@ -3155,7 +3155,7 @@ unsigned char type_AI_spellcaster::castSpell(unsigned char retreating)
             if (g_spellTraits[spell].m_level > 2)
                 continue;
         }
-        TSkillMastery mastery = m_ourHero->getSpellLevel(
+        SkillMastery mastery = m_ourHero->getSpellLevel(
             spell, g_combatManager->m_magicTerrain);
         long cost = m_ourHero->getManaCost(spell, enemyGroup,
                                           g_combatManager->m_magicTerrain);
@@ -3215,7 +3215,7 @@ int army::getLuck(unsigned char apply_limits)
 
 // E:\gamedcs\Army.h:825
 DC_ONLY(0x42a28, 0x12)
-TSkillMastery army::getSpellLevel(SpellID spell)
+SkillMastery army::getSpellLevel(SpellID spell)
 {
     // @stub
 }

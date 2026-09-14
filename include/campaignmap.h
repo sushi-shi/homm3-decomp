@@ -10,8 +10,16 @@
 // semantic member names, but its RoE-era region stores only one image
 // pointer per state. Retail stores one per player color (the static PCX
 // pointer runs at 0x660eb8 make all 24 slots explicit).
-struct TCampaignMapTraits {
-    struct TRegionTraits {
+// Before normalization (type): TCampaignMapTraits.
+#ifndef CampaignMapTraits
+#define CampaignMapTraits TCampaignMapTraits
+#endif
+struct CampaignMapTraits {
+// Before normalization (type): TCampaignMapTraits::TRegionTraits.
+#ifndef RegionTraits
+#define RegionTraits TRegionTraits
+#endif
+    struct RegionTraits {
         const char* m_name;
         int m_offsetX;
         int m_offsetY;
@@ -23,14 +31,14 @@ struct TCampaignMapTraits {
     const char* m_name;
     const char* m_imageName;
     int m_numRegions;
-    const TRegionTraits* m_regionTraits;
+    const RegionTraits* m_regionTraits;
 };
-SIZE(TCampaignMapTraits::TRegionTraits, 108);
-SIZE(TCampaignMapTraits, 16);
+SIZE(CampaignMapTraits::RegionTraits, 108);
+SIZE(CampaignMapTraits, 16);
 
-extern const TCampaignMapTraits (&g_campaignMapTraits)[21];
-extern TCampaignMapTraits g_campaignMapTraitsImp[21];
-extern TCampaignMapTraits::TRegionTraits* const g_campaignRegionTraits[21];
+extern const CampaignMapTraits (&g_campaignMapTraits)[21];
+extern CampaignMapTraits g_campaignMapTraitsImp[21];
+extern CampaignMapTraits::RegionTraits* const g_campaignRegionTraits[21];
 
 unsigned char initializeCampaignMapTraitsTable();
 

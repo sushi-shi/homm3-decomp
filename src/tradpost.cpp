@@ -34,9 +34,9 @@ void sellCreatureSlider(int state, heroWindow* parentWindow);
 // DoMarket news one per gMarketWindow value, keeps its pointer here for
 // the modal loop, and deletes it on close.
 DATA(0x006aaab0) static int g_rightAmount;
-DATA(0x006aaab4) static TTradeResourceWindow* g_tradeWindow;
-DATA(0x006aaa8c) static TGiveResourceWindow* g_giveWindow;
-DATA(0x006aaabc) static TSellCreatureWindow* g_sellCreatureWindow;
+DATA(0x006aaab4) static TradeResourceWindow* g_tradeWindow;
+DATA(0x006aaa8c) static GiveResourceWindow* g_giveWindow;
+DATA(0x006aaabc) static SellCreatureWindow* g_sellCreatureWindow;
 
 // --- the five marketplace dialog (constructor, ??_G, destructor) triples ---
 // Retail emits each dialog as (constructor, ??_G, destructor) in image order;
@@ -54,7 +54,7 @@ DATA(0x006aaabc) static TSellCreatureWindow* g_sellCreatureWindow;
 // state table, which is also why /OPT:ICF could not fold them.
 
 VA(0x005df5f0, 0x200c)  // dc 0x181a88
-TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
+TradeResourceWindow::TradeResourceWindow(int x2, int y2)
     : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
     m_widgets.reserve(144);
@@ -260,7 +260,7 @@ void tradeResourceSlider(int state, heroWindow* parentWindow)
 VA_COMPGEN(0x005e1620, 0x21, SCALAR_DELETING_DTOR, TTradeResourceWindow)
 
 VA(0x005e1650, 0x6B)  // dc 0x182dc0
-TTradeResourceWindow::~TTradeResourceWindow()
+TradeResourceWindow::~TradeResourceWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -269,7 +269,7 @@ TTradeResourceWindow::~TTradeResourceWindow()
 }
 
 VA(0x005e16c0, 0x1fab)  // dc 0x182e24
-TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
+GiveResourceWindow::GiveResourceWindow(int x2, int y2)
     : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
     m_widgets.reserve(151);
@@ -477,7 +477,7 @@ void giveResourceSlider(int state, heroWindow* parentWindow)
 VA_COMPGEN(0x005e3690, 0x21, SCALAR_DELETING_DTOR, TGiveResourceWindow)
 
 VA(0x005e36c0, 0x6B)  // dc 0x183ecc
-TGiveResourceWindow::~TGiveResourceWindow()
+GiveResourceWindow::~GiveResourceWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -486,7 +486,7 @@ TGiveResourceWindow::~TGiveResourceWindow()
 }
 
 VA(0x005e3730, 0x1f56)  // dc 0x183f30
-TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
+BuyArtifactWindow::BuyArtifactWindow(int x2, int y2)
     : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
     m_widgets.reserve(144);
@@ -683,7 +683,7 @@ TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
 VA_COMPGEN(0x005e5690, 0x21, SCALAR_DELETING_DTOR, TBuyArtifactWindow)
 
 VA(0x005e56c0, 0x6B)  // dc 0x1851a4
-TBuyArtifactWindow::~TBuyArtifactWindow()
+BuyArtifactWindow::~BuyArtifactWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -692,7 +692,7 @@ TBuyArtifactWindow::~TBuyArtifactWindow()
 }
 
 VA(0x005e5730, 0x24a7)  // dc 0x185208
-TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
+SellArtifactWindow::SellArtifactWindow(int x2, int y2)
     : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
     m_widgets.reserve(144);
@@ -972,7 +972,7 @@ TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
 VA_COMPGEN(0x005e7be0, 0x21, SCALAR_DELETING_DTOR, TSellArtifactWindow)
 
 VA(0x005e7c10, 0x6B)  // dc 0x186c34
-TSellArtifactWindow::~TSellArtifactWindow()
+SellArtifactWindow::~SellArtifactWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -981,7 +981,7 @@ TSellArtifactWindow::~TSellArtifactWindow()
 }
 
 VA(0x005e7c80, 0x1fd5)  // dc 0x186c98
-TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
+SellCreatureWindow::SellCreatureWindow(int x2, int y2)
     : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
     m_widgets.reserve(144);
@@ -1203,7 +1203,7 @@ void sellCreatureSlider(int state, heroWindow* parentWindow)
 VA_COMPGEN(0x005e9c80, 0x21, SCALAR_DELETING_DTOR, TSellCreatureWindow)
 
 VA(0x005e9cb0, 0x6B)  // dc 0x18838c
-TSellCreatureWindow::~TSellCreatureWindow()
+SellCreatureWindow::~SellCreatureWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -1266,11 +1266,11 @@ void doMarketplace()
 // read by SetRolloverText; the .rclick side (the odd 4-byte cells retail keeps
 // between them) is the 8-byte stride byte-proven by the widget ids' fixed
 // element offsets. tradpost-private (no other unit references this band).
-DATA(0x006a53a8) static THelpText g_giveHelpText[5];
-DATA(0x006a5868) static THelpText g_marketHelpText[6];
-DATA(0x006a6c50) static THelpText g_sellArtHelpText[5];
-DATA(0x006a7da8) static THelpText g_buyArtHelpText[5];
-DATA(0x006a7e98) static THelpText g_sellCreaHelpText[5];
+DATA(0x006a53a8) static HelpText g_giveHelpText[5];
+DATA(0x006a5868) static HelpText g_marketHelpText[6];
+DATA(0x006a6c50) static HelpText g_sellArtHelpText[5];
+DATA(0x006a7da8) static HelpText g_buyArtHelpText[5];
+DATA(0x006a7e98) static HelpText g_sellCreaHelpText[5];
 
 DATA(0x006aaa70) static unsigned char g_backpackStart;
 
@@ -1281,8 +1281,8 @@ DATA(0x006aaa70) static unsigned char g_backpackStart;
 // preserves every section and relocation destination across all five header
 // consumers under the evidenced DoBlackMarket signature rename. No copied
 // list, cast adapter, or alternate declaration replaces the old union.
-DATA(0x006aaa74) static TArtifact* g_marketArtifacts;
-DATA(0x006aaa78) static hero* g_marketHero;
+DATA(0x006aaa74) static Artifact* g_marketArtifacts;
+DATA(0x006aaa78) static Hero* g_marketHero;
 DATA(0x006aaa90) static int g_selectedArtifact;
 DATA(0x006aaa98) static int g_marketCount;
 DATA(0x006aaaa4) static int g_marketWindow;
@@ -1291,8 +1291,8 @@ DATA(0x006aaac4) static int g_marketSource;
 // The remaining two constructed dialog objects (their trade/give/creature
 // siblings and gRightAmount are declared ahead of the dialog band above,
 // where the slider callbacks reach them).
-DATA(0x006aaae4) static TBuyArtifactWindow* g_buyWindow;
-DATA(0x006aaac8) static TSellArtifactWindow* g_sellArtWindow;
+DATA(0x006aaae4) static BuyArtifactWindow* g_buyWindow;
+DATA(0x006aaac8) static SellArtifactWindow* g_sellArtWindow;
 
 // The shared trade selection reset before every window opens (DoMarket) and
 // driven by the resource-trade handlers. gLeftResource/gRightResource(=
@@ -1354,7 +1354,7 @@ static void countMarkets()
 {
     g_marketCount = 0;
     for (int i = 0; i < g_currentPlayer->m_numTowns; ++i) {
-        town* currentTown = g_game->getTown(g_currentPlayer->m_townIds[i]);
+        Town* currentTown = g_game->getTown(g_currentPlayer->m_townIds[i]);
         if (currentTown->hasBuilding(MARKETPLACE_ID, true))
             ++g_marketCount;
     }
@@ -1383,7 +1383,7 @@ void doArtifactMerchants()
 }
 
 VA(0x005e9e60, 0x38)  // dc 0x188518
-void doFreelancersGuild(hero* inHero)
+void doFreelancersGuild(Hero* inHero)
 {
     g_marketCount = 5;
     g_marketHero = inHero;
@@ -1394,7 +1394,7 @@ void doFreelancersGuild(hero* inHero)
 }
 
 VA(0x005e9ea0, 0x13b)
-void doFreelancersGuild(town* currentTown)
+void doFreelancersGuild(Town* currentTown)
 {
     if (currentTown->m_visitingHeroId == -1) {
         sprintf(g_text, (*g_generalText)[274],
@@ -1435,7 +1435,7 @@ void doTradingPost()
 }
 
 VA(0x005ea100, 0x2A)  // dc 0x1886d4
-void doBlackMarket(hero* inHero, TArtifact* blackArtifacts)
+void doBlackMarket(Hero* inHero, Artifact* blackArtifacts)
 {
     g_marketHero = inHero;
     g_marketArtifacts = blackArtifacts;
@@ -1473,7 +1473,7 @@ void doMarket()
     while (g_marketWindow != MARKET_COMMAND_ID) {
         switch (g_marketWindow) {
         case MARKET_WINDOW_TRADE:
-            g_tradeWindow = new TTradeResourceWindow(g_windowX, g_windowY);
+            g_tradeWindow = new TradeResourceWindow(g_windowX, g_windowY);
             if (g_tradeWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1492,7 +1492,7 @@ void doMarket()
             break;
 
         case MARKET_WINDOW_GIVE: {
-            g_giveWindow = new TGiveResourceWindow(g_windowX, g_windowY);
+            g_giveWindow = new GiveResourceWindow(g_windowX, g_windowY);
             if (g_giveWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1519,7 +1519,7 @@ void doMarket()
         }
 
         case MARKET_WINDOW_BUY:
-            g_buyWindow = new TBuyArtifactWindow(g_windowX, g_windowY);
+            g_buyWindow = new BuyArtifactWindow(g_windowX, g_windowY);
             if (g_buyWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1538,7 +1538,7 @@ void doMarket()
             break;
 
         case MARKET_WINDOW_SELL_ARTIFACT:
-            g_sellArtWindow = new TSellArtifactWindow(g_windowX, g_windowY);
+            g_sellArtWindow = new SellArtifactWindow(g_windowX, g_windowY);
             if (g_sellArtWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1557,7 +1557,7 @@ void doMarket()
             break;
 
         case MARKET_WINDOW_SELL_CREATURE:
-            g_sellCreatureWindow = new TSellCreatureWindow(g_windowX, g_windowY);
+            g_sellCreatureWindow = new SellCreatureWindow(g_windowX, g_windowY);
             if (g_sellCreatureWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1584,11 +1584,11 @@ void doMarket()
 }
 
 VA(0x005ea5d0, 0x103)  // dc 0x188bd4
-void TSellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
+void SellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
 {
     type_artifact art;
     if (i < 18) {
-        art = g_marketHero->getArtifact(TArtifactSlot(i));
+        art = g_marketHero->getArtifact(ArtifactSlot(i));
     } else {
         long numInBackpack = g_marketHero->getNumberInBackpack(1);
         if (numInBackpack < 6)
@@ -1625,34 +1625,34 @@ void TSellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
 // DC call sites also settle the easily-confused names: Disabled is the single
 // status-5 broadcast, while Off is the status-6 broadcast.  Keep the same
 // mapping for both sell windows.
-inline void TSellArtifactWindow::setWidgetOn(short id)
+inline void SellArtifactWindow::setWidgetOn(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 5, id, 6);
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
 }
 
-inline void TSellArtifactWindow::setWidgetOff(short id)
+inline void SellArtifactWindow::setWidgetOff(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
 }
 
-inline void TSellArtifactWindow::setWidgetDisabled(short id)
+inline void SellArtifactWindow::setWidgetDisabled(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
 }
 
-inline void TSellCreatureWindow::setWidgetOn(short id)
+inline void SellCreatureWindow::setWidgetOn(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 5, id, 6);
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
 }
 
-inline void TSellCreatureWindow::setWidgetOff(short id)
+inline void SellCreatureWindow::setWidgetOff(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
 }
 
-inline void TSellCreatureWindow::setWidgetDisabled(short id)
+inline void SellCreatureWindow::setWidgetDisabled(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
 }
@@ -1661,105 +1661,105 @@ inline void TSellCreatureWindow::setWidgetDisabled(short id)
 
 // E:\gamedcs\tradpost.cpp:905
 DC_ONLY(0x188cc8, 0x38)
-void TTradeResourceWindow::setWidgetOn(short id)
+void TradeResourceWindow::setWidgetOn(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:911
 DC_ONLY(0x188d00, 0x34)
-void TTradeResourceWindow::setWidgetOff(short id)
+void TradeResourceWindow::setWidgetOff(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:918
 DC_ONLY(0x188d34, 0x1C)
-void TTradeResourceWindow::setWidgetDisabled(short id)
+void TradeResourceWindow::setWidgetDisabled(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:923
 DC_ONLY(0x188d50, 0x38)
-void TGiveResourceWindow::setWidgetOn(short id)
+void GiveResourceWindow::setWidgetOn(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:929
 DC_ONLY(0x188d88, 0x34)
-void TGiveResourceWindow::setWidgetOff(short id)
+void GiveResourceWindow::setWidgetOff(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:936
 DC_ONLY(0x188dbc, 0x1C)
-void TGiveResourceWindow::setWidgetDisabled(short id)
+void GiveResourceWindow::setWidgetDisabled(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:941
 DC_ONLY(0x188dd8, 0x38)
-void TBuyArtifactWindow::setWidgetOn(short id)
+void BuyArtifactWindow::setWidgetOn(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:947
 DC_ONLY(0x188e10, 0x68)
-void TBuyArtifactWindow::setWidgetOff(short id)
+void BuyArtifactWindow::setWidgetOff(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:954
 DC_ONLY(0x188e78, 0x1C)
-void TBuyArtifactWindow::setWidgetDisabled(short id)
+void BuyArtifactWindow::setWidgetDisabled(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:959
 DC_ONLY(0x188e94, 0x38)
-void TSellArtifactWindow::setWidgetOn(short id)
+void SellArtifactWindow::setWidgetOn(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:965
 DC_ONLY(0x188ecc, 0x34)
-void TSellArtifactWindow::setWidgetOff(short id)
+void SellArtifactWindow::setWidgetOff(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:972
 DC_ONLY(0x188f00, 0x1C)
-void TSellArtifactWindow::setWidgetDisabled(short id)
+void SellArtifactWindow::setWidgetDisabled(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:977
 DC_ONLY(0x188f1c, 0x38)
-void TSellCreatureWindow::setWidgetOn(short id)
+void SellCreatureWindow::setWidgetOn(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:983
 DC_ONLY(0x188f54, 0x34)
-void TSellCreatureWindow::setWidgetOff(short id)
+void SellCreatureWindow::setWidgetOff(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:990
 DC_ONLY(0x188f88, 0x1C)
-void TSellCreatureWindow::setWidgetDisabled(short id)
+void SellCreatureWindow::setWidgetDisabled(short id)
 {
     // @stub
 }
@@ -1792,7 +1792,7 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 // formatting scope scores 86.9674%. Keep the proven helper and its full
 // three-output contract instead of copied arithmetic in this caller.
 VA(0x005ea6e0, 0x862)  // ordermap clean run + arity ret 4, dc 0x188fa4
-void TTradeResourceWindow::update(unsigned char update)
+void TradeResourceWindow::update(unsigned char update)
 {
     int tempMaxUnitsToTrade;
     int tempLeftDenominated;
@@ -1998,7 +1998,7 @@ void TTradeResourceWindow::update(unsigned char update)
 }
 
 VA(0x005eaf50, 0x744)  // dc 0x1895a8
-void TGiveResourceWindow::update(bool update)
+void GiveResourceWindow::update(bool update)
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
@@ -2214,7 +2214,7 @@ void TGiveResourceWindow::update(bool update)
 // Keeping the singular/plural assignment inside its quantity arm removes
 // have_word and improves 88.6580% to 89.2899%; DC 1479-1495 scopes support it.
 VA(0x005eb6a0, 0x7d9)  // ordermap clean run + arity ret 4, dc 0x189aac
-void TBuyArtifactWindow::update(unsigned char update)
+void BuyArtifactWindow::update(unsigned char update)
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
@@ -2419,7 +2419,7 @@ void TBuyArtifactWindow::update(unsigned char update)
 }
 
 VA(0x005ebe80, 0x6cb)  // dc 0x18a02c
-void TSellArtifactWindow::update(unsigned char update)
+void SellArtifactWindow::update(unsigned char update)
 {
     int tempMaxUnitsToTrade;
     int tempLeftDenominated;
@@ -2435,7 +2435,7 @@ void TSellArtifactWindow::update(unsigned char update)
         else
             rightQty = 1;
         if (g_selectedArtifact < 18) {
-            art = g_marketHero->getArtifact(TArtifactSlot(g_selectedArtifact)).m_artifactId;
+            art = g_marketHero->getArtifact(ArtifactSlot(g_selectedArtifact)).m_artifactId;
         } else {
             art = g_marketHero->getBackpack(
                 (g_backpackStart + g_selectedArtifact - 18)
@@ -2496,7 +2496,7 @@ void TSellArtifactWindow::update(unsigned char update)
             if (i2 == 0) {
                 msg.m_codeY = 9;
                 if (g_selectedArtifact < 18) {
-                    msg.m_extra = g_marketHero->getArtifact(TArtifactSlot(
+                    msg.m_extra = g_marketHero->getArtifact(ArtifactSlot(
                         g_selectedArtifact)).m_artifactId;
                 } else {
                     msg.m_extra = g_marketHero->getBackpack(
@@ -2591,7 +2591,7 @@ void TSellArtifactWindow::update(unsigned char update)
 // store reorders added 2--6 slots and volatile-local controls added 83--298.
 // There is no evidence-backed carrier for the last callee-save tie.
 VA(0x005ec550, 0x7ba)  // ordermap clean run + arity ret 4, dc 0x18a550
-void TSellCreatureWindow::update(bool update)
+void SellCreatureWindow::update(bool update)
 {
     int tempMaxUnitsToTrade;
     int tempLeftDenominated;
@@ -2814,7 +2814,7 @@ void TSellCreatureWindow::update(bool update)
 // rounded ratios and the resource-limited maximum. Complete expands this
 // ordinary helper in Update; the discarded maximum then disappears.
 DC_ONLY(0x18ad48, 0x140)
-void TTradeResourceWindow::computeTradeRatios(int inLeftResource,
+void TradeResourceWindow::computeTradeRatios(int inLeftResource,
     int inRightResource, int* inTradeRatio, int* inLeftDenominated,
     int* inMaxUnitsToTrade)
 {
@@ -2837,42 +2837,42 @@ void TTradeResourceWindow::computeTradeRatios(int inLeftResource,
 
 // E:\gamedcs\tradpost.cpp:2202
 DC_ONLY(0x18ae88, 0x6C)  // inlined away on x86 (no carve slot)
-void TGiveResourceWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
+void GiveResourceWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2209
 DC_ONLY(0x18aef4, 0xE0)  // inlined away on x86 (no carve slot)
-void TBuyArtifactWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
+void BuyArtifactWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2286
 DC_ONLY(0x18b2e8, 0x40)  // inlined away on x86 (no carve slot)
-void TTradeResourceWindow::setupNewTrade()
+void TradeResourceWindow::setupNewTrade()
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2294
 DC_ONLY(0x18b328, 0x40)  // inlined away on x86 (no carve slot)
-void TGiveResourceWindow::setupNewTrade()
+void GiveResourceWindow::setupNewTrade()
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2302
 DC_ONLY(0x18b368, 0x40)  // inlined away on x86 (no carve slot)
-void TBuyArtifactWindow::setupNewTrade()
+void BuyArtifactWindow::setupNewTrade()
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2319
 DC_ONLY(0x18b3d4, 0x40)  // inlined away on x86 (no carve slot)
-void TSellCreatureWindow::setupNewTrade()
+void SellCreatureWindow::setupNewTrade()
 {
     // @stub
 }
@@ -2898,11 +2898,11 @@ double getTradeRatio(EGameResource source, EGameResource dest, double efficiency
 }
 
 VA(0x005ecdc0, 0xbb)  // dc 0x18afd4
-void TSellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
+void SellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
 {
     type_artifact artifact;
     if (inLeftResource < 18) {
-        artifact = g_marketHero->getArtifact(TArtifactSlot(inLeftResource));
+        artifact = g_marketHero->getArtifact(ArtifactSlot(inLeftResource));
     }
     else
         artifact = g_marketHero->getBackpack(inLeftResource - 18);
@@ -2927,7 +2927,7 @@ void TSellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightReso
 // that it inverts to units-per-resource. The tradeable count is the stack size
 // (less one when it is the hero's only army) divided by the ratio.
 VA(0x005ece80, 0x157)  // anchor-callee (TSellCreatureWindow::Update+WindowHandler) + GetNumArmies, dc 0x18b114
-void TSellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
+void SellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
 {
     float denominator = static_cast<float>(g_creatureTypeTraits[
                             g_marketHero->m_army.m_armies[inLeftResource]].m_cost[6])
@@ -2972,7 +2972,7 @@ void TSellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightReso
 // ComputeTradeRatios definitions.
 
 // E:\gamedcs\tradpost.cpp:2312
-void TSellArtifactWindow::setupNewTrade()
+void SellArtifactWindow::setupNewTrade()
 {
     computeTradeRatios(g_selectedArtifact, g_leftResource,
         &g_giveQuantity, &g_ratioInverted, &g_maxTradeUnits);
@@ -2980,7 +2980,7 @@ void TSellArtifactWindow::setupNewTrade()
 }
 
 // E:\gamedcs\tradpost.cpp:2327
-void TSellArtifactWindow::updateMarketBackpack()
+void SellArtifactWindow::updateMarketBackpack()
 {
     long numInBackpack = g_marketHero->getNumberInBackpack(1);
     message icon;
@@ -3001,7 +3001,7 @@ void TSellArtifactWindow::updateMarketBackpack()
 }
 
 // E:\gamedcs\tradpost.cpp:2344
-void TSellArtifactWindow::incrementBackpackStart()
+void SellArtifactWindow::incrementBackpackStart()
 {
     long numInBackpack = g_marketHero->getNumberInBackpack(1);
     if (numInBackpack > 5) {
@@ -3012,7 +3012,7 @@ void TSellArtifactWindow::incrementBackpackStart()
 }
 
 // E:\gamedcs\tradpost.cpp:2356
-void TSellArtifactWindow::decrementBackpackStart()
+void SellArtifactWindow::decrementBackpackStart()
 {
     long numInBackpack = g_marketHero->getNumberInBackpack(1);
     if (numInBackpack > 5) {
@@ -3030,7 +3030,7 @@ void TSellArtifactWindow::decrementBackpackStart()
 // exchange ratio through the inlined ComputeTradeRatios. Hover events copy the
 // rollover string.
 VA(0x005ecfe0, 0x3ba)  // anchor-vtable 0x6439f8 slot 9, dc 0x18b540
-int TTradeResourceWindow::windowHandler(message& msg)
+int TradeResourceWindow::windowHandler(message& msg)
 {
     int r = CAdvPopup::windowHandler(msg);
     if (r != 0)
@@ -3163,7 +3163,7 @@ int TTradeResourceWindow::windowHandler(message& msg)
 }
 
 VA(0x005ed3a0, 0x1a2)  // dc 0x18b7c4
-void TTradeResourceWindow::setRolloverText(int codeY)
+void TradeResourceWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
     case MARKET_LEFT_PANEL_ID:  strcpy(g_text, g_marketHelpText[0].m_text); break;
@@ -3200,7 +3200,7 @@ void TTradeResourceWindow::setRolloverText(int codeY)
 // the gift moves the resource into the recipient's row and, when the recipient
 // is a networked human, transmits the gift message. Hover copies the rollover.
 VA(0x005ed550, 0x2f1)  // anchor-vtable 0x643a34 slot 9, dc 0x18b8d4
-int TGiveResourceWindow::windowHandler(message& msg)
+int GiveResourceWindow::windowHandler(message& msg)
 {
     int r = CAdvPopup::windowHandler(msg);
     if (r != 0)
@@ -3310,7 +3310,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
 }
 
 VA(0x005ed850, 0x190)  // dc 0x18bb40
-void TGiveResourceWindow::setRolloverText(int codeY)
+void GiveResourceWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
     case MARKET_LEFT_PANEL_ID:  strcpy(g_text, g_giveHelpText[0].m_text); break;
@@ -3347,7 +3347,7 @@ void TGiveResourceWindow::setRolloverText(int codeY)
 // the artifact, empty the slot) or the two tab-command panels; subtype 0xe
 // right-clicks an artifact slot into its info popup. Hover copies the rollover.
 VA(0x005ed9e0, 0x3e2)  // anchor-vtable 0x643a70 slot 9, dc 0x18bc64
-int TBuyArtifactWindow::windowHandler(message& msg)
+int BuyArtifactWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -3502,7 +3502,7 @@ int TBuyArtifactWindow::windowHandler(message& msg)
 }
 
 VA(0x005eddd0, 0x188)  // dc 0x18bee8
-void TBuyArtifactWindow::setRolloverText(int codeY)
+void BuyArtifactWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
     case MARKET_LEFT_PANEL_ID:      strcpy(g_text, g_buyArtHelpText[0].m_text); break;
@@ -3519,7 +3519,7 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
     case BUY_ARTIFACT_SLOT_2_ID: case BUY_ARTIFACT_SLOT_3_ID:
     case BUY_ARTIFACT_SLOT_4_ID: case BUY_ARTIFACT_SLOT_5_ID:
     case BUY_ARTIFACT_SLOT_6_ID: {
-        TArtifact art =
+        Artifact art =
             g_marketArtifacts[codeY - BUY_ARTIFACT_SLOT_0_ID];
         if (art == ARTIFACT_NONE)
             strcpy(g_text, g_emptyRolloverText);
@@ -3547,7 +3547,7 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
 // the rollover string.
 
 VA(0x005edf60, 0x75f)  // anchor-vtable 0x643aac slot 9, dc 0x18c00c
-int TSellArtifactWindow::windowHandler(message& msg)
+int SellArtifactWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -3626,7 +3626,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
             int artifactSlot = msg.m_codeY - MARKET_ARTIFACT_SLOT_00_ID;
             type_artifact artifact;
             if (artifactSlot < 18) {
-                artifact = g_marketHero->getArtifact(TArtifactSlot(artifactSlot));
+                artifact = g_marketHero->getArtifact(ArtifactSlot(artifactSlot));
                 g_marketHero->viewArtifact(&artifact, 1);
                 return MESSAGE_DISPATCH_CONSUME;
             } else {
@@ -3717,7 +3717,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
 }
 
 VA(0x005ee6c0, 0x1cf)  // dc 0x18c378
-void TSellArtifactWindow::setRolloverText(int codeY)
+void SellArtifactWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
     case MARKET_LEFT_PANEL_ID: strcpy(g_text, g_sellArtHelpText[0].m_text); break;
@@ -3746,7 +3746,7 @@ void TSellArtifactWindow::setRolloverText(int codeY)
         long slot = codeY - MARKET_ARTIFACT_SLOT_00_ID;
         type_artifact artifact;
         if (slot < 18) {
-            artifact = g_marketHero->getArtifact(TArtifactSlot(slot));
+            artifact = g_marketHero->getArtifact(ArtifactSlot(slot));
         } else {
             long backpackIndex = ((g_backpackStart & 0xff) + slot - 18)
                                  % g_marketHero->getNumberInBackpack(1);
@@ -3770,7 +3770,7 @@ void TSellArtifactWindow::setRolloverText(int codeY)
 // the sell/max panels and the two tab-command buttons; subtype 0xe right-clicks
 // an army slot into ViewArmy. Hover copies the rollover string.
 VA(0x005ee890, 0x33f)  // anchor-vtable 0x643ae8 slot 9, dc 0x18c4bc
-int TSellCreatureWindow::windowHandler(message& msg)
+int SellCreatureWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -3902,7 +3902,7 @@ int TSellCreatureWindow::windowHandler(message& msg)
 }
 
 VA(0x005eebd0, 0x1a1)  // dc 0x18c7b0
-void TSellCreatureWindow::setRolloverText(int codeY)
+void SellCreatureWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
     case MARKET_LEFT_PANEL_ID:

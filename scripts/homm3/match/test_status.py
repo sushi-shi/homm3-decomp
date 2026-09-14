@@ -9,11 +9,21 @@ from unittest import mock
 
 from homm3.match.banked_rows import missing_rows, parse_history, selftest
 from homm3.match.status import (_canonical_definition_text, _definition_text,
-                                MatchRow, checkpoint_drops, cmd_check,
+                                canonical_source_types, MatchRow,
+                                checkpoint_drops, cmd_check,
                                 seed_historical_maxima, update_rows)
 
 
 class UpdateRowsTest(unittest.TestCase):
+    def test_clean_type_alias_hashes_as_recovered_compiler_identity(self):
+        self.assertEqual(
+            canonical_source_types(
+                'bool save(AbstractFile* file, const Town& value) {'
+                ' return label("Town"); }',
+                {"AbstractFile": "TAbstractFile", "Town": "town"}),
+            'bool save(TAbstractFile* file, const town& value) {'
+            ' return label("Town"); }')
+
     def test_rva_migrates_history_across_label_promotion(self):
         old = {("unit", "flat_name"): MatchRow(75.0, 90.0, 95.0, 0x1234)}
         rows, stats = update_rows(

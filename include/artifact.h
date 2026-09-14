@@ -42,7 +42,11 @@
 // confirms every DC-era member at the same offset, then writes the four
 // Complete-era fields at +0x14..+0x1d. hero::remove_artifact corroborates the
 // allowable-slot class, combination indices and spell-list flag.
-struct TArtifactTraits {
+// Before normalization (type): TArtifactTraits.
+#ifndef ArtifactTraits
+#define ArtifactTraits TArtifactTraits
+#endif
+struct ArtifactTraits {
     // armyGroup::get_luck_description indexes artifact 0x55 at stride
     // 0x20 and passes +0 directly to format_string: the display name.
     const char* m_name;           // +0x00
@@ -64,17 +68,21 @@ struct TArtifactTraits {
     // 0x20-byte artifact stride. NH3API explicitly leaves these two bytes unnamed.
     char m_paddingAfterGivesSpells[0x2];
 };
-SIZE(TArtifactTraits, 32);
+SIZE(ArtifactTraits, 32);
 
 // The retail artslots.txt table: 19 display names paired with the first of
 // the 15 allowable-slot masks containing that physical equipment slot.
 // Its 8-byte stride and both fields are written by 0x44cd50; the public name
 // is preserved by the retail symbol at 0x660b64.
-struct TArtifactSlotTraits {
+// Before normalization (type): TArtifactSlotTraits.
+#ifndef ArtifactSlotTraits
+#define ArtifactSlotTraits TArtifactSlotTraits
+#endif
+struct ArtifactSlotTraits {
     const char* m_name;
     int m_type;
 };
-SIZE(TArtifactSlotTraits, 8);
+SIZE(ArtifactSlotTraits, 8);
 
 // The combination-artifact record. The 24-byte stride is byte-proven by
 // IsWieldingArtifact's `lea r,[id + 2*id]` / `[base + 8*r]` chain, and
@@ -83,7 +91,11 @@ SIZE(TArtifactSlotTraits, 8);
 // component mask the four retail-only combination bodies at
 // 0x4dbe80..0x4dc100 walk as a bitset<144> (five dwords). This is the
 // canonical record used by the artifact table and all its consumers.
-struct TCombinationArtifact {
+// Before normalization (type): TCombinationArtifact.
+#ifndef CombinationArtifact
+#define CombinationArtifact TCombinationArtifact
+#endif
+struct CombinationArtifact {
     // The cinit at 0x44c960 builds each of the twelve records in a 24-byte
     // stack temporary - the id dword stored FIRST, then the component
     // builder's five-word result copied in behind it - and only then
@@ -91,19 +103,19 @@ struct TCombinationArtifact {
     // two-argument constructor plus the implicit copy, and VC6 cannot
     // spell it any other way: brace initialization of a record carrying a
     // bitset member is a hard C2440 for this compiler.
-    TCombinationArtifact(int id, const std::bitset<144>& usedComponents)
+    CombinationArtifact(int id, const std::bitset<144>& usedComponents)
         : m_artifactId(id), m_components(usedComponents) {}
 
     int m_artifactId;             // +0x00
     std::bitset<144> m_components;
 };
-SIZE(TCombinationArtifact, 24);
+SIZE(CombinationArtifact, 24);
 
 // Cinit-owned tables consumed by artifact.cpp's ordinary source body.
 DATA(0x00693898)
 extern const std::bitset<19> g_artifactSlotMasks[15];
 DATA(0x006938d8)
-extern const TCombinationArtifact g_combinationArtifactTable[12];
+extern const CombinationArtifact g_combinationArtifactTable[12];
 
 // Retail .data 0x660b68 and 0x660b6c, two adjacent storage cells retail
 // LOADS and then indexes (`mov eax,[0x660b68]` / `[esi + eax + 0x18]`)
@@ -117,9 +129,9 @@ extern const TCombinationArtifact g_combinationArtifactTable[12];
 // Death addition); its name is INVENTED. artifact.obj owns both reference
 // cells and their underlying storage; the two excluded cinit tables remain a
 // separate source-initializer admission.
-extern const TArtifactTraits* g_artifactTraits;
-extern const TCombinationArtifact* g_combinationArtifacts;
-extern const TArtifactSlotTraits* g_artifactSlotTraits;
+extern const ArtifactTraits* g_artifactTraits;
+extern const CombinationArtifact* g_combinationArtifacts;
+extern const ArtifactSlotTraits* g_artifactSlotTraits;
 
 // Retail .data 0x6aa9f8, defined by townmgr.cpp and consumed by the AI
 // town-entry path. The record itself is completed by hero.h; an extern

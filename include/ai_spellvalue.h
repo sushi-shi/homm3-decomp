@@ -15,7 +15,10 @@
 // CodeView owns the value-list element and its inline comparisons here.
 #include "ai_creature_value.h"
 
-class hero;
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero;
 
 // get_best_spell_value refuses to appraise any spell whose
 // SSpellTraits::level is above 2 while the caster wields artifact 0x53 -
@@ -66,7 +69,7 @@ enum ESpellValueClass {
 // followed by zero stores to +0x18/+0x1c/+0x20.
 class type_spellvalue {
 public:
-    type_spellvalue(const hero* newHero);
+    type_spellvalue(const Hero* newHero);
     // CodeView LF_ONEMETHOD marks ~type_spellvalue compiler-generated
     // (compgenx, attributes 0x103). Let the vector member generate it;
     // ai.cpp enrolls the retained retail body.
@@ -103,13 +106,13 @@ protected:
     // into the constructor, but the Dreamcast member boundary and local
     // inventory remain authoritative source-shape evidence.
     void fillCreatureValueList();
-    long getDamageSpellValue(SpellID spell, TSkillMastery mastery,
+    long getDamageSpellValue(SpellID spell, SkillMastery mastery,
                                 long timesCastable, long combatValue) const;
-    long getEnchantmentValue(SpellID spell, TSkillMastery mastery,
+    long getEnchantmentValue(SpellID spell, SkillMastery mastery,
                                long timesCastable) const;
-    long getMassDamageSpellValue(SpellID spell, TSkillMastery mastery,
+    long getMassDamageSpellValue(SpellID spell, SkillMastery mastery,
                                      long timesCastable) const;
-    const hero* m_ourHero;  // +0x00
+    const Hero* m_ourHero;  // +0x00
     long m_stackValue;  // +0x04
     long m_power;  // +0x08
     long m_duration;  // +0x0c

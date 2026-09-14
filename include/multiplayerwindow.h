@@ -23,12 +23,16 @@ extern int g_unnamed699288;
 // Cast-free storage for the Winsock bind call in GetIPAddress. Both views are
 // the same 16-byte IPv4 socket-address record; keeping the union in the domain
 // header avoids a TU-local layout view.
-union TIPv4SocketAddress {
+// Before normalization (type): TIPv4SocketAddress.
+#ifndef IPv4SocketAddress
+#define IPv4SocketAddress TIPv4SocketAddress
+#endif
+union IPv4SocketAddress {
 public:
     sockaddr_in m_internet;
     sockaddr m_generic;
 };
-SIZE(TIPv4SocketAddress, 0x10);
+SIZE(IPv4SocketAddress, 0x10);
 
 // The private edit hierarchy is defined in multiplayerwindow.cpp.
 class CHotSeatEdit;
@@ -51,7 +55,7 @@ public:
     };
     CHotSeatEdit* m_edit[8];  // +0x50
     textWidget* m_rollover;  // +0x70
-    THelpText m_hotSeatHelp[20];
+    HelpText m_hotSeatHelp[20];
     CHotSeatDlg();
     virtual ~CHotSeatDlg();
     virtual int onWidgetDeselect(int id, bool& exitFlag);
@@ -97,7 +101,11 @@ SIZE(CHeroSessions, 0x14);
 // headers); they are modelled as their widget/textWidget base here because
 // every reconstructed body reaches them only through widget::send_message /
 // textWidget::Text, and narrowing the include set avoids the declarator wall.
-class TMultiPlayerWindow : public CHeroWindowEx {
+// Before normalization (type): TMultiPlayerWindow.
+#ifndef MultiPlayerWindow
+#define MultiPlayerWindow TMultiPlayerWindow
+#endif
+class MultiPlayerWindow : public CHeroWindowEx {
 public:
     enum EWidgetId {
         ONLINE_ID = 101,
@@ -130,8 +138,8 @@ public:
     unsigned char m_hostJoinScreen;  // +0xc0
     widget* m_splash;  // +0xc4 (DC bitmapBorder*)
 
-    TMultiPlayerWindow();
-    virtual ~TMultiPlayerWindow();
+    MultiPlayerWindow();
+    virtual ~MultiPlayerWindow();
     unsigned char initRemote(eNetGameType netGameType, const char* extra,
                              _DPCOMPORTADDRESS* comportInfo);
     unsigned char joinSession(CDPlaySession* session, const char* password);
@@ -176,11 +184,11 @@ private:
     textWidget* m_userNameHeader;  // +0xf8
     textWidget* m_rolloverWidget;  // +0xfc
 };
-SIZE(TMultiPlayerWindow, 0x100);
+SIZE(MultiPlayerWindow, 0x100);
 
 // The singleton the ctor latches to `this` (0x50e050+0x66) and the dtor
 // nulls (0x50ee40+0x51). No DC public names it - provisional house name.
-DATA(0x0069ca28) extern TMultiPlayerWindow* g_multiPlayerWindow;
+DATA(0x0069ca28) extern MultiPlayerWindow* g_multiPlayerWindow;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:94, dc 0xffaac) void AddHelp(THelpText* pHelpText, const char* rollover, const char* RightClick);

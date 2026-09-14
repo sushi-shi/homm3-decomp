@@ -63,7 +63,7 @@ void setPlayerPaletteColors(unsigned short* pPalette, int whichPlayer)
 
 // E:\gamedcs\wingraph.cpp:83
 DC_ONLY(0x198b1c, 0x2A)
-void setPlayerPaletteColors(TPalette24& pal, int whichPlayer)
+void setPlayerPaletteColors(Palette24& pal, int whichPlayer)
 {
     // @stub
 }
@@ -159,7 +159,7 @@ void setPlayerPaletteColors(unsigned short* pal, int whichPlayer)
 
 // E:\gamedcs\wingraph.cpp:83
 VA(0x005ffe40, 0x22)  // anchor-caller(bitmapBorder::SetPlayerPaletteColors) + dc-order-map, dc 0x198b1c
-void setPlayerPaletteColors(TPalette24& pal, int whichPlayer)
+void setPlayerPaletteColors(Palette24& pal, int whichPlayer)
 {
     memcpy(pal.m_palette + 224 * 3, g_playerPalette24->m_palette + whichPlayer * 32 * 3,
            32 * 3);

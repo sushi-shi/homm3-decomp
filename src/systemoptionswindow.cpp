@@ -20,7 +20,7 @@
 #include "widget.h"
 #include "winmgr.h"
 
-DATA(0x006a7584) THelpText g_systemOptionsHelp[48];
+DATA(0x006a7584) HelpText g_systemOptionsHelp[48];
 
 // genrltxt.txt rows this dialog labels itself with. They have no other
 // consumer in the image, so no EGeneralTextIndex name is coined for them;
@@ -36,7 +36,7 @@ DATA(0x006a7584) THelpText g_systemOptionsHelp[48];
 
 // E:\gamedcs\systemoptionswindow.cpp:43, dc 0x15f588
 VA(0x005b1790, 0x187C)  // sole sysopbck.pcx reference + vtable block, dc 0x15f588
-TSystemOptionsWindow::TSystemOptionsWindow()
+SystemOptionsWindow::SystemOptionsWindow()
     : CAdvPopup(159, 56, 481, 487, 0x12), m_prefsChanged(0)
 {
     m_quickCombatSave = g_combatQuickMode69877c;
@@ -48,15 +48,15 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     m_widgets.push_back(background);
 
     m_widgets.push_back(new button(246, 298, 100, 48,
-        TMainMenu::LOAD_GAME_ID, "soload.def", 1, 0, 0, 38, 2));
+        MainMenu::LOAD_GAME_ID, "soload.def", 1, 0, 0, 38, 2));
     m_widgets.push_back(new button(357, 298, 100, 48,
-        TMainMenu::SAVE_GAME_ID, "sosave.def", 1, 0, 0, 31, 2));
+        MainMenu::SAVE_GAME_ID, "sosave.def", 1, 0, 0, 31, 2));
     m_widgets.push_back(new button(246, 357, 100, 48,
-        TMainMenu::RESTART_ID, "sorstrt.def", 1, 0, 0, 19, 2));
+        MainMenu::RESTART_ID, "sorstrt.def", 1, 0, 0, 19, 2));
     m_widgets.push_back(new button(357, 357, 100, 48,
-        TMainMenu::MAIN_MENU_ID, "somain.def", 1, 0, 0, 50, 2));
+        MainMenu::MAIN_MENU_ID, "somain.def", 1, 0, 0, 50, 2));
     m_widgets.push_back(new button(246, 415, 100, 48,
-        TMainMenu::QUIT_ID, "soquit.def", 1, 0, 0, 16, 2));
+        MainMenu::QUIT_ID, "soquit.def", 1, 0, 0, 16, 2));
     m_widgets.push_back(new button(357, 415, 100, 48,
         DIALOG_RETURN_SPLIT_ACCEPT, "soretrn.def", 1, 0, 0, 1, 2));
 
@@ -320,7 +320,7 @@ TSystemOptionsWindow::TSystemOptionsWindow()
 VA_COMPGEN(0x005b3010, 0x21, SCALAR_DELETING_DTOR, TSystemOptionsWindow)
 
 VA(0x005b3040, 0x6B)  // dc 0x160634
-TSystemOptionsWindow::~TSystemOptionsWindow()
+SystemOptionsWindow::~SystemOptionsWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -331,7 +331,7 @@ TSystemOptionsWindow::~TSystemOptionsWindow()
 // E:\gamedcs\systemoptionswindow.cpp:205
 // Retail inlines this switch into WindowHandler; no separate entry exists
 // between the destructor and DoModal.
-int TSystemOptionsWindow::convertID2HelpID(int id) const
+int SystemOptionsWindow::convertID2HelpID(int id) const
 {
     if (id < 0)
         return -1;
@@ -340,11 +340,11 @@ int TSystemOptionsWindow::convertID2HelpID(int id) const
 
     int helpID;
     switch (id) {
-    case TMainMenu::MAIN_MENU_ID: helpID = 0; break;
-    case TMainMenu::LOAD_GAME_ID: helpID = 1; break;
-    case TMainMenu::SAVE_GAME_ID: helpID = 2; break;
-    case TMainMenu::RESTART_ID: helpID = 3; break;
-    case TMainMenu::QUIT_ID: helpID = 4; break;
+    case MainMenu::MAIN_MENU_ID: helpID = 0; break;
+    case MainMenu::LOAD_GAME_ID: helpID = 1; break;
+    case MainMenu::SAVE_GAME_ID: helpID = 2; break;
+    case MainMenu::RESTART_ID: helpID = 3; break;
+    case MainMenu::QUIT_ID: helpID = 4; break;
     case DIALOG_RETURN_SPLIT_ACCEPT: helpID = 5; break;
     default: helpID = -1; break;
     }
@@ -352,7 +352,7 @@ int TSystemOptionsWindow::convertID2HelpID(int id) const
 }
 
 VA(0x005b30b0, 0x8E)  // dc 0x160700
-void TSystemOptionsWindow::doModal()
+void SystemOptionsWindow::doModal()
 {
     m_prefsChanged = 0;
     heroWindow::doModal(0);
@@ -424,7 +424,7 @@ void TSystemOptionsWindow::doModal()
 // stays before translation; both joins are removed with all 1526 compiled
 // bytes and 96 references/addends unchanged at 94.3957%.
 VA(0x005b3140, 0x61E)  // vtable slot 9 + inlined help switch, dc 0x160770
-int TSystemOptionsWindow::windowHandler(message& msg)
+int SystemOptionsWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -468,8 +468,8 @@ int TSystemOptionsWindow::windowHandler(message& msg)
             case widget::WIDGET_DESELECT:
             {
                 int id = msg.m_codeY;
-                if (id == TMainMenu::LOAD_GAME_ID || id == TMainMenu::MAIN_MENU_ID ||
-                    id == TMainMenu::QUIT_ID)
+                if (id == MainMenu::LOAD_GAME_ID || id == MainMenu::MAIN_MENU_ID ||
+                    id == MainMenu::QUIT_ID)
                 {
                     normalDialog(
                         (*g_generalText)[GENERAL_TEXT_SYSTEM_OPTIONS_COMMAND_CONFIRM],
@@ -477,7 +477,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
                         exitFlag = 1;
                 }
-                else if (id == TMainMenu::SAVE_GAME_ID || id == TMainMenu::RESTART_ID ||
+                else if (id == MainMenu::SAVE_GAME_ID || id == MainMenu::RESTART_ID ||
                          id == DIALOG_RETURN_SPLIT_ACCEPT)
                     exitFlag = 1;
 
@@ -708,16 +708,16 @@ int TSystemOptionsWindow::windowHandler(message& msg)
 }
 
 // E:\gamedcs\systemoptionswindow.cpp:667
-void TSystemOptionsWindow::updateSystemOptions(unsigned char firstUpdate)
+void SystemOptionsWindow::updateSystemOptions(unsigned char firstUpdate)
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
     if (firstUpdate && g_networkActive69954c) {
-        getWidget(TMainMenu::RESTART_ID)->enable(0);
+        getWidget(MainMenu::RESTART_ID)->enable(0);
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_extra = widget::WIDGET_ACTIVE;
         broadcastMessage(msg);
-        msg.m_codeY = TMainMenu::LOAD_GAME_ID;
+        msg.m_codeY = MainMenu::LOAD_GAME_ID;
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
         broadcastMessage(msg);
@@ -732,7 +732,7 @@ void TSystemOptionsWindow::updateSystemOptions(unsigned char firstUpdate)
 // E:\gamedcs\systemoptionswindow.cpp:194
 #if 0  // @carcass -- represented by VA_COMPGEN above
 DC_ONLY(0x160d90, 0x34)
-void* TSystemOptionsWindow::`scalar deleting destructor'(unsigned __flags)
+void* SystemOptionsWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

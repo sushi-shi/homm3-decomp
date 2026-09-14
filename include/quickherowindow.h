@@ -4,15 +4,26 @@
 
 #include "window.h"
 
-class hero;
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero;
 
 // Retail's constructor initializes heroWindow directly and the deleting
 // destructor passes the same allocation head back to operator delete. No
 // derived storage is touched; the DC 0x44 size differs only by its 12-byte
 // vector/base layout, while retail inherits the byte-proven 0x4c base.
-class TQuickHeroWindow : public heroWindow {
+// Before normalization (type): TQuickHeroWindow.
+#ifndef QuickHeroWindow
+#define QuickHeroWindow TQuickHeroWindow
+#endif
+class QuickHeroWindow : public heroWindow {
 public:
-    enum TViewLevel {
+// Before normalization (type): TQuickHeroWindow::TViewLevel.
+#ifndef ViewLevel
+#define ViewLevel TViewLevel
+#endif
+    enum ViewLevel {
         ViewNone = 0,
         ViewSome = 1,
         ViewAll = 2
@@ -43,11 +54,11 @@ public:
 
     enum { NWIDGETS = 25 };
 
-    TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel);
-    virtual ~TQuickHeroWindow();
+    QuickHeroWindow(Hero* thisHero, ViewLevel viewLevel);
+    virtual ~QuickHeroWindow();
     void quickWindowWait();
 };
-SIZE(TQuickHeroWindow, 0x4c);
+SIZE(QuickHeroWindow, 0x4c);
 
 // --- TQuickHeroWindow ---
 // CODEVIEW(E:\gamedcs\quickherowindow.cpp:37, dc 0x1170bc) void TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TQuickHeroWindow::TViewLevel view_level);

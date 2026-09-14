@@ -50,7 +50,7 @@ DATA(0x006a7560) extern const char* g_recruitAcceptRolloverText;
 DATA(0x006a7568) extern const char* g_recruitCancelRolloverText;
 
 VA(0x0054e750, 0x64)  // dc 0x118adc
-void getUpgradeCost(TCreatureType creature, TCreatureType upgrade, long amount, long* cost)
+void getUpgradeCost(CreatureType creature, CreatureType upgrade, long amount, long* cost)
 {
     const int* toCost = g_creatureTypeTraits[upgrade].m_cost;
     const int* fromCost = g_creatureTypeTraits[creature].m_cost;
@@ -111,7 +111,7 @@ void recruitSliderCallback(int state, heroWindow* parentWindow)
 // is a CONSEQUENCE of landing in EAX, not a cause - VC6 has no 8-bit form
 // for EDI - so nothing at this site can move the allocation. WALL.
 VA(0x0054e850, 0x1295)  // unique x86/DC structure + constructor call, dc 0x118bb4
-TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
+RecruitWindow::RecruitWindow(int x2, int y2, int altResource,
                                recruitUnit* recruitInfo)
     : heroWindow(x2, y2, 0x1e5, 0x18b, 0x12)
 {
@@ -288,7 +288,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
 VA_COMPGEN(0x0054faf0, 0x21, SCALAR_DELETING_DTOR, TRecruitWindow)
 
 VA(0x0054fb20, 0x6B)  // dc 0x1197bc
-TRecruitWindow::~TRecruitWindow()
+RecruitWindow::~RecruitWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -316,7 +316,7 @@ TRecruitWindow::~TRecruitWindow()
 // so the natural push_back form below is the banked maximum. Inline-budget /
 // generation residual, not missing game logic.
 VA(0x0054fb90, 0x30D)  // anchor-callee + anchor-global, dc 0x119820
-void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TCreatureType creature, long slot)
+void RecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, CreatureType creature, long slot)
 {
     m_widgets.push_back(new bitmapBorder(startX, startY, 100, 130,
         slot + 0x21e,
@@ -341,7 +341,7 @@ int recruitUnit::open(int newPriority)
     message msg;
     int resCost[7];
 
-    g_recruitWindow = new TRecruitWindow(143, 16, m_altResource, this);
+    g_recruitWindow = new RecruitWindow(143, 16, m_altResource, this);
     if (!g_recruitWindow)
         memError();
 
@@ -493,7 +493,7 @@ void recruitUnit::close()
 // inlined it there as the jump table at 0x5504d4 and the
 // single-call-site STATIC rule dropped the standalone copy. `static`
 // reproduces that absence.
-static TArtifact siegeMonsterToSiegeArtifact(TCreatureType siegeMon)
+static Artifact siegeMonsterToSiegeArtifact(CreatureType siegeMon)
 {
     switch (siegeMon) {
     case CREATURE_CATAPULT:
@@ -509,7 +509,7 @@ static TArtifact siegeMonsterToSiegeArtifact(TCreatureType siegeMon)
 }
 
 VA(0x00550360, 0x3C)  // dc 0x119d98
-TCreatureType siegeArtifactToCreature(TArtifact engine)
+CreatureType siegeArtifactToCreature(Artifact engine)
 {
     switch (engine) {
     case ARTIFACT_CATAPULT:
@@ -781,7 +781,7 @@ int recruitUnit::main(message& msg)
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
             max(100, elapsed);
 
-        const TCreatureType monType[4] = {
+        const CreatureType monType[4] = {
             m_monType1, m_monType2, m_monType3, m_monType4
         };
         for (int slot = 0; slot < 4; slot++) {
@@ -829,7 +829,7 @@ int recruitUnit::main(message& msg)
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
                     update(1, 0);
                 } else {
-                    TViewArmyWindow viewArmyWindow(
+                    ViewArmyWindow viewArmyWindow(
                         m_monType1, 0x77, 0x20, !exitFlag);
                     if (exitFlag)
                         viewArmyWindow.quickView();
@@ -847,7 +847,7 @@ int recruitUnit::main(message& msg)
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
                     update(1, 1);
                 } else {
-                    TViewArmyWindow viewArmyWindow(
+                    ViewArmyWindow viewArmyWindow(
                         m_monType2, 0x77, 0x20, !exitFlag);
                     if (exitFlag)
                         viewArmyWindow.quickView();
@@ -865,7 +865,7 @@ int recruitUnit::main(message& msg)
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
                     update(1, 2);
                 } else {
-                    TViewArmyWindow viewArmyWindow(
+                    ViewArmyWindow viewArmyWindow(
                         m_monType3, 0x77, 0x20, !exitFlag);
                     if (exitFlag)
                         viewArmyWindow.quickView();
@@ -883,7 +883,7 @@ int recruitUnit::main(message& msg)
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
                     update(1, 3);
                 } else {
-                    TViewArmyWindow viewArmyWindow(
+                    ViewArmyWindow viewArmyWindow(
                         m_monType4, 0x77, 0x20, !exitFlag);
                     if (exitFlag)
                         viewArmyWindow.quickView();
@@ -1051,11 +1051,11 @@ inline void recruitUnit::updateCost()
 // flat, flat, and worse, leaving this as a front-end handle/register-homing
 // wall rather than a missing statement.
 VA(0x00551350, 0x101)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70, dc 0x11ad04
-recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,
-    TCreatureType monType1, short* numMon1,
-    TCreatureType monType2, short* numMon2,
-    TCreatureType monType3, short* numMon3,
-    TCreatureType monType4, short* numMon4)
+recruitUnit::recruitUnit(ArmyGroup* newGroup, unsigned char groupIsTownGarrison,
+    CreatureType monType1, short* numMon1,
+    CreatureType monType2, short* numMon2,
+    CreatureType monType3, short* numMon3,
+    CreatureType monType4, short* numMon4)
 {
     m_inTownMainScreen = 0;
     m_thisHero = 0;
@@ -1090,11 +1090,11 @@ recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,
 // block-exact, and why-reg v2's three adjacent-store creation-order controls
 // were all byte-flat, confirming the residual as front-end handle scheduling.
 VA(0x00551460, 0xFE)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70, dc 0x11adb4
-recruitUnit::recruitUnit(hero* thisHero,
-    TCreatureType monType1, short* numMon1,
-    TCreatureType monType2, short* numMon2,
-    TCreatureType monType3, short* numMon3,
-    TCreatureType monType4, short* numMon4)
+recruitUnit::recruitUnit(Hero* thisHero,
+    CreatureType monType1, short* numMon1,
+    CreatureType monType2, short* numMon2,
+    CreatureType monType3, short* numMon3,
+    CreatureType monType4, short* numMon4)
 {
     m_inTownMainScreen = 0;
     m_currArmyGroup = 0;
@@ -1118,7 +1118,7 @@ recruitUnit::recruitUnit(hero* thisHero,
 }
 
 VA(0x00551560, 0x14B)  // dc 0x11ae58
-recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainScreen)
+recruitUnit::recruitUnit(Town* newTown, int newDwellingIndex, int inInTownMainScreen)
 {
     m_inTownMainScreen = inInTownMainScreen;
     m_type = RECRUIT_SOURCE_TOWN;
@@ -1126,12 +1126,12 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
     m_monsterType = g_townDwellingCreatures[newTown->m_type * TOWN_DWELLING_SLOTS
                                          + newDwellingIndex];
     m_numAvail = &newTown->m_population[newDwellingIndex];
-    m_currArmyGroup = const_cast<armyGroup*>(&newTown->getArmy());
+    m_currArmyGroup = const_cast<ArmyGroup*>(&newTown->getArmy());
     m_currArmyGroupIsTownGarrison = 1;
     m_viewOnly = newTown->m_owner != g_netLocalGamePos;
-    m_monType2 = (TCreatureType)-1;
-    m_monType3 = (TCreatureType)-1;
-    m_monType4 = (TCreatureType)-1;
+    m_monType2 = (CreatureType)-1;
+    m_monType3 = (CreatureType)-1;
+    m_monType4 = (CreatureType)-1;
     m_selectedPosition = 0;
     m_monType1 = m_monsterType;
     m_available[0] = m_numAvail;
@@ -1150,7 +1150,7 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
 // E:\gamedcs\recruit.cpp:1219 - no retail body: the only caller is
 // QuickViewRecruit(char, short*) (0x551780), so /Ob2 inlined it and
 // the single-call-site STATIC rule dropped the out-of-line copy.
-inline TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2)
+inline RecruitQuickWindow::RecruitQuickWindow(int x2, int y2)
     : heroWindow(x2, y2, 160, 320, 0x12)
 {
     m_widgets.reserve(49);
@@ -1159,7 +1159,7 @@ inline TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2)
 VA_COMPGEN(0x005516b0, 0x21, SCALAR_DELETING_DTOR, TRecruitQuickWindow)
 
 VA(0x005516e0, 0x6B)  // dc 0x11af98
-TRecruitQuickWindow::~TRecruitQuickWindow()
+RecruitQuickWindow::~RecruitQuickWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -1168,7 +1168,7 @@ TRecruitQuickWindow::~TRecruitQuickWindow()
 }
 
 VA(0x00551750, 0x24)  // dc 0x11affc
-void quickViewRecruit(town* newTown, int newDwellingIndex)
+void quickViewRecruit(Town* newTown, int newDwellingIndex)
 {
     quickViewRecruit(
         g_townDwellingCreatures[newTown->m_type * TOWN_DWELLING_SLOTS
@@ -1177,7 +1177,7 @@ void quickViewRecruit(town* newTown, int newDwellingIndex)
 }
 
 VA(0x00551780, 0x641)  // dc 0x11b028
-void quickViewRecruit(TCreatureType monType, short* numMon)
+void quickViewRecruit(CreatureType monType, short* numMon)
 {
     message msg;
     int cost[7];
@@ -1201,8 +1201,8 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
         resourceX = 24;
     }
 
-    TRecruitQuickWindow* recruitWindow =
-        new TRecruitQuickWindow(356, 16);
+    RecruitQuickWindow* recruitWindow =
+        new RecruitQuickWindow(356, 16);
     if (!recruitWindow)
         memError();
 
@@ -1315,14 +1315,14 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
 
 // E:\gamedcs\recruit.cpp:288
 DC_ONLY(0x11b53c, 0x34)
-void* TRecruitWindow::`scalar deleting destructor'(unsigned __flags)
+void* RecruitWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\recruit.cpp:1221
 DC_ONLY(0x11b570, 0x34)
-void* TRecruitQuickWindow::`scalar deleting destructor'(unsigned __flags)
+void* RecruitQuickWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

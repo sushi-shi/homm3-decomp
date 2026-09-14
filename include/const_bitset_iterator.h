@@ -8,17 +8,21 @@
 // checks the end again. This is a const traversal twin of bitset_iterator;
 // its original source name is unknown. The combination pass is Complete-only.
 template<size_t N>
-class TConstBitsetIterator {
+// Before normalization (type): TConstBitsetIterator.
+#ifndef ConstBitsetIterator
+#define ConstBitsetIterator TConstBitsetIterator
+#endif
+class ConstBitsetIterator {
 public:
-    TConstBitsetIterator(const std::bitset<N>& bits, size_t position)
+    ConstBitsetIterator(const std::bitset<N>& bits, size_t position)
         : m_bits(&bits), m_position(position) {}
     bool operator*() const { return m_bits->test(m_position); }
-    TConstBitsetIterator& operator++()
+    ConstBitsetIterator& operator++()
     {
         ++m_position;
         return *this;
     }
-    bool operator!=(const TConstBitsetIterator& other) const
+    bool operator!=(const ConstBitsetIterator& other) const
     {
         return m_bits != other.m_bits || m_position != other.m_position;
     }
@@ -31,7 +35,11 @@ private:
 
 // Identity predicate for the set-bit search. Retail tests the returned bool
 // at 0x44d077; std::find(..., true) instead emits cmp al,1 / je.
-struct TBitIsSet {
+// Before normalization (type): TBitIsSet.
+#ifndef BitIsSet
+#define BitIsSet TBitIsSet
+#endif
+struct BitIsSet {
     bool operator()(bool value) const { return value; }
 };
 

@@ -28,7 +28,7 @@ const SMonFrameInfo (&g_monFrameInfo)[150] = g_monFrameInfoTable;
 VA(0x0050c810, 0x1E9)  // dc 0xfe598
 unsigned char initializeCreatureAnimationTraitsTable()
 {
-    TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
+    SpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0067ff28, cranimSpreadsheetName, "cranim.txt"));
     if (!sheet)
         return 0;

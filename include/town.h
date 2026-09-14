@@ -14,7 +14,10 @@
 // values with its TOWN_* alias spellings; the DC TTownType enum
 // corroborates 0..7 (Conflux is Complete-era, absent from the AB-age
 // DC roster).
-enum TTownType {
+#ifndef TownType
+#define TownType TTownType
+#endif
+enum TownType {
     // Dreamcast NB11 type 0x1ab5: the unassigned/neutral town sentinel.
     eTownNeutral = -1,
     TOWN_CASTLE = 0x0,
@@ -182,7 +185,7 @@ SIZE(type_dialog_resource, 8);
 // store), dwelling @6 (16-bit store).
 struct type_horde_effect {
 public:
-    TCreatureType m_creature;
+    CreatureType m_creature;
     short m_bonus;
     short m_dwelling;
 };
@@ -198,7 +201,7 @@ public:
     __int64 m_buildingDisabledMask;
     char m_hasFort;
     char m_customArmies;
-    armyGroup m_townArmy;
+    ArmyGroup m_townArmy;
     char m_customName;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_name;
     // A char in the Dreamcast record, a DWORD here: readTownData assigns it
@@ -232,11 +235,18 @@ SIZE(TownExtra, 0x88);
 // view of this header gains the type name (the initialize_game_data
 // include-set canary measured exactly this forward declaration at
 // 100.0 -> 96.09 when it sat here ungated, 2026-08-20).
-class TTownEvent;
+#ifndef TownEvent
+#define TownEvent TTownEvent
+#endif
+class TownEvent;
 
 extern __int64 g_bitNumber[];
 
-class town {
+// Before normalization (type): town.
+#ifndef Town
+#define Town town
+#endif
+class Town {
 public:
     enum { TOWN_DOCK_SITE_NONE = 0xff };
     // Index of this town in gpGame->towns (byte, sign-extended).
@@ -294,7 +304,7 @@ public:
     // akCreatureTypeTraits with it). Not gated: it is a rename plus an
     // int-to-enum retype of an EXISTING member, so no view of this class
     // gains or loses a declarator.
-    TCreatureType m_summoningType;
+    CreatureType m_summoningType;
     // +0x40. DC `summoningPopulation`, a T_SHORT at its own 56 - the row
     // straight after `summoningType` at 52.
     // Sliced 2026-08-14 for townManager::SetupWell (0x5dd5fa), which
@@ -328,7 +338,7 @@ public:
     std::bitset<70> m_spells;
     // The town's own troops (ctor constructs an armyGroup at +0xe0 and
     // then fills the seven type slots with -1).
-    armyGroup m_garrison;
+    ArmyGroup m_garrison;
 
 protected:
     int m_generatorBonus[14];
@@ -352,7 +362,7 @@ public:
     __int64 m_built;
     __int64 m_active;
     __int64 m_available;
-    void applySpecialBuildingEffect(hero* townHero);
+    void applySpecialBuildingEffect(Hero* townHero);
     unsigned char canBuildDock() const;
     // DC Town.h:299 / :305 header inlines, declaration-only here
     // (?get_building_mask@town@@QBA_JXZ kept out of line by the DC
@@ -366,7 +376,7 @@ public:
     // DC Town.h:299/300 returns full_building_mask (+0x150 in DC).
     // Retail's +0x158 band is m_active; getBuildableMask expands this read.
     __int64 getBuildingMask() const { return m_active; }
-    long getCastleGrowthBonus(TCreatureType creature) const;
+    long getCastleGrowthBonus(CreatureType creature) const;
     // DC Town.h:305-306, dc 0x181404, returns generatorBonus[dwelling].
     // set_bonus_display calls this header helper; retail 0x5c5b40 expands it.
     long getGeneratorBonus(long dwelling) const { return m_generatorBonus[dwelling]; }
@@ -413,11 +423,11 @@ public:
     }
     void setSummoningGenerator();
     int getPortraitFrame(bool isSmall) const;
-    town();
+    Town();
     unsigned char canBuild(short buildingId) const;
     unsigned char canEverBuild(int buildingId) const;
     // 0x5bfe50.
-    void changeGeneratorBonus(TCreatureType creature, long change);
+    void changeGeneratorBonus(CreatureType creature, long change);
     // 0x5be930. Declared for update_shipyard's direct call; the body is
     // still outside the admitted surface.
     type_building_id createBuilding(type_building_id building);
@@ -436,10 +446,10 @@ public:
     // 0x5bfeb0 (dc 0x167c3c) and 0x5c0670 (dc 0x16842c), reconstructed
     // in the owning TU; gated so no other view of this class gains the
     // declarators.
-    void giveEventReward(const TTownEvent* thisEvent);
+    void giveEventReward(const TownEvent* thisEvent);
     // 0x5bfdd0.
-    void increasePopulation(TCreatureType bonusCreature,
-                             TCreatureType alternateBonus, long bonusAmount);
+    void increasePopulation(CreatureType bonusCreature,
+                             CreatureType alternateBonus, long bonusAmount);
     void initialize(const TownExtra* townSetup);
     unsigned char isLegalBuilding(type_building_id building) const;
     // Dreamcast's LF_FIELDLIST puts these immediately before update_shipyard,
@@ -455,7 +465,7 @@ public:
     // and it pushes exactly these three.
     type_building_id buildBuilding(int buildingId, unsigned char setBuiltFlag,
                                    unsigned char applySpecialEffect);
-    int load(TAbstractFile* infile, int saveVersion);
+    int load(AbstractFile* infile, int saveVersion);
     // 0x5bd2f0 (body in town.obj, not yet reconstructed). game::Save's
     // town-pool loop is the only consumer here: it calls it on towns[i]
     // with edi striding 0x168 == sizeof(town). Retail's body writes the
@@ -464,9 +474,9 @@ public:
     // what identifies it. Gated rather than added outright - a bare
     // member declarator on a class this widely included is the
     // include-set wall's own trigger shape.
-    int save(TAbstractFile* outfile);
+    int save(AbstractFile* outfile);
     // 0x5c12e0. Charges and places one of the player's tavern offers.
-    void hire(hero* newHero, long playerId);
+    void hire(Hero* newHero, long playerId);
     // game.obj joins the gate for GiveSpells alone: CreateTownHeroes
 // (0x4ca040) closes each starting town with `GiveSpells(NULL)` right
 // after PlaceInMap. Widening the existing guard rather than adding a
@@ -474,7 +484,7 @@ public:
     // 0x5be030 remains outside the admitted surface; hire needs its
     // direct town-spell handoff, and advManager::TownEvent closes every
     // successful visit with it.
-    void giveSpells(hero* forceHero) const;
+    void giveSpells(Hero* forceHero) const;
     // advmgr.obj joins the gate for View alone: DoAdvCommand's two town arms
 // call it, one on gpGame->GetTown(currTownId) and one on the town the
 // current hero obscures. The guard is SPLIT around the single declarator
@@ -492,7 +502,7 @@ public:
     // create_included_masks. Definition + DATA claim in src/town.cpp.
     static __int64 s_includedBuildings[9][44];
     // ?get_army@town@@QAAAAVarmyGroup@@XZ / ...QBAABVarmyGroup@@XZ;
-    const class armyGroup& getArmy() const;
+    const ArmyGroup& getArmy() const;
     // The NON-const half of that DC pair, declared 2026-08-14 for
     // TCastleWindow::WindowHandler 0x5dcf80: the summoning-portal row
     // hands the town's garrison straight to a `recruitUnit`, whose first
@@ -509,7 +519,7 @@ public:
     // summoning-portal rows write `&townToView->get_army()`, which is
     // `'&' requires l-value` against a pointer return and correct against a
     // reference.
-    class armyGroup& getArmy();
+    ArmyGroup& getArmy();
     // 0x5be2d0. Removes this town from its owner's roster and marks
     // both this record and gpGame->towns[id] unowned.
     void deallocate();
@@ -517,7 +527,7 @@ public:
     static void initializeHordes();
     static unsigned char initializeBuildingCostsTables();
     const char* getTypeName() const;
-    TTerrainType getNativeTerrain() const;
+    TerrainType getNativeTerrain() const;
     // The garrisoned hero steps out onto the town tile (0x5be390).
     void removeGarrisonHero();
     static int upgradedDwellingID(int id);
@@ -551,7 +561,7 @@ protected:
     static int s_neutralBuildingCosts[SPECIAL_BUILDING_ID][NUM_RESOURCES];
     static int s_specialBuildingCosts[9][9][NUM_RESOURCES];
 };
-SIZE(town, 360);
+SIZE(Town, 360);
 
 // DC public gTownSizeNames; retail 0x6a6294 is indexed by the four hall
 // levels in TQuickTownWindow. Its owning data compiland is not yet located.
@@ -645,11 +655,11 @@ extern int g_siloIncome[9][NUM_RESOURCES];
 // BEFORE scaling (`[4*(esi+slot) + table]`, one reloc, no second base
 // register) - a two-dimensional subscript compiles to the three-term
 // form instead. Name INVENTED (no DC symbol); owner TU unlocated.
-extern TCreatureType g_townDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
+extern CreatureType g_townDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
 // Biased view of the upgraded half of the same first town row. Retail
 // GiveTroopsToNeutralTown carries a distinct relocation to this address.
 DATA(0x006747d0)
-extern TCreatureType g_townUpgradedDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
+extern CreatureType g_townUpgradedDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
 
 // Retail .data 0x6782a4: ordinary spell counts for guild levels one
 // through five. initialize_spells generates one extra candidate per row so

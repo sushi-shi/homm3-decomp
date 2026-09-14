@@ -35,7 +35,7 @@ DATA(0x0067f1f4) static int g_highScoreRanks[2];
 DATA(0x0067f1fc) extern short g_highScoreCreatureTable[][2];
 DATA(0x006a5ecc) extern char* g_highScoreDefaults0[11][4];
 DATA(0x006a7f08) extern char* g_highScoreDefaults1[11][4];
-DATA(0x006991c0) THighScoreWindow* g_highScoreWindow;
+DATA(0x006991c0) HighScoreWindow* g_highScoreWindow;
 DATA(0x006993cc) highScoreManager* g_highScoreManager;
 DATA(0x0069955c) int g_showHighScore;
 int highScoreWindowHandler(message& msg);
@@ -152,7 +152,7 @@ VA(0x004e9110, 0xC0)  // dc 0xd7bd0
 void highScoreManager::viewHiScore()
 {
     // Original local: high_score_window. DC733/734 retains this modal call.
-    THighScoreWindow highScoreWindow;
+    HighScoreWindow highScoreWindow;
     highScoreWindow.doModal();
 }
 
@@ -239,7 +239,7 @@ int highScoreManager::addScoreToHighScore(int score, int days,
 
 VA(0x004e96a0, 0x62)  // dc 0xd8d2c
 CHighScoreEdit::CHighScoreEdit(int x, int y, int w, int h, int textSize,
-    char* text, char* fontName, font::TColor color,
+    char* text, char* fontName, font::Color color,
     font::EJustify justification, char* backgroundIcon, int backgroundFrame,
     int id, int style, int readType, int insetX, int insetY)
     : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
@@ -327,7 +327,7 @@ int highScoreManager::getMonType(int score, int scoreType)
 // 90.6581%. No diagnostic qualifiers or alternate helper bodies are retained.
 // E:\gamedcs\hiscore.cpp:858
 VA(0x004e9880, 0x506)  // vtable/global/widget/resource xrefs, dc 0xd7e3c
-THighScoreWindow::THighScoreWindow()
+HighScoreWindow::HighScoreWindow()
     : heroWindow(0, 0, 800, 600, 0)
 {
     int i;
@@ -406,7 +406,7 @@ THighScoreWindow::THighScoreWindow()
 // DC941/943 owns this update/dialog pair. ViewHiScore calls the ordinary
 // helper at DC734; its retail body contains the corresponding expansion.
 DC_ONLY(0xd8400, 0x22)
-void THighScoreWindow::doModal()
+void HighScoreWindow::doModal()
 {
     update();
     g_windowManager->doDialog(this, highScoreWindowHandler, 0);
@@ -418,7 +418,7 @@ void THighScoreWindow::doModal()
 VA_COMPGEN(0x004e9d90, 0x21, SCALAR_DELETING_DTOR, THighScoreWindow)
 
 VA(0x004e9dc0, 0x81)  // dc 0xd8424
-THighScoreWindow::~THighScoreWindow()
+HighScoreWindow::~HighScoreWindow()
 {
     m_hiScoreBack[1]->dispose();
     m_hiScoreBack[0]->dispose();
@@ -435,7 +435,7 @@ THighScoreWindow::~THighScoreWindow()
 // raw here, as highScoreManager::AddScoreToHighScore's own GetText(261) is.
 
 VA(0x004e9e50, 0x372)  // dc 0xd849c
-void THighScoreWindow::update()
+void HighScoreWindow::update()
 {
     getWidget(STANDARD_ID)->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                   widget::WIDGET_HIGHLIGHTED);
@@ -499,15 +499,15 @@ void THighScoreWindow::update()
                 i + 1);
         g_mediumFont->drawBoundedString(
             g_text, g_windowManager->m_screenBitmap,
-            0x58, y, 0x3a, 0x1a, font::TColor(color),
+            0x58, y, 0x3a, 0x1a, font::Color(color),
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
         g_mediumFont->drawBoundedString(
             currentRec.m_playerName, g_windowManager->m_screenBitmap,
-            0xa3, y, 0x7a, 0x1a, font::TColor(color),
+            0xa3, y, 0x7a, 0x1a, font::Color(color),
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
         g_mediumFont->drawBoundedString(
             currentRec.m_land, g_windowManager->m_screenBitmap,
-            0x12f, y, 0xd2, 0x1a, font::TColor(color),
+            0x12f, y, 0xd2, 0x1a, font::Color(color),
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
 
         int value;
@@ -519,7 +519,7 @@ void THighScoreWindow::update()
                 value);
         g_mediumFont->drawBoundedString(
             g_text, g_windowManager->m_screenBitmap,
-            0x213, y, m_isStandard ? 0x34 : 0x7a, 0x1a, font::TColor(color),
+            0x213, y, m_isStandard ? 0x34 : 0x7a, 0x1a, font::Color(color),
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
 
         if (m_isStandard) {
@@ -528,7 +528,7 @@ void THighScoreWindow::update()
                     currentRec.m_score);
             g_mediumFont->drawBoundedString(
                 g_text, g_windowManager->m_screenBitmap,
-                0x259, y, 0x34, 0x1a, font::TColor(color),
+                0x259, y, 0x34, 0x1a, font::Color(color),
                 font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
         }
     }
@@ -575,17 +575,17 @@ int highScoreWindowHandler(message& msg)
             return MESSAGE_DISPATCH_CONSUME;
 
         switch (msg.m_codeY) {
-        case THighScoreWindow::STANDARD_ID:
+        case HighScoreWindow::STANDARD_ID:
             g_highScoreWindow->m_isStandard = 1;
             updateCreatures();
             break;
 
-        case THighScoreWindow::CAMPAIGN_ID:
+        case HighScoreWindow::CAMPAIGN_ID:
             g_highScoreWindow->m_isStandard = 0;
             updateCreatures();
             break;
 
-        case THighScoreWindow::RESET_ID:
+        case HighScoreWindow::RESET_ID:
             {
             normalDialog((*g_generalText)[667], 2, -1, -1, -1, 0, -1,
                          0, -1, 0, -1, 0);
@@ -729,21 +729,21 @@ int highScoreManager::getMonType(int iScore, int iScoreType)
 
 // E:\gamedcs\hiscore.cpp:858
 DC_ONLY(0xd7e3c, 0x5C4)
-void THighScoreWindow::THighScoreWindow()
+void HighScoreWindow::HighScoreWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\hiscore.cpp:953
 DC_ONLY(0xd8424, 0x76)
-void THighScoreWindow::~THighScoreWindow()
+void HighScoreWindow::~HighScoreWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\hiscore.cpp:969
 DC_ONLY(0xd849c, 0x3AC)
-void THighScoreWindow::update()
+void HighScoreWindow::update()
 {
     // @stub
 }
@@ -855,7 +855,7 @@ void* CHSInputDlg::`scalar deleting destructor'(unsigned __flags)
 
 // E:\gamedcs\hiscore.cpp:929
 DC_ONLY(0xd92c8, 0x34)
-void* THighScoreWindow::`scalar deleting destructor'(unsigned __flags)
+void* HighScoreWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

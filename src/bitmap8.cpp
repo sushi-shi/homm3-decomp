@@ -21,7 +21,7 @@ void Bitmap8Bit::Bitmap8Bit()
 
 // E:\gamedcs\bitmap8.cpp:40
 DC_ONLY(0x53448, 0x84)
-void Bitmap8Bit::Bitmap8Bit(const char* name, int w, int h, unsigned char* data, const TPalette24* p24, int csize)
+void Bitmap8Bit::Bitmap8Bit(const char* name, int w, int h, unsigned char* data, const Palette24* p24, int csize)
 {
     // @stub
 }
@@ -42,7 +42,7 @@ void Bitmap8Bit::~Bitmap8Bit()
 
 // E:\gamedcs\bitmap8.cpp:75
 DC_ONLY(0x53588, 0x64)
-void Bitmap8Bit::import(int w, int h, unsigned char* data, const TPalette24* p24, int csize)
+void Bitmap8Bit::import(int w, int h, unsigned char* data, const Palette24* p24, int csize)
 {
     // @stub
 }

@@ -82,7 +82,7 @@ DATA(0x0063bc00) static const short g_campaignSetExitRect[4] = { 576, 464, 126, 
 // enough to reach that plateau; it does not explain retail's alternating
 // allocation/reserve, widget-entry and hotkey homes. No such local is retained.
 VA(0x00456ec0, 0x337)  // anchor-string CSSsod.def + anchor-vtable 0x63bc08 + DoCampaignWindow's stack object, retail-only
-TCampaignSetWindow::TCampaignSetWindow()
+CampaignSetWindow::CampaignSetWindow()
     : heroWindow(0, 0, 800, 600, 0)
 {
     m_widgets.reserve(4);
@@ -135,7 +135,7 @@ TCampaignSetWindow::TCampaignSetWindow()
 VA_COMPGEN(0x00457200, 0x21, SCALAR_DELETING_DTOR, TCampaignSetWindow)
 
 VA(0x00457230, 0x4E)
-TCampaignSetWindow::~TCampaignSetWindow()
+CampaignSetWindow::~CampaignSetWindow()
 {
     deleteWidgets();
 }
@@ -147,13 +147,13 @@ VA(0x00457280, 0x64)
 static int campaignSetSodHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_SOD_HELP), 4, -1, -1,
+        normalDialog(g_generalText->getText(CampaignSetWindow::CAMPAIGN_SET_SOD_HELP), 4, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
     if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = TCampaignSetWindow::CAMPAIGN_SET_SOD_ID;
+        msg.m_codeY = CampaignSetWindow::CAMPAIGN_SET_SOD_ID;
         msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
@@ -164,13 +164,13 @@ VA(0x004572f0, 0x64)
 static int campaignSetArmHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_ARM_HELP), 4, -1, -1,
+        normalDialog(g_generalText->getText(CampaignSetWindow::CAMPAIGN_SET_ARM_HELP), 4, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
     if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = TCampaignSetWindow::CAMPAIGN_SET_AB_ID;
+        msg.m_codeY = CampaignSetWindow::CAMPAIGN_SET_AB_ID;
         msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
@@ -181,13 +181,13 @@ VA(0x00457360, 0x64)
 static int campaignSetCusHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_CUS_HELP), 4, -1, -1,
+        normalDialog(g_generalText->getText(CampaignSetWindow::CAMPAIGN_SET_CUS_HELP), 4, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
     if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = TCampaignSetWindow::CUSTOM_CAMPAIGN_ID;
+        msg.m_codeY = CampaignSetWindow::CUSTOM_CAMPAIGN_ID;
         msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
@@ -198,7 +198,7 @@ VA(0x004573d0, 0x64)
 static int campaignSetExitHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_EXIT_HELP), 4, -1,
+        normalDialog(g_generalText->getText(CampaignSetWindow::CAMPAIGN_SET_EXIT_HELP), 4, -1,
                      -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -215,13 +215,13 @@ VA(0x00457440, 0x60)
 static int campaignSetRoeHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_ROE_HELP), 4, -1, -1,
+        normalDialog(g_generalText->getText(CampaignSetWindow::CAMPAIGN_SET_ROE_HELP), 4, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
     if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = TCampaignSetWindow::CAMPAIGN_SET_ROE_ID;
+        msg.m_codeY = CampaignSetWindow::CAMPAIGN_SET_ROE_ID;
         msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
@@ -229,7 +229,7 @@ static int campaignSetRoeHandler(message& msg)
 }
 
 VA(0x004574a0, 0x2C)
-void TCampaignSetWindow::doModal()
+void CampaignSetWindow::doModal()
 {
     g_soundManager->startMP3(
         DATA_COMPGEN(0x00660e08, campaignSetMusic, "MainMenu"), 0, 1);
@@ -237,7 +237,7 @@ void TCampaignSetWindow::doModal()
 }
 
 VA(0x004574d0, 0xC4)
-int TCampaignSetWindow::handleMessage(message& msg)
+int CampaignSetWindow::handleMessage(message& msg)
 {
     unsigned char hoverChanged = 0;
 

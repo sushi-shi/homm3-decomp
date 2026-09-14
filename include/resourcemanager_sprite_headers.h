@@ -15,28 +15,40 @@ struct SpriteDefHeader {
 };
 SIZE(SpriteDefHeader, 0x310);
 
-struct TSpriteDataHeader {
+// Before normalization (type): TSpriteDataHeader.
+#ifndef SpriteDataHeader
+#define SpriteDataHeader TSpriteDataHeader
+#endif
+struct SpriteDataHeader {
     int m_sequenceNumber;
     int m_numFrames;
     char* m_frameNames;
     int* m_frameOffsets;
 };
-SIZE(TSpriteDataHeader, 0x10);
+SIZE(SpriteDataHeader, 0x10);
 
 // The two frame-header formats are retail-byte views. The compact form's
 // second dword is copied but never consumed; retail instead reads the
 // encoding slot of the cropped-header local in both constructor arms.
-struct TCompactSpriteFrameHeader {
+// Before normalization (type): TCompactSpriteFrameHeader.
+#ifndef CompactSpriteFrameHeader
+#define CompactSpriteFrameHeader TCompactSpriteFrameHeader
+#endif
+struct CompactSpriteFrameHeader {
     int m_dataSize;
     int m_encoding;
     int m_width;
     int m_height;
 };
-SIZE(TCompactSpriteFrameHeader, 0x10);
+SIZE(CompactSpriteFrameHeader, 0x10);
 
-struct TCroppedSpriteFrameHeader {
+// Before normalization (type): TCroppedSpriteFrameHeader.
+#ifndef CroppedSpriteFrameHeader
+#define CroppedSpriteFrameHeader TCroppedSpriteFrameHeader
+#endif
+struct CroppedSpriteFrameHeader {
     int m_dataSize;
-    TEncodingMethod m_encoding;
+    EncodingMethod m_encoding;
     int m_width;
     int m_height;
     int m_croppedWidth;
@@ -44,6 +56,6 @@ struct TCroppedSpriteFrameHeader {
     int m_croppedX;
     int m_croppedY;
 };
-SIZE(TCroppedSpriteFrameHeader, 0x20);
+SIZE(CroppedSpriteFrameHeader, 0x20);
 
 #endif  /* HOMM3_RESOURCEMANAGER_SPRITE_HEADERS_H */

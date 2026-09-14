@@ -239,9 +239,9 @@ inline void vwScaleToScreenBuffer(int destX, int destY)
 }
 
 VA(0x005f7500, 0x3F7)  // dc 0x19308c
-void advManager::vwDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::vwDrawHeroPart(int part, DrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
-    hero* currHero = g_game->getHero(heroParts.m_id);
+    Hero* currHero = g_game->getHero(heroParts.m_id);
 
     int heroCellY = part % 3;
     int heroCellX = part / 3;
@@ -299,9 +299,9 @@ void advManager::vwDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int 
 }
 
 VA(0x005f7900, 0x3F7)  // dc 0x1933d8
-void advManager::vwDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::vwDrawHeroPartShadow(int part, DrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
-    hero* currHero = g_game->getHero(heroParts.m_id);
+    Hero* currHero = g_game->getHero(heroParts.m_id);
 
     int heroCellY = part % 3;
     int heroCellX = part / 3;
@@ -359,7 +359,7 @@ void advManager::vwDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX
 }
 
 VA(0x005f7d00, 0x1E1)  // dc 0x193724
-void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::vwDrawBoatPart(int part, DrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
     boat* currBoat = &g_game->m_boats[boatParts.m_id];
     int boatCellY = part % 3;
@@ -375,7 +375,7 @@ void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int 
             tilex + (2 - boatCellY) * 32,
             tiley - boatCellX * 32 + 32, tilew, tileh,
             g_memoryBuffer, 0, 0,
-            currBoat->m_facing > hero::kFacingS);
+            currBoat->m_facing > Hero::kFacingS);
     }
 
     m_boatIcons[currBoat->m_type]->drawHero(
@@ -384,11 +384,11 @@ void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int 
         tilex + (2 - boatCellY) * 32,
         tiley - boatCellX * 32 + 32, tilew, tileh,
         g_memoryBuffer, 0, 0,
-        currBoat->m_facing > hero::kFacingS);
+        currBoat->m_facing > Hero::kFacingS);
 }
 
 VA(0x005f7ef0, 0x1E1)  // dc 0x1938cc
-void advManager::vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::vwDrawBoatPartShadow(int part, DrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
     boat* currBoat = &g_game->m_boats[boatParts.m_id];
     int boatCellY = part % 3;
@@ -404,7 +404,7 @@ void advManager::vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX
             tilex + (2 - boatCellY) * 32,
             tiley - boatCellX * 32 + 32, tilew, tileh,
             g_memoryBuffer, 0, 0,
-            currBoat->m_facing > hero::kFacingS);
+            currBoat->m_facing > Hero::kFacingS);
     }
 
     m_boatIcons[currBoat->m_type]->drawHeroShadow(
@@ -413,7 +413,7 @@ void advManager::vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX
         tilex + (2 - boatCellY) * 32,
         tiley - boatCellX * 32 + 32, tilew, tileh,
         g_memoryBuffer, 0, 0,
-        currBoat->m_facing > hero::kFacingS);
+        currBoat->m_facing > Hero::kFacingS);
 }
 
 // The dispatch is a jump table, so the emitted arm order IS the source case
@@ -486,8 +486,8 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
     int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW,
         baseY = destY * g_viewWorldScale + g_vwCenterOffsetH;
 
-    TDrawParts heroParts[6];
-    TDrawParts boatParts[6];
+    DrawParts heroParts[6];
+    DrawParts boatParts[6];
     unsigned char foundHero =
         scanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
     unsigned char foundBoat =
@@ -501,7 +501,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
         for (unsigned row = 0; row < 6; ++row) {
             for (int numObj = 0; numObj < thisCell->m_objects.size();
                  ++numObj) {
-                NewmapCell::TObjectCell* objCell =
+                NewmapCell::ObjectCell* objCell =
                     &thisCell->m_objects[numObj];
                 if (objCell->m_layer != row)
                     continue;
@@ -714,8 +714,8 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
     int baseY = destY * g_viewWorldScale + g_vwCenterOffsetH,
         baseX = destX * g_viewWorldScale + g_vwCenterOffsetW;
 
-    TDrawParts heroParts[6];
-    TDrawParts boatParts[6];
+    DrawParts heroParts[6];
+    DrawParts boatParts[6];
     unsigned char foundHero =
         scanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
     unsigned char foundBoat =
@@ -726,7 +726,7 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
            g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
 
     for (int numObj = 0; numObj < thisCell->m_objects.size(); ++numObj) {
-        NewmapCell::TObjectCell* objCell = &thisCell->m_objects[numObj];
+        NewmapCell::ObjectCell* objCell = &thisCell->m_objects[numObj];
 
         CObjectType* objType =
             &m_fullMap->m_objectTypes[
@@ -991,7 +991,7 @@ void advManager::vwDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 
     if (thisCell->m_objects.size() > 0) {
         for (int numObj = 0; numObj < thisCell->m_objects.size(); ++numObj) {
-            NewmapCell::TObjectCell* objCell = &thisCell->m_objects[numObj];
+            NewmapCell::ObjectCell* objCell = &thisCell->m_objects[numObj];
 
             CObjectType* objType =
                 &m_fullMap->m_objectTypes[
@@ -1106,7 +1106,7 @@ void advManager::vwDrawGround(int srcX, int srcY, int z, int destX, int destY)
 // the other side (SHRINK the caller), and the Dreamcast roster names no helper
 // to lift these blocks into, so it is out of reach without invented source.
 VA(0x005fa600, 0x1726)  // caller stack extent + vtable 0x643c54, dc 0x1952b8
-TViewWorldWindow::TViewWorldWindow()
+ViewWorldWindow::ViewWorldWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
     m_x = 0;
@@ -1293,7 +1293,7 @@ VA_COMPGEN(0x005fbd30, 0x21, SCALAR_DELETING_DTOR, TViewWorldWindow)
 VA_COMPGEN(0x005fdf20, 0x26, VECTOR_UFILL, widget)
 
 VA(0x005fbd60, 0x86)  // dc 0x195ac4
-TViewWorldWindow::~TViewWorldWindow()
+ViewWorldWindow::~ViewWorldWindow()
 {
     delete g_memoryBuffer;
     g_csVwIcons->dispose();
@@ -1320,7 +1320,7 @@ int viewWorldSurfaceHandler(message& msg)
     if (msg.m_codeX != g_levelButtonClick
         || (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT))
         return 0;
-    TViewWorldWindow* window = static_cast<TViewWorldWindow*>(msg.m_window);
+    ViewWorldWindow* window = static_cast<ViewWorldWindow*>(msg.m_window);
     window->m_origin.m_z = 0;
     window->m_surfaceButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
     window->m_undergroundButton->sendMessage(widget::WIDGET_SET_STATUS, 6);
@@ -1342,7 +1342,7 @@ int viewWorldUndergroundHandler(message& msg)
     if (msg.m_codeX != g_levelButtonClick
         || (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT))
         return 0;
-    TViewWorldWindow* window = static_cast<TViewWorldWindow*>(msg.m_window);
+    ViewWorldWindow* window = static_cast<ViewWorldWindow*>(msg.m_window);
     window->m_origin.m_z = 1;
     window->m_surfaceButton->sendMessage(widget::WIDGET_SET_STATUS, 6);
     window->m_undergroundButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
@@ -1357,7 +1357,7 @@ int viewWorldUndergroundHandler(message& msg)
 }
 
 VA(0x005fbf90, 0x2A3)  // dc 0x195b48
-void advManager::viewWorld(int whatToDraw, TSkillMastery level)
+void advManager::viewWorld(int whatToDraw, SkillMastery level)
 {
     g_unnamed6aac3c = 1;
     g_viewArtifacts = 0;
@@ -1410,7 +1410,7 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
     g_windowManager->m_colorCyclingOn = 0;
     g_combatActive698a18 = 2;
     {
-        TViewWorldWindow viewWorldWindow;
+        ViewWorldWindow viewWorldWindow;
         type_point mapCenter(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
                               m_radarOrigin.m_z);
 
@@ -1458,7 +1458,7 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
 // declaration into the top block and assigning later (98.89, byte-flat);
 // naming the ftol argument as a `double scaled` inside the loop (98.90).
 VA(0x005fc240, 0x274)  // anchor-caller ViewWorld, anchor-callee UpdateRadar, dc 0x195d30
-void TViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
+void ViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
 {
     int i;
 
@@ -1512,7 +1512,7 @@ void TViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
 // E:\gamedcs\viewwrld.cpp:1549, dc 0x195ffc. This ordinary method's
 // only source operation is the five-argument adventure repaint. Complete
 // expands the method into updateRadar while retaining vwCompleteDraw.
-void TViewWorldWindow::drawWindow()
+void ViewWorldWindow::drawWindow()
 {
     g_advManager->vwCompleteDraw(m_origin.m_x, m_origin.m_y, m_origin.m_z,
                                 m_viewableWidth, m_viewableHeight);
@@ -1564,7 +1564,7 @@ void advManager::vwCompleteDraw(int startX, int startY, int z, int drawwidth,
 }
 
 VA(0x005fc7a0, 0x147)  // dc 0x196228
-void TViewWorldWindow::updateViewWorld(message* msg)
+void ViewWorldWindow::updateViewWorld(message* msg)
 {
     message msg2;
     int i;
@@ -1593,7 +1593,7 @@ void TViewWorldWindow::updateViewWorld(message* msg)
 }
 
 VA(0x005fc8f0, 0x213)  // dc 0x1962fc
-void TViewWorldWindow::updateRadar(int mrx, int mry, float radarDivisor)
+void ViewWorldWindow::updateRadar(int mrx, int mry, float radarDivisor)
 {
     widget* radar = g_advManager->m_advWindow->m_radarWidget;
     int rx = radar->m_x;
@@ -1636,7 +1636,7 @@ void TViewWorldWindow::updateRadar(int mrx, int mry, float radarDivisor)
 // The radar drag is a pump: hold the button, keep the LAST mouse-move
 // seen, and re-centre once per outer pass until the button comes up.
 VA(0x005fcb10, 0x37F)  // vtable slot 9 + anchor-callee update_view_world/update_radar, dc 0x1964dc
-int TViewWorldWindow::windowHandler(message& msg)
+int ViewWorldWindow::windowHandler(message& msg)
 {
     message rMsg;
     message rSaveMsg;
@@ -1743,7 +1743,7 @@ int TViewWorldWindow::windowHandler(message& msg)
 
 // E:\gamedcs\viewwrld.cpp:1392
 DC_ONLY(0x196b18, 0x34)
-void* TViewWorldWindow::`scalar deleting destructor'(unsigned __flags)
+void* ViewWorldWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

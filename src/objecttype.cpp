@@ -21,7 +21,7 @@
 // Provisional role name; retail stores the two grid dimensions here.
 // The only references are TObjectTypeTable::load's default object and
 // TObjectType::setTriggerMask's no-trigger path, both in this compiland.
-DATA(0x00640278) const TObjectType::TPoint g_noTriggerCell = {8, 6};
+DATA(0x00640278) const ObjectType::Point g_noTriggerCell = {8, 6};
 // Retail publishes this class's whole layout at the .bss object 0x69cb80
 // that both accessors address:
 //   +0x00  a 16-byte Dinkumware _Tree - allocator byte, comparator byte,
@@ -41,7 +41,11 @@ DATA(0x00640278) const TObjectType::TPoint g_noTriggerCell = {8, 6};
 //
 // NAMES ARE PROVISIONAL - nothing attests this class; only the offsets, the
 // node size and the two accessors' arithmetic are retail-proven.
-class TObjectImageNameTable {
+// Before normalization (type): TObjectImageNameTable.
+#ifndef ObjectImageNameTable
+#define ObjectImageNameTable TObjectImageNameTable
+#endif
+class ObjectImageNameTable {
 public:
     typedef std::map<std::string, int> TNameIndex;
     TNameIndex m_nameIndex;
@@ -86,12 +90,15 @@ public:
 // order and every constructor argument: nine of the first class with the
 // terrain ids 0..8 (rock, 9, is absent), one of the second, and five of the
 // third with 1..5 - and the pointer table lists them in exactly that order.
-class TObjectTypeFilter {
+#ifndef ObjectTypeFilter
+#define ObjectTypeFilter TObjectTypeFilter
+#endif
+class ObjectTypeFilter {
 public:
-    virtual ~TObjectTypeFilter();
+    virtual ~ObjectTypeFilter();
     // Retail 0x5141bd returns its literal zero through AL. The native-terrain
     // override is exact with this byte result and a direct logical tail.
-    virtual unsigned char accepts(const TObjectType* objectType) const = 0;
+    virtual unsigned char accepts(const ObjectType* objectType) const = 0;
 };
 
 // Retail 0x5141b0. The terrain id lands at +4 and the predicate reads
@@ -99,10 +106,14 @@ public:
 // an unplaced object (category 0) whose recommended terrain set contains
 // this terrain and is SMALL - the `count() <= 3` arm, against the
 // any-terrain filter's `count() > 3` next door.
-class TNativeTerrainObjectFilter : public TObjectTypeFilter {
+// Before normalization (type): TNativeTerrainObjectFilter.
+#ifndef NativeTerrainObjectFilter
+#define NativeTerrainObjectFilter TNativeTerrainObjectFilter
+#endif
+class NativeTerrainObjectFilter : public ObjectTypeFilter {
 public:
-    explicit TNativeTerrainObjectFilter(int terrain);
-    virtual unsigned char accepts(const TObjectType* objectType) const;
+    explicit NativeTerrainObjectFilter(int terrain);
+    virtual unsigned char accepts(const ObjectType* objectType) const;
 
     int m_terrain;
 };
@@ -110,18 +121,26 @@ public:
 // Retail 0x514220. No state - its constructor 0x5144b0 writes nothing but
 // the vptr - and the mirror of the filter above: an unplaced object whose
 // recommended terrain set is WIDE.
-class TAnyTerrainObjectFilter : public TObjectTypeFilter {
+// Before normalization (type): TAnyTerrainObjectFilter.
+#ifndef AnyTerrainObjectFilter
+#define AnyTerrainObjectFilter TAnyTerrainObjectFilter
+#endif
+class AnyTerrainObjectFilter : public ObjectTypeFilter {
 public:
-    TAnyTerrainObjectFilter();
-    virtual unsigned char accepts(const TObjectType* objectType) const;
+    AnyTerrainObjectFilter();
+    virtual unsigned char accepts(const ObjectType* objectType) const;
 };
 
 // Retail 0x514260, the whole body a `sete` on one compare: the object's
 // slotCategory against the one this filter carries at +4.
-class TSlotCategoryObjectFilter : public TObjectTypeFilter {
+// Before normalization (type): TSlotCategoryObjectFilter.
+#ifndef SlotCategoryObjectFilter
+#define SlotCategoryObjectFilter TSlotCategoryObjectFilter
+#endif
+class SlotCategoryObjectFilter : public ObjectTypeFilter {
 public:
-    explicit TSlotCategoryObjectFilter(int slotCategory);
-    virtual unsigned char accepts(const TObjectType* objectType) const;
+    explicit SlotCategoryObjectFilter(int slotCategory);
+    virtual unsigned char accepts(const ObjectType* objectType) const;
 
     int m_slotCategory;
 };
@@ -130,11 +149,11 @@ public:
 // line, retail 0x514b80. Free and therefore __fastcall under /Gr: the
 // stream arrives in ECX and the record in EDX, and it answers the stream
 // so the caller can chain.
-std::istream& operator>>(std::istream& is, TObjectType& objectType);
+std::istream& operator>>(std::istream& is, ObjectType& objectType);
 
-static TObjectImageNameTable& getObjectImageNames()
+static ObjectImageNameTable& getObjectImageNames()
 {
-    static TObjectImageNameTable imageNames;
+    static ObjectImageNameTable imageNames;
     return imageNames;
 }
 
@@ -150,7 +169,7 @@ VA_COMPGEN(0x00514060, 0xCA, CLASS_CTOR, TObjectImageNameTable)
 // --- the object-type filter family -----------------------------------------
 
 VA(0x005141B0, 0x6E)
-unsigned char TNativeTerrainObjectFilter::accepts(const TObjectType* objectType) const
+unsigned char NativeTerrainObjectFilter::accepts(const ObjectType* objectType) const
 {
     if (objectType->m_slotCategory != 0)
         return 0;
@@ -159,20 +178,20 @@ unsigned char TNativeTerrainObjectFilter::accepts(const TObjectType* objectType)
 }
 
 VA(0x00514220, 0x3D)
-unsigned char TAnyTerrainObjectFilter::accepts(const TObjectType* objectType) const
+unsigned char AnyTerrainObjectFilter::accepts(const ObjectType* objectType) const
 {
     return objectType->m_slotCategory == 0
         && objectType->m_recommendedTerrainMask.count() > 3;
 }
 
 VA(0x00514260, 0x19)
-unsigned char TSlotCategoryObjectFilter::accepts(const TObjectType* objectType) const
+unsigned char SlotCategoryObjectFilter::accepts(const ObjectType* objectType) const
 {
     return objectType->m_slotCategory == m_slotCategory;
 }
 
 VA(0x005142A0, 0x15)
-TNativeTerrainObjectFilter::TNativeTerrainObjectFilter(int terrain)
+NativeTerrainObjectFilter::NativeTerrainObjectFilter(int terrain)
     : m_terrain(terrain)
 {
 }
@@ -180,44 +199,44 @@ TNativeTerrainObjectFilter::TNativeTerrainObjectFilter(int terrain)
 VA_COMPGEN(0x005142C0, 0x21, SCALAR_DELETING_DTOR, TNativeTerrainObjectFilter)
 
 VA(0x005144B0, 0x9)
-TAnyTerrainObjectFilter::TAnyTerrainObjectFilter()
+AnyTerrainObjectFilter::AnyTerrainObjectFilter()
 {
 }
 
 VA_COMPGEN(0x005144C0, 0x21, SCALAR_DELETING_DTOR, TAnyTerrainObjectFilter)
 
 VA(0x00514510, 0x15)
-TSlotCategoryObjectFilter::TSlotCategoryObjectFilter(int slotCategory)
+SlotCategoryObjectFilter::SlotCategoryObjectFilter(int slotCategory)
     : m_slotCategory(slotCategory)
 {
 }
 
 VA(0x00514530, 0x7)
-TObjectTypeFilter::~TObjectTypeFilter()
+ObjectTypeFilter::~ObjectTypeFilter()
 {
 }
 
 // The fifteen filter objects, in the order their dynamic initializers run.
 // Terrain ids follow terrain_type.h; rock (9) has no filter.
-DATA(0x0069cb30) TNativeTerrainObjectFilter g_dirtObjectFilter(0);
-DATA(0x0069cb38) TNativeTerrainObjectFilter g_sandObjectFilter(1);
-DATA(0x0069cb10) TNativeTerrainObjectFilter g_grassObjectFilter(2);
-DATA(0x0069caf8) TNativeTerrainObjectFilter g_snowObjectFilter(3);
-DATA(0x0069cb28) TNativeTerrainObjectFilter g_swampObjectFilter(4);
-DATA(0x0069cac8) TNativeTerrainObjectFilter g_roughObjectFilter(5);
-DATA(0x0069cad8) TNativeTerrainObjectFilter g_subterraneanObjectFilter(6);
-DATA(0x0069cad0) TNativeTerrainObjectFilter g_lavaObjectFilter(7);
-DATA(0x0069cb20) TNativeTerrainObjectFilter g_waterObjectFilter(8);
-DATA(0x0069cae0) TAnyTerrainObjectFilter g_anyTerrainObjectFilter;
-DATA(0x0069cb18) TSlotCategoryObjectFilter g_slotCategory1ObjectFilter(1);
-DATA(0x0069caf0) TSlotCategoryObjectFilter g_slotCategory2ObjectFilter(2);
-DATA(0x0069cae8) TSlotCategoryObjectFilter g_slotCategory3ObjectFilter(3);
-DATA(0x0069cb08) TSlotCategoryObjectFilter g_slotCategory4ObjectFilter(4);
-DATA(0x0069cb00) TSlotCategoryObjectFilter g_slotCategory5ObjectFilter(5);
+DATA(0x0069cb30) NativeTerrainObjectFilter g_dirtObjectFilter(0);
+DATA(0x0069cb38) NativeTerrainObjectFilter g_sandObjectFilter(1);
+DATA(0x0069cb10) NativeTerrainObjectFilter g_grassObjectFilter(2);
+DATA(0x0069caf8) NativeTerrainObjectFilter g_snowObjectFilter(3);
+DATA(0x0069cb28) NativeTerrainObjectFilter g_swampObjectFilter(4);
+DATA(0x0069cac8) NativeTerrainObjectFilter g_roughObjectFilter(5);
+DATA(0x0069cad8) NativeTerrainObjectFilter g_subterraneanObjectFilter(6);
+DATA(0x0069cad0) NativeTerrainObjectFilter g_lavaObjectFilter(7);
+DATA(0x0069cb20) NativeTerrainObjectFilter g_waterObjectFilter(8);
+DATA(0x0069cae0) AnyTerrainObjectFilter g_anyTerrainObjectFilter;
+DATA(0x0069cb18) SlotCategoryObjectFilter g_slotCategory1ObjectFilter(1);
+DATA(0x0069caf0) SlotCategoryObjectFilter g_slotCategory2ObjectFilter(2);
+DATA(0x0069cae8) SlotCategoryObjectFilter g_slotCategory3ObjectFilter(3);
+DATA(0x0069cb08) SlotCategoryObjectFilter g_slotCategory4ObjectFilter(4);
+DATA(0x0069cb00) SlotCategoryObjectFilter g_slotCategory5ObjectFilter(5);
 
 // Retail 0x640288, fifteen relocations in the initializer order above.
 DATA(0x00640288)
-TObjectTypeFilter* const g_objectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
+ObjectTypeFilter* const g_objectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
     &g_dirtObjectFilter,          &g_sandObjectFilter,
     &g_grassObjectFilter,         &g_snowObjectFilter,
     &g_swampObjectFilter,         &g_roughObjectFilter,
@@ -241,9 +260,9 @@ TObjectTypeFilter* const g_objectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
 // with the ordinary registry accessor and value-returning lookup, it
 // reproduces the retail cache/string operands. A static inline definition
 // keeps kind 8 storage and does not recover those operands.
-inline std::vector<TObjectType::TImageInfo>& getObjectImageCache()
+inline std::vector<ObjectType::ImageInfo>& getObjectImageCache()
 {
-    static std::vector<TObjectType::TImageInfo> imageCache;
+    static std::vector<ObjectType::ImageInfo> imageCache;
     return imageCache;
 }
 
@@ -388,21 +407,21 @@ VA_COMPGEN(0x00517b50, 0x14, STD_CONSTRUCT, TImageInfo)
 // Remaining: counter initialization placement. No inline-depth controls or
 // release-elided operations are used.
 VA(0x00514610, 0x317)  // anchor-callee 0x514b80 per-row `>>`; anchor-global 0x6aba80 .msk cache; retail-only
-TObjectType& TObjectType::setImageName(
+ObjectType& ObjectType::setImageName(
     const std::basic_string<char, std::char_traits<char>,
                             std::allocator<char> >& name)
 {
-    TPoint emptySize = { 0, 0 };
-    TObjectImageNameTable& imageNames = getObjectImageNames();
+    Point emptySize = { 0, 0 };
+    ObjectImageNameTable& imageNames = getObjectImageNames();
 
     unsigned int oldCount = imageNames.m_rows.size();
     m_imageNumber = imageNames.getIndex(name);
 
-    std::vector<TImageInfo>& imageCache = getObjectImageCache();
+    std::vector<ImageInfo>& imageCache = getObjectImageCache();
 
     if (m_imageNumber == oldCount) {
-        imageCache.push_back(TImageInfo(emptySize));
-        TImageInfo* record = &imageCache[oldCount];
+        imageCache.push_back(ImageInfo(emptySize));
+        ImageInfo* record = &imageCache[oldCount];
 
         std::basic_string<char, std::char_traits<char>,
                           std::allocator<char> > maskName(name);
@@ -453,10 +472,10 @@ TObjectType& TObjectType::setImageName(
 
 VA(0x00514960, 0xAD)
 const std::basic_string<char, std::char_traits<char>, std::allocator<char> >&
-TObjectType::getImageName()
+ObjectType::getImageName()
 {
     static std::string emptyImageName;
-    TObjectImageNameTable& imageNames = getObjectImageNames();
+    ObjectImageNameTable& imageNames = getObjectImageNames();
 
     if (m_imageNumber < imageNames.m_rows.size())
         return imageNames.m_rows[m_imageNumber]->first;
@@ -464,7 +483,7 @@ TObjectType::getImageName()
 }
 
 VA(0x00514a60, 0x11D)
-TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
+ObjectType& ObjectType::setTriggerMask(const std::bitset<48>& mask)
 {
     m_triggerMask = mask & ~m_passableMask;
     m_hasTrigger = m_triggerMask.any();
@@ -493,47 +512,47 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
 // Keep ordinary member boundaries: the reader's expanded chain reproduces
 // retail's retained bitset operations and string destruction. Flattening
 // these calls with the same declarations/default constructors scores 76.6378%.
-TObjectType& TObjectType::setPassableMask(const std::bitset<48>& mask)
+ObjectType& ObjectType::setPassableMask(const std::bitset<48>& mask)
 {
     m_passableMask = mask | ~m_imageInfo.m_drawMask;
     return *this;
 }
 
-TObjectType& TObjectType::setTerrainMask(const std::bitset<10>& mask)
+ObjectType& ObjectType::setTerrainMask(const std::bitset<10>& mask)
 {
     m_recommendedTerrainMask &= mask;
     m_terrainMask = mask;
     return *this;
 }
 
-TObjectType& TObjectType::setRecommendedTerrainMask(const std::bitset<10>& mask)
+ObjectType& ObjectType::setRecommendedTerrainMask(const std::bitset<10>& mask)
 {
     m_recommendedTerrainMask = mask;
     return *this;
 }
-TObjectType& TObjectType::setObjectType(TAdventureObjectType type)
+ObjectType& ObjectType::setObjectType(AdventureObjectType type)
 {
     m_objectType = type;
     return *this;
 }
-TObjectType& TObjectType::setSubtype(int subtype)
+ObjectType& ObjectType::setSubtype(int subtype)
 {
     m_subtype = subtype;
     return *this;
 }
-TObjectType& TObjectType::setSlotCategory(int category)
+ObjectType& ObjectType::setSlotCategory(int category)
 {
     m_slotCategory = category;
     return *this;
 }
-TObjectType& TObjectType::setUnderlay(bool underlay)
+ObjectType& ObjectType::setUnderlay(bool underlay)
 {
     m_isUnderlay = underlay;
     return *this;
 }
 
 VA(0x00514b80, 0x1F7)
-std::istream& operator>>(std::istream& is, TObjectType& objectType)
+std::istream& operator>>(std::istream& is, ObjectType& objectType)
 {
     std::string imageName;
     std::bitset<48> passable;
@@ -551,7 +570,7 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
     objectType.setImageName(imageName).setPassableMask(passable)
         .setTriggerMask(trigger).setTerrainMask(std::bitset<10>(terrainRead.to_ulong()))
         .setRecommendedTerrainMask(std::bitset<10>(recommendedRead.to_ulong()))
-        .setObjectType(TAdventureObjectType(typeRead)).setSubtype(subtype)
+        .setObjectType(AdventureObjectType(typeRead)).setSubtype(subtype)
         .setSlotCategory(slotCategory).setUnderlay(underlay != 0);
     return is;
 }
@@ -568,11 +587,11 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // [ebp-0x14]), its strstreambuf and the stream itself.
 
 VA(0x00514d80, 0x284)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
-void TObjectTypeTable::load(char* filename)
+void ObjectTypeTable::load(char* filename)
 {
-    TTextResource* text = ResourceManager::getText(filename);
+    TextResource* text = ResourceManager::getText(filename);
     if (text == 0)
-        throw TRuntimeError();
+        throw RuntimeError();
 
     try {
         int count = atoi(text->getText(0));

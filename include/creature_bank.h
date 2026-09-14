@@ -39,9 +39,9 @@ enum type_creature_bank_guard_shape {
 // invokes armyGroup::armyGroup at the start of each. The still-unread tail
 // is kept opaque until initialize_creature_bank names its reward fields.
 struct type_creature_bank_level {
-    armyGroup m_guards;
+    ArmyGroup m_guards;
     int m_resources[7];
-    TCreatureType m_rewardCreature;
+    CreatureType m_rewardCreature;
     signed char m_rewardCreatures;
     signed char m_chance;
     signed char m_upgradeChance;

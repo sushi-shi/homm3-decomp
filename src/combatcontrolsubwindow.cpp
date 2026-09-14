@@ -24,7 +24,7 @@
 // the image reads the two dwords below it, so the table could in principle
 // begin earlier, and the eleven-row extent is a floor rather than a
 // measured end.
-DATA(0x006a6968) extern THelpText g_combatSubWindowHelp[11];
+DATA(0x006a6968) extern HelpText g_combatSubWindowHelp[11];
 
 #if 0  // @carcass
 
@@ -51,63 +51,63 @@ void type_combat_sub_window::disableAllButtons()
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:177
 DC_ONLY(0x64fcc, 0x278)
-void TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
+void CombatControlSubWindow::CombatControlSubWindow(heroWindow* parent)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:222
 DC_ONLY(0x65244, 0x2C)
-void TCombatControlSubWindow::~TCombatControlSubWindow()
+void CombatControlSubWindow::~CombatControlSubWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:249
 DC_ONLY(0x65274, 0x24)
-void TCombatControlSubWindow::setRollover(const char* new_text)
+void CombatControlSubWindow::setRollover(const char* new_text)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:282
 DC_ONLY(0x652a8, 0x1A4)
-void TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
+void CombatPlacementSubWindow::CombatPlacementSubWindow(heroWindow* parent)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:317
 DC_ONLY(0x6544c, 0x2C)
-void TCombatPlacementSubWindow::~TCombatPlacementSubWindow()
+void CombatPlacementSubWindow::~CombatPlacementSubWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:327
 DC_ONLY(0x65478, 0x28)
-void TCombatPlacementSubWindow::disableAllButtons()
+void CombatPlacementSubWindow::disableAllButtons()
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:343
 DC_ONLY(0x654a0, 0x638)
-void TCombatHeroSubWindow::TCombatHeroSubWindow(int x, int y, int w, int h, heroWindow* parent)
+void CombatHeroSubWindow::CombatHeroSubWindow(int x, int y, int w, int h, heroWindow* parent)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:407
 DC_ONLY(0x65ad8, 0x68)
-void TCombatHeroSubWindow::~TCombatHeroSubWindow()
+void CombatHeroSubWindow::~CombatHeroSubWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:428
 DC_ONLY(0x65b40, 0x144)
-void TCombatHeroSubWindow::update(const hero* info, const hero* otherHero, unsigned char on_cursed_ground)
+void CombatHeroSubWindow::update(const Hero* info, const Hero* otherHero, unsigned char on_cursed_ground)
 {
     // @stub
 }
@@ -136,7 +136,7 @@ void TCombatHeroSubWindow::update(const hero* info, const hero* otherHero, unsig
 VA(0x0046b610, 0x570)  // dc 0x64a84
 type_combat_sub_window::type_combat_sub_window(
     heroWindow* parent, const char* backgroundSpriteName)
-    : TSubWindow(0, 556, 800, 44, parent)
+    : SubWindow(0, 556, 800, 44, parent)
 {
     m_rolloverWidget = 0;
     m_widgets.reserve(10);
@@ -263,7 +263,7 @@ void type_combat_sub_window::setRolloverButtons(long, long)
 }
 
 VA(0x0046bc30, 0x26D)  // dc 0x64fcc
-TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
+CombatControlSubWindow::CombatControlSubWindow(heroWindow* parent)
     : type_combat_sub_window(parent, "cbar.pcx")
 {
     std::vector<widget*> newWidgets;
@@ -275,7 +275,7 @@ TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
     newWidgets.push_back(m_rolloverWidget);
 
     m_logScrollUpButton = new type_func_button(624, 5, 18, 17, 0x7d6,
-        "ComSlide.def", TCombatWindow::scrollUp, 0, 1);
+        "ComSlide.def", CombatWindow::scrollUp, 0, 1);
     m_logScrollUpButton->setHelpText(g_combatSubWindowHelp[5].m_text,
         g_combatSubWindowHelp[5].m_rclick, 1);
     m_logScrollUpButton->setDisabledFrame(1);
@@ -283,7 +283,7 @@ TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
     newWidgets.push_back(m_logScrollUpButton);
 
     m_logScrollDownButton = new type_func_button(624, 24, 18, 17, 0x7d7,
-        "ComSlide.def", TCombatWindow::scrollDown, 2, 3);
+        "ComSlide.def", CombatWindow::scrollDown, 2, 3);
     m_logScrollDownButton->setHelpText(g_combatSubWindowHelp[5].m_text,
         g_combatSubWindowHelp[5].m_rclick, 1);
     m_logScrollDownButton->setHotkey(KEYCODE_KP_2);
@@ -307,20 +307,20 @@ TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
 VA_COMPGEN(0x0046bea0, 0x21, SCALAR_DELETING_DTOR, TCombatControlSubWindow)
 
 VA(0x0046bed0, 0x78)  // dc 0x65244
-TCombatControlSubWindow::~TCombatControlSubWindow()
+CombatControlSubWindow::~CombatControlSubWindow()
 {
 }
 
 // DC227..246 retains an empty derived override with the same JJ ABI.
 // Retail control-table slot 2 shares the base method's ret-8 fold.
 DC_ONLY(0x65270, 0x4)
-void TCombatControlSubWindow::setRolloverButtons(long, long)
+void CombatControlSubWindow::setRolloverButtons(long, long)
 {
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:249
 VA(0x0046bf50, 0x32)  // vtable 0x63d420 slot 1 + rollover widget at +0x34, dc 0x65274
-void TCombatControlSubWindow::setRollover(const char* newText)
+void CombatControlSubWindow::setRollover(const char* newText)
 {
     m_rolloverWidget->setText(newText);
     m_rolloverWidget->sendMessage(widget::WIDGET_DRAW, 0);
@@ -348,7 +348,7 @@ void type_combat_sub_window::disableAllButtons()
 // Retain the override and canonical source call instead of only inheriting
 // the base slot. The base body is visible here, as in the original TU.
 DC_ONLY(0x65298, 0x10)
-void TCombatControlSubWindow::disableAllButtons()
+void CombatControlSubWindow::disableAllButtons()
 {
     type_combat_sub_window::disableAllButtons();
 }
@@ -362,7 +362,7 @@ void TCombatControlSubWindow::disableAllButtons()
 // nothing from the base's 1392 bytes and lands without them.
 
 VA(0x0046c050, 0x18C)  // dc 0x65310
-TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
+CombatPlacementSubWindow::CombatPlacementSubWindow(heroWindow* parent)
     : type_combat_sub_window(parent, "CoPlacbr.pcx")
 {
     std::vector<widget*> buttons;
@@ -394,12 +394,12 @@ TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
 VA_COMPGEN(0x0046c1e0, 0x21, SCALAR_DELETING_DTOR, TCombatPlacementSubWindow)
 
 VA(0x0046c210, 0x78)  // dc 0x6544c
-TCombatPlacementSubWindow::~TCombatPlacementSubWindow()
+CombatPlacementSubWindow::~CombatPlacementSubWindow()
 {
 }
 
 VA(0x0046c290, 0xD6)  // dc 0x65478
-void TCombatPlacementSubWindow::disableAllButtons()
+void CombatPlacementSubWindow::disableAllButtons()
 {
     m_parentWindow->widgetSetStatus(0x8fc, widget::WIDGET_DIMMED_NODRAW);
     m_parentWindow->widgetSetStatus(0x7802, widget::WIDGET_DIMMED_NODRAW);
@@ -407,9 +407,9 @@ void TCombatPlacementSubWindow::disableAllButtons()
 }
 
 VA(0x0046c370, 0x7FC)  // dc 0x654a0
-TCombatHeroSubWindow::TCombatHeroSubWindow(
+CombatHeroSubWindow::CombatHeroSubWindow(
     int x, int y, int w, int h, heroWindow* parent)
-    : TSubWindow(x, y, w, h, parent)
+    : SubWindow(x, y, w, h, parent)
 {
     m_widgets.reserve(12);
 
@@ -501,7 +501,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
 VA_COMPGEN(0x0046cb70, 0x21, SCALAR_DELETING_DTOR, TCombatHeroSubWindow)
 
 VA(0x0046cba0, 0x6B)  // dc 0x65ad8
-TCombatHeroSubWindow::~TCombatHeroSubWindow()
+CombatHeroSubWindow::~CombatHeroSubWindow()
 {
     for (std::vector<widget*>::iterator it = m_widgets.begin();
          it != m_widgets.end(); ++it) {
@@ -511,11 +511,11 @@ TCombatHeroSubWindow::~TCombatHeroSubWindow()
 }
 
 VA(0x0046cc10, 0x1D7)  // dc 0x65b40
-void TCombatHeroSubWindow::update(const hero& info, const hero* otherHero,
+void CombatHeroSubWindow::update(const Hero& info, const Hero* otherHero,
                                   bool onCursedGround)
 {
     char buffer[64];
-    hero& mutableInfo = const_cast<hero&>(info);
+    Hero& mutableInfo = const_cast<Hero&>(info);
 
     m_backgroundWidget->setPlayerPaletteColors(info.m_owner);
     m_portrait->setImage(g_heroTraits[info.m_portrait].m_largePortraitName);
@@ -540,7 +540,7 @@ void TCombatHeroSubWindow::update(const hero& info, const hero* otherHero,
 }
 
 VA(0x0046cdf0, 0x74)  // dc 0x65c84
-void TCombatHeroSubWindow::show()
+void CombatHeroSubWindow::show()
 {
     if (!m_shown) {
         saveBackground();
@@ -558,7 +558,7 @@ void TCombatHeroSubWindow::show()
 }
 
 VA(0x0046ce70, 0x3A)  // dc 0x65cf8
-void TCombatHeroSubWindow::unShow()
+void CombatHeroSubWindow::unShow()
 {
     if (m_shown) {
         for (std::vector<widget*>::iterator current = m_widgets.begin();
@@ -614,9 +614,9 @@ void TCombatHeroSubWindow::unShow()
 // push_back loses the exact reserve/full-arm lowering (97.27%); keep the
 // canonical vector interface and both proven loop bodies.
 VA(0x0046ceb0, 0xCD1)  // roster order + vtable 0x63d444 + CCrPop/SpellInf, dc 0x65dbc
-TCombatCreatureSubWindow::TCombatCreatureSubWindow(
+CombatCreatureSubWindow::CombatCreatureSubWindow(
     int x, int y, int w, int h, heroWindow* parent, int viewLevel)
-    : TSubWindow(x, y, w, h, parent), m_viewLevel(viewLevel)
+    : SubWindow(x, y, w, h, parent), m_viewLevel(viewLevel)
 {
     m_widgets.reserve(11);
 
@@ -737,7 +737,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
 VA_COMPGEN(0x0046db90, 0x21, SCALAR_DELETING_DTOR, TCombatCreatureSubWindow)
 
 VA(0x0046dbc0, 0x6B)  // dc 0x665e0
-TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
+CombatCreatureSubWindow::~CombatCreatureSubWindow()
 {
     for (std::vector<widget*>::iterator it = m_widgets.begin();
          it != m_widgets.end(); ++it) {
@@ -749,7 +749,7 @@ TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
 // E:\gamedcs\combatcontrolsubwindow.cpp:688
 
 VA(0x0046dc30, 0x2C2)  // roster order + "%d(%d)" pair + the three spell icons, dc 0x66648
-void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
+void CombatCreatureSubWindow::update(const army& info, const Hero* owner)
 {
     char buffer[64];
 
@@ -758,7 +758,7 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
 
     if (m_viewLevel == 1) {
         m_creatureIcon->setIconFrame(info.m_creatureType + 2);
-        const TCreatureTypeTraits& normalTraits =
+        const CreatureTypeTraits& normalTraits =
             g_creatureTypeTraits[info.m_creatureType];
 
         unsigned char canShoot = info.canShoot(0);
@@ -811,7 +811,7 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
 }
 
 VA(0x0046df00, 0x73)  // dc 0x668e8
-void TCombatCreatureSubWindow::show()
+void CombatCreatureSubWindow::show()
 {
     if (!m_shown) {
         saveBackground();
@@ -829,7 +829,7 @@ void TCombatCreatureSubWindow::show()
 }
 
 VA(0x0046df80, 0x3A)  // dc 0x66970
-void TCombatCreatureSubWindow::unShow()
+void CombatCreatureSubWindow::unShow()
 {
     if (m_shown) {
         for (std::vector<widget*>::iterator current = m_widgets.begin();
@@ -847,35 +847,35 @@ void TCombatCreatureSubWindow::unShow()
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:562
 DC_ONLY(0x65dbc, 0x824)
-void TCombatCreatureSubWindow::TCombatCreatureSubWindow(int x, int y, int w, int h, heroWindow* parent, int view_level)
+void CombatCreatureSubWindow::CombatCreatureSubWindow(int x, int y, int w, int h, heroWindow* parent, int view_level)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:666
 DC_ONLY(0x665e0, 0x68)
-void TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
+void CombatCreatureSubWindow::~CombatCreatureSubWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:688
 DC_ONLY(0x66648, 0x2A0)
-void TCombatCreatureSubWindow::update(const army* info, const hero* owner)
+void CombatCreatureSubWindow::update(const army* info, const Hero* owner)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:773
 DC_ONLY(0x668e8, 0x88)
-void TCombatCreatureSubWindow::show()
+void CombatCreatureSubWindow::show()
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:820
 DC_ONLY(0x66970, 0x84)
-void TCombatCreatureSubWindow::unShow()
+void CombatCreatureSubWindow::unShow()
 {
     // @stub
 }
@@ -889,7 +889,7 @@ void button::setDisabledFrame(long frame)
 
 // E:\gamedcs\Hero.h:634
 DC_ONLY(0x669fc, 0x3C)
-int hero::getMaxMana()
+int Hero::getMaxMana()
 {
     // @stub
 }
@@ -903,28 +903,28 @@ void* type_combat_sub_window::`scalar deleting destructor'(unsigned __flags)
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:214
 DC_ONLY(0x66a6c, 0x34)
-void* TCombatControlSubWindow::`scalar deleting destructor'(unsigned __flags)
+void* CombatControlSubWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:308
 DC_ONLY(0x66aa0, 0x34)
-void* TCombatPlacementSubWindow::`scalar deleting destructor'(unsigned __flags)
+void* CombatPlacementSubWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:396
 DC_ONLY(0x66ad4, 0x34)
-void* TCombatHeroSubWindow::`scalar deleting destructor'(unsigned __flags)
+void* CombatHeroSubWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:655
 DC_ONLY(0x66b08, 0x34)
-void* TCombatCreatureSubWindow::`scalar deleting destructor'(unsigned __flags)
+void* CombatCreatureSubWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

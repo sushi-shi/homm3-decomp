@@ -11,7 +11,7 @@
 #include "winmgr.h"
 
 VA(0x0048fdc0, 0x6F)  // dc 0x81748
-TDialogBox::TDialogBox(int winX, int winY, int winWidth,
+DialogBoxWindow::DialogBoxWindow(int winX, int winY, int winWidth,
                        int winHeight, unsigned winType)
     : heroWindow(winX, winY, winWidth, winHeight, winType)
 {
@@ -21,13 +21,13 @@ TDialogBox::TDialogBox(int winX, int winY, int winWidth,
 VA_COMPGEN(0x0048fe30, 0x21, SCALAR_DELETING_DTOR, TDialogBox)
 
 VA(0x0048fe60, 0x2A)  // dc 0x817b0
-TDialogBox::TDialogBox(unsigned winType)
+DialogBoxWindow::DialogBoxWindow(unsigned winType)
     : heroWindow(0, 0, 800, 600, winType)
 {
 }
 
 VA(0x0048fe90, 0x6B)  // dc 0x817f8
-TDialogBox::~TDialogBox()
+DialogBoxWindow::~DialogBoxWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -36,7 +36,7 @@ TDialogBox::~TDialogBox()
 }
 
 VA(0x0048ff00, 0x833)  // dc 0x8185c
-unsigned char TDialogBox::setup(int winX, int winY,
+unsigned char DialogBoxWindow::setup(int winX, int winY,
                                 int winWidth, int winHeight)
 {
     m_x = winX;
@@ -140,7 +140,7 @@ VA_COMPGEN(0x00490770, 0x6B, IMPLICIT_DTOR, CTextDialog)
 
 VA(0x004907e0, 0x31)  // dc 0x81e00
 CTextDialog::CTextDialog(unsigned winType)
-    : TDialogBox(winType)
+    : DialogBoxWindow(winType)
 {
     m_textWidget = 0;
 }
@@ -158,7 +158,7 @@ unsigned char CTextDialog::setup(const char* text, font* currentFont)
     m_y = winY;
     m_width = winWidth;
     m_height = winHeight;
-    TDialogBox::setup(winX, winY, winWidth, winHeight);
+    DialogBoxWindow::setup(winX, winY, winWidth, winHeight);
 
     m_textWidget = new textWidget(
         20, 40, winWidth - 40, winHeight - 40,

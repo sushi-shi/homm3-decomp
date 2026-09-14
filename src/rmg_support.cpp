@@ -15,19 +15,19 @@
 // The common painter prefix owns only the two dimensions and virtual API.
 // Both retained final constructors obtain the adapter size before building
 // this base, then store their own adapter at +0xc. Keep one ordinary helper.
-TRmgLinePainterInterface::TRmgLinePainterInterface(const TRmgGridPoint& size)
+RmgLinePainterInterface::RmgLinePainterInterface(const RmgGridPoint& size)
     : m_size(size)
 {
 }
 
 VA(0x004F9BE0, 0xB7)
-TRmgLinePatternTable::TRmgLinePatternTable(unsigned int patternCount, const int* patterns)
+RmgLinePatternTable::RmgLinePatternTable(unsigned int patternCount, const int* patterns)
     : m_patternCount(patternCount), m_patterns(0)
 {
     int* allocated = new int[m_patternCount];
     m_patterns = allocated;
     if (!allocated)
-        throw TAllocationFailure();
+        throw AllocationFailure();
     std::copy(patterns, patterns + m_patternCount, m_patterns);
     for (unsigned int value = 0; value < 9; ++value) {
         m_ranges[value].m_firstIndex = 0;
@@ -48,7 +48,7 @@ TRmgLinePatternTable::TRmgLinePatternTable(unsigned int patternCount, const int*
 // only the copied pattern-id array at +4; the nine index/count pairs are plain
 // integers and need no cleanup.
 VA(0x004F9CA0, 0x0B)  // cinit cleanups 0x55ed90/0x55f310; Complete-only
-TRmgLinePatternTable::~TRmgLinePatternTable()
+RmgLinePatternTable::~RmgLinePatternTable()
 {
     delete[] m_patterns;
 }
@@ -69,7 +69,7 @@ static const unsigned char g_rmgLineReflections[4][2] = {
 
 VA(0x004F9CB0, 0x24E)
 void selectRmgLinePattern(
-    const unsigned char* neighbours, const TRmgLinePatternTable* table,
+    const unsigned char* neighbours, const RmgLinePatternTable* table,
     int& pattern, unsigned char& flipX, unsigned char& flipY)
 {
     if (neighbours[TILE_DIR_NORTH] && neighbours[TILE_DIR_EAST]
@@ -145,13 +145,13 @@ void selectRmgLinePattern(
 }
 
 VA(0x005355C0, 0x1A)
-TRmgMapPosition::TRmgMapPosition(int newX, int newY, int newZ)
+RmgMapPosition::RmgMapPosition(int newX, int newY, int newZ)
     : m_x(newX), m_y(newY), m_z(newZ)
 {
 }
 
 VA(0x0055EDA0, 0x07)
-TRmgRiverPainter::~TRmgRiverPainter()
+RmgRiverPainter::~RmgRiverPainter()
 {
 }
 
@@ -159,13 +159,13 @@ TRmgRiverPainter::~TRmgRiverPainter()
 // selects within that table at later painting sites and is intentionally not
 // consumed by this accessor.
 VA(0x0055EDB0, 0x08)  // vtables 0x641174/0x641190; Complete-only
-TRmgLinePatternTable* TRmgLinePainter::getPattern(int)
+RmgLinePatternTable* RmgLinePainter::getPattern(int)
 {
     return &g_rmgRiverPatternTable;
 }
 
 VA(0x0055EDC0, 0x36) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +4
-void TRmgLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
+void RmgLinePainter::setTile(const RmgGridPoint& point, const rmgTerrainTile& tile)
 {
     rmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
     snapshot.m_flipX = tile.m_flipX;
@@ -173,12 +173,12 @@ void TRmgLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& 
     m_adapter->setTile(point, snapshot);
 }
 
-void TRmgLinePainter::setOverlay(const TRmgGridPoint& point, int value)
+void RmgLinePainter::setOverlay(const RmgGridPoint& point, int value)
 {
     m_adapter->setOverlay(point, value);
 }
 
-void TRmgLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
+void RmgLinePainter::getTile(const RmgGridPoint& point, rmgTerrainTile& tile)
 {
     rmgTerrainTile snapshot = m_adapter->getTile(point);
     tile = snapshot;
@@ -187,7 +187,7 @@ void TRmgLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
 // Slot 3 of all four river/road painter vtables forwards to the adapter's
 // overlay query and accepts exactly the two retained paintable values.
 VA(0x0055EE00, 0x28)  // vtables 0x641174/0x641190/0x6411f0/0x64120c
-int TRmgLinePainter::canPaint(const TRmgGridPoint& point)
+int RmgLinePainter::canPaint(const RmgGridPoint& point)
 {
     int overlay = m_adapter->getOverlay(point);
     if (overlay == eTerrainWater || overlay == eTerrainRock)
@@ -196,18 +196,18 @@ int TRmgLinePainter::canPaint(const TRmgGridPoint& point)
 }
 
 VA(0x0055EE30, 0x13)
-int TRmgLinePainter::getLand(const TRmgGridPoint& point)
+int RmgLinePainter::getLand(const RmgGridPoint& point)
 {
     return m_adapter->getLand(point);
 }
 
 VA(0x0055EE50, 0x76)
-TRmgRiverPainter::TRmgRiverPainter(
-    TRmgMapAdapterInterface* newAdapter,
+RmgRiverPainter::RmgRiverPainter(
+    RmgMapAdapterInterface* newAdapter,
     int newRiverType,
-    const TRmgGridPoint& newStart)
-    : TRmgLinePainter(newAdapter),
-      TRmgLineWalker(this, newRiverType, newStart)
+    const RmgGridPoint& newStart)
+    : RmgLinePainter(newAdapter),
+      RmgLineWalker(this, newRiverType, newStart)
 {
 }
 
@@ -216,12 +216,12 @@ VA_COMPGEN(0x0055EED0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverPainter)
 // Cinit 0x55f2f0 builds the seventeen-entry road pattern table from the ids
 // at 0x6411ac. The road painter's first virtual slot returns that table.
 VA(0x0055F320, 0x08)  // vtables 0x6411f0/0x64120c; Complete-only
-TRmgLinePatternTable* TRmgRoadLinePainter::getPattern(int)
+RmgLinePatternTable* RmgRoadLinePainter::getPattern(int)
 {
     return &g_rmgRoadPatternTable;
 }
 
-void TRmgRoadLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
+void RmgRoadLinePainter::setTile(const RmgGridPoint& point, const rmgTerrainTile& tile)
 {
     rmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
     snapshot.m_flipX = tile.m_flipX;
@@ -229,7 +229,7 @@ void TRmgRoadLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTi
     m_adapter->setTile(point, snapshot);
 }
 
-int TRmgRoadLinePainter::canPaint(const TRmgGridPoint& point)
+int RmgRoadLinePainter::canPaint(const RmgGridPoint& point)
 {
     int overlay = m_adapter->getOverlay(point);
     if (overlay == eTerrainWater || overlay == eTerrainRock)
@@ -238,13 +238,13 @@ int TRmgRoadLinePainter::canPaint(const TRmgGridPoint& point)
 }
 
 VA(0x0055F330, 0x17)  // vtables 0x641174/0x641190/0x6411f0/0x64120c; Complete-only
-void TRmgRoadLinePainter::setOverlay(const TRmgGridPoint& point, int value)
+void RmgRoadLinePainter::setOverlay(const RmgGridPoint& point, int value)
 {
     m_adapter->setOverlay(point, value);
 }
 
 VA(0x0055F350, 0x34) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +0x10
-void TRmgRoadLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
+void RmgRoadLinePainter::getTile(const RmgGridPoint& point, rmgTerrainTile& tile)
 {
     rmgTerrainTile snapshot = m_adapter->getTile(point);
     tile = snapshot;
@@ -253,7 +253,7 @@ void TRmgRoadLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& ti
 // The road hierarchy's parallel vtables 0x6411f0/0x64120c use the same
 // adapter getLand forwarding shape in slot 5.
 VA(0x0055F390, 0x13)  // Complete-only road painter
-int TRmgRoadLinePainter::getLand(const TRmgGridPoint& point)
+int RmgRoadLinePainter::getLand(const RmgGridPoint& point)
 {
     return m_adapter->getLand(point);
 }
@@ -262,12 +262,12 @@ int TRmgRoadLinePainter::getLand(const TRmgGridPoint& point)
 // it here at 0x548143. As in the river constructor, the common painter prefix
 // is passed unchanged to walker 0x4fa280, whose subobject begins at +0x10.
 VA(0x0055F3B0, 0x76) // anchor-callee 0x548143; Complete-only, thiscall ret 0xc
-TRmgRoadPainter::TRmgRoadPainter(
-    TRmgRoadMapAdapterInterface* newAdapter,
+RmgRoadPainter::RmgRoadPainter(
+    RmgRoadMapAdapterInterface* newAdapter,
     int newRoadType,
-    const TRmgGridPoint& newStart)
-    : TRmgRoadLinePainter(newAdapter),
-      TRmgLineWalker(this, newRoadType, newStart)
+    const RmgGridPoint& newStart)
+    : RmgRoadLinePainter(newAdapter),
+      RmgLineWalker(this, newRoadType, newStart)
 {
 }
 
@@ -280,12 +280,12 @@ VA_COMPGEN(0x0055F430, 0x21, SCALAR_DELETING_DTOR, TRmgRoadPainter)
 // vtable at 0x6411f0. The road builder at 0x548040 constructs this parallel
 // hierarchy; its scalar deleting destructor is retained at 0x55f430.
 VA(0x0055F460, 0x07)  // road painter cleanup; Complete-only RMG helper
-TRmgRoadPainter::~TRmgRoadPainter()
+RmgRoadPainter::~RmgRoadPainter()
 {
 }
 
 VA(0x005FCEB0, 0x39)
-int TRmgVector::length() const
+int RmgVector::length() const
 {
     return static_cast<int>(sqrt(static_cast<double>(m_x * m_x + m_y * m_y)));
 }
@@ -297,7 +297,7 @@ int TRmgVector::length() const
 // 34 and keeps its first size() call as retail does. The same stores
 // written inline in each constructor (costs 157 and 87..135) never spend
 // enough: createEdge stayed at 90.96% through 14 constructor spellings.
-void TRmgBoundaryVertex::initialize()
+void RmgBoundaryVertex::initialize()
 {
     m_next = this;
     m_previous = this;
@@ -310,8 +310,8 @@ void TRmgBoundaryVertex::initialize()
 // into the successful allocation arm. The same site/zone fields feed the
 // Voronoi vertex calculations. Body assignments (cost 81) keep createEdge
 // exact; the initializer-list form costs 70 and loses it (90.96%).
-TRmgBoundaryVertex::TRmgBoundaryVertex(
-    TPoint sitePosition, TRmgZone* zone, TRmgBoundaryVertex* twin)
+RmgBoundaryVertex::RmgBoundaryVertex(
+    Point sitePosition, RmgZone* zone, RmgBoundaryVertex* twin)
 {
     m_sitePosition = sitePosition;
     m_zone = zone;
@@ -320,44 +320,44 @@ TRmgBoundaryVertex::TRmgBoundaryVertex(
 }
 
 VA(0x005FCEF0, 0x6C) // anchor-callee 0x5fd078; Complete-only, ret 0x18
-TRmgBoundaryVertex::TRmgBoundaryVertex(
-    TPoint sitePosition, TRmgZone* zone, TPoint twinSitePosition, TRmgZone* twinZone)
+RmgBoundaryVertex::RmgBoundaryVertex(
+    Point sitePosition, RmgZone* zone, Point twinSitePosition, RmgZone* twinZone)
     : m_zone(zone)
 {
     m_sitePosition = sitePosition;
-    m_twin = new TRmgBoundaryVertex(twinSitePosition, twinZone, this);
+    m_twin = new RmgBoundaryVertex(twinSitePosition, twinZone, this);
     initialize();
 }
 
 VA(0x005FCF60, 0x31) // anchor-callee 0x5fd308; thiscall, ret 4; Complete-only
-void TRmgBoundaryVertex::splice(TRmgBoundaryVertex* other)
+void RmgBoundaryVertex::splice(RmgBoundaryVertex* other)
 {
     std::swap(m_next->m_previous, other->m_next->m_previous);
-    TRmgBoundaryVertex* next = m_next;
+    RmgBoundaryVertex* next = m_next;
     m_next = other->m_next;
     other->m_next = next;
 }
 
 VA(0x005FCFA0, 0x61) // anchor-callee addSite 0x5fd790; thiscall, ret 0; Complete-only
-void TRmgBoundaryVertex::detach()
+void RmgBoundaryVertex::detach()
 {
-    TRmgBoundaryVertex* previous = m_previous;
-    TRmgBoundaryVertex* twinPrevious = m_twin->m_previous;
+    RmgBoundaryVertex* previous = m_previous;
+    RmgBoundaryVertex* twinPrevious = m_twin->m_previous;
     splice(previous);
     m_twin->splice(twinPrevious);
 }
 
 VA(0x005FD010, 0x316) // anchor-caller 0x53e050 and five createEdge expansions/calls
-TRmgVoronoi::TRmgVoronoi()
+RmgVoronoi::RmgVoronoi()
 {
-    TPoint first(-200, -200);
-    TPoint second(400, -200);
-    TPoint third(400, 400);
-    TPoint fourth(-200, 400);
-    TRmgBoundaryVertex* firstEdge = createEdge(first, 0, second, 0);
-    TRmgBoundaryVertex* secondEdge = createEdge(second, 0, third, 0);
-    TRmgBoundaryVertex* thirdEdge = createEdge(third, 0, fourth, 0);
-    TRmgBoundaryVertex* fourthEdge = createEdge(fourth, 0, first, 0);
+    Point first(-200, -200);
+    Point second(400, -200);
+    Point third(400, 400);
+    Point fourth(-200, 400);
+    RmgBoundaryVertex* firstEdge = createEdge(first, 0, second, 0);
+    RmgBoundaryVertex* secondEdge = createEdge(second, 0, third, 0);
+    RmgBoundaryVertex* thirdEdge = createEdge(third, 0, fourth, 0);
+    RmgBoundaryVertex* fourthEdge = createEdge(fourth, 0, first, 0);
     firstEdge->getTwin()->splice(secondEdge);
     secondEdge->getTwin()->splice(thirdEdge);
     thirdEdge->getTwin()->splice(fourthEdge);
@@ -369,17 +369,17 @@ TRmgVoronoi::TRmgVoronoi()
 // The subdivision owns every allocated half-edge and its pointer vector.
 // Its retained destructor proves the +0x04 vector and trivial edge cleanup.
 VA(0x005FD330, 0x58) // anchor-callee 0x53e685; thiscall, ret 0
-TRmgVoronoi::~TRmgVoronoi()
+RmgVoronoi::~RmgVoronoi()
 {
     for (int edge = 0; edge < m_edges.size(); ++edge)
         delete m_edges[edge];
 }
 
 VA(0x005FD390, 0x21C) // anchor-callers 0x5fd010/0x5fd790; Complete-only, ret 0x18
-TRmgBoundaryVertex* TRmgVoronoi::createEdge(TPoint first, TRmgZone* firstZone,
-    TPoint second, TRmgZone* secondZone)
+RmgBoundaryVertex* RmgVoronoi::createEdge(Point first, RmgZone* firstZone,
+    Point second, RmgZone* secondZone)
 {
-    TRmgBoundaryVertex* edge = new TRmgBoundaryVertex(first, firstZone, second, secondZone);
+    RmgBoundaryVertex* edge = new RmgBoundaryVertex(first, firstZone, second, secondZone);
     m_edges.push_back(edge);
     m_edges.push_back(edge->getTwin());
     return edge;
@@ -393,10 +393,10 @@ TRmgBoundaryVertex* TRmgVoronoi::createEdge(TPoint first, TRmgZone* firstZone,
 // reads (93), a named twin (103), chained accessors (113) or endpoint
 // locals (122) keep the same bytes here, and 137 or more loses the
 // constructor's first diagonal splice.
-TRmgBoundaryVertex* TRmgVoronoi::connectEdges(TRmgBoundaryVertex* first,
-    TRmgBoundaryVertex* second)
+RmgBoundaryVertex* RmgVoronoi::connectEdges(RmgBoundaryVertex* first,
+    RmgBoundaryVertex* second)
 {
-    TRmgBoundaryVertex* edge = createEdge(first->getOppositeSitePosition(),
+    RmgBoundaryVertex* edge = createEdge(first->getOppositeSitePosition(),
         first->getOppositeZone(), second->getSitePosition(), second->getZone());
     edge->splice(first->getLeftNext());
     edge->getTwin()->splice(second);
@@ -404,14 +404,14 @@ TRmgBoundaryVertex* TRmgVoronoi::connectEdges(TRmgBoundaryVertex* first,
 }
 
 VA(0x005FD5B0, 0xFF) // anchor-caller 0x5fd790; Complete-only, thiscall ret 4
-void TRmgVoronoi::removeEdge(TRmgBoundaryVertex* edge)
+void RmgVoronoi::removeEdge(RmgBoundaryVertex* edge)
 {
     edge->detach();
     unsigned int index = 0;
     while (index < m_edges.size() && m_edges[index] != edge)
         ++index;
     m_edges.erase(m_edges.begin() + index);
-    TRmgBoundaryVertex* twin = edge->getTwin();
+    RmgBoundaryVertex* twin = edge->getTwin();
     index = 0;
     while (index < m_edges.size() && m_edges[index] != twin)
         ++index;
@@ -429,29 +429,29 @@ void TRmgVoronoi::removeEdge(TRmgBoundaryVertex* edge)
 // budgets expand all three. Retail locate's first expanded orientation has
 // no spilled endpoint; the named twin restores all 215 bytes. Flattening
 // the call boundary returns 91.0460%.
-static int isRmgCounterClockwise(TPoint first, TPoint second, TPoint third)
+static int isRmgCounterClockwise(Point first, Point second, Point third)
 {
     return getRmgPointOrientation(first, second, third) > 0;
 }
 
-static int isRmgPointRightOfEdge(TPoint point, TRmgBoundaryVertex* edge)
+static int isRmgPointRightOfEdge(Point point, RmgBoundaryVertex* edge)
 {
-    TRmgBoundaryVertex* twin = edge->m_twin;
+    RmgBoundaryVertex* twin = edge->m_twin;
     return isRmgCounterClockwise(edge->m_sitePosition, point, twin->m_sitePosition);
 }
 
 VA(0x005FD6B0, 0xD7) // anchor-callers 0x53dad0/0x53e050/0x5fd790; ret 8
-TRmgBoundaryVertex* TRmgVoronoi::locate(TPoint point)
+RmgBoundaryVertex* RmgVoronoi::locate(Point point)
 {
-    TRmgBoundaryVertex* edge = m_root;
+    RmgBoundaryVertex* edge = m_root;
     for (;;) {
         {
-            TPoint origin = edge->m_sitePosition;
+            Point origin = edge->m_sitePosition;
             if (point == origin)
                 break;
         }
         {
-            TPoint destination = edge->m_twin->m_sitePosition;
+            Point destination = edge->m_twin->m_sitePosition;
             if (point == destination) {
                 edge = edge->m_twin;
                 break;
@@ -460,12 +460,12 @@ TRmgBoundaryVertex* TRmgVoronoi::locate(TPoint point)
         if (isRmgPointRightOfEdge(point, edge)) {
             edge = edge->m_twin;
         } else {
-            TRmgBoundaryVertex* next = edge->m_next;
+            RmgBoundaryVertex* next = edge->m_next;
             if (!isRmgPointRightOfEdge(point, next)) {
                 edge = next;
                 continue;
             }
-            TRmgBoundaryVertex* previous = edge->m_twin->m_previous->m_twin;
+            RmgBoundaryVertex* previous = edge->m_twin->m_previous->m_twin;
             if (isRmgPointRightOfEdge(point, previous))
                 break;
             edge = previous;
@@ -476,10 +476,10 @@ TRmgBoundaryVertex* TRmgVoronoi::locate(TPoint point)
 
 // Provisional edge flip: retail saves both predecessors before detach,
 // transfers their opposite sites/zones, and splices into the new rings.
-static void flipRmgEdge(TRmgBoundaryVertex* edge)
+static void flipRmgEdge(RmgBoundaryVertex* edge)
 {
-    TRmgBoundaryVertex* previous = edge->m_previous;
-    TRmgBoundaryVertex* twinPrevious = edge->m_twin->m_previous;
+    RmgBoundaryVertex* previous = edge->m_previous;
+    RmgBoundaryVertex* twinPrevious = edge->m_twin->m_previous;
     edge->detach();
     edge->m_zone = previous->m_twin->m_zone;
     edge->m_sitePosition = previous->m_twin->m_sitePosition;
@@ -503,15 +503,15 @@ static void flipRmgEdge(TRmgBoundaryVertex* edge)
 // dx/dy to [ebp-8]/[ebp-0xc] for the four products, which only this binding
 // reproduces; a by-value TPoint copy through the accessor re-reads the
 // field and keeps dx in a register (addSite 90.3482% with the rest exact).
-static unsigned char isRmgPointOnSegment(TPoint point, TRmgBoundaryVertex* edge)
+static unsigned char isRmgPointOnSegment(Point point, RmgBoundaryVertex* edge)
 {
-    TPoint opposite = edge->getOppositeSitePosition();
+    Point opposite = edge->getOppositeSitePosition();
     int firstDistance = getRmgSquaredDistance(point, edge->getSitePosition());
     int secondDistance = getRmgSquaredDistance(point, opposite);
     int edgeDistance = getRmgSquaredDistance(edge->getSitePosition(), opposite);
     if (firstDistance > edgeDistance || secondDistance > edgeDistance)
         return 0;
-    const TPoint& origin = edge->m_sitePosition;
+    const Point& origin = edge->m_sitePosition;
     int dx = opposite.m_x - origin.m_x;
     int dy = opposite.m_y - origin.m_y;
     int c = -(dy * origin.m_x - dx * origin.m_y);
@@ -525,8 +525,8 @@ static unsigned char isRmgPointOnSegment(TPoint point, TRmgBoundaryVertex* edge)
 // widens, and result lifetime. Twenty distinct objects span 33.2202% to the
 // unchanged 45.4167% caller score; none recovers the missing orientation
 // calls. Preserve the actual by-value point and signed-product boundaries.
-static unsigned char isRmgPointInsideCircle(TPoint first, TPoint second,
-    TPoint third, TPoint point)
+static unsigned char isRmgPointInsideCircle(Point first, Point second,
+    Point third, Point point)
 {
     int firstArea = getRmgPointOrientation(second, third, point);
     int secondArea = getRmgPointOrientation(first, third, point);
@@ -540,16 +540,16 @@ static unsigned char isRmgPointInsideCircle(TPoint first, TPoint second,
 }
 
 VA(0x005FD790, 0x348) // anchor-caller 0x53e050; Complete-only, thiscall ret 0xc
-void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
+void RmgVoronoi::addSite(Point point, RmgZone* zone)
 {
-    TRmgBoundaryVertex* edge = locate(point);
+    RmgBoundaryVertex* edge = locate(point);
     {
-        TPoint origin = edge->getSitePosition();
+        Point origin = edge->getSitePosition();
         if (point == origin)
             return;
     }
     {
-        TPoint destination = edge->getOppositeSitePosition();
+        Point destination = edge->getOppositeSitePosition();
         if (point == destination)
             return;
     }
@@ -557,7 +557,7 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
         edge = edge->getPrevious();
         removeEdge(edge->getNext());
     }
-    TRmgBoundaryVertex* base = createEdge(edge->getSitePosition(), edge->getZone(), point, zone);
+    RmgBoundaryVertex* base = createEdge(edge->getSitePosition(), edge->getZone(), point, zone);
     base->splice(edge);
     m_root = base;
     do {
@@ -566,7 +566,7 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
     } while (edge->getTwin()->getPrevious() != m_root);
 
     for (;;) {
-        TRmgBoundaryVertex* previous = edge->getPrevious();
+        RmgBoundaryVertex* previous = edge->getPrevious();
         if (isRmgPointRightOfEdge(previous->getTwin()->getSitePosition(), edge)) {
             if (isRmgPointInsideCircle(edge->getSitePosition(),
                     previous->getTwin()->getSitePosition(), edge->getOppositeSitePosition(), point)) {
@@ -582,14 +582,14 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
 }
 
 VA(0x005FDAE0, 0x2B) // anchor-callee 0x5fd937/0x5fd97e; Complete-only
-int getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
+int getRmgPointOrientation(Point first, Point second, Point third)
 {
     return (second.m_x - first.m_x) * (third.m_y - first.m_y)
         - (second.m_y - first.m_y) * (third.m_x - first.m_x);
 }
 
 VA(0x005FDB10, 0x21) // anchor-callee addSite; Complete-only, ret 0x10
-int getRmgSquaredDistance(TPoint first, TPoint second)
+int getRmgSquaredDistance(Point first, Point second)
 {
     int dy = first.m_y - second.m_y;
     int dx = first.m_x - second.m_x;

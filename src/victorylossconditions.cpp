@@ -68,7 +68,7 @@ unsigned char VictoryConditionStruct::checkForArtifactWin()
         }
 
         for (int i = 0; i < g_currentPlayer->m_numHeroes; ++i) {
-            hero* h = g_game->getHero(g_currentPlayer->m_heroes[i]);
+            Hero* h = g_game->getHero(g_currentPlayer->m_heroes[i]);
             for (std::vector<int>::iterator it = pieces.begin();
                  it != pieces.end();) {
                 if (h->hasArtifact(*it))
@@ -109,7 +109,7 @@ unsigned char VictoryConditionStruct::checkForArtifactWin()
             g_combinationArtifacts[comboIdx].m_components;
         for (j = 0; j < g_currentPlayer->m_numHeroes; ++j) {
             int remaining = components.count();
-            hero* h = g_game->getHero(g_currentPlayer->m_heroes[j]);
+            Hero* h = g_game->getHero(g_currentPlayer->m_heroes[j]);
             for (int i = 0;; ++i) {
                 int hasComponent = components.test(i);
                 if (hasComponent) {
@@ -184,7 +184,7 @@ unsigned char VictoryConditionStruct::checkForUpgradedTown()
 
     unsigned char hallOk = 0;
     unsigned char castleOk = 0;
-    town* checkedTown =
+    Town* checkedTown =
         g_game->getTown(g_game->getTownId(m_townX, m_townY, m_townZ));
     signed char owner = checkedTown->m_owner;
     if (owner == -1)
@@ -237,7 +237,7 @@ unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
     for (;;) {
         if (g_game->onSameTeam(player, g_netLocalGamePos)) {
             for (int j = 0; j < g_game->m_players[player].m_numTowns; ++j) {
-                town* thisTown = g_game->getTown(
+                Town* thisTown = g_game->getTown(
                     g_game->m_players[player].m_townIds[j]);
                 type_point thisTownLoc(thisTown->m_mapX, thisTown->m_mapY,
                                          thisTown->m_mapZ);
@@ -260,7 +260,7 @@ unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
 
 VA(0x005f2100, 0x53)  // dc 0x190244
 bool VictoryConditionStruct::checkForHeroDefeatWin(
-    const int winningPlayer, const hero* loser)
+    const int winningPlayer, const Hero* loser)
 {
     if (m_type == VICTORY_CONDITION_DEFEAT_HERO
         && loser
@@ -275,7 +275,7 @@ bool VictoryConditionStruct::checkForHeroDefeatWin(
 }
 
 VA(0x005f2160, 0xFD)  // dc 0x1902c4
-unsigned char VictoryConditionStruct::isGrailTarget(town* thisTown)
+unsigned char VictoryConditionStruct::isGrailTarget(Town* thisTown)
 {
     type_point anyTownLoc(-1, -1, -1);
     type_point grailTownLoc(m_townX, m_townY, m_townZ);
@@ -289,7 +289,7 @@ unsigned char VictoryConditionStruct::isGrailTarget(town* thisTown)
 }
 
 VA(0x005f2260, 0x34)  // dc 0x190340
-bool VictoryConditionStruct::isTownCaptureTarget(town* thisTown)
+bool VictoryConditionStruct::isTownCaptureTarget(Town* thisTown)
 {
     if (m_type != VICTORY_CONDITION_CAPTURE_TOWN)
         return 0;
@@ -315,7 +315,7 @@ unsigned char VictoryConditionStruct::checkForTownCaptureWin()
     if (townId < 0)
         return 0;
 
-    town* capturedTown = g_game->getTown(townId);
+    Town* capturedTown = g_game->getTown(townId);
     m_playerWinner = capturedTown->m_owner;
     m_gameWon = 1;
     return 1;
@@ -323,7 +323,7 @@ unsigned char VictoryConditionStruct::checkForTownCaptureWin()
 
 VA(0x005f2390, 0x267)  // dc 0x19040c
 bool VictoryConditionStruct::checkForDefeatedMonsterWin(
-    const hero* thisHero, const type_point monsterLoc)
+    const Hero* thisHero, const type_point monsterLoc)
 {
     if (m_type == VICTORY_CONDITION_DEFEAT_ALL_MONSTERS) {
         type_point pos;
@@ -415,7 +415,7 @@ unsigned char VictoryConditionStruct::checkForTimeSurvival()
 
 VA(0x005f2860, 0x1DE)  // dc 0x190620
 unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
-    const hero* thisHero, const type_point townLoc)
+    const Hero* thisHero, const type_point townLoc)
 {
     if (m_type != VICTORY_CONDITION_TRANSPORT_ARTIFACT
         || !g_currentPlayer
@@ -538,7 +538,7 @@ static const int g_lossPortrait146 = 0x92;
 // and temporary numbering; none repairs the return layout at 82.0170%.
 // E:\gamedcs\victorylossconditions.cpp:463
 VA(0x005f2a40, 0x3C8)  // anchor-global, dc 0x1906d4
-unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
+unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const Hero* loser)
 {
     if (g_campaignMode) {
         int map;
@@ -657,7 +657,7 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
 }
 
 VA(0x005f2e10, 0x2F)
-unsigned char LossConditionStruct::heroKilled(const hero* loser)
+unsigned char LossConditionStruct::heroKilled(const Hero* loser)
 {
     if (checkForDefeatedHeroLoss(loser)) {
         m_type = LOSS_CONDITION_LOSE_HERO;
@@ -670,7 +670,7 @@ unsigned char LossConditionStruct::heroKilled(const hero* loser)
 
 VA(0x005f2e40, 0xD9)  // dc 0x19074c
 unsigned char LossConditionStruct::checkForDefeatedTownLoss(
-    const int oldOwner, const town* lostTown)
+    const int oldOwner, const Town* lostTown)
 {
     if (m_type == LOSS_CONDITION_LOSE_TOWN) {
         type_point target(m_townX, m_townY, m_townZ);

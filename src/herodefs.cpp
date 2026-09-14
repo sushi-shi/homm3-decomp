@@ -10,12 +10,16 @@
 namespace {
 
 // CodeView field pStr; each loader owns its own private string class.
-class TAutoStrPtr {
+// Before normalization (type): TAutoStrPtr.
+#ifndef AutoStrPtr
+#define AutoStrPtr TAutoStrPtr
+#endif
+class AutoStrPtr {
 public:
     // E:\gamedcs\herodefs.cpp:391, dc 0xd60d4
-    TAutoStrPtr() : m_string(0) {}
+    AutoStrPtr() : m_string(0) {}
     // E:\gamedcs\herodefs.cpp:394, dc 0xd60dc
-    ~TAutoStrPtr() { delete[] m_string; }
+    ~AutoStrPtr() { delete[] m_string; }
     // E:\gamedcs\herodefs.cpp:396, dc 0xd60f4
     void set(char* value) { m_string = value; }
     // E:\gamedcs\herodefs.cpp:398, dc 0xd60f8
@@ -30,7 +34,7 @@ private:
 VA(0x004e67a0, 0x176)  // dc 0xd5a40
 unsigned char initializeHeroTraitsTable()
 {
-    TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
+    SpreadsheetResource* resource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0067f154, heroTraitsSpreadsheetName,
                      "hotraits.txt"));
     if (!resource)
@@ -44,13 +48,13 @@ unsigned char initializeHeroTraitsTable()
     int id = 0;
     int row = 2;
     for (; id < 156; ++id, ++row) {
-        const TSpreadsheetResource::TStringVector& values =
+        const SpreadsheetResource::TStringVector& values =
             resource->getRow(row);
-        THeroTraits& traits = g_heroTraitsStorage[id];
+        HeroTraits& traits = g_heroTraitsStorage[id];
 
         DATA_COMPGEN_GUARD(0x00698b99, heroStringsGuard, heroStrings)
         DATA(0x00698eb0)
-        static TAutoStrPtr heroStrings[156];
+        static AutoStrPtr heroStrings[156];
 
         heroStrings[id].set(new char[strlen(values[0]) + 1]);
         strcpy(heroStrings[id].get(), values[0]);
@@ -71,7 +75,7 @@ unsigned char initializeHeroTraitsTable()
 VA(0x004e6920, 0x1E2)  // dc 0xd5ab4
 unsigned char initializeHeroClassTraitsTable()
 {
-    TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
+    SpreadsheetResource* resource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0067f164, heroClassTraitsSpreadsheetName,
                      "hctraits.txt"));
     if (!resource)
@@ -85,14 +89,14 @@ unsigned char initializeHeroClassTraitsTable()
     int id = 0;
     int row = 2;
     for (; id < 18; ++id, ++row) {
-        const TSpreadsheetResource::TStringVector& values =
+        const SpreadsheetResource::TStringVector& values =
             resource->getRow(row);
-        THeroClassTraits& traits = g_heroClassTraits[id];
+        HeroClassTraits& traits = g_heroClassTraits[id];
 
         DATA_COMPGEN_GUARD(0x00698b9a, heroClassStringsGuard,
                           heroClassStrings)
         DATA(0x00699120)
-        static TAutoStrPtr heroClassStrings[18];
+        static AutoStrPtr heroClassStrings[18];
 
         heroClassStrings[id].set(new char[strlen(values[0]) + 1]);
         strcpy(heroClassStrings[id].get(), values[0]);
@@ -124,7 +128,7 @@ unsigned char initializeHeroClassTraitsTable()
 VA(0x004e6b10, 0x1C8)  // dc 0xd5b28
 unsigned char initializeSSkillTraitsTable()
 {
-    TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
+    SpreadsheetResource* resource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0067f174, secondarySkillTraitsSpreadsheetName,
                      "sstraits.txt"));
     if (!resource)
@@ -138,21 +142,21 @@ unsigned char initializeSSkillTraitsTable()
     int id = 0;
     int row = 2;
     for (; id < 28; ++id, ++row) {
-        const TSpreadsheetResource::TStringVector& values =
+        const SpreadsheetResource::TStringVector& values =
             resource->getRow(row);
-        TSSkillTraits& traits = g_sSkillTraitsStorage[id];
+        SSkillTraits& traits = g_sSkillTraitsStorage[id];
 
         DATA_COMPGEN_GUARD(0x00698b98, secondarySkillStringsGuard,
                           secondarySkillNames)
         DATA(0x00698b28)
-        static TAutoStrPtr secondarySkillNames[28];
+        static AutoStrPtr secondarySkillNames[28];
 
         secondarySkillNames[id].set(new char[strlen(values[0]) + 1]);
         strcpy(secondarySkillNames[id].get(), values[0]);
         traits.m_name = secondarySkillNames[id].get();
 
         DATA(0x00698b9c)
-        static TAutoStrPtr secondarySkillLevelNames[28][3];
+        static AutoStrPtr secondarySkillLevelNames[28][3];
 
         int level;
         for (level = 0; level < 3; ++level) {
@@ -208,28 +212,28 @@ void InitializeSSkillTraits(int id, const std::vector<char* resource)
 
 // E:\gamedcs\herodefs.cpp:391
 DC_ONLY(0xd60d4, 0x8)
-void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr()
+void `anonymous namespace'::AutoStrPtr::AutoStrPtr()
 {
     // @stub
 }
 
 // E:\gamedcs\herodefs.cpp:394
 DC_ONLY(0xd60dc, 0x18)
-void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr()
+void `anonymous namespace'::AutoStrPtr::~AutoStrPtr()
 {
     // @stub
 }
 
 // E:\gamedcs\herodefs.cpp:396
 DC_ONLY(0xd60f4, 0x4)
-void `anonymous namespace'::TAutoStrPtr::set(char* pStr)
+void `anonymous namespace'::AutoStrPtr::set(char* pStr)
 {
     // @stub
 }
 
 // E:\gamedcs\herodefs.cpp:398
 DC_ONLY(0xd60f8, 0x4)
-char* `anonymous namespace'::TAutoStrPtr::get()
+char* `anonymous namespace'::AutoStrPtr::get()
 {
     // @stub
 }

@@ -64,7 +64,7 @@ static const int g_resourceDisplayOrder[NUM_RESOURCES] = {
 // therefore a measured C1 front-end handle-order wall with no source-nameable
 // lever found; preserve this source shape.
 VA(0x00558ba0, 0x2A1)  // anchor-global, dc 0x120c54
-TResourceDisplay::TResourceDisplay(heroWindow* parent, bool isSmall)
+ResourceDisplay::ResourceDisplay(heroWindow* parent, bool isSmall)
     : m_isSmall(isSmall)
 {
     if (m_isSmall) {
@@ -128,7 +128,7 @@ TResourceDisplay::TResourceDisplay(heroWindow* parent, bool isSmall)
 VA_COMPGEN(0x00558e50, 0x21, SCALAR_DELETING_DTOR, TResourceDisplay)
 
 VA(0x00558e80, 0x95)  // dc 0x120ee8
-TResourceDisplay::~TResourceDisplay()
+ResourceDisplay::~ResourceDisplay()
 {
     if (m_backgroundWidget)
         delete m_backgroundWidget;
@@ -162,7 +162,7 @@ TResourceDisplay::~TResourceDisplay()
 // DC156 proves playerData&; DC168/201 prove operator[] for the three
 // date labels in Update/Clear. Retail expands those canonical accessors.
 VA(0x00558f20, 0xF3)  // anchor-global, dc 0x120fa0
-void TResourceDisplay::update(bool drawRequested, bool update)
+void ResourceDisplay::update(bool drawRequested, bool update)
 {
     int playerPos = g_unnamed69778c;
     playerData& player = g_game->m_players[playerPos];
@@ -172,7 +172,7 @@ void TResourceDisplay::update(bool drawRequested, bool update)
         m_resourceWidgets[i]->setText(g_text);
     }
 
-    TTextResource* labels = g_generalText;
+    TextResource* labels = g_generalText;
     sprintf(g_text, "%s: %d, %s: %d, %s: %d",
         (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_0],
         static_cast<unsigned short>(g_game->m_month),
@@ -186,13 +186,13 @@ void TResourceDisplay::update(bool drawRequested, bool update)
 }
 
 VA(0x00559020, 0xA4)  // dc 0x1210b4
-void TResourceDisplay::clear()
+void ResourceDisplay::clear()
 {
     m_backgroundWidget->setPlayerPaletteColors(g_unnamed69778c);
     for (int i = 0; i < NUM_RESOURCES; ++i)
         m_resourceWidgets[i]->setText("");
 
-    TTextResource* labels = g_generalText;
+    TextResource* labels = g_generalText;
     sprintf(g_text, "%s: %d, %s: %d, %s: %d",
         (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_0],
         static_cast<unsigned short>(g_game->m_month),

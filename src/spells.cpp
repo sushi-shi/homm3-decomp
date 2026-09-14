@@ -80,7 +80,7 @@ int handleCastSpell(message& msg);
 int handleCastWallSpell(message& msg);
 int handleCastTeleport(message& msg);
 static int handleGetTeleportDestination(message& msg);
-void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex);
+void markAreaHighlights(SpellID spell, SkillMastery mastery, long hex);
 static int updateSpellTarget(long hex);
 
 // Retail .data 0x688334/0x688338, both initialised to -1 and each with
@@ -228,9 +228,9 @@ int combatManager::viewSpells() const
     // the literal eContextCombat and it is `magicTerrain` that receives the
     // combat's spell-restriction code.
     {
-        TSpellbookWindow spellbook(*m_heroes[m_currentSide],
+        SpellbookWindow spellbook(*m_heroes[m_currentSide],
                                    m_armyGroups[1 - m_currentSide],
-                                   TSpellbookWindow::eContextCombat,
+                                   SpellbookWindow::eContextCombat,
                                    m_magicTerrain);
         spellbook.doModal(0);
     }
@@ -386,7 +386,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                     && target->m_combatSide != m_currentSide
                     && !(target->m_monInfo.m_attributes & (1 << 21))
                     && target->getMirrorEffect() >= random(1, 100)) {
-                TPickANumber picker(0, m_numArmies[m_currentSide] - 1);
+                PickANumber picker(0, m_numArmies[m_currentSide] - 1);
                 int picked;
                 do {
                     picked = picker.pick();
@@ -510,7 +510,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
             m_nextActionExtra = spellToCast;
             break;
         }
-        hero* castingHero = m_heroes[side];
+        Hero* castingHero = m_heroes[side];
         const char* gender;
         if (castingHero->isMale())
             gender = g_generalText->getText(540);
@@ -538,7 +538,7 @@ static int updateSpellTarget(long hex)
     unsigned char markArea = 0;
     int creatureSpell = manager->m_nextAction == AI_ORDER_CREATURE_SPELL;
     SpellID spell = manager->m_nextActionExtra;
-    hero* castingHero = manager->m_heroes[manager->m_currentSide];
+    Hero* castingHero = manager->m_heroes[manager->m_currentSide];
     unsigned int spellFlags = g_spellTraits[spell].m_flags;
     int mastery;
     if (!castingHero)
@@ -575,7 +575,7 @@ static int updateSpellTarget(long hex)
     if (markArea)
         markAreaHighlights(
             spell,
-            static_cast<TSkillMastery>(mastery) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
+            static_cast<SkillMastery>(mastery) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
             hex);
     return result;
 }
@@ -584,7 +584,7 @@ static int updateSpellTarget(long hex)
 // Keep the function at its Dreamcast-proven source location below while the
 // annotation records retail's actual emitted placement.
 VA(0x0059f8a0, 0x293)  // retail caller+CFG role, dc 0x152240
-void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex);
+void markAreaHighlights(SpellID spell, SkillMastery mastery, long hex);
 
 VA(0x0059fb40, 0x182)  // dc 0x14f51c
 unsigned char combatManager::checkLandmine(long hex, army* currentArmy,
@@ -595,7 +595,7 @@ unsigned char combatManager::checkLandmine(long hex, army* currentArmy,
     if ((m_cells[hex].m_attributes & 8) == 0)
         return 0;
 
-    TObstacle* obstacle = &getObstacle(m_cells[hex].m_obstacleIndex);
+    Obstacle* obstacle = &getObstacle(m_cells[hex].m_obstacleIndex);
 
     if (obstacle->isVisible(currentArmy->m_combatSide))
         return 0;
@@ -605,7 +605,7 @@ unsigned char combatManager::checkLandmine(long hex, army* currentArmy,
         return 0;
 
     if (isWalking)
-        currentArmy->stopSample(army::TSampleID(0));
+        currentArmy->stopSample(army::SampleID(0));
 
     long base = obstacle->m_spellDamage;
     long damage = modifySpellDamage(base, SPELL_LAND_MINE,
@@ -630,7 +630,7 @@ unsigned char combatManager::checkLandmine(long hex, army* currentArmy,
         waitEndSample(sample, -1);
 
     if (currentArmy->m_numTroops > 0 && isWalking)
-        currentArmy->playSample(army::TSampleID(0));
+        currentArmy->playSample(army::SampleID(0));
     checkRebirth();
     return 1;
 }
@@ -644,14 +644,14 @@ unsigned char combatManager::checkFireWall(long hex, army* currentArmy,
     if ((m_cells[hex].m_attributes & 0x10) == 0)
         return 0;
 
-    TObstacle* obstacle = &getObstacle(m_cells[hex].m_obstacleIndex);
+    Obstacle* obstacle = &getObstacle(m_cells[hex].m_obstacleIndex);
 
     if (spellCastWorkChance(SPELL_FIRE_WALL, obstacle->m_owner, currentArmy,
                             0, 1, 0) <= 0.0f)
         return 0;
 
     if (isWalking)
-        currentArmy->stopSample(army::TSampleID(0));
+        currentArmy->stopSample(army::SampleID(0));
 
     long base = obstacle->m_spellDamage;
     long damage = modifySpellDamage(base, SPELL_FIRE_WALL,
@@ -665,7 +665,7 @@ unsigned char combatManager::checkFireWall(long hex, army* currentArmy,
     powEffect(-1, 1);
 
     if (currentArmy->m_numTroops > 0 && isWalking)
-        currentArmy->playSample(army::TSampleID(0));
+        currentArmy->playSample(army::SampleID(0));
     checkRebirth();
     return 1;
 }
@@ -742,9 +742,9 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                               long monsterPower)
 {
     const int otherSide = 1 - m_currentSide;
-    hero* castingHero = isMonsterSpell == SPELL_CASTER_CREATURE
+    Hero* castingHero = isMonsterSpell == SPELL_CASTER_CREATURE
         ? 0 : m_heroes[m_currentSide];
-    hero* const otherHero = m_heroes[otherSide];
+    Hero* const otherHero = m_heroes[otherSide];
     const SSpellTraits* traits = &g_spellTraits[spellId];
 
     int mastery;
@@ -889,7 +889,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 DATA_COMPGEN(0x006884a0, quicksandSampleName,
                              "Quiksand.wav"));
 
-        TPickANumber picker(0, COMBAT_GRID_CELLS - 1);
+        PickANumber picker(0, COMBAT_GRID_CELLS - 1);
         for (int i = 0; i < nhexes; ++i) {
             int hex;
             do {
@@ -908,7 +908,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
 
             spellEffect(traits->m_effect, hex, 100, 1);
 
-            TObstacle newQuicksand;
+            Obstacle newQuicksand;
             newQuicksand.m_sprite =
                 ResourceManager::getSprite(s_quicksandInfo[0].m_spriteName);
             newQuicksand.m_shape = &s_quicksandInfo[0];
@@ -945,7 +945,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 DATA_COMPGEN(0x00688490, landMineSampleName,
                              "landmine.wav"));
 
-        TPickANumber picker(0, COMBAT_GRID_CELLS - 1);
+        PickANumber picker(0, COMBAT_GRID_CELLS - 1);
         for (int i = 0; i < nhexes; ++i) {
             int hex;
             do {
@@ -964,7 +964,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
 
             spellEffect(traits->m_effect, hex, 100, 1);
 
-            TObstacle newLandmine;
+            Obstacle newLandmine;
             newLandmine.m_sprite =
                 ResourceManager::getSprite(s_landMineInfo[0].m_spriteName);
             newLandmine.m_shape = &s_landMineInfo[0];
@@ -991,11 +991,11 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     case SPELL_FORCE_FIELD: {
         spellEffect((mastery >= eMasteryAdvanced) + 0x20, targetIndex,
                     100, 1);
-        const TObstacleInfo* shape = &s_wallObstacleInfo[0];
+        const ObstacleInfo* shape = &s_wallObstacleInfo[0];
         if (mastery >= eMasteryAdvanced)
             shape = &s_wallObstacleInfo[1];
 
-        TObstacle newWall;
+        Obstacle newWall;
         newWall.m_sprite = ResourceManager::getSprite(shape->m_spriteName);
         newWall.m_shape = shape;
         newWall.m_hex = static_cast<unsigned char>(targetIndex);
@@ -1018,7 +1018,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         for (unsigned int i = 0; i < nHexes; ++i) {
             spellEffect(traits->m_effect, targetIndex, 100, 1);
 
-            TObstacle newWall;
+            Obstacle newWall;
             newWall.m_sprite =
                 ResourceManager::getSprite(s_wallObstacleInfo[4].m_spriteName);
             newWall.m_shape = &s_wallObstacleInfo[4];
@@ -1421,7 +1421,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             showSpellMessage(isMonsterSpell, spellId, 0);
             showMassSpell(m_effected, traits->m_effect, 0);
 
-            for (TObstacle* obstacle = m_obstacles.begin();
+            for (Obstacle* obstacle = m_obstacles.begin();
                  obstacle != m_obstacles.end(); ++obstacle) {
                 if (obstacle->m_sprite
                     && (m_cells[obstacle->m_hex].m_attributes & 0x3c)) {
@@ -1830,14 +1830,14 @@ static unsigned char g_sacrificeBeneficiaryValidTarget;
 VA(0x005a2d00, 0x184)  // dc 0x151e94
 int handleSacrificeBeneficiary(message& msg)
 {
-    hero* castingHero =
+    Hero* castingHero =
         g_combatManager->m_heroes[g_combatManager->m_currentSide];
     switch (msg.m_id) {
     case MESSAGE_MOUSE_MOVE: {
         long hex = g_combatManager->getGridIndex(msg.m_codeX, msg.m_codeY);
         if (hex == g_sacrificeBeneficiaryLastIndex)
             break;
-        TSkillMastery mastery = castingHero->getSpellLevel(
+        SkillMastery mastery = castingHero->getSpellLevel(
             SPELL_SACRIFICE, g_combatManager->m_magicTerrain);
         g_sacrificeBeneficiaryLastIndex = hex;
         if (g_combatManager->validSpellTarget(SPELL_SACRIFICE, mastery, hex,
@@ -1888,14 +1888,14 @@ static int g_sacrificeIndexIsValid;
 VA(0x005a2e90, 0x1D4)  // dc 0x15205c
 int handleCastSacrifice(message& msg)
 {
-    hero* castingHero =
+    Hero* castingHero =
         g_combatManager->m_heroes[g_combatManager->m_currentSide];
     switch (msg.m_id) {
     case MESSAGE_MOUSE_MOVE: {
         long hex = g_combatManager->getGridIndex(msg.m_codeX, msg.m_codeY);
         if (hex == g_sacrificeLastIndex)
             break;
-        TSkillMastery mastery = castingHero->getSpellLevel(
+        SkillMastery mastery = castingHero->getSpellLevel(
             SPELL_SACRIFICE, g_combatManager->m_magicTerrain);
         g_sacrificeLastIndex = hex;
         if (g_combatManager->validSpellTarget(SPELL_SACRIFICE, mastery, hex,
@@ -1960,7 +1960,7 @@ int handleCastSacrifice(message& msg)
 // retained pointer walk. Eight states / two reproduced objects isolate these
 // choices. Complete's chance test still rejects unordered results as retail
 // does, so the negative guard is !(chance > 0), not chance <= 0.
-void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex)
+void markAreaHighlights(SpellID spell, SkillMastery mastery, long hex)
 {
     std::vector<army*> targets;
     unsigned char changed = 0;
@@ -2082,7 +2082,7 @@ static long g_castWallIndexToCastOn = -1;
 VA(0x005a3250, 0x31C)  // retail order+handler call, dc 0x1527bc
 int handleCastWallSpell(message& msg)
 {
-    hero* castingHero =
+    Hero* castingHero =
         g_combatManager->m_heroes[g_combatManager->m_currentSide];
     SpellID spell = static_cast<SpellID>(g_combatManager->m_nextActionExtra) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
     g_combatManager->doAnimations();
@@ -2093,7 +2093,7 @@ int handleCastWallSpell(message& msg)
         long hex = g_combatManager->getGridIndex(msg.m_codeX, msg.m_codeY);
         if (hex == g_castWallIndexToCastOn)
             break;
-        TSkillMastery mastery = castingHero->getSpellLevel(
+        SkillMastery mastery = castingHero->getSpellLevel(
             spell, g_combatManager->m_magicTerrain);
         if (g_combatManager->validSpellTarget(spell, mastery, hex,
                                               g_combatManager->m_currentSide,
@@ -2152,7 +2152,7 @@ int handleCastTeleport(message& msg)
         long hex = g_combatManager->getGridIndex(msg.m_codeX, msg.m_codeY);
         if (hex == g_castTeleportPreviousHex)
             break;
-        hero* currentHero =
+        Hero* currentHero =
             g_combatManager->m_heroes[g_combatManager->m_currentSide];
         if (g_combatManager->validSpellTarget(
                 SPELL_TELEPORT,
@@ -2207,7 +2207,7 @@ unsigned char combatManager::isValidTeleport(const army* thisArmy, long newHex)
         return 0;
 
     int mastery;
-    hero* castingHero = m_heroes[m_currentSide];
+    Hero* castingHero = m_heroes[m_currentSide];
     if (castingHero)
         mastery = castingHero->getSpellLevel(0x3f, m_magicTerrain);
     else
@@ -2442,7 +2442,7 @@ unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
                 return 0;
         }
     } else if (spellId == SPELL_FORCE_FIELD) {
-        const TObstacleInfo* shape = &s_wallObstacleInfo[0];
+        const ObstacleInfo* shape = &s_wallObstacleInfo[0];
         if (mastery >= eMasteryAdvanced)
             shape = &s_wallObstacleInfo[1];
         long oddRow = (targetIndex / COMBAT_GRID_ROW_STRIDE) & 1;
@@ -2737,7 +2737,7 @@ void combatManager::markBerserkAreaEffect(long hex, long mastery,
 // expands inside it in turn.
 DC_ONLY(0x153884, 0x80)
 void combatManager::markWallAreaEffect(long targetHex,
-                                          TSkillMastery mastery,
+                                          SkillMastery mastery,
                                           std::vector<long>& result)
 {
     int rows = mastery < 2 ? 2 : 3;
@@ -2877,7 +2877,7 @@ VA(0x005a4970, 0x249)  // order-map+arity, dc 0x153b60
 void combatManager::areaEffect(long targetCell, SpellID spellType,
                                long mastery, long power)
 {
-    hero* castingHero;
+    Hero* castingHero;
     unsigned char multipleTargets;
     spellEffect(g_spellTraits[spellType].m_effect, targetCell, 100, 0);
     std::vector<army*> targets;
@@ -3868,7 +3868,7 @@ void combatManager::clearEffects()
 // single target - and records the ones that took it.
 
 VA(0x005a66d0, 0xE5)  // dc 0x155a20
-void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell,
+void combatManager::setMassSpellInfluence(const Hero* castingHero, SpellID spell,
                                           long level, long power,
                                           long castingSide,
                                           long creatureSpell)
@@ -4181,7 +4181,7 @@ void combatManager::mirrorImage(int targetIndex, int level)
 // message.c_str()` reads the local's own _Ptr slot instead.
 
 VA(0x005a7080, 0x29A)  // order-map+arity, dc 0x15627c
-void combatManager::summonElemental(SpellID spell, TCreatureType monType,
+void combatManager::summonElemental(SpellID spell, CreatureType monType,
                                     int spellPower, int level)
 {
     army summoned;
@@ -4198,7 +4198,7 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
         if (m_currentSide)
             column = rightColumn;
         {
-            TPickANumber picker(0, 10);
+            PickANumber picker(0, 10);
             while (1) {
                 int pick = picker.pick();
                 int candidate = getHexIndex(column, pick);
@@ -4430,7 +4430,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
 DC_ONLY(0x156a68, 0x84)
 inline void combatManager::resurrect(SpellID spell, int targetHex,
                                      int power, int mastery,
-                                     const hero* castingHero)
+                                     const Hero* castingHero)
 {
     army* targetArmy =
         findResurrectionTarget(spell, m_currentSide, targetHex, 0);
@@ -4470,7 +4470,7 @@ inline void combatManager::showSpellCastFailure(army* targetArmy, int spellId)
 
 VA(0x005a7890, 0x4D)  // dc 0x156b94
 long combatManager::computeSpellDamage(SpellID spell, long spellPower, long mastery,
-                                       hero* castingHero, hero* targetHero,
+                                       Hero* castingHero, Hero* targetHero,
                                        const army* target, unsigned char simulated) const
 {
     long damage = g_spellTraits[spell].m_masteryBonus[mastery]
@@ -4529,14 +4529,14 @@ long combatManager::computeSpellDamage(SpellID spell, long spellPower, long mast
 //     names the bodies where the decision differs, and this is not one.
 VA(0x005a78e0, 0x2CD)  // anchor-callee+arity, dc 0x156c30
 long combatManager::modifySpellDamage(long baseDamage, SpellID spellType,
-                                      const hero* castingHero,
-                                      const hero* affectedHero,
+                                      const Hero* castingHero,
+                                      const Hero* affectedHero,
                                       const army* targetArmy,
                                       unsigned char printResult) const
 {
     long damage = baseDamage;
     if (castingHero)
-        damage = const_cast<hero*>(castingHero)->modifySpellDamage(
+        damage = const_cast<Hero*>(castingHero)->modifySpellDamage(
             spellType, baseDamage, targetArmy);
     if (!targetArmy)
         return damage;
@@ -4739,7 +4739,7 @@ void combatManager::earthquake(int level)
                 if (bounds->m_maxY > g_combatDrawLimits694f18.m_maxY)
                     bounds->m_maxY = g_combatDrawLimits694f18.m_maxY;
                 if (frame == g_earthquakeImpactFrame) {
-                    TWallTargetId wall;
+                    WallTargetId wall;
                     memcpy(&wall, &i, sizeof wall);
                     damageWall(wall, counts[i]);
                 }
@@ -4762,7 +4762,7 @@ void combatManager::earthquake(int level)
         drawFrame(1, 0, 0, 0, 1, 0);
     } else {
         for (int i = 0; i < WALL_TARGET_COUNT; i++) {
-            TWallTargetId wall;
+            WallTargetId wall;
             memcpy(&wall, &i, sizeof wall);
             damageWall(wall, counts[i]);
         }
@@ -4777,9 +4777,9 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
                                          unsigned char firstTarget,
                                          long creatureSpell) const
 {
-    const hero* const castingHero = m_heroes[side];
-    hero* targetHero = target->getController();
-    TCreatureType creature = target->m_creatureType;
+    const Hero* const castingHero = m_heroes[side];
+    Hero* targetHero = target->getController();
+    CreatureType creature = target->m_creatureType;
     const SSpellTraits* traits = &g_spellTraits[spell];
 
     if (m_magicTerrain == MAGIC_TERRAIN_CURSED_GROUND && traits->m_level > 1)
@@ -5184,7 +5184,7 @@ CSprite* combatManager::loadSpellEffect(int effect)
 }
 
 VA(0x005a9360, 0x3C)  // dc 0x158090
-TCreatureType getElementalType(SpellID spell)
+CreatureType getElementalType(SpellID spell)
 {
     switch (spell) {
     case SPELL_SUMMON_FIRE_ELEMENTAL:
@@ -5245,7 +5245,7 @@ bool army::isInAura()
 
 // E:\gamedcs\hero.h:724
 DC_ONLY(0x1581a0, 0x18)
-unsigned char hero::isMale()
+unsigned char Hero::isMale()
 {
     // @stub
 }

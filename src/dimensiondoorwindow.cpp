@@ -15,49 +15,49 @@
 
 // E:\gamedcs\dimensiondoorwindow.cpp:53
 DC_ONLY(0x827f8, 0x140)
-void TDimensionDoorWindow::TDimensionDoorWindow()
+void DimensionDoorWindow::DimensionDoorWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:74
 DC_ONLY(0x82938, 0x68)
-void TDimensionDoorWindow::~TDimensionDoorWindow()
+void DimensionDoorWindow::~DimensionDoorWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:100
 DC_ONLY(0x829a0, 0x1E2)
-int TDimensionDoorWindow::windowHandler(message& msg)
+int DimensionDoorWindow::windowHandler(message& msg)
 {
     // @stub
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:208
 DC_ONLY(0x82b84, 0x16)
-int TDimensionDoorWindow::exitDialog(message& msg)
+int DimensionDoorWindow::exitDialog(message& msg)
 {
     // @stub
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:235
 DC_ONLY(0x82b9c, 0x114)
-void TSkuttleBoatWindow::TSkuttleBoatWindow()
+void SkuttleBoatWindow::SkuttleBoatWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:254
 DC_ONLY(0x82cb0, 0x62)
-void TSkuttleBoatWindow::~TSkuttleBoatWindow()
+void SkuttleBoatWindow::~SkuttleBoatWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:280
 DC_ONLY(0x82d14, 0x1BC)
-int TSkuttleBoatWindow::windowHandler(message& msg)
+int SkuttleBoatWindow::windowHandler(message& msg)
 {
     // @stub
 }
@@ -65,7 +65,7 @@ int TSkuttleBoatWindow::windowHandler(message& msg)
 #endif  // @carcass
 
 VA(0x004916f0, 0x164)  // dc 0x827f8
-TDimensionDoorWindow::TDimensionDoorWindow()
+DimensionDoorWindow::DimensionDoorWindow()
     : CAdvPopup(0, 0, 800, 600, 1)
 {
     m_widgets.reserve(2);
@@ -85,7 +85,7 @@ TDimensionDoorWindow::TDimensionDoorWindow()
 VA_COMPGEN(0x00491860, 0x21, SCALAR_DELETING_DTOR, TDimensionDoorWindow)
 
 VA(0x00491890, 0x6B)  // dc 0x82938
-TDimensionDoorWindow::~TDimensionDoorWindow()
+DimensionDoorWindow::~DimensionDoorWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -104,7 +104,7 @@ TDimensionDoorWindow::~TDimensionDoorWindow()
 
 // E:\gamedcs\dimensiondoorwindow.cpp:100
 VA(0x00491900, 0x1B9)  // vtable slot 9 + source order, dc 0x829a0
-int TDimensionDoorWindow::windowHandler(message& msg)
+int DimensionDoorWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -194,7 +194,7 @@ int TDimensionDoorWindow::windowHandler(message& msg)
 
 // E:\gamedcs\dimensiondoorwindow.cpp:208
 VA(0x00491ac0, 0x2C)  // vtable slot 14 + source order, dc 0x82b84
-int TDimensionDoorWindow::exitDialog(message& msg)
+int DimensionDoorWindow::exitDialog(message& msg)
 {
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = msg.m_codeY = 10;
@@ -203,7 +203,7 @@ int TDimensionDoorWindow::exitDialog(message& msg)
 }
 
 VA(0x00491af0, 0x164)  // dc 0x82b9c
-TSkuttleBoatWindow::TSkuttleBoatWindow()
+SkuttleBoatWindow::SkuttleBoatWindow()
     : CAdvPopup(0, 0, 800, 600, 1)
 {
     m_widgets.reserve(2);
@@ -223,7 +223,7 @@ TSkuttleBoatWindow::TSkuttleBoatWindow()
 VA_COMPGEN(0x00491c60, 0x21, SCALAR_DELETING_DTOR, TSkuttleBoatWindow)
 
 VA(0x00491c90, 0x6B)  // dc 0x82cb0
-TSkuttleBoatWindow::~TSkuttleBoatWindow()
+SkuttleBoatWindow::~SkuttleBoatWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -235,7 +235,7 @@ TSkuttleBoatWindow::~TSkuttleBoatWindow()
 // DC 0x82d14 uses the same exit-flag/common message tail. Restoring it removes
 // two gotos at 100%; duplicated direct exits score 81.9421%.
 VA(0x00491d00, 0x1A9)  // vtable slot 9 + source order, dc 0x82d14
-int TSkuttleBoatWindow::windowHandler(message& msg)
+int SkuttleBoatWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -315,7 +315,7 @@ int TSkuttleBoatWindow::windowHandler(message& msg)
 
 // E:\gamedcs\dimensiondoorwindow.cpp:395
 VA(0x00491eb0, 0x2c)  // vtable slot 14 + source order, dc 0x82ed0
-int TSkuttleBoatWindow::exitDialog(message& msg)
+int SkuttleBoatWindow::exitDialog(message& msg)
 {
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = msg.m_codeY = 10;
@@ -327,14 +327,14 @@ int TSkuttleBoatWindow::exitDialog(message& msg)
 
 // E:\gamedcs\dimensiondoorwindow.cpp:71
 DC_ONLY(0x82eec, 0x34)
-void* TDimensionDoorWindow::`scalar deleting destructor'(unsigned __flags)
+void* DimensionDoorWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:250
 DC_ONLY(0x82f20, 0x34)
-void* TSkuttleBoatWindow::`scalar deleting destructor'(unsigned __flags)
+void* SkuttleBoatWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

@@ -6,7 +6,10 @@
 #include "armygrp.h"  // SpellID, used by spell_level_order
 
 class garrison;
-class hero;
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero;
 
 // E:\gamedcs\events.cpp:1883 (dc 0x9cdc0). The exchange dialog sorts
 // spells by descending level, then alphabetically within a level. The body
@@ -21,7 +24,7 @@ struct spell_level_order {
 // because townmgr.h rides in recruit.cpp's closure and one declarator there
 // costs recruitUnit::Update (the known include-set-sensitive row, and
 // recruit.cpp's own +0x1b0 note records the same trade).
-void doEventGarrison(hero* inHero, garrison* thisGarrison);
+void doEventGarrison(Hero* inHero, garrison* thisGarrison);
 
 // Retail .data 0x691208, the byte directly ahead of gUnnamed691209 (the
 // "gosolo" handed-to-AI byte advmgr.h declares and documents). DoCombat's
@@ -40,8 +43,14 @@ DATA(0x00691208) extern unsigned char g_unnamed691208;
 // collides with herospec.h's), and a declarator in either would ride
 // into every AI TU's closure besides. ai_combat.cpp / ai_player.cpp
 // keep the defining claims.
-class armyGroup;
-class town;
+#ifndef ArmyGroup
+#define ArmyGroup armyGroup
+#endif
+class ArmyGroup;
+#ifndef Town
+#define Town town
+#endif
+class Town;
 class NewmapCell;
 
 // The domain of combatManager::field_13d48 (+0x13d48), the post-combat
@@ -67,12 +76,12 @@ public:
     ~CTurnDurationPause();
 };
 
-unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
-                              armyGroup& defendingArmy, town* defendingTown,
+unsigned char aiQuickCombat(Hero* attackingHero, Hero* defendingHero,
+                              ArmyGroup& defendingArmy, Town* defendingTown,
                               NewmapCell* cell);
 // Dreamcast ai_player.cpp:2817 proves the enemy reference parameter.
-void splitArmies(hero* currentHero, const hero* enemyHero,
-                  const armyGroup& enemy);
+void splitArmies(Hero* currentHero, const Hero* enemyHero,
+                  const ArmyGroup& enemy);
 
 // Named indices into advevent.txt, the adventure-object text resource
 // events.obj loads through InitializeAdventureEventText (0x49e0e0).

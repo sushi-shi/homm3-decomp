@@ -47,15 +47,19 @@ DATA(0x0067ff50) POINT g_mouseHotSpots[mouseManager::MAX_POINTER_SETS][144];
 // original source owns both in-class bodies here at lines 291/298. Retail
 // expands or calls each retained body per site; the fs:[0] frame in users
 // is the unwind scaffolding).
-class TCSLock {
+// Before normalization (type): TCSLock.
+#ifndef CSLock
+#define CSLock TCSLock
+#endif
+class CSLock {
 public:
     VA(0x0050d890, 0x19)  // byte-identified out-of-line copy, dc 0xff7e0
-    TCSLock(CRITICAL_SECTION* criticalSection)
+    CSLock(CRITICAL_SECTION* criticalSection)
         : m_section(criticalSection) {
         EnterCriticalSection(m_section);
     }
     VA(0x0050cd80, 0xA)  // anchor-import (__imp__LeaveCriticalSection@4), dc 0xff800
-    ~TCSLock() { LeaveCriticalSection(m_section); }
+    ~CSLock() { LeaveCriticalSection(m_section); }
 
     CRITICAL_SECTION* m_section;
 };
@@ -145,7 +149,7 @@ int mouseManager::main(message& msg)
 VA(0x0050cca0, 0xE0)  // dc 0xfeb1c
 void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
 {
-    TCSLock lock(&m_sectionMouse);
+    CSLock lock(&m_sectionMouse);
     if (m_status != 1)
         return;
     if (m_noChangePointer != 0)
@@ -198,7 +202,7 @@ void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
 VA(0x0050cd90, 0x770)  // anchor-global, dc 0xfec54
 void mouseManager::update(bool forceIt)
 {
-    TCSLock lock(&m_sectionMouse);
+    CSLock lock(&m_sectionMouse);
     // The new rectangle belongs to the outer procedure scope.
     RECT newRect;
 
@@ -423,7 +427,7 @@ void mouseManager::restoreUnderlying(
 VA(0x0050d540, 0x6F)  // dc 0xff3a8
 void mouseManager::hidePointer()
 {
-    TCSLock lock(&m_sectionMouse);
+    CSLock lock(&m_sectionMouse);
     if (++m_hideCount == 1 && !IsIconic(g_hwndApp))
         update(1);
 }
@@ -431,7 +435,7 @@ void mouseManager::hidePointer()
 VA(0x0050d5b0, 0xD0)  // dc 0xff3e0
 void mouseManager::showPointer(bool force)
 {
-    TCSLock lock(&m_sectionMouse);
+    CSLock lock(&m_sectionMouse);
     if (force)
         m_hideCount = 1;
     if (m_hideCount > 0 && --m_hideCount == 0) {
@@ -449,7 +453,7 @@ void mouseManager::showPointer(bool force)
 // ShowPointer, including MouseCoords and both lock boundaries.
 void mouseManager::getPointerPosition()
 {
-    TCSLock lock(&m_sectionMouse);
+    CSLock lock(&m_sectionMouse);
     int x, y;
     mouseCoords(x, y);
     m_currentX = x;
@@ -459,7 +463,7 @@ void mouseManager::getPointerPosition()
 VA(0x0050d680, 0x210)  // anchor-global, dc 0xff484
 void mouseManager::checkUpdate()
 {
-    TCSLock lock(&m_sectionMouse);
+    CSLock lock(&m_sectionMouse);
     // DC procedure 0xff484 owns update_time and animate_time as unsigned
     // long function statics (NB11 owner record 5144). Retail's one shared
     // guard byte at 0x69ca20 tests bits 1/2 for these two initializers.
@@ -505,7 +509,7 @@ void mouseManager::checkUpdate()
 VA(0x0050d8b0, 0x16B)  // dc 0xff610
 void mouseManager::loadFrame(int newFrame)
 {
-    TCSLock lock(&m_sectionMouse);
+    CSLock lock(&m_sectionMouse);
 
     DDBLTFX fx;
     memset(&fx, 0, sizeof(fx));

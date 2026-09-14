@@ -3,7 +3,10 @@
 #define HOMM3_RMG_REQUEST_H
 
 #include "va.h"
-class TAbstractFile;
+#ifndef AbstractFile
+#define AbstractFile TAbstractFile
+#endif
+class AbstractFile;
 
 // The generator's result code (retail 0x54c090's return, dispatched through
 // GenerateRandomMap's four-entry jump table). Zero is success; each failure
@@ -23,7 +26,11 @@ enum ERandomMapResult {
 // field_48 = 0 and mapVersion = 2. Named where the caller contract proves a
 // role, ORDINAL otherwise - no symbol survives for this type. It is shared
 // through this header for the selection window and the RMG implementation.
-class TRandomMapRequest {
+// Before normalization (type): TRandomMapRequest.
+#ifndef RandomMapRequest
+#define RandomMapRequest TRandomMapRequest
+#endif
+class RandomMapRequest {
 public:
     // Set to 1 for every seat the lobby has a live player record for; the
     // constructor zeroes both dwords.
@@ -48,10 +55,10 @@ public:
     // same ordinals EGameVersion carries).
     int m_mapVersion;                 // +0x4c
 
-    TRandomMapRequest(int width, int height, int levels);
+    RandomMapRequest(int width, int height, int levels);
     int generate(const char* fileName, void* progress);
-    int generateToFile(TAbstractFile* outfile, void* progress);
+    int generateToFile(AbstractFile* outfile, void* progress);
 };
-SIZE(TRandomMapRequest, 0x50);
+SIZE(RandomMapRequest, 0x50);
 
 #endif

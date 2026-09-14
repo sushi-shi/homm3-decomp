@@ -7,8 +7,14 @@
 #include "artifact.h"
 #include "struct.h"
 
-class hero;
-class town;
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero;
+#ifndef Town
+#define Town town
+#endif
+class Town;
 
 class VictoryConditionStruct {
 public:
@@ -22,7 +28,7 @@ public:
     // first retail consumer whose register schedule distinguishes the typed
     // member from an int-to-enum bridge. Storage remains the same dword;
     // game.cpp's loaders cross the map-format ordinal into it.
-    TArtifact m_artifactNum;
+    Artifact m_artifactNum;
     // The Dreamcast field list (dump 0x3e34) orders ArtifactNum,
     // CreatureType, NumCreatures between AppliesToComputer and
     // ResourceType; retail widens the trailing pair to ints.
@@ -35,7 +41,7 @@ public:
     // checker needs the enum type for its armyGroup call; display-only
     // consumers use the same proven representation without pulling the enum
     // through fragile include cycles.
-    TCreatureType m_creatureType;
+    CreatureType m_creatureType;
     int m_numCreatures;
     int m_resourceType;
     int m_resourceAmount;
@@ -82,18 +88,18 @@ public:
     unsigned char checkForTotalCreatures();
     unsigned char checkForTotalResources();
     unsigned char checkForUpgradedTown();
-    bool checkForHeroDefeatWin(int winningPlayer, const hero* loser);
-    bool isTownCaptureTarget(town* thisTown);
+    bool checkForHeroDefeatWin(int winningPlayer, const Hero* loser);
+    bool isTownCaptureTarget(Town* thisTown);
     unsigned char checkForTownCaptureWin();
     // `?CheckForDefeatedMonsterWin@VictoryConditionStruct@@QAA_NPBVhero@@
     // Utype_point@@@Z` fixes the whole signature - public, bool, a const
-    bool checkForDefeatedMonsterWin(const hero* thisHero,
+    bool checkForDefeatedMonsterWin(const Hero* thisHero,
                                     const type_point monsterLoc);
     unsigned char checkForFlaggedGeneratorWin();
     unsigned char checkForFlaggedMineWin();
-    unsigned char checkForArtifactTransportWin(const hero* thisHero,
+    unsigned char checkForArtifactTransportWin(const Hero* thisHero,
                                                const type_point townLoc);
-    unsigned char isGrailTarget(town* thisTown);
+    unsigned char isGrailTarget(Town* thisTown);
     unsigned char checkForTimeSurvival();
     unsigned char checkForArtifactWin();
     unsigned char checkForGrailBuildingWin();
@@ -117,10 +123,10 @@ public:
     VA(0x0045bac0, 0xE)  // retained retail body; formerly enrolled by CLASS_CTOR
     LossConditionStruct()
       : m_type(-1), m_gameLost(0), m_playerLoser(-1) {}
-    unsigned char checkForDefeatedHeroLoss(const hero* loser);
-    unsigned char heroKilled(const hero* loser);
+    unsigned char checkForDefeatedHeroLoss(const Hero* loser);
+    unsigned char heroKilled(const Hero* loser);
     unsigned char checkForDefeatedTownLoss(int oldOwner,
-                                           const town* lostTown);
+                                           const Town* lostTown);
     unsigned char checkForTimeLimitExpired();
 };
 SIZE(LossConditionStruct, 0x24);

@@ -20,12 +20,15 @@
 // cross this TU. Type NAMES are provisional (no DC/NH3API evidence).
 class palette;
 class paletteHiColor;
-class TPalette24;
+#ifndef Palette24
+#define Palette24 TPalette24
+#endif
+class Palette24;
 class sample;
 
 void setPlayerPaletteColors(unsigned short* pal, int whichPlayer);
 void setPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
-void setPlayerPaletteColors(TPalette24& pal, int whichPlayer);
+void setPlayerPaletteColors(Palette24& pal, int whichPlayer);
 
 // Layout PROVEN by the retail ctor 0x455ef0 (member stores) and dtor
 // 0x4560f0 (member teardown): buttonIcon@0x30, normalFrame@0x34,
@@ -110,7 +113,7 @@ public:
 // [this+0x68]). Total 112.
 class textButton : public button {
 public:
-    textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor newColor);
+    textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::Color newColor);
 
     virtual void draw() const;    // slot 4, retail 0x456ca0
 
@@ -118,7 +121,7 @@ public:
 
 private:
     font* m_font;
-    font::TColor m_textColor;
+    font::Color m_textColor;
 };
 
 // DC gives only a forward ref. The dtor (retail 0x456db0) tears down

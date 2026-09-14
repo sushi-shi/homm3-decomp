@@ -84,7 +84,7 @@ void type_bottom_view_window::animate()
 // E:\gamedcs\bottomviewsubwindow.cpp:77
 // RETAIL_LOCATED(0x00450dd0, 0x319)  // anchor-vtable + anchor-caller
 DC_ONLY(0x5518c, 0x2BC)
-void TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
+void BottomViewNewTurn::BottomViewNewTurn(heroWindow* parent)
 {
     // @stub
 }
@@ -92,7 +92,7 @@ void TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
 // E:\gamedcs\bottomviewsubwindow.cpp:121
 // RETAIL_LOCATED(0x004511a0, 0x79)  // anchor-vtable + anchor-caller
 DC_ONLY(0x55448, 0x64)
-void TBottomViewNewTurn::animate()
+void BottomViewNewTurn::animate()
 {
     // @stub
 }
@@ -100,7 +100,7 @@ void TBottomViewNewTurn::animate()
 // E:\gamedcs\bottomviewsubwindow.cpp:146
 // RETAIL_LOCATED(0x00451220, 0x393)  // anchor-vtable + anchor-caller
 DC_ONLY(0x554ac, 0x2BC)
-void TBottomViewResourceMessage::TBottomViewResourceMessage(heroWindow* parent, int res, int quantity, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message)
+void BottomViewResourceMessage::BottomViewResourceMessage(heroWindow* parent, int res, int quantity, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message)
 {
     // @stub
 }
@@ -108,7 +108,7 @@ void TBottomViewResourceMessage::TBottomViewResourceMessage(heroWindow* parent, 
 // E:\gamedcs\bottomviewsubwindow.cpp:197
 // RETAIL_LOCATED(0x00451820, 0x1DC)  // anchor-vtable + anchor-caller
 DC_ONLY(0x55768, 0x140)
-void TBottomViewMessage::TBottomViewMessage(heroWindow* parent, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message)
+void BottomViewMessage::BottomViewMessage(heroWindow* parent, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message)
 {
     // @stub
 }
@@ -116,7 +116,7 @@ void TBottomViewMessage::TBottomViewMessage(heroWindow* parent, const std::basic
 // E:\gamedcs\bottomviewsubwindow.cpp:222
 // RETAIL_LOCATED(0x00451ab0, 0x68A)  // anchor-vtable + anchor-caller
 DC_ONLY(0x558a8, 0x54C)
-void TBottomViewHero::TBottomViewHero(heroWindow* parent)
+void BottomViewHero::BottomViewHero(heroWindow* parent)
 {
     // @stub
 }
@@ -124,7 +124,7 @@ void TBottomViewHero::TBottomViewHero(heroWindow* parent)
 // E:\gamedcs\bottomviewsubwindow.cpp:352
 // RETAIL_LOCATED(0x004521f0, 0x8D4)  // anchor-vtable + anchor-caller
 DC_ONLY(0x55df4, 0x5C4)
-void TBottomViewTown::TBottomViewTown(heroWindow* parent)
+void BottomViewTown::BottomViewTown(heroWindow* parent)
 {
     // @stub
 }
@@ -132,7 +132,7 @@ void TBottomViewTown::TBottomViewTown(heroWindow* parent)
 // E:\gamedcs\bottomviewsubwindow.cpp:515
 // RETAIL_LOCATED(0x00452b80, 0x620)  // anchor-vtable + anchor-caller
 DC_ONLY(0x563b8, 0x4C8)
-void TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
+void BottomViewKingdom::BottomViewKingdom(heroWindow* parent)
 {
     // @stub
 }
@@ -140,14 +140,14 @@ void TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
 // E:\gamedcs\bottomviewsubwindow.cpp:599
 // RETAIL_LOCATED(0x00453250, 0x3EE)  // anchor-vtable + anchor-caller
 DC_ONLY(0x56880, 0x33C)
-void TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
+void BottomViewEnemyTurn::BottomViewEnemyTurn(heroWindow* parent)
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:646
 DC_ONLY(0x56bbc, 0x58)
-long TBottomViewEnemyTurn::sumMobility(long player_id)
+long BottomViewEnemyTurn::sumMobility(long player_id)
 {
     // @stub
 }
@@ -155,7 +155,7 @@ long TBottomViewEnemyTurn::sumMobility(long player_id)
 // E:\gamedcs\bottomviewsubwindow.cpp:661
 // RETAIL_LOCATED(0x004536f0, 0x271)  // anchor-vtable + anchor-caller
 DC_ONLY(0x56c14, 0x1E4)
-void TBottomViewEnemyTurn::animate()
+void BottomViewEnemyTurn::animate()
 {
     // @stub
 }
@@ -184,98 +184,98 @@ void* type_bottom_view_window::`scalar deleting destructor'(unsigned __flags)
 
 // E:\gamedcs\bottomviewsubwindow.cpp:118
 DC_ONLY(0x56e70, 0x34)
-void* TBottomViewNewTurn::`scalar deleting destructor'(unsigned __flags)
+void* BottomViewNewTurn::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:118
 DC_ONLY(0x56ea4, 0x18)
-void TBottomViewNewTurn::~TBottomViewNewTurn()
+void BottomViewNewTurn::~BottomViewNewTurn()
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:183
 DC_ONLY(0x56ebc, 0x34)
-void* TBottomViewResourceMessage::`scalar deleting destructor'(unsigned __flags)
+void* BottomViewResourceMessage::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:183
 DC_ONLY(0x56ef0, 0x18)
-void TBottomViewResourceMessage::~TBottomViewResourceMessage()
+void BottomViewResourceMessage::~BottomViewResourceMessage()
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:209
 DC_ONLY(0x56f08, 0x34)
-void* TBottomViewMessage::`scalar deleting destructor'(unsigned __flags)
+void* BottomViewMessage::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:209
 DC_ONLY(0x56f3c, 0x18)
-void TBottomViewMessage::~TBottomViewMessage()
+void BottomViewMessage::~BottomViewMessage()
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:339
 DC_ONLY(0x56f54, 0x34)
-void* TBottomViewHero::`scalar deleting destructor'(unsigned __flags)
+void* BottomViewHero::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:339
 DC_ONLY(0x56f88, 0x18)
-void TBottomViewHero::~TBottomViewHero()
+void BottomViewHero::~BottomViewHero()
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:503
 DC_ONLY(0x56fa0, 0x34)
-void* TBottomViewTown::`scalar deleting destructor'(unsigned __flags)
+void* BottomViewTown::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:503
 DC_ONLY(0x56fd4, 0x18)
-void TBottomViewTown::~TBottomViewTown()
+void BottomViewTown::~BottomViewTown()
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:586
 DC_ONLY(0x56fec, 0x34)
-void* TBottomViewKingdom::`scalar deleting destructor'(unsigned __flags)
+void* BottomViewKingdom::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:586
 DC_ONLY(0x57020, 0x18)
-void TBottomViewKingdom::~TBottomViewKingdom()
+void BottomViewKingdom::~BottomViewKingdom()
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:643
 DC_ONLY(0x57038, 0x34)
-void* TBottomViewEnemyTurn::`scalar deleting destructor'(unsigned __flags)
+void* BottomViewEnemyTurn::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:643
 DC_ONLY(0x5706c, 0x18)
-void TBottomViewEnemyTurn::~TBottomViewEnemyTurn()
+void BottomViewEnemyTurn::~BottomViewEnemyTurn()
 {
     // @stub
 }
@@ -394,7 +394,7 @@ static const char* g_newWeekIcons[5] = {
 // are the same `text = format_string(...)` statement.
 
 VA(0x00450dd0, 0x319)  // dc 0x5518c
-TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
+BottomViewNewTurn::BottomViewNewTurn(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
     int id = BOTTOM_VIEW_BACKGROUND_ID;
@@ -439,12 +439,12 @@ TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
 VA_COMPGEN(0x004510f0, 0x21, SCALAR_DELETING_DTOR, TBottomViewNewTurn)
 
 VA(0x00451120, 0x78)  // dc 0x56ea4
-TBottomViewNewTurn::~TBottomViewNewTurn()
+BottomViewNewTurn::~BottomViewNewTurn()
 {
 }
 
 VA(0x004511a0, 0x79)  // dc 0x55448
-void TBottomViewNewTurn::animate()
+void BottomViewNewTurn::animate()
 {
     if (m_frame == m_icon->m_sprite->getNumFrames(0) - 1)
         return;
@@ -523,7 +523,7 @@ void TBottomViewNewTurn::animate()
 // buffered stream is not its explanation; what `str` is remains open,
 // and it is the first place to look for the five missing candidates.
 VA(0x00451220, 0x393)  // anchor-vtable 0x63bb1c + advManager::UpdBottomViewResMsg, dc 0x554ac
-TBottomViewResourceMessage::TBottomViewResourceMessage(
+BottomViewResourceMessage::BottomViewResourceMessage(
     heroWindow* parent, int res, int quantity,
     const std::string* message)
     : type_bottom_view_window(parent)
@@ -598,12 +598,12 @@ void ostrstream::`vbase destructor'();
 VA_COMPGEN(0x00451770, 0x21, SCALAR_DELETING_DTOR, TBottomViewResourceMessage)
 
 VA(0x004517a0, 0x78)  // dc 0x56ef0
-TBottomViewResourceMessage::~TBottomViewResourceMessage()
+BottomViewResourceMessage::~BottomViewResourceMessage()
 {
 }
 
 VA(0x00451820, 0x1DC)  // dc 0x55768
-TBottomViewMessage::TBottomViewMessage(heroWindow* parent,
+BottomViewMessage::BottomViewMessage(heroWindow* parent,
                                        const std::string* message)
     : type_bottom_view_window(parent)
 {
@@ -624,7 +624,7 @@ TBottomViewMessage::TBottomViewMessage(heroWindow* parent,
 VA_COMPGEN(0x00451a00, 0x21, SCALAR_DELETING_DTOR, TBottomViewMessage)
 
 VA(0x00451a30, 0x78)  // dc 0x56f3c
-TBottomViewMessage::~TBottomViewMessage()
+BottomViewMessage::~BottomViewMessage()
 {
 }
 
@@ -713,7 +713,7 @@ static const int g_heroArmyCoords[7][2] = {
 // one-instruction loop header the preheader `jmp`s past. Two lockstep IVs,
 // and VC6 picks the survivor itself; not a guard or return shape.
 VA(0x00451ab0, 0x68A)  // anchor-vtable 0x63bb2c + advManager::UpdBottomViewHero, dc 0x558a8
-TBottomViewHero::TBottomViewHero(heroWindow* parent)
+BottomViewHero::BottomViewHero(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
     m_widgets.reserve(25);
@@ -721,7 +721,7 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
     m_widgets.push_back(new bitmapBorder(0, 0, 176, 166,
         BOTTOM_VIEW_BACKGROUND_ID, "AdStatHr.pcx", 0x800));
 
-    hero* who = g_game->getCurrHero();
+    Hero* who = g_game->getCurrHero();
 
     m_widgets.push_back(new bitmapBorder(3, 2, 58, 64, 0x7d1,
         g_heroTraits[who->m_portrait].m_largePortraitName, 0x800));
@@ -784,7 +784,7 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
 VA_COMPGEN(0x00452140, 0x21, SCALAR_DELETING_DTOR, TBottomViewHero)
 
 VA(0x00452170, 0x78)  // dc 0x56f88
-TBottomViewHero::~TBottomViewHero()
+BottomViewHero::~BottomViewHero()
 {
 }
 
@@ -913,7 +913,7 @@ static const int g_townArmyCoords[7][2] = {
 // Address-arithmetic review (2026-09-10): indexing army_pos by the packed
 // display slot replaces its flattened int* walk and raises 94.0054 to 94.80%.
 VA(0x004521f0, 0x8D4)  // anchor-vtable 0x63bb34 + advManager::UpdBottomViewTown, dc 0x55df4
-TBottomViewTown::TBottomViewTown(heroWindow* parent)
+BottomViewTown::BottomViewTown(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
     m_widgets.reserve(25);
@@ -921,7 +921,7 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
     m_widgets.push_back(new bitmapBorder(0, 0, 176, 166,
         BOTTOM_VIEW_BACKGROUND_ID, "AdStatCs.pcx", 0x800));
 
-    town* which = g_game->getCurrTown();
+    Town* which = g_game->getCurrTown();
 
     m_widgets.push_back(new iconWidget(3, 2, 58, 64, 0x7d1, "itpt.def",
         which->getPortraitFrame(false), 0, 0, 0, 0x10));
@@ -986,7 +986,7 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         // DC lines 452/457/476 distinguish army slots from packed display
         // positions. Keep the two-dimensional army_pos table's row boundary.
         int displaySlot = 0;
-        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        for (int i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
             int creature = which->getArmy().m_armies[i];
             if (creature == -1)
                 continue;
@@ -1023,7 +1023,7 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
 VA_COMPGEN(0x00452ad0, 0x21, SCALAR_DELETING_DTOR, TBottomViewTown)
 
 VA(0x00452b00, 0x78)  // dc 0x56fd4
-TBottomViewTown::~TBottomViewTown()
+BottomViewTown::~BottomViewTown()
 {
 }
 
@@ -1071,7 +1071,7 @@ TBottomViewTown::~TBottomViewTown()
 // initializer and a hand-written 3/0/1/2 order all give the same bytes.
 
 VA(0x00452b80, 0x620)  // anchor-vtable 0x63bb3c + advManager::UpdBottomViewKingdom, dc 0x563b8
-TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
+BottomViewKingdom::BottomViewKingdom(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
     int i;
@@ -1089,7 +1089,7 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
     townCount[3] = 0;
 
     for (i = 0; i < g_currentPlayer->m_numTowns; i++) {
-        town* which = g_game->getTown(g_currentPlayer->m_townIds[i]);
+        Town* which = g_game->getTown(g_currentPlayer->m_townIds[i]);
         if (which->hasBuilding(HALL_CAPITOL_ID, 1))
             townCount[3]++;
         else if (which->hasBuilding(HALL_CITY_ID, 1))
@@ -1145,7 +1145,7 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
 VA_COMPGEN(0x004531a0, 0x21, SCALAR_DELETING_DTOR, TBottomViewKingdom)
 
 VA(0x004531d0, 0x78)  // dc 0x57020
-TBottomViewKingdom::~TBottomViewKingdom()
+BottomViewKingdom::~BottomViewKingdom()
 {
 }
 
@@ -1160,7 +1160,7 @@ TBottomViewKingdom::~TBottomViewKingdom()
 //     'medfont.fnt' in font::PRIMARY, centred, with id -1.
 
 VA(0x00453250, 0x3EE)  // dc 0x56880
-TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
+BottomViewEnemyTurn::BottomViewEnemyTurn(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
     int id = BOTTOM_VIEW_ENEMY_TURN_ID;
@@ -1217,7 +1217,7 @@ VA_COMPGEN(0x00453970, 0xAE, CLASS_CTOR, basic_ostream)
 VA_COMPGEN(0x00455820, 0x10B, CLASS_CTOR, numpunct)
 
 VA(0x00453670, 0x78)  // dc 0x5706c
-TBottomViewEnemyTurn::~TBottomViewEnemyTurn()
+BottomViewEnemyTurn::~BottomViewEnemyTurn()
 {
 }
 
@@ -1228,7 +1228,7 @@ TBottomViewEnemyTurn::~TBottomViewEnemyTurn()
 // `gpGame->players[player_id]` twice instead, our CL re-derives both
 // addresses from gpGame every iteration. Same lever as the mouseX/mouseY
 // and glTimers hoists - the value has to be a statement before the call.
-long TBottomViewEnemyTurn::sumMobility(long playerId)
+long BottomViewEnemyTurn::sumMobility(long playerId)
 {
     playerData* player = &g_game->m_players[playerId];
     long total = 1000;
@@ -1241,7 +1241,7 @@ long TBottomViewEnemyTurn::sumMobility(long playerId)
 // in TBottomViewNewTurn::animate.
 
 VA(0x004536f0, 0x271)  // dc 0x56c14
-void TBottomViewEnemyTurn::animate()
+void BottomViewEnemyTurn::animate()
 {
     unsigned long lastStep = m_lastStepTime;
     if (static_cast<long>(GameTime::get() - lastStep) < m_frameDelay)

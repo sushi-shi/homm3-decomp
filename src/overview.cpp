@@ -39,7 +39,7 @@ DATA(0x0069cbbc) static int g_overviewItemCounts[2];
 // Dreamcast names the overview screen's resource strip. Complete proves the
 // intervening pointer cell by both recruit-dialog refresh paths below.
 DATA(0x0069cbc4) static unsigned char g_overviewBackpackStart[8];
-DATA(0x0069cbcc) static TResourceDisplay* g_overviewBank;
+DATA(0x0069cbcc) static ResourceDisplay* g_overviewBank;
 DATA(0x0069cbd0) static int g_lastDynamicTop;
 // One artifact-page byte per local-player hero slot. The original source name
 // is not present in either symbol stream, so this spelling remains provisional.
@@ -196,13 +196,13 @@ void game::setupDynamicStuff(int update, int forceUpdate)
         if (g_overviewType == 1) {
             int lookup;
             int offsetToMon;
-            TCreatureType creature;
-            hero* occupyingHero;
+            CreatureType creature;
+            Hero* occupyingHero;
             // Retail reaches GetLocalPlayer through the global (0x51bf82
             // loads gpGame into ecx) while the GetTown expansion beside it
             // still uses `this` from [ebp-0x44]; the two are not the same
             // receiver in the source.
-            town* currTown = getTown(g_game->getLocalPlayer()->m_townIds[
+            Town* currTown = getTown(g_game->getLocalPlayer()->m_townIds[
                 g_overviewTop[g_overviewType] + row]);
 
             g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
@@ -289,16 +289,16 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             }
 
             for (item = 0; item < 7; item++) {
-                if (static_cast<const town*>(currTown)->getArmy()
+                if (static_cast<const Town*>(currTown)->getArmy()
                             .m_armies[item] != CREATURE_NONE
-                        && static_cast<const town*>(currTown)->getArmy()
+                        && static_cast<const Town*>(currTown)->getArmy()
                                .m_numTroops[item] > 0) {
                     g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
                         monsterX[item] + 336,
                         monsterY[item] + row * 116 + 27,
                         32, 32, rowWidgetId + item + 5,
                         "cprsmall.def",
-                        static_cast<const town*>(currTown)->getArmy()
+                        static_cast<const Town*>(currTown)->getArmy()
                                 .m_armies[item] + 2,
                         0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
@@ -308,7 +308,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                     curBitmap++;
 
                     sprintf(g_text, "%d",
-                            static_cast<const town*>(currTown)->getArmy()
+                            static_cast<const Town*>(currTown)->getArmy()
                                 .m_numTroops[item]);
                     g_textWidgetDynamic[slot + curText] = new textWidget(
                         monsterX[item] + 347,
@@ -367,14 +367,14 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
             g_textWidgetDynamic[slot + curText] = new textWidget(
                 26, row * 116 + 102, 54, 32, (*g_generalText)[266],
-                "smalfont.fnt", static_cast<font::TColor>(7),
+                "smalfont.fnt", static_cast<font::Color>(7),
                 rowWidgetId + 97, font::LEFT_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
             curText++;
 
             g_textWidgetDynamic[slot + curText] = new textWidget(
                 373, row * 116 + 102, 56, 32, (*g_generalText)[267],
-                "smalfont.fnt", static_cast<font::TColor>(7),
+                "smalfont.fnt", static_cast<font::Color>(7),
                 rowWidgetId + 47, font::LEFT_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
             curText++;
@@ -480,7 +480,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             }
         } else {
             int offsetToMon;
-            hero* currHero = getHero(g_overviewHeroIds[
+            Hero* currHero = getHero(g_overviewHeroIds[
                 g_overviewTop[g_overviewType] + row]);
 
             g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
@@ -708,7 +708,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             } else {
                 offsetToMon = 292;
                 for (item = 0; item < kNumArtifactSlots / 2; item++) {
-                    artifact = currHero->getArtifact(TArtifactSlot(
+                    artifact = currHero->getArtifact(ArtifactSlot(
                         (item + (kNumArtifactSlots / 2)
                             * g_overviewHeroArtifactPage[heroNumber])
                             % kNumArtifactSlots));
@@ -871,7 +871,7 @@ void game::setupNewOverviewType(int whichType, unsigned char update)
 }
 
 VA(0x0051e670, 0x14D)  // dc 0x106d18
-void TOverviewWindow::updateFlaggableIcon(int i)
+void OverviewWindow::updateFlaggableIcon(int i)
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
@@ -907,7 +907,7 @@ void TOverviewWindow::updateFlaggableIcon(int i)
 // through the global overview-window pointer.
 // E:\gamedcs\overview.cpp:1279, dc 0x106d98
 VA(0x0051e7c0, 0x2A)  // called by WindowHandler and DoFlaggableButtons
-void TOverviewWindow::updateFlaggableIcons()
+void OverviewWindow::updateFlaggableIcons()
 {
     for (int i = 0; i < 7; ++i)
         updateFlaggableIcon(i);
@@ -915,7 +915,7 @@ void TOverviewWindow::updateFlaggableIcons()
 }
 
 VA(0x0051e7f0, 0xE0)  // dc 0x106dcc
-void TOverviewWindow::doFlaggableButtons(int which)
+void OverviewWindow::doFlaggableButtons(int which)
 {
     switch (which) {
     case OVERVIEW_FLAGGABLE_HOME:
@@ -1008,7 +1008,7 @@ void game::overview()
 
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
 
-    g_overWin = new TOverviewWindow();
+    g_overWin = new OverviewWindow();
     if (!g_overWin)
         memError();
 
@@ -1022,7 +1022,7 @@ void game::overview()
 
     setWinText(g_overWin, 9);
 
-    g_overviewBank = new TResourceDisplay(g_overWin, 1);
+    g_overviewBank = new ResourceDisplay(g_overWin, 1);
     g_overviewBank->update(1, 0);
 
     signed char res[7];
@@ -1046,7 +1046,7 @@ void game::overview()
     }
 
     g_overviewFlaggableTop = 0;
-    static_cast<TOverviewWindow*>(g_overWin)->updateFlaggableIcons();
+    static_cast<OverviewWindow*>(g_overWin)->updateFlaggableIcons();
 
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 27;
@@ -1131,20 +1131,20 @@ static void decrementBackpackStart(long slot)
 // Complete emits no standalone body: VC6 expands both calls below, preserving
 // the helper while producing the two retail constructor/dialog/destructor
 // sequences. Open-coding either site is the negative source-shape control.
-static inline void showArtifact(hero* currHero,
+static inline void showArtifact(Hero* currHero,
                                  const type_artifact& artifact,
                                  unsigned char rightMouse)
 {
     if (artifact.m_artifactId == ARTIFACT_SPELLBOOK) {
-        TSpellbookWindow spellBookWindow(
-            *currHero, 0, TSpellbookWindow::eContextNeither,
+        SpellbookWindow spellBookWindow(
+            *currHero, 0, SpellbookWindow::eContextNeither,
             currHero->getSpecialTerrain());
         spellBookWindow.doModal(0);
     } else if (artifact.m_artifactId != ARTIFACT_NONE) {
         normalDialog(
             artifact.getDescription().c_str(),
-            rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                        : hero::PRIMARY_STAT_DIALOG_TYPE,
+            rightMouse ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                        : Hero::PRIMARY_STAT_DIALOG_TYPE,
             -1, 28, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 }
@@ -1172,7 +1172,7 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
             // Dreamcast's quotient iSlot.  Negative control: mutating iSlot
             // in this arm reaches 96.76% but emits four retail-absent
             // NormalDialog calls and a 119th CFG block.
-            hero* currHero = getHero(g_overviewHeroIds[selectedIndex]);
+            Hero* currHero = getHero(g_overviewHeroIds[selectedIndex]);
 
             switch (codeY) {
             case OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
@@ -1234,8 +1234,8 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
                 normalDialog(
                     g_sSkillTraits[skill].m_levelNames[
                         currHero->m_skillLevel[skill] - 1],
-                    rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                    rightMouse ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                     -1, -1, 20,
                     skill * 3 + currHero->m_skillLevel[skill] + 2,
                     -1, 0, -1, 0, -1, 0);
@@ -1253,7 +1253,7 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 8:
                 showArtifact(
                     currHero,
-                    currHero->getArtifact(TArtifactSlot(
+                    currHero->getArtifact(ArtifactSlot(
                         (codeY - 119
                          + 9 * g_overviewHeroArtifactPage[selectedIndex])
                         % 18)),
@@ -1287,33 +1287,33 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
             case OVERVIEW_HERO_PRIMARY_STAT_FIRST_ID + 3:
                 normalDialog(
                     g_statDesc[codeY - 182],
-                    rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                    rightMouse ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
 
             case OVERVIEW_HERO_MORALE_ID:
                 g_game->showMoraleInfo(
                     currHero,
-                    rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE);
+                    rightMouse ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE);
                 break;
             case OVERVIEW_HERO_LUCK_ID:
                 g_game->showLuckInfo(
                     currHero,
-                    rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE);
+                    rightMouse ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE);
                 break;
 
             case OVERVIEW_HERO_LEVEL_ID: {
                 int level = currHero->m_level;
                 sprintf(g_text, (*g_generalText)[3], level,
-                        hero::getExperience(level + 1),
+                        Hero::getExperience(level + 1),
                         currHero->m_experience);
                 normalDialog(
                     g_text,
-                    rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                    rightMouse ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             }
@@ -1323,8 +1323,8 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
                         currHero->m_mana, currHero->getMaxMana());
                 normalDialog(
                     g_text,
-                    rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                    rightMouse ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
 
@@ -1333,15 +1333,15 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
                        g_heroSpecificAbilities[currHero->m_id].m_longText);
                 normalDialog(
                     g_text,
-                    rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                    rightMouse ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             }
         }
 
         if (g_overviewType == 1) {
-            town* currTown = getTown(g_game->getLocalPlayer()->m_townIds[
+            Town* currTown = getTown(g_game->getLocalPlayer()->m_townIds[
                 g_overviewTop[g_overviewType] + slot]);
 
             switch (codeY) {
@@ -1402,10 +1402,10 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 4:
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 5:
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 6: {
-                hero* garrison = g_game->getHero(currTown->m_garrisonHeroId);
+                Hero* garrison = g_game->getHero(currTown->m_garrisonHeroId);
                 g_game->viewArmy(
-                    const_cast<armyGroup&>(
-                        static_cast<const town*>(currTown)->getArmy()),
+                    const_cast<ArmyGroup&>(
+                        static_cast<const Town*>(currTown)->getArmy()),
                     codeY - 5, 0, currTown, 119, 20,
                     !garrison || garrison->m_army.getNumArmies() > 1,
                     rightMouse);
@@ -1486,8 +1486,8 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
                                      &currTown->m_summoningPopulation);
                 } else {
                     recruitUnit* recruit = new recruitUnit(
-                        &const_cast<armyGroup&>(
-                            static_cast<const town*>(currTown)->getArmy()),
+                        &const_cast<ArmyGroup&>(
+                            static_cast<const Town*>(currTown)->getArmy()),
                         1, currTown->m_summoningType,
                         &currTown->m_summoningPopulation,
                         CREATURE_NONE, 0, CREATURE_NONE, 0,
@@ -1610,7 +1610,7 @@ void overviewSliderCallback(int state, heroWindow* parentWindow)
 // Both library-level spellings the doctrine offers are therefore bounded,
 // and the site is a /Ob2 quotient with no admissible source lever.
 VA(0x0051fa40, 0x1311)  // exhaustive ctor/callback/dtor identity, dc 0x1084f0
-TOverviewWindow::TOverviewWindow()
+OverviewWindow::OverviewWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
     m_widgets.reserve(100);
@@ -1860,7 +1860,7 @@ TOverviewWindow::TOverviewWindow()
 VA_COMPGEN(0x00520d60, 0x21, SCALAR_DELETING_DTOR, TOverviewWindow)
 
 VA(0x00520d90, 0x9C)  // dc 0x108f74
-TOverviewWindow::~TOverviewWindow()
+OverviewWindow::~OverviewWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -1875,7 +1875,7 @@ TOverviewWindow::~TOverviewWindow()
 // controls at slot+128, slot+129 and slot+138. Complete has no surviving
 // standalone copy; WindowHandler is expected to expand this helper.
 // E:\gamedcs\overview.cpp:2096
-void TOverviewWindow::clearButtons(int slot)
+void OverviewWindow::clearButtons(int slot)
 {
     broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
                      slot + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID,
@@ -1893,7 +1893,7 @@ void TOverviewWindow::clearButtons(int slot)
 // Complete retains precisely that sequence at the tail of DoRollover, but
 // VC6 /Ob2 folds the helper body into its only caller.
 // E:\gamedcs\overview.cpp:2103
-void TOverviewWindow::updateRollover(char* text)
+void OverviewWindow::updateRollover(char* text)
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
@@ -1917,7 +1917,7 @@ void TOverviewWindow::updateRollover(char* text)
 // Dreamcast retains only iSlot, so the repeated source expression is kept.
 // E:\gamedcs\overview.cpp:2115
 VA(0x00520e30, 0xB2C)  // vtable/caller/order-map + exhaustive body, dc 0x10906c
-void TOverviewWindow::doRollover(int codeY)
+void OverviewWindow::doRollover(int codeY)
 {
     int slot;
 
@@ -1929,7 +1929,7 @@ void TOverviewWindow::doRollover(int codeY)
         codeY = (codeY - 200) % 200;
 
         if (g_overviewType == 0) {
-            hero* currHero = g_game->getHero(
+            Hero* currHero = g_game->getHero(
                 g_overviewHeroIds[g_overviewTop[g_overviewType] + slot]);
 
             switch (codeY) {
@@ -2057,7 +2057,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 6:
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 7:
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 8:
-                currHero->getArtifact(TArtifactSlot(
+                currHero->getArtifact(ArtifactSlot(
                     (codeY - OVERVIEW_HERO_ARTIFACT_FIRST_ID
                      + 9 * g_overviewHeroArtifactPage[
                          g_overviewTop[g_overviewType] + slot]) % 18))
@@ -2092,7 +2092,7 @@ void TOverviewWindow::doRollover(int codeY)
                 break;
             }
         } else {
-            town* currTown = g_game->getTown(
+            Town* currTown = g_game->getTown(
                 g_game->getLocalPlayer()->m_townIds[
                     g_overviewTop[g_overviewType] + slot]);
             strcpy(g_text, g_emptyRolloverText);
@@ -2103,7 +2103,7 @@ void TOverviewWindow::doRollover(int codeY)
                 if (currTown->m_visitingHeroId < 0)
                     break;
                 {
-                    hero* currHero =
+                    Hero* currHero =
                         g_game->getHero(currTown->m_visitingHeroId);
                     sprintf(g_text,
                             (*g_generalText)[
@@ -2117,7 +2117,7 @@ void TOverviewWindow::doRollover(int codeY)
                 if (currTown->m_garrisonHeroId < 0)
                     break;
                 {
-                    hero* currHero =
+                    Hero* currHero =
                         g_game->getHero(currTown->m_garrisonHeroId);
                     sprintf(g_text,
                             (*g_generalText)[
@@ -2135,7 +2135,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 5:
             case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 6:
                 sprintf(g_text, g_heroScreenNameFormat,
-                        getArmyName(static_cast<const town*>(currTown)
+                        getArmyName(static_cast<const Town*>(currTown)
                                         ->getArmy().m_armies[
                             codeY
                             - OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID],
@@ -2150,7 +2150,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 5:
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 6:
                 sprintf(g_text, g_heroScreenNameFormat,
-                        getArmyName(static_cast<const town*>(currTown)
+                        getArmyName(static_cast<const Town*>(currTown)
                                         ->getArmy().m_armies[
                             codeY - OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID],
                                     2));
@@ -2455,7 +2455,7 @@ void game::overview()
 // controls are retained to alter the budget.
 // E:\gamedcs\overview.cpp:2546
 VA(0x00521960, 0xB03)  // vtable slot 9 + exhaustive call/CFG identity, dc 0x10997c
-int TOverviewWindow::windowHandler(message& msg)
+int OverviewWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -2718,7 +2718,7 @@ void updateBackpack(int slot)
     int i = 0;
     int slotOff = slot * 200 + 200;
     int heroNumber = g_overviewTop[g_overviewType] + slot;
-    hero* currHero = g_game->getHero(g_overviewHeroIds[heroNumber]);
+    Hero* currHero = g_game->getHero(g_overviewHeroIds[heroNumber]);
     int lastBackpackIndex = currHero->getLastBackpackIndex() + 1;
     type_artifact artifact;
     // DC 0x1076c4 calls the default message constructor at 0x2d58.
@@ -2762,7 +2762,7 @@ static long getLastBackpackIndex(long heroNumber)
 {
     if (heroNumber >= g_game->getLocalPlayer()->m_numHeroes)
         return 0;
-    hero* currHero = g_game->getHero(
+    Hero* currHero = g_game->getHero(
         g_game->getLocalPlayer()->m_heroes[heroNumber]);
     return currHero->getLastBackpackIndex();
 }
@@ -2785,7 +2785,7 @@ void decrementBackpackStart(long slot)
 
 // E:\gamedcs\overview.cpp:1647
 DC_ONLY(0x1079fc, 0x94)
-void showArtifact(hero* currHero, const type_artifact& artifact, unsigned char right_mouse)
+void showArtifact(Hero* currHero, const type_artifact& artifact, unsigned char right_mouse)
 {
     // @stub
 }
@@ -2799,49 +2799,49 @@ int game::processIconSelect(int codeY, unsigned char bRightMouse)
 
 // E:\gamedcs\overview.cpp:2086
 DC_ONLY(0x108f74, 0x68)
-void TOverviewWindow::~TOverviewWindow()
+void OverviewWindow::~OverviewWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\overview.cpp:2096
 DC_ONLY(0x108fdc, 0x50)
-void TOverviewWindow::clearButtons(int slot)
+void OverviewWindow::clearButtons(int slot)
 {
     // @stub
 }
 
 // E:\gamedcs\overview.cpp:2103
 DC_ONLY(0x10902c, 0x40)
-void TOverviewWindow::updateRollover(char* cText)
+void OverviewWindow::updateRollover(char* cText)
 {
     // @stub
 }
 
 // E:\gamedcs\overview.cpp:2115
 DC_ONLY(0x10906c, 0x90E)
-void TOverviewWindow::doRollover(int codeY)
+void OverviewWindow::doRollover(int codeY)
 {
     // @stub
 }
 
 // E:\gamedcs\overview.cpp:2546
 DC_ONLY(0x10997c, 0x87C)
-int TOverviewWindow::windowHandler(message& msg)
+int OverviewWindow::windowHandler(message& msg)
 {
     // @stub
 }
 
 // E:\gamedcs\Hero.h:664
 DC_ONLY(0x10a1f8, 0x18)
-town* hero::getOccupiedTown()
+Town* Hero::getOccupiedTown()
 {
     // @stub
 }
 
 // E:\gamedcs\overview.cpp:2083
 DC_ONLY(0x10a210, 0x34)
-void* TOverviewWindow::`scalar deleting destructor'(unsigned __flags)
+void* OverviewWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

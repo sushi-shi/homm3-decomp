@@ -201,7 +201,10 @@ public:
 };
 SIZE(CCombatMainMsg, 0x28);
 
-class TAbstractFile;
+#ifndef AbstractFile
+#define AbstractFile TAbstractFile
+#endif
+class AbstractFile;
 
 // Retail's complex wire-message base is a vptr followed by an ordinary
 // 20-byte CNetMsg image. The subtype constructor at 0x512c50 writes exactly
@@ -217,8 +220,8 @@ public:
     // five includers on merge.
     t_complex_net_message();
     t_complex_net_message(eRS_Messages subType);
-    virtual unsigned char read(TAbstractFile* infile);
-    virtual unsigned char write(TAbstractFile* outfile) const;
+    virtual unsigned char read(AbstractFile* infile);
+    virtual unsigned char write(AbstractFile* outfile) const;
     unsigned char remoteFn00512E00(CNetMsg* netMsg);
     unsigned char remoteFn00512D40(int toWho, bool compressMsg,
                                     bool guaranteed);
@@ -259,8 +262,8 @@ public:
         m_rightOwner = 0;
         m_rightGold = 0;
     }
-    virtual unsigned char read(TAbstractFile* infile);
-    virtual unsigned char write(TAbstractFile* outfile) const;
+    virtual unsigned char read(AbstractFile* infile);
+    virtual unsigned char write(AbstractFile* outfile) const;
     type_point m_point;  // +0x018
     unsigned char m_leftHero;  // +0x01c
     unsigned char m_rightTown;  // +0x01d
@@ -273,11 +276,11 @@ public:
     int m_leftGold;  // +0x030
     int m_rightOwner;  // +0x034
     int m_rightGold;  // +0x038
-    armyGroup m_leftArmyGroup;  // +0x03c
-    armyGroup m_rightArmyGroup;  // +0x074
-    town m_town;  // +0x0b0
-    hero m_leftHeroData;  // +0x218
-    hero m_rightHeroData;  // +0x6aa
+    ArmyGroup m_leftArmyGroup;  // +0x03c
+    ArmyGroup m_rightArmyGroup;  // +0x074
+    Town m_town;  // +0x0b0
+    Hero m_leftHeroData;  // +0x218
+    Hero m_rightHeroData;  // +0x6aa
 };
 SIZE(CCombatInitMsg, 0xb40);
 
@@ -809,9 +812,9 @@ SIZE(CCombatTypeMsg, 0x18);
 // heroes. Before attribution repair: CTradeHeroesMsg, m_hero1/m_hero2.
 class CTradeRequestMsg : public CNetMsg {
 public:
-    hero m_left;
-    hero m_right;
-    CTradeRequestMsg(hero* left, hero* right)
+    Hero m_left;
+    Hero m_right;
+    CTradeRequestMsg(Hero* left, Hero* right)
         : CNetMsg(RS_TRADE_REQUEST, sizeof(CTradeRequestMsg))
     {
         m_left = *left;

@@ -420,7 +420,11 @@ SIZE(CSingleSelectionNetMsgHandler, 0x10);
 // UpdateAllyEnemyFlags body adds the DC-named saved-background pointer
 // flagBack at +0x1870. The constructor further proves the DC-named embedded
 // netMsgHandler at +0x1888; the tail after it remains under reconstruction.
-class TSingleSelectionWindow : public CAdvPopup {
+// Before normalization (type): TSingleSelectionWindow.
+#ifndef SingleSelectionWindow
+#define SingleSelectionWindow TSingleSelectionWindow
+#endif
+class SingleSelectionWindow : public CAdvPopup {
 public:
     // DC CNewPlayerUpdateProc::Go at singleselectionwindow.cpp:1277
     // loads private gameVersion directly for the message constructor
@@ -657,8 +661,8 @@ public:
     // updateGameVars (0x583580) fills it from the selected map description.
     widget* m_descriptionWidget;  // 0x196c
 
-    TSingleSelectionWindow(int gameMode);
-    virtual ~TSingleSelectionWindow();
+    SingleSelectionWindow(int gameMode);
+    virtual ~SingleSelectionWindow();
     virtual int doModal(unsigned char fadeIn);
     void updatePlayerPositions(unsigned char updateCurPlayer);
     virtual int windowHandler(message& msg);  // slot 9
@@ -698,7 +702,7 @@ public:
     int getHeroInPos(int gamePos);
     // Dreamcast names the enum return, and Complete's inlined nine-town
     // callers retain that enum-typed local and mask lowering.
-    TTownType getDisplayTown(int gamePos);
+    TownType getDisplayTown(int gamePos);
     const char* getHeroName(int gamePos);
     void onNameChange(int gamePos, const char* newName);
     unsigned char highlightFile(char* filename);
@@ -756,7 +760,7 @@ public:
     void turnChatOff(unsigned char update);
     void onTownUpdateMsg(CNetMsg* netMsg, bool inPopup);
     void updateNameLists();
-    void updateTown(int pos, TTownType town, unsigned char inPopup);
+    void updateTown(int pos, TownType town, unsigned char inPopup);
     void setNewPlayerSlot(CNetPlayerInfo* playerInfo);
     void setupLoadGameMode();
     void setupNewGameMode();
@@ -801,7 +805,7 @@ public:
 private:
     CNetPlayerHandlerPlayer* getThisPlayer();
 };
-SIZE(TSingleSelectionWindow, 0x1970);
+SIZE(SingleSelectionWindow, 0x1970);
 
 // Four cross-TU cells advmgr's SaveGame drives; the selection window's
 // own TU is their natural owner, so they are declared here (the

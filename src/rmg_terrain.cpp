@@ -10,13 +10,13 @@
 #include "tiles.h"
 #include "includes.h"
 
-DATA(0x00642BD8) extern TRmgTerrainRule* const g_rmgTerrainRules[];
+DATA(0x00642BD8) extern RmgTerrainRule* const g_rmgTerrainRules[];
 
 // Initializer-list copy of the point: the body assignment costs the
 // walker's first neighbour pass its retained compound add (78.03 against
 // 87.12%); the factory and rectangle clear are byte-identical either way.
-TRmgLinePainterTile::TRmgLinePainterTile(
-    TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
+RmgLinePainterTile::RmgLinePainterTile(
+    RmgLinePainterInterface* painter, const RmgGridPoint& point)
     : m_painter(painter), m_point(point)
 {
 }
@@ -24,17 +24,17 @@ TRmgLinePainterTile::TRmgLinePainterTile(
 // The 168-case query family tested receiver/coordinate reference bindings,
 // their order, named results and real proxy construction (80 code results).
 // No gain over the direct query: clear 94.5070%, point 79.9380%, refresh 63.9923%.
-int TRmgLinePainterTile::getLand()
+int RmgLinePainterTile::getLand()
 {
     return m_painter->getLand(m_point);
 }
 
-void TRmgLinePainterTile::getTile(rmgTerrainTile& tile)
+void RmgLinePainterTile::getTile(rmgTerrainTile& tile)
 {
     m_painter->getTile(m_point, tile);
 }
 
-void TRmgLinePainterTile::setTile(const rmgTerrainTile& tile)
+void RmgLinePainterTile::setTile(const rmgTerrainTile& tile)
 {
     m_painter->setTile(m_point, tile);
 }
@@ -42,19 +42,19 @@ void TRmgLinePainterTile::setTile(const rmgTerrainTile& tile)
 // The point walker tests AL after slot 3 (0x4fa400..0x4fa405). Keep that
 // low-byte gate while preserving the retained virtual's integer-return ABI.
 // Its provisional canPaint name is inverted here: nonzero prevents painting.
-unsigned char TRmgLinePainterTile::isBlocked()
+unsigned char RmgLinePainterTile::isBlocked()
 {
     return m_painter->canPaint(m_point);
 }
 
-void TRmgLinePainterTile::setOverlay(int value)
+void RmgLinePainterTile::setOverlay(int value)
 {
     m_painter->setOverlay(m_point, value);
 }
 
 // The size is a grid point: the walker's one-cell rectangle then constructs
 // a unit size the way retail 0x4fa3c0 materializes it (see paintPoint).
-TRmgGridRectangle::TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGridPoint& size)
+RmgGridRectangle::RmgGridRectangle(const RmgGridPoint& origin, const RmgGridPoint& size)
     : m_origin(origin), m_size(size)
 {
 }
@@ -92,9 +92,9 @@ TRmgGridRectangle::TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGrid
 // painter first, building the mask first, and accessor coordinates do
 // not swap them (84-97%).
 VA(0x004F9F00, 0x146) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
-void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
+void refreshRmgLinePoint(RmgLinePainterInterface* painter, const RmgGridPoint& point)
 {
-    TRmgLinePainterTile tile = painter->at(point);
+    RmgLinePainterTile tile = painter->at(point);
     int oldType = tile.getLand();
     unsigned char available[TILE_DIR_COUNT];
     buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
@@ -106,7 +106,7 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
         else
             matches[direction] = 0;
     }
-    TRmgLinePatternTable* table = painter->getPattern(oldType);
+    RmgLinePatternTable* table = painter->getPattern(oldType);
     unsigned char flipX, flipY;
     int selected;
     selectRmgLinePattern(matches, table, selected, flipX, flipY);
@@ -125,9 +125,9 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
 }
 
 VA(0x004FA050, 0x22) // anchor-callee 0x4f9f86; thiscall hidden value return
-TRmgLinePainterTile TRmgLinePainterInterface::at(const TRmgGridPoint& point)
+RmgLinePainterTile RmgLinePainterInterface::at(const RmgGridPoint& point)
 {
-    return TRmgLinePainterTile(this, point);
+    return RmgLinePainterTile(this, point);
 }
 
 // Neighbour query used by refresh 0x4f9f00 and the walker's first pass
@@ -142,21 +142,21 @@ TRmgLinePainterTile TRmgLinePainterInterface::at(const TRmgGridPoint& point)
 // object; the proxy constructor copying the point through its fields,
 // accessors, setters or a by-value parameter never helps and the first
 // three cost the rectangle clear, 94.51%).
-int TRmgLinePainterInterface::getNeighbourLand(const TRmgGridPoint& point, unsigned int direction)
+int RmgLinePainterInterface::getNeighbourLand(const RmgGridPoint& point, unsigned int direction)
 {
-    TRmgGridPoint nearby = point + g_tileDirections[direction];
+    RmgGridPoint nearby = point + g_tileDirections[direction];
     return at(nearby).getLand();
 }
 
 VA(0x004FA080, 0x1FB) // anchor-callee 0x4fa42c; fastcall, no stack args
-void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRectangle& rectangle)
+void clearRmgLineRectangle(RmgLinePainterInterface* painter, const RmgGridRectangle& rectangle)
 {
-    TRmgGridPoint point;
+    RmgGridPoint point;
     for (point.m_y = rectangle.m_origin.m_y;
          point.m_y < rectangle.m_origin.m_y + rectangle.m_size.m_y; ++point.m_y) {
         for (point.m_x = rectangle.m_origin.m_x;
              point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
-            TRmgLinePainterTile tile(painter, point);
+            RmgLinePainterTile tile(painter, point);
             if (tile.getLand())
                 tile.setTile(rmgTerrainTile(0, 0));
         }
@@ -202,22 +202,22 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
 }
 
 VA(0x004FA280, 0x30) // anchor-caller 0x55ee50/0x55f3b0; thiscall ret 0xc
-TRmgLineWalker::TRmgLineWalker(
-    TRmgLinePainterInterface* newPainter,
+RmgLineWalker::RmgLineWalker(
+    RmgLinePainterInterface* newPainter,
     int newRiverType,
-    const TRmgGridPoint& start)
+    const RmgGridPoint& start)
     : m_painter(newPainter), m_riverType(newRiverType), m_position(start)
 {
     paintPoint(m_position);
 }
 
 VA(0x004FA2B0, 0x110) // anchor-caller 0x548040 and createRiver; thiscall ret 4
-void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
+void RmgLineWalker::drawTo(const RmgGridPoint& destination)
 {
-    TRmgLineWalkAxis x(destination.m_x, m_position.m_x);
-    TRmgLineWalkAxis y(destination.m_y, m_position.m_y);
-    TRmgLineWalkAxis* major;
-    TRmgLineWalkAxis* minor;
+    RmgLineWalkAxis x(destination.m_x, m_position.m_x);
+    RmgLineWalkAxis y(destination.m_y, m_position.m_y);
+    RmgLineWalkAxis* major;
+    RmgLineWalkAxis* minor;
     if (x.m_distance >= y.m_distance) {
         major = &x;
         minor = &y;
@@ -228,29 +228,29 @@ void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
     unsigned int error = 0;
     unsigned int distance = major->m_distance;
     for (unsigned int index = 0; index < distance; ++index) {
-        paintPoint(TRmgGridPoint(x.m_position, y.m_position));
+        paintPoint(RmgGridPoint(x.m_position, y.m_position));
         error += minor->m_distance;
         if (error >= major->m_distance) {
             error -= major->m_distance;
             minor->m_position += minor->m_step;
-            paintPoint(TRmgGridPoint(x.m_position, y.m_position));
+            paintPoint(RmgGridPoint(x.m_position, y.m_position));
         }
         major->m_position += major->m_step;
     }
     if (error + minor->m_distance >= major->m_distance)
-        paintPoint(TRmgGridPoint(x.m_position, y.m_position));
+        paintPoint(RmgGridPoint(x.m_position, y.m_position));
     m_position = destination;
 }
 
 VA(0x004FA3C0, 0x156) // anchor-caller 0x4fa280/0x4fa2b0; thiscall, ret 4
-void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
+void RmgLineWalker::paintPoint(const RmgGridPoint& point)
 {
-    TRmgLinePainterTile tile(m_painter, point);
+    RmgLinePainterTile tile(m_painter, point);
     int oldType = tile.getLand();
     if (oldType == m_riverType || tile.isBlocked())
         return;
     if (oldType)
-        clearRmgLineRectangle(m_painter, TRmgGridRectangle(point, TRmgGridPoint(1, 1)));
+        clearRmgLineRectangle(m_painter, RmgGridRectangle(point, RmgGridPoint(1, 1)));
     tile.setOverlay(m_riverType);
     refreshRmgLinePoint(m_painter, point);
 
@@ -258,7 +258,7 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
     unsigned char matches[TILE_DIR_COUNT];
     unsigned int direction;
     {
-        TRmgLinePainterInterface* painter = m_painter;
+        RmgLinePainterInterface* painter = m_painter;
         unsigned char available[TILE_DIR_COUNT];
         buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
                                point.m_x, point.m_y, available);
@@ -276,13 +276,13 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 }
 
 VA(0x004FA520, 0x16) // anchor-callee 0x4f9f77; thiscall, ret 4
-TRmgGridPoint::TRmgGridPoint(const TPoint& point)
+RmgGridPoint::RmgGridPoint(const Point& point)
     : m_x(point.m_x), m_y(point.m_y)
 {
 }
 
 VA(0x004FA540, 0x21) // anchor-callers 0x4f9f00/0x4fa3c0; thiscall, ret 4
-TPoint& TPoint::operator+=(const TPoint& offset)
+Point& Point::operator+=(const Point& offset)
 {
     m_x += offset.m_x;
     m_y += offset.m_y;
@@ -290,10 +290,10 @@ TPoint& TPoint::operator+=(const TPoint& offset)
 }
 
 VA(0x005B3780, 0xB3)
-TRmgPatternTerrainRule::TRmgPatternTerrainRule(
+RmgPatternTerrainRule::RmgPatternTerrainRule(
     unsigned char blendsWithOtherTerrain, unsigned char allowsSeparatedNeighbours,
-    int defaultFrame, unsigned int entryCount, const TRmgTerrainPatternEntry* entries)
-    : TRmgTerrainRule(blendsWithOtherTerrain, allowsSeparatedNeighbours),
+    int defaultFrame, unsigned int entryCount, const RmgTerrainPatternEntry* entries)
+    : RmgTerrainRule(blendsWithOtherTerrain, allowsSeparatedNeighbours),
       m_defaultFrame(defaultFrame), m_entryCount(entryCount), m_entries(entries)
 {
     int frame = m_entries[0].m_frame;
@@ -301,7 +301,7 @@ TRmgPatternTerrainRule::TRmgPatternTerrainRule(
     int range = frame * 2 + special;
     ++m_ranges[range].m_count;
     for (unsigned int index = 1; index < m_entryCount; ++index) {
-        const TRmgTerrainPatternEntry& entry = m_entries[index];
+        const RmgTerrainPatternEntry& entry = m_entries[index];
         if (entry.m_frame != frame || entry.m_special != special) {
             frame = entry.m_frame;
             special = entry.m_special;
@@ -315,20 +315,20 @@ TRmgPatternTerrainRule::TRmgPatternTerrainRule(
 // Vtable 0x642c98 slot 1 tests the count for pattern value 1. The constructor
 // at 0x5b3780 builds that range at +0x1c/+0x20 from its supplied entry array.
 VA(0x005B3840, 0x0C)  // Complete-only pattern terrain rule
-unsigned char TRmgPatternTerrainRule::hasEntries()
+unsigned char RmgPatternTerrainRule::hasEntries()
 {
     return 0 < m_ranges[1].m_count;
 }
 
 VA(0x005B3850, 0x07)  // terrain-rule deleting destructors; Complete-only
-TRmgTerrainRule::~TRmgTerrainRule()
+RmgTerrainRule::~RmgTerrainRule()
 {
 }
 
 // Vtable 0x642c98 slot 2 reads the byte at +4 in an eight-byte source entry.
 // Constructor 0x5b3780 retains the entry pointer at +0x10 (0x5b37a2).
 VA(0x005B3860, 0x11)  // Complete-only pattern terrain rule
-unsigned char TRmgPatternTerrainRule::isSpecialFrame(int frame)
+unsigned char RmgPatternTerrainRule::isSpecialFrame(int frame)
 {
     return m_entries[frame].m_special;
 }
@@ -336,7 +336,7 @@ unsigned char TRmgPatternTerrainRule::isSpecialFrame(int frame)
 // Each source entry is two dwords. Vtable 0x642c98 slot 3 returns
 // the first dword of the requested entry through the pointer at +0x10.
 VA(0x005B3880, 0x10)  // Complete-only pattern terrain rule
-int TRmgPatternTerrainRule::getEntry(int index)
+int RmgPatternTerrainRule::getEntry(int index)
 {
     return m_entries[index].m_frame;
 }
@@ -345,10 +345,10 @@ int TRmgPatternTerrainRule::getEntry(int index)
 // the secondary range with the rule's strength-scaled percentage, falling
 // back to the primary range, then chooses uniformly within that range.
 VA(0x005B3890, 0x58)
-int TRmgPatternTerrainRule::selectBaseFrame(int value, int oldFrame)
+int RmgPatternTerrainRule::selectBaseFrame(int value, int oldFrame)
 {
     if (oldFrame == -1 || m_entries[oldFrame].m_frame != 0) {
-        TRmgTerrainPatternRange* range;
+        RmgTerrainPatternRange* range;
         if (m_ranges[1].m_count > 0) {
             unsigned int chance =
                 static_cast<unsigned int>(m_defaultFrame * value) / 8;
@@ -368,14 +368,14 @@ int TRmgPatternTerrainRule::selectBaseFrame(int value, int oldFrame)
 // This selector uses the first pair and preserves an old frame whose entry
 // already names the requested transition; the requested flip is copied out.
 VA(0x005B38F0, 0x41)
-int TRmgPatternTerrainRule::selectTransitionFrame(
+int RmgPatternTerrainRule::selectTransitionFrame(
     int transition,
-    TRmgTerrainFlip requestedFlip,
-    TRmgTerrainFlip& selectedFlip,
+    RmgTerrainFlip requestedFlip,
+    RmgTerrainFlip& selectedFlip,
     int oldFrame)
 {
     if (oldFrame == -1 || m_entries[oldFrame].m_frame != transition) {
-        TRmgTerrainPatternRange& range = m_ranges[transition * 2];
+        RmgTerrainPatternRange& range = m_ranges[transition * 2];
         oldFrame = rand() % range.m_count + range.m_firstIndex;
     }
     selectedFlip = requestedFlip;
@@ -383,15 +383,15 @@ int TRmgPatternTerrainRule::selectTransitionFrame(
 }
 
 DATA(0x006A4158)
-TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
+RmgTerrainPatternTable g_rmgTerrainPatternRanges;
 
 VA(0x005B3940, 0xC5)
-TRmgTerrainPatternTable::TRmgTerrainPatternTable()
+RmgTerrainPatternTable::RmgTerrainPatternTable()
 {
     int frame = g_rmgTerrainPatterns[0].m_frame;
     unsigned char flipX = g_rmgTerrainPatterns[0].m_flipX;
     unsigned char flipY = g_rmgTerrainPatterns[0].m_flipY;
-    TRmgTerrainPatternRange* range =
+    RmgTerrainPatternRange* range =
         &m_ranges[(frame * 2 + flipX) * 2 + flipY];
     ++range->m_count;
     for (unsigned int index = 1; index < 48; ++index) {
@@ -408,12 +408,12 @@ TRmgTerrainPatternTable::TRmgTerrainPatternTable()
 }
 
 VA(0x005B3A20, 0x11)  // Complete-only table terrain rule
-TRmgTableTerrainRule::TRmgTableTerrainRule()
+RmgTableTerrainRule::RmgTableTerrainRule()
 {
 }
 
 VA(0x005B3A40, 0x03)
-unsigned char TRmgTableTerrainRule::hasEntries()
+unsigned char RmgTableTerrainRule::hasEntries()
 {
     return 0;
 }
@@ -426,13 +426,13 @@ unsigned char TRmgTableTerrainRule::hasEntries()
 VA_COMPGEN(0x005B3A50, 0x21, SCALAR_DELETING_DTOR, TRmgTableTerrainRule)
 
 VA(0x005B3A80, 0x11)
-int TRmgTableTerrainRule::getEntry(int index)
+int RmgTableTerrainRule::getEntry(int index)
 {
     return g_rmgTerrainPatterns[index].m_frame;
 }
 
 VA(0x005B3AA0, 0x31)  // vtable 0x642cb0 slot 4; Complete-only table rule
-int TRmgTableTerrainRule::selectBaseFrame(int, int oldFrame)
+int RmgTableTerrainRule::selectBaseFrame(int, int oldFrame)
 {
     if (oldFrame == -1
         || g_rmgTerrainPatterns[oldFrame].m_frame != 0) {
@@ -443,25 +443,25 @@ int TRmgTableTerrainRule::selectBaseFrame(int, int oldFrame)
 }
 
 VA(0x005B3AE0, 0x74)
-int TRmgTableTerrainRule::selectTransitionFrame(
-    int transition, TRmgTerrainFlip requestedFlip,
-    TRmgTerrainFlip& selectedFlip, int oldFrame)
+int RmgTableTerrainRule::selectTransitionFrame(
+    int transition, RmgTerrainFlip requestedFlip,
+    RmgTerrainFlip& selectedFlip, int oldFrame)
 {
     if (oldFrame == -1
         || g_rmgTerrainPatterns[oldFrame].m_frame != transition
         || g_rmgTerrainPatterns[oldFrame].m_flipX != requestedFlip.m_flipX
         || g_rmgTerrainPatterns[oldFrame].m_flipY != requestedFlip.m_flipY) {
-        TRmgTerrainPatternRange& range = g_rmgTerrainPatternRanges.m_ranges[
+        RmgTerrainPatternRange& range = g_rmgTerrainPatternRanges.m_ranges[
             (transition * 2 + requestedFlip.m_flipX) * 2 + requestedFlip.m_flipY];
         oldFrame = rand() % range.m_count + range.m_firstIndex;
     }
-    selectedFlip = TRmgTerrainFlip(0, 0);
+    selectedFlip = RmgTerrainFlip(0, 0);
     return oldFrame;
 }
 
 // by the call at 0x5b5f5b. All selector names are provisional retail roles.
 int __fastcall selectTerrainTransition(
-    const int* neighbours, TRmgTerrainFlip* flip);
+    const int* neighbours, RmgTerrainFlip* flip);
 
 // Four reflections of the eight neighbour slots. Read from the pinned
 // retail image; both flip bytes index this table independently.
@@ -477,17 +477,17 @@ const int g_rmgReflectedNeighbours[2][2][8] = {
 // them at ebp-8 and ebp-4 (99.93%); replacing the helper calls with direct
 // construction changes the fourth reflection loop's registers (99.7991%).
 // An explicit empty flip destructor prevents the helper from auto-inlining.
-static TRmgTerrainFlip makeTerrainFlip(unsigned char x, unsigned char y)
+static RmgTerrainFlip makeTerrainFlip(unsigned char x, unsigned char y)
 {
-    return TRmgTerrainFlip(x, y);
+    return RmgTerrainFlip(x, y);
 }
 
 VA(0x005B3DD0, 0x6F)
 void rmgTerrainPainter::initializePackedCell(
-    const TRmgGridPoint& point, unsigned int index)
+    const RmgGridPoint& point, unsigned int index)
 {
     rmgTerrainTile tile = m_adapter->getTile(point);
-    TRmgPackedTerrainCell& packed = m_packedCells[index];
+    RmgPackedTerrainCell& packed = m_packedCells[index];
     packed.m_terrain = tile.m_terrain;
     packed.m_frame = tile.m_frame;
     packed.m_flipX = tile.m_flipX;
@@ -500,8 +500,8 @@ int __fastcall getRmgTerrainNeighbourKind(int terrain, int neighbourTerrain)
 {
     if (terrain == neighbourTerrain || terrain == eTerrainSand)
         return RMG_NEIGHBOUR_NO_EDGE;
-    const TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];
-    const TRmgTerrainRule* neighbourRule = g_rmgTerrainRules[neighbourTerrain];
+    const RmgTerrainRule* rule = g_rmgTerrainRules[terrain];
+    const RmgTerrainRule* neighbourRule = g_rmgTerrainRules[neighbourTerrain];
     if (rule->m_blendsWithOtherTerrain) {
         if (neighbourRule->m_blendsWithOtherTerrain)
             return terrain != eTerrainDirt;
@@ -511,10 +511,10 @@ int __fastcall getRmgTerrainNeighbourKind(int terrain, int neighbourTerrain)
 
 VA(0x005B3E80, 0x75F)  // fastcall call at 0x5b5f5b; retail-only
 int __fastcall selectTerrainTransition(
-    const int* neighbours, TRmgTerrainFlip* flip)
+    const int* neighbours, RmgTerrainFlip* flip)
 {
     DATA(0x006A52B8)
-    static TRmgTerrainFlip flips[4] = {
+    static RmgTerrainFlip flips[4] = {
         makeTerrainFlip(0, 0), makeTerrainFlip(0, 1),
         makeTerrainFlip(1, 0), makeTerrainFlip(1, 1)
     };
@@ -701,16 +701,16 @@ int __fastcall selectTerrainTransition(
 
 VA(0x005B45F0, 0x26D)
 rmgTerrainPainter::rmgTerrainPainter(
-    TRmgMapInterface* newAdapter, int terrain, int strength)
+    RmgMapInterface* newAdapter, int terrain, int strength)
     : m_adapter(newAdapter), m_paintTerrain(terrain), m_transitionStrength(strength)
 {
     m_size = m_adapter->getSize();
-    m_packedCells.resize(getWidth() * getHeight(), TRmgPackedTerrainCell());
+    m_packedCells.resize(getWidth() * getHeight(), RmgPackedTerrainCell());
 }
 
 VA(0x005B48D0, 0x8D)  // repeated caller identity in 0x5b3dd0..0x5b76f0
-TRmgPackedTerrainCell* rmgTerrainPainter::getPackedCell(
-    const TRmgGridPoint& point)
+RmgPackedTerrainCell* rmgTerrainPainter::getPackedCell(
+    const RmgGridPoint& point)
 {
     unsigned int index = point.m_y * m_size.m_x + point.m_x;
     if (!m_packedCells[index].m_initialized)
@@ -721,12 +721,12 @@ TRmgPackedTerrainCell* rmgTerrainPainter::getPackedCell(
 // Retail proves the shared accessor and its expanded uses, but supplies no
 // source inline qualifier. Its ordinary TU definition preserves paintPoint's
 // 99.5570% checkpoint and both exact painter/brush destructors.
-int rmgTerrainPainter::getTerrain(const TRmgGridPoint& point)
+int rmgTerrainPainter::getTerrain(const RmgGridPoint& point)
 {
     return getPackedCell(point)->getTerrain();
 }
 
-int rmgTerrainPainter::getFrame(const TRmgGridPoint& point)
+int rmgTerrainPainter::getFrame(const RmgGridPoint& point)
 {
     return getPackedCell(point)->getFrame();
 }
@@ -746,7 +746,7 @@ unsigned int rmgTerrainPainter::getHeight() const
 // evaluation boundary and the captured terrain index across the first call.
 // The helper's role and signature are inferred from retail expansions.
 int rmgTerrainPainter::selectBaseFrame(
-    const TRmgGridPoint& point, int terrain, int oldFrame)
+    const RmgGridPoint& point, int terrain, int oldFrame)
 {
     int strength = getTransitionStrength(point, terrain);
     return g_rmgTerrainRules[terrain]->selectBaseFrame(strength, oldFrame);
@@ -757,10 +757,10 @@ int rmgTerrainPainter::selectBaseFrame(
 // cache initialization from an adapter read has a different store order.
 // This ordinary helper is inferred from retail expansions, with no DC name.
 void rmgTerrainPainter::setTile(
-    const TRmgGridPoint& point, const rmgTerrainTile& tile)
+    const RmgGridPoint& point, const rmgTerrainTile& tile)
 {
     m_adapter->setTile(point, tile);
-    TRmgPackedTerrainCell& packed = m_packedCells[point.m_y * m_size.m_x + point.m_x];
+    RmgPackedTerrainCell& packed = m_packedCells[point.m_y * m_size.m_x + point.m_x];
     packed.setInitialized();
     packed.setTerrain(tile.m_terrain);
     packed.setFrame(tile.m_frame);
@@ -771,7 +771,7 @@ void rmgTerrainPainter::setTile(
 // The base-tile block of paintPoint as paintRectangle's own helper: its one
 // site is what paintRectangle's terrain test needs (see there), while
 // paintPoint expands the same three operations from its own block.
-void rmgTerrainPainter::paintBaseTile(const TRmgGridPoint& point)
+void rmgTerrainPainter::paintBaseTile(const RmgGridPoint& point)
 {
     int frame = selectBaseFrame(point, m_paintTerrain, -1);
     rmgTerrainTile tile(m_paintTerrain, frame);
@@ -794,7 +794,7 @@ int rmgTerrainPainter::getPaintTerrain() const
     return m_paintTerrain;
 }
 
-unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
+unsigned char rmgTerrainPainter::isPaintTerrain(const RmgGridPoint& point)
 {
     if (getTerrain(point) != getPaintTerrain())
         return 0;
@@ -808,7 +808,7 @@ void rmgTerrainPainter::paintRectangle(
 {
     unsigned int endX = x + rectangleWidth;
     unsigned int endY = y + rectangleHeight;
-    TRmgGridPoint point;
+    RmgGridPoint point;
     for (point.setY(y); point.getY() < endY; point.setY(point.getY() + 1)) {
         for (point.setX(x); point.getX() < endX; point.setX(point.getX() + 1)) {
             if (m_paintTerrain != getTerrain(point)) {
@@ -821,7 +821,7 @@ void rmgTerrainPainter::paintRectangle(
 }
 
 VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
-void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
+void rmgTerrainPainter::paintPoint(const RmgGridPoint& point)
 {
     {
         int frame = selectBaseFrame(point, m_paintTerrain, -1);
@@ -833,7 +833,7 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 
     if (g_rmgTerrainRules[m_paintTerrain]->m_allowsSeparatedNeighbours) {
         if (point.m_y > 0) {
-            TRmgGridPoint nearby(point.m_x, point.m_y - 1);
+            RmgGridPoint nearby(point.m_x, point.m_y - 1);
             if (m_primaryPoints.find(nearby) != m_primaryPoints.end()
                 && !isHorizontalGap(nearby)) {
                 m_primaryPoints.erase(nearby);
@@ -841,7 +841,7 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
             }
         }
         if (point.m_y < m_size.m_y - 1) {
-            TRmgGridPoint nearby(point.m_x, point.m_y + 1);
+            RmgGridPoint nearby(point.m_x, point.m_y + 1);
             if (m_primaryPoints.find(nearby) != m_primaryPoints.end()
                 && !isHorizontalGap(nearby)) {
                 m_primaryPoints.erase(nearby);
@@ -849,7 +849,7 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
             }
         }
         if (point.m_x > 0) {
-            TRmgGridPoint nearby(point.m_x - 1, point.m_y);
+            RmgGridPoint nearby(point.m_x - 1, point.m_y);
             if (m_primaryPoints.find(nearby) != m_primaryPoints.end()
                 && !isVerticalGap(nearby)) {
                 m_primaryPoints.erase(nearby);
@@ -857,7 +857,7 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
             }
         }
         if (point.m_x < m_size.m_x - 1) {
-            TRmgGridPoint nearby(point.m_x + 1, point.m_y);
+            RmgGridPoint nearby(point.m_x + 1, point.m_y);
             if (m_primaryPoints.find(nearby) != m_primaryPoints.end()
                 && !isVerticalGap(nearby)) {
                 m_primaryPoints.erase(nearby);
@@ -870,8 +870,8 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
             m_size.m_x, m_size.m_y, point.m_x, point.m_y, neighbourExists);
         for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
             if (neighbourExists[direction]) {
-                const TPoint& offset = g_tileDirections[direction];
-                TRmgGridPoint nearby(point + offset);
+                const Point& offset = g_tileDirections[direction];
+                RmgGridPoint nearby(point + offset);
                 if (isPaintTerrain(nearby)) {
                     if (m_primaryPoints.find(nearby) != m_primaryPoints.end()) {
                         if (!needsTerrainRepair(nearby)) {
@@ -892,45 +892,45 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 }
 
 VA(0x005B50F0, 0x34E) // anchor-callee 0x5b4c72, 0x5b50dd; thiscall, ret 4
-void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
+void rmgTerrainPainter::queueOtherTerrainNeighbours(const RmgGridPoint& point)
 {
     if (point.getY() > 0
-        && getTerrain(TRmgGridPoint(point.getX(), point.getY() - 1)) != m_paintTerrain) {
-        m_secondaryPoints.insert(TRmgGridPoint(point.getX(), point.getY() - 1));
+        && getTerrain(RmgGridPoint(point.getX(), point.getY() - 1)) != m_paintTerrain) {
+        m_secondaryPoints.insert(RmgGridPoint(point.getX(), point.getY() - 1));
     } else if (point.getY() < getHeight() - 1
-        && getTerrain(TRmgGridPoint(point.getX(), point.getY() + 1)) != m_paintTerrain) {
-        m_secondaryPoints.insert(TRmgGridPoint(point.getX(), point.getY() + 1));
+        && getTerrain(RmgGridPoint(point.getX(), point.getY() + 1)) != m_paintTerrain) {
+        m_secondaryPoints.insert(RmgGridPoint(point.getX(), point.getY() + 1));
     }
     if (point.getX() > 0
-        && getTerrain(TRmgGridPoint(point.getX() - 1, point.getY())) != m_paintTerrain) {
-        m_secondaryPoints.insert(TRmgGridPoint(point.getX() - 1, point.getY()));
+        && getTerrain(RmgGridPoint(point.getX() - 1, point.getY())) != m_paintTerrain) {
+        m_secondaryPoints.insert(RmgGridPoint(point.getX() - 1, point.getY()));
     } else if (point.getX() < getWidth() - 1
-        && getTerrain(TRmgGridPoint(point.getX() + 1, point.getY())) != m_paintTerrain) {
-        m_secondaryPoints.insert(TRmgGridPoint(point.getX() + 1, point.getY()));
+        && getTerrain(RmgGridPoint(point.getX() + 1, point.getY())) != m_paintTerrain) {
+        m_secondaryPoints.insert(RmgGridPoint(point.getX() + 1, point.getY()));
     }
     if (point.getX() > 0 && point.getY() > 0) {
-        TRmgGridPoint nearby(point.getX() - 1, point.getY() - 1);
+        RmgGridPoint nearby(point.getX() - 1, point.getY() - 1);
         int terrain = getTerrain(nearby);
         if (terrain != m_paintTerrain
             && !g_rmgTerrainRules[terrain]->m_allowsSeparatedNeighbours)
             m_secondaryPoints.insert(nearby);
     }
     if (point.getX() < getWidth() - 1 && point.getY() > 0) {
-        TRmgGridPoint nearby(point.getX() + 1, point.getY() - 1);
+        RmgGridPoint nearby(point.getX() + 1, point.getY() - 1);
         int terrain = getTerrain(nearby);
         if (terrain != m_paintTerrain
             && !g_rmgTerrainRules[terrain]->m_allowsSeparatedNeighbours)
             m_secondaryPoints.insert(nearby);
     }
     if (point.getX() > 0 && point.getY() < getHeight() - 1) {
-        TRmgGridPoint nearby(point.getX() - 1, point.getY() + 1);
+        RmgGridPoint nearby(point.getX() - 1, point.getY() + 1);
         int terrain = getTerrain(nearby);
         if (terrain != m_paintTerrain
             && !g_rmgTerrainRules[terrain]->m_allowsSeparatedNeighbours)
             m_secondaryPoints.insert(nearby);
     }
     if (point.getX() < getWidth() - 1 && point.getY() < getHeight() - 1) {
-        TRmgGridPoint nearby(point.getX() + 1, point.getY() + 1);
+        RmgGridPoint nearby(point.getX() + 1, point.getY() + 1);
         int terrain = getTerrain(nearby);
         if (terrain != m_paintTerrain
             && !g_rmgTerrainRules[terrain]->m_allowsSeparatedNeighbours)
@@ -941,12 +941,12 @@ void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
 // Own-terrain checks share the predicates used with the selected paint
 // terrain. Retail retains the nested predicate in the horizontal check and expands
 // the vertical check at the four adjacent-row/column probes.
-unsigned char rmgTerrainPainter::isHorizontalGap(const TRmgGridPoint& point)
+unsigned char rmgTerrainPainter::isHorizontalGap(const RmgGridPoint& point)
 {
     return isHorizontalGap(point, getTerrain(point));
 }
 
-unsigned char rmgTerrainPainter::isVerticalGap(const TRmgGridPoint& point)
+unsigned char rmgTerrainPainter::isVerticalGap(const RmgGridPoint& point)
 {
     return isVerticalGap(point, getTerrain(point));
 }
@@ -962,7 +962,7 @@ unsigned char rmgTerrainPainter::isVerticalGap(const TRmgGridPoint& point)
 // repairTerrainPoint caller from 89.9680% to 90.0961% with no collateral.
 // Six predicate forms over ten worklist parents, followed by six helper
 // orders over ten joint parents, isolate this gain; keep the original order.
-unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
+unsigned char rmgTerrainPainter::needsTerrainRepair(const RmgGridPoint& point)
 {
     if (isHorizontalGap(point))
         return 1;
@@ -1014,36 +1014,36 @@ unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 // A cycle-complete result with either a loop-head test or bottom break
 // scores 86.0995% or 86.1619% for bool/byte/int, below 91.3389%.
 VA(0x005B5440, 0x628) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
-void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
+void rmgTerrainPainter::repairTerrainPoint(const RmgGridPoint& point)
 {
     if (isVerticalGap(point)) {
-        if (!needsTerrainRepair(TRmgGridPoint(point.m_x, point.m_y - 1)) &&
-            (needsTerrainRepair(TRmgGridPoint(point.m_x, point.m_y + 1)) ||
-             (isHorizontalGap(TRmgGridPoint(point.m_x, point.m_y - 1),
+        if (!needsTerrainRepair(RmgGridPoint(point.m_x, point.m_y - 1)) &&
+            (needsTerrainRepair(RmgGridPoint(point.m_x, point.m_y + 1)) ||
+             (isHorizontalGap(RmgGridPoint(point.m_x, point.m_y - 1),
                               getPaintTerrain()) &&
-              !isHorizontalGap(TRmgGridPoint(point.m_x, point.m_y + 1),
+              !isHorizontalGap(RmgGridPoint(point.m_x, point.m_y + 1),
                                getPaintTerrain()))))
-            paintPoint(TRmgGridPoint(point.m_x, point.m_y + 1));
+            paintPoint(RmgGridPoint(point.m_x, point.m_y + 1));
         else
-            paintPoint(TRmgGridPoint(point.m_x, point.m_y - 1));
+            paintPoint(RmgGridPoint(point.m_x, point.m_y - 1));
     }
     if (isHorizontalGap(point)) {
-        if (!needsTerrainRepair(TRmgGridPoint(point.m_x - 1, point.m_y)) &&
-            (needsTerrainRepair(TRmgGridPoint(point.m_x + 1, point.m_y)) ||
-             (isVerticalGap(TRmgGridPoint(point.m_x - 1, point.m_y),
+        if (!needsTerrainRepair(RmgGridPoint(point.m_x - 1, point.m_y)) &&
+            (needsTerrainRepair(RmgGridPoint(point.m_x + 1, point.m_y)) ||
+             (isVerticalGap(RmgGridPoint(point.m_x - 1, point.m_y),
                             getPaintTerrain()) &&
-              !isVerticalGap(TRmgGridPoint(point.m_x + 1, point.m_y),
+              !isVerticalGap(RmgGridPoint(point.m_x + 1, point.m_y),
                              getPaintTerrain()))))
-            paintPoint(TRmgGridPoint(point.m_x + 1, point.m_y));
+            paintPoint(RmgGridPoint(point.m_x + 1, point.m_y));
         else
-            paintPoint(TRmgGridPoint(point.m_x - 1, point.m_y));
+            paintPoint(RmgGridPoint(point.m_x - 1, point.m_y));
     }
 
     if (!g_rmgTerrainRules[getPaintTerrain()]->m_allowsSeparatedNeighbours &&
         hasSeparatedNeighbours(point)) {
         unsigned char matches[TILE_DIR_COUNT];
         buildMatchingNeighbourMask(point, matches);
-        TRmgTerrainGap gaps[TILE_DIR_COUNT / 2];
+        RmgTerrainGap gaps[TILE_DIR_COUNT / 2];
         unsigned int gapCount = 0;
         unsigned int first = 0;
         while (!matches[first])
@@ -1103,20 +1103,20 @@ VA(0x005B5A70, 0x8A7)
 void rmgTerrainPainter::paintTransitions()
 {
     std::vector<unsigned char> edgeCounts(getWidth() * getHeight());
-    TRmgGridPoint point;
+    RmgGridPoint point;
 
     for (point.setY(0); point.m_y < getHeight() - 1; point.setY(point.getY() + 1)) {
-        int terrain = getTerrain(TRmgGridPoint(0, point.m_y));
+        int terrain = getTerrain(RmgGridPoint(0, point.m_y));
 
-        if (getTerrain(TRmgGridPoint(1, point.m_y)) != terrain) {
+        if (getTerrain(RmgGridPoint(1, point.m_y)) != terrain) {
             ++edgeCounts[point.getY() * getWidth()];
             ++edgeCounts[point.getY() * getWidth() + 1];
         }
-        if (getTerrain(TRmgGridPoint(1, point.m_y + 1)) != terrain) {
+        if (getTerrain(RmgGridPoint(1, point.m_y + 1)) != terrain) {
             ++edgeCounts[point.getY() * getWidth()];
             ++edgeCounts[(point.getY() + 1) * getWidth() + 1];
         }
-        if (getTerrain(TRmgGridPoint(0, point.m_y + 1)) != terrain) {
+        if (getTerrain(RmgGridPoint(0, point.m_y + 1)) != terrain) {
             ++edgeCounts[point.getY() * getWidth()];
             ++edgeCounts[(point.getY() + 1) * getWidth()];
         }
@@ -1124,22 +1124,22 @@ void rmgTerrainPainter::paintTransitions()
         for (point.setX(1); point.m_x < getWidth() - 1; point.setX(point.getX() + 1)) {
             terrain = getTerrain(point);
 
-            TRmgGridPoint east(point.getX() + 1, point.getY());
+            RmgGridPoint east(point.getX() + 1, point.getY());
             if (getTerrain(east) != terrain) {
                 ++edgeCounts[point.getY() * getWidth() + point.getX()];
                 ++edgeCounts[point.getY() * getWidth() + point.getX() + 1];
             }
-            TRmgGridPoint southEast(point.getX() + 1, point.getY() + 1);
+            RmgGridPoint southEast(point.getX() + 1, point.getY() + 1);
             if (getTerrain(southEast) != terrain) {
                 ++edgeCounts[point.getY() * getWidth() + point.getX()];
                 ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX() + 1];
             }
-            TRmgGridPoint south(point.getX(), point.getY() + 1);
+            RmgGridPoint south(point.getX(), point.getY() + 1);
             if (getTerrain(south) != terrain) {
                 ++edgeCounts[point.getY() * getWidth() + point.getX()];
                 ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX()];
             }
-            TRmgGridPoint southWest(point.getX() - 1, point.getY() + 1);
+            RmgGridPoint southWest(point.getX() - 1, point.getY() + 1);
             if (getTerrain(southWest) != terrain) {
                 ++edgeCounts[point.getY() * getWidth() + point.getX()];
                 ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX() - 1];
@@ -1147,12 +1147,12 @@ void rmgTerrainPainter::paintTransitions()
         }
 
         terrain = getTerrain(point);
-        TRmgGridPoint south(point.getX(), point.getY() + 1);
+        RmgGridPoint south(point.getX(), point.getY() + 1);
         if (getTerrain(south) != terrain) {
             ++edgeCounts[point.getY() * getWidth() + point.getX()];
             ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX()];
         }
-        TRmgGridPoint southWest(point.getX() - 1, point.getY() + 1);
+        RmgGridPoint southWest(point.getX() - 1, point.getY() + 1);
         if (getTerrain(southWest) != terrain) {
             ++edgeCounts[point.getY() * getWidth() + point.getX()];
             ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX() - 1];
@@ -1161,7 +1161,7 @@ void rmgTerrainPainter::paintTransitions()
 
     for (point.setX(0); point.m_x < getWidth() - 1; point.setX(point.getX() + 1)) {
         int terrain = getTerrain(point);
-        TRmgGridPoint east(point.getX() + 1, point.getY());
+        RmgGridPoint east(point.getX() + 1, point.getY());
         if (getTerrain(east) != terrain) {
             ++edgeCounts[point.getY() * getWidth() + point.getX()];
             ++edgeCounts[point.getY() * getWidth() + point.getX() + 1];
@@ -1177,7 +1177,7 @@ void rmgTerrainPainter::paintTransitions()
                 buildNeighbourKinds(point, neighbours);
 
                 int transition;
-                TRmgTerrainFlip flip;
+                RmgTerrainFlip flip;
                 transition = selectTerrainTransition(neighbours, &flip);
                 if (transition == RMG_TERRAIN_FIRST_DIAGONAL_LOW) {
                     if (checkFirstDiagonal(point, flip))
@@ -1228,20 +1228,20 @@ void rmgTerrainPainter::paintTransitions()
 
 VA(0x005B6320, 0x107)
 unsigned char rmgTerrainPainter::isHorizontalGap(
-    const TRmgGridPoint& point, int terrain)
+    const RmgGridPoint& point, int terrain)
 {
     return point.m_x > 0 && point.m_x < getWidth() - 1
-        && getTerrain(TRmgGridPoint(point.m_x - 1, point.m_y)) != terrain
-        && getTerrain(TRmgGridPoint(point.m_x + 1, point.m_y)) != terrain;
+        && getTerrain(RmgGridPoint(point.m_x - 1, point.m_y)) != terrain
+        && getTerrain(RmgGridPoint(point.m_x + 1, point.m_y)) != terrain;
 }
 
 VA(0x005B6430, 0x106)
 unsigned char rmgTerrainPainter::isVerticalGap(
-    const TRmgGridPoint& point, int terrain)
+    const RmgGridPoint& point, int terrain)
 {
     return point.m_y > 0 && point.m_y < getHeight() - 1
-        && getTerrain(TRmgGridPoint(point.m_x, point.m_y - 1)) != terrain
-        && getTerrain(TRmgGridPoint(point.m_x, point.m_y + 1)) != terrain;
+        && getTerrain(RmgGridPoint(point.m_x, point.m_y - 1)) != terrain
+        && getTerrain(RmgGridPoint(point.m_x, point.m_y + 1)) != terrain;
 }
 
 // Cardinal neighbours use coordinates clamped to the map edge. A diagonal
@@ -1265,18 +1265,18 @@ unsigned char rmgTerrainPainter::isVerticalGap(
 // ordered, short-circuited queries in 185,856 states; five controls fail.
 VA(0x005B6540, 0x2CA) // anchor-callee 0x5b58f8, 0x5b681e; retail-only
 void rmgTerrainPainter::buildMatchingNeighbourMask(
-    const TRmgGridPoint& point, unsigned char* matches)
+    const RmgGridPoint& point, unsigned char* matches)
 {
     int terrain = getTerrain(point);
     unsigned int north = point.m_y > 0 ? point.m_y - 1 : point.m_y;
     unsigned int south = point.m_y < m_size.m_y - 1 ? point.m_y + 1 : point.m_y;
     unsigned int west = point.m_x > 0 ? point.m_x - 1 : point.m_x;
     unsigned int east = point.m_x < m_size.m_x - 1 ? point.m_x + 1 : point.m_x;
-    TRmgGridPoint low = TRmgGridPoint(west, north);
-    TRmgGridPoint high = TRmgGridPoint(east, south);
+    RmgGridPoint low = RmgGridPoint(west, north);
+    RmgGridPoint high = RmgGridPoint(east, south);
 
     {
-        TRmgGridPoint nearby;
+        RmgGridPoint nearby;
         nearby.setX(point.m_x);
         nearby.setY(low.getY());
         matches[TILE_DIR_NORTH] = getTerrain(nearby) == terrain;
@@ -1292,20 +1292,20 @@ void rmgTerrainPainter::buildMatchingNeighbourMask(
     }
     matches[TILE_DIR_NORTHWEST] =
         (matches[TILE_DIR_NORTH] || matches[TILE_DIR_WEST])
-        && getTerrain(TRmgGridPoint(low.getX(), low.getY())) == terrain;
+        && getTerrain(RmgGridPoint(low.getX(), low.getY())) == terrain;
     matches[TILE_DIR_NORTHEAST] =
         (matches[TILE_DIR_NORTH] || matches[TILE_DIR_EAST])
-        && getTerrain(TRmgGridPoint(high.getX(), low.getY())) == terrain;
+        && getTerrain(RmgGridPoint(high.getX(), low.getY())) == terrain;
     matches[TILE_DIR_SOUTHWEST] =
         (matches[TILE_DIR_SOUTH] || matches[TILE_DIR_WEST])
-        && getTerrain(TRmgGridPoint(low.getX(), high.getY())) == terrain;
+        && getTerrain(RmgGridPoint(low.getX(), high.getY())) == terrain;
     matches[TILE_DIR_SOUTHEAST] =
         (matches[TILE_DIR_SOUTH] || matches[TILE_DIR_EAST])
-        && getTerrain(TRmgGridPoint(high.getX(), high.getY())) == terrain;
+        && getTerrain(RmgGridPoint(high.getX(), high.getY())) == terrain;
 }
 
 VA(0x005B6810, 0x84)
-unsigned char rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& point)
+unsigned char rmgTerrainPainter::hasSeparatedNeighbours(const RmgGridPoint& point)
 {
     unsigned char matches[TILE_DIR_COUNT];
     buildMatchingNeighbourMask(point, matches);
@@ -1339,7 +1339,7 @@ noSeparation:
 
 VA(0x005B68A0, 0x2FF)
 void rmgTerrainPainter::buildNeighbourKinds(
-    const TRmgGridPoint& point, int* neighbours)
+    const RmgGridPoint& point, int* neighbours)
 {
     int terrain = getTerrain(point);
     unsigned int north = point.m_y > 0 ? point.m_y - 1 : point.m_y;
@@ -1348,49 +1348,49 @@ void rmgTerrainPainter::buildNeighbourKinds(
     unsigned int east = point.m_x < m_size.m_x - 1 ? point.m_x + 1 : point.m_x;
 
     {
-        TRmgGridPoint nearby(point.m_x, north);
+        RmgGridPoint nearby(point.m_x, north);
         int nearbyTerrain = getTerrain(nearby);
         neighbours[TILE_DIR_NORTH] = getRmgTerrainNeighbourKind(
             terrain, nearbyTerrain);
     }
     {
-        TRmgGridPoint nearby(point.m_x, south);
+        RmgGridPoint nearby(point.m_x, south);
         int nearbyTerrain = getTerrain(nearby);
         neighbours[TILE_DIR_SOUTH] = getRmgTerrainNeighbourKind(
             terrain, nearbyTerrain);
     }
     {
-        TRmgGridPoint nearby(west, point.m_y);
+        RmgGridPoint nearby(west, point.m_y);
         int nearbyTerrain = getTerrain(nearby);
         neighbours[TILE_DIR_WEST] = getRmgTerrainNeighbourKind(
             terrain, nearbyTerrain);
     }
     {
-        TRmgGridPoint nearby(east, point.m_y);
+        RmgGridPoint nearby(east, point.m_y);
         int nearbyTerrain = getTerrain(nearby);
         neighbours[TILE_DIR_EAST] = getRmgTerrainNeighbourKind(
             terrain, nearbyTerrain);
     }
     {
-        TRmgGridPoint nearby(west, north);
+        RmgGridPoint nearby(west, north);
         int nearbyTerrain = getTerrain(nearby);
         neighbours[TILE_DIR_NORTHWEST] = getRmgTerrainNeighbourKind(
             terrain, nearbyTerrain);
     }
     {
-        TRmgGridPoint nearby(east, north);
+        RmgGridPoint nearby(east, north);
         int nearbyTerrain = getTerrain(nearby);
         neighbours[TILE_DIR_NORTHEAST] = getRmgTerrainNeighbourKind(
             terrain, nearbyTerrain);
     }
     {
-        TRmgGridPoint nearby(west, south);
+        RmgGridPoint nearby(west, south);
         int nearbyTerrain = getTerrain(nearby);
         neighbours[TILE_DIR_SOUTHWEST] = getRmgTerrainNeighbourKind(
             terrain, nearbyTerrain);
     }
     {
-        TRmgGridPoint nearby(east, south);
+        RmgGridPoint nearby(east, south);
         int nearbyTerrain = getTerrain(nearby);
         neighbours[TILE_DIR_SOUTHEAST] = getRmgTerrainNeighbourKind(
             terrain, nearbyTerrain);
@@ -1399,18 +1399,18 @@ void rmgTerrainPainter::buildNeighbourKinds(
 
 VA(0x005B6BA0, 0x24C)
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
-    const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
+    const RmgGridPoint& point, const RmgTerrainFlip& flip)
 {
     DATA(0x006A5260)
-    static TPoint offsets[4][2] = {
-        { TPoint(-1, 1), TPoint(1, -1) },
-        { TPoint(1, 1), TPoint(-1, -1) },
-        { TPoint(-1, -1), TPoint(1, 1) },
-        { TPoint(1, -1), TPoint(-1, 1) }
+    static Point offsets[4][2] = {
+        { Point(-1, 1), Point(1, -1) },
+        { Point(1, 1), Point(-1, -1) },
+        { Point(-1, -1), Point(1, 1) },
+        { Point(1, -1), Point(-1, 1) }
     };
     int terrain = getTerrain(point);
-    const TPoint* pair = offsets[(flip.m_flipY << 1) | flip.m_flipX];
-    TRmgGridPoint nearby(
+    const Point* pair = offsets[(flip.m_flipY << 1) | flip.m_flipX];
+    RmgGridPoint nearby(
         tLimit(
             0, static_cast<int>(point.getX()) + pair[0].getX(), static_cast<int>(getWidth()) - 1),
         tLimit(
@@ -1426,15 +1426,15 @@ unsigned char rmgTerrainPainter::checkFirstDiagonal(
 
 VA(0x005B6E00, 0x1B3)
 unsigned char rmgTerrainPainter::checkSecondDiagonal(
-    const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
+    const RmgGridPoint& point, const RmgTerrainFlip& flip)
 {
     DATA(0x006A3D68)
-    static TPoint offsets[4] = {
-        TPoint(2, 2), TPoint(-2, 2), TPoint(2, -2), TPoint(-2, -2)
+    static Point offsets[4] = {
+        Point(2, 2), Point(-2, 2), Point(2, -2), Point(-2, -2)
     };
     int terrain = getTerrain(point);
-    const TPoint& offset = offsets[(flip.m_flipY << 1) | flip.m_flipX];
-    TRmgGridPoint nearby(
+    const Point& offset = offsets[(flip.m_flipY << 1) | flip.m_flipX];
+    RmgGridPoint nearby(
         tLimit(0, static_cast<int>(point.getX()) + offset.getX(), static_cast<int>(getWidth()) - 1), point.getY());
     if (getTerrain(nearby) != terrain)
         return 1;
@@ -1447,33 +1447,33 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
 
 VA(0x005B6FD0, 0x271)
 int rmgTerrainPainter::getTransitionStrength(
-    const TRmgGridPoint& point, int terrain)
+    const RmgGridPoint& point, int terrain)
 {
     unsigned int strength = m_transitionStrength;
-    TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];
+    RmgTerrainRule* rule = g_rmgTerrainRules[terrain];
     if (point.getX() > 0) {
-        TRmgGridPoint nearby(point.getX(), point.getY());
+        RmgGridPoint nearby(point.getX(), point.getY());
         nearby.setX(point.getX() - 1);
         if (getTerrain(nearby) == terrain
             && rule->isSpecialFrame(getFrame(nearby)))
             strength >>= 1;
     }
     if (point.getY() > 0) {
-        TRmgGridPoint nearby(point.getX(), point.getY());
+        RmgGridPoint nearby(point.getX(), point.getY());
         nearby.setY(point.getY() - 1);
         if (getTerrain(nearby) == terrain
             && rule->isSpecialFrame(getFrame(nearby)))
             strength >>= 1;
     }
     if (point.getX() < getWidth() - 1) {
-        TRmgGridPoint nearby(point.getX(), point.getY());
+        RmgGridPoint nearby(point.getX(), point.getY());
         nearby.setX(point.getX() + 1);
         if (getTerrain(nearby) == terrain
             && rule->isSpecialFrame(getFrame(nearby)))
             strength >>= 1;
     }
     if (point.getY() < getHeight() - 1) {
-        TRmgGridPoint nearby(point.getX(), point.getY());
+        RmgGridPoint nearby(point.getX(), point.getY());
         nearby.setY(point.getY() + 1);
         if (getTerrain(nearby) == terrain
             && rule->isSpecialFrame(getFrame(nearby)))
@@ -1489,11 +1489,11 @@ void rmgTerrainPainter::finish()
 {
     do {
         while (m_primaryPoints.size()) {
-            TRmgGridPoint point = *m_primaryPoints.begin();
+            RmgGridPoint point = *m_primaryPoints.begin();
             repairTerrainPoint(point);
         }
         while (m_secondaryPoints.size()) {
-            TRmgGridPoint point = *m_secondaryPoints.begin();
+            RmgGridPoint point = *m_secondaryPoints.begin();
             m_secondaryPoints.erase(point);
             if (needsTerrainRepair(point))
                 paintPoint(point);
@@ -1526,27 +1526,27 @@ int rmgTerrainPainter::changeTerrain(int terrain, int strength)
 }
 
 VA(0x005B7250, 0x9A) // anchor-callee 0x54017e; allocation and throw RTTI
-TRmgTerrainBrush::TRmgTerrainBrush(
-    TRmgMapInterface* map, int terrain, int strength)
+RmgTerrainBrush::RmgTerrainBrush(
+    RmgMapInterface* map, int terrain, int strength)
     : m_painter(new rmgTerrainPainter(map, terrain, strength))
 {
     if (!m_painter.get())
-        throw TAllocationFailure();
+        throw AllocationFailure();
 }
 
 VA(0x005B72F0, 0x225) // anchor-callee 0x540207; auto_ptr ownership cleanup
-TRmgTerrainBrush::~TRmgTerrainBrush()
+RmgTerrainBrush::~RmgTerrainBrush()
 {
 }
 
 VA(0x005B7520, 0x16A)
-void TRmgTerrainBrush::changeTerrain(int terrain, int strength)
+void RmgTerrainBrush::changeTerrain(int terrain, int strength)
 {
     m_painter->changeTerrain(terrain, strength);
 }
 
 VA(0x005B7690, 0x1F) // anchor-callee 0x5401e9; four unsigned rectangle args
-void TRmgTerrainBrush::paintRectangle(
+void RmgTerrainBrush::paintRectangle(
     unsigned int x, unsigned int y,
     unsigned int rectangleWidth, unsigned int rectangleHeight)
 {
@@ -1629,7 +1629,7 @@ VA_COMPGEN(0x005B8C70, 0x2B, STD_DISTANCE, TRmgGridPoint)
 VA_COMPGEN(0x005B8CD0, 0x28, STD_DISTANCE_TAGGED, TRmgGridPoint)
 
 VA(0x005B8CA0, 0x20) // anchor-callee 0x5b4e96; fastcall, two point references
-bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right)
+bool operator<(const RmgGridPoint& left, const RmgGridPoint& right)
 {
     return left.m_y < right.m_y || (left.m_y == right.m_y && left.m_x < right.m_x);
 }

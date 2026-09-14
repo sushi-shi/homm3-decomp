@@ -1231,7 +1231,7 @@ void CChatManager::setPosition(int newPos)
 
 VA(0x005541a0, 0x5A)  // dc 0x11cb48
 CChatEdit::CChatEdit(int x, int y, int w, int h, int textSize, char* text,
-    char* fontName, font::TColor color, font::EJustify justification,
+    char* fontName, font::Color color, font::EJustify justification,
     char* backgroundIcon, int backgroundFrame, int id, int style,
     int readType, int insetX, int insetY)
     : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
@@ -2417,7 +2417,7 @@ int CLevelPickWaitDlg::onPlayerDrop(CNetMsg* netMsg, message& msg)
 // The incoming level-update packet restores the raw four-byte skill band,
 // rather than the clamped gameplay accessor. Name provisional; retain an
 // ordinary body before its caller so VC6 can expand the copy.
-void hero::setPrimarySkills(const signed char* stats)
+void Hero::setPrimarySkills(const signed char* stats)
 {
     memcpy(m_stats, stats, sizeof(m_stats));
 }
@@ -2429,7 +2429,7 @@ void CLevelPickWaitDlg::onHeroLevelUpdate(CNetMsg* netMsg)
 {
     CHeroLevelUpdateMsg* levelMsg =
         static_cast<CHeroLevelUpdateMsg*>(netMsg);
-    hero* targetHero = g_game->getHero(levelMsg->m_hero);
+    Hero* targetHero = g_game->getHero(levelMsg->m_hero);
     if (targetHero) {
         memcpy(targetHero->m_skillLevel, levelMsg->m_ssLevel,
                sizeof(levelMsg->m_ssLevel));

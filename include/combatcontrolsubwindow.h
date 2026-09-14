@@ -7,7 +7,10 @@
 class bitmapBackedTextWidget;
 class message;
 class bitmapBorder;
-class hero;
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero;
 class type_func_button;
 class iconWidget;
 class textWidget;
@@ -28,7 +31,7 @@ class army;
 // either to the base or to each derived class. The three destructors
 // below need none of it: every one is the base body, and the base body
 // touches only the inherited TSubWindow subobject.
-class type_combat_sub_window : public TSubWindow {
+class type_combat_sub_window : public SubWindow {
 public:
     // +0x34, and the base owns it: the base constructor NULLS it and the
     // family's set_rollover slot is what reads it. Only
@@ -54,7 +57,11 @@ SIZE(type_combat_sub_window, 0x38);
 // base; the sole construction site is 0x4721d0, reached from
 // combatManager::Open. The destructor body is empty in retail - all 120
 // bytes are the base destructor inlined whole.
-class TCombatControlSubWindow : public type_combat_sub_window {
+// Before normalization (type): TCombatControlSubWindow.
+#ifndef CombatControlSubWindow
+#define CombatControlSubWindow TCombatControlSubWindow
+#endif
+class CombatControlSubWindow : public type_combat_sub_window {
 public:
     // The two 'ComSlide.def' arrows over the combat message log, +0x38 and
     // +0x3c; the constructor is the only body that writes either, and it
@@ -62,33 +69,41 @@ public:
     type_func_button* m_logScrollUpButton;
     type_func_button* m_logScrollDownButton;
 
-    TCombatControlSubWindow(heroWindow* parent);
-    virtual ~TCombatControlSubWindow();
+    CombatControlSubWindow(heroWindow* parent);
+    virtual ~CombatControlSubWindow();
     virtual void setRollover(const char* newText);
     virtual void setRolloverButtons(long first, long second);
     virtual void disableAllButtons();
 };
-SIZE(TCombatControlSubWindow, 0x40);
+SIZE(CombatControlSubWindow, 0x40);
 
 // The same shape one class over: 0x63d430, "coplacbr.pcx" (0x670054), the
 // same 0x4721d0 construction site, the same empty destructor.
-class TCombatPlacementSubWindow : public type_combat_sub_window {
+// Before normalization (type): TCombatPlacementSubWindow.
+#ifndef CombatPlacementSubWindow
+#define CombatPlacementSubWindow TCombatPlacementSubWindow
+#endif
+class CombatPlacementSubWindow : public type_combat_sub_window {
 private:
     // 0x4721d0 allocates this class at 0x3c against the base's 0x38, and
     // no body in the image writes the difference.
     char m_pad038[4];
 
 public:
-    TCombatPlacementSubWindow(heroWindow* parent);
-    virtual ~TCombatPlacementSubWindow();
+    CombatPlacementSubWindow(heroWindow* parent);
+    virtual ~CombatPlacementSubWindow();
     virtual void disableAllButtons();
 };
-SIZE(TCombatPlacementSubWindow, 0x3c);
+SIZE(CombatPlacementSubWindow, 0x3c);
 
 // Retail's two construction sites allocate 0x5c bytes. The constructor and
 // Show/UnShow pair independently fix the TSubWindow base, the nine pointer
 // fields at +0x34..+0x54, and the shown byte at +0x58.
-class TCombatHeroSubWindow : public TSubWindow {
+// Before normalization (type): TCombatHeroSubWindow.
+#ifndef CombatHeroSubWindow
+#define CombatHeroSubWindow TCombatHeroSubWindow
+#endif
+class CombatHeroSubWindow : public SubWindow {
 public:
     bitmapBorder* m_backgroundWidget;
     bitmapBorder* m_portrait;
@@ -101,22 +116,26 @@ public:
     textWidget* m_manaText;
     bool m_shown;
 
-    TCombatHeroSubWindow(int x, int y, int w, int h, heroWindow* parent);
-    virtual ~TCombatHeroSubWindow();
-    void update(const hero& info, const hero* otherHero,
+    CombatHeroSubWindow(int x, int y, int w, int h, heroWindow* parent);
+    virtual ~CombatHeroSubWindow();
+    void update(const Hero& info, const Hero* otherHero,
                 bool onCursedGround);
     void show();
     void unShow();
     bool isShown() const { return m_shown; }
 };
-SIZE(TCombatHeroSubWindow, 0x5c);
+SIZE(CombatHeroSubWindow, 0x5c);
 
 // Retail's two constructor arms close the entire 0x34..0x6f tail. The
 // full-stat arm creates the compact creature portrait and six statistic
 // rows; both arms create the three standing-spell icons and their text
 // overlay. DrawCreatureAndHeroSubwindows independently proves the shown
 // byte at +0x68 for each of TCombatWindow's four panels.
-class TCombatCreatureSubWindow : public TSubWindow {
+// Before normalization (type): TCombatCreatureSubWindow.
+#ifndef CombatCreatureSubWindow
+#define CombatCreatureSubWindow TCombatCreatureSubWindow
+#endif
+class CombatCreatureSubWindow : public SubWindow {
 public:
     bitmapBorder* m_backgroundWidget;  // +0x34
     iconWidget* m_creatureIcon;         // +0x38, full-stat arm only
@@ -135,24 +154,24 @@ public:
     char m_paddingBeforeViewLevel[3];
     int m_viewLevel;                     // +0x6c
 
-    TCombatCreatureSubWindow(int x, int y, int w, int h,
+    CombatCreatureSubWindow(int x, int y, int w, int h,
                              heroWindow* parent, int viewLevel);
 
     // Its 0x63d444 table holds exactly one slot: 0x63d440 (the sibling
     // TCombatHeroSubWindow's table) sits four bytes earlier, so neither
     // class adds a virtual beyond the destructor.
-    virtual ~TCombatCreatureSubWindow();
+    virtual ~CombatCreatureSubWindow();
 
     // Dreamcast's public symbols preserve these two source boundaries and
     // ProcessCombatMsg's retail call sites independently prove their
     // pointer ABI.  They remain out of line just like the sibling hero
     // panel methods.
-    void update(const army& info, const hero* owner);
+    void update(const army& info, const Hero* owner);
     void show();
 
     void unShow();
 };
-SIZE(TCombatCreatureSubWindow, 0x70);
+SIZE(CombatCreatureSubWindow, 0x70);
 
 // --- TCombatControlSubWindow ---
 // CODEVIEW(E:\gamedcs\combatcontrolsubwindow.cpp:227, dc 0x65270) void TCombatControlSubWindow::set_rollover_buttons();

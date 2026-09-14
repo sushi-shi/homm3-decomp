@@ -100,7 +100,11 @@ enum EHeroBackpackLimit {
 // Dreamcast's public wearable-position type. Complete adds a nineteenth
 // equipped position, but retains the same dword parameter ABI and may pass
 // that retail-only ordinal through functions which use this shared type.
-enum TArtifactSlot {
+// Before normalization (type): TArtifactSlot.
+#ifndef ArtifactSlot
+#define ArtifactSlot TArtifactSlot
+#endif
+enum ArtifactSlot {
     eArtifactSlotHead = 0,
     eArtifactSlotShoulders,
     eArtifactSlotNeck,
@@ -139,7 +143,7 @@ private:
 
 public:
     char m_paddingBeforeObscuredType;
-    TAdventureObjectType m_obscuredType;  // +0x0c (DC type)
+    AdventureObjectType m_obscuredType;  // +0x0c (DC type)
 
 private:
     unsigned char m_wasTrigger;  // +0x10
@@ -148,7 +152,7 @@ public:
     char m_paddingBeforeExtraInfo[3];
 
     type_obscuring_object();
-    class town* getObscuredTown() const;
+    class Town* getObscuredTown() const;
     // E:\gamedcs\hero.h:117. The Dreamcast tiny helper is the direct byte
     // accessor; retail expands it to the same +0x10 load at its callers.
     bool obscuredIsTrigger() const
@@ -165,7 +169,7 @@ public:
     bool isOnMap() const { return m_valid != 0; }
     // E:\gamedcs\Hero.h:150. Dreamcast retains an out-of-line copy, while
     // retail expands the validity test at every admitted Windows caller.
-    TAdventureObjectType getObscuredObject() const
+    AdventureObjectType getObscuredObject() const
     {
         if (m_valid)
             return m_obscuredType;
@@ -189,7 +193,7 @@ public:
     bool save(void* outfile);
 
 protected:
-    void obscureCell(TAdventureObjectType newType, long id);
+    void obscureCell(AdventureObjectType newType, long id);
 
 private:
     unsigned long m_extraInfo;  // +0x14
@@ -244,7 +248,7 @@ SIZE(boat, 0x28);
 
 struct type_artifact {
 public:
-    TArtifact m_artifactId;
+    Artifact m_artifactId;
     int m_extra;
     // DC Hero.h:211 stores the artifact argument at +0, then line 212 stores
     // the -1 sentinel at +4. Retail value_of_town preserves that order in
@@ -253,7 +257,7 @@ public:
     // The generated offering constructor at dc 0x128714 calls this
     // constructor with -1. That proves the default argument: no separate
     // zero-argument type_artifact constructor exists in the DC class API.
-    explicit type_artifact(TArtifact id = ARTIFACT_NONE)
+    explicit type_artifact(Artifact id = ARTIFACT_NONE)
     {
         m_artifactId = id;
         m_extra = -1;
@@ -294,7 +298,7 @@ extern unsigned char g_combatFlag697744;
 // 0x485d90, a /Gr free helper claimed in customcampaign.cpp. The returned
 // string's hidden pointer takes ECX and infile takes EDX, as hero::load's
 // call proves. The semantic name is provisional; no Dreamcast symbol covers it.
-std::string readLengthPrefixedString(TAbstractFile* infile);
+std::string readLengthPrefixedString(AbstractFile* infile);
 
 // hero::CheckLevel's three outside names. DECLARATIONS ONLY - the DATA
 // claims on 0x6a7570 and 0x69954c belong to levelupwindow.cpp and
@@ -344,7 +348,11 @@ extern int g_stablesMovementBonus;
 extern const char* g_moraleTexts[42];
 extern const char* g_luckTexts[25];
 
-class hero : public type_obscuring_object {
+// Before normalization (type): hero.
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero : public type_obscuring_object {
 public:
     enum {
         CLASS_NAME_OVERRIDE_HERO_ID = 27,
@@ -565,7 +573,7 @@ public:
     // walking from 0xad) - exactly armyGroup's 56-byte layout, and
     // AI_approximate_strength (0x427657) hands `hero + 0x91` straight
     // to armyGroup::get_AI_value as a this pointer.
-    armyGroup m_army;
+    ArmyGroup m_army;
     signed char m_skillLevel[28];  // +0xc9
     // Acquisition-order band, 28 entries at +0xe5, read UNSIGNED
     // (TakeSS's renumbering sweep compares with `jbe`, not `jle`).
@@ -717,7 +725,7 @@ public:
     // non-trivial implicit constructor - army, the bitset and the
     // Dinkumware string each have one - so declaring this changes what
     // that constructor does, not whether one exists.
-    hero();
+    Hero();
     void initialize(short index);
 
 private:
@@ -841,7 +849,7 @@ private:
 public:
     int heroFn004E5DE0() const;
     void heroFn004E6120(int creatureType,
-                         TCreatureTypeTraits* traits) const;
+                         CreatureTypeTraits* traits) const;
     // 0x4d9050 / 0x4e56b0, the two owner-record accessors; both open
     // with the same `owner < 0` guard.
     unsigned char belongsToHuman() const;
@@ -908,7 +916,7 @@ public:
     // tail up when the requested slot is occupied. `slot` < 0 means
     // "first free".
     unsigned char addToBackpack(const type_artifact* artifact, long slot);
-    std::string getBackpackError(TArtifact artifact) const;
+    std::string getBackpackError(Artifact artifact) const;
     unsigned char giveArtifact(const type_artifact* artifact,
                                unsigned char announce,
                                unsigned char checkEnd);
@@ -919,10 +927,10 @@ public:
     unsigned char isWieldingArtifact(int whichArtifact) const;
     // 0x004e2dd0 - the by-id overload: finds the artifact in the
     // backpack first, then in the equipped slots, and unequips it.
-    unsigned char removeArtifact(TArtifact artifact);
+    unsigned char removeArtifact(Artifact artifact);
     // 0x004e23d0 - drains another hero's equipped slots and backpack
     // into this hero's backpack.
-    void transferArtifacts(hero* src);
+    void transferArtifacts(Hero* src);
     // 0x4e5f30 - "this hero can still be given an order this turn".
     // Declared for playerData::NextHero, which inlines nothing of it -
     // it is a real call from game.obj.
@@ -934,9 +942,9 @@ public:
     // hero.obj OWNS both definitions (0x4dc320 / 0x4dcac0).
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         getMoraleDescription() const;
-    int getLuck(const hero* otherHero, unsigned char onCursedGround,
+    int getLuck(const Hero* otherHero, unsigned char onCursedGround,
                 unsigned char applyLimits) const;
-    int getMorale(const hero* otherHero, unsigned char onCursedGround,
+    int getMorale(const Hero* otherHero, unsigned char onCursedGround,
                   unsigned char applyLimits) const;
     int moraleIncreaseValue(int value);
     int luckIncreaseValue(int value);
@@ -957,7 +965,7 @@ public:
     // with a single-precision fmul.
     float getExperienceBonusFactor() const;
     int getMysticismBonus() const;
-    TAdventureObjectType heroFn004E4EC0();
+    AdventureObjectType heroFn004E4EC0();
     long getCombatSpeedBonus() const;
     // Header inline at E:\gamedcs\Hero.h:634 (dc 0x669fc). Dreamcast's
     // xrefs put direct calls in both hero-screen functions and the combat
@@ -989,7 +997,7 @@ public:
     // E:\gamedcs\Hero.h:664. Dreamcast emits this header helper from
     // overview.obj. Complete emits no standalone wrapper; ProcessIconSelect
     // expands it and retains the underlying get_obscured_town call.
-    inline town* getOccupiedTown()
+    inline Town* getOccupiedTown()
     {
         return getObscuredTown();
     }
@@ -1048,17 +1056,17 @@ public:
     // ai_combat's inlined get_spell_damage / get_resurrection_value can
     // call them.
     long modifySpellDamage(int spell, int damage, const class army* targetArmy) const;
-    TSkillMastery getSpellLevel(SpellID spell, int magicTerrain) const;
-    TSkillMastery getSpellSchoolLevel(TSpellSchool schoolMask,
+    SkillMastery getSpellLevel(SpellID spell, int magicTerrain) const;
+    SkillMastery getSpellSchoolLevel(SpellSchool schoolMask,
                                       int magicTerrain) const;
-    TSpellSchool getHighestSchool(TSpellSchool schoolMask) const;
-    int getManaCost(int whichSpell, const class armyGroup* enemy,
+    SpellSchool getHighestSchool(SpellSchool schoolMask) const;
+    int getManaCost(int whichSpell, const ArmyGroup* enemy,
                     int magicTerrain) const;
     float getCombatValueModifier() const;
     // The header helper used by GetManaCost's own-stack discount. Complete
     // folds it back to the same armyGroup::IsMember bytes.
     // E:\gamedcs\Hero.h:702, dc 0xd58f8
-    unsigned char hasArmy(TCreatureType type) const
+    unsigned char hasArmy(CreatureType type) const
     {
         return m_army.isMember(type);
     }
@@ -1070,7 +1078,7 @@ public:
             getSpecialTerrain());
     }
     // E:\gamedcs\Hero.h:718, dc 0x2308c
-    TSkillMastery getSpellLevel(SpellID spell) const
+    SkillMastery getSpellLevel(SpellID spell) const
     {
         return getSpellLevel(spell, getSpecialTerrain());
     }
@@ -1090,7 +1098,7 @@ public:
     // LF_MFUNCTION returns const type_artifact&, with TArtifactSlot as the
     // equipped-slot domain. UI-decoded indices convert to that domain at use.
     // E:\gamedcs\Hero.h:965, dc 0x27e8c
-    const type_artifact& getArtifact(TArtifactSlot slot) const
+    const type_artifact& getArtifact(ArtifactSlot slot) const
     {
         return m_equipped[slot];
     }
@@ -1107,12 +1115,12 @@ public:
     }
     // E:\gamedcs\Hero.h:981. Dreamcast records this exact typed boundary;
     // the byte-backed skillLevel array is widened by the inline return.
-    TSkillMastery getSecondarySkill(TSecondarySkill skill) const
+    SkillMastery getSecondarySkill(SecondarySkill skill) const
     {
         // skillLevel is the packed byte-backed persistence array.  The
         // original typed facade necessarily widens that stored ordinal back
         // into its CodeView-proven enum domain at this boundary.
-        return TSkillMastery(m_skillLevel[skill]);
+        return SkillMastery(m_skillLevel[skill]);
     }
     // E:\gamedcs\Hero.h:986, dc 0x1fd30. SetHeroContext preserves this
     // header-inline helper in source. Retail folds its packed-point
@@ -1184,7 +1192,7 @@ public:
     {
         return m_availableSpells[spell];
     }
-    TCreatureType getNecromancyCreature();
+    CreatureType getNecromancyCreature();
     const char* heroFn004D8FB0();
     unsigned char heroFn004DBE80(int combination);
     // Same gate and same reason as the equip pair above.
@@ -1200,8 +1208,8 @@ public:
     void heroFn004DC100(long slot);
     boat* findSummonableBoat() const;
     void placeInMap(int playerId, type_point point, unsigned char resetFlags);
-    int load(TAbstractFile* infile, int saveVersion);
-    int save(TAbstractFile* outfile);
+    int load(AbstractFile* infile, int saveVersion);
+    int save(AbstractFile* outfile);
 };
 // sizeof(hero) == 1170 (0x492), byte-proven THREE independent ways:
 //   - the save walk at 0x4be841 runs `lea edi,[gpGame+0x21620]` and
@@ -1213,7 +1221,7 @@ public:
 //   - two `push 0x492` / `call operator new` sites at 0x4af225 and
 //     0x4af26c, each immediately followed by `call hero::hero`.
 // 0x548 is army, not hero: it has ZERO `operator new` sites image-wide.
-SIZE(hero, 0x492);
+SIZE(Hero, 0x492);
 
 #pragma pack(pop)
 
@@ -1224,7 +1232,11 @@ SIZE(hero, 0x492);
 // (Dreamcast and NH3API name it m_large_portrait_name). The recovered
 // members below follow their consumers and reference layouts; the PC-only
 // four-byte slot at +0x3c remains unresolved.
-struct THeroTraits {
+// Before normalization (type): THeroTraits.
+#ifndef HeroTraits
+#define HeroTraits THeroTraits
+#endif
+struct HeroTraits {
 public:
     int m_sex;  // +0x00 (DC m_sex)
     int m_race;  // +0x04 (DC m_race)
@@ -1239,9 +1251,9 @@ public:
     // three bytes align the spell ID, despite NH3API widening the flag to bool32.
     char m_paddingBeforeStartingSpell[3];
     int m_startingSpell;  // +0x20 (SpellID)
-    TCreatureType m_firstStack;  // +0x24
-    TCreatureType m_secondStack;  // +0x28
-    TCreatureType m_thirdStack;  // +0x2c
+    CreatureType m_firstStack;  // +0x24
+    CreatureType m_secondStack;  // +0x28
+    CreatureType m_thirdStack;  // +0x2c
     // UpdateHeroLocator sends this pointer to the portrait widget. Dreamcast
     // independently names the same +0x30 member m_small_portrait_name.
     const char* m_smallPortraitName;  // +0x30 image name for locator portraits
@@ -1260,12 +1272,16 @@ public:
     int m_thirdStackLow;  // +0x54
     int m_thirdStackHigh;  // +0x58
 };
-SIZE(THeroTraits, 0x5c);
+SIZE(HeroTraits, 0x5c);
 
 // Retail's eighteen 64-byte hero-class rows. The class-name getter reaches
 // only the pointer at +4; cursor rendering independently proves the eighteen
 // class extent.
-struct THeroClassTraits {
+// Before normalization (type): THeroClassTraits.
+#ifndef HeroClassTraits
+#define HeroClassTraits THeroClassTraits
+#endif
+struct HeroClassTraits {
 public:
     int m_townType;  // +0x00
     const char* m_className;  // +0x04
@@ -1279,7 +1295,7 @@ public:
     // NH3API confirms the three trailing alignment bytes and 0x40-byte PC stride.
     char m_paddingAfterTownChances[3];
 };
-SIZE(THeroClassTraits, 0x40);
+SIZE(HeroClassTraits, 0x40);
 
 // Dreamcast names this public aggregate and its retail producer preserves the
 // exact layout: 21 land-speed entries, four Navigation masteries, then five
@@ -1297,8 +1313,8 @@ public:
 SIZE(type_movement_constants, 0x78);
 extern type_movement_constants g_moveConstants;
 extern int g_landMovement[21];
-DATA(0x0067d868) extern THeroClassTraits g_heroClassTraits[18];
-extern const THeroClassTraits (&g_heroClasses)[18];
+DATA(0x0067d868) extern HeroClassTraits g_heroClassTraits[18];
+extern const HeroClassTraits (&g_heroClasses)[18];
 
 // Retail .data 0x67dce8 (reloc-evidence datum; read by strip::DrawOwner
 // as pointer+index). The IDA-lineage mangling
@@ -1306,8 +1322,8 @@ extern const THeroClassTraits (&g_heroClasses)[18];
 // reference. Retail's parser settles the Complete bound: its direct
 // 0x5c-stride walk covers exactly 156 rows. The reference cell's retail
 // value is 0x679dd0; the loader begins at the +0x40 defaultName field.
-DATA(0x00679dd0) extern THeroTraits g_heroTraitsStorage[156];
-DATA(0x0067dce8) extern const THeroTraits (&g_heroTraits)[156];
+DATA(0x00679dd0) extern HeroTraits g_heroTraitsStorage[156];
+DATA(0x0067dce8) extern const HeroTraits (&g_heroTraits)[156];
 
 // E:\gamedcs\hero.cpp:267, dc 0xca7e8
 std::bitset<70> markArtifactSpells(int artifactId);
@@ -1336,7 +1352,7 @@ DATA(0x00698a88) extern type_artifact g_heroScreenDraggedArtifact;
 DATA(0x00697738) extern int g_heroScreenArmySlot;
 // HeroView stores GetLocalPlayer()->FindHero(gpCurrentHero->id) here before
 // SetupHeroView. UpdateHeroLocator compares it with topHero + locator index.
-DATA(0x00698b20) extern hero* g_currentHero;
+DATA(0x00698b20) extern Hero* g_currentHero;
 // HeroView's second argument, stashed on entry (0x4e1809 stores EDX
 // straight into this cell). SetupHeroView reads it as the "dismiss button
 // stays dead" latch, a full DWORD. The name is role-derived from
@@ -1353,7 +1369,11 @@ DATA(0x00698a50) extern int g_heroScreenHeroId;
 // roster; keep the refresh argument as the retail-proven ordinal index.
 // The constructor also touches a still-unmodelled two-dword retail tail;
 // no method admitted here relies on those fields.
-class THeroScreenWindow : public CAdvPopup {
+// Before normalization (type): THeroScreenWindow.
+#ifndef HeroScreenWindow
+#define HeroScreenWindow THeroScreenWindow
+#endif
+class HeroScreenWindow : public CAdvPopup {
 public:
     enum EArtifactSlotBounds {
         ARTIFACT_SLOT_FIRST = 0,
@@ -1433,10 +1453,10 @@ public:
     // do not populate the vector, so this does not establish a background
     // or last-base-widget role. Keep the semantic name unresolved.
     widget* m_field64;
-    THeroScreenWindow();
-    virtual ~THeroScreenWindow();
+    HeroScreenWindow();
+    virtual ~HeroScreenWindow();
     virtual int windowHandler(class message& msg);
-    void updateSlot(TArtifactSlot slot);
+    void updateSlot(ArtifactSlot slot);
     void updateAllSlots();
     void updateHeroScreenStatusBar(class message* msg);
     void updateHeroLocator(int which);
@@ -1448,7 +1468,7 @@ public:
     void setupHeroView();
     virtual int exitDialog(class message& msg);
 };
-SIZE(THeroScreenWindow, 0x68);
+SIZE(HeroScreenWindow, 0x68);
 
 // The live hero-screen window. HeroView (0x4e1800) stores its
 // `new THeroScreenWindow` result here (0x4e181c) before calling
@@ -1461,7 +1481,7 @@ SIZE(THeroScreenWindow, 0x68);
 // it decides whether an EMPTY slot's widget is drawn at all, and it
 // gates both selection-highlight arms of an occupied slot. Role
 // inferred from those three reads; ORDINAL PLACEHOLDER name.
-DATA(0x00698a78) extern THeroScreenWindow* g_heroScreenWindow;
+DATA(0x00698a78) extern HeroScreenWindow* g_heroScreenWindow;
 DATA(0x00698a44) extern int g_heroScreenArmyStripLive;
 
 // CODEVIEW(E:\gamedcs\hero.cpp:1594, dc 0xcc49c) void THeroScreenWindow::HeroMessageUpdate(char* cText);

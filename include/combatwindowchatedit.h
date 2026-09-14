@@ -12,7 +12,7 @@
 class CCombatChatEdit : public CGameChatEdit {
 public:
     CCombatChatEdit(int x, int y, int w, int h, int textSize, char* text,
-                    char* fontName, font::TColor color,
+                    char* fontName, font::Color color,
                     font::EJustify justification, char* backgroundIcon,
                     int backgroundFrame, int id, int style, int readType,
                     int insetX, int insetY);

@@ -20,7 +20,11 @@
 // data side: every per-skill factor table in hero.obj's .rdata run
 // (0x63e9e8 onward) is exactly FOUR floats wide, indexed by the
 // skillLevel byte.
-enum TSkillMastery {
+// Before normalization (type): TSkillMastery.
+#ifndef SkillMastery
+#define SkillMastery TSkillMastery
+#endif
+enum SkillMastery {
     eMasteryInvalid = -1,
     eMasteryNone = 0,
     eMasteryBasic = 1,
@@ -43,7 +47,11 @@ enum TSkillMastery {
 // ints in the record (retail reads a full dword either way) so a
 // consumer can compare `type` against whichever domain the kind
 // selects for `skill`.
-enum THeroAbilityKind {
+// Before normalization (type): THeroAbilityKind.
+#ifndef HeroAbilityKind
+#define HeroAbilityKind THeroAbilityKind
+#endif
+enum HeroAbilityKind {
     // Byte-proven by all eight specialty getters in hero.obj: each one
     // requires kind 0 and then matches the record's second dword
     // against its OWN TSecondarySkill id.
@@ -91,7 +99,11 @@ enum THeroAbilityKind {
     eHeroAbilityDragons = 7
 };
 
-struct THeroSpecificAbility {
+// Before normalization (type): THeroSpecificAbility.
+#ifndef HeroSpecificAbility
+#define HeroSpecificAbility THeroSpecificAbility
+#endif
+struct HeroSpecificAbility {
     int m_type;                   // +0x00 - a THeroAbilityKind
     // +0x04 under TWO domains. hero::GetMobility reads it as a CREATURE
     // for kind 1 and hands it to UpgradedCreatureType, which takes a
@@ -101,8 +113,8 @@ struct THeroSpecificAbility {
     // because herospec.h does not include armygrp.h and several TUs
     // (advmgr.cpp, findpath.cpp) reach this header before it.
     union {
-        TSecondarySkill m_skill;       // +0x04 - valid for kind 0
-        enum TCreatureType m_creature; // +0x04 - valid for kind 1
+        SecondarySkill m_skill;       // +0x04 - valid for kind 0
+        enum CreatureType m_creature; // +0x04 - valid for kind 1
     };
     // +0x08/+0x0c/+0x10, the FLAT creature bonuses kinds 4 and 7 add.
     // Byte-proven by hero::HeroFn_004E6120, which reads them at exactly
@@ -118,8 +130,8 @@ struct THeroSpecificAbility {
     // names TWO creatures it will upgrade, the one at +0x04 and this
     // second one, and +0x18 is what both become. Elaborated enum for the
     // reason the union above is: herospec.h does not include armygrp.h.
-    enum TCreatureType m_upgradeAlternateSubject;  // +0x14
-    enum TCreatureType m_upgradeResult;            // +0x18
+    enum CreatureType m_upgradeAlternateSubject;  // +0x14
+    enum CreatureType m_upgradeResult;            // +0x18
     // +0x1c, the one-line specialty label. Retail's own 17-byte getter at
     // 0x4d7220 is nothing but `return akHeroSpecificAbilities[id].<+0x1c>;`,
     // and THeroScreenWindow::SetupHeroView sprintf's it into widget 0x8b,
@@ -145,8 +157,8 @@ struct THeroSpecificAbility {
     // view so no other compiland's declarator count moves.
     const char* m_longText;       // +0x24
 };
-SIZE(THeroSpecificAbility, 40);
+SIZE(HeroSpecificAbility, 40);
 
-extern const THeroSpecificAbility (&g_heroSpecificAbilities)[156];
+extern const HeroSpecificAbility (&g_heroSpecificAbilities)[156];
 
 #endif  /* HOMM3_HEROSPEC_H */

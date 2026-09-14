@@ -16,14 +16,14 @@
 // DC public gAdventureOptionsHelp; retail consumers prove seven THelpText
 // rows at 0x6a6530 (the sixth row is unused by this dialog's ID mapping).
 // Do not conflate it with Dreamcast's separate gAdventureWindowHelp table.
-DATA(0x006a6530) extern THelpText g_adventureOptionsHelp[7];
+DATA(0x006a6530) extern HelpText g_adventureOptionsHelp[7];
 
 // File-static hover latch: the retail initializer at 0x65f46c is -1 and the
 // handler is its only image-wide reader/writer.
 DATA(0x0065f46c) static int g_lastImHoverId = -1;
 
 VA(0x004051d0, 0x4AA)  // dc 0x4cf4
-TAdventureOptionsWindow::TAdventureOptionsWindow()
+AdventureOptionsWindow::AdventureOptionsWindow()
     : CAdvPopup(255, 106, 289, 387, 0x12)
 {
     m_widgets.reserve(8);
@@ -104,7 +104,7 @@ TAdventureOptionsWindow::TAdventureOptionsWindow()
 VA_COMPGEN(0x00405690, 0x21, SCALAR_DELETING_DTOR, TAdventureOptionsWindow)
 
 VA(0x004056c0, 0x6B)  // dc 0x514c
-TAdventureOptionsWindow::~TAdventureOptionsWindow()
+AdventureOptionsWindow::~AdventureOptionsWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -120,7 +120,7 @@ TAdventureOptionsWindow::~TAdventureOptionsWindow()
 // one result for the final return. Complete adds the upper-bound fast reject;
 // with both bounds owned here, retail corroborates both inlined lowerings.
 DC_ONLY(0x51b0, 0x54)
-int TAdventureOptionsWindow::convertID2HelpID(int id) const
+int AdventureOptionsWindow::convertID2HelpID(int id) const
 {
     if (id < 0)
         return -1;
@@ -142,7 +142,7 @@ int TAdventureOptionsWindow::convertID2HelpID(int id) const
 
 // E:\gamedcs\adventureoptionswindow.cpp:143, dc 0x5204
 VA(0x00405730, 0x1FC)  // derived vtable slot 9, dc 0x5204
-int TAdventureOptionsWindow::windowHandler(message& msg)
+int AdventureOptionsWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)

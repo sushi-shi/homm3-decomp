@@ -46,7 +46,7 @@ const char* getBuildingName(int townType, int buildingId)
 }
 
 VA(0x00461130, 0x5C)  // dc 0x5c228
-int canBuy(const town* currTown, int buildingId)
+int canBuy(const Town* currTown, int buildingId)
 {
     int cost[NUM_RESOURCES];
     currTown->getBuildCost((type_building_id) buildingId, cost);
@@ -61,7 +61,7 @@ int canBuy(const town* currTown, int buildingId)
 
 // E:\gamedcs\castle.cpp:328
 VA(0x00461190, 0x91C)  // source-order + sole DoHall caller, dc 0x5c278
-void townManager::setupCastle(heroWindow* inCasWin, int isReset)
+void TownManager::setupCastle(heroWindow* inCasWin, int isReset)
 {
     int i;
     message msg;
@@ -265,7 +265,7 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
 // switch on the resource-bar ids.
 
 VA(0x00461AB0, 0x767)  // THallWindow vtable 0x6437a0 slot 9, dc 0x5c884
-int THallWindow::windowHandler(message& msg)
+int HallWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)

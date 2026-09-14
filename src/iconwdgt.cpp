@@ -356,7 +356,7 @@ void iconWidget::setIconSequence(int newSequence)
 DC_ONLY(0xd9cac, 0x32)
 void iconWidget::setPalette(const char* paletteName)
 {
-    TPalette16* newPalette = ResourceManager::getPalette(paletteName);
+    Palette16* newPalette = ResourceManager::getPalette(paletteName);
     if (newPalette) {
         m_sprite->setPalette(newPalette->m_data);
         newPalette->dispose();

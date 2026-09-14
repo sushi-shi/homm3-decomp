@@ -160,7 +160,11 @@ class slider;
 // (0x68/0x8c/0x64/0x64/0x68) and each ctor's `push <size>`. Members past the
 // CAdvPopup base (0x60) are named where a reconstructed body attests the store
 // and left as field_NN placeholders where only the size is proven so far.
-class TTradeResourceWindow : public CAdvPopup {
+// Before normalization (type): TTradeResourceWindow.
+#ifndef TradeResourceWindow
+#define TradeResourceWindow TTradeResourceWindow
+#endif
+class TradeResourceWindow : public CAdvPopup {
     slider* m_resourceSlider;   // +0x60, set by the ctor (TradeResourceSlider)
     int m_lastHoverId;          // +0x64, last widget the hover handler rolled over
     // Dreamcast tradpost.cpp:2181, original ComputeTradeRatios (private).
@@ -169,15 +173,19 @@ class TTradeResourceWindow : public CAdvPopup {
                             int* inMaxUnitsToTrade);
 
 public:
-    TTradeResourceWindow(int x2, int y2);
+    TradeResourceWindow(int x2, int y2);
     void update(unsigned char update);
     void setRolloverText(int codeY);
     virtual int windowHandler(message& msg);   // slot 9
-    virtual ~TTradeResourceWindow();
+    virtual ~TradeResourceWindow();
 };
-SIZE(TTradeResourceWindow, 0x68);
+SIZE(TradeResourceWindow, 0x68);
 
-class TGiveResourceWindow : public CAdvPopup {
+// Before normalization (type): TGiveResourceWindow.
+#ifndef GiveResourceWindow
+#define GiveResourceWindow TGiveResourceWindow
+#endif
+class GiveResourceWindow : public CAdvPopup {
 public:
     // +0x60. The 0x46..0x4c recipient buttons index gPlayerColorNames by this
     // per-slot player-colour array; SetRolloverText's byte-proven
@@ -193,27 +201,35 @@ public:
     slider* m_resourceSlider;   // +0x84, set by the ctor (GiveResourceSlider)
     int m_lastHoverId;          // +0x88, last widget the hover handler rolled over
 
-    TGiveResourceWindow(int x2, int y2);
+    GiveResourceWindow(int x2, int y2);
     void update(bool update);
     void setRolloverText(int codeY);
     virtual int windowHandler(message& msg);   // slot 9
-    virtual ~TGiveResourceWindow();
+    virtual ~GiveResourceWindow();
 };
-SIZE(TGiveResourceWindow, 0x8c);
+SIZE(GiveResourceWindow, 0x8c);
 
-class TBuyArtifactWindow : public CAdvPopup {
+// Before normalization (type): TBuyArtifactWindow.
+#ifndef BuyArtifactWindow
+#define BuyArtifactWindow TBuyArtifactWindow
+#endif
+class BuyArtifactWindow : public CAdvPopup {
     int m_lastHoverId;          // +0x60, last widget the hover handler rolled over
 
 public:
-    TBuyArtifactWindow(int x2, int y2);
+    BuyArtifactWindow(int x2, int y2);
     void update(unsigned char update);
     void setRolloverText(int codeY);
     virtual int windowHandler(message& msg);   // slot 9
-    virtual ~TBuyArtifactWindow();
+    virtual ~BuyArtifactWindow();
 };
-SIZE(TBuyArtifactWindow, 0x64);
+SIZE(BuyArtifactWindow, 0x64);
 
-class TSellArtifactWindow : public CAdvPopup {
+// Before normalization (type): TSellArtifactWindow.
+#ifndef SellArtifactWindow
+#define SellArtifactWindow TSellArtifactWindow
+#endif
+class SellArtifactWindow : public CAdvPopup {
     int m_lastHoverId;          // +0x60, last widget the hover handler rolled over
     void setupNewTrade();
     void updateMarketBackpack();
@@ -221,7 +237,7 @@ class TSellArtifactWindow : public CAdvPopup {
     void decrementBackpackStart();
 
 public:
-    TSellArtifactWindow(int x2, int y2);
+    SellArtifactWindow(int x2, int y2);
     void updateSellArtifactWidget(message* msg, long i);
     void setWidgetOn(short id);
     void setWidgetOff(short id);
@@ -232,16 +248,20 @@ public:
                             int* inMaxUnitsToTrade);
     void setRolloverText(int codeY);
     virtual int windowHandler(message& msg);   // slot 9
-    virtual ~TSellArtifactWindow();
+    virtual ~SellArtifactWindow();
 };
-SIZE(TSellArtifactWindow, 0x64);
+SIZE(SellArtifactWindow, 0x64);
 
-class TSellCreatureWindow : public CAdvPopup {
+// Before normalization (type): TSellCreatureWindow.
+#ifndef SellCreatureWindow
+#define SellCreatureWindow TSellCreatureWindow
+#endif
+class SellCreatureWindow : public CAdvPopup {
     slider* m_creatureSlider;   // +0x60, set by the ctor (SellCreatureSlider)
     int m_lastHoverId;          // +0x64, last widget the hover handler rolled over
 
 public:
-    TSellCreatureWindow(int x2, int y2);
+    SellCreatureWindow(int x2, int y2);
     void setWidgetOn(short id);
     void setWidgetOff(short id);
     void setWidgetDisabled(short id);
@@ -251,9 +271,9 @@ public:
                             int* inMaxUnitsToTrade);
     void setRolloverText(int codeY);
     virtual int windowHandler(message& msg);   // slot 9
-    virtual ~TSellCreatureWindow();
+    virtual ~SellCreatureWindow();
 };
-SIZE(TSellCreatureWindow, 0x68);
+SIZE(SellCreatureWindow, 0x68);
 
 long getMarketValue(EGameResource resource);
 
@@ -265,9 +285,9 @@ void doMarket();
 void doTradingPost();
 void doMarketplace();
 void doArtifactMerchants();
-void doFreelancersGuild(hero* inHero);
-void doFreelancersGuild(town* currentTown);
-void doBlackMarket(hero* inHero, TArtifact* blackArtifacts);
+void doFreelancersGuild(Hero* inHero);
+void doFreelancersGuild(Town* currentTown);
+void doBlackMarket(Hero* inHero, Artifact* blackArtifacts);
 
 // Retail .data 0x678344. The public retail name carries this spelling;
 // calculate_demand indexes entries 1..10 after clamping the number of

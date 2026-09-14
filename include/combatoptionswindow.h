@@ -12,7 +12,11 @@ class textWidget;
 // derived-member store and the Dreamcast field list identify the pointer at
 // +0x50 as RolloverWidget. Total size is independently proven by
 // combatManager::CombatSystemOptions' 0x54-byte stack object.
-class TCombatOptionsWindow : public heroWindow {
+// Before normalization (type): TCombatOptionsWindow.
+#ifndef CombatOptionsWindow
+#define CombatOptionsWindow TCombatOptionsWindow
+#endif
+class CombatOptionsWindow : public heroWindow {
 public:
     // Widget ids, byte-proven by the constructor's creation order and the
     // post-AddWidget preference sweep (every id below is either a literal
@@ -71,8 +75,8 @@ public:
     // this alignment gap; the reference layout retains the same boundary.
     char m_paddingBeforeRolloverWidget[3];
 
-    TCombatOptionsWindow();
-    virtual ~TCombatOptionsWindow();
+    CombatOptionsWindow();
+    virtual ~CombatOptionsWindow();
     void doModal();
 
 private:
@@ -90,7 +94,7 @@ private:
     void highlightMovementShadow();
     void highlightMouseShadow();
 };
-SIZE(TCombatOptionsWindow, 0x54);
+SIZE(CombatOptionsWindow, 0x54);
 
 // Retail /Gr passes the message by reference in ECX, matching DoDialog's
 // byte-proven TDialogHandler type.
@@ -101,7 +105,7 @@ int combatOptionsWindowHandler(message& msg);
 // the handler's `mov ecx,[8*eax + 0x6a55ac]`; the ID mapping reaches 38,
 // so at least 39 rows exist (the next initialised datum is 0x6a5704, which
 // leaves room for 43). Definition + DATA claim in src/combatoptionswindow.cpp.
-extern THelpText g_combatOptionsHelp[39];
+extern HelpText g_combatOptionsHelp[39];
 
 // The "Default" button's callee is misc.obj's SetDefaultCombatOptions
 // (declared in misc.h, defined in src/misc.cpp) - NOT a new function: its

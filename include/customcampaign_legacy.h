@@ -50,17 +50,17 @@ struct LegacyCampaignHero : public type_obscuring_object {
     unsigned long m_shrine3Flags; // +0x087
     unsigned char m_levelSeed;                 // +0x08b
     unsigned char m_lastWisdom;                // +0x08c
-    armyGroup m_army;                          // +0x08d
+    ArmyGroup m_army;                          // +0x08d
     signed char m_skillLevel[28];              // +0x0c5
     unsigned char m_skillOrder[28];            // +0x0e1
     int m_skillCount;                          // +0x0fd
     unsigned long m_flags; // +0x101
     float m_turnExperienceToRvRatio; // +0x105
     signed char m_dWalkSpellsCast; // +0x109
-    TSkillMastery m_disguiseLevel; // +0x10a
-    TSkillMastery m_flightLevel; // +0x10e
-    TSkillMastery m_waterWalkLevel; // +0x112
-    TSkillMastery m_identifyLevel; // +0x116
+    SkillMastery m_disguiseLevel; // +0x10a
+    SkillMastery m_flightLevel; // +0x10e
+    SkillMastery m_waterWalkLevel; // +0x112
+    SkillMastery m_identifyLevel; // +0x116
     signed char m_moraleBonus; // +0x11a
     signed char m_luckBonus; // +0x11b
     unsigned char m_isSleeping; // +0x11c
@@ -82,7 +82,11 @@ struct LegacyCampaignHero : public type_obscuring_object {
 SIZE(LegacyCampaignHero, 0x462);
 
 // Dreamcast TCarryOverPoolNumber, values e_pool_1/e_pool_2/e_pool_choice/e_pool_both.
-enum TCarryOverPoolNumber {
+// Before normalization (type): TCarryOverPoolNumber.
+#ifndef CarryOverPoolNumber
+#define CarryOverPoolNumber TCarryOverPoolNumber
+#endif
+enum CarryOverPoolNumber {
     ePool1 = 0,
     ePool2 = 1,
     ePoolChoice = 2,
@@ -92,7 +96,7 @@ enum TCarryOverPoolNumber {
 // Packed saved counterpart of Dreamcast TArtifactRequirement. These old
 // data records are read wholesale; no current runtime constructor is implied.
 struct LegacyCampaignArtifactRequirement {
-    TArtifact m_artifact;
+    Artifact m_artifact;
     signed char m_guardBit;
 };
 SIZE(LegacyCampaignArtifactRequirement, 5);
@@ -104,8 +108,8 @@ struct LegacyCampaignMapTraits {
     int m_expCap;
     signed char m_numIncomingHeroes;
     signed char m_numOutgoingHeroes;
-    TCarryOverPoolNumber m_incomingHeroPool;
-    TCarryOverPoolNumber m_outgoingHeroPool;
+    CarryOverPoolNumber m_incomingHeroPool;
+    CarryOverPoolNumber m_outgoingHeroPool;
     LegacyCampaignArtifactRequirement m_artifactReq[2];
     signed char m_startingPosition[2];
     signed char m_difficulty;

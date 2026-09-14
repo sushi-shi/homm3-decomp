@@ -5,9 +5,19 @@
 #include <string>
 #include "window.h"
 
-class TSubWindow;
-class TCombatCreatureSubWindow;
-class TCombatHeroSubWindow;
+// Before normalization (type): TSubWindow.
+#ifndef SubWindow
+#define SubWindow TSubWindow
+#endif
+class SubWindow;
+#ifndef CombatCreatureSubWindow
+#define CombatCreatureSubWindow TCombatCreatureSubWindow
+#endif
+class CombatCreatureSubWindow;
+#ifndef CombatHeroSubWindow
+#define CombatHeroSubWindow TCombatHeroSubWindow
+#endif
+class CombatHeroSubWindow;
 class textWidget;
 class textEntryWidget;
 class type_combat_sub_window;
@@ -16,14 +26,17 @@ class message;
 // Eleven interleaved rollover/right-click rows at retail 0x6a6968. The
 // combat-window right-click handler consumes the same table as the combat
 // sub-window constructors.
-extern THelpText g_combatSubWindowHelp[11];
+extern HelpText g_combatSubWindowHelp[11];
 
 // Retail vtable 0x63d528 and Close independently prove the heroWindow base;
 // combatManager::Open allocates the complete 0x8c-byte object. Close deletes
 // the polymorphic combat-control subwindow at +0x70 before delegating to
 // heroWindow::Close. DrawCreatureAndHeroSubwindows independently proves the
 // two hero panels and four creature panels that fill the remaining tail.
-class TCombatWindow : public heroWindow {
+#ifndef CombatWindow
+#define CombatWindow TCombatWindow
+#endif
+class CombatWindow : public heroWindow {
 public:
     enum EWidgetIds {
         COMBAT_LEFT_COMMAND_0_ID = 0x7d1,
@@ -55,10 +68,10 @@ public:
     int m_combatMessageStart;
     unsigned long m_combatMessageTime;
     type_combat_sub_window* m_controlSubWindow;
-    TCombatHeroSubWindow* m_heroSubWindows[2];
-    TCombatCreatureSubWindow* m_creatureSubWindows[4];
+    CombatHeroSubWindow* m_heroSubWindows[2];
+    CombatCreatureSubWindow* m_creatureSubWindows[4];
 
-    virtual ~TCombatWindow();
+    virtual ~CombatWindow();
     virtual void close(unsigned char update);
     virtual void handleWidgetHover(widget* currentWidget);
     virtual void drawWindow(unsigned char update, int low, int high);
@@ -70,14 +83,14 @@ public:
     void scrollRollover(long delta);
     static int scrollUp(message& msg);
     static int scrollDown(message& msg);
-    TCombatWindow(unsigned char doPlacement);
+    CombatWindow(unsigned char doPlacement);
     void endPlacementPhase();
     void combatMessage(const char* newText, bool keep,
                         bool priority);
     void drawChatText(unsigned char update);
     void onChatActivate(unsigned char active);
 };
-SIZE(TCombatWindow, 0x8c);
+SIZE(CombatWindow, 0x8c);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\combatwindow.cpp:42, dc 0x69638) void CheckCombatCheatCode(std::basic_string<char,std::char_traits<char>,std::allocator<char>* chatString);

@@ -38,7 +38,7 @@ namespace ResourceManager {
 // behavior at these addresses. These implementation types are used only by
 // this resource-loading module; they have no shared header interface.
 // Both Write methods fold with CHeroWindowEx::OnWidgetDeselect at 0x559140.
-class t_stdio_file_adapter : public TAbstractFile {
+class t_stdio_file_adapter : public AbstractFile {
 public:
     explicit t_stdio_file_adapter(FILE* value) : m_file(value) {}
 
@@ -49,7 +49,7 @@ public:
     FILE* m_file;
 };
 
-class t_lod_file_adapter : public TAbstractFile {
+class t_lod_file_adapter : public AbstractFile {
 public:
     explicit t_lod_file_adapter(LODFile* value) : m_lodFile(value) {}
 
@@ -63,24 +63,28 @@ public:
 // ordinary const operator< (original field: name). Retail 0x55ac20 copies
 // twelve bytes and terminates byte 12; 0x55ebd0 compares these keys with
 // _stricmp. Complete's map node has its key at +0xc and resource* at +0x1c.
-class TCacheMapKey {
+// Before normalization (type): ResourceManager::TCacheMapKey.
+#ifndef CacheMapKey
+#define CacheMapKey TCacheMapKey
+#endif
+class CacheMapKey {
 public:
     char m_name[13];
-    TCacheMapKey(const char* name);
-    bool operator<(const TCacheMapKey& other) const;
+    CacheMapKey(const char* name);
+    bool operator<(const CacheMapKey& other) const;
 };
 
-typedef std::map<TCacheMapKey, resource*> TCacheMap;
-SIZE(TCacheMapKey, 13);
+typedef std::map<CacheMapKey, resource*> TCacheMap;
+SIZE(CacheMapKey, 13);
 SIZE(TCacheMap, 16);
 
 Bitmap16Bit* loadBitmap16(const char* name);
-TPalette16* loadPalette(const char* name);
-TPalette24* getPalette24(const char* name);
+Palette16* loadPalette(const char* name);
+Palette24* getPalette24(const char* name);
 font* loadFont(const char* name);
-font* loadFontData(const char* name, TAbstractFile* stream, int fileSize);
-TTextResource* loadText(const char* name);
-TSpreadsheetResource* loadSpreadsheet(const char* name);
+font* loadFontData(const char* name, AbstractFile* stream, int fileSize);
+TextResource* loadText(const char* name);
+SpreadsheetResource* loadSpreadsheet(const char* name);
 
 }
 
@@ -154,14 +158,14 @@ Bitmap16Bit* ResourceManager::getBitmap16(const char* name, unsigned char ignore
 
 // E:\gamedcs\resourcemanager.cpp:1027
 DC_ONLY(0x121d90, 0x138)
-TPalette16* ResourceManager::getPalette(const char* name, unsigned char ignore_cache)
+Palette16* ResourceManager::getPalette(const char* name, unsigned char ignore_cache)
 {
     // @stub
 }
 
 // E:\gamedcs\resourcemanager.cpp:1133
 DC_ONLY(0x121ec8, 0xE4)
-TPalette24* ResourceManager::getPalette24(const char* name)
+Palette24* ResourceManager::getPalette24(const char* name)
 {
     // @stub
 }
@@ -175,7 +179,7 @@ font* ResourceManager::getFont(const char* name)
 
 // E:\gamedcs\resourcemanager.cpp:1356
 DC_ONLY(0x12208c, 0xD8)
-TTextResource* ResourceManager::getText(const char* name)
+TextResource* ResourceManager::getText(const char* name)
 {
     // @stub
 }
@@ -186,13 +190,16 @@ TTextResource* ResourceManager::getText(const char* name)
 // ResourceManager's retail archive pool is eight interleaved 0x190-byte
 // slots. Open proves the leading dword is the archive pathname and every
 // resource lookup independently proves the LODFile subobject at +4.
-struct TResourceLODSlot {
+#ifndef ResourceLODSlot
+#define ResourceLODSlot TResourceLODSlot
+#endif
+struct ResourceLODSlot {
     const char* m_archiveName;
     LODFile m_file;
 
-    TResourceLODSlot(const char* name);
+    ResourceLODSlot(const char* name);
 };
-SIZE(TResourceLODSlot, 0x190);
+SIZE(ResourceLODSlot, 0x190);
 
 VA(0x005590f0, 0x1D)  // stdio adapter vtable slot 1
 int ResourceManager::t_stdio_file_adapter::read(void* data, int size)
@@ -207,7 +214,7 @@ int ResourceManager::t_lod_file_adapter::read(void* data, int size)
 }
 
 VA(0x005591e0, 0x1A)
-TResourceLODSlot::TResourceLODSlot(const char* name)
+ResourceLODSlot::ResourceLODSlot(const char* name)
     : m_archiveName(name)
 {
 }
@@ -232,9 +239,9 @@ void basic_ostringstream::`vbase destructor'();
 DATA(0x00694d60) unsigned long g_colorMaskGreen;
 DATA(0x00694d64) unsigned long g_colorMaskRed;
 DATA(0x00694d68) unsigned long g_colorMaskBlue;
-DATA(0x0069cc60) unsigned int TPalette16::s_greenMask;
-DATA(0x0069cc64) unsigned int TPalette16::s_redMask;
-DATA(0x0069cc68) unsigned int TPalette16::s_blueMask;
+DATA(0x0069cc60) unsigned int Palette16::s_greenMask;
+DATA(0x0069cc64) unsigned int Palette16::s_redMask;
+DATA(0x0069cc68) unsigned int Palette16::s_blueMask;
 DATA(0x0069e598) unsigned long g_spriteMaskFirst;
 DATA(0x0069e59c) unsigned long g_spriteMaskGreen;
 // Toggled by the retail adventure-map command that dispatches
@@ -547,7 +554,7 @@ void ResourceManager::remapGraphics()
             break;
 
         case RESOURCE_TYPE_FONT: {
-            std::auto_ptr<TPalette16> palette(loadPalette(
+            std::auto_ptr<Palette16> palette(loadPalette(
                 DATA_COMPGEN(0x0067f780, resourceGamePaletteName,
                              "game.pal")));
             if (palette.get())
@@ -556,8 +563,8 @@ void ResourceManager::remapGraphics()
         }
 
         case RESOURCE_TYPE_PALETTE: {
-            TPalette16* destination = static_cast<TPalette16*>(value);
-            std::auto_ptr<TPalette16> loaded(loadPalette(value->getName()));
+            Palette16* destination = static_cast<Palette16*>(value);
+            std::auto_ptr<Palette16> loaded(loadPalette(value->getName()));
             if (loaded.get())
                 destination->m_colors = loaded->m_colors;
             break;
@@ -605,15 +612,15 @@ void ResourceManager::saturateGraphics()
         }
 
         case RESOURCE_TYPE_FONT: {
-            std::auto_ptr<TPalette16> palette(loadPalette("game.pal"));
+            std::auto_ptr<Palette16> palette(loadPalette("game.pal"));
             if (palette.get())
                 static_cast<font*>(value)->setPalette(*palette);
             break;
         }
 
         case RESOURCE_TYPE_PALETTE: {
-            TPalette16* destination = static_cast<TPalette16*>(value);
-            std::auto_ptr<TPalette16> loaded(loadPalette(value->getName()));
+            Palette16* destination = static_cast<Palette16*>(value);
+            std::auto_ptr<Palette16> loaded(loadPalette(value->getName()));
             if (loaded.get())
                 destination->m_colors = loaded->m_colors;
             break;
@@ -651,7 +658,7 @@ bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
         openedArchives.reserve(8);
 
         try {
-            TResourceArchiveContext* context =
+            ResourceArchiveContext* context =
                 &g_resourceArchiveContexts[*g_videoGameState];
 
             if (openSprites) {
@@ -659,7 +666,7 @@ bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
                 int* archive = context->m_sprites.m_indices;
                 do {
                     int archiveIndex = *archive;
-                    TResourceLODSlot& slot =
+                    ResourceLODSlot& slot =
                         g_resourceLodSlots[archiveIndex];
                     LODFile* file = &slot.m_file;
                     bool opened;
@@ -682,7 +689,7 @@ bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
                 int* archive = context->m_bitmaps.m_indices;
                 do {
                     int archiveIndex = *archive;
-                    TResourceLODSlot& slot =
+                    ResourceLODSlot& slot =
                         g_resourceLodSlots[archiveIndex];
                     LODFile* file = &slot.m_file;
                     bool opened;
@@ -752,7 +759,7 @@ void ResourceManager::setPixelFormat(unsigned long redMask,
     g_colorMaskBlue = redMask;
     g_colorMaskGreen = greenMask;
     g_colorMaskRed = blueMask;
-    TPalette16::setPixelFormat(redMask, greenMask, blueMask);
+    Palette16::setPixelFormat(redMask, greenMask, blueMask);
     g_spriteMaskFirst = redMask;
     g_spriteMaskGreen = greenMask;
     g_spriteMaskLast = blueMask;
@@ -819,7 +826,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
     }
 
     {
-        TResourceArchiveList& archives =
+        ResourceArchiveList& archives =
             g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
         int remaining = archives.m_count;
         int* archive = archives.m_indices;
@@ -842,7 +849,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
 
             const char* fallbackName = DATA_COMPGEN(
                 0x0064108c, defaultBitmap816Name, "default.pcx");
-            TResourceArchiveList& fallbackArchives =
+            ResourceArchiveList& fallbackArchives =
                 g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
             int fallbackRemaining = fallbackArchives.m_count;
             int* fallbackArchive = fallbackArchives.m_indices;
@@ -873,16 +880,16 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
                 int m_height;
             } bmpHeader;
             lodFile->read(&bmpHeader, sizeof(bmpHeader));
-            TAutoArrayPtr<unsigned char> data(
+            AutoArrayPtr<unsigned char> data(
                 new unsigned char[bmpHeader.m_dataSize]);
             lodFile->read(data.get(), bmpHeader.m_dataSize);
 
-            TPalette24 palette24;
+            Palette24 palette24;
             lodFile->read(palette24.m_palette, sizeof(palette24.m_palette));
             if (g_graphicsSaturated)
                 palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
-            TPalette16 palette16(
+            Palette16 palette16(
                 palette24,
                 g_firstMaskBits, g_firstMaskShift,
                 g_greenMaskBits, g_greenMaskShift,
@@ -903,13 +910,13 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
 }
 
 VA(0x0055ac20, 0x20)
-ResourceManager::TCacheMapKey::TCacheMapKey(const char* value)
+ResourceManager::CacheMapKey::CacheMapKey(const char* value)
 {
     strncpy(m_name, value, 12);
     m_name[12] = 0;
 }
 
-bool ResourceManager::TCacheMapKey::operator<(const TCacheMapKey& other) const
+bool ResourceManager::CacheMapKey::operator<(const CacheMapKey& other) const
 {
     return _stricmp(m_name, other.m_name) < 0;
 }
@@ -934,7 +941,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
                      result, 0, 0);
         return result;
     } else {
-        TResourceArchiveList& archives =
+        ResourceArchiveList& archives =
             g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
         int remaining = archives.m_count;
         int* archive = archives.m_indices;
@@ -957,7 +964,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
 
             const char* fallbackName = DATA_COMPGEN(
                 0x006410a8, defaultBitmap24Name, "dfault24.pcx");
-            TResourceArchiveList& fallbackArchives =
+            ResourceArchiveList& fallbackArchives =
                 g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
             int fallbackRemaining = fallbackArchives.m_count;
             int* fallbackArchive = fallbackArchives.m_indices;
@@ -981,9 +988,9 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
             }
         }
 
-        TBitmapResourceHeader header;
+        BitmapResourceHeader header;
         lodFile->read(&header, sizeof(header));
-        TAutoArrayPtr<unsigned char> data(
+        AutoArrayPtr<unsigned char> data(
             new unsigned char[header.m_dataSize]);
         lodFile->read(data.get(), header.m_dataSize);
 
@@ -1060,10 +1067,10 @@ Bitmap16Bit* ResourceManager::getBitmap16(const char* name)
 // block split and 22-vs-21 call count are therefore inliner/front-end walls,
 // not missing resource behavior.
 VA(0x0055b060, 0x377)  // public GetPalette callee + retail conversion tuple
-TPalette16* ResourceManager::loadPalette(const char* name)
+Palette16* ResourceManager::loadPalette(const char* name)
 {
     char header[24];
-    TRGBA paletteData[256];
+    RGBA paletteData[256];
 #pragma inline_depth(0)
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
 #pragma inline_depth()
@@ -1071,17 +1078,17 @@ TPalette16* ResourceManager::loadPalette(const char* name)
     if (file) {
         try {
             t_stdio_file_adapter stream(file);
-            TAbstractFile* streamInterface = &stream;
+            AbstractFile* streamInterface = &stream;
             streamInterface->read(header, sizeof(header));
             streamInterface->read(paletteData, sizeof(paletteData));
 
-            TPalette16* result;
+            Palette16* result;
             {
-                TPalette24 palette24(paletteData);
+                Palette24 palette24(paletteData);
                 if (g_graphicsSaturated)
                     palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
-                result = new TPalette16(
+                result = new Palette16(
                     name, palette24,
                     g_firstMaskBits, g_firstMaskShift,
                     g_greenMaskBits, g_greenMaskShift,
@@ -1096,7 +1103,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
             throw;
         }
     } else {
-        TResourceArchiveList& archives =
+        ResourceArchiveList& archives =
             g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
         int remaining = archives.m_count;
         int* archive = archives.m_indices;
@@ -1119,7 +1126,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
 
             const char* fallbackName = DATA_COMPGEN(
                 0x006410b8, defaultPalette16Name, "default.pal");
-            TResourceArchiveList& fallbackArchives =
+            ResourceArchiveList& fallbackArchives =
                 g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
             int fallbackRemaining = fallbackArchives.m_count;
             int* fallbackArchive = fallbackArchives.m_indices;
@@ -1144,15 +1151,15 @@ TPalette16* ResourceManager::loadPalette(const char* name)
         }
 
         t_lod_file_adapter stream(lodFile);
-        TAbstractFile* streamInterface = &stream;
+        AbstractFile* streamInterface = &stream;
         streamInterface->read(header, sizeof(header));
         streamInterface->read(paletteData, sizeof(paletteData));
 
-        TPalette24 palette24(paletteData);
+        Palette24 palette24(paletteData);
         if (g_graphicsSaturated)
             palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
-        return new TPalette16(
+        return new Palette16(
             name, palette24,
             g_firstMaskBits, g_firstMaskShift,
             g_greenMaskBits, g_greenMaskShift,
@@ -1163,13 +1170,13 @@ TPalette16* ResourceManager::loadPalette(const char* name)
 // Like GetBitmap16, Complete always consults the cache and removes the
 // Dreamcast ignore_cache argument; the retained body ends with plain ret.
 VA(0x0055b3e0, 0x8A)  // dc public GetPalette + retail getter family, dc 0x121d90
-TPalette16* ResourceManager::getPalette(const char* name)
+Palette16* ResourceManager::getPalette(const char* name)
 {
-    TPalette16* cached = static_cast<TPalette16*>(getFromCache(name));
+    Palette16* cached = static_cast<Palette16*>(getFromCache(name));
     if (cached)
         return cached;
 
-    TPalette16* loaded = loadPalette(name);
+    Palette16* loaded = loadPalette(name);
     if (loaded)
         addToCache(loaded);
     return loaded;
@@ -1207,20 +1214,20 @@ TPalette16* ResourceManager::getPalette(const char* name)
 // read buffers cannot be block-scoped - the LOD path below reads through
 // them too.
 VA(0x0055b470, 0x2D1)  // dc/hd public identity + retail palette-file shape, dc 0x121ec8
-TPalette24* ResourceManager::getPalette24(const char* name)
+Palette24* ResourceManager::getPalette24(const char* name)
 {
-    TPalette24* result;
+    Palette24* result;
     char header[24];
-    TRGBA rgba[256];
+    RGBA rgba[256];
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
     if (file) {
         try {
             t_stdio_file_adapter stream(file);
-            TAbstractFile* streamInterface = &stream;
+            AbstractFile* streamInterface = &stream;
             streamInterface->read(header, sizeof(header));
             streamInterface->read(rgba, sizeof(rgba));
 
-            result = new TPalette24(rgba);
+            result = new Palette24(rgba);
             if (g_graphicsSaturated)
                 result->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
@@ -1233,7 +1240,7 @@ TPalette24* ResourceManager::getPalette24(const char* name)
         }
     }
 
-    TResourceArchiveList& archives =
+    ResourceArchiveList& archives =
         g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
     int remaining = archives.m_count;
     int* archive = archives.m_indices;
@@ -1255,7 +1262,7 @@ TPalette24* ResourceManager::getPalette24(const char* name)
 
         const char* fallbackName =
             DATA_COMPGEN(0x006410c4, defaultPaletteName, "default.pal");
-        TResourceArchiveList& fallbackArchives =
+        ResourceArchiveList& fallbackArchives =
             g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
         int fallbackRemaining = fallbackArchives.m_count;
         int* fallbackArchive = fallbackArchives.m_indices;
@@ -1284,21 +1291,21 @@ TPalette24* ResourceManager::getPalette24(const char* name)
     // at 0x641128 and its slot-1 target at 0x559110; keeping this adapter is a
     // revision fact, not permission to flatten the older helper operation.
     t_lod_file_adapter stream(lodFile);
-    TAbstractFile* streamInterface = &stream;
+    AbstractFile* streamInterface = &stream;
     streamInterface->read(header, sizeof(header));
     streamInterface->read(rgba, sizeof(rgba));
 
-    result = new TPalette24(rgba);
+    result = new Palette24(rgba);
     if (g_graphicsSaturated)
         result->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
     return result;
 }
 
 VA(0x0055b750, 0x17A)
-font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
+font* ResourceManager::loadFontData(const char* name, AbstractFile* stream,
                                     int fileSize)
 {
-    font::TFontSpec spec;
+    font::FontSpec spec;
     stream->read(&spec, sizeof(spec));
 
     int dataSize = fileSize - sizeof(spec);
@@ -1309,7 +1316,7 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
         new font(name, spec, dataSize, data.get()));
     data = std::auto_ptr<unsigned char>(0);
 
-    TPalette16* palette = getPalette("game.pal");
+    Palette16* palette = getPalette("game.pal");
     if (palette) {
         try {
             result.get()->setPalette(palette);
@@ -1336,7 +1343,7 @@ font* ResourceManager::loadFont(const char* name)
             fseek(file, 0, SEEK_SET);
 
             t_stdio_file_adapter stream(file);
-            TAbstractFile* streamInterface = &stream;
+            AbstractFile* streamInterface = &stream;
             font* result = loadFontData(name, streamInterface, fileSize);
 
             fclose(file);
@@ -1349,7 +1356,7 @@ font* ResourceManager::loadFont(const char* name)
     }
 
     LODFile* lodFile = 0;
-    TResourceArchiveList& archives =
+    ResourceArchiveList& archives =
         g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
     int remaining = archives.m_count;
     int* archive = archives.m_indices;
@@ -1371,7 +1378,7 @@ font* ResourceManager::loadFont(const char* name)
 
         const char* fallbackName =
             DATA_COMPGEN(0x006410d0, defaultFontName, "default.fnt");
-        TResourceArchiveList& fallbackArchives =
+        ResourceArchiveList& fallbackArchives =
             g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
         int fallbackRemaining = fallbackArchives.m_count;
         int* fallbackArchive = fallbackArchives.m_indices;
@@ -1396,7 +1403,7 @@ font* ResourceManager::loadFont(const char* name)
 
     int fileSize = lodFile->getItemIndex(name)->m_size;
     t_lod_file_adapter stream(lodFile);
-    TAbstractFile* streamInterface = &stream;
+    AbstractFile* streamInterface = &stream;
     return loadFontData(name, streamInterface, fileSize);
 }
 
@@ -1414,7 +1421,7 @@ font* ResourceManager::getFont(const char* name)
 }
 
 VA(0x0055bb90, 0x240)
-TTextResource* ResourceManager::loadText(const char* name)
+TextResource* ResourceManager::loadText(const char* name)
 {
     FILE* file = fopen(
         (g_resourcePath + name).c_str(),
@@ -1426,13 +1433,13 @@ TTextResource* ResourceManager::loadText(const char* name)
             int fileSize = ftell(file);
             fseek(file, 0, SEEK_SET);
 
-            TTextResource* result;
+            TextResource* result;
             {
                 t_stdio_file_adapter stream(file);
                 std::auto_ptr<char> data(new char[fileSize]);
-                TAbstractFile* streamInterface = &stream;
+                AbstractFile* streamInterface = &stream;
                 streamInterface->read(data.get(), fileSize);
-                result = new TTextResource(name, fileSize, data.get());
+                result = new TextResource(name, fileSize, data.get());
             }
 
             fclose(file);
@@ -1444,7 +1451,7 @@ TTextResource* ResourceManager::loadText(const char* name)
         }
     }
 
-    TResourceArchiveList& archives =
+    ResourceArchiveList& archives =
         g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
     int remaining = archives.m_count;
     int* archive = archives.m_indices;
@@ -1469,26 +1476,26 @@ TTextResource* ResourceManager::loadText(const char* name)
     int fileSize = lodFile->getItemIndex(name)->m_size;
     t_lod_file_adapter stream(lodFile);
     std::auto_ptr<char> data(new char[fileSize]);
-    TAbstractFile* streamInterface = &stream;
+    AbstractFile* streamInterface = &stream;
     streamInterface->read(data.get(), fileSize);
-    return new TTextResource(name, fileSize, data.get());
+    return new TextResource(name, fileSize, data.get());
 }
 
 VA(0x0055bdd0, 0x8A)
-TTextResource* ResourceManager::getText(const char* name)
+TextResource* ResourceManager::getText(const char* name)
 {
-    TTextResource* cached = static_cast<TTextResource*>(getFromCache(name));
+    TextResource* cached = static_cast<TextResource*>(getFromCache(name));
     if (cached)
         return cached;
 
-    TTextResource* loaded = loadText(name);
+    TextResource* loaded = loadText(name);
     if (loaded)
         addToCache(loaded);
     return loaded;
 }
 
 VA(0x0055be60, 0x240)
-TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
+SpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
 {
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
 
@@ -1498,14 +1505,14 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
             int fileSize = ftell(file);
             fseek(file, 0, SEEK_SET);
 
-            TSpreadsheetResource* result;
+            SpreadsheetResource* result;
             {
                 t_stdio_file_adapter stream(file);
                 std::auto_ptr<char> data(new char[fileSize]);
-                TAbstractFile* streamInterface = &stream;
+                AbstractFile* streamInterface = &stream;
                 streamInterface->read(data.get(), fileSize);
                 result =
-                    new TSpreadsheetResource(name, fileSize, data.get());
+                    new SpreadsheetResource(name, fileSize, data.get());
             }
 
             fclose(file);
@@ -1517,7 +1524,7 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
         }
     }
 
-    TResourceArchiveList& archives =
+    ResourceArchiveList& archives =
         g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
     int remaining = archives.m_count;
     int* archive = archives.m_indices;
@@ -1543,19 +1550,19 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
     int fileSize = lodFile->getItemIndex(name)->m_size;
     t_lod_file_adapter stream(lodFile);
     std::auto_ptr<char> data(new char[fileSize]);
-    TAbstractFile* streamInterface = &stream;
+    AbstractFile* streamInterface = &stream;
     streamInterface->read(data.get(), fileSize);
-    return new TSpreadsheetResource(name, fileSize, data.get());
+    return new SpreadsheetResource(name, fileSize, data.get());
 }
 
 VA(0x0055c0a0, 0x8A)  // dc 0x122164
-TSpreadsheetResource* ResourceManager::getSpreadsheet(const char* name)
+SpreadsheetResource* ResourceManager::getSpreadsheet(const char* name)
 {
-    TSpreadsheetResource* cached = static_cast<TSpreadsheetResource*>(getFromCache(name));
+    SpreadsheetResource* cached = static_cast<SpreadsheetResource*>(getFromCache(name));
     if (cached)
         return cached;
 
-    TSpreadsheetResource* loaded = loadSpreadsheet(name);
+    SpreadsheetResource* loaded = loadSpreadsheet(name);
     if (loaded)
         addToCache(loaded);
     return loaded;
@@ -1728,7 +1735,7 @@ int resource::Release()
 
 // E:\gamedcs\Palette.h:137
 DC_ONLY(0x122b08, 0x1C)
-void TPalette16::setPixelFormat(unsigned red, unsigned green, unsigned blue)
+void Palette16::setPixelFormat(unsigned red, unsigned green, unsigned blue)
 {
     // @stub
 }
@@ -1777,161 +1784,161 @@ void CSprite::setPixelFormat(unsigned rmask, unsigned gmask, unsigned bmask)
 
 // E:\gamedcs\resourcemanager.cpp:121
 DC_ONLY(0x122bd0, 0x28)
-void ResourceManager::TCacheMapKey::TCacheMapKey(const char* n)
+void ResourceManager::CacheMapKey::CacheMapKey(const char* n)
 {
     // @stub
 }
 
 // E:\gamedcs\resourcemanager.cpp:126
 DC_ONLY(0x122bf8, 0x1C)
-unsigned char ResourceManager::TCacheMapKey::operator<(const ResourceManager::TCacheMapKey* y)
+unsigned char ResourceManager::CacheMapKey::operator<(const ResourceManager::CacheMapKey* y)
 {
     // @stub
 }
 
 // E:\gamedcs\resourcemanager.cpp:136
 DC_ONLY(0x122c14, 0x18)
-void std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::T()
+void std::map<ResourceManager::CacheMapKey,resource *,std::less<ResourceManager::T()
 {
     // @stub
 }
 
 // ..\stlport\stl_map.h:91
 DC_ONLY(0x122c2c, 0x3C)
-void std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::()
+void std::map<ResourceManager::CacheMapKey,resource *,std::less<ResourceManager::()
 {
     // @stub
 }
 
 // ..\stlport\stl_map.h:140
 DC_ONLY(0x122c68, 0x2C)
-std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::begin(__$ReturnUdt)
+std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::map<ResourceManager::CacheMapKey,resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::begin(__$ReturnUdt)
 {
     // @stub
 }
 
 // ..\stlport\stl_map.h:142
 DC_ONLY(0x122c94, 0x2C)
-std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::end(__$ReturnUdt)
+std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::map<ResourceManager::CacheMapKey,resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::end(__$ReturnUdt)
 {
     // @stub
 }
 
 // ..\stlport\stl_map.h:163
 DC_ONLY(0x122cc0, 0x1C)
-std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::insert(__$ReturnUdt, const std::pair<ResourceManager::TCacheMapKey* __x)
+std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::map<ResourceManager::CacheMapKey,resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::insert(__$ReturnUdt, const std::pair<ResourceManager::CacheMapKey* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_map.h:180
 DC_ONLY(0x122cdc, 0x44)
-void std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::erase(std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey __position)
+void std::map<ResourceManager::CacheMapKey,resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::erase(std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey __position)
 {
     // @stub
 }
 
 // ..\stlport\stl_map.h:184
 DC_ONLY(0x122d20, 0x18)
-void std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::clear()
+void std::map<ResourceManager::CacheMapKey,resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_map.h:188
 DC_ONLY(0x122d38, 0x2C)
-std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::find(__$ReturnUdt, const ResourceManager::TCacheMapKey* __x)
+std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::map<ResourceManager::CacheMapKey,resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::find(__$ReturnUdt, const ResourceManager::CacheMapKey* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:440
 DC_ONLY(0x122d64, 0x24)
-void std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<ResourceManager::TCacheMapKe()
+void std::_Rb_tree<ResourceManager::CacheMapKey,std::pair<ResourceManager::TCacheMapKe()
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:203
 DC_ONLY(0x122d88, 0x8)
-void std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,res(const std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey* __it)
+void std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,res(const std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey* __it)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:211
 DC_ONLY(0x122d90, 0x18)
-std::pair<ResourceManager::TCacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::operator->()
+std::pair<ResourceManager::CacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::operator->()
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:214
 DC_ONLY(0x122da8, 0x3C)
-std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::operator++(__$ReturnUdt, int __formal)
+std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::operator++(__$ReturnUdt, int __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_pair.h:60
 DC_ONLY(0x122de4, 0x4)
-void std::pair<ResourceManager::TCacheMapKey const ,resource *>::~pair<ResourceManager::TCacheMapKey const ,resource *>()
+void std::pair<ResourceManager::CacheMapKey const ,resource *>::~pair<ResourceManager::CacheMapKey const ,resource *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_pair.h:49
 DC_ONLY(0x122de8, 0x3C)
-void std::pair<ResourceManager::TCacheMapKey,resource *>::pair<ResourceManager::TCacheMapKey,resource *>(const ResourceManager::TCacheMapKey* __a, resource** __b)
+void std::pair<ResourceManager::CacheMapKey,resource *>::pair<ResourceManager::CacheMapKey,resource *>(const ResourceManager::CacheMapKey* __a, resource** __b)
 {
     // @stub
 }
 
 // ..\stlport\stl_pair.h:60
 DC_ONLY(0x122e24, 0x4)
-void std::pair<ResourceManager::TCacheMapKey,resource *>::~pair<ResourceManager::TCacheMapKey,resource *>()
+void std::pair<ResourceManager::CacheMapKey,resource *>::~pair<ResourceManager::CacheMapKey,resource *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_pair.h:60
 DC_ONLY(0x122e28, 0x4)
-void std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Nonconst()
+void std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,resource *>,std::_Nonconst()
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:424
 DC_ONLY(0x122e2c, 0x34)
-void std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<ResourceManager::TCacheMapK(const std::less<ResourceManager::TCacheMapKey>* __comp, const std::allocator<std::pair<ResourceManager::TCacheMapKey* __a)
+void std::_Rb_tree<ResourceManager::CacheMapKey,std::pair<ResourceManager::TCacheMapK(const std::less<ResourceManager::CacheMapKey>* __comp, const std::allocator<std::pair<ResourceManager::CacheMapKey* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:466
 DC_ONLY(0x122e60, 0x2C)
-std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree<ResourceManager::TCacheMapKey,std::(__$ReturnUdt)
+std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::_Rb_tree<ResourceManager::CacheMapKey,std::(__$ReturnUdt)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:468
 DC_ONLY(0x122e8c, 0x24)
-std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree<ResourceManager::TCacheMapKey,std(__$ReturnUdt)
+std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::_Rb_tree<ResourceManager::CacheMapKey,std(__$ReturnUdt)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:529
 DC_ONLY(0x122eb0, 0x3C)
-void std::_Rb_tree<ResourceManager::TCacheMapKey,std::(std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey __position)
+void std::_Rb_tree<ResourceManager::CacheMapKey,std::(std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey __position)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:545
 DC_ONLY(0x122eec, 0x58)
-void std::_Rb_tree<ResourceManager::TCacheMapKey,std::()
+void std::_Rb_tree<ResourceManager::CacheMapKey,std::()
 {
     // @stub
 }
@@ -1945,21 +1952,21 @@ void std::_Rb_tree_base<std::pair<ResourceManager::TCache()
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x122f6c, 0x4)
-void std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> >::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> >()
+void std::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> >::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x122f70, 0x4)
-void std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> >::~allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> >()
+void std::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> >::~allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:206
 DC_ONLY(0x122f74, 0x6)
-std::pair<ResourceManager::TCacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::operator*()
+std::pair<ResourceManager::CacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::operator*()
 {
     // @stub
 }
@@ -1973,119 +1980,119 @@ void std::_ST()
 
 // ..\stlport\stl_tree.h:333
 DC_ONLY(0x122f94, 0x30)
-void std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<Re(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __p)
+void std::_Rb_tree<ResourceManager::CacheMapKey,std::pair<Re(std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:343
 DC_ONLY(0x122fc4, 0x6)
-std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pa()
+std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey** std::_Rb_tree<ResourceManager::CacheMapKey,std::pa()
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:345
 DC_ONLY(0x122fcc, 0x6)
-std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<R()
+std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey** std::_Rb_tree<ResourceManager::CacheMapKey,std::pair<R()
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:347
 DC_ONLY(0x122fd4, 0x6)
-std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<Re()
+std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey** std::_Rb_tree<ResourceManager::CacheMapKey,std::pair<Re()
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:445
 DC_ONLY(0x122fdc, 0x48)
-void std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<ResourceM()
+void std::_Rb_tree<ResourceManager::CacheMapKey,std::pair<ResourceM()
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:259
 DC_ONLY(0x123024, 0x30)
-void std::_Rb_tree_base<std::pair<ResourceManager::TCach(const std::allocator<std::pair<ResourceManager::TCacheMapKey* __a)
+void std::_Rb_tree_base<std::pair<ResourceManager::TCach(const std::allocator<std::pair<ResourceManager::CacheMapKey* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x123054, 0x2C)
-void std::_STL_alloc_p(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __p, unsigned __n)
+void std::_STL_alloc_p(std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:202
 DC_ONLY(0x123080, 0x6)
-void std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,res(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x)
+void std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,res(std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:360
 DC_ONLY(0x123088, 0x4)
-unsigned char* std::_Rb_tree<ResourceManager::TCacheMapKey,std::pai(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x)
+unsigned char* std::_Rb_tree<ResourceManager::CacheMapKey,std::pai(std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x12308c, 0xC)
-void std::_S(const std::allocator<std::pair<ResourceManager::TCacheMapKey* __a, std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** __p)
+void std::_S(const std::allocator<std::pair<ResourceManager::CacheMapKey* __a, std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x123098, 0x28)
-std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* std::_STL_alloc(unsigned __n)
+std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* std::_STL_alloc(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x1230c0, 0x20)
-void std::allocator<std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::deallocate(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __p, unsigned __n)
+void std::allocator<std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::deallocate(std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x1230e0, 0x28)
-std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* std::allocator<std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::allocate(unsigned __n, const void* __formal)
+std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* std::allocator<std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.c:552
 DC_ONLY(0x123108, 0x54)
-void std::_Rb_tree<ResourceManager::TCacheMapKey,std::pai(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x)
+void std::_Rb_tree<ResourceManager::CacheMapKey,std::pai(std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.c:416
 DC_ONLY(0x12315c, 0x174)
-std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<Res(__$ReturnUdt, const std::pair<ResourceManager::TCacheMapKey* __v)
+std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::_Rb_tree<ResourceManager::CacheMapKey,std::pair<Res(__$ReturnUdt, const std::pair<ResourceManager::CacheMapKey* __v)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.c:585
 DC_ONLY(0x1232d0, 0xF4)
-std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree<ResourceManager::TCacheMapKey,std:(__$ReturnUdt, const ResourceManager::TCacheMapKey* __k)
+std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::_Rb_tree<ResourceManager::CacheMapKey,std:(__$ReturnUdt, const ResourceManager::CacheMapKey* __k)
 {
     // @stub
 }
 
 // ..\stlport\stl_pair.h:52
 DC_ONLY(0x1233c4, 0x3C)
-void std::pair<ResourceManager::TCacheMapKey const ,resource *>::pair<ResourceManager::TCacheMapKey const ,resource *>(const std::pair<ResourceManager::TCacheMapKey,resource* __p)
+void std::pair<ResourceManager::CacheMapKey const ,resource *>::pair<ResourceManager::CacheMapKey const ,resource *>(const std::pair<ResourceManager::CacheMapKey,resource* __p)
 {
     // @stub
 }
@@ -2099,84 +2106,84 @@ std::_Rb_tree_node_base* std::_Rb_global<bool>::_Rebalance_for_erase(std::_Rb_tr
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x12368c, 0x1C)
-void std::destroy(std::pair<ResourceManager::TCacheMapKey* __pointer)
+void std::destroy(std::pair<ResourceManager::CacheMapKey* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x1236a8, 0x4)
-std::allocator<std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* std::__stl_alloc_rebind(std::allocator<std::pair<ResourceManager::TCacheMapKey* __a, const std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __formal)
+std::allocator<std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* std::__stl_alloc_rebind(std::allocator<std::pair<ResourceManager::CacheMapKey* __a, const std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_function.h:110
 DC_ONLY(0x1236ac, 0x18)
-unsigned char std::less<ResourceManager::TCacheMapKey>::operator()(const ResourceManager::TCacheMapKey* __x, const ResourceManager::TCacheMapKey* __y)
+unsigned char std::less<ResourceManager::CacheMapKey>::operator()(const ResourceManager::CacheMapKey* __x, const ResourceManager::CacheMapKey* __y)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:350
 DC_ONLY(0x1236c4, 0x6)
-std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pa(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x)
+std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey** std::_Rb_tree<ResourceManager::CacheMapKey,std::pa(std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:352
 DC_ONLY(0x1236cc, 0x6)
-std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pai(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x)
+std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey** std::_Rb_tree<ResourceManager::CacheMapKey,std::pai(std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:358
 DC_ONLY(0x1236d4, 0x24)
-const ResourceManager::TCacheMapKey* std::_Rb_tree<ResourceManager::TCacheMapKey,std::p(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x)
+const ResourceManager::CacheMapKey* std::_Rb_tree<ResourceManager::CacheMapKey,std::p(std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:371
 DC_ONLY(0x1236f8, 0x24)
-const ResourceManager::TCacheMapKey* std::_Rb_tree<ResourceManager::TCacheMapKey,std::p(std::_Rb_tree_node_base* __x)
+const ResourceManager::CacheMapKey* std::_Rb_tree<ResourceManager::CacheMapKey,std::p(std::_Rb_tree_node_base* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:220
 DC_ONLY(0x12371c, 0x1C)
-std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::operator--()
+std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::operator--()
 {
     // @stub
 }
 
 // ..\stlport\stl_pair.h:49
 DC_ONLY(0x123738, 0x30)
-void std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Noncons(const std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey* __a, const unsigned char* __b)
+void std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,resource *>,std::_Noncons(const std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey* __a, const unsigned char* __b)
 {
     // @stub
 }
 
 // ..\stlport\stl_function.h:378
 DC_ONLY(0x123768, 0x4)
-const ResourceManager::TCacheMapKey* std::_Select1st<std::pair<ResourceManager::TCacheMapKey const ,resource *> >::operator()(const std::pair<ResourceManager::TCacheMapKey* __x)
+const ResourceManager::CacheMapKey* std::_Select1st<std::pair<ResourceManager::CacheMapKey const ,resource *> >::operator()(const std::pair<ResourceManager::CacheMapKey* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:356
 DC_ONLY(0x12376c, 0x6)
-std::pair<ResourceManager::TCacheMapKey* std::_Rb_tree<ResourceManager::TCacheMapKey,std::pai(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x)
+std::pair<ResourceManager::CacheMapKey* std::_Rb_tree<ResourceManager::CacheMapKey,std::pai(std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.c:363
 DC_ONLY(0x123774, 0x138)
-std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair(__$ReturnUdt, std::_Rb_tree_node_base* __x_, std::_Rb_tree_node_base* __y_, const std::pair<ResourceManager::TCacheMapKey* __v)
+std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::_Rb_tree<ResourceManager::CacheMapKey,std::pair(__$ReturnUdt, std::_Rb_tree_node_base* __x_, std::_Rb_tree_node_base* __y_, const std::pair<ResourceManager::CacheMapKey* __v)
 {
     // @stub
 }
@@ -2190,28 +2197,28 @@ void std::_Rb_global<bool>::_M_decrement(std::_Rb_tree_base_iterator* __it)
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0x1238f0, 0x18)
-void std::__destroy_aux(std::pair<ResourceManager::TCacheMapKey* __pointer, __false_type __formal)
+void std::__destroy_aux(std::pair<ResourceManager::CacheMapKey* __pointer, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\char_traits.h:201
 DC_ONLY(0x123908, 0x34)
-void* std::pair<ResourceManager::TCacheMapKey const ,resource *>::`scalar deleting destructor'(unsigned __flags)
+void* std::pair<ResourceManager::CacheMapKey const ,resource *>::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:314
 DC_ONLY(0x12393c, 0x30)
-std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<Reso(const std::pair<ResourceManager::TCacheMapKey* __x)
+std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* std::_Rb_tree<ResourceManager::CacheMapKey,std::pair<Reso(const std::pair<ResourceManager::CacheMapKey* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:354
 DC_ONLY(0x12396c, 0x6)
-std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x)
+std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey** std::_Rb_tree<ResourceManager::CacheMapKey,std::pair(std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* __x)
 {
     // @stub
 }
@@ -2225,14 +2232,14 @@ void std::_Rb_global<bool>::_Rebalance(std::_Rb_tree_node_base* __x, std::_Rb_tr
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x123a58, 0x2C)
-void std::construct(std::pair<ResourceManager::TCacheMapKey* __p, const std::pair<ResourceManager::TCacheMapKey* __value)
+void std::construct(std::pair<ResourceManager::CacheMapKey* __p, const std::pair<ResourceManager::CacheMapKey* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_pair.h:58
 DC_ONLY(0x123a84, 0x3C)
-void std::pair<ResourceManager::TCacheMapKey const ,resource *>::pair<ResourceManager::TCacheMapKey const ,resource *>(const std::pair<ResourceManager::TCacheMapKey* __o)
+void std::pair<ResourceManager::CacheMapKey const ,resource *>::pair<ResourceManager::CacheMapKey const ,resource *>(const std::pair<ResourceManager::CacheMapKey* __o)
 {
     // @stub
 }
@@ -2244,7 +2251,7 @@ bool getSoundFile(const char* localName, std::auto_ptr<char>& data, int* size);
 }
 
 DATA(0x0069e500)
-TSoundHeaderDescriptor g_soundHeaderDescriptors[3];
+SoundHeaderDescriptor g_soundHeaderDescriptors[3];
 
 // ECX/EDX carry name/auto_ptr and ret 4 removes the size output. The direct
 // Win32 file read replaces Dreamcast's separate data/header outputs.
@@ -2259,7 +2266,7 @@ bool ResourceManager::getSoundFile(const char* localName,
     if (extension != std::string::npos)
         soundName.erase(extension);
 
-    TResourceArchiveContext* context =
+    ResourceArchiveContext* context =
         &g_resourceArchiveContexts[*g_videoGameState];
     int remaining = context->m_sounds.m_count;
     int* archive = context->m_sounds.m_indices;
@@ -2267,7 +2274,7 @@ bool ResourceManager::getSoundFile(const char* localName,
 
     do {
         x = 0;
-        TSoundHeaderDescriptor& descriptor =
+        SoundHeaderDescriptor& descriptor =
             g_soundHeaderDescriptors[*archive];
         for (; x < *descriptor.m_count; ++x) {
             if (_stricmp((*descriptor.m_sounds)[x].m_filename,
@@ -2429,14 +2436,14 @@ CSprite* ResourceManager::getSprite(const char* name)
     if (!sprite)
         return 0;
 
-    TSpriteDataHeader* sequences =
-        new TSpriteDataHeader[sdef.m_numSequences];
+    SpriteDataHeader* sequences =
+        new SpriteDataHeader[sdef.m_numSequences];
 
     int sequenceIndex;
     for (sequenceIndex = 0;
          sequenceIndex < sdef.m_numSequences;
          ++sequenceIndex) {
-        TSpriteDataHeader& sequence = sequences[sequenceIndex];
+        SpriteDataHeader& sequence = sequences[sequenceIndex];
         memcpy(&sequence, definitionPosition, sizeof(sequence));
         definitionPosition += sizeof(sequence);
 
@@ -2454,15 +2461,15 @@ CSprite* ResourceManager::getSprite(const char* name)
     for (sequenceIndex = 0;
          sequenceIndex < sdef.m_numSequences;
          ++sequenceIndex) {
-        TSpriteDataHeader& sequence = sequences[sequenceIndex];
+        SpriteDataHeader& sequence = sequences[sequenceIndex];
         sprite->allocateSeq(sequence.m_sequenceNumber, sequence.m_numFrames);
 
         int frameIndex = 0;
         if (frameIndex < sequence.m_numFrames) {
             int frameNameOffset = 0;
             do {
-            TCompactSpriteFrameHeader compactHeader;
-            TCroppedSpriteFrameHeader croppedHeader;
+            CompactSpriteFrameHeader compactHeader;
+            CroppedSpriteFrameHeader croppedHeader;
             unsigned char* frameData;
             unsigned char* frameSource;
             int frameDataSize;
@@ -2539,11 +2546,11 @@ CSprite* ResourceManager::getSprite(const char* name)
     }
     delete[] sequences;
 
-    TPalette24 palette24(sdef.m_palette);
+    Palette24 palette24(sdef.m_palette);
     if (g_graphicsSaturated)
         palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
-    TPalette16 palette16(
+    Palette16 palette16(
         palette24,
         g_firstMaskBits, g_firstMaskShift,
         g_greenMaskBits, g_greenMaskShift,
@@ -2551,11 +2558,11 @@ CSprite* ResourceManager::getSprite(const char* name)
 
     if (sprite->m_p)
         delete sprite->m_p;
-    sprite->m_p = new TPalette16(&palette16);
+    sprite->m_p = new Palette16(&palette16);
 
     if (sprite->m_p24)
         delete sprite->m_p24;
-    sprite->m_p24 = new TPalette24(&palette24);
+    sprite->m_p24 = new Palette24(&palette24);
 
     delete[] fileData;
     addToCache(sprite);
@@ -2568,7 +2575,7 @@ DATA(0x0069923c)
 int* g_videoGameState;
 
 DATA(0x0069d870)
-TResourceLODSlot g_resourceLodSlots[8] = {
+ResourceLODSlot g_resourceLodSlots[8] = {
     DATA_COMPGEN(0x00682ef8, resourceBitmapArchiveName, "h3bitmap.lod"),
     DATA_COMPGEN(0x00682ee8, resourceSpriteArchiveName, "h3sprite.lod"),
     DATA_COMPGEN(0x00682ed8, resourceAbBitmapArchiveName, "h3ab_bmp.lod"),
@@ -2580,7 +2587,7 @@ TResourceLODSlot g_resourceLodSlots[8] = {
 };
 
 DATA(0x0069e538)
-TResourceArchiveContext g_resourceArchiveContexts[4];
+ResourceArchiveContext g_resourceArchiveContexts[4];
 
 VA(0x0055cf00, 0x4B)
 void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
@@ -2600,7 +2607,7 @@ void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
 VA(0x0055cf50, 0x83)
 LODFile* ResourceManager::pointToSpriteResource(const char* name)
 {
-    TResourceArchiveList& archives =
+    ResourceArchiveList& archives =
         g_resourceArchiveContexts[*g_videoGameState].m_sprites;
     int remaining = archives.m_count;
     int* archive = archives.m_indices;
@@ -2619,7 +2626,7 @@ LODFile* ResourceManager::pointToSpriteResource(const char* name)
 VA(0x0055cfe0, 0x83)  // bitmap-field twin of PointToSpriteResource
 LODFile* ResourceManager::pointToBitmapResource(const char* name)
 {
-    TResourceArchiveList& archives =
+    ResourceArchiveList& archives =
         g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
     int remaining = archives.m_count;
     int* archive = archives.m_indices;
@@ -2650,7 +2657,7 @@ LODFile* ResourceManager::pointToBitmapResource(const char* name)
 VA(0x0055d070, 0x5C)  // retail archive-list walk + dc/hd name corroboration
 int ResourceManager::getBitmapResourceSize(const char* name)
 {
-    TResourceArchiveList& archives =
+    ResourceArchiveList& archives =
         g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
     int* archive = archives.m_indices;
     LODEntry* entry = g_resourceLodSlots[*archive].m_file.getItemIndex(name);

@@ -10,8 +10,14 @@
 #include "herospec.h"
 #include "spellschool.h"
 
-class hero;
-class searchArray;
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero;
+#ifndef SearchArray
+#define SearchArray searchArray
+#endif
+class SearchArray;
 // findpath.h's cell record; get_attack_time takes one by pointer and
 // this header does not need the definition.
 struct pathCell;
@@ -47,13 +53,13 @@ public:
 struct type_enchant_data {
 public:
     SpellID m_spell;  // +0x00
-    TSkillMastery m_mastery;  // +0x04
+    SkillMastery m_mastery;  // +0x04
     long m_power;  // +0x08
     long m_duration;  // +0x0c
     // Both ctors seed it to 1; no located consumer reads it yet.
     unsigned char m_checkResistance;  // +0x10
 
-    type_enchant_data(SpellID newSpell, TSkillMastery newMastery,
+    type_enchant_data(SpellID newSpell, SkillMastery newMastery,
                       long newPower, long newDuration);
     long getMasteryValue() const;
 };
@@ -75,7 +81,7 @@ public:
     unsigned char m_castNow;  // +0x20 (0)
 
     type_spell_choice();
-    type_spell_choice(SpellID newSpell, TSkillMastery newMastery,
+    type_spell_choice(SpellID newSpell, SkillMastery newMastery,
                       long newPower, long newDuration);
 };
 SIZE(type_spell_choice, 0x24);
@@ -144,7 +150,7 @@ protected:
 
 public:
     const army* m_enemyArmy;  // +0x08
-    searchArray* m_searchData;  // +0x0c
+    SearchArray* m_searchData;  // +0x0c
     const long* m_enemyAttackArray;  // +0x10
     long m_enemyTroopsLeft;  // +0x14
     long m_ourTroops;  // +0x18
@@ -158,7 +164,7 @@ public:
     const type_AI_combat_parameters* m_data;  // +0x28
 
     type_AI_attack_hex_chooser(const army* attacker, const army* defender,
-                               const long* attackArray, searchArray* search,
+                               const long* attackArray, SearchArray* search,
                                const type_AI_combat_parameters* combatData);
     unsigned char findAttackHex();
     // dc 0x3d154. Inlined into check_adjacent_hexes and carrying no
@@ -185,10 +191,10 @@ struct type_AI_spellcaster {
 public:
     // +0x00 is the compiler's own vptr (vftable 0x63b7d8, one slot:
     // the scalar deleting destructor at 0x436bf0).
-    hero* m_ourHero;  // +0x04 combat->[0x53cc + side*4]
+    Hero* m_ourHero;  // +0x04 combat->[0x53cc + side*4]
 
 protected:
-    hero* m_enemyHero;  // +0x08 combat->[0x53cc + enemy_side*4]
+    Hero* m_enemyHero;  // +0x08 combat->[0x53cc + enemy_side*4]
 
 public:
     long m_side;  // +0x0c
@@ -270,7 +276,7 @@ protected:
     long getAirShieldValue(const army* ourArmy, type_enchant_data caster) const;
     long getAntimagicValue(const army* ourArmy, type_enchant_data caster) const;
     long getAreaEffectValue(SpellID spell, long baseDamage,
-                               TSkillMastery mastery, long hex) const;
+                               SkillMastery mastery, long hex) const;
     // DC ai_tactical.cpp:1158/1186: get_attack_boost_value, const overloads.
     long getAttackBoostValue(const army* ourArmy, const army* enemy,
                             long oldDamage, long duration, double increase) const;
@@ -284,14 +290,14 @@ protected:
     long getBloodLustValue(const army* ourArmy, type_enchant_data caster) const;
     long getBlindValue(const army* enemy, type_enchant_data caster) const;
     long getCancelValue(army* currentArmy, unsigned char badSpellsOnly) const;
-    long getChainLightningValue(long power, TSkillMastery mastery,
+    long getChainLightningValue(long power, SkillMastery mastery,
                                    army* target) const;
     long getCloneValue(const army* ourArmy, type_enchant_data caster) const;
     long getCounterstrokeValue(const army* ourArmy, type_enchant_data caster) const;
     long getCureValue(const army* ourArmy, type_enchant_data caster) const;
     long getCurseValue(const army* enemy, type_enchant_data caster) const;
     long getDamageValue(SpellID spell, long baseDamage,
-                          const hero* targetHero, const army* target) const;
+                          const Hero* targetHero, const army* target) const;
     long getDamageSpellValue(const army* enemy, type_enchant_data caster) const;
     long getDefenseBoostValue(const army* ourArmy, const army* enemy,
                                  long duration, double increase) const;
@@ -322,7 +328,7 @@ protected:
     long getPoisonValue(const army* enemy, type_enchant_data caster) const;
     long getPrayerValue(const army* ourArmy, type_enchant_data caster) const;
     long getPrecisionValue(const army* ourArmy, type_enchant_data caster) const;
-    long getProtectionValue(const army* ourArmy, TSpellSchool school,
+    long getProtectionValue(const army* ourArmy, SpellSchool school,
                               long level, long duration, long amount) const;
     long getShieldValue(const army* ourArmy, type_enchant_data caster) const;
     long getSlayerValue(const army* ourArmy, type_enchant_data caster) const;
@@ -368,7 +374,7 @@ protected:
     // has no retained row for them. That does not itself prove source inline;
     // the group, mass and summon definitions are ordinary source helpers.
     long getGroupDamageValue(SpellID spell, long baseDamage, long group,
-                                hero* targetHero) const;
+                                Hero* targetHero) const;
     void setMeleeEnemies();
     unsigned char spellsNotRequired() const;
 };

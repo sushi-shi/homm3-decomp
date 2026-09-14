@@ -10,7 +10,10 @@
 
 class palette;
 class paletteHiColor;
-class TPalette24;
+#ifndef Palette24
+#define Palette24 TPalette24
+#endif
+class Palette24;
 
 // Creature sprite sequence ids (DC CodeView enum creature_seqid,
 // NH3API creatures.hpp identical): only the transition pair
@@ -73,10 +76,10 @@ private:
     CSequence** m_s;
 
 public:
-    TPalette16* m_p;
+    Palette16* m_p;
     // DC CodeView type 0x17d1 is TPalette24*. Retail ResetPalette confirms
     // it by passing p24+0x1c (the resource head) to the raw palette ctor.
-    TPalette24* m_p24;
+    Palette24* m_p24;
 
 private:
     int m_numSequences;
@@ -160,18 +163,18 @@ public:
     void setPalette(const unsigned short* pal);
     // Complete expands this wrapper in ResetPalette.
     // E:\gamedcs\CSprite.h:259, dc 0x744e4
-    void setPalette(TPalette16& pal)
+    void setPalette(Palette16& pal)
     {
         if (m_p)
             delete m_p;
-        m_p = new TPalette16(&pal);
+        m_p = new Palette16(&pal);
     }
     void resetPalette();
     unsigned short* getPalette();
     void colorCycle(int begin, int end, int step);
     static int getNumSeqs(int type);
     // Original GetPalette24, CSprite.h:284, dc 0x57dbc.
-    TPalette24& getPalette24() { return *m_p24; }
+    Palette24& getPalette24() { return *m_p24; }
     // Header inline, DC CSprite.h:293 (dc 0x1f1dc, emitted into
     // advmgr.obj there). Byte-proven by iconwdgt's frame walkers: each
     // USE re-expands the guard (the else arm constant-folds to a

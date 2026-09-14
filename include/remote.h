@@ -249,7 +249,7 @@ enum ENetMessageRecipient {
 class CChatEdit : public textEntryWidget {
 public:
     CChatEdit(int x, int y, int w, int h, int textSize, char* text,
-              char* fontName, font::TColor color,
+              char* fontName, font::Color color,
               font::EJustify justification,
               char* backgroundIcon, int backgroundFrame, int id, int style,
               int readType, int insetX, int insetY);
@@ -270,7 +270,7 @@ public:
 class CGameChatEdit : public CChatEdit {
 public:
     CGameChatEdit(int x, int y, int w, int h, int textSize, char* text,
-                  char* fontName, font::TColor color,
+                  char* fontName, font::Color color,
                   font::EJustify justification, char* backgroundIcon,
                   int backgroundFrame, int id, int style, int readType,
                   int insetX, int insetY);
@@ -285,7 +285,7 @@ public:
 // E:\gamedcs\remote.h:441
 inline CGameChatEdit::CGameChatEdit(
     int x, int y, int w, int h, int textSize, char* text, char* fontName,
-    font::TColor color, font::EJustify justification, char* backgroundIcon,
+    font::Color color, font::EJustify justification, char* backgroundIcon,
     int backgroundFrame, int id, int style, int readType, int insetX,
     int insetY)
     : CChatEdit(x, y, w, h, textSize, text, fontName, color, justification,

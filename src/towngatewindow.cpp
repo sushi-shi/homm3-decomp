@@ -17,12 +17,12 @@
 
 // Every retail reference to this slot is in towngatewindow.obj. Dreamcast's
 // constructor line 41 is the matching source-private current-window store.
-DATA(0x006aa608) static TTownGateWindow* g_townGateWindow;
+DATA(0x006aa608) static TownGateWindow* g_townGateWindow;
 
 static void townGateSliderCallback(int state, heroWindow* parentWindow);
 
 VA(0x005c1ab0, 0x882)  // dc 0x1690b0
-TTownGateWindow::TTownGateWindow(bool adventureSpell)
+TownGateWindow::TownGateWindow(bool adventureSpell)
   : CAdvPopup(247, 65, 306, 469, 18),
     m_topTown(0), m_selectedTown(-1), m_adventureSpell(adventureSpell)
 {
@@ -119,7 +119,7 @@ TTownGateWindow::TTownGateWindow(bool adventureSpell)
 VA_COMPGEN(0x005c2340, 0x21, SCALAR_DELETING_DTOR, TTownGateWindow)
 
 VA(0x005c2370, 0x8f)  // dc 0x169824
-TTownGateWindow::~TTownGateWindow()
+TownGateWindow::~TownGateWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -128,13 +128,13 @@ TTownGateWindow::~TTownGateWindow()
 }
 
 VA(0x005c2400, 0x1AF)  // dc 0x169890
-void TTownGateWindow::addTown(int newTown)
+void TownGateWindow::addTown(int newTown)
 {
     m_towns.push_back(newTown);
 }
 
 VA(0x005c25b0, 0x1B5)  // dc 0x1698ac
-void TTownGateWindow::updateTownLocator(int i)
+void TownGateWindow::updateTownLocator(int i)
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
@@ -153,7 +153,7 @@ void TTownGateWindow::updateTownLocator(int i)
         broadcastMessage(msg);
 
         msg.m_codeX = widget::WIDGET_SET_COLOR;
-        const town* whichTown = g_game->getTown(m_towns[m_topTown + i]);
+        const Town* whichTown = g_game->getTown(m_towns[m_topTown + i]);
         if (((whichTown->m_active & g_bitNumber[EXTRA_1_ID]) != 0 || m_adventureSpell)
             && whichTown->m_visitingHeroId < 0) {
             msg.m_extra = font::PRIMARY;
@@ -181,7 +181,7 @@ void TTownGateWindow::updateTownLocator(int i)
 // Complete has no retained body: VC6 expands this ordinary source helper in
 // DoModal, WindowHandler, and TownGateSliderCallback. Dreamcast preserves the
 // call boundary and one loop scope; both builds agree on every operation.
-void TTownGateWindow::updateTownLocators()
+void TownGateWindow::updateTownLocators()
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
@@ -197,7 +197,7 @@ void TTownGateWindow::updateTownLocators()
 }
 
 VA(0x005c2770, 0xC8)  // dc 0x169a88
-void TTownGateWindow::doModal()
+void TownGateWindow::doModal()
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
@@ -230,7 +230,7 @@ void TTownGateWindow::doModal()
 // into the OK arm expresses the same merge and is byte-flat with the
 // unduplicated form - only the duplicate moves it.
 VA(0x005c2840, 0x13B)  // anchor-vtable (slot 9) + CAdvPopup::WindowHandler, dc 0x169ae0
-int TTownGateWindow::windowHandler(message& msg)
+int TownGateWindow::windowHandler(message& msg)
 {
     int handled = CAdvPopup::windowHandler(msg);
     if (handled != 0)
@@ -286,7 +286,7 @@ unsigned char game::getNumAllies(int playerNum)
 
 // E:\gamedcs\game.h:1022
 DC_ONLY(0x169c60, 0x1C)
-const town* game::getTown(int which)
+const Town* game::getTown(int which)
 {
     // @stub
 }
@@ -300,7 +300,7 @@ const char* game::getTownName(int iTownId)
 
 // E:\gamedcs\towngatewindow.cpp:98
 DC_ONLY(0x169c98, 0x34)
-void* TTownGateWindow::`scalar deleting destructor'(unsigned __flags)
+void* TownGateWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

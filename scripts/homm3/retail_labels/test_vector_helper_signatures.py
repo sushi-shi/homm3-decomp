@@ -72,6 +72,22 @@ bool saveVector(TAbstractFile* outfile, std::vector<type_university>& srcVector)
                          [("saveVector", "TAbstractFile", "type_point"),
                           ("saveVector", "TAbstractFile", "type_university")])
 
+    def test_scanner_uses_recovered_type_for_clean_carcass(self):
+        with tempfile.TemporaryDirectory(prefix="vector-claim-test-") as directory:
+            path = Path(directory) / "game.cpp"
+            path.write_text("""#if 0 // @carcass
+VA(0x004d2ac0, 0x60)
+bool saveVector(AbstractFile* outfile, std::vector<type_point>& srcVector)
+{
+    // @stub
+}
+#endif
+""")
+            rows = source.scan_file(
+                path, {0xd2ac0}, type_lineage={"AbstractFile": "TAbstractFile"})
+        self.assertEqual(rows[0]["vector_helper_signature"],
+                         ("saveVector", "TAbstractFile", "type_point"))
+
 
 @unittest.skipUnless(undname.available(), "llvm-undname not on PATH")
 class VectorHelperJoinTests(unittest.TestCase):

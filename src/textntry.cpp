@@ -57,7 +57,7 @@ void textEntryWidget::textEntryWidget()
 
 VA(0x005ba920, 0x1B5)  // dc 0x1629e8
 textEntryWidget::textEntryWidget(int x, int y, int w, int h, int textSize,
-    const char* text, const char* fontName, font::TColor color,
+    const char* text, const char* fontName, font::Color color,
     unsigned justification, const char* backgroundIcon, int backgroundFrame,
     int id, int style, int readType, int insetX, int insetY)
     : textWidget(x, y, w, h, text, fontName, color, id, justification, 0, 0x100)
@@ -439,22 +439,22 @@ void textEntryWidget::draw() const
         if (m_hasFocus)
             m_font->drawBoundedString(shown, g_windowManager->m_screenBitmap,
                 m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
-                m_boxWidth, m_boxHeight, font::TColor(m_color), m_justify, m_cursorIndex);
+                m_boxWidth, m_boxHeight, font::Color(m_color), m_justify, m_cursorIndex);
         else
             m_font->drawBoundedString(shown, g_windowManager->m_screenBitmap,
                 m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
-                m_boxWidth, m_boxHeight, font::TColor(m_color), m_justify, -1);
+                m_boxWidth, m_boxHeight, font::Color(m_color), m_justify, -1);
     } else if (m_hasFocus) {
         m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
             m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
             m_boxWidth, m_boxHeight,
-            font::TColor((m_status & WIDGET_DIMMED) ? font::PRIMARY_DIM : m_color),
+            font::Color((m_status & WIDGET_DIMMED) ? font::PRIMARY_DIM : m_color),
             m_justify, m_cursorIndex);
     } else {
         m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
             m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
             m_boxWidth, m_boxHeight,
-            font::TColor((m_status & WIDGET_DIMMED) ? font::PRIMARY_DIM : m_color),
+            font::Color((m_status & WIDGET_DIMMED) ? font::PRIMARY_DIM : m_color),
             m_justify, -1);
     }
 }

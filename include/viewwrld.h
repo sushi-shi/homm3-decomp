@@ -15,7 +15,11 @@ class type_func_button;
 // SurfaceButton@+0x64, UndergroundButton@+0x68, origin@+0x6c and the two
 // dimensions at +0x70/+0x74; the inherited 0x60-byte base fixes the remaining
 // Dreamcast RolloverWidget at +0x60.
-class TViewWorldWindow : public CAdvPopup {
+// Before normalization (type): TViewWorldWindow.
+#ifndef ViewWorldWindow
+#define ViewWorldWindow TViewWorldWindow
+#endif
+class ViewWorldWindow : public CAdvPopup {
 public:
     // The constructor's own append order fixes every id below: the three
     // magnification buttons carry VWMag1/VWMag2/VWMag4.def at 16, 17 and
@@ -60,8 +64,8 @@ private:
     friend class advManager;
 
 public:
-    TViewWorldWindow();
-    virtual ~TViewWorldWindow();
+    ViewWorldWindow();
+    virtual ~ViewWorldWindow();
     void init(type_point newCenter, unsigned char updateFlag);
     using CAdvPopup::drawWindow;
     void drawWindow();
@@ -72,7 +76,7 @@ private:
     void updateRadar(int mrx, int mry, float radarDivisor);
     void updateViewWorld(message* msg);
 };
-SIZE(TViewWorldWindow, 0x78);
+SIZE(ViewWorldWindow, 0x78);
 
 int viewWorldSurfaceHandler(message& msg);
 int viewWorldUndergroundHandler(message& msg);

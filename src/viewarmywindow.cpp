@@ -52,7 +52,7 @@ const int g_luckHelpIndex = 10;
 // 0..15 range is what indexes it: [].text is the bottom strip's line
 // and [].rclick the right-click dialog body. The extent is spelled 16
 // because the id map can produce 15; the loader stops one row short.
-DATA(0x006a7458) extern THelpText g_viewArmyHelp[16];
+DATA(0x006a7458) extern HelpText g_viewArmyHelp[16];
 
 // Two ARRAYTXT.TXT runs text.obj's second loader (0x5b9cc0) fills with
 // stride-4 char pointers: 42 rows from 0x6a57bc and 25 from 0x6a532c.
@@ -97,7 +97,7 @@ DATA(0x006a532c) extern const char* g_luckTexts[25];
 // around a de-inlined enum adapter once the owning member is typed.
 // E:\gamedcs\viewarmywindow.cpp:55
 VA(0x005f3360, 0x7B5)  // direct caller + CrStkPU.pcx, dc 0x190abc
-TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
+ViewArmyWindow::ViewArmyWindow(const army* thisArmy, int x0, int y0,
                                  unsigned char showOk)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
       m_armyType(thisArmy->m_creatureType),
@@ -108,8 +108,8 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
 {
     // The stack's OWN traits row is the copy embedded in army at +0x74
     // (army.h's sMonInfo slice); the table row is the unmodified one.
-    const TCreatureTypeTraits* stackTraits = &thisArmy->m_monInfo;
-    const TCreatureTypeTraits* typeTraits =
+    const CreatureTypeTraits* stackTraits = &thisArmy->m_monInfo;
+    const CreatureTypeTraits* typeTraits =
         &g_creatureTypeTraits[thisArmy->m_creatureType];
 
     unsigned char shooting = thisArmy->canShoot(0);
@@ -142,12 +142,12 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
     createMoraleWidget(thisArmy->getMorale(0));
 
     int side = thisArmy->getOwningSide();
-    hero* thisHero = thisArmy->getOwner();
-    hero* enemyHero = g_combatManager->m_heroes[1 - side];
-    armyGroup* group = g_combatManager->m_armyGroups[side];
-    armyGroup* enemies = g_combatManager->m_armyGroups[1 - side];
+    Hero* thisHero = thisArmy->getOwner();
+    Hero* enemyHero = g_combatManager->m_heroes[1 - side];
+    ArmyGroup* group = g_combatManager->m_armyGroups[side];
+    ArmyGroup* enemies = g_combatManager->m_armyGroups[1 - side];
     unsigned char groupAlignments = g_combatManager->m_hasAngelicAlliance[side];
-    const town* ourTown = 0;
+    const Town* ourTown = 0;
     if (side == 1)
         ourTown = g_combatManager->m_defendingTown;
     // DC lines 98/107 append the returned strings, and retail retains the
@@ -228,8 +228,8 @@ VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 
 // E:\gamedcs\viewarmywindow.cpp:140
 VA(0x005f3b50, 0x6B2)  // vtable-store + builder call set + describer pair, dc 0x190e78
-TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
-                                 const hero* thisHero, const town* thisTown,
+ViewArmyWindow::ViewArmyWindow(ArmyGroup* group, int iarmy,
+                                 const Hero* thisHero, const Town* thisTown,
                                  int x0, int y0, int upgrade,
                                  unsigned char showDismiss,
                                  unsigned char showOk,
@@ -245,8 +245,8 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     }
     m_upgrade = upgrade;
 
-    const TCreatureTypeTraits* typeTraits = &g_creatureTypeTraits[m_armyType];
-    TCreatureTypeTraits traits = *typeTraits;
+    const CreatureTypeTraits* typeTraits = &g_creatureTypeTraits[m_armyType];
+    CreatureTypeTraits traits = *typeTraits;
 
     // The widget vector NAMED AS A REFERENCE (three uses): 90.4657 ->
     // 90.9521.  The sibling army-only constructor below LOSES 0.03 on the
@@ -321,7 +321,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     if (upgrade != -1) {
         long cost[7];
         getUpgradeCost(m_armyType,
-                         TCreatureType(upgrade), m_armySize, cost);
+                         CreatureType(upgrade), m_armySize, cost);
         for (int i = 0; i < 7; i++) {
             if (g_currentPlayer->m_resources[i] < cost[i]) {
                 widgetSetStatus(UPGRADE_ID, 8);
@@ -332,15 +332,15 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
 }
 
 VA(0x005f4210, 0x3C1)  // dc 0x19148c
-TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
+ViewArmyWindow::ViewArmyWindow(int armyType, int x0, int y0,
                                  unsigned char showOk)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
       m_showingUpgradeButton(0),
       m_showingDismissButton(0),
       m_showingOkButton(showOk)
 {
-    m_armyType = TCreatureType(armyType);
-    const TCreatureTypeTraits* traits = &g_creatureTypeTraits[armyType];
+    m_armyType = CreatureType(armyType);
+    const CreatureTypeTraits* traits = &g_creatureTypeTraits[armyType];
 
     m_widgets.reserve(NWIDGETS);
 
@@ -387,7 +387,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
 }
 
 VA(0x005f45e0, 0xD5)  // dc 0x191660
-TViewArmyWindow::~TViewArmyWindow()
+ViewArmyWindow::~ViewArmyWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -396,7 +396,7 @@ TViewArmyWindow::~TViewArmyWindow()
 }
 
 VA(0x005f46c0, 0x12C)  // dc 0x1916d4
-int TViewArmyWindow::convertID2HelpID(int id) const
+int ViewArmyWindow::convertID2HelpID(int id) const
 {
     if (id < 0)
         return -1;
@@ -437,7 +437,7 @@ int TViewArmyWindow::convertID2HelpID(int id) const
 // between DoModal (0x5f47f0 + 92 = 0x5f484c) and WindowHandler (0x5f4850),
 // so retail either inlined this at its one call site or /OPT:REF dropped it.
 DC_ONLY(0x191764, 0x40)
-void TViewArmyWindow::quickView()
+void ViewArmyWindow::quickView()
 {
     // @stub
 }
@@ -445,7 +445,7 @@ void TViewArmyWindow::quickView()
 #endif  // @carcass
 
 VA(0x005f47f0, 0x5C)  // dc 0x1917a4
-void TViewArmyWindow::doModal()
+void ViewArmyWindow::doModal()
 {
     g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
         GameTime::get() + VIEW_ARMY_DELAY;
@@ -498,7 +498,7 @@ DATA(0x0068c660) static int g_lastViewArmyHoverId = -1;
 // - see the width sweep recorded at that declaration.
 // E:\gamedcs\viewarmywindow.cpp:404
 VA(0x005f4850, 0x7D7)  // direct caller + convertID2HelpID + help table, dc 0x191804
-int TViewArmyWindow::windowHandler(message& msg)
+int ViewArmyWindow::windowHandler(message& msg)
 {
     unsigned char exitFlag;
     pollSound();
@@ -565,7 +565,7 @@ int TViewArmyWindow::windowHandler(message& msg)
                 amount = 0;
                 int upgradeType;
                 upgradeType = m_upgrade;
-                getUpgradeCost(m_armyType, TCreatureType(upgradeType),
+                getUpgradeCost(m_armyType, CreatureType(upgradeType),
                                  m_armySize, cost);
                 int resource;
                 for (resource = 5; resource >= 0; resource--) {
@@ -686,7 +686,7 @@ int viewArmyCastSpellHandler(message& msg)
             && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeX = widget::WIDGET_END_DIALOG;
-        msg.m_codeY = TViewArmyWindow::OK_ID;
+        msg.m_codeY = ViewArmyWindow::OK_ID;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
@@ -700,7 +700,7 @@ int viewArmyCastSpellHandler(message& msg)
 // the battle constructor byte-neutral under /Ob2; ordinary forms additionally
 // emit unpaired helper bodies. That does not establish new retail claims.
 
-inline void TViewArmyWindow::createBackgroundWidget(const hero* thisHero)
+inline void ViewArmyWindow::createBackgroundWidget(const Hero* thisHero)
 {
     bitmapBorder* plate = new bitmapBorder(
         0, 0, 298, 311, BACKGROUND_ID,
@@ -718,7 +718,7 @@ inline void TViewArmyWindow::createBackgroundWidget(const hero* thisHero)
     m_widgets.push_back(plate);
 }
 
-inline void TViewArmyWindow::createNameWidget(const char* name)
+inline void ViewArmyWindow::createNameWidget(const char* name)
 {
     m_widgets.push_back(new textWidget(
         20, 21, 258, 19, name, "smalfont.fnt",
@@ -732,7 +732,7 @@ inline void TViewArmyWindow::createNameWidget(const char* name)
 // tail encodes.
 // E:\gamedcs\viewarmywindow.cpp:646
 VA(0x005f5060, 0x2D6)  // ctor call set + CrBkg table + Verd10B.fnt, dc 0x191f2c
-void TViewArmyWindow::createPortraitWidget(const char* spriteName,
+void ViewArmyWindow::createPortraitWidget(const char* spriteName,
                                              int townType, int count)
 {
     m_widgets.push_back(new bitmapBorder(
@@ -754,7 +754,7 @@ void TViewArmyWindow::createPortraitWidget(const char* spriteName,
 }
 
 VA(0x005f5340, 0x28E)  // widget IDs + primary-skill table + format literals
-void TViewArmyWindow::createAttackWidget(int normalAttackSkill,
+void ViewArmyWindow::createAttackWidget(int normalAttackSkill,
                                            int currentAttackSkill)
 {
     m_widgets.push_back(new textWidget(
@@ -772,7 +772,7 @@ void TViewArmyWindow::createAttackWidget(int normalAttackSkill,
 }
 
 VA(0x005f55d0, 0x28E)  // widget IDs + primary-skill table + format literals
-void TViewArmyWindow::createDefenseWidget(int normalDefenseSkill,
+void ViewArmyWindow::createDefenseWidget(int normalDefenseSkill,
                                             int currentDefenseSkill)
 {
     m_widgets.push_back(new textWidget(
@@ -807,8 +807,8 @@ void TViewArmyWindow::createDefenseWidget(int normalDefenseSkill,
 //
 // E:\gamedcs\viewarmywindow.cpp:707
 VA(0x005f5860, 0x2C2)  // widget IDs + text-record field + "%d - %d", dc 0x19226c
-void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits& traits,
-                                           const hero* ourHero)
+void ViewArmyWindow::createDamageWidget(const CreatureTypeTraits& traits,
+                                           const Hero* ourHero)
 {
     m_widgets.push_back(new textWidget(
         154, 104, 122, 17,
@@ -840,7 +840,7 @@ void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits& traits,
 // the same presentation the primary skills use, on one shared y.
 // E:\gamedcs\viewarmywindow.cpp:735
 VA(0x005f5b30, 0x29D)  // widget IDs + text-record field + format literals, dc 0x1923c0
-void TViewArmyWindow::createShotsWidget(const TCreatureTypeTraits& traits,
+void ViewArmyWindow::createShotsWidget(const CreatureTypeTraits& traits,
                                           int normalShots, int currentShots)
 {
     if (traits.m_attributes & g_ctaShooter) {
@@ -861,7 +861,7 @@ void TViewArmyWindow::createShotsWidget(const TCreatureTypeTraits& traits,
 }
 
 VA(0x005f5dd0, 0x297)  // widget IDs + text-record field + format literals
-void TViewArmyWindow::createHitpointsWidget(int normalHitpoints,
+void ViewArmyWindow::createHitpointsWidget(int normalHitpoints,
                                               int currentHitpoints)
 {
     m_widgets.push_back(new textWidget(
@@ -880,7 +880,7 @@ void TViewArmyWindow::createHitpointsWidget(int normalHitpoints,
 }
 
 VA(0x005f6070, 0x27D)  // widget IDs + text-record field + integer format
-void TViewArmyWindow::createHitpointsLeftWidget(int hitpointsLeft)
+void ViewArmyWindow::createHitpointsLeftWidget(int hitpointsLeft)
 {
     m_widgets.push_back(new textWidget(
         154, 142, 122, 17,
@@ -895,7 +895,7 @@ void TViewArmyWindow::createHitpointsLeftWidget(int hitpointsLeft)
 }
 
 VA(0x005f62f0, 0x2BE)  // widget IDs + text-record field + clamped formats
-void TViewArmyWindow::createSpeedWidget(int normalSpeed,
+void ViewArmyWindow::createSpeedWidget(int normalSpeed,
                                           int currentSpeed)
 {
     m_widgets.push_back(new textWidget(
@@ -919,7 +919,7 @@ void TViewArmyWindow::createSpeedWidget(int normalSpeed,
 // limit. Retail's battle constructor likewise reloads +0x68 after allocation.
 // The helper owns this store; caching the getter result in each caller loses
 // that reload. The group constructor uses the same canonical helper.
-inline void TViewArmyWindow::createMoraleWidget(int newMorale)
+inline void ViewArmyWindow::createMoraleWidget(int newMorale)
 {
     m_morale = newMorale;
     m_widgets.push_back(new iconWidget(
@@ -930,7 +930,7 @@ inline void TViewArmyWindow::createMoraleWidget(int newMorale)
 
 // DC 0x1928a2/0x1928ae and retail's battle +0x7c access prove the same
 // store-then-reload ownership as createMoraleWidget.
-inline void TViewArmyWindow::createLuckWidget(int newLuck)
+inline void ViewArmyWindow::createLuckWidget(int newLuck)
 {
     m_luck = newLuck;
     m_widgets.push_back(new iconWidget(
@@ -958,7 +958,7 @@ inline void TViewArmyWindow::createLuckWidget(int newLuck)
 // nested STL sites.
 // E:\gamedcs\viewarmywindow.cpp:837
 VA(0x005f65b0, 0x2B5)  // queue iterator arithmetic + SpellInt.def + widget ids
-void TViewArmyWindow::createSpellInfluenceWidgets(const army* thisArmy)
+void ViewArmyWindow::createSpellInfluenceWidgets(const army* thisArmy)
 {
     int x = 127;
     unsigned int first = cppMax<int>(
@@ -991,7 +991,7 @@ void TViewArmyWindow::createSpellInfluenceWidgets(const army* thisArmy)
 }
 
 VA(0x005f6870, 0x264)  // dc 0x192a28
-void TViewArmyWindow::createOkWidget()
+void ViewArmyWindow::createOkWidget()
 {
     m_widgets.push_back(new bitmapBorder(
         215, 237, 66, 32, OK_BORDER_ID,
@@ -1008,7 +1008,7 @@ void TViewArmyWindow::createOkWidget()
 }
 
 VA(0x005f6ae0, 0x265)  // dc 0x192ad8
-void TViewArmyWindow::createUpgradeWidget()
+void ViewArmyWindow::createUpgradeWidget()
 {
     m_widgets.push_back(new bitmapBorder(
         74, 236, 48, 34, -1,
@@ -1024,7 +1024,7 @@ void TViewArmyWindow::createUpgradeWidget()
 }
 
 VA(0x005f6d50, 0x265)  // dc 0x192b40
-void TViewArmyWindow::createDismissWidget()
+void ViewArmyWindow::createDismissWidget()
 {
     m_widgets.push_back(new bitmapBorder(
         19, 236, 48, 34, -1,
@@ -1039,7 +1039,7 @@ void TViewArmyWindow::createDismissWidget()
     m_widgets.push_back(dismiss);
 }
 
-inline void TViewArmyWindow::createRolloverWidget()
+inline void ViewArmyWindow::createRolloverWidget()
 {
     m_rolloverWidget = new bitmapBackedTextWidget(
         7, 285, 284, 19, 0, "smalfont.fnt",

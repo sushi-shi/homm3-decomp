@@ -815,7 +815,7 @@ std::string formatString(const char* format, ...)
 }
 
 VA(0x0050c6e0, 0x55)  // dc 0xfe150
-TPickANumber::TPickANumber(int lowBound, int high)
+PickANumber::PickANumber(int lowBound, int high)
     : m_low(lowBound),
       m_numbersLeft(high - lowBound + 1),
       m_available(m_numbersLeft, 1)
@@ -824,7 +824,7 @@ TPickANumber::TPickANumber(int lowBound, int high)
 
 // E:\gamedcs\misc.cpp:849.
 VA(0x0050c740, 0x52)  // dc 0xfe190
-int TPickANumber::pick()
+int PickANumber::pick()
 {
     if (m_numbersLeft <= 0)
         return m_low - 1;
@@ -868,7 +868,7 @@ unsigned long getAvailableDiskSpace()
 
 // E:\gamedcs\misc.cpp:884
 DC_ONLY(0xfe208, 0x40)
-void TPickANumber::MarkOut(int number)
+void PickANumber::MarkOut(int number)
 {
     // @stub
 }
@@ -910,7 +910,7 @@ unsigned char std::vector<bool,std::allocator<bool> >::operator[](unsigned __n)
 
 // E:\gamedcs\includes.h:166
 DC_ONLY(0xfe374, 0x24)
-unsigned char TPickANumber::IsAvailable(int number)
+unsigned char PickANumber::IsAvailable(int number)
 {
     // @stub
 }

@@ -17,7 +17,7 @@
 
 // Source-private in the Dreamcast compiland. Retail's constructor stores the
 // active dialog here and its destructor clears it before destroying the base.
-DATA(0x00694e2c) static TCampaignWindow* g_campaignWindow;
+DATA(0x00694e2c) static CampaignWindow* g_campaignWindow;
 
 // Complete-only campaign-preview table at retail 0x66c498. Each 0x50-byte
 // row has eight descriptor dwords followed by a 12-dword snapshot of the
@@ -35,7 +35,7 @@ DATA(0x00694e2c) static TCampaignWindow* g_campaignWindow;
 // DC line 81 calls widget::hide; keep the ordinary helper and its source
 // calls. Complete adds a null guard: both retail handler expansions test
 // GetWidget's result before sending WIDGET_CLEAR_STATUS (DC has no guard).
-void TCampaignWindow::hideText()
+void CampaignWindow::hideText()
 {
     for (int line = PREVIEW_FIRST_ID; line <= PREVIEW_LAST_ID; ++line) {
         widget* text = getWidget(line);
@@ -49,7 +49,7 @@ void TCampaignWindow::hideText()
 // gBinkVideo so the next row opens a fresh one, then hang the row's still on
 // the window. The destructor and the hover handler restore that snapshot.
 VA(0x0045e7c0, 0x27A)
-void TCampaignWindow::openPreview(int campaignIndex)
+void CampaignWindow::openPreview(int campaignIndex)
 {
     SCampaignPreview* preview = &g_campaignPreviews[campaignIndex];
 
@@ -104,7 +104,7 @@ void TCampaignWindow::openPreview(int campaignIndex)
 // 98.4726 peak the shadow bought.
 
 VA(0x0045ea40, 0x692)  // campbkx2.pcx + vtable/global stores; Complete adds newGame, dc 0x5b570
-TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
+CampaignWindow::CampaignWindow(unsigned char newGame, int newCampaign)
     : heroWindow(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0)
 {
     g_campaignWindow = this;
@@ -250,7 +250,7 @@ VA_COMPGEN(0x0045f110, 0x100, IMPLICIT_DTOR, SCampaign)
 VA_COMPGEN(0x0045f9e0, 0x265, VECTOR_COPY_ASSIGN, CampaignScenarioInfo)
 
 VA(0x0045f210, 0xAE)  // dc 0x5bd00
-TCampaignWindow::~TCampaignWindow()
+CampaignWindow::~CampaignWindow()
 {
     // Six Complete campaign previews retain independent copies of the Bink
     // globals. Restore each live copy, close it, then preserve the cleared
@@ -272,7 +272,7 @@ TCampaignWindow::~TCampaignWindow()
 }
 
 VA(0x0045f2c0, 0x2C)  // dc 0x5bd68
-void TCampaignWindow::doModal()
+void CampaignWindow::doModal()
 {
     g_soundManager->startMP3("MainMenu", 0, 1);
     g_windowManager->doDialog(this, campaignWindowHandler, 0);
@@ -299,30 +299,30 @@ int campaignWindowHandler(message& msg)
         if (msg.m_codeX == widget::WIDGET_DESELECT) {
             int id = msg.m_codeY;
             switch (id) {
-            case TCampaignWindow::CAMPAIGN_FIRST_ID:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 1:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 2:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 3:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 4:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 5:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 6:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 7:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 8:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 9:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 10:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 11:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 12:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 13:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 14:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 15:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 16:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 17:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 18:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 19:
+            case CampaignWindow::CAMPAIGN_FIRST_ID:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 1:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 2:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 3:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 4:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 5:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 6:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 7:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 8:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 9:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 10:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 11:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 12:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 13:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 14:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 15:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 16:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 17:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 18:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 19:
                 g_game->m_campaign.selectCampaign(
-                    id - TCampaignWindow::CAMPAIGN_FIRST_ID,
+                    id - CampaignWindow::CAMPAIGN_FIRST_ID,
                     g_campaignFileNames[
-                        id - TCampaignWindow::CAMPAIGN_FIRST_ID]);
+                        id - CampaignWindow::CAMPAIGN_FIRST_ID]);
                 g_binkPaused = 1;
                 _BinkPause(g_binkVideo, 1);
                 // Fall through: selection and cancel both close the dialog.
@@ -333,7 +333,7 @@ int campaignWindowHandler(message& msg)
         }
     } else if (msg.m_id == MESSAGE_KEY_DOWN) {
         switch (msg.m_codeX) {
-        case TCampaignWindow::DIALOG_CLOSE_KEY:
+        case CampaignWindow::DIALOG_CLOSE_KEY:
             exitFlag = 1;
             msg.m_codeY = DIALOG_RETURN_CANCEL;
             break;
@@ -344,8 +344,8 @@ int campaignWindowHandler(message& msg)
         if (hoverID != g_lastCampaignHoverId) {
             g_lastCampaignHoverId = hoverID;
 
-            if (hoverID >= TCampaignWindow::CAMPAIGN_FIRST_ID
-                    && hoverID <= TCampaignWindow::CAMPAIGN_LAST_ID) {
+            if (hoverID >= CampaignWindow::CAMPAIGN_FIRST_ID
+                    && hoverID <= CampaignWindow::CAMPAIGN_LAST_ID) {
                 // The ROW pointer, not the state block: retail keeps
                 // `&gCampaignPreviews[hover - 108]` live across the sweep and
                 // only reaches the snapshot with a `lea esi,[edi+0x20]` at the
@@ -353,7 +353,7 @@ int campaignWindowHandler(message& msg)
                 // into the base and swaps the sweep's counter register.
                 SCampaignPreview* preview =
                     &g_campaignPreviews[hoverID
-                        - TCampaignWindow::CAMPAIGN_FIRST_ID];
+                        - CampaignWindow::CAMPAIGN_FIRST_ID];
                 g_campaignWindow->hideText();
                 g_campaignWindow->getWidget(hoverID
                         - g_campaignWindow->m_firstCampaign - 7)->show();
@@ -390,7 +390,7 @@ int campaignWindowHandler(message& msg)
 // E:\gamedcs\campaignwindow.cpp:258
 #if 0  // @carcass -- represented by VA_COMPGEN above
 DC_ONLY(0x5bf44, 0x34)
-void* TCampaignWindow::`scalar deleting destructor'(unsigned __flags)
+void* CampaignWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

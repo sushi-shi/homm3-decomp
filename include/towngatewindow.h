@@ -7,7 +7,11 @@
 
 static void townGateSliderCallback(int state, heroWindow* parentWindow);
 
-class TTownGateWindow : public CAdvPopup {
+// Before normalization (type): TTownGateWindow.
+#ifndef TownGateWindow
+#define TownGateWindow TTownGateWindow
+#endif
+class TownGateWindow : public CAdvPopup {
 public:
     // Dreamcast CodeView publishes this nested enum in full. Complete's
     // constructor independently uses every value in the same roles.
@@ -37,8 +41,8 @@ private:
     bool m_adventureSpell;
 
 public:
-    TTownGateWindow(bool adventureSpell);
-    virtual ~TTownGateWindow();
+    TownGateWindow(bool adventureSpell);
+    virtual ~TownGateWindow();
     void addTown(int newTown);
 
 private:
@@ -53,7 +57,7 @@ public:
 private:
     void updateTownLocators();
 };
-SIZE(TTownGateWindow, 0x7c);
+SIZE(TownGateWindow, 0x7c);
 
 // --- TTownGateWindow ---
 // CODEVIEW(E:\gamedcs\towngatewindow.cpp:168, dc 0x1699e8) void TTownGateWindow::UpdateTownLocators();

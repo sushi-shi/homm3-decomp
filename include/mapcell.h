@@ -25,7 +25,11 @@ class CObject;
 // value: find_magus_hut_value (0x429910) compares the dword at
 // NewmapCell+0x1e against 0x1b, and 0x1b is EYE_OF_MAGI - the object
 // a Hut of Magi reveals, which is exactly what that function sums.
-enum TAdventureObjectType {
+// Before normalization (type): TAdventureObjectType.
+#ifndef AdventureObjectType
+#define AdventureObjectType TAdventureObjectType
+#endif
+enum AdventureObjectType {
     NOTHING                    = 0,
     ALTAR_OF_SACRIFICE         = 2,
     ANCHOR_POINT               = 3,
@@ -609,7 +613,7 @@ SIZE(type_skeleton_info, 4);
 struct MapArtifactInfo {
 public:
     ArtifactPrices m_price : 4;
-    TCreatureType m_guard : 9;
+    CreatureType m_guard : 9;
     EGameResource m_resourcePrice : 4;
     unsigned long m_guardQty : 14;
     unsigned long m_custom : 1;
@@ -696,7 +700,7 @@ public:
         ShipyardInfo m_shipyardInfo;
     };
     bool isCustomized() const;
-    TCreatureType getArtifactDefender() const;
+    CreatureType getArtifactDefender() const;
     ArtifactPrices getArtifactPrice() const;
     bool isDefendedArtifact() const;
     short getCampfireSize() const;
@@ -720,11 +724,11 @@ public:
     void fillMagicSpring(unsigned char full);
     void setPyramid(bool guards, int newSpell);
     ScholarAwards getScholarAward() const;
-    TPrimarySkill getScholarPrimarySkill() const;
-    TSecondarySkill getScholarSecondarySkill() const;
+    PrimarySkill getScholarPrimarySkill() const;
+    SecondarySkill getScholarSecondarySkill() const;
     SpellID getScholarSpell() const;
-    void setScholar(ScholarAwards award, TPrimarySkill primary,
-                    TSecondarySkill secondary, SpellID spell);
+    void setScholar(ScholarAwards award, PrimarySkill primary,
+                    SecondarySkill secondary, SpellID spell);
     SpellID getShrineSpell() const;
     int getTreasureArtifact() const;
     short getTreasureSize() const;
@@ -747,7 +751,7 @@ public:
     void emptyTomb();
     int getTombArtifact() const;
     unsigned char tombIsFull() const;
-    void setTomb(TArtifact artifact);
+    void setTomb(Artifact artifact);
     short getWheelGold() const;
     void setWheelGold(short amount);
     short getWindmillAmount() const;
@@ -768,7 +772,7 @@ class TreasureData {
 public:
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
     unsigned char m_hasCustomGuardians;
-    armyGroup m_guardians;
+    ArmyGroup m_guardians;
     // E:\gamedcs\MapCell.h:333, dc 0xf4790
     TreasureData() : m_hasCustomGuardians(0) {}
 };
@@ -781,8 +785,8 @@ SIZE(TreasureData, 0x4c);
 // loadBlackBox widens each serialized byte into its four-byte enum slot.
 struct SecondarySkillData {
 public:
-    TSecondarySkill m_type;
-    TSkillMastery m_level;
+    SecondarySkill m_type;
+    SkillMastery m_level;
 };
 SIZE(SecondarySkillData, 8);
 
@@ -798,9 +802,9 @@ public:
     std::vector<SecondarySkillData> m_secondarySkills;  // +0x7c
     // CodeView preserves vector<TArtifact> and vector<SpellID>.
     // loadBlackBox widens the serialized identifiers at the read boundary.
-    std::vector<TArtifact> m_artifacts;  // +0x8c
+    std::vector<Artifact> m_artifacts;  // +0x8c
     std::vector<SpellID> m_spells;  // +0x9c
-    armyGroup m_creatures;  // +0xac
+    ArmyGroup m_creatures;  // +0xac
 
     // loadBlackBoxList's resize temp proves the constructor: after the
     // TreasureData base and the three vectors have run their own, the only
@@ -812,7 +816,10 @@ public:
 };
 SIZE(BlackBoxData, 0xe4);
 
-class TAbstractFile;
+#ifndef AbstractFile
+#define AbstractFile TAbstractFile
+#endif
+class AbstractFile;
 
 // Dreamcast CodeView supplies the shared member names. Retail widens the
 // leading STL string to 16 bytes and adds ApplyToHuman before the DC-attested
@@ -820,7 +827,11 @@ class TAbstractFile;
 // remaining offset, while saveTimedEventList closes the 0x34-byte stride.
 // The alignment byte before FirstTime is deliberately implicit: naming it
 // makes VC6's generated copies treat retail padding as a real member.
-class TTimedEvent {
+// Before normalization (type): TTimedEvent.
+#ifndef TimedEvent
+#define TimedEvent TTimedEvent
+#endif
+class TimedEvent {
 public:
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
     int m_resQty[7];
@@ -831,18 +842,22 @@ public:
     unsigned short m_interval;
     // `ret 8`: the save version is a second argument, gating the
     // apply-to-human flag at 28 exactly as LoadGarrisonPool does.
-    int read(TAbstractFile* infile, int saveVersion);
-    int save(TAbstractFile* outfile);
-    int load(TAbstractFile* infile, int saveVersion);
+    int read(AbstractFile* infile, int saveVersion);
+    int save(AbstractFile* outfile);
+    int load(AbstractFile* infile, int saveVersion);
 };
-SIZE(TTimedEvent, 0x34);
+SIZE(TimedEvent, 0x34);
 
 // DC CodeView names the derived town-event payload. Retail's four-byte-wider
 // base shifts the three fields to +0x34/+0x38/+0x40; saveTownEventList proves
 // those offsets, the seven-word generator band, and the 0x50-byte stride.
 // Alignment before BuildBuildings and the tail rounding are likewise left
 // implicit so generated copies do not copy padding bytes.
-class TTownEvent : public TTimedEvent {
+// Before normalization (type): TTownEvent.
+#ifndef TownEvent
+#define TownEvent TTownEvent
+#endif
+class TownEvent : public TimedEvent {
 public:
     signed char m_townNum;
     __int64 m_buildBuildings;
@@ -852,15 +867,19 @@ public:
     // string is tidied it zeroes the eight bytes of BuildBuildings and
     // nothing else, TownNum and the generator band staying uninitialized.
     // E:\gamedcs\MapCell.h:400, dc 0xf48d8
-    TTownEvent() { m_buildBuildings = 0; }
+    TownEvent() { m_buildBuildings = 0; }
     // Complete forwards the additional version argument to the base reader.
-    int read(TAbstractFile* infile, int mapVersion);
-    int save(TAbstractFile* outfile);
-    int load(TAbstractFile* infile, int saveVersion);
+    int read(AbstractFile* infile, int mapVersion);
+    int save(AbstractFile* outfile);
+    int load(AbstractFile* infile, int saveVersion);
 };
-SIZE(TTownEvent, 0x50);
+SIZE(TownEvent, 0x50);
 
-struct TObjectType;
+// Before normalization (type): TObjectType.
+#ifndef ObjectType
+#define ObjectType TObjectType
+#endif
+struct ObjectType;
 // Canonical Random declaration needed by CObject's inline construction.
 int __fastcall random(int minimum, int maximum);
 
@@ -878,7 +897,7 @@ public:
     {
         return 47 - y * 8 - x;
     }
-    CObjectType(TObjectType* source);  // 0x506080
+    CObjectType(ObjectType* source);  // 0x506080
     // The DC field list names every member of this record - ImageName,
     // Width, Height, then the FOUR 48-cell masks PlacementMask,
     // PassableMask, ShadowMask, TriggerMask, then Type/Extra/IsUnderlay -
@@ -915,7 +934,7 @@ public:
     std::bitset<10> m_mask34;
     // loadObjectType stores one full dword at +0x38. A scalar preserves
     // that field and its single generated copy; no alternative view exists.
-    TAdventureObjectType m_objectType;
+    AdventureObjectType m_objectType;
     int m_extra;
     unsigned char m_suppressDraw;
     // +0x41 remains implicit alignment, but retail's generated assignment
@@ -958,7 +977,7 @@ public:
     // source helper which retail expands into get_trigger_cell.
     type_point getTrigger() const;
     CObjectType* getObjectTypePtr() const;
-    TAdventureObjectType getType() const;
+    AdventureObjectType getType() const;
     // MapCell.h:595. game::InsertObject byte-proves this header body: the
     // coordinates narrow to bytes, type starts at zero, extra info remains a
     // dword, and each dynamic object receives a random animation phase.
@@ -1103,7 +1122,11 @@ public:
     // erasing and then splices it out - `_First` at +0x12, `_Last` at
     // +0x16, a four-byte stride and the SIXTEEN-BIT objectIndex compare are
     // all in that one body.
-    struct TObjectCell {
+// Before normalization (type): NewmapCell::TObjectCell.
+#ifndef ObjectCell
+#define ObjectCell TObjectCell
+#endif
+    struct ObjectCell {
         // denoted the same unsigned word, not alternative representations.
         unsigned short m_objectIndex;
         union {
@@ -1117,7 +1140,7 @@ public:
 
         CObject* getObject() const;
     };
-    std::vector<TObjectCell> m_objects;
+    std::vector<ObjectCell> m_objects;
     // loadMapLayer stores the serialized object type as a FULL DWORD: the
     // stream carries two bytes and retail widens them into all four of
     // +0x1e..+0x21 (`mov ecx, dword; and ecx, 0xffff; mov dword [cell+0x1e],
@@ -1126,7 +1149,7 @@ public:
     // same way and for the same reason, and a cast here would be the tree's
     // first cast into an enum.
     union {
-        TAdventureObjectType m_type;  // +0x1e
+        AdventureObjectType m_type;  // +0x1e
         unsigned long m_typeValue;
     };
     short m_objectIndex;  // +0x22
@@ -1152,15 +1175,15 @@ public:
         m_extraInfo = 0;
         m_objectTypeIndex = -1;
     }
-    TAdventureObjectType getSpecialTerrain() const;
+    AdventureObjectType getSpecialTerrain() const;
     // Implicit destructor; CodeView dc 0xf4bdc compgenx.
     const unsigned char hasTriggerableEvent() const;
     int getMagicTerrainType();
     unsigned char isDiggable() const;
-    TAdventureObjectType getMapObject() const;
+    AdventureObjectType getMapObject() const;
     unsigned long getMapExtraInfo() const;
     unsigned char cellIsTrigger() const;
-    TArtifact getArtifactIndex() const;
+    Artifact getArtifactIndex() const;
     NewmapCell* getTriggerCell();
 };
 #pragma pack(pop)
@@ -1788,10 +1811,18 @@ class CObjectType;
 class CSprite;
 class TreasureData;
 class MonsterData;
-class TSeerHut;
-class TQuestGuard;
-class TTimedEvent;
-class TTownEvent;
+// Before normalization (type): TSeerHut.
+#ifndef SeerHut
+#define SeerHut TSeerHut
+#endif
+class SeerHut;
+// Before normalization (type): TQuestGuard.
+#ifndef QuestGuard
+#define QuestGuard TQuestGuard
+#endif
+class QuestGuard;
+class TimedEvent;
+class TownEvent;
 struct HeroPlaceholderData;
 struct RandomDwellingData;
 class CMapObjectData;
@@ -1815,10 +1846,10 @@ public:
     // events.obj.
     std::vector<MonsterData> m_customMonsterList;
     std::vector<BlackBoxData> m_blackBoxes;  // +0x50, first at +0x54
-    std::vector<TSeerHut> m_seerHutList;  // +0x60
-    std::vector<TQuestGuard> m_questGuardList;  // +0x70
-    std::vector<TTimedEvent> m_timedEventList;  // +0x80
-    std::vector<TTownEvent> m_townEventList;  // +0x90
+    std::vector<SeerHut> m_seerHutList;  // +0x60
+    std::vector<QuestGuard> m_questGuardList;  // +0x70
+    std::vector<TimedEvent> m_timedEventList;  // +0x80
+    std::vector<TownEvent> m_townEventList;  // +0x90
     // +0xa0 and +0xc0, sliced by readObject: it appends a sixteen-byte
     // record to each through push_back's `insert(_Last, 1, x)`, reading
     // _Last at +0xa8 and +0xc8.
@@ -1850,26 +1881,26 @@ private:
     NewmapCell* zCell(int x, int y, int z);
 
 public:
-    int load(TAbstractFile* infile, int size, unsigned char twoLayers,
+    int load(AbstractFile* infile, int size, unsigned char twoLayers,
              int saveVersion);
-    int save(TAbstractFile* outfile, int size, unsigned char twoLayers);
+    int save(AbstractFile* outfile, int size, unsigned char twoLayers);
     // `ret 0x10`: FOUR arguments, one more than Save's three. The fourth is
     // the map version, and Read forwards it verbatim to readMapObjects and
     // readTimedEventList and reads it nowhere else.
-    int read(TAbstractFile* infile, int size, unsigned char twoLayers,
+    int read(AbstractFile* infile, int size, unsigned char twoLayers,
              int mapVersion);
 
 private:
-    int readMapObjects(TAbstractFile* infile, int mapVersion);
+    int readMapObjects(AbstractFile* infile, int mapVersion);
     // `ret 4`: ONE argument, unlike readMapObjects' two - the save stream
     // carries no map version.
-    int loadMapObjects(TAbstractFile* infile);
+    int loadMapObjects(AbstractFile* infile);
 
 public:
     // 0x4fd950, `ret 8`. One of the four retail-only rows this compiland's
     // span audit already flags as having no Dreamcast counterpart; Load
     // reaches it, and only when the save version is at least 25.
-    void newfullMapFn004FD950(TAbstractFile* infile, int saveVersion);
+    void newfullMapFn004FD950(AbstractFile* infile, int saveVersion);
     // 0x5042c0, nullary. Reached by BOTH readMapObjects and loadMapObjects,
     // right after the object-type list is deserialized. It rebuilds the
     // per-class object-type index: the 232-entry array of vectors at
@@ -1880,91 +1911,91 @@ public:
     void newfullMapFn005042C0();
     void soDTransformRandomDwellings();
     void loadShipyards();
-    int readObjectType(TAbstractFile* infile, CObjectType& objectType);
-    int saveObjectType(TAbstractFile* outfile, CObjectType* objectType);
-    int loadObjectType(TAbstractFile* infile, CObjectType* objectType);
-    int saveObject(TAbstractFile* outfile, CObject& tempObject);
-    int loadObject(TAbstractFile* infile, CObject* object);
+    int readObjectType(AbstractFile* infile, CObjectType& objectType);
+    int saveObjectType(AbstractFile* outfile, CObjectType* objectType);
+    int loadObjectType(AbstractFile* infile, CObjectType* objectType);
+    int saveObject(AbstractFile* outfile, CObject& tempObject);
+    int loadObject(AbstractFile* infile, CObject* object);
 
 private:
     void init(int size, unsigned char twoLayers);
     // `ret 0xc`: the layer index is the third argument, and the return is
     // the cell count (size * size), not a status.
-    int readMapLayer(TAbstractFile* infile, int size, int layer);
-    int saveMapObjects(TAbstractFile* outfile);
+    int readMapLayer(AbstractFile* infile, int size, int layer);
+    int saveMapObjects(AbstractFile* outfile);
     // `ret 0x10`: a fourth argument, the save version, which reaches only
     // the per-cell upgrade pass.
-    int loadMapLayer(TAbstractFile* infile, int size, int layer,
+    int loadMapLayer(AbstractFile* infile, int size, int layer,
                      int saveVersion);
 
 public:
-    int readTreasureData(TAbstractFile* infile, TreasureData* treasure);
-    int saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox);
-    int saveTreasureData(TAbstractFile* outfile, TreasureData* treasure);
-    int saveMonsterData(TAbstractFile* outfile, MonsterData* monster);
+    int readTreasureData(AbstractFile* infile, TreasureData* treasure);
+    int saveBlackBox(AbstractFile* outfile, BlackBoxData* thisBox);
+    int saveTreasureData(AbstractFile* outfile, TreasureData* treasure);
+    int saveMonsterData(AbstractFile* outfile, MonsterData* monster);
 
 private:
-    int saveMapLayer(TAbstractFile* outfile, int size, int layer);
+    int saveMapLayer(AbstractFile* outfile, int size, int layer);
 
 public:
-    int loadBlackBoxList(TAbstractFile* infile, int saveVersion);
-    int loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+    int loadBlackBoxList(AbstractFile* infile, int saveVersion);
+    int loadBlackBox(AbstractFile* infile, BlackBoxData* thisBox,
                      int saveVersion);
-    int loadMonsterList(TAbstractFile* infile);
+    int loadMonsterList(AbstractFile* infile);
     // `ret 8`: the save version rides along to TTimedEvent::Read.
-    int readTimedEventList(TAbstractFile* infile, int saveVersion);
-    int loadTimedEventList(TAbstractFile* infile, int saveVersion);
-    int saveTimedEventList(TAbstractFile* outfile);
-    int saveTownEventList(TAbstractFile* outfile);
-    int saveBlackBoxList(TAbstractFile* outfile);
+    int readTimedEventList(AbstractFile* infile, int saveVersion);
+    int loadTimedEventList(AbstractFile* infile, int saveVersion);
+    int saveTimedEventList(AbstractFile* outfile);
+    int saveTownEventList(AbstractFile* outfile);
+    int saveBlackBoxList(AbstractFile* outfile);
     // Canonical mapcell.cpp members, expanded by Complete's save/load drivers.
     // CodeView source lines: 1293, 1362, 1729, 2695 and 2768 respectively.
-    int saveTreasureList(TAbstractFile* outfile);
-    int loadTreasureData(TAbstractFile* infile, TreasureData& thisTreasure);
-    int saveMonsterList(TAbstractFile* outfile);
-    int loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster);
-    int loadTownEventList(TAbstractFile* infile, int saveVersion);
+    int saveTreasureList(AbstractFile* outfile);
+    int loadTreasureData(AbstractFile* infile, TreasureData& thisTreasure);
+    int saveMonsterList(AbstractFile* outfile);
+    int loadMonsterData(AbstractFile* infile, MonsterData& thisMonster);
+    int loadTownEventList(AbstractFile* infile, int saveVersion);
     // Ordinary mapcell.cpp readers expanded in Complete's readObject.
     // DC source lines 1095, 1199, 1224 and 2383; pointer object parameters.
-    int readBoatData(TAbstractFile* infile, CObject* boatObject);
-    int readHolyGrailData(TAbstractFile* infile, CObject* grailObject);
-    int readShrineData(TAbstractFile* infile, CObject* shrineObject);
-    int readShipyardData(TAbstractFile* infile, CObject* shipyardObject);
-    int readArtifactData(TAbstractFile* infile, CObject* artifactObject);
-    int readResourceData(TAbstractFile* infile, CObject* resourceObject);
-    int readGeneratorData(TAbstractFile* infile, CObject* object);
-    int readSpellScrollData(TAbstractFile* infile, CObject* scrollObject);
+    int readBoatData(AbstractFile* infile, CObject* boatObject);
+    int readHolyGrailData(AbstractFile* infile, CObject* grailObject);
+    int readShrineData(AbstractFile* infile, CObject* shrineObject);
+    int readShipyardData(AbstractFile* infile, CObject* shipyardObject);
+    int readArtifactData(AbstractFile* infile, CObject* artifactObject);
+    int readResourceData(AbstractFile* infile, CObject* resourceObject);
+    int readGeneratorData(AbstractFile* infile, CObject* object);
+    int readSpellScrollData(AbstractFile* infile, CObject* scrollObject);
     // Three arguments, readGarrisonData's divergence again: retail's `ret 0xc`
     // against the Dreamcast's two, and mapVersion again picks the creature
     // field's width. readBlackBoxData carries it only to pass it through.
-    int readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+    int readBlackBox(AbstractFile* infile, BlackBoxData* thisBox,
                      int mapVersion);
-    int readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject,
+    int readBlackBoxData(AbstractFile* infile, CObject* blackboxObject,
                          int mapVersion);
-    int readEventData(TAbstractFile* infile, CObject* eventObject,
+    int readEventData(AbstractFile* infile, CObject* eventObject,
                       int mapVersion);
-    int readMonsterData(TAbstractFile* infile, CObject* monsterObject);
-    int readScholarData(TAbstractFile* infile, CObject* scholarObject);
+    int readMonsterData(AbstractFile* infile, CObject* monsterObject);
+    int readScholarData(AbstractFile* infile, CObject* scholarObject);
     // The map-object dispatcher. `ret 0xc`: three arguments, and the third
     // is the map version every version-sensitive reader below takes - it is
     // forwarded verbatim to readTownData, readHeroData, readEventData,
     // readBlackBoxData and readGarrisonData and read nowhere else.
-    int readObject(TAbstractFile* infile, CObject* tempObject, int mapVersion);
+    int readObject(AbstractFile* infile, CObject* tempObject, int mapVersion);
     // Three arguments, readGarrisonData's divergence again: readObject
     // pushes the map version to both of these as well.
-    int readTownData(TAbstractFile* infile, CObject* townObject,
+    int readTownData(AbstractFile* infile, CObject* townObject,
                      int mapVersion);
-    int readHeroData(TAbstractFile* infile, CObject* heroObject,
+    int readHeroData(AbstractFile* infile, CObject* heroObject,
                      int mapVersion);
-    int readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
+    int readGarrisonData(AbstractFile* infile, CObject* garrisonObject,
                          int mapVersion);
     // 0x505a10. advManager::EraseObj re-derives every touched cell's extra
     // info through it once the object's entry has been spliced out.
     void calculateCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
-    int readSignData(TAbstractFile* infile, CObject* object);
-    int readMineData(TAbstractFile* infile, CObject* object);
-    int readAbandonedMineData(TAbstractFile* infile, CObject* object);
-    int loadTreasureList(TAbstractFile* infile);
+    int readSignData(AbstractFile* infile, CObject* object);
+    int readMineData(AbstractFile* infile, CObject* object);
+    int readAbandonedMineData(AbstractFile* infile, CObject* object);
+    int loadTreasureList(AbstractFile* infile);
 
 private:
     void calcCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
@@ -1988,7 +2019,7 @@ public:
     CObjectType* newfullMapFn00505EA0(int objectType, int extra);
     NewfullMap();
     ~NewfullMap();
-    void stampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);
+    void stampObject(NewmapCell* cell, NewmapCell::ObjectCell* objectCell);
     void generateHeightMap(const CObject* object, signed char heightMap[8][6]);
     int placeObject(int objectIndex, unsigned char setExtraInfo);
 };
@@ -2069,7 +2100,7 @@ inline bool ExtraInfoUnion::playerKnowsCell(short player) const
 // the value-returning helper preserved retail's shr/test of the top bit.
 inline bool ExtraInfoUnion::isCustomized() const { return m_artifactInfo.m_custom != 0; }
 
-inline TCreatureType ExtraInfoUnion::getArtifactDefender() const { return m_artifactInfo.m_guard; }
+inline CreatureType ExtraInfoUnion::getArtifactDefender() const { return m_artifactInfo.m_guard; }
 
 inline ArtifactPrices ExtraInfoUnion::getArtifactPrice() const { return m_artifactInfo.m_price; }
 
@@ -2151,14 +2182,14 @@ inline ScholarAwards ExtraInfoUnion::getScholarAward() const
     return ScholarAwards(m_scholarInfo.m_award);
 }
 
-inline TPrimarySkill ExtraInfoUnion::getScholarPrimarySkill() const
+inline PrimarySkill ExtraInfoUnion::getScholarPrimarySkill() const
 {
-    return TPrimarySkill(m_scholarInfo.m_primary);
+    return PrimarySkill(m_scholarInfo.m_primary);
 }
 
-inline TSecondarySkill ExtraInfoUnion::getScholarSecondarySkill() const
+inline SecondarySkill ExtraInfoUnion::getScholarSecondarySkill() const
 {
-    return TSecondarySkill(m_scholarInfo.m_secondary);
+    return SecondarySkill(m_scholarInfo.m_secondary);
 }
 
 inline SpellID ExtraInfoUnion::getScholarSpell() const
@@ -2167,8 +2198,8 @@ inline SpellID ExtraInfoUnion::getScholarSpell() const
 }
 
 // E:\gamedcs\MapCell.h:1089, dc 0xbca4c
-inline void ExtraInfoUnion::setScholar(ScholarAwards award, TPrimarySkill primary,
-                                      TSecondarySkill secondary, SpellID spell)
+inline void ExtraInfoUnion::setScholar(ScholarAwards award, PrimarySkill primary,
+                                      SecondarySkill secondary, SpellID spell)
 {
     m_scholarInfo.m_award = award;
     m_scholarInfo.m_primary = primary;
@@ -2283,7 +2314,7 @@ inline unsigned char ExtraInfoUnion::tombIsFull() const { return m_tombInfo.m_ha
 // DC 1209..1211 writes artifact, fullness, visit bits. Complete widens
 // the artifact to ten bits; RandomizeEvents expands all three stores.
 // E:\gamedcs\MapCell.h:1208, dc 0xbcb94
-inline void ExtraInfoUnion::setTomb(TArtifact artifact)
+inline void ExtraInfoUnion::setTomb(Artifact artifact)
 {
     m_tombInfo.m_artifact = artifact;
     m_tombInfo.m_hasArtifact = 1;
@@ -2330,16 +2361,16 @@ inline void ExtraInfoUnion::setWitchSkill(int skill)
 // cross into the enum domain explicitly. Dreamcast masks the older
 // seven-bit object index; Complete's inlined artifact readers load the
 // full signed word, proving that the later accessor preserves it.
-inline TArtifact NewmapCell::getArtifactIndex() const
+inline Artifact NewmapCell::getArtifactIndex() const
 {
     // The packed signed ordinal crosses the enum boundary in this source
     // accessor; no separate artifactFromInt helper is evidenced.
-    return TArtifact(m_objectIndex);
+    return Artifact(m_objectIndex);
 }
 
 // E:\gamedcs\MapCell.h:1269 (dc 0xf4a78). Dreamcast retains an out-of-line
 // copy, while retail /Ob2 expands this header helper at its callers.
-inline TAdventureObjectType CObject::getType() const
+inline AdventureObjectType CObject::getType() const
 {
     return getObjectTypePtr()->m_objectType;
 }

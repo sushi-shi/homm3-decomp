@@ -17,12 +17,12 @@
 #include "widget.h"
 #include "winmgr.h"
 
-DATA(0x0069cd20) static TQuestLogWindow* g_questLogWindow;
+DATA(0x0069cd20) static QuestLogWindow* g_questLogWindow;
 
 static void questSliderCallback(int state, heroWindow* parentWindow);
 
 VA(0x0052d8c0, 0x8AF)  // dc 0x116604
-TQuestLogWindow::TQuestLogWindow()
+QuestLogWindow::QuestLogWindow()
   : CAdvPopup(205, 32, 389, 535, 2), m_firstVisibleQuest(0)
 {
     m_widgets.reserve(20);
@@ -91,14 +91,14 @@ static void questSliderCallback(int state, heroWindow* parentWindow)
 
 // E:\gamedcs\questlogwindow.cpp:81
 DC_ONLY(0x116b6c, 0x6A)
-void TQuestLogWindow::~TQuestLogWindow()
+void QuestLogWindow::~QuestLogWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\questlogwindow.cpp:89
 DC_ONLY(0x116bd8, 0xA0)
-void TQuestLogWindow::updateQuestLocator(int i)
+void QuestLogWindow::updateQuestLocator(int i)
 {
     // @stub
 }
@@ -108,7 +108,7 @@ void TQuestLogWindow::updateQuestLocator(int i)
 VA_COMPGEN(0x0052e1b0, 0x21, SCALAR_DELETING_DTOR, TQuestLogWindow)
 
 VA(0x0052e1e0, 0x8F)  // dc 0x116b6c
-TQuestLogWindow::~TQuestLogWindow()
+QuestLogWindow::~QuestLogWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -122,7 +122,7 @@ TQuestLogWindow::~TQuestLogWindow()
 // other two bodies touched.
 
 VA(0x0052e270, 0x19F)  // dc 0x116bd8
-void TQuestLogWindow::updateQuestLocator(int i)
+void QuestLogWindow::updateQuestLocator(int i)
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
@@ -150,7 +150,7 @@ void TQuestLogWindow::updateQuestLocator(int i)
 // 16 rows; the singular retail callee and loop schedule prove the revision.
 // Keep the ordinary source helper (questlogwindow.cpp:105..107); retail's
 // expansions in DoQuestLog and QuestSliderCallback do not prove `inline`.
-void TQuestLogWindow::updateQuestLocators()
+void QuestLogWindow::updateQuestLocators()
 {
     for (int i = 0; i < 16; ++i)
         updateQuestLocator(i);
@@ -158,7 +158,7 @@ void TQuestLogWindow::updateQuestLocators()
 
 // E:\gamedcs\questlogwindow.cpp:111
 VA(0x0052e410, 0x1d)  // source-order map + both retail call edges, dc 0x116ca4
-int TQuestLogWindow::windowHandler(message& msg)
+int QuestLogWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (!result)
@@ -174,7 +174,7 @@ void doQuestLog(int player)
 
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
 
-    g_questLogWindow = new TQuestLogWindow;
+    g_questLogWindow = new QuestLogWindow;
     if (!g_questLogWindow)
         memError();
 
@@ -213,7 +213,7 @@ const std::string* type_quest::questTextRow()
 
 // E:\gamedcs\questlogwindow.cpp:78
 DC_ONLY(0x116e28, 0x34)
-void* TQuestLogWindow::`scalar deleting destructor'(unsigned __flags)
+void* QuestLogWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

@@ -13,7 +13,7 @@ class textWidget;
 // +0x34. The retail type_bottom_view_window vtable at 0x63bb04 has two
 // entries, agreeing with the Dreamcast record's virtual destructor and
 // animate slot. No unobserved derived fields are named here.
-class type_bottom_view_window : public TSubWindow {
+class type_bottom_view_window : public SubWindow {
 public:
     // Widget ids shared by the family; read off the constructors, which
     // pass 0x7d0 for the backdrop and 0x834 for the text.
@@ -42,26 +42,38 @@ SIZE(type_bottom_view_window, 0x34);
 // Retail allocates each of these three presentation-only subclasses at the
 // unchanged 0x34-byte base extent. Dreamcast supplies the real class and
 // constructor identities; their UI state is owned by the inherited window.
-class TBottomViewHero : public type_bottom_view_window {
+// Before normalization (type): TBottomViewHero.
+#ifndef BottomViewHero
+#define BottomViewHero TBottomViewHero
+#endif
+class BottomViewHero : public type_bottom_view_window {
 public:
-    TBottomViewHero(heroWindow* parent);
-    virtual ~TBottomViewHero();
+    BottomViewHero(heroWindow* parent);
+    virtual ~BottomViewHero();
 };
-SIZE(TBottomViewHero, 0x34);
+SIZE(BottomViewHero, 0x34);
 
-class TBottomViewTown : public type_bottom_view_window {
+// Before normalization (type): TBottomViewTown.
+#ifndef BottomViewTown
+#define BottomViewTown TBottomViewTown
+#endif
+class BottomViewTown : public type_bottom_view_window {
 public:
-    TBottomViewTown(heroWindow* parent);
-    virtual ~TBottomViewTown();
+    BottomViewTown(heroWindow* parent);
+    virtual ~BottomViewTown();
 };
-SIZE(TBottomViewTown, 0x34);
+SIZE(BottomViewTown, 0x34);
 
-class TBottomViewKingdom : public type_bottom_view_window {
+// Before normalization (type): TBottomViewKingdom.
+#ifndef BottomViewKingdom
+#define BottomViewKingdom TBottomViewKingdom
+#endif
+class BottomViewKingdom : public type_bottom_view_window {
 public:
-    TBottomViewKingdom(heroWindow* parent);
-    virtual ~TBottomViewKingdom();
+    BottomViewKingdom(heroWindow* parent);
+    virtual ~BottomViewKingdom();
 };
-SIZE(TBottomViewKingdom, 0x34);
+SIZE(BottomViewKingdom, 0x34);
 
 // Slot 1 of 0x63bb44 is this class's own body 0x4536f0, so it overrides
 // animate; the five classes whose slot 1 is still the base's 0x5bc690 do
@@ -70,7 +82,11 @@ SIZE(TBottomViewKingdom, 0x34);
 // one the base destructor inlined whole.
 // The 0x40-byte derived tail is byte-proven twice over - the constructor
 // writes every field and animate reads every one of them back.
-class TBottomViewEnemyTurn : public type_bottom_view_window {
+// Before normalization (type): TBottomViewEnemyTurn.
+#ifndef BottomViewEnemyTurn
+#define BottomViewEnemyTurn TBottomViewEnemyTurn
+#endif
+class BottomViewEnemyTurn : public type_bottom_view_window {
 public:
     // +0x34, 'crest58.def' at (20,51). Its FRAME is the acting player's
     // game position, and animate re-frames it whenever that position
@@ -91,15 +107,15 @@ public:
     int m_frameDelay;              // +0x6c, 50 ticks
     int m_step;                    // +0x70
 
-    TBottomViewEnemyTurn(heroWindow* parent);
-    virtual ~TBottomViewEnemyTurn();
+    BottomViewEnemyTurn(heroWindow* parent);
+    virtual ~BottomViewEnemyTurn();
     virtual void animate();
 
     // dc 0x56bbc, :646. No retail body: /Ob2 expands it into both of
     // its call sites and the unreferenced copy is dropped.
     long sumMobility(long playerId);
 };
-SIZE(TBottomViewEnemyTurn, 0x74);
+SIZE(BottomViewEnemyTurn, 0x74);
 
 // Retail UpdBottomViewNewTurn allocates 0x48 bytes before invoking the
 // Dreamcast-attested constructor. Slot 1 of 0x63bb0c is 0x4511a0, this
@@ -108,7 +124,11 @@ SIZE(TBottomViewEnemyTurn, 0x74);
 // Dreamcast dump carries NO fieldlist for this class - only its four
 // function symbols - so every SPELLING below is the house ordinal
 // convention applied to a proven role, not an attested name.
-class TBottomViewNewTurn : public type_bottom_view_window {
+// Before normalization (type): TBottomViewNewTurn.
+#ifndef BottomViewNewTurn
+#define BottomViewNewTurn TBottomViewNewTurn
+#endif
+class BottomViewNewTurn : public type_bottom_view_window {
 public:
     // +0x34. A textWidget, redrawn through slot 4 immediately after the
     // icon on every frame step. The DERIVED type is byte-proven by the
@@ -125,28 +145,36 @@ public:
     int m_frameDelay;              // +0x40, ticks between steps
     unsigned long m_lastStepTime;  // +0x44, GameTime::Get at the last step
 
-    TBottomViewNewTurn(heroWindow* parent);
-    virtual ~TBottomViewNewTurn();
+    BottomViewNewTurn(heroWindow* parent);
+    virtual ~BottomViewNewTurn();
     virtual void animate();
 };
-SIZE(TBottomViewNewTurn, 0x48);
+SIZE(BottomViewNewTurn, 0x48);
 
 // Resource-message state is supplied by advManager; retail allocates no
 // derived storage beyond the 0x34-byte bottom-view base.
-class TBottomViewResourceMessage : public type_bottom_view_window {
+// Before normalization (type): TBottomViewResourceMessage.
+#ifndef BottomViewResourceMessage
+#define BottomViewResourceMessage TBottomViewResourceMessage
+#endif
+class BottomViewResourceMessage : public type_bottom_view_window {
 public:
-    TBottomViewResourceMessage(heroWindow* parent, int res,
+    BottomViewResourceMessage(heroWindow* parent, int res,
                                int quantity, const std::string* message);
-    virtual ~TBottomViewResourceMessage();
+    virtual ~BottomViewResourceMessage();
 };
-SIZE(TBottomViewResourceMessage, 0x34);
+SIZE(BottomViewResourceMessage, 0x34);
 
-class TBottomViewMessage : public type_bottom_view_window {
+// Before normalization (type): TBottomViewMessage.
+#ifndef BottomViewMessage
+#define BottomViewMessage TBottomViewMessage
+#endif
+class BottomViewMessage : public type_bottom_view_window {
 public:
-    TBottomViewMessage(heroWindow* parent, const std::string* message);
-    virtual ~TBottomViewMessage();
+    BottomViewMessage(heroWindow* parent, const std::string* message);
+    virtual ~BottomViewMessage();
 };
-SIZE(TBottomViewMessage, 0x34);
+SIZE(BottomViewMessage, 0x34);
 
 // --- TBottomViewEnemyTurn ---
 // CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:646, dc 0x56bbc) long TBottomViewEnemyTurn::sum_mobility(long player_id);

@@ -6,7 +6,10 @@ class CSprite;
 class font;
 class resource;
 class sample;
-class TPalette24;
+#ifndef Palette24
+#define Palette24 TPalette24
+#endif
+class Palette24;
 class LODFile;
 
 // Dreamcast: ?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z and
@@ -15,9 +18,20 @@ class LODFile;
 // under /Gr; called by the button ctors).
 class Bitmap816;
 class Bitmap16Bit;
-class TPalette16;
-class TSpreadsheetResource;
-class TTextResource;
+#ifndef Palette16
+#define Palette16 TPalette16
+#endif
+class Palette16;
+// Before normalization (type): TSpreadsheetResource.
+#ifndef SpreadsheetResource
+#define SpreadsheetResource TSpreadsheetResource
+#endif
+class SpreadsheetResource;
+// Before normalization (type): TTextResource.
+#ifndef TextResource
+#define TextResource TTextResource
+#endif
+class TextResource;
 
 extern int* g_videoGameState;
 // Claimed by resourcemanager.obj; the adventure-map phisher-price command
@@ -38,14 +52,14 @@ CSprite* getSprite(const char* name);
 font* getFont(const char* name);
 // Dreamcast and retail oldmain load the same Players.pal through the 24-bit
 // sibling immediately after the two TPalette16 loads (retail 0x55b470).
-TPalette24* getPalette24(const char* name);
+Palette24* getPalette24(const char* name);
 sample* getSample(const char* name);
 // Retail body 0x55a800 (bitmapBorder::SetImage's loader).
 Bitmap816* getBitmap816(const char* name);
 Bitmap16Bit* getBitmap16(const char* name);
 void getBackdrop(const char* resName, Bitmap16Bit* destBmap);
-TTextResource* getText(const char* name);
-TSpreadsheetResource* getSpreadsheet(const char* name);
+TextResource* getText(const char* name);
+SpreadsheetResource* getSpreadsheet(const char* name);
 void addToCache(resource* value);
 // Dreamcast resourcemanager.cpp:2377; expanded by Complete's cache getters.
 resource* getFromCache(const char* name);

@@ -81,7 +81,7 @@ public:
     // owning text-entry constructor review, not an invented overload here.
     CHighScoreEdit(int x, int y, int w, int h, int textSize,
                    char* text, char* fontName,
-                   font::TColor color, font::EJustify justification,
+                   font::Color color, font::EJustify justification,
                    char* backgroundIcon, int backgroundFrame, int id,
                    int style, int readType, int insetX, int insetY);
     // DC195 takes message&; the shared text-entry interface still uses message*.
@@ -114,7 +114,11 @@ public:
 };
 SIZE(CHSInputDlg, 0x5c);
 
-class THighScoreWindow : public heroWindow {
+// Before normalization (type): THighScoreWindow.
+#ifndef HighScoreWindow
+#define HighScoreWindow THighScoreWindow
+#endif
+class HighScoreWindow : public heroWindow {
     // DC hiscore.cpp:1014-1031/1034-1184 directly reads/writes private
     // bIsStandard and lLastServe in these free functions; the class method
     // record contains no category/clock accessors. Retail 0x4ea1d0 agrees.
@@ -142,8 +146,8 @@ public:
     // this alignment gap; the reference layout retains the same boundary.
     char m_paddingBeforeCreatureFrame[3];
 
-    THighScoreWindow();
-    virtual ~THighScoreWindow();
+    HighScoreWindow();
+    virtual ~HighScoreWindow();
     void doModal();
     void update();
 
@@ -152,7 +156,7 @@ private:
     unsigned long m_lastServe;
     Bitmap816* m_hiScoreBack[2];
 };
-SIZE(THighScoreWindow, 0x110);
+SIZE(HighScoreWindow, 0x110);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\hiscore.cpp:738, dc 0xd7bf4) void WriteHighScores();

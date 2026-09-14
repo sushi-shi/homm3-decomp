@@ -219,7 +219,14 @@ def _cpp_local_enum_sites(code: str, ctx) -> list:
 
 def _dc_local_classes(sources):
     from collections import Counter, defaultdict
-    from homm3.match.source_ownership import read_dc, read_filter, family_name
+    from homm3.match.source_ownership import (
+        family_name,
+        read_dc,
+        read_filter,
+        read_type_lineage,
+    )
+    current_names = {old: current for current, old
+                     in read_type_lineage(REPO).items()}
     origins = defaultdict(set)
     private_origins = defaultdict(set)
     for row in read_dc(REPO):
@@ -233,7 +240,7 @@ def _dc_local_classes(sources):
             # Only the direct class is admitted here; nested/other generated
             # spellings still need their own evidence.
             if "::" not in owner and "`" not in owner:
-                private_origins[owner].add(row.file)
+                private_origins[current_names.get(owner, owner)].add(row.file)
             continue
         if "::" in name and "`" not in name:
             owner = name.rsplit("::", 1)[0]
@@ -241,7 +248,8 @@ def _dc_local_classes(sources):
             # local identifier. Merge source evidence for that identifier;
             # uniqueness below still rejects another physical definition or
             # a competing namespace/header owner with the same local name.
-            origins[owner.rsplit("::", 1)[-1]].add(row.file)
+            owner = owner.rsplit("::", 1)[-1]
+            origins[current_names.get(owner, owner)].add(row.file)
     # The exact Windows function inventory also records reviewed ownership
     # for Complete-only local classes. Do not invent a second class ledger.
     # The source-ownership gate independently rejects unused filters and

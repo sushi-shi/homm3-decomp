@@ -4,9 +4,15 @@
 
 #include "window.h"
 
-class town;
+#ifndef Town
+#define Town town
+#endif
+class Town;
 class garrison;
-class armyGroup;
+#ifndef ArmyGroup
+#define ArmyGroup armyGroup
+#endif
+class ArmyGroup;
 
 // Retail .bss 0x6a7a70. This is the quick-view label consumed by the
 // garrison constructor; storage ownership remains with the text-loading TU.
@@ -14,9 +20,17 @@ DATA(0x006a7a70) extern const char* g_quickViewGarrisonText;
 
 // Both retail constructors initialize heroWindow directly, install vtable
 // 0x6406f4, and touch no storage beyond heroWindow's proven 0x4c-byte extent.
-class TQuickTownWindow : public heroWindow {
+// Before normalization (type): TQuickTownWindow.
+#ifndef QuickTownWindow
+#define QuickTownWindow TQuickTownWindow
+#endif
+class QuickTownWindow : public heroWindow {
 public:
-    enum TViewLevel {
+// Before normalization (type): TQuickTownWindow::TViewLevel.
+#ifndef ViewLevel
+#define ViewLevel TViewLevel
+#endif
+    enum ViewLevel {
         ViewNone = 0,
         ViewArmyTypes = 1,
         ViewArmySizes = 2,
@@ -44,15 +58,15 @@ public:
         DOUBLE_RESOURCE_BONUS = 2
     };
 
-    TQuickTownWindow(const town* thisTown, TViewLevel viewLevel);
-    TQuickTownWindow(const garrison* thisGarrison, TViewLevel viewLevel);
-    virtual ~TQuickTownWindow();
+    QuickTownWindow(const Town* thisTown, ViewLevel viewLevel);
+    QuickTownWindow(const garrison* thisGarrison, ViewLevel viewLevel);
+    virtual ~QuickTownWindow();
     void center(long newX, long newY);
     void quickWindowWait();
-    void initializeArmyDisplay(const armyGroup& currentArmyGroup,
-                                 TViewLevel viewLevel);
+    void initializeArmyDisplay(const ArmyGroup& currentArmyGroup,
+                                 ViewLevel viewLevel);
 };
-SIZE(TQuickTownWindow, 0x4c);
+SIZE(QuickTownWindow, 0x4c);
 
 // --- TQuickTownWindow ---
 // CODEVIEW(E:\gamedcs\quicktownwindow.cpp:39, dc 0x117e48) void TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TViewLevel view_level);

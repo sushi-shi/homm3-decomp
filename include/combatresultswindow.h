@@ -4,18 +4,25 @@
 
 #include "window.h"
 
-class hero;
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero;
 class message;
 
 // Retail's constructor initializes heroWindow directly, installs vtable
 // 0x63d46c, and adds no derived storage. The nine slots reproduce the
 // heroWindow roster, with this class overriding dtor/Open/Close only.
-class TCombatResultsWindow : public heroWindow {
+// Before normalization (type): TCombatResultsWindow.
+#ifndef CombatResultsWindow
+#define CombatResultsWindow TCombatResultsWindow
+#endif
+class CombatResultsWindow : public heroWindow {
 public:
-    TCombatResultsWindow(const hero* attacker, const hero* defender,
+    CombatResultsWindow(const Hero* attacker, const Hero* defender,
         int mySide, int winningSide, bool isSiege,
         int experience);
-    virtual ~TCombatResultsWindow();
+    virtual ~CombatResultsWindow();
     virtual int open(int newPriority, unsigned char update);
     virtual void close(unsigned char update);
     void doModal();
@@ -57,7 +64,7 @@ public:
         NWIDGETS = 21
     };
 };
-SIZE(TCombatResultsWindow, 0x4c);
+SIZE(CombatResultsWindow, 0x4c);
 
 // Retail .bss 0x695014, declared here for want of a proven owner: the
 // constructor below writes it eight times, always paired with the video id it

@@ -8,7 +8,10 @@
 #include "town.h"
 
 class message;
-class TDialogBox;
+#ifndef DialogBoxWindow
+#define DialogBoxWindow TDialogBox
+#endif
+class DialogBoxWindow;
 class VictoryConditionStruct;
 class LossConditionStruct;
 
@@ -59,7 +62,11 @@ enum EMBType {
 // the final 0x2a0 extent. The special members are intentionally implicit:
 // CodeView marks them compiler-generated, and retail expands this aggregate's
 // teardown while retaining type_dialog_icon's element destructor boundary.
-struct TNormalDialogInfo {
+// Before normalization (type): TNormalDialogInfo.
+#ifndef NormalDialogInfo
+#define NormalDialogInfo TNormalDialogInfo
+#endif
+struct NormalDialogInfo {
     std::string m_dialogText;
     int m_x;
     int m_y;
@@ -78,7 +85,7 @@ struct TNormalDialogInfo {
     int m_special;
     int m_timeout;
 };
-SIZE(TNormalDialogInfo, 0x2a0);
+SIZE(NormalDialogInfo, 0x2a0);
 
 // The normal-dialog rollover frame has one canonical project-wide model.
 // Retail's inlined constructor proves the base extent, derived vtable store
@@ -248,12 +255,12 @@ void normalDialog(const char* text, int mbType, int x, int y,
 void normalDialogTimeOut(const char* text, int mbType, int timeOut,
     int x, int y, int resType1, int resExtra1, int resType2,
     int resExtra2, int special, int resType3, int resExtra3); // 0x4f6530
-void doNormalDialog(TNormalDialogInfo dialogInfo);              // 0x4f6990
+void doNormalDialog(NormalDialogInfo dialogInfo);              // 0x4f6990
 // DC kb.cpp:5385 (dc 0xe5960); retail 0x4f5d80 (1,296 B), unclaimed.
 // NormalDialog sizes its info block through it before DoNormalDialog.
-void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo);
+void calculateNormalDialogSize(NormalDialogInfo& dialogInfo);
 int eventWindowHandler(message& msg);
-TDialogBox* getCurrentNormalDialog();
+DialogBoxWindow* getCurrentNormalDialog();
 void extendedDialog(const char* text,
     std::vector<type_dialog_resource>& resources,
     long x, long y, long timeout);

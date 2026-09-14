@@ -98,10 +98,14 @@ public:
 // re-declared here for the border family).
 class palette;
 class paletteHiColor;
-class TPalette24;
+// Before normalization (type): TPalette24.
+#ifndef Palette24
+#define Palette24 TPalette24
+#endif
+class Palette24;
 void setPlayerPaletteColors(unsigned short* pal, int whichPlayer);
 void setPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
-void setPlayerPaletteColors(TPalette24& pal, int whichPlayer);
+void setPlayerPaletteColors(Palette24& pal, int whichPlayer);
 
 // --- bitmapBorder ---
 // CODEVIEW(E:\gamedcs\border.cpp:323, dc 0x54988) void bitmapBorder::SetPalette(const char* palette_name);

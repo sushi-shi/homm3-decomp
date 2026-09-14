@@ -113,7 +113,7 @@ int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int av
 VA(0x0041e440, 0x129)  // dc 0x23750
 unsigned char combatManager::failedSiege()
 {
-    DATA(0x0063abc0) static const TWallTargetId walls[4] = {
+    DATA(0x0063abc0) static const WallTargetId walls[4] = {
         WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_4, WALL_TARGET_5
     };
 
@@ -216,7 +216,7 @@ unsigned char combatManager::aiCheckRetreat()
         long numTowns = player->m_numTowns;
         if (numTowns > 0) {
             { for (; i < numTowns; i++) {
-                    town* currentTown = g_game->getTown(player->m_townIds[i]);
+                    Town* currentTown = g_game->getTown(player->m_townIds[i]);
                     if (currentTown->hasBuilding(TAVERN_ID, 1)) {
                         count++;
                         if (m_defendingTown == currentTown)
@@ -235,7 +235,7 @@ unsigned char combatManager::aiCheckRetreat()
                 long combatValue = 0;
                 type_artifact artifact;
                 { for (long i = 0; i < 19; i++) {
-                        artifact = m_heroes[m_currentSide]->getArtifact(TArtifactSlot(i));
+                        artifact = m_heroes[m_currentSide]->getArtifact(ArtifactSlot(i));
                         if (artifact.m_artifactId == ARTIFACT_NONE)
                             continue;
                         long artifactValue = aiGetValueOfArtifact(
@@ -450,7 +450,7 @@ long getAreaAttackValue(const army* currentArmy, long hex, long ourGroup, type_A
 VA(0x0041eea0, 0x1B9)  // dc 0x2429c
 unsigned char combatManager::chooseCyclopsAction(long bestValue, long side, type_AI_combat_parameters* estimate)
 {
-    DATA(0x0063abd0) static const TWallTargetId walls[4] = {
+    DATA(0x0063abd0) static const WallTargetId walls[4] = {
         WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_4, WALL_TARGET_5
     };
 
@@ -800,15 +800,15 @@ long combatManager::getAreaEffect(long side, const army* ourArmy, long markedEne
                                                1, 0);
     }
     if (canCastSpells(side, 1)) {
-        hero* castingHero = m_heroes[side];
+        Hero* castingHero = m_heroes[side];
         long best = 0;
-        for (SpellID spell = 10; spell < hero::NUM_SPELLS; spell++) {
+        for (SpellID spell = 10; spell < Hero::NUM_SPELLS; spell++) {
             if (!castingHero->spellIsAvailable(spell))
                 continue;
             if (spell == SPELL_FROST_RING || spell == SPELL_FIREBALL
                     || spell == SPELL_INFERNO
                     || spell == SPELL_METEOR_SHOWER) {
-                TSkillMastery mastery =
+                SkillMastery mastery =
                     castingHero->getSpellLevel(spell, m_magicTerrain);
                 if (castingHero->getManaCost(spell, m_armyGroups[1 - side],
                                               m_magicTerrain)
@@ -911,7 +911,7 @@ void combatManager::markFriendlyArmies(const army* ourArmy, long* enemyAttacks, 
 
 void findAttackHexes(const army* ourArmy, long targetHex, long start,
                        long stop, long limitCost,
-                       const searchArray* currentSearchArray,
+                       const SearchArray* currentSearchArray,
                        std::vector<long>* result);
 
 // E:\gamedcs\ai.cpp:1121
@@ -934,7 +934,7 @@ void findAttackHexes(const army* ourArmy, long targetHex, long start,
 // the ENEMY's, and the enemy's facing picks both the tail hex and which
 // half of the direction ring is searched.
 DC_ONLY(0x253a8, 0xA4)
-static void findAttackHexes(const army* ourArmy, const army* enemy, const searchArray* currentSearchArray, std::vector<long>* result)
+static void findAttackHexes(const army* ourArmy, const army* enemy, const SearchArray* currentSearchArray, std::vector<long>* result)
 {
     long sides = (ourArmy->is(1u << 0)) ? 8 : 6;
     findAttackHexes(ourArmy, ourArmy->m_gridIndex, 0, sides,
@@ -983,7 +983,7 @@ static void findAttackHexes(const army* ourArmy, const army* enemy, const search
 // the `facing ? 1 : -1` temp.
 // E:\gamedcs\ai.cpp:1152
 VA(0x0041fd60, 0x2F6)  // anchor-callee, dc 0x2544c
-void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy, long* enemyAttacks, long limitValue, searchArray* currentSearchArray, type_AI_combat_parameters* estimate) const
+void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy, long* enemyAttacks, long limitValue, SearchArray* currentSearchArray, type_AI_combat_parameters* estimate) const
 {
     const army* other = m_armies[estimate->m_ourGroup];
     long value = -estimate->getSimpleAttackEffect(*(enemy), *(ourArmy), 0, 0);
@@ -1035,7 +1035,7 @@ void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy,
 }
 
 VA(0x00420060, 0x1FB)  // dc 0x25308
-void findAttackHexes(const army* ourArmy, long targetHex, long start, long stop, long limitCost, const searchArray* currentSearchArray, std::vector<long>* result)
+void findAttackHexes(const army* ourArmy, long targetHex, long start, long stop, long limitCost, const SearchArray* currentSearchArray, std::vector<long>* result)
 {
     for (long direction = start; direction < stop; direction++) {
         long hex = ourArmy->getAdjacentHex(targetHex, direction);
@@ -1149,7 +1149,7 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
 
 // E:\gamedcs\ai.cpp:1357
 VA(0x004205d0, 0x185)  // linkorder, dc 0x25998
-unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const army* client, long* bestHex, long* openHexes, searchArray* currentSearchArray)
+unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const army* client, long* bestHex, long* openHexes, SearchArray* currentSearchArray)
 {
     long bestTime;
     long bestContact;
@@ -1203,7 +1203,7 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
 }
 
 VA(0x00420760, 0x187)  // dc 0x25b0c
-unsigned char combatManager::attemptShooterDefense(const army* currentArmy, searchArray* currentSearchArray, const type_AI_combat_parameters* estimate)
+unsigned char combatManager::attemptShooterDefense(const army* currentArmy, SearchArray* currentSearchArray, const type_AI_combat_parameters* estimate)
 {
     long hex;
 
@@ -1255,7 +1255,7 @@ unsigned char combatManager::attemptShooterDefense(const army* currentArmy, sear
 }
 
 VA(0x004208f0, 0x184)  // dc 0x25c80
-unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyAttacks, const searchArray* currentSearchArray)
+unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyAttacks, const SearchArray* currentSearchArray)
 {
     if (g_game->m_setup.m_difficulty < 2
         && !m_sideIsAi[ourArmy->m_combatSide])
@@ -1513,7 +1513,7 @@ unsigned char combatManager::chooseResurrectAction(const army* currentArmy, long
         return 0;
     army temp;
     if (currentArmy->m_creatureType == CREATURE_PIT_LORD)
-        temp.initialize(TCreatureType(CREATURE_DEMON), 1,
+        temp.initialize(CreatureType(CREATURE_DEMON), 1,
                         m_heroes[estimate->m_ourGroup],
                         estimate->m_ourGroup, 0, 0);
     for (long i = m_numArmies[estimate->m_ourGroup]; i--; ) {
@@ -1641,7 +1641,7 @@ void combatManager::markFirewalls(const army* currentArmy, long* enemyAttacks, t
     for (long i = 0; i < 187; i++) {
         if ((m_cells[i].m_attributes & 0x10) == 0)
             continue;
-        TObstacle* obstacle = &getObstacle(m_cells[i].m_obstacleIndex);
+        Obstacle* obstacle = &getObstacle(m_cells[i].m_obstacleIndex);
         long base = obstacle->m_spellDamage;
         long damage = modifySpellDamage(base, 0xd,
                                         m_heroes[obstacle->m_owner],
@@ -2214,8 +2214,8 @@ long combatManager::computeFireShieldDamage(long damage, const army* attacker, c
         return 0;
     damage = static_cast<long>(target->getFireShieldStrength()
                                * min(targetHits, damage));
-    hero* targetHero = attacker->getController();
-    hero* castingHero = target->getController();
+    Hero* targetHero = attacker->getController();
+    Hero* castingHero = target->getController();
     return modifySpellDamage(damage, SPELL_FIRE_SHIELD, castingHero,
                              targetHero, attacker, 0);
 }
@@ -2397,7 +2397,7 @@ VA(0x00422b20, 0x278)  // anchor-caller(choose_shooter_action/choose_melee_actio
 void combatManager::findAITargets(long ourGroup, const army* currentArmy,
                                     unsigned char meleeOnly,
                                     const type_AI_combat_parameters* data,
-                                    searchArray* currentSearchArray)
+                                    SearchArray* currentSearchArray)
 {
     long enemyGroup = 1 - ourGroup;
     if (currentSearchArray == 0)
@@ -2635,21 +2635,21 @@ long army::getAdjacentHex(long direction)
 
 // E:\gamedcs\hero.h:965
 DC_ONLY(0x27e8c, 0x10)
-const type_artifact* hero::getArtifact(TArtifactSlot slot)
+const type_artifact* Hero::getArtifact(ArtifactSlot slot)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.h:970
 DC_ONLY(0x27e9c, 0x10)
-const type_artifact* hero::getBackpack(long slot)
+const type_artifact* Hero::getBackpack(long slot)
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1150
 DC_ONLY(0x27eac, 0x1C)
-int combatManager::TWallTarget::getBlockedHex()
+int combatManager::WallTarget::getBlockedHex()
 {
     // @stub
 }
@@ -2663,7 +2663,7 @@ unsigned char combatManager::validHex(int iHex)
 
 // E:\gamedcs\cmbtmgr.h:1473
 DC_ONLY(0x27edc, 0x20)
-long combatManager::getWallStrength(TWallTargetId target)
+long combatManager::getWallStrength(WallTargetId target)
 {
     // @stub
 }
@@ -2706,7 +2706,7 @@ unsigned char combatManager::inInvisibleColumn(int index)
 
 // E:\gamedcs\cmbtmgr.h:1542
 DC_ONLY(0x27fa0, 0x34)
-combatManager::TObstacle* combatManager::getObstacle(int index)
+combatManager::Obstacle* combatManager::getObstacle(int index)
 {
     // @stub
 }
@@ -2749,21 +2749,21 @@ long type_AI_attack_hex_chooser::get_hex_value()
 
 // E:\gamedcs\FindPath.h:194
 DC_ONLY(0x27fe8, 0x16)
-pathCell* searchArray::getHex(long x)
+pathCell* SearchArray::getHex(long x)
 {
     // @stub
 }
 
 // E:\gamedcs\FindPath.h:226
 DC_ONLY(0x28000, 0x18)
-const pathCell* searchArray::getStepCell(long i)
+const pathCell* SearchArray::getStepCell(long i)
 {
     // @stub
 }
 
 // E:\gamedcs\FindPath.h:242
 DC_ONLY(0x28018, 0xA)
-unsigned char searchArray::isMoat(short index)
+unsigned char SearchArray::isMoat(short index)
 {
     // @stub
 }
@@ -2875,7 +2875,7 @@ void std::allocator<army *>::~allocator<army *>()
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x281f8, 0x24)
-combatManager::TObstacle* std::vector<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::operator[](unsigned __n)
+combatManager::Obstacle* std::vector<combatManager::Obstacle,std::allocator<combatManager::Obstacle> >::operator[](unsigned __n)
 {
     // @stub
 }
@@ -2966,7 +2966,7 @@ void std::_Vector_base<army *,std::allocator<army *> >::~_Vector_base<army *,std
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x283b8, 0x4)
-combatManager::TObstacle* std::vector<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::begin()
+combatManager::Obstacle* std::vector<combatManager::Obstacle,std::allocator<combatManager::Obstacle> >::begin()
 {
     // @stub
 }

@@ -10,7 +10,11 @@ class textWidget;
 // Dreamcast supplies the sole derived member name and offset (+0x58 on its
 // 0x58-byte CAdvPopup). Retail's proven 0x60 base shifts the pointer to +0x60;
 // advManager::DoAdventureOptions allocates exactly 0x64 bytes on its stack.
-class TAdventureOptionsWindow : public CAdvPopup {
+// Before normalization (type): TAdventureOptionsWindow.
+#ifndef AdventureOptionsWindow
+#define AdventureOptionsWindow TAdventureOptionsWindow
+#endif
+class AdventureOptionsWindow : public CAdvPopup {
 public:
     enum EWidgetIDs {
         VIEW_WORLD_ID = 1,
@@ -33,15 +37,15 @@ public:
         ADVENTURE_OPTION_ACCEPT_HOTKEY_2 = 1
     };
 
-    TAdventureOptionsWindow();
-    virtual ~TAdventureOptionsWindow();
+    AdventureOptionsWindow();
+    virtual ~AdventureOptionsWindow();
     virtual int windowHandler(message& msg);
 
 private:
     textWidget* m_rolloverWidget;
     int convertID2HelpID(int id) const;
 };
-SIZE(TAdventureOptionsWindow, 0x64);
+SIZE(AdventureOptionsWindow, 0x64);
 
 // --- TAdventureOptionsWindow ---
 // CODEVIEW(E:\gamedcs\adventureoptionswindow.cpp:112, dc 0x51b0) int TAdventureOptionsWindow::convertID2HelpID(int id);

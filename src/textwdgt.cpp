@@ -22,7 +22,7 @@ void textWidget::textWidget()
 
 // E:\gamedcs\textwdgt.cpp:62
 DC_ONLY(0x164c80, 0xA4)
-void textWidget::textWidget(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, const char* textString, const char* textFontName, font::TColor color, int textWidgetId, unsigned justify, int back_color, int textWidgetStyle, unsigned char focusable)
+void textWidget::textWidget(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, const char* textString, const char* textFontName, font::Color color, int textWidgetId, unsigned justify, int back_color, int textWidgetStyle, unsigned char focusable)
 {
     // @stub
 }
@@ -55,7 +55,7 @@ VA_COMPGEN(0x005bc250, 0x21, SCALAR_DELETING_DTOR, textWidget)
 // written `Color; BackColor; Justify;` to land retail's order.
 VA(0x005bc280, 0x12D)  // anchor-vtable 0x642db0 + ret 0x2c, dc 0x164c80
 textWidget::textWidget(int x, int y, int w, int h, const char* text,
-                       const char* fontName, font::TColor color, int id,
+                       const char* fontName, font::Color color, int id,
                        unsigned justify, int backColor, int style)
     : widget(static_cast<short>(x), static_cast<short>(y),
              static_cast<short>(w), static_cast<short>(h),
@@ -83,7 +83,7 @@ textWidget::~textWidget()
 
 // E:\gamedcs\textwdgt.cpp:102
 DC_ONLY(0x164d68, 0x6C)
-void textWidget::initialize(int x, int y, int w, int h, int id, int style, const char* _text, const char* _font, font::TColor _color, unsigned _justify, unsigned char focusable)
+void textWidget::initialize(int x, int y, int w, int h, int id, int style, const char* _text, const char* _font, font::Color _color, unsigned _justify, unsigned char focusable)
 {
     // @stub
 }
@@ -129,7 +129,7 @@ int textWidget::main(message& msg)
             break;
         case WIDGET_SET_COLOR:
             if (msg.m_codeY == m_id) {
-                setColor(font::TColor(msg.m_extra));
+                setColor(font::Color(msg.m_extra));
                 return MESSAGE_DISPATCH_CONSUME;
             }
             break;
@@ -210,7 +210,7 @@ void textWidget::draw() const
             colorScheme = m_color;
         m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
                                 drawX, drawY, m_width, m_height,
-                                font::TColor(colorScheme), m_justify, -1);
+                                font::Color(colorScheme), m_justify, -1);
     }
 }
 
@@ -230,7 +230,7 @@ void iconBackedTextWidget::iconBackedTextWidget()
 
 // E:\gamedcs\textwdgt.cpp:272
 DC_ONLY(0x165090, 0x7E)
-void iconBackedTextWidget::iconBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, font::TColor color, int id, unsigned justify, int style)
+void iconBackedTextWidget::iconBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, font::Color color, int id, unsigned justify, int style)
 {
     // @stub
 }
@@ -258,7 +258,7 @@ void bitmapBackedTextWidget::bitmapBackedTextWidget()
 
 // E:\gamedcs\textwdgt.cpp:325
 DC_ONLY(0x1651d8, 0x7A)
-void bitmapBackedTextWidget::bitmapBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, font::TColor color, int id, unsigned justify, int style)
+void bitmapBackedTextWidget::bitmapBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, font::Color color, int id, unsigned justify, int style)
 {
     // @stub
 }
@@ -272,7 +272,7 @@ void bitmapBackedTextWidget::draw()
 
 // E:\gamedcs\TextWdgt.h:78
 DC_ONLY(0x1652f4, 0x6)
-void textWidget::SetColor(font::TColor new_color)
+void textWidget::SetColor(font::Color new_color)
 {
     // @stub
 }
@@ -317,7 +317,7 @@ VA_COMPGEN(0x005bc6d0, 0x8A, IMPLICIT_DTOR, bitmapBackedTextWidget)
 VA(0x005bc760, 0x7B)  // dc 0x1651d8
 bitmapBackedTextWidget::bitmapBackedTextWidget(
     int x, int y, int w, int h, const char* text, const char* fontName,
-    const char* backName, font::TColor color, int id, unsigned justify,
+    const char* backName, font::Color color, int id, unsigned justify,
     int style)
     : textWidget(x, y, w, h, text, fontName, color, id, justify, 0, style)
 {

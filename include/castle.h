@@ -4,7 +4,10 @@
 
 #include <va.h>
 
-class town;
+#ifndef Town
+#define Town town
+#endif
+class Town;
 
 // Building-name tables, byte-proven by the retail lookup 0x4610e0:
 // four .bss string arrays keyed by (townType, buildingId) with the
@@ -30,7 +33,7 @@ enum EBuildingId {
 };
 
 const char* getBuildingName(int townType, int buildingId);
-int canBuy(const town* currTown, int buildingId);
+int canBuy(const Town* currTown, int buildingId);
 
 // Retail extends the Dreamcast hall-screen table with Conflux while
 // preserving the original 18-byte row width. SetupCastle copies one row

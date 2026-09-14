@@ -34,7 +34,7 @@ VA_COMPGEN(0x004b5040, 0x21, SCALAR_DELETING_DTOR, font)
 // The resource type is 0x50; the neighbouring proven values are
 // text 2, bitmap24 0x11 and sfx 0x20.
 VA(0x004b5070, 0x9B)  // anchor-global, dc 0xa1c04
-font::font(const char* name, const font::TFontSpec& fontspec, int dsize,
+font::font(const char* name, const font::FontSpec& fontspec, int dsize,
            unsigned char* d)
     : resource(name, RESOURCE_TYPE_FONT), m_fs(fontspec)
 {
@@ -55,7 +55,7 @@ font::~font()
 // The decorated DC member signature uses TColor and bool (_N). Both
 // string renderers call this ordinary member; retail expands the custom
 // color test and palette bias. Keep the shared return and nested highlight.
-int font::getColor(font::TColor colorScheme, bool highlighted)
+int font::getColor(font::Color colorScheme, bool highlighted)
 {
     int color;
     if (!(colorScheme & CUSTOM_COLOR)) {
@@ -72,7 +72,7 @@ int font::getColor(font::TColor colorScheme, bool highlighted)
 
 // E:\gamedcs\font.cpp:81
 VA(0x004b5180, 0x16)  // anchor-global, dc 0xa1d14
-void font::setPalette(const TPalette16& newPalette)
+void font::setPalette(const Palette16& newPalette)
 {
     // DC82 calls the reference copy assignment; Complete 0x4b5180 calls
     // the retained pointer assignment at 0x522910, which copies palette
@@ -129,7 +129,7 @@ void font::drawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
 // E:\gamedcs\font.cpp:138, dc 0xa1e5c
 VA(0x004b5260, 0x22E)  // dc 0xa1e5c
 void font::drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
-                             int x, int y, font::TColor colorScheme, int clipX,
+                             int x, int y, font::Color colorScheme, int clipX,
                              int clipY, int clipWidth, int clipHeight,
                              int cursorPos)
 {
@@ -206,7 +206,7 @@ void font::drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
 
 // E:\gamedcs\font.cpp:246
 DC_ONLY(0xa209c, 0x6A)
-void font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, font::TColor color)
+void font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, font::Color color)
 {
     // @stub
 }
@@ -253,7 +253,7 @@ void font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, font:
 VA(0x004b5490, 0x308)  // anchor-global, dc 0xa2108
 void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                              int y, int boxWidth, int boxHeight,
-                             font::TColor colorScheme, unsigned justification,
+                             font::Color colorScheme, unsigned justification,
                              int cursorPos)
 {
     int pos = 0;
@@ -375,7 +375,7 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
 VA(0x004b57a0, 0x25)  // dc 0xa2420
 int font::getCharacterWidth(unsigned char currChar) const
 {
-    const TFontSpec::myABC* record = &m_fs.m_abc[currChar];
+    const FontSpec::myABC* record = &m_fs.m_abc[currChar];
     return record->m_abcB + record->m_abcC + record->m_abcA;
 }
 

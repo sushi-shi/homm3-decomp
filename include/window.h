@@ -30,7 +30,11 @@ DATA(0x00691210) extern const char g_emptyRolloverText[];
 // The rollover/right-click text pair CHeroWindowEx::SetHelpText hands
 // to widget::set_help_text. Stride 8 is byte-proven by 0x5ff8e0's
 // `lea edi,[8*eax]` row arithmetic and the +0/+4 field loads.
-struct THelpText {
+// Before normalization (type): THelpText.
+#ifndef HelpText
+#define HelpText THelpText
+#endif
+struct HelpText {
     const char* m_text;
     const char* m_rclick;
 };
@@ -191,7 +195,7 @@ public:
     virtual int windowHandler(message& msg);                            // slot 9
     virtual unsigned char processHover(int mouseX, int mouseY);         // slot 10
     virtual unsigned char processRightSelect(int id);                   // slot 11
-    void setHelpText(THelpText* helpText, int start, int stop, unsigned char copyText);
+    void setHelpText(HelpText* helpText, int start, int stop, unsigned char copyText);
 
 protected:
     virtual int onWidgetDeselect(int id, bool& exitFlag);  // slot 12

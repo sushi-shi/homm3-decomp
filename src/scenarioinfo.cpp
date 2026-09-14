@@ -42,7 +42,7 @@ public:
     int m_startingBonus;                // +0x50
     CSprite* m_bonusSprite;             // +0x54
     Bitmap816* m_heroPortrait;          // +0x58, owned
-    hero* m_startingHero;               // +0x5c
+    Hero* m_startingHero;               // +0x5c
 
     // Retail's inlined constructor ends with `mov word ptr [edi+0x10], dx`
     // (0x568160) - the widget id, `390 + playerPosition`, which is exactly
@@ -252,7 +252,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
             continue;
 
         int playerType;
-        CMapHeaderData::TPlayerSlotAttributes* slot =
+        CMapHeaderData::PlayerSlotAttributes* slot =
             &g_game->m_mapHeader.m_playerSlotAttributes[i];
         if (slot->m_canBeHuman)
             playerType = slot->m_canBeComputer ? 0 : 1;
@@ -261,7 +261,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         else
             continue;
 
-        hero* startingHero = g_game->getHero(g_game->m_setup.m_startingHero[i]);
+        Hero* startingHero = g_game->getHero(g_game->m_setup.m_startingHero[i]);
         CScenarioPlayerInfoWidget* row = new CScenarioPlayerInfoWidget(
             m_townPix, i + SCENARIO_INFO_PLAYER_ROW_FIRST_ID);
         row->m_panel = m_panels[i];
@@ -554,7 +554,7 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
             CTownDlg dlg(0);
             dlg.createWin(
                 m_townPix, townType * 2 + 2,
-                static_cast<TTownType>(townType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+                static_cast<TownType>(townType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             dlg.doModal(0);
         }
         return 1;
@@ -574,7 +574,7 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
             CScenarioPlayerInfoWidget* row =
                 static_cast<CScenarioPlayerInfoWidget*>(getWidget(
                     playerPosition + SCENARIO_INFO_PLAYER_ROW_FIRST_ID));
-            hero* startingHero = g_game->getHero(heroId);
+            Hero* startingHero = g_game->getHero(heroId);
             CHeroDlg dlg(0);
             dlg.createWin(row->m_heroPortrait, startingHero->m_name,
                           m_heroSpecificAbility, heroId,

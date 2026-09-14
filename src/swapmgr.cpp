@@ -39,7 +39,7 @@ DATA(0x006a3d30) swapManager* g_swapManager;
 // E:\gamedcs\swapmgr.cpp:120. Dreamcast proves the class identity and
 // constructor signature; retail independently proves the CNetMsg base plus
 // two complete hero snapshots and the 0x938-byte wire extent.
-CHeroUpdateMsg::CHeroUpdateMsg(hero* left, hero* right)
+CHeroUpdateMsg::CHeroUpdateMsg(Hero* left, Hero* right)
     : CNetMsg(RS_HERO_UPDATE, sizeof(CHeroUpdateMsg))
 {
     m_leftHero = *left;
@@ -60,7 +60,7 @@ CGiveMeStuffMsg::CGiveMeStuffMsg()
 
 inline CSwapManagerChatEdit::CSwapManagerChatEdit(
     int x, int y, int w, int h, int textSize, char* text, char* fontName,
-    font::TColor color, font::EJustify justification, char* backgroundIcon,
+    font::Color color, font::EJustify justification, char* backgroundIcon,
     int backgroundFrame, int id, int style, int readType, int insetX,
     int insetY)
     : CGameChatEdit(x, y, w, h, textSize, text, fontName, color,
@@ -75,7 +75,7 @@ inline CSwapManagerChatEdit::CSwapManagerChatEdit(
 // Complete adds the SoD background and artifact slots plus the network arrow
 // split; retail fixes all constructor arguments below.
 VA(0x005aaa80, 0x38E9)
-TSwapWindow::TSwapWindow(hero** heroes)
+SwapWindow::SwapWindow(Hero** heroes)
     : heroWindow(0, 0, 800, 600, 1)
 {
     m_widgets.reserve(125);
@@ -677,7 +677,7 @@ void CSwapManagerChatEdit::sendChat(const char* chat, int toWho)
 VA_COMPGEN(0x005ae390, 0x21, SCALAR_DELETING_DTOR, TSwapWindow)
 
 VA(0x005ae3c0, 0x6B)  // dc 0x15c320
-TSwapWindow::~TSwapWindow()
+SwapWindow::~SwapWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -686,7 +686,7 @@ TSwapWindow::~TSwapWindow()
 }
 
 VA(0x005ae430, 0xCB)  // dc 0x15c384
-void TSwapWindow::updateArrows()
+void SwapWindow::updateArrows()
 {
     if (!m_leftArrow)
         return;
@@ -740,7 +740,7 @@ public:
 SIZE(CSwapMgrNetMsgHandler, 0x10);
 
 VA(0x005ae500, 0xA9)  // dc 0x15c470
-swapManager::swapManager(hero* leftHero, hero* rightHero)
+swapManager::swapManager(Hero* leftHero, Hero* rightHero)
 {
     m_heroes[0] = leftHero;
     m_heroes[1] = rightHero;
@@ -825,7 +825,7 @@ VA(0x005ae750, 0x3A2)  // full retail body + dc 0x15c66c dossier
 int swapManager::open(int newPriority)
 {
     g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
-    m_parent = new TSwapWindow(m_heroes);
+    m_parent = new SwapWindow(m_heroes);
     if (!m_parent)
         memError();
 
@@ -1054,7 +1054,7 @@ void swapManager::drawSelector()
 
 // E:\gamedcs\swapmgr.cpp:914
 DC_ONLY(0x15cccc, 0x5E)
-inline void swapManager::updateArtifactWidget(long id, TArtifact artifact)
+inline void swapManager::updateArtifactWidget(long id, Artifact artifact)
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
@@ -1076,9 +1076,9 @@ inline void swapManager::updateArtifactWidget(long id, TArtifact artifact)
 }
 
 VA(0x005aef00, 0x24C)  // dc 0x15cd2c
-void swapManager::updateSlot(int hero, TArtifactSlot slot)
+void swapManager::updateSlot(int hero, ArtifactSlot slot)
 {
-    int artifact = m_heroes[hero]->getArtifact(TArtifactSlot(slot)).m_artifactId;
+    int artifact = m_heroes[hero]->getArtifact(ArtifactSlot(slot)).m_artifactId;
     if (artifact == ARTIFACT_NONE)
     {
         int type = g_artifactSlotTraits[slot].m_type;
@@ -1096,7 +1096,7 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
                     artifact = 0x91;
                     break;
                 }
-                if (m_heroes[hero]->getArtifact(TArtifactSlot(i)).m_artifactId == ARTIFACT_NONE
+                if (m_heroes[hero]->getArtifact(ArtifactSlot(i)).m_artifactId == ARTIFACT_NONE
                     && --remaining == 0)
                     break;
             }
@@ -1110,23 +1110,23 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
         int converted;
         converted = artifact;
         updateArtifactWidget(
-            hero * (kNumArtifactSlots + 1) + slot + 0x96,
-            TArtifact(converted));
+            Hero * (kNumArtifactSlots + 1) + slot + 0x96,
+            Artifact(converted));
         converted = 0x90;
         updateArtifactWidget(
-            hero * (kNumArtifactSlots + 1) + slot + 0x1b,
-            TArtifact(converted));
+            Hero * (kNumArtifactSlots + 1) + slot + 0x1b,
+            Artifact(converted));
     }
     else
     {
         updateArtifactWidget(
-            hero * (kNumArtifactSlots + 1) + slot + 0x96,
+            Hero * (kNumArtifactSlots + 1) + slot + 0x96,
             ARTIFACT_NONE);
         int converted;
         converted = artifact;
         updateArtifactWidget(
-            hero * (kNumArtifactSlots + 1) + slot + 0x1b,
-            TArtifact(converted));
+            Hero * (kNumArtifactSlots + 1) + slot + 0x1b,
+            Artifact(converted));
     }
 }
 
@@ -1141,7 +1141,7 @@ void swapManager::updateAllSlots()
             // Complete adds ordinal 18 to Dreamcast's public TArtifactSlot
             // domain; keep the proved callee ABI and make that revision
             // boundary explicit instead of flattening UpdateSlot to int.
-            updateSlot(hero, static_cast<TArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+            updateSlot(hero, static_cast<ArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
 }
 
 // E:\gamedcs\swapmgr.cpp:977
@@ -1237,7 +1237,7 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned 
 
     m_destinationHeroIndex = hero;
     m_destinationArmySlot = monster;
-    if (m_sourceHeroIndex == hero && m_sourceArmySlot == monster)
+    if (m_sourceHeroIndex == Hero && m_sourceArmySlot == monster)
         viewMon();
     else if (m_heroes[m_sourceHeroIndex]->m_owner == g_netLocalGamePos)
     {
@@ -1272,10 +1272,10 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned 
 VA(0x005af590, 0x3F7)  // Main roster/callees + full retail body, dc 0x15d150
 void swapManager::handleArtifactClick(long side, long id, unsigned char rightClick)
 {
-    TArtifactSlot slot =
-        static_cast<TArtifactSlot>(id) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
-    hero* ourHero = m_heroes[side];
-    type_artifact oldArtifact = ourHero->getArtifact(TArtifactSlot(slot));
+    ArtifactSlot slot =
+        static_cast<ArtifactSlot>(id) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+    Hero* ourHero = m_heroes[side];
+    type_artifact oldArtifact = ourHero->getArtifact(ArtifactSlot(slot));
 
     if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId == ARTIFACT_NONE)
@@ -1384,7 +1384,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
 VA(0x005af990, 0x251)  // roster bracket + body/callees, dc 0x15d2e0
 void swapManager::handleBackpackClick(long side, long id, unsigned char rightClick)
 {
-    hero* ourHero = m_heroes[side];
+    Hero* ourHero = m_heroes[side];
     type_artifact oldArtifact = ourHero->getBackpack(id);
 
     if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
@@ -1424,8 +1424,8 @@ void swapManager::sendHeroUpdate()
     if (g_networkActive69954c && m_humanPlayerTrade && m_givingToAlly) {
         int otherPlayer = getOtherHero()->m_owner;
         if (!m_netMsgHandler->getAbortPopupMsg()) {
-            hero* leftHero = m_heroes[0];
-            hero* rightHero = m_heroes[1];
+            Hero* leftHero = m_heroes[0];
+            Hero* rightHero = m_heroes[1];
             CHeroUpdateMsg msg(leftHero, rightHero);
             transmitRemoteData(&msg, otherPlayer, true, true);
         }
@@ -1592,8 +1592,8 @@ int swapManager::main(message& msg)
                         normalDialog(
                             g_text,
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, 20,
                             m_heroes[skillHero]->m_skillLevel[skill]
                                 + 3 * skill + 2,
@@ -1775,8 +1775,8 @@ int swapManager::main(message& msg)
                         g_game->showMoraleInfo(
                             m_heroes[0],
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE);
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE);
                     break;
 
                 case kSwapRolloverLuckLeft:
@@ -1785,8 +1785,8 @@ int swapManager::main(message& msg)
                         g_game->showLuckInfo(
                             m_heroes[0],
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE);
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE);
                     break;
 
                 case kSwapRolloverText9Left:
@@ -1795,13 +1795,13 @@ int swapManager::main(message& msg)
                     {
                         sprintf(g_text, g_generalText->getText(3),
                                 m_heroes[0]->m_level,
-                                hero::getExperience(m_heroes[0]->m_level + 1),
+                                Hero::getExperience(m_heroes[0]->m_level + 1),
                                 m_heroes[0]->m_experience);
                         normalDialog(
                             g_text,
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -1816,8 +1816,8 @@ int swapManager::main(message& msg)
                         normalDialog(
                             g_text,
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -1831,8 +1831,8 @@ int swapManager::main(message& msg)
                         normalDialog(
                             g_text,
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -1846,8 +1846,8 @@ int swapManager::main(message& msg)
                         g_game->showMoraleInfo(
                             m_heroes[1],
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE);
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE);
                     break;
 
                 case kSwapRolloverLuckRight:
@@ -1856,8 +1856,8 @@ int swapManager::main(message& msg)
                         g_game->showLuckInfo(
                             m_heroes[1],
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE);
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE);
                     break;
 
                 case kSwapRolloverText9Right:
@@ -1866,13 +1866,13 @@ int swapManager::main(message& msg)
                     {
                         sprintf(g_text, g_generalText->getText(3),
                                 m_heroes[1]->m_level,
-                                hero::getExperience(m_heroes[1]->m_level + 1),
+                                Hero::getExperience(m_heroes[1]->m_level + 1),
                                 m_heroes[1]->m_experience);
                         normalDialog(
                             g_text,
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -1887,8 +1887,8 @@ int swapManager::main(message& msg)
                         normalDialog(
                             g_text,
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -1902,8 +1902,8 @@ int swapManager::main(message& msg)
                         normalDialog(
                             g_text,
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -2127,7 +2127,7 @@ void swapManager::setRolloverText(int codeY)
     case kSwapRolloverLeftArtifact16: case kSwapRolloverLeftArtifact17:
     case kSwapRolloverLeftArtifact18:
         m_heroes[0]
-            ->getArtifact(static_cast<TArtifactSlot>(codeY - kSwapRolloverLeftArtifact0) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
+            ->getArtifact(static_cast<ArtifactSlot>(codeY - kSwapRolloverLeftArtifact0) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
             .getRolloverText(g_text);
         break;
 
@@ -2149,7 +2149,7 @@ void swapManager::setRolloverText(int codeY)
     case kSwapRolloverRightArtifact16: case kSwapRolloverRightArtifact17:
     case kSwapRolloverRightArtifact18:
         m_heroes[1]
-            ->getArtifact(static_cast<TArtifactSlot>(codeY - kSwapRolloverRightArtifact0) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
+            ->getArtifact(static_cast<ArtifactSlot>(codeY - kSwapRolloverRightArtifact0) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
             .getRolloverText(g_text);
         break;
 
@@ -2223,7 +2223,7 @@ unsigned char swapManager::isLeftHero()
 
 // E:\gamedcs\swapmgr.cpp:2259
 DC_ONLY(0x15ee74, 0x22)
-hero* swapManager::GetOurHero()
+Hero* swapManager::GetOurHero()
 {
     // @stub
 }
@@ -2272,7 +2272,7 @@ void CSwapManagerChatEdit::~CSwapManagerChatEdit()
 
 // E:\gamedcs\swapmgr.cpp:454
 DC_ONLY(0x15f1b0, 0x34)
-void* TSwapWindow::`scalar deleting destructor'(unsigned __flags)
+void* SwapWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -2301,8 +2301,8 @@ void swapManager::swapMons()
         if (m_heroes[m_sourceHeroIndex]->m_army.m_armies[slot] != CREATURE_NONE
             && m_heroes[m_sourceHeroIndex]->m_army.m_numTroops[slot] > 0)
             ++nonemptyTroops;
-    armyGroup* source = &m_heroes[m_sourceHeroIndex]->m_army;
-    armyGroup* destination = &m_heroes[m_destinationHeroIndex]->m_army;
+    ArmyGroup* source = &m_heroes[m_sourceHeroIndex]->m_army;
+    ArmyGroup* destination = &m_heroes[m_destinationHeroIndex]->m_army;
 
     if (destination->m_armies[m_destinationArmySlot] == source->m_armies[m_sourceArmySlot]) {
         if (source->getNumArmies() == 1)
@@ -2490,7 +2490,7 @@ void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
             && m_humanPlayerTrade)
         {
             CTradeRequestDoneMsg requestDone;
-            hero* otherHero = getOtherHero();
+            Hero* otherHero = getOtherHero();
             transmitRemoteData(&requestDone, otherHero->m_owner, 0, 1);
         }
         exitFlag = 1;
@@ -2517,7 +2517,7 @@ inline unsigned char swapManager::isRightHero()
 }
 
 // E:\gamedcs\swapmgr.cpp:2251, dc 0x15ee50.
-inline hero* swapManager::getOtherHero()
+inline Hero* swapManager::getOtherHero()
 {
     if (isLeftHero())
         return m_heroes[1];
@@ -2553,7 +2553,7 @@ void swapManager::onReceiveFromAlly()
     drawSwapWin();
 
     CGiveMeStuffMsg giveMeStuff;
-    hero* otherHero = getOtherHero();
+    Hero* otherHero = getOtherHero();
     transmitRemoteData(&giveMeStuff, otherHero->m_owner, 0, 1);
 }
 

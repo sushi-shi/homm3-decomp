@@ -5,10 +5,10 @@ a comment, an SDK header, vendored code, or a standard-library instantiation is
 not a project identifier.  Rows are TSV so a reviewed subset can become input to
 a later rewrite rather than making an unreviewed tree-wide edit.
 
-T-prefixed types are reported with ``alias-review`` because changing the actual
-record/enum tag changes VC6 decorated names.  A clean typedef may be used by
-authored code while the recovered tag remains the ABI identity.  Snake-case
-functions are reported as direct renames, except C-linkage declarations.
+T-prefixed types and snake-case functions are reported as direct reviews.
+Applying a type plan preserves the recovered spelling in the owning source
+comment; the normal build/delink pass then regenerates labels for the authored
+name. C-linkage functions remain external ABI spellings and are excluded.
 
 Run inside the build shell after generating the Clang header mirror::
 
@@ -114,7 +114,7 @@ def make_finding(cursor, ci, root: Path) -> Finding | None:
 
     if cursor.kind in record_kinds and TYPE_PREFIX.fullmatch(name):
         return Finding(
-            "type", qualified, name, name[1:], "alias-review", 9,
+            "type", qualified, name, name[1:], "direct-review", 9,
             relative, location.line, cursor.get_usr(),
         )
 
@@ -311,6 +311,308 @@ def apply_carcass_plan(root: Path, plan: Path, min_confidence: int) -> int:
     return 0
 
 
+def rewrite_code_identifiers(contents: str, replacements: dict[str, str],
+                             contextual: set[str] | None = None) -> str:
+    """Rewrite identifier tokens while leaving comments and literals intact.
+
+    T-prefixed names are sufficiently distinctive to replace as identifiers.
+    Explicit legacy lower-case class names use conservative type-position
+    checks so a parameter such as ``int town`` remains untouched.
+    """
+    contextual = contextual or set()
+    result = []
+    index = 0
+    length = len(contents)
+    state = "code"
+    while index < length:
+        if state == "code" and contents.startswith("//", index):
+            state = "line-comment"
+        elif state == "code" and contents.startswith("/*", index):
+            state = "block-comment"
+
+        if state == "line-comment":
+            end = contents.find("\n", index)
+            if end < 0:
+                result.append(contents[index:])
+                break
+            result.append(contents[index:end + 1])
+            index = end + 1
+            state = "code"
+            continue
+        if state == "block-comment":
+            end = contents.find("*/", index + 2)
+            if end < 0:
+                result.append(contents[index:])
+                break
+            result.append(contents[index:end + 2])
+            index = end + 2
+            state = "code"
+            continue
+        if contents[index] in {'"', "'"}:
+            quote = contents[index]
+            end = index + 1
+            closed = False
+            while end < length:
+                if quote == "'" and contents[end] == "\n":
+                    break
+                if contents[end] == "\\":
+                    end += 2
+                    continue
+                end += 1
+                if contents[end - 1] == quote:
+                    closed = True
+                    break
+            # CodeView's spelling for compiler-generated functions contains
+            # an unmatched apostrophe: `scalar deleting destructor'. It is
+            # punctuation, not a C++ character literal.
+            if quote == "'" and not closed:
+                result.append(contents[index])
+                index += 1
+                continue
+            result.append(contents[index:end])
+            index = end
+            continue
+        if contents[index].isalpha() or contents[index] == "_":
+            end = index + 1
+            while (end < length
+                   and (contents[end].isalnum() or contents[end] == "_")):
+                end += 1
+            token = contents[index:end]
+            replacement = replacements.get(token)
+            if replacement is not None and (token not in contextual
+                                               or is_type_position(
+                                                   contents, index, end, token)):
+                result.append(replacement)
+            else:
+                result.append(token)
+            index = end
+            continue
+        result.append(contents[index])
+        index += 1
+    return "".join(result)
+
+
+def restore_compgen_owner_spellings(contents: str,
+                                    replacements: dict[str, str]) -> str:
+    """Keep VA_COMPGEN owners aligned with compiler-facing legacy tags.
+
+    The fourth argument is an operational symbol key, not an authored C++
+    identifier.  Direct compiler functions retain the legacy tag in VC6's
+    decorated name through the compatibility macro, so the delinked target
+    must use that same spelling.
+    """
+    for old, new in replacements.items():
+        contents = re.sub(
+            rf"(\bVA_COMPGEN\s*\([^,\n]+,[^,\n]+,[^,\n]+,\s*)"
+            rf"{re.escape(new)}(\s*\))",
+            rf"\g<1>{old}\2", contents)
+    return contents
+
+
+def refresh_compatibility_macros(contents: str,
+                                 replacements: dict[str, str]) -> str:
+    """Emit one stable clean-to-recovered macro before each declaration."""
+    for old, new in replacements.items():
+        contents = re.sub(
+            rf"^[ \t]*#ifndef[ \t]+{re.escape(new)}[ \t]*\n"
+            rf"[ \t]*#define[ \t]+{re.escape(new)}[ \t]+"
+            rf"(?:{re.escape(old)}|{re.escape(new)})[ \t]*\n"
+            rf"[ \t]*#endif[ \t]*\n",
+            "", contents, flags=re.MULTILINE)
+    lines = contents.splitlines(keepends=True)
+    for old, new in replacements.items():
+        declaration = re.compile(
+            rf"\b(?:class|struct|union|enum)\s+{re.escape(new)}\b"
+            rf"(?=\s*(?:[{{:;]|$))")
+        indices = [index for index, line in enumerate(lines)
+                   if not line.lstrip().startswith("//")
+                   and declaration.search(line)]
+        if indices:
+            index = indices[0]
+            lines[index:index] = [
+                f"#ifndef {new}\n", f"#define {new} {old}\n", "#endif\n"]
+    return "".join(lines)
+
+
+def is_type_position(contents: str, start: int, end: int, name: str) -> bool:
+    """Recognize conservative contexts for an explicitly named legacy type."""
+    line_start = contents.rfind("\n", 0, start) + 1
+    line_end = contents.find("\n", end)
+    if line_end < 0:
+        line_end = len(contents)
+    left = contents[line_start:start]
+    right = contents[end:line_end]
+    if re.search(r"\b(?:class|struct|union|enum|new)\s*$", left):
+        return True
+    if re.match(r"\s*\*\s*[0-9]", right):
+        return False
+    if re.match(r"\s*(?:\*|&|::)", right):
+        return True
+    open_angle = left.rfind("<")
+    close_angle = left.rfind(">")
+    if (open_angle > close_angle and re.search(r"(?:<|,\s*)$", left)
+            and re.match(r"\s*(?:,|>)", right)):
+        return True
+    if re.search(r"(?:~|::)\s*$", left) and re.match(r"\s*\(", right):
+        return True
+    if not left.strip() and re.match(r"\s*\(", right):
+        return True
+    if not left.strip() and re.match(r"\s+[A-Za-z_]\w*\s*(?:[;=(\[])", right):
+        return True
+    if (re.search(r"\b(?:VA_COMPGEN|SIZE)\s*\(", left)
+            and re.match(r"\s*[,)]", right)):
+        return True
+    return False
+
+
+def parse_type_rename(value: str) -> tuple[str, str]:
+    old, separator, new = value.partition("=")
+    if (not separator or not re.fullmatch(r"[A-Za-z_]\w*", old)
+            or not re.fullmatch(r"[A-Za-z_]\w*", new)):
+        raise argparse.ArgumentTypeError("type rename must be OLD=NEW")
+    return old, new
+
+
+def apply_type_plan(root: Path, plan: Path, min_confidence: int,
+                    explicit: list[tuple[str, str]]) -> int:
+    """Apply reviewed types while preserving recovered VC6 type identities."""
+    source_files = sorted((root / "include").glob("**/*.h"))
+    source_files += sorted((root / "src").glob("**/*.cpp"))
+    initial = {path: path.read_text() for path in source_files}
+    existing_aliases = {
+        (match.group(1), match.group(2))
+        for contents in initial.values()
+        for match in re.finditer(
+            r"\btypedef\s+([A-Za-z_]\w*)\s+([A-Za-z_]\w*)\s*;", contents)
+    }
+    replacements: dict[str, str] = {}
+    owners: list[tuple[Path, int, str, str]] = []
+    with plan.open(newline="") as stream:
+        for row in csv.DictReader(stream, delimiter="\t"):
+            if (row["kind"] != "type"
+                    or row["strategy"] not in {"alias-review", "direct-review"}
+                    or int(row["confidence"]) < min_confidence):
+                continue
+            old, new = row["current"], row["suggested"]
+            if (old, new) in existing_aliases:
+                continue
+            if old in replacements and replacements[old] != new:
+                sys.exit(f"conflicting type plan for {old}")
+            replacements[old] = new
+            owners.append((root / row["file"], int(row["line"]),
+                           row["qualified_name"], old))
+
+    contextual = set()
+    for old, new in explicit:
+        # A reviewed explicit spelling may resolve a macro or semantic
+        # collision discovered after the mechanical suggestion was emitted.
+        replacements[old] = new
+        if not TYPE_PREFIX.fullmatch(old):
+            contextual.add(old)
+
+    rendered = dict(initial)
+
+    # Put lineage at the declaration selected by libclang. Line hints may have
+    # shifted since report generation, so select the nearest declaration line.
+    owner_edits: dict[Path, list[tuple[int, str]]] = {}
+    for path, hint, qualified, old in owners:
+        lines = rendered[path].splitlines(keepends=True)
+        comment = f"// Before normalization (type): {qualified}.\n"
+        # A prior repair may move lineage from a forward declaration to the
+        # concrete definition in its owning header. Treat that as satisfied
+        # when an updated report still points at the old declaration site.
+        if any(comment in contents for contents in rendered.values()):
+            continue
+        pattern = re.compile(
+            rf"\b(?:class|struct|union|enum)\s+{re.escape(old)}\b")
+        candidates = [number for number, line in enumerate(lines)
+                      if pattern.search(line)]
+        if not candidates:
+            sys.exit(f"cannot find owning declaration for {qualified} in {path}")
+        index = min(candidates, key=lambda number: abs(number + 1 - hint))
+        nearby = "".join(lines[max(0, index - 4):index])
+        if comment.strip() not in nearby:
+            owner_edits.setdefault(path, []).append((index, comment))
+
+    # Explicit lower-case classes are not in the T-prefix report. Comment the
+    # concrete definition, not every forward declaration.
+    for old, _ in explicit:
+        comment = f"// Before normalization (type): {old}.\n"
+        if any(comment in contents for contents in rendered.values()):
+            continue
+        pattern = re.compile(
+            rf"\b(?:class|struct|union|enum)\s+{re.escape(old)}\b[^;]*\{{")
+        matches = []
+        for path, contents in rendered.items():
+            for match in pattern.finditer(contents):
+                matches.append((path, contents.count("\n", 0, match.start())))
+        if len(matches) != 1:
+            sys.exit(f"expected one definition for explicit type {old}, found {len(matches)}")
+        path, index = matches[0]
+        lines = rendered[path].splitlines(keepends=True)
+        nearby = "".join(lines[max(0, index - 4):index])
+        if comment.strip() not in nearby:
+            owner_edits.setdefault(path, []).append((index, comment))
+
+    for path, edits in owner_edits.items():
+        lines = rendered[path].splitlines(keepends=True)
+        for index, comment in sorted(edits, reverse=True):
+            lines.insert(index, comment)
+        rendered[path] = "".join(lines)
+
+    changed = 0
+    for path, contents in rendered.items():
+        updated = rewrite_code_identifiers(contents, replacements, contextual)
+        updated = restore_compgen_owner_spellings(updated, replacements)
+        # Retire an earlier alias when its recovered tag is now directly named.
+        for new in replacements.values():
+            updated = re.sub(
+                rf"^[ \t]*typedef[ \t]+{re.escape(new)}[ \t]+{re.escape(new)}[ \t]*;[ \t]*\n",
+                "", updated, flags=re.MULTILINE)
+        # The source uses the normalized identifier, while the preprocessor
+        # retains the recovered tag that participates in VC6 mangling and can
+        # perturb optimization. Put the compatibility macro at each file's
+        # first declaration so standalone forward-declaration headers work.
+        updated = refresh_compatibility_macros(updated, replacements)
+        if updated != path.read_text():
+            path.write_text(updated)
+            changed += 1
+
+    # These columns describe authored identities. Keep provenance/reason text
+    # and the raw retail inventories untouched.
+    win_only = root / "config/win_only.tsv"
+    lines = win_only.read_text().splitlines(keepends=True)
+    updated_lines = []
+    for line in lines:
+        fields = line.rstrip("\n").split("\t")
+        if len(fields) >= 3 and not line.startswith("#") and fields[0] != "file":
+            fields[1] = rewrite_code_identifiers(fields[1], replacements, contextual)
+            fields[2] = rewrite_code_identifiers(fields[2], replacements, contextual)
+            line = "\t".join(fields) + ("\n" if line.endswith("\n") else "")
+        updated_lines.append(line)
+    updated = "".join(updated_lines)
+    if updated != win_only.read_text():
+        win_only.write_text(updated)
+        changed += 1
+
+    vtables = root / "config/retail-vtables.tsv"
+    lines = vtables.read_text().splitlines(keepends=True)
+    updated_lines = []
+    for line in lines:
+        fields = line.rstrip("\n").split("\t")
+        if len(fields) == 3 and fields[2] in replacements:
+            fields[2] = replacements[fields[2]]
+            line = "\t".join(fields) + ("\n" if line.endswith("\n") else "")
+        updated_lines.append(line)
+    updated = "".join(updated_lines)
+    if updated != vtables.read_text():
+        vtables.write_text(updated)
+        changed += 1
+    print(f"applied {len(replacements)} type rename(s) across {changed} file(s)",
+          file=sys.stderr)
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--module", action="append", default=[],
@@ -322,16 +624,31 @@ def main() -> int:
                         help="parallel libclang parses (default: 1)")
     parser.add_argument("--apply-carcass", type=Path, metavar="TSV",
                         help="apply non-colliding lexical-review rows from TSV")
+    parser.add_argument("--apply-types", type=Path, metavar="TSV",
+                        help="apply non-colliding reviewed type rows from TSV")
+    parser.add_argument("--type-rename", action="append", default=[],
+                        type=parse_type_rename, metavar="OLD=NEW",
+                        help="also rename an explicit legacy class (repeatable)")
     parser.add_argument("--min-confidence", type=int, default=8,
                         help="minimum confidence for --apply-carcass (default: 8)")
     args = parser.parse_args()
     root = common.HOMM3_DIR
     if args.apply_carcass is not None:
-        if args.all or args.module or args.limit is not None:
+        if (args.all or args.module or args.limit is not None
+                or args.apply_types is not None or args.type_rename):
             parser.error("--apply-carcass cannot be combined with audit selection")
         if not 1 <= args.min_confidence <= 10:
             parser.error("--min-confidence must be between 1 and 10")
         return apply_carcass_plan(root, args.apply_carcass, args.min_confidence)
+    if args.apply_types is not None:
+        if args.all or args.module or args.limit is not None:
+            parser.error("--apply-types cannot be combined with audit selection")
+        if not 1 <= args.min_confidence <= 10:
+            parser.error("--min-confidence must be between 1 and 10")
+        return apply_type_plan(root, args.apply_types, args.min_confidence,
+                               args.type_rename)
+    if args.type_rename:
+        parser.error("--type-rename requires --apply-types")
     if not args.all and not args.module:
         parser.error("choose --all or at least one --module")
     if args.limit is not None and args.limit <= 0:

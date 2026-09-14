@@ -47,7 +47,7 @@ static void customCampaignSliderHandler(int state, heroWindow* window);
 // OnWidgetDeselect decodes.
 
 VA(0x004827b0, 0x727)
-TCustomCampaignWindow::TCustomCampaignWindow()
+CustomCampaignWindow::CustomCampaignWindow()
     : CHeroWindowEx(0, 0, 800, 600, 0)
 {
     int widgetId = 200;
@@ -118,7 +118,7 @@ TCustomCampaignWindow::TCustomCampaignWindow()
 VA_COMPGEN(0x00482ee0, 0x21, SCALAR_DELETING_DTOR, TCustomCampaignWindow)
 
 VA(0x00482f10, 0xB1)
-TCustomCampaignWindow::~TCustomCampaignWindow()
+CustomCampaignWindow::~CustomCampaignWindow()
 {
     for (unsigned i = 0; i < m_campaignHeaders.size(); i++) {
         if (m_campaignHeaders[i])
@@ -128,11 +128,11 @@ TCustomCampaignWindow::~TCustomCampaignWindow()
 }
 
 VA(0x00482fd0, 0x264)
-void TCustomCampaignWindow::loadCampaignList()
+void CustomCampaignWindow::loadCampaignList()
 {
     char currentDirectory[100];
     _finddata_t fileInfo;
-    TCampaignBrief::CampaignHeaderStruct* header;
+    CampaignBrief::CampaignHeaderStruct* header;
 
     _getcwd(currentDirectory, sizeof(currentDirectory));
     _chdir(DATA_COMPGEN(0x006755ac, mapsDirectory, "Maps"));
@@ -145,7 +145,7 @@ void TCustomCampaignWindow::loadCampaignList()
         return;
 
     do {
-        header = new TCampaignBrief::CampaignHeaderStruct(fileInfo.name);
+        header = new CampaignBrief::CampaignHeaderStruct(fileInfo.name);
         _getcwd(currentDirectory, sizeof(currentDirectory));
         if (!header->load()) {
             delete header;
@@ -173,8 +173,8 @@ void TCustomCampaignWindow::loadCampaignList()
 
 VA(0x00483240, 0xEA)
 bool CampaignHeaderPointerLess::operator()(
-    TCampaignBrief::CampaignHeaderStruct* left,
-    TCampaignBrief::CampaignHeaderStruct* right) const
+    CampaignBrief::CampaignHeaderStruct* left,
+    CampaignBrief::CampaignHeaderStruct* right) const
 {
     return left->getCampaignName() < right->getCampaignName();
 }
@@ -194,13 +194,13 @@ bool CampaignHeaderPointerLess::operator()(
 // against show()/hide(), and hoisting the name widget above the colour
 // branch (loses 1.2). Include-set class.
 VA(0x00483330, 0x281)  // LoadCampaignList's tail callee, retail-only
-void TCustomCampaignWindow::updateList()
+void CustomCampaignWindow::updateList()
 {
     int i;
 
     for (i = 0; i < CAMPAIGN_LIST_ROWS
                 && i < m_campaignHeaders.size() + m_firstVisible; i++) {
-        TCampaignBrief::CampaignHeaderStruct* const header =
+        CampaignBrief::CampaignHeaderStruct* const header =
             m_campaignHeaders[m_firstVisible + i];
         m_nameWidgets[i]->setText(header->getCampaignName().c_str());
         m_countWidgets[i]->setText(
@@ -226,14 +226,14 @@ void TCustomCampaignWindow::updateList()
     if (index >= m_campaignHeaders.size()) {
         m_description->setText("");
     } else {
-        TCampaignBrief::CampaignHeaderStruct* header = m_campaignHeaders[index];
+        CampaignBrief::CampaignHeaderStruct* header = m_campaignHeaders[index];
         m_selectedName->setText(header->getCampaignName().c_str());
         m_description->setText(header->getCampaignDescription().c_str());
     }
 }
 
 VA(0x004835c0, 0xA4)
-int TCustomCampaignWindow::onWidgetDeselect(int id, bool& exitFlag)
+int CustomCampaignWindow::onWidgetDeselect(int id, bool& exitFlag)
 {
     if (id < 100 || id > 135)
         return 0;
@@ -261,7 +261,7 @@ int TCustomCampaignWindow::onWidgetDeselect(int id, bool& exitFlag)
 // Complete-only. The campaign ordinal 20 is the custom-campaign slot
 // select_campaign reserves for a file chosen here.
 VA(0x00483670, 0xCE)
-bool TCustomCampaignWindow::acceptSelection()
+bool CustomCampaignWindow::acceptSelection()
 {
     int index = m_selected + m_firstVisible;
     if (index >= m_campaignHeaders.size())
@@ -272,7 +272,7 @@ bool TCustomCampaignWindow::acceptSelection()
 }
 
 VA(0x00483740, 0x134)
-std::string TCampaignBrief::CampaignHeaderStruct::getFileName() const
+std::string CampaignBrief::CampaignHeaderStruct::getFileName() const
 {
     return m_fileName;
 }
@@ -283,7 +283,7 @@ VA(0x00483880, 0x3C)
 static int customCampaignBeginHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
-        if (static_cast<TCustomCampaignWindow*>(msg.m_window)
+        if (static_cast<CustomCampaignWindow*>(msg.m_window)
                 ->acceptSelection()) {
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeY = 1;
@@ -309,8 +309,8 @@ static int customCampaignBackHandler(message& msg)
 VA(0x004838f0, 0x25)
 static void customCampaignSliderHandler(int state, heroWindow* window)
 {
-    TCustomCampaignWindow* campaignWindow =
-        static_cast<TCustomCampaignWindow*>(window);
+    CustomCampaignWindow* campaignWindow =
+        static_cast<CustomCampaignWindow*>(window);
     campaignWindow->m_firstVisible = state;
     campaignWindow->updateList();
     campaignWindow->drawWindow(1, 0xffff0001, 0xffff);

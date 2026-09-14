@@ -15,9 +15,13 @@
 // and clears +0x64/+0x68/+0x6c, touching neither +0x60 nor +0x70. A
 // leading byte member would push every one of those four offsets up by
 // four, which is exactly the 4-byte error this pair caught.
-class TQuestLogWindow : public CAdvPopup {
+// Before normalization (type): TQuestLogWindow.
+#ifndef QuestLogWindow
+#define QuestLogWindow TQuestLogWindow
+#endif
+class QuestLogWindow : public CAdvPopup {
 public:
-    TQuestLogWindow();
+    QuestLogWindow();
     std::vector<int> m_seerHutLogList;
     // Scroll offset of the topmost listed quest: zeroed by the constructor,
     // untouched by the destructor, and read by UpdateQuestLocator (0x52e270)
@@ -27,13 +31,13 @@ public:
     // placeholder, no dump names it.
     int m_firstVisibleQuest;  // +0x70
 
-    virtual ~TQuestLogWindow();
+    virtual ~QuestLogWindow();
     virtual int windowHandler(message& msg);
 
     void updateQuestLocator(int i);
     void updateQuestLocators();
 };
-SIZE(TQuestLogWindow, 0x74);
+SIZE(QuestLogWindow, 0x74);
 
 // Defined in src/questlogwindow.cpp. Declared here for its second
 // consumer: THeroScreenWindow::WindowHandler's quest-log button arm calls

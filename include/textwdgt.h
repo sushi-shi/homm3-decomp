@@ -16,14 +16,14 @@ class textWidget : public widget {
 public:
     std::string m_text;
     font* m_font;
-    font::TColor m_color;
+    font::Color m_color;
     int m_backColor;
     unsigned int m_justify;
     textWidget(int x, int y, int w, int h, const char* text,
-               const char* fontName, font::TColor color, int id,
+               const char* fontName, font::Color color, int id,
                unsigned justify, int backColor, int style);
     textWidget(int x, int y, int w, int h, const char* text,
-               const char* fontName, font::TColor color, int id,
+               const char* fontName, font::Color color, int id,
                unsigned justify, int backColor, unsigned char focusable);
     virtual ~textWidget();  // retail 0x5bc3b0
     virtual int main(message& msg);
@@ -39,7 +39,7 @@ public:
     // qualifier is byte-neutral across the affected widget/name-edit callers.
     const char* getText() { return m_text.c_str(); }
     // E:\gamedcs\TextWdgt.h:78, dc 0x1652f4
-    void setColor(font::TColor newColor) { m_color = newColor; }
+    void setColor(font::Color newColor) { m_color = newColor; }
 };
 
 class Bitmap816;
@@ -56,7 +56,7 @@ public:
     Bitmap816* m_image;
     bitmapBackedTextWidget(int x, int y, int w, int h, const char* text,
                            const char* fontName, const char* backName,
-                           font::TColor color, int id, unsigned justify,
+                           font::Color color, int id, unsigned justify,
                            int style);
     // Implicit destructor; CodeView dc 0x1653b0 compgenx.
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;

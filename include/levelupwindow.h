@@ -4,7 +4,10 @@
 
 #include "advmgr_popup.h"
 
-class hero;
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero;
 class message;
 
 // Retail's vtable at 0x63fe60 has the inherited CAdvPopup shape: slot 0 is
@@ -12,7 +15,11 @@ class message;
 // 0x4f9780.  The destructor touches no tail state, and the constructor's
 // allocation/call sites allocate only the CAdvPopup-sized object; no derived
 // data members are presently evidenced.
-class TLevelUpWindow : public CAdvPopup {
+// Before normalization (type): TLevelUpWindow.
+#ifndef LevelUpWindow
+#define LevelUpWindow TLevelUpWindow
+#endif
+class LevelUpWindow : public CAdvPopup {
 public:
     enum EOtherWidgetIDs {
         BACKGROUND_ID = 2000,
@@ -38,9 +45,9 @@ public:
         LEVELUP_SELECT_RIGHT_KEY = 3
     };
 
-    TLevelUpWindow(hero* thisHero, int gainedSkill,
+    LevelUpWindow(Hero* thisHero, int gainedSkill,
                    int firstChoice, int secondChoice);
-    virtual ~TLevelUpWindow();
+    virtual ~LevelUpWindow();
     virtual int windowHandler(message& msg); // slot 9
 
     int m_leftSkill;   // +0x60 retail (+0x58 DC)
@@ -49,7 +56,7 @@ public:
 private:
     int m_selected;     // +0x68 retail (+0x60 DC)
 };
-SIZE(TLevelUpWindow, 0x6c);
+SIZE(LevelUpWindow, 0x6c);
 
 // --- TLevelUpWindow ---
 // CODEVIEW(E:\gamedcs\levelupwindow.cpp:155, dc 0xe9058) void* TLevelUpWindow::`scalar deleting destructor'(unsigned __flags);

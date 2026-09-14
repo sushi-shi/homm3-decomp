@@ -69,10 +69,10 @@ DATA(0x006604d0) static double g_defenseEstimates[5] = {
     0.5, 0.5, 1.0, 1.25, 1.25
 };
 
-float valueOfExperience(const hero* currentHero, const armyGroup& currentArmy);
+float valueOfExperience(const Hero* currentHero, const ArmyGroup& currentArmy);
 
 VA(0x00423c80, 0x79)  // dc 0x29978
-long type_monster_data::getEnchantmentValue(type_spell_choice& choice, const hero* castingHero, const hero* targetHero) const
+long type_monster_data::getEnchantmentValue(type_spell_choice& choice, const Hero* castingHero, const Hero* targetHero) const
 {
     if (m_totalValue == 0)
         return 0;
@@ -112,7 +112,7 @@ inline void type_monster_data::castEnchantment(long spellValue, unsigned char in
 }
 
 VA(0x00423d00, 0xDA)  // dc 0x29b94
-long type_monster_data::getResurrectionValue(type_spell_choice& choice, const hero* castingHero) const
+long type_monster_data::getResurrectionValue(type_spell_choice& choice, const Hero* castingHero) const
 {
     if (m_originalNumber <= m_number)
         return 0;
@@ -121,7 +121,7 @@ long type_monster_data::getResurrectionValue(type_spell_choice& choice, const he
     long value = choice.getMasteryValue()
                  + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     if (castingHero)
-        value += const_cast<hero*>(castingHero)->getHeroSpellBonus(
+        value += const_cast<Hero*>(castingHero)->getHeroSpellBonus(
             choice.m_spell, g_creatureTypeTraits[m_type].m_level, value);
     long resurrected = min(static_cast<long>(value * m_combatValuePerHit) / m_value,
                            m_originalNumber - m_number);
@@ -134,7 +134,7 @@ long type_monster_data::getResurrectionValue(type_spell_choice& choice, const he
 // statements below are reconstructed from the retail expansion.
 inline void type_monster_data::castResurrection(
     type_spell_choice& choice,
-    const hero* castingHero)
+    const Hero* castingHero)
 {
     long resurrected = getResurrectionValue(choice, castingHero)
                        / m_value;
@@ -143,7 +143,7 @@ inline void type_monster_data::castResurrection(
 }
 
 VA(0x00423de0, 0xB1)  // dc 0x29ce0
-long type_monster_data::getSpellDamage(SpellID spell, const hero* castingHero, const hero* targetHero, long damage) const
+long type_monster_data::getSpellDamage(SpellID spell, const Hero* castingHero, const Hero* targetHero, long damage) const
 {
     if (m_totalValue == 0)
         return 0;
@@ -153,7 +153,7 @@ long type_monster_data::getSpellDamage(SpellID spell, const hero* castingHero, c
     damage = modifySpellDamage(damage, spell, m_type);
     if (damage == 0)
         return 0;
-    damage = const_cast<hero*>(castingHero)->modifySpellDamage(spell, damage, 0);
+    damage = const_cast<Hero*>(castingHero)->modifySpellDamage(spell, damage, 0);
     if (damage == 0)
         return 0;
     return min(static_cast<long>(damage * m_combatValuePerHit), m_totalValue);
@@ -174,12 +174,12 @@ long type_monster_data::takeDamage(long damage)
 }
 
 VA(0x00423ee0, 0x233)  // dc 0x29e2c
-type_AI_combat_data::type_AI_combat_data(const hero* newHero, const armyGroup* newArmy, double baseModifier, const hero* enemyHero, const town* enemyTown, NewmapCell* mapCell)
+type_AI_combat_data::type_AI_combat_data(const Hero* newHero, const ArmyGroup* newArmy, double baseModifier, const Hero* enemyHero, const Town* enemyTown, NewmapCell* mapCell)
 {
-    m_currentHero = const_cast<hero*>(newHero);
-    m_currentArmy = const_cast<armyGroup*>(newArmy);
+    m_currentHero = const_cast<Hero*>(newHero);
+    m_currentArmy = const_cast<ArmyGroup*>(newArmy);
     checkWallArcheryPenalty(enemyTown);
-    m_enemyHero = const_cast<hero*>(enemyHero);
+    m_enemyHero = const_cast<Hero*>(enemyHero);
 
     if (newHero == 0)
         m_mana = 0;
@@ -235,7 +235,7 @@ type_AI_combat_data::type_AI_combat_data(const hero* newHero, const armyGroup* n
 // Preserve that initializer and the actual vector begin/end sort interface.
 
 VA(0x00424120, 0x66E)  // dc-callgraph unique, dc 0x29f58
-void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* enemyHero)
+void type_AI_combat_data::initializeCreatures(double baseModifier, const Hero* enemyHero)
 {
     type_monster_data unit;
     long speedBonus;
@@ -281,13 +281,13 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
     // GetHitPointBonus(int) per creature at 0x4242de. The audit's source-order
     // lead is this platform/ABI difference, not an omitted shared call.
     m_totalCombatValue = 0;
-    for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-        TCreatureType creature = m_currentArmy->m_armyTypes[i];
+    for (long i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        CreatureType creature = m_currentArmy->m_armyTypes[i];
         if (creature == CREATURE_NONE)
             continue;
 
         int creatureId = creature;
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[creatureId];
+        const CreatureTypeTraits& traits = g_creatureTypeTraits[creatureId];
         hitPoints = traits.m_hitPoints;
         if (m_currentHero) {
             hitBonus = m_currentHero->getHitPointBonus(creatureId);
@@ -333,7 +333,7 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
 }
 
 VA(0x00424790, 0xE5)  // dc 0x2a470
-void type_AI_combat_data::checkWallArcheryPenalty(const town* enemyTown)
+void type_AI_combat_data::checkWallArcheryPenalty(const Town* enemyTown)
 {
     m_wallArcheryPenalty = 0;
     m_wallSpeedLimit = 0;
@@ -372,7 +372,7 @@ void type_AI_combat_data::checkWallArcheryPenalty(const town* enemyTown)
 // explicit inline keyword. All eight declaration/order controls are score-
 // flat; keep the ordinary canonical helper and its real read-only interface.
 type_speed_catagory type_AI_combat_data::getCatagory(
-    TCreatureType creature,
+    CreatureType creature,
     long speed) const
 {
     unsigned int attributes = g_creatureTypeTraits[creature].m_attributes;
@@ -393,7 +393,7 @@ VA(0x00424880, 0xDB)  // dc 0x2a588
 void type_AI_combat_data::adjustArmy(unsigned char dismissHero)
 {
     if (m_totalCombatValue == 0) {
-        for (short i = 0; i != armyGroup::ARMY_GROUP_SLOT_COUNT; i++)
+        for (short i = 0; i != ArmyGroup::ARMY_GROUP_SLOT_COUNT; i++)
             m_currentArmy->dismiss(i);
         if (m_currentHero && dismissHero)
             g_advManager->heroLoses(m_currentHero, 0);
@@ -582,7 +582,7 @@ void type_AI_combat_data::castDamageSpell(type_spell_choice& choice, type_AI_com
 // Retail 0x425bd0 expands this const predicate before the one mana update.
 // Keep the ordinary helper and source call; the previous pasted scan enlarged
 // castSpell and changed its later mass-damage expansion decisions.
-unsigned char type_AI_combat_data::hasCreature(TCreatureType creature) const
+unsigned char type_AI_combat_data::hasCreature(CreatureType creature) const
 {
     for (long i = m_creatures.size(); i-- > 0; ) {
         if (m_creatures[i].m_type == creature && m_creatures[i].m_number > 0)
@@ -592,7 +592,7 @@ unsigned char type_AI_combat_data::hasCreature(TCreatureType creature) const
 }
 
 VA(0x004253e0, 0x12F)  // dc 0x2ab88
-long type_AI_combat_data::getMassDamageValue(type_spell_choice& choice, const hero* castingHero) const
+long type_AI_combat_data::getMassDamageValue(type_spell_choice& choice, const Hero* castingHero) const
 {
     long value = 0;
     long damage = choice.getMasteryValue()
@@ -632,7 +632,7 @@ void type_AI_combat_data::getMassDamageValue(
 // its separate getSummoningValue boundary, as documented below.
 void type_AI_combat_data::castMassDamageSpell(
     type_spell_choice& choice,
-    const hero* castingHero)
+    const Hero* castingHero)
 {
     long value = 0;
     long damage = choice.getMasteryValue()
@@ -650,7 +650,7 @@ void type_AI_combat_data::castMassDamageSpell(
 // row: /Ob2 inlined all four call sites in the two-side overload below
 // and OPT:REF dropped the body. The const signature and ordinary definition
 // preserve all four expansions; emission alone does not prove source inline.
-void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, const hero* castingHero) const
+void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, const Hero* castingHero) const
 {
     unsigned char mass = !spellTargetsASingleArmy(choice.m_spell, choice.m_mastery);
     for (long i = m_creatures.size(); i-- > 0; ) {
@@ -701,7 +701,7 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI
 }
 
 VA(0x004258a0, 0x269)  // dc 0x2ae60
-void type_AI_combat_data::castEnchantment(type_spell_choice& choice, const hero* castingHero, unsigned char increase)
+void type_AI_combat_data::castEnchantment(type_spell_choice& choice, const Hero* castingHero, unsigned char increase)
 {
     long value;
     if (spellTargetsASingleArmy(choice.m_spell, choice.m_mastery)) {
@@ -808,9 +808,9 @@ void type_AI_combat_data::castSpell(
     register long spellPower = m_currentHero->getPrimarySkill(2);
     long spellDuration = spellPower + m_currentHero->getSpellDurationBonus();
     long bestManaCost;
-    TSkillMastery mastery;
+    SkillMastery mastery;
 
-    for (SpellID spell = 10; spell < hero::NUM_SPELLS; spell++) {
+    for (SpellID spell = 10; spell < Hero::NUM_SPELLS; spell++) {
         if (!m_currentHero->spellIsAvailable(spell))
             continue;
 
@@ -1154,11 +1154,11 @@ void type_AI_combat_data::simulateCombat(type_AI_combat_data& defender)
 }
 
 // E:\gamedcs\ai_combat.cpp:1398
-static void doEagleEye(hero* winner, hero* loser)
+static void doEagleEye(Hero* winner, Hero* loser)
 {
     if (winner->m_skillLevel[g_secondarySkillEagleEye] > 0
         && winner->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-        for (short spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (short spell = 0; spell < Hero::NUM_SPELLS; ++spell) {
             if (!loser->spellIsAvailable(spell)
                 || winner->spellIsAvailable(spell))
                 continue;
@@ -1182,17 +1182,17 @@ static void doEagleEye(hero* winner, hero* loser)
 // [esi+0x1c], esi stepping by 4 over seven iterations (0x426e36
 // .. 0x426e89) - i.e. the losing side's stacks.
 VA(0x00426df0, 0xED)  // corroborates (hd-crossbuild + ida), dc 0x2bd6c
-void createSkeletons(const hero* currentHero, const armyGroup* deadArmy, armyGroup& destination)
+void createSkeletons(const Hero* currentHero, const ArmyGroup* deadArmy, ArmyGroup& destination)
 {
     float factor = currentHero->getNecromancyFactor(1);
     if (factor <= 0.0f)
         return;
     factor += 0.02f;
-    TCreatureType skeleton = const_cast<hero*>(currentHero)->getNecromancyCreature();
+    CreatureType skeleton = const_cast<Hero*>(currentHero)->getNecromancyCreature();
     long total = 0;
     long skeletonHitPoints = g_creatureTypeTraits[skeleton].m_hitPoints;
     float skeletonHitPointsF = static_cast<float>(skeletonHitPoints);
-    for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+    for (long i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         long creature = deadArmy->m_armies[i];
         long count = deadArmy->m_numTroops[i];
         long hitPoints = g_creatureTypeTraits[creature].m_hitPoints;
@@ -1211,11 +1211,11 @@ void createSkeletons(const hero* currentHero, const armyGroup* deadArmy, armyGro
 
 // E:\gamedcs\ai_combat.cpp:1440, dc 0x2be54
 VA(0x00426ee0, 0x1D8)  // anchor-global, dc 0x2be54
-void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemyTown)
+void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, Town* enemyTown)
 {
     unsigned char retreated = 0;
-    armyGroup* defeatedArmy = defender.getArmy();
-    hero* defeatedHero = defender.getHero();
+    ArmyGroup* defeatedArmy = defender.getArmy();
+    Hero* defeatedHero = defender.getHero();
 
     if (m_currentHero)
         m_currentHero->m_mana = static_cast<short>(m_mana);
@@ -1270,7 +1270,7 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
 // function a /GX frame (push -1 / push <ehfuncinfo> / mov eax,fs:[0])
 // and the two `mov [ebp-4], state` writes between the constructors.
 VA(0x004270c0, 0x149)  // anchor-global, dc 0x2c004
-unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup& defendingArmy, town* defendingTown, NewmapCell* cell)
+unsigned char aiQuickCombat(Hero* attackingHero, Hero* defendingHero, ArmyGroup& defendingArmy, Town* defendingTown, NewmapCell* cell)
 {
     float attackerModifier = random(75, 125) / 100.0f;
     float defenderModifier = random(75, 125) / 100.0f;
@@ -1291,7 +1291,7 @@ unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup&
 // E:\gamedcs\ai_combat.cpp:1539
 // EH-bearing, same shape as AI_quick_combat.
 VA(0x00427210, 0x113)  // anchor-global, dc 0x2c140
-void aiAutoCombat(hero* attackingHero, hero* defendingHero, armyGroup& attackingArmy, armyGroup& defendingArmy, const town* defendingTown, NewmapCell* cell)
+void aiAutoCombat(Hero* attackingHero, Hero* defendingHero, ArmyGroup& attackingArmy, ArmyGroup& defendingArmy, const Town* defendingTown, NewmapCell* cell)
 {
     float attackerLuck = random(75, 125) / 100.0f;
     float defenderModifier = random(75, 125) / 100.0f;
@@ -1309,13 +1309,13 @@ void aiAutoCombat(hero* attackingHero, hero* defendingHero, armyGroup& attacking
 }
 
 VA(0x00427330, 0x318)  // dc 0x2c27c
-long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
-                        const armyGroup& defendingArmy,
-                        const town* defendingTown, NewmapCell* cell)
+long aiValueOfCombat(const Hero* attackingHero, const Hero* defendingHero,
+                        const ArmyGroup& defendingArmy,
+                        const Town* defendingTown, NewmapCell* cell)
 {
-    armyGroup localArmy = attackingHero->m_army;
+    ArmyGroup localArmy = attackingHero->m_army;
     double aggression = attackingHero->getAggression();
-    armyGroup localDefender = defendingArmy;
+    ArmyGroup localDefender = defendingArmy;
     double defenderLuck = 1.25;
     unsigned char humanCombat = 0;
 
@@ -1347,7 +1347,7 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
     float experienceValue = static_cast<float>(experience);
     experience = static_cast<long>(
         experienceValue
-        * const_cast<hero*>(attackingHero)->getExperienceBonusFactor());
+        * const_cast<Hero*>(attackingHero)->getExperienceBonusFactor());
     long value = static_cast<long>(
         valueOfExperience(attackingHero, localArmy)
         * experience);
@@ -1395,7 +1395,7 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
 // at 0x427648 and the first approximate-strength overload starts at
 // 0x427650; all surrounding bodies and native STL tails are identified.
 DC_ONLY(0x2c5e8, 0x2C)
-long aiValueOfCombat(const hero* attacking_hero, TCreatureType type, long size, NewmapCell* cell)
+long aiValueOfCombat(const Hero* attacking_hero, CreatureType type, long size, NewmapCell* cell)
 {
     // @stub
 }
@@ -1403,7 +1403,7 @@ long aiValueOfCombat(const hero* attacking_hero, TCreatureType type, long size, 
 #endif  // @carcass
 
 VA(0x00427650, 0x33)  // dc 0x2c614
-long aiApproximateStrength(const hero* currentHero)
+long aiApproximateStrength(const Hero* currentHero)
 {
     return aiApproximateStrength(currentHero, currentHero->m_army);
 }
@@ -1411,7 +1411,7 @@ long aiApproximateStrength(const hero* currentHero)
 // E:\gamedcs\ai_combat.cpp:1674
 // LOCATED (hd-crossbuild + ida): same body with the group in edx.
 VA(0x00427690, 0x2F)  // corroborates (hd-crossbuild + ida), dc 0x2c628
-long aiApproximateStrength(const hero* currentHero, const armyGroup& currentArmy)
+long aiApproximateStrength(const Hero* currentHero, const ArmyGroup& currentArmy)
 {
     long value = currentArmy.getAIValue();
     if (currentHero == 0)
@@ -1423,14 +1423,14 @@ long aiApproximateStrength(const hero* currentHero, const armyGroup& currentArmy
 
 // E:\gamedcs\hero.h:669
 DC_ONLY(0x2c668, 0x28)
-int hero::getPrimarySkill(int skill)
+int Hero::getPrimarySkill(int skill)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.h:960
 DC_ONLY(0x2c690, 0x8)
-float hero::getAggression()
+float Hero::getAggression()
 {
     // @stub
 }
@@ -1451,7 +1451,7 @@ long type_AI_combat_data::getMana()
 
 // E:\gamedcs\ai_combat.h:250
 DC_ONLY(0x2c6a8, 0x4)
-armyGroup* type_AI_combat_data::getArmy()
+ArmyGroup* type_AI_combat_data::getArmy()
 {
     // @stub
 }
@@ -1466,7 +1466,7 @@ VA_COMPGEN(0x00427750, 0x21, VECTOR_SIZE, type_monster_data)
 
 // E:\gamedcs\ai_combat.h:260
 DC_ONLY(0x2c6b0, 0x4)
-hero* type_AI_combat_data::getHero()
+Hero* type_AI_combat_data::getHero()
 {
     // @stub
 }

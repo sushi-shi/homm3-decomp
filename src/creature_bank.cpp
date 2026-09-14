@@ -69,7 +69,7 @@ static void initializeCreatureBankLevel(type_creature_bank_level& traits,
 VA(0x0047ab30, 0x254)  // dc 0x7112c
 unsigned char initializeCreatureBankTraits()
 {
-    TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
+    SpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x006703a8, creatureBankSpreadsheetName, "crbanks.txt"));
     if (!sheet)
         return 0;
@@ -79,7 +79,7 @@ unsigned char initializeCreatureBankTraits()
     }
 
     DATA(0x006702a0)
-    static TCreatureType guardTypes[CREATURE_BANK_COUNT][5] = {
+    static CreatureType guardTypes[CREATURE_BANK_COUNT][5] = {
         { CREATURE_CYCLOPS, CREATURE_NONE },
         { CREATURE_DWARF, CREATURE_NONE },
         { CREATURE_GRIFFIN, CREATURE_NONE },
@@ -95,7 +95,7 @@ unsigned char initializeCreatureBankTraits()
           CREATURE_GOLD_DRAGON, CREATURE_BLACK_DRAGON, CREATURE_NONE }
     };
     DATA(0x0067037c)
-    static TCreatureType rewardTypes[CREATURE_BANK_COUNT] = {
+    static CreatureType rewardTypes[CREATURE_BANK_COUNT] = {
         CREATURE_NONE, CREATURE_NONE, CREATURE_ANGEL, CREATURE_NONE,
         CREATURE_NONE, CREATURE_NONE, CREATURE_WYVERN, CREATURE_NONE,
         CREATURE_NONE, CREATURE_NONE, CREATURE_NONE
@@ -104,7 +104,7 @@ unsigned char initializeCreatureBankTraits()
     int row = 2;
     for (int bank = 0; bank < CREATURE_BANK_COUNT; ++bank) {
         type_creature_bank_traits* traits = &g_creatureBankTraits[bank];
-        const TSpreadsheetResource::TStringVector& resource = sheet->getRow(row);
+        const SpreadsheetResource::TStringVector& resource = sheet->getRow(row);
         traits->m_name = resource[0];
 
         type_creature_bank_level* level = traits->m_levels;
@@ -136,15 +136,15 @@ unsigned char initializeCreatureBankTraits()
 // split and is carried across the whole run - every site's scan begins at
 // its own `slot` argument, which is what fixes the parameter's second role.
 DC_ONLY(0x71218, 0xB8)
-static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
+static void splitSlot(ArmyGroup* currentArmyGroup, long slot, long groups)
 {
     long freeSlot = slot;
     long groupsLeft = groups;
     for (; groupsLeft > 1; --groupsLeft) {
-        while (freeSlot < armyGroup::ARMY_GROUP_SLOT_COUNT
+        while (freeSlot < ArmyGroup::ARMY_GROUP_SLOT_COUNT
                && currentArmyGroup->m_armies[freeSlot] != -1)
             ++freeSlot;
-        if (freeSlot == armyGroup::ARMY_GROUP_SLOT_COUNT)
+        if (freeSlot == ArmyGroup::ARMY_GROUP_SLOT_COUNT)
             break;
         long amount = currentArmyGroup->m_numTroops[slot] / groupsLeft;
         currentArmyGroup->m_numTroops[slot] -= amount;
@@ -211,10 +211,10 @@ void initializeCreatureBank(type_creature_bank* bank,
     }
 
     if (random(1, 100) <= level->m_upgradeChance) {
-        TCreatureType current = bank->m_guards.m_armyTypes[slot];
+        CreatureType current = bank->m_guards.m_armyTypes[slot];
         if (!(g_game->m_f1f698 == 0 && isBaseElemental(current))
             && static_cast<unsigned char>(isBaseCreature(current))) {
-            TCreatureType promoted = bank->m_guards.m_armyTypes[slot];
+            CreatureType promoted = bank->m_guards.m_armyTypes[slot];
             int upgraded = g_game->upgradedCreatureType(promoted);
             bank->m_guards.m_armies[slot] = upgraded;
         }
@@ -246,140 +246,140 @@ void type_creature_bank_level::type_creature_bank_level()
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x71548, 0x3C)
-void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::push_back(const TArtifact* __x)
+void std::vector<enum Artifact,std::allocator<enum Artifact> >::push_back(const Artifact* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x71584, 0x2C)
-void std::_STL_alloc_proxy<enum TArtifact *,enum TArtifact,std::allocator<enum TArtifact> >::deallocate(TArtifact* __p, unsigned __n)
+void std::_STL_alloc_proxy<enum Artifact *,enum Artifact,std::allocator<enum Artifact> >::deallocate(Artifact* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x715b0, 0x1C)
-void std::allocator<enum TArtifact>::deallocate(TArtifact* __p, unsigned __n)
+void std::allocator<enum Artifact>::deallocate(Artifact* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x715cc, 0xCC)
-void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::_M_insert_overflow(TArtifact* __position, const TArtifact* __x, unsigned __fill_len)
+void std::vector<enum Artifact,std::allocator<enum Artifact> >::_M_insert_overflow(Artifact* __position, const Artifact* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x71698, 0x30)
-void std::destroy(TArtifact* __first, TArtifact* __last)
+void std::destroy(Artifact* __first, Artifact* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x716c8, 0x28)
-void std::construct(TArtifact* __p, const TArtifact* __value)
+void std::construct(Artifact* __p, const Artifact* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x716f0, 0x4)
-std::allocator<enum* std::__stl_alloc_rebind(std::allocator<enum* __a, const TArtifact* __formal)
+std::allocator<enum* std::__stl_alloc_rebind(std::allocator<enum* __a, const Artifact* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x716f4, 0xC)
-unsigned std::vector<enum TArtifact,std::allocator<enum TArtifact> >::size()
+unsigned std::vector<enum Artifact,std::allocator<enum Artifact> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x71700, 0x28)
-TArtifact* std::_STL_alloc_proxy<enum TArtifact *,enum TArtifact,std::allocator<enum TArtifact> >::allocate(unsigned __n)
+Artifact* std::_STL_alloc_proxy<enum Artifact *,enum Artifact,std::allocator<enum Artifact> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x71728, 0x24)
-TArtifact* std::allocator<enum TArtifact>::allocate(unsigned __n, const void* __formal)
+Artifact* std::allocator<enum Artifact>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x7174c, 0x38)
-TArtifact* std::uninitialized_copy(TArtifact* __first, TArtifact* __last, TArtifact* __result)
+Artifact* std::uninitialized_copy(Artifact* __first, Artifact* __last, Artifact* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x71784, 0x38)
-TArtifact* std::uninitialized_fill_n(TArtifact* __first, unsigned __n, const TArtifact* __x)
+Artifact* std::uninitialized_fill_n(Artifact* __first, unsigned __n, const Artifact* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x717bc, 0x4)
-TArtifact* std::value_type(const TArtifact* __formal)
+Artifact* std::value_type(const Artifact* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x717c0, 0x1C)
-void std::__destroy(TArtifact* __first, TArtifact* __last, TArtifact* __formal)
+void std::__destroy(Artifact* __first, Artifact* __last, Artifact* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x717dc, 0x1C)
-TArtifact* std::__uninitialized_copy(TArtifact* __first, TArtifact* __last, TArtifact* __result, TArtifact* __formal)
+Artifact* std::__uninitialized_copy(Artifact* __first, Artifact* __last, Artifact* __result, Artifact* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x717f8, 0x1C)
-TArtifact* std::__uninitialized_fill_n(TArtifact* __first, unsigned __n, const TArtifact* __x, TArtifact* __formal)
+Artifact* std::__uninitialized_fill_n(Artifact* __first, unsigned __n, const Artifact* __x, Artifact* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x71814, 0x30)
-void std::__destroy_aux(TArtifact* __first, TArtifact* __last, __false_type __formal)
+void std::__destroy_aux(Artifact* __first, Artifact* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x71844, 0x3C)
-TArtifact* std::__uninitialized_copy_aux(TArtifact* __first, TArtifact* __last, TArtifact* __result, __false_type __formal)
+Artifact* std::__uninitialized_copy_aux(Artifact* __first, Artifact* __last, Artifact* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x71880, 0x3C)
-TArtifact* std::__uninitialized_fill_n_aux(TArtifact* __first, unsigned __n, const TArtifact* __x, __false_type __formal)
+Artifact* std::__uninitialized_fill_n_aux(Artifact* __first, unsigned __n, const Artifact* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x718bc, 0x1C)
-void std::destroy(TArtifact* __pointer)
+void std::destroy(Artifact* __pointer)
 {
     // @stub
 }

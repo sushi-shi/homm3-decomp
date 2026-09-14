@@ -214,15 +214,15 @@ static void createIncludedMask(const int* includeList, __int64* includedBuilding
 DC_ONLY(0xdc448, 0x5C)
 static void createIncludedMasks()
 {
-    createIncludedMask(g_town0IncludeList, town::s_includedBuildings[0]);
-    createIncludedMask(g_town1IncludeList, town::s_includedBuildings[1]);
-    createIncludedMask(g_town3IncludeList, town::s_includedBuildings[3]);
-    createIncludedMask(g_town2IncludeList, town::s_includedBuildings[2]);
-    createIncludedMask(g_town4IncludeList, town::s_includedBuildings[4]);
-    createIncludedMask(g_town5IncludeList, town::s_includedBuildings[5]);
-    createIncludedMask(g_town6IncludeList, town::s_includedBuildings[6]);
-    createIncludedMask(g_town7IncludeList, town::s_includedBuildings[7]);
-    createIncludedMask(g_town8IncludeList, town::s_includedBuildings[8]);
+    createIncludedMask(g_town0IncludeList, Town::s_includedBuildings[0]);
+    createIncludedMask(g_town1IncludeList, Town::s_includedBuildings[1]);
+    createIncludedMask(g_town3IncludeList, Town::s_includedBuildings[3]);
+    createIncludedMask(g_town2IncludeList, Town::s_includedBuildings[2]);
+    createIncludedMask(g_town4IncludeList, Town::s_includedBuildings[4]);
+    createIncludedMask(g_town5IncludeList, Town::s_includedBuildings[5]);
+    createIncludedMask(g_town6IncludeList, Town::s_includedBuildings[6]);
+    createIncludedMask(g_town7IncludeList, Town::s_includedBuildings[7]);
+    createIncludedMask(g_town8IncludeList, Town::s_includedBuildings[8]);
 }
 
 VA(0x004ebc50, 0x99)  // dc 0xdc4a4
@@ -273,5 +273,5 @@ void initializeGameData()
 {
     createBuildingMasks();
     createIncludedMasks();
-    town::initializeHordes();
+    Town::initializeHordes();
 }

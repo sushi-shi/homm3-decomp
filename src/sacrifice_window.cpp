@@ -18,7 +18,7 @@
 #include "viewarmywindow.h"
 #include "winmgr.h"
 
-static const TCreatureType g_deathCreature[145] = {
+static const CreatureType g_deathCreature[145] = {
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
@@ -77,7 +77,7 @@ static const long g_constCreatureOfferings[2][2] = {
 
 // E:\gamedcs\sacrifice_window.cpp:125
 DC_ONLY(0x123e8c, 0x7C)
-void type_artifact_offering::set(const type_artifact* arg, TArtifactSlot slot, const hero* this_hero)
+void type_artifact_offering::set(const type_artifact* arg, ArtifactSlot slot, const Hero* this_hero)
 {
     // @stub
 }
@@ -140,7 +140,7 @@ unsigned char type_army_slot_widget::handleClick(unsigned char down_click, unsig
 
 // E:\gamedcs\sacrifice_window.cpp:287
 DC_ONLY(0x12419c, 0x51C)
-void type_sacrifice_window::type_sacrifice_window(hero* new_hero, int cur_player)
+void type_sacrifice_window::type_sacrifice_window(Hero* new_hero, int cur_player)
 {
     // @stub
 }
@@ -203,7 +203,7 @@ void updateOffering(iconWidget* artifact_widget, textWidget* value_widget, const
 
 // E:\gamedcs\sacrifice_window.cpp:841
 DC_ONLY(0x125b3c, 0xF6)
-void type_sacrifice_window::updateSlot(TArtifactSlot slot)
+void type_sacrifice_window::updateSlot(ArtifactSlot slot)
 {
     // @stub
 }
@@ -224,7 +224,7 @@ void type_sacrifice_window::setArtifactMode()
 
 // E:\gamedcs\sacrifice_window.cpp:914
 DC_ONLY(0x125de0, 0x28)
-long sacrificeValue(TCreatureType creature)
+long sacrificeValue(CreatureType creature)
 {
     // @stub
 }
@@ -245,7 +245,7 @@ void type_sacrifice_window::setCreatureMode()
 
 // E:\gamedcs\sacrifice_window.cpp:1036
 DC_ONLY(0x1261e4, 0x70)
-void type_sacrifice_window::pickUpArtifact(type_artifact artifact, TArtifactSlot slot, unsigned char new_artifact)
+void type_sacrifice_window::pickUpArtifact(type_artifact artifact, ArtifactSlot slot, unsigned char new_artifact)
 {
     // @stub
 }
@@ -259,7 +259,7 @@ void type_sacrifice_window::putDownArtifact(unsigned char change_experience)
 
 // E:\gamedcs\sacrifice_window.cpp:1071
 DC_ONLY(0x1262e4, 0x13A)
-void type_sacrifice_window::artifactClick(TArtifactSlot slot, unsigned char right_click)
+void type_sacrifice_window::artifactClick(ArtifactSlot slot, unsigned char right_click)
 {
     // @stub
 }
@@ -308,7 +308,7 @@ int type_sacrifice_window::scrollBackpackRight(message* msg)
 
 // E:\gamedcs\sacrifice_window.cpp:1289
 DC_ONLY(0x12681c, 0x88)
-unsigned char type_sacrifice_window::addArtifact(type_artifact artifact, TArtifactSlot source)
+unsigned char type_sacrifice_window::addArtifact(type_artifact artifact, ArtifactSlot source)
 {
     // @stub
 }
@@ -471,7 +471,7 @@ unsigned char type_transformer_slot::handleClick(unsigned char down_click, unsig
 
 // E:\gamedcs\sacrifice_window.cpp:2056
 DC_ONLY(0x1275c0, 0x448)
-void type_skeleton_window::type_skeleton_window(armyGroup* new_army)
+void type_skeleton_window::type_skeleton_window(ArmyGroup* new_army)
 {
     // @stub
 }
@@ -541,7 +541,7 @@ void type_skeleton_window::createCreatureIcons(long icon_x, long icon_y, long co
 
 // E:\gamedcs\sacrifice_window.cpp:2385
 DC_ONLY(0x1282b0, 0x5E)
-void moveAllArmies(armyGroup* source, armyGroup* dest)
+void moveAllArmies(ArmyGroup* source, ArmyGroup* dest)
 {
     // @stub
 }
@@ -1544,7 +1544,7 @@ void std::__destroy_aux()
 
 VA(0x0055fc30, 0xab)  // dc 0x123e8c
 void type_artifact_offering::set(const type_artifact* artifact, long slot,
-                                 const hero* owner)
+                                 const Hero* owner)
 {
     long artifactClass =
         g_artifactTraits[artifact->m_artifactId].m_artifactClass;
@@ -1685,7 +1685,7 @@ type_army_slot_widget::type_army_slot_widget(
 }
 
 VA(0x0055fdd0, 0x574)  // dc 0x12419c
-type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
+type_sacrifice_window::type_sacrifice_window(Hero* newHero, int curPlayer)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
     m_currentHero = newHero;
@@ -2135,7 +2135,7 @@ void type_sacrifice_window::updateExperience()
 {
     std::string text;
     text = convertWithCommas(
-        hero::getExperience(m_currentHero->m_level + 1)
+        Hero::getExperience(m_currentHero->m_level + 1)
         - m_currentHero->m_experience);
     m_experienceWidget->setText(text.c_str());
 
@@ -2163,7 +2163,7 @@ void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact)
 VA(0x00562840, 0x166)  // dc 0x125b3c
 void type_sacrifice_window::updateSlot(long slot)
 {
-    TArtifactSlot artifactSlot;
+    ArtifactSlot artifactSlot;
     memcpy(&artifactSlot, &slot, sizeof artifactSlot);
     type_artifact artifact = m_currentHero->getArtifact(artifactSlot);
 
@@ -2269,7 +2269,7 @@ void updateOffering(iconWidget* artifactWidget, textWidget* valueWidget,
 // E:\gamedcs\sacrifice_window.cpp:914
 // Inlined at both retail callers. The AI-value load at +0x40 and the signed
 // divide-by-forty reciprocal fix this integer value exactly.
-long sacrificeValue(TCreatureType creature)
+long sacrificeValue(CreatureType creature)
 {
     return g_creatureTypeTraits[creature].m_aiValue / 40 * 5;
 }
@@ -2304,7 +2304,7 @@ VA(0x00562da0, 0x3a2)  // dc order/name/signature + retail field graph, dc 0x125
 void type_sacrifice_window::updateCreatureOffering(
     type_creature_offering* creature)
 {
-    TCreatureType creatureType;
+    CreatureType creatureType;
     long available;
     if (creature->m_group < 0) {
         creatureType = CREATURE_NONE;
@@ -2436,7 +2436,7 @@ VA(0x005632a0, 0x417)  // dc 0x1262e4
 void type_sacrifice_window::artifactClick(
     long slot, unsigned char rightClick)
 {
-    type_artifact oldArtifact = m_currentHero->getArtifact(TArtifactSlot(slot));
+    type_artifact oldArtifact = m_currentHero->getArtifact(ArtifactSlot(slot));
 
     if (m_holdingArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId == ARTIFACT_NONE)
@@ -2448,8 +2448,8 @@ void type_sacrifice_window::artifactClick(
         }
 
         if (oldArtifact.m_artifactId == ARTIFACT_SPELLBOOK) {
-            TSpellbookWindow spellbook(
-                *m_currentHero, 0, TSpellbookWindow::eContextNeither,
+            SpellbookWindow spellbook(
+                *m_currentHero, 0, SpellbookWindow::eContextNeither,
                 m_currentHero->getSpecialTerrain());
             spellbook.doModal(0);
             return;
@@ -2717,7 +2717,7 @@ int type_sacrifice_window::allArtifacts(message& msg)
             static_cast<type_sacrifice_window*>(msg.m_window);
         type_artifact artifact;
         for (long slot = 0; slot < SACRIFICE_EQUIPPED_SLOT_COUNT; ++slot) {
-            artifact = window->m_currentHero->getArtifact(TArtifactSlot(slot));
+            artifact = window->m_currentHero->getArtifact(ArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE) {
                 if (!window->addArtifact(artifact, slot))
                     break;
@@ -2758,10 +2758,10 @@ int type_sacrifice_window::sacrifice(message& msg)
             if (window->m_holdingArtifact.m_artifactId != ARTIFACT_NONE)
                 window->putDownArtifact(0);
         } else {
-            armyGroup* army = &window->m_currentHero->m_army;
+            ArmyGroup* army = &window->m_currentHero->m_army;
             long group;
             for (group = 0;
-                 group < armyGroup::ARMY_GROUP_SLOT_COUNT; ++group) {
+                 group < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++group) {
                 army->m_numTroops[group] -=
                     window->m_creatureOfferings[group].m_amount;
                 if (army->m_numTroops[group] <= 0)
@@ -2887,7 +2887,7 @@ void type_sacrifice_window::setCreatureSacrifice(long slot, long newAmount)
     if (m_creatureOfferings[slot].m_amount == newAmount)
         return;
 
-    TCreatureType creatureType = m_currentHero->m_army.m_armyTypes[slot];
+    CreatureType creatureType = m_currentHero->m_army.m_armyTypes[slot];
     long value = sacrificeValue(creatureType);
     long oldExperience = static_cast<long>(
         (value * m_creatureOfferings[slot].m_amount)
@@ -2914,13 +2914,13 @@ long type_sacrifice_window::getMaxAmount(long slot) const
         return 0;
 
     long other;
-    for (other = 0; other < armyGroup::ARMY_GROUP_SLOT_COUNT; ++other) {
+    for (other = 0; other < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++other) {
         if (other != slot
             && m_creatureOfferings[other].m_amount
                 < m_currentHero->m_army.m_numTroops[other])
             break;
     }
-    if (other == armyGroup::ARMY_GROUP_SLOT_COUNT)
+    if (other == ArmyGroup::ARMY_GROUP_SLOT_COUNT)
         --amount;
     return amount;
 }
@@ -2939,7 +2939,7 @@ int type_sacrifice_window::allCreatures(message& msg)
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         type_sacrifice_window* window =
             static_cast<type_sacrifice_window*>(msg.m_window);
-        long slot = armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
+        long slot = ArmyGroup::ARMY_GROUP_SLOT_COUNT - 1;
         do {
             window->setCreatureSacrifice(
                 slot, window->getMaxAmount(slot));
@@ -3017,12 +3017,12 @@ void type_sacrifice_window::creatureClick(
             return;
         }
 
-        TCreatureType creatureType = m_currentHero->m_army.m_armyTypes[slot];
+        CreatureType creatureType = m_currentHero->m_army.m_armyTypes[slot];
         long amount = m_creatureOfferings[slot].m_amount;
         if (leftPane)
             amount = m_currentHero->m_army.m_numTroops[slot] - amount;
         if (creatureType != CREATURE_NONE && amount > 0) {
-            TViewArmyWindow viewArmyWindow(
+            ViewArmyWindow viewArmyWindow(
                 creatureType, 0x77, 0x20,
                 static_cast<unsigned char>(!rightClick));
             viewArmyWindow.centerWindow(-1, -1);
@@ -3157,7 +3157,7 @@ type_transformer_slot::type_transformer_slot(
 VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 
 VA(0x005654f0, 0xA3C)  // dc 0x1275c0
-type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
+type_skeleton_window::type_skeleton_window(ArmyGroup* newArmy)
     : CAdvPopup(100, 67, 600, 485, 18)
 {
     long widgetId = 100;
@@ -3237,7 +3237,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_rolloverText);
 
-    for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i)
+    for (long i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i)
         update(0, i);
     addWidgetsToMessageStream();
 }
@@ -3259,21 +3259,21 @@ type_skeleton_window::~type_skeleton_window()
 inline void type_skeleton_window::updateButtons()
 {
     long i;
-    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+    for (i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         long type = m_armies[1]->m_armyTypes[i];
         if (type == CREATURE_NONE)
             continue;
         if (type != g_deathCreature[type])
             break;
     }
-    m_sacrificeButton->enable(i < armyGroup::ARMY_GROUP_SLOT_COUNT);
+    m_sacrificeButton->enable(i < ArmyGroup::ARMY_GROUP_SLOT_COUNT);
     m_allCreaturesButton->enable(m_armies[0]->hasCreatures());
 }
 
 VA(0x00566030, 0x45D)  // dc 0x127b68
 void type_skeleton_window::update(long group, long index)
 {
-    TCreatureType type = m_armies[group]->m_armyTypes[index];
+    CreatureType type = m_armies[group]->m_armyTypes[index];
     if (type == CREATURE_NONE) {
         m_armyWidget[group][index]->setVisible(0);
         m_armyLabel[group][index]->setVisible(0);
@@ -3331,12 +3331,12 @@ VA(0x00566490, 0x258)
 void type_skeleton_window::creatureClick(
     long side, long slot, unsigned char rightClick)
 {
-    TCreatureType creatureType = m_armies[side]->m_armyTypes[slot];
+    CreatureType creatureType = m_armies[side]->m_armyTypes[slot];
 
     if (rightClick
         || (slot == m_selectedIndex && side == m_selectedGroup)) {
         if (creatureType != CREATURE_NONE) {
-            TViewArmyWindow viewArmyWindow(
+            ViewArmyWindow viewArmyWindow(
                 creatureType, 0x77, 0x20,
                 static_cast<unsigned char>(!rightClick));
             viewArmyWindow.centerWindow(-1, -1);
@@ -3454,9 +3454,9 @@ void type_skeleton_window::createCreatureIcons(
 // DC names this helper and records both transformer callbacks as callers.
 // Complete expands both calls: occupied source slots move into the same
 // destination slot when free, otherwise armyGroup::Add chooses a slot.
-inline void moveAllArmies(armyGroup* source, armyGroup* dest)
+inline void moveAllArmies(ArmyGroup* source, ArmyGroup* dest)
 {
-    for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+    for (long i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         if (source->m_armyTypes[i] == CREATURE_NONE)
             continue;
         long destIndex = i;
@@ -3483,7 +3483,7 @@ int type_skeleton_window::allCreatures(message& msg)
         type_skeleton_window* window =
             static_cast<type_skeleton_window*>(msg.m_window);
         moveAllArmies(window->m_armies[0], window->m_armies[1]);
-        for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        for (long i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
             window->update(0, i);
             window->update(1, i);
         }
@@ -3535,8 +3535,8 @@ int type_skeleton_window::sacrifice(message& msg)
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         type_skeleton_window* window =
             static_cast<type_skeleton_window*>(msg.m_window);
-        for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-            TCreatureType type = window->m_armies[1]->m_armyTypes[i];
+        for (long i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+            CreatureType type = window->m_armies[1]->m_armyTypes[i];
             if (type == CREATURE_NONE || type == g_deathCreature[type])
                 continue;
 

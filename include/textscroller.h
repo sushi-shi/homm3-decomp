@@ -26,7 +26,7 @@ class type_text_slider;
 class type_text_scroller : public widget {
 public:
     type_text_scroller(const char* text, int x, int y, int w, int h,
-                       const char* fontName, font::TColor color,
+                       const char* fontName, font::Color color,
                        slider::EGraphics graphics);
     virtual ~type_text_scroller();
     virtual int open(int priority, heroWindow* parent);

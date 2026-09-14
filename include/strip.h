@@ -5,7 +5,10 @@
 #include <va.h>
 #include "armygrp.h"
 
-class hero;
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero;
 class heroWindow;
 
 // The one attested sentinel of the ctor's newIcons icon-set id:
@@ -46,12 +49,12 @@ public:
     char m_pad30[0x34];  // +0x30 untouched by the five retail bodies
     int m_icons;          // +0x64 ctor newIcons (icon-set id; 161 = frame set)
     heroWindow* m_win;    // +0x68 ctor inWin
-    armyGroup* m_group;   // +0x6c ctor groupToDraw (0 = empty strip)
+    ArmyGroup* m_group;   // +0x6c ctor groupToDraw (0 = empty strip)
     int m_iconFrame;      // +0x70 ctor newIconFrame (-1 = no owner picture)
-    hero* m_thisHero;
+    Hero* m_thisHero;
 
     strip(int inX, int inY, int inPos, int newIcons, int newIconFrame,
-          long newOwner, hero* newHero, armyGroup* groupToDraw, int firstId,
+          long newOwner, Hero* newHero, ArmyGroup* groupToDraw, int firstId,
           unsigned char update, heroWindow* inWin);
     // Declared, deliberately NOT defined - not here and not in strip.cpp.
     // Retail's `delete strip` calls a real out-of-line body before
@@ -64,8 +67,8 @@ public:
     // inline, or leaving it undeclared, drops the call and blocks every
     // body that frees a strip.
     ~strip();
-    void draw(TCreatureType divideCreature);
-    void drawIcons(unsigned char update, TCreatureType divideCreature);
+    void draw(CreatureType divideCreature);
+    void drawIcons(unsigned char update, CreatureType divideCreature);
 
 protected:
     void drawNumber(int i);

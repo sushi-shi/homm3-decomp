@@ -35,8 +35,8 @@ enum EDayOfWeek {
     DAY_OF_WEEK_SUNDAY = 7
 };
 
-int __fastcall readHeroId(TAbstractFile* infile, int mapVersion);
-int __fastcall loadHeroId(TAbstractFile* infile, int saveVersion);
+int __fastcall readHeroId(AbstractFile* infile, int mapVersion);
+int __fastcall loadHeroId(AbstractFile* infile, int saveVersion);
 
 // The map record GetWorldMapData hands out. Its first 0xd0 bytes are the
 // scenario's object/event vectors (13 of them at VC6's 16-byte
@@ -125,7 +125,10 @@ SIZE(RandomDwellingData, 0x10);
 // The town-definition pool uses town.h's canonical TownExtra record.
 // readTownData and ProcessOnMapTowns share its 0x88-byte PC layout.
 
-class town;
+#ifndef Town
+#define Town town
+#endif
+class Town;
 
 // HeroExtra is naturally aligned except for the packed +0x300..+0x306 band,
 // which places location at +0x301. Compiler-generated copies skip alignment
@@ -189,7 +192,7 @@ SIZE(HeroExtra, 0x334);
 // the elemental schools: that operation belongs to the Conflux callers.
 struct type_university {
 public:
-    TSecondarySkill m_skills[4];
+    SecondarySkill m_skills[4];
     type_university* initializeMagicSkills();
 };
 SIZE(type_university, 0x10);
@@ -368,7 +371,11 @@ SIZE(type_map_hero_info, 0x18);
 // every translation unit.
 class CMapHeaderData {
 public:
-    class TPlayerSlotAttributes {
+// Before normalization (type): CMapHeaderData::TPlayerSlotAttributes.
+#ifndef PlayerSlotAttributes
+#define PlayerSlotAttributes TPlayerSlotAttributes
+#endif
+    class PlayerSlotAttributes {
     public:
         unsigned char m_canBeHuman;
         unsigned char m_canBeComputer;
@@ -409,7 +416,7 @@ public:
         std::vector<type_map_hero_identity> m_heroes;
 
         VA(0x0045a950, 0x3F)  // retained retail body; formerly enrolled by CLASS_CTOR
-        TPlayerSlotAttributes()
+        PlayerSlotAttributes()
         {
             m_canBeHuman = 0;
             m_canBeComputer = 0;
@@ -428,7 +435,7 @@ public:
         // passes the stream plus map-format version (`ret 8`).  Dreamcast
         // keeps the equivalent logic in the parent reader, so the role name
         // is provisional.
-        void readMapPlayerSlot(TAbstractFile* infile, int mapVersion);
+        void readMapPlayerSlot(AbstractFile* infile, int mapVersion);
     };
     int m_version;
     unsigned char m_isPlayable;
@@ -451,7 +458,7 @@ public:
     std::vector<int> m_placeholders;
     VictoryConditionStruct m_victoryCondition;
     LossConditionStruct m_lossCondition;
-    TPlayerSlotAttributes m_playerSlotAttributes[8];
+    PlayerSlotAttributes m_playerSlotAttributes[8];
     // +0x2c0, and it belongs to THIS class, not to NewSMapHeader - byte-
     // proven 2026-08-20 by the two constructors. CMapHeaderData's own
     // compiler-generated ctor at 0x45a990 writes the Dinkumware _Tree
@@ -466,14 +473,14 @@ public:
     std::map<int, type_map_hero_info> m_heroPlayerSetups;
 };
 SIZE(CMapHeaderData, 0x2d0);
-SIZE(CMapHeaderData::TPlayerSlotAttributes, 0x44);
+SIZE(CMapHeaderData::PlayerSlotAttributes, 0x44);
 
 class NewSMapHeader : public CMapHeaderData {
 public:
     std::string m_mapName;
     std::string m_mapDescription;
     std::bitset<156> m_availableHeroes;
-    int save(TAbstractFile* outfile);
+    int save(AbstractFile* outfile);
     VA(0x0045a7a0, 0x1A3)  // retained retail body; formerly enrolled by CLASS_CTOR
     NewSMapHeader()
     {
@@ -505,22 +512,22 @@ public:
     }
     // Complete's scenario reader consumes the abstract stream and the
     // selected campaign-map ordinal (`ret 8` at retail 0x4c4390).
-    int read(TAbstractFile* infile, int campaignMap);
+    int read(AbstractFile* infile, int campaignMap);
     // DC game.cpp:7232 and the class method record name this static
     // string-reference reader. Retail 0x4c6010 uses the same two-register
     // ABI as game's short-length reader, with a dword map length instead.
-    static int __fastcall readString(TAbstractFile* infile, std::string& value);
-    int readVictoryCondition(char type, TAbstractFile* infile);
-    int readLossCondition(char type, TAbstractFile* infile);
-    int saveVictoryCondition(char type, TAbstractFile* outfile);
+    static int __fastcall readString(AbstractFile* infile, std::string& value);
+    int readVictoryCondition(char type, AbstractFile* infile);
+    int readLossCondition(char type, AbstractFile* infile);
+    int saveVictoryCondition(char type, AbstractFile* outfile);
     // Complete's saved-header reader carries the save version as a third
     // argument so pre-25 campaign hero ids can be remapped.
-    int loadVictoryCondition(char type, TAbstractFile* infile,
+    int loadVictoryCondition(char type, AbstractFile* infile,
                              int saveVersion);
-    int loadLossCondition(char type, TAbstractFile* infile, int saveVersion);
+    int loadLossCondition(char type, AbstractFile* infile, int saveVersion);
     // Retail carries the save-version argument absent from the Dreamcast
     // declarator; the 0x4c5630 body returns with `ret 8`.
-    int load(TAbstractFile* infile, int saveVersion);
+    int load(AbstractFile* infile, int saveVersion);
     int get(const char* path, const char* filename, int saveVersion);
 };
 SIZE(NewSMapHeader, 0x304);
@@ -544,12 +551,12 @@ public:
     char m_genClass;  // +0x00
     char m_genType;  // +0x01
     char m_paddingBeforeCreatureTypes[2];
-    TCreatureType m_type[4];  // +0x04  (DC 0x1CF0, 16 B)
+    CreatureType m_type[4];  // +0x04  (DC 0x1CF0, 16 B)
     // +0x14. Four SHORTS, not two ints: the constructor's fused loop
     // walks `type` by 4 and this row by 2 over the same four
     // iterations.
     short m_population[4];
-    armyGroup m_guards;  // +0x1c
+    ArmyGroup m_guards;  // +0x1c
     unsigned char m_mapX;  // +0x54
     unsigned char m_mapY;  // +0x55
     unsigned char m_mapZ;  // +0x56
@@ -565,13 +572,13 @@ public:
     // Dreamcast's generator-event xref records three calls to get_owner;
     // retail expands the signed owner-byte load and has no out-of-line row.
     inline long getOwner() const { return m_playerOwner; }
-    unsigned char load(TAbstractFile* infile);
+    unsigned char load(AbstractFile* infile);
     // update_bonus's negative twin. Retail has no out-of-line row for it
     // (nothing fits between generator::save's end at 0x4b8791 and
     // update_bonus at 0x4b87a0), so it is inline-only - the same shape
     // set_owner below carries.
     inline void removeBonus();
-    unsigned char save(TAbstractFile* outfile);
+    unsigned char save(AbstractFile* outfile);
     inline void setOwner(long owner);
     void updateBonus();
     void grow(int unusedArg);
@@ -594,7 +601,7 @@ public:
     // for these mines and the overview counts them separately.
     unsigned char m_isAbandoned;
     char m_paddingBeforeGuards;
-    armyGroup m_guards;
+    ArmyGroup m_guards;
     // NH3API confirms PC +0x3c. Map loading stores the trigger coordinate.
     unsigned char m_mapX;
     // NH3API confirms PC +0x3d. Map loading stores the trigger coordinate.
@@ -630,7 +637,7 @@ public:
     signed char m_turnDuration;
     int m_startingHero[8];
     signed char m_startingBonus[8];
-    int save(TAbstractFile* outfile);
+    int save(AbstractFile* outfile);
     VA(0x0045ac20, 0xD2)  // retained retail body; formerly enrolled by CLASS_CTOR
     SGameSetupOptions()
     {
@@ -651,7 +658,7 @@ public:
         m_fileInitialized = 0;
         m_initializationNumHumans = 0;
     }
-    int load(TAbstractFile* infile, int saveVersion);
+    int load(AbstractFile* infile, int saveVersion);
 };
 SIZE(SGameSetupOptions, 0x1cc);
 
@@ -703,16 +710,20 @@ public:
     int m_currentPlayer;
     SavedGameHeader();
     void reset();
-    int save(TAbstractFile* outfile);
-    int load(TAbstractFile* infile);
+    int save(AbstractFile* outfile);
+    int load(AbstractFile* infile);
 };
 SIZE(SavedGameHeader, 0x5a4);
 
-struct TBlackMarket {
+// Before normalization (type): TBlackMarket.
+#ifndef BlackMarket
+#define BlackMarket TBlackMarket
+#endif
+struct BlackMarket {
 public:
-    TArtifact m_artifacts[7];
+    Artifact m_artifacts[7];
 };
-SIZE(TBlackMarket, 0x1c);
+SIZE(BlackMarket, 0x1c);
 
 class Sign {
 public:
@@ -746,7 +757,7 @@ public:
     // Dreamcast and retail place the one-byte owner at +0 and army
     // at +4. The intervening three bytes align the armyGroup.
     char m_paddingBeforeArmy[3];
-    armyGroup m_garrisonArmy;
+    ArmyGroup m_garrisonArmy;
     // +0x3c, retyped in place (no declarator added, the include-set-free
     // edit class): AI_enter_garrison (0x524370) gates the troop grab on
     // this byte being nonzero - the AB/SoD "removable troops" property.
@@ -904,12 +915,12 @@ public:
     // get_total_value/calculate_demand accesses independently.
     AI m_ai;  // +0xf0
     // Implicit destructor; CodeView dc 0xbd630 compgenx.
-    int load(TAbstractFile* infile, int saveVersion);
+    int load(AbstractFile* infile, int saveVersion);
     // 0x4bada0 (claimed in src/game.cpp). town::buy_building calls it
     // on gpGame->players[owner] to split the human and computer
     // resource paths.
     bool isHuman() const;
-    int save(TAbstractFile* outfile);
+    int save(AbstractFile* outfile);
     // 0x4b9fc0 (located in src/game.cpp, body not reconstructed).
     // townManager::SwapHeroes 0x5d5150 calls it on
     // gpGame->players[townToView->owner] with the town it is showing,
@@ -918,7 +929,7 @@ public:
     // bare member-function declarator on a class this widely included
     // is the include-set wall's own trigger shape (the townManager
     // precedent), and townmgr.cpp is the only live consumer.
-    unsigned char addGarrisonHero(town* ourTown);
+    unsigned char addGarrisonHero(Town* ourTown);
     bool hasMobileHero();
     int nextHero();
     int nextTown();
@@ -958,7 +969,11 @@ public:
     game();
     ~game();
     game& __fastcall operator=(const game& that);
-    struct TRumour {
+// Before normalization (type): game::TRumour.
+#ifndef Rumour
+#define Rumour TRumour
+#endif
+    struct Rumour {
         std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_text;
         unsigned char m_unavailable;
     };
@@ -1024,10 +1039,10 @@ public:
     short m_week;
     short m_month;
     char m_uniqueSystemId[0x20];
-    TArtifact m_marketArtifacts[7];
+    Artifact m_marketArtifacts[7];
     // NH3API global.hpp confirms the PC vector at +0x1f680. Map loading
     // appends each black market and stores its index in the map cell.
-    std::vector<TBlackMarket> m_blackMarkets;
+    std::vector<BlackMarket> m_blackMarkets;
     short m_ultimateArtifactX;
     short m_ultimateArtifactY;
     unsigned char m_ultimateArtifactZ;
@@ -1059,9 +1074,9 @@ public:
     // town::can_build reads gpGame->towns[this->id].field_02 and
     // town::Deallocate writes gpGame->towns[this->id].owner, both with
     // that same 360-byte stride.
-    std::vector<town> m_towns;
+    std::vector<Town> m_towns;
     enum { HERO_COUNT = 156 };
-    hero m_heroes[HERO_COUNT];
+    Hero m_heroes[HERO_COUNT];
     char m_heroAvailability[0x9c];  // +0x4df18
     // One eight-player eligibility mask per hero. GetStartingHeroId tests
     // the caller's player position through Dinkumware bitset::test(), and
@@ -1111,7 +1126,7 @@ public:
     // Dreamcast rumourAllocInfo[256] ends at +0x31ffe before MapRumours
     // at +0x32000; retail retains two alignment bytes before its vector.
     char m_paddingBeforeRumours[2];
-    std::vector<TRumour> m_rumours;  // +0x4e648
+    std::vector<Rumour> m_rumours;  // +0x4e648
     char m_ssDisabled[0x1c];
     char m_armyWindow[4];
     // Dreamcast original viewFrame is int at +0x32010. InitVars
@@ -1176,7 +1191,7 @@ public:
     type_point getPuzzleOrigin() const;  // 0x4cea70
     void setRandomHeroArmies(int heroId, int cheat,
                              unsigned char minimal);  // 0x4c9730
-    TArtifact getRandomArtifactId(int artifactClass);  // 0x4c94d0
+    Artifact getRandomArtifactId(int artifactClass);  // 0x4c94d0
     void checkHeroConsistency();
     void setupDynamicStuff(int update, int forceUpdate);  // 0x51bd50
     void setupNewOverviewType(int whichType,
@@ -1193,10 +1208,10 @@ public:
     // 0x4baf00, its link-order neighbour. countOnly stops at the piece
     // count; otherwise the shared puzzlePiecesRemoved bitset is re-rolled.
     int setupPuzzlePieces(int whichPlayer, int countOnly);
-    void giveArmy(armyGroup* thisMonInfo, int monType,
+    void giveArmy(ArmyGroup* thisMonInfo, int monType,
                   int monNum, int slot);  // 0x4ca340
-    int experienceValueOfStack(const armyGroup* whichGroup,
-                               const hero* whichHero);  // 0x4ca3b0
+    int experienceValueOfStack(const ArmyGroup* whichGroup,
+                               const Hero* whichHero);  // 0x4ca3b0
     void insertObject(int x, int y, int z, int objType,
                       int objectIndex, int extraInfo);  // 0x4c9890
     bool isLocalHuman(int gamePos) const;  // 0x4ce970
@@ -1224,18 +1239,18 @@ public:
     void recordClaimMine(long id, long newOwner);  // 0x49bf90
 
     void recordClaimTown(long id, long newOwner);
-    static int __fastcall saveString(TAbstractFile* outfile, std::string& text);
+    static int __fastcall saveString(AbstractFile* outfile, std::string& text);
     // DC game.cpp:2492/2531 and the class method records explicitly
     // declare static loadString/saveString with a string reference.
     // Retail passes stream in ECX and string address in EDX at
     // 0x4bb990/0x4bbb60. Static /Gr members have that same ABI.
-    static int __fastcall loadString(TAbstractFile* infile, std::string& value);
+    static int __fastcall loadString(AbstractFile* infile, std::string& value);
 
 private:
-    int loadRumours(TAbstractFile* infile);  // 0x4bbe40
-    int saveRumours(TAbstractFile* outfile);  // 0x4bbc20
-    int loadSignPool(TAbstractFile* infile);  // 0x4b9070
-    int saveSignPool(TAbstractFile* outfile);  // 0x4b9270
+    int loadRumours(AbstractFile* infile);  // 0x4bbe40
+    int saveRumours(AbstractFile* outfile);  // 0x4bbc20
+    int loadSignPool(AbstractFile* infile);  // 0x4b9070
+    int saveSignPool(AbstractFile* outfile);  // 0x4b9270
 
 public:
     bool isHumanAlly(int teamNum) const;
@@ -1290,19 +1305,19 @@ public:
     void showHeroesLogo();
     void setMapSize(int width, int height);  // 0x4ccef0
     void checkForTimeEvent();  // 0x4cd910
-    void giveTimeEventReward(const TTimedEvent* thisEvent);  // 0x4cd710
+    void giveTimeEventReward(const TimedEvent* thisEvent);  // 0x4cd710
     void checkForTownEvent();  // 0x4cda10
     bool isHuman(int gamePos) const;  // 0x4ce940
 
 private:
-    int loadMinePool(TAbstractFile* infile, int saveVersion);
+    int loadMinePool(AbstractFile* infile, int saveVersion);
 
 public:
     void recordMonsterIdentifier(int identifier, type_point point);
 
 private:
-    int loadGarrisonPool(TAbstractFile* infile, int saveVersion);
-    int loadTownPool(TAbstractFile* infile, int saveVersion);
+    int loadGarrisonPool(AbstractFile* infile, int saveVersion);
+    int loadTownPool(AbstractFile* infile, int saveVersion);
 
 public:
     int loadGame(const char* filename, int isOrigData, int isQuickLoad);
@@ -1313,30 +1328,30 @@ public:
                            unsigned char xferFile);
 
 private:
-    int load(TAbstractFile* infile);  // 0x4bcda0
-    int loadBlackMarkets(TAbstractFile* infile);
-    int saveBlackMarkets(TAbstractFile* outfile);
-    int saveMinePool(TAbstractFile* outfile);  // 0x4b9580
-    int saveGarrisonPool(TAbstractFile* outfile);  // 0x4b98c0
-    int loadBoatPool(TAbstractFile* infile);  // 0x4b9a00
-    int saveBoatPool(TAbstractFile* outfile);  // 0x4b9c40
-    int loadObeliskPool(TAbstractFile* infile);
-    int saveObeliskPool(TAbstractFile* outfile);
-    int saveTownPool(TAbstractFile* outfile);
+    int load(AbstractFile* infile);  // 0x4bcda0
+    int loadBlackMarkets(AbstractFile* infile);
+    int saveBlackMarkets(AbstractFile* outfile);
+    int saveMinePool(AbstractFile* outfile);  // 0x4b9580
+    int saveGarrisonPool(AbstractFile* outfile);  // 0x4b98c0
+    int loadBoatPool(AbstractFile* infile);  // 0x4b9a00
+    int saveBoatPool(AbstractFile* outfile);  // 0x4b9c40
+    int loadObeliskPool(AbstractFile* infile);
+    int saveObeliskPool(AbstractFile* outfile);
+    int saveTownPool(AbstractFile* outfile);
 
 public:
     // 0x4bf780 (dc 0xaa7e0).
     void validateVictoryLossConditions(unsigned char checkMapLocations);
     void giveTroopsToNeutralTown(int townId);  // 0x4bf570
     void setupOrigData();
-    void newMap(TAbstractFile* mapFile, int* playerHeroFaces,
+    void newMap(AbstractFile* mapFile, int* playerHeroFaces,
                 NewMapCampaignContext* campaignContext, int gameVersion);
     unsigned char newMap(const char* mapPath, const char* mapName,
                          int* playerHeroFaces, int gameVersion);
     void setupFirstPlayer();
-    bool loadMap(TAbstractFile* mapFile);
+    bool loadMap(AbstractFile* mapFile);
     void applyMapHeaderAvailability();
-    void readMapHeroSetups(TAbstractFile* mapFile, int mapVersion);
+    void readMapHeroSetups(AbstractFile* mapFile, int mapVersion);
     void randomizeHolyGrail();
     void randomizeEvents();
     void processOnMapTowns();
@@ -1354,23 +1369,23 @@ public:
     void replaceRecruit(int playerPos, long recruitSlot);
     bool growCoverOfDarkness();
     void initNewGame(int difficulty, int version,
-                     NewSMapHeader* mapHeader, TAbstractFile* infile);
+                     NewSMapHeader* mapHeader, AbstractFile* infile);
     void resetGame(int difficulty, int version, NewSMapHeader* mapHeader);
 
 private:
-    int save(TAbstractFile* outfile);  // 0x4be3f0
+    int save(AbstractFile* outfile);  // 0x4be3f0
     void setCannedRumour();
     void setMapRumour();
     void setSpecialRumour();
 
 public:
     void clearEventRecords();
-    void recordShowHero(hero* who, signed char player, type_point point,
+    void recordShowHero(Hero* who, signed char player, type_point point,
                           unsigned char reset);  // 0x49cb20
     void processRandomObjects();  // 0x4c9dd0
     // The random-object pass and the monster roll it drives. Both bodies
     // are claimed in game.cpp.
-    TCreatureType getRandomMonster(int minLevel, int maxLevel);  // 0x4c92c0
+    CreatureType getRandomMonster(int minLevel, int maxLevel);  // 0x4c92c0
     int computeDailyGold(int player, unsigned char includeSilo);
     void cancelComputerScreen();
     void makeTerrainVisible(int whichPlayer, unsigned short visMask);
@@ -1390,12 +1405,12 @@ public:
     // population is codegen-sensitive.
     void recordHideBoat(boat* currentBoat, unsigned char occupied,
                           int occupyingHero);  // 0x49c560
-    void recordMove(hero* who, int direction,
+    void recordMove(Hero* who, int direction,
                      type_point destination);  // 0x49cd50
-    void recordTeleport(hero* who, type_point destination);  // 0x49cf50
-    void showLuckInfo(hero* who, int dialogType);
-    void showMoraleInfo(hero* who, int dialogType);
-    void recordHideHero(hero* who, char newOwner,
+    void recordTeleport(Hero* who, type_point destination);  // 0x49cf50
+    void showLuckInfo(Hero* who, int dialogType);
+    void showMoraleInfo(Hero* who, int dialogType);
+    void recordHideHero(Hero* who, char newOwner,
                           unsigned char townGarrison);
     // 0x4c86a0. town::hire passes the player id and consumed two-slot
     // recruit index; hero::hire uses the same closeout call. The body
@@ -1414,7 +1429,7 @@ public:
     // Own the retained inline body here with the game interface. The selected
     // retail copy is in philai.obj; emission does not give that TU ownership.
     VA(0x00529710, 0x34)
-    TCreatureType upgradedCreatureType(TCreatureType creature) const
+    CreatureType upgradedCreatureType(CreatureType creature) const
     {
         if (m_f1f698 == 0
             && (creature == CREATURE_AIR_ELEMENTAL
@@ -1517,9 +1532,9 @@ public:
     int getNumThievesGuilds(int whichPlayer);
 
 private:
-    unsigned char saveRecordedEvents(TAbstractFile* outfile);
+    unsigned char saveRecordedEvents(AbstractFile* outfile);
     // declarator (`?load_recorded_events@game@@AAA_NPAX@Z`, private,
-    unsigned char loadRecordedEvents(TAbstractFile* infile, int version);
+    unsigned char loadRecordedEvents(AbstractFile* infile, int version);
     // 0x4bcb30 (dc 0xa8144, E:\gamedcs\game.cpp:2975,
     // `?setup_shipyards@game@@AAAXXZ`). Clears all eight
     // players[i].shipyards and re-derives them by sweeping the map,
@@ -1529,12 +1544,12 @@ private:
     void setupShipyards();
 
 public:
-    void viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
-                  const town* thisTown, int x, int y,
+    void viewArmy(ArmyGroup& group, int iarmy, const Hero* thisHero,
+                  const Town* thisTown, int x, int y,
                   unsigned char showDismiss, unsigned char isQuickView);
     void overview();
     VA(0x004317d0, 0x26)  // hd-crossbuild + exact body/callers x15, dc 0x2eb0
-    hero* getHero(int which)
+    Hero* getHero(int which)
     {
         if (which == -1)
             return 0;
@@ -1562,7 +1577,7 @@ public:
     // null arm placed after, whereas GetHero's `if (id == -1) return 0;`
     // lays the arms out the other way round. DC sizes them apart too - 68 B
     // against GetHero's 36 - so this is a separate inline, not a forwarder.
-    hero* getCurrHero()
+    Hero* getCurrHero()
     {
         if (g_currentPlayer->m_currHeroId != -1)
             return &m_heroes[g_currentPlayer->m_currHeroId];
@@ -1576,13 +1591,13 @@ public:
         return g_currentPlayer->m_currHeroId;
     }
     VA(0x0042ba30, 0x24)  // hd-crossbuild + exact body/callers x5, dc 0x2f24
-    town* getTown(int townId)
+    Town* getTown(int townId)
     {
         if (townId == -1)
             return 0;
         return &m_towns[townId];
     }
-    town* getCurrTown()
+    Town* getCurrTown()
     {
         if (g_currentPlayer->m_currTownId != -1)
             return &m_towns[g_currentPlayer->m_currTownId];
@@ -1825,7 +1840,7 @@ inline void SavedGameHeader::reset()
 // Preserve the disjoint scalar staging scopes used by retail stack slots.
 // E:\gamedcs\Game.h:1325, dc 0xbcf6c
 VA(0x004bc5d0, 0x17A)  // anchor-layout + game::Save caller
-inline int SavedGameHeader::save(TAbstractFile* outfile)
+inline int SavedGameHeader::save(AbstractFile* outfile)
 {
     char fileNameBuffer[0x15f];
     char compatibilityBuffer[32];
@@ -1882,20 +1897,20 @@ inline int SavedGameHeader::save(TAbstractFile* outfile)
 // Dreamcast uses gzread directly.
 // E:\gamedcs\Game.h:1344, dc 0xbcfe4
 VA(0x004bc750, 0x3D5)  // dc 0xbcfe4
-inline int SavedGameHeader::load(TAbstractFile* infile)
+inline int SavedGameHeader::load(AbstractFile* infile)
 {
     std::string openedName;
     unsigned char inputWasProvided = infile != 0;
-    std::auto_ptr<TAbstractFile> ownedInput;
+    std::auto_ptr<AbstractFile> ownedInput;
 
     if (!inputWasProvided) {
         openedName = g_game->m_setup.m_filename;
         _chdir("games");
         try {
-            infile = new TGzFile(openedName.c_str(), "rb");
-            ownedInput = std::auto_ptr<TAbstractFile>(infile);
+            infile = new GzFile(openedName.c_str(), "rb");
+            ownedInput = std::auto_ptr<AbstractFile>(infile);
         }
-        catch (TGzFile::TOpenFailure) {
+        catch (GzFile::OpenFailure) {
             return -1;
         }
         _chdir("..");
@@ -2958,10 +2973,14 @@ inline bool game::townAlreadyBuiltOn(int townId) const
 // The default constructor and GetCode are ordinary declarations in DC type
 // 0x3dc2 (method types 0x3dc5/0x3dcb), without procedure/source locations.
 // Neither has an active caller; leave their bodies unreconstructed.
-class TCheatCode {
+// Before normalization (type): TCheatCode.
+#ifndef CheatCode
+#define CheatCode TCheatCode
+#endif
+class CheatCode {
 public:
-    TCheatCode();
-    TCheatCode(const char* value) { encode(value); }
+    CheatCode();
+    CheatCode(const char* value) { encode(value); }
     bool compare(const char* value) const
     {
         return _strcmpi(m_code, value) == 0;
@@ -2974,11 +2993,11 @@ private:
     static const char* s_b;
     char m_code[200];
 };
-SIZE(TCheatCode, 200);
+SIZE(CheatCode, 200);
 
 // E:\gamedcs\Game.h:1439
 VA(0x00402a30, 0xA1)
-inline void TCheatCode::encode(const char* value)
+inline void CheatCode::encode(const char* value)
 {
     int i = 0;
     const int maximum = 199;

@@ -294,7 +294,7 @@ VA_COMPGEN(0x00575e30, 0x21, SCALAR_DELETING_DTOR, CHeroDlg)  // vtbl 0x641a68/0
 
 // E:\gamedcs\singleselectionpopups.cpp:302
 VA(0x00575e60, 0x670)  // anchor-vtable CTownDlg::CreateWin inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0xc (3 args), dc 0x12e708
-unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
+unsigned char CTownDlg::createWin(CSprite* town, int frame, TownType townType)
 {
     if (!setup(272, 140, 256, 320))
         return 0;
@@ -595,13 +595,13 @@ const char* getStartingResourceDescription(int town)
 // quicktownwindow..recruit span and is left unclaimed.
 
 VA(0x00576F00, 0x190)
-TRandomMapProgress::TRandomMapProgress(int totalSteps)
-    : TProgressSink(totalSteps)
+RandomMapProgress::RandomMapProgress(int totalSteps)
+    : ProgressSink(totalSteps)
 {
     m_barSprite = ResourceManager::getSprite(
         DATA_COMPGEN(0x0067F5AC, progressBarSpriteName, "loadprog.def"));
     m_drawnPosition = 0;
-    m_window = new TDialogBox(240, 236, 320, 128, 0x12);
+    m_window = new DialogBoxWindow(240, 236, 320, 128, 0x12);
 
     const char* caption = g_generalText->getText(761);
     int captionWidth = g_mediumFont->getStringWidth(caption);
@@ -623,7 +623,7 @@ TRandomMapProgress::TRandomMapProgress(int totalSteps)
 VA_COMPGEN(0x00577090, 0x21, SCALAR_DELETING_DTOR, TRandomMapProgress)
 
 VA(0x005770C0, 0xBE)
-TRandomMapProgress::~TRandomMapProgress()
+RandomMapProgress::~RandomMapProgress()
 {
     g_windowManager->removeWindow(m_window);
     delete m_window;
@@ -634,7 +634,7 @@ TRandomMapProgress::~TRandomMapProgress()
 }
 
 VA(0x00577180, 0x17F)
-void TRandomMapProgress::loadProgFn00577180()
+void RandomMapProgress::loadProgFn00577180()
 {
     if (!m_barSprite)
         return;
@@ -672,14 +672,14 @@ void TRandomMapProgress::loadProgFn00577180()
 
 // Slot 1 of vtable 0x641b14 - the base's SetTotal override.
 VA(0x00577300, 0x12)
-void TRandomMapProgress::setTotal(int totalSteps)
+void RandomMapProgress::setTotal(int totalSteps)
 {
     m_steps = totalSteps;
     loadProgFn00577180();
 }
 
 VA(0x00577320, 0x31)
-void TRandomMapProgress::advance(int amount)
+void RandomMapProgress::advance(int amount)
 {
     m_done = min(m_done + amount, m_steps);
     loadProgFn00577180();

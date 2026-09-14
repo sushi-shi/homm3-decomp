@@ -23,18 +23,18 @@
 
 // Source-private active-window slot. Retail's constructor stores `this` at
 // 0x59be77 and the destructor clears the same address before widget teardown.
-DATA(0x006a34ec) static TSpellbookWindow* g_spellbookWindow;
+DATA(0x006a34ec) static SpellbookWindow* g_spellbookWindow;
 
 // Complete retains the DC static member and initializes it to the same
 // sentinel used for every empty SpellMap slot.
-DATA(0x00684b40) int TSpellbookWindow::s_lastPage = -1;
-DATA(0x00684b44) TSpellbookWindow::TSpellContext
-    TSpellbookWindow::s_lastContext = TSpellbookWindow::eContextInvalid;
+DATA(0x00684b40) int SpellbookWindow::s_lastPage = -1;
+DATA(0x00684b44) SpellbookWindow::SpellContext
+    SpellbookWindow::s_lastContext = SpellbookWindow::eContextInvalid;
 
 // Complete places the current school in zero-fill storage immediately
 // before get_level_string's five-pointer table.  The handler and constructor
 // both retain it across spellbook instances.
-DATA(0x006a34f4) TSpellSchool TSpellbookWindow::s_lastSchool;
+DATA(0x006a34f4) SpellSchool SpellbookWindow::s_lastSchool;
 
 // Dreamcast names this source-private rollover cache `lastIMHoverID`.
 // Complete's sole two references are both in WindowHandler.
@@ -47,7 +47,7 @@ DATA(0x00684b48) static int g_lastSpellbookHeroId = -1;
 // Rollover/right-click pairs for the five school tabs, the two context tabs,
 // the mana label, the page arrows, and the close button.  The constructor
 // fills the zero-initialized rows from the spellbook text resource.
-DATA(0x006a52d0) static THelpText g_spellbookHelpText[11];
+DATA(0x006a52d0) static HelpText g_spellbookHelpText[11];
 
 // Dreamcast names this table `level_sprites`; the retail .rdata relocation
 // run at 0x641d94 fixes both its order and its four literals.
@@ -64,7 +64,7 @@ DATA(0x006a5d48) const char* g_secondarySkillLevels[4];
 
 // E:\gamedcs\spellbookwindow.cpp:82
 DC_ONLY(0x14d3a4, 0x28)
-int TSpellbookWindow::getPositionFromSchool(unsigned schoolMask)
+int SpellbookWindow::getPositionFromSchool(unsigned schoolMask)
 {
     if (schoolMask == eSchoolAll)
         return 4;
@@ -76,9 +76,9 @@ int TSpellbookWindow::getPositionFromSchool(unsigned schoolMask)
 }
 
 // E:\gamedcs\spellbookwindow.cpp:103, dc 0x14d3cc.
-inline TSpellSchool TSpellbookWindow::getSchoolFromPosition(int position)
+inline SpellSchool SpellbookWindow::getSchoolFromPosition(int position)
 {
-    return position < 4 ? (TSpellSchool)(1 << position)
+    return position < 4 ? (SpellSchool)(1 << position)
                         : eSchoolAll;
 }
 
@@ -108,14 +108,14 @@ static const char* getLevelString(SpellID spell)
 #if 0  // @carcass: untouched Dreamcast-only bodies
 // E:\gamedcs\spellbookwindow.cpp:69
 DC_ONLY(0x14bc58, 0x28)
-void TSpellbookWindow::reset()
+void SpellbookWindow::reset()
 {
     // @stub
 }
 #endif
 
 VA(0x0059ba80, 0x1D)  // dc 0x14bc58
-void TSpellbookWindow::reset()
+void SpellbookWindow::reset()
 {
     s_lastSchool = const_invalid_school;
     s_lastPage = -1;
@@ -132,8 +132,8 @@ void TSpellbookWindow::reset()
 // exactly _Tidy's cost. Meaningful helper value bindings recover the
 // caller boundary without changing its source or the other unit scores.
 VA(0x0059baa0, 0x341)  // retail widens DC's magic-plains byte to the Complete magic-terrain field at +0x6c; dc 0x14bcf4
-std::string TSpellbookWindow::getSpellDescription(
-    SpellID spell, const hero* currentHero, unsigned char rollover)
+std::string SpellbookWindow::getSpellDescription(
+    SpellID spell, const Hero* currentHero, unsigned char rollover)
 {
     const SSpellTraits* traits = &g_spellTraits[spell];
     std::string result;
@@ -155,7 +155,7 @@ std::string TSpellbookWindow::getSpellDescription(
         result += ")";
     } else if (currentHero && (traits->m_flags & 0x200)) {
         int power = currentHero->getPrimarySkill(2);
-        int damage = const_cast<hero*>(currentHero)->modifySpellDamage(
+        int damage = const_cast<Hero*>(currentHero)->modifySpellDamage(
             spell,
             traits->m_powerFactor * power + traits->m_masteryBonus[mastery],
             0);
@@ -167,7 +167,7 @@ std::string TSpellbookWindow::getSpellDescription(
 
 // E:\gamedcs\spellbookwindow.cpp:180, dc 0x14be88
 VA(0x0059bdf0, 0xAC9)  // anchor-bracket: immediately precedes scalar-del-dtor 0x59c8c0; EH, ret 0x10 = 4 args; spelback.pcx setup; dc 0x14be88
-TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbookWindow::TSpellContext context, int magicTerrain)
+SpellbookWindow::SpellbookWindow(const Hero& h, const ArmyGroup* g, SpellbookWindow::SpellContext context, int magicTerrain)
     : CAdvPopup(90, 2, 620, 595, 0x12),
       m_allowedContext(context),
       m_hero(&h),
@@ -183,7 +183,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
 
     if (h.m_id != g_lastSpellbookHeroId) {
         s_lastPage = -1;
-        s_lastSchool = (TSpellSchool)0;
+        s_lastSchool = (SpellSchool)0;
         s_lastContext = eContextInvalid;
         g_lastSpellbookHeroId = m_hero->m_id;
     }
@@ -337,7 +337,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
     if (context == eContextNeither) {
         if (s_lastContext != eContextInvalid) {
             setContext(s_lastContext);
-            TSpellSchool selectedSchool = s_lastSchool;
+            SpellSchool selectedSchool = s_lastSchool;
             setSchool(selectedSchool);
             m_schoolTabsWidget->setIconFrame(
                 getPositionFromSchool(selectedSchool));
@@ -351,7 +351,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
         }
     } else if (s_lastContext == context) {
         setContext(context);
-        TSpellSchool selectedSchool = s_lastSchool;
+        SpellSchool selectedSchool = s_lastSchool;
         setSchool(selectedSchool);
         m_schoolTabsWidget->setIconFrame(
             getPositionFromSchool(selectedSchool));
@@ -373,7 +373,7 @@ VA_COMPGEN(0x0059c8c0, 0x21, SCALAR_DELETING_DTOR, TSpellbookWindow)
 VA_COMPGEN(0x0059def0, 0x170, INSERTION_SORT_1, TSpellbookEntry)
 
 VA(0x0059c8f0, 0x75)  // dc 0x14c864
-TSpellbookWindow::~TSpellbookWindow()
+SpellbookWindow::~SpellbookWindow()
 {
     g_spellbookWindow = 0;
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -383,41 +383,41 @@ TSpellbookWindow::~TSpellbookWindow()
 }
 
 VA(0x0059c970, 0x1B)  // dc 0x14c8d4
-int TSpellbookWindow::open(int newPriority, unsigned char update)
+int SpellbookWindow::open(int newPriority, unsigned char update)
 {
     return heroWindow::open(newPriority, update) ? 3 : 0;
 }
 
 VA(0x0059c990, 0x10)  // dc 0x14c8f0
-void TSpellbookWindow::close(unsigned char update)
+void SpellbookWindow::close(unsigned char update)
 {
     heroWindow::close(update);
 }
 
 VA(0x0059c9a0, 0x691)  // dc 0x14c904
-void TSpellbookWindow::gotoPage(int page)
+void SpellbookWindow::gotoPage(int page)
 {
     if (page < 0)
         return;
 
     // DC locals: available_spells and FIRST_SLOT_AFTER_HEADING.
     const int firstSlotAfterHeading = 2;
-    std::vector<TSpellbookEntry> availableSpells;
-    availableSpells.reserve(hero::NUM_SPELLS);
+    std::vector<SpellbookEntry> availableSpells;
+    availableSpells.reserve(Hero::NUM_SPELLS);
 
-    for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+    for (int spell = 0; spell < Hero::NUM_SPELLS; ++spell) {
         if (m_hero->spellIsAvailable(spell)
             && (m_school & g_spellTraits[spell].m_school)
             && (m_contextMask & g_spellTraits[spell].m_flags)) {
-            TSpellSchool highestSchool =
+            SpellSchool highestSchool =
                 m_hero->getHighestSchool(g_spellTraits[spell].m_school);
-            TSpellSchool school = m_school;
+            SpellSchool school = m_school;
             if (school == eSchoolAll)
                 school = highestSchool;
-            TSkillMastery mastery = m_hero->getSpellLevel(
+            SkillMastery mastery = m_hero->getSpellLevel(
                 spell, m_onMagicPlains);
             availableSpells.insert(availableSpells.end(),
-                          TSpellbookEntry(spell, school, mastery));
+                          SpellbookEntry(spell, school, mastery));
         }
     }
 
@@ -456,7 +456,7 @@ void TSpellbookWindow::gotoPage(int page)
 
     for (; widgetIndex < SPELLS_PER_PAGE && spellIndex < availableSpells.size();
          ++widgetIndex, ++spellIndex) {
-        const TSpellbookEntry& entry = availableSpells[spellIndex];
+        const SpellbookEntry& entry = availableSpells[spellIndex];
         SpellID displaySpell = entry.m_id;
         m_spellLevelWidgets[widgetIndex]->m_status |=
             widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
@@ -476,7 +476,7 @@ void TSpellbookWindow::gotoPage(int page)
                     getLevelString(displaySpell),
                     g_secondarySkillLevels[entry.m_mastery],
                     (*g_generalText)[388],
-                    const_cast<hero*>(m_hero)->getManaCost(
+                    const_cast<Hero*>(m_hero)->getManaCost(
                         displaySpell, m_enemyGroup, m_onMagicPlains));
         } else {
             sprintf(g_text,
@@ -484,12 +484,12 @@ void TSpellbookWindow::gotoPage(int page)
                                  "{%s}\n%s\n%s: %d"),
                     g_spellTraits[displaySpell].m_name,
                     getLevelString(displaySpell), (*g_generalText)[388],
-                    const_cast<hero*>(m_hero)->getManaCost(
+                    const_cast<Hero*>(m_hero)->getManaCost(
                         displaySpell, m_enemyGroup, m_onMagicPlains));
         }
         m_spellNameWidgets[widgetIndex]->setText(g_text);
 
-        if (const_cast<hero*>(m_hero)->getManaCost(
+        if (const_cast<Hero*>(m_hero)->getManaCost(
                 displaySpell, m_enemyGroup, m_onMagicPlains) <= m_hero->m_mana)
             m_spellNameWidgets[widgetIndex]->m_status &= ~widget::WIDGET_DIMMED;
         else
@@ -529,14 +529,14 @@ void TSpellbookWindow::gotoPage(int page)
 #if 0  // @carcass: untouched Dreamcast-only bodies
 // E:\gamedcs\spellbookwindow.cpp:680
 DC_ONLY(0x14ce10, 0x58)
-void TSpellbookWindow::displayNewSchool(int position)
+void SpellbookWindow::displayNewSchool(int position)
 {
     // @stub
 }
 
 #endif  // @carcass
 
-void TSpellbookWindow::displayNewSchool(int position)
+void SpellbookWindow::displayNewSchool(int position)
 {
     if (getSchool() == getSchoolFromPosition(position))
         return;
@@ -550,7 +550,7 @@ void TSpellbookWindow::displayNewSchool(int position)
 }
 
 // E:\gamedcs\spellbookwindow.cpp:702, dc 0x14ce68.
-int TSpellbookWindow::convertID2HelpID(int id) const
+int SpellbookWindow::convertID2HelpID(int id) const
 {
     if (id < 0)
         return -1;
@@ -584,7 +584,7 @@ DATA(0x00641db8) static const int g_tabToSchool[] = {0, 3, 1, 2, 4};
 // Failed controls: dialogReturn-before-id changed the shared exit tail;
 // early return on a rollover cache hit changed the lifetime/return paths.
 VA(0x0059d040, 0xBA0)  // anchor-callee: calls GotoPage/get_spell_description/GetManaCost/SetIconFrame, msg jump-table, ret 4; absorbs inlined DisplayNewSchool+convertID2HelpID; dc 0x14cecc
-int TSpellbookWindow::windowHandler(message& msg)
+int SpellbookWindow::windowHandler(message& msg)
 {
     int exitFlag = 0;
     int handled = CAdvPopup::windowHandler(msg);
@@ -694,7 +694,7 @@ int TSpellbookWindow::windowHandler(message& msg)
                      && getContextMask() == eCombatContextMask)
                     || (m_allowedContext == eContextAdventure
                         && getContextMask() == eAdventureContextMask)) {
-                    int manaCost = const_cast<hero*>(m_hero)->getManaCost(
+                    int manaCost = const_cast<Hero*>(m_hero)->getManaCost(
                         spell, m_enemyGroup, m_onMagicPlains);
                     if (manaCost <= m_hero->m_mana) {
                         exitFlag = 1;
@@ -803,7 +803,7 @@ int TSpellbookWindow::windowHandler(message& msg)
 }
 
 VA(0x0059dbe0, 0x84)  // dc 0x14d290
-bool TSpellbookWindow::TSpellbookEntry::operator<(const TSpellbookEntry& y) const
+bool SpellbookWindow::SpellbookEntry::operator<(const SpellbookEntry& y) const
 {
     const SSpellTraits* traits = &g_spellTraits[m_id];
     const SSpellTraits* yTraits = &g_spellTraits[y.m_id];
@@ -822,140 +822,140 @@ bool TSpellbookWindow::TSpellbookEntry::operator<(const TSpellbookEntry& y) cons
 
 // E:\gamedcs\SpellbookWindow.h:209
 DC_ONLY(0x14d320, 0xA)
-void TSpellbookWindow::TSpellbookEntry::TSpellbookEntry(SpellID id_, TSpellSchool school_, TSkillMastery mastery_)
+void SpellbookWindow::SpellbookEntry::SpellbookEntry(SpellID id_, SpellSchool school_, SkillMastery mastery_)
 {
     // @stub
 }
 
 // E:\gamedcs\SpellbookWindow.h:222
 DC_ONLY(0x14d32c, 0x10)
-void TSpellbookWindow::setSchool(TSpellSchool school)
+void SpellbookWindow::setSchool(SpellSchool school)
 {
     // @stub
 }
 
 // E:\gamedcs\SpellbookWindow.h:230
 DC_ONLY(0x14d33c, 0x6)
-unsigned TSpellbookWindow::getSchool()
+unsigned SpellbookWindow::getSchool()
 {
     // @stub
 }
 
 // E:\gamedcs\SpellbookWindow.h:236
 DC_ONLY(0x14d344, 0x20)
-void TSpellbookWindow::setContext(TSpellbookWindow::TSpellContext context)
+void SpellbookWindow::setContext(SpellbookWindow::SpellContext context)
 {
     // @stub
 }
 
 // E:\gamedcs\SpellbookWindow.h:248
 DC_ONLY(0x14d364, 0x6)
-unsigned TSpellbookWindow::getContextMask()
+unsigned SpellbookWindow::getContextMask()
 {
     // @stub
 }
 
 // E:\gamedcs\SpellbookWindow.h:258
 DC_ONLY(0x14d36c, 0x1C)
-void TSpellbookWindow::previousPage()
+void SpellbookWindow::previousPage()
 {
     // @stub
 }
 
 // E:\gamedcs\SpellbookWindow.h:264
 DC_ONLY(0x14d388, 0x1C)
-void TSpellbookWindow::nextPage()
+void SpellbookWindow::nextPage()
 {
     // @stub
 }
 
 // E:\gamedcs\spellbookwindow.cpp:103
 DC_ONLY(0x14d3cc, 0x12)
-TSpellSchool TSpellbookWindow::getSchoolFromPosition(int j)
+SpellSchool SpellbookWindow::getSchoolFromPosition(int j)
 {
     // @stub
 }
 
 // E:\gamedcs\spellbookwindow.cpp:465
 DC_ONLY(0x14d3e0, 0x34)
-void* TSpellbookWindow::`scalar deleting destructor'(unsigned __flags)
+void* SpellbookWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x14d414, 0x4)
-TSpellbookWindow::TSpellbookEntry* std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::begin()
+SpellbookWindow::SpellbookEntry* std::vector<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0x14d418, 0x4)
-TSpellbookWindow::TSpellbookEntry* std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::end()
+SpellbookWindow::SpellbookEntry* std::vector<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x14d41c, 0x20)
-unsigned std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::size()
+unsigned std::vector<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x14d43c, 0x24)
-TSpellbookWindow::TSpellbookEntry* std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::operator[](unsigned __n)
+SpellbookWindow::SpellbookEntry* std::vector<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x14d460, 0x1C)
-void std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >(const std::allocator<TSpellbookWindow::TSpellbookEntry>* __a)
+void std::vector<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >::vector<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >(const std::allocator<SpellbookWindow::SpellbookEntry>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0x14d47c, 0x28)
-void std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::~vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >()
+void std::vector<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >::~vector<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x14d4a4, 0x3C)
-void std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::push_back(const TSpellbookWindow::TSpellbookEntry* __x)
+void std::vector<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >::push_back(const SpellbookWindow::SpellbookEntry* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x14d4e0, 0x4)
-void std::allocator<TSpellbookWindow::TSpellbookEntry>::allocator<TSpellbookWindow::TSpellbookEntry>()
+void std::allocator<SpellbookWindow::SpellbookEntry>::allocator<SpellbookWindow::SpellbookEntry>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x14d4e4, 0x4)
-void std::allocator<TSpellbookWindow::TSpellbookEntry>::~allocator<TSpellbookWindow::TSpellbookEntry>()
+void std::allocator<SpellbookWindow::SpellbookEntry>::~allocator<SpellbookWindow::SpellbookEntry>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x14d4e8, 0x2C)
-void std::_Vector_base<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::_Vector_base<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >(const std::allocator<TSpellbookWindow::TSpellbookEntry>* __a)
+void std::_Vector_base<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >::_Vector_base<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >(const std::allocator<SpellbookWindow::SpellbookEntry>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0x14d514, 0x40)
-void std::_Vector_base<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::~_Vector_base<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >()
+void std::_Vector_base<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >::~_Vector_base<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >()
 {
     // @stub
 }
@@ -969,287 +969,287 @@ void std::_STL_alloc_proxy<TSpell()
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x14d56c, 0xC)
-void std::_STL_alloc_proxy<TSpel(const std::allocator<TSpellbookWindow::TSpellbookEntry>* __a, TSpellbookWindow::TSpellbookEntry** __p)
+void std::_STL_alloc_proxy<TSpel(const std::allocator<SpellbookWindow::SpellbookEntry>* __a, SpellbookWindow::SpellbookEntry** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x14d578, 0x2C)
-void std::_STL_alloc_proxy<TSpellbookWindow::TSpellbookEntry *,TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::deallocate(TSpellbookWindow::TSpellbookEntry* __p, unsigned __n)
+void std::_STL_alloc_proxy<SpellbookWindow::SpellbookEntry *,SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >::deallocate(SpellbookWindow::SpellbookEntry* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x14d5a4, 0x20)
-void std::allocator<TSpellbookWindow::TSpellbookEntry>::deallocate(TSpellbookWindow::TSpellbookEntry* __p, unsigned __n)
+void std::allocator<SpellbookWindow::SpellbookEntry>::deallocate(SpellbookWindow::SpellbookEntry* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x14d5c4, 0xDC)
-void std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::_M_insert_overflow(TSpellbookWindow::TSpellbookEntry* __position, const TSpellbookWindow::TSpellbookEntry* __x, unsigned __fill_len)
+void std::vector<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >::_M_insert_overflow(SpellbookWindow::SpellbookEntry* __position, const SpellbookWindow::SpellbookEntry* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:68
 DC_ONLY(0x14d6a0, 0xA8)
-void std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::reserve(unsigned __n)
+void std::vector<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >::reserve(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.h:624
 DC_ONLY(0x14d748, 0x64)
-void std::sort(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+void std::sort(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x14d7ac, 0x30)
-void std::destroy(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+void std::destroy(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x14d7dc, 0x30)
-void std::construct(TSpellbookWindow::TSpellbookEntry* __p, const TSpellbookWindow::TSpellbookEntry* __value)
+void std::construct(SpellbookWindow::SpellbookEntry* __p, const SpellbookWindow::SpellbookEntry* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x14d80c, 0x4)
-std::allocator<TSpellbookWindow::TSpellbookEntry>* std::__stl_alloc_rebind(std::allocator<TSpellbookWindow::TSpellbookEntry>* __a, const TSpellbookWindow::TSpellbookEntry* __formal)
+std::allocator<SpellbookWindow::SpellbookEntry>* std::__stl_alloc_rebind(std::allocator<SpellbookWindow::SpellbookEntry>* __a, const SpellbookWindow::SpellbookEntry* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:199
 DC_ONLY(0x14d810, 0x20)
-unsigned std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::capacity()
+unsigned std::vector<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >::capacity()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x14d830, 0x28)
-TSpellbookWindow::TSpellbookEntry* std::_STL_alloc_proxy<TSpellbookWindow::TSpellbookEntry *,TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::allocate(unsigned __n)
+SpellbookWindow::SpellbookEntry* std::_STL_alloc_proxy<SpellbookWindow::SpellbookEntry *,SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x14d858, 0x28)
-TSpellbookWindow::TSpellbookEntry* std::allocator<TSpellbookWindow::TSpellbookEntry>::allocate(unsigned __n, const void* __formal)
+SpellbookWindow::SpellbookEntry* std::allocator<SpellbookWindow::SpellbookEntry>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x14d880, 0x38)
-TSpellbookWindow::TSpellbookEntry* std::uninitialized_copy(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __result)
+SpellbookWindow::SpellbookEntry* std::uninitialized_copy(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last, SpellbookWindow::SpellbookEntry* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x14d8b8, 0x38)
-TSpellbookWindow::TSpellbookEntry* std::uninitialized_fill_n(TSpellbookWindow::TSpellbookEntry* __first, unsigned __n, const TSpellbookWindow::TSpellbookEntry* __x)
+SpellbookWindow::SpellbookEntry* std::uninitialized_fill_n(SpellbookWindow::SpellbookEntry* __first, unsigned __n, const SpellbookWindow::SpellbookEntry* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:514
 DC_ONLY(0x14d8f0, 0x38)
-std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::_M_allocate_and_copy(unsigned __n, TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+std::vector<SpellbookWindow::SpellbookEntry,std::allocator<SpellbookWindow::SpellbookEntry> >::_M_allocate_and_copy(unsigned __n, SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x14d928, 0x4)
-TSpellbookWindow::TSpellbookEntry* std::value_type(const TSpellbookWindow::TSpellbookEntry* __formal)
+SpellbookWindow::SpellbookEntry* std::value_type(const SpellbookWindow::SpellbookEntry* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1081
 DC_ONLY(0x14d92c, 0xA4)
-void std::__introsort_loop(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __formal, int __depth_limit)
+void std::__introsort_loop(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last, SpellbookWindow::SpellbookEntry* __formal, int __depth_limit)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1057
 DC_ONLY(0x14d9d0, 0x5C)
-void std::__final_insertion_sort(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+void std::__final_insertion_sort(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x14da2c, 0x1C)
-void std::__destroy(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __formal)
+void std::__destroy(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last, SpellbookWindow::SpellbookEntry* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x14da48, 0x1C)
-TSpellbookWindow::TSpellbookEntry* std::__uninitialized_copy(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __result, TSpellbookWindow::TSpellbookEntry* __formal)
+SpellbookWindow::SpellbookEntry* std::__uninitialized_copy(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last, SpellbookWindow::SpellbookEntry* __result, SpellbookWindow::SpellbookEntry* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x14da64, 0x1C)
-TSpellbookWindow::TSpellbookEntry* std::__uninitialized_fill_n(TSpellbookWindow::TSpellbookEntry* __first, unsigned __n, const TSpellbookWindow::TSpellbookEntry* __x, TSpellbookWindow::TSpellbookEntry* __formal)
+SpellbookWindow::SpellbookEntry* std::__uninitialized_fill_n(SpellbookWindow::SpellbookEntry* __first, unsigned __n, const SpellbookWindow::SpellbookEntry* __x, SpellbookWindow::SpellbookEntry* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.h:664
 DC_ONLY(0x14da80, 0x38)
-void std::partial_sort(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __middle, TSpellbookWindow::TSpellbookEntry* __last)
+void std::partial_sort(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __middle, SpellbookWindow::SpellbookEntry* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:44
 DC_ONLY(0x14dab8, 0x6C)
-const TSpellbookWindow::TSpellbookEntry* std::__median(const TSpellbookWindow::TSpellbookEntry* __a, const TSpellbookWindow::TSpellbookEntry* __b, const TSpellbookWindow::TSpellbookEntry* __c)
+const SpellbookWindow::SpellbookEntry* std::__median(const SpellbookWindow::SpellbookEntry* __a, const SpellbookWindow::SpellbookEntry* __b, const SpellbookWindow::SpellbookEntry* __c)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:923
 DC_ONLY(0x14db24, 0x6C)
-TSpellbookWindow::TSpellbookEntry* std::__unguarded_partition(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry __pivot)
+SpellbookWindow::SpellbookEntry* std::__unguarded_partition(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last, SpellbookWindow::SpellbookEntry __pivot)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1012
 DC_ONLY(0x14db90, 0x40)
-void std::__insertion_sort(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+void std::__insertion_sort(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1035
 DC_ONLY(0x14dbd0, 0x30)
-void std::__unguarded_insertion_sort(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+void std::__unguarded_insertion_sort(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x14dc00, 0x30)
-void std::__destroy_aux(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, __false_type __formal)
+void std::__destroy_aux(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x14dc30, 0x3C)
-TSpellbookWindow::TSpellbookEntry* std::__uninitialized_copy_aux(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __result, __false_type __formal)
+SpellbookWindow::SpellbookEntry* std::__uninitialized_copy_aux(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last, SpellbookWindow::SpellbookEntry* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x14dc6c, 0x3C)
-TSpellbookWindow::TSpellbookEntry* std::__uninitialized_fill_n_aux(TSpellbookWindow::TSpellbookEntry* __first, unsigned __n, const TSpellbookWindow::TSpellbookEntry* __x, __false_type __formal)
+SpellbookWindow::SpellbookEntry* std::__uninitialized_fill_n_aux(SpellbookWindow::SpellbookEntry* __first, unsigned __n, const SpellbookWindow::SpellbookEntry* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1432
 DC_ONLY(0x14dca8, 0x90)
-void std::__partial_sort(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __middle, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __formal)
+void std::__partial_sort(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __middle, SpellbookWindow::SpellbookEntry* __last, SpellbookWindow::SpellbookEntry* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:107
 DC_ONLY(0x14dd38, 0x30)
-void std::iter_swap(TSpellbookWindow::TSpellbookEntry* __a, TSpellbookWindow::TSpellbookEntry* __b)
+void std::iter_swap(SpellbookWindow::SpellbookEntry* __a, SpellbookWindow::SpellbookEntry* __b)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:987
 DC_ONLY(0x14dd68, 0x58)
-void std::__linear_insert(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry __val)
+void std::__linear_insert(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last, SpellbookWindow::SpellbookEntry __val)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1028
 DC_ONLY(0x14ddc0, 0x3C)
-void std::__unguarded_insertion_sort_aux(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __formal)
+void std::__unguarded_insertion_sort_aux(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last, SpellbookWindow::SpellbookEntry* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x14ddfc, 0x1C)
-void std::destroy(TSpellbookWindow::TSpellbookEntry* __pointer)
+void std::destroy(SpellbookWindow::SpellbookEntry* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:207
 DC_ONLY(0x14de18, 0x40)
-void std::make_heap(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+void std::make_heap(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0x14de58, 0x4)
-int* std::distance_type(const TSpellbookWindow::TSpellbookEntry* __formal)
+int* std::distance_type(const SpellbookWindow::SpellbookEntry* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.h:64
 DC_ONLY(0x14de5c, 0x44)
-void std::__pop_heap(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __result, TSpellbookWindow::TSpellbookEntry __value, int* __formal)
+void std::__pop_heap(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last, SpellbookWindow::SpellbookEntry* __result, SpellbookWindow::SpellbookEntry __value, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.h:108
 DC_ONLY(0x14dea0, 0x3C)
-void std::sort_heap(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+void std::sort_heap(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:96
 DC_ONLY(0x14dedc, 0x18)
-void std::__iter_swap(TSpellbookWindow::TSpellbookEntry* __a, TSpellbookWindow::TSpellbookEntry* __b, TSpellbookWindow::TSpellbookEntry* __formal)
+void std::__iter_swap(SpellbookWindow::SpellbookEntry* __a, SpellbookWindow::SpellbookEntry* __b, SpellbookWindow::SpellbookEntry* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0x14def4, 0x50)
-TSpellbookWindow::TSpellbookEntry* std::copy_backward(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __result)
+SpellbookWindow::SpellbookEntry* std::copy_backward(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last, SpellbookWindow::SpellbookEntry* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:960
 DC_ONLY(0x14df44, 0x50)
-void std::__unguarded_linear_insert(TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry __val)
+void std::__unguarded_linear_insert(SpellbookWindow::SpellbookEntry* __last, SpellbookWindow::SpellbookEntry __val)
 {
     // @stub
 }
@@ -1263,56 +1263,56 @@ void std::__destroy_aux()
 
 // ..\stlport\stl_heap.c:192
 DC_ONLY(0x14df98, 0x84)
-void std::__make_heap(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __formal, int* __formal)
+void std::__make_heap(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last, SpellbookWindow::SpellbookEntry* __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:112
 DC_ONLY(0x14e01c, 0xC8)
-void std::__adjust_heap(TSpellbookWindow::TSpellbookEntry* __first, int __holeIndex, int __len, TSpellbookWindow::TSpellbookEntry __value)
+void std::__adjust_heap(SpellbookWindow::SpellbookEntry* __first, int __holeIndex, int __len, SpellbookWindow::SpellbookEntry __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:142
 DC_ONLY(0x14e0e4, 0x30)
-void std::pop_heap(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+void std::pop_heap(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:79
 DC_ONLY(0x14e114, 0x2A)
-void std::swap(TSpellbookWindow::TSpellbookEntry* __a, TSpellbookWindow::TSpellbookEntry* __b)
+void std::swap(SpellbookWindow::SpellbookEntry* __a, SpellbookWindow::SpellbookEntry* __b)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0x14e140, 0xC)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const TSpellbookWindow::TSpellbookEntry* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const SpellbookWindow::SpellbookEntry* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0x14e14c, 0x4C)
-TSpellbookWindow::TSpellbookEntry* std::__copy_backward(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __result, std::random_access_iterator_tag __formal, int* __formal)
+SpellbookWindow::SpellbookEntry* std::__copy_backward(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last, SpellbookWindow::SpellbookEntry* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:44
 DC_ONLY(0x14e198, 0x90)
-void std::__push_heap(TSpellbookWindow::TSpellbookEntry* __first, int __holeIndex, int __topIndex, TSpellbookWindow::TSpellbookEntry __value)
+void std::__push_heap(SpellbookWindow::SpellbookEntry* __first, int __holeIndex, int __topIndex, SpellbookWindow::SpellbookEntry __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:134
 DC_ONLY(0x14e228, 0x50)
-void std::__pop_heap_aux(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __formal)
+void std::__pop_heap_aux(SpellbookWindow::SpellbookEntry* __first, SpellbookWindow::SpellbookEntry* __last, SpellbookWindow::SpellbookEntry* __formal)
 {
     // @stub
 }

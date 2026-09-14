@@ -29,7 +29,7 @@ static int mainMenuHandler(message& msg);
 // Set after the one-time missing-CD notice has been shown. The constructor
 // uses it only as the persistent suppression latch; the disk-space check has
 // its own DC-named static below.
-DATA(0x00699660) static TMainMenu* g_mainMenu;
+DATA(0x00699660) static MainMenu* g_mainMenu;
 DATA(0x00699674) static unsigned char g_cdMessageShown;
 DATA(0x00699678) static unsigned long g_lastDiskSpaceCheck;
 
@@ -42,10 +42,10 @@ DATA(0x0069957c) extern int g_cdDriveNumber;
 
 // DC public gMainMenuHelp; InitializeHelpText fills the same five retail
 // THelpText rows at this address.
-DATA(0x006a6c24) extern THelpText g_mainMenuHelp[5];
+DATA(0x006a6c24) extern HelpText g_mainMenuHelp[5];
 
 DATA(0x0063ff28)
-static const TMainMenuButtonRect g_mainMenuButtonRects[5] = {
+static const MainMenuButtonRect g_mainMenuButtonRects[5] = {
     {540,  10, 207, 121},
     {532, 132, 226, 120},
     {524, 251, 239, 106},
@@ -54,7 +54,7 @@ static const TMainMenuButtonRect g_mainMenuButtonRects[5] = {
 };
 
 VA(0x004fb2a0, 0x385)  // dc 0xea2ec
-TMainMenu::TMainMenu()
+MainMenu::MainMenu()
     : heroWindow(0, 0, 800, 600, 0)
 {
     g_mainMenu = this;
@@ -102,7 +102,7 @@ TMainMenu::TMainMenu()
 VA_COMPGEN(0x004fb630, 0x21, SCALAR_DELETING_DTOR, TMainMenu)
 
 VA(0x004fb660, 0x75)
-TMainMenu::~TMainMenu()
+MainMenu::~MainMenu()
 {
     g_mainMenu = 0;
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -112,7 +112,7 @@ TMainMenu::~TMainMenu()
 }
 
 VA(0x004fb6e0, 0x2C)  // dc 0xea5ec
-void TMainMenu::doModal()
+void MainMenu::doModal()
 {
     g_soundManager->startMP3("MainMenu", 0, 1);
     g_windowManager->doDialog(this, mainMenuHandler, 0);
@@ -136,7 +136,7 @@ static int mainMenuHandler(message& msg)
             normalDialog(g_generalText->getText(GENERAL_TEXT_MAIN_MENU_LOW_DISK),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             updatePlease = 1;
-            g_windowManager->m_dialogReturn = TMainMenu::QUIT_ID;
+            g_windowManager->m_dialogReturn = MainMenu::QUIT_ID;
         }
         g_checkDiskSpace = 0;
     }
@@ -174,11 +174,11 @@ static int mainMenuHandler(message& msg)
              msg.m_codeX == widget::WIDGET_RIGHT_SELECT)) {
             int helpID;
             switch (msg.m_codeY) {
-            case TMainMenu::NEW_GAME_ID:  helpID = 0; break;
-            case TMainMenu::LOAD_GAME_ID: helpID = 1; break;
-            case TMainMenu::HIGH_SCORE_ID: helpID = 2; break;
-            case TMainMenu::CREDITS_ID: helpID = 3; break;
-            case TMainMenu::QUIT_ID: helpID = 4; break;
+            case MainMenu::NEW_GAME_ID:  helpID = 0; break;
+            case MainMenu::LOAD_GAME_ID: helpID = 1; break;
+            case MainMenu::HIGH_SCORE_ID: helpID = 2; break;
+            case MainMenu::CREDITS_ID: helpID = 3; break;
+            case MainMenu::QUIT_ID: helpID = 4; break;
             default: helpID = -1; break;
             }
             if (helpID >= 0 && !g_dPlayReady)
@@ -186,13 +186,13 @@ static int mainMenuHandler(message& msg)
                              -1, 0, -1, 0, -1, 0, -1, 0);
         }
     } else if (msg.m_id == MESSAGE_WIDGET) {
-        if (msg.m_codeY < TMainMenu::NEW_GAME_ID ||
-            msg.m_codeY > TMainMenu::QUIT_ID)
+        if (msg.m_codeY < MainMenu::NEW_GAME_ID ||
+            msg.m_codeY > MainMenu::QUIT_ID)
             return 0;
 
         if (msg.m_codeX == widget::WIDGET_DESELECT) {
             bool confirmed = 1;
-            if (msg.m_codeY == TMainMenu::QUIT_ID) {
+            if (msg.m_codeY == MainMenu::QUIT_ID) {
                 videoPause();
                 if (!g_dPlayReady) {
                     normalDialog((*g_generalText)[GENERAL_TEXT_QUIT],
@@ -215,8 +215,8 @@ static int mainMenuHandler(message& msg)
         if (hoverID != g_lastImHoverId) {
             hoverChanged = 1;
             g_lastImHoverId = hoverID;
-            for (int id = TMainMenu::NEW_GAME_ID;
-                 id <= TMainMenu::QUIT_ID; ++id) {
+            for (int id = MainMenu::NEW_GAME_ID;
+                 id <= MainMenu::QUIT_ID; ++id) {
                 widget* w = g_mainMenu->getWidget(id);
                 if (w)
                     w->sendMessage(widget::WIDGET_CLEAR_STATUS,
@@ -230,8 +230,8 @@ static int mainMenuHandler(message& msg)
     }
 
     if (videoNeedsUpdate() || hoverChanged) {
-        g_mainMenu->drawWindow(0, TMainMenu::NEW_GAME_ID,
-                               TMainMenu::QUIT_ID);
+        g_mainMenu->drawWindow(0, MainMenu::NEW_GAME_ID,
+                               MainMenu::QUIT_ID);
         g_windowManager->updateScreen(520, 4, 250, 567);
         videoDrawRects();
     }
@@ -240,7 +240,7 @@ static int mainMenuHandler(message& msg)
         if (g_dPlayReady) {
             unsigned long lastCheck = g_lastDiskSpaceCheck;
             if (static_cast<long>(GameTime::get() - lastCheck) > 10000)
-                g_windowManager->m_dialogReturn = TMainMenu::NEW_GAME_ID;
+                g_windowManager->m_dialogReturn = MainMenu::NEW_GAME_ID;
             else
                 return MESSAGE_DISPATCH_CONSUME;
         } else {

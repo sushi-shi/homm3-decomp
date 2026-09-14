@@ -13,14 +13,14 @@
 // this first code admission; these independently located declarations give
 // the function's relocations source authority without fabricating its data.
 DATA(0x00663538)
-TCampaignMapTraits g_campaignMapTraitsImp[21];
+CampaignMapTraits g_campaignMapTraitsImp[21];
 
 DATA(0x00663688)
-const TCampaignMapTraits (&g_campaignMapTraits)[21] = g_campaignMapTraitsImp;
+const CampaignMapTraits (&g_campaignMapTraits)[21] = g_campaignMapTraitsImp;
 
 // Exact 21-pointer walk used by the region-name pass (entry zero is null).
 DATA(0x0063bc50)
-TCampaignMapTraits::TRegionTraits* const g_campaignRegionTraits[21] = { 0 };
+CampaignMapTraits::RegionTraits* const g_campaignRegionTraits[21] = { 0 };
 
 VA(0x0045dee0, 0x310)  // dc 0x5af64
 unsigned char initializeCampaignMapTraitsTable()
@@ -28,9 +28,9 @@ unsigned char initializeCampaignMapTraitsTable()
     DATA_COMPGEN_GUARD(0x00694df8, campaignNamesGuard, campaignNames)
     VA_COMPGEN(0x0045e1f0, 0x16, STATIC_DTOR, campaignNames)
     DATA(0x00694e00)
-    static TAutoArrayPtr<char> campaignNames;
+    static AutoArrayPtr<char> campaignNames;
 
-    TResourcePtr<TTextResource> textResource(
+    ResourcePtr<TextResource> textResource(
         ResourceManager::getText(
             DATA_COMPGEN(0x0066b7bc, campaignTextName, "camptext.txt")));
     if (!textResource.get())
@@ -60,7 +60,7 @@ unsigned char initializeCampaignMapTraitsTable()
         }
     }
 
-    campaignNames = TAutoArrayPtr<char>(new char[strSize]);
+    campaignNames = AutoArrayPtr<char>(new char[strSize]);
     if (!campaignNames.get())
         return 0;
 

@@ -20,9 +20,9 @@
 #include "textresource.h"
 #include "includes.h"
 
-void aiEquipArtifacts(hero* currentHero);
-void aiJoinDecision(hero* currentHero, TCreatureType creature, int amount);
-void doMonsterJoinDialog(hero* currentHero, TCreatureType creature,
+void aiEquipArtifacts(Hero* currentHero);
+void aiJoinDecision(Hero* currentHero, CreatureType creature, int amount);
+void doMonsterJoinDialog(Hero* currentHero, CreatureType creature,
                             int amount);
 
 // The retail factory is frameless under /GX even though its new-expressions
@@ -34,161 +34,161 @@ __declspec(nothrow) void __cdecl operator delete(void* value);
 
 // E:\gamedcs\seerhut.cpp:139
 DC_ONLY(0x12d084, 0x4C)
-void TSeerHut::SetRandomName(TSeerHut* thisHut)
+void SeerHut::SetRandomName(SeerHut* thisHut)
 {
     // @stub
 }
 
 // E:\gamedcs\seerhut.cpp:148
 DC_ONLY(0x12d0e4, 0x74)
-void TSeerHut::doSeerEvent(hero* current_hero, unsigned char human_player)
+void SeerHut::doSeerEvent(Hero* current_hero, unsigned char human_player)
 {
     // @stub
 }
 
 // E:\gamedcs\seerhut.cpp:179
 DC_ONLY(0x12d158, 0x4E)
-void TSeerHut::doEmptyDialog()
+void SeerHut::doEmptyDialog()
 {
     // @stub
 }
 
 // E:\gamedcs\seerhut.cpp:185
 DC_ONLY(0x12d1a8, 0x8E)
-void TSeerHut::doCompletionDialog(hero* current_hero, unsigned char human_player)
+void SeerHut::doCompletionDialog(Hero* current_hero, unsigned char human_player)
 {
     // @stub
 }
 
 // E:\gamedcs\seerhut.cpp:204
 DC_ONLY(0x12d238, 0xB0)
-void TSeerHut::doProgressDialog()
+void SeerHut::doProgressDialog()
 {
     // @stub
 }
 
 // E:\gamedcs\seerhut.cpp:210
 DC_ONLY(0x12d2e8, 0xAA)
-void TSeerHut::DoAlreadyHaveProposalDialog(hero* current_hero, unsigned char human_player)
+void SeerHut::DoAlreadyHaveProposalDialog(Hero* current_hero, unsigned char human_player)
 {
     // @stub
 }
 
 // E:\gamedcs\seerhut.cpp:229
 DC_ONLY(0x12d394, 0x32)
-void TSeerHut::DoAcceptanceDialog()
+void SeerHut::DoAcceptanceDialog()
 {
     // @stub
 }
 
 // E:\gamedcs\seerhut.cpp:234
 DC_ONLY(0x12d3c8, 0x32)
-void TSeerHut::DoRefusalDialog()
+void SeerHut::DoRefusalDialog()
 {
     // @stub
 }
 
 // E:\gamedcs\seerhut.cpp:239
 DC_ONLY(0x12d3fc, 0xE0)
-void TSeerHut::doProposalDialog(hero* current_hero, unsigned char human_player)
+void SeerHut::doProposalDialog(Hero* current_hero, unsigned char human_player)
 {
     // @stub
 }
 
 // E:\gamedcs\seerhut.cpp:266
 DC_ONLY(0x12d4dc, 0x1FA)
-void TSeerHut::GiveReward(hero* current_hero, unsigned char human_player)
+void SeerHut::GiveReward(Hero* current_hero, unsigned char human_player)
 {
     // @stub
 }
 
 // E:\gamedcs\seerhut.cpp:373
 DC_ONLY(0x12d6d8, 0x7E)
-int TSeerHut::getRewardExtra(const hero* this_hero)
+int SeerHut::getRewardExtra(const Hero* this_hero)
 {
     // @stub
 }
 
 // E:\gamedcs\seerhut.cpp:414
 DC_ONLY(0x12d758, 0x90)
-int TSeerHut::getRewardType()
+int SeerHut::getRewardType()
 {
     // @stub
 }
 
 // E:\gamedcs\seerhut.cpp:481
 DC_ONLY(0x12d7e8, 0x6C)
-int TSeerHut::SaveSeerList(void* outfile)
+int SeerHut::SaveSeerList(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\seerhut.cpp:503
 DC_ONLY(0x12d854, 0x6C)
-int TSeerHut::LoadSeerList(void* infile)
+int SeerHut::LoadSeerList(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\seerhut.cpp:526
 DC_ONLY(0x12d8c0, 0x22)
-int TSeerHut::save(void* outfile)
+int SeerHut::save(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\seerhut.cpp:535
 DC_ONLY(0x12d8e4, 0x40)
-int TSeerHut::load(void* infile)
+int SeerHut::load(void* infile)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:505
 DC_ONLY(0x12d924, 0x30)
-void std::vector<TSeerHut,std::allocator<TSeerHut> >::resize(unsigned __new_size)
+void std::vector<SeerHut,std::allocator<SeerHut> >::resize(unsigned __new_size)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:499
 DC_ONLY(0x12d954, 0x80)
-void std::vector<TSeerHut,std::allocator<TSeerHut> >::resize(unsigned __new_size, const TSeerHut* __x)
+void std::vector<SeerHut,std::allocator<SeerHut> >::resize(unsigned __new_size, const SeerHut* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:472
 DC_ONLY(0x12d9d4, 0x18)
-void std::vector<TSeerHut,std::allocator<TSeerHut> >::insert(TSeerHut* __pos, unsigned __n, const TSeerHut* __x)
+void std::vector<SeerHut,std::allocator<SeerHut> >::insert(SeerHut* __pos, unsigned __n, const SeerHut* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:283
 DC_ONLY(0x12d9ec, 0xFC)
-void std::vector<TSeerHut,std::allocator<TSeerHut> >::_M_fill_insert(TSeerHut* __position, unsigned __n, const TSeerHut* __x)
+void std::vector<SeerHut,std::allocator<SeerHut> >::_M_fill_insert(SeerHut* __position, unsigned __n, const SeerHut* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0x12dae8, 0x50)
-TSeerHut* std::copy_backward(TSeerHut* __first, TSeerHut* __last, TSeerHut* __result)
+SeerHut* std::copy_backward(SeerHut* __first, SeerHut* __last, SeerHut* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:495
 DC_ONLY(0x12db38, 0x36)
-void std::fill(TSeerHut* __first, TSeerHut* __last, const TSeerHut* __value)
+void std::fill(SeerHut* __first, SeerHut* __last, const SeerHut* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0x12db70, 0x58)
-TSeerHut* std::__copy_backward(TSeerHut* __first, TSeerHut* __last, TSeerHut* __result, std::random_access_iterator_tag __formal, int* __formal)
+SeerHut* std::__copy_backward(SeerHut* __first, SeerHut* __last, SeerHut* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
@@ -259,7 +259,7 @@ void extendedDialog(const char* text,
 VA(0x0056c3e0, 0x183)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
 unsigned char initializeSeerHutText()
 {
-    TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
+    SpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00683214, seerHutSpreadsheetName, "seerhut.txt"));
     if (!sheet)
         return 0;
@@ -337,7 +337,7 @@ unsigned char type_quest::hasExpired() const
 // one shared scalar block (49.60%), and hoisting extra (49.60%), against the
 // 49.7043% peak. Those results do not justify retaining the wrong lifetimes.
 VA(0x0056cd00, 0x14F)  // anchor-vtable 0x64174c slot 11 + the chain from all eight leaf Loads, retail-only
-void type_quest::load(TAbstractFile* file, int version)
+void type_quest::load(AbstractFile* file, int version)
 {
     {
         unsigned char flag;
@@ -386,7 +386,7 @@ void type_quest::load(TAbstractFile* file, int version)
 // three _Tidy calls and uses __EH_prolog (30.4375%); retail retains only
 // the first cleanup and emits its prologue inline. Neither policy explains it.
 VA(0x0056ce50, 0x11E)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
-void type_quest::loadFromMap(TAbstractFile* file)
+void type_quest::loadFromMap(AbstractFile* file)
 {
     {
         int extra;
@@ -399,7 +399,7 @@ void type_quest::loadFromMap(TAbstractFile* file)
 }
 
 VA(0x0056cf70, 0xCD)
-void type_quest::save(TAbstractFile* file)
+void type_quest::save(AbstractFile* file)
 {
     {
         unsigned char flag = m_seerHut;
@@ -483,12 +483,12 @@ std::string type_experience_quest::getQuestDescription()
 }
 
 VA(0x0056d490, 0x1A)
-unsigned char type_experience_quest::isSatisfied(hero* currentHero)
+unsigned char type_experience_quest::isSatisfied(Hero* currentHero)
 {
     return currentHero->m_level >= m_requiredLevel;
 }
 VA(0x0056d4b0, 0x9F)
-void type_experience_quest::doProposalDialog(hero* currentHero)
+void type_experience_quest::doProposalDialog(Hero* currentHero)
 {
     normalDialog(getProposalDialogText().c_str(), 1, -1, -1, 0x11,
                  m_requiredLevel, -1, 0, -1, 0, -1, 0);
@@ -502,7 +502,7 @@ void type_experience_quest::doProgressDialog()
 }
 
 VA(0x0056d5f0, 0x35)
-void type_experience_quest::load(TAbstractFile* file, int version)
+void type_experience_quest::load(AbstractFile* file, int version)
 {
     unsigned short level;
 
@@ -512,7 +512,7 @@ void type_experience_quest::load(TAbstractFile* file, int version)
 }
 
 VA(0x0056d630, 0xE1)
-void type_experience_quest::save(TAbstractFile* file)
+void type_experience_quest::save(AbstractFile* file)
 {
     short level = m_requiredLevel;
     file->write(&level, sizeof(level));
@@ -574,7 +574,7 @@ std::string type_skill_quest::getQuestDescription()
 
 // E:\gamedcs\seerhut.cpp
 VA(0x0056da70, 0x60)  // anchor-vtable 0x6417c4 slot 2, retail-only
-unsigned char type_skill_quest::isSatisfied(hero* currentHero)
+unsigned char type_skill_quest::isSatisfied(Hero* currentHero)
 {
     for (int i = 0; i < 4; ++i) {
         int have = currentHero->getPrimarySkill(i);
@@ -590,7 +590,7 @@ unsigned char type_skill_quest::isSatisfied(hero* currentHero)
 // the common deadline suffix before showing the same pictures.
 
 VA(0x0056dad0, 0x28C)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
-void type_skill_quest::doProposalDialog(hero* currentHero)
+void type_skill_quest::doProposalDialog(Hero* currentHero)
 {
     signed char missing[4];
     for (int i = 0; i < 4; ++i) {
@@ -707,21 +707,21 @@ void type_skill_quest::doProgressDialog()
 }
 
 VA(0x0056de60, 0x29)
-void type_skill_quest::load(TAbstractFile* file, int version)
+void type_skill_quest::load(AbstractFile* file, int version)
 {
     file->read(m_requiredSkills, sizeof(m_requiredSkills));
     type_quest::load(file, version);
 }
 
 VA(0x0056de90, 0x25)
-void type_skill_quest::loadFromMap(TAbstractFile* file)
+void type_skill_quest::loadFromMap(AbstractFile* file)
 {
     file->read(m_requiredSkills, sizeof(m_requiredSkills));
     type_quest::loadFromMap(file);
 }
 
 VA(0x0056dec0, 0xD7)
-void type_skill_quest::save(TAbstractFile* file)
+void type_skill_quest::save(AbstractFile* file)
 {
     file->write(m_requiredSkills, sizeof(m_requiredSkills));
 
@@ -806,14 +806,14 @@ int type_defeat_hero_quest::questType()
 }
 
 VA(0x0056e3e0, 0x29)
-unsigned char type_defeat_hero_quest::isSatisfied(hero* currentHero)
+unsigned char type_defeat_hero_quest::isSatisfied(Hero* currentHero)
 {
     if (currentHero->m_owner < 0)
         return 0;
     return (m_satisfiedMask & (1 << currentHero->m_owner)) != 0;
 }
 VA(0x0056e410, 0x99)
-void type_defeat_hero_quest::doProposalDialog(hero* currentHero)
+void type_defeat_hero_quest::doProposalDialog(Hero* currentHero)
 {
     normalDialog(getProposalDialogText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
@@ -834,7 +834,7 @@ void type_defeat_hero_quest::notifyHeroDefeated(int heroId, int player)
 }
 
 VA(0x0056e580, 0x6E)
-void type_defeat_hero_quest::load(TAbstractFile* file, int version)
+void type_defeat_hero_quest::load(AbstractFile* file, int version)
 {
     {
         short id;
@@ -854,7 +854,7 @@ void type_defeat_hero_quest::load(TAbstractFile* file, int version)
 }
 
 VA(0x0056e5f0, 0xF4)
-void type_defeat_hero_quest::save(TAbstractFile* file)
+void type_defeat_hero_quest::save(AbstractFile* file)
 {
     short id = m_defeatedHero;
     file->write(&id, sizeof(id));
@@ -895,7 +895,7 @@ VA(0x0056e6f0, 0x29E)
 void type_defeat_hero_quest::setDefaultText()
 {
     const std::string* texts = questTexts();
-    hero* defeatedHero;
+    Hero* defeatedHero;
     for (m_defeatedHero = game::HERO_COUNT - 1; m_defeatedHero > -1;
          --m_defeatedHero) {
         defeatedHero = g_game->getHero(m_defeatedHero);
@@ -939,7 +939,7 @@ int type_monster_quest::questType()
 }
 
 VA(0x0056ebd0, 0x26)
-unsigned char type_monster_quest::isSatisfied(hero* currentHero)
+unsigned char type_monster_quest::isSatisfied(Hero* currentHero)
 {
     int owner = currentHero->m_owner;
 
@@ -948,7 +948,7 @@ unsigned char type_monster_quest::isSatisfied(hero* currentHero)
     return owner == m_defeatedBy;
 }
 VA(0x0056ec00, 0x9F)
-void type_monster_quest::doProposalDialog(hero* currentHero)
+void type_monster_quest::doProposalDialog(Hero* currentHero)
 {
     normalDialog(getProposalDialogText().c_str(), 1, -1, -1, 0x15,
                  m_monsterId, -1, 0, -1, 0, -1, 0);
@@ -977,7 +977,7 @@ void type_monster_quest::notifyMonsterDefeated(TQuestPosition where,
 }
 
 VA(0x0056ed90, 0x51)
-void type_monster_quest::load(TAbstractFile* file, int version)
+void type_monster_quest::load(AbstractFile* file, int version)
 {
     file->read(&m_position, sizeof(m_position));
     {
@@ -996,7 +996,7 @@ void type_monster_quest::load(TAbstractFile* file, int version)
 }
 
 VA(0x0056edf0, 0x2B)
-void type_experience_quest::loadFromMap(TAbstractFile* file)
+void type_experience_quest::loadFromMap(AbstractFile* file)
 {
     int level;
 
@@ -1006,7 +1006,7 @@ void type_experience_quest::loadFromMap(TAbstractFile* file)
 }
 
 VA(0x0056ee20, 0xFE)
-void type_monster_quest::save(TAbstractFile* file)
+void type_monster_quest::save(AbstractFile* file)
 {
     file->write(&m_position, sizeof(m_position));
     {
@@ -1167,7 +1167,7 @@ std::string type_artifact_quest::getQuestDescription()
 }
 
 VA(0x0056f800, 0x58)
-unsigned char type_artifact_quest::isSatisfied(hero* currentHero)
+unsigned char type_artifact_quest::isSatisfied(Hero* currentHero)
 {
     if (m_artifacts.size() == 0)
         return 0;
@@ -1178,7 +1178,7 @@ unsigned char type_artifact_quest::isSatisfied(hero* currentHero)
 }
 
 VA(0x0056f860, 0x37)
-void type_artifact_quest::takePayment(hero* currentHero)
+void type_artifact_quest::takePayment(Hero* currentHero)
 {
     for (unsigned i = 0; i < m_artifacts.size(); ++i)
         currentHero->removeArtifact(m_artifacts[i]);
@@ -1206,9 +1206,9 @@ void type_artifact_quest::takePayment(hero* currentHero)
 // lifetime instead of manufacturing storage or cleanup flow.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056f8a0, 0x313)  // anchor-vtable 0x641878 slot 4 + artifact picture class, retail-only
-void type_artifact_quest::doProposalDialog(hero* currentHero)
+void type_artifact_quest::doProposalDialog(Hero* currentHero)
 {
-    std::vector<TArtifact> missingArtifacts;
+    std::vector<Artifact> missingArtifacts;
     std::vector<std::string> requirements;
     const char* textPointer;
     for (unsigned i = 0; i < m_artifacts.size(); ++i) {
@@ -1288,7 +1288,7 @@ void type_artifact_quest::doProgressDialog()
     }
 }
 VA(0x0056fcb0, 0x1EE)
-void type_artifact_quest::load(TAbstractFile* file, int version)
+void type_artifact_quest::load(AbstractFile* file, int version)
 {
     int i;
     {
@@ -1300,9 +1300,9 @@ void type_artifact_quest::load(TAbstractFile* file, int version)
         short id;
 
         file->read(&id, sizeof(id));
-        TArtifact artifact;
+        Artifact artifact;
         {
-            artifact = TArtifact(id);
+            artifact = Artifact(id);
         }
         m_artifacts.push_back(artifact);
     }
@@ -1310,7 +1310,7 @@ void type_artifact_quest::load(TAbstractFile* file, int version)
 }
 
 VA(0x0056fea0, 0x1FA)
-void type_artifact_quest::loadFromMap(TAbstractFile* file)
+void type_artifact_quest::loadFromMap(AbstractFile* file)
 {
     int i;
     {
@@ -1322,9 +1322,9 @@ void type_artifact_quest::loadFromMap(TAbstractFile* file)
         short id;
 
         file->read(&id, sizeof(id));
-        TArtifact artifact;
+        Artifact artifact;
         {
-            artifact = TArtifact(id);
+            artifact = Artifact(id);
         }
         m_artifacts.push_back(artifact);
         g_game->m_artifactDisabled[artifact] = 1;
@@ -1333,7 +1333,7 @@ void type_artifact_quest::loadFromMap(TAbstractFile* file)
 }
 
 VA(0x005700a0, 0x121)
-void type_artifact_quest::save(TAbstractFile* file)
+void type_artifact_quest::save(AbstractFile* file)
 {
     unsigned char count = static_cast<unsigned char>(m_artifacts.size());
     file->write(&count, sizeof(count));
@@ -1420,7 +1420,7 @@ std::string type_creature_quest::getQuestDescription()
 }
 
 VA(0x00570760, 0x60)
-unsigned char type_creature_quest::isSatisfied(hero* currentHero)
+unsigned char type_creature_quest::isSatisfied(Hero* currentHero)
 {
     if (m_types.size() == 0)
         return 0;
@@ -1431,10 +1431,10 @@ unsigned char type_creature_quest::isSatisfied(hero* currentHero)
 }
 
 VA(0x005707c0, 0xB3)
-void type_creature_quest::takePayment(hero* currentHero)
+void type_creature_quest::takePayment(Hero* currentHero)
 {
     for (unsigned i = 0; i < m_types.size(); ++i) {
-        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        for (int slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
             if (currentHero->m_army.m_armies[slot] != m_types[i])
                 continue;
             if (currentHero->m_army.m_numTroops[slot] > m_counts[i]) {
@@ -1452,7 +1452,7 @@ void type_creature_quest::takePayment(hero* currentHero)
 // both in the localized text fragment and in the packed creature picture.
 
 VA(0x00570880, 0x2F8)
-void type_creature_quest::doProposalDialog(hero* currentHero)
+void type_creature_quest::doProposalDialog(Hero* currentHero)
 {
     std::string text;
     std::vector<std::string> requirements;
@@ -1543,7 +1543,7 @@ void type_creature_quest::doProgressDialog()
 #pragma inline_depth()
 
 VA(0x00570e60, 0x208)
-void type_creature_quest::load(TAbstractFile* file, int version)
+void type_creature_quest::load(AbstractFile* file, int version)
 {
     int i;
     {
@@ -1556,9 +1556,9 @@ void type_creature_quest::load(TAbstractFile* file, int version)
         int number;
 
         file->read(&type, sizeof(short));
-        TCreatureType creature;
+        CreatureType creature;
         {
-            creature = TCreatureType(type & 0xffff);
+            creature = CreatureType(type & 0xffff);
         }
         file->read(&number, sizeof(number));
         int amount = number;
@@ -1569,7 +1569,7 @@ void type_creature_quest::load(TAbstractFile* file, int version)
 }
 
 VA(0x00571070, 0x20A)
-void type_creature_quest::loadFromMap(TAbstractFile* file)
+void type_creature_quest::loadFromMap(AbstractFile* file)
 {
     int i;
     {
@@ -1582,9 +1582,9 @@ void type_creature_quest::loadFromMap(TAbstractFile* file)
         int number;
 
         file->read(&type, sizeof(short));
-        TCreatureType creature;
+        CreatureType creature;
         {
-            creature = TCreatureType(type & 0xffff);
+            creature = CreatureType(type & 0xffff);
         }
         file->read(&number, sizeof(short));
         int amount = number & 0xffff;
@@ -1595,7 +1595,7 @@ void type_creature_quest::loadFromMap(TAbstractFile* file)
 }
 
 VA(0x00571280, 0x137)
-void type_creature_quest::save(TAbstractFile* file)
+void type_creature_quest::save(AbstractFile* file)
 {
     unsigned char count = static_cast<unsigned char>(m_types.size());
     file->write(&count, sizeof(count));
@@ -1682,7 +1682,7 @@ std::string type_resource_quest::getQuestDescription()
 // Vtable 0x6418f0 slot 2. A hero without an owner cannot pay; otherwise
 // every one of the seven treasury balances must cover the quest price.
 VA(0x005717b0, 0x4B)  // anchor-vtable
-unsigned char type_resource_quest::isSatisfied(hero* currentHero)
+unsigned char type_resource_quest::isSatisfied(Hero* currentHero)
 {
     int owner = currentHero->m_owner;
     if (owner < 0)
@@ -1699,7 +1699,7 @@ unsigned char type_resource_quest::isSatisfied(hero* currentHero)
 }
 
 VA(0x00571800, 0x3D)  // anchor-vtable
-void type_resource_quest::takePayment(hero* currentHero)
+void type_resource_quest::takePayment(Hero* currentHero)
 {
     int* questResource = m_resources;
     long* playerResource = g_game->m_players[currentHero->m_owner].m_resources;
@@ -1710,7 +1710,7 @@ void type_resource_quest::takePayment(hero* currentHero)
 }
 
 VA(0x00571840, 0x29D)
-void type_resource_quest::doProposalDialog(hero* currentHero)
+void type_resource_quest::doProposalDialog(Hero* currentHero)
 {
     std::vector<std::string> requirements;
     std::string text;
@@ -1760,21 +1760,21 @@ void type_resource_quest::doProgressDialog()
 }
 
 VA(0x00571b80, 0x29)
-void type_resource_quest::load(TAbstractFile* file, int version)
+void type_resource_quest::load(AbstractFile* file, int version)
 {
     file->read(m_resources, sizeof(m_resources));
     type_quest::load(file, version);
 }
 
 VA(0x00571bb0, 0x25)
-void type_resource_quest::loadFromMap(TAbstractFile* file)
+void type_resource_quest::loadFromMap(AbstractFile* file)
 {
     file->read(m_resources, sizeof(m_resources));
     type_quest::loadFromMap(file);
 }
 
 VA(0x00571be0, 0xD7)
-void type_resource_quest::save(TAbstractFile* file)
+void type_resource_quest::save(AbstractFile* file)
 {
     file->write(m_resources, sizeof(m_resources));
 
@@ -1831,12 +1831,12 @@ void type_resource_quest::setDefaultText()
 }
 
 VA(0x00571f00, 0x19)
-unsigned char type_be_hero_quest::isSatisfied(hero* currentHero)
+unsigned char type_be_hero_quest::isSatisfied(Hero* currentHero)
 {
     return currentHero->m_id == m_requiredHero;
 }
 VA(0x00571f20, 0x99)
-void type_be_hero_quest::doProposalDialog(hero* currentHero)
+void type_be_hero_quest::doProposalDialog(Hero* currentHero)
 {
     normalDialog(getProposalDialogText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
@@ -1868,7 +1868,7 @@ int type_be_hero_quest::questType()
 }
 
 VA(0x00572200, 0x30)
-void type_be_hero_quest::load(TAbstractFile* file, int version)
+void type_be_hero_quest::load(AbstractFile* file, int version)
 {
     short id;
 
@@ -1878,7 +1878,7 @@ void type_be_hero_quest::load(TAbstractFile* file, int version)
 }
 
 VA(0x00572230, 0x31)
-void type_be_hero_quest::loadFromMap(TAbstractFile* file)
+void type_be_hero_quest::loadFromMap(AbstractFile* file)
 {
     unsigned char id;
 
@@ -1889,7 +1889,7 @@ void type_be_hero_quest::loadFromMap(TAbstractFile* file)
 VA(0x00572270, 0x276)
 void type_be_hero_quest::setDefaultText()
 {
-    hero* requiredHero = g_game->getHero(m_requiredHero);
+    Hero* requiredHero = g_game->getHero(m_requiredHero);
     const std::string* texts = questTexts();
     if (m_proposalText.length() == 0)
         m_proposalText = formatString(texts[QUEST_TEXT_PROPOSAL].c_str(),
@@ -1903,12 +1903,12 @@ void type_be_hero_quest::setDefaultText()
 }
 
 VA(0x005724f0, 0x1A)
-unsigned char type_belong_to_player_quest::isSatisfied(hero* currentHero)
+unsigned char type_belong_to_player_quest::isSatisfied(Hero* currentHero)
 {
     return currentHero->m_owner == m_requiredOwner;
 }
 VA(0x00572510, 0x99)
-void type_belong_to_player_quest::doProposalDialog(hero* currentHero)
+void type_belong_to_player_quest::doProposalDialog(Hero* currentHero)
 {
     normalDialog(getProposalDialogText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
@@ -1944,7 +1944,7 @@ int type_belong_to_player_quest::questType()
 }
 
 VA(0x00572820, 0x35)
-void type_belong_to_player_quest::load(TAbstractFile* file, int version)
+void type_belong_to_player_quest::load(AbstractFile* file, int version)
 {
     unsigned char owner;
 
@@ -1954,7 +1954,7 @@ void type_belong_to_player_quest::load(TAbstractFile* file, int version)
 }
 
 VA(0x00572860, 0xE0)
-void type_belong_to_player_quest::save(TAbstractFile* file)
+void type_belong_to_player_quest::save(AbstractFile* file)
 {
     unsigned char owner = static_cast<unsigned char>(m_requiredOwner);
     file->write(&owner, sizeof(owner));
@@ -2007,14 +2007,14 @@ void type_belong_to_player_quest::setDefaultText()
 }
 
 VA(0x00572b50, 0xD)
-TQuestGuard::TQuestGuard()
+QuestGuard::QuestGuard()
 {
     m_quest = 0;
     m_visitedPlayers = 0;
 }
 
 VA(0x00572b60, 0x1FE)
-void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
+void QuestGuard::doEvent(Hero* currentHero, bool humanPlayer,
                           NewmapCell* eventCell, type_point point)
 {
     if (!m_quest)
@@ -2069,7 +2069,7 @@ void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
 // pushes.
 
 VA(0x00572d60, 0xE0)
-std::string TQuestGuard::questGuardFn00572D60()
+std::string QuestGuard::questGuardFn00572D60()
 {
     return formatString(
         m_quest->questText(type_quest::QUEST_TEXT_LOG).c_str(),
@@ -2077,7 +2077,7 @@ std::string TQuestGuard::questGuardFn00572D60()
 }
 
 VA(0x00572e40, 0x1FF)
-std::string TQuestGuard::questGuardFn00572E40(int player)
+std::string QuestGuard::questGuardFn00572E40(int player)
 {
     std::string text;
     text = g_questGuardName;
@@ -2091,7 +2091,7 @@ std::string TQuestGuard::questGuardFn00572E40(int player)
 }
 
 VA(0x00573040, 0x1FF)
-std::string TQuestGuard::questGuardFn00573040(int player)
+std::string QuestGuard::questGuardFn00573040(int player)
 {
     std::string text;
     text = g_questGuardName;
@@ -2142,7 +2142,7 @@ type_artifact_quest::type_artifact_quest(unsigned char flags)
 // override, disabled-artifact store, and direct SetDefaultText call inside the
 // allocation-success arm. These support a shared single-artifact constructor.
 type_artifact_quest::type_artifact_quest(
-    unsigned char flags, TArtifact artifact, int textRow)
+    unsigned char flags, Artifact artifact, int textRow)
     : type_quest(flags)
 {
     m_artifacts.push_back(artifact);
@@ -2200,7 +2200,7 @@ type_quest* createQuest(int questType, unsigned char flags)
 }
 
 VA(0x00573480, 0x52)  // hd-crossbuild
-int TQuestGuard::load(TAbstractFile* infile, int saveVersion)
+int QuestGuard::load(AbstractFile* infile, int saveVersion)
 {
     {
         unsigned char questType;
@@ -2224,7 +2224,7 @@ int TQuestGuard::load(TAbstractFile* infile, int saveVersion)
 // it out of the vtable at +0x34 right after writing the type byte.
 
 VA(0x005734e0, 0x3B)
-void TQuestGuard::read(TAbstractFile* infile)
+void QuestGuard::read(AbstractFile* infile)
 {
     unsigned char questType;
 
@@ -2235,7 +2235,7 @@ void TQuestGuard::read(TAbstractFile* infile)
 }
 
 VA(0x00573520, 0x5E)
-int TQuestGuard::save(TAbstractFile* outfile)
+int QuestGuard::save(AbstractFile* outfile)
 {
     if (!m_quest) {
         unsigned char questType = 0;
@@ -2253,7 +2253,7 @@ int TQuestGuard::save(TAbstractFile* outfile)
 }
 
 VA(0x005735a0, 0xC3)
-int TSeerHut::getValue(hero* currentHero)
+int SeerHut::getValue(Hero* currentHero)
 {
     int value = m_reward.getValue(currentHero);
 
@@ -2290,7 +2290,7 @@ int TSeerHut::getValue(hero* currentHero)
 // needed. Both has_expired and getValue remain ordinary TU definitions.
 
 VA(0x00573670, 0x400)  // code plus two retail switch tables in the admitted row
-void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
+void SeerHut::doSeerEvent(Hero* currentHero, bool humanPlayer)
 {
     if (!m_quest || m_quest->hasExpired()) {
         m_visitedPlayers |= 1 << g_netLocalGamePos;
@@ -2330,7 +2330,7 @@ void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
 // helper's name lookup followed by NormalDialog. Complete retail expands this
 // source boundary into its sole caller while retaining selected nested
 // Dinkumware calls.
-void TSeerHut::doEmptyDialog()
+void SeerHut::doEmptyDialog()
 {
     std::string text;
     int textIndex = rand() % 3;
@@ -2346,8 +2346,8 @@ void TSeerHut::doEmptyDialog()
 // completion text and its reward object owns application, but retail folds
 // this revised helper into DoSeerEvent and cross-jumps its accepted arm with
 // the AI reward tail.
-inline void TSeerHut::doCompletionDialog(
-    hero* currentHero, bool humanPlayer)
+inline void SeerHut::doCompletionDialog(
+    Hero* currentHero, bool humanPlayer)
 {
     normalDialog(m_quest->getCompletionText().c_str(),
                  2, -1, -1, getRewardType(),
@@ -2365,7 +2365,7 @@ inline void TSeerHut::doCompletionDialog(
 // Dreamcast seerhut.cpp:414 (dc 0x12d758) records this as a separate,
 // no-local switch helper called first by DoCompletionDialog. Retail's inlined
 // copy preserves the ten reward arms and Complete's shifted skill pictures.
-inline int TSeerHut::getRewardType()
+inline int SeerHut::getRewardType()
 {
     switch (m_reward.m_rewardType) {
     case eRewardExperience:
@@ -2380,13 +2380,13 @@ inline int TSeerHut::getRewardType()
         return m_reward.m_value.m_resource.m_resourceType;
     case eRewardPrimarySkill:
         switch (m_reward.m_value.m_primarySkill.m_skillType) {
-        case TSeerReward::ePriSkillAttack:
+        case SeerReward::ePriSkillAttack:
             return 0x1f;
-        case TSeerReward::ePriSkillDefense:
+        case SeerReward::ePriSkillDefense:
             return 0x20;
-        case TSeerReward::ePriSkillPower:
+        case SeerReward::ePriSkillPower:
             return 0x21;
-        case TSeerReward::ePriSkillKnowledge:
+        case SeerReward::ePriSkillKnowledge:
             return 0x22;
         default:
             return -1;
@@ -2406,7 +2406,7 @@ inline int TSeerHut::getRewardType()
 
 // retail's real `AI_get_value_of_artifact(const type_artifact&, long)`
 VA(0x00573a70, 0x210)
-int TSeerReward::getValue(const hero* currentHero)
+int SeerReward::getValue(const Hero* currentHero)
 {
     switch (m_rewardType) {
     case eRewardExperience:
@@ -2417,11 +2417,11 @@ int TSeerReward::getValue(const hero* currentHero)
         return currentHero->getValueOfKnowledge() * m_value.m_dwords[0] / 20;
 
     case eRewardMorale:
-        return const_cast<hero*>(currentHero)->moraleIncreaseValue(
+        return const_cast<Hero*>(currentHero)->moraleIncreaseValue(
             m_value.m_signedLow.m_bonus);
 
     case eRewardLuck:
-        const_cast<hero*>(currentHero)->luckIncreaseValue(
+        const_cast<Hero*>(currentHero)->luckIncreaseValue(
             m_value.m_signedLow.m_bonus);
 
     case eRewardResource:
@@ -2437,7 +2437,7 @@ int TSeerReward::getValue(const hero* currentHero)
         switch (m_value.m_primarySkill.m_skillType) {
         case ePriSkillAttack:
         case ePriSkillDefense: {
-            int experience = hero::getExperienceIncrement(currentHero->m_level);
+            int experience = Hero::getExperienceIncrement(currentHero->m_level);
             return static_cast<int>(m_value.m_primarySkill.m_bonus
                 * currentHero->m_turnExperienceToRvRatio * experience);
         }
@@ -2450,15 +2450,15 @@ int TSeerReward::getValue(const hero* currentHero)
         }
 
     case eRewardSecondarySkill:
-        return const_cast<hero*>(currentHero)->soDGetSeerSkillValue(
+        return const_cast<Hero*>(currentHero)->soDGetSeerSkillValue(
             m_value.m_secondarySkill.m_skillType, m_value.m_secondarySkill.m_bonus);
 
     case eRewardArtifact: {
-        if (const_cast<hero*>(currentHero)->getNumberInBackpack(1) >= 64)
+        if (const_cast<Hero*>(currentHero)->getNumberInBackpack(1) >= 64)
             return 0;
         // Complete stores the reward ordinal in the serialized union word.
         // Decode that word before constructing the canonical typed artifact.
-        TArtifact artifact;
+        Artifact artifact;
         memcpy(&artifact, &m_value.m_dwords[0], sizeof artifact);
         return aiGetValueOfArtifact(
             type_artifact(artifact), currentHero->m_owner);
@@ -2477,7 +2477,7 @@ int TSeerReward::getValue(const hero* currentHero)
 }
 
 VA(0x00573c80, 0x290)
-void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
+void SeerReward::giveReward(Hero* currentHero, bool humanPlayer)
 {
     switch (m_rewardType) {
     case eRewardExperience:
@@ -2538,7 +2538,7 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
         if (currentHero->getNumberInBackpack(1) < 64) {
             type_artifact artifact(ARTIFACT_NONE);
             {
-                artifact.m_artifactId = TArtifact(m_value.m_dwords[0]);
+                artifact.m_artifactId = Artifact(m_value.m_dwords[0]);
             }
             currentHero->giveArtifact(&artifact, 1, 1);
             if (!humanPlayer)
@@ -2558,16 +2558,16 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
         if (!currentHero->m_army.add(m_value.m_creature.m_creatureType,
                                    m_value.m_creature.m_count, -1)) {
             if (humanPlayer) {
-                TCreatureType creature;
+                CreatureType creature;
                 {
-                    creature = TCreatureType(m_value.m_creature.m_creatureType);
+                    creature = CreatureType(m_value.m_creature.m_creatureType);
                 }
                 doMonsterJoinDialog(currentHero, creature,
                     m_value.m_creature.m_count);
             } else {
-                TCreatureType creature;
+                CreatureType creature;
                 {
-                    creature = TCreatureType(m_value.m_creature.m_creatureType);
+                    creature = CreatureType(m_value.m_creature.m_creatureType);
                 }
                 aiJoinDecision(currentHero, creature,
                     m_value.m_creature.m_count);
@@ -2578,12 +2578,12 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
 }
 
 VA(0x00573f10, 0xBC)
-int TSeerReward::getRewardExtra(const hero* thisHero)
+int SeerReward::getRewardExtra(const Hero* thisHero)
 {
     switch (m_rewardType) {
     case eRewardExperience:
         return static_cast<int>(
-            const_cast<hero*>(thisHero)->getExperienceBonusFactor()
+            const_cast<Hero*>(thisHero)->getExperienceBonusFactor()
             * m_value.m_dwords[0]);
     case eRewardMana:
         return m_value.m_dwords[0];
@@ -2609,7 +2609,7 @@ int TSeerReward::getRewardExtra(const hero* thisHero)
 }
 
 VA(0x00573fd0, 0x91)  // dc 0x12d8c0
-int TSeerHut::save(TAbstractFile* outfile)
+int SeerHut::save(AbstractFile* outfile)
 {
     if (!m_quest) {
         unsigned char questType = 0;
@@ -2638,7 +2638,7 @@ int TSeerHut::save(TAbstractFile* outfile)
 }
 
 VA(0x00574070, 0x138)  // UpdateQuestLocator caller; HD twin 0x574440
-std::string TSeerHut::getSeerLogText()
+std::string SeerHut::getSeerLogText()
 {
     std::string logFormat =
         m_quest->questTexts()[type_quest::QUEST_TEXT_LOG];
@@ -2654,7 +2654,7 @@ std::string TSeerHut::getSeerLogText()
 // separator relocation.
 
 VA(0x005741b0, 0x22C)
-std::string TSeerHut::seerHutFn005741B0(int player) const
+std::string SeerHut::seerHutFn005741B0(int player) const
 {
     if (!(m_visitedPlayers & (1 << static_cast<unsigned char>(player))))
         return g_seerName;
@@ -2673,7 +2673,7 @@ std::string TSeerHut::seerHutFn005741B0(int player) const
 }
 
 VA(0x005743e0, 0x22C)
-std::string TSeerHut::seerHutFn005743E0(int player) const
+std::string SeerHut::seerHutFn005743E0(int player) const
 {
     if (!(m_visitedPlayers & (1 << static_cast<unsigned char>(player))))
         return g_seerName;
@@ -2744,7 +2744,7 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
 // signed comparison is byte-flat. Keep the canonical shared constructor and
 // caller-specific natural inliner state rather than pinning either caller.
 VA(0x00574610, 0x480)  // anchor-caller readObject SEER arm; bracket seerhut..singleselectionpopups
-void TSeerHut::read(TAbstractFile* infile)
+void SeerHut::read(AbstractFile* infile)
 {
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         int textRow = rand() % 3;
@@ -2754,7 +2754,7 @@ void TSeerHut::read(TAbstractFile* infile)
             m_quest = 0;
         } else {
             m_quest = new type_artifact_quest(
-                1, static_cast<TArtifact>(charBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                1, static_cast<Artifact>(charBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         }
     } else {
         int intBuffer;
@@ -2898,7 +2898,7 @@ void TSeerHut::read(TAbstractFile* infile)
 }
 
 VA(0x00574A90, 0x24A)  // dc 0x12d8e4
-void TSeerHut::load(TAbstractFile* infile, int saveVersion)
+void SeerHut::load(AbstractFile* infile, int saveVersion)
 {
     if (saveVersion < 28) {
         int intBuffer;
@@ -2939,7 +2939,7 @@ void TSeerHut::load(TAbstractFile* infile, int saveVersion)
             m_quest = 0;
         else
             m_quest = new type_artifact_quest(
-                1, static_cast<TArtifact>(intBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                1, static_cast<Artifact>(intBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
     } else {
         type_quest* newQuest;
         {

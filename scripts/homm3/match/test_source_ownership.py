@@ -7,7 +7,11 @@ from homm3.match.source_ownership import (
     Definition,
     Origin,
     compare,
+    current_type_spelling,
     normalized_alias_type,
+    read_compiler_type_lineage,
+    read_type_lineage,
+    recovered_type_spelling,
     read_filter,
 )
 
@@ -32,6 +36,31 @@ class OwnershipTest(unittest.TestCase):
         self.assertEqual(normalized_alias_type('SpellID', 'int'), 'SpellID')
         self.assertEqual(normalized_alias_type('TArtifact', 'TArtifact'),
                          'TArtifact')
+
+    def test_owning_comments_restore_recovered_type_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'include').mkdir()
+            (root / 'src').mkdir()
+            (root / 'include' / 'town.h').write_text(
+                '// Before normalization (type): town.\n'
+                '#define Town town\n'
+                'class Town {};\n'
+                '// Before normalization (type): TDialogBox.\n'
+                'class DialogBoxWindow {};\n')
+            lineage = read_type_lineage(root)
+            compiler_lineage = read_compiler_type_lineage(root)
+        self.assertEqual(lineage, {'Town': 'town',
+                                   'DialogBoxWindow': 'TDialogBox'})
+        self.assertEqual(
+            recovered_type_spelling(
+                'const Town * DialogBoxWindow::owner', lineage),
+            'const town * TDialogBox::owner')
+        self.assertEqual(
+            current_type_spelling(
+                'const town * TDialogBox::owner', lineage),
+            'const Town * DialogBoxWindow::owner')
+        self.assertEqual(compiler_lineage, {'Town': 'town'})
 
     def test_reviewed_declaration_gap_cannot_hide_other_source_facts(self):
         from dataclasses import replace

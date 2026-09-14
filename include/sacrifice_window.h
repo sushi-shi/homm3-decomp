@@ -8,7 +8,10 @@
 #include "iconwdgt.h"
 #include "textwdgt.h"
 
-class armyGroup;
+#ifndef ArmyGroup
+#define ArmyGroup armyGroup
+#endif
+class ArmyGroup;
 class sample;
 class slider;
 class type_func_button;
@@ -23,7 +26,7 @@ struct type_artifact_offering : public type_artifact {
     // Its base call passes -1 to type_artifact(TArtifact), so the inherited
     // default-argument path supplies construction without written wrappers.
 
-    void set(const type_artifact* artifact, long slot, const hero* owner);
+    void set(const type_artifact* artifact, long slot, const Hero* owner);
 };
 SIZE(type_artifact_offering, 16);
 
@@ -95,7 +98,7 @@ enum ESacrificeGeneralText {
 
 // HELP.TXT's second pass at 0x5b9b52 fills exactly twenty stride-8
 // text/right-click pairs from 0x6a6638 through 0x6a66d7.
-DATA(0x006a6638) extern THelpText g_sacrificeWindowHelp[SACRIFICE_HELP_COUNT];
+DATA(0x006a6638) extern HelpText g_sacrificeWindowHelp[SACRIFICE_HELP_COUNT];
 
 // DC public ?gTransformerWindowHelp@@3PAUTHelpText@@A supplies the name;
 // Complete references the three text/right-click pairs at 0x6a77d0..e7.
@@ -105,7 +108,7 @@ enum ETransformerWindowHelp {
     TRANSFORMER_HELP_EXIT = 2,
     TRANSFORMER_HELP_COUNT = 3
 };
-DATA(0x006a77d0) extern THelpText
+DATA(0x006a77d0) extern HelpText
     g_transformerWindowHelp[TRANSFORMER_HELP_COUNT];
 
 struct type_icon_definition {
@@ -154,10 +157,10 @@ SIZE(type_creature_offering, 0x20);
 // callback widgets need the real derived type, not a synthetic window view.
 class type_sacrifice_window : public CAdvPopup {
 public:
-    type_sacrifice_window(hero* newHero, int curPlayer);
+    type_sacrifice_window(Hero* newHero, int curPlayer);
 
 private:
-    hero* m_currentHero;
+    Hero* m_currentHero;
     type_artifact_offering m_holdingArtifact;  // +0x64
     unsigned char m_sacrificingArtifacts;      // +0x74
     // +0x75: DoModal 0x5653b0 tests this byte to choose set_artifact_mode
@@ -332,7 +335,7 @@ class type_skeleton_window : public CAdvPopup {
 public:
     textWidget* m_rolloverText;  // +0x60
 
-    type_skeleton_window(armyGroup* newArmy);
+    type_skeleton_window(ArmyGroup* newArmy);
 
     virtual ~type_skeleton_window();
     void creatureClick(long side, long slot, unsigned char rightClick);
@@ -354,8 +357,8 @@ private:
     type_func_button* m_allCreaturesButton;     // +0x68
     long m_selectedGroup;                        // +0x6c
     long m_selectedIndex;                        // +0x70
-    armyGroup m_selectedCreatures;               // +0x74
-    armyGroup* m_armies[2];                        // +0xac
+    ArmyGroup m_selectedCreatures;               // +0x74
+    ArmyGroup* m_armies[2];                        // +0xac
     iconWidget* m_armyWidget[2][7];               // +0xb4
     iconWidget* m_selectBorder[2][7];             // +0xec
     textWidget* m_armyLabel[2][7];                // +0x124

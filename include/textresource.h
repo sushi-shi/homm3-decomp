@@ -299,12 +299,15 @@ enum EGeneralTextIndex {
 // TSpreadsheetResource above. The names are Dreamcast-attested; Data's
 // +0x2c position follows the adjacent vector/data members used by both
 // text-resource variants.
-class TTextResource : public resource {
+#ifndef TextResource
+#define TextResource TTextResource
+#endif
+class TextResource : public resource {
 public:
     typedef std::vector<char*> TTextArray;
-    TTextResource();
-    TTextResource(const char* name, int size, const char* data);
-    virtual ~TTextResource();
+    TextResource();
+    TextResource(const char* name, int size, const char* data);
+    virtual ~TextResource();
     virtual unsigned int getSize() const;
     // E:\gamedcs\TextResource.h:66
     VA(0x005cc8d0, 0x10)  // anchor-callee THallWindow ctor + /Gy COMDAT, dc 0x2d74
@@ -316,7 +319,7 @@ private:
     TTextArray m_text;  // +0x1c (_First +0x20)
     char* m_data;  // +0x2c
 };
-SIZE(TTextResource, 48);
+SIZE(TextResource, 48);
 
 // PROVEN layout (retail monframeinfo parser 0x50c810/0x50ca00): the
 // Spreadsheet row vector sits at +0x1c on the resource base - VC6
@@ -328,13 +331,16 @@ SIZE(TTextResource, 48);
 // with the STLport layout; Dinkumware puts them at 0x1c/0x2c, sizeof
 // 0x30 vs the DC 44). GetNumberOfRows/GetRow are the TextResource.h
 // header inlines (dc 0x5088c/0x508a4), inlined into callers by /Ob2.
-class TSpreadsheetResource : public resource {
+#ifndef SpreadsheetResource
+#define SpreadsheetResource TSpreadsheetResource
+#endif
+class SpreadsheetResource : public resource {
 public:
     typedef std::vector<char*> TStringVector;
     typedef std::vector<TStringVector*> TArray;
-    TSpreadsheetResource();
-    TSpreadsheetResource(const char* name, int size, const char* data);
-    virtual ~TSpreadsheetResource();
+    SpreadsheetResource();
+    SpreadsheetResource(const char* name, int size, const char* data);
+    virtual ~SpreadsheetResource();
     virtual unsigned int getSize() const;
     int getNumberOfRows() const { return m_spreadsheet.size(); }
     // DC TextResource.h:120/124 (text.obj:0x162934) returns const char* and
@@ -350,9 +356,9 @@ private:
     char* m_data;  // +0x2c
     int m_dataSize;  // +0x30, retail constructor stores size here
 };
-SIZE(TSpreadsheetResource, 52);
+SIZE(SpreadsheetResource, 52);
 
-extern TTextResource* g_generalText;  // retail .data 0x6a5d5c
+extern TextResource* g_generalText;  // retail .data 0x6a5d5c
 
 // --- TSpreadsheetResource ---
 // CODEVIEW(E:\gamedcs\textresource.cpp:177, dc 0x1639ec) void TSpreadsheetResource::TSpreadsheetResource();

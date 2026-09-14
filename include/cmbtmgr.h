@@ -14,14 +14,27 @@ class Bitmap16Bit;
 class CNetMsgHandlerPause;
 class Bitmap816;
 class CSprite;
-class hero;
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero;
 class heroWindow;
 class iconWidget;
 class textWidget;
-class TCombatWindow;
+// Before normalization (type): TCombatWindow.
+#ifndef CombatWindow
+#define CombatWindow TCombatWindow
+#endif
+class CombatWindow;
 class NewmapCell;
-class searchArray;
-class town;
+#ifndef SearchArray
+#define SearchArray searchArray
+#endif
+class SearchArray;
+#ifndef Town
+#define Town town
+#endif
+class Town;
 struct type_AI_combat_parameters;
 struct tagPOINT;
 struct type_artifact;
@@ -43,14 +56,18 @@ public:
 // Per-projectile launch offsets and frame-angle boundaries. Retail indexes
 // the table at 0x67ff24 with an 84-byte stride: three signed coordinate
 // pairs followed by eighteen float boundaries.
-struct TMissileStartInfo {
+// Before normalization (type): TMissileStartInfo.
+#ifndef MissileStartInfo
+#define MissileStartInfo TMissileStartInfo
+#endif
+struct MissileStartInfo {
 public:
     short m_offsets[3][2];
     float m_angles[18];
 };
-SIZE(TMissileStartInfo, 0x54);
+SIZE(MissileStartInfo, 0x54);
 
-extern const TMissileStartInfo* g_missileStartInfo;
+extern const MissileStartInfo* g_missileStartInfo;
 
 // One segment of an animated lightning bolt. THE DREAMCAST DUMP HAS NO
 // MEMBER EVIDENCE FOR THIS TYPE AT ALL - members.csv carries zero rows
@@ -268,20 +285,28 @@ enum ECombatGateHex {
 // One faction row in the siege-archer table at 0x63cf88. Retail indexes
 // nine 0x20-byte rows by town::type, then uses the three coordinate pairs
 // for the keep, lower tower and upper tower respectively.
-struct TSiegeArcherPosition {
+// Before normalization (type): TSiegeArcherPosition.
+#ifndef SiegeArcherPosition
+#define SiegeArcherPosition TSiegeArcherPosition
+#endif
+struct SiegeArcherPosition {
 public:
     int m_x;
     int m_y;
 };
 
-struct TSiegeArcherInfo {
+// Before normalization (type): TSiegeArcherInfo.
+#ifndef SiegeArcherInfo
+#define SiegeArcherInfo TSiegeArcherInfo
+#endif
+struct SiegeArcherInfo {
 public:
     int m_creatureType;
-    TSiegeArcherPosition m_positions[3];
+    SiegeArcherPosition m_positions[3];
     const char* m_shadowSpriteName;
 };
 
-extern const TSiegeArcherInfo g_siegeArcherInfo[9];
+extern const SiegeArcherInfo g_siegeArcherInfo[9];
 
 // Two additional TTerrainType values needed only by combat terrain
 // selection. Kept out of armygrp.h's include-sensitive enum: adding
@@ -304,14 +329,18 @@ enum ECombatMineType {
 // and animation length. DC independently types the row combatManager::SCmbtHero
 // {SpriteName, castX, castY, castFrame}; the retail table is 18 rows
 // where the Dreamcast's is 16.
-struct TCombatHeroSprite {
+// Before normalization (type): TCombatHeroSprite.
+#ifndef CombatHeroSprite
+#define CombatHeroSprite TCombatHeroSprite
+#endif
+struct CombatHeroSprite {
 public:
     const char* m_defName;
     int m_castX;
     int m_castY;
     int m_castFrame;
 };
-DATA(0x0063bd40) extern const TCombatHeroSprite g_combatHeroSprites[18];
+DATA(0x0063bd40) extern const CombatHeroSprite g_combatHeroSprites[18];
 
 // Head model from the byte-proven leaves. The battlefield holds two
 // sides of 21 army slots (20 used - ResetHitByCreature clears exactly
@@ -375,7 +404,11 @@ public:
                            unsigned char doscrollY);
     // DC CmbtMgr.h's complete nested enum. Command's get_tower_string takes
     // this type by value; retail indexes the same eighteen wall rows.
-    enum TWallSection {
+// Before normalization (type): combatManager::TWallSection.
+#ifndef WallSection
+#define WallSection TWallSection
+#endif
+    enum WallSection {
         eWallSectionDoor = 0,
         eWallSectionDoorRope = 1,
         eWallSectionMoat = 2,
@@ -401,7 +434,11 @@ public:
     // PlaceObstacle, RemoveObstacle and DrawFrame: the catalogue masks are
     // at +0/+2, placement bounds at +4/+5, signed occupied-hex offsets at
     // +8, and the sprite name at +0x10.
-    struct TObstacleInfo {
+// Before normalization (type): combatManager::TObstacleInfo.
+#ifndef ObstacleInfo
+#define ObstacleInfo TObstacleInfo
+#endif
+    struct ObstacleInfo {
         unsigned short m_terrainMask;
         unsigned short m_specialTerrainMask;
         unsigned char m_minRow;
@@ -413,14 +450,14 @@ public:
     };
 
 private:
-    static const TObstacleInfo s_obstacleInfo[];
+    static const ObstacleInfo s_obstacleInfo[];
     // Dreamcast records all four as private static arrays. Their raw MSVC
     // names (`@@0QBU...`) independently distinguish this declaration from
     // both a singleton object and a public static member. Retail fixes the
     // first elements at 0x63cee8, 0x63cf00 and 0x63cf18 respectively.
-    static const TObstacleInfo s_quicksandInfo[];
-    static const TObstacleInfo s_landMineInfo[];
-    static const TObstacleInfo s_wallObstacleInfo[];
+    static const ObstacleInfo s_quicksandInfo[];
+    static const ObstacleInfo s_landMineInfo[];
+    static const ObstacleInfo s_wallObstacleInfo[];
     // One 68-byte elevation-overlay catalogue at retail 0x0063bec0.
     // Dreamcast PlaceLargeObstacle references sElevationOverlay directly;
     // retail placement reads masks at +0/+2 and 25 blocked shorts at +0xc.
@@ -445,7 +482,11 @@ private:
 public:
     // Retail writes only name/hitpoints here; Dreamcast CodeView supplies
     // the intervening field identities and confirms the 36-byte extent.
-    struct TWallTraits {
+// Before normalization (type): combatManager::TWallTraits.
+#ifndef WallTraits
+#define WallTraits TWallTraits
+#endif
+    struct WallTraits {
         short m_x;
         short m_y;
         short m_hex;
@@ -461,7 +502,7 @@ public:
     };
 
 private:
-    static TWallTraits s_wallTraits[9][18];
+    static WallTraits s_wallTraits[9][18];
 
 public:
     enum {
@@ -480,11 +521,15 @@ public:
     // by the same body plus PlaceObstacle. Slot 0 holds a polymorphic
     // object RemoveObstacle virtual-calls (vtable slot 1) and then
     // clears - left padded until that class is modelled.
-    struct TObstacle {
+// Before normalization (type): combatManager::TObstacle.
+#ifndef Obstacle
+#define Obstacle TObstacle
+#endif
+    struct Obstacle {
         // RemoveObstacle calls vtable slot 1 on it with no arguments
         // and then clears the slot - CSprite's slot 1 is Dispose().
         CSprite* m_sprite;                    // +0x0
-        const TObstacleInfo* m_shape;         // +0x4
+        const ObstacleInfo* m_shape;         // +0x4
         unsigned char m_hex;                  // +0x8
         // DC CodeView names these owner/is_visible. Retail independently
         // fixes both offsets: searchArray::set_moat (0x4b3290) marks an
@@ -521,12 +566,16 @@ public:
     // 0xc-byte row, all five fields, and the eight-row extent. Keeping the
     // table on the class also lets get_wall_strength retain its original
     // source-visible inline boundary instead of flattening it into callers.
-    struct TWallTarget {
+// Before normalization (type): combatManager::TWallTarget.
+#ifndef WallTarget
+#define WallTarget TWallTarget
+#endif
+    struct WallTarget {
         short m_targetHex;             // +0x0
         short m_blockedRow;            // +0x2
         short m_hitX;                  // +0x4
         short m_hitY;                  // +0x6
-        TWallSection m_wall;            // +0x8
+        WallSection m_wall;            // +0x8
 
         int getBlockedHex() const
         {
@@ -535,7 +584,7 @@ public:
             return -1;
         }
     };
-    static const TWallTarget s_wallTargets[8];
+    static const WallTarget s_wallTargets[8];
     // One of the three defending-town archer positions. InitializeArchers
     // clears three contiguous 0x24-byte rows at +0x13d78 and fills these
     // members in this order; DamageWall later uses armySlot from each row
@@ -543,10 +592,14 @@ public:
     // DC TArcher (0x431d) has raw Sprite/Missile pointers. Complete owns
     // both through four-byte resource handles, as in army: 0x462920 clears
     // +4/+8 and 0x462930 releases them in reverse order with EH cleanup.
-    struct TArcher {
+// Before normalization (type): combatManager::TArcher.
+#ifndef Archer
+#define Archer TArcher
+#endif
+    struct Archer {
         int m_creatureType;             // +0x0
-        TResourceHandle<CSprite> m_sprite;          // +0x4
-        TResourceHandle<CSprite> m_shadowSprite;    // +0x8
+        ResourceHandle<CSprite> m_sprite;          // +0x4
+        ResourceHandle<CSprite> m_shadowSprite;    // +0x8
         int m_x;                        // +0xc
         int m_y;                        // +0x10
         int m_facing;                 // +0x14
@@ -556,7 +609,11 @@ public:
     };
     // InitializeArchers' two simultaneously live resource locals. Keeping
     // them as one record preserves retail VC6's [-8]/[-4] stack ordering.
-    struct TArcherLoadState {
+// Before normalization (type): combatManager::TArcherLoadState.
+#ifndef ArcherLoadState
+#define ArcherLoadState TArcherLoadState
+#endif
+    struct ArcherLoadState {
         CSprite* m_sprite;
         const char* m_spriteName;
     };
@@ -666,13 +723,13 @@ public:
     // The defending town. DetermineCombatTerrain calls its
     // GetNativeTerrain method; RaiseDoor and IsInMoat independently
     // read the faction byte at town+4.
-    town* m_defendingTown;  // +0x53c8
+    Town* m_defendingTown;  // +0x53c8
     // The two combat heroes, indexed by side: can_cast_spells indexes
     // heroes[side] for the spellbook test and then walks both slots for
     // the Orb of Inhibition, and army::get_controller (0x442690) /
     // army::get_owner (0x4426d0) do the same lookup off
     // gpCombatManager, with and without the hypnotize flip.
-    hero* m_heroes[2];  // +0x53cc
+    Hero* m_heroes[2];  // +0x53cc
     int m_spellPower[2];  // +0x53d4
     // A per-side latch berserk_attack (0x4222c0) raises, indexed by
     // SIDE as a byte, on exactly one path: when a berserked stack's
@@ -764,7 +821,7 @@ public:
     // The two persistent army groups combat was initialized from.
     // RaiseSkeletons indexes this pair by side and tries to merge the
     // post-combat raised stack into the selected group.
-    armyGroup* m_armyGroups[2];  // +0x54c4
+    ArmyGroup* m_armyGroups[2];  // +0x54c4
     army m_armies[2][21];  // +0x54cc
     // Per-side dword SetupCombat initialises to 30000 (0x7530) for both
     // sides, in the same loop as playerIds and field_54b0 - retail reaches
@@ -889,7 +946,7 @@ public:
     ECombatFortification m_fortificationLevel;  // +0x132f4
     // Cleared by InitNonVisualVars at full width. Ordinal.
     int m_battleOver;  // +0x132f8
-    TCombatWindow* m_combatWindow;  // +0x132fc
+    CombatWindow* m_combatWindow;  // +0x132fc
     int m_combatShowIt;  // +0x13300
     // Replaces synthetic pad_13304. Dreamcast combatManager type 0x66c7
     // names iconWidgetWL/textWidgetWL, each an array of 25 widget pointers.
@@ -952,7 +1009,7 @@ public:
     // this pair unchanged, then promotes the creature and converts the
     // count at a two-for-three ratio if the destination group is full.
     int m_raisedCreatureCount;  // +0x13d4c
-    TCreatureType m_raisedCreatureType;  // +0x13d50
+    CreatureType m_raisedCreatureType;  // +0x13d50
     Bitmap816* m_combatGridBitmap;  // +0x13d54
     // The placed-obstacle array, as the raw first/last pair retail
     // tests: RemoveObstacle (0x466b30) null-checks the FIRST pointer,
@@ -961,7 +1018,7 @@ public:
     // this really is a vector; only its first two members are proven.
     // Complete uses Dinkumware: allocator at +0,
     // pointers at +4/+8/+0xc; TObstacle remains a 0x18-byte value.
-    std::vector<TObstacle> m_obstacles;  // +0x13d58
+    std::vector<Obstacle> m_obstacles;  // +0x13d58
     // Placement-phase latch: FindPath/ValidPath forward it into
     // FindCombatPath's in_placement_phase and lift the speed limit
     // to 99 while it is set. Name provisional.
@@ -989,7 +1046,7 @@ public:
     char m_paddingBeforeArchers[0x1];
 
 private:
-    TArcher m_archers[3];  // +0x13d78; armySlot at +0x20
+    Archer m_archers[3];  // +0x13d78; armySlot at +0x20
 
 public:
     // "Move order is reversed for this combat": find_move_order
@@ -1076,7 +1133,7 @@ public:
     unsigned char isWinner(int thisSide) const;
     unsigned char combatIsOver() const;
     void resetHitByCreature();
-    void damageWall(TWallTargetId targetWall, int damage);
+    void damageWall(WallTargetId targetWall, int damage);
     int getGridIndex(int x, int y) const;
     // The SGTWDEF explosion frame army::attack_wall (0x445fd0) lets
     // play before it lands the DamageWall - the wall visibly breaks
@@ -1146,7 +1203,7 @@ public:
     const char* getBackgroundName();
     void generateMap();
     void combatSystemOptions();
-    void placeObstacle(const TObstacle* obstacle, int id, int hex,
+    void placeObstacle(const Obstacle* obstacle, int id, int hex,
                        unsigned attributes);
     void removeObstacle(int index);
     void placeAllObstacles();
@@ -1339,7 +1396,7 @@ public:
 private:
     unsigned char chooseToRun(const army* ourArmy,
                                 const long* enemyAttacks,
-                                const searchArray* currentSearchArray);  // 0x4208f0
+                                const SearchArray* currentSearchArray);  // 0x4208f0
     long getAttackChange(const army* currentArmy, const army* enemy,
                            type_AI_combat_parameters& data);  // 0x41f3b0
     void markFirewalls(const army* currentArmy, long* enemyAttacks,
@@ -1390,7 +1447,7 @@ private:
     // ai_tactical.h declares that method non-const. Spelling only.
     void markMultiheadedEnemy(const army* ourArmy, const army* enemy,
                                 long* enemyAttacks, long limitValue,
-                                searchArray* currentSearchArray,
+                                SearchArray* currentSearchArray,
                                 type_AI_combat_parameters* estimate) const;  // 0x41fd60
     // 0x420f00, the RETAIL-ONLY third spell chooser: same shape as the
     // two above and the third arm of choose_spell_action's switch, the
@@ -1422,10 +1479,10 @@ public:
     void findAITargets(long ourGroup, const army* currentArmy,
                          unsigned char meleeOnly,
                          const type_AI_combat_parameters* data,
-                         searchArray* currentSearchArray);
+                         SearchArray* currentSearchArray);
     unsigned char isValidTeleport(const army* thisArmy, long newHex);
     void simulateCombat(long side, unsigned char simulated);  // 0x422a40
-    unsigned char validWallTarget(TWallTargetId wall);  // 0x476440
+    unsigned char validWallTarget(WallTargetId wall);  // 0x476440
     void doCompAI(int whichGroup);  // 0x4221f0
     // command.cpp calls this ai.obj leaf from CheckGetAIMove.
     unsigned char doSpellAI();  // 0x422da0
@@ -1446,12 +1503,12 @@ public:
 private:
     unsigned char automateCatapult();  // 0x473c00
     unsigned char attemptShooterDefense(
-        const army* currentArmy, searchArray* currentSearchArray,
+        const army* currentArmy, SearchArray* currentSearchArray,
         const type_AI_combat_parameters* estimate);  // 0x420760
     unsigned char chooseDefenseHex(const army* currentArmy,
                                      const army* client, long* bestHex,
                                      long* openHexes,
-                                     searchArray* currentSearchArray);  // 0x4205d0
+                                     SearchArray* currentSearchArray);  // 0x4205d0
     void chooseShooterAction(const army* currentArmy,
                                unsigned char simulated, long side);  // 0x41f060
     unsigned char hasRangedAdvantage(
@@ -1524,13 +1581,13 @@ public:
     // VC6 expands this source helper into CastSpell's shared
     // Resurrection/Animate Dead arm.
     inline void resurrect(SpellID spell, int targetHex, int power,
-                          int mastery, const hero* castingHero);
+                          int mastery, const Hero* castingHero);
     long computeSpellDamage(SpellID spell, long spellPower, long mastery,
-                            hero* castingHero, hero* targetHero,
+                            Hero* castingHero, Hero* targetHero,
                             const army* target,
                             unsigned char simulated) const;  // 0x5a7890
     long modifySpellDamage(long baseDamage, SpellID spell,
-                           const hero* castingHero, const hero* targetHero,
+                           const Hero* castingHero, const Hero* targetHero,
                            const army* target,
                            unsigned char simulated) const;
     long modifySpellDamageForSpells(long damage, SpellID spell,
@@ -1558,7 +1615,7 @@ public:
     // 0x5a66d0, the mass-spell applier ClearEffects (0x5a66b0) clears
     // `effected` for. It rolls SpellCastWorkChance separately per stack
     // on both sides and records which ones took the spell.
-    void setMassSpellInfluence(const hero* castingHero, SpellID spell,
+    void setMassSpellInfluence(const Hero* castingHero, SpellID spell,
                                long level, long power,
                                long castingSide,
                                long creatureSpell);  // 0x5a66d0
@@ -1595,7 +1652,7 @@ public:
     //     for the number of wall sections to bring down.
     void showMassSpell(const unsigned char (*effected)[20], int spellEffect,
                        unsigned char showWince);  // 0x5a67c0
-    void summonElemental(SpellID spell, TCreatureType monType,
+    void summonElemental(SpellID spell, CreatureType monType,
                          int spellPower, int level);  // 0x5a7080
     void resetBoltAngle(SBolt* bolt);  // 0x5a5260
     void drawBolt(SBolt* bolt, int drawLength);  // 0x5a5440
@@ -1636,7 +1693,7 @@ public:
                                   std::vector<long>& hexes);  // 0x5a4430
     // DC spells.cpp:3214; expanded into HandleCastWallSpell, no retail
     // body of its own.
-    void markWallAreaEffect(long targetHex, TSkillMastery mastery,
+    void markWallAreaEffect(long targetHex, SkillMastery mastery,
                                std::vector<long>& result);
     // CodeView declares the axial helpers static and defines them in
     // spells.cpp:3103/3121/3138 using the Win32 POINT record.
@@ -1713,7 +1770,11 @@ public:
     // spelled 11 because this tree keeps its magic-constant floor at
     // zero; the rest of the enum waits for the lane that reconstructs
     // PowEffect's own body.
-    enum TSpellEffectID {
+// Before normalization (type): combatManager::TSpellEffectID.
+#ifndef SpellEffectID
+#define SpellEffectID TSpellEffectID
+#endif
+    enum SpellEffectID {
         eSpellEffectFireShield = 11,
         // Dreamcast's TSpellEffectID table and CastSpell's Berserk arm
         // both fix the mass-animation row to 35.
@@ -1751,7 +1812,7 @@ public:
     // DC header inline (cmbtmgr.h:1473, dc 0x27edc, 32 B); SH4 proves the
     // typed target -> wallTargets[target].wall -> wallStrength chain.
     // Retail has no body because /Ob2 folds the same chain into its callers.
-    long getWallStrength(TWallTargetId target) const
+    long getWallStrength(WallTargetId target) const
     {
         return m_wallStrength[s_wallTargets[target].m_wall];
     }
@@ -1811,7 +1872,7 @@ public:
     // NOT reproduce that (VC6 CSEs the second load away either way) -
     // it is kept because the DC roster attests the accessor, not as a
     // matching lever.
-    TObstacle& getObstacle(int index) { return m_obstacles[index]; }
+    Obstacle& getObstacle(int index) { return m_obstacles[index]; }
     void markCreatureEffect(int group, int index)
     {
         if (m_armies[group][index].m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
@@ -1829,10 +1890,10 @@ public:
                                   std::vector<army*>& targets);
     // DC ?SetupCombat@combatManager@@QAAXUtype_point@@PAVhero@@PAVarmyGroup@@
     // JPAVtown@@12HHH_N@Z - the S_PUB32 run types every parameter. The
-    void setupCombat(type_point point, hero* leftHero,
-                     armyGroup* leftArmyGroup, long rightPlayer,
-                     town* rightTown, hero* rightHero,
-                     armyGroup* rightArmyGroup, int x, int y, int seed,
+    void setupCombat(type_point point, Hero* leftHero,
+                     ArmyGroup* leftArmyGroup, long rightPlayer,
+                     Town* rightTown, Hero* rightHero,
+                     ArmyGroup* rightArmyGroup, int x, int y, int seed,
                      unsigned char isSurrounded);
     // DC ?NextArmy@combatManager@@QAA_N_N@Z - returns and takes _N,
     unsigned char nextArmy(unsigned char checkingForBadMorale);
@@ -1874,14 +1935,14 @@ public:
     void combatMessage(int command);
 
 private:
-    std::string getTowerString(TWallSection wall, long archers,
+    std::string getTowerString(WallSection wall, long archers,
                                  long skill) const;
     void autoResolveCombat();
     unsigned char automateFirstAidTent();
     void processFirstAid(army* currentArmy);
     unsigned char processMoveThenAttack(message* msg);
 };
-SIZE(combatManager::TWallTraits, 0x24);
+SIZE(combatManager::WallTraits, 0x24);
 
 // Retail .bss 0x6993d0 (DC ?gpCombatManager@@3PAVcombatManager@@A).
 extern combatManager* g_combatManager;
@@ -1997,7 +2058,11 @@ extern const char* const g_terrainCombatBackgrounds[9][3];    // 0x63d2f0
 // target's hex. BOOTSTRAP INVENTION - the four modes are named from
 // that one decoded switch and nothing else attests spellings.
 DATA(0x0063c7c8) extern const unsigned short g_obstacleTerrainMasks[];
-enum TSpellEffectPlacement {
+// Before normalization (type): TSpellEffectPlacement.
+#ifndef SpellEffectPlacement
+#define SpellEffectPlacement TSpellEffectPlacement
+#endif
+enum SpellEffectPlacement {
     SPELL_EFFECT_PLACE_OVERHEAD = 0x0,
     SPELL_EFFECT_PLACE_CENTERED = 0x1,
     SPELL_EFFECT_PLACE_ABOVE = 0x2,
@@ -2008,7 +2073,11 @@ enum TSpellEffectPlacement {
     SPELL_EFFECT_PLACE_HEX = 0x4
 };
 
-struct TSpellEffectTraits {
+// Before normalization (type): TSpellEffectTraits.
+#ifndef SpellEffectTraits
+#define SpellEffectTraits TSpellEffectTraits
+#endif
+struct SpellEffectTraits {
 public:
     const char* m_name;  // +0x0, the .def sprite
     const char* m_immName;  // +0x4, the Immersion effect
@@ -2018,8 +2087,8 @@ public:
     // the draw-alpha flag it hands to DrawSpellEffect.
     unsigned int m_flags;  // +0x8
 };
-SIZE(TSpellEffectTraits, 0xc);
-DATA(0x00641e08) extern const TSpellEffectTraits g_spellEffectTraits[];
+SIZE(SpellEffectTraits, 0xc);
+DATA(0x00641e08) extern const SpellEffectTraits g_spellEffectTraits[];
 
 // The moat's per-town base damage, at .rdata 0x63bd18 and indexed by
 // town type: SetupAndLoadObstacles folds [0x63bd20] for the Tower,

@@ -9,19 +9,26 @@
 #include <vector>
 #include "mapcell.h"
 
-class TObjectTypeFilter;
+// Before normalization (type): TObjectTypeFilter.
+#ifndef ObjectTypeFilter
+#define ObjectTypeFilter TObjectTypeFilter
+#endif
+class ObjectTypeFilter;
 
 enum EObjectTypeFilterConstants {
     OBJECT_TYPE_FILTER_COUNT = 15
 };
 
-extern TObjectTypeFilter* const g_objectTypeFilters[OBJECT_TYPE_FILTER_COUNT];
+extern ObjectTypeFilter* const g_objectTypeFilters[OBJECT_TYPE_FILTER_COUNT];
 
 // Map-editor/RMG object template consumed by the retail-identical
 // CObjectType conversion constructor at 0x506080. The public names are from
 // the HD structural bridge; retail independently fixes the 0x4c stride and
 // every offset read by that constructor.
-struct TObjectType {
+#ifndef ObjectType
+#define ObjectType TObjectType
+#endif
+struct ObjectType {
 public:
     // Numeric slot identities shared with the Complete-only editor filter
     // table (0x640288). The RMG selector at 0x546040 admits categories 4/5
@@ -34,18 +41,26 @@ public:
         SLOT_CATEGORY_4 = 4,
         SLOT_CATEGORY_5 = 5
     };
-    struct TPoint {
+// Before normalization (type): TObjectType::TPoint.
+#ifndef Point
+#define Point TPoint
+#endif
+    struct Point {
         int m_x;
         int m_y;
     };
-    struct TImageInfo {
+// Before normalization (type): TObjectType::TImageInfo.
+#ifndef ImageInfo
+#define ImageInfo TImageInfo
+#endif
+    struct ImageInfo {
         // Provisional overload: setImageName initializes the point before
         // either bitset constructor. TObjectType's default construction
         // leaves that point uninitialized, requiring a distinct size path.
-        TImageInfo() {}
-        explicit TImageInfo(const TPoint& size) : m_objectSize(size) {}
+        ImageInfo() {}
+        explicit ImageInfo(const Point& size) : m_objectSize(size) {}
 
-        TPoint m_objectSize;
+        Point m_objectSize;
         std::bitset<48> m_drawMask;
         std::bitset<48> m_shadowMask;
     };
@@ -55,19 +70,19 @@ public:
     // passable mask spelled as a flipped `bitset<48>(0)`, and the {8,6}
     // no-trigger sentinel. imageInfo's TPoint stays uninitialized there,
     // which is why it has no initializer here either.
-    TObjectType();
+    ObjectType();
     int m_imageNumber;
     std::bitset<48> m_passableMask;
     std::bitset<48> m_triggerMask;
     std::bitset<10> m_terrainMask;
     std::bitset<10> m_recommendedTerrainMask;
-    TAdventureObjectType m_objectType;
+    AdventureObjectType m_objectType;
     int m_subtype;
     int m_slotCategory;
     unsigned char m_isUnderlay;
     unsigned char m_hasTrigger;
-    TPoint m_triggerCell;
-    TImageInfo m_imageInfo;
+    Point m_triggerCell;
+    ImageInfo m_imageInfo;
     // is defined in the Complete .msk/objects compiland in the
     // of range). The ROLE is proven by its conversion-constructor caller - the result is what
     const std::basic_string<char, std::char_traits<char>,
@@ -85,33 +100,33 @@ public:
     // (and, on a miss, loads the row's .msk to append one); setTriggerMask
     // stores `mask & ~passableMask`, sets `hasTrigger` from its any(), and
     // scans the 8x6 grid for the first set cell. NAMES ARE PROVISIONAL.
-    TObjectType& setImageName(
+    ObjectType& setImageName(
         const std::basic_string<char, std::char_traits<char>,
                                 std::allocator<char> >& name);
-    TObjectType& setTriggerMask(const std::bitset<48>& mask);
+    ObjectType& setTriggerMask(const std::bitset<48>& mask);
     // Provisional fluent setter names: retail objects.txt extraction retains
     // the two setters above and expands this ordered field/invariant chain.
     // The corresponding ordinary definitions live in objecttype.cpp.
-    TObjectType& setPassableMask(const std::bitset<48>& mask);
-    TObjectType& setTerrainMask(const std::bitset<10>& mask);
-    TObjectType& setRecommendedTerrainMask(const std::bitset<10>& mask);
-    TObjectType& setObjectType(TAdventureObjectType type);
-    TObjectType& setSubtype(int subtype);
-    TObjectType& setSlotCategory(int category);
-    TObjectType& setUnderlay(bool underlay);
+    ObjectType& setPassableMask(const std::bitset<48>& mask);
+    ObjectType& setTerrainMask(const std::bitset<10>& mask);
+    ObjectType& setRecommendedTerrainMask(const std::bitset<10>& mask);
+    ObjectType& setObjectType(AdventureObjectType type);
+    ObjectType& setSubtype(int subtype);
+    ObjectType& setSlotCategory(int category);
+    ObjectType& setUnderlay(bool underlay);
 };
-SIZE(TObjectType, 0x4c);
+SIZE(ObjectType, 0x4c);
 
 // The "no trigger cell" sentinel, {8, 6} - the object mask grid's own
 // dimensions - in .rdata at 0x640278. Both of its consumers, the default
 // constructor above and TObjectType::setTriggerMask's else arm, issue both
 // loads before either store. objecttype.cpp owns the definition.
-extern const TObjectType::TPoint g_noTriggerCell;
+extern const ObjectType::Point g_noTriggerCell;
 
 // Shared header definition for the resize default value. Retail expands
 // this constructor, which does not establish an explicit inline keyword:
 // an ordinary definition in objecttype.cpp was byte-flat (2026-09-06).
-inline TObjectType::TObjectType()
+inline ObjectType::ObjectType()
     : m_imageNumber(0),
       m_passableMask(~std::bitset<48>(0)),
       m_objectType(NOTHING),
@@ -123,11 +138,15 @@ inline TObjectType::TObjectType()
 {
 }
 
-class TObjectTypeTable {
+// Before normalization (type): TObjectTypeTable.
+#ifndef ObjectTypeTable
+#define ObjectTypeTable TObjectTypeTable
+#endif
+class ObjectTypeTable {
 public:
-    std::vector<TObjectType> m_objectTypes;
+    std::vector<ObjectType> m_objectTypes;
     void load(char* filename);
 };
-SIZE(TObjectTypeTable, 0x10);
+SIZE(ObjectTypeTable, 0x10);
 
 #endif  /* HOMM3_OBJECTTYPE_H */

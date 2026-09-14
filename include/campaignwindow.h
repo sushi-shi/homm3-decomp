@@ -11,7 +11,11 @@ class Bitmap816;
 // 0x63bca4, and accesses derived storage through +0x78.  That tail differs
 // substantially from Dreamcast's smaller campaign roster, so it remains
 // deliberately unmodelled until a compiled consumer needs it.
-class TCampaignWindow : public heroWindow {
+// Before normalization (type): TCampaignWindow.
+#ifndef CampaignWindow
+#define CampaignWindow TCampaignWindow
+#endif
+class CampaignWindow : public heroWindow {
 public:
     // Widget ids, byte-proven by the handler: the seven preview rows it
     // sweeps live at 101..107, and the campaign selector answers 108..127 -
@@ -105,8 +109,8 @@ public:
 
     // Complete added the leading new-game selector to Dreamcast's
     // one-argument constructor; oldmain and the retail body prove both slots.
-    TCampaignWindow(unsigned char newGame, int newCampaign);
-    virtual ~TCampaignWindow();
+    CampaignWindow(unsigned char newGame, int newCampaign);
+    virtual ~CampaignWindow();
     void doModal();
     void openPreview(int campaignIndex);
     // Retail emits no out-of-line body: every caller expands it under /Ob2,
@@ -143,7 +147,7 @@ struct SCampaignPreview {
 SIZE(SCampaignPreview, 0x50);
 extern SCampaignPreview g_campaignPreviews[20];
 
-extern THelpText g_campaignWindowHelp[24];
+extern HelpText g_campaignWindowHelp[24];
 
 // The twenty campaign data-file names the handler hands to
 // SCampaign::select_campaign. Retail addresses them as

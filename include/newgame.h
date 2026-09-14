@@ -15,14 +15,14 @@ enum ENewGameDialogCommand {
 };
 
 long getAlignmentCount(int legalAlignments);
-TTownType pickAlignment(int legalAlignments,
+TownType pickAlignment(int legalAlignments,
                          unsigned char getFirstAvail);
 
 // Definitions belong to newgame.cpp. Complete widens the alignment mask
 // for Conflux; the advanced-options click handler uses the nine-town loops.
-TTownType pickPrevAlignment(int legalAlignments, TTownType type);
+TownType pickPrevAlignment(int legalAlignments, TownType type);
 
-TTownType pickNextAlignment(int legalAlignments, TTownType type);
+TownType pickNextAlignment(int legalAlignments, TownType type);
 
 // The seven resource names (retail 0x6a5e64, DATA-claimed by seerhut.cpp);
 // GetVictoryConditionText's resource arm formats one. Consumer-side plain

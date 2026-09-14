@@ -29,7 +29,7 @@
 // The class name is provisional. Retail vtable 0x640264 proves the three
 // TAbstractFile slots; constructor expansions at 0x512cad and 0x512e28 prove
 // the owned and borrowed forms. No original header location is established.
-class t_memory_file : public TAbstractFile {
+class t_memory_file : public AbstractFile {
 public:
     // Both constructors are defined inline in this module-local class.
     // Retail expands

@@ -19,7 +19,7 @@
 
 VA(0x005a9d20, 0x57)  // dc 0x158880
 strip::strip(int inX, int inY, int inPos, int newIcons, int newIconFrame,
-             long newOwner, hero* newHero, armyGroup* groupToDraw,
+             long newOwner, Hero* newHero, ArmyGroup* groupToDraw,
              int firstId, unsigned char update, heroWindow* inWin)
 {
     m_x = inX;
@@ -36,14 +36,14 @@ strip::strip(int inX, int inY, int inPos, int newIcons, int newIconFrame,
 }
 
 VA(0x005a9d80, 0x30)  // dc 0x1588e8
-void strip::draw(TCreatureType divideCreature)
+void strip::draw(CreatureType divideCreature)
 {
     drawIcons(1, divideCreature);
     g_windowManager->updateScreen(m_x, m_y, 494, 64);
 }
 
 VA(0x005a9db0, 0x2A2)  // dc 0x158910
-void strip::drawIcons(unsigned char update, TCreatureType divideCreature)
+void strip::drawIcons(unsigned char update, CreatureType divideCreature)
 {
     int i;
 

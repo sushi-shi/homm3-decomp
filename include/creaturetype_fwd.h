@@ -6,9 +6,9 @@
 
 #include "armygrp.h"
 
-int isBaseCreature(TCreatureType monType);
-unsigned char isSiegeWeapon(TCreatureType creature);
-TCreatureType upgradedCreatureType(TCreatureType type);
-TCreatureType downgradedCreatureType(TCreatureType type);
+int isBaseCreature(CreatureType monType);
+unsigned char isSiegeWeapon(CreatureType creature);
+CreatureType upgradedCreatureType(CreatureType type);
+CreatureType downgradedCreatureType(CreatureType type);
 
 #endif  /* HOMM3_CREATURETYPE_FWD_H */

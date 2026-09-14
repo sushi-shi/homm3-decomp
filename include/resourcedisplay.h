@@ -14,7 +14,11 @@ class textWidget;
 // +0x54..+0x6c, the bitmap background at +0x70 and the final status
 // text at +0x74. TSubWindow is exactly 0x34 bytes; isSmall occupies
 // the derived head byte at +0x34.
-class TResourceDisplay : public TSubWindow {
+// Before normalization (type): TResourceDisplay.
+#ifndef ResourceDisplay
+#define ResourceDisplay TResourceDisplay
+#endif
+class ResourceDisplay : public SubWindow {
 public:
     // The widget-id bands the constructor stamps in its resource loop
     // (0x3e9 + i on the seven textWidgets, 0x3f1 + i on the seven
@@ -56,12 +60,12 @@ public:
     bitmapBorder* m_backgroundWidget;
     textWidget* m_dayWidget;
 
-    TResourceDisplay(heroWindow* parent, bool isSmall);
-    virtual ~TResourceDisplay();
+    ResourceDisplay(heroWindow* parent, bool isSmall);
+    virtual ~ResourceDisplay();
     void update(bool draw, bool update);
     void clear();
 };
-SIZE(TResourceDisplay, 0x78);
+SIZE(ResourceDisplay, 0x78);
 
 // --- TResourceDisplay ---
 // CODEVIEW(E:\gamedcs\resourcedisplay.cpp:40, dc 0x120c54) void TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char is_small);

@@ -10,7 +10,10 @@
 
 class CSprite;
 class textWidget;
-class hero;
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero;
 class boat;
 
 // Dreamcast CodeView names the three pointer members and fixes this helper at
@@ -29,9 +32,9 @@ public:
     void restoreCell();
 
 protected:
-    hero* m_obscuringHero;
+    Hero* m_obscuringHero;
     boat* m_obscuringBoat;
-    hero* m_mobileHero;
+    Hero* m_mobileHero;
 };
 SIZE(type_cell_adjuster, 0xc);
 
@@ -133,8 +136,8 @@ enum EGetSoundCreatureId {
     GET_SOUND_CREATURE_115 = 115
 };
 
-DATA(0x0063d570) extern TCreatureType g_creatureGenerator1Types[];
-DATA(0x00677938) extern TCreatureType g_creatureGenerator4Types[][4];
+DATA(0x0063d570) extern CreatureType g_creatureGenerator1Types[];
+DATA(0x00677938) extern CreatureType g_creatureGenerator4Types[][4];
 
 class CObjectType;
 

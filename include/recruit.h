@@ -9,18 +9,27 @@
 #include "window.h"
 #include "palette.h"
 
-class armyGroup;
+#ifndef ArmyGroup
+#define ArmyGroup armyGroup
+#endif
+class ArmyGroup;
 class button;
-class hero;
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero;
 class iconWidget;
 class recruitUnit;
-class town;
+#ifndef Town
+#define Town town
+#endif
+class Town;
 
 void getMonsterCost(int monId, int* resCost);
-void getUpgradeCost(enum TCreatureType creature, enum TCreatureType upgrade,
+void getUpgradeCost(enum CreatureType creature, enum CreatureType upgrade,
     long amount, long* cost);
-void quickViewRecruit(town* newTown, int newDwellingIndex);
-void quickViewRecruit(enum TCreatureType monType, short* numMon);
+void quickViewRecruit(Town* newTown, int newDwellingIndex);
+void quickViewRecruit(enum CreatureType monType, short* numMon);
 
 // Recruit-window message ids, fixed by the constructor's widget ids and by
 // recruitUnit::Main's retail switch tables.
@@ -60,7 +69,11 @@ enum ERecruitCreatureSlot {
 // placeholders. The constructor proves +0x4c is recruit_info and proves
 // +0x50/+0x54 are button pointers: their derived-to-widget conversions
 // materialize the exact temporary consumed by vector<widget*>::push_back.
-class TRecruitWindow : public heroWindow {
+// Before normalization (type): TRecruitWindow.
+#ifndef RecruitWindow
+#define RecruitWindow TRecruitWindow
+#endif
+class RecruitWindow : public heroWindow {
 public:
     recruitUnit* m_recruitInfo;
     // Retail ctor 0x54e850 installs RECRUIT_ACCEPT_ID (0x7802) here;
@@ -76,19 +89,19 @@ public:
     // allocates 0x6c bytes for this class, closing the tail exactly.
     iconWidget* m_creatureWidgets[4];
 
-    TRecruitWindow(int x2, int y2, int altResource,
+    RecruitWindow(int x2, int y2, int altResource,
                    recruitUnit* recruitInfo);
-    virtual ~TRecruitWindow();
+    virtual ~RecruitWindow();
     void addCreatureWidgets(long startX, long startY, long nameY,
-                              TCreatureType creature, long slot);
+                              CreatureType creature, long slot);
 };
-SIZE(TRecruitWindow, 0x6c);
+SIZE(RecruitWindow, 0x6c);
 
 // The recruit dialog's window, .bss 0x69d5e8. Name provisional (the
 // gp<Type> house convention); recruitUnit::Open builds it,
 // recruitUnit::Close RemoveWindow()s and deletes it, and Update
 // broadcasts every widget refresh through it.
-extern TRecruitWindow* g_recruitWindow;
+extern RecruitWindow* g_recruitWindow;
 
 // recruit.obj's own .bss 0x69d5f4 - the menu recruitUnit::Open parks
 // before switching to the default one, and the menu ::Close puts back.
@@ -98,12 +111,16 @@ extern struct HMENU__* g_recruitSavedMenu;
 
 // The game palette uses indices 31 and 36 for normal and selected recruit
 // borders, index 45 for level-up selection, and indices starting at 64 for players.
-extern TPalette16* g_unnamed6aacb0;
+extern Palette16* g_unnamed6aacb0;
 
-class TRecruitQuickWindow : public heroWindow {
+// Before normalization (type): TRecruitQuickWindow.
+#ifndef RecruitQuickWindow
+#define RecruitQuickWindow TRecruitQuickWindow
+#endif
+class RecruitQuickWindow : public heroWindow {
 public:
-    TRecruitQuickWindow(int x2, int y2);
-    virtual ~TRecruitQuickWindow();
+    RecruitQuickWindow(int x2, int y2);
+    virtual ~RecruitQuickWindow();
 };
 
 // PROVEN layout. Base is baseManager (0x38): all three retail
@@ -141,15 +158,15 @@ public:
     int m_currentSpriteFrame[4];
     int m_type;
     unsigned char m_viewOnly;
-    TCreatureType m_monsterType;
+    CreatureType m_monsterType;
     short* m_numAvail;
     int m_selectedPosition;
-    TCreatureType m_monType1;
-    TCreatureType m_monType2;
-    TCreatureType m_monType3;
-    TCreatureType m_monType4;
+    CreatureType m_monType1;
+    CreatureType m_monType2;
+    CreatureType m_monType3;
+    CreatureType m_monType4;
     short* m_available[4];
-    hero* m_thisHero;
+    Hero* m_thisHero;
     // Dreamcast primitive pointer 0x474 and NH3API: int* at +0x80.
     int* m_availSource;
     long m_goldPerTroop;
@@ -158,21 +175,21 @@ public:
     int m_inTownMainScreen;
     // Dreamcast pointer 0x4811 and NH3API: heroWindow* at +0x94.
     heroWindow* m_errorWin;
-    armyGroup* m_currArmyGroup;
+    ArmyGroup* m_currArmyGroup;
     unsigned char m_currArmyGroupIsTownGarrison;
     // Naturally aligned at +0xa0 between the +0x9c flag and +0xa4 updateNeeded.
     int m_addIndex;
 
-    recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,
-        TCreatureType monType1, short* numMon1,
-        TCreatureType monType2, short* numMon2,
-        TCreatureType monType3, short* numMon3,
-        TCreatureType monType4, short* numMon4);
-    recruitUnit(hero* thisHero,
-        TCreatureType monType1, short* numMon1,
-        TCreatureType monType2, short* numMon2,
-        TCreatureType monType3, short* numMon3,
-        TCreatureType monType4, short* numMon4);
+    recruitUnit(ArmyGroup* newGroup, unsigned char groupIsTownGarrison,
+        CreatureType monType1, short* numMon1,
+        CreatureType monType2, short* numMon2,
+        CreatureType monType3, short* numMon3,
+        CreatureType monType4, short* numMon4);
+    recruitUnit(Hero* thisHero,
+        CreatureType monType1, short* numMon1,
+        CreatureType monType2, short* numMon2,
+        CreatureType monType3, short* numMon3,
+        CreatureType monType4, short* numMon4);
     int m_updateNeeded;
     int m_errorExit;
     int m_maxAvail;
@@ -189,7 +206,7 @@ public:
         RECRUIT_SOURCE_TOWN = 0x62
     };
 
-    recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainScreen);
+    recruitUnit(Town* newTown, int newDwellingIndex, int inInTownMainScreen);
 
     // The definition follows GetMonsterCost in recruit.cpp, as Dreamcast's
     // recruit.cpp line table attests.  It remains inline: retail emits no

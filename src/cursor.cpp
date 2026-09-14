@@ -55,7 +55,7 @@ VA(0x0047f7d0, 0x82)  // dc 0x79a84
 void advManager::stopCursor(unsigned char standEnd)
 {
     if (standEnd) {
-        hero* curr = g_game->getCurrHero();
+        Hero* curr = g_game->getCurrHero();
         if (curr)
             m_cursorSequence = curr->getStandSequence();
         else
@@ -81,7 +81,7 @@ void advManager::drawCursor(int cellX, int cellY)
     int refX = (cellX + 8) * 32;
     int refY = cellY * 32 + 232;
 
-    hero* curr = g_game->getCurrHero();
+    Hero* curr = g_game->getCurrHero();
     if (curr) {
         if (curr->m_flags & 0x40000) {
             boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
@@ -131,7 +131,7 @@ void advManager::drawCursorShadow(int cellX, int cellY)
     int refX = (cellX + 8) * 32;
     int refY = cellY * 32 + 232;
 
-    hero* curr = g_game->getCurrHero();
+    Hero* curr = g_game->getCurrHero();
     if (curr) {
         if (curr->m_flags & 0x40000) {
             boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
@@ -176,7 +176,7 @@ void advManager::drawCursorAlpha()
             if (m_radarOrigin.m_y + 9 >= g_mapHeight)
                 bottomClip = abs((g_mapHeight - m_radarOrigin.m_y - 9) * 32);
 
-            hero* curr = g_game->getHero(g_currentPlayer->m_currHeroId);
+            Hero* curr = g_game->getHero(g_currentPlayer->m_currHeroId);
 
             if (curr->m_flags & 0x40000) {
                 boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
@@ -228,7 +228,7 @@ void advManager::turnTo(int newDirection)
 }
 
 VA(0x00480000, 0x84)  // dc 0x7a45c
-int advManager::getMoveShowIt(hero* currHero, int direction)
+int advManager::getMoveShowIt(Hero* currHero, int direction)
 {
     int xInc = g_normalDirTable[direction].m_x;
     int yInc = g_normalDirTable[direction].m_y;
@@ -247,7 +247,7 @@ int advManager::getMoveShowIt(hero* currHero, int direction)
 }
 
 VA(0x00480090, 0x1A4)  // dc 0x7a4d0
-NewmapCell* advManager::endMoveHero(hero* curr, NewmapCell* returnCell, unsigned char isRemoteMove, long origX, long origY, unsigned char standEnd, int* foughtBattle)
+NewmapCell* advManager::endMoveHero(Hero* curr, NewmapCell* returnCell, unsigned char isRemoteMove, long origX, long origY, unsigned char standEnd, int* foughtBattle)
 {
     updateRadar(1, 1, 0, 0, 0);
 
@@ -272,7 +272,7 @@ NewmapCell* advManager::endMoveHero(hero* curr, NewmapCell* returnCell, unsigned
 }
 
 VA(0x00480240, 0x131)  // dc 0x7a6c4
-NewmapCell* advManager::handleStopOnTrigger(hero* curr, NewmapCell* destCell, unsigned char isRemoteMove, unsigned char standEnd, int* foughtBattle, long curMoveCost, long nextMoveMinCost)
+NewmapCell* advManager::handleStopOnTrigger(Hero* curr, NewmapCell* destCell, unsigned char isRemoteMove, unsigned char standEnd, int* foughtBattle, long curMoveCost, long nextMoveMinCost)
 {
     stopCursor(1);
 
@@ -310,7 +310,7 @@ NewmapCell* advManager::handleStopOnTrigger(hero* curr, NewmapCell* destCell, un
 // All 17 CFG blocks and 604 bytes agree after resolving the two equivalent
 // startVals+4 / retail const_23d6f4 operands. No table bytes were changed.
 VA(0x00480380, 0x25C)  // exhaustive order + timeGetTime call, dc 0x7a7f4
-void advManager::animateMove(hero* curr, int direction, int xInc, int yInc)
+void advManager::animateMove(Hero* curr, int direction, int xInc, int yInc)
 {
     m_scrollX = m_scrollY = 0;
     startCursor(direction);
@@ -391,7 +391,7 @@ VA(0x004805e0, 0x131C)  // ret 0x1c + caller arg order/call set, dc 0x7aa54
 NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_point& triggerPoint, int* noMove, unsigned char computerMove, int* foughtBattle, unsigned char isRemoteMove)
 {
     unsigned char becameBoat = 0;
-    hero* curr;
+    Hero* curr;
     unsigned char enteredBoat;
     NewmapCell* returnCell;
     int nextMoveMinCost;
@@ -518,7 +518,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
 
         case HERO:
             if (curr->m_flags & 0x40000) {
-                hero* other = g_game->getHero(destCell->m_extraInfo);
+                Hero* other = g_game->getHero(destCell->m_extraInfo);
                 if (!(other->m_flags & 0x40000))
                     return endMoveHero(curr, 0, isRemoteMove,
                                          origX, origY, standEnd,
@@ -531,7 +531,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
             break;
 
         case TOWN: {
-            town* thisTown = g_game->getTown(destCell->m_extraInfo);
+            Town* thisTown = g_game->getTown(destCell->m_extraInfo);
             if (!g_game->onSameTeam(thisTown->m_owner, g_netLocalGamePos)
                 && thisTown->hasGarrison())
                 return handleStopOnTrigger(
@@ -732,7 +732,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
 VA(0x00481900, 0x1C1)  // exhaustive cursor-tail order/call set, dc 0x7bbbc
 void advManager::checkAdjacentMon(int* foughtBattle)
 {
-    hero* curr = g_game->getCurrHero();
+    Hero* curr = g_game->getCurrHero();
     type_point location = curr->getLocation();
     type_point monster(0xff, 0xff, 0xff);
 
@@ -753,7 +753,7 @@ void advManager::checkAdjacentMon(int* foughtBattle)
 }
 
 VA(0x00481ad0, 0x10D)  // dc 0x7bdcc
-int advManager::validMoveWithEvent(hero* who, int direction)
+int advManager::validMoveWithEvent(Hero* who, int direction)
 {
     int destX = who->m_x + g_normalDirTable[direction].m_x;
     int destY = who->m_y + g_normalDirTable[direction].m_y;
@@ -767,14 +767,14 @@ int advManager::validMoveWithEvent(hero* who, int direction)
         return validMove(who, direction, 1, 0);
 
     if (who->m_flags & 0x40000) {
-        hero* occupant = g_game->getHero(destCell->m_extraInfo);
+        Hero* occupant = g_game->getHero(destCell->m_extraInfo);
         return (occupant->m_flags & 0x40000) ? 1 : 0;
     }
     return 1;
 }
 
 VA(0x00481be0, 0x2ED)  // dc 0x7bee4
-int advManager::validMove(hero* who, int direction, int computerMove,
+int advManager::validMove(Hero* who, int direction, int computerMove,
                           unsigned char landOnly)
 {
     int stepX = g_normalDirTable[direction].m_x;
@@ -836,7 +836,7 @@ int advManager::validMove(hero* who, int direction, int computerMove,
 
     if (destCell->m_type == HERO
             && destCell->getMapObject() == SANCTUARY) {
-        hero* occupant = g_game->getHero(destCell->m_extraInfo);
+        Hero* occupant = g_game->getHero(destCell->m_extraInfo);
         if (occupant->m_owner != who->m_owner)
             return 0;
     }
@@ -850,7 +850,7 @@ void advManager::onMoveHero(CMapChange* mapChange)
     CMCMoveHero* change = static_cast<CMCMoveHero*>(mapChange);
     int dummy1;
     int dummy2;
-    hero* currentHero = g_game->getHero(change->m_heroId);
+    Hero* currentHero = g_game->getHero(change->m_heroId);
     if (currentHero->getLocation() != change->m_point)
         return;
 
@@ -869,7 +869,7 @@ DC_ONLY(0x7c2e0, 0x48)
 void advManager::onTeleportHero(CMapChange* mapChange)
 {
     CMCTeleportHero* change = static_cast<CMCTeleportHero*>(mapChange);
-    hero* currentHero = g_game->getHero(change->m_heroId);
+    Hero* currentHero = g_game->getHero(change->m_heroId);
     teleportTo(currentHero, change->m_point, 0, 1, 1, 0);
 }
 
@@ -921,7 +921,7 @@ DC_ONLY(0x7c470, 0xAC)
 void advManager::onDeadHero(CMapChange* mapChange)
 {
     CMCDeadHero* change = static_cast<CMCDeadHero*>(mapChange);
-    hero* currentHero = g_game->getHero(change->m_heroId);
+    Hero* currentHero = g_game->getHero(change->m_heroId);
     if (currentHero->getLocation() != change->m_point)
         return;
     currentHero->deallocate(1, 1);
@@ -940,13 +940,13 @@ void advManager::onRecruitHero(CMapChange* mapChange)
     // after expanding OnRecruitHero. Negative control without this site pin:
     // ProcessMapChangeNew 100.0000% -> 92.6034%, calls 30 -> 29.
 #pragma inline_depth(0)
-    hero* currentHero = g_game->getHero(change->m_heroId);
+    Hero* currentHero = g_game->getHero(change->m_heroId);
 #pragma inline_depth()
     currentHero->m_x = change->m_point.m_x;
     currentHero->m_y = change->m_point.m_y;
     currentHero->m_z = change->m_point.m_z;
     currentHero->m_flags = 0;
-    currentHero->m_facing = hero::kFacingE;
+    currentHero->m_facing = Hero::kFacingE;
     currentHero->m_owner = static_cast<signed char>(change->m_playerPos);
     currentHero->obscureCell();
 }
@@ -993,7 +993,7 @@ VA(0x00481fd0, 0x32)  // dc 0x7c688
 void advManager::onHideHero(CMapChange* mapChange)
 {
     CMCHideHero* change = static_cast<CMCHideHero*>(mapChange);
-    hero* currentHero = g_game->getHero(change->m_heroId);
+    Hero* currentHero = g_game->getHero(change->m_heroId);
     if (currentHero)
         currentHero->restoreCell();
 }

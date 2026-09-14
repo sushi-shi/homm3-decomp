@@ -10,7 +10,7 @@
 // unsigned-byte debug storage records (ai_creature_value.h:29/35).
 struct type_creature_value {
 public:
-    TCreatureType m_type;
+    CreatureType m_type;
     long m_value;
     short m_amount;
     bool operator<(const type_creature_value& arg) const

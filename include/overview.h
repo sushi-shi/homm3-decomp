@@ -101,10 +101,14 @@ struct overview_item_record {
 };
 SIZE(overview_item_record, 8);
 
-class TOverviewWindow : public CAdvPopup {
+// Before normalization (type): TOverviewWindow.
+#ifndef OverviewWindow
+#define OverviewWindow TOverviewWindow
+#endif
+class OverviewWindow : public CAdvPopup {
 public:
-    TOverviewWindow();
-    virtual ~TOverviewWindow();
+    OverviewWindow();
+    virtual ~OverviewWindow();
     virtual int windowHandler(message& msg);
 
     void updateFlaggableIcons();
@@ -124,7 +128,7 @@ private:
     // count labels here; updateFlaggableIcon updates/hides each label.
     std::vector<textWidget*> m_flaggableCountWidgets;
 };
-SIZE(TOverviewWindow, 0x80);
+SIZE(OverviewWindow, 0x80);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\overview.cpp:1279, dc 0x106d98) void UpdateFlaggableIcons();

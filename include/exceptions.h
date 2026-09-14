@@ -16,7 +16,11 @@
 // failure adds no fields. Copy constructors 0x41b7b0/0x41b920 corroborate
 // the +0x1d byte before copying the exception and string subobjects.
 // Vtables 0x63aba8/0x63abb4 retain the library's three virtual slots.
-class TDebugBreak {
+// Before normalization (type): TDebugBreak.
+#ifndef DebugBreak
+#define DebugBreak TDebugBreak
+#endif
+class DebugBreak {
 public:
     // The default error construction at 0x514dbd calls the three-byte
     // empty-constructor representative 0x524360 on the base at +0x1d.
@@ -26,10 +30,14 @@ public:
     // initialization. No evidence supports a separate message overload.
     // Shared-header visibility is reconstructed from the elided and retained
     // calls; the folded body is already represented by philAI's VA claim.
-    TDebugBreak() {}
+    DebugBreak() {}
 };
 
-class TRuntimeError : public TDebugBreak, public std::runtime_error {
+// Before normalization (type): TRuntimeError.
+#ifndef RuntimeError
+#define RuntimeError TRuntimeError
+#endif
+class RuntimeError : public DebugBreak, public std::runtime_error {
 public:
     // The object-table failure at 0x514dba constructs the empty base,
     // default-constructs a string at 0x514dcc, passes it to the retained
@@ -37,14 +45,18 @@ public:
     // throws with the TRuntimeError descriptor. Keep this initialization
     // sequence shared with objnames' corresponding default-error path.
     // Expansion proves visibility there, not an original inline keyword.
-    TRuntimeError() : std::runtime_error(std::string()) {}
-    TRuntimeError(const char* text);  // retained at 0x49a0c0
+    RuntimeError() : std::runtime_error(std::string()) {}
+    RuntimeError(const char* text);  // retained at 0x49a0c0
 };
 
-class TAllocationFailure : public TRuntimeError {
+// Before normalization (type): TAllocationFailure.
+#ifndef AllocationFailure
+#define AllocationFailure TAllocationFailure
+#endif
+class AllocationFailure : public RuntimeError {
 public:
     VA(0x004d6b80, 0x17)  // anchor-callee 0x49a0c0 + anchor-vtable 0x63aba8, retail-only
-    TAllocationFailure() : TRuntimeError("Allocation failure.") {}
+    AllocationFailure() : RuntimeError("Allocation failure.") {}
 };
 
 #endif  /* HOMM3_EXCEPTIONS_H */

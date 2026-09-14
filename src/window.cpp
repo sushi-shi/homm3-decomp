@@ -661,7 +661,7 @@ textWidget* CHeroWindowEx::getRolloverWidget()
 }
 
 VA(0x005ff8e0, 0x75)  // dc 0x197f50
-void CHeroWindowEx::setHelpText(THelpText* helpText, int start, int stop,
+void CHeroWindowEx::setHelpText(HelpText* helpText, int start, int stop,
                                 unsigned char copyText)
 {
     for (int i = start; i < stop; i++) {
@@ -675,7 +675,7 @@ void CHeroWindowEx::setHelpText(THelpText* helpText, int start, int stop,
 VA(0x005ff960, 0xC3)  // dc 0x197fd8
 unsigned char initializeWinSetupText()
 {
-    TTextResource* textResource = ResourceManager::getText(
+    TextResource* textResource = ResourceManager::getText(
         DATA_COMPGEN(0x0068c838, winSetupTextName, "jktext.txt"));
     if (!textResource)
         return 0;

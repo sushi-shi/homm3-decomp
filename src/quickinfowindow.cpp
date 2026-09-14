@@ -11,9 +11,9 @@
 #include "textwdgt.h"
 
 VA(0x0052f8c0, 0x430)  // dc 0x11787c
-TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel viewLevel,
-    TCreatureType id, int count, TDisposition disposition, int cost)
-    : TDialogBox(0, 0, 256, 256, 0x12)
+QuickCreatureWindow::QuickCreatureWindow(ViewLevel viewLevel,
+    CreatureType id, int count, Disposition disposition, int cost)
+    : DialogBoxWindow(0, 0, 256, 256, 0x12)
 {
     m_widgets.reserve(m_widgets.size() + 3);
 
@@ -29,7 +29,7 @@ TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel viewLevel,
                     getArmyName(id, count));
         }
     } else {
-        sprintf(g_text, "%s %s", armyGroup::getArmySizeName(count, 1),
+        sprintf(g_text, "%s %s", ArmyGroup::getArmySizeName(count, 1),
                 getArmyName(id, 0));
     }
 
@@ -70,7 +70,7 @@ TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel viewLevel,
 VA_COMPGEN(0x0052fcf0, 0x21, SCALAR_DELETING_DTOR, TQuickCreatureWindow)
 
 VA(0x0052fd20, 0xB)  // dc 0x117b5c
-TQuickCreatureWindow::~TQuickCreatureWindow()
+QuickCreatureWindow::~QuickCreatureWindow()
 {
 }
 
@@ -81,7 +81,7 @@ TQuickCreatureWindow::~TQuickCreatureWindow()
 // the later quicktownwindow span.
 #if 0  // @carcass
 DC_ONLY(0x117b8c, 0x28)
-void TQuickCreatureWindow::quickWindowWait()
+void QuickCreatureWindow::quickWindowWait()
 {
     // @stub
 }

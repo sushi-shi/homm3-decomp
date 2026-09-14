@@ -29,7 +29,11 @@ extern const float g_afUpgradeCostFactor[7];
 //     totalCost with `lea edi,[this+0x27c]` / `mov ecx,7` / `rep stosd`.
 static void updateHillFort(unsigned char update);
 
-class THillFortWindow : public heroWindow {
+// Before normalization (type): THillFortWindow.
+#ifndef HillFortWindow
+#define HillFortWindow THillFortWindow
+#endif
+class HillFortWindow : public heroWindow {
     // Recovered UpdateHillFort calls this window's private Recalculate.
     friend void updateHillFort(unsigned char update);
 public:
@@ -122,13 +126,17 @@ public:
     // non-gold accumulation loop writes; and the four trailing dwords
     // are the creature type, its count, its dwelling level and the
     // tri-state the two icon tables index.
-    struct TUpgradeSlot {
+// Before normalization (type): THillFortWindow::TUpgradeSlot.
+#ifndef UpgradeSlot
+#define UpgradeSlot TUpgradeSlot
+#endif
+    struct UpgradeSlot {
         char m_countText[10];         // +0x00
         char m_goldCost[10];      // +0x0a
         char m_resourceCost[12];  // +0x14
         long m_cost[7];             // +0x20
         int m_resourceIndex;        // +0x3c
-        TCreatureType m_type;                 // +0x40 (TCreatureType domain)
+        CreatureType m_type;                 // +0x40 (TCreatureType domain)
         int m_count;                // +0x44
         int m_level;                // +0x48
         int m_state;                // +0x4c
@@ -143,13 +151,13 @@ public:
         UPGRADE_STATE_TOO_EXPENSIVE = 2
     };
 
-    THillFortWindow();
-    virtual ~THillFortWindow();
+    HillFortWindow();
+    virtual ~HillFortWindow();
     void doModal();
 
 private:
-    TUpgradeSlot m_slot[armyGroup::ARMY_GROUP_SLOT_COUNT];   // +0x4c
-    long m_totalCost[armyGroup::ARMY_GROUP_SLOT_COUNT];      // +0x27c
+    UpgradeSlot m_slot[ArmyGroup::ARMY_GROUP_SLOT_COUNT];   // +0x4c
+    long m_totalCost[ArmyGroup::ARMY_GROUP_SLOT_COUNT];      // +0x27c
     int m_upgradeAllButtonState;                             // +0x298
     widget* m_rolloverWidget;                                // +0x29c
 
@@ -168,9 +176,9 @@ private:
     // Original: UpgradeAll, hillfortwindow.cpp:500.
     void upgradeAll();
     // Original: GetCreatureType, HillFortWindow.h:170; const receiver proven.
-    TCreatureType getCreatureType(int slotnum) const { return m_slot[slotnum].m_type; }
+    CreatureType getCreatureType(int slotnum) const { return m_slot[slotnum].m_type; }
 };
-SIZE(THillFortWindow, 0x2a0);
+SIZE(HillFortWindow, 0x2a0);
 
 // Retail /Gr passes the message by reference in ECX, matching DoDialog.
 int hillFortWindowHandler(message& msg);

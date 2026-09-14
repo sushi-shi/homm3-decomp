@@ -14,9 +14,18 @@
 #include "monframeinfo.h"
 #include "includes.h"
 
-class hero;
-class armyGroup;
-class town;
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero;
+#ifndef ArmyGroup
+#define ArmyGroup armyGroup
+#endif
+class ArmyGroup;
+#ifndef Town
+#define Town town
+#endif
+class Town;
 class sample;
 class CSprite;
 
@@ -72,7 +81,11 @@ enum EAttackCriteria {
 // nine enumerators, one file earlier in the same closure); hero.cpp is
 // the only consumer that gains them, and its rows were re-measured
 // unchanged.
-enum TWallTargetId {
+// Before normalization (type): TWallTargetId.
+#ifndef WallTargetId
+#define WallTargetId TWallTargetId
+#endif
+enum WallTargetId {
     WALL_TARGET_0 = 0,
     WALL_TARGET_1 = 1,
     WALL_TARGET_2 = 2,
@@ -167,20 +180,24 @@ extern const type_ballistics_traits (&g_constBallisticsTraits)[4];
 // 0x43d400 owns member cleanup in army.cpp. A TU instantiating these handle
 // constructors/destructors must see the complete resource types.
 template<class T>
-class TResourceHandle {
+// Before normalization (type): TResourceHandle.
+#ifndef ResourceHandle
+#define ResourceHandle TResourceHandle
+#endif
+class ResourceHandle {
 public:
     T* m_resource;
 
-    TResourceHandle() { m_resource = 0; }
-    TResourceHandle(const TResourceHandle& that)
+    ResourceHandle() { m_resource = 0; }
+    ResourceHandle(const ResourceHandle& that)
     {
         m_resource = that.m_resource;
         if (m_resource)
             m_resource->addRef();
     }
-    ~TResourceHandle() { if (m_resource) m_resource->dispose(); }
+    ~ResourceHandle() { if (m_resource) m_resource->dispose(); }
 
-    TResourceHandle& operator=(T* newResource)
+    ResourceHandle& operator=(T* newResource)
     {
         m_resource = newResource;
         return *this;
@@ -193,7 +210,11 @@ class army {
 public:
     // Dreamcast Army.h enum; retail Teleport passes the two corresponding
     // immediate values to the independently located play_sample body.
-    enum TSampleID {
+// Before normalization (type): army::TSampleID.
+#ifndef SampleID
+#define SampleID TSampleID
+#endif
+    enum SampleID {
         WALK_SAMPLE = 0,
         ATTACK_SAMPLE = 1,
         WINCE_SAMPLE = 2,
@@ -280,7 +301,7 @@ public:
     // retail's S_PUB32 mangling for that slot is `W4TCreatureType`. The
     // ELABORATED spelling parses in every include order without armygrp.h
     // being visible, which is why this needs no view macro.
-    enum TCreatureType m_creatureType;   // +0x34, DC army::armyType
+    enum CreatureType m_creatureType;   // +0x34, DC army::armyType
     // Occupied combat cell. ai_tactical's find_attack_hex (0x436840)
     // feeds it straight into check_adjacent_hexes as the enemy hex,
     // and the type_AI_spellcaster ctor walks armies by it.
@@ -383,7 +404,7 @@ public:
     // could manufacture a higher local score in unrelated consumers.
     // -> sMonInfo.hasSpell        (+0xdc, row +0x68)
     // -> sMonInfo.wanderingLow/wanderingHigh (+0xe0/+0xe4)
-    TCreatureTypeTraits m_monInfo;  // +0x74 .. +0xe8, 116 B
+    CreatureTypeTraits m_monInfo;  // +0x74 .. +0xe8, 116 B
     // NAMED 2026-08-15 from the Dreamcast member table: DC army@212 is
     // show_fire_shield against this band's already-anchored +20 shift
     // (DC hitByCreature 220 = retail +0xf0, six lines below).
@@ -509,7 +530,7 @@ public:
     // stdIcon, missileIcon, image_height's plain dword in the middle of it,
     // and the eight-iteration armySample loop - instruction for instruction
     // against retail, fn+0x192..fn+0x202.
-    TResourceHandle<CSprite> m_stdIcon;    // +0x164
+    ResourceHandle<CSprite> m_stdIcon;    // +0x164
     // DC army.missileIcon (members.csv army@340, right between stdIcon
     // @336 = +0x164 and image_height @344 = +0x16c). attack_wall
     // (0x445fd0) hands it to ShootBallisticMissile as the CSprite*
@@ -518,11 +539,11 @@ public:
     // from the hexcell's own y, and LoadResources (0x43dd62) writes it
     // as `0x10b - <stdIcon frame metric>` - the stack's own vertical
     // span on the combat field. InitClean zeroes it.
-    TResourceHandle<CSprite> m_missileIcon;  // +0x168
+    ResourceHandle<CSprite> m_missileIcon;  // +0x168
     int m_imageHeight;             // +0x16c
     // DC army::armySample is sample*[8] at +0x15c; retail's preceding STL
     // expansion shifts it to +0x170, independently confirmed by play_sample.
-    TResourceHandle<sample> m_armySample[8];  // +0x170
+    ResourceHandle<sample> m_armySample[8];  // +0x170
     // Ordering key the AI compares BETWEEN stacks: should_attack_now
     // (0x436c60) refuses to cast now when any other still-able stack
     // on our side outranks the target's own value here. Name pending a
@@ -741,9 +762,9 @@ public:
     // candidate temporarily scores lower: C1XX assigns member handles from
     // this stream before C2 optimizes any individual function.
     army();
-    void init(int armyId, int newNumTroops, const hero* owner, int side,
+    void init(int armyId, int newNumTroops, const Hero* owner, int side,
               int inIndex, int gridIndex, int origPos);
-    void initialize(TCreatureType type, long number, const hero* owner,
+    void initialize(CreatureType type, long number, const Hero* owner,
                     long newGroup, long newIndex, long newGridIndex);
     void initClean();
     void loadResources();
@@ -819,8 +840,8 @@ public:
     void getBerserkTargets(std::vector<army*>& armies) const;
     int getOwningSide() const;
     int getControllingSide() const;
-    hero* getOwner() const;
-    hero* getController() const;
+    Hero* getOwner() const;
+    Hero* getController() const;
     inline double getDefenseDamageModifier(
         unsigned char rangedAttack) const;
     long getDefenseModifier() const;
@@ -878,7 +899,7 @@ public:
     void cancelSpellType(int spellType);
     void decrementSpellRounds();
     void goBerserk();
-    void cure(int level, int spellPower, const hero* castingHero);
+    void cure(int level, int spellPower, const Hero* castingHero);
     int canFit(int destIndex, int allowShifting,
                int* newDestIndex) const;
     void drawToBuffer(int x, int y, int numBoxOnly);
@@ -888,7 +909,7 @@ public:
     bool isActive() const;
     inline void checkLuck();
     void setSpellInfluence(int spell, int power, int mastery,
-                           const hero* castingHero);
+                           const Hero* castingHero);
     void cancelIndividualSpell(int spell);
     void cancelAllSpells();
     int bottomY() const;
@@ -913,11 +934,11 @@ public:
     long getMultiHeadDirections(long ourHex, const army* enemy,
                                    long enemyHex) const;
     long getSpellTime(int spell) const;
-    TSkillMastery getSpellLevel(int spell) const;
+    SkillMastery getSpellLevel(int spell) const;
     unsigned char setInsideAreaEffect(unsigned char arg);
-    void playSample(TSampleID id);
-    void stopSample(TSampleID id);
-    void waitSample(TSampleID which);
+    void playSample(SampleID id);
+    void stopSample(SampleID id);
+    void waitSample(SampleID which);
     void addAura();
     void removeAura();
     void removeBinding();
@@ -925,13 +946,13 @@ public:
     inline const char* getName() const;
     inline const char* getName(int count) const;
     bool isIncapacitated() const;
-    void setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
-                 const town* ownerTown, const hero* otherHero,
-                 const armyGroup* otherGroup, int magicTerrain);
+    void setLuck(const Hero* ownerHero, const ArmyGroup* ownerGroup,
+                 const Town* ownerTown, const Hero* otherHero,
+                 const ArmyGroup* otherGroup, int magicTerrain);
     int getLuck(unsigned char applyLimits) const;
-    void setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
-                   const town* ownerTown, const hero* otherHero,
-                   const armyGroup* otherGroup, int magicTerrain,
+    void setMorale(const Hero* ownerHero, const ArmyGroup* ownerGroup,
+                   const Town* ownerTown, const Hero* otherHero,
+                   const ArmyGroup* otherGroup, int magicTerrain,
                    unsigned char groupAlignments);
     int getMorale(unsigned char applyLimits) const;
     int getSpeed() const;
@@ -945,8 +966,8 @@ public:
     friend class combatManager;
 
 private:
-    void attackWall(TWallTargetId wall, long levelsDestroyed);
-    void attackWall(TWallTargetId wall,
+    void attackWall(WallTargetId wall, long levelsDestroyed);
+    void attackWall(WallTargetId wall,
                      const type_ballistics_traits& ballistics);
 
     void animateMissile(army* armyToAttack);
@@ -1039,9 +1060,9 @@ private:
     // (?set_inside_area_effect@army@@QAA_N_N@Z) is both the byte
     // argument and the byte return.
     unsigned char setInsideAreaEffect(unsigned char arg);  // 0x43efe0
-    void playSample(TSampleID id);          // 0x43d540
-    void stopSample(TSampleID id);          // 0x43d580
-    void waitSample(TSampleID which);
+    void playSample(SampleID id);          // 0x43d540
+    void stopSample(SampleID id);          // 0x43d580
+    void waitSample(SampleID which);
     // simple_move is PRIVATE on its own public
     // (?simple_move@army@@AAA_NH_N@Z) and every member of this movement
     // family returns `_N` - bool - and takes `restore_facing` as one:
@@ -1087,7 +1108,7 @@ private:
     // fourteen negative influences one by one and heal the remainder.
     // The DC prototype (army.cpp:4739) names the three parameters and
     // retail's `ret 0xc` agrees.
-    void cure(int level, int iSpellPower, const hero* casting_hero);  // 0x446500
+    void cure(int level, int iSpellPower, const Hero* casting_hero);  // 0x446500
     // 0x4448f0, claimed and reconstructed in army.cpp (an earlier
     // revision of this note said 0x4443f0 - a typo, that address is
     // inside ProcessDeath's span; the carve row 0x4448f0/0xB99 with
@@ -1101,17 +1122,17 @@ private:
     // (an index, two stores, one signed compare). Only the mangled
     // name differs, and the VA claim owns the pairing.
     void setSpellInfluence(int spell, int power, int mastery,
-                           const hero* casting_hero);
+                           const Hero* casting_hero);
     // Const (?ValidFlight@army@@QBA_NH_N@Z): the fly.obj body only
     // reads, and both callees it drives on `this` are already const.
     unsigned char validFlight(int destIndex,
                               unsigned char bLiteralTest) const;
-    void setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
-                 const town* ownerTown, const hero* otherHero,
-                 const armyGroup* otherGroup, int magicTerrain);
-    void setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
-                   const town* ownerTown, const hero* otherHero,
-                   const armyGroup* otherGroup, int magicTerrain,
+    void setLuck(const Hero* ownerHero, const ArmyGroup* ownerGroup,
+                 const Town* ownerTown, const Hero* otherHero,
+                 const ArmyGroup* otherGroup, int magicTerrain);
+    void setMorale(const Hero* ownerHero, const ArmyGroup* ownerGroup,
+                   const Town* ownerTown, const Hero* otherHero,
+                   const ArmyGroup* otherGroup, int magicTerrain,
                    unsigned char m_field54b2);
     // THREE CREATURE IDS THAT BELONG IN armygrp.h's TCreatureType and
     // are parked here instead. Byte-proven 2026-08-14 by two army.obj
@@ -1501,10 +1522,10 @@ public:
     // army.cpp's note above the pair. Do not re-litigate.
     // 0x442690 (57 B, ecx only): heroes[get_controlling_side()], the
     // hero currently DIRECTING this stack.
-    hero* getController() const;                               // 0x442690
+    Hero* getController() const;                               // 0x442690
     // 0x4426d0 (20 B, ecx only): heroes[combatSide], the hero who
     // OWNS this stack regardless of who is directing it.
-    hero* getOwner() const;                                    // 0x4426d0
+    Hero* getOwner() const;                                    // 0x4426d0
     // 0x43d8b0 / 0x43d9f0, LOCATED 2026-08-13 from combatManager::AddArmy
     // (0x47a100), which calls them back to back on the freshly claimed
     // slot. Init's SEVEN stack arguments are an exact arity match for the
@@ -1551,7 +1572,7 @@ public:
     const char* getName() const;
     const char* getName(int count) const;
     long getSpellTime(int spell) const;
-    TSkillMastery getSpellLevel(int spell) const;
+    SkillMastery getSpellLevel(int spell) const;
     unsigned char isActive() const;
     unsigned char isInAura() const;
     unsigned char isIncapacitated() const;
@@ -1707,9 +1728,9 @@ inline long army::getSpellTime(int spell) const
     }
 
     // E:\gamedcs\Army.h:825
-inline TSkillMastery army::getSpellLevel(int spell) const
+inline SkillMastery army::getSpellLevel(int spell) const
     {
-        return TSkillMastery(m_spellLevel[spell]);
+        return SkillMastery(m_spellLevel[spell]);
     }
 
     // E:\gamedcs\Army.h:830

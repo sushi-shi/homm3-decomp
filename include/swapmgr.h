@@ -16,7 +16,7 @@ class message;
 class CSwapManagerChatEdit : public CGameChatEdit {
 public:
     CSwapManagerChatEdit(int x, int y, int w, int h, int textSize,
-                         char* text, char* fontName, font::TColor color,
+                         char* text, char* fontName, font::Color color,
                          font::EJustify justification, char* backgroundIcon,
                          int backgroundFrame, int id, int style,
                          int readType, int insetX, int insetY);
@@ -25,7 +25,11 @@ public:
 
 // Dreamcast proves the direct heroWindow base and contributes no additional
 // virtuals. Retail's destructor walks the inherited Widgets vector verbatim.
-class TSwapWindow : public heroWindow {
+// Before normalization (type): TSwapWindow.
+#ifndef SwapWindow
+#define SwapWindow TSwapWindow
+#endif
+class SwapWindow : public heroWindow {
 public:
     // Role-derived names: ctor 0x5aaa80 creates the transcript/edit controls,
     // trarrowl/trarrowr bitmaps, and kSwapReceiveFromAlly button. updateArrows
@@ -39,11 +43,11 @@ public:
     button* m_receiveButton;        // +0x5c  transfer control
     int m_field60;       // +0x60  Complete-only tail (allocation extent proof)
 
-    TSwapWindow(hero** heroes);
-    virtual ~TSwapWindow();
+    SwapWindow(Hero** heroes);
+    virtual ~SwapWindow();
     void updateArrows();
 };
-SIZE(TSwapWindow, 0x64);
+SIZE(SwapWindow, 0x64);
 
 // Canonical partial retail layout. IsLeftHero and its sole retail caller
 // prove the two hero pointers at +0x40/+0x44; the swapManager ctor (0x5ae500)
@@ -221,10 +225,10 @@ public:
 
 class CHeroUpdateMsg : public CNetMsg {
 public:
-    hero m_leftHero;
-    hero m_rightHero;
+    Hero m_leftHero;
+    Hero m_rightHero;
 
-    CHeroUpdateMsg(hero* left, hero* right);
+    CHeroUpdateMsg(Hero* left, Hero* right);
 };
 
 SIZE(CTradeRequestDoneMsg, 0x14);
@@ -233,9 +237,9 @@ SIZE(CHeroUpdateMsg, 0x938);
 
 class swapManager : public baseManager {
 public:
-    TSwapWindow* m_parent;     // +0x38
+    SwapWindow* m_parent;     // +0x38
     Bitmap816* m_border;       // +0x3c
-    hero* m_heroes[2];         // +0x40 / +0x44
+    Hero* m_heroes[2];         // +0x40 / +0x44
     // Two-stage army selection. swapMons 0x5b0da0 indexes the source and
     // destination heroes and their respective army slots with these four
     // words, then combines or swaps the stacks. Role-derived names.
@@ -260,7 +264,7 @@ public:
     CNetMsgHandler* m_previousNetMsgHandler;  // +0x60
     CNetMsgHandler* m_netMsgHandler;
 
-    swapManager(hero* leftHero, hero* rightHero);
+    swapManager(Hero* leftHero, Hero* rightHero);
     void reset();
     virtual int open(int newPriority);  // baseManager vtable slot 0
     virtual void close();               // slot 1
@@ -268,14 +272,14 @@ public:
     int drawSwapWin();
     inline bool isLeftHero();
     inline unsigned char isRightHero();
-    inline hero* getOtherHero();
+    inline Hero* getOtherHero();
     void drawSelector();
     void sendHeroUpdate();
     int exitSwapManager(message& msg);
     void swapSide();
     void onChatUpdate();
-    void updateArtifactWidget(long id, TArtifact artifact);
-    void updateSlot(int hero, TArtifactSlot slot);
+    void updateArtifactWidget(long id, Artifact artifact);
+    void updateSlot(int hero, ArtifactSlot slot);
     void updateAllSlots();
     void updateBackpackItem(int hero, int i);
     void updateBackpack(int hero);

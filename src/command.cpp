@@ -65,7 +65,7 @@ static const int g_combatActionFirstAid = 11;
 VA(0x00473c00, 0x29F)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map, dc 0x6af98
 unsigned char combatManager::automateCatapult()
 {
-    DATA(0x0063d54c) static const TWallTargetId walls[4] = {
+    DATA(0x0063d54c) static const WallTargetId walls[4] = {
         WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_4, WALL_TARGET_5
     };
 
@@ -78,9 +78,9 @@ unsigned char combatManager::automateCatapult()
         return 1;
     }
 
-    TWallTargetId target;
+    WallTargetId target;
     for (target = WALL_TARGET_0; target < WALL_TARGET_COUNT;
-            target = TWallTargetId(target + 1)) {
+            target = WallTargetId(target + 1)) {
         if (validWallTarget(target))
             break;
     }
@@ -135,7 +135,7 @@ unsigned char combatManager::automateCatapult()
             }
             target = walls[index];
         } else {
-            DATA(0x00670198) static TWallTargetId towers[4] = {
+            DATA(0x00670198) static WallTargetId towers[4] = {
                 WALL_TARGET_3, WALL_TARGET_7, WALL_TARGET_0, WALL_TARGET_6
             };
 
@@ -148,7 +148,7 @@ unsigned char combatManager::automateCatapult()
                 target = towers[index];
             } else {
                 for (target = WALL_TARGET_0; target < WALL_TARGET_COUNT;
-                        target = TWallTargetId(target + 1)) {
+                        target = WallTargetId(target + 1)) {
                     if (validWallTarget(target))
                         break;
                 }
@@ -707,7 +707,7 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
     if (static_cast<const combatManager*>(this)->isQuickCombat())
         return 1;
 
-    hero* owner = currentArmy->getController();
+    Hero* owner = currentArmy->getController();
     switch (currentArmy->m_creatureType) {
     case CREATURE_BALLISTA:
     case CREATURE_ARROW_TOWER:
@@ -837,7 +837,7 @@ int combatManager::processCombatMsg(message& msg)
                 break;
 
             switch (msg.m_codeY) {
-            case TCombatWindow::COMBAT_LEFT_COMMAND_3_ID:
+            case CombatWindow::COMBAT_LEFT_COMMAND_3_ID:
                 m_autoCombatOn = !m_autoCombatOn;
                 if (m_autoCombatOn)
                     getControl();
@@ -848,15 +848,15 @@ int combatManager::processCombatMsg(message& msg)
                 }
                 break;
 
-            case TCombatWindow::COMBAT_RIGHT_COMMAND_2_ID:
+            case CombatWindow::COMBAT_RIGHT_COMMAND_2_ID:
                 m_nextAction = 3;
                 break;
 
-            case TCombatWindow::COMBAT_LEFT_COMMAND_2_ID:
+            case CombatWindow::COMBAT_LEFT_COMMAND_2_ID:
                 combatSystemOptions();
                 break;
 
-            case TCombatWindow::COMBAT_RIGHT_COMMAND_0_ID:
+            case CombatWindow::COMBAT_RIGHT_COMMAND_0_ID:
                 if (!m_heroes[m_currentSide]) {
                     normalDialog(g_generalText->getText(128),
                                  1, -1, -1, -1, 0,
@@ -867,7 +867,7 @@ int combatManager::processCombatMsg(message& msg)
                 }
                 break;
 
-            case TCombatWindow::COMBAT_LEFT_COMMAND_1_ID:
+            case CombatWindow::COMBAT_LEFT_COMMAND_1_ID:
                 normalDialog(g_generalText->getText(29),
                              2, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
@@ -876,7 +876,7 @@ int combatManager::processCombatMsg(message& msg)
                 resetMouse();
                 break;
 
-            case TCombatWindow::COMBAT_LEFT_COMMAND_0_ID:
+            case CombatWindow::COMBAT_LEFT_COMMAND_0_ID:
                 if (doSurrender()) {
                     if (g_game->m_players[m_playerIds[m_currentSide]].m_resources[6]
                             < g_surrenderCost695030) {
@@ -891,12 +891,12 @@ int combatManager::processCombatMsg(message& msg)
                 resetMouse();
                 break;
 
-            case TCombatWindow::COMBAT_RIGHT_COMMAND_1_ID:
-            case TCombatWindow::COMBAT_PLACEMENT_COMMAND_0_ID:
+            case CombatWindow::COMBAT_RIGHT_COMMAND_1_ID:
+            case CombatWindow::COMBAT_PLACEMENT_COMMAND_0_ID:
                 m_nextAction = 8;
                 break;
 
-            case TCombatWindow::COMBAT_PLACEMENT_COMMAND_1_ID:
+            case CombatWindow::COMBAT_PLACEMENT_COMMAND_1_ID:
                 m_lastMovedArmy = 0;
                 if (g_networkActive69954c) {
                     // The Dreamcast NB11 stream gives placementMsg its own
@@ -988,9 +988,9 @@ int combatManager::processCombatMsg(message& msg)
             } else if (validHex(gridIndex)) {
                 if (m_cells[gridIndex].hasArmy()) {
                     army* stack = m_cells[gridIndex].getArmy();
-                    hero* owner = stack->getOwner();
+                    Hero* owner = stack->getOwner();
                     if (g_unnamed698758.m_combatArmyInfoLevel
-                            == TCombatOptionsWindow::
+                            == CombatOptionsWindow::
                                 CREATURE_INFO_LEVEL_VERBOSE) {
                         if (stack->m_combatSide == 0) {
                             m_combatWindow->m_creatureSubWindows[0]->update(*stack,
@@ -1002,7 +1002,7 @@ int combatManager::processCombatMsg(message& msg)
                             m_combatWindow->m_creatureSubWindows[1]->show();
                         }
                     } else if (g_unnamed698758.m_combatArmyInfoLevel
-                               == TCombatOptionsWindow::
+                               == CombatOptionsWindow::
                                    CREATURE_INFO_LEVEL_COMPACT) {
                         if (stack->m_combatSide == 0) {
                             m_combatWindow->m_creatureSubWindows[2]->update(*stack,
@@ -1017,7 +1017,7 @@ int combatManager::processCombatMsg(message& msg)
                 } else if (m_debugShowBlockedHexes
                            && (m_cells[gridIndex].m_attributes & 2)
                            && m_cells[gridIndex].m_obstacleIndex != -1) {
-                    TObstacle& obstacle =
+                    Obstacle& obstacle =
                         m_obstacles[m_cells[gridIndex].m_obstacleIndex];
                     sprintf(g_text,
                             "Obstacle name: %s, owner: %d, visible:%s",
@@ -1283,7 +1283,7 @@ void combatManager::resetRound()
     if (m_someCreaturesVanish)
         makeCreaturesVanish();
 
-    for (TObstacle* obstacle = m_obstacles.begin();
+    for (Obstacle* obstacle = m_obstacles.begin();
             obstacle != m_obstacles.end(); ++obstacle) {
         if (obstacle->m_duration > 0) {
             obstacle->m_duration--;
@@ -1309,11 +1309,11 @@ void combatManager::autoResolveCombat()
     // ai_combat.cpp's free function is __fastcall under the shared /Gr
     // profile. Keep its one-use declaration at block scope: a file-scope
     // declarator crosses command.obj's measured GetCommand handle wall.
-    void aiAutoCombat(hero* attackingHero, hero* defendingHero,
-                        armyGroup& attackingArmy, armyGroup& defendingArmy,
-                        const town* defendingTown, NewmapCell* cell);
+    void aiAutoCombat(Hero* attackingHero, Hero* defendingHero,
+                        ArmyGroup& attackingArmy, ArmyGroup& defendingArmy,
+                        const Town* defendingTown, NewmapCell* cell);
 
-    armyGroup localArmies[2];
+    ArmyGroup localArmies[2];
     int side;
     for (side = 0; side < 2; side++)
         localArmies[side] = *m_armyGroups[side];
@@ -1379,7 +1379,7 @@ unsigned char combatManager::isOutsidePlacementBoundry(int group, int index)
 }
 
 VA(0x00476440, 0x50)  // dc 0x6d548
-unsigned char combatManager::validWallTarget(TWallTargetId wall)
+unsigned char combatManager::validWallTarget(WallTargetId wall)
 {
     if ((wall == WALL_TARGET_0 || wall == WALL_TARGET_6)
         && m_fortificationLevel < COMBAT_FORTIFICATION_CASTLE)
@@ -1544,8 +1544,8 @@ int combatManager::getCommand(int newIndex)
         // is used, both as wallTargets' subscript and as
         // valid_wall_target's argument. Codegen is identical - retail's
         // own counter is a plain dword in ecx.
-        for (TWallTargetId wall = WALL_TARGET_0; wall < WALL_TARGET_COUNT;
-                wall = TWallTargetId(wall + 1)) {
+        for (WallTargetId wall = WALL_TARGET_0; wall < WALL_TARGET_COUNT;
+                wall = WallTargetId(wall + 1)) {
             if (newIndex == s_wallTargets[wall].m_targetHex) {
                 if (validWallTarget(wall)) {
                     currentArmy->m_side = -1;
@@ -1765,7 +1765,7 @@ void combatManager::doCommand(int command)
 VA(0x00476fe0, 0x2C4)  // dc 0x6de24
 void combatManager::showEagleEye(int winningGroup, int dialogTimeout)
 {
-    hero* winner = m_heroes[winningGroup];
+    Hero* winner = m_heroes[winningGroup];
     if (!winner)
         return;
 
@@ -1974,7 +1974,7 @@ void combatManager::doVictory(int winningGroup)
     if (winningGroup != -1 && m_playerIds[winningGroup] != -1
         && g_game->isLocalHuman(m_playerIds[winningGroup])) {
         {
-            TCombatResultsWindow resultsWindow(
+            CombatResultsWindow resultsWindow(
                 m_heroes[0], m_heroes[1], winningGroup, winningGroup,
                 m_defendingTown != 0, experience);
             g_soundManager->startMP3(
@@ -1988,7 +1988,7 @@ void combatManager::doVictory(int winningGroup)
             showLootedArtifacts(lootedArtifacts, dialogtimeout);
         }
     } else if (!g_unk691209) {
-        TCombatResultsWindow resultsWindow(
+        CombatResultsWindow resultsWindow(
             m_heroes[0], m_heroes[1], lastAliveSideIndex, winningGroup,
             m_defendingTown != 0, 0);
         g_soundManager->startMP3(
@@ -2944,7 +2944,7 @@ army* combatManager::addArmy(int side, int monType, int monQty,
 }
 
 VA(0x0047a2d0, 0xA7)  // dc 0x70650
-std::string combatManager::getTowerString(TWallSection wall, long archers,
+std::string combatManager::getTowerString(WallSection wall, long archers,
                                              long skill) const
 {
     if (m_wallStrength[wall] <= 0) {
@@ -3017,7 +3017,7 @@ unsigned char combatManager::handleCombatPlayerDrop(unsigned long dpid,
 
 // E:\gamedcs\command.cpp:3922
 DC_ONLY(0x70650, 0xC4)
-std::basic_string<char,std::char_traits<char>,std::allocator<char> combatManager::getTowerString(__$ReturnUdt, combatManager::TWallSection wall, long archers, long skill)
+std::basic_string<char,std::char_traits<char>,std::allocator<char> combatManager::getTowerString(__$ReturnUdt, combatManager::WallSection wall, long archers, long skill)
 {
     // @stub
 }
@@ -3059,7 +3059,7 @@ unsigned char std::operator==(const std::_Rb_tree_base_iterator* __x, const std:
 
 // E:\gamedcs\hero.h:687
 DC_ONLY(0x70a1c, 0x10)
-void hero::setPrimarySkill(int skill, int amount)
+void Hero::setPrimarySkill(int skill, int amount)
 {
     // @stub
 }

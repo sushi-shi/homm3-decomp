@@ -97,7 +97,7 @@ VA_COMPGEN(0x00462930, 0x54, IMPLICIT_DTOR, TArcher)
 VA(0x00462990, 0x8F)  // dc 0x5d538
 unsigned char combatManager::loadWallTraitsTable()
 {
-    TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
+    SpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0066fec0, wallsSpreadsheetName, "walls.txt"));
     if (!sheet)
         return 0;
@@ -110,7 +110,7 @@ unsigned char combatManager::loadWallTraitsTable()
     for (int townType = 0; townType < 9; townType++) {
         row += 2;
         for (int wall = 0; wall < 18; wall++) {
-            const TSpreadsheetResource::TStringVector& values =
+            const SpreadsheetResource::TStringVector& values =
                 sheet->getRow(row);
             s_wallTraits[townType][wall].m_name = values[0];
             s_wallTraits[townType][wall].m_hitpoints =
@@ -188,7 +188,7 @@ int combatManager::open(int newPriority)
     if (isQuickCombat()) {
         m_combatWindow = 0;
     } else {
-        m_combatWindow = new TCombatWindow(m_creaturePlacement);
+        m_combatWindow = new CombatWindow(m_creaturePlacement);
         if (!m_combatWindow)
             memError();
         g_windowManager->addWindow(m_combatWindow, -1, 1);
@@ -296,7 +296,7 @@ void combatManager::loadIcons()
         DATA_COMPGEN(0x0066ff10, combatGridBitmapName, "CmNumWin.pcx"));
 
     if (m_fortificationLevel > 0) {
-        TWallTraits* traits = s_wallTraits[m_defendingTown->m_type];
+        WallTraits* traits = s_wallTraits[m_defendingTown->m_type];
         for (int wall = 0; wall < 18; wall++) {
             for (int icon = 0; icon < 5; icon++) {
                 if ((g_game->m_f1f698 >= 2
@@ -343,7 +343,7 @@ void combatManager::freeIcons()
         }
     }
 
-    for (TObstacle* obstacle = m_obstacles.begin();
+    for (Obstacle* obstacle = m_obstacles.begin();
             obstacle != m_obstacles.end(); ++obstacle) {
         if (obstacle->m_sprite)
             obstacle->m_sprite->dispose();
@@ -416,12 +416,12 @@ void combatManager::loadArmies(unsigned char isSurrounded)
         }
         m_numArmies[side] = 0;
         int placed = 0;
-        hero* combatHero = m_heroes[side];
-        armyGroup* group = m_armyGroups[side];
+        Hero* combatHero = m_heroes[side];
+        ArmyGroup* group = m_armyGroups[side];
         const unsigned char grouped =
             combatHero && (combatHero->m_formation & 1) && m_sideIsAi[side];
         const int layout = group->getNumArmies() - 1;
-        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        for (int i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
             if (m_armyGroups[side]->m_armies[i] == CREATURE_NONE)
                 continue;
             int hex;
@@ -517,7 +517,7 @@ void combatManager::stopCombatSounds()
 }
 
 VA(0x004639f0, 0x270)  // dc 0x5e464
-void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int x, int y, int seed, unsigned char isSurrounded)
+void combatManager::setupCombat(type_point point, Hero* leftHero, ArmyGroup* leftArmyGroup, long rightPlayer, Town* rightTown, Hero* rightHero, ArmyGroup* rightArmyGroup, int x, int y, int seed, unsigned char isSurrounded)
 {
     g_combatSeed66d840 = seed;
     sRand(x * 0x1aed3 + y * 0x28f79 + 0x13ea1);
@@ -782,7 +782,7 @@ void combatManager::setupAdjacencyArray()
 VA(0x004641f0, 0xDA)  // dc 0x5eb40
 void combatManager::updateArmyGroup(int whichSide)
 {
-    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
+    for (int slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
         m_armyGroups[whichSide]->m_armies[slot] = CREATURE_NONE;
         m_armyGroups[whichSide]->m_numTroops[slot] = 0;
     }
@@ -803,7 +803,7 @@ void combatManager::updateArmyGroup(int whichSide)
         if (current.is(1u << 6))
             continue;
         if (current.m_originalIndex < 0
-            || current.m_originalIndex >= armyGroup::ARMY_GROUP_SLOT_COUNT)
+            || current.m_originalIndex >= ArmyGroup::ARMY_GROUP_SLOT_COUNT)
             continue;
 
         m_armyGroups[whichSide]->m_armies[current.m_originalIndex] =
@@ -996,7 +996,7 @@ int combatManager::getGridIndex(int x, int y) const
 
 // E:\gamedcs\cmbtmgr.cpp:1971
 DC_ONLY(0x5f1d0, 0xDE)
-void combatManager::CombineGroups(armyGroup* src, armyGroup* dest)
+void combatManager::CombineGroups(ArmyGroup* src, ArmyGroup* dest)
 {
     // @stub
 }
@@ -1275,7 +1275,7 @@ void combatManager::setNextArmy(int group, int index)
     m_currentSide = stack->getControllingSide();
     if (!m_creaturePlacement) {
         if (m_artifactCast[m_currentSide]) {
-            hero* castingHero = m_heroes[m_currentSide];
+            Hero* castingHero = m_heroes[m_currentSide];
             if (castingHero) {
                 if (castingHero->isWieldingArtifact(
                         ARTIFACT_ANGELIC_ALLIANCE)) {
@@ -1302,7 +1302,7 @@ void combatManager::setNextArmy(int group, int index)
             if (m_inSecondPhase)
                 break;
             {
-                hero* drained = m_heroes[1 - stack->getControllingSide()];
+                Hero* drained = m_heroes[1 - stack->getControllingSide()];
                 if (!drained)
                     break;
                 if (drained->m_mana <= 0)
@@ -1434,7 +1434,7 @@ int getTargetWallIndex(int gridIndex)
 }
 
 VA(0x00465990, 0x140)  // dc 0x5fd10
-void combatManager::damageWall(TWallTargetId targetWall, int damage)
+void combatManager::damageWall(WallTargetId targetWall, int damage)
 {
     if (damage <= 0)
         return;
@@ -1535,7 +1535,7 @@ void combatManager::keepAttack(int towerPos)
         archerIndex = 2;
         break;
     }
-    TArcher* archer = &m_archers[archerIndex];
+    Archer* archer = &m_archers[archerIndex];
     const SMonFrameInfo* info = &g_monFrameInfo[archer->m_creatureType];
     army* target = &m_armies[0][towerPos];
 
@@ -1672,8 +1672,8 @@ void combatManager::resetHitByCreature()
 VA(0x00466010, 0x243)  // dc 0x60354
 unsigned char combatManager::placeObstacle(int obstacleId)
 {
-    const TObstacleInfo* shape = &s_obstacleInfo[obstacleId];
-    TPickANumber picker(0x12, 0xa8);
+    const ObstacleInfo* shape = &s_obstacleInfo[obstacleId];
+    PickANumber picker(0x12, 0xa8);
     int hex;
     while (1) {
         hex = picker.pick();
@@ -1715,7 +1715,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
                     continue;
             }
 
-            TObstacle obstacle;
+            Obstacle obstacle;
             obstacle.m_sprite = ResourceManager::getSprite(shape->m_spriteName);
             obstacle.m_shape = shape;
             obstacle.m_hex = static_cast<unsigned char>(hex);
@@ -1824,7 +1824,7 @@ void combatManager::setupAndLoadObstacles()
                                                 0, 0, 0, 0);
                 }
 
-                TObstacle newLandmine;
+                Obstacle newLandmine;
                 newLandmine.m_sprite =
                     ResourceManager::getSprite(s_landMineInfo[0].m_spriteName);
                 newLandmine.m_shape = &s_landMineInfo[0];
@@ -1882,7 +1882,7 @@ void combatManager::setupAndLoadObstacles()
         budget -= placeLargeObstacle(terrainMask, specialTerrainMask) / 2;
 
     int placed = 0;
-    TPickANumber obstaclePicker(0, 90);
+    PickANumber obstaclePicker(0, 90);
     while (placed < budget) {
         int obstacleId = obstaclePicker.pick();
         while (obstacleId >= 0
@@ -1901,7 +1901,7 @@ VA(0x004668a0, 0x108)  // dc 0x6091c
 int combatManager::placeLargeObstacle(unsigned terrainMask,
                                       unsigned magicTerrainMask)
 {
-    TPickANumber picker(0, 0x21);
+    PickANumber picker(0, 0x21);
     int obstacleId = picker.pick();
     while (obstacleId >= 0) {
         if ((terrainMask & g_largeObstacleTerrainMasks[obstacleId * 34])
@@ -1923,9 +1923,9 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
 }
 
 VA(0x004669b0, 0xBF)  // dc 0x609d0
-void combatManager::placeObstacle(const combatManager::TObstacle* obstacle, int id, int hex, unsigned attributes)
+void combatManager::placeObstacle(const combatManager::Obstacle* obstacle, int id, int hex, unsigned attributes)
 {
-    const TObstacleInfo* shape = obstacle->m_shape;
+    const ObstacleInfo* shape = obstacle->m_shape;
     unsigned char rowIsOdd = static_cast<unsigned char>((hex / 0x11) & 1);
     for (int i = 0; i < shape->m_extraHexCount; i++) {
         int cellIndex = shape->m_extraHexOffsets[i] + hex;
@@ -1950,7 +1950,7 @@ void combatManager::placeAllObstacles()
     else
         terrainMask = 1 << m_terrainType;
 
-    TPickANumber picker(0, 90);
+    PickANumber picker(0, 90);
     for (;;) {
         int obstacleId;
         do {
@@ -1973,8 +1973,8 @@ void combatManager::removeObstacle(int index)
             || static_cast<unsigned>(index)
                >= static_cast<unsigned>(m_obstacles.size()))
         return;
-    TObstacle* obstacle = &getObstacle(index);
-    const TObstacleInfo* shape = obstacle->m_shape;
+    Obstacle* obstacle = &getObstacle(index);
+    const ObstacleInfo* shape = obstacle->m_shape;
     unsigned char rowIsOdd =
         static_cast<unsigned char>((obstacle->m_hex / 0x11) & 1);
     for (int i = 0; i < shape->m_extraHexCount; i++) {
@@ -1995,13 +1995,13 @@ void combatManager::removeObstacle(int index)
 VA(0x00466c50, 0x1A1)  // dc 0x60c0c
 void combatManager::initializeArchers()
 {
-    TArcher* archer = m_archers;
+    Archer* archer = m_archers;
     memset(archer, 0, sizeof(m_archers));
     if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
         return;
 
-    const TSiegeArcherInfo& info = g_siegeArcherInfo[m_defendingTown->m_type];
-    TArcherLoadState locals;
+    const SiegeArcherInfo& info = g_siegeArcherInfo[m_defendingTown->m_type];
+    ArcherLoadState locals;
     locals.m_spriteName =
         g_creatureTypeTraits[info.m_creatureType].m_spriteName;
 
@@ -2764,7 +2764,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
 VA(0x004686b0, 0x7B)  // dc 0x622bc
 void combatManager::combatSystemOptions()
 {
-    TCombatOptionsWindow options;
+    CombatOptionsWindow options;
     options.doModal();
     m_backgroundDrawn = 0;
     updateGrid(0, 1);
@@ -2815,13 +2815,13 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
         else if (y > 275)
             y = 275;
 
-        TViewArmyWindow* view = new TViewArmyWindow(
+        ViewArmyWindow* view = new ViewArmyWindow(
             thisArmy, x, y, static_cast<unsigned char>(!isQuickView));
         if (isQuickView) {
             view->quickView();
         } else {
             view->doModal();
-            if (g_windowManager->m_dialogReturn == TViewArmyWindow::OK_ID) {
+            if (g_windowManager->m_dialogReturn == ViewArmyWindow::OK_ID) {
                 initiateSpell(thisArmy->m_faerieDragonSpell, 1);
                 if (m_nextAction == 1)
                     m_nextAction = 10;
@@ -3213,7 +3213,7 @@ void combatManager::updateArmyLuckAndMorale()
             army& stack = m_armies[side][slot];
             int ownerSide = stack.m_spellInfluence[60]
                 ? 1 - stack.m_combatSide : stack.m_combatSide;
-            town* ownerTown;
+            Town* ownerTown;
             if (!ownerSide)
                 ownerTown = 0;
             else
@@ -3236,7 +3236,7 @@ void getMissileStartingPosition(int armyType, int x, int y, int facing,
                                 int* startY, int* armyDir,
                                 int* missileFrame)
 {
-    const TMissileStartInfo& info = g_missileStartInfo[armyType];
+    const MissileStartInfo& info = g_missileStartInfo[armyType];
     if (!facing)
         *startX = x - info.m_offsets[1][0];
     else
@@ -3425,7 +3425,7 @@ void combatManager::raiseSkeletons(int side)
         added = m_armyGroups[side]->add(
             m_raisedCreatureType, m_raisedCreatureCount, -1);
         if (!added) {
-            TCreatureType upgradedType = m_raisedCreatureType;
+            CreatureType upgradedType = m_raisedCreatureType;
             if (!g_game->m_f1f698
                 && isBaseElemental(upgradedType)) {
                 upgradedType = CREATURE_NONE;
@@ -3476,13 +3476,13 @@ void combatManager::lootDeadHero(int side,
         return;
     if (g_combatFlag697744)
         return;
-    hero* dead = m_heroes[1 - side];
+    Hero* dead = m_heroes[1 - side];
     if (!dead)
         return;
-    hero* winner = m_heroes[side];
+    Hero* winner = m_heroes[side];
     for (int slot = 0; slot < 19; slot++) {
         // Complete walks 19 equipped ordinals; getArtifact retains DC's TArtifactSlot argument (Hero.h:18 positions).
-        type_artifact artifact = dead->getArtifact(static_cast<TArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+        type_artifact artifact = dead->getArtifact(static_cast<ArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
         if (artifact.m_artifactId == ARTIFACT_NONE
             || artifact.m_artifactId == ARTIFACT_HOLY_GRAIL
             || artifact.m_artifactId == ARTIFACT_SPELLBOOK
@@ -3635,14 +3635,14 @@ unsigned char SLimitData::contains(int x, int y)
 
 // E:\gamedcs\includes.h:134
 DC_ONLY(0x63a18, 0x18)
-void TPickANumber::~TPickANumber()
+void PickANumber::~PickANumber()
 {
     // @stub
 }
 
 // E:\gamedcs\hero.h:695
 DC_ONLY(0x63a30, 0x12)
-void hero::adjustPrimarySkill(int skill, int amount)
+void Hero::adjustPrimarySkill(int skill, int amount)
 {
     // @stub
 }
@@ -3740,49 +3740,49 @@ std::_Rb_tree_iterator<enum std::_Rb_tree_iterator<enum SpellID,std::_Const_trai
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0x63bdc, 0x4)
-combatManager::TObstacle* std::vector<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::end()
+combatManager::Obstacle* std::vector<combatManager::Obstacle,std::allocator<combatManager::Obstacle> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x63be0, 0x20)
-unsigned std::vector<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::size()
+unsigned std::vector<combatManager::Obstacle,std::allocator<combatManager::Obstacle> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x63c00, 0x1C)
-void std::vector<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::vector<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >(const std::allocator<combatManager::TObstacle>* __a)
+void std::vector<combatManager::Obstacle,std::allocator<combatManager::Obstacle> >::vector<combatManager::Obstacle,std::allocator<combatManager::Obstacle> >(const std::allocator<combatManager::Obstacle>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x63c1c, 0x3C)
-void std::vector<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::push_back(const combatManager::TObstacle* __x)
+void std::vector<combatManager::Obstacle,std::allocator<combatManager::Obstacle> >::push_back(const combatManager::Obstacle* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0x63c58, 0x38)
-void std::vector<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::clear()
+void std::vector<combatManager::Obstacle,std::allocator<combatManager::Obstacle> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x63c90, 0x4)
-void std::allocator<combatManager::TObstacle>::allocator<combatManager::TObstacle>()
+void std::allocator<combatManager::Obstacle>::allocator<combatManager::Obstacle>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x63c94, 0x4)
-void std::allocator<combatManager::TObstacle>::~allocator<combatManager::TObstacle>()
+void std::allocator<combatManager::Obstacle>::~allocator<combatManager::Obstacle>()
 {
     // @stub
 }
@@ -3838,14 +3838,14 @@ void std::_Rb_tree<enum SpellID,enum SpellID,std::_Identity<enum SpellID>,std::l
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0x63df4, 0x3C)
-combatManager::TObstacle* std::vector<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::erase(combatManager::TObstacle* __first, combatManager::TObstacle* __last)
+combatManager::Obstacle* std::vector<combatManager::Obstacle,std::allocator<combatManager::Obstacle> >::erase(combatManager::Obstacle* __first, combatManager::Obstacle* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x63e30, 0x2C)
-void std::_Vector_base<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::_Vector_base<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >(const std::allocator<combatManager::TObstacle>* __a)
+void std::_Vector_base<combatManager::Obstacle,std::allocator<combatManager::Obstacle> >::_Vector_base<combatManager::Obstacle,std::allocator<combatManager::Obstacle> >(const std::allocator<combatManager::Obstacle>* __a)
 {
     // @stub
 }
@@ -3901,14 +3901,14 @@ void std::_Rb_tree_iterator<enum SpellID,std::_Const_traits<enum SpellID> >::_Rb
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x63f20, 0xC)
-void std::_STL_alloc_proxy<combatManager::TObstacle *,combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::_STL_alloc_proxy<combatManager::TObstacle *,combatManager::TObstacle,std::allocator<combatManager::TObstacle> >(const std::allocator<combatManager::TObstacle>* __a, combatManager::TObstacle** __p)
+void std::_STL_alloc_proxy<combatManager::Obstacle *,combatManager::Obstacle,std::allocator<combatManager::Obstacle> >::_STL_alloc_proxy<combatManager::Obstacle *,combatManager::Obstacle,std::allocator<combatManager::Obstacle> >(const std::allocator<combatManager::Obstacle>* __a, combatManager::Obstacle** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x63f2c, 0x2C)
-void std::_STL_alloc_proxy<combatManager::TObstacle *,combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::deallocate(combatManager::TObstacle* __p, unsigned __n)
+void std::_STL_alloc_proxy<combatManager::Obstacle *,combatManager::Obstacle,std::allocator<combatManager::Obstacle> >::deallocate(combatManager::Obstacle* __p, unsigned __n)
 {
     // @stub
 }
@@ -3943,7 +3943,7 @@ std::_Rb_tree_node<enum* std::_STL_alloc_proxy<std::_Rb_tree_node<enum SpellID> 
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x63fac, 0x20)
-void std::allocator<combatManager::TObstacle>::deallocate(combatManager::TObstacle* __p, unsigned __n)
+void std::allocator<combatManager::Obstacle>::deallocate(combatManager::Obstacle* __p, unsigned __n)
 {
     // @stub
 }
@@ -3971,7 +3971,7 @@ void std::_Rb_tree<enum SpellID,enum SpellID,std::_Identity<enum SpellID>,std::l
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x64068, 0xDC)
-void std::vector<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::_M_insert_overflow(combatManager::TObstacle* __position, const combatManager::TObstacle* __x, unsigned __fill_len)
+void std::vector<combatManager::Obstacle,std::allocator<combatManager::Obstacle> >::_M_insert_overflow(combatManager::Obstacle* __position, const combatManager::Obstacle* __x, unsigned __fill_len)
 {
     // @stub
 }
@@ -3992,14 +3992,14 @@ void std::_Rb_global<bool>::_M_increment(std::_Rb_tree_base_iterator* __it)
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x64244, 0x30)
-void std::destroy(combatManager::TObstacle* __first, combatManager::TObstacle* __last)
+void std::destroy(combatManager::Obstacle* __first, combatManager::Obstacle* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x64274, 0x3C)
-void std::construct(combatManager::TObstacle* __p, const combatManager::TObstacle* __value)
+void std::construct(combatManager::Obstacle* __p, const combatManager::Obstacle* __value)
 {
     // @stub
 }
@@ -4020,7 +4020,7 @@ std::allocator<unsigned* std::__stl_alloc_rebind(std::allocator<bool>* __a, cons
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0x642e0, 0x50)
-combatManager::TObstacle* std::copy(combatManager::TObstacle* __first, combatManager::TObstacle* __last, combatManager::TObstacle* __result)
+combatManager::Obstacle* std::copy(combatManager::Obstacle* __first, combatManager::Obstacle* __last, combatManager::Obstacle* __result)
 {
     // @stub
 }
@@ -4034,7 +4034,7 @@ std::allocator<std::_Rb_tree_node<enum* std::__stl_alloc_rebind(std::allocator<e
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x64334, 0x4)
-std::allocator<combatManager::TObstacle>* std::__stl_alloc_rebind(std::allocator<combatManager::TObstacle>* __a, const combatManager::TObstacle* __formal)
+std::allocator<combatManager::Obstacle>* std::__stl_alloc_rebind(std::allocator<combatManager::Obstacle>* __a, const combatManager::Obstacle* __formal)
 {
     // @stub
 }
@@ -4062,7 +4062,7 @@ std::_Rb_tree_node<enum** std::_Rb_tree<enum SpellID,enum SpellID,std::_Identity
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x64378, 0x28)
-combatManager::TObstacle* std::_STL_alloc_proxy<combatManager::TObstacle *,combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::allocate(unsigned __n)
+combatManager::Obstacle* std::_STL_alloc_proxy<combatManager::Obstacle *,combatManager::Obstacle,std::allocator<combatManager::Obstacle> >::allocate(unsigned __n)
 {
     // @stub
 }
@@ -4090,7 +4090,7 @@ void std::_STL_alloc_proxy<type_artifact *,type_artifact,std::allocator<type_art
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x64400, 0x28)
-combatManager::TObstacle* std::allocator<combatManager::TObstacle>::allocate(unsigned __n, const void* __formal)
+combatManager::Obstacle* std::allocator<combatManager::Obstacle>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
@@ -4111,14 +4111,14 @@ void std::allocator<type_artifact>::deallocate(type_artifact* __p, unsigned __n)
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x6446c, 0x38)
-combatManager::TObstacle* std::uninitialized_copy(combatManager::TObstacle* __first, combatManager::TObstacle* __last, combatManager::TObstacle* __result)
+combatManager::Obstacle* std::uninitialized_copy(combatManager::Obstacle* __first, combatManager::Obstacle* __last, combatManager::Obstacle* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x644a4, 0x38)
-combatManager::TObstacle* std::uninitialized_fill_n(combatManager::TObstacle* __first, unsigned __n, const combatManager::TObstacle* __x)
+combatManager::Obstacle* std::uninitialized_fill_n(combatManager::Obstacle* __first, unsigned __n, const combatManager::Obstacle* __x)
 {
     // @stub
 }
@@ -4146,35 +4146,35 @@ void std::destroy(type_artifact* __first, type_artifact* __last)
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x6457c, 0x4)
-combatManager::TObstacle* std::value_type(const combatManager::TObstacle* __formal)
+combatManager::Obstacle* std::value_type(const combatManager::Obstacle* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x64580, 0x1C)
-void std::__destroy(combatManager::TObstacle* __first, combatManager::TObstacle* __last, combatManager::TObstacle* __formal)
+void std::__destroy(combatManager::Obstacle* __first, combatManager::Obstacle* __last, combatManager::Obstacle* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0x6459c, 0xC)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const combatManager::TObstacle* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const combatManager::Obstacle* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0x645a8, 0x4)
-int* std::distance_type(const combatManager::TObstacle* __formal)
+int* std::distance_type(const combatManager::Obstacle* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0x645ac, 0x54)
-combatManager::TObstacle* std::__copy(combatManager::TObstacle* __first, combatManager::TObstacle* __last, combatManager::TObstacle* __result, std::random_access_iterator_tag __formal, int* __formal)
+combatManager::Obstacle* std::__copy(combatManager::Obstacle* __first, combatManager::Obstacle* __last, combatManager::Obstacle* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
@@ -4188,14 +4188,14 @@ std::allocator<type_artifact>* std::__stl_alloc_rebind(std::allocator<type_artif
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x64604, 0x1C)
-combatManager::TObstacle* std::__uninitialized_copy(combatManager::TObstacle* __first, combatManager::TObstacle* __last, combatManager::TObstacle* __result, combatManager::TObstacle* __formal)
+combatManager::Obstacle* std::__uninitialized_copy(combatManager::Obstacle* __first, combatManager::Obstacle* __last, combatManager::Obstacle* __result, combatManager::Obstacle* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x64620, 0x1C)
-combatManager::TObstacle* std::__uninitialized_fill_n(combatManager::TObstacle* __first, unsigned __n, const combatManager::TObstacle* __x, combatManager::TObstacle* __formal)
+combatManager::Obstacle* std::__uninitialized_fill_n(combatManager::Obstacle* __first, unsigned __n, const combatManager::Obstacle* __x, combatManager::Obstacle* __formal)
 {
     // @stub
 }
@@ -4230,21 +4230,21 @@ void std::__destroy(type_artifact* __first, type_artifact* __last, type_artifact
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x64694, 0x30)
-void std::__destroy_aux(combatManager::TObstacle* __first, combatManager::TObstacle* __last, __false_type __formal)
+void std::__destroy_aux(combatManager::Obstacle* __first, combatManager::Obstacle* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x646c4, 0x3C)
-combatManager::TObstacle* std::__uninitialized_copy_aux(combatManager::TObstacle* __first, combatManager::TObstacle* __last, combatManager::TObstacle* __result, __false_type __formal)
+combatManager::Obstacle* std::__uninitialized_copy_aux(combatManager::Obstacle* __first, combatManager::Obstacle* __last, combatManager::Obstacle* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x64700, 0x3C)
-combatManager::TObstacle* std::__uninitialized_fill_n_aux(combatManager::TObstacle* __first, unsigned __n, const combatManager::TObstacle* __x, __false_type __formal)
+combatManager::Obstacle* std::__uninitialized_fill_n_aux(combatManager::Obstacle* __first, unsigned __n, const combatManager::Obstacle* __x, __false_type __formal)
 {
     // @stub
 }
@@ -4272,7 +4272,7 @@ void std::__destroy_aux(type_artifact* __first, type_artifact* __last, __false_t
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x647e4, 0x1C)
-void std::destroy(combatManager::TObstacle* __pointer)
+void std::destroy(combatManager::Obstacle* __pointer)
 {
     // @stub
 }

@@ -28,7 +28,7 @@ static Bitmap816* getPuzzleBitmap(long puzzle, long piece)
 }
 
 VA(0x0052c1e0, 0x388)  // dc 0x114f40
-TPuzzleWindow::TPuzzleWindow(int puzzlenum)
+PuzzleWindow::PuzzleWindow(int puzzlenum)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
     m_x = 0;
@@ -75,14 +75,14 @@ TPuzzleWindow::TPuzzleWindow(int puzzlenum)
         m_puzzlePieces[i] = getPuzzleBitmap(m_puzWhich, i);
     }
 
-    m_puzzleResourceBar = new TResourceDisplay(this, 0);
+    m_puzzleResourceBar = new ResourceDisplay(this, 0);
     drawWindow(0, -65535, 65535);
 }
 
 VA_COMPGEN(0x0052c570, 0x21, SCALAR_DELETING_DTOR, TPuzzleWindow)
 
 VA(0x0052c5a0, 0x96)  // dc 0x115268
-TPuzzleWindow::~TPuzzleWindow()
+PuzzleWindow::~PuzzleWindow()
 {
     for (int i = 0; i < 48; ++i)
         m_puzzlePieces[i]->dispose();
@@ -101,7 +101,7 @@ TPuzzleWindow::~TPuzzleWindow()
 #if 0  // @carcass: retail inlines this helper into WindowHandler
 // E:\gamedcs\puzzlewindow.cpp:179
 DC_ONLY(0x11530c, 0x1A)
-int TPuzzleWindow::convertID2HelpID(int id)
+int PuzzleWindow::convertID2HelpID(int id)
 {
     // @stub
 }
@@ -109,7 +109,7 @@ int TPuzzleWindow::convertID2HelpID(int id)
 
 // E:\gamedcs\puzzlewindow.cpp:203
 VA(0x0052c640, 0x78)  // vtable slot 9 + CAdvPopup delegation, dc 0x115328
-int TPuzzleWindow::windowHandler(message& msg)
+int PuzzleWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -139,7 +139,7 @@ int TPuzzleWindow::windowHandler(message& msg)
 }
 
 VA(0x0052c6c0, 0xAD)  // dc 0x1153a8
-int TPuzzleWindow::updatePuzzle(int full)
+int PuzzleWindow::updatePuzzle(int full)
 {
     int piecesNotFound = 0;
 
@@ -357,7 +357,7 @@ type_point aiAttemptPuzzleGuess(long player)
 
     int found = g_game->setupPuzzlePieces(player, 1);
     double uncovered =
-        found / static_cast<double>(TPuzzleWindow::PUZZLE_PIECE_COUNT);
+        found / static_cast<double>(PuzzleWindow::PUZZLE_PIECE_COUNT);
     if (g_puzzleGuessThreshold[g_game->m_setup.m_difficulty] <= uncovered) {
         unsigned char visible[17 * 19];
         if (markAIPuzzle(player, visible)) {
@@ -615,7 +615,7 @@ type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
 
 // E:\gamedcs\puzzlewindow.cpp:159
 DC_ONLY(0x116348, 0x34)
-void* TPuzzleWindow::`scalar deleting destructor'(unsigned __flags)
+void* PuzzleWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

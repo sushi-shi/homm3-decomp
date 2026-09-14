@@ -15,7 +15,11 @@ class message;
 // The owning module is src/campaign.cpp, in the retail link-order gap
 // between button and campaignbrief. The module and class names remain
 // provisional because this chooser has no Dreamcast counterpart.
-class TCampaignSetWindow : public heroWindow {
+// Before normalization (type): TCampaignSetWindow.
+#ifndef CampaignSetWindow
+#define CampaignSetWindow TCampaignSetWindow
+#endif
+class CampaignSetWindow : public heroWindow {
 public:
     // Its modal result selects the TCampaignWindow page passed by each
     // retail arm; the fourth result opens the Complete-only custom chooser.
@@ -45,11 +49,11 @@ public:
         CAMPAIGN_SET_EXIT_HELP = 728,
         CAMPAIGN_SET_SOD_HELP = 735
     };
-    TCampaignSetWindow();
-    virtual ~TCampaignSetWindow();
+    CampaignSetWindow();
+    virtual ~CampaignSetWindow();
     virtual int handleMessage(message& msg);
     void doModal();
 };
-SIZE(TCampaignSetWindow, 0x4c);
+SIZE(CampaignSetWindow, 0x4c);
 
 #endif  // HOMM3_CAMPAIGN_H

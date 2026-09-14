@@ -8,7 +8,10 @@
 #include "textwdgt.h"
 
 #include <vector>
-class hero;
+#ifndef Hero
+#define Hero hero
+#endif
+class Hero;
 struct type_university;
 class type_university_window;
 
@@ -24,14 +27,14 @@ extern const char* g_skillMasteryNames[3];
 class type_university_skill_button : public iconWidget {
 public:
     unsigned char m_click;       // +0x48
-    TSecondarySkill m_skill;     // +0x4c
+    SecondarySkill m_skill;     // +0x4c
 
     type_university_skill_button(long x, long y, long width, long height,
                                  long newId, const char* image,
-                                 TSecondarySkill newSkill);
+                                 SecondarySkill newSkill);
     virtual bool handleClick(bool downClick,
                                        bool rightClick);
-    void setSkill(TSecondarySkill newSkill, unsigned char newClick);
+    void setSkill(SecondarySkill newSkill, unsigned char newClick);
 };
 SIZE(type_university_skill_button, 0x50);
 
@@ -44,7 +47,7 @@ struct type_university_skill {
     iconWidget* m_topBar;
     iconWidget* m_bottomBar;
     textWidget* m_textWidget;
-    TSecondarySkill m_skill;
+    SecondarySkill m_skill;
 };
 SIZE(type_university_skill, 0x14);
 
@@ -65,7 +68,7 @@ public:
     // modal/callback bodies independently corroborate every used offset.
 
 protected:
-    hero* m_currentHero;                       // +0x60
+    Hero* m_currentHero;                       // +0x60
     class type_func_button* m_purchaseButton; // +0x64
     textWidget* m_purchaseTitleWidget;        // +0x68 (unused by Complete)
     textWidget* m_purchaseTextWidget;         // +0x6c
@@ -81,13 +84,13 @@ public:
     // call sites name it: the map object's visit (0x4aa526) passes 0,
     // the town building's page (0x5d2f26) passes 1, and the constructor
     // gates one extra 0x48-byte widget on it.
-    type_university_window(hero* newHero, const type_university* university,
+    type_university_window(Hero* newHero, const type_university* university,
                            unsigned char townUniversity);
     virtual int doModal(unsigned char fade);  // slot 6
 
     // DC message-reference override; retail slot 9 folds at 0x5666f0.
     virtual int windowHandler(message& msg);
-    void skillClick(TSecondarySkill skill);
+    void skillClick(SecondarySkill skill);
 
 protected:
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
