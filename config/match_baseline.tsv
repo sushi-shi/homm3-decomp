@@ -89,7 +89,7 @@ advmgr	?deactivateCurrHero@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x175a
 advmgr	?deactivateCurrTown@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x17570	tokens1:c8b06714cfc6
 advmgr	?demobilizeCurrHero@advManager@@QAEXEE@Z	99.4918	100.0000	100.0000	0x17680	tokens1:1c5f645e2b81
 advmgr	?disableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a2e0	tokens1:1796d2423457
-advmgr	?doAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	74.2470	74.2470	94.3953	0x7b80	tokens1:b2dd33063bcd
+advmgr	?doAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	74.7287	74.7287	94.3953	0x7b80	tokens1:b2dd33063bcd
 advmgr	?doAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00	tokens1:b5da8b6a746f
 advmgr	?doSystemOptions@advManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1ac00	tokens1:a833b0124e83
 advmgr	?drawAdvObj@advManager@@QAEXHHHHH@Z	87.7028	87.7028	87.9441	0x10c00	tokens1:a8f7c132bc48
@@ -130,7 +130,7 @@ advmgr	?handleNetMsg@CAdvMgrNetMsgHandler@@MAEPAVCNetMsg@@PAV2@@Z	99.7387	99.738
 advmgr	?handleTradeRequestMsg@CAdvMgrNetMsgHandler@@MAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6bf0	tokens1:d66033c9366e
 advmgr	?hasFlag@@YI_NH@Z	100.0000	100.0000	100.0000	0xfca0	tokens1:fed515a5a129
 advmgr	?heroQuickView@advManager@@QAEXHHHE@Z	100.0000	100.0000	100.0000	0x16590	tokens1:ced051436441
-advmgr	?hideRoute@advManager@@QAEXHHH@Z	99.3474	100.0000	100.0000	0x19300	tokens1:a4a442550b1a
+advmgr	?hideRoute@advManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x19300	tokens1:a4a442550b1a
 advmgr	?inMapArea@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x7ac0	tokens1:04f14ec0d1d7
 advmgr	?initializeCreatureGeneratorNames@@YIEXZ	100.0000	100.0000	100.0000	0x5d20	tokens1:cb71834f8313
 advmgr	?initializeExtraInfoText@@YIEXZ	100.0000	100.0000	100.0000	0x5d80	tokens1:a297b159fef7
@@ -181,7 +181,7 @@ advmgr	?updBottomViewResMsg@advManager@@AAEEE@Z	100.0000	100.0000	100.0000	0x161
 advmgr	?updBottomViewTown@advManager@@AAEEE@Z	100.0000	100.0000	100.0000	0x164f0	tokens1:13be7d476c67
 advmgr	?updateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790	tokens1:a45831bfb7b7
 advmgr	?updateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	91.2477	91.2477	91.2477	0x12c40	tokens1:bef9bccbdd4d
-advmgr	?updateScreen@advManager@@QAEXHH@Z	98.3243	98.3243	100.0000	0xf270	tokens1:970e6137bcaf
+advmgr	?updateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270	tokens1:e97a1d8db3b7
 advmgr	?viewPuzzle@advManager@@QAEXXZ	91.2768	91.2768	91.2768	0x1a7f0	tokens1:5df943c733b0
 advmgr	?what@logic_error@std@@UBEPBDXZ	100.0000	100.0000	100.0000	0x1bc00	-
 advmgr	?windowHandler@CAdvPopup@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1b1c0	tokens1:c9714f598612

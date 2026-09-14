@@ -4530,9 +4530,7 @@ void advManager::updateScreen(int allowIntermediateMouse, int forceDraw)
         unsigned long elapsedTime =
             curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-            cppMax(elapsedTime,
-                   static_cast<unsigned long>(
-                       ADVENTURE_ANIMATION_MAX_ELAPSED));
+            max(ADVENTURE_ANIMATION_MAX_ELAPSED, elapsedTime);
     }
     process1WindowsMessage();
 }
