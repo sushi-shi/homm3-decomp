@@ -4179,14 +4179,14 @@ spells	?addBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	10
 spells	?areaEffect@combatManager@@QAEXJHJJ@Z	99.8565	99.8565	99.8565	0x1a4970	tokens1:695e59d5eff4
 spells	?armageddon@combatManager@@QAEXHH@Z	93.9013	93.9013	93.9013	0x1a4bc0	tokens1:99b464297d21
 spells	?castSpell@combatManager@@QAEXHHHHHJ@Z	93.9842	93.9842	93.9842	0x19fe30	tokens1:a1481524e830
-spells	?chainLightning@combatManager@@QAEXHHH@Z	95.5560	96.1913	96.1913	0x1a6360	tokens1:077cc58bcf42
+spells	?chainLightning@combatManager@@QAEXHHH@Z	95.5560	95.5560	96.1913	0x1a6360	tokens1:40bceef521f2
 spells	?checkFireWall@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fcd0	tokens1:5c0bd012899f
 spells	?checkLandmine@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fb40	tokens1:c382667e7bd0
 spells	?clearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0	tokens1:38f028d7fbcf
 spells	?computeSpellDamage@combatManager@@QBEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890	tokens1:0cea538b6f73
 spells	?demonicResurrection@combatManager@@QAEXPBVarmy@@PAV2@@Z	100.0000	100.0000	100.0000	0x1a7390	tokens1:a4d78d7c1be1
 spells	?displayFailureReason@combatManager@@QAEXHPBDJ@Z	100.0000	100.0000	100.0000	0x1a2c60	tokens1:ac0c52503e7f
-spells	?doBolt@combatManager@@QAEXHHHHHHHHHHHHHHHHH@Z	99.4526	100.0000	100.0000	0x1a5c20	tokens1:509d059306b0
+spells	?doBolt@combatManager@@QAEXHHHHHHHHHHHHHHHHH@Z	99.4526	99.4526	100.0000	0x1a5c20	tokens1:91253f868f05
 spells	?drawBolt@combatManager@@QAEXPAUSBolt@@H@Z	100.0000	100.0000	100.0000	0x1a5440	tokens1:77fe36e615c5
 spells	?earthquake@combatManager@@QAEXH@Z	84.9579	84.9579	84.9579	0x1a7c80	tokens1:aa7d14e5a7d4
 spells	?findAnimateDeadTarget@combatManager@@QAEPAVarmy@@HH@Z	100.0000	100.0000	100.0000	0x1a3f50	tokens1:36ca42a4ecfa

@@ -3484,8 +3484,8 @@ void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
         g_mouseManager->hidePointer();
 
     int complete = 0;
-    long drawsPerSeg = (segmentLength - 1) / segmentLength + 1;
-    long splitChanceTimes100 = splitFrequency * 100 / segmentLength;
+    int drawsPerSeg = (segmentLength - 1) / segmentLength + 1;
+    int splitChanceTimes100 = splitFrequency * 100 / segmentLength;
 
     // A bolt fired leftwards wanders the other way, and the band is
     // normalised so the Random() below always gets a low-high pair.
@@ -3500,7 +3500,7 @@ void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
     }
 
     SBolt* bolts = new SBolt[25];
-    long halfThickness = cppMax(startThickness, endThickness) >> 1;
+    int halfThickness = cppMax(startThickness, endThickness) >> 1;
 
     addBolt(bolts, sourceX, sourceY, destX, destY, splitFrequency,
             startThickness, endThickness, color, angleDistortMin,
@@ -3510,15 +3510,15 @@ void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
         static_cast<float>(delay)
         * g_combatSpeedFactors[g_unnamed698758.m_combatSpeed]);
     unsigned long delayTil = GameTime::get() + delay;
-    long maxBolt = 1;
+    int maxBolt = 1;
 
     long i;
     do {
-        { for (long j = 0; j < drawsPerSeg; j++) {
+        { for (int j = 0; j < drawsPerSeg; j++) {
             complete = 1;
             long updTLY = 9999;
             long updTLX = 9999;
-            long updBRY = -1;
+            int updBRY = -1;
             long updBRX = -1;
 
             // The extremes are taken BOTH SIDES of the draw because
@@ -3573,10 +3573,10 @@ void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
                 goto done;
 
             if (splitFrequency) {
-                long maxBoltForThisCycle = maxBolt;
+                int maxBoltForThisCycle = maxBolt;
                 for (i = 0; i < maxBoltForThisCycle; i++) {
                     if (!bolts[i].m_atDestination) {
-                        long absDist = abs(bolts[i].m_destX - bolts[i].m_pixelX)
+                        int absDist = abs(bolts[i].m_destX - bolts[i].m_pixelX)
                             + abs(bolts[i].m_destY - bolts[i].m_pixelY);
                         if (maxBolt < 25 && absDist > segmentLength * 2
                             && random(0, splitChanceTimes100) < 100) {
@@ -3598,8 +3598,8 @@ void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
                                     offset = -offset;
                                 float angle = bolts[i].m_distortedAngle;
                                 angle += offset;
-                                long drawLength = random(maxSplitLength >> 1,
-                                                          maxSplitLength);
+                                int drawLength = random(maxSplitLength >> 1,
+                                                        maxSplitLength);
                                 if (drawLength > (absDist >> 1))
                                     drawLength = absDist >> 1;
                                 long splitX = static_cast<long>(
@@ -3781,13 +3781,13 @@ void combatManager::chainLightning(int index, int level, int power)
         g_spellTraits[SPELL_CHAIN_LIGHTNING].m_masteryBonus[level]
             + g_spellTraits[SPELL_CHAIN_LIGHTNING].m_powerFactor * power,
         SPELL_CHAIN_LIGHTNING, 0, 0, 0, 0);
-    long currentDamage = baseDamage;
-    long totalKilled = 0;
+    int currentDamage = baseDamage;
+    int totalKilled = 0;
     // NOT initialised, and that is retail's own shape: the pen is only
     // ever read on an iteration after the one that stamps it, so the two
     // stores a `= 0` adds do not exist in the 842 bytes.
-    long curX;
-    long curY;
+    int curX;
+    int curY;
 
     { for (int i = 0; i < g_chainLightningTargets[level]; i++) {
         if (index >= 0 && index < COMBAT_GRID_CELLS) {
@@ -3798,7 +3798,7 @@ void combatManager::chainLightning(int index, int level, int power)
                     curX = target->midX();
                     curY = target->midY();
                 } else {
-                    long destX = target->midX();
+                    const int destX = target->midX();
                     long destY = target->midY();
                     long distance = static_cast<long>(
                         sqrt(static_cast<double>(
@@ -3812,7 +3812,7 @@ void combatManager::chainLightning(int index, int level, int power)
                     // _cpp_min(30L, _cpp_max(distance, 8L)) 95.73,
                     // _cpp_min(30L, _cpp_max(8L, distance)) 95.95, against
                     // 96.19 as written.
-                    long segmentLength =
+                    const int segmentLength =
                         cppMin(cppMax(distance, 8L), 30L);
                     doBolt(0, curX, curY, destX, destY, 0, 80, 9, 2,
                            BOLT_COLOR_CHAIN_LIGHTNING, 10, 80,
