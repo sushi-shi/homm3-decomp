@@ -1259,8 +1259,10 @@ unsigned char rmgTerrainPainter::isVerticalGap(
 // signed-point conversion are one object with this; the reused point for
 // the diagonals is unconditional, so it changes the flow, 74.36%; the
 // corners constructed straight from the clamps reverse the clamp order,
-// 78.32%). Remaining: the south-east fill's index and cell-base registers
-// swap roles and the frame is 0x38 against 0x30.
+// 78.32%). Limiting the reused cardinal point to its own scope and copy-
+// initializing the two corner values recovers the remaining register homes
+// and retail's 0x30 frame: all 714 bytes match. The mask oracle preserves
+// ordered, short-circuited queries in 185,856 states; five controls fail.
 VA(0x005B6540, 0x2CA) // anchor-callee 0x5b58f8, 0x5b681e; retail-only
 void rmgTerrainPainter::buildMatchingNeighbourMask(
     const TRmgGridPoint& point, unsigned char* matches)
@@ -1270,22 +1272,24 @@ void rmgTerrainPainter::buildMatchingNeighbourMask(
     unsigned int south = point.m_y < m_size.m_y - 1 ? point.m_y + 1 : point.m_y;
     unsigned int west = point.m_x > 0 ? point.m_x - 1 : point.m_x;
     unsigned int east = point.m_x < m_size.m_x - 1 ? point.m_x + 1 : point.m_x;
-    TRmgGridPoint low(west, north);
-    TRmgGridPoint high(east, south);
+    TRmgGridPoint low = TRmgGridPoint(west, north);
+    TRmgGridPoint high = TRmgGridPoint(east, south);
 
-    TRmgGridPoint nearby;
-    nearby.setX(point.m_x);
-    nearby.setY(low.getY());
-    matches[TILE_DIR_NORTH] = getTerrain(nearby) == terrain;
-    nearby.setX(point.m_x);
-    nearby.setY(high.getY());
-    matches[TILE_DIR_SOUTH] = getTerrain(nearby) == terrain;
-    nearby.setX(low.getX());
-    nearby.setY(point.m_y);
-    matches[TILE_DIR_WEST] = getTerrain(nearby) == terrain;
-    nearby.setX(high.getX());
-    nearby.setY(point.m_y);
-    matches[TILE_DIR_EAST] = getTerrain(nearby) == terrain;
+    {
+        TRmgGridPoint nearby;
+        nearby.setX(point.m_x);
+        nearby.setY(low.getY());
+        matches[TILE_DIR_NORTH] = getTerrain(nearby) == terrain;
+        nearby.setX(point.m_x);
+        nearby.setY(high.getY());
+        matches[TILE_DIR_SOUTH] = getTerrain(nearby) == terrain;
+        nearby.setX(low.getX());
+        nearby.setY(point.m_y);
+        matches[TILE_DIR_WEST] = getTerrain(nearby) == terrain;
+        nearby.setX(high.getX());
+        nearby.setY(point.m_y);
+        matches[TILE_DIR_EAST] = getTerrain(nearby) == terrain;
+    }
     matches[TILE_DIR_NORTHWEST] =
         (matches[TILE_DIR_NORTH] || matches[TILE_DIR_WEST])
         && getTerrain(TRmgGridPoint(low.getX(), low.getY())) == terrain;
