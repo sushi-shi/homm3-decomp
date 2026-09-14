@@ -6,7 +6,8 @@
 
 // DrawOccupant's priority sentinels: 8 bypasses the army-priority filter,
 // while 7 performs the first draw but suppresses the moat/redraw pass.
-enum ECombatDrawPriority {
+// Before normalization (type): ECombatDrawPriority.
+enum CombatDrawPriority {
     COMBAT_DRAW_PRIORITY_WALL = 0,
     COMBAT_DRAW_PRIORITY_CORPSE = 1,
     COMBAT_DRAW_PRIORITY_OBSTACLE = 2,
@@ -14,7 +15,8 @@ enum ECombatDrawPriority {
     COMBAT_DRAW_PRIORITY_ANY = 8
 };
 
-enum ECombatWallDrawingConstants {
+// Before normalization (type): ECombatWallDrawingConstants.
+enum CombatWallDrawingConstants {
     COMBAT_WALL_HEX_WIDTH = 44,
     COMBAT_ARCHER_X_BIAS = 196,
     COMBAT_ARCHER_Y_BIAS = 267,
@@ -25,7 +27,8 @@ enum ECombatWallDrawingConstants {
 
 // Retail's battlefield indexing: eleven rows of seventeen cells, with the
 // first and last column reserved as off-grid borders.
-enum ECombatGridDimensions {
+// Before normalization (type): ECombatGridDimensions.
+enum CombatGridDimensions {
     COMBAT_GRID_COLUMN_COUNT = 17,
     COMBAT_GRID_RIGHT_BORDER_COLUMN = 16,
     COMBAT_GRID_HEX_COUNT = 187

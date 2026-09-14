@@ -28,7 +28,7 @@ class AbstractFile;
 
 class QuestGuard {
 public:
-    type_quest* m_quest;
+    Quest* m_quest;
     unsigned char m_visitedPlayers;
     // readObject (0x502e00) retains constructor 0x572b50 on its quest-guard
     // local. This Complete-only class has no DC inline declaration; keep
@@ -48,7 +48,7 @@ public:
         const unsigned char playerNum) const
     {
         return m_quest
-            && m_quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
+            && m_quest->questTexts()[Quest::QUEST_TEXT_LOG].length()
             && (m_visitedPlayers & (1 << playerNum))
             && m_quest;
     }
@@ -127,7 +127,7 @@ SIZE(SeerReward, 0xc);
 
 // Before normalization (type): TSeerData.
 struct SeerData {
-    type_quest* m_quest;              // Prior role: quest.
+    Quest* m_quest;              // Prior role: quest.
     unsigned char m_visitedPlayers;  // Prior role: visitedPlayers.
     SeerReward m_reward;            // Prior role: reward.
 };
@@ -199,13 +199,13 @@ public:
     unsigned char questActiveforPlayer(
         const unsigned char playerNum) const
     {
-        type_quest* thisQuest = m_quest;
+        Quest* thisQuest = m_quest;
         if (!thisQuest)
             return 0;
 
         const std::string* questTexts = thisQuest->questTextRow()
-            + type_quest::QUEST_TEXT_COLUMNS * thisQuest->questType();
-        return questTexts[type_quest::QUEST_TEXT_LOG].length()
+            + Quest::QUEST_TEXT_COLUMNS * thisQuest->questType();
+        return questTexts[Quest::QUEST_TEXT_LOG].length()
             && (m_visitedPlayers & (1 << playerNum))
             && m_quest;
     }

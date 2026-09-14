@@ -10,7 +10,8 @@
 // row and smackmgr's video-abort filter read them). NH3API
 // interface/key_codes.hpp EKeyCodes spellings; only the byte-proven
 // consumers' values are listed - grow the roster as consumers land.
-enum EKeyCodes {
+// Before normalization (type): EKeyCodes.
+enum KeyCodes {
     // The three keys textEntryWidget::IgnoreKey (0x5bba20) swallows
     // before its OnKeyPress ever sees them; its dec/sub/sub switch
     // descent fixes the values 1, 15 and 28 exactly.
@@ -100,11 +101,12 @@ enum EKeyCodes {
 // keyboardFilter@0x94c, keyCodeType@0x950, extendFlag@0x954,
 // currWidgetID@0x958, prevDialog@0x95c (tail past that unmodeled).
 // GetEvent returns the message BY VALUE (retail body 0x4ec590).
-class inputManager : public baseManager {
+// Before normalization (type): inputManager.
+class InputManager : public BaseManager {
 public:
     // DC inputManager type 0x240a declares iBuffer as message[64].
     // The canonical message constructor supplies Complete's zeroed records.
-    message m_buffer[64];
+    Message m_buffer[64];
     int m_head;
     int m_tail;
     int m_bufferBusy;
@@ -119,23 +121,23 @@ public:
     int m_keyCodeType;
     int m_extendFlag;
     void makeScanCodeTable();
-    void asciiConvert(message* msg);
+    void asciiConvert(Message* msg);
     int m_currWidgetId;
     int m_prevDialog;
 
-    inputManager();
+    InputManager();
 
     virtual int open(int keyboardFilter);        // slot 0, 0x4ec4d0
     virtual void close();                 // slot 1, 0x4ec540
-    virtual int main(message& msg);       // slot 2, 0x4ec560
+    virtual int main(Message& msg);       // slot 2, 0x4ec560
     void flush();
-    message getEvent();
-    message peekEvent();
+    Message getEvent();
+    Message peekEvent();
     void forceMouseMove();
 };
 
 // Retail .bss 0x6994e0 (DC ?gpInputManager@@3PAVinputManager@@A).
-extern inputManager* g_inputManager;
+extern InputManager* g_inputManager;
 
 // The Windows-message bridges (inputmgr.cpp bodies; kbwin's
 // AppWndProc forwards the keyboard/mouse arms through them).

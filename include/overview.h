@@ -5,13 +5,14 @@
 #include <vector>
 #include "advmgr_popup.h"
 
-class textWidget;
+class TextWidget;
 
 // Per-hero artifact subpage selected in the kingdom overview. Retail's
 // SetupDynamicStuff and click handler prove that the two equipped pages are
 // nine slots each and the third page is the backpack. Names are provisional;
 // the domain and values are byte-proven.
-enum EOverviewHeroArtifactPage {
+// Before normalization (type): EOverviewHeroArtifactPage.
+enum OverviewHeroArtifactPage {
     OVERVIEW_HERO_EQUIPPED_PAGE_1 = 0,
     OVERVIEW_HERO_EQUIPPED_PAGE_2 = 1,
     OVERVIEW_HERO_BACKPACK_PAGE = 2
@@ -20,7 +21,8 @@ enum EOverviewHeroArtifactPage {
 // Actions consumed by TOverviewWindow::DoFlaggableButtons. The values are
 // fixed by its four-entry retail jump table; names describe the proven
 // effects because neither debug stream preserves the original enum.
-enum EOverviewFlaggableAction {
+// Before normalization (type): EOverviewFlaggableAction.
+enum OverviewFlaggableAction {
     OVERVIEW_FLAGGABLE_HOME = 0,
     OVERVIEW_FLAGGABLE_PREVIOUS = 1,
     OVERVIEW_FLAGGABLE_NEXT = 2,
@@ -32,7 +34,8 @@ enum EOverviewFlaggableAction {
 // mana, specialty, summoning-portal, and second help bands. The band bases
 // and unique controls below are byte-proven by the retail switch tables;
 // individual consecutive slots are written as base-plus-offset at use sites.
-enum EOverviewIconId {
+// Before normalization (type): EOverviewIconId.
+enum OverviewIconId {
     // The four fixed strip-navigation buttons and the unlabelled control
     // dispatched between them. Their actions are fixed by the retail
     // WindowHandler switch; the original names do not survive.
@@ -92,21 +95,22 @@ enum EOverviewIconId {
 // order. The earlier vector's element stride is independently eight bytes in
 // the retail helper at 0x51e670. Dreamcast only exposes a forward reference
 // for this class; the member names below describe retail-proven roles.
-struct overview_item_record {
+// Before normalization (type): overview_item_record.
+struct OverviewItemRecord {
     // this category; updateFlaggableIcon (0x51e670) also uses it as the icon
     // frame, and doRollover selects the corresponding object description.
     int m_itemType;
     // category, incremented during construction and formatted as "%i".
     int m_count;
 };
-SIZE(overview_item_record, 8);
+SIZE(OverviewItemRecord, 8);
 
 // Before normalization (type): TOverviewWindow.
 class OverviewWindow : public CAdvPopup {
 public:
     OverviewWindow();
     virtual ~OverviewWindow();
-    virtual int windowHandler(message& msg);
+    virtual int windowHandler(Message& msg);
 
     void updateFlaggableIcons();
 
@@ -118,12 +122,12 @@ private:
     void doRollover(int codeY);
 
     // records consumed by updateFlaggableIcon and the scrolling controls.
-    std::vector<overview_item_record> m_flaggableItems;
+    std::vector<OverviewItemRecord> m_flaggableItems;
     // UpdateFlaggableIcon invokes textWidget's SetText virtual on every
     // element; retail therefore proves the derived pointer type, not the
     // earlier widget* placeholder.
     // count labels here; updateFlaggableIcon updates/hides each label.
-    std::vector<textWidget*> m_flaggableCountWidgets;
+    std::vector<TextWidget*> m_flaggableCountWidgets;
 };
 SIZE(OverviewWindow, 0x80);
 

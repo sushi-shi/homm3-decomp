@@ -13,7 +13,7 @@
 #include "kb.h"
 
 VA(0x004b0900, 0x10)  // dc 0x9e510
-executive::executive()
+Executive::Executive()
 {
     m_headManager = 0;
     m_tailManager = 0;
@@ -24,7 +24,7 @@ executive::executive()
 // gpGeneralText is the canonical TTextResource loaded from genrltxt.txt.
 
 VA(0x004b0910, 0x79)  // dc 0x9e520
-int executive::initSystem()
+int Executive::initSystem()
 {
     if (g_inputManager->open(-1))
         shutDown((*g_generalText)[131]);
@@ -36,34 +36,34 @@ int executive::initSystem()
 }
 
 VA(0x004b0990, 0x78)  // dc 0x9e594
-void executive::shutDownSystem()
+void Executive::shutDownSystem()
 {
     g_shutDownDone = 1;
     g_soundManager->close();
     earlyShutDownSystem();
 
-    baseManager* thisManager = m_headManager;
+    BaseManager* thisManager = m_headManager;
     while (thisManager) {
-        baseManager* nextManager = thisManager->m_nextManager;
+        BaseManager* nextManager = thisManager->m_nextManager;
         if (thisManager != g_windowManager && thisManager != g_mouseManager)
             removeManager(thisManager);
         thisManager = nextManager;
     }
-    if (g_windowManager->m_status == baseManager::STATUS_ACTIVE)
+    if (g_windowManager->m_status == BaseManager::STATUS_ACTIVE)
         removeManager(g_windowManager);
-    if (g_mouseManager->m_status == baseManager::STATUS_ACTIVE)
+    if (g_mouseManager->m_status == BaseManager::STATUS_ACTIVE)
         removeManager(g_mouseManager);
     g_inputManager->close();
 }
 
 VA(0x004b0a10, 0x10B)  // dc 0x9e66c
-int executive::doDialog(baseManager* newDialog)
+int Executive::doDialog(BaseManager* newDialog)
 {
-    executive dialogExec;
-    baseManager* savedMgr[20];
-    baseManager* savedPrev[20];
-    baseManager* savedNext[20];
-    baseManager* m;
+    Executive dialogExec;
+    BaseManager* savedMgr[20];
+    BaseManager* savedPrev[20];
+    BaseManager* savedNext[20];
+    BaseManager* m;
     int count = 0;
     int i;
 
@@ -91,7 +91,7 @@ int executive::doDialog(baseManager* newDialog)
 }
 
 VA(0x004b0b20, 0xCB)  // dc 0x9e778
-int executive::addManager(baseManager* newManager, int newPriority)
+int Executive::addManager(BaseManager* newManager, int newPriority)
 {
     if (!newManager)
         return 3;
@@ -103,7 +103,7 @@ int executive::addManager(baseManager* newManager, int newPriority)
     }
     if (!newManager->m_status && newManager->open(newPriority))
         return 3;
-    baseManager* current = m_tailManager;
+    BaseManager* current = m_tailManager;
     while (current && current->m_priority > newPriority)
         current = current->m_prevManager;
     if (!current) {
@@ -129,12 +129,12 @@ int executive::addManager(baseManager* newManager, int newPriority)
 }
 
 VA(0x004b0bf0, 0x79)  // dc 0x9e838
-void executive::removeManager(baseManager* killManager)
+void Executive::removeManager(BaseManager* killManager)
 {
     if (!killManager)
         return;
     killManager->close();
-    baseManager* prev = killManager->m_prevManager;
+    BaseManager* prev = killManager->m_prevManager;
     if (!prev) {
         if (m_headManager == m_tailManager) {
             m_tailManager = 0;
@@ -157,9 +157,9 @@ void executive::removeManager(baseManager* killManager)
 }
 
 VA(0x004b0c70, 0x1D0)  // dc 0x9e898
-void executive::callManager(baseManager* newManager)
+void Executive::callManager(BaseManager* newManager)
 {
-    baseManager* saved = m_currentManager;
+    BaseManager* saved = m_currentManager;
 
     try {
         if (saved == g_advManager) {
@@ -196,7 +196,7 @@ void executive::callManager(baseManager* newManager)
             kbChangeMenu(g_dfltMenu);
             g_advManager->forceNewHover();
             g_advManager->overrideBottomView(
-                advManager::BOTTOM_VIEW_DEFAULT, -1);
+                AdvManager::BOTTOM_VIEW_DEFAULT, -1);
             if (g_windowManager->m_isWaitingForFadeIn)
                 g_windowManager->fadeScreen(0, 4, 0);
         } else {
@@ -211,9 +211,9 @@ void executive::callManager(baseManager* newManager)
 }
 
 VA(0x004b0e40, 0xF5)  // dc 0x9e9b0
-void executive::mainLoop()
+void Executive::mainLoop()
 {
-    message msg;
+    Message msg;
     int done = 0;
     int dispatch;
 

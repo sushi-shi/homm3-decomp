@@ -12,7 +12,8 @@
 // Before normalization (type): TObjectTypeFilter.
 class ObjectTypeFilter;
 
-enum EObjectTypeFilterConstants {
+// Before normalization (type): EObjectTypeFilterConstants.
+enum ObjectTypeFilterConstants {
     OBJECT_TYPE_FILTER_COUNT = 15
 };
 

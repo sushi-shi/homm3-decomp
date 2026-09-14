@@ -7,7 +7,7 @@
 // Dreamcast function-local records (types 0x28ae and 0x55f6), with every
 // x86 field and stride independently visible in GetSprite's retail copies.
 struct SpriteDefHeader {
-    EResourceType m_type;
+    ResourceType m_type;
     int m_width;
     int m_height;
     int m_numSequences;

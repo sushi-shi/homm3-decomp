@@ -5,7 +5,7 @@
 #include "armygrp.h"
 #include "window.h"
 
-class message;
+class Message;
 
 extern const float g_afUpgradeCostFactor[7];
 
@@ -30,7 +30,7 @@ extern const float g_afUpgradeCostFactor[7];
 static void updateHillFort(unsigned char update);
 
 // Before normalization (type): THillFortWindow.
-class HillFortWindow : public heroWindow {
+class HillFortWindow : public HeroWindow {
     // Recovered UpdateHillFort calls this window's private Recalculate.
     friend void updateHillFort(unsigned char update);
 public:
@@ -39,7 +39,7 @@ public:
     // 0xca/0xcb, HandleClick brackets 0xcb..0xda and normalizes the
     // CREATURE_NUM row onto the CREATURE_PORTRAIT row with `add esi,-7`,
     // and the handler maps 0x105..0x10b onto the seven slots.
-    enum EWidgetIDs {
+    enum WidgetIDs {
         BACKGROUND_ID = 200,
         ROLLOVER_ID = 201,
         TITLE_ID = 202,
@@ -139,7 +139,8 @@ public:
     // slot[].state and UpgradeAllButtonState share this domain: it is
     // the index into the two .rdata icon tables (0x63eb34 / 0x63eb40),
     // whose entries are aphlf1y/aphlf1g/aphlf1r and aphlf4y/4g/4r.
-    enum EUpgradeState {
+// Before normalization (type): HillFortWindow::EUpgradeState.
+    enum UpgradeState {
         UPGRADE_STATE_NONE = 0,
         UPGRADE_STATE_AFFORDABLE = 1,
         UPGRADE_STATE_TOO_EXPENSIVE = 2
@@ -153,20 +154,20 @@ private:
     UpgradeSlot m_slot[ArmyGroup::ARMY_GROUP_SLOT_COUNT];   // +0x4c
     long m_totalCost[ArmyGroup::ARMY_GROUP_SLOT_COUNT];      // +0x27c
     int m_upgradeAllButtonState;                             // +0x298
-    widget* m_rolloverWidget;                                // +0x29c
+    Widget* m_rolloverWidget;                                // +0x29c
 
 public:
     // DC free HillFortWindowHandler (0xd7458) calls these private methods;
     // retail 0x4e8850 retains the same callback relationship.
-    friend int hillFortWindowHandler(message& msg);
+    friend int hillFortWindowHandler(Message& msg);
 
 private:
-    void handleClick(message& msg);
+    void handleClick(Message& msg);
     void recalculate(unsigned char drawDimmedButtons);
     void upgradeSlot(int which, unsigned char showMessage);
 private:
     // DC fieldlist 0x5209 marks these helpers private; the callback calls them.
-    friend int hillFortWindowHandler(message& msg);
+    friend int hillFortWindowHandler(Message& msg);
     // Original: UpgradeAll, hillfortwindow.cpp:500.
     void upgradeAll();
     // Original: GetCreatureType, HillFortWindow.h:170; const receiver proven.
@@ -175,7 +176,7 @@ private:
 SIZE(HillFortWindow, 0x2a0);
 
 // Retail /Gr passes the message by reference in ECX, matching DoDialog.
-int hillFortWindowHandler(message& msg);
+int hillFortWindowHandler(Message& msg);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\hillfortwindow.cpp:192, dc 0xd6bd4) bool CanAfford(const long* cost, const long* playerRes);

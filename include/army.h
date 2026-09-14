@@ -17,7 +17,7 @@
 class Hero;
 class ArmyGroup;
 class Town;
-class sample;
+class Sample;
 class CSprite;
 
 inline const char* getArmyName(int type, int count);
@@ -30,7 +30,8 @@ inline const char* getArmyName(int type, int count);
 // their mask bits for one-hex creatures; OppositeDirection pairs them
 // 6<->7). Names are bootstrap inventions - no DC/NH3API roster
 // survives for the direction ids.
-enum ECombatDirection {
+// Before normalization (type): ECombatDirection.
+enum CombatDirection {
     COMBAT_DIRECTION_0 = 0x0,
     COMBAT_DIRECTION_1 = 0x1,
     COMBAT_DIRECTION_2 = 0x2,
@@ -47,7 +48,8 @@ enum ECombatDirection {
 // where retail emits VC6's switch chain (`sub ecx,0` / `dec ecx`) and
 // lays the DEFENDER arm out first, which an if/else-if chain on the
 // same values cannot reproduce. Names are bootstrap inventions.
-enum EFacing {
+// Before normalization (type): EFacing.
+enum Facing {
     FACING_ATTACKER = 0x0,
     FACING_DEFENDER = 0x1
 };
@@ -55,7 +57,8 @@ enum EFacing {
 // ValidAttack's target-filter modes (byte-derived from the criteria
 // switch at 0x523bb0; names are bootstrap inventions): SELF accepts
 // only this army's own cell, ENEMY a hostile army, OCCUPIED any army.
-enum EAttackCriteria {
+// Before normalization (type): EAttackCriteria.
+enum AttackCriteria {
     ATTACK_CRITERIA_SELF = 0x0,
     ATTACK_CRITERIA_ENEMY = 0x1,
     ATTACK_CRITERIA_OCCUPIED = 0x2
@@ -85,7 +88,8 @@ enum WallTargetId {
     WALL_TARGET_COUNT = 8
 };
 
-enum EArmySpellCancelType {
+// Before normalization (type): EArmySpellCancelType.
+enum ArmySpellCancelType {
     ARMY_CANCEL_SPELLS_AFTER_MOVE = 0,
     ARMY_CANCEL_SPELLS_AFTER_ATTACK = 1,
     ARMY_CANCEL_SPELLS_AFTER_DAMAGE = 2
@@ -107,7 +111,8 @@ enum EArmySpellCancelType {
 
 // Dreamcast's field list names this type in army's unconditional private
 // attack_wall overload. It therefore cannot remain a TU-view score control.
-struct type_ballistics_traits {
+// Before normalization (type): type_ballistics_traits.
+struct BallisticsTraits {
     signed char m_chanceToHitMainBuilding;
     signed char m_chanceToHitTower;
     signed char m_chanceToHitDrawbridge;
@@ -123,7 +128,7 @@ struct type_ballistics_traits {
     // subtracted because falling through both already selects level 2.
     signed char m_levelChance[3];       // +0x5
 };
-SIZE(type_ballistics_traits, 8);
+SIZE(BallisticsTraits, 8);
 
 // The four rows themselves - one per Ballistics mastery - reached
 // through the cell at 0x679c84, which is a REFERENCE TO AN ARRAY OF
@@ -137,7 +142,7 @@ SIZE(type_ballistics_traits, 8);
 // what binds the reference at startup, immediately before the
 // experience ladder at 0x679c88 - so no DATA claim is made here.
 // army.cpp is the only located reader.
-extern const type_ballistics_traits (&g_constBallisticsTraits)[4];
+extern const BallisticsTraits (&g_constBallisticsTraits)[4];
 
 // Opaque head model. The 0x548 stride and the 0x54cc array base in
 // combatManager are byte-proven by hexcell::get_army/get_dead_army
@@ -191,7 +196,7 @@ public:
     T* operator->() const { return m_resource; }
 };
 
-class army {
+class Army {
 public:
     // Dreamcast Army.h enum; retail Teleport passes the two corresponding
     // immediate values to the independently located play_sample body.
@@ -525,7 +530,7 @@ public:
     int m_imageHeight;             // +0x16c
     // DC army::armySample is sample*[8] at +0x15c; retail's preceding STL
     // expansion shifts it to +0x170, independently confirmed by play_sample.
-    ResourceHandle<sample> m_armySample[8];  // +0x170
+    ResourceHandle<Sample> m_armySample[8];  // +0x170
     // Ordering key the AI compares BETWEEN stacks: should_attack_now
     // (0x436c60) refuses to cast now when any other still-able stack
     // on our side outranks the target's own value here. Name pending a
@@ -743,7 +748,7 @@ public:
     // before every later member.  Keep source facts here even while a retail
     // candidate temporarily scores lower: C1XX assigns member handles from
     // this stream before C2 optimizes any individual function.
-    army();
+    Army();
     void init(int armyId, int newNumTroops, const Hero* owner, int side,
               int inIndex, int gridIndex, int origPos);
     void initialize(CreatureType type, long number, const Hero* owner,
@@ -760,12 +765,12 @@ public:
     int flyTo(int destIndex, unsigned char restoreFacing);
     int teleport(int destIndex);
     int teleportTo(int destIndex, unsigned char restoreFacing);
-    long adjustDamage(army* enemy, long baseDamage, unsigned char isShot,
+    long adjustDamage(Army* enemy, long baseDamage, unsigned char isShot,
                        unsigned char simulated, long distance,
                        long* fireDamage) const;
     inline void adjustHitpoints();
     unsigned char attackHex(int hex, unsigned char restoreFacing);
-    unsigned char doAttack(army* armyToAttack, int direction);
+    unsigned char doAttack(Army* armyToAttack, int direction);
     void doAttack(int direction);
 
     // LF_FIELDLIST 0x205b entries 115..227. Overloads share one roster
@@ -773,7 +778,7 @@ public:
     // family without changing the attested relative order below.
     void doMultiHeadAttack(unsigned attackMask, int* damage, int* killed,
                               long* fireDamage);
-    void rangeAttack(army* armyToAttack);
+    void rangeAttack(Army* armyToAttack);
     void rangeAttack();
     void attackWall(int targetGridIndex);
     void turn(unsigned char animateTurn);
@@ -781,45 +786,45 @@ public:
     bool canCastResurrect(long hex) const;
     bool canCastResurrect() const;
     unsigned char canCastSpell(long hex) const;
-    bool canRetaliate(const army& attacker) const;
-    unsigned char canShoot(const army* excluded) const;
+    bool canRetaliate(const Army& attacker) const;
+    unsigned char canShoot(const Army* excluded) const;
     void castCaliphSpell(long hex);
     void castResurrect(long hex);
     void castDemonicResurrect(long hex);
-    unsigned char checkSpecialAttack(army* target);
+    unsigned char checkSpecialAttack(Army* target);
     void castSpell(long hex);
     // Complete retains this ordinary destructor in Army code at 0x43d400,
     // immediately after army(). Its body owns the member cleanup; callers
     // such as getCureValue keep the call. DC attributes it to an ai.cpp use site.
-    ~army();
+    ~Army();
     void faerieDragonSpell();
     unsigned char unnamed447fe0();
     unsigned char checkObstacleAttacks(unsigned char isWalking);
     void clearAIValues();
-    void considerAttack(const army* enemy, long value,
+    void considerAttack(const Army* enemy, long value,
                          long attackDistance);
-    unsigned char enemyIsAdjacent(const army* excluded) const;
+    unsigned char enemyIsAdjacent(const Army* excluded) const;
     unsigned getAttackMask(int currIndex, int criteria,
                            int literalTargetIndex) const;
-    long getAdjustedAttack(const army* enemy,
+    long getAdjustedAttack(const Army* enemy,
                              unsigned char rangedAttack) const;
-    long getAdjustedDefense(const army* enemy,
+    long getAdjustedDefense(const Army* enemy,
                               unsigned char frenzyIncluded) const;
     long getAIExpectedDamage() const;
-    const army* getAITarget() const;
+    const Army* getAITarget() const;
     long getAITargetValue() const;
     long getAITargetTime(long speed) const;
     long getAITargetTime() const;
     long getAIPossibleTargets() const;
-    long getAttackModifier(const army* enemy,
+    long getAttackModifier(const Army* enemy,
                              unsigned char rangedAttack) const;
-    long getAverageDamage(const army* enemy, unsigned char rangedAttack,
+    long getAverageDamage(const Army* enemy, unsigned char rangedAttack,
                             long amount, unsigned char limitDamage,
                             long distance) const;
     double getAverageDamage() const;
-    long getEstimatedDamage(const army* target, long amount,
+    long getEstimatedDamage(const Army* target, long amount,
                               unsigned char ranged, long distance) const;
-    void getBerserkTargets(std::vector<army*>& armies) const;
+    void getBerserkTargets(std::vector<Army*>& armies) const;
     int getOwningSide() const;
     int getControllingSide() const;
     Hero* getOwner() const;
@@ -833,19 +838,19 @@ public:
     long getLossCombatValue(long lowestAttack, long lowestDefense,
                                unsigned char ranged, long damage,
                                unsigned char killsOnly) const;
-    long getResurrectionSize(const army* target) const;
+    long getResurrectionSize(const Army* target) const;
     int getSecondGridIndex() const;
     long getTotalCombatValue(long lowestAttack,
                                 long lowestDefense) const;
     long getTotalHitPoints(unsigned char simulated) const;
     double getUnitCombatValue(long lowestAttack, long lowestDefense,
                                  unsigned char ranged,
-                                 const army* excluded) const;
-    long getValidCaliphSpells(const army* target) const;
+                                 const Army* excluded) const;
+    long getValidCaliphSpells(const Army* target) const;
     int getBestDirection(int start, int target, int direction);
-    unsigned char isAdjacent(const army* otherArmy) const;
+    unsigned char isAdjacent(const Army* otherArmy) const;
     unsigned char isAdjacent(int hex) const;
-    unsigned char isEnemy(const army* arg) const;
+    unsigned char isEnemy(const Army* arg) const;
     bool isInAura() const;
     unsigned char moveTo(int hex, unsigned char restoreFacing);
     void newTurn();
@@ -861,22 +866,22 @@ public:
     unsigned char validFlight(int destIndex,
                               unsigned char literalTest) const;
     int validRange(int destIndex);
-    inline long damageEnemy(army* enemy, int* damageOut, int* killed,
+    inline long damageEnemy(Army* enemy, int* damageOut, int* killed,
                             unsigned char isShot);
     int damage(int damage);
     int computeBaseDamage(unsigned char simulateOnly) const;
     int computeAttackerDamageBonuses(int baseDamage,
                                      unsigned char isShooting,
-                                     army* defender,
+                                     Army* defender,
                                      unsigned char simulateOnly,
                                      long distance) const;
     inline int computeDefenderDamageBonuses(int baseDamage) const;
-    double computeAttackerDamageReduction(const army* defender,
+    double computeAttackerDamageReduction(const Army* defender,
                                           unsigned char isShooting) const;
     double computeDefenderDamageReduction(
         unsigned char isShooting) const;
     int computeAttackerBonus(int baseDamage, unsigned char isShooting,
-                               army* defender, unsigned char simulateOnly,
+                               Army* defender, unsigned char simulateOnly,
                                long distance) const;
     void cancelSpellType(int spellType);
     void decrementSpellRounds();
@@ -909,11 +914,11 @@ public:
     int getAdjacentCellIndex(int currIndex, int direction) const;
     long getAdjacentHex(long hex, long direction) const;
     long getAdjacentHex(long direction) const;
-    long getAttackDirection(long ourHex, const army* enemy,
+    long getAttackDirection(long ourHex, const Army* enemy,
                               long enemyHex) const;
-    inline long getAttackDirection(long ourHex, const army* enemy) const;
-    long getAttackDirection(const army* enemy) const;
-    long getMultiHeadDirections(long ourHex, const army* enemy,
+    inline long getAttackDirection(long ourHex, const Army* enemy) const;
+    long getAttackDirection(const Army* enemy) const;
+    long getMultiHeadDirections(long ourHex, const Army* enemy,
                                    long enemyHex) const;
     long getSpellTime(int spell) const;
     SkillMastery getSpellLevel(int spell) const;
@@ -945,16 +950,16 @@ public:
     // shared IsIncapacitated helper. The exact retail lowering proves that
     // combatManager can read this tail without making the Dreamcast-private
     // data public; friendship is the source-level access that preserves both.
-    friend class combatManager;
+    friend class CombatManager;
 
 private:
     void attackWall(WallTargetId wall, long levelsDestroyed);
     void attackWall(WallTargetId wall,
-                     const type_ballistics_traits& ballistics);
+                     const BallisticsTraits& ballistics);
 
-    void animateMissile(army* armyToAttack);
+    void animateMissile(Army* armyToAttack);
     void doFireShield(long damage);
-    void doPostAttack(army* target, int attackDamage, int killedCount,
+    void doPostAttack(Army* target, int attackDamage, int killedCount,
                         int totalLife);
     void doHydraAttack(int direction);
     bool findFlyerAttackCell(int hex, int direction) const;
@@ -969,12 +974,12 @@ private:
     int m_luck;                             // +0x4ec, DC iLuck
     unsigned char m_resetThisRound;              // +0x4f0, DC reset_this_round
     unsigned char m_isAreaEffectTarget;  // +0x4f1
-    std::vector<army*> m_boundArmies;      // +0x4f4
-    std::vector<army*> m_binders;           // +0x504
-    std::vector<army*> m_auraClients;      // +0x514
-    std::vector<army*> m_auraSources;      // +0x524
+    std::vector<Army*> m_boundArmies;      // +0x4f4
+    std::vector<Army*> m_binders;           // +0x504
+    std::vector<Army*> m_auraClients;      // +0x514
+    std::vector<Army*> m_auraSources;      // +0x524
     int m_aiExpectedDamage;               // +0x534
-    army* m_aiTarget;                      // +0x538
+    Army* m_aiTarget;                      // +0x538
     long m_aiTargetValue;                 // +0x53c
     long m_aiTargetTime;                  // +0x540, DC AI_target_distance
     unsigned m_aiPossibleTargets;         // +0x544
@@ -998,14 +1003,14 @@ private:
     // 0x445840, claimed in army.cpp. Const because ai_tactical's
     // get_breath_bonus (0x436760) calls it on the `const army*` it
     // takes as its second parameter.
-    long getAttackDirection(long our_hex, const army* enemy,
+    long getAttackDirection(long our_hex, const Army* enemy,
                               long enemy_hex) const;
-    inline long getAttackDirection(long our_hex, const army* enemy) const;
+    inline long getAttackDirection(long our_hex, const Army* enemy) const;
     // 0x448ab0 (claimed in army.cpp): the bitmask of the directions a
     // wide/multi-headed stack would also strike. Const for the same
     // reason - get_multi_head_bonus (0x436620) drives it off a
     // `const army*`.
-    long getMultiHeadDirections(long our_hex, const army* enemy,
+    long getMultiHeadDirections(long our_hex, const Army* enemy,
                                    long enemy_hex) const;
     // The two neighbours of a combat direction. DC rows 0x45fc0 /
     // 0x46008, and NEITHER has a retail out-of-line slot - the whole
@@ -1064,18 +1069,18 @@ private:
     // 0x43f900 (still a carcass), which is the animation-and-damage
     // worker.
     void rangeAttack();
-    void rangeAttack(army* armyToAttack);
+    void rangeAttack(Army* armyToAttack);
     // 0x43f2c0, EH-bearing carcass in army.cpp; declared because the
     // volley worker above calls it once per shot.
-    void animateMissile(army* armyToAttack);
+    void animateMissile(Army* armyToAttack);
     unsigned char checkObstacleAttacks(unsigned char is_walking);
     // 0x440500, reconstructed in army.cpp: the attacker's on-attack
     // debuff roll (bind/blind/disease/curse/age/stone/poison/acid/
     // paralyze); returns 1 for the three incapacitators.
-    unsigned char checkSpecialAttack(army* target);
+    unsigned char checkSpecialAttack(Army* target);
     // 0x440bc0, EH-bearing carcass in army.cpp; declared for
     // do_attack's kill-accounting tail.
-    void doPostAttack(army* target, int iDamage, int iKilled,
+    void doPostAttack(Army* target, int iDamage, int iKilled,
                         int total_life);
     void turn(unsigned char play_animation); // 0x446720
     void setupAnimation();                   // 0x446830
@@ -1140,7 +1145,8 @@ private:
     // into TCreatureType when an owner moves initialize.cpp's includes.
 #endif  // superseded unordered/view-fragmented declarations
 public:
-    enum EArmyCreatureId {
+// Before normalization (type): army::EArmyCreatureId.
+    enum ArmyCreatureId {
         // The three-headed attacker. get_multi_head_directions
         // (0x448ab0) hands every OTHER creature the full adjacency
         // mask (0xff wide, 0x3f narrow) and only this id gets the
@@ -1327,19 +1333,19 @@ public:
     // still carries both as DC_ONLY carcasses.
     int midX() const;                        // 0x446660
     int midY() const;                        // 0x446630
-    unsigned char isEnemy(const army* arg) const; // 0x442880
+    unsigned char isEnemy(const Army* arg) const; // 0x442880
     // 0x4429f0: asks the combat manager whether any enemy stack (other
     // than `excluded`) neighbours this stack's own hex, and for a
     // two-hex creature its second hex as well. Const
     // (?enemy_is_adjacent@army@@QBA_NPBV1@@Z) - the last of the chain
     // combatManager::enemy_is_adjacent's own const `this` needs.
-    unsigned char enemyIsAdjacent(const army* excluded) const;
+    unsigned char enemyIsAdjacent(const Army* excluded) const;
     // 0x4430d0: clamps the AI's committed damage to what the stack can
     // actually absorb - `_cpp_min(get_total_hit_points(), arg)`.
     void setAIExpectedDamage(long arg);
-    long getAdjustedAttack(const army* enemy,
+    long getAdjustedAttack(const Army* enemy,
                              unsigned char ranged_attack) const;
-    long getAttackModifier(const army* enemy,
+    long getAttackModifier(const Army* enemy,
                              unsigned char ranged_attack) const;
     // 0x442660 (41 B). The 2026-08-08 note on ai_tactical's
     // type_AI_combat_parameters ctor called this leaf "unidentified";
@@ -1356,7 +1362,7 @@ public:
     // Combat-AI leaves, all claimed in army.cpp; declared here so
     // ai_tactical can call them (the retail callsites are the
     // location evidence for get_average_damage's own claim).
-    unsigned char canShoot(const army* excluded) const;        // 0x4428f0
+    unsigned char canShoot(const Army* excluded) const;        // 0x4428f0
     // 0x4473d0 / 0x4476c0, carcasses in army.cpp; declared here because
     // combatManager::GetCommand (command.obj) is a caller of both.
     // Both const (?can_cast_resurrect@army@@QBA_NJ@Z,
@@ -1368,7 +1374,7 @@ public:
                                unsigned char kills_only) const; // 0x442fd0
     long getTotalHitPoints(unsigned char simulated) const;   // 0x443080
     inline void checkLuck();
-    inline long damageEnemy(army* enemy, int* iDamage, int* iKilled,
+    inline long damageEnemy(Army* enemy, int* iDamage, int* iKilled,
                             unsigned char bIsShot);
     // 0x442590: the stack's defense as the ATTACKER sees it - zero
     // under Frenzy, reduced 40%/80% against a Behemoth / Ancient
@@ -1378,7 +1384,7 @@ public:
     // already has to declare const for get_attack_modifier's sake,
     // calls it on `this` in the Frenzy tail. Nothing in the body
     // writes.
-    long getAdjustedDefense(const army* enemy,
+    long getAdjustedDefense(const Army* enemy,
                               unsigned char frenzy_included) const;
     // 0x443840 / 0x443b90, carcasses in army.cpp; declared because
     // adjust_damage (0x443f40) calls both and retail does NOT inline
@@ -1389,7 +1395,7 @@ public:
     // roster's own split and not a transcription slip.
     int computeAttackerDamageBonuses(int base_damage,
                                      unsigned char is_shooting,
-                                     army* defender,
+                                     Army* defender,
                                      unsigned char simulate_only,
                                      long distance) const;
     // E:\gamedcs\army.cpp:3230
@@ -1397,7 +1403,7 @@ public:
     // Keep the named boundary source-visible even though retail VC6 can
     // erase both this body and its call from adjust_damage.
     inline int computeDefenderDamageBonuses(int base_damage) const;
-    double computeAttackerDamageReduction(const army* defender,
+    double computeAttackerDamageReduction(const Army* defender,
                                           unsigned char is_shooting) const;
     // 0x443320, the retail-only numeric half of the row above: the
     // offense / archery / spell-bonus arithmetic with no combat
@@ -1408,7 +1414,7 @@ public:
     // declaration does not drop it. Declared, not claimed here;
     // army.cpp owns the body.
     int computeAttackerBonus(int base_damage, unsigned char is_shooting,
-                               army* defender, unsigned char simulate_only,
+                               Army* defender, unsigned char simulate_only,
                                long distance) const;
     // 0x443160: one swing's RAW damage - the effective creature count,
     // the damage range (hero-attack-scaled for a ballista), then the
@@ -1424,7 +1430,7 @@ public:
     // restore to `target` - the Archangel rule, or the Pit Lord's
     // raise-Demons rule for every other caster. Const
     // (?get_resurrection_size@army@@QBAJPBV1@@Z).
-    long getResurrectionSize(const army* target) const;
+    long getResurrectionSize(const Army* target) const;
     // 0x444090: applies one blow's damage to the stack and answers how
     // many creatures it killed.
     int damage(int damage);
@@ -1435,7 +1441,7 @@ public:
     void doMultiHeadAttack(unsigned attackMask, int* damage, int* killed,
                               long* fire_damage);
     void doFireShield(long damage);
-    long getAverageDamage(const army* enemy, unsigned char ranged_attack,
+    long getAverageDamage(const Army* enemy, unsigned char ranged_attack,
                             long amount, unsigned char limit_damage,
                             long distance) const;               // 0x442780
     // The no-argument overload (0x4426f0, claimed in army.cpp): what
@@ -1452,14 +1458,14 @@ public:
     // get_attack_skill_value and get_defense_skill_value are its only
     // callers, both asking "what would a 100-creature stack of mine do
     // to this target?" - so the name below is a bootstrap invention.
-    long getEstimatedDamage(const army* target, long amount,
+    long getEstimatedDamage(const Army* target, long amount,
                               unsigned char ranged, long distance) const;
     // 0x445490, claimed in army.cpp. Fills the caller's vector with the
     // stacks a berserked `this` would be allowed to strike; ai_tactical's
     // get_berserk_value (0x43a400) is the located caller and passes a
     // freshly default-constructed local, so the callee is the only
     // writer. Const because that caller holds the stack as `const army*`.
-    void getBerserkTargets(std::vector<army*>& armies) const;
+    void getBerserkTargets(std::vector<Army*>& armies) const;
     // 0x4456d0, claimed in army.cpp: the consumer of the vector above.
     // NON-const, and the body is what says so - it hands `this` to
     // combatManager::berserk_attack, whose first parameter is a plain
@@ -1476,14 +1482,14 @@ public:
     void processDeath(int bFadeElementals);
     int getSecondGridIndex() const;                          // 0x4466a0
     int getMirrorEffect() const;                              // 0x4487f0
-    void considerAttack(const army* enemy, long value,
+    void considerAttack(const Army* enemy, long value,
                          long attack_distance);                 // 0x448840
     long getAITargetTime(long speed) const;                  // 0x448bd0
     long getTotalCombatValue(long lowest_attack,
                                 long lowest_defense) const;     // 0x442e60
     double getUnitCombatValue(long lowest_attack, long lowest_defense,
                                  unsigned char ranged,
-                                 const army* excluded) const;   // 0x442a50
+                                 const Army* excluded) const;   // 0x442a50
     // Returns float in st(0): the stack's own 0x4a0 while
     // fireShieldRounds is set, else the Efreet Sultan's innate
     // constant, else the zero constant (0x443130).
@@ -1545,7 +1551,7 @@ public:
     unsigned char needToTurn(int direction) const;
     unsigned char is(unsigned attribute) const;
     long getAIExpectedDamage() const;
-    const army* getAITarget() const;
+    const Army* getAITarget() const;
     long getAITargetValue() const;
     long getAITargetTime() const;
     long getAIPossibleTargets() const;
@@ -1558,10 +1564,10 @@ public:
     unsigned char isActive() const;
     unsigned char isInAura() const;
     unsigned char isIncapacitated() const;
-    unsigned char canRetaliate(const army& attacker) const;
+    unsigned char canRetaliate(const Army& attacker) const;
     unsigned char cannotAttack() const;
     long getAdjacentHex(long direction) const;
-    long getAttackDirection(const army* enemy) const;
+    long getAttackDirection(const Army* enemy) const;
     unsigned char isInAreaHighlight() const;
 
 private:
@@ -1575,18 +1581,18 @@ private:
     int luck;                             // +0x4ec, DC iLuck
     unsigned char m_resetThisRound;              // +0x4f0, DC reset_this_round
     unsigned char m_isAreaEffectTarget;  // +0x4f1
-    std::vector<army*> m_boundArmies;      // +0x4f4
-    std::vector<army*> m_binders;           // +0x504
-    std::vector<army*> m_auraClients;      // +0x514
-    std::vector<army*> m_auraSources;      // +0x524
+    std::vector<Army*> m_boundArmies;      // +0x4f4
+    std::vector<Army*> m_binders;           // +0x504
+    std::vector<Army*> m_auraClients;      // +0x514
+    std::vector<Army*> m_auraSources;      // +0x524
     int m_aiExpectedDamage;               // +0x534
-    army* m_aiTarget;                      // +0x538
+    Army* m_aiTarget;                      // +0x538
     long m_aiTargetValue;                 // +0x53c
     long m_aiTargetTime;                  // +0x540, DC AI_target_distance
     unsigned m_aiPossibleTargets;         // +0x544
 #endif  // superseded unordered/view-fragmented declarations
 };
-SIZE(army, 0x548);
+SIZE(Army, 0x548);
 
 // Dreamcast CodeView source lines Army.h:718..881 are out-of-class header
 // definitions.  LF_FIELDLIST 0x205b proves this: these declarations are
@@ -1594,7 +1600,7 @@ SIZE(army, 0x548);
 // source-line run.
 
     // E:\gamedcs\Army.h:718
-inline bool army::canCastResurrect() const
+inline bool Army::canCastResurrect() const
     {
         return (m_creatureType == ARMY_CREATURE_ARCHANGEL
                 || m_creatureType == ARMY_CREATURE_PIT_LORD)
@@ -1602,20 +1608,20 @@ inline bool army::canCastResurrect() const
     }
 
     // E:\gamedcs\Army.h:724
-inline int army::getMorale(unsigned char applyLimits) const
+inline int Army::getMorale(unsigned char applyLimits) const
     {
         return applyLimits ? limit(-3, m_morale, 3) : m_morale;
     }
 
     // E:\gamedcs\Army.h:730
-inline int army::getLuck(unsigned char applyLimits) const
+inline int Army::getLuck(unsigned char applyLimits) const
     {
         return applyLimits ? limit(-3, m_luck, 3) : m_luck;
     }
 
     // E:\gamedcs\Army.h:736
 VA(0x00445cd0, 0x38)  // anchor-caller + exact header-inline body, dc 0x27c9c
-inline int army::offsetToFront(int direction) const
+inline int Army::offsetToFront(int direction) const
     {
         if (direction >= 0 && direction <= 2)
             return 1;
@@ -1625,7 +1631,7 @@ inline int army::offsetToFront(int direction) const
     }
 
     // E:\gamedcs\Army.h:752
-inline void army::clearAIValues()
+inline void Army::clearAIValues()
     {
         m_aiExpectedDamage = 0;
         m_aiTarget = 0;
@@ -1634,56 +1640,56 @@ inline void army::clearAIValues()
     }
 
     // E:\gamedcs\Army.h:760
-inline bool army::needToTurn(int direction) const
+inline bool Army::needToTurn(int direction) const
     {
         return direction < 6 && (m_facing == 0) != (direction >= 3);
     }
 
     // E:\gamedcs\Army.h:765
-inline bool army::is(unsigned attribute) const
+inline bool Army::is(unsigned attribute) const
     {
         return (m_monInfo.m_attributes & attribute) != 0;
     }
 
     // E:\gamedcs\Army.h:770
-inline long army::getAIExpectedDamage() const
+inline long Army::getAIExpectedDamage() const
     {
         return m_aiExpectedDamage;
     }
 
     // E:\gamedcs\Army.h:775
-inline const army* army::getAITarget() const
+inline const Army* Army::getAITarget() const
     {
         return m_aiTarget;
     }
 
     // E:\gamedcs\Army.h:780
-inline long army::getAITargetValue() const
+inline long Army::getAITargetValue() const
     {
         return m_aiTargetValue;
     }
 
     // E:\gamedcs\Army.h:785
-inline long army::getAITargetTime() const
+inline long Army::getAITargetTime() const
     {
         return getAITargetTime(getSpeed());
     }
 
     // E:\gamedcs\Army.h:790
-inline long army::getAIPossibleTargets() const
+inline long Army::getAIPossibleTargets() const
     {
         return m_aiPossibleTargets;
     }
 
     // E:\gamedcs\Army.h:795
-inline int army::getOwningSide() const
+inline int Army::getOwningSide() const
     {
         return m_combatSide;
     }
 
     // E:\gamedcs\Army.h:800
 VA(0x00440140, 0x1F)  // anchor-callee + body identity, retail-only slot
-inline int army::getControllingSide() const
+inline int Army::getControllingSide() const
     {
         if (m_spellInfluence[60])
             return 1 - getOwningSide();
@@ -1691,51 +1697,51 @@ inline int army::getControllingSide() const
     }
 
     // E:\gamedcs\Army.h:810
-inline const char* army::getName() const
+inline const char* Army::getName() const
     {
         return getArmyName(m_creatureType, m_numTroops);
     }
 
     // E:\gamedcs\Army.h:815
-inline const char* army::getName(int count) const
+inline const char* Army::getName(int count) const
     {
         return getArmyName(m_creatureType, count);
     }
 
     // SpellID is still represented by its retail-width int domain here.
     // E:\gamedcs\Army.h:820
-inline long army::getSpellTime(int spell) const
+inline long Army::getSpellTime(int spell) const
     {
         return m_spellInfluence[spell];
     }
 
     // E:\gamedcs\Army.h:825
-inline SkillMastery army::getSpellLevel(int spell) const
+inline SkillMastery Army::getSpellLevel(int spell) const
     {
         return SkillMastery(m_spellLevel[spell]);
     }
 
     // E:\gamedcs\Army.h:830
-inline bool army::isActive() const
+inline bool Army::isActive() const
     {
         return m_creatureType >= 0 && m_numTroops > 0;
     }
 
     // E:\gamedcs\Army.h:835
-inline bool army::isInAura() const
+inline bool Army::isInAura() const
     {
         return m_auraSources.size() > 0;
     }
 
 VA(0x0041f380, 0x27)  // anchor-callee, dc 0x27d9c
-inline bool army::isIncapacitated() const
+inline bool Army::isIncapacitated() const
     {
         return m_spellInfluence[62] || m_spellInfluence[70]
                || m_spellInfluence[74];
     }
 
     // E:\gamedcs\Army.h:847
-inline bool army::canRetaliate(const army& attacker) const
+inline bool Army::canRetaliate(const Army& attacker) const
     {
         return !(attacker.is(1u << 16)) && !m_spellInfluence[70]
                && m_retaliationCount > 0;
@@ -1745,7 +1751,7 @@ inline bool army::canRetaliate(const army& attacker) const
 // Complete's inlined copy in consider_single_enchantment keeps the recovered
 // incapacity/attribute prefix but directly contradicts Dreamcast's final
 // Psychic/Magic Elemental pair: retail compares First Aid Tent and Ammo Cart.
-inline bool army::cannotAttack() const
+inline bool Army::cannotAttack() const
     {
         return isIncapacitated() || is(1u << 21)
                || m_creatureType == ARMY_CREATURE_FIRST_AID_TENT
@@ -1753,24 +1759,24 @@ inline bool army::cannotAttack() const
     }
 
     // E:\gamedcs\Army.h:864
-inline long army::getAdjacentHex(long direction) const
+inline long Army::getAdjacentHex(long direction) const
     {
         return getAdjacentHex(m_gridIndex, direction);
     }
 
     // E:\gamedcs\Army.h:869
-inline long army::getAttackDirection(const army* enemy) const
+inline long Army::getAttackDirection(const Army* enemy) const
     {
         return getAttackDirection(m_gridIndex, enemy);
     }
 
     // E:\gamedcs\Army.h:875
-inline bool army::leavesNoBody() const
+inline bool Army::leavesNoBody() const
     {
         return is((1u << 22) | (1u << 28));
     }
     // E:\gamedcs\Army.h:881
-inline bool army::isInAreaHighlight() const
+inline bool Army::isInAreaHighlight() const
     {
         return m_isAreaEffectTarget;
     }
@@ -1804,7 +1810,7 @@ DATA(0x00660870) extern int g_walkingTo;
 DATA(0x00660874) extern int g_walkingTo2;
 DATA(0x00693858) extern int g_walkingYMod;
 
-unsigned char isValidCaliphSpell(SpellID spell, const army* target);
+unsigned char isValidCaliphSpell(SpellID spell, const Army* target);
 // 0x447a80 (1065 B), the worker is_valid_caliph_spell tail-jumps to
 // and army::can_cast_spell (0x4476c0) also calls. It opens by
 // rejecting a target that already carries the spell
@@ -1813,7 +1819,7 @@ unsigned char isValidCaliphSpell(SpellID spell, const army* target);
 // is_valid_caliph_spell and can_cast_spell - so it is a retail-only
 // factoring and the NAME BELOW IS A BOOTSTRAP INVENTION, same class as
 // get_estimated_damage. Declared so the wrapper can call it; not claimed.
-unsigned char spellIsValidOnTarget(int spell, const army* target);
+unsigned char spellIsValidOnTarget(int spell, const Army* target);
 
 // E:\gamedcs\army.cpp:917, dc 0x44e14
 // E:\gamedcs\army.cpp:2708, dc 0x47944

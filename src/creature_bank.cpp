@@ -17,18 +17,18 @@
 // `mov edx, [0x67029c]` - a pointer LOAD. The array carries a constructor,
 // so its cinit initializer at 0x47aa20 is retail's own and stays excluded.
 DATA(0x00695038)
-static type_creature_bank_traits g_creatureBankTraits[CREATURE_BANK_COUNT];
+static CreatureBankTraits g_creatureBankTraits[CREATURE_BANK_COUNT];
 
 DATA(0x0067029c)
-const type_creature_bank_traits* g_constCreatureBankTraits =
+const CreatureBankTraits* g_constCreatureBankTraits =
     g_creatureBankTraits;
 
 // E:\gamedcs\creature_bank.cpp:25, dc 0x7152c
-type_creature_bank_level::type_creature_bank_level() {}
+CreatureBankLevel::CreatureBankLevel() {}
 
 // E:\gamedcs\creature_bank.cpp:25
 VA(0x0047aad0, 0x5E)  // dc 0x714e0
-type_creature_bank_traits::type_creature_bank_traits()
+CreatureBankTraits::CreatureBankTraits()
 {
 }
 
@@ -36,7 +36,7 @@ type_creature_bank_traits::type_creature_bank_traits()
 // DC proves static linkage and both reference parameters. Retail expands
 // the one source call in initializeCreatureBankTraits; keep the real body.
 DC_ONLY(0x70fe0, 0x14A)
-static void initializeCreatureBankLevel(type_creature_bank_level& traits,
+static void initializeCreatureBankLevel(CreatureBankLevel& traits,
                                        const std::vector<char*>& resource)
 {
     int column = 2;
@@ -103,11 +103,11 @@ unsigned char initializeCreatureBankTraits()
 
     int row = 2;
     for (int bank = 0; bank < CREATURE_BANK_COUNT; ++bank) {
-        type_creature_bank_traits* traits = &g_creatureBankTraits[bank];
+        CreatureBankTraits* traits = &g_creatureBankTraits[bank];
         const SpreadsheetResource::TStringVector& resource = sheet->getRow(row);
         traits->m_name = resource[0];
 
-        type_creature_bank_level* level = traits->m_levels;
+        CreatureBankLevel* level = traits->m_levels;
         int levelsLeft = 4;
         do {
             level->m_guards.initialize();
@@ -164,8 +164,8 @@ static void splitSlot(ArmyGroup* currentArmyGroup, long slot, long groups)
 // three become 2+2 with slot 0.
 
 VA(0x0047ad90, 0x36E)  // dc 0x712d0
-void initializeCreatureBank(type_creature_bank* bank,
-                              type_creature_bank_type type)
+void initializeCreatureBank(CreatureBank* bank,
+                              CreatureBankType type)
 {
     int roll = random(1, 100);
     int which;
@@ -175,7 +175,7 @@ void initializeCreatureBank(type_creature_bank* bank,
             break;
     }
 
-    const type_creature_bank_level* level =
+    const CreatureBankLevel* level =
         &g_constCreatureBankTraits[type].m_levels[which];
     bank->m_guards = level->m_guards;
     memcpy(bank->m_resources, level->m_resources, sizeof(bank->m_resources));
@@ -225,21 +225,21 @@ void initializeCreatureBank(type_creature_bank* bank,
 
 // E:\gamedcs\creature_bank.cpp:25
 DC_ONLY(0x714e0, 0x34)
-void type_creature_bank_traits::type_creature_bank_traits()
+void CreatureBankTraits::CreatureBankTraits()
 {
     // @stub
 }
 
 // E:\gamedcs\creature_bank.cpp:25
 DC_ONLY(0x71514, 0x18)
-void type_creature_bank_traits::~type_creature_bank_traits()
+void CreatureBankTraits::~CreatureBankTraits()
 {
     // @stub
 }
 
 // E:\gamedcs\creature_bank.cpp:25
 DC_ONLY(0x7152c, 0x1C)
-void type_creature_bank_level::type_creature_bank_level()
+void CreatureBankLevel::CreatureBankLevel()
 {
     // @stub
 }

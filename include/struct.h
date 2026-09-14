@@ -5,7 +5,8 @@
 #include <va.h>
 #include <string.h>
 
-class heroWindow;
+// Before normalization (type): heroWindow.
+class HeroWindow;
 
 // Dreamcast roster: id, codeX, codeY, qualifier, mouseX, mouseY,
 // extra, window, oldX@32, oldY@36 (40 B). The retail frames in
@@ -13,7 +14,8 @@ class heroWindow;
 // The Dreamcast xref graph also proves the default constructor at dc 0x2d58.
 // This is one class shape, not a per-TU optimizer view: the constructor is
 // canonical and VC6 may remove fields overwritten before their first read.
-class message {
+// Before normalization (type): message.
+class Message {
 public:
     int m_id;
     int m_codeX;
@@ -25,18 +27,18 @@ public:
         int m_extra;
         const char* m_extraText;
     };
-    heroWindow* m_window;
+    HeroWindow* m_window;
     // DC type 0x1020 proves this overload's declaration, but no body or
     // inline source row has been recovered. Keep the declaration alone;
     // overview's zero-initialization uses the proven default constructor.
-    message(int id, int codeX, int codeY, int qualifier,
-            int mouseX, int mouseY, int extra, heroWindow* window);
+    Message(int id, int codeX, int codeY, int qualifier,
+            int mouseX, int mouseY, int extra, HeroWindow* window);
     // Retail RS_CLICK constructs this 32-byte local at 0x588e3d before
     // setting codeY and passing it to OnWidgetDeselect. The retained body
     // zeroes offsets +0 through +0x1c and returns the receiver in EAX.
     // E:\gamedcs\struct.h:42, dc 0x2d58
     VA(0x00589190, 0x1c)  // RS_CLICK constructor + field stores, dc 0x2d58
-    message()
+    Message()
     {
         m_id = 0;
         m_codeX = 0;
@@ -48,7 +50,7 @@ public:
         m_window = 0;
     }
 };
-SIZE(message, 32);
+SIZE(Message, 32);
 
 // A packed map coordinate. The DC layout (classes.csv: 4 B, three
 // members) puts x at offset 0 and BOTH y and z at offset 2 - the

@@ -18,13 +18,16 @@
 // offset (16 dwords -> +0x1c0 vs 24 dwords -> +0x2bc), which is what
 // proves they are distinct types. Opaque here - only the pointers
 // cross this TU. Type NAMES are provisional (no DC/NH3API evidence).
-class palette;
-class paletteHiColor;
+// Before normalization (type): palette.
+class Palette;
+// Before normalization (type): paletteHiColor.
+class PaletteHiColor;
 class Palette24;
-class sample;
+// Before normalization (type): sample.
+class Sample;
 
 void setPlayerPaletteColors(unsigned short* pal, int whichPlayer);
-void setPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
+void setPlayerPaletteColors(PaletteHiColor* pal, int whichPlayer);
 void setPlayerPaletteColors(Palette24& pal, int whichPlayer);
 
 // Layout PROVEN by the retail ctor 0x455ef0 (member stores) and dtor
@@ -35,13 +38,14 @@ void setPlayerPaletteColors(Palette24& pal, int whichPlayer);
 // std::string, 16 B; the dtor shows the native refcounted-string
 // teardown, so retail uses VC6's own STL, not DC's STLport). Total 104.
 // No SIZE assert: the clang arm's host STL sizes differ.
-class button : public widget {
+// Before normalization (type): button.
+class Button : public Widget {
 public:
     // DC textButton::Draw (0x57b98, button.cpp:538) directly passes
     // button::Text at +84 to string::c_str; its field record is private.
     // Retail 0x456ca0 does the same at +0x58: this specific derived class
     // therefore needs friendship, with no intervening text accessor.
-    friend class textButton;
+    friend class TextButton;
 
 private:
     CSprite* m_buttonIcon;
@@ -59,19 +63,20 @@ private:
 
 public:
     // homm2 BUTTON.cpp's REPEAT_DELAY_TICKS, verbatim value.
-    enum EButtonConstants {
+// Before normalization (type): button::EButtonConstants.
+    enum ButtonConstants {
         BUTTON_REPEAT_DELAY_TICKS = 60
     };
-    button();
+    Button();
     void initialize(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
     // Dreamcast ?click_sample@button@@2PAVsample@@A; retail .bss
     // 0x694da4 (defined in button.cpp).
-    static sample* s_clickSample;
+    static Sample* s_clickSample;
     void setPalette(const char* paletteName);
-    button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
-    int select(message& msg);
+    Button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
+    int select(Message& msg);
     // E:\gamedcs\button.cpp:401, dc 0x57854
-    int deselect(message& msg);
+    int deselect(Message& msg);
     // Dreamcast homes SetText and set_hotkey in Button.h itself; the
     // wrapper is inlined at its retail call sites. The old 0x404200 mapping
     // was disproven by that body's `ret 0xc`: it is the three-argument
@@ -90,7 +95,7 @@ public:
     // Dreamcast button.h:120-122: the separate vector<int>::clear wrapper.
     // TAdvMenu::SetSleepImage retains this call in its source line table.
     void clearHotkeys() { m_hotKeyCodes.clear(); }
-    virtual int main(message& msg);  // slot 2, retail 0x456190
+    virtual int main(Message& msg);  // slot 2, retail 0x456190
 
     virtual int getRealWidth() const;  // slot 6, folded retail 0x4eab20
     virtual int getRealHeight() const; // slot 5, folded retail 0x4eab30
@@ -98,7 +103,7 @@ public:
     virtual void draw() const;  // slot 4, retail 0x456940
     virtual void dim() const;
 
-    virtual ~button();
+    virtual ~Button();
     // widget slot 12, overridden at 0x456a10 - the only override of it
     // in the image. Placeholder name inherited from widget.h.
     virtual void vslot12(int on);
@@ -108,32 +113,34 @@ public:
 // Dreamcast roster: Font@96, textColor@100 (font::TColor) - retail
 // button is 104, so Font@0x68, textColor@0x6c (the dtor Disposes
 // [this+0x68]). Total 112.
-class textButton : public button {
+// Before normalization (type): textButton.
+class TextButton : public Button {
 public:
-    textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::Color newColor);
+    TextButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, Font::Color newColor);
 
     virtual void draw() const;    // slot 4, retail 0x456ca0
 
-    virtual ~textButton();  // retail 0x456bf0
+    virtual ~TextButton();  // retail 0x456bf0
 
 private:
-    font* m_font;
-    font::Color m_textColor;
+    Font* m_font;
+    Font::Color m_textColor;
 };
 
 // DC gives only a forward ref. The dtor (retail 0x456db0) tears down
 // exactly button's members, so the tail is POD; Main proves handler is
 // a fastcall message handler at 0x68 (call [this+0x68] with ecx=msg).
-class type_func_button : public button {
+// Before normalization (type): type_func_button.
+class FuncButton : public Button {
 public:
-    typedef int (*handler_type)(message& msg);
+    typedef int (*handler_type)(Message& msg);
     handler_type m_handler;
-    type_func_button(long x, long y, long w, long h, long id,
+    FuncButton(long x, long y, long w, long h, long id,
                      const char* image, handler_type newHandler,
                      int normal, int selected);
-    virtual int main(message& msg);  // slot 2, retail 0x456e50
+    virtual int main(Message& msg);  // slot 2, retail 0x456e50
 
-    virtual ~type_func_button();  // retail 0x456db0
+    virtual ~FuncButton();  // retail 0x456db0
 };
 
 #endif  /* HOMM3_BUTTON_H */

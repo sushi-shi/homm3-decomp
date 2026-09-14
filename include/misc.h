@@ -26,7 +26,8 @@ unsigned long getAvailableDiskSpace();            // 0x50c7a0
 // oldmain's inlined SetupCDRom and separately singles out 5/6 in the main
 // menu. The original enumerator spellings did not survive, so keep the names
 // deliberately numeric rather than inventing error semantics for them.
-enum ECDDriveNumber {
+// Before normalization (type): ECDDriveNumber.
+enum CDDriveNumber {
     CD_DRIVE_NUMBER_1 = 1,
     CD_DRIVE_NUMBER_2 = 2,
     CD_DRIVE_NUMBER_3 = 3,

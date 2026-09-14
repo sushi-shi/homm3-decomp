@@ -9,7 +9,7 @@
 #include "textntry.h"
 #include "widget.h"
 
-class message;
+class Message;
 
 // Widget and dialog-return domains proven by TSplitWindow's constructor and
 // handler. The 0x7800 close result has no stronger semantic name yet.
@@ -29,9 +29,9 @@ enum SplitDialogReturn {
 // Before normalization (type): TSplitWindow.
 class SplitWindow : public CAdvPopup {
 public:
-    slider* m_splitSlider;                // +0x60, widget id 6
-    textEntryWidget* m_sourceEntry;       // +0x64, widget id 4
-    textEntryWidget* m_destinationEntry;  // +0x68, widget id 5
+    Slider* m_splitSlider;                // +0x60, widget id 6
+    TextEntryWidget* m_sourceEntry;       // +0x64, widget id 4
+    TextEntryWidget* m_destinationEntry;  // +0x68, widget id 5
     int m_totalTroops;             // +0x6c
     int m_sourceTroops;            // +0x70
     int m_destinationTroops;       // +0x74
@@ -50,7 +50,7 @@ public:
     virtual ~SplitWindow();
     inline void updateSplitArmy(unsigned char update);
     inline void setRolloverText(int codeY);
-    virtual int windowHandler(message& msg);
+    virtual int windowHandler(Message& msg);
 };
 SIZE(SplitWindow, 0x80);
 

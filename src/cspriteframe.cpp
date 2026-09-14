@@ -17,7 +17,7 @@ VA(0x0047c2b0, 0xa7)
 CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
                            unsigned char* data, int csize,
                            EncodingMethod encoding)
-    : resource(name, RESOURCE_TYPE_SPRITE),
+    : Resource(name, RESOURCE_TYPE_SPRITE),
       m_imageSize(w * h), m_encodingMethod(encoding), m_width(w), m_height(h),
       m_croppedWidth(w), m_croppedHeight(h), m_croppedX(0), m_croppedY(0), m_pitch(w)
 {
@@ -32,7 +32,7 @@ CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
                            unsigned char* data, int csize,
                            EncodingMethod encoding,
                            int cw, int ch, int cx, int cy)
-    : resource(name, RESOURCE_TYPE_SPRITE),
+    : Resource(name, RESOURCE_TYPE_SPRITE),
       m_imageSize(cw * ch), m_encodingMethod(encoding), m_width(w), m_height(h),
       m_croppedWidth(cw), m_croppedHeight(ch), m_croppedX(cx), m_croppedY(cy),
       m_pitch(cw)

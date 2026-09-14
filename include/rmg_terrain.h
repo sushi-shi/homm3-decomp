@@ -23,7 +23,7 @@ inline Point operator+(const Point& point, const Point& offset)
 // dword are the independent sprite flips. The names in this file describe
 // proven roles because the Dreamcast build has no RMG compiland.
 // Prior provisional class role: TRmgTerrainTile.
-struct rmgTerrainTile {
+struct RmgTerrainTile {
     int m_terrain;
     int m_frame;
     unsigned char m_flipX;
@@ -33,8 +33,8 @@ struct rmgTerrainTile {
     // only these two flip bytes; an explicit padding array makes copies
     // transfer data that neither retail operation owns. Prior role: pad000a.
 
-    rmgTerrainTile() {}
-    rmgTerrainTile(int newTerrain, int newFrame)
+    RmgTerrainTile() {}
+    RmgTerrainTile(int newTerrain, int newFrame)
         : m_terrain(newTerrain), m_frame(newFrame), m_flipX(0), m_flipY(0) {}
     // Frame and flip accessors: the line refresh compares the current tile
     // through them so its neighbour helper keeps retail's three retained
@@ -46,7 +46,7 @@ struct rmgTerrainTile {
     // Those returns keep an implicit copy boundary: a custom copy constructor
     // changes the retained 0x5b3dd0 fill and its expanded terrain callers.
     // The output-reference wrapper 0x55f350 assigns the same four fields.
-    rmgTerrainTile& operator=(const rmgTerrainTile& other)
+    RmgTerrainTile& operator=(const RmgTerrainTile& other)
     {
         m_terrain = other.m_terrain;
         m_frame = other.m_frame;
@@ -92,9 +92,9 @@ struct RmgPackedTerrainCell {
     inline int getFrame() const { return m_frame; }
     inline unsigned char getFlipX() const { return m_flipX; }
     inline unsigned char getFlipY() const { return m_flipY; }
-    inline rmgTerrainTile getTile() const
+    inline RmgTerrainTile getTile() const
     {
-        rmgTerrainTile tile;
+        RmgTerrainTile tile;
         tile.m_terrain = getTerrain();
         tile.m_frame = getFrame();
         tile.m_flipX = getFlipX();
@@ -245,7 +245,8 @@ enum RmgTerrainTransitionCase {
 // the constructor at 0x5b45f0 proves the field order and the two Dinkumware
 // point sets followed by the packed-cell vector.
 // Prior provisional class role: TRmgTerrainPainter.
-class rmgTerrainPainter {
+// Before normalization (type): rmgTerrainPainter.
+class RmgTerrainPainter {
 public:
     RmgMapInterface* m_adapter;                // +0x00
     int m_paintTerrain;                               // +0x04
@@ -255,11 +256,11 @@ public:
     std::set<RmgGridPoint> m_secondaryPoints;          // +0x24
     std::vector<RmgPackedTerrainCell> m_packedCells;   // +0x34
 
-    rmgTerrainPainter(
+    RmgTerrainPainter(
         RmgMapInterface* newAdapter,
         int newParameterA,
         int newTransitionStrength);
-    ~rmgTerrainPainter();
+    ~RmgTerrainPainter();
 
     void finish();
     int changeTerrain(int terrain, int strength);
@@ -278,7 +279,7 @@ public:
     unsigned int getHeight() const;
     void paintTransitions();
     int selectBaseFrame(const RmgGridPoint& point, int terrain, int oldFrame);
-    void setTile(const RmgGridPoint& point, const rmgTerrainTile& tile);
+    void setTile(const RmgGridPoint& point, const RmgTerrainTile& tile);
     void paintBaseTile(const RmgGridPoint& point);
     int getPaintTerrain() const;
     unsigned char isPaintTerrain(const RmgGridPoint& point);
@@ -308,7 +309,7 @@ public:
 // Before normalization (type): TRmgTerrainBrush.
 class RmgTerrainBrush {
 public:
-    std::auto_ptr<rmgTerrainPainter> m_painter;
+    std::auto_ptr<RmgTerrainPainter> m_painter;
 
     RmgTerrainBrush(RmgMapInterface* map, int terrain, int strength);
     ~RmgTerrainBrush();
@@ -318,11 +319,11 @@ public:
         unsigned int rectangleWidth, unsigned int rectangleHeight);
 };
 
-SIZE(rmgTerrainTile, 0x0c);
+SIZE(RmgTerrainTile, 0x0c);
 SIZE(RmgTerrainFlip, 0x02);
 SIZE(RmgPackedTerrainCell, 0x02);
 SIZE(RmgTerrainRule, 0x08);
-SIZE(rmgTerrainPainter, 0x44);
+SIZE(RmgTerrainPainter, 0x44);
 SIZE(RmgTerrainBrush, 0x08);
 
 #endif  // HOMM3_RMG_TERRAIN_H

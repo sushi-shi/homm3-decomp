@@ -4,7 +4,7 @@
 
 #include "window.h"
 
-class message;
+class Message;
 
 // Complete-only campaign-set chooser used by kb.cpp's DoCampaignWindow.
 // Retail constructor 0x456ec0 derives heroWindow directly and the caller's
@@ -16,11 +16,12 @@ class message;
 // between button and campaignbrief. The module and class names remain
 // provisional because this chooser has no Dreamcast counterpart.
 // Before normalization (type): TCampaignSetWindow.
-class CampaignSetWindow : public heroWindow {
+class CampaignSetWindow : public HeroWindow {
 public:
     // Its modal result selects the TCampaignWindow page passed by each
     // retail arm; the fourth result opens the Complete-only custom chooser.
-    enum ECampaignSetResults {
+// Before normalization (type): CampaignSetWindow::ECampaignSetResults.
+    enum CampaignSetResults {
         CAMPAIGN_SET_SOD_ID = 0,
         CAMPAIGN_SET_AB_ID = 1,
         CAMPAIGN_SET_ROE_ID = 2,
@@ -31,7 +32,7 @@ public:
     // it shifts down by one when that state is not held - which is what
     // the handler's `*gpVideoGameState == 3 ? 104 : 103` high bound
     // spells.
-    enum EWidgetIDs {
+    enum WidgetIDs {
         SOD_PLATE_ID = 100,
         LAST_PLATE_ID = 103,
         LAST_PLATE_WITH_AB_ID = 104
@@ -39,7 +40,8 @@ public:
     // The gpGeneralText rows each plate answers a right-click with. Retail
     // folds them into the load offset (`[ecx + 0xb7c]` = GetText(735)); the
     // values are those offsets divided by four. Names describe the plate.
-    enum ECampaignSetHelpText {
+// Before normalization (type): CampaignSetWindow::ECampaignSetHelpText.
+    enum CampaignSetHelpText {
         CAMPAIGN_SET_ARM_HELP = 725,
         CAMPAIGN_SET_ROE_HELP = 726,
         CAMPAIGN_SET_CUS_HELP = 727,
@@ -48,7 +50,7 @@ public:
     };
     CampaignSetWindow();
     virtual ~CampaignSetWindow();
-    virtual int handleMessage(message& msg);
+    virtual int handleMessage(Message& msg);
     void doModal();
 };
 SIZE(CampaignSetWindow, 0x4c);

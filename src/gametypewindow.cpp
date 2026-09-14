@@ -44,13 +44,13 @@ static const char* g_gameTypeBackgrounds[2] = {
 
 VA(0x004d54c0, 0x39B)  // dc 0xc9164
 GameTypeWindow::GameTypeWindow(unsigned char loadGameMode)
-    : heroWindow(0, 0, 800, 600, 0)
+    : HeroWindow(0, 0, 800, 600, 0)
 {
     g_gameTypeWindow = this;
     g_game->m_isTutorial = 0;
 
     m_widgets.reserve(NWIDGETS);
-    m_widgets.push_back(new bitmapBorder16(
+    m_widgets.push_back(new BitmapBorder16(
         114, 312, 300, 48, NEW_LOAD_ID,
         g_gameTypeBackgrounds[loadGameMode], 0x800));
 
@@ -61,30 +61,30 @@ GameTypeWindow::GameTypeWindow(unsigned char loadGameMode)
     const GameTypeButtonRect& back = g_gameTypeButtonRects[4];
 
     if (!g_noCdRom) {
-        m_widgets.push_back(new button(
+        m_widgets.push_back(new Button(
             single.m_x, single.m_y, single.m_width, single.m_height, SINGLE_ID,
             "gtsingl.def", 0, 1, 0, 31, 2));
 
-        m_widgets.push_back(new button(
+        m_widgets.push_back(new Button(
             campaign.m_x, campaign.m_y, campaign.m_width, campaign.m_height,
             CAMPAIGN_ID, "gtcampn.def", 0, 1, 0, 46, 2));
 
-        m_widgets.push_back(new button(
+        m_widgets.push_back(new Button(
             tutorial.m_x, tutorial.m_y, tutorial.m_width, tutorial.m_height,
             TUTORIAL_ID, "gttutor.def", 0, 1, 0, 20, 2));
     }
 
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         multi.m_x, multi.m_y, multi.m_width, multi.m_height,
         MULTIPLAYER_ID, "gtmulti.def", 0, 1, 0, 50, 2));
 
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         back.m_x, back.m_y, back.m_width, back.m_height, QUIT_ID,
         "gtback.def", 0, 1, 0, 1, 2));
 
-    widget** first = m_widgets.begin();
+    Widget** first = m_widgets.begin();
     if (first != m_widgets.end()) {
-        for (widget** it = first; it != m_widgets.end(); ++it) {
+        for (Widget** it = first; it != m_widgets.end(); ++it) {
             if (*it)
                 addWidget(*it, -1);
             else
@@ -98,7 +98,7 @@ VA_COMPGEN(0x004d5860, 0x21, SCALAR_DELETING_DTOR, GameTypeWindow)
 VA(0x004d5890, 0x75)  // dc 0xc9490
 GameTypeWindow::~GameTypeWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -114,7 +114,7 @@ void GameTypeWindow::doModal()
 }
 
 VA(0x004d5940, 0x220)  // dc 0xc9524
-int gameTypeWindowHandler(message& msg)
+int gameTypeWindowHandler(Message& msg)
 {
     unsigned char exitFlag = 0;
     unsigned char redraw = 0;
@@ -122,8 +122,8 @@ int gameTypeWindowHandler(message& msg)
     pollSound();
 
     if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
-        if (msg.m_codeX == widget::WIDGET_SELECT
-            || msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        if (msg.m_codeX == Widget::WIDGET_SELECT
+            || msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
             int helpIndex;
             switch (msg.m_codeY) {
             case GameTypeWindow::SINGLE_ID:
@@ -150,7 +150,7 @@ int gameTypeWindowHandler(message& msg)
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
     } else if (msg.m_id == MESSAGE_WIDGET) {
-        if (msg.m_codeX == widget::WIDGET_DESELECT
+        if (msg.m_codeX == Widget::WIDGET_DESELECT
             && msg.m_codeY >= GameTypeWindow::SINGLE_ID
             && msg.m_codeY <= GameTypeWindow::QUIT_ID) {
             g_windowManager->m_dialogReturn = msg.m_codeY;
@@ -166,23 +166,23 @@ int gameTypeWindowHandler(message& msg)
                 for (int id = GameTypeWindow::SINGLE_ID;
                      id <= GameTypeWindow::QUIT_ID; ++id) {
                     g_gameTypeWindow->getWidget(id)->sendMessage(
-                        widget::WIDGET_CLEAR_STATUS,
-                        widget::WIDGET_HIGHLIGHTED);
+                        Widget::WIDGET_CLEAR_STATUS,
+                        Widget::WIDGET_HIGHLIGHTED);
                 }
             } else {
                 g_gameTypeWindow->getWidget(
                     GameTypeWindow::MULTIPLAYER_ID)->sendMessage(
-                        widget::WIDGET_CLEAR_STATUS,
-                        widget::WIDGET_HIGHLIGHTED);
+                        Widget::WIDGET_CLEAR_STATUS,
+                        Widget::WIDGET_HIGHLIGHTED);
                 g_gameTypeWindow->getWidget(
                     GameTypeWindow::QUIT_ID)->sendMessage(
-                        widget::WIDGET_CLEAR_STATUS,
-                        widget::WIDGET_HIGHLIGHTED);
+                        Widget::WIDGET_CLEAR_STATUS,
+                        Widget::WIDGET_HIGHLIGHTED);
             }
 
             if (hoverID != -1) {
                 g_gameTypeWindow->getWidget(hoverID)->sendMessage(
-                    widget::WIDGET_SET_STATUS, widget::WIDGET_HIGHLIGHTED);
+                    Widget::WIDGET_SET_STATUS, Widget::WIDGET_HIGHLIGHTED);
             }
         }
     }
@@ -199,8 +199,8 @@ int gameTypeWindowHandler(message& msg)
     if (exitFlag) {
         msg.m_id = MESSAGE_WIDGET;
         g_windowManager->m_dialogReturn = msg.m_codeY;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = Widget::WIDGET_END_DIALOG;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;

@@ -56,12 +56,12 @@ class CAnimatedDlg : public CTextDialog {
 public:
     CAnimatedDlg();
     virtual ~CAnimatedDlg();
-    virtual unsigned char setup(const char* text, font* currentFont,
+    virtual unsigned char setup(const char* text, Font* currentFont,
                                 const char* spriteName, int seq);  // slot 13
-    virtual void calcDimensions(const char* text, font* currentFont,
+    virtual void calcDimensions(const char* text, Font* currentFont,
                                 int& winX, int& winY,
                                 int& winWidth, int& winHeight);  // slot 12
-    virtual int handleMessage(message& msg);  // slot 3
+    virtual int handleMessage(Message& msg);  // slot 3
     virtual void drawWindow(unsigned char update, int lowID,
                             int highID);  // slot 5
     void tickAnimation();
@@ -95,13 +95,13 @@ public:
     CNetMsgHandlerPause m_netMsgHandler;  // +0x80
     CWaitForReadyPlayersDlg();
     void wait();
-    virtual int handleMessage(message& msg);  // slot 3
+    virtual int handleMessage(Message& msg);  // slot 3
     bool allPlayersReady();
 
 protected:
     unsigned char m_playerReady[8];  // +0x90
 
-    int onPlayerDrop(CNetMsg* netMsg, message& msg);
+    int onPlayerDrop(CNetMsg* netMsg, Message& msg);
 };
 SIZE(CWaitForReadyPlayersDlg, 0x98);
 
@@ -128,10 +128,10 @@ public:
     unsigned char m_playerDropped;  // +0x8c
     CLevelPickWaitDlg();
     void waitForLevels(int fromWho);
-    virtual int handleMessage(message& msg);  // slot 3
+    virtual int handleMessage(Message& msg);  // slot 3
 
 protected:
-    int onPlayerDrop(CNetMsg* netMsg, message& msg);
+    int onPlayerDrop(CNetMsg* netMsg, Message& msg);
     void onHeroLevelUpdate(CNetMsg* netMsg);
 };
 SIZE(CLevelPickWaitDlg, 0x90);
@@ -150,10 +150,10 @@ public:
     CCombatInitMsg* m_combatInitMsgPointer;
     CWaitForRemoteBattleDlg();
     void wait(int playerPos);
-    virtual int handleMessage(message& msg);  // slot 3
+    virtual int handleMessage(Message& msg);  // slot 3
 
 protected:
-    int onPlayerDrop(CNetMsg* netMsg, message& msg);
+    int onPlayerDrop(CNetMsg* netMsg, Message& msg);
 
 public:
     // Public tail: advManager::DoCombat reads the received flag and
@@ -248,7 +248,7 @@ public:
     // when the progress window, rather than the adventure view, owns it.
     CGameTransferSmack m_smack;  // +0x58
     CGameTransferDlg(unsigned char sending);
-    virtual void calcDimensions(const char* text, font* currentFont,
+    virtual void calcDimensions(const char* text, Font* currentFont,
                                 int& winX, int& winY,
                                 int& winWidth, int& winHeight);  // slot 12
 

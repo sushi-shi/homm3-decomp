@@ -18,7 +18,7 @@ SubWindow::SubWindow()
 VA_COMPGEN(0x005aa390, 0x21, SCALAR_DELETING_DTOR, SubWindow)
 
 VA(0x005aa3c0, 0x4F)  // dc 0x158dac
-SubWindow::SubWindow(int inX, int inY, int w, int h, heroWindow* parentWindow)
+SubWindow::SubWindow(int inX, int inY, int w, int h, HeroWindow* parentWindow)
     : m_x(inX), m_y(inY), m_width(w), m_height(h), m_parentWindow(parentWindow),
       m_lowId(0xffff), m_highId(0xffff0001), m_background(0)
 {
@@ -32,7 +32,7 @@ SubWindow::~SubWindow()
 }
 
 VA(0x005aa470, 0x25)  // dc 0x158e60
-void SubWindow::initialize(int inX, int inY, int w, int h, heroWindow* parentWindow)
+void SubWindow::initialize(int inX, int inY, int w, int h, HeroWindow* parentWindow)
 {
     m_x = inX;
     m_y = inY;
@@ -42,7 +42,7 @@ void SubWindow::initialize(int inX, int inY, int w, int h, heroWindow* parentWin
 }
 
 VA(0x005aa4a0, 0x45)  // dc 0x158e7c
-void SubWindow::addWidget(widget* newWidget, int newPriority)
+void SubWindow::addWidget(Widget* newWidget, int newPriority)
 {
     newWidget->m_x += static_cast<short>(m_x);
     newWidget->m_y += static_cast<short>(m_y);
@@ -56,7 +56,7 @@ void SubWindow::addWidget(widget* newWidget, int newPriority)
 // E:\gamedcs\subwindow.cpp:111
 #if 0  // @carcass: no retail row in the AddWidget..Draw bracket
 DC_ONLY(0x158ebc, 0x12)
-void SubWindow::removeWidget(widget* killWidget)
+void SubWindow::removeWidget(Widget* killWidget)
 {
     // @stub
 }

@@ -17,7 +17,7 @@
 // this function are relocations to these two bases plus source-array
 // addends, rather than independent globals.
 DATA(0x00694e60)
-static heroWindow* g_castleWindow;
+static HeroWindow* g_castleWindow;
 DATA(0x00694e70)
 static unsigned char g_castleBuildOrder[18];
 
@@ -51,7 +51,7 @@ int canBuy(const Town* currTown, int buildingId)
     int cost[NUM_RESOURCES];
     currTown->getBuildCost((type_building_id) buildingId, cost);
 
-    playerData* player = &g_game->m_players[g_netLocalGamePos];
+    PlayerData* player = &g_game->m_players[g_netLocalGamePos];
     for (int resource = 0; resource < NUM_RESOURCES; ++resource) {
         if (player->m_resources[resource] < cost[resource])
             return 0;
@@ -61,14 +61,14 @@ int canBuy(const Town* currTown, int buildingId)
 
 // E:\gamedcs\castle.cpp:328
 VA(0x00461190, 0x91C)  // source-order + sole DoHall caller, dc 0x5c278
-void TownManager::setupCastle(heroWindow* inCasWin, int isReset)
+void TownManager::setupCastle(HeroWindow* inCasWin, int isReset)
 {
     int i;
-    message msg;
+    Message msg;
 
     g_castleWindow = inCasWin;
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.m_codeX = Widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
     g_castleWindow->broadcastMessage(msg);
@@ -204,14 +204,14 @@ void TownManager::setupCastle(heroWindow* inCasWin, int isReset)
             m_canBuyMask |= g_bitNumber[g_castleBuildOrder[i]];
     }
 
-    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
     for (i = 0; i < g_numOfTownSpecStrScreen[m_townToView->m_type]; ++i) {
         msg.m_codeY = CASTLE_BUILD_ICON_FIRST_ID + i;
         msg.m_extra = g_castleBuildOrder[i];
         g_castleWindow->broadcastMessage(msg);
     }
 
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     for (i = 0; i < g_numOfTownSpecStrScreen[m_townToView->m_type]; ++i) {
         msg.m_codeY = CASTLE_BUILD_NAME_FIRST_ID + i;
         msg.m_extraText =
@@ -229,20 +229,20 @@ void TownManager::setupCastle(heroWindow* inCasWin, int isReset)
             state = 2;
 
         if (state != -1) {
-            msg.m_codeX = widget::WIDGET_SET_STATUS;
+            msg.m_codeX = Widget::WIDGET_SET_STATUS;
             msg.m_codeY = CASTLE_BUILD_BUTTON_FIRST_ID + i;
-            msg.m_extra = widget::WIDGET_DRAWN;
+            msg.m_extra = Widget::WIDGET_DRAWN;
             g_castleWindow->broadcastMessage(msg);
-            msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+            msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
             msg.m_extra = state;
         } else {
-            msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = CASTLE_BUILD_BUTTON_FIRST_ID + i;
-            msg.m_extra = widget::WIDGET_DRAWN;
+            msg.m_extra = Widget::WIDGET_DRAWN;
         }
         g_castleWindow->broadcastMessage(msg);
 
-        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
         msg.m_codeY = CASTLE_BUILD_FRAME_FIRST_ID + i;
         if (!state)
             msg.m_extra = 0;
@@ -265,7 +265,7 @@ void TownManager::setupCastle(heroWindow* inCasWin, int isReset)
 // switch on the resource-bar ids.
 
 VA(0x00461AB0, 0x767)  // THallWindow vtable 0x6437a0 slot 9, dc 0x5c884
-int HallWindow::windowHandler(message& msg)
+int HallWindow::windowHandler(Message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -405,7 +405,7 @@ int HallWindow::windowHandler(message& msg)
             }
 
             msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_SET_TEXT;
+            msg.m_codeX = Widget::WIDGET_SET_TEXT;
             msg.m_codeY = CASTLE_ROLLOVER_TEXT_ID;
             msg.m_extraText = g_text;
             g_townManager->m_hallWindow->broadcastMessage(msg);
@@ -418,14 +418,14 @@ int HallWindow::windowHandler(message& msg)
 
     if (msg.m_id == MESSAGE_WIDGET) {
         switch (msg.m_codeX) {
-        case widget::WIDGET_DESELECT:
+        case Widget::WIDGET_DESELECT:
             if (msg.m_codeY == EXIT_BUTTON_ID) {
                 closeRequested = 1;
             }
             break;
 
-        case widget::WIDGET_SELECT:
-        case widget::WIDGET_RIGHT_SELECT: {
+        case Widget::WIDGET_SELECT:
+        case Widget::WIDGET_RIGHT_SELECT: {
             int quickView = (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) != 0;
             switch (building) {
             case MAGE_GUILD_ID:
@@ -526,7 +526,7 @@ int HallWindow::windowHandler(message& msg)
     }
 
     if (closeRequested) {
-        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = msg.m_codeY = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;

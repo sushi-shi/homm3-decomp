@@ -6,7 +6,8 @@
 
 // Dreamcast-attested resource-type domain; values unattested - grow as
 // consumers prove them.
-enum EResourceType {
+// Before normalization (type): EResourceType.
+enum ResourceType {
     RESOURCE_TYPE_INVALID = -1,
     RESOURCE_TYPE_NONE = 0,
     // Complete's common missing-resource reporter maps switch value 1 to
@@ -68,11 +69,12 @@ enum EResourceType {
 // Bitmap816's zBufferDraw starts at DC slot 1, shifted to retail slot 3,
 // independently confirming the two inserted resource slots. The exact
 // Windows-only filters cite each retained body's retail vtable slot.
-class resource {
+// Before normalization (type): resource.
+class Resource {
 public:
-    resource(const char* newName, EResourceType newType);
-    virtual ~resource();  // slot 0
-    EResourceType getResType() const { return m_resType; }
+    Resource(const char* newName, ResourceType newType);
+    virtual ~Resource();  // slot 0
+    ResourceType getResType() const { return m_resType; }
     const char* getName() const { return m_name; }
     // E:\gamedcs\resrce.h:36, dc 0x122af0
     int addRef() { return ++m_referenceCount; }
@@ -92,14 +94,14 @@ public:
 
 private:
     char m_name[13];
-    EResourceType m_resType;
+    ResourceType m_resType;
     int m_referenceCount;
 
 public:
     virtual void dispose();  // slot 1, base body 0x55d0f0
     virtual unsigned int getSize() const = 0;  // slot 2, pure at the base
 };
-SIZE(resource, 28);
+SIZE(Resource, 28);
 
 // --- resource ---
 // CODEVIEW(E:\gamedcs\resource.cpp:25, dc 0x120934) void resource::resource(const char* newName, EResourceType newType);

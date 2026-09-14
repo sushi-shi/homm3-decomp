@@ -11,7 +11,8 @@
 // the DC's own name at the same number: 1009 = 0x3f1 RS_COMBAT_TYPE, 1054 =
 // 0x41e RS_CLAIM_GENERATOR, 1055 = 0x41f RS_CLAIM_GARRISON. The numbering
 // transfers whole, so a retail subtype constant can be named from it.
-enum eRS_Messages {
+// Before normalization (type): eRS_Messages.
+enum ERSMessages {
     // CEndPlacementPhaseMsg's retail inline constructor stores 0x3f0;
     // the gapless DC message ladder names that value.
     RS_END_PLACEMENT_PHASE = 0x3f0,
@@ -129,7 +130,8 @@ enum eRS_Messages {
 // Network transfer wire limits shared by the sender and receiver.  Retail's
 // sender allocates 0x400 bytes per main message; the fixed 0x1c-byte header
 // leaves 996 payload bytes, and its idle watchdog compares against 30000 ms.
-enum EGameTransmitLimits {
+// Before normalization (type): EGameTransmitLimits.
+enum GameTransmitLimits {
     GAME_TRANSMIT_MESSAGE_SIZE = 1024,
     GAME_TRANSMIT_PAYLOAD_SIZE = 996,
     GAME_TRANSMIT_TIMEOUT = 30000
@@ -143,7 +145,7 @@ public:
     unsigned long m_size;
     int m_uncompressedSize;
     VA(0x004f2930, 0x23)  // anchor-callee + exact body, retail-only slot
-    CNetMsg(eRS_Messages subType, unsigned long size)
+    CNetMsg(ERSMessages subType, unsigned long size)
     {
         this->m_subType = subType;
         m_from = -1;
@@ -208,15 +210,16 @@ class AbstractFile;
 // that layout, and 0x512e00 copies a received header into netmsg before
 // dispatching the remaining payload through virtual read(). The ordinal name
 // is retained because neither retail nor DC names that PC-only bridge.
-class t_complex_net_message {
+// Before normalization (type): t_complex_net_message.
+class ComplexNetMessage {
 public:
     // The no-subtype form at 0x512c20 (stores the base vtable and
     // zeroes the netmsg image); singleselectionwindow's received-row
     // message constructs through it. ADDITIVE 2026-08-27 - one
     // declarator; re-measure the include-set-sensitive rows of the
     // five includers on merge.
-    t_complex_net_message();
-    t_complex_net_message(eRS_Messages subType);
+    ComplexNetMessage();
+    ComplexNetMessage(ERSMessages subType);
     virtual unsigned char read(AbstractFile* infile);
     virtual unsigned char write(AbstractFile* outfile) const;
     unsigned char remoteFn00512E00(CNetMsg* netMsg);
@@ -231,7 +234,7 @@ public:
                                     bool guaranteed);
     CNetMsg m_netmsg;  // +0x04
 };
-SIZE(t_complex_net_message, 0x18);
+SIZE(ComplexNetMessage, 0x18);
 
 // DC supplies all seventeen payload names and their order. Retail shifts the
 // scalar prefix by four bytes for t_complex_net_message's vptr, retains both
@@ -239,12 +242,12 @@ SIZE(t_complex_net_message, 0x18);
 // The last hero ends at +0xb3c; town's natural eight-byte alignment rounds the
 // complete PC class to 0xb40, exactly the stack extent in DoNetCombat and the
 // member extent in the wait-dialog constructor.
-class CCombatInitMsg : public t_complex_net_message {
+class CCombatInitMsg : public ComplexNetMessage {
 public:
     // Retail expands this member sequence in DoNetCombat and the wait dialog.
     // E:\gamedcs\netmsg.h:264, dc 0x9caa0
     CCombatInitMsg()
-        : t_complex_net_message(RS_COMBAT_INIT)
+        : ComplexNetMessage(RS_COMBAT_INIT)
     {
         m_point = type_point(0, 0, 0);
         m_leftHero = 0;
@@ -538,7 +541,7 @@ class CMapChange : public CNetMsg {
 public:
     // Dreamcast netmsg.h:532 names the parameters `id` and `size` and keeps
     // this CNetMsg construction as a distinct source boundary.
-    CMapChange(eRS_Messages id, unsigned long size)
+    CMapChange(ERSMessages id, unsigned long size)
         : CNetMsg(id, size) {}
 };
 
@@ -825,7 +828,7 @@ SIZE(CTradeRequestMsg, 0x938);
 class CPingMsg : public CNetMsg {
 public:
     unsigned long m_pingTime;
-    CPingMsg(unsigned long pingTime, eRS_Messages id)
+    CPingMsg(unsigned long pingTime, ERSMessages id)
         : CNetMsg(id, sizeof(CPingMsg)), m_pingTime(pingTime) {}
 };
 SIZE(CPingMsg, 0x18);
@@ -838,7 +841,7 @@ SIZE(CPingMsg, 0x18);
 class CPingResponseMsg : public CNetMsg {
 public:
     unsigned long m_pingTime;
-    CPingResponseMsg(unsigned long pingTime, eRS_Messages id)
+    CPingResponseMsg(unsigned long pingTime, ERSMessages id)
         : CNetMsg(id, sizeof(CPingResponseMsg)), m_pingTime(pingTime) {}
 };
 SIZE(CPingResponseMsg, 0x18);

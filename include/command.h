@@ -23,7 +23,8 @@
 // the castle tower info. 6 is only ever ANSWERED (the plain hover over
 // a hex that is not actionable) and falls into DoCommand's empty
 // default, as do the values with no name here - the domain is sparse.
-enum ECombatCommand {
+// Before normalization (type): ECombatCommand.
+enum CombatCommand {
     COMBAT_COMMAND_NONE = 0,
     COMBAT_COMMAND_WALK = 1,
     COMBAT_COMMAND_FLY = 2,
@@ -57,7 +58,8 @@ enum ECombatCommand {
 // show_eagle_eye. show_eagle_eye's list separator turns into " and " one
 // row EARLIER (`cmp eax,7` against a size taken before the push), which
 // is PAGE_SIZE - 1 and is spelled that way.
-enum EVictoryDialog {
+// Before normalization (type): EVictoryDialog.
+enum VictoryDialog {
     VICTORY_DIALOG_ARTIFACT_ROW = 8,
     VICTORY_DIALOG_SPELL_ROW = 9,
     VICTORY_DIALOG_PAGE_SIZE = 8
@@ -68,7 +70,8 @@ enum EVictoryDialog {
 // DoVictory's ladder has a third arm that touches BOTH heroes rather
 // than an index into heroes[]. Retail spells the three arms with
 // constant displacements (0x53cc and 0x53d0), never `heroes[loser]`.
-enum ELastAliveSide {
+// Before normalization (type): ELastAliveSide.
+enum LastAliveSide {
     LAST_ALIVE_ATTACKER = 0,
     LAST_ALIVE_DEFENDER = 1,
     LAST_ALIVE_NEITHER = 2

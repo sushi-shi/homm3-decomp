@@ -9,8 +9,8 @@
 
 #include <vector>
 class Hero;
-struct type_university;
-class type_university_window;
+struct University;
+class UniversityWindow;
 
 // Shared three-entry Basic/Advanced/Expert display-name row. Its retail
 // storage is claimed by levelupwindow.cpp; the university purchase callback
@@ -21,38 +21,41 @@ extern const char* g_skillMasteryNames[3];
 // by the byte click latch and dword skill at +0x48/+0x4c. Dreamcast preserves
 // both the class identity and the source-level constructor/handle_click
 // boundaries even though Complete inlines the constructor into this TU.
-class type_university_skill_button : public iconWidget {
+// Before normalization (type): type_university_skill_button.
+class UniversitySkillButton : public IconWidget {
 public:
     unsigned char m_click;       // +0x48
     SecondarySkill m_skill;     // +0x4c
 
-    type_university_skill_button(long x, long y, long width, long height,
+    UniversitySkillButton(long x, long y, long width, long height,
                                  long newId, const char* image,
                                  SecondarySkill newSkill);
     virtual bool handleClick(bool downClick,
                                        bool rightClick);
     void setSkill(SecondarySkill newSkill, unsigned char newClick);
 };
-SIZE(type_university_skill_button, 0x50);
+SIZE(UniversitySkillButton, 0x50);
 
 // The retail constructor and update path prove this complete 0x14-byte
 // record: the button, two coloured bars and label occupy the first four
 // dwords, followed by the TSecondarySkill. Dreamcast proves the record's
 // identity and the containing window's four-plus-one arrangement.
-struct type_university_skill {
-    type_university_skill_button* m_button;
-    iconWidget* m_topBar;
-    iconWidget* m_bottomBar;
-    textWidget* m_textWidget;
+// Before normalization (type): type_university_skill.
+struct UniversitySkill {
+    UniversitySkillButton* m_button;
+    IconWidget* m_topBar;
+    IconWidget* m_bottomBar;
+    TextWidget* m_textWidget;
     SecondarySkill m_skill;
 };
-SIZE(type_university_skill, 0x14);
+SIZE(UniversitySkill, 0x14);
 
 // Retail's +0x70 rollover pointer and +0x74 skill-array accesses translate
 // DC's +0x68/+0x6c fields by exactly the eight-byte CAdvPopup widening already
 // proven in advmgr_popup.h. The constructor and callbacks below complete the
 // translated tail through the two VC6 vectors at +0xd8 and +0xe8.
-class type_university_window : public CAdvPopup {
+// Before normalization (type): type_university_window.
+class UniversityWindow : public CAdvPopup {
 public:
     // The hero's secondary-skill slot cap, as BOTH university bodies test
     // it (`cmp dword [hero+0x101], 8`). Scoped to this window because it is
@@ -66,14 +69,14 @@ public:
 
 protected:
     Hero* m_currentHero;                       // +0x60
-    class type_func_button* m_purchaseButton; // +0x64
-    textWidget* m_purchaseTitleWidget;        // +0x68 (unused by Complete)
-    textWidget* m_purchaseTextWidget;         // +0x6c
-    textWidget* m_rolloverWidget;              // +0x70
-    type_university_skill m_skills[4];           // +0x74 .. +0xc3
-    type_university_skill m_selectedSkill;      // +0xc4 .. +0xd7
-    std::vector<widget*> m_selectionWidgets;    // +0xd8
-    std::vector<widget*> m_purchaseWidgets;     // +0xe8
+    class FuncButton* m_purchaseButton; // +0x64
+    TextWidget* m_purchaseTitleWidget;        // +0x68 (unused by Complete)
+    TextWidget* m_purchaseTextWidget;         // +0x6c
+    TextWidget* m_rolloverWidget;              // +0x70
+    UniversitySkill m_skills[4];           // +0x74 .. +0xc3
+    UniversitySkill m_selectedSkill;      // +0xc4 .. +0xd7
+    std::vector<Widget*> m_selectionWidgets;    // +0xd8
+    std::vector<Widget*> m_purchaseWidgets;     // +0xe8
 
 public:
     // Retail 0x5ef500. `bTownUniversity` is the retail-added third
@@ -81,28 +84,28 @@ public:
     // call sites name it: the map object's visit (0x4aa526) passes 0,
     // the town building's page (0x5d2f26) passes 1, and the constructor
     // gates one extra 0x48-byte widget on it.
-    type_university_window(Hero* newHero, const type_university* university,
+    UniversityWindow(Hero* newHero, const University* university,
                            unsigned char townUniversity);
     virtual int doModal(unsigned char fade);  // slot 6
 
     // DC message-reference override; retail slot 9 folds at 0x5666f0.
-    virtual int windowHandler(message& msg);
+    virtual int windowHandler(Message& msg);
     void skillClick(SecondarySkill skill);
 
 protected:
-    virtual void handleWidgetHover(widget* currentWidget);  // slot 4
+    virtual void handleWidgetHover(Widget* currentWidget);  // slot 4
 
 public:
-    virtual int exitDialog(message& msg);  // slot 14
+    virtual int exitDialog(Message& msg);  // slot 14
 
 protected:
     void setSelectionMode();
-    void updateSkillButton(type_university_skill& skill);
-    static int cancelClick(message& msg);
-    static int exitClick(message& msg);
-    static int purchaseClick(message& msg);
+    void updateSkillButton(UniversitySkill& skill);
+    static int cancelClick(Message& msg);
+    static int exitClick(Message& msg);
+    static int purchaseClick(Message& msg);
 };
-SIZE(type_university_window, 0xf8);
+SIZE(UniversityWindow, 0xf8);
 
 // --- type_university_skill_button ---
 // CODEVIEW(E:\gamedcs\university_window.cpp:65, dc 0x18e6ac) void type_university_skill_button::type_university_skill_button(long _x, long _y, long _width, long _height, long new_id, const char* _image, TSecondarySkill new_skill);

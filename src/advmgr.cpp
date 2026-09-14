@@ -150,13 +150,13 @@ BlackBoxData* ExtraInfoUnion::getBlackBox() const
 }
 
 VA(0x00405df0, 0x20)  // dc 0x5888
-type_creature_bank& ExtraInfoUnion::getCreatureBank() const
+CreatureBank& ExtraInfoUnion::getCreatureBank() const
 {
     return g_game->m_creatureBanks[m_creatureBankInfo.m_index];
 }
 
 VA(0x00405e10, 0x1C)  // dc 0x58bc
-type_university* ExtraInfoUnion::getUniversity() const
+University* ExtraInfoUnion::getUniversity() const
 {
     return &g_game->m_universities[m_universityInfo.m_index];
 }
@@ -207,7 +207,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         g_currentPlayer = &g_game->m_players[pos];
         g_unnamed69ccc4 = 1 << pos;
         if (!m_inPopup) {
-            g_advManager->m_bottomViewType = advManager::BOTTOM_VIEW_DEFAULT;
+            g_advManager->m_bottomViewType = AdvManager::BOTTOM_VIEW_DEFAULT;
             g_advManager->updBottomView(1, 1, 1);
         }
         if (g_currentPlayer->isHuman()) {
@@ -265,11 +265,11 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         g_advManager->completeDraw(g_advManager->m_radarOrigin.m_x,
                                    g_advManager->m_radarOrigin.m_y,
                                    g_advManager->m_radarOrigin.m_z, 0, 1);
-        advManager* manager = g_advManager;
-        g_windowManager->updateScreen(advManager::ADVENTURE_SCREEN_X,
-                                      advManager::ADVENTURE_SCREEN_Y,
-                                      advManager::ADVENTURE_SCREEN_WIDTH,
-                                      advManager::ADVENTURE_SCREEN_HEIGHT);
+        AdvManager* manager = g_advManager;
+        g_windowManager->updateScreen(AdvManager::ADVENTURE_SCREEN_X,
+                                      AdvManager::ADVENTURE_SCREEN_Y,
+                                      AdvManager::ADVENTURE_SCREEN_WIDTH,
+                                      AdvManager::ADVENTURE_SCREEN_HEIGHT);
         unsigned long curTime = GameTime::get();
         if (static_cast<long>(
                 curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
@@ -281,7 +281,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
             g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
                 cppMax(elapsedTime,
                          static_cast<long>(
-                             advManager::ADVENTURE_ANIMATION_MAX_ELAPSED));
+                             AdvManager::ADVENTURE_ANIMATION_MAX_ELAPSED));
         }
         process1WindowsMessage();
         break;
@@ -295,11 +295,11 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         g_advManager->completeDraw(g_advManager->m_radarOrigin.m_x,
                                    g_advManager->m_radarOrigin.m_y,
                                    g_advManager->m_radarOrigin.m_z, 0, 1);
-        advManager* manager = g_advManager;
-        g_windowManager->updateScreen(advManager::ADVENTURE_SCREEN_X,
-                                      advManager::ADVENTURE_SCREEN_Y,
-                                      advManager::ADVENTURE_SCREEN_WIDTH,
-                                      advManager::ADVENTURE_SCREEN_HEIGHT);
+        AdvManager* manager = g_advManager;
+        g_windowManager->updateScreen(AdvManager::ADVENTURE_SCREEN_X,
+                                      AdvManager::ADVENTURE_SCREEN_Y,
+                                      AdvManager::ADVENTURE_SCREEN_WIDTH,
+                                      AdvManager::ADVENTURE_SCREEN_HEIGHT);
         unsigned long curTime = GameTime::get();
         if (static_cast<long>(
                 curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
@@ -311,7 +311,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
             g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
                 cppMax(elapsedTime,
                          static_cast<long>(
-                             advManager::ADVENTURE_ANIMATION_MAX_ELAPSED));
+                             AdvManager::ADVENTURE_ANIMATION_MAX_ELAPSED));
         }
         process1WindowsMessage();
         break;
@@ -401,8 +401,8 @@ void CAdvMgrNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
             g_resourceNames[msg->m_resource]);
     }
 
-    std::vector<type_dialog_resource> resources;
-    type_dialog_resource resource;
+    std::vector<DialogResource> resources;
+    DialogResource resource;
     resource.m_resource = msg->m_resource;
     resource.m_qualifier = 0;
     resources.push_back(resource);
@@ -427,15 +427,15 @@ void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
             g_playerColorNames[msg->m_niceGuy]);
     }
 
-    std::vector<type_dialog_resource> resources;
-    type_dialog_resource resource;
+    std::vector<DialogResource> resources;
+    DialogResource resource;
     resource.m_resource = msg->m_resource;
     resource.m_qualifier = msg->m_qty;
     resources.push_back(resource);
     extendedDialog(text.c_str(), resources, -1, -1, 15000);
     resources.clear();
 
-    playerData* localPlayer = g_game->getLocalPlayer();
+    PlayerData* localPlayer = g_game->getLocalPlayer();
     if (localPlayer) {
         localPlayer->m_resources[msg->m_resource] += msg->m_qty;
         g_advManager->m_advWindow->updateResourceDisplay(!isInPopup(), 1);
@@ -464,7 +464,7 @@ void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
 // advCommand and the moving-object pair share one or-edx,-1.
 
 VA(0x00406df0, 0x1DF)  // anchor-global, dc 0x66f4
-advManager::advManager()
+AdvManager::AdvManager()
 {
     m_radarOrigin = type_point(0, 0, 0);
     m_radarIcons = 0;
@@ -548,7 +548,7 @@ DATA(0x0065f67c) extern const char* const g_boatFrothIconNames[3];
 // hotseat (MP_HOTSEAT) turn banner runs between the two same-condition
 // ifs - retail re-tests iMPNetProtocol rather than folding the arms.
 VA(0x00406fd0, 0x7D6)  // anchor-vtable, dc 0x6b24
-int advManager::open(int newPriority)
+int AdvManager::open(int newPriority)
 {
     m_bottomViewType = BOTTOM_VIEW_DEFAULT;
     m_heroLogoShowing = 0;
@@ -592,12 +592,12 @@ int advManager::open(int newPriority)
         if (_strnicmp(reversed,
                       DATA_COMPGEN(0x00660328, defExtensionReversed, "fed"),
                       3) == 0) {
-            resource* graphic = ResourceManager::getSprite(g_advCachedGraphicNames[cached]);
+            Resource* graphic = ResourceManager::getSprite(g_advCachedGraphicNames[cached]);
 #pragma inline_depth(0)
             m_cachedGraphics.push_back(graphic);
 #pragma inline_depth()
         } else {
-            resource* graphic = ResourceManager::getBitmap816(g_advCachedGraphicNames[cached]);
+            Resource* graphic = ResourceManager::getBitmap816(g_advCachedGraphicNames[cached]);
 #pragma inline_depth(0)
             m_cachedGraphics.push_back(graphic);
 #pragma inline_depth()
@@ -725,7 +725,7 @@ int advManager::open(int newPriority)
     m_id = 0x400;
     strcpy(m_mgrName,
            DATA_COMPGEN(0x00660294, advManagerMgrName, "advManager"));
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
 
     if (g_dPlay) {
         m_netMsgHandler = new CAdvMgrNetMsgHandler();
@@ -775,7 +775,7 @@ VA_COMPGEN(0x0057d160, 0x05, IMPLICIT_DTOR, CAdvMgrNetMsgHandler)
 // knob is caller body mass, not a vector spelling.
 
 VA(0x004077e0, 0x2D1)  // anchor-vtable, dc 0x74ec
-void advManager::close()
+void AdvManager::close()
 {
     m_advWindow->clearBottomView();
     m_bottomViewType = BOTTOM_VIEW_DEFAULT;
@@ -868,9 +868,9 @@ void advManager::close()
 }
 
 VA(0x00407ac0, 0x44)  // dc 0x793c
-int advManager::inMapArea(int x, int y)
+int AdvManager::inMapArea(int x, int y)
 {
-    const widget* mapWidget = m_advWindow->m_mapWidget;
+    const Widget* mapWidget = m_advWindow->m_mapWidget;
     return x >= mapWidget->m_x && x < mapWidget->m_y + mapWidget->m_width
         && y >= mapWidget->m_y && y < mapWidget->m_y + mapWidget->m_height;
 }
@@ -879,7 +879,7 @@ int advManager::inMapArea(int x, int y)
 
 // E:\gamedcs\advmgr.cpp:1229
 DC_ONLY(0x79b0, 0x52)
-void advManager::GetCursorSampleSet(int walkSpeed)
+void AdvManager::GetCursorSampleSet(int walkSpeed)
 {
     // @stub
 }
@@ -894,7 +894,7 @@ void advManager::GetCursorSampleSet(int walkSpeed)
 // ordinary body for the cross-TU spell/window callers; DoAdvCommand expands
 // its four source calls. A header-inline spelling emitted no retained body.
 VA(0x00407b10, 0x6F)  // field loads + four cross-TU call sites, dc 0x7a04
-type_point advManager::getMouseMapPoint() const
+type_point AdvManager::getMouseMapPoint() const
 {
     return type_point(m_radarOrigin.m_x + m_lastHoverX,
                       m_radarOrigin.m_y + m_lastHoverY,
@@ -999,7 +999,7 @@ type_point advManager::getMouseMapPoint() const
 // decrement stays in the body. Positive landing scopes remove the other two
 // jumps, preserving the same bytes with either nested or compound guards.
 VA(0x00407b80, 0xBF0)  // anchor-global, dc 0x7a8c
-NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
+NewmapCell* AdvManager::doAdvCommand(type_point* triggerPoint)
 {
     Town* newTown;
     NewmapCell* eventCell = 0;
@@ -1042,7 +1042,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
                 standingOn = map->cell(cellPoint.m_x, cellPoint.m_y,
                                        cellPoint.m_z);
             // The row past the nine terrain samples is the flight sample.
-            sample* walkSample = m_heroSamples[standingOn->m_groundSet];
+            Sample* walkSample = m_heroSamples[standingOn->m_groundSet];
             if (currHero->isFlying(0))
                 walkSample = m_heroSamples[10];
             walkSample->m_memSample.m_memLooping = 0;
@@ -1102,7 +1102,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
 
                     if (!currHero->isFlying(1) && !currHero->canWalkOnWater(1)) {
                         process1WindowsMessage();
-                        message msg = g_inputManager->getEvent();
+                        Message msg = g_inputManager->getEvent();
                         while (msg.m_id) {
                             if (msg.m_id == MESSAGE_KEY_DOWN
                                 || msg.m_id == MESSAGE_LEFT_BUTTON_DOWN
@@ -1159,7 +1159,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
 
     case ADV_COMMAND_VIEW_OBSCURED_TOWN:
         demobilizeCurrHero(0, 1);
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
         newTown = currHero->getObscuredTown();
         newTown->view(0);
         eventCell = 0;
@@ -1168,8 +1168,8 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
     case ADV_COMMAND_VIEW_TOWN: {
         if (g_currentPlayer->isLocalHuman())
             demobilizeCurrHero(0, 1);
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-        playerData* viewingPlayer = g_game->getLocalPlayer();
+        g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
+        PlayerData* viewingPlayer = g_game->getLocalPlayer();
         if (!viewingPlayer)
             break;
         if (viewingPlayer->m_currTownId == -1)
@@ -1194,12 +1194,12 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
     }
 
     case ADV_COMMAND_VIEW_HERO: {
-        playerData* viewingPlayer = g_game->getLocalPlayer();
+        PlayerData* viewingPlayer = g_game->getLocalPlayer();
         if (!viewingPlayer)
             break;
         if (viewingPlayer->m_currHeroId == -1)
             break;
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
         if (g_unnamed699560) {
             type_point offMap(-1, -1, 0);
             setEnvironmentOrigin(offMap, 1);
@@ -1251,7 +1251,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
 
     case ADV_COMMAND_SHIPYARD: {
         g_mouseManager->showPointer(0);
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
         type_point mapPoint = getMouseMapPoint();
         type_point dockPoint = getMouseMapPoint();
         type_point cellPoint = mapPoint;
@@ -1278,7 +1278,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
 }
 
 VA(0x004087b0, 0x487)  // dc 0x8644
-int advManager::main(message& msg)
+int AdvManager::main(Message& msg)
 {
     if (m_status == STATUS_SUSPENDED)
         return 0;
@@ -1364,17 +1364,17 @@ int advManager::main(message& msg)
 
         case MESSAGE_WIDGET:
             switch (msg.m_codeX) {
-            case widget::WIDGET_SELECT:
+            case Widget::WIDGET_SELECT:
                 result = processSelect(&msg, &triggerPoint, &eventCell);
                 break;
 
-            case widget::WIDGET_DESELECT:
+            case Widget::WIDGET_DESELECT:
                 if (!(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT))
                     result = processDeSelect(&msg, &exitFlag, &triggerPoint,
                                              &eventCell);
                 break;
 
-            case widget::WIDGET_RIGHT_SELECT:
+            case Widget::WIDGET_RIGHT_SELECT:
                 if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
                     if (!m_advWindow->processRightSelect(&msg))
                         result = processSelect(&msg, &triggerPoint,
@@ -1512,12 +1512,12 @@ DATA(0x006976d8) extern int g_gameCommand;
 // push all three in the prologue, and the SPACE arm's type_point cell
 // lookup keeps `fullMap` in a register slot where ours reloads it.
 VA(0x00408c40, 0xB9D)  // anchor-callee, dc 0x8b70
-int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, type_point* triggerPoint, NewmapCell** peventCell)
+int AdvManager::processKeyPress(const Message* msg, unsigned char* exitFlag, type_point* triggerPoint, NewmapCell** peventCell)
 {
     if (m_advWindow->m_chatEdit->m_hasFocus)
         return 0;
 
-    playerData* localPlayer = g_game->getLocalPlayer();
+    PlayerData* localPlayer = g_game->getLocalPlayer();
     unsigned char waitingPlayer = !g_currentPlayer->isLocalHuman();
     // NOT game::GetHero: that header inline tests `== -1` first, so VC6
     // emits its null arm ahead of the address computation. Retail has the
@@ -1543,9 +1543,9 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
             if (g_currentPlayer->isLocalHuman()
                 || (g_unnamed6989c8 && g_unnamed69ccd4)) {
                 g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,
                     AdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                    Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
                 if (m_showRoute) {
                     m_showRoute = 0;
                     completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
@@ -1697,7 +1697,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         return 1;
 
     case KEYCODE_I:
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
         g_game->showScenInfo();
         if (g_windowManager->m_dialogReturn != SYSOPT_COMMAND_111)
             break;
@@ -1717,9 +1717,9 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
             if (g_currentPlayer->isLocalHuman()
                 || (g_unnamed6989c8 && g_unnamed69ccd4)) {
                 g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,
                     AdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                    Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
                 if (m_showRoute) {
                     m_showRoute = 0;
                     completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
@@ -1749,9 +1749,9 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
             if (g_currentPlayer->isLocalHuman()
                 || (g_unnamed6989c8 && g_unnamed69ccd4)) {
                 g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,
                     AdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                    Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
                 if (m_showRoute) {
                     m_showRoute = 0;
                     completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
@@ -1773,9 +1773,9 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
             if (g_currentPlayer->isLocalHuman()
                 || (g_unnamed6989c8 && g_unnamed69ccd4)) {
                 g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,
                     AdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                    Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
                 int heroId = g_currentPlayer->m_currHeroId;
                 if (heroId != -1) {
                     Hero* pathHero = &g_game->m_heroes[heroId];
@@ -1842,16 +1842,16 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
                 showRoute(1, 0, 0);
                 g_advManager->m_advWindow->updateHeroLocators(-1, 1, 1);
 
-                advManager* dimTarget = g_advManager;
+                AdvManager* dimTarget = g_advManager;
                 if (g_currentPlayer->isLocalHuman()
                     && g_currentPlayer->hasMobileHero())
                     dimTarget->m_advWindow->widgetClearStatus(
                         AdventureMapWindow::NEXT_HERO_ID,
-                        widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                        Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
                 else
                     dimTarget->m_advWindow->widgetSetStatus(
                         AdventureMapWindow::NEXT_HERO_ID,
-                        widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                        Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
             }
             }
         }
@@ -1870,9 +1870,9 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
 // the town arm's guard, uncached.
 
 VA(0x004097e0, 0x290)  // dc 0x9330
-int advManager::processSelect(const message* msg, type_point* triggerPoint, NewmapCell** peventCell)
+int AdvManager::processSelect(const Message* msg, type_point* triggerPoint, NewmapCell** peventCell)
 {
-    playerData* localPlayer = g_game->getLocalPlayer();
+    PlayerData* localPlayer = g_game->getLocalPlayer();
     unsigned char waitingPlayer = !g_currentPlayer->isLocalHuman();
 
     switch (msg->m_codeY) {
@@ -1912,9 +1912,9 @@ int advManager::processSelect(const message* msg, type_point* triggerPoint, Newm
             if (g_currentPlayer->isLocalHuman()
                 || (g_unnamed6989c8 && g_unnamed69ccd4)) {
                 g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,
                     AdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                    Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
                 if (m_showRoute) {
                     m_showRoute = 0;
                     completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
@@ -1980,7 +1980,7 @@ int advManager::processSelect(const message* msg, type_point* triggerPoint, Newm
 
 // E:\gamedcs\advmgr.cpp:2031
 DC_ONLY(0x9614, 0x47E)
-void advManager::ProcessAdvMenu(message* msg)
+void AdvManager::ProcessAdvMenu(Message* msg)
 {
     // @stub
 }
@@ -1988,9 +1988,9 @@ void advManager::ProcessAdvMenu(message* msg)
 #endif  // @carcass
 
 VA(0x00409a70, 0x641)  // dc 0x9a94
-int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, type_point* triggerPoint, NewmapCell** peventCell)
+int AdvManager::processDeSelect(const Message* msg, unsigned char* exitFlag, type_point* triggerPoint, NewmapCell** peventCell)
 {
-    playerData* localPlayer = g_game->getLocalPlayer();
+    PlayerData* localPlayer = g_game->getLocalPlayer();
     unsigned char waitingPlayer = !g_currentPlayer->isLocalHuman();
 
     switch (msg->m_codeY) {
@@ -2023,9 +2023,9 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
                     if (g_currentPlayer->isLocalHuman()
                         || (g_unnamed6989c8 && g_unnamed69ccd4)) {
                         g_windowManager->broadcastMessage(
-                            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                            MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,
                             AdventureMapWindow::MOVE_ID,
-                            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                            Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
                         if (m_showRoute) {
                             m_showRoute = 0;
                             completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y,
@@ -2042,11 +2042,11 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
                 && g_currentPlayer->hasMobileHero())
                 m_advWindow->widgetClearStatus(
                     AdventureMapWindow::NEXT_HERO_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                    Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
             else
                 m_advWindow->widgetSetStatus(
                     AdventureMapWindow::NEXT_HERO_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                    Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
         }
         break;
     }
@@ -2112,7 +2112,7 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
         if (g_overviewReturnAction == OVERVIEW_EXIT_TOWN) {
             demobilizeCurrHero(0, 1);
             g_mouseManager->showPointer(1);
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
             g_game->getTown(g_overviewReturnActionExtra)->view(1);
             fadeOut = 0;
         } else if (g_unnamed699560) {
@@ -2167,7 +2167,7 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
 }
 
 VA(0x0040a0c0, 0x50D)  // dc 0xa168
-void advManager::processRadarSelect(const message* msg)
+void AdvManager::processRadarSelect(const Message* msg)
 {
     if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) {
         normalDialog(g_generalText->getText(55), 4, -1, -1, -1, 0, -1, 0,
@@ -2228,8 +2228,8 @@ void advManager::processRadarSelect(const message* msg)
     }
     process1WindowsMessage();
 
-    message dragMsg;
-    message event;
+    Message dragMsg;
+    Message event;
     do {
         process1WindowsMessage();
         event = g_inputManager->getEvent();
@@ -2347,7 +2347,7 @@ void advManager::processRadarSelect(const message* msg)
 // `xor ebx,ebx` arm behind. Dropping the guard reproduces that dead block
 // but does not pay (see the four measurements above).
 VA(0x0040a5d0, 0x606)  // anchor-callee, dc 0xa88c
-void advManager::processMapSelect(const message* msg, type_point* triggerPoint, NewmapCell** peventCell)
+void AdvManager::processMapSelect(const Message* msg, type_point* triggerPoint, NewmapCell** peventCell)
 {
     int visibilityBit = 1 << g_game->getLocalPlayerGamePos();
     int localPlayer = g_game->getLocalPlayerGamePos();
@@ -2428,7 +2428,7 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
                 return;
             }
 
-            pathCell* pathAt = g_searchArray->getCell(m_lastMapHover, 0);
+            PathCell* pathAt = g_searchArray->getCell(m_lastMapHover, 0);
             if (g_currentPlayer->isLocalHuman() && pathAt && pathAt->m_visited) {
                 if (!heroMobile
                     || (msg->m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS)
@@ -2491,7 +2491,7 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
 
 // E:\gamedcs\advmgr.cpp:2624
 DC_ONLY(0xaf3c, 0x2CA)
-void advManager::ProcessMapSelect2(const message* msg, type_point* trigger_point, NewmapCell** peventCell)
+void AdvManager::ProcessMapSelect2(const Message* msg, type_point* trigger_point, NewmapCell** peventCell)
 {
     // @stub
 }
@@ -2656,7 +2656,7 @@ static void setWindmillHelpText(
 // those stores before getTriggerCell; retain the constructor boundary
 // instead of aggregate-initializing its implementation in both callers.
 DC_ONLY(0xbeac, 0x1A)
-type_cell_adjuster::type_cell_adjuster()
+CellAdjuster::CellAdjuster()
 {
     m_obscuringHero = 0;
     m_obscuringBoat = 0;
@@ -2729,13 +2729,13 @@ std::string getArmyHelpText(const ArmyGroup* source,
 }
 
 VA(0x0040af60, 0x4A)  // dc 0xbec8
-type_cell_adjuster::~type_cell_adjuster()
+CellAdjuster::~CellAdjuster()
 {
     restoreCell();
 }
 
 VA(0x0040afb0, 0x12F)  // dc 0xbf1c
-NewmapCell* type_cell_adjuster::getTriggerCell(NewmapCell* mapCell, int x, int y)
+NewmapCell* CellAdjuster::getTriggerCell(NewmapCell* mapCell, int x, int y)
 {
     restoreCell();
 
@@ -2769,7 +2769,7 @@ NewmapCell* type_cell_adjuster::getTriggerCell(NewmapCell* mapCell, int x, int y
 // conditional restores. Retail expands it in the destructor, getTriggerCell,
 // and setRolloverText; keep its body at the original source position.
 DC_ONLY(0xc038, 0x5C)
-void type_cell_adjuster::restoreCell()
+void CellAdjuster::restoreCell()
 {
     if (m_obscuringHero) {
         m_obscuringHero->obscureCell();
@@ -2786,7 +2786,7 @@ void type_cell_adjuster::restoreCell()
 }
 
 VA(0x0040b0e0, 0x64)  // dc 0xc094
-void advManager::drawRolloverText(char* text)
+void AdvManager::drawRolloverText(char* text)
 {
     union {
         char* m_pointer;
@@ -2796,14 +2796,14 @@ void advManager::drawRolloverText(char* text)
     m_advWindow->broadcastMessage(0x200, 3, 200, extra.m_value);
     m_advWindow->drawWindow(0, 200, 200);
 
-    widget* rollover = m_advWindow->m_rolloverTextWidget;
+    Widget* rollover = m_advWindow->m_rolloverTextWidget;
     g_windowManager->updateScreen(m_advWindow->m_x + rollover->m_x,
                                   m_advWindow->m_y + rollover->m_y,
                                   rollover->m_width, rollover->m_height);
 }
 
 void getCreatureBankHelpText(char* buffer, NewmapCell* cell,
-    type_creature_bank_type type, long playerId, const char* separator,
+    CreatureBankType type, long playerId, const char* separator,
     unsigned char showFullList);
 void setShrineHelpText(char* buffer, Hero* currentHero, NewmapCell* cell,
     GlobalInfoFlags type, const char* separator1, const char* separator2);
@@ -2896,13 +2896,13 @@ void setWitchHutHelpText(char* buffer, Hero* currentHero,
 // PYRAMID, WAGON, WARRIOR_TOMB, WATER_WHEEL and WINDMILL are the same
 // inlined helpers, so a fix there is worth double.
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
-void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
+void AdvManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
 {
     if (m_advWindow->m_chatEdit->m_hasFocus)
         return;
 
     int visited;
-    playerData* player;
+    PlayerData* player;
     int thisPlayer;
     Hero* currHero;
     char tempText[500];
@@ -2914,7 +2914,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     playerBit = 1 << thisPlayer;
     currHero = g_game->getHero(player->m_currHeroId);
 
-    type_cell_adjuster adjuster;
+    CellAdjuster adjuster;
     NewmapCell* cell = adjuster.getTriggerCell(testCell, rx, ry);
     const char* separator = DATA_COMPGEN(
         0x00660330, rolloverSpaceSeparator, " ");
@@ -3016,11 +3016,11 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
         int bankType;
         bankType = cell->m_objectIndex;
         getCreatureBankHelpText(g_text, cell,
-            type_creature_bank_type(bankType), g_unnamed69778c, separator, 0);
+            CreatureBankType(bankType), g_unnamed69778c, separator, 0);
         break;
     case CREATURE_GENERATOR_1: {
         // DC3321/3342 records generator&.
-        generator& mapGenerator = g_game->m_generators[cell->m_extraInfo];
+        Generator& mapGenerator = g_game->m_generators[cell->m_extraInfo];
         int owner = mapGenerator.getOwner();
         // DC3324/3345 records int.
         int generatorType = mapGenerator.m_genType;
@@ -3036,7 +3036,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     }
     case CREATURE_GENERATOR_4: {
         // DC3321/3342 records generator&.
-        generator& mapGenerator = g_game->m_generators[cell->m_extraInfo];
+        Generator& mapGenerator = g_game->m_generators[cell->m_extraInfo];
         int owner = mapGenerator.getOwner();
         // DC3324/3345 records int.
         int generatorType = mapGenerator.m_genType;
@@ -3714,7 +3714,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
 // and the associated cleanup-tail scheduling.
 
 VA(0x0040d3f0, 0x27C)  // anchor-callee, dc 0xb3bc
-void getCreatureBankHelpText(char* buffer, NewmapCell* cell, type_creature_bank_type type, long playerId, const char* separator, unsigned char showFullList)
+void getCreatureBankHelpText(char* buffer, NewmapCell* cell, CreatureBankType type, long playerId, const char* separator, unsigned char showFullList)
 {
     strcpy(buffer, g_constCreatureBankTraits[type].m_name.c_str());
     strcat(buffer, separator);
@@ -3763,7 +3763,7 @@ VA(0x0040d670, 0x253)
 void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,
                        const char* separator, unsigned char showFullList)
 {
-    mine* currentMine = &g_game->m_mines[cell->m_extraInfo];
+    Mine* currentMine = &g_game->m_mines[cell->m_extraInfo];
     int owner = currentMine->m_playerOwner;
     int mineType = currentMine->m_type;
     const char* description = g_mineDescriptions[7];
@@ -3896,7 +3896,7 @@ void setWitchHutHelpText(char* buffer, Hero* currentHero, NewmapCell* cell, cons
 // state, giving an eight-byte local frame; this compile spills that state and
 // uses sixteen bytes. A shared rx/ry scope was tested and rejected (80.27%).
 VA(0x0040deb0, 0x3CF)  // anchor-callee, dc 0xed7c
-int advManager::processWaitingHover(int mouseX, int mouseY)
+int AdvManager::processWaitingHover(int mouseX, int mouseY)
 {
     if (inMapArea(mouseX, mouseY)) {
         int rx = mouseX / 32;
@@ -3909,7 +3909,7 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
         m_lastMapHover.m_z = m_radarOrigin.m_z;
 
         int thisPlayerBit = 1 << g_game->getLocalPlayerGamePos();
-        playerData* thisPlayer = g_game->getLocalPlayer();
+        PlayerData* thisPlayer = g_game->getLocalPlayer();
         if (m_lastMapHover.isValid()
             && (getMapExtra(m_lastMapHover) & thisPlayerBit)) {
             if (thisPlayer->m_currHeroId == -1
@@ -3942,7 +3942,7 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
                     if (g_game->isLocalHuman(town->m_owner)) {
                         m_advCommand = thisPlayer->m_currTownId == -1 ? 5 : 3;
                         g_mouseManager->setPointer(
-                            3, mouseManager::ADVENTURE_SET);
+                            3, MouseManager::ADVENTURE_SET);
                         return 1;
                     }
                     break;
@@ -3952,7 +3952,7 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
                     if (g_game->isLocalHuman(hero->m_owner)
                         && hero->m_owner == g_netLocalGamePos) {
                         g_mouseManager->setPointer(
-                            2, mouseManager::ADVENTURE_SET);
+                            2, MouseManager::ADVENTURE_SET);
                         m_advCommand = thisPlayer->m_currHeroId == -1 ? 4 : 2;
                         return 1;
                     }
@@ -3962,14 +3962,14 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
             }
         }
 
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
         return 1;
     }
 
     if (g_mouseManager->m_frame >= HOVER_SCROLL_POINTER_FIRST
         && g_mouseManager->m_frame <= HOVER_SCROLL_POINTER_LAST) {
         if (!mouseInScrollZone())
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
     }
 
     m_advWindow->processHover(mouseX, mouseY);
@@ -3978,10 +3978,10 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
 
 // DC advmgr.cpp:4514..4524 proves the private member get_garrison_cursor.
 // ProcessHover's retail GARRISON arm expands it and retains getNormalCursor.
-type_adventure_cursor advManager::getGarrisonCursor(NewmapCell* currCell)
+AdventureCursor AdvManager::getGarrisonCursor(NewmapCell* currCell)
 {
     if (currCell->m_isTrigger) {
-        garrison& mapGarrison = *g_game->getGarrison(currCell->m_extraInfo);
+        Garrison& mapGarrison = *g_game->getGarrison(currCell->m_extraInfo);
         if (!g_game->onSameTeam(mapGarrison.m_playerOwner, g_netLocalGamePos)
             && mapGarrison.m_garrisonArmy.hasCreatures())
             return ADV_SWORD_POINTER;
@@ -3990,7 +3990,7 @@ type_adventure_cursor advManager::getGarrisonCursor(NewmapCell* currCell)
 }
 
 VA(0x0040e280, 0xD3)  // dc 0xf2c0
-type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
+AdventureCursor AdvManager::getNormalCursor(NewmapCell* currCell)
 {
     HOMM3_RELEASE_VERIFY(currCell != 0);
     if ((getMapExtra(m_lastMapHover) & MAP_EXTRA_MONSTER)
@@ -4107,7 +4107,7 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 // `ExtraInfoUnion cellExtra;` per big block scores 91.6133 and one per ARM
 // scores the same, against 91.6263 - retail re-reads.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
-int advManager::processHover(int mouseX, int mouseY)
+int AdvManager::processHover(int mouseX, int mouseY)
 {
     if (!g_currentPlayer->isLocalHuman())
         return processWaitingHover(mouseX, mouseY);
@@ -4125,7 +4125,7 @@ int advManager::processHover(int mouseX, int mouseY)
 
         if (!m_lastMapHover.isValid()
             || !(getMapExtra(m_lastMapHover) & g_mapVisibilityBit)) {
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
             return 1;
         }
 
@@ -4145,7 +4145,7 @@ int advManager::processHover(int mouseX, int mouseY)
         if (g_currentPlayer->m_currHeroId != -1
             && g_game->getHero(g_currentPlayer->m_currHeroId)->m_z
                != m_lastMapHover.m_z) {
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
             return 1;
         }
 
@@ -4156,7 +4156,7 @@ int advManager::processHover(int mouseX, int mouseY)
                 if (g_game->onSameTeam(currentTown->m_owner, g_netLocalGamePos)
                     || m_debugViewAll) {
                     g_mouseManager->setPointer(3,
-                                               mouseManager::ADVENTURE_SET);
+                                               MouseManager::ADVENTURE_SET);
                     m_advCommand = 3;
                     return 1;
                 }
@@ -4165,7 +4165,7 @@ int advManager::processHover(int mouseX, int mouseY)
             if (currCell->m_type == HERO) {
                 Hero* mapHero = g_game->getHero(currCell->m_extraInfo);
                 if (mapHero->m_owner == g_netLocalGamePos) {
-                    g_mouseManager->setPointer(2, mouseManager::ADVENTURE_SET);
+                    g_mouseManager->setPointer(2, MouseManager::ADVENTURE_SET);
                     m_advCommand = 2;
                     return 1;
                 }
@@ -4176,13 +4176,13 @@ int advManager::processHover(int mouseX, int mouseY)
                     currCell->getTriggerCell()->getMapExtraInfo() << 24)
                     >> 24;
                 if (g_game->onSameTeam(owner, g_netLocalGamePos)) {
-                    g_mouseManager->setPointer(6, mouseManager::ADVENTURE_SET);
+                    g_mouseManager->setPointer(6, MouseManager::ADVENTURE_SET);
                     m_advCommand = 8;
                     return 1;
                 }
             }
 
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
             return 1;
         } else {
 
@@ -4195,7 +4195,7 @@ int advManager::processHover(int mouseX, int mouseY)
         heroPoint.m_y = currHero->m_y;
         heroPoint.m_z = currHero->m_z;
         if (heroPoint == m_lastMapHover) {
-            g_mouseManager->setPointer(2, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(2, MouseManager::ADVENTURE_SET);
             m_advCommand = 2;
             return 1;
         }
@@ -4207,7 +4207,7 @@ int advManager::processHover(int mouseX, int mouseY)
                 if (g_game->onSameTeam(currentTown->m_owner, g_netLocalGamePos)
                     || m_debugViewAll) {
                     g_mouseManager->setPointer(3,
-                                               mouseManager::ADVENTURE_SET);
+                                               MouseManager::ADVENTURE_SET);
                     m_advCommand = 5;
                     return 1;
                 }
@@ -4216,14 +4216,14 @@ int advManager::processHover(int mouseX, int mouseY)
                     currCell->getTriggerCell()->getMapExtraInfo() << 24)
                     >> 24;
                 if (g_game->onSameTeam(owner, g_netLocalGamePos)) {
-                    g_mouseManager->setPointer(6, mouseManager::ADVENTURE_SET);
+                    g_mouseManager->setPointer(6, MouseManager::ADVENTURE_SET);
                     m_advCommand = 8;
                     return 1;
                 }
             }
 
             g_searchArray->clearPath();
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
             return 1;
         }
 
@@ -4234,18 +4234,18 @@ int advManager::processHover(int mouseX, int mouseY)
                 && (currCell->m_type != BOAT || !currCell->m_isTrigger)
                 && (currCell->m_type != SHIPWRECK || !currCell->m_isTrigger)) {
                 g_searchArray->clearPath();
-                g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+                g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
                 return 1;
             }
         } else if (currCell->m_groundSet != eTerrainWater
                    && currCell->m_type != ANCHOR_POINT) {
             g_searchArray->clearPath();
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
             return 1;
         }
 
         seedTo(m_lastMapHover);
-        pathCell* currentPathCell = g_searchArray->getCell(m_lastMapHover, 0);
+        PathCell* currentPathCell = g_searchArray->getCell(m_lastMapHover, 0);
         int turns;
         int mouseOffset = 0;
         int newCursor;
@@ -4316,7 +4316,7 @@ int advManager::processHover(int mouseX, int mouseY)
                           ? turns
                           : mouseOffset;
         g_mouseManager->setPointer(newCursor,
-                                   mouseManager::ADVENTURE_SET);
+                                   MouseManager::ADVENTURE_SET);
         return 1;
         }
         }
@@ -4324,14 +4324,14 @@ int advManager::processHover(int mouseX, int mouseY)
         if (g_mouseManager->m_frame < HOVER_SCROLL_POINTER_FIRST
             || g_mouseManager->m_frame > HOVER_SCROLL_POINTER_LAST
             || !mouseInScrollZone())
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
         m_advWindow->processHover(mouseX, mouseY);
     }
     return 1;
 }
 
 VA(0x0040ec80, 0xA)  // dc 0xfd6c
-void advManager::reseed(int targetX, int targetY)
+void AdvManager::reseed(int targetX, int targetY)
 {
     m_seedingValid = 0;
 }
@@ -4365,7 +4365,7 @@ void advManager::reseed(int targetX, int targetY)
 // global cannot survive two calls, so the manager is hoisted into a local
 // here exactly as at advmgr.cpp:2235.
 VA(0x0040ec90, 0x5AD)  // anchor-callee, dc 0xfd84
-int advManager::processSearch(int x, int y, int z)
+int AdvManager::processSearch(int x, int y, int z)
 {
     Hero* currHero;
     SAMPLE2 digSample;
@@ -4501,14 +4501,14 @@ int advManager::processSearch(int x, int y, int z)
         showRoute(1, 0, 0);
         g_advManager->m_advWindow->updateHeroLocators(-1, 1, 1);
 
-        advManager* dimTarget = g_advManager;
+        AdvManager* dimTarget = g_advManager;
         if (g_currentPlayer->isLocalHuman()
             && g_currentPlayer->hasMobileHero())
             dimTarget->m_advWindow->widgetClearStatus(
-                11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                11, Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
         else
             dimTarget->m_advWindow->widgetSetStatus(
-                11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                11, Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
     }
 
     m_seedingValid = 0;
@@ -4516,7 +4516,7 @@ int advManager::processSearch(int x, int y, int z)
 }
 
 VA(0x0040f270, 0x7D)  // dc 0x10520
-void advManager::updateScreen(int allowIntermediateMouse, int forceDraw)
+void AdvManager::updateScreen(int allowIntermediateMouse, int forceDraw)
 {
     g_windowManager->updateScreen(ADVENTURE_SCREEN_X, ADVENTURE_SCREEN_Y,
                                   ADVENTURE_SCREEN_WIDTH,
@@ -4536,7 +4536,7 @@ void advManager::updateScreen(int allowIntermediateMouse, int forceDraw)
 }
 
 VA(0x0040f2f0, 0xF8)  // dc 0x10640
-void advManager::drawAdventureMapGems()
+void AdvManager::drawAdventureMapGems()
 {
     int player = g_game->getLocalPlayerGamePos();
     m_gemIcons[0]->draw(0, player, 0, 0, 46, 46,
@@ -4550,7 +4550,7 @@ void advManager::drawAdventureMapGems()
 }
 
 VA(0x0040f3f0, 0x47D)  // dc 0x10788
-void advManager::completeDraw(int startX, int startY, int z, unsigned char forceDraw, unsigned char updateBottomView)
+void AdvManager::completeDraw(int startX, int startY, int z, unsigned char forceDraw, unsigned char updateBottomView)
 {
     pollSound();
 
@@ -4671,14 +4671,14 @@ void advManager::completeDraw(int startX, int startY, int z, unsigned char force
 }
 
 VA(0x0040f870, 0x43)  // dc 0x10c9c
-void advManager::completeDraw(unsigned char forceDraw)
+void AdvManager::completeDraw(unsigned char forceDraw)
 {
     completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
                  forceDraw, true);
 }
 
 VA(0x0040f8c0, 0x265)  // dc 0x10cf4
-int advManager::getCloudLookup(int srcX, int srcY, int z)
+int AdvManager::getCloudLookup(int srcX, int srcY, int z)
 {
     int lookup = 0;
 
@@ -4740,7 +4740,7 @@ int advManager::getCloudLookup(int srcX, int srcY, int z)
 }
 
 VA(0x0040fb30, 0x167)  // dc 0x110c0
-bool advManager::scanForHeroOrBoat(int srcX, int srcY, int z,
+bool AdvManager::scanForHeroOrBoat(int srcX, int srcY, int z,
                                    unsigned short type,
                                    DrawParts (&parts)[6])
 {
@@ -4830,7 +4830,7 @@ int getFlaggedObjectOwner(NewmapCell* thisCell)
 }
 
 VA(0x0040fe30, 0x484)  // dc 0x11424
-void advManager::drawHeroPart(int part, DrawParts& heroParts, int baseX,
+void AdvManager::drawHeroPart(int part, DrawParts& heroParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
                               int tileh)
 {
@@ -4840,7 +4840,7 @@ void advManager::drawHeroPart(int part, DrawParts& heroParts, int baseX,
     int heroCellX = part / 3;
 
     if (currHero->m_flags & 0x40000) {
-        boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
+        Boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
         NewmapCell* heroCell = getCell(currHero->getLocation());
 
         if (!(heroCell->m_flags0011 & 0x200)) {
@@ -4892,7 +4892,7 @@ void advManager::drawHeroPart(int part, DrawParts& heroParts, int baseX,
 }
 
 VA(0x004102c0, 0x494)  // dc 0x11958
-void advManager::drawHeroPartShadow(int part, DrawParts& heroParts,
+void AdvManager::drawHeroPartShadow(int part, DrawParts& heroParts,
                                     int baseX, int baseY, int tilex,
                                     int tiley, int tilew, int tileh)
 {
@@ -4905,7 +4905,7 @@ void advManager::drawHeroPartShadow(int part, DrawParts& heroParts,
         if (currHero->m_owner < 0 || currHero->m_owner >= 8)
             return;
 
-        boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
+        Boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
         NewmapCell* heroCell = getCell(currHero->getLocation());
 
         if (!(heroCell->m_flags0011 & 0x200)) {
@@ -4957,11 +4957,11 @@ void advManager::drawHeroPartShadow(int part, DrawParts& heroParts,
 }
 
 VA(0x00410760, 0x24F)  // dc 0x11ea4
-void advManager::drawBoatPart(int part, DrawParts& boatParts, int baseX,
+void AdvManager::drawBoatPart(int part, DrawParts& boatParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
                               int tileh)
 {
-    boat* currBoat = g_game->getBoat(boatParts.m_id);
+    Boat* currBoat = g_game->getBoat(boatParts.m_id);
     int boatCellY = part % 3;
     int boatCellX = part / 3;
     NewmapCell* boatCell = getCell(
@@ -4988,11 +4988,11 @@ void advManager::drawBoatPart(int part, DrawParts& boatParts, int baseX,
 }
 
 VA(0x004109b0, 0x24F)  // dc 0x120ec
-void advManager::drawBoatPartShadow(int part, DrawParts& boatParts,
+void AdvManager::drawBoatPartShadow(int part, DrawParts& boatParts,
                                     int baseX, int baseY, int tilex,
                                     int tiley, int tilew, int tileh)
 {
-    boat* currBoat = g_game->getBoat(boatParts.m_id);
+    Boat* currBoat = g_game->getBoat(boatParts.m_id);
     int boatCellY = part % 3;
     int boatCellX = part / 3;
     NewmapCell* boatCell = getCell(
@@ -5053,7 +5053,7 @@ void advManager::drawBoatPartShadow(int part, DrawParts& boatParts,
 // before this function) retain 87.7661 in all 34 trials. No probe noise
 // is retained; these two search placements do not recover the loss.
 VA(0x00410c00, 0x98E)  // anchor-callee, dc 0x12334
-void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
+void AdvManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
@@ -5366,7 +5366,7 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 // disposable forest trials recorded beside drawAdvObj retain 85.1872
 // for this function. No probe noise is retained; recovery remains open.
 VA(0x00411590, 0x5E4)  // anchor-callee, dc 0x12fcc
-void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
+void AdvManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
@@ -5561,7 +5561,7 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
 }
 
 VA(0x00411b80, 0x1D7)  // dc 0x13890
-void advManager::drawRiver(int srcX, int srcY, int z, int destX, int destY)
+void AdvManager::drawRiver(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
@@ -5609,7 +5609,7 @@ void advManager::drawRiver(int srcX, int srcY, int z, int destX, int destY)
 }
 
 VA(0x00411d60, 0x1EC)  // dc 0x13a64
-void advManager::drawRoad(int srcX, int srcY, int z, int destX, int destY)
+void AdvManager::drawRoad(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
@@ -5659,7 +5659,7 @@ void advManager::drawRoad(int srcX, int srcY, int z, int destX, int destY)
 }
 
 VA(0x00411f50, 0x15F)  // dc 0x13c68
-void advManager::drawArrowShadow(int srcX, int srcY, int z, int destX,
+void AdvManager::drawArrowShadow(int srcX, int srcY, int z, int destX,
                                  int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
@@ -5704,7 +5704,7 @@ void advManager::drawArrowShadow(int srcX, int srcY, int z, int destX,
 }
 
 VA(0x004120b0, 0x162)  // dc 0x13e28
-void advManager::drawArrow(int srcX, int srcY, int z, int destX, int destY)
+void AdvManager::drawArrow(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
@@ -5747,7 +5747,7 @@ void advManager::drawArrow(int srcX, int srcY, int z, int destX, int destY)
 }
 
 VA(0x00412220, 0x248)  // dc 0x13fc8
-void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
+void AdvManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth)
         return;
@@ -5837,7 +5837,7 @@ void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
 // triggerY, z)` scores 91.2827.  The written default-then-assign form is the
 // maximum at both.
 VA(0x00412470, 0x482)  // linkorder, dc 0x142e0
-void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
+void AdvManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
@@ -5965,7 +5965,7 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 }
 
 VA(0x00412900, 0x2CB)  // dc 0x147c4
-void advManager::drawGround(int srcX, int srcY, int z, int destX, int destY)
+void AdvManager::drawGround(int srcX, int srcY, int z, int destX, int destY)
 {
     NewmapCell* thisCell = getCell(
         type_point(srcX, srcY, z));
@@ -6039,7 +6039,7 @@ void advManager::drawGround(int srcX, int srcY, int z, int destX, int destY)
 
 // E:\gamedcs\advmgr.cpp:7019
 DC_ONLY(0x14b08, 0x88)
-NewmapCell* advManager::getCell(int x, int y, int z)
+NewmapCell* AdvManager::getCell(int x, int y, int z)
 {
     // @stub
 }
@@ -6056,7 +6056,7 @@ NewmapCell* advManager::getCell(int x, int y, int z)
 DATA(0x006aac3c) extern int g_unnamed6aac3c;
 
 VA(0x00412bd0, 0x6C)  // dc 0x14b90
-NewmapCell* advManager::getCell(type_point point)
+NewmapCell* AdvManager::getCell(type_point point)
 {
     // DC advmgr.cpp:7028/7029 preserve both NewfullMap overloads.
     // Retail 0x412be6 folds the zero-coordinate call to cellData, and
@@ -6090,9 +6090,9 @@ NewmapCell* advManager::getCell(type_point point)
 // pixel block use a hardcoded 0x640-byte stride.
 
 VA(0x00412c40, 0xB41)  // linkorder, dc 0x14bec
-void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsigned char partialUpdate, unsigned char viewMines, unsigned char viewHeros, unsigned char viewTowns)
+void AdvManager::updateRadar(type_point origin, unsigned char updateFlag, unsigned char partialUpdate, unsigned char viewMines, unsigned char viewHeros, unsigned char viewTowns)
 {
-    widget* radar = m_advWindow->m_radarWidget;
+    Widget* radar = m_advWindow->m_radarWidget;
     int rectX = radar->m_x;
     int rectY = radar->m_y;
     int rectWidth = radar->m_width;
@@ -6107,7 +6107,7 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
 
     int lastColumn = g_mapWidth - 1;
     int lastRow = g_mapHeight - 1;
-    playerData* localPlayer = g_game->getLocalPlayer();
+    PlayerData* localPlayer = g_game->getLocalPlayer();
 
     if (!g_currentPlayer->isHuman() && m_heroLogoShowing == 0
         && (!g_networkActive69954c || g_unk691209))
@@ -6466,7 +6466,7 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
 }
 
 VA(0x00413790, 0x27)  // dc 0x15f7c
-void advManager::updateRadar(unsigned char updateFlag, unsigned char partialUpdate, unsigned char viewMines, unsigned char viewHeroes, unsigned char viewTowns)
+void AdvManager::updateRadar(unsigned char updateFlag, unsigned char partialUpdate, unsigned char viewMines, unsigned char viewHeroes, unsigned char viewTowns)
 {
     updateRadar(m_radarOrigin, updateFlag, partialUpdate, viewMines,
                 viewHeroes, viewTowns);
@@ -6514,7 +6514,7 @@ void advManager::updateRadar(unsigned char updateFlag, unsigned char partialUpda
 // data/accessor surface; the audit retains that ownership gap, including
 // GetItemId. It is not evidence for a copied helper body in this caller.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
-void advManager::quickInfo(int cellX, int cellY, int z)
+void AdvManager::quickInfo(int cellX, int cellY, int z)
 {
     // DC records tempText[500]. Retail bases it at [ebp-0x238] with
     // separate dwords beginning at [ebp-0x44], exactly 500 bytes later.
@@ -6523,7 +6523,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
     int width;
     int visited;
     NewmapCell* testCell;
-    playerData* player;
+    PlayerData* player;
     type_point mapPoint;
     long x;
     Hero* currHero;
@@ -6554,7 +6554,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
             strcpy(g_text, (*g_generalText)[
                 GENERAL_TEXT_QUICK_INFO_SHROUDED]);
         } else {
-            type_cell_adjuster adjuster;
+            CellAdjuster adjuster;
             testCell = adjuster.getTriggerCell(testCell, cellX, cellY);
 
             const char* separator = DATA_COMPGEN(
@@ -6690,7 +6690,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 int bankType;
                 bankType = testCell->m_objectIndex;
                 getCreatureBankHelpText(
-                    g_text, testCell, type_creature_bank_type(bankType), g_unnamed69778c,
+                    g_text, testCell, CreatureBankType(bankType), g_unnamed69778c,
                     newLine, 1);
                 break;
             }
@@ -7429,7 +7429,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
 
 // E:\gamedcs\advmgr.cpp:8816
 DC_ONLY(0x18c2c, 0x58)
-void advManager::clearBottomView()
+void AdvManager::clearBottomView()
 {
     // @stub
 }
@@ -7438,7 +7438,7 @@ void advManager::clearBottomView()
 #endif  // @carcass
 
 VA(0x00415d60, 0x78)  // dc 0x18c84
-void advManager::overrideBottomView(advManager::EBottomViewType view, int time)
+void AdvManager::overrideBottomView(AdvManager::BottomViewType view, int time)
 {
     m_bottomViewOverride = view;
     if (view != BOTTOM_VIEW_DEFAULT && view != BOTTOM_VIEW_8) {
@@ -7468,7 +7468,7 @@ void advManager::overrideBottomView(advManager::EBottomViewType view, int time)
 }
 
 VA(0x00415de0, 0x140)  // dc 0x18d38
-void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWindow, unsigned char update)
+void AdvManager::updBottomView(unsigned char forceUpdate, unsigned char drawWindow, unsigned char update)
 {
     if (m_bottomViewOverride == BOTTOM_VIEW_8)
         return;
@@ -7515,7 +7515,7 @@ void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWind
 }
 
 VA(0x00415f20, 0x87)  // dc 0x18f48
-unsigned char advManager::updBottomViewEnemyTurn(unsigned char forceUpdate)
+unsigned char AdvManager::updBottomViewEnemyTurn(unsigned char forceUpdate)
 {
     unsigned char changed = 0;
 
@@ -7530,7 +7530,7 @@ unsigned char advManager::updBottomViewEnemyTurn(unsigned char forceUpdate)
 }
 
 VA(0x00415fb0, 0xB0)  // dc 0x18fc4
-unsigned char advManager::updBottomViewNewTurn(unsigned char forceUpdate)
+unsigned char AdvManager::updBottomViewNewTurn(unsigned char forceUpdate)
 {
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_1) {
         m_advWindow->animateBottomView(0);
@@ -7550,7 +7550,7 @@ unsigned char advManager::updBottomViewNewTurn(unsigned char forceUpdate)
 // invocation clears the representation inline. All resource stores, override
 // timing, forced refresh and resource-display update instructions agree.
 VA(0x00416060, 0xF7)  // anchor-global, dc 0x19098
-void advManager::bvResMsg(const char* msg, int resType, int resQty)
+void AdvManager::bvResMsg(const char* msg, int resType, int resQty)
 {
     m_bottomViewResourceType = resType;
     m_bottomViewResourceQuantity = resQty;
@@ -7567,7 +7567,7 @@ void advManager::bvResMsg(const char* msg, int resType, int resQty)
 }
 
 VA(0x00416160, 0xAF)  // dc 0x190fc
-unsigned char advManager::updBottomViewResMsg(unsigned char forceUpdate)
+unsigned char AdvManager::updBottomViewResMsg(unsigned char forceUpdate)
 {
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_6)
         return 0;
@@ -7588,7 +7588,7 @@ unsigned char advManager::updBottomViewResMsg(unsigned char forceUpdate)
 // assign(const char*, length) are byte-identical; iterator-range assign is
 // worse and was rejected.
 VA(0x00416210, 0xD7)  // anchor-global, dc 0x19194
-void advManager::bvMessage(const char* msg)
+void AdvManager::bvMessage(const char* msg)
 {
     // MEASURED NEGATIVE, do not retry: same pin as BVResMsg above, same
     // reason - it costs 92.68 -> 21.28 here.
@@ -7599,7 +7599,7 @@ void advManager::bvMessage(const char* msg)
 }
 
 VA(0x004162f0, 0xA1)  // dc 0x191d0
-unsigned char advManager::updBottomViewMessage(unsigned char forceUpdate)
+unsigned char AdvManager::updBottomViewMessage(unsigned char forceUpdate)
 {
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_7)
         return 0;
@@ -7612,7 +7612,7 @@ unsigned char advManager::updBottomViewMessage(unsigned char forceUpdate)
 }
 
 VA(0x004163a0, 0xA6)  // dc 0x1927c
-unsigned char advManager::updBottomViewKingdom(unsigned char forceUpdate)
+unsigned char AdvManager::updBottomViewKingdom(unsigned char forceUpdate)
 {
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_2)
         return 0;
@@ -7625,7 +7625,7 @@ unsigned char advManager::updBottomViewKingdom(unsigned char forceUpdate)
 }
 
 VA(0x00416450, 0x9A)  // dc 0x1930c
-unsigned char advManager::updBottomViewHero(unsigned char forceUpdate)
+unsigned char AdvManager::updBottomViewHero(unsigned char forceUpdate)
 {
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_3)
         return 0;
@@ -7637,7 +7637,7 @@ unsigned char advManager::updBottomViewHero(unsigned char forceUpdate)
 }
 
 VA(0x004164f0, 0x9A)  // dc 0x19388
-unsigned char advManager::updBottomViewTown(unsigned char forceUpdate)
+unsigned char AdvManager::updBottomViewTown(unsigned char forceUpdate)
 {
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_4)
         return 0;
@@ -7655,7 +7655,7 @@ DC_ONLY(0x19420, 0x9C)
 static SkillMastery getIdentifyLevel(type_point point)
 {
     int identifyLevel = eMasteryInvalid;
-    playerData* player = &g_game->m_players[g_unnamed69778c];
+    PlayerData* player = &g_game->m_players[g_unnamed69778c];
 
     for (int i = 0; i < player->m_numHeroes; i++) {
         Hero* currentHero = g_game->getHero(player->m_heroes[i]);
@@ -7667,7 +7667,7 @@ static SkillMastery getIdentifyLevel(type_point point)
 }
 
 VA(0x00416590, 0x210)  // dc 0x194bc
-void advManager::heroQuickView(int heroId, int x, int y,
+void AdvManager::heroQuickView(int heroId, int x, int y,
                                unsigned char displayDropShadow)
 {
     Hero* theHero = g_game->getHero(heroId);
@@ -7701,7 +7701,7 @@ const char* getBuildingName(int townType, int buildingId);
 // E:\gamedcs\advmgr.cpp:9115
 
 VA(0x004167a0, 0x7DB)  // anchor-callee, dc 0x19674
-void advManager::townQuickView(int townId, int x, int y,
+void AdvManager::townQuickView(int townId, int x, int y,
                                unsigned char displayDropShadow)
 {
     if (townId == -1)
@@ -7727,7 +7727,7 @@ void advManager::townQuickView(int townId, int x, int y,
 
     if (m_debugViewAll && thisTown->m_owner != g_netLocalGamePos) {
         std::string text;
-        playerData* ownerPlayer = &g_game->m_players[thisTown->m_owner];
+        PlayerData* ownerPlayer = &g_game->m_players[thisTown->m_owner];
         unsigned char first = 1;
 
         text = thisTown->m_name;
@@ -7838,12 +7838,12 @@ void advManager::townQuickView(int townId, int x, int y,
 
 // E:\gamedcs\advmgr.cpp:9243
 VA(0x00416f80, 0x1CD)  // anchor-callee, dc 0x19cdc
-void advManager::garrisonQuickView(int id, int x, int y)
+void AdvManager::garrisonQuickView(int id, int x, int y)
 {
     if (id == -1)
         return;
 
-    garrison* const thisGarrison = &g_game->m_garrisons[id];
+    Garrison* const thisGarrison = &g_game->m_garrisons[id];
     type_point point(thisGarrison->m_mapX, thisGarrison->m_mapY,
                      thisGarrison->m_mapZ);
 
@@ -7870,7 +7870,7 @@ void advManager::garrisonQuickView(int id, int x, int y)
 long aiApproximateStrength(const Hero* currentHero);
 
 VA(0x00417150, 0x2C9)  // dc 0x19e80
-void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
+void AdvManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
 {
     const int count = cell->m_extraInfo & 0xfff;
     CreatureType type;
@@ -7878,7 +7878,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
         type = CreatureType(cell->m_objectIndex);
     }
 
-    playerData* localPlayer = g_game->getLocalPlayer();
+    PlayerData* localPlayer = g_game->getLocalPlayer();
     g_game->getLocalPlayerGamePos();
 
     QuickCreatureWindow* window;
@@ -7941,7 +7941,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
 }
 
 VA(0x00417420, 0x146)  // dc 0x1a230
-void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBorder)
+void AdvManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBorder)
 {
     const int playerId = g_game->getLocalPlayerGamePos();
     Bitmap816* const bmp = ResourceManager::getBitmap816("AdvMap.pcx");
@@ -7970,7 +7970,7 @@ void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBo
 }
 
 VA(0x00417570, 0x2A)  // dc 0x1a3b0
-void advManager::deactivateCurrTown(unsigned char waitingPlayer)
+void AdvManager::deactivateCurrTown(unsigned char waitingPlayer)
 {
     if (waitingPlayer)
         g_game->getLocalPlayer()->m_currTownId = 0xff;
@@ -7979,7 +7979,7 @@ void advManager::deactivateCurrTown(unsigned char waitingPlayer)
 }
 
 VA(0x004175a0, 0x3A)  // dc 0x1a3f0
-void advManager::deactivateCurrHero(unsigned char waitingPlayer)
+void AdvManager::deactivateCurrHero(unsigned char waitingPlayer)
 {
     demobilizeCurrHero(waitingPlayer, 0);
     if (waitingPlayer)
@@ -7989,9 +7989,9 @@ void advManager::deactivateCurrHero(unsigned char waitingPlayer)
 }
 
 VA(0x004175e0, 0x9D)  // dc 0x1a440
-void advManager::mobilizeCurrHero(int inMove, unsigned char waitingPlayer, unsigned char drawChanges)
+void AdvManager::mobilizeCurrHero(int inMove, unsigned char waitingPlayer, unsigned char drawChanges)
 {
-    playerData* player = g_currentPlayer;
+    PlayerData* player = g_currentPlayer;
 
     if (waitingPlayer)
         player = g_game->getLocalPlayer();
@@ -8013,7 +8013,7 @@ void advManager::mobilizeCurrHero(int inMove, unsigned char waitingPlayer, unsig
 }
 
 VA(0x00417680, 0x1AF)  // dc 0x1a520
-void advManager::demobilizeCurrHero(unsigned char waitingPlayer,
+void AdvManager::demobilizeCurrHero(unsigned char waitingPlayer,
                                     unsigned char drawChanges)
 {
     if (!waitingPlayer && g_currentPlayer
@@ -8070,15 +8070,15 @@ void advManager::demobilizeCurrHero(unsigned char waitingPlayer,
 // identical; what is left is the register choice in the GetTown index
 // chain and reloc-name-only rows on data.
 VA(0x00417830, 0x2EB)  // anchor-global, dc 0x1a65c
-void advManager::setTownContext(int townId, unsigned char waitingPlayer, unsigned char update)
+void AdvManager::setTownContext(int townId, unsigned char waitingPlayer, unsigned char update)
 {
     demobilizeCurrHero(waitingPlayer, 0);
 
-    playerData* heroOwner = waitingPlayer ? g_game->getLocalPlayer()
+    PlayerData* heroOwner = waitingPlayer ? g_game->getLocalPlayer()
                                           : g_currentPlayer;
     heroOwner->m_currHeroId = -1;
 
-    playerData* player = g_currentPlayer;
+    PlayerData* player = g_currentPlayer;
     if (waitingPlayer)
         player = g_game->getLocalPlayer();
     player->m_currTownId = townId;
@@ -8107,9 +8107,9 @@ void advManager::setTownContext(int townId, unsigned char waitingPlayer, unsigne
     if (g_currentPlayer->isLocalHuman()
         || (g_unnamed6989c8 && g_unnamed69ccd4)) {
         g_windowManager->broadcastMessage(
-            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+            MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,
             AdventureMapWindow::MOVE_ID,
-            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+            Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
         if (m_showRoute)
             m_showRoute = 0;
     }
@@ -8174,7 +8174,7 @@ void advManager::setTownContext(int townId, unsigned char waitingPlayer, unsigne
 // named hero::get_target boundary before SeedTo; restoring that inline
 // helper is byte-flat and is source-shape truth rather than a score lever.
 VA(0x00417b20, 0x63E)  // anchor-global, dc 0x1a878
-void advManager::setHeroContext(int heroId, int inMove, unsigned char waitingPlayer, unsigned char drawChanges)
+void AdvManager::setHeroContext(int heroId, int inMove, unsigned char waitingPlayer, unsigned char drawChanges)
 {
     if (heroId == -1)
         return;
@@ -8187,9 +8187,9 @@ void advManager::setHeroContext(int heroId, int inMove, unsigned char waitingPla
             if (g_currentPlayer->isLocalHuman()
                 || (g_unnamed6989c8 && g_unnamed69ccd4)) {
                 g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,
                     AdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                    Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
                 if (m_showRoute)
                     m_showRoute = 0;
             }
@@ -8198,7 +8198,7 @@ void advManager::setHeroContext(int heroId, int inMove, unsigned char waitingPla
 
     deactivateCurrHero(waitingPlayer);
 
-    playerData* player = g_currentPlayer;
+    PlayerData* player = g_currentPlayer;
     if (waitingPlayer)
         player = g_game->getLocalPlayer();
     else
@@ -8327,7 +8327,7 @@ unsigned char saveGame(unsigned char campaignWinMode)
                 humanCount++;
         }
     }
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
 
     if (g_unnamed69774c)
         sprintf(g_unnamed691268,
@@ -8387,7 +8387,7 @@ DATA(0x0063a64c) static const int g_soundVolumes[8] = { 32, 28, 20, 10,
                                                         3,  2,  1,  0 };
 
 VA(0x004183d0, 0x245)  // dc 0x1b164
-void advManager::setEnvironmentOrigin(type_point point, int reset)
+void AdvManager::setEnvironmentOrigin(type_point point, int reset)
 {
     const int maxRange = 4;
     if (!g_soundManager->m_playSounds)
@@ -8453,7 +8453,7 @@ void advManager::setEnvironmentOrigin(type_point point, int reset)
 
 // E:\gamedcs\advmgr.cpp:9929
 DC_ONLY(0x1b520, 0x88)
-void advManager::CheckLoadSample(e_looping_sound_id id_num)
+void AdvManager::CheckLoadSample(ELoopingSoundId id_num)
 {
     // @stub
 }
@@ -8482,7 +8482,7 @@ void advManager::CheckLoadSample(e_looping_sound_id id_num)
 // against a short compares at 16 bits; a switch cannot.
 
 VA(0x00418620, 0x5E4)  // anchor-global, dc 0x1b5a8
-e_looping_sound_id advManager::getSoundId(int x, int y, int z)
+ELoopingSoundId AdvManager::getSoundId(int x, int y, int z)
 {
     NewmapCell* thisCell = m_fullMap->cell(x, y, z);
 
@@ -8692,13 +8692,13 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
 DATA(0x0065f794) extern const char* const g_loopingSoundNames[LOOPING_SOUND_COUNT];
 
 VA(0x00418c10, 0x1B1)  // dc 0x1be10
-void advManager::insertSound(int x, int y, int z, int soundPriority,
+void AdvManager::insertSound(int x, int y, int z, int soundPriority,
                              int soundsType)
 {
     if (x < 0 || y < 0 || z < 0 || x >= g_mapWidth || y >= g_mapHeight)
         return;
 
-    e_looping_sound_id idNum = getSoundId(x, y, z);
+    ELoopingSoundId idNum = getSoundId(x, y, z);
     if (idNum == LOOPING_SOUND_INVALID)
         return;
 
@@ -8749,7 +8749,7 @@ void advManager::insertSound(int x, int y, int z, int soundPriority,
 }
 
 VA(0x00418dd0, 0x4DF)  // dc 0x1c05c
-void advManager::showRoute(int updateScreen, int reseed, int changeButton)
+void AdvManager::showRoute(int updateScreen, int reseed, int changeButton)
 {
     int steps;
     Hero* curr;
@@ -8807,11 +8807,11 @@ void advManager::showRoute(int updateScreen, int reseed, int changeButton)
             }
         }
         if (changeButton) {
-            widgetStatus = moveAvail ? widget::WIDGET_CLEAR_STATUS
-                                     : widget::WIDGET_SET_STATUS;
+            widgetStatus = moveAvail ? Widget::WIDGET_CLEAR_STATUS
+                                     : Widget::WIDGET_SET_STATUS;
             g_windowManager->broadcastMessage(
                 MESSAGE_WIDGET, widgetStatus, AdventureMapWindow::MOVE_ID,
-                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
         }
     } else {
         hideRoute(updateScreen, 1, 1);
@@ -8823,7 +8823,7 @@ void advManager::showRoute(int updateScreen, int reseed, int changeButton)
 }
 
 VA(0x00419300, 0x14C)  // dc 0x1c484
-void advManager::hideRoute(int updateScreen, int removeTarget,
+void AdvManager::hideRoute(int updateScreen, int removeTarget,
                            int changeButton)
 {
     if (!g_currentPlayer->isLocalHuman()
@@ -8832,9 +8832,9 @@ void advManager::hideRoute(int updateScreen, int removeTarget,
 
     if (changeButton) {
         g_windowManager->broadcastMessage(
-            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+            MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,
             AdventureMapWindow::MOVE_ID,
-            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+            Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
     }
 
     if (removeTarget) {
@@ -8859,7 +8859,7 @@ void advManager::hideRoute(int updateScreen, int removeTarget,
 #if 0  // @carcass
 // E:\gamedcs\advmgr.cpp:10558
 DC_ONLY(0x1c580, 0x16)
-void advManager::CheckDimHero()
+void AdvManager::CheckDimHero()
 {
     // @stub
 }
@@ -8867,17 +8867,17 @@ void advManager::CheckDimHero()
 
 VA(0x00419450, 0x43)  // dc 0x1c5ec
 #pragma auto_inline(off)
-void advManager::checkDimNextHeroBut()
+void AdvManager::checkDimNextHeroBut()
 {
     if (g_currentPlayer->isLocalHuman() && g_currentPlayer->hasMobileHero())
-        m_advWindow->widgetClearStatus(11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        m_advWindow->widgetClearStatus(11, Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
     else
-        m_advWindow->widgetSetStatus(11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        m_advWindow->widgetSetStatus(11, Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
 }
 #pragma auto_inline(on)
 
 VA(0x004194a0, 0xC7)  // dc 0x1c64c
-void advManager::seedTo(type_point target)
+void AdvManager::seedTo(type_point target)
 {
     if (!g_currentPlayer->isLocalHuman())
         return;
@@ -8905,7 +8905,7 @@ void advManager::seedTo(type_point target)
 }
 
 VA(0x00419570, 0x49)  // dc 0x1c750
-void advManager::forceNewHover()
+void AdvManager::forceNewHover()
 {
     if (g_currentPlayer->isLocalHuman()) {
         int x;
@@ -8929,7 +8929,7 @@ DATA(0x00691674) extern unsigned long g_unnamed691674;
 
 // E:\gamedcs\advmgr.cpp:10624
 VA(0x004195c0, 0x258)  // anchor-callee, dc 0x1c7e4
-void advManager::screenScroll(int dir, int changeMouse)
+void AdvManager::screenScroll(int dir, int changeMouse)
 {
     g_unnamed698758.m_windowScrollSpeed =
         limit(0, g_unnamed698758.m_windowScrollSpeed, 2);
@@ -8972,7 +8972,7 @@ void advManager::screenScroll(int dir, int changeMouse)
 
     if (changeMouse)
         g_mouseManager->setPointer(dir + ADV_SCROLL_POINTER,
-                                   mouseManager::ADVENTURE_SET);
+                                   MouseManager::ADVENTURE_SET);
 
     if (x < -9)
         x = -9;
@@ -9008,7 +9008,7 @@ void advManager::screenScroll(int dir, int changeMouse)
 // The DC also emits MouseInScrollZone (dc 0x1ccf8); its canonical member
 // definition follows this routine. Retail expands the hover callers' tests.
 VA(0x00419820, 0x169)  // dc 0x1cb08
-void advManager::checkScreenScroll()
+void AdvManager::checkScreenScroll()
 {
     int x;
     int y;
@@ -9056,28 +9056,28 @@ void advManager::checkScreenScroll()
     if (g_mouseManager->m_frame >= ADV_SCROLL_POINTER
         && g_mouseManager->m_frame <= ADV_SCROLL_NORTHWEST
         && origX == m_radarOrigin.m_x && origY == m_radarOrigin.m_y)
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
 }
 
 // DC advmgr.cpp:10756 records MouseInScrollZone as an ordinary public member.
 // Complete expands this body in ProcessHover; lack of a retained body does
 // not change its source ownership.
-int advManager::mouseInScrollZone()
+int AdvManager::mouseInScrollZone()
 {
     int rx;
     int ry;
     g_mouseManager->mouseCoords(rx, ry);
-    if (rx < 0 || rx >= advManager::HOVER_SCREEN_WIDTH || ry < 0
-        || ry >= advManager::HOVER_SCREEN_HEIGHT)
+    if (rx < 0 || rx >= AdvManager::HOVER_SCREEN_WIDTH || ry < 0
+        || ry >= AdvManager::HOVER_SCREEN_HEIGHT)
         return 0;
-    if (rx >= advManager::HOVER_SCROLL_MARGIN && rx <= advManager::HOVER_SCROLL_RIGHT
-        && ry >= advManager::HOVER_SCROLL_MARGIN && ry <= advManager::HOVER_SCROLL_BOTTOM)
+    if (rx >= AdvManager::HOVER_SCROLL_MARGIN && rx <= AdvManager::HOVER_SCROLL_RIGHT
+        && ry >= AdvManager::HOVER_SCROLL_MARGIN && ry <= AdvManager::HOVER_SCROLL_BOTTOM)
         return 0;
     return 1;
 }
 
 VA(0x00419990, 0x2E3)  // dc 0x1cd68
-void advManager::setInitialMapOrigin()
+void AdvManager::setInitialMapOrigin()
 {
     m_lastHoverX = m_lastHoverY = 0;
 
@@ -9089,7 +9089,7 @@ void advManager::setInitialMapOrigin()
     } else if (g_currentPlayer->isLocalHuman()) {
         mobilizeCurrHero(0, 0, 0);
     } else {
-        playerData* player = g_currentPlayer->isLocalHuman()
+        PlayerData* player = g_currentPlayer->isLocalHuman()
                                  ? g_currentPlayer
                                  : g_game->getLocalPlayer();
         if (player->m_numHeroes > 0) {
@@ -9132,10 +9132,10 @@ void popupPlayerTurnInfo()
 
     g_soundManager->stopMP3();
     SetForegroundWindow(g_hwndApp);
-    g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+    g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
 
     if (!g_currentPlayer->isLocalHuman())
-        g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_DEFAULT, -1);
+        g_advManager->overrideBottomView(AdvManager::BOTTOM_VIEW_DEFAULT, -1);
 
     g_soundManager->m_playSounds = 1;
     SAMPLE2 sample2 = loadPlaySample("SysMsg.wav");
@@ -9167,7 +9167,7 @@ void popupPlayerTurnInfo()
 }
 
 VA(0x00419e00, 0x300)  // dc 0x1d30c
-void advManager::startLocalPlayerTurn()
+void AdvManager::startLocalPlayerTurn()
 {
     if (g_game->m_playerDisabled[g_netLocalGamePos])
         computeAdvNetControl();
@@ -9213,7 +9213,7 @@ void advManager::startLocalPlayerTurn()
     m_advWindow->updateTownLocators(-1, 1, 1);
     m_advWindow->updateResourceDisplay(1, 1);
 
-    advManager* adv = g_advManager;
+    AdvManager* adv = g_advManager;
     if (g_currentPlayer->isLocalHuman()) {
         int mouseX;
         int mouseY;
@@ -9237,7 +9237,7 @@ void advManager::startLocalPlayerTurn()
 }
 
 VA(0x0041a100, 0xD9)  // dc 0x1d6ec
-void advManager::loadRemote(unsigned char makeOrig)
+void AdvManager::loadRemote(unsigned char makeOrig)
 {
     g_turnDuration69d630.clear();
     CHourGlass hourGlass(1);
@@ -9261,7 +9261,7 @@ void advManager::loadRemote(unsigned char makeOrig)
 }
 
 VA(0x0041a1e0, 0xF1)  // dc 0x1d804
-void advManager::trimLoopingSounds(int maxSoundsAllowed)
+void AdvManager::trimLoopingSounds(int maxSoundsAllowed)
 {
     if (g_highMemBuffer > 0)
         maxSoundsAllowed += g_highMemBuffer / 100;
@@ -9308,77 +9308,77 @@ void advManager::trimLoopingSounds(int maxSoundsAllowed)
 }
 
 VA(0x0041a2e0, 0xBC)  // dc 0x1d9e0
-void advManager::disableButtons()
+void AdvManager::disableButtons()
 {
-    if (g_advManager->m_status != baseManager::STATUS_ACTIVE)
+    if (g_advManager->m_status != BaseManager::STATUS_ACTIVE)
         return;
     m_advWindow->widgetClearStatus(AdventureMapWindow::KINGDOM_OVERVIEW_ID,
-                                 widget::WIDGET_ACTIVE);
+                                 Widget::WIDGET_ACTIVE);
     m_advWindow->widgetClearStatus(AdventureMapWindow::ELEVATION_TOGGLE_ID,
-                                 widget::WIDGET_ACTIVE);
+                                 Widget::WIDGET_ACTIVE);
     m_advWindow->widgetClearStatus(AdventureMapWindow::QUEST_LOG_ID,
-                                 widget::WIDGET_ACTIVE);
+                                 Widget::WIDGET_ACTIVE);
     m_advWindow->widgetClearStatus(AdventureMapWindow::SLEEP_ID,
-                                 widget::WIDGET_ACTIVE);
+                                 Widget::WIDGET_ACTIVE);
     m_advWindow->widgetClearStatus(AdventureMapWindow::MOVE_ID,
-                                 widget::WIDGET_ACTIVE);
+                                 Widget::WIDGET_ACTIVE);
     m_advWindow->widgetClearStatus(AdventureMapWindow::CAST_SPELL_ID,
-                                 widget::WIDGET_ACTIVE);
+                                 Widget::WIDGET_ACTIVE);
     m_advWindow->widgetClearStatus(AdventureMapWindow::ADVENTURE_OPTIONS_ID,
-                                 widget::WIDGET_ACTIVE);
+                                 Widget::WIDGET_ACTIVE);
     m_advWindow->widgetClearStatus(AdventureMapWindow::SYSTEM_OPTIONS_ID,
-                                 widget::WIDGET_ACTIVE);
+                                 Widget::WIDGET_ACTIVE);
     m_advWindow->widgetClearStatus(AdventureMapWindow::NEXT_HERO_ID,
-                                 widget::WIDGET_ACTIVE);
+                                 Widget::WIDGET_ACTIVE);
     m_advWindow->widgetClearStatus(AdventureMapWindow::END_TURN_ID,
-                                 widget::WIDGET_ACTIVE);
+                                 Widget::WIDGET_ACTIVE);
     m_advWindow->widgetClearStatus(AdventureMapWindow::HERO_UP_ID,
-                                 widget::WIDGET_ACTIVE);
+                                 Widget::WIDGET_ACTIVE);
     m_advWindow->widgetClearStatus(AdventureMapWindow::HERO_DOWN_ID,
-                                 widget::WIDGET_ACTIVE);
+                                 Widget::WIDGET_ACTIVE);
     m_advWindow->widgetClearStatus(AdventureMapWindow::TOWN_UP_ID,
-                                 widget::WIDGET_ACTIVE);
+                                 Widget::WIDGET_ACTIVE);
     m_advWindow->widgetClearStatus(AdventureMapWindow::TOWN_DOWN_ID,
-                                 widget::WIDGET_ACTIVE);
+                                 Widget::WIDGET_ACTIVE);
 }
 
 VA(0x0041a3a0, 0xBC)  // dc 0x1dafc
-void advManager::enableButtons()
+void AdvManager::enableButtons()
 {
-    if (g_advManager->m_status != baseManager::STATUS_ACTIVE)
+    if (g_advManager->m_status != BaseManager::STATUS_ACTIVE)
         return;
     m_advWindow->widgetSetStatus(AdventureMapWindow::KINGDOM_OVERVIEW_ID,
-                               widget::WIDGET_ACTIVE);
+                               Widget::WIDGET_ACTIVE);
     m_advWindow->widgetSetStatus(AdventureMapWindow::ELEVATION_TOGGLE_ID,
-                               widget::WIDGET_ACTIVE);
+                               Widget::WIDGET_ACTIVE);
     m_advWindow->widgetSetStatus(AdventureMapWindow::QUEST_LOG_ID,
-                               widget::WIDGET_ACTIVE);
+                               Widget::WIDGET_ACTIVE);
     m_advWindow->widgetSetStatus(AdventureMapWindow::SLEEP_ID,
-                               widget::WIDGET_ACTIVE);
+                               Widget::WIDGET_ACTIVE);
     m_advWindow->widgetSetStatus(AdventureMapWindow::MOVE_ID,
-                               widget::WIDGET_ACTIVE);
+                               Widget::WIDGET_ACTIVE);
     m_advWindow->widgetSetStatus(AdventureMapWindow::CAST_SPELL_ID,
-                               widget::WIDGET_ACTIVE);
+                               Widget::WIDGET_ACTIVE);
     m_advWindow->widgetSetStatus(AdventureMapWindow::ADVENTURE_OPTIONS_ID,
-                               widget::WIDGET_ACTIVE);
+                               Widget::WIDGET_ACTIVE);
     m_advWindow->widgetSetStatus(AdventureMapWindow::SYSTEM_OPTIONS_ID,
-                               widget::WIDGET_ACTIVE);
+                               Widget::WIDGET_ACTIVE);
     m_advWindow->widgetSetStatus(AdventureMapWindow::NEXT_HERO_ID,
-                               widget::WIDGET_ACTIVE);
+                               Widget::WIDGET_ACTIVE);
     m_advWindow->widgetSetStatus(AdventureMapWindow::END_TURN_ID,
-                               widget::WIDGET_ACTIVE);
+                               Widget::WIDGET_ACTIVE);
     m_advWindow->widgetSetStatus(AdventureMapWindow::HERO_UP_ID,
-                               widget::WIDGET_ACTIVE);
+                               Widget::WIDGET_ACTIVE);
     m_advWindow->widgetSetStatus(AdventureMapWindow::HERO_DOWN_ID,
-                               widget::WIDGET_ACTIVE);
+                               Widget::WIDGET_ACTIVE);
     m_advWindow->widgetSetStatus(AdventureMapWindow::TOWN_UP_ID,
-                               widget::WIDGET_ACTIVE);
+                               Widget::WIDGET_ACTIVE);
     m_advWindow->widgetSetStatus(AdventureMapWindow::TOWN_DOWN_ID,
-                               widget::WIDGET_ACTIVE);
+                               Widget::WIDGET_ACTIVE);
 }
 
 VA(0x0041a460, 0x1FB)  // dc 0x1dc24
-unsigned char advManager::findAdjacentMonster(type_point point, type_point* result, type_point excluded)
+unsigned char AdvManager::findAdjacentMonster(type_point point, type_point* result, type_point excluded)
 {
     RECT rect;
     int x;
@@ -9484,9 +9484,9 @@ int mapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit)
 // eats it). why-reg finds first defs aligned - past-first-defs
 // schedule, the bounded class.
 VA(0x0041a7f0, 0x307)  // anchor-callee, dc 0x1e068
-void advManager::viewPuzzle()
+void AdvManager::viewPuzzle()
 {
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
     demobilizeCurrHero(0, 1);
     int pos = g_game->getLocalPlayerGamePos();
     g_game->setupPuzzlePieces(pos, 0);
@@ -9542,7 +9542,7 @@ void advManager::viewPuzzle()
 
 // E:\gamedcs\advmgr.cpp:11287
 DC_ONLY(0x1e360, 0xE8)
-void advManager::PuzzleDraw(int startX, int startY, int z, int ultX, int ultY)
+void AdvManager::PuzzleDraw(int startX, int startY, int z, int ultX, int ultY)
 {
     // @stub
 }
@@ -9551,10 +9551,10 @@ void advManager::PuzzleDraw(int startX, int startY, int z, int ultX, int ultY)
 #endif  // @carcass
 
 VA(0x0041ab00, 0xF8)  // dc 0x1e448
-void advManager::doAdventureOptions()
+void AdvManager::doAdventureOptions()
 {
     trimLoopingSounds(4);
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
 
     unsigned char saveMobile = m_curHeroMobile;
     demobilizeCurrHero(0, 1);
@@ -9590,7 +9590,7 @@ void advManager::doAdventureOptions()
 
 // E:\gamedcs\advmgr.cpp:11352
 DC_ONLY(0x1e598, 0x4E)
-void advManager::DoAdvMenu()
+void AdvManager::DoAdvMenu()
 {
     // @stub
 }
@@ -9600,11 +9600,11 @@ void advManager::DoAdvMenu()
 unsigned char saveGame(unsigned char campaignWinMode);
 
 VA(0x0041ac00, 0x1AC)  // dc 0x1e5e8
-unsigned char advManager::doSystemOptions()
+unsigned char AdvManager::doSystemOptions()
 {
     int result = -1;
     trimLoopingSounds(4);
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
 
     unsigned char saveMobile = m_curHeroMobile;
     int walkSpeed = g_unnamed698758.m_walkSpeed;
@@ -9657,7 +9657,7 @@ unsigned char advManager::doSystemOptions()
 }
 
 VA(0x0041adb0, 0x25F)  // dc 0x1e86c
-int advManager::moreTreesNear(type_point point)
+int AdvManager::moreTreesNear(type_point point)
 {
     RECT rect;
     const int radius = 3;
@@ -9711,7 +9711,7 @@ int advManager::moreTreesNear(type_point point)
 
 // E:\gamedcs\advmgr.cpp:11501
 DC_ONLY(0x1eb78, 0x40)
-unsigned short advManager::GetRouteArray(int x, int y, int z)
+unsigned short AdvManager::GetRouteArray(int x, int y, int z)
 {
     // @stub
 }
@@ -9720,7 +9720,7 @@ unsigned short advManager::GetRouteArray(int x, int y, int z)
 #endif  // @carcass
 
 VA(0x0041b010, 0x27)  // dc 0x1ebb8
-unsigned short* advManager::getRouteArrayPtr(int x, int y, int z)
+unsigned short* AdvManager::getRouteArrayPtr(int x, int y, int z)
 {
     return &m_routeArray[(z * g_mapHeight + y) * g_mapWidth + x];
 }
@@ -9767,7 +9767,7 @@ CAdvPopup::~CAdvPopup()
 // result, rewrite the message from this object's three command fields, and
 // forward it to the executive.
 VA(0x0041b190, 0x2D)  // CAdvPopup vtable 0x63a6a8 slot 14, dc 0x1ec80
-int CAdvPopup::exitDialog(message& msg)
+int CAdvPopup::exitDialog(Message& msg)
 {
     g_windowManager->m_dialogReturn = m_exitCommand;
     msg.m_id = m_exitId;
@@ -9781,7 +9781,7 @@ int CAdvPopup::exitDialog(message& msg)
 // that control flow but gates the network pump on Complete's bVideoPaused:
 // base handler, expired-turn exit, CheckHandleNet, abort-message exit.
 VA(0x0041b1c0, 0x87)  // CAdvPopup vtable 0x63a6a8 slot 9, dc 0x1ecb4
-int CAdvPopup::windowHandler(message& msg)
+int CAdvPopup::windowHandler(Message& msg)
 {
     int ret = CHeroWindowEx::windowHandler(msg);
     if (ret)
@@ -9882,21 +9882,21 @@ int getMapExtra(type_point point)
 
 // E:\gamedcs\MouseMgr.h:189
 DC_ONLY(0x1f0d0, 0xE)
-int mouseManager::Enable()
+int MouseManager::Enable()
 {
     // @stub
 }
 
 // E:\gamedcs\MouseMgr.h:197
 DC_ONLY(0x1f0e0, 0xE)
-int mouseManager::Disable()
+int MouseManager::Disable()
 {
     // @stub
 }
 
 // E:\gamedcs\MouseMgr.h:210
 DC_ONLY(0x1f0f0, 0xE)
-int mouseManager::getFrame()
+int MouseManager::getFrame()
 {
     // @stub
 }
@@ -10107,42 +10107,42 @@ SecondarySkill ExtraInfoUnion::getWitchSkill()
 // E:\gamedcs\Hero.h:116
 DC_ONLY(0x1fb04, 0xC)
 // Before normalization (function): type_obscuring_object::get_obscured_type.
-AdventureObjectType type_obscuring_object::getObscuredType()
+AdventureObjectType ObscuringObject::getObscuredType()
 {
     // @stub
 }
 
 // E:\gamedcs\Hero.h:118
 DC_ONLY(0x1fb10, 0xC)
-unsigned long type_obscuring_object::get_obscured_extra_info()
+unsigned long ObscuringObject::get_obscured_extra_info()
 {
     // @stub
 }
 
 // E:\gamedcs\Hero.h:145
 DC_ONLY(0x1fb1c, 0x10)
-unsigned char type_obscuring_object::isOnMap()
+unsigned char ObscuringObject::isOnMap()
 {
     // @stub
 }
 
 // E:\gamedcs\Hero.h:157
 DC_ONLY(0x1fb2c, 0x60)
-type_point type_obscuring_object::getLocation() const
+type_point ObscuringObject::getLocation() const
 {
     // @stub
 }
 
 // E:\gamedcs\Hero.h:190
 DC_ONLY(0x1fb8c, 0x12)
-unsigned char boat::getHflip()
+unsigned char Boat::getHflip()
 {
     // @stub
 }
 
 // E:\gamedcs\Hero.h:196
 DC_ONLY(0x1fba0, 0x28)
-void boat::obscureCell()
+void Boat::obscureCell()
 {
     // @stub
 }
@@ -10205,63 +10205,63 @@ bool Town::hasBuilding(int buildingId, bool check_included) const
 
 // E:\gamedcs\game.h:419
 DC_ONLY(0x1feac, 0xE)
-long generator::getOwner()
+long Generator::getOwner()
 {
     // @stub
 }
 
 // E:\gamedcs\game.h:785
 DC_ONLY(0x1febc, 0x40)
-unsigned char game::onSameTeam(int player1, int player2)
+unsigned char Game::onSameTeam(int player1, int player2)
 {
     // @stub
 }
 
 // E:\gamedcs\game.h:933
 DC_ONLY(0x1fefc, 0x44)
-unsigned char game::getInfoFlag(GlobalInfoFlags flag, const int playerNum)
+unsigned char Game::getInfoFlag(GlobalInfoFlags flag, const int playerNum)
 {
     // @stub
 }
 
 // E:\gamedcs\game.h:1023
 DC_ONLY(0x1ff40, 0x58)
-Town* game::getCurrTown()
+Town* Game::getCurrTown()
 {
     // @stub
 }
 
 // E:\gamedcs\game.h:1024
 DC_ONLY(0x1ff98, 0x14)
-int game::GetCurrTownId()
+int Game::GetCurrTownId()
 {
     // @stub
 }
 
 // E:\gamedcs\game.h:1056
 DC_ONLY(0x1ffac, 0x30)
-garrison* game::getGarrison(int which)
+Garrison* Game::getGarrison(int which)
 {
     // @stub
 }
 
 // E:\gamedcs\game.h:1070
 DC_ONLY(0x1ffdc, 0x30)
-boat* game::getBoat(int which)
+Boat* Game::getBoat(int which)
 {
     // @stub
 }
 
 // E:\gamedcs\game.h:1375
 DC_ONLY(0x2000c, 0x58)
-TownType game::getAlignment(int player_id)
+TownType Game::getAlignment(int player_id)
 {
     // @stub
 }
 
 // E:\gamedcs\Findpath.h:202
 DC_ONLY(0x20064, 0x84)
-pathCell* SearchArray::getCell(type_point point, bool flying) const
+PathCell* SearchArray::getCell(type_point point, bool flying) const
 {
     // @stub
 }
@@ -10310,7 +10310,7 @@ Palette16* Bitmap816::getPalette()
 
 // E:\gamedcs\netmsg.h:167
 DC_ONLY(0x2018c, 0x2A)
-void CNetMsg::CNetMsg(eRS_Messages subType, unsigned long size)
+void CNetMsg::CNetMsg(ERSMessages subType, unsigned long size)
 {
     // @stub
 }
@@ -10436,21 +10436,21 @@ unsigned char std::bitset<48,unsigned long>::reference::operator bool()
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x20424, 0x24)
-void std::vector<resource *,std::allocator<resource *> >::vector<resource *,std::allocator<resource *> >(const std::allocator<resource* __a)
+void std::vector<Resource *,std::allocator<Resource *> >::vector<Resource *,std::allocator<Resource *> >(const std::allocator<Resource* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x20448, 0x8)
-void std::allocator<resource *>::allocator<resource *>()
+void std::allocator<Resource *>::allocator<Resource *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x20450, 0x6)
-void std::allocator<resource *>::~allocator<resource *>()
+void std::allocator<Resource *>::~allocator<Resource *>()
 {
     // @stub
 }
@@ -10492,105 +10492,105 @@ CSprite** std::vector<CSprite *,std::allocator<CSprite *> >::operator[](unsigned
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x20518, 0x2C)
-mine* std::vector<mine,std::allocator<mine> >::operator[](unsigned __n)
+Mine* std::vector<Mine,std::allocator<Mine> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x20544, 0x2C)
-generator* std::vector<generator,std::allocator<generator> >::operator[](unsigned __n)
+Generator* std::vector<Generator,std::allocator<Generator> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x20570, 0x2C)
-garrison* std::vector<garrison,std::allocator<garrison> >::operator[](unsigned __n)
+Garrison* std::vector<Garrison,std::allocator<Garrison> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x2059c, 0x2C)
-boat* std::vector<boat,std::allocator<boat> >::operator[](unsigned __n)
+Boat* std::vector<Boat,std::allocator<Boat> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x205c8, 0x2C)
-type_university* std::vector<type_university,std::allocator<type_university> >::operator[](unsigned __n)
+University* std::vector<University,std::allocator<University> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x205f4, 0x2C)
-type_creature_bank* std::vector<type_creature_bank,std::allocator<type_creature_bank> >::operator[](unsigned __n)
+CreatureBank* std::vector<CreatureBank,std::allocator<CreatureBank> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x20620, 0x16)
-unsigned std::vector<pathCell *,std::allocator<pathCell *> >::size()
+unsigned std::vector<PathCell *,std::allocator<PathCell *> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:204
 DC_ONLY(0x20638, 0x28)
-pathCell** std::vector<pathCell *,std::allocator<pathCell *> >::operator[](unsigned __n)
+PathCell** std::vector<PathCell *,std::allocator<PathCell *> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0x20660, 0x3C)
-void std::vector<pathCell *,std::allocator<pathCell *> >::clear()
+void std::vector<PathCell *,std::allocator<PathCell *> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x2069c, 0x24)
-void std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::vector<type_dialog_resource,std::allocator<type_dialog_resource> >(const std::allocator<type_dialog_resource>* __a)
+void std::vector<DialogResource,std::allocator<DialogResource> >::vector<DialogResource,std::allocator<DialogResource> >(const std::allocator<DialogResource>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0x206c0, 0x34)
-void std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::~vector<type_dialog_resource,std::allocator<type_dialog_resource> >()
+void std::vector<DialogResource,std::allocator<DialogResource> >::~vector<DialogResource,std::allocator<DialogResource> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x206f4, 0x54)
-void std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::push_back(const type_dialog_resource* __x)
+void std::vector<DialogResource,std::allocator<DialogResource> >::push_back(const DialogResource* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0x20748, 0x3C)
-void std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::clear()
+void std::vector<DialogResource,std::allocator<DialogResource> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x20784, 0x8)
-void std::allocator<type_dialog_resource>::allocator<type_dialog_resource>()
+void std::allocator<DialogResource>::allocator<DialogResource>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x2078c, 0x6)
-void std::allocator<type_dialog_resource>::~allocator<type_dialog_resource>()
+void std::allocator<DialogResource>::~allocator<DialogResource>()
 {
     // @stub
 }
@@ -10625,7 +10625,7 @@ void std::bitset<48,unsigned long>::reference::reference(std::bitset<48,unsigned
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x208e4, 0x44)
-void std::_Vector_base<resource *,std::allocator<resource *> >::_Vector_base<resource *,std::allocator<resource *> >(const std::allocator<resource* __a)
+void std::_Vector_base<Resource *,std::allocator<Resource *> >::_Vector_base<Resource *,std::allocator<Resource *> >(const std::allocator<Resource* __a)
 {
     // @stub
 }
@@ -10660,105 +10660,105 @@ CSprite** std::vector<CSprite *,std::allocator<CSprite *> >::begin()
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x20958, 0xC)
-mine* std::vector<mine,std::allocator<mine> >::begin()
+Mine* std::vector<Mine,std::allocator<Mine> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x20964, 0xC)
-generator* std::vector<generator,std::allocator<generator> >::begin()
+Generator* std::vector<Generator,std::allocator<Generator> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x20970, 0xC)
-garrison* std::vector<garrison,std::allocator<garrison> >::begin()
+Garrison* std::vector<Garrison,std::allocator<Garrison> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x2097c, 0xC)
-boat* std::vector<boat,std::allocator<boat> >::begin()
+Boat* std::vector<Boat,std::allocator<Boat> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x20988, 0xC)
-type_university* std::vector<type_university,std::allocator<type_university> >::begin()
+University* std::vector<University,std::allocator<University> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x20994, 0xC)
-type_creature_bank* std::vector<type_creature_bank,std::allocator<type_creature_bank> >::begin()
+CreatureBank* std::vector<CreatureBank,std::allocator<CreatureBank> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x209a0, 0xC)
-pathCell** std::vector<pathCell *,std::allocator<pathCell *> >::begin()
+PathCell** std::vector<PathCell *,std::allocator<PathCell *> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:180
 DC_ONLY(0x209ac, 0xC)
-pathCell** std::vector<pathCell *,std::allocator<pathCell *> >::begin()
+PathCell** std::vector<PathCell *,std::allocator<PathCell *> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0x209b8, 0xC)
-pathCell** std::vector<pathCell *,std::allocator<pathCell *> >::end()
+PathCell** std::vector<PathCell *,std::allocator<PathCell *> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0x209c4, 0x48)
-pathCell** std::vector<pathCell *,std::allocator<pathCell *> >::erase(pathCell** __first, pathCell** __last)
+PathCell** std::vector<PathCell *,std::allocator<PathCell *> >::erase(PathCell** __first, PathCell** __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x20a0c, 0xC)
-type_dialog_resource* std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::begin()
+DialogResource* std::vector<DialogResource,std::allocator<DialogResource> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0x20a18, 0xC)
-type_dialog_resource* std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::end()
+DialogResource* std::vector<DialogResource,std::allocator<DialogResource> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0x20a24, 0x48)
-type_dialog_resource* std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::erase(type_dialog_resource* __first, type_dialog_resource* __last)
+DialogResource* std::vector<DialogResource,std::allocator<DialogResource> >::erase(DialogResource* __first, DialogResource* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x20a6c, 0x44)
-void std::_Vector_base<type_dialog_resource,std::allocator<type_dialog_resource> >::_Vector_base<type_dialog_resource,std::allocator<type_dialog_resource> >(const std::allocator<type_dialog_resource>* __a)
+void std::_Vector_base<DialogResource,std::allocator<DialogResource> >::_Vector_base<DialogResource,std::allocator<DialogResource> >(const std::allocator<DialogResource>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0x20ab0, 0x44)
-void std::_Vector_base<type_dialog_resource,std::allocator<type_dialog_resource> >::~_Vector_base<type_dialog_resource,std::allocator<type_dialog_resource> >()
+void std::_Vector_base<DialogResource,std::allocator<DialogResource> >::~_Vector_base<DialogResource,std::allocator<DialogResource> >()
 {
     // @stub
 }
@@ -10772,7 +10772,7 @@ unsigned long std::_Base_bitset<48,unsigned long>::_S_maskbit(unsigned __pos)
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0x20b18, 0x1C)
-void std::_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >::~_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >()
+void std::_STL_alloc_proxy<DialogResource *,DialogResource,std::allocator<DialogResource> >::~_STL_alloc_proxy<DialogResource *,DialogResource,std::allocator<DialogResource> >()
 {
     // @stub
 }
@@ -10786,21 +10786,21 @@ unsigned long* std::_Base_bitset<2,unsigned long>::_M_getword(unsigned __pos)
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x20b5c, 0x1E)
-void std::_STL_alloc_proxy<resource * *,resource *,std::allocator<resource *> >::_STL_alloc_proxy<resource * *,resource *,std::allocator<resource *> >(const std::allocator<resource* __a, resource*** __p)
+void std::_STL_alloc_proxy<Resource * *,Resource *,std::allocator<Resource *> >::_STL_alloc_proxy<Resource * *,Resource *,std::allocator<Resource *> >(const std::allocator<Resource* __a, Resource*** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x20b7c, 0x1E)
-void std::_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >::_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >(const std::allocator<type_dialog_resource>* __a, type_dialog_resource** __p)
+void std::_STL_alloc_proxy<DialogResource *,DialogResource,std::allocator<DialogResource> >::_STL_alloc_proxy<DialogResource *,DialogResource,std::allocator<DialogResource> >(const std::allocator<DialogResource>* __a, DialogResource** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x20b9c, 0x30)
-void std::_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >::deallocate(type_dialog_resource* __p, unsigned __n)
+void std::_STL_alloc_proxy<DialogResource *,DialogResource,std::allocator<DialogResource> >::deallocate(DialogResource* __p, unsigned __n)
 {
     // @stub
 }
@@ -10821,7 +10821,7 @@ unsigned std::_Base_bitset<2,unsigned long>::_S_whichword(unsigned __pos)
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x20bec, 0x2C)
-void std::allocator<type_dialog_resource>::deallocate(type_dialog_resource* __p, unsigned __n)
+void std::allocator<DialogResource>::deallocate(DialogResource* __p, unsigned __n)
 {
     // @stub
 }
@@ -10849,7 +10849,7 @@ const int& tLimit(const int& minimum, const int& value, const int& maximum)
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x20d64, 0x120)
-void std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::_M_insert_overflow(type_dialog_resource* __position, const type_dialog_resource* __x, unsigned __fill_len)
+void std::vector<DialogResource,std::allocator<DialogResource> >::_M_insert_overflow(DialogResource* __position, const DialogResource* __x, unsigned __fill_len)
 {
     // @stub
 }
@@ -10863,14 +10863,14 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> >::assign(cha
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x20eb0, 0x30)
-void std::destroy(type_dialog_resource* __first, type_dialog_resource* __last)
+void std::destroy(DialogResource* __first, DialogResource* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x20ee0, 0x4C)
-void std::construct(type_dialog_resource* __p, const type_dialog_resource* __value)
+void std::construct(DialogResource* __p, const DialogResource* __value)
 {
     // @stub
 }
@@ -10884,63 +10884,63 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> >::append(cha
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0x20f58, 0x58)
-pathCell** std::copy(pathCell** __first, pathCell** __last, pathCell** __result)
+PathCell** std::copy(PathCell** __first, PathCell** __last, PathCell** __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x20fb0, 0x30)
-void std::destroy(pathCell** __first, pathCell** __last)
+void std::destroy(PathCell** __first, PathCell** __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0x20fe0, 0x58)
-type_dialog_resource* std::copy(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __result)
+DialogResource* std::copy(DialogResource* __first, DialogResource* __last, DialogResource* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x21038, 0xA)
-std::allocator<type_dialog_resource>* std::__stl_alloc_rebind(std::allocator<type_dialog_resource>* __a, const type_dialog_resource* __formal)
+std::allocator<DialogResource>* std::__stl_alloc_rebind(std::allocator<DialogResource>* __a, const DialogResource* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x21044, 0x16)
-unsigned std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::size()
+unsigned std::vector<DialogResource,std::allocator<DialogResource> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x2105c, 0x38)
-type_dialog_resource* std::_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >::allocate(unsigned __n)
+DialogResource* std::_STL_alloc_proxy<DialogResource *,DialogResource,std::allocator<DialogResource> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x21094, 0x3C)
-type_dialog_resource* std::allocator<type_dialog_resource>::allocate(unsigned __n, const void* __formal)
+DialogResource* std::allocator<DialogResource>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x210d0, 0x3C)
-type_dialog_resource* std::uninitialized_copy(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __result)
+DialogResource* std::uninitialized_copy(DialogResource* __first, DialogResource* __last, DialogResource* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x2110c, 0x3C)
-type_dialog_resource* std::uninitialized_fill_n(type_dialog_resource* __first, unsigned __n, const type_dialog_resource* __x)
+DialogResource* std::uninitialized_fill_n(DialogResource* __first, unsigned __n, const DialogResource* __x)
 {
     // @stub
 }
@@ -10954,14 +10954,14 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_assign_
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x211d4, 0x8)
-type_dialog_resource* std::value_type(const type_dialog_resource* __formal)
+DialogResource* std::value_type(const DialogResource* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x211dc, 0x24)
-void std::__destroy(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __formal)
+void std::__destroy(DialogResource* __first, DialogResource* __last, DialogResource* __formal)
 {
     // @stub
 }
@@ -10975,77 +10975,77 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_append_
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0x21248, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, pathCell** __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, PathCell** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0x2125c, 0x8)
-int* std::distance_type(pathCell** __formal)
+int* std::distance_type(PathCell** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0x21264, 0x40)
-pathCell** std::__copy(pathCell** __first, pathCell** __last, pathCell** __result, std::random_access_iterator_tag __formal, int* __formal)
+PathCell** std::__copy(PathCell** __first, PathCell** __last, PathCell** __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x212a4, 0x8)
-pathCell** std::value_type(pathCell** __formal)
+PathCell** std::value_type(PathCell** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x212ac, 0x24)
-void std::__destroy(pathCell** __first, pathCell** __last, pathCell** __formal)
+void std::__destroy(PathCell** __first, PathCell** __last, PathCell** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0x212d0, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const type_dialog_resource* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const DialogResource* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0x212e4, 0x8)
-int* std::distance_type(const type_dialog_resource* __formal)
+int* std::distance_type(const DialogResource* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0x212ec, 0x58)
-type_dialog_resource* std::__copy(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __result, std::random_access_iterator_tag __formal, int* __formal)
+DialogResource* std::__copy(DialogResource* __first, DialogResource* __last, DialogResource* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x21344, 0x30)
-type_dialog_resource* std::__uninitialized_copy(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __result, type_dialog_resource* __formal)
+DialogResource* std::__uninitialized_copy(DialogResource* __first, DialogResource* __last, DialogResource* __result, DialogResource* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x21374, 0x30)
-type_dialog_resource* std::__uninitialized_fill_n(type_dialog_resource* __first, unsigned __n, const type_dialog_resource* __x, type_dialog_resource* __formal)
+DialogResource* std::__uninitialized_fill_n(DialogResource* __first, unsigned __n, const DialogResource* __x, DialogResource* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x213a4, 0x34)
-void std::__destroy_aux(type_dialog_resource* __first, type_dialog_resource* __last, __false_type __formal)
+void std::__destroy_aux(DialogResource* __first, DialogResource* __last, __false_type __formal)
 {
     // @stub
 }
@@ -11059,28 +11059,28 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> >::append(cha
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x21588, 0x34)
-void std::__destroy_aux(pathCell** __first, pathCell** __last, __false_type __formal)
+void std::__destroy_aux(PathCell** __first, PathCell** __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x215bc, 0x44)
-type_dialog_resource* std::__uninitialized_copy_aux(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __result, __false_type __formal)
+DialogResource* std::__uninitialized_copy_aux(DialogResource* __first, DialogResource* __last, DialogResource* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x21600, 0x44)
-type_dialog_resource* std::__uninitialized_fill_n_aux(type_dialog_resource* __first, unsigned __n, const type_dialog_resource* __x, __false_type __formal)
+DialogResource* std::__uninitialized_fill_n_aux(DialogResource* __first, unsigned __n, const DialogResource* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x21644, 0x20)
-void std::destroy(type_dialog_resource* __pointer)
+void std::destroy(DialogResource* __pointer)
 {
     // @stub
 }
@@ -11094,14 +11094,14 @@ void std::distance(char* __first, char* __last, int* __n)
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x216a0, 0x20)
-void std::destroy(pathCell** __pointer)
+void std::destroy(PathCell** __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0x216c0, 0x8)
-void std::__destroy_aux(type_dialog_resource* __pointer, __false_type __formal)
+void std::__destroy_aux(DialogResource* __pointer, __false_type __formal)
 {
     // @stub
 }
@@ -11115,7 +11115,7 @@ void std::__distance(char* __first, char* __last, int* __n, std::random_access_i
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0x216e4, 0x8)
-void std::__destroy_aux(pathCell** __pointer, __false_type __formal)
+void std::__destroy_aux(PathCell** __pointer, __false_type __formal)
 {
     // @stub
 }

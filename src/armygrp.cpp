@@ -61,9 +61,9 @@ DATA(0x006a5860) extern const char* g_evilFogEvilMoraleText;
 
 inline void SplitWindow::updateSplitArmy(unsigned char update)
 {
-    message msg;
+    Message msg;
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
 
     sprintf(g_text, "%d", m_sourceTroops);
     msg.m_codeY = 4;
@@ -90,7 +90,7 @@ unsigned char ArmyGroup::hasCreatures() const
 }
 
 VA(0x004496c0, 0xC3)  // dc 0x4db88
-void splitSliderCallback(int state, heroWindow*)
+void splitSliderCallback(int state, HeroWindow*)
 {
     g_splitWindow->m_destinationTroops =
         g_splitWindow->m_minimumTransfer + state;
@@ -106,58 +106,58 @@ SplitWindow::SplitWindow(int x2, int y2, CreatureType thisArmy)
     m_creature = thisArmy;
     m_widgets.reserve(13);
 
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         0, 0, m_width, m_height, 0, "GPuCrDiv.pcx", 0x800));
 
     sprintf(g_text,
             (*g_generalText)[GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER],
             g_creatureTypeTraits[m_creature].m_pluralName);
-    m_widgets.push_back(new textWidget(
-        0, 20, m_width, 30, g_text, "bigfont.fnt", font::HEADING,
+    m_widgets.push_back(new TextWidget(
+        0, 20, m_width, 30, g_text, "bigfont.fnt", Font::HEADING,
         1, 1, 0, 8));
 
     strcpy(g_text, g_creatureBackgrounds[
         g_game->getAlignment(m_creature)]);
 
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         20, 54, 100, 130, -1, g_text, 0x800));
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         177, 54, 100, 130, -1, g_text, 0x800));
 
     strcpy(g_text, g_creatureTypeTraits[m_creature].m_spriteName);
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         20, 54, 100, 130, 2, g_text, 0, 2, 0, 0, 0x12));
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         177, 54, 100, 130, 3, g_text, 0, 2, 0, 0, 0x12));
 
-    m_sourceEntry = new textEntryWidget(
-        20, 218, 101, 37, 10, "99999", "bigfont.fnt", font::WHITE, 5,
+    m_sourceEntry = new TextEntryWidget(
+        20, 218, 101, 37, 10, "99999", "bigfont.fnt", Font::WHITE, 5,
         0, 0, 4, 0, 4, 0, 0);
     m_widgets.push_back(m_sourceEntry);
-    m_destinationEntry = new textEntryWidget(
-        177, 218, 101, 37, 10, "99999", "bigfont.fnt", font::WHITE, 5,
+    m_destinationEntry = new TextEntryWidget(
+        177, 218, 101, 37, 10, "99999", "bigfont.fnt", Font::WHITE, 5,
         0, 0, 5, 0, 4, 0, 0);
     m_widgets.push_back(m_destinationEntry);
 
-    m_splitSlider = new slider(
+    m_splitSlider = new Slider(
         21, 194, 257, 16, 6, 10, splitSliderCallback,
-        slider::BROWN, 0, 0);
+        Slider::BROWN, 0, 0);
     m_widgets.push_back(m_splitSlider);
 
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         8, 312, 282, 17, 7, "StatBar.pcx", 0x800));
-    m_widgets.push_back(new textWidget(
-        8, 312, 282, 17, 0, "smalfont.fnt", font::PRIMARY,
+    m_widgets.push_back(new TextWidget(
+        8, 312, 282, 17, 0, "smalfont.fnt", Font::PRIMARY,
         8, 1, 0, 8));
 
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         20, 263, 64, 32, DIALOG_RETURN_SPLIT_ACCEPT,
         "iOk6432.def", 0, 1, 1, 0x1c, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         214, 263, 64, 30, 0x7801,
         "iCancel.def", 0, 1, 1, 1, 2));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -172,7 +172,7 @@ VA_COMPGEN(0x0044c680, 0x60, BITSET_SET, Bitset9)
 VA(0x00449e20, 0x6B)  // dc 0x4e11c
 SplitWindow::~SplitWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -190,14 +190,14 @@ void ArmyGroup::splitArmy(int srcIndex, ArmyGroup* ag, int destIndex, unsigned c
     g_splitWindow->m_totalTroops =
         g_splitWindow->m_sourceTroops + g_splitWindow->m_destinationTroops;
 
-    message msg;
+    Message msg;
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.m_codeX = Widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
     g_splitWindow->broadcastMessage(msg);
 
-    msg.m_codeX = widget::WIDGET_SET_SLIDER_RESOLUTION;
+    msg.m_codeX = Widget::WIDGET_SET_SLIDER_RESOLUTION;
     msg.m_codeY = 6;
     if ((inSrcRestricted && getNumArmies() == 1)
         || (inDestRestricted && ag->getNumArmies() == 1)) {
@@ -214,7 +214,7 @@ void ArmyGroup::splitArmy(int srcIndex, ArmyGroup* ag, int destIndex, unsigned c
     else
         g_splitWindow->m_minimumTransfer = 0;
 
-    msg.m_codeX = widget::WIDGET_SET_SLIDER_STATE;
+    msg.m_codeX = Widget::WIDGET_SET_SLIDER_STATE;
     msg.m_extra = g_splitWindow->m_destinationTroops
         - g_splitWindow->m_minimumTransfer;
     g_splitWindow->broadcastMessage(msg);
@@ -264,14 +264,14 @@ inline void SplitWindow::setRolloverText(int codeY)
         break;
     }
 
-    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 8, int(g_text));
+    broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_TEXT, 8, int(g_text));
     drawWindow(0, 7, 8);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x138, 0x11a, 0x11);
 }
 
 // E:\gamedcs\armygrp.cpp:229, dc 0x4e428
 VA(0x0044a180, 0x2DF)  // dc 0x4e428 (+ 0x4e388 inlined)
-int SplitWindow::windowHandler(message& msg)
+int SplitWindow::windowHandler(Message& msg)
 {
     unsigned char closeDialog = false, updateArmy = false;
     int result = CAdvPopup::windowHandler(msg);
@@ -281,8 +281,8 @@ int SplitWindow::windowHandler(message& msg)
     switch (msg.m_id) {
     case MESSAGE_WIDGET:
         switch (msg.m_codeX) {
-        case widget::WIDGET_SELECT:
-            msg.m_codeX = widget::WIDGET_GET_TEXT;
+        case Widget::WIDGET_SELECT:
+            msg.m_codeX = Widget::WIDGET_GET_TEXT;
             broadcastMessage(msg);
 
             switch (msg.m_codeY) {
@@ -307,7 +307,7 @@ int SplitWindow::windowHandler(message& msg)
             updateArmy = true;
             break;
 
-        case widget::WIDGET_DESELECT:
+        case Widget::WIDGET_DESELECT:
             switch (msg.m_codeY) {
             case DIALOG_RETURN_SPLIT_CLOSE:
             case DIALOG_RETURN_SPLIT_CANCEL:
@@ -334,8 +334,8 @@ int SplitWindow::windowHandler(message& msg)
     }
 
     if (closeDialog == true) {
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = Widget::WIDGET_END_DIALOG;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     if (updateArmy)

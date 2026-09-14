@@ -9,10 +9,11 @@
 class SubWindow;
 class CombatCreatureSubWindow;
 class CombatHeroSubWindow;
-class textWidget;
-class textEntryWidget;
-class type_combat_sub_window;
-class message;
+class TextWidget;
+class TextEntryWidget;
+// Before normalization (type): type_combat_sub_window.
+class CombatSubWindow;
+class Message;
 
 // Eleven interleaved rollover/right-click rows at retail 0x6a6968. The
 // combat-window right-click handler consumes the same table as the combat
@@ -24,9 +25,10 @@ extern HelpText g_combatSubWindowHelp[11];
 // the polymorphic combat-control subwindow at +0x70 before delegating to
 // heroWindow::Close. DrawCreatureAndHeroSubwindows independently proves the
 // two hero panels and four creature panels that fill the remaining tail.
-class CombatWindow : public heroWindow {
+class CombatWindow : public HeroWindow {
 public:
-    enum EWidgetIds {
+// Before normalization (type): CombatWindow::EWidgetIds.
+    enum WidgetIds {
         COMBAT_LEFT_COMMAND_0_ID = 0x7d1,
         COMBAT_LEFT_COMMAND_1_ID = 0x7d2,
         COMBAT_LEFT_COMMAND_2_ID = 0x7d3,
@@ -44,10 +46,10 @@ public:
     // combat_message and handle_widget_hover both follow this pointer to
     // textEntryWidget::bHasFocus at +0x6d. The constructor initially nulls
     // it; the concrete object is the combat chat editor.
-    textEntryWidget* m_chatEdit;
+    TextEntryWidget* m_chatEdit;
     // DrawChatText and DrawFrame both load the same pointer at retail +0x50;
     // its DC counterpart is likewise the combat chat text widget.
-    textWidget* m_chatWidget;
+    TextWidget* m_chatWidget;
     // The four-word VC6 vector begins at +0x54; its pointer triplet at
     // +0x58/+0x5c/+0x60 is byte-proven by combat_message, scroll_rollover,
     // and the destructor.
@@ -55,22 +57,22 @@ public:
     int m_combatMessageCount;
     int m_combatMessageStart;
     unsigned long m_combatMessageTime;
-    type_combat_sub_window* m_controlSubWindow;
+    CombatSubWindow* m_controlSubWindow;
     CombatHeroSubWindow* m_heroSubWindows[2];
     CombatCreatureSubWindow* m_creatureSubWindows[4];
 
     virtual ~CombatWindow();
     virtual void close(unsigned char update);
-    virtual void handleWidgetHover(widget* currentWidget);
+    virtual void handleWidgetHover(Widget* currentWidget);
     virtual void drawWindow(unsigned char update, int low, int high);
     void clearCombatMessages();
     static int convertID2HelpID(int id);
-    unsigned char processRightSelect(const message* msg);
+    unsigned char processRightSelect(const Message* msg);
     void setRollover(const char* newText);
     void showMessages(long start);
     void scrollRollover(long delta);
-    static int scrollUp(message& msg);
-    static int scrollDown(message& msg);
+    static int scrollUp(Message& msg);
+    static int scrollDown(Message& msg);
     CombatWindow(unsigned char doPlacement);
     void endPlacementPhase();
     void combatMessage(const char* newText, bool keep,

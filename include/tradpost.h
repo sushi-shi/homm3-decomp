@@ -9,7 +9,8 @@
 // The gMarketWindow selector DoMarket dispatches on: the five dialog panes in
 // the order the classes are declared. Byte-proven by DoMarket's jump table and
 // the per-case `new <size>` immediates (0x68/0x8c/0x64/0x64/0x68).
-enum EMarketWindow {
+// Before normalization (type): EMarketWindow.
+enum MarketWindow {
     MARKET_WINDOW_TRADE = 0,
     MARKET_WINDOW_GIVE = 1,
     MARKET_WINDOW_BUY = 2,
@@ -20,14 +21,16 @@ enum EMarketWindow {
 // The gMarketSource pricing/mode selector the entry points seed (marketplace,
 // trading post, black market, freelancer's guild). The Update methods branch
 // label visibility and the title text on it.
-enum EMarketSource {
+// Before normalization (type): EMarketSource.
+enum MarketSource {
     MARKET_SOURCE_MARKETPLACE = 0,
     MARKET_SOURCE_TRADING_POST = 1,
     MARKET_SOURCE_BLACK_MARKET = 2,
     MARKET_SOURCE_FREELANCER = 3
 };
 
-enum EMarketWidgetId {
+// Before normalization (type): EMarketWidgetId.
+enum MarketWidgetId {
     MARKET_LEFT_PANEL_ID = 5,
     MARKET_RIGHT_PANEL_ID = 7,
     MARKET_LEFT_COUNT_ID = 16,
@@ -63,7 +66,8 @@ enum EMarketWidgetId {
 };
 
 // The three command subtypes shared by all five market-window handlers.
-enum EMarketWidgetCommand {
+// Before normalization (type): EMarketWidgetCommand.
+enum MarketWidgetCommand {
     MARKET_WIDGET_SELECT = 12,
     MARKET_WIDGET_ACTIVATE = 13,
     MARKET_WIDGET_QUICK_VIEW = 14
@@ -73,7 +77,8 @@ enum EMarketWidgetCommand {
 // (0x3f..0x45). The same numeric range other windows use for the buy-side
 // resource buttons here selects an artifact out of gpMarketArtifacts, so it
 // needs its own named cases.
-enum EMarketBuyArtifactSlotId {
+// Before normalization (type): EMarketBuyArtifactSlotId.
+enum MarketBuyArtifactSlotId {
     BUY_ARTIFACT_SLOT_0_ID = 0x3f,
     BUY_ARTIFACT_SLOT_1_ID, BUY_ARTIFACT_SLOT_2_ID,
     BUY_ARTIFACT_SLOT_3_ID, BUY_ARTIFACT_SLOT_4_ID,
@@ -84,7 +89,8 @@ enum EMarketBuyArtifactSlotId {
 // starting at 0x6b (update_sell_artifact_widget stamps id = slot + 0x6b).
 // Equipped slots 0..17 then the visible backpack rows; the SetRolloverText
 // switch needs each as a named case rather than a magic label.
-enum EMarketArtifactSlotId {
+// Before normalization (type): EMarketArtifactSlotId.
+enum MarketArtifactSlotId {
     MARKET_ARTIFACT_SLOT_00_ID = 0x6b,
     MARKET_ARTIFACT_SLOT_01_ID, MARKET_ARTIFACT_SLOT_02_ID,
     MARKET_ARTIFACT_SLOT_03_ID, MARKET_ARTIFACT_SLOT_04_ID,
@@ -102,13 +108,15 @@ enum EMarketArtifactSlotId {
 // The two backpack scroll arrows on the sell-artifact panel; its WindowHandler
 // pages gBackpackStart on these and re-blits the five visible backpack-icon
 // widgets (ids 0x66..0x6a). Provisional names.
-enum EMarketArtifactArrowId {
+// Before normalization (type): EMarketArtifactArrowId.
+enum MarketArtifactArrowId {
     MARKET_ARTIFACT_LEFT_ARROW_ID = 0x82,
     MARKET_ARTIFACT_RIGHT_ARROW_ID = 0x83
 };
 
 // The sell-creature left column: one widget id per army slot (0x8b..0x91).
-enum EMarketCreatureSlotId {
+// Before normalization (type): EMarketCreatureSlotId.
+enum MarketCreatureSlotId {
     MARKET_CREATURE_SLOT_0_ID = 0x8b,
     MARKET_CREATURE_SLOT_1_ID, MARKET_CREATURE_SLOT_2_ID,
     MARKET_CREATURE_SLOT_3_ID, MARKET_CREATURE_SLOT_4_ID,
@@ -119,7 +127,8 @@ enum EMarketCreatureSlotId {
 // slot (0x46..0x4c). TGiveResourceWindow::SetRolloverText formats each with
 // the player-colour name of the slot's stored colour id, so the seven ids
 // need named cases rather than a magic-label range. Provisional names.
-enum EGiveRecipientId {
+// Before normalization (type): EGiveRecipientId.
+enum GiveRecipientId {
     GIVE_RECIPIENT_SLOT_0_ID = 0x46,
     GIVE_RECIPIENT_SLOT_1_ID, GIVE_RECIPIENT_SLOT_2_ID,
     GIVE_RECIPIENT_SLOT_3_ID, GIVE_RECIPIENT_SLOT_4_ID,
@@ -154,7 +163,7 @@ enum EGiveRecipientId {
 // The three dialogs that build a `slider` (TradeResourceSlider,
 // GiveResourceSlider, SellCreatureSlider) hold its widget pointer as a member;
 // forward-declared here for the pointer, defined where the ctor `new`s it.
-class slider;
+class Slider;
 
 // Object sizes are byte-proven by DoMarket's `new` immediates
 // (0x68/0x8c/0x64/0x64/0x68) and each ctor's `push <size>`. Members past the
@@ -162,7 +171,7 @@ class slider;
 // and left as field_NN placeholders where only the size is proven so far.
 // Before normalization (type): TTradeResourceWindow.
 class TradeResourceWindow : public CAdvPopup {
-    slider* m_resourceSlider;   // +0x60, set by the ctor (TradeResourceSlider)
+    Slider* m_resourceSlider;   // +0x60, set by the ctor (TradeResourceSlider)
     int m_lastHoverId;          // +0x64, last widget the hover handler rolled over
     // Dreamcast tradpost.cpp:2181, original ComputeTradeRatios (private).
     void computeTradeRatios(int inLeftResource, int inRightResource,
@@ -173,7 +182,7 @@ public:
     TradeResourceWindow(int x2, int y2);
     void update(unsigned char update);
     void setRolloverText(int codeY);
-    virtual int windowHandler(message& msg);   // slot 9
+    virtual int windowHandler(Message& msg);   // slot 9
     virtual ~TradeResourceWindow();
 };
 SIZE(TradeResourceWindow, 0x68);
@@ -192,13 +201,13 @@ public:
     int m_recipientCount;
     int m_slotPlayerColor[7];   // +0x64
     int m_field80;             // +0x80
-    slider* m_resourceSlider;   // +0x84, set by the ctor (GiveResourceSlider)
+    Slider* m_resourceSlider;   // +0x84, set by the ctor (GiveResourceSlider)
     int m_lastHoverId;          // +0x88, last widget the hover handler rolled over
 
     GiveResourceWindow(int x2, int y2);
     void update(bool update);
     void setRolloverText(int codeY);
-    virtual int windowHandler(message& msg);   // slot 9
+    virtual int windowHandler(Message& msg);   // slot 9
     virtual ~GiveResourceWindow();
 };
 SIZE(GiveResourceWindow, 0x8c);
@@ -211,7 +220,7 @@ public:
     BuyArtifactWindow(int x2, int y2);
     void update(unsigned char update);
     void setRolloverText(int codeY);
-    virtual int windowHandler(message& msg);   // slot 9
+    virtual int windowHandler(Message& msg);   // slot 9
     virtual ~BuyArtifactWindow();
 };
 SIZE(BuyArtifactWindow, 0x64);
@@ -226,7 +235,7 @@ class SellArtifactWindow : public CAdvPopup {
 
 public:
     SellArtifactWindow(int x2, int y2);
-    void updateSellArtifactWidget(message* msg, long i);
+    void updateSellArtifactWidget(Message* msg, long i);
     void setWidgetOn(short id);
     void setWidgetOff(short id);
     void setWidgetDisabled(short id);
@@ -235,14 +244,14 @@ public:
                             int* inTradeRatio, int* inLeftDenominated,
                             int* inMaxUnitsToTrade);
     void setRolloverText(int codeY);
-    virtual int windowHandler(message& msg);   // slot 9
+    virtual int windowHandler(Message& msg);   // slot 9
     virtual ~SellArtifactWindow();
 };
 SIZE(SellArtifactWindow, 0x64);
 
 // Before normalization (type): TSellCreatureWindow.
 class SellCreatureWindow : public CAdvPopup {
-    slider* m_creatureSlider;   // +0x60, set by the ctor (SellCreatureSlider)
+    Slider* m_creatureSlider;   // +0x60, set by the ctor (SellCreatureSlider)
     int m_lastHoverId;          // +0x64, last widget the hover handler rolled over
 
 public:
@@ -255,12 +264,12 @@ public:
                             int* inTradeRatio, int* inLeftDenominated,
                             int* inMaxUnitsToTrade);
     void setRolloverText(int codeY);
-    virtual int windowHandler(message& msg);   // slot 9
+    virtual int windowHandler(Message& msg);   // slot 9
     virtual ~SellCreatureWindow();
 };
 SIZE(SellCreatureWindow, 0x68);
 
-long getMarketValue(EGameResource resource);
+long getMarketValue(GameResource resource);
 
 // The shared body all six market entry points tail into once they have
 // seeded the static market state. The Dreamcast roster has it `static`;

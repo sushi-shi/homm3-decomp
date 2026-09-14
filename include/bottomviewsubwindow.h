@@ -4,8 +4,8 @@
 
 #include "subwindow.h"
 
-class iconWidget;
-class textWidget;
+class IconWidget;
+class TextWidget;
 
 // PROVEN narrow retail layouts. The constructor reached by
 // advManager::UpdBottomViewEnemyTurn allocates 0x74 bytes and uses the
@@ -13,11 +13,11 @@ class textWidget;
 // +0x34. The retail type_bottom_view_window vtable at 0x63bb04 has two
 // entries, agreeing with the Dreamcast record's virtual destructor and
 // animate slot. No unobserved derived fields are named here.
-class type_bottom_view_window : public SubWindow {
+class BottomViewWindow : public SubWindow {
 public:
     // Widget ids shared by the family; read off the constructors, which
     // pass 0x7d0 for the backdrop and 0x834 for the text.
-    enum EWidgetIDs {
+    enum WidgetIDs {
         BOTTOM_VIEW_BACKGROUND_ID = 0x7d0,
         BOTTOM_VIEW_TEXT_ID = 0x834,
         // The enemy-turn window numbers its own widgets from a separate
@@ -33,35 +33,35 @@ public:
         BOTTOM_VIEW_SILO_TWO_RESOURCES = 2
     };
 
-    type_bottom_view_window(heroWindow* parentWindow);
-    virtual ~type_bottom_view_window();
+    BottomViewWindow(HeroWindow* parentWindow);
+    virtual ~BottomViewWindow();
     virtual void animate();
 };
-SIZE(type_bottom_view_window, 0x34);
+SIZE(BottomViewWindow, 0x34);
 
 // Retail allocates each of these three presentation-only subclasses at the
 // unchanged 0x34-byte base extent. Dreamcast supplies the real class and
 // constructor identities; their UI state is owned by the inherited window.
 // Before normalization (type): TBottomViewHero.
-class BottomViewHero : public type_bottom_view_window {
+class BottomViewHero : public BottomViewWindow {
 public:
-    BottomViewHero(heroWindow* parent);
+    BottomViewHero(HeroWindow* parent);
     virtual ~BottomViewHero();
 };
 SIZE(BottomViewHero, 0x34);
 
 // Before normalization (type): TBottomViewTown.
-class BottomViewTown : public type_bottom_view_window {
+class BottomViewTown : public BottomViewWindow {
 public:
-    BottomViewTown(heroWindow* parent);
+    BottomViewTown(HeroWindow* parent);
     virtual ~BottomViewTown();
 };
 SIZE(BottomViewTown, 0x34);
 
 // Before normalization (type): TBottomViewKingdom.
-class BottomViewKingdom : public type_bottom_view_window {
+class BottomViewKingdom : public BottomViewWindow {
 public:
-    BottomViewKingdom(heroWindow* parent);
+    BottomViewKingdom(HeroWindow* parent);
     virtual ~BottomViewKingdom();
 };
 SIZE(BottomViewKingdom, 0x34);
@@ -74,17 +74,17 @@ SIZE(BottomViewKingdom, 0x34);
 // The 0x40-byte derived tail is byte-proven twice over - the constructor
 // writes every field and animate reads every one of them back.
 // Before normalization (type): TBottomViewEnemyTurn.
-class BottomViewEnemyTurn : public type_bottom_view_window {
+class BottomViewEnemyTurn : public BottomViewWindow {
 public:
     // +0x34, 'crest58.def' at (20,51). Its FRAME is the acting player's
     // game position, and animate re-frames it whenever that position
     // changes - which is what pairs it with lastPlayerPos below.
-    iconWidget* m_crest;
+    IconWidget* m_crest;
     // +0x38 / +0x3c, the two halves of the hourglass at (98,51):
     // 'HourGlas.def' is the animated one (animate reads ITS sprite's
     // sequence-0 frame count) and 'HourSand.def' the level indicator.
-    iconWidget* m_hourGlass;
-    iconWidget* m_sand;
+    IconWidget* m_hourGlass;
+    IconWidget* m_sand;
     unsigned long m_lastStepTime;  // +0x40, GameTime::Get at the last step
     // +0x44. One entry per player, filled here and refreshed by animate
     // through the SAME sum_mobility below, which is why the two bodies
@@ -95,7 +95,7 @@ public:
     int m_frameDelay;              // +0x6c, 50 ticks
     int m_step;                    // +0x70
 
-    BottomViewEnemyTurn(heroWindow* parent);
+    BottomViewEnemyTurn(HeroWindow* parent);
     virtual ~BottomViewEnemyTurn();
     virtual void animate();
 
@@ -113,7 +113,7 @@ SIZE(BottomViewEnemyTurn, 0x74);
 // function symbols - so every SPELLING below is the house ordinal
 // convention applied to a proven role, not an attested name.
 // Before normalization (type): TBottomViewNewTurn.
-class BottomViewNewTurn : public type_bottom_view_window {
+class BottomViewNewTurn : public BottomViewWindow {
 public:
     // +0x34. A textWidget, redrawn through slot 4 immediately after the
     // icon on every frame step. The DERIVED type is byte-proven by the
@@ -122,15 +122,15 @@ public:
     // handing it to Widgets.push_back, and only a textWidget*->widget*
     // conversion makes that temporary exist - a plain widget* member is
     // passed by address (`lea ecx,[esi+0x34]`).
-    textWidget* m_backdrop;
+    TextWidget* m_backdrop;
     // +0x38. An iconWidget: animate calls SetIconFrame and send_message
     // on it and reads Sprite->GetNumFrames(0) through it.
-    iconWidget* m_icon;
+    IconWidget* m_icon;
     int m_frame;                   // +0x3c, the current sequence-0 frame
     int m_frameDelay;              // +0x40, ticks between steps
     unsigned long m_lastStepTime;  // +0x44, GameTime::Get at the last step
 
-    BottomViewNewTurn(heroWindow* parent);
+    BottomViewNewTurn(HeroWindow* parent);
     virtual ~BottomViewNewTurn();
     virtual void animate();
 };
@@ -139,18 +139,18 @@ SIZE(BottomViewNewTurn, 0x48);
 // Resource-message state is supplied by advManager; retail allocates no
 // derived storage beyond the 0x34-byte bottom-view base.
 // Before normalization (type): TBottomViewResourceMessage.
-class BottomViewResourceMessage : public type_bottom_view_window {
+class BottomViewResourceMessage : public BottomViewWindow {
 public:
-    BottomViewResourceMessage(heroWindow* parent, int res,
+    BottomViewResourceMessage(HeroWindow* parent, int res,
                                int quantity, const std::string* message);
     virtual ~BottomViewResourceMessage();
 };
 SIZE(BottomViewResourceMessage, 0x34);
 
 // Before normalization (type): TBottomViewMessage.
-class BottomViewMessage : public type_bottom_view_window {
+class BottomViewMessage : public BottomViewWindow {
 public:
-    BottomViewMessage(heroWindow* parent, const std::string* message);
+    BottomViewMessage(HeroWindow* parent, const std::string* message);
     virtual ~BottomViewMessage();
 };
 SIZE(BottomViewMessage, 0x34);

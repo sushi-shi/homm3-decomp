@@ -4,7 +4,7 @@
 
 #include "window.h"
 
-class message;
+class Message;
 
 // Packed source table row used by the game-type menu's five button layouts.
 // Retail's fixed-address movsx loads prove four consecutive shorts and an
@@ -24,9 +24,9 @@ SIZE(GameTypeButtonRect, 0x8);
 // object size to 0x50.  The retail constructor stores through +0x4c and the
 // handler reads it, independently confirming the translated offset.
 // Before normalization (type): TGameTypeWindow.
-class GameTypeWindow : public heroWindow {
+class GameTypeWindow : public HeroWindow {
 public:
-    enum EWidgetIDs {
+    enum WidgetIDs {
         SINGLE_ID = 100,
         CAMPAIGN_ID,
         MULTIPLAYER_ID,
@@ -47,7 +47,7 @@ private:
 };
 SIZE(GameTypeWindow, 0x50);
 
-int gameTypeWindowHandler(message& msg);
+int gameTypeWindowHandler(Message& msg);
 
 // Cross-TU menu-mode latch; oldmain owns the setup and both front-end menus
 // consume it.

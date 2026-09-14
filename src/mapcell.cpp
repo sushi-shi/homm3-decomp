@@ -135,7 +135,7 @@ int NewfullMap::saveTimedEventList(AbstractFile* outfile)
 VA(0x004fc440, 0xB7)  // dc 0xeba38
 int TimedEvent::save(AbstractFile* outfile)
 {
-    if (game::saveString(outfile, m_message) < 0)
+    if (Game::saveString(outfile, m_message) < 0)
         return -1;
     if (static_cast<unsigned>(outfile->write(m_resQty, sizeof(m_resQty)))
         < sizeof(m_resQty))
@@ -171,7 +171,7 @@ int NewfullMap::loadTimedEventList(AbstractFile* infile, int saveVersion)
 VA(0x004fc6a0, 0xC8)  // dc 0xebbbc
 int TimedEvent::load(AbstractFile* infile, int saveVersion)
 {
-    if (game::loadString(infile, m_message) < 0)
+    if (Game::loadString(infile, m_message) < 0)
         return -1;
     if (static_cast<unsigned>(infile->read(m_resQty, sizeof(m_resQty)))
         < sizeof(m_resQty))
@@ -320,7 +320,7 @@ AdventureObjectType NewmapCell::getMapObject() const
         return currentHero->getObscuredObject();
     }
     if (m_type == BOAT) {
-        const boat* currentBoat = g_game->getBoat(m_extraInfo);
+        const Boat* currentBoat = g_game->getBoat(m_extraInfo);
         return currentBoat->getObscuredObject();
     }
     return m_type;
@@ -344,7 +344,7 @@ unsigned char NewmapCell::cellIsTrigger() const
         return obscurer->isOnMap() && obscurer->obscuredIsTrigger();
     }
     if (m_type == BOAT) {
-        boat* obscurer = &g_game->m_boats[m_extraInfo];
+        Boat* obscurer = &g_game->m_boats[m_extraInfo];
         return obscurer->isOnMap() && obscurer->obscuredIsTrigger();
     }
     return m_isTrigger;
@@ -1021,12 +1021,12 @@ union LegacyUpgradeExtraInfo {
 union CurrentUpgradeExtraInfo {
     unsigned long m_value;
     CurrentArtifactInfo m_artifactInfo;
-    type_skeleton_info m_skeletonInfo;
+    SkeletonInfo m_skeletonInfo;
     MonsterInfo m_monsterInfo;
-    type_pyramid_info m_pyramidInfo;
+    PyramidInfo m_pyramidInfo;
     TreasureInfo m_treasureInfo;
     CurrentUpgradeWagonInfo m_wagonInfo;
-    type_tomb_info m_tombInfo;
+    TombInfo m_tombInfo;
     CurrentVisitedInfo m_visitedInfo;
 };
 
@@ -1258,7 +1258,7 @@ VA(0x004fed40, 0x102)  // dc 0xedbf8
 int NewfullMap::readGeneratorData(
     AbstractFile* infile, CObject* generatorObject)
 {
-    generator tempGenerator;
+    Generator tempGenerator;
     signed char owner;
     char padding[3];
 
@@ -1377,7 +1377,7 @@ int NewfullMap::saveTreasureList(AbstractFile* outfile)
 VA(0x004fef10, 0x4D)  // dc 0xee020
 int NewfullMap::saveTreasureData(AbstractFile* outfile, TreasureData* thisTreasure)
 {
-    game::saveString(outfile, thisTreasure->m_message);
+    Game::saveString(outfile, thisTreasure->m_message);
 
     unsigned char charBuffer = thisTreasure->m_hasCustomGuardians;
     if (static_cast<unsigned>(outfile->write(&charBuffer, 1)) < 1)
@@ -1409,7 +1409,7 @@ int NewfullMap::loadTreasureList(AbstractFile* infile)
 // The record is a reference in the CodeView formal argument list.
 int NewfullMap::loadTreasureData(AbstractFile* infile, TreasureData& thisTreasure)
 {
-    game::loadString(infile, thisTreasure.m_message);
+    Game::loadString(infile, thisTreasure.m_message);
 
     unsigned char value;
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -2195,7 +2195,7 @@ void NewfullMap::loadShipyards()
 VA(0x00501020, 0x110)  // dc 0xeffec
 int NewfullMap::readMineData(AbstractFile* infile, CObject* mineObject)
 {
-    mine tempMine;
+    Mine tempMine;
     signed char owner;
     char padding[3];
 
@@ -2227,7 +2227,7 @@ VA(0x00501130, 0x132)  // dc 0xf013c
 int NewfullMap::readAbandonedMineData(AbstractFile* infile,
                                       CObject* mineObject)
 {
-    mine tempMine;
+    Mine tempMine;
     int mineTypes;
     char padding[3];
 
@@ -2488,7 +2488,7 @@ int NewfullMap::loadMonsterList(AbstractFile* infile)
 VA(0x00501980, 0x6B)  // dc 0xf0824
 int NewfullMap::saveMonsterData(AbstractFile* outfile, MonsterData* thisMonster)
 {
-    game::saveString(outfile, thisMonster->m_message);
+    Game::saveString(outfile, thisMonster->m_message);
 
     for (int i = 0; i < 7; ++i) {
         int value = thisMonster->m_resQty[i];
@@ -2506,7 +2506,7 @@ int NewfullMap::saveMonsterData(AbstractFile* outfile, MonsterData* thisMonster)
 // The record is a reference in the CodeView formal argument list.
 int NewfullMap::loadMonsterData(AbstractFile* infile, MonsterData& thisMonster)
 {
-    game::loadString(infile, thisMonster.m_message);
+    Game::loadString(infile, thisMonster.m_message);
 
     for (int i = 0; i < 7; ++i) {
         int value;
@@ -3038,7 +3038,7 @@ VA(0x00502a00, 0x151)  // dc 0xf151c
 int NewfullMap::readGarrisonData(AbstractFile* infile, CObject* garrisonObject,
                                  int mapVersion)
 {
-    garrison newGarrison;
+    Garrison newGarrison;
 
     unsigned char owner;
     if (infile->read(&owner, sizeof(owner)) < sizeof(owner))
@@ -3095,7 +3095,7 @@ int NewfullMap::readGarrisonData(AbstractFile* infile, CObject* garrisonObject,
 VA(0x00502b60, 0x29B)
 void NewfullMap::soDTransformRandomDwellings()
 {
-    generator newGenerator;
+    Generator newGenerator;
 
     for (unsigned int index = 0; index < m_randomDwellings.size(); ++index) {
         RandomDwellingData& dwelling = m_randomDwellings[index];
@@ -3729,7 +3729,7 @@ VA(0x00503c40, 0x2B9)  // dc 0xf22cc
 int NewfullMap::saveObjectType(AbstractFile* outfile,
                                CObjectType* tempObjectType)
 {
-    game::saveString(outfile, tempObjectType->m_imageName);
+    Game::saveString(outfile, tempObjectType->m_imageName);
 
     char value = tempObjectType->m_width;
     if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
@@ -3792,7 +3792,7 @@ VA(0x00503f00, 0x35D)  // dc 0xf2784
 int NewfullMap::loadObjectType(AbstractFile* infile,
                                CObjectType* tempObjectType)
 {
-    game::loadString(infile, tempObjectType->m_imageName);
+    Game::loadString(infile, tempObjectType->m_imageName);
 
     char value;
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -4317,7 +4317,7 @@ VA(0x00505a10, 0x108)  // dc 0xf42f0
 void NewfullMap::calculateCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
 {
     Hero* obscuringHero = 0;
-    boat* obscuringBoat = 0;
+    Boat* obscuringBoat = 0;
     unsigned char restoreHero = 0;
     unsigned char restoreBoat = 0;
     AdventureObjectType visibleType = thisCell->getMapObject();
@@ -4594,7 +4594,7 @@ VA_COMPGEN(0x005085a0, 0xF3, VECTOR_ERASE, TownEvent)
 VA_COMPGEN(0x005086a0, 0x23, VECTOR_DESTROY, TownEvent)
 VA_COMPGEN(0x005086d0, 0x53, VECTOR_ERASE, HeroPlaceholderData)
 VA_COMPGEN(0x00508730, 0x12E, VECTOR_ERASE, TownExtra)
-VA_COMPGEN(0x00508860, 0x44, VECTOR_ERASE, generator)
+VA_COMPGEN(0x00508860, 0x44, VECTOR_ERASE, Generator)
 VA_COMPGEN(0x005088b0, 0x58, VECTOR_UCOPY, SeerHut)
 VA_COMPGEN(0x00508910, 0x4E, VECTOR_UFILL, SeerHut)
 VA_COMPGEN(0x00508960, 0x3E, VECTOR_UCOPY, QuestGuard)
@@ -4602,14 +4602,14 @@ VA_COMPGEN(0x005089a0, 0x34, VECTOR_UFILL, QuestGuard)
 // RandomDwellingData's instantiation precedes the byte-identical
 // HeroPlaceholderData instantiation in mapcell.obj and owns the folded body.
 VA_COMPGEN(0x005089e0, 0x30A, VECTOR_INSERT, RandomDwellingData)
-VA_COMPGEN(0x005090b0, 0x30C, VECTOR_INSERT, generator)
+VA_COMPGEN(0x005090b0, 0x30C, VECTOR_INSERT, Generator)
 // The mutable/const-source int-copy helpers at 0x5093c0/0x54df40 now expand
 // in mapcell. Both canonical <algorithm> specializations still emit in rmg,
 // where their enrollments live. The mutable form is also called for folded pointer
 // arrays; BlackBoxData's implicit assignment calls the separate const form.
 VA_COMPGEN(0x005093f0, 0x1A4, STD_COPY, TimedEvent)
-VA_COMPGEN(0x005095e0, 0x3F, STD_COPY, type_university)
-VA_COMPGEN(0x00509620, 0x207, STD_COPY, type_creature_bank)
+VA_COMPGEN(0x005095e0, 0x3F, STD_COPY, University)
+VA_COMPGEN(0x00509620, 0x207, STD_COPY, CreatureBank)
 VA_COMPGEN(0x00509830, 0x168, STD_CONSTRUCT, TreasureData)
 VA_COMPGEN(0x005099a0, 0x16A, STD_CONSTRUCT, MonsterData)
 VA_COMPGEN(0x00509b10, 0x208, STD_CONSTRUCT, BlackBoxData)
@@ -4706,7 +4706,7 @@ void MonsterData::MonsterData()
 // E:\gamedcs\Hero.h:167
 DC_ONLY(0xf4abc, 0x32)
 // Before normalization (function): type_obscuring_object::get_obscured_trigger.
-unsigned char type_obscuring_object::getObscuredTrigger()
+unsigned char ObscuringObject::getObscuredTrigger()
 {
     // @stub
 }
@@ -5374,63 +5374,63 @@ void std::vector<Sign,std::allocator<Sign> >::clear()
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0xf5c8c, 0x54)
-void std::vector<mine,std::allocator<mine> >::push_back(const mine* __x)
+void std::vector<Mine,std::allocator<Mine> >::push_back(const Mine* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf5ce0, 0x3C)
-void std::vector<mine,std::allocator<mine> >::clear()
+void std::vector<Mine,std::allocator<Mine> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0xf5d1c, 0x54)
-void std::vector<generator,std::allocator<generator> >::push_back(const generator* __x)
+void std::vector<Generator,std::allocator<Generator> >::push_back(const Generator* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf5d70, 0x3C)
-void std::vector<generator,std::allocator<generator> >::clear()
+void std::vector<Generator,std::allocator<Generator> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0xf5dac, 0x54)
-void std::vector<garrison,std::allocator<garrison> >::push_back(const garrison* __x)
+void std::vector<Garrison,std::allocator<Garrison> >::push_back(const Garrison* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf5e00, 0x3C)
-void std::vector<garrison,std::allocator<garrison> >::clear()
+void std::vector<Garrison,std::allocator<Garrison> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf5e3c, 0x3C)
-void std::vector<boat,std::allocator<boat> >::clear()
+void std::vector<Boat,std::allocator<Boat> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf5e78, 0x3C)
-void std::vector<type_university,std::allocator<type_university> >::clear()
+void std::vector<University,std::allocator<University> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf5eb4, 0x3C)
-void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::clear()
+void std::vector<CreatureBank,std::allocator<CreatureBank> >::clear()
 {
     // @stub
 }

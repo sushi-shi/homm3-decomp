@@ -64,7 +64,8 @@ typedef THeroClass HeroClass;
 // facing, returning 0/1/2/3/4 with 5,6,7 folded back onto 3,2,1 - i.e.
 // the west-facing frames are the east-facing ones mirrored, which is
 // exactly what a n/ne/e/se/s roster with no west members implies.
-enum hero_seqid {
+// Before normalization (type): hero_seqid.
+enum HeroSeqid {
     hs_stand_n = 0,
     hs_stand_ne = 1,
     hs_stand_e = 2,
@@ -93,7 +94,8 @@ enum hero_seqid {
 // unaligned dword loads). Names provisional.
 #pragma pack(push, 1)
 
-enum EHeroBackpackLimit {
+// Before normalization (type): EHeroBackpackLimit.
+enum HeroBackpackLimit {
     HERO_BACKPACK_CAPACITY = 64
 };
 
@@ -128,7 +130,8 @@ enum ArtifactSlot {
 // inheritance edges and supplies the member identities; retail proves the
 // 0x18-byte extent and every serialized offset. Retail packs type_point at
 // +0x07, one byte earlier than the naturally aligned Dreamcast build.
-struct type_obscuring_object {
+// Before normalization (type): type_obscuring_object.
+struct ObscuringObject {
 public:
     short m_x;  // +0x00 (DC mapX)
     short m_y;  // +0x02 (DC mapY)
@@ -148,7 +151,7 @@ private:
 public:
     char m_paddingBeforeExtraInfo[3];
 
-    type_obscuring_object();
+    ObscuringObject();
     class Town* getObscuredTown() const;
     // E:\gamedcs\hero.h:117. The Dreamcast tiny helper is the direct byte
     // accessor; retail expands it to the same +0x10 load at its callers.
@@ -195,7 +198,7 @@ protected:
 private:
     unsigned long m_extraInfo;  // +0x14
 };
-SIZE(type_obscuring_object, 0x18);
+SIZE(ObscuringObject, 0x18);
 
 #pragma pack(pop)
 
@@ -218,7 +221,7 @@ SIZE(type_obscuring_object, 0x18);
 // compare). With facing already proven at +0x1b that is four hits and
 // the stride, so the DC roster transfers to retail unrepacked and the
 // extent is now proven: sizeof is 0x28.
-class boat : public type_obscuring_object {
+class Boat : public ObscuringObject {
 public:
     unsigned char m_allocated;  // +0x18
     unsigned char m_id;  // +0x19
@@ -229,17 +232,17 @@ public:
     int m_occupyingHero;  // +0x20 (THeroID)
     unsigned char m_occupied;  // +0x24
     char m_paddingAfterOccupied[3];
-    boat() : m_allocated(0) {}
-    hero_seqid getStandSequence();
+    Boat() : m_allocated(0) {}
+    HeroSeqid getStandSequence();
     // Hero.h:196 in Dreamcast. Complete expands this ordinary header helper
     // in MoveHero, CreateBoat and the event-record undo path; retaining the
     // named boundary also preserves the byte-id zero extension at each site.
     void obscureCell()
     {
-        type_obscuring_object::obscureCell(BOAT, m_id);
+        ObscuringObject::obscureCell(BOAT, m_id);
     }
 };
-SIZE(boat, 0x28);
+SIZE(Boat, 0x28);
 
 #pragma pack(push, 1)
 
@@ -281,7 +284,7 @@ public:
         getDescription() const;
 };
 
-class boat;
+class Boat;
 
 // The two combat latches hero::Deallocate consults before dismissing the
 // army and before re-rolling the garrison. DECLARATION ONLY - cmbtmgr.h
@@ -346,7 +349,7 @@ extern const char* g_moraleTexts[42];
 extern const char* g_luckTexts[25];
 
 // Before normalization (type): hero.
-class Hero : public type_obscuring_object {
+class Hero : public ObscuringObject {
 public:
     enum {
         CLASS_NAME_OVERRIDE_HERO_ID = 27,
@@ -847,7 +850,7 @@ public:
     // 0x4d9050 / 0x4e56b0, the two owner-record accessors; both open
     // with the same `owner < 0` guard.
     unsigned char belongsToHuman() const;
-    class playerData* getPlayer() const;
+    class PlayerData* getPlayer() const;
     // 0x4e5330 / 0x4e5380, the two status-bar gauge frames.
     int getMobilityFrame() const;
     int getManaFrame() const;
@@ -905,7 +908,7 @@ public:
         return m_facing > kFacingS;
     }
     // 0x004d9110 - the idle frame for the hero's current facing.
-    hero_seqid getStandSequence();
+    HeroSeqid getStandSequence();
     // 0x004e2f90 - inserts an artifact into the backpack, shifting the
     // tail up when the requested slot is occupied. `slot` < 0 means
     // "first free".
@@ -1006,7 +1009,7 @@ public:
     }
     void obscureCell()
     {
-        type_obscuring_object::obscureCell(HERO, m_id);
+        ObscuringObject::obscureCell(HERO, m_id);
     }
     // DC-attested header inline (E:\gamedcs\hero.h:687, dc 0x70a1c, 16
     // SH4 bytes, params `skill` and `amount` both T_INT4) - and its own
@@ -1049,7 +1052,8 @@ public:
     // Claimed in src/hero.cpp (0x4e5760 / 0x4e5ff0); declared here so
     // ai_combat's inlined get_spell_damage / get_resurrection_value can
     // call them.
-    long modifySpellDamage(int spell, int damage, const class army* targetArmy) const;
+// Before normalization (type): army.
+    long modifySpellDamage(int spell, int damage, const class Army* targetArmy) const;
     SkillMastery getSpellLevel(SpellID spell, int magicTerrain) const;
     SkillMastery getSpellSchoolLevel(SpellSchool schoolMask,
                                       int magicTerrain) const;
@@ -1200,7 +1204,7 @@ public:
     // assembly through a NormalDialog and calls HeroFn_004DBF30 on yes.
     // ORDINAL PLACEHOLDER.
     void heroFn004DC100(long slot);
-    boat* findSummonableBoat() const;
+    Boat* findSummonableBoat() const;
     void placeInMap(int playerId, type_point point, unsigned char resetFlags);
     int load(AbstractFile* infile, int saveVersion);
     int save(AbstractFile* outfile);
@@ -1288,7 +1292,8 @@ SIZE(HeroClassTraits, 0x40);
 // Dreamcast names this public aggregate and its retail producer preserves the
 // exact layout: 21 land-speed entries, four Navigation masteries, then five
 // movement bonuses. Complete keeps the Stables bonus in the preceding cell.
-struct type_movement_constants {
+// Before normalization (type): type_movement_constants.
+struct MovementConstants {
 public:
     int m_land[21];
     int m_sea[4];
@@ -1298,8 +1303,8 @@ public:
     int m_seaCaptainsHatBonus;
     int m_lighthouseBonus;
 };
-SIZE(type_movement_constants, 0x78);
-extern type_movement_constants g_moveConstants;
+SIZE(MovementConstants, 0x78);
+extern MovementConstants g_moveConstants;
 extern int g_landMovement[21];
 DATA(0x0067d868) extern HeroClassTraits g_heroClassTraits[18];
 extern const HeroClassTraits (&g_heroClasses)[18];
@@ -1360,7 +1365,8 @@ DATA(0x00698a50) extern int g_heroScreenHeroId;
 // Before normalization (type): THeroScreenWindow.
 class HeroScreenWindow : public CAdvPopup {
 public:
-    enum EArtifactSlotBounds {
+// Before normalization (type): HeroScreenWindow::EArtifactSlotBounds.
+    enum ArtifactSlotBounds {
         ARTIFACT_SLOT_FIRST = 0,
         ARTIFACT_SLOT_COUNT = 19
     };
@@ -1375,7 +1381,8 @@ public:
     // three id-triplets below are structurally "three widgets share one
     // rollover row" (icon/label/value), but nothing in the bytes says
     // which triplet is which.
-    enum EHeroScreenWidgetId {
+// Before normalization (type): HeroScreenWindow::EHeroScreenWidgetId.
+    enum HeroScreenWidgetId {
         ARTIFACT_SLOT_0_ID = 0x02,  ARTIFACT_SLOT_1_ID,  ARTIFACT_SLOT_2_ID,
         ARTIFACT_SLOT_3_ID,  ARTIFACT_SLOT_4_ID,  ARTIFACT_SLOT_5_ID,
         ARTIFACT_SLOT_6_ID,  ARTIFACT_SLOT_7_ID,  ARTIFACT_SLOT_8_ID,
@@ -1437,13 +1444,13 @@ public:
     // dereferences end-1 before the first widget push. The base constructors
     // do not populate the vector, so this does not establish a background
     // or last-base-widget role. Keep the semantic name unresolved.
-    widget* m_field64;
+    Widget* m_field64;
     HeroScreenWindow();
     virtual ~HeroScreenWindow();
-    virtual int windowHandler(class message& msg);
+    virtual int windowHandler(class Message& msg);
     void updateSlot(ArtifactSlot slot);
     void updateAllSlots();
-    void updateHeroScreenStatusBar(class message* msg);
+    void updateHeroScreenStatusBar(class Message* msg);
     void updateHeroLocator(int which);
     void updateHeroLocators();
     // 0x4e1a50, thiscall with no arguments and NOT virtual (absent from
@@ -1451,7 +1458,7 @@ public:
     // all - `this` only ever feeds member calls - so the layout above
     // needs nothing for it.
     void setupHeroView();
-    virtual int exitDialog(class message& msg);
+    virtual int exitDialog(class Message& msg);
 };
 SIZE(HeroScreenWindow, 0x68);
 

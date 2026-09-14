@@ -38,9 +38,10 @@ namespace ResourceManager {
 // behavior at these addresses. These implementation types are used only by
 // this resource-loading module; they have no shared header interface.
 // Both Write methods fold with CHeroWindowEx::OnWidgetDeselect at 0x559140.
-class t_stdio_file_adapter : public AbstractFile {
+// Before normalization (type): ResourceManager::t_stdio_file_adapter.
+class StdioFileAdapter : public AbstractFile {
 public:
-    explicit t_stdio_file_adapter(FILE* value) : m_file(value) {}
+    explicit StdioFileAdapter(FILE* value) : m_file(value) {}
 
     virtual int read(void* data, int size);
     VA(0x00559140, 0x5)  // two adapter vtables + exact body, retail-only
@@ -49,9 +50,10 @@ public:
     FILE* m_file;
 };
 
-class t_lod_file_adapter : public AbstractFile {
+// Before normalization (type): ResourceManager::t_lod_file_adapter.
+class LodFileAdapter : public AbstractFile {
 public:
-    explicit t_lod_file_adapter(LODFile* value) : m_lodFile(value) {}
+    explicit LodFileAdapter(LODFile* value) : m_lodFile(value) {}
 
     virtual int read(void* data, int size);
     virtual int write(const void*, int) { return 0; }
@@ -71,15 +73,15 @@ public:
     bool operator<(const CacheMapKey& other) const;
 };
 
-typedef std::map<CacheMapKey, resource*> TCacheMap;
+typedef std::map<CacheMapKey, Resource*> TCacheMap;
 SIZE(CacheMapKey, 13);
 SIZE(TCacheMap, 16);
 
 Bitmap16Bit* loadBitmap16(const char* name);
 Palette16* loadPalette(const char* name);
 Palette24* getPalette24(const char* name);
-font* loadFont(const char* name);
-font* loadFontData(const char* name, AbstractFile* stream, int fileSize);
+Font* loadFont(const char* name);
+Font* loadFontData(const char* name, AbstractFile* stream, int fileSize);
 TextResource* loadText(const char* name);
 SpreadsheetResource* loadSpreadsheet(const char* name);
 
@@ -169,7 +171,7 @@ Palette24* ResourceManager::getPalette24(const char* name)
 
 // E:\gamedcs\resourcemanager.cpp:1221
 DC_ONLY(0x121fac, 0xE0)
-font* ResourceManager::getFont(const char* name)
+Font* ResourceManager::getFont(const char* name)
 {
     // @stub
 }
@@ -196,13 +198,13 @@ struct ResourceLODSlot {
 SIZE(ResourceLODSlot, 0x190);
 
 VA(0x005590f0, 0x1D)  // stdio adapter vtable slot 1
-int ResourceManager::t_stdio_file_adapter::read(void* data, int size)
+int ResourceManager::StdioFileAdapter::read(void* data, int size)
 {
     return fread(data, 1, size, m_file);
 }
 
 VA(0x00559110, 0x21)  // LOD adapter vtable slot 1
-int ResourceManager::t_lod_file_adapter::read(void* data, int size)
+int ResourceManager::LodFileAdapter::read(void* data, int size)
 {
     return m_lodFile->read(data, size) ? 0 : size;
 }
@@ -216,7 +218,7 @@ ResourceLODSlot::ResourceLODSlot(const char* name)
 VA_COMPGEN(0x00559440, 0x6E, IMPLICIT_DTOR, map)
 
 VA(0x005594b0, 0x40)  // dc 0x122984
-void ResourceManager::addToCache(resource* value)
+void ResourceManager::addToCache(Resource* value)
 {
     g_resourceCache.insert(std::make_pair(value->getName(), value));
     value->addRef();
@@ -266,7 +268,7 @@ DATA(0x0069e4f0) std::string g_resourcePath;
 // message scope regresses to 87.0742, and predict-inline leaves only one
 // ios_base destructor and one string::_Tidy over-inlined.
 VA(0x00559510, 0x4C1)  // caller ABI + retail type-name jump table/message graph
-void __fastcall game_null_159510(const char* caller,
+void __fastcall gameNull159510(const char* caller,
                                  int resourceType,
                                  const char* resourceName)
 {
@@ -399,7 +401,7 @@ void __fastcall game_null_159510(const char* caller,
 // six blocks are size-only stream frame coloring rather than a missing
 // semantic branch.
 VA(0x005599e0, 0x448)  // anchor-caller + retail type-name jump table; wall
-void __fastcall game_sprite_1599e0(const char* caller,
+void __fastcall gameSprite1599e0(const char* caller,
                                    int resourceType,
                                    const char* resourceName)
 {
@@ -521,7 +523,7 @@ void ResourceManager::remapGraphics()
 {
     for (TCacheMap::iterator position = g_resourceCache.begin();
          position != g_resourceCache.end(); position++) {
-        resource* value = position->second;
+        Resource* value = position->second;
 
         switch (value->getResType()) {
         case RESOURCE_TYPE_BITMAP16: {
@@ -552,7 +554,7 @@ void ResourceManager::remapGraphics()
                 DATA_COMPGEN(0x0067f780, resourceGamePaletteName,
                              "game.pal")));
             if (palette.get())
-                static_cast<font*>(value)->setPalette(*palette);
+                static_cast<Font*>(value)->setPalette(*palette);
             break;
         }
 
@@ -573,7 +575,7 @@ void ResourceManager::saturateGraphics()
 {
     for (TCacheMap::iterator position = g_resourceCache.begin();
          position != g_resourceCache.end(); position++) {
-        resource* value = position->second;
+        Resource* value = position->second;
 
         switch (value->getResType()) {
         case RESOURCE_TYPE_BITMAP16: {
@@ -608,7 +610,7 @@ void ResourceManager::saturateGraphics()
         case RESOURCE_TYPE_FONT: {
             std::auto_ptr<Palette16> palette(loadPalette("game.pal"));
             if (palette.get())
-                static_cast<font*>(value)->setPalette(*palette);
+                static_cast<Font*>(value)->setPalette(*palette);
             break;
         }
 
@@ -723,7 +725,7 @@ void ResourceManager::close()
 {
     TCacheMap::iterator position = g_resourceCache.begin();
     while (position != g_resourceCache.end()) {
-        resource* value = position->second;
+        Resource* value = position->second;
         if (value)
             delete value;
         ++position;
@@ -793,9 +795,9 @@ void ResourceManager::setPixelFormat(unsigned long redMask,
 }
 
 VA_COMPGEN(0x0055a7a0, 0x21, SCALAR_DELETING_DTOR,
-           t_stdio_file_adapter)
+           StdioFileAdapter)
 VA_COMPGEN(0x0055a7d0, 0x21, SCALAR_DELETING_DTOR,
-           t_lod_file_adapter)
+           LodFileAdapter)
 
 VA(0x0055a800, 0x41F)  // bitmapBorder::SetImage loader; dc 0x121ac8
 Bitmap816* ResourceManager::getBitmap816(const char* name)
@@ -836,7 +838,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
         }
 
         if (!lodFile) {
-            game_null_159510(
+            gameNull159510(
                 DATA_COMPGEN(0x00683030, getBitmap816ErrorContext,
                              "GetBitmap816"),
                 RESOURCE_TYPE_BITMAP, name);
@@ -859,7 +861,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
             }
 
             if (!lodFile) {
-                game_null_159510(
+                gameNull159510(
                     DATA_COMPGEN(0x00683030, getBitmap816ErrorContext,
                                  "GetBitmap816"),
                     RESOURCE_TYPE_BITMAP, fallbackName);
@@ -951,7 +953,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
         }
 
         if (!lodFile) {
-            game_null_159510(
+            gameNull159510(
                 DATA_COMPGEN(0x00683040, loadBitmap16ErrorContext,
                              "GetBitmap16"),
                 RESOURCE_TYPE_BITMAP16, name);
@@ -974,7 +976,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
             }
 
             if (!lodFile) {
-                game_null_159510(
+                gameNull159510(
                     DATA_COMPGEN(0x00683040, loadBitmap16ErrorContext,
                                  "GetBitmap16"),
                     RESOURCE_TYPE_BITMAP16, fallbackName);
@@ -1071,7 +1073,7 @@ Palette16* ResourceManager::loadPalette(const char* name)
 
     if (file) {
         try {
-            t_stdio_file_adapter stream(file);
+            StdioFileAdapter stream(file);
             AbstractFile* streamInterface = &stream;
             streamInterface->read(header, sizeof(header));
             streamInterface->read(paletteData, sizeof(paletteData));
@@ -1113,7 +1115,7 @@ Palette16* ResourceManager::loadPalette(const char* name)
         }
 
         if (!lodFile) {
-            game_null_159510(
+            gameNull159510(
                 DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
                              "GetPalette"),
                 RESOURCE_TYPE_PALETTE, name);
@@ -1136,7 +1138,7 @@ Palette16* ResourceManager::loadPalette(const char* name)
             }
 
             if (!lodFile) {
-                game_null_159510(
+                gameNull159510(
                     DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
                                  "GetPalette"),
                     RESOURCE_TYPE_PALETTE, fallbackName);
@@ -1144,7 +1146,7 @@ Palette16* ResourceManager::loadPalette(const char* name)
             }
         }
 
-        t_lod_file_adapter stream(lodFile);
+        LodFileAdapter stream(lodFile);
         AbstractFile* streamInterface = &stream;
         streamInterface->read(header, sizeof(header));
         streamInterface->read(paletteData, sizeof(paletteData));
@@ -1216,7 +1218,7 @@ Palette24* ResourceManager::getPalette24(const char* name)
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
     if (file) {
         try {
-            t_stdio_file_adapter stream(file);
+            StdioFileAdapter stream(file);
             AbstractFile* streamInterface = &stream;
             streamInterface->read(header, sizeof(header));
             streamInterface->read(rgba, sizeof(rgba));
@@ -1250,7 +1252,7 @@ Palette24* ResourceManager::getPalette24(const char* name)
     }
 
     if (!lodFile) {
-        game_null_159510(
+        gameNull159510(
             DATA_COMPGEN(0x0068304c, loadPaletteErrorContext, "GetPalette"),
             RESOURCE_TYPE_PALETTE, name);
 
@@ -1272,7 +1274,7 @@ Palette24* ResourceManager::getPalette24(const char* name)
         }
 
         if (!lodFile) {
-            game_null_159510(
+            gameNull159510(
                 DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
                              "GetPalette"),
                 RESOURCE_TYPE_PALETTE, fallbackName);
@@ -1284,7 +1286,7 @@ Palette24* ResourceManager::getPalette24(const char* name)
     // exact t_lod_file_adapter::Read receiver. Retail proves the vtable owner
     // at 0x641128 and its slot-1 target at 0x559110; keeping this adapter is a
     // revision fact, not permission to flatten the older helper operation.
-    t_lod_file_adapter stream(lodFile);
+    LodFileAdapter stream(lodFile);
     AbstractFile* streamInterface = &stream;
     streamInterface->read(header, sizeof(header));
     streamInterface->read(rgba, sizeof(rgba));
@@ -1296,18 +1298,18 @@ Palette24* ResourceManager::getPalette24(const char* name)
 }
 
 VA(0x0055b750, 0x17A)
-font* ResourceManager::loadFontData(const char* name, AbstractFile* stream,
+Font* ResourceManager::loadFontData(const char* name, AbstractFile* stream,
                                     int fileSize)
 {
-    font::FontSpec spec;
+    Font::FontSpec spec;
     stream->read(&spec, sizeof(spec));
 
     int dataSize = fileSize - sizeof(spec);
     std::auto_ptr<unsigned char> data(new unsigned char[dataSize]);
     stream->read(data.get(), dataSize);
 
-    std::auto_ptr<font> result(
-        new font(name, spec, dataSize, data.get()));
+    std::auto_ptr<Font> result(
+        new Font(name, spec, dataSize, data.get()));
     data = std::auto_ptr<unsigned char>(0);
 
     Palette16* palette = getPalette("game.pal");
@@ -1326,7 +1328,7 @@ font* ResourceManager::loadFontData(const char* name, AbstractFile* stream,
 }
 
 VA(0x0055b8d0, 0x229)
-font* ResourceManager::loadFont(const char* name)
+Font* ResourceManager::loadFont(const char* name)
 {
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
 
@@ -1336,9 +1338,9 @@ font* ResourceManager::loadFont(const char* name)
             int fileSize = ftell(file);
             fseek(file, 0, SEEK_SET);
 
-            t_stdio_file_adapter stream(file);
+            StdioFileAdapter stream(file);
             AbstractFile* streamInterface = &stream;
-            font* result = loadFontData(name, streamInterface, fileSize);
+            Font* result = loadFontData(name, streamInterface, fileSize);
 
             fclose(file);
             return result;
@@ -1366,7 +1368,7 @@ font* ResourceManager::loadFont(const char* name)
     }
 
     if (!lodFile) {
-        game_null_159510(
+        gameNull159510(
             DATA_COMPGEN(0x00683058, loadFontErrorContext, "GetFont"),
             RESOURCE_TYPE_FONT, name);
 
@@ -1388,7 +1390,7 @@ font* ResourceManager::loadFont(const char* name)
         }
 
         if (!lodFile) {
-            game_null_159510(
+            gameNull159510(
                 DATA_COMPGEN(0x00683058, loadFontErrorContext, "GetFont"),
                 RESOURCE_TYPE_FONT, fallbackName);
             return 0;
@@ -1396,19 +1398,19 @@ font* ResourceManager::loadFont(const char* name)
     }
 
     int fileSize = lodFile->getItemIndex(name)->m_size;
-    t_lod_file_adapter stream(lodFile);
+    LodFileAdapter stream(lodFile);
     AbstractFile* streamInterface = &stream;
     return loadFontData(name, streamInterface, fileSize);
 }
 
 VA(0x0055bb00, 0x8A)
-font* ResourceManager::getFont(const char* name)
+Font* ResourceManager::getFont(const char* name)
 {
-    font* cached = static_cast<font*>(getFromCache(name));
+    Font* cached = static_cast<Font*>(getFromCache(name));
     if (cached)
         return cached;
 
-    font* loaded = loadFont(name);
+    Font* loaded = loadFont(name);
     if (loaded)
         addToCache(loaded);
     return loaded;
@@ -1429,7 +1431,7 @@ TextResource* ResourceManager::loadText(const char* name)
 
             TextResource* result;
             {
-                t_stdio_file_adapter stream(file);
+                StdioFileAdapter stream(file);
                 std::auto_ptr<char> data(new char[fileSize]);
                 AbstractFile* streamInterface = &stream;
                 streamInterface->read(data.get(), fileSize);
@@ -1461,14 +1463,14 @@ TextResource* ResourceManager::loadText(const char* name)
     }
 
     if (!lodFile) {
-        game_null_159510(
+        gameNull159510(
             DATA_COMPGEN(0x00683060, loadTextErrorContext, "GetText"),
             RESOURCE_TYPE_TEXT, name);
         return 0;
     }
 
     int fileSize = lodFile->getItemIndex(name)->m_size;
-    t_lod_file_adapter stream(lodFile);
+    LodFileAdapter stream(lodFile);
     std::auto_ptr<char> data(new char[fileSize]);
     AbstractFile* streamInterface = &stream;
     streamInterface->read(data.get(), fileSize);
@@ -1501,7 +1503,7 @@ SpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
 
             SpreadsheetResource* result;
             {
-                t_stdio_file_adapter stream(file);
+                StdioFileAdapter stream(file);
                 std::auto_ptr<char> data(new char[fileSize]);
                 AbstractFile* streamInterface = &stream;
                 streamInterface->read(data.get(), fileSize);
@@ -1534,7 +1536,7 @@ SpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
     }
 
     if (!lodFile) {
-        game_null_159510(
+        gameNull159510(
             DATA_COMPGEN(0x00683068, loadSpreadsheetErrorContext,
                          "GetSpreadsheet"),
             RESOURCE_TYPE_TEXT, name);
@@ -1542,7 +1544,7 @@ SpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
     }
 
     int fileSize = lodFile->getItemIndex(name)->m_size;
-    t_lod_file_adapter stream(lodFile);
+    LodFileAdapter stream(lodFile);
     std::auto_ptr<char> data(new char[fileSize]);
     AbstractFile* streamInterface = &stream;
     streamInterface->read(data.get(), fileSize);
@@ -1573,7 +1575,7 @@ unsigned char ResourceManager::getSoundFile(char* localName, void** data, SoundH
 
 // E:\gamedcs\resourcemanager.cpp:1606
 DC_ONLY(0x1222e0, 0x40)
-sample* ResourceManager::getSample(const char* name)
+Sample* ResourceManager::getSample(const char* name)
 {
     // @stub
 }
@@ -1624,13 +1626,13 @@ int ResourceManager::getBitmapResourceSize(const char* name)
 
 // E:\gamedcs\resourcemanager.cpp:2141, dc 0x122530.
 // Complete routes disposal through the resource virtual method.
-void ResourceManager::dispose(resource* value) { value->dispose(); }
+void ResourceManager::dispose(Resource* value) { value->dispose(); }
 
 #if 0  // @carcass
 
 // E:\gamedcs\resourcemanager.cpp:2196
 DC_ONLY(0x1225c0, 0x1C)
-void ResourceManager::dispose(sample* sam)
+void ResourceManager::dispose(Sample* sam)
 {
     // @stub
 }
@@ -1659,12 +1661,12 @@ void ResourceManager::Expunge()
 #endif  // @carcass
 
 // A cache hit adds a reference before returning the resource.
-resource* ResourceManager::getFromCache(const char* name)
+Resource* ResourceManager::getFromCache(const char* name)
 {
     TCacheMap::iterator found = g_resourceCache.find(name);
     if (found == g_resourceCache.end())
         return 0;
-    resource* value = found->second;
+    Resource* value = found->second;
     value->addRef();
     return value;
 }
@@ -1673,7 +1675,7 @@ resource* ResourceManager::getFromCache(const char* name)
 
 // E:\gamedcs\resourcemanager.cpp:2397
 DC_ONLY(0x122984, 0x72)
-void ResourceManager::addToCache(resource* r)
+void ResourceManager::addToCache(Resource* r)
 {
     // @stub
 }
@@ -1715,14 +1717,14 @@ void std::_Rb_tree_rotate_right(std::_Rb_tree_node_base* __x, std::_Rb_tree_node
 
 // E:\gamedcs\resrce.h:36
 DC_ONLY(0x122af0, 0x8)
-int resource::AddRef()
+int Resource::AddRef()
 {
     // @stub
 }
 
 // E:\gamedcs\resrce.h:37
 DC_ONLY(0x122af8, 0x10)
-int resource::Release()
+int Resource::Release()
 {
     // @stub
 }
@@ -1792,56 +1794,56 @@ unsigned char ResourceManager::CacheMapKey::operator<(const ResourceManager::Cac
 
 // E:\gamedcs\resourcemanager.cpp:136
 DC_ONLY(0x122c14, 0x18)
-void std::map<ResourceManager::CacheMapKey,resource *,std::less<ResourceManager::T()
+void std::map<ResourceManager::CacheMapKey,Resource *,std::less<ResourceManager::T()
 {
     // @stub
 }
 
 // ..\stlport\stl_map.h:91
 DC_ONLY(0x122c2c, 0x3C)
-void std::map<ResourceManager::CacheMapKey,resource *,std::less<ResourceManager::()
+void std::map<ResourceManager::CacheMapKey,Resource *,std::less<ResourceManager::()
 {
     // @stub
 }
 
 // ..\stlport\stl_map.h:140
 DC_ONLY(0x122c68, 0x2C)
-std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::map<ResourceManager::CacheMapKey,resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::begin(__$ReturnUdt)
+std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::map<ResourceManager::CacheMapKey,Resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,Resource *> > >::begin(__$ReturnUdt)
 {
     // @stub
 }
 
 // ..\stlport\stl_map.h:142
 DC_ONLY(0x122c94, 0x2C)
-std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::map<ResourceManager::CacheMapKey,resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::end(__$ReturnUdt)
+std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::map<ResourceManager::CacheMapKey,Resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,Resource *> > >::end(__$ReturnUdt)
 {
     // @stub
 }
 
 // ..\stlport\stl_map.h:163
 DC_ONLY(0x122cc0, 0x1C)
-std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::map<ResourceManager::CacheMapKey,resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::insert(__$ReturnUdt, const std::pair<ResourceManager::CacheMapKey* __x)
+std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::map<ResourceManager::CacheMapKey,Resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,Resource *> > >::insert(__$ReturnUdt, const std::pair<ResourceManager::CacheMapKey* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_map.h:180
 DC_ONLY(0x122cdc, 0x44)
-void std::map<ResourceManager::CacheMapKey,resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::erase(std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey __position)
+void std::map<ResourceManager::CacheMapKey,Resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,Resource *> > >::erase(std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey __position)
 {
     // @stub
 }
 
 // ..\stlport\stl_map.h:184
 DC_ONLY(0x122d20, 0x18)
-void std::map<ResourceManager::CacheMapKey,resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::clear()
+void std::map<ResourceManager::CacheMapKey,Resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,Resource *> > >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_map.h:188
 DC_ONLY(0x122d38, 0x2C)
-std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::map<ResourceManager::CacheMapKey,resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::find(__$ReturnUdt, const ResourceManager::CacheMapKey* __x)
+std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::map<ResourceManager::CacheMapKey,Resource *,std::less<ResourceManager::CacheMapKey>,std::allocator<std::pair<ResourceManager::CacheMapKey const ,Resource *> > >::find(__$ReturnUdt, const ResourceManager::CacheMapKey* __x)
 {
     // @stub
 }
@@ -1862,42 +1864,42 @@ void std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,res(co
 
 // ..\stlport\stl_tree.h:211
 DC_ONLY(0x122d90, 0x18)
-std::pair<ResourceManager::CacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::operator->()
+std::pair<ResourceManager::CacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,Resource *>,std::_Nonconst_traits<std::pair<ResourceManager::CacheMapKey const ,Resource *> > >::operator->()
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:214
 DC_ONLY(0x122da8, 0x3C)
-std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::operator++(__$ReturnUdt, int __formal)
+std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,Resource *>,std::_Nonconst_traits<std::pair<ResourceManager::CacheMapKey const ,Resource *> > >::operator++(__$ReturnUdt, int __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_pair.h:60
 DC_ONLY(0x122de4, 0x4)
-void std::pair<ResourceManager::CacheMapKey const ,resource *>::~pair<ResourceManager::CacheMapKey const ,resource *>()
+void std::pair<ResourceManager::CacheMapKey const ,Resource *>::~pair<ResourceManager::CacheMapKey const ,Resource *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_pair.h:49
 DC_ONLY(0x122de8, 0x3C)
-void std::pair<ResourceManager::CacheMapKey,resource *>::pair<ResourceManager::CacheMapKey,resource *>(const ResourceManager::CacheMapKey* __a, resource** __b)
+void std::pair<ResourceManager::CacheMapKey,Resource *>::pair<ResourceManager::CacheMapKey,Resource *>(const ResourceManager::CacheMapKey* __a, Resource** __b)
 {
     // @stub
 }
 
 // ..\stlport\stl_pair.h:60
 DC_ONLY(0x122e24, 0x4)
-void std::pair<ResourceManager::CacheMapKey,resource *>::~pair<ResourceManager::CacheMapKey,resource *>()
+void std::pair<ResourceManager::CacheMapKey,Resource *>::~pair<ResourceManager::CacheMapKey,Resource *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_pair.h:60
 DC_ONLY(0x122e28, 0x4)
-void std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,resource *>,std::_Nonconst()
+void std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,Resource *>,std::_Nonconst()
 {
     // @stub
 }
@@ -1946,21 +1948,21 @@ void std::_Rb_tree_base<std::pair<ResourceManager::TCache()
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x122f6c, 0x4)
-void std::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> >::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> >()
+void std::allocator<std::pair<ResourceManager::CacheMapKey const ,Resource *> >::allocator<std::pair<ResourceManager::CacheMapKey const ,Resource *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x122f70, 0x4)
-void std::allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> >::~allocator<std::pair<ResourceManager::CacheMapKey const ,resource *> >()
+void std::allocator<std::pair<ResourceManager::CacheMapKey const ,Resource *> >::~allocator<std::pair<ResourceManager::CacheMapKey const ,Resource *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_tree.h:206
 DC_ONLY(0x122f74, 0x6)
-std::pair<ResourceManager::CacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::operator*()
+std::pair<ResourceManager::CacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,Resource *>,std::_Nonconst_traits<std::pair<ResourceManager::CacheMapKey const ,Resource *> > >::operator*()
 {
     // @stub
 }
@@ -2051,14 +2053,14 @@ std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* std::_STL_alloc(unsig
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x1230c0, 0x20)
-void std::allocator<std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::deallocate(std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* __p, unsigned __n)
+void std::allocator<std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey const ,Resource *> > >::deallocate(std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x1230e0, 0x28)
-std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* std::allocator<std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::allocate(unsigned __n, const void* __formal)
+std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey* std::allocator<std::_Rb_tree_node<std::pair<ResourceManager::CacheMapKey const ,Resource *> > >::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
@@ -2086,7 +2088,7 @@ std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey std::_Rb_tree<Reso
 
 // ..\stlport\stl_pair.h:52
 DC_ONLY(0x1233c4, 0x3C)
-void std::pair<ResourceManager::CacheMapKey const ,resource *>::pair<ResourceManager::CacheMapKey const ,resource *>(const std::pair<ResourceManager::CacheMapKey,resource* __p)
+void std::pair<ResourceManager::CacheMapKey const ,Resource *>::pair<ResourceManager::CacheMapKey const ,Resource *>(const std::pair<ResourceManager::CacheMapKey,Resource* __p)
 {
     // @stub
 }
@@ -2149,21 +2151,21 @@ const ResourceManager::CacheMapKey* std::_Rb_tree<ResourceManager::CacheMapKey,s
 
 // ..\stlport\stl_tree.h:220
 DC_ONLY(0x12371c, 0x1C)
-std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::CacheMapKey const ,resource *> > >::operator--()
+std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,Resource *>,std::_Nonconst_traits<std::pair<ResourceManager::CacheMapKey const ,Resource *> > >::operator--()
 {
     // @stub
 }
 
 // ..\stlport\stl_pair.h:49
 DC_ONLY(0x123738, 0x30)
-void std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,resource *>,std::_Noncons(const std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey* __a, const unsigned char* __b)
+void std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey const ,Resource *>,std::_Noncons(const std::_Rb_tree_iterator<std::pair<ResourceManager::CacheMapKey* __a, const unsigned char* __b)
 {
     // @stub
 }
 
 // ..\stlport\stl_function.h:378
 DC_ONLY(0x123768, 0x4)
-const ResourceManager::CacheMapKey* std::_Select1st<std::pair<ResourceManager::CacheMapKey const ,resource *> >::operator()(const std::pair<ResourceManager::CacheMapKey* __x)
+const ResourceManager::CacheMapKey* std::_Select1st<std::pair<ResourceManager::CacheMapKey const ,Resource *> >::operator()(const std::pair<ResourceManager::CacheMapKey* __x)
 {
     // @stub
 }
@@ -2198,7 +2200,7 @@ void std::__destroy_aux(std::pair<ResourceManager::CacheMapKey* __pointer, __fal
 
 // ..\stlport\char_traits.h:201
 DC_ONLY(0x123908, 0x34)
-void* std::pair<ResourceManager::CacheMapKey const ,resource *>::`scalar deleting destructor'(unsigned __flags)
+void* std::pair<ResourceManager::CacheMapKey const ,Resource *>::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -2233,7 +2235,7 @@ void std::construct(std::pair<ResourceManager::CacheMapKey* __p, const std::pair
 
 // ..\stlport\stl_pair.h:58
 DC_ONLY(0x123a84, 0x3C)
-void std::pair<ResourceManager::CacheMapKey const ,resource *>::pair<ResourceManager::CacheMapKey const ,resource *>(const std::pair<ResourceManager::CacheMapKey* __o)
+void std::pair<ResourceManager::CacheMapKey const ,Resource *>::pair<ResourceManager::CacheMapKey const ,Resource *>(const std::pair<ResourceManager::CacheMapKey* __o)
 {
     // @stub
 }
@@ -2290,18 +2292,18 @@ bool ResourceManager::getSoundFile(const char* localName,
 }
 
 namespace ResourceManager {
-sample* loadSample(const char* name);
+Sample* loadSample(const char* name);
 }
 
 VA(0x0055c3c0, 0x356)  // GetSample callee + GetSoundFile/default.wav graph
-sample* ResourceManager::loadSample(const char* name)
+Sample* ResourceManager::loadSample(const char* name)
 {
     FILE* file = fopen(
         (g_resourcePath + name).c_str(),
         DATA_COMPGEN(0x00677d6c, sampleReadMode, "rb"));
 
     if (file) {
-        sample* result;
+        Sample* result;
         try {
             {
                 fseek(file, 0, SEEK_END);
@@ -2309,7 +2311,7 @@ sample* ResourceManager::loadSample(const char* name)
                 fseek(file, 0, SEEK_SET);
                 std::auto_ptr<char> data(new char[size]);
                 fread(data.get(), size, 1, file);
-                result = new sample(name, data.get(), size, 0, 127, 1);
+                result = new Sample(name, data.get(), size, 0, 127, 1);
             }
             fclose(file);
             return result;
@@ -2365,17 +2367,17 @@ sample* ResourceManager::loadSample(const char* name)
         }
     }
 
-    return new sample(name, data.get(), size, 0, 127, 1);
+    return new Sample(name, data.get(), size, 0, 127, 1);
 }
 
 VA(0x0055c720, 0x8A)  // dc 0x1222e0
-sample* ResourceManager::getSample(const char* name)
+Sample* ResourceManager::getSample(const char* name)
 {
-    sample* cached = static_cast<sample*>(getFromCache(name));
+    Sample* cached = static_cast<Sample*>(getFromCache(name));
     if (cached)
         return cached;
 
-    sample* loaded = loadSample(name);
+    Sample* loaded = loadSample(name);
     if (loaded)
         addToCache(loaded);
     return loaded;
@@ -2403,14 +2405,14 @@ CSprite* ResourceManager::getSprite(const char* name)
     LODFile* lodFile = pointToSpriteResource(name);
 
     if (!lodFile) {
-        game_sprite_1599e0(
+        gameSprite1599e0(
             DATA_COMPGEN(0x00683088, getSpriteErrorContext, "GetSprite"),
             RESOURCE_TYPE_SPRITE, name);
 
         lodFile = pointToSpriteResource(name);
 
         if (!lodFile) {
-            game_sprite_1599e0(
+            gameSprite1599e0(
                 DATA_COMPGEN(0x00683088, getSpriteErrorContext, "GetSprite"),
                 RESOURCE_TYPE_SPRITE, name);
             return 0;
@@ -2592,7 +2594,7 @@ void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
                      destBmap, 0, 0, false);
         source->dispose();
     } else {
-        game_null_159510(
+        gameNull159510(
             DATA_COMPGEN(0x00683094, getBackdropErrorContext, "GetBackdrop"),
             RESOURCE_TYPE_BITMAP, resName);
     }
@@ -2669,7 +2671,7 @@ int ResourceManager::readFromBitmapResource(LODFile* resource, void* data,
 }
 
 VA(0x0055d0f0, 0xA1)  // resource vslot 1 + cache-key/lower-bound proof
-void resource::dispose()
+void Resource::dispose()
 {
     if (this) {
         release();
@@ -2708,7 +2710,7 @@ void CSprite::dispose()
                     }
                 }
             }
-            resource::dispose();
+            Resource::dispose();
         }
     }
 }

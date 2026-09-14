@@ -30,7 +30,8 @@ SIZE(SCampaignMusicCue, 8);
 // Forty-nine cues, and the loader's own loop bound twice over: its first pass
 // walks the text resource to a byte offset of 0xc4 (49 * 4) and its second
 // stops the table cursor at 0x66c21c (0x66c094 + 49 * 8).
-enum ECampaignMusicConstants {
+// Before normalization (type): ECampaignMusicConstants.
+enum CampaignMusicConstants {
     CAMPAIGN_MUSIC_CUE_COUNT = 49
 };
 

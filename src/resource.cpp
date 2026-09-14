@@ -6,7 +6,7 @@
 #include "resource.h"
 
 VA(0x00558720, 0x4E)  // dc 0x120934
-resource::resource(const char* newName, EResourceType newType)
+Resource::Resource(const char* newName, ResourceType newType)
 {
     if (newName) {
         strncpy(m_name, newName, 12);
@@ -20,9 +20,9 @@ resource::resource(const char* newName, EResourceType newType)
     }
 }
 
-VA_COMPGEN(0x00558770, 0x23, SCALAR_DELETING_DTOR, resource)
+VA_COMPGEN(0x00558770, 0x23, SCALAR_DELETING_DTOR, Resource)
 
 VA(0x005587a0, 0x7)  // dc 0x12099c
-resource::~resource()
+Resource::~Resource()
 {
 }

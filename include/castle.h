@@ -42,7 +42,8 @@ extern const unsigned char g_numOfTownSpecStrScreen[9];
 
 // The four parallel widget bands driven by SetupCastle. Values are the
 // Complete message operands; the names are reconstructed from their roles.
-enum ECastleHallWidgetId {
+// Before normalization (type): ECastleHallWidgetId.
+enum CastleHallWidgetId {
     CASTLE_BUILDING_NONE = -1,
     CASTLE_BUILD_FRAME_FIRST_ID = 0x190,
     CASTLE_BUILD_NAME_FIRST_ID = 0x258,

@@ -70,7 +70,8 @@
 
 // DirectPlay system-message discriminants. ReceiveSystemMsg reads dwType off the
 // leading DPMSG_GENERIC and dispatches to the matching SysMsg* handler.
-enum EDPlaySysMsgType {
+// Before normalization (type): EDPlaySysMsgType.
+enum DPlaySysMsgType {
     DPSYS_CREATEPLAYERORGROUP = 0x03,
     DPSYS_DESTROYPLAYERORGROUP = 0x05,
     DPSYS_ADDPLAYERTOGROUP = 0x07,

@@ -17,23 +17,23 @@
 // constructor call and a single derived vtable store. No explicit inline
 // declaration is needed to expose this body to those same-TU callers.
 // E:\gamedcs\border.cpp:34, dc 0x5433c
-border::border() {}
+Border::Border() {}
 
-VA_COMPGEN(0x0044fee0, 0x21, SCALAR_DELETING_DTOR, border)
+VA_COMPGEN(0x0044fee0, 0x21, SCALAR_DELETING_DTOR, Border)
 
 VA(0x0044ff10, 0x32)  // dc 0x54378
-border::border(int x, int y, int w, int h, int id, int style)
-    : widget(x, y, w, h, id, style)
+Border::Border(int x, int y, int w, int h, int id, int style)
+    : Widget(x, y, w, h, id, style)
 {
 }
 
 VA(0x0044ff50, 0xB)  // dc 0x543d8
-border::~border()
+Border::~Border()
 {
 }
 
 VA(0x0044ff60, 0x1CD)  // dc 0x54440
-int border::main(message& msg)
+int Border::main(Message& msg)
 {
     if (m_sleepCount > 0)
         return 0;
@@ -41,7 +41,7 @@ int border::main(message& msg)
     {
         if (!(m_status & WIDGET_ACTIVE)) {
             if (msg.m_id == MESSAGE_WIDGET)
-                return widget::main(msg);
+                return Widget::main(msg);
         } else {
             unsigned char isDisabled = 0;
             if (m_status & WIDGET_DISABLED)
@@ -50,7 +50,7 @@ int border::main(message& msg)
             switch (msg.m_id) {
             case MESSAGE_LEFT_BUTTON_DOWN:
                 if (isDisabled)
-                    return widget::main(msg);
+                    return Widget::main(msg);
                 // fall through
             case MESSAGE_RIGHT_BUTTON_DOWN: {
                 short mouseX = msg.m_codeX - m_parentWindow->m_x;
@@ -75,7 +75,7 @@ int border::main(message& msg)
 
             case MESSAGE_LEFT_BUTTON_UP:
                 if (isDisabled)
-                    return widget::main(msg);
+                    return Widget::main(msg);
                 // fall through
             case MESSAGE_RIGHT_BUTTON_UP:
                 if (m_status & WIDGET_SELECTED) {
@@ -89,7 +89,7 @@ int border::main(message& msg)
                 }
                 break;
             default:
-                return widget::main(msg);
+                return Widget::main(msg);
             }
         }
     }
@@ -102,7 +102,7 @@ int border::main(message& msg)
 // Retail border vslot 13 folds onto iconWidget's 0x4eab10 representative.
 // Keep border's canonical source body without a duplicate retail claim.
 DC_ONLY(0x54590, 0x4)
-bool border::handleClick(bool downClick, bool rightClick)
+bool Border::handleClick(bool downClick, bool rightClick)
 {
     return false;
 }
@@ -122,7 +122,7 @@ bool border::handleClick(bool downClick, bool rightClick)
 // whole thing in an fs:[0] frame - the base subobject has to be
 // unwindable across that call.
 VA(0x00450130, 0x6D)  // anchor-bracket + arity (`ret 0x1c`), dc 0x54650
-coloredBorderFrame::coloredBorderFrame(int x, int y, int w, int h, int id,
+ColoredBorderFrame::ColoredBorderFrame(int x, int y, int w, int h, int id,
                                        int color, int style)
 {
     initialize(x, y, w, h, id, style);
@@ -130,15 +130,15 @@ coloredBorderFrame::coloredBorderFrame(int x, int y, int w, int h, int id,
     m_colorize = 0;
 }
 
-VA_COMPGEN(0x004501a0, 0x21, SCALAR_DELETING_DTOR, coloredBorderFrame)
+VA_COMPGEN(0x004501a0, 0x21, SCALAR_DELETING_DTOR, ColoredBorderFrame)
 
 // inlined ~border, so only ??_7border@@6B@ survives before the
 // CodeView dc 0x54dd8: CV_fldattr_t.compgenx marks this destructor
 // as implicit. Its retained retail body performs only base/member teardown.
-VA_COMPGEN(0x004501d0, 0xB, IMPLICIT_DTOR, coloredBorderFrame)
+VA_COMPGEN(0x004501d0, 0xB, IMPLICIT_DTOR, ColoredBorderFrame)
 
 VA(0x004501e0, 0x5B)  // dc 0x546d4
-void coloredBorderFrame::draw() const
+void ColoredBorderFrame::draw() const
 {
     if (m_colorize)
         g_windowManager->m_screenBitmap->colorize(m_x + m_parentWindow->m_x,
@@ -149,7 +149,7 @@ void coloredBorderFrame::draw() const
 }
 
 VA(0x00450240, 0x82)  // dc 0x54744
-int coloredBorderFrame::main(message& msg)
+int ColoredBorderFrame::main(Message& msg)
 {
     if (m_sleepCount > 0)
         return 0;
@@ -172,11 +172,11 @@ int coloredBorderFrame::main(message& msg)
             break;
         }
     }
-    return border::main(msg);
+    return Border::main(msg);
 }
 
 VA(0x004502d0, 0x8C)  // dc 0x547c0
-bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id,
+BitmapBorder::BitmapBorder(int x, int y, int w, int h, int id,
                            const char* image, int style)
 {
     initialize(x, y, w, h, id, style);
@@ -190,21 +190,21 @@ bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id,
 
 // E:\gamedcs\border.cpp:67
 DC_ONLY(0x54408, 0x36)
-void border::initialize(int x, int y, int w, int h, int id, int style, unsigned char focusable)
+void Border::initialize(int x, int y, int w, int h, int id, int style, unsigned char focusable)
 {
     // @stub
 }
 
 // E:\gamedcs\border.cpp:158
 DC_ONLY(0x54594, 0x4)
-void border::zBufferDraw()
+void Border::zBufferDraw()
 {
     // @stub
 }
 
 // E:\gamedcs\border.cpp:161
 DC_ONLY(0x54598, 0x4)
-void border::draw()
+void Border::draw()
 {
     // @stub
 }
@@ -232,17 +232,17 @@ void coloredBorder::draw()
 
 // E:\gamedcs\border.cpp:210
 DC_ONLY(0x546d0, 0x4)
-void coloredBorderFrame::zBufferDraw()
+void ColoredBorderFrame::zBufferDraw()
 {
     // @stub
 }
 
 #endif  // @carcass
 
-VA_COMPGEN(0x00450360, 0x21, SCALAR_DELETING_DTOR, bitmapBorder)
+VA_COMPGEN(0x00450360, 0x21, SCALAR_DELETING_DTOR, BitmapBorder)
 
 VA(0x00450390, 0x5B)  // dc 0x54860
-bitmapBorder::~bitmapBorder()
+BitmapBorder::~BitmapBorder()
 {
     if (m_image)
         m_image->dispose();
@@ -252,7 +252,7 @@ bitmapBorder::~bitmapBorder()
 
 // E:\gamedcs\border.cpp:323
 DC_ONLY(0x54988, 0x38)
-void bitmapBorder::setPalette(const char* palette_name)
+void BitmapBorder::setPalette(const char* palette_name)
 {
     // @stub
 }
@@ -260,7 +260,7 @@ void bitmapBorder::setPalette(const char* palette_name)
 #endif  // @carcass
 
 VA(0x004503f0, 0x55)  // dc 0x5489c
-void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id) const
+void BitmapBorder::zBufferDraw(unsigned short* zBuffer, int id) const
 {
     if (m_image)
         m_image->zBufferDraw(0, 0, m_width, m_height, zBuffer,
@@ -268,7 +268,7 @@ void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id) const
 }
 
 VA(0x00450450, 0x44)  // dc 0x548fc
-void bitmapBorder::draw() const
+void BitmapBorder::draw() const
 {
     if (m_image)
         m_image->draw(0, 0, m_width, m_height, g_windowManager->m_screenBitmap,
@@ -276,7 +276,7 @@ void bitmapBorder::draw() const
 }
 
 VA(0x004504a0, 0xE)  // dc 0x54948
-int bitmapBorder::getRealWidth() const
+int BitmapBorder::getRealWidth() const
 {
     if (m_image)
         return m_image->getWidth();
@@ -284,7 +284,7 @@ int bitmapBorder::getRealWidth() const
 }
 
 VA(0x004504b0, 0xE)  // dc 0x54968
-int bitmapBorder::getRealHeight() const
+int BitmapBorder::getRealHeight() const
 {
     if (m_image)
         return m_image->getHeight();
@@ -292,7 +292,7 @@ int bitmapBorder::getRealHeight() const
 }
 
 VA(0x004504c0, 0x5B)  // dc 0x549c0
-void bitmapBorder::setImage(const char* bitmapName)
+void BitmapBorder::setImage(const char* bitmapName)
 {
     if (m_image != 0) {
         if (strcmp(m_image->getName(), bitmapName) == 0)
@@ -303,14 +303,14 @@ void bitmapBorder::setImage(const char* bitmapName)
 }
 
 VA(0x00450520, 0x2D)  // dc 0x549ec
-void bitmapBorder::setPlayerPaletteColors(int whichPlayer)
+void BitmapBorder::setPlayerPaletteColors(int whichPlayer)
 {
     ::setPlayerPaletteColors(m_image->m_p16.m_colors.m_data, whichPlayer);
     ::setPlayerPaletteColors(m_image->m_p24, whichPlayer);
 }
 
 VA(0x00450550, 0x132)  // dc 0x54a20
-int bitmapBorder::main(message& msg)
+int BitmapBorder::main(Message& msg)
 {
     if (m_sleepCount > 0)
         return 0;
@@ -339,11 +339,11 @@ int bitmapBorder::main(message& msg)
             return 1;
         }
     }
-    return border::main(msg);
+    return Border::main(msg);
 }
 
 VA(0x00450690, 0x8C)  // dc 0x54a98
-bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id,
+BitmapBorder16::BitmapBorder16(int x, int y, int w, int h, int id,
                                const char* image, int style)
 {
     initialize(x, y, w, h, id, style);
@@ -353,10 +353,10 @@ bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id,
         m_image = 0;
 }
 
-VA_COMPGEN(0x00450720, 0x21, SCALAR_DELETING_DTOR, bitmapBorder16)
+VA_COMPGEN(0x00450720, 0x21, SCALAR_DELETING_DTOR, BitmapBorder16)
 
 VA(0x00450750, 0x5B)  // dc 0x54b68
-bitmapBorder16::~bitmapBorder16()
+BitmapBorder16::~BitmapBorder16()
 {
     if (m_image)
         m_image->dispose();
@@ -366,7 +366,7 @@ bitmapBorder16::~bitmapBorder16()
 
 // E:\gamedcs\border.cpp:415
 DC_ONLY(0x54ba4, 0x4)
-void bitmapBorder16::zBufferDraw()
+void BitmapBorder16::zBufferDraw()
 {
     // @stub
 }
@@ -374,7 +374,7 @@ void bitmapBorder16::zBufferDraw()
 #endif  // @carcass
 
 VA(0x004507b0, 0x55)  // dc 0x54ba8
-void bitmapBorder16::draw() const
+void BitmapBorder16::draw() const
 {
     if (m_image) {
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
@@ -385,7 +385,7 @@ void bitmapBorder16::draw() const
 }
 
 VA(0x00450810, 0x44)  // dc 0x54bf0
-void bitmapBorder16::draw2() const
+void BitmapBorder16::draw2() const
 {
     if (m_image) {
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
@@ -413,7 +413,7 @@ void bitmapBorder16::draw2() const
 // epilogue and inverts the strcmp branch.
 // E:\gamedcs\border.cpp:441 - bitmapBorder::SetImage one class up with the
 // hi-colour loader. No VA: retail keeps no row for it (see the note below).
-void bitmapBorder16::setImage(const char* bitmapName)
+void BitmapBorder16::setImage(const char* bitmapName)
 {
     if (m_image != 0) {
         if (strcmp(m_image->getName(), bitmapName) == 0)
@@ -424,7 +424,7 @@ void bitmapBorder16::setImage(const char* bitmapName)
 }
 
 VA(0x00450860, 0xC6)  // dc 0x54c98
-int bitmapBorder16::main(message& msg)
+int BitmapBorder16::main(Message& msg)
 {
     if (m_sleepCount > 0)
         return 0;
@@ -440,35 +440,35 @@ int bitmapBorder16::main(message& msg)
             return 1;
         }
     }
-    return border::main(msg);
+    return Border::main(msg);
 }
 
 #if 0  // @carcass
 
 // E:\gamedcs\border.cpp:431
 DC_ONLY(0x54c2c, 0x20)
-int bitmapBorder16::getRealWidth() const
+int BitmapBorder16::getRealWidth() const
 {
     // @stub
 }
 
 // E:\gamedcs\border.cpp:436
 DC_ONLY(0x54c4c, 0x20)
-int bitmapBorder16::getRealHeight() const
+int BitmapBorder16::getRealHeight() const
 {
     // @stub
 }
 
 // E:\gamedcs\Widget.h:187
 DC_ONLY(0x54d20, 0x4)
-void widget::onKillFocus()
+void Widget::onKillFocus()
 {
     // @stub
 }
 
 // E:\gamedcs\border.cpp:35
 DC_ONLY(0x54d24, 0x34)
-void* border::`scalar deleting destructor'(unsigned __flags)
+void* Border::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -489,14 +489,14 @@ void coloredBorder::~coloredBorder()
 
 // E:\gamedcs\border.cpp:290
 DC_ONLY(0x54df0, 0x34)
-void* bitmapBorder::`scalar deleting destructor'(unsigned __flags)
+void* BitmapBorder::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\border.cpp:404
 DC_ONLY(0x54e24, 0x34)
-void* bitmapBorder16::`scalar deleting destructor'(unsigned __flags)
+void* BitmapBorder16::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

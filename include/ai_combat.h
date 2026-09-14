@@ -27,7 +27,8 @@ __declspec(nothrow) void __cdecl operator delete(void* p);
 // (get_attack 0x4263e0 routes catagory==0 with unblocked shooters
 // through the ranged value), choose_melee proves slow == 4, and the DC
 // enum supplies the intervening names and legacy `catagory` spelling.
-enum type_speed_catagory {
+// Before normalization (type): type_speed_catagory.
+enum SpeedCatagory {
     const_ranged = 0,
     const_very_fast = 1,
     const_fast = 2,
@@ -77,22 +78,22 @@ public:
     double m_finalMeleeModifier;  // +0x20
     double m_rangedModifier;  // +0x28
     double m_combatValuePerHit;  // +0x30
-    type_speed_catagory m_catagory;  // +0x38
+    SpeedCatagory m_catagory;  // +0x38
     long m_value;  // +0x3c
     long m_totalValue;  // +0x40
     long getSpellDamage(SpellID spell, const Hero* castingHero,
                           const Hero* targetHero, long damage) const;
 
-    long getEnchantmentValue(type_spell_choice& choice,
+    long getEnchantmentValue(SpellChoice& choice,
                                const Hero* castingHero,
                                const Hero* targetHero) const;
-    long getResurrectionValue(type_spell_choice& choice,
+    long getResurrectionValue(SpellChoice& choice,
                                 const Hero* castingHero) const;
     // No retail row of its own - /Ob2 inlined every call site and
     // OPT:REF dropped the out-of-line COMDAT, so ai_combat.cpp defines
     // it `inline` (see the note there).
     void castEnchantment(long spellValue, unsigned char increase);
-    void castResurrection(type_spell_choice& choice,
+    void castResurrection(SpellChoice& choice,
                            const Hero* castingHero);
     long takeDamage(long damage);
     bool operator<(const type_monster_data& arg) const
@@ -128,7 +129,8 @@ SIZE(type_monster_data, 0x48);
 //   +0x2c enemy_hero - the ctor's fourth parameter (0x423f30).
 //   +0x30 wall_penalty / +0x32 penalty_distance -
 //                     check_wall_archery_penalty's only outputs.
-class type_AI_combat_data {
+// Before normalization (type): type_AI_combat_data.
+class AICombatData {
 public:
     // DC ai_combat.h:245-246, dc 0x2c6a4; retained const mana getter.
     long getMana() const { return m_mana; }
@@ -168,40 +170,40 @@ public:
     unsigned char m_wallArcheryPenalty;  // +0x30, natural padding at +0x31
     short m_wallSpeedLimit;  // +0x32
 
-    type_AI_combat_data(const Hero* newHero, const ArmyGroup* newArmy,
+    AICombatData(const Hero* newHero, const ArmyGroup* newArmy,
                         double baseModifier, const Hero* enemyHero,
                         const Town* enemyTown, NewmapCell* mapCell);
-    type_AI_combat_data(const type_AI_combat_data& other);
+    AICombatData(const AICombatData& other);
     void adjustArmy(unsigned char dismissHero);
-    void doAftermath(type_AI_combat_data& defender, Town* enemyTown);
-    void simulateCombat(type_AI_combat_data& defender);
+    void doAftermath(AICombatData& defender, Town* enemyTown);
+    void simulateCombat(AICombatData& defender);
 
 protected:
-    void castAreaEffect(type_spell_choice& choice, type_AI_combat_data& defender,
+    void castAreaEffect(SpellChoice& choice, AICombatData& defender,
                           long damage, long extraTargets) const;
-    void castChainLightning(type_spell_choice& choice,
-                              type_AI_combat_data& defender, long damage) const;
-    void castDamageSpell(type_spell_choice& choice,
-                           type_AI_combat_data& defender) const;
-    void castEnchantment(type_spell_choice& choice, const Hero* castingHero,
+    void castChainLightning(SpellChoice& choice,
+                              AICombatData& defender, long damage) const;
+    void castDamageSpell(SpellChoice& choice,
+                           AICombatData& defender) const;
+    void castEnchantment(SpellChoice& choice, const Hero* castingHero,
                           unsigned char increase);
-    void castEnchantment(type_spell_choice& choice, type_AI_combat_data& defender);
-    void castMassDamageSpell(type_spell_choice& choice,
+    void castEnchantment(SpellChoice& choice, AICombatData& defender);
+    void castMassDamageSpell(SpellChoice& choice,
                                 const Hero* castingHero);
-    void getSummoningValue(type_spell_choice& choice) const;
-    void castSummoning(type_spell_choice& choice);
-    void castSpell(type_AI_combat_data& defender, type_speed_catagory round);
-    void castSpells(type_AI_combat_data& defender, type_speed_catagory round);
+    void getSummoningValue(SpellChoice& choice) const;
+    void castSummoning(SpellChoice& choice);
+    void castSpell(AICombatData& defender, SpeedCatagory round);
+    void castSpells(AICombatData& defender, SpeedCatagory round);
     void checkWallArcheryPenalty(const Town* enemyTown);
-    bool chooseMelee(const type_AI_combat_data& enemy,
-                      type_speed_catagory currentRound) const;
-    void doMeleeCombat(type_speed_catagory attackerSpeed,
-                         type_AI_combat_data& defender);
-    void doMeleeCombat(type_AI_combat_data& defender);
-    void doGeneralMelee(type_AI_combat_data& defender);
-    void doRangedCombat(type_AI_combat_data& defender);
-    void getAreaValue(type_spell_choice& choice,
-                        const type_AI_combat_data& defender,
+    bool chooseMelee(const AICombatData& enemy,
+                      SpeedCatagory currentRound) const;
+    void doMeleeCombat(SpeedCatagory attackerSpeed,
+                         AICombatData& defender);
+    void doMeleeCombat(AICombatData& defender);
+    void doGeneralMelee(AICombatData& defender);
+    void doRangedCombat(AICombatData& defender);
+    void getAreaValue(SpellChoice& choice,
+                        const AICombatData& defender,
                         long damage, long extraTargets) const;
     ArmyGroup* getArmy() const { return m_currentArmy; }
 
@@ -212,27 +214,27 @@ public:
     long getTotal() const { return m_totalCombatValue; }
 
 protected:
-    long getAttack(type_speed_catagory speedLimit,
+    long getAttack(SpeedCatagory speedLimit,
                     unsigned char shootersBlocked) const;
-    void getDamageSpellValue(type_spell_choice& choice,
-                                const type_AI_combat_data& defender) const;
-    type_speed_catagory getCatagory(CreatureType creature, long speed) const;
-    void getChainLightningValue(type_spell_choice& choice,
-                                   const type_AI_combat_data& defender,
+    void getDamageSpellValue(SpellChoice& choice,
+                                const AICombatData& defender) const;
+    SpeedCatagory getCatagory(CreatureType creature, long speed) const;
+    void getChainLightningValue(SpellChoice& choice,
+                                   const AICombatData& defender,
                                    long damage) const;
-    void getEnchantmentValue(type_spell_choice& choice,
+    void getEnchantmentValue(SpellChoice& choice,
                                const Hero* castingHero) const;
-    void getEnchantmentValue(type_spell_choice& choice,
-                               type_AI_combat_data& defender) const;
+    void getEnchantmentValue(SpellChoice& choice,
+                               AICombatData& defender) const;
     long getFastestSpeed() const;
     long getFinalMeleeValue() const;
     Hero* getHero() const { return m_currentHero; }
-    long getMassDamageValue(type_spell_choice& choice,
+    long getMassDamageValue(SpellChoice& choice,
                                const Hero* castingHero) const;
-    void getMassDamageValue(type_spell_choice& choice,
-                               type_AI_combat_data& defender) const;
+    void getMassDamageValue(SpellChoice& choice,
+                               AICombatData& defender) const;
     long getNextChainLightningTarget(long excluded,
-                                         const type_AI_combat_data& defender,
+                                         const AICombatData& defender,
                                          long start, long damage) const;
     unsigned char hasCreature(CreatureType creature) const;
     void inflictDamage(long damage, long blockerSpeed);

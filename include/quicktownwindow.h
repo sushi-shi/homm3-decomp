@@ -5,7 +5,7 @@
 #include "window.h"
 
 class Town;
-class garrison;
+class Garrison;
 class ArmyGroup;
 
 // Retail .bss 0x6a7a70. This is the quick-view label consumed by the
@@ -15,7 +15,7 @@ DATA(0x006a7a70) extern const char* g_quickViewGarrisonText;
 // Both retail constructors initialize heroWindow directly, install vtable
 // 0x6406f4, and touch no storage beyond heroWindow's proven 0x4c-byte extent.
 // Before normalization (type): TQuickTownWindow.
-class QuickTownWindow : public heroWindow {
+class QuickTownWindow : public HeroWindow {
 public:
 // Before normalization (type): TQuickTownWindow::TViewLevel.
     enum ViewLevel {
@@ -27,7 +27,7 @@ public:
 
     // Dreamcast CodeView EWidgetIDs/NWIDGETS; every value is independently
     // present as a retail widget id in the two constructors.
-    enum EWidgetIDs {
+    enum WidgetIDs {
         BACKGROUND_ID = 2000,
         PORTRAIT_ID = 2001,
         NAME_ID = 2002,
@@ -47,7 +47,7 @@ public:
     };
 
     QuickTownWindow(const Town* thisTown, ViewLevel viewLevel);
-    QuickTownWindow(const garrison* thisGarrison, ViewLevel viewLevel);
+    QuickTownWindow(const Garrison* thisGarrison, ViewLevel viewLevel);
     virtual ~QuickTownWindow();
     void center(long newX, long newY);
     void quickWindowWait();

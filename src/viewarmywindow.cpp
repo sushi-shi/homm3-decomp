@@ -33,7 +33,7 @@
 // MESSAGE_WIDGET; msg->codeX = 10; msg->codeY = OK_ID; return
 // MESSAGE_DISPATCH_FORWARD; } return 0;`. DECLARED ONLY - defining it
 // would put an unpaired function in this object.
-int viewArmyCastSpellHandler(message& msg);
+int viewArmyCastSpellHandler(Message& msg);
 
 // The shooter bit, byte-proven by initialize_creatures and consumed here
 // by create_shots_widget's single `test byte [traits+0x10], 4` guard.
@@ -97,7 +97,7 @@ DATA(0x006a532c) extern const char* g_luckTexts[25];
 // around a de-inlined enum adapter once the owning member is typed.
 // E:\gamedcs\viewarmywindow.cpp:55
 VA(0x005f3360, 0x7B5)  // direct caller + CrStkPU.pcx, dc 0x190abc
-ViewArmyWindow::ViewArmyWindow(const army* thisArmy, int x0, int y0,
+ViewArmyWindow::ViewArmyWindow(const Army* thisArmy, int x0, int y0,
                                  unsigned char showOk)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
       m_armyType(thisArmy->m_creatureType),
@@ -181,21 +181,21 @@ ViewArmyWindow::ViewArmyWindow(const army* thisArmy, int x0, int y0,
             && thisArmy->m_creatureType == CREATURE_FAERIE_DRAGON
             && stackTraits->m_hasSpell > 0
             && !g_combatManager->m_creaturePlacement) {
-        m_widgets.push_back(new bitmapBorder(
+        m_widgets.push_back(new BitmapBorder(
             74, 236, 48, 34, -1,
             "Box46x32.pcx",  // pooled with create_upgrade_widget's 0x68c664
             0x800));
-        m_widgets.push_back(new type_func_button(
+        m_widgets.push_back(new FuncButton(
             75, 237, 48, 36, OK_ID,
             DATA_COMPGEN(0x0066ffd4, viewArmyCastButton, "icm005.def"),
             viewArmyCastSpellHandler, 0, 1));
     } else if (stackTraits->m_specialAbility) {
-        m_widgets.push_back(new textWidget(
+        m_widgets.push_back(new TextWidget(
             20, 232, 192, 41, stackTraits->m_specialAbility, "smalfont.fnt",
-            font::WHITE, -1, 0, 0, 8));
+            Font::WHITE, -1, 0, 0, 8));
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -251,7 +251,7 @@ ViewArmyWindow::ViewArmyWindow(ArmyGroup* group, int iarmy,
     // The widget vector NAMED AS A REFERENCE (three uses): 90.4657 ->
     // 90.9521.  The sibling army-only constructor below LOSES 0.03 on the
     // same change, so it is per-body.
-    std::vector<widget*>& widgets = m_widgets;
+    std::vector<Widget*>& widgets = m_widgets;
     widgets.reserve(NWIDGETS);
 
     createBackgroundWidget(thisHero);
@@ -299,9 +299,9 @@ ViewArmyWindow::ViewArmyWindow(ArmyGroup* group, int iarmy,
         createDismissWidget();
         m_showingDismissButton = 1;
     } else if (upgrade == -1 && traits.m_specialAbility) {
-        widgets.push_back(new textWidget(
+        widgets.push_back(new TextWidget(
             20, 232, 192, 41, traits.m_specialAbility, "smalfont.fnt",
-            font::WHITE, -1, 0, 0, 8));
+            Font::WHITE, -1, 0, 0, 8));
     }
 
     createRolloverWidget();
@@ -310,7 +310,7 @@ ViewArmyWindow::ViewArmyWindow(ArmyGroup* group, int iarmy,
     m_influence[1] = -1;
     m_influence[2] = -1;
 
-    for (widget** it = widgets.begin(); it != widgets.end(); ++it) {
+    for (Widget** it = widgets.begin(); it != widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -368,9 +368,9 @@ ViewArmyWindow::ViewArmyWindow(int armyType, int x0, int y0,
         createOkWidget();
 
     if (traits->m_specialAbility) {
-        m_widgets.push_back(new textWidget(
+        m_widgets.push_back(new TextWidget(
             20, 232, 192, 41, traits->m_specialAbility, "smalfont.fnt",
-            font::WHITE, -1, 0, 0, 8));
+            Font::WHITE, -1, 0, 0, 8));
     }
 
     createRolloverWidget();
@@ -378,7 +378,7 @@ ViewArmyWindow::ViewArmyWindow(int armyType, int x0, int y0,
     for (int i = 0; i < 3; i++)
         m_influence[i] = -1;
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -389,7 +389,7 @@ ViewArmyWindow::ViewArmyWindow(int armyType, int x0, int y0,
 VA(0x005f45e0, 0xD5)  // dc 0x191660
 ViewArmyWindow::~ViewArmyWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -451,14 +451,14 @@ void ViewArmyWindow::doModal()
         GameTime::get() + VIEW_ARMY_DELAY;
 
     if (!g_currentPlayer->isLocalHuman()) {
-        widget* action = getWidget(UPGRADE_ID);
+        Widget* action = getWidget(UPGRADE_ID);
         if (action)
             action->enable(0);
         action = getWidget(DISMISS_ID);
         if (action)
             action->enable(0);
     }
-    heroWindow::doModal(0);
+    HeroWindow::doModal(0);
 }
 
 // The widget id the rollover strip was last built for, so a mouse move
@@ -498,7 +498,7 @@ DATA(0x0068c660) static int g_lastViewArmyHoverId = -1;
 // - see the width sweep recorded at that declaration.
 // E:\gamedcs\viewarmywindow.cpp:404
 VA(0x005f4850, 0x7D7)  // direct caller + convertID2HelpID + help table, dc 0x191804
-int ViewArmyWindow::windowHandler(message& msg)
+int ViewArmyWindow::windowHandler(Message& msg)
 {
     unsigned char exitFlag;
     pollSound();
@@ -509,8 +509,8 @@ int ViewArmyWindow::windowHandler(message& msg)
 
     exitFlag = 0;
     if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
-        if (msg.m_codeX == widget::WIDGET_SELECT
-            || msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        if (msg.m_codeX == Widget::WIDGET_SELECT
+            || msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
             int helpID = convertID2HelpID(msg.m_codeY);
             int resType = -1;
             std::string text;
@@ -557,7 +557,7 @@ int ViewArmyWindow::windowHandler(message& msg)
                              -1, 0, -1, 0);
         }
     } else if (msg.m_id == MESSAGE_WIDGET) {
-        if (msg.m_codeX == widget::WIDGET_DESELECT) {
+        if (msg.m_codeX == Widget::WIDGET_DESELECT) {
             switch (msg.m_codeY) {
             case UPGRADE_ID: {
                 long cost[7];
@@ -600,7 +600,7 @@ int ViewArmyWindow::windowHandler(message& msg)
             const char* rollover = g_emptyRolloverText;
             g_lastViewArmyHoverId = hoverID;
             if (hoverID != -1) {
-                g_mouseManager->setPointer(1, mouseManager::DEFAULT_SET);
+                g_mouseManager->setPointer(1, MouseManager::DEFAULT_SET);
                 int helpID = convertID2HelpID(hoverID);
                 if (helpID >= 0) {
                     if (hoverID >= AFFECTING_SPELLS_0_ID
@@ -641,7 +641,7 @@ int ViewArmyWindow::windowHandler(message& msg)
                     }
                 }
             } else {
-                g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+                g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
             }
             m_rolloverWidget->setText(rollover);
             drawWindow(0, ROLLOVER_ID, ROLLOVER_ID);
@@ -655,8 +655,8 @@ int ViewArmyWindow::windowHandler(message& msg)
     if (exitFlag) {
         msg.m_id = MESSAGE_WIDGET;
         g_windowManager->m_dialogReturn = msg.m_codeY;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = Widget::WIDGET_END_DIALOG;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
 
@@ -680,12 +680,12 @@ int ViewArmyWindow::windowHandler(message& msg)
 // missing retail inventory row owns 43 bytes. The authored fastcall
 // message-reference body reproduces all 43 bytes without relocations.
 VA(0x005f5030, 0x2B)  // Complete-only callback: address taken by battle constructor
-int viewArmyCastSpellHandler(message& msg)
+int viewArmyCastSpellHandler(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_DESELECT
+    if (msg.m_codeX == Widget::WIDGET_DESELECT
             && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         msg.m_codeY = ViewArmyWindow::OK_ID;
         return MESSAGE_DISPATCH_FORWARD;
     }
@@ -702,7 +702,7 @@ int viewArmyCastSpellHandler(message& msg)
 
 inline void ViewArmyWindow::createBackgroundWidget(const Hero* thisHero)
 {
-    bitmapBorder* plate = new bitmapBorder(
+    BitmapBorder* plate = new BitmapBorder(
         0, 0, 298, 311, BACKGROUND_ID,
         DATA_COMPGEN(0x0068c698, viewArmyPlate, "CrStkPU.pcx"),
         0x800);
@@ -720,9 +720,9 @@ inline void ViewArmyWindow::createBackgroundWidget(const Hero* thisHero)
 
 inline void ViewArmyWindow::createNameWidget(const char* name)
 {
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         20, 21, 258, 19, name, "smalfont.fnt",
-        font::HEADING, NAME_ID, 5, 0, 8));
+        Font::HEADING, NAME_ID, 5, 0, 8));
 }
 
 // The creature portrait: the town-alignment backdrop, the creature's own
@@ -735,21 +735,21 @@ VA(0x005f5060, 0x2D6)  // ctor call set + CrBkg table + Verd10B.fnt, dc 0x191f2c
 void ViewArmyWindow::createPortraitWidget(const char* spriteName,
                                              int townType, int count)
 {
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         21, 48, 100, 130, SPRITE_BACKGROUND_ID,
         g_creatureBackgrounds[townType],
         0x800));
 
-    m_spriteWidget = new iconWidget(
+    m_spriteWidget = new IconWidget(
         21, 48, 100, 130, SPRITE_ID, spriteName, 0, 2, 0, 0, 0x12);
     m_widgets.push_back(m_spriteWidget);
 
     if (count > 0) {
         sprintf(g_text, "%d", count);
-        m_widgets.push_back(new textWidget(
+        m_widgets.push_back(new TextWidget(
             21, 160, 100, 20, g_text,
             DATA_COMPGEN(0x006700b4, viewArmyCountFont, "Verd10B.fnt"),
-            font::WHITE, NUMBER_ID, 10, 0, 8));
+            Font::WHITE, NUMBER_ID, 10, 0, 8));
     }
 }
 
@@ -757,27 +757,27 @@ VA(0x005f5340, 0x28E)  // widget IDs + primary-skill table + format literals
 void ViewArmyWindow::createAttackWidget(int normalAttackSkill,
                                            int currentAttackSkill)
 {
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         154, 48, 122, 17, g_primarySkillNames[0], "smalfont.fnt",
-        font::PRIMARY, ATTACK_LABEL_ID, 4, 0, 8));
+        Font::PRIMARY, ATTACK_LABEL_ID, 4, 0, 8));
 
     if (normalAttackSkill == currentAttackSkill)
         sprintf(g_text, "%d", normalAttackSkill);
     else
         sprintf(g_text, "%d(%d)", normalAttackSkill, currentAttackSkill);
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         154, 48, 122, 17, g_text, "smalfont.fnt",
-        font::PRIMARY, ATTACK_ID, 6, 0, 8));
+        Font::PRIMARY, ATTACK_ID, 6, 0, 8));
 }
 
 VA(0x005f55d0, 0x28E)  // widget IDs + primary-skill table + format literals
 void ViewArmyWindow::createDefenseWidget(int normalDefenseSkill,
                                             int currentDefenseSkill)
 {
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         154, 66, 122, 17, g_primarySkillNames[1], "smalfont.fnt",
-        font::PRIMARY, DEFENSE_LABEL_ID, 4, 0, 8));
+        Font::PRIMARY, DEFENSE_LABEL_ID, 4, 0, 8));
 
     if (normalDefenseSkill == currentDefenseSkill)
         sprintf(g_text, "%d", normalDefenseSkill);
@@ -785,9 +785,9 @@ void ViewArmyWindow::createDefenseWidget(int normalDefenseSkill,
         sprintf(g_text, "%d(%d)", normalDefenseSkill,
                 currentDefenseSkill);
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         154, 66, 122, 17, g_text, "smalfont.fnt",
-        font::PRIMARY, DEFENSE_ID, 6, 0, 8));
+        Font::PRIMARY, DEFENSE_ID, 6, 0, 8));
 }
 
 // The damage row prints a single number when the creature's low and high
@@ -810,10 +810,10 @@ VA(0x005f5860, 0x2C2)  // widget IDs + text-record field + "%d - %d", dc 0x19226
 void ViewArmyWindow::createDamageWidget(const CreatureTypeTraits& traits,
                                            const Hero* ourHero)
 {
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         154, 104, 122, 17,
         (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_DAMAGE],
-        "smalfont.fnt", font::PRIMARY, DAMAGE_LABEL_ID, 4, 0, 8));
+        "smalfont.fnt", Font::PRIMARY, DAMAGE_LABEL_ID, 4, 0, 8));
 
     int low = traits.m_damageLowBound;
     int high = traits.m_damageHighBound;
@@ -829,9 +829,9 @@ void ViewArmyWindow::createDamageWidget(const CreatureTypeTraits& traits,
                                     "%d - %d"),
                 low, high);
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         154, 103, 122, 17, g_text, "smalfont.fnt",
-        font::PRIMARY, DAMAGE_ID, 6, 0, 8));
+        Font::PRIMARY, DAMAGE_ID, 6, 0, 8));
 }
 
 // The ammunition row exists only for a shooter, which is what the whole
@@ -844,19 +844,19 @@ void ViewArmyWindow::createShotsWidget(const CreatureTypeTraits& traits,
                                           int normalShots, int currentShots)
 {
     if (traits.m_attributes & g_ctaShooter) {
-        m_widgets.push_back(new textWidget(
+        m_widgets.push_back(new TextWidget(
             154, 85, 122, 17,
             (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SHOTS],
-            "smalfont.fnt", font::PRIMARY, SHOTS_LABEL_ID, 4, 0, 8));
+            "smalfont.fnt", Font::PRIMARY, SHOTS_LABEL_ID, 4, 0, 8));
 
         if (normalShots == currentShots)
             sprintf(g_text, "%d", normalShots);
         else
             sprintf(g_text, "%d(%d)", normalShots, currentShots);
 
-        m_widgets.push_back(new textWidget(
+        m_widgets.push_back(new TextWidget(
             154, 85, 122, 17, g_text, "smalfont.fnt",
-            font::PRIMARY, SHOTS_ID, 6, 0, 8));
+            Font::PRIMARY, SHOTS_ID, 6, 0, 8));
     }
 }
 
@@ -864,44 +864,44 @@ VA(0x005f5dd0, 0x297)  // widget IDs + text-record field + format literals
 void ViewArmyWindow::createHitpointsWidget(int normalHitpoints,
                                               int currentHitpoints)
 {
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         154, 123, 122, 17,
         g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH),
-        "smalfont.fnt", font::PRIMARY, HEALTH_LABEL_ID, 4, 0, 8));
+        "smalfont.fnt", Font::PRIMARY, HEALTH_LABEL_ID, 4, 0, 8));
 
     if (normalHitpoints == currentHitpoints)
         sprintf(g_text, "%d", normalHitpoints);
     else
         sprintf(g_text, "%d(%d)", normalHitpoints, currentHitpoints);
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         154, 123, 122, 17, g_text, "smalfont.fnt",
-        font::PRIMARY, HEALTH_ID, 6, 0, 8));
+        Font::PRIMARY, HEALTH_ID, 6, 0, 8));
 }
 
 VA(0x005f6070, 0x27D)  // widget IDs + text-record field + integer format
 void ViewArmyWindow::createHitpointsLeftWidget(int hitpointsLeft)
 {
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         154, 142, 122, 17,
         g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH_REMAINING),
-        "smalfont.fnt", font::PRIMARY, HEALTH_REMAINING_LABEL_ID, 4, 0, 8));
+        "smalfont.fnt", Font::PRIMARY, HEALTH_REMAINING_LABEL_ID, 4, 0, 8));
 
     sprintf(g_text, "%d", hitpointsLeft);
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         154, 142, 122, 17, g_text, "smalfont.fnt",
-        font::PRIMARY, HEALTH_REMAINING_ID, 6, 0, 8));
+        Font::PRIMARY, HEALTH_REMAINING_ID, 6, 0, 8));
 }
 
 VA(0x005f62f0, 0x2BE)  // widget IDs + text-record field + clamped formats
 void ViewArmyWindow::createSpeedWidget(int normalSpeed,
                                           int currentSpeed)
 {
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         154, 161, 122, 17,
         (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SPEED],
-        "smalfont.fnt", font::PRIMARY, SPEED_LABEL_ID, 4, 0, 8));
+        "smalfont.fnt", Font::PRIMARY, SPEED_LABEL_ID, 4, 0, 8));
 
     normalSpeed = max(0, normalSpeed);
     currentSpeed = max(0, currentSpeed);
@@ -910,9 +910,9 @@ void ViewArmyWindow::createSpeedWidget(int normalSpeed,
     else
         sprintf(g_text, "%d(%d)", normalSpeed, currentSpeed);
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         154, 161, 122, 17, g_text, "smalfont.fnt",
-        font::PRIMARY, SPEED_ID, 6, 0, 8));
+        Font::PRIMARY, SPEED_ID, 6, 0, 8));
 }
 
 // DC 0x1927ea stores the member before allocation; 0x1927f6 reloads it for
@@ -922,7 +922,7 @@ void ViewArmyWindow::createSpeedWidget(int normalSpeed,
 inline void ViewArmyWindow::createMoraleWidget(int newMorale)
 {
     m_morale = newMorale;
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         23, 189, 42, 38, MORALE_ID,
         DATA_COMPGEN(0x0068c68c, viewArmyMoraleIcons, "imrl42.def"),
         limit(-3, m_morale, 3) + 3, 0, 0, 0, 0x10));
@@ -933,7 +933,7 @@ inline void ViewArmyWindow::createMoraleWidget(int newMorale)
 inline void ViewArmyWindow::createLuckWidget(int newLuck)
 {
     m_luck = newLuck;
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         77, 189, 42, 38, LUCK_ID,
         DATA_COMPGEN(0x0068c680, viewArmyLuckIcons, "ilck42.def"),
         limit(-3, m_luck, 3) + 3, 0, 0, 0, 0x10));
@@ -958,7 +958,7 @@ inline void ViewArmyWindow::createLuckWidget(int newLuck)
 // nested STL sites.
 // E:\gamedcs\viewarmywindow.cpp:837
 VA(0x005f65b0, 0x2B5)  // queue iterator arithmetic + SpellInt.def + widget ids
-void ViewArmyWindow::createSpellInfluenceWidgets(const army* thisArmy)
+void ViewArmyWindow::createSpellInfluenceWidgets(const Army* thisArmy)
 {
     int x = 127;
     unsigned int first = cppMax<int>(
@@ -970,14 +970,14 @@ void ViewArmyWindow::createSpellInfluenceWidgets(const army* thisArmy)
 
     do {
         if (i < thisArmy->m_spellInfluenceQueue.size()) {
-            army::TSpellQueue::const_iterator position =
+            Army::TSpellQueue::const_iterator position =
                 thisArmy->m_spellInfluenceQueue.begin();
 #pragma inline_depth(0)
             position += i;
 #pragma inline_depth()
             *influence = *position;
             influence[NSPELLS] = thisArmy->m_spellInfluence[*influence];
-            m_widgets.push_back(new iconWidget(
+            m_widgets.push_back(new IconWidget(
                 x, 186, 48, 36, widgetId + i,
                 DATA_COMPGEN(0x006700a4, viewArmySpellIcons, "spellint.def"),
                 *influence + 1, 0, 0, 0, 0x10));
@@ -993,12 +993,12 @@ void ViewArmyWindow::createSpellInfluenceWidgets(const army* thisArmy)
 VA(0x005f6870, 0x264)  // dc 0x192a28
 void ViewArmyWindow::createOkWidget()
 {
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         215, 237, 66, 32, OK_BORDER_ID,
         DATA_COMPGEN(0x0067016c, viewArmyOkBorder, "Box64x30.pcx"),
         0x800));
 
-    button* accept = new button(
+    Button* accept = new Button(
         216, 238, 64, 30, ACCEPT_ID,
         DATA_COMPGEN(0x0068c6ac, viewArmyOkButton, "iOKAY.def"),
         0, 1, 0, 0, 2);
@@ -1010,12 +1010,12 @@ void ViewArmyWindow::createOkWidget()
 VA(0x005f6ae0, 0x265)  // dc 0x192ad8
 void ViewArmyWindow::createUpgradeWidget()
 {
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         74, 236, 48, 34, -1,
         DATA_COMPGEN(0x0068c664, viewArmySmallActionBorder, "Box46x32.pcx"),
         0x800));
 
-    button* upgrade = new button(
+    Button* upgrade = new Button(
         75, 237, 46, 32, UPGRADE_ID,
         DATA_COMPGEN(0x00660134, viewArmyUpgradeButton, "iViewCr.def"),
         0, 1, 0, 0, 2);
@@ -1026,12 +1026,12 @@ void ViewArmyWindow::createUpgradeWidget()
 VA(0x005f6d50, 0x265)  // dc 0x192b40
 void ViewArmyWindow::createDismissWidget()
 {
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         19, 236, 48, 34, -1,
         "Box46x32.pcx",
         0x800));
 
-    button* dismiss = new button(
+    Button* dismiss = new Button(
         20, 237, 46, 32, DISMISS_ID,
         DATA_COMPGEN(0x00660124, viewArmyDismissButton, "iViewCr2.def"),
         0, 1, 0, 0, 2);
@@ -1041,10 +1041,10 @@ void ViewArmyWindow::createDismissWidget()
 
 inline void ViewArmyWindow::createRolloverWidget()
 {
-    m_rolloverWidget = new bitmapBackedTextWidget(
+    m_rolloverWidget = new BitmapBackedTextWidget(
         7, 285, 284, 19, 0, "smalfont.fnt",
         DATA_COMPGEN(0x0068c674, viewArmyRolloverBack, "VARBack.pcx"),
-        font::PRIMARY, ROLLOVER_ID, 1, 8);
+        Font::PRIMARY, ROLLOVER_ID, 1, 8);
     m_widgets.push_back(m_rolloverWidget);
 }
 

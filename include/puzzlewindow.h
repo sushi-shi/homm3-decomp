@@ -39,7 +39,7 @@ public:
     PuzzleWindow(int puzzlenum);
     virtual ~PuzzleWindow();
     int updatePuzzle(int full);
-    virtual int windowHandler(message& msg);
+    virtual int windowHandler(Message& msg);
 
 private:
     ResourceDisplay* m_puzzleResourceBar;

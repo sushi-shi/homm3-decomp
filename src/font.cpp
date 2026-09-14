@@ -22,21 +22,21 @@ __declspec(nothrow) void __cdecl operator delete(void* p);
 // 32-byte 0x4b5020 an atexit/guard-byte cinit thunk (excluded class).
 // Either the retail source dropped it or its single use inlined it away.
 DC_ONLY(0xa1ba8, 0x5C)
-void font::font()
+void Font::Font()
 {
     // @stub
 }
 
 #endif  // @carcass
 
-VA_COMPGEN(0x004b5040, 0x21, SCALAR_DELETING_DTOR, font)
+VA_COMPGEN(0x004b5040, 0x21, SCALAR_DELETING_DTOR, Font)
 
 // The resource type is 0x50; the neighbouring proven values are
 // text 2, bitmap24 0x11 and sfx 0x20.
 VA(0x004b5070, 0x9B)  // anchor-global, dc 0xa1c04
-font::font(const char* name, const font::FontSpec& fontspec, int dsize,
+Font::Font(const char* name, const Font::FontSpec& fontspec, int dsize,
            unsigned char* d)
-    : resource(name, RESOURCE_TYPE_FONT), m_fs(fontspec)
+    : Resource(name, RESOURCE_TYPE_FONT), m_fs(fontspec)
 {
     m_data = new unsigned char[dsize];
     m_dataSize = dsize;
@@ -45,7 +45,7 @@ font::font(const char* name, const font::FontSpec& fontspec, int dsize,
 }
 
 VA(0x004b5110, 0x67)  // dc 0xa1c94
-font::~font()
+Font::~Font()
 {
     if (m_data)
         delete m_data;
@@ -55,7 +55,7 @@ font::~font()
 // The decorated DC member signature uses TColor and bool (_N). Both
 // string renderers call this ordinary member; retail expands the custom
 // color test and palette bias. Keep the shared return and nested highlight.
-int font::getColor(font::Color colorScheme, bool highlighted)
+int Font::getColor(Font::Color colorScheme, bool highlighted)
 {
     int color;
     if (!(colorScheme & CUSTOM_COLOR)) {
@@ -72,7 +72,7 @@ int font::getColor(font::Color colorScheme, bool highlighted)
 
 // E:\gamedcs\font.cpp:81
 VA(0x004b5180, 0x16)  // anchor-global, dc 0xa1d14
-void font::setPalette(const Palette16& newPalette)
+void Font::setPalette(const Palette16& newPalette)
 {
     // DC82 calls the reference copy assignment; Complete 0x4b5180 calls
     // the retained pointer assignment at 0x522910, which copies palette
@@ -81,7 +81,7 @@ void font::setPalette(const Palette16& newPalette)
 }
 
 VA(0x004b51a0, 0xA9)  // dc 0xa1d58
-void font::drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const
+void Font::drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const
 {
     if (c < 0)
         return;
@@ -110,16 +110,16 @@ void font::drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const
 }
 
 VA(0x004b5250, 0xC)
-unsigned int font::getSize() const
+unsigned int Font::getSize() const
 {
-    return m_dataSize + sizeof(font);
+    return m_dataSize + sizeof(Font);
 }
 
 // E:\gamedcs\font.cpp:123..125. Original name: DrawCursor.
 // DC proves the ordinary nine-argument member and the underscore draw;
 // clip arguments are unused. Retail expands it at the string-rendering
 // call sites. The decorated bool (_N) remains the highlight interface.
-void font::drawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
+void Font::drawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
                       int clipX, int clipY, int clipWidth, int clipHeight,
                       bool highlighted)
 {
@@ -128,8 +128,8 @@ void font::drawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
 
 // E:\gamedcs\font.cpp:138, dc 0xa1e5c
 VA(0x004b5260, 0x22E)  // dc 0xa1e5c
-void font::drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
-                             int x, int y, font::Color colorScheme, int clipX,
+void Font::drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
+                             int x, int y, Font::Color colorScheme, int clipX,
                              int clipY, int clipWidth, int clipHeight,
                              int cursorPos)
 {
@@ -206,7 +206,7 @@ void font::drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
 
 // E:\gamedcs\font.cpp:246
 DC_ONLY(0xa209c, 0x6A)
-void font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, font::Color color)
+void Font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, Font::Color color)
 {
     // @stub
 }
@@ -251,9 +251,9 @@ void font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, font:
 // or bypassing the loop guard (95-96% allocation cascades).
 
 VA(0x004b5490, 0x308)  // anchor-global, dc 0xa2108
-void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
+void Font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                              int y, int boxWidth, int boxHeight,
-                             font::Color colorScheme, unsigned justification,
+                             Font::Color colorScheme, unsigned justification,
                              int cursorPos)
 {
     int pos = 0;
@@ -373,14 +373,14 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
 }
 
 VA(0x004b57a0, 0x25)  // dc 0xa2420
-int font::getCharacterWidth(unsigned char currChar) const
+int Font::getCharacterWidth(unsigned char currChar) const
 {
-    const FontSpec::myABC* record = &m_fs.m_abc[currChar];
+    const FontSpec::MyABC* record = &m_fs.m_abc[currChar];
     return record->m_abcB + record->m_abcC + record->m_abcA;
 }
 
 VA(0x004b57d0, 0x44)  // dc 0xa2438
-long font::getStringWidth(const char* arg) const
+long Font::getStringWidth(const char* arg) const
 {
     long width = 0;
     for (const char* p = arg; *p;)
@@ -389,7 +389,7 @@ long font::getStringWidth(const char* arg) const
 }
 
 VA(0x004b5820, 0xF2)  // dc 0xa246c
-int font::lineLength(const char* str, int boxWidth) const
+int Font::lineLength(const char* str, int boxWidth) const
 {
     int limit = strlen(str);
     int count = 0;
@@ -428,7 +428,7 @@ int font::lineLength(const char* str, int boxWidth) const
 }
 
 VA(0x004b5920, 0x64)  // dc 0xa2554
-int font::lineWidth(const char* text) const
+int Font::lineWidth(const char* text) const
 {
     int len = strlen(text);
     int idx = 0;
@@ -444,7 +444,7 @@ int font::lineWidth(const char* text) const
 }
 
 VA(0x004b5990, 0x76)  // dc 0xa25c8
-int font::longestLineWidth(const char* str) const
+int Font::longestLineWidth(const char* str) const
 {
     int len = strlen(str);
     int best = 0;
@@ -464,7 +464,7 @@ int font::longestLineWidth(const char* str) const
 }
 
 VA(0x004b5a10, 0x6F)  // dc 0xa2650
-int font::longestWordLength(const char* str) const
+int Font::longestWordLength(const char* str) const
 {
     int best = 0;
     const char* p = str;
@@ -486,7 +486,7 @@ int font::longestWordLength(const char* str) const
 }
 
 VA(0x004b5a80, 0x110)  // dc 0xa26d4
-int font::longestWrappedLineWidth(const char* str, int boxWidth) const
+int Font::longestWrappedLineWidth(const char* str, int boxWidth) const
 {
     int limit = strlen(str);
     int maxWidth = 0;
@@ -537,7 +537,7 @@ int font::longestWrappedLineWidth(const char* str, int boxWidth) const
 // NH3API corroborates the name and the parameter shape only.
 
 VA(0x004b5b90, 0x3A5)  // anchor-member (fs.abc[' '] at this+0x1bc), retail-only
-void font::fillLinesVector(const char* str, int boxWidth,
+void Font::fillLinesVector(const char* str, int boxWidth,
                            std::vector<std::string>& result)
 {
     int lineWidth = 0;
@@ -612,7 +612,7 @@ VA_COMPGEN(0x004B6010, 0x175, VECTOR_ERASE, string)
 
 // E:\gamedcs\font.cpp:35
 DC_ONLY(0xa27c4, 0x34)
-void* font::`scalar deleting destructor'(unsigned __flags)
+void* Font::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

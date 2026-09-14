@@ -5,13 +5,13 @@
 #include "window.h"
 
 class Hero;
-class message;
+class Message;
 
 // Retail's constructor initializes heroWindow directly, installs vtable
 // 0x63d46c, and adds no derived storage. The nine slots reproduce the
 // heroWindow roster, with this class overriding dtor/Open/Close only.
 // Before normalization (type): TCombatResultsWindow.
-class CombatResultsWindow : public heroWindow {
+class CombatResultsWindow : public HeroWindow {
 public:
     CombatResultsWindow(const Hero* attacker, const Hero* defender,
         int mySide, int winningSide, bool isSiege,
@@ -32,7 +32,7 @@ public:
     // BACKGROUND_ID, because Complete builds them from a data-driven
     // aggregation loop rather than from fourteen fixed slots. The 208..221
     // half of this roster is Dreamcast-only and does not name a retail widget.
-    enum EOtherWidgetIDs {
+    enum OtherWidgetIDs {
         BACKGROUND_ID = 200,
         ATTACKER_NAME = 201,
         ATTACKER_PORTRAIT = 202,
@@ -79,7 +79,7 @@ extern int g_combatResultFlag695014;
 // this tree defines it yet, so no DATA claim.
 extern const char* const g_combatResultMusic[6];
 
-int combatResultsWindowHandler(message& msg);
+int combatResultsWindowHandler(Message& msg);
 
 // --- TCombatResultsWindow ---
 // CODEVIEW(E:\gamedcs\combatresultswindow.cpp:72, dc 0x68364) void TCombatResultsWindow::TCombatResultsWindow(const hero* attacker, const hero* defender, int my_side, int winning_side, unsigned char is_siege, int experience);

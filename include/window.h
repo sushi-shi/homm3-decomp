@@ -5,9 +5,9 @@
 #include <vector>
 #include "va.h"
 
-class widget;
-class textWidget;
-class message;
+class Widget;
+class TextWidget;
+class Message;
 class Bitmap16Bit;
 
 // The retail table at 0x68c710 has 37 eight-byte rows.  SetWinText proves
@@ -40,26 +40,30 @@ struct HelpText {
 // homm2's WindowFlag names and values (byte-proven in Open/Close);
 // 0x10 is retail-only - SaveBackground pads the grab by 8 pixels and
 // Open draws the two-pass edge shadow under it - name provisional.
-enum EWindowFlags {
+// Before normalization (type): EWindowFlags.
+enum WindowFlags {
     WINDOW_FLAG_FIXED_LAYER = 1,
     WINDOW_FLAG_SAVE_BACKGROUND = 2,
     WINDOW_FLAG_SHADOWED = 0x10
 };
 
 // homm2's WindowDrawId lineage, verbatim values.
-enum EWindowDrawIds {
+// Before normalization (type): EWindowDrawIds.
+enum WindowDrawIds {
     WINDOW_ALL_WIDGETS_LOW = -0xffff,
     WINDOW_ALL_WIDGETS_HIGH = 0xffff
 };
 
 // homm2's WindowState lineage; Open/Close test and assign bit 1.
-enum EWindowStates {
+// Before normalization (type): EWindowStates.
+enum WindowStates {
     WINDOW_STATE_OPEN = 1
 };
 
 // The 800x600 desktop (homm2's WindowConstant idiom at 640x480);
 // names provisional.
-enum EWindowMetrics {
+// Before normalization (type): EWindowMetrics.
+enum WindowMetrics {
     WINDOW_SCREEN_WIDTH = 800,
     WINDOW_SCREEN_HEIGHT = 600
 };
@@ -89,20 +93,20 @@ enum EWindowMetrics {
 //   7  AddWidgetsToMessageStream 0x5ff570
 //   8  0x5ff5f0 - retail-only, unsigned char arg, the per-widget twin
 //      of SleepAllWidgets; reached only through SleepAllWidgets.
-class heroWindow {
+class HeroWindow {
 public:
     int m_priority;
-    heroWindow* m_nextWindow;
-    heroWindow* m_prevWindow;
+    HeroWindow* m_nextWindow;
+    HeroWindow* m_prevWindow;
     unsigned int m_type;
     int m_status;
     int m_x;
     int m_y;
     int m_width;
     int m_height;
-    widget* m_headWidget;
-    widget* m_tailWidget;
-    std::vector<widget*> m_widgets;
+    Widget* m_headWidget;
+    Widget* m_tailWidget;
+    std::vector<Widget*> m_widgets;
 
 protected:
     int m_focusId;
@@ -113,23 +117,23 @@ private:
 public:
     int m_sleepCount;
 
-    heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType);
+    HeroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType);
     void centerWindow(int centerX, int centerY);
-    int broadcastMessage(message& msg);
+    int broadcastMessage(Message& msg);
     int broadcastMessage(int id, int codeX, int codeY, int extra);
     int widgetSetStatus(int id, int status);
     int widgetClearStatus(int id, int status);
-    widget* findWidgetPtr(int mx, int my) const;
+    Widget* findWidgetPtr(int mx, int my) const;
     int findWidget(int mx, int my) const;
-    void addWidget(widget* newWidget, int newPriority);
-    void removeWidget(widget* killWidget);
-    widget* getWidget(int id);
+    void addWidget(Widget* newWidget, int newPriority);
+    void removeWidget(Widget* killWidget);
+    Widget* getWidget(int id);
     void setFocus(int id);
 
 protected:
     // DC: protected STATIC (no vfptr slot). /Gr makes it fastcall, which
     // is exactly the TDialogHandler shape DoModal hands to DoDialog.
-    static int heroWindowHandler(message& msg);
+    static int heroWindowHandler(Message& msg);
 
 private:
     int saveBackground();
@@ -138,11 +142,11 @@ private:
 public:
     void sleepAllWidgets(unsigned char sleep);
 
-    virtual ~heroWindow();
+    virtual ~HeroWindow();
     virtual int open(int zOrder, unsigned char update);
     virtual void close(unsigned char update);         // slot 2, retail 0x5fec60
-    virtual int handleMessage(message& msg);         // slot 3, folded onto 0x4ec560
-    virtual void handleWidgetHover(widget* w);      // slot 4, folded onto 0x485d80
+    virtual int handleMessage(Message& msg);         // slot 3, folded onto 0x4ec560
+    virtual void handleWidgetHover(Widget* w);      // slot 4, folded onto 0x485d80
     virtual void drawWindow(unsigned char update, int lowID, int highID);
     virtual int doModal(unsigned char fadeIn);
 
@@ -178,29 +182,29 @@ public:
 // rows onto the seven DC roster entries: the sdd sits second (the
 // widget/heroWindow placement), OnWidgetDeselect has no distinct retail
 // row here, and the three claims in between were each one slot low.
-class CHeroWindowEx : public heroWindow {
+class CHeroWindowEx : public HeroWindow {
 public:
     int m_rolloverId;   // +0x4c, -1 in the ctor, latched by ProcessHover
 
     CHeroWindowEx(int winX, int winY, int winWidth, int winHeight, unsigned winType);
 
     VA(0x00405680, 0x10)  // shared slot-3 header forwarder, dc 0x2dcc
-    virtual int handleMessage(message& msg)
+    virtual int handleMessage(Message& msg)
     {
         return windowHandler(msg);
     }
-    virtual int windowHandler(message& msg);                            // slot 9
+    virtual int windowHandler(Message& msg);                            // slot 9
     virtual unsigned char processHover(int mouseX, int mouseY);         // slot 10
     virtual unsigned char processRightSelect(int id);                   // slot 11
     void setHelpText(HelpText* helpText, int start, int stop, unsigned char copyText);
 
 protected:
     virtual int onWidgetDeselect(int id, bool& exitFlag);  // slot 12
-    virtual textWidget* getRolloverWidget();                            // slot 13
+    virtual TextWidget* getRolloverWidget();                            // slot 13
 };
 
 unsigned char initializeWinSetupText();
-void setWinText(heroWindow* win, int winId);
+void setWinText(HeroWindow* win, int winId);
 
 // --- CHeroWindowEx ---
 // CODEVIEW(E:\gamedcs\window.cpp:1122, dc 0x197f48) int CHeroWindowEx::OnWidgetDeselect(int id, bool& bExitFlag);

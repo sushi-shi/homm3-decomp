@@ -7,11 +7,11 @@
 
 #include "herospec.h"
 class ArmyGroup;
-class bitmapBackedTextWidget;
-class bitmapBorder;
+class BitmapBackedTextWidget;
+class BitmapBorder;
 class Hero;
-class iconWidget;
-class textWidget;
+class IconWidget;
+class TextWidget;
 
 typedef int SpellID;
 
@@ -39,7 +39,8 @@ public:
 
     // Dreamcast CodeView's class-local widget domain. Complete doubles the
     // spell rows per page but retains this complete 200..249 ID layout.
-    enum EOtherWidgetIDs {
+// Before normalization (type): SpellbookWindow::EOtherWidgetIDs.
+    enum OtherWidgetIDs {
         BACKGROUND_ID = 200,
         SPELL_LEVEL_0_ID = 201,
         SPELL_LEVEL_1_ID = 202,
@@ -152,7 +153,7 @@ public:
         gotoPage(m_page + 1);
     }
     static void reset();
-    virtual int windowHandler(message& msg);
+    virtual int windowHandler(Message& msg);
 
 private:
     const SpellContext m_allowedContext;       // +0x60
@@ -163,14 +164,14 @@ private:
     unsigned m_contextMask;                     // +0x74
     int m_page;                                 // +0x78
     SpellID m_spellMap[SPELLS_PER_PAGE];        // +0x7c
-    iconWidget** m_spellLevelWidgets;           // +0xac
-    iconWidget** m_spellIconWidgets;            // +0xb0
-    textWidget** m_spellNameWidgets;            // +0xb4
-    iconWidget* m_headingWidget;                // +0xb8
-    bitmapBorder* m_nextPageWidget;              // +0xbc
-    bitmapBorder* m_previousPageWidget;          // +0xc0
-    iconWidget* m_schoolTabsWidget;              // +0xc4
-    bitmapBackedTextWidget* m_rolloverWidget;    // +0xc8
+    IconWidget** m_spellLevelWidgets;           // +0xac
+    IconWidget** m_spellIconWidgets;            // +0xb0
+    TextWidget** m_spellNameWidgets;            // +0xb4
+    IconWidget* m_headingWidget;                // +0xb8
+    BitmapBorder* m_nextPageWidget;              // +0xbc
+    BitmapBorder* m_previousPageWidget;          // +0xc0
+    IconWidget* m_schoolTabsWidget;              // +0xc4
+    BitmapBackedTextWidget* m_rolloverWidget;    // +0xc8
     static SpellContext s_lastContext;
     static SpellSchool s_lastSchool;
 

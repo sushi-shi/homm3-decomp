@@ -6,9 +6,9 @@
 #include "findpath.h"
 
 VA(0x005239d0, 0x96)  // dc 0x10c918
-int army::findPath(int fpTargetCellIndex, int maxMoves, unsigned char moveUnlimited, unsigned char literalTarget)
+int Army::findPath(int fpTargetCellIndex, int maxMoves, unsigned char moveUnlimited, unsigned char literalTarget)
 {
-    if (!combatManager::validHex(fpTargetCellIndex))
+    if (!CombatManager::validHex(fpTargetCellIndex))
         return 0;
     int moves;
     if (!g_combatManager->m_creaturePlacement && !moveUnlimited)
@@ -27,9 +27,9 @@ int army::findPath(int fpTargetCellIndex, int maxMoves, unsigned char moveUnlimi
 }
 
 VA(0x00523a70, 0xA8)  // dc 0x10c9a4
-unsigned char army::validPath(int destIndex, unsigned char literalTest)
+unsigned char Army::validPath(int destIndex, unsigned char literalTest)
 {
-    if (!combatManager::validHex(destIndex))
+    if (!CombatManager::validHex(destIndex))
         return 0;
     if (!findPath(destIndex, getSpeed(), 0, literalTest))
         return 0;
@@ -38,7 +38,7 @@ unsigned char army::validPath(int destIndex, unsigned char literalTest)
 }
 
 VA(0x00523b20, 0x89)  // dc 0x10c9ec
-unsigned army::getAttackMask(int currIndex, int criteria, int literalTargetIndex) const
+unsigned Army::getAttackMask(int currIndex, int criteria, int literalTargetIndex) const
 {
     int testCellIndex;
     unsigned char twoHex = static_cast<unsigned char>(m_monInfo.m_attributes & 1);
@@ -54,9 +54,9 @@ unsigned army::getAttackMask(int currIndex, int criteria, int literalTargetIndex
 }
 
 VA(0x00523bb0, 0x1DF)  // dc 0x10ca6c
-int army::validAttack(int currIndex, int direction, int criteria, int literalIndex, int* testCellIndex) const
+int Army::validAttack(int currIndex, int direction, int criteria, int literalIndex, int* testCellIndex) const
 {
-    if (!combatManager::validHex(currIndex))
+    if (!CombatManager::validHex(currIndex))
         return 0;
     int other = currIndex;
     if (m_monInfo.m_attributes & 1) {
@@ -82,11 +82,11 @@ int army::validAttack(int currIndex, int direction, int criteria, int literalInd
     } else {
         *testCellIndex = getAdjacentCellIndex(currIndex, direction);
     }
-    if (!combatManager::validHex(*testCellIndex))
+    if (!CombatManager::validHex(*testCellIndex))
         return 0;
     if (literalIndex != -1 && *testCellIndex != literalIndex)
         return 0;
-    hexcell* hc = &g_combatManager->m_cells[*testCellIndex];
+    Hexcell* hc = &g_combatManager->m_cells[*testCellIndex];
     switch (criteria) {
         case ATTACK_CRITERIA_SELF:
             if (hc->m_armySide == m_side && hc->m_armySlot == m_slot)
@@ -105,9 +105,9 @@ int army::validAttack(int currIndex, int direction, int criteria, int literalInd
 }
 
 VA(0x00523d90, 0x57)  // dc 0x10cbf8
-int army::getAdjacentCellIndex(int currIndex, int direction) const
+int Army::getAdjacentCellIndex(int currIndex, int direction) const
 {
-    if (!combatManager::validHex(currIndex))
+    if (!CombatManager::validHex(currIndex))
         return -1;
     if (direction == COMBAT_DIRECTION_WIDE_UPPER)
         direction = (m_facing == 1) ? 5 : 0;
@@ -117,7 +117,7 @@ int army::getAdjacentCellIndex(int currIndex, int direction) const
 }
 
 VA(0x00523df0, 0x86)  // dc 0x10cc80
-long army::getAdjacentHex(long hex, long direction) const
+long Army::getAdjacentHex(long hex, long direction) const
 {
     if (m_monInfo.m_attributes & 1) {
         if (m_facing == 0) {
@@ -133,7 +133,7 @@ long army::getAdjacentHex(long hex, long direction) const
 VA(0x00523e80, 0x3B)  // dc 0x10ccdc
 int getAdjacentCellIndexNoArmy(int currIndex, int direction)
 {
-    if (!combatManager::validHex(currIndex))
+    if (!CombatManager::validHex(currIndex))
         return -1;
     if (direction == COMBAT_DIRECTION_WIDE_UPPER)
         direction = 5;
@@ -155,7 +155,7 @@ int oppositeDirection(int direction)
 
 // E:\gamedcs\path.cpp:480
 DC_ONLY(0x10cd50, 0x4A8)
-int army::getBestDirection(int currIndex, int destIndex, int currMask)
+int Army::getBestDirection(int currIndex, int destIndex, int currMask)
 {
     // @stub
 }

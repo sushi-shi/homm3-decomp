@@ -29,7 +29,7 @@ public:
     int m_firstVisibleQuest;  // +0x70
 
     virtual ~QuestLogWindow();
-    virtual int windowHandler(message& msg);
+    virtual int windowHandler(Message& msg);
 
     void updateQuestLocator(int i);
     void updateQuestLocators();

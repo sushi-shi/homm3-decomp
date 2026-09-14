@@ -110,14 +110,14 @@ int _close(int handle)
 
 // E:\gamedcs\h3\DC_precompiledheaders.cpp:158
 DC_ONLY(0x7fec8, 0x12)
-void _endthreadex(unsigned retval)
+void endthreadex(unsigned retval)
 {
     // @stub
 }
 
 // E:\gamedcs\h3\DC_precompiledheaders.cpp:164
 DC_ONLY(0x7fedc, 0x1E)
-void* _beginthreadex(void* security, unsigned stack_size, unsigned long (*)()* start_address, void* arglist, unsigned initflag, unsigned long* thrdaddr)
+void* beginthreadex(void* security, unsigned stack_size, unsigned long (*)()* start_address, void* arglist, unsigned initflag, unsigned long* thrdaddr)
 {
     // @stub
 }
@@ -250,14 +250,14 @@ int pcxinfo(const char* fname, PcxData* pdata)
 
 // E:\gamedcs\h3\DC_precompiledheaders.cpp:544
 DC_ONLY(0x8014c, 0x4)
-int allocimage(imgdes* image, int iwidth, int ilength, int bppixel)
+int allocimage(Imgdes* image, int iwidth, int ilength, int bppixel)
 {
     // @stub
 }
 
 // E:\gamedcs\h3\DC_precompiledheaders.cpp:550
 DC_ONLY(0x80150, 0x4)
-int loadpcx(const char* fname, imgdes* desimg)
+int loadpcx(const char* fname, Imgdes* desimg)
 {
     // @stub
 }
@@ -271,14 +271,14 @@ void freeimage()
 
 // E:\gamedcs\h3\DC_precompiledheaders.cpp:560
 DC_ONLY(0x80158, 0x4)
-int flipimage(imgdes* srcimg, imgdes* desimg)
+int flipimage(Imgdes* srcimg, Imgdes* desimg)
 {
     // @stub
 }
 
 // E:\gamedcs\h3\DC_precompiledheaders.cpp:565
 DC_ONLY(0x8015c, 0x4)
-int savepcx(const char* fname, imgdes* srcimg)
+int savepcx(const char* fname, Imgdes* srcimg)
 {
     // @stub
 }

@@ -25,10 +25,10 @@ public:
     CAdvPopup(int winX, int winY, int winWidth, int winHeight,
               unsigned winType);
     virtual ~CAdvPopup();
-    virtual int windowHandler(message& msg);             // slot 9
+    virtual int windowHandler(Message& msg);             // slot 9
 
 protected:
-    virtual int exitDialog(message& msg);                 // slot 14
+    virtual int exitDialog(Message& msg);                 // slot 14
 };
 SIZE(CAdvPopup, 0x60);
 

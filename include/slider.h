@@ -8,14 +8,16 @@
 class Bitmap816;
 class CSprite;
 
-class slider : public widget {
+// Before normalization (type): slider.
+class Slider : public Widget {
 public:
-    enum EGraphics {
+// Before normalization (type): slider::EGraphics.
+    enum Graphics {
         BROWN = 0,
         BLUE = 1
     };
 
-    typedef void (*TSliderFunction)(int, heroWindow*);
+    typedef void (*TSliderFunction)(int, HeroWindow*);
 
     // Retail reordered the Dreamcast fields after widget. Every offset below
     // is read or written by 0x596050..0x597184; the resulting size is 0x68.
@@ -54,13 +56,13 @@ public:
     // NH3API also leaves +0x5e/+0x5f unnamed.
     unsigned char m_paddingBeforeLastFocus[2];
 
-    slider();
-    slider(int x, int y, int w, int h, int id, int num,
-           TSliderFunction func, EGraphics graphics, int page,
+    Slider();
+    Slider(int x, int y, int w, int h, int id, int num,
+           TSliderFunction func, Graphics graphics, int page,
            unsigned char hotKey);
-    virtual ~slider();
+    virtual ~Slider();
 
-    virtual int main(message& msg);                 // slot 2
+    virtual int main(Message& msg);                 // slot 2
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     virtual void draw() const;                            // slot 4
     virtual int getRealHeight() const;                    // slot 5
@@ -85,14 +87,14 @@ public:
     // No procedure/source location or active caller is known;
     // retain the API without borrowing get_maximum's body position.
     int getState() const;
-    int select(message* msg, unsigned char dragging);
-    int deselect(message* msg);
+    int select(Message* msg, unsigned char dragging);
+    int deselect(Message* msg);
     void keyAccel(int x1, int x2, int x3, int x4, int key);
 
 protected:
     void initialize(const char* resourceName);
     void setKnob(int inX);
 };
-SIZE(slider, 0x68);
+SIZE(Slider, 0x68);
 
 #endif  /* HOMM3_SLIDER_H */

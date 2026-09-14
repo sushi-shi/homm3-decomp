@@ -62,21 +62,21 @@ __declspec(nothrow) void __cdecl operator delete(void* p);
 
 // E:\gamedcs\bottomviewsubwindow.cpp:39
 DC_ONLY(0x550b8, 0x5C)
-void type_bottom_view_window::type_bottom_view_window(heroWindow* parent_window)
+void BottomViewWindow::BottomViewWindow(HeroWindow* parent_window)
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:47
 DC_ONLY(0x55114, 0x74)
-void type_bottom_view_window::~type_bottom_view_window()
+void BottomViewWindow::~BottomViewWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:64
 DC_ONLY(0x55188, 0x4)
-void type_bottom_view_window::animate()
+void BottomViewWindow::animate()
 {
     // @stub
 }
@@ -84,7 +84,7 @@ void type_bottom_view_window::animate()
 // E:\gamedcs\bottomviewsubwindow.cpp:77
 // RETAIL_LOCATED(0x00450dd0, 0x319)  // anchor-vtable + anchor-caller
 DC_ONLY(0x5518c, 0x2BC)
-void BottomViewNewTurn::BottomViewNewTurn(heroWindow* parent)
+void BottomViewNewTurn::BottomViewNewTurn(HeroWindow* parent)
 {
     // @stub
 }
@@ -100,7 +100,7 @@ void BottomViewNewTurn::animate()
 // E:\gamedcs\bottomviewsubwindow.cpp:146
 // RETAIL_LOCATED(0x00451220, 0x393)  // anchor-vtable + anchor-caller
 DC_ONLY(0x554ac, 0x2BC)
-void BottomViewResourceMessage::BottomViewResourceMessage(heroWindow* parent, int res, int quantity, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message)
+void BottomViewResourceMessage::BottomViewResourceMessage(HeroWindow* parent, int res, int quantity, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message)
 {
     // @stub
 }
@@ -108,7 +108,7 @@ void BottomViewResourceMessage::BottomViewResourceMessage(heroWindow* parent, in
 // E:\gamedcs\bottomviewsubwindow.cpp:197
 // RETAIL_LOCATED(0x00451820, 0x1DC)  // anchor-vtable + anchor-caller
 DC_ONLY(0x55768, 0x140)
-void BottomViewMessage::BottomViewMessage(heroWindow* parent, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message)
+void BottomViewMessage::BottomViewMessage(HeroWindow* parent, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message)
 {
     // @stub
 }
@@ -116,7 +116,7 @@ void BottomViewMessage::BottomViewMessage(heroWindow* parent, const std::basic_s
 // E:\gamedcs\bottomviewsubwindow.cpp:222
 // RETAIL_LOCATED(0x00451ab0, 0x68A)  // anchor-vtable + anchor-caller
 DC_ONLY(0x558a8, 0x54C)
-void BottomViewHero::BottomViewHero(heroWindow* parent)
+void BottomViewHero::BottomViewHero(HeroWindow* parent)
 {
     // @stub
 }
@@ -124,7 +124,7 @@ void BottomViewHero::BottomViewHero(heroWindow* parent)
 // E:\gamedcs\bottomviewsubwindow.cpp:352
 // RETAIL_LOCATED(0x004521f0, 0x8D4)  // anchor-vtable + anchor-caller
 DC_ONLY(0x55df4, 0x5C4)
-void BottomViewTown::BottomViewTown(heroWindow* parent)
+void BottomViewTown::BottomViewTown(HeroWindow* parent)
 {
     // @stub
 }
@@ -132,7 +132,7 @@ void BottomViewTown::BottomViewTown(heroWindow* parent)
 // E:\gamedcs\bottomviewsubwindow.cpp:515
 // RETAIL_LOCATED(0x00452b80, 0x620)  // anchor-vtable + anchor-caller
 DC_ONLY(0x563b8, 0x4C8)
-void BottomViewKingdom::BottomViewKingdom(heroWindow* parent)
+void BottomViewKingdom::BottomViewKingdom(HeroWindow* parent)
 {
     // @stub
 }
@@ -140,7 +140,7 @@ void BottomViewKingdom::BottomViewKingdom(heroWindow* parent)
 // E:\gamedcs\bottomviewsubwindow.cpp:599
 // RETAIL_LOCATED(0x00453250, 0x3EE)  // anchor-vtable + anchor-caller
 DC_ONLY(0x56880, 0x33C)
-void BottomViewEnemyTurn::BottomViewEnemyTurn(heroWindow* parent)
+void BottomViewEnemyTurn::BottomViewEnemyTurn(HeroWindow* parent)
 {
     // @stub
 }
@@ -162,7 +162,7 @@ void BottomViewEnemyTurn::animate()
 
 // E:\gamedcs\Widget.h:263
 DC_ONLY(0x56df8, 0x28)
-void widget::setVisible(unsigned char arg)
+void Widget::setVisible(unsigned char arg)
 {
     // @stub
 }
@@ -170,14 +170,14 @@ void widget::setVisible(unsigned char arg)
 // E:\gamedcs\Widget.h:271
 DC_ONLY(0x56e20, 0x1C)
 // Before normalization (function): widget::force_update.
-void widget::forceUpdate()
+void Widget::forceUpdate()
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:41
 DC_ONLY(0x56e3c, 0x34)
-void* type_bottom_view_window::`scalar deleting destructor'(unsigned __flags)
+void* BottomViewWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -282,21 +282,21 @@ void BottomViewEnemyTurn::~BottomViewEnemyTurn()
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x57084, 0x20)
-widget** std::vector<widget *,std::allocator<widget *> >::operator[](unsigned __n)
+Widget** std::vector<Widget *,std::allocator<Widget *> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 #endif  // @carcass
 
-VA_COMPGEN(0x00450d20, 0x21, SCALAR_DELETING_DTOR, type_bottom_view_window)
+VA_COMPGEN(0x00450d20, 0x21, SCALAR_DELETING_DTOR, BottomViewWindow)
 
 VA(0x00450d50, 0x78)  // dc 0x55114
-type_bottom_view_window::~type_bottom_view_window()
+BottomViewWindow::~BottomViewWindow()
 {
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
+    for (std::vector<Widget*>::iterator it = m_widgets.begin();
          it != m_widgets.end(); ++it) {
-        widget* item = *it;
+        Widget* item = *it;
         if (item) {
             m_parentWindow->removeWidget(item);
             delete item;
@@ -353,7 +353,7 @@ type_bottom_view_window::~type_bottom_view_window()
 // carries no claim. Its shape is read straight off every derived
 // constructor's first eighteen instructions: TSubWindow's default
 // constructor, then this class's vptr, then the one body statement.
-type_bottom_view_window::type_bottom_view_window(heroWindow* parentWindow)
+BottomViewWindow::BottomViewWindow(HeroWindow* parentWindow)
 {
     initialize(614, 400, 176, 166, parentWindow);
 }
@@ -394,12 +394,12 @@ static const char* g_newWeekIcons[5] = {
 // are the same `text = format_string(...)` statement.
 
 VA(0x00450dd0, 0x319)  // dc 0x5518c
-BottomViewNewTurn::BottomViewNewTurn(heroWindow* parent)
-    : type_bottom_view_window(parent)
+BottomViewNewTurn::BottomViewNewTurn(HeroWindow* parent)
+    : BottomViewWindow(parent)
 {
     int id = BOTTOM_VIEW_BACKGROUND_ID;
 
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         0, 0, 176, 166, id++, "AdStatOt.pcx", 0x800));
 
     m_frame = 0;
@@ -419,16 +419,16 @@ BottomViewNewTurn::BottomViewNewTurn(heroWindow* parent)
         launchSample("newday.wav", 30000, 3);
     }
 
-    m_icon = new iconWidget(0, 0, 175, 166, id++, iconName, 0, 0, 0, 0, 0x10);
+    m_icon = new IconWidget(0, 0, 175, 166, id++, iconName, 0, 0, 0, 0, 0x10);
     m_icon->setIconFrame(0);
     m_widgets.push_back(m_icon);
 
     m_frameDelay = 100;
-    m_backdrop = new textWidget(10, 10, 148, 146, text.c_str(), "medfont.fnt",
-        font::WHITE, id++, 1, 0, 8);
+    m_backdrop = new TextWidget(10, 10, 148, 146, text.c_str(), "medfont.fnt",
+        Font::WHITE, id++, 1, 0, 8);
     m_widgets.push_back(m_backdrop);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
     }
@@ -457,7 +457,7 @@ void BottomViewNewTurn::animate()
     m_icon->setIconFrame(m_frame);
     m_icon->draw();
     m_backdrop->draw();
-    m_icon->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+    m_icon->sendMessage(Widget::WIDGET_SET_STATUS, Widget::WIDGET_UPDATE);
     m_lastStepTime = GameTime::get();
 }
 
@@ -524,22 +524,22 @@ void BottomViewNewTurn::animate()
 // and it is the first place to look for the five missing candidates.
 VA(0x00451220, 0x393)  // anchor-vtable 0x63bb1c + advManager::UpdBottomViewResMsg, dc 0x554ac
 BottomViewResourceMessage::BottomViewResourceMessage(
-    heroWindow* parent, int res, int quantity,
+    HeroWindow* parent, int res, int quantity,
     const std::string* message)
-    : type_bottom_view_window(parent)
+    : BottomViewWindow(parent)
 {
     m_widgets.reserve(5);
 
-    m_widgets.push_back(new bitmapBorder(0, 0, 176, 166,
+    m_widgets.push_back(new BitmapBorder(0, 0, 176, 166,
         BOTTOM_VIEW_BACKGROUND_ID, "AdStatOt.pcx", 0x800));
-    m_widgets.push_back(new textWidget(10, 10, 156, 146,
-        message->c_str(), "smalfont.fnt", font::WHITE, BOTTOM_VIEW_TEXT_ID,
+    m_widgets.push_back(new TextWidget(10, 10, 156, 146,
+        message->c_str(), "smalfont.fnt", Font::WHITE, BOTTOM_VIEW_TEXT_ID,
         1, 0, 8));
 
     if (res >= 0) {
         CSprite* sprite = ResourceManager::getSprite("resour82.def");
 
-        m_widgets.push_back(new iconWidget((m_width - sprite->getWidth()) / 2, 50,
+        m_widgets.push_back(new IconWidget((m_width - sprite->getWidth()) / 2, 50,
             sprite->getWidth(), sprite->getHeight(), 0x837, "resour82.def", res,
             0, 0, 0, 0x10));
 
@@ -549,16 +549,16 @@ BottomViewResourceMessage::BottomViewResourceMessage(
         int textWidth = g_unnamed698a08->lineWidth(quantityText.str());
         int fontHeight = g_unnamed698a08->m_fs.m_height;
 
-        m_widgets.push_back(new textWidget((m_width - textWidth) / 2,
+        m_widgets.push_back(new TextWidget((m_width - textWidth) / 2,
             sprite->getHeight() + 55, textWidth, fontHeight,
-            quantityText.str(), "smalfont.fnt", font::PRIMARY, 0x836,
+            quantityText.str(), "smalfont.fnt", Font::PRIMARY, 0x836,
             1, 0, 8));
 
         quantityText.freeze(false);
         sprite->dispose();
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
     }
@@ -603,19 +603,19 @@ BottomViewResourceMessage::~BottomViewResourceMessage()
 }
 
 VA(0x00451820, 0x1DC)  // dc 0x55768
-BottomViewMessage::BottomViewMessage(heroWindow* parent,
+BottomViewMessage::BottomViewMessage(HeroWindow* parent,
                                        const std::string* message)
-    : type_bottom_view_window(parent)
+    : BottomViewWindow(parent)
 {
     m_widgets.reserve(2);
 
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         0, 0, 176, 166, BOTTOM_VIEW_BACKGROUND_ID, "AdStatOt.pcx", 0x800));
-    m_widgets.push_back(new textWidget(
-        10, 10, 148, 146, message->c_str(), "smalfont.fnt", font::WHITE,
+    m_widgets.push_back(new TextWidget(
+        10, 10, 148, 146, message->c_str(), "smalfont.fnt", Font::WHITE,
         BOTTOM_VIEW_TEXT_ID, 1, 0, 8));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
     }
@@ -713,36 +713,36 @@ static const int g_heroArmyCoords[7][2] = {
 // one-instruction loop header the preheader `jmp`s past. Two lockstep IVs,
 // and VC6 picks the survivor itself; not a guard or return shape.
 VA(0x00451ab0, 0x68A)  // anchor-vtable 0x63bb2c + advManager::UpdBottomViewHero, dc 0x558a8
-BottomViewHero::BottomViewHero(heroWindow* parent)
-    : type_bottom_view_window(parent)
+BottomViewHero::BottomViewHero(HeroWindow* parent)
+    : BottomViewWindow(parent)
 {
     m_widgets.reserve(25);
 
-    m_widgets.push_back(new bitmapBorder(0, 0, 176, 166,
+    m_widgets.push_back(new BitmapBorder(0, 0, 176, 166,
         BOTTOM_VIEW_BACKGROUND_ID, "AdStatHr.pcx", 0x800));
 
     Hero* who = g_game->getCurrHero();
 
-    m_widgets.push_back(new bitmapBorder(3, 2, 58, 64, 0x7d1,
+    m_widgets.push_back(new BitmapBorder(3, 2, 58, 64, 0x7d1,
         g_heroTraits[who->m_portrait].m_largePortraitName, 0x800));
-    m_widgets.push_back(new textWidget(66, 2, 107, 17, who->m_name,
-        "smalfont.fnt", font::WHITE, 0x7d2, 0, 0, 8));
+    m_widgets.push_back(new TextWidget(66, 2, 107, 17, who->m_name,
+        "smalfont.fnt", Font::WHITE, 0x7d2, 0, 0, 8));
 
     for (int i = 0; i < 4; i++) {
         int value = who->getPrimarySkill(i);
         sprintf(g_text, "%d", value);
-        m_widgets.push_back(new textWidget(g_heroStatCoords[i][0],
+        m_widgets.push_back(new TextWidget(g_heroStatCoords[i][0],
             g_heroStatCoords[i][1], 23, 16, g_text, "smalfont.fnt",
-            font::WHITE, 0x7d3 + i, 1, 0, 8));
+            Font::WHITE, 0x7d3 + i, 1, 0, 8));
     }
 
     sprintf(g_text, "%d", who->m_mana);
-    m_widgets.push_back(new textWidget(145, 93, 27, 14, g_text, "tiny.fnt",
-        font::WHITE, 0x7da, 1, 0, 8));
+    m_widgets.push_back(new TextWidget(145, 93, 27, 14, g_text, "tiny.fnt",
+        Font::WHITE, 0x7da, 1, 0, 8));
 
-    m_widgets.push_back(new iconWidget(5, 74, 22, 12, 0x7d8, "imrl22.def",
+    m_widgets.push_back(new IconWidget(5, 74, 22, 12, 0x7d8, "imrl22.def",
         who->getMorale(0, 0, 1) + 3, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(5, 91, 22, 12, 0x7d9, "ilck22.def",
+    m_widgets.push_back(new IconWidget(5, 91, 22, 12, 0x7d9, "ilck22.def",
         who->getLuck(0, 0, 1) + 3, 0, 0, 0, 0x10));
 
     int numStacks = 0;
@@ -756,7 +756,7 @@ BottomViewHero::BottomViewHero(heroWindow* parent)
         for (int j = 0; j < 7; j++) {
             int type = who->m_army.m_armies[j];
             if (type != -1) {
-                m_widgets.push_back(new iconWidget(g_heroArmyCoords[j][0],
+                m_widgets.push_back(new IconWidget(g_heroArmyCoords[j][0],
                     g_heroArmyCoords[j][1], 32, 32, id++, "cprsmall.def",
                     type + 2, 0, 0, 0, 0x10));
 
@@ -766,14 +766,14 @@ BottomViewHero::BottomViewHero(heroWindow* parent)
                 else
                     text = formatString("%dk", who->m_army.m_numTroops[j] / 1000);
 
-                m_widgets.push_back(new textWidget(g_heroArmyCoords[j][0],
+                m_widgets.push_back(new TextWidget(g_heroArmyCoords[j][0],
                     g_heroArmyCoords[j][1] + 34, 32, 13, text.c_str(),
-                    "tiny.fnt", font::WHITE, id++, 1, 0, 8));
+                    "tiny.fnt", Font::WHITE, id++, 1, 0, 8));
             }
         }
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
     }
@@ -913,20 +913,20 @@ static const int g_townArmyCoords[7][2] = {
 // Address-arithmetic review (2026-09-10): indexing army_pos by the packed
 // display slot replaces its flattened int* walk and raises 94.0054 to 94.80%.
 VA(0x004521f0, 0x8D4)  // anchor-vtable 0x63bb34 + advManager::UpdBottomViewTown, dc 0x55df4
-BottomViewTown::BottomViewTown(heroWindow* parent)
-    : type_bottom_view_window(parent)
+BottomViewTown::BottomViewTown(HeroWindow* parent)
+    : BottomViewWindow(parent)
 {
     m_widgets.reserve(25);
 
-    m_widgets.push_back(new bitmapBorder(0, 0, 176, 166,
+    m_widgets.push_back(new BitmapBorder(0, 0, 176, 166,
         BOTTOM_VIEW_BACKGROUND_ID, "AdStatCs.pcx", 0x800));
 
     Town* which = g_game->getCurrTown();
 
-    m_widgets.push_back(new iconWidget(3, 2, 58, 64, 0x7d1, "itpt.def",
+    m_widgets.push_back(new IconWidget(3, 2, 58, 64, 0x7d1, "itpt.def",
         which->getPortraitFrame(false), 0, 0, 0, 0x10));
-    m_widgets.push_back(new textWidget(66, 1, 107, 16, which->m_name.c_str(),
-        "smalfont.fnt", font::WHITE, 0x7d2, 0, 0, 8));
+    m_widgets.push_back(new TextWidget(66, 1, 107, 16, which->m_name.c_str(),
+        "smalfont.fnt", Font::WHITE, 0x7d2, 0, 0, 8));
 
     int hallLevel = 0;
     if (which->hasBuilding(HALL_TOWN_ID, 0))
@@ -938,7 +938,7 @@ BottomViewTown::BottomViewTown(heroWindow* parent)
 
     std::string townSizeName = g_townSizeNames[hallLevel];
 
-    m_widgets.push_back(new iconWidget(67, 31, 34, 34, 0x7d3, "itmtls.def",
+    m_widgets.push_back(new IconWidget(67, 31, 34, 34, 0x7d3, "itmtls.def",
         hallLevel, 0, 0, 0, 0x10));
 
     int fortLevel;
@@ -951,11 +951,11 @@ BottomViewTown::BottomViewTown(heroWindow* parent)
     else
         fortLevel = 3;
 
-    m_widgets.push_back(new iconWidget(105, 31, 34, 34, 0x7d4, "itmcls.def",
+    m_widgets.push_back(new IconWidget(105, 31, 34, 34, 0x7d4, "itmcls.def",
         fortLevel, 0, 0, 0, 0x10));
 
     if (which->m_garrisonHeroId != -1)
-        m_widgets.push_back(new bitmapBorder(149, 76, 22, 30, 0x7d8,
+        m_widgets.push_back(new BitmapBorder(149, 76, 22, 30, 0x7d8,
             "townqkgh.pcx", 0x800));
 
     if (which->hasBuilding(MARKETPLACE_SILO_ID, 1)) {
@@ -967,19 +967,19 @@ BottomViewTown::BottomViewTown(heroWindow* parent)
                 slots[found++] = i;
         }
         if (found == BOTTOM_VIEW_SILO_TWO_RESOURCES) {
-            m_widgets.push_back(new iconWidget(6, 75, 20, 18, 0x7d7,
+            m_widgets.push_back(new IconWidget(6, 75, 20, 18, 0x7d7,
                 "smalres.def", slots[0], 0, 0, 0, 0x10));
-            m_widgets.push_back(new iconWidget(6, 87, 20, 18, 0x7d7,
+            m_widgets.push_back(new IconWidget(6, 87, 20, 18, 0x7d7,
                 "smalres.def", slots[1], 0, 0, 0, 0x10));
         } else if (found == BOTTOM_VIEW_SILO_ONE_RESOURCE) {
-            m_widgets.push_back(new iconWidget(6, 81, 20, 18, 0x7d7,
+            m_widgets.push_back(new IconWidget(6, 81, 20, 18, 0x7d7,
                 "smalres.def", slots[0], 0, 0, 0, 0x10));
         }
     }
 
     sprintf(g_text, "%d", which->getGoldIncome(1));
-    m_widgets.push_back(new textWidget(144, 54, 28, 12, g_text, "tiny.fnt",
-        font::WHITE, 0x7d6, 1, 0, 8));
+    m_widgets.push_back(new TextWidget(144, 54, 28, 12, g_text, "tiny.fnt",
+        Font::WHITE, 0x7d6, 1, 0, 8));
 
     if (which->getArmy().getNumArmies() > 0) {
         int id = 0x7d9;
@@ -991,7 +991,7 @@ BottomViewTown::BottomViewTown(heroWindow* parent)
             if (creature == -1)
                 continue;
 
-            m_widgets.push_back(new iconWidget(g_townArmyCoords[displaySlot][0],
+            m_widgets.push_back(new IconWidget(g_townArmyCoords[displaySlot][0],
                 g_townArmyCoords[displaySlot][1],
                 32, 32, id++, "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
 
@@ -1002,17 +1002,17 @@ BottomViewTown::BottomViewTown(heroWindow* parent)
                 quantityText << which->getArmy().m_numTroops[i] / 1000 << "k"
                               << std::ends;
 
-            m_widgets.push_back(new textWidget(g_townArmyCoords[displaySlot][0],
+            m_widgets.push_back(new TextWidget(g_townArmyCoords[displaySlot][0],
                 g_townArmyCoords[displaySlot][1] + 34, 32, 13,
                 quantityText.str(), "tiny.fnt",
-                font::WHITE, id++, 1, 0, 8));
+                Font::WHITE, id++, 1, 0, 8));
 
             quantityText.freeze(false);
             ++displaySlot;
         }
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
     }
@@ -1071,15 +1071,15 @@ BottomViewTown::~BottomViewTown()
 // initializer and a hand-written 3/0/1/2 order all give the same bytes.
 
 VA(0x00452b80, 0x620)  // anchor-vtable 0x63bb3c + advManager::UpdBottomViewKingdom, dc 0x563b8
-BottomViewKingdom::BottomViewKingdom(heroWindow* parent)
-    : type_bottom_view_window(parent)
+BottomViewKingdom::BottomViewKingdom(HeroWindow* parent)
+    : BottomViewWindow(parent)
 {
     int i;
 
     m_widgets.reserve(8);
 
     int id = BOTTOM_VIEW_BACKGROUND_ID;
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         0, 0, 176, 166, id++, "AdStatin.pcx", 0x800));
 
     int townCount[4];
@@ -1103,38 +1103,38 @@ BottomViewKingdom::BottomViewKingdom(heroWindow* parent)
     std::string text;
 
     for (i = 0; i < 4; i++) {
-        m_widgets.push_back(new iconWidget(42 * i + 6, 11, 38, 38, id++,
+        m_widgets.push_back(new IconWidget(42 * i + 6, 11, 38, 38, id++,
             "itmtl.def", i, 0, 0, 0, 0x10));
         if (townCount[i] > 0)
-            m_widgets.push_back(new textWidget(42 * i + 7, 56, 37, 17,
+            m_widgets.push_back(new TextWidget(42 * i + 7, 56, 37, 17,
                 formatString("%d", townCount[i]).c_str(), "smalfont.fnt",
-                font::WHITE, -1, 1, 0, 8));
+                Font::WHITE, -1, 1, 0, 8));
     }
 
     text = formatString("%s:", g_generalText->getText(391));
-    m_widgets.push_back(new textWidget(10, 103, 57, 20, text.c_str(),
-        "smalfont.fnt", font::WHITE, -1, 0, 0, 8));
+    m_widgets.push_back(new TextWidget(10, 103, 57, 20, text.c_str(),
+        "smalfont.fnt", Font::WHITE, -1, 0, 0, 8));
     text = formatString("%s:", g_generalText->getText(392));
-    m_widgets.push_back(new textWidget(10, 134, 57, 20, text.c_str(),
-        "smalfont.fnt", font::WHITE, -1, 0, 0, 8));
+    m_widgets.push_back(new TextWidget(10, 134, 57, 20, text.c_str(),
+        "smalfont.fnt", Font::WHITE, -1, 0, 0, 8));
 
     int allyX, enemyX;
     allyX = enemyX = 67;
     for (i = 0; i < 8; i++) {
         if (!g_game->m_playerDisabled[i]) {
             if (g_game->onSameTeam(i, g_unnamed69778c)) {
-                m_widgets.push_back(new iconWidget(allyX, 102, 15, 20, id++,
+                m_widgets.push_back(new IconWidget(allyX, 102, 15, 20, id++,
                     "itgflags.def", i, 0, 0, 0, 0x10));
                 allyX += 15;
             } else {
-                m_widgets.push_back(new iconWidget(enemyX, 133, 15, 20, id++,
+                m_widgets.push_back(new IconWidget(enemyX, 133, 15, 20, id++,
                     "itgflags.def", i, 0, 0, 0, 0x10));
                 enemyX += 15;
             }
         }
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
     }
@@ -1160,19 +1160,19 @@ BottomViewKingdom::~BottomViewKingdom()
 //     'medfont.fnt' in font::PRIMARY, centred, with id -1.
 
 VA(0x00453250, 0x3EE)  // dc 0x56880
-BottomViewEnemyTurn::BottomViewEnemyTurn(heroWindow* parent)
-    : type_bottom_view_window(parent)
+BottomViewEnemyTurn::BottomViewEnemyTurn(HeroWindow* parent)
+    : BottomViewWindow(parent)
 {
     int id = BOTTOM_VIEW_ENEMY_TURN_ID;
 
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         0, 0, 176, 166, id++, "AdStatNx.pcx", 0x800));
 
-    m_crest = new iconWidget(20, 51, 58, 64, id++, "crest58.def",
+    m_crest = new IconWidget(20, 51, 58, 64, id++, "crest58.def",
         g_netLocalGamePos, 0, 0, 0, 0x10);
     m_widgets.push_back(m_crest);
 
-    m_sand = new iconWidget(98, 51, 58, 64, id++, "HourSand.def",
+    m_sand = new IconWidget(98, 51, 58, 64, id++, "HourSand.def",
         0, 0, 0, 0, 0x10);
     m_sand->setIconFrame(0);
     m_widgets.push_back(m_sand);
@@ -1180,7 +1180,7 @@ BottomViewEnemyTurn::BottomViewEnemyTurn(heroWindow* parent)
     m_frame = 0;
     m_frameDelay = 50;
 
-    m_hourGlass = new iconWidget(98, 51, 58, 64, id++, "HourGlas.def",
+    m_hourGlass = new IconWidget(98, 51, 58, 64, id++, "HourGlas.def",
         0, 0, 0, 0, 0x10);
     m_widgets.push_back(m_hourGlass);
 
@@ -1195,11 +1195,11 @@ BottomViewEnemyTurn::BottomViewEnemyTurn(heroWindow* parent)
     }
 
     if (g_currentPlayer->isHuman()) {
-        m_widgets.push_back(new textWidget(0, 20, 176, 31,
-            g_generalText->getText(631), "medfont.fnt", font::PRIMARY,
+        m_widgets.push_back(new TextWidget(0, 20, 176, 31,
+            g_generalText->getText(631), "medfont.fnt", Font::PRIMARY,
             -1, 1, 0, 8));
-        m_widgets.push_back(new textWidget(0, 123, 176, 31,
-            g_currentPlayer->m_name, "medfont.fnt", font::PRIMARY,
+        m_widgets.push_back(new TextWidget(0, 123, 176, 31,
+            g_currentPlayer->m_name, "medfont.fnt", Font::PRIMARY,
             -1, 1, 0, 8));
     }
 
@@ -1230,7 +1230,7 @@ BottomViewEnemyTurn::~BottomViewEnemyTurn()
 // and glTimers hoists - the value has to be a statement before the call.
 long BottomViewEnemyTurn::sumMobility(long playerId)
 {
-    playerData* player = &g_game->m_players[playerId];
+    PlayerData* player = &g_game->m_players[playerId];
     long total = 1000;
     for (int i = 0; i < player->m_numHeroes; i++)
         total += g_game->getHero(player->m_heroes[i])->getMobility();
@@ -1255,17 +1255,17 @@ void BottomViewEnemyTurn::animate()
         m_lastPlayerPos = g_netLocalGamePos;
         m_crest->setIconFrame(g_netLocalGamePos);
         m_crest->draw();
-        m_crest->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+        m_crest->sendMessage(Widget::WIDGET_SET_STATUS, Widget::WIDGET_UPDATE);
         if (g_currentPlayer->isHuman()) {
-            m_hourGlass->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                    widget::WIDGET_DRAWN);
-            m_sand->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                               widget::WIDGET_DRAWN);
+            m_hourGlass->sendMessage(Widget::WIDGET_CLEAR_STATUS,
+                                    Widget::WIDGET_DRAWN);
+            m_sand->sendMessage(Widget::WIDGET_CLEAR_STATUS,
+                               Widget::WIDGET_DRAWN);
             return;
         }
-        m_hourGlass->sendMessage(widget::WIDGET_SET_STATUS,
-                                widget::WIDGET_DRAWN);
-        m_sand->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+        m_hourGlass->sendMessage(Widget::WIDGET_SET_STATUS,
+                                Widget::WIDGET_DRAWN);
+        m_sand->sendMessage(Widget::WIDGET_SET_STATUS, Widget::WIDGET_DRAWN);
         m_mobility[g_netLocalGamePos] = sumMobility(g_netLocalGamePos);
         m_step = 0;
     }
@@ -1299,10 +1299,10 @@ void BottomViewEnemyTurn::animate()
     m_sand->setIconFrame(m_frame);
     m_sand->draw();
     m_hourGlass->draw();
-    m_hourGlass->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+    m_hourGlass->sendMessage(Widget::WIDGET_SET_STATUS, Widget::WIDGET_UPDATE);
     m_crest->setIconFrame(g_netLocalGamePos);
     m_crest->draw();
-    m_crest->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+    m_crest->sendMessage(Widget::WIDGET_SET_STATUS, Widget::WIDGET_UPDATE);
 }
 
 // COMDAT pairing: basic_streambuf::1?$basic_streambuf, mnemonic agreement 1.000.

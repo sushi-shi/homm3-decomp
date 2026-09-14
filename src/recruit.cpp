@@ -76,7 +76,7 @@ void getMonsterCost(int monId, int* resCost)
 // ---------------------------------------------------------------------
 
 VA(0x0054e800, 0x4F)  // dc 0x118b68
-void recruitSliderCallback(int state, heroWindow* parentWindow)
+void recruitSliderCallback(int state, HeroWindow* parentWindow)
 {
     g_recruitWindow->m_recruitInfo->m_numberToBuy = state;
     g_recruitWindow->m_acceptButton->enable(state != 0);
@@ -112,136 +112,136 @@ void recruitSliderCallback(int state, heroWindow* parentWindow)
 // for EDI - so nothing at this site can move the allocation. WALL.
 VA(0x0054e850, 0x1295)  // unique x86/DC structure + constructor call, dc 0x118bb4
 RecruitWindow::RecruitWindow(int x2, int y2, int altResource,
-                               recruitUnit* recruitInfo)
-    : heroWindow(x2, y2, 0x1e5, 0x18b, 0x12)
+                               RecruitUnit* recruitInfo)
+    : HeroWindow(x2, y2, 0x1e5, 0x18b, 0x12)
 {
     int resourceShift;
     ++altResource;
     resourceShift = altResource ? 0 : 0x18;
 
     m_widgets.reserve(49);
-    m_widgets.push_back(new bitmapBorder(0, 0, 0x1e5, 0x18b, 0,
+    m_widgets.push_back(new BitmapBorder(0, 0, 0x1e5, 0x18b, 0,
         DATA_COMPGEN(0x00682a0c, recruitBackground, "TPrcrt.pcx"),
         0x800));
 
-    m_widgets.push_back(new coloredBorderFrame(0x40, 0xde, 0x63, 0x4c,
+    m_widgets.push_back(new ColoredBorderFrame(0x40, 0xde, 0x63, 0x4c,
         0x227, g_unnamed6aacb0->m_data[31], 0x400));
-    m_widgets.push_back(new coloredBorderFrame(0x142, 0xde, 0x63, 0x4c,
+    m_widgets.push_back(new ColoredBorderFrame(0x142, 0xde, 0x63, 0x4c,
         0x228, g_unnamed6aacb0->m_data[31], 0x400));
-    m_widgets.push_back(new coloredBorderFrame(0xac, 0xde, 0x43, 0x2a,
+    m_widgets.push_back(new ColoredBorderFrame(0xac, 0xde, 0x43, 0x2a,
         0x229, g_unnamed6aacb0->m_data[31], 0x400));
-    m_widgets.push_back(new coloredBorderFrame(0xf6, 0xde, 0x43, 0x2a,
+    m_widgets.push_back(new ColoredBorderFrame(0xf6, 0xde, 0x43, 0x2a,
         0x22a, g_unnamed6aacb0->m_data[31], 0x400));
 
-    m_widgets.push_back(new textWidget(0xf, 0x14, 0x1c8, 0x1a,
+    m_widgets.push_back(new TextWidget(0xf, 0x14, 0x1c8, 0x1a,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
         DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
-        font::HEADING, 0x226, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(0x42, 0xe0, 0x5f, 0x11,
+        Font::HEADING, 0x226, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(0x42, 0xe0, 0x5f, 0x11,
         g_generalText->getText(347),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 0x1f4,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 0x1f4,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new iconWidget(resourceShift + 0x4a, 0xf3,
+    m_widgets.push_back(new IconWidget(resourceShift + 0x4a, 0xf3,
         0x20, 0x20, 0x1f8,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(0x7a, 0xf3, 0x20, 0x20, 0x1fc,
+        6, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(0x7a, 0xf3, 0x20, 0x20, 0x1fc,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new textWidget(resourceShift + 0x42, 0x117,
+        6, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new TextWidget(resourceShift + 0x42, 0x117,
         0x30, 0x11,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 0x200,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(0x72, 0x117, 0x30, 0x11,
+        Font::PRIMARY, 0x200,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(0x72, 0x117, 0x30, 0x11,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 0x204,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 0x204,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new textWidget(0xad, 0xdf, 0x41, 0x15,
+    m_widgets.push_back(new TextWidget(0xad, 0xdf, 0x41, 0x15,
         g_generalText->getText(466),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 0x208,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(0xae, 0xf5, 0x3f, 0x11,
+        Font::PRIMARY, 0x208,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(0xae, 0xf5, 0x3f, 0x11,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 0x209,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(0xf7, 0xdf, 0x41, 0x15,
+        Font::PRIMARY, 0x209,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(0xf7, 0xdf, 0x41, 0x15,
         g_generalText->getText(17),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 0x20d,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textEntryWidget(0xf8, 0xf5, 0x3f, 0x11,
+        Font::PRIMARY, 0x20d,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextEntryWidget(0xf8, 0xf5, 0x3f, 0x11,
         0xa, DATA_COMPGEN(0x00682a08, recruitZeroText, "0"),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::WHITE,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED,
+        Font::WHITE,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED,
         0, 0, RECRUIT_QUANTITY_ID, 0,
-        textEntryWidget::READ_TYPE_INSET, 0, 0));
+        TextEntryWidget::READ_TYPE_INSET, 0, 0));
 
-    m_quantitySlider = new slider(0xb0, 0x117, 0x87, 0x10, 0x22f, 0xa,
-        recruitSliderCallback, slider::BROWN, 0, 0);
+    m_quantitySlider = new Slider(0xb0, 0x117, 0x87, 0x10, 0x22f, 0xa,
+        recruitSliderCallback, Slider::BROWN, 0, 0);
     m_widgets.push_back(m_quantitySlider);
 
-    m_widgets.push_back(new textWidget(0x144, 0xe0, 0x5f, 0x11,
+    m_widgets.push_back(new TextWidget(0x144, 0xe0, 0x5f, 0x11,
         g_generalText->getText(467),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 0x20f,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new iconWidget(resourceShift + 0x14c, 0xf3,
+        Font::PRIMARY, 0x20f,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new IconWidget(resourceShift + 0x14c, 0xf3,
         0x20, 0x20, 0x210,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(0x17c, 0xf3, 0x20, 0x20, 0x211,
+        6, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(0x17c, 0xf3, 0x20, 0x20, 0x211,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new textWidget(resourceShift + 0x144, 0x117,
+        6, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new TextWidget(resourceShift + 0x144, 0x117,
         0x30, 0x11,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 0x212,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(0x174, 0x117, 0x30, 0x11,
+        Font::PRIMARY, 0x212,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(0x174, 0x117, 0x30, 0x11,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 0x213,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 0x213,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new bitmapBorder(8, 0x172, 0x1d4, 0x12, 0x230,
+    m_widgets.push_back(new BitmapBorder(8, 0x172, 0x1d4, 0x12, 0x230,
         DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"),
         0x800));
-    m_widgets.push_back(new textWidget(8, 0x172, 0x1d4, 0x12, 0,
+    m_widgets.push_back(new TextWidget(8, 0x172, 0x1d4, 0x12, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 0x231, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 0x231, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new bitmapBorder(0x85, 0x138, 0x42, 0x22, -1,
+    m_widgets.push_back(new BitmapBorder(0x85, 0x138, 0x42, 0x22, -1,
         DATA_COMPGEN(0x006829f8, recruitButtonBorder, "Box64x32.pcx"),
         0x800));
-    m_maximumButton = new button(0x86, 0x139, 0x40, 0x20, RECRUIT_MAXIMUM_ID,
+    m_maximumButton = new Button(0x86, 0x139, 0x40, 0x20, RECRUIT_MAXIMUM_ID,
         DATA_COMPGEN(0x006829ec, recruitMaximumButton, "ircbtns.def"),
         0, 1, 0, 0x32, 2);
     m_widgets.push_back(m_maximumButton);
 
-    m_widgets.push_back(new bitmapBorder(0xd3, 0x138, 0x42,
+    m_widgets.push_back(new BitmapBorder(0xd3, 0x138, 0x42,
         0x22, -1,
         DATA_COMPGEN(0x006829f8, recruitButtonBorder, "Box64x32.pcx"),
         0x800));
-    m_acceptButton = new button(0xd4, 0x139, 0x40, 0x20, RECRUIT_ACCEPT_ID,
+    m_acceptButton = new Button(0xd4, 0x139, 0x40, 0x20, RECRUIT_ACCEPT_ID,
         DATA_COMPGEN(0x006829e0, recruitAcceptButton, "iBY6432.def"),
         0, 1, 0, 0x1c, 2);
     m_widgets.push_back(m_acceptButton);
 
-    m_widgets.push_back(new bitmapBorder(0x121, 0x138, 0x42,
+    m_widgets.push_back(new BitmapBorder(0x121, 0x138, 0x42,
         0x22, -1,
         DATA_COMPGEN(0x006829f8, recruitButtonBorder, "Box64x32.pcx"),
         0x800));
-    m_widgets.push_back(new button(0x122, 0x139, 0x40, 0x20,
+    m_widgets.push_back(new Button(0x122, 0x139, 0x40, 0x20,
         RECRUIT_CANCEL_ID,
         DATA_COMPGEN(0x006829d4, recruitCancelButton, "iCN6432.def"),
         0, 1, 0, 1, 2));
@@ -277,7 +277,7 @@ RecruitWindow::RecruitWindow(int x2, int y2, int altResource,
                              recruitInfo->m_monType1, 0);
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -290,7 +290,7 @@ VA_COMPGEN(0x0054faf0, 0x21, SCALAR_DELETING_DTOR, RecruitWindow)
 VA(0x0054fb20, 0x6B)  // dc 0x1197bc
 RecruitWindow::~RecruitWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -318,7 +318,7 @@ RecruitWindow::~RecruitWindow()
 VA(0x0054fb90, 0x30D)  // anchor-callee + anchor-global, dc 0x119820
 void RecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, CreatureType creature, long slot)
 {
-    m_widgets.push_back(new bitmapBorder(startX, startY, 100, 130,
+    m_widgets.push_back(new BitmapBorder(startX, startY, 100, 130,
         slot + 0x21e,
         g_creatureBackgrounds[
             g_game->m_f1f698 == 0
@@ -326,19 +326,19 @@ void RecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, Cre
             ? -1 : g_creatureTypeTraits[creature].m_townType],
         0x800));
 
-    m_creatureWidgets[slot] = new iconWidget(startX, startY, 100, 130,
+    m_creatureWidgets[slot] = new IconWidget(startX, startY, 100, 130,
         slot + 0x216, g_creatureTypeTraits[creature].m_spriteName,
-        0, 2, 0, 0, iconWidget::ICON_STYLE_CREATURE);
+        0, 2, 0, 0, IconWidget::ICON_STYLE_CREATURE);
     m_widgets.push_back(m_creatureWidgets[slot]);
 
-    m_widgets.push_back(new coloredBorderFrame(startX - 1, startY - 1,
+    m_widgets.push_back(new ColoredBorderFrame(startX - 1, startY - 1,
         102, 132, slot + 0x21a, g_unnamed6aacb0->m_data[31], 0x400));
 }
 
 VA(0x0054fea0, 0x42E)  // dc 0x11994c
-int recruitUnit::open(int newPriority)
+int RecruitUnit::open(int newPriority)
 {
-    message msg;
+    Message msg;
     int resCost[7];
 
     g_recruitWindow = new RecruitWindow(143, 16, m_altResource, this);
@@ -351,7 +351,7 @@ int recruitUnit::open(int newPriority)
     m_totalResources = 0;
 
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.m_codeX = Widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
     g_recruitWindow->broadcastMessage(msg);
@@ -364,14 +364,14 @@ int recruitUnit::open(int newPriority)
     sprintf(g_text, "%s %s",
         g_generalText->getText(GENERAL_TEXT_RECRUIT_TITLE), creatureName);
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x226;
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
     sprintf(g_text, "%d", m_goldPerTroop);
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x200;
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
@@ -379,49 +379,49 @@ int recruitUnit::open(int newPriority)
     if (m_altResource != -1) {
         sprintf(g_text, "%d", m_resourcesPerTroop);
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_TEXT;
+        msg.m_codeX = Widget::WIDGET_SET_TEXT;
         msg.m_codeY = 0x204;
         msg.m_extraText = g_text;
         g_recruitWindow->broadcastMessage(msg);
 
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
         msg.m_codeY = 0x1fc;
         msg.m_extra = m_altResource;
         g_recruitWindow->broadcastMessage(msg);
 
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
         msg.m_codeY = 0x211;
         msg.m_extra = m_altResource;
         g_recruitWindow->broadcastMessage(msg);
     } else {
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
         msg.m_codeY = 0x1fc;
-        msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        msg.m_extra = Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN;
         g_recruitWindow->broadcastMessage(msg);
 
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
         msg.m_codeY = 0x211;
-        msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        msg.m_extra = Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN;
         g_recruitWindow->broadcastMessage(msg);
 
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
         msg.m_codeY = 0x204;
-        msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        msg.m_extra = Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN;
         g_recruitWindow->broadcastMessage(msg);
 
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
         msg.m_codeY = 0x213;
-        msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        msg.m_extra = Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN;
         g_recruitWindow->broadcastMessage(msg);
     }
 
-    g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+    g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
 
     for (int slot = 3; slot >= 0; slot--) {
         if (g_recruitWindow->m_creatureWidgets[slot])
@@ -429,8 +429,8 @@ int recruitUnit::open(int newPriority)
     }
 
     g_windowManager->broadcastMessage(MESSAGE_WIDGET,
-        widget::WIDGET_SET_STATUS, 0x7800,
-        widget::WIDGET_DIMMED | widget::WIDGET_UPDATE);
+        Widget::WIDGET_SET_STATUS, 0x7800,
+        Widget::WIDGET_DIMMED | Widget::WIDGET_UPDATE);
     g_windowManager->addWindow(g_recruitWindow, -1, 1);
 
     g_recruitWindow->m_quantitySlider->setResolution(m_maxAvail + 1);
@@ -464,14 +464,14 @@ int recruitUnit::open(int newPriority)
 // TResourceDisplay::update through the member, so townmgr.h's
 // old heroWindow* declaration is retyped here rather than cast around.
 VA(0x005502d0, 0x8C)  // dc 0x119ce4
-void recruitUnit::close()
+void RecruitUnit::close()
 {
     g_windowManager->removeWindow(g_recruitWindow);
     delete g_recruitWindow;
     // 0x7800 is the dialog-exit widget id the whole window family uses
     // (townmgr.h spells it EXIT_BUTTON_ID on every CAdvPopup here).
-    g_windowManager->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
-        0x7800, widget::WIDGET_DIMMED | widget::WIDGET_UPDATE);
+    g_windowManager->broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS,
+        0x7800, Widget::WIDGET_DIMMED | Widget::WIDGET_UPDATE);
     if (m_type == RECRUIT_SOURCE_TOWN && m_updateNeeded && m_inTownMainScreen) {
         g_townManager->resetStrips();
         g_townManager->m_resourceDisplay->update(1, 0);
@@ -527,9 +527,9 @@ CreatureType siegeArtifactToCreature(Artifact engine)
 // E:\gamedcs\recruit.cpp:511
 
 VA(0x005503a0, 0x594)  // anchor-global, dc 0x119dcc
-void recruitUnit::update(unsigned char newMonster, long slot)
+void RecruitUnit::update(unsigned char newMonster, long slot)
 {
-    message msg;
+    Message msg;
 
     if (slot == -1)
         slot = m_selectedPosition;
@@ -540,7 +540,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
         (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE],
         getArmyName(m_monsterType, 2));
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x226;
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
@@ -556,7 +556,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
         sprintf(g_text, "%d", *m_numAvail - m_numberToBuy);
     }
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x209;
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
@@ -601,7 +601,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
 
     sprintf(g_text, "%d", m_numberToBuy);
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = RECRUIT_QUANTITY_ID;
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
@@ -609,14 +609,14 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     m_totalGold = m_goldPerTroop * m_numberToBuy;
     sprintf(g_text, "%d", m_totalGold);
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x212;
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
     sprintf(g_text, "%d", m_goldPerTroop);
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x200;
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
@@ -626,44 +626,44 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     m_totalResources = m_resourcesPerTroop * m_numberToBuy;
     sprintf(g_text, "%d", m_totalResources);
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x213;
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
     sprintf(g_text, "%d", m_resourcesPerTroop);
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x204;
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_COLOR;
+    msg.m_codeX = Widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_0_ID;
     msg.m_extra = g_unnamed6aacb0->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_COLOR;
+    msg.m_codeX = Widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_1_ID;
     msg.m_extra = g_unnamed6aacb0->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_COLOR;
+    msg.m_codeX = Widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_2_ID;
     msg.m_extra = g_unnamed6aacb0->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_COLOR;
+    msg.m_codeX = Widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_3_ID;
     msg.m_extra = g_unnamed6aacb0->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_COLOR;
+    msg.m_codeX = Widget::WIDGET_SET_COLOR;
     msg.m_codeY = m_selectedPosition + RECRUIT_CREATURE_0_ID;
     msg.m_extra = g_unnamed6aacb0->m_data[36];
     g_recruitWindow->broadcastMessage(msg);
@@ -673,14 +673,14 @@ void recruitUnit::update(unsigned char newMonster, long slot)
 
 // E:\gamedcs\recruit.cpp:666
 DC_ONLY(0x11a280, 0x74)
-void recruitUnit::setRolloverText(int codeY)
+void RecruitUnit::setRolloverText(int codeY)
 {
     // @stub
 }
 
 // E:\gamedcs\recruit.cpp:693
 DC_ONLY(0x11a2f4, 0x18)
-int exitRecruitUnit(message& msg)
+int exitRecruitUnit(Message& msg)
 {
     // @stub
 }
@@ -690,7 +690,7 @@ int exitRecruitUnit(message& msg)
 // E:\gamedcs\recruit.cpp:666 / :693. Both Dreamcast helpers are header-sized
 // single-purpose bodies. Retail /Ob2 expands them into Main and /OPT:REF leaves
 // no standalone row in the recruit band.
-inline void recruitUnit::setRolloverText(int codeY)
+inline void RecruitUnit::setRolloverText(int codeY)
 {
     switch (codeY) {
     case RECRUIT_MAXIMUM_ID:
@@ -707,16 +707,16 @@ inline void recruitUnit::setRolloverText(int codeY)
         break;
     }
 
-    message update;
+    Message update;
     update.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(MESSAGE_WIDGET,
-        widget::WIDGET_SET_TEXT, 0x231, update.m_extra);
+        Widget::WIDGET_SET_TEXT, 0x231, update.m_extra);
     g_recruitWindow->drawWindow(0, 0x230, 0x231);
     g_windowManager->updateScreen(g_recruitWindow->m_x + 8,
         g_recruitWindow->m_y + 0x172, 0x1d4, 0x12);
 }
 
-inline int exitRecruitUnit(message& msg)
+inline int exitRecruitUnit(Message& msg)
 {
     msg.m_id = MESSAGE_EXECUTIVE;
     msg.m_codeX = EXECUTIVE_COMMAND_RETURN_RESULT;
@@ -753,7 +753,7 @@ inline int exitRecruitUnit(message& msg)
 // sets the dialog result and codeY: retail's other three helper expansions
 // write only id/codeX, so those PC routing differences remain explicit.
 VA(0x00550940, 0xA08)  // anchor-callee + switch-table bracket, dc 0x11a30c
-int recruitUnit::main(message& msg)
+int RecruitUnit::main(Message& msg)
 {
     unsigned char abortDialog = g_turnDuration69d630.isExpired();
 
@@ -771,7 +771,7 @@ int recruitUnit::main(message& msg)
         g_windowManager->m_dialogReturn = 0x7800;
         msg.m_id = MESSAGE_EXECUTIVE;
         msg.m_codeX = EXECUTIVE_COMMAND_RETURN_RESULT;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
 
@@ -802,13 +802,13 @@ int recruitUnit::main(message& msg)
     switch (msg.m_id) {
     case MESSAGE_WIDGET:
         switch (msg.m_codeX) {
-        case widget::WIDGET_SELECT:
-        case widget::WIDGET_RIGHT_SELECT:
+        case Widget::WIDGET_SELECT:
+        case Widget::WIDGET_RIGHT_SELECT:
             switch (msg.m_codeY) {
             case RECRUIT_QUANTITY_ID:
                 if (exitFlag)
                     break;
-                msg.m_codeX = widget::WIDGET_GET_TEXT;
+                msg.m_codeX = Widget::WIDGET_GET_TEXT;
                 g_recruitWindow->broadcastMessage(msg);
                 m_numberToBuy = atoi(msg.m_extraText);
                 if (m_numberToBuy < 0)
@@ -896,7 +896,7 @@ int recruitUnit::main(message& msg)
                                         WINDOW_ALL_WIDGETS_HIGH);
             break;
 
-        case widget::WIDGET_DESELECT:
+        case Widget::WIDGET_DESELECT:
             switch (msg.m_codeY) {
             case RECRUIT_MAXIMUM_ID:
                 if (exitFlag)
@@ -1010,7 +1010,7 @@ int recruitUnit::main(message& msg)
 // build expands it at every recruitUnit call site and emits no standalone
 // body.  Raw NB11 names the sole surviving local `resCost`, while the body
 // calls the exact GetMonsterCost helper above before deriving the two costs.
-inline void recruitUnit::updateCost()
+inline void RecruitUnit::updateCost()
 {
     int resCost[7];
     getMonsterCost(m_monsterType, resCost);
@@ -1051,7 +1051,7 @@ inline void recruitUnit::updateCost()
 // flat, flat, and worse, leaving this as a front-end handle/register-homing
 // wall rather than a missing statement.
 VA(0x00551350, 0x101)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70, dc 0x11ad04
-recruitUnit::recruitUnit(ArmyGroup* newGroup, unsigned char groupIsTownGarrison,
+RecruitUnit::RecruitUnit(ArmyGroup* newGroup, unsigned char groupIsTownGarrison,
     CreatureType monType1, short* numMon1,
     CreatureType monType2, short* numMon2,
     CreatureType monType3, short* numMon3,
@@ -1090,7 +1090,7 @@ recruitUnit::recruitUnit(ArmyGroup* newGroup, unsigned char groupIsTownGarrison,
 // block-exact, and why-reg v2's three adjacent-store creation-order controls
 // were all byte-flat, confirming the residual as front-end handle scheduling.
 VA(0x00551460, 0xFE)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70, dc 0x11adb4
-recruitUnit::recruitUnit(Hero* thisHero,
+RecruitUnit::RecruitUnit(Hero* thisHero,
     CreatureType monType1, short* numMon1,
     CreatureType monType2, short* numMon2,
     CreatureType monType3, short* numMon3,
@@ -1118,7 +1118,7 @@ recruitUnit::recruitUnit(Hero* thisHero,
 }
 
 VA(0x00551560, 0x14B)  // dc 0x11ae58
-recruitUnit::recruitUnit(Town* newTown, int newDwellingIndex, int inInTownMainScreen)
+RecruitUnit::RecruitUnit(Town* newTown, int newDwellingIndex, int inInTownMainScreen)
 {
     m_inTownMainScreen = inInTownMainScreen;
     m_type = RECRUIT_SOURCE_TOWN;
@@ -1151,7 +1151,7 @@ recruitUnit::recruitUnit(Town* newTown, int newDwellingIndex, int inInTownMainSc
 // QuickViewRecruit(char, short*) (0x551780), so /Ob2 inlined it and
 // the single-call-site STATIC rule dropped the out-of-line copy.
 inline RecruitQuickWindow::RecruitQuickWindow(int x2, int y2)
-    : heroWindow(x2, y2, 160, 320, 0x12)
+    : HeroWindow(x2, y2, 160, 320, 0x12)
 {
     m_widgets.reserve(49);
 }
@@ -1161,7 +1161,7 @@ VA_COMPGEN(0x005516b0, 0x21, SCALAR_DELETING_DTOR, RecruitQuickWindow)
 VA(0x005516e0, 0x6B)  // dc 0x11af98
 RecruitQuickWindow::~RecruitQuickWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -1179,7 +1179,7 @@ void quickViewRecruit(Town* newTown, int newDwellingIndex)
 VA(0x00551780, 0x641)  // dc 0x11b028
 void quickViewRecruit(CreatureType monType, short* numMon)
 {
-    message msg;
+    Message msg;
     int cost[7];
     getMonsterCost(monType, cost);
 
@@ -1207,74 +1207,74 @@ void quickViewRecruit(CreatureType monType, short* numMon)
         memError();
 
     recruitWindow->addWidget(
-        new bitmapBorder(0, 0, 161, 324, 0,
+        new BitmapBorder(0, 0, 161, 324, 0,
             DATA_COMPGEN(0x00682a28, quickRecruitBackground,
                 "crtoinfo.pcx"),
             0x800), -1);
 
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.m_codeX = Widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
     recruitWindow->broadcastMessage(msg);
 
-    recruitWindow->addWidget(new textWidget(0, 20, 161, 20,
+    recruitWindow->addWidget(new TextWidget(0, 20, 161, 20,
         monType >= 0 && monType <= 150
             ? g_creatureTypeTraits[monType].m_pluralName
             : DATA_COMPGEN(0x00691210, quickRecruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 0x222,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
+        Font::PRIMARY, 0x222,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
 
-    recruitWindow->addWidget(new bitmapBorder(30, 44, 100, 130, 0x21e,
+    recruitWindow->addWidget(new BitmapBorder(30, 44, 100, 130, 0x21e,
         g_creatureBackgrounds[
             g_game->m_f1f698 == 0
                 && isBaseElemental(monType)
             ? -1 : g_creatureTypeTraits[monType].m_townType],
         0x800), -1);
-    recruitWindow->addWidget(new iconWidget(30, 44, 100, 130, 0x216,
+    recruitWindow->addWidget(new IconWidget(30, 44, 100, 130, 0x216,
         g_creatureTypeTraits[monType].m_spriteName,
-        0, 2, 0, 0, iconWidget::ICON_STYLE_CREATURE), -1);
+        0, 2, 0, 0, IconWidget::ICON_STYLE_CREATURE), -1);
 
     sprintf(g_text,
         DATA_COMPGEN(0x00660c98, quickRecruitAvailabilityFormat, "%s %d"),
         g_generalText->getText(218), *numMon);
-    recruitWindow->addWidget(new textWidget(30, 182, 100, 17, g_text,
+    recruitWindow->addWidget(new TextWidget(30, 182, 100, 17, g_text,
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 0x209,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
-    recruitWindow->addWidget(new textWidget(32, 218, 96, 19,
+        Font::PRIMARY, 0x209,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
+    recruitWindow->addWidget(new TextWidget(32, 218, 96, 19,
         g_generalText->getText(347),
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 0x1f4,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
+        Font::PRIMARY, 0x1f4,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
 
-    recruitWindow->addWidget(new iconWidget(resourceX + 40, 238, 32, 32,
+    recruitWindow->addWidget(new IconWidget(resourceX + 40, 238, 32, 32,
         0x1f8,
         DATA_COMPGEN(0x00660224, quickRecruitResourceSprite,
             "resource.def"),
         6, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN), -1);
-    recruitWindow->addWidget(new iconWidget(90, 238, 32, 32, 0x1fc,
+        IconWidget::ICON_STYLE_PLAIN), -1);
+    recruitWindow->addWidget(new IconWidget(90, 238, 32, 32, 0x1fc,
         DATA_COMPGEN(0x00660224, quickRecruitResourceSprite,
             "resource.def"),
-        6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN), -1);
-    recruitWindow->addWidget(new textWidget(resourceX + 40, 273, 32, 17,
+        6, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN), -1);
+    recruitWindow->addWidget(new TextWidget(resourceX + 40, 273, 32, 17,
         DATA_COMPGEN(0x00691210, quickRecruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 0x200,
-        font::CENTER_JUSTIFIED, 0, 8), -1);
-    recruitWindow->addWidget(new textWidget(90, 273, 32, 17,
+        Font::PRIMARY, 0x200,
+        Font::CENTER_JUSTIFIED, 0, 8), -1);
+    recruitWindow->addWidget(new TextWidget(90, 273, 32, 17,
         DATA_COMPGEN(0x00691210, quickRecruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 0x204,
-        font::CENTER_JUSTIFIED, 0, 8), -1);
+        Font::PRIMARY, 0x204,
+        Font::CENTER_JUSTIFIED, 0, 8), -1);
 
     sprintf(g_text,
         DATA_COMPGEN(0x00660a1c, quickRecruitDecimalFormat, "%d"),
         cost[6]);
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x200;
     msg.m_extraText = g_text;
     recruitWindow->broadcastMessage(msg);
@@ -1284,27 +1284,27 @@ void quickViewRecruit(CreatureType monType, short* numMon)
             DATA_COMPGEN(0x00660a1c, quickRecruitDecimalFormat, "%d"),
             resourcesPerTroop);
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_TEXT;
+        msg.m_codeX = Widget::WIDGET_SET_TEXT;
         msg.m_codeY = 0x204;
         msg.m_extraText = g_text;
         recruitWindow->broadcastMessage(msg);
 
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
         msg.m_codeY = 0x1fc;
         msg.m_extra = altResource;
         recruitWindow->broadcastMessage(msg);
     } else {
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
         msg.m_codeY = 0x1fc;
-        msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        msg.m_extra = Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN;
         recruitWindow->broadcastMessage(msg);
 
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
         msg.m_codeY = 0x204;
-        msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        msg.m_extra = Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN;
         recruitWindow->broadcastMessage(msg);
     }
 
@@ -1337,4 +1337,4 @@ void* RecruitQuickWindow::`scalar deleting destructor'(unsigned __flags)
 // exactly ONE caller, TCombatWindow::combat_message, so it is that unit's
 // own vector and not this COMDAT; towngatewindow 0x5c2400 turned out to be
 // AddTown with the insert expanded into it.
-VA_COMPGEN(0x0054d120, 0x209, VECTOR_INSERT, widget)
+VA_COMPGEN(0x0054d120, 0x209, VECTOR_INSERT, Widget)

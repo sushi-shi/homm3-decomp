@@ -65,7 +65,8 @@ typedef type_point TQuestPosition;
 // Retail's factory at 0x573240 switches on exactly these nine values. The
 // class mapping is independently fixed by the slot-8 constants in the nine
 // derived vtables (see the file header).
-enum EQuestType {
+// Before normalization (type): EQuestType.
+enum QuestType {
     QUEST_EXPERIENCE = 1,
     QUEST_PRIMARY_SKILLS = 2,
     QUEST_DEFEAT_HERO = 3,
@@ -79,7 +80,8 @@ enum EQuestType {
 
 // Every derived class reads its own payload at +0x40, so the base closes at
 // 0x40; nothing between the vptr and there is attested.
-class type_quest {
+// Before normalization (type): type_quest.
+class Quest {
 public:
     // SLICED 2026-08-21 out of the family's slot-13 serializer, which
     // writes every one of these in this order and is the only body in
@@ -112,7 +114,7 @@ public:
     // returns false for a negative limit, otherwise compares it with the current turn.
     int m_limit;
 
-    type_quest(unsigned char flags);
+    Quest(unsigned char flags);
 
     //   0x64174c 0056cbe0 004ec560 00617d9a 00485d80 00617d9a 00617d9a
     //            00617d9a 00617d9a 00617d9a 005bc7e0 005bc7e0 0056cd00
@@ -129,7 +131,7 @@ public:
     // dtors - 0x571530 is `call <base dtor> / test [ebp+8],1 / call
     // operator delete / mov eax,esi`, the standard `??_G` shape - so the
     // source declared `virtual ~type_quest()`.
-    virtual ~type_quest();
+    virtual ~Quest();
     // Slot 1: the AI's valuation of the quest for one player. The base body
     // at 0x4ec560 is a bare `xor eax,eax / ret 4`, so the default is 0.
     virtual int getAIValue(int player);
@@ -265,11 +267,12 @@ public:
     std::string getTimeLimitText();
 };
 
-class type_experience_quest : public type_quest {
+// Before normalization (type): type_experience_quest.
+class ExperienceQuest : public Quest {
 public:
     int m_requiredLevel;  // +0x40
 
-    type_experience_quest(unsigned char flags);
+    ExperienceQuest(unsigned char flags);
 
     virtual unsigned char isSatisfied(Hero* currentHero);
     virtual std::string getRequirementText();
@@ -286,11 +289,12 @@ public:
 // deserializers - the four primary skills, in the h3m order. They are
 // SIGNED: slot 2 widens each one with `movsx`, exactly as hero::stats is
 // read everywhere else.
-class type_skill_quest : public type_quest {
+// Before normalization (type): type_skill_quest.
+class SkillQuest : public Quest {
 public:
     signed char m_requiredSkills[4];  // +0x40
 
-    type_skill_quest(unsigned char flags);
+    SkillQuest(unsigned char flags);
 
     std::string skillRequirementText(
         const signed char (&skills)[4]);
@@ -306,13 +310,14 @@ public:
     virtual void setDefaultText();
 };
 
-class type_defeat_hero_quest : public type_quest {
+// Before normalization (type): type_defeat_hero_quest.
+class DefeatHeroQuest : public Quest {
 public:
     int m_mapHero;         // +0x40, the h3m identity slot 12 fills
     int m_defeatedHero;    // +0x44
     int m_satisfiedMask;   // +0x48, one bit per player
 
-    type_defeat_hero_quest(unsigned char flags);
+    DefeatHeroQuest(unsigned char flags);
 
     virtual unsigned char isSatisfied(Hero* currentHero);
     virtual int questType();
@@ -326,14 +331,15 @@ public:
     virtual void setDefaultText();
 };
 
-class type_monster_quest : public type_quest {
+// Before normalization (type): type_monster_quest.
+class MonsterQuest : public Quest {
 public:
     int m_mapMonster;             // +0x40, the h3m identity slot 12 fills
     TQuestPosition m_position;     // +0x44
     int m_monsterId;       // +0x48
     int m_defeatedBy;      // +0x4c, -1 until some player kills it
 
-    type_monster_quest(unsigned char flags);
+    MonsterQuest(unsigned char flags);
 
     virtual unsigned char isSatisfied(Hero* currentHero);
     virtual int questType();
@@ -352,12 +358,13 @@ public:
 // _First` guard its own size() carries is visible in every body that walks
 // it, and _First/_Last sit at +0x44/+0x48, which puts the 16-byte container
 // exactly at the +0x40 payload slot every other leaf uses.
-class type_artifact_quest : public type_quest {
+// Before normalization (type): type_artifact_quest.
+class ArtifactQuest : public Quest {
 public:
     std::vector<Artifact> m_artifacts;  // +0x40
 
-    type_artifact_quest(unsigned char flags);
-    type_artifact_quest(unsigned char flags, Artifact artifact, int textRow);
+    ArtifactQuest(unsigned char flags);
+    ArtifactQuest(unsigned char flags, Artifact artifact, int textRow);
 
     virtual int getAIValue(int player);
     virtual unsigned char isSatisfied(Hero* currentHero);
@@ -379,12 +386,13 @@ public:
 };
 
 // Quest type 6: parallel creature-type and creature-count vectors.
-class type_creature_quest : public type_quest {
+// Before normalization (type): type_creature_quest.
+class CreatureQuest : public Quest {
 public:
     std::vector<int> m_counts;             // +0x40
     std::vector<CreatureType> m_types;    // +0x50
 
-    type_creature_quest(unsigned char flags);
+    CreatureQuest(unsigned char flags);
 
     virtual int getAIValue(int player);
     virtual unsigned char isSatisfied(Hero* currentHero);
@@ -406,11 +414,12 @@ public:
 };
 
 // Quest type 7: seven resource amounts, read as one 0x1c-byte block.
-class type_resource_quest : public type_quest {
+// Before normalization (type): type_resource_quest.
+class ResourceQuest : public Quest {
 public:
     int m_resources[7];  // +0x40
 
-    type_resource_quest(unsigned char flags);
+    ResourceQuest(unsigned char flags);
 
     virtual int getAIValue(int player);
     virtual unsigned char isSatisfied(Hero* currentHero);
@@ -431,11 +440,12 @@ public:
     virtual void setDefaultText();
 };
 
-class type_be_hero_quest : public type_quest {
+// Before normalization (type): type_be_hero_quest.
+class BeHeroQuest : public Quest {
 public:
     int m_requiredHero;  // +0x40
 
-    type_be_hero_quest(unsigned char flags);
+    BeHeroQuest(unsigned char flags);
 
     virtual unsigned char isSatisfied(Hero* currentHero);
     virtual int questType();
@@ -448,11 +458,12 @@ public:
     virtual void setDefaultText();
 };
 
-class type_belong_to_player_quest : public type_quest {
+// Before normalization (type): type_belong_to_player_quest.
+class BelongToPlayerQuest : public Quest {
 public:
     int m_requiredOwner;  // +0x40
 
-    type_belong_to_player_quest(unsigned char flags);
+    BelongToPlayerQuest(unsigned char flags);
 
     virtual unsigned char isSatisfied(Hero* currentHero);
     virtual int questType();

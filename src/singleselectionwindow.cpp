@@ -216,7 +216,7 @@ public:
 // the same payload in t_complex_net_message so the header is serialized via
 // its unique 0x641d30 read/write vtable. The +0x18 member placement is fixed
 // independently by both retail virtual bodies and their construction sites.
-class CNewMapHeaderInfoMsg : public t_complex_net_message {
+class CNewMapHeaderInfoMsg : public ComplexNetMessage {
 public:
     NewSMapHeader m_header;  // +0x18
 
@@ -235,7 +235,7 @@ public:
 // HandleRequests expands the construction - base ctor and the header's member
 // assign (the 0x578440 COMDAT) stay calls, while default construction and the
 // flag/number stores inline.
-class CGameHeaderInfoMsg : public t_complex_net_message {
+class CGameHeaderInfoMsg : public ComplexNetMessage {
 public:
     unsigned char m_flag;                 // +0x18
     // Retail stores the preceding flag as one byte; these three bytes
@@ -297,9 +297,10 @@ public:
 // Complete's derived map-list implementation for the added 1083
 // TransferHeaders protocol. Its separate vtable and constructor are retail-
 // only; Go is exact, while Tick/Finish retain their documented residuals.
-class t_map_list_update : public CNewPlayerUpdateProc {
+// Before normalization (type): t_map_list_update.
+class MapListUpdate : public CNewPlayerUpdateProc {
 public:
-    t_map_list_update(unsigned long dpid);
+    MapListUpdate(unsigned long dpid);
     virtual void go();       // slot 0, 0x577d70
     virtual void tick();     // slot 1, 0x577de0
     virtual void finish();   // slot 2, 0x578930
@@ -358,7 +359,7 @@ public:
 // The free game-selection message pump (retail dialogDrawFunction, dc
 // 0x145128), passed by address to DoDialogDraw alongside HeroWindowHandler.
 // message& (not message*) so it binds the int(*)(message&) TDialogHandler.
-int update(message& msg);
+int update(Message& msg);
 
 // E:\gamedcs\singleselectionwindow.cpp:164
 // Dreamcast preserves these two helpers as standalone functions. Complete
@@ -476,7 +477,7 @@ unsigned char saveValid(const char* filename)
 DATA(0x0069fb0c) int g_saveCurPlayer;
 
 VA(0x00577530, 0x20C)
-void backupGameHeaders(game* dest, game* src)
+void backupGameHeaders(Game* dest, Game* src)
 {
     int i;
 
@@ -517,7 +518,7 @@ unsigned __stdcall processMouse(void* nothing)
     while (WaitForSingleObject(g_endMouseThreadEvent, 41) == WAIT_TIMEOUT &&
            !g_shutDownDone)
         g_mouseManager->checkUpdate();
-    _endthreadex(0);
+    endthreadex(0);
     return 0;
 }
 
@@ -527,11 +528,11 @@ void startMouseThread()
     unsigned threadId;
 
     if (!g_mouseThread) {
-        g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(1, MouseManager::ADVENTURE_SET);
         g_endMouseThreadEvent = CreateEvent(0, TRUE, FALSE, 0);
         if (g_endMouseThreadEvent) {
             g_soundManager->serviceSounds();
-            g_mouseThread = (HANDLE)_beginthreadex(
+            g_mouseThread = (HANDLE)beginthreadex(
                 0, 0, processMouse, 0, 0, &threadId);
             if (!g_mouseThread) {
                 CloseHandle(g_endMouseThreadEvent);
@@ -562,7 +563,7 @@ void stopMouseThread()
         g_mouseThread = 0;
         CloseHandle(g_endMouseThreadEvent);
         g_endMouseThreadEvent = 0;
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
     }
 }
 #pragma auto_inline(on)
@@ -675,7 +676,7 @@ public:
         m_msg = 0;
         m_forWho = 0;
     }
-    virtual int handleMessage(message& msg);  // slot 3
+    virtual int handleMessage(Message& msg);  // slot 3
 
     // DC Wait (0x1476dc, source line 437) takes only the dpid and reads
     // general text 534 after randomizing the creature. Complete's two
@@ -778,7 +779,7 @@ CScrollMsg::CScrollMsg(int map, int index)
 // dispatch and wire pair prove the Complete complex-message base.
 inline CNewMapHeaderInfoMsg::CNewMapHeaderInfoMsg(
     NewSMapHeader* mapHeader)
-    : t_complex_net_message(RS_NEW_MAP_HEADER_INFO)
+    : ComplexNetMessage(RS_NEW_MAP_HEADER_INFO)
 {
     m_header = *mapHeader;
 }
@@ -1008,9 +1009,9 @@ void remoteCleanup();
 // This TU's own file-scope save-name validator; its definition sits in
 // the carcass under the 0x577360 claim until reconstructed.
 unsigned char saveValid(const char* filename);
-static void sliderChatWindow(int state, heroWindow* parentWindow);
-static void sliderDuration(int state, heroWindow* parentWindow);
-static void sliderFileMenu(int state, heroWindow* parentWindow);
+static void sliderChatWindow(int state, HeroWindow* parentWindow);
+static void sliderDuration(int state, HeroWindow* parentWindow);
+static void sliderFileMenu(int state, HeroWindow* parentWindow);
 
 // The live TSingleSelectionWindow (set for the dialog's lifetime; every
 // widget callback and net handler reaches the window through it). All 35
@@ -1152,21 +1153,21 @@ int alphaCompare(const void* arg1, const void* arg2)
 
 // E:\gamedcs\singleselectionwindow.cpp:985
 DC_ONLY(0x13035c, 0x1E)
-void sliderChatWindow(int state, heroWindow* parent_window)
+void sliderChatWindow(int state, HeroWindow* parent_window)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:989
 DC_ONLY(0x13037c, 0x60)
-void sliderDuration(int state, heroWindow* parent_window)
+void sliderDuration(int state, HeroWindow* parent_window)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:994
 DC_ONLY(0x1303dc, 0x1E)
-void sliderFileMenu(int state, heroWindow* parent_window)
+void sliderFileMenu(int state, HeroWindow* parent_window)
 {
     // @stub
 }
@@ -1404,7 +1405,7 @@ int CNetPlayerHandler::getPlayerCount(unsigned char assignedOnly)
 #endif  // @carcass
 
 VA(0x00577d70, 0x6C)  // anchor-vtable t_map_list_update vtbl 0x641d38 slot0; Complete-only 0x43b header-count msg from the +0x1044/+0x1048 pair
-void t_map_list_update::go()
+void MapListUpdate::go()
 {
     SingleSelectionWindow* win = g_unnamed69fbe8;
     CTransferHeaderInfoInitMsg msg(
@@ -1476,7 +1477,7 @@ inline void CNewPlayerUpdateProc::requestConfirmation()
 // mutable char* parameter are all byte-flat. Earlier loop-layout failures
 // were measured before these helper and exhausted-list corrections.
 VA(0x00577DE0, 0x228)  // anchor-vtable vtbl 0x641d38 slot1 - the slot WindowHandler's inlined Man::Tick dispatches; Complete-only override shaped from the Dreamcast base Tick at 0x148130
-void t_map_list_update::tick()
+void MapListUpdate::tick()
 {
     if (GameTime::elapsedSince(m_lastSendTime) < 75)
         return;
@@ -1540,7 +1541,7 @@ GameSelectionHeadersStruct& GameSelectionHeadersStruct::operator=(
 VA_COMPGEN(0x00578760, 0x1CE, IMPLICIT_DTOR, CGameHeaderInfoMsg)
 
 VA(0x00578930, 0xB2)
-void t_map_list_update::finish()
+void MapListUpdate::finish()
 {
     CGameHeaderInfoEndMsg endMsg;
     transmitRemoteDataDPID(&endMsg, m_dpid, false, true);
@@ -1618,7 +1619,7 @@ void CNewPlayerUpdateProc::tick()
 VA(0x00579060, 0x251)  // DC header-row constructor + Complete list flag, dc 0x147940
 CGameHeaderInfoMsg::CGameHeaderInfoMsg(
     unsigned char flag, int number, GameSelectionHeadersStruct* header)
-    : t_complex_net_message(RS_GAME_HEADER_INFO)
+    : ComplexNetMessage(RS_GAME_HEADER_INFO)
 {
     m_flag = flag;
     m_number = number;
@@ -1691,11 +1692,11 @@ inline CNewPlayerUpdateProc* CNewPlayerUpdateMan::getProc(unsigned long dpid)
 // Both bodies read the slider base fields retail's slider.obj proves
 // (numStates +0x48, currentState +0x3c, oldState +0x38, knobPos +0x40,
 // knobRange +0x44). CChatSlider introduces no field either body reaches.
-class CChatSlider : public slider {
+class CChatSlider : public Slider {
 public:
     CChatSlider(int x, int y, int w, int h, int id, int num,
-                TSliderFunction func, EGraphics graphics, int page)
-        : slider(x, y, w, h, id, num, func, graphics, page, 0)
+                TSliderFunction func, Graphics graphics, int page)
+        : Slider(x, y, w, h, id, num, func, graphics, page, 0)
     {
     }
 
@@ -1708,7 +1709,7 @@ public:
 // CChatSave (Bitmap16Bit + a saved flag at +0x38, the CTextEntrySave shape)
 // so Draw restores the background before repainting. m_save at +0x50; vtable
 // 0x241bdc overrides slot 4 (Draw vs the textWidget base).
-class CChatWidget : public textWidget {
+class CChatWidget : public TextWidget {
 public:
     class CChatSave : public Bitmap16Bit {
     public:
@@ -1718,9 +1719,9 @@ public:
     };
 
     CChatWidget(int x, int y, int w, int h, const char* text,
-                const char* fontName, font::Color color, int id,
+                const char* fontName, Font::Color color, int id,
                 unsigned justify, int backColor, int style)
-        : textWidget(x, y, w, h, text, fontName, color, id,
+        : TextWidget(x, y, w, h, text, fontName, color, id,
                      justify, backColor, style)
     {
         m_save = new CChatSave(w, h);
@@ -1739,8 +1740,8 @@ class CSingleSelectionChatEdit : public CChatEdit {
 public:
     CSingleSelectionChatEdit(
         int x, int y, int w, int h, int textSize, const char* text,
-        const char* fontName, font::Color color,
-        font::EJustify justification,
+        const char* fontName, Font::Color color,
+        Font::Justify justification,
         const char* backgroundIcon, int backgroundFrame, int id, int style,
         int readType, int insetX, int insetY)
         : CChatEdit(x, y, w, h, textSize, const_cast<char*>(text),
@@ -1751,7 +1752,7 @@ public:
     }
 
     virtual void sendChat(const char* text, int toWho);
-    virtual unsigned char ignoreKey(message* msg);
+    virtual unsigned char ignoreKey(Message* msg);
 };
 
 // E:\gamedcs\singleselectionwindow.cpp:1805
@@ -1760,21 +1761,21 @@ public:
 // both bodies expand the shared commit helper OnEnter, which DC keeps out
 // of line (dc 0x149238) and retail fully inlines - no retail row exists
 // for it, so its definition must be `inline` (cpp-local, this TU only).
-class CEnterNameEdit : public textEntryWidget {
+class CEnterNameEdit : public TextEntryWidget {
 public:
     CEnterNameEdit(int x, int y, int w, int h, int textSize,
                    const char* text, const char* fontName,
-                   font::Color color, unsigned justification,
+                   Font::Color color, unsigned justification,
                    const char* backgroundIcon, int backgroundFrame, int id,
                    int style, int readType, int insetX, int insetY)
-        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
+        : TextEntryWidget(x, y, w, h, textSize, text, fontName, color,
                           justification, backgroundIcon, backgroundFrame, id,
                           style, readType, insetX, insetY)
     {
     }
 
     virtual void onKillFocus();            // slot 11
-    virtual int onKeyPress(message* msg);  // slot 15
+    virtual int onKeyPress(Message* msg);  // slot 15
     int onEnter();
 };
 
@@ -1797,21 +1798,21 @@ inline int CEnterNameEdit::onEnter()
 // E:\gamedcs\singleselectionwindow.cpp:1887
 // The save-filename editor. vtable 0x241c60 overrides slot 15 (OnKeyPress)
 // and slot 16 (IgnoreKey).
-class CSaveGameEdit : public textEntryWidget {
+class CSaveGameEdit : public TextEntryWidget {
 public:
     CSaveGameEdit(int x, int y, int w, int h, int textSize,
                   const char* text, const char* fontName,
-                  font::Color color, unsigned justification,
+                  Font::Color color, unsigned justification,
                   const char* backgroundIcon, int backgroundFrame, int id,
                   int style, int readType, int insetX, int insetY)
-        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
+        : TextEntryWidget(x, y, w, h, textSize, text, fontName, color,
                           justification, backgroundIcon, backgroundFrame, id,
                           style, readType, insetX, insetY)
     {
     }
 
-    virtual int onKeyPress(message* msg);           // slot 15
-    virtual unsigned char ignoreKey(message* msg);  // slot 16
+    virtual int onKeyPress(Message* msg);           // slot 15
+    virtual unsigned char ignoreKey(Message* msg);  // slot 16
 };
 
 // E:\gamedcs\singleselectionwindow.cpp:1393
@@ -1892,7 +1893,7 @@ SingleSelectionWindow::SingleSelectionWindow(int gameMode)
         m_flag65 = 1;
         m_textIndex = -1;
         memset(g_unnamed69fc2c, 0, 351);
-        g_saveHeader = new game;
+        g_saveHeader = new Game;
         backupGameHeaders(g_saveHeader, g_game);
         g_unnamed69fdc8 = 16;
     }
@@ -1940,14 +1941,14 @@ SingleSelectionWindow::SingleSelectionWindow(int gameMode)
     m_widgets.reserve(111);
 
     sprintf(g_text, "gamselb%d.pcx", random(0, 50));
-    bitmapBorder16* tempBack = new bitmapBorder16(
+    BitmapBorder16* tempBack = new BitmapBorder16(
         0, 0, 800, 600, 100, g_text, 0x800);
     m_widgets.push_back(tempBack);
     tempBack->m_image->draw(0, 0, tempBack->m_image->getWidth(),
         tempBack->m_image->getHeight(), g_windowManager->m_screenBitmap,
         tempBack->m_x + m_x, tempBack->m_y + m_y, 0);
 
-    bitmapBorder* w = new bitmapBorder(
+    BitmapBorder* w = new BitmapBorder(
         396, 6, 370, 585, 100, "GSelPop1.pcx", 0x800);
     // DEPTH LADDER: this ONE append is `insert(end(), w)`; all 24 others in
     // this constructor stay `push_back`.  95.7079 -> 95.8142; every other site
@@ -1956,77 +1957,77 @@ SingleSelectionWindow::SingleSelectionWindow(int gameMode)
     w->m_image->draw(0, 0, w->m_image->getWidth(), w->m_image->getHeight(),
         g_windowManager->m_screenBitmap, w->m_x + m_x, w->m_y + m_y, 0);
 
-    w = new bitmapBorder(3, 6, 575, 585, 101,
+    w = new BitmapBorder(3, 6, 575, 585, 101,
                          "SCSelBck.pcx", 0x800);
     w->hide();
     m_widgets.push_back(w);
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         25, 23, 367, 23, g_unnamed6a8098[m_flag65 ? 2 : (m_flag64 ? 1 : 0)],
-        "medfont.fnt", font::HEADING_HIGHLIGHT, 361, 5, 0, 8));
+        "medfont.fnt", Font::HEADING_HIGHLIGHT, 361, 5, 0, 8));
 
     if ((!m_flag64 && !m_flag65) || (m_flag64 && isMultiPlayer())) {
-        w = new bitmapBorder(3, 6, 557, 585, 102,
+        w = new BitmapBorder(3, 6, 557, 585, 102,
                              "AdvOptBk.pcx", 0x800);
         w->hide();
         m_widgets.push_back(w);
 
-        w = new bitmapBorder(3, 6, 557, 585, 103,
+        w = new BitmapBorder(3, 6, 557, 585, 103,
                              "RanMapBk.pcx", 0x800);
         w->hide();
         m_widgets.push_back(w);
     }
 
     sprintf(g_text, "%s:", g_generalText->getText(493));
-    m_widgets.push_back(new textWidget(
-        414, 435, 334, 19, g_text, "smalfont.fnt", font::PRIMARY_HIGHLIGHT,
-        132, font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
+        414, 435, 334, 19, g_text, "smalfont.fnt", Font::PRIMARY_HIGHLIGHT,
+        132, Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
     sprintf(g_text, "%s:", g_generalText->getText(219));
-    m_widgets.push_back(new textWidget(
-        665, 435, 84, 19, g_text, "smalfont.fnt", font::PRIMARY_HIGHLIGHT,
-        133, font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
+        665, 435, 84, 19, g_text, "smalfont.fnt", Font::PRIMARY_HIGHLIGHT,
+        133, Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         414, 435, 90, 19, g_generalText->getText(495), "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 134,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY_HIGHLIGHT, 134,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         422, 27, 278, 18, g_generalText->getText(496), "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY_HIGHLIGHT, 100, Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         422, 137, 278, 18, g_generalText->getText(497), "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 105, font::VERT_CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY_HIGHLIGHT, 105, Font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     m_descriptionWidget = new CScrollTextWidget(
         g_emptyRolloverText, 422, 155, 319, 115, "smalfont.fnt",
-        font::WHITE, slider::BLUE);
+        Font::WHITE, Slider::BLUE);
     m_widgets.push_back(m_descriptionWidget);
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         422, 288, 278, 18, g_generalText->getText(498), "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY_HIGHLIGHT, 100, Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         422, 344, 278, 18, g_generalText->getText(499), "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY_HIGHLIGHT, 100, Font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     if (g_videoPaused && !m_flag65) {
-        m_chatToggle = new textButton(
+        m_chatToggle = new TextButton(
             622, 81, 128, 20, 131, "gspbut2.def", g_emptyRolloverText,
-            "smalfont.fnt", 0, 1, 0, 15, 2, font::WHITE);
+            "smalfont.fnt", 0, 1, 0, 15, 2, Font::WHITE);
         m_widgets.push_back(m_chatToggle);
     }
 
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         714, 28, 29, 23, 189, "scnrmpsz.def", 0, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN));
+        IconWidget::ICON_STYLE_PLAIN));
     sprintf(g_text, "%s:", g_generalText->getText(391));
-    textWidget* t = new textWidget(
-        414, 403, 44, 23, g_text, "smalfont.fnt", font::WHITE, 100,
-        font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8);
+    TextWidget* t = new TextWidget(
+        414, 403, 44, 23, g_text, "smalfont.fnt", Font::WHITE, 100,
+        Font::VERT_CENTER_JUSTIFIED | Font::RIGHT_JUSTIFIED, 0, 8);
     m_widgets.push_back(t);
     sprintf(g_text, "%s:", g_generalText->getText(392));
-    textWidget* t2 = new textWidget(
-        579, 403, 58, 23, g_text, "smalfont.fnt", font::WHITE, 386,
-        font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8);
+    TextWidget* t2 = new TextWidget(
+        579, 403, 58, 23, g_text, "smalfont.fnt", Font::WHITE, 386,
+        Font::VERT_CENTER_JUSTIFIED | Font::RIGHT_JUSTIFIED, 0, 8);
     m_widgets.push_back(t2);
 
     if (m_flag65 || (m_flag64 && !isMultiPlayer())) {
@@ -2036,15 +2037,15 @@ SingleSelectionWindow::SingleSelectionWindow(int gameMode)
 
     {
         for (int i = 0; i < 8; ++i) {
-            iconWidget* flag = new iconWidget(
+            IconWidget* flag = new IconWidget(
                 460 + i * 15, 405, 15, 20, 112 + i, "itgflags.def",
-                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
             flag->hide();
             m_widgets.push_back(flag);
 
-            flag = new iconWidget(
+            flag = new IconWidget(
                 640 + i * 15, 405, 15, 20, 120 + i, "itgflags.def",
-                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
             flag->hide();
             m_widgets.push_back(flag);
         }
@@ -2054,16 +2055,16 @@ SingleSelectionWindow::SingleSelectionWindow(int gameMode)
         m_widgets.push_back(new CHotspotWidget(456, 402, 310, 25, 387));
 
     for (int i = 0; i < g_unnamed69fdc8; ++i) {
-        textWidget* row = new textWidget(
+        TextWidget* row = new TextWidget(
             57, 122 + i * 25, 314, 25, g_emptyRolloverText,
-            "smalfont.fnt", font::WHITE, 142 + i,
-            font::CENTER_JUSTIFIED, 0, 8);
+            "smalfont.fnt", Font::WHITE, 142 + i,
+            Font::CENTER_JUSTIFIED, 0, 8);
         row->hide();
         m_widgets.push_back(row);
     }
 
     if (m_flag65) {
-        m_widgets.push_back(new bitmapBorder(
+        m_widgets.push_back(new BitmapBorder(
             3, 520 - m_y, 399, 65, 388, "gsstrip.pcx", 0x800));
         strtok(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                             "NEWGAME.gm1"),
@@ -2072,33 +2073,33 @@ SingleSelectionWindow::SingleSelectionWindow(int gameMode)
             35, 542, 342, 21, 61,
             DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                          "NEWGAME.gm1"),
-            "smalfont.fnt", font::WHITE, font::CENTER_JUSTIFIED,
+            "smalfont.fnt", Font::WHITE, Font::CENTER_JUSTIFIED,
             0, 0, 160, 0x100, 0, 7, 5);
         m_widgets.push_back(m_saveGameEdit);
     }
 
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         161, 52, 44, 33, 137, "scsmbut.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         208, 52, 44, 33, 138, "scmdbut.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         255, 52, 44, 33, 139, "sclgbut.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         302, 52, 44, 33, 140, "scxlbut.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         349, 52, 44, 33, 141, "scalbut.def", 0, 1, 0, 0, 2));
 
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         26, 92, 31, 28, 190, "scbutt1.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         58, 92, 32, 28, 191, "scbutt2.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         91, 92, 32, 28, 192, "ScButCp.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         124, 92, 184, 33, 193, "scbutt3.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         309, 92, 32, 28, 194, "scbutt4.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         342, 92, 32, 28, 195, "scbutt5.def", 0, 1, 0, 0, 2));
 
     // Retail loads 480 unconditionally and overwrites it under m_flag65
@@ -2107,17 +2108,17 @@ SingleSelectionWindow::SingleSelectionWindow(int gameMode)
     int sliderHeight = 480;
     if (m_flag65)
         sliderHeight = 428;
-    m_fileSlider = new slider(
+    m_fileSlider = new Slider(
         375, 92, 16, sliderHeight, 337, 10, sliderFileMenu,
-        slider::BLUE, g_unnamed69fdc8, 0);
+        Slider::BLUE, g_unnamed69fdc8, 0);
     m_fileSlider->hide();
     m_widgets.push_back(m_fileSlider);
 
     char flagColors[] = "RBYGOPTS";
     if ((!m_flag64 && !m_flag65) || (m_flag64 && isMultiPlayer())) {
-        m_durationSlider = new slider(
+        m_durationSlider = new Slider(
             58, 557, 194, 16, 338, 11, sliderDuration,
-            slider::BLUE, 0, 0);
+            Slider::BLUE, 0, 0);
         m_durationSlider->hide();
         m_widgets.push_back(m_durationSlider);
 
@@ -2126,53 +2127,53 @@ SingleSelectionWindow::SingleSelectionWindow(int gameMode)
         for (int i = 0; i < 8; ++i) {
             int rowY = 133 + i * 50;
             sprintf(flagName, "AOFLGB%c.DEF", flagColors[i]);
-            m_widgets.push_back(new button(
+            m_widgets.push_back(new Button(
                 14 - m_x, rowY - m_y - 3, 42, 50, 263 + i,
                 flagName, 0, 1, 0, 0, 2));
 
-            m_widgets.push_back(new textWidget(
+            m_widgets.push_back(new TextWidget(
                 62, rowY + 18, 46, 24, g_generalText->getText(500),
-                "tiny.fnt", font::WHITE, 199 + i,
-                font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED,
+                "tiny.fnt", Font::WHITE, 199 + i,
+                Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED,
                 0, 8));
 
             sprintf(tempStr, "adopb2%c.def", "rbygopts"[i]);
-            widget* handicapButton;
+            Widget* handicapButton;
             if (isMultiPlayer()) {
-                handicapButton = new textButton(
+                handicapButton = new TextButton(
                     110, rowY + 18, 50, 24, 207 + i,
                     tempStr, g_unnamed6a7800[0], "tiny.fnt",
-                    0, 1, 0, 0, 2, font::WHITE);
+                    0, 1, 0, 0, 2, Font::WHITE);
             } else {
-                handicapButton = new button(
+                handicapButton = new Button(
                     110, rowY + 18, 50, 24, 207 + i,
                     tempStr, 0, 1, 0, 0, 2);
             }
             m_widgets.push_back(handicapButton);
 
-            m_widgets.push_back(new button(
+            m_widgets.push_back(new Button(
                 164, rowY, 11, 24, 215 + i,
                 "adoplfa.def", 0, 1, 0, 0, 2));
-            m_widgets.push_back(new button(
+            m_widgets.push_back(new Button(
                 225, rowY, 11, 24, 223 + i,
                 "adoprta.def", 1, 0, 0, 0, 2));
-            m_widgets.push_back(new button(
+            m_widgets.push_back(new Button(
                 240, rowY, 11, 24, 231 + i,
                 "adoplfa.def", 0, 1, 0, 0, 2));
-            m_widgets.push_back(new button(
+            m_widgets.push_back(new Button(
                 301, rowY, 11, 24, 239 + i,
                 "adoprta.def", 1, 0, 0, 0, 2));
-            m_widgets.push_back(new button(
+            m_widgets.push_back(new Button(
                 316, rowY, 11, 24, 247 + i,
                 "adoplfa.def", 0, 1, 0, 0, 2));
-            m_widgets.push_back(new button(
+            m_widgets.push_back(new Button(
                 377, rowY, 11, 24, 255 + i,
                 "adoprta.def", 1, 0, 0, 0, 2));
 
-            m_widgets.push_back(new textWidget(
+            m_widgets.push_back(new TextWidget(
                 62, rowY - 3, 97, 17, g_generalText->getText(469),
-                "smalfont.fnt", font::PRIMARY, 345 + i,
-                font::CENTER_JUSTIFIED, 0, 8));
+                "smalfont.fnt", Font::PRIMARY, 345 + i,
+                Font::CENTER_JUSTIFIED, 0, 8));
             m_widgets.push_back(new CHotspotWidget(
                 252, rowY - 3, 48, 32, 362 + i));
             m_widgets.push_back(new CHotspotWidget(
@@ -2183,7 +2184,7 @@ SingleSelectionWindow::SingleSelectionWindow(int gameMode)
             if (!isMultiPlayer()) {
                 CEnterNameEdit* edit = new CEnterNameEdit(
                     62, rowY - 3, 97, 17, 21, g_emptyRolloverText,
-                    "smalfont.fnt", font::PRIMARY, font::LEFT_JUSTIFIED,
+                    "smalfont.fnt", Font::PRIMARY, Font::LEFT_JUSTIFIED,
                     0, 0, 353 + i, 0x100, 0, 7, 5);
                 edit->hide();
                 edit->setAutoDraw(1);
@@ -2191,35 +2192,35 @@ SingleSelectionWindow::SingleSelectionWindow(int gameMode)
             }
         }
 
-        m_widgets.push_back(new textWidget(
+        m_widgets.push_back(new TextWidget(
             58, 90, 104, 36, g_generalText->getText(518),
-            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 339,
-            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-        m_widgets.push_back(new textWidget(
+            "smalfont.fnt", Font::PRIMARY_HIGHLIGHT, 339,
+            Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+        m_widgets.push_back(new TextWidget(
             163, 90, 75, 36, g_generalText->getText(519),
-            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, m_townHeadingId,
-            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-        m_widgets.push_back(new textWidget(
+            "smalfont.fnt", Font::PRIMARY_HIGHLIGHT, m_townHeadingId,
+            Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+        m_widgets.push_back(new TextWidget(
             239, 90, 75, 36, g_generalText->getText(520),
-            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 343,
-            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-        m_widgets.push_back(new textWidget(
+            "smalfont.fnt", Font::PRIMARY_HIGHLIGHT, 343,
+            Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+        m_widgets.push_back(new TextWidget(
             315, 90, 75, 36, g_generalText->getText(521),
-            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 344,
-            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-        m_widgets.push_back(new textWidget(
+            "smalfont.fnt", Font::PRIMARY_HIGHLIGHT, 344,
+            Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+        m_widgets.push_back(new TextWidget(
             58, 534, 334, 20, g_generalText->getText(522),
-            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 340,
-            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+            "smalfont.fnt", Font::PRIMARY_HIGHLIGHT, 340,
+            Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
 
         if (g_videoPaused && !m_flag65) {
             m_chatWidget = new CChatWidget(
                 416, 131, 315, 128, g_emptyRolloverText,
-                "smalfont.fnt", font::CHAT, 179,
-                font::BOTTOM_JUSTIFIED, 0, 8);
+                "smalfont.fnt", Font::CHAT, 179,
+                Font::BOTTOM_JUSTIFIED, 0, 8);
             m_chatSlider = new CChatSlider(
                 733, 133, 16, 126, 336, 0, sliderChatWindow,
-                slider::BLUE, 0);
+                Slider::BLUE, 0);
             m_chatSlider->setResolution(0);
             m_chatSlider->setState(0);
             g_chatMan.updateWidget(m_chatWidget, 0, 5);
@@ -2228,22 +2229,22 @@ SingleSelectionWindow::SingleSelectionWindow(int gameMode)
             CSingleSelectionChatEdit* edit =
                 new CSingleSelectionChatEdit(
                     415, 259, 334, 16, 127, g_emptyRolloverText,
-                    "smalfont.fnt", font::WHITE, font::LEFT_JUSTIFIED,
+                    "smalfont.fnt", Font::WHITE, Font::LEFT_JUSTIFIED,
                     "ircentry.pcx", 0, 180, 0x100, 0, 7, 5);
             m_chatEdit = edit;
-            bitmapBorder* chatBack = new bitmapBorder(
+            BitmapBorder* chatBack = new BitmapBorder(
                 412, 282, 340, 114, 181, "CHATPLUG.pcx", 0x800);
-            m_nameList1 = new textWidget(
+            m_nameList1 = new TextWidget(
                 419, 287, 156, 103, g_emptyRolloverText,
-                "smalfont.fnt", font::PRIMARY, 182,
-                font::LEFT_JUSTIFIED, 0, 8);
-            m_nameList2 = new textWidget(
+                "smalfont.fnt", Font::PRIMARY, 182,
+                Font::LEFT_JUSTIFIED, 0, 8);
+            m_nameList2 = new TextWidget(
                 584, 287, 156, 103, g_emptyRolloverText,
-                "smalfont.fnt", font::PRIMARY, 182,
-                font::LEFT_JUSTIFIED, 0, 8);
+                "smalfont.fnt", Font::PRIMARY, 182,
+                Font::LEFT_JUSTIFIED, 0, 8);
 
             m_widgets.push_back(chatBack);
-            m_widgets.push_back(new bitmapBorder(
+            m_widgets.push_back(new BitmapBorder(
                 730, 133, 19, 126, 389, "selslide.pcx", 0x800));
             m_widgets.push_back(m_chatSlider);
             m_widgets.push_back(m_chatWidget);
@@ -2257,37 +2258,37 @@ SingleSelectionWindow::SingleSelectionWindow(int gameMode)
     if ((!m_flag64 && !m_flag65) || (m_flag64 && isMultiPlayer())) {
         createFilterWidgets();
         if (m_flag64)
-            m_widgets.push_back(new textButton(
+            m_widgets.push_back(new TextButton(
                 414, 81, 200, 20, 128, "gspbutt.def",
                 g_generalText->getText(656), "smalfont.fnt",
-                0, 1, 0, 31, 2, font::WHITE));
+                0, 1, 0, 31, 2, Font::WHITE));
         else
-            m_widgets.push_back(new textButton(
+            m_widgets.push_back(new TextButton(
                 414, 81, 200, 20, 128, "gspbutt.def",
                 g_generalText->getText(501), "smalfont.fnt",
-                0, 1, 0, 31, 2, font::WHITE));
-        m_widgets.push_back(new textButton(
+                0, 1, 0, 31, 2, Font::WHITE));
+        m_widgets.push_back(new TextButton(
             414, 509, 200, 20, 129, "gspbutt.def",
             g_generalText->getText(502), "smalfont.fnt",
-            0, 1, 0, 30, 2, font::WHITE));
+            0, 1, 0, 30, 2, Font::WHITE));
         if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1
             || *g_videoGameState == SINGLE_SELECTION_CONTEXT_3) {
-            m_widgets.push_back(new textButton(
+            m_widgets.push_back(new TextButton(
                 414, 105, 200, 20, 130, "gspbutt.def",
                 g_generalText->getText(760), "smalfont.fnt",
-                0, 1, 0, 19, 2, font::WHITE));
+                0, 1, 0, 19, 2, Font::WHITE));
         }
     }
 
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         506, 456, 30, 46, 107, "gspbut3.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         538, 456, 30, 46, 108, "gspbut4.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         570, 456, 30, 46, 109, "gspbut5.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         602, 456, 30, 46, 110, "gspbut6.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         634, 456, 30, 46, 111, "gspbut7.def", 0, 1, 0, 0, 2));
 
     const char* beginButtonName = "scnrbeg.def";
@@ -2299,7 +2300,7 @@ SingleSelectionWindow::SingleSelectionWindow(int gameMode)
         beginButtonName = "scnrsav.def";
         key = 31;
     }
-    button* b = new button(
+    Button* b = new Button(
         414, 535, 166, 40, 186, beginButtonName,
         0, 1, 0, key, 2);
     if (m_flag64)
@@ -2312,17 +2313,17 @@ SingleSelectionWindow::SingleSelectionWindow(int gameMode)
     // this large caller naturally retains the call and emits its exact COMDAT.
     if (g_unnamed69774c) {
         if (!g_game->m_campaign.getCurrentScenario()->m_completed) {
-            m_widgets.push_back(new button(
+            m_widgets.push_back(new Button(
                 584, 535, 166, 40, 188, "scnrback.def",
                 0, 1, 0, 1, 2));
         }
     } else {
-        m_widgets.push_back(new button(
+        m_widgets.push_back(new Button(
             584, 535, 166, 40, 188, "scnrback.def",
             0, 1, 0, 1, 2));
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -2403,21 +2404,21 @@ SingleSelectionWindow::SingleSelectionWindow(int gameMode)
 
 // E:\gamedcs\singleselectionwindow.cpp:985
 VA(0x0057C7D0, 0x1B)  // dc 0x13035c
-static void sliderChatWindow(int state, heroWindow*)
+static void sliderChatWindow(int state, HeroWindow*)
 {
     g_unnamed69fbe8->onChatWindowSlider(state);
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:989
 VA(0x0057C7F0, 0x194)  // dc 0x13037c
-static void sliderDuration(int state, heroWindow*)
+static void sliderDuration(int state, HeroWindow*)
 {
     g_unnamed69fbe8->onDurationSlider(state);
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:994
 VA(0x0057C990, 0x1C)  // dc 0x1303dc
-static void sliderFileMenu(int state, heroWindow*)
+static void sliderFileMenu(int state, HeroWindow*)
 {
     g_unnamed69fbe8->onFileMenuSlider(state);
 }
@@ -2474,7 +2475,7 @@ void CChatWidget::draw() const
                        g_windowManager->m_screenBitmap->getWidth(),
                        g_windowManager->m_screenBitmap->getHeight(),
                        g_windowManager->m_screenBitmap->getPitch());
-            textWidget::draw();
+            TextWidget::draw();
             return;
         }
     } else {
@@ -2485,7 +2486,7 @@ void CChatWidget::draw() const
                    g_windowManager->m_screenBitmap->getHeight(),
                    g_windowManager->m_screenBitmap->getPitch(), 0);
     }
-    textWidget::draw();
+    TextWidget::draw();
 }
 
 VA_COMPGEN(0x0057cb40, 0x21, SCALAR_DELETING_DTOR, CChatSave)
@@ -2506,7 +2507,7 @@ void CSingleSelectionChatEdit::sendChat(const char* chat, int)
 }
 
 VA(0x0057CD00, 0x85)  // dc 0x149080
-unsigned char CSingleSelectionChatEdit::ignoreKey(message* msg)
+unsigned char CSingleSelectionChatEdit::ignoreKey(Message* msg)
 {
     switch (msg->m_codeX) {
     case KEYCODE_ESCAPE:
@@ -2528,22 +2529,22 @@ VA_COMPGEN(0x0057cd90, 0x21, SCALAR_DELETING_DTOR,
            CSingleSelectionChatEdit)
 
 VA(0x0057cdc0, 0x11D)  // dc 0x1491e0
-int CEnterNameEdit::onKeyPress(message* msg)
+int CEnterNameEdit::onKeyPress(Message* msg)
 {
     if (getCharPressed(msg) == KEYCODE_ENTER)
         return onEnter();
-    return textEntryWidget::onKeyPress(msg);
+    return TextEntryWidget::onKeyPress(msg);
 }
 
 VA(0x0057cee0, 0xFD)  // dc 0x149290
 void CEnterNameEdit::onKillFocus()
 {
     onEnter();
-    textEntryWidget::onKillFocus();
+    TextEntryWidget::onKillFocus();
 }
 
 VA(0x0057cfe0, 0xCF)  // dc 0x1493c8
-unsigned char CSaveGameEdit::ignoreKey(message* msg)
+unsigned char CSaveGameEdit::ignoreKey(Message* msg)
 {
     switch (msg->m_codeX) {
     case KEYCODE_KP_DECIMAL:
@@ -2580,10 +2581,10 @@ unsigned char CSaveGameEdit::ignoreKey(message* msg)
 }
 
 VA(0x0057d0b0, 0x50)  // dc 0x149514
-int CSaveGameEdit::onKeyPress(message* msg)
+int CSaveGameEdit::onKeyPress(Message* msg)
 {
-    int ret = textEntryWidget::onKeyPress(msg);
-    if (_strcmpi(m_text.c_str(),
+    int ret = TextEntryWidget::onKeyPress(msg);
+    if (strcmpi(m_text.c_str(),
                  DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                               "NEWGAME.gm1")) != 0
             && g_unnamed69fbe8->m_currentMap != -1)
@@ -2602,7 +2603,7 @@ VA_COMPGEN(0x0057d100, 0x21, SCALAR_DELETING_DTOR, CEnterNameEdit)
 VA(0x0057D170, 0x1DF7)
 void SingleSelectionWindow::createFilterWidgets()
 {
-    std::vector<widget*>& widgets = m_widgets;
+    std::vector<Widget*>& widgets = m_widgets;
     m_randomMapOptions[0] = MAP_DIMENSION_MEDIUM;
     m_randomMapOptions[1] = 2;
     m_randomMapOptions[2] = -1;
@@ -2613,211 +2614,211 @@ void SingleSelectionWindow::createFilterWidgets()
     m_randomMapOptions[7] = -1;
 
     {
-        widget* created = new textWidget(
+        Widget* created = new TextWidget(
             58, 82, 99, 31, g_generalText->getText(753), "smalfont.fnt",
-            font::PRIMARY, 0x118,
-            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8);
+            Font::PRIMARY, 0x118,
+            Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8);
         widgets.push_back(created);
     }
     {
-        widget* created = new button(
+        Widget* created = new Button(
             161, 81, 44, 33, 0x119, "RanSizS.def", 0, 1, 0, 0, 2);
         widgets.push_back(created);
     }
     {
-        widget* created = new button(
+        Widget* created = new Button(
             208, 81, 44, 33, 0x11a, "RanSizM.def", 0, 1, 0, 0, 2);
         widgets.push_back(created);
     }
     {
-        widget* created = new button(
+        Widget* created = new Button(
             255, 81, 44, 33, 0x11b, "RanSizL.def", 0, 1, 0, 0, 2);
         widgets.push_back(created);
     }
     {
-        widget* created = new button(
+        Widget* created = new Button(
             302, 81, 44, 33, 0x11c, "RanSizX.def", 0, 1, 0, 0, 2);
         widgets.push_back(created);
     }
     {
-        widget* created = new button(
+        Widget* created = new Button(
             349, 81, 44, 33, 0x11d, "RanUndr.def", 0, 1, 0, 0, 2);
         widgets.push_back(created);
     }
 
     {
-        widget* created = new textWidget(
+        Widget* created = new TextWidget(
             71, 133, 250, 16, g_generalText->getText(754), "smalfont.fnt",
-            font::PRIMARY, 0x11e, font::LEFT_JUSTIFIED, 0, 8);
+            Font::PRIMARY, 0x11e, Font::LEFT_JUSTIFIED, 0, 8);
         widgets.push_back(created);
     }
-    m_filterCountAButtons[0] = new button(
+    m_filterCountAButtons[0] = new Button(
         70, 153, 30, 32, 0x11f, "RanNum1.def", 0, 1, 0, 0, 2);
-    m_filterCountAButtons[1] = new button(
+    m_filterCountAButtons[1] = new Button(
         102, 153, 30, 32, 0x120, "RanNum2.def", 0, 1, 0, 0, 2);
-    m_filterCountAButtons[2] = new button(
+    m_filterCountAButtons[2] = new Button(
         134, 153, 30, 32, 0x121, "RanNum3.def", 0, 1, 0, 0, 2);
-    m_filterCountAButtons[3] = new button(
+    m_filterCountAButtons[3] = new Button(
         166, 153, 30, 32, 0x122, "RanNum4.def", 0, 1, 0, 0, 2);
-    m_filterCountAButtons[4] = new button(
+    m_filterCountAButtons[4] = new Button(
         198, 153, 30, 32, 0x123, "RanNum5.def", 0, 1, 0, 0, 2);
-    m_filterCountAButtons[5] = new button(
+    m_filterCountAButtons[5] = new Button(
         230, 153, 30, 32, 0x124, "RanNum6.def", 0, 1, 0, 0, 2);
-    m_filterCountAButtons[6] = new button(
+    m_filterCountAButtons[6] = new Button(
         262, 153, 30, 32, 0x125, "RanNum7.def", 0, 1, 0, 0, 2);
-    m_filterCountAButtons[7] = new button(
+    m_filterCountAButtons[7] = new Button(
         294, 153, 30, 32, 0x126, "RanNum8.def", 0, 1, 0, 0, 2);
-    m_filterCountAButtons[8] = new button(
+    m_filterCountAButtons[8] = new Button(
         326, 153, 55, 32, 0x127, "RanRand.def", 0, 1, 0, 0, 2);
     int i;
     for (i = 0; i < 9; ++i) {
-        button* current = m_filterCountAButtons[i];
+        Button* current = m_filterCountAButtons[i];
         current->m_highlightedFrame = 2;
         current->setDisabledFrame(1);
-        widget* added = current;
+        Widget* added = current;
         widgets.insert(widgets.end(), added);
     }
 
     {
-        widget* created = new textWidget(
+        Widget* created = new TextWidget(
             71, 199, 250, 16, g_generalText->getText(755), "smalfont.fnt",
-            font::PRIMARY, 0x128, font::LEFT_JUSTIFIED, 0, 8);
+            Font::PRIMARY, 0x128, Font::LEFT_JUSTIFIED, 0, 8);
         widgets.push_back(created);
     }
-    m_filterCountBButtons[0] = new button(
+    m_filterCountBButtons[0] = new Button(
         70, 219, 30, 32, 0x129, "RanNum0.def", 0, 1, 0, 0, 2);
-    m_filterCountBButtons[1] = new button(
+    m_filterCountBButtons[1] = new Button(
         102, 219, 30, 24, 0x12a, "RanNum1.def", 0, 1, 0, 0, 2);
-    m_filterCountBButtons[2] = new button(
+    m_filterCountBButtons[2] = new Button(
         134, 219, 30, 24, 0x12b, "RanNum2.def", 0, 1, 0, 0, 2);
-    m_filterCountBButtons[3] = new button(
+    m_filterCountBButtons[3] = new Button(
         166, 219, 30, 32, 0x12c, "RanNum3.def", 0, 1, 0, 0, 2);
-    m_filterCountBButtons[4] = new button(
+    m_filterCountBButtons[4] = new Button(
         198, 219, 30, 32, 0x12d, "RanNum4.def", 0, 1, 0, 0, 2);
-    m_filterCountBButtons[5] = new button(
+    m_filterCountBButtons[5] = new Button(
         230, 219, 30, 32, 0x12e, "RanNum5.def", 0, 1, 0, 0, 2);
-    m_filterCountBButtons[6] = new button(
+    m_filterCountBButtons[6] = new Button(
         262, 219, 30, 32, 0x12f, "RanNum6.def", 0, 1, 0, 0, 2);
-    m_filterCountBButtons[7] = new button(
+    m_filterCountBButtons[7] = new Button(
         294, 219, 30, 32, 0x130, "RanNum7.def", 0, 1, 0, 0, 2);
-    m_filterCountBButtons[8] = new button(
+    m_filterCountBButtons[8] = new Button(
         326, 219, 55, 32, 0x131, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 9; ++i) {
-        button* current = m_filterCountBButtons[i];
+        Button* current = m_filterCountBButtons[i];
         current->m_highlightedFrame = 2;
         current->setDisabledFrame(1);
-        widget* added = current;
+        Widget* added = current;
         widgets.insert(widgets.end(), added);
     }
 
     {
-        widget* created = new textWidget(
+        Widget* created = new TextWidget(
             71, 265, 250, 16, g_generalText->getText(756), "smalfont.fnt",
-            font::PRIMARY, 0x132, font::LEFT_JUSTIFIED, 0, 8);
+            Font::PRIMARY, 0x132, Font::LEFT_JUSTIFIED, 0, 8);
         widgets.push_back(created);
     }
-    m_filterCountCButtons[0] = new button(
+    m_filterCountCButtons[0] = new Button(
         70, 285, 30, 32, 0x133, "RanNum0.def", 0, 1, 0, 0, 2);
-    m_filterCountCButtons[1] = new button(
+    m_filterCountCButtons[1] = new Button(
         102, 285, 30, 32, 0x134, "RanNum1.def", 0, 1, 0, 0, 2);
-    m_filterCountCButtons[2] = new button(
+    m_filterCountCButtons[2] = new Button(
         134, 285, 30, 32, 0x135, "RanNum2.def", 0, 1, 0, 0, 2);
-    m_filterCountCButtons[3] = new button(
+    m_filterCountCButtons[3] = new Button(
         166, 285, 30, 32, 0x136, "RanNum3.def", 0, 1, 0, 0, 2);
-    m_filterCountCButtons[4] = new button(
+    m_filterCountCButtons[4] = new Button(
         198, 285, 30, 32, 0x137, "RanNum4.def", 0, 1, 0, 0, 2);
-    m_filterCountCButtons[5] = new button(
+    m_filterCountCButtons[5] = new Button(
         230, 285, 30, 32, 0x138, "RanNum5.def", 0, 1, 0, 0, 2);
-    m_filterCountCButtons[6] = new button(
+    m_filterCountCButtons[6] = new Button(
         262, 285, 30, 32, 0x139, "RanNum6.def", 0, 1, 0, 0, 2);
-    m_filterCountCButtons[7] = new button(
+    m_filterCountCButtons[7] = new Button(
         294, 285, 30, 32, 0x13a, "RanNum7.def", 0, 1, 0, 0, 2);
-    m_filterCountCButtons[8] = new button(
+    m_filterCountCButtons[8] = new Button(
         326, 285, 55, 32, 0x13b, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 9; ++i) {
-        button* current = m_filterCountCButtons[i];
+        Button* current = m_filterCountCButtons[i];
         current->m_highlightedFrame = 2;
         current->setDisabledFrame(1);
-        widget* added = current;
+        Widget* added = current;
         widgets.insert(widgets.end(), added);
     }
 
     {
-        widget* created = new textWidget(
+        Widget* created = new TextWidget(
             71, 331, 250, 16, g_generalText->getText(757), "smalfont.fnt",
-            font::PRIMARY, 0x13c, font::LEFT_JUSTIFIED, 0, 8);
+            Font::PRIMARY, 0x13c, Font::LEFT_JUSTIFIED, 0, 8);
         widgets.push_back(created);
     }
-    m_filterCountDButtons[0] = new button(
+    m_filterCountDButtons[0] = new Button(
         70, 351, 30, 32, 0x13d, "RanNum0.def", 0, 1, 0, 0, 2);
-    m_filterCountDButtons[1] = new button(
+    m_filterCountDButtons[1] = new Button(
         102, 351, 30, 32, 0x13e, "RanNum1.def", 0, 1, 0, 0, 2);
-    m_filterCountDButtons[2] = new button(
+    m_filterCountDButtons[2] = new Button(
         134, 351, 30, 32, 0x13f, "RanNum2.def", 0, 1, 0, 0, 2);
-    m_filterCountDButtons[3] = new button(
+    m_filterCountDButtons[3] = new Button(
         166, 351, 30, 32, 0x140, "RanNum3.def", 0, 1, 0, 0, 2);
-    m_filterCountDButtons[4] = new button(
+    m_filterCountDButtons[4] = new Button(
         198, 351, 30, 32, 0x141, "RanNum4.def", 0, 1, 0, 0, 2);
-    m_filterCountDButtons[5] = new button(
+    m_filterCountDButtons[5] = new Button(
         230, 351, 30, 32, 0x142, "RanNum5.def", 0, 1, 0, 0, 2);
-    m_filterCountDButtons[6] = new button(
+    m_filterCountDButtons[6] = new Button(
         262, 351, 30, 32, 0x143, "RanNum6.def", 0, 1, 0, 0, 2);
-    m_filterCountDButtons[7] = new button(
+    m_filterCountDButtons[7] = new Button(
         326, 351, 55, 32, 0x144, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 8; ++i) {
-        button* current = m_filterCountDButtons[i];
+        Button* current = m_filterCountDButtons[i];
         current->m_highlightedFrame = 2;
         current->setDisabledFrame(1);
-        widget* added = current;
+        Widget* added = current;
         widgets.insert(widgets.end(), added);
     }
 
     {
-        widget* created = new textWidget(
+        Widget* created = new TextWidget(
             71, 398, 105, 16, g_generalText->getText(758), "smalfont.fnt",
-            font::PRIMARY, 0x145, font::LEFT_JUSTIFIED, 0, 8);
+            Font::PRIMARY, 0x145, Font::LEFT_JUSTIFIED, 0, 8);
         widgets.push_back(created);
     }
-    m_filterWaterButtons[0] = new button(
+    m_filterWaterButtons[0] = new Button(
         70, 419, 83, 32, 0x146, "RanNone.def", 0, 1, 0, 0, 2);
-    m_filterWaterButtons[1] = new button(
+    m_filterWaterButtons[1] = new Button(
         155, 419, 83, 32, 0x147, "RanNorm.def", 0, 1, 0, 0, 2);
-    m_filterWaterButtons[2] = new button(
+    m_filterWaterButtons[2] = new Button(
         240, 419, 83, 32, 0x148, "RanIsld.def", 0, 1, 0, 0, 2);
-    m_filterWaterButtons[3] = new button(
+    m_filterWaterButtons[3] = new Button(
         326, 419, 55, 32, 0x149, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 4; ++i) {
-        button* current = m_filterWaterButtons[i];
+        Button* current = m_filterWaterButtons[i];
         current->m_highlightedFrame = 2;
         current->setDisabledFrame(1);
-        widget* added = current;
+        Widget* added = current;
         widgets.insert(widgets.end(), added);
     }
 
     {
-        widget* created = new textWidget(
+        Widget* created = new TextWidget(
             71, 465, 105, 16, g_generalText->getText(759), "smalfont.fnt",
-            font::PRIMARY, 0x14a, font::LEFT_JUSTIFIED, 0, 8);
+            Font::PRIMARY, 0x14a, Font::LEFT_JUSTIFIED, 0, 8);
         widgets.push_back(created);
     }
-    m_filterStrengthButtons[0] = new button(
+    m_filterStrengthButtons[0] = new Button(
         70, 485, 83, 32, 0x14b, "RanWeak.def", 0, 1, 0, 0, 2);
-    m_filterStrengthButtons[1] = new button(
+    m_filterStrengthButtons[1] = new Button(
         155, 485, 83, 32, 0x14c, "RanNorm.def", 0, 1, 0, 0, 2);
-    m_filterStrengthButtons[2] = new button(
+    m_filterStrengthButtons[2] = new Button(
         240, 485, 83, 32, 0x14d, "RanStrg.def", 0, 1, 0, 0, 2);
-    m_filterStrengthButtons[3] = new button(
+    m_filterStrengthButtons[3] = new Button(
         326, 485, 55, 32, 0x14e, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 4; ++i) {
-        button* current = m_filterStrengthButtons[i];
+        Button* current = m_filterStrengthButtons[i];
         current->m_highlightedFrame = 2;
         current->setDisabledFrame(1);
-        widget* added = current;
+        Widget* added = current;
         widgets.insert(widgets.end(), added);
     }
 
     {
-        widget* created = new button(
+        Widget* created = new Button(
             57, 535, 337, 40, 0x14f, "RanShow.def", 0, 1, 0, 0, 2);
         widgets.push_back(created);
     }
@@ -3034,7 +3035,7 @@ void SingleSelectionWindow::setupNewGameMode()
 VA(0x0057FB20, 0x66)  // dc 0x135da8
 void SingleSelectionWindow::showWidget(int id)
 {
-    widget* currentWidget = getWidget(id);
+    Widget* currentWidget = getWidget(id);
     if (!currentWidget)
         return;
     currentWidget->show();
@@ -3223,7 +3224,7 @@ void SingleSelectionWindow::rebuildFilteredPlayerSetup()
 
     if (isHost()) {
         updateAllyEnemyFlags(1);
-        widget* w = getWidget(186);
+        Widget* w = getWidget(186);
         w->enable(1);
         w->draw();
     }
@@ -3293,7 +3294,7 @@ void SingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
         drawWindow(0, 0xffff0001, 0xffff);
         g_unnamed698a08->drawBoundedString(
             g_generalText->getText(503), g_windowManager->m_screenBitmap,
-            123, 122, 184, 25, font::WHITE, 5, -1);
+            123, 122, 184, 25, Font::WHITE, 5, -1);
         this->update();
         m_inScenarioOptions = 1;
         if (g_videoPaused && !g_dPlay->isHost() && !m_flag65)
@@ -3422,16 +3423,16 @@ void SingleSelectionWindow::setupAdvancedOptions()
 
     int i;
     int nextColor = 0;
-    widget* playerName;
-    widget* playerType;
-    widget* playerFlag;
-    widget* townButton;
-    widget* townLeft;
-    widget* townRight;
-    widget* heroButton;
-    textEntryWidget* nameEdit;
-    widget* bonusLeft;
-    widget* bonusRight;
+    Widget* playerName;
+    Widget* playerType;
+    Widget* playerFlag;
+    Widget* townButton;
+    Widget* townLeft;
+    Widget* townRight;
+    Widget* heroButton;
+    TextEntryWidget* nameEdit;
+    Widget* bonusLeft;
+    Widget* bonusRight;
     updateGameVars();
     for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
         int strNbr = 0;
@@ -3448,7 +3449,7 @@ void SingleSelectionWindow::setupAdvancedOptions()
         townRight = getWidget(i + 370);
         heroButton = getWidget(i + 378);
         if (!isMultiPlayer())
-            nameEdit = static_cast<textEntryWidget*>(getWidget(i + 353));
+            nameEdit = static_cast<TextEntryWidget*>(getWidget(i + 353));
         bonusLeft = getWidget(i + 215);
         bonusRight = getWidget(i + 223);
 
@@ -3457,10 +3458,10 @@ void SingleSelectionWindow::setupAdvancedOptions()
         townButton->m_y = nextColor * 50 - m_y + 130;
 
         {
-            widget* townIcon = getWidget(i + 231);
-            widget* heroIcon = getWidget(i + 247);
-            widget* heroLeft = getWidget(i + 239);
-            widget* heroRight = getWidget(i + 255);
+            Widget* townIcon = getWidget(i + 231);
+            Widget* heroIcon = getWidget(i + 247);
+            Widget* heroLeft = getWidget(i + 239);
+            Widget* heroRight = getWidget(i + 255);
             townIcon->m_y = nextColor * 50 + 133;
             heroIcon->m_y = nextColor * 50 + 133;
             heroLeft->m_y = nextColor * 50 + 133;
@@ -3490,16 +3491,16 @@ void SingleSelectionWindow::setupAdvancedOptions()
         heroButton->show();
 
         if (!isMultiPlayer()) {
-            playerType->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                     widget::WIDGET_ACTIVE);
+            playerType->sendMessage(Widget::WIDGET_CLEAR_STATUS,
+                                     Widget::WIDGET_ACTIVE);
             nameEdit->hide();
         } else if (!isHost()) {
-            playerType->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                     widget::WIDGET_ACTIVE);
+            playerType->sendMessage(Widget::WIDGET_CLEAR_STATUS,
+                                     Widget::WIDGET_ACTIVE);
         }
         if (m_flag64)
-            playerType->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                     widget::WIDGET_ACTIVE);
+            playerType->sendMessage(Widget::WIDGET_CLEAR_STATUS,
+                                     Widget::WIDGET_ACTIVE);
 
         if (g_game->m_mapHeader.m_playerSlotAttributes[i].m_canBeHuman
             && g_game->m_mapHeader.m_playerSlotAttributes[i].m_canBeComputer)
@@ -3508,7 +3509,7 @@ void SingleSelectionWindow::setupAdvancedOptions()
             strNbr = 1;
         else
             strNbr = 2;
-        static_cast<textWidget*>(playerName)->setText(
+        static_cast<TextWidget*>(playerName)->setText(
             g_unnamed6a7e18[strNbr]);
         ++nextColor;
     }
@@ -4183,9 +4184,9 @@ void SingleSelectionWindow::makeHeroFilter()
             if (g_heroTraits[heroId].m_heroClass != heroClass1
                     && g_heroTraits[heroId].m_heroClass != heroClass2)
                 continue;
-            const std::map<int, type_map_hero_info>& setups =
+            const std::map<int, MapHeroInfo>& setups =
                 g_game->m_mapHeader.m_heroPlayerSetups;
-            std::map<int, type_map_hero_info>::const_iterator it = setups.find(heroId);
+            std::map<int, MapHeroInfo>::const_iterator it = setups.find(heroId);
             if (it != setups.end()) {
                 if (!it->second.m_players[i])
                     continue;
@@ -4285,7 +4286,7 @@ void SingleSelectionWindow::drawBasicMapInfo()
     else
         name = getFileName(m_currentMap);
     g_bigFont->drawBoundedString(name, g_windowManager->m_screenBitmap,
-                                 422, 45, 324, 30, font::HEADING_HIGHLIGHT, 0, -1);
+                                 422, 45, 324, 30, Font::HEADING_HIGHLIGHT, 0, -1);
     if (m_currentMap != -1
             && (m_flag64 != 0 || m_flag65 != 0 || m_flag66 != 0)) {
         _FILETIME localTime;
@@ -4299,15 +4300,15 @@ void SingleSelectionWindow::drawBasicMapInfo()
                              "%d/%d/%d - %d:%02d"),
                 st.wMonth, st.wDay, st.wYear, st.wHour, st.wMinute);
         g_unnamed698a08->drawBoundedString(dateBuf,
-            g_windowManager->m_screenBitmap, 422, 27, 278, 18, font::WHITE, 6, -1);
+            g_windowManager->m_screenBitmap, 422, 27, 278, 18, Font::WHITE, 6, -1);
     }
     g_unnamed698a08->drawBoundedString(g_unnamed6a77ec[hdr->m_difficulty],
-        g_windowManager->m_screenBitmap, 414, 454, 89, 48, font::WHITE, 5, -1);
+        g_windowManager->m_screenBitmap, 414, 454, 89, 48, Font::WHITE, 5, -1);
     char ratingBuf[256];
     sprintf(ratingBuf, DATA_COMPGEN(0x006831e4, percentFormat, "%d%%"),
             g_difficultyRatingPercent[g_game->m_setup.m_difficulty]);
     g_unnamed698a08->drawBoundedString(ratingBuf,
-        g_windowManager->m_screenBitmap, 666, 454, 83, 48, font::WHITE, 5, -1);
+        g_windowManager->m_screenBitmap, 666, 454, 83, 48, Font::WHITE, 5, -1);
     if (m_chatShowing != 0)
         return;
     char vcText[256];
@@ -4324,9 +4325,9 @@ void SingleSelectionWindow::drawBasicMapInfo()
     char lcText[256];
     strcpy(lcText, g_lossConditionDesc[lc->m_type + 1]);
     g_unnamed698a08->drawBoundedString(vcText,
-        g_windowManager->m_screenBitmap, 456, 305, 288, 32, font::WHITE, 4, -1);
+        g_windowManager->m_screenBitmap, 456, 305, 288, 32, Font::WHITE, 4, -1);
     g_unnamed698a08->drawBoundedString(lcText,
-        g_windowManager->m_screenBitmap, 456, 364, 288, 32, font::WHITE, 4, -1);
+        g_windowManager->m_screenBitmap, 456, 364, 288, 32, Font::WHITE, 4, -1);
     if (vc->m_type >= 0 && vc->m_type <= 11)
         m_victoryIcon->draw(0, vc->m_type, 0, 0,
             m_victoryIcon->getWidth(), m_victoryIcon->getHeight(),
@@ -4367,7 +4368,7 @@ int SingleSelectionWindow::update()
             return 1;
         g_unnamed698a08->drawBoundedString(
             g_generalText->getText(510), g_windowManager->m_screenBitmap,
-            433, 46, 210, 23, font::WHITE, 4, -1);
+            433, 46, 210, 23, Font::WHITE, 4, -1);
     } else {
         drawBasicMapInfo();
         if (m_inScenarioOptions) {
@@ -4376,7 +4377,7 @@ int SingleSelectionWindow::update()
                 rows = m_selectionHeaders.size();
             g_unnamed698a08->drawBoundedString(
                 g_generalText->getText(511), g_windowManager->m_screenBitmap,
-                25, 52, 132, 32, font::PRIMARY_HIGHLIGHT, 5, -1);
+                25, 52, 132, 32, Font::PRIMARY_HIGHLIGHT, 5, -1);
             int i = 0;
             if (rows > 0) {
                 int y = 123;
@@ -4437,7 +4438,7 @@ int SingleSelectionWindow::update()
                                 hdr->m_header.m_numPlayers, hdr->m_header.m_maxNumHumanPlayers);
                         g_unnamed698a08->drawBoundedString(
                             text, g_windowManager->m_screenBitmap,
-                            26, y - 1, 30, 25, font::Color(color), 5, -1);
+                            26, y - 1, 30, 25, Font::Color(color), 5, -1);
                         const char* sizeText;
                         if (hdr->m_header.m_size == MAP_DIMENSION_SMALL)
                             sizeText = g_generalText->getText(512);
@@ -4450,7 +4451,7 @@ int SingleSelectionWindow::update()
                         strcpy(text, sizeText);
                         g_unnamed698a08->drawBoundedString(
                             text, g_windowManager->m_screenBitmap,
-                            59, y - 1, 30, 25, font::Color(color), 5, -1);
+                            59, y - 1, 30, 25, Font::Color(color), 5, -1);
                         if (frame >= 0)
                             m_versionIcon->draw(0, frame, 0, 0,
                                 m_versionIcon->getWidth(), m_versionIcon->getHeight(),
@@ -4458,7 +4459,7 @@ int SingleSelectionWindow::update()
                         g_unnamed698a08->drawBoundedString(
                             getMapName(m_currentIndex + i),
                             g_windowManager->m_screenBitmap,
-                            125, y - 1, 184, 25, font::Color(color), 5, -1);
+                            125, y - 1, 184, 25, Font::Color(color), 5, -1);
                         if (hdr->m_header.m_victoryCondition.m_type >= 0
                                 && hdr->m_header.m_victoryCondition.m_type <= 11)
                             m_victoryIcon->draw(0,
@@ -4492,8 +4493,8 @@ int SingleSelectionWindow::update()
             int pos;
             for (pos = 0; pos < 8; ++pos) {
                 CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(pos);
-                textWidget* w =
-                    static_cast<textWidget*>(getWidget(pos + 345));
+                TextWidget* w =
+                    static_cast<TextWidget*>(getWidget(pos + 345));
                 if (p == 0)
                     w->setText(g_generalText->getText(469));
                 else
@@ -4501,13 +4502,13 @@ int SingleSelectionWindow::update()
             }
             g_bigFont->drawBoundedString(
                 g_generalText->getText(516), g_windowManager->m_screenBitmap,
-                58, 24, 334, 25, font::HEADING_HIGHLIGHT, 1, -1);
+                58, 24, 334, 25, Font::HEADING_HIGHLIGHT, 1, -1);
             g_unnamed698a08->drawBoundedString(
                 g_generalText->getText(517), g_windowManager->m_screenBitmap,
-                58, 48, 334, 34, font::WHITE, 1, -1);
+                58, 48, 334, 34, Font::WHITE, 1, -1);
             g_unnamed698a08->drawBoundedString(
                 g_turnDurationText[g_game->m_setup.m_turnDuration],
-                g_windowManager->m_screenBitmap, 256, 556, 134, 18, font::WHITE, 5, -1);
+                g_windowManager->m_screenBitmap, 256, 556, 134, 18, Font::WHITE, 5, -1);
             pos = 0;
             for (int i = 0; i < 8; ++i) {
                 if (g_game->m_setup.m_playerPos[i] >= 0
@@ -4520,10 +4521,10 @@ int SingleSelectionWindow::update()
         if (m_inFilterOptions) {
             g_bigFont->drawBoundedString(
                 g_generalText->getText(739), g_windowManager->m_screenBitmap,
-                58, 24, 334, 25, font::HEADING_HIGHLIGHT, 1, -1);
+                58, 24, 334, 25, Font::HEADING_HIGHLIGHT, 1, -1);
             g_unnamed698a08->drawBoundedString(
                 g_generalText->getText(740), g_windowManager->m_screenBitmap,
-                58, 48, 334, 34, font::WHITE, 1, -1);
+                58, 48, 334, 34, Font::WHITE, 1, -1);
             updateFilterWidgets();
         }
     }
@@ -4540,7 +4541,7 @@ int SingleSelectionWindow::doModal(unsigned char fade)
                     || g_unnamed6989f0 == WINDOW_MODE_6989F0_3)))
         m_durationSlider->setState(11);
     return g_windowManager->doDialogDraw(this,
-        heroWindow::heroWindowHandler, ::update, 0);
+        HeroWindow::heroWindowHandler, ::update, 0);
 }
 
 #if 0  // @carcass
@@ -4809,31 +4810,31 @@ void SingleSelectionWindow::updateAllyEnemyFlags(unsigned char update)
         playerPos = player->m_playerPos;
     }
 
-    widget* flag;
+    Widget* flag;
     for (int i = 0; i < 8; ++i) {
         flag = getWidget(i + 120);
-        flag->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                           widget::WIDGET_CLEAR_STATUS);
+        flag->sendMessage(Widget::WIDGET_CLEAR_STATUS,
+                           Widget::WIDGET_CLEAR_STATUS);
         flag = getWidget(i + 112);
-        flag->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                           widget::WIDGET_CLEAR_STATUS);
+        flag->sendMessage(Widget::WIDGET_CLEAR_STATUS,
+                           Widget::WIDGET_CLEAR_STATUS);
 
         if (g_game->m_setup.m_playerPos[i] < 0)
             continue;
 
         if (g_game->onSameTeam(i, playerPos)) {
             flag = getWidget(allyCount + 112);
-            flag->sendMessage(widget::WIDGET_SET_STATUS,
-                               widget::WIDGET_CLEAR_STATUS);
+            flag->sendMessage(Widget::WIDGET_SET_STATUS,
+                               Widget::WIDGET_CLEAR_STATUS);
             getWidget(allyCount + 112)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME, i);
+                Widget::WIDGET_SET_ICON_FRAME, i);
             ++allyCount;
         } else {
             flag = getWidget(enemyCount + 120);
-            flag->sendMessage(widget::WIDGET_SET_STATUS,
-                               widget::WIDGET_CLEAR_STATUS);
+            flag->sendMessage(Widget::WIDGET_SET_STATUS,
+                               Widget::WIDGET_CLEAR_STATUS);
             getWidget(enemyCount + 120)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME, i);
+                Widget::WIDGET_SET_ICON_FRAME, i);
             ++enemyCount;
         }
     }
@@ -4851,7 +4852,7 @@ void SingleSelectionWindow::setCurrentMap(int map, unsigned char update)
     int i;
     if (map >= static_cast<int>(m_selectionHeaders.size()))
         return;
-    message msg;
+    Message msg;
     msg.m_id = 0;
     msg.m_codeX = 0;
     msg.m_codeY = 0;
@@ -4962,7 +4963,7 @@ void SingleSelectionWindow::setCurrentMap(int map, unsigned char update)
         }
     }
     if (!g_videoPaused || g_dPlay->isHost()) {
-        widget* w = getWidget(186);
+        Widget* w = getWidget(186);
         if (w) {
             if (!m_flag64 && !m_flag65
                     && g_game->m_mapHeader.m_version
@@ -4980,7 +4981,7 @@ void SingleSelectionWindow::setCurrentMap(int map, unsigned char update)
         }
     }
     if (m_flag64 || m_flag65) {
-        message deselect;
+        Message deselect;
         deselect.m_id = 0x200;
         deselect.m_qualifier = 0;
         deselect.m_mouseX = 0;
@@ -5000,8 +5001,8 @@ void SingleSelectionWindow::setCurrentMap(int map, unsigned char update)
         if (m_mapChanged) {
             drawWindow(0, 0xffff0001, 0xffff);
         } else {
-            widget* temp = getWidget(101);
-            if (temp->m_status & widget::WIDGET_ACTIVE) {
+            Widget* temp = getWidget(101);
+            if (temp->m_status & Widget::WIDGET_ACTIVE) {
                 temp->draw();
                 getWidget(361)->draw();
                 drawWindow(0, 137, 141);
@@ -5022,11 +5023,11 @@ void SingleSelectionWindow::setCurrentMap(int map, unsigned char update)
             if (!player)
                 player = m_players.getCompPlayerInPos(i);
             player->m_handicap = g_game->m_setup.m_handicap[i];
-            widget* w = getWidget(207 + i);
+            Widget* w = getWidget(207 + i);
             if (w) {
                 int saveStatus = w->m_status;
-                w->m_status |= widget::WIDGET_ACTIVE;
-                w->sendMessage(widget::WIDGET_SET_TEXT,
+                w->m_status |= Widget::WIDGET_ACTIVE;
+                w->sendMessage(Widget::WIDGET_SET_TEXT,
                                 int(g_unnamed6a7800[player->m_handicap]));
                 w->m_status = saveStatus;
             }
@@ -5064,7 +5065,7 @@ void SingleSelectionWindow::setFilter(int size)
         m_currentHeader = m_selectionHeaders.begin();
         updateGameVars();
     }
-    message msg;
+    Message msg;
     msg.m_qualifier = 0;
     msg.m_mouseX = 0;
     msg.m_mouseY = 0;
@@ -5103,19 +5104,19 @@ void SingleSelectionWindow::setFilter(int size)
 VA(0x00586060, 0x79)  // dc 0x13c698
 void SingleSelectionWindow::setDifficultyHiLite()
 {
-    message select;
+    Message select;
     select.m_qualifier = 0;
     select.m_mouseX = 0;
     select.m_mouseY = 0;
     select.m_window = 0;
     select.m_id = 0x200;
-    select.m_codeX = widget::WIDGET_CLEAR_STATUS;
-    select.m_extra = widget::WIDGET_HIGHLIGHTED;
+    select.m_codeX = Widget::WIDGET_CLEAR_STATUS;
+    select.m_extra = Widget::WIDGET_HIGHLIGHTED;
     for (int i = SSW_DIFFICULTY_FIRST; i <= SSW_DIFFICULTY_LAST; ++i) {
         select.m_codeY = i;
         getWidget(i)->main(select);
     }
-    select.m_codeX = widget::WIDGET_SET_STATUS;
+    select.m_codeX = Widget::WIDGET_SET_STATUS;
     select.m_codeY = SSW_DIFFICULTY_FIRST + g_game->m_setup.m_difficulty;
     broadcastMessage(select);
 }
@@ -5198,7 +5199,7 @@ unsigned char SingleSelectionWindow::generateRandomMap(const char* name)
             ? GAME_VERSION_AB
             : GAME_VERSION_ROE;
 
-    g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(1, MouseManager::ADVENTURE_SET);
     startMouseThread();
 
     int result;
@@ -5235,7 +5236,7 @@ unsigned char SingleSelectionWindow::generateRandomMap(const char* name)
     }
 
     stopMouseThread();
-    g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+    g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
 
     switch (result) {
     case RANDOM_MAP_OK:
@@ -5262,7 +5263,7 @@ DC_ONLY(0x13c724, 0x78)
 bool SingleSelectionWindow::onClickMsg(CNetMsg* netMsg)
 {
     CClickMsg* clickMsg = static_cast<CClickMsg*>(netMsg);
-    message msg;
+    Message msg;
     unsigned char exitFlag;
     msg.m_codeY = clickMsg->m_widgetId;
     onWidgetDeselect(&msg, &exitFlag, 1);
@@ -5299,7 +5300,7 @@ bool SingleSelectionWindow::onClickMsg(CNetMsg* netMsg)
 // encoding and costs 0.25 overall, so it stays.
 // E:\gamedcs\singleselectionwindow.cpp:5100
 VA(0x005865b0, 0x13EA)  // anchor-callee WindowHandler's id==0x200/codeX==13 arm calls it (msg, &redraw, 0) - the DC signature exactly; size 0.57x dc 0x22d4, dc 0x13c79c
-int SingleSelectionWindow::onWidgetDeselect(message* msg,
+int SingleSelectionWindow::onWidgetDeselect(Message* msg,
                                               unsigned char* exitFlag,
                                               unsigned char remoteClick)
 {
@@ -5386,7 +5387,7 @@ int SingleSelectionWindow::onWidgetDeselect(message* msg,
         if (m_flag65) {
             *exitFlag = saveValid(m_saveGameEdit->getText());
             if (*exitFlag)
-                g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+                g_mouseManager->setPointer(1, MouseManager::ADVENTURE_SET);
         } else {
             *exitFlag = onBeginGame();
         }
@@ -5720,11 +5721,11 @@ int SingleSelectionWindow::onWidgetDeselect(message* msg,
             if (player) {
                 player->m_handicap =
                     static_cast<signed char>((player->m_handicap + 1) % 3);
-                widget* w = getWidget(msg->m_codeY);
+                Widget* w = getWidget(msg->m_codeY);
                 if (w) {
                     int saveStatus = w->m_status;
-                    w->m_status |= widget::WIDGET_ACTIVE;
-                    w->sendMessage(widget::WIDGET_SET_TEXT,
+                    w->m_status |= Widget::WIDGET_ACTIVE;
+                    w->sendMessage(Widget::WIDGET_SET_TEXT,
                                     int(g_unnamed6a7800[player->m_handicap]));
                     w->m_status = saveStatus;
                 }
@@ -5935,7 +5936,7 @@ std::string getRandomMapName()
 
     do {
         for (int j = 0; j < 15; ++j) {
-            if (_strcmpi(names[j], fileinfo.name) == 0) {
+            if (strcmpi(names[j], fileinfo.name) == 0) {
                 times[j] = fileinfo.time_write;
                 break;
             }
@@ -5963,7 +5964,7 @@ std::string getRandomMapName()
 // the shared end-dialog command exactly as the tradpost handlers do.
 // E:\gamedcs\singleselectionwindow.cpp:5933
 VA(0x00587bc0, 0x138)  // anchor-vtable vtbl 0x241cac slot14 (ExitDialog override; cf sibling THeroScreenWindow slot14 ExitDialog); label "starting_multiplayer_game", dc 0x13ea70
-int SingleSelectionWindow::exitDialog(message& msg)
+int SingleSelectionWindow::exitDialog(Message& msg)
 {
     if (!m_flag64 && !m_flag65) {
         if (g_videoPaused)
@@ -6014,7 +6015,7 @@ int SingleSelectionWindow::exitDialog(message& msg)
 // vs inline respelling of the KP_8 arm measured byte-flat (90.02 both).
 // E:\gamedcs\singleselectionwindow.cpp:5976
 VA(0x00587d00, 0x624)  // anchor-vtable vtbl 0x241cac slot9 (WindowHandler override; cf sibling THeroScreenWindow slot9 WindowHandler) + fingerprint w2.43, dc 0x13ebc0
-int SingleSelectionWindow::windowHandler(message& msg)
+int SingleSelectionWindow::windowHandler(Message& msg)
 {
     unsigned char redraw = 0;
     pollSound();
@@ -6115,30 +6116,30 @@ int SingleSelectionWindow::windowHandler(message& msg)
                 break;
             }
         } else if (msg.m_id == MESSAGE_WIDGET) {
-            if (msg.m_codeX == widget::WIDGET_DESELECT)
+            if (msg.m_codeX == Widget::WIDGET_DESELECT)
                 onWidgetDeselect(&msg, &redraw, 0);
         } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
             int id = findWidget(msg.m_mouseX, msg.m_mouseY);
             if (id != g_lastImHoverId) {
                 if (id >= 0x107 && id <= 0x10e) {
                     if (g_lastImHoverId != -1) {
-                        widget* previous = getWidget(g_lastImHoverId);
+                        Widget* previous = getWidget(g_lastImHoverId);
                         previous->sendMessage(
-                            widget::WIDGET_CLEAR_STATUS, 0x10);
+                            Widget::WIDGET_CLEAR_STATUS, 0x10);
                         drawHeroAdvancedOption(
                             g_lastImHoverId - 0x107, 1, -1);
                     }
                     if (!g_videoPaused || g_dPlay->isHost()) {
-                        widget* hovered = getWidget(id);
+                        Widget* hovered = getWidget(id);
                         hovered->sendMessage(
-                            widget::WIDGET_SET_STATUS, 0x10);
+                            Widget::WIDGET_SET_STATUS, 0x10);
                         drawHeroAdvancedOption(id - 0x107, 1, -1);
                     }
                     g_lastImHoverId = id;
                 } else if (g_lastImHoverId != -1) {
-                    widget* previous = getWidget(g_lastImHoverId);
+                    Widget* previous = getWidget(g_lastImHoverId);
                     previous->sendMessage(
-                        widget::WIDGET_CLEAR_STATUS, 0x10);
+                        Widget::WIDGET_CLEAR_STATUS, 0x10);
                     drawHeroAdvancedOption(g_lastImHoverId - 0x107, 1, -1);
                     g_lastImHoverId = -1;
                 }
@@ -6433,7 +6434,7 @@ bool SingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, bool& cancel)
 }
 
 VA(0x005891b0, 0x45)  // dc 0x1477b0
-int CHostWaitDlg::handleMessage(message& msg)
+int CHostWaitDlg::handleMessage(Message& msg)
 {
     int ret = CAnimatedDlg::handleMessage(msg);
     m_msg = getRemoteData(1, 0);
@@ -6447,7 +6448,7 @@ VA_COMPGEN(0x00589200, 0x21, SCALAR_DELETING_DTOR, CHostWaitDlg)  // dc 0x147828
 VA_COMPGEN(0x00589230, 0x5, IMPLICIT_DTOR, CHostWaitDlg)  // dc 0x147860
 
 VA(0x00589240, 0x2F)
-t_map_list_update::t_map_list_update(unsigned long dpid)
+MapListUpdate::MapListUpdate(unsigned long dpid)
     : CNewPlayerUpdateProc(dpid)
 {
 }
@@ -6907,7 +6908,7 @@ int SingleSelectionWindow::calcPosition(int playerPos)
 
 // E:\gamedcs\singleselectionwindow.cpp:8749
 DC_ONLY(0x145128, 0x22)
-int update(message* msg)
+int update(Message* msg)
 {
     // @stub
 }
@@ -6988,11 +6989,11 @@ unsigned char SingleSelectionWindow::onNewSetupInfoMsg(CNetMsg* netMsg)
 VA(0x00589D30, 0x265)  // dc 0x1409d4
 unsigned char SingleSelectionWindow::isVersionCompatible(const char* otherVersion)
 {
-    if (_strcmpi(m_gameVersion,
+    if (strcmpi(m_gameVersion,
                  DATA_COMPGEN(0x00683900, defaultRemoteVersion, "1.0"))
             < 0)
         return 1;
-    if (_strcmpi(m_gameVersion, otherVersion) == 0)
+    if (strcmpi(m_gameVersion, otherVersion) == 0)
         return 1;
     if (strcmp(m_gameVersion,
                DATA_COMPGEN(0x006838fc, versionComplete14, "1.4")) == 0
@@ -7102,7 +7103,7 @@ void CNewPlayerUpdateMan::requestMapHeaders(unsigned long dpid)
 {
     int index = getFirstAvailable();
     if (index != -1) {
-        m_procs[index] = new t_map_list_update(dpid);
+        m_procs[index] = new MapListUpdate(dpid);
         m_procs[index]->go();
     }
 }
@@ -7225,7 +7226,7 @@ inline void SingleSelectionWindow::onDurationSlider(int newIndex)
 inline void SingleSelectionWindow::sendChat(
     unsigned long dpid, const char* chat)
 {
-    if (_strcmpi(chat,
+    if (strcmpi(chat,
                  g_generalText->getText(GENERAL_TEXT_CHAT_PING_COMMAND)) == 0) {
         CPingMsg msg(GameTime::get(), RS_SETUP_PING);
         transmitRemoteDataDPID(&msg, dpid, false, false);
@@ -7395,54 +7396,54 @@ unsigned char SingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
                        != g_thisNetPlayerInfo.m_dpid)
             m_newPlayerUpdateMan->newPlayer(m_players.m_humanPlayers[i].m_dpid);
     }
-    widget* w = getWidget(128);
+    Widget* w = getWidget(128);
     if (w) {
-        w->sendMessage(widget::WIDGET_SET_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->sendMessage(Widget::WIDGET_SET_STATUS,
+                        Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
     }
     w = getWidget(129);
     if (w) {
-        w->sendMessage(widget::WIDGET_SET_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->sendMessage(Widget::WIDGET_SET_STATUS,
+                        Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
     }
     if (g_gameContextFeatures[*g_videoGameState].test(1)) {
         w = getWidget(130);
         if (w) {
-            w->sendMessage(widget::WIDGET_SET_STATUS,
-                            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            w->sendMessage(Widget::WIDGET_SET_STATUS,
+                            Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
             w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
         }
     }
     w = getWidget(107);
     if (w) {
-        w->sendMessage(widget::WIDGET_SET_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->sendMessage(Widget::WIDGET_SET_STATUS,
+                        Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
     }
     w = getWidget(108);
     if (w) {
-        w->sendMessage(widget::WIDGET_SET_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->sendMessage(Widget::WIDGET_SET_STATUS,
+                        Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
     }
     w = getWidget(109);
     if (w) {
-        w->sendMessage(widget::WIDGET_SET_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->sendMessage(Widget::WIDGET_SET_STATUS,
+                        Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
     }
     w = getWidget(110);
     if (w) {
-        w->sendMessage(widget::WIDGET_SET_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->sendMessage(Widget::WIDGET_SET_STATUS,
+                        Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
     }
     w = getWidget(111);
     if (w) {
-        w->sendMessage(widget::WIDGET_SET_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->sendMessage(Widget::WIDGET_SET_STATUS,
+                        Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
     }
 #pragma inline_depth(0)
@@ -7463,10 +7464,10 @@ void SingleSelectionWindow::onNewHostMsg(CNetMsg* netMsg)
     m_receivedMaps = 0;
     m_receivingMaps = 1;
     if (m_chatShowing) {
-        widget* chatWidget = getWidget(179);
-        chatWidget->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                 widget::WIDGET_ACTIVE
-                                     | widget::WIDGET_DRAWN);
+        Widget* chatWidget = getWidget(179);
+        chatWidget->sendMessage(Widget::WIDGET_CLEAR_STATUS,
+                                 Widget::WIDGET_ACTIVE
+                                     | Widget::WIDGET_DRAWN);
     }
     m_currentIndex = 0;
     m_currentMap = 0;
@@ -7498,7 +7499,7 @@ void SingleSelectionWindow::onNameClick(int pos)
     if (player->m_playerPos != pos)
         return;
 
-    textWidget* w = static_cast<textWidget*>(getWidget(pos + 353));
+    TextWidget* w = static_cast<TextWidget*>(getWidget(pos + 353));
     int colorPos = calcPosition(pos);
     if (w) {
         m_panels[pos]->draw(w->m_x - 57, w->m_y - 128 - colorPos * 50,
@@ -7506,12 +7507,12 @@ void SingleSelectionWindow::onNameClick(int pos)
                           g_windowManager->m_screenBitmap, 57,
                           128 + colorPos * 50, true);
         w->setText(player->m_name);
-        w->sendMessage(widget::WIDGET_SET_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w = static_cast<textWidget*>(getWidget(pos + 345));
+        w->sendMessage(Widget::WIDGET_SET_STATUS,
+                        Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+        w = static_cast<TextWidget*>(getWidget(pos + 345));
         if (w)
-            w->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            w->sendMessage(Widget::WIDGET_CLEAR_STATUS,
+                            Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         w->setText(player->m_name);
         setFocus(pos + 353);
     }
@@ -7549,11 +7550,11 @@ void SingleSelectionWindow::onPlayerPosClick(int pos)
         if (mp->m_playerSlotAttributes[pos].m_canBeHuman
                 && player->m_playerPos != pos) {
             if (player->m_playerPos != -1) {
-                button* b = static_cast<button*>(
+                Button* b = static_cast<Button*>(
                     getWidget(player->m_playerPos + 263));
                 b->sendMessage(
-                    widget::WIDGET_CLEAR_STATUS,
-                    widget::WIDGET_HIGHLIGHTED);
+                    Widget::WIDGET_CLEAR_STATUS,
+                    Widget::WIDGET_HIGHLIGHTED);
             }
             setup->m_playerPos[player->m_playerPos] = setup->m_playerPos[pos];
             setup->m_playerPos[pos] = pos;
@@ -7597,7 +7598,7 @@ void SingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
             p = &m_players.m_computerPlayers[i];
         if (p) {
             getWidget(p->m_playerPos + 207)->sendMessage(
-                widget::WIDGET_SET_TEXT, int(g_unnamed6a7800[p->m_handicap]));
+                Widget::WIDGET_SET_TEXT, int(g_unnamed6a7800[p->m_handicap]));
         }
     }
     if (!m_receivingMaps) {
@@ -7736,8 +7737,8 @@ unsigned char SingleSelectionWindow::onBeginGame()
         }
     }
 
-    widget* beginButton = getWidget(186);
-    if (beginButton && (beginButton->m_status & widget::WIDGET_DISABLED))
+    Widget* beginButton = getWidget(186);
+    if (beginButton && (beginButton->m_status & Widget::WIDGET_DISABLED))
         return 0;
 
     if (m_selectionHeaders.size() == 0 && !m_randomMapSelected) {
@@ -7767,7 +7768,7 @@ unsigned char SingleSelectionWindow::onBeginGame()
         }
     }
 
-    g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(1, MouseManager::ADVENTURE_SET);
 
     if (g_videoPaused) {
         DPSESSIONDESC2* sessionDesc = g_dPlay->getCurrSession();
@@ -8083,9 +8084,9 @@ int SingleSelectionWindow::getDisplayFace(int gamePos)
             return slotAtt->m_nonRandomHeroCustomPortrait;
         heroId = slotAtt->m_nonRandomHeroCustomPortrait;
     }
-    const std::map<int, type_map_hero_info>& setups =
+    const std::map<int, MapHeroInfo>& setups =
         g_game->m_mapHeader.m_heroPlayerSetups;
-    std::map<int, type_map_hero_info>::const_iterator it = setups.find(heroId);
+    std::map<int, MapHeroInfo>::const_iterator it = setups.find(heroId);
     if (it != setups.end() && it->second.m_portrait != -1)
         heroId = it->second.m_portrait;
     return heroId;
@@ -8148,9 +8149,9 @@ const char* SingleSelectionWindow::getHeroName(int gamePos)
         int heroId = g_game->m_setup.m_startingHero[gamePos];
         if (heroId == -1)
             return g_generalText->getText(524);
-        std::map<int, type_map_hero_info>& setups =
+        std::map<int, MapHeroInfo>& setups =
             g_game->m_mapHeader.m_heroPlayerSetups;
-        std::map<int, type_map_hero_info>::iterator it = setups.find(heroId);
+        std::map<int, MapHeroInfo>::iterator it = setups.find(heroId);
         if (it != setups.end()
                 && it->second.m_name.size() != 0)
             return it->second.m_name.c_str();
@@ -8166,9 +8167,9 @@ const char* SingleSelectionWindow::getHeroName(int gamePos)
     if (slot->m_nonRandomHeroId != -1 && !slot->m_generateHero
             && !slot->m_hasRandomHero)
         heroId = slot->m_nonRandomHeroId;
-    std::map<int, type_map_hero_info>& setups =
+    std::map<int, MapHeroInfo>& setups =
         g_game->m_mapHeader.m_heroPlayerSetups;
-    std::map<int, type_map_hero_info>::iterator it = setups.find(heroId);
+    std::map<int, MapHeroInfo>::iterator it = setups.find(heroId);
     if (it != setups.end()
             && it->second.m_name.size() != 0)
         return it->second.m_name.c_str();
@@ -8192,7 +8193,7 @@ void SingleSelectionWindow::onNameChange(int gamePos, const char* newName)
         strcpy(g_localPlayerName, newName);
         writePrefs();
     }
-    textWidget* w = static_cast<textWidget*>(getWidget(gamePos + 345));
+    TextWidget* w = static_cast<TextWidget*>(getWidget(gamePos + 345));
     w->setText(player->m_name);
     drawHeroAdvancedOption(gamePos, 1, -1);
 }
@@ -8256,7 +8257,7 @@ void SingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
         int textY = rowY + 162;
         // (textY/iconY keep retail's dead-slot homes)
         g_tinyFont->drawBoundedString(g_unnamed6a74f4[position],
-            g_windowManager->m_screenBitmap, 164, textY, 71, 16, font::WHITE, 5, -1);
+            g_windowManager->m_screenBitmap, 164, textY, 71, 16, Font::WHITE, 5, -1);
         int face = getDisplayFace(playerPos);
         if (face != -1) {
             m_heroPix[face]->draw(0, 0, m_heroPix[0]->getWidth(),
@@ -8264,13 +8265,13 @@ void SingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 252, iconY, 0);
             const char* name = getHeroName(playerPos);
             g_tinyFont->drawBoundedString(name,
-                g_windowManager->m_screenBitmap, 240, textY, 71, 16, font::WHITE, 5,
+                g_windowManager->m_screenBitmap, 240, textY, 71, 16, Font::WHITE, 5,
                 -1);
         } else {
             m_noHeroBmp->draw(0, 0, m_noHeroBmp->getWidth(), m_noHeroBmp->getHeight(),
                 g_windowManager->m_screenBitmap, 252, iconY, 0);
             g_tinyFont->drawBoundedString(g_generalText->getText(524),
-                g_windowManager->m_screenBitmap, 240, textY, 71, 16, font::WHITE, 5,
+                g_windowManager->m_screenBitmap, 240, textY, 71, 16, Font::WHITE, 5,
                 -1);
         }
         int bonus = g_game->m_setup.m_startingBonus[playerPos];
@@ -8293,11 +8294,11 @@ void SingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                          g_windowManager->m_screenBitmap, 328, iconY, 0, 1);
         if (bonus == NEW_MAP_BONUS_RANDOM)
             g_tinyFont->drawBoundedString(g_generalText->getText(523),
-                g_windowManager->m_screenBitmap, 316, textY, 71, 16, font::WHITE, 5,
+                g_windowManager->m_screenBitmap, 316, textY, 71, 16, Font::WHITE, 5,
                 -1);
         else
             g_tinyFont->drawBoundedString(g_unnamed6a5e14[bonus],
-                g_windowManager->m_screenBitmap, 316, textY, 71, 16, font::WHITE, 5,
+                g_windowManager->m_screenBitmap, 316, textY, 71, 16, Font::WHITE, 5,
                 -1);
     } else {
         CNetPlayerHandlerPlayer* q = m_players.getPlayerInPos(playerPos);
@@ -8317,20 +8318,20 @@ void SingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                     1);
 #pragma inline_depth()
         }
-        widget* townLeft = getWidget(playerPos + 215);
-        widget* townRight = getWidget(playerPos + 223);
+        Widget* townLeft = getWidget(playerPos + 215);
+        Widget* townRight = getWidget(playerPos + 223);
         if (canChooseTown(playerPos)) {
             townLeft->enable(1);
             townRight->enable(1);
-            townLeft->sendMessage(widget::WIDGET_SET_STATUS, 6);
-            townRight->sendMessage(widget::WIDGET_SET_STATUS, 6);
+            townLeft->sendMessage(Widget::WIDGET_SET_STATUS, 6);
+            townRight->sendMessage(Widget::WIDGET_SET_STATUS, 6);
             townLeft->draw();
             townRight->draw();
         } else {
             townLeft->enable(0);
             townRight->enable(0);
-            townLeft->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
-            townRight->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+            townLeft->sendMessage(Widget::WIDGET_CLEAR_STATUS, 6);
+            townRight->sendMessage(Widget::WIDGET_CLEAR_STATUS, 6);
         }
         if (town == -1) {
             m_randomTownBmp->draw(0, 0, m_randomHeroBmp->getWidth(),
@@ -8338,31 +8339,31 @@ void SingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 176, rowY + 130, 0);
             g_tinyFont->drawBoundedString(g_generalText->getText(523),
                 g_windowManager->m_screenBitmap, 164, rowY + 162, 71, 16,
-                font::WHITE, 5, -1);
+                Font::WHITE, 5, -1);
         } else {
             m_townPix->draw(0, town * 2 + 2, 0, 0, m_townPix->getWidth(),
                 m_townPix->getHeight(), g_windowManager->m_screenBitmap, 176,
                 rowY + 130, 0, 1);
             g_tinyFont->drawBoundedString(g_unnamed6a74f4[town],
                 g_windowManager->m_screenBitmap, 164, rowY + 162, 71, 16,
-                font::WHITE, 5, -1);
+                Font::WHITE, 5, -1);
         }
         int face = getDisplayFace(playerPos);
-        widget* heroLeft = getWidget(playerPos + 231);
-        widget* heroRight = getWidget(playerPos + 239);
+        Widget* heroLeft = getWidget(playerPos + 231);
+        Widget* heroRight = getWidget(playerPos + 239);
         unsigned char canChooseHero = this->canChooseHero(playerPos);
         if (canChooseHero) {
             heroLeft->enable(1);
             heroRight->enable(1);
-            heroLeft->sendMessage(widget::WIDGET_SET_STATUS, 6);
-            heroRight->sendMessage(widget::WIDGET_SET_STATUS, 6);
+            heroLeft->sendMessage(Widget::WIDGET_SET_STATUS, 6);
+            heroRight->sendMessage(Widget::WIDGET_SET_STATUS, 6);
             heroLeft->draw();
             heroRight->draw();
         } else {
             heroLeft->enable(0);
             heroRight->enable(0);
-            heroLeft->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
-            heroRight->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+            heroLeft->sendMessage(Widget::WIDGET_CLEAR_STATUS, 6);
+            heroRight->sendMessage(Widget::WIDGET_CLEAR_STATUS, 6);
         }
         unsigned char noHero = 0;
         if (face == -1) {
@@ -8383,7 +8384,7 @@ void SingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 g_tinyFont->drawBoundedString(
                     g_generalText->getText(524),
                     g_windowManager->m_screenBitmap, 240, rowY + 162, 71,
-                    16, font::WHITE, 5, -1);
+                    16, Font::WHITE, 5, -1);
             } else {
                 m_randomHeroBmp->draw(0, 0, m_randomHeroBmp->getWidth(),
                     m_randomHeroBmp->getHeight(),
@@ -8391,7 +8392,7 @@ void SingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 g_tinyFont->drawBoundedString(
                     g_generalText->getText(523),
                     g_windowManager->m_screenBitmap, 240, rowY + 162, 71,
-                    16, font::WHITE, 5, -1);
+                    16, Font::WHITE, 5, -1);
             }
         } else {
             const char* name = getHeroName(playerPos);
@@ -8400,10 +8401,10 @@ void SingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 252, rowY + 130, 0);
             g_tinyFont->drawBoundedString(name,
                 g_windowManager->m_screenBitmap, 240, rowY + 162, 71, 16,
-                font::WHITE, 5, -1);
+                Font::WHITE, 5, -1);
         }
-        widget* bonusLeft = getWidget(playerPos + 247);
-        widget* bonusRight = getWidget(playerPos + 255);
+        Widget* bonusLeft = getWidget(playerPos + 247);
+        Widget* bonusRight = getWidget(playerPos + 255);
         int bonus = p->m_startBonusIndex;
         int frame;
         switch (bonus) {
@@ -8430,11 +8431,11 @@ void SingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
         if (bonus == NEW_MAP_BONUS_RANDOM)
             g_tinyFont->drawBoundedString(g_generalText->getText(523),
                 g_windowManager->m_screenBitmap, 316, rowY + 162, 71, 16,
-                font::WHITE, 5, -1);
+                Font::WHITE, 5, -1);
         else
             g_tinyFont->drawBoundedString(g_unnamed6a5e14[bonus],
                 g_windowManager->m_screenBitmap, 316, rowY + 162, 71, 16,
-                font::WHITE, 5, -1);
+                Font::WHITE, 5, -1);
         m_resource->draw(0, frame, 0, 0, m_resource->getWidth(),
             m_resource->getHeight(), g_windowManager->m_screenBitmap, 328,
             rowY + 130, 0, 1);
@@ -8453,19 +8454,19 @@ void SingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 || g_unnamed6989f0 == WINDOW_MODE_6989F0_3) {
             bonusLeft->enable(1);
             bonusRight->enable(1);
-            bonusLeft->sendMessage(widget::WIDGET_SET_STATUS, 6);
-            bonusRight->sendMessage(widget::WIDGET_SET_STATUS, 6);
+            bonusLeft->sendMessage(Widget::WIDGET_SET_STATUS, 6);
+            bonusRight->sendMessage(Widget::WIDGET_SET_STATUS, 6);
             bonusLeft->draw();
             bonusRight->draw();
         } else {
             bonusLeft->enable(0);
             bonusRight->enable(0);
-            bonusLeft->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
-            bonusRight->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+            bonusLeft->sendMessage(Widget::WIDGET_CLEAR_STATUS, 6);
+            bonusRight->sendMessage(Widget::WIDGET_CLEAR_STATUS, 6);
         }
     }
-    widget* nameText = getWidget(playerPos + 345);
-    nameText->sendMessage(widget::WIDGET_SET_STATUS, 6);
+    Widget* nameText = getWidget(playerPos + 345);
+    nameText->sendMessage(Widget::WIDGET_SET_STATUS, 6);
     nameText->draw();
     if (g_videoPaused == 0
             && g_unnamed6989f0 != WINDOW_MODE_6989F0_3)
@@ -8720,7 +8721,7 @@ void CNetPlayerInfo::CNetPlayerInfo(char* _sName, unsigned long _dpid)
 
 // E:\gamedcs\TextWdgt.h:64
 DC_ONLY(0x1473f8, 0x24)
-void textWidget::setText(const char* new_text)
+void TextWidget::setText(const char* new_text)
 {
     // @stub
 }
@@ -8797,7 +8798,7 @@ void CNetPlayerHandlerPlayer::resetAdvancedOptions()
 
 // E:\gamedcs\Button.h:136
 DC_ONLY(0x14762c, 0x24)
-void textButton::setText(const char* new_text)
+void TextButton::setText(const char* new_text)
 {
     // @stub
 }
@@ -9091,7 +9092,7 @@ void CNewPlayerUpdateProc::~CNewPlayerUpdateProc()
 
 // E:\gamedcs\singleselectionwindow.cpp:1569
 DC_ONLY(0x148a48, 0x90)
-void CChatSlider::CChatSlider(int x, int y, int w, int h, int id, int num, void (*)()* func, slider::EGraphics graf, int page)
+void CChatSlider::CChatSlider(int x, int y, int w, int h, int id, int num, void (*)()* func, Slider::Graphics graf, int page)
 {
     // @stub
 }
@@ -9133,7 +9134,7 @@ unsigned char CChatWidget::CChatSave::isSaved()
 
 // E:\gamedcs\singleselectionwindow.cpp:1664
 DC_ONLY(0x148ca0, 0xD8)
-void CChatWidget::CChatWidget(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, const char* textString, const char* textFontName, font::Color color, int textWidgetId, unsigned justify, int back_color, int textWidgetStyle)
+void CChatWidget::CChatWidget(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, const char* textString, const char* textFontName, Font::Color color, int textWidgetId, unsigned justify, int back_color, int textWidgetStyle)
 {
     // @stub
 }
@@ -9182,7 +9183,7 @@ void CChatWidget::CChatSave::~CChatSave()
 
 // E:\gamedcs\singleselectionwindow.cpp:1741
 DC_ONLY(0x148f98, 0xBC)
-void CSingleSelectionChatEdit::CSingleSelectionChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+void CSingleSelectionChatEdit::CSingleSelectionChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, Font::Justify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
 {
     // @stub
 }
@@ -9196,7 +9197,7 @@ void CSingleSelectionChatEdit::sendChat(const char* sChat, int toWho)
 
 // E:\gamedcs\singleselectionwindow.cpp:1752
 DC_ONLY(0x149080, 0x50)
-unsigned char CSingleSelectionChatEdit::ignoreKey(message* msg)
+unsigned char CSingleSelectionChatEdit::ignoreKey(Message* msg)
 {
     // @stub
 }
@@ -9217,7 +9218,7 @@ void CSingleSelectionChatEdit::~CSingleSelectionChatEdit()
 
 // E:\gamedcs\singleselectionwindow.cpp:1805
 DC_ONLY(0x149124, 0xBC)
-void CEnterNameEdit::CEnterNameEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+void CEnterNameEdit::CEnterNameEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, Font::Justify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
 {
     // @stub
 }
@@ -9245,7 +9246,7 @@ void CEnterNameEdit::~CEnterNameEdit()
 
 // E:\gamedcs\singleselectionwindow.cpp:1887
 DC_ONLY(0x14930c, 0xBC)
-void CSaveGameEdit::CSaveGameEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+void CSaveGameEdit::CSaveGameEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, Font::Justify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
 {
     // @stub
 }
@@ -9306,7 +9307,7 @@ SingleSelectionWindow::~SingleSelectionWindow()
     }
 
     g_unnamed69fbe8 = 0;
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
+    for (std::vector<Widget*>::iterator it = m_widgets.begin();
          it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
@@ -9578,8 +9579,8 @@ inline bool SortMapsByName::operator()(const GameSelectionHeadersStruct& a,
     }
 
     if (m_direction)
-        return _strcmpi(sb, sa) < 0;
-    return _strcmpi(sa, sb) < 0;
+        return strcmpi(sb, sa) < 0;
+    return strcmpi(sa, sb) < 0;
 }
 
 VA(0x00590e00, 0x4F)
@@ -9673,7 +9674,7 @@ VA_COMPGEN(0x00593f50, 0x259, IMPLICIT_COPY_CTOR, SavedGameHeader)
 // (slot 5 of that zip); its group holds this row alone.
 VA_COMPGEN(0x0058ff80, 0x31, IMPLICIT_COPY_CTOR, _Tree)
 
-VA_COMPGEN(0x0058f750, 0x30A, IMPLICIT_COPY_ASSIGN, playerData)
+VA_COMPGEN(0x0058f750, 0x30A, IMPLICIT_COPY_ASSIGN, PlayerData)
 
 VA_COMPGEN(0x00591650, 0x318, STD_COPY_BACKWARD, gameselectionheadersstruct)
 
@@ -9790,16 +9791,16 @@ VA_COMPGEN(0x00595e10, 0x204, STD_UNGUARDED_PARTITION,
 VA_COMPGEN(0x00515480, 0x14, BITSET_AND_ASSIGN, Bitset4)
 VA_COMPGEN(0x0058eae0, 0xE, BITSET_FLIP, Bitset4)
 VA_COMPGEN(0x0058eaf0, 0x15, BITSET_TIDY, Bitset4)
-VA_COMPGEN(0x0058eb50, 0xF, TREE_CONST_END, type_map_hero_info)
-VA_COMPGEN(0x0058eb60, 0x4B, TREE_FIND, type_map_hero_info)
-VA_COMPGEN(0x0058f0f0, 0x17, TREE_LOWER_BOUND, type_map_hero_info)
-VA_COMPGEN(0x0058f110, 0x49, TREE_LBOUND, type_map_hero_info)
+VA_COMPGEN(0x0058eb50, 0xF, TREE_CONST_END, MapHeroInfo)
+VA_COMPGEN(0x0058eb60, 0x4B, TREE_FIND, MapHeroInfo)
+VA_COMPGEN(0x0058f0f0, 0x17, TREE_LOWER_BOUND, MapHeroInfo)
+VA_COMPGEN(0x0058f110, 0x49, TREE_LBOUND, MapHeroInfo)
 VA_COMPGEN(0x0058f160, 0x313, STD_COPY, GameSelectionHeadersStruct)
 VA_COMPGEN(0x004d2c90, 0x1B3, STD_COPY, type_artifact_vector)
 
-VA_COMPGEN(0x0058eb10, 0x36, TREE_COPY_ASSIGN, type_map_hero_info)
+VA_COMPGEN(0x0058eb10, 0x36, TREE_COPY_ASSIGN, MapHeroInfo)
 VA_COMPGEN(0x0058fa60, 0x1AA, IMPLICIT_COPY_CTOR, NewSMapHeader)
-VA_COMPGEN(0x0058ffc0, 0xA8, TREE_INIT, type_map_hero_info)
+VA_COMPGEN(0x0058ffc0, 0xA8, TREE_INIT, MapHeroInfo)
 VA_COMPGEN(0x00590810, 0x2BD, IMPLICIT_COPY_CTOR, CMapHeaderData)
 VA_COMPGEN(0x005941b0, 0x6C, VECTOR_COPY_CTOR, hero_vector)
 VA_COMPGEN(0x00594220, 0x6C, VECTOR_COPY_CTOR, type_artifact_vector)

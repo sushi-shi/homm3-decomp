@@ -4,7 +4,7 @@
 
 #include "window.h"
 
-class message;
+class Message;
 
 // Before normalization (type): TMainMenuButtonRect.
 struct MainMenuButtonRect {
@@ -19,9 +19,10 @@ SIZE(MainMenuButtonRect, 0x8);
 // heroWindow moves them to +0x4c/+0x50; the constructor stores +0x4c and
 // oldmain's two stack instances independently prove the 0x54 total size.
 // Before normalization (type): TMainMenu.
-class MainMenu : public heroWindow {
+class MainMenu : public HeroWindow {
 public:
-    enum EGameCommandIDs {
+// Before normalization (type): MainMenu::EGameCommandIDs.
+    enum GameCommandIDs {
         NEW_GAME_ID = 101,
         LOAD_GAME_ID,
         HIGH_SCORE_ID,
@@ -32,7 +33,7 @@ public:
         MAIN_MENU_ID
     };
 
-    enum EOtherWidgetIDs {
+    enum OtherWidgetIDs {
         BACKGROUND_ID = 200,
         TITLE_ID,
         VERSION_ID,
@@ -45,7 +46,7 @@ public:
     virtual ~MainMenu();
     void doModal();
 
-    friend int mainMenuHandler(message& msg);
+    friend int mainMenuHandler(Message& msg);
 
     unsigned char m_showCdMessage;
 
@@ -53,7 +54,7 @@ private:
     // The preceding byte field and following four-byte field establish
     // this alignment gap; the reference layout retains the same boundary.
     char m_paddingBeforeRolloverWidget[3];
-    widget* m_rolloverWidget;
+    Widget* m_rolloverWidget;
 };
 SIZE(MainMenu, 0x54);
 

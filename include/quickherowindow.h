@@ -11,7 +11,7 @@ class Hero;
 // derived storage is touched; the DC 0x44 size differs only by its 12-byte
 // vector/base layout, while retail inherits the byte-proven 0x4c base.
 // Before normalization (type): TQuickHeroWindow.
-class QuickHeroWindow : public heroWindow {
+class QuickHeroWindow : public HeroWindow {
 public:
 // Before normalization (type): TQuickHeroWindow::TViewLevel.
     enum ViewLevel {
@@ -24,7 +24,8 @@ public:
     // -1 inactive sentinel in hero::disguiseLevel. Kept local to this narrow
     // consumer view so hero.h's optimizer-sensitive include closure does not
     // acquire the wider hero-specialty domain header.
-    enum EDisguiseLevel {
+// Before normalization (type): QuickHeroWindow::EDisguiseLevel.
+    enum DisguiseLevel {
         DisguiseInvalid = -1,
         DisguiseNone = 0,
         DisguiseBasic = 1,
@@ -32,7 +33,7 @@ public:
         DisguiseExpert = 3
     };
 
-    enum EWidgetIDs {
+    enum WidgetIDs {
         BACKGROUND_ID = 2000,
         PORTRAIT_ID = 2001,
         NAME_ID = 2002,

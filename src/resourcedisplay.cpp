@@ -64,7 +64,7 @@ static const int g_resourceDisplayOrder[NUM_RESOURCES] = {
 // therefore a measured C1 front-end handle-order wall with no source-nameable
 // lever found; preserve this source shape.
 VA(0x00558ba0, 0x2A1)  // anchor-global, dc 0x120c54
-ResourceDisplay::ResourceDisplay(heroWindow* parent, bool isSmall)
+ResourceDisplay::ResourceDisplay(HeroWindow* parent, bool isSmall)
     : m_isSmall(isSmall)
 {
     if (m_isSmall) {
@@ -73,10 +73,10 @@ ResourceDisplay::ResourceDisplay(heroWindow* parent, bool isSmall)
         initialize(3, 0x23f, 0x31a, 0x16, parent);
     }
     if (isSmall) {
-        m_backgroundWidget = new bitmapBorder(
+        m_backgroundWidget = new BitmapBorder(
             0, 0, 0x2e2, 0x16, 1000, "kresbar.pcx", 0x800);
     } else {
-        m_backgroundWidget = new bitmapBorder(
+        m_backgroundWidget = new BitmapBorder(
             0, 0, 0x31a, 0x16, 1000, "aresbar.pcx", 0x800);
     }
 
@@ -100,11 +100,11 @@ ResourceDisplay::ResourceDisplay(heroWindow* parent, bool isSmall)
     int textId = 0x3e9;
     int borderId = 0x3f1;
     for (int i = 0; i < NUM_RESOURCES; ++i) {
-        m_resourceWidgets[i] = new textWidget(
-            textX, 3, 0x32, 0x12, 0, "smalfont.fnt", font::WHITE,
+        m_resourceWidgets[i] = new TextWidget(
+            textX, 3, 0x32, 0x12, 0, "smalfont.fnt", Font::WHITE,
             textId, 0, 0, 8);
         addWidget(m_resourceWidgets[i], -1);
-        m_resourceIconWidgets[i] = new border(
+        m_resourceIconWidgets[i] = new Border(
             textX - borderWidth, 3, borderWidth, 0x12,
             borderId, 1);
         addWidget(m_resourceIconWidgets[i], -1);
@@ -114,12 +114,12 @@ ResourceDisplay::ResourceDisplay(heroWindow* parent, bool isSmall)
     }
 
     if (isSmall) {
-        m_dayWidget = new textWidget(
-            0x22b, 3, 0xb2, 0x12, 0, "smalfont.fnt", font::WHITE,
+        m_dayWidget = new TextWidget(
+            0x22b, 3, 0xb2, 0x12, 0, "smalfont.fnt", Font::WHITE,
             0x3f0, 1, 0, 8);
     } else {
-        m_dayWidget = new textWidget(
-            0x25f, 3, 0xb4, 0x12, 0, "smalfont.fnt", font::WHITE,
+        m_dayWidget = new TextWidget(
+            0x25f, 3, 0xb4, 0x12, 0, "smalfont.fnt", Font::WHITE,
             0x3f0, 1, 0, 8);
     }
     addWidget(m_dayWidget, -1);
@@ -165,7 +165,7 @@ VA(0x00558f20, 0xF3)  // anchor-global, dc 0x120fa0
 void ResourceDisplay::update(bool drawRequested, bool update)
 {
     int playerPos = g_unnamed69778c;
-    playerData& player = g_game->m_players[playerPos];
+    PlayerData& player = g_game->m_players[playerPos];
     m_backgroundWidget->setPlayerPaletteColors(playerPos);
     for (int i = 0; i < NUM_RESOURCES; ++i) {
         sprintf(g_text, "%d", player.m_resources[g_resourceDisplayOrder[i]]);

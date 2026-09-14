@@ -8,7 +8,8 @@ class AbstractFile;
 // The generator's result code (retail 0x54c090's return, dispatched through
 // GenerateRandomMap's four-entry jump table). Zero is success; each failure
 // rung selects one general-text row. Ordinal names - no symbol survives.
-enum ERandomMapResult {
+// Before normalization (type): ERandomMapResult.
+enum RandomMapResult {
     RANDOM_MAP_OK = 0,
     RANDOM_MAP_FAILED_1 = 1,
     RANDOM_MAP_FAILED_2 = 2,

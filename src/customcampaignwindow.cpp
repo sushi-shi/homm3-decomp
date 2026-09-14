@@ -37,9 +37,9 @@
 #include "kbwin.h"
 #include "winmgr.h"
 
-static int customCampaignBeginHandler(message& msg);
-static int customCampaignBackHandler(message& msg);
-static void customCampaignSliderHandler(int state, heroWindow* window);
+static int customCampaignBeginHandler(Message& msg);
+static int customCampaignBackHandler(Message& msg);
+static void customCampaignSliderHandler(int state, HeroWindow* window);
 
 // Complete-only. The window's widget ids run from 200 for the frame,
 // title, two buttons and selected-name text (the slider takes the next
@@ -52,7 +52,7 @@ CustomCampaignWindow::CustomCampaignWindow()
 {
     int widgetId = 200;
 
-    bitmapBorder* border = new bitmapBorder(
+    BitmapBorder* border = new BitmapBorder(
         0, 0, 800, 600, widgetId++,
         DATA_COMPGEN(0x00675594, customCampaignBackground, "CamCust.pcx"),
         0x800);
@@ -60,50 +60,50 @@ CustomCampaignWindow::CustomCampaignWindow()
     border->m_image->draw(0, 0, 800, 600, g_windowManager->m_screenBitmap, 0, 0,
                         false);
 
-    textWidget* title = new textWidget(
+    TextWidget* title = new TextWidget(
         25, 23, 366, 22,
         DATA_COMPGEN(0x00675580, customCampaignTitle, "Select a Campaign"),
-        "medfont.fnt", font::HEADING_HIGHLIGHT, widgetId++, 1, 0, 8);
+        "medfont.fnt", Font::HEADING_HIGHLIGHT, widgetId++, 1, 0, 8);
     m_widgets.push_back(title);
 
-    type_func_button* beginButton = new type_func_button(
+    FuncButton* beginButton = new FuncButton(
         414, 535, 166, 40, widgetId++,
         DATA_COMPGEN(0x00675574, customCampaignBeginSprite, "scnrbeg.def"),
         customCampaignBeginHandler, 0, 1);
     m_widgets.push_back(beginButton);
 
-    type_func_button* backButton = new type_func_button(
+    FuncButton* backButton = new FuncButton(
         584, 535, 166, 40, widgetId++,
         DATA_COMPGEN(0x00675564, customCampaignBackSprite, "scnrback.def"),
         customCampaignBackHandler, 0, 1);
     backButton->setHotkey(1);
     m_widgets.push_back(backButton);
 
-    m_selectedName = new textWidget(422, 46, 324, 30, "", "bigfont.fnt",
-                                  font::HEADING_HIGHLIGHT, widgetId++, 0, 0,
+    m_selectedName = new TextWidget(422, 46, 324, 30, "", "bigfont.fnt",
+                                  Font::HEADING_HIGHLIGHT, widgetId++, 0, 0,
                                   8);
     m_widgets.push_back(m_selectedName);
 
-    m_description = new type_text_scroller("", 423, 107, 323, 393,
-                                         "smalfont.fnt", font::WHITE,
-                                         slider::BLUE);
+    m_description = new TextScroller("", 423, 107, 323, 393,
+                                         "smalfont.fnt", Font::WHITE,
+                                         Slider::BLUE);
     m_widgets.push_back(m_description);
 
     for (int i = 0; i < CAMPAIGN_LIST_ROWS; i++) {
-        m_nameWidgets[i] = new textWidget(58, 122 + i * 25, 317, 25, "",
-                                        "smalfont.fnt", font::WHITE, 100 + i,
+        m_nameWidgets[i] = new TextWidget(58, 122 + i * 25, 317, 25, "",
+                                        "smalfont.fnt", Font::WHITE, 100 + i,
                                         1, 0, 8);
         m_nameWidgets[i]->hide();
         m_widgets.push_back(m_nameWidgets[i]);
-        m_countWidgets[i] = new textWidget(26, 122 + i * 25, 30, 23, "",
-                                         "smalfont.fnt", font::WHITE, 118 + i,
+        m_countWidgets[i] = new TextWidget(26, 122 + i * 25, 30, 23, "",
+                                         "smalfont.fnt", Font::WHITE, 118 + i,
                                          2, 0, 8);
         m_countWidgets[i]->hide();
         m_widgets.push_back(m_countWidgets[i]);
     }
 
-    m_campaignSlider = new slider(376, 92, 16, 480, widgetId, 2,
-                                customCampaignSliderHandler, slider::BLUE,
+    m_campaignSlider = new Slider(376, 92, 16, 480, widgetId, 2,
+                                customCampaignSliderHandler, Slider::BLUE,
                                 CAMPAIGN_LIST_ROWS, 0);
     m_campaignSlider->hide();
     m_widgets.push_back(m_campaignSlider);
@@ -134,19 +134,19 @@ void CustomCampaignWindow::loadCampaignList()
     _finddata_t fileInfo;
     CampaignBrief::CampaignHeaderStruct* header;
 
-    _getcwd(currentDirectory, sizeof(currentDirectory));
+    getcwd(currentDirectory, sizeof(currentDirectory));
     _chdir(DATA_COMPGEN(0x006755ac, mapsDirectory, "Maps"));
-    _getcwd(currentDirectory, sizeof(currentDirectory));
+    getcwd(currentDirectory, sizeof(currentDirectory));
     long findHandle = _findfirst(
         DATA_COMPGEN(0x006755a4, campaignFilePattern, "*.h3c"), &fileInfo);
     _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
-    _getcwd(currentDirectory, sizeof(currentDirectory));
+    getcwd(currentDirectory, sizeof(currentDirectory));
     if (findHandle == -1)
         return;
 
     do {
         header = new CampaignBrief::CampaignHeaderStruct(fileInfo.name);
-        _getcwd(currentDirectory, sizeof(currentDirectory));
+        getcwd(currentDirectory, sizeof(currentDirectory));
         if (!header->load()) {
             delete header;
         } else if (header->getNumMaps() == 0) {
@@ -156,10 +156,10 @@ void CustomCampaignWindow::loadCampaignList()
             header->freeData();
             m_campaignHeaders.push_back(header);
         }
-        _getcwd(currentDirectory, sizeof(currentDirectory));
+        getcwd(currentDirectory, sizeof(currentDirectory));
     } while (_findnext(findHandle, &fileInfo) == 0);
     _findclose(findHandle);
-    _getcwd(currentDirectory, sizeof(currentDirectory));
+    getcwd(currentDirectory, sizeof(currentDirectory));
 
     std::sort(m_campaignHeaders.begin(), m_campaignHeaders.end(),
               CampaignHeaderPointerLess());
@@ -208,11 +208,11 @@ void CustomCampaignWindow::updateList()
                                        "%i"),
                           header->getNumMaps()).c_str());
         if (i == m_selected) {
-            m_nameWidgets[i]->setColor(font::WHITE_HIGHLIGHT);
-            m_countWidgets[i]->setColor(font::WHITE_HIGHLIGHT);
+            m_nameWidgets[i]->setColor(Font::WHITE_HIGHLIGHT);
+            m_countWidgets[i]->setColor(Font::WHITE_HIGHLIGHT);
         } else {
-            m_nameWidgets[i]->setColor(font::WHITE);
-            m_countWidgets[i]->setColor(font::WHITE_HIGHLIGHT);
+            m_nameWidgets[i]->setColor(Font::WHITE);
+            m_countWidgets[i]->setColor(Font::WHITE_HIGHLIGHT);
         }
         m_nameWidgets[i]->show();
         m_countWidgets[i]->show();
@@ -280,9 +280,9 @@ std::string CampaignBrief::CampaignHeaderStruct::getFileName() const
 // Complete-only. The Begin button accepts the selection and closes the
 // modal loop with codeY 1; the Back button closes it with codeY 0.
 VA(0x00483880, 0x3C)
-static int customCampaignBeginHandler(message& msg)
+static int customCampaignBeginHandler(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
+    if (msg.m_codeX == Widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
         if (static_cast<CustomCampaignWindow*>(msg.m_window)
                 ->acceptSelection()) {
             msg.m_id = MESSAGE_WIDGET;
@@ -295,9 +295,9 @@ static int customCampaignBeginHandler(message& msg)
 }
 
 VA(0x004838c0, 0x2E)
-static int customCampaignBackHandler(message& msg)
+static int customCampaignBackHandler(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
+    if (msg.m_codeX == Widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeY = 0;
         msg.m_codeX = 10;
@@ -307,7 +307,7 @@ static int customCampaignBackHandler(message& msg)
 }
 
 VA(0x004838f0, 0x25)
-static void customCampaignSliderHandler(int state, heroWindow* window)
+static void customCampaignSliderHandler(int state, HeroWindow* window)
 {
     CustomCampaignWindow* campaignWindow =
         static_cast<CustomCampaignWindow*>(window);

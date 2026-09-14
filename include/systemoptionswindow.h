@@ -12,7 +12,8 @@
 // the quit confirm (general text 68); the other values are forwarded whole
 // to the exit-command latch at 0x6976d8, so their labels stay ordinal
 // placeholders until that consumer names them.
-enum ESystemOptionsCommand {
+// Before normalization (type): ESystemOptionsCommand.
+enum SystemOptionsCommand {
     // 101 has no producer in this window - advManager::ProcessKeyPress's
     // N arm latches it directly, one below the 102 its L arm latches, so
     // the band starts here. Ordinal placeholder like its neighbours.
@@ -39,7 +40,7 @@ class SystemOptionsWindow : public CAdvPopup {
 public:
     // Dreamcast EOtherWidgetIDs, verbatim; retail's handler independently
     // proves every range and preference mapping.
-    enum EOtherWidgetIDs {
+    enum OtherWidgetIDs {
         BACKGROUND_ID = 200,
         MUSIC_VOLUME_0_ID = 201,
         MUSIC_VOLUME_1_ID = 202,
@@ -97,7 +98,7 @@ public:
     SystemOptionsWindow();
     virtual ~SystemOptionsWindow();
     void doModal();
-    virtual int windowHandler(message& msg);
+    virtual int windowHandler(Message& msg);
     void updateSystemOptions(unsigned char firstUpdate);
 
 private:

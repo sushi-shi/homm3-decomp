@@ -56,7 +56,7 @@ const int g_mapFormatAb = 21;
 const int g_setupPlayerPosComputer = 10;
 
 VA(0x00513320, 0x41A)  // dc 0x1034fc
-void game::initNewGame(int difficulty, int version,
+void Game::initNewGame(int difficulty, int version,
                        NewSMapHeader* mapHeader, AbstractFile* infile)
 {
     int humanCount = 0;
@@ -158,7 +158,7 @@ TownType pickNextAlignment(int legalAlignments, TownType type)
 }
 
 VA(0x00513740, 0xBC)  // dc 0x103824
-void game::showScenInfo()
+void Game::showScenInfo()
 {
     if (g_unk69774c) {
         CampaignBrief campaignBrief(0, 1);
@@ -172,7 +172,7 @@ void game::showScenInfo()
 }
 
 VA(0x00513800, 0x1D5)  // dc 0x103888
-void game::getLossConditionText(char* text)
+void Game::getLossConditionText(char* text)
 {
     LossConditionStruct& loss = m_mapHeader.m_lossCondition;
     if (loss.m_type != -1) {
@@ -208,7 +208,7 @@ void game::getLossConditionText(char* text)
 }
 
 VA(0x005139e0, 0x64C)  // dc 0x103a08
-void game::getVictoryConditionText(char* text)
+void Game::getVictoryConditionText(char* text)
 {
     VictoryConditionStruct& victory = m_mapHeader.m_victoryCondition;
     if (victory.m_type != -1) {
@@ -334,21 +334,21 @@ void game::getVictoryConditionText(char* text)
 
 // E:\gamedcs\newgame.cpp:337
 DC_ONLY(0x1037f4, 0x4)
-void game::SetupNetPlayerNames()
+void Game::SetupNetPlayerNames()
 {
     // @stub
 }
 
 // E:\gamedcs\newgame.cpp:668
 DC_ONLY(0x103a08, 0x5AC)
-void game::getVictoryConditionText(char* rText)
+void Game::getVictoryConditionText(char* rText)
 {
     // @stub
 }
 
 // E:\gamedcs\newgame.cpp:826
 DC_ONLY(0x103fb4, 0x244)
-int game::GetSideDesc(char* rText, int iStartPos, int iEndPos)
+int Game::GetSideDesc(char* rText, int iStartPos, int iEndPos)
 {
     // @stub
 }

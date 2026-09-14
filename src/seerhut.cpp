@@ -226,7 +226,7 @@ SeerHut* std::__copy_backward(SeerHut* __first, SeerHut* __last, SeerHut* __resu
 // from a header - seerhut.cpp is its only consumer in this tree.
 int aiResourceCost(int player, const int* costs);
 
-type_quest* createQuest(int questType, unsigned char flags);
+Quest* createQuest(int questType, unsigned char flags);
 
 std::string formatString(const char* format, ...);
 
@@ -248,7 +248,7 @@ void normalDialog(const char* text, int mbType, int x, int y,
     int resType1, int resExtra1, int resType2, int resExtra2,
     int special, int timeout, int resType3, int resExtra3);
 void extendedDialog(const char* text,
-    std::vector<type_dialog_resource>& resources,
+    std::vector<DialogResource>& resources,
     long x, long y, long timeout);
 
 // Retail 0x56c3e0. Pull seerhut.txt out of the resource cache, fill both
@@ -283,10 +283,10 @@ unsigned char initializeSeerHutText()
     return 1;
 }
 
-VA_COMPGEN(0x0056cbe0, 0x21, SCALAR_DELETING_DTOR, type_quest)
+VA_COMPGEN(0x0056cbe0, 0x21, SCALAR_DELETING_DTOR, Quest)
 
 VA(0x0056cb80, 0x5F)  // sole callee of all nine factory arms
-type_quest::type_quest(unsigned char flags)
+Quest::Quest(unsigned char flags)
 {
     m_seerHut = flags;
     m_textVariant = rand() % 3;
@@ -296,12 +296,12 @@ type_quest::type_quest(unsigned char flags)
 // The common virtual base destructor. Its three std::string members unwind
 // in reverse order.
 VA(0x0056cc10, 0xA0)
-type_quest::~type_quest()
+Quest::~Quest()
 {
 }
 
 VA(0x0056ccb0, 0x44)
-unsigned char type_quest::hasExpired() const
+unsigned char Quest::hasExpired() const
 {
     if (m_limit < 0)
         return 0;
@@ -337,7 +337,7 @@ unsigned char type_quest::hasExpired() const
 // one shared scalar block (49.60%), and hoisting extra (49.60%), against the
 // 49.7043% peak. Those results do not justify retaining the wrong lifetimes.
 VA(0x0056cd00, 0x14F)  // anchor-vtable 0x64174c slot 11 + the chain from all eight leaf Loads, retail-only
-void type_quest::load(AbstractFile* file, int version)
+void Quest::load(AbstractFile* file, int version)
 {
     {
         unsigned char flag;
@@ -386,7 +386,7 @@ void type_quest::load(AbstractFile* file, int version)
 // three _Tidy calls and uses __EH_prolog (30.4375%); retail retains only
 // the first cleanup and emits its prologue inline. Neither policy explains it.
 VA(0x0056ce50, 0x11E)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
-void type_quest::loadFromMap(AbstractFile* file)
+void Quest::loadFromMap(AbstractFile* file)
 {
     {
         int extra;
@@ -399,7 +399,7 @@ void type_quest::loadFromMap(AbstractFile* file)
 }
 
 VA(0x0056cf70, 0xCD)
-void type_quest::save(AbstractFile* file)
+void Quest::save(AbstractFile* file)
 {
     {
         unsigned char flag = m_seerHut;
@@ -439,7 +439,7 @@ void type_quest::save(AbstractFile* file)
 // quest_text()'s own note describes.
 
 VA(0x0056d040, 0x1F7)  // anchor-caller(both base dialog getters) + the row-column-51 read, retail-only
-std::string type_quest::getTimeLimitText()
+std::string Quest::getTimeLimitText()
 {
     int days = static_cast<short>(
         (g_game->m_month * 4 + g_game->m_week - 5) * 7
@@ -454,7 +454,7 @@ std::string type_quest::getTimeLimitText()
 }
 
 VA(0x0056d240, 0xCA)
-std::string type_quest::getProposalDialogText()
+std::string Quest::getProposalDialogText()
 {
     if (m_limit < 0)
         return m_progressText;
@@ -462,7 +462,7 @@ std::string type_quest::getProposalDialogText()
 }
 
 VA(0x0056d310, 0xCA)
-std::string type_quest::getProgressDialogText()
+std::string Quest::getProgressDialogText()
 {
     if (m_limit < 0)
         return m_proposalText;
@@ -470,49 +470,49 @@ std::string type_quest::getProgressDialogText()
 }
 
 VA(0x0056d3e0, 0x2A)
-std::string type_experience_quest::getRequirementText()
+std::string ExperienceQuest::getRequirementText()
 {
     return formatString(DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                          m_requiredLevel);
 }
 VA(0x0056d410, 0x72)
-std::string type_experience_quest::getQuestDescription()
+std::string ExperienceQuest::getQuestDescription()
 {
     return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
                          m_requiredLevel);
 }
 
 VA(0x0056d490, 0x1A)
-unsigned char type_experience_quest::isSatisfied(Hero* currentHero)
+unsigned char ExperienceQuest::isSatisfied(Hero* currentHero)
 {
     return currentHero->m_level >= m_requiredLevel;
 }
 VA(0x0056d4b0, 0x9F)
-void type_experience_quest::doProposalDialog(Hero* currentHero)
+void ExperienceQuest::doProposalDialog(Hero* currentHero)
 {
     normalDialog(getProposalDialogText().c_str(), 1, -1, -1, 0x11,
                  m_requiredLevel, -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x0056d550, 0x9B)
-void type_experience_quest::doProgressDialog()
+void ExperienceQuest::doProgressDialog()
 {
     normalDialog(getProgressDialogText().c_str(), 1, -1, -1, 0x11,
                  m_requiredLevel, -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x0056d5f0, 0x35)
-void type_experience_quest::load(AbstractFile* file, int version)
+void ExperienceQuest::load(AbstractFile* file, int version)
 {
     unsigned short level;
 
     file->read(&level, sizeof(level));
     m_requiredLevel = level;
-    type_quest::load(file, version);
+    Quest::load(file, version);
 }
 
 VA(0x0056d630, 0xE1)
-void type_experience_quest::save(AbstractFile* file)
+void ExperienceQuest::save(AbstractFile* file)
 {
     short level = m_requiredLevel;
     file->write(&level, sizeof(level));
@@ -546,7 +546,7 @@ void type_experience_quest::save(AbstractFile* file)
     }
 }
 VA(0x0056d720, 0x23E)
-void type_experience_quest::setDefaultText()
+void ExperienceQuest::setDefaultText()
 {
     const std::string* texts = questTexts();
     if (m_proposalText.length() == 0)
@@ -561,12 +561,12 @@ void type_experience_quest::setDefaultText()
 }
 
 VA(0x0056d960, 0x22)
-std::string type_skill_quest::getRequirementText()
+std::string SkillQuest::getRequirementText()
 {
     return skillRequirementText(m_requiredSkills);
 }
 VA(0x0056d990, 0xD3)
-std::string type_skill_quest::getQuestDescription()
+std::string SkillQuest::getQuestDescription()
 {
     return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
                          skillRequirementText(m_requiredSkills).c_str());
@@ -574,7 +574,7 @@ std::string type_skill_quest::getQuestDescription()
 
 // E:\gamedcs\seerhut.cpp
 VA(0x0056da70, 0x60)  // anchor-vtable 0x6417c4 slot 2, retail-only
-unsigned char type_skill_quest::isSatisfied(Hero* currentHero)
+unsigned char SkillQuest::isSatisfied(Hero* currentHero)
 {
     for (int i = 0; i < 4; ++i) {
         int have = currentHero->getPrimarySkill(i);
@@ -590,7 +590,7 @@ unsigned char type_skill_quest::isSatisfied(Hero* currentHero)
 // the common deadline suffix before showing the same pictures.
 
 VA(0x0056dad0, 0x28C)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
-void type_skill_quest::doProposalDialog(Hero* currentHero)
+void SkillQuest::doProposalDialog(Hero* currentHero)
 {
     signed char missing[4];
     for (int i = 0; i < 4; ++i) {
@@ -606,15 +606,15 @@ void type_skill_quest::doProposalDialog(Hero* currentHero)
         const char* textPointer = text.c_str();
 #pragma inline_depth(0)
         {
-        std::vector<type_dialog_resource> dialogResources;
+        std::vector<DialogResource> dialogResources;
 #pragma inline_depth()
-        type_dialog_resource resource;
+        DialogResource resource;
         for (int i = 0; i < 4; ++i) {
             if (missing[i] > 0) {
                 resource.m_resource = 0x1f + i;
                 resource.m_qualifier = 0x10000
                     | static_cast<unsigned short>(missing[i]);
-                type_dialog_resource* position = dialogResources.end();
+                DialogResource* position = dialogResources.end();
 #pragma inline_depth(0)
                 dialogResources.insert(position, resource);
 #pragma inline_depth()
@@ -640,15 +640,15 @@ void type_skill_quest::doProposalDialog(Hero* currentHero)
         const char* textPointer = text.c_str();
 #pragma inline_depth(0)
         {
-        std::vector<type_dialog_resource> dialogResources;
+        std::vector<DialogResource> dialogResources;
 #pragma inline_depth()
-        type_dialog_resource resource;
+        DialogResource resource;
         for (int i = 0; i < 4; ++i) {
             if (missing[i] > 0) {
                 resource.m_resource = 0x1f + i;
                 resource.m_qualifier = 0x10000
                     | static_cast<unsigned short>(missing[i]);
-                type_dialog_resource* position = dialogResources.end();
+                DialogResource* position = dialogResources.end();
 #pragma inline_depth(0)
                 dialogResources.insert(position, resource);
 #pragma inline_depth()
@@ -681,18 +681,18 @@ void type_skill_quest::doProposalDialog(Hero* currentHero)
 // This Complete quest has no Dreamcast counterpart to settle the source form.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056dd60, 0xF5)  // anchor-vtable 0x6417c4 slot 5 + dialog picture rows, retail-only
-void type_skill_quest::doProgressDialog()
+void SkillQuest::doProgressDialog()
 {
     const std::string& text = getProgressDialogText();
     const char* textPointer = text.c_str();
     {
         const signed char* skill = m_requiredSkills;
-        std::vector<type_dialog_resource> dialogResources;
+        std::vector<DialogResource> dialogResources;
         int picture = 0x1f;
         int remaining = 4;
         do {
             if (*skill > 0) {
-                type_dialog_resource resource;
+                DialogResource resource;
                 resource.m_resource = picture;
                 resource.m_qualifier = 0x10000
                     | static_cast<unsigned short>(*skill);
@@ -707,21 +707,21 @@ void type_skill_quest::doProgressDialog()
 }
 
 VA(0x0056de60, 0x29)
-void type_skill_quest::load(AbstractFile* file, int version)
+void SkillQuest::load(AbstractFile* file, int version)
 {
     file->read(m_requiredSkills, sizeof(m_requiredSkills));
-    type_quest::load(file, version);
+    Quest::load(file, version);
 }
 
 VA(0x0056de90, 0x25)
-void type_skill_quest::loadFromMap(AbstractFile* file)
+void SkillQuest::loadFromMap(AbstractFile* file)
 {
     file->read(m_requiredSkills, sizeof(m_requiredSkills));
-    type_quest::loadFromMap(file);
+    Quest::loadFromMap(file);
 }
 
 VA(0x0056dec0, 0xD7)
-void type_skill_quest::save(AbstractFile* file)
+void SkillQuest::save(AbstractFile* file)
 {
     file->write(m_requiredSkills, sizeof(m_requiredSkills));
 
@@ -754,7 +754,7 @@ void type_skill_quest::save(AbstractFile* file)
     }
 }
 VA(0x0056dfa0, 0x124)
-std::string type_skill_quest::skillRequirementText(
+std::string SkillQuest::skillRequirementText(
     const signed char (&skills)[4])
 {
     std::vector<std::string> requirements;
@@ -768,7 +768,7 @@ std::string type_skill_quest::skillRequirementText(
     return joinTextList(requirements);
 }
 VA(0x0056e0d0, 0x169)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
-void type_skill_quest::setDefaultText()
+void SkillQuest::setDefaultText()
 {
     const std::string* texts = questTexts();
     std::string requirement = skillRequirementText(m_requiredSkills);
@@ -787,54 +787,54 @@ void type_skill_quest::setDefaultText()
 }
 
 VA(0x0056e240, 0xF2)
-std::string type_defeat_hero_quest::getRequirementText()
+std::string DefeatHeroQuest::getRequirementText()
 {
     return g_game->getHero(m_defeatedHero)->m_name;
 }
 
 VA(0x0056e340, 0x8B)
-std::string type_defeat_hero_quest::getQuestDescription()
+std::string DefeatHeroQuest::getQuestDescription()
 {
     return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
                          g_game->getHero(m_defeatedHero)->m_name);
 }
 
 VA(0x0056e3d0, 0x06)
-int type_defeat_hero_quest::questType()
+int DefeatHeroQuest::questType()
 {
     return 3;
 }
 
 VA(0x0056e3e0, 0x29)
-unsigned char type_defeat_hero_quest::isSatisfied(Hero* currentHero)
+unsigned char DefeatHeroQuest::isSatisfied(Hero* currentHero)
 {
     if (currentHero->m_owner < 0)
         return 0;
     return (m_satisfiedMask & (1 << currentHero->m_owner)) != 0;
 }
 VA(0x0056e410, 0x99)
-void type_defeat_hero_quest::doProposalDialog(Hero* currentHero)
+void DefeatHeroQuest::doProposalDialog(Hero* currentHero)
 {
     normalDialog(getProposalDialogText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x0056e4b0, 0x95)
-void type_defeat_hero_quest::doProgressDialog()
+void DefeatHeroQuest::doProgressDialog()
 {
     normalDialog(getProgressDialogText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x0056e550, 0x26)
-void type_defeat_hero_quest::notifyHeroDefeated(int heroId, int player)
+void DefeatHeroQuest::notifyHeroDefeated(int heroId, int player)
 {
     if (player >= 0 && heroId == m_defeatedHero)
         m_satisfiedMask |= 1 << player;
 }
 
 VA(0x0056e580, 0x6E)
-void type_defeat_hero_quest::load(AbstractFile* file, int version)
+void DefeatHeroQuest::load(AbstractFile* file, int version)
 {
     {
         short id;
@@ -850,11 +850,11 @@ void type_defeat_hero_quest::load(AbstractFile* file, int version)
         file->read(&mask, sizeof(mask));
         m_satisfiedMask = mask;
     }
-    type_quest::load(file, version);
+    Quest::load(file, version);
 }
 
 VA(0x0056e5f0, 0xF4)
-void type_defeat_hero_quest::save(AbstractFile* file)
+void DefeatHeroQuest::save(AbstractFile* file)
 {
     short id = m_defeatedHero;
     file->write(&id, sizeof(id));
@@ -892,11 +892,11 @@ void type_defeat_hero_quest::save(AbstractFile* file)
     }
 }
 VA(0x0056e6f0, 0x29E)
-void type_defeat_hero_quest::setDefaultText()
+void DefeatHeroQuest::setDefaultText()
 {
     const std::string* texts = questTexts();
     Hero* defeatedHero;
-    for (m_defeatedHero = game::HERO_COUNT - 1; m_defeatedHero > -1;
+    for (m_defeatedHero = Game::HERO_COUNT - 1; m_defeatedHero > -1;
          --m_defeatedHero) {
         defeatedHero = g_game->getHero(m_defeatedHero);
         if (defeatedHero->m_order == m_mapHero)
@@ -914,7 +914,7 @@ void type_defeat_hero_quest::setDefaultText()
 }
 
 VA(0x0056ea30, 0xF9)
-std::string type_monster_quest::getRequirementText()
+std::string MonsterQuest::getRequirementText()
 {
     const char* name = m_monsterId >= 0 && m_monsterId <= 0x96
                            ? g_creatureTypeTraits[m_monsterId].m_pluralName
@@ -923,7 +923,7 @@ std::string type_monster_quest::getRequirementText()
 }
 
 VA(0x0056eb30, 0x90)
-std::string type_monster_quest::getQuestDescription()
+std::string MonsterQuest::getQuestDescription()
 {
     return formatString(
         questText(QUEST_TEXT_DESCRIPTION).c_str(),
@@ -933,13 +933,13 @@ std::string type_monster_quest::getQuestDescription()
 }
 
 VA(0x0056ebc0, 0x06)
-int type_monster_quest::questType()
+int MonsterQuest::questType()
 {
     return 4;
 }
 
 VA(0x0056ebd0, 0x26)
-unsigned char type_monster_quest::isSatisfied(Hero* currentHero)
+unsigned char MonsterQuest::isSatisfied(Hero* currentHero)
 {
     int owner = currentHero->m_owner;
 
@@ -948,21 +948,21 @@ unsigned char type_monster_quest::isSatisfied(Hero* currentHero)
     return owner == m_defeatedBy;
 }
 VA(0x0056ec00, 0x9F)
-void type_monster_quest::doProposalDialog(Hero* currentHero)
+void MonsterQuest::doProposalDialog(Hero* currentHero)
 {
     normalDialog(getProposalDialogText().c_str(), 1, -1, -1, 0x15,
                  m_monsterId, -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x0056eca0, 0x9B)
-void type_monster_quest::doProgressDialog()
+void MonsterQuest::doProgressDialog()
 {
     normalDialog(getProgressDialogText().c_str(), 1, -1, -1, 0x15,
                  m_monsterId, -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x0056ed40, 0x45)
-void type_monster_quest::notifyMonsterDefeated(TQuestPosition where,
+void MonsterQuest::notifyMonsterDefeated(TQuestPosition where,
                                                 int player)
 {
     if (m_defeatedBy >= 0)
@@ -977,7 +977,7 @@ void type_monster_quest::notifyMonsterDefeated(TQuestPosition where,
 }
 
 VA(0x0056ed90, 0x51)
-void type_monster_quest::load(AbstractFile* file, int version)
+void MonsterQuest::load(AbstractFile* file, int version)
 {
     file->read(&m_position, sizeof(m_position));
     {
@@ -992,21 +992,21 @@ void type_monster_quest::load(AbstractFile* file, int version)
         file->read(&killer, sizeof(killer));
         m_defeatedBy = killer;
     }
-    type_quest::load(file, version);
+    Quest::load(file, version);
 }
 
 VA(0x0056edf0, 0x2B)
-void type_experience_quest::loadFromMap(AbstractFile* file)
+void ExperienceQuest::loadFromMap(AbstractFile* file)
 {
     int level;
 
     file->read(&level, sizeof(level));
     m_requiredLevel = level;
-    type_quest::loadFromMap(file);
+    Quest::loadFromMap(file);
 }
 
 VA(0x0056ee20, 0xFE)
-void type_monster_quest::save(AbstractFile* file)
+void MonsterQuest::save(AbstractFile* file)
 {
     file->write(&m_position, sizeof(m_position));
     {
@@ -1073,7 +1073,7 @@ void type_monster_quest::save(AbstractFile* file)
 // decision, not a source fact - retired 2026-09-05 with game.h's fork.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056ef20, 0x57C)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
-void type_monster_quest::setDefaultText()
+void MonsterQuest::setDefaultText()
 {
     m_position = g_game->gameFn004CEF10(m_mapMonster);
     if (m_position.m_x < 0)
@@ -1133,14 +1133,14 @@ void type_monster_quest::setDefaultText()
                                        monsterName, direction.c_str());
 }
 
-VA_COMPGEN(0x0056e990, 0xA0, IMPLICIT_DTOR, type_experience_quest)
+VA_COMPGEN(0x0056e990, 0xA0, IMPLICIT_DTOR, ExperienceQuest)
 
 // The vector-owning artifact leaf has its own wrapper/body pair.
-VA_COMPGEN(0x0056f4a0, 0x21, SCALAR_DELETING_DTOR, type_artifact_quest)
-VA_COMPGEN(0x0056f4d0, 0xC2, IMPLICIT_DTOR, type_artifact_quest)
+VA_COMPGEN(0x0056f4a0, 0x21, SCALAR_DELETING_DTOR, ArtifactQuest)
+VA_COMPGEN(0x0056f4d0, 0xC2, IMPLICIT_DTOR, ArtifactQuest)
 
 VA(0x0056f5a0, 0x4C)
-int type_artifact_quest::getAIValue(int player)
+int ArtifactQuest::getAIValue(int player)
 {
     int total = 0;
 
@@ -1152,7 +1152,7 @@ int type_artifact_quest::getAIValue(int player)
     return total;
 }
 VA(0x0056f5f0, 0x136)
-std::string type_artifact_quest::getRequirementText()
+std::string ArtifactQuest::getRequirementText()
 {
     std::vector<std::string> requirements;
     for (unsigned i = 0; i < m_artifacts.size(); ++i)
@@ -1160,14 +1160,14 @@ std::string type_artifact_quest::getRequirementText()
     return joinTextList(requirements);
 }
 VA(0x0056f730, 0xCF)
-std::string type_artifact_quest::getQuestDescription()
+std::string ArtifactQuest::getQuestDescription()
 {
     return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
                          getRequirementText().c_str());
 }
 
 VA(0x0056f800, 0x58)
-unsigned char type_artifact_quest::isSatisfied(Hero* currentHero)
+unsigned char ArtifactQuest::isSatisfied(Hero* currentHero)
 {
     if (m_artifacts.size() == 0)
         return 0;
@@ -1178,7 +1178,7 @@ unsigned char type_artifact_quest::isSatisfied(Hero* currentHero)
 }
 
 VA(0x0056f860, 0x37)
-void type_artifact_quest::takePayment(Hero* currentHero)
+void ArtifactQuest::takePayment(Hero* currentHero)
 {
     for (unsigned i = 0; i < m_artifacts.size(); ++i)
         currentHero->removeArtifact(m_artifacts[i]);
@@ -1206,7 +1206,7 @@ void type_artifact_quest::takePayment(Hero* currentHero)
 // lifetime instead of manufacturing storage or cleanup flow.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056f8a0, 0x313)  // anchor-vtable 0x641878 slot 4 + artifact picture class, retail-only
-void type_artifact_quest::doProposalDialog(Hero* currentHero)
+void ArtifactQuest::doProposalDialog(Hero* currentHero)
 {
     std::vector<Artifact> missingArtifacts;
     std::vector<std::string> requirements;
@@ -1225,8 +1225,8 @@ void type_artifact_quest::doProposalDialog(Hero* currentHero)
             textFormat.c_str(),
             joinTextList(requirements).c_str());
         textPointer = text.c_str();
-        std::vector<type_dialog_resource> dialogResources;
-        type_dialog_resource resource;
+        std::vector<DialogResource> dialogResources;
+        DialogResource resource;
         unsigned i = 0;
         for (;;) {
 #pragma inline_depth(0)
@@ -1241,8 +1241,8 @@ void type_artifact_quest::doProposalDialog(Hero* currentHero)
         extendedDialog(textPointer, dialogResources, -1, -1, 0);
     } else {
         textPointer = m_progressText.c_str();
-        std::vector<type_dialog_resource> dialogResources;
-        type_dialog_resource resource;
+        std::vector<DialogResource> dialogResources;
+        DialogResource resource;
         for (unsigned i = 0; i < missingArtifacts.size(); ++i) {
             resource.m_resource = 8;
             resource.m_qualifier = missingArtifacts[i];
@@ -1272,14 +1272,14 @@ void type_artifact_quest::doProposalDialog(Hero* currentHero)
 // Complete quest has no Dreamcast counterpart to settle its source scopes.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056fbc0, 0xE6)  // anchor-vtable 0x641878 slot 5 + artifact picture class, retail-only
-void type_artifact_quest::doProgressDialog()
+void ArtifactQuest::doProgressDialog()
 {
     const std::string& text = getProgressDialogText();
     const char* textPointer = text.c_str();
     {
-        std::vector<type_dialog_resource> dialogResources;
+        std::vector<DialogResource> dialogResources;
         for (unsigned i = 0; i < m_artifacts.size(); ++i) {
-            type_dialog_resource resource;
+            DialogResource resource;
             resource.m_resource = 8;
             resource.m_qualifier = m_artifacts[i];
             dialogResources.push_back(resource);
@@ -1288,7 +1288,7 @@ void type_artifact_quest::doProgressDialog()
     }
 }
 VA(0x0056fcb0, 0x1EE)
-void type_artifact_quest::load(AbstractFile* file, int version)
+void ArtifactQuest::load(AbstractFile* file, int version)
 {
     int i;
     {
@@ -1306,11 +1306,11 @@ void type_artifact_quest::load(AbstractFile* file, int version)
         }
         m_artifacts.push_back(artifact);
     }
-    type_quest::load(file, version);
+    Quest::load(file, version);
 }
 
 VA(0x0056fea0, 0x1FA)
-void type_artifact_quest::loadFromMap(AbstractFile* file)
+void ArtifactQuest::loadFromMap(AbstractFile* file)
 {
     int i;
     {
@@ -1329,11 +1329,11 @@ void type_artifact_quest::loadFromMap(AbstractFile* file)
         m_artifacts.push_back(artifact);
         g_game->m_artifactDisabled[artifact] = 1;
     }
-    type_quest::loadFromMap(file);
+    Quest::loadFromMap(file);
 }
 
 VA(0x005700a0, 0x121)
-void type_artifact_quest::save(AbstractFile* file)
+void ArtifactQuest::save(AbstractFile* file)
 {
     unsigned char count = static_cast<unsigned char>(m_artifacts.size());
     file->write(&count, sizeof(count));
@@ -1371,7 +1371,7 @@ void type_artifact_quest::save(AbstractFile* file)
     }
 }
 VA(0x005701d0, 0x199)
-void type_artifact_quest::setDefaultText()
+void ArtifactQuest::setDefaultText()
 {
     const std::string* texts = questTexts();
     std::string requirement;
@@ -1387,11 +1387,11 @@ void type_artifact_quest::setDefaultText()
 
 // The two-vector creature leaf has the second distinct implicit
 // wrapper/body pair in the family.
-VA_COMPGEN(0x00570370, 0x21, SCALAR_DELETING_DTOR, type_creature_quest)
-VA_COMPGEN(0x005703a0, 0xD7, IMPLICIT_DTOR, type_creature_quest)
+VA_COMPGEN(0x00570370, 0x21, SCALAR_DELETING_DTOR, CreatureQuest)
+VA_COMPGEN(0x005703a0, 0xD7, IMPLICIT_DTOR, CreatureQuest)
 
 VA(0x00570480, 0x55)
-int type_creature_quest::getAIValue(int player)
+int CreatureQuest::getAIValue(int player)
 {
     int total = 0;
 
@@ -1400,7 +1400,7 @@ int type_creature_quest::getAIValue(int player)
     return total;
 }
 VA(0x005704e0, 0x1A7)
-std::string type_creature_quest::getRequirementText()
+std::string CreatureQuest::getRequirementText()
 {
     std::string requirement;
     std::vector<std::string> requirements;
@@ -1413,14 +1413,14 @@ std::string type_creature_quest::getRequirementText()
     return joinTextList(requirements);
 }
 VA(0x00570690, 0xCF)
-std::string type_creature_quest::getQuestDescription()
+std::string CreatureQuest::getQuestDescription()
 {
     return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
                          getRequirementText().c_str());
 }
 
 VA(0x00570760, 0x60)
-unsigned char type_creature_quest::isSatisfied(Hero* currentHero)
+unsigned char CreatureQuest::isSatisfied(Hero* currentHero)
 {
     if (m_types.size() == 0)
         return 0;
@@ -1431,7 +1431,7 @@ unsigned char type_creature_quest::isSatisfied(Hero* currentHero)
 }
 
 VA(0x005707c0, 0xB3)
-void type_creature_quest::takePayment(Hero* currentHero)
+void CreatureQuest::takePayment(Hero* currentHero)
 {
     for (unsigned i = 0; i < m_types.size(); ++i) {
         for (int slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
@@ -1452,12 +1452,12 @@ void type_creature_quest::takePayment(Hero* currentHero)
 // both in the localized text fragment and in the packed creature picture.
 
 VA(0x00570880, 0x2F8)
-void type_creature_quest::doProposalDialog(Hero* currentHero)
+void CreatureQuest::doProposalDialog(Hero* currentHero)
 {
     std::string text;
     std::vector<std::string> requirements;
-    std::vector<type_dialog_resource> dialogResources;
-    type_dialog_resource resource;
+    std::vector<DialogResource> dialogResources;
+    DialogResource resource;
 
     for (unsigned i = 0; i < m_types.size(); ++i) {
         if (currentHero->m_army.getCreatureTotal(m_types[i]) < m_counts[i]) {
@@ -1502,13 +1502,13 @@ void type_creature_quest::doProposalDialog(Hero* currentHero)
 // to 83.51% and depth 1 reproduces the same 86.05% class.
 // E:\gamedcs\seerhut.cpp
 VA(0x00570b80, 0x2D5)  // anchor-vtable 0x6418b4 slot 5 + creature picture class, retail-only
-void type_creature_quest::doProgressDialog()
+void CreatureQuest::doProgressDialog()
 {
     std::string text;
     {
         std::vector<std::string> requirements;
-        std::vector<type_dialog_resource> dialogResources;
-        type_dialog_resource resource;
+        std::vector<DialogResource> dialogResources;
+        DialogResource resource;
 
         for (unsigned i = 0; i < m_types.size(); ++i) {
             text = formatString(
@@ -1543,7 +1543,7 @@ void type_creature_quest::doProgressDialog()
 #pragma inline_depth()
 
 VA(0x00570e60, 0x208)
-void type_creature_quest::load(AbstractFile* file, int version)
+void CreatureQuest::load(AbstractFile* file, int version)
 {
     int i;
     {
@@ -1565,11 +1565,11 @@ void type_creature_quest::load(AbstractFile* file, int version)
         m_counts.push_back(amount);
         m_types.push_back(creature);
     }
-    type_quest::load(file, version);
+    Quest::load(file, version);
 }
 
 VA(0x00571070, 0x20A)
-void type_creature_quest::loadFromMap(AbstractFile* file)
+void CreatureQuest::loadFromMap(AbstractFile* file)
 {
     int i;
     {
@@ -1591,11 +1591,11 @@ void type_creature_quest::loadFromMap(AbstractFile* file)
         m_counts.push_back(amount);
         m_types.push_back(creature);
     }
-    type_quest::loadFromMap(file);
+    Quest::loadFromMap(file);
 }
 
 VA(0x00571280, 0x137)
-void type_creature_quest::save(AbstractFile* file)
+void CreatureQuest::save(AbstractFile* file)
 {
     unsigned char count = static_cast<unsigned char>(m_types.size());
     file->write(&count, sizeof(count));
@@ -1639,7 +1639,7 @@ void type_creature_quest::save(AbstractFile* file)
     }
 }
 VA(0x005713c0, 0x16A)
-void type_creature_quest::setDefaultText()
+void CreatureQuest::setDefaultText()
 {
     if (m_completionText.length() == 0) {
         std::string requirement = getRequirementText();
@@ -1650,15 +1650,15 @@ void type_creature_quest::setDefaultText()
     }
 }
 
-VA_COMPGEN(0x00571530, 0x21, SCALAR_DELETING_DTOR, type_experience_quest)
+VA_COMPGEN(0x00571530, 0x21, SCALAR_DELETING_DTOR, ExperienceQuest)
 
 VA(0x00571560, 0x12)
-int type_resource_quest::getAIValue(int player)
+int ResourceQuest::getAIValue(int player)
 {
     return aiResourceCost(player, m_resources);
 }
 VA(0x00571580, 0x15A)
-std::string type_resource_quest::getRequirementText()
+std::string ResourceQuest::getRequirementText()
 {
     std::vector<std::string> requirements;
     std::string requirement;
@@ -1673,7 +1673,7 @@ std::string type_resource_quest::getRequirementText()
     return joinTextList(requirements);
 }
 VA(0x005716e0, 0xCF)
-std::string type_resource_quest::getQuestDescription()
+std::string ResourceQuest::getQuestDescription()
 {
     return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
                          getRequirementText().c_str());
@@ -1682,7 +1682,7 @@ std::string type_resource_quest::getQuestDescription()
 // Vtable 0x6418f0 slot 2. A hero without an owner cannot pay; otherwise
 // every one of the seven treasury balances must cover the quest price.
 VA(0x005717b0, 0x4B)  // anchor-vtable
-unsigned char type_resource_quest::isSatisfied(Hero* currentHero)
+unsigned char ResourceQuest::isSatisfied(Hero* currentHero)
 {
     int owner = currentHero->m_owner;
     if (owner < 0)
@@ -1699,7 +1699,7 @@ unsigned char type_resource_quest::isSatisfied(Hero* currentHero)
 }
 
 VA(0x00571800, 0x3D)  // anchor-vtable
-void type_resource_quest::takePayment(Hero* currentHero)
+void ResourceQuest::takePayment(Hero* currentHero)
 {
     int* questResource = m_resources;
     long* playerResource = g_game->m_players[currentHero->m_owner].m_resources;
@@ -1710,12 +1710,12 @@ void type_resource_quest::takePayment(Hero* currentHero)
 }
 
 VA(0x00571840, 0x29D)
-void type_resource_quest::doProposalDialog(Hero* currentHero)
+void ResourceQuest::doProposalDialog(Hero* currentHero)
 {
     std::vector<std::string> requirements;
     std::string text;
-    std::vector<type_dialog_resource> dialogResources;
-    type_dialog_resource resource;
+    std::vector<DialogResource> dialogResources;
+    DialogResource resource;
     long* playerResources =
         g_game->m_players[currentHero->m_owner].m_resources;
 
@@ -1745,12 +1745,12 @@ void type_resource_quest::doProposalDialog(Hero* currentHero)
 }
 
 VA(0x00571ae0, 0x9A)  // anchor-vtable
-void type_resource_quest::doProgressDialog()
+void ResourceQuest::doProgressDialog()
 {
-    std::vector<type_dialog_resource> dialogResources;
+    std::vector<DialogResource> dialogResources;
     for (int i = 0; i <= 6; ++i) {
         if (m_resources[i] > 0) {
-            type_dialog_resource resource;
+            DialogResource resource;
             resource.m_resource = i;
             resource.m_qualifier = m_resources[i];
             dialogResources.push_back(resource);
@@ -1760,21 +1760,21 @@ void type_resource_quest::doProgressDialog()
 }
 
 VA(0x00571b80, 0x29)
-void type_resource_quest::load(AbstractFile* file, int version)
+void ResourceQuest::load(AbstractFile* file, int version)
 {
     file->read(m_resources, sizeof(m_resources));
-    type_quest::load(file, version);
+    Quest::load(file, version);
 }
 
 VA(0x00571bb0, 0x25)
-void type_resource_quest::loadFromMap(AbstractFile* file)
+void ResourceQuest::loadFromMap(AbstractFile* file)
 {
     file->read(m_resources, sizeof(m_resources));
-    type_quest::loadFromMap(file);
+    Quest::loadFromMap(file);
 }
 
 VA(0x00571be0, 0xD7)
-void type_resource_quest::save(AbstractFile* file)
+void ResourceQuest::save(AbstractFile* file)
 {
     file->write(m_resources, sizeof(m_resources));
 
@@ -1807,7 +1807,7 @@ void type_resource_quest::save(AbstractFile* file)
     }
 }
 VA(0x00571cc0, 0x23E)
-void type_resource_quest::setDefaultText()
+void ResourceQuest::setDefaultText()
 {
     std::vector<std::string> requirements;
     std::string requirement;
@@ -1831,63 +1831,63 @@ void type_resource_quest::setDefaultText()
 }
 
 VA(0x00571f00, 0x19)
-unsigned char type_be_hero_quest::isSatisfied(Hero* currentHero)
+unsigned char BeHeroQuest::isSatisfied(Hero* currentHero)
 {
     return currentHero->m_id == m_requiredHero;
 }
 VA(0x00571f20, 0x99)
-void type_be_hero_quest::doProposalDialog(Hero* currentHero)
+void BeHeroQuest::doProposalDialog(Hero* currentHero)
 {
     normalDialog(getProposalDialogText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x00571fc0, 0x95)
-void type_be_hero_quest::doProgressDialog()
+void BeHeroQuest::doProgressDialog()
 {
     normalDialog(getProgressDialogText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 VA(0x00572060, 0xF2)
-std::string type_be_hero_quest::getRequirementText()
+std::string BeHeroQuest::getRequirementText()
 {
     return g_game->getHero(m_requiredHero)->m_name;
 }
 
 VA(0x00572160, 0x8B)
-std::string type_be_hero_quest::getQuestDescription()
+std::string BeHeroQuest::getQuestDescription()
 {
     return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
                          g_game->getHero(m_requiredHero)->m_name);
 }
 
 VA(0x005721f0, 0x06)
-int type_be_hero_quest::questType()
+int BeHeroQuest::questType()
 {
     return 8;
 }
 
 VA(0x00572200, 0x30)
-void type_be_hero_quest::load(AbstractFile* file, int version)
+void BeHeroQuest::load(AbstractFile* file, int version)
 {
     short id;
 
     file->read(&id, sizeof(id));
     m_requiredHero = id;
-    type_quest::load(file, version);
+    Quest::load(file, version);
 }
 
 VA(0x00572230, 0x31)
-void type_be_hero_quest::loadFromMap(AbstractFile* file)
+void BeHeroQuest::loadFromMap(AbstractFile* file)
 {
     unsigned char id;
 
     file->read(&id, sizeof(id));
     m_requiredHero = id;
-    type_quest::loadFromMap(file);
+    Quest::loadFromMap(file);
 }
 VA(0x00572270, 0x276)
-void type_be_hero_quest::setDefaultText()
+void BeHeroQuest::setDefaultText()
 {
     Hero* requiredHero = g_game->getHero(m_requiredHero);
     const std::string* texts = questTexts();
@@ -1903,32 +1903,32 @@ void type_be_hero_quest::setDefaultText()
 }
 
 VA(0x005724f0, 0x1A)
-unsigned char type_belong_to_player_quest::isSatisfied(Hero* currentHero)
+unsigned char BelongToPlayerQuest::isSatisfied(Hero* currentHero)
 {
     return currentHero->m_owner == m_requiredOwner;
 }
 VA(0x00572510, 0x99)
-void type_belong_to_player_quest::doProposalDialog(Hero* currentHero)
+void BelongToPlayerQuest::doProposalDialog(Hero* currentHero)
 {
     normalDialog(getProposalDialogText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x005725b0, 0x95)
-void type_belong_to_player_quest::doProgressDialog()
+void BelongToPlayerQuest::doProgressDialog()
 {
     normalDialog(getProgressDialogText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x00572650, 0x20)
-std::string type_belong_to_player_quest::getRequirementText()
+std::string BelongToPlayerQuest::getRequirementText()
 {
     return std::string();
 }
 
 VA(0x00572670, 0x19D)
-std::string type_belong_to_player_quest::getQuestDescription()
+std::string BelongToPlayerQuest::getQuestDescription()
 {
     std::string requirement = g_playerColorNames[m_requiredOwner];
     std::transform(requirement.begin(), requirement.end(),
@@ -1938,23 +1938,23 @@ std::string type_belong_to_player_quest::getQuestDescription()
 }
 
 VA(0x00572810, 0x06)
-int type_belong_to_player_quest::questType()
+int BelongToPlayerQuest::questType()
 {
     return 9;
 }
 
 VA(0x00572820, 0x35)
-void type_belong_to_player_quest::load(AbstractFile* file, int version)
+void BelongToPlayerQuest::load(AbstractFile* file, int version)
 {
     unsigned char owner;
 
     file->read(&owner, sizeof(owner));
     m_requiredOwner = owner;
-    type_quest::load(file, version);
+    Quest::load(file, version);
 }
 
 VA(0x00572860, 0xE0)
-void type_belong_to_player_quest::save(AbstractFile* file)
+void BelongToPlayerQuest::save(AbstractFile* file)
 {
     unsigned char owner = static_cast<unsigned char>(m_requiredOwner);
     file->write(&owner, sizeof(owner));
@@ -1988,7 +1988,7 @@ void type_belong_to_player_quest::save(AbstractFile* file)
     }
 }
 VA(0x00572940, 0x204)
-void type_belong_to_player_quest::setDefaultText()
+void BelongToPlayerQuest::setDefaultText()
 {
     std::string requirement = g_playerColorNames[m_requiredOwner];
     std::transform(requirement.begin(), requirement.end(),
@@ -2032,7 +2032,7 @@ void QuestGuard::doEvent(Hero* currentHero, bool humanPlayer,
             const std::string* row = m_quest->m_seerHut
                 ? g_questTextA[m_quest->m_textVariant]
                 : g_questTextB[m_quest->m_textVariant];
-            normalDialog(row[type_quest::QUEST_TEXT_EXPIRED].c_str(),
+            normalDialog(row[Quest::QUEST_TEXT_EXPIRED].c_str(),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         return;
@@ -2072,7 +2072,7 @@ VA(0x00572d60, 0xE0)
 std::string QuestGuard::questGuardFn00572D60()
 {
     return formatString(
-        m_quest->questText(type_quest::QUEST_TEXT_LOG).c_str(),
+        m_quest->questText(Quest::QUEST_TEXT_LOG).c_str(),
         m_quest->getRequirementText().c_str());
 }
 
@@ -2104,36 +2104,36 @@ std::string QuestGuard::questGuardFn00573040(int player)
     return text;
 }
 
-__forceinline type_experience_quest::type_experience_quest(
+__forceinline ExperienceQuest::ExperienceQuest(
     unsigned char flags)
-    : type_quest(flags)
+    : Quest(flags)
 {
     m_requiredLevel = 0;
 }
 
-__forceinline type_skill_quest::type_skill_quest(unsigned char flags)
-    : type_quest(flags)
+__forceinline SkillQuest::SkillQuest(unsigned char flags)
+    : Quest(flags)
 {
     memset(m_requiredSkills, 0, sizeof(m_requiredSkills));
 }
 
-__forceinline type_defeat_hero_quest::type_defeat_hero_quest(
+__forceinline DefeatHeroQuest::DefeatHeroQuest(
     unsigned char flags)
-    : type_quest(flags)
+    : Quest(flags)
 {
     m_mapHero = 0;
     m_defeatedHero = -1;
     m_satisfiedMask = 0;
 }
 
-__forceinline type_monster_quest::type_monster_quest(unsigned char flags)
-    : type_quest(flags)
+__forceinline MonsterQuest::MonsterQuest(unsigned char flags)
+    : Quest(flags)
 {
     m_position.m_x = (m_monsterId = m_defeatedBy = -1);
 }
 
-type_artifact_quest::type_artifact_quest(unsigned char flags)
-    : type_quest(flags)
+ArtifactQuest::ArtifactQuest(unsigned char flags)
+    : Quest(flags)
 {
 }
 
@@ -2141,9 +2141,9 @@ type_artifact_quest::type_artifact_quest(unsigned char flags)
 // construction. Retail 0x574610 and 0x574a90 keep the append, text-row
 // override, disabled-artifact store, and direct SetDefaultText call inside the
 // allocation-success arm. These support a shared single-artifact constructor.
-type_artifact_quest::type_artifact_quest(
+ArtifactQuest::ArtifactQuest(
     unsigned char flags, Artifact artifact, int textRow)
-    : type_quest(flags)
+    : Quest(flags)
 {
     m_artifacts.push_back(artifact);
     m_textVariant = textRow;
@@ -2151,50 +2151,50 @@ type_artifact_quest::type_artifact_quest(
     setDefaultText();
 }
 
-__forceinline type_creature_quest::type_creature_quest(unsigned char flags)
-    : type_quest(flags)
+__forceinline CreatureQuest::CreatureQuest(unsigned char flags)
+    : Quest(flags)
 {
 }
 
-__forceinline type_resource_quest::type_resource_quest(unsigned char flags)
-    : type_quest(flags)
+__forceinline ResourceQuest::ResourceQuest(unsigned char flags)
+    : Quest(flags)
 {
     memset(m_resources, 0, sizeof(m_resources));
 }
 
-__forceinline type_be_hero_quest::type_be_hero_quest(unsigned char flags)
-    : type_quest(flags), m_requiredHero(-1)
+__forceinline BeHeroQuest::BeHeroQuest(unsigned char flags)
+    : Quest(flags), m_requiredHero(-1)
 {
 }
 
-__forceinline type_belong_to_player_quest::type_belong_to_player_quest(
+__forceinline BelongToPlayerQuest::BelongToPlayerQuest(
     unsigned char flags)
-    : type_quest(flags), m_requiredOwner(0)
+    : Quest(flags), m_requiredOwner(0)
 {
 }
 
 VA(0x00573240, 0x23C)  // hd-crossbuild + nine vtables + four callers
-type_quest* createQuest(int questType, unsigned char flags)
+Quest* createQuest(int questType, unsigned char flags)
 {
     switch (questType) {
     case QUEST_EXPERIENCE:
-        return new type_experience_quest(flags);
+        return new ExperienceQuest(flags);
     case QUEST_PRIMARY_SKILLS:
-        return new type_skill_quest(flags);
+        return new SkillQuest(flags);
     case QUEST_DEFEAT_HERO:
-        return new type_defeat_hero_quest(flags);
+        return new DefeatHeroQuest(flags);
     case QUEST_DEFEAT_MONSTER:
-        return new type_monster_quest(flags);
+        return new MonsterQuest(flags);
     case QUEST_ARTIFACTS:
-        return new type_artifact_quest(flags);
+        return new ArtifactQuest(flags);
     case QUEST_CREATURES:
-        return new type_creature_quest(flags);
+        return new CreatureQuest(flags);
     case QUEST_RESOURCES:
-        return new type_resource_quest(flags);
+        return new ResourceQuest(flags);
     case QUEST_BE_HERO:
-        return new type_be_hero_quest(flags);
+        return new BeHeroQuest(flags);
     case QUEST_BELONG_TO_PLAYER:
-        return new type_belong_to_player_quest(flags);
+        return new BelongToPlayerQuest(flags);
     }
     return 0;
 }
@@ -2335,7 +2335,7 @@ void SeerHut::doEmptyDialog()
     std::string text;
     int textIndex = rand() % 3;
     text = formatString(
-        g_questTextA[textIndex][type_quest::QUEST_TEXT_EXPIRED].c_str(),
+        g_questTextA[textIndex][Quest::QUEST_TEXT_EXPIRED].c_str(),
         getName());
     normalDialog(text.c_str(), 1, -1, -1, -1, 0,
                  -1, 0, -1, 0, -1, 0);
@@ -2427,7 +2427,7 @@ int SeerReward::getValue(const Hero* currentHero)
     case eRewardResource:
     {
         double quantity;
-        playerData* player = currentHero->getPlayer();
+        PlayerData* player = currentHero->getPlayer();
         quantity = m_value.m_resource.m_quantity;
         return static_cast<int>(
             quantity * player->m_ai.m_resourceValue[m_value.m_resource.m_resourceType]);
@@ -2641,7 +2641,7 @@ VA(0x00574070, 0x138)  // UpdateQuestLocator caller; HD twin 0x574440
 std::string SeerHut::getSeerLogText()
 {
     std::string logFormat =
-        m_quest->questTexts()[type_quest::QUEST_TEXT_LOG];
+        m_quest->questTexts()[Quest::QUEST_TEXT_LOG];
     return formatString(
         logFormat.c_str(),
         m_quest->getRequirementText().c_str(),
@@ -2753,13 +2753,13 @@ void SeerHut::read(AbstractFile* infile)
         if (charBuffer == -1) {
             m_quest = 0;
         } else {
-            m_quest = new type_artifact_quest(
+            m_quest = new ArtifactQuest(
                 1, static_cast<Artifact>(charBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         }
     } else {
         int intBuffer;
         infile->read(&intBuffer, 1);
-        type_quest* newQuest =
+        Quest* newQuest =
             createQuest(intBuffer & 0xff, 1);
         if (newQuest)
             newQuest->loadFromMap(infile);
@@ -2938,10 +2938,10 @@ void SeerHut::load(AbstractFile* infile, int saveVersion)
         if (noQuest || intBuffer == -1)
             m_quest = 0;
         else
-            m_quest = new type_artifact_quest(
+            m_quest = new ArtifactQuest(
                 1, static_cast<Artifact>(intBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
     } else {
-        type_quest* newQuest;
+        Quest* newQuest;
         {
             unsigned char value;
             infile->read(&value, sizeof(value));

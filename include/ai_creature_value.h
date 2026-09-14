@@ -8,16 +8,17 @@
 // copies it three dwords at a time and compares the value at +4.
 // The DC decorated comparison publics encode bool (_N), despite their
 // unsigned-byte debug storage records (ai_creature_value.h:29/35).
-struct type_creature_value {
+// Before normalization (type): type_creature_value.
+struct CreatureValue {
 public:
     CreatureType m_type;
     long m_value;
     short m_amount;
-    bool operator<(const type_creature_value& arg) const
+    bool operator<(const CreatureValue& arg) const
     {
         return m_value < arg.m_value;
     }
-    bool operator>(const type_creature_value& arg) const
+    bool operator>(const CreatureValue& arg) const
     {
         return m_value > arg.m_value;
     }

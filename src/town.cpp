@@ -27,7 +27,7 @@ DATA(0x006aa5f0) extern int g_unnamed6aa5f0;
 DATA(0x00699548) extern int g_unnamed699548;
 DATA(0x0069778c) extern int g_unnamed69778c;
 DATA(0x006994fc) extern TownManager* g_townManager;
-DATA(0x00699500) extern executive* g_executive;
+DATA(0x00699500) extern Executive* g_executive;
 
 // DC public ?included_buildings@town@@2PAY0CM@_JA; retail .bss
 // 0x6a8bb8, nine 0x160-stride rows to 0x6a9818. Ownership: the DC
@@ -306,7 +306,7 @@ VA(0x005bd750, 0x188)  // dc 0x165da4
 void Town::setSummoningGenerator()
 {
     std::vector<int> generators;
-    generator thisGenerator;
+    Generator thisGenerator;
     int i;
 
     for (i = 0; i < g_game->m_generators.size(); ++i) {
@@ -465,9 +465,9 @@ void Town::initializeHordes()
     int creatureBase = 0;
     for (short townType = 0; townType < TOWN_TYPE_COUNT; townType++) {
         for (short entry = 0; entry < 4; entry += 2) {
-            type_horde_effect* effect = &s_constHordeEffects[townType][entry];
+            HordeEffect* effect = &s_constHordeEffects[townType][entry];
             CreatureType creature = effect->m_creature;
-            type_horde_effect* upgrade = effect + 1;
+            HordeEffect* upgrade = effect + 1;
             short slot;
             for (slot = 0; slot <= TOWN_DWELLING_COUNT; slot++) {
                 if (creature == g_townDwellingCreatures[creatureBase + slot])
@@ -584,7 +584,7 @@ void Town::view(int alreadyFaded)
 VA(0x005be2d0, 0xB3)  // dc 0x166720
 void Town::deallocate()
 {
-    playerData* player = &g_game->m_players[m_owner];
+    PlayerData* player = &g_game->m_players[m_owner];
     int slot = -1;
     for (int i = 0; i < player->m_numTowns; i++) {
         if (player->m_townIds[i] == m_id)
@@ -819,7 +819,7 @@ VA(0x005bec60, 0x173)  // dc 0x166ed8
 void Town::destroyExtraCapitol()
 {
     if (isCapitol() && m_owner >= 0) {
-        playerData* player = &g_game->m_players[m_owner];
+        PlayerData* player = &g_game->m_players[m_owner];
         int townCount = player->m_numTowns;
 
         for (int slot = 0; slot < townCount; ++slot) {
@@ -948,7 +948,7 @@ unsigned char Town::buyBuilding(type_building_id building)
     if (!canBuild(building))
         return 0;
     int* costs = getBuildCostArray(building);
-    playerData* player = &g_game->m_players[m_owner];
+    PlayerData* player = &g_game->m_players[m_owner];
     if (!player->isHuman()) {
         unnamed526d20(m_owner, costs, 1);
         if (m_builtThisTurn)
@@ -1060,7 +1060,7 @@ long Town::getAssembledLegionBonus(long dwelling)
 VA(0x005bf900, 0x258)  // dc 0x1675d4
 long Town::getLegionBonus(long dwelling) const
 {
-    game* currentGame = g_game;
+    Game* currentGame = g_game;
     int tier = dwelling % TOWN_DWELLING_COUNT + 1;
     Hero* garrisonHero = 0;
     Hero* visitingHero = 0;
@@ -1205,14 +1205,14 @@ void Town::changeGeneratorBonus(CreatureType creature, long change)
 // The kb.h and castle.h prototypes, repeated file-locally for the
 // reason CheckEndGame above is.
 void extendedDialog(const char* text,
-                     std::vector<type_dialog_resource>& resources,
+                     std::vector<DialogResource>& resources,
                      long x, long y, long timeout);
 const char* getBuildingName(int townType, int buildingId);
 
 void showBuildingRewards(const Town* thisTown,
-                           std::vector<type_dialog_resource>* rewards);
+                           std::vector<DialogResource>* rewards);
 void showCreatureRewards(const Town* thisTown,
-                           std::vector<type_dialog_resource>* rewards);
+                           std::vector<DialogResource>* rewards);
 
 // The reward dialog flushes in batches of eight rows (the extended
 // dialog's row capacity); named per the kStartLevelCampaign precedent.
@@ -1264,8 +1264,8 @@ void Town::giveEventReward(const TownEvent* thisEvent)
         mask |= g_bitNumber[DOCK_ID];
     grantable &= ~mask;
 
-    std::vector<type_dialog_resource> rewards;
-    type_dialog_resource reward;
+    std::vector<DialogResource> rewards;
+    DialogResource reward;
     for (i = 0; i < MAX_BUILDING_TYPE; i++) {
         if (grantable & g_bitNumber[i]) {
             buildBuilding(i, 0, 1);
@@ -1310,7 +1310,7 @@ void Town::giveEventReward(const TownEvent* thisEvent)
 
 VA(0x005c0220, 0x1DA)  // dc 0x167958
 void showBuildingRewards(const Town* thisTown,
-                           std::vector<type_dialog_resource>* rewards)
+                           std::vector<DialogResource>* rewards)
 {
     std::string text;
     for (int i = 0; i < rewards->size(); i++) {
@@ -1343,7 +1343,7 @@ void showBuildingRewards(const Town* thisTown,
 // reward's count.
 VA(0x005c0400, 0x26F)  // anchor-caller (give_event_reward), dc 0x167a8c
 void showCreatureRewards(const Town* thisTown,
-                           std::vector<type_dialog_resource>* rewards)
+                           std::vector<DialogResource>* rewards)
 {
     std::string text;
     for (int i = 0; i < rewards->size(); i++) {
@@ -1654,7 +1654,7 @@ void Town::getBuildCost(type_building_id building, int* resources) const
 }
 
 VA(0x005c1180, 0xA9)  // dc 0x168910
-short Town::getBuildCost(type_building_id building, EGameResource* types,
+short Town::getBuildCost(type_building_id building, GameResource* types,
                          int* amounts) const
 {
     short count = 0;
@@ -1662,7 +1662,7 @@ short Town::getBuildCost(type_building_id building, EGameResource* types,
     memset(amounts, 0, NUM_RESOURCES * sizeof(int));
     for (short resource = 0; resource < NUM_RESOURCES; resource++) {
         if (costs[resource] > 0) {
-            types[count] = EGameResource(resource);
+            types[count] = GameResource(resource);
             amounts[count++] = costs[resource];
         }
     }
@@ -1670,7 +1670,7 @@ short Town::getBuildCost(type_building_id building, EGameResource* types,
 }
 
 VA(0x005c1230, 0x46)  // dc 0x168970
-type_horde_effect* Town::getHordeEffect(type_building_id building) const
+HordeEffect* Town::getHordeEffect(type_building_id building) const
 {
     short slot;
     for (slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
@@ -1717,7 +1717,7 @@ unsigned char Town::isDisabled(type_building_id building)
 VA(0x005c12e0, 0xC9)  // dc 0x168a98
 void Town::hire(Hero* newHero, long playerId)
 {
-    playerData* player = &g_game->m_players[playerId];
+    PlayerData* player = &g_game->m_players[playerId];
     int recruitSlot;
     int heroId = newHero->m_id;
     for (recruitSlot = 0; recruitSlot < 2; recruitSlot++) {

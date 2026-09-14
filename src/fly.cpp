@@ -26,7 +26,7 @@
 // terrain.h bitset initializers.
 #if 0  // @carcass -- inlined away in retail
 DC_ONLY(0xa1360, 0x88)
-unsigned char army::findFlyerAttackCell(int start, int target)
+unsigned char Army::findFlyerAttackCell(int start, int target)
 {
     // @stub
 }
@@ -35,7 +35,7 @@ unsigned char army::findFlyerAttackCell(int start, int target)
 // E:\gamedcs\fly.cpp:58
 #if 0  // @carcass -- inlined away in retail
 DC_ONLY(0xa13e8, 0x46)
-unsigned char army::findFlyerAttackCell(int target)
+unsigned char Army::findFlyerAttackCell(int target)
 {
     // @stub
 }
@@ -66,13 +66,13 @@ unsigned char army::findFlyerAttackCell(int target)
 // that falls through to the literal reachability test.
 
 // E:\gamedcs\fly.cpp:35
-inline bool army::findFlyerAttackCell(int start, int target) const
+inline bool Army::findFlyerAttackCell(int start, int target) const
 {
     for (long dir = 0; dir < 6; dir++) {
         long adjacent = g_combatManager->m_adjacentCells[target][dir];
         long hex = adjacent - start + m_gridIndex;
         if (adjacent >= 0 && hex >= 0 && hex < COMBAT_GRID_CELLS
-                && combatManager::getDistance(start, adjacent) <= getSpeed()
+                && CombatManager::getDistance(start, adjacent) <= getSpeed()
                 && canFit(hex, 0, 0))
             return 1;
     }
@@ -80,7 +80,7 @@ inline bool army::findFlyerAttackCell(int start, int target) const
 }
 
 // E:\gamedcs\fly.cpp:58
-inline bool army::findFlyerAttackCell(int target) const
+inline bool Army::findFlyerAttackCell(int target) const
 {
     if (findFlyerAttackCell(m_gridIndex, target))
         return 1;
@@ -91,19 +91,19 @@ inline bool army::findFlyerAttackCell(int target) const
 }
 
 VA(0x004b46c0, 0x2F9)  // dc 0xa1430
-unsigned char army::validFlight(int destIndex, unsigned char literalTest) const
+unsigned char Army::validFlight(int destIndex, unsigned char literalTest) const
 {
-    if (!combatManager::validHex(destIndex))
+    if (!CombatManager::validHex(destIndex))
         return 0;
 
     if (literalTest || m_side == -1 || m_slot == -1) {
-        if (combatManager::getDistance(m_gridIndex, destIndex) > getSpeed()
+        if (CombatManager::getDistance(m_gridIndex, destIndex) > getSpeed()
                 && !g_combatManager->m_creaturePlacement)
             return 0;
         if (!canFit(destIndex, 0, 0))
             return 0;
     } else {
-        const army* enemy = &g_combatManager->m_armies[m_side][m_slot];
+        const Army* enemy = &g_combatManager->m_armies[m_side][m_slot];
         long enemyHex = enemy->m_gridIndex;
         if (!findFlyerAttackCell(enemyHex)) {
             if (!enemy->is(1u << 0)
@@ -116,9 +116,9 @@ unsigned char army::validFlight(int destIndex, unsigned char literalTest) const
 }
 
 VA(0x004b49c0, 0x76)  // dc 0xa1514
-int army::flyTo(int destIndex, unsigned char restoreFacing)
+int Army::flyTo(int destIndex, unsigned char restoreFacing)
 {
-    if (combatManager::validHex(destIndex)) {
+    if (CombatManager::validHex(destIndex)) {
         int oldFacing = m_facing;
         removeAura();
         removeBinding();
@@ -153,11 +153,11 @@ int army::flyTo(int destIndex, unsigned char restoreFacing)
 // the cmbtmgr layout, not for fly.obj.
 
 VA(0x004b4a40, 0x44E)  // dc 0xa1590
-int army::fly(int destIndex)
+int Army::fly(int destIndex)
 {
     unsigned char turn;
-    int sourceX = combatManager::gridX(m_gridIndex);
-    int destX = combatManager::gridX(destIndex);
+    int sourceX = CombatManager::gridX(m_gridIndex);
+    int destX = CombatManager::gridX(destIndex);
 
     if (sourceX > destX)
         turn = m_facing == FACING_DEFENDER;
@@ -198,7 +198,7 @@ int army::fly(int destIndex)
                   / static_cast<float>(ttlLoops);
     int loop;
 
-    if (!static_cast<const combatManager*>(g_combatManager)->isQuickCombat()) {
+    if (!static_cast<const CombatManager*>(g_combatManager)->isQuickCombat()) {
         m_isMoving = 1;
         playSample(PRE_WALK_SAMPLE);
         playAnimation(20, -1, 0);
@@ -250,7 +250,7 @@ int army::fly(int destIndex)
     g_combatManager->placeArmyInGrid(*this, destIndex);
     m_gridIndex = destIndex;
 
-    if (!static_cast<const combatManager*>(g_combatManager)->isQuickCombat()) {
+    if (!static_cast<const CombatManager*>(g_combatManager)->isQuickCombat()) {
         playSample(POST_WALK_SAMPLE);
         g_soundManager->stopSample(m_armySample[WALK_SAMPLE]->m_memSample.m_memSampleHandle);
         playAnimation(21, -1, 0);
@@ -263,9 +263,9 @@ int army::fly(int destIndex)
 }
 
 VA(0x004b4e90, 0x76)  // dc 0xa19a0
-int army::teleportTo(int destIndex, unsigned char restoreFacing)
+int Army::teleportTo(int destIndex, unsigned char restoreFacing)
 {
-    if (combatManager::validHex(destIndex)) {
+    if (CombatManager::validHex(destIndex)) {
         int oldFacing = m_facing;
         removeAura();
         removeBinding();
@@ -281,11 +281,11 @@ int army::teleportTo(int destIndex, unsigned char restoreFacing)
 }
 
 VA(0x004b4f10, 0x102)  // dc 0xa1a7c
-int army::teleport(int destIndex)
+int Army::teleport(int destIndex)
 {
     unsigned char turn;
-    int sourceX = combatManager::gridX(m_gridIndex);
-    int destX = combatManager::gridX(destIndex);
+    int sourceX = CombatManager::gridX(m_gridIndex);
+    int destX = CombatManager::gridX(destIndex);
 
     if (sourceX > destX)
         turn = m_facing == FACING_DEFENDER;

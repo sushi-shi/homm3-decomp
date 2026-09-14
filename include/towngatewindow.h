@@ -5,14 +5,14 @@
 #include <vector>
 #include "advmgr_popup.h"
 
-static void townGateSliderCallback(int state, heroWindow* parentWindow);
+static void townGateSliderCallback(int state, HeroWindow* parentWindow);
 
 // Before normalization (type): TTownGateWindow.
 class TownGateWindow : public CAdvPopup {
 public:
     // Dreamcast CodeView publishes this nested enum in full. Complete's
     // constructor independently uses every value in the same roles.
-    enum EWidgetIDs {
+    enum WidgetIDs {
         BACKGROUND_ID = 0,
         TITLE_TEXT_ID = 1,
         SELECT_TEXT_ID = 2,
@@ -47,9 +47,9 @@ private:
 
 public:
     // DC callback 0x169ba8 calls this private method; retail 0x5c2980 agrees.
-    friend void townGateSliderCallback(int state, heroWindow* parentWindow);
+    friend void townGateSliderCallback(int state, HeroWindow* parentWindow);
     void doModal();
-    virtual int windowHandler(message& msg);
+    virtual int windowHandler(Message& msg);
 
 private:
     void updateTownLocators();

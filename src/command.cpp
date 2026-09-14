@@ -63,13 +63,13 @@ static const int g_combatActionFirstAid = 11;
 // final order stores and return into the keep arm scores 95.9569%. Preserve
 // the four named calls and their conditional random draw.
 VA(0x00473c00, 0x29F)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map, dc 0x6af98
-unsigned char combatManager::automateCatapult()
+unsigned char CombatManager::automateCatapult()
 {
     DATA(0x0063d54c) static const WallTargetId walls[4] = {
         WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_4, WALL_TARGET_5
     };
 
-    army* currentArmy = getCurrentArmy();
+    Army* currentArmy = getCurrentArmy();
     if (currentArmy->m_creatureType != CREATURE_CATAPULT)
         return 0;
 
@@ -93,7 +93,7 @@ unsigned char combatManager::automateCatapult()
     long skill = currentArmy->getController()->getSecondarySkill(
         eSecSkillSiegeBallistics);
     bool targetChosen = 0;
-    if (static_cast<const combatManager*>(this)->isQuickCombat()
+    if (static_cast<const CombatManager*>(this)->isQuickCombat()
             || isComputerAction(getCurrentArmy())) {
         if (skill > 0
                 && m_wallStrength[s_wallTargets[WALL_TARGET_3].m_wall] > 0) {
@@ -168,9 +168,9 @@ unsigned char combatManager::automateCatapult()
 // the target grid first, then clear field_40. Retail's Complete-only pointer
 // overload of is_computer_action is kept because its call relocation proves it.
 VA(0x00473ea0, 0x196)  // anchor-callee: Main's other automate callee (no-Random sibling) + order-map, dc 0x6b12c
-unsigned char combatManager::automateFirstAidTent()
+unsigned char CombatManager::automateFirstAidTent()
 {
-    const army* currentArmy = getCurrentArmy();
+    const Army* currentArmy = getCurrentArmy();
     int side = currentArmy->getControllingSide();
 
     if (currentArmy->m_creatureType != CREATURE_FIRST_AID_TENT)
@@ -179,7 +179,7 @@ unsigned char combatManager::automateFirstAidTent()
     int bestIndex = -1;
     int bestDamage = 0;
     for (int i = 0; i < m_numArmies[side]; ++i) {
-        army* target = &m_armies[side][i];
+        Army* target = &m_armies[side][i];
         if (target->is((1u << 21) | (1u << 6)))
             continue;
         if (target->m_topCreatureDamage == 0)
@@ -201,7 +201,7 @@ unsigned char combatManager::automateFirstAidTent()
         return 1;
     }
 
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()
+    if (!static_cast<const CombatManager*>(this)->isQuickCombat()
             && !isComputerAction(getCurrentArmy())) {
         if (currentArmy->getController()->getSecondarySkill(
                 eSecSkillFirstAid) > 0)
@@ -215,9 +215,9 @@ unsigned char combatManager::automateFirstAidTent()
 }
 
 VA(0x00474040, 0x8C)  // dc 0x6b268
-void combatManager::doAnimations()
+void CombatManager::doAnimations()
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (static_cast<const CombatManager*>(this)->isQuickCombat())
         return;
 
     if (GameTime::elapsedSince(g_combatStamp698998) >= 0) {
@@ -238,15 +238,15 @@ void combatManager::doAnimations()
 
 // E:\gamedcs\command.cpp:291
 VA(0x004740d0, 0x5AB)  // anchor-vtable combatManager slot02 + dispatcher: calls automate_catapult/first_aid + ProcessCombatMsg/CheckWin/ResetRound, dc 0x6b318
-int combatManager::main(message& msg)
+int CombatManager::main(Message& msg)
 {
     int result = 1;
     doAnimations();
 
     unsigned char automaticTurn = 0;
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()
+    if (!static_cast<const CombatManager*>(this)->isQuickCombat()
             && m_thisNetHasControl && (m_autoCombatOn || g_unk691209)) {
-        if (static_cast<const combatManager*>(this)->isQuickCombat()
+        if (static_cast<const CombatManager*>(this)->isQuickCombat()
                 || isComputerAction(getCurrentArmy())) {
             while (msg.m_id != MESSAGE_KEY_DOWN
                     && msg.m_id != MESSAGE_LEFT_BUTTON_DOWN
@@ -271,7 +271,7 @@ int combatManager::main(message& msg)
         if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL) {
             towerTurn = 0;
         } else {
-            army* currentArmy = getCurrentArmy();
+            Army* currentArmy = getCurrentArmy();
             if (currentArmy->m_creatureType != CREATURE_ARROW_TOWER) {
                 towerTurn = 0;
             } else {
@@ -292,7 +292,7 @@ int combatManager::main(message& msg)
                     currentArmy->m_monInfo.m_attributes |= 0x200000;
                     m_nextAction = 12;
                     towerTurn = 1;
-                } else if (static_cast<const combatManager*>(this)->isQuickCombat()
+                } else if (static_cast<const CombatManager*>(this)->isQuickCombat()
                         || isComputerAction(getCurrentArmy())) {
                     unnamed465f20();
 #pragma inline_depth(0)
@@ -311,7 +311,7 @@ int combatManager::main(message& msg)
     if (checkWin(&msg))
         return MESSAGE_DISPATCH_FORWARD;
 
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()
+    if (!static_cast<const CombatManager*>(this)->isQuickCombat()
             && !automaticTurn) {
         // The retail command header retains the Dreamcast two-argument
         // prototype even though remote.cpp's Complete wrapper ignores the
@@ -350,7 +350,7 @@ int combatManager::main(message& msg)
                     m_turnNumber = 0;
                     m_creaturePlacement = 0;
                     m_actingSide = 1;
-                    if (!static_cast<const combatManager*>(this)->isQuickCombat())
+                    if (!static_cast<const CombatManager*>(this)->isQuickCombat())
                         m_combatWindow->endPlacementPhase();
                     resetRound();
                 }
@@ -373,7 +373,7 @@ int combatManager::main(message& msg)
     }
 
     if (m_thisNetHasControl) {
-        army* currentArmy = getCurrentArmy();
+        Army* currentArmy = getCurrentArmy();
         if (currentArmy->m_spellInfluence[59]) {
             currentArmy->goBerserk();
             if (checkWin(&msg))
@@ -405,9 +405,9 @@ process_action:
 // 256 D2 ordinary-source trees were exhausted. Exposing OffsetToFront's real
 // header inline was byte-flat, so its folded expression avoids another view.
 VA(0x00474690, 0x36B)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map, dc 0x6b66c
-void combatManager::setCombatDirections(int hex)
+void CombatManager::setCombatDirections(int hex)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat()
+    if (static_cast<const CombatManager*>(this)->isQuickCombat()
             || isComputerAction(getCurrentArmy()))
         return;
 
@@ -416,7 +416,7 @@ void combatManager::setCombatDirections(int hex)
     long firstHex;
     int targetIndex;
     int targetGroup;
-    army* currentArmy;
+    Army* currentArmy;
     unsigned char firstIsValid;
     long closest;
     long secondHex;
@@ -529,35 +529,35 @@ VA_COMPGEN(0x0047a670, 0x11, TREE_BEGIN, int_set)
 
 // E:\gamedcs\command.cpp:709
 DC_ONLY(0x6ba7c, 0x362)
-unsigned char combatManager::SelectAttackDir(int iGridIndex)
+unsigned char CombatManager::SelectAttackDir(int iGridIndex)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:860
 DC_ONLY(0x6bde0, 0x28)
-void combatManager::HighlightHex(int hex)
+void CombatManager::HighlightHex(int hex)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:866
 DC_ONLY(0x6be08, 0x1C)
-void combatManager::HighlightHex(int x, int y)
+void CombatManager::HighlightHex(int x, int y)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:872
 DC_ONLY(0x6be24, 0x50)
-int combatManager::MoveToValidHex(int from, int direction)
+int CombatManager::MoveToValidHex(int from, int direction)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:888
 DC_ONLY(0x6be74, 0x2E)
-int combatManager::ValidAttackHex(int hex)
+int CombatManager::ValidAttackHex(int hex)
 {
     // @stub
 }
@@ -569,7 +569,7 @@ int combatManager::ValidAttackHex(int hex)
 // ProcessCombatMsg and carries no out-of-line copy, so keep the source fact
 // as an inline definition rather than replacing it with caller longhand.
 DC_ONLY(0x6bea4, 0x18)
-inline int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
+inline int CombatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 {
     if (inCombatCommand == COMBAT_COMMAND_VIEW_OTHER_HERO
             || inCombatCommand == COMBAT_COMMAND_VIEW_TOWERS)
@@ -595,13 +595,13 @@ inline int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // Remaining differences are the ESI/EDI register binding, with the same
 // retail CFG and calls; this is not a claim of complete byte equality.
 VA(0x00474a00, 0x198)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
-unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
+unsigned char CombatManager::checkSetMouseDirection(int x, int y, int hex)
 {
     int direction;
     float slope;
 
     do {
-        if (static_cast<const combatManager*>(this)->isQuickCombat())
+        if (static_cast<const CombatManager*>(this)->isQuickCombat())
             break;
         if (isComputerAction(getCurrentArmy()))
             break;
@@ -648,7 +648,7 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 
         m_lastAttackCursor = m_combatDirections[0][direction];
         g_mouseManager->setPointer(m_combatDirections[0][direction],
-                                   mouseManager::COMBAT_SET);
+                                   MouseManager::COMBAT_SET);
         return 1;
     } while (0);
     return 0;
@@ -656,9 +656,9 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 
 // E:\gamedcs\command.cpp:928, dc 0x6bebc.
 VA(0x00474ba0, 0x4A)  // anchor-callee IsQuickCombat + current-army forwarding, dc 0x6bebc
-unsigned char combatManager::isComputerAction()
+unsigned char CombatManager::isComputerAction()
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (static_cast<const CombatManager*>(this)->isQuickCombat())
         return 1;
     return isComputerAction(getCurrentArmy());
 }
@@ -702,9 +702,9 @@ unsigned char combatManager::isComputerAction()
 
 // Use the controlling player, which can change when a stack is hypnotized.
 VA(0x00474bf0, 0x188)  // anchor-global + retained nullary caller, retail-only overload
-unsigned char combatManager::isComputerAction(const army* currentArmy)
+unsigned char CombatManager::isComputerAction(const Army* currentArmy)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (static_cast<const CombatManager*>(this)->isQuickCombat())
         return 1;
 
     Hero* owner = currentArmy->getController();
@@ -796,20 +796,20 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
 // byte-flat (93.0970 to the digit, frame still 0x4c), so declaration order is
 // not the lever - only a real second use of msgTemp can be.
 VA(0x00474d80, 0x114D)  // exhaustive command order-map + callers + literal/call graph, dc 0x6c070
-int combatManager::processCombatMsg(message& msg)
+int CombatManager::processCombatMsg(Message& msg)
 {
     int mouseX = msg.m_mouseX;
     int mouseY = msg.m_mouseY;
     // Dreamcast places this sole named local in the function frame before
     // the dispatch switch. Retail's PeekEvent path retains the same
     // whole-function lifetime even though the default construction folds out.
-    message msgTemp;
+    Message msgTemp;
 
     switch (msg.m_id) {
     case MESSAGE_WIDGET:
         if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
-            if (msg.m_codeX == widget::WIDGET_SELECT
-                    || msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+            if (msg.m_codeX == Widget::WIDGET_SELECT
+                    || msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
                 if (msg.m_codeY == 0 || msg.m_codeY == 1)
                     rightClick(m_lastCellIndex);
                 else
@@ -819,7 +819,7 @@ int combatManager::processCombatMsg(message& msg)
         }
 
         switch (msg.m_codeX) {
-        case widget::WIDGET_SELECT:
+        case Widget::WIDGET_SELECT:
             if (m_thisNetHasControl && msg.m_codeY >= 0 && msg.m_codeY <= 1) {
                 m_combatWindow->m_heroSubWindows[0]->unShow();
                 m_combatWindow->m_heroSubWindows[1]->unShow();
@@ -832,7 +832,7 @@ int combatManager::processCombatMsg(message& msg)
             }
             break;
 
-        case widget::WIDGET_DESELECT:
+        case Widget::WIDGET_DESELECT:
             if (!m_thisNetHasControl)
                 break;
 
@@ -842,7 +842,7 @@ int combatManager::processCombatMsg(message& msg)
                 if (m_autoCombatOn)
                     getControl();
                 if (m_autoCombatOn
-                        && (static_cast<const combatManager*>(this)->isQuickCombat()
+                        && (static_cast<const CombatManager*>(this)->isQuickCombat()
                             || isComputerAction(getCurrentArmy()))) {
                     m_combatWindow->m_controlSubWindow->disableAllButtons();
                 }
@@ -914,7 +914,7 @@ int combatManager::processCombatMsg(message& msg)
                     m_actingSide = 1;
                     m_actingSlot = 0;
                     m_turnNumber = 0;
-                    if (!static_cast<const combatManager*>(this)->isQuickCombat())
+                    if (!static_cast<const CombatManager*>(this)->isQuickCombat())
                         m_combatWindow->endPlacementPhase();
                     resetRound();
                 }
@@ -930,7 +930,7 @@ int combatManager::processCombatMsg(message& msg)
     case MESSAGE_MOUSE_MOVE: {
         unsigned char pointerChanged = 0;
         if ((m_autoCombatOn || g_unk691209)
-                && (static_cast<const combatManager*>(this)->isQuickCombat()
+                && (static_cast<const CombatManager*>(this)->isQuickCombat()
                     || isComputerAction(getCurrentArmy())))
             break;
 
@@ -951,7 +951,7 @@ int combatManager::processCombatMsg(message& msg)
             m_combatWindow->m_creatureSubWindows[2]->unShow();
             m_combatWindow->m_creatureSubWindows[3]->unShow();
             g_windowManager->convertToHover(msg);
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(6, MouseManager::COMBAT_SET);
             m_lastCellIndex = -1;
             m_lastCommand = -99;
             return MESSAGE_DISPATCH_CONSUME;
@@ -987,7 +987,7 @@ int combatManager::processCombatMsg(message& msg)
                 }
             } else if (validHex(gridIndex)) {
                 if (m_cells[gridIndex].hasArmy()) {
-                    army* stack = m_cells[gridIndex].getArmy();
+                    Army* stack = m_cells[gridIndex].getArmy();
                     Hero* owner = stack->getOwner();
                     if (g_unnamed698758.m_combatArmyInfoLevel
                             == CombatOptionsWindow::
@@ -1041,11 +1041,11 @@ int combatManager::processCombatMsg(message& msg)
                 pointerChanged = checkSetMouseDirection(mouseX, mouseY,
                                                         gridIndex);
             } else if (m_combatCommand == COMBAT_COMMAND_CREATURE_SPELL) {
-                g_mouseManager->setPointer(0, mouseManager::SPELL_SET);
+                g_mouseManager->setPointer(0, MouseManager::SPELL_SET);
             } else {
                 g_mouseManager->setPointer(
                     getPointer(m_combatCommand, gridIndex),
-                    mouseManager::COMBAT_SET);
+                    MouseManager::COMBAT_SET);
             }
             }
 
@@ -1096,11 +1096,11 @@ int combatManager::processCombatMsg(message& msg)
             if (m_creaturePlacement)
                 break;
             if ((m_autoCombatOn || g_unk691209)
-                    && (static_cast<const combatManager*>(this)->isQuickCombat()
+                    && (static_cast<const CombatManager*>(this)->isQuickCombat()
                         || isComputerAction(getCurrentArmy())))
                 break;
             {
-                army* currentArmy = getCurrentArmy();
+                Army* currentArmy = getCurrentArmy();
                 if (currentArmy->m_creatureType == CREATURE_FAERIE_DRAGON
                         && currentArmy->m_monInfo.m_hasSpell) {
                     initiateSpell(currentArmy->m_faerieDragonSpell, 1);
@@ -1119,7 +1119,7 @@ int combatManager::processCombatMsg(message& msg)
             m_combatWindow->m_creatureSubWindows[1]->unShow();
             m_combatWindow->m_creatureSubWindows[2]->unShow();
             m_combatWindow->m_creatureSubWindows[3]->unShow();
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(6, MouseManager::COMBAT_SET);
             viewArmy(getCurrentArmy(), 0);
             resetMouse();
             break;
@@ -1134,84 +1134,84 @@ int combatManager::processCombatMsg(message& msg)
 
 // E:\gamedcs\command.cpp:1522
 DC_ONLY(0x6cb78, 0x108)
-unsigned char combatManager::DoKeyboardNavigation(message* msg)
+unsigned char CombatManager::DoKeyboardNavigation(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:1571
 DC_ONLY(0x6cc80, 0x40)
-void combatManager::InitMouse(unsigned char initfirst)
+void CombatManager::InitMouse(unsigned char initfirst)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:1591
 DC_ONLY(0x6ccc0, 0x10C)
-void combatManager::MoveCursor(int x, int y, unsigned char abs, unsigned char clientcoords)
+void CombatManager::MoveCursor(int x, int y, unsigned char abs, unsigned char clientcoords)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:1625
 DC_ONLY(0x6cdcc, 0x5E)
-void combatManager::MoveCursorCombatXY(int x, int y)
+void CombatManager::MoveCursorCombatXY(int x, int y)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:1638
 DC_ONLY(0x6ce2c, 0x32)
-void combatManager::GetHexXY(int hex, int* x, int* y)
+void CombatManager::GetHexXY(int hex, int* x, int* y)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:1645
 DC_ONLY(0x6ce60, 0x84)
-int combatManager::MoveCursorTo(int gridIndex, unsigned char isdir)
+int CombatManager::MoveCursorTo(int gridIndex, unsigned char isdir)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:1676
 DC_ONLY(0x6cee4, 0x102)
-void combatManager::MoveCursorMenu(int x, int y)
+void CombatManager::MoveCursorMenu(int x, int y)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:1724
 DC_ONLY(0x6cfe8, 0x1A)
-void combatManager::ClientToCombat(int* x, int* y)
+void CombatManager::ClientToCombat(int* x, int* y)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:1732
 DC_ONLY(0x6d004, 0x5C)
-void combatManager::CombatToScreen(int* x, int* y)
+void CombatManager::CombatToScreen(int* x, int* y)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:1746
 DC_ONLY(0x6d060, 0x268)
-void combatManager::resetRound()
+void CombatManager::resetRound()
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:1826
 DC_ONLY(0x6d2c8, 0x168)
-void combatManager::autoResolveCombat()
+void CombatManager::autoResolveCombat()
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:1861
 DC_ONLY(0x6d430, 0xD6)
-int combatManager::checkWin(message* msg)
+int CombatManager::checkWin(Message* msg)
 {
     // @stub
 }
@@ -1232,11 +1232,11 @@ int combatManager::checkWin(message* msg)
 // highlighter expansion were measured and were byte-identical or worse. The
 // DC statement row independently requires the TurnOffHighlighter call here.
 VA(0x00475ed0, 0x32F)  // unique retail body + order-map, dc 0x6d060
-void combatManager::resetRound()
+void CombatManager::resetRound()
 {
     m_turnNumber++;
     if (m_creaturePlacement
-            && (static_cast<const combatManager*>(this)->isQuickCombat()
+            && (static_cast<const CombatManager*>(this)->isQuickCombat()
                 || isComputerAction(getCurrentArmy()))
             && (!m_anyActionTaken || m_turnNumber >= 3)) {
         if (m_creaturePlacement) {
@@ -1244,7 +1244,7 @@ void combatManager::resetRound()
             m_actingSide = 1;
             m_actingSlot = 0;
             m_turnNumber = 0;
-            if (!static_cast<const combatManager*>(this)->isQuickCombat())
+            if (!static_cast<const CombatManager*>(this)->isQuickCombat())
                 m_combatWindow->endPlacementPhase();
             resetRound();
         }
@@ -1274,7 +1274,7 @@ void combatManager::resetRound()
         m_spellsCast[side] = 0;
         m_turnSinceLastEnchanter[side]++;
         for (int slot = 0; slot < 20; slot++) {
-            army* stack = &m_armies[side][slot];
+            Army* stack = &m_armies[side][slot];
             if (stack->m_gridIndex != -1)
                 stack->resetRound();
         }
@@ -1296,7 +1296,7 @@ void combatManager::resetRound()
     }
 
     if (!m_creaturePlacement
-            && !static_cast<const combatManager*>(this)->isQuickCombat()) {
+            && !static_cast<const CombatManager*>(this)->isQuickCombat()) {
         m_combatWindow->combatMessage(
             g_generalText->getText(GENERAL_TEXT_COMBAT_ROUND), 1, 0);
     }
@@ -1304,7 +1304,7 @@ void combatManager::resetRound()
 }
 
 VA(0x00476200, 0xE1)  // dc 0x6d2c8
-void combatManager::autoResolveCombat()
+void CombatManager::autoResolveCombat()
 {
     // ai_combat.cpp's free function is __fastcall under the shared /Gr
     // profile. Keep its one-use declaration at block scope: a file-scope
@@ -1323,7 +1323,7 @@ void combatManager::autoResolveCombat()
 
     for (side = 0; side < 2; side++) {
         for (int slot = 0; slot < m_numArmies[side]; slot++) {
-            army* stack = &m_armies[side][slot];
+            Army* stack = &m_armies[side][slot];
             if (stack->m_numTroops > 0
                     && !(stack->is(1u << 6))
                     && stack->m_originalIndex >= 0) {
@@ -1337,9 +1337,9 @@ void combatManager::autoResolveCombat()
 }
 
 VA(0x004762f0, 0xF6)  // dc 0x6d430
-int combatManager::checkWin(message* msg)
+int CombatManager::checkWin(Message* msg)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat()
+    if (static_cast<const CombatManager*>(this)->isQuickCombat()
             && m_turnNumber > 30)
         autoResolveCombat();
 
@@ -1369,7 +1369,7 @@ int combatManager::checkWin(message* msg)
 }
 
 VA(0x004763f0, 0x4D)  // dc 0x6d508
-unsigned char combatManager::isOutsidePlacementBoundry(int group, int index)
+unsigned char CombatManager::isOutsidePlacementBoundry(int group, int index)
 {
     if (group == 0)
         return index % COMBAT_GRID_ROW_STRIDE
@@ -1379,7 +1379,7 @@ unsigned char combatManager::isOutsidePlacementBoundry(int group, int index)
 }
 
 VA(0x00476440, 0x50)  // dc 0x6d548
-unsigned char combatManager::validWallTarget(WallTargetId wall)
+unsigned char CombatManager::validWallTarget(WallTargetId wall)
 {
     if ((wall == WALL_TARGET_0 || wall == WALL_TARGET_6)
         && m_fortificationLevel < COMBAT_FORTIFICATION_CASTLE)
@@ -1431,7 +1431,7 @@ unsigned char combatManager::validWallTarget(WallTargetId wall)
 // unsigned char argument form.
 
 VA(0x00476490, 0x52A)  // anchor-global, dc 0x6d58c
-int combatManager::getCommand(int newIndex)
+int CombatManager::getCommand(int newIndex)
 {
     if (newIndex == -1)
         return COMBAT_COMMAND_NONE;
@@ -1454,7 +1454,7 @@ int combatManager::getCommand(int newIndex)
                                 : COMBAT_COMMAND_VIEW_OTHER_HERO;
     }
 
-    army* currentArmy = getCurrentArmy();
+    Army* currentArmy = getCurrentArmy();
 
     if (m_fortificationLevel >= COMBAT_FORTIFICATION_CASTLE
             && newIndex == COMBAT_HEX_UPPER_TOWER) {
@@ -1494,7 +1494,7 @@ int combatManager::getCommand(int newIndex)
 
     if (m_cells[newIndex].m_armySide >= 0
             && currentArmy->m_creatureType != CREATURE_CATAPULT) {
-        army* target = m_cells[newIndex].getArmy();
+        Army* target = m_cells[newIndex].getArmy();
         long targetSide = target->m_combatSide;
 
         if (m_creaturePlacement)
@@ -1582,7 +1582,7 @@ int combatManager::getCommand(int newIndex)
 // hex test has failed AND the town is a full castle. All three land on
 // ViewCastleBallista(1).
 VA(0x004769c0, 0x207)  // dc 0x6d988
-int combatManager::rightClick(int newIndex)
+int CombatManager::rightClick(int newIndex)
 {
     if (newIndex == COMBAT_HEX_DEFENDER_HERO) {
         if (m_heroes[1]) {
@@ -1613,9 +1613,9 @@ int combatManager::rightClick(int newIndex)
     if (newIndex != s_wallTargets[7].m_targetHex) {
         if (newIndex >= 0 && newIndex < COMBAT_GRID_CELLS
                 && m_cells[newIndex].m_armySide >= 0) {
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(6, MouseManager::COMBAT_SET);
             viewArmy(m_cells[newIndex].getArmy(), 1);
-            if (static_cast<const combatManager*>(this)->isQuickCombat())
+            if (static_cast<const CombatManager*>(this)->isQuickCombat())
                 return 0;
             if (m_thisNetHasControl && m_playerIds[m_currentSide] >= 0
                     && g_game->isHuman(m_playerIds[m_currentSide])) {
@@ -1625,7 +1625,7 @@ int combatManager::rightClick(int newIndex)
                 g_inputManager->forceMouseMove();
                 return 0;
             }
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(6, MouseManager::COMBAT_SET);
             return 0;
         }
         if (m_fortificationLevel != COMBAT_FORTIFICATION_CASTLE)
@@ -1646,9 +1646,9 @@ int combatManager::rightClick(int newIndex)
 // tail hex, the anchor moves one column against the stack's facing.
 
 VA(0x00476bd0, 0x402)  // dc 0x6db78
-void combatManager::doCommand(int command)
+void CombatManager::doCommand(int command)
 {
-    army* currentArmy = getCurrentArmy();
+    Army* currentArmy = getCurrentArmy();
 
     switch (command) {
     case COMBAT_COMMAND_WALK:
@@ -1698,9 +1698,9 @@ void combatManager::doCommand(int command)
             m_combatWindow->m_creatureSubWindows[1]->unShow();
             m_combatWindow->m_creatureSubWindows[2]->unShow();
             m_combatWindow->m_creatureSubWindows[3]->unShow();
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(6, MouseManager::COMBAT_SET);
             initiateSpell(spell, 0);
-            if (static_cast<const combatManager*>(this)->isQuickCombat())
+            if (static_cast<const CombatManager*>(this)->isQuickCombat())
                 break;
             if (m_thisNetHasControl && m_playerIds[m_currentSide] >= 0
                     && g_game->isHuman(m_playerIds[m_currentSide])) {
@@ -1710,14 +1710,14 @@ void combatManager::doCommand(int command)
                 g_inputManager->forceMouseMove();
                 break;
             }
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(6, MouseManager::COMBAT_SET);
         }
         break;
 
     case COMBAT_COMMAND_VIEW_TOWERS:
-        g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+        g_mouseManager->setPointer(6, MouseManager::COMBAT_SET);
         viewCastleBallista(0);
-        if (static_cast<const combatManager*>(this)->isQuickCombat())
+        if (static_cast<const CombatManager*>(this)->isQuickCombat())
             break;
         if (m_thisNetHasControl && m_playerIds[m_currentSide] >= 0
                 && g_game->isHuman(m_playerIds[m_currentSide])) {
@@ -1727,15 +1727,15 @@ void combatManager::doCommand(int command)
             g_inputManager->forceMouseMove();
             break;
         }
-        g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+        g_mouseManager->setPointer(6, MouseManager::COMBAT_SET);
         break;
 
     case COMBAT_COMMAND_VIEW_ARMY:
-        g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+        g_mouseManager->setPointer(6, MouseManager::COMBAT_SET);
         if (m_lastCellIndex < 0 || m_lastCellIndex >= COMBAT_GRID_CELLS)
             break;
         viewArmy(m_cells[m_lastCellIndex].getArmy(), 0);
-        if (static_cast<const combatManager*>(this)->isQuickCombat())
+        if (static_cast<const CombatManager*>(this)->isQuickCombat())
             break;
         if (m_thisNetHasControl && m_playerIds[m_currentSide] >= 0
                 && g_game->isHuman(m_playerIds[m_currentSide])) {
@@ -1745,7 +1745,7 @@ void combatManager::doCommand(int command)
             g_inputManager->forceMouseMove();
             break;
         }
-        g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+        g_mouseManager->setPointer(6, MouseManager::COMBAT_SET);
         break;
 
     case COMBAT_COMMAND_BOMBARD_WALL:
@@ -1763,15 +1763,15 @@ void combatManager::doCommand(int command)
 }
 
 VA(0x00476fe0, 0x2C4)  // dc 0x6de24
-void combatManager::showEagleEye(int winningGroup, int dialogTimeout)
+void CombatManager::showEagleEye(int winningGroup, int dialogTimeout)
 {
     Hero* winner = m_heroes[winningGroup];
     if (!winner)
         return;
 
     std::string msg;
-    std::vector<type_dialog_resource> rewards;
-    type_dialog_resource reward;
+    std::vector<DialogResource> rewards;
+    DialogResource reward;
 
     std::set<SpellID>::iterator x =
         m_eagleEyeData[winningGroup].begin();
@@ -1810,13 +1810,13 @@ void combatManager::showEagleEye(int winningGroup, int dialogTimeout)
 }
 
 VA(0x004772b0, 0x1BF)  // dc 0x6e0d8
-void combatManager::showLootedArtifacts(
+void CombatManager::showLootedArtifacts(
     std::vector<type_artifact>& lootedArtifacts, int dialogTimeout)
 {
     type_artifact* artifact = lootedArtifacts.begin();
     std::string msg;
-    std::vector<type_dialog_resource> rewards;
-    type_dialog_resource reward;
+    std::vector<DialogResource> rewards;
+    DialogResource reward;
 
     while (artifact != lootedArtifacts.end()) {
         reward.m_resource = VICTORY_DIALOG_ARTIFACT_ROW;
@@ -1841,7 +1841,7 @@ void combatManager::showLootedArtifacts(
 }
 
 VA(0x00477470, 0x58C)  // dc 0x6e1c8
-void combatManager::doVictory(int winningGroup)
+void CombatManager::doVictory(int winningGroup)
 {
     int lastAliveSideIndex = 1 - winningGroup;
     if (lastAliveSideIndex == LAST_ALIVE_ATTACKER) {
@@ -1861,7 +1861,7 @@ void combatManager::doVictory(int winningGroup)
         int survivingTroops = 0;
         int lastAliveSlot = -1;
         for (int slot = 0; slot < 20; slot++) {
-            army* stack = &m_armies[side][slot];
+            Army* stack = &m_armies[side][slot];
             if (stack->m_creatureType != CREATURE_NONE && stack->m_numTroops > 0) {
                 lastAliveSlot = slot;
                 if (stack->m_numTroopsBattleResurrected > 0)
@@ -1889,7 +1889,7 @@ void combatManager::doVictory(int winningGroup)
                 g_creatureTypeTraits[m_raisedCreatureType].m_hitPoints;
             unsigned char anythingDied = 0;
             for (int slot = 0; slot < 20; slot++) {
-                army* stack = &m_armies[lastAliveSideIndex][slot];
+                Army* stack = &m_armies[lastAliveSideIndex][slot];
                 if (stack->m_creatureType == CREATURE_NONE)
                     continue;
                 int killed = stack->m_origNumTroops - stack->m_numTroops;
@@ -1951,12 +1951,12 @@ void combatManager::doVictory(int winningGroup)
     }
 
     stopCombatSounds();
-    if (!static_cast<const combatManager*>(this)->isQuickCombat())
+    if (!static_cast<const CombatManager*>(this)->isQuickCombat())
         m_combatWindow->combatMessage("", 0, 0);
     g_mouseManager->m_noChangePointer = 0;
-    g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+    g_mouseManager->setPointer(6, MouseManager::COMBAT_SET);
     g_mouseManager->showPointer(false);
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!static_cast<const CombatManager*>(this)->isQuickCombat()) {
         g_windowManager->m_screenBitmap->darken(0, 0, 800, 600);
         g_windowManager->updateScreen(0, 0, 800, 600);
     }
@@ -2000,13 +2000,13 @@ void combatManager::doVictory(int winningGroup)
 }
 
 VA(0x00477a00, 0xB2)  // dc 0x6e898
-long combatManager::getSurrenderCost()
+long CombatManager::getSurrenderCost()
 {
     long cost = 0;
     int side = m_currentSide;
 
     for (int slot = 0; slot < 20; ++slot) {
-        army* currentArmy = &m_armies[side][slot];
+        Army* currentArmy = &m_armies[side][slot];
         if (currentArmy->m_creatureType >= 0
             && currentArmy->m_numTroops > 0
             && !(currentArmy->is(1u << 22))
@@ -2026,70 +2026,70 @@ long combatManager::getSurrenderCost()
 
 // E:\gamedcs\command.cpp:2818
 DC_ONLY(0x6ea10, 0x108)
-void combatManager::checkChangeSelector()
+void CombatManager::checkChangeSelector()
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:2869
 DC_ONLY(0x6eb18, 0xA4)
-void combatManager::turnOffSelector(unsigned char draw_it)
+void CombatManager::turnOffSelector(unsigned char draw_it)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:2894
 DC_ONLY(0x6ebbc, 0x15C)
-void combatManager::checkChangeHighlighter(int current_index)
+void CombatManager::checkChangeHighlighter(int current_index)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:2964
 DC_ONLY(0x6ed18, 0xA4)
-void combatManager::turnOffHighlighter(unsigned char draw_it)
+void CombatManager::turnOffHighlighter(unsigned char draw_it)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:2992
 DC_ONLY(0x6edbc, 0xA2)
-void combatManager::CheckCastleAttack()
+void CombatManager::CheckCastleAttack()
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:3038
 DC_ONLY(0x6ee60, 0x338)
-void combatManager::checkGetAIMove()
+void CombatManager::checkGetAIMove()
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:3131
 DC_ONLY(0x6f198, 0x45C)
-void combatManager::getControl()
+void CombatManager::getControl()
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:3320
 DC_ONLY(0x6f5f4, 0x70)
-void combatManager::resetMouse()
+void CombatManager::resetMouse()
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:3365
 DC_ONLY(0x6f664, 0x1C0)
-unsigned char combatManager::processMoveThenAttack(message* msg)
+unsigned char CombatManager::processMoveThenAttack(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:3431
 DC_ONLY(0x6f824, 0x160)
-void combatManager::processFirstAid(army* current_army)
+void CombatManager::processFirstAid(Army* current_army)
 {
     // @stub
 }
@@ -2100,28 +2100,28 @@ void combatManager::processFirstAid(army* current_army)
 
 // E:\gamedcs\command.cpp:3742
 DC_ONLY(0x701b0, 0x10A)
-void combatManager::resetCyclingCreatures()
+void CombatManager::resetCyclingCreatures()
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:3790
 DC_ONLY(0x702bc, 0xDA)
-void combatManager::resetCycleTimers()
+void CombatManager::resetCycleTimers()
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:3819
 DC_ONLY(0x70398, 0x28)
-void combatManager::SetCombatViewArmy(int iNewCombatViewArmy)
+void CombatManager::SetCombatViewArmy(int iNewCombatViewArmy)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:3836
 DC_ONLY(0x703c0, 0xB4)
-void combatManager::setCombatGrid(int bCombatShowEntireGrid, int bCombatShowMouseHex, int iCombatGridLevel, unsigned char draw_it_now)
+void CombatManager::setCombatGrid(int bCombatShowEntireGrid, int bCombatShowMouseHex, int iCombatGridLevel, unsigned char draw_it_now)
 {
     // @stub
 }
@@ -2133,7 +2133,7 @@ void combatManager::setCombatGrid(int bCombatShowEntireGrid, int bCombatShowMous
 // no standalone retail body. Complete also omits the older port's FullUpdate
 // after the modal dialog, as it does in the neighbouring retreat path.
 DC_ONLY(0x6e990, 0x80)
-inline int combatManager::doSurrender()
+inline int CombatManager::doSurrender()
 {
     g_surrenderCost695030 = getSurrenderCost();
     sprintf(g_text, g_generalText->getText(33),
@@ -2143,12 +2143,12 @@ inline int combatManager::doSurrender()
 }
 
 VA(0x00477ac0, 0x95)  // dc 0x6ea10
-void combatManager::checkChangeSelector()
+void CombatManager::checkChangeSelector()
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (static_cast<const CombatManager*>(this)->isQuickCombat())
         return;
 
-    army* currentArmy = getCurrentArmy();
+    Army* currentArmy = getCurrentArmy();
     if (m_lastMovedArmy == currentArmy)
         return;
 
@@ -2163,7 +2163,7 @@ void combatManager::checkChangeSelector()
 }
 
 VA(0x00477b60, 0xB6)  // dc 0x6eb18
-void combatManager::turnOffSelector(unsigned char drawIt)
+void CombatManager::turnOffSelector(unsigned char drawIt)
 {
     if (!m_lastMovedArmy)
         return;
@@ -2181,14 +2181,14 @@ void combatManager::turnOffSelector(unsigned char drawIt)
 }
 
 VA(0x00477c20, 0x1E4)  // dc 0x6ebbc
-void combatManager::checkChangeHighlighter(int currentIndex)
+void CombatManager::checkChangeHighlighter(int currentIndex)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (static_cast<const CombatManager*>(this)->isQuickCombat())
         return;
     if (m_battleOver)
         return;
 
-    army* currentArmy;
+    Army* currentArmy;
     if (validHex(currentIndex) && m_cells[currentIndex].hasArmy())
         currentArmy = m_cells[currentIndex].getArmy();
     else
@@ -2224,7 +2224,7 @@ void combatManager::checkChangeHighlighter(int currentIndex)
 }
 
 VA(0x00477e10, 0xC2)  // dc 0x6ed18
-void combatManager::turnOffHighlighter(unsigned char drawIt)
+void CombatManager::turnOffHighlighter(unsigned char drawIt)
 {
     if (!m_highlighterOn)
         return;
@@ -2267,7 +2267,7 @@ void combatManager::turnOffHighlighter(unsigned char drawIt)
 // BYTE-FLAT.  The wall is the cross-inline CSE of the row base, not the
 // loop form.
 VA(0x00477ee0, 0x3E5)  // exhaustive command order-map + call graph, dc 0x6ee60
-void combatManager::checkGetAIMove()
+void CombatManager::checkGetAIMove()
 {
     unsigned char isHuman = 0;
     if (m_playerIds[m_currentSide] >= 0
@@ -2295,9 +2295,9 @@ void combatManager::checkGetAIMove()
         if (proceed) {
             long combatValue = 0;
             if (m_heroes[1 - m_currentSide] && m_heroes[m_currentSide]) {
-                army* currentArmies = m_armies[m_currentSide];
+                Army* currentArmies = m_armies[m_currentSide];
                 for (int slot = 0; slot < 20; ++slot) {
-                    army* currentArmy = &currentArmies[slot];
+                    Army* currentArmy = &currentArmies[slot];
                     if (currentArmy->m_creatureType >= 0
                             && currentArmy->m_numTroops > 0) {
                         combatValue +=
@@ -2339,7 +2339,7 @@ void combatManager::checkGetAIMove()
 
 // E:\gamedcs\command.cpp:3131
 VA(0x004782d0, 0x5B5)  // exhaustive command order-map + body, dc 0x6f198
-void combatManager::getControl()
+void CombatManager::getControl()
 {
     m_lastCellIndex = -1;
     m_lastCommand = -99;
@@ -2348,8 +2348,8 @@ void combatManager::getControl()
         g_inputManager->flush();
 
     if (m_status == STATUS_ACTIVE
-            && !static_cast<const combatManager*>(this)->isQuickCombat())
-        g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+            && !static_cast<const CombatManager*>(this)->isQuickCombat())
+        g_mouseManager->setPointer(6, MouseManager::COMBAT_SET);
 
     checkChangeSelector();
 
@@ -2372,7 +2372,7 @@ void combatManager::getControl()
     if (m_combatWindow && m_combatWindow->m_controlSubWindow) {
         if ((m_autoCombatOn != zero || g_unk691209)
                 && isComputerAction()) {
-            static_cast<type_combat_sub_window*>(
+            static_cast<CombatSubWindow*>(
                 m_combatWindow->m_controlSubWindow)->disableAllButtons();
             if (m_autoCombatOn && m_sideIsAi[m_currentSide]) {
                 m_combatWindow->widgetClearStatus(
@@ -2457,7 +2457,7 @@ void combatManager::getControl()
                 zero, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
             g_windowManager->updateScreen(zero, 556, 800, 44);
         } else {
-            static_cast<type_combat_sub_window*>(
+            static_cast<CombatSubWindow*>(
                 m_combatWindow->m_controlSubWindow)->disableAllButtons();
         }
     }
@@ -2468,9 +2468,9 @@ void combatManager::getControl()
 }
 
 VA(0x00478890, 0x6E)  // dc 0x6f5f4
-void combatManager::resetMouse()
+void CombatManager::resetMouse()
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (static_cast<const CombatManager*>(this)->isQuickCombat())
         return;
 
     if (m_thisNetHasControl && m_playerIds[m_currentSide] >= 0
@@ -2482,13 +2482,13 @@ void combatManager::resetMouse()
         return;
     }
 
-    g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+    g_mouseManager->setPointer(6, MouseManager::COMBAT_SET);
 }
 
 VA(0x00478900, 0x290)  // dc 0x6f664
-unsigned char combatManager::processMoveThenAttack(message* msg)
+unsigned char CombatManager::processMoveThenAttack(Message* msg)
 {
-    army* currentArmy = getCurrentArmy();
+    Army* currentArmy = getCurrentArmy();
     int oldGridIndex = currentArmy->m_gridIndex;
     int oldFacing = currentArmy->m_facing;
 
@@ -2509,9 +2509,9 @@ unsigned char combatManager::processMoveThenAttack(message* msg)
     currentArmy->m_monInfo.m_attributes |= 0x04000000;
     currentArmy->m_joustBonus = 0;
     if (m_nextActionExtra != -1 && oldGridIndex != m_nextActionExtra
-            && (currentArmy->m_creatureType == army::ARMY_CREATURE_HARPY
+            && (currentArmy->m_creatureType == Army::ARMY_CREATURE_HARPY
                 || currentArmy->m_creatureType
-                       == army::ARMY_CREATURE_HARPY_HAG)
+                       == Army::ARMY_CREATURE_HARPY_HAG)
             && !(currentArmy->is(1u << 21))
             && currentArmy->m_spellInfluence[62] == 0
             && currentArmy->m_spellInfluence[70] == 0
@@ -2537,10 +2537,10 @@ unsigned char combatManager::processMoveThenAttack(message* msg)
 }
 
 VA(0x00478b90, 0x1E5)  // dc 0x6f824
-void combatManager::processFirstAid(army* currentArmy)
+void CombatManager::processFirstAid(Army* currentArmy)
 {
     if (validHex(m_nextActionGridIndex)) {
-        army* targetArmy = m_cells[m_nextActionGridIndex].getArmy();
+        Army* targetArmy = m_cells[m_nextActionGridIndex].getArmy();
         int maximum = random(
             1, static_cast<int>(
                    currentArmy->getController()->getFirstAidFactor()
@@ -2550,7 +2550,7 @@ void combatManager::processFirstAid(army* currentArmy)
         targetArmy->m_topCreatureDamage -= result;
         currentArmy->m_monInfo.m_attributes |= 0x04000000;
 
-        if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+        if (!static_cast<const CombatManager*>(this)->isQuickCombat()) {
             SAMPLE2 sample = loadPlaySample(
                 DATA_COMPGEN(0x00660a94, regenerSampleName,
                              "Regener.wav"));
@@ -2575,9 +2575,9 @@ void combatManager::processFirstAid(army* currentArmy)
 // callers' inline decisions, so retain that source scope. No inline-depth pin
 // or copied helper body is needed.
 VA(0x00478d80, 0x1054)  // anchor-callee exhaustive + single-fn gap, dc 0x6f984
-int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
+int CombatManager::processNextAction(Message& msg, unsigned char automaticTurn)
 {
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!static_cast<const CombatManager*>(this)->isQuickCombat()) {
         m_combatWindow->clearCombatMessages();
         m_combatWindow->m_heroSubWindows[0]->unShow();
         m_combatWindow->m_heroSubWindows[1]->unShow();
@@ -2588,9 +2588,9 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
     }
 
     g_processingCombatAction = 1;
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!static_cast<const CombatManager*>(this)->isQuickCombat()) {
         if (m_nextAction)
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(6, MouseManager::COMBAT_SET);
         updateMouseGrid(-1, 1);
         memset(m_curDrawGridShade, 0, sizeof(m_curDrawGridShade));
         if (updateGrid(0, 0))
@@ -2615,7 +2615,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
             shutDown(0);
     }
 
-    army* currentArmy = getCurrentArmy();
+    Army* currentArmy = getCurrentArmy();
     int returnValue = 0;
 
     if (checkWin(&msg)) {
@@ -2806,12 +2806,12 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
 }
 
 VA(0x00479de0, 0x14F)  // dc 0x701b0
-void combatManager::resetCyclingCreatures()
+void CombatManager::resetCyclingCreatures()
 {
     int cyclingCreatures = 0;
     for (int side = 0; side < 2; side++) {
         for (int slot = 0; slot < m_numArmies[side]; slot++) {
-            army* stack = &m_armies[side][slot];
+            Army* stack = &m_armies[side][slot];
             if (!(stack->is(1u << 21))
                     && stack->m_currFrameType == cs_fidget) {
                 cyclingCreatures++;
@@ -2824,7 +2824,7 @@ void combatManager::resetCyclingCreatures()
         computeMaxExtent();
         for (int side = 0; side < 2; side++) {
             for (int slot = 0; slot < m_numArmies[side]; slot++) {
-                army* stack = &m_armies[side][slot];
+                Army* stack = &m_armies[side][slot];
                 if (!(stack->is(1u << 21))) {
                     stack->m_currFrameType = cs_wait;
                     stack->m_currFrameIndex = 0;
@@ -2839,7 +2839,7 @@ void combatManager::resetCyclingCreatures()
 }
 
 VA(0x00479f30, 0x8B)  // dc 0x702bc
-void combatManager::resetCycleTimers()
+void CombatManager::resetCycleTimers()
 {
     unsigned long now = GameTime::get();
     m_cmbtHeroLastFidgetTime[0] = now;
@@ -2847,7 +2847,7 @@ void combatManager::resetCycleTimers()
 
     for (int side = 0; side < 2; side++) {
         for (int slot = 0; slot < m_numArmies[side]; slot++) {
-            army* stack = &m_armies[side][slot];
+            Army* stack = &m_armies[side][slot];
             if (stack->m_monFrameInfo.m_fidgetFrequency > 51) {
                 stack->m_lastFidgetTime =
                     now + 2 * random(50, stack->m_monFrameInfo.m_fidgetFrequency)
@@ -2858,7 +2858,7 @@ void combatManager::resetCycleTimers()
 }
 
 VA(0x00479fc0, 0x131)  // dc 0x703c0
-void combatManager::setCombatGrid(int combatShowEntireGrid,
+void CombatManager::setCombatGrid(int combatShowEntireGrid,
                                   int combatShowMouseHex,
                                   int combatGridLevel,
                                   unsigned char drawItNow)
@@ -2889,14 +2889,14 @@ void combatManager::setCombatGrid(int combatShowEntireGrid,
 // left/top/right/bottom rectangle. The save/redraw/fizzle triple around
 // DrawFrame(0,0,0,0,1,0) is what makes a mid-combat summon appear.
 VA(0x0047a100, 0x1CD)  // dc 0x70474
-army* combatManager::addArmy(int side, int monType, int monQty,
+Army* CombatManager::addArmy(int side, int monType, int monQty,
                              int gridIndex, int setAttributes,
                              int fizzleItIn)
 {
     long replaced = 0;
     int slot = -1;
     { for (long candidate = 0; candidate < 20; candidate++) {
-        const army* stack = &m_armies[side][candidate];
+        const Army* stack = &m_armies[side][candidate];
         if (stack->m_creatureType == -1) {
             slot = candidate;
             break;
@@ -2914,7 +2914,7 @@ army* combatManager::addArmy(int side, int monType, int monQty,
     if (slot == -1 || m_cells[gridIndex].m_armySide >= 0)
         return 0;
 
-    army* newArmy = &m_armies[side][slot];
+    Army* newArmy = &m_armies[side][slot];
     newArmy->init(monType, monQty, m_heroes[side], side, slot, gridIndex,
                   -1);
     newArmy->loadResources();
@@ -2923,7 +2923,7 @@ army* combatManager::addArmy(int side, int monType, int monQty,
         m_numArmies[side]++;
 
     if (fizzleItIn
-            && !static_cast<const combatManager*>(this)->isQuickCombat()) {
+            && !static_cast<const CombatManager*>(this)->isQuickCombat()) {
         resetLimitCreature();
         if (m_armies[side][slot].m_creatureType == CREATURE_ARROW_TOWER)
             markTowerArmy(newArmy);
@@ -2944,7 +2944,7 @@ army* combatManager::addArmy(int side, int monType, int monQty,
 }
 
 VA(0x0047a2d0, 0xA7)  // dc 0x70650
-std::string combatManager::getTowerString(WallSection wall, long archers,
+std::string CombatManager::getTowerString(WallSection wall, long archers,
                                              long skill) const
 {
     if (m_wallStrength[wall] <= 0) {
@@ -2960,7 +2960,7 @@ std::string combatManager::getTowerString(WallSection wall, long archers,
 }
 
 VA(0x0047a380, 0x180)  // dc 0x70714
-void combatManager::viewCastleBallista(int isQuickInfo)
+void CombatManager::viewCastleBallista(int isQuickInfo)
 {
     if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
         return;
@@ -2983,8 +2983,8 @@ void combatManager::viewCastleBallista(int isQuickInfo)
 }
 
 VA(0x0047a500, 0x164)  // dc 0x70820
-unsigned char combatManager::handleCombatPlayerDrop(unsigned long dpid,
-                                                      message* msg)
+unsigned char CombatManager::handleCombatPlayerDrop(unsigned long dpid,
+                                                      Message* msg)
 {
     int gamePos = g_game->getGamePosFromDPID(dpid);
     if (gamePos == -1)
@@ -3017,35 +3017,35 @@ unsigned char combatManager::handleCombatPlayerDrop(unsigned long dpid,
 
 // E:\gamedcs\command.cpp:3922
 DC_ONLY(0x70650, 0xC4)
-std::basic_string<char,std::char_traits<char>,std::allocator<char> combatManager::getTowerString(__$ReturnUdt, combatManager::WallSection wall, long archers, long skill)
+std::basic_string<char,std::char_traits<char>,std::allocator<char> CombatManager::getTowerString(__$ReturnUdt, CombatManager::WallSection wall, long archers, long skill)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:3932
 DC_ONLY(0x70714, 0x10A)
-void combatManager::viewCastleBallista(int bIsQuickInfo)
+void CombatManager::viewCastleBallista(int bIsQuickInfo)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:3953
 DC_ONLY(0x70820, 0xFE)
-unsigned char combatManager::handleCombatPlayerDrop(unsigned long dpid, message* msg)
+unsigned char CombatManager::handleCombatPlayerDrop(unsigned long dpid, Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:4001
 DC_ONLY(0x70920, 0x88)
-void combatManager::CheckAutoScrolling()
+void CombatManager::CheckAutoScrolling()
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:4023
 DC_ONLY(0x709a8, 0x68)
-void combatManager::ShiftXY(message* msg)
+void CombatManager::ShiftXY(Message* msg)
 {
     // @stub
 }
@@ -3066,7 +3066,7 @@ void Hero::setPrimarySkill(int skill, int amount)
 
 // E:\gamedcs\CmbtMgr.h:1488
 DC_ONLY(0x70a2c, 0x2A)
-unsigned char combatManager::inCombatArea(int x, int y)
+unsigned char CombatManager::inCombatArea(int x, int y)
 {
     // @stub
 }
@@ -3115,14 +3115,14 @@ void CMessageKill::setMessage(CNetMsg* pNetMsg)
 
 // E:\gamedcs\WinMgr.h:193
 DC_ONLY(0x70af0, 0x50)
-void heroWindowManager::fizzleForwardX(const SLimitData* limits, int fadeTime)
+void HeroWindowManager::fizzleForwardX(const SLimitData* limits, int fadeTime)
 {
     // @stub
 }
 
 // E:\gamedcs\WinMgr.h:198
 DC_ONLY(0x70b40, 0x48)
-void heroWindowManager::saveFizzleSourceX(const SLimitData* limits)
+void HeroWindowManager::saveFizzleSourceX(const SLimitData* limits)
 {
     // @stub
 }

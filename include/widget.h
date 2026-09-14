@@ -5,8 +5,8 @@
 
 #include <va.h>
 
-class heroWindow;
-class message;
+class HeroWindow;
+class Message;
 
 // PROVEN size 48: the retail ctor 0x5fe340 stores every member and
 // button::buttonIcon at 0x30 bounds the total. The tail diverges from
@@ -48,11 +48,12 @@ class message;
 //      has no such virtual, so this is the house _vslotN placeholder.
 //      Its role is byte-fixed even though its name is not: it is the
 //      per-widget sleep/wake edge hook.
-class widget {
+// Before normalization (type): widget.
+class Widget {
 public:
-    heroWindow* m_parentWindow;
-    widget* m_prevWidget;
-    widget* m_nextWidget;
+    HeroWindow* m_parentWindow;
+    Widget* m_prevWidget;
+    Widget* m_nextWidget;
     short m_id;
     short m_priority;
     short m_style;
@@ -72,7 +73,8 @@ public:
     // Dreamcast widget::EStatusFlags, values byte-corroborated by the
     // retail ctor (status = WIDGET_ACTIVE | WIDGET_DRAWN) and enable
     // (WIDGET_DISABLED mask).
-    enum EStatusFlags {
+// Before normalization (type): widget::EStatusFlags.
+    enum StatusFlags {
         WIDGET_STATUS_MASK = 0xFFFF,
         WIDGET_SELECTED = 1,
         WIDGET_ACTIVE = 2,
@@ -87,7 +89,8 @@ public:
     // widget::style values; 0x1000 is homm2's WIDGET_KIND_AUTO_REPEAT
     // role (button::Main's repeat-timer head keys on it) - name
     // provisional.
-    enum EStyles {
+// Before normalization (type): widget::EStyles.
+    enum Styles {
         WIDGET_STYLE_AUTO_REPEAT = 0x1000
     };
     // Dreamcast widget::EReturnCodes, verbatim - plus one retail-only
@@ -99,7 +102,8 @@ public:
     // below is an ORDINAL PLACEHOLDER (the field_NN / _vslotN house
     // convention), NOT an attested name. Rename it the moment a
     // producer's TU proves one.
-    enum EReturnCodes {
+// Before normalization (type): widget::EReturnCodes.
+    enum ReturnCodes {
         WIDGET_END_DIALOG = 10,
         WIDGET_SELECT = 12,
         WIDGET_DESELECT = 13,
@@ -107,7 +111,8 @@ public:
         WIDGET_RETURN_32 = 0x20
     };
     // Dreamcast widget::ECommands, verbatim.
-    enum ECommands {
+// Before normalization (type): widget::ECommands.
+    enum Commands {
         WIDGET_ACTIVATE = 1,
         WIDGET_DRAW = 2,
         WIDGET_SET_TEXT = 3,
@@ -140,13 +145,13 @@ public:
     };
     // Retail body 0x5fe410 (dc 0x196bd4) - the default ctor really is
     // emitted; it is not an inlined-away static.
-    widget();
-    widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle);
+    Widget();
+    Widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle);
     // Keep the retail virtual slot order as one block. CodeView's header
     // bodies at 144/147 and 186/187 precede the text/status helpers below.
-    virtual ~widget();  // slot 0
+    virtual ~Widget();  // slot 0
     void initialize(int x, int y, int w, int h, int id, int style);
-    virtual int open(int newPriority, heroWindow* parent);  // slot 1
+    virtual int open(int newPriority, HeroWindow* parent);  // slot 1
     // Non-virtual on DC and in retail: heroWindow::RemoveWidget calls
     // it DIRECTLY (0x5bc690 - a /Gy header-COMDAT the link kept from an
     // earlier obj, ICF-folded with other empty bodies). Declared only;
@@ -154,7 +159,7 @@ public:
     void close();
     // DC Main(message&) is shared by the widget overrides; retail passes
     // the same address through slot 2.
-    virtual int main(message& msg) = 0;  // slot 2
+    virtual int main(Message& msg) = 0;  // slot 2
     // Complete widened the Dreamcast nil-argument draw hook. The shared
     // vtable representative at 0x5bc7e0 is `ret 8`, and
     // TCampaignBrief dispatches this slot with the z-buffer and widget id.
@@ -170,7 +175,7 @@ public:
     virtual void dim() const;  // slot 8
     virtual void enable(unsigned char on);  // slot 9
     void setHelpText(const char* text, const char* rclick, unsigned char copyText);
-    int sendMessage(widget::ECommands command, int extra);
+    int sendMessage(Widget::Commands command, int extra);
 
     VA(0x00404df0, 0x1)  // shared empty focus hook, vtable slots 10/11; dc 0x54d1c
     virtual void onSetFocus() {}  // slot 10
@@ -227,7 +232,7 @@ protected:
     // Dreamcast: protected static widget* last_hover_widget
     // (?last_hover_widget@widget@@1PAV1@A); retail .bss 0x6aac68,
     // cleared by the dtor when the dying widget is the hoveree.
-    static widget* s_lastHoverWidget;
+    static Widget* s_lastHoverWidget;
 
 public:
     // Slot 12. DECLARED ONLY, exactly like Close: retail's body is the
@@ -237,7 +242,7 @@ public:
     // of an /Ob2-inlined nothing.
     virtual void vslot12(int on);  // slot 12
 };
-SIZE(widget, 48);
+SIZE(Widget, 48);
 
 // CODEVIEW(E:\gamedcs\widget.cpp:235, dc 0x196ccc) void widget::Close();
 

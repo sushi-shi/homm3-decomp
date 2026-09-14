@@ -12,7 +12,7 @@ class Bitmap16Bit;
 // destructor releases that pointer. Slot 2 then reports DataSize plus the
 // fixed 0x30-byte object extent, matching the resource-size virtual used by
 // Bitmap16Bit and Bitmap816.
-class Bitmap24Bit : public resource {
+class Bitmap24Bit : public Resource {
 public:
     unsigned int m_dataSize;
     int m_imageSize;

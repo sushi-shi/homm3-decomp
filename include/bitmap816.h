@@ -10,7 +10,7 @@ class Bitmap16Bit;
 // Partial model: the resource base is byte-proven by
 // bitmapBorder::SetImage (name strcmp at +4, Dispose vcall); the
 // embedded palette pair at +0x50/+0x250 by SetPlayerPaletteColors.
-class Bitmap816 : public resource {
+class Bitmap816 : public Resource {
 private:
     // DC names both dwords; retail vtable slot 2 reads DataSize directly
     // and adds the fixed 0x56c-byte object extent.

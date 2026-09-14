@@ -5,14 +5,15 @@
 
 #include "struct.h"
 
-class heroWindow;
+class HeroWindow;
 
 // Message-id domain. Only the value the widget bodies prove is listed:
 // homm2's BASE/message.h MESSAGE_WIDGET = 0x200 carried over verbatim
 // (widget::send_message and widget::enable store it into message::id).
 // Enum NAME is homm2 lineage, unattested on DC - grow the roster as
 // consumers prove values.
-enum EMessageId {
+// Before normalization (type): EMessageId.
+enum MessageId {
     // The empty-queue message. inputManager::GetEvent (0x4ec590) and its
     // PeekEvent twin build it by hand - `id = 0; codeY = 0; codeX = 0;
     // qualifier = 0` - whenever the ring is drained, and
@@ -36,7 +37,8 @@ enum EMessageId {
 // switches on them (homm2 BASE/message.h MessageDispatchResult
 // names/values carried over verbatim; CONTINUE = 0 is the untaken
 // default arm).
-enum EMessageDispatchResult {
+// Before normalization (type): EMessageDispatchResult.
+enum MessageDispatchResult {
     MESSAGE_DISPATCH_CONSUME = 0x1,
     MESSAGE_DISPATCH_FORWARD = 0x2
 };
@@ -45,7 +47,8 @@ enum EMessageDispatchResult {
 // message (homm2 BASE/message.h ExecutiveCommand names/values
 // verbatim; retail's MainLoop keeps TERMINATE_LOOP as a done-only arm
 // and stores dialogReturn only for RETURN_RESULT).
-enum EExecutiveCommand {
+// Before normalization (type): EExecutiveCommand.
+enum ExecutiveCommand {
     EXECUTIVE_COMMAND_TERMINATE_LOOP = 0x1,
     EXECUTIVE_COMMAND_REMOVE_MANAGER = 0x2,
     EXECUTIVE_COMMAND_RETURN_RESULT = 0x4
@@ -54,7 +57,8 @@ enum EExecutiveCommand {
 // Modifier bits carried in message::qualifier (homm2 lineage names):
 // button::Select latches qualifier & MASK into iLeftRightSave and the
 // right-select stamp writes RIGHT.
-enum EMessageModifiers {
+// Before normalization (type): EMessageModifiers.
+enum MessageModifiers {
     // Byte-proven by inputManager::ForceMouseMove, which builds the
     // qualifier from three GetKeyState probes: VK_SHIFT -> 1,
     // VK_CONTROL -> 4, VK_MENU -> 0x20. homm2 splits bit 0/1 into

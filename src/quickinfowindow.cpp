@@ -17,7 +17,7 @@ QuickCreatureWindow::QuickCreatureWindow(ViewLevel viewLevel,
 {
     m_widgets.reserve(m_widgets.size() + 3);
 
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         99, 26, 58, 64, 1000, "TwCrPort.def", id + 2, 0, 0, 0, 0x10));
     addWidget(m_widgets.back(), -1);
 
@@ -33,8 +33,8 @@ QuickCreatureWindow::QuickCreatureWindow(ViewLevel viewLevel,
                 getArmyName(id, 0));
     }
 
-    m_widgets.push_back(new textWidget(
-        16, 110, 224, 36, g_text, "smalfont.fnt", font::PRIMARY,
+    m_widgets.push_back(new TextWidget(
+        16, 110, 224, 36, g_text, "smalfont.fnt", Font::PRIMARY,
         1001, 1, 0, 8));
     addWidget(m_widgets.back(), -1);
 
@@ -60,8 +60,8 @@ QuickCreatureWindow::QuickCreatureWindow(ViewLevel viewLevel,
             break;
         }
 
-        m_widgets.push_back(new textWidget(
-            16, 156, 224, 74, g_text, "smalfont.fnt", font::PRIMARY,
+        m_widgets.push_back(new TextWidget(
+            16, 156, 224, 74, g_text, "smalfont.fnt", Font::PRIMARY,
             1001, 1, 0, 8));
         addWidget(m_widgets.back(), -1);
     }

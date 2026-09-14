@@ -295,7 +295,7 @@ static void setAvailableRmgHeroes(
 // Vtable 0x6409cc slot 0 and the 0x14-byte concrete map layout identify this
 // scalar deleting wrapper. Its non-deleting half destroys the owned array of
 // 0x30-byte TRmgMapItem elements before restoring the abstract map vtable.
-VA_COMPGEN(0x00530F80, 0x21, SCALAR_DELETING_DTOR, type_random_map)
+VA_COMPGEN(0x00530F80, 0x21, SCALAR_DELETING_DTOR, RandomMap)
 
 VA(0x00530E90, 0x4A)
 RmgMapItem::RmgMapItem()
@@ -358,7 +358,7 @@ void RmgMapItem::clear()
 }
 
 VA(0x00530FB0, 0xA0)
-type_random_map::type_random_map(int width, int height, int levels)
+RandomMap::RandomMap(int width, int height, int levels)
 {
     m_mapWidth = width;
     m_mapHeight = height;
@@ -372,14 +372,14 @@ type_random_map::type_random_map(int width, int height, int levels)
 VA_COMPGEN(0x00531050, 0x58, VECTOR_DELETING_DTOR, RmgMapItem)
 
 VA(0x005310B0, 0x83)
-type_random_map::~type_random_map()
+RandomMap::~RandomMap()
 {
     if (m_ownsMapItems)
         delete[] m_mapItems;
 }
 
 VA(0x00531140, 0x2A)
-void type_random_map::clear()
+void RandomMap::clear()
 {
     RmgMapItem* mapItem = m_mapItems;
     int mapItemCount = m_mapWidth * m_mapHeight * m_numberLevels;
@@ -390,7 +390,7 @@ void type_random_map::clear()
 }
 
 VA(0x00531170, 0x19C)
-unsigned char type_random_map::hasConnectedOutline(
+unsigned char RandomMap::hasConnectedOutline(
     const std::vector<Point>& outline, RmgMapPosition position,
     unsigned char allowEntrances, RmgZone* zone, unsigned char requireGate)
 {
@@ -430,7 +430,7 @@ unsigned char type_random_map::hasConnectedOutline(
 }
 
 VA(0x00531310, 0x14B)
-void type_random_map::markCoastalTiles()
+void RandomMap::markCoastalTiles()
 {
     RmgMapPosition position;
     RmgMapItem* item = m_mapItems;
@@ -515,7 +515,7 @@ static void insertRmgWorkItem(
 // states plateau at 83.6813%. Reusing queuedCost reaches 82.2308%; scalar
 // lookup overloads add no peak. Keep the existing position-lookup interface.
 VA(0x00531460, 0x441)
-void type_random_map::floodConnectionCosts(RmgMapPosition position, unsigned char waterZone)
+void RandomMap::floodConnectionCosts(RmgMapPosition position, unsigned char waterZone)
 {
     std::vector<int> costs;
     std::vector<RmgMapPosition> positions;
@@ -609,7 +609,7 @@ void type_random_map::floodConnectionCosts(RmgMapPosition position, unsigned cha
 // indices reaches 90.2171%. Both retained mask-range calls agree. The
 // current 0x20 frame still differs from retail's 0x1c frame and reloads.
 VA(0x005318B0, 0x212) // anchor-callee 0x531d29; thiscall, ret 0x18; retail-only
-unsigned char type_random_map::isPlacementBlocked(
+unsigned char RandomMap::isPlacementBlocked(
     RmgObjectPropertiesRef* properties, RmgMapPosition position,
     int zoneIndex, unsigned char rejectBorder)
 {
@@ -648,7 +648,7 @@ unsigned char type_random_map::isPlacementBlocked(
 }
 
 VA(0x00531AD0, 0x100) // anchor-callee 0x5441a1; Complete-only, ret 0xc
-void type_random_map::openPathPatch(int x, int y, int level)
+void RandomMap::openPathPatch(int x, int y, int level)
 {
     RmgMapItem* item = getMapItem(x, y, level);
     if (!item->m_connection.m_present) {
@@ -672,7 +672,7 @@ void type_random_map::openPathPatch(int x, int y, int level)
 }
 
 VA(0x00531BD0, 0x11F) // anchor-callee 0x544343; Complete-only, ret 0xc
-void type_random_map::markBorderPatch(RmgMapPosition position)
+void RandomMap::markBorderPatch(RmgMapPosition position)
 {
     RmgMapItem* item = getMapItem(position);
     if (!item->m_connection.m_present) {
@@ -704,7 +704,7 @@ void type_random_map::markBorderPatch(RmgMapPosition position)
 // Moving coordinate snapshots to function entry does not recover retail's
 // EDI/EBX homes across the helper calls; terrain snapshots also remain lower.
 VA(0x00531CF0, 0x1A5) // anchor-callee 0x541c73; thiscall, ret 0x14; retail-only
-unsigned char type_random_map::canPlaceObject(
+unsigned char RandomMap::canPlaceObject(
     RmgObjectPropertiesRef* properties, RmgMapPosition position, RmgZone* zone)
 {
     ObjectType& prototype = *properties->m_prototype;
@@ -753,7 +753,7 @@ unsigned char type_random_map::canPlaceObject(
 // 85.03%; using insert(end, object) for the entrance append is flat. Keep
 // the by-value position snapshot and canonical container operations.
 VA(0x00531EA0, 0x2E6) // anchor-callee 0x5465d9/0x535400; thiscall, ret 0x10
-void type_random_map::addObject(type_object* object, RmgMapPosition position)
+void RandomMap::addObject(Object* object, RmgMapPosition position)
 {
     ObjectType& prototype = *object->m_properties->m_prototype;
     object->m_position = position;
@@ -782,7 +782,7 @@ void type_random_map::addObject(type_object* object, RmgMapPosition position)
 }
 
 VA(0x00532190, 0x6D)
-void type_random_map::setTile(const RmgGridPoint& point, const rmgTerrainTile& tile)
+void RandomMap::setTile(const RmgGridPoint& point, const RmgTerrainTile& tile)
 {
     RmgMapItem& item = m_mapItems[point.m_y * m_mapWidth + point.m_x];
     unsigned char flipY = tile.m_flipY;
@@ -797,14 +797,14 @@ void type_random_map::setTile(const RmgGridPoint& point, const rmgTerrainTile& t
 
 // Slot 2 updates only the packed eight-bit terrain frame.
 VA(0x00532200, 0x3C)
-void type_random_map::setOverlay(const RmgGridPoint& point, int value)
+void RandomMap::setOverlay(const RmgGridPoint& point, int value)
 {
     RmgMapItem& item = m_mapItems[point.m_y * m_mapWidth + point.m_x];
     item.m_tile.m_terrainFrame = value;
 }
 
 VA(0x00532240, 0x15)
-RmgGridPoint type_random_map::getSize()
+RmgGridPoint RandomMap::getSize()
 {
     return RmgGridPoint(m_mapWidth, m_mapHeight);
 }
@@ -812,10 +812,10 @@ RmgGridPoint type_random_map::getSize()
 // Slot 4 expands the packed terrain fields into the adapter's three-dword
 // value, including the two independent flip bytes.
 VA(0x00532260, 0x60)
-rmgTerrainTile type_random_map::getTile(const RmgGridPoint& point)
+RmgTerrainTile RandomMap::getTile(const RmgGridPoint& point)
 {
     RmgMapItem& item = m_mapItems[point.m_y * m_mapWidth + point.m_x];
-    rmgTerrainTile tile;
+    RmgTerrainTile tile;
     tile.m_terrain = item.m_tile.m_landType;
     tile.m_frame = item.m_tile.m_terrainFrame;
     tile.m_flipX = item.m_tileData.m_terrainFlipX;
@@ -827,13 +827,13 @@ rmgTerrainTile type_random_map::getTile(const RmgGridPoint& point)
 // supplied x/y point. The two signed extracts select the six-bit land kind
 // and its adjacent eight-bit terrain frame from TRmgGroundTile.
 VA(0x005322C0, 0x2A)
-int type_random_map::getLand(const RmgGridPoint& point)
+int RandomMap::getLand(const RmgGridPoint& point)
 {
     return m_mapItems[point.m_y * m_mapWidth + point.m_x].m_tile.m_landType;
 }
 
 VA(0x005322F0, 0x2A)
-int type_random_map::getOverlay(const RmgGridPoint& point)
+int RandomMap::getOverlay(const RmgGridPoint& point)
 {
     return m_mapItems[point.m_y * m_mapWidth + point.m_x]
         .m_tile.m_terrainFrame;
@@ -848,7 +848,7 @@ VA_COMPGEN(0x00537940, 0x23, SCALAR_DELETING_DTOR, RmgRoadMapAdapterInterface)
 
 VA(0x00532360, 0x6E)
 void RmgRoadMapAdapter::setTile(
-    const RmgGridPoint& point, const rmgTerrainTile& tile)
+    const RmgGridPoint& point, const RmgTerrainTile& tile)
 {
     RmgMapItem& item = m_map->m_mapItems[
         point.m_y * m_map->m_mapWidth + point.m_x];
@@ -870,11 +870,11 @@ void RmgRoadMapAdapter::setOverlay(const RmgGridPoint& point, int value)
 }
 
 VA(0x00532410, 0x62)
-rmgTerrainTile RmgRoadMapAdapter::getTile(const RmgGridPoint& point)
+RmgTerrainTile RmgRoadMapAdapter::getTile(const RmgGridPoint& point)
 {
     RmgMapItem& item = m_map->m_mapItems[
         point.m_y * m_map->m_mapWidth + point.m_x];
-    rmgTerrainTile tile;
+    RmgTerrainTile tile;
     tile.m_terrain = item.m_tile.m_roadType;
     tile.m_frame = item.m_tileData.m_roadFrame;
     tile.m_flipX = item.m_tileData.m_roadFlipX;
@@ -921,7 +921,7 @@ VA_COMPGEN(0x00537910, 0x23, SCALAR_DELETING_DTOR, RmgMapAdapterInterface)
 VA_COMPGEN(0x005324E0, 0x21, SCALAR_DELETING_DTOR, RmgMapAdapter)
 
 VA(0x00532520, 0x205)
-void RmgMapAdapter::setTile(const RmgGridPoint& point, const rmgTerrainTile& tile)
+void RmgMapAdapter::setTile(const RmgGridPoint& point, const RmgTerrainTile& tile)
 {
     RmgMapItem& item = m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x];
     unsigned char flipX = tile.m_flipX;
@@ -993,10 +993,10 @@ RmgGridPoint RmgMapAdapter::getSize()
 }
 
 VA(0x005327C0, 0x63) // anchor-vtable + packed-field evidence; Complete-only
-rmgTerrainTile RmgMapAdapter::getTile(const RmgGridPoint& point)
+RmgTerrainTile RmgMapAdapter::getTile(const RmgGridPoint& point)
 {
     const RmgMapItem& item = m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x];
-    rmgTerrainTile tile;
+    RmgTerrainTile tile;
     tile.m_terrain = item.m_tile.m_riverType;
     tile.m_frame = item.m_tile.m_riverFrame;
     tile.m_flipX = item.m_tileData.m_riverFlipX;
@@ -1269,13 +1269,13 @@ RmgTownSlot* RmgTemplate::findZone(int zoneIndex)
 // Shipyard water probing copies all three fields from the object before
 // adding offsets. This ordinary value accessor models that copy boundary;
 // the source name is inferred from the Complete-only retail use.
-RmgMapPosition type_object::getPosition() const
+RmgMapPosition Object::getPosition() const
 {
     return m_position;
 }
 
 VA(0x005330E0, 0x39)
-type_object::type_object(RmgObjectPropertiesRef* newProperties)
+Object::Object(RmgObjectPropertiesRef* newProperties)
 {
     m_properties = newProperties;
     ++m_properties->m_refCount;
@@ -1291,28 +1291,28 @@ type_object::type_object(RmgObjectPropertiesRef* newProperties)
 // class/procedure counterparts. The factories 0x534870/0x534970/0x534a00/
 // 0x534a90 allocate only the base's 0x1c bytes and install 0x640ac4/0x640b24/
 // 0x640b34/0x640b54 respectively; writer slot 3 proves each payload role.
-rmgResourceObject::rmgResourceObject(RmgObjectPropertiesRef* properties)
-    : type_object(properties)
+RmgResourceObject::RmgResourceObject(RmgObjectPropertiesRef* properties)
+    : Object(properties)
 {
 }
 
-rmgScholarObject::rmgScholarObject(RmgObjectPropertiesRef* properties)
-    : type_object(properties)
+RmgScholarObject::RmgScholarObject(RmgObjectPropertiesRef* properties)
+    : Object(properties)
 {
 }
 
-rmgShrineObject::rmgShrineObject(RmgObjectPropertiesRef* properties)
-    : type_object(properties)
+RmgShrineObject::RmgShrineObject(RmgObjectPropertiesRef* properties)
+    : Object(properties)
 {
 }
 
-rmgSpellScrollObject::rmgSpellScrollObject(RmgObjectPropertiesRef* properties, int spell)
-    : type_object(properties), m_spell(spell)
+RmgSpellScrollObject::RmgSpellScrollObject(RmgObjectPropertiesRef* properties, int spell)
+    : Object(properties), m_spell(spell)
 {
 }
 
-rmgWitchHutObject::rmgWitchHutObject(RmgObjectPropertiesRef* properties)
-    : type_object(properties)
+RmgWitchHutObject::RmgWitchHutObject(RmgObjectPropertiesRef* properties)
+    : Object(properties)
 {
 }
 
@@ -1323,8 +1323,8 @@ rmgWitchHutObject::rmgWitchHutObject(RmgObjectPropertiesRef* properties)
 // are the gameplay payload and reader, not these generator definitions.
 // Retail 0x534380/0x534410/0x534490 allocate 0x54 bytes, install 0x640ad4,
 // clear vector words +0x48/+0x4c/+0x50, and set the reward defaults below.
-rmgBlackBoxObject::rmgBlackBoxObject(RmgObjectPropertiesRef* properties)
-    : type_object(properties)
+RmgBlackBoxObject::RmgBlackBoxObject(RmgObjectPropertiesRef* properties)
+    : Object(properties)
 {
     m_creatureType = -1;
     m_creatureCount = 0;
@@ -1334,10 +1334,10 @@ rmgBlackBoxObject::rmgBlackBoxObject(RmgObjectPropertiesRef* properties)
 
 // Base-object vtable 0x640a74 slot 0 retains the generated deleting wrapper;
 // its non-deleting half is the shared refcount release at 0x5338d0.
-VA_COMPGEN(0x00533120, 0x2D, SCALAR_DELETING_DTOR, type_object)
+VA_COMPGEN(0x00533120, 0x2D, SCALAR_DELETING_DTOR, Object)
 
 VA(0x00533150, 0x12)
-void type_object::clearPlacementMarks()
+void Object::clearPlacementMarks()
 {
     m_candidateCovers = 0;
     m_candidateBehind = 0;
@@ -1347,7 +1347,7 @@ void type_object::clearPlacementMarks()
 }
 
 VA(0x00533170, 0x79)
-void type_object::write(AbstractFile* outfile, int parameter)
+void Object::write(AbstractFile* outfile, int parameter)
 {
     {
         char byteBuffer = m_position.m_x;
@@ -1371,9 +1371,9 @@ void type_object::write(AbstractFile* outfile, int parameter)
 }
 
 VA(0x005331F0, 0xFD) // anchor-vtable 0x640a84+0x0c; thiscall, ret 8
-void rmgMonsterObject::write(AbstractFile* outfile, int version)
+void RmgMonsterObject::write(AbstractFile* outfile, int version)
 {
-    type_object::write(outfile, version);
+    Object::write(outfile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         int intBuffer = m_objectId;
         outfile->write(&intBuffer, sizeof(intBuffer));
@@ -1405,9 +1405,9 @@ void rmgMonsterObject::write(AbstractFile* outfile, int version)
 }
 
 VA(0x005332F0, 0x16A)
-void rmgTownObject::write(AbstractFile* outfile, int version)
+void RmgTownObject::write(AbstractFile* outfile, int version)
 {
-    type_object::write(outfile, version);
+    Object::write(outfile, version);
     if (version >= 1) {
         int value = m_objectId;
         outfile->write(&value, sizeof(value));
@@ -1455,9 +1455,9 @@ void rmgTownObject::write(AbstractFile* outfile, int version)
 }
 
 VA(0x00533460, 0xA0) // base serialization plus unowned player and reserved bytes
-void rmgOwnableObject::write(AbstractFile* outfile, int parameter)
+void RmgOwnableObject::write(AbstractFile* outfile, int parameter)
 {
-    type_object::write(outfile, parameter);
+    Object::write(outfile, parameter);
     {
         char player = -1;
         outfile->write(&player, sizeof(player));
@@ -1470,13 +1470,13 @@ void rmgOwnableObject::write(AbstractFile* outfile, int parameter)
 // Artifact vtable 0x640ab4 is the only change from the base constructor.
 // Its factory at 0x5341f0 expands this ordinary constructor and the canonical
 // base body; no independent retained artifact-constructor address is claimed.
-rmgArtifactObject::rmgArtifactObject(RmgObjectPropertiesRef* properties)
-    : type_object(properties)
+RmgArtifactObject::RmgArtifactObject(RmgObjectPropertiesRef* properties)
+    : Object(properties)
 {
 }
 
-rmgSeerHutObject::rmgSeerHutObject(RmgObjectPropertiesRef* properties)
-    : type_object(properties)
+RmgSeerHutObject::RmgSeerHutObject(RmgObjectPropertiesRef* properties)
+    : Object(properties)
 {
     m_experience = 0;
     m_artifact = -1;
@@ -1486,36 +1486,36 @@ rmgSeerHutObject::rmgSeerHutObject(RmgObjectPropertiesRef* properties)
     m_creatureCount = 0;
 }
 
-rmgQuestArtifactObject::rmgQuestArtifactObject(RmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, rmgSeerHutObject* seerHut,
-    type_treasure_def* definition)
-    : rmgArtifactObject(properties), m_generator(generator),
+RmgQuestArtifactObject::RmgQuestArtifactObject(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator* generator, RmgSeerHutObject* seerHut,
+    TreasureDef* definition)
+    : RmgArtifactObject(properties), m_generator(generator),
       m_seerHut(seerHut), m_definition(definition)
 {
 }
 
-rmgKeyTentObject::rmgKeyTentObject(RmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, int value)
-    : type_object(properties), m_generator(generator), m_value(value)
+RmgKeyTentObject::RmgKeyTentObject(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator* generator, int value)
+    : Object(properties), m_generator(generator), m_value(value)
 {
 }
 
 VA(0x00533500, 0x8A)
-void rmgArtifactObject::write(AbstractFile* outfile, int parameter)
+void RmgArtifactObject::write(AbstractFile* outfile, int parameter)
 {
-    type_object::write(outfile, parameter);
+    Object::write(outfile, parameter);
     {
         char hasCustomTreasure = 0;
         outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
     }
 }
 
-VA_COMPGEN(0x00533590, 0x21, SCALAR_DELETING_DTOR, rmgOwnableObject)
+VA_COMPGEN(0x00533590, 0x21, SCALAR_DELETING_DTOR, RmgOwnableObject)
 
 VA(0x005335C0, 0xB2) // anchor-vtable 0x640ac4 slot 3; thiscall ret 8
-void rmgResourceObject::write(AbstractFile* outfile, int parameter)
+void RmgResourceObject::write(AbstractFile* outfile, int parameter)
 {
-    type_object::write(outfile, parameter);
+    Object::write(outfile, parameter);
     {
         char hasCustomTreasure = 0;
         outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
@@ -1530,14 +1530,14 @@ void rmgResourceObject::write(AbstractFile* outfile, int parameter)
     }
 }
 
-VA_COMPGEN(0x00533680, 0x21, SCALAR_DELETING_DTOR, rmgBlackBoxObject)
+VA_COMPGEN(0x00533680, 0x21, SCALAR_DELETING_DTOR, RmgBlackBoxObject)
 
-VA_COMPGEN(0x005336B0, 0x36, IMPLICIT_DTOR, rmgBlackBoxObject)
+VA_COMPGEN(0x005336B0, 0x36, IMPLICIT_DTOR, RmgBlackBoxObject)
 
 VA(0x005336F0, 0x1E0)
-void rmgBlackBoxObject::write(AbstractFile* outfile, int version)
+void RmgBlackBoxObject::write(AbstractFile* outfile, int version)
 {
-    type_object::write(outfile, version);
+    Object::write(outfile, version);
     {
         char hasCustomTreasure = 0;
         outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
@@ -1616,24 +1616,24 @@ void rmgBlackBoxObject::write(AbstractFile* outfile, int version)
 // With the body visible, base and ownable destructors have identical 13-byte
 // bodies and the same base-vtable relocation, proving their ICF identity.
 VA(0x005338D0, 0x0D)
-type_object::~type_object()
+Object::~Object()
 {
     --m_properties->m_refCount;
 }
 
 VA(0x005338E0, 0xD4)
-unsigned char rmgKeyTentObject::isWritable()
+unsigned char RmgKeyTentObject::isWritable()
 {
     if (m_generator->placeKeyTentGuard(this, m_value * 3 / 2))
         return 1;
-    type_random_map_generator* generator = m_generator;
+    RandomMapGenerator* generator = m_generator;
     int value = m_value;
     RmgMapPosition position = m_position;
     generator->removeObject(this);
     RmgZone* zone = generator->m_zones[
         generator->m_map.getMapItem(position)->m_zoneState.m_zone];
     int actualValue;
-    type_object* object = generator->generateTreasure(
+    Object* object = generator->generateTreasure(
         zone, value, value * 3 / 2, &actualValue, 0, 0, 0, position);
     if (object)
         generator->addObject(object, position);
@@ -1642,9 +1642,9 @@ unsigned char rmgKeyTentObject::isWritable()
 
 // Vtable 0x640af4 owns a pending polymorphic seer-hut object. The retained
 // destructor deletes it before the ordinary artifact/base property release.
-VA_COMPGEN(0x005339C0, 0x21, SCALAR_DELETING_DTOR, rmgQuestArtifactObject)
+VA_COMPGEN(0x005339C0, 0x21, SCALAR_DELETING_DTOR, RmgQuestArtifactObject)
 VA(0x005339F0, 0x58)
-rmgQuestArtifactObject::~rmgQuestArtifactObject()
+RmgQuestArtifactObject::~RmgQuestArtifactObject()
 {
     delete m_seerHut;
 }
@@ -1652,7 +1652,7 @@ rmgQuestArtifactObject::~rmgQuestArtifactObject()
 // The generator places the seer hut on success and takes ownership. On
 // failure the wrapper destroys its pending hut. Both paths clear ownership.
 VA(0x00533A50, 0x33) // vtable 0x640af4 slot 2 + retained callee 0x54b490
-unsigned char rmgQuestArtifactObject::isWritable()
+unsigned char RmgQuestArtifactObject::isWritable()
 {
     if (m_generator->placeQuestArtifact(this)) {
         m_seerHut = 0;
@@ -1667,9 +1667,9 @@ unsigned char rmgQuestArtifactObject::isWritable()
 // reward: experience, creatures, or resources, in that precedence order.
 // AB adds the quest kind, artifact count, deadline and three empty strings.
 VA(0x00533A90, 0x1E0)
-void rmgSeerHutObject::write(AbstractFile* outfile, int version)
+void RmgSeerHutObject::write(AbstractFile* outfile, int version)
 {
-    type_object::write(outfile, version);
+    Object::write(outfile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         {
             char questKind = 5;
@@ -1751,10 +1751,10 @@ void rmgSeerHutObject::write(AbstractFile* outfile, int version)
 // The hero-object factory marks the selected index in disabledHeroes before
 // construction. Vtable 0x640b14 slot 1 clears that byte when the reservation
 // is released.
-rmgHeroObject::rmgHeroObject(RmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, int objectId, int heroIndex,
+RmgHeroObject::RmgHeroObject(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator* generator, int objectId, int heroIndex,
     int experience)
-    : type_object(properties)
+    : Object(properties)
 {
     m_generator = generator;
     m_heroIndex = heroIndex;
@@ -1763,15 +1763,15 @@ rmgHeroObject::rmgHeroObject(RmgObjectPropertiesRef* properties,
 }
 
 VA(0x00533C70, 0x0F)  // factory 0x5348d0; Complete-only RMG object
-void rmgHeroObject::unknownOperation()
+void RmgHeroObject::unknownOperation()
 {
     m_generator->m_disabledHeroes[m_heroIndex] = 0;
 }
 
 VA(0x00533C80, 0x1E4) // anchor-vtable + ordered versioned H3M writes; ret 8
-void rmgHeroObject::write(AbstractFile* outfile, int version)
+void RmgHeroObject::write(AbstractFile* outfile, int version)
 {
-    type_object::write(outfile, version);
+    Object::write(outfile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         int objectId = m_objectId;
         outfile->write(&objectId, sizeof(objectId));
@@ -1854,9 +1854,9 @@ void rmgHeroObject::write(AbstractFile* outfile, int version)
 }
 
 VA(0x00533E70, 0xC3) // anchor-vtable + default serialization bytes; ret 8
-void rmgScholarObject::write(AbstractFile* outfile, int parameter)
+void RmgScholarObject::write(AbstractFile* outfile, int parameter)
 {
-    type_object::write(outfile, parameter);
+    Object::write(outfile, parameter);
     {
         char rewardKind = -1;
         outfile->write(&rewardKind, sizeof(rewardKind));
@@ -1876,9 +1876,9 @@ void rmgScholarObject::write(AbstractFile* outfile, int parameter)
 }
 
 VA(0x00533F40, 0xAF) // anchor-vtable + ordered write sizes; ret 8
-void rmgShrineObject::write(AbstractFile* outfile, int parameter)
+void RmgShrineObject::write(AbstractFile* outfile, int parameter)
 {
-    type_object::write(outfile, parameter);
+    Object::write(outfile, parameter);
     {
         char spell = -1;
         outfile->write(&spell, sizeof(spell));
@@ -1894,12 +1894,12 @@ void rmgShrineObject::write(AbstractFile* outfile, int parameter)
 }
 
 VA(0x00533FF0, 0xC2)
-void rmgSpellScrollObject::write(AbstractFile* outfile, int parameter)
+void RmgSpellScrollObject::write(AbstractFile* outfile, int parameter)
 {
-    type_object::write(outfile, parameter);
+    Object::write(outfile, parameter);
     {
         char message = 0;
-        outfile->write(&message, sizeof(message));
+        outfile->write(&message, sizeof(Message));
     }
     {
         char spell = m_spell;
@@ -1916,9 +1916,9 @@ void rmgSpellScrollObject::write(AbstractFile* outfile, int parameter)
 }
 
 VA(0x005340C0, 0x93) // anchor-vtable + version guard and mask 0xefdf; ret 8
-void rmgWitchHutObject::write(AbstractFile* outfile, int parameter)
+void RmgWitchHutObject::write(AbstractFile* outfile, int parameter)
 {
-    type_object::write(outfile, parameter);
+    Object::write(outfile, parameter);
     if (parameter >= RMG_MAP_ARMAGEDDONS_BLADE) {
         unsigned int allowedSkills = 0xefdf;
         outfile->write(&allowedSkills, sizeof(allowedSkills));
@@ -1929,7 +1929,7 @@ void rmgWitchHutObject::write(AbstractFile* outfile, int parameter)
 // The four argument loads, five stores, vtable relocation, and `ret 0x10`
 // independently prove this constructor and the shared 0x14-byte prefix.
 VA(0x00534160, 0x27)
-type_treasure_def::type_treasure_def(
+TreasureDef::TreasureDef(
     int newObjectType, int newSubtype, int newValue, int newDensity)
 {
     m_objectType = newObjectType;
@@ -1939,28 +1939,28 @@ type_treasure_def::type_treasure_def(
 }
 
 VA(0x00534190, 0x06)
-int type_treasure_def::getValue(RmgZone*, type_random_map_generator*)
+int TreasureDef::getValue(RmgZone*, RandomMapGenerator*)
 {
     return m_value;
 }
 
 VA(0x005341A0, 0x4D)
-type_object* type_treasure_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator*, RmgZone*)
+Object* TreasureDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator*, RmgZone*)
 {
-    return new type_object(properties);
+    return new Object(properties);
 }
 
 VA(0x005341F0, 0x53)
-type_object* type_artifact_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator*, RmgZone*)
+Object* ArtifactDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator*, RmgZone*)
 {
-    return new rmgArtifactObject(properties);
+    return new RmgArtifactObject(properties);
 }
 
 VA(0x00534250, 0xB5)
-type_black_box_creature_def::type_black_box_creature_def(int newCreatureType)
-    : type_treasure_def(6, 0, -1, 3),
+BlackBoxCreatureDef::BlackBoxCreatureDef(int newCreatureType)
+    : TreasureDef(6, 0, -1, 3),
       m_creatureType(newCreatureType)
 {
     m_adjustedValue =
@@ -1979,8 +1979,8 @@ type_black_box_creature_def::type_black_box_creature_def(int newCreatureType)
 // (townType2), and the alignment weighting uses the generator's active-zone
 // counts. These offsets distinguish both arguments from the old placeholders.
 VA(0x00534310, 0x64)
-int type_black_box_creature_def::getValue(
-    RmgZone* zone, type_random_map_generator* generator)
+int BlackBoxCreatureDef::getValue(
+    RmgZone* zone, RandomMapGenerator* generator)
 {
     int alignment = g_creatureTypeTraits[m_creatureType].m_townType;
     if (alignment != zone->m_townType2)
@@ -1996,10 +1996,10 @@ int type_black_box_creature_def::getValue(
 }
 
 VA(0x00534380, 0x85)
-type_object* type_black_box_creature_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator*, RmgZone*)
+Object* BlackBoxCreatureDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator*, RmgZone*)
 {
-    rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
+    RmgBlackBoxObject* object = new RmgBlackBoxObject(properties);
     int count = m_adjustedValue;
     object->m_creatureType = m_creatureType;
     object->m_creatureCount = count;
@@ -2007,28 +2007,28 @@ type_object* type_black_box_creature_def::generate(RmgObjectPropertiesRef* prope
 }
 
 VA(0x00534410, 0x7F)
-type_object* type_black_box_experience_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator*, RmgZone*)
+Object* BlackBoxExperienceDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator*, RmgZone*)
 {
-    rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
+    RmgBlackBoxObject* object = new RmgBlackBoxObject(properties);
     object->m_experience = m_experience;
     return object;
 }
 
 VA(0x00534490, 0x84)
-type_object* type_black_box_gold_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator*, RmgZone*)
+Object* BlackBoxGoldDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator*, RmgZone*)
 {
-    rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
+    RmgBlackBoxObject* object = new RmgBlackBoxObject(properties);
     object->m_resources[6] += m_gold;
     return object;
 }
 
 VA(0x00534520, 0x267) // anchor-vtable 0x640ba0 slot 0; object vptr 0x640ad4; ret 0xc
-type_object* type_black_box_spells_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator*, RmgZone*)
+Object* BlackBoxSpellsDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator*, RmgZone*)
 {
-    rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
+    RmgBlackBoxObject* object = new RmgBlackBoxObject(properties);
     for (int level = m_maximumLevel; level >= m_minimumLevel; --level) {
         for (long spell = 0; spell < 70; ++spell) {
             if (!(g_spellTraits[spell].m_flags & 0x2000)
@@ -2042,14 +2042,14 @@ type_object* type_black_box_spells_def::generate(RmgObjectPropertiesRef* propert
 
 // Both dwelling-definition tables share this ownable-object factory.
 VA(0x00534790, 0x53)
-type_object* type_dwelling_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator*, RmgZone*)
+Object* DwellingDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator*, RmgZone*)
 {
-    return new rmgOwnableObject(properties);
+    return new RmgOwnableObject(properties);
 }
 
 VA(0x005347F0, 0x79)
-int type_map_dwelling_def::getValue(RmgZone* zone, type_random_map_generator* generator)
+int MapDwellingDef::getValue(RmgZone* zone, RandomMapGenerator* generator)
 {
     const CreatureTypeTraits& creature =
         g_creatureTypeTraits[g_creatureGenerator1Types[m_subtype]];
@@ -2069,10 +2069,10 @@ int type_map_dwelling_def::getValue(RmgZone* zone, type_random_map_generator* ge
 // object and replaces its vptr with 0x640ac4 after the canonical base call.
 // This and the scholar/shrine/witch-hut factories reproduce all 83 bytes.
 VA(0x00534870, 0x53) // anchor-definition table + allocated-object vptr; ret 0xc
-type_object* type_resource_lump_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator*, RmgZone*)
+Object* ResourceLumpDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator*, RmgZone*)
 {
-    return new rmgResourceObject(properties);
+    return new RmgResourceObject(properties);
 }
 
 // Prison-definition table 0x640bd0 selects this factory. Retail reserves
@@ -2089,70 +2089,70 @@ type_object* type_resource_lump_def::generate(RmgObjectPropertiesRef* properties
 // are flat. Retail still loads experience later and stores the first
 // placement byte before the position fields. No other RMG scores changed.
 VA(0x005348D0, 0x93) // anchor-definition/object vtables + selectPrisonHero
-type_object* type_prison_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, RmgZone*)
+Object* PrisonDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator* generator, RmgZone*)
 {
     int heroIndex = generator->selectPrisonHero();
     if (heroIndex == -1)
         return 0;
-    return new rmgHeroObject(properties, generator,
+    return new RmgHeroObject(properties, generator,
         generator->m_nextObjectId++, heroIndex, m_experience);
 }
 
 // Scholar-definition table 0x640bdc selects object vtable 0x640b24.
 VA(0x00534970, 0x53) // anchor-definition and object vtables; ret 0xc
-type_object* type_scholar_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator*, RmgZone*)
+Object* ScholarDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator*, RmgZone*)
 {
-    return new rmgScholarObject(properties);
+    return new RmgScholarObject(properties);
 }
 
 VA(0x005349D0, 0x29)
-type_shrine_def::type_shrine_def(int newObjectType, int newValue)
-    : type_treasure_def(newObjectType, 0, newValue, 100)
+ShrineDef::ShrineDef(int newObjectType, int newValue)
+    : TreasureDef(newObjectType, 0, newValue, 100)
 {
 }
 
 // Shrine-definition table 0x640be8 selects object vtable 0x640b34.
 VA(0x00534A00, 0x53) // anchor-definition and object vtables; ret 0xc
-type_object* type_shrine_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator*, RmgZone*)
+Object* ShrineDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator*, RmgZone*)
 {
-    return new rmgShrineObject(properties);
+    return new RmgShrineObject(properties);
 }
 
 VA(0x00534A60, 0x25)
-type_witch_hut_def::type_witch_hut_def()
-    : type_treasure_def(0x71, 0, 1500, 80)
+WitchHutDef::WitchHutDef()
+    : TreasureDef(0x71, 0, 1500, 80)
 {
 }
 
 // Witch-hut definition 0x640bf4 selects object vtable 0x640b54.
 VA(0x00534A90, 0x53) // anchor-definition and object vtables; ret 0xc
-type_object* type_witch_hut_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator*, RmgZone*)
+Object* WitchHutDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator*, RmgZone*)
 {
-    return new rmgWitchHutObject(properties);
+    return new RmgWitchHutObject(properties);
 }
 
 VA(0x00534AF0, 0x9E)
-int type_quest_creature_def::getValue(RmgZone* zone, type_random_map_generator* generator)
+int QuestCreatureDef::getValue(RmgZone* zone, RandomMapGenerator* generator)
 {
     if (generator->m_nextSeerHutPrototypeIndex != m_subtype)
         return -1;
     if (generator->m_questArtifactPoolLow)
         return -1;
-    int value = type_black_box_creature_def::getValue(zone, generator);
+    int value = BlackBoxCreatureDef::getValue(zone, generator);
     return (2 * value - 4000) / 3;
 }
 
 VA(0x00534B90, 0xE7) // anchor-vtable + canonical hut/wrapper allocations; ret 0xc
-type_object* type_quest_creature_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, RmgZone*)
+Object* QuestCreatureDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator* generator, RmgZone*)
 {
-    rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
+    RmgSeerHutObject* seerHut = new RmgSeerHutObject(properties);
     RmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
-    rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
+    RmgQuestArtifactObject* object = new RmgQuestArtifactObject(artifact, generator, seerHut, this);
     int count = m_adjustedValue;
     seerHut->m_creatureType = m_creatureType;
     seerHut->m_creatureCount = count;
@@ -2163,7 +2163,7 @@ type_object* type_quest_creature_def::generate(RmgObjectPropertiesRef* propertie
 // Both classes exist independently and use the same availability checks:
 // current prototype at +0xf58, then the exhausted-artifact flag at +0x10b4.
 VA(0x00534C80, 0x34)
-int type_quest_experience_def::getValue(RmgZone*, type_random_map_generator* generator)
+int QuestExperienceDef::getValue(RmgZone*, RandomMapGenerator* generator)
 {
     if (generator->m_nextSeerHutPrototypeIndex != m_subtype)
         return -1;
@@ -2172,7 +2172,7 @@ int type_quest_experience_def::getValue(RmgZone*, type_random_map_generator* gen
     return m_value;
 }
 
-int type_quest_gold_def::getValue(RmgZone*, type_random_map_generator* generator)
+int QuestGoldDef::getValue(RmgZone*, RandomMapGenerator* generator)
 {
     if (generator->m_nextSeerHutPrototypeIndex != m_subtype)
         return -1;
@@ -2182,23 +2182,23 @@ int type_quest_gold_def::getValue(RmgZone*, type_random_map_generator* generator
 }
 
 VA(0x00534CC0, 0xE1)
-type_object* type_quest_experience_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, RmgZone*)
+Object* QuestExperienceDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator* generator, RmgZone*)
 {
-    rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
+    RmgSeerHutObject* seerHut = new RmgSeerHutObject(properties);
     RmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
-    rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
+    RmgQuestArtifactObject* object = new RmgQuestArtifactObject(artifact, generator, seerHut, this);
     seerHut->m_experience = m_experience;
     return object;
 }
 
 VA(0x00534DB0, 0xE8)
-type_object* type_quest_gold_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, RmgZone*)
+Object* QuestGoldDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator* generator, RmgZone*)
 {
-    rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
+    RmgSeerHutObject* seerHut = new RmgSeerHutObject(properties);
     RmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
-    rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
+    RmgQuestArtifactObject* object = new RmgQuestArtifactObject(artifact, generator, seerHut, this);
     int amount = m_gold;
     seerHut->m_resourceType = 6;
     seerHut->m_resourceCount = amount;
@@ -2206,15 +2206,15 @@ type_object* type_quest_gold_def::generate(RmgObjectPropertiesRef* properties,
 }
 
 VA(0x00534EA0, 0x30)
-type_spell_scroll_def::type_spell_scroll_def(int newSpellLevel, int newValue)
-    : type_treasure_def(0x5d, 0, newValue, 30)
+SpellScrollDef::SpellScrollDef(int newSpellLevel, int newValue)
+    : TreasureDef(0x5d, 0, newValue, 30)
 {
     m_spellLevel = newSpellLevel;
 }
 
 VA(0x00534ED0, 0xC3)
-type_object* type_spell_scroll_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator*, RmgZone*)
+Object* SpellScrollDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator*, RmgZone*)
 {
     int count = 0;
     int spell;
@@ -2233,11 +2233,11 @@ type_object* type_spell_scroll_def::generate(RmgObjectPropertiesRef* properties,
                 break;
         }
     }
-    return new rmgSpellScrollObject(properties, spell);
+    return new RmgSpellScrollObject(properties, spell);
 }
 
 VA(0x00534FA0, 0x21)
-int type_key_tent_def::getValue(RmgZone*, type_random_map_generator* generator)
+int KeyTentDef::getValue(RmgZone*, RandomMapGenerator* generator)
 {
     if (generator->m_nextKeyTentColor != m_subtype)
         return -1;
@@ -2248,10 +2248,10 @@ int type_key_tent_def::getValue(RmgZone*, type_random_map_generator* generator)
 // The generator is the second factory argument; +0x20 receives m_value,
 // not the definition subtype/color (that is already in its properties).
 VA(0x00534FD0, 0x64)
-type_object* type_key_tent_def::generate(RmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, RmgZone*)
+Object* KeyTentDef::generate(RmgObjectPropertiesRef* properties,
+    RandomMapGenerator* generator, RmgZone*)
 {
-    return new rmgKeyTentObject(properties, generator, m_value);
+    return new RmgKeyTentObject(properties, generator, m_value);
 }
 
 // The treasure-group constructor calls reset after its map and vectors
@@ -2271,14 +2271,14 @@ type_object* type_key_tent_def::generate(RmgObjectPropertiesRef* properties,
 VA(0x00535040, 0xC6) // anchor-callee 0x5473d2; thiscall, ret 0; retail-only
 void RmgTreasureGroup::reset()
 {
-    std::vector<type_object*>& objects = m_objects;
+    std::vector<Object*>& objects = m_objects;
     objects.clear();
     std::vector<Point>& outline = m_outline;
     outline.erase(outline.begin(), outline.end());
     m_map.clear();
     m_hasGuard = 0;
     m_ready = 0;
-    type_random_map& map = m_map;
+    RandomMap& map = m_map;
     RmgMapItem* item = map.getMapItem(0, 0);
     int width = map.m_mapWidth;
     int height = map.m_mapHeight;
@@ -2301,14 +2301,14 @@ void RmgTreasureGroup::reset()
 // 87.74%. An outline-size local across rand is byte-neutral. Coordinate
 // homes and nested container expansion remain; keep the helper boundaries.
 VA(0x00535110, 0x4AB) // anchor-callee 0x546843; thiscall, ret 4
-unsigned char RmgTreasureGroup::addGuard(type_object* guard)
+unsigned char RmgTreasureGroup::addGuard(Object* guard)
 {
     traceOutline();
     // Retail 0x535150 saves the existing object's prototype; 0x535405
     // still reads that last prototype's trigger after inserting the guard.
     ObjectType* prototype;
     for (unsigned int objectIndex = 0; objectIndex < m_objects.size(); ++objectIndex) {
-        type_object* object = m_objects[objectIndex];
+        Object* object = m_objects[objectIndex];
         prototype = object->m_properties->m_prototype;
         RmgMapPosition entrance = object->getPosition();
         entrance.m_y -= prototype->m_triggerCell.m_y;
@@ -2499,7 +2499,7 @@ placementFailure:
 // point is flat; two canonical += translations reach 79.3429%, and naming
 // the candidate count is flat. Preserve both map and group helper calls.
 VA(0x00535970, 0x240) // anchor-callee 0x546680; thiscall, ret 4
-unsigned char RmgTreasureGroup::tryAddObject(type_object* object)
+unsigned char RmgTreasureGroup::tryAddObject(Object* object)
 {
     RmgObjectPropertiesRef* properties = object->m_properties;
     ObjectType* prototype = properties->m_prototype;
@@ -2511,7 +2511,7 @@ unsigned char RmgTreasureGroup::tryAddObject(type_object* object)
     Point trigger(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
     std::vector<RmgMapPosition> candidates;
     for (unsigned index = 0; index < m_objects.size(); ++index) {
-        type_object* existing = m_objects[index];
+        Object* existing = m_objects[index];
         ObjectType* existingPrototype = existing->m_properties->m_prototype;
         RmgMapPosition entrance = existing->getPosition();
         entrance.m_x -= existingPrototype->m_triggerCell.m_x;
@@ -2819,7 +2819,7 @@ int RmgGeneratorBase::scoreObjectPlacement(
     RmgObjectPropertiesRef* properties, RmgMapPosition position)
 {
     ObjectType* prototype = properties->m_prototype;
-    std::vector<type_object*> affected;
+    std::vector<Object*> affected;
     unsigned char terrainSeen[10];
     memset(terrainSeen, 0, sizeof(terrainSeen));
     unsigned int marks[10][8];
@@ -2897,7 +2897,7 @@ int RmgGeneratorBase::scoreObjectPlacement(
                 priority = properties->m_overlapPriorities[column - 1][row - 1];
             for (int index = 0; index < static_cast<int>(item->m_objects.size());
                  ++index) {
-                type_object* object = item->m_objects[index];
+                Object* object = item->m_objects[index];
                 unsigned char wasTouched = object->isPlacementTouched();
                 if (mark & RMG_PLACEMENT_OVERLAP) {
                     object->m_properties->buildOverlapPriorities();
@@ -2922,7 +2922,7 @@ int RmgGeneratorBase::scoreObjectPlacement(
     }
 
     for (unsigned int index = 0; index < affected.size(); ++index) {
-        type_object* object = affected[index];
+        Object* object = affected[index];
         if (object->m_blockedByCandidate) {
             if (!object->m_properties->m_placementRule)
                 score = RMG_PLACEMENT_INVALID;
@@ -2940,7 +2940,7 @@ int RmgGeneratorBase::scoreObjectPlacement(
 }
 
 VA(0x005371C0, 0x1DA)
-void RmgGeneratorBase::addObject(type_object* object, RmgMapPosition position)
+void RmgGeneratorBase::addObject(Object* object, RmgMapPosition position)
 {
     m_map.addObject(object, position);
     m_positions.push_back(object);
@@ -2992,7 +2992,7 @@ void RmgGeneratorBase::decorateMapCell(RmgMapPosition position, int progressStep
         // Retail constructs a fourth vector at frame -0x84 and destroys it
         // before weights (-0x48), positions (-0x58), candidates (-0x38).
         // No element use survives; object-pointer element type/name provisional.
-        std::vector<type_object*> unusedObjects;
+        std::vector<Object*> unusedObjects;
         int totalWeight = 0;
         for (const int* type = g_rmgDecorationTypes;
             type < g_rmgDecorationTypes + sizeof(g_rmgDecorationTypes) / sizeof(g_rmgDecorationTypes[0]); ++type) {
@@ -3043,7 +3043,7 @@ void RmgGeneratorBase::decorateMapCell(RmgMapPosition position, int progressStep
             RmgObjectPropertiesRef* properties = candidates[index];
             RmgMapPosition candidatePosition = positions[index];
             ObjectType* prototype = properties->m_prototype;
-            addObject(new type_object(properties), candidatePosition);
+            addObject(new Object(properties), candidatePosition);
             RmgZoneBounds bounds;
             bounds.m_minimumX = std::_cpp_max<long>(candidatePosition.m_x - prototype->getWidth(), 0);
             bounds.m_minimumY = std::_cpp_max<long>(candidatePosition.m_y - prototype->getHeight(), 0);
@@ -3068,7 +3068,7 @@ void RmgGeneratorBase::decorateMapCell(RmgMapPosition position, int progressStep
 }
 
 VA(0x005378E0, 0x27)
-RmgMapItem* type_random_map::getMapItem(RmgMapPosition point)
+RmgMapItem* RandomMap::getMapItem(RmgMapPosition point)
 {
     return getMapItem(point.m_x, point.m_y, point.m_z);
 }
@@ -3127,7 +3127,7 @@ void RmgGeneratorBase::decorateMap()
 // loading. Hero eligibility uses bytes within the canonical attributes field;
 // 0x537d11/+0x3a excludes special heroes, +0x38/+0x39 selects map-version availability.
 VA(0x00537B10, 0x2A8)
-type_random_map_generator::type_random_map_generator(
+RandomMapGenerator::RandomMapGenerator(
     int width, int height, int levels, int humanPlayers, int humanTeams,
     int computerPlayers, int computerTeams, int waterContent,
     int monsterStrength, ProgressSink* progress, int mapVersion)
@@ -3170,10 +3170,10 @@ type_random_map_generator::type_random_map_generator(
     }
 }
 
-VA_COMPGEN(0x00537DC0, 0x21, SCALAR_DELETING_DTOR, type_random_map_generator)
+VA_COMPGEN(0x00537DC0, 0x21, SCALAR_DELETING_DTOR, RandomMapGenerator)
 
 VA(0x00537DF0, 0x200)
-type_random_map_generator::~type_random_map_generator()
+RandomMapGenerator::~RandomMapGenerator()
 {
     for (unsigned int zone = 0; zone < m_zones.size(); ++zone)
         delete m_zones[zone];
@@ -3252,7 +3252,7 @@ static bool hasRmgTemplatePlayerSlots(RmgTemplate* mapTemplate,
 // passes score 22.20%, expanding findZone and vector calls retail retains.
 // Preserve the ordinary helpers and the single cleanup; no inline controls.
 VA(0x00537FF0, 0x482)
-void type_random_map_generator::loadTemplates()
+void RandomMapGenerator::loadTemplates()
 {
     SpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00682804, rmgTemplatesFilename, "rmg.txt"));
@@ -3401,181 +3401,181 @@ void readRmgTemplateZones(
 // only repeated structures present in retail; every other registration is an
 // unrolled source statement.
 VA(0x00538B10, 0x2241)
-void type_random_map_generator::initializeObjectGenerators()
+void RandomMapGenerator::initializeObjectGenerators()
 {
-    m_objectGenerators.push_back(new type_treasure_def(2, 0, 100, 20));
-    m_objectGenerators.push_back(new type_treasure_def(4, 0, 3000, 50));
+    m_objectGenerators.push_back(new TreasureDef(2, 0, 100, 20));
+    m_objectGenerators.push_back(new TreasureDef(4, 0, 3000, 50));
 
     {
         int creatureCount = m_mapVersion >= 1 ? 145 : 118;
         for (int creature = creatureCount; creature--;) {
             if (g_creatureTypeTraits[creature].m_level >= 0)
                 m_objectGenerators.push_back(
-                    new type_black_box_creature_def(creature));
+                    new BlackBoxCreatureDef(creature));
         }
     }
 
     m_objectGenerators.push_back(
-        new type_black_box_experience_def(6000, 5000));
+        new BlackBoxExperienceDef(6000, 5000));
     m_objectGenerators.push_back(
-        new type_black_box_experience_def(12000, 10000));
+        new BlackBoxExperienceDef(12000, 10000));
     m_objectGenerators.push_back(
-        new type_black_box_experience_def(18000, 15000));
+        new BlackBoxExperienceDef(18000, 15000));
     m_objectGenerators.push_back(
-        new type_black_box_experience_def(24000, 20000));
+        new BlackBoxExperienceDef(24000, 20000));
 
-    m_objectGenerators.push_back(new type_black_box_gold_def(5000, 5000));
-    m_objectGenerators.push_back(new type_black_box_gold_def(10000, 10000));
-    m_objectGenerators.push_back(new type_black_box_gold_def(15000, 15000));
-    m_objectGenerators.push_back(new type_black_box_gold_def(20000, 20000));
+    m_objectGenerators.push_back(new BlackBoxGoldDef(5000, 5000));
+    m_objectGenerators.push_back(new BlackBoxGoldDef(10000, 10000));
+    m_objectGenerators.push_back(new BlackBoxGoldDef(15000, 15000));
+    m_objectGenerators.push_back(new BlackBoxGoldDef(20000, 20000));
 
-    m_objectGenerators.push_back(new type_black_box_spells_def(5000, 1, 1, 15));
-    m_objectGenerators.push_back(new type_black_box_spells_def(7500, 2, 2, 15));
-    m_objectGenerators.push_back(new type_black_box_spells_def(10000, 3, 3, 15));
-    m_objectGenerators.push_back(new type_black_box_spells_def(12500, 4, 4, 15));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 5, 5, 15));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, 1));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, 2));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, 4));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, 8));
-    m_objectGenerators.push_back(new type_black_box_spells_def(30000, 1, 5, 15));
+    m_objectGenerators.push_back(new BlackBoxSpellsDef(5000, 1, 1, 15));
+    m_objectGenerators.push_back(new BlackBoxSpellsDef(7500, 2, 2, 15));
+    m_objectGenerators.push_back(new BlackBoxSpellsDef(10000, 3, 3, 15));
+    m_objectGenerators.push_back(new BlackBoxSpellsDef(12500, 4, 4, 15));
+    m_objectGenerators.push_back(new BlackBoxSpellsDef(15000, 5, 5, 15));
+    m_objectGenerators.push_back(new BlackBoxSpellsDef(15000, 1, 5, 1));
+    m_objectGenerators.push_back(new BlackBoxSpellsDef(15000, 1, 5, 2));
+    m_objectGenerators.push_back(new BlackBoxSpellsDef(15000, 1, 5, 4));
+    m_objectGenerators.push_back(new BlackBoxSpellsDef(15000, 1, 5, 8));
+    m_objectGenerators.push_back(new BlackBoxSpellsDef(30000, 1, 5, 15));
 
     {
         int player = m_objectPrototypes[10].size();
         m_disabledKeyTents.resize(player);
         for (; player--;) {
             m_disabledKeyTents[player] = 0;
-            m_objectGenerators.push_back(new type_key_tent_def(player, 5000));
-            m_objectGenerators.push_back(new type_key_tent_def(player, 7500));
-            m_objectGenerators.push_back(new type_key_tent_def(player, 10000));
-            m_objectGenerators.push_back(new type_key_tent_def(player, 15000));
-            m_objectGenerators.push_back(new type_key_tent_def(player, 20000));
+            m_objectGenerators.push_back(new KeyTentDef(player, 5000));
+            m_objectGenerators.push_back(new KeyTentDef(player, 7500));
+            m_objectGenerators.push_back(new KeyTentDef(player, 10000));
+            m_objectGenerators.push_back(new KeyTentDef(player, 15000));
+            m_objectGenerators.push_back(new KeyTentDef(player, 20000));
         }
     }
 
-    m_objectGenerators.push_back(new type_treasure_def(7, 0, 8000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(11, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(12, 0, 2000, 500));
-    m_objectGenerators.push_back(new type_treasure_def(13, 0, 5000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(13, 1, 10000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(13, 2, 7500, 20));
-    m_objectGenerators.push_back(new type_treasure_def(14, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(16, 0, 3000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(16, 1, 2000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(16, 2, 2000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(16, 3, 5000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(16, 4, 1500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(16, 5, 3000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(16, 6, 9000, 100));
+    m_objectGenerators.push_back(new TreasureDef(7, 0, 8000, 20));
+    m_objectGenerators.push_back(new TreasureDef(11, 0, 100, 100));
+    m_objectGenerators.push_back(new TreasureDef(12, 0, 2000, 500));
+    m_objectGenerators.push_back(new TreasureDef(13, 0, 5000, 20));
+    m_objectGenerators.push_back(new TreasureDef(13, 1, 10000, 20));
+    m_objectGenerators.push_back(new TreasureDef(13, 2, 7500, 20));
+    m_objectGenerators.push_back(new TreasureDef(14, 0, 100, 100));
+    m_objectGenerators.push_back(new TreasureDef(16, 0, 3000, 100));
+    m_objectGenerators.push_back(new TreasureDef(16, 1, 2000, 100));
+    m_objectGenerators.push_back(new TreasureDef(16, 2, 2000, 100));
+    m_objectGenerators.push_back(new TreasureDef(16, 3, 5000, 100));
+    m_objectGenerators.push_back(new TreasureDef(16, 4, 1500, 100));
+    m_objectGenerators.push_back(new TreasureDef(16, 5, 3000, 100));
+    m_objectGenerators.push_back(new TreasureDef(16, 6, 9000, 100));
 
     int dwelling = 80;
     if (m_mapVersion < 1)
         dwelling = 58;
     for (; dwelling--;)
-        m_objectGenerators.push_back(new type_map_dwelling_def(dwelling));
+        m_objectGenerators.push_back(new MapDwellingDef(dwelling));
 
-    m_objectGenerators.push_back(new type_treasure_def(22, 0, 500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(23, 0, 1500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(24, 0, 4000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(25, 0, 10000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(28, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(29, 0, 500, 1000));
-    m_objectGenerators.push_back(new type_treasure_def(30, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(31, 0, 100, 50));
-    m_objectGenerators.push_back(new type_treasure_def(32, 0, 1500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(35, 0, 7000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(38, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(39, 0, 500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(41, 0, 12000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(47, 0, 1000, 50));
-    m_objectGenerators.push_back(new type_treasure_def(48, 0, 500, 50));
-    m_objectGenerators.push_back(new type_treasure_def(49, 0, 250, 100));
-    m_objectGenerators.push_back(new type_treasure_def(51, 0, 1500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(52, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(55, 0, 500, 50));
-    m_objectGenerators.push_back(new type_treasure_def(56, 0, 100, 50));
-    m_objectGenerators.push_back(new type_treasure_def(57, 0, 3500, 200));
-    m_objectGenerators.push_back(new type_treasure_def(58, 0, 750, 100));
-    m_objectGenerators.push_back(new type_treasure_def(60, 0, 750, 100));
-    m_objectGenerators.push_back(new type_treasure_def(61, 0, 1500, 100));
+    m_objectGenerators.push_back(new TreasureDef(22, 0, 500, 100));
+    m_objectGenerators.push_back(new TreasureDef(23, 0, 1500, 100));
+    m_objectGenerators.push_back(new TreasureDef(24, 0, 4000, 20));
+    m_objectGenerators.push_back(new TreasureDef(25, 0, 10000, 100));
+    m_objectGenerators.push_back(new TreasureDef(28, 0, 100, 100));
+    m_objectGenerators.push_back(new TreasureDef(29, 0, 500, 1000));
+    m_objectGenerators.push_back(new TreasureDef(30, 0, 100, 100));
+    m_objectGenerators.push_back(new TreasureDef(31, 0, 100, 50));
+    m_objectGenerators.push_back(new TreasureDef(32, 0, 1500, 100));
+    m_objectGenerators.push_back(new TreasureDef(35, 0, 7000, 20));
+    m_objectGenerators.push_back(new TreasureDef(38, 0, 100, 100));
+    m_objectGenerators.push_back(new TreasureDef(39, 0, 500, 100));
+    m_objectGenerators.push_back(new TreasureDef(41, 0, 12000, 20));
+    m_objectGenerators.push_back(new TreasureDef(47, 0, 1000, 50));
+    m_objectGenerators.push_back(new TreasureDef(48, 0, 500, 50));
+    m_objectGenerators.push_back(new TreasureDef(49, 0, 250, 100));
+    m_objectGenerators.push_back(new TreasureDef(51, 0, 1500, 100));
+    m_objectGenerators.push_back(new TreasureDef(52, 0, 100, 100));
+    m_objectGenerators.push_back(new TreasureDef(55, 0, 500, 50));
+    m_objectGenerators.push_back(new TreasureDef(56, 0, 100, 50));
+    m_objectGenerators.push_back(new TreasureDef(57, 0, 3500, 200));
+    m_objectGenerators.push_back(new TreasureDef(58, 0, 750, 100));
+    m_objectGenerators.push_back(new TreasureDef(60, 0, 750, 100));
+    m_objectGenerators.push_back(new TreasureDef(61, 0, 1500, 100));
 
-    m_objectGenerators.push_back(new type_prison_def(2500, 0));
-    m_objectGenerators.push_back(new type_prison_def(5000, 5000));
-    m_objectGenerators.push_back(new type_prison_def(10000, 15000));
-    m_objectGenerators.push_back(new type_prison_def(20000, 90000));
-    m_objectGenerators.push_back(new type_prison_def(30000, 500000));
-    m_objectGenerators.push_back(new type_treasure_def(63, 0, 5000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(64, 0, 100, 100));
+    m_objectGenerators.push_back(new PrisonDef(2500, 0));
+    m_objectGenerators.push_back(new PrisonDef(5000, 5000));
+    m_objectGenerators.push_back(new PrisonDef(10000, 15000));
+    m_objectGenerators.push_back(new PrisonDef(20000, 90000));
+    m_objectGenerators.push_back(new PrisonDef(30000, 500000));
+    m_objectGenerators.push_back(new TreasureDef(63, 0, 5000, 20));
+    m_objectGenerators.push_back(new TreasureDef(64, 0, 100, 100));
 
-    m_objectGenerators.push_back(new type_artifact_def(66, 2000));
-    m_objectGenerators.push_back(new type_artifact_def(67, 5000));
-    m_objectGenerators.push_back(new type_artifact_def(68, 10000));
-    m_objectGenerators.push_back(new type_artifact_def(69, 20000));
+    m_objectGenerators.push_back(new ArtifactDef(66, 2000));
+    m_objectGenerators.push_back(new ArtifactDef(67, 5000));
+    m_objectGenerators.push_back(new ArtifactDef(68, 10000));
+    m_objectGenerators.push_back(new ArtifactDef(69, 20000));
 
-    m_objectGenerators.push_back(new type_resource_lump_def(76, 0, 1500, 2000));
-    m_objectGenerators.push_back(new type_treasure_def(78, 0, 5000, 20));
-    m_objectGenerators.push_back(new type_resource_lump_def(79, 0, 1400, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(79, 2, 1400, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(79, 1, 2000, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(79, 3, 2000, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(79, 4, 2000, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(79, 5, 2000, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(79, 6, 750, 300));
-    m_objectGenerators.push_back(new type_treasure_def(80, 0, 100, 50));
-    m_objectGenerators.push_back(new type_scholar_def());
-    m_objectGenerators.push_back(new type_treasure_def(82, 0, 1500, 500));
+    m_objectGenerators.push_back(new ResourceLumpDef(76, 0, 1500, 2000));
+    m_objectGenerators.push_back(new TreasureDef(78, 0, 5000, 20));
+    m_objectGenerators.push_back(new ResourceLumpDef(79, 0, 1400, 300));
+    m_objectGenerators.push_back(new ResourceLumpDef(79, 2, 1400, 300));
+    m_objectGenerators.push_back(new ResourceLumpDef(79, 1, 2000, 300));
+    m_objectGenerators.push_back(new ResourceLumpDef(79, 3, 2000, 300));
+    m_objectGenerators.push_back(new ResourceLumpDef(79, 4, 2000, 300));
+    m_objectGenerators.push_back(new ResourceLumpDef(79, 5, 2000, 300));
+    m_objectGenerators.push_back(new ResourceLumpDef(79, 6, 750, 300));
+    m_objectGenerators.push_back(new TreasureDef(80, 0, 100, 50));
+    m_objectGenerators.push_back(new ScholarDef());
+    m_objectGenerators.push_back(new TreasureDef(82, 0, 1500, 500));
 
     for (int quest = 0; quest < m_objectPrototypes[83].size(); ++quest) {
         int creatureCount = m_mapVersion >= 1 ? 145 : 118;
         for (int creature = creatureCount; creature--;) {
             if (g_creatureTypeTraits[creature].m_level >= 0)
                 m_objectGenerators.push_back(
-                    new type_quest_creature_def(creature, quest));
+                    new QuestCreatureDef(creature, quest));
         }
 
         m_objectGenerators.push_back(
-            new type_quest_experience_def(quest, 2000, 5000));
+            new QuestExperienceDef(quest, 2000, 5000));
         m_objectGenerators.push_back(
-            new type_quest_experience_def(quest, 5333, 10000));
+            new QuestExperienceDef(quest, 5333, 10000));
         m_objectGenerators.push_back(
-            new type_quest_experience_def(quest, 8666, 15000));
+            new QuestExperienceDef(quest, 8666, 15000));
         m_objectGenerators.push_back(
-            new type_quest_experience_def(quest, 12000, 20000));
-        m_objectGenerators.push_back(new type_quest_gold_def(quest, 2000, 5000));
-        m_objectGenerators.push_back(new type_quest_gold_def(quest, 5333, 10000));
-        m_objectGenerators.push_back(new type_quest_gold_def(quest, 8666, 15000));
-        m_objectGenerators.push_back(new type_quest_gold_def(quest, 12000, 20000));
+            new QuestExperienceDef(quest, 12000, 20000));
+        m_objectGenerators.push_back(new QuestGoldDef(quest, 2000, 5000));
+        m_objectGenerators.push_back(new QuestGoldDef(quest, 5333, 10000));
+        m_objectGenerators.push_back(new QuestGoldDef(quest, 8666, 15000));
+        m_objectGenerators.push_back(new QuestGoldDef(quest, 12000, 20000));
     }
 
-    m_objectGenerators.push_back(new type_treasure_def(84, 0, 1000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(85, 0, 2000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(86, 0, 1500, 50));
-    m_objectGenerators.push_back(new type_shrine_def(88, 500));
-    m_objectGenerators.push_back(new type_shrine_def(89, 2000));
-    m_objectGenerators.push_back(new type_shrine_def(90, 3000));
-    m_objectGenerators.push_back(new type_treasure_def(92, 0, 100, 20));
-    m_objectGenerators.push_back(new type_spell_scroll_def(1, 500));
-    m_objectGenerators.push_back(new type_spell_scroll_def(2, 2000));
-    m_objectGenerators.push_back(new type_spell_scroll_def(3, 3000));
-    m_objectGenerators.push_back(new type_spell_scroll_def(4, 4000));
-    m_objectGenerators.push_back(new type_spell_scroll_def(5, 5000));
-    m_objectGenerators.push_back(new type_treasure_def(94, 0, 200, 40));
-    m_objectGenerators.push_back(new type_treasure_def(95, 0, 100, 20));
-    m_objectGenerators.push_back(new type_treasure_def(96, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(97, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(99, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(100, 0, 1500, 200));
-    m_objectGenerators.push_back(new type_treasure_def(101, 0, 1500, 1000));
-    m_objectGenerators.push_back(new type_treasure_def(102, 0, 2500, 50));
-    m_objectGenerators.push_back(new type_treasure_def(104, 0, 2500, 20));
-    m_objectGenerators.push_back(new type_treasure_def(105, 0, 500, 50));
-    m_objectGenerators.push_back(new type_treasure_def(106, 0, 1500, 50));
-    m_objectGenerators.push_back(new type_treasure_def(107, 0, 1000, 50));
-    m_objectGenerators.push_back(new type_treasure_def(108, 0, 6000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(109, 0, 750, 50));
-    m_objectGenerators.push_back(new type_treasure_def(110, 0, 500, 50));
-    m_objectGenerators.push_back(new type_treasure_def(112, 0, 2500, 150));
-    m_objectGenerators.push_back(new type_witch_hut_def());
+    m_objectGenerators.push_back(new TreasureDef(84, 0, 1000, 100));
+    m_objectGenerators.push_back(new TreasureDef(85, 0, 2000, 100));
+    m_objectGenerators.push_back(new TreasureDef(86, 0, 1500, 50));
+    m_objectGenerators.push_back(new ShrineDef(88, 500));
+    m_objectGenerators.push_back(new ShrineDef(89, 2000));
+    m_objectGenerators.push_back(new ShrineDef(90, 3000));
+    m_objectGenerators.push_back(new TreasureDef(92, 0, 100, 20));
+    m_objectGenerators.push_back(new SpellScrollDef(1, 500));
+    m_objectGenerators.push_back(new SpellScrollDef(2, 2000));
+    m_objectGenerators.push_back(new SpellScrollDef(3, 3000));
+    m_objectGenerators.push_back(new SpellScrollDef(4, 4000));
+    m_objectGenerators.push_back(new SpellScrollDef(5, 5000));
+    m_objectGenerators.push_back(new TreasureDef(94, 0, 200, 40));
+    m_objectGenerators.push_back(new TreasureDef(95, 0, 100, 20));
+    m_objectGenerators.push_back(new TreasureDef(96, 0, 100, 100));
+    m_objectGenerators.push_back(new TreasureDef(97, 0, 100, 100));
+    m_objectGenerators.push_back(new TreasureDef(99, 0, 100, 100));
+    m_objectGenerators.push_back(new TreasureDef(100, 0, 1500, 200));
+    m_objectGenerators.push_back(new TreasureDef(101, 0, 1500, 1000));
+    m_objectGenerators.push_back(new TreasureDef(102, 0, 2500, 50));
+    m_objectGenerators.push_back(new TreasureDef(104, 0, 2500, 20));
+    m_objectGenerators.push_back(new TreasureDef(105, 0, 500, 50));
+    m_objectGenerators.push_back(new TreasureDef(106, 0, 1500, 50));
+    m_objectGenerators.push_back(new TreasureDef(107, 0, 1000, 50));
+    m_objectGenerators.push_back(new TreasureDef(108, 0, 6000, 20));
+    m_objectGenerators.push_back(new TreasureDef(109, 0, 750, 50));
+    m_objectGenerators.push_back(new TreasureDef(110, 0, 500, 50));
+    m_objectGenerators.push_back(new TreasureDef(112, 0, 2500, 150));
+    m_objectGenerators.push_back(new WitchHutDef());
 }
 
 // Candidate generators and the boundary coordinator call this predicate.
@@ -3598,7 +3598,7 @@ void type_random_map_generator::initializeObjectGenerators()
 // family raises any tracked score. All 104 distinct bodies preserve the
 // bounded integer-distance/ordered-sqrt oracle; the scalar source stays put.
 VA(0x0053AD60, 0x113) // anchor-callee 0x53e2ea/0x53af04; thiscall, ret 4
-unsigned char type_random_map_generator::canPlaceZone(RmgZone* zone)
+unsigned char RandomMapGenerator::canPlaceZone(RmgZone* zone)
 {
     RmgTownSlot* slot = zone->m_slot;
     RmgMapPosition position = zone->getLevelPosition();
@@ -3635,7 +3635,7 @@ unsigned char type_random_map_generator::canPlaceZone(RmgZone* zone)
 // branches. Explicit count-insert at all three sites changes that frontier
 // substantially; retain the canonical vector calls and accessor copies.
 VA(0x0053AE80, 0x36A) // anchor-callee 0x53bab9/0x53bb23; thiscall, ret 0xc
-void type_random_map_generator::appendZonePositions(RmgZone* center,
+void RandomMapGenerator::appendZonePositions(RmgZone* center,
     RmgZone* zone, std::vector<RmgMapPosition>& candidates)
 {
     int radius = center->m_slot->m_size + zone->m_slot->m_size;
@@ -3688,7 +3688,7 @@ void type_random_map_generator::appendZonePositions(RmgZone* center,
 // but expands the first zone-pointer vector::size instead (94.56%); the
 // ordinary unpinned source is the negative control. Early-continue for an
 // unplaced destination is also byte-neutral. No diagnostic pin is retained.
-int type_random_map_generator::countPlacedZoneConnections(RmgZone* zone) const
+int RandomMapGenerator::countPlacedZoneConnections(RmgZone* zone) const
 {
     int result = 0;
     RmgTownSlot* slot = zone->m_slot;
@@ -3701,7 +3701,7 @@ int type_random_map_generator::countPlacedZoneConnections(RmgZone* zone) const
 }
 
 VA(0x0053B1F0, 0xFE)
-void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimumX,
+void RandomMapGenerator::getInitialZoneBounds(int& minimumY, int& minimumX,
     int& maximumY, int& maximumX) const
 {
     minimumY = 0;
@@ -3735,7 +3735,7 @@ void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimum
 // zone vector's this pointer with an add from a spilled this and binds the
 // connection element load differently; all 110 blocks agree.
 VA(0x0053B2F0, 0x678) // anchor-callee 0x53bb38; thiscall, ret 0xc
-void type_random_map_generator::filterZonePositions(
+void RandomMapGenerator::filterZonePositions(
     RmgZone* zone, std::vector<RmgMapPosition>& candidates, int mapSize)
 {
     int bestConnections = 0;
@@ -3828,7 +3828,7 @@ void type_random_map_generator::filterZonePositions(
 // sites after the first push, or 11 more units spent before it, would refuse
 // them; neither has a source correlate yet.
 VA(0x0053B970, 0x232) // anchor-callee 0x53bde2/0x53be39; thiscall, ret 8
-void type_random_map_generator::positionZone(RmgZone* zone, int mapSize)
+void RandomMapGenerator::positionZone(RmgZone* zone, int mapSize)
 {
     std::vector<RmgMapPosition> candidates;
     if (m_zones.size() == 0) {
@@ -3862,7 +3862,7 @@ void type_random_map_generator::positionZone(RmgZone* zone, int mapSize)
 }
 
 VA(0x0053BBB0, 0xFD)
-void type_random_map_generator::calculateZoneBounds()
+void RandomMapGenerator::calculateZoneBounds()
 {
     RmgMapItem* item = m_map.m_mapItems;
     RmgMapPosition position;
@@ -3890,7 +3890,7 @@ void type_random_map_generator::calculateZoneBounds()
 // deltas: vector erase expands here but is retained in retail, and the
 // dimension products / bounds normalization exchange operand scheduling.
 VA(0x0053BCB0, 0x33B)
-void type_random_map_generator::initializeZones(RmgTemplate* mapTemplate)
+void RandomMapGenerator::initializeZones(RmgTemplate* mapTemplate)
 {
     m_zones.erase(m_zones.begin(), m_zones.end());
     int minimumSize = 32000;
@@ -3953,7 +3953,7 @@ void type_random_map_generator::initializeZones(RmgTemplate* mapTemplate)
 }
 
 VA(0x0053BFF0, 0x22B)
-void type_random_map_generator::drawIrregularZoneBoundary(
+void RandomMapGenerator::drawIrregularZoneBoundary(
     Point from, Point to, int zoneIndex, int level, int roughness)
 {
     std::vector<Point> pending;
@@ -3993,7 +3993,7 @@ void type_random_map_generator::drawIrregularZoneBoundary(
 }
 
 VA(0x0053C220, 0x16A)
-void type_random_map_generator::drawStraightZoneBoundary(
+void RandomMapGenerator::drawStraightZoneBoundary(
     Point from, Point to, int zoneIndex, int level)
 {
     if (from.m_x > to.m_x)
@@ -4060,7 +4060,7 @@ void type_random_map_generator::drawStraightZoneBoundary(
 // _Destroy expansions, followed by local-slot and register differences.
 // Account for cross-type ICF before treating a template name as a new call.
 VA(0x0053C390, 0x730) // caller 0x53e5f4/0x53e602, ret 8; retail-only
-void type_random_map_generator::traceZoneBoundary(
+void RandomMapGenerator::traceZoneBoundary(
     RmgBoundaryVertex* first, unsigned char irregular)
 {
     RmgBoundaryVertex* vertex = first;
@@ -4225,7 +4225,7 @@ static void insertRmgWorkItem(
 }
 
 VA(0x0053CD30, 0x212) // anchor-callee 0x53d34e; thiscall, ret 0x1c
-void type_random_map_generator::drawIslandBoundary(Point from, Point to,
+void RandomMapGenerator::drawIslandBoundary(Point from, Point to,
     int zoneIndex, int level, int roughness)
 {
     std::vector<Point> pending;
@@ -4265,7 +4265,7 @@ void type_random_map_generator::drawIslandBoundary(Point from, Point to,
 }
 
 VA(0x0053CF50, 0x177)
-void type_random_map_generator::fillIslandInterior(RmgZone* zone)
+void RandomMapGenerator::fillIslandInterior(RmgZone* zone)
 {
     std::vector<RmgMapPosition> pending;
     int zoneIndex = zone->m_slot->m_zoneIndex;
@@ -4312,7 +4312,7 @@ void type_random_map_generator::fillIslandInterior(RmgZone* zone)
 // The tested bindings/lifetimes do not recover that entry sequence; some
 // alternatives also lower the unchanged-source header writer to 77.8952%.
 VA(0x0053D0D0, 0xE3) // anchor-callee 0x53e6e8; thiscall, ret 4
-void type_random_map_generator::recenterZone(RmgZone* zone)
+void RandomMapGenerator::recenterZone(RmgZone* zone)
 {
     RmgZoneBounds bounds = zone->m_bounds;
     RmgMapPosition position;
@@ -4348,7 +4348,7 @@ void type_random_map_generator::recenterZone(RmgZone* zone)
 // Length and edge calls remain intact. Clamp temporary homes, vector
 // multiply/divide scheduling and the reverse-loop register roles differ.
 VA(0x0053D1C0, 0x1B9) // anchor-callee 0x53e70f; thiscall, ret 4
-void type_random_map_generator::insetIslandZone(RmgZone* zone)
+void RandomMapGenerator::insetIslandZone(RmgZone* zone)
 {
     int zoneIndex = zone->m_slot->m_zoneIndex;
     RmgMapPosition center = zone->getLevelPosition();
@@ -4394,7 +4394,7 @@ void type_random_map_generator::insetIslandZone(RmgZone* zone)
 // in-bounds seed/3x3 grid/level/water-mode cases, with address and undefined-
 // behavior sanitizers. That oracle covers filling and flags, not seed clipping.
 VA(0x0053D380, 0x551) // anchor-caller 0x53e050; Complete-only, thiscall ret 8
-void type_random_map_generator::fillZoneArea(RmgZone* zone, RmgBoundaryVertex* first)
+void RandomMapGenerator::fillZoneArea(RmgZone* zone, RmgBoundaryVertex* first)
 {
     int zoneIndex = zone->m_slot->m_zoneIndex;
     std::vector<RmgMapPosition> pending;
@@ -4490,7 +4490,7 @@ void type_random_map_generator::fillZoneArea(RmgZone* zone, RmgBoundaryVertex* f
 // retail retains single-element insert. Every variant passes 16,585 directed
 // graph/root-count cases against an independent Floyd-Warshall distance table.
 VA(0x0053D8E0, 0x1EC) // anchor-callee 0x53dcd2/0x53e020; Complete-only, ret 4
-void type_random_map_generator::propagateZoneDistances(RmgZone* zone)
+void RandomMapGenerator::propagateZoneDistances(RmgZone* zone)
 {
     std::vector<RmgZone*> pending;
     std::vector<int> costs;
@@ -4525,7 +4525,7 @@ VA_COMPGEN(0x0054C3D0, 0x12, VECTOR_SIZE, Short)
 // inline spelling compile identically, raise JoinExtraZones 68.8871 -> 79.6078,
 // emit the exact retained resize above, and leave every sibling score fixed.
 static void initializeRmgZoneDistances(
-    type_random_map_generator* generator, int originalZones)
+    RandomMapGenerator* generator, int originalZones)
 {
     for (int index = 0; index < generator->m_zones.size(); ++index) {
         RmgZone* zone = generator->m_zones[index];
@@ -4560,7 +4560,7 @@ static void initializeRmgZoneDistances(
 // only the post-resize fill loses at 66.1663%. The two large connection loops,
 // their ring-search exits and final insertion expansion remain to reconcile.
 VA(0x0053DAD0, 0x57F) // anchor-callee buildZoneBoundaries; Complete-only, ret 8
-void type_random_map_generator::joinExtraZones(int originalZones, RmgVoronoi* diagram)
+void RandomMapGenerator::joinExtraZones(int originalZones, RmgVoronoi* diagram)
 {
     RmgZoneBounds bounds = {0, 0, m_map.m_mapWidth, m_map.m_mapHeight};
     for (int index = originalZones; index < m_zones.size(); ++index) {
@@ -4652,7 +4652,7 @@ VA_COMPGEN(0x0054DE90, 0x14, STD_CONSTRUCT, RmgZoneConnection)
 // where retail expands it, plus two width/height floating operand stores.
 // Splitting the maximum-coordinate guards into nested ifs is byte-neutral.
 VA(0x0053E050, 0x64D) // anchor-callee 0x549af9; thiscall, ret 8
-void type_random_map_generator::buildZoneBoundaries(
+void RandomMapGenerator::buildZoneBoundaries(
     RmgTemplate* mapTemplate, int level)
 {
     RmgVoronoi diagram;
@@ -4755,7 +4755,7 @@ void type_random_map_generator::buildZoneBoundaries(
 }
 
 VA(0x0053E6A0, 0x337)
-void type_random_map_generator::paintZoneTerrain()
+void RandomMapGenerator::paintZoneTerrain()
 {
     calculateZoneBounds();
     for (int zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
@@ -4765,7 +4765,7 @@ void type_random_map_generator::paintZoneTerrain()
             insetIslandZone(zone);
     }
     if (m_map.m_numberLevels > 1) {
-        type_random_map levelMap(m_map.getMapItem(0, 0, 1),
+        RandomMap levelMap(m_map.getMapItem(0, 0, 1),
             m_map.m_mapWidth, m_map.m_mapHeight);
         RmgTerrainBrush brush(&levelMap, eTerrainRock, 4);
         brush.paintRectangle(0, 0, m_map.m_mapWidth, m_map.m_mapHeight);
@@ -4782,7 +4782,7 @@ void type_random_map_generator::paintZoneTerrain()
         RmgZoneBounds bounds = zone->getBounds();
         RmgMapPosition position = zone->getLevelPosition();
         if (zone->getTerrain() != eTerrainWater) {
-            type_random_map levelMap(m_map.getMapItem(0, 0, position.m_z),
+            RandomMap levelMap(m_map.getMapItem(0, 0, position.m_z),
                 m_map.m_mapWidth, m_map.m_mapHeight);
             RmgTerrainBrush brush(&levelMap, zone->getTerrain(), 4);
             for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
@@ -4936,7 +4936,7 @@ void __fastcall generateRmgIslandMask(unsigned char* mask, int width, int height
 }
 
 VA(0x0053EFA0, 0x1F2)
-void type_random_map_generator::createWaterZoneIsland(const RmgZoneBounds& bounds, int level)
+void RandomMapGenerator::createWaterZoneIsland(const RmgZoneBounds& bounds, int level)
 {
     int width = bounds.m_maximumX - bounds.m_minimumX;
     int height = bounds.m_maximumY - bounds.m_minimumY;
@@ -4944,7 +4944,7 @@ void type_random_map_generator::createWaterZoneIsland(const RmgZoneBounds& bound
     RmgMapPosition point;
     int terrain = rand() % 6;
     {
-        type_random_map map(m_map.getMapItem(0, 0, level),
+        RandomMap map(m_map.getMapItem(0, 0, level),
             m_map.m_mapWidth, m_map.m_mapHeight);
         RmgTerrainBrush brush(&map, terrain, 4);
         generateRmgIslandMask(mask, width, height);
@@ -4991,7 +4991,7 @@ void type_random_map_generator::createWaterZoneIsland(const RmgZoneBounds& bound
 // retains position single-insert where retail expands that wrapper. Those
 // call boundaries remain unresolved; keep the ordinary canonical helper.
 VA(0x0053F1A0, 0x2C6)
-void type_random_map_generator::floodWaterZoneDistances(RmgMapPosition position, int zoneIndex)
+void RandomMapGenerator::floodWaterZoneDistances(RmgMapPosition position, int zoneIndex)
 {
     std::vector<RmgMapPosition> positions;
     std::vector<int> costs;
@@ -5054,7 +5054,7 @@ void type_random_map_generator::floodWaterZoneDistances(RmgMapPosition position,
 // upper-limit batches preserve this peak; named scan cells/insert iterators
 // and ADD-negative limit expressions do not recover the remaining differences.
 VA(0x0053F470, 0x409)
-void type_random_map_generator::prepareWaterZoneConnections(RmgZone* zone)
+void RandomMapGenerator::prepareWaterZoneConnections(RmgZone* zone)
 {
     if (zone->m_terrain != eTerrainWater)
         return;
@@ -5125,7 +5125,7 @@ void type_random_map_generator::prepareWaterZoneConnections(RmgZone* zone)
 // Preserve the two separate connection-policy tests at 0x53fa3f..0x53fa58;
 // the ordinary findConnection helper and progress call remain canonical.
 VA(0x0053F880, 0x429)
-void type_random_map_generator::expandObstacleClearance()
+void RandomMapGenerator::expandObstacleClearance()
 {
     RmgMapItem* current = m_map.m_mapItems;
     RmgMapPosition position;
@@ -5207,7 +5207,7 @@ void type_random_map_generator::expandObstacleClearance()
 }
 
 VA(0x0053FCB0, 0x5EC)
-void type_random_map_generator::repairWaterZoneBorders()
+void RandomMapGenerator::repairWaterZoneBorders()
 {
     RmgMapItem* current = m_map.m_mapItems;
     int terrain;
@@ -5310,7 +5310,7 @@ void type_random_map_generator::repairWaterZoneBorders()
         }
         if (positions.size()) {
             int lastTerrain = terrains[0];
-            type_random_map levelMap(m_map.getMapItem(0, 0, position.m_z),
+            RandomMap levelMap(m_map.getMapItem(0, 0, position.m_z),
                 m_map.m_mapWidth, m_map.m_mapHeight);
             RmgTerrainBrush brush(&levelMap, lastTerrain, 4);
             for (unsigned int i = 0; i < positions.size(); ++i) {
@@ -5352,7 +5352,7 @@ void type_random_map_generator::repairWaterZoneBorders()
 // not raise the peak. See generate-rmg-add-object-family.py; the independent
 // 159-body distance oracle passes with ten wrong controls rejected.
 VA(0x005402A0, 0x32A) // anchor-vtable + generator/map layouts; retail-only
-void type_random_map_generator::addObject(type_object* object, RmgMapPosition position)
+void RandomMapGenerator::addObject(Object* object, RmgMapPosition position)
 {
     RmgGeneratorBase::addObject(object, position);
     ObjectType* prototype = object->m_properties->m_prototype;
@@ -5415,7 +5415,7 @@ void type_random_map_generator::addObject(type_object* object, RmgMapPosition po
 // and perturbs writeMapHeader 77.9030 -> 77.8952%. No mask is adopted merely
 // to fix one instruction; retain the canonical signed field and 99.3582% body.
 VA(0x005405D0, 0x304)
-void type_random_map_generator::buildZoneConnectionPaths()
+void RandomMapGenerator::buildZoneConnectionPaths()
 {
     int count = m_map.m_numberLevels * m_map.m_mapHeight * m_map.m_mapWidth;
     RmgMapItem* item = m_map.m_mapItems;
@@ -5502,7 +5502,7 @@ void type_random_map_generator::buildZoneConnectionPaths()
 // improve it. Keep the retained retail map/helper calls as the next target;
 // do not replace them with a pasted body or an inline-depth pin.
 VA(0x005408E0, 0x23F) // anchor-callee createGroundConnection; thiscall, ret 0x10
-void type_random_map_generator::openConnectionPath(
+void RandomMapGenerator::openConnectionPath(
     RmgMapPosition position, unsigned char narrow)
 {
     RmgMapItem* item = m_map.getMapItem(position);
@@ -5513,7 +5513,7 @@ void type_random_map_generator::openConnectionPath(
         if (item->m_connection.m_present) {
             RmgObjectPropertiesRef* properties = selectObjectPrototype(
                 eTerrainDirt, BORDER_GUARD, item->m_connection.m_direction);
-            type_object* object = new type_object(properties);
+            Object* object = new Object(properties);
             item->m_connection.m_present = 0;
             item->m_connection.m_direction = 0;
             if (!item->m_connection.m_present) {
@@ -5561,7 +5561,7 @@ void type_random_map_generator::openConnectionPath(
 // constructor store scheduling remain different. Local/parameter count and
 // paired/delta draws were measured; keeping the real intermediate is best.
 VA(0x00540B20, 0x240) // anchor-callee 0x54203b; thiscall, ret 8; retail-only
-type_object* type_random_map_generator::createGuard(int value, RmgZone* zone)
+Object* RandomMapGenerator::createGuard(int value, RmgZone* zone)
 {
     unsigned char allowed[10];
     if (zone->m_slot->m_flag0094 && zone->m_alignment != -1) {
@@ -5610,11 +5610,11 @@ type_object* type_random_map_generator::createGuard(int value, RmgZone* zone)
         delta -= rand() % variation;
         count += delta;
     }
-    return new rmgMonsterObject(properties, m_nextObjectId++, count);
+    return new RmgMonsterObject(properties, m_nextObjectId++, count);
 }
 
 VA(0x00540D60, 0x256) // anchor-callee createShipyardConnection; thiscall, ret 0x14
-int type_random_map_generator::placeBorderObject(
+int RandomMapGenerator::placeBorderObject(
     RmgMapPosition position, int count, RmgZone* zone)
 {
     int color = m_nextKeyTentColor;
@@ -5635,14 +5635,14 @@ int type_random_map_generator::placeBorderObject(
     if (index == m_objectPrototypes[BORDER_GUARD].size())
         return 0;
     RmgObjectPropertiesRef* guardProperties = m_objectPrototypes[BORDER_GUARD][index];
-    type_object* tent = new type_object(tentProperties);
+    Object* tent = new Object(tentProperties);
     if (!placeObjectInZone(tent, zone)) {
         delete tent;
         return -1;
     }
 
     for (index = 0; index < count; ++index) {
-        type_object* guard = new type_object(guardProperties);
+        Object* guard = new Object(guardProperties);
         RmgMapItem* item = m_map.getMapItem(position);
         item->m_connection.m_present = 0;
         item->m_connection.m_direction = 0;
@@ -5663,7 +5663,7 @@ int type_random_map_generator::placeBorderObject(
 }
 
 VA(0x00540FC0, 0x172) // anchor-callee createGroundConnection; thiscall, ret 0x10
-void type_random_map_generator::markBorderObjectArea(
+void RandomMapGenerator::markBorderObjectArea(
     RmgMapPosition position, int direction)
 {
     RmgZoneBounds bounds;
@@ -5746,13 +5746,13 @@ RmgMapPosition& RmgMapPosition::operator-=(const Point& offset)
 // retail-only hypothesis. All five connection sites use this ordinary body;
 // flattening the ground copies loses its final retained map-item accesses.
 // Shipyard is byte-neutral versus a flat body with a separate position copy.
-void type_random_map_generator::placeGuard(RmgMapPosition position, int value)
+void RandomMapGenerator::placeGuard(RmgMapPosition position, int value)
 {
     RmgMapItem* item = m_map.getMapItem(position);
     RmgZone* zone = m_zones[item->m_zoneState.m_zone];
     if (static_cast<int>(item->m_objects.size()) > 0)
         return;
-    type_object* guard = createGuard(value, zone);
+    Object* guard = createGuard(value, zone);
     if (guard)
         addObject(guard, position);
 }
@@ -5780,7 +5780,7 @@ void type_random_map_generator::placeGuard(RmgMapPosition position, int value)
 // candidateCount before the empty test is 75.386406%. The two size calls
 // preserve retail's count reuse through min. No inline pin is retained.
 VA(0x00541140, 0x63A) // anchor-callee ConnectZones 0x543550; retail-only
-unsigned char type_random_map_generator::createGroundConnection(
+unsigned char RandomMapGenerator::createGroundConnection(
     RmgZone* source,
     RmgZoneConnection* connection,
     std::vector<RmgMapItem*>* borderItems,
@@ -5883,7 +5883,7 @@ unsigned char type_random_map_generator::createGroundConnection(
 // rather than copy-initializing nearby reaches the same island. Keep the
 // public STL calls; the seed insert still expands one level past retail.
 VA(0x00541780, 0x18D) // anchor-callee 0x541f1f; thiscall, ret 0x0c
-void type_random_map_generator::floodConnectionRegion(RmgMapPosition position)
+void RandomMapGenerator::floodConnectionRegion(RmgMapPosition position)
 {
     std::vector<RmgMapPosition> openPositions;
     openPositions.push_back(position);
@@ -5926,7 +5926,7 @@ void type_random_map_generator::floodConnectionRegion(RmgMapPosition position)
 // byte-neutral. Returned-point translation and keeping only the old z do
 // not recover the remaining coordinate homes/registers or side-branch shape.
 VA(0x00541960, 0x16C) // anchor-callee 0x541c94; thiscall, ret 0x0c
-unsigned char type_random_map_generator::canPlaceShipyard(RmgMapPosition position)
+unsigned char RandomMapGenerator::canPlaceShipyard(RmgMapPosition position)
 {
     if (position.m_y + 1 >= m_map.m_mapHeight)
         return 0;
@@ -6026,7 +6026,7 @@ unsigned char type_random_map_generator::canPlaceShipyard(RmgMapPosition positio
 // A short-lived entrance value copied into nearby still grows the frame to
 // 0x74 and changes the trigger-load/subtraction sequence (92.79536%).
 VA(0x00541AD0, 0x5B0) // anchor-callee connectZones; thiscall, ret 8; retail-only
-unsigned char type_random_map_generator::createShipyardConnection(
+unsigned char RandomMapGenerator::createShipyardConnection(
     RmgZone* source, RmgZoneConnection* connection)
 {
     RmgTownSlot* sourceSlot = source->m_slot;
@@ -6074,7 +6074,7 @@ unsigned char type_random_map_generator::createShipyardConnection(
     if (candidates.size() == 0)
         return 0;
 
-    rmgOwnableObject* shipyard = new rmgOwnableObject(properties);
+    RmgOwnableObject* shipyard = new RmgOwnableObject(properties);
     RmgMapPosition position = candidates[rand() % candidates.size()];
     addObject(shipyard, position);
 
@@ -6161,7 +6161,7 @@ unsigned char type_random_map_generator::createShipyardConnection(
 // The independent scan oracle checks ordered queries, live level reads and
 // both later coordinate projections; the ordinary placement helpers remain.
 VA(0x00542080, 0x8AA)
-unsigned char type_random_map_generator::createSubterraneanGate(
+unsigned char RandomMapGenerator::createSubterraneanGate(
     RmgZone* source, RmgZoneConnection* connection)
 {
     RmgZone* destination = m_zones[connection->m_destination->m_zoneIndex];
@@ -6232,11 +6232,11 @@ unsigned char type_random_map_generator::createSubterraneanGate(
         return 0;
 
     position = candidates[rand() % candidates.size()];
-    addObject(new type_object(gateProperties), position);
+    addObject(new Object(gateProperties), position);
 
     RmgMapPosition otherPosition = position;
     otherPosition.m_z = destination->getLevelPosition().m_z;
-    addObject(new type_object(gateProperties), otherPosition);
+    addObject(new Object(gateProperties), otherPosition);
 
     position -= Point(gatePrototype->m_triggerCell.m_x,
                        gatePrototype->m_triggerCell.m_y);
@@ -6342,7 +6342,7 @@ unsigned char type_random_map_generator::createSubterraneanGate(
 // short. Direct/copy-selected arguments lose its duplicate homes; public
 // vector insertion alternatives do not resolve that retained copy either.
 VA(0x00542930, 0x1C6) // anchor-callee 0x540e81; thiscall, ret 8; retail-only
-unsigned char type_random_map_generator::placeObjectInZone(type_object* object, RmgZone* zone)
+unsigned char RandomMapGenerator::placeObjectInZone(Object* object, RmgZone* zone)
 {
     RmgObjectPropertiesRef* properties = object->m_properties;
     ObjectType* prototype = properties->m_prototype;
@@ -6378,7 +6378,7 @@ unsigned char type_random_map_generator::placeObjectInZone(type_object* object, 
 // combinations are byte-flat; a signed cost scores 66.0465%. Keep the
 // canonical map-position calls and the array-derived neighbor count.
 VA(0x00542B00, 0x1D2) // anchor-callers 0x542ec5/0x54304f; Complete-only, ret 0x10
-unsigned char type_random_map_generator::placeMonolithBorder(
+unsigned char RandomMapGenerator::placeMonolithBorder(
     RmgMapPosition position, RmgZone* zone)
 {
     Point offsets[5] = {
@@ -6441,7 +6441,7 @@ unsigned char type_random_map_generator::placeMonolithBorder(
 // preserve the placement order and raise matching to 91.9028%. The other
 // registry paths retain push_back; all position and guard helpers stay shared.
 VA(0x00542CE0, 0x554) // anchor-caller 0x543240; Complete-only, thiscall ret 0xc
-void type_random_map_generator::createMonolithConnection(
+void RandomMapGenerator::createMonolithConnection(
     RmgZone* source, RmgZoneConnection* connection, int prototypeIndex)
 {
     RmgObjectPropertiesRef* exitProperties = 0;
@@ -6462,7 +6462,7 @@ void type_random_map_generator::createMonolithConnection(
     else
         guardValue = getRmgGuardValue(connection->m_value, m_monsterStrength);
 
-    type_object* object = new type_object(properties);
+    Object* object = new Object(properties);
     if (!placeObjectInZone(object, source)) {
         delete object;
     } else {
@@ -6478,7 +6478,7 @@ void type_random_map_generator::createMonolithConnection(
             placeGuard(object->getPosition() + Point(0, 1), guardValue);
         }
     }
-    object = new type_object(properties);
+    object = new Object(properties);
     if (!placeObjectInZone(object, destination)) {
         delete object;
     } else {
@@ -6497,7 +6497,7 @@ void type_random_map_generator::createMonolithConnection(
         }
     }
     if (exitProperties) {
-        object = new type_object(exitProperties);
+        object = new Object(exitProperties);
         if (!placeObjectInZone(object, source)) {
             delete object;
         } else {
@@ -6507,7 +6507,7 @@ void type_random_map_generator::createMonolithConnection(
             entrance.m_y = object->m_position.m_y;
             source->m_entrances.push_back(entrance);
         }
-        object = new type_object(exitProperties);
+        object = new Object(exitProperties);
         if (!placeObjectInZone(object, destination)) {
             delete object;
         } else {
@@ -6531,7 +6531,7 @@ void type_random_map_generator::createMonolithConnection(
 // residuals are VC6's excess expansion of the two initial vector inserts and
 // register/layout choices around the paired-connection searches.
 VA(0x00543240, 0x797)
-void type_random_map_generator::connectZones()
+void RandomMapGenerator::connectZones()
 {
     std::vector<RmgMapItem*> borderItems;
     std::vector<RmgMapPosition> borderPositions;
@@ -6658,7 +6658,7 @@ void type_random_map_generator::connectZones()
 
         int objectIndex = 0;
         while (objectIndex < m_positions.size()) {
-            type_object* object = m_positions[objectIndex];
+            Object* object = m_positions[objectIndex];
             if (object->m_properties->m_prototype->m_objectType == SHIPYARD) {
                 position = object->m_position;
                 if (m_map.getMapItem(position)->m_zoneState.m_zone == zoneIndex) {
@@ -6747,13 +6747,13 @@ void type_random_map_generator::connectZones()
 // Sixty caller and sixty origin forms plus 61 shared-constructor combinations
 // preserve the real brush/map scopes and predicates. No inline pin is used.
 VA(0x005439E0, 0x283)
-void type_random_map_generator::decorateUnderground()
+void RandomMapGenerator::decorateUnderground()
 {
     RmgMapPosition scan;
     scan.m_z = 1;
     RmgMapItem* item = m_map.getMapItem(0, 0, scan.m_z);
     Point dimensions(m_map.m_mapWidth, m_map.m_mapHeight);
-    type_random_map map(item, dimensions.m_x, dimensions.m_y);
+    RandomMap map(item, dimensions.m_x, dimensions.m_y);
     RmgTerrainBrush brush(&map, eTerrainRock, 4);
     for (scan.m_y = 0; scan.m_y < m_map.m_mapHeight; ++scan.m_y) {
         for (scan.m_x = 0; scan.m_x < m_map.m_mapWidth; ++scan.m_x, ++item) {
@@ -6813,7 +6813,7 @@ void type_random_map_generator::decorateUnderground()
 // remain reversed. All 120 forms pass 17,150 closed-form lattice cases each,
 // with four negative controls; no speculative source change is retained.
 VA(0x00543C70, 0x1A2) // anchor-callee 0x544226; Complete-only, hidden result, ret 0x18
-Point type_random_map::traceBranchEnd(Point from, Point toward, int level)
+Point RandomMap::traceBranchEnd(Point from, Point toward, int level)
 {
     int dx = toward.m_x - from.m_x;
     int dy = toward.m_y - from.m_y;
@@ -6880,7 +6880,7 @@ Point type_random_map::traceBranchEnd(Point from, Point toward, int level)
 // The current emitted-object scan also finds no byte-identical range-erase
 // body under another template type, even before checking callee identities.
 VA(0x00543E20, 0x574) // anchor-callee 0x544920; Complete-only, thiscall, no arguments
-void type_random_map_generator::carveBranchingPaths()
+void RandomMapGenerator::carveBranchingPaths()
 {
     RmgMapItem* item = m_map.m_mapItems;
     for (int remaining = m_map.m_mapWidth * m_map.m_mapHeight * m_map.m_numberLevels;
@@ -6995,7 +6995,7 @@ void type_random_map_generator::carveBranchingPaths()
 }
 
 VA(0x005443A0, 0x2F5)
-void type_random_map_generator::connectJunctionEntrance(Point from, Point to,
+void RandomMapGenerator::connectJunctionEntrance(Point from, Point to,
     RmgZone* zone)
 {
     std::vector<Point> pending;
@@ -7074,7 +7074,7 @@ void type_random_map_generator::connectJunctionEntrance(Point from, Point to,
 // instead of retail's separate LEA receiver, and retains the same frame and
 // extra scan block. No receiver or loop form is adopted on that score alone.
 VA(0x005446A0, 0x27E)
-void type_random_map_generator::prepareJunctionZone(RmgZone* zone)
+void RandomMapGenerator::prepareJunctionZone(RmgZone* zone)
 {
     RmgZoneBounds bounds = zone->m_bounds;
     int zoneIndex = zone->m_slot->m_zoneIndex;
@@ -7134,7 +7134,7 @@ void type_random_map_generator::prepareJunctionZone(RmgZone* zone)
 }
 
 VA(0x00544920, 0x124)
-void type_random_map_generator::prepareZoneConnections()
+void RandomMapGenerator::prepareZoneConnections()
 {
     carveBranchingPaths();
     expandObstacleClearance();
@@ -7159,7 +7159,7 @@ void type_random_map_generator::prepareZoneConnections()
 }
 
 VA(0x00544A50, 0x90)
-void type_random_map_generator::placePrimaryTown(RmgZone* zone)
+void RandomMapGenerator::placePrimaryTown(RmgZone* zone)
 {
     RmgTownSlot* slot = zone->m_slot;
     int alignment = zone->m_alignment;
@@ -7185,7 +7185,7 @@ void type_random_map_generator::placePrimaryTown(RmgZone* zone)
 // candidate CFG has 45 blocks versus retail's 49. Preserve all eight placement
 // call sites and the category-specific failure flags while resolving that layout.
 VA(0x00544AE0, 0x2B0)
-void type_random_map_generator::placeAdditionalTowns(RmgZone* zone)
+void RandomMapGenerator::placeAdditionalTowns(RmgZone* zone)
 {
     RmgTownSlot* slot = zone->m_slot;
     int alignment = zone->m_alignment;
@@ -7277,7 +7277,7 @@ void type_random_map_generator::placeAdditionalTowns(RmgZone* zone)
 // differences include candidate-loop layout and compiler-generated cleanup.
 // Preserve the alignment fallback, full neighbourhood scan and tied-site list.
 VA(0x00544D90, 0x4B7)
-unsigned char type_random_map_generator::tryPlaceAdditionalTown(RmgZone* zone,
+unsigned char RandomMapGenerator::tryPlaceAdditionalTown(RmgZone* zone,
     int alignment, int player, unsigned char townOption, int spacing)
 {
     RmgTownSlot* slot = zone->m_slot;
@@ -7346,7 +7346,7 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(RmgZone* zone,
     }
     if (!candidates.size())
         return 0;
-    rmgTownObject* object = new rmgTownObject(properties, m_nextObjectId++, player, townOption);
+    RmgTownObject* object = new RmgTownObject(properties, m_nextObjectId++, player, townOption);
     position = candidates[rand() % candidates.size()];
     addObject(object, position);
     RmgMapPosition entrance = position;
@@ -7369,7 +7369,7 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(RmgZone* zone,
 // inspect vector cleanup and the selected-position copy before changing
 // the nearest-site rule or the verified town construction boundary.
 VA(0x00545250, 0x324)
-unsigned char type_random_map_generator::tryPlacePrimaryTown(
+unsigned char RandomMapGenerator::tryPlacePrimaryTown(
     RmgZone* zone, int alignment, int player, unsigned char townOption)
 {
     if (alignment == -1)
@@ -7401,7 +7401,7 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
     }
     if (!candidates.size())
         return 0;
-    rmgTownObject* town = new rmgTownObject(properties, m_nextObjectId++, player, townOption);
+    RmgTownObject* town = new RmgTownObject(properties, m_nextObjectId++, player, townOption);
     position = candidates[rand() % candidates.size()];
     addObject(town, position);
     position.m_x -= prototype->m_triggerCell.m_x;
@@ -7422,7 +7422,7 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
 // First reconstruction: 84.2575%. Preserve the ordered distance, border
 // count and score filters, including their separate candidate resets.
 VA(0x00545580, 0x401)
-unsigned char type_random_map_generator::placeMineSite(type_object* object,
+unsigned char RandomMapGenerator::placeMineSite(Object* object,
     RmgZone* zone, unsigned char startingMine, int spacing)
 {
     RmgObjectPropertiesRef* properties = object->m_properties;
@@ -7514,7 +7514,7 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
 // recovering the remaining per-site boundaries, including getRmgGuardValue
 // and the second getMapItem call.
 VA(0x00545990, 0x466)
-unsigned char type_random_map_generator::tryPlaceMine(RmgZone* zone,
+unsigned char RandomMapGenerator::tryPlaceMine(RmgZone* zone,
     int resource, unsigned char startingMine, int spacing)
 {
     std::vector<RmgObjectPropertiesRef*> candidates;
@@ -7538,7 +7538,7 @@ unsigned char type_random_map_generator::tryPlaceMine(RmgZone* zone,
     if (!candidates.size())
         return 0;
     properties = candidates[rand() % candidates.size()];
-    rmgOwnableObject* mine = new rmgOwnableObject(properties);
+    RmgOwnableObject* mine = new RmgOwnableObject(properties);
     if (!placeMineSite(mine, zone, startingMine, spacing)) {
         delete mine;
         return 0;
@@ -7568,7 +7568,7 @@ unsigned char type_random_map_generator::tryPlaceMine(RmgZone* zone,
         item = m_map.getMapItem(entrance);
         RmgZone* guardZone = m_zones[item->m_zoneState.m_zone];
         if (static_cast<int>(item->m_objects.size()) <= 0) {
-            type_object* guard = createGuard(guardValue, guardZone);
+            Object* guard = createGuard(guardValue, guardZone);
             if (guard)
                 addObject(guard, entrance);
         }
@@ -7587,7 +7587,7 @@ unsigned char type_random_map_generator::tryPlaceMine(RmgZone* zone,
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX && placed <= 2; ++position.m_x) {
             if (rand() % 2 == 0 && m_map.canPlaceObject(properties, position, zone)) {
                 ++placed;
-                addObject(new rmgResourceObject(properties), position);
+                addObject(new RmgResourceObject(properties), position);
             }
         }
     }
@@ -7610,7 +7610,7 @@ int getRmgGuardValue(int value, int strength)
 }
 
 VA(0x00545E60, 0xFA)
-void type_random_map_generator::placeExtraMines(RmgZone* zone)
+void RandomMapGenerator::placeExtraMines(RmgZone* zone)
 {
     RmgTownSlot* slot = zone->m_slot;
     unsigned char exhausted[7];
@@ -7655,7 +7655,7 @@ void type_random_map_generator::placeExtraMines(RmgZone* zone)
 }
 
 VA(0x00545F60, 0xD6)
-void type_random_map_generator::placeMines()
+void RandomMapGenerator::placeMines()
 {
     for (unsigned int index = 0; index < m_zones.size(); ++index) {
         RmgZone* zone = m_zones[index];
@@ -7704,7 +7704,7 @@ void type_random_map_generator::placeMines()
 // The loader's direct-read solution therefore does not explain this selector's
 // ESI/EDI exchange. Checked-mask throws and ordered random selection remain.
 VA(0x00546040, 0x141) // anchor-callee openConnectionPath; thiscall, ret 0x0c
-RmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
+RmgObjectPropertiesRef* RandomMapGenerator::selectObjectPrototype(
     int terrain, int objectType, int subtype)
 {
     std::vector<RmgObjectPropertiesRef*> candidates;
@@ -7746,18 +7746,18 @@ RmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
 // Public count insert expands both vectors and grows a representative body
 // to 0x66d versus retail's 0x385; it is not a missing-symbol/tool failure.
 VA(0x00546190, 0x385) // anchor-callee 0x546572/0x546663; thiscall, ret 0x28
-type_object* type_random_map_generator::createTreasureObject(RmgZone* zone,
+Object* RandomMapGenerator::createTreasureObject(RmgZone* zone,
     int minimum, int maximum, int* value, unsigned char primary,
     unsigned char allowTerrainDependent, unsigned char compact,
     RmgMapPosition position)
 {
     int zoneIndex = zone->m_slot->m_zoneIndex;
     int totalWeight = 0;
-    std::vector<type_treasure_def*> candidates;
+    std::vector<TreasureDef*> candidates;
     std::vector<RmgObjectPropertiesRef*> properties;
     int bestValuePerCell = 0;
     for (unsigned int index = 0; index < m_objectGenerators.size(); ++index) {
-        type_treasure_def* definition = m_objectGenerators[index];
+        TreasureDef* definition = m_objectGenerators[index];
         int objectType = definition->m_objectType;
         if (!primary && g_adventureObjectLandBlocked[objectType][0]
             && !g_adventureObjectLandBlocked[objectType][2])
@@ -7810,7 +7810,7 @@ type_object* type_random_map_generator::createTreasureObject(RmgZone* zone,
         if (selected < 0)
             break;
     }
-    type_treasure_def* definition = candidates[selectedIndex];
+    TreasureDef* definition = candidates[selectedIndex];
     *value = definition->getValue(zone, this);
     return definition->generate(properties[selectedIndex], this, zone);
 }
@@ -7845,14 +7845,14 @@ type_object* type_random_map_generator::createTreasureObject(RmgZone* zone,
 // masking its two call operands, and both operator new/delete targets agree.
 // The retail label names vector<widget*>; keep the real source element type.
 VA(0x00546520, 0x1B6) // anchor-callee 0x54678a; thiscall, ret 0x10
-int type_random_map_generator::fillTreasureGroup(RmgZone* zone,
+int RandomMapGenerator::fillTreasureGroup(RmgZone* zone,
     RmgTreasureGroup* group, unsigned char alternate, int value)
 {
     int objectValue = 0;
     int attempts;
     int total;
     {
-        type_object* selected;
+        Object* selected;
         RmgMapPosition position;
         position.m_x = -1;
         position.m_y = -1;
@@ -7866,7 +7866,7 @@ int type_random_map_generator::fillTreasureGroup(RmgZone* zone,
         if (!selected)
             return 0;
         ObjectType* prototype = selected->m_properties->m_prototype;
-        type_object* object = selected;
+        Object* object = selected;
         position.m_x = (group->m_map.m_mapWidth + static_cast<unsigned>(prototype->getWidth())) / 2;
         position.m_y = (group->m_map.m_mapHeight + static_cast<unsigned>(prototype->getHeight())) / 2;
         position.m_z = 0;
@@ -7878,7 +7878,7 @@ int type_random_map_generator::fillTreasureGroup(RmgZone* zone,
         int remainder = value - total;
         if (remainder < RMG_TREASURE_MINIMUM_REMAINDER && remainder < total / 2)
             break;
-        type_object* nextObject;
+        Object* nextObject;
         for (attempts = 0; ; ) {
             int creationAttempts;
             for (creationAttempts = 0; creationAttempts < RMG_TREASURE_ATTEMPTS;
@@ -7925,7 +7925,7 @@ int type_random_map_generator::fillTreasureGroup(RmgZone* zone,
 // retain the shared source and recover this caller's own inline state.
 // Separate requested/actual value locals previously measured byte-flat.
 VA(0x005466E0, 0x253) // anchor-callee 0x547594/0x54768c; thiscall, ret 0x14
-unsigned char type_random_map_generator::assembleTreasureGroup(RmgZone* zone,
+unsigned char RandomMapGenerator::assembleTreasureGroup(RmgZone* zone,
     RmgTreasureGroup* group, unsigned char alternate, int minimum, int maximum)
 {
     group->reset();
@@ -7939,7 +7939,7 @@ unsigned char type_random_map_generator::assembleTreasureGroup(RmgZone* zone,
         else if (strength < 0) strength = 0;
         int guardValue = getRmgGuardValue(totalValue, strength);
         if (guardValue > 0) {
-            type_object* guard = createGuard(guardValue, zone);
+            Object* guard = createGuard(guardValue, zone);
             if (guard && !group->addGuard(guard)) {
                 for (unsigned i = 0; i < group->m_objects.size(); ++i) {
                     group->m_objects[i]->unknownOperation();
@@ -7971,7 +7971,7 @@ void RmgMapItem::setTerrain(int terrain, int frame,
 }
 
 VA(0x00546990, 0x1E) // anchor-callee reset expansions; Complete-only helper
-RmgMapItem* type_random_map::getMapItem(int x, int y)
+RmgMapItem* RandomMap::getMapItem(int x, int y)
 {
     return m_mapItems + y * m_mapWidth + x;
 }
@@ -8056,12 +8056,12 @@ VA_COMPGEN(0x0054df40, 0x25, STD_COPY, const_int)
 // moved. No accessor change was adopted: this family supplies no positive
 // evidence for a different helper body at the mismatching expansion.
 VA(0x005469B0, 0x2B4) // anchor-callee 0x547330; thiscall, ret 0x10
-void type_random_map_generator::commitTreasureGroup(RmgTreasureGroup* group,
+void RandomMapGenerator::commitTreasureGroup(RmgTreasureGroup* group,
     RmgMapPosition position)
 {
     group->m_position = position;
     for (unsigned int i = 0; i < group->m_objects.size(); ++i) {
-        type_object* object = group->m_objects[i];
+        Object* object = group->m_objects[i];
         RmgMapPosition objectPosition = object->getPosition();
         objectPosition.m_x += position.m_x;
         objectPosition.m_y += position.m_y;
@@ -8151,14 +8151,14 @@ void type_random_map_generator::commitTreasureGroup(RmgTreasureGroup* group,
 // whose exhaustion arm owns the guard-policy assignment reach 99.2993%
 // with for/while/do headers. Both remain below 99.9850%.
 VA(0x00546C70, 0x452) // anchor-callee 0x54721c; thiscall, ret 0x14
-unsigned char type_random_map_generator::canPlaceTreasureGroup(RmgTreasureGroup* group,
+unsigned char RandomMapGenerator::canPlaceTreasureGroup(RmgTreasureGroup* group,
     RmgMapPosition position, RmgZone* zone)
 {
     RmgMapPosition workingPosition;
     RmgZoneBounds bounds = group->m_bounds;
     int zoneIndex = zone->m_slot->m_zoneIndex;
     for (unsigned int i = 0; i < group->m_objects.size(); ++i) {
-        type_object* object = group->m_objects[i];
+        Object* object = group->m_objects[i];
         workingPosition = object->getPosition();
         RmgObjectPropertiesRef* properties = object->m_properties;
         workingPosition.m_x += position.m_x;
@@ -8188,7 +8188,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(RmgTreasureGroup*
     int firstDirection = 0;
     int lastDirection = RMG_DIRECTION_COUNT;
     unsigned char waterZone = zone->m_terrain == eTerrainWater;
-    type_object* lastObject = group->m_objects.back();
+    Object* lastObject = group->m_objects.back();
     ObjectType* prototype = lastObject->m_properties->m_prototype;
     RmgMapPosition entrance = lastObject->getPosition();
     entrance.m_x -= prototype->m_triggerCell.m_x;
@@ -8269,7 +8269,7 @@ disallowEntrances:
 // preserves all other 339 RMG scores. Native controls cover ordered lookups,
 // live post-fit score reads, cached bounds/zone identity and random tie order.
 VA(0x005470D0, 0x286) // anchor-callee 0x5475b2/0x5476aa; thiscall, ret 0xc
-unsigned char type_random_map_generator::placeTreasureGroup(RmgTreasureGroup* group,
+unsigned char RandomMapGenerator::placeTreasureGroup(RmgTreasureGroup* group,
     RmgZone* zone, int spacing)
 {
     int zoneIndex = zone->m_slot->m_zoneIndex;
@@ -8308,7 +8308,7 @@ unsigned char type_random_map_generator::placeTreasureGroup(RmgTreasureGroup* gr
 }
 
 VA(0x00547360, 0x460)
-void type_random_map_generator::placeZoneTreasures(RmgZone* zone)
+void RandomMapGenerator::placeZoneTreasures(RmgZone* zone)
 {
     RmgTownSlot* slot = zone->m_slot;
     RmgTreasureGroup group(16, 16);
@@ -8400,7 +8400,7 @@ VA_COMPGEN(0x005477C0, 0xB3, IMPLICIT_DTOR, RmgTreasureGroup)
 // inserts already select the retail count-insert calls. Keep the canonical
 // helpers while recovering the remaining source/optimizer state.
 VA(0x00547880, 0x7B1)  // roadTargets caller + monolith vectors; retail-only
-void type_random_map_generator::buildRoadCostMap(RmgMapPosition position)
+void RandomMapGenerator::buildRoadCostMap(RmgMapPosition position)
 {
     std::vector<RmgMapPosition> openPositions;
     std::vector<int> openCosts;
@@ -8426,7 +8426,7 @@ void type_random_map_generator::buildRoadCostMap(RmgMapPosition position)
         unsigned char roadEntrance = mapItem->m_tileData.m_roadEntrance;
 
         if (roadEntrance) {
-            type_object* object = mapItem->m_objects[0];
+            Object* object = mapItem->m_objects[0];
             ObjectType* properties = object->m_properties->m_prototype;
             int objectType = properties->m_objectType;
             if (!g_adventureObjectLandBlocked[objectType][1]
@@ -8438,7 +8438,7 @@ void type_random_map_generator::buildRoadCostMap(RmgMapPosition position)
             case LITH_ONEWAY_EXIT: {
                 int subtype = properties->m_subtype;
                 for (int i = 0; i < m_monolithsOneWay.size(); ++i) {
-                    type_object* destination = m_monolithsOneWay[i];
+                    Object* destination = m_monolithsOneWay[i];
                     if (destination->m_properties->m_prototype->m_subtype != subtype)
                         continue;
 
@@ -8458,7 +8458,7 @@ void type_random_map_generator::buildRoadCostMap(RmgMapPosition position)
             case LITH_TWOWAY: {
                 int subtype = properties->m_subtype;
                 for (int i = 0; i < m_monolithsTwoWay.size(); ++i) {
-                    type_object* destination = m_monolithsTwoWay[i];
+                    Object* destination = m_monolithsTwoWay[i];
                     if (destination->m_properties->m_prototype->m_subtype != subtype)
                         continue;
 
@@ -8552,12 +8552,12 @@ void type_random_map_generator::buildRoadCostMap(RmgMapPosition position)
 // run reaches 70.4101%; repeated lookup is 51.8371%. A continue guard loses
 // the shared cleanup layout (68.9944%); direct/goto loop tests remain lower.
 VA(0x00548040, 0x244) // anchor-callee 0x548408 + adapter/painter vtables; retail-only
-unsigned char type_random_map_generator::paintRoad(RmgMapPosition position, int roadType)
+unsigned char RandomMapGenerator::paintRoad(RmgMapPosition position, int roadType)
 {
     unsigned char painted = 0;
     for (;;) {
         int level = position.m_z;
-        type_random_map levelMap(m_map.getMapItem(0, 0, level),
+        RandomMap levelMap(m_map.getMapItem(0, 0, level),
             m_map.m_mapWidth, m_map.m_mapHeight);
         RmgMapPosition previous = position;
         RmgMapItem* existing = m_map.getMapItem(position);
@@ -8606,7 +8606,7 @@ unsigned char type_random_map_generator::paintRoad(RmgMapPosition position, int 
 // Its final empty-vector cleanup now has separate returns where retail shares
 // the final delete epilogue. Preserve the exact reset sequence through that
 // remaining caller cleanup work.
-void type_random_map_generator::resetMovementCosts()
+void RandomMapGenerator::resetMovementCosts()
 {
     RmgMapPosition resetPosition(-1, -1, -1);
     RmgMapItem* mapItem = m_map.getMapItem(0, 0);
@@ -8626,7 +8626,7 @@ void type_random_map_generator::resetMovementCosts()
 // two-coordinate map lookup at each call; retail expands both. Keep the
 // canonical shared reset rather than copying its body into this caller.
 VA(0x00548290, 0x26E)
-void type_random_map_generator::createRoads()
+void RandomMapGenerator::createRoads()
 {
     int roadType = rand() % 3 + 1;
     for (unsigned int first = 0; first < m_roadTargets.size() - 1; ++first) {
@@ -8657,7 +8657,7 @@ void type_random_map_generator::createRoads()
 // invalid-position local scores 83.63%. Retained vector cleanup boundaries
 // and frame/register homes remain unresolved; no inlining pins are used.
 VA(0x00548500, 0x533)
-void type_random_map_generator::createRiverToObject(RmgMapPosition source)
+void RandomMapGenerator::createRiverToObject(RmgMapPosition source)
 {
     resetMovementCosts();
     std::vector<RmgMapPosition> openPositions;
@@ -8711,7 +8711,7 @@ void type_random_map_generator::createRiverToObject(RmgMapPosition source)
     }
     if (!mapItem->hasRiver())
         return;
-    type_random_map levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
+    RandomMap levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
         m_map.m_mapWidth, m_map.m_mapHeight);
     RmgMapAdapter mapAdapter(&levelMap);
     RmgRiverPainter riverPainter(
@@ -8738,7 +8738,7 @@ void type_random_map_generator::createRiverToObject(RmgMapPosition source)
 // the peak; a water-item binding/direction local reaches only 79.6875%.
 // A copy-based operator+ removes the retail constructor calls (65.57%).
 VA(0x00548A40, 0x222)
-void type_random_map_generator::markRiverCoastTarget(RmgMapPosition position, int direction)
+void RandomMapGenerator::markRiverCoastTarget(RmgMapPosition position, int direction)
 {
     RmgMapPosition point = position + g_rmgDirections[(direction + 2) & 7];
     Point step = g_rmgDirections[(direction - 2) & 7];
@@ -8777,7 +8777,7 @@ void type_random_map_generator::markRiverCoastTarget(RmgMapPosition position, in
 }
 
 VA(0x00548C70, 0x17D)
-void type_random_map_generator::markRiverTargets()
+void RandomMapGenerator::markRiverTargets()
 {
     RmgMapPosition position;
     RmgMapItem* item = m_map.m_mapItems;
@@ -8810,7 +8810,7 @@ void type_random_map_generator::markRiverTargets()
 }
 
 VA(0x00548DF0, 0x99F)  // water-wheel caller + river-delta object; retail-only
-void type_random_map_generator::createRiver(RmgMapPosition source)
+void RandomMapGenerator::createRiver(RmgMapPosition source)
 {
     resetMovementCosts();
 
@@ -8907,7 +8907,7 @@ void type_random_map_generator::createRiver(RmgMapPosition source)
     mapItem->m_tileData.m_riverTarget = 1;
     position = nextPosition;
 
-    type_random_map levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
+    RandomMap levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
         m_map.m_mapWidth, m_map.m_mapHeight);
     RmgMapAdapter mapAdapter(&levelMap);
     RmgRiverPainter riverPainter(
@@ -8943,7 +8943,7 @@ void type_random_map_generator::createRiver(RmgMapPosition source)
         if (prototypeIndex == m_objectPrototypes[TERRAIN_RIVER_DELTA].size())
             return;
 
-        type_object* riverDelta = new type_object(
+        Object* riverDelta = new Object(
             m_objectPrototypes[TERRAIN_RIVER_DELTA][prototypeIndex]);
         addObject(
             riverDelta,
@@ -8970,10 +8970,10 @@ void type_random_map_generator::createRiver(RmgMapPosition source)
 }
 
 VA(0x005497A0, 0xCE)
-void type_random_map_generator::markRiverObjectTargets()
+void RandomMapGenerator::markRiverObjectTargets()
 {
     for (unsigned int index = 0; index < m_positions.size(); ++index) {
-        type_object* object = m_positions[index];
+        Object* object = m_positions[index];
         ObjectType* prototype = object->m_properties->m_prototype;
         if (prototype->m_objectType == TERRAIN_MOUNTAIN
             || prototype->m_objectType == TERRAIN_LAKE
@@ -9003,12 +9003,12 @@ void type_random_map_generator::markRiverObjectTargets()
 }
 
 VA(0x00549870, 0xB1)
-void type_random_map_generator::createRivers()
+void RandomMapGenerator::createRivers()
 {
     markRiverObjectTargets();
     markRiverTargets();
     for (unsigned int index = 0; index < m_positions.size(); ++index) {
-        type_object* object = m_positions[index];
+        Object* object = m_positions[index];
         ObjectType* prototype = object->m_properties->m_prototype;
         if (prototype->m_objectType == WATER_WHEEL) {
             ObjectType::Point trigger = prototype->m_triggerCell;
@@ -9034,7 +9034,7 @@ void type_random_map_generator::createRivers()
 // Both eight-byte memsets and the nine-int loop recover retail's store/fill
 // scheduling. Native mapping/ordered-callback checks cover the source family.
 VA(0x00549930, 0x37B)
-unsigned char type_random_map_generator::generate()
+unsigned char RandomMapGenerator::generate()
 {
     if (!m_templates.size())
         return 0;
@@ -9122,7 +9122,7 @@ unsigned char type_random_map_generator::generate()
 // class offsets and serialization order are retail-byte facts.
 
 VA(0x00549CB0, 0xE90)  // GenerateRandomMap caller chain; retail-only RMG
-void type_random_map_generator::writeMapHeader(AbstractFile* outfile)
+void RandomMapGenerator::writeMapHeader(AbstractFile* outfile)
 {
     {
         int intBuffer = getSerializedMapVersion();
@@ -9509,9 +9509,9 @@ void type_random_map_generator::writeMapHeader(AbstractFile* outfile)
     } else if (m_mapVersion >= 1) {
         std::bitset<129> legacyDisabledArtifacts;
         std::copy(
-            bitset_iterator<144>(disabledArtifacts, 0),
-            bitset_iterator<144>(disabledArtifacts, 129),
-            bitset_iterator<129>(legacyDisabledArtifacts, 0));
+            BitsetIterator<144>(disabledArtifacts, 0),
+            BitsetIterator<144>(disabledArtifacts, 129),
+            BitsetIterator<129>(legacyDisabledArtifacts, 0));
 
         unsigned char packedArtifacts[17];
         memset(packedArtifacts, 0, sizeof(packedArtifacts));
@@ -9610,7 +9610,7 @@ void __fastcall writeRmgObjectPrototype(AbstractFile*, ObjectType*);
 // The native oracle also appends prototypes during serialization and rejects
 // cached loop sizes, so those per-iteration size queries must remain live.
 VA(0x0054ABF0, 0x235) // anchor-callee 0x54c05b + WriteMapHeader and map loops; retail-only
-unsigned char type_random_map_generator::writeMap(AbstractFile* outfile)
+unsigned char RandomMapGenerator::writeMap(AbstractFile* outfile)
 {
     RmgMapPosition position;
     writeMapHeader(outfile);
@@ -9649,12 +9649,12 @@ unsigned char type_random_map_generator::writeMap(AbstractFile* outfile)
         outfile->write(&count, sizeof(count));
     }
     for (unsigned int first = 0; first < m_positions.size(); ++first) {
-        type_object* object = m_positions[first];
+        Object* object = m_positions[first];
         if (g_adventureObjectLandBlocked[object->m_properties->m_prototype->m_objectType][12])
             object->write(outfile, m_mapVersion);
     }
     for (unsigned int second = 0; second < m_positions.size(); ++second) {
-        type_object* object = m_positions[second];
+        Object* object = m_positions[second];
         if (!g_adventureObjectLandBlocked[object->m_properties->m_prototype->m_objectType][12])
             object->write(outfile, m_mapVersion);
     }
@@ -9741,7 +9741,7 @@ void __fastcall writeRmgObjectPrototype(AbstractFile* outfile, ObjectType* proto
 }
 
 VA(0x0054B100, 0x71)
-int type_random_map_generator::selectPrisonHero()
+int RandomMapGenerator::selectPrisonHero()
 {
     int available = 0;
     int hero;
@@ -9795,7 +9795,7 @@ static void insertRmgWorkItem(std::vector<RmgZone*>& zones, RmgZone* zone)
 // Single/count insertion in the shared helper is flat. Retail retains
 // the seed-insert and erase wrappers that this compile expands.
 VA(0x0054B180, 0x174) // anchor-callee + zone/template layouts; retail-only
-void type_random_map_generator::calculateQuestZoneDistances(RmgZone* origin)
+void RandomMapGenerator::calculateQuestZoneDistances(RmgZone* origin)
 {
     std::vector<RmgZone*> pending;
     for (unsigned int index = 0; index < m_zones.size(); ++index)
@@ -9830,7 +9830,7 @@ void type_random_map_generator::calculateQuestZoneDistances(RmgZone* origin)
 // preserves stable ties, exclusions, random calls, live bounds and early exit;
 // five corrupted controls fail.
 VA(0x0054B300, 0x18B) // anchor-callee + placement call + zone fields; retail-only
-unsigned char type_random_map_generator::placeQuestGroup(
+unsigned char RandomMapGenerator::placeQuestGroup(
     RmgTreasureGroup* group, RmgZone* origin)
 {
     std::vector<RmgZone*> candidates;
@@ -9881,9 +9881,9 @@ static const int g_rmgQuestArtifactClass = 2;
 // differently. The writable caller remains exact; all controls change only
 // this worker among other RMG functions.
 VA(0x0054B490, 0x42E) // anchor-caller + artifact/group/generator fields; retail-only
-unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
+unsigned char RandomMapGenerator::placeQuestArtifact(RmgQuestArtifactObject* object)
 {
-    rmgSeerHutObject* seerHut = object->m_seerHut;
+    RmgSeerHutObject* seerHut = object->m_seerHut;
     int available = 0;
     int artifact;
     for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
@@ -9920,7 +9920,7 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
     position.m_x = (group.m_map.m_mapWidth + static_cast<unsigned>(prototype->getWidth())) / 2;
     position.m_y = (group.m_map.m_mapHeight + static_cast<unsigned>(prototype->getHeight())) / 2;
     position.m_z = 0;
-    type_object* questObject = seerHut;
+    Object* questObject = seerHut;
     group.m_objects.push_back(questObject);
     group.m_map.addObject(questObject, position);
     group.updateBounds();
@@ -9936,7 +9936,7 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
         removeObject(object);
         RmgZone* zone = m_zones[m_map.getMapItem(originalPosition)->m_zoneState.m_zone];
         int actualValue;
-        type_object* replacement = createTreasureObject(zone, value, value * 3 / 2,
+        Object* replacement = createTreasureObject(zone, value, value * 3 / 2,
             &actualValue, 0, 0, 0, originalPosition);
         if (replacement)
             addObject(replacement, originalPosition);
@@ -9970,7 +9970,7 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
 // See generate-rmg-key-tent-family.py / generate-rmg-key-color-helper-family.py.
 // 207 native caller/helper combinations pass with thirteen wrong controls.
 VA(0x0054B8C0, 0x385) // anchor-callee 0x5338e0; retail-only
-unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, int maxValue)
+unsigned char RandomMapGenerator::placeKeyTentGuard(Object* object, int maxValue)
 {
     int color = object->m_properties->m_prototype->m_subtype;
     unsigned int index = 0;
@@ -9982,7 +9982,7 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
     RmgZone* origin = m_zones[m_map.getMapItem(object->m_position)->m_zoneState.m_zone];
     RmgObjectPropertiesRef* properties = m_objectPrototypes[BORDER_GUARD][index];
     RmgTreasureGroup group(16, 16);
-    type_object* guard = new type_object(properties);
+    Object* guard = new Object(properties);
     m_disabledKeyTents[color] = 1;
     m_nextKeyTentColor = 0;
     while (m_nextKeyTentColor < m_disabledKeyTents.size()
@@ -10032,12 +10032,12 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
 // raises matching to 95.7733%. Keep the existing direct per-zone decrement;
 // the separate inferred decrement helper from the old branch is not needed.
 VA(0x0054BC50, 0x2AE) // anchor-callee 0x5338e0/0x54b490; retail-only
-void type_random_map_generator::removeObject(type_object* object)
+void RandomMapGenerator::removeObject(Object* object)
 {
     ObjectType* prototype = object->m_properties->m_prototype;
     RmgMapPosition position;
     position = object->m_position;
-    std::vector<type_object*>::iterator found = std::find(m_positions.begin(), m_positions.end(), object);
+    std::vector<Object*>::iterator found = std::find(m_positions.begin(), m_positions.end(), object);
     if (found) {
         m_positions.erase(found);
         --m_objectCountByType[prototype->m_objectType];
@@ -10070,7 +10070,7 @@ void type_random_map_generator::removeObject(type_object* object)
             if (!prototype->m_passableMask.test(CObjectType::getBitPos(cell.m_x, cell.m_y))
                 || prototype->m_triggerMask.test(CObjectType::getBitPos(cell.m_x, cell.m_y))) {
                 RmgMapItem* item = m_map.getMapItem(mapPosition);
-                std::vector<type_object*>::iterator entry = std::find(item->m_objects.begin(), item->m_objects.end(), object);
+                std::vector<Object*>::iterator entry = std::find(item->m_objects.begin(), item->m_objects.end(), object);
                 if (entry) {
                     item->m_objects.erase(entry);
                     if (item->m_objects.empty()) {
@@ -10102,12 +10102,12 @@ RandomMapRequest::RandomMapRequest(int width, int height, int levels)
 // recoveries. Flattening both leaves 85.5534%; keeping only setHumanPlayer
 // reaches 99.6116% with a town-loop register rotation. Both recover the
 // complete worker instruction stream without inline keywords or pins.
-void type_random_map_generator::setHumanPlayer(int seat)
+void RandomMapGenerator::setHumanPlayer(int seat)
 {
     m_fixedHumanPlayers[seat] = 1;
 }
 
-void type_random_map_generator::setTownChoice(int seat, int town)
+void RandomMapGenerator::setTownChoice(int seat, int town)
 {
     m_townChoices[seat] = town;
 }
@@ -10124,7 +10124,7 @@ int RandomMapRequest::generateToFile(AbstractFile* outfile, void* progress)
         m_humanPlayerCount = 1;
         m_computerPlayerCount = 1;
     }
-    type_random_map_generator generator(m_width, m_height, m_levels,
+    RandomMapGenerator generator(m_width, m_height, m_levels,
         m_humanPlayerCount, m_humanTeamCount, m_computerPlayerCount,
         m_computerTeamCount, m_waterContent, strength,
         static_cast<ProgressSink*>(progress), m_mapVersion);

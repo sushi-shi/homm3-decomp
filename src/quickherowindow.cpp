@@ -45,12 +45,12 @@ DATA(0x00682378) static int g_armyPos[7][2] = {
 
 VA(0x0052ead0, 0x8C8)  // heroqvbk.pcx + vtable/allocation block, dc 0x1170bc
 QuickHeroWindow::QuickHeroWindow(Hero* thisHero, ViewLevel viewLevel)
-    : heroWindow(200, 200, 194, 186, 0x12)
+    : HeroWindow(200, 200, 194, 186, 0x12)
 {
-    std::vector<widget*>& widgets = m_widgets;
+    std::vector<Widget*>& widgets = m_widgets;
     widgets.reserve(NWIDGETS);
 
-    bitmapBorder* background = new bitmapBorder(
+    BitmapBorder* background = new BitmapBorder(
         0, 0, 194, 186, BACKGROUND_ID, "heroqvbk.pcx", 0x800);
     background->setPlayerPaletteColors(
         thisHero->m_owner >= 0
@@ -58,40 +58,40 @@ QuickHeroWindow::QuickHeroWindow(Hero* thisHero, ViewLevel viewLevel)
             : g_game->getLocalPlayerGamePos());
     widgets.push_back(background);
 
-    widgets.push_back(new bitmapBorder(
+    widgets.push_back(new BitmapBorder(
         12, 13, 58, 64, PORTRAIT_ID,
         g_heroTraits[thisHero->m_portrait].m_largePortraitName, 0x800));
 
-    widgets.push_back(new textWidget(
-        75, 13, 107, 17, thisHero->m_name, "smalfont.fnt", font::WHITE,
+    widgets.push_back(new TextWidget(
+        75, 13, 107, 17, thisHero->m_name, "smalfont.fnt", Font::WHITE,
         NAME_ID, 0, 0, 8));
 
     if (viewLevel >= ViewAll) {
         int widgetId = PRIMARY_SKILL_1_ID;
         for (int stat = 0; stat < 4; ++stat) {
             sprintf(g_text, "%d", thisHero->getPrimarySkill(stat));
-            widgets.push_back(new textWidget(
+            widgets.push_back(new TextWidget(
                 g_skillLoc[stat].x,
                 g_skillLoc[stat].y,
-                23, 16, g_text, "smalfont.fnt", font::WHITE,
+                23, 16, g_text, "smalfont.fnt", Font::WHITE,
                 widgetId, 1, 0, 8));
             ++widgetId;
         }
 
-        widgets.push_back(new textWidget(
+        widgets.push_back(new TextWidget(
             154, 104, 27, 13,
             formatString("%d", thisHero->m_mana).c_str(), "tiny.fnt",
-            font::WHITE, MANA_ID, 1, 0, 8));
+            Font::WHITE, MANA_ID, 1, 0, 8));
 
         int morale = limit(
             -3, thisHero->getMorale(0, 0, 1), 3);
-        widgets.push_back(new iconWidget(
+        widgets.push_back(new IconWidget(
             14, 86, 22, 12, MORALE_ID, "imrl22.def", morale + 3,
             0, 0, 0, 0x10));
 
         int luck = limit(
             -3, thisHero->getLuck(0, 0, 1), 3);
-        widgets.push_back(new iconWidget(
+        widgets.push_back(new IconWidget(
             14, 103, 22, 12, LUCK_ID, "ilck22.def", luck + 3,
             0, 0, 0, 0x10));
     }
@@ -141,7 +141,7 @@ QuickHeroWindow::QuickHeroWindow(Hero* thisHero, ViewLevel viewLevel)
             if (disguiseCreature != CREATURE_NONE)
                 creature = disguiseCreature;
 
-            widgets.push_back(new iconWidget(
+            widgets.push_back(new IconWidget(
                 g_armyPos[displaySlot][0],
                 g_armyPos[displaySlot][1], 32, 32, widgetId++,
                 "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
@@ -158,18 +158,18 @@ QuickHeroWindow::QuickHeroWindow(Hero* thisHero, ViewLevel viewLevel)
                 else
                     quantityText << count / 1000 << "k" << std::ends;
 
-                widgets.push_back(new textWidget(
+                widgets.push_back(new TextWidget(
                     g_armyPos[displaySlot][0],
                     g_armyPos[displaySlot][1] + 34, 32, 11,
-                    quantityText.str(), "tiny.fnt", font::WHITE,
+                    quantityText.str(), "tiny.fnt", Font::WHITE,
                     widgetId++, 1, 0, 8));
             } else {
                 quantityText << ArmyGroup::getArmySizeName(count, 0)
                               << std::ends;
-                widgets.push_back(new textWidget(
+                widgets.push_back(new TextWidget(
                     g_armyPos[displaySlot][0],
                     g_armyPos[displaySlot][1] + 34, 32, 11,
-                    quantityText.str(), "tiny.fnt", font::WHITE,
+                    quantityText.str(), "tiny.fnt", Font::WHITE,
                     widgetId++, 1, 0, 8));
             }
             quantityText.freeze(false);
@@ -177,7 +177,7 @@ QuickHeroWindow::QuickHeroWindow(Hero* thisHero, ViewLevel viewLevel)
         }
     }
 
-    for (widget** it = widgets.begin(); it != widgets.end(); ++it) {
+    for (Widget** it = widgets.begin(); it != widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
     }
@@ -188,7 +188,7 @@ VA_COMPGEN(0x0052f3a0, 0x21, SCALAR_DELETING_DTOR, QuickHeroWindow)
 VA(0x0052f3d0, 0x6B)  // dc 0x1177b4
 QuickHeroWindow::~QuickHeroWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }

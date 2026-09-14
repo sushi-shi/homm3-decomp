@@ -29,21 +29,22 @@ namespace force_feedback {
 // constructor at 0x4b6a50 writes (`test eax,eax / setne cl / mov [esi],cl
 // / mov [esi+4],eax` is auto_ptr's `_Owns(_P != 0), _Ptr(_P)` verbatim)
 // and what the out-of-line auto_ptr destructor at 0x4b7020 reads back.
-class t_enclosure {
+class Enclosure {
 public:
     // `.?AVt_create_failure@t_enclosure@force_feedback@@` (0x65f2b0), a
     // 28-byte runtime_error with no members of its own: its CatchableType
     // array 0x64ce08 lists exactly {itself, runtime_error, exception} at
     // sizes 28/28/12, and the throw at 0x4b6b8c hands the base a
     // DEFAULT-constructed string.
-    class t_create_failure : public std::runtime_error {
+// Before normalization (type): force_feedback::t_enclosure::t_create_failure.
+    class CreateFailure : public std::runtime_error {
     public:
-        t_create_failure() : std::runtime_error(std::string()) {}
+        CreateFailure() : std::runtime_error(std::string()) {}
     };
 
-    t_enclosure(const RECT* rect, long a, unsigned long b, unsigned long c,
+    Enclosure(const RECT* rect, long a, unsigned long b, unsigned long c,
                 unsigned char d, unsigned char e);
-    ~t_enclosure();
+    ~Enclosure();
 
     std::auto_ptr<CImmEnclosure> m_enclosure;
 };
@@ -53,24 +54,25 @@ public:
 // Inlined into the holder's destructor as retail's only copy: the erase
 // runs unconditionally on the enclosure key, and the delete is the
 // auto_ptr member's own scope exit, guarded by the flag at +0.
-inline force_feedback::t_enclosure::~t_enclosure()
+inline force_feedback::Enclosure::~Enclosure()
 {
     g_immEffectEntries.erase(m_enclosure.get());
 }
 
 namespace {
-class t_initializer {
+class Initializer {
 public:
     // `.?AVt_initialize_failure@t_initializer@...@@` (0x6778c0), a 28-byte
     // runtime_error with no members of its own - the same shape as
     // t_enclosure::t_create_failure, and thrown the same way, with a
     // DEFAULT-constructed string handed to the base.
-    class t_initialize_failure : public std::runtime_error {
+// Before normalization (type): t_initializer::t_initialize_failure.
+    class InitializeFailure : public std::runtime_error {
     public:
-        t_initialize_failure() : std::runtime_error(std::string()) {}
+        InitializeFailure() : std::runtime_error(std::string()) {}
     };
 
-    t_initializer(void* instance, void* hwnd);
+    Initializer(void* instance, void* hwnd);
     // Retail's atexit thunk at 0x4b6910 - the address InitImmMouse hands to
     // _atexit, 58 B - is this destructor EXPANDED, so it is defined inline
     // here.  It touches no member: the holder is the eight bytes at
@@ -81,7 +83,7 @@ public:
     // member, the `$E<n>` thunk carries no relocation to the owned datum -
     // see canonicalize_data_symbols' owner-free static-destructor arm and
     // its control in build/test_ownerless_static_dtor.py.
-    ~t_initializer()
+    ~Initializer()
     {
         g_immProject->Close();
         delete g_immProject;
@@ -106,11 +108,11 @@ DATA(0x00696d88) CImmCompoundEffect* g_immEffect;
 // slot 0 of the throw vftable at 0x63e634 points at. It sits far ahead of
 // the rest of this compiland, in the advmgr..advspells gap, which is
 // ordinary COMDAT placement; the vftable reference is what owns it.
-VA_COMPGEN(0x0041bed0, 0x21, SCALAR_DELETING_DTOR, t_create_failure)
+VA_COMPGEN(0x0041bed0, 0x21, SCALAR_DELETING_DTOR, CreateFailure)
 
 // unnamed namespace, restored above with its nested failure type.
 VA(0x004b6260, 0x462)
-t_initializer::t_initializer(void* instance, void* hwnd)
+Initializer::Initializer(void* instance, void* hwnd)
 {
     g_immWindow = static_cast<HWND>(hwnd);
     g_immWindowOrigin.x = 0;
@@ -120,22 +122,22 @@ t_initializer::t_initializer(void* instance, void* hwnd)
 
     std::auto_ptr<CImmMouse> mouse(new CImmMouse);
     if (!mouse->Initialize(instance, hwnd, 4))
-        throw t_initialize_failure();
+        throw InitializeFailure();
 
     std::auto_ptr<char> project;
     try {
         std::filebuf file;
         if (file.open((std::string("data\\") + "H3Shad.ifr").c_str(),
                       std::ios_base::in | std::ios_base::binary) == 0)
-            throw t_initialize_failure();
+            throw InitializeFailure();
         int size = file.pubseekoff(0, std::ios_base::end);
         file.pubseekoff(0, std::ios_base::beg);
         project = std::auto_ptr<char>(new char[size]);
         file.sgetn(project.get(), size);
-    } catch (t_initialize_failure) {
+    } catch (InitializeFailure) {
         LODFile* resource = ResourceManager::pointToBitmapResource("H3Shad.ifr");
         if (resource == 0)
-            throw t_initialize_failure();
+            throw InitializeFailure();
         int size = ResourceManager::getBitmapResourceSize("H3Shad.ifr");
         project = std::auto_ptr<char>(new char[size]);
         ResourceManager::readFromBitmapResource(resource, project.get(), size);
@@ -143,7 +145,7 @@ t_initializer::t_initializer(void* instance, void* hwnd)
 
     std::auto_ptr<CImmProject> immProject(new CImmProject);
     if (!immProject->LoadProjectFromMemory(project.get(), mouse.get()))
-        throw t_initialize_failure();
+        throw InitializeFailure();
     g_immDevice = mouse.release();
     g_immProject = immProject.release();
 }
@@ -153,9 +155,9 @@ t_initializer::t_initializer(void* instance, void* hwnd)
 // (CatchableType 0x64cc68 names the latter at exactly this address), and
 // the client-side `??_G` for the dllimported CImmMouse - slot 0 of the
 // vftable at 0x63e618, the same shape as CImmEnclosure's at 0x4b6c30.
-VA_COMPGEN(0x004b66d0, 0x21, SCALAR_DELETING_DTOR, t_initialize_failure)
+VA_COMPGEN(0x004b66d0, 0x21, SCALAR_DELETING_DTOR, InitializeFailure)
 VA_COMPGEN(0x004b6700, 0x22, SCALAR_DELETING_DTOR, CImmMouse)
-VA_COMPGEN(0x004b6730, 0x157, IMPLICIT_COPY_CTOR, t_initialize_failure)
+VA_COMPGEN(0x004b6730, 0x157, IMPLICIT_COPY_CTOR, InitializeFailure)
 
 // InitImmMouse: once-guarded `static <ImmWrapper> obj(hInst, hwnd)`
 // construction (guard byte 0x696d58, atexit dtor thunk 0x4b6910);
@@ -167,9 +169,9 @@ unsigned char initImmMouse(void* instance, void* hwnd)
     try {
         DATA_COMPGEN_GUARD(0x00696d58, immMouseGuard, immMouse)
         DATA(0x00696d78)
-        static t_initializer immMouse(instance, hwnd);
+        static Initializer immMouse(instance, hwnd);
         return 1;
-    } catch (t_initializer::t_initialize_failure) {
+    } catch (Initializer::InitializeFailure) {
         return 0;
     }
 }
@@ -223,7 +225,7 @@ unsigned char playImmEffect(const char* effectName, int count)
 // window origin BEFORE Initialize sees it, and the same offset copy is
 // what goes into the map.
 VA(0x004b6a50, 0x185)
-force_feedback::t_enclosure::t_enclosure(const RECT* rect, long a,
+force_feedback::Enclosure::Enclosure(const RECT* rect, long a,
                                          unsigned long b, unsigned long c,
                                          unsigned char d, unsigned char e)
     : m_enclosure(new CImmEnclosure)
@@ -232,12 +234,12 @@ force_feedback::t_enclosure::t_enclosure(const RECT* rect, long a,
     OffsetRect(&bounds, g_immWindowOrigin.x, g_immWindowOrigin.y);
     if (!m_enclosure->Initialize(g_immDevice, &bounds, a, a, b, b, c, c,
                                  (d ? 0x66 : 0) | (e ? 0x99 : 0), 0, 0, 0, 0))
-        throw t_create_failure();
+        throw CreateFailure();
     g_immEffectEntries.insert(std::make_pair(m_enclosure.get(), bounds));
 }
 
 VA_COMPGEN(0x004b6c30, 0x22, SCALAR_DELETING_DTOR, CImmEnclosure)
-VA_COMPGEN(0x004b6c60, 0x157, IMPLICIT_COPY_CTOR, t_create_failure)
+VA_COMPGEN(0x004b6c60, 0x157, IMPLICIT_COPY_CTOR, CreateFailure)
 
 // The holder TAdventureMapWindow owns at +0x9c. `operator new(8)` for the
 // enclosure wrapper, then auto_ptr's own two stores - the EH frame is the
@@ -246,7 +248,7 @@ VA(0x004b6dc0, 0x74)
 ImmMouseEffect::ImmMouseEffect(const RECT* rect, long a, unsigned long b,
                                  unsigned long c, unsigned char d,
                                  unsigned char e)
-    : m_impl(new force_feedback::t_enclosure(rect, a, b, c, d, e))
+    : m_impl(new force_feedback::Enclosure(rect, a, b, c, d, e))
 {
 }
 

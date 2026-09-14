@@ -192,7 +192,7 @@ SpellbookWindow::SpellbookWindow(const Hero& h, const ArmyGroup* g, SpellbookWin
     m_widgets.reserve(51);
 
     {
-        bitmapBorder* const background = new bitmapBorder(
+        BitmapBorder* const background = new BitmapBorder(
             0, 0, 620, 595, BACKGROUND_ID,
             DATA_COMPGEN(0x00684bcc, spellbookBackground, "Spelback.pcx"),
             0x800);
@@ -207,17 +207,17 @@ SpellbookWindow::SpellbookWindow(const Hero& h, const ArmyGroup* g, SpellbookWin
     int column;
     for (row = 89; row < 377; row += 96) {
         for (column = 117; column < 289; column += 86) {
-            m_widgets.push_back(new iconWidget(
+            m_widgets.push_back(new IconWidget(
                 column, row, 78, 65, id++, 0, 0, 0, 0, 0,
-                iconWidget::ICON_STYLE_PLAIN));
+                IconWidget::ICON_STYLE_PLAIN));
         }
     }
     id = SPELL_LEVEL_6_ID;
     for (row = 89; row < 377; row += 96) {
         for (column = 333; column < 505; column += 86) {
-            m_widgets.push_back(new iconWidget(
+            m_widgets.push_back(new IconWidget(
                 column, row, 78, 65, id++, 0, 0, 0, 0, 0,
-                iconWidget::ICON_STYLE_PLAIN));
+                IconWidget::ICON_STYLE_PLAIN));
         }
     }
 
@@ -225,19 +225,19 @@ SpellbookWindow::SpellbookWindow(const Hero& h, const ArmyGroup* g, SpellbookWin
     id = SPELL_0_ID;
     for (row = 89; row < 377; row += 96) {
         for (column = 117; column < 289; column += 86) {
-            m_widgets.push_back(new iconWidget(
+            m_widgets.push_back(new IconWidget(
                 column, row, 78, 65, id++,
                 DATA_COMPGEN(0x00660208, m_spellIcons, "spells.def"),
-                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+                0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
         }
     }
     id = SPELL_6_ID;
     for (row = 89; row < 377; row += 96) {
         for (column = 333; column < 505; column += 86) {
-            m_widgets.push_back(new iconWidget(
+            m_widgets.push_back(new IconWidget(
                 column, row, 78, 65, id++,
                 DATA_COMPGEN(0x00660208, m_spellIcons, "spells.def"),
-                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+                0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
         }
     }
 
@@ -245,89 +245,89 @@ SpellbookWindow::SpellbookWindow(const Hero& h, const ArmyGroup* g, SpellbookWin
     id = SPELL_0_NAME_ID;
     for (row = 154; row < 442; row += 96) {
         for (column = 113; column < 285; column += 86) {
-            m_widgets.push_back(new textWidget(
+            m_widgets.push_back(new TextWidget(
                 column, row, 86, 36, 0,
                 DATA_COMPGEN(0x00660cb4, spellbookTinyFont, "tiny.fnt"),
-                font::PRIMARY, id++,
+                Font::PRIMARY, id++,
                 1, 0, 8));
         }
     }
     id = SPELL_6_NAME_ID;
     for (row = 154; row < 442; row += 96) {
         for (column = 329; column < 501; column += 86) {
-            m_widgets.push_back(new textWidget(
+            m_widgets.push_back(new TextWidget(
                 column, row, 86, 36, 0,
                 DATA_COMPGEN(0x00660cb4, spellbookTinyFont, "tiny.fnt"),
-                font::PRIMARY, id++,
+                Font::PRIMARY, id++,
                 1, 0, 8));
         }
     }
 
-    m_headingWidget = new iconWidget(
+    m_headingWidget = new IconWidget(
         117, 74, 160, 96, SCHOOL_HEADING_ID,
         DATA_COMPGEN(0x00684bc0, spellbookSchools, "schools.def"),
         0, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN);
+        IconWidget::ICON_STYLE_PLAIN);
     m_widgets.push_back(m_headingWidget);
 
-    m_schoolTabsWidget = new iconWidget(
+    m_schoolTabsWidget = new IconWidget(
         524, 88, 83, 294, SCHOOL_TABS_ID,
         DATA_COMPGEN(0x00684bb4, spellbookTabs, "SpelTab.def"),
         0, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN);
+        IconWidget::ICON_STYLE_PLAIN);
     m_widgets.push_back(m_schoolTabsWidget);
 
-    m_widgets.push_back(new border(523, 87, 83, 43, AIR_SCHOOL_ID, 1));
-    m_widgets.push_back(new border(523, 205, 83, 43, FIRE_SCHOOL_ID, 1));
-    m_widgets.push_back(new border(523, 268, 83, 43, WATER_SCHOOL_ID, 1));
-    m_widgets.push_back(new border(523, 145, 83, 43, EARTH_SCHOOL_ID, 1));
-    m_widgets.push_back(new border(523, 329, 83, 43, ALL_SCHOOL_ID, 1));
+    m_widgets.push_back(new Border(523, 87, 83, 43, AIR_SCHOOL_ID, 1));
+    m_widgets.push_back(new Border(523, 205, 83, 43, FIRE_SCHOOL_ID, 1));
+    m_widgets.push_back(new Border(523, 268, 83, 43, WATER_SCHOOL_ID, 1));
+    m_widgets.push_back(new Border(523, 145, 83, 43, EARTH_SCHOOL_ID, 1));
+    m_widgets.push_back(new Border(523, 329, 83, 43, ALL_SCHOOL_ID, 1));
 
-    m_previousPageWidget = new bitmapBorder(
+    m_previousPageWidget = new BitmapBorder(
         97, 77, 33, 39, PREVIOUS_PAGE_ID,
         DATA_COMPGEN(0x00684ba4, spellbookPreviousPage, "SpelTrnL.pcx"),
         0x800);
     m_widgets.push_back(m_previousPageWidget);
 
-    m_nextPageWidget = new bitmapBorder(
+    m_nextPageWidget = new BitmapBorder(
         487, 74, 29, 32, NEXT_PAGE_ID,
         DATA_COMPGEN(0x00684b94, spellbookNextPage, "SpelTrnR.pcx"),
         0x800);
     m_widgets.push_back(m_nextPageWidget);
 
-    m_widgets.push_back(new border(
+    m_widgets.push_back(new Border(
         219, 404, 37, 47, COMBAT_SPELLS_ID, 1));
-    m_widgets.push_back(new border(
+    m_widgets.push_back(new Border(
         353, 405, 35, 41, ADVENTURE_SPELLS_ID, 1));
 
     sprintf(g_text,
         DATA_COMPGEN(0x00660a1c, spellbookDecimalFormat, "%d"),
         m_hero->m_mana);
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         417, 405, 36, 45, g_text,
         DATA_COMPGEN(0x0065f2f8, spellbookSmallFont, "smalfont.fnt"),
-        font::HEADING,
+        Font::HEADING,
         SPELL_POINTS_ID, 5, 0, 8));
 
-    m_widgets.push_back(new border(
+    m_widgets.push_back(new Border(
         478, 407, 35, 42, DIALOG_RETURN_CANCEL, 1));
 
-    m_rolloverWidget = new bitmapBackedTextWidget(
+    m_rolloverWidget = new BitmapBackedTextWidget(
         8, 569, 605, 19,
         0,
         DATA_COMPGEN(0x0065f2f8, spellbookSmallFont, "smalfont.fnt"),
         DATA_COMPGEN(0x00684b84, spellbookRollover, "spelroll.pcx"),
-        font::PRIMARY, ROLLOVER_ID, 1, 8);
+        Font::PRIMARY, ROLLOVER_ID, 1, 8);
     m_widgets.push_back(m_rolloverWidget);
 
-    m_spellLevelWidgets = static_cast<iconWidget**>(static_cast<void*>(
+    m_spellLevelWidgets = static_cast<IconWidget**>(static_cast<void*>(
         &m_widgets[spellLevelWidgetsIndex]));
-    m_spellIconWidgets = static_cast<iconWidget**>(static_cast<void*>(
+    m_spellIconWidgets = static_cast<IconWidget**>(static_cast<void*>(
         &m_widgets[spellIconWidgetsIndex]));
-    m_spellNameWidgets = static_cast<textWidget**>(static_cast<void*>(
+    m_spellNameWidgets = static_cast<TextWidget**>(static_cast<void*>(
         &m_widgets[spellNameWidgetsIndex]));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -376,7 +376,7 @@ VA(0x0059c8f0, 0x75)  // dc 0x14c864
 SpellbookWindow::~SpellbookWindow()
 {
     g_spellbookWindow = 0;
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -385,13 +385,13 @@ SpellbookWindow::~SpellbookWindow()
 VA(0x0059c970, 0x1B)  // dc 0x14c8d4
 int SpellbookWindow::open(int newPriority, unsigned char update)
 {
-    return heroWindow::open(newPriority, update) ? 3 : 0;
+    return HeroWindow::open(newPriority, update) ? 3 : 0;
 }
 
 VA(0x0059c990, 0x10)  // dc 0x14c8f0
 void SpellbookWindow::close(unsigned char update)
 {
-    heroWindow::close(update);
+    HeroWindow::close(update);
 }
 
 VA(0x0059c9a0, 0x691)  // dc 0x14c904
@@ -429,28 +429,28 @@ void SpellbookWindow::gotoPage(int page)
 
     int widgetIndex;
     if (page == 0 && m_school != eSchoolAll) {
-        m_headingWidget->m_status |= widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        m_headingWidget->m_status |= Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN;
         m_headingWidget->setIconFrame(getPositionFromSchool(m_school));
 
         m_spellLevelWidgets[0]->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            ~(Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         m_spellIconWidgets[0]->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            ~(Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         m_spellNameWidgets[0]->setText(
             DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, ""));
         m_spellMap[0] = -1;
 
         m_spellLevelWidgets[1]->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            ~(Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         m_spellIconWidgets[1]->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            ~(Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         m_spellNameWidgets[1]->setText(
             DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, ""));
         m_spellMap[1] = -1;
         widgetIndex = firstSlotAfterHeading;
     } else {
         m_headingWidget->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            ~(Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         widgetIndex = 0;
     }
 
@@ -459,13 +459,13 @@ void SpellbookWindow::gotoPage(int page)
         const SpellbookEntry& entry = availableSpells[spellIndex];
         SpellID displaySpell = entry.m_id;
         m_spellLevelWidgets[widgetIndex]->m_status |=
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+            Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN;
         m_spellLevelWidgets[widgetIndex]->setSprite(
             g_levelSprites[getPositionFromSchool(entry.m_school)]);
         m_spellLevelWidgets[widgetIndex]->setIconFrame(entry.m_mastery);
 
         m_spellIconWidgets[widgetIndex]->m_status |=
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+            Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN;
         m_spellIconWidgets[widgetIndex]->setIconFrame(displaySpell);
 
         if (entry.m_mastery > 0) {
@@ -491,18 +491,18 @@ void SpellbookWindow::gotoPage(int page)
 
         if (const_cast<Hero*>(m_hero)->getManaCost(
                 displaySpell, m_enemyGroup, m_onMagicPlains) <= m_hero->m_mana)
-            m_spellNameWidgets[widgetIndex]->m_status &= ~widget::WIDGET_DIMMED;
+            m_spellNameWidgets[widgetIndex]->m_status &= ~Widget::WIDGET_DIMMED;
         else
-            m_spellNameWidgets[widgetIndex]->m_status |= widget::WIDGET_DIMMED;
+            m_spellNameWidgets[widgetIndex]->m_status |= Widget::WIDGET_DIMMED;
 
         m_spellMap[widgetIndex] = displaySpell;
     }
 
     for (; widgetIndex < SPELLS_PER_PAGE; ++widgetIndex) {
         m_spellLevelWidgets[widgetIndex]->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            ~(Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         m_spellIconWidgets[widgetIndex]->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            ~(Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         m_spellNameWidgets[widgetIndex]->setText(
             DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, ""));
         m_spellMap[widgetIndex] = -1;
@@ -513,17 +513,17 @@ void SpellbookWindow::gotoPage(int page)
 
     if (page > 0)
         m_previousPageWidget->m_status |=
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+            Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN;
     else
         m_previousPageWidget->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            ~(Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
 
     if (spellIndex < availableSpells.size())
         m_nextPageWidget->m_status |=
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+            Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN;
     else
         m_nextPageWidget->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            ~(Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
 }
 
 #if 0  // @carcass: untouched Dreamcast-only bodies
@@ -584,7 +584,7 @@ DATA(0x00641db8) static const int g_tabToSchool[] = {0, 3, 1, 2, 4};
 // Failed controls: dialogReturn-before-id changed the shared exit tail;
 // early return on a rollover cache hit changed the lifetime/return paths.
 VA(0x0059d040, 0xBA0)  // anchor-callee: calls GotoPage/get_spell_description/GetManaCost/SetIconFrame, msg jump-table, ret 4; absorbs inlined DisplayNewSchool+convertID2HelpID; dc 0x14cecc
-int SpellbookWindow::windowHandler(message& msg)
+int SpellbookWindow::windowHandler(Message& msg)
 {
     int exitFlag = 0;
     int handled = CAdvPopup::windowHandler(msg);
@@ -594,8 +594,8 @@ int SpellbookWindow::windowHandler(message& msg)
     pollSound();
 
     if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
-        if (msg.m_codeX == widget::WIDGET_SELECT
-            || msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        if (msg.m_codeX == Widget::WIDGET_SELECT
+            || msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
             int id = msg.m_codeY;
             if (id >= SPELL_0_ID && id <= SPELL_11_ID) {
                 SpellID spell = m_spellMap[id - SPELL_0_ID];
@@ -613,7 +613,7 @@ int SpellbookWindow::windowHandler(message& msg)
     } else if (msg.m_id == MESSAGE_KEY_DOWN) {
         switch (msg.m_codeX) {
         case KEYCODE_KP_4: // left
-            if (m_previousPageWidget->m_status & widget::WIDGET_ACTIVE) {
+            if (m_previousPageWidget->m_status & Widget::WIDGET_ACTIVE) {
                 if (g_unnamed698758.m_animateSpellBook)
                     videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
                 previousPage();
@@ -622,7 +622,7 @@ int SpellbookWindow::windowHandler(message& msg)
             break;
 
         case KEYCODE_KP_6: // right
-            if (m_nextPageWidget->m_status & widget::WIDGET_ACTIVE) {
+            if (m_nextPageWidget->m_status & Widget::WIDGET_ACTIVE) {
                 if (g_unnamed698758.m_animateSpellBook)
                     videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
                 nextPage();
@@ -675,7 +675,7 @@ int SpellbookWindow::windowHandler(message& msg)
             break;
         }
     } else if (msg.m_id == MESSAGE_WIDGET) {
-        if (msg.m_codeX == widget::WIDGET_SELECT) {
+        if (msg.m_codeX == Widget::WIDGET_SELECT) {
             switch (msg.m_codeY) {
             case SPELL_0_ID:
             case SPELL_1_ID:
@@ -767,7 +767,7 @@ int SpellbookWindow::windowHandler(message& msg)
             std::string rollover;
             g_lastImHoverId = id;
             if (id != -1) {
-                g_mouseManager->setPointer(1, mouseManager::DEFAULT_SET);
+                g_mouseManager->setPointer(1, MouseManager::DEFAULT_SET);
                 if (id >= SPELL_0_ID && id <= SPELL_11_ID) {
                     SpellID spell = m_spellMap[id - SPELL_0_ID];
                     rollover = getSpellDescription(spell, m_hero, 1);
@@ -779,11 +779,11 @@ int SpellbookWindow::windowHandler(message& msg)
                         rollover = "";
                 }
             } else {
-                g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+                g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
                 rollover = "";
             }
 
-            textWidget* rolloverWidget = m_rolloverWidget;
+            TextWidget* rolloverWidget = m_rolloverWidget;
             rolloverWidget->setText(rollover.c_str());
             drawWindow(0, ROLLOVER_ID, ROLLOVER_ID);
             g_windowManager->updateScreen(
@@ -815,7 +815,7 @@ bool SpellbookWindow::SpellbookEntry::operator<(const SpellbookEntry& y) const
         return true;
     if (m_school > y.m_school)
         return false;
-    return _strcmpi(traits->m_name, yTraits->m_name) < 0;
+    return strcmpi(traits->m_name, yTraits->m_name) < 0;
 }
 
 #if 0  // @carcass: untouched Dreamcast-only bodies

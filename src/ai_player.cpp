@@ -43,25 +43,26 @@
 const unsigned short g_aiDayOfWeekSunday = 7;
 
 int aiResourceCost(long playerId, const int* resources);
-int aiResourceCost(const playerData* player, const int* resources);
+int aiResourceCost(const PlayerData* player, const int* resources);
 long aiGetSpellValue(const Hero* ourHero, SpellID spell);
 bool considerHiring(long playerId, Hero* candidate);
 const std::bitset<9>& armyGrpFn0044A460();
 int canBuy(const Town* currTown, int buildingId);
-double getTradeRatio(EGameResource source, EGameResource dest,
+double getTradeRatio(GameResource source, GameResource dest,
                        double efficiency);
 const unsigned int g_ctaShooter = 0x4;
 
 // Dreamcast names the 144 vector rows and Complete's initializer passes this
 // address, count and 16-byte stride to the vector-constructor iterator.
 DATA(0x00692e18)
-std::vector<type_artifact_effect*> g_constArtifactEffects[144];
+std::vector<ArtifactEffect*> g_constArtifactEffects[144];
 // Retail and Dreamcast both make this an 8-byte strategy object: a
 // three-slot vptr followed by the current player id. start_turn inlines
 // both constructors and calls check_towns on one base and one derived
 // instance. The virtual roster/order comes from the three retail vtable
 // entries and the corresponding DC public names.
-class type_town_threat_checker {
+// Before normalization (type): type_town_threat_checker.
+class TownThreatChecker {
 protected:
     void markTowns(Hero* enemyHero, SearchArray* currentSearchArray);
 
@@ -69,7 +70,7 @@ public:
     int m_currentPlayerId;
 
     // E:\gamedcs\ai_player.cpp:89, dc 0x2dd40
-    type_town_threat_checker(int newPlayer) { m_currentPlayerId = newPlayer; }
+    TownThreatChecker(int newPlayer) { m_currentPlayerId = newPlayer; }
     void checkTowns();
     virtual void clearMarks() const;
     virtual unsigned char isMarked(const Town* ourTown) const;
@@ -77,12 +78,12 @@ public:
 };
 
 VA(0x004280e0, 0x171)  // dc 0x2dd64
-void type_town_threat_checker::checkTowns()
+void TownThreatChecker::checkTowns()
 {
     clearMarks();
 
     for (int playerId = 0; playerId < 8; ++playerId) {
-        const playerData& player = g_game->m_players[playerId];
+        const PlayerData& player = g_game->m_players[playerId];
         if (!g_game->onSameTeam(playerId, m_currentPlayerId)
             && !g_game->m_playerDisabled[playerId]) {
             for (int heroIndex = 0; heroIndex < player.m_numHeroes;
@@ -103,17 +104,17 @@ void type_town_threat_checker::checkTowns()
 }
 
 VA(0x00428260, 0x4E)  // dc 0x2de68
-void type_town_threat_checker::clearMarks() const
+void TownThreatChecker::clearMarks() const
 {
     for (unsigned int i = 0; i < g_game->m_towns.size(); ++i)
         g_game->m_towns[i].m_threateningHeroes = 0;
 }
 
 VA(0x004282b0, 0x157)  // dc 0x2deac
-void type_town_threat_checker::markTowns(Hero* enemyHero,
+void TownThreatChecker::markTowns(Hero* enemyHero,
                                           SearchArray* currentSearchArray)
 {
-    playerData& player = g_game->m_players[m_currentPlayerId];
+    PlayerData& player = g_game->m_players[m_currentPlayerId];
 
     for (int townIndex = 0; townIndex < player.m_numTowns; ++townIndex) {
         Town* ourTown = g_game->getTown(player.m_townIds[townIndex]);
@@ -135,9 +136,9 @@ unsigned char canTakeTown(const Hero* attackingHero, const Town* defendingTown)
     ArmyGroup attackingArmy = attackingHero->m_army;
     ArmyGroup defendingArmy = defendingTown->getArmy();
     NewmapCell* cell = g_game->getCell(defendingTown->getLocation());
-    type_AI_combat_data attacker(attackingHero, &attackingArmy, 1.25, 0,
+    AICombatData attacker(attackingHero, &attackingArmy, 1.25, 0,
                                  defendingTown, cell);
-    type_AI_combat_data defender(0, &defendingArmy, 0.75, attackingHero, 0,
+    AICombatData defender(0, &defendingArmy, 0.75, attackingHero, 0,
                                  cell);
     attacker.simulateCombat(defender);
     return attacker.m_totalCombatValue > 0;
@@ -171,77 +172,77 @@ unsigned char canTakeTown(const Hero* attackingHero, const Town* defendingTown)
 
 // E:\gamedcs\ai_player.cpp:89
 DC_ONLY(0x2dd40, 0x22)
-void type_town_threat_checker::type_town_threat_checker(long new_player)
+void TownThreatChecker::TownThreatChecker(long new_player)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:97
 DC_ONLY(0x2dd64, 0x104)
-void type_town_threat_checker::checkTowns()
+void TownThreatChecker::checkTowns()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:134
 DC_ONLY(0x2de68, 0x42)
-void type_town_threat_checker::clearMarks()
+void TownThreatChecker::clearMarks()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:146
 DC_ONLY(0x2deac, 0xF2)
-void type_town_threat_checker::markTowns(Hero* enemy_hero, SearchArray* search_array)
+void TownThreatChecker::markTowns(Hero* enemy_hero, SearchArray* search_array)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:179
 DC_ONLY(0x2dfa0, 0x4)
-unsigned char type_town_threat_checker::isMarked(const Town* our_town)
+unsigned char TownThreatChecker::isMarked(const Town* our_town)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:186
 DC_ONLY(0x2dfa4, 0x12)
-void type_town_threat_checker::markTown(Town* our_town)
+void TownThreatChecker::markTown(Town* our_town)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:195
 DC_ONLY(0x2dfb8, 0x32)
-void type_garrison_purchaser::type_garrison_purchaser(long new_player)
+void GarrisonPurchaser::GarrisonPurchaser(long new_player)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:202
 DC_ONLY(0x2dfec, 0x4)
-void type_garrison_purchaser::clearMarks()
+void GarrisonPurchaser::clearMarks()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:209
 DC_ONLY(0x2dff0, 0x4)
-unsigned char type_garrison_purchaser::isMarked(const Town* our_town)
+unsigned char GarrisonPurchaser::isMarked(const Town* our_town)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:217
 DC_ONLY(0x2dff4, 0xA0)
-void type_garrison_purchaser::markTown(Town* our_town)
+void GarrisonPurchaser::markTown(Town* our_town)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:230
 DC_ONLY(0x2e094, 0xC8)
-long type_AI_player::getResourceValue(int* resources)
+long AIPlayer::getResourceValue(int* resources)
 {
     // @stub
 }
@@ -249,35 +250,36 @@ long type_AI_player::getResourceValue(int* resources)
 #endif  // @carcass
 
 VA(0x00428570, 0x0D)  // dc 0x2dfa4
-void type_town_threat_checker::markTown(Town* ourTown) const
+void TownThreatChecker::markTown(Town* ourTown) const
 {
     ++ourTown->m_threateningHeroes;
 }
-class type_garrison_purchaser : public type_town_threat_checker {
+// Before normalization (type): type_garrison_purchaser.
+class GarrisonPurchaser : public TownThreatChecker {
 public:
     // E:\gamedcs\ai_player.cpp:195, dc 0x2dfb8
-    type_garrison_purchaser(int newPlayer)
-        : type_town_threat_checker(newPlayer) {}
+    GarrisonPurchaser(int newPlayer)
+        : TownThreatChecker(newPlayer) {}
     virtual void clearMarks() const;
     virtual unsigned char isMarked(const Town* ourTown) const;
     virtual void markTown(Town* ourTown) const;
 };
 
 VA(0x00428580, 0x121)  // dc 0x2dff4
-void type_garrison_purchaser::markTown(Town* ourTown) const
+void GarrisonPurchaser::markTown(Town* ourTown) const
 {
-    type_AI_creature_purchaser purchaser(m_currentPlayerId, ourTown);
-    playerData* player = &g_game->m_players[m_currentPlayerId];
+    AICreaturePurchaser purchaser(m_currentPlayerId, ourTown);
+    PlayerData* player = &g_game->m_players[m_currentPlayerId];
     unsigned char hasAngelicAlliance = player->hasGivenArtifact(0x81);
     purchaser.setSubtractMode(0);
     purchaser.doPurchase(&ourTown->getArmy(), 3, 0, player->m_resources,
                           1, hasAngelicAlliance);
 }
 
-VA_COMPGEN(0x004286e0, 0x26, IMPLICIT_DTOR, type_AI_creature_purchaser)
+VA_COMPGEN(0x004286e0, 0x26, IMPLICIT_DTOR, AICreaturePurchaser)
 
 VA(0x00428710, 0x2D)  // dc 0x2e15c
-float type_AI_player::getAttackBonus(short player)
+float AIPlayer::getAttackBonus(short player)
 {
     if (player < 0)
         return 0.0f;
@@ -308,9 +310,9 @@ float type_AI_player::getAttackBonus(short player)
 // `movsx esi, word ptr [ecx+8]` from the source) - register-homing family;
 // the creation-order probes measured against it are in the device note.
 VA(0x00428740, 0x68E)  // linkorder, dc 0x2e188
-void type_AI_player::calculateDemand()
+void AIPlayer::calculateDemand()
 {
-    playerData* player = &g_game->m_players[m_team];
+    PlayerData* player = &g_game->m_players[m_team];
     memset(m_resourceSupply, 0, sizeof(m_resourceSupply));
     memset(m_resourceDemand, 0, sizeof(m_resourceDemand));
 
@@ -339,7 +341,7 @@ void type_AI_player::calculateDemand()
         }
     }
 
-    std::vector<type_creature_value> creatures(145);
+    std::vector<CreatureValue> creatures(145);
     int creatureIndex;
     for (creatureIndex = 0; creatureIndex < 145; creatureIndex++) {
         {
@@ -376,12 +378,12 @@ void type_AI_player::calculateDemand()
             * g_creatureTypeTraits[valueCreature].m_aiValue;
 
     std::sort(creatures.begin(), creatures.end(),
-              std::greater<type_creature_value>());
+              std::greater<CreatureValue>());
     int valuableCreature;
     for (valuableCreature = 0;
          valuableCreature < 3 && valuableCreature < creatures.size();
          valuableCreature++) {
-        type_creature_value creatureInfo = creatures[valuableCreature];
+        CreatureValue creatureInfo = creatures[valuableCreature];
         int costResource;
         for (costResource = 0; costResource < 7; costResource++)
             m_resourceDemand[costResource] +=
@@ -421,7 +423,7 @@ void type_AI_player::calculateDemand()
                     totalValue = 1.0 / efficiency;
             }
         }
-        totalValue *= getMarketValue(EGameResource(valueResource));
+        totalValue *= getMarketValue(GameResource(valueResource));
         m_resourceValue[valueResource] = totalValue;
         player->m_ai.m_resourceValue[valueResource] = totalValue;
     }
@@ -434,9 +436,9 @@ void type_AI_player::calculateDemand()
 }
 
 VA(0x00428dd0, 0x33E)  // dc 0x2e7d8
-void type_AI_player::endTurn()
+void AIPlayer::endTurn()
 {
-    playerData* player = &g_game->m_players[m_team];
+    PlayerData* player = &g_game->m_players[m_team];
     g_game->calculateProduction();
 
     for (int resource = 0; resource < 7; resource++) {
@@ -445,9 +447,9 @@ void type_AI_player::endTurn()
             m_reservedFunds[resource] = 0;
     }
 
-    type_garrison_purchaser purchaser(m_team);
+    GarrisonPurchaser purchaser(m_team);
     purchaser.checkTowns();
-    type_town_threat_checker checker(m_team);
+    TownThreatChecker checker(m_team);
     checker.checkTowns();
 
     purchaseBuildings();
@@ -520,9 +522,9 @@ void type_AI_player::endTurn()
 // an unreachable compiler-state wall.
 
 VA(0x00429110, 0x6AC)  // linkorder, dc 0x2ea20
-void type_AI_player::makeGift(long playerId)
+void AIPlayer::makeGift(long playerId)
 {
-    playerData& player = g_game->m_players[m_team];
+    PlayerData& player = g_game->m_players[m_team];
     long surplus[7];
     int resource;
 
@@ -563,7 +565,7 @@ void type_AI_player::makeGift(long playerId)
         return;
 
     if (!g_game->m_players[playerId].isHuman()) {
-        type_AI_player* recipientAi = &g_aiPlayers[playerId];
+        AIPlayer* recipientAi = &g_aiPlayers[playerId];
         recipientAi->calculateDemand();
         for (resource = 0; resource < 7; resource++) {
             surplus[resource] = min(
@@ -588,10 +590,10 @@ void type_AI_player::makeGift(long playerId)
     if (!g_game->m_players[playerId].isHuman())
         return;
 
-    std::vector<type_dialog_resource> list;
+    std::vector<DialogResource> list;
     for (resource = 0; resource < 7; resource++) {
         if (surplus[resource] > 0) {
-            type_dialog_resource displayedResource;
+            DialogResource displayedResource;
             displayedResource.m_resource = resource;
             displayedResource.m_qualifier = surplus[resource];
             if (g_game->m_players[playerId].isLocalHuman()) {
@@ -615,7 +617,7 @@ void type_AI_player::makeGift(long playerId)
     list.clear();
     for (resource = 0; resource < 7; resource++) {
         if (surplus[resource] < 0) {
-            type_dialog_resource requestedResource;
+            DialogResource requestedResource;
             requestedResource.m_resource = resource;
             requestedResource.m_qualifier = 0;
             if (g_game->m_players[playerId].isLocalHuman()) {
@@ -648,9 +650,9 @@ void type_AI_player::makeGift(long playerId)
 }
 
 VA(0x004297c0, 0x149)  // dc 0x2f148
-void type_AI_player::startTurn()
+void AIPlayer::startTurn()
 {
-    playerData* player = &g_game->m_players[m_team];
+    PlayerData* player = &g_game->m_players[m_team];
 
     for (int i = 0; i < player->m_numHeroes; i++) {
         Hero* currentHero = g_game->getHero(player->m_heroes[i]);
@@ -671,9 +673,9 @@ void type_AI_player::startTurn()
     m_magusHutValue = findMagusHutValue(
         m_team, g_game->m_setup.m_difficulty > 0 && player->m_numTowns > 0);
 
-    type_garrison_purchaser garrisonPurchaser(m_team);
+    GarrisonPurchaser garrisonPurchaser(m_team);
     garrisonPurchaser.checkTowns();
-    type_town_threat_checker threatChecker(m_team);
+    TownThreatChecker threatChecker(m_team);
     threatChecker.checkTowns();
 
     calculateReserve();
@@ -701,16 +703,16 @@ long findMagusHutValue(long playerId, unsigned char exploreMode)
 }
 
 VA(0x00429ab0, 0x12)  // dc 0x2f268
-void type_AI_player::resetMagusHutValue()
+void AIPlayer::resetMagusHutValue()
 {
     m_magusHutValue = findMagusHutValue(m_team, 0);
 }
 
 VA(0x00429ad0, 0x280)  // anchor-callee, dc 0x2f280
-void type_AI_player::calculateReserve()
+void AIPlayer::calculateReserve()
 {
-    playerData* player = &g_game->m_players[m_team];
-    std::vector<type_creature_value> creatures;
+    PlayerData* player = &g_game->m_players[m_team];
+    std::vector<CreatureValue> creatures;
     memset(m_reservedFunds, 0, sizeof(m_reservedFunds));
     short dwelling;
     short* population;
@@ -724,7 +726,7 @@ void type_AI_player::calculateReserve()
         population = currentTown->m_population;
         for (; dwelling < 14; dwelling++, population++) {
             if (*population > 0) {
-                type_creature_value creatureInfo;
+                CreatureValue creatureInfo;
                 {
                     int value = g_townDwellingCreatures[
                         currentTown->m_type * 14 + dwelling];
@@ -767,7 +769,7 @@ void type_AI_player::calculateReserve()
 static long sumPlayerDwellings(long playerId)
 {
     long value = 0;
-    playerData* player = &g_game->m_players[playerId];
+    PlayerData* player = &g_game->m_players[playerId];
     for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
         Town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
         for (int dwelling = 0; dwelling < 14; ++dwelling) {
@@ -783,7 +785,7 @@ static long sumPlayerDwellings(long playerId)
 }
 
 VA(0x00429d50, 0x3F9)  // dc 0x2f694
-void fillProhibitedArray(playerData* player, unsigned char* prohibited)
+void fillProhibitedArray(PlayerData* player, unsigned char* prohibited)
 {
     long humanStrength;
     int income[7];
@@ -868,7 +870,7 @@ long sumPlayerDwellings(long player_id)
 
 // E:\gamedcs\ai_player.cpp:926
 DC_ONLY(0x2f694, 0x20C)
-void fillProhibitedArray(playerData* player, unsigned char* prohibited)
+void fillProhibitedArray(PlayerData* player, unsigned char* prohibited)
 {
     // @stub
 }
@@ -886,9 +888,9 @@ int valueOfCastleUpgrade(Town* current_town, int* extra_cost)
 #endif  // @carcass
 
 VA(0x0042a150, 0x157)  // dc 0x301c4
-long type_AI_player::getTotalValue(long basicValue, int* cost)
+long AIPlayer::getTotalValue(long basicValue, int* cost)
 {
-    playerData* player = &g_game->m_players[m_team];
+    PlayerData* player = &g_game->m_players[m_team];
     unsigned char tradeNeeded = 0;
     for (int i = 0; i < 7; i++) {
         if (cost[i] > player->m_resources[i]
@@ -934,13 +936,13 @@ long type_AI_player::getTotalValue(long basicValue, int* cost)
 // processing order - the C1 handle-state class.
 // E:\gamedcs\ai_player.cpp:1383
 VA(0x0042a2b0, 0x1BF)  // retail link order + arity, dc 0x30334
-bool type_AI_player::checkTradeSupply(const int* cost, long number,
+bool AIPlayer::checkTradeSupply(const int* cost, long number,
                                         int* supply,
                                         std::vector<long>& tradeQty)
 {
     unsigned char tradeNeeded = 0;
     unsigned char supplyAvailable = 0;
-    playerData* player = &g_game->m_players[m_team];
+    PlayerData* player = &g_game->m_players[m_team];
     long limit;
 
     tradeQty.push_back(number);
@@ -980,7 +982,7 @@ bool type_AI_player::checkTradeSupply(const int* cost, long number,
 }
 
 VA(0x0042a470, 0x110)  // dc 0x304cc
-void type_AI_player::tradeResources(const int* cost, long number)
+void AIPlayer::tradeResources(const int* cost, long number)
 {
     std::vector<long> tradeQty;
     int supply[7];
@@ -1000,12 +1002,12 @@ void type_AI_player::tradeResources(const int* cost, long number)
 
 // E:\gamedcs\ai_player.cpp:1474
 VA(0x0042a580, 0x5BE)  // retail link order + arity, dc 0x305b4
-bool type_AI_player::canTradeResources(const int* cost, int* supply,
+bool AIPlayer::canTradeResources(const int* cost, int* supply,
                                          std::vector<long>& tradeQty)
 {
     long markets = 0;
     unsigned char canBuildMarket = 0;
-    playerData* player = &g_game->m_players[m_team];
+    PlayerData* player = &g_game->m_players[m_team];
     if (supply[0] >= 0
         && player->m_ai.m_turnProductionResource[0] > 0)
         canBuildMarket = 1;
@@ -1034,7 +1036,7 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
     int i;
     for (i = 0; i < 7; ++i) {
         if (supply[i] > 0) {
-            EGameResource resource;
+            GameResource resource;
             {
                 int ordinal = i;
                 memcpy(&resource, &ordinal, sizeof resource);
@@ -1046,7 +1048,7 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
             long onHand = player->m_resources[i];
             int resourceValue;
             resourceValue = i;
-            long value = getMarketValue(EGameResource(resourceValue));
+            long value = getMarketValue(GameResource(resourceValue));
             for (unsigned int j = 0; j < tradeQty.size(); ++j) {
                 if (tradeQty[j] * cost[i] > onHand) {
                     baseCost[j] += (tradeQty[j] * cost[i] - onHand)
@@ -1088,9 +1090,9 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
 }
 
 VA(0x0042ab40, 0xD1)  // dc 0x309d4
-bool type_AI_player::buildMarkets(int* supply)
+bool AIPlayer::buildMarkets(int* supply)
 {
-    playerData* player = &g_game->m_players[m_team];
+    PlayerData* player = &g_game->m_players[m_team];
     bool built = false;
     if (supply[0] < 0 || player->m_ai.m_turnProductionResource[0] <= 0)
         return false;
@@ -1108,10 +1110,10 @@ bool type_AI_player::buildMarkets(int* supply)
 }
 
 VA(0x0042ac20, 0x1DE)  // dc 0x30a70
-void type_AI_player::doResourceTrade(int* supply)
+void AIPlayer::doResourceTrade(int* supply)
 {
     int marketCount = 0;
-    playerData* player = &g_game->m_players[m_team];
+    PlayerData* player = &g_game->m_players[m_team];
     for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
         Town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
         if (currentTown->m_active & g_bitNumber[MARKETPLACE_ID])
@@ -1131,8 +1133,8 @@ void type_AI_player::doResourceTrade(int* supply)
                 continue;
             double ratio;
             {
-                EGameResource sourceResource;
-                EGameResource destResource;
+                GameResource sourceResource;
+                GameResource destResource;
                 {
                     int ordinal = source;
                     memcpy(&sourceResource, &ordinal, sizeof sourceResource);
@@ -1173,14 +1175,14 @@ long valueOfHorde(Town* currentTown, type_building_id building,
 long valueOfHordeUpgrade(Town* currentTown, type_building_id building,
                             unsigned char* prohibited, int* extraCost);
 long valueOfHall(Town* currentTown, type_building_id building);
-int aiResourceCost(const playerData* player, const int* resources);
+int aiResourceCost(const PlayerData* player, const int* resources);
 int canBuy(const Town* currTown, int buildingId);
 
 // E:\gamedcs\ai_player.cpp:1045
 // Single-call-site static: /Ob2 folds it into value_of_building below,
 // which is itself folded into purchase_building - no retail body.
 DC_ONLY(0x2f998, 0x24)
-static long valueOfSilo(Town* currentTown, playerData* player)
+static long valueOfSilo(Town* currentTown, PlayerData* player)
 {
     return 7 * aiResourceCost(player, currentTown->getSiloIncome());
 }
@@ -1196,7 +1198,7 @@ static long valueOfBuilding(Town* currentTown, type_building_id building,
                               unsigned char* prohibitedCreatures,
                               int* extraCost)
 {
-    playerData* player = &g_game->m_players[currentTown->m_owner];
+    PlayerData* player = &g_game->m_players[currentTown->m_owner];
     switch (building) {
     case CASTLE_CITADEL_ID:
     case CASTLE_CASTLE_ID:
@@ -1386,7 +1388,7 @@ static void markValues(long* fullValue, long totalValue,
 // three growth arms' scratch registers are rotated by one against
 // retail's. Branches, rets and the frame are all exact.
 VA(0x0042ae00, 0x718)  // retail callee set + arity, dc 0x30d6c
-unsigned char type_AI_player::purchaseBuilding(
+unsigned char AIPlayer::purchaseBuilding(
     unsigned char* prohibitedCreatures)
 {
     int extraCosts[MAX_BUILDING_TYPE][7];
@@ -1396,7 +1398,7 @@ unsigned char type_AI_player::purchaseBuilding(
     Town* bestTown = 0;
     int bestBuilding = MAX_BUILDING_TYPE;
     __int64 requirements;
-    playerData* player = &g_game->m_players[m_team];
+    PlayerData* player = &g_game->m_players[m_team];
 
     for (short townIndex = 0; townIndex < player->m_numTowns;
          ++townIndex) {
@@ -1563,7 +1565,7 @@ int valueOfCastleUpgrade(Town* currentTown, int* extraCost)
 VA(0x0042b790, 0x62)  // dc 0x2f9bc
 long valueOfHorde(Town* currentTown, type_building_id building, unsigned char* prohibited, int* extraCost)
 {
-    type_horde_effect* horde = currentTown->getHordeEffect(building);
+    HordeEffect* horde = currentTown->getHordeEffect(building);
     CreatureType creature = horde->m_creature;
     if (prohibited[creature])
         return -1;
@@ -1576,7 +1578,7 @@ long valueOfHorde(Town* currentTown, type_building_id building, unsigned char* p
 VA(0x0042b800, 0xa2)  // dc 0x2fa88
 long valueOfHordeUpgrade(Town* currentTown, type_building_id building, unsigned char* prohibited, int* extraCost)
 {
-    type_horde_effect* horde = currentTown->getHordeEffect(building);
+    HordeEffect* horde = currentTown->getHordeEffect(building);
     if (!horde)
         return -1;
     if (g_bitNumber[building - 1] & currentTown->m_built)
@@ -1604,7 +1606,7 @@ long valueOfHall(Town* currentTown, type_building_id building)
         && building >= g_game->m_mapHeader.m_victoryCondition.m_hallLevel
                            + HALL_TOWN_ID)
         value = 5000000;
-    playerData* player = &g_game->m_players[currentTown->m_owner];
+    PlayerData* player = &g_game->m_players[currentTown->m_owner];
     switch (building) {
     case HALL_VILLAGE_ID:
         return static_cast<long>(
@@ -1646,7 +1648,7 @@ static int __cdecl maxBuyableCreatures(
 // E:\gamedcs\ai_player.cpp:1838, dc 0x31094.
 // Complete extends the prohibited-creature table to 145 entries.
 DC_ONLY(0x31094, 0x60)
-void type_AI_player::purchaseBuildings()
+void AIPlayer::purchaseBuildings()
 {
     unsigned char prohibitedCreatures[145];
     fillProhibitedArray(&g_game->m_players[m_team], prohibitedCreatures);
@@ -1662,10 +1664,10 @@ void type_AI_player::purchaseBuildings()
 // against get_buildable_mask and prices each candidate through the
 // single-candidate set overload with the leftover supply as funds.
 VA(0x0042ba60, 0x447)  // retail callee set + arity, dc 0x310f4
-void type_AI_player::buyCreatures(Hero* currentHero, Town* currentTown)
+void AIPlayer::buyCreatures(Hero* currentHero, Town* currentTown)
 {
-    playerData* player = &g_game->m_players[m_team];
-    type_AI_creature_purchaser purchaser(currentHero->m_owner, currentTown);
+    PlayerData* player = &g_game->m_players[m_team];
+    AICreaturePurchaser purchaser(currentHero->m_owner, currentTown);
 
     Hero* garrisonHero = 0;
     if (currentTown->m_garrisonHeroId > -1)
@@ -1761,7 +1763,7 @@ void type_AI_player::buyCreatures(Hero* currentHero, Town* currentTown)
 }
 
 VA(0x0042beb0, 0x187)  // dc 0x31398
-void type_AI_player::buyMageGuild(Hero* currentHero, Town* currentTown)
+void AIPlayer::buyMageGuild(Hero* currentHero, Town* currentTown)
 {
     int building;
     building = currentTown->m_mageLevel;
@@ -1781,7 +1783,7 @@ void type_AI_player::buyMageGuild(Hero* currentHero, Town* currentTown)
     if (building > 0
         || m_resourceSupply[WOOD] < m_resourceDemand[WOOD]
         || m_resourceSupply[ORE] < m_resourceDemand[ORE]) {
-        playerData* player = &g_game->m_players[m_team];
+        PlayerData* player = &g_game->m_players[m_team];
         for (int townIndex = 0; townIndex < player->m_numTowns;
              ++townIndex) {
             Town* otherTown = g_game->getTown(player->m_townIds[townIndex]);
@@ -1813,21 +1815,21 @@ void moveCreatures(ArmyGroup* army, CreatureType type, short amount)
 
 // E:\gamedcs\ai_player.cpp:2061
 DC_ONLY(0x315bc, 0x1A)
-void type_AI_creature_swapper::type_AI_creature_swapper()
+void AICreatureSwapper::AICreatureSwapper()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2074
 DC_ONLY(0x315d8, 0x92)
-void type_AI_creature_swapper::addCreatures(CreatureType type, short amount, short slot)
+void AICreatureSwapper::addCreatures(CreatureType type, short amount, short slot)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2096
 DC_ONLY(0x3166c, 0x168)
-long type_AI_creature_swapper::doBestSwap(unsigned char can_take_all)
+long AICreatureSwapper::doBestSwap(unsigned char can_take_all)
 {
     // @stub
 }
@@ -1844,84 +1846,84 @@ short calculateImprovement(const Hero* current_hero, const Hero* second_hero)
 
 // E:\gamedcs\ai_player.cpp:2209
 DC_ONLY(0x31864, 0xC0)
-long type_AI_creature_swapper::getSwapValue(const Hero* current_hero, const ArmyGroup* source_army, const Hero* second_hero)
+long AICreatureSwapper::getSwapValue(const Hero* current_hero, const ArmyGroup* source_army, const Hero* second_hero)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2233
 DC_ONLY(0x31924, 0xDA)
-void type_AI_creature_swapper::dumpExtraCreature()
+void AICreatureSwapper::dumpExtraCreature()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2282
 DC_ONLY(0x31a00, 0xF2)
-long type_AI_creature_swapper::chooseWeakestArmy(unsigned char is_shooter, unsigned char check_alignments)
+long AICreatureSwapper::chooseWeakestArmy(unsigned char is_shooter, unsigned char check_alignments)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2350
 DC_ONLY(0x31af4, 0x346)
-long type_AI_creature_swapper::valueOfAddingArmy(CreatureType type, short count, short* slot, unsigned char must_replace_creature)
+long AICreatureSwapper::valueOfAddingArmy(CreatureType type, short count, short* slot, unsigned char must_replace_creature)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2461
 DC_ONLY(0x31e3c, 0x98)
-void type_AI_creature_purchaser::type_AI_creature_purchaser(long player, generator* current_generator)
+void AICreaturePurchaser::AICreaturePurchaser(long player, Generator* current_generator)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2483
 DC_ONLY(0x31ed4, 0x4E)
-void type_AI_creature_purchaser::type_AI_creature_purchaser(long player, Town* current_town)
+void AICreaturePurchaser::AICreaturePurchaser(long player, Town* current_town)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2495
 DC_ONLY(0x31f24, 0x6E)
-void type_AI_creature_purchaser::type_AI_creature_purchaser(long player, CreatureType type, short* amount, bool is_free)
+void AICreaturePurchaser::AICreaturePurchaser(long player, CreatureType type, short* amount, bool is_free)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2506
 DC_ONLY(0x31f94, 0x68)
-void type_AI_creature_purchaser::set(Town* current_town)
+void AICreaturePurchaser::set(Town* current_town)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2524
 DC_ONLY(0x31ffc, 0x3A)
-void type_AI_creature_purchaser::set(CreatureType type, short* amount)
+void AICreaturePurchaser::set(CreatureType type, short* amount)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2535
 DC_ONLY(0x32038, 0x250)
-long type_AI_creature_purchaser::doBestPurchase(unsigned char trade_allowed)
+long AICreaturePurchaser::doBestPurchase(unsigned char trade_allowed)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2626
 DC_ONLY(0x32288, 0x70)
-void type_AI_creature_purchaser::doPurchase(ArmyGroup* new_army, short new_morale, ArmyGroup* new_adjacent_army, long* new_funds, unsigned char allow_trade)
+void AICreaturePurchaser::doPurchase(ArmyGroup* new_army, short new_morale, ArmyGroup* new_adjacent_army, long* new_funds, unsigned char allow_trade)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2657
 DC_ONLY(0x322f8, 0xC2)
-long type_AI_creature_purchaser::getPurchaseValue(const ArmyGroup* new_army, short new_morale, const ArmyGroup* new_adjacent_army, const long* new_funds)
+long AICreaturePurchaser::getPurchaseValue(const ArmyGroup* new_army, short new_morale, const ArmyGroup* new_adjacent_army, const long* new_funds)
 {
     // @stub
 }
@@ -1955,7 +1957,7 @@ void AI_arrange_army_for_combat(Hero* current_hero, const Hero* enemy_hero, cons
 
 // E:\gamedcs\ai_player.cpp:3044
 DC_ONLY(0x32a84, 0x3AC)
-long markDestinations(Hero* current_hero, long max_distance, SearchArray* search_array, unsigned short* friendly_distances, type_search_type search_type)
+long markDestinations(Hero* current_hero, long max_distance, SearchArray* search_array, unsigned short* friendly_distances, SearchType search_type)
 {
     // @stub
 }
@@ -1979,7 +1981,7 @@ void markStrategicMap(Hero* current_hero, long* strategic_map, std::vector<HeroD
 
 // E:\gamedcs\ai_player.cpp:3498
 DC_ONLY(0x33854, 0x1F6)
-int netValueOfLocation(Hero* current_hero, HeroDestination* destination, long* strategic_map, pathCell* path_cell, SearchArray* search_array)
+int netValueOfLocation(Hero* current_hero, HeroDestination* destination, long* strategic_map, PathCell* path_cell, SearchArray* search_array)
 {
     // @stub
 }
@@ -2007,7 +2009,7 @@ void considerHidingMouse(Hero* current_hero, int direction)
 
 // E:\gamedcs\ai_player.cpp:3832
 DC_ONLY(0x341f4, 0x1CE)
-unsigned char attemptStep(Hero* current_hero, pathCell* path_cell, unsigned char bStandEnd, unsigned char first_step)
+unsigned char attemptStep(Hero* current_hero, PathCell* path_cell, unsigned char bStandEnd, unsigned char first_step)
 {
     // @stub
 }
@@ -2049,14 +2051,14 @@ unsigned char considerHiring(long player_id, Hero* candidate)
 
 // E:\gamedcs\ai_player.cpp:4565
 DC_ONLY(0x357ec, 0x9C)
-Town* getShipyardTown(const playerData* player, long x, long y, long z)
+Town* getShipyardTown(const PlayerData* player, long x, long y, long z)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:4583
 DC_ONLY(0x35888, 0x86)
-unsigned char getMapShipyard(const playerData* player, long x, long y, long z)
+unsigned char getMapShipyard(const PlayerData* player, long x, long y, long z)
 {
     // @stub
 }
@@ -2077,7 +2079,7 @@ long aiGetShipCost(const Hero* our_hero, type_point point)
 
 // E:\gamedcs\ai_player.cpp:4670
 DC_ONLY(0x35ac8, 0x178)
-bool type_AI_player::hireHeroes()
+bool AIPlayer::hireHeroes()
 {
     // @stub
 }
@@ -2104,126 +2106,126 @@ void initializeArtifactEffects()
 
 // E:\gamedcs\ai_player.cpp:5057
 DC_ONLY(0x36214, 0x44)
-void type_scouting_artifact::type_scouting_artifact(long new_bonus)
+void ScoutingArtifact::ScoutingArtifact(long new_bonus)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5090
 DC_ONLY(0x362e0, 0x40)
-void type_might_artifact::type_might_artifact(long new_bonus)
+void MightArtifact::MightArtifact(long new_bonus)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5109
 DC_ONLY(0x36350, 0x40)
-void type_power_artifact::type_power_artifact(long new_bonus)
+void PowerArtifact::PowerArtifact(long new_bonus)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5127
 DC_ONLY(0x363b4, 0x3C)
-void type_knowledge_artifact::type_knowledge_artifact(long new_bonus)
+void KnowledgeArtifact::KnowledgeArtifact(long new_bonus)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5145
 DC_ONLY(0x36414, 0x3C)
-void type_necromancy_artifact::type_necromancy_artifact(long new_bonus)
+void NecromancyArtifact::NecromancyArtifact(long new_bonus)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5182
 DC_ONLY(0x364dc, 0x50)
-void type_movement_artifact::type_movement_artifact(long new_bonus)
+void MovementArtifact::MovementArtifact(long new_bonus)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5198
 DC_ONLY(0x36558, 0x44)
-void type_spellcaster_artifact::type_spellcaster_artifact(long new_bonus)
+void SpellcasterArtifact::SpellcasterArtifact(long new_bonus)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5219
 DC_ONLY(0x365e4, 0x48)
-void type_morale_artifact::type_morale_artifact(long new_bonus)
+void MoraleArtifact::MoraleArtifact(long new_bonus)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5243
 DC_ONLY(0x366d8, 0x48)
-void type_luck_artifact::type_luck_artifact(long new_bonus)
+void LuckArtifact::LuckArtifact(long new_bonus)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5267
 DC_ONLY(0x367cc, 0x48)
-void type_duration_artifact::type_duration_artifact(long new_bonus)
+void DurationArtifact::DurationArtifact(long new_bonus)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5285
 DC_ONLY(0x36838, 0x44)
-void type_school_artifact::type_school_artifact(SpellSchool new_school, long new_bonus)
+void SchoolArtifact::SchoolArtifact(SpellSchool new_school, long new_bonus)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5347
 DC_ONLY(0x369dc, 0x40)
-void type_antimagic_artifact::type_antimagic_artifact(long _max_level)
+void AntimagicArtifact::AntimagicArtifact(long _max_level)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5380
 DC_ONLY(0x36ab4, 0x48)
-void type_antimorale_artifact::type_antimorale_artifact()
+void AntimoraleArtifact::AntimoraleArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5406
 DC_ONLY(0x36c40, 0x50)
-void type_antiluck_artifact::type_antiluck_artifact()
+void AntiluckArtifact::AntiluckArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5433
 DC_ONLY(0x36dd4, 0x54)
-void type_tome_artifact::type_tome_artifact(SpellSchool new_school)
+void TomeArtifact::TomeArtifact(SpellSchool new_school)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5477
 DC_ONLY(0x36ee8, 0x6C)
-void type_income_artifact::type_income_artifact(long new_amount, EGameResource new_resource)
+void IncomeArtifact::IncomeArtifact(long new_amount, GameResource new_resource)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5495
 DC_ONLY(0x36fec, 0x60)
-void type_creature_growth_artifact::type_creature_growth_artifact(long new_level, long new_bonus)
+void CreatureGrowthArtifact::CreatureGrowthArtifact(long new_level, long new_bonus)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5505
 DC_ONLY(0x3704c, 0x148)
-long type_creature_growth_artifact::getValue(const Hero* owner, unsigned char equipped, unsigned char exact)
+long CreatureGrowthArtifact::getValue(const Hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
 }
@@ -2339,63 +2341,63 @@ unsigned char Hero::isInSpellbook(SpellID spell)
 
 // E:\gamedcs\ai_player.h:263
 DC_ONLY(0x37dec, 0x4)
-void type_AI_player::init(short new_team)
+void AIPlayer::init(short new_team)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.h:273
 DC_ONLY(0x37df0, 0x6)
-void type_AI_player::clear_magus_hut_value()
+void AIPlayer::clear_magus_hut_value()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.h:278
 DC_ONLY(0x37df8, 0xE)
-double type_AI_player::getResourceValue(EGameResource resource)
+double AIPlayer::getResourceValue(GameResource resource)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.h:299
 DC_ONLY(0x37e08, 0x16)
-void type_creature_source::type_creature_source(CreatureType new_type, short* new_amount, bool _is_free)
+void CreatureSource::CreatureSource(CreatureType new_type, short* new_amount, bool _is_free)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.h:313
 DC_ONLY(0x37e20, 0x6)
-void type_AI_creature_purchaser::setSubtractMode(unsigned char arg)
+void AICreaturePurchaser::setSubtractMode(unsigned char arg)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_creature_value.h:29
 DC_ONLY(0x37e28, 0xA)
-unsigned char type_creature_value::operator<(const type_creature_value* arg)
+unsigned char CreatureValue::operator<(const CreatureValue* arg)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_creature_value.h:35
 DC_ONLY(0x37e34, 0xA)
-unsigned char type_creature_value::operator>(const type_creature_value* arg)
+unsigned char CreatureValue::operator>(const CreatureValue* arg)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_spellvalue.h:84
 DC_ONLY(0x37e40, 0x8)
-unsigned char type_spellvalue::canCastSpells()
+unsigned char Spellvalue::canCastSpells()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_spellvalue.h:114
 DC_ONLY(0x37e48, 0x4)
-void type_spellvalue::setPower(long arg)
+void Spellvalue::setPower(long arg)
 {
     // @stub
 }
@@ -2409,7 +2411,7 @@ long SearchArray::getVisitedCount()
 
 // E:\gamedcs\findpath.h:236
 DC_ONLY(0x37e64, 0x18)
-pathCell* SearchArray::getVisitedCell(long index)
+PathCell* SearchArray::getVisitedCell(long index)
 {
     // @stub
 }
@@ -2438,7 +2440,7 @@ long* getDangerCell(long* danger_zones, type_point point)
 #endif  // @carcass
 
 VA(0x0042c040, 0x15)  // dc 0x315bc
-type_AI_creature_swapper::type_AI_creature_swapper()
+AICreatureSwapper::AICreatureSwapper()
 {
     m_army = 0;
     m_adjacentArmy = 0;
@@ -2448,7 +2450,7 @@ type_AI_creature_swapper::type_AI_creature_swapper()
 }
 
 VA(0x0042c060, 0xC3)
-void type_AI_creature_swapper::getAlignments()
+void AICreatureSwapper::getAlignments()
 {
     m_alignmentCount = m_army->getAlignments(m_alignments);
     if (!m_hasAngelicAlliance) {
@@ -2476,7 +2478,7 @@ void type_AI_creature_swapper::getAlignments()
 }
 
 VA(0x0042c130, 0x146)  // dc 0x315d8
-void type_AI_creature_swapper::addCreatures(
+void AICreatureSwapper::addCreatures(
     CreatureType type, short amount, short slot)
 {
     CreatureType oldType = m_army->m_armyTypes[slot];
@@ -2513,7 +2515,7 @@ void type_AI_creature_swapper::addCreatures(
 }
 
 VA(0x0042c280, 0x126)  // dc 0x3166c
-long type_AI_creature_swapper::doBestSwap(bool canTakeAll)
+long AICreatureSwapper::doBestSwap(bool canTakeAll)
 {
     long bestValue = 0;
     short bestArmySlot = -1;
@@ -2586,7 +2588,7 @@ static short calculateImprovement(
 }
 
 VA(0x0042c3b0, 0xe3)  // dc 0x31808
-void type_AI_creature_swapper::doSwap(Hero* currentHero,
+void AICreatureSwapper::doSwap(Hero* currentHero,
                                        ArmyGroup* sourceArmy,
                                        Hero* secondHero,
                                        unsigned char newHasAngelicAlliance)
@@ -2614,7 +2616,7 @@ void type_AI_creature_swapper::doSwap(Hero* currentHero,
 // control forced 15 blocks but changed the surrounding allocation and fell to
 // 80.38%, so the source-false qualifier is rejected.
 VA(0x0042c4a0, 0x108)  // DC method/locals + Complete parameter, dc 0x31864
-long type_AI_creature_swapper::getSwapValue(
+long AICreatureSwapper::getSwapValue(
     const Hero* currentHero, const ArmyGroup* sourceArmy,
     const Hero* secondHero, unsigned char newHasAngelicAlliance)
 {
@@ -2640,7 +2642,7 @@ long type_AI_creature_swapper::getSwapValue(
 }
 
 VA(0x0042c5b0, 0xD1)  // dc 0x31924
-void type_AI_creature_swapper::dumpExtraCreature()
+void AICreatureSwapper::dumpExtraCreature()
 {
     if (!m_adjacentArmy
         || m_adjacentArmy->getNumArmies() == ArmyGroup::ARMY_GROUP_SLOT_COUNT
@@ -2687,7 +2689,7 @@ void type_AI_creature_swapper::dumpExtraCreature()
 // improves that internal distance but worsens the real objdiff score to
 // 86.33%, and declaration/reference/condition spellings are flat or worse.
 VA(0x0042c690, 0x192)  // DC method + retail body/caller; dc 0x31a00
-long type_AI_creature_swapper::chooseWeakestArmy(
+long AICreatureSwapper::chooseWeakestArmy(
     unsigned char isShooter, unsigned char checkAlignments)
 {
     long shooterCount = 0;
@@ -2770,7 +2772,7 @@ long type_AI_creature_swapper::chooseWeakestArmy(
 // DC lines 2351/2352 place traits and value before the morale locals;
 // restoring that declaration order is byte-flat at the recovered peak.
 VA(0x0042c830, 0x33F)  // DC method/callgraph + retail Complete body; dc 0x31af4
-long type_AI_creature_swapper::valueOfAddingArmy(
+long AICreatureSwapper::valueOfAddingArmy(
     CreatureType type, short count, short& slot,
     unsigned char mustReplaceCreature)
 {
@@ -2880,8 +2882,8 @@ long type_AI_creature_swapper::valueOfAddingArmy(
 }
 
 VA(0x0042cb70, 0x2b9)  // dc 0x31e3c
-type_AI_creature_purchaser::type_AI_creature_purchaser(
-    long player, generator* currentGenerator)
+AICreaturePurchaser::AICreaturePurchaser(
+    long player, Generator* currentGenerator)
 {
     m_playerId = player;
     m_funds = 0;
@@ -2889,7 +2891,7 @@ type_AI_creature_purchaser::type_AI_creature_purchaser(
     for (short i = 0; i < 4; ++i) {
         CreatureType type = currentGenerator->m_type[i];
         if (type != CREATURE_NONE) {
-            m_creatures.push_back(type_creature_source(
+            m_creatures.push_back(CreatureSource(
                 type, &currentGenerator->m_population[i],
                 g_creatureTypeTraits[type].m_level == 0));
         }
@@ -2897,7 +2899,7 @@ type_AI_creature_purchaser::type_AI_creature_purchaser(
 }
 
 VA(0x0042ce30, 0x114)  // dc 0x31ed4
-type_AI_creature_purchaser::type_AI_creature_purchaser(
+AICreaturePurchaser::AICreaturePurchaser(
     long player, Town* currentTown)
 {
     m_funds = 0;
@@ -2910,17 +2912,17 @@ type_AI_creature_purchaser::type_AI_creature_purchaser(
 // the swapper base and creature vector, initialize the same scalar tail, and
 // push exactly one source carrying the supplied creature, amount and bool.
 VA(0x0042cf50, 0x25a)  // dc 0x31f24
-type_AI_creature_purchaser::type_AI_creature_purchaser(
+AICreaturePurchaser::AICreaturePurchaser(
     long player, CreatureType type, short* amount, bool isFree)
 {
     m_playerId = player;
     m_funds = 0;
     m_subtractCostMode = 1;
-    m_creatures.push_back(type_creature_source(type, amount, isFree));
+    m_creatures.push_back(CreatureSource(type, amount, isFree));
 }
 
 VA(0x0042d1b0, 0x268)  // dc 0x31f94
-void type_AI_creature_purchaser::set(Town* currentTown)
+void AICreaturePurchaser::set(Town* currentTown)
 {
     m_creatures.clear();
     int dwelling = 0;
@@ -2931,17 +2933,17 @@ void type_AI_creature_purchaser::set(Town* currentTown)
             currentTown->m_type * 14 + dwelling];
         short amount = *population;
         if (amount > 0) {
-            m_creatures.push_back(type_creature_source(type, population, 0));
+            m_creatures.push_back(CreatureSource(type, population, 0));
         }
     }
 }
 
-void type_AI_creature_purchaser::set(CreatureType newType,
+void AICreaturePurchaser::set(CreatureType newType,
                                      short* newAmount)
 {
     m_creatures.clear();
     m_creatures.push_back(
-        type_creature_source(newType, newAmount, false));
+        CreatureSource(newType, newAmount, false));
 }
 
 // DC proves the method, signature, and the add_creatures/value_of_adding_army
@@ -2961,7 +2963,7 @@ void type_AI_creature_purchaser::set(CreatureType newType,
 // best_number` after the assignment - are byte-flat at 97.2740, so the extra
 // slot is the allocator's, not a source local.
 VA(0x0042d420, 0x264)  // DC method/callgraph + exact retail caller; dc 0x32038
-long type_AI_creature_purchaser::doBestPurchase(
+long AICreaturePurchaser::doBestPurchase(
     unsigned char tradeAllowed)
 {
     int resourceCost[7];
@@ -3029,7 +3031,7 @@ long type_AI_creature_purchaser::doBestPurchase(
 }
 
 VA(0x0042d690, 0xE1)  // dc 0x32288
-void type_AI_creature_purchaser::doPurchase(
+void AICreaturePurchaser::doPurchase(
     ArmyGroup* newArmy, short newMorale, ArmyGroup* newAdjacentArmy,
     long* newFunds, unsigned char allowTrade,
     unsigned char newHasAngelicAlliance)
@@ -3063,7 +3065,7 @@ void type_AI_creature_purchaser::doPurchase(
 // lifetime/order probes, direct-loop expansion and alternate call operands
 // either leave it unchanged or worsen it.
 VA(0x0042d780, 0xEF)  // DC method/locals + retail Complete tail; dc 0x322f8
-long type_AI_creature_purchaser::getPurchaseValue(
+long AICreaturePurchaser::getPurchaseValue(
     const ArmyGroup* newArmy, short newMorale,
     const ArmyGroup* newAdjacentArmy, const long* newFunds,
     unsigned char newHasAngelicAlliance)
@@ -3119,8 +3121,8 @@ void aiConsolidateArmy(ArmyGroup& currentArmy)
 VA(0x0042d8e0, 0x239)  // dc 0x32430
 void aiArrangeArmy(ArmyGroup& currentArmy)
 {
-    std::vector<type_creature_value> values;
-    type_creature_value entry;
+    std::vector<CreatureValue> values;
+    CreatureValue entry;
     for (int i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         CreatureType type = currentArmy.m_armyTypes[i];
         if (type != CREATURE_NONE) {
@@ -3348,7 +3350,7 @@ VA(0x0042de50, 0x25c)  // outer census + MoveHero caller, dc 0x329f8
 void aiMarkDangerZones(Hero* currentHero, long* dangerZones)
 {
     for (int playerId = 0; playerId < 8; ++playerId) {
-        const playerData& player = g_game->m_players[playerId];
+        const PlayerData& player = g_game->m_players[playerId];
         if (!g_game->onSameTeam(playerId, currentHero->m_owner)
             && !g_game->m_playerDisabled[playerId]) {
             for (int heroIndex = 0; heroIndex < player.m_numHeroes;
@@ -3379,14 +3381,14 @@ static void checkHolyGrail(
     std::vector<HeroDestination>& destinations,
     const unsigned short* friendlyDistances)
 {
-    playerData* player = &g_game->m_players[currentHero->m_owner];
+    PlayerData* player = &g_game->m_players[currentHero->m_owner];
     if (player->m_puzzleGuess.m_x >= 0) {
         HeroDestination point;
         point.m_point.m_x = player->m_puzzleGuess.m_x;
         point.m_point.m_y = player->m_puzzleGuess.m_y;
         point.m_point.m_z = player->m_puzzleGuess.m_z;
         point.m_isCritical = 0;
-        pathCell* guessCell = currentSearchArray->getCell(point.m_point, 0);
+        PathCell* guessCell = currentSearchArray->getCell(point.m_point, 0);
         if (guessCell->m_visited) {
             NewmapCell* mapCell = g_game->getCell(point.m_point);
             if (!(mapCell->m_type == HERO && mapCell->m_isTrigger)
@@ -3478,7 +3480,7 @@ static void markStrategicMap(
             nearbyCost = 0;
             for (pt.m_x = topX; pt.m_x < stopX; ++pt.m_x) {
                 for (pt.m_y = topY; pt.m_y < stopY; ++pt.m_y) {
-                    pathCell* nearby = currentSearchArray.getCell(pt, false);
+                    PathCell* nearby = currentSearchArray.getCell(pt, false);
                     if (nearby->m_cost > nearbyCost)
                         nearbyCost = nearby->m_cost;
                 }
@@ -3486,7 +3488,7 @@ static void markStrategicMap(
         }
 
         for (long j = currentSearchArray.getVisitedCount(); j-- != 0;) {
-            pathCell* visited = currentSearchArray.getVisitedCell(j);
+            PathCell* visited = currentSearchArray.getVisitedCell(j);
             long value;
             if (visited->m_cost <= nearbyCost) {
                 value = point.m_value;
@@ -3547,7 +3549,7 @@ static void unblockLith(Hero* currentHero,
             continue;
         if (getMapExtra(point.m_x, point.m_y, point.m_z) & MAP_EXTRA_MONSTER)
             continue;
-        pathCell* currentPathCell =
+        PathCell* currentPathCell =
             g_searchArray->getCell(point, false);
         if (!currentPathCell->m_visited)
             continue;
@@ -3632,7 +3634,7 @@ int aiChooseDestination(Hero* currentHero, long maxDistance,
         rawValue = bestRawValue;
         if (bestDistance > 100)
             rawValue = rawValue * 100 / bestDistance;
-        pathCell* bestCell = g_searchArray->getCell(bestPoint.m_point,
+        PathCell* bestCell = g_searchArray->getCell(bestPoint.m_point,
                                                       false);
         bestPoint.m_isNearby =
             bestCell->m_lastPoint == start
@@ -3649,7 +3651,7 @@ int aiChooseDestination(Hero* currentHero, long maxDistance,
         if (bestPoint.m_value > 0 && point.m_value == 0)
             continue;
 
-        pathCell* currentPathCell = g_searchArray->getCell(point.m_point, false);
+        PathCell* currentPathCell = g_searchArray->getCell(point.m_point, false);
         unsigned char isNearby = 0;
         if (currentPathCell->m_lastPoint == start
             && g_game->getCell(currentPathCell->m_lastPoint)->m_isTrigger) {
@@ -3725,14 +3727,14 @@ __int64 Town::getBuildingMask()
 
 // E:\gamedcs\game.h:839
 DC_ONLY(0x37f64, 0x58)
-unsigned char game::isHumanTeam(int teamNum)
+unsigned char Game::isHumanTeam(int teamNum)
 {
     // @stub
 }
 
 // E:\gamedcs\game.h:865
 DC_ONLY(0x37fbc, 0x1C)
-int game::getTeam(int playerNum)
+int Game::getTeam(int playerNum)
 {
     // @stub
 }
@@ -3783,7 +3785,7 @@ int game::getTeam(int playerNum)
 long markDestinations(Hero* currentHero, long maxDistance,
                        SearchArray* currentSearchArray,
                        unsigned short* friendlyDistances,
-                       type_search_type searchType);
+                       SearchType searchType);
 long aiValueOfEvent(const Hero* currentHero, type_point point,
                        long& moveCost);
 
@@ -3814,7 +3816,7 @@ long findAllDestinations(Hero* currentHero, SearchArray* currentSearchArray,
     unsigned short* friendlyDistances = new unsigned short[levelCells];
     memset(friendlyDistances, -1, levelCells * sizeof(unsigned short));
 
-    type_search_type searchType;
+    SearchType searchType;
     if (allowSpells) {
         searchType = const_AI_search;
     } else {
@@ -3839,7 +3841,7 @@ long findAllDestinations(Hero* currentHero, SearchArray* currentSearchArray,
     }
 
     for (long j = currentSearchArray->getVisitedCount(); j-- != 0;) {
-        pathCell* cell = currentSearchArray->getVisitedCell(j);
+        PathCell* cell = currentSearchArray->getVisitedCell(j);
         if (!allowSpells && cell->m_cost < cell->m_adjustedCost)
             continue;
         NewmapCell* mapCell = g_advManager->getCell(cell->m_point);
@@ -3937,7 +3939,7 @@ VA(0x0042f570, 0x40e)  // anchor-callee + arity, dc 0x32a84
 long markDestinations(Hero* currentHero, long maxDistance,
                        SearchArray* currentSearchArray,
                        unsigned short* friendlyDistances,
-                       type_search_type searchType)
+                       SearchType searchType)
 {
     int mapCells = g_mapHeight * g_mapWidth;
     SearchArray friendlySearch;
@@ -3961,7 +3963,7 @@ long markDestinations(Hero* currentHero, long maxDistance,
         if (friendly == currentHero)
             continue;
         type_point friendPoint(friendly->m_x, friendly->m_y, friendly->m_z);
-        pathCell* friendCell = currentSearchArray->getCell(friendPoint, 0);
+        PathCell* friendCell = currentSearchArray->getCell(friendPoint, 0);
         if (!friendCell->m_visited)
             continue;
 
@@ -3993,7 +3995,7 @@ long markDestinations(Hero* currentHero, long maxDistance,
 
         for (int j = static_cast<int>(friendlySearch.getVisitedCount());
              j-- != 0;) {
-            pathCell* visited = friendlySearch.getVisitedCell(j);
+            PathCell* visited = friendlySearch.getVisitedCell(j);
             if (currentHero->isInPatrolRadius(visited->m_point)) {
                 int index = visited->m_point.m_z * mapCells
                     + visited->m_point.m_y * g_mapWidth + visited->m_point.m_x;
@@ -4020,7 +4022,7 @@ long markDestinations(Hero* currentHero, long maxDistance,
 // where anything else is scaled by Random(1,25)+75 percent.
 VA(0x0042f980, 0x2c9)  // anchor-callee unique (Random, FindAdjacentMonster), dc 0x33854
 int netValueOfLocation(Hero* currentHero, HeroDestination* destination,
-                          long* strategicMap, pathCell* currentPathCell,
+                          long* strategicMap, PathCell* currentPathCell,
                           SearchArray* currentSearchArray)
 {
     type_point point = destination->m_point;
@@ -4030,7 +4032,7 @@ int netValueOfLocation(Hero* currentHero, HeroDestination* destination,
         if (getMapExtra(point.m_x, point.m_y, point.m_z) & g_unnamed69ccc4) {
             destination->m_moveCost -= currentPathCell->m_cost;
             point = currentPathCell->m_lastPoint;
-            pathCell* lastCell = currentSearchArray->getCell(point, 0);
+            PathCell* lastCell = currentSearchArray->getCell(point, 0);
             destination->m_moveCost += lastCell->m_cost;
         }
     }
@@ -4083,19 +4085,19 @@ void aiSetHeroBonuses(Hero* ourHero);
 void aiBuildShip(const Hero* ourHero, long x, long y, long z);
 
 static void buildPath(Hero* currentHero, SearchArray* currentSearchArray,
-                       std::vector<pathCell>& path,
+                       std::vector<PathCell>& path,
                        HeroDestination& destination);
 static unsigned char checkMoveSpell(Hero* currentHero,
-                                      std::vector<pathCell>& path,
+                                      std::vector<PathCell>& path,
                                       long step, SpellID spell,
                                       unsigned char alreadyActive);
 static unsigned char attemptTeleport(Hero* currentHero,
-                                      std::vector<pathCell>& path,
+                                      std::vector<PathCell>& path,
                                       long step);
 
 // E:\gamedcs\ai_player.cpp:3832
 VA(0x0042fc50, 0x285)  // dc 0x341f4
-unsigned char attemptStep(Hero* currentHero, pathCell* currentPathCell,
+unsigned char attemptStep(Hero* currentHero, PathCell* currentPathCell,
                            unsigned char standEnd, unsigned char firstStep)
 {
     type_point triggerPoint;
@@ -4170,7 +4172,7 @@ unsigned char attemptStep(Hero* currentHero, pathCell* currentPathCell,
 }
 
 static void buildPath(Hero* currentHero, SearchArray* currentSearchArray,
-                       std::vector<pathCell>& path,
+                       std::vector<PathCell>& path,
                        HeroDestination& destination)
 {
     path.clear();
@@ -4182,7 +4184,7 @@ static void buildPath(Hero* currentHero, SearchArray* currentSearchArray,
     }
 
     while (i-- > 0) {
-        const pathCell* currentPathCell = g_searchArray->getStepCell(i);
+        const PathCell* currentPathCell = g_searchArray->getStepCell(i);
         if (currentPathCell->m_flying
             && (abs(currentPathCell->m_point.m_x - currentPathCell->m_lastPoint.m_x) > 1
                 || abs(currentPathCell->m_point.m_y - currentPathCell->m_lastPoint.m_y) > 1
@@ -4200,7 +4202,7 @@ static void buildPath(Hero* currentHero, SearchArray* currentSearchArray,
 }
 
 static unsigned char checkMoveSpell(Hero* currentHero,
-                                      std::vector<pathCell>& path,
+                                      std::vector<PathCell>& path,
                                       long step, SpellID spell,
                                       unsigned char alreadyActive)
 {
@@ -4239,7 +4241,7 @@ DATA(0x00660500) static const long g_constThresholds[6] = {
 };
 
 static unsigned char attemptTeleport(Hero* currentHero,
-                                      std::vector<pathCell>& path,
+                                      std::vector<PathCell>& path,
                                       long step)
 {
     unsigned char atManaSource;
@@ -4284,7 +4286,7 @@ static unsigned char attemptTeleport(Hero* currentHero,
     // Retail keeps this source object live in EBX across get_target/get_cell.
     // Dreamcast's local inventory is a lower bound and cannot expose an
     // optimizer-only pointer alias.
-    game* currentGame = g_game;
+    Game* currentGame = g_game;
     AdventureObjectType targetType =
         currentGame->getCell(currentHero->getTarget())->m_type;
     if (targetType == MAGIC_WELL || targetType == MAGIC_SPRING)
@@ -4406,7 +4408,7 @@ void aiAttemptMove(Hero* currentHero, HeroDestination& bestPoint,
                     long& bestRawValue, unsigned char exploreMode)
 {
     long totalCost;
-    std::vector<pathCell> path;
+    std::vector<PathCell> path;
     unsigned char firstStep;
     long maxDistance;
     type_point destination;
@@ -4527,12 +4529,12 @@ void aiAttemptMove(Hero* currentHero, HeroDestination& bestPoint,
 
 VA(0x00430610, 0x384)  // dc 0x343c4
 static void buildPath(Hero* currentHero, SearchArray* currentSearchArray,
-                       std::vector<pathCell>& path,
+                       std::vector<PathCell>& path,
                        HeroDestination& destination);
 
 VA(0x004309a0, 0x103)  // dc 0x34508
 static unsigned char checkMoveSpell(Hero* currentHero,
-                                      std::vector<pathCell>& path,
+                                      std::vector<PathCell>& path,
                                       long step, SpellID spell,
                                       unsigned char alreadyActive);
 
@@ -4541,7 +4543,7 @@ static unsigned char checkMoveSpell(Hero* currentHero,
 // retained emission slot.
 VA(0x00430ab0, 0x4c1)  // caller/callee/body bridge, dc 0x34630
 static unsigned char attemptTeleport(Hero* currentHero,
-                                      std::vector<pathCell>& path,
+                                      std::vector<PathCell>& path,
                                       long step);
 
 // E:\\gamedcs\\ai_player.cpp:4457. Dreamcast proves two lexical artifact
@@ -4574,7 +4576,7 @@ static long totalArtifactValue(Hero* candidate, long playerId)
 // The Dreamcast roster marks both coordinate lookups static, and its
 // AI_build_ship xrefs mark both calls inlined. Retail retains those two
 // source-level passes: owned town docks first, then claimed map shipyards.
-static Town* getShipyardTown(const playerData* player, long x, long y,
+static Town* getShipyardTown(const PlayerData* player, long x, long y,
                                long z)
 {
     for (long i = 0; i < player->m_numTowns; ++i) {
@@ -4587,7 +4589,7 @@ static Town* getShipyardTown(const playerData* player, long x, long y,
 }
 
 // E:\gamedcs\ai_player.cpp:4583, dc 0x35888.
-static unsigned char getMapShipyard(const playerData* player, long x,
+static unsigned char getMapShipyard(const PlayerData* player, long x,
                                       long y, long z)
 {
     for (unsigned long i = 0; i < player->m_shipyards.size(); ++i) {
@@ -4609,7 +4611,7 @@ void aiBuildShip(const Hero* ourHero, long x, long y, long z)
     if (ourHero->belongsToHuman() && !g_unk691209)
         return;
 
-    playerData* player = &g_game->m_players[ourHero->m_owner];
+    PlayerData* player = &g_game->m_players[ourHero->m_owner];
     Town* shipyardTown = getShipyardTown(player, x, y, z);
     if (!shipyardTown) {
         if (!getMapShipyard(player, x, y, z))
@@ -4630,7 +4632,7 @@ void aiBuildShip(const Hero* ourHero, long x, long y, long z)
 VA(0x00431160, 0x1f3)  // dc 0x35a10
 long aiGetShipCost(const Hero* ourHero, type_point point)
 {
-    const playerData* player = &g_game->m_players[ourHero->m_owner];
+    const PlayerData* player = &g_game->m_players[ourHero->m_owner];
     Town* shipyardTown =
         getShipyardTown(player, point.m_x, point.m_y, point.m_z);
     int cost[7];
@@ -4649,12 +4651,12 @@ long aiGetShipCost(const Hero* ourHero, type_point point)
 }
 
 VA(0x00431360, 0x463)  // dc 0x35ac8
-bool type_AI_player::hireHeroes()
+bool AIPlayer::hireHeroes()
 {
-    playerData* player = &g_game->m_players[m_team];
+    PlayerData* player = &g_game->m_players[m_team];
     Hero* first = 0;
     Hero* second = 0;
-    if (player->m_numHeroes >= playerData::HERO_SLOT_COUNT)
+    if (player->m_numHeroes >= PlayerData::HERO_SLOT_COUNT)
         return false;
     if (player->m_resources[GOLD] < g_heroGoldCost)
         return false;
@@ -4711,7 +4713,7 @@ int canBuy(const Town* currTown, int buildingId);
 VA(0x00431800, 0x3c2)  // dc 0x354bc
 bool considerHiring(long playerId, Hero* candidate)
 {
-    playerData& player = g_game->m_players[playerId];
+    PlayerData& player = g_game->m_players[playerId];
     long total = totalArtifactValue(candidate, playerId);
     int slot;
     for (slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
@@ -4796,10 +4798,10 @@ long valueOfHiring(Town* currentTown, Hero* candidate,
                      SearchArray* currentSearchArray)
 {
     short playerId = currentTown->m_owner;
-    playerData* player = &g_game->m_players[currentTown->m_owner];
+    PlayerData* player = &g_game->m_players[currentTown->m_owner];
     ArmyGroup heroArmy = candidate->m_army;
     ArmyGroup townArmy = static_cast<const Town*>(currentTown)->getArmy();
-    type_AI_creature_purchaser purchaser(playerId, currentTown);
+    AICreaturePurchaser purchaser(playerId, currentTown);
 
     candidate->m_turnExperienceToRvRatio = 0;
     candidate->m_owner = static_cast<char>(playerId);
@@ -4823,14 +4825,14 @@ long valueOfHiring(Town* currentTown, Hero* candidate,
     findAllDestinations(candidate, currentSearchArray, destinations, 0x7fff,
                           1, 0, 0);
 
-    std::vector<pathCell*> monsters;
+    std::vector<PathCell*> monsters;
     long totalValue = 0;
     HeroDestination destination;
-    pathCell* monsterCell;
+    PathCell* monsterCell;
     unsigned int i;
     for (i = 0; i < destinations.size(); ++i) {
         destination = destinations[i];
-        pathCell* cell = currentSearchArray->getCell(destination.m_point, 0);
+        PathCell* cell = currentSearchArray->getCell(destination.m_point, 0);
         NewmapCell* mapCell = g_advManager->getCell(destination.m_point);
         if (mapCell->m_type == HERO && mapCell->m_isTrigger
             && g_game->getHero(mapCell->m_extraInfo)->m_owner == playerId) {
@@ -4858,7 +4860,7 @@ long valueOfHiring(Town* currentTown, Hero* candidate,
     for (int heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
         Hero* other = g_game->getHero(player->m_heroes[heroIndex]);
         if (other->m_z == candidate->m_z) {
-            pathCell* cell = currentSearchArray->getCell(
+            PathCell* cell = currentSearchArray->getCell(
                 type_point(other->m_x, other->m_y, other->m_z), 0);
 
             if (cell->m_visited) {
@@ -4917,35 +4919,35 @@ long aiValueOfObservatory(type_point origin, long playerId, long range)
     return value;
 }
 
-VA_COMPGEN(0x004324b0, 0x18, DEFAULT_CTOR_CLOSURE, type_artifact_effect)
+VA_COMPGEN(0x004324b0, 0x18, DEFAULT_CTOR_CLOSURE, ArtifactEffect)
 
-VA_COMPGEN(0x004324d0, 0x23, SCALAR_DELETING_DTOR, type_artifact_effect)
+VA_COMPGEN(0x004324d0, 0x23, SCALAR_DELETING_DTOR, ArtifactEffect)
 
 VA(0x00432500, 0x7)  // dc 0x361f4
-type_artifact_effect::~type_artifact_effect()
+ArtifactEffect::~ArtifactEffect()
 {
 }
 
 VA(0x00432510, 0x24)  // dc 0x36258
-long type_scouting_artifact::getValue(const Hero* owner, unsigned char, unsigned char) const
+long ScoutingArtifact::getValue(const Hero* owner, unsigned char, unsigned char) const
 {
     return owner->m_maxMovePoints * m_bonus / 100;
 }
 
 VA(0x00432540, 0x15)  // dc 0x36274
-type_combat_artifact::type_combat_artifact(long newBonus)
+CombatArtifact::CombatArtifact(long newBonus)
 {
     m_bonus = newBonus;
 }
 
 VA(0x00432560, 0x32)  // dc 0x362b8
-long type_combat_artifact::getValue(const Hero* owner, unsigned char, unsigned char) const
+long CombatArtifact::getValue(const Hero* owner, unsigned char, unsigned char) const
 {
     return owner->m_army.getAIValue() * m_bonus / 100;
 }
 
 VA(0x004325a0, 0x40)  // dc 0x36320
-long type_might_artifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
+long MightArtifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
 {
     if (exact)
         return 0;
@@ -4953,7 +4955,7 @@ long type_might_artifact::getValue(const Hero* owner, unsigned char, unsigned ch
 }
 
 VA(0x004325e0, 0x21)  // dc 0x36390
-long type_power_artifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
+long PowerArtifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
 {
     if (exact)
         return 0;
@@ -4961,7 +4963,7 @@ long type_power_artifact::getValue(const Hero* owner, unsigned char, unsigned ch
 }
 
 VA(0x00432610, 0x21)  // dc 0x363f0
-long type_knowledge_artifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
+long KnowledgeArtifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
 {
     if (exact)
         return 0;
@@ -4970,7 +4972,7 @@ long type_knowledge_artifact::getValue(const Hero* owner, unsigned char, unsigne
 
 // E:\gamedcs\ai_player.cpp:5152
 VA(0x00432640, 0x97)  // artifact get_value cluster order-map + get_AI_value, dc 0x36450
-long type_necromancy_artifact::getValue(const Hero* owner, unsigned char equipped, unsigned char) const
+long NecromancyArtifact::getValue(const Hero* owner, unsigned char equipped, unsigned char) const
 {
     if (owner->m_skillLevel[12] == 0)
         return 0;
@@ -4989,13 +4991,13 @@ long type_necromancy_artifact::getValue(const Hero* owner, unsigned char equippe
 }
 
 VA(0x004326e0, 0x38)  // dc 0x3652c
-long type_movement_artifact::getValue(const Hero* owner, unsigned char, unsigned char) const
+long MovementArtifact::getValue(const Hero* owner, unsigned char, unsigned char) const
 {
     return (owner->m_army.getAIValue() + 2500) * m_bonus / 100;
 }
 
 VA(0x00432720, 0x54)  // dc 0x3659c
-long type_spellcaster_artifact::getValue(const Hero* owner, unsigned char, unsigned char) const
+long SpellcasterArtifact::getValue(const Hero* owner, unsigned char, unsigned char) const
 {
     if (owner->getValueOfPower() == 0)
         return 0;
@@ -5012,7 +5014,7 @@ double aiValueOfMorale(long morale, long change);
 double aiValueOfLuck(long luck, long change);
 
 VA(0x00432780, 0x68)  // dc 0x3662c
-long type_morale_artifact::getValue(const Hero* owner, unsigned char equipped, unsigned char exact) const
+long MoraleArtifact::getValue(const Hero* owner, unsigned char equipped, unsigned char exact) const
 {
     if (exact)
         return 0;
@@ -5024,7 +5026,7 @@ long type_morale_artifact::getValue(const Hero* owner, unsigned char equipped, u
 }
 
 VA(0x004327f0, 0x68)  // dc 0x36720
-long type_luck_artifact::getValue(const Hero* owner, unsigned char equipped, unsigned char exact) const
+long LuckArtifact::getValue(const Hero* owner, unsigned char equipped, unsigned char exact) const
 {
     if (exact)
         return 0;
@@ -5036,7 +5038,7 @@ long type_luck_artifact::getValue(const Hero* owner, unsigned char equipped, uns
 }
 
 VA(0x00432860, 0x21)  // dc 0x36814
-long type_duration_artifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
+long DurationArtifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
 {
     if (exact)
         return 0;
@@ -5044,13 +5046,13 @@ long type_duration_artifact::getValue(const Hero* owner, unsigned char, unsigned
 }
 
 VA(0x00432890, 0x1b2)  // dc 0x3687c
-long type_school_artifact::getValue(const Hero* owner, unsigned char equipped,
+long SchoolArtifact::getValue(const Hero* owner, unsigned char equipped,
                                      unsigned char exact) const
 {
     if (exact)
         return 0;
 
-    type_spellvalue caster(owner);
+    Spellvalue caster(owner);
     if (!caster.canCastSpells())
         return 0;
 
@@ -5086,7 +5088,7 @@ long type_school_artifact::getValue(const Hero* owner, unsigned char equipped,
 }
 
 VA(0x00432a50, 0xc3)  // dc 0x36a1c
-long type_antimagic_artifact::getValue(const Hero* owner, unsigned char equipped, unsigned char exact) const
+long AntimagicArtifact::getValue(const Hero* owner, unsigned char equipped, unsigned char exact) const
 {
     long value;
     if (m_bonus == 0)
@@ -5106,7 +5108,7 @@ long type_antimagic_artifact::getValue(const Hero* owner, unsigned char equipped
 }
 
 VA(0x00432b20, 0x78)  // dc 0x36afc
-long type_antimorale_artifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
+long AntimoraleArtifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
 {
     long army = owner->m_army.getAIValue();
     long result = static_cast<long>(aiValueOfMorale(0, 2) * army);
@@ -5119,7 +5121,7 @@ long type_antimorale_artifact::getValue(const Hero* owner, unsigned char, unsign
 }
 
 VA(0x00432ba0, 0x78)  // dc 0x36c90
-long type_antiluck_artifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
+long AntiluckArtifact::getValue(const Hero* owner, unsigned char, unsigned char exact) const
 {
     long army = owner->m_army.getAIValue();
     long result = static_cast<long>(aiValueOfLuck(0, 2) * army);
@@ -5132,13 +5134,13 @@ long type_antiluck_artifact::getValue(const Hero* owner, unsigned char, unsigned
 }
 
 VA(0x00432c20, 0xf5)  // dc 0x36e28
-long type_tome_artifact::getValue(const Hero* owner, unsigned char equipped,
+long TomeArtifact::getValue(const Hero* owner, unsigned char equipped,
                                    unsigned char exact) const
 {
     if (exact)
         return 0;
 
-    type_spellvalue caster(owner);
+    Spellvalue caster(owner);
     if (!caster.canCastSpells())
         return 0;
 
@@ -5158,7 +5160,7 @@ long type_tome_artifact::getValue(const Hero* owner, unsigned char equipped,
 }
 
 VA(0x00432d20, 0x49)  // dc 0x36f54
-long type_income_artifact::getValue(const Hero* owner, unsigned char,
+long IncomeArtifact::getValue(const Hero* owner, unsigned char,
                                      unsigned char) const
 {
     return static_cast<long>(
@@ -5166,12 +5168,12 @@ long type_income_artifact::getValue(const Hero* owner, unsigned char,
 }
 
 VA(0x00432d70, 0x219)  // dc 0x3704c
-long type_creature_growth_artifact::getValue(const Hero* owner,
+long CreatureGrowthArtifact::getValue(const Hero* owner,
                                                unsigned char,
                                                unsigned char exact) const
 {
     long value = 0;
-    const playerData& player = g_game->m_players[owner->m_owner];
+    const PlayerData& player = g_game->m_players[owner->m_owner];
 
     if (exact) {
         int townId = g_game->getTownId(owner->m_x, owner->m_y, owner->m_z);
@@ -5218,7 +5220,7 @@ long type_creature_growth_artifact::getValue(const Hero* owner,
 // Complete-only constructor and virtual definitions are reviewed in
 // config/win_only.tsv; class names remain provisional semantic names.
 VA(0x00432f90, 0xe4)  // vtable-slot 0x63b750 + get_raw_spell_value, retail-only
-long type_spell_artifact::getValue(const Hero* owner, unsigned char equipped,
+long SpellArtifact::getValue(const Hero* owner, unsigned char equipped,
                                     unsigned char exact) const
 {
     if (exact)
@@ -5228,17 +5230,17 @@ long type_spell_artifact::getValue(const Hero* owner, unsigned char equipped,
     if (!equipped && owner->spellIsAvailable(m_spell))
         return 0;
 
-    type_spellvalue caster(owner);
+    Spellvalue caster(owner);
     if (!caster.canCastSpells())
         return 0;
     long value = caster.getRawSpellValue(m_spell);
     return value;
 }
 
-VA_COMPGEN(0x00433080, 0x21, SCALAR_DELETING_DTOR, type_combat_artifact)
+VA_COMPGEN(0x00433080, 0x21, SCALAR_DELETING_DTOR, CombatArtifact)
 
 VA(0x004330b0, 0x73)
-long type_shooter_bonus_artifact::getValue(const Hero* owner, unsigned char, unsigned char) const
+long ShooterBonusArtifact::getValue(const Hero* owner, unsigned char, unsigned char) const
 {
     long total = 0;
     for (int i = 0; i < 7; i++) {
@@ -5250,11 +5252,11 @@ long type_shooter_bonus_artifact::getValue(const Hero* owner, unsigned char, uns
 }
 
 VA(0x00433130, 0x26f)
-long type_angelic_alliance_artifact::getValue(
+long AngelicAllianceArtifact::getValue(
     const Hero* owner, unsigned char, unsigned char exact) const
 {
     std::bitset<9> alliedAlignments = armyGrpFn0044A460();
-    playerData* player = &g_game->m_players[owner->m_owner];
+    PlayerData* player = &g_game->m_players[owner->m_owner];
     long total = 0;
     int heroIndex = 0;
 
@@ -5319,7 +5321,7 @@ long type_angelic_alliance_artifact::getValue(
 // byte-flat. Keep the direct expression rather than manufacture a register
 // carrier.
 VA(0x004333a0, 0x174)  // vtable-slot 0x63b768 (provisional type), retail-only
-long type_undead_king_cloak_artifact::getValue(const Hero* owner,
+long UndeadKingCloakArtifact::getValue(const Hero* owner,
                                                 unsigned char equipped,
                                                 unsigned char) const
 {
@@ -5375,7 +5377,7 @@ long type_undead_king_cloak_artifact::getValue(const Hero* owner,
 }
 
 VA(0x00433520, 0x5a)
-long type_elixir_of_life_artifact::getValue(const Hero* owner, unsigned char, unsigned char) const
+long ElixirOfLifeArtifact::getValue(const Hero* owner, unsigned char, unsigned char) const
 {
     long total = 0;
     for (int i = 0; i < 7; i++) {
@@ -5387,11 +5389,11 @@ long type_elixir_of_life_artifact::getValue(const Hero* owner, unsigned char, un
 }
 
 VA(0x00433580, 0x13a)
-long type_statue_of_legion_artifact::getValue(
+long StatueOfLegionArtifact::getValue(
     const Hero* owner, unsigned char, unsigned char) const
 {
     long total = 0;
-    playerData* player = &g_game->m_players[owner->m_owner];
+    PlayerData* player = &g_game->m_players[owner->m_owner];
     for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
         const Town* currentTown =
             g_game->getTown(player->m_townIds[townIndex]);
@@ -5517,7 +5519,7 @@ long aiGetValueOfArtifact(type_artifact artifact, const Hero* owner, unsigned ch
     if (combination != -1) {
         for (int component = 0; component < 144; ++component) {
             if (g_combinationArtifacts[combination].m_components[component]) {
-                std::vector<type_artifact_effect*>::iterator effect =
+                std::vector<ArtifactEffect*>::iterator effect =
                     g_constArtifactEffects[component].begin();
                 while (effect != g_constArtifactEffects[component].end()) {
                     value += (*effect)->getValue(owner, equipped, exact);
@@ -5563,7 +5565,7 @@ long aiGetValueOfArtifact(const type_artifact& artifact, long playerId)
 {
     if (artifact.m_artifactId == -1)
         return 0;
-    playerData* player = &g_game->m_players[playerId];
+    PlayerData* player = &g_game->m_players[playerId];
     long best = 10;
     for (int i = 0; i < player->m_numHeroes; ++i) {
         Hero* bestHero = g_game->getHero(player->m_heroes[i]);
@@ -5626,7 +5628,7 @@ long removeNegativeArtifacts(Hero* ourHero)
 VA(0x00433c60, 0x1b3)  // dc 0x37588
 long getFullValue(const Hero* ourHero)
 {
-    type_spellvalue caster(ourHero);
+    Spellvalue caster(ourHero);
     long value = 0;
 
     for (int i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
@@ -5781,121 +5783,121 @@ void aiSwapArtifacts(Hero* source, Hero* dest)
 // the explicit type_artifact_effect default constructor (line 5043); spelling
 // it here is byte-flat but preserves that real source/inliner boundary.
 // Retail retains type_combat_artifact at four later nested-base sites.
-inline type_artifact_effect::type_artifact_effect()
+inline ArtifactEffect::ArtifactEffect()
 {
 }
 
-inline type_scouting_artifact::type_scouting_artifact(long newBonus)
+inline ScoutingArtifact::ScoutingArtifact(long newBonus)
     : m_bonus(newBonus)
 {
 }
 
-inline type_might_artifact::type_might_artifact(long newBonus)
-    : type_combat_artifact(newBonus)
+inline MightArtifact::MightArtifact(long newBonus)
+    : CombatArtifact(newBonus)
 {
 }
 
-inline type_power_artifact::type_power_artifact(long newBonus)
-    : type_combat_artifact(newBonus)
+inline PowerArtifact::PowerArtifact(long newBonus)
+    : CombatArtifact(newBonus)
 {
 }
 
-inline type_knowledge_artifact::type_knowledge_artifact(long newBonus)
-    : type_combat_artifact(newBonus)
+inline KnowledgeArtifact::KnowledgeArtifact(long newBonus)
+    : CombatArtifact(newBonus)
 {
 }
 
-inline type_necromancy_artifact::type_necromancy_artifact(long newBonus)
-    : type_combat_artifact(newBonus)
+inline NecromancyArtifact::NecromancyArtifact(long newBonus)
+    : CombatArtifact(newBonus)
 {
 }
 
-inline type_movement_artifact::type_movement_artifact(long newBonus)
-    : type_combat_artifact(newBonus)
+inline MovementArtifact::MovementArtifact(long newBonus)
+    : CombatArtifact(newBonus)
 {
 }
 
-inline type_spellcaster_artifact::type_spellcaster_artifact(long newBonus)
-    : type_combat_artifact(newBonus)
+inline SpellcasterArtifact::SpellcasterArtifact(long newBonus)
+    : CombatArtifact(newBonus)
 {
 }
 
-inline type_morale_artifact::type_morale_artifact(long newBonus)
-    : type_combat_artifact(newBonus)
+inline MoraleArtifact::MoraleArtifact(long newBonus)
+    : CombatArtifact(newBonus)
 {
 }
 
-inline type_luck_artifact::type_luck_artifact(long newBonus)
-    : type_combat_artifact(newBonus)
+inline LuckArtifact::LuckArtifact(long newBonus)
+    : CombatArtifact(newBonus)
 {
 }
 
-inline type_duration_artifact::type_duration_artifact(long newBonus)
-    : type_power_artifact(newBonus)
+inline DurationArtifact::DurationArtifact(long newBonus)
+    : PowerArtifact(newBonus)
 {
 }
 
-inline type_school_artifact::type_school_artifact(SpellSchool newSchool,
+inline SchoolArtifact::SchoolArtifact(SpellSchool newSchool,
                                                    long newBonus)
-    : type_power_artifact(newBonus), m_school(newSchool)
+    : PowerArtifact(newBonus), m_school(newSchool)
 {
 }
 
-inline type_antimagic_artifact::type_antimagic_artifact(long maxLevel)
+inline AntimagicArtifact::AntimagicArtifact(long maxLevel)
     : m_bonus(maxLevel)
 {
 }
 
-inline type_antimorale_artifact::type_antimorale_artifact()
+inline AntimoraleArtifact::AntimoraleArtifact()
 {
 }
 
-inline type_antiluck_artifact::type_antiluck_artifact()
+inline AntiluckArtifact::AntiluckArtifact()
 {
 }
 
-inline type_tome_artifact::type_tome_artifact(SpellSchool newSchool)
-    : type_combat_artifact(0), m_school(newSchool)
+inline TomeArtifact::TomeArtifact(SpellSchool newSchool)
+    : CombatArtifact(0), m_school(newSchool)
 {
 }
 
-inline type_income_artifact::type_income_artifact(
-    long newAmount, EGameResource newResource)
+inline IncomeArtifact::IncomeArtifact(
+    long newAmount, GameResource newResource)
     : m_amount(newAmount), m_resource(newResource)
 {
 }
 
-inline type_creature_growth_artifact::type_creature_growth_artifact(
+inline CreatureGrowthArtifact::CreatureGrowthArtifact(
     long newLevel, long newBonus)
     : m_bonus(newLevel), m_growthBonus(newBonus)
 {
 }
 
-inline type_undead_king_cloak_artifact::type_undead_king_cloak_artifact()
-    : type_necromancy_artifact(30)
+inline UndeadKingCloakArtifact::UndeadKingCloakArtifact()
+    : NecromancyArtifact(30)
 {
 }
 
-inline type_spell_artifact::type_spell_artifact(SpellID newSpell)
+inline SpellArtifact::SpellArtifact(SpellID newSpell)
     : m_spell(newSpell)
 {
 }
 
-inline type_shooter_bonus_artifact::type_shooter_bonus_artifact(long newBonus)
-    : type_combat_artifact(newBonus)
+inline ShooterBonusArtifact::ShooterBonusArtifact(long newBonus)
+    : CombatArtifact(newBonus)
 {
 }
 
-inline type_angelic_alliance_artifact::type_angelic_alliance_artifact()
-    : type_might_artifact(8)
+inline AngelicAllianceArtifact::AngelicAllianceArtifact()
+    : MightArtifact(8)
 {
 }
 
-inline type_elixir_of_life_artifact::type_elixir_of_life_artifact()
+inline ElixirOfLifeArtifact::ElixirOfLifeArtifact()
 {
 }
 
-inline type_statue_of_legion_artifact::type_statue_of_legion_artifact()
+inline StatueOfLegionArtifact::StatueOfLegionArtifact()
 {
 }
 
@@ -5944,95 +5946,95 @@ static void initializeArtifactEffects()
 {
     const int* definition = g_aiArtifactEffectDefinitions;
     while (*definition >= 0) {
-        std::vector<type_artifact_effect*>& effects =
+        std::vector<ArtifactEffect*>& effects =
             g_constArtifactEffects[*definition++];
         effects.clear();
         while (*definition >= 0) {
-            EArtifactEffectKind kind = (EArtifactEffectKind)*definition++;
-            type_artifact_effect* effect;
+            ArtifactEffectKind kind = (ArtifactEffectKind)*definition++;
+            ArtifactEffect* effect;
             switch (kind) {
                 case ARTIFACT_EFFECT_MIGHT:
-                    effect = new type_might_artifact(*definition++);
+                    effect = new MightArtifact(*definition++);
                     break;
                 case ARTIFACT_EFFECT_POWER:
-                    effect = new type_power_artifact(*definition++);
+                    effect = new PowerArtifact(*definition++);
                     break;
                 case ARTIFACT_EFFECT_KNOWLEDGE:
-                    effect = new type_knowledge_artifact(*definition++);
+                    effect = new KnowledgeArtifact(*definition++);
                     break;
                 case ARTIFACT_EFFECT_MORALE:
-                    effect = new type_morale_artifact(*definition++);
+                    effect = new MoraleArtifact(*definition++);
                     break;
                 case ARTIFACT_EFFECT_LUCK:
-                    effect = new type_luck_artifact(*definition++);
+                    effect = new LuckArtifact(*definition++);
                     break;
                 case ARTIFACT_EFFECT_SCOUTING:
-                    effect = new type_scouting_artifact(*definition++);
+                    effect = new ScoutingArtifact(*definition++);
                     break;
                 case ARTIFACT_EFFECT_NECROMANCY:
-                    effect = new type_necromancy_artifact(*definition++);
+                    effect = new NecromancyArtifact(*definition++);
                     break;
                 case ARTIFACT_EFFECT_COMBAT:
-                    effect = new type_combat_artifact(*definition++);
+                    effect = new CombatArtifact(*definition++);
                     break;
                 case ARTIFACT_EFFECT_MOVEMENT:
-                    effect = new type_movement_artifact(*definition++);
+                    effect = new MovementArtifact(*definition++);
                     break;
                 case ARTIFACT_EFFECT_SPELLCASTER:
-                    effect = new type_spellcaster_artifact(*definition++);
+                    effect = new SpellcasterArtifact(*definition++);
                     break;
                 case ARTIFACT_EFFECT_DURATION:
-                    effect = new type_duration_artifact(*definition++);
+                    effect = new DurationArtifact(*definition++);
                     break;
                 case ARTIFACT_EFFECT_SCHOOL: {
                     SpellSchool school = (SpellSchool)*definition++;
-                    effect = new type_school_artifact(
+                    effect = new SchoolArtifact(
                         school, *definition++);
                     break;
                 }
                 case ARTIFACT_EFFECT_ANTIMAGIC:
-                    effect = new type_antimagic_artifact(*definition++);
+                    effect = new AntimagicArtifact(*definition++);
                     break;
                 case ARTIFACT_EFFECT_ANTIMORALE:
-                    effect = new type_antimorale_artifact;
+                    effect = new AntimoraleArtifact;
                     break;
                 case ARTIFACT_EFFECT_ANTILUCK:
-                    effect = new type_antiluck_artifact;
+                    effect = new AntiluckArtifact;
                     break;
                 case ARTIFACT_EFFECT_TOME:
-                    effect = new type_tome_artifact(
+                    effect = new TomeArtifact(
                         (SpellSchool)*definition++);
                     break;
                 case ARTIFACT_EFFECT_INCOME: {
                     long amount = *definition++;
-                    effect = new type_income_artifact(
-                        amount, (EGameResource)*definition++);
+                    effect = new IncomeArtifact(
+                        amount, (GameResource)*definition++);
                     break;
                 }
                 case ARTIFACT_EFFECT_CREATURE_GROWTH: {
                     long level = *definition++;
-                    effect = new type_creature_growth_artifact(
+                    effect = new CreatureGrowthArtifact(
                         level, *definition++);
                     break;
                 }
                 case ARTIFACT_EFFECT_SPELL:
-                    effect = new type_spell_artifact(
+                    effect = new SpellArtifact(
                         (SpellID)*definition++);
                     break;
                 case ARTIFACT_EFFECT_SHOOTER_BONUS:
-                    effect = new type_shooter_bonus_artifact(*definition++);
+                    effect = new ShooterBonusArtifact(*definition++);
                     break;
                 case ARTIFACT_EFFECT_ANGELIC_ALLIANCE:
-                    effect = new type_angelic_alliance_artifact;
+                    effect = new AngelicAllianceArtifact;
                     break;
                 case ARTIFACT_EFFECT_UNDEAD_KING_CLOAK:
-                    effect = new type_undead_king_cloak_artifact;
+                    effect = new UndeadKingCloakArtifact;
                     break;
                 case ARTIFACT_EFFECT_ELIXIR_OF_LIFE:
-                    effect = new type_elixir_of_life_artifact;
+                    effect = new ElixirOfLifeArtifact;
                     break;
                 case ARTIFACT_EFFECT_STATUE_OF_LEGION:
-                    effect = new type_statue_of_legion_artifact;
+                    effect = new StatueOfLegionArtifact;
                     break;
             }
             effects.push_back(effect);
@@ -6055,14 +6057,14 @@ void aiShutDown()
 
 // E:\gamedcs\game.h:1410
 DC_ONLY(0x3803c, 0x28)
-unsigned char game::townAlreadyBuiltOn(int id)
+unsigned char Game::townAlreadyBuiltOn(int id)
 {
     // @stub
 }
 
 // E:\gamedcs\mousemgr.h:221
 DC_ONLY(0x38064, 0xA)
-unsigned char mouseManager::isVis()
+unsigned char MouseManager::isVis()
 {
     // @stub
 }
@@ -6083,7 +6085,7 @@ void CGiftRequestMsg::CGiftRequestMsg(int greedyGuy, int resource)
 
 // E:\gamedcs\ai_player.cpp:224
 DC_ONLY(0x380d8, 0x18)
-void type_AI_creature_purchaser::~type_AI_creature_purchaser()
+void AICreaturePurchaser::~AICreaturePurchaser()
 {
     // @stub
 }
@@ -6097,7 +6099,7 @@ void HeroDestination::HeroDestination()
 
 // E:\gamedcs\ai_player.cpp:4924
 DC_ONLY(0x38118, 0x34)
-void std::vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >::`default constructor closure'()
+void std::vector<ArtifactEffect *,std::allocator<ArtifactEffect *> >::`default constructor closure'()
 {
     // @stub
 }
@@ -6111,259 +6113,259 @@ void `vector destructor iterator'(void* __t, unsigned __s, int __n, void (*)()* 
 
 // E:\gamedcs\ai_player.cpp:5044
 DC_ONLY(0x38184, 0x34)
-void* type_artifact_effect::`scalar deleting destructor'(unsigned __flags)
+void* ArtifactEffect::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5059
 DC_ONLY(0x381b8, 0x34)
-void* type_scouting_artifact::`scalar deleting destructor'(unsigned __flags)
+void* ScoutingArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5059
 DC_ONLY(0x381ec, 0x18)
-void type_scouting_artifact::~type_scouting_artifact()
+void ScoutingArtifact::~ScoutingArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5075
 DC_ONLY(0x38204, 0x34)
-void* type_combat_artifact::`scalar deleting destructor'(unsigned __flags)
+void* CombatArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5075
 DC_ONLY(0x38238, 0x18)
-void type_combat_artifact::~type_combat_artifact()
+void CombatArtifact::~CombatArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5091
 DC_ONLY(0x38250, 0x34)
-void* type_might_artifact::`scalar deleting destructor'(unsigned __flags)
+void* MightArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5091
 DC_ONLY(0x38284, 0x18)
-void type_might_artifact::~type_might_artifact()
+void MightArtifact::~MightArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5110
 DC_ONLY(0x3829c, 0x34)
-void* type_power_artifact::`scalar deleting destructor'(unsigned __flags)
+void* PowerArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5110
 DC_ONLY(0x382d0, 0x18)
-void type_power_artifact::~type_power_artifact()
+void PowerArtifact::~PowerArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5128
 DC_ONLY(0x382e8, 0x34)
-void* type_knowledge_artifact::`scalar deleting destructor'(unsigned __flags)
+void* KnowledgeArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5128
 DC_ONLY(0x3831c, 0x18)
-void type_knowledge_artifact::~type_knowledge_artifact()
+void KnowledgeArtifact::~KnowledgeArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5146
 DC_ONLY(0x38334, 0x34)
-void* type_necromancy_artifact::`scalar deleting destructor'(unsigned __flags)
+void* NecromancyArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5146
 DC_ONLY(0x38368, 0x18)
-void type_necromancy_artifact::~type_necromancy_artifact()
+void NecromancyArtifact::~NecromancyArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5183
 DC_ONLY(0x38380, 0x34)
-void* type_movement_artifact::`scalar deleting destructor'(unsigned __flags)
+void* MovementArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5183
 DC_ONLY(0x383b4, 0x18)
-void type_movement_artifact::~type_movement_artifact()
+void MovementArtifact::~MovementArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5199
 DC_ONLY(0x383cc, 0x34)
-void* type_spellcaster_artifact::`scalar deleting destructor'(unsigned __flags)
+void* SpellcasterArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5199
 DC_ONLY(0x38400, 0x18)
-void type_spellcaster_artifact::~type_spellcaster_artifact()
+void SpellcasterArtifact::~SpellcasterArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5220
 DC_ONLY(0x38418, 0x34)
-void* type_morale_artifact::`scalar deleting destructor'(unsigned __flags)
+void* MoraleArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5220
 DC_ONLY(0x3844c, 0x18)
-void type_morale_artifact::~type_morale_artifact()
+void MoraleArtifact::~MoraleArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5244
 DC_ONLY(0x38464, 0x34)
-void* type_luck_artifact::`scalar deleting destructor'(unsigned __flags)
+void* LuckArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5244
 DC_ONLY(0x38498, 0x18)
-void type_luck_artifact::~type_luck_artifact()
+void LuckArtifact::~LuckArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5268
 DC_ONLY(0x384b0, 0x34)
-void* type_duration_artifact::`scalar deleting destructor'(unsigned __flags)
+void* DurationArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5268
 DC_ONLY(0x384e4, 0x18)
-void type_duration_artifact::~type_duration_artifact()
+void DurationArtifact::~DurationArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5287
 DC_ONLY(0x384fc, 0x34)
-void* type_school_artifact::`scalar deleting destructor'(unsigned __flags)
+void* SchoolArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5287
 DC_ONLY(0x38530, 0x18)
-void type_school_artifact::~type_school_artifact()
+void SchoolArtifact::~SchoolArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5349
 DC_ONLY(0x38548, 0x34)
-void* type_antimagic_artifact::`scalar deleting destructor'(unsigned __flags)
+void* AntimagicArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5349
 DC_ONLY(0x3857c, 0x18)
-void type_antimagic_artifact::~type_antimagic_artifact()
+void AntimagicArtifact::~AntimagicArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5381
 DC_ONLY(0x38594, 0x34)
-void* type_antimorale_artifact::`scalar deleting destructor'(unsigned __flags)
+void* AntimoraleArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5381
 DC_ONLY(0x385c8, 0x18)
-void type_antimorale_artifact::~type_antimorale_artifact()
+void AntimoraleArtifact::~AntimoraleArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5407
 DC_ONLY(0x385e0, 0x34)
-void* type_antiluck_artifact::`scalar deleting destructor'(unsigned __flags)
+void* AntiluckArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5407
 DC_ONLY(0x38614, 0x18)
-void type_antiluck_artifact::~type_antiluck_artifact()
+void AntiluckArtifact::~AntiluckArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5435
 DC_ONLY(0x3862c, 0x34)
-void* type_tome_artifact::`scalar deleting destructor'(unsigned __flags)
+void* TomeArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5435
 DC_ONLY(0x38660, 0x18)
-void type_tome_artifact::~type_tome_artifact()
+void TomeArtifact::~TomeArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5480
 DC_ONLY(0x38678, 0x34)
-void* type_income_artifact::`scalar deleting destructor'(unsigned __flags)
+void* IncomeArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5480
 DC_ONLY(0x386ac, 0x18)
-void type_income_artifact::~type_income_artifact()
+void IncomeArtifact::~IncomeArtifact()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5498
 DC_ONLY(0x386c4, 0x34)
-void* type_creature_growth_artifact::`scalar deleting destructor'(unsigned __flags)
+void* CreatureGrowthArtifact::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5498
 DC_ONLY(0x386f8, 0x18)
-void type_creature_growth_artifact::~type_creature_growth_artifact()
+void CreatureGrowthArtifact::~CreatureGrowthArtifact()
 {
     // @stub
 }
@@ -6384,217 +6386,217 @@ unsigned char std::bitset<18,unsigned long>::operator[](unsigned __pos)
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x38740, 0x20)
-unsigned std::vector<type_creature_source,std::allocator<type_creature_source> >::size()
+unsigned std::vector<CreatureSource,std::allocator<CreatureSource> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x38760, 0x24)
-type_creature_source* std::vector<type_creature_source,std::allocator<type_creature_source> >::operator[](unsigned __n)
+CreatureSource* std::vector<CreatureSource,std::allocator<CreatureSource> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x38784, 0x1C)
-void std::vector<type_creature_source,std::allocator<type_creature_source> >::vector<type_creature_source,std::allocator<type_creature_source> >(const std::allocator<type_creature_source>* __a)
+void std::vector<CreatureSource,std::allocator<CreatureSource> >::vector<CreatureSource,std::allocator<CreatureSource> >(const std::allocator<CreatureSource>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0x387a0, 0x28)
-void std::vector<type_creature_source,std::allocator<type_creature_source> >::~vector<type_creature_source,std::allocator<type_creature_source> >()
+void std::vector<CreatureSource,std::allocator<CreatureSource> >::~vector<CreatureSource,std::allocator<CreatureSource> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x387c8, 0x3C)
-void std::vector<type_creature_source,std::allocator<type_creature_source> >::push_back(const type_creature_source* __x)
+void std::vector<CreatureSource,std::allocator<CreatureSource> >::push_back(const CreatureSource* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0x38804, 0x38)
-void std::vector<type_creature_source,std::allocator<type_creature_source> >::clear()
+void std::vector<CreatureSource,std::allocator<CreatureSource> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x3883c, 0x4)
-void std::allocator<type_creature_source>::allocator<type_creature_source>()
+void std::allocator<CreatureSource>::allocator<CreatureSource>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x38840, 0x4)
-void std::allocator<type_creature_source>::~allocator<type_creature_source>()
+void std::allocator<CreatureSource>::~allocator<CreatureSource>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x38844, 0x4)
-type_creature_value* std::vector<type_creature_value,std::allocator<type_creature_value> >::begin()
+CreatureValue* std::vector<CreatureValue,std::allocator<CreatureValue> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0x38848, 0x4)
-type_creature_value* std::vector<type_creature_value,std::allocator<type_creature_value> >::end()
+CreatureValue* std::vector<CreatureValue,std::allocator<CreatureValue> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x3884c, 0x20)
-unsigned std::vector<type_creature_value,std::allocator<type_creature_value> >::size()
+unsigned std::vector<CreatureValue,std::allocator<CreatureValue> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x3886c, 0x24)
-type_creature_value* std::vector<type_creature_value,std::allocator<type_creature_value> >::operator[](unsigned __n)
+CreatureValue* std::vector<CreatureValue,std::allocator<CreatureValue> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x38890, 0x1C)
-void std::vector<type_creature_value,std::allocator<type_creature_value> >::vector<type_creature_value,std::allocator<type_creature_value> >(const std::allocator<type_creature_value>* __a)
+void std::vector<CreatureValue,std::allocator<CreatureValue> >::vector<CreatureValue,std::allocator<CreatureValue> >(const std::allocator<CreatureValue>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:230
 DC_ONLY(0x388ac, 0x50)
-void std::vector<type_creature_value,std::allocator<type_creature_value> >::vector<type_creature_value,std::allocator<type_creature_value> >(unsigned __n)
+void std::vector<CreatureValue,std::allocator<CreatureValue> >::vector<CreatureValue,std::allocator<CreatureValue> >(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x388fc, 0x3C)
-void std::vector<type_creature_value,std::allocator<type_creature_value> >::push_back(const type_creature_value* __x)
+void std::vector<CreatureValue,std::allocator<CreatureValue> >::push_back(const CreatureValue* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0x38938, 0x38)
-void std::vector<type_creature_value,std::allocator<type_creature_value> >::clear()
+void std::vector<CreatureValue,std::allocator<CreatureValue> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x38970, 0x4)
-void std::allocator<type_creature_value>::allocator<type_creature_value>()
+void std::allocator<CreatureValue>::allocator<CreatureValue>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x38974, 0xC)
-unsigned std::vector<pathCell,std::allocator<pathCell> >::size()
+unsigned std::vector<PathCell,std::allocator<PathCell> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x38980, 0x20)
-pathCell* std::vector<pathCell,std::allocator<pathCell> >::operator[](unsigned __n)
+PathCell* std::vector<PathCell,std::allocator<PathCell> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x389a0, 0x1C)
-void std::vector<pathCell,std::allocator<pathCell> >::vector<pathCell,std::allocator<pathCell> >(const std::allocator<pathCell>* __a)
+void std::vector<PathCell,std::allocator<PathCell> >::vector<PathCell,std::allocator<PathCell> >(const std::allocator<PathCell>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0x389bc, 0x28)
-void std::vector<pathCell,std::allocator<pathCell> >::~vector<pathCell,std::allocator<pathCell> >()
+void std::vector<PathCell,std::allocator<PathCell> >::~vector<PathCell,std::allocator<PathCell> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x389e4, 0x3C)
-void std::vector<pathCell,std::allocator<pathCell> >::push_back(const pathCell* __x)
+void std::vector<PathCell,std::allocator<PathCell> >::push_back(const PathCell* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0x38a20, 0x38)
-void std::vector<pathCell,std::allocator<pathCell> >::clear()
+void std::vector<PathCell,std::allocator<PathCell> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x38a58, 0x4)
-void std::allocator<pathCell>::allocator<pathCell>()
+void std::allocator<PathCell>::allocator<PathCell>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x38a5c, 0x4)
-void std::allocator<pathCell>::~allocator<pathCell>()
+void std::allocator<PathCell>::~allocator<PathCell>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x38a60, 0x20)
-pathCell** std::vector<pathCell *,std::allocator<pathCell *> >::operator[](unsigned __n)
+PathCell** std::vector<PathCell *,std::allocator<PathCell *> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x38a80, 0x1C)
-void std::vector<pathCell *,std::allocator<pathCell *> >::vector<pathCell *,std::allocator<pathCell *> >(const std::allocator<pathCell* __a)
+void std::vector<PathCell *,std::allocator<PathCell *> >::vector<PathCell *,std::allocator<PathCell *> >(const std::allocator<PathCell* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0x38a9c, 0x28)
-void std::vector<pathCell *,std::allocator<pathCell *> >::~vector<pathCell *,std::allocator<pathCell *> >()
+void std::vector<PathCell *,std::allocator<PathCell *> >::~vector<PathCell *,std::allocator<PathCell *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x38ac4, 0x3C)
-void std::vector<pathCell *,std::allocator<pathCell *> >::push_back(pathCell** __x)
+void std::vector<PathCell *,std::allocator<PathCell *> >::push_back(PathCell** __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x38b00, 0x4)
-void std::allocator<pathCell *>::allocator<pathCell *>()
+void std::allocator<PathCell *>::allocator<PathCell *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x38b04, 0x4)
-void std::allocator<pathCell *>::~allocator<pathCell *>()
+void std::allocator<PathCell *>::~allocator<PathCell *>()
 {
     // @stub
 }
@@ -6643,7 +6645,7 @@ long* std::vector<long,std::allocator<long> >::erase(long* __position)
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x38bd4, 0x20)
-type_dialog_resource* std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::operator[](unsigned __n)
+DialogResource* std::vector<DialogResource,std::allocator<DialogResource> >::operator[](unsigned __n)
 {
     // @stub
 }
@@ -6706,63 +6708,63 @@ void std::allocator<HeroDestination>::~allocator<HeroDestination>()
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x38d04, 0xC)
-unsigned std::vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >::size()
+unsigned std::vector<ArtifactEffect *,std::allocator<ArtifactEffect *> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x38d10, 0x20)
-type_artifact_effect** std::vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >::operator[](unsigned __n)
+ArtifactEffect** std::vector<ArtifactEffect *,std::allocator<ArtifactEffect *> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:204
 DC_ONLY(0x38d30, 0x20)
-type_artifact_effect** std::vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >::operator[](unsigned __n)
+ArtifactEffect** std::vector<ArtifactEffect *,std::allocator<ArtifactEffect *> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x38d50, 0x1C)
-void std::vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >::vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >(const std::allocator<type_artifact_effect* __a)
+void std::vector<ArtifactEffect *,std::allocator<ArtifactEffect *> >::vector<ArtifactEffect *,std::allocator<ArtifactEffect *> >(const std::allocator<ArtifactEffect* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0x38d6c, 0x28)
-void std::vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >::~vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >()
+void std::vector<ArtifactEffect *,std::allocator<ArtifactEffect *> >::~vector<ArtifactEffect *,std::allocator<ArtifactEffect *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x38d94, 0x3C)
-void std::vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >::push_back(type_artifact_effect** __x)
+void std::vector<ArtifactEffect *,std::allocator<ArtifactEffect *> >::push_back(ArtifactEffect** __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0x38dd0, 0x38)
-void std::vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >::clear()
+void std::vector<ArtifactEffect *,std::allocator<ArtifactEffect *> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x38e08, 0x4)
-void std::allocator<type_artifact_effect *>::allocator<type_artifact_effect *>()
+void std::allocator<ArtifactEffect *>::allocator<ArtifactEffect *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x38e0c, 0x4)
-void std::allocator<type_artifact_effect *>::~allocator<type_artifact_effect *>()
+void std::allocator<ArtifactEffect *>::~allocator<ArtifactEffect *>()
 {
     // @stub
 }
@@ -6776,105 +6778,105 @@ unsigned char std::bitset<18,unsigned long>::_Unchecked_test(unsigned __pos)
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x38e48, 0x4)
-type_creature_source* std::vector<type_creature_source,std::allocator<type_creature_source> >::begin()
+CreatureSource* std::vector<CreatureSource,std::allocator<CreatureSource> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0x38e4c, 0x4)
-type_creature_source* std::vector<type_creature_source,std::allocator<type_creature_source> >::end()
+CreatureSource* std::vector<CreatureSource,std::allocator<CreatureSource> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0x38e50, 0x3C)
-type_creature_source* std::vector<type_creature_source,std::allocator<type_creature_source> >::erase(type_creature_source* __first, type_creature_source* __last)
+CreatureSource* std::vector<CreatureSource,std::allocator<CreatureSource> >::erase(CreatureSource* __first, CreatureSource* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x38e8c, 0x2C)
-void std::_Vector_base<type_creature_source,std::allocator<type_creature_source> >::_Vector_base<type_creature_source,std::allocator<type_creature_source> >(const std::allocator<type_creature_source>* __a)
+void std::_Vector_base<CreatureSource,std::allocator<CreatureSource> >::_Vector_base<CreatureSource,std::allocator<CreatureSource> >(const std::allocator<CreatureSource>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0x38eb8, 0x40)
-void std::_Vector_base<type_creature_source,std::allocator<type_creature_source> >::~_Vector_base<type_creature_source,std::allocator<type_creature_source> >()
+void std::_Vector_base<CreatureSource,std::allocator<CreatureSource> >::~_Vector_base<CreatureSource,std::allocator<CreatureSource> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0x38ef8, 0x3C)
-type_creature_value* std::vector<type_creature_value,std::allocator<type_creature_value> >::erase(type_creature_value* __first, type_creature_value* __last)
+CreatureValue* std::vector<CreatureValue,std::allocator<CreatureValue> >::erase(CreatureValue* __first, CreatureValue* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x38f34, 0x2C)
-void std::_Vector_base<type_creature_value,std::allocator<type_creature_value> >::_Vector_base<type_creature_value,std::allocator<type_creature_value> >(const std::allocator<type_creature_value>* __a)
+void std::_Vector_base<CreatureValue,std::allocator<CreatureValue> >::_Vector_base<CreatureValue,std::allocator<CreatureValue> >(const std::allocator<CreatureValue>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:94
 DC_ONLY(0x38f60, 0x4C)
-void std::_Vector_base<type_creature_value,std::allocator<type_creature_value> >::_Vector_base<type_creature_value,std::allocator<type_creature_value> >(unsigned __n, const std::allocator<type_creature_value>* __a)
+void std::_Vector_base<CreatureValue,std::allocator<CreatureValue> >::_Vector_base<CreatureValue,std::allocator<CreatureValue> >(unsigned __n, const std::allocator<CreatureValue>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x38fac, 0x4)
-pathCell* std::vector<pathCell,std::allocator<pathCell> >::begin()
+PathCell* std::vector<PathCell,std::allocator<PathCell> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0x38fb0, 0x4)
-pathCell* std::vector<pathCell,std::allocator<pathCell> >::end()
+PathCell* std::vector<PathCell,std::allocator<PathCell> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0x38fb4, 0x3C)
-pathCell* std::vector<pathCell,std::allocator<pathCell> >::erase(pathCell* __first, pathCell* __last)
+PathCell* std::vector<PathCell,std::allocator<PathCell> >::erase(PathCell* __first, PathCell* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x38ff0, 0x2C)
-void std::_Vector_base<pathCell,std::allocator<pathCell> >::_Vector_base<pathCell,std::allocator<pathCell> >(const std::allocator<pathCell>* __a)
+void std::_Vector_base<PathCell,std::allocator<PathCell> >::_Vector_base<PathCell,std::allocator<PathCell> >(const std::allocator<PathCell>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0x3901c, 0x30)
-void std::_Vector_base<pathCell,std::allocator<pathCell> >::~_Vector_base<pathCell,std::allocator<pathCell> >()
+void std::_Vector_base<PathCell,std::allocator<PathCell> >::~_Vector_base<PathCell,std::allocator<PathCell> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x3904c, 0x2C)
-void std::_Vector_base<pathCell *,std::allocator<pathCell *> >::_Vector_base<pathCell *,std::allocator<pathCell *> >(const std::allocator<pathCell* __a)
+void std::_Vector_base<PathCell *,std::allocator<PathCell *> >::_Vector_base<PathCell *,std::allocator<PathCell *> >(const std::allocator<PathCell* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0x39078, 0x30)
-void std::_Vector_base<pathCell *,std::allocator<pathCell *> >::~_Vector_base<pathCell *,std::allocator<pathCell *> >()
+void std::_Vector_base<PathCell *,std::allocator<PathCell *> >::~_Vector_base<PathCell *,std::allocator<PathCell *> >()
 {
     // @stub
 }
@@ -6923,63 +6925,63 @@ void std::_Vector_base<HeroDestination,std::allocator<HeroDestination> >::~_Vect
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x3915c, 0x4)
-type_artifact_effect** std::vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >::begin()
+ArtifactEffect** std::vector<ArtifactEffect *,std::allocator<ArtifactEffect *> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:180
 DC_ONLY(0x39160, 0x4)
-type_artifact_effect** std::vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >::begin()
+ArtifactEffect** std::vector<ArtifactEffect *,std::allocator<ArtifactEffect *> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0x39164, 0x4)
-type_artifact_effect** std::vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >::end()
+ArtifactEffect** std::vector<ArtifactEffect *,std::allocator<ArtifactEffect *> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0x39168, 0x3C)
-type_artifact_effect** std::vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >::erase(type_artifact_effect** __first, type_artifact_effect** __last)
+ArtifactEffect** std::vector<ArtifactEffect *,std::allocator<ArtifactEffect *> >::erase(ArtifactEffect** __first, ArtifactEffect** __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x391a4, 0x2C)
-void std::_Vector_base<type_artifact_effect *,std::allocator<type_artifact_effect *> >::_Vector_base<type_artifact_effect *,std::allocator<type_artifact_effect *> >(const std::allocator<type_artifact_effect* __a)
+void std::_Vector_base<ArtifactEffect *,std::allocator<ArtifactEffect *> >::_Vector_base<ArtifactEffect *,std::allocator<ArtifactEffect *> >(const std::allocator<ArtifactEffect* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0x391d0, 0x30)
-void std::_Vector_base<type_artifact_effect *,std::allocator<type_artifact_effect *> >::~_Vector_base<type_artifact_effect *,std::allocator<type_artifact_effect *> >()
+void std::_Vector_base<ArtifactEffect *,std::allocator<ArtifactEffect *> >::~_Vector_base<ArtifactEffect *,std::allocator<ArtifactEffect *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:101
 DC_ONLY(0x39200, 0x18)
-void std::_STL_alloc_proxy<type_creature_source *,type_creature_source,std::allocator<type_creature_source> >::~_STL_alloc_proxy<type_creature_source *,type_creature_source,std::allocator<type_creature_source> >()
+void std::_STL_alloc_proxy<CreatureSource *,CreatureSource,std::allocator<CreatureSource> >::~_STL_alloc_proxy<CreatureSource *,CreatureSource,std::allocator<CreatureSource> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:101
 DC_ONLY(0x39218, 0x18)
-void std::_STL_alloc_proxy<pathCell *,pathCell,std::allocator<pathCell> >::~_STL_alloc_proxy<pathCell *,pathCell,std::allocator<pathCell> >()
+void std::_STL_alloc_proxy<PathCell *,PathCell,std::allocator<PathCell> >::~_STL_alloc_proxy<PathCell *,PathCell,std::allocator<PathCell> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:101
 DC_ONLY(0x39230, 0x18)
-void std::_STL_alloc_proxy<pathCell * *,pathCell *,std::allocator<pathCell *> >::~_STL_alloc_proxy<pathCell * *,pathCell *,std::allocator<pathCell *> >()
+void std::_STL_alloc_proxy<PathCell * *,PathCell *,std::allocator<PathCell *> >::~_STL_alloc_proxy<PathCell * *,PathCell *,std::allocator<PathCell *> >()
 {
     // @stub
 }
@@ -6993,7 +6995,7 @@ void std::_STL_alloc_proxy<HeroDestination *,HeroDestination,std::allocator<Hero
 
 // ..\stlport\stl_string.h:101
 DC_ONLY(0x39260, 0x18)
-void std::_STL_alloc_proxy<type_artifact_effect * *,type_artifact_effect *,std::allocator<type_artifact_effect *> >::~_STL_alloc_proxy<type_artifact_effect * *,type_artifact_effect *,std::allocator<type_artifact_effect *> >()
+void std::_STL_alloc_proxy<ArtifactEffect * *,ArtifactEffect *,std::allocator<ArtifactEffect *> >::~_STL_alloc_proxy<ArtifactEffect * *,ArtifactEffect *,std::allocator<ArtifactEffect *> >()
 {
     // @stub
 }
@@ -7007,56 +7009,56 @@ unsigned long std::_Base_bitset<1,unsigned long>::_M_getword(unsigned __pos)
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x39298, 0xC)
-void std::_STL_alloc_proxy<type_creature_source *,type_creature_source,std::allocator<type_creature_source> >::_STL_alloc_proxy<type_creature_source *,type_creature_source,std::allocator<type_creature_source> >(const std::allocator<type_creature_source>* __a, type_creature_source** __p)
+void std::_STL_alloc_proxy<CreatureSource *,CreatureSource,std::allocator<CreatureSource> >::_STL_alloc_proxy<CreatureSource *,CreatureSource,std::allocator<CreatureSource> >(const std::allocator<CreatureSource>* __a, CreatureSource** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x392a4, 0x2C)
-void std::_STL_alloc_proxy<type_creature_source *,type_creature_source,std::allocator<type_creature_source> >::deallocate(type_creature_source* __p, unsigned __n)
+void std::_STL_alloc_proxy<CreatureSource *,CreatureSource,std::allocator<CreatureSource> >::deallocate(CreatureSource* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x392d0, 0xC)
-void std::_STL_alloc_proxy<type_creature_value *,type_creature_value,std::allocator<type_creature_value> >::_STL_alloc_proxy<type_creature_value *,type_creature_value,std::allocator<type_creature_value> >(const std::allocator<type_creature_value>* __a, type_creature_value** __p)
+void std::_STL_alloc_proxy<CreatureValue *,CreatureValue,std::allocator<CreatureValue> >::_STL_alloc_proxy<CreatureValue *,CreatureValue,std::allocator<CreatureValue> >(const std::allocator<CreatureValue>* __a, CreatureValue** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x392dc, 0x28)
-type_creature_value* std::_STL_alloc_proxy<type_creature_value *,type_creature_value,std::allocator<type_creature_value> >::allocate(unsigned __n)
+CreatureValue* std::_STL_alloc_proxy<CreatureValue *,CreatureValue,std::allocator<CreatureValue> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x39304, 0xC)
-void std::_STL_alloc_proxy<pathCell *,pathCell,std::allocator<pathCell> >::_STL_alloc_proxy<pathCell *,pathCell,std::allocator<pathCell> >(const std::allocator<pathCell>* __a, pathCell** __p)
+void std::_STL_alloc_proxy<PathCell *,PathCell,std::allocator<PathCell> >::_STL_alloc_proxy<PathCell *,PathCell,std::allocator<PathCell> >(const std::allocator<PathCell>* __a, PathCell** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x39310, 0x2C)
-void std::_STL_alloc_proxy<pathCell *,pathCell,std::allocator<pathCell> >::deallocate(pathCell* __p, unsigned __n)
+void std::_STL_alloc_proxy<PathCell *,PathCell,std::allocator<PathCell> >::deallocate(PathCell* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x3933c, 0xC)
-void std::_STL_alloc_proxy<pathCell * *,pathCell *,std::allocator<pathCell *> >::_STL_alloc_proxy<pathCell * *,pathCell *,std::allocator<pathCell *> >(const std::allocator<pathCell* __a, pathCell*** __p)
+void std::_STL_alloc_proxy<PathCell * *,PathCell *,std::allocator<PathCell *> >::_STL_alloc_proxy<PathCell * *,PathCell *,std::allocator<PathCell *> >(const std::allocator<PathCell* __a, PathCell*** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x39348, 0x2C)
-void std::_STL_alloc_proxy<pathCell * *,pathCell *,std::allocator<pathCell *> >::deallocate(pathCell** __p, unsigned __n)
+void std::_STL_alloc_proxy<PathCell * *,PathCell *,std::allocator<PathCell *> >::deallocate(PathCell** __p, unsigned __n)
 {
     // @stub
 }
@@ -7084,42 +7086,42 @@ void std::_STL_alloc_proxy<HeroDestination *,HeroDestination,std::allocator<Hero
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x393d4, 0xC)
-void std::_STL_alloc_proxy<type_artifact_effect * *,type_artifact_effect *,std::allocator<type_artifact_effect *> >::_STL_alloc_proxy<type_artifact_effect * *,type_artifact_effect *,std::allocator<type_artifact_effect *> >(const std::allocator<type_artifact_effect* __a, type_artifact_effect*** __p)
+void std::_STL_alloc_proxy<ArtifactEffect * *,ArtifactEffect *,std::allocator<ArtifactEffect *> >::_STL_alloc_proxy<ArtifactEffect * *,ArtifactEffect *,std::allocator<ArtifactEffect *> >(const std::allocator<ArtifactEffect* __a, ArtifactEffect*** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x393e0, 0x2C)
-void std::_STL_alloc_proxy<type_artifact_effect * *,type_artifact_effect *,std::allocator<type_artifact_effect *> >::deallocate(type_artifact_effect** __p, unsigned __n)
+void std::_STL_alloc_proxy<ArtifactEffect * *,ArtifactEffect *,std::allocator<ArtifactEffect *> >::deallocate(ArtifactEffect** __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x3940c, 0x20)
-void std::allocator<type_creature_source>::deallocate(type_creature_source* __p, unsigned __n)
+void std::allocator<CreatureSource>::deallocate(CreatureSource* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x3942c, 0x28)
-type_creature_value* std::allocator<type_creature_value>::allocate(unsigned __n, const void* __formal)
+CreatureValue* std::allocator<CreatureValue>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x39454, 0x1C)
-void std::allocator<pathCell>::deallocate(pathCell* __p, unsigned __n)
+void std::allocator<PathCell>::deallocate(PathCell* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x39470, 0x1C)
-void std::allocator<pathCell *>::deallocate(pathCell** __p, unsigned __n)
+void std::allocator<PathCell *>::deallocate(PathCell** __p, unsigned __n)
 {
     // @stub
 }
@@ -7140,35 +7142,35 @@ void std::allocator<HeroDestination>::deallocate(HeroDestination* __p, unsigned 
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x394d0, 0x1C)
-void std::allocator<type_artifact_effect *>::deallocate(type_artifact_effect** __p, unsigned __n)
+void std::allocator<ArtifactEffect *>::deallocate(ArtifactEffect** __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x394ec, 0xDC)
-void std::vector<type_creature_source,std::allocator<type_creature_source> >::_M_insert_overflow(type_creature_source* __position, const type_creature_source* __x, unsigned __fill_len)
+void std::vector<CreatureSource,std::allocator<CreatureSource> >::_M_insert_overflow(CreatureSource* __position, const CreatureSource* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x395c8, 0xDC)
-void std::vector<type_creature_value,std::allocator<type_creature_value> >::_M_insert_overflow(type_creature_value* __position, const type_creature_value* __x, unsigned __fill_len)
+void std::vector<CreatureValue,std::allocator<CreatureValue> >::_M_insert_overflow(CreatureValue* __position, const CreatureValue* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x396a4, 0xD0)
-void std::vector<pathCell,std::allocator<pathCell> >::_M_insert_overflow(pathCell* __position, const pathCell* __x, unsigned __fill_len)
+void std::vector<PathCell,std::allocator<PathCell> >::_M_insert_overflow(PathCell* __position, const PathCell* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x39774, 0xCC)
-void std::vector<pathCell *,std::allocator<pathCell *> >::_M_insert_overflow(pathCell** __position, pathCell** __x, unsigned __fill_len)
+void std::vector<PathCell *,std::allocator<PathCell *> >::_M_insert_overflow(PathCell** __position, PathCell** __x, unsigned __fill_len)
 {
     // @stub
 }
@@ -7182,7 +7184,7 @@ void std::vector<long,std::allocator<long> >::_M_fill_insert(long* __position, u
 
 // ..\stlport\stl_algo.h:636
 DC_ONLY(0x3990c, 0x70)
-void std::sort(type_creature_value* __first, type_creature_value* __last, std::greater<type_creature_value> __comp)
+void std::sort(CreatureValue* __first, CreatureValue* __last, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
@@ -7196,7 +7198,7 @@ const long* std::min(const long* __a, const long* __b)
 
 // ..\stlport\stl_algo.h:624
 DC_ONLY(0x3998c, 0x64)
-void std::sort(type_creature_value* __first, type_creature_value* __last)
+void std::sort(CreatureValue* __first, CreatureValue* __last)
 {
     // @stub
 }
@@ -7224,56 +7226,56 @@ void std::vector<HeroDestination,std::allocator<HeroDestination> >::_M_insert_ov
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x39b28, 0xCC)
-void std::vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >::_M_insert_overflow(type_artifact_effect** __position, type_artifact_effect** __x, unsigned __fill_len)
+void std::vector<ArtifactEffect *,std::allocator<ArtifactEffect *> >::_M_insert_overflow(ArtifactEffect** __position, ArtifactEffect** __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x39bf4, 0x30)
-void std::destroy(type_creature_source* __first, type_creature_source* __last)
+void std::destroy(CreatureSource* __first, CreatureSource* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x39c24, 0x30)
-void std::construct(type_creature_source* __p, const type_creature_source* __value)
+void std::construct(CreatureSource* __p, const CreatureSource* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x39c54, 0x38)
-type_creature_value* std::uninitialized_fill_n(type_creature_value* __first, unsigned __n, const type_creature_value* __x)
+CreatureValue* std::uninitialized_fill_n(CreatureValue* __first, unsigned __n, const CreatureValue* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x39c8c, 0x30)
-void std::construct(type_creature_value* __p, const type_creature_value* __value)
+void std::construct(CreatureValue* __p, const CreatureValue* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x39cbc, 0x30)
-void std::destroy(pathCell* __first, pathCell* __last)
+void std::destroy(PathCell* __first, PathCell* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x39cec, 0x44)
-void std::construct(pathCell* __p, const pathCell* __value)
+void std::construct(PathCell* __p, const PathCell* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x39d30, 0x28)
-void std::construct(pathCell** __p, pathCell** __value)
+void std::construct(PathCell** __p, PathCell** __value)
 {
     // @stub
 }
@@ -7308,63 +7310,63 @@ void std::construct(HeroDestination* __p, const HeroDestination* __value)
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x39e10, 0x30)
-void std::destroy(type_artifact_effect** __first, type_artifact_effect** __last)
+void std::destroy(ArtifactEffect** __first, ArtifactEffect** __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x39e40, 0x28)
-void std::construct(type_artifact_effect** __p, type_artifact_effect** __value)
+void std::construct(ArtifactEffect** __p, ArtifactEffect** __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0x39e68, 0x50)
-type_creature_source* std::copy(type_creature_source* __first, type_creature_source* __last, type_creature_source* __result)
+CreatureSource* std::copy(CreatureSource* __first, CreatureSource* __last, CreatureSource* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0x39eb8, 0x50)
-type_creature_value* std::copy(type_creature_value* __first, type_creature_value* __last, type_creature_value* __result)
+CreatureValue* std::copy(CreatureValue* __first, CreatureValue* __last, CreatureValue* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0x39f08, 0x50)
-pathCell* std::copy(pathCell* __first, pathCell* __last, pathCell* __result)
+PathCell* std::copy(PathCell* __first, PathCell* __last, PathCell* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0x39f58, 0x50)
-type_artifact_effect** std::copy(type_artifact_effect** __first, type_artifact_effect** __last, type_artifact_effect** __result)
+ArtifactEffect** std::copy(ArtifactEffect** __first, ArtifactEffect** __last, ArtifactEffect** __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x39fa8, 0x4)
-std::allocator<type_creature_source>* std::__stl_alloc_rebind(std::allocator<type_creature_source>* __a, const type_creature_source* __formal)
+std::allocator<CreatureSource>* std::__stl_alloc_rebind(std::allocator<CreatureSource>* __a, const CreatureSource* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x39fac, 0x4)
-std::allocator<pathCell>* std::__stl_alloc_rebind(std::allocator<pathCell>* __a, const pathCell* __formal)
+std::allocator<PathCell>* std::__stl_alloc_rebind(std::allocator<PathCell>* __a, const PathCell* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x39fb0, 0x4)
-std::allocator<pathCell* std::__stl_alloc_rebind(std::allocator<pathCell* __a, pathCell** __formal)
+std::allocator<PathCell* std::__stl_alloc_rebind(std::allocator<PathCell* __a, PathCell** __formal)
 {
     // @stub
 }
@@ -7378,112 +7380,112 @@ std::allocator<HeroDestination>* std::__stl_alloc_rebind(std::allocator<HeroDest
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x39fb8, 0x4)
-std::allocator<type_artifact_effect* std::__stl_alloc_rebind(std::allocator<type_artifact_effect* __a, type_artifact_effect** __formal)
+std::allocator<ArtifactEffect* std::__stl_alloc_rebind(std::allocator<ArtifactEffect* __a, ArtifactEffect** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x39fbc, 0x28)
-type_creature_source* std::_STL_alloc_proxy<type_creature_source *,type_creature_source,std::allocator<type_creature_source> >::allocate(unsigned __n)
+CreatureSource* std::_STL_alloc_proxy<CreatureSource *,CreatureSource,std::allocator<CreatureSource> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x39fe4, 0x28)
-pathCell* std::_STL_alloc_proxy<pathCell *,pathCell,std::allocator<pathCell> >::allocate(unsigned __n)
+PathCell* std::_STL_alloc_proxy<PathCell *,PathCell,std::allocator<PathCell> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x3a00c, 0x28)
-pathCell** std::_STL_alloc_proxy<pathCell * *,pathCell *,std::allocator<pathCell *> >::allocate(unsigned __n)
+PathCell** std::_STL_alloc_proxy<PathCell * *,PathCell *,std::allocator<PathCell *> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x3a034, 0x28)
-type_artifact_effect** std::_STL_alloc_proxy<type_artifact_effect * *,type_artifact_effect *,std::allocator<type_artifact_effect *> >::allocate(unsigned __n)
+ArtifactEffect** std::_STL_alloc_proxy<ArtifactEffect * *,ArtifactEffect *,std::allocator<ArtifactEffect *> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x3a05c, 0x28)
-type_creature_source* std::allocator<type_creature_source>::allocate(unsigned __n, const void* __formal)
+CreatureSource* std::allocator<CreatureSource>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x3a084, 0x28)
-pathCell* std::allocator<pathCell>::allocate(unsigned __n, const void* __formal)
+PathCell* std::allocator<PathCell>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x3a0ac, 0x24)
-pathCell** std::allocator<pathCell *>::allocate(unsigned __n, const void* __formal)
+PathCell** std::allocator<PathCell *>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x3a0d0, 0x24)
-type_artifact_effect** std::allocator<type_artifact_effect *>::allocate(unsigned __n, const void* __formal)
+ArtifactEffect** std::allocator<ArtifactEffect *>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x3a0f4, 0x38)
-type_creature_source* std::uninitialized_copy(type_creature_source* __first, type_creature_source* __last, type_creature_source* __result)
+CreatureSource* std::uninitialized_copy(CreatureSource* __first, CreatureSource* __last, CreatureSource* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x3a12c, 0x38)
-type_creature_source* std::uninitialized_fill_n(type_creature_source* __first, unsigned __n, const type_creature_source* __x)
+CreatureSource* std::uninitialized_fill_n(CreatureSource* __first, unsigned __n, const CreatureSource* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x3a164, 0x38)
-type_creature_value* std::uninitialized_copy(type_creature_value* __first, type_creature_value* __last, type_creature_value* __result)
+CreatureValue* std::uninitialized_copy(CreatureValue* __first, CreatureValue* __last, CreatureValue* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x3a19c, 0x38)
-pathCell* std::uninitialized_copy(pathCell* __first, pathCell* __last, pathCell* __result)
+PathCell* std::uninitialized_copy(PathCell* __first, PathCell* __last, PathCell* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x3a1d4, 0x38)
-pathCell* std::uninitialized_fill_n(pathCell* __first, unsigned __n, const pathCell* __x)
+PathCell* std::uninitialized_fill_n(PathCell* __first, unsigned __n, const PathCell* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x3a20c, 0x38)
-pathCell** std::uninitialized_copy(pathCell** __first, pathCell** __last, pathCell** __result)
+PathCell** std::uninitialized_copy(PathCell** __first, PathCell** __last, PathCell** __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x3a244, 0x38)
-pathCell** std::uninitialized_fill_n(pathCell** __first, unsigned __n, pathCell** __x)
+PathCell** std::uninitialized_fill_n(PathCell** __first, unsigned __n, PathCell** __x)
 {
     // @stub
 }
@@ -7504,28 +7506,28 @@ void std::fill(long* __first, long* __last, const long* __value)
 
 // ..\stlport\stl_algo.c:1102
 DC_ONLY(0x3a2e4, 0xB8)
-void std::__introsort_loop(type_creature_value* __first, type_creature_value* __last, type_creature_value* __formal, int __depth_limit, std::greater<type_creature_value> __comp)
+void std::__introsort_loop(CreatureValue* __first, CreatureValue* __last, CreatureValue* __formal, int __depth_limit, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1068
 DC_ONLY(0x3a39c, 0x68)
-void std::__final_insertion_sort(type_creature_value* __first, type_creature_value* __last, std::greater<type_creature_value> __comp)
+void std::__final_insertion_sort(CreatureValue* __first, CreatureValue* __last, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1081
 DC_ONLY(0x3a404, 0xA4)
-void std::__introsort_loop(type_creature_value* __first, type_creature_value* __last, type_creature_value* __formal, int __depth_limit)
+void std::__introsort_loop(CreatureValue* __first, CreatureValue* __last, CreatureValue* __formal, int __depth_limit)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1057
 DC_ONLY(0x3a4a8, 0x5C)
-void std::__final_insertion_sort(type_creature_value* __first, type_creature_value* __last)
+void std::__final_insertion_sort(CreatureValue* __first, CreatureValue* __last)
 {
     // @stub
 }
@@ -7553,49 +7555,49 @@ HeroDestination* std::uninitialized_copy(HeroDestination* __first, HeroDestinati
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x3a610, 0x38)
-type_artifact_effect** std::uninitialized_copy(type_artifact_effect** __first, type_artifact_effect** __last, type_artifact_effect** __result)
+ArtifactEffect** std::uninitialized_copy(ArtifactEffect** __first, ArtifactEffect** __last, ArtifactEffect** __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x3a648, 0x38)
-type_artifact_effect** std::uninitialized_fill_n(type_artifact_effect** __first, unsigned __n, type_artifact_effect** __x)
+ArtifactEffect** std::uninitialized_fill_n(ArtifactEffect** __first, unsigned __n, ArtifactEffect** __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x3a680, 0x4)
-type_creature_source* std::value_type(const type_creature_source* __formal)
+CreatureSource* std::value_type(const CreatureSource* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x3a684, 0x1C)
-void std::__destroy(type_creature_source* __first, type_creature_source* __last, type_creature_source* __formal)
+void std::__destroy(CreatureSource* __first, CreatureSource* __last, CreatureSource* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x3a6a0, 0x1C)
-type_creature_value* std::__uninitialized_fill_n(type_creature_value* __first, unsigned __n, const type_creature_value* __x, type_creature_value* __formal)
+CreatureValue* std::__uninitialized_fill_n(CreatureValue* __first, unsigned __n, const CreatureValue* __x, CreatureValue* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x3a6bc, 0x4)
-pathCell* std::value_type(const pathCell* __formal)
+PathCell* std::value_type(const PathCell* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x3a6c0, 0x1C)
-void std::__destroy(pathCell* __first, pathCell* __last, pathCell* __formal)
+void std::__destroy(PathCell* __first, PathCell* __last, PathCell* __formal)
 {
     // @stub
 }
@@ -7630,147 +7632,147 @@ void std::__destroy(HeroDestination* __first, HeroDestination* __last, HeroDesti
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x3a71c, 0x4)
-type_artifact_effect** std::value_type(type_artifact_effect** __formal)
+ArtifactEffect** std::value_type(ArtifactEffect** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x3a720, 0x1C)
-void std::__destroy(type_artifact_effect** __first, type_artifact_effect** __last, type_artifact_effect** __formal)
+void std::__destroy(ArtifactEffect** __first, ArtifactEffect** __last, ArtifactEffect** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0x3a73c, 0xC)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const type_creature_source* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const CreatureSource* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0x3a748, 0x4)
-int* std::distance_type(const type_creature_source* __formal)
+int* std::distance_type(const CreatureSource* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0x3a74c, 0x48)
-type_creature_source* std::__copy(type_creature_source* __first, type_creature_source* __last, type_creature_source* __result, std::random_access_iterator_tag __formal, int* __formal)
+CreatureSource* std::__copy(CreatureSource* __first, CreatureSource* __last, CreatureSource* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0x3a794, 0xC)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const type_creature_value* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const CreatureValue* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0x3a7a0, 0x4)
-int* std::distance_type(const type_creature_value* __formal)
+int* std::distance_type(const CreatureValue* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0x3a7a4, 0x48)
-type_creature_value* std::__copy(type_creature_value* __first, type_creature_value* __last, type_creature_value* __result, std::random_access_iterator_tag __formal, int* __formal)
+CreatureValue* std::__copy(CreatureValue* __first, CreatureValue* __last, CreatureValue* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0x3a7ec, 0xC)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const pathCell* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const PathCell* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0x3a7f8, 0x4)
-int* std::distance_type(const pathCell* __formal)
+int* std::distance_type(const PathCell* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0x3a7fc, 0x4C)
-pathCell* std::__copy(pathCell* __first, pathCell* __last, pathCell* __result, std::random_access_iterator_tag __formal, int* __formal)
+PathCell* std::__copy(PathCell* __first, PathCell* __last, PathCell* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0x3a848, 0xC)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, type_artifact_effect** __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, ArtifactEffect** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0x3a854, 0x4)
-int* std::distance_type(type_artifact_effect** __formal)
+int* std::distance_type(ArtifactEffect** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0x3a858, 0x1E)
-type_artifact_effect** std::__copy(type_artifact_effect** __first, type_artifact_effect** __last, type_artifact_effect** __result, std::random_access_iterator_tag __formal, int* __formal)
+ArtifactEffect** std::__copy(ArtifactEffect** __first, ArtifactEffect** __last, ArtifactEffect** __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x3a878, 0x1C)
-type_creature_source* std::__uninitialized_copy(type_creature_source* __first, type_creature_source* __last, type_creature_source* __result, type_creature_source* __formal)
+CreatureSource* std::__uninitialized_copy(CreatureSource* __first, CreatureSource* __last, CreatureSource* __result, CreatureSource* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x3a894, 0x1C)
-type_creature_source* std::__uninitialized_fill_n(type_creature_source* __first, unsigned __n, const type_creature_source* __x, type_creature_source* __formal)
+CreatureSource* std::__uninitialized_fill_n(CreatureSource* __first, unsigned __n, const CreatureSource* __x, CreatureSource* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x3a8b0, 0x1C)
-type_creature_value* std::__uninitialized_copy(type_creature_value* __first, type_creature_value* __last, type_creature_value* __result, type_creature_value* __formal)
+CreatureValue* std::__uninitialized_copy(CreatureValue* __first, CreatureValue* __last, CreatureValue* __result, CreatureValue* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x3a8cc, 0x1C)
-pathCell* std::__uninitialized_copy(pathCell* __first, pathCell* __last, pathCell* __result, pathCell* __formal)
+PathCell* std::__uninitialized_copy(PathCell* __first, PathCell* __last, PathCell* __result, PathCell* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x3a8e8, 0x1C)
-pathCell* std::__uninitialized_fill_n(pathCell* __first, unsigned __n, const pathCell* __x, pathCell* __formal)
+PathCell* std::__uninitialized_fill_n(PathCell* __first, unsigned __n, const PathCell* __x, PathCell* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x3a904, 0x1C)
-pathCell** std::__uninitialized_copy(pathCell** __first, pathCell** __last, pathCell** __result, pathCell** __formal)
+PathCell** std::__uninitialized_copy(PathCell** __first, PathCell** __last, PathCell** __result, PathCell** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x3a920, 0x1C)
-pathCell** std::__uninitialized_fill_n(pathCell** __first, unsigned __n, pathCell** __x, pathCell** __formal)
+PathCell** std::__uninitialized_fill_n(PathCell** __first, unsigned __n, PathCell** __x, PathCell** __formal)
 {
     // @stub
 }
@@ -7784,70 +7786,70 @@ long* std::__copy_backward(long* __first, long* __last, long* __result, std::ran
 
 // ..\stlport\stl_algo.h:677
 DC_ONLY(0x3a960, 0x40)
-void std::partial_sort(type_creature_value* __first, type_creature_value* __middle, type_creature_value* __last, std::greater<type_creature_value> __comp)
+void std::partial_sort(CreatureValue* __first, CreatureValue* __middle, CreatureValue* __last, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:65
 DC_ONLY(0x3a9a0, 0x80)
-const type_creature_value* std::__median(const type_creature_value* __a, const type_creature_value* __b, const type_creature_value* __c, std::greater<type_creature_value> __comp)
+const CreatureValue* std::__median(const CreatureValue* __a, const CreatureValue* __b, const CreatureValue* __c, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:941
 DC_ONLY(0x3aa20, 0x74)
-type_creature_value* std::__unguarded_partition(type_creature_value* __first, type_creature_value* __last, type_creature_value __pivot, std::greater<type_creature_value> __comp)
+CreatureValue* std::__unguarded_partition(CreatureValue* __first, CreatureValue* __last, CreatureValue __pivot, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1020
 DC_ONLY(0x3aa94, 0x48)
-void std::__insertion_sort(type_creature_value* __first, type_creature_value* __last, std::greater<type_creature_value> __comp)
+void std::__insertion_sort(CreatureValue* __first, CreatureValue* __last, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1050
 DC_ONLY(0x3aadc, 0x34)
-void std::__unguarded_insertion_sort(type_creature_value* __first, type_creature_value* __last, std::greater<type_creature_value> __comp)
+void std::__unguarded_insertion_sort(CreatureValue* __first, CreatureValue* __last, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.h:664
 DC_ONLY(0x3ab10, 0x38)
-void std::partial_sort(type_creature_value* __first, type_creature_value* __middle, type_creature_value* __last)
+void std::partial_sort(CreatureValue* __first, CreatureValue* __middle, CreatureValue* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:44
 DC_ONLY(0x3ab48, 0x68)
-const type_creature_value* std::__median(const type_creature_value* __a, const type_creature_value* __b, const type_creature_value* __c)
+const CreatureValue* std::__median(const CreatureValue* __a, const CreatureValue* __b, const CreatureValue* __c)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:923
 DC_ONLY(0x3abb0, 0x6C)
-type_creature_value* std::__unguarded_partition(type_creature_value* __first, type_creature_value* __last, type_creature_value __pivot)
+CreatureValue* std::__unguarded_partition(CreatureValue* __first, CreatureValue* __last, CreatureValue __pivot)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1012
 DC_ONLY(0x3ac1c, 0x40)
-void std::__insertion_sort(type_creature_value* __first, type_creature_value* __last)
+void std::__insertion_sort(CreatureValue* __first, CreatureValue* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1035
 DC_ONLY(0x3ac5c, 0x30)
-void std::__unguarded_insertion_sort(type_creature_value* __first, type_creature_value* __last)
+void std::__unguarded_insertion_sort(CreatureValue* __first, CreatureValue* __last)
 {
     // @stub
 }
@@ -7896,35 +7898,35 @@ HeroDestination* std::__uninitialized_copy(HeroDestination* __first, HeroDestina
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x3add0, 0x1C)
-type_artifact_effect** std::__uninitialized_copy(type_artifact_effect** __first, type_artifact_effect** __last, type_artifact_effect** __result, type_artifact_effect** __formal)
+ArtifactEffect** std::__uninitialized_copy(ArtifactEffect** __first, ArtifactEffect** __last, ArtifactEffect** __result, ArtifactEffect** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x3adec, 0x1C)
-type_artifact_effect** std::__uninitialized_fill_n(type_artifact_effect** __first, unsigned __n, type_artifact_effect** __x, type_artifact_effect** __formal)
+ArtifactEffect** std::__uninitialized_fill_n(ArtifactEffect** __first, unsigned __n, ArtifactEffect** __x, ArtifactEffect** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x3ae08, 0x30)
-void std::__destroy_aux(type_creature_source* __first, type_creature_source* __last, __false_type __formal)
+void std::__destroy_aux(CreatureSource* __first, CreatureSource* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x3ae38, 0x3C)
-type_creature_value* std::__uninitialized_fill_n_aux(type_creature_value* __first, unsigned __n, const type_creature_value* __x, __false_type __formal)
+CreatureValue* std::__uninitialized_fill_n_aux(CreatureValue* __first, unsigned __n, const CreatureValue* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x3ae74, 0x30)
-void std::__destroy_aux(pathCell* __first, pathCell* __last, __false_type __formal)
+void std::__destroy_aux(PathCell* __first, PathCell* __last, __false_type __formal)
 {
     // @stub
 }
@@ -7945,112 +7947,112 @@ void std::__destroy_aux(HeroDestination* __first, HeroDestination* __last, __fal
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x3af10, 0x30)
-void std::__destroy_aux(type_artifact_effect** __first, type_artifact_effect** __last, __false_type __formal)
+void std::__destroy_aux(ArtifactEffect** __first, ArtifactEffect** __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_function.h:104
 DC_ONLY(0x3af40, 0x18)
-unsigned char std::greater<type_creature_value>::operator()(const type_creature_value* __x, const type_creature_value* __y)
+unsigned char std::greater<CreatureValue>::operator()(const CreatureValue* __x, const CreatureValue* __y)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x3af58, 0x3C)
-type_creature_source* std::__uninitialized_copy_aux(type_creature_source* __first, type_creature_source* __last, type_creature_source* __result, __false_type __formal)
+CreatureSource* std::__uninitialized_copy_aux(CreatureSource* __first, CreatureSource* __last, CreatureSource* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x3af94, 0x3C)
-type_creature_source* std::__uninitialized_fill_n_aux(type_creature_source* __first, unsigned __n, const type_creature_source* __x, __false_type __formal)
+CreatureSource* std::__uninitialized_fill_n_aux(CreatureSource* __first, unsigned __n, const CreatureSource* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x3afd0, 0x3C)
-type_creature_value* std::__uninitialized_copy_aux(type_creature_value* __first, type_creature_value* __last, type_creature_value* __result, __false_type __formal)
+CreatureValue* std::__uninitialized_copy_aux(CreatureValue* __first, CreatureValue* __last, CreatureValue* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x3b00c, 0x3C)
-pathCell* std::__uninitialized_copy_aux(pathCell* __first, pathCell* __last, pathCell* __result, __false_type __formal)
+PathCell* std::__uninitialized_copy_aux(PathCell* __first, PathCell* __last, PathCell* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x3b048, 0x3C)
-pathCell* std::__uninitialized_fill_n_aux(pathCell* __first, unsigned __n, const pathCell* __x, __false_type __formal)
+PathCell* std::__uninitialized_fill_n_aux(PathCell* __first, unsigned __n, const PathCell* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x3b084, 0x3C)
-pathCell** std::__uninitialized_copy_aux(pathCell** __first, pathCell** __last, pathCell** __result, __false_type __formal)
+PathCell** std::__uninitialized_copy_aux(PathCell** __first, PathCell** __last, PathCell** __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x3b0c0, 0x3C)
-pathCell** std::__uninitialized_fill_n_aux(pathCell** __first, unsigned __n, pathCell** __x, __false_type __formal)
+PathCell** std::__uninitialized_fill_n_aux(PathCell** __first, unsigned __n, PathCell** __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1443
 DC_ONLY(0x3b0fc, 0xA8)
-void std::__partial_sort(type_creature_value* __first, type_creature_value* __middle, type_creature_value* __last, type_creature_value* __formal, std::greater<type_creature_value> __comp)
+void std::__partial_sort(CreatureValue* __first, CreatureValue* __middle, CreatureValue* __last, CreatureValue* __formal, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:107
 DC_ONLY(0x3b1a4, 0x30)
-void std::iter_swap(type_creature_value* __a, type_creature_value* __b)
+void std::iter_swap(CreatureValue* __a, CreatureValue* __b)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1000
 DC_ONLY(0x3b1d4, 0x64)
-void std::__linear_insert(type_creature_value* __first, type_creature_value* __last, type_creature_value __val, std::greater<type_creature_value> __comp)
+void std::__linear_insert(CreatureValue* __first, CreatureValue* __last, CreatureValue __val, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1042
 DC_ONLY(0x3b238, 0x44)
-void std::__unguarded_insertion_sort_aux(type_creature_value* __first, type_creature_value* __last, type_creature_value* __formal, std::greater<type_creature_value> __comp)
+void std::__unguarded_insertion_sort_aux(CreatureValue* __first, CreatureValue* __last, CreatureValue* __formal, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1432
 DC_ONLY(0x3b27c, 0x90)
-void std::__partial_sort(type_creature_value* __first, type_creature_value* __middle, type_creature_value* __last, type_creature_value* __formal)
+void std::__partial_sort(CreatureValue* __first, CreatureValue* __middle, CreatureValue* __last, CreatureValue* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:987
 DC_ONLY(0x3b30c, 0x58)
-void std::__linear_insert(type_creature_value* __first, type_creature_value* __last, type_creature_value __val)
+void std::__linear_insert(CreatureValue* __first, CreatureValue* __last, CreatureValue __val)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1028
 DC_ONLY(0x3b364, 0x3C)
-void std::__unguarded_insertion_sort_aux(type_creature_value* __first, type_creature_value* __last, type_creature_value* __formal)
+void std::__unguarded_insertion_sort_aux(CreatureValue* __first, CreatureValue* __last, CreatureValue* __formal)
 {
     // @stub
 }
@@ -8092,28 +8094,28 @@ HeroDestination* std::__uninitialized_copy_aux(HeroDestination* __first, HeroDes
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x3b4ec, 0x3C)
-type_artifact_effect** std::__uninitialized_copy_aux(type_artifact_effect** __first, type_artifact_effect** __last, type_artifact_effect** __result, __false_type __formal)
+ArtifactEffect** std::__uninitialized_copy_aux(ArtifactEffect** __first, ArtifactEffect** __last, ArtifactEffect** __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x3b528, 0x3C)
-type_artifact_effect** std::__uninitialized_fill_n_aux(type_artifact_effect** __first, unsigned __n, type_artifact_effect** __x, __false_type __formal)
+ArtifactEffect** std::__uninitialized_fill_n_aux(ArtifactEffect** __first, unsigned __n, ArtifactEffect** __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x3b564, 0x1C)
-void std::destroy(type_creature_source* __pointer)
+void std::destroy(CreatureSource* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x3b580, 0x1C)
-void std::destroy(pathCell* __pointer)
+void std::destroy(PathCell* __pointer)
 {
     // @stub
 }
@@ -8127,77 +8129,77 @@ void std::destroy(HeroDestination* __pointer)
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x3b5b8, 0x1C)
-void std::destroy(type_artifact_effect** __pointer)
+void std::destroy(ArtifactEffect** __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:235
 DC_ONLY(0x3b5d4, 0x4C)
-void std::make_heap(type_creature_value* __first, type_creature_value* __last, std::greater<type_creature_value> __comp)
+void std::make_heap(CreatureValue* __first, CreatureValue* __last, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.h:85
 DC_ONLY(0x3b620, 0x4C)
-void std::__pop_heap(type_creature_value* __first, type_creature_value* __last, type_creature_value* __result, type_creature_value __value, std::greater<type_creature_value> __comp, int* __formal)
+void std::__pop_heap(CreatureValue* __first, CreatureValue* __last, CreatureValue* __result, CreatureValue __value, std::greater<CreatureValue> __comp, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.h:118
 DC_ONLY(0x3b66c, 0x44)
-void std::sort_heap(type_creature_value* __first, type_creature_value* __last, std::greater<type_creature_value> __comp)
+void std::sort_heap(CreatureValue* __first, CreatureValue* __last, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:96
 DC_ONLY(0x3b6b0, 0x18)
-void std::__iter_swap(type_creature_value* __a, type_creature_value* __b, type_creature_value* __formal)
+void std::__iter_swap(CreatureValue* __a, CreatureValue* __b, CreatureValue* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0x3b6c8, 0x50)
-type_creature_value* std::copy_backward(type_creature_value* __first, type_creature_value* __last, type_creature_value* __result)
+CreatureValue* std::copy_backward(CreatureValue* __first, CreatureValue* __last, CreatureValue* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:974
 DC_ONLY(0x3b718, 0x54)
-void std::__unguarded_linear_insert(type_creature_value* __last, type_creature_value __val, std::greater<type_creature_value> __comp)
+void std::__unguarded_linear_insert(CreatureValue* __last, CreatureValue __val, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:207
 DC_ONLY(0x3b76c, 0x40)
-void std::make_heap(type_creature_value* __first, type_creature_value* __last)
+void std::make_heap(CreatureValue* __first, CreatureValue* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.h:64
 DC_ONLY(0x3b7ac, 0x44)
-void std::__pop_heap(type_creature_value* __first, type_creature_value* __last, type_creature_value* __result, type_creature_value __value, int* __formal)
+void std::__pop_heap(CreatureValue* __first, CreatureValue* __last, CreatureValue* __result, CreatureValue __value, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.h:108
 DC_ONLY(0x3b7f0, 0x3C)
-void std::sort_heap(type_creature_value* __first, type_creature_value* __last)
+void std::sort_heap(CreatureValue* __first, CreatureValue* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:960
 DC_ONLY(0x3b82c, 0x54)
-void std::__unguarded_linear_insert(type_creature_value* __last, type_creature_value __val)
+void std::__unguarded_linear_insert(CreatureValue* __last, CreatureValue __val)
 {
     // @stub
 }
@@ -8267,56 +8269,56 @@ void std::__destroy_aux()
 
 // ..\stlport\stl_heap.c:218
 DC_ONLY(0x3b968, 0x8C)
-void std::__make_heap(type_creature_value* __first, type_creature_value* __last, std::greater<type_creature_value> __comp, type_creature_value* __formal, int* __formal)
+void std::__make_heap(CreatureValue* __first, CreatureValue* __last, std::greater<CreatureValue> __comp, CreatureValue* __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:151
 DC_ONLY(0x3b9f4, 0xCC)
-void std::__adjust_heap(type_creature_value* __first, int __holeIndex, int __len, type_creature_value __value, std::greater<type_creature_value> __comp)
+void std::__adjust_heap(CreatureValue* __first, int __holeIndex, int __len, CreatureValue __value, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:183
 DC_ONLY(0x3bac0, 0x34)
-void std::pop_heap(type_creature_value* __first, type_creature_value* __last, std::greater<type_creature_value> __comp)
+void std::pop_heap(CreatureValue* __first, CreatureValue* __last, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:79
 DC_ONLY(0x3baf4, 0x2A)
-void std::swap(type_creature_value* __a, type_creature_value* __b)
+void std::swap(CreatureValue* __a, CreatureValue* __b)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0x3bb20, 0x4C)
-type_creature_value* std::__copy_backward(type_creature_value* __first, type_creature_value* __last, type_creature_value* __result, std::random_access_iterator_tag __formal, int* __formal)
+CreatureValue* std::__copy_backward(CreatureValue* __first, CreatureValue* __last, CreatureValue* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:192
 DC_ONLY(0x3bb6c, 0x84)
-void std::__make_heap(type_creature_value* __first, type_creature_value* __last, type_creature_value* __formal, int* __formal)
+void std::__make_heap(CreatureValue* __first, CreatureValue* __last, CreatureValue* __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:112
 DC_ONLY(0x3bbf0, 0xC8)
-void std::__adjust_heap(type_creature_value* __first, int __holeIndex, int __len, type_creature_value __value)
+void std::__adjust_heap(CreatureValue* __first, int __holeIndex, int __len, CreatureValue __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:142
 DC_ONLY(0x3bcb8, 0x30)
-void std::pop_heap(type_creature_value* __first, type_creature_value* __last)
+void std::pop_heap(CreatureValue* __first, CreatureValue* __last)
 {
     // @stub
 }
@@ -8351,28 +8353,28 @@ void std::swap(long* __a, long* __b)
 
 // ..\stlport\stl_heap.c:78
 DC_ONLY(0x3bdf0, 0x90)
-void std::__push_heap(type_creature_value* __first, int __holeIndex, int __topIndex, type_creature_value __value, std::greater<type_creature_value> __comp)
+void std::__push_heap(CreatureValue* __first, int __holeIndex, int __topIndex, CreatureValue __value, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:173
 DC_ONLY(0x3be80, 0x58)
-void std::__pop_heap_aux(type_creature_value* __first, type_creature_value* __last, type_creature_value* __formal, std::greater<type_creature_value> __comp)
+void std::__pop_heap_aux(CreatureValue* __first, CreatureValue* __last, CreatureValue* __formal, std::greater<CreatureValue> __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:44
 DC_ONLY(0x3bed8, 0x90)
-void std::__push_heap(type_creature_value* __first, int __holeIndex, int __topIndex, type_creature_value __value)
+void std::__push_heap(CreatureValue* __first, int __holeIndex, int __topIndex, CreatureValue __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:134
 DC_ONLY(0x3bf68, 0x50)
-void std::__pop_heap_aux(type_creature_value* __first, type_creature_value* __last, type_creature_value* __formal)
+void std::__pop_heap_aux(CreatureValue* __first, CreatureValue* __last, CreatureValue* __formal)
 {
     // @stub
 }
@@ -8394,23 +8396,23 @@ void std::__pop_heap_aux(long* __first, long* __last, long* __formal)
 #endif  // @carcass
 
 // COMDAT pairing: vector<type_creature_source>::size, agreement 1.000.
-VA_COMPGEN(0x00434600, 0x20, VECTOR_SIZE, type_creature_source)
+VA_COMPGEN(0x00434600, 0x20, VECTOR_SIZE, CreatureSource)
 
-VA_COMPGEN(0x00434620, 0x23, VECTOR_SIZE, pathCell)
+VA_COMPGEN(0x00434620, 0x23, VECTOR_SIZE, PathCell)
 
-VA_COMPGEN(0x00434650, 0x26, VECTOR_DTOR, pathCell)
+VA_COMPGEN(0x00434650, 0x26, VECTOR_DTOR, PathCell)
 
-VA_COMPGEN(0x00434680, 0x4D, VECTOR_ERASE, type_creature_source)
+VA_COMPGEN(0x00434680, 0x4D, VECTOR_ERASE, CreatureSource)
 
-VA_COMPGEN(0x00434ba0, 0x43, VECTOR_UCOPY, type_creature_source)
+VA_COMPGEN(0x00434ba0, 0x43, VECTOR_UCOPY, CreatureSource)
 
 // The retained uninitialized fill copies the three dwords of each
 // type_creature_source record.  The emitted loop agrees with all 58 bytes.
-VA_COMPGEN(0x0054d580, 0x3A, VECTOR_UFILL, type_creature_source)
+VA_COMPGEN(0x0054d580, 0x3A, VECTOR_UFILL, CreatureSource)
 
 // COMDAT pairing: vector<pathCell>::_Ucopy, agreement 0.952; the
 // type_creature_source arm scores 0.531 at operand level.
-VA_COMPGEN(0x00434bf0, 0x3D, VECTOR_UCOPY, pathCell)
+VA_COMPGEN(0x00434bf0, 0x3D, VECTOR_UCOPY, PathCell)
 
 // COMDAT pairing: std::_Sort<type_creature_value, greater>, agreement 0.979.
 // The default-predicate arm scores 0.932 here and 0.976 at 0x34e80, so the
@@ -8418,7 +8420,7 @@ VA_COMPGEN(0x00434bf0, 0x3D, VECTOR_UCOPY, pathCell)
 VA_COMPGEN(0x00434ce0, 0x199, STD_SORT, type_creature_value_greater)
 
 // COMDAT pairing: std::_Sort<type_creature_value>, agreement 0.976.
-VA_COMPGEN(0x00434e80, 0x191, STD_SORT, type_creature_value)
+VA_COMPGEN(0x00434e80, 0x191, STD_SORT, CreatureValue)
 
 // COMDAT pairing: std::_Sort<long>, agreement 0.995.
 VA_COMPGEN(0x00435070, 0xCF, STD_SORT, long)
@@ -8429,7 +8431,7 @@ VA_COMPGEN(0x00435160, 0xD5, INSERTION_SORT_1, type_creature_value_greater)
 
 // COMDAT pairing: std::_Insertion_sort_1<type_creature_value>, agreement
 // 0.955 against 0.920 for the greater arm.
-VA_COMPGEN(0x00435310, 0xD5, INSERTION_SORT_1, type_creature_value)
+VA_COMPGEN(0x00435310, 0xD5, INSERTION_SORT_1, CreatureValue)
 
 // COMDAT pairing: std::_Insertion_sort_1<long>, agreement 0.926.
 VA_COMPGEN(0x004353f0, 0x67, INSERTION_SORT_1, long)
@@ -8457,7 +8459,7 @@ VA_COMPGEN(0x004346d0, 0xCB, BITSET_XRAN, Bitset144)
 // (0x44c610).
 VA_COMPGEN(0x00434ad0, 0xCB, BITSET_XRAN, Bitset9)
 
-VA_COMPGEN(0x00435020, 0x42, STD_UNGUARDED_INSERT, type_creature_value)
+VA_COMPGEN(0x00435020, 0x42, STD_UNGUARDED_INSERT, CreatureValue)
 
 // COMDAT pairing: std::_Unguarded_insert<long>. Both parameters are register
 // arguments under /Gr, so this one ends on a bare `ret`.

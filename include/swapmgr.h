@@ -9,15 +9,15 @@
 #include "window.h"
 
 class Bitmap816;
-class bitmapBorder;
-class button;
-class message;
+class BitmapBorder;
+class Button;
+class Message;
 
 class CSwapManagerChatEdit : public CGameChatEdit {
 public:
     CSwapManagerChatEdit(int x, int y, int w, int h, int textSize,
-                         char* text, char* fontName, font::Color color,
-                         font::EJustify justification, char* backgroundIcon,
+                         char* text, char* fontName, Font::Color color,
+                         Font::Justify justification, char* backgroundIcon,
                          int backgroundFrame, int id, int style,
                          int readType, int insetX, int insetY);
     virtual void sendChat(const char* text, int toWho) OVERRIDE;
@@ -26,18 +26,18 @@ public:
 // Dreamcast proves the direct heroWindow base and contributes no additional
 // virtuals. Retail's destructor walks the inherited Widgets vector verbatim.
 // Before normalization (type): TSwapWindow.
-class SwapWindow : public heroWindow {
+class SwapWindow : public HeroWindow {
 public:
     // Role-derived names: ctor 0x5aaa80 creates the transcript/edit controls,
     // trarrowl/trarrowr bitmaps, and kSwapReceiveFromAlly button. updateArrows
     // 0x5ae430 switches the arrows; the manager feeds chatText to CChatManager.
-    textWidget* m_chatText;  // +0x4c  chat transcript consumed by CChatManager
+    TextWidget* m_chatText;  // +0x4c  chat transcript consumed by CChatManager
     CSwapManagerChatEdit* m_chatEdit;  // +0x50, rollover suppressed while focused
-    bitmapBorder* m_leftArrow;  // +0x54  left-army count arrow
-    bitmapBorder* m_rightArrow;  // +0x58  right-army count arrow
+    BitmapBorder* m_leftArrow;  // +0x54  left-army count arrow
+    BitmapBorder* m_rightArrow;  // +0x58  right-army count arrow
     // 0x5ae500 sets this for a network trade between distinct human owners;
     // sendHeroUpdate and canModHero use it for the two-player handshake.
-    button* m_receiveButton;        // +0x5c  transfer control
+    Button* m_receiveButton;        // +0x5c  transfer control
     int m_field60;       // +0x60  Complete-only tail (allocation extent proof)
 
     SwapWindow(Hero** heroes);
@@ -49,7 +49,8 @@ SIZE(SwapWindow, 0x64);
 // Canonical partial retail layout. IsLeftHero and its sole retail caller
 // prove the two hero pointers at +0x40/+0x44; the swapManager ctor (0x5ae500)
 // proves the rest of the ctor-touched prefix store-for-store.
-enum ESwapSelectSide {
+// Before normalization (type): ESwapSelectSide.
+enum SwapSelectSide {
     kSwapSelectLeft = 0,
     kSwapSelectRight = 1,
 };
@@ -57,7 +58,8 @@ enum ESwapSelectSide {
 // Complete moved the four backpack controls two widget ids above the
 // Dreamcast build and added a second full-refresh id.  The two network ids
 // retain their protocol values across both revisions.
-enum ESwapWidgetId {
+// Before normalization (type): ESwapWidgetId.
+enum SwapWidgetId {
     kSwapLeftQuestLog = 0x55,
     kSwapRightQuestLog = 0x56,
     kSwapLeftBackpackLeft = 0x63,
@@ -73,7 +75,8 @@ enum ESwapWidgetId {
 // SetRolloverText's complete dispatch domain. The 215-byte retail selector
 // table proves each band; ordinal names are retained where the corresponding
 // TSwapWindow constructor body has not yet supplied a stronger widget role.
-enum ESwapRolloverWidgetId {
+// Before normalization (type): ESwapRolloverWidgetId.
+enum SwapRolloverWidgetId {
     kSwapRolloverHeroLeft = 1,
     kSwapRolloverHeroRight,
     kSwapRolloverLeftPrimary0,
@@ -198,13 +201,15 @@ enum ESwapRolloverWidgetId {
     kSwapNoRefreshWidget = 300,
 };
 
-enum ESwapRolloverCreatureDomain {
+// Before normalization (type): ESwapRolloverCreatureDomain.
+enum SwapRolloverCreatureDomain {
     kSwapRolloverCreatureLast = 0x96,
 };
 
 // Complete's campaign-only guard in handle_artifact_click. Retail fixes the
 // scenario ordinals and the one exempt hero id directly.
-enum EArmageddonsBladeCampaignGuard {
+// Before normalization (type): EArmageddonsBladeCampaignGuard.
+enum ArmageddonsBladeCampaignGuard {
     ARMAGEDDONS_BLADE_CAMPAIGN = 7,
     ARMAGEDDONS_BLADE_MAP = 7,
     ARMAGEDDONS_BLADE_EXEMPT_HERO = 148
@@ -232,7 +237,8 @@ SIZE(CTradeRequestDoneMsg, 0x14);
 SIZE(CGiveMeStuffMsg, 0x14);
 SIZE(CHeroUpdateMsg, 0x938);
 
-class swapManager : public baseManager {
+// Before normalization (type): swapManager.
+class SwapManager : public BaseManager {
 public:
     SwapWindow* m_parent;     // +0x38
     Bitmap816* m_border;       // +0x3c
@@ -261,18 +267,18 @@ public:
     CNetMsgHandler* m_previousNetMsgHandler;  // +0x60
     CNetMsgHandler* m_netMsgHandler;
 
-    swapManager(Hero* leftHero, Hero* rightHero);
+    SwapManager(Hero* leftHero, Hero* rightHero);
     void reset();
     virtual int open(int newPriority);  // baseManager vtable slot 0
     virtual void close();               // slot 1
-    virtual int main(message& msg);     // slot 2
+    virtual int main(Message& msg);     // slot 2
     int drawSwapWin();
     inline bool isLeftHero();
     inline unsigned char isRightHero();
     inline Hero* getOtherHero();
     void drawSelector();
     void sendHeroUpdate();
-    int exitSwapManager(message& msg);
+    int exitSwapManager(Message& msg);
     void swapSide();
     void onChatUpdate();
     void updateArtifactWidget(long id, Artifact artifact);
@@ -291,7 +297,7 @@ public:
     void setRolloverText(int codeY);
     void update();
     void handleHeroUpdateMsg(CNetMsg* netMsg);
-    void onWidgetDeselect(message& msg, int& exitFlag);
+    void onWidgetDeselect(Message& msg, int& exitFlag);
     void onReceiveFromAlly();
     void onGiveMeStuffMsg();
     bool canModHero(int hero);

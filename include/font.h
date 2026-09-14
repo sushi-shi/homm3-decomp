@@ -14,7 +14,8 @@ class Bitmap16Bit;
 // pointer at 0x1258 (deleted when set). The 0x1020 span before the
 // palette is the unmodeled font spec table (DC size 5212).
 // Vtable 0x63e5f4.
-class font : public resource {
+// Before normalization (type): font.
+class Font : public Resource {
 public:
     // DC font::TFontSpec (LF_INTERFACE 0x2378, LF_FIELDLIST 0x2377,
     // size 4128 = 0x1020) - the WHOLE header blob at font+0x1c, not the
@@ -34,7 +35,8 @@ public:
         // `int abcC` (right side bearing). The names are left as field_N
         // because other lanes' sources already spell them that way; the
         // identity is recorded rather than renamed.
-        struct myABC {
+// Before normalization (type): font::FontSpec::myABC.
+        struct MyABC {
             int m_abcA;
             unsigned int m_abcB;
             int m_abcC;
@@ -55,7 +57,7 @@ public:
         char m_pad;
         unsigned long m_numpal;
         unsigned short* m_pal[5];
-        myABC m_abc[256];
+        MyABC m_abc[256];
         // Per-character offsets into `data` (DrawCharacter indexes this
         // at font+0xc3c).
         unsigned long m_offset[256];
@@ -65,14 +67,16 @@ public:
     // 0 draws nothing, SOLID takes the color slot, every other value
     // takes the shadow slot (palette.data[32]). Name is a bootstrap
     // invention.
-    enum EGlyphPixel {
+// Before normalization (type): font::EGlyphPixel.
+    enum GlyphPixel {
         GLYPH_PIXEL_SOLID = 0xff
     };
     // Dreamcast font::EJustify, verbatim. Retail corroborates the
     // whole roster: DrawBoundedString strips bit 4 for vertical
     // centering, bit 8 for bottom alignment, then switches the
     // remainder on 0/1/2.
-    enum EJustify {
+// Before normalization (type): font::EJustify.
+    enum Justify {
         LEFT_JUSTIFIED = 0,
         TOP_JUSTIFIED = 0,
         CENTER_JUSTIFIED = 1,
@@ -122,13 +126,13 @@ public:
     // at 0x125c that the size query adds to it. DC has no such member -
     // its port left the resource size query on a different slot shape.
     int m_dataSize;
-    font(const char* name, const FontSpec& fontspec, int dsize,
+    Font(const char* name, const FontSpec& fontspec, int dsize,
          unsigned char* d);  // retail 0x4b5070
-    virtual ~font();
+    virtual ~Font();
     virtual unsigned int getSize() const;
     void setPalette(const Palette16& newPalette);
     void drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const;
-    void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, font::Color colorScheme, unsigned justification, int cursorPos);
+    void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, Font::Color colorScheme, unsigned justification, int cursorPos);
     int lineLength(const char* str, int boxWidth) const;
     int lineWidth(const char* text) const;
     int longestLineWidth(const char* str) const;
@@ -142,7 +146,7 @@ public:
     long getStringWidth(const char* arg) const;
 
 private:
-    void drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, font::Color colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
+    void drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, Font::Color colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
 
 public:
     // Retail 0x4b5b90, font.obj's tail. The `fs.abc[' ']` triple it reads
@@ -153,7 +157,7 @@ public:
                          std::vector<std::string>& result);
 private:
     // Original GetColor, font.cpp:56; ordinary member.
-    int getColor(font::Color colorScheme, bool highlighted);
+    int getColor(Font::Color colorScheme, bool highlighted);
 };
 
 // Retail .bss 0x698a08, a loaded `font*` that four bodies read (0x4514b1
@@ -165,7 +169,7 @@ private:
 // (the Dreamcast dump carries only `medFont`), which is why this keeps
 // the house ordinal placeholder. Owner TU unlocated - extern only, no
 // DATA claim (the gpWindowManager / gTownSizeNames pattern).
-extern font* g_unnamed698a08;
+extern Font* g_unnamed698a08;
 
 // --- font ---
 // CODEVIEW(E:\gamedcs\font.cpp:33, dc 0xa1ba8) void font::font();

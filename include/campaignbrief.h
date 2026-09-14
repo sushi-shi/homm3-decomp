@@ -10,14 +10,14 @@
 
 // Shared saved game snapshot; original Dreamcast name: saveHeader.
 // campaignbrief.cpp owns retail 0x69fdc4.
-extern game* g_saveHeader;
+extern Game* g_saveHeader;
 
-class bitmapBorder;
-class button;
-class coloredBorderFrame;
-class iconWidget;
-class type_func_button;
-class type_text_scroller;
+class BitmapBorder;
+class Button;
+class ColoredBorderFrame;
+class IconWidget;
+class FuncButton;
+class TextScroller;
 
 // Retail's vector insert and constructor cleanup both prove this exact
 // source-level aggregate: a NewSMapHeader, the trivially copied setup record,
@@ -25,7 +25,8 @@ class type_text_scroller;
 // The four map extents NewSMapHeader::Size takes; TCampaignBrief::Select
 // maps them onto the WHICHMAP icon's frames 0..3 (anything else is frame
 // 4). Declared with its one consumer.
-enum EMapSize {
+// Before normalization (type): EMapSize.
+enum MapSize {
     MAP_SIZE_SMALL = 36,
     MAP_SIZE_MEDIUM = 72,
     MAP_SIZE_LARGE = 108,
@@ -69,7 +70,7 @@ class CampaignStartOption;
 // Retail Complete diverges from the Dreamcast class after heroWindow, but
 // fixes every field used by the campaign constructor and destructor.
 // Before normalization (type): TCampaignBrief.
-class CampaignBrief : public heroWindow {
+class CampaignBrief : public HeroWindow {
 public:
     struct ScenarioStruct;
     struct CampaignHeaderStruct;
@@ -169,13 +170,14 @@ public:
     struct CampaignHeaderStruct {
         // Complete's Load body sets OPEN_FAILED when its reader factory
         // returns null and VERSION_UNSUPPORTED when campaign_version < 4.
-        enum EFileError {
+// Before normalization (type): CampaignBrief::CampaignHeaderStruct::EFileError.
+        enum FileError {
             CAMPAIGN_FILE_OK = 0,
             CAMPAIGN_FILE_OPEN_FAILED = 1,
             CAMPAIGN_FILE_VERSION_UNSUPPORTED = 2
         };
 
-        EFileError m_fileError;
+        FileError m_fileError;
         std::string m_fileName;
         int m_campaignVersion;
         int m_regionMap;
@@ -214,7 +216,7 @@ public:
     // the background, campaign text, flags and three region-image states.
     // Keeping the names in the class also restores the real C1 declaration
     // environment instead of steering /Ob2 from a stripped-down surrogate.
-    enum EOtherWidgetIDs {
+    enum OtherWidgetIDs {
         BACKGROUND_ID = 100,
         CAMPAIGN_NAME_ID,
         CAMPAIGN_DESCRIPTION_ID,
@@ -360,13 +362,13 @@ public:
     CampaignHeaderStruct* m_campaign;
     int m_field68;
     int m_selectedScenario;
-    coloredBorderFrame* m_startBonusBorders[3];
-    bitmapBorder* m_bitmapBonusImages[3];
-    iconWidget* m_spriteBonusImages[3];
-    button* m_difficultyButtons[5];
-    type_func_button* m_difficultyDecrButton;
-    type_func_button* m_difficultyIncrButton;
-    type_text_scroller* m_scroller;
+    ColoredBorderFrame* m_startBonusBorders[3];
+    BitmapBorder* m_bitmapBonusImages[3];
+    IconWidget* m_spriteBonusImages[3];
+    Button* m_difficultyButtons[5];
+    FuncButton* m_difficultyDecrButton;
+    FuncButton* m_difficultyIncrButton;
+    TextScroller* m_scroller;
 
     CampaignBrief(unsigned char newCampaign, unsigned char viewFromGame);
     virtual ~CampaignBrief();
@@ -386,7 +388,7 @@ private:
     // private helper, proving the owning header grants it friendship;
     // campaignbrief.cpp declares the static ahead of this header so the
     // friend binds to it.
-    friend int campaignBriefHandler(message& msg);
+    friend int campaignBriefHandler(Message& msg);
     // The DC class type contains this private member in addition to the
     // same-named file-scope helper emitted by campaignbrief.obj.
     void showTerritorySmacker(unsigned char evilPost);

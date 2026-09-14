@@ -12,21 +12,22 @@
 // (16 B), Font@0x40, Color@0x44, BackColor@0x48, Justify@0x4c - total
 // 0x50. Vtable 0x642db0; the dtor Disposes the font, the string
 // teardown is implicit.
-class textWidget : public widget {
+// Before normalization (type): textWidget.
+class TextWidget : public Widget {
 public:
     std::string m_text;
-    font* m_font;
-    font::Color m_color;
+    Font* m_font;
+    Font::Color m_color;
     int m_backColor;
     unsigned int m_justify;
-    textWidget(int x, int y, int w, int h, const char* text,
-               const char* fontName, font::Color color, int id,
+    TextWidget(int x, int y, int w, int h, const char* text,
+               const char* fontName, Font::Color color, int id,
                unsigned justify, int backColor, int style);
-    textWidget(int x, int y, int w, int h, const char* text,
-               const char* fontName, font::Color color, int id,
+    TextWidget(int x, int y, int w, int h, const char* text,
+               const char* fontName, Font::Color color, int id,
                unsigned justify, int backColor, unsigned char focusable);
-    virtual ~textWidget();  // retail 0x5bc3b0
-    virtual int main(message& msg);
+    virtual ~TextWidget();  // retail 0x5bc3b0
+    virtual int main(Message& msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     virtual void draw() const;
     // Dreamcast textwdgt.cpp:257: empty Dim overrides widget dimming.
@@ -39,7 +40,7 @@ public:
     // qualifier is byte-neutral across the affected widget/name-edit callers.
     const char* getText() { return m_text.c_str(); }
     // E:\gamedcs\TextWdgt.h:78, dc 0x1652f4
-    void setColor(font::Color newColor) { m_color = newColor; }
+    void setColor(Font::Color newColor) { m_color = newColor; }
 };
 
 class Bitmap816;
@@ -48,15 +49,16 @@ class Bitmap16Bit;
 // Retail dtor 0x5bc6d0 is the empty derived dtor: the inlined
 // ~textWidget body under this class's vtable store, then ~widget.
 // It does NOT free the backing bitmap - that resource is borrowed.
-class bitmapBackedTextWidget : public textWidget {
+// Before normalization (type): bitmapBackedTextWidget.
+class BitmapBackedTextWidget : public TextWidget {
 public:
     // +0x50: the 11-argument constructor 0x5bc760 stores GetBitmap816's
     // result here, and Draw 0x5bc7f0 blits out of it after clamping the
     // widget extent against its +0x24/+0x28 Width/Height.
     Bitmap816* m_image;
-    bitmapBackedTextWidget(int x, int y, int w, int h, const char* text,
+    BitmapBackedTextWidget(int x, int y, int w, int h, const char* text,
                            const char* fontName, const char* backName,
-                           font::Color color, int id, unsigned justify,
+                           Font::Color color, int id, unsigned justify,
                            int style);
     // Implicit destructor; CodeView dc 0x1653b0 compgenx.
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;

@@ -34,12 +34,13 @@ class Bitmap816;
 // mode-change path (0x601bfe) picks between them with
 // `greenMask == 0x7e0 ? 6 : 5` and hands the answer to Remap, which is the
 // only consumer; the DC roster names that parameter old_green_bits.
-enum EBitmapGreenBits {
+// Before normalization (type): EBitmapGreenBits.
+enum BitmapGreenBits {
     BITMAP_GREEN_BITS_1555 = 5,
     BITMAP_GREEN_BITS_565 = 6
 };
 
-class Bitmap16Bit : public resource {
+class Bitmap16Bit : public Resource {
 public:
     // Slot 0 is the scalar deleting destructor: heroWindow deletes its
     // background through [vptr]+flag 1. Slot 2 reports the resource's

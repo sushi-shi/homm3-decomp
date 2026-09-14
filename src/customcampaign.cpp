@@ -220,7 +220,7 @@ VA(0x004840d0, 0x155)
 Hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
 {
     Hero* best = 0;
-    playerData* player = &g_game->m_players[whichPlayer];
+    PlayerData* player = &g_game->m_players[whichPlayer];
     switch (heroSelector) {
     case CAMPAIGN_BONUS_HERO_STRONGEST: {
         for (int heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
@@ -285,7 +285,7 @@ void CampaignSpellScrollBonus::apply(int whichPlayer) const
 VA(0x00484310, 0x1D5)
 void CampaignCreatureBonus::apply(int whichPlayer) const
 {
-    playerData* player = &g_game->m_players[whichPlayer];
+    PlayerData* player = &g_game->m_players[whichPlayer];
     if ((g_game->m_campaign.m_currentCampaign == g_creatureBonusTownCampaignA &&
          g_game->m_campaign.m_currentMap == g_creatureBonusTownScenarioA) ||
         (g_game->m_campaign.m_currentCampaign == g_creatureBonusTownCampaignB &&
@@ -396,7 +396,7 @@ const char* CampaignBuildingBonus::getIconDefName() const
 VA(0x00484650, 0x146)
 void CampaignBuildingBonus::apply(int whichPlayer) const
 {
-    playerData* player = &g_game->m_players[whichPlayer];
+    PlayerData* player = &g_game->m_players[whichPlayer];
     CMapHeaderData::PlayerSlotAttributes* slot =
         &g_game->m_mapHeader.m_playerSlotAttributes[whichPlayer];
     if (player->m_numTowns == 0)
@@ -649,7 +649,7 @@ std::string CampaignResourceBonus::getText() const
 VA(0x00484e20, 0xDE)
 void CampaignResourceBonus::apply(int whichPlayer) const
 {
-    playerData* player = &g_game->m_players[whichPlayer];
+    PlayerData* player = &g_game->m_players[whichPlayer];
     switch (m_resource) {
     case WOOD:
     case MERCURY:
@@ -1187,7 +1187,7 @@ CampaignBrief::ScenarioStruct::~ScenarioStruct()
 // The major recovery still depends on game.h's HeroExtra pads not being
 // members: retail's generated assignment skips every one of them.
 VA(0x00486110, 0x32F)  // anchor-caller(DoPreLoadCustomization +0x117), retail-only
-void game::rehomeCampaignHeroSetup(int heroId)
+void Game::rehomeCampaignHeroSetup(int heroId)
 {
     HeroExtra& setup = m_heroSetup[heroId];
     if (setup.m_location.m_x < 0)
@@ -1698,7 +1698,7 @@ void CampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
                 continue;
             if (!m_crossoverArtifacts.at(artifact.m_artifactId))
                 continue;
-            playerData& recipient = g_game->m_players[player];
+            PlayerData& recipient = g_game->m_players[player];
             for (int playerHero = 0;
                  playerHero < recipient.m_numHeroes;
                  ++playerHero) {
@@ -1848,9 +1848,9 @@ void CampaignBrief::ScenarioStruct::read(AbstractFile* infile,
     } else {
         std::bitset<129> legacyArtifacts = readPackedCampaignBits<129>(infile);
         std::copy(
-            bitset_iterator<129>(legacyArtifacts, 0),
-            bitset_iterator<129>(legacyArtifacts, g_crossoverLegacyArtifactBits),
-            bitset_iterator<144>(m_crossoverArtifacts, 0));
+            BitsetIterator<129>(legacyArtifacts, 0),
+            BitsetIterator<129>(legacyArtifacts, g_crossoverLegacyArtifactBits),
+            BitsetIterator<144>(m_crossoverArtifacts, 0));
     }
 
     unsigned char optionType;
@@ -2044,7 +2044,7 @@ bool CampaignBrief::CampaignHeaderStruct::load()
 
     std::filebuf* fileBuf = new std::filebuf;
     char currentDirectory[200];
-    _getcwd(currentDirectory, sizeof(currentDirectory));
+    getcwd(currentDirectory, sizeof(currentDirectory));
     _chdir(DATA_COMPGEN(0x006772d0, oldMainMapsDir, "maps"));
     fileBuf->open(m_fileName.c_str(), std::ios::in | std::ios::binary);
     _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
@@ -2210,11 +2210,11 @@ void CampaignBrief::MapTextStruct::play()
         strip->fillRect(0, 0, strip->getWidth(), strip->getHeight(), 0);
         g_bigFont->drawBoundedString(m_subtitles.c_str(), strip, 0, 0,
                                      strip->getWidth(), strip->getHeight(),
-                                     font::Color(g_campaignSubtitleColor),
-                                     font::CENTER_JUSTIFIED, -1);
+                                     Font::Color(g_campaignSubtitleColor),
+                                     Font::CENTER_JUSTIFIED, -1);
     }
 
-    sample* speech;
+    Sample* speech;
     if (!speechName)
         speech = 0;
     else
@@ -2337,7 +2337,7 @@ void CampaignBrief::MapTextStruct::play()
                 finished = 1;
         }
 
-        message msg = g_inputManager->getEvent();
+        Message msg = g_inputManager->getEvent();
         switch (msg.m_id) {
         case MESSAGE_KEY_DOWN:
             if (msg.m_codeX != g_campaignSkipKey)
@@ -2485,7 +2485,7 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
             break;
     }
 
-    playerData* player = &g_game->m_players[gamePos];
+    PlayerData* player = &g_game->m_players[gamePos];
     for (int heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex)
         crossover.push_back(*g_game->getHero(player->m_heroes[heroIndex]));
 
@@ -2553,7 +2553,7 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
     CampaignBrief::CampaignHeaderStruct* header =
         static_cast<CampaignBrief::CampaignHeaderStruct*>(campaignHeader);
 
-    unsigned char wanted[game::HERO_COUNT];
+    unsigned char wanted[Game::HERO_COUNT];
     memset(wanted, 0, sizeof wanted);
 
     for (unsigned int mapIndex = 0; mapIndex < header->m_scenarios.size(); ++mapIndex) {

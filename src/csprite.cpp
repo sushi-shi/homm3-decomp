@@ -11,7 +11,7 @@ VA_COMPGEN(0x0047b8f0, 0x21, SCALAR_DELETING_DTOR, CSprite)
 
 VA(0x0047b920, 0x118)
 CSprite::CSprite(const char* name, int sprtype, int w, int h)
-    : resource(name, (EResourceType)sprtype),
+    : Resource(name, (ResourceType)sprtype),
       m_s(0), m_p(0), m_p24(0), m_numSequences(0), m_width(w), m_height(h)
 {
     m_numSequences = getNumSeqs(sprtype);
@@ -447,7 +447,7 @@ void CSprite::SpriteDataReload()
 
 // E:\gamedcs\resrce.h:34
 DC_ONLY(0x74060, 0x6)
-const char* resource::get_Name()
+const char* Resource::get_Name()
 {
     // @stub
 }

@@ -104,16 +104,19 @@ public:
 };
 
 // dplay.h's DPPLAYERTYPE_ pair, the domain of the field above.
-enum EDPlayerType {
+// Before normalization (type): EDPlayerType.
+enum DPlayerType {
     DPPLAYERTYPE_GROUP = 0,
     DPPLAYERTYPE_PLAYER = 1
 };
 
-enum EDPlayConnectionFlags {
+// Before normalization (type): EDPlayConnectionFlags.
+enum DPlayConnectionFlags {
     DPLAY_CONNECTION_CREATE_SESSION = 0x2
 };
 
-enum EDPlaySessionFlags {
+// Before normalization (type): EDPlaySessionFlags.
+enum DPlaySessionFlags {
     DPLAY_SESSION_MIGRATE_HOST = 0x4,
     DPLAY_SESSION_KEEP_ALIVE = 0x40
 };
@@ -121,7 +124,8 @@ enum EDPlaySessionFlags {
 // The SDK macro values are also the exact HRESULT immediates used by the
 // DirectPlay send path. The domain lives here instead of importing DPLAY.H's
 // anonymous typedef structs over these hand-owned forward declarations.
-enum EDPlaySendError {
+// Before normalization (type): EDPlaySendError.
+enum DPlaySendError {
     DPLAY_SEND_ERROR_INVALID_PARAMETER = 0x80070057,
     DPLAY_SEND_ERROR_INVALID_PLAYER = 0x88770096
 };
@@ -129,7 +133,8 @@ enum EDPlaySendError {
 // The receive path's own SDK immediate, the one HRESULT its drain loop
 // treats as success: MAKE_DPHRESULT(190). remote.obj's PollRemote compares
 // m_hRes against it before deciding the session is broken.
-enum EDPlayReceiveError {
+// Before normalization (type): EDPlayReceiveError.
+enum DPlayReceiveError {
     DPLAY_RECEIVE_ERROR_NO_MESSAGES = 0x887700be
 };
 

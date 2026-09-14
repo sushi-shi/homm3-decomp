@@ -59,7 +59,8 @@ struct PcxData {
     int m_vbitcount;
 };
 
-struct imgdes {
+// Before normalization (type): imgdes.
+struct Imgdes {
     unsigned char* m_ibuff;
     unsigned int m_stx;
     unsigned int m_sty;
@@ -74,10 +75,10 @@ struct imgdes {
 };
 
 int __stdcall pcxinfo(const char* filename, PcxData* data);
-int __stdcall allocimage(imgdes* image, int width, int height,
+int __stdcall allocimage(Imgdes* image, int width, int height,
                          int bitsPerPixel);
-int __stdcall loadpcx(const char* filename, imgdes* image);
-int __stdcall flipimage(imgdes* source, imgdes* destination);
-void __stdcall freeimage(imgdes* image);
+int __stdcall loadpcx(const char* filename, Imgdes* image);
+int __stdcall flipimage(Imgdes* source, Imgdes* destination);
+void __stdcall freeimage(Imgdes* image);
 
 #endif  // HOMM3_PCX_H

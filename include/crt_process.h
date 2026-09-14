@@ -10,10 +10,12 @@
 typedef unsigned (__stdcall* H3ThreadStart)(void*);
 
 extern "C" {
-unsigned long __cdecl _beginthreadex(
+// Before normalization (function): _beginthreadex.
+unsigned long __cdecl beginthreadex(
     void* security, unsigned stackSize, H3ThreadStart startAddress,
     void* arguments, unsigned initFlag, unsigned* threadAddress);
-void __cdecl _endthreadex(unsigned returnValue);
+// Before normalization (function): _endthreadex.
+void __cdecl endthreadex(unsigned returnValue);
 }
 
 #endif  /* HOMM3_CRT_PROCESS_H */

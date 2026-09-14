@@ -9,7 +9,8 @@
 // claimed by advmgr.cpp; this is the owning new-game consumer declaration.
 extern int g_gameCommand;
 
-enum ENewGameDialogCommand {
+// Before normalization (type): ENewGameDialogCommand.
+enum NewGameDialogCommand {
     NEWGAME_CAMPAIGN_BRIEF_EXIT = 111,
     NEWGAME_COMMAND_QUIT = 107
 };

@@ -9,12 +9,12 @@
 #include "advmgr_popup.h"
 #include "armygrp.h"
 
-class army;
+class Army;
 class ArmyGroup;
 class Hero;
 class Town;
-class bitmapBackedTextWidget;
-class iconWidget;
+class BitmapBackedTextWidget;
+class IconWidget;
 struct CreatureTypeTraits;
 
 // DC's named tail begins at +0x58 after its 0x58-byte CAdvPopup. Retail's
@@ -28,7 +28,7 @@ struct CreatureTypeTraits;
 class ViewArmyWindow : public CAdvPopup {
 public:
     // Complete retains public action IDs; the older DC enum records UPGRADE_ID.
-    enum EWidgetIDs {
+    enum WidgetIDs {
         UPGRADE_ID = 300,
         OK_ID = 301,
         ACCEPT_ID = 0x7802,
@@ -36,7 +36,7 @@ public:
     };
 
     ViewArmyWindow(int armyType, int x0, int y0, unsigned char showOk);
-    ViewArmyWindow(const army* thisArmy, int x0, int y0,
+    ViewArmyWindow(const Army* thisArmy, int x0, int y0,
                     unsigned char showOk);
     // Complete adds the tenth groupAlignments argument (ret 0x28) and
     // uses the mutable group pointer required by GetArmyMorale/GetArmyLuck.
@@ -47,10 +47,10 @@ public:
     virtual ~ViewArmyWindow();
     void doModal();
     void quickView();
-    virtual int windowHandler(message& msg);
+    virtual int windowHandler(Message& msg);
 
 private:
-    enum EOtherWidgetIDs {
+    enum OtherWidgetIDs {
         BACKGROUND_ID = 200,
         SPRITE_ID = 201,
         SPRITE_BACKGROUND_ID = 202,
@@ -99,7 +99,7 @@ private:
     void createSpeedWidget(int normalSpeed, int currentSpeed);
     void createMoraleWidget(int newMorale);
     void createLuckWidget(int newLuck);
-    void createSpellInfluenceWidgets(const army* thisArmy);
+    void createSpellInfluenceWidgets(const Army* thisArmy);
     void createOkWidget();
     void createUpgradeWidget();
     void createDismissWidget();
@@ -121,8 +121,8 @@ private:
     // before Influence. DC records 14 real members and no padding field.
     int m_influence[3];
     int m_duration[3];
-    bitmapBackedTextWidget* m_rolloverWidget;
-    iconWidget* m_spriteWidget;
+    BitmapBackedTextWidget* m_rolloverWidget;
+    IconWidget* m_spriteWidget;
 
 };
 SIZE(ViewArmyWindow, 0xb8);

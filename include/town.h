@@ -105,7 +105,8 @@ enum type_building_id {
 // NUM_RESOURCES is a source constant, not an EGameResource member: the
 // complete Dreamcast CodeView enum does not contain it.
 #define NUM_RESOURCES 7
-enum EGameResource {
+// Before normalization (type): EGameResource.
+enum GameResource {
     const_no_resource = -1,
     WOOD = 0,
     MERCURY = 1,
@@ -165,7 +166,8 @@ extern int g_heroGoldCost;
 // DC struct.h roster: exactly two dwords. make_gift's retail vector
 // advances by eight bytes and writes the resource id followed by the
 // displayed quantity before inserting an entry.
-struct type_dialog_resource {
+// Before normalization (type): type_dialog_resource.
+struct DialogResource {
 public:
     // Retail only proves a four-byte resource index in the dialog vector;
     // the DC enum name is semantic evidence, not an x86 layout requirement.
@@ -175,18 +177,19 @@ public:
     // signed long cannot produce.
     unsigned long m_qualifier;
 };
-SIZE(type_dialog_resource, 8);
+SIZE(DialogResource, 8);
 
 // DC LF_INTERFACE `type_horde_effect`, size 8, three members at the
 // offsets initialize_hordes writes: creature @0, bonus @4 (16-bit
 // store), dwelling @6 (16-bit store).
-struct type_horde_effect {
+// Before normalization (type): type_horde_effect.
+struct HordeEffect {
 public:
     CreatureType m_creature;
     short m_bonus;
     short m_dwelling;
 };
-SIZE(type_horde_effect, 8);
+SIZE(HordeEffect, 8);
 
 class TownExtra {
 public:
@@ -425,14 +428,14 @@ public:
     unsigned char buyBuilding(type_building_id building);
     void destroyExtraCapitol();
     void getBuildCost(type_building_id building, int* resources) const;
-    short getBuildCost(type_building_id building, EGameResource* types,
+    short getBuildCost(type_building_id building, GameResource* types,
                          int* amounts) const;
     int* getBuildCostArray(type_building_id building) const;
     __int64 getBuildableMask() const;
     // 0x5bfb60. Weekly base, castle, artifact, horde, generator, and Grail
     // growth for one dwelling slot.
     short getGrowthRate(short dwelling) const;
-    type_horde_effect* getHordeEffect(type_building_id building) const;
+    HordeEffect* getHordeEffect(type_building_id building) const;
     int* getSiloIncome() const;
     // 0x5bfeb0 (dc 0x167c3c) and 0x5c0670 (dc 0x16842c), reconstructed
     // in the owning TU; gated so no other view of this class gains the
@@ -528,7 +531,7 @@ protected:
     // 0x6887a0, nine 4-entry rows of 8 bytes (0x6887a0..0x6888c0);
     // initialize_hordes walks it with a 0x10 (two-entry) inner step
     // nine times, which is what pins the row count at 9.
-    static type_horde_effect s_constHordeEffects[9][4];
+    static HordeEffect s_constHordeEffects[9][4];
     static int s_dwellingCosts[9][14][NUM_RESOURCES];
     // The three build-cost tables get_build_cost_array switches
     // between, all DC-attested town statics whose retail .bss extents
@@ -587,7 +590,8 @@ extern __int64 g_townEligibleBuildMask[9];
 // 0x160-stride rows to 0x6983f8). Owner TU unlocated - extern only.
 extern __int64 g_hierarchyMask[9][44];
 
-enum ETownConstants {
+// Before normalization (type): ETownConstants.
+enum TownConstants {
     // The "no dock site" sentinel CanBuildDock tests for.
     TOWN_DOCK_SITE_NONE = 0xff,
     // Nine town types x 44 building-id slots, byte-derived from
@@ -612,7 +616,8 @@ enum ETownConstants {
 // One-based dwelling tier used by the retail artifact-growth helper.
 // Tier one has no corresponding growth artifact, so only the switch's
 // populated domain is named here.
-enum ETownDwellingTier {
+// Before normalization (type): ETownDwellingTier.
+enum TownDwellingTier {
     TOWN_DWELLING_TIER_2 = 2,
     TOWN_DWELLING_TIER_3 = 3,
     TOWN_DWELLING_TIER_4 = 4,

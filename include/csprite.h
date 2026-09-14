@@ -8,15 +8,16 @@
 #include "resource.h"
 #include "palette.h"
 
-class palette;
-class paletteHiColor;
+class Palette;
+class PaletteHiColor;
 class Palette24;
 
 // Creature sprite sequence ids (DC CodeView enum creature_seqid,
 // NH3API creatures.hpp identical): only the transition pair
 // iconWidget's idle machine dispatches on is listed - grow the roster
 // as consumers prove values.
-enum creature_seqid {
+// Before normalization (type): creature_seqid.
+enum CreatureSeqid {
     cs_walk = 0,
     cs_fidget = 1,
     cs_wait = 2,
@@ -55,7 +56,7 @@ enum creature_seqid {
 // dropped SpecialCacheFlag/Sp_loaded and hoisted s ahead of p).
 // Retail vtable 0x63d6b0: slot 0 = scalar deleting dtor (0x47b8f0),
 // slot 1 = Dispose (0x55d1a0), slot 2 = resource size (0x47bd50).
-class CSprite : public resource {
+class CSprite : public Resource {
 public:
     CSprite(const char* name, int sprtype, int w, int h);
     virtual ~CSprite();  // slot 0

@@ -19,7 +19,7 @@ int random(int min, int max);
 
 // E:\gamedcs\iconwdgt.cpp:35
 DC_ONLY(0xd92fc, 0x54)
-void iconWidget::iconWidget()
+void IconWidget::IconWidget()
 {
     // @stub
 }
@@ -28,13 +28,13 @@ void iconWidget::iconWidget()
 
 #endif  // @carcass
 
-VA_COMPGEN(0x004ea6f0, 0x21, SCALAR_DELETING_DTOR, iconWidget)
+VA_COMPGEN(0x004ea6f0, 0x21, SCALAR_DELETING_DTOR, IconWidget)
 
 VA(0x004ea720, 0x8C)  // dc 0xd9350
-iconWidget::iconWidget(int x, int y, int w, int h, int id, const char* image,
+IconWidget::IconWidget(int x, int y, int w, int h, int id, const char* image,
                        int frame, int sequence, bool flipped,
                        unsigned backColor, int style)
-    : widget(x, y, w, h, id, style),
+    : Widget(x, y, w, h, id, style),
       m_frame(frame),
       m_seqId(sequence),
       m_isFlipped(flipped),
@@ -45,7 +45,7 @@ iconWidget::iconWidget(int x, int y, int w, int h, int id, const char* image,
 }
 
 VA(0x004ea7b0, 0x55)  // dc 0xd9464
-iconWidget::~iconWidget()
+IconWidget::~IconWidget()
 {
     if (m_sprite)
         m_sprite->dispose();
@@ -67,7 +67,7 @@ iconWidget::~iconWidget()
 // moving default/base delegation into separate switch arms gives at most
 // 91.8050%. Neither failed form establishes an unavoidable source goto.
 VA(0x004ea810, 0x2F4)  // vtable 0x63ec48 slot 2, dc 0xd94a4
-int iconWidget::main(message& msg)
+int IconWidget::main(Message& msg)
 {
     if (m_sleepCount > 0) {
         return 0;
@@ -75,7 +75,7 @@ int iconWidget::main(message& msg)
 
     if (!(m_status & WIDGET_ACTIVE)) {
         if (msg.m_id == MESSAGE_WIDGET)
-            return widget::main(msg);
+            return Widget::main(msg);
         return 0;
     }
 
@@ -159,14 +159,14 @@ int iconWidget::main(message& msg)
         break;
     }
 
-    return widget::main(msg);
+    return Widget::main(msg);
 }
 
 #if 0  // @carcass
 
 // E:\gamedcs\iconwdgt.cpp:275
 DC_ONLY(0xd96e4, 0x4)
-void iconWidget::zBufferDraw()
+void IconWidget::zBufferDraw()
 {
     // @stub
 }
@@ -183,19 +183,19 @@ void iconWidget::zBufferDraw()
 // dead - retail returns a bare zero.
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x004eab10, 0x5)  // anchor-vtable (slot 13 of 0x63ec48), dc 0xd96b8
-bool iconWidget::handleClick(bool downClick, bool rightClick)
+bool IconWidget::handleClick(bool downClick, bool rightClick)
 {
     return 0;
 }
 
 VA(0x004eab20, 0x7)  // dc 0xd96bc
-int iconWidget::getRealWidth() const
+int IconWidget::getRealWidth() const
 {
     return m_sprite->getWidth();
 }
 
 VA(0x004eab30, 0x7)  // dc 0xd96d0
-int iconWidget::getRealHeight() const
+int IconWidget::getRealHeight() const
 {
     return m_sprite->getHeight();
 }
@@ -207,7 +207,7 @@ int iconWidget::getRealHeight() const
 // offset moving into sx/sy and shrinking sw/sh, each overrun clamping
 // sw/sh against the widget box.
 VA(0x004eab40, 0x4B0)  // dc 0xd96e8
-void iconWidget::draw() const
+void IconWidget::draw() const
 {
     int drawX = m_x + m_parentWindow->m_x;
     int drawY = m_y + m_parentWindow->m_y;
@@ -336,7 +336,7 @@ void iconWidget::draw() const
 }
 
 VA(0x004eaff0, 0x3E)  // dc 0xd9c7c
-void iconWidget::setIconFrame(int newFrame)
+void IconWidget::setIconFrame(int newFrame)
 {
     m_frame = newFrame % m_sprite->getNumFrames(m_seqId);
 }
@@ -346,7 +346,7 @@ void iconWidget::setIconFrame(int newFrame)
 // Main's retail-inlined WIDGET_SET_ICON_SEQUENCE arm corroborates the order:
 // its six-instruction block is exact only with this source shape.
 DC_ONLY(0xd9ca4, 0x8)
-void iconWidget::setIconSequence(int newSequence)
+void IconWidget::setIconSequence(int newSequence)
 {
     m_seqId = newSequence;
     m_frame = 0;
@@ -354,7 +354,7 @@ void iconWidget::setIconSequence(int newSequence)
 
 // E:\gamedcs\iconwdgt.cpp:452
 DC_ONLY(0xd9cac, 0x32)
-void iconWidget::setPalette(const char* paletteName)
+void IconWidget::setPalette(const char* paletteName)
 {
     Palette16* newPalette = ResourceManager::getPalette(paletteName);
     if (newPalette) {
@@ -365,7 +365,7 @@ void iconWidget::setPalette(const char* paletteName)
 
 // E:\gamedcs\iconwdgt.cpp:462
 DC_ONLY(0xd9ce0, 0x84)
-void iconWidget::setPlayerPaletteColors(int whichPlayer)
+void IconWidget::setPlayerPaletteColors(int whichPlayer)
 {
     ::setPlayerPaletteColors(m_sprite->getPalette(), whichPlayer);
     // DC 465 calls the non-const GetPalette24 reference accessor.
@@ -373,7 +373,7 @@ void iconWidget::setPlayerPaletteColors(int whichPlayer)
 }
 
 VA(0x004eb030, 0x22)  // dc 0xd9d64
-void iconWidget::setSprite(const char* newSprite)
+void IconWidget::setSprite(const char* newSprite)
 {
     if (m_sprite)
         m_sprite->dispose();
@@ -381,7 +381,7 @@ void iconWidget::setSprite(const char* newSprite)
 }
 
 VA(0x004eb060, 0x1EB)  // dc 0xd9d90
-void iconWidget::nextRandomFrame()
+void IconWidget::nextRandomFrame()
 {
     if (m_frame + 1 < m_sprite->getNumFrames(m_seqId)) {
         setIconFrame(m_frame + 1);
@@ -395,7 +395,7 @@ void iconWidget::nextRandomFrame()
     } else {
         do {
             const struct {
-                creature_seqid m_sequenceId;
+                CreatureSeqid m_sequenceId;
                 int m_chance;
             } sequenceList[11] = {
                 {cs_walk, 65},
@@ -433,7 +433,7 @@ void iconWidget::nextRandomFrame()
 }
 
 VA(0x004eb250, 0xED)  // dc 0xd9ee8
-void iconWidget::nextRandomSiegeEngineFrame()
+void IconWidget::nextRandomSiegeEngineFrame()
 {
     if (m_frame + 1 < m_sprite->getNumFrames(m_seqId)) {
         setIconFrame(m_frame + 1);
@@ -442,7 +442,7 @@ void iconWidget::nextRandomSiegeEngineFrame()
     int chosen;
     do {
         const struct {
-            creature_seqid m_sequenceId;
+            CreatureSeqid m_sequenceId;
             int m_chance;
         } sequenceList[4] = {
             {cs_wait, 94},
@@ -467,7 +467,7 @@ void iconWidget::nextRandomSiegeEngineFrame()
 
 // E:\gamedcs\resrce.h:33
 DC_ONLY(0xd9f94, 0x4)
-EResourceType resource::get_resType()
+ResourceType Resource::get_resType()
 {
     // @stub
 }
@@ -481,7 +481,7 @@ void CSprite::drawPointer(int framenum, Bitmap16Bit* dst, int dx, int dy, unsign
 
 // E:\gamedcs\iconwdgt.cpp:41
 DC_ONLY(0xda018, 0x34)
-void* iconWidget::`scalar deleting destructor'(unsigned __flags)
+void* IconWidget::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

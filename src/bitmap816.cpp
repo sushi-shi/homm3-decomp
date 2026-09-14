@@ -34,7 +34,7 @@ void Bitmap816::Bitmap816(const char* name, int rbits, int rshift, int gbits, in
 VA(0x0044f800, 0xCA)  // dc 0x53960
 Bitmap816::Bitmap816(const char* name, int w, int h, unsigned char* data,
                      Palette16* palette16, int dataSize)
-    : resource(name, RESOURCE_TYPE_BITMAP),
+    : Resource(name, RESOURCE_TYPE_BITMAP),
       m_imageSize(w * h), m_width(w), m_height(h), m_pitch(w), m_p16(palette16)
 {
     m_dataSize = dataSize ? dataSize : m_imageSize;
@@ -47,7 +47,7 @@ VA(0x0044f8d0, 0xF8)  // dc 0x53b0c
 Bitmap816::Bitmap816(const char* name, const char* path,
                      int rbits, int rshift, int gbits, int gshift,
                      int bbits, int bshift)
-    : resource(name, RESOURCE_TYPE_BITMAP),
+    : Resource(name, RESOURCE_TYPE_BITMAP),
       m_dataSize(0), m_imageSize(0), m_width(0), m_height(0), m_pitch(0), m_map(0)
 {
     char filename[264];
@@ -134,7 +134,7 @@ int Bitmap816::importPCXFile(const char* filename, int rbits, int rshift,
                              int gbits, int gshift, int bbits, int bshift)
 {
     PcxData pdat;
-    imgdes pcxfile;
+    Imgdes pcxfile;
     int error = pcxinfo(filename, &pdat);
     if (error)
         return 1;

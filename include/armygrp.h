@@ -282,7 +282,8 @@ typedef int SpellID;
 // ai_combat's damage-spell dispatch). NH3API spells.hpp spellings;
 // the DC SpellID enum corroborates every value (eSpellStoneGaze for
 // SPELL_STONE).
-enum ESpellId {
+// Before normalization (type): ESpellId.
+enum SpellId {
     SPELL_SUMMON_BOAT = 0x0,
     // advManager::SkuttleBoat (0x41cdf0) is the witness and it proves the
     // id twice in one body: it takes its traits row at `akSpellTraits +

@@ -118,10 +118,10 @@ double aiValueOfLuck(long luck, long change)
                                    g_aiBadLuckValue);
 }
 
-VA_COMPGEN(0x00437a00, 0x6FA, IMPLICIT_COPY_CTOR, army)
+VA_COMPGEN(0x00437a00, 0x6FA, IMPLICIT_COPY_CTOR, Army)
 
 VA(0x00435980, 0x2A)  // dc 0x3c810
-long aiGetAttackDamage(const army& currentArmy, long ourHits, const army& enemy, unsigned char ranged, long distance)
+long aiGetAttackDamage(const Army& currentArmy, long ourHits, const Army& enemy, unsigned char ranged, long distance)
 {
     long troops = (currentArmy.m_monInfo.m_hitPoints + ourHits - 1)
                   / currentArmy.m_monInfo.m_hitPoints;
@@ -131,7 +131,7 @@ long aiGetAttackDamage(const army& currentArmy, long ourHits, const army& enemy,
 // E:\gamedcs\ai_tactical.cpp:215 - dc 0x3c854. No retail slot of its
 // own: simulate_attack (0x4359b0) carries it inlined three times, so
 // /OPT:REF dropped the out-of-line copy.
-void type_AI_combat_parameters::simulateSingleAttack(const army& currentArmy, long& ourHits, const army& enemy, long& enemyHits, unsigned char ranged, long distance) const
+void AICombatParameters::simulateSingleAttack(const Army& currentArmy, long& ourHits, const Army& enemy, long& enemyHits, unsigned char ranged, long distance) const
 {
     long troops = (currentArmy.m_monInfo.m_hitPoints + ourHits - 1)
                   / currentArmy.m_monInfo.m_hitPoints;
@@ -152,7 +152,7 @@ void type_AI_combat_parameters::simulateSingleAttack(const army& currentArmy, lo
 }
 
 VA(0x004359b0, 0x1D5)  // dc 0x3c8dc
-void type_AI_combat_parameters::simulateAttack(const army& currentArmy, long& ourHits, const army& enemy, long& enemyHits, unsigned char ranged, long distance) const
+void AICombatParameters::simulateAttack(const Army& currentArmy, long& ourHits, const Army& enemy, long& enemyHits, unsigned char ranged, long distance) const
 {
     if (ranged)
         ranged = currentArmy.canShoot(0);
@@ -173,7 +173,7 @@ void type_AI_combat_parameters::simulateAttack(const army& currentArmy, long& ou
 }
 
 VA(0x00435b90, 0xD2)  // dc 0x3c9ac
-long type_AI_combat_parameters::getSimpleAttackEffect(const army& currentArmy, long ourTotal, const army& enemy, long enemyTotal, unsigned char ranged, long distance) const
+long AICombatParameters::getSimpleAttackEffect(const Army& currentArmy, long ourTotal, const Army& enemy, long enemyTotal, unsigned char ranged, long distance) const
 {
     long ourHits;
     long enemyHits;
@@ -200,7 +200,7 @@ long type_AI_combat_parameters::getSimpleAttackEffect(const army& currentArmy, l
 }
 
 VA(0x00435c70, 0x3D)  // dc 0x3ca94
-long type_AI_combat_parameters::getSimpleAttackEffect(const army& currentArmy, const army& enemy, unsigned char ranged, long distance) const
+long AICombatParameters::getSimpleAttackEffect(const Army& currentArmy, const Army& enemy, unsigned char ranged, long distance) const
 {
     long ourTotal = currentArmy.getTotalHitPoints(0);
     long enemyTotal = enemy.getTotalHitPoints(0);
@@ -208,7 +208,7 @@ long type_AI_combat_parameters::getSimpleAttackEffect(const army& currentArmy, c
 }
 
 VA(0x00435cb0, 0x10E)  // dc 0x3cae4
-long type_AI_combat_parameters::getRangedAttackValue(const army& currentArmy, const army& enemy) const
+long AICombatParameters::getRangedAttackValue(const Army& currentArmy, const Army& enemy) const
 {
     long value = getSimpleAttackEffect(currentArmy, enemy, 1, 0);
     if (!g_game->m_setup.m_difficulty && !g_combatManager->m_sideIsAi[m_ourGroup])
@@ -223,7 +223,7 @@ long type_AI_combat_parameters::getRangedAttackValue(const army& currentArmy, co
 }
 
 VA(0x00435dc0, 0xF3)  // dc 0x3cba0
-long type_AI_combat_parameters::getExchangeEffect(const army& currentArmy, const army& enemy, long distance) const
+long AICombatParameters::getExchangeEffect(const Army& currentArmy, const Army& enemy, long distance) const
 {
     unsigned char ranged = currentArmy.canShoot(0);
     long ourHits = currentArmy.getTotalHitPoints(m_simulated);
@@ -251,7 +251,7 @@ long type_AI_combat_parameters::getExchangeEffect(const army& currentArmy, const
 // ahead it is worth planning.
 
 VA(0x00435ec0, 0x1F7)  // dc 0x3cc8c
-type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat, long side)
+AICombatParameters::AICombatParameters(const CombatManager* combat, long side)
 {
     unsigned char first = 1;
     this->m_ourGroup = side;
@@ -262,7 +262,7 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
     m_simulated = 0;
     for (long group = 0; group < 2; group++) {
         for (long i = 0; i < combat->m_numArmies[group]; i++) {
-            const army* ourArmy = &combat->m_armies[group][i];
+            const Army* ourArmy = &combat->m_armies[group][i];
             if (ourArmy->m_numTroops <= 0)
                 continue;
             if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
@@ -308,7 +308,7 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
 }
 
 VA(0x004360c0, 0xBC)  // dc 0x3ceb8
-type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attacker, const army* defender, const long* attackArray, SearchArray* search, const type_AI_combat_parameters* combatData)
+AIAttackHexChooser::AIAttackHexChooser(const Army* attacker, const Army* defender, const long* attackArray, SearchArray* search, const AICombatParameters* combatData)
 {
     m_data = combatData;
     m_attackArmy = attacker;
@@ -331,7 +331,7 @@ type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attacker, con
 
 // E:\gamedcs\ai_tactical.cpp:511
 VA(0x00436180, 0x17A)  // anchor-global, dc 0x3cf50
-long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
+long AIAttackHexChooser::getHexAttackValue(long hex, long& checked)
 {
     double combatValue;
     long value = 0;
@@ -342,7 +342,7 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
         long index = g_combatManager->m_adjacentCells[hex][direction];
         if (!g_combatManager->validHex(index))
             continue;
-        army* enemy = g_combatManager->m_cells[index].getArmy();
+        Army* enemy = g_combatManager->m_cells[index].getArmy();
         if (!enemy)
             continue;
         if (enemy->m_combatSide == g_combatManager->m_currentSide)
@@ -381,7 +381,7 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
 // where the same statements written out in the caller store to the
 // slot at every assignment.
 DC_ONLY(0x3d154, 0x8E)
-inline long type_AI_attack_hex_chooser::getAttackTime(const pathCell* cell) const
+inline long AIAttackHexChooser::getAttackTime(const PathCell* cell) const
 {
     if (m_speed == 0)
         return 0 < cell->m_cost ? 100 : 1;
@@ -406,13 +406,13 @@ inline long type_AI_attack_hex_chooser::getAttackTime(const pathCell* cell) cons
 // enemy threat taken is the SMALLER of the two hexes'.
 
 VA(0x00436300, 0x31C)  // dc 0x3d1e4
-void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDirection, long stopDirection)
+void AIAttackHexChooser::checkAdjacentHexes(long enemyHex, long startDirection, long stopDirection)
 {
     for (long direction = startDirection; direction < stopDirection; direction++) {
         long hex = g_combatManager->m_adjacentCells[enemyHex][direction];
         if (!g_combatManager->validHex(hex))
             continue;
-        const pathCell* cell = m_searchData->getHex(hex);
+        const PathCell* cell = m_searchData->getHex(hex);
         if (!cell->m_visited)
             continue;
         if (cell->m_flightCost > 0)
@@ -470,7 +470,7 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
             if (value < m_bestValue)
                 continue;
             if (value == m_bestValue) {
-                const pathCell* bestCell = m_searchData->getHex(m_bestHex);
+                const PathCell* bestCell = m_searchData->getHex(m_bestHex);
                 long difference = cell->m_cost - bestCell->m_cost;
                 if ((m_attackArmy->m_creatureType == CREATURE_CAVALIER
                             || m_attackArmy->m_creatureType == CREATURE_CHAMPION)
@@ -494,7 +494,7 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
 // (`push 0` where get_breath_bonus pushes estimate->kills_only), and
 // the ranged argument is 0 in both.
 VA(0x00436620, 0x13A)  // dc 0x3c608
-long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters* estimate)
+long getMultiHeadBonus(long ourGroup, const Army* ourArmy, long ourHex, long troopCount, const Army* enemy, long enemyHex, const AICombatParameters* estimate)
 {
     long counted = 1 << enemy->m_bitIndex;
     long directions = ourArmy->getMultiHeadDirections(ourHex, enemy, enemyHex);
@@ -505,7 +505,7 @@ long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long tro
         long hex = ourArmy->getAdjacentHex(ourHex, i);
         if (hex < 0 || hex >= 187)
             continue;
-        army* target = g_combatManager->m_cells[hex].getArmy();
+        Army* target = g_combatManager->m_cells[hex].getArmy();
         if (target == 0)
             continue;
         if (target->m_combatSide == ourGroup)
@@ -523,14 +523,14 @@ long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long tro
 }
 
 VA(0x00436760, 0xDF)  // dc 0x3c708
-long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters* estimate)
+long getBreathBonus(long ourGroup, const Army* ourArmy, long ourHex, long troopCount, const Army* enemy, long enemyHex, const AICombatParameters* estimate)
 {
     long direction = ourArmy->getAttackDirection(ourHex, enemy, enemyHex);
     long breathHex = ourArmy->getAdjacentHex(ourHex, direction);
     long hex = ourArmy->getAdjacentCellIndex(breathHex, direction);
     if (hex < 0 || hex >= 187)
         return 0;
-    army* target = g_combatManager->m_cells[hex].getArmy();
+    Army* target = g_combatManager->m_cells[hex].getArmy();
     if (target == 0 || target == enemy)
         return 0;
     long damage = ourArmy->getAverageDamage(target, 0, troopCount, 1, 0);
@@ -545,7 +545,7 @@ long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopC
 }
 
 VA(0x00436840, 0xEA)  // dc 0x3d440
-unsigned char type_AI_attack_hex_chooser::findAttackHex()
+unsigned char AIAttackHexChooser::findAttackHex()
 {
     m_bestValue = 0;
     m_bestHex = -1;
@@ -574,7 +574,7 @@ unsigned char type_AI_attack_hex_chooser::findAttackHex()
 // E:\gamedcs\ai_tactical.cpp:744 - dc 0x3d524. No retail slot: both
 // type_spell_choice ctors inline it whole (their bytes carry the five
 // stores), so /OPT:REF dropped the out-of-line copy.
-type_enchant_data::type_enchant_data(SpellID newSpell, SkillMastery newMastery, long newPower, long newDuration)
+EnchantData::EnchantData(SpellID newSpell, SkillMastery newMastery, long newPower, long newDuration)
 {
     m_spell = newSpell;
     m_mastery = newMastery;
@@ -584,14 +584,14 @@ type_enchant_data::type_enchant_data(SpellID newSpell, SkillMastery newMastery, 
 }
 
 VA(0x00436930, 0x1A)  // dc 0x3d56c
-long type_enchant_data::getMasteryValue() const
+long EnchantData::getMasteryValue() const
 {
     return g_spellTraits[m_spell].m_masteryBonus[m_mastery];
 }
 
 VA(0x00436950, 0x23)  // dc 0x3d584
-type_spell_choice::type_spell_choice()
-    : type_enchant_data(-1, eMasteryNone, 0, 0)
+SpellChoice::SpellChoice()
+    : EnchantData(-1, eMasteryNone, 0, 0)
 {
     m_value = 0;
     m_target = -1;
@@ -600,8 +600,8 @@ type_spell_choice::type_spell_choice()
 }
 
 VA(0x00436980, 0x35)  // dc 0x3d5b0
-type_spell_choice::type_spell_choice(SpellID newSpell, SkillMastery newMastery, long newPower, long newDuration)
-    : type_enchant_data(newSpell, newMastery, newPower, newDuration)
+SpellChoice::SpellChoice(SpellID newSpell, SkillMastery newMastery, long newPower, long newDuration)
+    : EnchantData(newSpell, newMastery, newPower, newDuration)
 {
     m_value = 0;
     m_target = -1;
@@ -613,7 +613,7 @@ type_spell_choice::type_spell_choice(SpellID newSpell, SkillMastery newMastery, 
 
 // E:\gamedcs\ai_tactical.cpp:779
 DC_ONLY(0x3d5dc, 0x28)
-void type_AI_spellcaster::initialize(combatManager* combat, long side)
+void AISpellcaster::initialize(CombatManager* combat, long side)
 {
     // @stub
 }
@@ -622,8 +622,8 @@ void type_AI_spellcaster::initialize(combatManager* combat, long side)
 
 // E:\gamedcs\ai_tactical.cpp:817
 DC_ONLY(0x3d6f0, 0x72)
-inline type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent,
-                                                combatManager* combat, long side,
+inline AISpellcaster::AISpellcaster(AISpellcaster* parent,
+                                                CombatManager* combat, long side,
                                                 unsigned char creatureSpell)
     : m_estimate(combat, side)
 {
@@ -668,7 +668,7 @@ inline type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent,
 // byte-flat; the model's automated adjacent-store mutation has no further
 // legal source move.
 VA(0x004369c0, 0x22B)  // anchor-callee, dc 0x3d604
-type_AI_spellcaster::type_AI_spellcaster(combatManager* combat, long side,
+AISpellcaster::AISpellcaster(CombatManager* combat, long side,
                                          unsigned char creatureSpell)
     : m_estimate(combat, side)
 {
@@ -685,14 +685,14 @@ type_AI_spellcaster::type_AI_spellcaster(combatManager* combat, long side,
     for (long group = 0; group < 2; group++)
         g_combatManager->findAITargets(group, 0, 0, &m_estimate, 0);
     findEnemyAttacks();
-    m_enemyCaster = new type_AI_spellcaster(this, combat, enemy, creatureSpell);
+    m_enemyCaster = new AISpellcaster(this, combat, enemy, creatureSpell);
     m_ownsEnemyCaster = 1;
 }
 
-VA_COMPGEN(0x00436bf0, 0x3A, SCALAR_DELETING_DTOR, type_AI_spellcaster)
+VA_COMPGEN(0x00436bf0, 0x3A, SCALAR_DELETING_DTOR, AISpellcaster)
 
 VA(0x00436c30, 0x21)  // dc 0x3d764
-type_AI_spellcaster::~type_AI_spellcaster()
+AISpellcaster::~AISpellcaster()
 {
     if (m_enemyCaster && m_ownsEnemyCaster)
         delete m_enemyCaster;
@@ -704,12 +704,12 @@ type_AI_spellcaster::~type_AI_spellcaster()
 // the helper naturally at its three callers. Absence of a retained retail
 // body does not justify an explicit inline keyword.
 DC_ONLY(0x3d7b0, 0x86)
-inline unsigned char type_AI_spellcaster::isLastAction() const
+inline unsigned char AISpellcaster::isLastAction() const
 {
-    const army* current = g_combatManager->getCurrentArmy();
+    const Army* current = g_combatManager->getCurrentArmy();
     long total = g_combatManager->m_numArmies[m_side];
     for (long j = 0; j < total; j++) {
-        const army* other = &g_combatManager->m_armies[m_side][j];
+        const Army* other = &g_combatManager->m_armies[m_side][j];
         if (other->is(0x200040) || other->isIncapacitated())
             continue;
         if (other->is(1u << 26))
@@ -721,13 +721,13 @@ inline unsigned char type_AI_spellcaster::isLastAction() const
 }
 
 VA(0x00436c60, 0x1C4)  // dc 0x3d838
-unsigned char type_AI_spellcaster::shouldAttackNow(const army& enemy) const
+unsigned char AISpellcaster::shouldAttackNow(const Army& enemy) const
 {
     if (m_estimate.m_killsOnly)
         return 1;
     if (isLastAction())
         return 1;
-    const army* current = g_combatManager->getCurrentArmy();
+    const Army* current = g_combatManager->getCurrentArmy();
     if (current->m_combatSide == m_side && current->getAITarget() == &enemy
         && current->getAITargetTime(current->getSpeed()) == 1
         && !current->canShoot(0)
@@ -737,7 +737,7 @@ unsigned char type_AI_spellcaster::shouldAttackNow(const army& enemy) const
         return 0;
     long total = g_combatManager->m_numArmies[m_side];
     for (long j = 0; j < total; j++) {
-        const army* ourArmy = &g_combatManager->m_armies[m_side][j];
+        const Army* ourArmy = &g_combatManager->m_armies[m_side][j];
         if (ourArmy->is(1u << 21) || ourArmy->isIncapacitated())
             continue;
         if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
@@ -751,7 +751,7 @@ unsigned char type_AI_spellcaster::shouldAttackNow(const army& enemy) const
 }
 
 VA(0x00436e30, 0x125)  // dc 0x3d96c
-long type_AI_spellcaster::getDamageValue(SpellID spell, long baseDamage, const Hero* targetHero, const army* target) const
+long AISpellcaster::getDamageValue(SpellID spell, long baseDamage, const Hero* targetHero, const Army* target) const
 {
     unsigned char immune = static_cast<unsigned char>(static_cast<unsigned>(target->m_monInfo.m_attributes) >> 21);
     if ((immune & 1) || target->m_creatureType == CREATURE_ARROW_TOWER)
@@ -782,7 +782,7 @@ long type_AI_spellcaster::getDamageValue(SpellID spell, long baseDamage, const H
 }
 
 VA(0x00436f60, 0x45)  // dc 0x3da7c
-long type_AI_spellcaster::getDamageSpellValue(const army* enemy, type_enchant_data caster) const
+long AISpellcaster::getDamageSpellValue(const Army* enemy, EnchantData caster) const
 {
     long baseDamage = g_spellTraits[caster.m_spell].m_powerFactor * caster.m_power
                        + caster.getMasteryValue();
@@ -808,20 +808,20 @@ long type_AI_spellcaster::getDamageSpellValue(const army* enemy, type_enchant_da
 // inline address and a named damage result remain 98.1927. Mass-result
 // declaration/argument lifetimes do not change either outcome.
 DC_ONLY(0x3dabc, 0x6E)
-long type_AI_spellcaster::getGroupDamageValue(SpellID spell, long baseDamage,
+long AISpellcaster::getGroupDamageValue(SpellID spell, long baseDamage,
                                                         long group, Hero* targetHero) const
 {
     long value = 0;
     long count = g_combatManager->m_numArmies[group];
     while (count--) {
-        const army* target = &g_combatManager->m_armies[group][count];
+        const Army* target = &g_combatManager->m_armies[group][count];
         value += getDamageValue(spell, baseDamage, targetHero, target);
     }
     return value;
 }
 
 VA(0x00436fb0, 0x8A)  // dc 0x3db2c
-long type_AI_spellcaster::getMassDamageEffect(long enemyDamage, long friendlyDamage) const
+long AISpellcaster::getMassDamageEffect(long enemyDamage, long friendlyDamage) const
 {
     if (enemyDamage <= 0)
         return 0;
@@ -839,14 +839,14 @@ long type_AI_spellcaster::getMassDamageEffect(long enemyDamage, long friendlyDam
 }
 
 VA(0x00437040, 0x141)  // dc 0x3db84
-long type_AI_spellcaster::getAreaEffectValue(SpellID spell, long baseDamage, SkillMastery mastery, long hex) const
+long AISpellcaster::getAreaEffectValue(SpellID spell, long baseDamage, SkillMastery mastery, long hex) const
 {
     long friendlyDamage = 0;
     long enemyDamage = 0;
-    std::vector<army*> targets;
+    std::vector<Army*> targets;
     g_combatManager->markAreaEffect(spell, hex, mastery, targets);
     for (long i = targets.size(); i-- > 0; ) {
-        army* target = targets[i];
+        Army* target = targets[i];
         if (target->m_combatSide == m_side)
             friendlyDamage += getDamageValue(spell, baseDamage, m_ourHero, target);
         else
@@ -863,7 +863,7 @@ long type_AI_spellcaster::getAreaEffectValue(SpellID spell, long baseDamage, Ski
 // column test, which is why retail emits a range guard the loop bound
 // already guarantees.
 DC_ONLY(0x3dc50, 0x72)
-inline void type_AI_spellcaster::considerAreaEffect(type_spell_choice* choice) const
+inline void AISpellcaster::considerAreaEffect(SpellChoice* choice) const
 {
     long baseDamage = g_spellTraits[choice->m_spell].m_powerFactor * choice->m_power
                        + g_spellTraits[choice->m_spell].m_masteryBonus[choice->m_mastery];
@@ -890,7 +890,7 @@ inline void type_AI_spellcaster::considerAreaEffect(type_spell_choice* choice) c
 // next hex, and stop the moment it answers off-field. ClearEffects
 // wipes the marks before the walk starts.
 VA(0x00437190, 0x17D)  // dc 0x3dcc4
-long type_AI_spellcaster::getChainLightningValue(long power, SkillMastery mastery, army* target) const
+long AISpellcaster::getChainLightningValue(long power, SkillMastery mastery, Army* target) const
 {
     long count = g_chainLightningTargets[mastery];
     long enemyDamage = 0;
@@ -918,11 +918,11 @@ long type_AI_spellcaster::getChainLightningValue(long power, SkillMastery master
 }
 
 VA(0x00437310, 0xD1)  // dc 0x3dde8
-void type_AI_spellcaster::considerChainLightning(type_spell_choice* choice) const
+void AISpellcaster::considerChainLightning(SpellChoice* choice) const
 {
     long targetSide = 1 - m_side;
     for (long i = 0; i < g_combatManager->m_numArmies[targetSide]; ++i) {
-        army* target = &g_combatManager->m_armies[targetSide][i];
+        Army* target = &g_combatManager->m_armies[targetSide][i];
         unsigned char immune = static_cast<unsigned char>(
             static_cast<unsigned>(target->m_monInfo.m_attributes) >> 21);
         long creatureCast = m_isCreatureSpell != 0;
@@ -949,8 +949,8 @@ void type_AI_spellcaster::considerChainLightning(type_spell_choice* choice) cons
 // boundary family preserves all five TUs' scores; flattening only that mastery
 // call while leaving the effect unpinned lowers considerSpell 98.1927 ->
 // 80.5073. Ordinary group/mass/summon helpers preserve every old code section.
-void type_AI_spellcaster::considerMassDamage(
-    type_spell_choice& choice) const
+void AISpellcaster::considerMassDamage(
+    SpellChoice& choice) const
 {
     long baseDamage =
         g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power
@@ -964,7 +964,7 @@ void type_AI_spellcaster::considerMassDamage(
 }
 
 VA(0x004373f0, 0x34)  // dc 0x3df28
-long type_AI_spellcaster::getAgeValue(const army* enemy, type_enchant_data caster) const
+long AISpellcaster::getAgeValue(const Army* enemy, EnchantData caster) const
 {
     if (m_winLikely)
         return 0;
@@ -975,8 +975,8 @@ long type_AI_spellcaster::getAgeValue(const army* enemy, type_enchant_data caste
 // DC ai_tactical.cpp:1158/1186.
 // Ordinary const overloads: callers expand them in retail; /OPT:REF drops
 // unreferenced retained bodies. Keep their source order before the callers.
-long type_AI_spellcaster::getAttackBoostValue(const army* ourArmy,
-    const army* enemy, long oldDamage, long duration, double increase) const
+long AISpellcaster::getAttackBoostValue(const Army* ourArmy,
+    const Army* enemy, long oldDamage, long duration, double increase) const
 {
     long newDamage = static_cast<long>(oldDamage * increase);
     long enemyHits = enemy->getTotalHitPoints(0);
@@ -992,8 +992,8 @@ long type_AI_spellcaster::getAttackBoostValue(const army* ourArmy,
     return static_cast<long>((sqrt(increase) - 1.0) * total * modifier);
 }
 
-long type_AI_spellcaster::getAttackBoostValue(const army* ourArmy,
-    const army* enemy, long duration, double increase) const
+long AISpellcaster::getAttackBoostValue(const Army* ourArmy,
+    const Army* enemy, long duration, double increase) const
 {
     long oldDamage = ourArmy->getAverageDamage(enemy, ourArmy->canShoot(0),
         ourArmy->m_numTroops, 1, 0);
@@ -1001,9 +1001,9 @@ long type_AI_spellcaster::getAttackBoostValue(const army* ourArmy,
 }
 
 VA(0x00437430, 0x198)  // dc 0x3e17c
-long type_AI_spellcaster::getBlessValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getBlessValue(const Army* ourArmy, EnchantData caster) const
 {
-    const army* target = ourArmy->getAITarget();
+    const Army* target = ourArmy->getAITarget();
     if (target == 0 || ourArmy->getAITargetTime() > 1)
         return 0;
     double average = ourArmy->getAverageDamage();
@@ -1046,9 +1046,9 @@ long type_AI_spellcaster::getBlessValue(const army* ourArmy, type_enchant_data c
 // value also fail to reuse retail's divisor scratch (seven states, five
 // emitted objects). The named ratio and both early guards stay intact.
 VA(0x004375d0, 0x224)  // anchor-vtable, dc 0x3e280
-long type_AI_spellcaster::getFrenzyValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getFrenzyValue(const Army* ourArmy, EnchantData caster) const
 {
-    const army* target = ourArmy->getAITarget();
+    const Army* target = ourArmy->getAITarget();
     if (target == 0 || ourArmy->getAITargetTime() > 1)
         return 0;
     unsigned char ranged = ourArmy->canShoot(0);
@@ -1067,11 +1067,11 @@ long type_AI_spellcaster::getFrenzyValue(const army* ourArmy, type_enchant_data 
 }
 
 VA(0x00437800, 0x1F5)  // dc 0x3e3bc
-long type_AI_spellcaster::getAttackSkillValue(const army* ourArmy, const army* enemy, long duration, long bonus) const
+long AISpellcaster::getAttackSkillValue(const Army* ourArmy, const Army* enemy, long duration, long bonus) const
 {
     if (m_winLikely)
         return 0;
-    army testArmy = *ourArmy;
+    Army testArmy = *ourArmy;
     testArmy.m_monInfo.m_attackSkill += bonus;
     unsigned char ranged = ourArmy->canShoot(0);
     double oldDamage = ourArmy->getEstimatedDamage(enemy, 100, ranged, 0);
@@ -1081,10 +1081,10 @@ long type_AI_spellcaster::getAttackSkillValue(const army* ourArmy, const army* e
 }
 
 VA(0x00438100, 0x64)  // dc 0x3e4a0
-long type_AI_spellcaster::getBloodLustValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getBloodLustValue(const Army* ourArmy, EnchantData caster) const
 {
     if (!ourArmy->canShoot(0)) {
-        const army* target = ourArmy->getAITarget();
+        const Army* target = ourArmy->getAITarget();
         if (target != 0
                 && ourArmy->getAITargetTime(ourArmy->getSpeed()) <= 1) {
             long bonus = g_spellTraits[SPELL_BLOODLUST].m_masteryBonus[caster.m_mastery];
@@ -1095,7 +1095,7 @@ long type_AI_spellcaster::getBloodLustValue(const army* ourArmy, type_enchant_da
 }
 
 VA(0x00438170, 0x142)  // dc 0x3e50c
-long type_AI_spellcaster::getMirthValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getMirthValue(const Army* ourArmy, EnchantData caster) const
 {
     unsigned char undead = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 17);
     if (undead & 1)
@@ -1122,7 +1122,7 @@ long type_AI_spellcaster::getMirthValue(const army* ourArmy, type_enchant_data c
 }
 
 VA(0x004382c0, 0x1C6)  // dc 0x3e658
-long type_AI_spellcaster::getSorrowValue(const army* enemy, type_enchant_data caster) const
+long AISpellcaster::getSorrowValue(const Army* enemy, EnchantData caster) const
 {
     unsigned char undead = static_cast<unsigned char>(static_cast<unsigned>(enemy->m_monInfo.m_attributes) >> 17);
     if (undead & 1)
@@ -1168,9 +1168,9 @@ long type_AI_spellcaster::getSorrowValue(const army* enemy, type_enchant_data ca
 // divided by 24, which is the per-point chance a lucky strike fires.
 
 VA(0x00438490, 0x32B)  // dc 0x3e87c
-long type_AI_spellcaster::getFortuneValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getFortuneValue(const Army* ourArmy, EnchantData caster) const
 {
-    const army* target = ourArmy->getAITarget();
+    const Army* target = ourArmy->getAITarget();
     if (target == 0 || ourArmy->getAITargetTime() > 1)
         return 0;
     long bonus = g_spellTraits[SPELL_FORTUNE].m_masteryBonus[caster.m_mastery];
@@ -1205,7 +1205,7 @@ long type_AI_spellcaster::getFortuneValue(const army* ourArmy, type_enchant_data
 }
 
 VA(0x004387c0, 0x14A)  // dc 0x3e9d8
-long type_AI_spellcaster::getDefenseBoostValue(const army* ourArmy, const army* enemy, long duration, double increase) const
+long AISpellcaster::getDefenseBoostValue(const Army* ourArmy, const Army* enemy, long duration, double increase) const
 {
     long damage = enemy->getAverageDamage(ourArmy, enemy->canShoot(0),
                                             enemy->m_numTroops, 0, 0);
@@ -1237,12 +1237,12 @@ long type_AI_spellcaster::getDefenseBoostValue(const army* ourArmy, const army* 
 }
 
 VA(0x00438910, 0xFB)  // dc 0x3ec10
-long type_AI_spellcaster::getDefenseSkillValue(const army* ourArmy, long duration, long bonus) const
+long AISpellcaster::getDefenseSkillValue(const Army* ourArmy, long duration, long bonus) const
 {
-    const army* enemy = m_worstEnemies[ourArmy->m_bitIndex].m_enemy;
+    const Army* enemy = m_worstEnemies[ourArmy->m_bitIndex].m_enemy;
     if (!enemy)
         return 0;
-    army testArmy = *ourArmy;
+    Army testArmy = *ourArmy;
     testArmy.m_monInfo.m_defenseSkill += bonus;
     unsigned char ranged = enemy->canShoot(0);
     double oldDamage = enemy->getEstimatedDamage(ourArmy, 100, ranged, 0);
@@ -1259,7 +1259,7 @@ long type_AI_spellcaster::getDefenseSkillValue(const army* ourArmy, long duratio
 //     ... SpellCastWorkChance(spell, side, enemy, 0, 1, creature_cast)
 
 VA(0x00438a10, 0xAD)  // dc 0x3ed34
-long type_AI_spellcaster::getDiseaseValue(const army* enemy, type_enchant_data caster) const
+long AISpellcaster::getDiseaseValue(const Army* enemy, EnchantData caster) const
 {
     if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) == 0)
         return 0;
@@ -1279,10 +1279,10 @@ long type_AI_spellcaster::getDiseaseValue(const army* enemy, type_enchant_data c
 }
 
 VA(0x00438ac0, 0x85)  // dc 0x3eea8
-long type_AI_spellcaster::getPrayerValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getPrayerValue(const Army* ourArmy, EnchantData caster) const
 {
     long bonus = g_spellTraits[SPELL_PRAYER].m_masteryBonus[caster.m_mastery];
-    const army* target = ourArmy->getAITarget();
+    const Army* target = ourArmy->getAITarget();
     long value = getDefenseSkillValue(ourArmy, caster.m_duration, bonus);
     value += getSpeedValue(ourArmy, bonus, caster.m_duration);
     if (target != 0
@@ -1292,10 +1292,10 @@ long type_AI_spellcaster::getPrayerValue(const army* ourArmy, type_enchant_data 
 }
 
 VA(0x00438b50, 0x64)  // dc 0x3ef24
-long type_AI_spellcaster::getPrecisionValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getPrecisionValue(const Army* ourArmy, EnchantData caster) const
 {
     if (ourArmy->canShoot(0)) {
-        const army* target = ourArmy->getAITarget();
+        const Army* target = ourArmy->getAITarget();
         if (target != 0
                 && ourArmy->getAITargetTime(ourArmy->getSpeed()) <= 1) {
             long bonus = g_spellTraits[SPELL_PRECISION].m_masteryBonus[caster.m_mastery];
@@ -1306,9 +1306,9 @@ long type_AI_spellcaster::getPrecisionValue(const army* ourArmy, type_enchant_da
 }
 
 VA(0x00438bc0, 0x99)  // dc 0x3ef90
-long type_AI_spellcaster::getAirShieldValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getAirShieldValue(const Army* ourArmy, EnchantData caster) const
 {
-    const army* enemy = m_attacks[ourArmy->m_bitIndex].m_enemy;
+    const Army* enemy = m_attacks[ourArmy->m_bitIndex].m_enemy;
     if (enemy == 0)
         return 0;
     long melee = m_meleeEnemies[ourArmy->m_bitIndex].m_totalDamage;
@@ -1320,9 +1320,9 @@ long type_AI_spellcaster::getAirShieldValue(const army* ourArmy, type_enchant_da
 }
 
 VA(0x00438c60, 0x99)  // dc 0x3f080
-long type_AI_spellcaster::getShieldValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getShieldValue(const Army* ourArmy, EnchantData caster) const
 {
-    const army* enemy = m_meleeEnemies[ourArmy->m_bitIndex].m_enemy;
+    const Army* enemy = m_meleeEnemies[ourArmy->m_bitIndex].m_enemy;
     if (enemy == 0)
         return 0;
     long ranged = m_attacks[ourArmy->m_bitIndex].m_totalDamage;
@@ -1334,9 +1334,9 @@ long type_AI_spellcaster::getShieldValue(const army* ourArmy, type_enchant_data 
 }
 
 VA(0x00438d00, 0x81)  // dc 0x3f158
-long type_AI_spellcaster::getSlayerValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getSlayerValue(const Army* ourArmy, EnchantData caster) const
 {
-    const army* target = ourArmy->getAITarget();
+    const Army* target = ourArmy->getAITarget();
     if (target != 0 && ourArmy->getAITargetTime(ourArmy->getSpeed()) <= 1) {
         unsigned flags = static_cast<unsigned>(target->m_monInfo.m_attributes);
         if ((static_cast<unsigned char>(flags >> 7) & 1)
@@ -1353,17 +1353,17 @@ long type_AI_spellcaster::getSlayerValue(const army* ourArmy, type_enchant_data 
 }
 
 VA(0x00438d90, 0x25)  // dc 0x3f208
-long type_AI_spellcaster::getToughSkinValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getToughSkinValue(const Army* ourArmy, EnchantData caster) const
 {
     return getDefenseSkillValue(ourArmy, caster.m_duration,
                                    g_spellTraits[SPELL_STONE_SKIN].m_masteryBonus[caster.m_mastery]);
 }
 
 VA(0x00438dc0, 0x109)  // dc 0x3f22c
-long type_AI_spellcaster::getDisruptiveRayValue(const army* enemy, type_enchant_data caster) const
+long AISpellcaster::getDisruptiveRayValue(const Army* enemy, EnchantData caster) const
 {
-    const combatManager* combat = g_combatManager;
-    const army* stacks = combat->m_armies[m_side];
+    const CombatManager* combat = g_combatManager;
+    const Army* stacks = combat->m_armies[m_side];
     if (m_estimate.m_killsOnly)
         return 0;
     long count = combat->m_numArmies[m_side];
@@ -1388,10 +1388,10 @@ long type_AI_spellcaster::getDisruptiveRayValue(const army* enemy, type_enchant_
 }
 
 VA(0x00438ed0, 0x8D)  // dc 0x3f408
-long type_AI_spellcaster::getWeaknessValue(const army* enemy, type_enchant_data caster) const
+long AISpellcaster::getWeaknessValue(const Army* enemy, EnchantData caster) const
 {
     if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) != 0 && !m_estimate.m_killsOnly) {
-        const army* target = enemy->getAITarget();
+        const Army* target = enemy->getAITarget();
         if (target != 0
                 && enemy->getAITargetTime(enemy->getSpeed()) <= 1) {
             long capped = cppMin(g_spellTraits[SPELL_WEAKNESS].m_masteryBonus[caster.m_mastery],
@@ -1403,7 +1403,7 @@ long type_AI_spellcaster::getWeaknessValue(const army* enemy, type_enchant_data 
 }
 
 VA(0x00438f60, 0x199)  // dc 0x3f5f0
-long type_AI_spellcaster::getMisfortuneValue(const army* enemy, type_enchant_data caster) const
+long AISpellcaster::getMisfortuneValue(const Army* enemy, EnchantData caster) const
 {
     if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) == 0)
         return 0;
@@ -1436,7 +1436,7 @@ long type_AI_spellcaster::getMisfortuneValue(const army* enemy, type_enchant_dat
 }
 
 VA(0x00439100, 0x169)  // dc 0x3f7f0
-long type_AI_spellcaster::getBlindValue(const army* enemy, type_enchant_data caster) const
+long AISpellcaster::getBlindValue(const Army* enemy, EnchantData caster) const
 {
     if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) == 0)
         return 0;
@@ -1477,7 +1477,7 @@ long type_AI_spellcaster::getBlindValue(const army* enemy, type_enchant_data cas
 // E:\gamedcs\ai_tactical.cpp:1767
 DC_ONLY(0x3f9d0, 0x52)
 // Before normalization (function): type_AI_spellcaster::get_move_order_change_value.
-long type_AI_spellcaster::getMoveOrderChangeValue(const army* our_army)
+long AISpellcaster::getMoveOrderChangeValue(const Army* our_army)
 {
     // @stub
 }
@@ -1517,7 +1517,7 @@ long type_AI_spellcaster::getMoveOrderChangeValue(const army* our_army)
 // `&armies[side][0]` with no j at all; set_melee_enemies below already
 // carries the hoisted form).
 VA(0x00439270, 0x28B)  // anchor-vtable, dc 0x3fa24
-long type_AI_spellcaster::getMuckAndMireValue(const army* enemy, type_enchant_data caster) const
+long AISpellcaster::getMuckAndMireValue(const Army* enemy, EnchantData caster) const
 {
     if (enemy->getAITarget() == 0)
         return 0;
@@ -1538,7 +1538,7 @@ long type_AI_spellcaster::getMuckAndMireValue(const army* enemy, type_enchant_da
     if (newSpeed < 1)
         newSpeed = 1;
     if (time == 1) {
-        const army* ourArmy = &g_combatManager->m_armies[m_side][0];
+        const Army* ourArmy = &g_combatManager->m_armies[m_side][0];
         for (long j = 0; j < g_combatManager->m_numArmies[m_side]; j++, ourArmy++) {
             if (ourArmy->getAITarget() != enemy)
                 continue;
@@ -1560,7 +1560,7 @@ long type_AI_spellcaster::getMuckAndMireValue(const army* enemy, type_enchant_da
             if (ourArmy->getSpeed() <= newSpeed)
                 continue;
             long effect;
-            const army* target = ourArmy->getAITarget();
+            const Army* target = ourArmy->getAITarget();
             if (target == 0) {
                 effect = 0;
             } else {
@@ -1596,7 +1596,7 @@ long type_AI_spellcaster::getMuckAndMireValue(const army* enemy, type_enchant_da
 }
 
 VA(0x00439500, 0x4C)  // dc 0x3fc20
-long type_AI_spellcaster::getPoisonValue(const army* enemy, type_enchant_data caster) const
+long AISpellcaster::getPoisonValue(const Army* enemy, EnchantData caster) const
 {
     if (m_winLikely)
         return 0;
@@ -1608,7 +1608,7 @@ long type_AI_spellcaster::getPoisonValue(const army* enemy, type_enchant_data ca
 }
 
 VA(0x00439550, 0x153)  // dc 0x3fc80
-long type_AI_spellcaster::getSpeedValue(const army* ourArmy, long increase, long duration) const
+long AISpellcaster::getSpeedValue(const Army* ourArmy, long increase, long duration) const
 {
     if (ourArmy->getAITarget() == 0)
         return 0;
@@ -1628,9 +1628,9 @@ long type_AI_spellcaster::getSpeedValue(const army* ourArmy, long increase, long
     if (newTime > m_estimate.m_roundsLeft)
         return 0;
     if (newTime == 1) {
-        const army* target = ourArmy->getAITarget();
+        const Army* target = ourArmy->getAITarget();
         if (target->getSpeed() >= oldSpeed && target->getSpeed() < newSpeed) {
-            const army* enemy = ourArmy->getAITarget();
+            const Army* enemy = ourArmy->getAITarget();
             if (enemy) {
                 long ours = m_estimate.getExchangeEffect(*(ourArmy), *(enemy), 0);
                 value = m_estimate.getExchangeEffect(*(enemy), *(ourArmy), 0) + ours;
@@ -1653,7 +1653,7 @@ long type_AI_spellcaster::getSpeedValue(const army* ourArmy, long increase, long
 }
 
 VA(0x004396b0, 0x2E)  // dc 0x3fdb8
-long type_AI_spellcaster::getHasteValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getHasteValue(const Army* ourArmy, EnchantData caster) const
 {
     return getSpeedValue(ourArmy, caster.getMasteryValue(),
                            caster.m_duration);
@@ -1664,7 +1664,7 @@ long type_AI_spellcaster::getHasteValue(const army* ourArmy, type_enchant_data c
 // closing odds ladder is the TU's usual double one.
 
 VA(0x004396e0, 0x2BC)  // dc 0x3fde4
-long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
+long AISpellcaster::getProtectionValue(const Army* ourArmy,
     SpellSchool school, long level, long duration, long amount) const
 {
     if (!g_combatManager->canCastSpells(m_enemySide, 1))
@@ -1721,7 +1721,7 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
 }
 
 VA(0x004399a0, 0x29)  // dc 0x40060
-long type_AI_spellcaster::getAirProtectionValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getAirProtectionValue(const Army* ourArmy, EnchantData caster) const
 {
     return getProtectionValue(
         ourArmy, eSchoolAir, 5, caster.m_duration,
@@ -1729,7 +1729,7 @@ long type_AI_spellcaster::getAirProtectionValue(const army* ourArmy, type_enchan
 }
 
 VA(0x004399d0, 0x29)  // dc 0x4008c
-long type_AI_spellcaster::getFireProtectionValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getFireProtectionValue(const Army* ourArmy, EnchantData caster) const
 {
     return getProtectionValue(
         ourArmy, eSchoolFire, 5, caster.m_duration,
@@ -1737,14 +1737,14 @@ long type_AI_spellcaster::getFireProtectionValue(const army* ourArmy, type_encha
 }
 
 VA(0x00439a00, 0x32)  // dc 0x400b8
-long type_AI_spellcaster::getEarthProtectionValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getEarthProtectionValue(const Army* ourArmy, EnchantData caster) const
 {
     long amount = g_spellTraits[caster.m_spell].m_masteryBonus[caster.m_mastery];
     return getProtectionValue(ourArmy, eSchoolEarth, 5, caster.m_duration, amount);
 }
 
 VA(0x00439a40, 0x32)  // dc 0x400f4
-long type_AI_spellcaster::getWaterProtectionValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getWaterProtectionValue(const Army* ourArmy, EnchantData caster) const
 {
     long amount = g_spellTraits[caster.m_spell].m_masteryBonus[caster.m_mastery];
     return getProtectionValue(ourArmy, eSchoolWater, 5, caster.m_duration, amount);
@@ -1752,7 +1752,7 @@ long type_AI_spellcaster::getWaterProtectionValue(const army* ourArmy, type_ench
 
 // DC ai_tactical.cpp:2116-2129, dc 0x40130. Ordinary const helper;
 // protection value expands it in retail.
-double type_AI_spellcaster::getDuration(long turns, unsigned char movedThisTurn) const
+double AISpellcaster::getDuration(long turns, unsigned char movedThisTurn) const
 {
     double result;
     if (turns >= m_estimate.m_roundsLeft)
@@ -1768,7 +1768,7 @@ double type_AI_spellcaster::getDuration(long turns, unsigned char movedThisTurn)
 }
 
 VA(0x00439a80, 0x135)  // dc 0x40248
-long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpellsOnly) const
+long AISpellcaster::getCancelValue(Army* currentArmy, unsigned char badSpellsOnly) const
 {
     long value = 0;
     for (long spell = 10; spell < 81; spell++) {
@@ -1785,7 +1785,7 @@ long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpe
         TEnchantValue valueOf = getEnchantmentFunction(spell);
         if (valueOf == 0)
             continue;
-        type_enchant_data caster(spell, currentArmy->getSpellLevel(spell),
+        EnchantData caster(spell, currentArmy->getSpellLevel(spell),
                                  duration, duration);
         caster.m_checkResistance = 0;
         currentArmy->cancelIndividualSpell(spell);
@@ -1800,16 +1800,16 @@ long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpe
 }
 
 VA(0x00439bc0, 0x6E)  // dc 0x40348
-long type_AI_spellcaster::getDispelValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getDispelValue(const Army* ourArmy, EnchantData caster) const
 {
-    army testArmy = *ourArmy;
+    Army testArmy = *ourArmy;
     return getCancelValue(&testArmy, 0);
 }
 
 VA(0x00439c30, 0x10F)  // dc 0x403c0
-long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getCureValue(const Army* ourArmy, EnchantData caster) const
 {
-    army currentArmy = *ourArmy;
+    Army currentArmy = *ourArmy;
     long value = getCancelValue(&currentArmy, 1);
     int mastery = caster.getMasteryValue();
     int damage = ourArmy->m_topCreatureDamage;
@@ -1829,9 +1829,9 @@ long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data ca
 }
 
 VA(0x00439d40, 0x94)  // dc 0x40570
-long type_AI_spellcaster::getAntimagicValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getAntimagicValue(const Army* ourArmy, EnchantData caster) const
 {
-    army testArmy = *ourArmy;
+    Army testArmy = *ourArmy;
     long value = getCancelValue(&testArmy, 0);
     value += getProtectionValue(ourArmy, eSchoolAll,
                                   g_spellTraits[SPELL_ANTI_MAGIC].m_masteryBonus[caster.m_mastery],
@@ -1840,9 +1840,9 @@ long type_AI_spellcaster::getAntimagicValue(const army* ourArmy, type_enchant_da
 }
 
 VA(0x00439de0, 0x94)  // dc 0x405d4
-long type_AI_spellcaster::getBacklashValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getBacklashValue(const Army* ourArmy, EnchantData caster) const
 {
-    army testArmy = *ourArmy;
+    Army testArmy = *ourArmy;
     return getProtectionValue(ourArmy, eSchoolAll, 5, caster.m_duration,
                                 (50 - caster.getMasteryValue()) * 2);
 }
@@ -1864,7 +1864,7 @@ long type_AI_spellcaster::getBacklashValue(const army* ourArmy, type_enchant_dat
 // of the deal than a shooter does.
 
 VA(0x00439e80, 0x290)  // dc 0x40628
-long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getCounterstrokeValue(const Army* ourArmy, EnchantData caster) const
 {
     long mult = 1;
     if (ourArmy->m_creatureType == CREATURE_GRIFFIN)
@@ -1877,7 +1877,7 @@ long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchan
     long extra = cppMin(m_meleeEnemies[ourArmy->m_bitIndex].m_count - mult, bonus);
     if (extra <= 0)
         return 0;
-    const army* target = m_meleeEnemies[ourArmy->m_bitIndex].m_enemy;
+    const Army* target = m_meleeEnemies[ourArmy->m_bitIndex].m_enemy;
     if (target == 0)
         return 0;
     long ourHits = ourArmy->getTotalHitPoints(0);
@@ -1929,7 +1929,7 @@ long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchan
 // is docked a flat 20 off the mastery row before the `<= 0` bail.
 
 VA(0x0043a110, 0x222)  // dc 0x407e8
-long type_AI_spellcaster::getFireShieldValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getFireShieldValue(const Army* ourArmy, EnchantData caster) const
 {
     if (m_winLikely)
         return 0;
@@ -1939,7 +1939,7 @@ long type_AI_spellcaster::getFireShieldValue(const army* ourArmy, type_enchant_d
         amount -= 20;
     if (amount <= 0)
         return 0;
-    const army* target = m_meleeEnemies[ourArmy->m_bitIndex].m_enemy;
+    const Army* target = m_meleeEnemies[ourArmy->m_bitIndex].m_enemy;
     if (target == 0)
         return 0;
     unsigned char fireImmune = static_cast<unsigned char>(static_cast<unsigned>(target->m_monInfo.m_attributes) >> 14);
@@ -1982,7 +1982,7 @@ long type_AI_spellcaster::getFireShieldValue(const army* ourArmy, type_enchant_d
 }
 
 VA(0x0043a340, 0xBE)  // dc 0x40928
-long type_AI_spellcaster::getTraitorValue(const army* enemy, const army* target) const
+long AISpellcaster::getTraitorValue(const Army* enemy, const Army* target) const
 {
     unsigned char ranged = enemy->canShoot(0);
     if (target->m_combatSide == m_side)
@@ -2003,9 +2003,9 @@ long type_AI_spellcaster::getTraitorValue(const army* enemy, const army* target)
 }
 
 VA(0x0043a400, 0xF8)  // dc 0x40a08
-long type_AI_spellcaster::getBerserkValue(const army* enemy, type_enchant_data caster) const
+long AISpellcaster::getBerserkValue(const Army* enemy, EnchantData caster) const
 {
-    std::vector<army*> targets;
+    std::vector<Army*> targets;
     if (m_winLikely)
         return 0;
     enemy->getBerserkTargets(targets);
@@ -2018,7 +2018,7 @@ long type_AI_spellcaster::getBerserkValue(const army* enemy, type_enchant_data c
 }
 
 VA(0x0043a500, 0x16E)  // dc 0x40ac0
-long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data caster) const
+long AISpellcaster::getHypnotizeValue(const Army* enemy, EnchantData caster) const
 {
     if (m_winLikely)
         return 0;
@@ -2035,7 +2035,7 @@ long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data
             || enemy->m_creatureType == CREATURE_AMMO_CART)
         return 0;
     long best = 0;
-    const army* enemyRow = g_combatManager->m_armies[m_enemySide];
+    const Army* enemyRow = g_combatManager->m_armies[m_enemySide];
     long turns = cppMin(g_hypnotizeTurns[caster.m_mastery], m_estimate.m_roundsLeft);
     unsigned char slowFlags = static_cast<unsigned char>(static_cast<unsigned>(enemy->m_monInfo.m_attributes) >> 26);
     if (slowFlags & 1)
@@ -2058,12 +2058,12 @@ long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data
 }
 
 VA(0x0043a670, 0x291)  // dc 0x40bb8
-void type_AI_spellcaster::considerSingleEnchantment(type_spell_choice* choice, long group) const
+void AISpellcaster::considerSingleEnchantment(SpellChoice* choice, long group) const
 {
     TEnchantValue valueFunc = getEnchantmentFunction(choice->m_spell);
-    const army* best = 0;
+    const Army* best = 0;
     for (long i = 0; i < g_combatManager->m_numArmies[group]; i++) {
-        const army* target = &g_combatManager->m_armies[group][i];
+        const Army* target = &g_combatManager->m_armies[group][i];
         if (target->cannotAttack())
             continue;
         long creatureCast = m_isCreatureSpell != 0;
@@ -2104,7 +2104,7 @@ void type_AI_spellcaster::considerSingleEnchantment(type_spell_choice* choice, l
 // The +0x198 row is read HERE by spell id, which is what the split of
 // army.h's spell-row view out of the round view exists for.
 VA(0x0043a910, 0x150)  // dc 0x40dc8
-void type_AI_spellcaster::considerEnchantment(type_spell_choice* choice, long group) const
+void AISpellcaster::considerEnchantment(SpellChoice* choice, long group) const
 {
     if (spellTargetsASingleArmy(choice->m_spell, choice->m_mastery)) {
         considerSingleEnchantment(choice, group);
@@ -2113,7 +2113,7 @@ void type_AI_spellcaster::considerEnchantment(type_spell_choice* choice, long gr
     TEnchantValue valueOf = getEnchantmentFunction(choice->m_spell);
     long value = 0;
     for (long i = 0; i < g_combatManager->m_numArmies[group]; i++) {
-        const army* target = &g_combatManager->m_armies[group][i];
+        const Army* target = &g_combatManager->m_armies[group][i];
         if (target->m_spellInfluence[62])
             continue;
         if (target->m_spellInfluence[70])
@@ -2165,10 +2165,10 @@ void type_AI_spellcaster::considerEnchantment(type_spell_choice* choice, long gr
 // putting a body in the image retail does not carry.
 
 VA(0x0043aa60, 0x235)  // anchor-callee, dc 0x40ec0
-void type_AI_spellcaster::considerTeleport(type_spell_choice* choice) const
+void AISpellcaster::considerTeleport(SpellChoice* choice) const
 {
     unsigned char moved = 0;
-    const army* ourArmy = g_combatManager->m_armies[m_side];
+    const Army* ourArmy = g_combatManager->m_armies[m_side];
     long count = g_combatManager->m_numArmies[m_side];
     for (; count-- > 0; ++ourArmy) {
         unsigned char immune = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 21);
@@ -2197,13 +2197,13 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice* choice) const
         choice->m_target = ourArmy->m_gridIndex;
         choice->m_secondTargetHex = g_combatManager->m_nextActionExtra;
         long last = 1;
-        const army* current = &g_combatManager->m_armies[g_combatManager->m_actingSide]
+        const Army* current = &g_combatManager->m_armies[g_combatManager->m_actingSide]
                                                       [g_combatManager->m_actingSlot];
         if (ourArmy != current && !ourArmy->m_spellInfluence[62]
                 && !ourArmy->m_spellInfluence[70] && !ourArmy->m_spellInfluence[74]) {
             long total = g_combatManager->m_numArmies[m_side];
             for (long j = 0; j < total; j++) {
-                const army* other = &g_combatManager->m_armies[m_side][j];
+                const Army* other = &g_combatManager->m_armies[m_side][j];
                 if (other->m_monInfo.m_attributes & 0x200040)
                     continue;
                 if (other->m_spellInfluence[62])
@@ -2262,9 +2262,9 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice* choice) const
 // gpCombatManager relocation-name differences. This is C1 register-handle
 // state, with no source-addressable lever found.
 VA(0x0043aca0, 0x2AE)  // anchor-callee, dc 0x4101c
-void type_AI_spellcaster::considerResurrect(type_spell_choice* choice) const
+void AISpellcaster::considerResurrect(SpellChoice* choice) const
 {
-    const army* ourArmy = g_combatManager->m_armies[m_side];
+    const Army* ourArmy = g_combatManager->m_armies[m_side];
     long count = g_combatManager->m_numArmies[m_side];
     for (; count-- > 0; ++ourArmy) {
         long creatureCast = m_isCreatureSpell != 0;
@@ -2309,7 +2309,7 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice* choice) const
         choice->m_value = value;
         choice->m_target = hex;
         unsigned char last = 1;
-        const army* current = &g_combatManager->m_armies[g_combatManager->m_actingSide]
+        const Army* current = &g_combatManager->m_armies[g_combatManager->m_actingSide]
                                                       [g_combatManager->m_actingSlot];
         if (ourArmy != current && !m_winLikely)
             last = isLastAction();
@@ -2338,9 +2338,9 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice* choice) const
 // same way.
 
 VA(0x0043af50, 0x284)  // anchor-callee, dc 0x41278
-void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const army* healedArmy, long targetHex) const
+void AISpellcaster::considerSacrifice(SpellChoice& choice, const Army* healedArmy, long targetHex) const
 {
-    const army* victim = g_combatManager->m_armies[m_side];
+    const Army* victim = g_combatManager->m_armies[m_side];
     long count = g_combatManager->m_numArmies[m_side];
     for (; count-- > 0; ++victim) {
         unsigned char immune = static_cast<unsigned char>(static_cast<unsigned>(victim->m_monInfo.m_attributes) >> 21);
@@ -2380,12 +2380,12 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const arm
         choice.m_target = targetHex;
         choice.m_secondTargetHex = victim->m_gridIndex;
         unsigned char last = 1;
-        const army* current = &g_combatManager->m_armies[g_combatManager->m_actingSide]
+        const Army* current = &g_combatManager->m_armies[g_combatManager->m_actingSide]
                                                       [g_combatManager->m_actingSlot];
         if (healedArmy != current && !m_winLikely) {
             long total = g_combatManager->m_numArmies[m_side];
             for (long j = 0; j < total; j++) {
-                const army* ourArmy = &g_combatManager->m_armies[m_side][j];
+                const Army* ourArmy = &g_combatManager->m_armies[m_side][j];
                 if (ourArmy->m_monInfo.m_attributes & 0x200040)
                     continue;
                 if (ourArmy->m_spellInfluence[62])
@@ -2408,9 +2408,9 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const arm
 }
 
 VA(0x0043b1e0, 0xF2)  // dc 0x414a0
-void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice) const
+void AISpellcaster::considerSacrifice(SpellChoice& choice) const
 {
-    const army* candidateHealedArmy = g_combatManager->m_armies[m_side];
+    const Army* candidateHealedArmy = g_combatManager->m_armies[m_side];
     long count = g_combatManager->m_numArmies[m_side];
     for (; count-- > 0; ++candidateHealedArmy) {
         long creatureSpell = m_isCreatureSpell != 0;
@@ -2419,7 +2419,7 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice) const
             continue;
 
         long candidateTargetHex = candidateHealedArmy->m_gridIndex;
-        army* target = g_combatManager->findResurrectionTarget(
+        Army* target = g_combatManager->findResurrectionTarget(
             choice.m_spell, m_side, candidateTargetHex, 0);
 
         if (target != candidateHealedArmy) {
@@ -2436,12 +2436,12 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice) const
 }
 
 VA(0x0043b2e0, 0x85)  // dc 0x41558
-long type_AI_spellcaster::getCloneValue(const army* ourArmy, type_enchant_data caster) const
+long AISpellcaster::getCloneValue(const Army* ourArmy, EnchantData caster) const
 {
     if (!m_winLikely) {
         unsigned char noTarget = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 26);
         if ((noTarget & 1) == 0) {
-            const army* target = ourArmy->getAITarget();
+            const Army* target = ourArmy->getAITarget();
             if (target != 0
                     && ourArmy->getAITargetTime(ourArmy->getSpeed()) <= 1) {
                 long damage = ourArmy->getAverageDamage(target, ourArmy->canShoot(0),
@@ -2457,7 +2457,7 @@ long type_AI_spellcaster::getCloneValue(const army* ourArmy, type_enchant_data c
 }
 
 VA(0x0043b370, 0x18E)  // dc 0x41624
-long type_AI_spellcaster::getCurseValue(const army* enemy, type_enchant_data caster) const
+long AISpellcaster::getCurseValue(const Army* enemy, EnchantData caster) const
 {
     if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) != 0 && !m_estimate.m_killsOnly && !m_winLikely) {
         long value = enemy->getTotalCombatValue(m_estimate.m_lowestAttack,
@@ -2493,7 +2493,7 @@ long type_AI_spellcaster::getCurseValue(const army* enemy, type_enchant_data cas
 }
 
 VA(0x0043b500, 0x17D)  // dc 0x41890
-long type_AI_spellcaster::getForgetfulnessValue(const army* enemy, type_enchant_data caster) const
+long AISpellcaster::getForgetfulnessValue(const Army* enemy, EnchantData caster) const
 {
     if (enemy->canShoot(0)) {
         unsigned char immune = static_cast<unsigned char>(static_cast<unsigned>(enemy->m_monInfo.m_attributes) >> 23);
@@ -2530,99 +2530,99 @@ long type_AI_spellcaster::getForgetfulnessValue(const army* enemy, type_enchant_
 }
 
 VA(0x0043b680, 0x10)  // dc 0x41a74
-long type_AI_spellcaster::unimplemented(const army* enemy,
-                                        type_enchant_data caster) const
+long AISpellcaster::unimplemented(const Army* enemy,
+                                        EnchantData caster) const
 {
     return 0;
 }
 
 VA(0x0043b690, 0x251)  // dc 0x41a7c
-type_AI_spellcaster::TEnchantValue type_AI_spellcaster::getEnchantmentFunction(SpellID spell) const
+AISpellcaster::TEnchantValue AISpellcaster::getEnchantmentFunction(SpellID spell) const
 {
     switch (spell) {
     case SPELL_AGE:
-        return &type_AI_spellcaster::getAgeValue;
+        return &AISpellcaster::getAgeValue;
     case SPELL_AIR_SHIELD:
-        return &type_AI_spellcaster::getAirShieldValue;
+        return &AISpellcaster::getAirShieldValue;
     case SPELL_ANTI_MAGIC:
-        return &type_AI_spellcaster::getAntimagicValue;
+        return &AISpellcaster::getAntimagicValue;
     case SPELL_MAGIC_MIRROR:
-        return &type_AI_spellcaster::getBacklashValue;
+        return &AISpellcaster::getBacklashValue;
     case SPELL_BERSERK:
-        return &type_AI_spellcaster::getBerserkValue;
+        return &AISpellcaster::getBerserkValue;
     case SPELL_BLESS:
-        return &type_AI_spellcaster::getBlessValue;
+        return &AISpellcaster::getBlessValue;
     case SPELL_BLIND:
     case SPELL_PARALYZE:
-        return &type_AI_spellcaster::getBlindValue;
+        return &AISpellcaster::getBlindValue;
     case SPELL_BLOODLUST:
-        return &type_AI_spellcaster::getBloodLustValue;
+        return &AISpellcaster::getBloodLustValue;
     case SPELL_CLONE:
-        return &type_AI_spellcaster::getCloneValue;
+        return &AISpellcaster::getCloneValue;
     case SPELL_COUNTERSTRIKE:
-        return &type_AI_spellcaster::getCounterstrokeValue;
+        return &AISpellcaster::getCounterstrokeValue;
     case SPELL_CURE:
-        return &type_AI_spellcaster::getCureValue;
+        return &AISpellcaster::getCureValue;
     case SPELL_CURSE:
-        return &type_AI_spellcaster::getCurseValue;
+        return &AISpellcaster::getCurseValue;
     case SPELL_DISPEL:
-        return &type_AI_spellcaster::getDispelValue;
+        return &AISpellcaster::getDispelValue;
     case SPELL_DISRUPTING_RAY:
-        return &type_AI_spellcaster::getDisruptiveRayValue;
+        return &AISpellcaster::getDisruptiveRayValue;
     case SPELL_MAGIC_ARROW:
     case SPELL_ICE_BOLT:
     case SPELL_LIGHTNING_BOLT:
     case SPELL_IMPLOSION:
     case SPELL_TITANS_LIGHTNING_BOLT:
-        return &type_AI_spellcaster::getDamageSpellValue;
+        return &AISpellcaster::getDamageSpellValue;
     case SPELL_DISEASE:
-        return &type_AI_spellcaster::getDiseaseValue;
+        return &AISpellcaster::getDiseaseValue;
     case SPELL_FORGETFULNESS:
-        return &type_AI_spellcaster::getForgetfulnessValue;
+        return &AISpellcaster::getForgetfulnessValue;
     case SPELL_FORTUNE:
-        return &type_AI_spellcaster::getFortuneValue;
+        return &AISpellcaster::getFortuneValue;
     case SPELL_FIRE_SHIELD:
-        return &type_AI_spellcaster::getFireShieldValue;
+        return &AISpellcaster::getFireShieldValue;
     case SPELL_FRENZY:
-        return &type_AI_spellcaster::getFrenzyValue;
+        return &AISpellcaster::getFrenzyValue;
     case SPELL_HYPNOTIZE:
-        return &type_AI_spellcaster::getHypnotizeValue;
+        return &AISpellcaster::getHypnotizeValue;
     case SPELL_MIRTH:
-        return &type_AI_spellcaster::getMirthValue;
+        return &AISpellcaster::getMirthValue;
     case SPELL_MISFORTUNE:
-        return &type_AI_spellcaster::getMisfortuneValue;
+        return &AISpellcaster::getMisfortuneValue;
     case SPELL_SLOW:
-        return &type_AI_spellcaster::getMuckAndMireValue;
+        return &AISpellcaster::getMuckAndMireValue;
     case SPELL_POISON:
-        return &type_AI_spellcaster::getPoisonValue;
+        return &AISpellcaster::getPoisonValue;
     case SPELL_PRAYER:
-        return &type_AI_spellcaster::getPrayerValue;
+        return &AISpellcaster::getPrayerValue;
     case SPELL_PRECISION:
-        return &type_AI_spellcaster::getPrecisionValue;
+        return &AISpellcaster::getPrecisionValue;
     case SPELL_PROTECTION_FROM_AIR:
-        return &type_AI_spellcaster::getAirProtectionValue;
+        return &AISpellcaster::getAirProtectionValue;
     case SPELL_PROTECTION_FROM_EARTH:
-        return &type_AI_spellcaster::getEarthProtectionValue;
+        return &AISpellcaster::getEarthProtectionValue;
     case SPELL_PROTECTION_FROM_FIRE:
-        return &type_AI_spellcaster::getFireProtectionValue;
+        return &AISpellcaster::getFireProtectionValue;
     case SPELL_PROTECTION_FROM_WATER:
-        return &type_AI_spellcaster::getWaterProtectionValue;
+        return &AISpellcaster::getWaterProtectionValue;
     case SPELL_SHIELD:
-        return &type_AI_spellcaster::getShieldValue;
+        return &AISpellcaster::getShieldValue;
     case SPELL_SLAYER:
-        return &type_AI_spellcaster::getSlayerValue;
+        return &AISpellcaster::getSlayerValue;
     case SPELL_SORROW:
-        return &type_AI_spellcaster::getSorrowValue;
+        return &AISpellcaster::getSorrowValue;
     case SPELL_HASTE:
-        return &type_AI_spellcaster::getHasteValue;
+        return &AISpellcaster::getHasteValue;
     case SPELL_STONE_SKIN:
-        return &type_AI_spellcaster::getToughSkinValue;
+        return &AISpellcaster::getToughSkinValue;
     case SPELL_WEAKNESS:
-        return &type_AI_spellcaster::getWeaknessValue;
+        return &AISpellcaster::getWeaknessValue;
     case SPELL_BIND:
-        return &type_AI_spellcaster::unimplemented;
+        return &AISpellcaster::unimplemented;
     }
-    return &type_AI_spellcaster::unimplemented;
+    return &AISpellcaster::unimplemented;
 }
 
 // The value is then "what would our shooters be worth if the wall were
@@ -2635,7 +2635,7 @@ type_AI_spellcaster::TEnchantValue type_AI_spellcaster::getEnchantmentFunction(S
 // minimum is for.
 
 VA(0x0043b8f0, 0x224)  // dc 0x41c30
-void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
+void AISpellcaster::considerEarthquake(SpellChoice* choice) const
 {
     if (m_side == 1)
         return;
@@ -2647,13 +2647,13 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
     long total = 0;
     for (long i = 0; i < WALL_TARGET_COUNT; i++) {
         long strength = g_combatManager->m_wallStrength[
-            combatManager::s_wallTargets[i].m_wall];
+            CombatManager::s_wallTargets[i].m_wall];
         total += strength;
         lowest = cppMin(lowest, strength);
     }
     if (total == 0)
         return;
-    const army* enemy = g_combatManager->m_armies[m_enemySide];
+    const Army* enemy = g_combatManager->m_armies[m_enemySide];
     long count = g_combatManager->m_numArmies[m_enemySide];
     for (; count-- > 0; ++enemy) {
         unsigned char immune = static_cast<unsigned char>(
@@ -2668,7 +2668,7 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
     if (count < 0)
         return;
     long value = 0;
-    const army* ourArmy = g_combatManager->m_armies[m_side];
+    const Army* ourArmy = g_combatManager->m_armies[m_side];
     long damage = cppMin<long>(
         g_spellTraits[choice->m_spell].m_masteryBonus[choice->m_mastery], total);
     long remaining = g_combatManager->m_numArmies[m_side];
@@ -2687,7 +2687,7 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
             continue;
         if (ourArmy->m_creatureType == CREATURE_AMMO_CART)
             continue;
-        const army* target = ourArmy->getAITarget();
+        const Army* target = ourArmy->getAITarget();
         if (target == 0) {
             if (lowest > 0)
                 value += ourArmy->getTotalCombatValue(m_estimate.m_lowestAttack,
@@ -2711,7 +2711,7 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
 // DC 0x41e5c and dispatcher line 3167 prove this ordinary helper boundary.
 // Line 3098 calls get_mastery_value; line 3107 writes cast_now after the split.
 DC_ONLY(0x41e5c, 0x78)
-void type_AI_spellcaster::considerSummon(type_spell_choice& choice) const
+void AISpellcaster::considerSummon(SpellChoice& choice) const
 {
     if (m_winLikely)
         return;
@@ -2728,7 +2728,7 @@ void type_AI_spellcaster::considerSummon(type_spell_choice& choice) const
 }
 
 VA(0x0043bb20, 0x3FC)  // dc 0x41ed4
-void type_AI_spellcaster::considerSpell(type_spell_choice* choice) const
+void AISpellcaster::considerSpell(SpellChoice* choice) const
 {
     switch (choice->m_spell) {
     case SPELL_RESURRECTION:
@@ -2748,7 +2748,7 @@ void type_AI_spellcaster::considerSpell(type_spell_choice* choice) const
         if (choice->m_mastery == eMasteryAdvanced)
             considerEnchantment(choice, m_enemySide);
         if (choice->m_mastery == eMasteryExpert) {
-            type_spell_choice mirror = *choice;
+            SpellChoice mirror = *choice;
             considerEnchantment(&mirror, m_enemySide);
             choice->m_value += mirror.m_value;
         }
@@ -2787,14 +2787,14 @@ void type_AI_spellcaster::considerSpell(type_spell_choice* choice) const
 
 // E:\gamedcs\ai_tactical.cpp:3191
 VA(0x0043bf20, 0x119)  // anchor-global, dc 0x420ac
-void type_AI_spellcaster::setMeleeEnemies()
+void AISpellcaster::setMeleeEnemies()
 {
-    const army* ourArmy = &g_combatManager->m_armies[m_side][0];
+    const Army* ourArmy = &g_combatManager->m_armies[m_side][0];
     memset(m_meleeEnemies, 0, sizeof(m_meleeEnemies));
     for (long i = 0; i < g_combatManager->m_numArmies[m_side]; i++) {
         if (ourArmy->cannotAttack() || ourArmy->getSpellTime(SPELL_BLIND))
             continue;
-        const army* target = ourArmy->getAITarget();
+        const Army* target = ourArmy->getAITarget();
         if (!target || ourArmy->canShoot(0) || target->getAITargetTime() > 1)
             continue;
         m_meleeEnemies[i].m_enemy = target;
@@ -2810,7 +2810,7 @@ void type_AI_spellcaster::setMeleeEnemies()
 // E:\gamedcs\ai_tactical.cpp:3221
 DC_ONLY(0x42170, 0xAE)
 // Before normalization (function): type_AI_spellcaster::set_worst_enemies.
-void type_AI_spellcaster::setWorstEnemies()
+void AISpellcaster::setWorstEnemies()
 {
     // @stub
 }
@@ -2818,7 +2818,7 @@ void type_AI_spellcaster::setWorstEnemies()
 // E:\gamedcs\ai_tactical.cpp:3237
 DC_ONLY(0x42220, 0x5A)
 // Before normalization (function): type_AI_spellcaster::add_enemy.
-void type_AI_spellcaster::addEnemy(type_AI_enemy_data* sum, const army* our_army, const army* enemy, unsigned char ranged)
+void AISpellcaster::addEnemy(AIEnemyData* sum, const Army* our_army, const Army* enemy, unsigned char ranged)
 {
     // @stub
 }
@@ -2840,22 +2840,22 @@ void type_AI_spellcaster::addEnemy(type_AI_enemy_data* sum, const army* our_army
 // would put two bodies in the image that retail does not carry.
 
 VA(0x0043c040, 0x2E6)  // anchor-global, dc 0x4227c
-void type_AI_spellcaster::findEnemyAttacks()
+void AISpellcaster::findEnemyAttacks()
 {
     m_canBeAttacked = 0;
     m_enemyCanAttack = 0;
     memset(m_worstEnemies, 0, sizeof(m_worstEnemies));
     memset(m_attacks, 0, sizeof(m_attacks));
     setMeleeEnemies();
-    const army* ourArmy = &g_combatManager->m_armies[m_side][0];
+    const Army* ourArmy = &g_combatManager->m_armies[m_side][0];
     { for (long i = 0; i < g_combatManager->m_numArmies[m_side]; i++, ourArmy++) {
         unsigned char flags = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 21);
         if (flags & 1)
             continue;
         if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
-        army* enemy = &g_combatManager->m_armies[m_enemySide][0];
-        const army* meleeEnemy = m_meleeEnemies[i].m_enemy;
+        Army* enemy = &g_combatManager->m_armies[m_enemySide][0];
+        const Army* meleeEnemy = m_meleeEnemies[i].m_enemy;
         for (long j = 0; j < g_combatManager->m_numArmies[m_enemySide]; j++, enemy++) {
             if (enemy->m_spellInfluence[62] || enemy->m_spellInfluence[70] || enemy->m_spellInfluence[74])
                 continue;
@@ -2904,7 +2904,7 @@ void type_AI_spellcaster::findEnemyAttacks()
 }
 
 VA(0x0043c330, 0x16C)  // dc 0x423f4
-long type_AI_spellcaster::getOgreMageValue(const army* target) const
+long AISpellcaster::getOgreMageValue(const Army* target) const
 {
     if (target->m_spellInfluence[43])
         return 0;
@@ -2933,7 +2933,7 @@ long type_AI_spellcaster::getOgreMageValue(const army* target) const
     }
     if (expert)
         mastery = eMasteryExpert;
-    type_spell_choice choice(SPELL_BLOODLUST, mastery, 6, 6);
+    SpellChoice choice(SPELL_BLOODLUST, mastery, 6, 6);
     if (spellTargetsASingleArmy(SPELL_BLOODLUST, mastery))
         return getBloodLustValue(target, choice);
     considerEnchantment(&choice, m_side);
@@ -2941,7 +2941,7 @@ long type_AI_spellcaster::getOgreMageValue(const army* target) const
 }
 
 VA(0x0043c4a0, 0x180)  // dc 0x424c4
-long type_AI_spellcaster::getCaliphValue(const army* target) const
+long AISpellcaster::getCaliphValue(const Army* target) const
 {
     long total = 0;
     long count = 0;
@@ -2976,7 +2976,7 @@ long type_AI_spellcaster::getCaliphValue(const army* target) const
         count++;
         TEnchantValue valueOf = getEnchantmentFunction(spell);
         if (valueOf != 0) {
-            type_spell_choice choice(spell, mastery, 6, 6);
+            SpellChoice choice(spell, mastery, 6, 6);
             if (spellTargetsASingleArmy(spell, mastery)) {
                 total += (this->*valueOf)(target, choice);
             } else {
@@ -2991,7 +2991,7 @@ long type_AI_spellcaster::getCaliphValue(const army* target) const
 }
 
 VA(0x0043c620, 0x1DD)
-long type_AI_spellcaster::getFaerieDragonSpellValue(
+long AISpellcaster::getFaerieDragonSpellValue(
         long hex, long power, SpellID spell)
 {
     SkillMastery mastery = eMasteryAdvanced;
@@ -3020,7 +3020,7 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
     if (expert)
         mastery = eMasteryExpert;
 
-    army* target = g_combatManager->m_cells[hex].getArmy();
+    Army* target = g_combatManager->m_cells[hex].getArmy();
     long baseDamage;
     switch (spell) {
     case SPELL_MAGIC_ARROW:
@@ -3065,9 +3065,9 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
 // act (creature bit 6 clear). The walk is the TU's `count-- > 0`
 // pointer form, the same one consider_teleport carries.
 DC_ONLY(0x425a8, 0x68)
-inline void type_AI_spellcaster::checkSimulation()
+inline void AISpellcaster::checkSimulation()
 {
-    const army* enemy = g_combatManager->m_armies[m_enemySide];
+    const Army* enemy = g_combatManager->m_armies[m_enemySide];
     long count = g_combatManager->m_numArmies[m_enemySide];
     for (; count-- > 0; ++enemy) {
         unsigned char immune = static_cast<unsigned char>(
@@ -3091,11 +3091,11 @@ inline void type_AI_spellcaster::checkSimulation()
 // at line 3436. Complete also excludes Arrow Towers. Retail expands this
 // ordinary helper into 0x43c800; the bracket has no retained body for it.
 DC_ONLY(0x42610, 0xA0)
-unsigned char type_AI_spellcaster::spellsNotRequired() const
+unsigned char AISpellcaster::spellsNotRequired() const
 {
     if (!m_winLikely)
         return 0;
-    const army* ourArmy = g_combatManager->m_armies[m_side];
+    const Army* ourArmy = g_combatManager->m_armies[m_side];
     long count = g_combatManager->m_numArmies[m_side];
     for (; count-- > 0; ++ourArmy) {
         if (ourArmy->is(1u << 21))
@@ -3119,9 +3119,9 @@ unsigned char type_AI_spellcaster::spellsNotRequired() const
 // still make sense while RETREATING.
 
 VA(0x0043c800, 0x308)  // dc 0x426b0
-unsigned char type_AI_spellcaster::castSpell(unsigned char retreating)
+unsigned char AISpellcaster::castSpell(unsigned char retreating)
 {
-    type_spell_choice best;
+    SpellChoice best;
     long power = g_combatManager->m_spellPower[m_side];
     long duration = power;
     const ArmyGroup* enemyGroup = g_combatManager->m_armyGroups[m_enemySide];
@@ -3165,7 +3165,7 @@ unsigned char type_AI_spellcaster::castSpell(unsigned char retreating)
             if (spell != SPELL_RESURRECTION && spell != SPELL_ANIMATE_DEAD)
                 continue;
         }
-        type_spell_choice choice(spell, mastery, power, duration);
+        SpellChoice choice(spell, mastery, power, duration);
         considerSpell(&choice);
         if (choice.m_value <= 0)
             continue;
@@ -3201,42 +3201,42 @@ unsigned std::__deque_buf_size(unsigned __n, unsigned size)
 
 // E:\gamedcs\Army.h:724
 DC_ONLY(0x429c0, 0x34)
-int army::getMorale(unsigned char apply_limits)
+int Army::getMorale(unsigned char apply_limits)
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:730
 DC_ONLY(0x429f4, 0x34)
-int army::getLuck(unsigned char apply_limits)
+int Army::getLuck(unsigned char apply_limits)
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:825
 DC_ONLY(0x42a28, 0x12)
-SkillMastery army::getSpellLevel(SpellID spell)
+SkillMastery Army::getSpellLevel(SpellID spell)
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1466
 DC_ONLY(0x42a3c, 0x38)
-army* combatManager::findResurrectionTarget(SpellID spell, long group, long hex, unsigned char creature_spell)
+Army* CombatManager::findResurrectionTarget(SpellID spell, long group, long hex, unsigned char creature_spell)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:807
 DC_ONLY(0x42a74, 0x34)
-void* type_AI_spellcaster::`scalar deleting destructor'(unsigned __flags)
+void* AISpellcaster::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:2183
 DC_ONLY(0x42aa8, 0x306)
-void army::army(const army* __that)
+void Army::Army(const Army* __that)
 {
     // @stub
 }
@@ -3250,7 +3250,7 @@ void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::deque<enum SpellID
 
 // ..\stlport\stl_vector.h:236
 DC_ONLY(0x42e68, 0x60)
-void std::vector<army *,std::allocator<army *> >::vector<army *,std::allocator<army *> >(const std::vector<army* __x)
+void std::vector<Army *,std::allocator<Army *> >::vector<Army *,std::allocator<Army *> >(const std::vector<Army* __x)
 {
     // @stub
 }
@@ -3292,14 +3292,14 @@ std::allocator<enum std::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0
 
 // ..\stlport\stl_vector.h:153
 DC_ONLY(0x42f7c, 0x8)
-std::allocator<army std::vector<army *,std::allocator<army *> >::get_allocator(__$ReturnUdt)
+std::allocator<army std::vector<Army *,std::allocator<Army *> >::get_allocator(__$ReturnUdt)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:94
 DC_ONLY(0x42f84, 0x48)
-void std::_Vector_base<army *,std::allocator<army *> >::_Vector_base<army *,std::allocator<army *> >(unsigned __n, const std::allocator<army* __a)
+void std::_Vector_base<Army *,std::allocator<Army *> >::_Vector_base<Army *,std::allocator<Army *> >(unsigned __n, const std::allocator<Army* __a)
 {
     // @stub
 }
@@ -3362,7 +3362,7 @@ std::_Deque_iterator<enum std::uninitialized_copy(__$ReturnUdt, std::_Deque_iter
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x431a4, 0x38)
-army** std::uninitialized_copy(army** __first, army** __last, army** __result)
+Army** std::uninitialized_copy(Army** __first, Army** __last, Army** __result)
 {
     // @stub
 }
@@ -3397,7 +3397,7 @@ std::_Deque_iterator<enum std::__uninitialized_copy(__$ReturnUdt, std::_Deque_it
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x432e0, 0x1C)
-army** std::__uninitialized_copy(army** __first, army** __last, army** __result, army** __formal)
+Army** std::__uninitialized_copy(Army** __first, Army** __last, Army** __result, Army** __formal)
 {
     // @stub
 }
@@ -3425,7 +3425,7 @@ std::_Deque_iterator<enum std::__uninitialized_copy_aux(__$ReturnUdt, std::_Dequ
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x433d4, 0x3C)
-army** std::__uninitialized_copy_aux(army** __first, army** __last, army** __result, __false_type __formal)
+Army** std::__uninitialized_copy_aux(Army** __first, Army** __last, Army** __result, __false_type __formal)
 {
     // @stub
 }

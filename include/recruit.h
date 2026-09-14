@@ -10,10 +10,10 @@
 #include "palette.h"
 
 class ArmyGroup;
-class button;
+class Button;
 class Hero;
-class iconWidget;
-class recruitUnit;
+class IconWidget;
+class RecruitUnit;
 class Town;
 
 void getMonsterCost(int monId, int* resCost);
@@ -24,7 +24,8 @@ void quickViewRecruit(enum CreatureType monType, short* numMon);
 
 // Recruit-window message ids, fixed by the constructor's widget ids and by
 // recruitUnit::Main's retail switch tables.
-enum ERecruitWidgetId {
+// Before normalization (type): ERecruitWidgetId.
+enum RecruitWidgetId {
     RECRUIT_QUANTITY_ID = 0x20e,
     RECRUIT_MAXIMUM_ID = 0x214,
     RECRUIT_CREATURE_0_ID = 0x21a,
@@ -36,7 +37,8 @@ enum ERecruitWidgetId {
     RECRUIT_ACCEPT_ID = 0x7802
 };
 
-enum ERecruitCreatureSlot {
+// Before normalization (type): ERecruitCreatureSlot.
+enum RecruitCreatureSlot {
     RECRUIT_SLOT_0 = 0,
     RECRUIT_SLOT_1 = 1,
     RECRUIT_SLOT_2 = 2,
@@ -61,24 +63,24 @@ enum ERecruitCreatureSlot {
 // +0x50/+0x54 are button pointers: their derived-to-widget conversions
 // materialize the exact temporary consumed by vector<widget*>::push_back.
 // Before normalization (type): TRecruitWindow.
-class RecruitWindow : public heroWindow {
+class RecruitWindow : public HeroWindow {
 public:
-    recruitUnit* m_recruitInfo;
+    RecruitUnit* m_recruitInfo;
     // Retail ctor 0x54e850 installs RECRUIT_ACCEPT_ID (0x7802) here;
     // update enables it only for a valid, nonzero purchase quantity.
-    button* m_acceptButton;
+    Button* m_acceptButton;
     // Same ctor installs RECRUIT_MAXIMUM_ID (0x214) here.
-    button* m_maximumButton;
+    Button* m_maximumButton;
     // Quantity control: update sets resolution=maxAvail+1 and state=numberToBuy.
     // These three names are role-derived; no original member names recovered.
-    slider* m_quantitySlider;
+    Slider* m_quantitySlider;
     // Four creature portraits, byte-proven by
     // add_creature_widgets' [this + slot*4 + 0x5c] stores. recruitUnit::Open
     // allocates 0x6c bytes for this class, closing the tail exactly.
-    iconWidget* m_creatureWidgets[4];
+    IconWidget* m_creatureWidgets[4];
 
     RecruitWindow(int x2, int y2, int altResource,
-                   recruitUnit* recruitInfo);
+                   RecruitUnit* recruitInfo);
     virtual ~RecruitWindow();
     void addCreatureWidgets(long startX, long startY, long nameY,
                               CreatureType creature, long slot);
@@ -102,7 +104,7 @@ extern struct HMENU__* g_recruitSavedMenu;
 extern Palette16* g_unnamed6aacb0;
 
 // Before normalization (type): TRecruitQuickWindow.
-class RecruitQuickWindow : public heroWindow {
+class RecruitQuickWindow : public HeroWindow {
 public:
     RecruitQuickWindow(int x2, int y2);
     virtual ~RecruitQuickWindow();
@@ -137,7 +139,8 @@ public:
 //   0xb8 numberToBuy   Update computes and displays all four
 // The gaps (0x38, 0x80, 0x94, 0xa0, 0xa8) stay padding: the Dreamcast
 // names them but no retail body reconstructed here touches them.
-class recruitUnit : public baseManager {
+// Before normalization (type): recruitUnit.
+class RecruitUnit : public BaseManager {
 public:
     // Dreamcast array type 0x3dcc: four ints; NH3API agrees at +0x38.
     int m_currentSpriteFrame[4];
@@ -159,18 +162,18 @@ public:
     int m_resourcesPerTroop;
     int m_inTownMainScreen;
     // Dreamcast pointer 0x4811 and NH3API: heroWindow* at +0x94.
-    heroWindow* m_errorWin;
+    HeroWindow* m_errorWin;
     ArmyGroup* m_currArmyGroup;
     unsigned char m_currArmyGroupIsTownGarrison;
     // Naturally aligned at +0xa0 between the +0x9c flag and +0xa4 updateNeeded.
     int m_addIndex;
 
-    recruitUnit(ArmyGroup* newGroup, unsigned char groupIsTownGarrison,
+    RecruitUnit(ArmyGroup* newGroup, unsigned char groupIsTownGarrison,
         CreatureType monType1, short* numMon1,
         CreatureType monType2, short* numMon2,
         CreatureType monType3, short* numMon3,
         CreatureType monType4, short* numMon4);
-    recruitUnit(Hero* thisHero,
+    RecruitUnit(Hero* thisHero,
         CreatureType monType1, short* numMon1,
         CreatureType monType2, short* numMon2,
         CreatureType monType3, short* numMon3,
@@ -186,12 +189,13 @@ public:
     // before it refreshes the town page behind the dialog. The 0x62
     // spelling is retail's own immediate, stored and compared; the name
     // is the house ordinal placeholder.
-    enum ERecruitSource {
+// Before normalization (type): recruitUnit::ERecruitSource.
+    enum RecruitSource {
         RECRUIT_SOURCE_NONE = -1,
         RECRUIT_SOURCE_TOWN = 0x62
     };
 
-    recruitUnit(Town* newTown, int newDwellingIndex, int inInTownMainScreen);
+    RecruitUnit(Town* newTown, int newDwellingIndex, int inInTownMainScreen);
 
     // The definition follows GetMonsterCost in recruit.cpp, as Dreamcast's
     // recruit.cpp line table attests.  It remains inline: retail emits no
@@ -205,12 +209,12 @@ public:
     // (0x4a4600) both need.
     virtual int open(int newPriority) OVERRIDE;      // slot 0, 0x54fea0
     virtual void close() OVERRIDE;                   // slot 1, 0x5502d0
-    virtual int main(message& msg) OVERRIDE;         // slot 2, 0x550940
+    virtual int main(Message& msg) OVERRIDE;         // slot 2, 0x550940
 
     void update(unsigned char newMonster, long slot);
     void setRolloverText(int codeY);
 };
-SIZE(recruitUnit, 188);
+SIZE(RecruitUnit, 188);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\recruit.cpp:473, dc 0x119d64) TArtifact SiegeMonsterToSiegeArtifact(TCreatureType siegeMon);

@@ -29,12 +29,12 @@ void hsvToRGB(float h, float s, float v,
 // Bitmap816's embedded pair at +0x50/+0x250
 // (bitmapBorder::SetPlayerPaletteColors 0x450520). Storage only;
 // names provisional.
-class palette {
+class Palette {
 public:
     unsigned short m_data[256];
 };
 
-class paletteHiColor {
+class PaletteHiColor {
 public:
     unsigned char m_data[256][3];
 };
@@ -43,7 +43,7 @@ public:
 // to/from +0x1c; vtable slot 2 at 0x522f70 returns the resulting 0x31c
 // total extent. This is the resource-owning 24-bit palette class, distinct
 // from the same-sized paletteHiColor raw record embedded in Bitmap816.
-class Palette24 : public resource {
+class Palette24 : public Resource {
 public:
     Palette24();
     Palette24(const unsigned char* data);
@@ -64,7 +64,7 @@ public:
 };
 SIZE(Palette24, 0x31c);
 
-class Palette16 : public resource {
+class Palette16 : public Resource {
     // Dreamcast CodeView names these three class statics directly. Retail's
     // SetPixelFormat stores its red/green/blue arguments at the corresponding
     // three addresses, and every 16-bit palette transform reads them back.
@@ -76,7 +76,7 @@ private:
 public:
     union {
         unsigned short m_data[256];
-        palette m_colors;
+        Palette m_colors;
     };
     Palette16();
     Palette16(const unsigned short* data);

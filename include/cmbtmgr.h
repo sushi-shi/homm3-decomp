@@ -15,15 +15,16 @@ class CNetMsgHandlerPause;
 class Bitmap816;
 class CSprite;
 class Hero;
-class heroWindow;
-class iconWidget;
-class textWidget;
+class HeroWindow;
+class IconWidget;
+class TextWidget;
 // Before normalization (type): TCombatWindow.
 class CombatWindow;
 class NewmapCell;
 class SearchArray;
 class Town;
-struct type_AI_combat_parameters;
+// Before normalization (type): type_AI_combat_parameters.
+struct AICombatParameters;
 struct tagPOINT;
 struct type_artifact;
 
@@ -148,7 +149,8 @@ SIZE(SBolt, 0x78);
 // as army.h's wallTargets rows do where no roster names the individual
 // segments.
 
-enum EBoltColor {
+// Before normalization (type): EBoltColor.
+enum BoltColor {
     BOLT_COLOR_0 = 0x12c,
     BOLT_COLOR_1 = 0x12d,
     BOLT_COLOR_2 = 0x12e,
@@ -180,7 +182,8 @@ enum EBoltColor {
 // for the record the effects are the five spell-affecting special
 // battlefields' published rules, and code 2's already-recorded
 // "creature casts refused" is the sixth.
-enum ECombatSpellRestriction {
+// Before normalization (type): ECombatSpellRestriction.
+enum CombatSpellRestriction {
     COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS = 0x2
     ,
     COMBAT_SPELL_RESTRICTION_ALL_EXPERT = 0x1,
@@ -196,7 +199,8 @@ enum ECombatSpellRestriction {
 // 17 to a row (`idiv 0x11` in get_distance, IsInMoat, PlaceObstacle and
 // RemoveObstacle), which makes columns 0 and 16 the two off-field
 // margins SeedCombatPosition refuses to seed a wide stack's tail into.
-enum ECombatGrid {
+// Before normalization (type): ECombatGrid.
+enum CombatGrid {
     COMBAT_GRID_CELLS = 0xbb,
     COMBAT_GRID_ROW_STRIDE = 0x11,
     COMBAT_GRID_LAST_COLUMN = 0x10,
@@ -215,7 +219,8 @@ enum ECombatGrid {
 
 // SetCombatDirections has two approach records per ordinary six-way combat
 // direction. These four endpoints are the source's asymmetric tie-break set.
-enum ECombatAttackAngle {
+// Before normalization (type): ECombatAttackAngle.
+enum CombatAttackAngle {
     COMBAT_ATTACK_ANGLE_0 = 0,
     COMBAT_ATTACK_ANGLE_5 = 5,
     COMBAT_ATTACK_ANGLE_6 = 6,
@@ -231,7 +236,8 @@ enum ECombatAttackAngle {
 // 3 - the bridge still up. The intermediate 2 is an animation frame
 // only, so it stays unnamed. BOOTSTRAP INVENTION - no roster attests
 // the domain.
-enum EDrawbridgeState {
+// Before normalization (type): EDrawbridgeState.
+enum DrawbridgeState {
     DRAWBRIDGE_DOWN = 0x1,
     DRAWBRIDGE_UP = 0x3
 };
@@ -239,7 +245,8 @@ enum EDrawbridgeState {
 // The defending town's wall tier. InitializeArchers proves that a Citadel
 // installs the keep archer and a Castle installs the two tower archers too;
 // the other combat readers only distinguish an absent wall from any tier.
-enum ECombatFortification {
+// Before normalization (type): ECombatFortification.
+enum CombatFortification {
     COMBAT_FORTIFICATION_NONE = 0,
     COMBAT_FORTIFICATION_FORT = 1,
     COMBAT_FORTIFICATION_CITADEL = 2,
@@ -253,7 +260,8 @@ enum ECombatFortification {
 // should_lower_door all three, and IsInMoat excludes 0x5f from the
 // moat proper (0x5e from the Fortress row) while the bridge is down.
 // Names are BOOTSTRAP INVENTIONS.
-enum ECombatGateHex {
+// Before normalization (type): ECombatGateHex.
+enum CombatGateHex {
     // The ROW those three columns are the fifth entry of, which is what
     // SetupAndLoadObstacles compares against directly: it lays a mine in
     // every moat row of a Tower except this one, and it tests the row
@@ -290,14 +298,16 @@ extern const SiegeArcherInfo g_siegeArcherInfo[9];
 // Two additional TTerrainType values needed only by combat terrain
 // selection. Kept out of armygrp.h's include-sensitive enum: adding
 // enumerators there perturbs VC6 code generation in initialize.obj.
-enum ECombatTerrainValue {
+// Before normalization (type): ECombatTerrainValue.
+enum CombatTerrainValue {
     COMBAT_TERRAIN_SAND = 1,
     COMBAT_TERRAIN_SUBTERRANEAN = 6
 };
 
 // Mine type sentinels that force an underground combat background.
 // Their values are retail-proven; their semantic names are not.
-enum ECombatMineType {
+// Before normalization (type): ECombatMineType.
+enum CombatMineType {
     COMBAT_MINE_TYPE_4 = 4,
     COMBAT_MINE_TYPE_6 = 6
 };
@@ -344,7 +354,8 @@ DATA(0x0063bd40) extern const CombatHeroSprite g_combatHeroSprites[18];
 // The SPELLINGS are behaviour-derived and provisional - no roster or
 // string reaches this domain, exactly as the three field names it
 // describes are address ordinals.
-enum EAIOrder {
+// Before normalization (type): EAIOrder.
+enum AIOrder {
     AI_ORDER_CAST_SPELL = 1,
     AI_ORDER_MOVE_AND_ATTACK = 6,
     AI_ORDER_SHOOT = 7,
@@ -371,7 +382,8 @@ enum CombatHeroFrameType {
     COMBAT_HERO_FRAME_EVENT_3 = 3
 };
 
-class combatManager : public baseManager {
+// Before normalization (type): combatManager.
+class CombatManager : public BaseManager {
 public:
     // drawing.cpp:666, Dreamcast dc 0x841d4. range_attack uses this
     // five-argument overload to center the Magog effect before animating it.
@@ -621,7 +633,7 @@ public:
     char m_paddingBeforeCells[0x2];
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
     // (0x523bb0: index*112 + 0x1c4).
-    hexcell m_cells[187];  // +0x1c4, ends 0x5394
+    Hexcell m_cells[187];  // +0x1c4, ends 0x5394
     // PlaceAllObstacles shifts one by this dword while field_53c0 is -1;
     // it is the current combat terrain selector for the catalogue mask.
     int m_terrainType;  // +0x5394
@@ -777,7 +789,7 @@ public:
     // RaiseSkeletons indexes this pair by side and tries to merge the
     // post-combat raised stack into the selected group.
     ArmyGroup* m_armyGroups[2];  // +0x54c4
-    army m_armies[2][21];  // +0x54cc
+    Army m_armies[2][21];  // +0x54cc
     // Per-side dword SetupCombat initialises to 30000 (0x7530) for both
     // sides, in the same loop as playerIds and field_54b0 - retail reaches
     // it as `[&playerIds[side] + 0xddf8]`, which is what proves the stride
@@ -866,7 +878,7 @@ public:
     // a counter: simple_move's store is `mov [ecx+0x132c8], esi` with
     // esi holding `this`. Name is provisional; no roster reaches the
     // slot (the Dreamcast dump carries no combatManager fieldlist).
-    army* m_lastMovedArmy;  // +0x132c8
+    Army* m_lastMovedArmy;  // +0x132c8
     // Dreamcast TurnOffHighlighter (dc 0x6ed18) uses highlighterOn /
     // highlighterIndex at +0x1299c/+0x129a0; retail 0x477e10 uses this
     // byte/int pair at +0x132cc/+0x132d0. The earlier reference mapping
@@ -898,7 +910,7 @@ public:
     // (0x469a10) only consults the gate hexes while it is positive and
     // should_lower_door (0x467130) while it is non-zero. Name pending
     // a writer.
-    ECombatFortification m_fortificationLevel;  // +0x132f4
+    CombatFortification m_fortificationLevel;  // +0x132f4
     // Cleared by InitNonVisualVars at full width. Ordinal.
     int m_battleOver;  // +0x132f8
     CombatWindow* m_combatWindow;  // +0x132fc
@@ -907,8 +919,8 @@ public:
     // names iconWidgetWL/textWidgetWL, each an array of 25 widget pointers.
     // NH3API confirms PC offsets +0x13304/+0x13368; retail mainWindow /
     // combatDirections accesses bound the same 200-byte interval.
-    iconWidget* m_iconWidgetWL[25];  // +0x13304
-    textWidget* m_textWidgetWL[25];  // +0x13368
+    IconWidget* m_iconWidgetWL[25];  // +0x13304
+    TextWidget* m_textWidgetWL[25];  // +0x13368
     // SetCombatDirections fills twelve direction/hex pairs here. Retail
     // addresses the second row exactly 0x30 bytes after the first.
     int m_combatDirections[2][12];  // +0x133cc
@@ -1084,7 +1096,7 @@ public:
     unsigned char m_anyActionTaken;  // +0x14030
     unsigned char m_obstacleAttackVisited[COMBAT_GRID_CELLS];  // +0x14031
 
-    combatManager();
+    CombatManager();
     unsigned char isWinner(int thisSide) const;
     unsigned char combatIsOver() const;
     void resetHitByCreature();
@@ -1094,27 +1106,27 @@ public:
     // play before it lands the DamageWall - the wall visibly breaks
     // mid-animation, not on the last frame.
     enum { WALL_EXPLOSION_HIT_FRAME = 0x5 };
-    unsigned char enemyIsAdjacent(const army* currentArmy, int gridIndex,
-                                    const army* excluded) const;
+    unsigned char enemyIsAdjacent(const Army* currentArmy, int gridIndex,
+                                    const Army* excluded) const;
     unsigned char isAdjacent(int first, int second) const;
-    void viewArmy(army* thisArmy, int isQuickView);
-    void removeArmyFromGrid(const army& a);
-    void placeArmyInGrid(const army& a, int hex);
+    void viewArmy(Army* thisArmy, int isQuickView);
+    void removeArmyFromGrid(const Army& a);
+    void placeArmyInGrid(const Army& a, int hex);
     // Retail 0x59ec50 extends Dreamcast's one-argument spells.cpp:176
     // routine with the creature-cast selector passed by command.cpp.
     void initiateSpell(SpellID spellToCast, int creatureSpell);
     unsigned char placeObstacle(int obstacleId);
-    void unnamed46a520(army* stack);  // 0x46a520
-    unsigned char checkObstacleAttacks(army* thisArmy,
+    void unnamed46a520(Army* stack);  // 0x46a520
+    unsigned char checkObstacleAttacks(Army* thisArmy,
                                          unsigned char isWalking);
     void lootDeadHero(int side,
                       std::vector<type_artifact>& lootedArtifacts);
     void calculateGainedExperience(int side, int* experienceGained);
-    unsigned char checkFireWall(long hex, army* currentArmy,
+    unsigned char checkFireWall(long hex, Army* currentArmy,
                                   unsigned char isWalking);
-    unsigned char checkLandmine(long hex, army* currentArmy,
+    unsigned char checkLandmine(long hex, Army* currentArmy,
                                  unsigned char isWalking);
-    unsigned char shouldLowerDoor(army* thisArmy, long hex) const;
+    unsigned char shouldLowerDoor(Army* thisArmy, long hex) const;
     int experienceValueOfStack(int whichGroup);
     void makeCreaturesVanish();
     void raiseDoor();
@@ -1131,11 +1143,11 @@ public:
     void doVictory(int winningGroup);
     int checkApplyBadMorale(int group, int index);
     void checkApplyGoodMorale(int group, int index);
-    void spellEffect(int effect, army* targetArmy, int delay,
+    void spellEffect(int effect, Army* targetArmy, int delay,
                      bool doWince);
-    unsigned char shotIsNotOptimal(const army* attacker,
-                                   const army* defender) const;
-    unsigned char shotIsThroughWall(const army* shooter, int sourceIndex,
+    unsigned char shotIsNotOptimal(const Army* attacker,
+                                   const Army* defender) const;
+    unsigned char shotIsThroughWall(const Army* shooter, int sourceIndex,
                                     int destIndex) const;
     unsigned char inLineOfSight(int sourceIndex, int destIndex) const;
     unsigned char hexIsBlocked(int index) const;
@@ -1149,7 +1161,7 @@ private:
 public:
     // Complete-only moat damage worker; its sole caller passes the entered
     // hex, moving stack and a byte sound-control flag.
-    unsigned char unnamed469e50(int hex, army* stack,
+    unsigned char unnamed469e50(int hex, Army* stack,
                                 unsigned char playSound);
     int open(int newPriority);
     void initNonVisualVars();
@@ -1174,11 +1186,11 @@ public:
     void raiseSkeletons(int side);
     void learnSpellFromEagleEye(int side);
     void resetLimitCreature();
-    void setupGridForArmy(const army* thisArmy);
+    void setupGridForArmy(const Army* thisArmy);
     int updateGrid(int postGridIsClean, int setupGrid);
     void drawBackground();
     void updateCombatArea();  // 0x493780
-    unsigned char handleCombatPlayerDrop(unsigned long dpid, message* msg);
+    unsigned char handleCombatPlayerDrop(unsigned long dpid, Message* msg);
 
 private:
     unsigned char isComputerAction();
@@ -1252,7 +1264,7 @@ public:
     int drawWall(const Bitmap816* image, int x, int y, int width, int height,
                  int destX, int destY);
     int drawObject(const Bitmap816* image, int x, int y);
-    int drawObstacle(const hexcell& cell);
+    int drawObstacle(const Hexcell& cell);
     int drawMoatOverlay(int index);
     void drawOccupant(int index, int drawPriority, int numBoxOnly);
     void drawDeadOccupants(int index);
@@ -1269,7 +1281,8 @@ public:
     // Dreamcast's spells.cpp helper. CastSpell calls this boundary while
     // placing Fire Wall segments; retail VC6 expands it into the row-parity
     // ladder, so no standalone Complete body is required by that caller.
-    enum ESpellWallRowOffset {
+// Before normalization (type): combatManager::ESpellWallRowOffset.
+    enum SpellWallRowOffset {
         SPELL_WALL_SECOND_ROW = 2
     };
     int getSpellWallHex(int baseIndex, int rowOffset, int side);
@@ -1291,7 +1304,7 @@ public:
     // this declaration alone already costs GetCommand 92.5714 ->
     // 92.5357 unconditionally (include-set class, bisected), so it is
     // scoped to army.cpp and the field waits for the same lane.
-    void markMovingArmy(const army* movingArmy);  // 0x46a520
+    void markMovingArmy(const Army* movingArmy);  // 0x46a520
     // 0x465ad0 (0x443), already carved and carcassed in cmbtmgr.cpp.
     // army::range_attack (0x440160) short-circuits into it for an ARROW
     // TOWER, passing that stack's indexToAttack as the tower position -
@@ -1306,7 +1319,7 @@ public:
     // arm but records KeepAttack private. This narrow friendship is a
     // retail-supported source hypothesis: bytes do not distinguish it from
     // an unrecorded inline wrapper, and no original friend syntax survives.
-    friend void army::rangeAttack();
+    friend void Army::rangeAttack();
 
 private:
     // 0x465ad0 (0x443), already carved and carcassed in cmbtmgr.cpp.
@@ -1335,87 +1348,87 @@ public:
     void checkRebirth();  // 0x469440
     unsigned char canCastSpells(long side,
                                   unsigned char heroSpell) const;  // 0x41f890
-    long computeFireShieldDamage(long damage, const army* attacker,
-                                    const army* target,
+    long computeFireShieldDamage(long damage, const Army* attacker,
+                                    const Army* target,
                                     long targetHits) const;
     // (?damage_message@combatManager@@QAAXPBDJJPBVarmy@@J@Z) fixes both
     void damageMessage(const char* attacker, long attackerQty,
-                        long damage, const army* defender,
+                        long damage, const Army* defender,
                         long deaths);  // 0x469a90
-    void findMoveOrder(std::vector<army*>* result);
+    void findMoveOrder(std::vector<Army*>* result);
     long getTotalCombatValue(long side, long lowestAttack,
                                 long lowestDefense,
                                 unsigned char includeCripples) const;
     CSprite* loadSpellEffect(int effect);  // 0x5a92f0
 
 private:
-    unsigned char chooseToRun(const army* ourArmy,
+    unsigned char chooseToRun(const Army* ourArmy,
                                 const long* enemyAttacks,
                                 const SearchArray* currentSearchArray);  // 0x4208f0
-    long getAttackChange(const army* currentArmy, const army* enemy,
-                           type_AI_combat_parameters& data);  // 0x41f3b0
-    void markFirewalls(const army* currentArmy, long* enemyAttacks,
-                        type_AI_combat_parameters* estimate);  // 0x4214f0
-    unsigned char moveToward(const army* currentArmy, long targetHex,
+    long getAttackChange(const Army* currentArmy, const Army* enemy,
+                           AICombatParameters& data);  // 0x41f3b0
+    void markFirewalls(const Army* currentArmy, long* enemyAttacks,
+                        AICombatParameters* estimate);  // 0x4214f0
+    unsigned char moveToward(const Army* currentArmy, long targetHex,
                               const long* enemyAttacks,
                               unsigned char considerWaiting);  // 0x41f580
 
 public:
-    void markMoat(const army* currentArmy, long* enemyAttacks,
-                   type_AI_combat_parameters* estimate);  // 0x421590
+    void markMoat(const Army* currentArmy, long* enemyAttacks,
+                   AICombatParameters* estimate);  // 0x421590
     unsigned char chooseCyclopsAction(long bestValue, long side,
-                                        type_AI_combat_parameters* estimate);  // 0x41eea0
+                                        AICombatParameters* estimate);  // 0x41eea0
 
 private:
-    unsigned char chooseCreatureSpell(const army* currentArmy,
+    unsigned char chooseCreatureSpell(const Army* currentArmy,
                                         long* bestValue,
-                                        type_AI_combat_parameters* estimate);  // 0x420d20
-    unsigned char chooseMeleeTarget(const army* currentArmy,
+                                        AICombatParameters* estimate);  // 0x420d20
+    unsigned char chooseMeleeTarget(const Army* currentArmy,
                                       unsigned char teleport,
                                       long* actionValue,
-                                      type_AI_combat_parameters* estimate);  // 0x421680
+                                      AICombatParameters* estimate);  // 0x421680
     unsigned char chooseResurrectAction(
-        const army* currentArmy, long* bestValue,
-        type_AI_combat_parameters* estimate);  // 0x421000
-    long chooseShooterTarget(const army* currentArmy,
-                               type_AI_combat_parameters* data,
+        const Army* currentArmy, long* bestValue,
+        AICombatParameters* estimate);  // 0x421000
+    long chooseShooterTarget(const Army* currentArmy,
+                               AICombatParameters* data,
                                long* bestValue) const;  // 0x41eb80
-    unsigned char chooseSpellAction(const army* currentArmy,
+    unsigned char chooseSpellAction(const Army* currentArmy,
                                       long* bestValue,
-                                      type_AI_combat_parameters* estimate);
-    long getAreaEffect(long side, const army* ourArmy,
+                                      AICombatParameters* estimate);
+    long getAreaEffect(long side, const Army* ourArmy,
                          long markedEnemies,
-                         const type_AI_combat_parameters* estimate) const;  // 0x41f920
+                         const AICombatParameters* estimate) const;  // 0x41f920
     // Non-const `estimate` for the same reason mark_multiheaded_enemy
     // below is: this body calls that one and reaches
     // get_simple_attack_effect itself.
-    void markEnemyAttacks(const army* ourArmy, long* enemyAttacks,
+    void markEnemyAttacks(const Army* ourArmy, long* enemyAttacks,
                             long* dangerousEnemies,
-                            type_AI_combat_parameters* estimate) const;  // 0x420260
-    void markFriendlyArmies(const army* ourArmy, long* enemyAttacks,
+                            AICombatParameters* estimate) const;  // 0x420260
+    void markFriendlyArmies(const Army* ourArmy, long* enemyAttacks,
                               long markedEnemies,
-                              const type_AI_combat_parameters* estimate) const;  // 0x41fb60
+                              const AICombatParameters* estimate) const;  // 0x41fb60
     // `estimate` is NON-const where the Dreamcast roster prints
     // `const type_AI_combat_parameters*`, for the same reason the
     // searchArray pair above is: the body reaches
     // type_AI_combat_parameters::get_simple_attack_effect through it and
     // ai_tactical.h declares that method non-const. Spelling only.
-    void markMultiheadedEnemy(const army* ourArmy, const army* enemy,
+    void markMultiheadedEnemy(const Army* ourArmy, const Army* enemy,
                                 long* enemyAttacks, long limitValue,
                                 SearchArray* currentSearchArray,
-                                type_AI_combat_parameters* estimate) const;  // 0x41fd60
+                                AICombatParameters* estimate) const;  // 0x41fd60
     // 0x420f00, the RETAIL-ONLY third spell chooser: same shape as the
     // two above and the third arm of choose_spell_action's switch, the
     // one creatureType 0x86 (Faerie Dragon) takes. The address is fixed
     // independently by that switch; the HD/cross-build symbol can then
     // supply the otherwise unattested private bool/reference declarator.
     bool sodChooseFaerieDragonSpell(
-        const army* currentArmy, long& bestValue,
-        type_AI_combat_parameters& estimate);  // 0x420f00
+        const Army* currentArmy, long& bestValue,
+        AICombatParameters& estimate);  // 0x420f00
 
 public:
-    void berserkAttack(army* currentArmy, const army* target);  // 0x4222c0
-    long chooseMeleeAction(const army* currentArmy, unsigned char teleport,
+    void berserkAttack(Army* currentArmy, const Army* target);  // 0x4222c0
+    long chooseMeleeAction(const Army* currentArmy, unsigned char teleport,
                              unsigned char simulated, long side);  // 0x421f80
     unsigned char failedSiege();  // 0x41e440
     // 0x422b20 (632 B), NOT YET CLAIMED and NOT in any TU's carve span
@@ -1431,11 +1444,11 @@ public:
     // CodeView ai.cpp:2608 (dc 0x27888) declares a const parameters
     // receiver. Its calculations are const too; the old non-const claim
     // came from our reconstructed declaration, not the retail bytes.
-    void findAITargets(long ourGroup, const army* currentArmy,
+    void findAITargets(long ourGroup, const Army* currentArmy,
                          unsigned char meleeOnly,
-                         const type_AI_combat_parameters* data,
+                         const AICombatParameters* data,
                          SearchArray* currentSearchArray);
-    unsigned char isValidTeleport(const army* thisArmy, long newHex);
+    unsigned char isValidTeleport(const Army* thisArmy, long newHex);
     void simulateCombat(long side, unsigned char simulated);  // 0x422a40
     unsigned char validWallTarget(WallTargetId wall);  // 0x476440
     void doCompAI(int whichGroup);  // 0x4221f0
@@ -1448,7 +1461,7 @@ public:
     void clearEffects();  // 0x5a66b0
     void checkGetAIMove();
     unsigned char ableToSummonElemental(SpellID spell, long side);
-    int getNextChainLightningTarget(army* lastTargetArmy,
+    int getNextChainLightningTarget(Army* lastTargetArmy,
                                     int useSRandom);  // 0x5a61f0
     // command.obj's leaf (0x4763f0, claimed in src/command.cpp); ai.cpp
     // and findpath.cpp are both located callers and both reach it
@@ -1458,33 +1471,33 @@ public:
 private:
     unsigned char automateCatapult();  // 0x473c00
     unsigned char attemptShooterDefense(
-        const army* currentArmy, SearchArray* currentSearchArray,
-        const type_AI_combat_parameters* estimate);  // 0x420760
-    unsigned char chooseDefenseHex(const army* currentArmy,
-                                     const army* client, long* bestHex,
+        const Army* currentArmy, SearchArray* currentSearchArray,
+        const AICombatParameters* estimate);  // 0x420760
+    unsigned char chooseDefenseHex(const Army* currentArmy,
+                                     const Army* client, long* bestHex,
                                      long* openHexes,
                                      SearchArray* currentSearchArray);  // 0x4205d0
-    void chooseShooterAction(const army* currentArmy,
+    void chooseShooterAction(const Army* currentArmy,
                                unsigned char simulated, long side);  // 0x41f060
     unsigned char hasRangedAdvantage(
-        type_AI_combat_parameters* data);  // 0x420a80
-    void placeShooter(const army* currentArmy);  // 0x422060
+        AICombatParameters* data);  // 0x420a80
+    void placeShooter(const Army* currentArmy);  // 0x422060
     unsigned char shouldStayInCastle(
-        type_AI_combat_parameters* estimate);
+        AICombatParameters* estimate);
     bool showCreatureSpellError(char* buffer,
-                                   const army* currentArmy);
+                                   const Army* currentArmy);
     void showEagleEye(int winningGroup, int dialogTimeout);
     void showLootedArtifacts(std::vector<type_artifact>& lootedArtifacts,
                                int dialogTimeout);
-    long simulateActions(std::vector<army*>& list, long i,
+    long simulateActions(std::vector<Army*>& list, long i,
                           long ourGroup);
-    void simulateMeleeAttack(army* currentArmy, long hex, army* target,
+    void simulateMeleeAttack(Army* currentArmy, long hex, Army* target,
                                long enemyHex, long ourGroup);  // 0x4224e0
-    void simulateMeleeAttack(army* currentArmy, army* target,
+    void simulateMeleeAttack(Army* currentArmy, Army* target,
                                long ourGroup);  // 0x4227a0
 
 public:
-    unsigned char isComputerAction(const army* currentArmy);
+    unsigned char isComputerAction(const Army* currentArmy);
     // DC publishes void(int,int,int); Complete's x86 body changes the result
     // to an unsigned-byte "pointer changed" flag. Its retail field/call graph
     // fixes the three arguments as mouse x, mouse y and combat hex.
@@ -1505,12 +1518,12 @@ public:
     int viewSpells() const;
     // 0x47a100. Claims the first free (or expendable) slot on a side,
     // initialises the stack there and optionally fizzles it in.
-    army* addArmy(int side, int monType, int monQty, int gridIndex,
+    Army* addArmy(int side, int monType, int monQty, int gridIndex,
                   int setAttributes, int fizzleItIn);
     void viewCastleBallista(int isQuickInfo);
-    void markTowerArmy(const army* tower);
-    void demonicResurrection(const army* caster, army* target);
-    void removeCorpse(hexcell* hex, long side, long slot);  // 0x5a7320
+    void markTowerArmy(const Army* tower);
+    void demonicResurrection(const Army* caster, Army* target);
+    void removeCorpse(Hexcell* hex, long side, long slot);  // 0x5a7320
     unsigned char hasValidSpellTarget(SpellID spellId, long mastery,
                                       long castingSide,
                                       unsigned char firstTarget,
@@ -1530,7 +1543,7 @@ public:
     // 0x5a7560, carcass in spells.cpp; declared here because
     // army::cast_spell's Archangel arm calls it (the carcass stub is a
     // good-enough callee - the reloc pairs).
-    void resurrect(army* targetArmy, long hitPointsResurrected,
+    void resurrect(Army* targetArmy, long hitPointsResurrected,
                    unsigned char temporary);
     // Dreamcast spells.cpp:4984. Complete has no separate retail body:
     // VC6 expands this source helper into CastSpell's shared
@@ -1539,14 +1552,14 @@ public:
                           int mastery, const Hero* castingHero);
     long computeSpellDamage(SpellID spell, long spellPower, long mastery,
                             Hero* castingHero, Hero* targetHero,
-                            const army* target,
+                            const Army* target,
                             unsigned char simulated) const;  // 0x5a7890
     long modifySpellDamage(long baseDamage, SpellID spell,
                            const Hero* castingHero, const Hero* targetHero,
-                           const army* target,
+                           const Army* target,
                            unsigned char simulated) const;
     long modifySpellDamageForSpells(long damage, SpellID spell,
-                                    const army* target) const;  // 0x5a7bb0
+                                    const Army* target) const;  // 0x5a7bb0
     // 0x495bf0, carried by drawing.obj (drawing.cpp:2093) and located
     // there already; declared here because AddArmy calls it.
     void computeMaxExtent();
@@ -1562,7 +1575,8 @@ public:
     // above. Basic and Advanced reach the first two, Expert all three -
     // retail's own count is `(mastery >= 2) + 2`. The domain is named
     // because the walk compares the index against 2 directly.
-    enum EWallCell {
+// Before normalization (type): combatManager::EWallCell.
+    enum WallCell {
         WALL_CELL_ANCHOR = 0,
         WALL_CELL_NEAR = 1,
         WALL_CELL_FAR = 2
@@ -1623,7 +1637,7 @@ public:
     // (three stack arguments: the launch point and the target stack).
     // ORDINAL PLACEHOLDER name - no roster row reaches it; the body
     // stays spells.obj's to reconstruct.
-    void unnamed59FDE0(int x, int y, army* target);
+    void unnamed59FDE0(int x, int y, Army* target);
     void spellTargetMessage(SpellID spellId, int targetIndex,
                             unsigned char firstTarget);  // 0x5a8690
     void doBolt(int handleResets, int sourceX, int sourceY, int destX,
@@ -1658,23 +1672,23 @@ public:
     // The integer-hex overload belongs to cmbtmgr.cpp (retail 0x469670).
     static long getDistance(long start, long stop);
     unsigned char validSpellTargetArmy(SpellID spellId, int castingSide,
-                                       const army* targetArmy,
+                                       const Army* targetArmy,
                                        unsigned char firstTarget,
                                        long creatureSpell) const;  // 0x5a3c80
     void castSpell(SpellID spellId, int targetIndex,
                    int isMonsterSpell, int secondaryIndex,
                    int monsterSkill, long monsterPower);
-    float spellCastWorkChance(SpellID spell, long side, const army* target,
+    float spellCastWorkChance(SpellID spell, long side, const Army* target,
                               unsigned char redirected,
                               unsigned char firstTarget,
                               long creatureSpell) const;
     unsigned char spellCastWorks(SpellID spell, long side,
-                                 const army* target,
+                                 const Army* target,
                                  unsigned char redirected,
                                  long creatureSpell) const;  // 0x5a8640
-    army* findResurrectionTarget(int armyGroup, int targetIndex,
+    Army* findResurrectionTarget(int armyGroup, int targetIndex,
                                    long creatureSpell);
-    army* findAnimateDeadTarget(int armyGroup, int targetIndex);
+    Army* findAnimateDeadTarget(int armyGroup, int targetIndex);
 
 private:
     // 0x5a3950, the selector in front of the two rows above: it bounds the
@@ -1683,7 +1697,7 @@ private:
     // find_animate_dead_target, and otherwise answers cells[hex].get_army().
     // Declared beside the leaves it calls rather than at the end of the
     // class because this run of spells.obj leaves is already unconditional.
-    army* findSpellTarget(SpellID spell, long side, long hex,
+    Army* findSpellTarget(SpellID spell, long side, long hex,
                             unsigned char firstTarget,
                             long creatureSpell);  // 0x5a3950
 
@@ -1701,7 +1715,8 @@ public:
     // artifacts are precisely the two rows the 2-arm special-cases.
     // The parameter keeps its int width and its roster name; the enum
     // exists so the arms can be spelled as what they are.
-    enum ESpellCaster {
+// Before normalization (type): combatManager::ESpellCaster.
+    enum SpellCaster {
         SPELL_CASTER_HERO = 0,
         SPELL_CASTER_CREATURE = 1,
         SPELL_CASTER_ARTIFACT = 2
@@ -1712,11 +1727,11 @@ public:
     // a header this one does not include.
     void powEffect(int spellEffect, int resetLimitCreature);  // 0x468990
     void showSpellMessage(int isMonsterSpell, SpellID spellId,
-                          army* targetArmy);  // 0x5a8950
+                          Army* targetArmy);  // 0x5a8950
     // Dreamcast spells.cpp:5041 emits this inline helper separately;
     // Complete VC6 expands its only surviving call into CastSpell's
     // failure path at +0x2159.
-    inline void showSpellCastFailure(army* targetArmy, int spellId);
+    inline void showSpellCastFailure(Army* targetArmy, int spellId);
     // The ONE TSpellEffectID this header needs so far. Value from the
     // Dreamcast enum table (evidence/dreamcast/enums.csv:
     // TSpellEffectID.eSpellEffectFireShield = 11), and retail proves the
@@ -1754,7 +1769,7 @@ public:
     };
     // DC cmbtmgr.h:1466. Retail expands this selector in both sacrifice
     // lookup sites; no standalone body survives.
-    army* findResurrectionTarget(SpellID spell, long group, long hex,
+    Army* findResurrectionTarget(SpellID spell, long group, long hex,
                                    unsigned char creatureSpell)
     {
         if (spell == SPELL_ANIMATE_DEAD)
@@ -1771,7 +1786,7 @@ public:
     // DC header inline (cmbtmgr.h:1478, dc 0x27efc); the DC xref graph
     // lists it among DoCompAI's callees and retail carries no
     // out-of-line copy, so it is the /Ob2 inline-away case.
-    army* getCurrentArmy() { return &m_armies[m_actingSide][m_actingSlot]; }
+    Army* getCurrentArmy() { return &m_armies[m_actingSide][m_actingSlot]; }
     // E:\gamedcs\CmbtMgr.h:1488. Dreamcast proves the single-expression
     // helper and its four ordered bounds. Complete widens the window to the
     // retail 800x556 combat area; ProcessCombatMsg retains the source call
@@ -1814,7 +1829,7 @@ public:
     // (?GetCell@combatManager@@QAAAAVhexcell@@HH@Z); the roster text
     // renders every reference as a pointer, which is what this
     // declaration read before the S_PUB32 pass.
-    hexcell& getCell(int x, int y)
+    Hexcell& getCell(int x, int y)
     {
         return m_cells[getHexIndex(x, y)];
     }
@@ -1827,19 +1842,19 @@ public:
     Obstacle& getObstacle(int index) { return m_obstacles[index]; }
     void markCreatureEffect(int group, int index)
     {
-        if (m_armies[group][index].m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
+        if (m_armies[group][index].m_creatureType == Army::ARMY_CREATURE_ARROW_TOWER)
             markTowerArmy(&m_armies[group][index]);
         else
             m_creatureEffect[group][index] = 1;
     }
-    army* findDemonicResurrectionTarget(int armyGroup, int targetIndex);
+    Army* findDemonicResurrectionTarget(int armyGroup, int targetIndex);
     void markAreaEffect(SpellID spell, long hex, long mastery,
-                          std::vector<army*>& targets);
+                          std::vector<Army*>& targets);
     void markHexAreaEffect(long hex, long radius,
                               unsigned char includeCenter,
-                              std::vector<army*>& targets);
+                              std::vector<Army*>& targets);
     void markBerserkAreaEffect(long hex, long mastery,
-                                  std::vector<army*>& targets);
+                                  std::vector<Army*>& targets);
     // DC ?SetupCombat@combatManager@@QAAXUtype_point@@PAVhero@@PAVarmyGroup@@
     // JPAVtown@@12HHH_N@Z - the S_PUB32 run types every parameter. The
     void setupCombat(type_point point, Hero* leftHero,
@@ -1858,16 +1873,16 @@ private:
     void loadArmies(unsigned char isSurrounded);
 
 public:
-    unsigned char unnamed464d40(army* selected);
-    unsigned char unnamed464f50(const army* incumbent, const army* candidate);
-    virtual int main(message& msg);
-    int processCombatMsg(message& msg);
-    int processNextAction(message& msg, unsigned char automaticTurn);
+    unsigned char unnamed464d40(Army* selected);
+    unsigned char unnamed464f50(const Army* incumbent, const Army* candidate);
+    virtual int main(Message& msg);
+    int processCombatMsg(Message& msg);
+    int processNextAction(Message& msg, unsigned char automaticTurn);
     void setCombatDirections(int hex);
     // DC command.cpp:2800. Complete likewise expands its sole call, while
     // retaining the helper's source-level surrender-dialog boundary.
     int doSurrender();
-    int checkWin(message* msg);
+    int checkWin(Message* msg);
     void resetRound();
     // The named command rearm helper. 0x4782d0 (1461 B, command.obj) is
     // Dreamcast's named GetControl method; SetNextArmy calls it immediately
@@ -1891,13 +1906,13 @@ private:
                                  long skill) const;
     void autoResolveCombat();
     unsigned char automateFirstAidTent();
-    void processFirstAid(army* currentArmy);
-    unsigned char processMoveThenAttack(message* msg);
+    void processFirstAid(Army* currentArmy);
+    unsigned char processMoveThenAttack(Message* msg);
 };
-SIZE(combatManager::WallTraits, 0x24);
+SIZE(CombatManager::WallTraits, 0x24);
 
 // Retail .bss 0x6993d0 (DC ?gpCombatManager@@3PAVcombatManager@@A).
-extern combatManager* g_combatManager;
+extern CombatManager* g_combatManager;
 
 // Two single-byte .bss flags that are always read as a PAIR, in this
 // order, and always to suppress something: CalculateGainedExperience

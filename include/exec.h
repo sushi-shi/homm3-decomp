@@ -9,27 +9,28 @@
 // currentManager@8, dialogReturn@12 - byte-corroborated by the retail
 // Add/RemoveManager list walks (tail-first, like heroWindow's widget
 // list).
-class executive {
+// Before normalization (type): executive.
+class Executive {
 public:
-    baseManager* m_headManager;
-    baseManager* m_tailManager;
-    baseManager* m_currentManager;
+    BaseManager* m_headManager;
+    BaseManager* m_tailManager;
+    BaseManager* m_currentManager;
     long m_dialogReturn;
 
-    executive();
+    Executive();
     int initSystem();
     void shutDownSystem();
-    int addManager(baseManager* newManager, int newPriority);
-    int doDialog(baseManager* newDialog);
-    void removeManager(baseManager* killManager);
-    void callManager(baseManager* newManager);
+    int addManager(BaseManager* newManager, int newPriority);
+    int doDialog(BaseManager* newDialog);
+    void removeManager(BaseManager* killManager);
+    void callManager(BaseManager* newManager);
     void mainLoop();
 };
 
 // events.obj joins the gate for the refugee camp (0x4a4600), whose
 // recruit dialog is run through gpExecutive->DoDialog. The pointer stays
 // invisible to every TU with no consumer.
-extern executive* g_executive;
+extern Executive* g_executive;
 
 void aiShutDown();
 

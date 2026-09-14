@@ -18,13 +18,14 @@
 
 class BlackBoxData;
 class CNetMsgHandler;
-class resource;
-class sample;
-class ds_memsample;
+class Resource;
+class Sample;
+// Before normalization (type): ds_memsample.
+class DsMemsample;
 class TreasureData;
 struct ExtraInfoUnion;
-struct type_creature_bank;
-struct type_university;
+struct CreatureBank;
+struct University;
 class ArmyGroup;
 class Hero;
 class ResourceDisplay;
@@ -34,8 +35,10 @@ class ResourceDisplay;
 // through overview and town-screen readers of both columns.
 extern HelpText g_adventureWindowHelp[];
 
-struct type_creature_bank;
-struct type_university;
+// Before normalization (type): type_creature_bank.
+struct CreatureBank;
+// Before normalization (type): type_university.
+struct University;
 
 // Dreamcast CodeView supplies the domain and ordering. Retail indexes the
 // matching 32-byte per-player flag band and the parallel help-name table with
@@ -116,13 +119,15 @@ enum WitchHutSkillEncoding {
 // The three cartographer variants, indexed by NewmapCell::objectIndex.
 // DispatchEvent's cartographer arm shows one map plane per value, matching
 // the three-wide cartographerMask/cartographerFlags arrays.
-enum ECartographerType {
+// Before normalization (type): ECartographerType.
+enum CartographerType {
     CARTOGRAPHER_WATER = 0,
     CARTOGRAPHER_LAND = 1,
     CARTOGRAPHER_UNDERGROUND = 2
 };
 
-enum EAdvmgrRetailObjectType {
+// Before normalization (type): EAdvmgrRetailObjectType.
+enum AdvmgrRetailObjectType {
     BORDER_GATE = 212,
     // 213: DispatchEvent's 0xd5 arm gates DoFreelancersGuild(hero*) on
     // human_player - the map-object entry of tradpost's guild pair.
@@ -201,7 +206,8 @@ DATA(0x006782ac) extern const signed char g_routeArrowFrames[8][8];
 // member itself stays `int` - this enum exists so the dispatch labels and
 // the one `advCommand != WALK_ROUTE` compare are named rather than magic.
 // Gated to advmgr.obj's own view for the standing include-set reason.
-enum EAdvCommand {
+// Before normalization (type): EAdvCommand.
+enum AdvCommand {
     ADV_COMMAND_NONE = -1,
     // Retargets the current hero's path at lastMapHover, then FALLS
     // THROUGH into WALK_ROUTE - the fallthrough is retail's own, proved
@@ -224,10 +230,10 @@ enum EAdvCommand {
 //             returns for the step the route walker is about to take.
 //   0x6968e4  the resource-side walk sample paired with that live handle;
 //             StopCursor clears both after stopping the handle.
-DATA(0x006968e0) extern ds_memsample* g_unnamed6968e0;
+DATA(0x006968e0) extern DsMemsample* g_unnamed6968e0;
 //   0x6968e8  a cursor-owned byte latch cleared when animate_move finishes.
 //             No surviving symbol names its role, so the name stays ordinal.
-DATA(0x006968e4) extern sample* g_unnamed6968e4;
+DATA(0x006968e4) extern Sample* g_unnamed6968e4;
 extern unsigned char g_unnamed6968e8;
 //   0x69777c  breaks the route step loop when nonzero.
 //   0x698774  suppresses the route teardown and forces ShowRoute
@@ -339,7 +345,8 @@ extern int g_gameOver;
 // overview arm answers 2 by viewing giOverviewReturnActionExtra's town and suppressing the
 // screen fade - so the label is an ORDINAL PLACEHOLDER carrying only that
 // role. This enum exists so the compare is named rather than magic.
-enum EOverviewExit {
+// Before normalization (type): EOverviewExit.
+enum OverviewExit {
     OVERVIEW_EXIT_TOWN = 2
 };
 
@@ -358,7 +365,8 @@ extern float g_unnamed68c6b8;
 // HoMM3's published map sizes. advmgr.h already carried 144 as
 // ADVENTURE_XLARGE_MAP_WIDTH inside advManager's sound-extent enum - that
 // enumerator is left alone, this is the domain's own home.
-enum EMapDimension {
+// Before normalization (type): EMapDimension.
+enum MapDimension {
     MAP_DIMENSION_SMALL = 36,
     MAP_DIMENSION_MEDIUM = 72,
     MAP_DIMENSION_LARGE = 108,
@@ -387,7 +395,8 @@ DATA(0x006912ac) extern const char* g_knownWitchSkillText;
 // Retail GetSoundId returns this four-byte enum. The semantic aliases have
 // not been admitted; these ordinal names expose only the values proved by
 // that function's return blocks.
-enum e_looping_sound_id {
+// Before normalization (type): e_looping_sound_id.
+enum ELoopingSoundId {
     LOOPING_SOUND_INVALID = -1,
     LOOPING_SOUND_0 = 0,
     LOOPING_SOUND_1,
@@ -465,16 +474,18 @@ enum e_looping_sound_id {
 // Dreamcast CodeView publishes this complete eight-byte record and both
 // member names. Retail TrimLoopingSounds independently proves the four-entry
 // array, stride, and soundId field.
-struct soundNode {
+// Before normalization (type): soundNode.
+struct SoundNode {
 public:
-    e_looping_sound_id m_soundId;
+    ELoopingSoundId m_soundId;
     int m_priority;
 };
-SIZE(soundNode, 8);
+SIZE(SoundNode, 8);
 
 // Dreamcast CodeView publishes this complete cursor-frame domain. Retail's
 // ProcessHover independently corroborates every value it uses directly.
-enum type_adventure_cursor {
+// Before normalization (type): type_adventure_cursor.
+enum AdventureCursor {
     ADV_ARROW_POINTER = 0,
     ADV_WAIT_POINTER = 1,
     ADV_HERO_INFO_POINTER = 2,
@@ -504,16 +515,17 @@ enum type_adventure_cursor {
 // GetMapExtra's ninth bit records a monster occupying the map square. The
 // role is independently described by the cross-build map inventory and is
 // used by retail's normal-cursor decision before inspecting the cell below.
-enum EMapExtraFlag {
+// Before normalization (type): EMapExtraFlag.
+enum MapExtraFlag {
     MAP_EXTRA_MONSTER = 0x100
 };
 
-class textEntryWidget;
+class TextEntryWidget;
 
 class NewfullMap;
 class NewmapCell;
 class CSprite;
-class textWidget;
+class TextWidget;
 
 // Only byte +1 of this 16-byte row is named by behavior, so keep the
 // otherwise unknown table raw instead of inventing a partial object type.
@@ -597,11 +609,12 @@ SIZE(DrawParts, 0x10);
 // resolves to `?SleepAllWidgets@heroWindow@@QAEXE@Z` - the base body,
 // not an override.
 // Before normalization (type): TAdventureMapWindow.
-class AdventureMapWindow : public heroWindow {
+class AdventureMapWindow : public HeroWindow {
 public:
     // Dreamcast TAdventureMapWindow::EWidgetIDs, complete. Retail uses the
     // same ids in the window's broadcast-message helpers.
-    enum EWidgetIDs {
+// Before normalization (type): AdventureMapWindow::EWidgetIDs.
+    enum WidgetIDs {
         MAP_ID = 0,
         RADAR_ID = 1,
         SELECTION_WINDOW_ID = 2,
@@ -664,7 +677,8 @@ public:
     // Retail-only ids accepted by convertID2HelpID. Their numeric identity
     // and help-row mapping are byte-proven; no surviving symbol source gives
     // the widget roles, so keep the spellings explicitly provisional.
-    enum EHelpWidgetIDs {
+// Before normalization (type): AdventureMapWindow::EHelpWidgetIDs.
+    enum HelpWidgetIDs {
         ROLLOVER_TEXT_ID = 200,
         HELP_WIDGET_1001_ID = 1001,
         HELP_WIDGET_1002_ID,
@@ -686,19 +700,19 @@ public:
     // heroWindow is eight bytes wider, placing them at +0x4c/+0x50;
     // InMapArea independently proves MapWidget's retail offset and reads
     // its widget x/y/width/height fields.
-    widget* m_radarWidget;
-    widget* m_mapWidget;
-    textWidget* m_chatTextWidget;  // +0x54, CompleteDraw's chat update target
+    Widget* m_radarWidget;
+    Widget* m_mapWidget;
+    TextWidget* m_chatTextWidget;  // +0x54, CompleteDraw's chat update target
     // Retail heroWindow is 8 bytes wider than the Dreamcast base (0x4c
     // versus 0x44). Applying that independently proven shift to the DC
     // TAdventureMapWindow member roster puts chatEdit@0x50 at retail
     // +0x58. KeyboardMessageHandler confirms the result directly with
     // `mov ecx,[advWindow+0x58] / mov al,[ecx+0x6d]`; +0x6d is the
     // byte-proven textEntryWidget::bHasFocus field.
-    textEntryWidget* m_chatEdit;
+    TextEntryWidget* m_chatEdit;
     // UpdateResourceDisplay (0x403f00) calls through this +0x5c field.
     ResourceDisplay* m_resourceDisplay;
-    class bitmapBackedTextWidget* m_rolloverTextWidget;  // +0x60
+    class BitmapBackedTextWidget* m_rolloverTextWidget;  // +0x60
     int m_topHero;
     int m_topTown;
 
@@ -718,12 +732,13 @@ public:
     // with hpsyyy.pcx plus a send_message/Draw pair and is indexed
     // `[this + i*4 + 0x84]`. Five entries each is fixed at both ends -
     // the loops bound on 5 and 0x70 + 2*5*4 lands exactly on bottomView.
-    class bitmapBorder* m_heroPortraits[5];
-    class bitmapBorder* m_heroLocators[5];
+    class BitmapBorder* m_heroPortraits[5];
+    class BitmapBorder* m_heroLocators[5];
 
 private:
     // ClearBottomView (0x403ee0) owns and clears the pointer at +0x98.
-    class type_bottom_view_window* m_bottomView;
+// Before normalization (type): type_bottom_view_window.
+    class BottomViewWindow* m_bottomView;
 
 public:
     // Complete-only owned popup state: Open constructs it and Close deletes
@@ -735,7 +750,7 @@ public:
     virtual int open(int zOrder, unsigned char update);
     virtual void close(unsigned char update);
     virtual void vslot8(unsigned char on);
-    unsigned char processRightSelect(const message* msg);
+    unsigned char processRightSelect(const Message* msg);
     unsigned char processHover(int hx, int hy);
     void doHeroKnob(unsigned char up);
     void doTownKnob(unsigned char up);
@@ -763,7 +778,7 @@ public:
     void clearBottomView();
     void drawBottomView(unsigned char update);
     inline void setBackgroundAnimation(unsigned char enable);
-    void setBottomView(class type_bottom_view_window* newView);
+    void setBottomView(class BottomViewWindow* newView);
     void updateResourceDisplay(bool draw, bool update);
     void setAdvWinButtonPalette(int id, int player);
     void drawChatText(unsigned char update);
@@ -777,12 +792,14 @@ SIZE(AdventureMapWindow, 0xa0);
 // Derives baseManager (0x38 bytes): executive::CallManager (0x4b0c70)
 // compares it against executive::currentManager and writes
 // baseManager::status (+0x34) as its suspend/resume mode.
-class advManager : public baseManager {
+// Before normalization (type): advManager.
+class AdvManager : public BaseManager {
 public:
     // Provisional ordinal names. OverrideBottomView proves the complete
     // 0..8 range and distinct behavior for 0, 1..6 and 8; semantic names
     // remain unclaimed.
-    enum EBottomViewType {
+// Before normalization (type): advManager::EBottomViewType.
+    enum BottomViewType {
         BOTTOM_VIEW_DEFAULT = 0,
         BOTTOM_VIEW_1,
         BOTTOM_VIEW_2,
@@ -793,7 +810,8 @@ public:
         BOTTOM_VIEW_7,
         BOTTOM_VIEW_8
     };
-    enum ECursorDrawCell {
+// Before normalization (type): advManager::ECursorDrawCell.
+    enum CursorDrawCell {
         CURSOR_DEST_Y0 = 7,
         CURSOR_DEST_Y1 = 8,
         CURSOR_DEST_X0 = 8,
@@ -803,19 +821,22 @@ public:
     // cursorType is DC-attested as a plain int. Retail ProcessHover proves
     // only this distinguished state, so retain an ordinal spelling rather
     // than inventing a semantic domain name.
-    enum ECursorTypeState {
+// Before normalization (type): advManager::ECursorTypeState.
+    enum CursorTypeState {
         CURSOR_TYPE_8 = 8,
         // DoEventAnchor (0x49e670) parks the map cursor in this state as a
         // hero steps ashore, where DoEventBoat parks it in 8 as one boards.
         // Ordinal for the reason 8 is: no surviving name covers the domain.
         CURSOR_TYPE_34 = 0x22
     };
-    enum EObjectDrawLayer {
+// Before normalization (type): advManager::EObjectDrawLayer.
+    enum ObjectDrawLayer {
         OBJECT_DRAW_LAYER_HERO_FRONT = 1,
         OBJECT_DRAW_LAYER_HERO_BACK = 2,
         OBJECT_DRAW_LAYER_LAST = 6
     };
-    enum ECompleteDrawExtent {
+// Before normalization (type): advManager::ECompleteDrawExtent.
+    enum CompleteDrawExtent {
         COMPLETE_DRAW_LAST_X = 19,
         COMPLETE_DRAW_LAST_Y = 17
     };
@@ -831,11 +852,13 @@ public:
     // an ungated nested enum is a type DEFINITION in the closure of every
     // TU that includes this header. MEASURED score-neutral in both
     // positions today - the gate is prophylaxis, not a repair.
-    enum EHeroViewTile {
+// Before normalization (type): advManager::EHeroViewTile.
+    enum HeroViewTile {
         HERO_VIEW_TILE_X = 9,
         HERO_VIEW_TILE_Y = 8
     };
-    enum EHoverBounds {
+// Before normalization (type): advManager::EHoverBounds.
+    enum HoverBounds {
         HOVER_SCREEN_WIDTH = 800,
         HOVER_SCREEN_HEIGHT = 600,
         HOVER_SCROLL_MARGIN = 16,
@@ -844,14 +867,16 @@ public:
         HOVER_SCROLL_POINTER_FIRST = 32,
         HOVER_SCROLL_POINTER_LAST = 39
     };
-    enum ECloudDrawFrame {
+// Before normalization (type): advManager::ECloudDrawFrame.
+    enum CloudDrawFrame {
         CLOUD_DRAW_FRAME_1 = 1,
         CLOUD_DRAW_FRAME_3 = 3,
         CLOUD_DRAW_FRAME_4 = 4,
         CLOUD_DRAW_FRAME_5 = 5,
         CLOUD_DRAW_FLIPPED_OFFSET = 100
     };
-    enum EAdventureScreenUpdate {
+// Before normalization (type): advManager::EAdventureScreenUpdate.
+    enum AdventureScreenUpdate {
         ADVENTURE_SCREEN_X = 0,
         ADVENTURE_SCREEN_Y = 8,
         ADVENTURE_SCREEN_WIDTH = 608,
@@ -864,17 +889,20 @@ public:
     // general-text row through NormalDialog, and ignores every id outside
     // it. Bounds are retail's own `cmp 0x7d0 / jl` and `cmp 0x898 / jg`;
     // no surviving symbol names the band, so the spelling is provisional.
-    enum EAdventureHelpIds {
+// Before normalization (type): advManager::EAdventureHelpIds.
+    enum AdventureHelpIds {
         ADV_HELP_ID_FIRST = 2000,
         ADV_HELP_ID_LAST = 2200
     };
-    enum EAdventureSoundExtent {
+// Before normalization (type): advManager::EAdventureSoundExtent.
+    enum AdventureSoundExtent {
         ADVENTURE_ACTIVE_SOUND_COUNT = 4,
         ADVENTURE_XLARGE_MAP_WIDTH = 144
     };
     // Open's load-bar pacing: the two mid-batch IncProgressBar ticks fire
     // at the halfway index of the cached-graphics and cursor-icon loops.
-    enum EAdventureOpenProgress {
+// Before normalization (type): advManager::EAdventureOpenProgress.
+    enum AdventureOpenProgress {
         CACHED_GRAPHIC_TICK = 19,
         CURSOR_ICON_TICK = 9
     };
@@ -937,7 +965,7 @@ public:
     // monAttackSprites exactly as retail does. DC's STL makes the vector
     // twelve bytes against Dinkumware's sixteen, which is the whole of
     // the 232->244 versus 0xd0->0xe0 drift.
-    std::vector<resource*> m_cachedGraphics;
+    std::vector<Resource*> m_cachedGraphics;
     CSprite* m_movingObjectSprite;  // +0xe0, transient object draw override
     // +0xe4. The five-argument UpdateRadar overload forwards this packed
     // point by value as the origin argument of the six-argument overload.
@@ -994,9 +1022,9 @@ public:
     int m_movingObjectSequence;  // +0x21c
     int m_movingObjectFrame;  // +0x220
     int m_touchedSounds;  // +0x224, DC name
-    soundNode m_soundArray[4];  // +0x228, DC name and extent
-    sample* m_loopedSample[LOOPING_SOUND_COUNT];  // +0x248, DC name
-    sample* m_heroSamples[11];  // +0x360, DC name and extent
+    SoundNode m_soundArray[4];  // +0x228, DC name and extent
+    Sample* m_loopedSample[LOOPING_SOUND_COUNT];  // +0x248, DC name
+    Sample* m_heroSamples[11];  // +0x360, DC name and extent
     int m_heroLogoShowing;  // +0x38c, DC name
     // +0x390. SetHeroContext's tail gates the closing
     // ForceMouseMove/lastHoverX reset on Dreamcast's bHeroMoving byte.
@@ -1007,10 +1035,10 @@ public:
     char m_paddingBeforeBottomViewType[3];
     // +0x394: UpdBottomViewEnemyTurn compares this against 5 before
     // rebuilding the view, then stores 5 before installing the new window.
-    EBottomViewType m_bottomViewType;
+    BottomViewType m_bottomViewType;
 
 private:
-    EBottomViewType m_bottomViewOverride;  // +0x398
+    BottomViewType m_bottomViewOverride;  // +0x398
 
 public:
     unsigned long m_bottomViewDeadline;  // +0x39c
@@ -1018,10 +1046,10 @@ public:
     int m_bottomViewResourceQuantity;  // +0x3a4
     std::string m_bottomViewMessage;  // +0x3a8
 
-    advManager();
+    AdvManager();
     virtual int open(int newPriority);
     virtual void close();
-    virtual int main(message& msg);
+    virtual int main(Message& msg);
     void updateScreen(int allowIntermediateMouse, int forceDraw);
     BlackBoxData* getBlackBox(const ExtraInfoUnion* cell) const;
     TreasureData* getTreasureData(NewmapCell* cell) const;
@@ -1065,18 +1093,18 @@ public:
     void insertSound(int x, int y, int z, int soundPriority, int soundsType);
     void eraseAndFizzle(NewmapCell* eventCell, type_point point,
                         int fizzleSound);
-    int processSelect(const message* msg, type_point* triggerPoint,
+    int processSelect(const Message* msg, type_point* triggerPoint,
                       NewmapCell** peventCell);
-    int processDeSelect(const message* msg, unsigned char* exitFlag,
+    int processDeSelect(const Message* msg, unsigned char* exitFlag,
                         type_point* triggerPoint, NewmapCell** peventCell);
-    int processKeyPress(const message* msg, unsigned char* exitFlag,
+    int processKeyPress(const Message* msg, unsigned char* exitFlag,
                         type_point* triggerPoint, NewmapCell** peventCell);
-    void processRadarSelect(const message* msg);
-    void processMapSelect(const message* msg, type_point* triggerPoint,
+    void processRadarSelect(const Message* msg);
+    void processMapSelect(const Message* msg, type_point* triggerPoint,
                           NewmapCell** peventCell);
     void eraseObj(NewmapCell* thisCell, type_point point,
                   unsigned char record);
-    void overrideBottomView(EBottomViewType view, int time);
+    void overrideBottomView(BottomViewType view, int time);
     void hideRoute(int updateScreen, int removeTarget, int changeButton);
     void reseed(int targetX, int targetY);
     void checkDimNextHeroBut();
@@ -1493,7 +1521,7 @@ public:
     int getCloudLookup(int srcX, int srcY, int z);
     void checkCastSpell();
     void trimLoopingSounds(int maxSoundsAllowed);
-    e_looping_sound_id getSoundId(int x, int y, int z);
+    ELoopingSoundId getSoundId(int x, int y, int z);
     void disableButtons();
     void enableButtons();
     int mouseInScrollZone();
@@ -1506,8 +1534,8 @@ public:
 
 private:
     void garrisonQuickView(int id, int x, int y);
-    type_adventure_cursor getGarrisonCursor(NewmapCell* currCell);
-    type_adventure_cursor getNormalCursor(NewmapCell* currCell);
+    AdventureCursor getGarrisonCursor(NewmapCell* currCell);
+    AdventureCursor getNormalCursor(NewmapCell* currCell);
     static int getForceModifier(float strengthRatio);
     static int getLikeModifier(Hero* currentHero,
                                  enum CreatureType creature);
@@ -1580,7 +1608,7 @@ inline int getMapExtra(type_point point)
 }
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
-extern advManager* g_advManager;
+extern AdvManager* g_advManager;
 extern int g_thisNetGotAdventureControl;
 
 // Two town.obj-owned globals advManager::Close reads. town::View holds the

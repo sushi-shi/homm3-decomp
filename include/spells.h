@@ -13,7 +13,8 @@ CreatureType getElementalType(SpellID spell);
 // one at a time rather than through a table (each arm re-expands
 // RGBto16 in full; only the last channel term is tail-merged). Depth 0
 // is the span's outer rim, and anything deeper than four is the floor.
-enum EBoltSpanDepth {
+// Before normalization (type): EBoltSpanDepth.
+enum BoltSpanDepth {
     BOLT_SPAN_DEPTH_0 = 0,
     BOLT_SPAN_DEPTH_1 = 1,
     BOLT_SPAN_DEPTH_2 = 2,

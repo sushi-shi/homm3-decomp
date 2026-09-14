@@ -39,30 +39,30 @@ PuzzleWindow::PuzzleWindow(int puzzlenum)
 
     m_widgets.reserve(NWIDGETS);
 
-    bitmapBorder* background =
-        new bitmapBorder(0, 0, 800, 600, BACKGROUND_ID,
+    BitmapBorder* background =
+        new BitmapBorder(0, 0, 800, 600, BACKGROUND_ID,
                          "puzzle.pcx", 0x800);
     background->setPlayerPaletteColors(g_game->getLocalPlayerGamePos());
     m_widgets.push_back(background);
 
-    m_widgets.push_back(new bitmapBorder(607, 3, 190, 71, -1,
+    m_widgets.push_back(new BitmapBorder(607, 3, 190, 71, -1,
                                        "puzzlogo.pcx", 0x800));
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         607, 73, 190, 40,
         g_generalText->getText(GENERAL_TEXT_PUZZLE_WINDOW),
-        "Bigfont.fnt", font::HEADING, -1,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+        "Bigfont.fnt", Font::HEADING, -1,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new bitmapBorder(669, 537, 68, 34, -1,
+    m_widgets.push_back(new BitmapBorder(669, 537, 68, 34, -1,
                                        "box66x32.pcx", 0x800));
 
-    button* accept = new button(670, 538, 66, 32, ACCEPT_ID,
+    Button* accept = new Button(670, 538, 66, 32, ACCEPT_ID,
                                 "iOkay32.def", 0, 1, 0, 28, 2);
     accept->setHotkey(1);
     m_widgets.push_back(accept);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -87,7 +87,7 @@ PuzzleWindow::~PuzzleWindow()
     for (int i = 0; i < 48; ++i)
         m_puzzlePieces[i]->dispose();
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -109,7 +109,7 @@ int PuzzleWindow::convertID2HelpID(int id)
 
 // E:\gamedcs\puzzlewindow.cpp:203
 VA(0x0052c640, 0x78)  // vtable slot 9 + CAdvPopup delegation, dc 0x115328
-int PuzzleWindow::windowHandler(message& msg)
+int PuzzleWindow::windowHandler(Message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -126,15 +126,15 @@ int PuzzleWindow::windowHandler(message& msg)
             return MESSAGE_DISPATCH_CONSUME;
         }
     } else if (msg.m_id != MESSAGE_WIDGET ||
-               msg.m_codeX != widget::WIDGET_DESELECT ||
+               msg.m_codeX != Widget::WIDGET_DESELECT ||
                msg.m_codeY != ACCEPT_ID) {
         return MESSAGE_DISPATCH_CONSUME;
     }
 
     msg.m_id = MESSAGE_WIDGET;
     g_windowManager->m_dialogReturn = msg.m_codeY;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
+    msg.m_codeY = Widget::WIDGET_END_DIALOG;
+    msg.m_codeX = Widget::WIDGET_END_DIALOG;
     return MESSAGE_DISPATCH_FORWARD;
 }
 
@@ -163,7 +163,8 @@ int PuzzleWindow::updatePuzzle(int full)
 // Retail preserves the Dreamcast record's four packed allocation units:
 // a 10-bit object type, two signed four-bit object offsets, three terrain
 // descriptors, and the diggable/grail/visible flag trio.
-struct type_AI_puzzle_tile {
+// Before normalization (type): type_AI_puzzle_tile.
+struct AIPuzzleTile {
     int m_objectType : 10;
     int m_paddingAfterObjectType : 22;
     signed char m_objectX : 4;
@@ -181,7 +182,7 @@ struct type_AI_puzzle_tile {
 
     // Retail expands these stores in AI_attempt_puzzle_guess's array loop.
     // E:\gamedcs\puzzlewindow.cpp:279, dc 0x1154c4
-    type_AI_puzzle_tile()
+    AIPuzzleTile()
     {
         m_objectType = 0;
         m_objectX = -1;
@@ -192,15 +193,15 @@ struct type_AI_puzzle_tile {
         m_diggable = 1;
         m_visible = 0;
     }
-    type_AI_puzzle_tile(NewmapCell* cell, type_point point);
-    unsigned char operator==(const type_AI_puzzle_tile* arg) const;
+    AIPuzzleTile(NewmapCell* cell, type_point point);
+    unsigned char operator==(const AIPuzzleTile* arg) const;
 };
-SIZE(type_AI_puzzle_tile, 0x10);
+SIZE(AIPuzzleTile, 0x10);
 
-type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17]);
+type_point matchPuzzle(long player, AIPuzzleTile (*puzzleMap)[17]);
 
 VA(0x0052c770, 0x140)  // dc 0x115538
-type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
+AIPuzzleTile::AIPuzzleTile(NewmapCell* cell, type_point point)
 {
     m_objectType = 0;
     m_visible = 1;
@@ -233,8 +234,8 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 // ecx,0x1fe0` for river and road together, and `test dl,1` for diggable.
 // has_grail and visible are deliberately NOT compared.
 DC_ONLY(0x1156bc, 0xC0)
-unsigned char type_AI_puzzle_tile::operator==(
-    const type_AI_puzzle_tile* arg) const
+unsigned char AIPuzzleTile::operator==(
+    const AIPuzzleTile* arg) const
 {
     return m_objectType == arg->m_objectType
         && m_objectX == arg->m_objectX
@@ -331,7 +332,7 @@ static unsigned char markAIPuzzle(long player, unsigned char* visible)
 DC_ONLY(0x115944, 0x12C)
 static void createAIPuzzleMap(long player, unsigned char* visible,
                             long puzzleX, long puzzleY,
-                            type_AI_puzzle_tile (&puzzleMap)[19][17])
+                            AIPuzzleTile (&puzzleMap)[19][17])
 {
     type_point point;
     point.m_z = g_game->m_ultimateArtifactZ;
@@ -343,7 +344,7 @@ static void createAIPuzzleMap(long player, unsigned char* visible,
             if (point.isValid() && visible[row * 19 + col]) {
                 NewmapCell* mapCell = g_game->getCell(point);
                 puzzleMap[col][row] =
-                    type_AI_puzzle_tile(mapCell, point);
+                    AIPuzzleTile(mapCell, point);
             }
         }
     }
@@ -362,7 +363,7 @@ type_point aiAttemptPuzzleGuess(long player)
         unsigned char visible[17 * 19];
         if (markAIPuzzle(player, visible)) {
             type_point origin = g_game->getPuzzleOrigin();
-            type_AI_puzzle_tile puzzleMap[19][17];
+            AIPuzzleTile puzzleMap[19][17];
 
             createAIPuzzleMap(player, visible, origin.m_x, origin.m_y, puzzleMap);
 
@@ -426,7 +427,7 @@ type_point aiAttemptPuzzleGuess(long player)
 DC_ONLY(0x115a70, 0x176)
 static long checkMatch(long player, long firstX, long firstY,
                         type_point origin,
-                        type_AI_puzzle_tile (*puzzleMap)[17])
+                        AIPuzzleTile (*puzzleMap)[17])
 {
     long playerMask = 1 << player;
     origin.m_x = origin.m_x - firstX;
@@ -445,7 +446,7 @@ static long checkMatch(long player, long firstX, long firstY,
                 continue;
             if (!(getMapExtra(point.m_x, point.m_y, point.m_z) & playerMask))
                 continue;
-            type_AI_puzzle_tile tile(
+            AIPuzzleTile tile(
                 g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z), point);
             if (puzzleMap[firstX][firstY] == &tile)
                 ++matches;
@@ -528,7 +529,7 @@ static long checkMatch(long player, long firstX, long firstY,
 // re-reading it per iteration, where we spread the copies over four slots and keep
 // min_x in ESI. Our frame is 0x84 against retail's 0x80 for that reason.
 VA(0x0052cf10, 0x5B4)  // anchor-caller AI_attempt_puzzle_guess +0x39d, dc 0x115be8
-type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
+type_point matchPuzzle(long player, AIPuzzleTile (*puzzleMap)[17])
 {
     type_point result;
     result.m_x = -1;

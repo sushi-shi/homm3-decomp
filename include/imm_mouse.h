@@ -25,7 +25,7 @@ public:
     unsigned char start();
     void stop();
 
-    std::auto_ptr<force_feedback::t_enclosure> m_impl;
+    std::auto_ptr<force_feedback::Enclosure> m_impl;
 };
 
 #endif

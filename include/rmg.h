@@ -11,18 +11,19 @@
 
 class AbstractFile;
 class SpreadsheetResource;
-class type_random_map_generator;
+class RandomMapGenerator;
 // Before normalization (type): TRmgTownSlot.
 struct RmgTownSlot;
 // Before normalization (type): TRmgZone.
 struct RmgZone;
-struct rmgTerrainTile;
+// Before normalization (type): rmgTerrainTile.
+struct RmgTerrainTile;
 // Before normalization (type): TPoint.
 struct Point;
 struct ObjectType;
 // Before normalization (type): TRmgObjectPropertiesRef.
 struct RmgObjectPropertiesRef;
-class type_object;
+class Object;
 
 // The abstract progress sink driven by Complete's random-map generator.
 // Retail constructor 0x530e20 stores vtable 0x6409c0, the step total at +4,
@@ -47,60 +48,65 @@ SIZE(ProgressSink, 0xc);
 // two-argument value query, and a parameterless boolean property.  The method
 // names remain role descriptions until retail-era source identifies their
 // original spelling; their boundaries and arities are retail-byte facts.
-class type_treasure_def {
+// Before normalization (type): type_treasure_def.
+class TreasureDef {
 public:
     int m_objectType;
     int m_subtype;
     int m_value;
     int m_density;
 
-    type_treasure_def(int objectType, int subtype, int value, int density);
+    TreasureDef(int objectType, int subtype, int value, int density);
 
     // Shared caller 0x5464cd..0x5464de passes the selected property reference,
     // generator and zone, then consumes the result as a type_object pointer.
     // This replaces the earlier placeholder void*/int/int factory signature.
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
-    virtual int getValue(RmgZone* zone, type_random_map_generator* generator);
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
+    virtual int getValue(RmgZone* zone, RandomMapGenerator* generator);
     virtual unsigned char isTerrainDependent();
 };
 
-SIZE(type_treasure_def, 0x14);
+SIZE(TreasureDef, 0x14);
 
 // These identities come from the contiguous cross-build vtable roster.  The
 // current-image constructor relocations independently fix each table address.
-class type_shrine_def : public type_treasure_def {
+// Before normalization (type): type_shrine_def.
+class ShrineDef : public TreasureDef {
 public:
-    type_shrine_def(int objectType, int value);
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
+    ShrineDef(int objectType, int value);
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
 };
 
-class type_witch_hut_def : public type_treasure_def {
+// Before normalization (type): type_witch_hut_def.
+class WitchHutDef : public TreasureDef {
 public:
-    type_witch_hut_def();
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
+    WitchHutDef();
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
 };
 
-class type_spell_scroll_def : public type_treasure_def {
+// Before normalization (type): type_spell_scroll_def.
+class SpellScrollDef : public TreasureDef {
 public:
     int m_spellLevel;
 
-    type_spell_scroll_def(int spellLevel, int value);
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
+    SpellScrollDef(int spellLevel, int value);
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
 };
 
-class type_black_box_creature_def : public type_treasure_def {
+// Before normalization (type): type_black_box_creature_def.
+class BlackBoxCreatureDef : public TreasureDef {
 public:
     int m_creatureType;
     int m_adjustedValue;
 
-    type_black_box_creature_def(int creatureType);
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
-    virtual int getValue(RmgZone* zone, type_random_map_generator* generator);
+    BlackBoxCreatureDef(int creatureType);
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
+    virtual int getValue(RmgZone* zone, RandomMapGenerator* generator);
 };
 
 // The initializer at 0x538b10 expands these small constructors at their
@@ -108,74 +114,79 @@ public:
 // stops expanding parts of the base-constructor and vector::push_back chains:
 // the retained call pattern is a caller-specific /Ob2 decision, not license
 // to erase the original helper boundaries.
-class type_artifact_def : public type_treasure_def {
+// Before normalization (type): type_artifact_def.
+class ArtifactDef : public TreasureDef {
 public:
-    inline type_artifact_def(int objectType, int value)
-        : type_treasure_def(objectType, 0, value, 150)
+    inline ArtifactDef(int objectType, int value)
+        : TreasureDef(objectType, 0, value, 150)
     {
     }
 
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
 };
 
-class type_black_box_experience_def : public type_treasure_def {
+// Before normalization (type): type_black_box_experience_def.
+class BlackBoxExperienceDef : public TreasureDef {
 public:
     int m_experience;
 
-    inline type_black_box_experience_def(int value, int experience)
-        : type_treasure_def(6, 0, value, 20)
+    inline BlackBoxExperienceDef(int value, int experience)
+        : TreasureDef(6, 0, value, 20)
     {
         this->m_experience = experience;
     }
 
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
 };
 
-class type_black_box_gold_def : public type_treasure_def {
+// Before normalization (type): type_black_box_gold_def.
+class BlackBoxGoldDef : public TreasureDef {
 public:
     int m_gold;
 
-    inline type_black_box_gold_def(int value, int gold)
-        : type_treasure_def(6, 0, value, 5)
+    inline BlackBoxGoldDef(int value, int gold)
+        : TreasureDef(6, 0, value, 5)
     {
         this->m_gold = gold;
     }
 
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
 };
 
-class type_black_box_spells_def : public type_treasure_def {
+// Before normalization (type): type_black_box_spells_def.
+class BlackBoxSpellsDef : public TreasureDef {
 public:
     int m_minimumLevel;
     int m_maximumLevel;
     int m_schoolMask;
 
-    inline type_black_box_spells_def(
+    inline BlackBoxSpellsDef(
         int value, int minimumLevel, int maximumLevel, int schoolMask)
-        : type_treasure_def(6, 0, value, 2)
+        : TreasureDef(6, 0, value, 2)
     {
         this->m_minimumLevel = minimumLevel;
         this->m_maximumLevel = maximumLevel;
         this->m_schoolMask = schoolMask;
     }
 
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
 };
 
-class type_key_tent_def : public type_treasure_def {
+// Before normalization (type): type_key_tent_def.
+class KeyTentDef : public TreasureDef {
 public:
-    inline type_key_tent_def(int subtype, int value)
-        : type_treasure_def(10, subtype, value, 10)
+    inline KeyTentDef(int subtype, int value)
+        : TreasureDef(10, subtype, value, 10)
     {
     }
 
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
-    virtual int getValue(RmgZone* zone, type_random_map_generator* generator);
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
+    virtual int getValue(RmgZone* zone, RandomMapGenerator* generator);
     virtual unsigned char isTerrainDependent();
 };
 
@@ -183,129 +194,137 @@ public:
 // That is direct evidence for this two-level dwelling hierarchy.  The older
 // cross-build vtable roster supplies the final class name; the intermediate
 // role name remains provisional until stronger source evidence appears.
-class type_dwelling_def : public type_treasure_def {
+// Before normalization (type): type_dwelling_def.
+class DwellingDef : public TreasureDef {
 public:
-    inline type_dwelling_def(int subtype)
-        : type_treasure_def(17, subtype, -1, 40)
+    inline DwellingDef(int subtype)
+        : TreasureDef(17, subtype, -1, 40)
     {
     }
 
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
 };
 
-class type_map_dwelling_def : public type_dwelling_def {
+// Before normalization (type): type_map_dwelling_def.
+class MapDwellingDef : public DwellingDef {
 public:
-    inline type_map_dwelling_def(int subtype)
-        : type_dwelling_def(subtype)
+    inline MapDwellingDef(int subtype)
+        : DwellingDef(subtype)
     {
     }
 
-    virtual int getValue(RmgZone* zone, type_random_map_generator* generator);
+    virtual int getValue(RmgZone* zone, RandomMapGenerator* generator);
 };
 
-class type_resource_lump_def : public type_treasure_def {
+// Before normalization (type): type_resource_lump_def.
+class ResourceLumpDef : public TreasureDef {
 public:
-    inline type_resource_lump_def(
+    inline ResourceLumpDef(
         int objectType, int subtype, int value, int density)
-        : type_treasure_def(objectType, subtype, value, density)
+        : TreasureDef(objectType, subtype, value, density)
     {
     }
 
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
 };
 
-class type_prison_def : public type_treasure_def {
+// Before normalization (type): type_prison_def.
+class PrisonDef : public TreasureDef {
 public:
     int m_experience;
 
-    inline type_prison_def(int value, int experience)
-        : type_treasure_def(62, 0, value, 30)
+    inline PrisonDef(int value, int experience)
+        : TreasureDef(62, 0, value, 30)
     {
         this->m_experience = experience;
     }
 
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
 };
 
-class type_scholar_def : public type_treasure_def {
+// Before normalization (type): type_scholar_def.
+class ScholarDef : public TreasureDef {
 public:
-    inline type_scholar_def()
-        : type_treasure_def(81, 0, 1500, 100)
+    inline ScholarDef()
+        : TreasureDef(81, 0, 1500, 100)
     {
     }
 
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
 };
 
-class type_quest_creature_def : public type_black_box_creature_def {
+// Before normalization (type): type_quest_creature_def.
+class QuestCreatureDef : public BlackBoxCreatureDef {
 public:
-    inline type_quest_creature_def(int creatureType, int questIndex)
-        : type_black_box_creature_def(creatureType)
+    inline QuestCreatureDef(int creatureType, int questIndex)
+        : BlackBoxCreatureDef(creatureType)
     {
         m_objectType = 83;
         m_subtype = questIndex;
     }
 
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
-    virtual int getValue(RmgZone* zone, type_random_map_generator* generator);
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
+    virtual int getValue(RmgZone* zone, RandomMapGenerator* generator);
     virtual unsigned char isTerrainDependent();
 };
 
-class type_quest_experience_def : public type_treasure_def {
+// Before normalization (type): type_quest_experience_def.
+class QuestExperienceDef : public TreasureDef {
 public:
     int m_experience;
 
-    inline type_quest_experience_def(
+    inline QuestExperienceDef(
         int questIndex, int value, int experience)
-        : type_treasure_def(83, questIndex, value, 10)
+        : TreasureDef(83, questIndex, value, 10)
     {
         this->m_experience = experience;
     }
 
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
-    virtual int getValue(RmgZone* zone, type_random_map_generator* generator);
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
+    virtual int getValue(RmgZone* zone, RandomMapGenerator* generator);
     virtual unsigned char isTerrainDependent();
 };
 
-class type_quest_gold_def : public type_treasure_def {
+// Before normalization (type): type_quest_gold_def.
+class QuestGoldDef : public TreasureDef {
 public:
     int m_gold;
 
-    inline type_quest_gold_def(int questIndex, int value, int gold)
-        : type_treasure_def(83, questIndex, value, 10)
+    inline QuestGoldDef(int questIndex, int value, int gold)
+        : TreasureDef(83, questIndex, value, 10)
     {
         this->m_gold = gold;
     }
 
-    virtual type_object* generate(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, RmgZone* zone);
-    virtual int getValue(RmgZone* zone, type_random_map_generator* generator);
+    virtual Object* generate(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgZone* zone);
+    virtual int getValue(RmgZone* zone, RandomMapGenerator* generator);
     virtual unsigned char isTerrainDependent();
 };
 
-SIZE(type_shrine_def, 0x14);
-SIZE(type_witch_hut_def, 0x14);
-SIZE(type_spell_scroll_def, 0x18);
-SIZE(type_black_box_creature_def, 0x1c);
-SIZE(type_artifact_def, 0x14);
-SIZE(type_black_box_experience_def, 0x18);
-SIZE(type_black_box_gold_def, 0x18);
-SIZE(type_black_box_spells_def, 0x20);
-SIZE(type_key_tent_def, 0x14);
-SIZE(type_dwelling_def, 0x14);
-SIZE(type_map_dwelling_def, 0x14);
-SIZE(type_resource_lump_def, 0x14);
-SIZE(type_prison_def, 0x18);
-SIZE(type_scholar_def, 0x14);
-SIZE(type_quest_creature_def, 0x1c);
-SIZE(type_quest_experience_def, 0x18);
-SIZE(type_quest_gold_def, 0x18);
+SIZE(ShrineDef, 0x14);
+SIZE(WitchHutDef, 0x14);
+SIZE(SpellScrollDef, 0x18);
+SIZE(BlackBoxCreatureDef, 0x1c);
+SIZE(ArtifactDef, 0x14);
+SIZE(BlackBoxExperienceDef, 0x18);
+SIZE(BlackBoxGoldDef, 0x18);
+SIZE(BlackBoxSpellsDef, 0x20);
+SIZE(KeyTentDef, 0x14);
+SIZE(DwellingDef, 0x14);
+SIZE(MapDwellingDef, 0x14);
+SIZE(ResourceLumpDef, 0x14);
+SIZE(PrisonDef, 0x18);
+SIZE(ScholarDef, 0x14);
+SIZE(QuestCreatureDef, 0x1c);
+SIZE(QuestExperienceDef, 0x18);
+SIZE(QuestGoldDef, 0x18);
 
 // Before normalization (type): TRmgMapPosition.
 struct RmgMapPosition {
@@ -347,14 +366,16 @@ struct RmgZoneConnection {
     int m_maximumPlayers;                    // +0x18
 };
 
-enum ERmgTemplateZoneKind {
+// Before normalization (type): ERmgTemplateZoneKind.
+enum RmgTemplateZoneKind {
     RMG_TEMPLATE_HUMAN = 0,
     RMG_TEMPLATE_COMPUTER = 1,
     RMG_TEMPLATE_TREASURE = 2,
     RMG_TEMPLATE_JUNCTION = 3
 };
 
-enum ERmgTreasurePlacementLimits {
+// Before normalization (type): ERmgTreasurePlacementLimits.
+enum RmgTreasurePlacementLimits {
     RMG_TREASURE_ATTEMPTS = 3,
     RMG_TREASURE_MINIMUM_REMAINDER = 1500
 };
@@ -424,7 +445,8 @@ int getRmgGuardValue(int value, int strength);
 
 // The eight clockwise neighbors are initialized at 0x530da0; group fit
 // 0x5355e0 scans the whole domain when testing for an open neighbor.
-enum ERmgDirectionLimits {
+// Before normalization (type): ERmgDirectionLimits.
+enum RmgDirectionLimits {
     RMG_DIRECTION_COUNT = 8
 };
 
@@ -591,7 +613,8 @@ SIZE(RmgNoiseMidpoints, 0x10);
 void subdivideRmgNoiseRegion(std::vector<RmgNoiseRegion>& pending,
     int centerValue, RmgNoiseRegion region, RmgNoiseMidpoints midpoints);
 
-enum ERmgConnectionConstants {
+// Before normalization (type): ERmgConnectionConstants.
+enum RmgConnectionConstants {
     RMG_SHIPYARD_WATER_OFFSET_COUNT = 4,
     RMG_WATER_NONE = 0,
     RMG_WATER_NORMAL = 1,
@@ -602,7 +625,8 @@ enum ERmgConnectionConstants {
 // Complete's guard selector 0x540b20 uses these bounds, not the full combat
 // creature array. Its RoE exclusion starts at 118 even though evaluation
 // stops before 117; keep that observed boundary distinct.
-enum ERmgGuardConstants {
+// Before normalization (type): ERmgGuardConstants.
+enum RmgGuardConstants {
     RMG_GUARD_CREATURE_COUNT = 145,
     RMG_GUARD_ROE_CREATURE_LIMIT = 117,
     RMG_GUARD_ROE_EXCLUDED_FIRST = 118,
@@ -622,7 +646,7 @@ struct RmgRiverDeltaOffset {
     ~RmgRiverDeltaOffset() {}
 };
 
-class type_object;
+class Object;
 
 // Before normalization (type): TRmgMovementCost.
 struct RmgMovementCost {
@@ -727,13 +751,15 @@ struct RmgObjectPlacementRule {
     std::vector<int> m_blockedScores;     // +0x3c
 };
 
-enum ERmgObjectPlacementMark {
+// Before normalization (type): ERmgObjectPlacementMark.
+enum RmgObjectPlacementMark {
     RMG_PLACEMENT_ADJACENT = 1,
     RMG_PLACEMENT_OVERLAP = 2,
     RMG_PLACEMENT_BLOCKED = 4
 };
 
-enum ERmgObjectPlacementScore {
+// Before normalization (type): ERmgObjectPlacementScore.
+enum RmgObjectPlacementScore {
     RMG_PLACEMENT_INVALID = -5000,
     RMG_PLACEMENT_MINIMUM_TERRAIN_SCORE = -1000,
     RMG_PLACEMENT_NO_TERRAIN_PREFERENCE = -1
@@ -762,7 +788,8 @@ struct RmgObjectPropertiesRef {
     void buildOverlapPriorities();
 };
 
-class type_object {
+// Before normalization (type): type_object.
+class Object {
 public:
     RmgObjectPropertiesRef* m_properties; // +0x04
     RmgMapPosition m_position;             // +0x08
@@ -778,7 +805,7 @@ public:
     unsigned char m_blockedByCandidate;
     char m_tailPadding[3];
 
-    type_object(RmgObjectPropertiesRef* newProperties);
+    Object(RmgObjectPropertiesRef* newProperties);
     RmgMapPosition getPosition() const;
 
     void clearPlacementMarks();
@@ -788,7 +815,7 @@ public:
         return m_adjacentToCandidate || m_blockedByCandidate || m_overlapsCandidate;
     }
 
-    virtual ~type_object();
+    virtual ~Object();
     virtual void unknownOperation();
     // The quest-artifact override at 0x533a50 clears owned state, and its
     // generator callee replaces this object's property reference. These
@@ -800,15 +827,16 @@ public:
 // Provisional Complete-only role: createGuard (0x540b20) allocates 0x2c and
 // installs vtable 0x640a84. Slot 3 (0x5331f0) serializes the id, count and
 // disposition below; +0x28 is neither initialized nor read by those bodies.
-class rmgMonsterObject : public type_object {
+// Before normalization (type): rmgMonsterObject.
+class RmgMonsterObject : public Object {
 public:
     int m_objectId;       // +0x1c
     int m_count;          // +0x20, serialized as two bytes
     int m_disposition;    // +0x24, serialized as one byte
     int m_unknown28;      // +0x28
 
-    rmgMonsterObject(RmgObjectPropertiesRef* properties, int objectId, int count)
-        : type_object(properties)
+    RmgMonsterObject(RmgObjectPropertiesRef* properties, int objectId, int count)
+        : Object(properties)
     {
         m_count = count;
         m_disposition = RMG_GUARD_DISPOSITION;
@@ -816,17 +844,18 @@ public:
     }
     virtual void write(AbstractFile* outfile, int version);
 };
-SIZE(rmgMonsterObject, 0x2c);
+SIZE(RmgMonsterObject, 0x2c);
 
 // Complete town vtable 0x640a94; constructor expansion at 0x54543d
 // stores owner/option/id in the 0x28-byte allocation. Names are role-derived.
-class rmgTownObject : public type_object {
+// Before normalization (type): rmgTownObject.
+class RmgTownObject : public Object {
 public:
     int m_objectId;
     int m_player;
     unsigned char m_townOption;
-    rmgTownObject(RmgObjectPropertiesRef* properties, int objectId,
-        int player, unsigned char townOption) : type_object(properties)
+    RmgTownObject(RmgObjectPropertiesRef* properties, int objectId,
+        int player, unsigned char townOption) : Object(properties)
     {
         m_player = player;
         m_townOption = townOption;
@@ -834,46 +863,50 @@ public:
     }
     virtual void write(AbstractFile* outfile, int version);
 };
-SIZE(rmgTownObject, 0x28);
+SIZE(RmgTownObject, 0x28);
 
 // Provisional Complete-only role. The shipyard path allocates 0x1c bytes,
 // calls type_object's constructor, then replaces its vptr with 0x640aa4.
 // That table shares the base's middle slots and overrides serialization:
 // 0x533460 appends an unowned player byte and three reserved bytes.
-class rmgOwnableObject : public type_object {
+// Before normalization (type): rmgOwnableObject.
+class RmgOwnableObject : public Object {
 public:
-    rmgOwnableObject(RmgObjectPropertiesRef* properties)
-        : type_object(properties) {}
+    RmgOwnableObject(RmgObjectPropertiesRef* properties)
+        : Object(properties) {}
     virtual void write(AbstractFile* outfile, int parameter);
 };
 
 // Artifact factory 0x5341f0 allocates the base 0x1c extent and installs
 // vtable 0x640ab4. Its writer adds one zero byte after type_object's record;
 // no additional instance fields are present. Complete-only role spelling.
-class rmgArtifactObject : public type_object {
+// Before normalization (type): rmgArtifactObject.
+class RmgArtifactObject : public Object {
 public:
-    rmgArtifactObject(RmgObjectPropertiesRef* properties);
+    RmgArtifactObject(RmgObjectPropertiesRef* properties);
     virtual void write(AbstractFile* outfile, int parameter);
 };
-SIZE(rmgArtifactObject, 0x1c);
+SIZE(RmgArtifactObject, 0x1c);
 
 // These four factories allocate the same 0x1c base extent and change only
 // the writer vptr. Their distinct default H3M payloads prove separate classes;
 // the Complete-only class spellings below describe those roles.
 // Retail vtable 0x640ac4.
-class rmgResourceObject : public type_object {
+// Before normalization (type): rmgResourceObject.
+class RmgResourceObject : public Object {
 public:
-    rmgResourceObject(RmgObjectPropertiesRef* properties);
+    RmgResourceObject(RmgObjectPropertiesRef* properties);
     virtual void write(AbstractFile* outfile, int parameter);
 };
-SIZE(rmgResourceObject, 0x1c);
+SIZE(RmgResourceObject, 0x1c);
 
 // Pandora's Box factories 0x534380/0x534410/0x534490 allocate 0x54 bytes
 // and install vtable 0x640ad4. Writer 0x5336f0 identifies each payload field;
 // the spell factory 0x534520 appends integer spell indices to the vector.
 // The vector begins at +0x44 (its allocator byte), with _First at +0x48.
 // These are provisional Complete-only role names, not Dreamcast identities.
-class rmgBlackBoxObject : public type_object {
+// Before normalization (type): rmgBlackBoxObject.
+class RmgBlackBoxObject : public Object {
 public:
     int m_experience;                  // +0x1c
     int m_resources[7];                // +0x20, gold at +0x38
@@ -881,15 +914,16 @@ public:
     int m_creatureCount;               // +0x40
     std::vector<int> m_spells;         // +0x44
 
-    rmgBlackBoxObject(RmgObjectPropertiesRef* properties);
+    RmgBlackBoxObject(RmgObjectPropertiesRef* properties);
     virtual void write(AbstractFile* outfile, int version);
 };
-SIZE(rmgBlackBoxObject, 0x54);
+SIZE(RmgBlackBoxObject, 0x54);
 
 // Seer-hut factories 0x534b90/0x534cc0/0x534db0 allocate this 0x34-byte
 // reward object (vtable 0x640b04). Writer 0x533a90 proves the field roles.
 // Complete-only names are provisional; no Dreamcast RMG class is available.
-class rmgSeerHutObject : public type_object {
+// Before normalization (type): rmgSeerHutObject.
+class RmgSeerHutObject : public Object {
 public:
     int m_artifact;                    // +0x1c, required quest artifact
     int m_experience;                  // +0x20
@@ -898,103 +932,110 @@ public:
     int m_creatureType;                // +0x2c, defaults to -1
     int m_creatureCount;               // +0x30
 
-    rmgSeerHutObject(RmgObjectPropertiesRef* properties);
+    RmgSeerHutObject(RmgObjectPropertiesRef* properties);
     virtual void write(AbstractFile* outfile, int version);
 };
-SIZE(rmgSeerHutObject, 0x34);
+SIZE(RmgSeerHutObject, 0x34);
 
 // Artifact wrapper vtable 0x640af4 shares the ordinary artifact writer at
 // 0x533500. It owns the pending seer hut until placement transfers it to
 // the map; 0x533a50 clears that pointer on both success and failure.
-class rmgQuestArtifactObject : public rmgArtifactObject {
+// Before normalization (type): rmgQuestArtifactObject.
+class RmgQuestArtifactObject : public RmgArtifactObject {
 public:
-    type_random_map_generator* m_generator; // +0x1c
-    rmgSeerHutObject* m_seerHut;             // +0x20
-    type_treasure_def* m_definition;        // +0x24
+    RandomMapGenerator* m_generator; // +0x1c
+    RmgSeerHutObject* m_seerHut;             // +0x20
+    TreasureDef* m_definition;        // +0x24
 
-    rmgQuestArtifactObject(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, rmgSeerHutObject* seerHut,
-        type_treasure_def* definition);
-    virtual ~rmgQuestArtifactObject();
+    RmgQuestArtifactObject(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, RmgSeerHutObject* seerHut,
+        TreasureDef* definition);
+    virtual ~RmgQuestArtifactObject();
     virtual unsigned char isWritable();
 };
-SIZE(rmgQuestArtifactObject, 0x28);
+SIZE(RmgQuestArtifactObject, 0x28);
 
 // Key-tent definition factory 0x534fd0 allocates 0x24 bytes, installs
 // vtable 0x640ae4, and supplies its generator and value. The writable
 // override tries a corresponding guard, then substitutes another treasure
 // if that placement fails. Its record uses the ordinary object writer.
 // Complete-only class and method spellings describe the recovered roles.
-class rmgKeyTentObject : public type_object {
+// Before normalization (type): rmgKeyTentObject.
+class RmgKeyTentObject : public Object {
 public:
-    type_random_map_generator* m_generator; // +0x1c
+    RandomMapGenerator* m_generator; // +0x1c
     int m_value;                           // +0x20
 
-    rmgKeyTentObject(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, int value);
+    RmgKeyTentObject(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, int value);
     virtual unsigned char isWritable();
 };
-SIZE(rmgKeyTentObject, 0x24);
+SIZE(RmgKeyTentObject, 0x24);
 
 // Retail vtable 0x640b24.
-class rmgScholarObject : public type_object {
+// Before normalization (type): rmgScholarObject.
+class RmgScholarObject : public Object {
 public:
-    rmgScholarObject(RmgObjectPropertiesRef* properties);
+    RmgScholarObject(RmgObjectPropertiesRef* properties);
     virtual void write(AbstractFile* outfile, int parameter);
 };
-SIZE(rmgScholarObject, 0x1c);
+SIZE(RmgScholarObject, 0x1c);
 
 // Retail vtable 0x640b34.
-class rmgShrineObject : public type_object {
+// Before normalization (type): rmgShrineObject.
+class RmgShrineObject : public Object {
 public:
-    rmgShrineObject(RmgObjectPropertiesRef* properties);
+    RmgShrineObject(RmgObjectPropertiesRef* properties);
     virtual void write(AbstractFile* outfile, int parameter);
 };
-SIZE(rmgShrineObject, 0x1c);
+SIZE(RmgShrineObject, 0x1c);
 
 // Complete-only spell-scroll object. Factory 0x534ed0 allocates 0x20
 // bytes, stores its selected spell at +0x1c and installs vtable 0x640b44.
 // Writer 0x533ff0 emits that spell as one byte. Original class name unknown.
 // Full-build collateral on admission: unchanged CEnterNameEdit::onKillFocus
 // CUR 100 -> 99.8710 (two loads exchange order); MAX/HIST retain 100.
-class rmgSpellScrollObject : public type_object {
+// Before normalization (type): rmgSpellScrollObject.
+class RmgSpellScrollObject : public Object {
 public:
     int m_spell; // +0x1c, role-derived name
-    rmgSpellScrollObject(RmgObjectPropertiesRef* properties, int spell);
+    RmgSpellScrollObject(RmgObjectPropertiesRef* properties, int spell);
     virtual void write(AbstractFile* outfile, int parameter);
 };
-SIZE(rmgSpellScrollObject, 0x20);
+SIZE(RmgSpellScrollObject, 0x20);
 
 // Retail vtable 0x640b54.
-class rmgWitchHutObject : public type_object {
+// Before normalization (type): rmgWitchHutObject.
+class RmgWitchHutObject : public Object {
 public:
-    rmgWitchHutObject(RmgObjectPropertiesRef* properties);
+    RmgWitchHutObject(RmgObjectPropertiesRef* properties);
     virtual void write(AbstractFile* outfile, int parameter);
 };
-SIZE(rmgWitchHutObject, 0x1c);
+SIZE(RmgWitchHutObject, 0x1c);
 
 // Factory 0x5348d0 allocates this 0x2c-byte derived object after reserving a
 // hero. Vtable 0x640b14 slot 1 releases that reservation through the generator
 // at +0x1c; the original Complete-only class spelling is unavailable.
-class rmgHeroObject : public type_object {
+// Before normalization (type): rmgHeroObject.
+class RmgHeroObject : public Object {
 public:
-    type_random_map_generator* m_generator; // +0x1c
+    RandomMapGenerator* m_generator; // +0x1c
     int m_objectId;                         // +0x20
     int m_heroIndex;                        // +0x24
     int m_experience;                       // +0x28, prison definition experience
 
-    rmgHeroObject(RmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, int objectId, int heroIndex,
+    RmgHeroObject(RmgObjectPropertiesRef* properties,
+        RandomMapGenerator* generator, int objectId, int heroIndex,
         int experience);
 
     virtual void unknownOperation();
     virtual void write(AbstractFile* outfile, int parameter);
 };
-SIZE(rmgHeroObject, 0x2c);
+SIZE(RmgHeroObject, 0x2c);
 
 // Before normalization (type): TRmgMapItem.
 struct RmgMapItem {
-    std::vector<type_object*> m_objects;    // +0x00
+    std::vector<Object*> m_objects;    // +0x00
     RmgMapPosition m_previousTile;         // +0x10
     RmgMovementCost m_movement;            // +0x1c
     RmgZoneCellState m_zoneState;           // +0x20
@@ -1101,10 +1142,10 @@ class RmgMapInterface {
 public:
     virtual ~RmgMapInterface();
     virtual void setTile(
-        const RmgGridPoint& point, const rmgTerrainTile& tile) = 0;
+        const RmgGridPoint& point, const RmgTerrainTile& tile) = 0;
     virtual void setOverlay(const RmgGridPoint& point, int value) = 0;
     virtual RmgGridPoint getSize() = 0;
-    virtual rmgTerrainTile getTile(const RmgGridPoint& point) = 0;
+    virtual RmgTerrainTile getTile(const RmgGridPoint& point) = 0;
     virtual int getLand(const RmgGridPoint& point) = 0;
     virtual int getOverlay(const RmgGridPoint& point) = 0;
 };
@@ -1114,10 +1155,10 @@ class RmgMapAdapterInterface {
 public:
     virtual ~RmgMapAdapterInterface();
     virtual void setTile(
-        const RmgGridPoint& point, const rmgTerrainTile& tile) = 0;
+        const RmgGridPoint& point, const RmgTerrainTile& tile) = 0;
     virtual void setOverlay(const RmgGridPoint& point, int value) = 0;
     virtual RmgGridPoint getSize() = 0;
-    virtual rmgTerrainTile getTile(const RmgGridPoint& point) = 0;
+    virtual RmgTerrainTile getTile(const RmgGridPoint& point) = 0;
     virtual int getLand(const RmgGridPoint& point) = 0;
     virtual int getOverlay(const RmgGridPoint& point) = 0;
 };
@@ -1130,15 +1171,16 @@ class RmgRoadMapAdapterInterface {
 public:
     virtual ~RmgRoadMapAdapterInterface();
     virtual void setTile(
-        const RmgGridPoint& point, const rmgTerrainTile& tile) = 0;
+        const RmgGridPoint& point, const RmgTerrainTile& tile) = 0;
     virtual void setOverlay(const RmgGridPoint& point, int value) = 0;
     virtual RmgGridPoint getSize() = 0;
-    virtual rmgTerrainTile getTile(const RmgGridPoint& point) = 0;
+    virtual RmgTerrainTile getTile(const RmgGridPoint& point) = 0;
     virtual int getLand(const RmgGridPoint& point) = 0;
     virtual int getOverlay(const RmgGridPoint& point) = 0;
 };
 
-class type_random_map : public RmgMapInterface {
+// Before normalization (type): type_random_map.
+class RandomMap : public RmgMapInterface {
 public:
     unsigned char m_ownsMapItems;           // +0x04
     // The ownership flag is a byte at +4 after the vptr, and
@@ -1151,7 +1193,7 @@ public:
 
     // Owning constructor retained at 0x530fb0, called by the generator base
     // and temporary treasure-group maps. Three dimensions, thiscall ret 0xc.
-    type_random_map(int width, int height, int levels);
+    RandomMap(int width, int height, int levels);
 
     // The buffer-first view signature preserves the dimension values before
     // GetMapItem computes the plane pointer. In RepairWaterZoneBorders the
@@ -1167,7 +1209,7 @@ public:
     // width/height/items order loses the island's constructor scheduling
     // (95.8947%); the separate caller-only control does not recover it.
 
-    inline type_random_map(RmgMapItem* items, int width, int height)
+    inline RandomMap(RmgMapItem* items, int width, int height)
     {
         m_mapItems = items;
         m_mapWidth = width;
@@ -1176,18 +1218,18 @@ public:
         m_ownsMapItems = 0;
     }
 
-    virtual ~type_random_map();
+    virtual ~RandomMap();
 
     virtual void setTile(
-        const RmgGridPoint& point, const rmgTerrainTile& tile);
+        const RmgGridPoint& point, const RmgTerrainTile& tile);
     virtual void setOverlay(const RmgGridPoint& point, int value);
     virtual RmgGridPoint getSize();
-    virtual rmgTerrainTile getTile(const RmgGridPoint& point);
+    virtual RmgTerrainTile getTile(const RmgGridPoint& point);
     virtual int getLand(const RmgGridPoint& point);
     virtual int getOverlay(const RmgGridPoint& point);
 
     void clear();
-    void addObject(type_object* object, RmgMapPosition position);
+    void addObject(Object* object, RmgMapPosition position);
     void markCoastalTiles();
     void floodConnectionCosts(RmgMapPosition position, unsigned char waterZone);
 
@@ -1222,9 +1264,9 @@ public:
 // 0x5470d0 reads its bounds at +0x18. Names are provisional retail roles.
 // Before normalization (type): TRmgTreasureGroup.
 struct RmgTreasureGroup {
-    type_random_map m_map;                  // +0x00
+    RandomMap m_map;                  // +0x00
     RmgZoneBounds m_bounds;                // +0x18
-    std::vector<type_object*> m_objects;    // +0x28
+    std::vector<Object*> m_objects;    // +0x28
     std::vector<Point> m_outline;           // +0x38
     // with the guard's local coordinates; canPlaceTreasureGroup checks them.
     unsigned char m_hasGuard;               // +0x48, cleared by reset
@@ -1244,9 +1286,9 @@ struct RmgTreasureGroup {
         reset();
     }
     void reset();
-    unsigned char addGuard(type_object* guard);
+    unsigned char addGuard(Object* guard);
     unsigned char canFitObject(RmgObjectPropertiesRef* properties, RmgMapPosition position);
-    unsigned char tryAddObject(type_object* object);
+    unsigned char tryAddObject(Object* object);
     void updateBounds();
     void traceOutline();
 };
@@ -1259,13 +1301,13 @@ SIZE(RmgTreasureGroup, 0x64);
 // Before normalization (type): TRmgRoadMapAdapter.
 class RmgRoadMapAdapter : public RmgRoadMapAdapterInterface {
 public:
-    type_random_map* m_map;
+    RandomMap* m_map;
 
-    RmgRoadMapAdapter(type_random_map* map) : m_map(map) {}
-    virtual void setTile(const RmgGridPoint& point, const rmgTerrainTile& tile);
+    RmgRoadMapAdapter(RandomMap* map) : m_map(map) {}
+    virtual void setTile(const RmgGridPoint& point, const RmgTerrainTile& tile);
     virtual void setOverlay(const RmgGridPoint& point, int value);
     virtual RmgGridPoint getSize();
-    virtual rmgTerrainTile getTile(const RmgGridPoint& point);
+    virtual RmgTerrainTile getTile(const RmgGridPoint& point);
     virtual int getLand(const RmgGridPoint& point);
     virtual int getOverlay(const RmgGridPoint& point);
 };
@@ -1277,15 +1319,15 @@ public:
 // Before normalization (type): TRmgMapAdapter.
 class RmgMapAdapter : public RmgMapAdapterInterface {
 public:
-    type_random_map* m_map;
+    RandomMap* m_map;
 
-    inline RmgMapAdapter(type_random_map* newMap) : m_map(newMap) {}
+    inline RmgMapAdapter(RandomMap* newMap) : m_map(newMap) {}
 
     virtual void setTile(
-        const RmgGridPoint& point, const rmgTerrainTile& tile);
+        const RmgGridPoint& point, const RmgTerrainTile& tile);
     virtual void setOverlay(const RmgGridPoint& point, int value);
     virtual RmgGridPoint getSize();
-    virtual rmgTerrainTile getTile(const RmgGridPoint& point);
+    virtual RmgTerrainTile getTile(const RmgGridPoint& point);
     virtual int getLand(const RmgGridPoint& point);
     virtual int getOverlay(const RmgGridPoint& point);
 };
@@ -1339,10 +1381,10 @@ public:
 
     RmgLinePainterInterface(const RmgGridPoint& size);
     virtual RmgLinePatternTable* getPattern(int value) = 0;
-    virtual void setTile(const RmgGridPoint& point, const rmgTerrainTile& tile) = 0;
+    virtual void setTile(const RmgGridPoint& point, const RmgTerrainTile& tile) = 0;
     virtual void setOverlay(const RmgGridPoint& point, int value) = 0;
     virtual int canPaint(const RmgGridPoint& point) = 0;
-    virtual void getTile(const RmgGridPoint& point, rmgTerrainTile& tile) = 0;
+    virtual void getTile(const RmgGridPoint& point, RmgTerrainTile& tile) = 0;
     virtual int getLand(const RmgGridPoint& point) = 0;
 
     RmgLinePainterTile at(const RmgGridPoint& point);
@@ -1359,8 +1401,8 @@ struct RmgLinePainterTile {
 
     RmgLinePainterTile(RmgLinePainterInterface* painter, const RmgGridPoint& point);
     int getLand();
-    void getTile(rmgTerrainTile& tile);
-    void setTile(const rmgTerrainTile& tile);
+    void getTile(RmgTerrainTile& tile);
+    void setTile(const RmgTerrainTile& tile);
     unsigned char isBlocked();
     void setOverlay(int value);
 };
@@ -1395,13 +1437,13 @@ public:
 
     virtual RmgLinePatternTable* getPattern(int value);
     virtual void setTile(
-        const RmgGridPoint& point, const rmgTerrainTile& tile);
+        const RmgGridPoint& point, const RmgTerrainTile& tile);
     virtual void setOverlay(const RmgGridPoint& point, int value);
     virtual int canPaint(const RmgGridPoint& point);
     // Slot 4's caller at 0x4f9fdd pushes output first, then point. The
     // retained wrapper 0x55f350 writes through its second explicit argument;
     // unlike the adapter, this interface does not return a tile by value.
-    virtual void getTile(const RmgGridPoint& point, rmgTerrainTile& tile);
+    virtual void getTile(const RmgGridPoint& point, RmgTerrainTile& tile);
     virtual int getLand(const RmgGridPoint& point);
 };
 
@@ -1473,10 +1515,10 @@ public:
 
     virtual RmgLinePatternTable* getPattern(int value);
     virtual void setTile(
-        const RmgGridPoint& point, const rmgTerrainTile& tile);
+        const RmgGridPoint& point, const RmgTerrainTile& tile);
     virtual void setOverlay(const RmgGridPoint& point, int value);
     virtual int canPaint(const RmgGridPoint& point);
-    virtual void getTile(const RmgGridPoint& point, rmgTerrainTile& tile);
+    virtual void getTile(const RmgGridPoint& point, RmgTerrainTile& tile);
     virtual int getLand(const RmgGridPoint& point);
 };
 
@@ -1677,7 +1719,8 @@ SIZE(RmgZoneConnection, 0x1c);
 SIZE(RmgZoneBounds, 0x10);
 SIZE(RmgZone, 0x414);
 
-enum ERmgMapVersion {
+// Before normalization (type): ERmgMapVersion.
+enum RmgMapVersion {
     RMG_MAP_RESTORATION_OF_ERATHIA = 0,
     RMG_MAP_ARMAGEDDONS_BLADE = 1,
     RMG_MAP_SHADOW_OF_DEATH = 2
@@ -1685,7 +1728,8 @@ enum ERmgMapVersion {
 
 // Complete-only 0x543e20 chooses one of these four initial branch segments.
 // Names describe the endpoint stores; the original source spelling is unknown.
-enum ERmgBranchSeedPattern {
+// Before normalization (type): ERmgBranchSeedPattern.
+enum RmgBranchSeedPattern {
     RMG_BRANCH_SEED_MAIN_DIAGONAL = 0,
     RMG_BRANCH_SEED_VERTICAL = 1,
     RMG_BRANCH_SEED_ANTI_DIAGONAL = 2,
@@ -1714,18 +1758,18 @@ public:
     // time(&m_randomSeed) at 0x536140 proves VC6 time_t (long).
     long m_randomSeed;                                 // +0x004
     int m_mapVersion;                                  // +0x008
-    type_random_map m_map;                             // +0x00c
+    RandomMap m_map;                             // +0x00c
     // 0x536213 calls TObjectTypeTable::load with this complete member.
     ObjectTypeTable m_objectsTxt;                     // +0x024
     std::vector<RmgObjectPropertiesRef*> m_objectPrototypes[232]; // +0x034
     // Terrain-relation records populated by the loader and used by the scorer.
     std::vector<RmgObjectPlacementRule> m_placementRules; // +0xeb4
-    std::vector<type_object*> m_positions;             // +0xec4
+    std::vector<Object*> m_positions;             // +0xec4
     ProgressSink* m_progress;                          // +0xed4
     RmgGeneratorBase(int width, int height, int levels,
         ProgressSink* progress, int additionalSteps, int version);
     virtual ~RmgGeneratorBase();
-    virtual void addObject(type_object* object, RmgMapPosition position);
+    virtual void addObject(Object* object, RmgMapPosition position);
     // Retained 0x536200 loads object records, builds the per-type vectors,
     // then calls the placement-rule loader. Larger body not yet recovered.
     void loadObjectPrototypes();
@@ -1739,14 +1783,16 @@ SIZE(RmgGeneratorBase, 0xed8);
 
 // Four fixed-count/density groups consumed by 0x544ae0; the option byte's
 // gameplay meaning remains provisional, while ownership and ordering are proven.
-enum ERmgTownPlacementCategory {
+// Before normalization (type): ERmgTownPlacementCategory.
+enum RmgTownPlacementCategory {
     RMG_TOWN_PLAYER_OPTION,
     RMG_TOWN_PLAYER_BASIC,
     RMG_TOWN_NEUTRAL_OPTION,
     RMG_TOWN_NEUTRAL_BASIC
 };
 
-class type_random_map_generator : public RmgGeneratorBase {
+// Before normalization (type): type_random_map_generator.
+class RandomMapGenerator : public RmgGeneratorBase {
 public:
     unsigned char m_fixedHumanPlayers[8];              // +0x0ed8
     // Retail 0x5499fb clears nine integers at +0xee0; slot +1 is used
@@ -1797,16 +1843,16 @@ public:
     // Replaces the remaining half of synthetic opaque10c8.
     std::vector<RmgTemplate*> m_templates;            // +0x10d0
     std::vector<RmgZone*> m_zones;                    // +0x10e0
-    std::vector<type_treasure_def*> m_objectGenerators; // +0x10f0
+    std::vector<TreasureDef*> m_objectGenerators; // +0x10f0
     std::vector<unsigned char> m_disabledKeyTents;     // +0x1100
     int m_objectCountByType[232];                      // +0x1110
     std::vector<RmgMapPosition> m_roadTargets;        // +0x14b0
-    std::vector<type_object*> m_monolithsOneWay;       // +0x14c0
-    std::vector<type_object*> m_monolithsTwoWay;       // +0x14d0
+    std::vector<Object*> m_monolithsOneWay;       // +0x14c0
+    std::vector<Object*> m_monolithsTwoWay;       // +0x14d0
 
     // Retail 0x537b10 forwards dimensions/progress/version to the base,
     // then initializes the derived template, zone and object-generator state.
-    type_random_map_generator(int width, int height, int levels,
+    RandomMapGenerator(int width, int height, int levels,
         int humanPlayers, int humanTeams, int computerPlayers, int computerTeams,
         int waterContent, int monsterStrength, ProgressSink* progress, int version);
     void loadTemplates();
@@ -1820,7 +1866,7 @@ public:
     void floodWaterZoneDistances(RmgMapPosition position, int zoneIndex);
     void buildZoneConnectionPaths();
     void placeExtraMines(RmgZone* zone);
-    unsigned char placeMineSite(type_object* object, RmgZone* zone,
+    unsigned char placeMineSite(Object* object, RmgZone* zone,
         unsigned char startingMine, int spacing);
     unsigned char tryPlaceMine(RmgZone* zone, int resource,
         unsigned char startingMine, int spacing);
@@ -1846,7 +1892,7 @@ public:
     void prepareJunctionZone(RmgZone* zone);
     void connectJunctionEntrance(Point from, Point to, RmgZone* zone);
     void placeZoneTreasures(RmgZone* zone);
-    type_object* createTreasureObject(RmgZone* zone, int minimum, int maximum,
+    Object* createTreasureObject(RmgZone* zone, int minimum, int maximum,
         int* value, unsigned char primary, unsigned char allowTerrainDependent,
         unsigned char compact, RmgMapPosition position);
     int fillTreasureGroup(RmgZone* zone, RmgTreasureGroup* group,
@@ -1860,8 +1906,8 @@ public:
     void decorateUnderground();
     unsigned char generate();
     unsigned char writeMap(AbstractFile* outfile);
-    virtual ~type_random_map_generator();
-    virtual void addObject(type_object* object, RmgMapPosition position);
+    virtual ~RandomMapGenerator();
+    virtual void addObject(Object* object, RmgMapPosition position);
 
     inline int getSerializedMapVersion() const
     {
@@ -1923,8 +1969,8 @@ public:
     void markBorderObjectArea(RmgMapPosition position, int direction);
     int placeBorderObject(
         RmgMapPosition position, int count, RmgZone* zone);
-    type_object* createGuard(int value, RmgZone* zone);
-    unsigned char placeObjectInZone(type_object* object, RmgZone* zone);
+    Object* createGuard(int value, RmgZone* zone);
+    unsigned char placeObjectInZone(Object* object, RmgZone* zone);
     void placeGuard(RmgMapPosition position, int value);
     // Complete-only prototype/subtype/terrain filter at retail 0x546040.
     RmgObjectPropertiesRef* selectObjectPrototype(
@@ -1938,7 +1984,7 @@ public:
     // It changes the artifact prototype and attempts to place its seer hut;
     // success transfers ownership to the generated map. Retained thiscall
     // boundary with one mutable artifact argument.
-    unsigned char placeQuestArtifact(rmgQuestArtifactObject* object);
+    unsigned char placeQuestArtifact(RmgQuestArtifactObject* object);
     // Retained Complete-only helpers at 0x54b180 and 0x54b300. The quest
     // artifact caller supplies its origin zone and the prepared hut group.
     // Original names are unavailable; the graph and placement roles are proven.
@@ -1948,14 +1994,14 @@ public:
     // 0x54b8c0 finds objectPrototypes[9] of the same color and tries a
     // guarded treasure group; 0x54bc50 removes the old object's map marks,
     // counts and list entry without deleting the object itself.
-    unsigned char placeKeyTentGuard(type_object* object, int maxValue);
+    unsigned char placeKeyTentGuard(Object* object, int maxValue);
     void setHumanPlayer(int seat);
     void setTownChoice(int seat, int town);
-    void removeObject(type_object* object);
+    void removeObject(Object* object);
     // Retail 0x546190: zone, value range, output value, three byte flags,
     // then a by-value position (ret 0x28). Flags bypass the object-trait
     // filter, allow terrain-dependent definitions, and rank value per area.
-    type_object* generateTreasure(RmgZone* zone, int minValue, int maxValue,
+    Object* generateTreasure(RmgZone* zone, int minValue, int maxValue,
         int* value, unsigned char ignoreObjectTraits,
         unsigned char allowTerrainDependent, unsigned char preferValueDensity,
         RmgMapPosition position);
@@ -1984,10 +2030,10 @@ SIZE(RmgGroundTileData, 0x04);
 SIZE(RmgConnectionDecoration, 0x04);
 SIZE(RmgObjectPlacementRule, 0x4c);
 SIZE(RmgObjectPropertiesRef, 0xe8);
-SIZE(type_object, 0x1c);
-SIZE(rmgOwnableObject, 0x1c);
+SIZE(Object, 0x1c);
+SIZE(RmgOwnableObject, 0x1c);
 SIZE(RmgMapItem, 0x30);
-SIZE(type_random_map, 0x18);
+SIZE(RandomMap, 0x18);
 SIZE(RmgMapInterface, 0x04);
 SIZE(RmgMapAdapterInterface, 0x04);
 SIZE(RmgRoadMapAdapterInterface, 0x04);
@@ -1998,7 +2044,7 @@ SIZE(RmgRoadLinePainter, 0x10);
 SIZE(RmgLineWalker, 0x10);
 SIZE(RmgRiverPainter, 0x20);
 SIZE(RmgRoadPainter, 0x20);
-SIZE(type_random_map_generator, 0x14e0);
+SIZE(RandomMapGenerator, 0x14e0);
 
 // Retail 0x6824e0 is indexed by the creature-traits level dword before
 // type_black_box_creature_def divides by that creature's AI value.

@@ -8,7 +8,7 @@ VA_COMPGEN(0x005bbb70, 0x21, SCALAR_DELETING_DTOR, TextResource)
 
 VA(0x005bbba0, 0x227)  // dc 0x163858
 TextResource::TextResource(const char* name, int size, const char* data)
-    : resource(name, RESOURCE_TYPE_TEXT)
+    : Resource(name, RESOURCE_TYPE_TEXT)
 {
     m_data = new char[size];
     if (!m_data)
@@ -81,7 +81,7 @@ VA_COMPGEN(0x005bbe40, 0x21, SCALAR_DELETING_DTOR, SpreadsheetResource)
 VA(0x005bbe70, 0x2E6)  // dc 0x163a70
 SpreadsheetResource::SpreadsheetResource(const char* name, int size,
                                             const char* data)
-    : resource(name, RESOURCE_TYPE_TEXT)
+    : Resource(name, RESOURCE_TYPE_TEXT)
 {
     m_dataSize = size;
     m_data = new char[size];

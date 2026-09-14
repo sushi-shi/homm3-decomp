@@ -4,13 +4,14 @@
 
 #include "advmgr_popup.h"
 
-class textWidget;
+class TextWidget;
 
 // The ESC scancode, in the message::codeX domain a MESSAGE_KEY_DOWN
 // carries. Both handlers in this compiland close on it, so it sits at file
 // scope rather than in either class; puzzlewindow.h spells the same value
 // for the same role as a class-local enumerator.
-enum EDimensionDoorKey {
+// Before normalization (type): EDimensionDoorKey.
+enum DimensionDoorKey {
     DIALOG_CLOSE_KEY = 1
 };
 
@@ -25,11 +26,11 @@ class DimensionDoorWindow : public CAdvPopup {
 public:
     DimensionDoorWindow();
     virtual ~DimensionDoorWindow();
-    virtual int windowHandler(message& msg);
-    virtual int exitDialog(message& msg);
+    virtual int windowHandler(Message& msg);
+    virtual int exitDialog(Message& msg);
 
 private:
-    textWidget* m_rolloverWidget;
+    TextWidget* m_rolloverWidget;
 };
 SIZE(DimensionDoorWindow, 0x64);
 
@@ -41,11 +42,11 @@ class SkuttleBoatWindow : public CAdvPopup {
 public:
     SkuttleBoatWindow();
     virtual ~SkuttleBoatWindow();
-    virtual int windowHandler(message& msg);
-    virtual int exitDialog(message& msg);
+    virtual int windowHandler(Message& msg);
+    virtual int exitDialog(Message& msg);
 
 private:
-    textWidget* m_rolloverWidget;
+    TextWidget* m_rolloverWidget;
 };
 SIZE(SkuttleBoatWindow, 0x64);
 

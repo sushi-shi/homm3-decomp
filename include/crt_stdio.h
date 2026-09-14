@@ -34,8 +34,10 @@ int __cdecl sprintf(char* buffer, const char* format, ...);
 // <stdarg.h> and its include-set surface into every consumer of this header.
 int __cdecl vsprintf(char* buffer, const char* format, char* arguments);
 void* __cdecl memset(void* dest, int fill, unsigned int count);
-char* __cdecl _getcwd(char* buffer, int maxlen);
-int __cdecl _strcmpi(const char* lhs, const char* rhs);
+// Before normalization (function): _getcwd.
+char* __cdecl getcwd(char* buffer, int maxlen);
+// Before normalization (function): _strcmpi.
+int __cdecl strcmpi(const char* lhs, const char* rhs);
 char* __cdecl strcat(char* dest, const char* src);
 char* __cdecl strcpy(char* dest, const char* src);
 unsigned int __cdecl strlen(const char* text);

@@ -12,7 +12,7 @@
 // 0x462 stride exactly. The gaps below therefore retain the old fields,
 // including identifyLevel, which the current hero stores elsewhere.
 #pragma pack(push, 1)
-struct LegacyCampaignHero : public type_obscuring_object {
+struct LegacyCampaignHero : public ObscuringObject {
     short m_mana;                              // +0x018
     int m_id;                                  // +0x01a
     signed char m_owner;                       // +0x01e

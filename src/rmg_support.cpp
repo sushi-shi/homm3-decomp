@@ -165,9 +165,9 @@ RmgLinePatternTable* RmgLinePainter::getPattern(int)
 }
 
 VA(0x0055EDC0, 0x36) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +4
-void RmgLinePainter::setTile(const RmgGridPoint& point, const rmgTerrainTile& tile)
+void RmgLinePainter::setTile(const RmgGridPoint& point, const RmgTerrainTile& tile)
 {
-    rmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
+    RmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
     snapshot.m_flipX = tile.m_flipX;
     snapshot.m_flipY = tile.m_flipY;
     m_adapter->setTile(point, snapshot);
@@ -178,9 +178,9 @@ void RmgLinePainter::setOverlay(const RmgGridPoint& point, int value)
     m_adapter->setOverlay(point, value);
 }
 
-void RmgLinePainter::getTile(const RmgGridPoint& point, rmgTerrainTile& tile)
+void RmgLinePainter::getTile(const RmgGridPoint& point, RmgTerrainTile& tile)
 {
-    rmgTerrainTile snapshot = m_adapter->getTile(point);
+    RmgTerrainTile snapshot = m_adapter->getTile(point);
     tile = snapshot;
 }
 
@@ -221,9 +221,9 @@ RmgLinePatternTable* RmgRoadLinePainter::getPattern(int)
     return &g_rmgRoadPatternTable;
 }
 
-void RmgRoadLinePainter::setTile(const RmgGridPoint& point, const rmgTerrainTile& tile)
+void RmgRoadLinePainter::setTile(const RmgGridPoint& point, const RmgTerrainTile& tile)
 {
-    rmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
+    RmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
     snapshot.m_flipX = tile.m_flipX;
     snapshot.m_flipY = tile.m_flipY;
     m_adapter->setTile(point, snapshot);
@@ -244,9 +244,9 @@ void RmgRoadLinePainter::setOverlay(const RmgGridPoint& point, int value)
 }
 
 VA(0x0055F350, 0x34) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +0x10
-void RmgRoadLinePainter::getTile(const RmgGridPoint& point, rmgTerrainTile& tile)
+void RmgRoadLinePainter::getTile(const RmgGridPoint& point, RmgTerrainTile& tile)
 {
-    rmgTerrainTile snapshot = m_adapter->getTile(point);
+    RmgTerrainTile snapshot = m_adapter->getTile(point);
     tile = snapshot;
 }
 

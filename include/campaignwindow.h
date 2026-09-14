@@ -4,7 +4,7 @@
 
 #include "window.h"
 
-class message;
+class Message;
 class Bitmap816;
 
 // Retail's constructor initializes heroWindow directly, installs vtable
@@ -12,7 +12,7 @@ class Bitmap816;
 // substantially from Dreamcast's smaller campaign roster, so it remains
 // deliberately unmodelled until a compiled consumer needs it.
 // Before normalization (type): TCampaignWindow.
-class CampaignWindow : public heroWindow {
+class CampaignWindow : public HeroWindow {
 public:
     // Widget ids, byte-proven by the handler: the seven preview rows it
     // sweeps live at 101..107, and the campaign selector answers 108..127 -
@@ -22,7 +22,7 @@ public:
     // The three plates and the backdrop all answer 100, and the
     // per-campaign completion check marks answer 128..134 - the
     // constructor's `i - firstCampaign + 0x80`, one per visible row.
-    enum EOtherWidgetIDs {
+    enum OtherWidgetIDs {
         BACKGROUND_ID = 100,
         PREVIEW_FIRST_ID = 101,
         PREVIEW_LAST_ID = 107,
@@ -37,7 +37,8 @@ public:
 
     // Every preview still is 200x116, in OpenPreview's VideoOpen call and
     // again in the bitmapBorder16 it builds for the same row.
-    enum EPreviewSize {
+// Before normalization (type): CampaignWindow::EPreviewSize.
+    enum PreviewSize {
         PREVIEW_WIDTH = 200,
         PREVIEW_HEIGHT = 116
     };
@@ -49,7 +50,8 @@ public:
     // and swaps the backdrop to campbkx2.pcx. Seven, six and seven rows
     // are exactly Restoration of Erathia's, Armageddon's Blade's and
     // Shadow of Death's campaign counts, in shipping order.
-    enum ECampaignSets {
+// Before normalization (type): CampaignWindow::ECampaignSets.
+    enum CampaignSets {
         CAMPAIGN_SET_ROE = 0,
         CAMPAIGN_SET_AB = 1,
         CAMPAIGN_SET_SOD = 2
@@ -60,7 +62,8 @@ public:
     // of the Armageddon's Blade page and then clears it on the first
     // incomplete sibling, skipping itself in that test. Its state is
     // also what gates the page's forward plate.
-    enum ECampaignRows {
+// Before normalization (type): CampaignWindow::ECampaignRows.
+    enum CampaignRows {
         CAMPAIGN_ROW_AB_SEALED = 11
     };
 
@@ -68,7 +71,8 @@ public:
     // dispatches on it with a switch: retail's `mov eax,[esi+4]; dec eax`
     // is a switch selector load, not a `cmp mem,1`, and keeping it a switch
     // is what stops VC6 caching the literal 1 in a callee-saved register.
-    enum EKeys {
+// Before normalization (type): CampaignWindow::EKeys.
+    enum Keys {
         DIALOG_CLOSE_KEY = 1
     };
 
@@ -89,7 +93,7 @@ public:
     // located; declarations follow source/layout evidence.
     void* m_saveVideoFile;               // +0x54
     Bitmap816* m_checkMark;              // +0x58
-    const widget* m_rolloverWidget;      // +0x5c
+    const Widget* m_rolloverWidget;      // +0x5c
     // +0x60. One byte per campaign row, cleared as a single inlined
     // 21-byte memset (five dwords plus a byte) and then filled by the
     // constructor's three-way switch; the widget loop walks 0..19 and the
@@ -117,7 +121,7 @@ public:
 };
 
 // Retail /Gr passes the message in ECX, as DoDialog's TDialogHandler does.
-int campaignWindowHandler(message& msg);
+int campaignWindowHandler(Message& msg);
 
 // Complete-only initialized campaign-preview table at retail 0x66c498:
 // twenty 0x50-byte rows, one per campaign, indexed by `id -

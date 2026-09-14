@@ -21,7 +21,8 @@ class CTextEntrySave;
 // The 0x58..0x6e tail is read out of those ten bodies. Every field is
 // a 16-bit slot except the three trailing flags; 0x64/0x66/0x68 keep
 // house ordinal placeholders because no source we may read names them.
-class textEntryWidget : public textWidget {
+// Before normalization (type): textEntryWidget.
+class TextEntryWidget : public TextWidget {
 public:
     // The domain of field_68 below. Only the one value the retail
     // bodies branch on is recoverable: at 3, Draw renders a
@@ -31,7 +32,8 @@ public:
     // string. Nothing in the image writes the field, so the domain
     // cannot be enumerated further and this spelling is a house
     // placeholder describing the branch's effect, not an attested name.
-    enum EField68 {
+// Before normalization (type): textEntryWidget::EField68.
+    enum Field68 {
         FIELD_68_SCROLLED = 3
     };
     // The constructor's readType domain. Only one value is
@@ -40,7 +42,8 @@ public:
     // branches on: at 4 the text box is inset by (insetX, insetY) on
     // every side and field_66 latches 1. Placeholder spelling, same
     // rule as above.
-    enum EReadType {
+// Before normalization (type): textEntryWidget::EReadType.
+    enum ReadType {
         READ_TYPE_INSET = 4
     };
     Bitmap816* m_textBack;  // 0x50, ResourceManager::GetBitmap816
@@ -79,22 +82,22 @@ public:
     // Dreamcast ends the 0x70-byte editor with autoDraw at +0x6e.
     // NH3API confirms that the last byte is alignment in the PC object.
     char m_paddingAfterAutoDraw[1];
-    textEntryWidget(int x, int y, int w, int h, int textSize,
+    TextEntryWidget(int x, int y, int w, int h, int textSize,
                     const char* text, const char* fontName,
-                    font::Color color, unsigned justification,
+                    Font::Color color, unsigned justification,
                     const char* backgroundIcon, int backgroundFrame, int id,
                     int style, int readType, int insetX, int insetY);
-    virtual ~textEntryWidget();
-    virtual int main(message& msg);
+    virtual ~TextEntryWidget();
+    virtual int main(Message& msg);
     virtual void draw() const;
     void setupDisplayString(char* core, unsigned short inCursorIndex);
-    char getCharPressed(message* msg);
+    char getCharPressed(Message* msg);
     virtual void onSetFocus();
     virtual void onKillFocus();
     virtual void setText(const char* newText);
     virtual void setFocus(unsigned char state);
-    virtual int onKeyPress(message* msg);
-    virtual unsigned char ignoreKey(message* msg);
+    virtual int onKeyPress(Message* msg);
+    virtual unsigned char ignoreKey(Message* msg);
     virtual void setAutoDraw(unsigned char b);
 
 protected:

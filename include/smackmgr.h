@@ -67,18 +67,28 @@ struct Smack {
 // documents for Miles). smackmgr.cpp aliases the underscored names
 // back to the radlib spellings.
 extern "C" {
-__declspec(dllimport) void __stdcall _SmackToBuffer(Smack* smk, unsigned long left, unsigned long top, unsigned long pitch, unsigned long destheight, void* buf, unsigned long flags);
-__declspec(dllimport) unsigned long __stdcall _SmackToBufferRect(Smack* smk, unsigned long flags);
-__declspec(dllimport) unsigned long __stdcall _SmackDoFrame(Smack* smk);
-__declspec(dllimport) void __stdcall _SmackGoto(Smack* smk, unsigned long frame);
-__declspec(dllimport) void __stdcall _SmackClose(Smack* smk);
+// Before normalization (function): _SmackToBuffer.
+__declspec(dllimport) void __stdcall smacktobuffer(Smack* smk, unsigned long left, unsigned long top, unsigned long pitch, unsigned long destheight, void* buf, unsigned long flags);
+// Before normalization (function): _SmackToBufferRect.
+__declspec(dllimport) unsigned long __stdcall smacktobufferrect(Smack* smk, unsigned long flags);
+// Before normalization (function): _SmackDoFrame.
+__declspec(dllimport) unsigned long __stdcall smackdoframe(Smack* smk);
+// Before normalization (function): _SmackGoto.
+__declspec(dllimport) void __stdcall smackgoto(Smack* smk, unsigned long frame);
+// Before normalization (function): _SmackClose.
+__declspec(dllimport) void __stdcall smackclose(Smack* smk);
 // The rest of the surface, consumed only by smackmgr.cpp itself: the
 // per-frame pump's wait/advance pair and ShowVideo's open path.
-__declspec(dllimport) unsigned long __stdcall _SmackWait(Smack* smk);
-__declspec(dllimport) void __stdcall _SmackNextFrame(Smack* smk);
-__declspec(dllimport) Smack* __stdcall _SmackOpen(void* handle, unsigned long flags, long extra);
-__declspec(dllimport) void __stdcall _SmackUseMMX(unsigned long on);
-__declspec(dllimport) void __stdcall _SmackVolumePan(Smack* smk, unsigned long trackFlags, unsigned long volume, unsigned long pan);
+// Before normalization (function): _SmackWait.
+__declspec(dllimport) unsigned long __stdcall smackwait(Smack* smk);
+// Before normalization (function): _SmackNextFrame.
+__declspec(dllimport) void __stdcall smacknextframe(Smack* smk);
+// Before normalization (function): _SmackOpen.
+__declspec(dllimport) Smack* __stdcall smackopen(void* handle, unsigned long flags, long extra);
+// Before normalization (function): _SmackUseMMX.
+__declspec(dllimport) void __stdcall smackusemmx(unsigned long on);
+// Before normalization (function): _SmackVolumePan.
+__declspec(dllimport) void __stdcall smackvolumepan(Smack* smk, unsigned long trackFlags, unsigned long volume, unsigned long pan);
 }
 
 // Per-id video descriptor table in a foreign TU's .data (0x6839c0,
@@ -123,7 +133,8 @@ extern int g_unnamed699290;       // .bss 0x699290 - nonzero suppresses the vide
 // forced onto bink while *gpVideoGameState holds either forced-bink
 // state; the OVERLAY_BLIT id draws through the primary-surface Blt
 // instead of the merged dirty rect.
-enum EVideoId {
+// Before normalization (type): EVideoId.
+enum VideoId {
     VIDEO_ID_FIRST_TABLED = 0x1c,
     VIDEO_ID_OVERLAY_BLIT = 0x1d,
     VIDEO_ID_STATE_GATED = 0x21
@@ -137,7 +148,8 @@ enum EVideoId {
 // {1, 3} open the h3ab_ahd expansion archives (LoadAnimHeaders /
 // LoadSoundHeaders). Value 3 is a member of both sets, so it keeps the
 // name the bink gate gave it. Names are role names, provisional.
-enum EVideoGameState {
+// Before normalization (type): EVideoGameState.
+enum VideoGameState {
     VIDEO_GAME_STATE_EXPANSION_ARCHIVES = 0x1,
     VIDEO_GAME_STATE_FORCED_BINK_LOW = 0x2,
     VIDEO_GAME_STATE_FORCED_BINK_HIGH = 0x3
@@ -145,7 +157,8 @@ enum EVideoGameState {
 
 // GreenBits' one attested value: the RGB565 screen mode that selects
 // SMACKBUFFER565. The global's name and bit-count meaning are DC-proven.
-enum EVideoPixelFormat {
+// Before normalization (type): EVideoPixelFormat.
+enum VideoPixelFormat {
     VIDEO_PIXEL_FORMAT_RGB565 = 0x6
 };
 

@@ -323,7 +323,8 @@ public:
 // The start-bonus type byte the list reader at 0x485190 switches on, in
 // the jump table's own order - which is the roster order the eight
 // vftables 0x63daa0..0x63d9c0 already carry. Names are role inventions.
-enum ECampaignBonusType {
+// Before normalization (type): ECampaignBonusType.
+enum CampaignBonusType {
     CAMPAIGN_BONUS_SPELL = 0,
     CAMPAIGN_BONUS_CREATURE = 1,
     CAMPAIGN_BONUS_BUILDING = 2,
@@ -337,7 +338,8 @@ enum ECampaignBonusType {
 class CampaignStartOption {
 public:
     // UpdateBonusIcons centres the frames when there are two choices.
-    enum EChoiceCount {
+// Before normalization (type): CampaignStartOption::EChoiceCount.
+    enum ChoiceCount {
         CHOICE_COUNT_PAIR = 2
     };
     // 0x484f40, and it is the DESTRUCTOR, not a constructor: the body is
@@ -468,7 +470,8 @@ SIZE(CampaignStartHeroOption, 0x14);
 // The starting-options type byte ScenarioStruct::Read switches on, in its
 // own `dec/je` chain order. Zero (and anything past three) leaves the
 // scenario without a record at all. Names are role inventions.
-enum ECampaignStartOptionType {
+// Before normalization (type): ECampaignStartOptionType.
+enum CampaignStartOptionType {
     CAMPAIGN_START_OPTION_NONE = 0,
     CAMPAIGN_START_OPTION_BONUS = 1,
     CAMPAIGN_START_OPTION_CROSSOVER = 2,
@@ -487,7 +490,8 @@ extern const int g_campaignBuildingRemap[][41];
 // seven EGameResource rows, byte-read off the ten-entry jump tables the
 // description (0x484d90) and the applier (0x484e20) share: -3 pays wood
 // AND ore, -2 pays all four rare resources. Names are role inventions.
-enum ECampaignBonusResource {
+// Before normalization (type): ECampaignBonusResource.
+enum CampaignBonusResource {
     CAMPAIGN_BONUS_RESOURCE_WOOD_AND_ORE = -3,
     CAMPAIGN_BONUS_RESOURCE_RARE = -2,
     CAMPAIGN_BONUS_RESOURCE_NONE = -1
@@ -502,7 +506,8 @@ extern const char* g_resourceNames[7];
 // The three sentinel hero selectors a campaign bonus can carry, byte-read
 // off the picker's own jump chain at 0x4840d0 (`cmp ecx,-3 / -2 / -1`
 // with the plain-id arm falling through). Names are role inventions.
-enum ECampaignBonusHero {
+// Before normalization (type): ECampaignBonusHero.
+enum CampaignBonusHero {
     CAMPAIGN_BONUS_HERO_STRONGEST = -3,
     CAMPAIGN_BONUS_HERO_FIRST = -2,
     CAMPAIGN_BONUS_HERO_NONE = -1

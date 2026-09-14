@@ -3,9 +3,9 @@
 #define HOMM3_RESOURCEMANAGER_H
 
 class CSprite;
-class font;
-class resource;
-class sample;
+class Font;
+class Resource;
+class Sample;
 class Palette24;
 class LODFile;
 
@@ -37,22 +37,22 @@ void setPath(const char* path);
 void setPixelFormat(unsigned long redMask, unsigned long greenMask,
                     unsigned long blueMask);             // 0x55a6b0
 CSprite* getSprite(const char* name);
-font* getFont(const char* name);
+Font* getFont(const char* name);
 // Dreamcast and retail oldmain load the same Players.pal through the 24-bit
 // sibling immediately after the two TPalette16 loads (retail 0x55b470).
 Palette24* getPalette24(const char* name);
-sample* getSample(const char* name);
+Sample* getSample(const char* name);
 // Retail body 0x55a800 (bitmapBorder::SetImage's loader).
 Bitmap816* getBitmap816(const char* name);
 Bitmap16Bit* getBitmap16(const char* name);
 void getBackdrop(const char* resName, Bitmap16Bit* destBmap);
 TextResource* getText(const char* name);
 SpreadsheetResource* getSpreadsheet(const char* name);
-void addToCache(resource* value);
+void addToCache(Resource* value);
 // Dreamcast resourcemanager.cpp:2377; expanded by Complete's cache getters.
-resource* getFromCache(const char* name);
+Resource* getFromCache(const char* name);
 
-void dispose(resource* value);
+void dispose(Resource* value);
 void dispose(CSprite* value);
 void delSprFromCache();
 
@@ -64,7 +64,7 @@ int readFromBitmapResource(LODFile* resource, void* data, int numBytes);
 // getItemIndex finds the named entry, then returns that entry's +0x14 size.
 int getBitmapResourceSize(const char* name);
 
-resource* getFromCache(const char* name);
+Resource* getFromCache(const char* name);
 
 }
 
@@ -72,14 +72,16 @@ resource* getFromCache(const char* name);
 // retail 0x559510. Its fastcall ABI is proven by all thirteen getter call
 // sites and its body is reconstructed; no PC symbol source survives, so the
 // linkage name remains explicitly provisional.
-extern "C" void __fastcall game_null_159510(const char* caller,
+// Before normalization (function): game_null_159510.
+extern "C" void __fastcall gameNull159510(const char* caller,
                                              int resourceType,
                                              const char* resourceName);
 
 // Complete's sprite-family counterpart to game_null_159510. GetSprite's two
 // retail call sites prove the same fastcall surface; the PC symbol name is
 // provisional because this helper has no Dreamcast identity.
-extern "C" void __fastcall game_sprite_1599e0(const char* caller,
+// Before normalization (function): game_sprite_1599e0.
+extern "C" void __fastcall gameSprite1599e0(const char* caller,
                                                int resourceType,
                                                const char* resourceName);
 

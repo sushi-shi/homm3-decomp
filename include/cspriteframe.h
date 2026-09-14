@@ -72,7 +72,7 @@ enum RawRowUnrollEntry {
     eRawRowUnroll7 = 7
 };
 
-class CSpriteFrame : public resource {
+class CSpriteFrame : public Resource {
 public:
     CSpriteFrame(const char* name, int w, int h, unsigned char* data,
                  int csize, EncodingMethod encoding);

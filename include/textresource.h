@@ -10,7 +10,8 @@
 // Named indices into genrltxt.txt. Every value is retail-byte-proven by the
 // corresponding TTextResource::Text[index] consumer; names describe those
 // consumers until the original source roster supplies stronger wording.
-enum EGeneralTextIndex {
+// Before normalization (type): EGeneralTextIndex.
+enum GeneralTextIndex {
     GENERAL_TEXT_SHUTDOWN = 1,
     GENERAL_TEXT_LEVEL_UP_OR = 5,
     // The dismiss-this-stack confirmation TViewArmyWindow::WindowHandler
@@ -299,7 +300,7 @@ enum EGeneralTextIndex {
 // TSpreadsheetResource above. The names are Dreamcast-attested; Data's
 // +0x2c position follows the adjacent vector/data members used by both
 // text-resource variants.
-class TextResource : public resource {
+class TextResource : public Resource {
 public:
     typedef std::vector<char*> TTextArray;
     TextResource();
@@ -328,7 +329,7 @@ SIZE(TextResource, 48);
 // with the STLport layout; Dinkumware puts them at 0x1c/0x2c, sizeof
 // 0x30 vs the DC 44). GetNumberOfRows/GetRow are the TextResource.h
 // header inlines (dc 0x5088c/0x508a4), inlined into callers by /Ob2.
-class SpreadsheetResource : public resource {
+class SpreadsheetResource : public Resource {
 public:
     typedef std::vector<char*> TStringVector;
     typedef std::vector<TStringVector*> TArray;

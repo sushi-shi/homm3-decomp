@@ -4,8 +4,8 @@
 
 #include "window.h"
 
-class message;
-class textWidget;
+class Message;
+class TextWidget;
 
 // Retail's destructor proves the heroWindow base and vtable 0x63d448.
 // DoModal reads/writes bPrefsChanged at +0x4c; the constructor's final
@@ -13,14 +13,14 @@ class textWidget;
 // +0x50 as RolloverWidget. Total size is independently proven by
 // combatManager::CombatSystemOptions' 0x54-byte stack object.
 // Before normalization (type): TCombatOptionsWindow.
-class CombatOptionsWindow : public heroWindow {
+class CombatOptionsWindow : public HeroWindow {
 public:
     // Widget ids, byte-proven by the constructor's creation order and the
     // post-AddWidget preference sweep (every id below is either a literal
     // in a widget constructor or a loop bound in that sweep). Names follow
     // the preference field each id drives; the four Highlight* Dreamcast
     // methods corroborate the grid/shadow/speed group.
-    enum EOtherWidgetIDs {
+    enum OtherWidgetIDs {
         BACKGROUND_ID = 200,
         DEFAULT_ID = 201,
         MUSIC_VOLUME_0_ID = 202,
@@ -62,7 +62,8 @@ public:
     // The domain of the prefs block's combatArmyInfoLevel, byte-proven by
     // the constructor: it lights CREATURE_INFO_VERBOSE_ID when the field is
     // 1 and CREATURE_INFO_COMPACT_ID when it is 2.
-    enum ECreatureInfoLevel {
+// Before normalization (type): CombatOptionsWindow::ECreatureInfoLevel.
+    enum CreatureInfoLevel {
         CREATURE_INFO_LEVEL_VERBOSE = 1,
         CREATURE_INFO_LEVEL_COMPACT = 2
     };
@@ -77,13 +78,13 @@ public:
     void doModal();
 
 private:
-    textWidget* m_rolloverWidget;   // +0x50
+    TextWidget* m_rolloverWidget;   // +0x50
     int convertID2HelpID(int id) const;
 
 public:
     // DC CombatOptionsWindowHandler (0x67b7c) directly calls these private
     // methods; retail 0x46f7b0 expands them. Preserve the callback friendship.
-    friend int combatOptionsWindowHandler(message& msg);
+    friend int combatOptionsWindowHandler(Message& msg);
 
 private:
     void highlightCombatSpeed();
@@ -95,7 +96,7 @@ SIZE(CombatOptionsWindow, 0x54);
 
 // Retail /Gr passes the message by reference in ECX, matching DoDialog's
 // byte-proven TDialogHandler type.
-int combatOptionsWindowHandler(message& msg);
+int combatOptionsWindowHandler(Message& msg);
 
 // The rollover/right-click pairs this dialog's help path indexes with
 // convertID2HelpID's answer. Stride 8 and base 0x6a55ac are byte-proven by

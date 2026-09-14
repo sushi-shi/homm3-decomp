@@ -20,7 +20,7 @@
 
 // E:\gamedcs\winmgr.cpp:101
 DC_ONLY(0x19a840, 0x11A)
-int heroWindowManager::Open(int newPriority)
+int HeroWindowManager::Open(int newPriority)
 {
     // @stub
 }
@@ -37,7 +37,7 @@ DATA(0x006aac9c) extern int g_unnamed6aac9c;
 DATA(0x006aaca0) extern unsigned short* g_unnamed6aaca0;
 
 VA(0x00602170, 0x38)
-heroWindowManager::heroWindowManager()
+HeroWindowManager::HeroWindowManager()
 {
     m_status = 0;
     m_activeWindow = 0;
@@ -53,7 +53,7 @@ heroWindowManager::heroWindowManager()
 }
 
 VA(0x006021b0, 0x114)  // dc 0x19a840
-int heroWindowManager::open(int newPriority)
+int HeroWindowManager::open(int newPriority)
 {
     initVideo();
 
@@ -72,7 +72,7 @@ int heroWindowManager::open(int newPriority)
     tempRect.bottom = 600;
     robAppBlit(&tempRect);
 
-    g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+    g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
     g_mouseManager->showPointer(1);
 
     m_priority = newPriority;
@@ -85,13 +85,13 @@ int heroWindowManager::open(int newPriority)
 }
 
 VA(0x006022d0, 0x46)  // dc 0x19a95c
-void heroWindowManager::close()
+void HeroWindowManager::close()
 {
     if (m_status != STATUS_ACTIVE)
         return;
-    heroWindow* w = m_tailWindow;
+    HeroWindow* w = m_tailWindow;
     while (w) {
-        heroWindow* prev = w->m_prevWindow;
+        HeroWindow* prev = w->m_prevWindow;
         removeWindow(w);
         w = prev;
     }
@@ -103,11 +103,11 @@ void heroWindowManager::close()
 }
 
 VA(0x00602320, 0x36)  // dc 0x19a9c0
-int heroWindowManager::main(message& msg)
+int HeroWindowManager::main(Message& msg)
 {
     int result = 0;
 
-    for (heroWindow* w = m_tailWindow; w; w = w->m_prevWindow) {
+    for (HeroWindow* w = m_tailWindow; w; w = w->m_prevWindow) {
         if (w->m_sleepCount > 0)
             continue;
         result = w->broadcastMessage(msg);
@@ -118,15 +118,15 @@ int heroWindowManager::main(message& msg)
 }
 
 VA(0x00602360, 0x10)  // dc 0x19aa08
-int heroWindowManager::convertToHover(message& msg)
+int HeroWindowManager::convertToHover(Message& msg)
 {
     return main(msg);
 }
 
 VA(0x00602370, 0x3B)  // dc 0x19aa20
-int heroWindowManager::broadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra)
+int HeroWindowManager::broadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra)
 {
-    message msg;
+    Message msg;
 
     msg.m_qualifier = 0;
     msg.m_mouseX = 0;
@@ -140,10 +140,10 @@ int heroWindowManager::broadcastMessage(int msgId, int msgCodeX, int msgCodeY, i
 }
 
 VA(0x006023b0, 0xE7)  // dc 0x19aa64
-void heroWindowManager::addWindow(heroWindow* newWindow, int newPriority,
+void HeroWindowManager::addWindow(HeroWindow* newWindow, int newPriority,
                                   unsigned char update)
 {
-    heroWindow* at = m_tailWindow;
+    HeroWindow* at = m_tailWindow;
 
     if (newWindow->m_type & WINDOW_FLAG_FIXED_LAYER) {
         newPriority = 0;
@@ -186,7 +186,7 @@ void heroWindowManager::addWindow(heroWindow* newWindow, int newPriority,
 }
 
 VA(0x006024a0, 0x78)  // dc 0x19ac14
-void heroWindowManager::removeWindow(heroWindow* killWindow)
+void HeroWindowManager::removeWindow(HeroWindow* killWindow)
 {
     if (!killWindow)
         return;
@@ -201,10 +201,10 @@ void heroWindowManager::removeWindow(heroWindow* killWindow)
         m_tailWindow = killWindow->m_prevWindow;
         m_tailWindow->m_nextWindow = 0;
     } else {
-        heroWindow* prev = killWindow->m_prevWindow;
+        HeroWindow* prev = killWindow->m_prevWindow;
         if (prev)
             prev->m_nextWindow = killWindow->m_nextWindow;
-        heroWindow* next = killWindow->m_nextWindow;
+        HeroWindow* next = killWindow->m_nextWindow;
         if (next)
             next->m_prevWindow = killWindow->m_prevWindow;
     }
@@ -222,10 +222,10 @@ void heroWindowManager::removeWindow(heroWindow* killWindow)
 // nesting and where each try opens (the [ebp-4] walk 0/1/2/3 lands
 // exactly on those four boundaries).
 VA(0x00602520, 0x280)  // anchor-global, dc 0x19ad18
-int heroWindowManager::doDialog(heroWindow* dialogWindow,
+int HeroWindowManager::doDialog(HeroWindow* dialogWindow,
                                 TDialogHandler dialogFunction, int fadeIn)
 {
-    heroWindow* w;
+    HeroWindow* w;
     int endFlag;
 
     if (g_dialogNestCount++ == 0)
@@ -243,7 +243,7 @@ int heroWindowManager::doDialog(heroWindow* dialogWindow,
                     if (fadeIn)
                         g_windowManager->fadeScreen(0, 4, 0);
                     g_inputManager->flush();
-                    message msg;
+                    Message msg;
                     m_dialogReturn = -1;
                     endFlag = 0;
                     msg.m_id = 0;
@@ -268,7 +268,7 @@ int heroWindowManager::doDialog(heroWindow* dialogWindow,
                                 continue;
                             if (result == MESSAGE_DISPATCH_FORWARD
                                 && msg.m_id == MESSAGE_WIDGET
-                                && msg.m_codeX == widget::WIDGET_END_DIALOG) {
+                                && msg.m_codeX == Widget::WIDGET_END_DIALOG) {
                                 m_dialogReturn = msg.m_codeY;
                                 endFlag = 1;
                             }
@@ -276,7 +276,7 @@ int heroWindowManager::doDialog(heroWindow* dialogWindow,
                         msg.m_window = dialogWindow;
                         if (dialogFunction(msg) == MESSAGE_DISPATCH_FORWARD
                             && msg.m_id == MESSAGE_WIDGET
-                            && msg.m_codeX == widget::WIDGET_END_DIALOG)
+                            && msg.m_codeX == Widget::WIDGET_END_DIALOG)
                             endFlag = 1;
                     }
                 } catch (...) {
@@ -319,12 +319,12 @@ int heroWindowManager::doDialog(heroWindow* dialogWindow,
 // while retail sinks it past the redraw arm behind a forward `je`,
 // which is exactly VC6's two-case switch layout.
 VA(0x006027a0, 0x29A)  // anchor-global, dc 0x19aef4
-int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
+int HeroWindowManager::doDialogDraw(HeroWindow* dialogWindow,
                                     TDialogHandler dialogFunction,
                                     TDialogHandler dialogDrawFunction,
                                     int fadeIn)
 {
-    heroWindow* w;
+    HeroWindow* w;
     int endFlag;
 
     if (g_dialogNestCount++ == 0)
@@ -339,7 +339,7 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
                 if (dialogWindow)
                     addWindow(dialogWindow, -1, 1);
                 try {
-                    message msg;
+                    Message msg;
                     endFlag = 0;
                     msg.m_id = 0;
                     msg.m_codeX = 0;
@@ -366,7 +366,7 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
                             if (dialogWindow->broadcastMessage(msg)
                                     == MESSAGE_DISPATCH_FORWARD
                                 && msg.m_id == MESSAGE_WIDGET
-                                && msg.m_codeX == widget::WIDGET_END_DIALOG) {
+                                && msg.m_codeX == Widget::WIDGET_END_DIALOG) {
                                 m_dialogReturn = msg.m_codeY;
                                 endFlag = 1;
                             }
@@ -375,10 +375,10 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
                         if (dialogFunction(msg) == MESSAGE_DISPATCH_FORWARD
                             && msg.m_id == MESSAGE_WIDGET) {
                             switch (msg.m_codeX) {
-                            case widget::WIDGET_END_DIALOG:
+                            case Widget::WIDGET_END_DIALOG:
                                 endFlag = 1;
                                 break;
-                            case widget::WIDGET_RETURN_32:
+                            case Widget::WIDGET_RETURN_32:
                                 dialogDrawFunction(msg);
                                 break;
                             }
@@ -415,9 +415,9 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
 }
 
 VA(0x00602a40, 0x188)  // dc 0x19b0fc
-void heroWindowManager::doQuickView(heroWindow* window)
+void HeroWindowManager::doQuickView(HeroWindow* window)
 {
-    heroWindow* w;
+    HeroWindow* w;
 
     g_mouseManager->hidePointer();
     try {
@@ -428,7 +428,7 @@ void heroWindowManager::doQuickView(heroWindow* window)
                 addWindow(window, -1, 1);
             try {
                 for (;;) {
-                    message msg;
+                    Message msg;
                     pollSound();
                     process1WindowsMessage();
                     msg = g_inputManager->getEvent();
@@ -473,28 +473,28 @@ void heroWindowManager::doQuickView(heroWindow* window)
 
 // E:\gamedcs\winmgr.cpp:844
 DC_ONLY(0x19b1f0, 0x3E)
-void heroWindowManager::updateScreen()
+void HeroWindowManager::updateScreen()
 {
     // @stub
 }
 
 // E:\gamedcs\winmgr.cpp:916
 DC_ONLY(0x19b328, 0x9C)
-void heroWindowManager::updateScreen(int x, int y, int width, int height, int dx, int dy)
+void HeroWindowManager::updateScreen(int x, int y, int width, int height, int dx, int dy)
 {
     // @stub
 }
 
 // E:\gamedcs\winmgr.cpp:964
 DC_ONLY(0x19b3c4, 0x2A)
-void heroWindowManager::BlitToScreenWithPointer(int x, int y, int w, int h)
+void HeroWindowManager::BlitToScreenWithPointer(int x, int y, int w, int h)
 {
     // @stub
 }
 
 // E:\gamedcs\winmgr.cpp:986
 DC_ONLY(0x19b3f0, 0x38)
-void heroWindowManager::BlitToScreenWithPointerX(int x, int y, int w, int h, int dx, int dy)
+void HeroWindowManager::BlitToScreenWithPointerX(int x, int y, int w, int h, int dx, int dy)
 {
     // @stub
 }
@@ -502,7 +502,7 @@ void heroWindowManager::BlitToScreenWithPointerX(int x, int y, int w, int h, int
 #endif  // @carcass
 
 VA(0x00602bd0, 0x7C)  // dc 0x19b230
-void heroWindowManager::updateScreen(int x, int y, int width, int height)
+void HeroWindowManager::updateScreen(int x, int y, int width, int height)
 {
     RECT region;
 
@@ -528,7 +528,7 @@ void heroWindowManager::updateScreen(int x, int y, int width, int height)
 }
 
 VA(0x00602c50, 0x63)  // dc 0x19b428
-void heroWindowManager::fadeScreen(int inOut, int speed, unsigned char expectFadein)
+void HeroWindowManager::fadeScreen(int inOut, int speed, unsigned char expectFadein)
 {
     if (inOut == 1) {
         if (expectFadein)
@@ -548,21 +548,21 @@ void heroWindowManager::fadeScreen(int inOut, int speed, unsigned char expectFad
 
 // E:\gamedcs\winmgr.cpp:1051
 DC_ONLY(0x19b490, 0x2C)
-void heroWindowManager::ScreenShot()
+void HeroWindowManager::ScreenShot()
 {
     // @stub
 }
 
 // E:\gamedcs\winmgr.cpp:1085
 DC_ONLY(0x19b4bc, 0x104)
-void heroWindowManager::SaveFizzleSource(int startX, int startY, int width, int height)
+void HeroWindowManager::SaveFizzleSource(int startX, int startY, int width, int height)
 {
     // @stub
 }
 
 // E:\gamedcs\winmgr.cpp:1194
 DC_ONLY(0x19b66c, 0x28E)
-void heroWindowManager::FizzleForward(int startX, int startY, int width, int height, int iFadeTime)
+void HeroWindowManager::FizzleForward(int startX, int startY, int width, int height, int iFadeTime)
 {
     // @stub
 }
@@ -579,21 +579,21 @@ void heroWindowManager::FizzleForward(int startX, int startY, int width, int hei
 
 // E:\gamedcs\winmgr.cpp:1455
 DC_ONLY(0x19bbd4, 0x80)
-void heroWindowManager::NextFlashFrame(int startX, int startY, int width, int height, int iFadeTime)
+void HeroWindowManager::NextFlashFrame(int startX, int startY, int width, int height, int iFadeTime)
 {
     // @stub
 }
 
 // E:\gamedcs\winmgr.cpp:1463
 DC_ONLY(0x19bc54, 0x1D2)
-void heroWindowManager::Flash(int startX, int startY, int width, int height, int iFadeTime)
+void HeroWindowManager::Flash(int startX, int startY, int width, int height, int iFadeTime)
 {
     // @stub
 }
 
 // E:\gamedcs\winmgr.cpp:1545
 DC_ONLY(0x19be28, 0x394)
-void heroWindowManager::FadeBlit(int sx, int sy, int sw, int sh, const Bitmap816* src_bmp, int dx, int dy, unsigned char tblit, int nframes, int period)
+void HeroWindowManager::FadeBlit(int sx, int sy, int sw, int sh, const Bitmap816* src_bmp, int dx, int dy, unsigned char tblit, int nframes, int period)
 {
     // @stub
 }
@@ -615,7 +615,7 @@ const unsigned char* Bitmap816::getMap(int x, int y)
 #endif  // @carcass
 
 VA(0x00602cc0, 0xF2)  // dc 0x19b5c0
-void heroWindowManager::saveFizzleSourceX(int startX, int startY, int width,
+void HeroWindowManager::saveFizzleSourceX(int startX, int startY, int width,
                                           int height)
 {
     if (g_completeDrawEnabled) {
@@ -665,7 +665,7 @@ void heroWindowManager::saveFizzleSourceX(int startX, int startY, int width,
 // left/right/top/bottom inside the loop, left/top/right/bottom after it.
 
 VA(0x00602dc0, 0x2F7)  // anchor-import + exhaustive tail order, dc 0x19b8fc
-void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
+void HeroWindowManager::fizzleForwardX(int startX, int startY, int width,
                                        int height, int fadeTime)
 {
     // DC locals: DEFAULT_FADE_TIME, src/odst (read-only row pointers).
@@ -766,7 +766,7 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
 }
 
 VA(0x006030c0, 0x19)  // dc 0x19bba8
-void heroWindowManager::releaseFizzleSource()
+void HeroWindowManager::releaseFizzleSource()
 {
     if (m_bmpFizzleSource)
         delete m_bmpFizzleSource;
@@ -793,7 +793,7 @@ void heroWindowManager::releaseFizzleSource()
 // slot displacement and the whole post-loop tail are byte-identical.
 
 VA(0x006030e0, 0x1F9)  // anchor-caller, dc 0x19c1bc
-void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
+void HeroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
 {
     unsigned long maskBlue = (g_colorMaskBlue << 16) | g_colorMaskBlue;
     unsigned long maskGreen = (g_colorMaskGreen << 16) | g_colorMaskGreen;
@@ -857,7 +857,7 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
 // the Draw below rather than by a pass of its own.
 
 VA(0x006032e0, 0x1E5)  // anchor-caller, dc 0x19c3b8
-void heroWindowManager::fadeFromBlack(int speed)
+void HeroWindowManager::fadeFromBlack(int speed)
 {
     unsigned long maskBlue = (g_colorMaskBlue << 16) | g_colorMaskBlue;
     unsigned long maskGreen = (g_colorMaskGreen << 16) | g_colorMaskGreen;

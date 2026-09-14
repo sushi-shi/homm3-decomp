@@ -80,7 +80,7 @@ void Palette16::Palette16(const char* name, const Palette24& p24)
 
 VA(0x00522650, 0x16)  // dc 0x10a2a8
 Palette16::Palette16()
-    : resource(0, RESOURCE_TYPE_NONE)
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
 }
 
@@ -90,7 +90,7 @@ VA_COMPGEN(0x00522670, 0x21, SCALAR_DELETING_DTOR, Palette16)
 // +0x1c, the same shape TPalette24's raw-data constructor has at 0x522e80.
 VA(0x005226a0, 0x2D)  // dc 0x10a2f0
 Palette16::Palette16(const unsigned short* newData)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(m_data, newData, sizeof(m_data));
 }
@@ -98,7 +98,7 @@ Palette16::Palette16(const unsigned short* newData)
 VA(0x005226d0, 0x9D)  // dc 0x10a338
 Palette16::Palette16(const Palette24& p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
     convert24to16(p24.m_palette, rbits, rshift, gbits, gshift,
                   bbits, bshift);
@@ -108,7 +108,7 @@ VA(0x00522770, 0x9F)  // dc 0x10a498
 Palette16::Palette16(const char* name, const Palette24& p24,
                        int rbits, int rshift, int gbits, int gshift,
                        int bbits, int bshift)
-    : resource(name, RESOURCE_TYPE_PALETTE)
+    : Resource(name, RESOURCE_TYPE_PALETTE)
 {
     convert24to16(p24.m_palette, rbits, rshift, gbits, gshift,
                   bbits, bshift);
@@ -116,7 +116,7 @@ Palette16::Palette16(const char* name, const Palette24& p24,
 
 VA(0x00522810, 0xC6)  // dc 0x10a508
 Palette16::Palette16(const Palette24& p24)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
     unsigned short* dst = m_data;
     const unsigned int redScale = (s_redMask + s_redMask) & ~s_redMask;
@@ -137,7 +137,7 @@ Palette16::Palette16(const Palette24& p24)
 // 0x300-byte one, and the assignment keeps the resource identity.
 VA(0x005228e0, 0x30)  // dc 0x10a854
 Palette16::Palette16(const Palette16* copy)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(m_data, copy->m_data, sizeof(m_data));
 }
@@ -384,7 +384,7 @@ void Palette16::gray()
 
 VA(0x00522e30, 0x16)  // null-name resource ctor + TPalette24 vtable
 Palette24::Palette24()
-    : resource(0, RESOURCE_TYPE_NONE)
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
 }
 
@@ -392,14 +392,14 @@ VA_COMPGEN(0x00522e50, 0x21, SCALAR_DELETING_DTOR, Palette24)
 
 VA(0x00522e80, 0x2D)  // dc 0x10b904
 Palette24::Palette24(const unsigned char* data)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(m_palette, data, sizeof(m_palette));
 }
 
 VA(0x00522eb0, 0x42)  // dc 0x10b94c
 Palette24::Palette24(const RGBA* rgba)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
     for (int index = 0; index < 256; ++index) {
         m_palette[3 * index + 0] = rgba->m_red;
@@ -411,7 +411,7 @@ Palette24::Palette24(const RGBA* rgba)
 
 VA(0x00522f00, 0x30)  // dc 0x10ba3c
 Palette24::Palette24(const Palette24* copy)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(m_palette, copy->m_palette, sizeof(m_palette));
 }

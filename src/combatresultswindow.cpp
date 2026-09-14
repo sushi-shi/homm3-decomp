@@ -119,7 +119,7 @@ VA(0x004702d0, 0x176D)  // CPResult.pcx + vtable/global stores, dc 0x68364
 CombatResultsWindow::CombatResultsWindow(const Hero* attacker,
     const Hero* defender, int mySide, int winningSide,
     bool isSiege, int experience)
-    : heroWindow(165, 19, 470, 561, 0x10)
+    : HeroWindow(165, 19, 470, 561, 0x10)
 {
     g_combatResultsWindow = this;
 
@@ -135,26 +135,26 @@ CombatResultsWindow::CombatResultsWindow(const Hero* attacker,
     char text[100];
     int firstX;
 
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         0, 0, 470, 561, BACKGROUND_ID, "CPResult.pcx", 0x800));
-    static_cast<bitmapBorder*>(m_widgets.back())->setPlayerPaletteColors(
+    static_cast<BitmapBorder*>(m_widgets.back())->setPlayerPaletteColors(
         g_game->getLocalPlayerGamePos());
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         0, 290, 466, 100, (*g_generalText)[408], "BigFont.fnt",
-        font::HEADING_HIGHLIGHT, BACKGROUND_ID, 1, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::HEADING_HIGHLIGHT, BACKGROUND_ID, 1, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0, 320, 466, 100, (*g_generalText)[409], "BigFont.fnt",
-        font::WHITE, BACKGROUND_ID, 1, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::WHITE, BACKGROUND_ID, 1, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0, 412, 466, 100, (*g_generalText)[410], "BigFont.fnt",
-        font::WHITE, BACKGROUND_ID, 1, 0, 8));
+        Font::WHITE, BACKGROUND_ID, 1, 0, 8));
 
     if (attacker) {
-        m_widgets.push_back(new textWidget(
-            89, 37, 115, 20, attacker->m_name, "smalfont.fnt", font::WHITE,
+        m_widgets.push_back(new TextWidget(
+            89, 37, 115, 20, attacker->m_name, "smalfont.fnt", Font::WHITE,
             ATTACKER_NAME, 0, 0, 8));
-        m_widgets.push_back(new bitmapBorder(
+        m_widgets.push_back(new BitmapBorder(
             21, 38, 58, 64, ATTACKER_PORTRAIT,
             g_heroTraits[attacker->m_portrait].m_largePortraitName, 0x800));
     } else {
@@ -166,7 +166,7 @@ CombatResultsWindow::CombatResultsWindow(const Hero* attacker,
         type = CreatureType(0);
         int numMons = 0;
         for (int slot = 0; slot < 20; slot++) {
-            army& stack = g_combatManager->m_armies[0][slot];
+            Army& stack = g_combatManager->m_armies[0][slot];
             if (stack.m_creatureType != -1 &&
                     stack.m_creatureType != CREATURE_ARROW_TOWER) {
                 numMons++;
@@ -177,28 +177,28 @@ CombatResultsWindow::CombatResultsWindow(const Hero* attacker,
                 }
             }
         }
-        m_widgets.push_back(new textWidget(
+        m_widgets.push_back(new TextWidget(
             89, 37, 115, 20,
             numMons > 1
                 ? g_combatManager->m_armies[0][type].m_monInfo.m_pluralName
                 : g_combatManager->m_armies[0][type].m_monInfo.m_name,
-            "smalfont.fnt", font::WHITE, ATTACKER_NAME, 0, 0, 8));
-        m_widgets.push_back(new iconWidget(
+            "smalfont.fnt", Font::WHITE, ATTACKER_NAME, 0, 0, 8));
+        m_widgets.push_back(new IconWidget(
             21, 38, 58, 64, ATTACKER_PORTRAIT, "TwCrPort.def",
             0, 0, 0, 0, 0x10));
-        static_cast<iconWidget*>(m_widgets.back())->setIconFrame(
+        static_cast<IconWidget*>(m_widgets.back())->setIconFrame(
             g_combatManager->m_armies[0][type].m_creatureType + 2);
     }
 
-    m_widgets.push_back(new textWidget(
-        83, 112, 65, 20, 0, "smalfont.fnt", font::WHITE,
+    m_widgets.push_back(new TextWidget(
+        83, 112, 65, 20, 0, "smalfont.fnt", Font::WHITE,
         ATTACKER_STATUS, 2, 0, 8));
 
     if (defender) {
-        m_widgets.push_back(new textWidget(
-            266, 37, 115, 20, defender->m_name, "smalfont.fnt", font::WHITE,
+        m_widgets.push_back(new TextWidget(
+            266, 37, 115, 20, defender->m_name, "smalfont.fnt", Font::WHITE,
             DEFENDER_NAME, 2, 0, 8));
-        m_widgets.push_back(new bitmapBorder(
+        m_widgets.push_back(new BitmapBorder(
             392, 38, 58, 64, DEFENDER_PORTRAIT,
             g_heroTraits[defender->m_portrait].m_largePortraitName, 0x800));
     } else {
@@ -206,7 +206,7 @@ CombatResultsWindow::CombatResultsWindow(const Hero* attacker,
         type = CreatureType(0);
         int numMons = 0;
         for (int slot = 0; slot < 20; slot++) {
-            army& stack = g_combatManager->m_armies[1][slot];
+            Army& stack = g_combatManager->m_armies[1][slot];
             if (stack.m_creatureType != -1 &&
                     stack.m_creatureType != CREATURE_ARROW_TOWER) {
                 numMons++;
@@ -217,36 +217,36 @@ CombatResultsWindow::CombatResultsWindow(const Hero* attacker,
                 }
             }
         }
-        m_widgets.push_back(new textWidget(
+        m_widgets.push_back(new TextWidget(
             266, 37, 115, 20,
             numMons > 1
                 ? g_combatManager->m_armies[1][type].m_monInfo.m_pluralName
                 : g_combatManager->m_armies[1][type].m_monInfo.m_name,
-            "smalfont.fnt", font::WHITE, DEFENDER_NAME, 2, 0, 8));
-        m_widgets.push_back(new iconWidget(
+            "smalfont.fnt", Font::WHITE, DEFENDER_NAME, 2, 0, 8));
+        m_widgets.push_back(new IconWidget(
             392, 38, 58, 64, DEFENDER_PORTRAIT, "TwCrPort.def",
             0, 0, 1, 0, 0x10));
-        static_cast<iconWidget*>(m_widgets.back())->setIconFrame(
+        static_cast<IconWidget*>(m_widgets.back())->setIconFrame(
             g_combatManager->m_armies[1][type].m_creatureType + 2);
     }
 
     // Retail's defender status text repeats the defender NAME rectangle
     // rather than mirroring the attacker's (83, 112, 65, 20) - a retail
     // quirk, transcribed as the bytes have it.
-    m_widgets.push_back(new textWidget(
-        266, 38, 115, 20, 0, "smalfont.fnt", font::WHITE,
+    m_widgets.push_back(new TextWidget(
+        266, 38, 115, 20, 0, "smalfont.fnt", Font::WHITE,
         DEFENDER_STATUS, 0, 0, 8));
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         17, 116, 84, 20,
         winningSide == 0 ? (*g_generalText)[411]
                           : (*g_generalText)[412],
-        "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
-    m_widgets.push_back(new textWidget(
+        "smalfont.fnt", Font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
+    m_widgets.push_back(new TextWidget(
         367, 116, 84, 20,
         winningSide == 1 ? (*g_generalText)[411]
                           : (*g_generalText)[412],
-        "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
+        "smalfont.fnt", Font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
 
     int videoId;
     if (mySide == winningSide) {
@@ -311,8 +311,8 @@ CombatResultsWindow::CombatResultsWindow(const Hero* attacker,
         }
     }
 
-    m_widgets.push_back(new textWidget(
-        68, 202, 332, 70, g_text, "smalfont.fnt", font::WHITE,
+    m_widgets.push_back(new TextWidget(
+        68, 202, 332, 70, g_text, "smalfont.fnt", Font::WHITE,
         RESULTS, 5, 0, 8));
 
     // DC277 writes the enum to sp+0x38 and DC279 the loss count to
@@ -353,34 +353,34 @@ CombatResultsWindow::CombatResultsWindow(const Hero* attacker,
     for (int lossSide = 0; lossSide < 2; lossSide++) {
         int rowY = lossSide ? 440 : 343;
         if (ttlDeadArmies[lossSide] <= 0)
-            m_widgets.push_back(new textWidget(
+            m_widgets.push_back(new TextWidget(
                 42, rowY + 10, 384, 36, (*g_generalText)[32],
-                "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
+                "smalfont.fnt", Font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
         int maxToShow = min(ttlDeadArmies[lossSide], 7);
         firstX = (468 - 42 * maxToShow) / 2 + 11;
         for (int row = 0; row < maxToShow; row++) {
             int x = firstX + 42 * row;
-            m_widgets.push_back(new iconWidget(
+            m_widgets.push_back(new IconWidget(
                 x, rowY, 32, 32, BACKGROUND_ID, "cprsmall.def",
                 deadArmyTypes[lossSide][row] + 2, 0, 0, 0, 0x10));
             sprintf(text, "%d", deadArmyNumTroops[lossSide][row]);
-            m_widgets.push_back(new textWidget(
+            m_widgets.push_back(new TextWidget(
                 x - 5, rowY + 38, 32, 32, text, "smalfont.fnt",
-                font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
+                Font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
         }
     }
 
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         384, 506, 66, 32, BACKGROUND_ID, "Box64x30.pcx", 0x800));
 
-    button* accept = new button(
+    Button* accept = new Button(
         385, 507, 64, 30, DIALOG_RETURN_SPLIT_ACCEPT, "iOkay.def",
         0, 1, 0, 0, 2);
     accept->setHotkey(28);
     accept->setHotkey(1);
     m_widgets.push_back(accept);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -396,7 +396,7 @@ VA(0x00471a70, 0x75)  // dc 0x69198
 CombatResultsWindow::~CombatResultsWindow()
 {
     g_combatResultsWindow = 0;
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -405,7 +405,7 @@ CombatResultsWindow::~CombatResultsWindow()
 VA(0x00471af0, 0x54)  // dc 0x69200
 int CombatResultsWindow::open(int newPriority, unsigned char update)
 {
-    int result = heroWindow::open(newPriority, 0);
+    int result = HeroWindow::open(newPriority, 0);
     drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     videoDrawCurrentFrame();
     if (update)
@@ -418,7 +418,7 @@ VA(0x00471b50, 0x1B)  // dc 0x69244
 void CombatResultsWindow::close(unsigned char update)
 {
     videoClose();
-    heroWindow::close(update);
+    HeroWindow::close(update);
 }
 
 VA(0x00471b70, 0x14)  // dc 0x69268
@@ -428,7 +428,7 @@ void CombatResultsWindow::doModal()
 }
 
 VA(0x00471b90, 0x84)  // dc 0x692cc
-int combatResultsWindowHandler(message& msg)
+int combatResultsWindowHandler(Message& msg)
 {
     unsigned char exitFlag = 0;
 
@@ -436,7 +436,7 @@ int combatResultsWindowHandler(message& msg)
 
     if (msg.m_id != MESSAGE_KEY_DOWN) {
         if (msg.m_id == MESSAGE_WIDGET
-            && msg.m_codeX == widget::WIDGET_DESELECT
+            && msg.m_codeX == Widget::WIDGET_DESELECT
             && msg.m_codeY == DIALOG_RETURN_SPLIT_ACCEPT)
             exitFlag = 1;
     }
@@ -453,8 +453,8 @@ int combatResultsWindowHandler(message& msg)
     if (exitFlag) {
         msg.m_id = MESSAGE_WIDGET;
         g_windowManager->m_dialogReturn = msg.m_codeY;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = Widget::WIDGET_END_DIALOG;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         g_dialogDeadline697784 = 0;
         return MESSAGE_DISPATCH_FORWARD;
     }

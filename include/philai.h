@@ -7,18 +7,19 @@
 
 class Hero;
 class Town;
-class garrison;
-class generator;
+class Garrison;
+class Generator;
 class NewmapCell;
-class playerData;
+class PlayerData;
 struct BlackMarket;
-struct type_university;
+struct University;
 struct type_point;
 
 // The Dreamcast class roster has no data members for this coordinator;
 // its three public methods are the complete method roster.  Retail DoAI
 // likewise uses `this` only to dispatch GetTurnAIVars.
-class philAI {
+// Before normalization (type): philAI.
+class PhilAI {
 public:
     enum {
         ONE_ACTIVE_HERO = 1,
@@ -32,7 +33,7 @@ public:
         AI_HERO_MOVE_SLEEP_DAY = 7
     };
 
-    philAI();
+    PhilAI();
     void doAI(int whichPlayer);
     void getTurnAIVars(int whichPlayer);
 };
@@ -63,16 +64,16 @@ long valueOfBlackMarket(const Hero* currentHero,
 int valueOfArena(const Hero* currentHero, NewmapCell* cell);
 int valueOfMapArtifact(const Hero* currentHero, NewmapCell* cell);
 int valueOfBlackBox(const Hero* currentHero, NewmapCell* cell);
-int valueOfCampfire(playerData* player, NewmapCell* cell);
+int valueOfCampfire(PlayerData* player, NewmapCell* cell);
 int valueOfDefenseTower(const Hero* currentHero, NewmapCell* cell);
 long valueOfBank(const Hero* currentHero, NewmapCell* cell);
 int valueOfGenerator(const Hero* currentHero, int x, int y, int z,
                      NewmapCell* cell, int moveCost);
 long valueOfGarrison(const Hero* currentHero, NewmapCell* cell);
 long valueOfIdol(const Hero* currentHero, long moveCost);
-int valueOfFlotsam(playerData* player);
+int valueOfFlotsam(PlayerData* player);
 int valueOfGarden(const Hero* currentHero, NewmapCell* cell);
-__forceinline int valueOfLeanTo(NewmapCell* cell, playerData* player);
+__forceinline int valueOfLeanTo(NewmapCell* cell, PlayerData* player);
 __forceinline long valueOfHeroEvent(
     const Hero* currentHero, NewmapCell* cell, short x, short y, short z,
     short moveCost);
@@ -94,7 +95,7 @@ int valueOfMoveSource(const Hero* currentHero, long flag, short increase,
                          long& moveCost);
 int valueOfObelisk(NewmapCell* cell, long playerId);
 int valueOfPowerSchool(const Hero* currentHero, NewmapCell* cell);
-int valueOfPrison(NewmapCell* cell, playerData* player);
+int valueOfPrison(NewmapCell* cell, PlayerData* player);
 long valueOfPyramid(const Hero* currentHero, NewmapCell* cell);
 long getValueOfSpring(const Hero* currentHero, const NewmapCell* cell,
                          unsigned short moveCost);
@@ -102,7 +103,7 @@ long getValueOfWell(const Hero* currentHero, unsigned short moveCost);
 int valueOfRallyFlag(const Hero* currentHero, long& moveCost);
 int valueOfRefugeeCamp(const Hero* currentHero, NewmapCell* cell);
 long valueOfResource(const Hero* currentHero, NewmapCell* cell,
-                     playerData* player);
+                     PlayerData* player);
 int valueOfSeaChest(const Hero* currentHero, NewmapCell* cell);
 int valueOfSkeleton(const Hero* currentHero, NewmapCell* cell);
 int valueOfScroll(const Hero* currentHero, NewmapCell* cell);
@@ -120,11 +121,11 @@ int valueOfWitchHut(const Hero* currentHero, NewmapCell* cell);
 
 void aiEnterTown(Hero* currentHero, Town* currentTown);
 
-void aiEnterGarrison(Hero* currentHero, garrison* ourGarrison);
-void aiPurchaseCreatures(Hero* currentHero, generator* currentGenerator);
+void aiEnterGarrison(Hero* currentHero, Garrison* ourGarrison);
+void aiPurchaseCreatures(Hero* currentHero, Generator* currentGenerator);
 void aiVisitBlackMarket(Hero* currentHero, BlackMarket* blackMarket);
 void aiVisitHillFort(Hero* currentHero);
-void aiVisitUniversity(Hero* currentHero, type_university* university);
+void aiVisitUniversity(Hero* currentHero, University* university);
 void aiVisitWarFactory(Hero* currentHero);
 
 // Retail .data 0x678370, the row immediately after tradpost.h's

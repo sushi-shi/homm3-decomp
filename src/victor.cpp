@@ -19,7 +19,7 @@ DATA(0x00644128) const unsigned char g_victorTrailingBits[8] =
     { 0x7f, 0x3f, 0x1f, 0x0f, 7, 3, 1, 0 };
 
 VA(0x00603590, 0x25)  // anchor-caller Bitmap24Bit/Bitmap816::importPCXFile; external Victor library
-int __stdcall allocimage(imgdes* image, int width, int height, int bitsPerPixel)
+int __stdcall allocimage(Imgdes* image, int width, int height, int bitsPerPixel)
 {
     return victorAllocateImage(image, width, height, bitsPerPixel,
                                g_victorUseDibSection);
@@ -41,7 +41,7 @@ int __stdcall allocimage(imgdes* image, int width, int height, int bitsPerPixel)
 // named color lifetime collapses to the retained direct-member object and no
 // state improves the peak.
 VA(0x006035c0, 0x1d6)  // anchor-caller allocimage + imgdes / bitmap header / Win32 allocation
-int __cdecl victorAllocateImage(imgdes* image, int width, int height,
+int __cdecl victorAllocateImage(Imgdes* image, int width, int height,
                                int bitsPerPixel, unsigned int useDibSection)
 {
     memset(image, 0, sizeof(*image));
@@ -121,7 +121,7 @@ int __cdecl victorAllocateImage(imgdes* image, int width, int height,
 // Dreamcast's PCX stub independently confirms the public void result;
 // the incidental EAX value does not justify changing that interface.
 VA(0x006037a0, 0x6e)  // anchor-caller PCX importers + Win32 ownership calls; external Victor library
-void __stdcall freeimage(imgdes* image)
+void __stdcall freeimage(Imgdes* image)
 {
     unsigned int bytes;
     if (image->m_bitmap)
@@ -150,7 +150,7 @@ void __stdcall freeimage(imgdes* image)
 // Eight resource-declaration/success-status lifetimes and six status-type /
 // nested-guard controls do not improve the retained 77.1404% body.
 VA(0x00603810, 0x9a)  // anchor-caller loadpcx + GDI selection/cleanup + imgdes layout
-int __stdcall victorUploadPalette(imgdes* image)
+int __stdcall victorUploadPalette(Imgdes* image)
 {
     int status = 0;
     if (image->m_bitmap && image->m_colors) {
@@ -171,7 +171,7 @@ int __stdcall victorUploadPalette(imgdes* image)
 }
 
 VA(0x006038b0, 0xea)  // anchor-caller victorValidateBitmap + imgdes offsets / IsBadReadPtr
-int __stdcall victorValidateImage(imgdes* image)
+int __stdcall victorValidateImage(Imgdes* image)
 {
     int status = -42;
     if (!IsBadReadPtr(image->m_ibuff, 1)) {
@@ -210,7 +210,7 @@ int __stdcall victorValidateImage(imgdes* image)
 }
 
 VA(0x006039a0, 0x20)  // anchor-caller + bitmap-header semantics; external Victor library
-int __stdcall victorValidateBitmap(imgdes* image)
+int __stdcall victorValidateBitmap(Imgdes* image)
 {
     int status = victorValidateImage(image);
     if (status == victorUnsupportedBitDepth && image->m_bmh->biBitCount == 1)
@@ -231,7 +231,7 @@ int __stdcall victorValidateBitmap(imgdes* image)
 // member-binding combinations do not exceed it. The for-clause increment is
 // worse (69.72%).
 VA(0x006039c0, 0xfc)  // anchor-callers alloc/loadpcx + RGBQUAD stores / GDI cleanup
-void __stdcall victorInitializePalette(imgdes* image)
+void __stdcall victorInitializePalette(Imgdes* image)
 {
     int step = 255;
     if (image->m_palette && image->m_bmh->biBitCount != victorTrueColor) {
@@ -272,7 +272,7 @@ void __stdcall victorInitializePalette(imgdes* image)
 // These exit spellings do not recover retail's memory compare and epilogue.
 // Compiling this body alone with the same headers and flags is byte-identical.
 VA(0x00603ac0, 0x4d)  // anchor-caller flipimage + unsigned extent semantics; external Victor library
-void __cdecl victorMinimumDimensions(imgdes* first, imgdes* second,
+void __cdecl victorMinimumDimensions(Imgdes* first, Imgdes* second,
                                       unsigned int* height, unsigned int* width)
 {
     unsigned int secondWidth = second->m_endx - second->m_stx + 1;
