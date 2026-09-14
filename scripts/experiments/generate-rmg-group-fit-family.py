@@ -243,6 +243,15 @@ def admitted_bodies():
     for _, method in semantic_forms():
         result.add(method)
         result.update(text for _, text in entry_refinements(method))
+    # Retain the adopted trigger-copy/vector-origin form as a rebase control.
+    translated = early_failure(body(1, 5, 0)).replace(
+        "    int x = position.m_x;\n    int y = position.m_y;\n"
+        "    x -= prototype->m_triggerCell.m_x;\n"
+        "    y -= prototype->m_triggerCell.m_y;\n",
+        "    TObjectType::TPoint trigger = prototype->m_triggerCell;\n"
+        "    TRmgVector origin(position.m_x, position.m_y);\n"
+        "    origin.m_x -= trigger.m_x;\n    origin.m_y -= trigger.m_y;\n")
+    result.add(translated.replace("TRmgVector(x, y)", "origin"))
     return frozenset(result)
 
 
