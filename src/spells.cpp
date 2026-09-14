@@ -3007,7 +3007,7 @@ void combatManager::armageddon(int level, int power)
 
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
         loadSpellEffect(spellTraits.m_effect);
-        long maxFrames;
+        int maxFrames;
         if (m_powSprite)
             maxFrames = m_powSprite->getNumFrames(0);
         else
@@ -3040,10 +3040,10 @@ void combatManager::armageddon(int level, int power)
             } }
         } }
 
-        long twidth = m_powSprite->getWidth();
-        long theight = m_powSprite->getHeight();
-        long xtiles = (twidth + 799) / twidth;
-        long ytiles = (theight + 599) / theight;
+        const int twidth = m_powSprite->getWidth();
+        const int theight = m_powSprite->getHeight();
+        const int xtiles = (twidth + 799) / twidth;
+        const int ytiles = (theight + 599) / theight;
         { for (int frame = 0; frame < maxFrames; frame++) {
             { for (int side = 0; side < 2; side++) {
                 { for (int i = 0; i < m_numArmies[side]; i++) {
@@ -3065,9 +3065,9 @@ void combatManager::armageddon(int level, int power)
             } }
             drawFrame(0, 0, 0, 100, 1, 1);
             if (m_powSprite && frame < m_powSprite->getNumFrames(0)) {
-                long dy = 0;
+                int dy = 0;
                 { for (int ty = 0; ty < ytiles; ty++) {
-                    long sh = theight;
+                    int sh = theight;
                     if (sh > 556 - dy)
                         sh = 556 - dy;
                     long dx = 0;

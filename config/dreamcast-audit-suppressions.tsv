@@ -1,0 +1,37 @@
+module	dc_offset	finding_id	confidence	reason
+creaturetype.obj	0x718fc	497d6befbe75	10	Complete exact symbol encodes int; unsigned-char negative control changes the ABI identity and unbinds the retail claim.
+cursor.obj	0x7bee4	7e467e74ea56	10	Complete exact public symbol encodes mutable hero*; Dreamcast const hero* is an older interface.
+drawing.obj	0x8354c	c1649254e2e4	10	Complete exact private symbol encodes bool return; Dreamcast unsigned char is an older ABI.
+drawing.obj	0x84e2c	e5af691971b2	10	Complete exact DrawFrame symbol encodes bool for update; Dreamcast byte record is lowered or older.
+drawing.obj	0x84e2c	4f2ee12f8485	10	Complete exact DrawFrame symbol encodes bool for bLimitCreatureEffect; Dreamcast byte record is lowered or older.
+drawing.obj	0x84e2c	85acf470e66c	10	Complete exact DrawFrame symbol encodes bool for bLimitDraw; Dreamcast byte record is lowered or older.
+drawing.obj	0x84e2c	dc09dfb6be5d	10	Complete exact DrawFrame symbol encodes bool for bRefreshBackground; Dreamcast byte record is lowered or older.
+drawing.obj	0x84e2c	bf43ec0dfa7f	10	Complete exact DrawFrame symbol encodes bool for bDoDelayTil; Dreamcast byte record is lowered or older.
+dxplay.obj	0x8b564	45d44464e9ef	10	Complete exact DirectPlay wrapper symbol encodes unsigned long* and the native API accepts nullable output pointers.
+dxplay.obj	0x8b564	63eb0c0c676f	10	Complete exact DirectPlay wrapper symbol encodes unsigned long* and the native API accepts nullable output pointers.
+dxplay.obj	0x8b568	45d44464e9ef	10	Complete exact DirectPlay wrapper symbol encodes unsigned long* and the native API accepts nullable output pointers.
+dxplay.obj	0x8b568	63eb0c0c676f	10	Complete exact DirectPlay wrapper symbol encodes unsigned long* and the native API accepts nullable output pointers.
+dxplay.obj	0x8b69c	c1649254e2e4	9	Complete retail symbol encodes bool return; Dreamcast unsigned char is an older ABI.
+dxplay.obj	0x8bba4	72daff3befb0	10	Complete exact callback and DirectPlay callback ABI require const GUID*; Dreamcast records a reference.
+event_record.obj	0x8e1d0	8c1a69cf690c	10	Complete's exact public symbol encodes signed char for owner; Dreamcast records plain char in the older interface.
+event_record.obj	0x8ebc4	9ca13b4f7bc6	10	Dreamcast serializes through gzwrite and records void*; Complete's exact private symbol and virtual-write body require TAbstractFile*.
+findpath.obj	0x9f034	244821371b7b	8	Dreamcast enum local requires a cast from Complete's retail-proven signed int bitfield; the source-model gate rejects that mismodeling.
+font.obj	0xa1e5c	3e52403f36e6	10	Complete exact forwarding into drawCursor(bool) requires the bool local; unsigned char adds a conversion absent from retail.
+hiscore.obj	0xd9190	3fade58c582f	10	Complete exact public symbol encodes bool&; Dreamcast unsigned char& is an older interface.
+inputmgr.obj	0xddd60	3d5058c1519f	10	Complete exact public symbol and both exact callers use message*; Dreamcast records message&.
+mousemgr.obj	0xfec54	717029497480	10	Complete exact public symbol encodes bool; Dreamcast unsigned char is lowered or from the older interface.
+mousemgr.obj	0xff3e0	96e5bf9b4297	10	Complete exact public symbol encodes bool; Dreamcast unsigned char is lowered or from the older interface.
+mousemgr.obj	0xff708	215a5abb57f9	10	Complete exact public symbol encodes bool; Dreamcast unsigned char is lowered or from the older interface.
+search.obj	0x12b988	b7a10adc58b5	10	Complete retained symbol encodes const pathCell*; Dreamcast const reference is an older source boundary.
+slider.obj	0x14a380	3d5058c1519f	10	Complete exact widget API symbol encodes message*; Dreamcast records message&.
+slider.obj	0x14a508	3d5058c1519f	10	Complete exact widget API symbol encodes message*; Dreamcast records message&.
+smackmgr.obj	0x14ac3c	4d09cc013568	10	Complete exact VideoOpen symbol encodes eight int parameters; Dreamcast records the last two as unsigned char.
+spelldefs.obj	0x14e39c	37a632789123	8	TSpellTraits is the older nominal name of Complete's shared SSpellTraits model; a cosmetic local alias is not structural recovery.
+spells.obj	0x153d2c	bdf23f1dd15b	8	TSpellTraits is the older nominal name of Complete's shared SSpellTraits model; the recovered const-reference shape is already retained.
+spells.obj	0x153d2c	dcb74013b33f	10	Dreamcast marks sh const, but Complete's recovered edge-tiling loop mutates it.
+spells.obj	0x153d2c	ca8c1b91c341	10	Dreamcast marks dy const, but Complete's recovered edge-tiling loop mutates it.
+town.obj	0x168bb8	a6a00e7b7ca0	10	Const pointer return changes VC6's symbol to QBEQBDXZ; Complete exact retail identity is QBEPBDXZ.
+victorylossconditions.obj	0x18fdc4	497d6befbe75	9	Complete retained symbol encodes int return; Dreamcast unsigned char is an older ABI.
+window.obj	0x197aec	c0cd1dc29cb9	10	Complete exact x86 body is the raw backward pointer loop; Dreamcast uses its platform STL reverse_iterator carrier.
+window.obj	0x197c08	241667ef5918	10	Complete exact body returns DoDialog's consumed int result; Dreamcast declares void.
+window.obj	0x197eb4	1c0f40a909d8	10	Complete exact handler passes the local to the bool& onWidgetDeselect interface; Dreamcast records unsigned char.

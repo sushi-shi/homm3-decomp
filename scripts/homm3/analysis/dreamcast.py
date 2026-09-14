@@ -1339,6 +1339,14 @@ def _build_parser() -> argparse.ArgumentParser:
     audit.add_argument("--module", help="review source-claimed functions in one module[.obj]")
     audit.add_argument("--all", action="store_true", help="review all source-claimed Dreamcast counterparts")
     audit.add_argument("--json", action="store_true", help="machine-readable review and coverage")
+    suppression_group = audit.add_mutually_exclusive_group()
+    suppression_group.add_argument(
+        "--suppressions", type=Path,
+        default=common.HOMM3_DIR / "config/dreamcast-audit-suppressions.tsv",
+        help="reviewed finding suppressions TSV (default config/dreamcast-audit-suppressions.tsv)")
+    suppression_group.add_argument(
+        "--no-suppressions", action="store_const", dest="suppressions", const=None,
+        help="show the raw audit without reviewed suppressions")
     structure = sub.add_parser("structure", help="export annotated C++ stubs and debug records")
     structure.add_argument("--module", action="append", dest="modules", metavar="MODULE",
                            help="module[.obj] to export; repeatable (default all)")
@@ -1435,7 +1443,11 @@ def _dispatch(argv: list[str]) -> int:
             rows = list({corpus.key(row): row for row in rows}.values())
             if not rows:
                 raise NoMatch("audit selection has no source-claimed Dreamcast functions")
-            rc = source_facts.run(corpus, rows, as_json=args.json)
+            try:
+                rc = source_facts.run(corpus, rows, as_json=args.json,
+                                      suppression_path=args.suppressions)
+            except source_facts.SuppressionError as exc:
+                raise DreamcastError(str(exc)) from exc
         elif args.command == "structure":
             from homm3.analysis import dc_structure
             try:

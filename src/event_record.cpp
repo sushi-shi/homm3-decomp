@@ -1253,12 +1253,11 @@ void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
         for (int x = x0; x < x1; ++x) {
             int dx = startX - x;
             if (sqrt(static_cast<double>(dx * dx + dy * dy)) <= limit) {
-                unsigned short* extra = getMapExtraPtr(x, y, z);
-                unsigned short oldValue = *extra;
-                unsigned short newValue = oldValue & keepMask;
-                if (oldValue != newValue)
-                    record->addChange(x, y, z, oldValue, newValue);
-                *extra = newValue;
+                unsigned short* oldValue = getMapExtraPtr(x, y, z);
+                unsigned short newValue = *oldValue & keepMask;
+                if (*oldValue != newValue)
+                    record->addChange(x, y, z, *oldValue, newValue);
+                *oldValue = newValue;
             }
         }
     }
@@ -1326,7 +1325,7 @@ void game::playRecordedEvents()
         }
     }
 
-    int size = m_eventRecords.size();
+    long size = m_eventRecords.size();
     while (size--)
         m_eventRecords[size]->undo();
 
@@ -2229,7 +2228,7 @@ type_event_record* (*g_recordCreators[12])() = {
 VA(0x0049dac0, 0x19C)  // dc 0x8ead0
 unsigned char game::loadRecordedEvents(TAbstractFile* infile, int version)
 {
-    int count;
+    long count;
     if (infile->read(&count, sizeof(count)) != sizeof(count))
         return 0;
 
@@ -2254,10 +2253,10 @@ unsigned char game::loadRecordedEvents(TAbstractFile* infile, int version)
 VA(0x0049dc60, 0x8C)  // dc 0x8ebc4
 unsigned char game::saveRecordedEvents(TAbstractFile* outfile)
 {
-    int count = m_eventRecords.size();
+    long count = m_eventRecords.size();
     outfile->write(&count, 4);
     for (int i = 0; i < count; ++i) {
-        unsigned char type = m_eventRecords[i]->getType();
+        char type = m_eventRecords[i]->getType();
         outfile->write(&type, 1);
         if (!m_eventRecords[i]->save(outfile))
             return 0;

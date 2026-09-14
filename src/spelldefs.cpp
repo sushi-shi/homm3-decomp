@@ -8,7 +8,7 @@
 #include "textresource.h"
 
 static void initializeSpellTraits(
-    int id, const std::vector<char*>& resource);
+    int id, const std::vector<char*, std::allocator<char*> >& resource);
 
 VA(0x0059e060, 0x30)  // dc 0x14e278
 unsigned char spellTargetsASingleArmy(int spell, int sslevel)
@@ -85,7 +85,7 @@ private:
 
 VA(0x0059e150, 0x35F)  // dc 0x14e39c
 static void initializeSpellTraits(
-    int id, const std::vector<char*>& resource)
+    int id, const std::vector<char*, std::allocator<char*> >& resource)
 {
     SSpellTraits& traits = g_spellTraitsImp[id];
 

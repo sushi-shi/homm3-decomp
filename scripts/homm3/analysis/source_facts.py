@@ -8,6 +8,7 @@ counts equalized, source edited, or matching scores changed by this module.
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+import csv
 from dataclasses import dataclass
 import hashlib
 import json
@@ -23,12 +24,91 @@ from homm3.core.cc_wrap import ZLIB_INC
 from homm3.vc6 import _source
 
 SCHEMA = "homm3.source-facts.v1"
+DEFAULT_SUPPRESSIONS = common.HOMM3_DIR / "config/dreamcast-audit-suppressions.tsv"
+SUPPRESSION_COLUMNS = ("module", "dc_offset", "finding_id", "confidence", "reason")
 CAUTION = (
     "Review leads from positive Dreamcast records, not retail-source verdicts. "
     "Zero findings means no disagreement in the checked facts, not complete "
     "source recovery. Coverage gaps and intentional platform differences "
     "must remain visible. Validate every adopted change with VC6 and retail."
 )
+
+
+class SuppressionError(ValueError):
+    pass
+
+
+@dataclass(frozen=True)
+class Suppression:
+    confidence: int
+    reason: str
+
+
+def load_suppressions(path: Path) -> dict[tuple[str, int, str], Suppression]:
+    """Load reviewed cross-version exceptions; exact function identity is mandatory."""
+    try:
+        stream = path.open(newline="", encoding="utf-8")
+    except OSError as exc:
+        raise SuppressionError(f"cannot read audit suppressions {path}: {exc}") from exc
+    with stream:
+        reader = csv.DictReader(stream, delimiter="\t")
+        if tuple(reader.fieldnames or ()) != SUPPRESSION_COLUMNS:
+            raise SuppressionError(
+                f"{path}: expected TSV header {' '.join(SUPPRESSION_COLUMNS)}")
+        result = {}
+        for line, row in enumerate(reader, 2):
+            module = row["module"].strip()
+            finding_id = row["finding_id"].strip()
+            reason = row["reason"].strip()
+            try:
+                dc_offset = int(row["dc_offset"], 0)
+            except ValueError as exc:
+                raise SuppressionError(
+                    f"{path}:{line}: invalid Dreamcast offset {row['dc_offset']!r}") from exc
+            try:
+                confidence = int(row["confidence"])
+            except ValueError as exc:
+                raise SuppressionError(
+                    f"{path}:{line}: confidence must be an integer from 1 through 10") from exc
+            if not module.endswith(".obj"):
+                raise SuppressionError(f"{path}:{line}: module must end in .obj")
+            if not re.fullmatch(r"[0-9a-f]{12}", finding_id):
+                raise SuppressionError(f"{path}:{line}: finding_id must be 12 lowercase hex digits")
+            if not 1 <= confidence <= 10:
+                raise SuppressionError(
+                    f"{path}:{line}: confidence must be an integer from 1 through 10")
+            if not reason:
+                raise SuppressionError(f"{path}:{line}: suppression reason is required")
+            key = (module, dc_offset, finding_id)
+            if key in result:
+                raise SuppressionError(f"{path}:{line}: duplicate suppression key {key}")
+            result[key] = Suppression(confidence, reason)
+    return result
+
+
+def apply_suppressions(results: list[dict],
+                       suppressions: dict[tuple[str, int, str], Suppression]
+                       ) -> list[tuple[str, int, str]]:
+    """Move matching findings aside and return stale entries in selected functions."""
+    selected = {(row["module"], row["dc_offset"]) for row in results}
+    applicable = {key for key in suppressions if key[:2] in selected}
+    matched = set()
+    for row in results:
+        retained, suppressed = [], []
+        for finding in row["findings"]:
+            key = (row["module"], row["dc_offset"], finding["id"])
+            if key not in suppressions:
+                retained.append(finding)
+                continue
+            item = dict(finding)
+            suppression = suppressions[key]
+            item["suppression_confidence"] = suppression.confidence
+            item["suppression_reason"] = suppression.reason
+            suppressed.append(item)
+            matched.add(key)
+        row["findings"] = retained
+        row["suppressed_findings"] = suppressed
+    return sorted(applicable - matched)
 
 
 def name_key(name: str) -> str:
@@ -558,17 +638,31 @@ def audit(corpus, row: dict, *, dump=None, data=None, type_table=None) -> dict:
     return output
 
 
-def run(corpus, rows: list[dict], *, as_json: bool = False) -> int:
+def run(corpus, rows: list[dict], *, as_json: bool = False,
+        suppression_path: Path | None = None) -> int:
     from homm3.analysis import dc_lines
     from homm3.core import inputs
     from homm3.core.nb11_types import Types
     dump, data = dc_lines.load_symbols(), inputs.read_dreamcast_exe()
     types = Types.from_symbols(dump)
     results = [audit(corpus, row, dump=dump, data=data, type_table=types) for row in rows]
+    stale_suppressions = []
+    if suppression_path is not None:
+        stale_suppressions = apply_suppressions(results, load_suppressions(suppression_path))
     total_findings = sum(len(row["findings"]) for row in results)
+    total_suppressed = sum(len(row.get("suppressed_findings", [])) for row in results)
     total_gaps = sum(len(row["coverage_gaps"]) for row in results)
     payload = {"schema": SCHEMA, "caution": CAUTION, "functions": results,
-               "summary": {"functions": len(results), "findings": total_findings, "coverage_gaps": total_gaps}}
+               "summary": {"functions": len(results), "findings": total_findings,
+                           "suppressed_findings": total_suppressed,
+                           "stale_suppressions": len(stale_suppressions),
+                           "coverage_gaps": total_gaps}}
+    if suppression_path is not None:
+        payload["suppressions"] = {"path": str(suppression_path),
+                                   "stale": [{"module": module,
+                                              "dc_offset": dc_offset,
+                                              "finding_id": finding_id}
+                                             for module, dc_offset, finding_id in stale_suppressions]}
     if as_json:
         print(json.dumps(payload, indent=2, sort_keys=True))
     else:
@@ -583,5 +677,8 @@ def run(corpus, rows: list[dict], *, as_json: bool = False) -> int:
                 print(f"    C++: {item['candidate']}")
             for gap in row["coverage_gaps"]: print("  UNCHECKED: " + gap)
             print("  checked: " + (", ".join(f"{key}={value}" for key, value in row["checked"].items()) or "none"))
-        print(f"\n{len(results)} function(s), {total_findings} review finding(s), {total_gaps} coverage gap(s)")
-    return 2 if total_gaps else 1 if total_findings else 0
+        print(f"\n{len(results)} function(s), {total_findings} review finding(s), "
+              f"{total_suppressed} suppressed finding(s), {total_gaps} coverage gap(s)")
+        for module, dc_offset, finding_id in stale_suppressions:
+            print(f"  STALE SUPPRESSION: {module} dc:{dc_offset:#x} {finding_id}")
+    return 2 if total_gaps or stale_suppressions else 1 if total_findings else 0

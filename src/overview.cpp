@@ -536,7 +536,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                 curBitmap++;
             }
 
-            int luck = limit(-3, currHero->getLuck(0, 0, 1), 3);
+            const int luck = limit(-3, currHero->getLuck(0, 0, 1), 3);
             g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
                 246, row * 116 + 52, 30, 20, rowWidgetId + 187,
                 "ILCK30.def", luck + 3, 0, 0, 0,
@@ -1025,7 +1025,7 @@ void game::overview()
     g_overviewBank = new TResourceDisplay(g_overWin, 1);
     g_overviewBank->update(1, 0);
 
-    char res[7];
+    signed char res[7];
     memset(res, 0, sizeof(res));
 
     for (unsigned mineIndex = 0; mineIndex < m_mines.size(); mineIndex++) {
