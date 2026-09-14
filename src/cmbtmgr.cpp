@@ -1548,7 +1548,7 @@ void combatManager::keepAttack(int towerPos)
 
     if (!isQuickCombat()) {
         int destX = target->midX();
-        int destY = target->midY();
+        const int destY = target->midY();
         archer->m_facing = destX >= archer->m_x;
         getMissileStartingPosition(archer->m_creatureType, archer->m_x,
                                    archer->m_y, archer->m_facing, destX,
@@ -2408,11 +2408,11 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     if (isQuickCombat())
         return;
 
-    int deltaX = destX - startX;
-    int deltaY = destY - startY;
-    int arrowtraveldist = static_cast<int>(sqrt(static_cast<double>(
+    const int deltaX = destX - startX;
+    const int deltaY = destY - startY;
+    const int arrowtraveldist = static_cast<int>(sqrt(static_cast<double>(
         deltaY * deltaY + deltaX * deltaX)));
-    int nframes = (arrowtraveldist + 10) / 20;
+    const int nframes = (arrowtraveldist + 10) / 20;
     // The arc: half the horizontal span, spread over the flight. The
     // trajectory below subtracts flatness*(nframes - step) from deltaY,
     // so the peak deviation is nframes/4 * flatness = abs(deltaX)/2.
@@ -2427,7 +2427,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
 
     Bitmap16Bit saved(width, height);
     TDrawbridgeBounds updateArea = g_combatAreaLimits;
-    int missileperiod = static_cast<int>(
+    const int missileperiod = static_cast<int>(
         g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 100.0f);
 
     int frame = 0;
@@ -2641,12 +2641,12 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     if (isQuickCombat())
         return;
 
-    int deltaX = destX - startX;
+    const int deltaX = destX - startX;
     int deltaY = destY - startY;
     // DC records flipped as a lowered byte; retail forwards it directly to
     // CSprite's public _N parameter. An unsigned char adds test/setne.
     bool flipped = deltaX < 0;
-    int nframes = (static_cast<int>(sqrt(static_cast<double>(
+    const int nframes = (static_cast<int>(sqrt(static_cast<double>(
                        deltaY * deltaY + deltaX * deltaX))) + 20) / 40;
     int addX;
     int addY;
@@ -2696,7 +2696,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     Bitmap16Bit saved(width, height);
     TDrawbridgeBounds updateArea = g_combatAreaLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
-    int arrowdelay = static_cast<int>(
+    const int arrowdelay = static_cast<int>(
         g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 33.0f);
 
     int bottom = y + height - 1;
@@ -2978,7 +2978,7 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
             playImmEffect(g_spellEffectTraits[spellEffect].m_immName, 1);
 
         for (int frameCount = 0; frameCount < numFrames; frameCount++) {
-            int winceStartOffset = numFrames - 1 - frameCount;
+            const int winceStartOffset = numFrames - 1 - frameCount;
             for (side = 0; side < 2; side++) {
                 for (slot = 0; slot < m_numArmies[side]; slot++) {
                     army& stack = m_armies[side][slot];

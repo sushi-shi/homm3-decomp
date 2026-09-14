@@ -415,7 +415,7 @@ public:
     int getPortraitFrame(bool isSmall) const;
     town();
     unsigned char canBuild(short buildingId) const;
-    unsigned char canEverBuild(int buildingId) const;
+    unsigned char canEverBuild(short buildingId) const;
     // 0x5bfe50.
     void changeGeneratorBonus(TCreatureType creature, long change);
     // 0x5be930. Declared for update_shipyard's direct call; the body is

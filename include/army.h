@@ -743,7 +743,7 @@ public:
     army();
     void init(int armyId, int newNumTroops, const hero* owner, int side,
               int inIndex, int gridIndex, int origPos);
-    void initialize(int type, long number, const hero* owner,
+    void initialize(TCreatureType type, long number, const hero* owner,
                     long newGroup, long newIndex, long newGridIndex);
     void initClean();
     void loadResources();
@@ -1801,7 +1801,7 @@ DATA(0x00660870) extern int g_walkingTo;
 DATA(0x00660874) extern int g_walkingTo2;
 DATA(0x00693858) extern int g_walkingYMod;
 
-unsigned char isValidCaliphSpell(int spell, const army* target);
+unsigned char isValidCaliphSpell(SpellID spell, const army* target);
 // 0x447a80 (1065 B), the worker is_valid_caliph_spell tail-jumps to
 // and army::can_cast_spell (0x4476c0) also calls. It opens by
 // rejecting a target that already carries the spell

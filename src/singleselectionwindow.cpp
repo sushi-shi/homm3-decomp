@@ -4779,8 +4779,8 @@ void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
 VA(0x00585300, 0x1FA)  // dc 0x13b9fc
 void TSingleSelectionWindow::updateAllyEnemyFlags(unsigned char update)
 {
-    int allyCount = 0;
-    int enemyCount = 0;
+    long allyCount = 0;
+    long enemyCount = 0;
     int playerPos;
     CNetPlayerHandlerPlayer* player;
 

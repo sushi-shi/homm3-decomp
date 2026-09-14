@@ -190,6 +190,8 @@ def _base_type_key(text: str) -> str:
     allocators distinct, including in nested template arguments.
     """
     key = name_key(text).removeprefix("::")
+    if key in {"int64", "longlong"}:
+        return "longlong"
     if key == "std::string":
         return "std::basicstring<char,std::chartraits<char>,std::allocator<char>>"
     head, opening, tail = key.partition("<")

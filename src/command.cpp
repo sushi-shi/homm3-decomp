@@ -2894,7 +2894,7 @@ army* combatManager::addArmy(int side, int monType, int monQty,
                              int fizzleItIn)
 {
     long replaced = 0;
-    long slot = -1;
+    int slot = -1;
     { for (long candidate = 0; candidate < 20; candidate++) {
         const army* stack = &m_armies[side][candidate];
         if (stack->m_creatureType == -1) {

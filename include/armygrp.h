@@ -773,7 +773,7 @@ public:
     // the unreferenced out-of-line copy from retail.
     unsigned char hasSomeUndead() const;
     unsigned char merge(armyGroup* ag);
-    void mergeArmies(armyGroup* source);
+    void mergeArmies(armyGroup& source);
     void splitArmy(int srcIndex, armyGroup* ag, int destIndex,
                    unsigned char inSrcRestricted,
                    unsigned char inDestRestricted);

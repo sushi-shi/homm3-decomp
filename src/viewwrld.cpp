@@ -1357,7 +1357,7 @@ int viewWorldUndergroundHandler(message& msg)
 }
 
 VA(0x005fbf90, 0x2A3)  // dc 0x195b48
-void advManager::viewWorld(int whatToDraw, int level)
+void advManager::viewWorld(int whatToDraw, TSkillMastery level)
 {
     g_unnamed6aac3c = 1;
     g_viewArtifacts = 0;

@@ -620,7 +620,7 @@ VA(0x004b8a60, 0x88)  // dc 0xa3320
 void generator::grow(int unusedArg)
 {
     m_guards.initialize();
-    for (int i = 0; i < 4; i++) {
+    for (long i = 0; i < 4; i++) {
         if (m_type[i] != -1) {
             m_population[i] = g_creatureTypeTraits[m_type[i]].m_growthRate;
             if (g_creatureTypeTraits[m_type[i]].m_level >= 4)
@@ -1937,45 +1937,45 @@ VA(0x004bb400, 0x1DC)  // dc 0xa68d8
 int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 {
     int heroArray[HERO_COUNT];
-    int heroClass1 = 0;
-    int heroClass2 = 1;
+    THeroClass heroClass1 = eClassKnight;
+    THeroClass heroClass2 = eClassCleric;
 
     switch (alignment) {
     case TOWN_CASTLE:
-        heroClass1 = 0;
-        heroClass2 = 1;
+        heroClass1 = eClassKnight;
+        heroClass2 = eClassCleric;
         break;
     case TOWN_RAMPART:
-        heroClass1 = 3;
-        heroClass2 = 2;
+        heroClass1 = eClassDruid;
+        heroClass2 = eClassRanger;
         break;
     case TOWN_TOWER:
-        heroClass1 = 5;
-        heroClass2 = 4;
+        heroClass1 = eClassWizard;
+        heroClass2 = eClassAlchemist;
         break;
     case TOWN_INFERNO:
-        heroClass1 = 6;
-        heroClass2 = 7;
+        heroClass1 = eClassPagan;
+        heroClass2 = eClassHeretic;
         break;
     case TOWN_NECROPOLIS:
-        heroClass1 = 8;
-        heroClass2 = 9;
+        heroClass1 = eClassDeathKnight;
+        heroClass2 = eClassNecromancer;
         break;
     case TOWN_DUNGEON:
-        heroClass1 = 10;
-        heroClass2 = 11;
+        heroClass1 = eClassOverlord;
+        heroClass2 = eClassWarlock;
         break;
     case TOWN_STRONGHOLD:
-        heroClass1 = 12;
-        heroClass2 = 13;
+        heroClass1 = eClassBarbarian;
+        heroClass2 = eClassBattleMage;
         break;
     case TOWN_FORTRESS:
-        heroClass1 = 14;
-        heroClass2 = 15;
+        heroClass1 = eClassBeastmaster;
+        heroClass2 = eClassWitch;
         break;
     case TOWN_CONFLUX:
-        heroClass1 = 16;
-        heroClass2 = 17;
+        heroClass1 = eClassPlanesWalker;
+        heroClass2 = eClassElementalist;
         break;
     }
 
@@ -3714,7 +3714,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
                 ++numLivingPlayers;
         }
 
-        int map = m_campaign.m_currentMap;
+        const int map = m_campaign.m_currentMap;
         int campaignNumber = m_campaign.m_currentCampaign;
         if (numLivingPlayers == 1) {
             m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
@@ -10620,18 +10620,18 @@ void game::checkForTownEvent()
 }
 
 VA(0x004cdb80, 0x231)  // dc 0xbb0e4
-unsigned char game::getRandomLith(const std::vector<type_point>* points,
-                                    type_point* result, long cellType,
+unsigned char game::getRandomLith(const std::vector<type_point>& points,
+                                    type_point& result, long cellType,
                                     long excluded) const
 {
-    long lithCount = points->size();
+    long lithCount = points.size();
     long openCount = 0;
     type_point exitPoint;
     long i;
     const NewmapCell* exitCell;
 
     for (i = 0; i < lithCount; ++i) {
-        exitPoint = (*points)[i];
+        exitPoint = points[i];
         exitCell = m_worldMap.cell(
             exitPoint.m_x, exitPoint.m_y, exitPoint.m_z);
         if (exitCell->m_type == HERO && exitCell->m_isTrigger
@@ -10650,21 +10650,21 @@ unsigned char game::getRandomLith(const std::vector<type_point>* points,
 
     openCount = random(1, openCount);
     for (i = 0; i < lithCount; ++i) {
-        exitPoint = (*points)[i];
+        exitPoint = points[i];
         exitCell = m_worldMap.cell(
             exitPoint.m_x, exitPoint.m_y, exitPoint.m_z);
         if (exitCell->m_type == HERO && exitCell->m_isTrigger
             && !onSameTeam(
                 m_heroes[exitCell->m_extraInfo].m_owner, g_netLocalGamePos)) {
             if (--openCount == 0) {
-                *result = exitPoint;
+                result = exitPoint;
                 return 1;
             }
         } else if (exitCell->m_type == cellType
                    && exitCell->m_extraInfo != excluded
                    && exitCell->m_isTrigger) {
             if (--openCount == 0) {
-                *result = exitPoint;
+                result = exitPoint;
                 return 1;
             }
         }
@@ -10673,21 +10673,21 @@ unsigned char game::getRandomLith(const std::vector<type_point>* points,
 }
 
 VA(0x004cddc0, 0x22)  // dc 0xbb3e0
-unsigned char game::getRandomLithExit(long color, type_point* result) const
+unsigned char game::getRandomLithExit(long color, type_point& result) const
 {
-    return getRandomLith(&m_lithExitPools[color], result, 0x2c, -1);
+    return getRandomLith(m_lithExitPools[color], result, 0x2c, -1);
 }
 
 VA(0x004cddf0, 0x24)  // dc 0xbb41c
-unsigned char game::getRandomLith(long color, long excluded, type_point* result) const
+unsigned char game::getRandomLith(long color, long excluded, type_point& result) const
 {
-    return getRandomLith(&m_lithPools[color], result, 0x2d, excluded);
+    return getRandomLith(m_lithPools[color], result, 0x2d, excluded);
 }
 
 VA(0x004cde20, 0x1D)  // dc 0xbb45c
-unsigned char game::getRandomWhirlpool(long excluded, type_point* result) const
+unsigned char game::getRandomWhirlpool(long excluded, type_point& result) const
 {
-    return getRandomLith(&m_whirlpools, result, 0x6f, excluded);
+    return getRandomLith(m_whirlpools, result, 0x6f, excluded);
 }
 
 VA(0x004cde40, 0xE0)  // dc 0xbb490
@@ -11106,7 +11106,7 @@ unsigned char saveObjectVector(TAbstractFile* outfile,
     if (outfile->write(&count, sizeof(short)) < sizeof(short))
         return 0;
 
-    for (int i = 0; i < static_cast<short>(count); ++i) {
+    for (long i = 0; i < static_cast<short>(count); ++i) {
         type_creature_bank& bank = (*srcVector)[i];
         outfile->write(&bank.m_guards, sizeof(bank.m_guards));
         outfile->write(bank.m_resources, sizeof(bank.m_resources));

@@ -1594,7 +1594,7 @@ unsigned char town::canBuild(short buildingId) const
 }
 
 VA(0x005c0e60, 0xC0)  // dc 0x16865c
-unsigned char town::canEverBuild(int buildingId) const
+unsigned char town::canEverBuild(short buildingId) const
 {
     if (g_bitNumber[buildingId] & m_available) {
         if (buildingId == DOCK_ID)

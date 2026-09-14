@@ -182,6 +182,9 @@ Window::Window() {
         self.assertEqual(result["findings"][0]["subject"], "local custom")
         self.assertEqual(result["findings"][0]["aspects"], ["base-type"])
 
+    def test_int64_aliases_compare_equal(self):
+        self.assertEqual(facts.type_differences("__int64", "long long"), ([], []))
+
     def test_owning_alias_comment_matches_normalized_local(self):
         source = '''struct Window { Window(); };
 Window::Window() {

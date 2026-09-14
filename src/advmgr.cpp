@@ -7673,7 +7673,7 @@ void advManager::heroQuickView(int heroId, int x, int y,
     hero* theHero = g_game->getHero(heroId);
     type_point heroPoint(theHero->m_x, theHero->m_y, theHero->m_z);
 
-    int identifyLevel = getIdentifyLevel(heroPoint);
+    TSkillMastery identifyLevel = getIdentifyLevel(heroPoint);
 
     TQuickHeroWindow::TViewLevel level;
     if (g_game->onSameTeam(theHero->m_owner, g_game->getLocalPlayerGamePos())
@@ -7872,7 +7872,7 @@ long aiApproximateStrength(const hero* currentHero);
 VA(0x00417150, 0x2C9)  // dc 0x19e80
 void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
 {
-    int count = cell->m_extraInfo & 0xfff;
+    const int count = cell->m_extraInfo & 0xfff;
     TCreatureType type;
     {
         type = TCreatureType(cell->m_objectIndex);
@@ -7895,13 +7895,15 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
              && currHero->heroFn004E5DE0() != eMasteryInvalid)
             || m_debugViewAll) {
             int like = getLikeModifier(currHero, type);
-            int diplomacy = currHero->m_skillLevel[eSecSkillDiplomacy];
-            float strengthRatio =
+            const int diplomacy = currHero->m_skillLevel[eSecSkillDiplomacy];
+            const float strengthRatio =
                 static_cast<float>(aiApproximateStrength(currHero))
                 / static_cast<float>(g_creatureTypeTraits[type].m_aiValue
                                      * count);
             int force = getForceModifier(strengthRatio);
-            int disposition = static_cast<long>(cell->m_extraInfo << 15) >> 27;
+            TQuickCreatureWindow::TDisposition disposition =
+                static_cast<TQuickCreatureWindow::TDisposition>(
+                    static_cast<long>(cell->m_extraInfo << 15) >> 27);
 
             TQuickCreatureWindow::TDisposition mood;
             if (disposition > force + diplomacy + like)
@@ -7941,7 +7943,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
 VA(0x00417420, 0x146)  // dc 0x1a230
 void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBorder)
 {
-    int playerId = g_game->getLocalPlayerGamePos();
+    const int playerId = g_game->getLocalPlayerGamePos();
     Bitmap816* bmp = ResourceManager::getBitmap816("AdvMap.pcx");
 
     if (bmp) {

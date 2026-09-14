@@ -2361,8 +2361,7 @@ void advManager::payForArtifact(hero* currentHero, NewmapCell* cell,
                                 short goldCost, short resourceCost,
                                 bool humanPlayer)
 {
-    int resourceType =
-        static_cast<long>(cell->m_extraInfo << 15) >> 28;
+    int resourceType = static_cast<long>(cell->m_extraInfo << 15) >> 28;
 
     if (humanPlayer) {
         short artifact = cell->m_objectIndex;
@@ -3809,7 +3808,7 @@ void advManager::doEventLibrary(hero* currentHero, NewmapCell* cell,
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
-int aiChooseMagicSkill(hero* currentHero);
+TPrimarySkill aiChooseMagicSkill(hero* currentHero);
 
 // `game* g = gpGame;` is spelled out for the war school's reason: it is
 // what puts the player position first in the SIB of the inlined
@@ -3836,7 +3835,7 @@ void advManager::doEventMagicSchool(hero* currentHero, NewmapCell* cell,
         return;
     }
 
-    int skill = 2;
+    TPrimarySkill skill = ePriSkillPower;
     if (humanPlayer) {
         overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
         updBottomView(0, 1, 1);
@@ -3847,10 +3846,10 @@ void advManager::doEventMagicSchool(hero* currentHero, NewmapCell* cell,
         case DIALOG_RETURN_CANCEL:
             return;
         case DIALOG_RETURN_CHOICE_1:
-            skill = 2;
+            skill = ePriSkillPower;
             break;
         case DIALOG_RETURN_CHOICE_2:
-            skill = 3;
+            skill = ePriSkillKnowledge;
             break;
         }
     } else {
@@ -4732,7 +4731,7 @@ void advManager::doEventSpellScroll(hero* currentHero, NewmapCell* cell,
         return;
     }
 
-    int spell = cell->m_extraInfo;
+    SpellID spell = cell->m_extraInfo;
     type_artifact scroll;
     scroll.m_artifactId = ARTIFACT_SPELL_SCROLL;
     scroll.m_extra = spell;
@@ -5686,7 +5685,7 @@ void advManager::doEventLithOneWay(hero* currentHero, NewmapCell* cell,
                                        bool humanPlayer)
 {
     type_point point;
-    if (!g_game->getRandomLithExit(cell->m_objectIndex, &point))
+    if (!g_game->getRandomLithExit(cell->m_objectIndex, point))
         return;
 
     NewmapCell* exitCell = g_game->m_worldMap.cell(point);
@@ -5714,7 +5713,7 @@ void advManager::doEventLithTwoWay(hero* currentHero, NewmapCell* cell,
                                        bool humanPlayer)
 {
     type_point point;
-    if (!g_game->getRandomLith(cell->m_objectIndex, cell->m_extraInfo, &point))
+    if (!g_game->getRandomLith(cell->m_objectIndex, cell->m_extraInfo, point))
         return;
 
     NewmapCell* exitCell = g_game->m_worldMap.cell(point);
@@ -5774,7 +5773,7 @@ inline void advManager::doEventWhirlpool(hero* currentHero,
                                            unsigned char humanPlayer)
 {
     type_point exitPoint;
-    if (g_game->getRandomWhirlpool(cell->m_extraInfo, &exitPoint)) {
+    if (g_game->getRandomWhirlpool(cell->m_extraInfo, exitPoint)) {
         stopCursor(1);
         g_advManager->teleportTo(currentHero, exitPoint, 0, 0, 1, 0);
     }
@@ -6602,7 +6601,7 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
                 return;
             }
             defender->m_army.mergeArmies(
-                const_cast<armyGroup*>(&thisTown->getArmy()));
+                *const_cast<armyGroup*>(&thisTown->getArmy()));
             defendingArmy = &defender->m_army;
         } else {
             if (thisTown->m_garrisonHeroId < 0)
@@ -7066,7 +7065,7 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
 
     demobilizeCurrHero(0, 1);
 
-    int eventSeed = point.m_x * 0x3c907 + point.m_z * 0x4bb5f
+    const int eventSeed = point.m_x * 0x3c907 + point.m_z * 0x4bb5f
                      + point.m_y * 0x4386d + 0x25ea7;
     sRand(eventSeed);
 
@@ -7315,7 +7314,7 @@ int advManager::doNetCombat(CNetMsg* netMsg)
     type_point point;
     int seed;
     signed char winner;
-    receiveHeroTownData(&combatInitMsg, &fromWho, &point,
+    receiveHeroTownData(&combatInitMsg, &fromWho, point,
                         &leftHero, &leftArmyGroup, &rightPlayer,
                         &rightTown, &rightHero, &rightArmyGroup,
                         &seed, &winner,
@@ -7615,7 +7614,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
                         armyGroup* trightArmyGroup;
                         signed char winnerId;
                         receiveHeroTownData(&dlg.m_combatInitMsg, &fromWho,
-                                            &point, &tleftHero, &tleftArmyGroup,
+                                            point, &tleftHero, &tleftArmyGroup,
                                             &tempRightPlayer, &trightTown,
                                             &trightHero, &trightArmyGroup, &seed,
                                             &winnerId, &g_combatFlag6985a3,
@@ -7907,7 +7906,7 @@ void advManager::sendHeroTownData(type_point point, hero* leftHero, armyGroup* l
 }
 
 VA(0x004aeee0, 0x3DF)  // dc 0x9c554
-void advManager::receiveHeroTownData(CCombatInitMsg* combatInitMsg, int* fromWho, type_point* point, hero** leftHero, armyGroup** leftArmyGroup, int* rightPlayer, town** rightTown, hero** rightHero, armyGroup** rightArmyGroup, int* seed, signed char* winner, unsigned char* retreatWin, unsigned char* combatSurrender)
+void advManager::receiveHeroTownData(CCombatInitMsg* combatInitMsg, int* fromWho, type_point& point, hero** leftHero, armyGroup** leftArmyGroup, int* rightPlayer, town** rightTown, hero** rightHero, armyGroup** rightArmyGroup, int* seed, signed char* winner, unsigned char* retreatWin, unsigned char* combatSurrender)
 {
     *leftHero = 0;
     *leftArmyGroup = 0;
@@ -7917,7 +7916,7 @@ void advManager::receiveHeroTownData(CCombatInitMsg* combatInitMsg, int* fromWho
     *rightPlayer = -1;
 
     *fromWho = combatInitMsg->m_netmsg.m_from;
-    *point = combatInitMsg->m_point;
+    point = combatInitMsg->m_point;
     int hasLeftHero = combatInitMsg->m_leftHero;
     int hasRightTown = combatInitMsg->m_rightTown;
     int hasRightHero = combatInitMsg->m_rightHero;

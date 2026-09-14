@@ -88,7 +88,7 @@ void type_town_threat_checker::checkTowns()
             for (int heroIndex = 0; heroIndex < player.m_numHeroes;
                  ++heroIndex) {
                 hero* enemyHero = g_game->getHero(player.m_heroes[heroIndex]);
-                int mobility = enemyHero->getMobility() + 800;
+                long mobility = enemyHero->getMobility() + 800;
                 type_point start(enemyHero->m_x, enemyHero->m_y, enemyHero->m_z);
                 type_point target(-1, -1, -1);
                 enemyHero->m_bounty = 0;
@@ -5640,9 +5640,9 @@ long getFullValue(const hero* ourHero)
                 hasAlliance = ourHero->isWieldingArtifact(
                     ARTIFACT_ANGELIC_ALLIANCE);
 
-            int morale = ourHero->m_army.getArmyMorale(
+            long morale = ourHero->m_army.getArmyMorale(
                 i, ourHero, 0, -1, hasAlliance, 1);
-            int luck = ourHero->m_army.getArmyLuck(
+            long luck = ourHero->m_army.getArmyLuck(
                 i, ourHero, 0, -1, 1);
             value = static_cast<long>(
                 (aiValueOfMorale(0, morale) + 1.0) *
