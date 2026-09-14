@@ -91,7 +91,7 @@ int valueOfMine(const hero* currentHero, NewmapCell* cell);
 long valueOfMonsters(const hero* currentHero, NewmapCell* cell,
                        type_point point);
 int valueOfMoveSource(const hero* currentHero, long flag, short increase,
-                         long* moveCost);
+                         long& moveCost);
 int valueOfObelisk(NewmapCell* cell, long playerId);
 int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell);
 int valueOfPrison(NewmapCell* cell, playerData* player);
@@ -99,7 +99,7 @@ long valueOfPyramid(const hero* currentHero, NewmapCell* cell);
 long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
                          unsigned short moveCost);
 long getValueOfWell(const hero* currentHero, unsigned short moveCost);
-int valueOfRallyFlag(const hero* currentHero, long* moveCost);
+int valueOfRallyFlag(const hero* currentHero, long& moveCost);
 int valueOfRefugeeCamp(const hero* currentHero, NewmapCell* cell);
 long valueOfResource(const hero* currentHero, NewmapCell* cell,
                      playerData* player);
@@ -108,7 +108,7 @@ int valueOfSkeleton(const hero* currentHero, NewmapCell* cell);
 int valueOfScroll(const hero* currentHero, NewmapCell* cell);
 __forceinline int valueOfShrine(const hero* currentHero, NewmapCell* cell);
 int valueOfSirens(const hero* currentHero);
-int valueOfStables(const hero* currentHero, long* moveCost);
+int valueOfStables(const hero* currentHero, long& moveCost);
 long valueOfTown(const hero* currentHero, int x, int y, int z,
                    short moveCost);
 int valueOfTreasure(const hero* currentHero);
@@ -146,7 +146,7 @@ extern float g_artifactPurchaseEfficency[];
 // philai.cpp as statics when the bodies land.
 long getSkillValue(const hero* ourHero, TSecondarySkill skill,
                      unsigned char complexChoice);
-unsigned char wantsSkill(const hero* ourHero, int skill,
+unsigned char wantsSkill(const hero* ourHero, TSecondarySkill skill,
                           unsigned char complexChoice);
 
 // --- globals ---

@@ -870,7 +870,7 @@ void advManager::close()
 VA(0x00407ac0, 0x44)  // dc 0x793c
 int advManager::inMapArea(int x, int y)
 {
-    widget* mapWidget = m_advWindow->m_mapWidget;
+    const widget* mapWidget = m_advWindow->m_mapWidget;
     return x >= mapWidget->m_x && x < mapWidget->m_y + mapWidget->m_width
         && y >= mapWidget->m_y && y < mapWidget->m_y + mapWidget->m_height;
 }
@@ -2350,7 +2350,7 @@ VA(0x0040a5d0, 0x606)  // anchor-callee, dc 0xa88c
 void advManager::processMapSelect(const message* msg, type_point* triggerPoint, NewmapCell** peventCell)
 {
     int visibilityBit = 1 << g_game->getLocalPlayerGamePos();
-    playerData* localPlayer = g_game->getLocalPlayer();
+    int localPlayer = g_game->getLocalPlayerGamePos();
 
     type_point hoverPoint = m_lastMapHover;
     if (!hoverPoint.isValid())
@@ -2384,7 +2384,8 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
 
         TAdventureObjectType objType;
         int objIndex;
-        if (g_currentPlayer == localPlayer && m_lastHoverX == HERO_VIEW_TILE_X
+        if (g_currentPlayer == &g_game->m_players[localPlayer]
+            && m_lastHoverX == HERO_VIEW_TILE_X
             && m_lastHoverY == HERO_VIEW_TILE_Y
             && g_currentPlayer->m_currHeroId != -1 && m_curHeroMobile) {
             objIndex = g_currentPlayer->m_currHeroId;
@@ -4526,11 +4527,10 @@ void advManager::updateScreen(int allowIntermediateMouse, int forceDraw)
             curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
         && !m_animCtrPaused) {
         ++m_animCtr;
-        long elapsedTime =
+        unsigned long elapsedTime =
             curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-            cppMax(elapsedTime,
-                     static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED));
+            max(ADVENTURE_ANIMATION_MAX_ELAPSED, elapsedTime);
     }
     process1WindowsMessage();
 }
@@ -5095,7 +5095,7 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
     NewmapCell* cellObjects = thisCell;
     if (cellObjects->m_objects.size() > 0) {
-        for (unsigned row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
+        for (int row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
             for (int numObj = 0; numObj < cellObjects->m_objects.size();
                  ++numObj) {
                 NewmapCell::TObjectCell* objCell = &cellObjects->m_objects[numObj];
@@ -6140,7 +6140,7 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
     // [ebp-0x8], we move it to ESI - the bounded C1 handle-state class.
     int heroX = -1;
     int heroY = -1;
-    hero* currentHero;
+    const hero* currentHero;
     if (localPlayer->m_currHeroId == -1) {
         currentHero = 0;
     } else {
@@ -7673,7 +7673,7 @@ void advManager::heroQuickView(int heroId, int x, int y,
     hero* theHero = g_game->getHero(heroId);
     type_point heroPoint(theHero->m_x, theHero->m_y, theHero->m_z);
 
-    int identifyLevel = getIdentifyLevel(heroPoint);
+    TSkillMastery identifyLevel = getIdentifyLevel(heroPoint);
 
     TQuickHeroWindow::TViewLevel level;
     if (g_game->onSameTeam(theHero->m_owner, g_game->getLocalPlayerGamePos())
@@ -7723,7 +7723,7 @@ void advManager::townQuickView(int townId, int x, int y,
     const town* thisTown = &g_game->m_towns[townId];
     type_point point(thisTown->m_mapX, thisTown->m_mapY, thisTown->m_mapZ);
 
-    int identifyLevel = getIdentifyLevel(point);
+    TSkillMastery identifyLevel = TSkillMastery(getIdentifyLevel(point));
 
     if (m_debugViewAll && thisTown->m_owner != g_netLocalGamePos) {
         std::string text;
@@ -7737,7 +7737,7 @@ void advManager::townQuickView(int townId, int x, int y,
             first = 0;
         }
 
-        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
             if (thisTown->getArmy().m_armies[i] != -1) {
                 if (!first)
                     text += ", ";
@@ -7843,11 +7843,11 @@ void advManager::garrisonQuickView(int id, int x, int y)
     if (id == -1)
         return;
 
-    garrison* thisGarrison = &g_game->m_garrisons[id];
+    garrison* const thisGarrison = &g_game->m_garrisons[id];
     type_point point(thisGarrison->m_mapX, thisGarrison->m_mapY,
                      thisGarrison->m_mapZ);
 
-    int identifyLevel = getIdentifyLevel(point);
+    TSkillMastery identifyLevel = TSkillMastery(getIdentifyLevel(point));
 
     TQuickTownWindow::TViewLevel level;
     if (g_game->onSameTeam(thisGarrison->m_playerOwner, g_unnamed69778c)
@@ -7872,7 +7872,7 @@ long aiApproximateStrength(const hero* currentHero);
 VA(0x00417150, 0x2C9)  // dc 0x19e80
 void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
 {
-    int count = cell->m_extraInfo & 0xfff;
+    const int count = cell->m_extraInfo & 0xfff;
     TCreatureType type;
     {
         type = TCreatureType(cell->m_objectIndex);
@@ -7883,7 +7883,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
 
     TQuickCreatureWindow* window;
     bool showDetails = false;
-    hero* currHero = g_game->getHero(localPlayer->m_currHeroId);
+    hero* const currHero = g_game->getHero(localPlayer->m_currHeroId);
     if (currHero) {
         unsigned char inIdentifyRange;
         {
@@ -7895,13 +7895,15 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
              && currHero->heroFn004E5DE0() != eMasteryInvalid)
             || m_debugViewAll) {
             int like = getLikeModifier(currHero, type);
-            int diplomacy = currHero->m_skillLevel[eSecSkillDiplomacy];
-            float strengthRatio =
+            const int diplomacy = currHero->m_skillLevel[eSecSkillDiplomacy];
+            const float strengthRatio =
                 static_cast<float>(aiApproximateStrength(currHero))
                 / static_cast<float>(g_creatureTypeTraits[type].m_aiValue
                                      * count);
             int force = getForceModifier(strengthRatio);
-            int disposition = static_cast<long>(cell->m_extraInfo << 15) >> 27;
+            TQuickCreatureWindow::TDisposition disposition =
+                static_cast<TQuickCreatureWindow::TDisposition>(
+                    static_cast<long>(cell->m_extraInfo << 15) >> 27);
 
             TQuickCreatureWindow::TDisposition mood;
             if (disposition > force + diplomacy + like)
@@ -7941,8 +7943,8 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
 VA(0x00417420, 0x146)  // dc 0x1a230
 void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBorder)
 {
-    int playerId = g_game->getLocalPlayerGamePos();
-    Bitmap816* bmp = ResourceManager::getBitmap816("AdvMap.pcx");
+    const int playerId = g_game->getLocalPlayerGamePos();
+    Bitmap816* const bmp = ResourceManager::getBitmap816("AdvMap.pcx");
 
     if (bmp) {
         setPlayerPaletteColors(bmp->m_p16.m_colors.m_data, playerId);

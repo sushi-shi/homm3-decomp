@@ -31,7 +31,8 @@ class TypeFactsTest(unittest.TestCase):
 
     def test_string_defaults_preserve_custom_arguments_and_cv_layers(self):
         full = "std::basic_string<char, std::char_traits<char>, std::allocator<char> >"
-        for abbreviated in ("std::basic_string<char>",
+        for abbreviated in ("std::string",
+                            "std::basic_string<char>",
                             "std::basic_string<char, std::char_traits<char> >"):
             self.assertEqual(facts.type_differences(full, abbreviated), ([], []))
             self.assertEqual(facts.type_differences("Box<" + full + ">",
@@ -44,6 +45,9 @@ class TypeFactsTest(unittest.TestCase):
         self.assertEqual(facts.type_differences("const " + full + "&",
                                               "std::basic_string<char>*")[0],
                          ["qualifiers", "reference/pointer"])
+        self.assertEqual(
+            facts.type_differences("std::vector<long, std::allocator<long> >",
+                                   "std::vector<long>"), ([], []))
 
     def test_cv_layers_references_arrays_and_template_qualifiers(self):
         for a, b in (("const T &", "T const&"), ("const int [8][18]", "int const[8][18]"),
@@ -178,6 +182,20 @@ Window::Window() {
         self.assertEqual(result["findings"][0]["subject"], "local custom")
         self.assertEqual(result["findings"][0]["aspects"], ["base-type"])
 
+    def test_int64_aliases_compare_equal(self):
+        self.assertEqual(facts.type_differences("__int64", "long long"), ([], []))
+
+    def test_known_nested_types_compare_equal_inside_their_owner(self):
+        pairs = (
+            ("TSpellbookWindow::TSpellbookEntry", "TSpellbookEntry"),
+            ("game::TRumour*", "TRumour*"),
+            ("const combatManager::TWallTraits* const",
+             "const TWallTraits* const"),
+        )
+        for qualified, owner_relative in pairs:
+            self.assertEqual(facts.type_differences(qualified, owner_relative),
+                             ([], []))
+
     def test_owning_alias_comment_matches_normalized_local(self):
         source = '''struct Window { Window(); };
 Window::Window() {
@@ -237,6 +255,46 @@ class CommandTest(unittest.TestCase):
         args = dreamcast._build_parser().parse_args(["audit", "--module", "townmgr", "--json"])
         self.assertEqual(args.module, "townmgr")
         self.assertTrue(args.json)
+        self.assertEqual(args.suppressions, facts.DEFAULT_SUPPRESSIONS)
+        args = dreamcast._build_parser().parse_args(
+            ["audit", "town::save", "--no-suppressions"])
+        self.assertIsNone(args.suppressions)
+
+    def test_suppressions_are_function_scoped_and_stale_entries_fail(self):
+        results = [
+            {"module": "a.obj", "dc_offset": 0x10,
+             "findings": [{"id": "0123456789ab"}, {"id": "0123456789ab"}]},
+            {"module": "b.obj", "dc_offset": 0x20,
+             "findings": [{"id": "0123456789ab"}]},
+        ]
+        suppressions = {
+            ("a.obj", 0x10, "0123456789ab"): facts.Suppression(9, "retail ABI"),
+            ("b.obj", 0x20, "ba9876543210"): facts.Suppression(6, "stale"),
+            ("outside.obj", 0x30, "ba9876543210"): facts.Suppression(5, "not selected"),
+        }
+        self.assertEqual(facts.apply_suppressions(results, suppressions),
+                         [("b.obj", 0x20, "ba9876543210")])
+        self.assertFalse(results[0]["findings"])
+        self.assertEqual(len(results[0]["suppressed_findings"]), 2)
+        self.assertEqual(results[0]["suppressed_findings"][0]["suppression_confidence"], 9)
+        self.assertEqual(results[1]["findings"], [{"id": "0123456789ab"}])
+
+    def test_suppression_tsv_is_strict(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "s.tsv"
+            path.write_text("module\tdc_offset\tfinding_id\tconfidence\treason\n"
+                            "unit.obj\t0x123\t0123456789ab\t9\tretail ABI\n")
+            self.assertEqual(facts.load_suppressions(path),
+                             {("unit.obj", 0x123, "0123456789ab"):
+                              facts.Suppression(9, "retail ABI")})
+            path.write_text("module\tdc_offset\tfinding_id\tconfidence\treason\n"
+                            "unit.obj\tbad\t0123456789ab\t9\tretail ABI\n")
+            with self.assertRaises(facts.SuppressionError):
+                facts.load_suppressions(path)
+            path.write_text("module\tdc_offset\tfinding_id\tconfidence\treason\n"
+                            "unit.obj\t0x123\t0123456789ab\t11\tretail ABI\n")
+            with self.assertRaises(facts.SuppressionError):
+                facts.load_suppressions(path)
 
     def test_exit_codes_do_not_hide_gaps_or_findings(self):
         for findings, gaps, code in (([], [], 0), ([{}], [], 1), ([], ["parse failure"], 2)):

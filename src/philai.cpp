@@ -1065,15 +1065,15 @@ __forceinline int valueOfMercenaryCamp(const hero* currentHero,
 }
 
 inline int valueOfMoveSource(const hero* currentHero, long flag,
-                                short increase, long* moveCost)
+                                short increase, long& moveCost)
 {
     if (currentHero->m_flags & flag)
         return 0;
-    if (*moveCost >= increase) {
-        *moveCost -= increase;
+    if (moveCost >= increase) {
+        moveCost -= increase;
         return const_cast<hero*>(currentHero)->moraleIncreaseValue(1);
     }
-    *moveCost = 0;
+    moveCost = 0;
     return 10000;
 }
 
@@ -1489,10 +1489,11 @@ long getSchoolValue(const hero* ourHero, TSecondarySkill skill)
 }
 
 VA(0x00524dd0, 0xF3)  // dc 0x113ae4
-unsigned char wantsSkill(const hero* ourHero, int first, int complexChoice)
+unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
+                         unsigned char complexChoice)
 {
     long skillValue[28];
-    int skillIndex[28];
+    TSecondarySkill skillIndex[28];
 
     int openSlots;
     int i;
@@ -1504,7 +1505,7 @@ unsigned char wantsSkill(const hero* ourHero, int first, int complexChoice)
             skillValue[i] = getSkillValue(ourHero, TSecondarySkill(i), complexChoice);
         else
             skillValue[i] = 0;
-        skillIndex[i] = i;
+        skillIndex[i] = TSecondarySkill(i);
     }
 
     for (i = 0; i < 27; i++) {
@@ -1535,16 +1536,16 @@ void aiVisitUniversity(hero* currentHero, type_university* university)
     if (g_currentPlayer->m_resources[GOLD] < 2000)
         return;
 
-    const THeroClassTraits* traits = &g_heroClasses[currentHero->m_heroClass];
+    const THeroClassTraits& traits = g_heroClasses[currentHero->m_heroClass];
     do {
         int bestSkill = -1;
         long bestValue = 0;
 
         for (int i = 0; i < 4; i++) {
             int skill = university->m_skills[i];
-            if (traits->m_gainSecondarySkillChance[skill]
+            if (traits.m_gainSecondarySkillChance[skill]
                 && currentHero->m_skillLevel[skill] <= 0
-                && wantsSkill(currentHero, skill, 1)) {
+                && wantsSkill(currentHero, TSecondarySkill(skill), 1)) {
                 long value = getSkillValue(currentHero, TSecondarySkill(skill), 1);
                 if (value >= bestValue) {
                     bestValue = value;
@@ -1655,7 +1656,7 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
 
     if (!secondHero) {
         currentHero->m_army.mergeArmies(
-            const_cast<armyGroup*>(
+            *const_cast<armyGroup*>(
                 &static_cast<const town*>(currentTown)->getArmy()));
         const_cast<armyGroup*>(
             &static_cast<const town*>(currentTown)->getArmy())->initialize();
@@ -1907,7 +1908,7 @@ long valueOfUniversity(const hero* currentHero,
         int skill = university->m_skills[i];
         if (traits->m_gainSecondarySkillChance[skill]
             && currentHero->m_skillLevel[skill] <= 0
-            && wantsSkill(currentHero, skill, 1))
+            && wantsSkill(currentHero, TSecondarySkill(skill), 1))
             total += getSkillValue(currentHero, TSecondarySkill(skill), 1);
     }
     return total;
@@ -2425,7 +2426,7 @@ static const struct {
 };
 
 VA(0x005270e0, 0xDF)  // dc 0x10f404
-long type_spellvalue::getDamageSpellValue(SpellID spell, int mastery,
+long type_spellvalue::getDamageSpellValue(SpellID spell, TSkillMastery mastery,
     long timesCastable, long combatValue) const
 {
     long damage = g_spellTraits[spell].m_masteryValues[mastery]
@@ -2452,7 +2453,7 @@ long type_spellvalue::getDamageSpellValue(SpellID spell, int mastery,
 }
 
 VA(0x005271c0, 0xC1)  // dc 0x10f648
-long type_spellvalue::getMassDamageSpellValue(SpellID spell, int mastery,
+long type_spellvalue::getMassDamageSpellValue(SpellID spell, TSkillMastery mastery,
     long timesCastable) const
 {
     long total = 0;
@@ -2482,7 +2483,7 @@ long type_spellvalue::getMassDamageSpellValue(SpellID spell, int mastery,
 }
 
 VA(0x00527290, 0x134)  // dc 0x10f810
-long type_spellvalue::getEnchantmentValue(SpellID spell, int mastery,
+long type_spellvalue::getEnchantmentValue(SpellID spell, TSkillMastery mastery,
     long timesCastable) const
 {
     const SSpellTraits* traits = &g_spellTraits[spell];
@@ -2525,14 +2526,17 @@ long type_spellvalue::getRawSpellValue(SpellID spell) const
     long timesCastable = cost > 0 ? m_mana / cost : 1000;
     switch (traits->m_flags & SPELL_VALUE_CLASS_MASK) {
     case SPELL_VALUE_DAMAGE:
-        return getDamageSpellValue(spell, mastery, timesCastable,
+        return getDamageSpellValue(spell, TSkillMastery(mastery), timesCastable,
                                       m_stackValue);
     case SPELL_VALUE_DAMAGE_ONCE:
-        return getDamageSpellValue(spell, mastery, 1, m_stackValue);
+        return getDamageSpellValue(spell, TSkillMastery(mastery), 1,
+                                   m_stackValue);
     case SPELL_VALUE_MASS_DAMAGE:
-        return getMassDamageSpellValue(spell, mastery, timesCastable);
+        return getMassDamageSpellValue(spell, TSkillMastery(mastery),
+                                       timesCastable);
     case SPELL_VALUE_ENCHANTMENT:
-        return getEnchantmentValue(spell, mastery, timesCastable);
+        return getEnchantmentValue(spell, TSkillMastery(mastery),
+                                   timesCastable);
     case SPELL_VALUE_SUMMONING: {
         long damage = traits->m_masteryValues[mastery] * (m_power + mastery);
         double damageTaken = static_cast<double>(damage * 10);
@@ -2878,7 +2882,7 @@ void aiVisitHillFort(hero* currentHero)
 {
     long cost[NUM_RESOURCES];
 
-    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+    for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         TCreatureType creature = currentHero->m_army.m_armyTypes[i];
         if (creature == CREATURE_NONE)
             continue;
@@ -2910,10 +2914,10 @@ void aiVisitHillFort(hero* currentHero)
 }
 
 VA(0x00527cd0, 0x1b)  // dc 0x111808
-int aiChooseMagicSkill(hero* currentHero)
+TPrimarySkill aiChooseMagicSkill(hero* currentHero)
 {
     return currentHero->getValueOfPower() < currentHero->getValueOfKnowledge()
-        ? 3 : 2;
+        ? ePriSkillKnowledge : ePriSkillPower;
 }
 
 // E:\gamedcs\philai.cpp:2692. Retail changes the DC helper's explicit
@@ -3096,7 +3100,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
             currentHero->getLuck(0, 0, 1), 1));
     case FOUNTAIN_OF_YOUTH:
         return valueOfMoveSource(
-            currentHero, 0x4000, 200, &moveCost);
+            currentHero, 0x4000, 200, moveCost);
 
     case GARDEN_OF_REVELATION:
         return valueOfGarden(currentHero, cell);
@@ -3171,7 +3175,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     case OASIS:
 #pragma inline_depth(0)
         return valueOfMoveSource(
-            currentHero, 0x80, 400, &moveCost);
+            currentHero, 0x80, 400, moveCost);
 #pragma inline_depth()
     case OBELISK:
 #pragma inline_depth(0)
@@ -3194,7 +3198,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
         if (moveCost > currentHero->m_movePoints)
             return 0;
 #pragma inline_depth(0)
-        return valueOfRallyFlag(currentHero, &moveCost);
+        return valueOfRallyFlag(currentHero, moveCost);
 #pragma inline_depth()
     case REFUGEE_CAMP:
 #pragma inline_depth(0)
@@ -3245,7 +3249,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
         return valueOfScroll(currentHero, cell);
     case STABLES:
 #pragma inline_depth(0)
-        return valueOfStables(currentHero, &moveCost);
+        return valueOfStables(currentHero, moveCost);
 #pragma inline_depth()
     case TEMPLE:
         if (currentHero->m_flags & 0x100)
@@ -3328,7 +3332,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     case WATERING_HOLE:
 #pragma inline_depth(0)
         return valueOfMoveSource(
-            currentHero, 0x40, 200, &moveCost);
+            currentHero, 0x40, 200, moveCost);
 #pragma inline_depth()
     case WINDMILL: {
         const ExtraInfoUnion* info =
@@ -3609,7 +3613,7 @@ long valueOfMonsters(const hero* currentHero, NewmapCell* cell, type_point point
 
 VA(0x0052a1e0, 0xc3)  // dc 0x111c44
 int valueOfMoveSource(const hero* currentHero, long flag,
-                         short increase, long* moveCost);
+                         short increase, long& moveCost);
 
 VA(0x0052a2b0, 0xc5)  // dc 0x111d68
 int valueOfObelisk(NewmapCell* cell, long playerId)
@@ -3707,7 +3711,7 @@ long getValueOfWell(const hero* currentHero, unsigned short moveCost)
 }
 
 VA(0x0052a5f0, 0x108)  // dc 0x1120e8
-int valueOfRallyFlag(const hero* currentHero, long* moveCost)
+int valueOfRallyFlag(const hero* currentHero, long& moveCost)
 {
     if (currentHero->m_flags & 0x10000)
         return 0;
@@ -3836,17 +3840,17 @@ int valueOfSirens(const hero* currentHero)
 }
 
 VA(0x0052aac0, 0xB9)  // dc 0x11276c
-int valueOfStables(const hero* currentHero, long* moveCost)
+int valueOfStables(const hero* currentHero, long& moveCost)
 {
     int value = 0;
     if (!(currentHero->m_flags & 2)) {
         short movementValue = static_cast<short>(
             (8 - g_game->m_day) * g_stablesMovementBonus / 2);
-        if (*moveCost >= movementValue) {
-            *moveCost -= movementValue;
+        if (moveCost >= movementValue) {
+            moveCost -= movementValue;
             value = 50;
         } else {
-            *moveCost = 0;
+            moveCost = 0;
             value = 10000;
         }
     }
@@ -4230,7 +4234,7 @@ int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
             return 0;
         if (currentHero->m_skillLevel[skill])
             return 0;
-        if (!wantsSkill(currentHero, skill, 1))
+        if (!wantsSkill(currentHero, TSecondarySkill(skill), 1))
             return 0;
         return getSkillValue(currentHero, TSecondarySkill(skill), 1);
     }

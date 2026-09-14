@@ -180,11 +180,11 @@ int army::fly(int destIndex)
     if (turn)
         this->turn(1);
 
-    long startX = g_combatManager->m_cells[m_gridIndex].m_refX;
+    int startX = g_combatManager->m_cells[m_gridIndex].m_refX;
     long startY = g_combatManager->m_cells[m_gridIndex].m_refY;
     long spanX = g_combatManager->m_cells[destIndex].m_refX - startX;
     long spanY = g_combatManager->m_cells[destIndex].m_refY - startY;
-    long ttlLoops = static_cast<long>(
+    int ttlLoops = static_cast<int>(
         sqrt(static_cast<double>(spanX * spanX + spanY * spanY)));
     if (m_monFrameInfo.m_flightPixelSpan > 0)
         ttlLoops = (ttlLoops + m_monFrameInfo.m_flightPixelSpan / 2)
@@ -196,7 +196,7 @@ int army::fly(int destIndex)
                   / static_cast<float>(ttlLoops);
     float stepY = static_cast<float>(spanY)
                   / static_cast<float>(ttlLoops);
-    long loop;
+    int loop;
 
     if (!static_cast<const combatManager*>(g_combatManager)->isQuickCombat()) {
         m_isMoving = 1;
@@ -206,7 +206,7 @@ int army::fly(int destIndex)
         g_combatManager->removeArmyFromGrid(*this);
 
         m_currFrameType = 0;
-        long numFlapFrames = m_stdIcon->getNumFrames(cs_walk);
+        int numFlapFrames = m_stdIcon->getNumFrames(cs_walk);
         float x = static_cast<float>(startX);
         float y = static_cast<float>(startY);
         const int flyperiod = static_cast<long>(

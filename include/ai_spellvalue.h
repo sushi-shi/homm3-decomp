@@ -103,11 +103,11 @@ protected:
     // into the constructor, but the Dreamcast member boundary and local
     // inventory remain authoritative source-shape evidence.
     void fillCreatureValueList();
-    long getDamageSpellValue(SpellID spell, int mastery,
+    long getDamageSpellValue(SpellID spell, TSkillMastery mastery,
                                 long timesCastable, long combatValue) const;
-    long getEnchantmentValue(SpellID spell, int mastery,
+    long getEnchantmentValue(SpellID spell, TSkillMastery mastery,
                                long timesCastable) const;
-    long getMassDamageSpellValue(SpellID spell, int mastery,
+    long getMassDamageSpellValue(SpellID spell, TSkillMastery mastery,
                                      long timesCastable) const;
     const hero* m_ourHero;  // +0x00
     long m_stackValue;  // +0x04

@@ -2204,7 +2204,7 @@ void townManager::setCommandAndText(message* msg)
 // the same clamp the creature-traits table's own extent gives.
 
 VA(0x005c8080, 0x108)  // dc 0x16d0dc
-void townManager::selectArmy(strip* fromStrip, int slot,
+void townManager::selectArmy(strip* fromStrip, long slot,
                               unsigned char isOwnerCell)
 {
     m_currStrip = fromStrip;
@@ -3096,7 +3096,7 @@ void townManager::handleMageGuildClick()
 VA(0x005ce830, 0x1D20)  // dc 0x171554
 type_garrison_base_window::type_garrison_base_window(hero* inHero,
                                                      int garrisonOwner,
-                                                     armyGroup* garrisonArmy)
+                                                     armyGroup& garrisonArmy)
     : CAdvPopup(125, 102, 549, 392, 0x12)
 {
     m_thisHero = inHero;
@@ -3239,7 +3239,7 @@ type_garrison_base_window::type_garrison_base_window(hero* inHero,
 
     g_townManager->m_garrisonStrip = new strip(m_x + 28, m_y + 126, 0, 161,
                                          garrisonOwner, garrisonOwner, 0,
-                                         garrisonArmy, 100, 0, this);
+                                         &garrisonArmy, 100, 0, this);
     if (!g_townManager->m_garrisonStrip)
         memError();
     g_townManager->m_heroStrip = new strip(m_x + 28, m_y + 222, 1, 162,
@@ -3513,7 +3513,7 @@ VA(0x005d0b40, 0x21F)  // anchor-vtable 0x643854 + ??_G call edge + arity, dc 0x
 type_monster_join_window::type_monster_join_window(hero* inHero,
                                                    armyGroup* monsters,
                                                    unsigned char flags)
-    : type_garrison_base_window(inHero, inHero->m_owner, monsters)
+    : type_garrison_base_window(inHero, inHero->m_owner, *monsters)
 {
     std::string title;
     m_isJoinDialog = 1;
@@ -3552,7 +3552,7 @@ VA_COMPGEN(0x005d0d90, 0x6B, IMPLICIT_DTOR, type_monster_join_window)
 
 VA(0x005d0e00, 0x28C)  // dc 0x1730b8
 TGarrisonWindow::TGarrisonWindow(hero* inHero, int garrisonOwner,
-                                 armyGroup* garrisonArmy)
+                                 armyGroup& garrisonArmy)
     : type_garrison_base_window(inHero, garrisonOwner, garrisonArmy)
 {
     widget* newWidget = new textWidget(0, 20, m_width, 30,
@@ -3585,7 +3585,7 @@ void doEventGarrison(hero* inHero, garrison* thisGarrison)
     int owner = thisGarrison->m_playerOwner;
     if (!thisGarrison->m_removableTroops)
         owner = -1;
-    TGarrisonWindow garrisonWindow(inHero, owner, &thisGarrison->m_garrisonArmy);
+    TGarrisonWindow garrisonWindow(inHero, owner, thisGarrison->m_garrisonArmy);
     garrisonWindow.doModal(0);
 }
 
@@ -5674,7 +5674,8 @@ int TBuyBuildWindow::windowHandler(message& msg)
 // region to flush.
 
 VA(0x005d6910, 0x16E)  // dc 0x179a64
-void townManager::cycleOutline(int objectIndex, int x, int y, int w, int h)
+void townManager::cycleOutline(const int objectIndex, const int x, const int y,
+                               const int w, const int h)
 {
     g_unnamed6aa9e8 = m_townObjects[objectIndex]->m_objId;
     TPalette16& pal = m_townObjects[objectIndex]->m_objOutline->m_p16;

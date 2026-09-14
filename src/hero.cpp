@@ -2113,10 +2113,10 @@ void hero::checkLevel()
                 g_game->m_campaign.m_currentCampaign == LEVEL_UP_CAMPAIGN_OVERRIDE &&
                 m_id == LEVEL_UP_OVERRIDE_HERO_ID) {
                 if (m_level <= LEVEL_UP_LOW_LEVEL_LAST)
-                    chances = g_heroClasses[eClassBarbarian]
+                    chances = g_heroClasses[classBarbarian]
                                   .m_gainPrimarySkillChance;
                 else
-                    chances = g_heroClasses[eClassBarbarian]
+                    chances = g_heroClasses[classBarbarian]
                                   .m_gainPrimarySkillChance10P;
                 roll = random(1, chances[0] + chances[1]);
             }
@@ -2302,10 +2302,10 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
 
     int wisdomGap;
     int magicGap;
-    if (heroClass == eClassCleric || heroClass == eClassDruid ||
-        heroClass == eClassWizard || heroClass == eClassHeretic ||
-        heroClass == eClassNecromancer || heroClass == eClassWarlock ||
-        heroClass == eClassBattleMage || heroClass == eClassWitch) {
+    if (heroClass == classCleric || heroClass == classDruid ||
+        heroClass == classWizard || heroClass == classHeretic ||
+        heroClass == classNecromancer || heroClass == classWarlock ||
+        heroClass == classBattleMage || heroClass == classWitch) {
         wisdomGap = 3;
         magicGap = 3;
     } else {

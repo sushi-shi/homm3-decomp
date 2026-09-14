@@ -8,7 +8,7 @@
 #include "resourcemanager.h"
 
 static void initializeCreatureAnimationTraits(int id,
-                                              const std::vector<char*>& row);
+    const std::vector<char*, std::allocator<char*> >& row);
 
 // The parse target. File-static (the Dreamcast dump publishes only the
 // gMonFrameInfo reference below, never the array); name provisional.
@@ -115,7 +115,7 @@ unsigned char initializeCreatureAnimationTraitsTable()
 
 VA(0x0050ca00, 0x126)  // dc 0xfe764
 static void initializeCreatureAnimationTraits(int id,
-                                              const std::vector<char*>& row)
+    const std::vector<char*, std::allocator<char*> >& row)
 {
     SMonFrameInfo& traits = g_monFrameInfoTable[id];
 

@@ -487,7 +487,7 @@ public:
     // at +0x6c. These three bytes align the 0x70-byte base extent.
     char m_tailPadding[3];
     type_garrison_base_window(hero* inHero, int garrisonOwner,
-                              armyGroup* garrisonArmy);
+                              armyGroup& garrisonArmy);
     virtual ~type_garrison_base_window();
 
 protected:
@@ -517,7 +517,7 @@ public:
 
 class TGarrisonWindow : public type_garrison_base_window {
 public:
-    TGarrisonWindow(hero* inHero, int garrisonOwner, armyGroup* garrisonArmy);
+    TGarrisonWindow(hero* inHero, int garrisonOwner, armyGroup& garrisonArmy);
 
     // Implicit destructor; CodeView dc 0x181684 compgenx.
 };
@@ -874,7 +874,8 @@ public:
     void setArmyCommand(int splitEnabled, unsigned char joinDialog);
     void doCommand(int inCommand, unsigned char isGarrison,
                    type_garrison_base_window* garrisonWindow);
-    void cycleOutline(int objectIndex, int x, int y, int w, int h);
+    void cycleOutline(const int objectIndex, const int x, const int y,
+                      const int w, const int h);
     // Retail 0x5d5f30. Prices `buildingId`, puts up TBuyBuildWindow over
     // the town page and, if the player confirms, debits the cost.
     // `bQuickView` shows the panel read-only through DoQuickView instead
@@ -908,7 +909,7 @@ public:
 private:
     void doSkeletonTransformer();
     void doHall();
-    void selectArmy(strip* fromStrip, int slot, unsigned char isOwnerCell);
+    void selectArmy(strip* fromStrip, long slot, unsigned char isOwnerCell);
 
 public:
     // Retail 0x5d2da0, retail-only - the Dreamcast townmgr roster runs

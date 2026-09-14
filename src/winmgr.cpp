@@ -813,7 +813,7 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
             unsigned long* src = static_cast<unsigned long*>(
                 static_cast<void*>(sourceBytes));
-            unsigned long* dst = static_cast<unsigned long*>(
+            unsigned int* dst = static_cast<unsigned int*>(
                 static_cast<void*>(destinationBytes));
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
                 unsigned long pair = *src++;
@@ -875,9 +875,9 @@ void heroWindowManager::fadeFromBlack(int speed)
         unsigned char* destinationBytes = static_cast<unsigned char*>(
             static_cast<void*>(m_screenBitmap->getMap(0, 0)));
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
-            unsigned long* src = static_cast<unsigned long*>(
+            const unsigned int* src = static_cast<const unsigned int*>(
                 static_cast<void*>(sourceBytes));
-            unsigned long* dst = static_cast<unsigned long*>(
+            unsigned int* dst = static_cast<unsigned int*>(
                 static_cast<void*>(destinationBytes));
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
                 unsigned long pair = *src++;

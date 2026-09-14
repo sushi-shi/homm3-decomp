@@ -225,7 +225,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
                              const pathCell* currentPathCell, long limit,
                              type_search_type searchType)
 {
-    town* ourTown = g_game->getTown(startTown);
+    const town* ourTown = g_game->getTown(startTown);
     if (!g_game->onSameTeam(ourTown->m_owner, currentHero->m_owner))
         return;
     if (ourTown->m_type != TOWN_INFERNO)

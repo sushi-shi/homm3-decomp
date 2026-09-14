@@ -149,6 +149,8 @@ records and declarations/calls in the authored C++ AST:
 homm3 dreamcast audit 0x005c9be0 0x004f8880
 homm3 dreamcast audit --module levelupwindow --json
 homm3 dreamcast audit --all --json > build/source-facts.json
+homm3 dreamcast audit --all --no-suppressions --json > build/source-facts-raw.json
+homm3 dreamcast audit --all --suppressions path/to/reviewed.tsv --json
 ```
 
 Module and whole-corpus selections include source-claimed Dreamcast functions.
@@ -225,18 +227,36 @@ Do not infer every byte field is bool from its name or zero/one values.
 
 Each JSON finding has an ID derived from its kind, subject and compared facts.
 The report also carries source identity, source hash, checked categories and
-coverage gaps. It does not edit source, suppress findings, alter matching
-scores, or automatically reject Dreamcast facts after a score decrease.
+coverage gaps. Reviewed older-version or retail-ABI exceptions live in
+`config/dreamcast-audit-suppressions.tsv`, keyed by module, Dreamcast function
+offset and finding ID. The default audit moves matching rows from `findings` to
+`suppressed_findings`; `--no-suppressions` restores the raw report. A suppression
+for a selected function that no longer matches is stale and makes the audit
+exit 2, so fixed or changed findings cannot silently disappear. The audit does
+not edit source, alter matching scores, or automatically reject Dreamcast facts
+after a score decrease.
 
-Exit status is **0** for no findings or gaps, **1** for review findings, and
-**2** for coverage gaps or an input error. Zero describes only the checked
-facts; it does not certify complete source recovery. Whole-corpus review can
-take time because each selected definition is parsed under its owning profile.
+The TSV header is `module`, `dc_offset`, `finding_id`, `confidence`, `reason`.
+Confidence is an integer from 1 (tentative) through 10 (directly compelled by
+retail ABI/body evidence), making lower-confidence exceptions the first
+re-review queue. Offsets accept decimal or `0x` notation. Module and offset
+scope IDs that can legitimately repeat for the same type disagreement in
+several functions; one row suppresses all identical occurrences within its one
+function. Missing/out-of-range confidence, empty reasons, duplicate keys and
+malformed rows are rejected. JSON exposes the retained review metadata as
+`suppression_confidence` and `suppression_reason`.
+
+Exit status is **0** for no unsuppressed findings, gaps or stale suppressions,
+**1** for review findings, and **2** for coverage gaps, stale suppressions or an
+input error. Zero describes only the checked facts; it does not certify complete
+source recovery. Whole-corpus review can take time because each selected
+definition is parsed under its owning profile.
 
 The loop is: inspect a finding's dossier/line evidence, check retail semantics
 and ABI, restore the supported source fact, compile with VC6, and rerun both
 the source audit and retail diff. Record a proven platform difference beside
-the function and leave it visible in the report. For example, Complete's hall
+the finding in the suppression TSV and leave it visible in JSON's
+`suppressed_findings`. For example, Complete's hall
 arrays have nine town rows and a seven-by-five layout; Dreamcast has eight
 town rows and a three-by-three layout. Preserve retail's extents while
 restoring the Dreamcast-proven `const`. Reducing unexplained disagreements is

@@ -1820,7 +1820,7 @@ void type_sacrifice_window::createArtifactWidgets(
     textWidget* currentTextWidget;
     for (long j = 0; j < 5; ++j) {
         long itemX = g_rowStart[j][0];
-        long itemY = g_rowStart[j][1];
+        int itemY = g_rowStart[j][1];
         long textX = itemX - 2;
         long textY = itemY + 47;
         for (count = g_rowSize[j]; count > 0; --count) {

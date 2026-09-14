@@ -170,7 +170,7 @@ unsigned char combatManager::automateCatapult()
 VA(0x00473ea0, 0x196)  // anchor-callee: Main's other automate callee (no-Random sibling) + order-map, dc 0x6b12c
 unsigned char combatManager::automateFirstAidTent()
 {
-    army* currentArmy = getCurrentArmy();
+    const army* currentArmy = getCurrentArmy();
     int side = currentArmy->getControllingSide();
 
     if (currentArmy->m_creatureType != CREATURE_FIRST_AID_TENT)
@@ -2894,7 +2894,7 @@ army* combatManager::addArmy(int side, int monType, int monQty,
                              int fizzleItIn)
 {
     long replaced = 0;
-    long slot = -1;
+    int slot = -1;
     { for (long candidate = 0; candidate < 20; candidate++) {
         const army* stack = &m_armies[side][candidate];
         if (stack->m_creatureType == -1) {
