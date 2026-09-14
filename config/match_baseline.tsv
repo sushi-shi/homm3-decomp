@@ -1968,7 +1968,7 @@ game	?getLocalPlayer@game@@QAEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xce9
 game	?getLocalPlayerGamePos@game@@QBEHXZ	100.0000	100.0000	100.0000	0xcea20	tokens1:6d82447f2715
 game	?getName@playerData@@QAEPADXZ	100.0000	100.0000	100.0000	0xbadb0	tokens1:562795576f6e
 game	?getNewBoatId@game@@QAEHXZ	100.0000	100.0000	100.0000	0xbb170	tokens1:6f31c69308b5
-game	?getNewHeroId@game@@QAEHHW4THeroClass@@E0@Z	98.9815	98.9815	98.9815	0xbb5e0	tokens1:84269b40c8ca
+game	?getNewHeroId@game@@QAEHHW4THeroClass@@E0@Z	98.9815	98.9815	98.9815	0xbb5e0	tokens1:6ea905495eba
 game	?getNumObelisks@@YIHH@Z	100.0000	100.0000	100.0000	0xbaba0	tokens1:7a28b072a3b1
 game	?getNumThievesGuilds@game@@QAEHH@Z	100.0000	100.0000	100.0000	0xcce30	tokens1:781685e1b527
 game	?getPlayerName@game@@QAEPADH@Z	100.0000	100.0000	100.0000	0xceb60	tokens1:f8f6c8621fd3
@@ -1980,7 +1980,7 @@ game	?getRandomLithExit@game@@QBEEJAAUtype_point@@@Z	100.0000	100.0000	100.0000	
 game	?getRandomMonster@game@@QAE?AW4TCreatureType@@HH@Z	92.2308	92.2308	92.2308	0xc92c0	tokens1:313137b835f9
 game	?getRandomSpell@game@@QAEHV?$bitset@$04@std@@@Z	100.0000	100.0000	100.0000	0xc95a0	tokens1:92d6b83898ad
 game	?getRandomWhirlpool@game@@QBEEJAAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20	tokens1:ecde6f521078
-game	?getStartingHeroId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb400	tokens1:c571864b2054
+game	?getStartingHeroId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb400	tokens1:6572f92cb457
 game	?getTownId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb870	tokens1:b84a2e928939
 game	?getUndergroundGateExit@game@@QBE?AUtype_point@@PBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xcde40	tokens1:302f69ac4c5c
 game	?getWorldMapData@game@@QAEPAVNewfullMap@@XZ	100.0000	100.0000	100.0000	0xbb160	tokens1:ade6d5ab36fc
@@ -2098,7 +2098,7 @@ game	?setMapRumour@game@@AAEXXZ	100.0000	100.0000	100.0000	0xccfb0	tokens1:35cf9
 game	?setMapSize@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xccef0	tokens1:9e2990c94852
 game	?setPyramid@ExtraInfoUnion@@QAEX_NH@Z	0.0000	0.0000	100.0000	0xc2330	tokens1:b0dd0fb0b8a7
 game	?setRandomHeroArmies@game@@QAEXHHE@Z	100.0000	100.0000	100.0000	0xc9730	tokens1:1ed168d87142
-game	?setRecruits@game@@QAEXH@Z	100.0000	100.0000	100.0000	0xc8450	tokens1:aa3915f0e651
+game	?setRecruits@game@@QAEXH@Z	100.0000	100.0000	100.0000	0xc8450	tokens1:9f73d0d155a6
 game	?setSpecialRumour@game@@AAEXXZ	100.0000	100.0000	100.0000	0xcd170	tokens1:6f28ca5468ea
 game	?setWagon@ExtraInfoUnion@@QAEXH@Z	0.0000	0.0000	100.0000	0xc2390	tokens1:dac919614454
 game	?setWagon@ExtraInfoUnion@@QAEXW4EGameResource@@F@Z	0.0000	0.0000	100.0000	0xc2360	tokens1:13ba2fd57e1d
@@ -2186,7 +2186,7 @@ hero	?applyBattleWinTemps@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda510	tokens
 hero	?belongsToHuman@hero@@QBEEXZ	100.0000	100.0000	100.0000	0xd9050	tokens1:acfddbab0bf7
 hero	?canLand@hero@@ABEEXZ	100.0000	100.0000	100.0000	0xe5ce0	tokens1:0001216cf722
 hero	?canSummonBoat@hero@@QBEEXZ	100.0000	100.0000	100.0000	0xe5550	tokens1:20cee7b44e0b
-hero	?checkLevel@hero@@QAEXXZ	87.1338	87.1338	87.1338	0xda720	tokens1:609a0bbb95f0
+hero	?checkLevel@hero@@QAEXXZ	87.1338	87.1338	87.1338	0xda720	tokens1:f0167a756c63
 hero	?creatureTypeCount@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xe2340	tokens1:028c27339605
 hero	?deallocate@hero@@QAEXEE@Z	100.0000	100.0000	100.0000	0xd9ec0	tokens1:c9bbb9098890
 hero	?destroySiegeWeaponArtifact@hero@@QAEXH@Z	96.5278	96.5278	96.5278	0xd9260	tokens1:6ac54a58c5ed
@@ -2232,7 +2232,7 @@ hero	?getOffenseFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe42b0	tokens1:0
 hero	?getPlayer@hero@@QBEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xe56b0	tokens1:cfda5d919970
 hero	?getPrimarySkillTotal@hero@@QBEFXZ	100.0000	100.0000	100.0000	0xe5960	tokens1:e9b56306c479
 hero	?getRolloverText@type_artifact@@QBEXPAD@Z	100.0000	100.0000	100.0000	0xdb350	tokens1:781032228aea
-hero	?getSkillAward@@YI?AW4TSecondarySkill@@PBVhero@@W4TSkillMastery@@1W41@@Z	98.8073	98.8073	98.8073	0xdad00	tokens1:e43f592cbac8
+hero	?getSkillAward@@YI?AW4TSecondarySkill@@PBVhero@@W4TSkillMastery@@1W41@@Z	98.8073	98.8073	98.8073	0xdad00	tokens1:beab7ea6c023
 hero	?getSpecialTerrain@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4fa0	tokens1:94509538293e
 hero	?getSpecificAbilityTextShort@hero@@QAEPBDXZ	100.0000	100.0000	100.0000	0xd7220	tokens1:589ff4a4fd98
 hero	?getSpellDurationBonus@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4db0	tokens1:b82406c039d7
@@ -4001,7 +4001,7 @@ singleselectionwindow	?isFaceTaken@CNetPlayerHandler@@QAEEHH@Z	100.0000	100.0000
 singleselectionwindow	?isHost@TSingleSelectionWindow@@QAE_NXZ	100.0000	100.0000	100.0000	0x18adf0	tokens1:cac7a16fc552
 singleselectionwindow	?isVersionCompatible@TSingleSelectionWindow@@QAEEPBD@Z	100.0000	100.0000	100.0000	0x189d30	tokens1:1a1cb794a64b
 singleselectionwindow	?lower_bound@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QBE?AVconst_iterator@12@ABH@Z	100.0000	100.0000	100.0000	0x18f0f0	-
-singleselectionwindow	?makeHeroFilter@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x183890	tokens1:084fae121a0c
+singleselectionwindow	?makeHeroFilter@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x183890	tokens1:2ab98750b2d2
 singleselectionwindow	?newPlayer@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x18a280	tokens1:81dec24c9ecc
 singleselectionwindow	?onBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18df50	tokens1:3b4415b6c652
 singleselectionwindow	?onBeginGame@TSingleSelectionWindow@@QAEEXZ	75.4086	75.4086	78.9055	0x18bce0	tokens1:7f2af7b1f8d8

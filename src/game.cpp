@@ -1937,45 +1937,45 @@ VA(0x004bb400, 0x1DC)  // dc 0xa68d8
 int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 {
     int heroArray[HERO_COUNT];
-    THeroClass heroClass1 = eClassKnight;
-    THeroClass heroClass2 = eClassCleric;
+    THeroClass heroClass1 = classKnight;
+    THeroClass heroClass2 = classCleric;
 
     switch (alignment) {
     case TOWN_CASTLE:
-        heroClass1 = eClassKnight;
-        heroClass2 = eClassCleric;
+        heroClass1 = classKnight;
+        heroClass2 = classCleric;
         break;
     case TOWN_RAMPART:
-        heroClass1 = eClassDruid;
-        heroClass2 = eClassRanger;
+        heroClass1 = classDruid;
+        heroClass2 = classRanger;
         break;
     case TOWN_TOWER:
-        heroClass1 = eClassWizard;
-        heroClass2 = eClassAlchemist;
+        heroClass1 = classWizard;
+        heroClass2 = classAlchemist;
         break;
     case TOWN_INFERNO:
-        heroClass1 = eClassPagan;
-        heroClass2 = eClassHeretic;
+        heroClass1 = classPagan;
+        heroClass2 = classHeretic;
         break;
     case TOWN_NECROPOLIS:
-        heroClass1 = eClassDeathKnight;
-        heroClass2 = eClassNecromancer;
+        heroClass1 = classDeathKnight;
+        heroClass2 = classNecromancer;
         break;
     case TOWN_DUNGEON:
-        heroClass1 = eClassOverlord;
-        heroClass2 = eClassWarlock;
+        heroClass1 = classOverlord;
+        heroClass2 = classWarlock;
         break;
     case TOWN_STRONGHOLD:
-        heroClass1 = eClassBarbarian;
-        heroClass2 = eClassBattleMage;
+        heroClass1 = classBarbarian;
+        heroClass2 = classBattleMage;
         break;
     case TOWN_FORTRESS:
-        heroClass1 = eClassBeastmaster;
-        heroClass2 = eClassWitch;
+        heroClass1 = classBeastmaster;
+        heroClass2 = classWitch;
         break;
     case TOWN_CONFLUX:
-        heroClass1 = eClassPlanesWalker;
-        heroClass2 = eClassElementalist;
+        heroClass1 = classPlanesWalker;
+        heroClass2 = classElementalist;
         break;
     }
 
@@ -2025,7 +2025,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
         alignment = -1;
 
     memset(counts, 0, sizeof(counts));
-    for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+    for (heroClass = classKnight; heroClass < kNumHeroClasses;
          heroClass++) {
         weights[heroClass] =
             g_heroClasses[heroClass].m_foundInTownType[alignment];
@@ -2042,7 +2042,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     if (totalCount == 0)
         return -1;
 
-    for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+    for (heroClass = classKnight; heroClass < kNumHeroClasses;
          heroClass++) {
         if (counts[heroClass] == 0)
             weights[heroClass] = 0;
@@ -2051,12 +2051,12 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     if (g_game->m_f1f698 >= 2
         && *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW
         && alignment != TOWN_CONFLUX
-        && counts[eClassPlanesWalker] + counts[eClassElementalist]
+        && counts[classPlanesWalker] + counts[classElementalist]
             < totalCount) {
-        if (preferredClass != eClassPlanesWalker)
-            weights[eClassPlanesWalker] = 0;
-        if (preferredClass != eClassElementalist)
-            weights[eClassElementalist] = 0;
+        if (preferredClass != classPlanesWalker)
+            weights[classPlanesWalker] = 0;
+        if (preferredClass != classElementalist)
+            weights[classElementalist] = 0;
     }
 
     if (excluded < kNumHeroClasses
@@ -2066,13 +2066,13 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
 
     if (preferAlignment) {
         alignedCount = 0;
-        for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+        for (heroClass = classKnight; heroClass < kNumHeroClasses;
              heroClass++) {
             if (g_heroClasses[heroClass].m_townType == alignment)
                 alignedCount += weights[heroClass];
         }
         if (alignedCount > 0) {
-            for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+            for (heroClass = classKnight; heroClass < kNumHeroClasses;
                  heroClass++) {
                 if (g_heroClasses[heroClass].m_townType != alignment)
                     weights[heroClass] = 0;
@@ -2084,12 +2084,12 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
         heroClass = preferredClass;
     } else {
         totalCount = 0;
-        for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+        for (heroClass = classKnight; heroClass < kNumHeroClasses;
              heroClass++) {
             totalCount += weights[heroClass];
         }
         choice = random(1, totalCount);
-        for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+        for (heroClass = classKnight; heroClass < kNumHeroClasses;
              heroClass++) {
             choice -= weights[heroClass];
             if (choice <= 0)
@@ -7957,19 +7957,19 @@ void game::setRecruits(int playerPos)
             && static_cast<unsigned short>(m_week) <= 2) {
             if (m_week == 1) {
                 for (heroId = 0; heroId < HERO_COUNT; ++heroId) {
-                    if (g_game->getHero(heroId)->m_heroClass == eClassCleric
+                    if (g_game->getHero(heroId)->m_heroClass == classCleric
                         && g_game->m_heroAvailability[heroId] == -1)
                         break;
                 }
             } else if (recruitSlot == 0) {
                 for (heroId = 0; heroId < HERO_COUNT; ++heroId) {
-                    if (g_game->getHero(heroId)->m_heroClass == eClassPagan
+                    if (g_game->getHero(heroId)->m_heroClass == classPagan
                         && g_game->m_heroAvailability[heroId] == -1)
                         break;
                 }
             } else {
                 for (heroId = 0; heroId < HERO_COUNT; ++heroId) {
-                    if (g_game->getHero(heroId)->m_heroClass == eClassHeretic
+                    if (g_game->getHero(heroId)->m_heroClass == classHeretic
                         && g_game->m_heroAvailability[heroId] == -1)
                         break;
                 }

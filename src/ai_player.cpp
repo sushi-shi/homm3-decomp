@@ -1272,7 +1272,7 @@ static long valueOfBuilding(town* currentTown, type_building_id building,
                 long value = 0;
                 for (int i = 0; i < player->m_numHeroes; ++i) {
                     if (g_game->getHero(player->m_heroes[i])->m_heroClass
-                        == eClassNecromancer)
+                        == classNecromancer)
                         value += 1000;
                 }
                 return value;
