@@ -47,6 +47,75 @@ NAMED_STATIC = re.compile(r"^(?P<prefix>.+\$S)[0-9]+$")
 VOLATILE_E_FUNCTION = re.compile(r"^_?\$E[0-9]+$")
 COMPGEN_PREFIX = "__h3cg$"
 
+# VC6 anonymous namespace scope: ?%<path><crc32>@ in mangled names.
+ANON_NS_SCOPE_RE = re.compile(r"\?\%([^@]+)@")
+_ANON_NS_CANONICAL: dict[str, str] | None = None
+
+
+def _load_anon_ns_canonical() -> dict[str, str]:
+    """Load retail-RTTI-proven canonical anonymous namespace paths.
+
+    Returns {lowercase_basename: canonical_scope_body} where the scope
+    body is the full path+hash string that goes between ?% and @.
+    """
+    global _ANON_NS_CANONICAL
+    if _ANON_NS_CANONICAL is not None:
+        return _ANON_NS_CANONICAL
+    from homm3.core import common
+    path = common.HOMM3_DIR / "config/retail-anon-ns-paths.tsv"
+    if not path.is_file():
+        _ANON_NS_CANONICAL = {}
+        return _ANON_NS_CANONICAL
+    result = {}
+    for line in path.read_text().splitlines():
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split("\t")
+        if len(parts) != 2 or parts[0] == "source_basename":
+            continue
+        result[parts[0].lower()] = parts[1]
+    _ANON_NS_CANONICAL = result
+    return _ANON_NS_CANONICAL
+
+
+def normalize_anon_ns_name(name: str) -> str:
+    """Replace machine-specific anonymous namespace path with canonical OG path.
+
+    VC6 embeds the absolute source-file path + CRC32 into COMDAT symbol
+    names for anonymous-namespace members.  This makes the name
+    machine-specific.  Retail RTTI proves the OG path; this function
+    substitutes it so symbol names are portable across build machines.
+    """
+    canonical = _load_anon_ns_canonical()
+    if not canonical:
+        return name
+    match = ANON_NS_SCOPE_RE.search(name)
+    if not match:
+        return name
+    scope_body = match.group(1)
+    basename = scope_body.rsplit("\\", 1)[-1] if "\\" in scope_body else scope_body
+    basename = re.sub(r"\d+$", "", basename).lower()
+    replacement = canonical.get(basename)
+    if replacement is None:
+        return name
+    return name[:match.start()] + "?%" + replacement + name[match.end() - 1:]
+
+
+def _anon_ns_renames(
+    symbols: dict[int, "Symbol"],
+    existing_renames: dict[int, str],
+) -> dict[int, str]:
+    """Build renames for anonymous namespace symbols using canonical paths."""
+    renames = {}
+    for symbol in symbols.values():
+        if symbol.index in existing_renames:
+            continue
+        new_name = normalize_anon_ns_name(symbol.name)
+        if new_name != symbol.name:
+            renames[symbol.index] = new_name
+    return renames
+
+
 INITIALIZED_DATA = 0x00000040
 UNINITIALIZED_DATA = 0x00000080
 CNT_CODE = 0x00000020
@@ -1487,6 +1556,8 @@ def canonicalize_coff(payload: bytes,
         raise RuntimeError("data and compiler-function canonicalization overlap")
     renames.update(compgen_rename)
     rows.extend(compgen_rows)
+    anon_renames = _anon_ns_renames(coff.symbols, renames)
+    renames.update(anon_renames)
     normalized = _rewrite_names(coff, renames)
     normalized, jump_table_rewrites = _rewrite_jump_table_relocations(
         coff, normalized)
