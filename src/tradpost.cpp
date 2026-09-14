@@ -3355,14 +3355,6 @@ int TBuyArtifactWindow::windowHandler(message& msg)
 
     int exitFlag = 0;
     switch (msg.m_id) {
-    case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(msg);
-        if (msg.m_codeY != m_lastHoverId) {
-            m_lastHoverId = msg.m_codeY;
-            setRolloverText(msg.m_codeY);
-        }
-        break;
-
     case MESSAGE_WIDGET:
         switch (msg.m_codeX) {
         case MARKET_WIDGET_ACTIVATE:
@@ -3495,6 +3487,14 @@ int TBuyArtifactWindow::windowHandler(message& msg)
         if (exitFlag) {
             msg.m_codeX = msg.m_codeY = 10;
             return MESSAGE_DISPATCH_FORWARD;
+        }
+        break;
+
+    case MESSAGE_MOUSE_MOVE:
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY != m_lastHoverId) {
+            m_lastHoverId = msg.m_codeY;
+            setRolloverText(msg.m_codeY);
         }
         break;
     }
@@ -3778,14 +3778,6 @@ int TSellCreatureWindow::windowHandler(message& msg)
 
     int switchWindow = 0;
     switch (msg.m_id) {
-    case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(msg);
-        if (msg.m_codeY != m_lastHoverId) {
-            m_lastHoverId = msg.m_codeY;
-            setRolloverText(msg.m_codeY);
-        }
-        break;
-
     case MESSAGE_WIDGET:
         switch (msg.m_codeX) {
         case MARKET_WIDGET_QUICK_VIEW:
@@ -3895,6 +3887,14 @@ int TSellCreatureWindow::windowHandler(message& msg)
         if (switchWindow) {
             msg.m_codeX = msg.m_codeY = 10;
             return MESSAGE_DISPATCH_FORWARD;
+        }
+        break;
+
+    case MESSAGE_MOUSE_MOVE:
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY != m_lastHoverId) {
+            m_lastHoverId = msg.m_codeY;
+            setRolloverText(msg.m_codeY);
         }
         break;
     }

@@ -3756,6 +3756,11 @@ int TBlacksmithWindow::windowHandler(message& msg)
         return result;
 
     switch (msg.m_id) {
+    case MESSAGE_WIDGET:
+        if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT)
+            setRightClickText(msg.m_codeY);
+        break;
+
     case MESSAGE_MOUSE_MOVE:
         g_windowManager->convertToHover(msg);
         if (msg.m_codeY != m_lastHover) {
@@ -3763,11 +3768,6 @@ int TBlacksmithWindow::windowHandler(message& msg)
             setRolloverText(msg.m_codeY);
         }
         return 1;
-
-    case MESSAGE_WIDGET:
-        if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT)
-            setRightClickText(msg.m_codeY);
-        break;
     }
 
     long elapsed = GameTime::get()
@@ -5523,7 +5523,6 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
     };
     EGameResource types[7];
     int amounts[7];
-    message msg;
     int i;
 
     int numResources = m_townToView->getBuildCost(
@@ -5533,6 +5532,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
     if (window == 0)
         memError();
 
+    message msg;
     msg.m_qualifier = 0;
     msg.m_mouseX = 0;
     msg.m_mouseY = 0;
@@ -6097,15 +6097,6 @@ int TTavernWindow::windowHandler(message& msg)
     playerData* player = g_game->getLocalPlayer();
 
     switch (msg.m_id) {
-    case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(msg);
-        if (msg.m_codeY != m_lastHover || msg.m_qualifier != m_lastQualifier) {
-            m_lastHover = msg.m_codeY;
-            m_lastQualifier = msg.m_qualifier;
-            setRolloverText(msg.m_codeY);
-        }
-        break;
-
     case MESSAGE_WIDGET:
         switch (msg.m_codeX) {
         case widget::WIDGET_DESELECT:
@@ -6171,6 +6162,15 @@ int TTavernWindow::windowHandler(message& msg)
                            WINDOW_ALL_WIDGETS_HIGH);
             }
             break;
+        }
+        break;
+
+    case MESSAGE_MOUSE_MOVE:
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY != m_lastHover || msg.m_qualifier != m_lastQualifier) {
+            m_lastHover = msg.m_codeY;
+            m_lastQualifier = msg.m_qualifier;
+            setRolloverText(msg.m_codeY);
         }
         break;
     }
@@ -8007,16 +8007,6 @@ int TCastleWindow::windowHandler(message& msg)
         return result;
 
     switch (msg.m_id) {
-    case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(msg);
-        if (msg.m_codeY != g_townManager->m_lastHover
-            || msg.m_qualifier != g_townManager->m_lastQualifier) {
-            g_townManager->m_lastHover = msg.m_codeY;
-            g_townManager->m_lastQualifier = msg.m_qualifier;
-            setRolloverText(&msg);
-        }
-        return 1;
-
     case MESSAGE_WIDGET:
         if (msg.m_codeX == widget::WIDGET_SELECT
             || msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -8153,6 +8143,16 @@ int TCastleWindow::windowHandler(message& msg)
             }
         }
         break;
+
+    case MESSAGE_MOUSE_MOVE:
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY != g_townManager->m_lastHover
+            || msg.m_qualifier != g_townManager->m_lastQualifier) {
+            g_townManager->m_lastHover = msg.m_codeY;
+            g_townManager->m_lastQualifier = msg.m_qualifier;
+            setRolloverText(&msg);
+        }
+        return 1;
     }
 
     long elapsed = GameTime::get()
