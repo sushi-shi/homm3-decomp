@@ -2456,7 +2456,7 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
                         guardList.add(treasure->m_guardians.m_armies[i],
                                        treasure->m_guardians.m_numTroops[i], -1);
                 }
-                int numArmies = guardList.getNumArmies();
+                long numArmies = guardList.getNumArmies();
                 firstGuardAmount =
                     armyGroup::getArmySizeName(guardList.m_numTroops[0], 2);
                 guards = getArmyName(guardList.m_armies[0], 2);
@@ -3166,7 +3166,8 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                     if (currentGenerator.m_guards.m_armies[i] != CREATURE_NONE)
                         break;
                 }
-                int guardType = currentGenerator.m_guards.m_armies[i];
+                TCreatureType guardType =
+                    TCreatureType(currentGenerator.m_guards.m_armies[i]);
                 long guardQty = currentGenerator.m_guards.getCreatureTotal();
                 overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
                 updBottomView(0, 1, 1);
@@ -6844,7 +6845,7 @@ VA(0x004abdc0, 0x6D0)  // anchor-callee ExtraInfoUnion::get_creature_bank, ret 0
 int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text, type_point point, unsigned char humanPlayer)
 {
     type_creature_bank& bank = cell->getCreatureBank();
-    int leaderMonster = -1;
+    TCreatureType leaderMonster = CREATURE_NONE;
     long creatureCount = bank.m_guards.getCreatureTotal();
     if (humanPlayer) {
         int best = 0;
@@ -6853,7 +6854,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
             if (type != CREATURE_NONE
                 && g_creatureTypeTraits[type].m_aiValue > best) {
                 best = g_creatureTypeTraits[type].m_aiValue;
-                leaderMonster = type;
+                leaderMonster = TCreatureType(type);
             }
         }
     }

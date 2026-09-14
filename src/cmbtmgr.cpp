@@ -2416,7 +2416,8 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     // The arc: half the horizontal span, spread over the flight. The
     // trajectory below subtracts flatness*(nframes - step) from deltaY,
     // so the peak deviation is nframes/4 * flatness = abs(deltaX)/2.
-    double flatness = 2.0 * abs(deltaX) / static_cast<double>(nframes);
+    const double flatness =
+        2.0 * abs(deltaX) / static_cast<double>(nframes);
 
     int width = missile->getWidth();
     int height = missile->getHeight();

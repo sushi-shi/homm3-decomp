@@ -828,7 +828,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
                 || m_currFrameType == cs_fidget))) {
         long step = 1;
         long xoff;
-        long yoff;
+        int yoff;
         if (m_facing == 0) {
             xoff = 0x34;
             yoff = -0x1e;
@@ -2327,7 +2327,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
     m_isMoving = 1;
     m_joustBonus = last - stop + 1;
     for (long i = last; i >= stop; i--) {
-        long direction = g_searchArray->getStep(i);
+        const int direction = g_searchArray->getStep(i);
         long nextHex = getAdjacentCellIndex(m_gridIndex, direction);
         if (g_combatManager->shouldLowerDoor(this, nextHex)) {
             if (!atRest) {

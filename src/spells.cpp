@@ -2881,7 +2881,7 @@ void combatManager::areaEffect(long targetCell, SpellID spellType,
     unsigned char multipleTargets;
     spellEffect(g_spellTraits[spellType].m_effect, targetCell, 100, 0);
     std::vector<army*> targets;
-    long damage;
+    int damage;
     markAreaEffect(spellType, targetCell, mastery, targets);
     long deaths = 0;
     army* victim = 0;

@@ -170,7 +170,7 @@ unsigned char combatManager::automateCatapult()
 VA(0x00473ea0, 0x196)  // anchor-callee: Main's other automate callee (no-Random sibling) + order-map, dc 0x6b12c
 unsigned char combatManager::automateFirstAidTent()
 {
-    army* currentArmy = getCurrentArmy();
+    const army* currentArmy = getCurrentArmy();
     int side = currentArmy->getControllingSide();
 
     if (currentArmy->m_creatureType != CREATURE_FIRST_AID_TENT)

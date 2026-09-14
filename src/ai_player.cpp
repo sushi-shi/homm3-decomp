@@ -426,11 +426,10 @@ void type_AI_player::calculateDemand()
         player->m_ai.m_resourceValue[valueResource] = totalValue;
     }
 
-    long averageValue = 0;
+    double averageValue = 0;
     int averageResource;
     for (averageResource = 0; averageResource < 6; averageResource++)
-        averageValue = static_cast<long>(averageValue
-            + m_resourceValue[averageResource]);
+        averageValue += m_resourceValue[averageResource];
     player->m_ai.m_averageResourceValue = averageValue / 5;
 }
 
@@ -1119,11 +1118,11 @@ void type_AI_player::doResourceTrade(int* supply)
             ++marketCount;
     }
 
-    int efficiency = cppMin(marketCount, 10);
-    if (efficiency == 0)
+    marketCount = cppMin(marketCount, 10);
+    if (marketCount == 0)
         return;
 
-    double marketEfficiency = g_tradingPostEfficency[efficiency];
+    double efficiency = g_tradingPostEfficency[marketCount];
     for (int source = 0; source < 7; ++source) {
         if (supply[source] <= 0)
             continue;
@@ -1143,7 +1142,7 @@ void type_AI_player::doResourceTrade(int* supply)
                     memcpy(&destResource, &ordinal, sizeof destResource);
                 }
                 ratio = getTradeRatio(sourceResource, destResource,
-                                      marketEfficiency);
+                                      efficiency);
             }
             long traded = static_cast<long>(0.99999 - supply[dest] * ratio);
             long limit = static_cast<long>(
@@ -2966,7 +2965,7 @@ long type_AI_creature_purchaser::doBestPurchase(
 {
     int resourceCost[7];
     short sourceIndex;
-    long bestValue = 0;
+    int bestValue = 0;
     short bestNumber = 0;
     short bestSource = -1;
     short bestSlot = -1;

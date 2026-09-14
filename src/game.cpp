@@ -826,7 +826,7 @@ VA(0x004b9340, 0x240)  // anchor-global (ClaimMine vector) + read-slot, dc 0xa3e
 int game::loadMinePool(TAbstractFile* infile, int saveVersion)
 {
     int count;
-    unsigned int x;
+    int x;
     char charBuffer;
     if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
         return -1;
@@ -2301,7 +2301,7 @@ void game::setupShipyards()
 {
     hero* obscuringHero = 0;
     boat* obscuringBoat = 0;
-    int i;
+    long i;
     for (i = 0; i < 8; ++i) {
         m_players[i].m_shipyards.clear();
     }
@@ -3805,7 +3805,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
     }
 
     if (victory.m_type == VICTORY_CONDITION_DEFEAT_MONSTER) {
-        NewmapCell* thisCell = m_worldMap.cell(
+        const NewmapCell* thisCell = m_worldMap.cell(
             victory.m_monsterX, victory.m_monsterY, victory.m_monsterZ);
         if (thisCell->m_type == MONSTER && thisCell->m_isTrigger) {
             {
@@ -4670,7 +4670,7 @@ void game::randomizeEvents()
     int luckBonus;
     unsigned char resQty;
     EGameResource resType;
-    NewmapCell::TObjectCell thisObj;
+    NewmapCell::TObjectCell* thisObj;
 
     const unsigned long visitedBits = 0x00001fe0;
     const unsigned long poolIndexBits = 0x03ffe000;
@@ -5114,18 +5114,18 @@ void game::randomizeEvents()
                     break;
 
                 case WHIRLPOOL:
-                    thisObj = tempCell->m_objects[0];
-                    if ((thisObj.m_offsets & 0xf)
+                    thisObj = &tempCell->m_objects[0];
+                    if ((thisObj->m_offsets & 0xf)
                             == g_whirlpoolTriggerXOffset
-                        && (thisObj.m_offsets & 0xf0)
+                        && (thisObj->m_offsets & 0xf0)
                             == g_whirlpoolTriggerYOffset) {
                         tempCell->m_extraInfo = numWhirlpool++;
                     }
                     else {
                         int xOffset = static_cast<signed char>(
-                            thisObj.m_offsets << 4) >> 4;
+                            thisObj->m_offsets << 4) >> 4;
                         int yOffset =
-                            static_cast<signed char>(thisObj.m_offsets) >> 4;
+                            static_cast<signed char>(thisObj->m_offsets) >> 4;
                         tempCell->m_extraInfo = m_worldMap.cell(
                             x + xOffset - 2, y + yOffset - 1, z)->m_extraInfo;
                     }
@@ -7871,14 +7871,14 @@ void game::perDay()
 
     if (m_day == 1) {
         for (i = 0; i < m_towns.size(); ++i) {
-            town* currentTown = &m_towns[i];
-            if (currentTown->m_type == TOWN_RAMPART
-                && currentTown->hasBuilding(SPECIAL_BUILDING_ID, 1)) {
-                currentTown->m_pondResource = g_resources[random(0, 3)];
-                currentTown->m_pondAmount = random(1, 4);
+            town& currentTown = m_towns[i];
+            if (currentTown.m_type == TOWN_RAMPART
+                && currentTown.hasBuilding(SPECIAL_BUILDING_ID, 1)) {
+                currentTown.m_pondResource = g_resources[random(0, 3)];
+                currentTown.m_pondAmount = random(1, 4);
             } else {
-                currentTown->m_pondResource = -1;
-                currentTown->m_pondAmount = 0;
+                currentTown.m_pondResource = -1;
+                currentTown.m_pondAmount = 0;
             }
         }
     }
@@ -8732,7 +8732,7 @@ void game::convertObject(NewmapCell* tempCell)
         }
     }
 
-    TAdventureObjectType oldType = newType->m_objectType;
+    int oldType = newType->m_objectType;
     newType->m_imageName = defName;
     newType->m_objectType = newObject;
     newType->m_extra = tempCell->m_objectIndex;

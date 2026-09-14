@@ -7543,7 +7543,8 @@ void TSingleSelectionWindow::onPlayerPosClick(int pos)
         if (mp->m_playerSlotAttributes[pos].m_canBeHuman
                 && player->m_playerPos != pos) {
             if (player->m_playerPos != -1) {
-                widget* b = getWidget(player->m_playerPos + 263);
+                button* b = static_cast<button*>(
+                    getWidget(player->m_playerPos + 263));
                 b->sendMessage(
                     widget::WIDGET_CLEAR_STATUS,
                     widget::WIDGET_HIGHLIGHTED);
