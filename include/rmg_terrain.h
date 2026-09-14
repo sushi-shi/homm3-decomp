@@ -24,10 +24,10 @@ inline TPoint operator+(const TPoint& point, const TPoint& offset)
 // proven roles because the Dreamcast build has no RMG compiland.
 // Prior provisional class role: TRmgTerrainTile.
 struct rmgTerrainTile {
-    int m_terrain; // prior role: terrain
-    int m_frame; // prior role: frame
-    unsigned char m_flipX; // prior role: flipX
-    unsigned char m_flipY; // prior role: flipY
+    int m_terrain;
+    int m_frame;
+    unsigned char m_flipX;
+    unsigned char m_flipY;
     // +0x0a..0x0b are natural alignment padding, not source members.
     // Painter copies at 0x55edc0 and 0x55f350 transfer the two dwords and
     // only these two flip bytes; an explicit padding array makes copies
@@ -57,9 +57,7 @@ struct rmgTerrainTile {
 };
 
 struct TRmgTerrainFlip {
-    // Before normalization: flipX.
     unsigned char m_flipX;
-    // Before normalization: flipY.
     unsigned char m_flipY;
 
     TRmgTerrainFlip() {}
@@ -78,30 +76,19 @@ enum TRmgTerrainNeighbourKind {
 // retail cluster. Its constructor clears only the validity bit; the upper
 // two bits survive every fill from the map adapter.
 struct TRmgPackedTerrainCell {
-    // Before normalization: initialized.
     unsigned short m_initialized : 1;
-    // Before normalization: terrain.
     unsigned short m_terrain : 4;
-    // Before normalization: frame.
     unsigned short m_frame : 7;
-    // Before normalization: flipX.
     unsigned short m_flipX : 1;
-    // Before normalization: flipY.
     unsigned short m_flipY : 1;
-    // Before normalization: unknown14.
     unsigned short m_unknown14 : 2;
 
     TRmgPackedTerrainCell() : m_initialized(0) {}
 
-    // Before normalization (function): TRmgPackedTerrainCell::GetTerrain.
     inline int getTerrain() const { return m_terrain; }
-    // Before normalization (function): TRmgPackedTerrainCell::GetFrame.
     inline int getFrame() const { return m_frame; }
-    // Before normalization (function): TRmgPackedTerrainCell::GetFlipX.
     inline unsigned char getFlipX() const { return m_flipX; }
-    // Before normalization (function): TRmgPackedTerrainCell::GetFlipY.
     inline unsigned char getFlipY() const { return m_flipY; }
-    // Before normalization (function): TRmgPackedTerrainCell::GetTile.
     inline rmgTerrainTile getTile() const
     {
         rmgTerrainTile tile;
@@ -111,15 +98,10 @@ struct TRmgPackedTerrainCell {
         tile.m_flipY = getFlipY();
         return tile;
     }
-    // Before normalization (function): TRmgPackedTerrainCell::SetInitialized.
     inline void setInitialized() { m_initialized = 1; }
-    // Before normalization (function): TRmgPackedTerrainCell::SetTerrain.
     inline void setTerrain(int value) { m_terrain = value; }
-    // Before normalization (function): TRmgPackedTerrainCell::SetFrame.
     inline void setFrame(int value) { m_frame = value; }
-    // Before normalization (function): TRmgPackedTerrainCell::SetFlipX.
     inline void setFlipX(unsigned char value) { m_flipX = value; }
-    // Before normalization (function): TRmgPackedTerrainCell::SetFlipY.
     inline void setFlipY(unsigned char value) { m_flipY = value; }
 };
 
@@ -128,9 +110,8 @@ struct TRmgPackedTerrainCell {
 // and its source spellings remain unknown.
 class TRmgTerrainRule {
 public:
-    // Before normalization: blendsWithOtherTerrain.
     unsigned char m_blendsWithOtherTerrain; // +0x04
-    // Previously opaque0005; needsTerrainRepair and repairTerrainPoint
+    // needsTerrainRepair and repairTerrainPoint
     // consult this byte before joining separated neighbour regions.
     unsigned char m_allowsSeparatedNeighbours; // +0x05
     char m_tailPadding[2];
@@ -140,15 +121,10 @@ public:
         : m_blendsWithOtherTerrain(blendsWithOtherTerrain),
           m_allowsSeparatedNeighbours(allowsSeparatedNeighbours) {}
     virtual ~TRmgTerrainRule();
-    // Before normalization (function): TRmgTerrainRule::HasEntries.
     virtual unsigned char hasEntries() = 0;
-    // Before normalization (function): TRmgTerrainRule::IsSpecialFrame.
     virtual unsigned char isSpecialFrame(int frame) = 0;
-    // Before normalization (function): TRmgTerrainRule::GetEntry.
     virtual int getEntry(int index) = 0;
-    // Before normalization (function): TRmgTerrainRule::SelectBaseFrame.
     virtual int selectBaseFrame(int value, int oldFrame) = 0;
-    // Before normalization (function): TRmgTerrainRule::SelectTransitionFrame.
     virtual int selectTransitionFrame(
         int transition,
         TRmgTerrainFlip requestedFlip,
@@ -192,8 +168,8 @@ struct TRmgTerrainPatternTable {
 DATA(0x006A4158)
 extern TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
 
-// Constructor 0x5b3780 copies its entry array and builds 58 first/count
-// ranges at +0x14. This data-backed rule supplies vtable 0x642c98; its
+// Constructor 0x5b3780 retains the entry-array pointer at +0x10 and builds
+// 58 first/count ranges at +0x14. This data-backed rule supplies vtable 0x642c98; its
 // original Complete-only class name is unavailable.
 class TRmgPatternTerrainRule : public TRmgTerrainRule {
 public:
@@ -225,8 +201,6 @@ public:
 class TRmgTableTerrainRule : public TRmgTerrainRule {
 public:
     TRmgTableTerrainRule();
-    virtual ~TRmgTableTerrainRule();
-    // Before normalization (function): TRmgTableTerrainRule::HasEntries.
     virtual unsigned char hasEntries();
     virtual unsigned char isSpecialFrame(int frame);
     virtual int getEntry(int index);
@@ -239,15 +213,12 @@ public:
 };
 
 // Retail 0x642bd8 is a pointer table in the read-only .rdata section.
-// Before normalization: gRmgTerrainRules.
 extern TRmgTerrainRule* const g_rmgTerrainRules[];
 
 // RepairTerrainPoint ranks up to four disjoint runs in an eight-cell ring.
 struct TRmgTerrainGap {
     unsigned int m_weight;
-    // Before normalization: start.
     unsigned int m_start;
-    // Before normalization: length.
     unsigned int m_length;
 };
 
@@ -264,13 +235,13 @@ enum TRmgTerrainTransitionCase {
 // Prior provisional class role: TRmgTerrainPainter.
 class rmgTerrainPainter {
 public:
-    TRmgMapInterface* m_adapter;                // +0x00; prior role: adapter
-    int m_paintTerrain;                               // +0x04; prior role: paintTerrain
-    int m_transitionStrength;                         // +0x08; prior role: transitionStrength
-    TRmgGridPoint m_size;                             // +0x0c; prior roles: width, height
-    std::set<TRmgGridPoint> m_primaryPoints;            // +0x14; prior role: primaryPoints
-    std::set<TRmgGridPoint> m_secondaryPoints;          // +0x24; prior role: secondaryPoints
-    std::vector<TRmgPackedTerrainCell> m_packedCells;   // +0x34; prior role: packedCells
+    TRmgMapInterface* m_adapter;                // +0x00
+    int m_paintTerrain;                               // +0x04
+    int m_transitionStrength;                         // +0x08
+    TRmgGridPoint m_size;                             // +0x0c
+    std::set<TRmgGridPoint> m_primaryPoints;            // +0x14
+    std::set<TRmgGridPoint> m_secondaryPoints;          // +0x24
+    std::vector<TRmgPackedTerrainCell> m_packedCells;   // +0x34
 
     rmgTerrainPainter(
         TRmgMapInterface* newAdapter,
@@ -278,23 +249,14 @@ public:
         int newTransitionStrength);
     ~rmgTerrainPainter();
 
-    // Prior provisional role: Finish
     void finish();
-    // Prior provisional role: ChangeTerrain
     int changeTerrain(int terrain, int strength);
-    // Prior provisional role: PaintRectangle
     void paintRectangle(
         unsigned int x, unsigned int y,
         unsigned int rectangleWidth, unsigned int rectangleHeight);
 
-    // Prior provisional role: InitializePackedCell
     void initializePackedCell(const TRmgGridPoint& point, unsigned int index);
-    // Prior provisional role: GetPackedCell
     TRmgPackedTerrainCell* getPackedCell(const TRmgGridPoint& point);
-    // Retail repeatedly expands this field accessor while retaining the
-    // nested GetPackedCell call. Keeping the source helper is therefore
-    // required even though it has no separately located retail body.
-    // Prior provisional role: GetTerrain
     int getTerrain(const TRmgGridPoint& point);
     int getFrame(const TRmgGridPoint& point);
     // Provisional dimension accessors inferred from paintTransitions' scalar
@@ -302,47 +264,30 @@ public:
     // the source calls restore all but one of its retained cache reads.
     unsigned int getWidth() const;
     unsigned int getHeight() const;
-    // Prior provisional role: PaintTransitions
     void paintTransitions();
-    // Prior provisional role: SelectBaseFrame
     int selectBaseFrame(const TRmgGridPoint& point, int terrain, int oldFrame);
-    // Prior provisional role: SetTile
     void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
     void paintBaseTile(const TRmgGridPoint& point);
     int getPaintTerrain() const;
     unsigned char isPaintTerrain(const TRmgGridPoint& point);
 
-    // Prior provisional role: PaintPoint
     void paintPoint(const TRmgGridPoint& point);
-    // Prior provisional role: QueueOtherTerrainNeighbours
     void queueOtherTerrainNeighbours(const TRmgGridPoint& point);
-    // Prior provisional role: RepairTerrainPoint
     void repairTerrainPoint(const TRmgGridPoint& point);
-    // Prior provisional role: IsHorizontalGap
     unsigned char isHorizontalGap(const TRmgGridPoint& point, int terrain);
-    // Prior provisional role: IsVerticalGap
     unsigned char isVerticalGap(const TRmgGridPoint& point, int terrain);
-    // Prior provisional role: IsHorizontalGap
     unsigned char isHorizontalGap(const TRmgGridPoint& point);
-    // Prior provisional role: IsVerticalGap
     unsigned char isVerticalGap(const TRmgGridPoint& point);
-    // Prior provisional role: NeedsTerrainRepair
     unsigned char needsTerrainRepair(const TRmgGridPoint& point);
-    // Prior provisional role: HasSeparatedNeighbours
     unsigned char hasSeparatedNeighbours(const TRmgGridPoint& point);
-    // Prior provisional role: BuildMatchingNeighbourMask
     void buildMatchingNeighbourMask(
         const TRmgGridPoint& point, unsigned char* matches);
 
-    // Prior provisional role: BuildNeighbourKinds
     void buildNeighbourKinds(const TRmgGridPoint& point, int* neighbours);
-    // Prior provisional role: CheckFirstDiagonal
     unsigned char checkFirstDiagonal(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
-    // Prior provisional role: CheckSecondDiagonal
     unsigned char checkSecondDiagonal(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
-    // Prior provisional role: GetTransitionStrength
     int getTransitionStrength(const TRmgGridPoint& point, int terrain);
 };
 
@@ -350,7 +295,6 @@ public:
 // auto_ptr ownership byte/pointer pair; 0x5b72f0 conditionally deletes it.
 class TRmgTerrainBrush {
 public:
-    // Before normalization: painter.
     std::auto_ptr<rmgTerrainPainter> m_painter;
 
     TRmgTerrainBrush(TRmgMapInterface* map, int terrain, int strength);

@@ -16,6 +16,19 @@ from homm3.analysis import dreamcast, source_facts as facts
 
 
 class TypeFactsTest(unittest.TestCase):
+    def test_local_conventions_work_without_alias_comments(self):
+        expected = {"locals": [{"name": "pCurrentHero", "type": "Hero*"}]}
+        candidate = {"locals": [{"name": "currentHero", "type": "Hero*"}]}
+        result = facts.compare_facts(expected, candidate)
+        self.assertFalse(result["findings"])
+        self.assertFalse(any("local pCurrentHero:" in s for s in result["coverage_gaps"]))
+        candidate["locals"].append({"name": "current_hero", "type": "Hero*"})
+        result = facts.compare_facts(expected, candidate)
+        self.assertTrue(any("ambiguous" in s for s in result["coverage_gaps"]))
+        candidate["locals"] = [{"name": "anotherHero", "type": "Hero*"}]
+        result = facts.compare_facts(expected, candidate)
+        self.assertTrue(any("no named" in s for s in result["coverage_gaps"]))
+
     def test_string_defaults_preserve_custom_arguments_and_cv_layers(self):
         full = "std::basic_string<char, std::char_traits<char>, std::allocator<char> >"
         for abbreviated in ("std::basic_string<char>",

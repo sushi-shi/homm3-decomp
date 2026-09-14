@@ -1,6 +1,7 @@
 #ifndef HOMM3_BITSET_ITERATOR_H
 #define HOMM3_BITSET_ITERATOR_H
 
+#include <va.h>
 #include <bitset>
 
 // The PC standard library's bitset has no iterator surface.  The game uses
@@ -33,13 +34,15 @@ public:
     }
 
 private:
-    // Before normalization: bits_.
     std::bitset<N>* m_bits;
-    // Before normalization: position_.
     size_t m_position;
 };
 
 template <size_t N>
+// VA instance: bitset_iterator<144>::operator*
+VA(0x0048eb40, 0x14)  // retained caller in ScenarioStruct::read
+// VA instance: bitset_iterator<145>::operator*
+VA(0x004d4ca0, 0x14)  // retained caller in game::getRandomMonster
 typename std::bitset<N>::reference bitset_iterator<N>::operator*() const
 {
     return (*m_bits)[m_position];

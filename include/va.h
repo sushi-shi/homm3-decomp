@@ -20,7 +20,7 @@
  *                                  STATIC_DTOR / STATIC_CTOR /
  *                                  DEFAULT_CTOR_CLOSURE /
  *                                  VECTOR_DELETING_DTOR / VECTOR_DTOR /
- *                                  VECTOR_* / BITSET_* / TREE_* / STD_* /
+ *                                  VECTOR_* / BITSET_* / TREE_* / MAP_* / STD_* /
  *                                  BASIC_STRING_* / OSTREAM_* /
  *                                  INSERTION_SORT_1 /
  *                                  BITSET_AND_ASSIGN / BITSET_OR /
@@ -52,7 +52,9 @@
 #ifndef HOMM3_VA_H
 #define HOMM3_VA_H
 
-#ifdef __clang__
+// The source inventory selects VC6 project branches but still needs these
+// annotations. HOMM3_SOURCE_OWNERSHIP is set only by that analysis tool.
+#if defined(__clang__) || defined(HOMM3_SOURCE_OWNERSHIP)
 
 #define VA(addr, size) __attribute__((annotate("va:" #addr " size:" #size)))
 #define VA_COMPGEN(addr, size, kind, owner)

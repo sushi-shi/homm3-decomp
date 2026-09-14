@@ -18,12 +18,6 @@ DATA(0x00644120) const unsigned char g_victorLeadingBits[8] =
 DATA(0x00644128) const unsigned char g_victorTrailingBits[8] =
     { 0x7f, 0x3f, 0x1f, 0x0f, 7, 3, 1, 0 };
 
-// Public API name corroborated by DC_precompiledheaders.cpp:544's PCX stub;
-// that four-byte Dreamcast stub supplies no Windows implementation evidence.
-// Retail independently proves stdcall/ret 16, four stack arguments forwarded
-// to the cdecl worker at 0x6035c0, and the extra global mode argument.
-// All 37 bytes agree after resolving the two known relocation targets.
-// /Oy- is a negative control: it adds an EBP frame and changes stack operands.
 VA(0x00603590, 0x25)  // anchor-caller Bitmap24Bit/Bitmap816::importPCXFile; external Victor library
 int __stdcall allocimage(imgdes* image, int width, int height, int bitsPerPixel)
 {
@@ -176,26 +170,6 @@ int __stdcall victorUploadPalette(imgdes* image)
     return status;
 }
 
-// Retail-only Victor validator: IsBadReadPtr on the pixel buffer, unsigned
-// inclusive-region normalization, signed byte-stride calculation and
-// compression/depth status precedence. No Dreamcast implementation exists.
-// Residual (88.64%): an explicit success else preserves retail's compression
-// branch polarity and raises the body from 79.95%; both sides now retain
-// twenty CFG blocks, thirteen branches and four return sequences. Retail still
-// keeps the initial -42 in EBP and shares the final status exit, while VC6
-// splits a trailing literal -42 return. Its null/region failures also use a
-// later -1 epilogue instead of sharing the stride failure's first epilogue.
-// Explicit region-error / finished labels are byte-flat at the earlier shape,
-// and reversing the swap stores lowers the score to 79.68%.
-// A complete 64-state source family crossed eight equivalent expressions for
-// the shared region error with eight for the stride error; every candidate
-// compiled to the same object. VC6 RTM and RTM-front-end controls are also
-// byte-identical to SP3, excluding the known compiler-generation hypothesis.
-// A twenty-state exit-structure family emits six objects and proves the else
-// gain. Two twenty-five-state follow-ups exhaust nested error/stride joins and
-// outer bad-pointer return/goto forms; they emit two and six objects, with no
-// further gain. Five forward gotos are invalid because they cross header and
-// maxWidth initialization; the other twenty outer-flow sources compile.
 VA(0x006038b0, 0xea)  // anchor-caller victorValidateBitmap + imgdes offsets / IsBadReadPtr
 int __stdcall victorValidateImage(imgdes* image)
 {
@@ -235,11 +209,6 @@ int __stdcall victorValidateImage(imgdes* image)
     return status;
 }
 
-// Provisional internal name. The three callers at 0x603b2c, 0x603b42 and
-// 0x603e12 all belong to Victor. Preserve the validator's other statuses;
-// only its unsupported-depth result (-26) is cleared for a one-bit image.
-// The 16-bit read at BITMAPINFOHEADER+0x0e proves biBitCount, and ret 4
-// proves the stack-call ABI. All 32 bytes agree after the callee relocation.
 VA(0x006039a0, 0x20)  // anchor-caller + bitmap-header semantics; external Victor library
 int __stdcall victorValidateBitmap(imgdes* image)
 {

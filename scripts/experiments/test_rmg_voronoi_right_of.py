@@ -23,10 +23,13 @@ class RightOfTests(unittest.TestCase):
         types = "struct TRmgZone {};\n" + "\n".join(block(name) for name in (
             "TRmgVector", "TPoint", "TRmgBoundaryVertex"))
         methods = "\n".join(helper.definition(source, name, **args) for name, args in (
+            ("TRmgBoundaryVertex::initialize", {}),
             ("TRmgBoundaryVertex::TRmgBoundaryVertex", dict(parameters="TPoint sitePosition, TRmgZone* zone, TRmgBoundaryVertex* twin")),
             ("TRmgBoundaryVertex::TRmgBoundaryVertex", dict(parameters="TPoint sitePosition, TRmgZone* zone, TPoint twinSitePosition, TRmgZone* twinZone")),
             ("getRmgPointOrientation", {})))
         forms = [module.predicate(*choice) for choice in itertools.product(range(3), range(5), range(2), range(2))]
+        forms.append(helper.definition(source, "isRmgCounterClockwise") + "\n"
+                     + helper.definition(source, "isRmgPointRightOfEdge"))
         count = len(forms)
         forms += [forms[0].replace(") > 0;", ") < 0;"),
                   forms[0].replace(") > 0;", ") >= 0;"),

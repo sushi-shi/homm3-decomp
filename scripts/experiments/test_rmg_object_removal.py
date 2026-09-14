@@ -22,7 +22,7 @@ class ObjectRemovalTests(unittest.TestCase):
         source=(root/"src/rmg.cpp").read_text()
         header=(root/"include/rmg.h").read_text()
         support=(root/"src/rmg_support.cpp").read_text()
-        objects=(root/"include/advmgr_objects.h").read_text()
+        objects=(root/"include/objecttype.h").read_text()
         mapcell=(root/"include/mapcell.h").read_text()
         module=generator("generate-rmg-object-removal-family.py")
         definition=generator("generate-rmg-position-family.py").definition
@@ -85,7 +85,7 @@ class ObjectRemovalTests(unittest.TestCase):
         def field(text,name):
             return next(line.split("//")[0].strip() for line in text.splitlines() if name+";" in line)
 
-        text="#include <vector>\n#include <bitset>\n#include <algorithm>\n#include <cstring>\n#include <cstdio>\n"
+        text="#define VA(address, size)\n#include <vector>\n#include <bitset>\n#include <algorithm>\n#include <cstring>\n#include <cstdio>\n"
         for name in ("TRmgVector","TPoint","TRmgMapPosition","TRmgZoneCellState","TRmgGroundTileData"):
             text+=block(header,"struct "+name)+"\n"
         start = header.index("template<class Coordinate>\nstruct TRmgGridPointT {")
@@ -100,7 +100,7 @@ class ObjectRemovalTests(unittest.TestCase):
             text+=field(objects,name)+"\n"
         text+=definition(objects,"getWidth",parameters="")+"\n"
         text+=definition(objects,"getHeight",parameters="")+"\n};\n"
-        text+="struct CObjectType {\n"+definition(objects,"getBitPos",parameters="unsigned x, unsigned y")+"\n};\n"
+        text+="struct CObjectType {\n"+definition(mapcell,"getBitPos",parameters="unsigned x, unsigned y")+"\n};\n"
         text+="struct TRmgObjectPropertiesRef { "+field(header,"m_prototype")+" };\n"
         text+="struct type_object { "+field(header,"m_properties")+" "+field(header,"m_position")+" };\n"
         text+="struct TRmgMapItem { "+field(header,"m_objects")+" TRmgZoneCellState m_zoneState; TRmgGroundTileData m_tileData; };\n"

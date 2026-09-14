@@ -1,5 +1,4 @@
 // dialogbox.cpp - E:\gamedcs\dialogbox.cpp (compiland dialogbox.obj)
-// HAND-OWNED after admission; retail bytes are authoritative.
 #include <va.h>
 #include "border.h"
 #include "dialogbox.h"
@@ -11,8 +10,7 @@
 #include "widget.h"
 #include "winmgr.h"
 
-// E:\gamedcs\dialogbox.cpp:36
-VA(0x0048fdc0, 0x6F)  // Setup call + five-arg heroWindow ctor, dc 0x81748
+VA(0x0048fdc0, 0x6F)  // dc 0x81748
 TDialogBox::TDialogBox(int winX, int winY, int winWidth,
                        int winHeight, unsigned winType)
     : heroWindow(winX, winY, winWidth, winHeight, winType)
@@ -20,18 +18,15 @@ TDialogBox::TDialogBox(int winX, int winY, int winWidth,
     setup(winX, winY, winWidth, winHeight);
 }
 
-// Retail vtable 0x63db40 slot 0.
 VA_COMPGEN(0x0048fe30, 0x21, SCALAR_DELETING_DTOR, TDialogBox)
 
-// E:\gamedcs\dialogbox.cpp:41
-VA(0x0048fe60, 0x2A)  // vtable + heroWindow ctor, dc 0x817b0
+VA(0x0048fe60, 0x2A)  // dc 0x817b0
 TDialogBox::TDialogBox(unsigned winType)
     : heroWindow(0, 0, 800, 600, winType)
 {
 }
 
-// E:\gamedcs\dialogbox.cpp:46
-VA(0x0048fe90, 0x6B)  // deleting-dtor callee + widget ownership, dc 0x817f8
+VA(0x0048fe90, 0x6B)  // dc 0x817f8
 TDialogBox::~TDialogBox()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -40,8 +35,7 @@ TDialogBox::~TDialogBox()
     }
 }
 
-// E:\gamedcs\dialogbox.cpp:52
-VA(0x0048ff00, 0x833)  // vtable slot 9 + tiled-dialog CFG, dc 0x8185c
+VA(0x0048ff00, 0x833)  // dc 0x8185c
 unsigned char TDialogBox::setup(int winX, int winY,
                                 int winWidth, int winHeight)
 {
@@ -140,27 +134,18 @@ unsigned char TDialogBox::setup(int winX, int winY,
     return 1;
 }
 
-// Retail vtable 0x63db68 slot 0.
 VA_COMPGEN(0x00490740, 0x21, SCALAR_DELETING_DTOR, CTextDialog)
 
-// E:\gamedcs\dialogbox.cpp:143
-// The DC member attribute is compgenx, not an explicit empty source body.
-// Removing the false declaration/definition preserves all 1129 tracked
-// scores across the twelve header consumers and fixes CAnimatedDlg's
-// retained base-cleanup target. Keep the generated retained body claimed.
 VA_COMPGEN(0x00490770, 0x6B, IMPLICIT_DTOR, CTextDialog)
 
-// E:\gamedcs\dialogbox.cpp:146
-VA(0x004907e0, 0x31)  // vtable + pTextWidget zero, dc 0x81e00
+VA(0x004907e0, 0x31)  // dc 0x81e00
 CTextDialog::CTextDialog(unsigned winType)
     : TDialogBox(winType)
 {
     m_textWidget = 0;
 }
 
-// E:\gamedcs\dialogbox.cpp:151
-// Before normalization (locals): cText, pFont.
-VA(0x00490820, 0x26B)  // vtable slot 10 + CalcDimensions call, dc 0x81e38
+VA(0x00490820, 0x26B)  // dc 0x81e38
 unsigned char CTextDialog::setup(const char* text, font* currentFont)
 {
     int winX;
@@ -177,15 +162,13 @@ unsigned char CTextDialog::setup(const char* text, font* currentFont)
 
     m_textWidget = new textWidget(
         20, 40, winWidth - 40, winHeight - 40,
-        text, currentFont->m_name, font::PRIMARY, -1, 1, 0, 8);
+        text, currentFont->getName(), font::PRIMARY, -1, 1, 0, 8);
     m_widgets.push_back(m_textWidget);
     addWidget(m_textWidget, -1);
     return 1;
 }
 
-// E:\gamedcs\dialogbox.cpp:175
-// Before normalization (locals): cText, pFont.
-VA(0x00490a90, 0x8C)  // vtable slot 12 + font metric calls, dc 0x81f00
+VA(0x00490a90, 0x8C)  // dc 0x81f00
 void CTextDialog::calcDimensions(const char* text, font* currentFont,
                                  int& winX, int& winY,
                                  int& winWidth, int& winHeight)
@@ -203,20 +186,7 @@ void CTextDialog::calcDimensions(const char* text, font* currentFont,
     winY = (600 - winHeight) / 2;
 }
 
-// E:\gamedcs\dialogbox.cpp:200
-// NOT a helper the message handlers share.  The same five statements appear
-// at the tail of four free `*Handler(message&)` functions - CampaignBrief,
-// GameTypeWindow, CombatResultsWindow and HiScore - and that is a repeated
-// source idiom, not a paste of this body: checked 2026-09-06 (polish lane
-// 46) and REFUTED on the ABI.  This is `?ExitDialog@CTextDialog@@QAEHAAV
-// message@@@Z`, a thiscall member of a class the handlers have no instance
-// of (`CTextDialog : TDialogBox`, while `TCampaignBrief` and
-// `TGameTypeWindow` are both `heroWindow`), and retail's inventory has no
-// free `?ExitDialog@@YI...` row for them to reach - every other ExitDialog
-// is a member of some window class too, and all seven take `message*`
-// rather than the `message&` the handlers hold.  So there is no callable
-// spelling to restore, and GameTypeWindowHandler (100) is right as written.
-VA(0x00490b20, 0x2C)  // anchor-global, dc 0x81f98
+VA(0x00490b20, 0x2C)  // dc 0x81f98
 int CTextDialog::exitDialog(message& msg)
 {
     msg.m_id = MESSAGE_WIDGET;
@@ -226,9 +196,7 @@ int CTextDialog::exitDialog(message& msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
-// E:\gamedcs\dialogbox.cpp:211
-// Before normalization (locals): cNewText.
-VA(0x00490b50, 0x17)  // vtable slot 11 + textWidget::SetText, dc 0x81fb0
+VA(0x00490b50, 0x17)  // dc 0x81fb0
 void CTextDialog::updateText(const char* newText)
 {
     if (m_textWidget)

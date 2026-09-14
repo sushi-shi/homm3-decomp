@@ -111,11 +111,17 @@ def segment(original, guard):
 def variants(source, use_object=False):
     helper = generator("generate-rmg-position-family.py")
     original = helper.definition(source, "isRmgPointOnSegment")
+    template = original
     if "getRmgPointOrientation(edge->m_sitePosition, opposite, point) == 0" not in original:
-        raise ValueError("review changed segment predicate")
+        guard = "    if (firstDistance > edgeDistance || secondDistance > edgeDistance)"
+        if guard not in original or "return dy * point.m_x - dx * point.m_y + c == 0;" not in original:
+            raise ValueError("review changed segment predicate")
+        template = (original[:original.index(guard)]
+                    + "    return firstDistance <= edgeDistance && secondDistance <= edgeDistance\n"
+                    + "        && getRmgPointOrientation(edge->m_sitePosition, opposite, point) == 0;\n}")
     yield dict(name="original", replace=original)
     for lifetime, ownership, guard in itertools.product(range(5), range(4), range(3)):
-        body = segment(original, guard)
+        body = segment(template, guard)
         if use_object:
             definition = line_object(lifetime, ownership)
             body = body.replace(NAME + "(point, edge->m_sitePosition, opposite)", "line.contains(point)")

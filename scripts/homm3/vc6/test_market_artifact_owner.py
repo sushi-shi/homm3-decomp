@@ -14,7 +14,7 @@ class MarketArtifactOwnerTests(unittest.TestCase):
         source = (root / "src/tradpost.cpp").read_text()
         start = source.index("void TSellArtifactWindow::setupNewTrade()")
         setup = source[start:source.index("\n}", start) + 2]
-        handler = source[source.index("int TSellArtifactWindow::windowHandler(message* msg)"):]
+        handler = source[source.index("int TSellArtifactWindow::windowHandler(message& msg)"):]
         handler = handler[:handler.index("\n}\n")]
         self.assertNotIn("#pragma", handler)
         self.assertNotIn("computeTradeRatios(", handler)
@@ -97,7 +97,7 @@ bool check() {
         record = game[start:game.index("\n};", start) + 3]
         member = next(line.strip() for line in game.splitlines()
                       if "TArtifact m_marketArtifacts[7];" in line)
-        artifact = (root / "include/artifact.h").read_text()
+        artifact = (root / "include/artifact_type.h").read_text()
         start = artifact.index("enum TArtifact {")
         enumeration = artifact[start:artifact.index("\n};", start) + 3]
         variants = [

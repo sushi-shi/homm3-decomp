@@ -122,6 +122,9 @@ def main():
     cmd = ["wine", str(cl), *flags, f"/Fo{winepath_w(out)}", winepath_w(src)]
     output, rc = _run_cl(cmd, out)
     if not out.exists():
+        diagnostic_log = out.with_suffix(".compile.log")
+        diagnostic_log.write_text(output)
+        sys.stderr.write(f"[cc_wrap] full diagnostics: {diagnostic_log}\n")
         sys.stderr.write(f"[cc_wrap] FAILED {src.name} -> {out}\n" + "\n".join(output.strip().splitlines()[-15:]) + "\n")
         sys.exit(rc or 1)
     # Emit a conservative depfile so Ninja recompiles on local-header edits.

@@ -131,7 +131,7 @@ class RmgGroupFitTests(unittest.TestCase):
             self.assertIn(before, control)
             candidate(label, control.replace(before, after))
             checks.append("if (check<" + label + ">()) return 2;")
-        prototype = block((self.root / "include/advmgr_objects.h").read_text(), "struct TObjectType {")
+        prototype = block((self.root / "include/objecttype.h").read_text(), "struct TObjectType {")
         point_start = prototype.index("    struct TPoint {")
         prototype_point = prototype[point_start:prototype.index("\n    };", point_start) + 7]
         program = template
