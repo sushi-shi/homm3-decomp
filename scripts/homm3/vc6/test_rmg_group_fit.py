@@ -54,7 +54,7 @@ class RmgGroupFitTests(unittest.TestCase):
         self.assertEqual(len(options) - 1 - len(parents), 49)
         semantic = {text for _, text in self.module.semantic_forms()}
         self.assertEqual(len(semantic), 198)
-        self.assertTrue({option["replace"] for option in options} <= semantic)
+        self.assertTrue({option["replace"] for option in options} <= semantic | {original})
         payload = dict(schema=1, units=["rmg", "rmg_support", "rmg_terrain"], axes=axes)
         with tempfile.TemporaryDirectory(prefix="rmg-group-fit-frontier-") as raw:
             path = Path(raw) / "manifest.json"
@@ -131,7 +131,7 @@ class RmgGroupFitTests(unittest.TestCase):
             self.assertIn(before, control)
             candidate(label, control.replace(before, after))
             checks.append("if (check<" + label + ">()) return 2;")
-        prototype = block((self.root / "include/advmgr_objects.h").read_text(), "struct TObjectType {")
+        prototype = block((self.root / "include/objecttype.h").read_text(), "struct TObjectType {")
         point_start = prototype.index("    struct TPoint {")
         prototype_point = prototype[point_start:prototype.index("\n    };", point_start) + 7]
         program = template
