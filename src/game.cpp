@@ -7292,6 +7292,9 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
     } else {
         viewArmyWindow->doModal();
         switch (g_windowManager->m_dialogReturn) {
+        case TViewArmyWindow::DISMISS_ID:
+            group.dismiss(iarmy);
+            break;
         case TViewArmyWindow::UPGRADE_ID: {
             long upgradeCost[NUM_RESOURCES];
             getUpgradeCost(armyType, upgradeToType, numTroops, upgradeCost);
@@ -7300,9 +7303,6 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
             group.m_armies[iarmy] = upgradeToType;
             break;
         }
-        case TViewArmyWindow::DISMISS_ID:
-            group.dismiss(iarmy);
-            break;
         }
     }
     delete viewArmyWindow;

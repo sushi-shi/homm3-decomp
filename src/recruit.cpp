@@ -802,100 +802,6 @@ int recruitUnit::main(message& msg)
     switch (msg.m_id) {
     case MESSAGE_WIDGET:
         switch (msg.m_codeX) {
-        case widget::WIDGET_DESELECT:
-            switch (msg.m_codeY) {
-            case RECRUIT_MAXIMUM_ID:
-                if (exitFlag)
-                    break;
-                m_numberToBuy = m_maxAvail;
-                g_recruitWindow->m_quantitySlider->setState(m_numberToBuy);
-                g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
-                update(0, -1);
-                g_recruitWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
-                                            WINDOW_ALL_WIDGETS_HIGH);
-                break;
-
-            case RECRUIT_ACCEPT_ID:
-                if (exitFlag)
-                    break;
-                if (m_numberToBuy == 0 && m_monType2 == CREATURE_NONE)
-                    return exitRecruitUnit(msg);
-
-                if (g_creatureTypeTraits[m_monsterType].m_attributes
-                    & g_ctaSiegeWeapon) {
-                    if (m_thisHero->getNumberInBackpack(1) + m_numberToBuy
-                        > 64) {
-                        normalDialog(g_generalText->getText(327),
-                            1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-                        break;
-                    }
-
-                    for (int i = 0; i < m_numberToBuy; i++) {
-                        if (m_monsterType == CREATURE_BALLISTA) {
-                            type_artifact artifact(ARTIFACT_BALLISTA);
-                            m_thisHero->giveArtifact(&artifact, 1, 1);
-                        } else if (m_monsterType == CREATURE_FIRST_AID_TENT) {
-                            type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
-                            m_thisHero->giveArtifact(&artifact, 1, 1);
-                        } else if (m_monsterType == CREATURE_AMMO_CART) {
-                            type_artifact artifact(ARTIFACT_AMMO_CART);
-                            m_thisHero->giveArtifact(&artifact, 1, 1);
-                        }
-                    }
-                } else if (m_currArmyGroup->canJoin(m_monsterType)) {
-                    m_currArmyGroup->add(m_monsterType, m_numberToBuy, -1);
-                } else {
-                    if (m_currArmyGroupIsTownGarrison) {
-                        normalDialog(g_generalText->getText(18),
-                            1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-                    } else {
-                        const char* creatureName;
-                        if (m_monsterType >= 0 && m_monsterType <= 150) {
-                            if (m_numberToBuy == 1)
-                                creatureName = g_creatureTypeTraits[
-                                    m_monsterType].m_name;
-                            else
-                                creatureName = g_creatureTypeTraits[
-                                    m_monsterType].m_pluralName;
-                        } else {
-                            creatureName = g_emptyRolloverText;
-                        }
-                        normalDialog(formatString(
-                            g_generalText->getText(426), creatureName).c_str(),
-                            1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-                    }
-                    break;
-                }
-
-                g_currentPlayer->m_resources[6] -=
-                    m_goldPerTroop * m_numberToBuy;
-                if (m_altResource != -1)
-                    g_currentPlayer->m_resources[m_altResource] -=
-                        m_resourcesPerTroop * m_numberToBuy;
-                *m_numAvail -= static_cast<short>(m_numberToBuy);
-                m_numberToBuy = 0;
-                g_recruitWindow->m_quantitySlider->setState(0);
-                g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
-
-                if (m_monType2 == CREATURE_NONE
-                    || m_type == RECRUIT_SOURCE_TOWN)
-                    return exitRecruitUnit(msg);
-
-                update(1, m_selectedPosition);
-                g_advManager->updBottomView(1, 1, 1);
-                g_recruitWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
-                                            WINDOW_ALL_WIDGETS_HIGH);
-                break;
-
-            case RECRUIT_CANCEL_ID:
-                if (exitFlag)
-                    break;
-                m_numberToBuy = 0;
-                g_recruitWindow->m_acceptButton->enable(0);
-                return exitRecruitUnit(msg);
-            }
-            break;
-
         case widget::WIDGET_SELECT:
         case widget::WIDGET_RIGHT_SELECT:
             switch (msg.m_codeY) {
@@ -988,6 +894,100 @@ int recruitUnit::main(message& msg)
             }
             g_recruitWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                                         WINDOW_ALL_WIDGETS_HIGH);
+            break;
+
+        case widget::WIDGET_DESELECT:
+            switch (msg.m_codeY) {
+            case RECRUIT_MAXIMUM_ID:
+                if (exitFlag)
+                    break;
+                m_numberToBuy = m_maxAvail;
+                g_recruitWindow->m_quantitySlider->setState(m_numberToBuy);
+                g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
+                update(0, -1);
+                g_recruitWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                                            WINDOW_ALL_WIDGETS_HIGH);
+                break;
+
+            case RECRUIT_ACCEPT_ID:
+                if (exitFlag)
+                    break;
+                if (m_numberToBuy == 0 && m_monType2 == CREATURE_NONE)
+                    return exitRecruitUnit(msg);
+
+                if (g_creatureTypeTraits[m_monsterType].m_attributes
+                    & g_ctaSiegeWeapon) {
+                    if (m_thisHero->getNumberInBackpack(1) + m_numberToBuy
+                        > 64) {
+                        normalDialog(g_generalText->getText(327),
+                            1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                        break;
+                    }
+
+                    for (int i = 0; i < m_numberToBuy; i++) {
+                        if (m_monsterType == CREATURE_BALLISTA) {
+                            type_artifact artifact(ARTIFACT_BALLISTA);
+                            m_thisHero->giveArtifact(&artifact, 1, 1);
+                        } else if (m_monsterType == CREATURE_FIRST_AID_TENT) {
+                            type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
+                            m_thisHero->giveArtifact(&artifact, 1, 1);
+                        } else if (m_monsterType == CREATURE_AMMO_CART) {
+                            type_artifact artifact(ARTIFACT_AMMO_CART);
+                            m_thisHero->giveArtifact(&artifact, 1, 1);
+                        }
+                    }
+                } else if (m_currArmyGroup->canJoin(m_monsterType)) {
+                    m_currArmyGroup->add(m_monsterType, m_numberToBuy, -1);
+                } else {
+                    if (m_currArmyGroupIsTownGarrison) {
+                        normalDialog(g_generalText->getText(18),
+                            1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                    } else {
+                        const char* creatureName;
+                        if (m_monsterType >= 0 && m_monsterType <= 150) {
+                            if (m_numberToBuy == 1)
+                                creatureName = g_creatureTypeTraits[
+                                    m_monsterType].m_name;
+                            else
+                                creatureName = g_creatureTypeTraits[
+                                    m_monsterType].m_pluralName;
+                        } else {
+                            creatureName = g_emptyRolloverText;
+                        }
+                        normalDialog(formatString(
+                            g_generalText->getText(426), creatureName).c_str(),
+                            1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                    }
+                    break;
+                }
+
+                g_currentPlayer->m_resources[6] -=
+                    m_goldPerTroop * m_numberToBuy;
+                if (m_altResource != -1)
+                    g_currentPlayer->m_resources[m_altResource] -=
+                        m_resourcesPerTroop * m_numberToBuy;
+                *m_numAvail -= static_cast<short>(m_numberToBuy);
+                m_numberToBuy = 0;
+                g_recruitWindow->m_quantitySlider->setState(0);
+                g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
+
+                if (m_monType2 == CREATURE_NONE
+                    || m_type == RECRUIT_SOURCE_TOWN)
+                    return exitRecruitUnit(msg);
+
+                update(1, m_selectedPosition);
+                g_advManager->updBottomView(1, 1, 1);
+                g_recruitWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                                            WINDOW_ALL_WIDGETS_HIGH);
+                break;
+
+            case RECRUIT_CANCEL_ID:
+                if (exitFlag)
+                    break;
+                m_numberToBuy = 0;
+                g_recruitWindow->m_acceptButton->enable(0);
+                return exitRecruitUnit(msg);
+            }
             break;
 
         }

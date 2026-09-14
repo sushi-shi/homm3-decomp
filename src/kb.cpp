@@ -409,6 +409,7 @@ void initMainClasses()
 VA(0x004edda0, 0x407)  // dc 0xdfa3c
 void creditsWait()
 {
+    message msg;
     font* creditsFont = ResourceManager::getFont("Credits.fnt");
     int done = 0;
     int textHeight = creditsFont->lineLength(g_credits[0], 328)
@@ -440,7 +441,7 @@ void creditsWait()
             break;
         pollSound();
         process1WindowsMessage();
-        message msg = g_inputManager->getEvent();
+        msg = g_inputManager->getEvent();
         switch (msg.m_id) {
         case MESSAGE_LEFT_BUTTON_DOWN:
         case MESSAGE_RIGHT_BUTTON_DOWN:
@@ -492,7 +493,7 @@ void creditsWait()
             continue;
         }
         break;
-}
+    }
 
     if (credits)
         delete credits;
@@ -3872,6 +3873,7 @@ void fileError(const char* buf)
 VA(0x004f3ab0, 0x374)  // dc 0xe3e48
 void congratsWait(int mode, char* rank, int base, int score, int dayz)
 {
+    message msg;
     font* currentFont = ResourceManager::getFont("HiScore.fnt");
     const char* labels[5] = {
         g_generalText->getText(439),
@@ -3881,7 +3883,6 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
         g_generalText->getText(677)
     };
     char temp[100];
-    message msg;
     Smack* smk = 0;
     int i;
     int x;
