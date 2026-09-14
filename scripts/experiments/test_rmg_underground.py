@@ -33,7 +33,7 @@ class UndergroundTests(unittest.TestCase):
             "TRmgVector", "TPoint", "TRmgMapPosition", "TRmgZoneBounds",
             "TRmgZoneCellState", "TRmgGroundTile", "TRmgGroundTileData"))
         types += "\n" + block((root / "include/terrain_type.h").read_text(), "enum TTerrainType")
-        types += "\n" + definition(support, "TRmgMapPosition::TRmgMapPosition")
+        types += "\n" + definition(source, "TRmgMapPosition::TRmgMapPosition")
         types += """
 struct TRmgMapItem {
     TRmgZoneCellState m_zoneState;
@@ -53,7 +53,7 @@ void append(std::vector<Event>& events,int kind,int a=0,int b=0,int c=0) {
 struct type_random_map {
     unsigned char m_ownsMapItems;
     TRmgMapItem* m_mapItems;
-    int m_mapWidth,m_mapHeight,m_numberLevels;
+    TRmgMapPosition m_size;
     type_random_map() : m_ownsMapItems(1) {}
     ~type_random_map() {if(!m_ownsMapItems) append(g_events,6);}
 """ + definition(header, "type_random_map", parameters="TRmgMapItem* items, int width, int height")
@@ -72,7 +72,7 @@ struct TRmgTerrainBrush {
     int m_terrain;
     TRmgTerrainBrush(type_random_map* map,int terrain,int strength) : m_map(map),m_terrain(terrain) {
         append(g_events,1,terrain,strength);
-        if(map->m_mapWidth!=g_width || map->m_mapHeight!=g_height || map->m_numberLevels!=1 ||
+        if(map->m_size.m_x!=g_width || map->m_size.m_y!=g_height || map->m_size.m_z!=1 ||
            map->m_ownsMapItems || map->m_mapItems!=g_cells+g_width*g_height) g_valid=false;
     }
     ~TRmgTerrainBrush() {append(g_events,5);}
@@ -202,7 +202,7 @@ bool check() {
         if(progress && progress!=3) append(events,4,1200,progress==2?1:0);
         append(events,5);append(events,6);
         Progress first={0},second={1};type_random_map_generator owner;
-        owner.m_map.m_mapWidth=w;owner.m_map.m_mapHeight=h;owner.m_map.m_numberLevels=2;
+        owner.m_map.m_size.m_x=w;owner.m_map.m_size.m_y=h;owner.m_map.m_size.m_z=2;
         owner.m_map.m_mapItems=&cells[1];owner.m_progress=progress?&first:0;
         for(int a=0;a<zoneCount;++a) owner.m_zones.push_back(&zones[a]);
         g_width=w;g_height=h;g_cells=&cells[1];g_progressMode=progress;

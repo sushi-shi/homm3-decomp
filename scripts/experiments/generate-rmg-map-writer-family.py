@@ -35,11 +35,11 @@ def variant(original, coordinates, vectors, result):
     if coordinates:
         declarations = ("    int x;\n    int y;\n    int z;\n" if coordinates < 3
                         else "    TRmgMapPosition position;\n")
-        for coordinate, bound in (("z", "numberLevels"), ("y", "mapHeight"), ("x", "mapWidth")):
+        for coordinate in ("z", "y", "x"):
             name = coordinate if coordinates < 3 else "position.m_" + coordinate
             body = replace(body,
-                f"for (int {coordinate} = 0; {coordinate} < m_map.m_{bound}; ++{coordinate})",
-                f"for ({name} = 0; {name} < m_map.m_{bound}; ++{name})")
+                f"for (int {coordinate} = 0; {coordinate} < m_map.m_size.m_{coordinate}; ++{coordinate})",
+                f"for ({name} = 0; {name} < m_map.m_size.m_{coordinate}; ++{name})")
         if coordinates in (1, 3):
             body = replace(body, "    TRmgMapItem* item =", declarations + "    TRmgMapItem* item =")
         else:
@@ -76,10 +76,10 @@ def axes(source):
     seed = original
     if "    TRmgMapPosition position;\n" in original:
         seed = replace(seed, "    TRmgMapPosition position;\n", "")
-        for coordinate, bound in (("z", "numberLevels"), ("y", "mapHeight"), ("x", "mapWidth")):
+        for coordinate in ("z", "y", "x"):
             name = "position.m_" + coordinate
-            seed = replace(seed, f"for ({name} = 0; {name} < m_map.m_{bound}; ++{name})",
-                           f"for (int {coordinate} = 0; {coordinate} < m_map.m_{bound}; ++{coordinate})")
+            seed = replace(seed, f"for ({name} = 0; {name} < m_map.m_size.m_{coordinate}; ++{name})",
+                           f"for (int {coordinate} = 0; {coordinate} < m_map.m_size.m_{coordinate}; ++{coordinate})")
         seed = replace(seed,
             "    {\n        int reserved = 0;\n        unsigned char result = outfile->write(&reserved, sizeof(reserved)) == sizeof(reserved);\n        return result;\n    }",
             "    int reserved = 0;\n    return outfile->write(&reserved, sizeof(reserved)) == sizeof(reserved);")

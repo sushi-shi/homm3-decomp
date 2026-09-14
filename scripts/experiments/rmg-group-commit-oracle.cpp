@@ -20,7 +20,7 @@ struct type_object {
     std::vector<int>* m_events;
     std::vector<type_object*>* m_objects;
     type_object* m_append;
-    TRmgMapPosition getPosition() const;
+    // @POSITION_ACCESSOR_DECL@
     virtual unsigned char isWritable() {
         event(*m_events, -2, m_id, m_position.m_x, m_position.m_y, m_position.m_z);
         ++m_writes;
@@ -35,11 +35,11 @@ struct TRmgMapItem {
     // @PREDICATES@
 };
 struct type_random_map {
-    int m_mapWidth, m_mapHeight, m_id;
+    TRmgMapPosition m_size; int m_id;
     TRmgMapItem* m_mapItems;
     std::vector<int>* m_events;
     void record(int x, int y, int z) {
-        if (x < 0 || x >= m_mapWidth || y < 0 || y >= m_mapHeight
+        if (x < 0 || x >= m_size.m_x || y < 0 || y >= m_size.m_y
             || z < 0 || z > (m_id ? 0 : 1) || m_events->size() > 10000)
             throw std::runtime_error("invalid or unbounded map traversal");
         event(*m_events, m_id, x, y, z, 0);
@@ -118,9 +118,9 @@ template<class Candidate> static bool one(int width, int height, int groupWidth,
         cells[i].terrain = seed < 0 ? sourceTerrain : (i + seed) % 3 == 0 ? eTerrainWater : eTerrainDirt;
     }
     for (int i = 0; i < count; ++i) initialize(storage[i], cells[i], i);
-    actual.m_map.m_mapWidth = width; actual.m_map.m_mapHeight = height;
+    actual.m_map.m_size.m_x = width; actual.m_map.m_size.m_y = height;
     actual.m_map.m_mapItems = &storage[0]; actual.m_map.m_id = 0; actual.m_map.m_events = &actual.m_events;
-    group.m_map.m_mapWidth = groupWidth; group.m_map.m_mapHeight = groupHeight;
+    group.m_map.m_size.m_x = groupWidth; group.m_map.m_size.m_y = groupHeight;
     group.m_map.m_mapItems = &storage[sourceBase]; group.m_map.m_id = 1; group.m_map.m_events = &actual.m_events;
     group.m_position.m_x = group.m_position.m_y = group.m_position.m_z = -99;
     type_object objects[4];
@@ -181,8 +181,8 @@ template<class Candidate> static bool one(int width, int height, int groupWidth,
     for (int i = 0; i < 4; ++i)
         if (objects[i].m_position.m_x != objectPositions[i].m_x || objects[i].m_position.m_y != objectPositions[i].m_y
             || objects[i].m_position.m_z != objectPositions[i].m_z || objects[i].m_writes != writes[i]) return false;
-    return actual.m_map.m_mapWidth == width && actual.m_map.m_mapHeight == height
-        && group.m_map.m_mapWidth == groupWidth && group.m_map.m_mapHeight == groupHeight
+    return actual.m_map.m_size.m_x == width && actual.m_map.m_size.m_y == height
+        && group.m_map.m_size.m_x == groupWidth && group.m_map.m_size.m_y == groupHeight
         && actual.m_map.m_mapItems == &storage[0] && group.m_map.m_mapItems == &storage[sourceBase];
 }
 template<class Candidate> static bool check() {

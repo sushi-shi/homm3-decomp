@@ -24,9 +24,9 @@ FUNCTION = "type_random_map_generator::markRiverTargets"
 BASELINE = """void type_random_map_generator::markRiverTargets()
 {
     TRmgMapItem* item = m_map.m_mapItems;
-    for (int z = 0; z < m_map.m_numberLevels; ++z) {
-        for (int y = 0; y < m_map.m_mapHeight; ++y) {
-            for (int x = 0; x < m_map.m_mapWidth; ++x, ++item) {
+    for (int z = 0; z < m_map.m_size.m_z; ++z) {
+        for (int y = 0; y < m_map.m_size.m_y; ++y) {
+            for (int x = 0; x < m_map.m_size.m_x; ++x, ++item) {
                 if (item->m_tile.m_landType == eTerrainWater) {
                     for (int direction = 0; direction < 8; direction += 2)
                         markRiverCoastTarget(TRmgMapPosition(x, y, z), direction);
@@ -34,14 +34,14 @@ BASELINE = """void type_random_map_generator::markRiverTargets()
             }
         }
     }
-    for (z = 0; z < m_map.m_numberLevels; ++z) {
-        for (int y = 0; y < m_map.m_mapHeight; ++y) {
+    for (z = 0; z < m_map.m_size.m_z; ++z) {
+        for (int y = 0; y < m_map.m_size.m_y; ++y) {
             m_map.getMapItem(0, y, z)->m_tileData.m_riverTarget = 1;
-            m_map.getMapItem(m_map.m_mapWidth - 1, y, z)->m_tileData.m_riverTarget = 1;
+            m_map.getMapItem(m_map.m_size.m_x - 1, y, z)->m_tileData.m_riverTarget = 1;
         }
-        for (int x = 0; x < m_map.m_mapWidth; ++x) {
+        for (int x = 0; x < m_map.m_size.m_x; ++x) {
             m_map.getMapItem(x, 0, z)->m_tileData.m_riverTarget = 1;
-            m_map.getMapItem(x, m_map.m_mapHeight - 1, z)->m_tileData.m_riverTarget = 1;
+            m_map.getMapItem(x, m_map.m_size.m_y - 1, z)->m_tileData.m_riverTarget = 1;
         }
     }
     if (m_progress)

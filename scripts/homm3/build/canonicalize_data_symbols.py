@@ -773,6 +773,11 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
         return any(
             name == "_" + owner or
             name.startswith("?" + owner + "@@") or
+            # VC6 anonymous-namespace globals retain their source-file
+            # nonce: ?name@?%Z:\...\unit.cpp<nonce>@@3... . The owner is
+            # still the exact leading identifier; uniqueness below must
+            # resolve the initializer, never the nonce or its ordinal.
+            name.startswith("?" + owner + "@?%") or
             # Function-local statics use `_?name@?1??function...` rather
             # than the external-data `?name@@...` spelling.
             name.startswith("_?" + owner + "@?")

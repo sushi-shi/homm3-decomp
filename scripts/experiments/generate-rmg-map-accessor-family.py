@@ -31,7 +31,7 @@ def definition(header):
 def variants(original):
     for lifetime, multiply, row_order, result in itertools.product(
             range(5), range(2), range(2), range(3)):
-        row_expr = "z * m_mapHeight + y" if not row_order else "y + z * m_mapHeight"
+        row_expr = "z * m_size.m_y + y" if not row_order else "y + z * m_size.m_y"
         setup = []
         if lifetime == 0:
             row = "(" + row_expr + ")"
@@ -42,13 +42,13 @@ def variants(original):
             setup = ["int row;", f"row = {row_expr};"]
             row = "row"
         elif lifetime == 3:
-            setup = (["int row = z * m_mapHeight;", "row += y;"]
-                     if not row_order else ["int row = y;", "row += z * m_mapHeight;"])
+            setup = (["int row = z * m_size.m_y;", "row += y;"]
+                     if not row_order else ["int row = y;", "row += z * m_size.m_y;"])
             row = "row"
         else:
             setup = [f"const int row = {row_expr};"]
             row = "row"
-        product = f"{row} * m_mapWidth" if not multiply else f"m_mapWidth * {row}"
+        product = f"{row} * m_size.m_x" if not multiply else f"m_size.m_x * {row}"
         if lifetime == 4:
             setup += [f"const int index = {product} + x;"]
             index = "index"

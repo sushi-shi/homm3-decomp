@@ -35,14 +35,14 @@ class IslandFillTests(unittest.TestCase):
             start = header.index("struct " + name + " {")
             return header[start:header.index("\n};", start) + 3]
         types = "\n".join(block(n) for n in ("TRmgVector", "TPoint", "TRmgMapPosition", "TRmgZoneCellState", "TRmgGroundTileData"))
-        helper = "\n".join(self.module.helpers().definition(support, n) for n in ("TRmgMapPosition::TRmgMapPosition", "TRmgVector::length"))
+        helper = "\n".join(self.module.helpers().definition(support + "\n" + self.source, n) for n in ("TRmgMapPosition::TRmgMapPosition", "TRmgVector::length"))
         helper += "\n" + "\n".join(self.module.helpers().definition(self.source, n) for n in (
             "TRmgMapPosition::operator+=", "TRmgZone::getLevelPosition", "TRmgVector::operator*", "TRmgVector::operator/"))
         caller = self.module.helpers().definition(self.source, "type_random_map_generator::insetIslandZone")
         self.assertTrue(caller.endswith("    fillIslandInterior(zone);\n}"))
         methods, checks = [], []
-        def candidate(name, body, good, call=caller):
-            methods.append("struct " + name + " : Root { void fillIslandInterior(TRmgZone*); void insetIslandZone(TRmgZone*); };\n"
+        def candidate(name, body, good, call=caller, before=""):
+            methods.append(before + "\nstruct " + name + " : Root { void fillIslandInterior(TRmgZone*); void insetIslandZone(TRmgZone*); };\n"
                 + body.replace("type_random_map_generator::", name + "::") + "\n" + call.replace("type_random_map_generator::", name + "::"))
             condition = ("!check<" + name + ">(false) || !check<" + name + ">(true)") if good else ("check<" + name + ">(true)")
             checks.append('if (' + condition + ') { std::fprintf(stderr, "failed ' + name + '\\n"); return 1; }')
@@ -51,6 +51,26 @@ class IslandFillTests(unittest.TestCase):
         forms = list(self.module.forms())
         original = self.module.helpers().definition(self.source, self.module.FUNCTION)
         candidate("Adopted", original, True)
+        inset = generator("generate-rmg-inset-lifetimes.py")
+        inset_forms = list(inset.forms(caller))
+        self.assertEqual(len({body for _, body in inset_forms}), 60)
+        for i, (_, body) in enumerate(inset_forms):
+            candidate("Inset" + str(i), original, True, body)
+        inset_helper = generator("generate-rmg-inset-helper-family.py")
+        helper_forms = list(inset_helper.forms())
+        self.assertEqual(len(helper_forms), 60)
+        for i, (_, helper_body, body) in enumerate(helper_forms):
+            name = "InsetHelper" + str(i)
+            helper_name = "insetPoint" + str(i)
+            candidate(name, original, True, body.replace(inset_helper.HELPER, helper_name),
+                      helper_body.replace(inset_helper.HELPER, helper_name))
+        for name, before, after in (
+            ("ClampFloor", "std::_cpp_max<long>(4, length / 4)", "std::_cpp_max<long>(1, length / 4)"),
+            ("ClampCeiling", "std::_cpp_min<long>(displacement, length / 2)", "std::_cpp_min<long>(displacement, length)"),
+            ("DivisionOrder", "delta * displacement / length", "delta / length * displacement"),
+            ("EdgeOrder", "drawIslandBoundary(point, previous,", "drawIslandBoundary(previous, point,")):
+            self.assertIn(before, caller)
+            candidate("WrongInset" + name, original, False, caller.replace(before, after))
         parents = [(str(i), self.source.replace(original, forms[i][1])) for i in (53, 52, 51, 15, 16, 17, 4, 1, 36, 40)]
         frontier = self.module.make_parent_axes(self.source, parents)
         self.assertEqual(len(frontier[0]["options"]), 60)
@@ -61,7 +81,7 @@ class IslandFillTests(unittest.TestCase):
             ("Zone", "!= zoneIndex", "== zoneIndex"),
             ("Blocked", "item->isZoneBoundary()", "item->isZoneBoundary() || item->m_tileData.m_roadEntrance"),
             ("Level", "next.m_y, next.m_z", "next.m_y, 0"),
-            ("Extent", "next.m_x >= m_map.m_mapWidth", "next.m_x >= m_map.m_mapWidth - 1"),
+            ("Extent", "next.m_x >= m_map.m_size.m_x", "next.m_x >= m_map.m_size.m_x - 1"),
             ("Seed", "pending.push_back(position);", "")):
             self.assertIn(before, self.module.BASELINE)
             candidate("Wrong" + name, self.module.BASELINE.replace(before, after), False)

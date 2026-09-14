@@ -30,8 +30,8 @@ BASELINE = """void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
         for (int direction = 0; direction < 8; direction += 2) {
             TRmgMapPosition next = position;
             next += g_rmgDirections[direction];
-            if (next.m_x < 0 || next.m_x >= m_map.m_mapWidth
-                || next.m_y < 0 || next.m_y >= m_map.m_mapHeight)
+            if (next.m_x < 0 || next.m_x >= m_map.m_size.m_x
+                || next.m_y < 0 || next.m_y >= m_map.m_size.m_y)
                 continue;
             TRmgMapItem* item = m_map.getMapItem(next.m_x, next.m_y, next.m_z);
             if (item->isZoneBoundary() || item->m_zoneState.m_zone != zoneIndex)

@@ -1,5 +1,7 @@
 """Independent parsed-row and last-matching-rule oracle for the reader family."""
 from pathlib import Path
+import itertools
+import os
 import shutil
 import subprocess
 import tempfile
@@ -48,6 +50,23 @@ class RuleReaderTests(unittest.TestCase):
         self.assertEqual(len(row_forms), 60)
         forms = list(dict.fromkeys(forms + row_forms))
         self.assertEqual(len(forms), 198)
+        candidate_types = {}
+        if os.environ.get('HOMM3_RULE_READER_MANIFEST'):
+            from homm3.vc6 import source_families
+            _, originals, axes = source_families.load_manifest(Path(os.environ['HOMM3_RULE_READER_MANIFEST']), root)
+            definition = generator('generate-rmg-position-family.py').definition
+            original_rule = block('struct TRmgObjectPlacementRule')
+            for choices in itertools.product(*(range(len(axis.options)) for axis in axes)):
+                rendered = source_families.render(originals, axes, choices)
+                candidate_header = rendered.get('include/rmg.h', header)
+                candidate_source = rendered.get('src/rmg.cpp', source)
+                begin = candidate_header.index('struct TRmgObjectPlacementRule {')
+                rule = candidate_header[begin:candidate_header.index('\n};', begin) + 3]
+                companion = ''
+                if 'TRmgObjectPlacementRule();' in rule:
+                    companion = definition(candidate_source, 'TRmgObjectPlacementRule::TRmgObjectPlacementRule') + '\n'
+                candidate_types[len(forms)] = types.replace(original_rule, rule) + companion
+                forms.append(definition(candidate_source, 'TRmgGeneratorBase::readObjectPlacementRules'))
         count = len(forms)
         seed = forms[0]
         forms += [seed.replace("values[0][0] == ' '", "values[0][0] == '!'"),
@@ -66,7 +85,7 @@ class RuleReaderTests(unittest.TestCase):
             # Only accommodate VC6's old for-initializer scope in the host.
             body = body.replace("        for (int index = 0; index < ruleCount; ++index)",
                                 "        int index;\n        for (index = 0; index < ruleCount; ++index)")
-            text += f"namespace Case{index} {{\n" + types + r"""
+            text += f"namespace Case{index} {{\n" + candidate_types.get(index, types) + r"""
 static unsigned char g_traits[232][16];
 static const unsigned char (*g_adventureObjectLandBlocked)[16] = g_traits;
 static int g_disposals;

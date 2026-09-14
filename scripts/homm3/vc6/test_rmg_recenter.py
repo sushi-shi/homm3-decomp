@@ -54,7 +54,7 @@ class RecenterTests(unittest.TestCase):
             start = header.index("struct " + name + " {")
             return header[start:header.index("\n};", start) + 3]
         types = "\n".join(block(n) for n in ("TRmgVector", "TPoint", "TRmgMapPosition", "TRmgZoneBounds", "TRmgZoneCellState"))
-        helper = self.module.helpers().definition(support, "TRmgMapPosition::TRmgMapPosition")
+        helper = self.module.helpers().definition(self.source, "TRmgMapPosition::TRmgMapPosition")
         helper += "\n" + "\n".join(self.module.helpers().definition(self.source, "TRmgZone::" + n) for n in ("getLevelPosition", "setLevelPosition"))
         methods, checks = [], []
         def candidate(name, body, good):

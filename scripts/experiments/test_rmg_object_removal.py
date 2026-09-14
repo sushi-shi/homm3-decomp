@@ -22,16 +22,33 @@ class ObjectRemovalTests(unittest.TestCase):
         source=(root/"src/rmg.cpp").read_text()
         header=(root/"include/rmg.h").read_text()
         support=(root/"src/rmg_support.cpp").read_text()
-        objects=(root/"include/advmgr_objects.h").read_text()
+        objects=(root/"include/objecttype.h").read_text()
         mapcell=(root/"include/mapcell.h").read_text()
         module=generator("generate-rmg-object-removal-family.py")
         definition=generator("generate-rmg-position-family.py").definition
         current=module.definition(source)
         original=module.scalar_seed(current)
         forms=[("current",current)]+list(module.variants(original))
+        zone_methods=[]
+        if "void TRmgZone::decrementObjectCount(" in source:
+            zone_methods.append(definition(source,"TRmgZone::decrementObjectCount"))
         for path in filter(None,os.environ.get("HOMM3_OBJECT_REMOVAL_MANIFEST","").split(os.pathsep)):
             payload=json.loads(Path(path).read_text())
-            forms += [(o["name"],o["replace"]) for o in payload["axes"][0]["options"]]
+            for option in payload["axes"][0]["options"]:
+                body=option["replace"]
+                helpers=[edit["text"] for edit in option.get("extra_edits",[])
+                         if edit.get("source")=="src/rmg.cpp" and
+                         "void TRmgZone::decrementObjectCount(" in edit.get("text","")]
+                if helpers:
+                    self.assertEqual(len(helpers),1)
+                    helper=definition(helpers[0],"TRmgZone::decrementObjectCount")
+                    # Keep each actual helper signature/body with its caller;
+                    # distinct fixture names avoid coexisting overload ambiguity.
+                    name="decrementObjectCountCandidate%d"%len(zone_methods)
+                    body=body.replace("decrementObjectCount(",name+"(")
+                    helper=helper.replace("decrementObjectCount(",name+"(")
+                    zone_methods.append(helper)
+                forms.append((option["name"],body))
         forms=list(dict((body,name) for name,body in forms).items())
         positives=len(forms)
         negatives=[
@@ -51,6 +68,15 @@ class ObjectRemovalTests(unittest.TestCase):
         for name,old,new in negatives:
             self.assertEqual(original.count(old),1,name)
             forms.append((original.replace(old,new),name))
+        negative_count=len(negatives)
+        if "void TRmgZone::decrementObjectCount(" in source:
+            bad_helper=definition(source,"TRmgZone::decrementObjectCount")
+            self.assertEqual(bad_helper.count("--m_objectCountByType[objectType];"),1)
+            bad_helper=bad_helper.replace("decrementObjectCount(","incrementObjectCountBad(")
+            bad_helper=bad_helper.replace("--m_objectCountByType[objectType];","++m_objectCountByType[objectType];")
+            zone_methods.append(bad_helper)
+            forms.append((current.replace("->decrementObjectCount(","->incrementObjectCountBad("),"wrong_count_helper"))
+            negative_count+=1
 
         def block(text,prefix):
             start=text.index(prefix+" {")
@@ -59,10 +85,13 @@ class ObjectRemovalTests(unittest.TestCase):
         def field(text,name):
             return next(line.split("//")[0].strip() for line in text.splitlines() if name+";" in line)
 
-        text="#include <vector>\n#include <bitset>\n#include <algorithm>\n#include <cstring>\n#include <cstdio>\n"
-        for name in ("TRmgVector","TPoint","TRmgMapPosition","TRmgGridPoint","TRmgZoneCellState","TRmgGroundTileData"):
+        text="#define VA(address, size)\n#include <vector>\n#include <bitset>\n#include <algorithm>\n#include <cstring>\n#include <cstdio>\n"
+        for name in ("TRmgVector","TPoint","TRmgMapPosition","TRmgZoneCellState","TRmgGroundTileData"):
             text+=block(header,"struct "+name)+"\n"
-        text+=definition(support,"TRmgMapPosition::TRmgMapPosition")+"\n"
+        start = header.index("template<class Coordinate>\nstruct TRmgGridPointT {")
+        end = header.index("typedef TRmgGridPointT<unsigned int> TRmgGridPoint;", start)
+        text += header[start:end] + "typedef TRmgGridPointT<unsigned int> TRmgGridPoint;\n"
+        text+=definition(source,"TRmgMapPosition::TRmgMapPosition")+"\n"
         text+=block(mapcell,"enum TAdventureObjectType")+"\n"
         start=objects.index("    struct TPoint {")
         nested_end=objects.index("\n    };",objects.index("    struct TImageInfo {",start))+7
@@ -71,15 +100,18 @@ class ObjectRemovalTests(unittest.TestCase):
             text+=field(objects,name)+"\n"
         text+=definition(objects,"getWidth",parameters="")+"\n"
         text+=definition(objects,"getHeight",parameters="")+"\n};\n"
-        text+="struct CObjectType {\n"+definition(objects,"getBitPos",parameters="unsigned x, unsigned y")+"\n};\n"
+        text+="struct CObjectType {\n"+definition(mapcell,"getBitPos",parameters="unsigned x, unsigned y")+"\n};\n"
         text+="struct TRmgObjectPropertiesRef { "+field(header,"m_prototype")+" };\n"
         text+="struct type_object { "+field(header,"m_properties")+" "+field(header,"m_position")+" };\n"
         text+="struct TRmgMapItem { "+field(header,"m_objects")+" TRmgZoneCellState m_zoneState; TRmgGroundTileData m_tileData; };\n"
-        text+="struct type_random_map { int m_mapWidth,m_mapHeight; TRmgMapItem* m_mapItems; TRmgMapItem* getMapItem(TRmgMapPosition point);\n"
+        text+="struct type_random_map { TRmgMapPosition m_size; TRmgMapItem* m_mapItems; TRmgMapItem* getMapItem(TRmgMapPosition point);\n"
         text+=definition(header,"getMapItem",parameters="int x, int y, int z")+"\n};\n"
         text+=definition(source,"type_random_map::getMapItem",parameters="TRmgMapPosition point")+"\n"
         counts=next(line.split("//")[0].strip() for line in header.splitlines() if "m_objectCountByType[" in line)
-        text+="struct TRmgZone { "+counts+" };\n"
+        text+="struct TRmgZone { "+counts+"\n"
+        for helper in zone_methods:
+            text+=helper.split("\n{",1)[0].replace("TRmgZone::","")+";\n"
+        text+="};\n"+"\n".join(zone_methods)+"\n"
         text+="struct GeneratorFixture { type_random_map m_map; std::vector<TRmgZone*> m_zones; "+counts+" std::vector<type_object*> m_positions; std::vector<unsigned char> m_disabledKeyTents; int m_nextKeyTentColor; };\n"
         text+=r'''
 static void removeFirst(std::vector<type_object*>& values,type_object* object) {
@@ -97,8 +129,8 @@ static void reference(GeneratorFixture& owner,type_object* object) {
     for(unsigned i=0;i<owner.m_positions.size();++i) registered|=owner.m_positions[i]==object;
     if(registered) {
         removeFirst(owner.m_positions,object);--owner.m_objectCountByType[p.m_objectType];
-        int linear=position.m_z*owner.m_map.m_mapHeight*owner.m_map.m_mapWidth
-            +(position.m_y-p.m_triggerCell.m_y)*owner.m_map.m_mapWidth+position.m_x-p.m_triggerCell.m_x;
+        int linear=position.m_z*owner.m_map.m_size.m_y*owner.m_map.m_size.m_x
+            +(position.m_y-p.m_triggerCell.m_y)*owner.m_map.m_size.m_x+position.m_x-p.m_triggerCell.m_x;
         int zone=owner.m_map.m_mapItems[linear].m_zoneState.m_zone;
         if(zone>=0) --owner.m_zones[zone]->m_objectCountByType[p.m_objectType];
     }
@@ -109,10 +141,10 @@ static void reference(GeneratorFixture& owner,type_object* object) {
         owner.m_nextKeyTentColor=available.empty()?int(owner.m_disabledKeyTents.size()):available.front();
     }
     // Enumerate destination cells, not the candidate's reverse footprint scan.
-    for(int linear=0;linear<owner.m_map.m_mapWidth*owner.m_map.m_mapHeight*2;++linear) {
-        int x=linear%owner.m_map.m_mapWidth;
-        int y=(linear/owner.m_map.m_mapWidth)%owner.m_map.m_mapHeight;
-        int z=linear/(owner.m_map.m_mapWidth*owner.m_map.m_mapHeight);
+    for(int linear=0;linear<owner.m_map.m_size.m_x*owner.m_map.m_size.m_y*2;++linear) {
+        int x=linear%owner.m_map.m_size.m_x;
+        int y=(linear/owner.m_map.m_size.m_x)%owner.m_map.m_size.m_y;
+        int z=linear/(owner.m_map.m_size.m_x*owner.m_map.m_size.m_y);
         int dx=position.m_x-x,dy=position.m_y-y;
         if(z!=position.m_z || dx<0 || dy<0 || dx>=p.m_imageInfo.m_objectSize.m_x || dy>=p.m_imageInfo.m_objectSize.m_y) continue;
         int bit=8*(5-dy)+(7-dx);
@@ -165,8 +197,8 @@ template<class Candidate> bool check() {
             }
             b[i]=a[i];
         }
-        actual.m_map.m_mapWidth=expected.m_map.m_mapWidth=w;
-        actual.m_map.m_mapHeight=expected.m_map.m_mapHeight=h;
+        actual.m_map.m_size.m_x=expected.m_map.m_size.m_x=w;
+        actual.m_map.m_size.m_y=expected.m_map.m_size.m_y=h;
         actual.m_map.m_mapItems=&a[64];expected.m_map.m_mapItems=&b[64];
         if(registered) {
             if(population) actual.m_positions.push_back(&other);
@@ -198,7 +230,7 @@ template<class Candidate> bool check() {
         text+="int main() {\n"
         for index,(body,name) in enumerate(forms):
             text+='if(check<N%d::type_random_map_generator>() != %s) { std::fprintf(stderr,"failed %s\\n"); return 1; }\n'%(index,"true" if index<positives else "false",name)
-        text+='std::printf("%d removal forms; 18432 scenarios each; twelve negative controls rejected\\n");}\n'%positives
+        text+='std::printf("%d removal forms; 18432 scenarios each; %d negative controls rejected\\n");}\n'%(positives,negative_count)
         with tempfile.TemporaryDirectory(prefix="homm3-object-removal-") as directory:
             source_path=Path(directory)/"oracle.cpp";source_path.write_text(text)
             executable=Path(directory)/"oracle"

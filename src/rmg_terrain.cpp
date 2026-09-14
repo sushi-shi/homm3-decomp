@@ -91,6 +91,19 @@ TRmgGridRectangle::TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGrid
 // retail; a direct proxy construction, reading the land through the
 // painter first, building the mask first, and accessor coordinates do
 // not swap them (84-97%).
+// Sixty table pointer/reference, selected-pattern value/reference and
+// compared-entry ownership controls produce four objects. Value forms
+// retain 97.3461%; borrowing the escaped selector output gives 91.5154%.
+// None recovers the parameter homes or the direct memory comparison, and
+// no sibling score changes. Keep the independent post-tile-read value.
+// Forty-eight borrowed input/receiver and availability-mask scope forms
+// produce three objects; sixteen reproduced-parent comparison-order and
+// signed int/long value forms produce six. Neither exceeds 97.3461% or
+// changes a sibling score. Sixty distinct bodies pass 110,592 callback/query
+// scenarios each across the two families; five wrong-input, mask, output-
+// lifetime, random-range and flip controls fail. The checks use authored
+// mask/proxy methods and controlled painter/selector/random dependencies.
+// Parameter homes and B5's extra pattern load/copy remain unresolved.
 VA(0x004F9F00, 0x146) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
@@ -275,8 +288,15 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
     }
 }
 
+// Refresh 0x4f9f77 builds the grid argument of the retained proxy call at
+// 0x4f9f86 from the copied TPoint sum through this one-argument
+// constructor. It is not the grid copy: retail's at() and getSize copy grid
+// points memberwise, and a written copy constructor of any spelling
+// reschedules them (see TRmgGridPoint in rmg.h). The conversion from the
+// signed TPoint reproduces all 22 raw bytes without relocations.
+template<class Coordinate>
 VA(0x004FA520, 0x16) // anchor-callee 0x4f9f77; thiscall, ret 4
-TRmgGridPoint::TRmgGridPoint(const TPoint& point)
+TRmgGridPointT<Coordinate>::TRmgGridPointT(const TPoint& point)
     : m_x(point.m_x), m_y(point.m_y)
 {
 }
@@ -1248,7 +1268,7 @@ unsigned char rmgTerrainPainter::isVerticalGap(
 // contributes only when at least one adjoining cardinal cell also matches.
 // Retail retains the center and four cardinal cache reads, expands the
 // diagonals' reads with their fills refused, and expands the south-east
-// fill. Residual 99.2138% (77.26% with eight constructed temporaries and
+// fill. The earlier form reached 99.2138% (77.26% with eight constructed temporaries and
 // no corner points). The east read must be refused at the budget its
 // remaining sites leave, and the north-west read expanded right after,
 // which needs the diagonal region to hold three candidate sites per arm
@@ -1259,10 +1279,14 @@ unsigned char rmgTerrainPainter::isVerticalGap(
 // signed-point conversion are one object with this; the reused point for
 // the diagonals is unconditional, so it changes the flow, 74.36%; the
 // corners constructed straight from the clamps reverse the clamp order,
-// 78.32%). Limiting the reused cardinal point to its own scope and copy-
-// initializing the two corner values recovers the remaining register homes
-// and retail's 0x30 frame: all 714 bytes match. The mask oracle preserves
-// ordered, short-circuited queries in 185,856 states; five controls fail.
+// 78.32%) left the south-east fill's index/cell-base registers swapped and
+// a 0x38 frame against 0x30. Exact: copy-initialize the two corners and
+// scope the reused point to its cardinal reads. Copy initialization alone
+// is 99.9420%; the cardinal scope alone gives 99.2717%. Their combination
+// fixes both the frame and last fill without changing any helper boundary.
+// Thirty-six clamp/corner/point-scope controls produce 24 objects and ten
+// reproduced elites, with no sibling score changes. All pass 185,856 native
+// mask/query-order cases each and reject five independent bad controls.
 VA(0x005B6540, 0x2CA) // anchor-callee 0x5b58f8, 0x5b681e; retail-only
 void rmgTerrainPainter::buildMatchingNeighbourMask(
     const TRmgGridPoint& point, unsigned char* matches)
@@ -1564,6 +1588,10 @@ rmgTerrainPainter::~rmgTerrainPainter()
     finish();
 }
 
+// The four late point constructions in RepairTerrainPoint pass x and y by
+// reference. The retained two-store body is 24 bytes including ret 8.
+VA_COMPGEN(0x005B76B0, 0x18, CLASS_CTOR, TRmgGridPointT)
+
 // The terrain work set's insertion at 0x5b7cd0 calls the admitted grid-point
 // comparator and the retained node insertion at 0x5b8720. Both node insertion
 // and initialization allocate 0x18-byte nodes and share nil at 0x6a52c4
@@ -1571,18 +1599,24 @@ rmgTerrainPainter::~rmgTerrainPainter()
 // Initialization and node insertion match all 168/766 bytes.
 // Node insertion's _Construct call at 0x5b877c shares the 15-byte two-dword
 // copy at 0x5b8cc0 with type_dialog_resource; both emitted bodies agree.
-// Public insert reaches 79.83%: its named call sequence agrees, but VC6 elides the lock
-// scope's EH frame and emits four returns where retail shares one tail.
-// Preserve the canonical Dinkumware implementation and real comparator.
-VA_COMPGEN(0x005B7CD0, 0x156, TREE_INSERT, TRmgGridPoint)
-VA_COMPGEN(0x005B8670, 0xA8, TREE_INIT, TRmgGridPoint)
-VA_COMPGEN(0x005B8720, 0x2FE, TREE_NODE_INSERT, TRmgGridPoint)
+// Public insert matches all 342 bytes with the coordinate function-template
+// comparison (see its claim below). The ordinary fixed-type comparator
+// incorrectly made the lock scope nonthrowing and removed its EH frame.
+VA_COMPGEN(0x005B7CD0, 0x156, TREE_INSERT, TRmgGridPointT_unsigned_int)
+VA_COMPGEN(0x005B8670, 0xA8, TREE_INIT, TRmgGridPointT_unsigned_int)
+VA_COMPGEN(0x005B8720, 0x2FE, TREE_NODE_INSERT, TRmgGridPointT_unsigned_int)
 // Public insert's predecessor test calls this node walk; its color field
 // at +0x14 and nil references identify the same terrain point-set instance.
 // The naturally emitted body matches all 179 bytes.
-VA_COMPGEN(0x005B8AA0, 0xB3, TREE_CONST_ITERATOR_DEC, TRmgGridPoint)
+VA_COMPGEN(0x005B8AA0, 0xB3, TREE_CONST_ITERATOR_DEC, TRmgGridPointT_unsigned_int)
 
-VA_COMPGEN(0x005B7F60, 0x59, TREE_ERASE_KEY, TRmgGridPoint)
+// PaintPoint and changeTerrain erase points by key. Retail 0x5b7f60
+// obtains upper/lower bounds, counts their iterator range, erases that
+// range, and returns size_type (ret 4). This is public erase(key), not
+// private _Erase(node): the old TREE_ERASE probe paired the wrong body
+// and scored 36.62%. The existing set calls naturally emit this overload,
+// which matches all 89 bytes under the correct TREE_ERASE_KEY claim.
+VA_COMPGEN(0x005B7F60, 0x59, TREE_ERASE_KEY, TRmgGridPointT_unsigned_int)
 
 // The retained erase(key) calls 0x5b7e30 with two iterators and a hidden
 // result pointer. Its whole-range branch recursively clears nodes through
@@ -1591,18 +1625,28 @@ VA_COMPGEN(0x005B7F60, 0x59, TREE_ERASE_KEY, TRmgGridPoint)
 // Dinkumware bodies are naturally emitted by the existing set operations.
 // All 289/1295/126 bytes match respectively. The retained _Lockit destructor
 // at 0x60b634 releases the CRT lock through LeaveCriticalSection.
-VA_COMPGEN(0x005B7E30, 0x121, TREE_ERASE_RANGE, TRmgGridPoint)
-VA_COMPGEN(0x005B8090, 0x50F, TREE_ERASE_ITERATOR, TRmgGridPoint)
-VA_COMPGEN(0x005B85F0, 0x7E, TREE_ERASE, TRmgGridPoint)
+VA_COMPGEN(0x005B7E30, 0x121, TREE_ERASE_RANGE, TRmgGridPointT_unsigned_int)
+VA_COMPGEN(0x005B8090, 0x50F, TREE_ERASE_ITERATOR, TRmgGridPointT_unsigned_int)
+VA_COMPGEN(0x005B85F0, 0x7E, TREE_ERASE, TRmgGridPointT_unsigned_int)
 
 // Both erase overloads and the admitted distance loop retain this successor
 // walk. Its 0x6a52c4 nil references prove the terrain point-set ownership;
 // the naturally emitted TRmgGridPoint specialization matches all 163 bytes.
 // This replaces the provisional TPoint claim and its artificial emission
 // wrapper in rmg.cpp. The two specializations have distinct nil symbols.
-VA_COMPGEN(0x005B8BC0, 0xA3, TREE_CONST_ITERATOR_INC, TRmgGridPoint)
+VA_COMPGEN(0x005B8BC0, 0xA3, TREE_CONST_ITERATOR_INC, TRmgGridPointT_unsigned_int)
 
-VA_COMPGEN(0x005B7FC0, 0x57, TREE_FIND, TRmgGridPoint)
+// The one-point lookup calls _Lbound and tests y/x before returning an
+// iterator through the hidden result pointer (ret 8). Residual 99.4634%:
+// ECX/EDX roles differ in the expanded comparison; CFG and calls agree.
+// Banked MAX 100%: two comparator batches (24 branch/binding forms, then
+// 108 capture/operand forms) found 28 exact observations. A full build with
+// `unsigned int ry = right.m_y; unsigned int ly = left.m_y;` before the
+// lexical comparison verified and banked find's exact body. That form lowers
+// standalone operator< to 98.75%; restoring its direct expression recovers
+// its 100% while find's unchanged-source MAX retains the exact observation.
+// Simultaneous CUR exactness remains unresolved; no candidate closes both.
+VA_COMPGEN(0x005B7FC0, 0x57, TREE_FIND, TRmgGridPointT_unsigned_int)
 
 VA_COMPGEN(0x005B8020, 0x35, VECTOR_ERASE, TRmgPackedTerrainCell)
 
@@ -1610,14 +1654,14 @@ VA_COMPGEN(0x005B8060, 0x24, VECTOR_UFILL, unsigned_char)
 
 // PaintPoint and TRmgTerrainBrush::changeTerrain retain this one-dword
 // iterator wrapper around the tree's raw-node lower bound.
-VA_COMPGEN(0x005B85A0, 0x17, TREE_LOWER_BOUND, TRmgGridPoint)
+VA_COMPGEN(0x005B85A0, 0x17, TREE_LOWER_BOUND, TRmgGridPointT_unsigned_int)
 // PaintPoint retains the two-bound wrapper returning its iterator pair.
-VA_COMPGEN(0x005B85C0, 0x2C, TREE_EQUAL_RANGE, TRmgGridPoint)
-VA_COMPGEN(0x005B8A20, 0x17, TREE_UPPER_BOUND, TRmgGridPoint)
+VA_COMPGEN(0x005B85C0, 0x2C, TREE_EQUAL_RANGE, TRmgGridPointT_unsigned_int)
+VA_COMPGEN(0x005B8A20, 0x17, TREE_UPPER_BOUND, TRmgGridPointT_unsigned_int)
 
 // The retained public wrappers above delegate to these raw-node searches.
-VA_COMPGEN(0x005B8A40, 0x59, TREE_LBOUND, TRmgGridPoint)
-VA_COMPGEN(0x005B8B60, 0x59, TREE_UBOUND, TRmgGridPoint)
+VA_COMPGEN(0x005B8A40, 0x59, TREE_LBOUND, TRmgGridPointT_unsigned_int)
+VA_COMPGEN(0x005B8B60, 0x59, TREE_UBOUND, TRmgGridPointT_unsigned_int)
 
 VA_COMPGEN(0x005B4860, 0x6E, IMPLICIT_DTOR, set)
 
@@ -1625,11 +1669,17 @@ VA_COMPGEN(0x005B4860, 0x6E, IMPLICIT_DTOR, set)
 // public distance wrapper and its category-dispatched overload. The wrapper
 // increments the caller's count directly; the unused tag argument accounts
 // for the tagged body's missing self-store.
-VA_COMPGEN(0x005B8C70, 0x2B, STD_DISTANCE, TRmgGridPoint)
-VA_COMPGEN(0x005B8CD0, 0x28, STD_DISTANCE_TAGGED, TRmgGridPoint)
+VA_COMPGEN(0x005B8C70, 0x2B, STD_DISTANCE, TRmgGridPointT_unsigned_int)
+VA_COMPGEN(0x005B8CD0, 0x28, STD_DISTANCE_TAGGED, TRmgGridPointT_unsigned_int)
 
+// The set lookup at 0x5b4e96 retains the unsigned y-then-x comparison.
+// Its canonical function-template definition lives beside the coordinate
+// template in rmg.h; this redeclaration only owns the retail annotation.
+// The template is emitted after _Distance and before _Construct, matching
+// retail 0x5b8c70/0x5b8ca0/0x5b8cc0. The fixed-type ordinary inline control
+// emits the same comparison after paintPoint, removes insert's lock unwind
+// scope and leaves insert at 79.83%. Header narrowing alone was inert.
+template<class Coordinate>
 VA(0x005B8CA0, 0x20) // anchor-callee 0x5b4e96; fastcall, two point references
-bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right)
-{
-    return left.m_y < right.m_y || (left.m_y == right.m_y && left.m_x < right.m_x);
-}
+bool operator<(const TRmgGridPointT<Coordinate>& left,
+               const TRmgGridPointT<Coordinate>& right);

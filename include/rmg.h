@@ -148,6 +148,13 @@ public:
     int m_maximumLevel;
     int m_schoolMask;
 
+    // Retail roster 0x538b10 installs the derived vtable before these three
+    // field stores. Sixteen initializer/store forms keep the current body
+    // closest; the all-member form moves fields before that vtable store.
+    // Sixteen input-ownership forms and 55 roster recombinations do not
+    // improve the remaining nested base-constructor decision. One borrowed
+    // input recovers the early prefix but loses later insertion/constructor
+    // choices. Retain the value interface and this ordered inline body.
     inline type_black_box_spells_def(
         int value, int minimumLevel, int maximumLevel, int schoolMask)
         : type_treasure_def(6, 0, value, 2)
@@ -493,18 +500,51 @@ int getRmgSquaredDistance(TPoint first, TPoint second);
 // bound at 0x5b8a40 compares y, then x, with jb/jae. Its retained constructor
 // at 0x5b76b0 reads both arguments through pointers. This role name is
 // provisional; the signed geometry TPoint is a separate recovered surface.
-struct TRmgGridPoint {
-    unsigned int m_x;
-    unsigned int m_y;
+// The coordinate-template model is supported by two independent boundaries:
+// const-coordinate-reference construction at 0x5b76b0 and the comparison
+// emitted among the terrain tree templates at 0x5b8ca0. Its template body
+// stays unknown to the optimizer until after insert is emitted, preserving
+// retail's _Lockit exception scope (0x5b7cd0). An ordinary inline comparison
+// on this same specialization is compiled at paintPoint and loses that frame.
+// TRmgGridPointT is a provisional template name; TRmgGridPoint preserves the
+// existing unsigned-coordinate role spelling at its uses.
+template<class Coordinate>
+struct TRmgGridPointT {
+    // Before normalization: x.
+    Coordinate m_x;
+    // Before normalization: y.
+    Coordinate m_y;
 
-    TRmgGridPoint() {}
+    TRmgGridPointT() {}
+    // Trivially copyable: no user-written copy constructor. Retail's proxy
+    // factory at() (0x4fa050) and rmg's getSize (0x532240) copy a grid
+    // point as the compiler's memberwise copy, x before y; a written copy
+    // of any spelling (initializer list or body, either field order, or
+    // `*this = other`) reschedules those copies (at() 67.53%, getSize
+    // 97.56%) and is a 45-cost inline site at every copy, which drains the
+    // brush destructor's finish budget (needsTerrainRepair refused at
+    // 70 < 106, 78.60%) and clearRmgLineRectangle (94.51%). The implicit
+    // copy closes all four (2026-09-12). A written operator= instead costs
+    // clearRmgLineRectangle, the painter constructor and terrain paintPoint
+    // (94.51/91.22/90.97%).
+    // The retained 22-byte one-argument constructor at 0x4fa520 is the
+    // conversion from the signed TPoint, and the retained 33-byte add at
+    // 0x4fa540 is TPoint's: refresh 0x4f9f51..0x4f9f86 copies the grid
+    // point memberwise into a TPoint, calls TPoint::operator+= with the
+    // tile direction, copies the sum out as the returned value, then calls
+    // this constructor to build the grid argument of the retained at()
+    // call. Grid arithmetic therefore goes through TPoint both ways (the
+    // free sum lives in rmg_terrain.h with its only users): repairTerrainPoint
+    // 91.34 -> 93.63%, terrain paintPoint 96.56 -> 97.29%, line paintPoint
+    // 79.94 -> 80.64%, refresh 74.42 -> 71.92%; rmg's quest-creature
+    // generate lost one parameter reload (99.73%) as include-set state
+    // until TPoint's accessors below restored it.
+    // The river-painter constructor at 0x55ee50 stays exact; its earlier
+    // 99.71% implicit-copy reading predates the retained compound add.
 
-    // The four late point constructions in RepairTerrainPoint pass x and y by
-    // reference. The retained two-store body is 24 bytes including ret 8.
-    VA(0x005B76B0, 0x18)
-    TRmgGridPoint(const unsigned int& newX, const unsigned int& newY)
+    TRmgGridPointT(const Coordinate& newX, const Coordinate& newY)
         : m_x(newX), m_y(newY) {}
-    TRmgGridPoint(const TPoint& point);
+    TRmgGridPointT(const TPoint& point);
 
     // Coordinate accessors: each use is a free inline site, and the terrain
     // painter's diagonal checks need those sites to divide their budgets so
@@ -512,14 +552,14 @@ struct TRmgGridPoint {
     // paintRectangle walks its rectangle through them so its body stays
     // above the saved-body cliff. Every other body still reads the public
     // fields, and each migration is measured on its own.
-    unsigned int getX() const { return m_x; }
-    unsigned int getY() const { return m_y; }
-    void setX(unsigned int newX) { m_x = newX; }
-    void setY(unsigned int newY) { m_y = newY; }
+    Coordinate getX() const { return m_x; }
+    Coordinate getY() const { return m_y; }
+    void setX(Coordinate newX) { m_x = newX; }
+    void setY(Coordinate newY) { m_y = newY; }
 
     // paintTransitions steps one column with a grid-side compound add; the
     // retained add at 0x4fa540 is TPoint's, so this one stays inline.
-    TRmgGridPoint& operator+=(const TPoint& offset)
+    TRmgGridPointT& operator+=(const TPoint& offset)
     {
         m_x += offset.m_x;
         m_y += offset.m_y;
@@ -531,7 +571,13 @@ struct TRmgGridPoint {
     }
 };
 
-bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right);
+typedef TRmgGridPointT<unsigned int> TRmgGridPoint;
+
+template<class Coordinate>
+bool operator<(const TRmgGridPointT<Coordinate>& left, const TRmgGridPointT<Coordinate>& right)
+{
+    return left.m_y < right.m_y || (left.m_y == right.m_y && left.m_x < right.m_x);
+}
 
 struct TRmgZoneBounds {
     int m_minimumX;
@@ -758,7 +804,9 @@ public:
     char m_tailPadding[3];
 
     type_object(TRmgObjectPropertiesRef* newProperties);
-    TRmgMapPosition getPosition() const;
+    // Placement callers own their coordinate snapshots. The borrowed result
+    // distinguishes its former exact transfer model; see the source evidence.
+    const TRmgMapPosition& getPosition() const;
 
     void clearPlacementMarks();
 
@@ -963,7 +1011,7 @@ public:
     int m_experience;                       // +0x28, prison definition experience
 
     rmgHeroObject(TRmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, int objectId, int heroIndex,
+        type_random_map_generator* generator, const int& objectId, int heroIndex,
         int experience);
 
     virtual void unknownOperation();
@@ -1120,9 +1168,11 @@ public:
     // mapItems starts at +8. These three bytes align the pointer.
     char m_paddingBeforeMapItems[3];
     TRmgMapItem* m_mapItems;                // +0x08
-    int m_mapWidth;                         // +0x0c
-    int m_mapHeight;                        // +0x10
-    int m_numberLevels;                     // +0x14
+    // Before normalization: mapWidth, mapHeight, numberLevels.
+    // Retail-only ownership hypothesis: this coordinate subobject preserves
+    // the exact owned-map body and its retained call from TRmgGeneratorBase;
+    // three independent integers preserve only the former. No DC declaration.
+    TRmgMapPosition m_size; // +0x0c: signed width, height and level count
 
     // Owning constructor retained at 0x530fb0, called by the generator base
     // and temporary treasure-group maps. Three dimensions, thiscall ret 0xc.
@@ -1145,9 +1195,9 @@ public:
     inline type_random_map(TRmgMapItem* items, int width, int height)
     {
         m_mapItems = items;
-        m_mapWidth = width;
-        m_mapHeight = height;
-        m_numberLevels = 1;
+        m_size.m_x = width;
+        m_size.m_y = height;
+        m_size.m_z = 1;
         m_ownsMapItems = 0;
     }
 
@@ -1169,7 +1219,7 @@ public:
     TRmgMapItem* getMapItem(int x, int y);
     inline TRmgMapItem* getMapItem(int x, int y, int z)
     {
-        return m_mapItems + (z * m_mapHeight + y) * m_mapWidth + x;
+        return m_mapItems + (z * m_size.m_y + y) * m_size.m_x + x;
     }
     TRmgMapItem* getMapItem(TRmgMapPosition point);
 
@@ -1497,8 +1547,9 @@ struct TRmgZone {
     std::vector<TPoint> m_entrances;   // +0x404
 
     TRmgZone(TRmgTownSlot* slot);
+    // Provisional role-derived helper; retail removal expands its count update.
+    void decrementObjectCount(TAdventureObjectType objectType);
     void chooseTerrain();
-    ~TRmgZone();
     int getTerrain() const
     {
         return m_terrain;

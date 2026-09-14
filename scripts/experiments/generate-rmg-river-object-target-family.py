@@ -39,8 +39,8 @@ BASELINE = """void type_random_map_generator::markRiverObjectTargets()
             }
             position.m_x -= offsetX;
             position.m_y -= offsetY;
-            if (position.m_x >= 0 && position.m_x < m_map.m_mapWidth
-                && position.m_y >= 0 && position.m_y < m_map.m_mapHeight)
+            if (position.m_x >= 0 && position.m_x < m_map.m_size.m_x
+                && position.m_y >= 0 && position.m_y < m_map.m_size.m_y)
                 m_map.getMapItem(position.m_x, position.m_y, position.m_z)->m_tileData.m_hasRiver = 1;
         }
     }

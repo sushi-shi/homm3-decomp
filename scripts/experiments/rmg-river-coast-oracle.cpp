@@ -14,7 +14,7 @@ struct TRmgMapItem {
     // @ENTRANCE@
 };
 struct type_random_map {
-    int m_mapWidth, m_mapHeight;
+    TRmgMapPosition m_size;
     TRmgMapItem* m_mapItems;
     // @ACCESSOR@
 };
@@ -93,7 +93,7 @@ template<class T> static bool check() {
             std::memcpy(&expected[last].m_tileData, &bits, 4);
         }
         T candidate;
-        candidate.m_map.m_mapWidth = w; candidate.m_map.m_mapHeight = h;
+        candidate.m_map.m_size.m_x = w; candidate.m_map.m_size.m_y = h;
         candidate.m_map.m_mapItems = &cells[1];
         candidate.markRiverCoastTarget(TRmgMapPosition(x, y, z), d);
         if (std::memcmp(&cells[0], &expected[0], cells.size() * sizeof(cells[0]))) return false;

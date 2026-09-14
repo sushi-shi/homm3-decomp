@@ -135,7 +135,7 @@ class RmgGroupFillTests(unittest.TestCase):
         for marker, replacement in (("VALUE_TYPES", "\n".join(types)),
                 ("ACCESSORS", "\n".join(accessors)),
                 ("LIMITS", block(header, "enum ERmgTreasurePlacementLimits {")),
-                ("VALUE_HELPERS", self.module.helpers().definition(support, "TRmgMapPosition::TRmgMapPosition")),
+                ("VALUE_HELPERS", self.module.helpers().definition(self.source, "TRmgMapPosition::TRmgMapPosition")),
                 ("CANDIDATES", "\n".join(programs)), ("CHECKS", "\n".join(checks))):
             program = program.replace("// @" + marker + "@", replacement)
         self.assertNotIn("// @", program)
