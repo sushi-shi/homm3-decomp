@@ -201,9 +201,6 @@ public:
 };
 SIZE(CCombatMainMsg, 0x28);
 
-#ifndef AbstractFile
-#define AbstractFile TAbstractFile
-#endif
 class AbstractFile;
 
 // Retail's complex wire-message base is a vptr followed by an ordinary

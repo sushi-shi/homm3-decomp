@@ -131,7 +131,7 @@ ProgressSink::ProgressSink(int totalSteps)
     m_done = 0;
 }
 
-VA_COMPGEN(0x00530E40, 0x23, SCALAR_DELETING_DTOR, TProgressSink)
+VA_COMPGEN(0x00530E40, 0x23, SCALAR_DELETING_DTOR, ProgressSink)
 
 VA(0x00530E70, 0x07)
 ProgressSink::~ProgressSink()
@@ -303,7 +303,7 @@ RmgMapItem::RmgMapItem()
     clear();
 }
 
-VA_COMPGEN(0x00530EE0, 0x26, IMPLICIT_DTOR, TRmgMapItem)
+VA_COMPGEN(0x00530EE0, 0x26, IMPLICIT_DTOR, RmgMapItem)
 
 // The array constructor at 0x530e90 calls this initializer after constructing
 // m_objects, and type_random_map::clear calls it for every allocated cell.
@@ -369,7 +369,7 @@ type_random_map::type_random_map(int width, int height, int levels)
 
 // The array-delete helper for TRmgMapItem uses the recovered 0x30-byte stride
 // and delegates every element to the implicit destructor above.
-VA_COMPGEN(0x00531050, 0x58, VECTOR_DELETING_DTOR, TRmgMapItem)
+VA_COMPGEN(0x00531050, 0x58, VECTOR_DELETING_DTOR, RmgMapItem)
 
 VA(0x005310B0, 0x83)
 type_random_map::~type_random_map()
@@ -844,7 +844,7 @@ RmgRoadMapAdapterInterface::~RmgRoadMapAdapterInterface()
 {
 }
 
-VA_COMPGEN(0x00537940, 0x23, SCALAR_DELETING_DTOR, TRmgRoadMapAdapterInterface)
+VA_COMPGEN(0x00537940, 0x23, SCALAR_DELETING_DTOR, RmgRoadMapAdapterInterface)
 
 VA(0x00532360, 0x6E)
 void RmgRoadMapAdapter::setTile(
@@ -906,19 +906,19 @@ RmgGridPoint RmgRoadMapAdapter::getSize()
 
 // The real road-painting stack construction at 0x548120 retains the
 // concrete adapter vtable and this ordinary deleting wrapper naturally.
-VA_COMPGEN(0x00532320, 0x21, SCALAR_DELETING_DTOR, TRmgRoadMapAdapter)
+VA_COMPGEN(0x00532320, 0x21, SCALAR_DELETING_DTOR, RmgRoadMapAdapter)
 
 VA(0x00532510, 0x07)
 RmgMapAdapterInterface::~RmgMapAdapterInterface()
 {
 }
 
-VA_COMPGEN(0x00537910, 0x23, SCALAR_DELETING_DTOR, TRmgMapAdapterInterface)
+VA_COMPGEN(0x00537910, 0x23, SCALAR_DELETING_DTOR, RmgMapAdapterInterface)
 
 // Vtable 0x640a3c slot 0 and the 0x08 concrete adapter layout identify this
 // scalar deleting wrapper. The retained body delegates to the adapter-interface
 // destructor at 0x532510 before conditionally releasing the object.
-VA_COMPGEN(0x005324E0, 0x21, SCALAR_DELETING_DTOR, TRmgMapAdapter)
+VA_COMPGEN(0x005324E0, 0x21, SCALAR_DELETING_DTOR, RmgMapAdapter)
 
 VA(0x00532520, 0x205)
 void RmgMapAdapter::setTile(const RmgGridPoint& point, const rmgTerrainTile& tile)
@@ -1046,7 +1046,7 @@ void RmgMapItem::write(AbstractFile* outfile)
     value = flags;
     outfile->write(&value, sizeof(value));
 }
-VA_COMPGEN(0x005329A0, 0x32, IMPLICIT_DTOR, TRmgTownSlot)
+VA_COMPGEN(0x005329A0, 0x32, IMPLICIT_DTOR, RmgTownSlot)
 
 VA(0x005329E0, 0xCF) // anchor-callee 0x53e149/0x53e45c; thiscall, ret 4
 RmgZone::RmgZone(RmgTownSlot* newSlot)
@@ -1116,7 +1116,7 @@ void RmgZone::chooseTerrain()
 // (+0x3e4). Retail 0x532b62/0x532b85/0x532ba6 frees each backing allocation
 // and clears its three pointers. No vptr, owned pointee or user cleanup is
 // present; the written empty destructor added no source operation.
-VA_COMPGEN(0x00532B50, 0x76, IMPLICIT_DTOR, TRmgZone)
+VA_COMPGEN(0x00532B50, 0x76, IMPLICIT_DTOR, RmgZone)
 
 // Both the level-occupancy pass and the bounds pass in FilterZonePositions
 // copy the whole coordinate before selecting a component. That retained
@@ -2643,16 +2643,16 @@ RmgGeneratorBase::RmgGeneratorBase(int width, int height, int levels,
     loadObjectPrototypes();
 }
 
-VA_COMPGEN(0x00536170, 0x21, SCALAR_DELETING_DTOR, TRmgGeneratorBase)
+VA_COMPGEN(0x00536170, 0x21, SCALAR_DELETING_DTOR, RmgGeneratorBase)
 
 VA(0x005361A0, 0x07)
 RmgMapInterface::~RmgMapInterface()
 {
 }
 
-VA_COMPGEN(0x005361B0, 0x23, SCALAR_DELETING_DTOR, TRmgMapInterface)
+VA_COMPGEN(0x005361B0, 0x23, SCALAR_DELETING_DTOR, RmgMapInterface)
 
-VA_COMPGEN(0x005361E0, 0x18, DEFAULT_CTOR_CLOSURE, TRmgObjectPropertiesRef)
+VA_COMPGEN(0x005361E0, 0x18, DEFAULT_CTOR_CLOSURE, RmgObjectPropertiesRef)
 
 // The loader inlines construction of each reference. Its owned outline
 // vector is constructed before the scalar stores below; the 8x6 priority
@@ -4635,7 +4635,7 @@ void type_random_map_generator::joinExtraZones(int originalZones, RmgVoronoi* di
     }
 }
 
-VA_COMPGEN(0x0054DE90, 0x14, STD_CONSTRUCT, TRmgZoneConnection)
+VA_COMPGEN(0x0054DE90, 0x14, STD_CONSTRUCT, RmgZoneConnection)
 
 // The map-generation driver calls this once per level with its selected
 // template. Sites for existing zones seed a subdivision; radial sites add
@@ -4863,10 +4863,10 @@ void subdivideRmgNoiseRegion(std::vector<RmgNoiseRegion>& pending,
 // Retained by the subdivision helper's ordinary vector insertion paths.
 // The nine-dword copy stride identifies the specialization independently of
 // all other 36-byte structures. No source-only emission anchor is required.
-VA_COMPGEN(0x0054C670, 0x21, VECTOR_SIZE, TRmgNoiseRegion)
-VA_COMPGEN(0x0054D5C0, 0x2E4, VECTOR_INSERT_COUNT, TRmgNoiseRegion)
-VA_COMPGEN(0x0054D960, 0x3B, VECTOR_UCOPY, TRmgNoiseRegion)
-VA_COMPGEN(0x0054D9A0, 0x31, VECTOR_UFILL, TRmgNoiseRegion)
+VA_COMPGEN(0x0054C670, 0x21, VECTOR_SIZE, RmgNoiseRegion)
+VA_COMPGEN(0x0054D5C0, 0x2E4, VECTOR_INSERT_COUNT, RmgNoiseRegion)
+VA_COMPGEN(0x0054D960, 0x3B, VECTOR_UCOPY, RmgNoiseRegion)
+VA_COMPGEN(0x0054D9A0, 0x31, VECTOR_UFILL, RmgNoiseRegion)
 
 // The inlined search at 0x53fe7a returns an element pointer and its caller
 // then tests that pointer, even on the found arm. Preserve that ordinary
@@ -7978,41 +7978,41 @@ RmgMapItem* type_random_map::getMapItem(int x, int y)
 
 VA_COMPGEN(0x00404200, 0x209, VECTOR_INSERT, Int)
 VA_COMPGEN(0x00422F50, 0x1B1, VECTOR_INSERT, Int)
-VA_COMPGEN(0x004347A0, 0x32E, VECTOR_INSERT, TRmgMapPosition)
-VA_COMPGEN(0x0054C3F0, 0x21C, VECTOR_INSERT_SINGLE, TRmgMapPosition)
+VA_COMPGEN(0x004347A0, 0x32E, VECTOR_INSERT, RmgMapPosition)
+VA_COMPGEN(0x0054C3F0, 0x21C, VECTOR_INSERT_SINGLE, RmgMapPosition)
 
-VA_COMPGEN(0x0054DD60, 0x15, STD_CONSTRUCT, TRmgMapPosition)
+VA_COMPGEN(0x0054DD60, 0x15, STD_CONSTRUCT, RmgMapPosition)
 
-VA_COMPGEN(0x0054C730, 0x1DD, VECTOR_INSERT_SINGLE, TRmgObjectPlacementRule)
-VA_COMPGEN(0x0054C940, 0x23, VECTOR_DESTROY, TRmgObjectPlacementRule)
-VA_COMPGEN(0x0054D8B0, 0x38, VECTOR_UCOPY, TRmgObjectPlacementRule)
-VA_COMPGEN(0x0054D8F0, 0x29, VECTOR_UFILL, TRmgObjectPlacementRule)
-VA_COMPGEN(0x0054DD80, 0x104, STD_CONSTRUCT, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054C730, 0x1DD, VECTOR_INSERT_SINGLE, RmgObjectPlacementRule)
+VA_COMPGEN(0x0054C940, 0x23, VECTOR_DESTROY, RmgObjectPlacementRule)
+VA_COMPGEN(0x0054D8B0, 0x38, VECTOR_UCOPY, RmgObjectPlacementRule)
+VA_COMPGEN(0x0054D8F0, 0x29, VECTOR_UFILL, RmgObjectPlacementRule)
+VA_COMPGEN(0x0054DD80, 0x104, STD_CONSTRUCT, RmgObjectPlacementRule)
 // The retained insertion calls these value-assignment loops. Both traverse
 // 0x4c-byte rules with the two owned vectors at +0x2c and +0x3c.
-VA_COMPGEN(0x0054DA20, 0x19F, STD_FILL, TRmgObjectPlacementRule)
-VA_COMPGEN(0x0054DBC0, 0x1A0, STD_COPY_BACKWARD, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054DA20, 0x19F, STD_FILL, RmgObjectPlacementRule)
+VA_COMPGEN(0x0054DBC0, 0x1A0, STD_COPY_BACKWARD, RmgObjectPlacementRule)
 
-VA_COMPGEN(0x0054C970, 0x22F, VECTOR_INSERT_SINGLE, TRmgZoneConnection)
+VA_COMPGEN(0x0054C970, 0x22F, VECTOR_INSERT_SINGLE, RmgZoneConnection)
 
 VA_COMPGEN(0x005157D0, 0x1B, CLASS_CTOR, vector)
 VA_COMPGEN(0x00536BA0, 0x18, DEFAULT_CTOR_CLOSURE, vector)
 
-VA_COMPGEN(0x00536B60, 0x3D, IMPLICIT_DTOR, TRmgObjectPlacementRule)
+VA_COMPGEN(0x00536B60, 0x3D, IMPLICIT_DTOR, RmgObjectPlacementRule)
 
 // The recovered generator-base constructor's exception cleanup naturally
 // retains the value-vector destructor. Its 0x4c-stride loop and calls to
 // TRmgObjectPlacementRule::~TRmgObjectPlacementRule distinguish it from
 // the separate pointer-vector destructor emitted by the rule loader.
-VA_COMPGEN(0x0054C170, 0x38, VECTOR_DTOR, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054C170, 0x38, VECTOR_DTOR, RmgObjectPlacementRule)
 
-VA_COMPGEN(0x0054C1B0, 0x23, VECTOR_SIZE, TRmgZoneConnection)
+VA_COMPGEN(0x0054C1B0, 0x23, VECTOR_SIZE, RmgZoneConnection)
 
-VA_COMPGEN(0x0054CD70, 0x3D, VECTOR_ERASE, TPoint)
+VA_COMPGEN(0x0054CD70, 0x3D, VECTOR_ERASE, Point)
 
 // The neighboring 12-byte position worklist retains the same single-element
 // erase specialization with TRmgMapPosition's three-dword copy loop.
-VA_COMPGEN(0x0054C610, 0x53, VECTOR_ERASE, TRmgMapPosition)
+VA_COMPGEN(0x0054C610, 0x53, VECTOR_ERASE, RmgMapPosition)
 
 // The reader's two resize shrink arms retain this int-vector erase.
 // All 51 raw bytes agree; no calls or data relocations remain unresolved.
@@ -8024,7 +8024,7 @@ VA_COMPGEN(0x0054CFD0, 0x2F, VECTOR_ERASE, unsigned_char)
 
 // FilterZonePositions erases 12-byte positions through this forward copy;
 // the retained body copies three dwords and returns the end pointer.
-VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, TRmgMapPosition)
+VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, RmgMapPosition)
 
 // Canonical int-copy overloads shared with mapcell's BlackBoxData paths.
 // They expand there but remain naturally emitted by this TU's int vectors.
@@ -8380,7 +8380,7 @@ void type_random_map_generator::placeZoneTreasures(RmgZone* zone)
     }
 }
 
-VA_COMPGEN(0x005477C0, 0xB3, IMPLICIT_DTOR, TRmgTreasureGroup)
+VA_COMPGEN(0x005477C0, 0xB3, IMPLICIT_DTOR, RmgTreasureGroup)
 
 // Complete's road-target pass at 0x548290 invokes this flood once for each
 // prospective source.  Retail proves the source-level worklist shape: two
@@ -10155,10 +10155,10 @@ int RandomMapRequest::generate(const char* fileName, void* progress)
 // The branch queue naturally emits these ordinary Dinkumware members.
 // Eight-byte coordinate values and 16-byte linked nodes identify list<TPoint>;
 // erase's iterator result is returned through a hidden stack pointer.
-VA_COMPGEN(0x0054C6A0, 0x4D, LIST_DTOR, TPoint)
-VA_COMPGEN(0x0054D000, 0x5E, LIST_INSERT_SINGLE, TPoint)
-VA_COMPGEN(0x0054D060, 0x36, LIST_ERASE_ITERATOR, TPoint)
-VA_COMPGEN(0x0054D0F0, 0x2D, LIST_BUYNODE, TPoint)
+VA_COMPGEN(0x0054C6A0, 0x4D, LIST_DTOR, Point)
+VA_COMPGEN(0x0054D000, 0x5E, LIST_INSERT_SINGLE, Point)
+VA_COMPGEN(0x0054D060, 0x36, LIST_ERASE_ITERATOR, Point)
+VA_COMPGEN(0x0054D0F0, 0x2D, LIST_BUYNODE, Point)
 
 // Retail's 129-bit setter is claimed from its identical canonical COMDAT in
 // customcampaign.cpp; this TU expands it after removing the reference pin.

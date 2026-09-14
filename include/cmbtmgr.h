@@ -14,26 +14,14 @@ class Bitmap16Bit;
 class CNetMsgHandlerPause;
 class Bitmap816;
 class CSprite;
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 class heroWindow;
 class iconWidget;
 class textWidget;
 // Before normalization (type): TCombatWindow.
-#ifndef CombatWindow
-#define CombatWindow TCombatWindow
-#endif
 class CombatWindow;
 class NewmapCell;
-#ifndef SearchArray
-#define SearchArray searchArray
-#endif
 class SearchArray;
-#ifndef Town
-#define Town town
-#endif
 class Town;
 struct type_AI_combat_parameters;
 struct tagPOINT;
@@ -57,9 +45,6 @@ public:
 // the table at 0x67ff24 with an 84-byte stride: three signed coordinate
 // pairs followed by eighteen float boundaries.
 // Before normalization (type): TMissileStartInfo.
-#ifndef MissileStartInfo
-#define MissileStartInfo TMissileStartInfo
-#endif
 struct MissileStartInfo {
 public:
     short m_offsets[3][2];
@@ -286,9 +271,6 @@ enum ECombatGateHex {
 // nine 0x20-byte rows by town::type, then uses the three coordinate pairs
 // for the keep, lower tower and upper tower respectively.
 // Before normalization (type): TSiegeArcherPosition.
-#ifndef SiegeArcherPosition
-#define SiegeArcherPosition TSiegeArcherPosition
-#endif
 struct SiegeArcherPosition {
 public:
     int m_x;
@@ -296,9 +278,6 @@ public:
 };
 
 // Before normalization (type): TSiegeArcherInfo.
-#ifndef SiegeArcherInfo
-#define SiegeArcherInfo TSiegeArcherInfo
-#endif
 struct SiegeArcherInfo {
 public:
     int m_creatureType;
@@ -330,9 +309,6 @@ enum ECombatMineType {
 // {SpriteName, castX, castY, castFrame}; the retail table is 18 rows
 // where the Dreamcast's is 16.
 // Before normalization (type): TCombatHeroSprite.
-#ifndef CombatHeroSprite
-#define CombatHeroSprite TCombatHeroSprite
-#endif
 struct CombatHeroSprite {
 public:
     const char* m_defName;
@@ -405,9 +381,6 @@ public:
     // DC CmbtMgr.h's complete nested enum. Command's get_tower_string takes
     // this type by value; retail indexes the same eighteen wall rows.
 // Before normalization (type): combatManager::TWallSection.
-#ifndef WallSection
-#define WallSection TWallSection
-#endif
     enum WallSection {
         eWallSectionDoor = 0,
         eWallSectionDoorRope = 1,
@@ -435,9 +408,6 @@ public:
     // at +0/+2, placement bounds at +4/+5, signed occupied-hex offsets at
     // +8, and the sprite name at +0x10.
 // Before normalization (type): combatManager::TObstacleInfo.
-#ifndef ObstacleInfo
-#define ObstacleInfo TObstacleInfo
-#endif
     struct ObstacleInfo {
         unsigned short m_terrainMask;
         unsigned short m_specialTerrainMask;
@@ -483,9 +453,6 @@ public:
     // Retail writes only name/hitpoints here; Dreamcast CodeView supplies
     // the intervening field identities and confirms the 36-byte extent.
 // Before normalization (type): combatManager::TWallTraits.
-#ifndef WallTraits
-#define WallTraits TWallTraits
-#endif
     struct WallTraits {
         short m_x;
         short m_y;
@@ -522,9 +489,6 @@ public:
     // object RemoveObstacle virtual-calls (vtable slot 1) and then
     // clears - left padded until that class is modelled.
 // Before normalization (type): combatManager::TObstacle.
-#ifndef Obstacle
-#define Obstacle TObstacle
-#endif
     struct Obstacle {
         // RemoveObstacle calls vtable slot 1 on it with no arguments
         // and then clears the slot - CSprite's slot 1 is Dispose().
@@ -567,9 +531,6 @@ public:
     // table on the class also lets get_wall_strength retain its original
     // source-visible inline boundary instead of flattening it into callers.
 // Before normalization (type): combatManager::TWallTarget.
-#ifndef WallTarget
-#define WallTarget TWallTarget
-#endif
     struct WallTarget {
         short m_targetHex;             // +0x0
         short m_blockedRow;            // +0x2
@@ -593,9 +554,6 @@ public:
     // both through four-byte resource handles, as in army: 0x462920 clears
     // +4/+8 and 0x462930 releases them in reverse order with EH cleanup.
 // Before normalization (type): combatManager::TArcher.
-#ifndef Archer
-#define Archer TArcher
-#endif
     struct Archer {
         int m_creatureType;             // +0x0
         ResourceHandle<CSprite> m_sprite;          // +0x4
@@ -610,9 +568,6 @@ public:
     // InitializeArchers' two simultaneously live resource locals. Keeping
     // them as one record preserves retail VC6's [-8]/[-4] stack ordering.
 // Before normalization (type): combatManager::TArcherLoadState.
-#ifndef ArcherLoadState
-#define ArcherLoadState TArcherLoadState
-#endif
     struct ArcherLoadState {
         CSprite* m_sprite;
         const char* m_spriteName;
@@ -1771,9 +1726,6 @@ public:
     // zero; the rest of the enum waits for the lane that reconstructs
     // PowEffect's own body.
 // Before normalization (type): combatManager::TSpellEffectID.
-#ifndef SpellEffectID
-#define SpellEffectID TSpellEffectID
-#endif
     enum SpellEffectID {
         eSpellEffectFireShield = 11,
         // Dreamcast's TSpellEffectID table and CastSpell's Berserk arm
@@ -2059,9 +2011,6 @@ extern const char* const g_terrainCombatBackgrounds[9][3];    // 0x63d2f0
 // that one decoded switch and nothing else attests spellings.
 DATA(0x0063c7c8) extern const unsigned short g_obstacleTerrainMasks[];
 // Before normalization (type): TSpellEffectPlacement.
-#ifndef SpellEffectPlacement
-#define SpellEffectPlacement TSpellEffectPlacement
-#endif
 enum SpellEffectPlacement {
     SPELL_EFFECT_PLACE_OVERHEAD = 0x0,
     SPELL_EFFECT_PLACE_CENTERED = 0x1,
@@ -2074,9 +2023,6 @@ enum SpellEffectPlacement {
 };
 
 // Before normalization (type): TSpellEffectTraits.
-#ifndef SpellEffectTraits
-#define SpellEffectTraits TSpellEffectTraits
-#endif
 struct SpellEffectTraits {
 public:
     const char* m_name;  // +0x0, the .def sprite

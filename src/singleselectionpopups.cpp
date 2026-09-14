@@ -620,7 +620,7 @@ RandomMapProgress::RandomMapProgress(int totalSteps)
 }
 
 // Slot 0 of vtable 0x641b14.
-VA_COMPGEN(0x00577090, 0x21, SCALAR_DELETING_DTOR, TRandomMapProgress)
+VA_COMPGEN(0x00577090, 0x21, SCALAR_DELETING_DTOR, RandomMapProgress)
 
 VA(0x005770C0, 0xBE)
 RandomMapProgress::~RandomMapProgress()

@@ -108,9 +108,6 @@ public:
 // sort machinery. Constructor stores put isNet before direction, matching
 // SortMaps at 0x5850b4/0x5850b7 and 0x58510a/0x58510d.
 // Before normalization (type): TSortMapsByName.
-#ifndef SortMapsByName
-#define SortMapsByName TSortMapsByName
-#endif
 struct SortMapsByName {
     unsigned char m_direction;  // +0
     unsigned char m_isNet;      // +1
@@ -124,9 +121,6 @@ struct SortMapsByName {
 };
 
 // Before normalization (type): TSortMapsByPlayers.
-#ifndef SortMapsByPlayers
-#define SortMapsByPlayers TSortMapsByPlayers
-#endif
 struct SortMapsByPlayers {
     unsigned char m_direction;  // +0
     SortMapsByPlayers(unsigned char dir) { m_direction = dir; }
@@ -142,9 +136,6 @@ struct SortMapsByPlayers {
 // itself, which is what identifies the base as this class rather than a
 // constructed temporary.
 // Before normalization (type): TSortMapsByVersion.
-#ifndef SortMapsByVersion
-#define SortMapsByVersion TSortMapsByVersion
-#endif
 struct SortMapsByVersion : public SortMapsByName {
     SortMapsByVersion(unsigned char dir, unsigned char net)
         : SortMapsByName(dir, net)
@@ -155,9 +146,6 @@ struct SortMapsByVersion : public SortMapsByName {
 };
 
 // Before normalization (type): TSortMapsBySize.
-#ifndef SortMapsBySize
-#define SortMapsBySize TSortMapsBySize
-#endif
 struct SortMapsBySize {
     unsigned char m_direction;  // +0
     SortMapsBySize(unsigned char dir) { m_direction = dir; }
@@ -166,9 +154,6 @@ struct SortMapsBySize {
 };
 
 // Before normalization (type): TSortMapsByVictory.
-#ifndef SortMapsByVictory
-#define SortMapsByVictory TSortMapsByVictory
-#endif
 struct SortMapsByVictory {
     unsigned char m_direction;  // +0
     SortMapsByVictory(unsigned char dir) { m_direction = dir; }
@@ -177,9 +162,6 @@ struct SortMapsByVictory {
 };
 
 // Before normalization (type): TSortMapsByLoss.
-#ifndef SortMapsByLoss
-#define SortMapsByLoss TSortMapsByLoss
-#endif
 struct SortMapsByLoss {
     unsigned char m_direction;  // +0
     SortMapsByLoss(unsigned char dir) { m_direction = dir; }
@@ -9341,7 +9323,7 @@ SingleSelectionWindow::~SingleSelectionWindow()
         ResourceManager::delSprFromCache();
 }
 
-VA_COMPGEN(0x0057d130, 0x21, SCALAR_DELETING_DTOR, TSingleSelectionWindow)  // dc 0x1495e4
+VA_COMPGEN(0x0057d130, 0x21, SCALAR_DELETING_DTOR, SingleSelectionWindow)  // dc 0x1495e4
 
 // Retail 0x58e700, the seat-assignment entry the nine OnNewPlayerMsg /
 // OnUpdatePlayerPosMsg sites reach. Complete-only in this shape: DC's

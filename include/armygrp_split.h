@@ -14,18 +14,12 @@ class message;
 // Widget and dialog-return domains proven by TSplitWindow's constructor and
 // handler. The 0x7800 close result has no stronger semantic name yet.
 // Before normalization (type): TSplitWidgetId.
-#ifndef SplitWidgetId
-#define SplitWidgetId TSplitWidgetId
-#endif
 enum SplitWidgetId {
     SPLIT_WIDGET_SOURCE_ENTRY = 4,
     SPLIT_WIDGET_DESTINATION_ENTRY = 5
 };
 
 // Before normalization (type): TSplitDialogReturn.
-#ifndef SplitDialogReturn
-#define SplitDialogReturn TSplitDialogReturn
-#endif
 enum SplitDialogReturn {
     DIALOG_RETURN_SPLIT_CLOSE = 0x7800,
     DIALOG_RETURN_SPLIT_CANCEL = 0x7801
@@ -33,9 +27,6 @@ enum SplitDialogReturn {
 
 // Retail allocates 0x80 bytes for this source-private dialog.
 // Before normalization (type): TSplitWindow.
-#ifndef SplitWindow
-#define SplitWindow TSplitWindow
-#endif
 class SplitWindow : public CAdvPopup {
 public:
     slider* m_splitSlider;                // +0x60, widget id 6

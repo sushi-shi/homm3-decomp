@@ -13,9 +13,6 @@ class textWidget;
 // translated fields are +0x4c/+0x50 and the class is 0x54. Retail vtable
 // 0x63db40 has ten slots: heroWindow's nine followed by Setup.
 // Before normalization (type): TDialogBox.
-#ifndef DialogBoxWindow
-#define DialogBoxWindow TDialogBox
-#endif
 class DialogBoxWindow : public heroWindow {
 public:
     enum {

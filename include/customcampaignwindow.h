@@ -21,9 +21,6 @@ class type_text_scroller;
 // timestamp at +0xf4 (GameTime::Get) and the header vector at +0xf8.
 // Names INVENTED (no Dreamcast twin).
 // Before normalization (type): TCustomCampaignWindow.
-#ifndef CustomCampaignWindow
-#define CustomCampaignWindow TCustomCampaignWindow
-#endif
 class CustomCampaignWindow : public CHeroWindowEx {
 public:
     enum {

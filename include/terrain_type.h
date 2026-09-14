@@ -6,9 +6,6 @@
 // {Dirt=0, Sand=1, Grass=2, Snow=3, Swamp=4, Rough=5,
 // Subterranean=6, Lava=7, Water=8, Rock=9}.
 // Before normalization (type): TTerrainType.
-#ifndef TerrainType
-#define TerrainType TTerrainType
-#endif
 enum TerrainType {
     TERRAIN_NONE = -1,
     eTerrainDirt = 0,

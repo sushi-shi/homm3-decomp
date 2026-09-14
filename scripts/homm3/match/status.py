@@ -204,9 +204,12 @@ def source_hashes(*, legacy: bool = False) -> dict[tuple[str, str], str]:
 
     from homm3.build import configure
     from homm3.core.cpp_tokens import fingerprint
-    from homm3.match.source_ownership import read_compiler_type_lineage
+    from homm3.match.source_ownership import read_type_lineage
     from homm3.retail_labels import source
-    type_lineage = read_compiler_type_lineage(common.HOMM3_DIR)
+    # Identifier-only normalization does not invalidate a byte-match peak.
+    # Canonicalize authored names through their evidence lineage whether or
+    # not a preprocessor alias still controls the compiler spelling.
+    type_lineage = read_type_lineage(common.HOMM3_DIR)
 
     by_identity: dict[tuple[str, int], list[tuple[str, str]]] = {}
     for key, rva in function_rvas().items():

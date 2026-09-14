@@ -26,9 +26,6 @@ public:
 // Dreamcast proves the direct heroWindow base and contributes no additional
 // virtuals. Retail's destructor walks the inherited Widgets vector verbatim.
 // Before normalization (type): TSwapWindow.
-#ifndef SwapWindow
-#define SwapWindow TSwapWindow
-#endif
 class SwapWindow : public heroWindow {
 public:
     // Role-derived names: ctor 0x5aaa80 creates the transcript/edit controls,

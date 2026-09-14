@@ -178,15 +178,9 @@ extern const SCampaignMusicCue* g_campaignMusicTraits;
 // slot 6 deserializes it. NAMES ARE ROLE INVENTIONS - the compiland has
 // no Dreamcast twin (the port's SCampaign::give_custom_items did all of
 // this longhand) and no RTTI descriptor names any of these classes.
-#ifndef AbstractFile
-#define AbstractFile TAbstractFile
-#endif
 class AbstractFile;
 
 // Before normalization (type): TCampaignBonus.
-#ifndef CampaignBonus
-#define CampaignBonus TCampaignBonus
-#endif
 class CampaignBonus {
 public:
     // Out of line at 0x485370, seven bytes of vftable restore; its
@@ -206,9 +200,6 @@ public:
 // Spell: the hero id it is granted to and the spell. Read takes a SIGNED
 // word then an unsigned byte (0x484050).
 // Before normalization (type): TCampaignSpellBonus.
-#ifndef CampaignSpellBonus
-#define CampaignSpellBonus TCampaignSpellBonus
-#endif
 class CampaignSpellBonus : public CampaignBonus {
 public:
     virtual const char* getIconDefName() const;
@@ -226,9 +217,6 @@ public:
 // SAME addresses in both vftables (0x484050 / 0x484090 / the folded
 // three-byte getter).
 // Before normalization (type): TCampaignSpellScrollBonus.
-#ifndef CampaignSpellScrollBonus
-#define CampaignSpellScrollBonus TCampaignSpellScrollBonus
-#endif
 class CampaignSpellScrollBonus : public CampaignSpellBonus {
 public:
     virtual std::string getText() const;
@@ -238,9 +226,6 @@ public:
 // Creature: hero, creature type and count, all three read as words
 // (0x4844f0) - the first two signed, the count unsigned.
 // Before normalization (type): TCampaignCreatureBonus.
-#ifndef CampaignCreatureBonus
-#define CampaignCreatureBonus TCampaignCreatureBonus
-#endif
 class CampaignCreatureBonus : public CampaignBonus {
 public:
     virtual const char* getIconDefName() const;
@@ -258,9 +243,6 @@ public:
 // single byte into the building slot); the town arrives later through
 // SetTown, which is also where the building index is remapped.
 // Before normalization (type): TCampaignBuildingBonus.
-#ifndef CampaignBuildingBonus
-#define CampaignBuildingBonus TCampaignBuildingBonus
-#endif
 class CampaignBuildingBonus : public CampaignBonus {
 public:
     virtual bool isBuildingBonus() const;
@@ -277,9 +259,6 @@ public:
 
 // Artifact: hero and artifact, both signed words (0x4848a0).
 // Before normalization (type): TCampaignArtifactBonus.
-#ifndef CampaignArtifactBonus
-#define CampaignArtifactBonus TCampaignArtifactBonus
-#endif
 class CampaignArtifactBonus : public CampaignBonus {
 public:
     virtual const char* getIconDefName() const;
@@ -297,9 +276,6 @@ public:
 // before a four-byte Read is what proves the array is the member, not
 // four ints).
 // Before normalization (type): TCampaignPrimarySkillBonus.
-#ifndef CampaignPrimarySkillBonus
-#define CampaignPrimarySkillBonus TCampaignPrimarySkillBonus
-#endif
 class CampaignPrimarySkillBonus : public CampaignBonus {
 public:
     virtual const char* getIconDefName() const;
@@ -315,9 +291,6 @@ public:
 // Secondary skill: a signed word hero id, then the skill and its mastery
 // as unsigned bytes (0x484cf0).
 // Before normalization (type): TCampaignSecondarySkillBonus.
-#ifndef CampaignSecondarySkillBonus
-#define CampaignSecondarySkillBonus TCampaignSecondarySkillBonus
-#endif
 class CampaignSecondarySkillBonus : public CampaignBonus {
 public:
     virtual const char* getIconDefName() const;
@@ -335,9 +308,6 @@ public:
 // The negative selectors are the two mixed rows the icon frame folds onto
 // 7 and 8 (0x484d70).
 // Before normalization (type): TCampaignResourceBonus.
-#ifndef CampaignResourceBonus
-#define CampaignResourceBonus TCampaignResourceBonus
-#endif
 class CampaignResourceBonus : public CampaignBonus {
 public:
     virtual const char* getIconDefName() const;
@@ -364,9 +334,6 @@ enum ECampaignBonusType {
     CAMPAIGN_BONUS_RESOURCE = 7
 };
 
-#ifndef CampaignStartOption
-#define CampaignStartOption TCampaignStartOption
-#endif
 class CampaignStartOption {
 public:
     // UpdateBonusIcons centres the frames when there are two choices.
@@ -403,9 +370,6 @@ public:
 
 // Vftable 0x63d98c, 0x18 bytes: the player at +4 and the bonus list at +8.
 // Before normalization (type): TCampaignStartBonusOption.
-#ifndef CampaignStartBonusOption
-#define CampaignStartBonusOption TCampaignStartBonusOption
-#endif
 class CampaignStartBonusOption : public CampaignStartOption {
 public:
     virtual ~CampaignStartBonusOption();
@@ -442,9 +406,6 @@ SIZE(CampaignStartBonusOption, 0x18);
 // to, and the scenario whose mapScores row names that pool. Both are one
 // byte in the file and every consumer sign-extends them (`movsx`).
 // Before normalization (type): TCampaignCrossoverChoice.
-#ifndef CampaignCrossoverChoice
-#define CampaignCrossoverChoice TCampaignCrossoverChoice
-#endif
 struct CampaignCrossoverChoice {
     signed char m_player;
     signed char m_scenario;
@@ -453,9 +414,6 @@ struct CampaignCrossoverChoice {
 // Vftable 0x63dad8. Its implicit constructor is inlined at ScenarioStruct::
 // Read's `new` site, so no declarator is needed here.
 // Before normalization (type): TCampaignStartCrossoverOption.
-#ifndef CampaignStartCrossoverOption
-#define CampaignStartCrossoverOption TCampaignStartCrossoverOption
-#endif
 class CampaignStartCrossoverOption : public CampaignStartOption {
 public:
     virtual bool isBuildingBonus(int which) const;
@@ -478,9 +436,6 @@ SIZE(CampaignStartCrossoverOption, 0x14);
 // as a signed byte and a signed word but held as ints - GetPlayer reads the
 // element at stride 8 and slot 7 the dword behind it.
 // Before normalization (type): TCampaignHeroChoice.
-#ifndef CampaignHeroChoice
-#define CampaignHeroChoice TCampaignHeroChoice
-#endif
 struct CampaignHeroChoice {
     int m_player;
     int m_hero;
@@ -492,9 +447,6 @@ struct CampaignHeroChoice {
 // The implicit-form probe in customcampaign.cpp explains its current spelling.
 // This class overrides slot 7 and inherits slots 5 and 12 unchanged.
 // Before normalization (type): TCampaignStartHeroOption.
-#ifndef CampaignStartHeroOption
-#define CampaignStartHeroOption TCampaignStartHeroOption
-#endif
 class CampaignStartHeroOption : public CampaignStartOption {
 public:
     CampaignStartHeroOption();

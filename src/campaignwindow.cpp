@@ -243,7 +243,7 @@ CampaignWindow::CampaignWindow(unsigned char newGame, int newCampaign)
     hideText();
 }
 
-VA_COMPGEN(0x0045f0e0, 0x21, SCALAR_DELETING_DTOR, TCampaignWindow)
+VA_COMPGEN(0x0045f0e0, 0x21, SCALAR_DELETING_DTOR, CampaignWindow)
 
 VA_COMPGEN(0x0045f110, 0x100, IMPLICIT_DTOR, SCampaign)
 

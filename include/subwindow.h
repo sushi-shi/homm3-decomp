@@ -15,9 +15,6 @@ class widget;
 // store parentWindow/lowId/highId/background at +0x24..+0x30.
 // The sole vtable entry at 0x64234c is the scalar deleting destructor
 // 0x5aa390, so only the destructor is virtual.
-#ifndef SubWindow
-#define SubWindow TSubWindow
-#endif
 class SubWindow {
 public:
     int m_x;

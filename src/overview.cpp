@@ -1857,7 +1857,7 @@ OverviewWindow::OverviewWindow()
     }
 }
 
-VA_COMPGEN(0x00520d60, 0x21, SCALAR_DELETING_DTOR, TOverviewWindow)
+VA_COMPGEN(0x00520d60, 0x21, SCALAR_DELETING_DTOR, OverviewWindow)
 
 VA(0x00520d90, 0x9C)  // dc 0x108f74
 OverviewWindow::~OverviewWindow()

@@ -115,9 +115,6 @@ public:
 SIZE(CHSInputDlg, 0x5c);
 
 // Before normalization (type): THighScoreWindow.
-#ifndef HighScoreWindow
-#define HighScoreWindow THighScoreWindow
-#endif
 class HighScoreWindow : public heroWindow {
     // DC hiscore.cpp:1014-1031/1034-1184 directly reads/writes private
     // bIsStandard and lLastServe in these free functions; the class method

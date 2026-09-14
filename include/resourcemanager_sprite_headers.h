@@ -16,9 +16,6 @@ struct SpriteDefHeader {
 SIZE(SpriteDefHeader, 0x310);
 
 // Before normalization (type): TSpriteDataHeader.
-#ifndef SpriteDataHeader
-#define SpriteDataHeader TSpriteDataHeader
-#endif
 struct SpriteDataHeader {
     int m_sequenceNumber;
     int m_numFrames;
@@ -31,9 +28,6 @@ SIZE(SpriteDataHeader, 0x10);
 // second dword is copied but never consumed; retail instead reads the
 // encoding slot of the cropped-header local in both constructor arms.
 // Before normalization (type): TCompactSpriteFrameHeader.
-#ifndef CompactSpriteFrameHeader
-#define CompactSpriteFrameHeader TCompactSpriteFrameHeader
-#endif
 struct CompactSpriteFrameHeader {
     int m_dataSize;
     int m_encoding;
@@ -43,9 +37,6 @@ struct CompactSpriteFrameHeader {
 SIZE(CompactSpriteFrameHeader, 0x10);
 
 // Before normalization (type): TCroppedSpriteFrameHeader.
-#ifndef CroppedSpriteFrameHeader
-#define CroppedSpriteFrameHeader TCroppedSpriteFrameHeader
-#endif
 struct CroppedSpriteFrameHeader {
     int m_dataSize;
     EncodingMethod m_encoding;

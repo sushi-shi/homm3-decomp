@@ -48,9 +48,6 @@ DATA(0x0067ff50) POINT g_mouseHotSpots[mouseManager::MAX_POINTER_SETS][144];
 // expands or calls each retained body per site; the fs:[0] frame in users
 // is the unwind scaffolding).
 // Before normalization (type): TCSLock.
-#ifndef CSLock
-#define CSLock TCSLock
-#endif
 class CSLock {
 public:
     VA(0x0050d890, 0x19)  // byte-identified out-of-line copy, dc 0xff7e0

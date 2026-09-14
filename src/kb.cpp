@@ -4942,7 +4942,7 @@ DialogBoxWindow* getCurrentNormalDialog()
 // destructor iterator (0x4c stride, ??1type_dialog_icon as the element
 // hook) and then dialog_text's Dinkumware teardown - members in reverse
 // declaration order, exactly as this header models them.
-VA_COMPGEN(0x004f6410, 0x74, IMPLICIT_DTOR, TNormalDialogInfo)
+VA_COMPGEN(0x004f6410, 0x74, IMPLICIT_DTOR, NormalDialogInfo)
 
 VA_COMPGEN(0x004f6490, 0x2A, CLASS_CTOR, type_dialog_icon)
 VA_COMPGEN(0x004f64c0, 0x6D, IMPLICIT_DTOR, type_dialog_icon)

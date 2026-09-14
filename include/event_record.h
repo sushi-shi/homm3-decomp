@@ -9,13 +9,7 @@
 // adds no declarators. hero/boat/NewmapCell appear only as pointer members.
 #include "struct.h"
 
-#ifndef AbstractFile
-#define AbstractFile TAbstractFile
-#endif
 class AbstractFile;
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 class boat;
 class NewmapCell;

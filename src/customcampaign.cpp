@@ -129,9 +129,6 @@ DATA(0x00675be8) extern const char* g_campaignVideoSounds[];
 // The TAbstractFile view of a streambuf: Read is sgetn, Write is sputn.
 // Size 8 is byte-proven by every stack instance (vftable, streambuf*).
 // Before normalization (type): TStreamBufFile.
-#ifndef StreamBufFile
-#define StreamBufFile TStreamBufFile
-#endif
 class StreamBufFile : public AbstractFile {
 public:
     StreamBufFile(std::streambuf* newBuffer) : m_buffer(newBuffer) {}
@@ -185,7 +182,7 @@ bool CrossoverHeroStronger::operator()(Hero& lhs, Hero& rhs) const
 
 // --- the eight campaign start bonuses ---
 
-VA_COMPGEN(0x00484020, 0x23, SCALAR_DELETING_DTOR, TCampaignBonus)
+VA_COMPGEN(0x00484020, 0x23, SCALAR_DELETING_DTOR, CampaignBonus)
 
 VA(0x00484050, 0x3D)
 void CampaignSpellBonus::read(AbstractFile* file)
@@ -705,7 +702,7 @@ CampaignStartOption::~CampaignStartOption()
 
 // The root's scalar deleting destructor: the base teardown is one vptr
 // store, so nothing is called.
-VA_COMPGEN(0x00484f50, 0x23, SCALAR_DELETING_DTOR, TCampaignStartOption)
+VA_COMPGEN(0x00484f50, 0x23, SCALAR_DELETING_DTOR, CampaignStartOption)
 
 // Slot 5, inherited by the bonus list and the starting-hero option (the
 // crossover option overrides it at 0x4859b0). The answer is the campaign's
@@ -770,7 +767,7 @@ CampaignStartBonusOption::~CampaignStartBonusOption()
         delete m_bonuses[i];
 }
 
-VA_COMPGEN(0x00485130, 0x21, SCALAR_DELETING_DTOR, TCampaignStartBonusOption)
+VA_COMPGEN(0x00485130, 0x21, SCALAR_DELETING_DTOR, CampaignStartBonusOption)
 
 VA(0x00485160, 0x13)
 int CampaignStartBonusOption::getCount() const
@@ -833,7 +830,7 @@ void CampaignStartBonusOption::read(AbstractFile* file)
 // The scalar deleting destructor the SEVEN derived bonus classes share:
 // each one's teardown is the base's, so /OPT:ICF folds all seven onto this
 // address, which every derived vftable's slot 0 points at.
-VA_COMPGEN(0x00485340, 0x21, SCALAR_DELETING_DTOR, TCampaignSpellBonus)
+VA_COMPGEN(0x00485340, 0x21, SCALAR_DELETING_DTOR, CampaignSpellBonus)
 
 VA(0x00485370, 0x7)
 CampaignBonus::~CampaignBonus()
@@ -1728,9 +1725,9 @@ void CampaignBrief::ScenarioStruct::loadMapHeader(
     mapHeader->read(&file, which);
 }
 
-VA_COMPGEN(0x00487dd0, 0x23, SCALAR_DELETING_DTOR, TAbstractFile)
+VA_COMPGEN(0x00487dd0, 0x23, SCALAR_DELETING_DTOR, AbstractFile)
 
-VA_COMPGEN(0x00487e00, 0x07, IMPLICIT_DTOR, TStreamBufFile)
+VA_COMPGEN(0x00487e00, 0x07, IMPLICIT_DTOR, StreamBufFile)
 
 VA(0x00487e10, 0x2D)
 void CampaignBrief::ScenarioStruct::markCrossoverHeroes(unsigned char* wanted)
@@ -1929,11 +1926,11 @@ CampaignStartHeroOption::CampaignStartHeroOption()
 {
 }
 
-VA_COMPGEN(0x00488400, 0x21, SCALAR_DELETING_DTOR, TCampaignStartCrossoverOption)
-VA_COMPGEN(0x00488430, 0x21, SCALAR_DELETING_DTOR, TCampaignStartHeroOption)
+VA_COMPGEN(0x00488400, 0x21, SCALAR_DELETING_DTOR, CampaignStartCrossoverOption)
+VA_COMPGEN(0x00488430, 0x21, SCALAR_DELETING_DTOR, CampaignStartHeroOption)
 
-VA_COMPGEN(0x00488460, 0x2C, IMPLICIT_DTOR, TCampaignStartCrossoverOption)
-VA_COMPGEN(0x00488490, 0x2C, IMPLICIT_DTOR, TCampaignStartHeroOption)
+VA_COMPGEN(0x00488460, 0x2C, IMPLICIT_DTOR, CampaignStartCrossoverOption)
+VA_COMPGEN(0x00488490, 0x2C, IMPLICIT_DTOR, CampaignStartHeroOption)
 
 VA(0x004884c0, 0x103)  // CampaignHeaderStruct::StartScenario sole caller
 void CampaignBrief::ScenarioStruct::startScenario(
@@ -3060,7 +3057,7 @@ void SCampaign::save(AbstractFile* outfile)
 VA_COMPGEN(0x004013D0, 0x28, VECTOR_CONSTRUCTOR_ITERATOR, LegacyCampaignHero)
 VA_COMPGEN(0x00404140, 0x03, VECTOR_DESTROY, type_artifact)
 VA_COMPGEN(0x0048B440, 0x21, VECTOR_SIZE, CampaignScenarioInfo)
-VA_COMPGEN(0x0048B470, 0x23, VECTOR_SIZE, hero)
+VA_COMPGEN(0x0048B470, 0x23, VECTOR_SIZE, Hero)
 VA_COMPGEN(0x004AF4E0, 0x13, VECTOR_SIZE, hero_vector)
 VA_COMPGEN(0x0048C270, 0x285, VECTOR_INSERT, hero_vector)
 VA_COMPGEN(0x0048C7A0, 0x285, VECTOR_INSERT, type_artifact_vector)
@@ -3076,8 +3073,8 @@ VA_COMPGEN(0x0048c610, 0x183, VECTOR_INSERT, type_artifact_vector)
 VA_COMPGEN(0x0048CA30, 0x6A, VECTOR_ERASE, type_artifact_vector)
 VA_COMPGEN(0x0048CAE0, 0x2E4, VECTOR_INSERT, CampaignScenarioInfo)
 VA_COMPGEN(0x0048CDD0, 0x44, VECTOR_ERASE, CampaignScenarioInfo)
-VA_COMPGEN(0x0048D060, 0x331, VECTOR_INSERT, hero)
-VA_COMPGEN(0x0048D3A0, 0x6D, VECTOR_ERASE, hero)
+VA_COMPGEN(0x0048D060, 0x331, VECTOR_INSERT, Hero)
+VA_COMPGEN(0x0048D3A0, 0x6D, VECTOR_ERASE, Hero)
 VA_COMPGEN(0x0054D330, 0x246, VECTOR_INSERT, type_artifact)
 
 VA(0x0048b200, 0x80)  // dc 0x7d374
@@ -3185,19 +3182,19 @@ VA_COMPGEN(0x0048fc20, 0x195, STD_UNGUARDED_PARTITION, hero_crossoverherostronge
 VA_COMPGEN(0x0048d9a0, 0xCB, BITSET_XRAN, Bitset145)
 VA_COMPGEN(0x0048da70, 0xCB, BITSET_XRAN, Bitset8)
 
-VA_COMPGEN(0x0048d440, 0x3E, VECTOR_UCOPY, hero)
+VA_COMPGEN(0x0048d440, 0x3E, VECTOR_UCOPY, Hero)
 VA_COMPGEN(0x0048d8d0, 0x38, VECTOR_UCOPY, type_artifact_vector)
 
 // COMDAT pairing: hero::copy_backward, mnemonic agreement 0.918.
-VA_COMPGEN(0x0048e880, 0x3B, STD_COPY_BACKWARD, hero)
+VA_COMPGEN(0x0048e880, 0x3B, STD_COPY_BACKWARD, Hero)
 
 // The adjacent hero fill walks the same 0x492-byte records forward and
 // invokes hero::operator= once per element.  Its sole non-loop relocation
 // and all 42 bytes identify the specialization independently of link order.
-VA_COMPGEN(0x0048e850, 0x2A, STD_FILL, hero)
+VA_COMPGEN(0x0048e850, 0x2A, STD_FILL, Hero)
 
 // COMDAT pairing: hero::_Ufill, mnemonic agreement 0.913.
-VA_COMPGEN(0x0048d970, 0x2C, VECTOR_UFILL, hero)
+VA_COMPGEN(0x0048d970, 0x2C, VECTOR_UFILL, Hero)
 
 VA_COMPGEN(0x00404700, 0x157, CLASS_CTOR, out_of_range)
 
@@ -3211,11 +3208,11 @@ VA_COMPGEN(0x0048c5b0, 0x53, VECTOR_DESTROY, hero_vector)
 // elements of exactly this type), and game's SCampaign::operator=. Mnemonic
 // agreement is 1.000 against a 704 B object and `ret 4` matches the one
 // reference argument.
-VA_COMPGEN(0x0045ff30, 0x2C0, VECTOR_COPY_ASSIGN, hero)
+VA_COMPGEN(0x0045ff30, 0x2C0, VECTOR_COPY_ASSIGN, Hero)
 
-VA_COMPGEN(0x00460850, 0x4B1, IMPLICIT_COPY_CTOR, hero)
+VA_COMPGEN(0x00460850, 0x4B1, IMPLICIT_COPY_CTOR, Hero)
 
-VA_COMPGEN(0x004603a0, 0x355, STD_CONSTRUCT, hero)
+VA_COMPGEN(0x004603a0, 0x355, STD_CONSTRUCT, Hero)
 
 // --- basic_filebuf<char> and the <fstream> COMDAT block --------------------
 
@@ -3242,10 +3239,10 @@ VA_COMPGEN(0x0048bea0, 0x58, STREAMBUF_INIT, char)
 // COMDAT pairing: vector<hero>::capacity and vector<hero>::_Destroy,
 // agreements 0.933 and 1.000. Both are reached from the campaign's
 // carry-over hero vector.
-VA_COMPGEN(0x0048ce20, 0x23, VECTOR_CAPACITY, hero)
-VA_COMPGEN(0x0048d410, 0x26, VECTOR_DESTROY, hero)
+VA_COMPGEN(0x0048ce20, 0x23, VECTOR_CAPACITY, Hero)
+VA_COMPGEN(0x0048d410, 0x26, VECTOR_DESTROY, Hero)
 
-VA_COMPGEN(0x0048ce50, 0x210, VECTOR_INSERT, hero)
+VA_COMPGEN(0x0048ce50, 0x210, VECTOR_INSERT, Hero)
 
 // COMDAT pairing: basic_filebuf<char>::_Init(FILE*, _Initfl), agreement
 // 0.973 - the census had already named it `exe_filebuf_open` off the same
@@ -3286,10 +3283,10 @@ VA_COMPGEN(0x0048ec10, 0x18, CODECVT_DO_LENGTH, char)
 // element and the hero choice an eight-byte one, which is why the hero
 // option's _Ucopy folds onto vector<type_artifact>'s (same width) and only
 // its _Ufill survives as its own address.
-VA_COMPGEN(0x0048dba0, 0x31, VECTOR_UCOPY, TCampaignCrossoverChoice)
-VA_COMPGEN(0x0048dbe0, 0x28, VECTOR_UFILL, TCampaignCrossoverChoice)
-VA_COMPGEN(0x0048dc50, 0x2C, VECTOR_UFILL, TCampaignHeroChoice)
-VA_COMPGEN(0x0048e9e0, 0xB, STD_CONSTRUCT, TCampaignCrossoverChoice)
+VA_COMPGEN(0x0048dba0, 0x31, VECTOR_UCOPY, CampaignCrossoverChoice)
+VA_COMPGEN(0x0048dbe0, 0x28, VECTOR_UFILL, CampaignCrossoverChoice)
+VA_COMPGEN(0x0048dc50, 0x2C, VECTOR_UFILL, CampaignHeroChoice)
+VA_COMPGEN(0x0048e9e0, 0xB, STD_CONSTRUCT, CampaignCrossoverChoice)
 
 // ScenarioStruct::read's prerequisite append retains single-element insert
 // in retail: ret 8, returned iterator and byte-sized copies distinguish it
@@ -3326,7 +3323,7 @@ VA_COMPGEN(0x0048d820, 0x3B, STREAMBUF_GETLOC, char)
 // hero::operator= called and both pointers stepping by 0x492. The const and
 // non-const source overloads compile to the same bytes and /OPT:ICF folded
 // them, so one claim names the row and the other spelling is its alias.
-VA_COMPGEN(0x0048dc80, 0x3B, STD_COPY, hero)
+VA_COMPGEN(0x0048dc80, 0x3B, STD_COPY, Hero)
 
 VA_COMPGEN(0x0048ece0, 0x37, BITSET_TEST, Bitset129)
 

@@ -8,9 +8,6 @@
 #include "town.h"
 
 class message;
-#ifndef DialogBoxWindow
-#define DialogBoxWindow TDialogBox
-#endif
 class DialogBoxWindow;
 class VictoryConditionStruct;
 class LossConditionStruct;
@@ -63,9 +60,6 @@ enum EMBType {
 // CodeView marks them compiler-generated, and retail expands this aggregate's
 // teardown while retaining type_dialog_icon's element destructor boundary.
 // Before normalization (type): TNormalDialogInfo.
-#ifndef NormalDialogInfo
-#define NormalDialogInfo TNormalDialogInfo
-#endif
 struct NormalDialogInfo {
     std::string m_dialogText;
     int m_x;

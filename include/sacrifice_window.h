@@ -8,9 +8,6 @@
 #include "iconwdgt.h"
 #include "textwdgt.h"
 
-#ifndef ArmyGroup
-#define ArmyGroup armyGroup
-#endif
 class ArmyGroup;
 class sample;
 class slider;

@@ -5,21 +5,12 @@
 #include "armygrp.h"
 #include "herospec.h"  // TSecondarySkill, the appraisals' skill parameter
 
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
-#ifndef Town
-#define Town town
-#endif
 class Town;
 class garrison;
 class generator;
 class NewmapCell;
 class playerData;
-#ifndef BlackMarket
-#define BlackMarket TBlackMarket
-#endif
 struct BlackMarket;
 struct type_university;
 struct type_point;

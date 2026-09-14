@@ -93,7 +93,7 @@ GameTypeWindow::GameTypeWindow(unsigned char loadGameMode)
     }
 }
 
-VA_COMPGEN(0x004d5860, 0x21, SCALAR_DELETING_DTOR, TGameTypeWindow)
+VA_COMPGEN(0x004d5860, 0x21, SCALAR_DELETING_DTOR, GameTypeWindow)
 
 VA(0x004d5890, 0x75)  // dc 0xc9490
 GameTypeWindow::~GameTypeWindow()

@@ -26,9 +26,6 @@ class CObject;
 // NewmapCell+0x1e against 0x1b, and 0x1b is EYE_OF_MAGI - the object
 // a Hut of Magi reveals, which is exactly what that function sums.
 // Before normalization (type): TAdventureObjectType.
-#ifndef AdventureObjectType
-#define AdventureObjectType TAdventureObjectType
-#endif
 enum AdventureObjectType {
     NOTHING                    = 0,
     ALTAR_OF_SACRIFICE         = 2,
@@ -816,9 +813,6 @@ public:
 };
 SIZE(BlackBoxData, 0xe4);
 
-#ifndef AbstractFile
-#define AbstractFile TAbstractFile
-#endif
 class AbstractFile;
 
 // Dreamcast CodeView supplies the shared member names. Retail widens the
@@ -828,9 +822,6 @@ class AbstractFile;
 // The alignment byte before FirstTime is deliberately implicit: naming it
 // makes VC6's generated copies treat retail padding as a real member.
 // Before normalization (type): TTimedEvent.
-#ifndef TimedEvent
-#define TimedEvent TTimedEvent
-#endif
 class TimedEvent {
 public:
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
@@ -854,9 +845,6 @@ SIZE(TimedEvent, 0x34);
 // Alignment before BuildBuildings and the tail rounding are likewise left
 // implicit so generated copies do not copy padding bytes.
 // Before normalization (type): TTownEvent.
-#ifndef TownEvent
-#define TownEvent TTownEvent
-#endif
 class TownEvent : public TimedEvent {
 public:
     signed char m_townNum;
@@ -876,9 +864,6 @@ public:
 SIZE(TownEvent, 0x50);
 
 // Before normalization (type): TObjectType.
-#ifndef ObjectType
-#define ObjectType TObjectType
-#endif
 struct ObjectType;
 // Canonical Random declaration needed by CObject's inline construction.
 int __fastcall random(int minimum, int maximum);
@@ -1123,9 +1108,6 @@ public:
     // +0x16, a four-byte stride and the SIXTEEN-BIT objectIndex compare are
     // all in that one body.
 // Before normalization (type): NewmapCell::TObjectCell.
-#ifndef ObjectCell
-#define ObjectCell TObjectCell
-#endif
     struct ObjectCell {
         // denoted the same unsigned word, not alternative representations.
         unsigned short m_objectIndex;
@@ -1812,14 +1794,8 @@ class CSprite;
 class TreasureData;
 class MonsterData;
 // Before normalization (type): TSeerHut.
-#ifndef SeerHut
-#define SeerHut TSeerHut
-#endif
 class SeerHut;
 // Before normalization (type): TQuestGuard.
-#ifndef QuestGuard
-#define QuestGuard TQuestGuard
-#endif
 class QuestGuard;
 class TimedEvent;
 class TownEvent;

@@ -285,7 +285,7 @@ RecruitWindow::RecruitWindow(int x2, int y2, int altResource,
     }
 }
 
-VA_COMPGEN(0x0054faf0, 0x21, SCALAR_DELETING_DTOR, TRecruitWindow)
+VA_COMPGEN(0x0054faf0, 0x21, SCALAR_DELETING_DTOR, RecruitWindow)
 
 VA(0x0054fb20, 0x6B)  // dc 0x1197bc
 RecruitWindow::~RecruitWindow()
@@ -1156,7 +1156,7 @@ inline RecruitQuickWindow::RecruitQuickWindow(int x2, int y2)
     m_widgets.reserve(49);
 }
 
-VA_COMPGEN(0x005516b0, 0x21, SCALAR_DELETING_DTOR, TRecruitQuickWindow)
+VA_COMPGEN(0x005516b0, 0x21, SCALAR_DELETING_DTOR, RecruitQuickWindow)
 
 VA(0x005516e0, 0x6B)  // dc 0x11af98
 RecruitQuickWindow::~RecruitQuickWindow()

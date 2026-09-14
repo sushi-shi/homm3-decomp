@@ -8,9 +8,6 @@
 static void townGateSliderCallback(int state, heroWindow* parentWindow);
 
 // Before normalization (type): TTownGateWindow.
-#ifndef TownGateWindow
-#define TownGateWindow TTownGateWindow
-#endif
 class TownGateWindow : public CAdvPopup {
 public:
     // Dreamcast CodeView publishes this nested enum in full. Complete's

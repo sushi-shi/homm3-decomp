@@ -674,7 +674,7 @@ void CSwapManagerChatEdit::sendChat(const char* chat, int toWho)
     sendChatCleanup();
 }
 
-VA_COMPGEN(0x005ae390, 0x21, SCALAR_DELETING_DTOR, TSwapWindow)
+VA_COMPGEN(0x005ae390, 0x21, SCALAR_DELETING_DTOR, SwapWindow)
 
 VA(0x005ae3c0, 0x6B)  // dc 0x15c320
 SwapWindow::~SwapWindow()
@@ -1110,22 +1110,22 @@ void swapManager::updateSlot(int hero, ArtifactSlot slot)
         int converted;
         converted = artifact;
         updateArtifactWidget(
-            Hero * (kNumArtifactSlots + 1) + slot + 0x96,
+            hero * (kNumArtifactSlots + 1) + slot + 0x96,
             Artifact(converted));
         converted = 0x90;
         updateArtifactWidget(
-            Hero * (kNumArtifactSlots + 1) + slot + 0x1b,
+            hero * (kNumArtifactSlots + 1) + slot + 0x1b,
             Artifact(converted));
     }
     else
     {
         updateArtifactWidget(
-            Hero * (kNumArtifactSlots + 1) + slot + 0x96,
+            hero * (kNumArtifactSlots + 1) + slot + 0x96,
             ARTIFACT_NONE);
         int converted;
         converted = artifact;
         updateArtifactWidget(
-            Hero * (kNumArtifactSlots + 1) + slot + 0x1b,
+            hero * (kNumArtifactSlots + 1) + slot + 0x1b,
             Artifact(converted));
     }
 }
@@ -1237,7 +1237,7 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned 
 
     m_destinationHeroIndex = hero;
     m_destinationArmySlot = monster;
-    if (m_sourceHeroIndex == Hero && m_sourceArmySlot == monster)
+    if (m_sourceHeroIndex == hero && m_sourceArmySlot == monster)
         viewMon();
     else if (m_heroes[m_sourceHeroIndex]->m_owner == g_netLocalGamePos)
     {

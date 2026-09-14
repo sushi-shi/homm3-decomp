@@ -24,9 +24,6 @@ extern int g_unnamed699288;
 // the same 16-byte IPv4 socket-address record; keeping the union in the domain
 // header avoids a TU-local layout view.
 // Before normalization (type): TIPv4SocketAddress.
-#ifndef IPv4SocketAddress
-#define IPv4SocketAddress TIPv4SocketAddress
-#endif
 union IPv4SocketAddress {
 public:
     sockaddr_in m_internet;
@@ -102,9 +99,6 @@ SIZE(CHeroSessions, 0x14);
 // every reconstructed body reaches them only through widget::send_message /
 // textWidget::Text, and narrowing the include set avoids the declarator wall.
 // Before normalization (type): TMultiPlayerWindow.
-#ifndef MultiPlayerWindow
-#define MultiPlayerWindow TMultiPlayerWindow
-#endif
 class MultiPlayerWindow : public CHeroWindowEx {
 public:
     enum EWidgetId {

@@ -30,9 +30,6 @@ extern const float g_afUpgradeCostFactor[7];
 static void updateHillFort(unsigned char update);
 
 // Before normalization (type): THillFortWindow.
-#ifndef HillFortWindow
-#define HillFortWindow THillFortWindow
-#endif
 class HillFortWindow : public heroWindow {
     // Recovered UpdateHillFort calls this window's private Recalculate.
     friend void updateHillFort(unsigned char update);
@@ -127,9 +124,6 @@ public:
     // are the creature type, its count, its dwelling level and the
     // tri-state the two icon tables index.
 // Before normalization (type): THillFortWindow::TUpgradeSlot.
-#ifndef UpgradeSlot
-#define UpgradeSlot TUpgradeSlot
-#endif
     struct UpgradeSlot {
         char m_countText[10];         // +0x00
         char m_goldCost[10];      // +0x0a

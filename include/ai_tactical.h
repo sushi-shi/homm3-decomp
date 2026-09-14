@@ -10,13 +10,7 @@
 #include "herospec.h"
 #include "spellschool.h"
 
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
-#ifndef SearchArray
-#define SearchArray searchArray
-#endif
 class SearchArray;
 // findpath.h's cell record; get_attack_time takes one by pointer and
 // this header does not need the definition.

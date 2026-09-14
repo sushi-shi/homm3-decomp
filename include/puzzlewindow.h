@@ -10,18 +10,12 @@ struct type_point;
 
 class Bitmap816;
 class NewmapCell;
-#ifndef ResourceDisplay
-#define ResourceDisplay TResourceDisplay
-#endif
 class ResourceDisplay;
 
 // DC's 0x58-byte CAdvPopup grows to retail's proven 0x60-byte base. The
 // remaining fields translate directly: one piece-count byte, the resource
 // display pointer, 48 puzzle bitmaps, and the selected puzzle index.
 // Before normalization (type): TPuzzleWindow.
-#ifndef PuzzleWindow
-#define PuzzleWindow TPuzzleWindow
-#endif
 class PuzzleWindow : public CAdvPopup {
 public:
     enum {

@@ -173,9 +173,6 @@ namespace {
 
 // CodeView field pStr; each loader owns its own private string class.
 // Before normalization (type): TAutoStrPtr.
-#ifndef AutoStrPtr
-#define AutoStrPtr TAutoStrPtr
-#endif
 class AutoStrPtr {
 public:
     // E:\gamedcs\creaturetype.cpp:399, dc 0x71eec

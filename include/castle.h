@@ -4,9 +4,6 @@
 
 #include <va.h>
 
-#ifndef Town
-#define Town town
-#endif
 class Town;
 
 // Building-name tables, byte-proven by the retail lookup 0x4610e0:

@@ -9,9 +9,6 @@
 
 #include <va.h>
 
-#ifndef SpreadsheetResource
-#define SpreadsheetResource TSpreadsheetResource
-#endif
 class SpreadsheetResource;
 
 // One quest type's five text variants. PROVEN by the loader at 0x56c120:
@@ -23,9 +20,6 @@ class SpreadsheetResource;
 // exactly what the enclosing record's own pair does for its ten quests. The
 // ordinal names are placeholders; only the count and the order are proven.
 // Before normalization (type): TSeerHutQuestText.
-#ifndef SeerHutQuestText
-#define SeerHutQuestText TSeerHutQuestText
-#endif
 struct SeerHutQuestText {
     std::string m_text0;
     std::string m_text1;
@@ -41,9 +35,6 @@ SIZE(SeerHutQuestText, 0x50);
 // entries are quest types 1..9; the two trailing strings are the row-1 and
 // row-47 cells, which the loader writes before and after the block.
 // Before normalization (type): TSeerHutTextColumn.
-#ifndef SeerHutTextColumn
-#define SeerHutTextColumn TSeerHutTextColumn
-#endif
 struct SeerHutTextColumn {
     SeerHutQuestText m_quest[10];  // +0x000, quest[0] never written
     std::string m_name;             // +0x320, spreadsheet row 1

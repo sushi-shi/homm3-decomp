@@ -99,7 +99,7 @@ MainMenu::MainMenu()
     }
 }
 
-VA_COMPGEN(0x004fb630, 0x21, SCALAR_DELETING_DTOR, TMainMenu)
+VA_COMPGEN(0x004fb630, 0x21, SCALAR_DELETING_DTOR, MainMenu)
 
 VA(0x004fb660, 0x75)
 MainMenu::~MainMenu()

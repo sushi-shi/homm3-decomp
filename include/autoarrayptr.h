@@ -4,9 +4,6 @@
 
 template<class T>
 // Before normalization (type): TAutoArrayPtr.
-#ifndef AutoArrayPtr
-#define AutoArrayPtr TAutoArrayPtr
-#endif
 class AutoArrayPtr {
 public:
     AutoArrayPtr(T* ptr = 0) : m_owns(ptr != 0), m_ptr(ptr) {}

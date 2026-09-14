@@ -3453,7 +3453,7 @@ void std::construct(SpellID* __p, const SpellID* __value)
 
 #endif  // @carcass
 
-VA_COMPGEN(0x0043cb10, 0xC, IMPLICIT_DTOR, TResourceHandle)
+VA_COMPGEN(0x0043cb10, 0xC, IMPLICIT_DTOR, ResourceHandle)
 
 VA_COMPGEN(0x0043CB20, 0x2CF, DEQUE_PUSH_BACK, int)
 

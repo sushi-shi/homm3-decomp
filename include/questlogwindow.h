@@ -16,9 +16,6 @@
 // leading byte member would push every one of those four offsets up by
 // four, which is exactly the 4-byte error this pair caught.
 // Before normalization (type): TQuestLogWindow.
-#ifndef QuestLogWindow
-#define QuestLogWindow TQuestLogWindow
-#endif
 class QuestLogWindow : public CAdvPopup {
 public:
     QuestLogWindow();

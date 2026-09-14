@@ -79,7 +79,7 @@ PuzzleWindow::PuzzleWindow(int puzzlenum)
     drawWindow(0, -65535, 65535);
 }
 
-VA_COMPGEN(0x0052c570, 0x21, SCALAR_DELETING_DTOR, TPuzzleWindow)
+VA_COMPGEN(0x0052c570, 0x21, SCALAR_DELETING_DTOR, PuzzleWindow)
 
 VA(0x0052c5a0, 0x96)  // dc 0x115268
 PuzzleWindow::~PuzzleWindow()

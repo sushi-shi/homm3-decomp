@@ -8,9 +8,6 @@
 // independently proves the 16-byte stride and name at +0; retail's loader
 // fills the three mastery strings at +4/+8/+c.
 // Before normalization (type): TSSkillTraits.
-#ifndef SSkillTraits
-#define SSkillTraits TSSkillTraits
-#endif
 struct SSkillTraits {
     const char* m_name;
     const char* m_levelNames[3];

@@ -651,7 +651,7 @@ void checkAdvCheatCode(std::string& chatString)
 }
 
 // slot 0 of ??_7TAdventureMapWindow@@6B@ (0x63a5e4) points at it.
-VA_COMPGEN(0x00402ae0, 0x21, SCALAR_DELETING_DTOR, TAdventureMapWindow)
+VA_COMPGEN(0x00402ae0, 0x21, SCALAR_DELETING_DTOR, AdventureMapWindow)
 
 VA(0x00402b10, 0x77)  // dc 0xb9c
 AdventureMapWindow::~AdventureMapWindow()

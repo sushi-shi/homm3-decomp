@@ -165,7 +165,7 @@ SplitWindow::SplitWindow(int x2, int y2, CreatureType thisArmy)
     }
 }
 
-VA_COMPGEN(0x00449df0, 0x21, SCALAR_DELETING_DTOR, TSplitWindow)
+VA_COMPGEN(0x00449df0, 0x21, SCALAR_DELETING_DTOR, SplitWindow)
 
 VA_COMPGEN(0x0044c680, 0x60, BITSET_SET, Bitset9)
 

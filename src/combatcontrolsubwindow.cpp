@@ -304,7 +304,7 @@ CombatControlSubWindow::CombatControlSubWindow(heroWindow* parent)
 
 // UNBLOCKED by the constructor above: its 0x63d420 store is the only
 // image-wide reference to this class's table.
-VA_COMPGEN(0x0046bea0, 0x21, SCALAR_DELETING_DTOR, TCombatControlSubWindow)
+VA_COMPGEN(0x0046bea0, 0x21, SCALAR_DELETING_DTOR, CombatControlSubWindow)
 
 VA(0x0046bed0, 0x78)  // dc 0x65244
 CombatControlSubWindow::~CombatControlSubWindow()
@@ -391,7 +391,7 @@ CombatPlacementSubWindow::CombatPlacementSubWindow(heroWindow* parent)
     }
 }
 
-VA_COMPGEN(0x0046c1e0, 0x21, SCALAR_DELETING_DTOR, TCombatPlacementSubWindow)
+VA_COMPGEN(0x0046c1e0, 0x21, SCALAR_DELETING_DTOR, CombatPlacementSubWindow)
 
 VA(0x0046c210, 0x78)  // dc 0x6544c
 CombatPlacementSubWindow::~CombatPlacementSubWindow()
@@ -498,7 +498,7 @@ CombatHeroSubWindow::CombatHeroSubWindow(
 // survives. The surviving reference is what lets the wrapper be claimed
 // with it, exactly as for the family base.
 
-VA_COMPGEN(0x0046cb70, 0x21, SCALAR_DELETING_DTOR, TCombatHeroSubWindow)
+VA_COMPGEN(0x0046cb70, 0x21, SCALAR_DELETING_DTOR, CombatHeroSubWindow)
 
 VA(0x0046cba0, 0x6B)  // dc 0x65ad8
 CombatHeroSubWindow::~CombatHeroSubWindow()
@@ -734,7 +734,7 @@ CombatCreatureSubWindow::CombatCreatureSubWindow(
     m_shown = false;
 }
 
-VA_COMPGEN(0x0046db90, 0x21, SCALAR_DELETING_DTOR, TCombatCreatureSubWindow)
+VA_COMPGEN(0x0046db90, 0x21, SCALAR_DELETING_DTOR, CombatCreatureSubWindow)
 
 VA(0x0046dbc0, 0x6B)  // dc 0x665e0
 CombatCreatureSubWindow::~CombatCreatureSubWindow()

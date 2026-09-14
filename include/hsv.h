@@ -4,9 +4,6 @@
 // The six integer sectors selected by HSVToRGB after scaling hue by 6.
 // Palette and 24-bit bitmap conversion helpers share this exact domain.
 // Before normalization (type): THueSector.
-#ifndef HueSector
-#define HueSector THueSector
-#endif
 enum HueSector {
     HSV_RED_SECTOR,
     HSV_YELLOW_SECTOR,

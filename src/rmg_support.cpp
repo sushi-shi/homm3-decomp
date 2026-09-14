@@ -211,7 +211,7 @@ RmgRiverPainter::RmgRiverPainter(
 {
 }
 
-VA_COMPGEN(0x0055EED0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverPainter)
+VA_COMPGEN(0x0055EED0, 0x21, SCALAR_DELETING_DTOR, RmgRiverPainter)
 
 // Cinit 0x55f2f0 builds the seventeen-entry road pattern table from the ids
 // at 0x6411ac. The road painter's first virtual slot returns that table.
@@ -274,7 +274,7 @@ RmgRoadPainter::RmgRoadPainter(
 // Recovering the real constructor emits the final vtable and this wrapper
 // naturally. Its 33 bytes call the retained destructor, test the deleting
 // flag, conditionally release this, and return the original object pointer.
-VA_COMPGEN(0x0055F430, 0x21, SCALAR_DELETING_DTOR, TRmgRoadPainter)
+VA_COMPGEN(0x0055F430, 0x21, SCALAR_DELETING_DTOR, RmgRoadPainter)
 
 // The road painter's empty derived destructor restores its distinct base
 // vtable at 0x6411f0. The road builder at 0x548040 constructs this parallel
@@ -600,4 +600,4 @@ int getRmgSquaredDistance(Point first, Point second)
 // 0x5fd091/0x5fd0f6/0x5fd10e/0x5fd15a/0x5fd172/0x5fd1bb/0x5fd1d3.
 // Four-byte elements, ret 8 and the owning m_edges vector identify this
 // ordinary Dinkumware specialization independently of its ICF helper names.
-VA_COMPGEN(0x005FDD60, 0x1B1, VECTOR_INSERT_SINGLE, TRmgBoundaryVertex)
+VA_COMPGEN(0x005FDD60, 0x1B1, VECTOR_INSERT_SINGLE, RmgBoundaryVertex)

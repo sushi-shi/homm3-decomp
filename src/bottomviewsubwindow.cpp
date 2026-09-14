@@ -436,7 +436,7 @@ BottomViewNewTurn::BottomViewNewTurn(heroWindow* parent)
     m_lastStepTime = GameTime::get();
 }
 
-VA_COMPGEN(0x004510f0, 0x21, SCALAR_DELETING_DTOR, TBottomViewNewTurn)
+VA_COMPGEN(0x004510f0, 0x21, SCALAR_DELETING_DTOR, BottomViewNewTurn)
 
 VA(0x00451120, 0x78)  // dc 0x56ea4
 BottomViewNewTurn::~BottomViewNewTurn()
@@ -595,7 +595,7 @@ void ostrstream::`vbase destructor'();
 
 // UNBLOCKED by the constructor above - its 0x63bb1c store is the one
 // image-wide reference to this class's table.
-VA_COMPGEN(0x00451770, 0x21, SCALAR_DELETING_DTOR, TBottomViewResourceMessage)
+VA_COMPGEN(0x00451770, 0x21, SCALAR_DELETING_DTOR, BottomViewResourceMessage)
 
 VA(0x004517a0, 0x78)  // dc 0x56ef0
 BottomViewResourceMessage::~BottomViewResourceMessage()
@@ -621,7 +621,7 @@ BottomViewMessage::BottomViewMessage(heroWindow* parent,
     }
 }
 
-VA_COMPGEN(0x00451a00, 0x21, SCALAR_DELETING_DTOR, TBottomViewMessage)
+VA_COMPGEN(0x00451a00, 0x21, SCALAR_DELETING_DTOR, BottomViewMessage)
 
 VA(0x00451a30, 0x78)  // dc 0x56f3c
 BottomViewMessage::~BottomViewMessage()
@@ -781,7 +781,7 @@ BottomViewHero::BottomViewHero(heroWindow* parent)
 
 // UNBLOCKED by the constructor above - its 0x63bb2c store is the one
 // image-wide reference to this class's table.
-VA_COMPGEN(0x00452140, 0x21, SCALAR_DELETING_DTOR, TBottomViewHero)
+VA_COMPGEN(0x00452140, 0x21, SCALAR_DELETING_DTOR, BottomViewHero)
 
 VA(0x00452170, 0x78)  // dc 0x56f88
 BottomViewHero::~BottomViewHero()
@@ -1020,7 +1020,7 @@ BottomViewTown::BottomViewTown(heroWindow* parent)
 
 // UNBLOCKED by the constructor above - its 0x63bb34 store is the one
 // image-wide reference to this class's table.
-VA_COMPGEN(0x00452ad0, 0x21, SCALAR_DELETING_DTOR, TBottomViewTown)
+VA_COMPGEN(0x00452ad0, 0x21, SCALAR_DELETING_DTOR, BottomViewTown)
 
 VA(0x00452b00, 0x78)  // dc 0x56fd4
 BottomViewTown::~BottomViewTown()
@@ -1142,7 +1142,7 @@ BottomViewKingdom::BottomViewKingdom(heroWindow* parent)
 
 // UNBLOCKED by the constructor above - its 0x63bb3c store is the one
 // image-wide reference to this class's table.
-VA_COMPGEN(0x004531a0, 0x21, SCALAR_DELETING_DTOR, TBottomViewKingdom)
+VA_COMPGEN(0x004531a0, 0x21, SCALAR_DELETING_DTOR, BottomViewKingdom)
 
 VA(0x004531d0, 0x78)  // dc 0x57020
 BottomViewKingdom::~BottomViewKingdom()
@@ -1211,7 +1211,7 @@ BottomViewEnemyTurn::BottomViewEnemyTurn(heroWindow* parent)
 
 // UNBLOCKED by the constructor above - its 0x63bb44 store is the one
 // image-wide reference to this class's table.
-VA_COMPGEN(0x00453640, 0x21, SCALAR_DELETING_DTOR, TBottomViewEnemyTurn)
+VA_COMPGEN(0x00453640, 0x21, SCALAR_DELETING_DTOR, BottomViewEnemyTurn)
 
 VA_COMPGEN(0x00453970, 0xAE, CLASS_CTOR, basic_ostream)
 VA_COMPGEN(0x00455820, 0x10B, CLASS_CTOR, numpunct)

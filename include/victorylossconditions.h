@@ -7,13 +7,7 @@
 #include "artifact.h"
 #include "struct.h"
 
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
-#ifndef Town
-#define Town town
-#endif
 class Town;
 
 class VictoryConditionStruct {

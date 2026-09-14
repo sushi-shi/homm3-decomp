@@ -17,9 +17,6 @@
 // The effect holder is the public eight-byte handle; its implementation and
 // RTTI-proven local initializer are defined in forcefeedback.cpp.
 // Before normalization (type): TImmMouseEffect.
-#ifndef ImmMouseEffect
-#define ImmMouseEffect TImmMouseEffect
-#endif
 class ImmMouseEffect {
 public:
     ImmMouseEffect(const RECT* rect, long a, unsigned long b,

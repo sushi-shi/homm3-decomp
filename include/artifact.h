@@ -43,9 +43,6 @@
 // Complete-era fields at +0x14..+0x1d. hero::remove_artifact corroborates the
 // allowable-slot class, combination indices and spell-list flag.
 // Before normalization (type): TArtifactTraits.
-#ifndef ArtifactTraits
-#define ArtifactTraits TArtifactTraits
-#endif
 struct ArtifactTraits {
     // armyGroup::get_luck_description indexes artifact 0x55 at stride
     // 0x20 and passes +0 directly to format_string: the display name.
@@ -75,9 +72,6 @@ SIZE(ArtifactTraits, 32);
 // Its 8-byte stride and both fields are written by 0x44cd50; the public name
 // is preserved by the retail symbol at 0x660b64.
 // Before normalization (type): TArtifactSlotTraits.
-#ifndef ArtifactSlotTraits
-#define ArtifactSlotTraits TArtifactSlotTraits
-#endif
 struct ArtifactSlotTraits {
     const char* m_name;
     int m_type;
@@ -92,9 +86,6 @@ SIZE(ArtifactSlotTraits, 8);
 // 0x4dbe80..0x4dc100 walk as a bitset<144> (five dwords). This is the
 // canonical record used by the artifact table and all its consumers.
 // Before normalization (type): TCombinationArtifact.
-#ifndef CombinationArtifact
-#define CombinationArtifact TCombinationArtifact
-#endif
 struct CombinationArtifact {
     // The cinit at 0x44c960 builds each of the twelve records in a 24-byte
     // stack temporary - the id dword stored FIRST, then the component

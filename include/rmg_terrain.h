@@ -57,9 +57,6 @@ struct rmgTerrainTile {
 };
 
 // Before normalization (type): TRmgTerrainFlip.
-#ifndef RmgTerrainFlip
-#define RmgTerrainFlip TRmgTerrainFlip
-#endif
 struct RmgTerrainFlip {
     unsigned char m_flipX;
     unsigned char m_flipY;
@@ -71,9 +68,6 @@ struct RmgTerrainFlip {
 // BuildNeighbourKinds (0x5b68a0) returns zero for no edge, one when both
 // terrain rules permit blending, and two for the remaining terrain changes.
 // Before normalization (type): TRmgTerrainNeighbourKind.
-#ifndef RmgTerrainNeighbourKind
-#define RmgTerrainNeighbourKind TRmgTerrainNeighbourKind
-#endif
 enum RmgTerrainNeighbourKind {
     RMG_NEIGHBOUR_NO_EDGE = 0,
     RMG_NEIGHBOUR_BLEND_EDGE = 1,
@@ -84,9 +78,6 @@ enum RmgTerrainNeighbourKind {
 // retail cluster. Its constructor clears only the validity bit; the upper
 // two bits survive every fill from the map adapter.
 // Before normalization (type): TRmgPackedTerrainCell.
-#ifndef RmgPackedTerrainCell
-#define RmgPackedTerrainCell TRmgPackedTerrainCell
-#endif
 struct RmgPackedTerrainCell {
     unsigned short m_initialized : 1;
     unsigned short m_terrain : 4;
@@ -121,9 +112,6 @@ struct RmgPackedTerrainCell {
 // admitted renderer are named by role here; the concrete terrain-rule type
 // and its source spellings remain unknown.
 // Before normalization (type): TRmgTerrainRule.
-#ifndef RmgTerrainRule
-#define RmgTerrainRule TRmgTerrainRule
-#endif
 class RmgTerrainRule {
 public:
     unsigned char m_blendsWithOtherTerrain; // +0x04
@@ -149,9 +137,6 @@ public:
 };
 
 // Before normalization (type): TRmgTerrainPatternRange.
-#ifndef RmgTerrainPatternRange
-#define RmgTerrainPatternRange TRmgTerrainPatternRange
-#endif
 struct RmgTerrainPatternRange {
     int m_firstIndex;
     unsigned int m_count;
@@ -161,9 +146,6 @@ struct RmgTerrainPatternRange {
 };
 
 // Before normalization (type): TRmgTerrainPatternEntry.
-#ifndef RmgTerrainPatternEntry
-#define RmgTerrainPatternEntry TRmgTerrainPatternEntry
-#endif
 struct RmgTerrainPatternEntry {
     int m_frame;
     unsigned char m_special;
@@ -174,9 +156,6 @@ struct RmgTerrainPatternEntry {
 // Unlike the pattern rule's special-frame flag, +4/+5 here are the two
 // transition flips (selector 0x5b3ae0 and range constructor 0x5b3940).
 // Before normalization (type): TRmgTerrainTransitionEntry.
-#ifndef RmgTerrainTransitionEntry
-#define RmgTerrainTransitionEntry TRmgTerrainTransitionEntry
-#endif
 struct RmgTerrainTransitionEntry {
     int m_frame;
     unsigned char m_flipX;
@@ -190,9 +169,6 @@ extern const RmgTerrainTransitionEntry g_rmgTerrainPatterns[];
 // The static initializer at 0x5b3a10 passes this complete global as `this`.
 // Complete-only owner spelling is provisional.
 // Before normalization (type): TRmgTerrainPatternTable.
-#ifndef RmgTerrainPatternTable
-#define RmgTerrainPatternTable TRmgTerrainPatternTable
-#endif
 struct RmgTerrainPatternTable {
     RmgTerrainPatternRange m_ranges[116];
     RmgTerrainPatternTable();
@@ -204,9 +180,6 @@ extern RmgTerrainPatternTable g_rmgTerrainPatternRanges;
 // 58 first/count ranges at +0x14. This data-backed rule supplies vtable 0x642c98; its
 // original Complete-only class name is unavailable.
 // Before normalization (type): TRmgPatternTerrainRule.
-#ifndef RmgPatternTerrainRule
-#define RmgPatternTerrainRule TRmgPatternTerrainRule
-#endif
 class RmgPatternTerrainRule : public RmgTerrainRule {
 public:
     int m_defaultFrame;                         // +0x08
@@ -235,9 +208,6 @@ public:
 // the random-map generator; this role name follows the retail implementation,
 // whose remaining slots read the fixed transition table at 0x6424a8.
 // Before normalization (type): TRmgTableTerrainRule.
-#ifndef RmgTableTerrainRule
-#define RmgTableTerrainRule TRmgTableTerrainRule
-#endif
 class RmgTableTerrainRule : public RmgTerrainRule {
 public:
     RmgTableTerrainRule();
@@ -257,9 +227,6 @@ extern RmgTerrainRule* const g_rmgTerrainRules[];
 
 // RepairTerrainPoint ranks up to four disjoint runs in an eight-cell ring.
 // Before normalization (type): TRmgTerrainGap.
-#ifndef RmgTerrainGap
-#define RmgTerrainGap TRmgTerrainGap
-#endif
 struct RmgTerrainGap {
     unsigned int m_weight;
     unsigned int m_start;
@@ -267,9 +234,6 @@ struct RmgTerrainGap {
 };
 
 // Before normalization (type): TRmgTerrainTransitionCase.
-#ifndef RmgTerrainTransitionCase
-#define RmgTerrainTransitionCase TRmgTerrainTransitionCase
-#endif
 enum RmgTerrainTransitionCase {
     RMG_TERRAIN_FIRST_DIAGONAL_LOW = 2,
     RMG_TERRAIN_SECOND_DIAGONAL_LOW = 5,
@@ -342,9 +306,6 @@ public:
 // Provisional facade name. The ctor at 0x5b7250 initializes the exact VC6
 // auto_ptr ownership byte/pointer pair; 0x5b72f0 conditionally deletes it.
 // Before normalization (type): TRmgTerrainBrush.
-#ifndef RmgTerrainBrush
-#define RmgTerrainBrush TRmgTerrainBrush
-#endif
 class RmgTerrainBrush {
 public:
     std::auto_ptr<rmgTerrainPainter> m_painter;

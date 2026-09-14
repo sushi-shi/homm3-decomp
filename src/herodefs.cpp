@@ -11,9 +11,6 @@ namespace {
 
 // CodeView field pStr; each loader owns its own private string class.
 // Before normalization (type): TAutoStrPtr.
-#ifndef AutoStrPtr
-#define AutoStrPtr TAutoStrPtr
-#endif
 class AutoStrPtr {
 public:
     // E:\gamedcs\herodefs.cpp:391, dc 0xd60d4

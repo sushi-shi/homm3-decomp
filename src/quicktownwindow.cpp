@@ -186,7 +186,7 @@ QuickTownWindow::QuickTownWindow(const garrison* thisGarrison,
     }
 }
 
-VA_COMPGEN(0x005307a0, 0x21, SCALAR_DELETING_DTOR, TQuickTownWindow)
+VA_COMPGEN(0x005307a0, 0x21, SCALAR_DELETING_DTOR, QuickTownWindow)
 
 VA(0x00530920, 0x6B)  // dc 0x1184c4
 QuickTownWindow::~QuickTownWindow()

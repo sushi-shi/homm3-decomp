@@ -102,9 +102,6 @@ struct overview_item_record {
 SIZE(overview_item_record, 8);
 
 // Before normalization (type): TOverviewWindow.
-#ifndef OverviewWindow
-#define OverviewWindow TOverviewWindow
-#endif
 class OverviewWindow : public CAdvPopup {
 public:
     OverviewWindow();

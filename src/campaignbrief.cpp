@@ -825,12 +825,12 @@ VA_COMPGEN(0x0045aab0, 0xCC, IMPLICIT_DTOR, CMapHeaderData)
 // `tplayerslotattributes_tplayerslotattributes@dtor`, with no enclosing-class
 // prefix. Default construction, destruction, copy construction and copy
 // assignment each have their own admitted claim.
-VA_COMPGEN(0x0045ab80, 0x9B, IMPLICIT_DTOR, TPlayerSlotAttributes)
+VA_COMPGEN(0x0045ab80, 0x9B, IMPLICIT_DTOR, PlayerSlotAttributes)
 // Canonical body and VA: include/game.h.
 
 VA_COMPGEN(0x0045ad00, 0x13E, IMPLICIT_DTOR, NewSMapHeader)
 
-VA_COMPGEN(0x0045ae40, 0x21, SCALAR_DELETING_DTOR, TCampaignBrief)
+VA_COMPGEN(0x0045ae40, 0x21, SCALAR_DELETING_DTOR, CampaignBrief)
 
 VA_COMPGEN(0x0045ae70, 0x13E, IMPLICIT_DTOR, CampaignScenarioPreview)
 
@@ -859,7 +859,7 @@ VA_COMPGEN(0x0045c030, 0x3B, VECTOR_DTOR, CampaignScenarioPreview)
 // three-argument vector::insert specialization in campaignbrief.obj.
 VA_COMPGEN(0x0045c960, 0x3AD, VECTOR_INSERT, CampaignScenarioPreview)
 
-VA_COMPGEN(0x0045cf70, 0x2BE, IMPLICIT_COPY_ASSIGN, TPlayerSlotAttributes)
+VA_COMPGEN(0x0045cf70, 0x2BE, IMPLICIT_COPY_ASSIGN, PlayerSlotAttributes)
 
 VA_COMPGEN(0x0045cd10, 0x25A, IMPLICIT_COPY_ASSIGN, NewSMapHeader)
 
@@ -1357,7 +1357,7 @@ unsigned char& std::basic_string<char>::_Refcnt(const char* s)
 VA_COMPGEN(0x0045c1e0, 0x13, ALLOCATOR_DEALLOCATE, char)
 VA_COMPGEN(0x0045dca0, 0x6, BASIC_STRING_NULLSTR, char)
 
-VA_COMPGEN(0x0045da70, 0x21B, IMPLICIT_COPY_CTOR, TPlayerSlotAttributes)
+VA_COMPGEN(0x0045da70, 0x21B, IMPLICIT_COPY_CTOR, PlayerSlotAttributes)
 
 #if 0  // @carcass: Dinkumware instantiations emitted by this compiland
 

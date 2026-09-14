@@ -299,9 +299,6 @@ enum EGeneralTextIndex {
 // TSpreadsheetResource above. The names are Dreamcast-attested; Data's
 // +0x2c position follows the adjacent vector/data members used by both
 // text-resource variants.
-#ifndef TextResource
-#define TextResource TTextResource
-#endif
 class TextResource : public resource {
 public:
     typedef std::vector<char*> TTextArray;
@@ -331,9 +328,6 @@ SIZE(TextResource, 48);
 // with the STLport layout; Dinkumware puts them at 0x1c/0x2c, sizeof
 // 0x30 vs the DC 44). GetNumberOfRows/GetRow are the TextResource.h
 // header inlines (dc 0x5088c/0x508a4), inlined into callers by /Ob2.
-#ifndef SpreadsheetResource
-#define SpreadsheetResource TSpreadsheetResource
-#endif
 class SpreadsheetResource : public resource {
 public:
     typedef std::vector<char*> TStringVector;

@@ -125,9 +125,6 @@ SIZE(RandomDwellingData, 0x10);
 // The town-definition pool uses town.h's canonical TownExtra record.
 // readTownData and ProcessOnMapTowns share its 0x88-byte PC layout.
 
-#ifndef Town
-#define Town town
-#endif
 class Town;
 
 // HeroExtra is naturally aligned except for the packed +0x300..+0x306 band,
@@ -372,9 +369,6 @@ SIZE(type_map_hero_info, 0x18);
 class CMapHeaderData {
 public:
 // Before normalization (type): CMapHeaderData::TPlayerSlotAttributes.
-#ifndef PlayerSlotAttributes
-#define PlayerSlotAttributes TPlayerSlotAttributes
-#endif
     class PlayerSlotAttributes {
     public:
         unsigned char m_canBeHuman;
@@ -716,9 +710,6 @@ public:
 SIZE(SavedGameHeader, 0x5a4);
 
 // Before normalization (type): TBlackMarket.
-#ifndef BlackMarket
-#define BlackMarket TBlackMarket
-#endif
 struct BlackMarket {
 public:
     Artifact m_artifacts[7];
@@ -970,9 +961,6 @@ public:
     ~game();
     game& __fastcall operator=(const game& that);
 // Before normalization (type): game::TRumour.
-#ifndef Rumour
-#define Rumour TRumour
-#endif
     struct Rumour {
         std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_text;
         unsigned char m_unavailable;
@@ -2974,9 +2962,6 @@ inline bool game::townAlreadyBuiltOn(int townId) const
 // 0x3dc2 (method types 0x3dc5/0x3dcb), without procedure/source locations.
 // Neither has an active caller; leave their bodies unreconstructed.
 // Before normalization (type): TCheatCode.
-#ifndef CheatCode
-#define CheatCode TCheatCode
-#endif
 class CheatCode {
 public:
     CheatCode();

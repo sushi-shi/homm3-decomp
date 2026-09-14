@@ -1285,7 +1285,7 @@ ViewWorldWindow::ViewWorldWindow()
         m_surfaceButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
 }
 
-VA_COMPGEN(0x005fbd30, 0x21, SCALAR_DELETING_DTOR, TViewWorldWindow)
+VA_COMPGEN(0x005fbd30, 0x21, SCALAR_DELETING_DTOR, ViewWorldWindow)
 
 // The two retained vector<widget*>::insert overloads at 0x5fd390 and
 // 0x5fdd60 both call this guarded four-byte fill loop. viewwrld.obj emits

@@ -29,9 +29,6 @@
 #include "armygrp.h"
 #include "artifact.h"  // TArtifact, used by the artifact-quest vector below
 
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 
 // The two adventure-object names the TQuestGuard / TSeerHut text builders

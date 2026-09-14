@@ -14,17 +14,8 @@
 #include "monframeinfo.h"
 #include "includes.h"
 
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
-#ifndef ArmyGroup
-#define ArmyGroup armyGroup
-#endif
 class ArmyGroup;
-#ifndef Town
-#define Town town
-#endif
 class Town;
 class sample;
 class CSprite;
@@ -82,9 +73,6 @@ enum EAttackCriteria {
 // the only consumer that gains them, and its rows were re-measured
 // unchanged.
 // Before normalization (type): TWallTargetId.
-#ifndef WallTargetId
-#define WallTargetId TWallTargetId
-#endif
 enum WallTargetId {
     WALL_TARGET_0 = 0,
     WALL_TARGET_1 = 1,
@@ -181,9 +169,6 @@ extern const type_ballistics_traits (&g_constBallisticsTraits)[4];
 // constructors/destructors must see the complete resource types.
 template<class T>
 // Before normalization (type): TResourceHandle.
-#ifndef ResourceHandle
-#define ResourceHandle TResourceHandle
-#endif
 class ResourceHandle {
 public:
     T* m_resource;
@@ -211,9 +196,6 @@ public:
     // Dreamcast Army.h enum; retail Teleport passes the two corresponding
     // immediate values to the independently located play_sample body.
 // Before normalization (type): army::TSampleID.
-#ifndef SampleID
-#define SampleID TSampleID
-#endif
     enum SampleID {
         WALK_SAMPLE = 0,
         ATTACK_SAMPLE = 1,

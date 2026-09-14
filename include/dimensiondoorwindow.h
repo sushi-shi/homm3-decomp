@@ -21,9 +21,6 @@ enum EDimensionDoorKey {
 // each holds the fifteen slots the CAdvPopup hierarchy declares, which is
 // what puts ExitDialog in slot 14.
 // Before normalization (type): TDimensionDoorWindow.
-#ifndef DimensionDoorWindow
-#define DimensionDoorWindow TDimensionDoorWindow
-#endif
 class DimensionDoorWindow : public CAdvPopup {
 public:
     DimensionDoorWindow();
@@ -40,9 +37,6 @@ SIZE(DimensionDoorWindow, 0x64);
 // base widening moves it to +0x60, and the stack instance in the skuttle-boat
 // adventure action proves the resulting 0x64-byte canonical layout.
 // Before normalization (type): TSkuttleBoatWindow.
-#ifndef SkuttleBoatWindow
-#define SkuttleBoatWindow TSkuttleBoatWindow
-#endif
 class SkuttleBoatWindow : public CAdvPopup {
 public:
     SkuttleBoatWindow();

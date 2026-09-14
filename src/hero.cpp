@@ -4582,7 +4582,7 @@ HeroScreenWindow::HeroScreenWindow()
 
 // Canonical body and VA: include/button.h.
 
-VA_COMPGEN(0x004e1520, 0x21, SCALAR_DELETING_DTOR, THeroScreenWindow)
+VA_COMPGEN(0x004e1520, 0x21, SCALAR_DELETING_DTOR, HeroScreenWindow)
 
 #endif  // @carcass
 

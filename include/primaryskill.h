@@ -6,9 +6,6 @@
 // primary lane and Random(0, 3) in retail RandomizeEvents corroborate
 // the four stat ordinals. Original enumerator spellings are retained.
 // Before normalization (type): TPrimarySkill.
-#ifndef PrimarySkill
-#define PrimarySkill TPrimarySkill
-#endif
 enum PrimarySkill {
     ePriSkillAttack = 0,
     ePriSkillDefense = 1,

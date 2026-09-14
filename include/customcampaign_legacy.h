@@ -83,9 +83,6 @@ SIZE(LegacyCampaignHero, 0x462);
 
 // Dreamcast TCarryOverPoolNumber, values e_pool_1/e_pool_2/e_pool_choice/e_pool_both.
 // Before normalization (type): TCarryOverPoolNumber.
-#ifndef CarryOverPoolNumber
-#define CarryOverPoolNumber TCarryOverPoolNumber
-#endif
 enum CarryOverPoolNumber {
     ePool1 = 0,
     ePool2 = 1,

@@ -55,9 +55,6 @@ inline int limit(int minimum, int value, int maximum)
 // Original CodeView fields: Low, NumbersLeft, Available. Project spelling
 // follows the m_ scope prefix and lowerCamelCase convention.
 // Before normalization (type): TPickANumber.
-#ifndef PickANumber
-#define PickANumber TPickANumber
-#endif
 class PickANumber {
 protected:
     int m_low;
@@ -73,9 +70,6 @@ public:
 // passes [0, 15] to the base; Reset is expanded into ProcessOnMapTowns.
 // game.obj emits the Dreamcast copies but does not own their source bodies.
 // Before normalization (type): TPickRandomTownName.
-#ifndef PickRandomTownName
-#define PickRandomTownName TPickRandomTownName
-#endif
 class PickRandomTownName : public PickANumber {
 public:
     PickRandomTownName() : PickANumber(0, 15) {}

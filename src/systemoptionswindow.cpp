@@ -317,7 +317,7 @@ SystemOptionsWindow::SystemOptionsWindow()
     updateSystemOptions(1);
 }
 
-VA_COMPGEN(0x005b3010, 0x21, SCALAR_DELETING_DTOR, TSystemOptionsWindow)
+VA_COMPGEN(0x005b3010, 0x21, SCALAR_DELETING_DTOR, SystemOptionsWindow)
 
 VA(0x005b3040, 0x6B)  // dc 0x160634
 SystemOptionsWindow::~SystemOptionsWindow()

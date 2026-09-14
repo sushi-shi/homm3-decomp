@@ -9,9 +9,6 @@
 // its original source name is unknown. The combination pass is Complete-only.
 template<size_t N>
 // Before normalization (type): TConstBitsetIterator.
-#ifndef ConstBitsetIterator
-#define ConstBitsetIterator TConstBitsetIterator
-#endif
 class ConstBitsetIterator {
 public:
     ConstBitsetIterator(const std::bitset<N>& bits, size_t position)
@@ -36,9 +33,6 @@ private:
 // Identity predicate for the set-bit search. Retail tests the returned bool
 // at 0x44d077; std::find(..., true) instead emits cmp al,1 / je.
 // Before normalization (type): TBitIsSet.
-#ifndef BitIsSet
-#define BitIsSet TBitIsSet
-#endif
 struct BitIsSet {
     bool operator()(bool value) const { return value; }
 };

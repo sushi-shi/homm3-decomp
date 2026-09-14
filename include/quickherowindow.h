@@ -4,9 +4,6 @@
 
 #include "window.h"
 
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 
 // Retail's constructor initializes heroWindow directly and the deleting
@@ -14,15 +11,9 @@ class Hero;
 // derived storage is touched; the DC 0x44 size differs only by its 12-byte
 // vector/base layout, while retail inherits the byte-proven 0x4c base.
 // Before normalization (type): TQuickHeroWindow.
-#ifndef QuickHeroWindow
-#define QuickHeroWindow TQuickHeroWindow
-#endif
 class QuickHeroWindow : public heroWindow {
 public:
 // Before normalization (type): TQuickHeroWindow::TViewLevel.
-#ifndef ViewLevel
-#define ViewLevel TViewLevel
-#endif
     enum ViewLevel {
         ViewNone = 0,
         ViewSome = 1,

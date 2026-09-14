@@ -505,9 +505,11 @@ def resolve_instances(definitions, requests, unit, root, args):
     probes = []
     expected = {}
     errors = []
+    type_lineage = read_type_lineage(root)
     for index, token_offset in requests:
         d = definitions[index]
-        owner, separator, member = d.instance.rpartition('::')
+        selector = current_type_spelling(d.instance, type_lineage)
+        owner, separator, member = selector.rpartition('::')
         if (not separator or '<' not in owner
                 or not re.fullmatch(r'[A-Za-z_][\w:<>, *&]*', owner)
                 or not re.fullmatch(r'(?:~?[A-Za-z_]\w*|operator\*|operator\(\))', member)):
@@ -521,7 +523,7 @@ def resolve_instances(definitions, requests, unit, root, args):
             probes.append(f'typedef {owner} {alias};\n'
                           f'int {name} = ((({owner}*)0)->~{alias}(), 0);')
         else:
-            probes.append(f'auto {name} = &{d.instance};')
+            probes.append(f'auto {name} = &{selector};')
         expected[name] = (index, token_offset)
     if not probes:
         return definitions, errors
@@ -564,7 +566,8 @@ def resolve_instances(definitions, requests, unit, root, args):
         # Check the destructor spelling too: the alias expression above
         # identifies the owner's destructor, not an arbitrary trailing name.
         if d.instance.rpartition('::')[2].startswith('~'):
-            selected = d.instance.rpartition('::')[2]
+            selected = current_type_spelling(
+                d.instance, type_lineage).rpartition('::')[2]
             if selected != ref.spelling.split('<', 1)[0]:
                 errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: invalid destructor selector {d.instance!r}')
                 continue

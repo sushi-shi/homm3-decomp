@@ -7,9 +7,6 @@
 // (buffer, size) on the stack). Keep that three-slot ABI canonical for every
 // consumer rather than substituting an opaque pure-virtual placeholder.
 // Before normalization (type): TAbstractFile.
-#ifndef AbstractFile
-#define AbstractFile TAbstractFile
-#endif
 class AbstractFile {
 public:
     // Retail expands this body in TGzFile::~TGzFile (0x4d6d60) and

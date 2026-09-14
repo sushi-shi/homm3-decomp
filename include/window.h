@@ -31,9 +31,6 @@ DATA(0x00691210) extern const char g_emptyRolloverText[];
 // to widget::set_help_text. Stride 8 is byte-proven by 0x5ff8e0's
 // `lea edi,[8*eax]` row arithmetic and the +0/+4 field loads.
 // Before normalization (type): THelpText.
-#ifndef HelpText
-#define HelpText THelpText
-#endif
 struct HelpText {
     const char* m_text;
     const char* m_rclick;

@@ -6,17 +6,8 @@
 #include "window.h"
 
 // Before normalization (type): TSubWindow.
-#ifndef SubWindow
-#define SubWindow TSubWindow
-#endif
 class SubWindow;
-#ifndef CombatCreatureSubWindow
-#define CombatCreatureSubWindow TCombatCreatureSubWindow
-#endif
 class CombatCreatureSubWindow;
-#ifndef CombatHeroSubWindow
-#define CombatHeroSubWindow TCombatHeroSubWindow
-#endif
 class CombatHeroSubWindow;
 class textWidget;
 class textEntryWidget;
@@ -33,9 +24,6 @@ extern HelpText g_combatSubWindowHelp[11];
 // the polymorphic combat-control subwindow at +0x70 before delegating to
 // heroWindow::Close. DrawCreatureAndHeroSubwindows independently proves the
 // two hero panels and four creature panels that fill the remaining tail.
-#ifndef CombatWindow
-#define CombatWindow TCombatWindow
-#endif
 class CombatWindow : public heroWindow {
 public:
     enum EWidgetIds {

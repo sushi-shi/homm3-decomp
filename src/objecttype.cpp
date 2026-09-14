@@ -42,9 +42,6 @@ DATA(0x00640278) const ObjectType::Point g_noTriggerCell = {8, 6};
 // NAMES ARE PROVISIONAL - nothing attests this class; only the offsets, the
 // node size and the two accessors' arithmetic are retail-proven.
 // Before normalization (type): TObjectImageNameTable.
-#ifndef ObjectImageNameTable
-#define ObjectImageNameTable TObjectImageNameTable
-#endif
 class ObjectImageNameTable {
 public:
     typedef std::map<std::string, int> TNameIndex;
@@ -90,9 +87,6 @@ public:
 // order and every constructor argument: nine of the first class with the
 // terrain ids 0..8 (rock, 9, is absent), one of the second, and five of the
 // third with 1..5 - and the pointer table lists them in exactly that order.
-#ifndef ObjectTypeFilter
-#define ObjectTypeFilter TObjectTypeFilter
-#endif
 class ObjectTypeFilter {
 public:
     virtual ~ObjectTypeFilter();
@@ -107,9 +101,6 @@ public:
 // this terrain and is SMALL - the `count() <= 3` arm, against the
 // any-terrain filter's `count() > 3` next door.
 // Before normalization (type): TNativeTerrainObjectFilter.
-#ifndef NativeTerrainObjectFilter
-#define NativeTerrainObjectFilter TNativeTerrainObjectFilter
-#endif
 class NativeTerrainObjectFilter : public ObjectTypeFilter {
 public:
     explicit NativeTerrainObjectFilter(int terrain);
@@ -122,9 +113,6 @@ public:
 // the vptr - and the mirror of the filter above: an unplaced object whose
 // recommended terrain set is WIDE.
 // Before normalization (type): TAnyTerrainObjectFilter.
-#ifndef AnyTerrainObjectFilter
-#define AnyTerrainObjectFilter TAnyTerrainObjectFilter
-#endif
 class AnyTerrainObjectFilter : public ObjectTypeFilter {
 public:
     AnyTerrainObjectFilter();
@@ -134,9 +122,6 @@ public:
 // Retail 0x514260, the whole body a `sete` on one compare: the object's
 // slotCategory against the one this filter carries at +4.
 // Before normalization (type): TSlotCategoryObjectFilter.
-#ifndef SlotCategoryObjectFilter
-#define SlotCategoryObjectFilter TSlotCategoryObjectFilter
-#endif
 class SlotCategoryObjectFilter : public ObjectTypeFilter {
 public:
     explicit SlotCategoryObjectFilter(int slotCategory);
@@ -164,7 +149,7 @@ VA_COMPGEN(0x00517c30, 0x13F, PAIR_CTOR, string_int_pair)
 // 0x69cba4, _Lockit around the head-node purchase) followed by the four
 // zero stores of the vector at +0x10. GetImageName's function-local static
 // and setImageName's are the same object, so both initialize through this.
-VA_COMPGEN(0x00514060, 0xCA, CLASS_CTOR, TObjectImageNameTable)
+VA_COMPGEN(0x00514060, 0xCA, CLASS_CTOR, ObjectImageNameTable)
 
 // --- the object-type filter family -----------------------------------------
 
@@ -196,14 +181,14 @@ NativeTerrainObjectFilter::NativeTerrainObjectFilter(int terrain)
 {
 }
 
-VA_COMPGEN(0x005142C0, 0x21, SCALAR_DELETING_DTOR, TNativeTerrainObjectFilter)
+VA_COMPGEN(0x005142C0, 0x21, SCALAR_DELETING_DTOR, NativeTerrainObjectFilter)
 
 VA(0x005144B0, 0x9)
 AnyTerrainObjectFilter::AnyTerrainObjectFilter()
 {
 }
 
-VA_COMPGEN(0x005144C0, 0x21, SCALAR_DELETING_DTOR, TAnyTerrainObjectFilter)
+VA_COMPGEN(0x005144C0, 0x21, SCALAR_DELETING_DTOR, AnyTerrainObjectFilter)
 
 VA(0x00514510, 0x15)
 SlotCategoryObjectFilter::SlotCategoryObjectFilter(int slotCategory)
@@ -275,7 +260,7 @@ VA_COMPGEN(0x00514930, 0x2A, LOCAL_STATIC_DTOR, imageCache)
 // grows from 20 to 39 bytes and replaces rep movsd with six individual
 // load/store pairs. Coordinate constructors taking values or references
 // are neutral when the empty point is initialized before the row count.
-VA_COMPGEN(0x00517b50, 0x14, STD_CONSTRUCT, TImageInfo)
+VA_COMPGEN(0x00517b50, 0x14, STD_CONSTRUCT, ImageInfo)
 
 // Further boundary controls do not close the residual: an ordinary free
 // GetIndex is neutral; a separate registry-append helper changes nested
@@ -618,7 +603,7 @@ VA_COMPGEN(0x00517780, 0xA3, TREE_CONST_ITERATOR_INC, string)
 // 0.915. The class's implicit constructor is already claimed at 0x514060 and
 // this is its mirror image - the vector at +0x10 freed, then _Tree::_Erase
 // over the head node - reached only through the two function-local statics.
-VA_COMPGEN(0x00514130, 0x7E, IMPLICIT_DTOR, TObjectImageNameTable)
+VA_COMPGEN(0x00514130, 0x7E, IMPLICIT_DTOR, ObjectImageNameTable)
 
 // COMDAT pairing: basic_istream<char>'s streambuf constructor, agreement
 // 0.931 (the `_Bool` tie-parameter arm - the only istream ctor this object
@@ -639,7 +624,7 @@ VA_COMPGEN(0x00515f50, 0x106, CLASS_CTOR, ctype)
 VA_COMPGEN(0x00516130, 0x21, SCALAR_DELETING_DTOR, ctype)
 VA_COMPGEN(0x00516160, 0x24, IMPLICIT_DTOR, ctype)
 
-VA_COMPGEN(0x00516560, 0x23, SCALAR_DELETING_DTOR, TObjectTypeFilter)
+VA_COMPGEN(0x00516560, 0x23, SCALAR_DELETING_DTOR, ObjectTypeFilter)
 
 // COMDAT pairing: strstreambuf(const char*, int), agreement 0.957.
 VA_COMPGEN(0x005165f0, 0xE7, CLASS_CTOR, strstreambuf)
@@ -673,8 +658,8 @@ VA_COMPGEN(0x00516770, 0x28, BITSET_FLIP, bitset48)
 // already-claimed TObjectTypeTable::load at 0x514d80. These two are
 // compiland-private by construction - TObjectType is this header's type -
 // which is why the sizes agree to the byte.
-VA_COMPGEN(0x005167a0, 0x2E1, VECTOR_INSERT, TObjectType)
-VA_COMPGEN(0x00516a90, 0x44, VECTOR_ERASE, TObjectType)
+VA_COMPGEN(0x005167a0, 0x2E1, VECTOR_INSERT, ObjectType)
+VA_COMPGEN(0x00516a90, 0x44, VECTOR_ERASE, ObjectType)
 
 // COMDAT pairing: _Tree<string, pair<const string,int>>::erase(first, last),
 // agreement 0.960 - the registry map's range eraser.
@@ -890,13 +875,13 @@ VA_COMPGEN(0x004046e0, 0x1D, EXCEPTION_DORAISE, out_of_range)
 // belongs to cmbtmgr's TObstacle specialization; no image-cache count-insert
 // call or explicit instantiation is introduced just to emit another copy.
 
-VA_COMPGEN(0x00516c10, 0x20A, VECTOR_INSERT_SINGLE, TImageInfo)
+VA_COMPGEN(0x00516c10, 0x20A, VECTOR_INSERT_SINGLE, ImageInfo)
 
 // This insertion and setupAndLoadObstacles (0x466290) both call 0x517750.
 // Retail retains the folded size helper here in the objecttype cluster.
 // The TObstacle copy expands in cmbtmgr; this native TImageInfo instance
 // matches all 33 retail bytes, with no relocations or added instantiation.
-VA_COMPGEN(0x00517750, 0x21, VECTOR_SIZE, TImageInfo)
+VA_COMPGEN(0x00517750, 0x21, VECTOR_SIZE, ImageInfo)
 
 // COMDAT pairing: basic_istream<char>'s destructor, agreement 0.750 on a
 // 15-byte body - the virtual-base vtable fixup, and 1:1 in this object.
@@ -905,4 +890,4 @@ VA_COMPGEN(0x00515260, 0xF, IMPLICIT_DTOR, basic_istream)
 VA_COMPGEN(0x00515270, 0x207, ISTREAM_EXTRACT_INT, char)
 VA_COMPGEN(0x00517830, 0x2BE, ISTREAM_EXTRACT_STRING, char)
 
-VA_COMPGEN(0x0054C910, 0x21, VECTOR_SIZE, TObjectType)
+VA_COMPGEN(0x0054C910, 0x21, VECTOR_SIZE, ObjectType)

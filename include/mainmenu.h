@@ -7,9 +7,6 @@
 class message;
 
 // Before normalization (type): TMainMenuButtonRect.
-#ifndef MainMenuButtonRect
-#define MainMenuButtonRect TMainMenuButtonRect
-#endif
 struct MainMenuButtonRect {
     short m_x;
     short m_y;
@@ -22,9 +19,6 @@ SIZE(MainMenuButtonRect, 0x8);
 // heroWindow moves them to +0x4c/+0x50; the constructor stores +0x4c and
 // oldmain's two stack instances independently prove the 0x54 total size.
 // Before normalization (type): TMainMenu.
-#ifndef MainMenu
-#define MainMenu TMainMenu
-#endif
 class MainMenu : public heroWindow {
 public:
     enum EGameCommandIDs {

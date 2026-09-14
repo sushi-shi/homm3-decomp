@@ -44,27 +44,15 @@ enum EMageGuildSlotState {
     MAGE_SLOT_ABSENT = 999
 };
 
-#ifndef ArmyGroup
-#define ArmyGroup armyGroup
-#endif
 class ArmyGroup;
 class Bitmap816;
 class border;
 class CSprite;
 class garrison;
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 class iconWidget;
 class textWidget;
-#ifndef Town
-#define Town town
-#endif
 class Town;
-#ifndef ResourceDisplay
-#define ResourceDisplay TResourceDisplay
-#endif
 class ResourceDisplay;
 
 // IDENTIFIED 2026-08-14: the .bss cell recruit.h models as
@@ -78,9 +66,6 @@ class ResourceDisplay;
 // beside the struct in recruit.h: an extern added there moved
 // recruitUnit::Update 90.84 -> 88.24 (the include-set wall), and this
 // page is its only consumer.
-#ifndef Palette16
-#define Palette16 TPalette16
-#endif
 class Palette16;
 extern Palette16* g_systemPalette;  // retail .bss 0x6aacb0
 
@@ -207,9 +192,6 @@ extern const char* g_townMusic[9];
 // NOT a CAdvPopup: its vtable 0x64372c is 9 slots, the plain heroWindow
 // width, and its destructor runs ~heroWindow rather than ~CAdvPopup.
 // Before normalization (type): TTownScreenWindow.
-#ifndef TownScreenWindow
-#define TownScreenWindow TTownScreenWindow
-#endif
 class TownScreenWindow : public heroWindow {
 public:
     enum {
@@ -372,9 +354,6 @@ private:
 };
 
 // Before normalization (type): TThievesGuildWindow.
-#ifndef ThievesGuildWindow
-#define ThievesGuildWindow TThievesGuildWindow
-#endif
 class ThievesGuildWindow : public CAdvPopup {
 public:
     // The one non-literal widget id the constructor uses; the rest of
@@ -430,9 +409,6 @@ public:
 // building slots the constructor lays out from two tables it builds on
 // its own stack.
 // Before normalization (type): THallWindow.
-#ifndef HallWindow
-#define HallWindow THallWindow
-#endif
 class HallWindow : public CAdvPopup {
 public:
     enum {
@@ -458,9 +434,6 @@ public:
 // icons over twenty scroll icons, both runs numbered by row. Its
 // constructor writes nothing past CAdvPopup's 0x60.
 // Before normalization (type): TMageGuildWindow.
-#ifndef MageGuildWindow
-#define MageGuildWindow TMageGuildWindow
-#endif
 class MageGuildWindow : public CAdvPopup {
 public:
     enum {
@@ -547,9 +520,6 @@ public:
 };
 
 // Before normalization (type): TGarrisonWindow.
-#ifndef GarrisonWindow
-#define GarrisonWindow TGarrisonWindow
-#endif
 class GarrisonWindow : public type_garrison_base_window {
 public:
     GarrisonWindow(Hero* inHero, int garrisonOwner, ArmyGroup& garrisonArmy);
@@ -560,9 +530,6 @@ public:
 // The blacksmith, which sells one war machine per town type. Its
 // constructor 0x5d1360 writes all three members past CAdvPopup's 0x60.
 // Before normalization (type): TBlacksmithWindow.
-#ifndef BlacksmithWindow
-#define BlacksmithWindow TBlacksmithWindow
-#endif
 class BlacksmithWindow : public CAdvPopup {
 public:
     enum {
@@ -590,9 +557,6 @@ public:
 // CAdvPopup's 0x60: +0x60 is cleared and nothing else in the compiland
 // reads it yet, and +0x64 keeps the boat picture the dialog shows.
 // Before normalization (type): TShipWindow.
-#ifndef ShipWindow
-#define ShipWindow TShipWindow
-#endif
 class ShipWindow : public CAdvPopup {
 public:
     enum {
@@ -617,9 +581,6 @@ public:
 // at +0x64 - the latter stored immediately after the vptr, which is the
 // member-initializer-list slot.
 // Before normalization (type): TBuyBuildWindow.
-#ifndef BuyBuildWindow
-#define BuyBuildWindow TBuyBuildWindow
-#endif
 class BuyBuildWindow : public CAdvPopup {
 public:
     // The two widget ids the constructor and the handler share. Both are
@@ -642,9 +603,6 @@ public:
 // width - and the two slots reconstructed are the ones retail overrides to
 // bracket the dialog with the tavern's background video.
 // Before normalization (type): TTavernWindow.
-#ifndef TavernWindow
-#define TavernWindow TTavernWindow
-#endif
 class TavernWindow : public CAdvPopup {
 public:
     // The page's widget ids, all of them proven by the two bodies below:
@@ -696,9 +654,6 @@ public:
 // otherwise; `use8` is that switch, re-read before every row that has
 // a bottom slot.
 // Before normalization (type): TCastleWindow.
-#ifndef CastleWindow
-#define CastleWindow TCastleWindow
-#endif
 class CastleWindow : public CAdvPopup {
 public:
     // The page's widget-id families. Every family is EIGHT wide - one id
@@ -795,9 +750,6 @@ class CTownNetMsgHandler;
 // unattested run at +0x144 stays an opaque pad. The three virtuals are
 // the three slots of vtable 0x643720.
 // Before normalization (type): townManager.
-#ifndef TownManager
-#define TownManager townManager
-#endif
 class TownManager : public baseManager {
 public:
     Town* m_townToView;  // +0x38

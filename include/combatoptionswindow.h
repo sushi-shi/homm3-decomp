@@ -13,9 +13,6 @@ class textWidget;
 // +0x50 as RolloverWidget. Total size is independently proven by
 // combatManager::CombatSystemOptions' 0x54-byte stack object.
 // Before normalization (type): TCombatOptionsWindow.
-#ifndef CombatOptionsWindow
-#define CombatOptionsWindow TCombatOptionsWindow
-#endif
 class CombatOptionsWindow : public heroWindow {
 public:
     // Widget ids, byte-proven by the constructor's creation order and the

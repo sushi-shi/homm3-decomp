@@ -125,7 +125,7 @@ ResourceDisplay::ResourceDisplay(heroWindow* parent, bool isSmall)
     addWidget(m_dayWidget, -1);
 }
 
-VA_COMPGEN(0x00558e50, 0x21, SCALAR_DELETING_DTOR, TResourceDisplay)
+VA_COMPGEN(0x00558e50, 0x21, SCALAR_DELETING_DTOR, ResourceDisplay)
 
 VA(0x00558e80, 0x95)  // dc 0x120ee8
 ResourceDisplay::~ResourceDisplay()

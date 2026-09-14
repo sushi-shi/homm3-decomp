@@ -7,18 +7,12 @@
 #include "palette.h"
 
 // Before normalization (type): TFloatLongBits.
-#ifndef FloatLongBits
-#define FloatLongBits TFloatLongBits
-#endif
 union FloatLongBits {
     unsigned long m_bits;
     float m_value;
 };
 
 // Before normalization (type): TDoubleLongBits.
-#ifndef DoubleLongBits
-#define DoubleLongBits TDoubleLongBits
-#endif
 union DoubleLongBits {
     double m_value;
     long m_words[2];
@@ -90,7 +84,7 @@ Palette16::Palette16()
 {
 }
 
-VA_COMPGEN(0x00522670, 0x21, SCALAR_DELETING_DTOR, TPalette16)
+VA_COMPGEN(0x00522670, 0x21, SCALAR_DELETING_DTOR, Palette16)
 
 // The raw 16-bit table overload: 0x80 dwords straight into the payload at
 // +0x1c, the same shape TPalette24's raw-data constructor has at 0x522e80.
@@ -394,7 +388,7 @@ Palette24::Palette24()
 {
 }
 
-VA_COMPGEN(0x00522e50, 0x21, SCALAR_DELETING_DTOR, TPalette24)
+VA_COMPGEN(0x00522e50, 0x21, SCALAR_DELETING_DTOR, Palette24)
 
 VA(0x00522e80, 0x2D)  // dc 0x10b904
 Palette24::Palette24(const unsigned char* data)

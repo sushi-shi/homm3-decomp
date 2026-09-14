@@ -10,13 +10,7 @@
 // E:\gamedcs\seerhut.cpp:50, dc 0x12cd28
 unsigned char initializeSeerHutText();
 
-#ifndef AdventureMapWindow
-#define AdventureMapWindow TAdventureMapWindow
-#endif
 class AdventureMapWindow;
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 class NewmapCell;
 struct type_point;
@@ -30,14 +24,8 @@ DATA(0x0069fab8) extern std::vector<std::string>* g_seerHutNamesPointer;
 
 // Retail's constructor family and NewfullMap vector walks prove the packed
 // five-byte guard record: a quest pointer followed by the visited-player mask.
-#ifndef AbstractFile
-#define AbstractFile TAbstractFile
-#endif
 class AbstractFile;
 
-#ifndef QuestGuard
-#define QuestGuard TQuestGuard
-#endif
 class QuestGuard {
 public:
     type_quest* m_quest;
@@ -72,9 +60,6 @@ SIZE(QuestGuard, 0x5);
 // dispatch and the three adjacent users preserve the same 0..10 values even
 // though the x86 build split the reward into its own 12-byte record.
 // Before normalization (type): TSeerRewardType.
-#ifndef SeerRewardType
-#define SeerRewardType TSeerRewardType
-#endif
 enum SeerRewardType {
     eRewardNone = 0,
     eRewardExperience = 1,
@@ -92,18 +77,12 @@ enum SeerRewardType {
 // Bytes +5..+0x10 of TSeerHut. The constructor initializes the common type
 // word; the remaining eight bytes are the selected reward's payload.
 // Before normalization (type): TSeerReward.
-#ifndef SeerReward
-#define SeerReward TSeerReward
-#endif
 struct SeerReward {
 public:
     // DC TPrimarySkill values. Kept nested because the canonical global
     // secondary-skill header is intentionally outside game.h's wide include
     // closure; these are exactly the four case labels this record needs.
 // Before normalization (type): TSeerReward::TPrimarySkillType.
-#ifndef PrimarySkillType
-#define PrimarySkillType TPrimarySkillType
-#endif
     enum PrimarySkillType {
         ePriSkillAttack = 0,
         ePriSkillDefense = 1,
@@ -147,9 +126,6 @@ public:
 SIZE(SeerReward, 0xc);
 
 // Before normalization (type): TSeerData.
-#ifndef SeerData
-#define SeerData TSeerData
-#endif
 struct SeerData {
     type_quest* m_quest;              // Prior role: quest.
     unsigned char m_visitedPlayers;  // Prior role: visitedPlayers.
@@ -159,9 +135,6 @@ SIZE(SeerData, 0x11);
 
 // Retail indexes NewfullMap::SeerHutList with a 0x13 stride. Preserve the
 // Dreamcast-proven private TSeerData base with the revised Complete payload.
-#ifndef SeerHut
-#define SeerHut TSeerHut
-#endif
 class SeerHut : private SeerData {
 public:
     // readObject's SEER arm tests the private base's quest pointer before

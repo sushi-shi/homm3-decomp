@@ -82,7 +82,7 @@ DimensionDoorWindow::DimensionDoorWindow()
     }
 }
 
-VA_COMPGEN(0x00491860, 0x21, SCALAR_DELETING_DTOR, TDimensionDoorWindow)
+VA_COMPGEN(0x00491860, 0x21, SCALAR_DELETING_DTOR, DimensionDoorWindow)
 
 VA(0x00491890, 0x6B)  // dc 0x82938
 DimensionDoorWindow::~DimensionDoorWindow()
@@ -220,7 +220,7 @@ SkuttleBoatWindow::SkuttleBoatWindow()
     }
 }
 
-VA_COMPGEN(0x00491c60, 0x21, SCALAR_DELETING_DTOR, TSkuttleBoatWindow)
+VA_COMPGEN(0x00491c60, 0x21, SCALAR_DELETING_DTOR, SkuttleBoatWindow)
 
 VA(0x00491c90, 0x6B)  // dc 0x82cb0
 SkuttleBoatWindow::~SkuttleBoatWindow()

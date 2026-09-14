@@ -14,9 +14,6 @@
 // values with its TOWN_* alias spellings; the DC TTownType enum
 // corroborates 0..7 (Conflux is Complete-era, absent from the AB-age
 // DC roster).
-#ifndef TownType
-#define TownType TTownType
-#endif
 enum TownType {
     // Dreamcast NB11 type 0x1ab5: the unassigned/neutral town sentinel.
     eTownNeutral = -1,
@@ -235,17 +232,11 @@ SIZE(TownExtra, 0x88);
 // view of this header gains the type name (the initialize_game_data
 // include-set canary measured exactly this forward declaration at
 // 100.0 -> 96.09 when it sat here ungated, 2026-08-20).
-#ifndef TownEvent
-#define TownEvent TTownEvent
-#endif
 class TownEvent;
 
 extern __int64 g_bitNumber[];
 
 // Before normalization (type): town.
-#ifndef Town
-#define Town town
-#endif
 class Town {
 public:
     enum { TOWN_DOCK_SITE_NONE = 0xff };

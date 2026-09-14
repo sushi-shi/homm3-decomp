@@ -179,7 +179,7 @@ HillFortWindow::HillFortWindow()
     updateHillFort(1);
 }
 
-VA_COMPGEN(0x004e7de0, 0x21, SCALAR_DELETING_DTOR, THillFortWindow)
+VA_COMPGEN(0x004e7de0, 0x21, SCALAR_DELETING_DTOR, HillFortWindow)
 
 VA(0x004e7e10, 0x75)  // dc 0xd6b2c
 HillFortWindow::~HillFortWindow()

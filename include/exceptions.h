@@ -17,9 +17,6 @@
 // the +0x1d byte before copying the exception and string subobjects.
 // Vtables 0x63aba8/0x63abb4 retain the library's three virtual slots.
 // Before normalization (type): TDebugBreak.
-#ifndef DebugBreak
-#define DebugBreak TDebugBreak
-#endif
 class DebugBreak {
 public:
     // The default error construction at 0x514dbd calls the three-byte
@@ -34,9 +31,6 @@ public:
 };
 
 // Before normalization (type): TRuntimeError.
-#ifndef RuntimeError
-#define RuntimeError TRuntimeError
-#endif
 class RuntimeError : public DebugBreak, public std::runtime_error {
 public:
     // The object-table failure at 0x514dba constructs the empty base,
@@ -50,9 +44,6 @@ public:
 };
 
 // Before normalization (type): TAllocationFailure.
-#ifndef AllocationFailure
-#define AllocationFailure TAllocationFailure
-#endif
 class AllocationFailure : public RuntimeError {
 public:
     VA(0x004d6b80, 0x17)  // anchor-callee 0x49a0c0 + anchor-vtable 0x63aba8, retail-only

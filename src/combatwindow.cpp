@@ -202,7 +202,7 @@ void CCombatChatEdit::updateScreen()
 VA_COMPGEN(0x00472890, 0x05, IMPLICIT_DTOR, CCombatChatEdit)
 
 // Vtable 0x63d528 slot 0.
-VA_COMPGEN(0x004728a0, 0x21, SCALAR_DELETING_DTOR, TCombatWindow)
+VA_COMPGEN(0x004728a0, 0x21, SCALAR_DELETING_DTOR, CombatWindow)
 
 VA(0x004728d0, 0x2A)  // dc 0x69b2c
 void CombatWindow::close(unsigned char update)

@@ -161,7 +161,7 @@ LevelUpWindow::LevelUpWindow(Hero* thisHero, int gainedSkill,
         g_dialogDeadline697784 = GameTime::get() + 2000;
 }
 
-VA_COMPGEN(0x004f9700, 0x21, SCALAR_DELETING_DTOR, TLevelUpWindow)
+VA_COMPGEN(0x004f9700, 0x21, SCALAR_DELETING_DTOR, LevelUpWindow)
 
 VA(0x004f9730, 0x4E)  // dc 0xe8c2c
 LevelUpWindow::~LevelUpWindow()

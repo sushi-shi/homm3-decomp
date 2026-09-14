@@ -34,9 +34,6 @@
 #include "exceptions.h"
 #include "gzinflatebuf.h"
 
-#ifndef GzInflateBuf
-#define GzInflateBuf TGzInflateBuf
-#endif
 class GzInflateBuf::DataError : public std::runtime_error {
 public:
     DataError();
@@ -197,9 +194,9 @@ GzInflateBuf::DataError::DataError()
 
 // __CxxThrowException's catchable-type record for the tag; the copy is what
 // the throw makes into the exception object.
-VA_COMPGEN(0x004d6690, 0x157, IMPLICIT_COPY_CTOR, TDataError)
+VA_COMPGEN(0x004d6690, 0x157, IMPLICIT_COPY_CTOR, DataError)
 
-VA_COMPGEN(0x004d67f0, 0x21, SCALAR_DELETING_DTOR, TGzInflateBuf)
+VA_COMPGEN(0x004d67f0, 0x21, SCALAR_DELETING_DTOR, GzInflateBuf)
 
 // 0x4d6820: hand the source stream back whatever this object read ahead -
 // the raw bytes still in next_in, or, when the member was never a gzip
@@ -330,5 +327,5 @@ int GzInflateBuf::readByte()
 }
 
 VA_COMPGEN(0x0041ba90, 0x162, CLASS_CTOR, runtime_error)
-VA_COMPGEN(0x0041b7b0, 0x169, IMPLICIT_COPY_CTOR, TRuntimeError)
-VA_COMPGEN(0x0041b920, 0x16F, IMPLICIT_COPY_CTOR, TAllocationFailure)
+VA_COMPGEN(0x0041b7b0, 0x169, IMPLICIT_COPY_CTOR, RuntimeError)
+VA_COMPGEN(0x0041b920, 0x16F, IMPLICIT_COPY_CTOR, AllocationFailure)

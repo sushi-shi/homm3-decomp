@@ -12,9 +12,6 @@ class Bitmap816;
 // substantially from Dreamcast's smaller campaign roster, so it remains
 // deliberately unmodelled until a compiled consumer needs it.
 // Before normalization (type): TCampaignWindow.
-#ifndef CampaignWindow
-#define CampaignWindow TCampaignWindow
-#endif
 class CampaignWindow : public heroWindow {
 public:
     // Widget ids, byte-proven by the handler: the seven preview rows it

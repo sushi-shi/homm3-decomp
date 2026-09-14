@@ -16,13 +16,7 @@ template<class E> struct char_traits;
 template<class E, class Tr, class A> class basic_string;
 }
 
-#ifndef Town
-#define Town town
-#endif
 class Town;
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 
 // Bootstrap domain: only the sentinel is modeled; the full creature
@@ -30,9 +24,6 @@ class Hero;
 // (Dreamcast CodeView types armies[] and IsMember's parameter as
 // TCreatureType; retail compares slots against -1.)
 // Before normalization (type): TCreatureType.
-#ifndef CreatureType
-#define CreatureType TCreatureType
-#endif
 enum CreatureType {
     CREATURE_NONE = -1,
     // The two griffins, byte-proven by ai_tactical's
@@ -641,9 +632,6 @@ enum EMagicTerrain {
 // AI_value @0x40 from the same bodies; field names are the NH3API
 // roster, which lands exactly on those offsets with cost[7].
 // Before normalization (type): TCreatureTypeTraits.
-#ifndef CreatureTypeTraits
-#define CreatureTypeTraits TCreatureTypeTraits
-#endif
 struct CreatureTypeTraits {
     int m_townType;
     int m_level;
@@ -754,9 +742,6 @@ DATA(0x00643698) extern const TerrainType g_nativeTerrains[9];
 // neutral; likely the expansion/map-version gate).
 
 // Before normalization (type): armyGroup.
-#ifndef ArmyGroup
-#define ArmyGroup armyGroup
-#endif
 class ArmyGroup {
 public:
     enum { ARMY_GROUP_SLOT_COUNT = 7 };

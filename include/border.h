@@ -99,9 +99,6 @@ public:
 class palette;
 class paletteHiColor;
 // Before normalization (type): TPalette24.
-#ifndef Palette24
-#define Palette24 TPalette24
-#endif
 class Palette24;
 void setPlayerPaletteColors(unsigned short* pal, int whichPlayer);
 void setPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);

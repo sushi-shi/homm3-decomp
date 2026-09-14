@@ -161,9 +161,6 @@ class slider;
 // CAdvPopup base (0x60) are named where a reconstructed body attests the store
 // and left as field_NN placeholders where only the size is proven so far.
 // Before normalization (type): TTradeResourceWindow.
-#ifndef TradeResourceWindow
-#define TradeResourceWindow TTradeResourceWindow
-#endif
 class TradeResourceWindow : public CAdvPopup {
     slider* m_resourceSlider;   // +0x60, set by the ctor (TradeResourceSlider)
     int m_lastHoverId;          // +0x64, last widget the hover handler rolled over
@@ -182,9 +179,6 @@ public:
 SIZE(TradeResourceWindow, 0x68);
 
 // Before normalization (type): TGiveResourceWindow.
-#ifndef GiveResourceWindow
-#define GiveResourceWindow TGiveResourceWindow
-#endif
 class GiveResourceWindow : public CAdvPopup {
 public:
     // +0x60. The 0x46..0x4c recipient buttons index gPlayerColorNames by this
@@ -210,9 +204,6 @@ public:
 SIZE(GiveResourceWindow, 0x8c);
 
 // Before normalization (type): TBuyArtifactWindow.
-#ifndef BuyArtifactWindow
-#define BuyArtifactWindow TBuyArtifactWindow
-#endif
 class BuyArtifactWindow : public CAdvPopup {
     int m_lastHoverId;          // +0x60, last widget the hover handler rolled over
 
@@ -226,9 +217,6 @@ public:
 SIZE(BuyArtifactWindow, 0x64);
 
 // Before normalization (type): TSellArtifactWindow.
-#ifndef SellArtifactWindow
-#define SellArtifactWindow TSellArtifactWindow
-#endif
 class SellArtifactWindow : public CAdvPopup {
     int m_lastHoverId;          // +0x60, last widget the hover handler rolled over
     void setupNewTrade();
@@ -253,9 +241,6 @@ public:
 SIZE(SellArtifactWindow, 0x64);
 
 // Before normalization (type): TSellCreatureWindow.
-#ifndef SellCreatureWindow
-#define SellCreatureWindow TSellCreatureWindow
-#endif
 class SellCreatureWindow : public CAdvPopup {
     slider* m_creatureSlider;   // +0x60, set by the ctor (SellCreatureSlider)
     int m_lastHoverId;          // +0x64, last widget the hover handler rolled over

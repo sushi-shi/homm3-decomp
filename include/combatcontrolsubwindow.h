@@ -7,9 +7,6 @@
 class bitmapBackedTextWidget;
 class message;
 class bitmapBorder;
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 class type_func_button;
 class iconWidget;
@@ -58,9 +55,6 @@ SIZE(type_combat_sub_window, 0x38);
 // combatManager::Open. The destructor body is empty in retail - all 120
 // bytes are the base destructor inlined whole.
 // Before normalization (type): TCombatControlSubWindow.
-#ifndef CombatControlSubWindow
-#define CombatControlSubWindow TCombatControlSubWindow
-#endif
 class CombatControlSubWindow : public type_combat_sub_window {
 public:
     // The two 'ComSlide.def' arrows over the combat message log, +0x38 and
@@ -80,9 +74,6 @@ SIZE(CombatControlSubWindow, 0x40);
 // The same shape one class over: 0x63d430, "coplacbr.pcx" (0x670054), the
 // same 0x4721d0 construction site, the same empty destructor.
 // Before normalization (type): TCombatPlacementSubWindow.
-#ifndef CombatPlacementSubWindow
-#define CombatPlacementSubWindow TCombatPlacementSubWindow
-#endif
 class CombatPlacementSubWindow : public type_combat_sub_window {
 private:
     // 0x4721d0 allocates this class at 0x3c against the base's 0x38, and
@@ -100,9 +91,6 @@ SIZE(CombatPlacementSubWindow, 0x3c);
 // Show/UnShow pair independently fix the TSubWindow base, the nine pointer
 // fields at +0x34..+0x54, and the shown byte at +0x58.
 // Before normalization (type): TCombatHeroSubWindow.
-#ifndef CombatHeroSubWindow
-#define CombatHeroSubWindow TCombatHeroSubWindow
-#endif
 class CombatHeroSubWindow : public SubWindow {
 public:
     bitmapBorder* m_backgroundWidget;
@@ -132,9 +120,6 @@ SIZE(CombatHeroSubWindow, 0x5c);
 // overlay. DrawCreatureAndHeroSubwindows independently proves the shown
 // byte at +0x68 for each of TCombatWindow's four panels.
 // Before normalization (type): TCombatCreatureSubWindow.
-#ifndef CombatCreatureSubWindow
-#define CombatCreatureSubWindow TCombatCreatureSubWindow
-#endif
 class CombatCreatureSubWindow : public SubWindow {
 public:
     bitmapBorder* m_backgroundWidget;  // +0x34

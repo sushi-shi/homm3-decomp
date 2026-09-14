@@ -64,17 +64,11 @@ SIZE(CampaignScenarioPreview, 0x4d4);
 // all three (it carries a byte vector at +0x18, an int row at +0x4c, a
 // vector at +0x70 and a five-dword bit block at +0x90).
 // Before normalization (type): TCampaignStartOption.
-#ifndef CampaignStartOption
-#define CampaignStartOption TCampaignStartOption
-#endif
 class CampaignStartOption;
 
 // Retail Complete diverges from the Dreamcast class after heroWindow, but
 // fixes every field used by the campaign constructor and destructor.
 // Before normalization (type): TCampaignBrief.
-#ifndef CampaignBrief
-#define CampaignBrief TCampaignBrief
-#endif
 class CampaignBrief : public heroWindow {
 public:
     struct ScenarioStruct;

@@ -15,9 +15,6 @@ class CSprite;
 class CSprite;
 class Bitmap816;
 // Before normalization (type): TTownType.
-#ifndef TownType
-#define TownType TTownType
-#endif
 enum TownType;
 
 const char* getStartingResourceName(int town);
@@ -168,9 +165,6 @@ protected:
 // destructor, 0x577300 SetTotal, 0x577320 Advance); the constructor 0x576f00
 // and the repaint 0x577180 reach the rest.  Ordinal name.
 // Before normalization (type): TRandomMapProgress.
-#ifndef RandomMapProgress
-#define RandomMapProgress TRandomMapProgress
-#endif
 class RandomMapProgress : public ProgressSink {
 public:
     std::vector<widget*> m_widgets;   // +0x0c

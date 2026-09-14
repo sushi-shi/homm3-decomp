@@ -9,9 +9,6 @@
 // PROVEN retail layout: both ctor and dtor access only the allocation
 // pointer at +0; callers allocate four bytes for the object.
 // Before normalization (type): TFileVersionInfo.
-#ifndef FileVersionInfo
-#define FileVersionInfo TFileVersionInfo
-#endif
 class FileVersionInfo {
 public:
     char* m_data;

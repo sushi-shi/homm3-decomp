@@ -4,9 +4,6 @@
 
 #include "window.h"
 
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 class message;
 
@@ -14,9 +11,6 @@ class message;
 // 0x63d46c, and adds no derived storage. The nine slots reproduce the
 // heroWindow roster, with this class overriding dtor/Open/Close only.
 // Before normalization (type): TCombatResultsWindow.
-#ifndef CombatResultsWindow
-#define CombatResultsWindow TCombatResultsWindow
-#endif
 class CombatResultsWindow : public heroWindow {
 public:
     CombatResultsWindow(const Hero* attacker, const Hero* defender,

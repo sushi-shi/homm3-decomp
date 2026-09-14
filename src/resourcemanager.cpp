@@ -64,9 +64,6 @@ public:
 // twelve bytes and terminates byte 12; 0x55ebd0 compares these keys with
 // _stricmp. Complete's map node has its key at +0xc and resource* at +0x1c.
 // Before normalization (type): ResourceManager::TCacheMapKey.
-#ifndef CacheMapKey
-#define CacheMapKey TCacheMapKey
-#endif
 class CacheMapKey {
 public:
     char m_name[13];
@@ -190,9 +187,6 @@ TextResource* ResourceManager::getText(const char* name)
 // ResourceManager's retail archive pool is eight interleaved 0x190-byte
 // slots. Open proves the leading dword is the archive pathname and every
 // resource lookup independently proves the LODFile subobject at +4.
-#ifndef ResourceLODSlot
-#define ResourceLODSlot TResourceLODSlot
-#endif
 struct ResourceLODSlot {
     const char* m_archiveName;
     LODFile m_file;
@@ -2725,14 +2719,14 @@ void CSprite::dispose()
 
 VA_COMPGEN(0x0055D2C0, 0xBE, CLASS_CTOR, map)
 
-VA_COMPGEN(0x0055d380, 0x2C, MAP_INSERT, TCacheMapKey)
-VA_COMPGEN(0x0055d3b0, 0x56, MAP_FIND, TCacheMapKey)
-VA_COMPGEN(0x0055e330, 0x56, TREE_FIND, TCacheMapKey)
+VA_COMPGEN(0x0055d380, 0x2C, MAP_INSERT, CacheMapKey)
+VA_COMPGEN(0x0055d3b0, 0x56, MAP_FIND, CacheMapKey)
+VA_COMPGEN(0x0055e330, 0x56, TREE_FIND, CacheMapKey)
 // Insert's locked key search calls the node rebalance at 0x55e7e0 and
 // predecessor walk at 0x55ec30. Their stock XTREE bodies own all three.
-VA_COMPGEN(0x0055dbc0, 0x12D, TREE_INSERT, TCacheMapKey)
-VA_COMPGEN(0x0055e7e0, 0x301, TREE_NODE_INSERT, TCacheMapKey)
-VA_COMPGEN(0x0055ec30, 0xB3, TREE_CONST_ITERATOR_DEC, TCacheMapKey)
+VA_COMPGEN(0x0055dbc0, 0x12D, TREE_INSERT, CacheMapKey)
+VA_COMPGEN(0x0055e7e0, 0x301, TREE_NODE_INSERT, CacheMapKey)
+VA_COMPGEN(0x0055ec30, 0xB3, TREE_CONST_ITERATOR_DEC, CacheMapKey)
 
 VA_COMPGEN(0x0055d410, 0x117, CLASS_CTOR, basic_ostringstream)
 VA_COMPGEN(0x0055d630, 0x1AD, STRINGBUF_OVERFLOW, char)
@@ -2742,13 +2736,13 @@ VA_COMPGEN(0x0055db40, 0x7D, IMPLICIT_DTOR, basic_stringbuf)
 // stringbuf members. All three byte-verified against the emitted COMDATs
 // (0.977 / 0.992 / 0.978); `_Erase` keys off the tree's NAMED key type,
 // TCacheMapKey, exactly as the iterator-increment claim below does.
-VA_COMPGEN(0x0055e760, 0x7E, TREE_ERASE, TCacheMapKey)
+VA_COMPGEN(0x0055e760, 0x7E, TREE_ERASE, CacheMapKey)
 VA_COMPGEN(0x0055eaf0, 0xDC, STRINGBUF_INIT, char)
 
-VA_COMPGEN(0x0055E390, 0xA3, TREE_CONST_ITERATOR_INC, TCacheMapKey)
+VA_COMPGEN(0x0055E390, 0xA3, TREE_CONST_ITERATOR_INC, CacheMapKey)
 
-VA_COMPGEN(0x0055e740, 0x17, TREE_LOWER_BOUND, TCacheMapKey)
-VA_COMPGEN(0x0055ebd0, 0x5A, TREE_LBOUND, TCacheMapKey)
+VA_COMPGEN(0x0055e740, 0x17, TREE_LOWER_BOUND, CacheMapKey)
+VA_COMPGEN(0x0055ebd0, 0x5A, TREE_LBOUND, CacheMapKey)
 
 // COMDAT pairing: basic_ostringstream::_G?$basic_ostringstream, mnemonic agreement 1.000.
 VA_COMPGEN(0x0055dae0, 0x30, SCALAR_DELETING_DTOR, basic_ostringstream)
@@ -2761,10 +2755,10 @@ VA_COMPGEN(0x0055e440, 0xFF, CLASS_CTOR, basic_stringbuf)
 // COMDAT pairing: basic_ostringstream::1?$basic_ostringstream, mnemonic agreement 0.944.
 VA_COMPGEN(0x0055d530, 0xC2, IMPLICIT_DTOR, basic_ostringstream)
 
-VA_COMPGEN(0x0055dcf0, 0x50F, TREE_ERASE_ITERATOR, TCacheMapKey)
+VA_COMPGEN(0x0055dcf0, 0x50F, TREE_ERASE_ITERATOR, CacheMapKey)
 
 // COMDAT pairing: _Tree<TCacheMapKey, resource*>::erase(first, last), 0.960.
-VA_COMPGEN(0x0055e200, 0x121, TREE_ERASE_RANGE, TCacheMapKey)
+VA_COMPGEN(0x0055e200, 0x121, TREE_ERASE_RANGE, CacheMapKey)
 
 // COMDAT pairing: str on the char instantiation, mnemonic agreement 0.976.
 VA_COMPGEN(0x0055e570, 0x1C5, STRINGBUF_STR, char)

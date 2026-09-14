@@ -26,9 +26,6 @@ public:
     // list verbatim; retail corroborates height@+5, baseyoffset@+6,
     // abc@+0x20 and Offset@+0xc20 by use.
 // Before normalization (type): font::TFontSpec.
-#ifndef FontSpec
-#define FontSpec TFontSpec
-#endif
     struct FontSpec {
         // DC font::TFontSpec::myABC (LF_FIELDLIST 0x2372, size 12): the
         // Win32 ABC widths - `int abcA` (left side bearing, SIGNED: it is
@@ -87,9 +84,6 @@ public:
     // CUSTOM_COLOR: DrawBoundedString's cursor path tests it with
     // `test ah,1` and clears it with `and ah,-2`.
 // Before normalization (type): font::TColor.
-#ifndef Color
-#define Color TColor
-#endif
     enum Color {
         LowestColor = 1,
         PRIMARY = 1,

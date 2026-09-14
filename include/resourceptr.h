@@ -4,16 +4,10 @@
 
 #include <va.h>
 
-#ifndef TextResource
-#define TextResource TTextResource
-#endif
 class TextResource;
 
 template<class T>
 // Before normalization (type): TResourcePtr.
-#ifndef ResourcePtr
-#define ResourcePtr TResourcePtr
-#endif
 class ResourcePtr {
 public:
     ResourcePtr(T* ptr = 0) : m_owns(ptr != 0), m_ptr(ptr) {}

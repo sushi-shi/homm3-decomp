@@ -105,7 +105,7 @@ void QuestLogWindow::updateQuestLocator(int i)
 
 #endif  // @carcass
 
-VA_COMPGEN(0x0052e1b0, 0x21, SCALAR_DELETING_DTOR, TQuestLogWindow)
+VA_COMPGEN(0x0052e1b0, 0x21, SCALAR_DELETING_DTOR, QuestLogWindow)
 
 VA(0x0052e1e0, 0x8F)  // dc 0x116b6c
 QuestLogWindow::~QuestLogWindow()

@@ -4,9 +4,6 @@
 
 #include "advmgr_popup.h"
 
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 class message;
 
@@ -16,9 +13,6 @@ class message;
 // allocation/call sites allocate only the CAdvPopup-sized object; no derived
 // data members are presently evidenced.
 // Before normalization (type): TLevelUpWindow.
-#ifndef LevelUpWindow
-#define LevelUpWindow TLevelUpWindow
-#endif
 class LevelUpWindow : public CAdvPopup {
 public:
     enum EOtherWidgetIDs {

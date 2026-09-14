@@ -27,9 +27,6 @@
 // of the 977 scored functions in all 52 units moved by so much as a
 // byte.
 // Before normalization (type): TSpellSchool.
-#ifndef SpellSchool
-#define SpellSchool TSpellSchool
-#endif
 enum SpellSchool {
     const_invalid_school = 0,
     eSchoolAir = 1,

@@ -257,7 +257,7 @@ void tradeResourceSlider(int state, heroWindow* parentWindow)
     g_tradeWindow->update(1);
 }
 
-VA_COMPGEN(0x005e1620, 0x21, SCALAR_DELETING_DTOR, TTradeResourceWindow)
+VA_COMPGEN(0x005e1620, 0x21, SCALAR_DELETING_DTOR, TradeResourceWindow)
 
 VA(0x005e1650, 0x6B)  // dc 0x182dc0
 TradeResourceWindow::~TradeResourceWindow()
@@ -474,7 +474,7 @@ void giveResourceSlider(int state, heroWindow* parentWindow)
     g_giveWindow->update(1);
 }
 
-VA_COMPGEN(0x005e3690, 0x21, SCALAR_DELETING_DTOR, TGiveResourceWindow)
+VA_COMPGEN(0x005e3690, 0x21, SCALAR_DELETING_DTOR, GiveResourceWindow)
 
 VA(0x005e36c0, 0x6B)  // dc 0x183ecc
 GiveResourceWindow::~GiveResourceWindow()
@@ -680,7 +680,7 @@ BuyArtifactWindow::BuyArtifactWindow(int x2, int y2)
     }
 }
 
-VA_COMPGEN(0x005e5690, 0x21, SCALAR_DELETING_DTOR, TBuyArtifactWindow)
+VA_COMPGEN(0x005e5690, 0x21, SCALAR_DELETING_DTOR, BuyArtifactWindow)
 
 VA(0x005e56c0, 0x6B)  // dc 0x1851a4
 BuyArtifactWindow::~BuyArtifactWindow()
@@ -969,7 +969,7 @@ SellArtifactWindow::SellArtifactWindow(int x2, int y2)
     }
 }
 
-VA_COMPGEN(0x005e7be0, 0x21, SCALAR_DELETING_DTOR, TSellArtifactWindow)
+VA_COMPGEN(0x005e7be0, 0x21, SCALAR_DELETING_DTOR, SellArtifactWindow)
 
 VA(0x005e7c10, 0x6B)  // dc 0x186c34
 SellArtifactWindow::~SellArtifactWindow()
@@ -1200,7 +1200,7 @@ void sellCreatureSlider(int state, heroWindow* parentWindow)
     g_sellCreatureWindow->update(1);
 }
 
-VA_COMPGEN(0x005e9c80, 0x21, SCALAR_DELETING_DTOR, TSellCreatureWindow)
+VA_COMPGEN(0x005e9c80, 0x21, SCALAR_DELETING_DTOR, SellCreatureWindow)
 
 VA(0x005e9cb0, 0x6B)  // dc 0x18838c
 SellCreatureWindow::~SellCreatureWindow()

@@ -6,15 +6,9 @@
 #include "spellschool.h"
 
 #include "herospec.h"
-#ifndef ArmyGroup
-#define ArmyGroup armyGroup
-#endif
 class ArmyGroup;
 class bitmapBackedTextWidget;
 class bitmapBorder;
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 class iconWidget;
 class textWidget;
@@ -27,15 +21,9 @@ typedef int SpellID;
 // entries. The widget-range pointers then occupy +0xac through +0xb4, and
 // the five individual widget pointers occupy +0xb8 through +0xc8.
 // Before normalization (type): TSpellbookWindow.
-#ifndef SpellbookWindow
-#define SpellbookWindow TSpellbookWindow
-#endif
 class SpellbookWindow : public CAdvPopup {
 public:
 // Before normalization (type): TSpellbookWindow::TSpellContext.
-#ifndef SpellContext
-#define SpellContext TSpellContext
-#endif
     enum SpellContext {
         eContextInvalid = -1,
         eContextCombat = 0,
@@ -44,9 +32,6 @@ public:
     };
 
 // Before normalization (type): TSpellbookWindow::TSpellContextMask.
-#ifndef SpellContextMask
-#define SpellContextMask TSpellContextMask
-#endif
     enum SpellContextMask {
         eCombatContextMask = 1,
         eAdventureContextMask = 2
@@ -110,9 +95,6 @@ public:
     enum { SPELLS_PER_PAGE = 12 };
 
 // Before normalization (type): TSpellbookWindow::TSpellbookEntry.
-#ifndef SpellbookEntry
-#define SpellbookEntry TSpellbookEntry
-#endif
     class SpellbookEntry {
     public:
         SpellbookEntry(SpellID id, SpellSchool school,

@@ -11,14 +11,8 @@
 // pointer per state. Retail stores one per player color (the static PCX
 // pointer runs at 0x660eb8 make all 24 slots explicit).
 // Before normalization (type): TCampaignMapTraits.
-#ifndef CampaignMapTraits
-#define CampaignMapTraits TCampaignMapTraits
-#endif
 struct CampaignMapTraits {
 // Before normalization (type): TCampaignMapTraits::TRegionTraits.
-#ifndef RegionTraits
-#define RegionTraits TRegionTraits
-#endif
     struct RegionTraits {
         const char* m_name;
         int m_offsetX;

@@ -33,9 +33,6 @@ enum ETileDirection {
     TILE_DIR_COUNT = 8
 };
 
-#ifndef Point
-#define Point TPoint
-#endif
 struct Point;
 extern Point g_tileDirections[TILE_DIR_COUNT];
 

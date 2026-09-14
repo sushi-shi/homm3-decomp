@@ -11,9 +11,6 @@ class textWidget;
 // 0x58-byte CAdvPopup). Retail's proven 0x60 base shifts the pointer to +0x60;
 // advManager::DoAdventureOptions allocates exactly 0x64 bytes on its stack.
 // Before normalization (type): TAdventureOptionsWindow.
-#ifndef AdventureOptionsWindow
-#define AdventureOptionsWindow TAdventureOptionsWindow
-#endif
 class AdventureOptionsWindow : public CAdvPopup {
 public:
     enum EWidgetIDs {

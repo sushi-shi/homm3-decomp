@@ -101,9 +101,6 @@ enum EHeroBackpackLimit {
 // equipped position, but retains the same dword parameter ABI and may pass
 // that retail-only ordinal through functions which use this shared type.
 // Before normalization (type): TArtifactSlot.
-#ifndef ArtifactSlot
-#define ArtifactSlot TArtifactSlot
-#endif
 enum ArtifactSlot {
     eArtifactSlotHead = 0,
     eArtifactSlotShoulders,
@@ -349,9 +346,6 @@ extern const char* g_moraleTexts[42];
 extern const char* g_luckTexts[25];
 
 // Before normalization (type): hero.
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero : public type_obscuring_object {
 public:
     enum {
@@ -1233,9 +1227,6 @@ SIZE(Hero, 0x492);
 // members below follow their consumers and reference layouts; the PC-only
 // four-byte slot at +0x3c remains unresolved.
 // Before normalization (type): THeroTraits.
-#ifndef HeroTraits
-#define HeroTraits THeroTraits
-#endif
 struct HeroTraits {
 public:
     int m_sex;  // +0x00 (DC m_sex)
@@ -1278,9 +1269,6 @@ SIZE(HeroTraits, 0x5c);
 // only the pointer at +4; cursor rendering independently proves the eighteen
 // class extent.
 // Before normalization (type): THeroClassTraits.
-#ifndef HeroClassTraits
-#define HeroClassTraits THeroClassTraits
-#endif
 struct HeroClassTraits {
 public:
     int m_townType;  // +0x00
@@ -1370,9 +1358,6 @@ DATA(0x00698a50) extern int g_heroScreenHeroId;
 // The constructor also touches a still-unmodelled two-dword retail tail;
 // no method admitted here relies on those fields.
 // Before normalization (type): THeroScreenWindow.
-#ifndef HeroScreenWindow
-#define HeroScreenWindow THeroScreenWindow
-#endif
 class HeroScreenWindow : public CAdvPopup {
 public:
     enum EArtifactSlotBounds {

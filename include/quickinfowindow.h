@@ -9,24 +9,15 @@
 // installs vtable 0x6406cc before tail-calling TDialogBox::~TDialogBox. Thus
 // this class adds no storage to the byte-proven 0x54-byte base.
 // Before normalization (type): TQuickCreatureWindow.
-#ifndef QuickCreatureWindow
-#define QuickCreatureWindow TQuickCreatureWindow
-#endif
 class QuickCreatureWindow : public DialogBoxWindow {
 public:
 // Before normalization (type): TQuickCreatureWindow::TViewLevel.
-#ifndef ViewLevel
-#define ViewLevel TViewLevel
-#endif
     enum ViewLevel {
         ViewNone = 0,
         ViewAll = 1
     };
 
 // Before normalization (type): TQuickCreatureWindow::TDisposition.
-#ifndef Disposition
-#define Disposition TDisposition
-#endif
     enum Disposition {
         Flee = 0,
         Attack = 1,

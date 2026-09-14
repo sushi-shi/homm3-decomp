@@ -10,9 +10,6 @@
 
 class palette;
 class paletteHiColor;
-#ifndef Palette24
-#define Palette24 TPalette24
-#endif
 class Palette24;
 
 // Creature sprite sequence ids (DC CodeView enum creature_seqid,

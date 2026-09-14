@@ -16,9 +16,6 @@ class type_func_button;
 // dimensions at +0x70/+0x74; the inherited 0x60-byte base fixes the remaining
 // Dreamcast RolloverWidget at +0x60.
 // Before normalization (type): TViewWorldWindow.
-#ifndef ViewWorldWindow
-#define ViewWorldWindow TViewWorldWindow
-#endif
 class ViewWorldWindow : public CAdvPopup {
 public:
     // The constructor's own append order fixes every id below: the three

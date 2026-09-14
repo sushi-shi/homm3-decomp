@@ -10,9 +10,6 @@
 #include "mapcell.h"
 
 // Before normalization (type): TObjectTypeFilter.
-#ifndef ObjectTypeFilter
-#define ObjectTypeFilter TObjectTypeFilter
-#endif
 class ObjectTypeFilter;
 
 enum EObjectTypeFilterConstants {
@@ -25,9 +22,6 @@ extern ObjectTypeFilter* const g_objectTypeFilters[OBJECT_TYPE_FILTER_COUNT];
 // CObjectType conversion constructor at 0x506080. The public names are from
 // the HD structural bridge; retail independently fixes the 0x4c stride and
 // every offset read by that constructor.
-#ifndef ObjectType
-#define ObjectType TObjectType
-#endif
 struct ObjectType {
 public:
     // Numeric slot identities shared with the Complete-only editor filter
@@ -42,17 +36,11 @@ public:
         SLOT_CATEGORY_5 = 5
     };
 // Before normalization (type): TObjectType::TPoint.
-#ifndef Point
-#define Point TPoint
-#endif
     struct Point {
         int m_x;
         int m_y;
     };
 // Before normalization (type): TObjectType::TImageInfo.
-#ifndef ImageInfo
-#define ImageInfo TImageInfo
-#endif
     struct ImageInfo {
         // Provisional overload: setImageName initializes the point before
         // either bitset constructor. TObjectType's default construction
@@ -139,9 +127,6 @@ inline ObjectType::ObjectType()
 }
 
 // Before normalization (type): TObjectTypeTable.
-#ifndef ObjectTypeTable
-#define ObjectTypeTable TObjectTypeTable
-#endif
 class ObjectTypeTable {
 public:
     std::vector<ObjectType> m_objectTypes;

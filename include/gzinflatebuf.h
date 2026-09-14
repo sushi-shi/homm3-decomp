@@ -21,9 +21,6 @@
 // The vftable is basic_streambuf's thirteen slots with only the deleting
 // destructor and underflow overridden.
 // Before normalization (type): TGzInflateBuf.
-#ifndef GzInflateBuf
-#define GzInflateBuf TGzInflateBuf
-#endif
 class GzInflateBuf : public std::streambuf {
 public:
     GzInflateBuf(std::streambuf* source);  // 0x4d6050
@@ -36,9 +33,6 @@ public:
     // `.?AVexception@@`, which is what makes the 0x63e704 vftable a
     // three-slot copy of Dinkumware's {deleting dtor, what, _Doraise}.
 // Before normalization (type): TGzInflateBuf::TDataError.
-#ifndef DataError
-#define DataError TDataError
-#endif
     class DataError;
 
     std::streambuf* m_source;      // +0x38

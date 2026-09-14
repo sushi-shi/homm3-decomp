@@ -415,7 +415,7 @@ void HighScoreWindow::doModal()
 // DC 0xd92c8 proves destructor -> conditional operator-delete.  Retail's
 // 33-byte wrapper matches all 3 CFG blocks exactly; compiler-generated /Z7
 // output carries no classic source-line records.
-VA_COMPGEN(0x004e9d90, 0x21, SCALAR_DELETING_DTOR, THighScoreWindow)
+VA_COMPGEN(0x004e9d90, 0x21, SCALAR_DELETING_DTOR, HighScoreWindow)
 
 VA(0x004e9dc0, 0x81)  // dc 0xd8424
 HighScoreWindow::~HighScoreWindow()

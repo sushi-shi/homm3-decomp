@@ -22,9 +22,6 @@ enum {
 // landing veto and cursor/findpath read byte +1 - so the remaining flags
 // keep neutral spellings.
 // Before normalization (type): TAdvObjectTraits.
-#ifndef AdvObjectTraits
-#define AdvObjectTraits TAdvObjectTraits
-#endif
 struct AdvObjectTraits {
     unsigned char m_blocksLanding;  // +0x00
     unsigned char m_trait1;         // +0x01
@@ -38,9 +35,6 @@ SIZE(AdvObjectTraits, 0x10);
 // One row of the loader's first .rdata override table: the object id and
 // the objnames.txt line its name comes from.
 // Before normalization (type): TAdvObjectNameRow.
-#ifndef AdvObjectNameRow
-#define AdvObjectNameRow TAdvObjectNameRow
-#endif
 struct AdvObjectNameRow {
     int m_objectType;
     int m_nameRow;

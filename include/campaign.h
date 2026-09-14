@@ -16,9 +16,6 @@ class message;
 // between button and campaignbrief. The module and class names remain
 // provisional because this chooser has no Dreamcast counterpart.
 // Before normalization (type): TCampaignSetWindow.
-#ifndef CampaignSetWindow
-#define CampaignSetWindow TCampaignSetWindow
-#endif
 class CampaignSetWindow : public heroWindow {
 public:
     // Its modal result selects the TCampaignWindow page passed by each

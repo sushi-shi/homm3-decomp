@@ -67,7 +67,7 @@ QuickCreatureWindow::QuickCreatureWindow(ViewLevel viewLevel,
     }
 }
 
-VA_COMPGEN(0x0052fcf0, 0x21, SCALAR_DELETING_DTOR, TQuickCreatureWindow)
+VA_COMPGEN(0x0052fcf0, 0x21, SCALAR_DELETING_DTOR, QuickCreatureWindow)
 
 VA(0x0052fd20, 0xB)  // dc 0x117b5c
 QuickCreatureWindow::~QuickCreatureWindow()

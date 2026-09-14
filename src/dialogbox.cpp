@@ -18,7 +18,7 @@ DialogBoxWindow::DialogBoxWindow(int winX, int winY, int winWidth,
     setup(winX, winY, winWidth, winHeight);
 }
 
-VA_COMPGEN(0x0048fe30, 0x21, SCALAR_DELETING_DTOR, TDialogBox)
+VA_COMPGEN(0x0048fe30, 0x21, SCALAR_DELETING_DTOR, DialogBoxWindow)
 
 VA(0x0048fe60, 0x2A)  // dc 0x817b0
 DialogBoxWindow::DialogBoxWindow(unsigned winType)

@@ -132,7 +132,7 @@ CampaignSetWindow::CampaignSetWindow()
     addWidgetsToMessageStream();
 }
 
-VA_COMPGEN(0x00457200, 0x21, SCALAR_DELETING_DTOR, TCampaignSetWindow)
+VA_COMPGEN(0x00457200, 0x21, SCALAR_DELETING_DTOR, CampaignSetWindow)
 
 VA(0x00457230, 0x4E)
 CampaignSetWindow::~CampaignSetWindow()

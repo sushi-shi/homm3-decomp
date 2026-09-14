@@ -35,9 +35,6 @@ enum ESystemOptionsCommand {
 };
 
 // Before normalization (type): TSystemOptionsWindow.
-#ifndef SystemOptionsWindow
-#define SystemOptionsWindow TSystemOptionsWindow
-#endif
 class SystemOptionsWindow : public CAdvPopup {
 public:
     // Dreamcast EOtherWidgetIDs, verbatim; retail's handler independently

@@ -365,12 +365,12 @@ SpellbookWindow::SpellbookWindow(const Hero& h, const ArmyGroup* g, SpellbookWin
     }
 }
 
-VA_COMPGEN(0x0059c8c0, 0x21, SCALAR_DELETING_DTOR, TSpellbookWindow)
+VA_COMPGEN(0x0059c8c0, 0x21, SCALAR_DELETING_DTOR, SpellbookWindow)
 
 // Dinkumware's _Insertion_sort_1 over TSpellbookEntry, the tail of the sort
 // that orders the open page's entries. The two mnemonic streams agree
 // EXACTLY over all 368 bytes against the COMDAT this object already emits.
-VA_COMPGEN(0x0059def0, 0x170, INSERTION_SORT_1, TSpellbookEntry)
+VA_COMPGEN(0x0059def0, 0x170, INSERTION_SORT_1, SpellbookEntry)
 
 VA(0x0059c8f0, 0x75)  // dc 0x14c864
 SpellbookWindow::~SpellbookWindow()

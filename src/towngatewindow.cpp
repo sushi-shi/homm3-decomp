@@ -116,7 +116,7 @@ TownGateWindow::TownGateWindow(bool adventureSpell)
     m_exitCommand = -1;
 }
 
-VA_COMPGEN(0x005c2340, 0x21, SCALAR_DELETING_DTOR, TTownGateWindow)
+VA_COMPGEN(0x005c2340, 0x21, SCALAR_DELETING_DTOR, TownGateWindow)
 
 VA(0x005c2370, 0x8f)  // dc 0x169824
 TownGateWindow::~TownGateWindow()

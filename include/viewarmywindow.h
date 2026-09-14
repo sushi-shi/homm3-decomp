@@ -10,23 +10,11 @@
 #include "armygrp.h"
 
 class army;
-#ifndef ArmyGroup
-#define ArmyGroup armyGroup
-#endif
 class ArmyGroup;
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
-#ifndef Town
-#define Town town
-#endif
 class Town;
 class bitmapBackedTextWidget;
 class iconWidget;
-#ifndef CreatureTypeTraits
-#define CreatureTypeTraits TCreatureTypeTraits
-#endif
 struct CreatureTypeTraits;
 
 // DC's named tail begins at +0x58 after its 0x58-byte CAdvPopup. Retail's
@@ -37,9 +25,6 @@ struct CreatureTypeTraits;
 // The DC class records agree on method order and private helper/member
 // ownership. Retail allocation and member accesses independently fix layout.
 // Before normalization (type): TViewArmyWindow.
-#ifndef ViewArmyWindow
-#define ViewArmyWindow TViewArmyWindow
-#endif
 class ViewArmyWindow : public CAdvPopup {
 public:
     // Complete retains public action IDs; the older DC enum records UPGRADE_ID.

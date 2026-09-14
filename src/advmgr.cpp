@@ -382,7 +382,7 @@ void CAdvMgrNetMsgHandler::handleGiftRequestMsg(CNetMsg* pNetMsg)
 // E:\gamedcs\advmgr.cpp:677
 #endif  // @carcass
 
-VA_COMPGEN(0x00406480, 0x59F, IMPLICIT_COPY_ASSIGN, hero)
+VA_COMPGEN(0x00406480, 0x59F, IMPLICIT_COPY_ASSIGN, Hero)
 
 VA(0x00406a20, 0x1C7)  // dc 0x61cc
 void CAdvMgrNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)

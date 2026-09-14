@@ -10,9 +10,6 @@
 
 class CSprite;
 class textWidget;
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 class boat;
 

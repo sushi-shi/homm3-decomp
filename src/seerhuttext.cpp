@@ -10,10 +10,10 @@
 #include "seerhuttext.h"
 #include "textresource.h"
 
-VA_COMPGEN(0x0056bde0, 0x5A, CLASS_CTOR, TSeerHutTextColumn)
-VA_COMPGEN(0x0056be40, 0x8A, IMPLICIT_DTOR, TSeerHutTextColumn)
-VA_COMPGEN(0x0056bed0, 0x56, CLASS_CTOR, TSeerHutQuestText)
-VA_COMPGEN(0x0056bf30, 0xF4, IMPLICIT_DTOR, TSeerHutQuestText)
+VA_COMPGEN(0x0056bde0, 0x5A, CLASS_CTOR, SeerHutTextColumn)
+VA_COMPGEN(0x0056be40, 0x8A, IMPLICIT_DTOR, SeerHutTextColumn)
+VA_COMPGEN(0x0056bed0, 0x56, CLASS_CTOR, SeerHutQuestText)
+VA_COMPGEN(0x0056bf30, 0xF4, IMPLICIT_DTOR, SeerHutQuestText)
 
 // Retail 0x56c120. Copy one seerhut.txt column into one TSeerHutTextColumn.
 

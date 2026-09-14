@@ -6,9 +6,6 @@
 #include "armygrp.h"  // SpellID, used by spell_level_order
 
 class garrison;
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 
 // E:\gamedcs\events.cpp:1883 (dc 0x9cdc0). The exchange dialog sorts
@@ -43,13 +40,7 @@ DATA(0x00691208) extern unsigned char g_unnamed691208;
 // collides with herospec.h's), and a declarator in either would ride
 // into every AI TU's closure besides. ai_combat.cpp / ai_player.cpp
 // keep the defining claims.
-#ifndef ArmyGroup
-#define ArmyGroup armyGroup
-#endif
 class ArmyGroup;
-#ifndef Town
-#define Town town
-#endif
 class Town;
 class NewmapCell;
 

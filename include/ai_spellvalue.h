@@ -15,9 +15,6 @@
 // CodeView owns the value-list element and its inline comparisons here.
 #include "ai_creature_value.h"
 
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 
 // get_best_spell_value refuses to appraise any spell whose

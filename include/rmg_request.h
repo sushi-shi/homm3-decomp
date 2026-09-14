@@ -3,9 +3,6 @@
 #define HOMM3_RMG_REQUEST_H
 
 #include "va.h"
-#ifndef AbstractFile
-#define AbstractFile TAbstractFile
-#endif
 class AbstractFile;
 
 // The generator's result code (retail 0x54c090's return, dispatched through
@@ -27,9 +24,6 @@ enum ERandomMapResult {
 // role, ORDINAL otherwise - no symbol survives for this type. It is shared
 // through this header for the selection window and the RMG implementation.
 // Before normalization (type): TRandomMapRequest.
-#ifndef RandomMapRequest
-#define RandomMapRequest TRandomMapRequest
-#endif
 class RandomMapRequest {
 public:
     // Set to 1 for every seat the lobby has a live player record for; the

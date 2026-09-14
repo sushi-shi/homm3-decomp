@@ -183,7 +183,7 @@ QuickHeroWindow::QuickHeroWindow(Hero* thisHero, ViewLevel viewLevel)
     }
 }
 
-VA_COMPGEN(0x0052f3a0, 0x21, SCALAR_DELETING_DTOR, TQuickHeroWindow)
+VA_COMPGEN(0x0052f3a0, 0x21, SCALAR_DELETING_DTOR, QuickHeroWindow)
 
 VA(0x0052f3d0, 0x6B)  // dc 0x1177b4
 QuickHeroWindow::~QuickHeroWindow()

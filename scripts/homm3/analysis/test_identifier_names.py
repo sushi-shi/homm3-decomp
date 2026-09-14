@@ -9,7 +9,6 @@ from homm3.analysis.identifier_names import (
     lower_camel,
     apply_carcass_plan,
     rewrite_code_identifiers,
-    restore_compgen_owner_spellings,
     refresh_compatibility_macros,
 )
 
@@ -72,6 +71,8 @@ class IdentifierNamesTest(unittest.TestCase):
             "std::pair<int, town> pair;\n"
             "call(first, town, last);\n"
             "draw(town * 2);\n"
+            "draw(town * (width + 1));\n"
+            "if (selected == town) use(town);\n"
             "const char* label = \"town\";\n"
             "TArtifact artifact;\n"
         )
@@ -87,32 +88,19 @@ class IdentifierNamesTest(unittest.TestCase):
             "std::pair<int, Town> pair;\n"
             "call(first, town, last);\n"
             "draw(town * 2);\n"
+            "draw(town * (width + 1));\n"
+            "if (selected == town) use(town);\n"
             "const char* label = \"town\";\n"
             "Artifact artifact;\n",
         )
 
-    def test_compgen_owner_keeps_recovered_compiler_spelling(self):
-        source = (
-            "VA_COMPGEN(0x401000, 0x21, SCALAR_DELETING_DTOR, Town)\n"
-            "VA_COMPGEN(0x402000, 0x21, VECTOR_DTOR, ResourcePtr)\n"
-        )
-        self.assertEqual(
-            restore_compgen_owner_spellings(
-                source, {"town": "Town", "TResourcePtr": "ResourcePtr"}),
-            "VA_COMPGEN(0x401000, 0x21, SCALAR_DELETING_DTOR, town)\n"
-            "VA_COMPGEN(0x402000, 0x21, VECTOR_DTOR, TResourcePtr)\n",
-        )
-
-    def test_compatibility_macros_are_idempotent(self):
+    def test_compatibility_macros_are_retired_idempotently(self):
         source = (
             "#ifndef ResourcePtr\n#define ResourcePtr ResourcePtr\n#endif\n"
             "#ifndef ResourcePtr\n#define ResourcePtr TResourcePtr\n#endif\n"
             "class ResourcePtr {};\n"
         )
-        expected = (
-            "#ifndef ResourcePtr\n#define ResourcePtr TResourcePtr\n#endif\n"
-            "class ResourcePtr {};\n"
-        )
+        expected = "class ResourcePtr {};\n"
         replacements = {"TResourcePtr": "ResourcePtr"}
         self.assertEqual(refresh_compatibility_macros(source, replacements),
                          expected)

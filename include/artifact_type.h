@@ -11,9 +11,6 @@
 // resolution preserves the artifact domain in every caller. This header
 // contains only the domain, without artifact traits or STL dependencies.
 // Before normalization (type): TArtifact.
-#ifndef Artifact
-#define Artifact TArtifact
-#endif
 enum Artifact {
     ARTIFACT_NONE = -1,
     // Retail witness: hero::TransferArtifacts (0x4e23d0) refuses to move

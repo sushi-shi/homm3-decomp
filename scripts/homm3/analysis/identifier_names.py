@@ -392,26 +392,9 @@ def rewrite_code_identifiers(contents: str, replacements: dict[str, str],
     return "".join(result)
 
 
-def restore_compgen_owner_spellings(contents: str,
-                                    replacements: dict[str, str]) -> str:
-    """Keep VA_COMPGEN owners aligned with compiler-facing legacy tags.
-
-    The fourth argument is an operational symbol key, not an authored C++
-    identifier.  Direct compiler functions retain the legacy tag in VC6's
-    decorated name through the compatibility macro, so the delinked target
-    must use that same spelling.
-    """
-    for old, new in replacements.items():
-        contents = re.sub(
-            rf"(\bVA_COMPGEN\s*\([^,\n]+,[^,\n]+,[^,\n]+,\s*)"
-            rf"{re.escape(new)}(\s*\))",
-            rf"\g<1>{old}\2", contents)
-    return contents
-
-
 def refresh_compatibility_macros(contents: str,
                                  replacements: dict[str, str]) -> str:
-    """Emit one stable clean-to-recovered macro before each declaration."""
+    """Retire obsolete clean-to-recovered preprocessor aliases."""
     for old, new in replacements.items():
         contents = re.sub(
             rf"^[ \t]*#ifndef[ \t]+{re.escape(new)}[ \t]*\n"
@@ -419,19 +402,7 @@ def refresh_compatibility_macros(contents: str,
             rf"(?:{re.escape(old)}|{re.escape(new)})[ \t]*\n"
             rf"[ \t]*#endif[ \t]*\n",
             "", contents, flags=re.MULTILINE)
-    lines = contents.splitlines(keepends=True)
-    for old, new in replacements.items():
-        declaration = re.compile(
-            rf"\b(?:class|struct|union|enum)\s+{re.escape(new)}\b"
-            rf"(?=\s*(?:[{{:;]|$))")
-        indices = [index for index, line in enumerate(lines)
-                   if not line.lstrip().startswith("//")
-                   and declaration.search(line)]
-        if indices:
-            index = indices[0]
-            lines[index:index] = [
-                f"#ifndef {new}\n", f"#define {new} {old}\n", "#endif\n"]
-    return "".join(lines)
+    return contents
 
 
 def is_type_position(contents: str, start: int, end: int, name: str) -> bool:
@@ -444,6 +415,8 @@ def is_type_position(contents: str, start: int, end: int, name: str) -> bool:
     right = contents[end:line_end]
     if re.search(r"\b(?:class|struct|union|enum|new)\s*$", left):
         return True
+    if re.match(r"\s*\*\s*\(", right):
+        return False
     if re.match(r"\s*\*\s*[0-9]", right):
         return False
     if re.match(r"\s*(?:\*|&|::)", right):
@@ -458,6 +431,9 @@ def is_type_position(contents: str, start: int, end: int, name: str) -> bool:
     if not left.strip() and re.match(r"\s*\(", right):
         return True
     if not left.strip() and re.match(r"\s+[A-Za-z_]\w*\s*(?:[;=(\[])", right):
+        return True
+    if (re.search(r"\b(?:extern|static|const|volatile|mutable)\s*$", left)
+            and re.match(r"\s+[A-Za-z_]\w*\s*(?:[;=(\[])", right)):
         return True
     if (re.search(r"\b(?:VA_COMPGEN|SIZE)\s*\(", left)
             and re.match(r"\s*[,)]", right)):
@@ -563,16 +539,13 @@ def apply_type_plan(root: Path, plan: Path, min_confidence: int,
     changed = 0
     for path, contents in rendered.items():
         updated = rewrite_code_identifiers(contents, replacements, contextual)
-        updated = restore_compgen_owner_spellings(updated, replacements)
         # Retire an earlier alias when its recovered tag is now directly named.
         for new in replacements.values():
             updated = re.sub(
                 rf"^[ \t]*typedef[ \t]+{re.escape(new)}[ \t]+{re.escape(new)}[ \t]*;[ \t]*\n",
                 "", updated, flags=re.MULTILINE)
-        # The source uses the normalized identifier, while the preprocessor
-        # retains the recovered tag that participates in VC6 mangling and can
-        # perturb optimization. Put the compatibility macro at each file's
-        # first declaration so standalone forward-declaration headers work.
+        # Compiler/debug identities are normalized by the evidence layer;
+        # authored C++ no longer needs preprocessor aliases for legacy tags.
         updated = refresh_compatibility_macros(updated, replacements)
         if updated != path.read_text():
             path.write_text(updated)

@@ -203,7 +203,7 @@ ViewArmyWindow::ViewArmyWindow(const army* thisArmy, int x0, int y0,
     }
 }
 
-VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
+VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, ViewArmyWindow)
 
 // Current group-constructor score: 88.5394 versus the preceding 91.1781;
 // HIST retains 97.4452. The background's recorded palette-call arms and the

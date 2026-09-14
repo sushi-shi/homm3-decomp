@@ -9,39 +9,18 @@
 #include "terrain_type.h"
 #include "advmgr_objects.h"
 
-#ifndef AbstractFile
-#define AbstractFile TAbstractFile
-#endif
 class AbstractFile;
-#ifndef SpreadsheetResource
-#define SpreadsheetResource TSpreadsheetResource
-#endif
 class SpreadsheetResource;
 class type_random_map_generator;
 // Before normalization (type): TRmgTownSlot.
-#ifndef RmgTownSlot
-#define RmgTownSlot TRmgTownSlot
-#endif
 struct RmgTownSlot;
 // Before normalization (type): TRmgZone.
-#ifndef RmgZone
-#define RmgZone TRmgZone
-#endif
 struct RmgZone;
 struct rmgTerrainTile;
 // Before normalization (type): TPoint.
-#ifndef Point
-#define Point TPoint
-#endif
 struct Point;
-#ifndef ObjectType
-#define ObjectType TObjectType
-#endif
 struct ObjectType;
 // Before normalization (type): TRmgObjectPropertiesRef.
-#ifndef RmgObjectPropertiesRef
-#define RmgObjectPropertiesRef TRmgObjectPropertiesRef
-#endif
 struct RmgObjectPropertiesRef;
 class type_object;
 
@@ -50,9 +29,6 @@ class type_object;
 // and zero at +8. The vtable holds a scalar deleting destructor at 0x530e40,
 // SetTotal at 0x530e80, and _purecall in the Advance slot.
 // Before normalization (type): TProgressSink.
-#ifndef ProgressSink
-#define ProgressSink TProgressSink
-#endif
 class ProgressSink {
 public:
     int m_steps;
@@ -332,9 +308,6 @@ SIZE(type_quest_experience_def, 0x18);
 SIZE(type_quest_gold_def, 0x18);
 
 // Before normalization (type): TRmgMapPosition.
-#ifndef RmgMapPosition
-#define RmgMapPosition TRmgMapPosition
-#endif
 struct RmgMapPosition {
     int m_x;
     int m_y;
@@ -356,9 +329,6 @@ struct RmgMapPosition {
 // the connection pass.  The first pointer identifies the opposite template
 // zone; the three adjacent bytes select guard policy and record completion.
 // Before normalization (type): TRmgZoneConnection.
-#ifndef RmgZoneConnection
-#define RmgZoneConnection TRmgZoneConnection
-#endif
 struct RmgZoneConnection {
     RmgTownSlot* m_destination;             // +0x00
     int m_value;                             // +0x04
@@ -390,9 +360,6 @@ enum ERmgTreasurePlacementLimits {
 };
 
 // Before normalization (type): TRmgTreasureRange.
-#ifndef RmgTreasureRange
-#define RmgTreasureRange TRmgTreasureRange
-#endif
 struct RmgTreasureRange {
     int m_minimum;
     int m_maximum;
@@ -435,9 +402,6 @@ SIZE(RmgTownSlot, 0xd4);
 // The rmg.txt coordinator allocates this 0x38-byte object, assigns its
 // name and size limits, and passes it to the zone reader in edx.
 // Before normalization (type): TRmgTemplate.
-#ifndef RmgTemplate
-#define RmgTemplate TRmgTemplate
-#endif
 struct RmgTemplate {
     std::string m_name;                  // +0x00
     std::vector<RmgTownSlot*> m_zones;   // +0x10
@@ -468,9 +432,6 @@ enum ERmgDirectionLimits {
 // positions: vector+vector is a member call, point+vector and point-point
 // are free calls. All carry two signed dwords; names remain provisional.
 // Before normalization (type): TRmgVector.
-#ifndef RmgVector
-#define RmgVector TRmgVector
-#endif
 struct RmgVector {
     int m_x;
     int m_y;
@@ -543,9 +504,6 @@ int getRmgSquaredDistance(Point first, Point second);
 // at 0x5b76b0 reads both arguments through pointers. This role name is
 // provisional; the signed geometry TPoint is a separate recovered surface.
 // Before normalization (type): TRmgGridPoint.
-#ifndef RmgGridPoint
-#define RmgGridPoint TRmgGridPoint
-#endif
 struct RmgGridPoint {
     unsigned int m_x;
     unsigned int m_y;
@@ -587,9 +545,6 @@ struct RmgGridPoint {
 bool operator<(const RmgGridPoint& left, const RmgGridPoint& right);
 
 // Before normalization (type): TRmgZoneBounds.
-#ifndef RmgZoneBounds
-#define RmgZoneBounds TRmgZoneBounds
-#endif
 struct RmgZoneBounds {
     int m_minimumX;
     int m_minimumY;
@@ -613,9 +568,6 @@ Point clipRmgBoundaryPoint(
 // (minX,minY)/(minX,maxY)/(maxX,minY)/(maxX,maxY); +0x20 controls the random
 // displacement range. These Complete-only role names have no DC counterpart.
 // Before normalization (type): TRmgNoiseRegion.
-#ifndef RmgNoiseRegion
-#define RmgNoiseRegion TRmgNoiseRegion
-#endif
 struct RmgNoiseRegion {
     RmgZoneBounds m_bounds;
     int m_corners[4];
@@ -628,9 +580,6 @@ SIZE(RmgNoiseRegion, 0x24);
 // Random displacements are drawn in minX/minY/maxX/maxY order before the
 // center displacement; the field order preserves the by-value call ABI.
 // Before normalization (type): TRmgNoiseMidpoints.
-#ifndef RmgNoiseMidpoints
-#define RmgNoiseMidpoints TRmgNoiseMidpoints
-#endif
 struct RmgNoiseMidpoints {
     int m_minYValue;
     int m_minXValue;
@@ -665,9 +614,6 @@ enum ERmgGuardConstants {
 // retail registers its cleanup thunk when CreateRiver first reaches the
 // table.  The type is shared here so the table has one canonical shape.
 // Before normalization (type): TRmgRiverDeltaOffset.
-#ifndef RmgRiverDeltaOffset
-#define RmgRiverDeltaOffset TRmgRiverDeltaOffset
-#endif
 struct RmgRiverDeltaOffset {
     int m_x;
     int m_y;
@@ -679,9 +625,6 @@ struct RmgRiverDeltaOffset {
 class type_object;
 
 // Before normalization (type): TRmgMovementCost.
-#ifndef RmgMovementCost
-#define RmgMovementCost TRmgMovementCost
-#endif
 struct RmgMovementCost {
     unsigned m_cost : 16;
     // Zone flood 0x53f1a0 clears this high word at the seed (0x53f242),
@@ -696,9 +639,6 @@ struct RmgMovementCost {
 // both fields in one dword reproduces the retail bitfield loads rather than
 // masking raw storage in the algorithm.
 // Before normalization (type): TRmgZoneCellState.
-#ifndef RmgZoneCellState
-#define RmgZoneCellState TRmgZoneCellState
-#endif
 struct RmgZoneCellState {
     unsigned m_score : 16;
     signed m_zone : 8;
@@ -709,9 +649,6 @@ struct RmgZoneCellState {
 // extraction in the river-delta path.  The four-bit field at bit 26 is
 // tested as a unit when river routing prices an already decorated tile.
 // Before normalization (type): TRmgGroundTile.
-#ifndef RmgGroundTile
-#define RmgGroundTile TRmgGroundTile
-#endif
 struct RmgGroundTile {
     // All three painter adapters exchange integer kinds. The terrain setter
     // 0x532190 writes that generic integer directly, and getter 0x5322c0
@@ -732,9 +669,6 @@ struct RmgGroundTile {
 };
 
 // Before normalization (type): TRmgGroundTileData.
-#ifndef RmgGroundTileData
-#define RmgGroundTileData TRmgGroundTileData
-#endif
 struct RmgGroundTileData {
     // Road adapter 0x532360 writes all eight low bits; 0x53244a/0x532453
     // sign-extends the frame. Replaces roadSprite and synthetic unknown07.
@@ -776,9 +710,6 @@ struct RmgGroundTileData {
 };
 
 // Before normalization (type): TRmgConnectionDecoration.
-#ifndef RmgConnectionDecoration
-#define RmgConnectionDecoration TRmgConnectionDecoration
-#endif
 struct RmgConnectionDecoration {
     unsigned m_present : 1;
     unsigned m_direction : 4;
@@ -789,9 +720,6 @@ struct RmgConnectionDecoration {
 // consumes the ten terrain values and the two vectors indexed by rule id.
 // These are Complete-only role names; no Dreamcast RMG records survive.
 // Before normalization (type): TRmgObjectPlacementRule.
-#ifndef RmgObjectPlacementRule
-#define RmgObjectPlacementRule TRmgObjectPlacementRule
-#endif
 struct RmgObjectPlacementRule {
     int m_index;                         // +0x00
     int m_terrainScores[10];             // +0x04
@@ -1065,9 +993,6 @@ public:
 SIZE(rmgHeroObject, 0x2c);
 
 // Before normalization (type): TRmgMapItem.
-#ifndef RmgMapItem
-#define RmgMapItem TRmgMapItem
-#endif
 struct RmgMapItem {
     std::vector<type_object*> m_objects;    // +0x00
     RmgMapPosition m_previousTile;         // +0x10
@@ -1172,9 +1097,6 @@ struct RmgMapItem {
 // store those different tables, so matching operation slots do not establish
 // one base identity. The painting coordinates are the unsigned grid type.
 // Before normalization (type): TRmgMapInterface.
-#ifndef RmgMapInterface
-#define RmgMapInterface TRmgMapInterface
-#endif
 class RmgMapInterface {
 public:
     virtual ~RmgMapInterface();
@@ -1188,9 +1110,6 @@ public:
 };
 
 // Before normalization (type): TRmgMapAdapterInterface.
-#ifndef RmgMapAdapterInterface
-#define RmgMapAdapterInterface TRmgMapAdapterInterface
-#endif
 class RmgMapAdapterInterface {
 public:
     virtual ~RmgMapAdapterInterface();
@@ -1207,9 +1126,6 @@ public:
 // abstract vtable at 0x640a20. Its concrete subclass writes the packed road
 // fields through the bodies beginning at 0x532360.
 // Before normalization (type): TRmgRoadMapAdapterInterface.
-#ifndef RmgRoadMapAdapterInterface
-#define RmgRoadMapAdapterInterface TRmgRoadMapAdapterInterface
-#endif
 class RmgRoadMapAdapterInterface {
 public:
     virtual ~RmgRoadMapAdapterInterface();
@@ -1305,9 +1221,6 @@ public:
 // contains the map. 0x547360 proves the 0x64-byte stack object and cleanup;
 // 0x5470d0 reads its bounds at +0x18. Names are provisional retail roles.
 // Before normalization (type): TRmgTreasureGroup.
-#ifndef RmgTreasureGroup
-#define RmgTreasureGroup TRmgTreasureGroup
-#endif
 struct RmgTreasureGroup {
     type_random_map m_map;                  // +0x00
     RmgZoneBounds m_bounds;                // +0x18
@@ -1344,9 +1257,6 @@ SIZE(RmgTreasureGroup, 0x64);
 // with the address of a type_random_map view at +4. Its methods independently
 // index that map's 0x30-byte cells and read/write the road packed fields.
 // Before normalization (type): TRmgRoadMapAdapter.
-#ifndef RmgRoadMapAdapter
-#define RmgRoadMapAdapter TRmgRoadMapAdapter
-#endif
 class RmgRoadMapAdapter : public RmgRoadMapAdapterInterface {
 public:
     type_random_map* m_map;
@@ -1365,9 +1275,6 @@ public:
 // class definitions shared but the retained bodies in rmg_support.cpp
 // reproduces that ordinary translation-unit visibility boundary.
 // Before normalization (type): TRmgMapAdapter.
-#ifndef RmgMapAdapter
-#define RmgMapAdapter TRmgMapAdapter
-#endif
 class RmgMapAdapter : public RmgMapAdapterInterface {
 public:
     type_random_map* m_map;
@@ -1388,9 +1295,6 @@ public:
 // pattern ids, then records the first index and occurrence count for each of
 // the nine pattern values.
 // Before normalization (type): TRmgLinePatternRange.
-#ifndef RmgLinePatternRange
-#define RmgLinePatternRange TRmgLinePatternRange
-#endif
 struct RmgLinePatternRange {
     // Role-derived names: the constructor writes index/count at an 8-byte
     // stride, not two separate nine-element arrays.
@@ -1400,9 +1304,6 @@ struct RmgLinePatternRange {
 SIZE(RmgLinePatternRange, 0x8);
 
 // Before normalization (type): TRmgLinePatternTable.
-#ifndef RmgLinePatternTable
-#define RmgLinePatternTable TRmgLinePatternTable
-#endif
 struct RmgLinePatternTable {
     unsigned int m_patternCount;
     int* m_patterns;
@@ -1423,9 +1324,6 @@ void selectRmgLinePattern(
     int& pattern, unsigned char& flipX, unsigned char& flipY);
 
 // Before normalization (type): TRmgLinePainterTile.
-#ifndef RmgLinePainterTile
-#define RmgLinePainterTile TRmgLinePainterTile
-#endif
 struct RmgLinePainterTile;
 
 // Both painter constructors pass their first base to the same retained walker
@@ -1435,9 +1333,6 @@ struct RmgLinePainterTile;
 // Complete-only interface spelling is unknown. It has no virtual destructor
 // slot: only the final river/road painters append slot 6.
 // Before normalization (type): TRmgLinePainterInterface.
-#ifndef RmgLinePainterInterface
-#define RmgLinePainterInterface TRmgLinePainterInterface
-#endif
 class RmgLinePainterInterface {
 public:
     RmgGridPoint m_size;
@@ -1475,9 +1370,6 @@ SIZE(RmgLinePainterTile, 0x0c);
 // min/max bounds used for zones. The point walker builds a one-cell rectangle.
 // This Complete-only role name does not assert an original class spelling.
 // Before normalization (type): TRmgGridRectangle.
-#ifndef RmgGridRectangle
-#define RmgGridRectangle TRmgGridRectangle
-#endif
 struct RmgGridRectangle {
     RmgGridPoint m_origin;
     RmgGridPoint m_size;
@@ -1491,9 +1383,6 @@ void refreshRmgLinePoint(RmgLinePainterInterface* painter, const RmgGridPoint& p
 void clearRmgLineRectangle(RmgLinePainterInterface* painter, const RmgGridRectangle& rectangle);
 
 // Before normalization (type): TRmgLinePainter.
-#ifndef RmgLinePainter
-#define RmgLinePainter TRmgLinePainter
-#endif
 class RmgLinePainter : public RmgLinePainterInterface {
 public:
     RmgMapAdapterInterface* m_adapter;
@@ -1522,9 +1411,6 @@ public:
 // at 0x4fa2c8/0x4fa2f4 and 0x4fa30c establish the coordinate/distance types.
 // This Complete-only role name is provisional, not a recovered source name.
 // Before normalization (type): TRmgLineWalkAxis.
-#ifndef RmgLineWalkAxis
-#define RmgLineWalkAxis TRmgLineWalkAxis
-#endif
 struct RmgLineWalkAxis {
     unsigned int m_position;
     unsigned int m_distance;
@@ -1545,9 +1431,6 @@ struct RmgLineWalkAxis {
 SIZE(RmgLineWalkAxis, 0x0c);
 
 // Before normalization (type): TRmgLineWalker.
-#ifndef RmgLineWalker
-#define RmgLineWalker TRmgLineWalker
-#endif
 class RmgLineWalker {
 public:
     RmgLinePainterInterface* m_painter;
@@ -1564,9 +1447,6 @@ public:
 };
 
 // Before normalization (type): TRmgRiverPainter.
-#ifndef RmgRiverPainter
-#define RmgRiverPainter TRmgRiverPainter
-#endif
 class RmgRiverPainter : public RmgLinePainter, public RmgLineWalker {
 public:
     RmgRiverPainter(
@@ -1581,9 +1461,6 @@ public:
 // hierarchy's 0x641174/0x641190 tables, while retaining the same line-painting
 // interface shape. Original Complete-only class spellings are unavailable.
 // Before normalization (type): TRmgRoadLinePainter.
-#ifndef RmgRoadLinePainter
-#define RmgRoadLinePainter TRmgRoadLinePainter
-#endif
 class RmgRoadLinePainter : public RmgLinePainterInterface {
 public:
     RmgRoadMapAdapterInterface* m_adapter;
@@ -1604,9 +1481,6 @@ public:
 };
 
 // Before normalization (type): TRmgRoadPainter.
-#ifndef RmgRoadPainter
-#define RmgRoadPainter TRmgRoadPainter
-#endif
 class RmgRoadPainter : public RmgRoadLinePainter, public RmgLineWalker {
 public:
     RmgRoadPainter(
@@ -1687,9 +1561,6 @@ struct RmgZone {
 // at 0x53e050. The twin's owning zone identifies the region across an edge;
 // following next traverses a closed polygon. Names are provisional.
 // Before normalization (type): TRmgBoundaryVertex.
-#ifndef RmgBoundaryVertex
-#define RmgBoundaryVertex TRmgBoundaryVertex
-#endif
 struct RmgBoundaryVertex {
     // The paired-edge constructor 0x5fcef0
     // copies a by-value point into +0/+4 and its zone into +8.
@@ -1782,9 +1653,6 @@ SIZE(RmgBoundaryVertex, 0x24);
 // a vector of allocated edges. The coordinator inserts zone sites, computes
 // dual vertices, then looks up an edge for each site. All names are provisional.
 // Before normalization (type): TRmgVoronoi.
-#ifndef RmgVoronoi
-#define RmgVoronoi TRmgVoronoi
-#endif
 class RmgVoronoi {
 public:
     RmgBoundaryVertex* m_root;                 // +0x00
@@ -1831,9 +1699,6 @@ enum ERmgBranchSeedPattern {
 // Retail 0x537b10 reads two-int records from 0x640718 and 0x640808.
 // Role-derived names; no Dreamcast RMG counterpart survives.
 // Before normalization (type): TRmgObjectLimit.
-#ifndef RmgObjectLimit
-#define RmgObjectLimit TRmgObjectLimit
-#endif
 struct RmgObjectLimit {
     int m_objectType;
     int m_limit;
@@ -1844,9 +1709,6 @@ struct RmgObjectLimit {
 // constructor/destructor replace it with 0x640c44. The old flat model hid
 // this retained base boundary. TRmgGeneratorBase is a provisional name.
 // Before normalization (type): TRmgGeneratorBase.
-#ifndef RmgGeneratorBase
-#define RmgGeneratorBase TRmgGeneratorBase
-#endif
 class RmgGeneratorBase {
 public:
     // time(&m_randomSeed) at 0x536140 proves VC6 time_t (long).

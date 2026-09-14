@@ -21,18 +21,12 @@
 // base vptr before gzopen and its own vptr afterward. A body assignment
 // reversed that observed boundary in the prior 92.76% control.
 // Before normalization (type): TGzFile.
-#ifndef GzFile
-#define GzFile TGzFile
-#endif
 class GzFile : public AbstractFile {
 public:
     // Retail RTTI at 0x677d48 and its two-entry catchable-type array prove
     // this empty std::exception-derived tag. game::SaveGame catches it by
     // value when opening the output stream fails.
 // Before normalization (type): TGzFile::TOpenFailure.
-#ifndef OpenFailure
-#define OpenFailure TOpenFailure
-#endif
     class OpenFailure : public std::exception {
     };
     GzFile(const char* path, const char* mode);

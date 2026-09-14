@@ -9,20 +9,11 @@
 #include "window.h"
 #include "palette.h"
 
-#ifndef ArmyGroup
-#define ArmyGroup armyGroup
-#endif
 class ArmyGroup;
 class button;
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 class iconWidget;
 class recruitUnit;
-#ifndef Town
-#define Town town
-#endif
 class Town;
 
 void getMonsterCost(int monId, int* resCost);
@@ -70,9 +61,6 @@ enum ERecruitCreatureSlot {
 // +0x50/+0x54 are button pointers: their derived-to-widget conversions
 // materialize the exact temporary consumed by vector<widget*>::push_back.
 // Before normalization (type): TRecruitWindow.
-#ifndef RecruitWindow
-#define RecruitWindow TRecruitWindow
-#endif
 class RecruitWindow : public heroWindow {
 public:
     recruitUnit* m_recruitInfo;
@@ -114,9 +102,6 @@ extern struct HMENU__* g_recruitSavedMenu;
 extern Palette16* g_unnamed6aacb0;
 
 // Before normalization (type): TRecruitQuickWindow.
-#ifndef RecruitQuickWindow
-#define RecruitQuickWindow TRecruitQuickWindow
-#endif
 class RecruitQuickWindow : public heroWindow {
 public:
     RecruitQuickWindow(int x2, int y2);

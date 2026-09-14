@@ -15,7 +15,7 @@ SubWindow::SubWindow()
 {
 }
 
-VA_COMPGEN(0x005aa390, 0x21, SCALAR_DELETING_DTOR, TSubWindow)
+VA_COMPGEN(0x005aa390, 0x21, SCALAR_DELETING_DTOR, SubWindow)
 
 VA(0x005aa3c0, 0x4F)  // dc 0x158dac
 SubWindow::SubWindow(int inX, int inY, int w, int h, heroWindow* parentWindow)

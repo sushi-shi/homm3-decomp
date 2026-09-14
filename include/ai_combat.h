@@ -7,13 +7,7 @@
 #include "armygrp.h"
 #include "ai_tactical.h"
 
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
-#ifndef Town
-#define Town town
-#endif
 class Town;
 class NewmapCell;
 

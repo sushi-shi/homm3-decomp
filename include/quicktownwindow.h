@@ -4,14 +4,8 @@
 
 #include "window.h"
 
-#ifndef Town
-#define Town town
-#endif
 class Town;
 class garrison;
-#ifndef ArmyGroup
-#define ArmyGroup armyGroup
-#endif
 class ArmyGroup;
 
 // Retail .bss 0x6a7a70. This is the quick-view label consumed by the
@@ -21,15 +15,9 @@ DATA(0x006a7a70) extern const char* g_quickViewGarrisonText;
 // Both retail constructors initialize heroWindow directly, install vtable
 // 0x6406f4, and touch no storage beyond heroWindow's proven 0x4c-byte extent.
 // Before normalization (type): TQuickTownWindow.
-#ifndef QuickTownWindow
-#define QuickTownWindow TQuickTownWindow
-#endif
 class QuickTownWindow : public heroWindow {
 public:
 // Before normalization (type): TQuickTownWindow::TViewLevel.
-#ifndef ViewLevel
-#define ViewLevel TViewLevel
-#endif
     enum ViewLevel {
         ViewNone = 0,
         ViewArmyTypes = 1,

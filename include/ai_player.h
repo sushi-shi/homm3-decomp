@@ -8,18 +8,9 @@
 #include "armygrp.h"
 #include "ai_creature_value.h"
 
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 class playerData;
-#ifndef SearchArray
-#define SearchArray searchArray
-#endif
 class SearchArray;
-#ifndef Town
-#define Town town
-#endif
 class Town;
 class generator;
 struct type_artifact;

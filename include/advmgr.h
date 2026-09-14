@@ -25,17 +25,8 @@ class TreasureData;
 struct ExtraInfoUnion;
 struct type_creature_bank;
 struct type_university;
-#ifndef ArmyGroup
-#define ArmyGroup armyGroup
-#endif
 class ArmyGroup;
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
-#ifndef ResourceDisplay
-#define ResourceDisplay TResourceDisplay
-#endif
 class ResourceDisplay;
 
 // adventuremapwindow.obj's shared rollover/right-click text table. Dreamcast
@@ -570,9 +561,6 @@ DATA(0x00696a04) extern unsigned char g_completeDrawMessageBypass;
 // fields at +0/+4/+8/+c with a 0x10 stride; the names and bool type are the
 // surviving CodeView signature/layout evidence.
 // Before normalization (type): TDrawParts.
-#ifndef DrawParts
-#define DrawParts TDrawParts
-#endif
 struct DrawParts {
 public:
     bool m_isValid;
@@ -609,9 +597,6 @@ SIZE(DrawParts, 0x10);
 // resolves to `?SleepAllWidgets@heroWindow@@QAEXE@Z` - the base body,
 // not an override.
 // Before normalization (type): TAdventureMapWindow.
-#ifndef AdventureMapWindow
-#define AdventureMapWindow TAdventureMapWindow
-#endif
 class AdventureMapWindow : public heroWindow {
 public:
     // Dreamcast TAdventureMapWindow::EWidgetIDs, complete. Retail uses the

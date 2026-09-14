@@ -10,9 +10,6 @@
 #include "struct.h"
 
 class army;
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 class NewmapCell;
 
@@ -91,9 +88,6 @@ extern int g_mapHeight;
 // implicit vector teardowns. valid_rectangle (0x28..0x37) stays
 // uninitialized by the ctor - Init fills it.
 // Before normalization (type): searchArray.
-#ifndef SearchArray
-#define SearchArray searchArray
-#endif
 class SearchArray {
 private:
     int m_maxQueueCount;

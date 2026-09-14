@@ -390,7 +390,7 @@ CombatResultsWindow::CombatResultsWindow(const Hero* attacker,
     videoOpen(videoId, 272, 89, 0, 0, 1, 1, 1);
 }
 
-VA_COMPGEN(0x00471a40, 0x21, SCALAR_DELETING_DTOR, TCombatResultsWindow)
+VA_COMPGEN(0x00471a40, 0x21, SCALAR_DELETING_DTOR, CombatResultsWindow)
 
 VA(0x00471a70, 0x75)  // dc 0x69198
 CombatResultsWindow::~CombatResultsWindow()

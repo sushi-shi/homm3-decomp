@@ -8,9 +8,6 @@
 #include "textwdgt.h"
 
 #include <vector>
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 struct type_university;
 class type_university_window;

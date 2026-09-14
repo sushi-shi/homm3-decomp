@@ -20,9 +20,6 @@
 // cross this TU. Type NAMES are provisional (no DC/NH3API evidence).
 class palette;
 class paletteHiColor;
-#ifndef Palette24
-#define Palette24 TPalette24
-#endif
 class Palette24;
 class sample;
 

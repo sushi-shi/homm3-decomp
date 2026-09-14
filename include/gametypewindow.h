@@ -10,9 +10,6 @@ class message;
 // Retail's fixed-address movsx loads prove four consecutive shorts and an
 // eight-byte stride.
 // Before normalization (type): TGameTypeButtonRect.
-#ifndef GameTypeButtonRect
-#define GameTypeButtonRect TGameTypeButtonRect
-#endif
 struct GameTypeButtonRect {
     short m_x;
     short m_y;
@@ -27,9 +24,6 @@ SIZE(GameTypeButtonRect, 0x8);
 // object size to 0x50.  The retail constructor stores through +0x4c and the
 // handler reads it, independently confirming the translated offset.
 // Before normalization (type): TGameTypeWindow.
-#ifndef GameTypeWindow
-#define GameTypeWindow TGameTypeWindow
-#endif
 class GameTypeWindow : public heroWindow {
 public:
     enum EWidgetIDs {

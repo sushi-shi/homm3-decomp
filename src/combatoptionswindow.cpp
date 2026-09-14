@@ -201,7 +201,7 @@ CombatOptionsWindow::CombatOptionsWindow()
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
 }
 
-VA_COMPGEN(0x0046f6d0, 0x21, SCALAR_DELETING_DTOR, TCombatOptionsWindow)
+VA_COMPGEN(0x0046f6d0, 0x21, SCALAR_DELETING_DTOR, CombatOptionsWindow)
 
 VA(0x0046f700, 0x75)  // dc 0x679ac
 CombatOptionsWindow::~CombatOptionsWindow()

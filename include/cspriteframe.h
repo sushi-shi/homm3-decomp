@@ -5,9 +5,6 @@
 #include "resource.h"
 
 // Before normalization (type): TPalette16.
-#ifndef Palette16
-#define Palette16 TPalette16
-#endif
 class Palette16;
 
 // Retail layout is byte-proven by both constructors at 0x47c2b0/0x47c360
@@ -24,9 +21,6 @@ class Palette16;
 // through both CSpriteFrame constructor overloads, proving the same 32-bit
 // domain on x86.
 // Before normalization (type): TEncodingMethod.
-#ifndef EncodingMethod
-#define EncodingMethod TEncodingMethod
-#endif
 enum EncodingMethod {
     eEncodeRaw = 0,
     eEncodeGeneralRLE = 1,
@@ -39,9 +33,6 @@ enum EncodingMethod {
 // and retain only its low half. The union makes both retail widths explicit
 // without introducing cast debt into the source tree.
 // Before normalization (type): TBlendMask.
-#ifndef BlendMask
-#define BlendMask TBlendMask
-#endif
 union BlendMask {
     unsigned short m_word;
     unsigned int m_dword;
@@ -51,9 +42,6 @@ union BlendMask {
 // Their effects vary with the renderer and whether an outline color is live,
 // so the names preserve the encoded domain rather than inventing one effect.
 // Before normalization (type): TRleControlCode.
-#ifndef RleControlCode
-#define RleControlCode TRleControlCode
-#endif
 enum RleControlCode {
     eRleControlShadow75 = 1,
     // Codes 2 and 3 are proven by DrawTileShadow's jump table alone: its
@@ -73,9 +61,6 @@ enum RleControlCode {
 // Duff-loop entry selected by a raw row's width modulo eight. A zero
 // remainder enters the full eight-pixel arm.
 // Before normalization (type): TRawRowUnrollEntry.
-#ifndef RawRowUnrollEntry
-#define RawRowUnrollEntry TRawRowUnrollEntry
-#endif
 enum RawRowUnrollEntry {
     eRawRowUnroll8 = 0,
     eRawRowUnroll1 = 1,

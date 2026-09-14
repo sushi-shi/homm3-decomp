@@ -43,9 +43,6 @@ SIZE(type_bottom_view_window, 0x34);
 // unchanged 0x34-byte base extent. Dreamcast supplies the real class and
 // constructor identities; their UI state is owned by the inherited window.
 // Before normalization (type): TBottomViewHero.
-#ifndef BottomViewHero
-#define BottomViewHero TBottomViewHero
-#endif
 class BottomViewHero : public type_bottom_view_window {
 public:
     BottomViewHero(heroWindow* parent);
@@ -54,9 +51,6 @@ public:
 SIZE(BottomViewHero, 0x34);
 
 // Before normalization (type): TBottomViewTown.
-#ifndef BottomViewTown
-#define BottomViewTown TBottomViewTown
-#endif
 class BottomViewTown : public type_bottom_view_window {
 public:
     BottomViewTown(heroWindow* parent);
@@ -65,9 +59,6 @@ public:
 SIZE(BottomViewTown, 0x34);
 
 // Before normalization (type): TBottomViewKingdom.
-#ifndef BottomViewKingdom
-#define BottomViewKingdom TBottomViewKingdom
-#endif
 class BottomViewKingdom : public type_bottom_view_window {
 public:
     BottomViewKingdom(heroWindow* parent);
@@ -83,9 +74,6 @@ SIZE(BottomViewKingdom, 0x34);
 // The 0x40-byte derived tail is byte-proven twice over - the constructor
 // writes every field and animate reads every one of them back.
 // Before normalization (type): TBottomViewEnemyTurn.
-#ifndef BottomViewEnemyTurn
-#define BottomViewEnemyTurn TBottomViewEnemyTurn
-#endif
 class BottomViewEnemyTurn : public type_bottom_view_window {
 public:
     // +0x34, 'crest58.def' at (20,51). Its FRAME is the acting player's
@@ -125,9 +113,6 @@ SIZE(BottomViewEnemyTurn, 0x74);
 // function symbols - so every SPELLING below is the house ordinal
 // convention applied to a proven role, not an attested name.
 // Before normalization (type): TBottomViewNewTurn.
-#ifndef BottomViewNewTurn
-#define BottomViewNewTurn TBottomViewNewTurn
-#endif
 class BottomViewNewTurn : public type_bottom_view_window {
 public:
     // +0x34. A textWidget, redrawn through slot 4 immediately after the
@@ -154,9 +139,6 @@ SIZE(BottomViewNewTurn, 0x48);
 // Resource-message state is supplied by advManager; retail allocates no
 // derived storage beyond the 0x34-byte bottom-view base.
 // Before normalization (type): TBottomViewResourceMessage.
-#ifndef BottomViewResourceMessage
-#define BottomViewResourceMessage TBottomViewResourceMessage
-#endif
 class BottomViewResourceMessage : public type_bottom_view_window {
 public:
     BottomViewResourceMessage(heroWindow* parent, int res,
@@ -166,9 +148,6 @@ public:
 SIZE(BottomViewResourceMessage, 0x34);
 
 // Before normalization (type): TBottomViewMessage.
-#ifndef BottomViewMessage
-#define BottomViewMessage TBottomViewMessage
-#endif
 class BottomViewMessage : public type_bottom_view_window {
 public:
     BottomViewMessage(heroWindow* parent, const std::string* message);

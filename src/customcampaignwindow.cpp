@@ -115,7 +115,7 @@ CustomCampaignWindow::CustomCampaignWindow()
     m_lastClickTime = GameTime::get();
 }
 
-VA_COMPGEN(0x00482ee0, 0x21, SCALAR_DELETING_DTOR, TCustomCampaignWindow)
+VA_COMPGEN(0x00482ee0, 0x21, SCALAR_DELETING_DTOR, CustomCampaignWindow)
 
 VA(0x00482f10, 0xB1)
 CustomCampaignWindow::~CustomCampaignWindow()

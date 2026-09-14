@@ -421,9 +421,6 @@ SIZE(CSingleSelectionNetMsgHandler, 0x10);
 // flagBack at +0x1870. The constructor further proves the DC-named embedded
 // netMsgHandler at +0x1888; the tail after it remains under reconstruction.
 // Before normalization (type): TSingleSelectionWindow.
-#ifndef SingleSelectionWindow
-#define SingleSelectionWindow TSingleSelectionWindow
-#endif
 class SingleSelectionWindow : public CAdvPopup {
 public:
     // DC CNewPlayerUpdateProc::Go at singleselectionwindow.cpp:1277

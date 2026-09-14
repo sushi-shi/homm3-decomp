@@ -901,7 +901,7 @@ TownScreenWindow::TownScreenWindow()
     }
 }
 
-VA_COMPGEN(0x005c58b0, 0x21, SCALAR_DELETING_DTOR, TTownScreenWindow)
+VA_COMPGEN(0x005c58b0, 0x21, SCALAR_DELETING_DTOR, TownScreenWindow)
 
 VA(0x005c58e0, 0x82)  // dc 0x16adf0
 TownScreenWindow::~TownScreenWindow()
@@ -2357,7 +2357,7 @@ ThievesGuildWindow::ThievesGuildWindow(int numGuilds)
     setupThievesGuild(numGuilds);
 }
 
-VA_COMPGEN(0x005c9660, 0x21, SCALAR_DELETING_DTOR, TThievesGuildWindow)
+VA_COMPGEN(0x005c9660, 0x21, SCALAR_DELETING_DTOR, ThievesGuildWindow)
 
 VA(0x005c9690, 0x7B)  // dc 0x16de90
 ThievesGuildWindow::~ThievesGuildWindow()
@@ -2380,7 +2380,7 @@ DATA(0x006a9e00) extern int g_heroWidgetMap[];
 // One armyGroup per player column: SetRolloverText reads a single slot out of a
 // row, WindowHandler hands a whole row to game::ViewArmy.
 DATA(0x006a98ec) extern int g_creatureWidgetMap1[];
-DATA(0x006aa660) extern armyGroup g_creatureArmies[];
+DATA(0x006aa660) extern ArmyGroup g_creatureArmies[];
 
 // Located, not reconstructed: the thieves' guild rollover-text setter and
 // its message handler. show_side (dc 0x16df0c) has no distinct retail carve
@@ -2757,7 +2757,7 @@ HallWindow::HallWindow(int which)
     }
 }
 
-VA_COMPGEN(0x005cc8e0, 0x21, SCALAR_DELETING_DTOR, THallWindow)
+VA_COMPGEN(0x005cc8e0, 0x21, SCALAR_DELETING_DTOR, HallWindow)
 
 VA(0x005cc910, 0x6B)  // dc 0x1700c0
 HallWindow::~HallWindow()
@@ -2886,7 +2886,7 @@ MageGuildWindow::MageGuildWindow()
     }
 }
 
-VA_COMPGEN(0x005ce120, 0x21, SCALAR_DELETING_DTOR, TMageGuildWindow)
+VA_COMPGEN(0x005ce120, 0x21, SCALAR_DELETING_DTOR, MageGuildWindow)
 
 VA(0x005ce150, 0x6B)  // dc 0x170fb8
 MageGuildWindow::~MageGuildWindow()
@@ -3568,11 +3568,11 @@ GarrisonWindow::GarrisonWindow(Hero* inHero, int garrisonOwner,
     addWidget(newWidget, -1);
 }
 
-VA_COMPGEN(0x005d1090, 0x21, SCALAR_DELETING_DTOR, TGarrisonWindow)
+VA_COMPGEN(0x005d1090, 0x21, SCALAR_DELETING_DTOR, GarrisonWindow)
 
 // CodeView dc 0x181684: CV_fldattr_t.compgenx marks this destructor
 // as implicit. Its retained retail body performs only base/member teardown.
-VA_COMPGEN(0x005d10c0, 0x6B, IMPLICIT_DTOR, TGarrisonWindow)
+VA_COMPGEN(0x005d10c0, 0x6B, IMPLICIT_DTOR, GarrisonWindow)
 
 // Three modal entry points that build one of the two garrison windows on
 // the stack, run it, and let the local's destructor - the empty derived
@@ -3690,7 +3690,7 @@ BlacksmithWindow::BlacksmithWindow(int heroID, int inTownType)
     g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] = GameTime::get() + 100;
 }
 
-VA_COMPGEN(0x005d1a00, 0x21, SCALAR_DELETING_DTOR, TBlacksmithWindow)
+VA_COMPGEN(0x005d1a00, 0x21, SCALAR_DELETING_DTOR, BlacksmithWindow)
 
 VA(0x005d1a30, 0x6B)  // dc 0x173a1c
 BlacksmithWindow::~BlacksmithWindow()
@@ -3910,7 +3910,7 @@ ShipWindow::ShipWindow(int type)
     }
 }
 
-VA_COMPGEN(0x005d2500, 0x21, SCALAR_DELETING_DTOR, TShipWindow)
+VA_COMPGEN(0x005d2500, 0x21, SCALAR_DELETING_DTOR, ShipWindow)
 
 VA(0x005d2530, 0x6B)  // dc 0x1745e8
 ShipWindow::~ShipWindow()
@@ -5344,7 +5344,7 @@ BuyBuildWindow::BuyBuildWindow(int x2, int y2, int id)
     setPrerequisiteText(g_townManager->m_townToView, m_buildingId);
 }
 
-VA_COMPGEN(0x005d5b40, 0x21, SCALAR_DELETING_DTOR, TBuyBuildWindow)
+VA_COMPGEN(0x005d5b40, 0x21, SCALAR_DELETING_DTOR, BuyBuildWindow)
 
 VA(0x005d5b70, 0x6B)  // dc 0x179024
 BuyBuildWindow::~BuyBuildWindow()
@@ -5986,7 +5986,7 @@ TavernWindow::TavernWindow(int x2, int y2)
     }
 }
 
-VA_COMPGEN(0x005d7880, 0x21, SCALAR_DELETING_DTOR, TTavernWindow)
+VA_COMPGEN(0x005d7880, 0x21, SCALAR_DELETING_DTOR, TavernWindow)
 
 VA(0x005d78b0, 0x6B)  // dc 0x17a734
 TavernWindow::~TavernWindow()
@@ -7791,7 +7791,7 @@ CastleWindow::CastleWindow()
     }
 }
 
-VA_COMPGEN(0x005dcb50, 0x21, SCALAR_DELETING_DTOR, TCastleWindow)
+VA_COMPGEN(0x005dcb50, 0x21, SCALAR_DELETING_DTOR, CastleWindow)
 
 VA(0x005dcb80, 0x6B)  // dc 0x17f0f4
 CastleWindow::~CastleWindow()

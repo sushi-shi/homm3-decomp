@@ -8,9 +8,6 @@
 // Dreamcast CodeView type 0x184c; retail's TPalette24 constructor consumes
 // this exact four-byte stride and copies the first three channels.
 // Before normalization (type): TRGBA.
-#ifndef RGBA
-#define RGBA TRGBA
-#endif
 struct RGBA {
     unsigned char m_red;
     unsigned char m_green;
@@ -46,9 +43,6 @@ public:
 // to/from +0x1c; vtable slot 2 at 0x522f70 returns the resulting 0x31c
 // total extent. This is the resource-owning 24-bit palette class, distinct
 // from the same-sized paletteHiColor raw record embedded in Bitmap816.
-#ifndef Palette24
-#define Palette24 TPalette24
-#endif
 class Palette24 : public resource {
 public:
     Palette24();
@@ -70,9 +64,6 @@ public:
 };
 SIZE(Palette24, 0x31c);
 
-#ifndef Palette16
-#define Palette16 TPalette16
-#endif
 class Palette16 : public resource {
     // Dreamcast CodeView names these three class statics directly. Retail's
     // SetPixelFormat stores its red/green/blue arguments at the corresponding

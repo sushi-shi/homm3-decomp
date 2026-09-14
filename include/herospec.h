@@ -21,9 +21,6 @@
 // (0x63e9e8 onward) is exactly FOUR floats wide, indexed by the
 // skillLevel byte.
 // Before normalization (type): TSkillMastery.
-#ifndef SkillMastery
-#define SkillMastery TSkillMastery
-#endif
 enum SkillMastery {
     eMasteryInvalid = -1,
     eMasteryNone = 0,
@@ -48,9 +45,6 @@ enum SkillMastery {
 // consumer can compare `type` against whichever domain the kind
 // selects for `skill`.
 // Before normalization (type): THeroAbilityKind.
-#ifndef HeroAbilityKind
-#define HeroAbilityKind THeroAbilityKind
-#endif
 enum HeroAbilityKind {
     // Byte-proven by all eight specialty getters in hero.obj: each one
     // requires kind 0 and then matches the record's second dword
@@ -100,9 +94,6 @@ enum HeroAbilityKind {
 };
 
 // Before normalization (type): THeroSpecificAbility.
-#ifndef HeroSpecificAbility
-#define HeroSpecificAbility THeroSpecificAbility
-#endif
 struct HeroSpecificAbility {
     int m_type;                   // +0x00 - a THeroAbilityKind
     // +0x04 under TWO domains. hero::GetMobility reads it as a CREATURE

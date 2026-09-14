@@ -753,7 +753,7 @@ int CMultiPlayerWindowEdit::onKeyPress(message* msg)
 VA_COMPGEN(0x0050ede0, 0x21, SCALAR_DELETING_DTOR, CHeroSessions)
 VA_COMPGEN(0x00558350, 0x54, IMPLICIT_DTOR, CHeroSessions)
 
-VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, TMultiPlayerWindow)
+VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, MultiPlayerWindow)
 
 VA(0x0050ee40, 0xAB)  // dc 0x100430
 MultiPlayerWindow::~MultiPlayerWindow()

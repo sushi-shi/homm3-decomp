@@ -15,9 +15,6 @@ class textWidget;
 // text at +0x74. TSubWindow is exactly 0x34 bytes; isSmall occupies
 // the derived head byte at +0x34.
 // Before normalization (type): TResourceDisplay.
-#ifndef ResourceDisplay
-#define ResourceDisplay TResourceDisplay
-#endif
 class ResourceDisplay : public SubWindow {
 public:
     // The widget-id bands the constructor stamps in its resource loop

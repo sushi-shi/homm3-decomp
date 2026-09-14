@@ -6,9 +6,6 @@ class CSprite;
 class font;
 class resource;
 class sample;
-#ifndef Palette24
-#define Palette24 TPalette24
-#endif
 class Palette24;
 class LODFile;
 
@@ -18,19 +15,10 @@ class LODFile;
 // under /Gr; called by the button ctors).
 class Bitmap816;
 class Bitmap16Bit;
-#ifndef Palette16
-#define Palette16 TPalette16
-#endif
 class Palette16;
 // Before normalization (type): TSpreadsheetResource.
-#ifndef SpreadsheetResource
-#define SpreadsheetResource TSpreadsheetResource
-#endif
 class SpreadsheetResource;
 // Before normalization (type): TTextResource.
-#ifndef TextResource
-#define TextResource TTextResource
-#endif
 class TextResource;
 
 extern int* g_videoGameState;

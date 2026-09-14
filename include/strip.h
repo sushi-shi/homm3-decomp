@@ -5,9 +5,6 @@
 #include <va.h>
 #include "armygrp.h"
 
-#ifndef Hero
-#define Hero hero
-#endif
 class Hero;
 class heroWindow;
 

@@ -19,9 +19,6 @@
 // clover field), none of which touches a spell school; they stay
 // unnamed rather than invented.
 // Before normalization (type): TMagicTerrain.
-#ifndef MagicTerrain
-#define MagicTerrain TMagicTerrain
-#endif
 enum MagicTerrain {
     kMagicTerrainNone = -1,
     kMagicTerrainMagicPlains = 1,

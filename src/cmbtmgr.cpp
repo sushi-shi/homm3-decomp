@@ -91,8 +91,8 @@ VA_COMPGEN(0x004628b0, 0x6E, IMPLICIT_DTOR, set)
 // 0x462920 clears +4/+8; 0x462930 releases +8 then +4, including cleanup
 // of the second member if the first release throws. CodeView's older
 // TArcher uses raw Sprite/Missile pointers and has no written constructor.
-VA_COMPGEN(0x00462920, 0x0B, CLASS_CTOR, TArcher)
-VA_COMPGEN(0x00462930, 0x54, IMPLICIT_DTOR, TArcher)
+VA_COMPGEN(0x00462920, 0x0B, CLASS_CTOR, Archer)
+VA_COMPGEN(0x00462930, 0x54, IMPLICIT_DTOR, Archer)
 
 VA(0x00462990, 0x8F)  // dc 0x5d538
 unsigned char combatManager::loadWallTraitsTable()
@@ -1735,7 +1735,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
     }
 }
 
-VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
+VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, PickANumber)  // dc 0x63a18
 
 // E:\gamedcs\cmbtmgr.cpp:2859
 // Everything the battlefield carries before the armies land: the wall
@@ -4300,9 +4300,9 @@ void std::__destroy_aux()
 
 #endif  // @carcass
 
-VA_COMPGEN(0x0046aeb0, 0x2E4, VECTOR_INSERT_COUNT, TObstacle)
-VA_COMPGEN(0x0046b1a0, 0x3B, VECTOR_UCOPY, TObstacle)
-VA_COMPGEN(0x0046b1e0, 0x31, VECTOR_UFILL, TObstacle)
+VA_COMPGEN(0x0046aeb0, 0x2E4, VECTOR_INSERT_COUNT, Obstacle)
+VA_COMPGEN(0x0046b1a0, 0x3B, VECTOR_UCOPY, Obstacle)
+VA_COMPGEN(0x0046b1e0, 0x31, VECTOR_UFILL, Obstacle)
 
 VA_COMPGEN(0x0046A680, 0xBE, CLASS_CTOR, set)
 
