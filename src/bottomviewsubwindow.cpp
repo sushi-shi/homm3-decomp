@@ -169,7 +169,8 @@ void widget::setVisible(unsigned char arg)
 
 // E:\gamedcs\Widget.h:271
 DC_ONLY(0x56e20, 0x1C)
-void widget::force_update()
+// Before normalization (function): widget::force_update.
+void widget::forceUpdate()
 {
     // @stub
 }

@@ -1805,7 +1805,8 @@ void type_AI_player::buyMageGuild(hero* currentHero, town* currentTown)
 
 // E:\gamedcs\ai_player.cpp:2022
 DC_ONLY(0x31514, 0xA8)
-void move_creatures(armyGroup* army, TCreatureType type, short amount)
+// Before normalization (function): move_creatures.
+void moveCreatures(armyGroup* army, TCreatureType type, short amount)
 {
     // @stub
 }

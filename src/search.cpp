@@ -207,7 +207,8 @@ void searchArray::enterGate(const pathCell* cell, const NewmapCell* mapCell,
 
 // E:\gamedcs\search.cpp:264
 DC_ONLY(0x12b900, 0x88)
-void searchArray::board_boat(const hero* current_hero, pathCell* cell)
+// Before normalization (function): searchArray::board_boat.
+void searchArray::boardBoat(const hero* current_hero, pathCell* cell)
 {
     // @stub
 }
@@ -720,14 +721,16 @@ VA_COMPGEN(0x0056bd30, 0x33, VECTOR_ERASE, pathCell)
 
 // E:\gamedcs\game.h:1395
 DC_ONLY(0x12ca94, 0x14)
-const std::vector<type_point,std::allocator<type_point>* game::get_liths(long color)
+// Before normalization (function): game::get_liths.
+const std::vector<type_point,std::allocator<type_point>* game::getLiths(long color)
 {
     // @stub
 }
 
 // E:\gamedcs\game.h:1400
 DC_ONLY(0x12caa8, 0x14)
-const std::vector<type_point,std::allocator<type_point>* game::get_lith_exits(long color)
+// Before normalization (function): game::get_lith_exits.
+const std::vector<type_point,std::allocator<type_point>* game::getLithExits(long color)
 {
     // @stub
 }

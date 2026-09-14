@@ -4108,8 +4108,8 @@ void TSingleSelectionWindow::updateGameVars()
 VA(0x00583890, 0x2B0)  // dc 0x139498
 void TSingleSelectionWindow::makeHeroFilter()
 {
-    THeroClass heroClass1;
-    THeroClass heroClass2;
+    HeroClass heroClass1;
+    HeroClass heroClass2;
     int i;
     CNetPlayerHandlerPlayer* player;
     TTownType town;

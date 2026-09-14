@@ -130,7 +130,8 @@ char* LODFile::getErrorString(int LODErr)
 
 // E:\gamedcs\lodfile.cpp:341
 DC_ONLY(0xe955c, 0xF6)
-void LODFile::set_filemap(unsigned char on)
+// Before normalization (function): LODFile::set_filemap.
+void LODFile::setFilemap(unsigned char on)
 {
     // @stub
 }

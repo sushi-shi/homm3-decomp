@@ -1145,7 +1145,8 @@ void game::recordMove(hero* who, int direction, type_point destination)
 // Whatever the PC revision does on player death, it does not go through an
 // out-of-line recorder here.
 DC_ONLY(0x8e2bc, 0x3C)
-void game::record_player_death(char player_id)
+// Before normalization (function): game::record_player_death.
+void game::recordPlayerDeath(char player_id)
 {
     // @stub
 }
@@ -1390,7 +1391,8 @@ unsigned char game::loadRecordedEvents(void* infile)
 
 // E:\gamedcs\event_record.h:64
 DC_ONLY(0x8ec5c, 0x4)
-char type_event_record::get_player_id()
+// Before normalization (function): type_event_record::get_player_id.
+char type_event_record::getPlayerId()
 {
     // @stub
 }

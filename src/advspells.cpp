@@ -276,7 +276,7 @@ void advManager::skuttleBoat(TSkillMastery level)
         // (?get_map_center@advManager@@QBE...); /OPT:ICF folded the pair onto
         // one row, so the receiver cast costs no bytes and buys the name.
         boat& theBoat = g_game->m_boats[
-            getCell(get_mouse_map_point())
+            getCell(getMouseMapPoint())
                 ->m_extraInfo];
         theBoat.restoreCell();
 
@@ -354,7 +354,7 @@ void advManager::dimensionDoor(TSkillMastery level)
         doorWin.doModal(0);
     }
 
-    type_point destination = get_mouse_map_point();
+    type_point destination = getMouseMapPoint();
     if (destination.isValid() && g_windowManager->m_dialogReturn == 1) {
         NewmapCell* cell = getCell(destination);
         if (((who->m_flags & 0x40000) != 0

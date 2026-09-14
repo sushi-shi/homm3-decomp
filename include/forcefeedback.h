@@ -110,7 +110,8 @@ public:
     int Initialize(void* instance, void* hwnd, unsigned long flags);
 
 protected:
-    virtual int prepare_device();
+    // Before normalization: CImmMouse::prepare_device.
+    virtual int prepareDevice();
     virtual void reset();
 
 protected:

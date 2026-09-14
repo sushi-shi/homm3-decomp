@@ -26,6 +26,8 @@ extern const char* g_statDesc[4];
 // Hero-class ids. Dreamcast CodeView supplies the original 0..15 ladder;
 // retail GetNewHeroId extends it with the two Conflux classes, indexes all
 // eighteen class-traits rows, and uses 18 as the no-class sentinel.
+// Before normalization (type): THeroClass. The clean alias preserves that
+// recovered tag as the retail ABI identity.
 // Before normalization (Dreamcast enumerators): eClassKnight, eClassCleric,
 // eClassRanger, eClassDruid, eClassAlchemist, eClassWizard, eClassPagan,
 // eClassHeretic, eClassDeathKnight, eClassNecromancer, eClassOverlord,
@@ -52,6 +54,7 @@ enum THeroClass {
     classElementalist = 17,
     kNumHeroClasses = 18
 };
+typedef THeroClass HeroClass;
 
 // Hero/boat sprite sequence ids, transcribed COMPLETE from the
 // Dreamcast CodeView enum `hero_seqid` (the creature_seqid precedent in
@@ -1225,7 +1228,7 @@ struct THeroTraits {
 public:
     int m_sex;  // +0x00 (DC m_sex)
     int m_race;  // +0x04 (DC m_race)
-    THeroClass m_heroClass;  // +0x08 (DC m_class)
+    HeroClass m_heroClass;  // +0x08 (DC m_class)
     int m_firstSkill;  // +0x0c (TSecondarySkill)
     int m_firstSkillLevel;  // +0x10 (TSkillMastery)
     int m_secondSkill;  // +0x14 (TSecondarySkill)

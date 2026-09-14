@@ -967,7 +967,8 @@ EGameResource ExtraInfoUnion::getCampfireResource()
 
 // E:\gamedcs\MapCell.h:974
 DC_ONLY(0x9c7c8, 0xC)
-short ExtraInfoUnion::get_custom_index()
+// Before normalization (function): ExtraInfoUnion::get_custom_index.
+short ExtraInfoUnion::getCustomIndex()
 {
     // @stub
 }

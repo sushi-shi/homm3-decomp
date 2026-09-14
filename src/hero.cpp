@@ -408,7 +408,8 @@ type_obscuring_object::type_obscuring_object()
 
 // E:\gamedcs\hero.cpp:380
 DC_ONLY(0xcaac8, 0x3A)
-mine* type_obscuring_object::get_obscured_mine()
+// Before normalization (function): type_obscuring_object::get_obscured_mine.
+mine* type_obscuring_object::getObscuredMine()
 {
     // @stub
 }
@@ -3377,7 +3378,8 @@ void THeroScreenWindow::ShowWidgets()
 
 // E:\gamedcs\hero.cpp:3421
 DC_ONLY(0xcf3ac, 0x1A0)
-void THeroScreenWindow::show_skills()
+// Before normalization (function): THeroScreenWindow::show_skills.
+void THeroScreenWindow::showSkills()
 {
     // @stub
 }
@@ -6636,7 +6638,8 @@ inline const int& tLimit(const int& minimum, const int& value, const int& maximu
 
 // E:\gamedcs\hero.cpp:6493
 DC_ONLY(0xd5800, 0xCC)
-void hero::reset_artifacts()
+// Before normalization (function): hero::reset_artifacts.
+void hero::resetArtifacts()
 {
     // @stub
 }

@@ -4705,7 +4705,8 @@ void MonsterData::MonsterData()
 
 // E:\gamedcs\Hero.h:167
 DC_ONLY(0xf4abc, 0x32)
-unsigned char type_obscuring_object::get_obscured_trigger()
+// Before normalization (function): type_obscuring_object::get_obscured_trigger.
+unsigned char type_obscuring_object::getObscuredTrigger()
 {
     // @stub
 }

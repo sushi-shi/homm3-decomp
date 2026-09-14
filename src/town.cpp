@@ -1553,7 +1553,8 @@ unsigned char checkShipyardSquare(town* currentTown, long x, long y)
 // E:\gamedcs\town.cpp:2017
 #if 0  // @carcass
 DC_ONLY(0x168330, 0xFC)
-void initialize_army(town* current_town, const TownExtra* town_setup)
+// Before normalization (function): initialize_army.
+void initializeArmy(town* current_town, const TownExtra* town_setup)
 {
     // @stub
 }
@@ -1697,14 +1698,16 @@ unsigned char town::isLegalBuilding(type_building_id building) const
 
 // E:\gamedcs\town.cpp:2291
 DC_ONLY(0x168a10, 0x3E)
-void town::set_legal_buildings(__int64 disabled_buildings)
+// Before normalization (function): town::set_legal_buildings.
+void town::setLegalBuildings(__int64 disabled_buildings)
 {
     // @stub
 }
 
 // E:\gamedcs\town.cpp:2300
 DC_ONLY(0x168a50, 0x48)
-unsigned char town::is_disabled(type_building_id building)
+// Before normalization (function): town::is_disabled.
+unsigned char town::isDisabled(type_building_id building)
 {
     // @stub
 }
@@ -1845,7 +1848,8 @@ unsigned char town::initializeBuildingCostsTables()
 
 // E:\gamedcs\Town.h:331
 DC_ONLY(0x168dfc, 0x28)
-void town::set_mask(__int64 new_mask)
+// Before normalization (function): town::set_mask.
+void town::setMask(__int64 new_mask)
 {
     // @stub
 }

@@ -1476,7 +1476,8 @@ long type_AI_spellcaster::getBlindValue(const army* enemy, type_enchant_data cas
 
 // E:\gamedcs\ai_tactical.cpp:1767
 DC_ONLY(0x3f9d0, 0x52)
-long type_AI_spellcaster::get_move_order_change_value(const army* our_army)
+// Before normalization (function): type_AI_spellcaster::get_move_order_change_value.
+long type_AI_spellcaster::getMoveOrderChangeValue(const army* our_army)
 {
     // @stub
 }
@@ -2808,14 +2809,16 @@ void type_AI_spellcaster::setMeleeEnemies()
 
 // E:\gamedcs\ai_tactical.cpp:3221
 DC_ONLY(0x42170, 0xAE)
-void type_AI_spellcaster::set_worst_enemies()
+// Before normalization (function): type_AI_spellcaster::set_worst_enemies.
+void type_AI_spellcaster::setWorstEnemies()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:3237
 DC_ONLY(0x42220, 0x5A)
-void type_AI_spellcaster::add_enemy(type_AI_enemy_data* sum, const army* our_army, const army* enemy, unsigned char ranged)
+// Before normalization (function): type_AI_spellcaster::add_enemy.
+void type_AI_spellcaster::addEnemy(type_AI_enemy_data* sum, const army* our_army, const army* enemy, unsigned char ranged)
 {
     // @stub
 }

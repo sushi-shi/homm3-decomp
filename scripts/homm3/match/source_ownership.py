@@ -48,6 +48,8 @@ class Definition:
     return_type: str = ""
     inline_origin: tuple[int, int] = ()
     declaration_only_type: int = 0
+    canonical_argument_types: tuple[str, ...] = ()
+    canonical_return_type: str = ""
 
 
 @dataclass(frozen=True)
@@ -195,6 +197,19 @@ def procedure_name(name: str) -> str:
 def type_identity(name: str) -> str:
     """Ignore elaborated-type syntax, preserving typedefs and qualifiers."""
     return re.sub(r'\s+', '', re.sub(r'\b(?:class|struct|enum|union)\s+', '', name))
+
+
+def normalized_alias_type(spelled: str, canonical: str) -> str:
+    """Canonicalize only CleanName aliases of recovered TCleanName tags.
+
+    General typedef canonicalization loses meaningful source domains (for
+    example an integer spell id versus TArtifact).  The normalization aliases
+    introduced by this project have one deliberately narrow, reversible form.
+    """
+    spelled_id = type_identity(spelled)
+    canonical_id = type_identity(canonical)
+    clean_canonical = type_identity(re.sub(r'\bT(?=[A-Z])', '', canonical))
+    return canonical if spelled_id != canonical_id and spelled_id == clean_canonical else spelled
 
 
 def reference_stubs_only(raw: str) -> bool:
@@ -613,7 +628,13 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
                 instances[0][1] if instances else "",
                 return_type=('void' if cursor.kind in {k.CONSTRUCTOR, k.DESTRUCTOR}
                              else cursor.result_type.spelling),
-                inline_origin=inline_origin, declaration_only_type=declaration_type))
+                inline_origin=inline_origin, declaration_only_type=declaration_type,
+                canonical_argument_types=tuple(
+                    c.type.get_canonical().spelling for c in cursor.get_children()
+                    if c.kind == k.PARM_DECL),
+                canonical_return_type=(
+                    'void' if cursor.kind in {k.CONSTRUCTOR, k.DESTRUCTOR}
+                    else cursor.result_type.get_canonical().spelling)))
             if instances:
                 instance_requests.append((first, cursor.location.offset))
                 extras = []
@@ -765,7 +786,13 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
         else:
             signature_mismatch = [o for o in candidates if o.argument_types is not None]
             candidates = [o for o in candidates if o.argument_types is None]
-        definition_arguments = tuple(d.argument_types) + (('...',) if d.variadic else ())
+        authored_arguments = tuple(
+            normalized_alias_type(spelled, canonical)
+            for spelled, canonical in zip(d.argument_types,
+                                          d.canonical_argument_types or d.argument_types))
+        authored_return = normalized_alias_type(
+            d.return_type, d.canonical_return_type or d.return_type)
+        definition_arguments = tuple(authored_arguments) + (('...',) if d.variadic else ())
         narrowed = [o for o in candidates if o.argument_types is not None
                     and tuple(type_identity(t) for t in o.argument_types)
                     == tuple(type_identity(t) for t in definition_arguments)]
@@ -794,8 +821,8 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
                      and o.argument_types is not None
                      and tuple(type_identity(t) for t in o.argument_types)
                      == tuple(type_identity(t) for t in definition_arguments)
-                     and o.const == d.const and o.return_type and d.return_type
-                     and type_identity(o.return_type) == type_identity(d.return_type)]
+                     and o.const == d.const and o.return_type and authored_return
+                     and type_identity(o.return_type) == type_identity(authored_return)]
             if (len(exact) != 1 or len(written) != 1 or not d.inline or not d.member
                     or d.class_offset is None or not d.file.startswith('include/')
                     or d.inline_origin or d.va is not None):
@@ -820,9 +847,9 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
             # Require both parsed return types; old/partial inventories cannot
             # authorize this distinction. An emitted DC body still needs its
             # proper owner rather than this declaration-only exception.
-            changed_return = (written and d.return_type
+            changed_return = (written and authored_return
                               and all(o.declaration_only and o.return_type
-                                      and type_identity(o.return_type) != type_identity(d.return_type)
+                                      and type_identity(o.return_type) != type_identity(authored_return)
                                       for o in written))
             if written and not changed_return:
                 errors.append(f'FILTER {where}: Windows-only exemption hides a CodeView counterpart')

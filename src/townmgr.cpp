@@ -6360,7 +6360,8 @@ void TThievesGuildWindow::TThievesGuildWindow(int num_guilds)
 
 // E:\gamedcs\townmgr.cpp:3951
 DC_ONLY(0x16df0c, 0x3E8)
-void TThievesGuildWindow::show_side()
+// Before normalization (function): TThievesGuildWindow::show_side.
+void TThievesGuildWindow::showSide()
 {
     // @stub
 }
@@ -6402,7 +6403,8 @@ void TMageGuildWindow::setRolloverText(int codeY)
 
 // E:\gamedcs\townmgr.cpp:4728
 DC_ONLY(0x1712c4, 0x5A)
-void townManager::create_popup_bank(heroWindow* parent)
+// Before normalization (function): townManager::create_popup_bank.
+void townManager::createPopupBank(heroWindow* parent)
 {
     // @stub
 }
@@ -6556,7 +6558,8 @@ void townManager::doHall()
 
 // E:\gamedcs\townmgr.cpp:5583
 DC_ONLY(0x174990, 0x26A)
-void townManager::show_hall_side()
+// Before normalization (function): townManager::show_hall_side.
+void townManager::showHallSide()
 {
     // @stub
 }
@@ -7125,7 +7128,8 @@ void townManager::moveHero(town* fromTown, town* toTown)
 
 // E:\gamedcs\townmgr.cpp:8642
 DC_ONLY(0x17f160, 0x398)
-void TCastleWindow::show_scroller()
+// Before normalization (function): TCastleWindow::show_scroller.
+void TCastleWindow::showScroller()
 {
     // @stub
 }

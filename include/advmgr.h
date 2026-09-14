@@ -1496,7 +1496,8 @@ public:
     void processMapChangeNew(class CMapChange* change);
     void viewWorld(int whatToDraw, TSkillMastery level);
     int inMapArea(int x, int y);
-    type_point get_mouse_map_point() const;
+    // Before normalization: advManager::get_mouse_map_point.
+    type_point getMouseMapPoint() const;
     unsigned short* getRouteArrayPtr(int x, int y, int z);
 
 private:

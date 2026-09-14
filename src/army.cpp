@@ -5127,21 +5127,24 @@ void army::castDemonicResurrect(long hex)
 
 // E:\gamedcs\army.cpp:5433
 DC_ONLY(0x4c0f0, 0x64)
-unsigned char group_has_melee(long group)
+// Before normalization (function): group_has_melee.
+unsigned char groupHasMelee(long group)
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:5451
 DC_ONLY(0x4c154, 0x64)
-unsigned char group_has_shooters(long group)
+// Before normalization (function): group_has_shooters.
+unsigned char groupHasShooters(long group)
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:5469
 DC_ONLY(0x4c1b8, 0x56)
-unsigned char group_has_dragons(long group)
+// Before normalization (function): group_has_dragons.
+unsigned char groupHasDragons(long group)
 {
     // @stub
 }

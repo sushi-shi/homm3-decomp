@@ -811,14 +811,16 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
 // alignment padding, not a body. Both overloads are the /Ob2
 // inline-away case (single-caller predicates on the combat grid).
 DC_ONLY(0xa02c8, 0xC6)
-unsigned char searchArray::valid_move_adjacent(const army* current_army, int hex)
+// Before normalization (function): searchArray::valid_move_adjacent.
+unsigned char searchArray::validMoveAdjacent(const army* current_army, int hex)
 {
     // @stub
 }
 
 // E:\gamedcs\findpath.cpp:905
 DC_ONLY(0xa0390, 0x6C)
-unsigned char searchArray::valid_move_adjacent(const army* current_army, const army* enemy)
+// Before normalization (function): searchArray::valid_move_adjacent.
+unsigned char searchArray::validMoveAdjacent(const army* current_army, const army* enemy)
 {
     // @stub
 }

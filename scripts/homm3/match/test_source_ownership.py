@@ -3,7 +3,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from homm3.match.source_ownership import Definition, Origin, compare, read_filter
+from homm3.match.source_ownership import (
+    Definition,
+    Origin,
+    compare,
+    normalized_alias_type,
+    read_filter,
+)
 
 
 def definition(name='Widget::draw', file='include/widget.h', line=20,
@@ -17,6 +23,16 @@ def origin(name='Widget::draw', file='widget.h', line=100):
 
 
 class OwnershipTest(unittest.TestCase):
+    def test_only_normalized_t_prefix_aliases_use_canonical_identity(self):
+        self.assertEqual(normalized_alias_type('HeroClass', 'THeroClass'),
+                         'THeroClass')
+        self.assertEqual(normalized_alias_type('const HeroClass &',
+                                               'const THeroClass &'),
+                         'const THeroClass &')
+        self.assertEqual(normalized_alias_type('SpellID', 'int'), 'SpellID')
+        self.assertEqual(normalized_alias_type('TArtifact', 'TArtifact'),
+                         'TArtifact')
+
     def test_reviewed_declaration_gap_cannot_hide_other_source_facts(self):
         from dataclasses import replace
         d = replace(definition(), declaration_only_type=0x1234,

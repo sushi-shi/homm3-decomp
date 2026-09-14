@@ -500,14 +500,16 @@ static void clearShipyards(playerData* player)
 
 // E:\gamedcs\philai.cpp:1239
 DC_ONLY(0x10f0d0, 0x9C)
-void move_all_heroes(long player_id, long* danger_zones)
+// Before normalization (function): move_all_heroes.
+void moveAllHeroes(long player_id, long* danger_zones)
 {
     // @stub
 }
 
 // E:\gamedcs\philai.cpp:1529
 DC_ONLY(0x10f94c, 0x136)
-long type_spellvalue::get_summoning_value(long damage, long times_castable)
+// Before normalization (function): type_spellvalue::get_summoning_value.
+long type_spellvalue::getSummoningValue(long damage, long times_castable)
 {
     // @stub
 }

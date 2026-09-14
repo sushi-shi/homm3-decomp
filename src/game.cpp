@@ -1937,8 +1937,8 @@ VA(0x004bb400, 0x1DC)  // dc 0xa68d8
 int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 {
     int heroArray[HERO_COUNT];
-    THeroClass heroClass1 = classKnight;
-    THeroClass heroClass2 = classCleric;
+    HeroClass heroClass1 = classKnight;
+    HeroClass heroClass2 = classCleric;
 
     switch (alignment) {
     case TOWN_CASTLE:
@@ -2004,9 +2004,9 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 
 // E:\gamedcs\game.cpp:2275
 VA(0x004bb5e0, 0x282)  // anchor-global, dc 0xa6cd4
-int game::getNewHeroId(int playerPos, THeroClass excluded,
+int game::getNewHeroId(int playerPos, HeroClass excluded,
                        unsigned char preferAlignment,
-                       THeroClass preferredClass)
+                       HeroClass preferredClass)
 {
     int heroClass;
     long totalCount;
@@ -3418,14 +3418,16 @@ int game::save(TAbstractFile* outfile)
 
 // E:\gamedcs\game.cpp:3275
 DC_ONLY(0xa8ba0, 0xCC)
-int hero_power(hero* this_hero)
+// Before normalization (function): hero_power.
+int heroPower(hero* this_hero)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:3288
 DC_ONLY(0xa8c6c, 0x62)
-int compare_heroes(const void* arg1, const void* arg2)
+// Before normalization (function): compare_heroes.
+int compareHeroes(const void* arg1, const void* arg2)
 {
     // @stub
 }
@@ -7638,21 +7640,24 @@ void game::perDay()
 
 // E:\gamedcs\game.cpp:8266
 DC_ONLY(0xb3d8c, 0x74)
-void game::clear_recruits(THeroID* m_recruits)
+// Before normalization (function): game::clear_recruits.
+void game::clearRecruits(THeroID* m_recruits)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:8290
 DC_ONLY(0xb3e00, 0x5E)
-THeroID get_new_hero(THeroClass hero_class)
+// Before normalization (function): get_new_hero.
+THeroID getNewHero(HeroClass heroClass)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:8308
 DC_ONLY(0xb3e60, 0x1EE)
-void game::set_weekly_recruits(THeroID* m_recruits, TTownType alignment)
+// Before normalization (function): game::set_weekly_recruits.
+void game::setWeeklyRecruits(THeroID* m_recruits, TTownType alignment)
 {
     // @stub
 }
@@ -7944,12 +7949,12 @@ void game::setRecruits(int playerPos)
         if (player->m_recruits[recruitSlot] >= 0)
             continue;
 
-        THeroClass otherClass;
+        HeroClass otherClass;
         if (player->m_recruits[1 - recruitSlot] < 0)
             otherClass = kNumHeroClasses;
         else
         {
-            otherClass = THeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
+            otherClass = HeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
         }
 
         int heroId;
@@ -8001,11 +8006,11 @@ void game::setRecruits(int playerPos)
 VA(0x004c86a0, 0xD5)
 void game::replaceRecruit(int playerPos, long recruitSlot)
 {
-    THeroClass otherClass = kNumHeroClasses;
+    HeroClass otherClass = kNumHeroClasses;
     playerData* player = &m_players[playerPos];
     if (player->m_recruits[1 - recruitSlot] != -1)
     {
-        otherClass = THeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
+        otherClass = HeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
     }
 
     int heroId = getNewHeroId(playerPos, otherClass, 0, kNumHeroClasses);
@@ -9192,7 +9197,8 @@ void game::processOnMapTowns()
 
 // E:\gamedcs\game.cpp:9912
 DC_ONLY(0xb6c84, 0x57E)
-void initialize_hero(hero* current_hero, const HeroExtra* setup)
+// Before normalization (function): initialize_hero.
+void initializeHero(hero* current_hero, const HeroExtra* setup)
 {
     // @stub
 }
@@ -11136,7 +11142,8 @@ int game::GetLastHuman()
 
 // E:\gamedcs\game.cpp:11884
 DC_ONLY(0xbc384, 0x94)
-void game::mark_campaign_map_won()
+// Before normalization (function): game::mark_campaign_map_won.
+void game::markCampaignMapWon()
 {
     // @stub
 }

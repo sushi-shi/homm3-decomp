@@ -904,7 +904,8 @@ inline void type_AI_combat_data::castSpells(
 // before take_damage; PC inflictDamage uses the retained range-based
 // inflictMeleeDamage helper. Keep the old roster entry without a false claim.
 DC_ONLY(0x2b380, 0x88)
-long type_AI_combat_data::inflict_catagory_damage(long damage, type_speed_catagory catagory)
+// Before normalization (function): type_AI_combat_data::inflict_catagory_damage.
+long type_AI_combat_data::inflictCatagoryDamage(long damage, type_speed_catagory catagory)
 {
     // @stub
 }

@@ -840,7 +840,8 @@ long combatManager::getAreaEffect(long side, const army* ourArmy, long markedEne
 // NO RETAIL SLOT - a two-parameter static with one call site, folded
 // into whichever of get_area_effect / mark_friendly_armies uses it.
 DC_ONLY(0x250e0, 0x42)
-long get_enemy_attack_limit(const army* our_army, const type_AI_combat_parameters* estimate)
+// Before normalization (function): get_enemy_attack_limit.
+long getEnemyAttackLimit(const army* our_army, const type_AI_combat_parameters* estimate)
 {
     // @stub
 }
@@ -2676,7 +2677,8 @@ army* combatManager::getCurrentArmy()
 
 // E:\gamedcs\cmbtmgr.h:1494
 DC_ONLY(0x27f28, 0xC)
-unsigned char combatManager::is_in_second_phase()
+// Before normalization (function): combatManager::is_in_second_phase.
+unsigned char combatManager::isInSecondPhase()
 {
     // @stub
 }
@@ -2711,7 +2713,8 @@ combatManager::TObstacle* combatManager::getObstacle(int index)
 
 // E:\gamedcs\ai_tactical.h:82
 DC_ONLY(0x27fd4, 0x4)
-long type_AI_combat_parameters::get_enemy_group()
+// Before normalization (function): type_AI_combat_parameters::get_enemy_group.
+long type_AI_combat_parameters::getEnemyGroup()
 {
     // @stub
 }

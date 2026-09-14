@@ -37,7 +37,7 @@
 
 // Other DC rows proven bodyless here: InitializeCreatureGeneratorNames
 // and InitializeExtraInfoText (before the span's first row),
-// GetCursorSampleSet, get_mouse_map_point, ProcessAdvMenu,
+// GetCursorSampleSet, getMouseMapPoint, ProcessAdvMenu,
 // ProcessMapSelect2, get_garrison_cursor, get_identify_level (a static
 // inlined into all four *QuickView bodies), type_cell_adjuster's ctor
 // and restore_cell, and six of the eleven help-text builders.
@@ -884,7 +884,7 @@ void advManager::GetCursorSampleSet(int walkSpeed)
     // @stub
 }
 
-// The ordinary get_mouse_map_point body follows this reference block.
+// The ordinary getMouseMapPoint body follows this reference block.
 
 #endif  // @carcass
 
@@ -894,7 +894,7 @@ void advManager::GetCursorSampleSet(int walkSpeed)
 // ordinary body for the cross-TU spell/window callers; DoAdvCommand expands
 // its four source calls. A header-inline spelling emitted no retained body.
 VA(0x00407b10, 0x6F)  // field loads + four cross-TU call sites, dc 0x7a04
-type_point advManager::get_mouse_map_point() const
+type_point advManager::getMouseMapPoint() const
 {
     return type_point(m_radarOrigin.m_x + m_lastHoverX,
                       m_radarOrigin.m_y + m_lastHoverY,
@@ -1220,7 +1220,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
     }
 
     case ADV_COMMAND_SELECT_HERO: {
-        type_point mapPoint = get_mouse_map_point();
+        type_point mapPoint = getMouseMapPoint();
         type_point cellPoint = mapPoint;
         unsigned char valid = cellPoint.isValid();
         NewfullMap* map = m_fullMap;
@@ -1235,7 +1235,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
     }
 
     case ADV_COMMAND_SELECT_TOWN: {
-        type_point mapPoint = get_mouse_map_point();
+        type_point mapPoint = getMouseMapPoint();
         type_point cellPoint = mapPoint;
         unsigned char valid = cellPoint.isValid();
         NewfullMap* map = m_fullMap;
@@ -1252,8 +1252,8 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
     case ADV_COMMAND_SHIPYARD: {
         g_mouseManager->showPointer(0);
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-        type_point mapPoint = get_mouse_map_point();
-        type_point dockPoint = get_mouse_map_point();
+        type_point mapPoint = getMouseMapPoint();
+        type_point dockPoint = getMouseMapPoint();
         type_point cellPoint = mapPoint;
         unsigned char valid = cellPoint.isValid();
         NewfullMap* map = m_fullMap;
@@ -10106,7 +10106,8 @@ TSecondarySkill ExtraInfoUnion::getWitchSkill()
 
 // E:\gamedcs\Hero.h:116
 DC_ONLY(0x1fb04, 0xC)
-TAdventureObjectType type_obscuring_object::get_obscured_type()
+// Before normalization (function): type_obscuring_object::get_obscured_type.
+TAdventureObjectType type_obscuring_object::getObscuredType()
 {
     // @stub
 }

@@ -1174,7 +1174,7 @@ TCampaignBrief::ScenarioStruct::~ScenarioStruct()
 // provisional.
 // 2026-09-07: 98.4901 -> 99.9509 by reading setup.m_owner directly in the
 // GetNewHeroId call; the prior named int owner rotated EAX/ECX/EDX throughout
-// the copy. heroClass remains a named THeroClass because that fixes its
+// the copy. heroClass remains a named HeroClass because that fixes its
 // evaluation before the direct owner read. All 38 blocks, 20 branches and 5
 // calls agree. The only remaining code delta exchanges the compiler copy's
 // two stack homes: retail puts setup at [ebp-0x14] and the source/destination
@@ -1192,7 +1192,7 @@ void game::rehomeCampaignHeroSetup(int heroId)
     if (setup.m_location.m_x < 0)
         return;
 
-    THeroClass heroClass = g_heroTraits[heroId].m_heroClass;
+    HeroClass heroClass = g_heroTraits[heroId].m_heroClass;
     int newHeroId = getNewHeroId(setup.m_owner, kNumHeroClasses, 1, heroClass);
     if (newHeroId == -1) {
         setup.m_location.m_x = -1;
