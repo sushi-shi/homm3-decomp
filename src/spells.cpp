@@ -3500,7 +3500,9 @@ void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
     }
 
     SBolt* bolts = new SBolt[25];
-    int halfThickness = cppMax(startThickness, endThickness) >> 1;
+    // Dreamcast spells.cpp:3998 records the project max helper; this argument
+    // order also reproduces Complete's exact compare and parameter homes.
+    int halfThickness = max(startThickness, endThickness) >> 1;
 
     addBolt(bolts, sourceX, sourceY, destX, destY, splitFrequency,
             startThickness, endThickness, color, angleDistortMin,

@@ -916,7 +916,7 @@ campaignwindow	?doModal@TCampaignWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x5f2
 campaignwindow	?openPreview@TCampaignWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x5e7c0	tokens1:a5bf78b986d7
 castle	?canBuy@@YIHPBVtown@@H@Z	100.0000	100.0000	100.0000	0x61130	tokens1:64c5d097c667
 castle	?getBuildingName@@YIPBDHH@Z	100.0000	100.0000	100.0000	0x610e0	tokens1:76dff944d296
-castle	?setupCastle@townManager@@QAEXPAVheroWindow@@H@Z	97.8957	98.0447	98.0447	0x61190	tokens1:eeeb38b58ffc
+castle	?setupCastle@townManager@@QAEXPAVheroWindow@@H@Z	98.0447	98.0447	98.0447	0x61190	tokens1:eeeb38b58ffc
 castle	?windowHandler@THallWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x61ab0	tokens1:e2d442d38cb8
 cmbtmgr	??0?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@QAE@ABU?$less@H@1@ABV?$allocator@H@1@@Z	100.0000	100.0000	100.0000	0x6a680	-
 cmbtmgr	??0TArcher@combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62920	3d81a1019a8b
@@ -4186,7 +4186,7 @@ spells	?clearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0	t
 spells	?computeSpellDamage@combatManager@@QBEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890	tokens1:0cea538b6f73
 spells	?demonicResurrection@combatManager@@QAEXPBVarmy@@PAV2@@Z	100.0000	100.0000	100.0000	0x1a7390	tokens1:a4d78d7c1be1
 spells	?displayFailureReason@combatManager@@QAEXHPBDJ@Z	100.0000	100.0000	100.0000	0x1a2c60	tokens1:ac0c52503e7f
-spells	?doBolt@combatManager@@QAEXHHHHHHHHHHHHHHHHH@Z	99.4526	99.4526	100.0000	0x1a5c20	tokens1:91253f868f05
+spells	?doBolt@combatManager@@QAEXHHHHHHHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5c20	tokens1:89832b236816
 spells	?drawBolt@combatManager@@QAEXPAUSBolt@@H@Z	100.0000	100.0000	100.0000	0x1a5440	tokens1:77fe36e615c5
 spells	?earthquake@combatManager@@QAEXH@Z	84.9579	84.9579	84.9579	0x1a7c80	tokens1:aa7d14e5a7d4
 spells	?findAnimateDeadTarget@combatManager@@QAEPAVarmy@@HH@Z	100.0000	100.0000	100.0000	0x1a3f50	tokens1:36ca42a4ecfa
@@ -4354,7 +4354,7 @@ town	?buyBuilding@town@@QAEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x
 town	?calcNumLevelArchers@town@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x1bf4f0	tokens1:b2259400c4e1
 town	?canBuild@town@@QBEEF@Z	81.1852	81.1852	89.6018	0x1c0d20	tokens1:3f1ab1705516
 town	?canBuildDock@town@@QBEEXZ	100.0000	100.0000	100.0000	0x1bf4e0	tokens1:3f5ecbff0f3e
-town	?canEverBuild@town@@QBEEF@Z	84.4531	84.4531	100.0000	0x1c0e60	tokens1:0ef82edb5454
+town	?canEverBuild@town@@QBEEH@Z	100.0000	100.0000	100.0000	0x1c0e60	tokens1:ca99471c1b68
 town	?changeGeneratorBonus@town@@QAEXW4TCreatureType@@J@Z	100.0000	100.0000	100.0000	0x1bfe50	tokens1:e1614c770094
 town	?checkShipyardSquare@@YIEPAVtown@@JJ@Z	100.0000	100.0000	100.0000	0x1c0c90	tokens1:e18f7a839a02
 town	?createBuilding@town@@QAE?AW4type_building_id@@W42@@Z	85.9771	85.9771	85.9771	0x1be930	tokens1:e7f6cea3b2a4
