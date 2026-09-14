@@ -49,24 +49,6 @@
 // reset best_value or result - and both re-read numArmies[target_group]
 // through the back edge.
 
-// Residual (99.89%): one immediate - retail keeps its int-to-double
-// conversion in a COMPILER TEMP at [ebp-8], the top of the frame, and
-// pushes the four-byte locals below it (best_value -0xc, the `this`
-// spill -0x10, result -0x14); the named `double damage` that is the only
-// spelling found to emit the fild BEFORE the ComputeDefenderDamageReduction
-// call is allocated with the other named locals, at -0x14, so every frame
-// displacement shifts one slot. Tried and rejected: the conversion left
-// anonymous inside the multiply, in its own statement or with an explicit
-// static_cast<double>, both 96.29 - VC6 then evaluates the CALL first and
-// converts afterwards; declaring the double at function scope instead of
-// in the loop body is byte-identical to declaring it in the loop.
-// Residual (99.8919%): one stack-home cycle and nothing else.  Retail puts
-// the three entry stores at [-0x10]/[-0xc]/[-0x14] and its `double` scratch at
-// [-0x8]; ours has them at [-0x8]/[-0x4]/[-0xc] with the double at [-0x14] -
-// the same overlay rotated, on an equal frame.  Measured and rejected
-// 2026-09-06, both byte-flat at 99.8919: declaring `double damage` third
-// (after `result`) and declaring it last (after `estimate`).  Declaration
-// order does not move a slot cycle; see playerData::save for the same result.
 VA(0x0041e190, 0x2A8)  // order-map(DC ai.obj head) + anchor-callee find_AI_targets, dc 0x23450
 int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int averageDamage)
 {
@@ -203,33 +185,11 @@ unsigned char combatManager::failedSiege()
 // pyramid alone is +24.22 and makes the branch census exact (54/54
 // branches, 4/4 rets).
 
-// Residual (95.77%): retail's `xor ebx,ebx` serves count, the flag AND the
-// census index, and with EDI then holding the player record retail must
-// RELOAD gpGame for the players base where our EDI still carries it from the
-// victory-condition test.
-// 2026-09-06: the index/bound half of that cascade IS a source fact and it
-// is now spelled. `long i = 0;` declared with count and the flag - so the
-// index pseudo is BORN before `numTowns` - gives EBX to the index and spills
-// numTowns to [ebp-0x10] with a reload at the back edge, which is retail's
-// allocation exactly: 95.3960 -> 95.7676. The lever is the FIRST ASSIGNMENT,
-// not the declaration: `long i;` hoisted with an `i = 0` left in the `for`
-// head is byte-flat at 95.3960 (which is what the earlier note recorded as
-// "initialising the index before the numTowns guard" - it was measuring a
-// bare declaration). Same rule as docs/vc6/regalloc.md 6b's SIB birth order.
-// Order among the three inits is inert (count/i/flag and count/flag/i both
-// 95.7676). Still rejected: hoisting the index to the enclosing block,
-// dropping the braces around the loop, dropping the named numTowns, and
-// naming `heroes[currentSide]` in a `currentHero` local (95.5665 - it costs
-// the three guards their memory compares).
-// The two remaining singles are a `lea` scheduled one slot late in the
-// army scan and the fight-value walk's +0x4c bias emitted as a separate
-// `add` rather than folded into the base `lea`.
-
 // Levers that paid, in order: the nested-if pyramid (60.44 -> 84.66);
 // naming the AI_get_artifact_player_value result so the call is
 // evaluated BEFORE the traits-cost operand of max - VC6 evaluates
 // by-value arguments right to left, and with the call first the
-// half-cost no longer has to survive it, which frees EDI for the loop
+// half-cost dies before it, which frees EDI for the loop
 // index and lets combat_value live in EBX (84.66 -> 94.82); naming the
 // attribute word so the flag test is `test ecx, 0x4000000` and not
 // Is()'s shr/test pair, plus naming the final quotient so the division
@@ -711,8 +671,6 @@ long combatManager::getAttackChange(const army* currentArmy, const army* enemy, 
     return committed + bestOther;
 }
 
-// A former local selector experiment put the first operand in a fresh
-// -0x1c home, while its explicit copy of the
 VA(0x0041f580, 0x304)  // dc 0x24b64
 unsigned char combatManager::moveToward(const army* currentArmy, long targetHex, const long* enemyAttacks, unsigned char considerWaiting)
 {
@@ -1188,16 +1146,6 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
 // neither before the loop and both are only read once *best_hex is no
 // longer -1.
 
-// Residual (99.1%): a caller-saved permutation only - retail materialises
-// the `facing ? 1 : -1` step in EAX and takes EDX for the best_hex
-// pointer, our CL coalesces the step into EDX (killing the current_army
-// pseudo) and takes EAX. `homm3 vc6 why-reg --model` confirms all three
-// callee-saved bindings (EDI open_hexes, ESI hex, EBX cell) already
-// agree and caps the rest as C1 handle state. Tried and rejected:
-// storing best_contact before best_time in the accept block (99.09),
-// `long contact = 1;` with a single `contact = 2` arm (78.6, the wrong
-// branch shape), and the `if (cell) cell += hex;` accessor spelling
-// choose_to_run uses (80.9 - retail wants getCellData's ternary here).
 // E:\gamedcs\ai.cpp:1357
 VA(0x004205d0, 0x185)  // linkorder, dc 0x25998
 unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const army* client, long* bestHex, long* openHexes, searchArray* currentSearchArray)
@@ -1440,28 +1388,7 @@ VA_COMPGEN(0x00420cf0, 0x26, IMPLICIT_DTOR, type_spellvalue)
 // EH-bearing (P2.2) and NOT blocked by it: the fs:[0] frame is the local
 // type_AI_spellcaster's unwind scaffolding, one state.
 
-// Residual (95.9%): the trip counter. Retail keeps TWO induction
-// variables - the decremented index feeding the armies[] address and a
-// separate down-counter it rebuilds with an `inc` - where our CL folds
-// the -1 into the address lea and stores the undecremented count. The
-// two-case dispatch has to be a real `switch` (95.89 against 93.17 for
-// if/else-if: retail puts both compares up front and lays the second
-// arm first, which only switch lowering does), and `count` has to be a
-// named local (83.68 with numArmies[side] inline).
-// Tried and rejected 2026-08-14: `for (long i = count - 1; i >= 0; i--)`
-// - semantically identical, 88.52 against 95.89. Retail's loop head is
-// `mov ecx,edi / dec edi / test ecx,ecx`, i.e. it tests the value BEFORE
-// the decrement, which is the `i-- > 0` form and not the `i >= 0` one.
 // E:\gamedcs\ai.cpp:1635
-// Residual (95.8926%): the loop TAIL is byte-identical to retail's, including
-// the unsigned `ja` back edge, and the whole delta is three instructions in
-// the preheader. Retail materialises the post-decrement (`mov ecx,edi` /
-// `dec edi` / `test ecx,ecx` / `jle`, then `lea edx,[edi+2*eax]` and an
-// `inc edi` before homing it); this compile leaves EDI at the pre-decrement
-// value and folds the -1 into the address (`lea edx,[edi+2*eax-1]`). The
-// `i-- > 0` form is already retail's - the body's `continue`s make the
-// decrement unmovable out of the for-condition - so this is a fold decision,
-// not a loop-form one.
 VA(0x00420d20, 0x1D5)  // anchor-callee, dc 0x2600c
 unsigned char combatManager::chooseCreatureSpell(const army* currentArmy, long* bestValue, type_AI_combat_parameters* estimate)
 {
@@ -1839,68 +1766,7 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 // conventional VERIFY is possible history but cannot select the retail
 // allocator phase here; no fabricated macro is retained.
 
-// Three spellings ARE byte-load-bearing and were measured one at a time:
-//   * MEASURED AND REFUTED 2026-08-20, with bytes: an earlier note said
-//     `long budget = 127;` must be declared NEXT TO ITS USE, "declared
-//     up top it costs the frame its 0x350th byte (78.30 -> 78.54)".
-//     Retail stores it IN THE PROLOGUE - `mov [ebp-0x30], 0x7f` at
-//     +0x2d, before the mark_firewalls call - and reuses that same slot
-//     for the enemy loop counter afterwards. The refutation only holds
-//     when it is paired with moving the `memset` BELOW the whole
-//     initialiser run, which is what retail's zero-store order proves
-//     (six `mov [ebp-N],eax` stores THEN `rep stosd`): the two together
-//     are +1.89 (80.3043 -> 82.1977), while the memset move ALONE is
-//     -0.35. Doses are not independent; do not re-split this pair.
-//     At the old 82.20 plateau, budget still landed in ESI (frame 0x34c)
-//     where retail memory-homes it at [ebp-0x30] and keeps `this` in
-//     ESI - that 4-byte frame deficit is the register wall above, not a
-//     missing local.
-//     HISTORICALLY QUALIFIED 2026-08-20 by counting the slots on both sides,
-//     before the two unnamed-carrier corrections above. The
-//     "not a missing local" half does not survive the count. Both frames
-//     carry the same three byte locals and the same 48-byte
-//     type_AI_attack_hex_chooser (retail [ebp-0x64], ours [ebp-0x60] -
-//     members +0x1c/+0x20/+0x24 land at -0x48/-0x44/-0x40 and -0x44/-0x40/
-//     -0x3c, so the CLASS SIZE IS RIGHT, 0x2c both sides) and the same
-//     0x2ec-byte enemy_attacks array. What differs is the scalar region
-//     alone: retail's runs -0x38..-0x00 as TWELVE dwords, ours -0x34..-0x00
-//     as ELEVEN. So the deficit is exactly ONE MORE NAMED int-sized local,
-//     not a spill the register wall forced - retail spends its extra slot
-//     homing `this` at [ebp-0x10] while ALSO keeping it in ESI. Two further
-//     facts from the same sweep, both source-shaped: retail's two `unsigned
-//     char` locals sit in the FIRST dword slot ([ebp-0x1] and [ebp-0x2])
-//     where ours sit in the second ([ebp-0x5]/[ebp-0x6] with `this` taking
-//     [ebp-0x4]); and retail REBUILDS `&armies[enemy_side][i]` from the
-//     memory-homed counter every iteration (`mov [ebp-0x38],edx` then an
-//     immediate reload of 21*enemy_side, `add ecx,eax`, then the 1352
-//     multiply) where our compile strength-reduces the walk to `add edi,
-//     0x548`. That pair - a memory-homed counter and a rebuilt subscript -
-//     is the address-taken-loop-counter tell, so look for the missing local
-//     there before believing the wall.
-//   * the disabled-precedence guard tests BEST_ENEMY first and the
-//     candidate second - `!(best_disabled && !enemy_disabled)`. Written
-//     with the operands the other way round it is the same predicate but
-//     lowers with both triples' polarity flipped (78.54 -> 79.79).
-//   * the get_simple_attack_effect distance is a NAMED LOCAL initialised
-//     to 0 and conditionally assigned, not a ternary argument. The local
-//     creates the result pseudo BEFORE the cellData load, which is what
-//     hoists retail's `xor eax,eax` above the `cmp field_24,1` and lets
-//     the accessor share one register (79.79 -> 80.30).
-//   * the cellData accessor's null arm answers `cellData` itself, not a
-//     literal 0 - findpath.h's get_cell spells its own null arm exactly
-//     that way (`if (!cellData) return cellData;`), and the literal
-//     forces VC6 to materialise a fresh zero and duplicate the load.
-//     SCOPE, measured 2026-08-20: that is true of the ONE site it was
-//     measured at (the get_simple_attack_effect distance). Rewriting the
-//     other FIVE null arms in this body the same way is byte-flat to the
-//     digit - VC6 folds `? 0` and `? cellData` identically where the
-//     result is not feeding a pseudo created before the load. Do not
-//     spend a lane re-applying it "to the sites the note missed".
 // E:\gamedcs\ai.cpp:1896
-// Goto controls: the positive defensive scope preserves all 2266 compiled
-// bytes and 46 relocation names/addends at 91.6697%. A for/break scope and
-// bool/byte commit result also preserve the score; do/while(0) falls to
-// 75.7425%. Keep the DC positive scope and its ordinary helper calls.
 VA(0x00421680, 0x8F9)  // linkorder, dc 0x266d4
 unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned char teleport, long* actionValue, type_AI_combat_parameters* estimate)
 {
@@ -2524,30 +2390,7 @@ void combatManager::simulateCombat(long ourGroup, unsigned char checkingSurrende
     m_nextActionGridIndex2 = saved48;
 }
 
-// E:\gamedcs\ai.cpp:2608. Score every enemy stack as a target for every
-// stack of `our_group`, leaving the best in each attacker's AI_target
-// quartet. A shooter is seeded at range 1 and never walks; anything else
-// has its reachable set laid down by SeedCombatPosition first and then
-// reads the per-hex arrival cost back out of the search array.
-// Residual (78.8%): addressing, not structure - the block count is exact
-// (46 = 46), the call streams agree 9 = 9, and the frame is one dword over.
-// Retail computes `&armies[our_group][0]` and `&armies[enemy_group][0]`
-// AHEAD of each loop's numArmies guard and walks both with `add reg,0x548`;
-// ours computes them inside. Tried and rejected: the four AI_target stores
-// through the `ours` pointer (63.59 - VC6 then biases the induction
-// variable onto +0x53c and needs a second one for the army base, which is
-// the whole 15-point difference and why they are written as subscripts);
-// full subscripts everywhere with no pointer local (64.26); an explicit
-// `ours++` pointer walk on both loops (78.70) and on the outer alone
-// (70.69); declaring the pointers above their loops (78.81, byte-flat);
-// inlining the get_simple_attack_effect result into the consider_attack
-// argument list (77.79).
-// Re-measured 2026-09-05 in the two-call inline structure below (the
-// verdicts above predate it): hoisting BOTH pointer initialisers above
-// their loop guards with `i++, ours++` in the for-header scores 83.08,
-// the outer one alone 84.84 - both under the 87.36 subscript form. The
-// hoist is therefore not the lever for retail's pre-guard `lea esi` and
-// its unconditional prologue `push esi`.
+// E:\gamedcs\ai.cpp:2608
 VA(0x00422b20, 0x278)  // anchor-caller(choose_shooter_action/choose_melee_action) + anchor-callee(SeedCombatPosition), dc 0x27888
 void combatManager::findAITargets(long ourGroup, const army* currentArmy,
                                     unsigned char meleeOnly,
@@ -3914,12 +3757,7 @@ VA_COMPGEN(0x00423820, 0x87, STD_UNGUARDED_PARTITION, army_ptr_func_moves_before
 // COMDAT pairing: std::_Unguarded_insert<army*, func_moves_before>, 0.976.
 VA_COMPGEN(0x004237c0, 0x5E, STD_UNGUARDED_INSERT, army_ptr_func_moves_before)
 
-// Original: func_moves_before::operator(); ai.cpp:597, dc 0x28024.
-// CodeView fixes this ordinary non-const call operator. Retail compares
-// move order at army+0x190, then stack index at +0xf8, and returns a byte
-// with ret 8. The sort calls it at 0x4236be/0x4236d0/0x4236e2, while its
-// unguarded insertion helper expands the same comparison. The written body
-// owns this VA directly, replacing the former FUNCTOR_CALL enrollment.
+// E:\gamedcs\ai.cpp:597, dc 0x28024
 VA(0x004235c0, 0x44)  // retained comparator + CodeView identity
 unsigned char func_moves_before::operator()(const army* a, const army* b)
 {

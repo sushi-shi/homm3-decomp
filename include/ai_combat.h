@@ -62,11 +62,7 @@ enum type_speed_catagory {
 //   +0x38 catagory    - get_attack's speed-band gate (0x4263d0).
 //   +0x3c value       - take_damage's per-creature divisor (0x423ec9).
 //   +0x40 total_value - the stack's remaining combat value.
-// Original names from Dreamcast 0x5d4f, corroborated by NH3API:
-// index, type, number, original_number, speed, melee_modifier,
-// final_melee_modifier, ranged_modifier, combat_value_per_hit, catagory,
-// value, total_value. The old hit_points names were misleading: the
-// population code computes value from baseFightValue and forceModifier.
+// Combat value is computed from baseFightValue and forceModifier.
 struct type_monster_data {
 public:
     long m_index;  // +0x00
@@ -110,20 +106,6 @@ SIZE(type_monster_data, 0x48);
 // pointers, retail reading _First at +0x04 and _Last at +0x08 and the
 // ctor (0x423f08) zeroing all three.
 
-// P2.3 IS ANSWERED (2026-08-07): retail links VC6's own Dinkumware
-// <vector>, not STLport, and this very class is one of the proofs.
-// The copy ctor 0x004276c0 opens `mov al,[esi] / mov [edi],al` - a
-// ONE-BYTE copy at +0 before any pointer - then `size()` from
-// [esi+4]/[esi+8], `if (_N<0) _N=0`, `operator new(_N*72)`. That byte
-// is Dinkumware's EMPTY `allocator` SUBOBJECT, which sits at vector+0
-// and pushes _First/_Last/_End to +4/+8/+0xc; STLport's vector has no
-// such member. The vector therefore starts at type_AI_combat_data+0x00
-// and is 16 bytes, rather than being a 12-byte pointer head at +0x04.
-// DC members.csv calls this member `creatures`, with the actual std::vector
-// type. The former type_monster_vector derived shim was not an original
-// container: its mutable const subscript bypassed the vendor's begin().
-// Use the real owner, including the native const-reference interface.
-
 // type_AI_combat_data - the quick-combat simulation side. Offsets are
 // byte-proven from the ctor's store sequence (0x423ee0) plus each
 // accessor:
@@ -150,7 +132,6 @@ class type_AI_combat_data {
 public:
     // DC ai_combat.h:245-246, dc 0x2c6a4; retained const mana getter.
     long getMana() const { return m_mana; }
-    // DC original: creatures (previous reconstruction: monsters).
     std::vector<type_monster_data> m_creatures;  // +0x00
     long m_terrain;  // +0x10
 
@@ -158,11 +139,8 @@ protected:
     long m_mana;  // +0x14
 
 public:
-    // DC original: can_cast_spells (previous reconstruction: can_cast).
     unsigned char m_canCastSpells;  // +0x18, natural padding to +0x1c
-    // DC original: total_combat_value (previous reconstruction:
-    // total_hit_points). initializeCreatures adds each unit's combat value,
-    // not its raw hit points (retail 0x424120; DC 0x29f58).
+    // Sum of the units' combat values, rather than their hit points.
     long m_totalCombatValue;  // +0x1c
 
 protected:
@@ -180,18 +158,14 @@ protected:
     long m_tacticsAdvantage;  // +0x20
 
 public:
-    // DC original: current_hero (previous reconstruction: my_hero).
     hero* m_currentHero;  // +0x24
-    // DC original: current_army (previous reconstruction: my_army).
     armyGroup* m_currentArmy;  // +0x28
 
 protected:
     hero* m_enemyHero;  // +0x2c
 
 public:
-    // DC original: wall_archery_penalty (previous reconstruction: wall_penalty).
     unsigned char m_wallArcheryPenalty;  // +0x30, natural padding at +0x31
-    // DC original: wall_speed_limit (previous reconstruction: penalty_distance).
     short m_wallSpeedLimit;  // +0x32
 
     type_AI_combat_data(const hero* newHero, const armyGroup* newArmy,
@@ -215,9 +189,7 @@ protected:
     void castMassDamageSpell(type_spell_choice& choice,
                                 const hero* castingHero);
     void getSummoningValue(type_spell_choice& choice) const;
-    // Before normalization: cast_summoning.
     void castSummoning(type_spell_choice& choice);
-    // Before normalization (function): type_AI_combat_data::cast_spell.
     void castSpell(type_AI_combat_data& defender, type_speed_catagory round);
     void castSpells(type_AI_combat_data& defender, type_speed_catagory round);
     void checkWallArcheryPenalty(const town* enemyTown);
@@ -262,7 +234,6 @@ protected:
     long getNextChainLightningTarget(long excluded,
                                          const type_AI_combat_data& defender,
                                          long start, long damage) const;
-    // DC original: has_creature.
     unsigned char hasCreature(TCreatureType creature) const;
     void inflictDamage(long damage, long blockerSpeed);
     long inflictMeleeDamage(long damage, long start, long speedLimit);

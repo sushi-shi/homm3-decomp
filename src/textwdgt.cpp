@@ -98,26 +98,7 @@ int textWidget::main(message& msg)
 #endif  // @carcass
 
 // E:\gamedcs\textwdgt.cpp:120
-// Vtable 0x642db0 slot 2. The stale generated vtable join called this
-// TSpreadsheetResource_vslot02, but the hand-admitted table is textWidget's
-// and every accessed field is the widget/textWidget layout. The control flow
-// is the button-family message protocol with no click callback: select and
-// deselect translate mouse messages in place, while widget commands 3 and 8
-// set Text and Color.
 
-// Dreamcast textwdgt.cpp:140..160 places widget commands first; line 152
-// calls the canonical SetColor header helper, lines 169..173 compute X then
-// Y, and lines 187/210 update Status directly. Preserve those source facts.
-// Restoring lines 180..194's common message-id/widget-id/return tail after
-// the right/left select arms closes the former 98.4931% register mismatch.
-// All eight combinations with the inactive-message branch order (125..128)
-// and positive selected scope (205..223) reproduce. The common down-event
-// tail is decisive: all four forms with it are exact; all four with the
-// duplicated tail remain 98.4931%. The retained form restores all three
-// positive source shapes. All 149 instructions, 34 CFG blocks, 25 branches,
-// seven returns and two named calls agree; every scored sibling is unchanged.
-// Earlier cached-status, disabled-type, case-order and coordinate-order
-// controls were flat because they preserved the duplicated message tail.
 VA(0x005bc440, 0x1AD)  // vtable 0x642db0 slot 2 + widget-message protocol, dc 0x164dd4
 int textWidget::main(message& msg)
 {

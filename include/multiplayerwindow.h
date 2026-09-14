@@ -9,8 +9,6 @@
 #include "textntry.h"
 #include "netgame.h"
 #include "va.h"
-// CDPlaySession and CAutoArray<T> live with their owning compiland; this
-// header used to carry private copies of both behind a per-TU macro.
 #include "dxplay.h"
 #include "hotseat.h"
 
@@ -155,7 +153,7 @@ public:
     void goMainMenu();
     virtual int windowHandler(message& msg);
     virtual int onWidgetDeselect(int id, bool& exitFlag);
-    // Original: TMultiPlayerWindow::GetRolloverWidget; MultiPlayerWindow.h:91, dc 0x101da0.
+    // E:\gamedcs\MultiPlayerWindow.h:91, dc 0x101da0
     VA(0x0050ed50, 0x7)  // dc 0x101da0
     virtual textWidget* getRolloverWidget()
     {

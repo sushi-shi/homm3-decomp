@@ -197,12 +197,6 @@ public:
     // to act against: should_attack_now (0x436c60) answers 0 outright
     // when the enemy's bit is clear. Name pending a writer.
     long m_enemyCanAttack;  // +0x14
-    // A SECOND bitmask, sliced 2026-08-08 out of the old pad by
-    // find_enemy_attacks (0x43c040): the census clears +0x18 and +0x14
-    // together at entry and then folds `1 << j` into +0x18 for every
-    // MELEE enemy it counts while folding `1 << enemy->bitIndex` into
-    // +0x14 for every enemy of either kind - so +0x18 is indexed by the
-    // enemy's SLOT and +0x14 by its bitIndex. Name pending a reader.
     long m_canBeAttacked;  // +0x18
     unsigned char m_winLikely;  // +0x1c
     // Original Dreamcast type_AI_spellcaster::is_creature_spell; retail field role agrees.

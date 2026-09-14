@@ -464,10 +464,6 @@ public:
     char m_goldBox[0x88 - 0x84];
     Bitmap816* m_flags[8];  // 0x88, DC name; adopflg%c.pcx
     Bitmap816* m_panels[8];  // 0xa8, DC name; adop_cpnl.pcx
-    // Dreamcast's 130-entry HeroPix field is a single array. Complete widens
-    // the same destructor walk to 164 pointers at +0xc8..+0x357; the former
-    // +0x354 `GoldBox` split was a model artifact (DC's real GoldBox precedes
-    // Flags and has no Complete counterpart at this offset).
     Bitmap816* m_heroPix[164];  // 0xc8..0x357, expanded retail roster
     char m_pad358[0x35c - 0x358];
     Bitmap816* m_randomTownBmp;  // 0x35c
@@ -476,7 +472,6 @@ public:
     // (+0x350/+0x354/+0x358). Retail's adjacent bitmap pointers are
     // +0x360/+0x368, preserving the +0x10 shift and intervening slot.
     // Source/layout recovery; no retail access to this member located.
-    // Replaces synthetic pad_364; original spelling: noDice.
     Bitmap816* m_noDice;  // 0x364
     Bitmap816* m_noHeroBmp;  // 0x368
     // The DC currentIndex/currentMap/durationIndex run (dc offsets
@@ -515,7 +510,6 @@ public:
     // Dreamcast mode is a byte at +0x374 between saveGameEdit (+0x370)
     // and pNewPlayerUpdateMan (+0x378). Both retail pointer anchors shift
     // by +0x10, preserving this slot. No retail mode access located.
-    // Replaces synthetic pad_384; original spelling: mode.
     unsigned char m_mode;  // 0x384
     // +0x385..0x387: alignment before the update-manager pointer.
     CNewPlayerUpdateMan* m_newPlayerUpdateMan;  // 0x388
@@ -556,11 +550,8 @@ public:
     char m_paddingBeforeChatSlider[0x1838 - 0x1835];
 
 private:
-    // The DC chatSlider/fileSlider/durationSlider/nameSlider run (dc
-    // 2832..2844). fileSlider is the one the WindowHandler scroll arms
-    // SetState through (+0x183c); +0x1840 - previously misfiled as the
-    // file slider - is the DURATION slider DoModal resets to state 11
-    // (the unlimited-turn index) on teardown.
+    // The window handler scrolls the file slider. On teardown, doModal resets
+    // the duration slider to 11 (unlimited turns).
     slider* m_chatSlider;  // 0x1838
     slider* m_fileSlider;  // 0x183c
     slider* m_durationSlider;  // 0x1840
@@ -589,10 +580,6 @@ private:
     // DC chatEdit (a CCombatChatEdit there): TurnChatOn (0x58ca80)
     // focuses its id on chat-open. Base-typed until its widget lands.
     textEntryWidget* m_chatEdit;  // 0x1858
-    // DC sortWhich - the linear run puts IT at 0x185c, not chatEdit as
-    // an earlier note here claimed; OnNewHostMsg resets it on the host
-    // handover (the dword store 0x58b510+0xd5 the old model read as a
-    // chatEdit null).
     int m_sortWhich;  // 0x185c
 
 public:
@@ -635,7 +622,7 @@ private:
     CSingleSelectionNetMsgHandler m_netMsgHandler;  // 0x1888
 
 public:
-    // Previously field_1898. Retail 0x58ea00 intersects the seated humans'
+    // Retail 0x58ea00 intersects the seated humans'
     // version feature sets and returns their highest common version.
     // Construction seeds this from the local version; join/drop refresh it.
     // PC-only role-derived name; not a player count or the product string.
@@ -696,7 +683,6 @@ public:
     // DC SetHumanSlot (dc 0x13b22c, 0.84x): re-seat the human players
     // against the refreshed slot attributes.
     void setHumanSlot();
-    // DC public QAA_NPAVCNetMsg@@AA_N proves bool return / bool& cancel;
     bool handleNetMsg(CNetMsg* netMsg, bool& cancel);
     void onSortMaps(int how);
     unsigned char onBeginGame();
@@ -771,16 +757,6 @@ public:
     void onTownUpdateMsg(CNetMsg* netMsg, bool inPopup);
     void updateNameLists();
     void updateTown(int pos, TTownType town, unsigned char inPopup);
-    // Retail 0x58e700 (past the stale span end) hands the whole incoming
-    // record to the seat assigner; DC's SetNewPlayerSlot takes the dpid
-    // alone. Provisional widening.
-    // Retail 0x58e700 (past the stale span end) takes the incoming
-    // CNetPlayerInfo record itself: OnNewPlayerMsg hands it
-    // &pMsg->m_playerInfo and OnUpdatePlayerPosMsg a full seat record
-    // (derived-to-base). DC's takes the dpid alone.
-    // ...and it returns nothing: the retail body sets no result on any of
-    // its four exits, and every one of its nine call sites discards the
-    // value. DC's is `unsigned char`.
     void setNewPlayerSlot(CNetPlayerInfo* playerInfo);
     void setupLoadGameMode();
     void setupNewGameMode();

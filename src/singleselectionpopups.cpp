@@ -293,18 +293,6 @@ CTownDlg::CTownDlg(unsigned char newGameMode)
 VA_COMPGEN(0x00575e30, 0x21, SCALAR_DELETING_DTOR, CHeroDlg)  // vtbl 0x641a68/0x641a90/0x641ab8 slot0; ICF folds CTownDlg (dc 0x12f36c) + CTeamAlignmentDlg (dc 0x12f3a0) dtors, dc 0x12f338
 
 // E:\gamedcs\singleselectionpopups.cpp:302
-// FIXED 87.2839% -> 98.6504% (2026-09-05). The old note's "one slot (our 0x14
-// frame vs retail 0x18)" WAS the whole wall, and the missing local is the row
-// centre. The two dwelling rows start at `width / 2 - 68` and `width / 2 - 88`;
-// written as two expressions VC6 re-derives the signed halving (`cdq/sub/sar`
-// off `[this+0x20]`) in the second preheader, which costs six instructions,
-// pushes iconX into EBX instead of retail's dead-parameter home `[ebp+8]`, and
-// leaves a one-instruction loop header the preheader has to `jmp` past. Retail
-// computes the centre ONCE into `[ebp-0x1c]` and both preheaders just bias it
-// (`lea eax,[ecx-0x58]`). Naming it makes the skeletons identical: 50/50
-// blocks, zero flow-kind, size-only, target-shift or missing rows.
-// Residual (98.6504%): one register divergence at +0xe5, inside the
-// CSpriteWidget Add; every other asm row is an unclaimed-reloc name.
 VA(0x00575e60, 0x670)  // anchor-vtable CTownDlg::CreateWin inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0xc (3 args), dc 0x12e708
 unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
 {
@@ -690,13 +678,6 @@ void TRandomMapProgress::setTotal(int totalSteps)
     loadProgFn00577180();
 }
 
-// Slot 2 - the base's pure Advance. Retail 0x577320 copies both operands
-// before selecting their addresses (fn+0x10..0x24). The canonical includes.h
-// min wrapper owns those copies and dereferences _cpp_min's reference while
-// they are alive. The former file-local ssp_cpp_min returned a reference to
-// its own parameter copy, conflating these two proven source boundaries.
-// Restoring min from includes.h preserves the exact 49-byte retail body;
-// the separate popup-destructor source-order move is also byte-neutral.
 VA(0x00577320, 0x31)
 void TRandomMapProgress::advance(int amount)
 {

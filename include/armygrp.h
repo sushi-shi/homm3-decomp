@@ -5,16 +5,6 @@
 #include <va.h>
 #include "abstractfile.h"
 
-// This header used to pull in "game.h" for its consumers' convenience.
-// It cannot any more: game.h owns `class game`, whose hero array needs
-// the COMPLETE hero type, and hero.h needs armyGroup for the record at
-// hero+0x91 - so game.h -> hero.h -> armygrp.h -> game.h was a cycle.
-// The edge broken is this one, because armygrp.h itself never needed
-// game.h: `game` and gpGame moved to their owner's header on
-// 2026-08-07, and what is left of the dependency is the two small
-// value-type headers game.h used to forward here. A TU that wants
-// `game`/gpGame/playerData now says `#include "game.h"` itself
-// (armygrp.cpp, hero.cpp, town.cpp, ai_tactical.cpp all do).
 #include "artifact_type.h"
 #include "terrain_type.h"  // TTerrainType, for akNativeTerrains below
 #include "struct.h"    // type_point, used through this header's consumers
@@ -444,12 +434,6 @@ enum ESpellId {
     SPELL_HYPNOTIZE = 0x3c,
     SPELL_FORGETFULNESS = 0x3d,
     SPELL_BLIND = 0x3e,
-    // 63, byte-proven by ai_tactical's consider_teleport (0x43aa60),
-    // which pushes the literal 0x3f into SpellCastWorks as the spell it
-    // is pricing, and again by combatManager::SpellTargetMessage
-    // (0x5a8690), whose 53-entry byte table gives 0x3f its own arm.
-    // UNGATED 2026-08-20: the view it used to sit behind bought nothing
-    // the ledger keeps - see SPELL_REMOVE_OBSTACLE below.
     SPELL_TELEPORT = 0x3f,
     // 64, byte-proven by combatManager::SpellTargetMessage (0x5a8690).
     // Its jump table covers exactly 0xc..0x40 and the TOP entry, 0x40,
@@ -576,25 +560,6 @@ struct SSpellTraits {
     // sptraits.txt column 1 into this pointer.
     const char* m_abbreviatedName;
     int m_level;                // the dragons' magic-immunity gate
-    // +0x1c, the spell's SCHOOL MASK - a full dword, byte-proven by
-    // hero::get_spell_level (0x4e5080) and hero::GetManaCost
-    // (0x4e5240), which both load `[akSpellTraits + spell*136 + 0x1c]`
-    // with a 32-bit `mov` and hand it straight to
-    // hero::GetSpellSchoolLevel as the school_mask argument.
-    // armygrp's own consumer tests bit 1 of it - eSchoolFire - crossed
-    // with creature trait 0x4000, i.e. fire immunity.
-    // Typed TSpellSchool rather than int so that hand-off needs no cast
-    // into the enum domain. That means this header - which IS inside
-    // initialize.cpp's include closure - gains one type definition
-    // through spellschool.h; A/B-measured 2026-08-08, initialize_game_data
-    // stayed at 96.0880 and no scored function in any of the 52 units
-    // moved. (Three ESpellId ENUMERATORS added to this same header in
-    // the same session did move it, 96.09 -> 90.16, and were withdrawn -
-    // the class is non-monotonic, so measure every time.)
-    // For the record: initialize_game_data finished that session at
-    // 100.0000, but NOT from this include - the A/B above is why. The
-    // raise belongs to the wider header change-set and was never
-    // isolated; see the note above its baseline row.
     union {
         TSpellSchool m_school;  // typed consumer view
         unsigned int m_schoolBits;  // loader's OR-accumulator view
@@ -745,9 +710,6 @@ DATA(0x00682910) extern const char* g_creatureBackgrounds[9];
 // text): nine threshold bands x three name sets, 12-byte row stride
 // proven by GetArmySizeName's nine reloc targets. The NAME is a
 // bootstrap invention (no Dreamcast/NH3API name survives for these).
-// NWC's Hungarian-lite is attested by the DC name corpus (b/i/p/gp/
-// gb/psz all in real use: gpGame, pszFormat, iNameSet), but the
-// `apsz` composition specifically is NOT - replace on evidence.
 DATA(0x006a5bb8) extern const char* g_apszArmySizeNames[9][3];
 
 // Native terrain by ALIGNMENT (townType order; -1 = none), .rdata:
@@ -876,12 +838,11 @@ long modifySpellDamage(long damage, SpellID spell, TCreatureType creature);  // 
 // CODEVIEW(E:\gamedcs\armygrp.cpp:208, dc 0x4e388) void TSplitWindow::SetRolloverText(int codeY);
 // CODEVIEW(E:\gamedcs\armygrp.cpp:131, dc 0x4fd54) void* TSplitWindow::`scalar deleting destructor'(unsigned __flags);
 
-// --- armyGroup ---
-// CODEVIEW(E:\gamedcs\armygrp.cpp:668, dc 0x4eb88) unsigned char armyGroup::HasSomeUndead();
-// CODEVIEW(E:\gamedcs\armygrp.cpp:748, dc 0x4ec98) int armyGroup::GetHomogeneityMoraleAdjust();
-// CODEVIEW(E:\gamedcs\armygrp.cpp:885, dc 0x4ee08) void armyGroup::DamageGroup(float casualtyRate);
-// CODEVIEW(E:\gamedcs\armygrp.cpp:1347, dc 0x4f708) older Dreamcast prototype; retail Complete's ret 0x24 and body prove the corrected declaration above.
-// CODEVIEW(E:\gamedcs\armygrp.cpp:1464, dc 0x4fab4) older Dreamcast prototype; retail Complete's ret 0x20 and creature indexing prove the corrected declaration above.
+// E:\gamedcs\armygrp.cpp:668, dc 0x4eb88
+// E:\gamedcs\armygrp.cpp:748, dc 0x4ec98
+// E:\gamedcs\armygrp.cpp:885, dc 0x4ee08
+// E:\gamedcs\armygrp.cpp:1347, dc 0x4f708
+// E:\gamedcs\armygrp.cpp:1464, dc 0x4fab4
 
 // --- std ---
 // CODEVIEW(..\stlport\stl_string.h:296, dc 0x4fd88) void std::basic_string<char,std::char_traits<char>,std::allocator<char> >::basic_string<char,std::char_traits<char>,std::allocator<char> >(const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __s);

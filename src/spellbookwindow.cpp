@@ -165,19 +165,7 @@ std::string TSpellbookWindow::getSpellDescription(
     return result;
 }
 
-// E:\gamedcs\spellbookwindow.cpp:180
-// Reconstructed 2026-08-27/28 (stub -> 100%). Dreamcast proves the initial
-// DC-only del_Spr_from_Cache boundary, the four SetContext/SetSchool/position sites,
-// and the three widget-index locals. Retail additionally proves the Complete
-// font/sprite data identities and that RolloverWidget's initial text pointer
-// is null rather than an empty-string address. The header-inline setters,
-// explicit right-page id resets, Hero-member mana reload, and short-lived
-// background local reproduce VC6's retail register, slot, and EH schedule.
-// DC also proves const hero& h and bitmapBorder* const background. The
-// retained-cache-call negative control leaves the constructor at 99.3662%;
-// omitting the PC-absent operation reaches 100% with either local cv form.
-// Before normalization (locals): magic_terrain, spell_level_widgets_index,
-// spell_icon_widgets_index, spell_name_widgets_index, selected_school.
+// E:\gamedcs\spellbookwindow.cpp:180, dc 0x14be88
 VA(0x0059bdf0, 0xAC9)  // anchor-bracket: immediately precedes scalar-del-dtor 0x59c8c0; EH, ret 0x10 = 4 args; spelback.pcx setup; dc 0x14be88
 TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbookWindow::TSpellContext context, int magicTerrain)
     : CAdvPopup(90, 2, 620, 595, 0x12),
@@ -591,10 +579,8 @@ DATA(0x00641db8) static const int g_tabToSchool[] = {0, 3, 1, 2, 4};
 // previous, next, cancel), real exit flag, mana-ok SpellMap re-subscript,
 // and rollover cache guard. Named spell and rolloverWidget locals plus
 // canonical previousPage/nextPage calls reproduce the string expansions.
-// The initial sema view ends at the first physical epilogue (+0x657),
-// before the rollover code. Full-carve bytes and both lookup pools must be
-// checked too; their incorrect addends were the former 99.9011% residual,
-// not harmless linker aliases. The other unit scores remain unchanged.
+// The physical epilogue precedes the rollover code; the full carve and both
+// lookup pools are required because their addends affect the function bytes.
 // Failed controls: dialogReturn-before-id changed the shared exit tail;
 // early return on a rollover cache hit changed the lifetime/return paths.
 VA(0x0059d040, 0xBA0)  // anchor-callee: calls GotoPage/get_spell_description/GetManaCost/SetIconFrame, msg jump-table, ret 4; absorbs inlined DisplayNewSchool+convertID2HelpID; dc 0x14cecc

@@ -146,15 +146,6 @@ SIZE(SBolt, 0x78);
 // as army.h's wallTargets rows do where no roster names the individual
 // segments.
 
-// CORRECTION 2026-08-20, on reconstructing DrawBolt: this note used to
-// say each of the SIX values gets its own gradient table. It does not.
-// The jump table's SECOND entry - BOLT_COLOR_1 - points AT the default
-// block, so 0x12d has no case of its own and is drawn as a raw pixel
-// like any unrecognised colour. Of the remaining five, BOLT_COLOR_2 and
-// BOLT_COLOR_4 have a five-row rim-indexed ramp each, BOLT_COLOR_0 and
-// BOLT_COLOR_3 SHARE one fifteen-row ramp read in opposite directions,
-// and BOLT_COLOR_CHAIN_LIGHTNING has no table at all - its six shades
-// are spelled out one by one in the body.
 enum EBoltColor {
     BOLT_COLOR_0 = 0x12c,
     BOLT_COLOR_1 = 0x12d,
@@ -214,29 +205,6 @@ enum ECombatGrid {
     // screen hit rectangles at 0x694ea8..0x694f08 are tested in.
     COMBAT_HEX_ATTACKER_HERO = 0xfc,
     COMBAT_HEX_DEFENDER_HERO = 0xfd,
-    // Two more pseudo-hexes in the same domain, both bombardable castle
-    // structures and both wallTargets rows: 0xfe is row 7 and 0xff is
-    // row 0 (the table's own `target_hex` column carries exactly 254 and 255,
-    // read straight from the image). valid_wall_target is what SPLITS
-    // them - it refuses row 7 below a CITADEL and rows 0 and 6 below a
-    // full CASTLE, which is the tier that builds the central keep and
-    // the tier that builds the two side towers respectively. So 0xfe is
-    // the KEEP and 0xff is one of the two side towers.
-    // CORRECTION 2026-08-20: this comment used to finish "the other being
-    // row 6's ordinary hex 183", and that was wrong. LoadArmies
-    // (0x463600) installs THREE arrow-tower stacks, at 0xfe, 0xff and
-    // 0xfb - never at 183 - and the field_1402c/d/e note further down
-    // this header had already recorded 0x46a460 keying the same three
-    // pseudo-hexes 254/251/255. So 0xfb is the third member of this
-    // domain, and it is added below rather than left as a literal.
-    // Which side tower is which (upper vs lower) remains the one half of
-    // the naming NOT proven; GetCommand (0x476490) tests 0xff first,
-    // ahead of the keep, and the four GetGridIndex hit rectangles are
-    // tested 252, 253, 254, 255.
-    // Include-set measurement: this enumerator visible to command.obj
-    // cost GetCommand 92.5714 -> 92.5357 (max/hist hold the peak); it
-    // joins the declarator-count evidence recorded at field_132a0 - an
-    // enumerator counts too.
     COMBAT_HEX_KEEP = 0xfe,
     COMBAT_HEX_UPPER_TOWER = 0xff
     ,
@@ -690,10 +658,6 @@ public:
     // while the byte below is set. Both names await a writer.
     int m_magicTerrain;  // +0x53c0
     unsigned char m_onAntiMagicGarrison;  // +0x53c4
-    // "This combat was started by surrounding the defender": SetupCombat
-    // parks its own is_surrounded parameter here, as its second-to-last
-    // act, and that parameter's name is the DC SetupCombat prototype's.
-    // Sliced out of the old pad by that writer; no reader is decoded yet.
     unsigned char m_isSurrounded;  // +0x53c5
     // GetBackgroundName selects CmBkDeck.pcx while this byte is set.
     // Name remains ordinal until its writer is reconstructed.
@@ -709,12 +673,6 @@ public:
     // army::get_owner (0x4426d0) do the same lookup off
     // gpCombatManager, with and without the hypnotize flip.
     hero* m_heroes[2];  // +0x53cc
-    // The two combat heroes' spell power, cached per side: ai.cpp's
-    // get_area_effect (0x41f920) hands `[this + 4*side + 0x53d4]` to
-    // ComputeSpellDamage as the multiplier that leaf applies to the
-    // spell traits row's per-power damage (0x5a78ba, `imul edi,
-    // [ebp+0xc]`). Sliced out of the old pad; the pair is the whole
-    // eight bytes and the name is that argument's role.
     int m_spellPower[2];  // +0x53d4
     // A per-side latch berserk_attack (0x4222c0) raises, indexed by
     // SIDE as a byte, on exactly one path: when a berserked stack's
@@ -743,10 +701,6 @@ public:
     unsigned long m_cmbtHeroLastFidgetTime[2];  // +0x53fc
     CSprite* m_creatureSprites[2];  // +0x5404
     CSprite* m_heroFlagSprites[2];  // +0x540c
-    // Original Dreamcast cmbtHeroFlagFrame[2] at +0x5424; retail
-    // InitNonVisualVars seeds 0/3 at +0x5414/+0x5418, and DrawFrame
-    // indexes both entries by side. Former field_5414/field_5418 are
-    // one array, including the dynamic accesses in hero animation.
     int m_cmbtHeroFlagFrame[2];  // +0x5414
     // DC CodeView names these two adjacent SLimitData[2] arrays; DrawFrame's
     // four DrawCombatHero calls independently prove the retail offsets.
@@ -783,11 +737,6 @@ public:
     // combatcontrolsubwindow.cpp and this TU would move with it, and this
     // lane touches none of them (the field_54b4 precedent).
     unsigned char m_sideIsAi[2];  // +0x54a4
-    // Per-side "this side is played on THIS machine": SetupCombat stamps
-    // it with `gpGame->IsLocalHuman(playerIds[side])` in the same loop
-    // that fills sideIsAI, and clears it for a side with no player id.
-    // Sliced out of the old pad by that writer; no reader is decoded yet,
-    // so the name states only what the writer proves.
     unsigned char m_sideIsLocalHuman[2];  // +0x54a6
     // The adventure-map player ids behind the two combat sides. LowerDoor's
     // inlined IsQuickCombat indexes the 360-byte gpGame->players row with
@@ -795,10 +744,6 @@ public:
     // UpdateArmyGroup applies its creatureId bit-22 exclusion only while
     // the selected id is not -1.
     int m_playerIds[2];  // +0x54a8
-    // Per-side latch SetupCombat raises to 1 for BOTH sides unconditionally,
-    // outside the player-id test that guards the three bytes around it.
-    // Sliced out of the old pad by that writer; no reader is decoded yet
-    // and no roster row reaches the pair, so the name is an ordinal.
     unsigned char m_artifactCast[2];  // +0x54b0
     // Passed as the final, byte-wide SetMorale input for every stack
     // controlled by the indexed side. Its meaning and public name are
@@ -977,12 +922,6 @@ public:
     // and then asks it, after the death sweep, whether MakeCreaturesVanish
     // needs running. A retype, not a new declarator.
 
-    // A BYTE, not the int this line used to carry (byte-proven
-    // 2026-08-20 by Armageddon, 0x5a4bc0): it clears the field with
-    // `mov byte ptr [ebx+0x13460], al` out of the same `xor eax,eax`
-    // that seeds the field_13438 memset, and asks it with
-    // `mov al, [ebx+0x13460] / test al,al`. A dword field gives
-    // `mov dword ptr [...],0` and `cmp dword ptr [...],0` in both places.
     unsigned char m_someCreaturesVanish;  // +0x13460
     // Dreamcast bSomeCreaturesVanish is one byte followed by cBkgName;
     // retail retains the three-byte pointer-alignment gap at +0x13461.
@@ -1020,8 +959,7 @@ public:
     // then divides last-first by sizeof(TObstacle) for the bound. The
     // DC roster's std::vector<combatManager::TObstacle> COMDATs say
     // this really is a vector; only its first two members are proven.
-    // Original: Obstacles, std::vector<combatManager::TObstacle> in DC
-    // combatManager type 0x1ed7. Complete uses Dinkumware: allocator at +0,
+    // Complete uses Dinkumware: allocator at +0,
     // pointers at +4/+8/+0xc; TObstacle remains a 0x18-byte value.
     std::vector<TObstacle> m_obstacles;  // +0x13d58
     // Placement-phase latch: FindPath/ValidPath forward it into
@@ -1112,10 +1050,6 @@ private:
 public:
     Bitmap816* m_combatCellGridBitmap;  // +0x13ff4
     Bitmap816* m_combatShadowBitmap;  // +0x13ff8
-    // Sliced out of the old pad in place 2026-08-20 (a retype, not a new
-    // declarator). SetupAndLoadObstacles zeroes it as its very first
-    // statement and nothing else decoded touches it, so the name stays
-    // an ordinal.
     int m_obstacleAnimationFrame;  // +0x13ffc
     // "This slot's stack was added mid-combat and still owes a fizzle-in
     // frame": AddArmy (0x47a100) stamps [iSide][slot] with the flattened
@@ -1123,39 +1057,19 @@ public:
     // Twenty slots a side, not the twenty-one `armies` carries - AddArmy
     // only ever searches 0..19. Name is an address ordinal.
     unsigned char m_creatureEffect[2][20];  // +0x14000
-    // Original Dreamcast bHeroEffect[2]/bFlagEffect[2] at +0x136f0/2.
-    // Retail hero animation sets the first pair at +0x14028, flag
-    // animation sets the second at +0x1402a, and ComputeMaxExtent
-    // checks both pairs by combat side. Former field_14028[4].
     unsigned char m_heroEffect[2];  // +0x14028
     unsigned char m_flagEffect[2];  // +0x1402a
     // The three arrow-tower latches, keyed by the tower's grid index by
     // 0x46a460: hex 254 -> +0x1402c, hex 251 -> +0x1402d, hex 255 ->
     // +0x1402e.
 
-    // AN ARRAY, corrected 2026-08-20. This used to be three scalars, on
-    // the reasoning that "the hex order and the slot order do not
-    // agree" - and KeepAttack (0x465ad0) refutes it outright, because it
-    // INDEXES the band: it maps the acting tower's gridIndex through the
-    // same three-way switch mark_tower_army uses, to 0xfe -> 0,
-    // 0xfb -> 1, 0xff -> 2, and then stores with
-    // `mov byte ptr [ecx + edi + 0x1402c], 1`. That index is exactly the
-    // scalar order 0x46a460 writes, so the two orders DO agree and the
-    // band is one array. Every existing reader keeps its byte offset.
     unsigned char m_archerEffect[3];  // +0x1402c
     // Original Dreamcast auto_retreat_on (+0x136f7). Retail SetupCombat
     // enables this byte at +0x1402f; command processing asks whether to
     // retreat and records the answer here. Earlier any_action_taken
     // correspondence was shifted by one byte.
     unsigned char m_autoRetreatOn;  // +0x1402f
-    // Original Dreamcast any_action_taken (+0x136f8). Retail actions set
-    // this byte and ResetRound clears it, using it to finish placement.
-    // Former field_14030[0].
     unsigned char m_anyActionTaken;  // +0x14030
-    // Retail-only scratch grid: 0x46a520 clears 187 bytes and marks the
-    // army's occupied hexes. CheckObstacleAttacks (0x46a570) tests/sets
-    // each hex before fire-wall, landmine and moat checks, avoiding
-    // repeated obstacle hits. Former field_14030[1..187]. Role-derived.
     unsigned char m_obstacleAttackVisited[COMBAT_GRID_CELLS];  // +0x14031
 
     combatManager();
@@ -1735,46 +1649,6 @@ public:
                                        const army* targetArmy,
                                        unsigned char firstTarget,
                                        long creatureSpell) const;  // 0x5a3c80
-    // 0x5a3e40 (269 B), the Pit Lord's own lookup - the fourth spells.obj
-    // leaf and the sibling of find_resurrection_target 0x5a3cc0 (373 B)
-    // two lines above. LOCATED 2026-08-14 from army::can_cast_resurrect
-    // (0x4473d0), whose DC twin 0x4be64 calls exactly six things and
-    // whose retail body calls exactly the matching three that survive
-    // out of line: can_cast_spells, then ONE of these two by creature
-    // id. The two arities separate them with no ambiguity - the
-    // demonic lookup takes (group, hex) and the general one
-    // (group, hex, bool) - and the DC spells.obj order
-    // find_resurrection_target 0x153158 < find_demonic_resurrection_target
-    // 0x1532f8 < find_animate_dead_target 0x153400 is preserved exactly
-    // by retail 0x5a3cc0 < 0x5a3e40 < 0x5a4260. Names and parameter
-    // types are the S_PUB32 mangling's
-    // (?find_demonic_resurrection_target@combatManager@@QAAPAVarmy@@HH@Z).
-    // Neither body is claimed here; both belong to src/spells.cpp.
-    // 0x5a8950 (2457 B), the fifth spells.obj leaf. THE COMMENT THAT USED
-    // TO CARRY THIS ADDRESS WAS WRONG: SpellCastWorks two declarations
-    // above claimed it, and the arity refutes that outright - 0x5a8950
-    // ends `ret 0xc`, three stack arguments, where SpellCastWorks takes
-    // five. It is combatManager::ShowSpellMessage (DC 0x157ae4,
-    // ?ShowSpellMessage@combatManager@@QAAXHHPAVarmy@@@Z, three
-    // parameters plus this), the ONE spells.obj row DC's ResetRound
-    // calls, and retail's ResetRound calls 0x5a8950 with exactly
-    // (1, SPELL_POISON, this) - the DC parameter names are
-    // bIsMonsterSpell / spellId / targetArmy in that order. The real
-    // SpellCastWorks is 0x5a3c80, byte-proven as the call target of
-    // ai_tactical's consider_chain_lightning (0x437310); that
-    // correction is recorded on its own declaration.
-    // 0x59fe30, the spells.obj entry point. DC 0x14f7dc
-    // ?CastSpell@combatManager@@QAAXW4SpellID@@H_NHW4TSkillMastery@@J@Z
-    // with the parameter names spellId / targetIndex / bIsMonsterSpell
-    // / secondaryIndex / monster_skill / monster_power, and retail's
-    // six pushes at army::cast_caliph_spell (0x447ee0) match that arity
-    // exactly. Dreamcast's older build typed bIsMonsterSpell as `_N` (and
-    // CodeView records its one-byte storage), but Complete widened the role
-    // to the three-way ESpellCaster value: retail compares the full dword
-    // against 1 and 2 and forwards it without a zero-extension mask. The
-    // third parameter is therefore int in the Complete ABI. TSkillMastery is
-    // spelled int here because its typedef lives in a header this one does
-    // not include. Not claimed.
     void castSpell(SpellID spellId, int targetIndex,
                    int isMonsterSpell, int secondaryIndex,
                    int monsterSkill, long monsterPower);
@@ -1906,8 +1780,8 @@ public:
     {
         return (y & 1) != 0;
     }
-    // Original: combatManager::GridY; CmbtMgr.h:1513, dc 0x27f34.
     // LF_MFUNCTION has no this type: this is a static header helper.
+    // E:\gamedcs\CmbtMgr.h:1513, dc 0x27f34
     static int gridY(int index) { return index / COMBAT_GRID_ROW_STRIDE; }
     static int gridX(int index)
     {
@@ -1987,17 +1861,6 @@ public:
     // after clearing lastMovedArmy, re-arming the command bar for the new
     // stack. Declared, not claimed: its body is outside this lane.
 
-    // RESOLVED 2026-09-06: the five artifact auto-casts' gate at 0x5a40d0
-    // was ALSO declared here as `Unnamed5a40d0(SpellID, long, long, long,
-    // long)` while spells.cpp:2811 claims that same RVA as
-    // HasValidSpellTarget(SpellID, long, long, unsigned char, long) - two
-    // contradictory declarations of one retail function, so every cmbtmgr
-    // call named ?Unnamed5a40d0@...@@QAEEHJJJJ@Z against retail's
-    // ?HasValidSpellTarget@...@@QAEEHJJEJ@Z. The (spell, 3, side, 1, 2)
-    // argument list this note recovered is exactly HasValidSpellTarget's
-    // (spellId, mastery, casting_side, first_target, creature_spell), and
-    // the retail push sequence at 0x465330+0x2c0c is byte-identical either
-    // way, so the duplicate is withdrawn in favour of the claimed name.
     void getControl();
     // DC command.cpp:907. Complete has no standalone copy: ProcessCombatMsg
     // carries this two-compare helper expanded at its sole retail site.
@@ -2165,15 +2028,6 @@ DATA(0x00641e08) extern const TSpellEffectTraits g_spellEffectTraits[];
 // Name is a BOOTSTRAP INVENTION - no roster attests it.
 DATA(0x0063bd18) extern const int g_moatDamage[];
 
-// The nine faction-specific moat attacker strings filled by the game-array
-// text loader and indexed by defendingTown->type in the retail-only moat
-// worker at 0x469e50. Name is a BOOTSTRAP INVENTION, but the ROLE is
-// settled: text.cpp used to define the same datum as `gBorderGuardColors`
-// (the Dreamcast public at dc 0x34f50, transferred here by its position in
-// InitializeArrayText's fill run). The whole retail image references
-// 0x6a5d60 exactly twice - that fill and 0x469ecc - and no border-guard
-// body reads it, so the town-type indexing is the only attested use.
-// text.cpp now defines it under this name; do not reintroduce the second.
 DATA(0x006a5d60) extern const char* g_moatDamageMessages[9];
 
 // The thirty-two hexes two facing boats occupy, at .rdata 0x63d368.
@@ -2194,28 +2048,6 @@ DATA(0x0063becc) extern const short g_largeObstacleHexes[];
 DATA(0x0069877c) extern int g_combatQuickMode69877c;
 extern int g_combatActive698a18;
 
-// The four screen hit rectangles GetGridIndex (0x4647a0) tests before
-// it falls through to the grid arithmetic, one per special combat hex,
-// in its own test order: 0x694f08 -> hex 252, 0x694ef0 -> 253,
-// 0x694ea8 -> 254, 0x694ed8 -> 255. Each is a left/top/right/bottom
-// quadruple - the read order is left, RIGHT, top, BOTTOM, which is the
-// natural `l <= x && x <= r && t <= y && y <= b` bounding-box test and
-// is what fixes right at +8 rather than +4.
-// SPELLED AS SIXTEEN SEPARATE INTS, but NOT because a struct would
-// cost bytes. CORRECTED 2026-08-20: an earlier note here claimed the
-// in-instruction displacement a four-int struct produces (one reloc
-// against the base symbol, addend 8) is scored against the delinked
-// target's per-address symbols (addend 0). It is not - objdiff masks
-// the whole reloc'd field, addend included. The negative control is
-// drawing.obj's ResetLimitCreature, which copies gCombatAreaLimits
-// through addends 4/8/0xc against a target whose addends are all 0 and
-// scores 100.0000%. The missile animators then USED that: spelling the
-// four running limits as one aggregate is what took ShootMissile from
-// 91.22 to 91.74. So a struct is available whenever retail's source
-// plausibly had one; sixteen ints here is a naming choice (no roster
-// row reaches any of the four rectangles), not a scoring workaround.
-// NAMES ARE BOOTSTRAP INVENTIONS - no roster, string or DC global
-// reaches any of them, so each keeps an address ordinal.
 DATA(0x00694ea8) extern int g_combatHexLeft694ea8;
 DATA(0x00694eac) extern int g_combatHexTop694eac;
 DATA(0x00694eb0) extern int g_combatHexRight694eb0;

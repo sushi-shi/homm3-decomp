@@ -2819,7 +2819,7 @@ void combatManager::markAreaEffect(SpellID spell, long hex, long mastery,
 // the spell missed it.
 
 // THE `victim` / `multiple_targets` PAIR IS THE MESSAGE SELECTOR. Retail keeps
-// the FIRST stack it damaged and a byte saying whether there was more
+// the FIRST stack it damaged and a byte saying whether more stacks remained
 // than one, and the two arms of the tail differ in exactly two
 // arguments: with one victim the message names that stack and reports
 // the damage the loop last computed, with several it names none and
@@ -3133,18 +3133,7 @@ void combatManager::armageddon(int level, int power)
     checkRebirth();
 }
 
-// E:\gamedcs\spells.cpp:3572, original ResetBoltAngle.
-// Recomputes remaining distance, thickness and angular distortion. Retail
-// proves float rounding of both progress operands and the unusual atan2
-// argument order (x delta, y delta). DC 3582/3583 owns the absolute-distance
-// locals, followed by sqrt at 3584; 3629/3630 is a zero-distortion early return.
-// Restore those facts and remove the invented squared-delta inline helper.
-// Residual (97.3158%): progress numerator/divisor scratch reuse and the
-// distortion branch's float-store merge differ. Nineteen source states show
-// natural distance locals, their lifetime/reuse, direct float-cast ratio and
-// early return are all flat; a separate compound ratio assignment is 91.0292%.
-// The former claim that explicit locals could not reach this score is false.
-// All other spells scores stayed fixed through the reproduced family.
+// E:\gamedcs\spells.cpp:3572
 VA(0x005a5260, 0x1DC)  // order-map+arity, dc 0x1542b4
 void combatManager::resetBoltAngle(SBolt* bolt)
 {
@@ -4189,12 +4178,6 @@ void combatManager::mirrorImage(int targetIndex, int level)
 // format_string's returned object, where `std::string message = ...;
 // message.c_str()` reads the local's own _Ptr slot instead.
 
-// Residual (99.0144%): inspect the current structured-loop object; the
-// historical 93.44% duplicated-header diagnosis no longer describes it.
-// The canonical GetHexIndex call at DC 4729 is neutral at 99.0144%; making
-// the DC col/candidate locals const with a column ternary scores 98.7164%.
-// The remaining mismatch starts at the exhausted-picker guard/destructor
-// edge; all sixteen named calls agree.
 VA(0x005a7080, 0x29A)  // order-map+arity, dc 0x15627c
 void combatManager::summonElemental(SpellID spell, TCreatureType monType,
                                     int spellPower, int level)
@@ -5225,13 +5208,13 @@ unsigned char combatManager::ableToSummonElemental(SpellID spell, long side)
     return getElementalType(spell) == m_summonedElemental[side];
 }
 
-// Original: combatManager::GetSpellWallHex; spells.cpp:5928, dc 0x158108.
 // DC line5934 calls the canonical GridY and RowIsOdd header helpers.
 // ONE result variable, defaulted before the row test: retail's
 // expansion in HandleCastWallSpell (0x5a3250) copies baseIndex into
 // the result register ahead of the `rowOffset == 1` branch and
 // stores it once at the join, which three separate returns cannot
 // give (they store per arm, measured 94.08 -> 100 on that body).
+// E:\gamedcs\spells.cpp:5928, dc 0x158108
 int combatManager::getSpellWallHex(int baseIndex, int rowOffset, int side)
 {
     int hex = baseIndex;

@@ -11,12 +11,6 @@ void pollSound();
 class sample;
 class ds_memsample;
 
-// Retail PC uses the Miles 5.0e digital driver, rather than Dreamcast's
-// ds_engine. Use the pristine SDK layout, including its synchronization
-// qualifiers. The former AILDigitalDriver::opaque prefix ended at +0xa8:
-// retail Open reads that SDK lppdsb member and calls SetVolume at slot 15.
-// SDK boundary spellings remain unchanged; the original prefix names and
-// types are owned by vendor/miles-5.0e/orig/Mss.h (_DIG_DRIVER).
 struct AILPrimaryBufferVtable {
     void* m_methods[15];
     long (__stdcall* m_setVolume)(void* self, long volume);
@@ -68,11 +62,6 @@ SAMPLE2 loadPlaySample(const char* sampleName);
 void clearMemSample(SAMPLE2 sample2);
 void waitEndSample(SAMPLE2 sample2, int milliWait);
 
-// Retail 0x55c720 is ResourceManager::GetSample, claimed and defined in
-// resourcemanager.cpp; the provisional `LoadSampleResource` spelling this
-// header used to carry was a second name for that same body, so consumers
-// declare the real one in a namespace block instead (advmgr.cpp includes
-// resourcemanager.h outright).
 namespace ResourceManager {
 sample* getSample(const char* name);
 }
@@ -104,7 +93,7 @@ enum ESoundChannel {
     SOUND_CHANNEL_COUNT = 4
 };
 
-// The PCM sample-width domain used to fill the wave format and to select
+// The PCM sample-width domain fills the wave format and selects
 // Open's fallback after a failed driver probe. Values are retail-byte proven;
 // names are role placeholders.
 enum ESoundBitsPerSample {
@@ -133,36 +122,6 @@ enum ESampleModifyFunction {
 
 // soundManager (baseManager base = 0x38, basemgr.h SIZE-asserted).
 
-// PROVEN layout (2026-08-07), re-derived from the retail ctor 0x599760
-// jointly with MemorySample 0x59a210, ResumeSamples 0x599b90,
-// StopAllSamples 0x599d90 and PauseSamples 0x599c40. It CORRECTS an
-// earlier reading that shifted the whole middle group down by 4: the
-// ctor's `mov [esi+0x34], edx` lands on baseManager::status (offset 52),
-// not on a soundManager member, and every later member sits 4 bytes
-// lower than previously modelled.
-//   0x34  baseManager::status - re-zeroed by this ctor
-//   0x38  field_38  (untouched by the ctor; role unattested)
-//   0x3c  ds        - the DC name retained for the PC Miles driver handle;
-//                     the engine handle whose non-null
-//                     value gates every AIL call (`[ecx+0x3c]` test in
-//                     MemorySample/StopAllSamples/PauseSamples)
-//   0x40  field_40  (second non-null gate in MemorySample; unattested)
-//   0x44  sampleHandles[14] - `lea edx,[ecx+4*esi+0x44]` in
-//                     MemorySample; the 14 extent is PROVEN by the
-//                     channel table at 0x684ab8, four {first,last,next}
-//                     rows covering [0,1) [1,2) [2,6) [6,14)
-//   0x7c  field_7c  - the live handle count; every walker loops
-//                     `for (i = 0; i < field_7c; i++)` (unattested name)
-//   0x80  field_80  (untouched by the ctor; role unattested)
-//   0x84  field_84  - with gbUnk691209 forms the "sound is on" guard
-//   0x88  bChangeSounds - DC-attested (the DC field list has
-//                     bChangeSounds immediately before MP3Playing and
-//                     the three sections, and that tail maps onto
-//                     retail 0x88/0x8c/0x90/0xa8/0xc0 store for store)
-//   0x8c  MP3Playing (unsigned char; MusicPlaying returns it)
-//   0x90/0xa8/0xc0  the three CRITICAL_SECTIONs, initialized in order
-// The ctor's single 16-dword `rep stosd` at 0x40 spans field_40 +
-// sampleHandles + field_7c exactly (1 + 14 + 1 = 16 dwords).
 class soundManager : public baseManager {
 public:
     enum ESampleInfoOperation {
@@ -179,8 +138,6 @@ public:
     // +80 with MOVSX byte and later restores it through switchAmbientMusic.
     // Keep the retail signed-byte width: NH3API's int32 declaration differs.
     signed char m_currentTerrainMusic;
-    // Former field_81: three compiler alignment bytes between the
-    // retail-proven signed byte at +80 and four-byte playSounds at +84.
     int m_playSounds;
     int m_changeSounds;
     unsigned char m_mp3Playing;
@@ -231,12 +188,6 @@ public:
 // no-sound / silent-mode latch; name provisional).
 extern int g_noSound;
 
-// Retail .bss 0x69fea0. RETYPED this lane: MemorySample stores
-// `mov word ptr [2*esi + 0x69fea0], ax` from sample::field_2c with the
-// slot index esi, so this is a 14-entry SHORT table (one per sample
-// handle), not the seven dwords an earlier reading assumed. 14 shorts =
-// 28 bytes = exactly the ctor's seven-dword `rep stosd`. Name kept
-// (provisional) so the one view stays one view.
 extern short g_ailDriverState[14];
 
 // Retail .data 0x691209, a byte that is zero in the image. Read only as
@@ -438,29 +389,7 @@ extern "C" void __cdecl _endthread(void);
 // Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).
 extern soundManager* g_soundManager;
 
-// Header-ownership checkpoint, 2026-09-06: the canonical header body makes
-// VC6 expand additional callers and omit the retained 0x59a7d0 COMDAT.
-// Whole-tree exact count 3669 -> 3660; fuzzy 95.81 -> 95.69. Measured callers:
-// BinkManager::GetBinkFilePtr 100 -> 65.67, NextBinkFrame 92.92 -> 0,
-// LostGame 100 -> 50.18, StartMouseThread 100 -> 38.33,
-// SmackManager::NextSmackerFrame 90.73 -> 73.42, OpenSmackerTrack 100 -> 69.28,
-// VideoClose 100 -> 7.69, VideoSoundOnOff 100 -> 0,
-// townManager::Main 90.21 -> 88.48. Historical MAX values remain banked.
-// The prior ordinary .cpp definition retained the call decisions, but
-// contradicted the CodeView header owner; recover the natural caller/TU
-// inlining state without moving this body back or forcing its emission.
-// Recovery, 2026-09-09: the exact retained body is currently emitted in
-// singleselectionwindow.obj. Capture the stream after AIL_serve, as retail
-// does, and preserve its three ordered guards as nested scopes. This keeps
-// the retained member exact and recovers showVideo 67.8147 -> 94.1120;
-// every other tracked score holds across all 51 dependent TUs. The combined
-// guard control stays at 67.8147. No declaration or helper owner changes.
-// Definition-placement control: moving the existing Miles/global dependencies
-// before this class is code-identical; defining this same inline body inside
-// the class produces a second object identity but changes no tracked score
-// across all 51 consumers. NextBinkFrame still expands serviceSounds where
-// retail 0x44daa0 calls 0x59a7d0. Keep this placement and its proven guards.
-// Original: soundManager::service_sounds; SoundMgr.h:140, dc 0xe6ef4.
+// E:\gamedcs\SoundMgr.h:140, dc 0xe6ef4
 VA(0x0059a7d0, 0x51)  // dc 0xe6ef4
 inline void soundManager::serviceSounds()
 {

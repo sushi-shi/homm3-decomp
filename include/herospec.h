@@ -1,9 +1,5 @@
 // herospec.h - the secondary-skill domain and the hero specialty table.
 
-// A dedicated domain header shared by Hero.h, Army.h and the AI headers.
-// Dreamcast CodeView records one TSkillMastery enum across those interfaces;
-// keeping it here prevents the former per-subsystem int/enum twins from
-// recreating contradictory source models.
 #ifndef HOMM3_HEROSPEC_H
 #define HOMM3_HEROSPEC_H
 
@@ -151,20 +147,6 @@ struct THeroSpecificAbility {
 };
 SIZE(THeroSpecificAbility, 40);
 
-// Owner TU unlocated (the table is filled by
-// InitializeHeroSpecificAbilitiesTable, dc 0xca728, which retail did
-// not keep as a standalone body); extern only, no DATA claim - the
-// gpWindowManager pattern.
-// EXTENT CORRECTED 2026-09-06, 128 -> 156. The DC decoration quoted at the
-// top of this note (`Y0IA@` = 0x80) is the DREAMCAST bound; retail Complete's
-// is 156, which is exactly its hero count (RoE's 128 plus Armageddon's Blade's
-// 12 plus Shadow of Death's 16). Byte-proven twice over by
-// InitializeHeroSpecificAbilitiesTable: its fill loop writes rows 0..155 at
-// `0x678420 + 0x1c + 40*i` and stops on the address 0x679c80 - which is the
-// storage cell of this very reference, i.e. the array ends exactly where the
-// reference begins (0x679c80 - 0x678420 = 6240 = 156 * 40) - and its own
-// entry guard demands at least 158 spreadsheet rows, the two header lines
-// plus those 156.
 extern const THeroSpecificAbility (&g_heroSpecificAbilities)[156];
 
 #endif  /* HOMM3_HEROSPEC_H */

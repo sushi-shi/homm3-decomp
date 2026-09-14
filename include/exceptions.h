@@ -43,10 +43,6 @@ public:
 
 class TAllocationFailure : public TRuntimeError {
 public:
-    // Retail 0x4d6b80 forwards the allocation-failure literal to 0x49a0c0
-    // at 0x4d6b88, then installs 0x63aba8. The objnames throw at 0x41b6ed
-    // expands this same derived initialization, while gzinflatebuf keeps
-    // the retained body. The canonical header body serves both uses.
     VA(0x004d6b80, 0x17)  // anchor-callee 0x49a0c0 + anchor-vtable 0x63aba8, retail-only
     TAllocationFailure() : TRuntimeError("Allocation failure.") {}
 };

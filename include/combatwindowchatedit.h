@@ -16,13 +16,9 @@ public:
                     font::EJustify justification, char* backgroundIcon,
                     int backgroundFrame, int id, int style, int readType,
                     int insetX, int insetY);
-    // Before normalization (function): CCombatChatEdit::OnKeyPress.
     virtual int onKeyPress(message* msg);              // slot 15
-    // Before normalization (function): CCombatChatEdit::UpdateScreen.
     virtual void updateScreen();                       // slot 19
-    // Before normalization (function): CCombatChatEdit::OnEscape.
     virtual int onEscape(message msg);                 // slot 21
-    // Before normalization (function): CCombatChatEdit::SendChat.
     virtual void sendChat(const char* text, int toWho); // slot 24
 };
 SIZE(CCombatChatEdit, 0x74);

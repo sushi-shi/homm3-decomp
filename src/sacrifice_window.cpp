@@ -1608,7 +1608,6 @@ inline type_artifact_offering_widget::type_artifact_offering_widget(
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x0055fce0, 0x26)  // linkorder + iconWidget parent/+0x48 read, dc 0x123f88
 bool type_doll_slot_widget::handleClick(
-    // Before normalization (locals): down_click, right_click.
     bool downClick, bool rightClick)
 {
     if (downClick) {
@@ -1622,7 +1621,6 @@ bool type_doll_slot_widget::handleClick(
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x0055fd10, 0x26)
 bool type_backpack_slot_widget::handleClick(
-    // Before normalization (locals): down_click, right_click.
     bool downClick, bool rightClick)
 {
     if (downClick) {
@@ -1636,7 +1634,6 @@ bool type_backpack_slot_widget::handleClick(
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x0055fd40, 0x26)
 bool type_artifact_offering_widget::handleClick(
-    // Before normalization (locals): down_click, right_click.
     bool downClick, bool rightClick)
 {
     if (downClick) {
@@ -1663,7 +1660,6 @@ VA_COMPGEN(0x0055fd70, 0x21, SCALAR_DELETING_DTOR,
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x0055fda0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x12416c
 bool type_army_slot_widget::handleClick(
-    // Before normalization (locals): down_click, right_click.
     bool downClick, bool rightClick)
 {
     if (downClick) {
@@ -1758,33 +1754,6 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
 }
 
 // E:\gamedcs\sacrifice_window.cpp:360
-// DC fixes the function identity, local roster, reserve and callee counts.
-// Complete independently exposes all nineteen equipment coordinates, the
-// five-slot backpack strip, the 5/5/5/5/2 offering grid, every callback and
-// help row, and the insertion order into Widgets and artifact_widgets.
-// Residual (99.9983%, MAX 100% banked before the armyGroup const-interface
-// correction): all 102 CFG blocks, all 50 symbolic branch targets, both
-// returns, and the 92-call count agree. The only byte delta is the order of
-// two adjacent `-1` stores for the inlined type_artifact base of
-// `artifact_offering`: retail writes extra then artifactId, while this C1
-// state writes the DC-proven constructor order artifactId then extra. The
-// mismatch is four masked slots and every later instruction is identical.
-// why-reg's model finds no register-binding divergence; its 24 guided
-// declaration/store/lifetime controls are either byte-flat or worse (making
-// item_count volatile adds 75 slots). Swapping the semantic constructor
-// stores is forbidden: DC Hero.h:211-212 and retail value_of_town prove the
-// shared id-then-extra source order. Preserve the coherent header state and
-// the banked exact peak; this is a measured C1 handle-order collateral wall.
-// TownExtra consolidation collateral: 99.9983% -> 99.5918%. The masked
-// difference is the EBX reload placement at the artifact-row loop boundary;
-// the retained source calls and types stay proven. A disposable Gruntz
-// forest probe before this function (seed 20260906, baseline + 16 trials)
-// finds two islands, 99.5918% and 99.9983%; all 16 forests recover the prior
-// score. No probe noise is retained; the production residual remains.
-// A target-local manual follow-up on 2026-09-07 covered 240 trials across
-// Gruntz's typedef, enum, struct, class, packed, member, extern, static-data,
-// prototype, function, forest and stride-one typedef-count families. None
-// exceeded 99.9983%, so the DC-proven constructor order remains authoritative.
 VA(0x00560380, 0xD67)  // ctor caller + dc name/order/locals, dc 0x1246b8
 void type_sacrifice_window::createArtifactWidgets(
     long& widgetId, int curPlayer)
@@ -2531,18 +2500,9 @@ void type_sacrifice_window::updateBackpack()
     m_rightBackpackButton->enable(scrollBackpack);
 }
 
+// Picking up an artifact removes its backpack record. Putting one down inserts
+// it or displays the backpack error.
 // E:\gamedcs\sacrifice_window.cpp:1150
-// The backpack widget's call target and the adjacent DC roster row fix the
-// boundary. Complete's first branch removes and picks up an existing record;
-// the second inserts the held record or presents hero::get_backpack_error.
-// Residual (86.13%): the first 25 semantic blocks agree. This SP3 compile
-// expands update_all_slots at both helper sites (two update_slot calls),
-// while retail expands the pickup site but keeps the final put-down site's
-// update_all_slots call (one of each); it also duplicates the first redraw
-// epilogue where retail cross-jumps to the common redraw. `predict-inline`
-// reports exactly that one over-inline/one under-inline pair. Rewriting the
-// handler in the DC line table's nested if/else-if form is byte-flat, so the
-// closest source-authentic spelling is retained without a per-site pragma.
 VA(0x005636c0, 0x31a)  // widget call edge + dc name/order, dc 0x1264dc
 void type_sacrifice_window::backpackClick(
     long slot, unsigned char rightClick)
@@ -3165,7 +3125,6 @@ VA_COMPGEN(0x005654b0, 0x5, IMPLICIT_DTOR, type_transformer_slot)  // dc 0x12876
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x005654c0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x127598
 bool type_transformer_slot::handleClick(
-    // Before normalization (locals): down_click, right_click.
     bool downClick, bool rightClick)
 {
     if (downClick) {
@@ -3197,14 +3156,6 @@ type_transformer_slot::type_transformer_slot(
 // 0x5654f0 - so neither row is an /OPT:ICF fold.
 VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 
-// RETAIL RESIDUAL (98.3508%, 2026-08-26): every divergence is confined to
-// the final Widgets.push_back(rolloverText) expansion. Retail retains one
-// null-_First guard (51 branches versus 50) that this partial TU lets VC6
-// prove unnecessary; constructor args, EH states, prior vector growth and
-// the terminal loop align. Separate/combined assignment, textWidget*/
-// widget* temporaries, exit-button base typing and a local vector view were
-// compiled and rejected. This is a source-surface/inlining-context plateau,
-// not license for an opaque carrier or a raised exactness claim.
 VA(0x005654f0, 0xA3C)  // dc 0x1275c0
 type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     : CAdvPopup(100, 67, 600, 485, 18)

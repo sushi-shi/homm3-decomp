@@ -41,19 +41,6 @@ public:
     // enum grows (the same-sized edit made to csprite.h instead is
     // inert).
 
-    // WHAT MOVES IT IS A BUDGET OF FOUR, not "a single enumerator" -
-    // corrected 2026-08-14 by bisection after RESOURCE_TYPE_FONT = 80
-    // was appended for font::font 0x4b5070 and nothing in the tree
-    // moved. With that enumerator in place, adding N more probe
-    // enumerators immediately before RESOURCE_TYPE_SFX gives
-    //     N = 1,2,3,4 -> 90.8376 (inert)
-    //     N = 5,6,8,10 -> 88.2360
-    // and the step is the same whether the names are appended past the
-    // last value or inserted among the existing ones, so it is the
-    // COUNT that matters, not the position. The earlier note here read
-    // its own sweep as flat from N = 1; it was not, and the low counts
-    // were never the ones that fired.
-
     // Practical consequence: three more enumerators can be added to
     // EResourceType for free, but this ten-name block still cannot
     // move. Scoping the names to iconWidget keeps them collision-free

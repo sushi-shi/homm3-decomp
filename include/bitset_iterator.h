@@ -38,11 +38,6 @@ private:
     size_t m_position;
 };
 
-// Retail 0x48eb40 copies this adapter's pointer and position into the
-// two-word bitset reference returned to the legacy campaign-bit copy.
-// Retail 0x4d4ca0 is the same operation for game::GetRandomMonster's
-// 145-bit iterator, retained at call 0x4c931b. Both instances share this
-// canonical generic operation; their comparison TUs own no copied body.
 template <size_t N>
 // VA instance: bitset_iterator<144>::operator*
 VA(0x0048eb40, 0x14)  // retained caller in ScenarioStruct::read

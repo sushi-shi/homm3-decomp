@@ -1400,7 +1400,6 @@ TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
     m_fileError = CAMPAIGN_FILE_OK;
 }
 
-// Original: TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct;
 // campaignbrief.cpp:192, dc 0x5ade8. Complete expands the record and its
 // cleanup; preserve that retail body in the original owning module.
 // Retail deletes every scenario record (null-checked by
@@ -1422,6 +1421,7 @@ TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
 // repeat them or use them to infer the helper's cost. Natural loop controls:
 // signed index is byte-identical at 75.72034; naming the scenarios vector
 // by reference gives 67.27966. Neither changes the retained source choice.
+// E:\gamedcs\campaignbrief.cpp:192, dc 0x5ade8
 VA(0x004886a0, 0x132)  // anchor-caller(TCampaignBrief ctor), retail-only
 TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
 {

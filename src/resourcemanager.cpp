@@ -796,34 +796,6 @@ VA_COMPGEN(0x0055a7a0, 0x21, SCALAR_DELETING_DTOR,
 VA_COMPGEN(0x0055a7d0, 0x21, SCALAR_DELETING_DTOR,
            t_lod_file_adapter)
 
-// Dreamcast fixes the public name/signature and the two Bitmap816 constructor
-// forms. Retail supplies the Complete-only cache head, ordinary-file probe,
-// active-LOD fallback walk, its `bmpHeader` local and 12-byte record, packed
-// 24-bit palette and six-mask conversion tuple. Historical residual with
-// OpenResourcePath (97.6325%): the wrapper changed the string boundary without
-// a site pragma; both sides then had 34 blocks and the same branch sequence.
-// The wrapper was introduced only for that compiler effect; the path-open
-// expression now belongs directly to each resource loader. The remaining
-// early-cache insertion and archive-local coloring differed in that probe. Replacing the explicit public-map wrapper
-// with AddToCache or the natural insert expression regresses to 90.14/89.45;
-// a fully nested pair/value/wrapper expression is a separate 92.61 negative
-// control. why-reg's best volatile-remaining probe reduces its masked distance
-// from 145 to 133 slots, but invents a source-false qualifier and does not
-// close the function, so the Dreamcast-proven ordinary integer remains.
-// The shared cache helpers are DC-proven source calls. Their canonical map
-// now scores 94.5542% here; the old facade's 97.6325% remains in HIST. Retail
-// retains map::find and map::insert at the early file arm, while this build
-// calls tree::find and expands map::insert but retains its result-pair ctor.
-// Sixteen implicit/explicit key, iterator-construction and pair-conversion
-// controls peak at 94.5542%; explicit key pairs also contradict the retained
-// pair<const char*, resource*> constructor at 0x55ecf0. No copied helper body
-// or synthetic pair overload is retained to steer those calls.
-// The ordinary-file allocation arm adds only a nonnull result to the
-// cache, then returns that result. This positive guard removes the failure
-// goto at 94.5542%, with every sibling unchanged; it is not a cache-hit exit.
-// An explicit successful-result scope is equally neutral. Merging both
-// arms' returns scores 94.0994%; sharing the cache insertion too scores
-// 86.3825% and loses the retained pair constructor. Keep both cache calls.
 VA(0x0055a800, 0x41F)  // bitmapBorder::SetImage loader; dc 0x121ac8
 Bitmap816* ResourceManager::getBitmap816(const char* name)
 {
@@ -938,9 +910,6 @@ bool ResourceManager::TCacheMapKey::operator<(const TCacheMapKey& other) const
     return _stricmp(m_name, other.m_name) < 0;
 }
 
-// independently fixed by cleanup. The Bitmap24Bit guard is VC6 std::auto_ptr
-// from <memory>, whose owns flag, pointer and scalar-delete destructor were
-// formerly duplicated by TAutoPtr. Pixel data uses scalar operator delete as
 VA(0x0055ac40, 0x388)
 Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
 {
@@ -1351,11 +1320,6 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
     return result.release();
 }
 
-// Historical exact result (2026-08-26) used the artificial OpenResourcePath
-// wrapper to steer c_str()/_Tidy(true) expansion. The ordinary-file/archive
-// branches, error reports, original-name getItemIndex and stream adapters
-// remain. The path-open expression is restored to this loader: temporary
-// scheduling alone does not establish an additional source helper boundary.
 VA(0x0055b8d0, 0x229)
 font* ResourceManager::loadFont(const char* name)
 {
@@ -1689,15 +1653,7 @@ void ResourceManager::Expunge()
 
 #endif  // @carcass
 
-// Original: ResourceManager::GetFromCache; resourcemanager.cpp:2377,
-// dc 0x122928. CodeView names iterator i and the key-ctor/find/end/AddRef
-// sequence. Complete expands that sequence in its cache-first getters and sprite
-// frame lookup.
-// Earlier getter score/probe notes describe those expanded caller forms.
-// Those formerly repeated the helper body (GetBitmap816 also pasted the key
-// constructor). Keep one ordinary helper and the canonical name constructor.
-// The public std::map::find owns the lookup; its underlying tree helper
-// remains a separate library enrollment.
+// A cache hit adds a reference before returning the resource.
 resource* ResourceManager::getFromCache(const char* name)
 {
     TCacheMap::iterator found = g_resourceCache.find(name);
@@ -2332,13 +2288,6 @@ namespace ResourceManager {
 sample* loadSample(const char* name);
 }
 
-// Historical wrapper-based result: exact across 25 blocks / 854 bytes.
-// Complete's PC loader first tries an
-// that closes an ordinary file on failure. Retail owns both error-stream
-// scopes at 0x55c501..0x55c5c4 and 0x55c5dd..0x55c69a, with destruction
-// before fallback lookup or return. The unsupported reportMissingSample
-// wrapper and its diagnostic inline-depth pins were removed; each error
-// scope remains in this canonical loader.
 VA(0x0055c3c0, 0x356)  // GetSample callee + GetSoundFile/default.wav graph
 sample* ResourceManager::loadSample(const char* name)
 {

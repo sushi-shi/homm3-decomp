@@ -89,44 +89,6 @@ static const int g_overviewHelpIds[8] = {
 static long getLastBackpackIndex(long heroNumber);
 void updateBackpack(int slot);
 
-// Dreamcast proves the source signature, five leading array initializers,
-// cleanup-loop nesting, named town/hero locals, and every subsequent helper
-// boundary. Complete independently fixes the two-argument ABI, 0x25dc extent,
-// five dynamic-widget arrays, four rows, seventy general slots per row, and
-// the Complete-specific geometry. The admitted body reproduces all 328 retail
-// CFG blocks and the 197-call out-of-line multiset; the remaining delta is
-// register allocation and instruction scheduling, not missing source regions.
-// 2026-09-05 frame census (90.57): retail's frame is 8 B smaller because
-// its two hoisted 64-bit building-mask temps sit at [-0x4c]/[-0x48] above
-// monsterY, with monsterX BELOW monsterY (-0x84 / -0x68); ours homes the
-// temps at [-0x80]/[-0xac] with monsterX above monsterY. Every later slot
-// (currTown/currHero -0x14 vs -0x10, iLookup/luck -0x10 vs -0x14/-0x40)
-// is the same overlay one slot shifted, and retail forwards the hall/
-// castle iLookup arms into ESI where ours keeps them in memory. Measured
-// Residual (90.91%): frame 0xa0 against retail's 0x98 - eight bytes of
-// locals we hold that retail does not; blocks (328) and branches (145) now
-// agree exactly and the whole masked-asm gap is that constant slot shift plus
-// three polarity flips. The flips are one register fact: retail keeps
-// iCurBitmap in a zeroed EDI across the row-loop head, so GetTown's -1 arm
-// reuses that live zero (`je` straight to the join at 0x51bfb6) where we must
-// materialise 0 into the currTown slot. Tried and rejected: declaring `slot`
-// below the break guard, which is where retail computes row*70 (-0.12).
-// RE-MEASURED and EXTENDED 2026-09-05: the -0.12 above reproduces exactly
-// (90.7853).  Three further probes at the same iCurBitmap register fact,
-// all byte-flat or worse: declaring `slot` AFTER `rowWidgetId` but still
-// above the guard is 90.8843, so the head's two-statement order is not the
-// lever either; BLOCK-SCOPING both counters inside the row loop
-// (`int iCurBitmap = 0; int iCurText = 0;` replacing the function-scope
-// pair) is byte-flat AND leaves the frame at 0xa0, which proves the eight
-// surplus bytes are NOT those two slots; swapping the two zero assignments,
-// and swapping the two function-scope declarations, are both byte-flat.
-// The eight bytes are in the array/temporary overlay described above.
-// byte-inert: the DC CodeView local order, monsterX/monsterY swapped
-// (90.40, stores reorder only), and the exact interleaving recorded by DC
-// (`monsterX`, `titleYOffs`, `monsterY`, `titleXOffs`, `titleWidths`),
-// which remains 91.7373. Also byte-inert: currTown/currHero declared first
-// in their blocks. The DC statement order of the town block matches ours.
-
 // 90.9107 -> 91.7418 (2026-09-05): the town row's TWO `iLookup` chains
 // carry their default in a FINAL `else` ARM, not in a leading assignment.
 // Written `iLookup = 0; if (capitol) 1; else if (city) 2; else if (town)
@@ -941,10 +903,9 @@ void TOverviewWindow::updateFlaggableIcon(int i)
     }
 }
 
-// Original: UpdateFlaggableIcons; overview.cpp:1279, dc 0x106d98.
-// DC refreshes two items and draws overWin through its global pointer.
-// Complete extends the loop to seven and retains ECX as the window receiver
-// at 0x51e7c2/0x51e7c7/0x51e7e2, matching the adjacent converted helpers.
+// Complete refreshes seven items through this window; Dreamcast refreshes two
+// through the global overview-window pointer.
+// E:\gamedcs\overview.cpp:1279, dc 0x106d98
 VA(0x0051e7c0, 0x2A)  // called by WindowHandler and DoFlaggableButtons
 void TOverviewWindow::updateFlaggableIcons()
 {

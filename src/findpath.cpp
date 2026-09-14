@@ -80,9 +80,6 @@ void searchArray::close()
     m_isMoatSlowed = 0;
 }
 
-// Retail 0x4b3b90 is the retained FindPath.h get_hex inline (formerly
-// named getCellData from an HD-build correlation).
-
 VA(0x004b1530, 0x20F)  // dc 0x9ef20
 void searchArray::clear(long flyLevel, long startZ, long stopZ)
 {
@@ -212,11 +209,6 @@ int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
                            cell->m_groundSet, hasNomad);
 }
 
-// DC findpath.cpp:234/235 computes dest_x and the y coordinate, then line
-// 239 constructs type_point (dc 0x9f1e6) for the destination cell lookup.
-// Use that canonical constructor. The former make_terrain_destination helper
-// only controlled VC6's packed-field load scheduling; the historical exact
-// result with that wrapper does not prove a separate source operation.
 VA(0x004b18c0, 0x1A2)  // dc 0x9f184
 int getTerrainCost(hero* currentHero, type_point start, int direction, int moveLeft)
 {
@@ -431,14 +423,6 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
 // searchArray::enter_hostile_trigger (0x56aad0), check_adjacent_monster
 // (0x56a360) and AI_get_ship_cost (0x431160).
 
-// THE FOG GATE is `GetMapExtra(x, y, z) & gMapVisibilityBit` (the byte at
-// 0x69ccbc, advmgr.h's name), tested twice. Retail's shape is NOT the
-// earlier note's: an unseen candidate outside the enemy search blocks the
-// square whenever the acting player is HUMAN (`jne` straight into the
-// latch block), and only for a computer player does it go on to require
-// that the source square be unseen too and that the player still own a
-// town.
-
 // THE SECOND FOG TEST TAKES ITS POINT BY VALUE, and that is worth 89.0387 ->
 // 90.1238 (2026-08-20).  Retail loads `source->point` there as ONE DWORD
 // (`mov eax,[edi]` plus a frame copy) and pulls x, y and z out of the
@@ -449,13 +433,6 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
 // test is byte-FLAT either way (90.1238 both), because `candidate` is already
 // a local pathCell copy, and is left in the three-argument form the retail
 // bytes show there.
-
-// THE 1170-STRIDE SCAN near 0x4b3861 is gpGame->heroes, not the town
-// array the earlier note named: `hero* other = gpGame->GetHero(cell->
-// extraInfo)` on a cell whose type is HERO, and the test that follows is
-// "an enemy hero is standing in a Sanctuary here" - was_trigger set,
-// obscuredType SANCTUARY, a different owner - which is exactly the square
-// a path may not end on.
 
 // THE WATER-CROSSING PAIR READS THE MAP THROUGH `NewfullMap::cell`, AND
 // THAT IS WORTH 93.0950 -> 98.7182 (2026-08-20).  Retail reloads BOTH
@@ -494,16 +471,6 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
 //   * `cost = 0` is the FIRST statement of the rock and dimension-door arms,
 //     not the last: retail's `xor esi,esi` precedes the `add word ptr` on
 //     adjusted_cost in both. +0.52.
-
-// CURRENT 2026-08-21 (99.2000%, from 98.7182%): three source-order facts
-// close every remaining control-flow and size delta.  The rock arm assigns
-// impassable before last_can_stop; the final water/flight choice is written
-// `<=` with water as the fall-through arm; and the first Dimension Door arm
-// sets the bit before adding 500.  The last spelling makes VC6 use retail's
-// two-byte `or al,80h` instead of a six-byte `or esi,80h`.  Both objects are
-// now 0xa94 bytes and their 116 branches plus one return agree exactly.  The
-// old note's claimed two-call entry dispatch was stale: both current objects
-// already tail-merge the boat/land pushes into one CalcTerrainCost call.
 
 // Residual (99.2000%): the initial Nomad predicate is scheduled differently,
 // then after the second GetCell retail keeps `source` in EDI and the result in
@@ -859,31 +826,11 @@ unsigned char searchArray::valid_move_adjacent(const army* current_army, const a
 // E:\gamedcs\findpath.cpp:921
 #endif  // @carcass
 
-// PARAMETER ORDER IS THE DC ROSTER'S, NOT findpath.h's OLD ONE. The
-// retail body reads [ebp+0x10] as the value it forwards to
-// FindCombatPath's `limit` and [ebp+0x14] as the byte it tests before
-// every placement-boundary call, which is (limit, in_placement_phase,
-// base_speed) - the header's earlier (budget, start, limit) guess is
-// withdrawn.
-
 // Retail hands FindCombatPath 1000 for BOTH limit and base_speed in
 // the placement phase, materialising the constant once; outside it,
 // base_speed falls back to the stack's own speed when the caller
 // passed a negative and the limit collapses to zero for a bound stack.
 
-// Residual (89.8%): register-homing family, ONE allocator decision
-// with a long tail. Retail parks `thisArmy` in ESI for the whole body
-// and `this` in EDI, then RECYCLES edi as the loop's 30-byte cell
-// offset; with all three callee-saved registers spoken for it has to
-// spell each of the three zero tests as a load plus `test`. Our CL
-// parks `this` in ESI, leaves EDI free, hoists a zero into it and
-// spells the same three tests `cmp <mem>, edi` - after which the loop
-// needs a rotated preheader to reload `this` on the back edge only.
-// Byte counts match; the colouring does not. Tried and rejected:
-// aliasing the parameter through a local `const army* a` (VC6 folds
-// the copy, no change); splitting the two creatureId bit tests into
-// nested ifs to stop the dword CSE retail does not perform (no
-// change); dropping the const_cast on GetSpeed (no change).
 VA(0x004b2da0, 0x24B)  // anchor-global, dc 0xa03fc
 void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, long limit, unsigned char inPlacementPhase, long baseSpeed)
 {
@@ -1058,12 +1005,7 @@ void searchArray::setMoat(const army* currentArmy)
         m_isMoatSlowed[currentArmy->getSecondGridIndex()] = 0;
 }
 
-// E:\gamedcs\findpath.cpp:1136, dc 0xa0970.
-// CodeView proves an ordinary searchArray member, not a free function with
-// an explicit search pointer. Lines 1137/1156/1159 name ValidHex, get_hex
-// and vector::push_back. Retail FindCombatPath expands this tail and retains
-// the native vector insertion call. The former free wrapper/pin was an
-// inline-budget experiment (73.5149 -> 78.9419%), not source ownership.
+// E:\gamedcs\findpath.cpp:1136, dc 0xa0970
 bool searchArray::buildCombatPath(const army* currentArmy,
                                  int startHex, int endHex, int destination)
 {
@@ -1085,17 +1027,6 @@ bool searchArray::buildCombatPath(const army* currentArmy,
     return m_result.size() > 0;
 }
 
-// One canonical mark_enemy serves MarkTeleport and CheckEnemyArmies.
-// DC 0xa0a44 calls the FindPath.h get_hex accessor; retail retains that
-// accessor at 0x4b3b90 in FindCombatPath's four mark expansions. The former
-// markEnemySearched clone and its inline-depth pin are removed. Different
-// caller expansion decisions do not imply different source helpers.
-// Recovery, 2026-09-09: the active definition had accidentally retained its
-// carcass stub. DC 0xa0a44 and retail's six caller expansions prove the flag,
-// minimum-cost guard and unsigned-short store below. Restoring this body
-// recovers FindCombatPath 50.9545 -> 92.2920 and MarkTeleport 71.6135 -> 100;
-// the retained getHex body is emitted at 100 again. An empty-body negative
-// control loses those effects and all three recoveries.
 // E:\gamedcs\findpath.cpp:1172
 void searchArray::markEnemy(long hex, long cost)
 {
@@ -1134,11 +1065,6 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 }
 
 // E:\gamedcs\findpath.cpp:1218
-// Historical probes below predate removing combatWalkLimits,
-// combatSiegePressure, clearCombatCellMarks and the markEnemySearched
-// clone. Their statements/calls are now back in the canonical owners.
-// `ret 0x18` = six stack arguments over `this`, and the DC roster's
-// seven-parameter count matches exactly.
 
 // THE SIEGE-PRESSURE PREAMBLE is the only part of this body that is not
 // a plain Dijkstra. It fires only while a town is defending AND the
@@ -1151,12 +1077,6 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 // faithfully. The second comparison's `siege_pressure &&` guard is
 // invisible in the bytes on the path where the first comparison has just
 // set the flag, which is exactly the retail branch layout.
-
-// DC's three ordinary private helpers are retained once, in source order:
-// build_combat_path, mark_enemy, check_enemy_armies. DC lines 1224-1232
-// place the walk-limit statements here. Complete's retail-only siege
-// preamble and mark wipe also have no retained helper call; their former
-// extraction was explicitly a budget experiment, not source evidence.
 
 // Whole-TU controls (2026-09-09), see the helper/accessor family generators:
 // removing the three budget-only helpers and the duplicate mark helper
@@ -1189,14 +1109,6 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 // pointer copy (37 B), both empty vector destructors (3 B), and pointer
 // insertion (521 B) match the retail int/type_artifact/widget-labelled
 // bodies byte-for-byte after relocation, including their callee references.
-
-// Historical negative controls at the earlier 73.5149% source state:
-// spelling both vector clears and pop_back as erase fell to 69.5447%;
-// queue.erase(queue.end()-1) alone gave 72.1272%. Keep clear/pop_back.
-// Hoisting facing ? 1 : -1 into a side_step local was byte-inert; that
-// does not justify dropping the positively recovered OffsetToFront call.
-// Retail falls through the one-hex moat arm and branches to the two-hex
-// arm, so preserve the negated Is(1) condition.
 
 // Candidate /Z7 labels are candidate-only, and aggregate call counts or
 // unclaimed synthetic labels do not prove a missing source statement.

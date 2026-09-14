@@ -35,10 +35,6 @@ struct THelpText {
     const char* m_rclick;
 };
 
-// The former TQuickViewTextRow began at the second word of a THelpText
-// row and treated the next row's first pointer as pad_04. Retail quick-view
-// selection now uses the canonical adventure help table's rclick member.
-
 // heroWindow::type flag bits. FIXED_LAYER and SAVE_BACKGROUND carry
 // homm2's WindowFlag names and values (byte-proven in Open/Close);
 // 0x10 is retail-only - SaveBackground pads the grab by 8 pixels and
@@ -144,16 +140,6 @@ public:
     virtual ~heroWindow();
     virtual int open(int zOrder, unsigned char update);
     virtual void close(unsigned char update);         // slot 2, retail 0x5fec60
-    // CORRECTION 2026-08-08: slots 3 and 4 are NOT pure. Both hold real
-    // (empty) retail bodies that /OPT:ICF folded onto program-wide
-    // representatives - slot 3 onto 0x4ec560, the `xor eax,eax; ret 4`
-    // that inputmgr.cpp claims as inputManager::Main and mouseManager's
-    // vtable also points at, and slot 4 onto 0x485d80, the `ret 4` that
-    // widget's own slot 12 shares. A pure slot spells _purecall
-    // (0x617d9a), which is exactly what baseManager's three slots do
-    // hold, so the distinction is byte-visible. Declared only, no local
-    // definition (the widget::Close idiom): the folds have no claimable
-    // home in this TU.
     virtual int handleMessage(message& msg);         // slot 3, folded onto 0x4ec560
     virtual void handleWidgetHover(widget* w);      // slot 4, folded onto 0x485d80
     virtual void drawWindow(unsigned char update, int lowID, int highID);

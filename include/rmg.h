@@ -611,7 +611,6 @@ class type_object;
 
 struct TRmgMovementCost {
     unsigned m_cost : 16;
-    // Role-derived; original name unknown.
     // Zone flood 0x53f1a0 clears this high word at the seed (0x53f242),
     // stays in the supplied zone (0x53f339), and relaxes it with step
     // costs 2/3 (0x53f34a..0x53f377). Ground-connection selection reads
@@ -667,17 +666,12 @@ struct TRmgGroundTileData {
     unsigned m_riverFlipY : 1;
     unsigned m_roadFlipX : 1;
     unsigned m_roadFlipY : 1;
-    // Retail cell writer 0x532972 maps this bit to flag 0x40 in the
-    // seventh H3M cell byte. Reader 0x4fe220 uses that flag to create
-    // non-water ANCHOR_POINT cells: this is the coastal marker.
-    // Role-derived name; completes recovery of former unknown15.
     unsigned m_coastal : 1;
     // BuildRoadCostMap proves these two Complete-only routing flags at bits
     // 22 and 25.  The first marks an object entrance whose adventure-object
     // traits constrain approach directions; the second admits the tile to
     // the road-cost flood.
     unsigned m_roadEntrance : 1;
-    // Role-derived; original name unknown.
     // 0x535ee0 traces a closed placement perimeter into the point vector
     // at +0x38 (append 0x535fb2, closure 0x536051..0x536062). Accepted
     // placement 0x5468e8 calls it, then marks these points with bit 23
@@ -729,11 +723,11 @@ enum ERmgObjectPlacementScore {
 // 0x532c80 owns the outline vector; 0x532e40 lazily fills the 8x6 priorities.
 struct TRmgObjectPropertiesRef {
     TObjectType* m_prototype;              // +0x00
-    // Previously unknown04; retail 0x536560 binds the first recommended terrain.
+    // Retail 0x536560 binds the first recommended terrain.
     int m_preferredTerrain;               // +0x04, rand_trn.txt rule binding
     unsigned m_refCount;                   // +0x08
     int m_prototypeIndex;
-    // Previously opaque0010: lazy builder 0x532c80 owns outline; 0x532e40
+    // Lazy builder 0x532c80 owns outline; 0x532e40
     // initializes overlapPriorities and the +0xe4 flag. +0xe5..e7 aligns the tail.
     TRmgObjectPlacementRule* m_placementRule; // +0x10
     std::vector<TPoint> m_outline;         // +0x14
@@ -751,15 +745,15 @@ class type_object {
 public:
     TRmgObjectPropertiesRef* m_properties; // +0x04
     TRmgMapPosition m_position;             // +0x08
-    // Previously unknown14; placement scorer 0x536bc0 marks this relation.
+    // Placement scorer 0x536bc0 marks this relation.
     unsigned char m_candidateCovers;
-    // Previously unknown15; placement scorer 0x536bc0 marks this relation.
+    // Placement scorer 0x536bc0 marks this relation.
     unsigned char m_candidateBehind;
-    // Previously unknown16; placement scorer 0x536bc0 marks this relation.
+    // Placement scorer 0x536bc0 marks this relation.
     unsigned char m_adjacentToCandidate;
-    // Previously unknown17; placement scorer 0x536bc0 marks this relation.
+    // Placement scorer 0x536bc0 marks this relation.
     unsigned char m_overlapsCandidate;
-    // Previously unknown18; placement scorer 0x536bc0 marks this relation.
+    // Placement scorer 0x536bc0 marks this relation.
     unsigned char m_blockedByCandidate;
     char m_tailPadding[3];
 
@@ -1209,12 +1203,11 @@ struct TRmgTreasureGroup {
     // with the guard's local coordinates; canPlaceTreasureGroup checks them.
     unsigned char m_hasGuard;               // +0x48, cleared by reset
     char m_padding0049[3];
-    // Previously part of opaque0049; addGuard stores x/y at 0x53556f.
+    // addGuard stores x/y at 0x53556f.
     // canPlaceTreasureGroup reads x/y
     // from +0x4c/+0x50 before translating the guard's neighborhood.
     TPoint m_guardPosition;                 // +0x4c
     // Retail commitTreasureGroup 0x5469ca stores the selected map offset.
-    // Role-derived name; previously part of opaque0049.
     TRmgMapPosition m_position;             // +0x54
     unsigned char m_ready;                  // +0x60, set after assembly
     char m_padding0061[3];
@@ -1486,7 +1479,7 @@ struct TRmgZone {
     TRmgMapPosition m_position;        // +0x30: main town
     unsigned char m_active;            // +0x3c
     char m_opaque003d[3];              // +0x3d..+0x3f
-    // Previously the tail of opaque003d. Retail 0x54b180 relaxes graph
+    // Retail 0x54b180 relaxes graph
     // distances here; 0x54b300 converts them into randomized quest-zone
     // priorities, penalizing immediately adjacent zones. Role-derived name.
     int m_questPlacementScore;         // +0x40
@@ -1529,7 +1522,7 @@ struct TRmgZone {
 // at 0x53e050. The twin's owning zone identifies the region across an edge;
 // following next traverses a closed polygon. Names are provisional.
 struct TRmgBoundaryVertex {
-    // Previously opaque0000. The paired-edge constructor 0x5fcef0
+    // The paired-edge constructor 0x5fcef0
     // copies a by-value point into +0/+4 and its zone into +8.
     // buildVertices 0x5fdb40 subtracts these site coordinates while
     // calculating the boundary point at +0x1c. Role-derived name.
@@ -1537,7 +1530,7 @@ struct TRmgBoundaryVertex {
     TRmgZone* m_zone;                   // +0x08
     TRmgBoundaryVertex* m_twin;        // +0x0c
     TRmgBoundaryVertex* m_next;        // +0x10
-    // Previously opaque0014. Constructor 0x5fcef0 initializes both
+    // Constructor 0x5fcef0 initializes both
     // ring links to self; splice 0x5fcf60 swaps next->previous together
     // with next, preserving the backward link. Role-derived name.
     TRmgBoundaryVertex* m_previous;     // +0x14
@@ -1682,8 +1675,7 @@ public:
     // 0x536213 calls TObjectTypeTable::load with this complete member.
     TObjectTypeTable m_objectsTxt;                     // +0x024
     std::vector<TRmgObjectPropertiesRef*> m_objectPrototypes[232]; // +0x034
-    // Previously unknownPointers/randomTerrainEntries; loader 0x536560 and
-    // scorer 0x536bc0 prove value records and the terrain/relation semantics.
+    // Terrain-relation records populated by the loader and used by the scorer.
     std::vector<TRmgObjectPlacementRule> m_placementRules; // +0xeb4
     std::vector<type_object*> m_positions;             // +0xec4
     TProgressSink* m_progress;                          // +0xed4
@@ -1719,8 +1711,8 @@ public:
     int m_playerIndexMap[9];                          // +0x0ee0
     char m_opaque0f04[0x20];                          // +0x0f04
     int m_townChoices[8];                              // +0x0f24
-    // Role-derived; original name unknown. Constructor 0x537b10 seeds
-    // +0xf44 to 1. Creation paths 0x534902, 0x540cfa, 0x545104 and
+    // The constructor seeds this object-ID counter to 1. Creation paths
+    // 0x534902, 0x540cfa, 0x545104 and
     // 0x54543d take then increment the counter, storing the taken ID in
     // the new object's derived data (+0x20 for the first, +0x1c for others).
     int m_nextObjectId;                               // +0x0f44

@@ -65,8 +65,6 @@
 #include "message.h"
 #include "misc.h"
 #include "winmgr.h"
-// The level-up dialog and its widget ids; skill names use the shared
-// akSSkillTraits table, formerly duplicated as akLevelUpSkillTraits.
 #include "levelupwindow.h"
 #include "sskilltraits.h"
 // The two windows THeroScreenWindow::WindowHandler constructs on the
@@ -605,26 +603,6 @@ void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
 // not apply and the depth lever (spelling the site one wrapper deeper)
 // has no shallower or deeper form to choose from here.
 
-// Instruction counts nearly agree (654 vs 629) while blocks do not
-// (33 vs 21), which is what that one expansion looks like from the CFG
-// side rather than a missing statement. `why-branch` finds no catalog
-// lever, and its four induction mutations on the bitset loop all measure
-// WORSE (+2 each), which independently confirms the unsigned counter is
-// right. Same class the two describers carry. Release-elided diagnostic
-// carrier sites are now bounded too (2026-08-21): doses 1 and 2 at entry are
-// byte-flat at 87.94118%, while 3 and 4 both overshoot to 81.68044%.
-// Conventional release VERIFY around an already-unguarded Read retains the
-// same call and reduces to its existing ignored-result expression, so it
-// cannot supply the missing nested-call boundary either.
-// The preceding score notes describe the former scalar-wrapper candidate.
-// DC 0xcaf98 explicitly owns uint_buffer, ushort_buffer, int_buffer,
-// short_buffer, uchar_buffer and char_buffer in this function; its SH4
-// reads fill those buffers before member assignment. Retail 0x4d7a6b onward
-// preserves the read/copy sequence through TAbstractFile::read, including
-// signed-byte extension (0x4d7a78/0x4d7b49) and boolean normalization
-// (0x4d7a95). Recycled parameter homes do not disprove these source locals.
-// The reconstruction-only readByteField/readWordField/readDwordField
-// wrappers are removed. Complete's unchecked reads and version gates stay.
 VA(0x004d7a20, 0x69F)  // linkorder, dc 0xcaf98
 int hero::load(TAbstractFile* infile, int saveVersion)
 {
@@ -763,7 +741,6 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     m_isSleeping = ucharBuffer != 0;
 
     std::bitset<48> granted;
-    // DC scratch-array name: inBuf. Former reconstruction: granted_mask.
     unsigned char inBuf[6];
     infile->read(inBuf, sizeof(inBuf));
     for (unsigned int i = 0; i < 48; i++)
@@ -788,18 +765,6 @@ int hero::load(TAbstractFile* infile, int saveVersion)
 // Dinkumware's c_str() null fallback inlined, the same expansion
 // HeroFn_004D8FB0 carries.
 
-// The tail packs TownSpecialGrantedMask into six bytes a bit at a
-// time. bitset::test's range check is what the loop's `cmp edi,0x30`
-// tests: VC6 rotated the loop and merged the peeled first-iteration
-// check with the back-edge condition, so ONE compare serves both and
-// _Xran sits above the loop body rather than inside it.
-// DC 0xcb698 owns the same six scalar buffers (original spellings:
-// uint_buffer, ushort_buffer, int_buffer, short_buffer, uchar_buffer,
-// char_buffer). SH4 writes them after copying/narrowing each member; retail
-// 0x4d80e2..0x4d8121 independently proves the byte/dword scratch writes,
-// followed by virtual Write calls. Its overlapping parameter-home slots
-// do not establish the former writeByteField/writeWordField/writeDwordField
-// source boundaries. Keep the buffers local and the wire widths explicit.
 VA(0x004d80c0, 0x526)  // dc 0xcb698
 int hero::save(TAbstractFile* outfile)
 {
@@ -931,7 +896,6 @@ int hero::save(TAbstractFile* outfile)
     outfile->write(&ucharBuffer, sizeof(ucharBuffer));
 
     const std::bitset<48>& granted = m_townSpecialGrantedMask;
-    // DC scratch-array name: outBuf. Former reconstruction: granted_mask.
     unsigned char outBuf[6];
     memset(outBuf, 0, sizeof(outBuf));
     for (unsigned int i = 0; i < 48; ++i) {
@@ -1093,11 +1057,6 @@ void hero::initialize(short index)
         setPrimarySkill(i, g_heroClasses[m_heroClass].m_initialPrimarySkill[i]);
     }
 
-    // Both GiveSS calls here, and the third in SetSS, used to carry
-    // statement `inline_depth(0)` pins that held retail's out-of-line
-    // decision. All three are byte-flat now - /Ob2 declines GiveSS on cost
-    // at every one of these sites without help (2026-09-06, polish lane 50,
-    // measured one at a time and jointly).
     if (g_heroTraits[index].m_firstSkill != eSecSkillNone) {
         giveSS(g_heroTraits[index].m_firstSkill,
                g_heroTraits[index].m_firstSkillLevel);
@@ -1168,34 +1127,9 @@ void hero::initialize(short index)
 // hero. Its single caller is inside game.obj (0x4cae10), which walks 156
 // records with `add ebx, 0x334` - which is what closes the record's size.
 
-// TYPE BLOCKER RETIRED 2026-08-20: this needed no new type either. The
-// record is game.h's existing HeroExtra, and the identification is
-// conclusive rather than plausible - from Dreamcast offset 8 onward all
-// sixteen of its members land on retail at DC + 4, in order, without a
-// single exception. What was missing is only the head band, which this
-// body reads field by field, plus the pack(1) that keeps `location` at
-// +0x301 where retail puts it. The DC counterpart is the free function
-// initialize_hero(hero*, const HeroExtra*) (dc 0xb6c84); retail made it
-// a member and moved it into hero.cpp.
-// 55.74 -> 94.67 (2026-08-20) ON ONE `#pragma inline_depth(0)` AT THE
-// `customName = setup->name` SITE, and that CORRECTS this note's old
-// conclusion. The diagnosis was right and had been right for a while -
-// retail's census is ten calls and exactly ONE is a string call,
-// basic_string::assign, which our CL expanded, spilling _Grow x2,
-// _Split x2, _Eos, memmove and operator delete into this body and
-// accounting for the whole branch gap (base 53 against retail's 37). What
-// was wrong was the KNOB. The old text recorded `#pragma inline_depth(1)`
-// around the body as not reaching the decision and concluded "what is
-// missing is one more pre-inline caller reduction, not a spelling".
-// inline_depth is STATEMENT-granular in VC6 and only bites at 0: pinning
-// the single assign site reproduces retail's census exactly - base 10
-// calls against retail 10, and flow-distance 0.
-// Still true and still worth keeping: splitting apply_setup_artifacts out
-// paid 49.03 -> 55.74 before this.
-// NOT a general lever for this TU - measure per site. The identical pin on
-// the identical `customName = <char const*>` spelling in hero::initialize
-// costs 82.86 -> 62.31, because retail inlines the assign THERE and calls
-// it HERE.
+// Dreamcast initialize_hero(hero*, const HeroExtra*) is a free function at
+// hero.cpp:1098, dc 0xb6c84; Complete implements it as this member.
+// Keep basic_string::assign out of line at the customName assignment.
 
 // Residual (94.67%): register-homing only, and why-reg v2's model CAPS it -
 // "bindings agree at every first definition, the divergence is past the
@@ -1501,41 +1435,6 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
 }
 
 // E:\gamedcs\hero.cpp:1466
-// Creature -> artifact, then unequip. The jump table covers exactly
-// CREATURE_CATAPULT..CREATURE_AMMO_CART (0x91..0x94) with an `add
-// eax,-0x91` bias, and the CATAPULT arm goes straight to an epilogue:
-// the catapult's artifact is never destroyed. Note this direction is
-// NOT the swapped one - recruit.cpp's siege_artifact_to_creature maps
-// ARTIFACT_AMMO_CART to CREATURE_FIRST_AID_TENT and back, while retail
-// here pairs each machine with its own artifact
-// (0x92->4, 0x93->6, 0x94->5).
-// The `default:` arm is EXPLICIT, not an initialiser - that is what
-// produces the `jmp` closing the third constant arm.
-// Residual (96.5%): the register-homing family. Every instruction and
-// the whole CFG agree; retail leaves the parameter in memory and
-// re-reads it twice (`mov eax,[ebp+8]` / `add eax,-0x91` for the switch
-// bias, then `mov esi,[ebp+8]` in the default arm) where our CL
-// enregisters it once into edx and biases with `lea eax,[edx-0x91]`.
-// Tried and rejected: `int artifact = creature_type;` ahead of the
-// switch - hoists the store to `mov esi,eax` in the prologue and drops
-// the third arm's jmp (89.9%); reusing the PARAMETER as the artifact
-// variable, which is the spelling that would justify the reloads -
-// VC6 then preloads it into esi instead and biases with
-// `lea eax,[esi-0x91]` (86.9%); declaring the loop counter ahead of
-// the switch to shift allocation (no change, 96.5%). A base-normalized
-// switch expression and a named discriminator followed by
-// `-= CREATURE_CATAPULT` are also byte-flat: VC6 canonicalizes both back to
-// the same EDX-preserving LEA. why-reg found no applicable catalog mutation.
-// A 40-source batch moving the empty CATAPULT/default arms through every
-// position, with signed and unsigned switch selectors, is also flat at
-// 96.5278%. The nonempty arm order remains retail's ballista/tent/cart.
-// Twenty further parameter-const/register, artifact-width, and named-selector
-// combinations also stop at 96.5278%; none recovers the default-arm reload.
-// A TArtifact local with the existing artifactFromInt boundary in default
-// also preserves 96.5278% and every other score in hero.obj; it does not
-// recover the parameter reload. DC records no local type here, so retain int.
-// A 16-state parameter-reuse, for/while, return/break, and slot-lifetime
-// batch also leaves 96.5278% best; mutating the parameter changes the CFG.
 VA(0x004d9260, 0x68)  // dc-bracket forced, dc 0xcc2a8
 void hero::destroySiegeWeaponArtifact(int creatureType)
 {
@@ -1597,17 +1496,6 @@ std::bitset<70> markSpells(TSpellSchool school)
     return granted;
 }
 
-// Complete artifact dispatcher; markArtifactSpells is a provisional name.
-// It was formerly labelled mark_spells, but dc 0xcc360 owns only the
-// school helper above, not this artifact-id switch.
-// The artifact -> granted-spells map, and NOT the DC row's
-// `(unsigned char*, TSpellSchool)`: it is a /Gr FREE function returning
-// bitset<70> BY VALUE - the hidden return pointer arrives in ECX and the
-// artifact id in EDX (`lea ecx,[ebp-0x50] / mov edx,<id> / call`), and
-// each caller copies exactly three dwords out of the result, which is
-// bitset<70>'s whole storage. Two call sites image-wide, so /Ob2's
-// single-call-site rule never threatened it.
-
 // The dispatch is `lea eax,[id-0x56] / cmp eax,0x31 / ja default` over a
 // 50-byte index table at +0x240 selecting a nine-entry dword jump table
 // at +0x21c. Read out of the image the 50 index bytes collapse to EIGHT
@@ -1623,24 +1511,6 @@ std::bitset<70> markSpells(TSpellSchool school)
 // three Tome arms inline operator[] where the fourth calls it out of
 // line: that is purely the /Ob2 budget running out mid-switch, so all
 // four arms are written identically here.
-
-// Historical two-helper experiment: the level helper was introduced only
-// to adjust /Ob2 and is now removed. DC preserves the school helper, while
-// its Spellbinder's Hat level scan is directly in UpdateSpellList at
-// hero.cpp:1576..1580. Complete moves that arm into this dispatcher at
-// 0x4d94d8..0x4d9507, retaining bitset::set at 0x4d94f3. The old score
-// improvements below do not prove a separate level-helper boundary.
-// The two-helper experiment observed the retail callee
-// census: _Tidy x5 / reference::operator= x5 / operator[] x2 / set x3,
-// i.e. retail inlines almost no STL here at all - and with the four Tome
-// loops and the level loop written out longhand in this function our CL
-// has enough /Ob2 budget to inline ALL of it (84.29%). Moving them into
-// file-statics shrinks the pre-inline caller, drops the budget, and each
-// step bought back exactly the calls the census predicts: the school
-// helper (four call sites) restored operator= x5 and operator[] x2 and
-// took it to 88.79%, and the level helper (one call site, so expanded
-// unconditionally) restored the level arm instruction-for-instruction at
-// 92.71%.
 
 // 92.71 -> 93.96 (2026-08-20): the diagnosis below was right about WHICH
 // sites diverged, and `#pragma inline_depth(0)` on the Sea Captain's
@@ -1819,10 +1689,10 @@ void hero::updateArmies()
     }
 }
 
-// Original: hero::ViewStat; hero.cpp:1709, dc 0xcc708.
 // Retail reads both arguments, expands GetPrimarySkill, and passes gStatDesc
 // plus the quick/normal dialog type to NormalDialog. DC confirms the same
 // calls and arguments; the old HeroScreenUpdate association was positional.
+// E:\gamedcs\hero.cpp:1709, dc 0xcc708
 VA(0x004d9990, 0x65)  // stat-dialog semantics and two-argument ABI, dc 0xcc708
 void hero::viewStat(int whichStat, int isQuickView)
 {
@@ -1855,15 +1725,6 @@ void hero::viewArtifact(const type_artifact* artifact, int isQuickView)
     }
 }
 
-// Complete-only combination-artifact prompt.
-// Retail is `ret 4` with one artifact-id argument and never reads ECX.
-// A stack type_artifact supplies the description before general text 734
-// asks for confirmation; the caller gates disassembly at 0x4dc070 on this
-// reply. DC ViewStat is independently identified at retail 0x4d9990 above;
-// its former association with this body was a positional-map error.
-// DC's 20-byte TArtifactTraits (type 0x3d9c) lacks the combination fields
-// used by this caller, and TArtifact's enum ends at 127 (type 0x1b5a).
-// The provisional address-based name remains until a PC source name is found.
 VA(0x004d9b30, 0x18D)  // combination-artifact caller + settled retail ABI
 int hero::heroFn004D9B30(int artifact)
 {
@@ -2680,14 +2541,6 @@ void type_artifact::getRolloverText(char* buffer) const
 // follows. The 136-byte spell stride and the +0x10 name are the ones
 // armygrp.h already models, indexed by the record's second dword.
 
-// Residual (88.4%): a callee-saved role swap and the byte it costs.
-// Retail keeps `this` in ESI, homes it at [ebp-0x14] and holds the
-// scanned character in BL; our CL puts `this` in EDI, leaves it unhomed
-// and spills the character to [ebp-0xd], and it materialises the zero
-// operand as immediates where retail CSEs it into EDI (`push edi`).
-// Every block, branch and call agrees. Tried and rejected: dropping the
-// named `char c` in favour of `*cursor` in both the test and the append
-// (88.40, byte-flat).
 VA(0x004db3e0, 0x277)  // anchor-bracket, dc 0xcd8b8
 std::string type_artifact::getDescription() const
 {
@@ -2764,9 +2617,6 @@ DATA(0x006a8090) extern const char* g_heroScreenFormationHelp;         // row 31
 DATA(0x006a8094) extern const char* g_heroScreenMixedArmyHelp;         // row 32
 DATA(0x006a5704) extern const char* g_unnamed6a5704;
 
-// WindowHandler retains this call. The 2026-09-09 whole-TU control is
-// code-identical without auto_inline(off); the earlier single-call-site
-// expansion diagnosis no longer applies to the current source state.
 VA(0x004db660, 0x728)  // dc 0xcd9c4
 void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
 {
@@ -3086,27 +2936,8 @@ void hero::heroFn004DC070(long slot)
 // The owner index is taken WITHOUT the `owner < 0` guard get_player
 // carries; retail indexes gpGame->players directly.
 
-// 48.77 -> 65.97 (2026-08-20) ON TWO SITE-GRANULAR PINS, and this
-// CORRECTS the note this entry used to carry. The old text concluded
-// "no source spelling in this body reaches the decision" after measuring
-// a byte-inert padding sweep:
-//     N=0/2 -> 48.77   N=6 -> 57.92   N=12/20/30/45 -> 78.07
-// and read that as "retail's body carries about TWELVE more inline
-// candidate sites". That reading was wrong. The budget is not what
-// diverged - the SITES are: retail keeps bitset<144>::set(size_t, bool)
-// and bitset<144>::any() OUT OF LINE where our CL expanded both, and
-// `#pragma inline_depth(0)` is STATEMENT-granular in VC6, so wrapping
-// those two call sites alone reproduces retail's census directly, with no
-// padding and no change to the semantics. `predict-inline` now reports
-// ZERO over- and zero under-inline entries for this body: every call
-// pairs, base 10 against retail 9.
-// Measured and rejected while landing this, one compile each:
-//   * `#pragma inline_depth(1)` on the three bitset<12> set/test sites,
-//     to keep set/test inline while forcing the nested _Xran out of line
-//     the way retail has it: BYTE-FLAT (65.97). inline_depth only bites
-//     at 0 in this compiland - the same result hero.cpp:888 already
-//     records for depths 2/3/4 - so the pragmas were removed rather than
-//     left as inert noise.
+// Keep bitset<144>::set(size_t, bool) and bitset<144>::any() out of line at
+// their two call sites.
 
 // 65.9718 -> 87.2712 (2026-08-20), AND THE NOTE BELOW NAMED THE WALL AND
 // THEN DECLARED IT UNSPELLABLE. It was right that retail calls the
@@ -3200,29 +3031,6 @@ void hero::heroFn004DC100(long slot)
 // The opening flag arm ASSIGNS (Dinkumware `assign(const char*,
 // size_type)`), it does not append.
 
-// 85.71 -> 91.65 (2026-08-20): the old note's "_Xlen x5 vs x3 = retail
-// expands two more grow paths" read the census BACKWARDS - a fn-level
-// `call _Xlen` reloc marks a site where the APPEND ITSELF was expanded
-// (its throw left as the call), so five _Xlen on our side against three
-// meant WE expand two appends retail keeps out of line. Walking the
-// sites by their gMoraleTexts addends: retail CALLS append(const char*,
-// size_type) at the Basic-leadership rung [20] (fn+0x454, repne scasb +
-// call) and expands [21],[22] as we do; the TownQuickView lever (spell
-// append(p, strlen-local), then the statement pin) imposed exactly that
-// call. The luck twin's [14] rung was the same shape: +7.97 there.
-
-// Residual (91.65%): ONE ledger row left - the tail. Retail CALLS
-// append(const basic_string&, 0, npos) in the NEGATIVE otherModifier arm
-// (fn+0x651: push npos-global/0/temp) and EXPANDS the identical append
-// in the positive arm (_Xlen fn+0x6c1); we expand both. MEASURED
-// NEGATIVE, do not retry as spelled: the named-temp + 3-arg append + pin
-// form in that arm costs 91.65 -> 81.81 - the pin's A9 cascade flips the
-// downstream dtor/_Tidy ledger, the same failure the luck twin's [15]
-// probe showed. The residual class is "imposition reachable, imposition
-// net-negative": each remaining site needs its call WITHOUT the pin's
-// side effects, which no measured spelling provides.
-// Also tried and rejected earlier: `morale += 500` / `luck += 500` for
-// the constant store (byte-flat on both twins).
 VA(0x004dc320, 0x793)  // anchor-caller (armyGroup::get_morale_description), dc 0xce260
 std::string hero::getMoraleDescription() const
 {
@@ -3576,10 +3384,6 @@ void THeroScreenWindow::show_skills()
 
 #endif  // @carcass
 
-// The two click handlers retain the DC helper identities
-// handle_artifact_click (dc 0xcdf30) and handle_backpack_click (dc 0xcea3c).
-// THeroScreenWindow::show_skills (dc 0xcf3ac) is a separate widget-update
-// member, not the skill-description popup formerly lifted from WindowHandler.
 static void handleArtifactClick(long code, unsigned char rightMouse)
 {
     long slot = code;
@@ -3593,7 +3397,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
         // retail CALLS 0x4e2840 here where our CL expanded it (this helper
         // is itself a single-call-site static that /Ob2 folds into
         // WindowHandler, so the budget reaches through). With two call
-        // sites in the compiland the expansion no longer happens, and this
+        // sites in the compiland the expansion does not happen, and this
         // pin and update_slot's sibling are both byte-flat, so both went
         // (2026-09-06, polish lane 50).
         if (!g_currentHero->heroFn004E2840(
@@ -3803,17 +3607,6 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
 // help-dialog tails. The explicit rightMouse 1/0 assignments follow DC
 // 3499..3502 and are byte-identical to the normalized expression here.
 
-// The three army-selection refreshes reread g_heroScreenArmySlot AFTER
-// updateArmies, then branch between SET_STATUS and CLEAR_STATUS broadcasts.
-// Retail sites +0x6c5, +0x7e0 and +0x8bb prove this reread; constant status
-// arguments discarded it. Explicit call arms retain all four updateArmies
-// calls naturally. After the army action, refresh the hover/status bar only
-// for a left click (DC 3822..3824; retail +0x708..+0x7bc): the unconditional
-// refresh was a behavioral mismatch, not an interchangeable merged tail.
-// Its corrected path shares the single updateHeroScreenStatusBar call with
-// mouse movement, as retail does. DC's infowin is the block-scoped
-// TQuickHeroWindow in the hero-locator arm, not missing frame padding.
-
 // Controls in the current TU: reread-status ternaries plus exitFlag give
 // 69.0893 raw-probe similarity; adding the hover early return gives 76.6445
 // (76.6464 in the normalized build). Explicit status call arms give 78.0658
@@ -3841,26 +3634,6 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
 // byte-identical between the two front ends apart from its own two-byte
 // version word (rtm-generation.md §6), so there is no front-end lever
 // here. The merge-set flip is a model gap, not a vintage.
-
-// THE FOURTH UpdateArmies CALL IS NOW EXPLAINED (2026-08-20), and this
-// corrects the earlier "nothing missing" diagnosis. In the selected-army
-// path, retail tests gUnnamed6aa9d8 before split/merge/swap. When that latch
-// is set, clicking an occupied different slot merely selects that slot,
-// refreshes the seven army widgets, broadcasts the mixed-army status and
-// redraws; an empty slot does nothing. The target block is fn+0x7bc..0x8e1:
-// `test gUnnamed6aa9d8 / je <split path> / cmp army[slot],-1 / je <tail> /
-// mov [gHeroScreenArmySlot],edi / call UpdateArmies`. It is semantic,
-// not padding. A direct same-level else-if initially cost 74.4733 ->
-// 70.1594 by crossing a VC6 whole-function threshold. Restoring the
-// independently attested Hero.h:634 GetMaxMana inline at its five hero.obj
-// sites is byte-flat at every site alone but changes that threshold honestly:
-// with both source corrections present this function reaches 75.4051 and
-// emits all four UpdateArmies calls plus both BroadcastMessage calls.
-// That is the landed form. The qualifier test in the split path is also
-// corrected from MESSAGE_MODIFIER_SHIFT (0x1) to
-// MESSAGE_MODIFIER_SHIFT_KEYS (0x3), exactly retail's `test byte ptr [...],3`;
-// the matcher masks that immediate class, so the semantic correction is
-// score-neutral.
 
 // Retail's three army refresh arms also do NOT pass the status code as the
 // constant the arm already knows: each emits
@@ -5210,9 +4983,9 @@ int hero::giveSS(int whichSS, int numLevelsToGive)
     return m_skillLevel[whichSS] - oldLevel;
 }
 
-// Original: hero::HasSecondarySkill; hero.cpp:4689, dc 0xd38d8.
 // The DC formal type is non-const, and its source body tests skillOrder.
 // SetupHeroView calls this ordinary TU helper; no header force-inline view.
+// E:\gamedcs\hero.cpp:4689, dc 0xd38d8
 unsigned char hero::hasSecondarySkill(int whichSkill)
 {
     return m_skillOrder[whichSkill] > 0;
@@ -5478,13 +5251,12 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
 // Re-measured WITH the catch scope, since a rejected knob is only
 // rejected for the inline structure it was measured in: the depth ladder
 // (`allowable[slot]`, which reaches test through operator[]) is now
-// BYTE-FLAT at 94.5203 - with an EH frame present it no longer pushes
-// _Xran out of line, so the ladder has nothing left to trade here. The
+// BYTE-FLAT at 94.5203 - with an EH frame present it keeps
+// _Xran inline, so the ladder has nothing left to trade here. The
 // _Eos direction is a confirmed OVER-inline (base 0 calls vs retail 1),
 // whose doctrinal lever is caller-shrink, and a 437-byte body with no
 // liftable block and no DC-named helper has no dose to give.
 VA(0x004e2840, 0x1B5)  // retail-only, hero member, ret 8; size absorbs the
-    // 0x4e29dc catch funclet (boundary correction 2026-09-06b)
 unsigned char hero::heroFn004E2840(long artifact, long slot)
 {
     const std::bitset<19>& allowable =
@@ -5577,17 +5349,6 @@ unsigned char hero::equipArtifact(const type_artifact* artifact, long slot)
 // that occupies the assembled artifact's slot), then removes the assembled
 // artifact's own bonuses. The spell list is rebuilt if either the assembled
 // artifact or any component affects it.
-
-// All three loops are SIGNED-INDEX loops, not pointer walks - corrected
-// 2026-08-20 after `vc6 diagnose` reported flow-distance 6 with three
-// `jb`->`jl` twins, against the older note here which had claimed all 13
-// branches agreed. A C++ pointer relational compare is UNSIGNED (`jb`);
-// retail's `jl` survives because VC6 strength-reduces `i < N` into
-// pointer form while KEEPING the original comparison's signedness, which
-// is why the outer loop can end in `cmp ebx, gArtifactPrimarySkillBonuses
-// End / jl` and still have been written as an int index. Rewriting the
-// three walks as `for (int i = 0; i < N; i++)` took the row 74.49 ->
-// 90.20 and flow-distance to 0.
 
 // Residual (90.2%): register-homing only. Retail binds the artifact id to
 // ESI as its first call-crossing pseudo and saves ESI in the prologue; our
@@ -5713,10 +5474,6 @@ unsigned char hero::addToBackpack(const type_artifact* artifact, long slot)
 }
 
 // E:\gamedcs\hero.cpp:5044
-// Equips the artifact if a slot takes it, otherwise backpacks it, then
-// runs the combination-assembly offer and the optional end-condition
-// check. See the header for the retail-corrected signature: both flags
-// are BYTES and the function RETURNS one.
 
 // The `else if` shape is exact - the owner-is-not-the-local-player
 // branch and the still-holding-the-combination branch BOTH fall into the
@@ -6184,7 +5941,7 @@ float hero::getExperienceBonusFactor() const
 static const float g_logisticsFactors[kNumMasteries] =
     { 0.0f, 0.1f, 0.2f, 0.3f };
 
-// E:\gamedcs\hero.cpp:5709, original name hero::GetLogisticsFactor.
+// E:\gamedcs\hero.cpp:5709.
 DC_ONLY(0xd49a8, 0x48)
 float hero::getLogisticsFactor() const
 {
@@ -6197,7 +5954,7 @@ float hero::getLogisticsFactor() const
     return factor + 1.0f;
 }
 
-// E:\gamedcs\hero.cpp:5734, original name hero::GetNavigationFactor.
+// E:\gamedcs\hero.cpp:5734.
 DC_ONLY(0xd49f0, 0x4E)
 long hero::getNavigationFactor() const
 {
@@ -6244,21 +6001,6 @@ float hero::getFirstAidFactor() const
     }
     return factor + 1.0f;
 }
-
-// movement.txt, parsed at 0x4d7240 into six .bss cells this TU is the
-// modeled consumer of. The land row is bounded by the parser's own
-// `cmp edi,0x698ae8 / jle` - 21 entries, one per creature speed 0..20 -
-// and the sea row by `cmp edi,0x18 / jl`, one per Navigation mastery.
-// NAMES ARE ROLE-INFERRED from their readers here (no public symbol
-// survives), but each role is byte-fixed by the artifact GetMobility
-// pairs it with: 0x46 Equestrian's Gloves, 0x62 Boots of Speed, 0x47
-// Necklace of Ocean Guidance, 0x7b Sea Captain's Hat. 0x698b0c is the
-// SAME cell the owned-Lighthouse count and the Castle Lighthouse
-// building multiply, which is what makes it the lighthouse bonus rather
-// than a fourth artifact's.
-// Creature-specialty upgrades use the canonical game::UpgradedCreatureType
-// member (retained at 0x529710), including its base-map elemental guard.
-// The former local GetUpgradedCreature duplicated that same body.
 
 VA(0x004e4990, 0x3F6)  // dc 0xd4b50
 int hero::getMobility(unsigned char seaMovement) const
@@ -6431,23 +6173,6 @@ TSkillMastery hero::getSpellSchoolLevel(TSpellSchool schoolMask,
 }
 
 // E:\gamedcs\hero.cpp:6025
-// Same four blocks in the same emission order, but the answer is the
-// SCHOOL rather than the level, the running best starts at -1 (so a
-// zero-level school still wins over nothing), and the fallback is the
-// mask itself. The surviving CodeView symbol makes the member const.
-// Retail reads only the low byte for the four mask tests (`mov
-// cl,[ebp+8]`) yet re-reads the complete enum on the fallback path
-// (`mov eax,[ebp+8]`). Dreamcast likewise tests the parameter directly and
-// records no source local; the former volatile byte alias was therefore a
-// source-false optimizer lever. Constant-mask tests express the narrow reads;
-// explicit unsigned-char casts on all four tests and a non-volatile byte mask
-// local are both byte-flat at 98.3750 because VC6 folds them back to the same
-// dword load.
-// The `&&` + else form sinks the fallback into the air arm as retail
-// does; hoisting `best_school = school_mask` measured only 77.1%.
-// DC 6043/6049/6055 places each pair of school/level tests in one condition.
-// The eight independent combined-guard controls produce four reproduced code
-// results, all 98.3750%; preserve the combined guards without a byte alias.
 VA(0x004e51c0, 0x73)  // anchor-global, dc 0xd4ed0
 TSpellSchool hero::getHighestSchool(TSpellSchool schoolMask) const
 {
@@ -6478,17 +6203,7 @@ TSpellSchool hero::getHighestSchool(TSpellSchool schoolMask) const
     return bestSchool;
 }
 
-// Canonical const-API checkpoint: IsWieldingArtifact, GetIntelligenceFactor,
-// get_special_terrain, get_spell_level, GetManaCost and artifact rollover
-// retain 100% after their six symbol migrations. Shared-header collateral:
-// CEnterNameEdit::OnKillFocus 100 -> 99.870964%, oldmain 77.025734 -> 77.023056%,
-// CampaignHeaderStruct::Load 53.971493 -> 53.986843%. All historical peaks
-// remain banked; Fly is unchanged at 32.623375% with the canonical overload.
-// The DC LF_MFUNCTION records prove const on this overload and the Hero.h
-// facade. The former second, const-adapter implementation represented this
-// same source function; retain one ordinary body and its canonical calls.
-// DC6071 names GetSpellSchoolLevel and HasArmy as source calls. Complete
-// adds the Armageddon's Blade mastery override before indexing the mana row. Titan's Lightning
+// Complete adds the Armageddon's Blade mastery override before indexing the mana row.
 VA(0x004e5240, 0xEF)  // dc 0xd4f64
 int hero::getManaCost(int whichSpell, const armyGroup* enemy,
     int magicTerrain) const
@@ -6824,10 +6539,6 @@ int hero::getHeroSpellBonus(SpellID spellId, int targetLevel, int value) const
 
 // E:\gamedcs\hero.cpp:6493
 
-// The flat additions at 0x4e621a..0x4e6246 and 0x4e633d..0x4e6377
-// belong to the two specialty arms below. The former addFlatCreatureBonus
-// helper had no DC or retained retail identity and existed only to shrink
-// the caller's /Ob2 budget. Earlier 99.97% measurements used that wrapper.
 VA(0x004e6120, 0x39E)
 void hero::heroFn004E6120(int creatureType,
                            TCreatureTypeTraits* traits) const
@@ -6976,16 +6687,6 @@ void type_artifact::`default constructor closure'()
 // (moved to retail link order at 0x004e1520, immediately before the
 // destructor it calls; the VA_COMPGEN claim lives there)
 
-// ..\stlport\stl_bitset.h:379
-// CLAIM WITHDRAWN 2026-08-07 - MISATTRIBUTION (cinit excluded class).
-// 0x4e6780 is not an STL body at all: its entire 32 bytes are the
-// guard-byte/atexit prologue of a file-scope initializer -
-//   mov cl,[0x6abaa0]; mov al,1; test al,cl; jne +8; or cl,al;
-//   mov [0x6abaa0],cl; push <vslot>; call _atexit; pop ecx; ret
-// - the exact pattern the match skill lists as never-claimable, and the
-// same block that opens herodefs' run 0x20 bytes before its first
-// initializer. The real reference::operator= is DC 60 B, an STLport
-// header inline with no out-of-line retail body.
 DC_ONLY(0xd5a04, 0x3C)
 std::bitset<48,unsigned* std::bitset<48,unsigned long>::reference::operator=(unsigned char __x)
 {

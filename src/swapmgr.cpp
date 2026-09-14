@@ -730,7 +730,7 @@ void TSwapWindow::updateArrows()
 // prove that the byte is assigned in the body, not a member initializer.
 class CSwapMgrNetMsgHandler : public CNetMsgHandler {
 public:
-    // Original: CSwapMgrNetMsgHandler::CSwapMgrNetMsgHandler; swapmgr.cpp:512, dc 0x15f1e4.
+    // E:\gamedcs\swapmgr.cpp:512, dc 0x15f1e4
     CSwapMgrNetMsgHandler() { m_field0c = 0; }
     virtual CNetMsg* handleNetMsg(CNetMsg* netMsg) OVERRIDE;
 
@@ -1381,14 +1381,6 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
 }
 
 // E:\gamedcs\swapmgr.cpp:1168
-// The exact UpdateBackpack/SendHeroUpdate bracket fixes this third handler at
-// 0x5af990. Dreamcast supplies the two locals, helper boundaries and branch
-// order; retail independently proves the Complete dialog and pointer sets.
-// All 33 CFG blocks, 197 instructions, 20 branches and five returns agree.
-// The 99.90% residual is an eight-slot EAX/ECX/EDX scratch transpose at the
-// get_backpack_error argument chain; why-reg's model caps it as front-end
-// handle state.  Naming the string temporary is the negative control and
-// drops this function to 97.86% without repairing the transpose.
 VA(0x005af990, 0x251)  // roster bracket + body/callees, dc 0x15d2e0
 void swapManager::handleBackpackClick(long side, long id, unsigned char rightClick)
 {
@@ -2332,15 +2324,7 @@ void swapManager::swapMons()
     source->swap(m_sourceArmySlot, destination, m_destinationArmySlot);
 }
 
-// E:\gamedcs\swapmgr.cpp:2072
-// Dreamcast preserves the message local, primary-skill and army-widget loops,
-// then the update_all_slots helper call in this order. Complete /Ob2 expands
-// that final helper to the same nested UpdateSlot walk seen in both callers.
-// Direct member expressions in canonical hero::getPrimarySkill reproduce
-// this entire body. The former signed-byte accessor temporary had 25 aligned
-// blocks (24 exact-sized), differing scratch registers and an end-of-side MOV. A
-// named primary-skill temporary and hoisting `side` beside `i` both compile to
-// the same 89.35% bytes; the accessor's source expressions resolve that delta.
+// E:\gamedcs\swapmgr.cpp:2072, dc 0x15ea00
 VA(0x005b0ef0, 0x1D4)  // body/callee corroborates, dc 0x15ea00
 void swapManager::update()
 {

@@ -635,11 +635,6 @@ inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));
     if (info->isCustomized()) {
-        // Both Dreamcast ValueOfMapArtifact and Complete's expanded
-        // ARTIFACT arm retain this source helper as a real call boundary.
-        // The `inline_depth(0)` pin that used to enforce it is byte-flat and
-        // came out, with seven of AI_value_of_event's own arm pins
-        // (2026-09-06, polish lane 50 - the whole-TU per-pin sweep).
         return valueOfCustomItem(currentHero, cell, value);
     }
 
@@ -2132,12 +2127,6 @@ void philAI::doAI(int whichPlayer)
 }
 
 // E:\gamedcs\philai.cpp:1056
-// Residual (86.6362%): all four DC static helpers expand naturally after
-// removing their forced declarations and all seven shipyard fences. Source
-// scope/call evidence and complete negative-control families are recorded at
-// markShipyards above. The historical census-only note missed these helper
-// boundaries; compare ordered named call sites and local CFGs before treating
-// the remaining shipyard register homes as a compiler-only residual.
 VA(0x005261f0, 0x5ba)  // anchor-callee, dc 0x10ec58
 void moveHero(hero* currentHero, long* dangerZones, unsigned char isLastHero, unsigned char* exploreMode)
 {
@@ -2379,32 +2368,7 @@ void unnamed526d20(int playerId, int* costs, int flag)
     g_aiPlayers[playerId].tradeResources(costs, flag);
 }
 
-// E:\gamedcs\philai.cpp:1339.  The spell-appraisal object's constructor; retail
-// inlines fill_creature_value_list into it (134 -> 915 B). The summoning
-// and value-of-increase helpers expand into other callers.
-// Dreamcast fixes the negative artifact guard, four scalar assignments and
-// helper call. Complete additionally expands GetPrimarySkill/GetMaxMana and
-// therefore exposes the byte-proven 1..99 clamps before the helper body.
-// Exact after restoring direct member expressions in canonical GetPrimarySkill.
-// Its former signed-byte temporary left this caller at 64.3242%: inside
-// std::sort, VC6 expanded the short-path _Insertion_sort_1 and called the
-// long-path copy, opposite retail (39 versus 37 blocks, one extra branch).
-// The accessor edit restores both decisions without touching the sort.
-// Moving
-// the helper back to its DC lexical position and adding explicit `inline`
-// were byte-flat; why-reg's first definitions all agree. A guarded early
-// return instead of the outer else is also byte-flat, as is restoring the
-// unsigned-char comparison results. The DC decorated publics encode bool
-// (ai_creature_value.h:29/35), so bool is retained despite byte storage
-// records. That type control leaves this constructor byte-flat.
-// The early-return probe is not retained: the scope rows do not distinguish
-// it from an else arm. The original sort helper and comparator stay canonical.
-// Dreamcast philai.cpp:1344..1347 and retail +0x372 clear power, duration,
-// mana, then stack value. Restoring that order raised 64.3119 -> 64.3242%.
-// The verified C2 trace locates the sort frontier: _Insertion_sort_1 costs
-// 112, receives 115 at the short-path depth-five site and 88 at the later
-// long-path site. The first expansion spends the budget needed by the
-// second. This is a per-site budget mismatch, not a comparator-count error.
+// E:\gamedcs\philai.cpp:1339, dc 0x10f37c
 VA(0x00526d40, 0x393)  // anchor-global, dc 0x10f37c
 type_spellvalue::type_spellvalue(const hero* newHero)
 {

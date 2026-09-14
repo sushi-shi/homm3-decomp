@@ -13,8 +13,6 @@
 // attested by a CodeView row: the two class names above are retail's own,
 // everything else is role-derived and provisional.
 
-// All Immersion bodies and their enclosure-tree instantiations are owned
-// here, including the three formerly carried by game.cpp.
 #include <va.h>
 
 #include <fstream>
@@ -252,17 +250,6 @@ TImmMouseEffect::TImmMouseEffect(const RECT* rect, long a, unsigned long b,
 {
 }
 
-// 2026-09-05: the sub-object is `std::auto_ptr<CImmEnclosure>`, and the
-// holder here is `std::auto_ptr<force_feedback::t_enclosure>`. Both are
-// byte-proven from ForceFeedback.obj's own constructors: 0x4b6dc0 and
-// 0x4b6a50 each buy their pointee and then write `(p != 0)` and `p` in
-// that order, which is auto_ptr's `_Owns(_P != 0), _Ptr(_P)` verbatim,
-// and 0x4b7020 / 0x4b7040 / 0x4b7050 are the three out-of-line
-// `~auto_ptr` bodies (CImmEnclosure, char, CImmProject) the same
-// compiland emits. The earlier "TRIED AND REJECTED: splitting the class
-// in two scores 14.62" measurement was taken with a HAND-WRITTEN
-// sub-object; a real std::auto_ptr member is a different inline
-// candidate, so the body below is now just the implicit member teardown.
 VA(0x004b6e40, 0xE3)
 TImmMouseEffect::~TImmMouseEffect()
 {

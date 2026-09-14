@@ -31,10 +31,10 @@ public:
     // overview's zero-initialization uses the proven default constructor.
     message(int id, int codeX, int codeY, int qualifier,
             int mouseX, int mouseY, int extra, heroWindow* window);
-    // Original: message::message; struct.h:42, dc 0x2d58.
     // Retail RS_CLICK constructs this 32-byte local at 0x588e3d before
     // setting codeY and passing it to OnWidgetDeselect. The retained body
     // zeroes offsets +0 through +0x1c and returns the receiver in EAX.
+    // E:\gamedcs\struct.h:42, dc 0x2d58
     VA(0x00589190, 0x1c)  // RS_CLICK constructor + field stores, dc 0x2d58
     message()
     {
@@ -203,7 +203,6 @@ namespace GameTime {
     // argument evaluated ahead of its guard), and the result is tested
     // with `sub eax, edi; js`, i.e. the SIGN of the difference - not
     // the unsigned `cmp` a hand-spelled `Get() >= deadline` emits.
-    // Before normalization (function): GameTime::Elapsed.
     // The stop/start subtraction is retained by the upstream mouse timing helper.
     inline long elapsed(unsigned long stop, unsigned long start)
     {

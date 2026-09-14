@@ -1,28 +1,6 @@
 // strip.cpp - E:\gamedcs\strip.cpp (compiland strip.obj)
 // 5 retail functions in link order (of 8 DC procs).
 
-// Retail span: the spells->subwindow gap. The gap's head belongs to
-// spells.cpp's tail (the spell-id probe 0x5a93a0 and the std::map
-// _Lockit template bodies 0x5a9450/0x5a9570/0x5a9870 - the last two
-// are the bracket's two EH-prologue functions, neither strip's) and a
-// cinit run (guard byte 0x6abaa0, ten-iteration bitset initializers,
-// 0x5a9930..0x5a9d1f - excluded class). strip.obj's code is exactly
-// 0x5a9d20..0x5aa31d in DC source order; then subwindow.cpp opens
-// with its own cinit funclet at 0x5aa320 and the TSubWindow ctors at
-// 0x5aa340.
-
-// ~strip (DC :70) IS in retail, but not at an address this compiland
-// can claim: it is empty, so it compiles to a lone `ret` that /OPT:ICF
-// folded into the image-wide empty-body fold at 0x5bc690 (carve name
-// border_vslot04). townmgr's `delete strip` proves the call survives -
-// ::UnloadTown 0x5c70b0 and ::SwapHeroes 0x5d5150 both emit
-// `mov ecx,<p> / call 0x5bc690 / push <p> / call ??3@YAXPAX@Z`. So
-// strip.h declares it and nothing defines it: a definition here would
-// emit an unpairable 1-byte body into strip.obj, and an inline
-// definition in the header would delete the call at every use site.
-// (Correction of an earlier note that read the NOP fill at
-// 0x5a9d77..0x5a9d80 as proof the destructor was absent.)
-
 // Absent from retail (documented, not forced): DrawNumber (DC :124)
 // and DrawSelector (DC :253) - both survive only /Ob2-inlined inside DrawIcons
 // 0x5a9db0 (the sprintf/SET_TEXT pair; three selector expansions at
@@ -118,19 +96,6 @@ void strip::drawNumber(int i)
 }
 
 // E:\gamedcs\strip.cpp:139
-// DC140 constructs message,141 sets MESSAGE_WIDGET, and 143 tests pos.
-// The shared constructor owns zero initialization. Removing the redundant
-// caller stores and obsolete portrait const_casts is byte-neutral.
-// Residual (93.1783%): the constructor expansion retains an extra codeX=0
-// store before the branch. In the pos!=0 portrait arm, VC6 selects EAX for
-// the traits base and EDX for the row index; retail uses EDX/ECX and loads
-// the base before storing codeX. All eleven CFG blocks and ten named calls
-// align apart from these instruction/size differences.
-// The named portrait snapshot below avoids a different suffix merge. Prior
-// direct-expression, row/base bindings and initialization-order controls
-// did not resolve it; those bounded probes do not prove that no natural
-// source form can produce retail's allocation. DC204 sets codeX and 205
-// stores the portrait; no named portrait local is recorded.
 VA(0x005aa060, 0x1CE)  // linkorder + body: akHeroTraits[frame] portrait via WIDGET_SET_IMAGE, owner widgets 100/122/123 (pos==0) and 124/125; dc 0x158a80
 void strip::drawOwner(int frame)
 {

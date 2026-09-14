@@ -47,7 +47,6 @@
 #include "winmm_thunks.h"
 
 // homm2 BUTTON.cpp's file-static modifier latch, same name and role.
-// Before normalization: iLeftRightSave.
 DATA(0x00694da8)
 static int g_leftRightSave;
 
@@ -132,47 +131,8 @@ void button::initialize(int x, int y, int w, int h, int id,
     m_buttonIcon = ResourceManager::getSprite(image);
 }
 
-// E:\gamedcs\button.cpp:131
-// Residual (88.1%, was 67.4 on 2026-08-08): two DUP-EXIT defects are
-// GONE. (1) The capture loop's two exits now BREAK to one shared
-// `return Deselect(*msg)`; spelling either as its own `return`
-// expands the inlined deselect body twice (+8.4 points). (2) The
-// WIDGET sub-switch case ORDER is retail's emission order -
-// SET_PALETTE, SET_ICON_NAME, SET_TEXT, SET_PLAYER_PALETTE_COLORS -
-// not ascending by value (+8.9 points); retail's jump table lands the
-// palette body first and cross-jumps SET_ICON_NAME onto the
-// palette-failure tail. Spelling the palette case positively likewise
-// restores retail's success-first layout (+2.75 points).
-// CORRECTED 2026-08-08 (closeout lane): the auto-repeat guard calls
-// GameTime::Get(), NOT timeGetTime(). The delinked target reads
-// `call ?Get@GameTime@@SIKXZ` at +0x37 where this TU was emitting the
-// winmm thunk; kbwin's GameTime::Get (0x4f82e0) is a 6-byte
-// `jmp [__imp__timeGetTime@0]`, so the two are observationally equal
-// at runtime but a different callee in the object. button::Select's
-// timeGetTime at +0x188 stays the thunk form - the per-TU import-form
-// note below still applies to THAT call, not to this one.
-// DC-census verdict (2026-08-14), both rows negative: `GameTime::ElapsedSince`
-// x1 (E:\gamedcs\struct.h:411, dc 0x1eed4 = `Elapsed(Get(), t)`) against the
-// `(int)(GameTime::Get() - repeatTime) > 0` below is byte-EXACTLY flat at
-// 88.1009 modelled file-locally - it folds. And `combatManager::CombatIsOver`
-// x3 is pure Dreamcast platform delta: the DC census records it from
-// button::Select x1 and button::Deselect x1 as well, and both of those are
-// already EXACT here without it, so the DC widget pump polls combat-over where
-// retail does not. slider::Main carries the identical ElapsedSince row with
-// the identical verdict.
-// What is left is (a) a whole-body esi/edi role swap (retail pins msg
-// in ESI) that source order does not steer, and (b) the /Ob2 boundary
-// inside button::SetText. `Text = new_text` recovers retail's strlen and
-// raw movsd/movsb tail, but this compile expands std::string::_Grow while
-// retail calls its two-argument COMDAT at 0x404a90. The same header body
-// makes the opposite inline-boundary choice in the textButton ctor, so
-// this is translation-unit optimizer state rather than a text-layout gap.
-// `inline_depth(1..4)` and scoped auto_inline did not move the decision.
-// The left-click capture loop pumps the mouse manager and input queue
-// until a button-up, toggling selection as the pointer crosses the
-// widget - homm2's shape with h3's GetEvent-by-value copy. The WIDGET
-// sub-switch inlines SetText and the palette swap; a failed palette
-// load falls back to reloading the icon sprite by the same name.
+// E:\gamedcs\button.cpp:131, dc 0x1eed4
+// E:\gamedcs\struct.h:411, dc 0x1eed4
 // E:\gamedcs\button.cpp:131
 VA(0x00456190, 0x6CF)  // linkorder bracket; Select/widget-Main/manager callees byte-proven, dc 0x572d0
 int button::main(message& msg)
@@ -351,17 +311,8 @@ int button::select(message& msg)
     return 2;
 }
 
-// Original: button::Deselect; button.cpp:401, dc 0x57854.
-// CodeView's Main calls this member at dc 0x57304/0x574ce/0x57676/
-// 0x576e0/0x57708. Its body owns the selected-bit early return/clear,
-// Draw, UpdateScreen, widget message, endDialog choice and qualifier reset.
-// Complete expands the same member in Main: the first copy clears +0x16
-// at 0x4561d6, draws at 0x4561dc, calls UpdateScreen at 0x456206, then
-// stamps the message and clears gLeftRightSave at 0x45620e..0x45623e.
-// The DC-only combat-screen offset arm at dc 0x5787a..0x578ba is absent
-// in that retail expansion. Keep the reference formal proved by CodeView.
-// Formerly DeselectSelected with an unsupported inline keyword copied from
-// the homm2 reconstruction; use the actual HoMM3 name and source position.
+// Complete omits the combat-screen offset adjustment used in Dreamcast.
+// E:\gamedcs\button.cpp:401, dc 0x57854
 int button::deselect(message& msg)
 {
     if (!(m_status & WIDGET_SELECTED))
@@ -483,19 +434,7 @@ void textButton::textButton()
 // row calls ??1textButton (0x456bf0) and carries the flags&1 tail.
 VA_COMPGEN(0x00456a20, 0x21, SCALAR_DELETING_DTOR, textButton)
 
-// E:\gamedcs\button.cpp:508
-// EXACT 2026-09-12 after restoring the ordinary eleven-argument initialize
-// helper at DC509, its Complete highlighted-frame store before selected,
-// and the proven font::TColor parameter/member. The five store-order states
-// emit five distinct objects; two positions before selected reproduce 100%.
-// All scored siblings preserve their prior scores.
-//
-// Historical flattened-body controls stalled at 88.44%: max_size and _Eos
-// expanded where retail called them. Added dummy candidate sites only fell
-// to 58.33..59.18%; no such instrumentation is retained. The canonical helper
-// boundary naturally recovers both retail call decisions and the hotkey
-// argument's early stack store. Callee-label aliases were not code deltas.
-// Before normalization (locals): text_, font_name, new_color.
+// E:\gamedcs\button.cpp:508, dc 0x57ab4
 VA(0x00456a50, 0x193)  // linkorder bracket; initialize/GetSprite/GetFont callees byte-proven, dc 0x57ab4
 textButton::textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor newColor)
     : button()
@@ -630,8 +569,6 @@ void* type_func_button::`scalar deleting destructor'(unsigned __flags)
 
 #endif  // @carcass
 
-
-
 #if 0  // @carcass
 
 // ..\stlport\stl_vector.h:203
@@ -696,7 +633,6 @@ void std::_STL_alloc_proxy<int *,int,std::allocator<int> >::_STL_alloc_proxy<int
 {
     // @stub
 }
-
 
 #endif  // @carcass
 

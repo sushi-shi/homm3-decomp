@@ -21,23 +21,6 @@
 // address misc.obj touches lands inside it - which is what makes them
 // MEMBERS and not neighbours.
 
-// The FIELD NAMES below are not guesses: WritePrefsToRegistry hands
-// each one to RegSetValueExA next to the registry value name it is
-// stored under, so the name/offset pairing is read straight off the
-// image. The slicing closes EXACTLY - the last field ends at +0xd4 =
-// 212 - which is the arithmetic check that no field was invented:
-//   ...+0x70 the dword run, +0x74..+0x8f untouched by this TU,
-//   +0x90 name[4] ("Unique System ID", written REG_SZ with cbData 4),
-//   +0x94 combatSpeed, +0x98/+0xa5/+0xb2 the three 13-byte RMT keys,
-//   +0xbf networkDefaultName[21] ("Network Default Name", cbData 0x15).
-// The earlier reading of name as char[8] was wrong: 'Combat Speed'
-// sits at +0x94, inside that span, and pins name at four bytes - which
-// is also what makes the 13-byte RMT buffers exactly big enough for
-// "RMT" + a 3-char name + "RC.BIN" + NUL.
-// Dreamcast configStruct supplies the legacy driver-name/Redbook fields
-// at +0x74..+0x8e. Retail fixes firstInstall at +0x8f and the same total
-// extent, corroborating this retained layout. NH3API instead widens the
-// preceding scalar into an array and puts firstInstall two bytes early.
 struct SUnnamed698758 {
     int m_computerWalkSpeed;        // +0x00  "Computer Walk Speed"
     int m_walkSpeed;                // +0x04  "Walk Speed"
@@ -68,9 +51,6 @@ struct SUnnamed698758 {
     int m_showCombatMouseHex;       // +0x68  "Show Combat Mouse Hex"
     int m_combatShadeLevel;         // +0x6c  "Combat Shade Level"
     int m_combatArmyInfoLevel;      // +0x70  "Combat Army Info Level"
-    // Former pad74: Dreamcast configStruct::cDOSDigitalDriver and
-    // cDOSMIDIDriver are consecutive 13-byte names; bDontTryRedbook is
-    // the byte at +0x8e. These legacy slots are not used by retail misc.
     char m_dosDigitalDriver[13];    // +0x74
     char m_dosMidiDriver[13];       // +0x81
     char m_dontTryRedbook;          // +0x8e

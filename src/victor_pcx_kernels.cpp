@@ -1,10 +1,7 @@
 // Reconstructed Victor PCX assembly kernels (Catenary Systems).
-// This semantic grouping and filename are provisional: the original source
-// and object boundaries are unknown. These three consecutive retail kernels
-// share explicit inline-assembly bodies and compiler-generated outer frames.
-// /O2 /Og- reproduces all 234 bytes; /Od is also byte-exact. Ordinary /O2
-// removes RLE's unused EBX save/restore. The C++ library wrappers instead need
-// ordinary /O2 and remain in victor.cpp. See docs/vc6/victor-library.md.
+// The original source and object boundaries are unknown.
+// /O2 /Og- preserves the RLE kernel's EBX save/restore; the C++ wrappers in
+// victor.cpp use ordinary /O2. See docs/vc6/victor-library.md.
 #include <va.h>
 #include "victor.h"
 

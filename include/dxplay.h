@@ -535,7 +535,6 @@ public:
     unsigned char setConnectionSettings(
         unsigned long appId, DPLCONNECTION* connection);
     unsigned char connect();
-    // DC public ?TestLobbied@CDPlayLobby@@QAA_NXZ proves bool; the
     bool testLobbied();
     virtual unsigned char enumLobbyConnections(
         CAutoArray<CDPlayConnection>* connections);

@@ -33,9 +33,6 @@ TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr)
 
 #endif
 
-// exact control). Its hill-fort callers still test only AL, preserved by
-// their explicit unsigned-char conversion. That test does not establish the
-// CanUpgradeCreature wrapper previously introduced in hillfortwindow.cpp.
 VA(0x0047b120, 0x5D)  // dc 0x718fc
 int isBaseCreature(TCreatureType monType)
 {
@@ -177,13 +174,13 @@ namespace {
 // CodeView field pStr; each loader owns its own private string class.
 class TAutoStrPtr {
 public:
-    // Original: `anonymous namespace'::TAutoStrPtr::TAutoStrPtr; creaturetype.cpp:399, dc 0x71eec.
+    // E:\gamedcs\creaturetype.cpp:399, dc 0x71eec
     TAutoStrPtr() : m_string(0) {}
-    // Original: `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr; creaturetype.cpp:402, dc 0x71ef4.
+    // E:\gamedcs\creaturetype.cpp:402, dc 0x71ef4
     ~TAutoStrPtr() { delete[] m_string; }
-    // Original: `anonymous namespace'::TAutoStrPtr::set; creaturetype.cpp:404, dc 0x71f0c.
+    // E:\gamedcs\creaturetype.cpp:404, dc 0x71f0c
     void set(char* value) { m_string = value; }
-    // Original: `anonymous namespace'::TAutoStrPtr::get; creaturetype.cpp:406, dc 0x71f10.
+    // E:\gamedcs\creaturetype.cpp:406, dc 0x71f10
     char* get() const { return m_string; }
 
 private:

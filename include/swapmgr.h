@@ -243,7 +243,6 @@ public:
     int m_destinationHeroIndex;            // +0x4c
     int m_sourceArmySlot;            // +0x50
     int m_destinationArmySlot;            // +0x54
-    // Role-derived; original name unknown.
     // Ctor 0x5ae530 and reset 0x5ae5c6 store -1 (awaiting source stack).
     // handleMonster tests it at 0x5af2fc, clears it at 0x5af3af when the
     // source is selected, and then accepts the destination at 0x5af40b.

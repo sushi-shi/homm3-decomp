@@ -12,11 +12,11 @@
 // window's origin, so this TU needs the COMPLETE heroWindow.
 #include "window.h"
 
-// Original: border::border; border.cpp:34, dc 0x5433c.
 // Ordinary source-local body. Retail expands it in the three derived
 // constructors (0x450130, 0x4502d0, 0x450690), leaving a widget default-
 // constructor call and a single derived vtable store. No explicit inline
 // declaration is needed to expose this body to those same-TU callers.
+// E:\gamedcs\border.cpp:34, dc 0x5433c
 border::border() {}
 
 VA_COMPGEN(0x0044fee0, 0x21, SCALAR_DELETING_DTOR, border)
@@ -101,7 +101,6 @@ int border::main(message& msg)
 // UAA_N_N0 signature proves native bool for the return and both parameters.
 // Retail border vslot 13 folds onto iconWidget's 0x4eab10 representative.
 // Keep border's canonical source body without a duplicate retail claim.
-// Before normalization (locals): down_click, right_click.
 DC_ONLY(0x54590, 0x4)
 bool border::handleClick(bool downClick, bool rightClick)
 {

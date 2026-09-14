@@ -65,7 +65,6 @@ type_university_skill_button::type_university_skill_button(
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x005ef490, 0x6A)  // vtable slot 13 + skill_click call, dc 0x18e728
 bool type_university_skill_button::handleClick(
-    // Before normalization (locals): down_click, right_click.
     bool downClick, bool rightClick)
 {
     if (downClick) {

@@ -320,7 +320,6 @@ void advManager::animateMove(hero* curr, int direction, int xInc, int yInc)
     curr->m_y += yInc;
 
     if (g_completeDrawEnabled) {
-        // Before normalization (locals): walk_speed, iScrollDelayValue, next_frame_time.
         int speedIndex;
         speedIndex = (&g_unnamed698758.m_computerWalkSpeed)
             [g_currentPlayer->isLocalHuman()];
@@ -433,10 +432,6 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
     curMoveCost = getTerrainCost(curr, curr->getLocation(), direction,
                                  curr->m_movePoints);
     // DC 617/623 independently expands get_secondary_skill in these arms.
-    // Retail schedules one widened read before the flags test. A historical
-    // named-int cache lowered 89.5139% to 86.4535%; that alone did not prove
-    // the absence of a local. Keep both proven accessor calls and their
-    // original scopes while recovering the remaining scheduling differences.
     if (curr->m_flags & 0x40000) {
         nextMoveMinCost = minimumTerrainCost(
             destCell, curr->m_movePoints - curMoveCost, curr->getSecondarySkill(eSecSkillPathfinding),

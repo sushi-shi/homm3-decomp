@@ -54,17 +54,6 @@ DATA(0x00694fbc) static TCombatResultsWindow* g_combatResultsWindow;
 // vector organically, which is why several vector<widget*>::insert
 // expansions sit inline in the body while the rest stay out of line.
 
-// CURRENT (99.860664%; past every prior local maximum): every widget,
-// literal, id, coordinate and text index below is retail's. Restoring
-// Dreamcast line 280's one positive lexical scope around loss aggregation
-// first carried the shared CodeView-proven `amount` past the old 99.84615%
-// maximum. Restoring line 319's one statement group then dipped to 99.65748;
-// source-gap line 320 supplied the optimized-away `accept = 0` initializer
-// before line 321's construction assignment and recovered 2067 vs 2067 real
-// instructions at 99.860664%. The former named `acceptBox` split was only a
-// percentage lever, not the attested source. A checkpoint is not allowed to
-// erase any of these facts.
-
 // Three source facts closed 92.77% -> 96.23%, all of them the same lesson -
 // VC6's induction-variable machinery reads the SPELLING, not the value:
 
@@ -86,35 +75,6 @@ DATA(0x00694fbc) static TCombatResultsWindow* g_combatResultsWindow;
 //      `lea ecx,[gpCombatManager+0x5580]` and a negative displacement for
 //      creatureType); with creatureType the more-referenced field it biases
 //      to creatureType instead, which is retail's +0x5500 base. (+0.1%)
-
-// Note this SUPERSEDES the earlier reading that retail's third loss-loop
-// value was absent "because it had no free register, not because it spelled
-// the subtraction differently". It was the spelling.
-
-// Before restoring line 319, what remained was stack coloring only. Both
-// sides allocated the exact 0x1cc frame, contained 2067 real instructions,
-// and used the same arrays at
-// [ebp-0x1d8], [ebp-0xd4] and [ebp-0x34]. The first broader divergence is a
-// slot permutation: retail coalesces `my_hero` into the dead attacker home
-// [ebp+8] and `amount` into [ebp-0x10], while this compile assigns them
-// [ebp-0x14] and [ebp+8]. Splitting Dreamcast's one function-scope `amount`
-// into two arm locals recovered 99.84615%, but that false source hypothesis
-// was only a local maximum. Restoring Dreamcast's positive loss scope while
-// keeping the shared local passes it at 99.86018%. The raw CodeView inventory and
-// zero-emission declaration windows instead prove, in order, `long amount`,
-// `TCreatureType type`, the two [2][20] arrays, `const hero* const my_hero`,
-// iTtlDeadArmies, cText[100], and firstX. The pointer-level const comes from
-// raw type 0x2072, distinct from the parameters' 0x1AA2 pointer-to-const.
-// cTemp is independently type-proven char[150]; fixing
-// the former char[100] guess made the complete winner sprintf/strcat region
-// exact. There is no leading source-line gap, so this function has no entry
-// ASSERT clue. The remaining mismatch is an allocator/handle-state problem,
-// not evidence for retail semantic skew.
-// A release VERIFY of `Widgets.size()` is bounded separately from the
-// elided TRACE/ASSERT-shaped carrier sweep (2026-08-21). Placing the retained
-// inline accessor before the last two inserts, between them, or immediately
-// before the final insert scores 89.66957%, 88.85438%, and 90.499275%
-// respectively. All three perturb the /Ob2 phase far below 96.37881%.
 
 // Dreamcast lines 101/107/108/110/111 also settle the strongest-stack source
 // shape: one shared `amount`, one shared enum-typed `type`, scoped `numMons`,
@@ -165,17 +125,13 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
 
     long amount;
     TCreatureType type;
-    // Before normalization (locals): iDeadArmyTypes.
     int deadArmyTypes[2][20];
-    // Before normalization (locals): iDeadArmyNumTroops.
     int deadArmyNumTroops[2][20];
 
     // The hero whose result the window narrates.
     const hero* const myHero = mySide == 0 ? attacker : defender;
 
-    // Before normalization (locals): iTtlDeadArmies.
     int ttlDeadArmies[2];
-    // Before normalization (locals): cText.
     char text[100];
     int firstX;
 
@@ -301,7 +257,6 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         else
             strcpy(g_text, (*g_generalText)[305]);
         if (myHero) {
-            // Before normalization (locals): cTemp.
             char temp[150];
             sprintf(temp, (*g_generalText)[306],
                 myHero->m_name, experience);
@@ -401,7 +356,6 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             m_widgets.push_back(new textWidget(
                 42, rowY + 10, 384, 36, (*g_generalText)[32],
                 "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
-        // Before normalization (locals): iMaxToShow.
         int maxToShow = min(ttlDeadArmies[lossSide], 7);
         firstX = (468 - 42 * maxToShow) / 2 + 11;
         for (int row = 0; row < maxToShow; row++) {

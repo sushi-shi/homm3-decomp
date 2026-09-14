@@ -223,7 +223,6 @@ static void ddSetupClipper()
 // the body; the empty spin on the mouse manager's busy word is retail's, and
 // VC6 hoists its load out so the wait is one self-jump.
 // E:\gamedcs\wingraph.cpp:260
-// Before normalization (locals): comb_rect.
 VA(0x005ffe70, 0x35C)  // anchor-caller(AppPaint, winmgr's five UpdateScreen/fade sites) + wingraph statics, dc 0x198d5c
 void robAppBlit(tagRECT* combRect)
 {
@@ -344,22 +343,6 @@ static void ddRestoreFrontBuffer(tagRECT& dstRect);
 // DC 0x199170's signature also proves both rectangles are const references
 // (udst_rect/usrc_rect), not nullable pointers. All callers pass real RECTs.
 //
-// EXACT (100.0000%, 2026-09-05). The three retry arms are
-// `while (1) { if (Blt(...) != LOST) goto done; <recovery> }` - an infinite
-// loop whose ONLY exit is the forward `goto` out of the function. The
-// previous note recorded this as the merged-return / tail-merge class after
-// four measurements ("VC6 INVERTS all three retry loops... every shape is
-// BYTE-IDENTICAL"), and the conclusion was wrong: all four of those shapes
-// keep a LABEL that both falls in and is jumped back to, and VC6 PEELS such
-// a label - it emits the Blt once as a guard and a second time at the
-// bottom, giving three surplus calls and two surplus rets. Wrapping the same
-// statements in `while (1)` removes the fall-in predecessor, so VC6 emits
-// one Blt per arm with retail's unconditional `jmp` back edge and
-// cross-jumps all three epilogues onto the single `ret 0xc`. 63.77 -> 100.
-// Same lever, same day: kb::oldmain's two campaign-continue arms, 73.35 ->
-// 75.97.
-// Direct returns from all three Blt loops also share the retail epilogue
-// and remain exact; no forward done label is needed.
 // E:\gamedcs\wingraph.cpp:931
 VA(0x006001d0, 0x1E1)  // anchor-caller(mousemgr, six sites) + header identification, dc 0x199170
 void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
@@ -665,7 +648,6 @@ static void ddReleaseMouseSurfaces()
 // passed to wsprintfA, and the final guard reset.  The shared HoMM2 DDSD body
 // supplies the source lineage; its smaller error roster is not copied blindly.
 // E:\gamedcs\wingraph.cpp:1313
-// Before normalization (locals): iDDErr, cFile, iLine, cTemp.
 VA(0x006006E0, 0xCBF)  // DC DDSD identity + retail literals/CFG + HoMM2 lineage, dc 0x199724
 void ddsd(int ddErr, char* file, int line)
 {

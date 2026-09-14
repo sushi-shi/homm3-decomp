@@ -40,9 +40,6 @@ struct Smack {
     // Dreamcast SmackTag, type 0x474e, supplies this contiguous prefix.
     // Retail VideoPlay/VideoDrawRects confirm Frames +0x0c, FrameNum
     // +0x374 and the signed LastRect quartet +0x380..+0x38c.
-    // Original spellings: MSPerFrame, SmackerType, LargestInTrack,
-    // tablesize, codesize, absize, detailsize, typesize, TrackType, extra,
-    // NewPalette, Palette, PalType. Replaces synthetic pad_10.
     unsigned long m_msPerFrame;       // +0x010
     unsigned long m_smackerType;      // +0x014
     unsigned long m_largestInTrack[7];// +0x018
@@ -57,8 +54,6 @@ struct Smack {
     unsigned char m_palette[772];     // +0x06c (original array extent)
     unsigned long m_palType;          // +0x370
     unsigned long m_frameNum;  // +0x374
-    // Dreamcast original FrameSize/SndSize, between retail-confirmed
-    // FrameNum and LastRectx. Replaces synthetic pad_378.
     unsigned long m_frameSize; // +0x378
     unsigned long m_sndSize;   // +0x37c
     long m_lastRectx;          // +0x380

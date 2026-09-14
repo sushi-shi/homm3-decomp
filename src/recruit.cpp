@@ -18,20 +18,6 @@
 // on C1XX symbol-handle position, and appending leaves every handle the
 // old include stream numbered alone.
 
-// textwdgt.h carries no call site in the bodies reconstructed so far -
-// it is here as INCLUDE-SET evidence, and it is measured. Adding
-// recruitUnit::Close below (specifically its `delete gpRecruitWindow`,
-// isolated statement by statement) shifts C1XX's type-handle stream by
-// one and costs recruitUnit::Update 90.84 -> 88.24, a pure
-// register-allocation flip: our CL parks the 0x3 widget code in esi
-// instead of the shared zero. Exactly one more type DEFINITION anywhere
-// in the TU puts it back, and it stays back for at least six (0 -> 88.24,
-// 1..6 -> 90.84), so this is the wide side of the plateau, not a knife
-// edge of its own. textWidget is the honest supply: retail's recruit.cpp
-// builds this dialog's text out of it in TRecruitWindow::TRecruitWindow
-// and add_creature_widgets, neither of which is reconstructed yet, so
-// its declaration belongs in this TU's include closure regardless.
-
 // button.h and border.h joined textwdgt.h 2026-08-14, on the same
 // standard and with the same kind of evidence, to buy back the handle
 // position ONE forward declaration in townmgr.h costs (see the +0x1b0
@@ -539,38 +525,7 @@ TCreatureType siegeArtifactToCreature(TArtifact engine)
 }
 
 // E:\gamedcs\recruit.cpp:511
-// The recruit dialog's full refresh. `ret 8` + the byte read at
-// [ebp+8] and the long at [ebp+0xc] match the Dreamcast two-parameter
-// prototype exactly. UpdateCost() expands at the head (the same block
-// the three constructors carry), and SiegeMonsterToSiegeArtifact
-// expands as the four-case jump table at 0x5504d4 - note it pairs
-// 0x93->6 and 0x94->5, the opposite way round from
-// siege_artifact_to_creature above.
-// Dreamcast's raw NB11 records `message msg` and `long maxGold` as the
-// only surviving locals. Its line 521 is one statement containing
-// TTextResource::operator[], GetArmyName and sprintf; UpdateCost in turn
-// owns a sole `resCost` array and calls GetMonsterCost. Retail independently
-// corroborates all three helper boundaries by expanding their bodies. Keeping
-// those source facts raised the candidate from 88.2360% to 96.5558%
-// and makes every instruction through the GetArmyName join exact.
-// The tree-wide 30-forest TU-state sweep reproduced this unchanged
-// 75fd1ca020f9 body's 96.5558% historical peak twice at trial 24, so that
-// transient result is banked as MAX; no probe declarations are retained.
 
-// DC line 533 is one statement containing HasArtifact and the `1 - result`
-// store. Spelling that assignment directly (with no synthetic `owned` local)
-// is byte-flat at the current peak but restores the positive source shape.
-// DC lines 538 and 542 format the available count separately in the siege
-// and ordinary arms. Restoring those calls after the obsolete game helper
-// declaration was removed raises 94.1574% to 99.9898%, above the previous
-// 96.5558% peak. Sharing the sprintf let VC6 park WIDGET_SET_TEXT in ESI
-// and changed the siege selector. Both canonical helper chains stay intact.
-// Residual: only the gold/resource multiplication operand loads are swapped;
-// all 55 blocks, 24 branches and 29 calls agree. Reversing either or both
-// source products emits the same object in a four-state controlled family.
-// Negative controls: also assigning/clamping the member availability in the
-// gold-limit arm scores 99.1523%; an explicit maxGold/resource choice scores
-// 99.3299%. Neither replaces the existing min expression and DC locals.
 VA(0x005503a0, 0x594)  // anchor-global, dc 0x119dcc
 void recruitUnit::update(unsigned char newMonster, long slot)
 {

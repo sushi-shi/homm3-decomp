@@ -200,7 +200,6 @@ void mouseManager::update(bool forceIt)
 {
     TCSLock lock(&m_sectionMouse);
     // The new rectangle belongs to the outer procedure scope.
-    // Before normalization: new_rect.
     RECT newRect;
 
     if (g_mouseInUpdate)
@@ -251,10 +250,8 @@ void mouseManager::update(bool forceIt)
             || newRect.right <= m_savedRect.left
             || newRect.top >= m_savedRect.bottom
             || newRect.bottom <= m_savedRect.top) {
-        // Before normalization: front_rect.
         RECT frontRect;
         frontRect = newRect;
-        // Before normalization: window_origin.
         POINT windowOrigin;
         windowOrigin.x = 0;
         windowOrigin.y = 0;
@@ -262,7 +259,6 @@ void mouseManager::update(bool forceIt)
         OffsetRect(&frontRect, windowOrigin.x, windowOrigin.y);
 
         // Complete uses the v1 descriptor.
-        // Before normalization: ddsd.
         DDSURFACEDESC surfaceDesc;
         memset(&surfaceDesc, 0, sizeof(surfaceDesc));
         surfaceDesc.dwSize = sizeof(surfaceDesc);
@@ -294,7 +290,6 @@ void mouseManager::update(bool forceIt)
         restoreUnderlying(g_ddsPrimary,
             m_savedRect);
 
-        // Before normalization: copy_rect.
         RECT copyRect;
         copyRect.left = 0;
         copyRect.top = 0;
@@ -304,11 +299,9 @@ void mouseManager::update(bool forceIt)
             g_ddsMouseScratchSurface, copyRect, DDBLT_WAIT);
         m_savedRect = newRect;
     } else {
-        // Before normalization: front_work_rect.
         RECT frontWorkRect;
         UnionRect(&frontWorkRect, &newRect, &m_savedRect);
 
-        // Before normalization: window_origin.
         POINT windowOrigin;
         windowOrigin.x = 0;
         windowOrigin.y = 0;
@@ -316,7 +309,6 @@ void mouseManager::update(bool forceIt)
         OffsetRect(&frontWorkRect, windowOrigin.x, windowOrigin.y);
 
         // Complete uses the v1 descriptor.
-        // Before normalization: ddsd.
         DDSURFACEDESC surfaceDesc;
         memset(&surfaceDesc, 0, sizeof(surfaceDesc));
         surfaceDesc.dwSize = sizeof(surfaceDesc);
@@ -330,12 +322,10 @@ void mouseManager::update(bool forceIt)
         if (frontWorkRect.bottom > static_cast<long>(surfaceDesc.dwHeight))
             frontWorkRect.bottom = surfaceDesc.dwHeight;
 
-        // Before normalization: work_rect.
         RECT workRect;
         workRect = frontWorkRect;
         OffsetRect(&workRect, -windowOrigin.x, -windowOrigin.y);
 
-        // Before normalization: dst_rect.
         RECT dstRect;
         dstRect.left = 0;
         dstRect.top = 0;
@@ -345,7 +335,6 @@ void mouseManager::update(bool forceIt)
             g_ddsPrimary,
             frontWorkRect, DDBLT_WAIT);
 
-        // Before normalization: old_rect.
         RECT oldRect;
         oldRect = m_savedRect;
         OffsetRect(&oldRect, -workRect.left, -workRect.top);
@@ -368,7 +357,6 @@ void mouseManager::update(bool forceIt)
             newRect, m_imageX - workRect.left,
             m_imageY - workRect.top);
 
-        // Before normalization: src_rect.
         RECT srcRect;
         srcRect.left = 0;
         srcRect.top = 0;
@@ -468,32 +456,6 @@ void mouseManager::getPointerPosition()
     m_currentY = y;
 }
 
-// DC 0xff484 calls the canonical GameTime helpers, isBusy,
-// ShowSystemCursor and GetNumFrames. Retail expands ShowSystemCursor's
-// selected arm at each site, retaining ShowPointer but expanding HidePointer.
-// The former pasted HidePointer body used an inline-depth override; restore
-// the helper boundary instead. Retail's 33ms interval and separate initial
-// Get calls differ from DC's 30ms/shared initial time and remain authoritative.
-// Residual 96.1361% after restoring those calls: the second static guard
-// uses AL rather than retail's CL, and the nested HidePointer expansion
-// inlines TCSLock's ctor where retail retains a call to 0x50d890. The old
-// pasted-body/inline-depth pin reached 100% but hid the canonical call
-// boundary. Restoring the proven function statics is byte-flat. A two-form
-// class-placement probe (header versus immediately before the first mouse
-// function, following DC's ctor/dtor source rows 291/298) also emits one
-// object. The canonical class now lives in this TU at DC source lines
-// 291/298, with in-class bodies. Neither placement recovers the natural
-// inline decision; the claimed 25-byte ctor is currently not emitted.
-// The 16-state constructor/hotspot family emits six objects: body assignment
-// is byte-flat, while passing the parameter instead of m_section to Enter
-// drops CheckUpdate to 89.3669%. No variant restores the nested ctor call.
-// Further controls: four IsIconic-guard/bool-literal forms emit two objects
-// (positive guard 94.1834%, literals flat); eight static grouping/initializer
-// forms emit one object. Seven NextFrameTime clamp forms emit four objects
-// across nine consuming TUs: none improves this caller, and split returns
-// lose four exact siblings. Four HidePointer compound/nested guard-scope
-// forms emit two objects, all holding 96.1361% and thirteen exact siblings.
-// None restores the retained nested constructor. No inline pin is retained.
 VA(0x0050d680, 0x210)  // anchor-global, dc 0xff484
 void mouseManager::checkUpdate()
 {
@@ -573,7 +535,6 @@ void mouseManager::loadFrame(int newFrame)
 // Public ?ShowSystemCursor@mouseManager@@QAAX_N@Z proves bool; the NB11
 // T_UCHAR formal is its lowered storage record. Preserve the separate helper
 // calls at DC1123/1124 and1128/1129 and retail's byte-tested flag.
-// Before normalization (locals): show_it.
 VA(0x0050da20, 0x37)  // anchor-global, dc 0xff708
 void mouseManager::showSystemCursor(bool showIt)
 {
