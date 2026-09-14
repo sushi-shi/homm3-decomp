@@ -34,6 +34,11 @@ from homm3.core.cc_wrap import ZLIB_INC
 
 
 TYPE_PREFIX = re.compile(r"^T[A-Z][A-Za-z0-9_]*$")
+ENUM_PREFIX = re.compile(r"^E[A-Z][A-Za-z0-9]*$")
+TYPE_UNDERSCORE_PREFIX = re.compile(r"^type_[a-zA-Z_]+$")
+T_UNDERSCORE_PREFIX = re.compile(r"^t_[a-zA-Z_]+$")
+LOWERCASE_TYPE = re.compile(r"^[a-z][A-Za-z0-9]*$")
+SNAKE_TYPE = re.compile(r"^[a-z][a-zA-Z0-9]*(?:_[a-zA-Z0-9]+)+$")
 SNAKE_FUNCTION = re.compile(r"^[a-z][A-Za-z0-9]*_[A-Za-z0-9_]+$")
 CARCASS_FUNCTION = re.compile(
     r"^[ \t]*(?:[A-Za-z_][A-Za-z0-9_:<>,*& \t]*[ \t]+)"
@@ -53,6 +58,31 @@ class Finding:
     file: str
     line: int
     usr: str
+
+
+def _needs_contextual_check(name: str) -> bool:
+    """True if the old name could collide with variable names."""
+    if TYPE_PREFIX.fullmatch(name):
+        return False
+    if ENUM_PREFIX.fullmatch(name):
+        return False
+    if TYPE_UNDERSCORE_PREFIX.fullmatch(name):
+        return False
+    if T_UNDERSCORE_PREFIX.fullmatch(name):
+        return False
+    return True
+
+
+def upper_camel(spelling: str) -> str:
+    """Convert an identifier to CamelCase."""
+    if spelling.startswith("type_"):
+        spelling = spelling[5:]
+    elif spelling.startswith("t_"):
+        spelling = spelling[2:]
+    words = [word for word in spelling.split("_") if word]
+    if not words:
+        return spelling
+    return "".join(word[:1].upper() + word[1:] for word in words)
 
 
 def lower_camel(spelling: str) -> str:
@@ -112,11 +142,43 @@ def make_finding(cursor, ci, root: Path) -> Finding | None:
     if qualified.startswith("std::"):
         return None
 
-    if cursor.kind in record_kinds and TYPE_PREFIX.fullmatch(name):
-        return Finding(
-            "type", qualified, name, name[1:], "direct-review", 9,
-            relative, location.line, cursor.get_usr(),
-        )
+    if cursor.kind in record_kinds:
+        if TYPE_PREFIX.fullmatch(name):
+            return Finding(
+                "type", qualified, name, name[1:], "direct-review", 9,
+                relative, location.line, cursor.get_usr(),
+            )
+        if ENUM_PREFIX.fullmatch(name):
+            return Finding(
+                "type", qualified, name, name[1:], "direct-review", 9,
+                relative, location.line, cursor.get_usr(),
+            )
+        if TYPE_UNDERSCORE_PREFIX.fullmatch(name):
+            return Finding(
+                "type", qualified, name, upper_camel(name),
+                "direct-review", 9,
+                relative, location.line, cursor.get_usr(),
+            )
+        if T_UNDERSCORE_PREFIX.fullmatch(name):
+            return Finding(
+                "type", qualified, name, upper_camel(name),
+                "direct-review", 9,
+                relative, location.line, cursor.get_usr(),
+            )
+        if SNAKE_TYPE.fullmatch(name):
+            return Finding(
+                "type", qualified, name, upper_camel(name),
+                "direct-review", 8,
+                relative, location.line, cursor.get_usr(),
+            )
+        if LOWERCASE_TYPE.fullmatch(name):
+            suggested = name[0].upper() + name[1:]
+            if suggested != name:
+                return Finding(
+                    "type", qualified, name, suggested,
+                    "direct-review", 7,
+                    relative, location.line, cursor.get_usr(),
+                )
 
     if cursor.kind in function_kinds and SNAKE_FUNCTION.fullmatch(name):
         # C linkage is an external ABI spelling, even when its declaration is
@@ -413,30 +475,58 @@ def is_type_position(contents: str, start: int, end: int, name: str) -> bool:
         line_end = len(contents)
     left = contents[line_start:start]
     right = contents[end:line_end]
-    if re.search(r"\b(?:class|struct|union|enum|new)\s*$", left):
+    if re.search(r"\b(?:class|struct|union|enum|new|typedef|friend)\s*$", left):
         return True
+    if re.search(r"\b(?:public|private|protected)\s*$", left):
+        return True
+    if re.search(r"\b(?:static_cast|dynamic_cast|const_cast|reinterpret_cast)\s*<\s*$", left):
+        return True
+    if re.search(r"\(\s*$", left) and re.match(r"\s*(?:\*\s*)?\)", right):
+        if re.search(r">\s*\(\s*$", left):
+            pass
+        elif not re.search(r"[A-Za-z_0-9]\s*\(\s*$", left):
+            return True
+        elif re.search(r"\b(?:sizeof|typeof|typeid|alignof|__alignof|decltype)\s*\(\s*$", left):
+            return True
     if re.match(r"\s*\*\s*\(", right):
         return False
     if re.match(r"\s*\*\s*[0-9]", right):
         return False
-    if re.match(r"\s*(?:\*|&|::)", right):
+    if re.match(r"\s*&\s*[0-9(&]", right):
+        return False
+    if re.match(r"\s*(?:\*|&(?!&)|::)", right):
+        return True
+    if re.match(r"<(?!<)", right):
         return True
     open_angle = left.rfind("<")
     close_angle = left.rfind(">")
     if (open_angle > close_angle and re.search(r"(?:<|,\s*)$", left)
             and re.match(r"\s*(?:,|>)", right)):
         return True
-    if re.search(r"(?:~|::)\s*$", left) and re.match(r"\s*\(", right):
+    if re.search(r"(?:~|::)\s*$", left):
         return True
     if not left.strip() and re.match(r"\s*\(", right):
         return True
-    if not left.strip() and re.match(r"\s+[A-Za-z_]\w*\s*(?:[;=(\[])", right):
+    if not left.strip() and re.match(r"\s+[A-Za-z_][\w:]*\s*[;=(\[]", right):
         return True
-    if (re.search(r"\b(?:extern|static|const|volatile|mutable)\s*$", left)
-            and re.match(r"\s+[A-Za-z_]\w*\s*(?:[;=(\[])", right)):
+    if (re.search(r"\b(?:extern|static|const|volatile|mutable|virtual|inline|explicit)\s*$", left)
+            and re.match(r"\s+[A-Za-z_][\w:]*\s*[;=(\[]", right)):
+        return True
+    if (re.search(r"\)\s*$", left)
+            and re.match(r"\s+[A-Za-z_][\w:]*\s*[;=(\[]", right)):
         return True
     if (re.search(r"\b(?:VA_COMPGEN|SIZE)\s*\(", left)
             and re.match(r"\s*[,)]", right)):
+        return True
+    if (re.search(r"[,(]\s*$", left)
+            and re.match(r"\s+[A-Za-z_]\w*\s*(?:[,)])", right)):
+        return True
+    if (re.search(r"[,(]\s*$", left)
+            and re.match(r"\s*(?:\*|&)", right)):
+        return True
+    if re.search(r"\b(?:const|volatile)\s*$", left):
+        return True
+    if re.search(r"[:,(]\s*$", left) and re.match(r"\s*\(", right):
         return True
     return False
 
@@ -462,28 +552,40 @@ def apply_type_plan(root: Path, plan: Path, min_confidence: int,
             r"\btypedef\s+([A-Za-z_]\w*)\s+([A-Za-z_]\w*)\s*;", contents)
     }
     replacements: dict[str, str] = {}
+    function_replacements: dict[str, str] = {}
     owners: list[tuple[Path, int, str, str]] = []
+    function_owners: list[tuple[Path, int, str, str]] = []
     with plan.open(newline="") as stream:
         for row in csv.DictReader(stream, delimiter="\t"):
-            if (row["kind"] != "type"
-                    or row["strategy"] not in {"alias-review", "direct-review"}
-                    or int(row["confidence"]) < min_confidence):
+            if row["strategy"] not in {"alias-review", "direct-review"}:
+                continue
+            if int(row["confidence"]) < min_confidence:
                 continue
             old, new = row["current"], row["suggested"]
-            if (old, new) in existing_aliases:
-                continue
-            if old in replacements and replacements[old] != new:
-                sys.exit(f"conflicting type plan for {old}")
-            replacements[old] = new
-            owners.append((root / row["file"], int(row["line"]),
-                           row["qualified_name"], old))
+            if row["kind"] == "type":
+                if (old, new) in existing_aliases:
+                    continue
+                if old in replacements and replacements[old] != new:
+                    sys.exit(f"conflicting type plan for {old}")
+                replacements[old] = new
+                owners.append((root / row["file"], int(row["line"]),
+                               row["qualified_name"], old))
+            elif row["kind"] == "function":
+                if old in function_replacements and function_replacements[old] != new:
+                    sys.exit(f"conflicting function plan for {old}")
+                function_replacements[old] = new
+                function_owners.append((root / row["file"], int(row["line"]),
+                                        row["qualified_name"], old))
 
     contextual = set()
+    for old in replacements:
+        if _needs_contextual_check(old):
+            contextual.add(old)
     for old, new in explicit:
         # A reviewed explicit spelling may resolve a macro or semantic
         # collision discovered after the mechanical suggestion was emitted.
         replacements[old] = new
-        if not TYPE_PREFIX.fullmatch(old):
+        if _needs_contextual_check(old):
             contextual.add(old)
 
     rendered = dict(initial)
@@ -536,17 +638,41 @@ def apply_type_plan(root: Path, plan: Path, min_confidence: int,
             lines.insert(index, comment)
         rendered[path] = "".join(lines)
 
+    # Function lineage comments at their declaration sites.
+    for path, hint, qualified, old in function_owners:
+        if path not in rendered:
+            continue
+        lines = rendered[path].splitlines(keepends=True)
+        comment = f"// Before normalization (function): {qualified}.\n"
+        if any(comment in contents for contents in rendered.values()):
+            continue
+        pattern = re.compile(rf"\b{re.escape(old)}\s*\(")
+        candidates = [number for number, line in enumerate(lines)
+                      if pattern.search(line) and not line.lstrip().startswith("//")]
+        if not candidates:
+            continue
+        index = min(candidates, key=lambda number: abs(number + 1 - hint))
+        nearby = "".join(lines[max(0, index - 4):index])
+        if comment.strip() not in nearby:
+            owner_edits.setdefault(path, [])
+            lines.insert(index, comment)
+            rendered[path] = "".join(lines)
+
+    # Merge function renames — snake_case names are distinctive.
+    all_replacements = dict(replacements)
+    all_replacements.update(function_replacements)
+
     changed = 0
     for path, contents in rendered.items():
-        updated = rewrite_code_identifiers(contents, replacements, contextual)
+        updated = rewrite_code_identifiers(contents, all_replacements, contextual)
         # Retire an earlier alias when its recovered tag is now directly named.
-        for new in replacements.values():
+        for new in all_replacements.values():
             updated = re.sub(
                 rf"^[ \t]*typedef[ \t]+{re.escape(new)}[ \t]+{re.escape(new)}[ \t]*;[ \t]*\n",
                 "", updated, flags=re.MULTILINE)
         # Compiler/debug identities are normalized by the evidence layer;
         # authored C++ no longer needs preprocessor aliases for legacy tags.
-        updated = refresh_compatibility_macros(updated, replacements)
+        updated = refresh_compatibility_macros(updated, all_replacements)
         if updated != path.read_text():
             path.write_text(updated)
             changed += 1
@@ -559,8 +685,8 @@ def apply_type_plan(root: Path, plan: Path, min_confidence: int,
     for line in lines:
         fields = line.rstrip("\n").split("\t")
         if len(fields) >= 3 and not line.startswith("#") and fields[0] != "file":
-            fields[1] = rewrite_code_identifiers(fields[1], replacements, contextual)
-            fields[2] = rewrite_code_identifiers(fields[2], replacements, contextual)
+            fields[1] = rewrite_code_identifiers(fields[1], all_replacements, contextual)
+            fields[2] = rewrite_code_identifiers(fields[2], all_replacements, contextual)
             line = "\t".join(fields) + ("\n" if line.endswith("\n") else "")
         updated_lines.append(line)
     updated = "".join(updated_lines)
@@ -573,16 +699,16 @@ def apply_type_plan(root: Path, plan: Path, min_confidence: int,
     updated_lines = []
     for line in lines:
         fields = line.rstrip("\n").split("\t")
-        if len(fields) == 3 and fields[2] in replacements:
-            fields[2] = replacements[fields[2]]
+        if len(fields) == 3 and fields[2] in all_replacements:
+            fields[2] = all_replacements[fields[2]]
             line = "\t".join(fields) + ("\n" if line.endswith("\n") else "")
         updated_lines.append(line)
     updated = "".join(updated_lines)
     if updated != vtables.read_text():
         vtables.write_text(updated)
         changed += 1
-    print(f"applied {len(replacements)} type rename(s) across {changed} file(s)",
-          file=sys.stderr)
+    print(f"applied {len(replacements)} type + {len(function_replacements)} function "
+          f"rename(s) across {changed} file(s)", file=sys.stderr)
     return 0
 
 
