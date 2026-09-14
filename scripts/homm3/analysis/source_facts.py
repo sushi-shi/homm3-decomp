@@ -192,6 +192,12 @@ def _base_type_key(text: str) -> str:
     key = name_key(text).removeprefix("::")
     if key in {"int64", "longlong"}:
         return "longlong"
+    nested_aliases = {
+        "tspellbookentry": "tspellbookwindow::tspellbookentry",
+        "trumour": "game::trumour",
+        "twalltraits": "combatmanager::twalltraits",
+    }
+    key = nested_aliases.get(key, key)
     if key == "std::string":
         return "std::basicstring<char,std::chartraits<char>,std::allocator<char>>"
     head, opening, tail = key.partition("<")

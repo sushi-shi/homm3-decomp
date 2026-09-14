@@ -323,7 +323,7 @@ unsigned char VictoryConditionStruct::checkForTownCaptureWin()
 
 VA(0x005f2390, 0x267)  // dc 0x19040c
 bool VictoryConditionStruct::checkForDefeatedMonsterWin(
-    const hero* thisHero, type_point monsterLoc)
+    const hero* thisHero, const type_point monsterLoc)
 {
     if (m_type == VICTORY_CONDITION_DEFEAT_ALL_MONSTERS) {
         type_point pos;
@@ -415,7 +415,7 @@ unsigned char VictoryConditionStruct::checkForTimeSurvival()
 
 VA(0x005f2860, 0x1DE)  // dc 0x190620
 unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
-    const hero* thisHero, type_point townLoc)
+    const hero* thisHero, const type_point townLoc)
 {
     if (m_type != VICTORY_CONDITION_TRANSPORT_ARTIFACT
         || !g_currentPlayer

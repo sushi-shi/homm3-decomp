@@ -3962,18 +3962,18 @@ VA(0x004a39a0, 0x21D)  // dc 0x94314
 void advManager::doEventMine(NewmapCell* cell, hero* currentHero,
                              type_point point, bool human)
 {
-    mine& currentMine = g_game->m_mines[cell->m_extraInfo];
-    if (g_game->onSameTeam(currentMine.m_playerOwner, g_netLocalGamePos)) {
-        if (currentMine.m_playerOwner == g_netLocalGamePos && human)
-            doMonsterJoinDialog(currentHero, &currentMine.m_guards, 1);
+    mine* currentMine = &g_game->m_mines[cell->m_extraInfo];
+    if (g_game->onSameTeam(currentMine->m_playerOwner, g_netLocalGamePos)) {
+        if (currentMine->m_playerOwner == g_netLocalGamePos && human)
+            doMonsterJoinDialog(currentHero, &currentMine->m_guards, 1);
         return;
     }
 
-    if (currentMine.m_guards.hasCreatures()) {
+    if (currentMine->m_guards.hasCreatures()) {
         if (human) {
             overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
             updBottomView(0, 1, 1);
-            if (currentMine.m_playerOwner < 0)
+            if (currentMine->m_playerOwner < 0)
                 normalDialog(g_adventureEventText->getText(
                                  ADV_EVENT_TEXT_MINE_GUARDED),
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -3987,34 +3987,34 @@ void advManager::doEventMine(NewmapCell* cell, hero* currentHero,
             return;
         }
 
-        if (currentMine.m_playerOwner < 0
-            && currentMine.m_guards.getNumArmies() == 1) {
-            int guardCount = currentMine.m_guards.m_numTroops[0];
+        if (currentMine->m_playerOwner < 0
+            && currentMine->m_guards.getNumArmies() == 1) {
+            int guardCount = currentMine->m_guards.m_numTroops[0];
             if (combatMonsterEvent(
-                    currentHero, currentMine.m_guards.m_armies[0],
+                    currentHero, currentMine->m_guards.m_armies[0],
                     &guardCount, cell, point,
                     CREATURE_NONE, 0, 0,
                     CREATURE_NONE, 0, 0)) {
-                currentMine.m_guards.m_numTroops[0] = guardCount;
+                currentMine->m_guards.m_numTroops[0] = guardCount;
                 return;
             }
-            currentMine.m_guards.initialize();
+            currentMine->m_guards.initialize();
             if (human)
                 normalDialog(g_adventureEventText->getText(
                                  ADV_EVENT_TEXT_MINE_CLEARED),
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else if (doCombat(point, currentHero, &currentHero->m_army,
-                            currentMine.m_playerOwner, 0, 0,
-                            &currentMine.m_guards, -1, 1, 0)) {
+                            currentMine->m_playerOwner, 0, 0,
+                            &currentMine->m_guards, -1, 1, 0)) {
             return;
         }
         currentHero->restoreCell();
     }
 
     if (human)
-        normalDialog(g_mineEventText[currentMine.m_type], 1, -1, -1,
-                     currentMine.m_type,
-                     -g_mineCharacteristics[currentMine.m_type],
+        normalDialog(g_mineEventText[currentMine->m_type], 1, -1, -1,
+                     currentMine->m_type,
+                     -g_mineCharacteristics[currentMine->m_type],
                      -1, 0, -1, 0, -1, 0);
     g_game->claimMine(cell->m_extraInfo, g_netLocalGamePos, const_normal_action);
 }

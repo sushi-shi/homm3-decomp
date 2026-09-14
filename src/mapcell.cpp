@@ -316,11 +316,11 @@ VA(0x004fcbd0, 0x5C)  // dc 0xec098
 TAdventureObjectType NewmapCell::getMapObject() const
 {
     if (m_type == HERO) {
-        hero* currentHero = g_game->getHero(m_extraInfo);
+        const hero* currentHero = g_game->getHero(m_extraInfo);
         return currentHero->getObscuredObject();
     }
     if (m_type == BOAT) {
-        boat* currentBoat = g_game->getBoat(m_extraInfo);
+        const boat* currentBoat = g_game->getBoat(m_extraInfo);
         return currentBoat->getObscuredObject();
     }
     return m_type;
@@ -391,7 +391,7 @@ VA(0x004fce20, 0x116)  // dc 0xec3b4
 TAdventureObjectType NewmapCell::getSpecialTerrain() const
 {
     if (m_type == HERO && (m_cellFlags & 0x1000)) {
-        hero* ourHero = g_game->getHero(m_extraInfo);
+        const hero* ourHero = g_game->getHero(m_extraInfo);
         if (ourHero->getObscuredObject() == GARRISON
                 && ourHero->obscuredIsTrigger()
                 && m_objectIndex == 1)

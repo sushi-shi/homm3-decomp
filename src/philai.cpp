@@ -1493,7 +1493,7 @@ unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
                          unsigned char complexChoice)
 {
     long skillValue[28];
-    int skillIndex[28];
+    TSecondarySkill skillIndex[28];
 
     int openSlots;
     int i;
@@ -1505,7 +1505,7 @@ unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
             skillValue[i] = getSkillValue(ourHero, TSecondarySkill(i), complexChoice);
         else
             skillValue[i] = 0;
-        skillIndex[i] = i;
+        skillIndex[i] = TSecondarySkill(i);
     }
 
     for (i = 0; i < 27; i++) {
@@ -1536,14 +1536,14 @@ void aiVisitUniversity(hero* currentHero, type_university* university)
     if (g_currentPlayer->m_resources[GOLD] < 2000)
         return;
 
-    const THeroClassTraits* traits = &g_heroClasses[currentHero->m_heroClass];
+    const THeroClassTraits& traits = g_heroClasses[currentHero->m_heroClass];
     do {
         int bestSkill = -1;
         long bestValue = 0;
 
         for (int i = 0; i < 4; i++) {
             int skill = university->m_skills[i];
-            if (traits->m_gainSecondarySkillChance[skill]
+            if (traits.m_gainSecondarySkillChance[skill]
                 && currentHero->m_skillLevel[skill] <= 0
                 && wantsSkill(currentHero, TSecondarySkill(skill), 1)) {
                 long value = getSkillValue(currentHero, TSecondarySkill(skill), 1);

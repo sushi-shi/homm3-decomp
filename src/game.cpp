@@ -501,7 +501,7 @@ void generator::updateBonus()
     if (m_playerOwner < 0)
         return;
 
-    playerData* player = &g_game->m_players[m_playerOwner];
+    playerData& player = g_game->m_players[m_playerOwner];
     int creature = m_type[0];
     if (!g_game->m_f1f698 &&
         isBaseElemental(creature))
@@ -511,8 +511,8 @@ void generator::updateBonus()
     if (townType == -1)
         return;
 
-    for (int index = 0; index < player->m_numTowns; index++) {
-        town* currentTown = g_game->getTown(player->m_townIds[index]);
+    for (int index = 0; index < player.m_numTowns; index++) {
+        town* currentTown = g_game->getTown(player.m_townIds[index]);
         if (currentTown->m_type == townType)
             currentTown->changeGeneratorBonus(m_type[0], 1);
     }
@@ -1892,26 +1892,26 @@ int game::createBoat(int x, int y, int z, int owner, unsigned char isRemoteMove,
     if (id == -1)
         return -1;
 
-    boat* thisBoat = &m_boats[id];
+    boat& thisBoat = m_boats[id];
     if (!isRemoteMove) {
         type_point location(x, y, z);
         CMCBuildBoat change(location, g_netLocalGamePos);
         sendMapChange(&change);
-        recordShowBoat(thisBoat, location);
+        recordShowBoat(&thisBoat, location);
     }
 
-    thisBoat->initialize();
-    thisBoat->m_type = type;
-    thisBoat->m_x = x;
-    thisBoat->m_y = y;
-    thisBoat->m_z = z;
-    thisBoat->m_id = static_cast<unsigned char>(id);
-    thisBoat->m_allocated = 1;
-    thisBoat->m_facing = 2;
-    thisBoat->m_playerOwner = owner;
-    thisBoat->m_occupyingHero = -1;
-    thisBoat->m_occupied = 0;
-    thisBoat->obscureCell();
+    thisBoat.initialize();
+    thisBoat.m_type = type;
+    thisBoat.m_x = x;
+    thisBoat.m_y = y;
+    thisBoat.m_z = z;
+    thisBoat.m_id = static_cast<unsigned char>(id);
+    thisBoat.m_allocated = 1;
+    thisBoat.m_facing = 2;
+    thisBoat.m_playerOwner = owner;
+    thisBoat.m_occupyingHero = -1;
+    thisBoat.m_occupied = 0;
+    thisBoat.obscureCell();
     return id;
 }
 
@@ -7138,14 +7138,14 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
 VA(0x004c66e0, 0xCB)  // dc 0xb1748
 void game::claimMine(int mineId, int newPlayerOwner, type_action_type actionType)
 {
-    mine* currentMine = &m_mines[mineId];
-    type_point location(currentMine->m_mapX, currentMine->m_mapY,
-                        currentMine->m_mapZ);
+    mine& currentMine = m_mines[mineId];
+    type_point location(currentMine.m_mapX, currentMine.m_mapY,
+                        currentMine.m_mapZ);
 
     if (actionType == const_normal_action)
         recordClaimMine(mineId, newPlayerOwner);
 
-    currentMine->m_playerOwner = newPlayerOwner;
+    currentMine.m_playerOwner = newPlayerOwner;
     if (newPlayerOwner != -1)
         setVisibility(location.m_x, location.m_y, location.m_z,
                       newPlayerOwner, 3, 0);
@@ -7157,14 +7157,14 @@ void game::claimMine(int mineId, int newPlayerOwner, type_action_type actionType
 VA(0x004c67b0, 0x1A4)  // dc 0xb1828
 void game::claimGenerator(int generatorId, int newPlayerOwner)
 {
-    generator* currentGenerator = &m_generators[generatorId];
+    generator& currentGenerator = m_generators[generatorId];
     CMCClaimGenerator change(generatorId, newPlayerOwner);
     sendMapChange(&change);
 
-    currentGenerator->setOwner(newPlayerOwner);
+    currentGenerator.setOwner(newPlayerOwner);
     if (newPlayerOwner != -1) {
-        type_point location(currentGenerator->m_mapX, currentGenerator->m_mapY,
-                            currentGenerator->m_mapZ);
+        type_point location(currentGenerator.m_mapX, currentGenerator.m_mapY,
+                            currentGenerator.m_mapZ);
         setVisibility(location.m_x, location.m_y, location.m_z,
                       newPlayerOwner, 3, 0);
     }
@@ -7690,7 +7690,7 @@ void game::perMonth()
 VA(0x004c7930, 0x266)  // dc 0xb2ad4
 int game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
 {
-    playerData* p = &m_players[whichPlayer];
+    const playerData& p = m_players[whichPlayer];
     int gold = 0;
     int i;
 
@@ -7707,15 +7707,15 @@ int game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
         }
     }
 
-    gold += p->numOfGivenArtifact(
+    gold += p.numOfGivenArtifact(
                  g_productionArtifactEndlessSackOfGold) * 1000;
-    gold += p->numOfGivenArtifact(
+    gold += p.numOfGivenArtifact(
                  g_productionArtifactEndlessBagOfGold) * 750;
-    gold += p->numOfGivenArtifact(
+    gold += p.numOfGivenArtifact(
                  g_productionArtifactEndlessPurseOfGold) * 500;
 
-    for (i = 0; i < p->m_numHeroes; ++i)
-        gold += getHero(p->m_heroes[i])->getEstatesBonus();
+    for (i = 0; i < p.m_numHeroes; ++i)
+        gold += getHero(p.m_heroes[i])->getEstatesBonus();
 
     int humanId = whichPlayer;
     if (humanId >= 8 || humanId < 0)
@@ -10491,7 +10491,7 @@ void game::setSpecialRumour()
     } else {
         type_point artifactLocation(m_ultimateArtifactX, m_ultimateArtifactY,
                                     m_ultimateArtifactZ);
-        NewmapCell* cell = g_advManager->getCell(artifactLocation);
+        const NewmapCell* cell = g_advManager->getCell(artifactLocation);
         sprintf(m_currentRumour,
                 g_generalText->getText(g_specialRumourGrailObjectText),
                 g_grailTerrainNames[cell->m_groundSet]);
@@ -10590,30 +10590,30 @@ void game::checkForTownEvent()
         (m_month * 4 + m_week - 5) * 7 + m_day);
 
     for (unsigned int i = 0; i < m_worldMap.m_townEventList.size(); ++i) {
-        TTownEvent* thisEvent = &m_worldMap.m_townEventList[i];
+        const TTownEvent& thisEvent = m_worldMap.m_townEventList[i];
         int playerIndex = g_netLocalGamePos;
         if (playerIndex >= 8 || playerIndex < 0)
             playerIndex = 0;
         if (!(m_players[playerIndex].m_isHuman
-                  ? thisEvent->m_applyToHuman
-                  : thisEvent->m_applyToComputer)) {
+                  ? thisEvent.m_applyToHuman
+                  : thisEvent.m_applyToComputer)) {
             continue;
         }
-        if (!(g_unnamed69ccc4 & thisEvent->m_playerFlags))
+        if (!(g_unnamed69ccc4 & thisEvent.m_playerFlags))
             continue;
 
-        if (thisEvent->m_firstTime == day) {
-            town* thisTown = getTown(thisEvent->m_townNum);
+        if (thisEvent.m_firstTime == day) {
+            town* thisTown = getTown(thisEvent.m_townNum);
             if (g_netLocalGamePos == thisTown->m_owner) {
-                giveTimeEventReward(thisEvent);
-                thisTown->giveEventReward(thisEvent);
+                giveTimeEventReward(&thisEvent);
+                thisTown->giveEventReward(&thisEvent);
             }
-        } else if (thisEvent->m_interval && day > thisEvent->m_firstTime
-                   && (day - thisEvent->m_firstTime) % thisEvent->m_interval == 0) {
-            town* thisTown = getTown(thisEvent->m_townNum);
+        } else if (thisEvent.m_interval && day > thisEvent.m_firstTime
+                   && (day - thisEvent.m_firstTime) % thisEvent.m_interval == 0) {
+            town* thisTown = getTown(thisEvent.m_townNum);
             if (g_netLocalGamePos == thisTown->m_owner) {
-                giveTimeEventReward(thisEvent);
-                thisTown->giveEventReward(thisEvent);
+                giveTimeEventReward(&thisEvent);
+                thisTown->giveEventReward(&thisEvent);
             }
         }
     }

@@ -4654,7 +4654,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
             || destIndex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_LAST_COLUMN)
         return 0;
 
-    hexcell* cell = &g_combatManager->m_cells[destIndex];
+    const hexcell* cell = &g_combatManager->m_cells[destIndex];
     if (g_combatManager->hexIsBlocked(destIndex))
         return 0;
     if (cell->m_armySide >= 0) {

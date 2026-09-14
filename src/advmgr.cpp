@@ -870,7 +870,7 @@ void advManager::close()
 VA(0x00407ac0, 0x44)  // dc 0x793c
 int advManager::inMapArea(int x, int y)
 {
-    widget* mapWidget = m_advWindow->m_mapWidget;
+    const widget* mapWidget = m_advWindow->m_mapWidget;
     return x >= mapWidget->m_x && x < mapWidget->m_y + mapWidget->m_width
         && y >= mapWidget->m_y && y < mapWidget->m_y + mapWidget->m_height;
 }
@@ -7883,7 +7883,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
 
     TQuickCreatureWindow* window;
     bool showDetails = false;
-    hero* currHero = g_game->getHero(localPlayer->m_currHeroId);
+    hero* const currHero = g_game->getHero(localPlayer->m_currHeroId);
     if (currHero) {
         unsigned char inIdentifyRange;
         {
@@ -7944,7 +7944,7 @@ VA(0x00417420, 0x146)  // dc 0x1a230
 void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBorder)
 {
     const int playerId = g_game->getLocalPlayerGamePos();
-    Bitmap816* bmp = ResourceManager::getBitmap816("AdvMap.pcx");
+    Bitmap816* const bmp = ResourceManager::getBitmap816("AdvMap.pcx");
 
     if (bmp) {
         setPlayerPaletteColors(bmp->m_p16.m_colors.m_data, playerId);

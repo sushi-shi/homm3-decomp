@@ -185,6 +185,17 @@ Window::Window() {
     def test_int64_aliases_compare_equal(self):
         self.assertEqual(facts.type_differences("__int64", "long long"), ([], []))
 
+    def test_known_nested_types_compare_equal_inside_their_owner(self):
+        pairs = (
+            ("TSpellbookWindow::TSpellbookEntry", "TSpellbookEntry"),
+            ("game::TRumour*", "TRumour*"),
+            ("const combatManager::TWallTraits* const",
+             "const TWallTraits* const"),
+        )
+        for qualified, owner_relative in pairs:
+            self.assertEqual(facts.type_differences(qualified, owner_relative),
+                             ([], []))
+
     def test_owning_alias_comment_matches_normalized_local(self):
         source = '''struct Window { Window(); };
 Window::Window() {

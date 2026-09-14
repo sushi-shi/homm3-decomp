@@ -4775,7 +4775,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
                                          unsigned char firstTarget,
                                          long creatureSpell) const
 {
-    hero* castingHero = m_heroes[side];
+    const hero* const castingHero = m_heroes[side];
     hero* targetHero = target->getController();
     TCreatureType creature = target->m_creatureType;
     const SSpellTraits* traits = &g_spellTraits[spell];
