@@ -7207,10 +7207,10 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
             return 1;
         }
     }
-    if (!m_players.getPlayer(msg->m_playerInfo.m_dpid))
-        setNewPlayerSlot(&msg->m_playerInfo);
     if (m_chatShowing)
         turnChatOn(1);
+    if (!m_players.getPlayer(msg->m_playerInfo.m_dpid))
+        setNewPlayerSlot(&msg->m_playerInfo);
     if (!g_videoPaused || g_dPlay->isHost()) {
         m_newPlayerUpdateMan->newPlayer(netMsg->m_dpidFrom);
         if (m_inAdvancedOptions) {

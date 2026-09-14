@@ -252,9 +252,9 @@ int combatManager::open(int newPriority)
     m_combatMouseBackground = new Bitmap16Bit(855, 52);
 
     loadIcons();
-    initializeArchers();
     initNonVisualVars();
     setupAndLoadObstacles();
+    initializeArchers();
 
     memset(m_lastDrawGridShade, 0, COMBAT_GRID_CELLS);
     memset(m_curDrawGridShade, 0, COMBAT_GRID_CELLS);
@@ -300,6 +300,8 @@ int combatManager::open(int newPriority)
                 0x7802, widget::WIDGET_DIMMED | widget::WIDGET_UPDATE);
         }
     }
+
+    nextArmy(0);
 
     if (!isQuickCombat()) {
         drawFrame(1, 0, 0, 0, 1, 0);
@@ -349,7 +351,6 @@ int combatManager::open(int newPriority)
 
     g_chatMan.resumeTimeOuts();
     m_netMsgHandlerPause = new CNetMsgHandlerPause();
-    nextArmy(0);
     return 0;
 }
 

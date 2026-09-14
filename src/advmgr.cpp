@@ -443,13 +443,13 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
                                &g_game->m_heroes[msg->m_hero2.m_id]);
         break;
     }
+    case RS_GIFT:
+        handleTradeRequestMsg(netMsg);
+        break;
     case RS_PLAYER_ACTIVE:
         systemMsg(
             &g_chatMan, g_generalText->getText(40),
             g_game->getPlayerName(g_game->getLocalPlayerGamePos()));
-        break;
-    case RS_GIFT:
-        handleTradeRequestMsg(netMsg);
         break;
     case RS_GIFT_REQUEST:
         handleGiftMsg(netMsg);

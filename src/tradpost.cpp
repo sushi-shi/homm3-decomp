@@ -3244,9 +3244,17 @@ int TTradeResourceWindow::windowHandler(message* msg)
     // Before normalization (locals): bExit.
     int exit = 0;
 
-    if (msg->m_id != MESSAGE_MOUSE_MOVE) {
-        if (msg->m_id != MESSAGE_WIDGET)
-            return 1;
+    if (msg->m_id == MESSAGE_MOUSE_MOVE) {
+        g_windowManager->convertToHover(*msg);
+        if (msg->m_codeY != m_lastHoverId) {
+            m_lastHoverId = msg->m_codeY;
+            setRolloverText(msg->m_codeY);
+        }
+        return 1;
+    }
+
+    if (msg->m_id != MESSAGE_WIDGET)
+        return 1;
 
     switch (msg->m_codeX) {
     case widget::WIDGET_DESELECT:
@@ -3358,14 +3366,6 @@ int TTradeResourceWindow::windowHandler(message* msg)
         return 2;
     }
     return 1;
-    }
-
-    g_windowManager->convertToHover(*msg);
-    if (msg->m_codeY != m_lastHoverId) {
-        m_lastHoverId = msg->m_codeY;
-        setRolloverText(msg->m_codeY);
-    }
-    return 1;
 }
 
 // E:\gamedcs\tradpost.cpp:2507
@@ -3421,103 +3421,103 @@ int TGiveResourceWindow::windowHandler(message* msg)
     // Before normalization (locals): bExit.
     int exit = 0;
 
-    if (msg->m_id != MESSAGE_MOUSE_MOVE) {
-        if (msg->m_id != MESSAGE_WIDGET)
-            return 1;
-
-        switch (msg->m_codeX) {
-        case widget::WIDGET_SELECT:
-            switch (msg->m_codeY) {
-            case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
-            case MARKET_SELL_ORE_ID: case MARKET_SELL_SULFUR_ID:
-            case MARKET_SELL_CRYSTAL_ID: case MARKET_SELL_GEMS_ID:
-            case MARKET_SELL_GOLD_ID: {
-                int res = msg->m_codeY - MARKET_SELL_WOOD_ID;
-                if (res == g_selectedArtifact)
-                    return 1;
-                g_selectedArtifact = res;
-                if (g_leftResource != -1) {
-                    g_ratioInverted = 0;
-                    g_giveQuantity = 1;
-                    g_maxTradeUnits = g_currentPlayer->m_resources[g_selectedArtifact];
-                    m_resourceSlider->setResolution(g_maxTradeUnits + 1);
-                    g_rightAmount = 0;
-                }
-                break;
-            }
-            case GIVE_RECIPIENT_SLOT_0_ID: case GIVE_RECIPIENT_SLOT_1_ID:
-            case GIVE_RECIPIENT_SLOT_2_ID: case GIVE_RECIPIENT_SLOT_3_ID:
-            case GIVE_RECIPIENT_SLOT_4_ID: case GIVE_RECIPIENT_SLOT_5_ID:
-            case GIVE_RECIPIENT_SLOT_6_ID: {
-                int recip = msg->m_codeY - GIVE_RECIPIENT_SLOT_0_ID;
-                if (recip == g_leftResource)
-                    return 1;
-                g_leftResource = recip;
-                if (g_selectedArtifact != -1) {
-                    g_ratioInverted = 0;
-                    g_giveQuantity = 1;
-                    g_maxTradeUnits = g_currentPlayer->m_resources[g_selectedArtifact];
-                    m_resourceSlider->setResolution(g_maxTradeUnits + 1);
-                    g_rightAmount = 0;
-                }
-                break;
-            }
-            default:
-                return 1;
-            }
-            break;
-
-        case widget::WIDGET_DESELECT:
-            switch (msg->m_codeY) {
-            case MARKET_LEFT_PANEL_ID: {
-                if (g_rightAmount == 0)
-                    return 1;
-                g_currentPlayer->m_resources[g_selectedArtifact] -= g_rightAmount;
-                int color = m_slotPlayerColor[g_leftResource];
-                g_game->m_players[color].m_resources[g_selectedArtifact] += g_rightAmount;
-                if (g_networkActive69954c && g_game->m_players[color].isHuman()) {
-                    TGiveNetMsg m(g_game->getLocalPlayerGamePos(),
-                                  g_selectedArtifact, g_rightAmount);
-                    transmitRemoteData(&m, color, false, true);
-                }
-                g_leftDenominated = 1;
-                g_leftResource = -1;
-                g_selectedArtifact = -1;
-                break;
-            }
-            case MARKET_RIGHT_PANEL_ID:
-                g_rightAmount = g_maxTradeUnits;
-                m_resourceSlider->setState(g_maxTradeUnits);
-                break;
-            case MARKET_LEFT_COUNT_ID:
-            case MARKET_RIGHT_LABEL_ID:
-                exit = 1;
-                g_windowManager->m_dialogReturn = msg->m_codeY - MARKET_LEFT_COUNT_ID;
-                g_leftResource = -1;
-                g_selectedArtifact = -1;
-                g_leftDenominated = 0;
-                break;
-            default:
-                return 1;
-            }
-            break;
-
-        default:
-            return 1;
-        }
-
-        update(1);
-        if (exit) {
-            msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
-            return 2;
+    if (msg->m_id == MESSAGE_MOUSE_MOVE) {
+        g_windowManager->convertToHover(*msg);
+        if (msg->m_codeY != m_lastHoverId) {
+            m_lastHoverId = msg->m_codeY;
+            setRolloverText(msg->m_codeY);
         }
         return 1;
     }
 
-    g_windowManager->convertToHover(*msg);
-    if (msg->m_codeY != m_lastHoverId) {
-        m_lastHoverId = msg->m_codeY;
-        setRolloverText(msg->m_codeY);
+    if (msg->m_id != MESSAGE_WIDGET)
+        return 1;
+
+    switch (msg->m_codeX) {
+    case widget::WIDGET_SELECT:
+        switch (msg->m_codeY) {
+        case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
+        case MARKET_SELL_ORE_ID: case MARKET_SELL_SULFUR_ID:
+        case MARKET_SELL_CRYSTAL_ID: case MARKET_SELL_GEMS_ID:
+        case MARKET_SELL_GOLD_ID: {
+            int res = msg->m_codeY - MARKET_SELL_WOOD_ID;
+            if (res == g_selectedArtifact)
+                return 1;
+            g_selectedArtifact = res;
+            if (g_leftResource != -1) {
+                g_ratioInverted = 0;
+                g_giveQuantity = 1;
+                g_maxTradeUnits = g_currentPlayer->m_resources[g_selectedArtifact];
+                m_resourceSlider->setResolution(g_maxTradeUnits + 1);
+                g_rightAmount = 0;
+            }
+            break;
+        }
+        case GIVE_RECIPIENT_SLOT_0_ID: case GIVE_RECIPIENT_SLOT_1_ID:
+        case GIVE_RECIPIENT_SLOT_2_ID: case GIVE_RECIPIENT_SLOT_3_ID:
+        case GIVE_RECIPIENT_SLOT_4_ID: case GIVE_RECIPIENT_SLOT_5_ID:
+        case GIVE_RECIPIENT_SLOT_6_ID: {
+            int recip = msg->m_codeY - GIVE_RECIPIENT_SLOT_0_ID;
+            if (recip == g_leftResource)
+                return 1;
+            g_leftResource = recip;
+            if (g_selectedArtifact != -1) {
+                g_ratioInverted = 0;
+                g_giveQuantity = 1;
+                g_maxTradeUnits = g_currentPlayer->m_resources[g_selectedArtifact];
+                m_resourceSlider->setResolution(g_maxTradeUnits + 1);
+                g_rightAmount = 0;
+            }
+            break;
+        }
+        default:
+            return 1;
+        }
+        break;
+
+    case widget::WIDGET_DESELECT:
+        switch (msg->m_codeY) {
+        case MARKET_LEFT_PANEL_ID: {
+            if (g_rightAmount == 0)
+                return 1;
+            g_currentPlayer->m_resources[g_selectedArtifact] -= g_rightAmount;
+            int color = m_slotPlayerColor[g_leftResource];
+            g_game->m_players[color].m_resources[g_selectedArtifact] += g_rightAmount;
+            if (g_networkActive69954c && g_game->m_players[color].isHuman()) {
+                TGiveNetMsg m(g_game->getLocalPlayerGamePos(),
+                              g_selectedArtifact, g_rightAmount);
+                transmitRemoteData(&m, color, false, true);
+            }
+            g_leftDenominated = 1;
+            g_leftResource = -1;
+            g_selectedArtifact = -1;
+            break;
+        }
+        case MARKET_RIGHT_PANEL_ID:
+            g_rightAmount = g_maxTradeUnits;
+            m_resourceSlider->setState(g_maxTradeUnits);
+            break;
+        case MARKET_LEFT_COUNT_ID:
+        case MARKET_RIGHT_LABEL_ID:
+            exit = 1;
+            g_windowManager->m_dialogReturn = msg->m_codeY - MARKET_LEFT_COUNT_ID;
+            g_leftResource = -1;
+            g_selectedArtifact = -1;
+            g_leftDenominated = 0;
+            break;
+        default:
+            return 1;
+        }
+        break;
+
+    default:
+        return 1;
+    }
+
+    update(1);
+    if (exit) {
+        msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
+        return 2;
     }
     return 1;
 }
@@ -3573,55 +3573,8 @@ int TBuyArtifactWindow::windowHandler(message* msg)
 
     int exitFlag = 0;
     switch (msg->m_id) {
-    case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(*msg);
-        if (msg->m_codeY != m_lastHoverId) {
-            m_lastHoverId = msg->m_codeY;
-            setRolloverText(msg->m_codeY);
-        }
-        break;
-
     case MESSAGE_WIDGET:
         switch (msg->m_codeX) {
-        case MARKET_WIDGET_ACTIVATE:
-            switch (msg->m_codeY) {
-            case MARKET_LEFT_PANEL_ID:
-                if (g_rightAmount == 0)
-                    return MESSAGE_DISPATCH_CONSUME;
-                if (g_ratioInverted) {
-                    g_currentPlayer->m_resources[g_leftResource] +=
-                        g_giveQuantity * g_rightAmount;
-                } else {
-                    g_currentPlayer->m_resources[g_selectedArtifact] -=
-                        g_giveQuantity * g_rightAmount;
-                    type_artifact artifact(
-                        g_marketArtifacts[g_leftResource],
-                        -1);
-                    g_marketHero->giveArtifact(&artifact, 1, 1);
-                    g_marketArtifacts[g_leftResource] =
-                        ARTIFACT_NONE;
-                }
-                g_leftDenominated = 1;
-                g_leftResource = -1;
-                g_selectedArtifact = -1;
-                break;
-
-            case MARKET_LEFT_COUNT_ID:
-            case MARKET_LEFT_LABEL_ID:
-            case MARKET_BUY_RIGHT_LABEL_ID:
-                g_windowManager->m_dialogReturn =
-                    msg->m_codeY - MARKET_LEFT_COUNT_ID;
-                exitFlag = 1;
-                g_leftResource = -1;
-                g_selectedArtifact = -1;
-                g_leftDenominated = 0;
-                break;
-
-            default:
-                return MESSAGE_DISPATCH_CONSUME;
-            }
-            break;
-
         case MARKET_WIDGET_SELECT:
             switch (msg->m_codeY) {
             case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
@@ -3707,6 +3660,45 @@ int TBuyArtifactWindow::windowHandler(message* msg)
             return MESSAGE_DISPATCH_CONSUME;
         }
 
+        case MARKET_WIDGET_ACTIVATE:
+            switch (msg->m_codeY) {
+            case MARKET_LEFT_PANEL_ID:
+                if (g_rightAmount == 0)
+                    return MESSAGE_DISPATCH_CONSUME;
+                if (g_ratioInverted) {
+                    g_currentPlayer->m_resources[g_leftResource] +=
+                        g_giveQuantity * g_rightAmount;
+                } else {
+                    g_currentPlayer->m_resources[g_selectedArtifact] -=
+                        g_giveQuantity * g_rightAmount;
+                    type_artifact artifact(
+                        g_marketArtifacts[g_leftResource],
+                        -1);
+                    g_marketHero->giveArtifact(&artifact, 1, 1);
+                    g_marketArtifacts[g_leftResource] =
+                        ARTIFACT_NONE;
+                }
+                g_leftDenominated = 1;
+                g_leftResource = -1;
+                g_selectedArtifact = -1;
+                break;
+
+            case MARKET_LEFT_COUNT_ID:
+            case MARKET_LEFT_LABEL_ID:
+            case MARKET_BUY_RIGHT_LABEL_ID:
+                g_windowManager->m_dialogReturn =
+                    msg->m_codeY - MARKET_LEFT_COUNT_ID;
+                exitFlag = 1;
+                g_leftResource = -1;
+                g_selectedArtifact = -1;
+                g_leftDenominated = 0;
+                break;
+
+            default:
+                return MESSAGE_DISPATCH_CONSUME;
+            }
+            break;
+
         default:
             return MESSAGE_DISPATCH_CONSUME;
         }
@@ -3715,6 +3707,14 @@ int TBuyArtifactWindow::windowHandler(message* msg)
         if (exitFlag) {
             msg->m_codeX = msg->m_codeY = 10;
             return MESSAGE_DISPATCH_FORWARD;
+        }
+        break;
+
+    case MESSAGE_MOUSE_MOVE:
+        g_windowManager->convertToHover(*msg);
+        if (msg->m_codeY != m_lastHoverId) {
+            m_lastHoverId = msg->m_codeY;
+            setRolloverText(msg->m_codeY);
         }
         break;
     }
@@ -4046,14 +4046,6 @@ int TSellCreatureWindow::windowHandler(message* msg)
 
     int switchWindow = 0;
     switch (msg->m_id) {
-    case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(*msg);
-        if (msg->m_codeY != m_lastHoverId) {
-            m_lastHoverId = msg->m_codeY;
-            setRolloverText(msg->m_codeY);
-        }
-        break;
-
     case MESSAGE_WIDGET:
         switch (msg->m_codeX) {
         case MARKET_WIDGET_QUICK_VIEW:
@@ -4163,6 +4155,14 @@ int TSellCreatureWindow::windowHandler(message* msg)
         if (switchWindow) {
             msg->m_codeX = msg->m_codeY = 10;
             return MESSAGE_DISPATCH_FORWARD;
+        }
+        break;
+
+    case MESSAGE_MOUSE_MOVE:
+        g_windowManager->convertToHover(*msg);
+        if (msg->m_codeY != m_lastHoverId) {
+            m_lastHoverId = msg->m_codeY;
+            setRolloverText(msg->m_codeY);
         }
         break;
     }

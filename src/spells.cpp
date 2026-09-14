@@ -707,13 +707,13 @@ unsigned char combatManager::checkLandmine(long hex, army* currentArmy,
 
     TObstacle* obstacle = &getObstacle(m_cells[hex].m_obstacleIndex);
 
+    if (spellCastWorkChance(SPELL_LAND_MINE, obstacle->m_owner, currentArmy,
+                            0, 1, 0) <= 0.0f)
+        return 0;
+
     // Not TObstacle::IsVisible: that header inline reads `is_visible ||
     // owner == side`, and retail tests the two the other way round.
     if (obstacle->isVisible(currentArmy->m_combatSide))
-        return 0;
-
-    if (spellCastWorkChance(SPELL_LAND_MINE, obstacle->m_owner, currentArmy,
-                            0, 1, 0) <= 0.0f)
         return 0;
 
     if (isWalking)

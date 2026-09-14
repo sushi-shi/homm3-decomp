@@ -1226,6 +1226,42 @@ static int campaignBriefHandler(message& msg)
             brief->select(msg.m_codeY - TCampaignBrief::MAP_SELECTED_1_ID);
         break;
 
+    case DIALOG_RETURN_CANCEL:
+        exitFlag = 1;
+        break;
+
+    case DIALOG_RETURN_OK: {
+        int selected = brief->m_selectedScenario;
+        int choice = g_game->m_campaign.m_briefingChoice;
+        int difficulty = g_game->m_setup.m_difficulty;
+
+        g_game->m_campaign.m_currentMap = static_cast<signed char>(selected);
+        if (g_game->m_campaign.m_currentCampaign != GAME_CAMPAIGN_2
+            || selected != GAME_SCENARIO_2)
+            g_game->m_campaign.playScenarioPrologue(brief->m_campaign);
+
+        showProgressBar();
+        incProgressBar(1);
+        g_soundManager->stopMP3();
+
+        NewSMapHeader mapHeader;
+        brief->m_campaign->loadScenario(selected, &mapHeader);
+        g_game->resetGame(difficulty, selected, &mapHeader);
+        g_game->m_campaign.applyBriefingChoice(choice);
+        memset(g_newMapStartingBonus, 3, sizeof(g_newMapStartingBonus));
+        incProgressBar(1);
+
+        int gamePos = brief->m_campaign->m_scenarios[selected]
+                          ->m_options->getPlayer(choice);
+        strcpy(g_game->m_players[gamePos].m_name, g_localPlayerName);
+        g_localGamePos = gamePos;
+        brief->m_campaign->startScenario(selected, choice);
+        incProgressBar(1);
+        incProgressBar(1);
+        exitFlag = 1;
+        break;
+    }
+
     case TCampaignBrief::CHOICE_1_ID:
     case TCampaignBrief::CHOICE_2_ID:
     case TCampaignBrief::CHOICE_3_ID:
@@ -1249,42 +1285,6 @@ static int campaignBriefHandler(message& msg)
                               WINDOW_ALL_WIDGETS_HIGH);
         }
         break;
-
-    case DIALOG_RETURN_CANCEL:
-        exitFlag = 1;
-        break;
-
-    case DIALOG_RETURN_OK: {
-        int selected = brief->m_selectedScenario;
-        int choice = g_game->m_campaign.m_briefingChoice;
-        int difficulty = g_game->m_setup.m_difficulty;
-
-        g_game->m_campaign.m_currentMap = static_cast<signed char>(selected);
-        if (g_game->m_campaign.m_currentCampaign != GAME_CAMPAIGN_2
-            || selected != GAME_SCENARIO_2)
-            g_game->m_campaign.playScenarioPrologue(brief->m_campaign);
-
-        showProgressBar();
-        incProgressBar(1);
-
-        NewSMapHeader mapHeader;
-        brief->m_campaign->loadScenario(selected, &mapHeader);
-        g_game->resetGame(difficulty, selected, &mapHeader);
-        g_game->m_campaign.applyBriefingChoice(choice);
-        memset(g_newMapStartingBonus, 3, sizeof(g_newMapStartingBonus));
-        incProgressBar(1);
-
-        int gamePos = brief->m_campaign->m_scenarios[selected]
-                          ->m_options->getPlayer(choice);
-        strcpy(g_game->m_players[gamePos].m_name, g_localPlayerName);
-        g_localGamePos = gamePos;
-        brief->m_campaign->startScenario(selected, choice);
-        incProgressBar(1);
-        g_soundManager->stopMP3();
-        incProgressBar(1);
-        exitFlag = 1;
-        break;
-    }
     }
 
     if (exitFlag) {

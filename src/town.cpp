@@ -1492,7 +1492,6 @@ short town::getGrowthRate(short dwelling)
     TCreatureType creature = g_townDwellingCreatures[
         m_type * TOWN_DWELLING_SLOTS + dwellingIndex];
     short growth = g_creatureTypeTraits[creature].m_growthRate;
-    growth += getCastleGrowthBonus(creature);
 
     if (m_owner >= 0) {
         long legionBonus = 0;
@@ -1520,6 +1519,8 @@ short town::getGrowthRate(short dwelling)
         growth += legionBonus;
         growth += townFn005BF900(dwellingIndex);
     }
+
+    growth += getCastleGrowthBonus(creature);
 
     for (short slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
         if ((m_active & g_bitNumber[g_hordeBuildings[slot]])

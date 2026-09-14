@@ -2160,14 +2160,6 @@ VA(0x004d9ec0, 0x4D3)  // anchor-global, dc 0xcc800
 void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
 {
     unsigned char freedTownVisitor = 0;
-    int townId = g_game->getTownId(m_x, m_y, m_z);
-    if (townId >= 0) {
-        town* visited = g_game->getTown(townId);
-        if (visited->m_garrisonHeroId == m_id) {
-            visited->m_garrisonHeroId = -1;
-            freedTownVisitor = 1;
-        }
-    }
 
     if (gameLoaded && !remoteMove) {
         type_point location;
@@ -2205,6 +2197,16 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
         player->m_heroes[player->m_numHeroes - 1] = -1;
         player->m_numHeroes--;
     }
+
+    int townId = g_game->getTownId(m_x, m_y, m_z);
+    if (townId >= 0) {
+        town* visited = g_game->getTown(townId);
+        if (visited->m_garrisonHeroId == m_id) {
+            visited->m_garrisonHeroId = -1;
+            freedTownVisitor = 1;
+        }
+    }
+
     if (player->m_currHeroId == m_id) {
         player->m_currHeroId = -1;
         if (g_netLocalGamePos == m_owner)

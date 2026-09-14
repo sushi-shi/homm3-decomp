@@ -637,6 +637,7 @@ void initMainClasses()
 VA(0x004edda0, 0x407)  // anchor-callee + dc-order-map, dc 0xdfa3c
 void creditsWait()
 {
+    message msg;
     // Before normalization (locals): CreditsFont.
     font* creditsFont = ResourceManager::getFont("Credits.fnt");
     int done = 0;
@@ -669,7 +670,7 @@ void creditsWait()
             break;
         pollSound();
         process1WindowsMessage();
-        message msg = g_inputManager->getEvent();
+        msg = g_inputManager->getEvent();
         switch (msg.m_id) {
         case MESSAGE_LEFT_BUTTON_DOWN:
         case MESSAGE_RIGHT_BUTTON_DOWN:
@@ -721,7 +722,7 @@ void creditsWait()
             continue;
         }
         break;
-}
+    }
 
     if (credits)
         delete credits;
@@ -1024,6 +1025,7 @@ void lostGame()
     // DC lines 904..911 retain the event switch and completion flag.
     // Breaking the video loop from that flag preserves all retail bytes;
     // replacing the switch with a combined condition does not.
+    message msg;
     unsigned char done = 0;
     videoOpen(34, 0, 0, 0, 0, 0, 1, 1);
     g_soundManager->startMP3("UltimateLose", 1, 1);
@@ -1038,7 +1040,7 @@ void lostGame()
         if (!videoPlaying())
             break;
         process1WindowsMessage();
-        message msg = g_inputManager->getEvent();
+        msg = g_inputManager->getEvent();
         switch (msg.m_id) {
         case MESSAGE_KEY_DOWN:
             if (msg.m_codeX == KEYCODE_F4)
@@ -3730,6 +3732,7 @@ void shutDown(const char* inExitMessage)
         remoteCleanup();
         g_executive->shutDownSystem();
         g_chatMan.shutDown();
+        ResourceManager::close();
         deleteAnimHeaders();
         deleteSoundHeaders();
 
@@ -3742,7 +3745,6 @@ void shutDown(const char* inExitMessage)
             g_mapExtra = 0;
         }
         deleteMainClasses();
-        ResourceManager::close();
         appExit();
         timeEndPeriod(1);
         g_inShutDown = 0;
@@ -4285,6 +4287,7 @@ void fileError(const char* buf)
 VA(0x004f3ab0, 0x374)  // anchor-caller (ShowCongrats) + dc-order-map, dc 0xe3e48
 void congratsWait(int mode, char* rank, int base, int score, int dayz)
 {
+    message msg;
     font* currentFont = ResourceManager::getFont("HiScore.fnt");
     const char* labels[5] = {
         g_generalText->m_text[439],
@@ -4294,7 +4297,6 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
         g_generalText->m_text[677]
     };
     char temp[100];
-    message msg;
     Smack* smk = 0;
     int i;
     int x;

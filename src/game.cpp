@@ -8972,6 +8972,9 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
     } else {
         viewArmyWindow->doModal();
         switch (g_windowManager->m_dialogReturn) {
+        case TViewArmyWindow::DISMISS_ID:
+            group.dismiss(iarmy);
+            break;
         case TViewArmyWindow::UPGRADE_ID: {
             long upgradeCost[NUM_RESOURCES];
             getUpgradeCost(armyType, upgradeToType, numTroops, upgradeCost);
@@ -8980,9 +8983,6 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
             group.m_armies[iarmy] = upgradeToType;
             break;
         }
-        case TViewArmyWindow::DISMISS_ID:
-            group.dismiss(iarmy);
-            break;
         }
     }
     delete viewArmyWindow;
@@ -9846,21 +9846,6 @@ void game::perWeek()
     ++m_week;
 
     for (i = 0; i < 8; ++i) {
-        for (int j = 0; j < 2; ++j) {
-            int heroId = m_players[i].m_recruits[j];
-            if (heroId >= 0) {
-#pragma inline_depth(0)
-                hero* recruitHero = getHero(heroId);
-#pragma inline_depth()
-                if (!(recruitHero->m_flags & g_heroRecruitReservedFlag)) {
-                    m_heroAvailability[heroId] = -1;
-                    m_players[i].m_recruits[j] = -1;
-                }
-            }
-        }
-    }
-
-    for (i = 0; i < 8; ++i) {
         if (!m_playerDisabled[i])
             setRecruits(i);
     }
@@ -9967,6 +9952,21 @@ void game::perWeek()
                 }
                 ++y;
             } while (y < g_mapHeight);
+        }
+    }
+
+    for (i = 0; i < 8; ++i) {
+        for (int j = 0; j < 2; ++j) {
+            int heroId = m_players[i].m_recruits[j];
+            if (heroId >= 0) {
+#pragma inline_depth(0)
+                hero* recruitHero = getHero(heroId);
+#pragma inline_depth()
+                if (!(recruitHero->m_flags & g_heroRecruitReservedFlag)) {
+                    m_heroAvailability[heroId] = -1;
+                    m_players[i].m_recruits[j] = -1;
+                }
+            }
         }
     }
 
@@ -10407,13 +10407,15 @@ void game::insertObject(int x, int y, int z, int objType, int objectIndex, int e
     if (objType == RANDOM_MONSTER)
         objType = MONSTER;
 
+    NewmapCell* tempCell = m_worldMap.cell(x, y, z);
+
     CObject object(static_cast<unsigned char>(x),
                    static_cast<unsigned char>(y),
                    static_cast<unsigned char>(z), 0, extraInfo);
 
     if (objType == TERRAIN_HOLE) {
         m_worldMap.newfullMapFn00505F20(
-            &object, TERRAIN_HOLE, 0, m_worldMap.cell(x, y, z)->m_groundSet);
+            &object, TERRAIN_HOLE, 0, tempCell->m_groundSet);
     } else {
         m_worldMap.newfullMapFn00505F20(
             &object, objType, objectIndex, -1);

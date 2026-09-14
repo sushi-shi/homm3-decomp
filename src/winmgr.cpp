@@ -274,7 +274,6 @@ int heroWindowManager::doDialog(heroWindow* dialogWindow,
                                 TDialogHandler dialogFunction, int fadeIn)
 {
     heroWindow* w;
-    message msg;
     int endFlag;
 
     if (g_dialogNestCount++ == 0)
@@ -292,6 +291,7 @@ int heroWindowManager::doDialog(heroWindow* dialogWindow,
                     if (fadeIn)
                         g_windowManager->fadeScreen(0, 4, 0);
                     g_inputManager->flush();
+                    message msg;
                     m_dialogReturn = -1;
                     endFlag = 0;
                     msg.m_id = 0;
@@ -374,7 +374,6 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
                                     int fadeIn)
 {
     heroWindow* w;
-    message msg;
     int endFlag;
 
     if (g_dialogNestCount++ == 0)
@@ -389,6 +388,7 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
                 if (dialogWindow)
                     addWindow(dialogWindow, -1, 1);
                 try {
+                    message msg;
                     endFlag = 0;
                     msg.m_id = 0;
                     msg.m_codeX = 0;
@@ -490,9 +490,10 @@ void heroWindowManager::doQuickView(heroWindow* window)
                 addWindow(window, -1, 1);
             try {
                 for (;;) {
+                    message msg;
                     pollSound();
                     process1WindowsMessage();
-                    message msg = g_inputManager->getEvent();
+                    msg = g_inputManager->getEvent();
                     unsigned char done =
                         msg.m_id == MESSAGE_RIGHT_BUTTON_UP
                         || msg.m_id == MESSAGE_LEFT_BUTTON_DOWN

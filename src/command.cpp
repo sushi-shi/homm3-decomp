@@ -2101,6 +2101,11 @@ void combatManager::doVictory(int winningGroup)
             m_armies[side][lastAliveSlot].m_numTroops = 1;
     }
 
+    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+        g_windowManager->m_screenBitmap->darken(0, 0, 800, 600);
+        g_windowManager->updateScreen(0, 0, 800, 600);
+    }
+
     // Necromancy. The raise is per DEAD STACK, capped at that stack's own
     // losses, and the hit-point term is the SMALLER of the dead
     // creature's and the raised creature's - so a necromancer never
@@ -2191,11 +2196,6 @@ void combatManager::doVictory(int winningGroup)
     g_mouseManager->m_noChangePointer = 0;
     g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
     g_mouseManager->showPointer(false);
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
-        g_windowManager->m_screenBitmap->darken(0, 0, 800, 600);
-        g_windowManager->updateScreen(0, 0, 800, 600);
-    }
-
     // DIALOG_TIMEOUT is the Dreamcast local roster's own spelling. A
     // networked machine that is not holding adventure control arms a
     // deadline and passes it on to the two presentations; everyone else
