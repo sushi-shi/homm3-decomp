@@ -388,7 +388,7 @@ void AdvManager::animateMove(Hero* curr, int direction, int xInc, int yInc)
 // for IsFlying, including its can_land call. Complete expands that same
 // checkTerrain=1 wrapper; canLand is private, not a direct cursor API.
 VA(0x004805e0, 0x131C)  // ret 0x1c + caller arg order/call set, dc 0x7aa54
-NewmapCell* AdvManager::moveHero(int direction, unsigned char standEnd, type_point& triggerPoint, int* noMove, unsigned char computerMove, int* foughtBattle, unsigned char isRemoteMove)
+NewmapCell* AdvManager::moveHero(int direction, unsigned char standEnd, MapPoint& triggerPoint, int* noMove, unsigned char computerMove, int* foughtBattle, unsigned char isRemoteMove)
 {
     unsigned char becameBoat = 0;
     Hero* curr;
@@ -620,7 +620,7 @@ NewmapCell* AdvManager::moveHero(int direction, unsigned char standEnd, type_poi
         updateScreen(0, 0);
     }
 
-    type_point point(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8, m_radarOrigin.m_z);
+    MapPoint point(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8, m_radarOrigin.m_z);
     int ground = getCell(point)->m_groundSet;
     if (ground != m_lastTerrain) {
         m_lastTerrain = ground;
@@ -640,7 +640,7 @@ NewmapCell* AdvManager::moveHero(int direction, unsigned char standEnd, type_poi
         g_unnamed6968e0 = g_soundManager->memorySample(walkSample);
     }
 
-    point = type_point(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
+    point = MapPoint(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
                        m_radarOrigin.m_z);
     setEnvironmentOrigin(point, 0);
     m_scrollX = m_scrollY = 0;
@@ -733,8 +733,8 @@ VA(0x00481900, 0x1C1)  // exhaustive cursor-tail order/call set, dc 0x7bbbc
 void AdvManager::checkAdjacentMon(int* foughtBattle)
 {
     Hero* curr = g_game->getCurrHero();
-    type_point location = curr->getLocation();
-    type_point monster(0xff, 0xff, 0xff);
+    MapPoint location = curr->getLocation();
+    MapPoint monster(0xff, 0xff, 0xff);
 
     if (findAdjacentMonster(location, &monster, monster)) {
         stopCursor(1);
@@ -855,7 +855,7 @@ void AdvManager::onMoveHero(CMapChange* mapChange)
         return;
 
     g_advManager->setHeroContext(change->m_heroId, 0, 0, 1);
-    type_point triggerPoint;
+    MapPoint triggerPoint;
     NewmapCell* eventCell = moveHero(
         change->m_dir, change->m_standEnd != 0, triggerPoint, &dummy1,
         1, &dummy2, 1);

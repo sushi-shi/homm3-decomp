@@ -158,7 +158,7 @@ void AdvManager::summonBoat(SkillMastery level)
     if (who == 0)
         return;
 
-    type_point point(who->m_x, who->m_y, who->m_z);
+    MapPoint point(who->m_x, who->m_y, who->m_z);
     if (getCell(point)->m_groundSet == eTerrainWater) {
         if (g_game->isLocalHuman(who->m_owner)) {
             sprintf(g_text,
@@ -178,7 +178,7 @@ void AdvManager::summonBoat(SkillMastery level)
         y = who->m_y + g_normalDirTable[direction].m_y;
         if (x >= 0 && x < g_mapWidth && y >= 0
             && y < g_mapHeight) {
-            NewmapCell* cell = getCell(type_point(x, y, who->m_z));
+            NewmapCell* cell = getCell(MapPoint(x, y, who->m_z));
             if (cell->m_typeValue == 0 && cell->m_groundSet == eTerrainWater) {
                 foundWater = true;
                 break;
@@ -354,7 +354,7 @@ void AdvManager::dimensionDoor(SkillMastery level)
         doorWin.doModal(0);
     }
 
-    type_point destination = getMouseMapPoint();
+    MapPoint destination = getMouseMapPoint();
     if (destination.isValid() && g_windowManager->m_dialogReturn == 1) {
         NewmapCell* cell = getCell(destination);
         if (((who->m_flags & 0x40000) != 0
@@ -477,10 +477,10 @@ void AdvManager::townGate(SkillMastery level)
     } else {
         int closestTown = -1;
         int closestDistance2 = (std::numeric_limits<int>::max)();
-        type_point heroLoc = who->getLocation();
+        MapPoint heroLoc = who->getLocation();
         for (unsigned i = 0; i < g_game->m_towns.size(); i++) {
             if (g_game->onSameTeam(who->m_owner, g_game->m_towns[i].m_owner)) {
-                type_point townLoc = g_game->getTown(i)->getLocation();
+                MapPoint townLoc = g_game->getTown(i)->getLocation();
                 if (heroLoc.distanceSquared(townLoc)
                     < closestDistance2) {
                     closestDistance2
@@ -597,7 +597,7 @@ void AdvManager::flight(SkillMastery level)
 // draw_changes decides whether the sample plays and whether the visibility
 // scan runs at all.
 VA(0x0041d930, 0x464)  // dc 0x22b88
-void AdvManager::teleportTo(Hero* who, type_point destination,
+void AdvManager::teleportTo(Hero* who, MapPoint destination,
                             const char* sampleName,
                             unsigned char isRemoteMove,
                             unsigned char drawChanges,
@@ -700,7 +700,7 @@ void AdvManager::teleportTo(Hero* who, type_point destination,
 #if 0  // @carcass: remaining untouched bodies (continued)
 // E:\gamedcs\struct.h:120
 DC_ONLY(0x22fe4, 0x2E)
-int type_point::distanceSquared(const type_point* p2)
+int MapPoint::distanceSquared(const MapPoint* p2)
 {
     // @stub
 }
@@ -756,14 +756,14 @@ void HeroWindowManager::FizzleForward(const SLimitData* limits, int fadeTime)
 
 // E:\gamedcs\netmsg.h:532
 DC_ONLY(0x23154, 0x1C)
-void CMapChange::CMapChange(ERSMessages id, unsigned long size)
+void CMapChange::CMapChange(RsMessages id, unsigned long size)
 {
     // @stub
 }
 
 // E:\gamedcs\netmsg.h:563
 DC_ONLY(0x23170, 0x54)
-void CMCTeleportHero::CMCTeleportHero(signed char heroId, type_point point)
+void CMCTeleportHero::CMCTeleportHero(signed char heroId, MapPoint point)
 {
     // @stub
 }

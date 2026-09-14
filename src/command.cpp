@@ -1811,9 +1811,9 @@ void CombatManager::showEagleEye(int winningGroup, int dialogTimeout)
 
 VA(0x004772b0, 0x1BF)  // dc 0x6e0d8
 void CombatManager::showLootedArtifacts(
-    std::vector<type_artifact>& lootedArtifacts, int dialogTimeout)
+    std::vector<ArtifactRecord>& lootedArtifacts, int dialogTimeout)
 {
-    type_artifact* artifact = lootedArtifacts.begin();
+    ArtifactRecord* artifact = lootedArtifacts.begin();
     std::string msg;
     std::vector<DialogResource> rewards;
     DialogResource reward;
@@ -1927,7 +1927,7 @@ void CombatManager::doVictory(int winningGroup)
     }
 
     int experience = 0;
-    std::vector<type_artifact> lootedArtifacts;
+    std::vector<ArtifactRecord> lootedArtifacts;
     if (winningGroup != -1) {
         if (m_heroes[winningGroup]) {
             calculateGainedExperience(winningGroup, &experience);
@@ -3129,70 +3129,70 @@ void HeroWindowManager::saveFizzleSourceX(const SLimitData* limits)
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x70b88, 0x4)
-type_artifact* std::vector<type_artifact,std::allocator<type_artifact> >::begin()
+ArtifactRecord* std::vector<ArtifactRecord,std::allocator<ArtifactRecord> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0x70b8c, 0x4)
-type_artifact* std::vector<type_artifact,std::allocator<type_artifact> >::end()
+ArtifactRecord* std::vector<ArtifactRecord,std::allocator<ArtifactRecord> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x70b90, 0x1C)
-void std::vector<type_artifact,std::allocator<type_artifact> >::vector<type_artifact,std::allocator<type_artifact> >(const std::allocator<type_artifact>* __a)
+void std::vector<ArtifactRecord,std::allocator<ArtifactRecord> >::vector<ArtifactRecord,std::allocator<ArtifactRecord> >(const std::allocator<ArtifactRecord>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0x70bac, 0x28)
-void std::vector<type_artifact,std::allocator<type_artifact> >::~vector<type_artifact,std::allocator<type_artifact> >()
+void std::vector<ArtifactRecord,std::allocator<ArtifactRecord> >::~vector<ArtifactRecord,std::allocator<ArtifactRecord> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x70bd4, 0x4)
-void std::allocator<type_artifact>::allocator<type_artifact>()
+void std::allocator<ArtifactRecord>::allocator<ArtifactRecord>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x70bd8, 0x4)
-void std::allocator<type_artifact>::~allocator<type_artifact>()
+void std::allocator<ArtifactRecord>::~allocator<ArtifactRecord>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x70bdc, 0x2C)
-void std::_Vector_base<type_artifact,std::allocator<type_artifact> >::_Vector_base<type_artifact,std::allocator<type_artifact> >(const std::allocator<type_artifact>* __a)
+void std::_Vector_base<ArtifactRecord,std::allocator<ArtifactRecord> >::_Vector_base<ArtifactRecord,std::allocator<ArtifactRecord> >(const std::allocator<ArtifactRecord>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0x70c08, 0x30)
-void std::_Vector_base<type_artifact,std::allocator<type_artifact> >::~_Vector_base<type_artifact,std::allocator<type_artifact> >()
+void std::_Vector_base<ArtifactRecord,std::allocator<ArtifactRecord> >::~_Vector_base<ArtifactRecord,std::allocator<ArtifactRecord> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:101
 DC_ONLY(0x70c38, 0x18)
-void std::_STL_alloc_proxy<type_artifact *,type_artifact,std::allocator<type_artifact> >::~_STL_alloc_proxy<type_artifact *,type_artifact,std::allocator<type_artifact> >()
+void std::_STL_alloc_proxy<ArtifactRecord *,ArtifactRecord,std::allocator<ArtifactRecord> >::~_STL_alloc_proxy<ArtifactRecord *,ArtifactRecord,std::allocator<ArtifactRecord> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x70c50, 0xC)
-void std::_STL_alloc_proxy<type_artifact *,type_artifact,std::allocator<type_artifact> >::_STL_alloc_proxy<type_artifact *,type_artifact,std::allocator<type_artifact> >(const std::allocator<type_artifact>* __a, type_artifact** __p)
+void std::_STL_alloc_proxy<ArtifactRecord *,ArtifactRecord,std::allocator<ArtifactRecord> >::_STL_alloc_proxy<ArtifactRecord *,ArtifactRecord,std::allocator<ArtifactRecord> >(const std::allocator<ArtifactRecord>* __a, ArtifactRecord** __p)
 {
     // @stub
 }

@@ -49,7 +49,8 @@ enum TownType {
 //     table (included_buildings, gHierarchyMask) and the bound of
 //     CalcNumLevelArchers' bitNumber walk (end symbol 0x66cef8 =
 //     bitNumber + 44).
-enum type_building_id {
+// Before normalization (type): type_building_id.
+enum BuildingId {
     MAGE_GUILD_ID = 0,
     MAGE_GUILD2_ID = 1,
     MAGE_GUILD3_ID = 2,
@@ -388,9 +389,9 @@ public:
     // point-return local and 79.06 with this constructor expression, versus
     // the local clone's 98.75/100 peaks. Those measurements do not refute
     // the CodeView constructor call or justify a second helper definition.
-    type_point getLocation() const
+    MapPoint getLocation() const
     {
-        return type_point(m_mapX, m_mapY, m_mapZ);
+        return MapPoint(m_mapX, m_mapY, m_mapZ);
     }
     void calcNumLevelArchers(int* numArchers, int* archerLevel);
 
@@ -424,18 +425,18 @@ public:
     void changeGeneratorBonus(CreatureType creature, long change);
     // 0x5be930. Declared for update_shipyard's direct call; the body is
     // still outside the admitted surface.
-    type_building_id createBuilding(type_building_id building);
-    unsigned char buyBuilding(type_building_id building);
+    BuildingId createBuilding(BuildingId building);
+    unsigned char buyBuilding(BuildingId building);
     void destroyExtraCapitol();
-    void getBuildCost(type_building_id building, int* resources) const;
-    short getBuildCost(type_building_id building, GameResource* types,
+    void getBuildCost(BuildingId building, int* resources) const;
+    short getBuildCost(BuildingId building, GameResource* types,
                          int* amounts) const;
-    int* getBuildCostArray(type_building_id building) const;
+    int* getBuildCostArray(BuildingId building) const;
     __int64 getBuildableMask() const;
     // 0x5bfb60. Weekly base, castle, artifact, horde, generator, and Grail
     // growth for one dwelling slot.
     short getGrowthRate(short dwelling) const;
-    HordeEffect* getHordeEffect(type_building_id building) const;
+    HordeEffect* getHordeEffect(BuildingId building) const;
     int* getSiloIncome() const;
     // 0x5bfeb0 (dc 0x167c3c) and 0x5c0670 (dc 0x16842c), reconstructed
     // in the owning TU; gated so no other view of this class gains the
@@ -445,7 +446,7 @@ public:
     void increasePopulation(CreatureType bonusCreature,
                              CreatureType alternateBonus, long bonusAmount);
     void initialize(const TownExtra* townSetup);
-    unsigned char isLegalBuilding(type_building_id building) const;
+    unsigned char isLegalBuilding(BuildingId building) const;
     // Dreamcast's LF_FIELDLIST puts these immediately before update_shipyard,
     // in this order. BuildBuilding calls both, and retail inlines both into
     // that owner.
@@ -457,7 +458,7 @@ public:
     int hasGarrison();
     // 0x5bede0. DC signature; buy_building is the only claimed caller
     // and it pushes exactly these three.
-    type_building_id buildBuilding(int buildingId, unsigned char setBuiltFlag,
+    BuildingId buildBuilding(int buildingId, unsigned char setBuiltFlag,
                                    unsigned char applySpecialEffect);
     int load(AbstractFile* infile, int saveVersion);
     // 0x5bd2f0 (body in town.obj, not yet reconstructed). game::Save's
@@ -672,7 +673,7 @@ extern const signed char g_mageGuildBaseSpellCounts[5];
 // assigns a row entry back into its type_building_id argument, which
 // the enum element type carries without a cast, while every int reader
 // (get_horde's return, the bitNumber indexes) narrows implicitly.
-extern const type_building_id g_hordeBuildings[4];
+extern const BuildingId g_hordeBuildings[4];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\town.cpp:1760, dc 0x167a8c) void show_creature_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards);

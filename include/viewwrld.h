@@ -46,7 +46,7 @@ private:
     const Widget* m_rolloverWidget;
     FuncButton* m_surfaceButton;
     FuncButton* m_undergroundButton;
-    type_point m_origin;
+    MapPoint m_origin;
     int m_viewableWidth;
     int m_viewableHeight;
     // Complete's two level callbacks (0x5fbdf0 / 0x5fbec0) are free
@@ -63,7 +63,7 @@ private:
 public:
     ViewWorldWindow();
     virtual ~ViewWorldWindow();
-    void init(type_point newCenter, unsigned char updateFlag);
+    void init(MapPoint newCenter, unsigned char updateFlag);
     using CAdvPopup::drawWindow;
     void drawWindow();
     virtual int windowHandler(Message& msg);

@@ -120,7 +120,7 @@ ComplexNetMessage::ComplexNetMessage()
 }
 
 VA(0x00512c50, 0x27)  // anchor-vtable 0x640270; anchor-caller 0x4aeb50
-ComplexNetMessage::ComplexNetMessage(ERSMessages subType)
+ComplexNetMessage::ComplexNetMessage(RsMessages subType)
     : m_netmsg(subType, 0)
 {
 }

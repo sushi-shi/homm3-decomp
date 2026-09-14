@@ -72,7 +72,7 @@ DATA(0x006604d0) static double g_defenseEstimates[5] = {
 float valueOfExperience(const Hero* currentHero, const ArmyGroup& currentArmy);
 
 VA(0x00423c80, 0x79)  // dc 0x29978
-long type_monster_data::getEnchantmentValue(SpellChoice& choice, const Hero* castingHero, const Hero* targetHero) const
+long AiMonsterData::getEnchantmentValue(SpellChoice& choice, const Hero* castingHero, const Hero* targetHero) const
 {
     if (m_totalValue == 0)
         return 0;
@@ -93,7 +93,7 @@ long type_monster_data::getEnchantmentValue(SpellChoice& choice, const Hero* cas
 // total_hit_points*damage_modifier is taken BEFORE the update, the
 // per-creature delta is a 64-bit imul/__alldiv, and damage_modifier is
 // rewritten as the new total over that pre-image.
-inline void type_monster_data::castEnchantment(long spellValue, unsigned char increase)
+inline void AiMonsterData::castEnchantment(long spellValue, unsigned char increase)
 {
     double previous = m_totalValue * m_combatValuePerHit;
     // 64-bit local, not a long: retail spills the __alldiv result's
@@ -112,7 +112,7 @@ inline void type_monster_data::castEnchantment(long spellValue, unsigned char in
 }
 
 VA(0x00423d00, 0xDA)  // dc 0x29b94
-long type_monster_data::getResurrectionValue(SpellChoice& choice, const Hero* castingHero) const
+long AiMonsterData::getResurrectionValue(SpellChoice& choice, const Hero* castingHero) const
 {
     if (m_originalNumber <= m_number)
         return 0;
@@ -132,7 +132,7 @@ long type_monster_data::getResurrectionValue(SpellChoice& choice, const Hero* ca
 // Retail expands this helper at cast_spell's selected target and emits no
 // out-of-line row. The Dreamcast supplies the helper boundary/name; the
 // statements below are reconstructed from the retail expansion.
-inline void type_monster_data::castResurrection(
+inline void AiMonsterData::castResurrection(
     SpellChoice& choice,
     const Hero* castingHero)
 {
@@ -143,7 +143,7 @@ inline void type_monster_data::castResurrection(
 }
 
 VA(0x00423de0, 0xB1)  // dc 0x29ce0
-long type_monster_data::getSpellDamage(SpellID spell, const Hero* castingHero, const Hero* targetHero, long damage) const
+long AiMonsterData::getSpellDamage(SpellID spell, const Hero* castingHero, const Hero* targetHero, long damage) const
 {
     if (m_totalValue == 0)
         return 0;
@@ -160,7 +160,7 @@ long type_monster_data::getSpellDamage(SpellID spell, const Hero* castingHero, c
 }
 
 VA(0x00423ea0, 0x36)  // dc 0x29dec
-long type_monster_data::takeDamage(long damage)
+long AiMonsterData::takeDamage(long damage)
 {
     if (m_totalValue < damage) {
         damage = m_totalValue;
@@ -237,7 +237,7 @@ AICombatData::AICombatData(const Hero* newHero, const ArmyGroup* newArmy, double
 VA(0x00424120, 0x66E)  // dc-callgraph unique, dc 0x29f58
 void AICombatData::initializeCreatures(double baseModifier, const Hero* enemyHero)
 {
-    type_monster_data unit;
+    AiMonsterData unit;
     long speedBonus;
     double hitPoints;
     double forceModifier = baseModifier;
@@ -400,7 +400,7 @@ void AICombatData::adjustArmy(unsigned char dismissHero)
         return;
     }
     for (short i = static_cast<short>(m_creatures.size()); i-- > 0; ) {
-        type_monster_data unit = m_creatures[i];
+        AiMonsterData unit = m_creatures[i];
         if (unit.m_index < 0)
             continue;
         if (unit.m_number == 0)
@@ -654,7 +654,7 @@ void AICombatData::getEnchantmentValue(SpellChoice& choice, const Hero* castingH
 {
     unsigned char mass = !spellTargetsASingleArmy(choice.m_spell, choice.m_mastery);
     for (long i = m_creatures.size(); i-- > 0; ) {
-        const type_monster_data& monster = m_creatures[i];
+        const AiMonsterData& monster = m_creatures[i];
         long value = monster.getEnchantmentValue(choice, castingHero, m_currentHero);
         if (mass) {
             choice.m_value += value;
@@ -758,7 +758,7 @@ void AICombatData::getSummoningValue(SpellChoice& choice) const
     case SPELL_RESURRECTION:
     case SPELL_ANIMATE_DEAD:
         for (long i = m_creatures.size(); i-- > 0; ) {
-            const type_monster_data& monster = m_creatures[i];
+            const AiMonsterData& monster = m_creatures[i];
             long value = monster.getResurrectionValue(choice, m_currentHero);
             if (value > choice.m_value) {
                 choice.m_value = value;
@@ -1437,7 +1437,7 @@ float Hero::getAggression()
 
 // E:\gamedcs\ai_combat.h:62
 DC_ONLY(0x2c698, 0xA)
-unsigned char type_monster_data::operator<(const type_monster_data* arg)
+unsigned char AiMonsterData::operator<(const AiMonsterData* arg)
 {
     // @stub
 }
@@ -1458,9 +1458,9 @@ ArmyGroup* AICombatData::getArmy()
 
 #endif  // @carcass
 
-VA_COMPGEN(0x004276c0, 0x87, VECTOR_COPY_CTOR, type_monster_data)
+VA_COMPGEN(0x004276c0, 0x87, VECTOR_COPY_CTOR, AiMonsterData)
 
-VA_COMPGEN(0x00427750, 0x21, VECTOR_SIZE, type_monster_data)
+VA_COMPGEN(0x00427750, 0x21, VECTOR_SIZE, AiMonsterData)
 
 #if 0  // @carcass
 
@@ -1495,406 +1495,406 @@ void AICombatData::~AICombatData()
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x2c720, 0x4)
-type_monster_data* std::vector<type_monster_data,std::allocator<type_monster_data> >::begin()
+AiMonsterData* std::vector<AiMonsterData,std::allocator<AiMonsterData> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0x2c724, 0x4)
-type_monster_data* std::vector<type_monster_data,std::allocator<type_monster_data> >::end()
+AiMonsterData* std::vector<AiMonsterData,std::allocator<AiMonsterData> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x2c728, 0x20)
-unsigned std::vector<type_monster_data,std::allocator<type_monster_data> >::size()
+unsigned std::vector<AiMonsterData,std::allocator<AiMonsterData> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x2c748, 0x24)
-type_monster_data* std::vector<type_monster_data,std::allocator<type_monster_data> >::operator[](unsigned __n)
+AiMonsterData* std::vector<AiMonsterData,std::allocator<AiMonsterData> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:204
 DC_ONLY(0x2c76c, 0x24)
-const type_monster_data* std::vector<type_monster_data,std::allocator<type_monster_data> >::operator[](unsigned __n)
+const AiMonsterData* std::vector<AiMonsterData,std::allocator<AiMonsterData> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x2c790, 0x1C)
-void std::vector<type_monster_data,std::allocator<type_monster_data> >::vector<type_monster_data,std::allocator<type_monster_data> >(const std::allocator<type_monster_data>* __a)
+void std::vector<AiMonsterData,std::allocator<AiMonsterData> >::vector<AiMonsterData,std::allocator<AiMonsterData> >(const std::allocator<AiMonsterData>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:236
 DC_ONLY(0x2c7ac, 0x60)
-void std::vector<type_monster_data,std::allocator<type_monster_data> >::vector<type_monster_data,std::allocator<type_monster_data> >(const std::vector<type_monster_data,std::allocator<type_monster_data>* __x)
+void std::vector<AiMonsterData,std::allocator<AiMonsterData> >::vector<AiMonsterData,std::allocator<AiMonsterData> >(const std::vector<AiMonsterData,std::allocator<AiMonsterData>* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0x2c80c, 0x28)
-void std::vector<type_monster_data,std::allocator<type_monster_data> >::~vector<type_monster_data,std::allocator<type_monster_data> >()
+void std::vector<AiMonsterData,std::allocator<AiMonsterData> >::~vector<AiMonsterData,std::allocator<AiMonsterData> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x2c834, 0x3C)
-void std::vector<type_monster_data,std::allocator<type_monster_data> >::push_back(const type_monster_data* __x)
+void std::vector<AiMonsterData,std::allocator<AiMonsterData> >::push_back(const AiMonsterData* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x2c870, 0x4)
-void std::allocator<type_monster_data>::allocator<type_monster_data>()
+void std::allocator<AiMonsterData>::allocator<AiMonsterData>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x2c874, 0x4)
-void std::allocator<type_monster_data>::~allocator<type_monster_data>()
+void std::allocator<AiMonsterData>::~allocator<AiMonsterData>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:153
 DC_ONLY(0x2c878, 0x8)
-std::allocator<type_monster_data> std::vector<type_monster_data,std::allocator<type_monster_data> >::get_allocator(__$ReturnUdt)
+std::allocator<AiMonsterData> std::vector<AiMonsterData,std::allocator<AiMonsterData> >::get_allocator(__$ReturnUdt)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:180
 DC_ONLY(0x2c880, 0x4)
-const type_monster_data* std::vector<type_monster_data,std::allocator<type_monster_data> >::begin()
+const AiMonsterData* std::vector<AiMonsterData,std::allocator<AiMonsterData> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x2c884, 0x2C)
-void std::_Vector_base<type_monster_data,std::allocator<type_monster_data> >::_Vector_base<type_monster_data,std::allocator<type_monster_data> >(const std::allocator<type_monster_data>* __a)
+void std::_Vector_base<AiMonsterData,std::allocator<AiMonsterData> >::_Vector_base<AiMonsterData,std::allocator<AiMonsterData> >(const std::allocator<AiMonsterData>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:94
 DC_ONLY(0x2c8b0, 0x4C)
-void std::_Vector_base<type_monster_data,std::allocator<type_monster_data> >::_Vector_base<type_monster_data,std::allocator<type_monster_data> >(unsigned __n, const std::allocator<type_monster_data>* __a)
+void std::_Vector_base<AiMonsterData,std::allocator<AiMonsterData> >::_Vector_base<AiMonsterData,std::allocator<AiMonsterData> >(unsigned __n, const std::allocator<AiMonsterData>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0x2c8fc, 0x40)
-void std::_Vector_base<type_monster_data,std::allocator<type_monster_data> >::~_Vector_base<type_monster_data,std::allocator<type_monster_data> >()
+void std::_Vector_base<AiMonsterData,std::allocator<AiMonsterData> >::~_Vector_base<AiMonsterData,std::allocator<AiMonsterData> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:101
 DC_ONLY(0x2c93c, 0x18)
-void std::_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >::~_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >()
+void std::_STL_alloc_proxy<AiMonsterData *,AiMonsterData,std::allocator<AiMonsterData> >::~_STL_alloc_proxy<AiMonsterData *,AiMonsterData,std::allocator<AiMonsterData> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x2c954, 0xC)
-void std::_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >::_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >(const std::allocator<type_monster_data>* __a, type_monster_data** __p)
+void std::_STL_alloc_proxy<AiMonsterData *,AiMonsterData,std::allocator<AiMonsterData> >::_STL_alloc_proxy<AiMonsterData *,AiMonsterData,std::allocator<AiMonsterData> >(const std::allocator<AiMonsterData>* __a, AiMonsterData** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x2c960, 0x28)
-type_monster_data* std::_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >::allocate(unsigned __n)
+AiMonsterData* std::_STL_alloc_proxy<AiMonsterData *,AiMonsterData,std::allocator<AiMonsterData> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x2c988, 0x2C)
-void std::_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >::deallocate(type_monster_data* __p, unsigned __n)
+void std::_STL_alloc_proxy<AiMonsterData *,AiMonsterData,std::allocator<AiMonsterData> >::deallocate(AiMonsterData* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x2c9b4, 0x28)
-type_monster_data* std::allocator<type_monster_data>::allocate(unsigned __n, const void* __formal)
+AiMonsterData* std::allocator<AiMonsterData>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x2c9dc, 0x20)
-void std::allocator<type_monster_data>::deallocate(type_monster_data* __p, unsigned __n)
+void std::allocator<AiMonsterData>::deallocate(AiMonsterData* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x2c9fc, 0xDC)
-void std::vector<type_monster_data,std::allocator<type_monster_data> >::_M_insert_overflow(type_monster_data* __position, const type_monster_data* __x, unsigned __fill_len)
+void std::vector<AiMonsterData,std::allocator<AiMonsterData> >::_M_insert_overflow(AiMonsterData* __position, const AiMonsterData* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.h:624
 DC_ONLY(0x2cad8, 0x64)
-void std::sort(type_monster_data* __first, type_monster_data* __last)
+void std::sort(AiMonsterData* __first, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x2cb3c, 0x38)
-type_monster_data* std::uninitialized_copy(const type_monster_data* __first, const type_monster_data* __last, type_monster_data* __result)
+AiMonsterData* std::uninitialized_copy(const AiMonsterData* __first, const AiMonsterData* __last, AiMonsterData* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x2cb74, 0x30)
-void std::destroy(type_monster_data* __first, type_monster_data* __last)
+void std::destroy(AiMonsterData* __first, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x2cba4, 0x44)
-void std::construct(type_monster_data* __p, const type_monster_data* __value)
+void std::construct(AiMonsterData* __p, const AiMonsterData* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x2cbe8, 0x4)
-std::allocator<type_monster_data>* std::__stl_alloc_rebind(std::allocator<type_monster_data>* __a, const type_monster_data* __formal)
+std::allocator<AiMonsterData>* std::__stl_alloc_rebind(std::allocator<AiMonsterData>* __a, const AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x2cbec, 0x38)
-type_monster_data* std::uninitialized_copy(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result)
+AiMonsterData* std::uninitialized_copy(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x2cc24, 0x38)
-type_monster_data* std::uninitialized_fill_n(type_monster_data* __first, unsigned __n, const type_monster_data* __x)
+AiMonsterData* std::uninitialized_fill_n(AiMonsterData* __first, unsigned __n, const AiMonsterData* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x2cc5c, 0x4)
-type_monster_data* std::value_type(const type_monster_data* __formal)
+AiMonsterData* std::value_type(const AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1081
 DC_ONLY(0x2cc60, 0xF4)
-void std::__introsort_loop(type_monster_data* __first, type_monster_data* __last, type_monster_data* __formal, int __depth_limit)
+void std::__introsort_loop(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __formal, int __depth_limit)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1057
 DC_ONLY(0x2cd54, 0x5C)
-void std::__final_insertion_sort(type_monster_data* __first, type_monster_data* __last)
+void std::__final_insertion_sort(AiMonsterData* __first, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x2cdb0, 0x1C)
-type_monster_data* std::__uninitialized_copy(const type_monster_data* __first, const type_monster_data* __last, type_monster_data* __result, type_monster_data* __formal)
+AiMonsterData* std::__uninitialized_copy(const AiMonsterData* __first, const AiMonsterData* __last, AiMonsterData* __result, AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x2cdcc, 0x1C)
-void std::__destroy(type_monster_data* __first, type_monster_data* __last, type_monster_data* __formal)
+void std::__destroy(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x2cde8, 0x1C)
-type_monster_data* std::__uninitialized_copy(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result, type_monster_data* __formal)
+AiMonsterData* std::__uninitialized_copy(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __result, AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x2ce04, 0x1C)
-type_monster_data* std::__uninitialized_fill_n(type_monster_data* __first, unsigned __n, const type_monster_data* __x, type_monster_data* __formal)
+AiMonsterData* std::__uninitialized_fill_n(AiMonsterData* __first, unsigned __n, const AiMonsterData* __x, AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.h:664
 DC_ONLY(0x2ce20, 0x38)
-void std::partial_sort(type_monster_data* __first, type_monster_data* __middle, type_monster_data* __last)
+void std::partial_sort(AiMonsterData* __first, AiMonsterData* __middle, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:44
 DC_ONLY(0x2ce58, 0x68)
-const type_monster_data* std::__median(const type_monster_data* __a, const type_monster_data* __b, const type_monster_data* __c)
+const AiMonsterData* std::__median(const AiMonsterData* __a, const AiMonsterData* __b, const AiMonsterData* __c)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:923
 DC_ONLY(0x2cec0, 0x6C)
-type_monster_data* std::__unguarded_partition(type_monster_data* __first, type_monster_data* __last, type_monster_data __pivot)
+AiMonsterData* std::__unguarded_partition(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData __pivot)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1012
 DC_ONLY(0x2cf2c, 0x68)
-void std::__insertion_sort(type_monster_data* __first, type_monster_data* __last)
+void std::__insertion_sort(AiMonsterData* __first, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1035
 DC_ONLY(0x2cf94, 0x30)
-void std::__unguarded_insertion_sort(type_monster_data* __first, type_monster_data* __last)
+void std::__unguarded_insertion_sort(AiMonsterData* __first, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x2cfc4, 0x3C)
-type_monster_data* std::__uninitialized_copy_aux(const type_monster_data* __first, const type_monster_data* __last, type_monster_data* __result, __false_type __formal)
+AiMonsterData* std::__uninitialized_copy_aux(const AiMonsterData* __first, const AiMonsterData* __last, AiMonsterData* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x2d000, 0x30)
-void std::__destroy_aux(type_monster_data* __first, type_monster_data* __last, __false_type __formal)
+void std::__destroy_aux(AiMonsterData* __first, AiMonsterData* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x2d030, 0x3C)
-type_monster_data* std::__uninitialized_copy_aux(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result, __false_type __formal)
+AiMonsterData* std::__uninitialized_copy_aux(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x2d06c, 0x3C)
-type_monster_data* std::__uninitialized_fill_n_aux(type_monster_data* __first, unsigned __n, const type_monster_data* __x, __false_type __formal)
+AiMonsterData* std::__uninitialized_fill_n_aux(AiMonsterData* __first, unsigned __n, const AiMonsterData* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1432
 DC_ONLY(0x2d0a8, 0xF4)
-void std::__partial_sort(type_monster_data* __first, type_monster_data* __middle, type_monster_data* __last, type_monster_data* __formal)
+void std::__partial_sort(AiMonsterData* __first, AiMonsterData* __middle, AiMonsterData* __last, AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:107
 DC_ONLY(0x2d19c, 0x30)
-void std::iter_swap(type_monster_data* __a, type_monster_data* __b)
+void std::iter_swap(AiMonsterData* __a, AiMonsterData* __b)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:987
 DC_ONLY(0x2d1cc, 0xAC)
-void std::__linear_insert(type_monster_data* __first, type_monster_data* __last, type_monster_data __val)
+void std::__linear_insert(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData __val)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1028
 DC_ONLY(0x2d278, 0x98)
-void std::__unguarded_insertion_sort_aux(type_monster_data* __first, type_monster_data* __last, type_monster_data* __formal)
+void std::__unguarded_insertion_sort_aux(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x2d310, 0x1C)
-void std::destroy(type_monster_data* __pointer)
+void std::destroy(AiMonsterData* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:207
 DC_ONLY(0x2d32c, 0x40)
-void std::make_heap(type_monster_data* __first, type_monster_data* __last)
+void std::make_heap(AiMonsterData* __first, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0x2d36c, 0x4)
-int* std::distance_type(const type_monster_data* __formal)
+int* std::distance_type(const AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.h:64
 DC_ONLY(0x2d370, 0x88)
-void std::__pop_heap(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result, type_monster_data __value, int* __formal)
+void std::__pop_heap(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __result, AiMonsterData __value, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.h:108
 DC_ONLY(0x2d3f8, 0x3C)
-void std::sort_heap(type_monster_data* __first, type_monster_data* __last)
+void std::sort_heap(AiMonsterData* __first, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:96
 DC_ONLY(0x2d434, 0x18)
-void std::__iter_swap(type_monster_data* __a, type_monster_data* __b, type_monster_data* __formal)
+void std::__iter_swap(AiMonsterData* __a, AiMonsterData* __b, AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0x2d44c, 0x50)
-type_monster_data* std::copy_backward(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result)
+AiMonsterData* std::copy_backward(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:960
 DC_ONLY(0x2d49c, 0x84)
-void std::__unguarded_linear_insert(type_monster_data* __last, type_monster_data __val)
+void std::__unguarded_linear_insert(AiMonsterData* __last, AiMonsterData __val)
 {
     // @stub
 }
@@ -1908,56 +1908,56 @@ void std::__destroy_aux()
 
 // ..\stlport\stl_heap.c:192
 DC_ONLY(0x2d524, 0xC8)
-void std::__make_heap(type_monster_data* __first, type_monster_data* __last, type_monster_data* __formal, int* __formal)
+void std::__make_heap(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:112
 DC_ONLY(0x2d5ec, 0x110)
-void std::__adjust_heap(type_monster_data* __first, int __holeIndex, int __len, type_monster_data __value)
+void std::__adjust_heap(AiMonsterData* __first, int __holeIndex, int __len, AiMonsterData __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:142
 DC_ONLY(0x2d6fc, 0x30)
-void std::pop_heap(type_monster_data* __first, type_monster_data* __last)
+void std::pop_heap(AiMonsterData* __first, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:79
 DC_ONLY(0x2d72c, 0x82)
-void std::swap(type_monster_data* __a, type_monster_data* __b)
+void std::swap(AiMonsterData* __a, AiMonsterData* __b)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0x2d7b0, 0xC)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const type_monster_data* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0x2d7bc, 0x68)
-type_monster_data* std::__copy_backward(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result, std::random_access_iterator_tag __formal, int* __formal)
+AiMonsterData* std::__copy_backward(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:44
 DC_ONLY(0x2d824, 0xC0)
-void std::__push_heap(type_monster_data* __first, int __holeIndex, int __topIndex, type_monster_data __value)
+void std::__push_heap(AiMonsterData* __first, int __holeIndex, int __topIndex, AiMonsterData __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:134
 DC_ONLY(0x2d8e4, 0x98)
-void std::__pop_heap_aux(type_monster_data* __first, type_monster_data* __last, type_monster_data* __formal)
+void std::__pop_heap_aux(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __formal)
 {
     // @stub
 }
@@ -1968,10 +1968,10 @@ void std::__pop_heap_aux(type_monster_data* __first, type_monster_data* __last, 
 // three-argument vector::insert specialization in ai_combat.obj. Byte-
 // verified against the emitted COMDAT at 0.987 mnemonic agreement over 740
 // bytes - the largest single row the COMDAT pass recovered.
-VA_COMPGEN(0x00427780, 0x2E4, VECTOR_INSERT, type_monster_data)
+VA_COMPGEN(0x00427780, 0x2E4, VECTOR_INSERT, AiMonsterData)
 
 // COMDAT pairing: std::_Sort<type_monster_data>, agreement 0.983.
-VA_COMPGEN(0x00427a90, 0x19B, STD_SORT, type_monster_data)
+VA_COMPGEN(0x00427a90, 0x19B, STD_SORT, AiMonsterData)
 
 // COMDAT pairing: std::_Unguarded_partition<type_monster_data>, 0.913.
-VA_COMPGEN(0x00427c30, 0x64, STD_UNGUARDED_PARTITION, type_monster_data)
+VA_COMPGEN(0x00427c30, 0x64, STD_UNGUARDED_PARTITION, AiMonsterData)

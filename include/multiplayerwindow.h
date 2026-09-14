@@ -74,13 +74,13 @@ class CSprite;
 class CHeroSessions : public CAutoArray<CDPlaySession> {
 public:
 // Before normalization (type): CHeroSessions::eSessionStatus.
-    enum ESessionStatus {
+    enum SessionStatus {
         closed,
         open,
         password
     };
     bool getSessionInfo(unsigned long index, char* sessName, char* userName,
-                        int& numPlayers, ESessionStatus& status);
+                        int& numPlayers, SessionStatus& status);
 };
 SIZE(CHeroSessions, 0x14);
 
@@ -136,7 +136,7 @@ public:
 
     MultiPlayerWindow();
     virtual ~MultiPlayerWindow();
-    unsigned char initRemote(ENetGameType netGameType, const char* extra,
+    unsigned char initRemote(NetGameType netGameType, const char* extra,
                              _DPCOMPORTADDRESS* comportInfo);
     unsigned char joinSession(CDPlaySession* session, const char* password);
     unsigned char hostSession(const char* sessName, const char* password);

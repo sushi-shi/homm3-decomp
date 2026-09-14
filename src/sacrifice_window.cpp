@@ -77,7 +77,7 @@ static const long g_constCreatureOfferings[2][2] = {
 
 // E:\gamedcs\sacrifice_window.cpp:125
 DC_ONLY(0x123e8c, 0x7C)
-void ArtifactOffering::set(const type_artifact* arg, ArtifactSlot slot, const Hero* this_hero)
+void ArtifactOffering::set(const ArtifactRecord* arg, ArtifactSlot slot, const Hero* this_hero)
 {
     // @stub
 }
@@ -189,7 +189,7 @@ void SacrificeWindow::updateExperience()
 
 // E:\gamedcs\sacrifice_window.cpp:800
 DC_ONLY(0x125a4c, 0x5E)
-void updateArtifactWidget(IconWidget* slot_widget, type_artifact artifact)
+void updateArtifactWidget(IconWidget* slot_widget, ArtifactRecord artifact)
 {
     // @stub
 }
@@ -245,7 +245,7 @@ void SacrificeWindow::setCreatureMode()
 
 // E:\gamedcs\sacrifice_window.cpp:1036
 DC_ONLY(0x1261e4, 0x70)
-void SacrificeWindow::pickUpArtifact(type_artifact artifact, ArtifactSlot slot, unsigned char new_artifact)
+void SacrificeWindow::pickUpArtifact(ArtifactRecord artifact, ArtifactSlot slot, unsigned char new_artifact)
 {
     // @stub
 }
@@ -308,7 +308,7 @@ int SacrificeWindow::scrollBackpackRight(Message* msg)
 
 // E:\gamedcs\sacrifice_window.cpp:1289
 DC_ONLY(0x12681c, 0x88)
-unsigned char SacrificeWindow::addArtifact(type_artifact artifact, ArtifactSlot source)
+unsigned char SacrificeWindow::addArtifact(ArtifactRecord artifact, ArtifactSlot source)
 {
     // @stub
 }
@@ -1543,7 +1543,7 @@ void std::__destroy_aux()
 #endif  // @carcass
 
 VA(0x0055fc30, 0xab)  // dc 0x123e8c
-void ArtifactOffering::set(const type_artifact* artifact, long slot,
+void ArtifactOffering::set(const ArtifactRecord* artifact, long slot,
                                  const Hero* owner)
 {
     long artifactClass =
@@ -2147,7 +2147,7 @@ void SacrificeWindow::updateExperience()
 VA(0x00562660, 0x1d5)  // dc 0x1258ac
 std::string convertWithCommas(long value);
 
-void updateArtifactWidget(IconWidget* slotWidget, type_artifact artifact)
+void updateArtifactWidget(IconWidget* slotWidget, ArtifactRecord artifact)
 {
     if (artifact.m_artifactId == ARTIFACT_NONE) {
         slotWidget->setVisible(0);
@@ -2165,7 +2165,7 @@ void SacrificeWindow::updateSlot(long slot)
 {
     ArtifactSlot artifactSlot;
     memcpy(&artifactSlot, &slot, sizeof artifactSlot);
-    type_artifact artifact = m_currentHero->getArtifact(artifactSlot);
+    ArtifactRecord artifact = m_currentHero->getArtifact(artifactSlot);
 
     if (m_holdingArtifact.m_artifactId != ARTIFACT_NONE
         && m_currentHero->heroFn004E2840(
@@ -2238,7 +2238,7 @@ VA(0x00562c70, 0x124)  // dc 0x125aac
 void updateOffering(IconWidget* artifactWidget, TextWidget* valueWidget,
                      const ArtifactOffering* offering)
 {
-    type_artifact artifact = *offering;
+    ArtifactRecord artifact = *offering;
     if (artifact.m_artifactId == -1) {
         artifactWidget->sendMessage(Widget::WIDGET_CLEAR_STATUS,
                                       Widget::WIDGET_DRAWN);
@@ -2398,7 +2398,7 @@ void SacrificeWindow::setCreatureMode()
 // source order and argument ABI; the Complete mouse-pointer and refresh call
 // graph independently proves the body.
 void SacrificeWindow::pickUpArtifact(
-    type_artifact artifact, long slot, unsigned char newArtifact)
+    ArtifactRecord artifact, long slot, unsigned char newArtifact)
 {
     m_holdingArtifact.set(&artifact, slot, m_currentHero);
     if (newArtifact) {
@@ -2436,7 +2436,7 @@ VA(0x005632a0, 0x417)  // dc 0x1262e4
 void SacrificeWindow::artifactClick(
     long slot, unsigned char rightClick)
 {
-    type_artifact oldArtifact = m_currentHero->getArtifact(ArtifactSlot(slot));
+    ArtifactRecord oldArtifact = m_currentHero->getArtifact(ArtifactSlot(slot));
 
     if (m_holdingArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId == ARTIFACT_NONE)
@@ -2507,7 +2507,7 @@ VA(0x005636c0, 0x31a)  // widget call edge + dc name/order, dc 0x1264dc
 void SacrificeWindow::backpackClick(
     long slot, unsigned char rightClick)
 {
-    type_artifact oldArtifact = m_currentHero->getBackpack(slot);
+    ArtifactRecord oldArtifact = m_currentHero->getBackpack(slot);
 
     if (m_holdingArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
@@ -2536,7 +2536,7 @@ void SacrificeWindow::backpackClick(
 }
 
 VA(0x005639e0, 0x5b)  // dc 0x125a4c
-void updateArtifactWidget(IconWidget* slotWidget, type_artifact artifact);
+void updateArtifactWidget(IconWidget* slotWidget, ArtifactRecord artifact);
 
 VA(0x00563a40, 0x31)  // dc 0x1265b8
 void SacrificeWindow::updateArtifactOffering(long slot)
@@ -2626,7 +2626,7 @@ int SacrificeWindow::scrollBackpackRight(Message& msg)
 // the first empty offering, adds that record's scaled value, and refreshes
 // the corresponding pair of offering widgets.
 unsigned char SacrificeWindow::addArtifact(
-    type_artifact artifact, long source)
+    ArtifactRecord artifact, long source)
 {
     unsigned long i;
     for (i = 0; i < m_artifactOfferings.size(); ++i) {
@@ -2647,7 +2647,7 @@ unsigned char SacrificeWindow::addArtifact(
 // backpack for its next occupied slot and stops if the offering pane fills.
 void SacrificeWindow::emptyBackpack()
 {
-    type_artifact artifact;
+    ArtifactRecord artifact;
     while (m_currentHero->getNumberInBackpack(1) > 0) {
         long i;
         for (i = 0; i < SACRIFICE_BACKPACK_ARTIFACT_COUNT; ++i) {
@@ -2715,7 +2715,7 @@ int SacrificeWindow::allArtifacts(Message& msg)
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         SacrificeWindow* window =
             static_cast<SacrificeWindow*>(msg.m_window);
-        type_artifact artifact;
+        ArtifactRecord artifact;
         for (long slot = 0; slot < SACRIFICE_EQUIPPED_SLOT_COUNT; ++slot) {
             artifact = window->m_currentHero->getArtifact(ArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE) {

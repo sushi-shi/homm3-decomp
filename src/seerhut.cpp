@@ -1145,7 +1145,7 @@ int ArtifactQuest::getAIValue(int player)
     int total = 0;
 
     for (unsigned i = 0; i < m_artifacts.size(); ++i) {
-        type_artifact wanted(m_artifacts[i]);
+        ArtifactRecord wanted(m_artifacts[i]);
 
         total += aiGetValueOfArtifact(wanted, player);
     }
@@ -2015,7 +2015,7 @@ QuestGuard::QuestGuard()
 
 VA(0x00572b60, 0x1FE)
 void QuestGuard::doEvent(Hero* currentHero, bool humanPlayer,
-                          NewmapCell* eventCell, type_point point)
+                          NewmapCell* eventCell, MapPoint point)
 {
     if (!m_quest)
         return;
@@ -2461,7 +2461,7 @@ int SeerReward::getValue(const Hero* currentHero)
         Artifact artifact;
         memcpy(&artifact, &m_value.m_dwords[0], sizeof artifact);
         return aiGetValueOfArtifact(
-            type_artifact(artifact), currentHero->m_owner);
+            ArtifactRecord(artifact), currentHero->m_owner);
     }
 
     case eRewardSpell:
@@ -2536,7 +2536,7 @@ void SeerReward::giveReward(Hero* currentHero, bool humanPlayer)
 
     case eRewardArtifact:
         if (currentHero->getNumberInBackpack(1) < 64) {
-            type_artifact artifact(ARTIFACT_NONE);
+            ArtifactRecord artifact(ARTIFACT_NONE);
             {
                 artifact.m_artifactId = Artifact(m_value.m_dwords[0]);
             }

@@ -187,7 +187,7 @@ DATA(0x0068a340) static const char* const g_boatDefNames[9] = {
 DATA(0x00642e90) static const int g_blacksmithMachines[9] = {
     146, 147, 148, 148, 147, 146, 148, 147, 146
 };
-DATA(0x006aa9f8) type_artifact g_blacksmithArtifacts[9];
+DATA(0x006aa9f8) ArtifactRecord g_blacksmithArtifacts[9];
 
 void setWinText(HeroWindow* win, int which);
 
@@ -3061,7 +3061,7 @@ void TownManager::handleMageGuildClick()
                      -1, 0, -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE)
             return;
-        type_artifact spellbook(ARTIFACT_SPELLBOOK);
+        ArtifactRecord spellbook(ARTIFACT_SPELLBOOK);
         currentHero->giveArtifact(&spellbook, 1, 1);
         g_currentPlayer->m_resources[GOLD] -= 500;
     }
@@ -3704,7 +3704,7 @@ BlacksmithWindow::~BlacksmithWindow()
 VA(0x005d1aa0, 0xB3)  // dc 0x173a88
 void BlacksmithWindow::setRightClickText(int id)
 {
-    type_artifact machine = g_blacksmithArtifacts[m_townType];
+    ArtifactRecord machine = g_blacksmithArtifacts[m_townType];
     normalDialog(machine.getDescription().c_str(), 4, -1, 28,
                  -1, 0, -1, 0, -1, 0, -1, 0);
 }
@@ -5526,7 +5526,7 @@ int TownManager::buyBuild(int buildingId, int infoOnly, int quickView)
     int i;
 
     int numResources = m_townToView->getBuildCost(
-        (type_building_id)buildingId, types, amounts);
+        (BuildingId)buildingId, types, amounts);
 
     BuyBuildWindow* window = new BuyBuildWindow(0xca, 0x28, buildingId);
     if (window == 0)
@@ -5747,7 +5747,7 @@ void TownManager::buildObj(int buildingId)
     }
     g_windowManager->updateScreen(0, 0, 800, 374);
 
-    type_building_id newBuilding = m_townToView->buildBuilding(buildingId, 1, 1);
+    BuildingId newBuilding = m_townToView->buildBuilding(buildingId, 1, 1);
 
     for (int j = 0; j < m_townObjectCount; j++) {
         if (m_townToView->m_built & g_bitNumber[m_townObjects[j]->m_objId]) {
@@ -5895,7 +5895,7 @@ void TownManager::setupMage(HeroWindow* mageWin)
             {
                 int storage;
                 storage = level;
-                if (!m_townToView->isLegalBuilding(type_building_id(storage)))
+                if (!m_townToView->isLegalBuilding(BuildingId(storage)))
                     state = 0;
             }
             if (slot < m_townToView->m_mageGuildSpellCounts[level])
@@ -6667,7 +6667,7 @@ void BuyBuildWindow::BuyBuildWindow(int x2, int y2, int Id)
 
 // E:\gamedcs\townmgr.cpp:7272
 DC_ONLY(0x179090, 0x324)
-void BuyBuildWindow::setPrerequisiteText(const Town* current_town, type_building_id buildingId)
+void BuyBuildWindow::setPrerequisiteText(const Town* current_town, BuildingId buildingId)
 {
     // @stub
 }
@@ -6799,7 +6799,7 @@ unsigned char doTavern()
 #endif  // @carcass
 
 VA(0x005d7e90, 0x30)  // dc 0x17b0e8
-void doMapTavern(type_point point)
+void doMapTavern(MapPoint point)
 {
     g_mapTavern = 1;
     if (doTavern())

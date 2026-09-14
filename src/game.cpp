@@ -96,7 +96,7 @@
 #include <io.h>
 #include <sys/stat.h>
 
-type_point aiAttemptPuzzleGuess(long player);
+MapPoint aiAttemptPuzzleGuess(long player);
 
 // Retail/HD evidence names the hourglass animation phase; NextPlayer is its
 // game.obj writer. The second dword is the byte-proven autosave preference
@@ -371,7 +371,7 @@ void HeroExtra::heroExtraFn004B8450(int heroId)
     m_owner = -1;
     m_id = heroId;
     m_objRef = 0;
-    m_location = type_point(-1, -1, -1);
+    m_location = MapPoint(-1, -1, -1);
     m_patrolRadius = -1;
     m_hasCustomName = 0;
     m_customExperience = 0;
@@ -1753,7 +1753,7 @@ char* PlayerData::getName()
 VA(0x004bae50, 0x1B)  // dc 0xa6230
 void PlayerData::guessGrailLocation(long playerId)
 {
-    type_point guess = aiAttemptPuzzleGuess(playerId);
+    MapPoint guess = aiAttemptPuzzleGuess(playerId);
     m_puzzleGuess = guess;
 }
 
@@ -1894,7 +1894,7 @@ int Game::createBoat(int x, int y, int z, int owner, unsigned char isRemoteMove,
 
     Boat& thisBoat = m_boats[id];
     if (!isRemoteMove) {
-        type_point location(x, y, z);
+        MapPoint location(x, y, z);
         CMCBuildBoat change(location, g_netLocalGamePos);
         sendMapChange(&change);
         recordShowBoat(&thisBoat, location);
@@ -2123,7 +2123,7 @@ int Game::getTownId(int x, int y, int z)
 
 // E:\gamedcs\game.cpp:2390
 DC_ONLY(0xa707c, 0x90)
-int Game::GetHeroId(type_point hero_location)
+int Game::GetHeroId(MapPoint hero_location)
 {
     // @stub
 }
@@ -2306,7 +2306,7 @@ void Game::setupShipyards()
         m_players[i].m_shipyards.clear();
     }
 
-    type_point location;
+    MapPoint location;
     for (location.m_z = 0;
          location.m_z < g_game->m_worldMap.getNumLevels();
          ++location.m_z) {
@@ -2328,9 +2328,9 @@ void Game::setupShipyards()
                         static_cast<void*>(&mapCell->m_extraInfo));
                 if (mapCell->m_type == SHIPYARD && mapCell->m_isTrigger &&
                     shipyardInfo->m_owner >= 0) {
-                    std::vector<type_point>& shipyards =
+                    std::vector<MapPoint>& shipyards =
                         m_players[shipyardInfo->m_owner].m_shipyards;
-                    type_point* shipyardEnd = shipyards.end();
+                    MapPoint* shipyardEnd = shipyards.end();
 #pragma inline_depth(0)
                     shipyards.insert(shipyardEnd, 1, location);
 #pragma inline_depth()
@@ -3784,12 +3784,12 @@ void Game::validateVictoryLossConditions(unsigned char checkMapLocations)
     VictoryConditionStruct& victory = m_mapHeader.m_victoryCondition;
     if (victoryType == VICTORY_CONDITION_DEFEAT_HERO) {
         int* victoryHeroLocation = &victory.m_heroX;
-        type_point vcheroLoc(victoryHeroLocation[0],
+        MapPoint vcheroLoc(victoryHeroLocation[0],
                               victoryHeroLocation[1],
                               victoryHeroLocation[2]);
         victory.m_heroId = -1;
         for (int i = 0; i < HERO_COUNT; ++i) {
-            type_point poolheroLoc(m_heroes[i].m_x, m_heroes[i].m_y, m_heroes[i].m_z);
+            MapPoint poolheroLoc(m_heroes[i].m_x, m_heroes[i].m_y, m_heroes[i].m_z);
             if (vcheroLoc.operator==(poolheroLoc)) {
                 int team = m_heroes[i].m_owner;
                 if (team >= 0)
@@ -3832,10 +3832,10 @@ void Game::validateVictoryLossConditions(unsigned char checkMapLocations)
 
     LossConditionStruct& loss = m_mapHeader.m_lossCondition;
     if (loss.m_type == LOSS_CONDITION_LOSE_HERO) {
-        type_point lcheroLoc(loss.m_heroX, loss.m_heroY, loss.m_heroZ);
+        MapPoint lcheroLoc(loss.m_heroX, loss.m_heroY, loss.m_heroZ);
         loss.m_heroId = -1;
         for (int i = 0; i < HERO_COUNT; ++i) {
-            type_point poolheroLoc(m_heroes[i].m_x, m_heroes[i].m_y, m_heroes[i].m_z);
+            MapPoint poolheroLoc(m_heroes[i].m_x, m_heroes[i].m_y, m_heroes[i].m_z);
             if (lcheroLoc.operator==(poolheroLoc)) {
                 int numHumanTeams = 0;
                 for (int team = 0; team < 8; ++team) {
@@ -4002,7 +4002,7 @@ void Game::newMap(AbstractFile* mapFile, int* playerHeroFaces,
             != -1)
             campaignHero->removeArtifact(Hero::EQUIPPED_SLOT_SPELLBOOK);
         if (m_campaign.m_currentMap == GAME_SCENARIO_2) {
-            type_artifact alliance(ARTIFACT_ANGELIC_ALLIANCE);
+            ArtifactRecord alliance(ARTIFACT_ANGELIC_ALLIANCE);
             campaignHero->giveArtifact(&alliance, 0, 0);
         }
     }
@@ -4048,7 +4048,7 @@ void Game::newMap(AbstractFile* mapFile, int* playerHeroFaces,
                     heroId = m_players[setupPlayer].m_heroes[0];
                 Hero* bonusHero = getHero(heroId);
                 if (bonusHero != NULL) {
-                    type_artifact artifact(getRandomArtifactId(2));
+                    ArtifactRecord artifact(getRandomArtifactId(2));
                     bonusHero->giveArtifact(&artifact, 1, 1);
                 }
                 break;
@@ -4536,10 +4536,10 @@ VA(0x004c0b60, 0x160)  // dc-order + NewMap caller, dc 0xac63c
 void Game::matchUndergroundGates()
 {
     long distance;
-    type_point currentGate;
+    MapPoint currentGate;
     long i;
     long j;
-    type_point exitPoint;
+    MapPoint exitPoint;
     long bestDistance = 0;
     long closest;
 
@@ -4874,7 +4874,7 @@ void Game::randomizeEvents()
                         id = tempCell->m_extraInfo;
                         Garrison* g = &m_garrisons[id];
                         int newOwner = g->m_playerOwner;
-                        type_point location(g->m_mapX, g->m_mapY, g->m_mapZ);
+                        MapPoint location(g->m_mapX, g->m_mapY, g->m_mapZ);
 #pragma inline_depth(0)
                         CMCClaimGarrison change(id, newOwner);
 #pragma inline_depth()
@@ -4916,10 +4916,10 @@ void Game::randomizeEvents()
 
                 case LITH_ONEWAY_EXIT:
                     {
-                        std::vector<type_point>* pool =
+                        std::vector<MapPoint>* pool =
                             &m_lithExitPools[tempCell->m_objectIndex];
                         tempCell->m_extraInfo = pool->size();
-                        type_point point(x, y, z);
+                        MapPoint point(x, y, z);
                         pool->push_back(point);
                     }
                     break;
@@ -4927,7 +4927,7 @@ void Game::randomizeEvents()
                 case UNDERGROUND_GATE:
                     {
                         tempCell->m_extraInfo = m_undergroundGateExits.size();
-                        type_point point(x, y, z);
+                        MapPoint point(x, y, z);
                         m_undergroundGateExits.push_back(point);
                         m_undergroundGatePairs.push_back(-1);
                     }
@@ -4935,10 +4935,10 @@ void Game::randomizeEvents()
 
                 case LITH_TWOWAY:
                     {
-                        std::vector<type_point>* pool =
+                        std::vector<MapPoint>* pool =
                             &m_lithPools[tempCell->m_objectIndex];
                         tempCell->m_extraInfo = pool->size();
-                        type_point point(x, y, z);
+                        MapPoint point(x, y, z);
                         pool->push_back(point);
                     }
                     break;
@@ -5061,7 +5061,7 @@ void Game::randomizeEvents()
                         if (oldOwner != -1) {
                             tempCell->m_extraInfo =
                                 (tempCell->m_extraInfo & 0xffffff00) | 0xff;
-                            type_point location(x, y, z);
+                            MapPoint location(x, y, z);
                             claimShipyard(location, oldOwner);
                         }
                     }
@@ -5132,8 +5132,8 @@ void Game::randomizeEvents()
                             x + xOffset - 2, y + yOffset - 1, z)->m_extraInfo;
                     }
                     {
-                        type_point point(x, y, z);
-                        type_point* whirlpoolEnd = m_whirlpools.end();
+                        MapPoint point(x, y, z);
+                        MapPoint* whirlpoolEnd = m_whirlpools.end();
 #pragma inline_depth(0)
                         m_whirlpools.insert(whirlpoolEnd, 1, point);
 #pragma inline_depth()
@@ -5459,7 +5459,7 @@ void Game::readMapHeroSetups(AbstractFile* mapFile, int mapVersion)
                 mapFile->read(&artifact, sizeof(artifact));
                 heroRecord->m_artifacts[equipped] =
                     // Complete map input stores a signed 16-bit artifact ordinal; the in-memory record retains DC's TArtifact constructor.
-                    type_artifact(static_cast<Artifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+                    ArtifactRecord(static_cast<Artifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             }
 
             short backpackCount;
@@ -5472,11 +5472,11 @@ void Game::readMapHeroSetups(AbstractFile* mapFile, int mapVersion)
                 mapFile->read(&artifact, sizeof(artifact));
                 heroRecord->m_backpack[carried] =
                     // Complete map input stores a signed 16-bit artifact ordinal; the in-memory record retains DC's TArtifact constructor.
-                    type_artifact(static_cast<Artifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+                    ArtifactRecord(static_cast<Artifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             }
 
             heroRecord->m_artifacts[Hero::EQUIPPED_SLOT_WAR_MACHINE_4] =
-                type_artifact(ARTIFACT_CATAPULT);
+                ArtifactRecord(ARTIFACT_CATAPULT);
         }
 
         char customName;
@@ -7141,7 +7141,7 @@ VA(0x004c66e0, 0xCB)  // dc 0xb1748
 void Game::claimMine(int mineId, int newPlayerOwner, ActionType actionType)
 {
     Mine& currentMine = m_mines[mineId];
-    type_point location(currentMine.m_mapX, currentMine.m_mapY,
+    MapPoint location(currentMine.m_mapX, currentMine.m_mapY,
                         currentMine.m_mapZ);
 
     if (actionType == const_normal_action)
@@ -7165,7 +7165,7 @@ void Game::claimGenerator(int generatorId, int newPlayerOwner)
 
     currentGenerator.setOwner(newPlayerOwner);
     if (newPlayerOwner != -1) {
-        type_point location(currentGenerator.m_mapX, currentGenerator.m_mapY,
+        MapPoint location(currentGenerator.m_mapX, currentGenerator.m_mapY,
                             currentGenerator.m_mapZ);
         setVisibility(location.m_x, location.m_y, location.m_z,
                       newPlayerOwner, 3, 0);
@@ -7179,7 +7179,7 @@ VA(0x004c6960, 0xC9)  // dc 0xb1988
 void Game::claimGarrison(int garrisonId, int newPlayerOwner)
 {
     Garrison& currentGarrison = m_garrisons[garrisonId];
-    type_point location(currentGarrison.m_mapX, currentGarrison.m_mapY,
+    MapPoint location(currentGarrison.m_mapX, currentGarrison.m_mapY,
                         currentGarrison.m_mapZ);
     sendMapChange(&CMCClaimGarrison(garrisonId, newPlayerOwner));
 
@@ -7190,7 +7190,7 @@ void Game::claimGarrison(int garrisonId, int newPlayerOwner)
 }
 
 VA(0x004c6a30, 0x21F)  // dc 0xb1a50
-void Game::claimShipyard(type_point location, int newPlayerOwner)
+void Game::claimShipyard(MapPoint location, int newPlayerOwner)
 {
     Hero* obscuringHero = 0;
     NewmapCell* mapCell = m_worldMap.cell(location);
@@ -7942,7 +7942,7 @@ VA(0x004c8450, 0x248)
 void Game::setRecruits(int playerPos)
 {
     PlayerData* player = &m_players[playerPos];
-    type_artifact artifact;
+    ArtifactRecord artifact;
     int recruitSlot;
 
     for (recruitSlot = 0; recruitSlot < 2; ++recruitSlot) {
@@ -8614,11 +8614,11 @@ void Game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
     i = 1;
     if (random(1, 100) <= 88 && traits->m_secondStack != -1) {
         if (traits->m_secondStack == CREATURE_BALLISTA) {
-            type_artifact artifact;
+            ArtifactRecord artifact;
             artifact.m_artifactId = ARTIFACT_BALLISTA;
             m_heroes[hero].giveArtifact(&artifact, 0, 0);
         } else if (traits->m_secondStack == CREATURE_FIRST_AID_TENT) {
-            type_artifact artifact;
+            ArtifactRecord artifact;
             artifact.m_artifactId = ARTIFACT_FIRST_AID_TENT;
             m_heroes[hero].giveArtifact(&artifact, 0, 0);
         } else {
@@ -9028,8 +9028,8 @@ void Game::showHeroesLogo()
 VA(0x004ca410, 0x116)  // dc 0xb61d0
 void Game::setupAdjacentMons()
 {
-    type_point excluded(0xff, 0xff, 0xff);
-    type_point monster;
+    MapPoint excluded(0xff, 0xff, 0xff);
+    MapPoint monster;
     int x;
     int y;
     int z;
@@ -9039,7 +9039,7 @@ void Game::setupAdjacentMons()
         for (x = 0; x < g_mapWidth; ++x) {
             for (y = 0; y < g_mapHeight; ++y) {
                 if (g_advManager->findAdjacentMonster(
-                        type_point(x, y, z), &monster, excluded)) {
+                        MapPoint(x, y, z), &monster, excluded)) {
                     unsigned short* extraByte = getMapExtraPtr(x, y, z);
                     *extraByte |= MAP_EXTRA_MONSTER;
                 } else {
@@ -9395,7 +9395,7 @@ void Game::processOnMapHeroes()
     Hero* currHero;
     int i;
     NewmapCell* townCell;
-    type_point townLoc;
+    MapPoint townLoc;
 
     for (i = 0; i < HERO_COUNT; ++i) {
         heroExtra = &m_heroSetup[i];
@@ -10495,7 +10495,7 @@ void Game::setSpecialRumour()
                     g_questMonsterDirections[direction]);
         }
     } else {
-        type_point artifactLocation(m_ultimateArtifactX, m_ultimateArtifactY,
+        MapPoint artifactLocation(m_ultimateArtifactX, m_ultimateArtifactY,
                                     m_ultimateArtifactZ);
         const NewmapCell* cell = g_advManager->getCell(artifactLocation);
         sprintf(m_currentRumour,
@@ -10626,13 +10626,13 @@ void Game::checkForTownEvent()
 }
 
 VA(0x004cdb80, 0x231)  // dc 0xbb0e4
-unsigned char Game::getRandomLith(const std::vector<type_point>& points,
-                                    type_point& result, long cellType,
+unsigned char Game::getRandomLith(const std::vector<MapPoint>& points,
+                                    MapPoint& result, long cellType,
                                     long excluded) const
 {
     long lithCount = points.size();
     long openCount = 0;
-    type_point exitPoint;
+    MapPoint exitPoint;
     long i;
     const NewmapCell* exitCell;
 
@@ -10679,36 +10679,36 @@ unsigned char Game::getRandomLith(const std::vector<type_point>& points,
 }
 
 VA(0x004cddc0, 0x22)  // dc 0xbb3e0
-unsigned char Game::getRandomLithExit(long color, type_point& result) const
+unsigned char Game::getRandomLithExit(long color, MapPoint& result) const
 {
     return getRandomLith(m_lithExitPools[color], result, 0x2c, -1);
 }
 
 VA(0x004cddf0, 0x24)  // dc 0xbb41c
-unsigned char Game::getRandomLith(long color, long excluded, type_point& result) const
+unsigned char Game::getRandomLith(long color, long excluded, MapPoint& result) const
 {
     return getRandomLith(m_lithPools[color], result, 0x2d, excluded);
 }
 
 VA(0x004cde20, 0x1D)  // dc 0xbb45c
-unsigned char Game::getRandomWhirlpool(long excluded, type_point& result) const
+unsigned char Game::getRandomWhirlpool(long excluded, MapPoint& result) const
 {
     return getRandomLith(m_whirlpools, result, 0x6f, excluded);
 }
 
 VA(0x004cde40, 0xE0)  // dc 0xbb490
-type_point Game::getUndergroundGateExit(const NewmapCell* cell) const
+MapPoint Game::getUndergroundGateExit(const NewmapCell* cell) const
 {
     long exitGate = m_undergroundGatePairs[cell->m_extraInfo];
     if (exitGate < 0)
-        return type_point(0xff, 0xff, 0xff);
+        return MapPoint(0xff, 0xff, 0xff);
 
-    type_point exitPoint = m_undergroundGateExits[exitGate];
+    MapPoint exitPoint = m_undergroundGateExits[exitGate];
     const NewmapCell* exitCell = m_worldMap.cell(exitPoint.m_x, exitPoint.m_y, exitPoint.m_z);
     if (exitCell->m_type == HERO && exitCell->m_isTrigger)
         return exitPoint;
     if (exitCell->m_type != UNDERGROUND_GATE)
-        return type_point(0xff, 0xff, 0xff);
+        return MapPoint(0xff, 0xff, 0xff);
     return exitPoint;
 }
 
@@ -10858,9 +10858,9 @@ int Game::getLocalPlayerGamePos() const
 }
 
 VA(0x004cea70, 0xE7)  // dc 0xbc0c0
-type_point Game::getPuzzleOrigin() const
+MapPoint Game::getPuzzleOrigin() const
 {
-    type_point result;
+    MapPoint result;
     result.m_x = m_ultimateArtifactX - 9;
     result.m_y = m_ultimateArtifactY - 8;
     result.m_z = m_ultimateArtifactZ;
@@ -10931,7 +10931,7 @@ void Game::resetGame(int difficulty, int version,
 }
 
 VA(0x004ced40, 0x1D0)  // sole caller 0x5013b0 + game+0x4e7bc vector layout
-void Game::recordMonsterIdentifier(int identifier, type_point point)
+void Game::recordMonsterIdentifier(int identifier, MapPoint point)
 {
     MonsterIdentifier record;
     record.m_identifier = identifier;
@@ -10942,14 +10942,14 @@ void Game::recordMonsterIdentifier(int identifier, type_point point)
 // Quest-monster setup resolves the most recently recorded object with this
 // identifier; absent objects use the packed all-minus-one point sentinel.
 VA(0x004cef10, 0x68)  // sole semantic caller 0x56ef20 + reverse 8-byte walk
-type_point Game::gameFn004CEF10(int identifier)
+MapPoint Game::gameFn004CEF10(int identifier)
 {
     for (unsigned int i = m_monsterIdentifiers.size(); i-- != 0;) {
         if (m_monsterIdentifiers[i].m_identifier == identifier)
             return m_monsterIdentifiers[i].m_point;
     }
 
-    type_point point;
+    MapPoint point;
     point.m_x = -1;
     point.m_y = -1;
     point.m_z = -1;
@@ -11054,7 +11054,7 @@ VA_COMPGEN(0x004d4500, 0x2CF, VECTOR_RESIZE, Generator)
 VA_COMPGEN(0x004d47d0, 0x23, VECTOR_SIZE, Generator)
 VA_COMPGEN(0x004d4800, 0x25E, VECTOR_RESIZE, University)
 VA_COMPGEN(0x004d4a60, 0x40, VECTOR_UFILL, University)
-VA_COMPGEN(0x004d4aa0, 0x1F1, VECTOR_RESIZE, type_point)
+VA_COMPGEN(0x004d4aa0, 0x1F1, VECTOR_RESIZE, MapPoint)
 // NewSMapHeader::Read materializes the eight-player availability setter and
 // the four-dword default mask initializer. Their immediate bounds/fill counts
 // distinguish these two retained bitset widths from the neighboring rows.
@@ -11092,7 +11092,7 @@ unsigned char loadObjectVector(
 // Their one active implementation appears at the DC source-order boundary.
 #if 0  // @carcass -- claim-only template instances
 VA(0x004d2ac0, 0x60)  // point/long ICF twin, dc 0xc1dd4 / 0xc1e58
-bool saveVector(AbstractFile* outfile, std::vector<type_point>& srcVector)
+bool saveVector(AbstractFile* outfile, std::vector<MapPoint>& srcVector)
 {
     // @stub
 }
@@ -11500,14 +11500,14 @@ void CMCClaimGarrison::CMCClaimGarrison(int garrisonId, int playerPos)
 
 // E:\gamedcs\netmsg.h:633
 DC_ONLY(0xbd2c8, 0x6C)
-void CMCClaimShipYard::CMCClaimShipYard(type_point point, int playerPos)
+void CMCClaimShipYard::CMCClaimShipYard(MapPoint point, int playerPos)
 {
     // @stub
 }
 
 // E:\gamedcs\netmsg.h:649
 DC_ONLY(0xbd334, 0x6C)
-void CMCBuildBoat::CMCBuildBoat(type_point point, int playerPos)
+void CMCBuildBoat::CMCBuildBoat(MapPoint point, int playerPos)
 {
     // @stub
 }
@@ -11597,7 +11597,7 @@ void CGameTransferDlg::~CGameTransferDlg()
 
 // E:\gamedcs\game.cpp:11746
 DC_ONLY(0xbd654, 0x44)
-void std::vector<type_point,std::allocator<type_point> >::`default constructor closure'()
+void std::vector<MapPoint,std::allocator<MapPoint> >::`default constructor closure'()
 {
     // @stub
 }
@@ -11765,63 +11765,63 @@ TownEvent* std::vector<TownEvent,std::allocator<TownEvent> >::operator[](unsigne
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0xbdb50, 0xC)
-type_point* std::vector<type_point,std::allocator<type_point> >::begin()
+MapPoint* std::vector<MapPoint,std::allocator<MapPoint> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0xbdb5c, 0x28)
-type_point* std::vector<type_point,std::allocator<type_point> >::operator[](unsigned __n)
+MapPoint* std::vector<MapPoint,std::allocator<MapPoint> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xbdb84, 0x24)
-void std::vector<type_point,std::allocator<type_point> >::vector<type_point,std::allocator<type_point> >(const std::allocator<type_point>* __a)
+void std::vector<MapPoint,std::allocator<MapPoint> >::vector<MapPoint,std::allocator<MapPoint> >(const std::allocator<MapPoint>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xbdba8, 0x34)
-void std::vector<type_point,std::allocator<type_point> >::~vector<type_point,std::allocator<type_point> >()
+void std::vector<MapPoint,std::allocator<MapPoint> >::~vector<MapPoint,std::allocator<MapPoint> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0xbdbdc, 0x54)
-void std::vector<type_point,std::allocator<type_point> >::push_back(const type_point* __x)
+void std::vector<MapPoint,std::allocator<MapPoint> >::push_back(const MapPoint* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:480
 DC_ONLY(0xbdc30, 0x60)
-type_point* std::vector<type_point,std::allocator<type_point> >::erase(type_point* __position)
+MapPoint* std::vector<MapPoint,std::allocator<MapPoint> >::erase(MapPoint* __position)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xbdc90, 0x3C)
-void std::vector<type_point,std::allocator<type_point> >::clear()
+void std::vector<MapPoint,std::allocator<MapPoint> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xbdccc, 0x8)
-void std::allocator<type_point>::allocator<type_point>()
+void std::allocator<MapPoint>::allocator<MapPoint>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xbdcd4, 0x6)
-void std::allocator<type_point>::~allocator<type_point>()
+void std::allocator<MapPoint>::~allocator<MapPoint>()
 {
     // @stub
 }
@@ -12500,28 +12500,28 @@ TownEvent* std::vector<TownEvent,std::allocator<TownEvent> >::begin()
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0xbe9fc, 0xC)
-type_point* std::vector<type_point,std::allocator<type_point> >::end()
+MapPoint* std::vector<MapPoint,std::allocator<MapPoint> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0xbea08, 0x48)
-type_point* std::vector<type_point,std::allocator<type_point> >::erase(type_point* __first, type_point* __last)
+MapPoint* std::vector<MapPoint,std::allocator<MapPoint> >::erase(MapPoint* __first, MapPoint* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xbea50, 0x44)
-void std::_Vector_base<type_point,std::allocator<type_point> >::_Vector_base<type_point,std::allocator<type_point> >(const std::allocator<type_point>* __a)
+void std::_Vector_base<MapPoint,std::allocator<MapPoint> >::_Vector_base<MapPoint,std::allocator<MapPoint> >(const std::allocator<MapPoint>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xbea94, 0x44)
-void std::_Vector_base<type_point,std::allocator<type_point> >::~_Vector_base<type_point,std::allocator<type_point> >()
+void std::_Vector_base<MapPoint,std::allocator<MapPoint> >::~_Vector_base<MapPoint,std::allocator<MapPoint> >()
 {
     // @stub
 }
@@ -12801,7 +12801,7 @@ void std::_STL_alloc_proxy<enum Artifact *,enum Artifact,std::allocator<enum Art
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xbf6d4, 0x1C)
-void std::_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >::~_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >()
+void std::_STL_alloc_proxy<MapPoint *,MapPoint,std::allocator<MapPoint> >::~_STL_alloc_proxy<MapPoint *,MapPoint,std::allocator<MapPoint> >()
 {
     // @stub
 }
@@ -12920,14 +12920,14 @@ void std::_STL_alloc_proxy<enum Artifact *,enum Artifact,std::allocator<enum Art
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xbf8ac, 0x1E)
-void std::_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >::_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >(const std::allocator<type_point>* __a, type_point** __p)
+void std::_STL_alloc_proxy<MapPoint *,MapPoint,std::allocator<MapPoint> >::_STL_alloc_proxy<MapPoint *,MapPoint,std::allocator<MapPoint> >(const std::allocator<MapPoint>* __a, MapPoint** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xbf8cc, 0x30)
-void std::_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >::deallocate(type_point* __p, unsigned __n)
+void std::_STL_alloc_proxy<MapPoint *,MapPoint,std::allocator<MapPoint> >::deallocate(MapPoint* __p, unsigned __n)
 {
     // @stub
 }
@@ -13242,7 +13242,7 @@ unsigned std::_Base_bitset<2,unsigned long>::_S_whichbit(unsigned __pos)
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xbfff8, 0x28)
-void std::allocator<type_point>::deallocate(type_point* __p, unsigned __n)
+void std::allocator<MapPoint>::deallocate(MapPoint* __p, unsigned __n)
 {
     // @stub
 }
@@ -13354,7 +13354,7 @@ void std::vector<CSprite *,std::allocator<CSprite *> >::_M_insert_overflow(CSpri
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0xc05b4, 0x11C)
-void std::vector<type_point,std::allocator<type_point> >::_M_insert_overflow(type_point* __position, const type_point* __x, unsigned __fill_len)
+void std::vector<MapPoint,std::allocator<MapPoint> >::_M_insert_overflow(MapPoint* __position, const MapPoint* __x, unsigned __fill_len)
 {
     // @stub
 }
@@ -13457,7 +13457,7 @@ unsigned char saveVector(void* outfile, std::vector<enum* src_vector)
 
 // E:\gamedcs\game.cpp:2698
 DC_ONLY(0xc19e8, 0x80)
-unsigned char load_vector(void* infile, std::vector<type_point,std::allocator<type_point>* dest_vector)
+unsigned char load_vector(void* infile, std::vector<MapPoint,std::allocator<MapPoint>* dest_vector)
 {
     // @stub
 }
@@ -13497,7 +13497,7 @@ void std::vector<Hero,std::allocator<Hero> >::_M_insert_overflow(Hero* __positio
 
 // E:\gamedcs\game.cpp:2716
 DC_ONLY(0xc1dd4, 0x84)
-unsigned char saveVector(void* outfile, std::vector<type_point,std::allocator<type_point>* src_vector)
+unsigned char saveVector(void* outfile, std::vector<MapPoint,std::allocator<MapPoint>* src_vector)
 {
     // @stub
 }
@@ -13546,28 +13546,28 @@ void std::construct(CSprite** __p, CSprite** __value)
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xc20d8, 0x30)
-void std::destroy(type_point* __first, type_point* __last)
+void std::destroy(MapPoint* __first, MapPoint* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0xc2108, 0x58)
-void std::construct(type_point* __p, const type_point* __value)
+void std::construct(MapPoint* __p, const MapPoint* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xc2160, 0x58)
-type_point* std::copy(type_point* __first, type_point* __last, type_point* __result)
+MapPoint* std::copy(MapPoint* __first, MapPoint* __last, MapPoint* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0xc21b8, 0x20)
-void std::destroy(type_point* __pointer)
+void std::destroy(MapPoint* __pointer)
 {
     // @stub
 }
@@ -13700,7 +13700,7 @@ BlackMarket* std::copy(BlackMarket* __first, BlackMarket* __last, BlackMarket* _
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xc2810, 0xA)
-std::allocator<type_point>* std::__stl_alloc_rebind(std::allocator<type_point>* __a, const type_point* __formal)
+std::allocator<MapPoint>* std::__stl_alloc_rebind(std::allocator<MapPoint>* __a, const MapPoint* __formal)
 {
     // @stub
 }
@@ -13924,14 +13924,14 @@ void std::_STL_alloc_proxy<CSprite * *,CSprite *,std::allocator<CSprite *> >::de
 
 // ..\stlport\stl_vector.h:505
 DC_ONLY(0xc2ec8, 0x34)
-void std::vector<type_point,std::allocator<type_point> >::resize(unsigned __new_size)
+void std::vector<MapPoint,std::allocator<MapPoint> >::resize(unsigned __new_size)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0xc2efc, 0x38)
-type_point* std::_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >::allocate(unsigned __n)
+MapPoint* std::_STL_alloc_proxy<MapPoint *,MapPoint,std::allocator<MapPoint> >::allocate(unsigned __n)
 {
     // @stub
 }
@@ -14064,14 +14064,14 @@ void std::allocator<CSprite *>::deallocate(CSprite** __p, unsigned __n)
 
 // ..\stlport\stl_vector.h:499
 DC_ONLY(0xc3364, 0x90)
-void std::vector<type_point,std::allocator<type_point> >::resize(unsigned __new_size, const type_point* __x)
+void std::vector<MapPoint,std::allocator<MapPoint> >::resize(unsigned __new_size, const MapPoint* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0xc33f4, 0x38)
-type_point* std::allocator<type_point>::allocate(unsigned __n, const void* __formal)
+MapPoint* std::allocator<MapPoint>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
@@ -14162,7 +14162,7 @@ Artifact* std::vector<enum Artifact,std::allocator<enum Artifact> >::erase(Artif
 
 // ..\stlport\stl_vector.h:472
 DC_ONLY(0xc3820, 0x28)
-void std::vector<type_point,std::allocator<type_point> >::insert(type_point* __pos, unsigned __n, const type_point* __x)
+void std::vector<MapPoint,std::allocator<MapPoint> >::insert(MapPoint* __pos, unsigned __n, const MapPoint* __x)
 {
     // @stub
 }
@@ -14295,21 +14295,21 @@ void std::destroy(CSprite** __first, CSprite** __last)
 
 // ..\stlport\stl_vector.c:283
 DC_ONLY(0xc3bb4, 0x154)
-void std::vector<type_point,std::allocator<type_point> >::_M_fill_insert(type_point* __position, unsigned __n, const type_point* __x)
+void std::vector<MapPoint,std::allocator<MapPoint> >::_M_fill_insert(MapPoint* __position, unsigned __n, const MapPoint* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xc3d08, 0x3C)
-type_point* std::uninitialized_copy(type_point* __first, type_point* __last, type_point* __result)
+MapPoint* std::uninitialized_copy(MapPoint* __first, MapPoint* __last, MapPoint* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0xc3d44, 0x3C)
-type_point* std::uninitialized_fill_n(type_point* __first, unsigned __n, const type_point* __x)
+MapPoint* std::uninitialized_fill_n(MapPoint* __first, unsigned __n, const MapPoint* __x)
 {
     // @stub
 }
@@ -14617,42 +14617,42 @@ Hero* std::uninitialized_fill_n(Hero* __first, unsigned __n, const Hero* __x)
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xc54ec, 0x8)
-type_point* std::value_type(const type_point* __formal)
+MapPoint* std::value_type(const MapPoint* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xc54f4, 0x24)
-void std::__destroy(type_point* __first, type_point* __last, type_point* __formal)
+void std::__destroy(MapPoint* __first, MapPoint* __last, MapPoint* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0xc5518, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const type_point* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const MapPoint* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0xc552c, 0x8)
-int* std::distance_type(const type_point* __formal)
+int* std::distance_type(const MapPoint* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xc5534, 0x60)
-type_point* std::__copy(type_point* __first, type_point* __last, type_point* __result, std::random_access_iterator_tag __formal, int* __formal)
+MapPoint* std::__copy(MapPoint* __first, MapPoint* __last, MapPoint* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0xc5594, 0x8)
-void std::__destroy_aux(type_point* __pointer, __false_type __formal)
+void std::__destroy_aux(MapPoint* __pointer, __false_type __formal)
 {
     // @stub
 }
@@ -15198,28 +15198,28 @@ void std::__destroy(CSprite** __first, CSprite** __last, CSprite** __formal)
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0xc63b0, 0x58)
-type_point* std::copy_backward(type_point* __first, type_point* __last, type_point* __result)
+MapPoint* std::copy_backward(MapPoint* __first, MapPoint* __last, MapPoint* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:495
 DC_ONLY(0xc6408, 0x44)
-void std::fill(type_point* __first, type_point* __last, const type_point* __value)
+void std::fill(MapPoint* __first, MapPoint* __last, const MapPoint* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xc644c, 0x30)
-type_point* std::__uninitialized_copy(type_point* __first, type_point* __last, type_point* __result, type_point* __formal)
+MapPoint* std::__uninitialized_copy(MapPoint* __first, MapPoint* __last, MapPoint* __result, MapPoint* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0xc647c, 0x30)
-type_point* std::__uninitialized_fill_n(type_point* __first, unsigned __n, const type_point* __x, type_point* __formal)
+MapPoint* std::__uninitialized_fill_n(MapPoint* __first, unsigned __n, const MapPoint* __x, MapPoint* __formal)
 {
     // @stub
 }
@@ -15527,7 +15527,7 @@ Hero* std::__uninitialized_fill_n(Hero* __first, unsigned __n, const Hero* __x, 
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xc7508, 0x34)
-void std::__destroy_aux(type_point* __first, type_point* __last, __false_type __formal)
+void std::__destroy_aux(MapPoint* __first, MapPoint* __last, __false_type __formal)
 {
     // @stub
 }
@@ -15793,21 +15793,21 @@ void std::__destroy_aux(CSprite** __first, CSprite** __last, __false_type __form
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0xc7e40, 0x5E)
-type_point* std::__copy_backward(type_point* __first, type_point* __last, type_point* __result, std::random_access_iterator_tag __formal, int* __formal)
+MapPoint* std::__copy_backward(MapPoint* __first, MapPoint* __last, MapPoint* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xc7ea0, 0x44)
-type_point* std::__uninitialized_copy_aux(type_point* __first, type_point* __last, type_point* __result, __false_type __formal)
+MapPoint* std::__uninitialized_copy_aux(MapPoint* __first, MapPoint* __last, MapPoint* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0xc7ee4, 0x44)
-type_point* std::__uninitialized_fill_n_aux(type_point* __first, unsigned __n, const type_point* __x, __false_type __formal)
+MapPoint* std::__uninitialized_fill_n_aux(MapPoint* __first, unsigned __n, const MapPoint* __x, __false_type __formal)
 {
     // @stub
 }

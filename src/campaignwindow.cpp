@@ -396,4 +396,4 @@ void* CampaignWindow::`scalar deleting destructor'(unsigned __flags)
 }
 #endif
 
-VA_COMPGEN(0x004601f0, 0x1A4, VECTOR_COPY_ASSIGN, type_artifact)
+VA_COMPGEN(0x004601f0, 0x1A4, VECTOR_COPY_ASSIGN, ArtifactRecord)

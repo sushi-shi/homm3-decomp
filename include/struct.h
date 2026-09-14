@@ -65,14 +65,15 @@ SIZE(Message, 32);
 //   z: dword @ +2, shl 2, movsx ax, sar 12     -> signed  4 bits @ 10..13
 // and can_take_town (0x428410) builds one the other way round, masking
 // the three source bytes with 0x3ff, 0x3ff and 0xf before packing.
-struct type_point {
+// Before normalization (type): type_point.
+struct MapPoint {
 public:
     short m_x : 10;
     short m_y : 10;
     short m_z : 4;
-    type_point() {}
+    MapPoint() {}
     VA(0x004192b0, 0x44)  // anchor-callee, dc 0x1edb0
-    type_point(short newX, short newY, short newZ)
+    MapPoint(short newX, short newY, short newZ)
     {
         m_x = newX;
         m_y = newY;
@@ -83,12 +84,12 @@ public:
     // Dreamcast S_PUB32 is ??8type_point@@QBA_NABU0@@Z: bool return,
     // const member, const-reference operand.
     VA(0x0042ec20, 0x45)  // exact body + sole caller, dc 0x1ee20
-    bool operator==(const type_point& arg) const
+    bool operator==(const MapPoint& arg) const
     {
         return m_x == arg.m_x && m_y == arg.m_y && m_z == arg.m_z;
     }
     VA(0x00482340, 0x45)  // call edge + byte-identical point comparison, dc 0x37d2c
-    bool operator!=(const type_point& arg) const
+    bool operator!=(const MapPoint& arg) const
     {
         return m_x != arg.m_x || m_y != arg.m_y || m_z != arg.m_z;
     }
@@ -101,7 +102,7 @@ public:
     // bitfields sign-extended through the shl/movsx/sar triple. The z
     // plane takes no part, which is what makes it a MAP distance.
     // DC struct.h:120 proves const type_point& p2 (dc 0x22fe4).
-    int distanceSquared(const type_point& p2) const
+    int distanceSquared(const MapPoint& p2) const
     {
         int dx = m_x - p2.m_x;
         int dy = m_y - p2.m_y;

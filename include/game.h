@@ -69,7 +69,7 @@ public:
     virtual void newMapVFn1c();
     virtual void newMapVFn20();
     virtual void newMapVFn24(int heroId, int player);
-    virtual void newMapVFn28(type_point point, int player);
+    virtual void newMapVFn28(MapPoint point, int player);
     virtual void newMapVFn2c();
     virtual void newMapVFn30();
     virtual void newMapVFn34();
@@ -159,11 +159,11 @@ public:
     short m_numTroops[7];  // +0x58 - movsx word
     unsigned char m_groupFormation;  // +0x66 - no retail body reads it
     unsigned char m_customArtifacts;  // +0x67
-    type_artifact m_artifacts[19];
-    type_artifact m_backpack[64];
+    ArtifactRecord m_artifacts[19];
+    ArtifactRecord m_backpack[64];
     #pragma pack(push, 1)
     unsigned char m_numInBackpack;  // +0x300 - no retail body reads it
-    type_point m_location;  // +0x301 - unaligned, hence the band
+    MapPoint m_location;  // +0x301 - unaligned, hence the band
     signed char m_patrolRadius;  // +0x305 - sign gates the patrol XY
     unsigned char m_customName;  // +0x306
 #pragma pack(pop)
@@ -412,7 +412,7 @@ public:
         unsigned char m_hasMainTown;
         // +0x0d..+0x0f: alignment hole (0x45da70 goes +0x0c byte -> +0x10 dword).
         int m_mainTownType;
-        type_point m_castleLoc;
+        MapPoint m_castleLoc;
         signed char m_hasRandomHero;
         // +0x19..+0x1b: alignment hole (0x45da70 goes +0x18 byte -> +0x1c dword).
         int m_nonRandomHeroId;
@@ -871,7 +871,7 @@ public:
     // (x 10 bits in the first unit, y 10 + z 4 in the second) at an
     // ODD base - which is the alignment finding above, from the other
     // side.
-    type_point m_puzzleGuess;
+    MapPoint m_puzzleGuess;
     char m_deathCountDown;  // +0x3d
     char m_numTowns;  // +0x3e
     char m_currTownId;  // +0x3f (advManager::DeactivateCurrTown stores -1)
@@ -893,7 +893,7 @@ public:
     // `mov cl,[ebp-1]` is the temporary `allocator<type_point>()`) and
     // zeroes +0x90/+0x94/+0x98, and the destructor at 0x4ce570 frees
     // +0x90 and re-zeroes the same triple.
-    std::vector<type_point> m_shipyards;
+    std::vector<MapPoint> m_shipyards;
     // The seven-resource row, sliced 2026-08-08 for recruit.obj.
     // Byte-proven twice over, from two unrelated TUs:
     // recruitUnit::Update (0x550274) divides `[player+0xb4]` by the
@@ -1153,12 +1153,12 @@ public:
     // bound check. Cell types come from the wrappers: 0x2d for the
     // first array, 0x2c for the second, 0x6f for the whirlpool pool.
     // NAMES ARE PROVISIONAL - nothing attests them.
-    std::vector<type_point> m_lithPools[8];  // +0x4e67c
-    std::vector<type_point> m_lithExitPools[8];  // +0x4e6fc
+    std::vector<MapPoint> m_lithPools[8];  // +0x4e67c
+    std::vector<MapPoint> m_lithExitPools[8];  // +0x4e6fc
 
 private:
-    std::vector<type_point> m_whirlpools;  // +0x4e77c
-    std::vector<type_point> m_undergroundGateExits;  // +0x4e78c
+    std::vector<MapPoint> m_whirlpools;  // +0x4e77c
+    std::vector<MapPoint> m_undergroundGateExits;  // +0x4e78c
 
 public:
     // One reciprocal exit index per entry above.  Dreamcast names the
@@ -1177,11 +1177,11 @@ public:
     // stride, byte-proving both the member and its element layout.
     struct MonsterIdentifier {
         int m_identifier;
-        type_point m_point;
+        MapPoint m_point;
     };
     std::vector<MonsterIdentifier> m_monsterIdentifiers;
     NewfullMap* getWorldMapData();
-    type_point gameFn004CEF10(int identifier);
+    MapPoint gameFn004CEF10(int identifier);
     int getStartingHeroId(int alignment, int playerPos,
                           int mapPosition);  // 0x4bb400
     int getNewBoatId();  // 0x4bb170
@@ -1198,7 +1198,7 @@ public:
     // no Dreamcast row covers it.
     void rehomeCampaignHeroSetup(int heroId);  // 0x486110
                  // DC game.cpp:10132
-    type_point getPuzzleOrigin() const;  // 0x4cea70
+    MapPoint getPuzzleOrigin() const;  // 0x4cea70
     void setRandomHeroArmies(int heroId, int cheat,
                              unsigned char minimal);  // 0x4c9730
     Artifact getRandomArtifactId(int artifactClass);  // 0x4c94d0
@@ -1238,7 +1238,7 @@ public:
     // overrides GetStartingHeroId for human players.
     void createTownHeroes(int* startingHeroIds);
     int getAlignment(int creature) const;
-    void claimShipyard(type_point location, int newPlayerOwner);  // 0x4c6a30
+    void claimShipyard(MapPoint location, int newPlayerOwner);  // 0x4c6a30
     void claimTown(int townId, int newPlayerOwner,
                    unsigned char isRemoteMove,
                    unsigned char checkEndGame);  // 0x4c61e0
@@ -1266,20 +1266,20 @@ public:
     bool isHumanAlly(int teamNum) const;
     // event_record.obj owns 0x49d6c0's body.
     void clearEventRecords(char playerId);
-    type_point getUndergroundGateExit(const NewmapCell* cell) const;
-    unsigned char getRandomLithExit(long color, type_point& result) const;
-    unsigned char getRandomLith(const std::vector<type_point>& points,
-                                  type_point& result, long cellType,
+    MapPoint getUndergroundGateExit(const NewmapCell* cell) const;
+    unsigned char getRandomLithExit(long color, MapPoint& result) const;
+    unsigned char getRandomLith(const std::vector<MapPoint>& points,
+                                  MapPoint& result, long cellType,
                                   long excluded) const;  // 0x4cdb80
     unsigned char getRandomLith(long color, long excluded,
-                                  type_point& result) const;
-    unsigned char getRandomWhirlpool(long excluded, type_point& result) const;
+                                  MapPoint& result) const;
+    unsigned char getRandomWhirlpool(long excluded, MapPoint& result) const;
     // event_record.cpp:1061 in the DC roster (dc 0x8e0b8). advManager::
     // EraseObj is its caller and pins the retail row: a 0x18-byte record
     // built with `new`, two vtable stores and the cell's +0x00/+0x22/+0x24
     // copied into it, reached with the cell and the point on the stack.
-    void recordEraseObject(NewmapCell* cell, type_point point);  // 0x49c390
-    void recordShowBoat(Boat* currentBoat, type_point point);  // 0x49c900
+    void recordEraseObject(NewmapCell* cell, MapPoint point);  // 0x49c390
+    void recordShowBoat(Boat* currentBoat, MapPoint point);  // 0x49c900
     void calculateProduction();
     short getBaseMapScore() const;
     short getCurrentTurn() const;
@@ -1323,7 +1323,7 @@ private:
     int loadMinePool(AbstractFile* infile, int saveVersion);
 
 public:
-    void recordMonsterIdentifier(int identifier, type_point point);
+    void recordMonsterIdentifier(int identifier, MapPoint point);
 
 private:
     int loadGarrisonPool(AbstractFile* infile, int saveVersion);
@@ -1390,7 +1390,7 @@ private:
 
 public:
     void clearEventRecords();
-    void recordShowHero(Hero* who, signed char player, type_point point,
+    void recordShowHero(Hero* who, signed char player, MapPoint point,
                           unsigned char reset);  // 0x49cb20
     void processRandomObjects();  // 0x4c9dd0
     // The random-object pass and the monster roll it drives. Both bodies
@@ -1416,8 +1416,8 @@ public:
     void recordHideBoat(Boat* currentBoat, unsigned char occupied,
                           int occupyingHero);  // 0x49c560
     void recordMove(Hero* who, int direction,
-                     type_point destination);  // 0x49cd50
-    void recordTeleport(Hero* who, type_point destination);  // 0x49cf50
+                     MapPoint destination);  // 0x49cd50
+    void recordTeleport(Hero* who, MapPoint destination);  // 0x49cf50
     void showLuckInfo(Hero* who, int dialogType);
     void showMoraleInfo(Hero* who, int dialogType);
     void recordHideHero(Hero* who, char newOwner,
@@ -1656,8 +1656,8 @@ public:
     // retail expands the map's byte flag plus one at both cheat loops.
     // DC game.h:1405, dc 0x12cabc: const reference to the whirlpool list.
     // searchArray::enterTrigger passes its address to enterLith in retail.
-    inline const std::vector<type_point>& getWhirlpools() const;
-    NewmapCell* getCell(type_point point);
+    inline const std::vector<MapPoint>& getWhirlpools() const;
+    NewmapCell* getCell(MapPoint point);
     void getLossConditionText(char* text);
     void getVictoryConditionText(char* text);
 };
@@ -2032,7 +2032,7 @@ inline int Game::getAlignment(int creature) const
 // E:\gamedcs\game.h:1380. Retail retains this header-inline copy in
 // ai_player.obj; all consumers use the same canonical body.
 VA(0x0042ed80, 0x4D)  // anchor-global, dc 0x38000
-inline NewmapCell* Game::getCell(type_point point)
+inline NewmapCell* Game::getCell(MapPoint point)
 {
     return m_worldMap.cell(point.m_x, point.m_y, point.m_z);
 }
@@ -2045,7 +2045,7 @@ inline short Game::getCurrentTurn() const
 }
 
 // E:\gamedcs\Game.h:1405.
-inline const std::vector<type_point>& Game::getWhirlpools() const
+inline const std::vector<MapPoint>& Game::getWhirlpools() const
 {
     return m_whirlpools;
 }

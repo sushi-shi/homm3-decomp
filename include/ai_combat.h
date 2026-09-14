@@ -64,7 +64,8 @@ enum SpeedCatagory {
 //   +0x3c value       - take_damage's per-creature divisor (0x423ec9).
 //   +0x40 total_value - the stack's remaining combat value.
 // Combat value is computed from baseFightValue and forceModifier.
-struct type_monster_data {
+// Before normalization (type): type_monster_data.
+struct AiMonsterData {
 public:
     long m_index;  // +0x00
     CreatureType m_type;  // +0x04
@@ -96,12 +97,12 @@ public:
     void castResurrection(SpellChoice& choice,
                            const Hero* castingHero);
     long takeDamage(long damage);
-    bool operator<(const type_monster_data& arg) const
+    bool operator<(const AiMonsterData& arg) const
     {
         return m_value < arg.m_value;
     }
 };
-SIZE(type_monster_data, 0x48);
+SIZE(AiMonsterData, 0x48);
 
 // The monster roster is a std::vector<type_monster_data>: three
 // pointers, retail reading _First at +0x04 and _Last at +0x08 and the
@@ -134,7 +135,7 @@ class AICombatData {
 public:
     // DC ai_combat.h:245-246, dc 0x2c6a4; retained const mana getter.
     long getMana() const { return m_mana; }
-    std::vector<type_monster_data> m_creatures;  // +0x00
+    std::vector<AiMonsterData> m_creatures;  // +0x00
     long m_terrain;  // +0x10
 
 protected:

@@ -655,7 +655,7 @@ void Game::setupDynamicStuff(int update, int forceUpdate)
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
             curText++;
 
-            type_artifact artifact;
+            ArtifactRecord artifact;
             int heroNumber = g_overviewTop[g_overviewType] + row;
             if (g_overviewHeroArtifactPage[heroNumber]
                     == OVERVIEW_HERO_BACKPACK_PAGE) {
@@ -1132,7 +1132,7 @@ static void decrementBackpackStart(long slot)
 // the helper while producing the two retail constructor/dialog/destructor
 // sequences. Open-coding either site is the negative source-shape control.
 static inline void showArtifact(Hero* currHero,
-                                 const type_artifact& artifact,
+                                 const ArtifactRecord& artifact,
                                  unsigned char rightMouse)
 {
     if (artifact.m_artifactId == ARTIFACT_SPELLBOOK) {
@@ -2720,7 +2720,7 @@ void updateBackpack(int slot)
     int heroNumber = g_overviewTop[g_overviewType] + slot;
     Hero* currHero = g_game->getHero(g_overviewHeroIds[heroNumber]);
     int lastBackpackIndex = currHero->getLastBackpackIndex() + 1;
-    type_artifact artifact;
+    ArtifactRecord artifact;
     // DC 0x1076c4 calls the default message constructor at 0x2d58.
     // Retail 0x522470 initializes the same zero fields before id/codeX.
     Message msg;
@@ -2785,7 +2785,7 @@ void decrementBackpackStart(long slot)
 
 // E:\gamedcs\overview.cpp:1647
 DC_ONLY(0x1079fc, 0x94)
-void showArtifact(Hero* currHero, const type_artifact& artifact, unsigned char right_mouse)
+void showArtifact(Hero* currHero, const ArtifactRecord& artifact, unsigned char right_mouse)
 {
     // @stub
 }

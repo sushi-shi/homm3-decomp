@@ -1151,7 +1151,7 @@ void SwapManager::updateAllSlots()
 void SwapManager::updateBackpackItem(int hero, int i)
 {
     Message msg;
-    type_artifact artifact = m_heroes[hero]->getBackpack(i);
+    ArtifactRecord artifact = m_heroes[hero]->getBackpack(i);
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = 4;
     // Complete shifts the backpack widget band by two from Dreamcast's 0x57.
@@ -1275,7 +1275,7 @@ void SwapManager::handleArtifactClick(long side, long id, unsigned char rightCli
     ArtifactSlot slot =
         static_cast<ArtifactSlot>(id) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
     Hero* ourHero = m_heroes[side];
-    type_artifact oldArtifact = ourHero->getArtifact(ArtifactSlot(slot));
+    ArtifactRecord oldArtifact = ourHero->getArtifact(ArtifactSlot(slot));
 
     if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId == ARTIFACT_NONE)
@@ -1385,7 +1385,7 @@ VA(0x005af990, 0x251)  // roster bracket + body/callees, dc 0x15d2e0
 void SwapManager::handleBackpackClick(long side, long id, unsigned char rightClick)
 {
     Hero* ourHero = m_heroes[side];
-    type_artifact oldArtifact = ourHero->getBackpack(id);
+    ArtifactRecord oldArtifact = ourHero->getBackpack(id);
 
     if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId != ARTIFACT_NONE && canModHero(side)) {

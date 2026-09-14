@@ -517,7 +517,7 @@ void CombatManager::stopCombatSounds()
 }
 
 VA(0x004639f0, 0x270)  // dc 0x5e464
-void CombatManager::setupCombat(type_point point, Hero* leftHero, ArmyGroup* leftArmyGroup, long rightPlayer, Town* rightTown, Hero* rightHero, ArmyGroup* rightArmyGroup, int x, int y, int seed, unsigned char isSurrounded)
+void CombatManager::setupCombat(MapPoint point, Hero* leftHero, ArmyGroup* leftArmyGroup, long rightPlayer, Town* rightTown, Hero* rightHero, ArmyGroup* rightArmyGroup, int x, int y, int seed, unsigned char isSurrounded)
 {
     g_combatSeed66d840 = seed;
     sRand(x * 0x1aed3 + y * 0x28f79 + 0x13ea1);
@@ -3470,7 +3470,7 @@ void CombatManager::learnSpellFromEagleEye(int side)
 
 VA(0x0046a070, 0x2D3)  // dc 0x63704
 void CombatManager::lootDeadHero(int side,
-                                 std::vector<type_artifact>& lootedArtifacts)
+                                 std::vector<ArtifactRecord>& lootedArtifacts)
 {
     if (g_combatFlag6985a3)
         return;
@@ -3482,7 +3482,7 @@ void CombatManager::lootDeadHero(int side,
     Hero* winner = m_heroes[side];
     for (int slot = 0; slot < 19; slot++) {
         // Complete walks 19 equipped ordinals; getArtifact retains DC's TArtifactSlot argument (Hero.h:18 positions).
-        type_artifact artifact = dead->getArtifact(static_cast<ArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+        ArtifactRecord artifact = dead->getArtifact(static_cast<ArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
         if (artifact.m_artifactId == ARTIFACT_NONE
             || artifact.m_artifactId == ARTIFACT_HOLY_GRAIL
             || artifact.m_artifactId == ARTIFACT_SPELLBOOK
@@ -3497,7 +3497,7 @@ void CombatManager::lootDeadHero(int side,
         lootedArtifacts.push_back(artifact);
     }
     for (int index = 63; index >= 0; index--) {
-        type_artifact artifact = dead->getBackpack(index);
+        ArtifactRecord artifact = dead->getBackpack(index);
         if (artifact.m_artifactId == ARTIFACT_NONE
             || artifact.m_artifactId == ARTIFACT_HOLY_GRAIL
             || artifact.m_artifactId == ARTIFACT_SPELLBOOK
@@ -3789,7 +3789,7 @@ void std::allocator<CombatManager::Obstacle>::~allocator<CombatManager::Obstacle
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x63c98, 0x3C)
-void std::vector<type_artifact,std::allocator<type_artifact> >::push_back(const type_artifact* __x)
+void std::vector<ArtifactRecord,std::allocator<ArtifactRecord> >::push_back(const ArtifactRecord* __x)
 {
     // @stub
 }
@@ -3978,7 +3978,7 @@ void std::vector<CombatManager::Obstacle,std::allocator<CombatManager::Obstacle>
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x64144, 0xD0)
-void std::vector<type_artifact,std::allocator<type_artifact> >::_M_insert_overflow(type_artifact* __position, const type_artifact* __x, unsigned __fill_len)
+void std::vector<ArtifactRecord,std::allocator<ArtifactRecord> >::_M_insert_overflow(ArtifactRecord* __position, const ArtifactRecord* __x, unsigned __fill_len)
 {
     // @stub
 }
@@ -4006,7 +4006,7 @@ void std::construct(CombatManager::Obstacle* __p, const CombatManager::Obstacle*
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x642b0, 0x2C)
-void std::construct(type_artifact* __p, const type_artifact* __value)
+void std::construct(ArtifactRecord* __p, const ArtifactRecord* __value)
 {
     // @stub
 }
@@ -4069,21 +4069,21 @@ CombatManager::Obstacle* std::_STL_alloc_proxy<CombatManager::Obstacle *,CombatM
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x643a0, 0xC)
-unsigned std::vector<type_artifact,std::allocator<type_artifact> >::size()
+unsigned std::vector<ArtifactRecord,std::allocator<ArtifactRecord> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x643ac, 0x28)
-type_artifact* std::_STL_alloc_proxy<type_artifact *,type_artifact,std::allocator<type_artifact> >::allocate(unsigned __n)
+ArtifactRecord* std::_STL_alloc_proxy<ArtifactRecord *,ArtifactRecord,std::allocator<ArtifactRecord> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x643d4, 0x2C)
-void std::_STL_alloc_proxy<type_artifact *,type_artifact,std::allocator<type_artifact> >::deallocate(type_artifact* __p, unsigned __n)
+void std::_STL_alloc_proxy<ArtifactRecord *,ArtifactRecord,std::allocator<ArtifactRecord> >::deallocate(ArtifactRecord* __p, unsigned __n)
 {
     // @stub
 }
@@ -4097,14 +4097,14 @@ CombatManager::Obstacle* std::allocator<CombatManager::Obstacle>::allocate(unsig
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x64428, 0x28)
-type_artifact* std::allocator<type_artifact>::allocate(unsigned __n, const void* __formal)
+ArtifactRecord* std::allocator<ArtifactRecord>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x64450, 0x1C)
-void std::allocator<type_artifact>::deallocate(type_artifact* __p, unsigned __n)
+void std::allocator<ArtifactRecord>::deallocate(ArtifactRecord* __p, unsigned __n)
 {
     // @stub
 }
@@ -4125,21 +4125,21 @@ CombatManager::Obstacle* std::uninitialized_fill_n(CombatManager::Obstacle* __fi
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x644dc, 0x38)
-type_artifact* std::uninitialized_copy(type_artifact* __first, type_artifact* __last, type_artifact* __result)
+ArtifactRecord* std::uninitialized_copy(ArtifactRecord* __first, ArtifactRecord* __last, ArtifactRecord* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x64514, 0x38)
-type_artifact* std::uninitialized_fill_n(type_artifact* __first, unsigned __n, const type_artifact* __x)
+ArtifactRecord* std::uninitialized_fill_n(ArtifactRecord* __first, unsigned __n, const ArtifactRecord* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x6454c, 0x30)
-void std::destroy(type_artifact* __first, type_artifact* __last)
+void std::destroy(ArtifactRecord* __first, ArtifactRecord* __last)
 {
     // @stub
 }
@@ -4181,7 +4181,7 @@ CombatManager::Obstacle* std::__copy(CombatManager::Obstacle* __first, CombatMan
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x64600, 0x4)
-std::allocator<type_artifact>* std::__stl_alloc_rebind(std::allocator<type_artifact>* __a, const type_artifact* __formal)
+std::allocator<ArtifactRecord>* std::__stl_alloc_rebind(std::allocator<ArtifactRecord>* __a, const ArtifactRecord* __formal)
 {
     // @stub
 }
@@ -4202,28 +4202,28 @@ CombatManager::Obstacle* std::__uninitialized_fill_n(CombatManager::Obstacle* __
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x6463c, 0x4)
-type_artifact* std::value_type(const type_artifact* __formal)
+ArtifactRecord* std::value_type(const ArtifactRecord* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x64640, 0x1C)
-type_artifact* std::__uninitialized_copy(type_artifact* __first, type_artifact* __last, type_artifact* __result, type_artifact* __formal)
+ArtifactRecord* std::__uninitialized_copy(ArtifactRecord* __first, ArtifactRecord* __last, ArtifactRecord* __result, ArtifactRecord* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x6465c, 0x1C)
-type_artifact* std::__uninitialized_fill_n(type_artifact* __first, unsigned __n, const type_artifact* __x, type_artifact* __formal)
+ArtifactRecord* std::__uninitialized_fill_n(ArtifactRecord* __first, unsigned __n, const ArtifactRecord* __x, ArtifactRecord* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x64678, 0x1C)
-void std::__destroy(type_artifact* __first, type_artifact* __last, type_artifact* __formal)
+void std::__destroy(ArtifactRecord* __first, ArtifactRecord* __last, ArtifactRecord* __formal)
 {
     // @stub
 }
@@ -4251,21 +4251,21 @@ CombatManager::Obstacle* std::__uninitialized_fill_n_aux(CombatManager::Obstacle
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x6473c, 0x3C)
-type_artifact* std::__uninitialized_copy_aux(type_artifact* __first, type_artifact* __last, type_artifact* __result, __false_type __formal)
+ArtifactRecord* std::__uninitialized_copy_aux(ArtifactRecord* __first, ArtifactRecord* __last, ArtifactRecord* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x64778, 0x3C)
-type_artifact* std::__uninitialized_fill_n_aux(type_artifact* __first, unsigned __n, const type_artifact* __x, __false_type __formal)
+ArtifactRecord* std::__uninitialized_fill_n_aux(ArtifactRecord* __first, unsigned __n, const ArtifactRecord* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x647b4, 0x30)
-void std::__destroy_aux(type_artifact* __first, type_artifact* __last, __false_type __formal)
+void std::__destroy_aux(ArtifactRecord* __first, ArtifactRecord* __last, __false_type __formal)
 {
     // @stub
 }
@@ -4279,7 +4279,7 @@ void std::destroy(CombatManager::Obstacle* __pointer)
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x64800, 0x1C)
-void std::destroy(type_artifact* __pointer)
+void std::destroy(ArtifactRecord* __pointer)
 {
     // @stub
 }

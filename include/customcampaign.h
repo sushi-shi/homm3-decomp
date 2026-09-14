@@ -90,7 +90,7 @@ public:
     // +0x3c / +0x4c: the carry-over hero pools and the artifact pools
     // (proved by the two out-of-line operator=/destructor pairs above).
     std::vector<std::vector<Hero> > m_carryOverHeroes;
-    std::vector<std::vector<type_artifact> > m_carryoverArtifact;
+    std::vector<std::vector<ArtifactRecord> > m_carryoverArtifact;
     std::vector<MapScore> m_mapScores;
     // +0x6c, the fourth assignable sub-object. Its operator= is the
     // four-byte-element vector::operator= at 0x50ac00 and its teardown is

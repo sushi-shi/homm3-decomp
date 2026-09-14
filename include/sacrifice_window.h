@@ -16,7 +16,7 @@ class FuncButton;
 // DC field list: a 16-byte type_artifact-derived record, with the wearable
 // source slot at +8 and the displayed sacrifice value at +12.
 // Before normalization (type): type_artifact_offering.
-struct ArtifactOffering : public type_artifact {
+struct ArtifactOffering : public ArtifactRecord {
     long m_source;
     long m_value;
 
@@ -24,7 +24,7 @@ struct ArtifactOffering : public type_artifact {
     // Its base call passes -1 to type_artifact(TArtifact), so the inherited
     // default-argument path supplies construction without written wrappers.
 
-    void set(const type_artifact* artifact, long slot, const Hero* owner);
+    void set(const ArtifactRecord* artifact, long slot, const Hero* owner);
 };
 SIZE(ArtifactOffering, 16);
 
@@ -214,7 +214,7 @@ public:
     virtual int exitDialog(Message& msg);                      // slot 14
 
 private:
-    unsigned char addArtifact(type_artifact artifact, long source);
+    unsigned char addArtifact(ArtifactRecord artifact, long source);
     void clear();
     void createArtifactWidgets(long& widgetId, int curPlayer);
     long createCreatureIcons(
@@ -226,7 +226,7 @@ private:
     void emptyBackpack();
     static int emptyBackpack(Message& msg);
     long getMaxAmount(long slot) const;
-    void pickUpArtifact(type_artifact artifact, long slot,
+    void pickUpArtifact(ArtifactRecord artifact, long slot,
                           unsigned char newArtifact);
     void putDownArtifact(unsigned char changeExperience);
     void returnArtifact(const ArtifactOffering& artifact);

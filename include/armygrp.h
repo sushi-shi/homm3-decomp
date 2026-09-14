@@ -610,7 +610,8 @@ unsigned char spellTargetsASingleArmy(int spell, int sslevel);
 // field lifts neutral-town luck. NH3API terrain.hpp EMagicTerrain
 // spellings. NewmapCell::get_magic_terrain_type (0x4fcf40) proves the
 // remaining return values against its five-way special-terrain switch.
-enum EMagicTerrain {
+// Before normalization (type): EMagicTerrain.
+enum MagicTerrainType {
     MAGIC_TERRAIN_INVALID = -1,
     MAGIC_TERRAIN_COAST = 0,
     MAGIC_TERRAIN_MAGIC_PLAINS = 0x1,

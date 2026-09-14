@@ -305,7 +305,7 @@ NewmapCell* NewmapCell::getTriggerCell()
         return 0;
 
     CObject* object = &g_game->m_worldMap.m_objects[m_objectTypeIndex];
-    type_point location = object->getTrigger();
+    MapPoint location = object->getTrigger();
 
     if (location.m_x < 0)
         return 0;
@@ -1222,12 +1222,12 @@ CObjectType* CObject::getObjectTypePtr() const
 
 // E:\gamedcs\mapcell.cpp:1119. Dreamcast retains this source helper as an
 // out-of-line SH4 body; Complete expands it into every admitted retail use.
-inline type_point CObject::getTrigger() const
+inline MapPoint CObject::getTrigger() const
 {
     int resultX;
     int resultY;
     findTrigger(resultX, resultY);
-    return type_point(resultX, resultY, m_z);
+    return MapPoint(resultX, resultY, m_z);
 }
 
 VA(0x004fec30, 0x106)  // dc 0xedab8
@@ -2149,7 +2149,7 @@ static int g_shipyardOffsets[12][2] = {
 VA(0x00500de0, 0x239)
 void NewfullMap::loadShipyards()
 {
-    type_point newPoint;
+    MapPoint newPoint;
 
     for (int z = 0; z < m_hasTwoLevels + 1; ++z) {
         for (int y = 0; y < g_mapHeight; ++y) {
@@ -2447,7 +2447,7 @@ int NewfullMap::readMonsterData(AbstractFile* infile, CObject* monsterObject)
     if (infile->read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
 
-    type_point point;
+    MapPoint point;
     point.m_x = monsterObject->m_x;
     point.m_y = monsterObject->m_y;
     point.m_z = monsterObject->m_z;
@@ -4417,7 +4417,7 @@ void NewfullMap::newfullMapFn00505D20(int heroId, int player)
 }
 
 VA(0x00505d60, 0x3F)
-void NewfullMap::newfullMapFn00505D60(type_point point, int player)
+void NewfullMap::newfullMapFn00505D60(MapPoint point, int player)
 {
     for (unsigned int i = 0; i < m_mapObjectData.size(); ++i)
         m_mapObjectData[i]->newMapVFn28(point, player);

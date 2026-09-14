@@ -466,7 +466,7 @@ void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
 VA(0x00406df0, 0x1DF)  // anchor-global, dc 0x66f4
 AdvManager::AdvManager()
 {
-    m_radarOrigin = type_point(0, 0, 0);
+    m_radarOrigin = MapPoint(0, 0, 0);
     m_radarIcons = 0;
     m_scrollX = 0;
     m_scrollY = 0;
@@ -894,9 +894,9 @@ void AdvManager::GetCursorSampleSet(int walkSpeed)
 // ordinary body for the cross-TU spell/window callers; DoAdvCommand expands
 // its four source calls. A header-inline spelling emitted no retained body.
 VA(0x00407b10, 0x6F)  // field loads + four cross-TU call sites, dc 0x7a04
-type_point AdvManager::getMouseMapPoint() const
+MapPoint AdvManager::getMouseMapPoint() const
 {
-    return type_point(m_radarOrigin.m_x + m_lastHoverX,
+    return MapPoint(m_radarOrigin.m_x + m_lastHoverX,
                       m_radarOrigin.m_y + m_lastHoverY,
                       m_radarOrigin.m_z);
 }
@@ -999,7 +999,7 @@ type_point AdvManager::getMouseMapPoint() const
 // decrement stays in the body. Positive landing scopes remove the other two
 // jumps, preserving the same bytes with either nested or compound guards.
 VA(0x00407b80, 0xBF0)  // anchor-global, dc 0x7a8c
-NewmapCell* AdvManager::doAdvCommand(type_point* triggerPoint)
+NewmapCell* AdvManager::doAdvCommand(MapPoint* triggerPoint)
 {
     Town* newTown;
     NewmapCell* eventCell = 0;
@@ -1024,7 +1024,7 @@ NewmapCell* AdvManager::doAdvCommand(type_point* triggerPoint)
             break;
 
         {
-            type_point heroPoint(currHero->m_x, currHero->m_y, currHero->m_z);
+            MapPoint heroPoint(currHero->m_x, currHero->m_y, currHero->m_z);
             // The BY-VALUE copy is retail's, not decoration: it emits
             // `mov ecx,[ebp-0x20] / mov [ebp-0x20],ecx`, a dword self-store,
             // which is a struct copy whose source and destination the
@@ -1032,7 +1032,7 @@ NewmapCell* AdvManager::doAdvCommand(type_point* triggerPoint)
             // load sitting BETWEEN the is_valid call and its test, that is
             // the signature of this file's own by-value DrawHeroCell helper
             // being expanded here.
-            type_point cellPoint = heroPoint;
+            MapPoint cellPoint = heroPoint;
             unsigned char valid = cellPoint.isValid();
             NewfullMap* map = m_fullMap;
             NewmapCell* standingOn;
@@ -1050,7 +1050,7 @@ NewmapCell* AdvManager::doAdvCommand(type_point* triggerPoint)
         }
 
         {
-            type_point target(currHero->m_pathTargetX, currHero->m_pathTargetY,
+            MapPoint target(currHero->m_pathTargetX, currHero->m_pathTargetY,
                               currHero->m_pathTargetZ);
             seedTo(target);
         }
@@ -1175,13 +1175,13 @@ NewmapCell* AdvManager::doAdvCommand(type_point* triggerPoint)
         if (viewingPlayer->m_currTownId == -1)
             break;
         Town* viewedTown = g_game->getTown(viewingPlayer->m_currTownId);
-        type_point townPoint(viewedTown->m_mapX, viewedTown->m_mapY,
+        MapPoint townPoint(viewedTown->m_mapX, viewedTown->m_mapY,
                              viewedTown->m_mapZ);
         // The lookup's result is DISCARDED - retail makes the call and
         // never reads eax. Transcribed as retail wrote it, through the
         // by-value cell helper (see the WALK_ROUTE site for the self-store
         // that proves the copy).
-        type_point cellPoint = townPoint;
+        MapPoint cellPoint = townPoint;
         unsigned char valid = cellPoint.isValid();
         NewfullMap* map = m_fullMap;
         if (!valid)
@@ -1201,13 +1201,13 @@ NewmapCell* AdvManager::doAdvCommand(type_point* triggerPoint)
             break;
         g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
         if (g_unnamed699560) {
-            type_point offMap(-1, -1, 0);
+            MapPoint offMap(-1, -1, 0);
             setEnvironmentOrigin(offMap, 1);
         }
         trimLoopingSounds(0);
         heroView(viewingPlayer->m_currHeroId, 0, 0, 0);
         if (g_unnamed699560) {
-            type_point centre = getMapCenter();
+            MapPoint centre = getMapCenter();
             setEnvironmentOrigin(centre, 1);
         }
         if (g_networkActive69954c && g_dPlay) {
@@ -1220,8 +1220,8 @@ NewmapCell* AdvManager::doAdvCommand(type_point* triggerPoint)
     }
 
     case ADV_COMMAND_SELECT_HERO: {
-        type_point mapPoint = getMouseMapPoint();
-        type_point cellPoint = mapPoint;
+        MapPoint mapPoint = getMouseMapPoint();
+        MapPoint cellPoint = mapPoint;
         unsigned char valid = cellPoint.isValid();
         NewfullMap* map = m_fullMap;
         NewmapCell* heroCell;
@@ -1235,8 +1235,8 @@ NewmapCell* AdvManager::doAdvCommand(type_point* triggerPoint)
     }
 
     case ADV_COMMAND_SELECT_TOWN: {
-        type_point mapPoint = getMouseMapPoint();
-        type_point cellPoint = mapPoint;
+        MapPoint mapPoint = getMouseMapPoint();
+        MapPoint cellPoint = mapPoint;
         unsigned char valid = cellPoint.isValid();
         NewfullMap* map = m_fullMap;
         NewmapCell* townCell;
@@ -1252,9 +1252,9 @@ NewmapCell* AdvManager::doAdvCommand(type_point* triggerPoint)
     case ADV_COMMAND_SHIPYARD: {
         g_mouseManager->showPointer(0);
         g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
-        type_point mapPoint = getMouseMapPoint();
-        type_point dockPoint = getMouseMapPoint();
-        type_point cellPoint = mapPoint;
+        MapPoint mapPoint = getMouseMapPoint();
+        MapPoint dockPoint = getMouseMapPoint();
+        MapPoint cellPoint = mapPoint;
         unsigned char valid = cellPoint.isValid();
         NewfullMap* map = m_fullMap;
         NewmapCell* dockCell;
@@ -1332,7 +1332,7 @@ int AdvManager::main(Message& msg)
             g_unnamed699544 = 0;
             g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
 
-            type_point ambientCentre;
+            MapPoint ambientCentre;
             int centreX = m_radarOrigin.m_x + 9;
             int centreY = m_radarOrigin.m_y + 8;
             int centreZ = m_radarOrigin.m_z;
@@ -1346,7 +1346,7 @@ int AdvManager::main(Message& msg)
     unsigned char exitFlag;
     int result;
     NewmapCell* eventCell;
-    type_point triggerPoint;
+    MapPoint triggerPoint;
     result = MESSAGE_DISPATCH_CONSUME;
     exitFlag = 0;
     eventCell = 0;
@@ -1512,7 +1512,7 @@ DATA(0x006976d8) extern int g_gameCommand;
 // push all three in the prologue, and the SPACE arm's type_point cell
 // lookup keeps `fullMap` in a register slot where ours reloads it.
 VA(0x00408c40, 0xB9D)  // anchor-callee, dc 0x8b70
-int AdvManager::processKeyPress(const Message* msg, unsigned char* exitFlag, type_point* triggerPoint, NewmapCell** peventCell)
+int AdvManager::processKeyPress(const Message* msg, unsigned char* exitFlag, MapPoint* triggerPoint, NewmapCell** peventCell)
 {
     if (m_advWindow->m_chatEdit->m_hasFocus)
         return 0;
@@ -1556,11 +1556,11 @@ int AdvManager::processKeyPress(const Message* msg, unsigned char* exitFlag, typ
             setHeroContext(localPlayer->m_currHeroId, 0, 0, 1);
         }
 
-        type_point heroPoint(currHero->m_x, currHero->m_y, currHero->m_z);
+        MapPoint heroPoint(currHero->m_x, currHero->m_y, currHero->m_z);
 
         NewmapCell* standingOn;
         {
-            type_point cellPoint = heroPoint;
+            MapPoint cellPoint = heroPoint;
             if (!cellPoint.isValid())
                 standingOn = m_fullMap->cell(0, 0, 0);
             else
@@ -1572,7 +1572,7 @@ int AdvManager::processKeyPress(const Message* msg, unsigned char* exitFlag, typ
         if (standingOn->m_type == ANCHOR_POINT)
             break;
 
-        type_point eventPoint(currHero->m_x, currHero->m_y, currHero->m_z);
+        MapPoint eventPoint(currHero->m_x, currHero->m_y, currHero->m_z);
         doEvent(standingOn, eventPoint);
         return 1;
     }
@@ -1816,7 +1816,7 @@ int AdvManager::processKeyPress(const Message* msg, unsigned char* exitFlag, typ
             walker->m_pathTargetZ = walker->m_z;
 
             {
-            type_point walkTrigger;
+            MapPoint walkTrigger;
             int noMove;
             int foughtBattle;
             *peventCell = moveHero(moveDir, 1, walkTrigger, &noMove, 0,
@@ -1870,7 +1870,7 @@ int AdvManager::processKeyPress(const Message* msg, unsigned char* exitFlag, typ
 // the town arm's guard, uncached.
 
 VA(0x004097e0, 0x290)  // dc 0x9330
-int AdvManager::processSelect(const Message* msg, type_point* triggerPoint, NewmapCell** peventCell)
+int AdvManager::processSelect(const Message* msg, MapPoint* triggerPoint, NewmapCell** peventCell)
 {
     PlayerData* localPlayer = g_game->getLocalPlayer();
     unsigned char waitingPlayer = !g_currentPlayer->isLocalHuman();
@@ -1988,7 +1988,7 @@ void AdvManager::ProcessAdvMenu(Message* msg)
 #endif  // @carcass
 
 VA(0x00409a70, 0x641)  // dc 0x9a94
-int AdvManager::processDeSelect(const Message* msg, unsigned char* exitFlag, type_point* triggerPoint, NewmapCell** peventCell)
+int AdvManager::processDeSelect(const Message* msg, unsigned char* exitFlag, MapPoint* triggerPoint, NewmapCell** peventCell)
 {
     PlayerData* localPlayer = g_game->getLocalPlayer();
     unsigned char waitingPlayer = !g_currentPlayer->isLocalHuman();
@@ -2102,7 +2102,7 @@ int AdvManager::processDeSelect(const Message* msg, unsigned char* exitFlag, typ
 
     case AdventureMapWindow::KINGDOM_OVERVIEW_ID: {
         if (g_unnamed699560) {
-            type_point invalidOrigin(-1, -1, 0);
+            MapPoint invalidOrigin(-1, -1, 0);
             setEnvironmentOrigin(invalidOrigin, 1);
         }
         trimLoopingSounds(0);
@@ -2116,7 +2116,7 @@ int AdvManager::processDeSelect(const Message* msg, unsigned char* exitFlag, typ
             g_game->getTown(g_overviewReturnActionExtra)->view(1);
             fadeOut = 0;
         } else if (g_unnamed699560) {
-            type_point viewCentre;
+            MapPoint viewCentre;
             int centreX = m_radarOrigin.m_x + 9;
             int centreY = m_radarOrigin.m_y + 8;
             int centreZ = m_radarOrigin.m_z;
@@ -2347,12 +2347,12 @@ void AdvManager::processRadarSelect(const Message* msg)
 // `xor ebx,ebx` arm behind. Dropping the guard reproduces that dead block
 // but does not pay (see the four measurements above).
 VA(0x0040a5d0, 0x606)  // anchor-callee, dc 0xa88c
-void AdvManager::processMapSelect(const Message* msg, type_point* triggerPoint, NewmapCell** peventCell)
+void AdvManager::processMapSelect(const Message* msg, MapPoint* triggerPoint, NewmapCell** peventCell)
 {
     int visibilityBit = 1 << g_game->getLocalPlayerGamePos();
     int localPlayer = g_game->getLocalPlayerGamePos();
 
-    type_point hoverPoint = m_lastMapHover;
+    MapPoint hoverPoint = m_lastMapHover;
     if (!hoverPoint.isValid())
         return;
 
@@ -2368,7 +2368,7 @@ void AdvManager::processMapSelect(const Message* msg, type_point* triggerPoint, 
     // that local alive across the whole body and costs the frame a slot.
     NewmapCell* cell;
     {
-        type_point cellPoint = m_lastMapHover;
+        MapPoint cellPoint = m_lastMapHover;
         if (!cellPoint.isValid())
             cell = m_fullMap->cell(0, 0, 0);
         else
@@ -2491,7 +2491,7 @@ void AdvManager::processMapSelect(const Message* msg, type_point* triggerPoint, 
 
 // E:\gamedcs\advmgr.cpp:2624
 DC_ONLY(0xaf3c, 0x2CA)
-void AdvManager::ProcessMapSelect2(const Message* msg, type_point* trigger_point, NewmapCell** peventCell)
+void AdvManager::ProcessMapSelect2(const Message* msg, MapPoint* trigger_point, NewmapCell** peventCell)
 {
     // @stub
 }
@@ -3915,10 +3915,10 @@ int AdvManager::processWaitingHover(int mouseX, int mouseY)
             if (thisPlayer->m_currHeroId == -1
                 || g_game->getHero(thisPlayer->m_currHeroId)->m_z
                     == m_radarOrigin.m_z) {
-                type_point point(m_radarOrigin.m_x + m_lastHoverX, m_radarOrigin.m_y + m_lastHoverY,
+                MapPoint point(m_radarOrigin.m_x + m_lastHoverX, m_radarOrigin.m_y + m_lastHoverY,
                                  m_radarOrigin.m_z);
 
-                type_point cellPoint = point;
+                MapPoint cellPoint = point;
                 NewmapCell* currCell;
                 if (!cellPoint.isValid())
                     currCell = m_fullMap->cell(0, 0, 0);
@@ -4190,7 +4190,7 @@ int AdvManager::processHover(int mouseX, int mouseY)
         // FIELD ASSIGNMENT, not the ctor, at this ONE site: the ctor form
         // that is worth +2.5 to +5.7 in the neighbouring hover/context
         // bodies costs 0.62 here (83.5000 -> 82.8763). Measured per site.
-        type_point heroPoint;
+        MapPoint heroPoint;
         heroPoint.m_x = currHero->m_x;
         heroPoint.m_y = currHero->m_y;
         heroPoint.m_z = currHero->m_z;
@@ -4376,7 +4376,7 @@ int AdvManager::processSearch(int x, int y, int z)
 
     if (currHero->m_movePoints != currHero->m_maxMovePoints) {
         if (!g_currentPlayer->isHuman()) {
-            type_point invalidPoint(-1, -1, -1);
+            MapPoint invalidPoint(-1, -1, -1);
             g_currentPlayer->m_puzzleGuess = invalidPoint;
             return 1;
         }
@@ -4389,7 +4389,7 @@ int AdvManager::processSearch(int x, int y, int z)
     if (currHero->getNumberInBackpack(true)
             == HERO_BACKPACK_CAPACITY) {
         if (!g_currentPlayer->isHuman()) {
-            type_point invalidPoint(-1, -1, -1);
+            MapPoint invalidPoint(-1, -1, -1);
             g_currentPlayer->m_puzzleGuess = invalidPoint;
             return 1;
         }
@@ -4407,16 +4407,16 @@ int AdvManager::processSearch(int x, int y, int z)
         z = currHero->m_z;
     }
 
-    type_point point(x, y, z);
+    MapPoint point(x, y, z);
 
-    type_point lookupPoint = point;
+    MapPoint lookupPoint = point;
     if (!lookupPoint.isValid())
         currCell = m_fullMap->cell(0, 0, 0);
     else
         currCell = m_fullMap->cell(lookupPoint.m_x, lookupPoint.m_y, lookupPoint.m_z);
 
     if (!g_currentPlayer->isHuman() && !currCell->isDiggable()) {
-        type_point invalidPoint(-1, -1, -1);
+        MapPoint invalidPoint(-1, -1, -1);
         g_currentPlayer->m_puzzleGuess = invalidPoint;
         return 1;
     }
@@ -4452,7 +4452,7 @@ int AdvManager::processSearch(int x, int y, int z)
                         GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
-            type_artifact grail(ARTIFACT_HOLY_GRAIL);
+            ArtifactRecord grail(ARTIFACT_HOLY_GRAIL);
 
             if (g_currentPlayer->isHuman()) {
                 g_unnamed69950c = g_netLocalGamePos;
@@ -4468,7 +4468,7 @@ int AdvManager::processSearch(int x, int y, int z)
                 normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
 
-                type_artifact describedGrail(ARTIFACT_HOLY_GRAIL);
+                ArtifactRecord describedGrail(ARTIFACT_HOLY_GRAIL);
                 std::string description = describedGrail.getDescription();
                 normalDialog(description.c_str(), 1, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
@@ -4754,7 +4754,7 @@ bool AdvManager::scanForHeroOrBoat(int srcX, int srcY, int z,
             if (srcX + cx >= 0 && srcY + cy >= 0
                 && srcX + cx < g_mapWidth && srcY + cy < g_mapHeight) {
                 NewmapCell* tempCell =
-                    getCell(type_point(srcX + cx, srcY + cy, z));
+                    getCell(MapPoint(srcX + cx, srcY + cy, z));
                 if (tempCell->m_type == type && tempCell->m_isTrigger
                     && tempCell->m_extraInfo != ~0UL) {
                     parts[partNum].m_isValid = true;
@@ -5225,7 +5225,7 @@ void AdvManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                         mapObjects->m_objects[objCell->m_objectIndex].findTrigger(
                             triggerX, triggerY);
                         NewmapCell* triggerCell =
-                            getCell(type_point(triggerX, triggerY, z));
+                            getCell(MapPoint(triggerX, triggerY, z));
                         int owner = getFlaggedObjectOwner(triggerCell);
                         signed char offsets = objCell->m_offsets;
                         signed char yOffset = offsets >> 4;
@@ -5371,8 +5371,8 @@ void AdvManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    type_point point;
-    point = type_point(srcX, srcY, z);
+    MapPoint point;
+    point = MapPoint(srcX, srcY, z);
     NewmapCell* thisCell;
     unsigned char valid = point.isValid();
     NewfullMap* map = m_fullMap;
@@ -5566,8 +5566,8 @@ void AdvManager::drawRiver(int srcX, int srcY, int z, int destX, int destY)
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    type_point point;
-    point = type_point(srcX, srcY, z);
+    MapPoint point;
+    point = MapPoint(srcX, srcY, z);
     NewmapCell* thisCell;
     if (!point.isValid()) {
         thisCell = m_fullMap->cell(0, 0, 0);
@@ -5614,8 +5614,8 @@ void AdvManager::drawRoad(int srcX, int srcY, int z, int destX, int destY)
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    type_point point;
-    point = type_point(srcX, srcY, z);
+    MapPoint point;
+    point = MapPoint(srcX, srcY, z);
     NewmapCell* thisCell;
     if (!point.isValid()) {
         thisCell = m_fullMap->cell(0, 0, 0);
@@ -5672,8 +5672,8 @@ void AdvManager::drawArrowShadow(int srcX, int srcY, int z, int destX,
     int baseX = m_scrollX + destX * 32;
     int baseY = m_scrollY + destY * 32;
 
-    type_point point;
-    point = type_point(srcX, srcY, z);
+    MapPoint point;
+    point = MapPoint(srcX, srcY, z);
     getCell(point);
 
     int tilex = 0;
@@ -5713,8 +5713,8 @@ void AdvManager::drawArrow(int srcX, int srcY, int z, int destX, int destY)
     if (!arrow)
         return;
 
-    type_point point;
-    point = type_point(srcX, srcY, z);
+    MapPoint point;
+    point = MapPoint(srcX, srcY, z);
     getCell(point);
 
     int baseX = m_scrollX + destX * 32;
@@ -5755,8 +5755,8 @@ void AdvManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
         return;
 
     {
-        type_point point;
-        point = type_point(srcX, srcY, z);
+        MapPoint point;
+        point = MapPoint(srcX, srcY, z);
         point.isValid();
     }
 
@@ -5850,8 +5850,8 @@ void AdvManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
     int baseY;
     NewmapCell* thisCell;
 
-    type_point point;
-    point = type_point(srcX, srcY, z);
+    MapPoint point;
+    point = MapPoint(srcX, srcY, z);
     thisCell = getCell(point);
 
     baseX = m_scrollX + destX * 32;
@@ -5908,8 +5908,8 @@ void AdvManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                 int owner;
                 obj = &m_fullMap->m_objects[objCell->m_objectIndex];
                 obj->findTrigger(triggerX, triggerY);
-                type_point triggerPoint;
-                triggerPoint = type_point(triggerX, triggerY, z);
+                MapPoint triggerPoint;
+                triggerPoint = MapPoint(triggerX, triggerY, z);
                 // The `valid` and `map` locals are the file's own
                 // trigger-cell idiom (DrawHeroCell, DrawAdvObjShadow), and
                 // both halves are measured here: 92.2180 bare, 92.5775 with
@@ -5968,7 +5968,7 @@ VA(0x00412900, 0x2CB)  // dc 0x147c4
 void AdvManager::drawGround(int srcX, int srcY, int z, int destX, int destY)
 {
     NewmapCell* thisCell = getCell(
-        type_point(srcX, srcY, z));
+        MapPoint(srcX, srcY, z));
 
     int baseX = m_scrollX + destX * 32;
     int baseY = m_scrollY + destY * 32;
@@ -6056,7 +6056,7 @@ NewmapCell* AdvManager::getCell(int x, int y, int z)
 DATA(0x006aac3c) extern int g_unnamed6aac3c;
 
 VA(0x00412bd0, 0x6C)  // dc 0x14b90
-NewmapCell* AdvManager::getCell(type_point point)
+NewmapCell* AdvManager::getCell(MapPoint point)
 {
     // DC advmgr.cpp:7028/7029 preserve both NewfullMap overloads.
     // Retail 0x412be6 folds the zero-coordinate call to cellData, and
@@ -6090,7 +6090,7 @@ NewmapCell* AdvManager::getCell(type_point point)
 // pixel block use a hardcoded 0x640-byte stride.
 
 VA(0x00412c40, 0xB41)  // linkorder, dc 0x14bec
-void AdvManager::updateRadar(type_point origin, unsigned char updateFlag, unsigned char partialUpdate, unsigned char viewMines, unsigned char viewHeros, unsigned char viewTowns)
+void AdvManager::updateRadar(MapPoint origin, unsigned char updateFlag, unsigned char partialUpdate, unsigned char viewMines, unsigned char viewHeros, unsigned char viewTowns)
 {
     Widget* radar = m_advWindow->m_radarWidget;
     int rectX = radar->m_x;
@@ -6524,7 +6524,7 @@ void AdvManager::quickInfo(int cellX, int cellY, int z)
     int visited;
     NewmapCell* testCell;
     PlayerData* player;
-    type_point mapPoint;
+    MapPoint mapPoint;
     long x;
     Hero* currHero;
     long y;
@@ -7652,7 +7652,7 @@ unsigned char AdvManager::updBottomViewTown(unsigned char forceUpdate)
 // DC carries this free helper out of line (dc 0x19420, 0x9C); retail's
 // /Ob2 inlines the static into every quick-view caller and drops the body.
 DC_ONLY(0x19420, 0x9C)
-static SkillMastery getIdentifyLevel(type_point point)
+static SkillMastery getIdentifyLevel(MapPoint point)
 {
     int identifyLevel = eMasteryInvalid;
     PlayerData* player = &g_game->m_players[g_unnamed69778c];
@@ -7671,7 +7671,7 @@ void AdvManager::heroQuickView(int heroId, int x, int y,
                                unsigned char displayDropShadow)
 {
     Hero* theHero = g_game->getHero(heroId);
-    type_point heroPoint(theHero->m_x, theHero->m_y, theHero->m_z);
+    MapPoint heroPoint(theHero->m_x, theHero->m_y, theHero->m_z);
 
     SkillMastery identifyLevel = getIdentifyLevel(heroPoint);
 
@@ -7721,7 +7721,7 @@ void AdvManager::townQuickView(int townId, int x, int y,
     // function retail references - and it retires a false OVER-inline row
     // that would otherwise send the next lane after an inliner knob.
     const Town* thisTown = &g_game->m_towns[townId];
-    type_point point(thisTown->m_mapX, thisTown->m_mapY, thisTown->m_mapZ);
+    MapPoint point(thisTown->m_mapX, thisTown->m_mapY, thisTown->m_mapZ);
 
     SkillMastery identifyLevel = SkillMastery(getIdentifyLevel(point));
 
@@ -7756,7 +7756,7 @@ void AdvManager::townQuickView(int townId, int x, int y,
             if (thisTown->m_built & g_bitNumber[building]) {
                 int storage;
                 storage = building;
-                if (thisTown->isLegalBuilding(type_building_id(storage))) {
+                if (thisTown->isLegalBuilding(BuildingId(storage))) {
                     // Retail CALLS basic_string::append(const char*,
                     // size_type) at BOTH of this arm's appends - fn+0x349 for
                     // the separator and fn+0x371 for the name - with the
@@ -7844,7 +7844,7 @@ void AdvManager::garrisonQuickView(int id, int x, int y)
         return;
 
     Garrison* const thisGarrison = &g_game->m_garrisons[id];
-    type_point point(thisGarrison->m_mapX, thisGarrison->m_mapY,
+    MapPoint point(thisGarrison->m_mapX, thisGarrison->m_mapY,
                      thisGarrison->m_mapZ);
 
     SkillMastery identifyLevel = SkillMastery(getIdentifyLevel(point));
@@ -7887,7 +7887,7 @@ void AdvManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
     if (currHero) {
         unsigned char inIdentifyRange;
         {
-            type_point point(m_radarOrigin.m_x + cellx, m_radarOrigin.m_y + celly,
+            MapPoint point(m_radarOrigin.m_x + cellx, m_radarOrigin.m_y + celly,
                              m_radarOrigin.m_z);
             inIdentifyRange = currHero->isInIdentifyRange(&point);
         }
@@ -8027,8 +8027,8 @@ void AdvManager::demobilizeCurrHero(unsigned char waitingPlayer,
         stopCursor(1);
         currHero->obscureCell();
 
-        type_point point;
-        point = type_point(currHero->m_x, currHero->m_y, currHero->m_z);
+        MapPoint point;
+        point = MapPoint(currHero->m_x, currHero->m_y, currHero->m_z);
         getCell(point);
 
         currHero->m_facing = m_cursorDirection;
@@ -8116,7 +8116,7 @@ void AdvManager::setTownContext(int townId, unsigned char waitingPlayer, unsigne
 
     g_advManager->redrawAdvScreen(update, 0);
 
-    type_point point(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8, m_radarOrigin.m_z);
+    MapPoint point(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8, m_radarOrigin.m_z);
     setEnvironmentOrigin(point, 1);
 
     point.m_x = currTown->m_mapX;
@@ -8209,9 +8209,9 @@ void AdvManager::setHeroContext(int heroId, int inMove, unsigned char waitingPla
     Hero* curr = &g_game->m_heroes[heroId];
     NewmapCell* cell;
     {
-        type_point heroPoint(curr->m_x, curr->m_y, curr->m_z);
+        MapPoint heroPoint(curr->m_x, curr->m_y, curr->m_z);
 
-        type_point cellPoint = heroPoint;
+        MapPoint cellPoint = heroPoint;
         if (!cellPoint.isValid())
             cell = m_fullMap->cell(0, 0, 0);
         else
@@ -8272,7 +8272,7 @@ void AdvManager::setHeroContext(int heroId, int inMove, unsigned char waitingPla
         && (m_status == STATUS_ACTIVE || g_currentPlayer->isLocalHuman())) {
         m_seedingValid = 0;
         if (curr->m_pathTargetX >= 0) {
-            type_point routeTarget = curr->getTarget();
+            MapPoint routeTarget = curr->getTarget();
             seedTo(routeTarget);
         }
         showRoute(0, 0, 1);
@@ -8295,7 +8295,7 @@ void AdvManager::setHeroContext(int heroId, int inMove, unsigned char waitingPla
     // needs: both values have to be in hand before the first bitfield
     // write or VC6 emits two read-modify-write inserts instead of one
     // masked store.
-    type_point viewCentre;
+    MapPoint viewCentre;
     int centreX = m_radarOrigin.m_x + 9;
     int centreY = m_radarOrigin.m_y + 8;
     int centreZ = m_radarOrigin.m_z;
@@ -8387,7 +8387,7 @@ DATA(0x0063a64c) static const int g_soundVolumes[8] = { 32, 28, 20, 10,
                                                         3,  2,  1,  0 };
 
 VA(0x004183d0, 0x245)  // dc 0x1b164
-void AdvManager::setEnvironmentOrigin(type_point point, int reset)
+void AdvManager::setEnvironmentOrigin(MapPoint point, int reset)
 {
     const int maxRange = 4;
     if (!g_soundManager->m_playSounds)
@@ -8453,7 +8453,7 @@ void AdvManager::setEnvironmentOrigin(type_point point, int reset)
 
 // E:\gamedcs\advmgr.cpp:9929
 DC_ONLY(0x1b520, 0x88)
-void AdvManager::CheckLoadSample(ELoopingSoundId id_num)
+void AdvManager::CheckLoadSample(LoopingSoundId id_num)
 {
     // @stub
 }
@@ -8482,7 +8482,7 @@ void AdvManager::CheckLoadSample(ELoopingSoundId id_num)
 // against a short compares at 16 bits; a switch cannot.
 
 VA(0x00418620, 0x5E4)  // anchor-global, dc 0x1b5a8
-ELoopingSoundId AdvManager::getSoundId(int x, int y, int z)
+LoopingSoundId AdvManager::getSoundId(int x, int y, int z)
 {
     NewmapCell* thisCell = m_fullMap->cell(x, y, z);
 
@@ -8698,7 +8698,7 @@ void AdvManager::insertSound(int x, int y, int z, int soundPriority,
     if (x < 0 || y < 0 || z < 0 || x >= g_mapWidth || y >= g_mapHeight)
         return;
 
-    ELoopingSoundId idNum = getSoundId(x, y, z);
+    LoopingSoundId idNum = getSoundId(x, y, z);
     if (idNum == LOOPING_SOUND_INVALID)
         return;
 
@@ -8757,7 +8757,7 @@ void AdvManager::showRoute(int updateScreen, int reseed, int changeButton)
     int testMobility;
     int i;
     TerrainType nativeTerrain;
-    type_point point;
+    MapPoint point;
     unsigned short* routeArrayPtr;
     int dir;
     int nextDir;
@@ -8877,7 +8877,7 @@ void AdvManager::checkDimNextHeroBut()
 #pragma auto_inline(on)
 
 VA(0x004194a0, 0xC7)  // dc 0x1c64c
-void AdvManager::seedTo(type_point target)
+void AdvManager::seedTo(MapPoint target)
 {
     if (!g_currentPlayer->isLocalHuman())
         return;
@@ -8887,7 +8887,7 @@ void AdvManager::seedTo(type_point target)
         return;
 
     Hero* currentHero = &g_game->m_heroes[heroId];
-    type_point start(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    MapPoint start(currentHero->m_x, currentHero->m_y, currentHero->m_z);
 
     if (!m_seedingValid) {
         g_searchArray->seedPosition(currentHero, start, target, 59999,
@@ -9111,7 +9111,7 @@ void AdvManager::setInitialMapOrigin()
 
     m_advWindow->setElevationToggleImage(m_radarOrigin.m_z);
 
-    type_point center(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8, m_radarOrigin.m_z);
+    MapPoint center(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8, m_radarOrigin.m_z);
 
     m_lastTerrain = getCell(center)->m_groundSet;
     g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
@@ -9378,7 +9378,7 @@ void AdvManager::enableButtons()
 }
 
 VA(0x0041a460, 0x1FB)  // dc 0x1dc24
-unsigned char AdvManager::findAdjacentMonster(type_point point, type_point* result, type_point excluded)
+unsigned char AdvManager::findAdjacentMonster(MapPoint point, MapPoint* result, MapPoint excluded)
 {
     RECT rect;
     int x;
@@ -9498,7 +9498,7 @@ void AdvManager::viewPuzzle()
 
     if (g_game->m_numObelisks > 0) {
         g_windowManager->saveFizzleSourceX(8, 8, 592, 544);
-        type_point centre = g_game->getPuzzleOrigin();
+        MapPoint centre = g_game->getPuzzleOrigin();
         int grailY = g_game->m_ultimateArtifactY;
         int grailX = g_game->m_ultimateArtifactX;
         g_unnamed6989f4 = 1;
@@ -9532,7 +9532,7 @@ void AdvManager::viewPuzzle()
     if (!g_unnamed6aac3c) {
         redrawAdvScreen(1, 0);
         g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
-        type_point centre(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
+        MapPoint centre(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
                           m_radarOrigin.m_z);
         setEnvironmentOrigin(centre, 1);
     }
@@ -9657,14 +9657,14 @@ unsigned char AdvManager::doSystemOptions()
 }
 
 VA(0x0041adb0, 0x25F)  // dc 0x1e86c
-int AdvManager::moreTreesNear(type_point point)
+int AdvManager::moreTreesNear(MapPoint point)
 {
     RECT rect;
     const int radius = 3;
     int trees = 0;
     int mountains = 0;
     int dead = 0;
-    type_point pt;
+    MapPoint pt;
 
     rect.top = max(point.m_y - radius, 0);
     rect.bottom = cppMin(point.m_y + radius + 1, g_mapHeight);
@@ -9805,14 +9805,14 @@ int CAdvPopup::windowHandler(Message& msg)
 
 // E:\gamedcs\struct.h:100
 DC_ONLY(0x1eda8, 0x8)
-void type_point::type_point()
+void MapPoint::MapPoint()
 {
     // @stub
 }
 
 // E:\gamedcs\struct.h:110
 DC_ONLY(0x1ee20, 0x7A)
-unsigned char type_point::operator==(const type_point* arg)
+unsigned char MapPoint::operator==(const MapPoint* arg)
 {
     // @stub
 }
@@ -9875,7 +9875,7 @@ void DrawParts::DrawParts()
 
 // E:\gamedcs\AdvMgr.h:1254
 DC_ONLY(0x1f084, 0x4C)
-int getMapExtra(type_point point)
+int getMapExtra(MapPoint point)
 {
     // @stub
 }
@@ -10050,7 +10050,7 @@ NewmapCell* NewfullMap::zCell(int x, int y, int z)
 
 // E:\gamedcs\MapCell.h:906
 DC_ONLY(0x1f9f4, 0x4C)
-NewmapCell* NewfullMap::cell(type_point point)
+NewmapCell* NewfullMap::cell(MapPoint point)
 {
     // @stub
 }
@@ -10128,7 +10128,7 @@ unsigned char ObscuringObject::isOnMap()
 
 // E:\gamedcs\Hero.h:157
 DC_ONLY(0x1fb2c, 0x60)
-type_point ObscuringObject::getLocation() const
+MapPoint ObscuringObject::getLocation() const
 {
     // @stub
 }
@@ -10177,7 +10177,7 @@ void Hero::obscureCell()
 
 // E:\gamedcs\Hero.h:986
 DC_ONLY(0x1fd30, 0x60)
-type_point Hero::getTarget(__$ReturnUdt)
+MapPoint Hero::getTarget(__$ReturnUdt)
 {
     // @stub
 }
@@ -10191,7 +10191,7 @@ unsigned char Hero::spellIsAvailable(int spell)
 
 // E:\gamedcs\Town.h:311
 DC_ONLY(0x1fdac, 0x68)
-type_point Town::getLocation(__$ReturnUdt)
+MapPoint Town::getLocation(__$ReturnUdt)
 {
     // @stub
 }
@@ -10261,7 +10261,7 @@ TownType Game::getAlignment(int player_id)
 
 // E:\gamedcs\Findpath.h:202
 DC_ONLY(0x20064, 0x84)
-PathCell* SearchArray::getCell(type_point point, bool flying) const
+PathCell* SearchArray::getCell(MapPoint point, bool flying) const
 {
     // @stub
 }
@@ -10310,7 +10310,7 @@ Palette16* Bitmap816::getPalette()
 
 // E:\gamedcs\netmsg.h:167
 DC_ONLY(0x2018c, 0x2A)
-void CNetMsg::CNetMsg(ERSMessages subType, unsigned long size)
+void CNetMsg::CNetMsg(RsMessages subType, unsigned long size)
 {
     // @stub
 }

@@ -49,7 +49,7 @@ VA(0x00461130, 0x5C)  // dc 0x5c228
 int canBuy(const Town* currTown, int buildingId)
 {
     int cost[NUM_RESOURCES];
-    currTown->getBuildCost((type_building_id) buildingId, cost);
+    currTown->getBuildCost((BuildingId) buildingId, cost);
 
     PlayerData* player = &g_game->m_players[g_netLocalGamePos];
     for (int resource = 0; resource < NUM_RESOURCES; ++resource) {

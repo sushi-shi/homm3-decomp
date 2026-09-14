@@ -23,7 +23,8 @@ extern const char* g_hallInfo[10];
 // Building-id domain landmarks the name lookup switches on (the
 // dwelling row, the town-row band start, the upgrade band start).
 // Names provisional.
-enum EBuildingId {
+// Before normalization (type): EBuildingId.
+enum BuildingIdRange {
     BUILDING_ID_DWELLING = 15,
     BUILDING_ID_TOWN_FIRST = 17,
     BUILDING_ID_UPGRADE_FIRST = 30

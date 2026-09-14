@@ -25,9 +25,9 @@
 
 double aiValueOfMorale(long morale, long change);
 double aiValueOfLuck(long luck, long change);
-long aiGetValueOfArtifact(type_artifact artifact, const Hero* owner,
+long aiGetValueOfArtifact(ArtifactRecord artifact, const Hero* owner,
                               unsigned char equipped, unsigned char exact);
-long aiGetEquipValue(type_artifact artifact, const Hero* ourHero,
+long aiGetEquipValue(ArtifactRecord artifact, const Hero* ourHero,
                         unsigned char exact);
 void aiSetHeroBonuses(Hero* ourHero);
 void aiEquipArtifacts(Hero* currentHero);
@@ -56,7 +56,7 @@ long valueOfUniversity(const Hero* currentHero,
                          unsigned char mustPay);
 void buySpecialBuilding(Hero* currentHero, Town* currentTown);
 void buySiegeEngine(Hero* currentHero, Town* currentTown,
-                      type_building_id building, Artifact engine);
+                      BuildingId building, Artifact engine);
 
 long AICreatureSwapper::getSwapValue(
     const Hero* currentHero, const ArmyGroup* sourceArmy,
@@ -318,7 +318,7 @@ static long getArtifactPurchaseValue(
     if (price > funds[resource])
         return 0;
 
-    type_artifact artifact(artifactId);
+    ArtifactRecord artifact(artifactId);
     long value = static_cast<long>(
         static_cast<double>(aiGetValueOfArtifact(
             artifact, g_netLocalGamePos))
@@ -361,7 +361,7 @@ static void visitWarFactory(Hero* currentHero, Artifact engine)
         for (int resource = 0; resource < 7; resource++)
             g_currentPlayer->m_resources[resource] -= costs[resource];
 
-        type_artifact artifact(engine);
+        ArtifactRecord artifact(engine);
         currentHero->giveArtifact(&artifact, 1, 1);
     }
 }
@@ -450,7 +450,7 @@ static void markShipyards(PlayerData* player)
 
     for (unsigned int shipyardIndex = 0;
          shipyardIndex < player->m_shipyards.size(); ++shipyardIndex) {
-        type_point shipyardPoint = player->m_shipyards[shipyardIndex];
+        MapPoint shipyardPoint = player->m_shipyards[shipyardIndex];
         NewmapCell* shipyard = g_game->getCell(shipyardPoint);
         const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
             static_cast<const void*>(&shipyard->m_extraInfo));
@@ -483,7 +483,7 @@ static void clearShipyards(PlayerData* player)
 
     for (unsigned int shipyardIndex = 0;
          shipyardIndex < player->m_shipyards.size(); ++shipyardIndex) {
-        type_point shipyardPoint = player->m_shipyards[shipyardIndex];
+        MapPoint shipyardPoint = player->m_shipyards[shipyardIndex];
         NewmapCell* shipyard = g_game->getCell(shipyardPoint);
         const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
             static_cast<const void*>(&shipyard->m_extraInfo));
@@ -629,7 +629,7 @@ inline int valueOfMapArtifact(const Hero* currentHero, NewmapCell* cell)
             >= HERO_BACKPACK_CAPACITY)
         return 0;
 
-    type_artifact artifact(cell->getArtifactIndex());
+    ArtifactRecord artifact(cell->getArtifactIndex());
     int value = aiGetValueOfArtifact(artifact, currentHero->m_owner);
     if (value < 10)
         value = 10;
@@ -1156,7 +1156,7 @@ void buyArtifacts(Hero* currentHero, Artifact* artifactList,
                 artifactList[bestArtifact], marketCount, &resource);
             g_currentPlayer->m_resources[resource] -= price;
 
-            type_artifact artifact(artifactList[bestArtifact]);
+            ArtifactRecord artifact(artifactList[bestArtifact]);
             currentHero->giveArtifact(&artifact, 1, 1);
             artifactList[bestArtifact] = ARTIFACT_NONE;
         } else {
@@ -1589,7 +1589,7 @@ static long valueOfWarFactory(const Hero* currentHero,
         return 0;
 
     long artifactValue = aiGetValueOfArtifact(
-        type_artifact(engine), currentHero, false, true);
+        ArtifactRecord(engine), currentHero, false, true);
     CreatureType creature = siegeArtifactToCreature(engine);
     const int* costs = g_creatureTypeTraits[creature].m_cost;
     const double* resourceValues = g_currentPlayer->m_ai.m_resourceValue;
@@ -1701,7 +1701,7 @@ void aiEnterTown(Hero* currentHero, Town* currentTown)
                 int ordinal = ARTIFACT_SPELLBOOK;
                 memcpy(&artifactId, &ordinal, sizeof artifactId);
             }
-            type_artifact artifact(artifactId);
+            ArtifactRecord artifact(artifactId);
             currentHero->giveArtifact(&artifact, 1, 1);
             player->m_resources[GOLD] -= 500;
         }
@@ -1918,13 +1918,13 @@ long valueOfUniversity(const Hero* currentHero,
 
 VA(0x00525ca0, 0x11e)  // dc 0x10e118
 void buySiegeEngine(Hero* currentHero, Town* currentTown,
-                      type_building_id building, Artifact engine)
+                      BuildingId building, Artifact engine)
 {
     if (currentHero->hasArtifact(engine))
         return;
 
     long value = aiGetValueOfArtifact(
-        type_artifact(engine), currentHero, false, true);
+        ArtifactRecord(engine), currentHero, false, true);
     CreatureType creature = siegeArtifactToCreature(engine);
     const int* costs = g_creatureTypeTraits[creature].m_cost;
     if (!value)
@@ -1948,7 +1948,7 @@ void buySiegeEngine(Hero* currentHero, Town* currentTown,
     for (int costResource = 0; costResource < 7; ++costResource)
         g_currentPlayer->m_resources[costResource] -= costs[costResource];
 
-    currentHero->giveArtifact(&type_artifact(engine), 1, 1);
+    currentHero->giveArtifact(&ArtifactRecord(engine), 1, 1);
 }
 
 VA(0x00525dc0, 0xB1)  // dc 0x10e678
@@ -2211,9 +2211,9 @@ void moveHero(Hero* currentHero, unsigned char isLastHero,
                unsigned char& exploreMode)
 {
     HeroDestination destination;
-    type_point oldTarget = currentHero->getTarget();
+    MapPoint oldTarget = currentHero->getTarget();
     long rawValue;
-    type_point originalDestination;
+    MapPoint originalDestination;
     int rv;
 
     long maximumDistance = 32000;
@@ -2684,7 +2684,7 @@ void PhilAI::getTurnAIVars(int whichPlayer)
                 int ordinal = artifactId;
                 memcpy(&artifactType, &ordinal, sizeof artifactType);
             }
-            type_artifact artifact(artifactType);
+            ArtifactRecord artifact(artifactType);
             totalArtifactValue +=
                 aiGetValueOfArtifact(artifact, whichPlayer);
         }
@@ -3017,7 +3017,7 @@ unsigned char aiChooseResourceOrExperience(const Hero* currentHero,
 // Complete adds object variants and widens a few packed fields, but keeps the
 // same dispatch at this independently located retail address.
 VA(0x00528040, 0x1648)  // anchor-callee + 100-row DC statement shape, dc 0x113e24
-long aiValueOfEvent(const Hero* currentHero, type_point point,
+long aiValueOfEvent(const Hero* currentHero, MapPoint point,
                        long& moveCost)
 {
     PlayerData* player = currentHero->getPlayer();
@@ -3593,7 +3593,7 @@ int valueOfMine(const Hero* currentHero, NewmapCell* cell)
 }
 
 VA(0x0052a140, 0x96)  // dc 0x111a9c
-long valueOfMonsters(const Hero* currentHero, NewmapCell* cell, type_point point)
+long valueOfMonsters(const Hero* currentHero, NewmapCell* cell, MapPoint point)
 {
     int typedCreature;
     typedCreature = cell->m_objectIndex;
@@ -3632,7 +3632,7 @@ int valueOfObelisk(NewmapCell* cell, long playerId)
             == static_cast<short>(g_game->m_ultimateArtifactZ))
         return 0;
 
-    type_artifact grailArtifact(ARTIFACT_HOLY_GRAIL);
+    ArtifactRecord grailArtifact(ARTIFACT_HOLY_GRAIL);
     return aiGetValueOfArtifact(grailArtifact, playerId)
         / g_game->m_numObelisks;
 }
@@ -3699,11 +3699,11 @@ long getValueOfWell(const Hero* currentHero, unsigned short moveCost)
     if (currentHero->m_flags & 1)
         return 0;
 
-    type_point path;
+    MapPoint path;
     path.m_x = currentHero->m_pathTargetX;
     path.m_y = currentHero->m_pathTargetY;
     path.m_z = currentHero->m_pathTargetZ;
-    type_point target = path;
+    MapPoint target = path;
     if (target.isValid() && moveCost > 300) {
         NewmapCell* cell = g_game->m_worldMap.cell(target);
         if (cell->m_type != MAGIC_WELL && cell->m_type != MAGIC_SPRING)
@@ -3819,7 +3819,7 @@ int valueOfScroll(const Hero* currentHero, NewmapCell* cell)
     } else
         spell = cell->m_extraInfo;
 
-    type_artifact artifact(spell);
+    ArtifactRecord artifact(spell);
     if (!currentHero->spellIsAvailable(spell))
         value += aiGetValueOfArtifact(artifact, currentHero, false, false);
     return value;
@@ -3881,7 +3881,7 @@ VA(0x0052ab80, 0x505)  // dc 0x112914
 long valueOfTown(const Hero* currentHero, int x, int y, int z, short moveCost)
 {
     short townId = static_cast<short>(g_game->getTownId(x, y, z));
-    type_point point(static_cast<short>(x), static_cast<short>(y),
+    MapPoint point(static_cast<short>(x), static_cast<short>(y),
                      static_cast<short>(z));
     NewmapCell* cell = g_game->getCell(point);
     if (townId < 0)
@@ -3917,7 +3917,7 @@ long valueOfTown(const Hero* currentHero, int x, int y, int z, short moveCost)
                 value += 5000000;
             }
         } else {
-            type_artifact grail(ARTIFACT_HOLY_GRAIL);
+            ArtifactRecord grail(ARTIFACT_HOLY_GRAIL);
             value += aiGetValueOfArtifact(grail,
                                                    currentHero->m_owner);
         }
@@ -3953,7 +3953,7 @@ long valueOfTown(const Hero* currentHero, int x, int y, int z, short moveCost)
         for (int i = 0; i < 5; ++i) {
             if (currentHero->hasArtifact(
                     g_legionArtifacts[i])) {
-                type_artifact artifact(g_legionArtifacts[i]);
+                ArtifactRecord artifact(g_legionArtifacts[i]);
                 value += aiGetEquipValue(artifact, garrisonHero, 1);
             }
         }
@@ -4209,11 +4209,11 @@ long getValueOfSpring(const Hero* currentHero, const NewmapCell* cell,
     if (!info->magicSpringIsFull())
         return 0;
 
-    type_point path;
+    MapPoint path;
     path.m_x = currentHero->m_pathTargetX;
     path.m_y = currentHero->m_pathTargetY;
     path.m_z = currentHero->m_pathTargetZ;
-    type_point target = path;
+    MapPoint target = path;
     if (target.isValid() && moveCost > 300) {
         NewmapCell* destination = g_game->m_worldMap.cell(target);
         if (destination->m_type != MAGIC_WELL
@@ -4249,7 +4249,7 @@ int valueOfWitchHut(const Hero* currentHero, NewmapCell* cell)
 VA(0x0052b9c0, 0x20c)  // dc 0x1147ac
 void __cdecl aiExamineMap()
 {
-    type_point point;
+    MapPoint point;
     point.m_z = 0;
     long passableCells = 0;
     long waterCells = 0;
@@ -4323,7 +4323,7 @@ void aiJoinDecision(Hero* currentHero, CreatureType creature,
 }
 
 VA(0x0052bd10, 0x1D)  // dc 0x114b44
-long aiValueOfEvent(const Hero* currentHero, type_point point)
+long aiValueOfEvent(const Hero* currentHero, MapPoint point)
 {
     long moveCost = 0;
     return aiValueOfEvent(currentHero, point, moveCost);
@@ -4340,7 +4340,7 @@ void aiJoinDecision(Hero* current_hero, CreatureType creature, short amount)
 
 // E:\gamedcs\philai.cpp:4217
 DC_ONLY(0x114b44, 0x44)
-long aiValueOfEvent(const Hero* current_hero, type_point point)
+long aiValueOfEvent(const Hero* current_hero, MapPoint point)
 {
     // @stub
 }

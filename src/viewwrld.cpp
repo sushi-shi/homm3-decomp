@@ -365,7 +365,7 @@ void AdvManager::vwDrawBoatPart(int part, DrawParts& boatParts, int baseX, int b
     int boatCellY = part % 3;
     int boatCellX = part / 3;
     NewmapCell* boatCell = getCell(
-        type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
+        MapPoint(currBoat->m_x, currBoat->m_y, currBoat->m_z));
 
     if (!(boatCell->m_flags0011 & 0x200)) {
         m_boatFrothIcons[currBoat->m_type]->drawHero(
@@ -394,7 +394,7 @@ void AdvManager::vwDrawBoatPartShadow(int part, DrawParts& boatParts, int baseX,
     int boatCellY = part % 3;
     int boatCellX = part / 3;
     NewmapCell* boatCell = getCell(
-        type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
+        MapPoint(currBoat->m_x, currBoat->m_y, currBoat->m_z));
 
     if (!(boatCell->m_flags0011 & 0x200)) {
         m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
@@ -424,7 +424,7 @@ void AdvManager::vwDrawSymbols(int srcX, int srcY, int z, int destX, int destY)
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
+    NewmapCell* thisCell = getCell(MapPoint(srcX, srcY, z));
 
     if (!thisCell->m_isTrigger)
         return;
@@ -479,7 +479,7 @@ void AdvManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
+    NewmapCell* thisCell = getCell(MapPoint(srcX, srcY, z));
     int playerBit = 1 << g_game->getLocalPlayerGamePos();
     playerBit &= getMapExtra(srcX, srcY, z);
 
@@ -536,7 +536,7 @@ void AdvManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     m_fullMap->m_objects[objCell->m_objectIndex].findTrigger(
                         triggerX, triggerY);
                     int owner = getFlaggedObjectOwner(
-                        getCell(type_point(triggerX, triggerY, z)));
+                        getCell(MapPoint(triggerX, triggerY, z)));
 
                     sprPtr->drawAdvObjWithFlag(
                         (m_animCtr
@@ -707,7 +707,7 @@ void AdvManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
+    NewmapCell* thisCell = getCell(MapPoint(srcX, srcY, z));
     int playerBit = (1 << g_game->getLocalPlayerGamePos())
         & getMapExtra(srcX, srcY, z);
 
@@ -811,7 +811,7 @@ void AdvManager::vwDrawRiver(int srcX, int srcY, int z, int destX, int destY)
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
+    NewmapCell* thisCell = getCell(MapPoint(srcX, srcY, z));
 
     int playerBit = 1 << g_game->getLocalPlayerGamePos();
 
@@ -855,7 +855,7 @@ void AdvManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
+    NewmapCell* thisCell = getCell(MapPoint(srcX, srcY, z));
 
     int playerBit = 1 << g_game->getLocalPlayerGamePos();
 
@@ -910,7 +910,7 @@ void AdvManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
     if (srcY >= g_mapHeight && !g_completeDrawAllCells)
         return;
 
-    getCell(type_point(srcX, srcY, z));
+    getCell(MapPoint(srcX, srcY, z));
 
     int playerBit = 1 << g_game->getLocalPlayerGamePos();
 
@@ -974,7 +974,7 @@ void AdvManager::vwDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
+    NewmapCell* thisCell = getCell(MapPoint(srcX, srcY, z));
 
     int playerBit = 1 << g_game->getLocalPlayerGamePos();
 
@@ -1024,7 +1024,7 @@ void AdvManager::vwDrawGround(int srcX, int srcY, int z, int destX, int destY)
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
+    NewmapCell* thisCell = getCell(MapPoint(srcX, srcY, z));
 
     int playerBit = 1 << g_game->getLocalPlayerGamePos();
 
@@ -1411,7 +1411,7 @@ void AdvManager::viewWorld(int whatToDraw, SkillMastery level)
     g_combatActive698a18 = 2;
     {
         ViewWorldWindow viewWorldWindow;
-        type_point mapCenter(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
+        MapPoint mapCenter(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
                               m_radarOrigin.m_z);
 
         viewWorldWindow.init(mapCenter, 0);
@@ -1458,7 +1458,7 @@ void AdvManager::viewWorld(int whatToDraw, SkillMastery level)
 // declaration into the top block and assigning later (98.89, byte-flat);
 // naming the ftol argument as a `double scaled` inside the loop (98.90).
 VA(0x005fc240, 0x274)  // anchor-caller ViewWorld, anchor-callee UpdateRadar, dc 0x195d30
-void ViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
+void ViewWorldWindow::init(MapPoint newCenter, unsigned char updateFlag)
 {
     int i;
 
@@ -1582,7 +1582,7 @@ void ViewWorldWindow::updateViewWorld(Message* msg)
     msg2.m_extra = 16;
     broadcastMessage(msg2);
 
-    type_point center(m_origin.m_x + g_viewHalfWidth,
+    MapPoint center(m_origin.m_x + g_viewHalfWidth,
                       m_origin.m_y + g_viewHalfHeight, m_origin.m_z);
 
     init(center, 1);
@@ -1640,7 +1640,7 @@ int ViewWorldWindow::windowHandler(Message& msg)
 {
     Message rMsg;
     Message rSaveMsg;
-    type_point center;
+    MapPoint center;
     float radarDivisor;
     int handled;
 
@@ -1720,7 +1720,7 @@ int ViewWorldWindow::windowHandler(Message& msg)
                 g_windowManager->fadeScreen(1, 4, 0);
                 g_advManager->redrawAdvScreen(0, 0);
                 drawWindow(0, 0xffff0001, 0xffff);
-                center = type_point(m_origin.m_x + g_viewHalfWidth,
+                center = MapPoint(m_origin.m_x + g_viewHalfWidth,
                                     m_origin.m_y + g_viewHalfHeight, m_origin.m_z);
                 init(center, 0);
                 g_advManager->vwCompleteDraw(m_origin.m_x, m_origin.m_y, m_origin.m_z,

@@ -2113,7 +2113,7 @@ bool NormalDialogFrame::handleClick(bool downClick,
             break;
         case RES_ARTIFACT: {
             // The Complete resource message packs an artifact ordinal in its low word and scroll payload in its high word; the constructor keeps DC TArtifact.
-            type_artifact artifact(static_cast<Artifact>(LOWORD(m_qualifier)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+            ArtifactRecord artifact(static_cast<Artifact>(LOWORD(m_qualifier)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             artifact.m_extra = HIWORD(m_qualifier);
 
             if (artifact.m_artifactId == ARTIFACT_SPELL_SCROLL)
@@ -2263,7 +2263,7 @@ void playerDead(int whichPlayer)
                 if (cell->m_isTrigger && cell->m_typeValue == SHIPYARD &&
                     cell->m_shipyardInfo.m_owner == whichPlayer) {
                     g_game->claimShipyard(
-                        type_point(static_cast<short>(x),
+                        MapPoint(static_cast<short>(x),
                                    static_cast<short>(y),
                                    static_cast<short>(level)), -1);
                 }
@@ -3756,7 +3756,7 @@ void std::allocator<Resource *>::deallocate(Resource** __p, unsigned __n)
 
 // ..\stlport\stl_vector.c:207
 DC_ONLY(0xe7758, 0xDC)
-std::vector<type_point,std::allocator<type_point>* std::vector<type_point,std::allocator<type_point> >::operator=(const std::vector<type_point,std::allocator<type_point>* __x)
+std::vector<MapPoint,std::allocator<MapPoint>* std::vector<MapPoint,std::allocator<MapPoint> >::operator=(const std::vector<MapPoint,std::allocator<MapPoint>* __x)
 {
     // @stub
 }
@@ -3777,28 +3777,28 @@ std::allocator<Resource* std::__stl_alloc_rebind(std::allocator<Resource* __a, R
 
 // ..\stlport\stl_vector.h:199
 DC_ONLY(0xe7868, 0xC)
-unsigned std::vector<type_point,std::allocator<type_point> >::capacity()
+unsigned std::vector<MapPoint,std::allocator<MapPoint> >::capacity()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:514
 DC_ONLY(0xe7874, 0x38)
-std::vector<type_point,std::allocator<type_point> >::_M_allocate_and_copy(unsigned __n, const type_point* __first, const type_point* __last)
+std::vector<MapPoint,std::allocator<MapPoint> >::_M_allocate_and_copy(unsigned __n, const MapPoint* __first, const MapPoint* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xe78ac, 0x50)
-type_point* std::copy(const type_point* __first, const type_point* __last, type_point* __result)
+MapPoint* std::copy(const MapPoint* __first, const MapPoint* __last, MapPoint* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xe78fc, 0x38)
-type_point* std::uninitialized_copy(const type_point* __first, const type_point* __last, type_point* __result)
+MapPoint* std::uninitialized_copy(const MapPoint* __first, const MapPoint* __last, MapPoint* __result)
 {
     // @stub
 }
@@ -3819,14 +3819,14 @@ void std::__destroy(Resource** __first, Resource** __last, Resource** __formal)
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xe7954, 0x32)
-type_point* std::__copy(const type_point* __first, const type_point* __last, type_point* __result, std::random_access_iterator_tag __formal, int* __formal)
+MapPoint* std::__copy(const MapPoint* __first, const MapPoint* __last, MapPoint* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xe7988, 0x1C)
-type_point* std::__uninitialized_copy(const type_point* __first, const type_point* __last, type_point* __result, type_point* __formal)
+MapPoint* std::__uninitialized_copy(const MapPoint* __first, const MapPoint* __last, MapPoint* __result, MapPoint* __formal)
 {
     // @stub
 }
@@ -3840,7 +3840,7 @@ void std::__destroy_aux(Resource** __first, Resource** __last, __false_type __fo
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xe79d4, 0x3C)
-type_point* std::__uninitialized_copy_aux(const type_point* __first, const type_point* __last, type_point* __result, __false_type __formal)
+MapPoint* std::__uninitialized_copy_aux(const MapPoint* __first, const MapPoint* __last, MapPoint* __result, __false_type __formal)
 {
     // @stub
 }
@@ -4252,7 +4252,7 @@ int handleAppSpecificMenuCommands(int idItem)
             {
                 artifactId = Artifact(idItem - APP_MENU_ARTIFACT_FIRST);
             }
-            type_artifact artifact(artifactId);
+            ArtifactRecord artifact(artifactId);
             if (currentHero)
                 currentHero->giveArtifact(&artifact, 0, 0);
         }
@@ -4262,7 +4262,7 @@ int handleAppSpecificMenuCommands(int idItem)
             if (g_combatManager->m_status == BaseManager::STATUS_ACTIVE)
                 currentHero = g_combatManager->m_heroes[g_combatManager->m_currentSide];
             if (currentHero) {
-                type_artifact artifact(ARTIFACT_NONE);
+                ArtifactRecord artifact(ARTIFACT_NONE);
                 g_game->m_isCheater = 1;
                 if (g_unk69774c)
                     g_game->m_campaign.m_isCheater = 1;

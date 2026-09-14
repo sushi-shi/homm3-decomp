@@ -90,8 +90,8 @@ void TownThreatChecker::checkTowns()
                  ++heroIndex) {
                 Hero* enemyHero = g_game->getHero(player.m_heroes[heroIndex]);
                 long mobility = enemyHero->getMobility() + 800;
-                type_point start(enemyHero->m_x, enemyHero->m_y, enemyHero->m_z);
-                type_point target(-1, -1, -1);
+                MapPoint start(enemyHero->m_x, enemyHero->m_y, enemyHero->m_z);
+                MapPoint target(-1, -1, -1);
                 enemyHero->m_bounty = 0;
                 g_searchArray->seedPosition(
                     enemyHero, start, target, mobility,
@@ -119,7 +119,7 @@ void TownThreatChecker::markTowns(Hero* enemyHero,
     for (int townIndex = 0; townIndex < player.m_numTowns; ++townIndex) {
         Town* ourTown = g_game->getTown(player.m_townIds[townIndex]);
         if (!isMarked(ourTown)) {
-            type_point location(ourTown->m_mapX, ourTown->m_mapY,
+            MapPoint location(ourTown->m_mapX, ourTown->m_mapY,
                                 ourTown->m_mapZ);
             if (currentSearchArray->getCell(location, 0)->m_visited
                 && canTakeTown(enemyHero, ourTown)) {
@@ -331,7 +331,7 @@ void AIPlayer::calculateDemand()
         for (building = 0; building < 44; building++) {
             if (g_bitNumber[building] & buildMask) {
                 int* buildCost = currentTown->getBuildCostArray(
-                    type_building_id(building));
+                    BuildingId(building));
                 int buildResource;
                 for (buildResource = 0; buildResource < 7; buildResource++)
                     m_resourceDemand[buildResource] = cppMax(
@@ -687,7 +687,7 @@ VA(0x00429910, 0x195)  // dc 0x2efc8
 long findMagusHutValue(long playerId, unsigned char exploreMode)
 {
     long value = 0;
-    type_point point;
+    MapPoint point;
     for (point.m_z = 0; point.m_z < g_game->m_worldMap.getNumLevels(); point.m_z++) {
         for (point.m_x = 0; point.m_x < g_mapWidth; point.m_x++) {
             for (point.m_y = 0; point.m_y < g_mapHeight; point.m_y++) {
@@ -1170,11 +1170,11 @@ long valueOfDwelling(Town* currentTown, short dwelling,
 long valueOfDwellingUpgrade(Town* currentTown, short dwelling,
                                int* extraCost);
 int valueOfCastleUpgrade(Town* currentTown, int* extraCost);
-long valueOfHorde(Town* currentTown, type_building_id building,
+long valueOfHorde(Town* currentTown, BuildingId building,
                     unsigned char* prohibited, int* extraCost);
-long valueOfHordeUpgrade(Town* currentTown, type_building_id building,
+long valueOfHordeUpgrade(Town* currentTown, BuildingId building,
                             unsigned char* prohibited, int* extraCost);
-long valueOfHall(Town* currentTown, type_building_id building);
+long valueOfHall(Town* currentTown, BuildingId building);
 int aiResourceCost(const PlayerData* player, const int* resources);
 int canBuy(const Town* currTown, int buildingId);
 
@@ -1194,7 +1194,7 @@ static long valueOfSilo(Town* currentTown, PlayerData* player)
 // The faction switch keeps retail's source order (Stronghold's arm sits
 // between Tower's and Necropolis'). Single call site - no retail body.
 DC_ONLY(0x2fdac, 0x29c)
-static long valueOfBuilding(Town* currentTown, type_building_id building,
+static long valueOfBuilding(Town* currentTown, BuildingId building,
                               unsigned char* prohibitedCreatures,
                               int* extraCost)
 {
@@ -1311,7 +1311,7 @@ static long valueOfBuilding(Town* currentTown, type_building_id building,
 // `building` - and this one is what the bytes say. 96.20 -> 97.32.
 DC_ONLY(0x30048, 0x106)
 static __int64 getRequirements(const Town* currentTown,
-                                type_building_id building)
+                                BuildingId building)
 {
     __int64 requirements = g_bitNumber[building];
     __int64 seen = 0;
@@ -1319,7 +1319,7 @@ static __int64 getRequirements(const Town* currentTown,
     while (k < MAX_BUILDING_TYPE) {
         if (requirements & g_bitNumber[k]) {
             {
-                type_building_id buildingId;
+                BuildingId buildingId;
                 int ordinal = k;
                 memcpy(&buildingId, &ordinal, sizeof buildingId);
                 if (!currentTown->isLegalBuilding(buildingId))
@@ -1347,7 +1347,7 @@ static void getFullCost(const Town* currentTown, int* result,
         if (requirements & g_bitNumber[k]) {
             int* costs;
             {
-                type_building_id buildingId;
+                BuildingId buildingId;
                 int ordinal = k;
                 memcpy(&buildingId, &ordinal, sizeof buildingId);
                 costs = currentTown->getBuildCostArray(buildingId);
@@ -1411,7 +1411,7 @@ unsigned char AIPlayer::purchaseBuilding(
         int building;
         for (building = 0; building < MAX_BUILDING_TYPE; ++building) {
             {
-                type_building_id buildingId;
+                BuildingId buildingId;
                 int ordinal = building;
                 memcpy(&buildingId, &ordinal, sizeof buildingId);
                 if (!currentTown->isLegalBuilding(buildingId)
@@ -1422,7 +1422,7 @@ unsigned char AIPlayer::purchaseBuilding(
                 }
             }
             {
-                type_building_id buildingId;
+                BuildingId buildingId;
                 int ordinal = building;
                 memcpy(&buildingId, &ordinal, sizeof buildingId);
                 basicValue[building] = valueOfBuilding(
@@ -1436,7 +1436,7 @@ unsigned char AIPlayer::purchaseBuilding(
             if (basicValue[building] <= 0)
                 continue;
             {
-                type_building_id buildingId;
+                BuildingId buildingId;
                 int ordinal = building;
                 memcpy(&buildingId, &ordinal, sizeof buildingId);
                 requirements = getRequirements(currentTown, buildingId);
@@ -1467,7 +1467,7 @@ unsigned char AIPlayer::purchaseBuilding(
 
     int cost[7];
     {
-        type_building_id buildingId;
+        BuildingId buildingId;
         int ordinal = bestBuilding;
         memcpy(&buildingId, &ordinal, sizeof buildingId);
         bestTown->getBuildCost(buildingId, cost);
@@ -1488,7 +1488,7 @@ unsigned char AIPlayer::purchaseBuilding(
         }
     }
     {
-        type_building_id buildingId;
+        BuildingId buildingId;
         int ordinal = bestBuilding;
         memcpy(&buildingId, &ordinal, sizeof buildingId);
         if (!bestTown->buyBuilding(buildingId))
@@ -1563,7 +1563,7 @@ int valueOfCastleUpgrade(Town* currentTown, int* extraCost)
 }
 
 VA(0x0042b790, 0x62)  // dc 0x2f9bc
-long valueOfHorde(Town* currentTown, type_building_id building, unsigned char* prohibited, int* extraCost)
+long valueOfHorde(Town* currentTown, BuildingId building, unsigned char* prohibited, int* extraCost)
 {
     HordeEffect* horde = currentTown->getHordeEffect(building);
     CreatureType creature = horde->m_creature;
@@ -1576,7 +1576,7 @@ long valueOfHorde(Town* currentTown, type_building_id building, unsigned char* p
 }
 
 VA(0x0042b800, 0xa2)  // dc 0x2fa88
-long valueOfHordeUpgrade(Town* currentTown, type_building_id building, unsigned char* prohibited, int* extraCost)
+long valueOfHordeUpgrade(Town* currentTown, BuildingId building, unsigned char* prohibited, int* extraCost)
 {
     HordeEffect* horde = currentTown->getHordeEffect(building);
     if (!horde)
@@ -1593,7 +1593,7 @@ long valueOfHordeUpgrade(Town* currentTown, type_building_id building, unsigned 
 }
 
 VA(0x0042b8b0, 0x130)  // dc 0x2fb2c
-long valueOfHall(Town* currentTown, type_building_id building)
+long valueOfHall(Town* currentTown, BuildingId building)
 {
     long value = 0;
     if (currentTown->m_threateningHeroes > 0)
@@ -1714,7 +1714,7 @@ void AIPlayer::buyCreatures(Hero* currentHero, Town* currentTown)
     long bestValue = 0;
     union {
         int m_index;
-        type_building_id m_id;
+        BuildingId m_id;
     } building, bestBuilding;
     __int64 buildMask = currentTown->getBuildableMask();
     short morale = currentHero->getMorale(0, 0, 1);
@@ -1796,11 +1796,11 @@ void AIPlayer::buyMageGuild(Hero* currentHero, Town* currentTown)
     }
 
     int cost[7];
-    currentTown->getBuildCost(type_building_id(building), cost);
+    currentTown->getBuildCost(BuildingId(building), cost);
     tradeResources(cost, 1);
     if (canBuy(currentTown, building)
         && !g_game->m_towns[currentTown->m_id].m_builtThisTurn)
-        currentTown->buyBuilding(type_building_id(building));
+        currentTown->buyBuilding(BuildingId(building));
 }
 
 #if 0  // @carcass
@@ -2025,7 +2025,7 @@ unsigned char attemptStep(Hero* current_hero, PathCell* path_cell, unsigned char
 
 // E:\gamedcs\ai_player.cpp:4155
 DC_ONLY(0x34a7c, 0x8C)
-void checkGatePurchase(type_point point)
+void checkGatePurchase(MapPoint point)
 {
     // @stub
 }
@@ -2072,7 +2072,7 @@ void aiBuildShip(const Hero* our_hero, long x, long y, long z)
 
 // E:\gamedcs\ai_player.cpp:4643
 DC_ONLY(0x35a10, 0xB6)
-long aiGetShipCost(const Hero* our_hero, type_point point)
+long aiGetShipCost(const Hero* our_hero, MapPoint point)
 {
     // @stub
 }
@@ -2086,7 +2086,7 @@ bool AIPlayer::hireHeroes()
 
 // E:\gamedcs\ai_player.cpp:4728
 DC_ONLY(0x35c40, 0x210)
-long aiValueOfObservatory(type_point origin, long player_id, long range)
+long aiValueOfObservatory(MapPoint origin, long player_id, long range)
 {
     // @stub
 }
@@ -2234,7 +2234,7 @@ long CreatureGrowthArtifact::getValue(const Hero* owner, unsigned char equipped,
 
 // E:\gamedcs\ai_player.cpp:5643
 DC_ONLY(0x37464, 0xAE)
-long aiGetEquipValue(type_artifact artifact, const Hero* our_hero, unsigned char exact)
+long aiGetEquipValue(ArtifactRecord artifact, const Hero* our_hero, unsigned char exact)
 {
     // @stub
 }
@@ -2292,7 +2292,7 @@ void aiShutDown()
 
 // E:\gamedcs\struct.h:114
 DC_ONLY(0x37d2c, 0x5A)
-unsigned char type_point::operator!=(const type_point* arg)
+unsigned char MapPoint::operator!=(const MapPoint* arg)
 {
     // @stub
 }
@@ -2432,7 +2432,7 @@ void SearchArray::setRectangle(tagRECT* rect)
 
 // E:\gamedcs\findpath.h:265
 DC_ONLY(0x37e98, 0x54)
-long* getDangerCell(long* danger_zones, type_point point)
+long* getDangerCell(long* danger_zones, MapPoint point)
 {
     // @stub
 }
@@ -3324,8 +3324,8 @@ static void markDangerZones(const Hero* ourHero, Hero* enemyHero,
     if (value < 0) {
         int mobility = enemyHero->getMobility() + 300;
         checkDoMain(0, 0);
-        type_point start = enemyHero->getLocation();
-        type_point target(-1, -1, -1);
+        MapPoint start = enemyHero->getLocation();
+        MapPoint target(-1, -1, -1);
         g_searchArray->seedPosition(
             enemyHero, start, target, mobility,
             (enemyHero->m_flags >> 18) & 1,
@@ -3334,7 +3334,7 @@ static void markDangerZones(const Hero* ourHero, Hero* enemyHero,
         for (long visitedIndex =
                  g_searchArray->getVisitedCount();
              visitedIndex--;) {
-            const type_point& point = g_searchArray->getVisitedCell(visitedIndex)->m_point;
+            const MapPoint& point = g_searchArray->getVisitedCell(visitedIndex)->m_point;
             if (value >= -500000000) {
                 *getDangerCell(dangerZones, point) += value;
             } else {
@@ -3408,7 +3408,7 @@ static void checkHolyGrail(
                             point.m_value = 1968;
                         } else {
                             point.m_value = aiGetValueOfArtifact(
-                                type_artifact(ARTIFACT_HOLY_GRAIL),
+                                ArtifactRecord(ARTIFACT_HOLY_GRAIL),
                                 currentHero->m_owner);
                         }
                         point.m_moveCost = max(
@@ -3435,7 +3435,7 @@ static void markStrategicMap(
     short topX;
     unsigned char wasTrigger;
     short topY;
-    type_point pt;
+    MapPoint pt;
     long levelSize = g_mapWidth * g_mapHeight;
 
     for (short i = 0; i < destinations.size(); ++i) {
@@ -3461,7 +3461,7 @@ static void markStrategicMap(
         currentSearchArray.setRectangle(rect);
         g_advManager->m_advWindow->animateBottomView(0);
         currentSearchArray.seedPosition(
-            currentHero, point.m_point, type_point(-1, -1, -1), 500,
+            currentHero, point.m_point, MapPoint(-1, -1, -1), 500,
             cell->m_groundSet == eTerrainWater, const_AI_treasure_search,
             59999, 0);
 
@@ -3536,7 +3536,7 @@ static void unblockLith(Hero* currentHero,
         return;
     }
 
-    type_point point;
+    MapPoint point;
     long closest = 0;
     point.m_z = currentHero->m_z;
     for (long direction = 0; direction < 8; ++direction) {
@@ -3596,7 +3596,7 @@ int aiChooseDestination(Hero* currentHero, long maxDistance,
     unsigned char noTowns;
     short i;
     std::vector<HeroDestination> destinations(0);
-    type_point start;
+    MapPoint start;
     HeroDestination point;
     long bestDistance;
 
@@ -3786,7 +3786,7 @@ long markDestinations(Hero* currentHero, long maxDistance,
                        SearchArray* currentSearchArray,
                        unsigned short* friendlyDistances,
                        SearchType searchType);
-long aiValueOfEvent(const Hero* currentHero, type_point point,
+long aiValueOfEvent(const Hero* currentHero, MapPoint point,
                        long& moveCost);
 
 // Residual (96.9365%): all 81 CFG blocks agree in flow/instruction count;
@@ -3945,15 +3945,15 @@ long markDestinations(Hero* currentHero, long maxDistance,
     SearchArray friendlySearch;
     long movePoints = currentHero->m_movePoints;
     long heroDanger;
-    type_point point;
+    MapPoint point;
     {
-        type_point dangerPoint(currentHero->m_x, currentHero->m_y,
+        MapPoint dangerPoint(currentHero->m_x, currentHero->m_y,
                                 currentHero->m_z);
         heroDanger = currentSearchArray->getDangerValue(dangerPoint);
     }
     g_advManager->m_advWindow->animateBottomView(0);
-    type_point start(currentHero->m_x, currentHero->m_y, currentHero->m_z);
-    currentSearchArray->seedPosition(currentHero, start, type_point(-1, -1, -1),
+    MapPoint start(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    currentSearchArray->seedPosition(currentHero, start, MapPoint(-1, -1, -1),
                                maxDistance,
                                (currentHero->m_flags >> 18) & 1, searchType,
                                movePoints, 0);
@@ -3962,12 +3962,12 @@ long markDestinations(Hero* currentHero, long maxDistance,
         Hero* friendly = g_game->getHero(g_currentPlayer->m_heroes[i]);
         if (friendly == currentHero)
             continue;
-        type_point friendPoint(friendly->m_x, friendly->m_y, friendly->m_z);
+        MapPoint friendPoint(friendly->m_x, friendly->m_y, friendly->m_z);
         PathCell* friendCell = currentSearchArray->getCell(friendPoint, 0);
         if (!friendCell->m_visited)
             continue;
 
-        type_point target;
+        MapPoint target;
         target.m_x = friendly->m_pathTargetX;
         target.m_y = friendly->m_pathTargetY;
         target.m_z = friendly->m_pathTargetZ;
@@ -3988,7 +3988,7 @@ long markDestinations(Hero* currentHero, long maxDistance,
         NewmapCell* targetCell = g_advManager->getCell(target);
         g_advManager->m_advWindow->animateBottomView(0);
         friendlySearch.seedPosition(
-            friendly, target, type_point(-1, -1, -1),
+            friendly, target, MapPoint(-1, -1, -1),
             friendly->m_maxMovePoints,
             targetCell->m_groundSet == eTerrainWater, const_AI_allied_search,
             friendly->m_maxMovePoints, 0);
@@ -4025,7 +4025,7 @@ int netValueOfLocation(Hero* currentHero, HeroDestination* destination,
                           long* strategicMap, PathCell* currentPathCell,
                           SearchArray* currentSearchArray)
 {
-    type_point point = destination->m_point;
+    MapPoint point = destination->m_point;
     NewmapCell* cell = g_advManager->getCell(point);
     int type = cell->m_type;
     if (cell->m_isTrigger && g_adventureObjectTraits[type][0]) {
@@ -4045,7 +4045,7 @@ int netValueOfLocation(Hero* currentHero, HeroDestination* destination,
         value += currentPathCell->m_dangerValue;
 
     if (!g_adventureObjectTraits[type][0]) {
-        type_point monsterPos;
+        MapPoint monsterPos;
         if (g_advManager->findAdjacentMonster(destination->m_point,
                                               &monsterPos,
                                               destination->m_point)) {
@@ -4100,7 +4100,7 @@ VA(0x0042fc50, 0x285)  // dc 0x341f4
 unsigned char attemptStep(Hero* currentHero, PathCell* currentPathCell,
                            unsigned char standEnd, unsigned char firstStep)
 {
-    type_point triggerPoint;
+    MapPoint triggerPoint;
     int direction = currentPathCell->m_direction;
     if (g_mouseManager->m_hideCount == 0
         && g_advManager->considerHidingMouse(currentHero, direction)) {
@@ -4246,7 +4246,7 @@ static unsigned char attemptTeleport(Hero* currentHero,
 {
     unsigned char atManaSource;
     unsigned char willTeleport;
-    type_point startPoint;
+    MapPoint startPoint;
     long startCost;
     unsigned char inBoat;
     long bestSavings;
@@ -4372,7 +4372,7 @@ static unsigned char attemptTeleport(Hero* currentHero,
     return 1;
 }
 // E:\gamedcs\ai_player.cpp:4155, dc 0x34a7c.
-static __forceinline void checkGatePurchase(type_point point)
+static __forceinline void checkGatePurchase(MapPoint point)
 {
     int townId = g_game->getTownId(point.m_x, point.m_y, point.m_z);
     if (townId >= 0) {
@@ -4411,7 +4411,7 @@ void aiAttemptMove(Hero* currentHero, HeroDestination& bestPoint,
     std::vector<PathCell> path;
     unsigned char firstStep;
     long maxDistance;
-    type_point destination;
+    MapPoint destination;
 
     // Dreamcast line 4188 groups both comparisons and all four accessors in
     // one short-circuit statement; retail likewise constructs get_target's
@@ -4434,7 +4434,7 @@ void aiAttemptMove(Hero* currentHero, HeroDestination& bestPoint,
 
     if (path[0].m_startAtTrigger) {
         g_advManager->mobilizeCurrHero(0, 0, 1);
-        type_point point = currentHero->getLocation();
+        MapPoint point = currentHero->getLocation();
         NewmapCell* cell =
             g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
         g_advManager->doAIEvent(cell, currentHero,
@@ -4453,7 +4453,7 @@ void aiAttemptMove(Hero* currentHero, HeroDestination& bestPoint,
 
     for (long step = 0; step < path.size(); ++step) {
         if (path[step].m_castleGate) {
-            type_point gatePoint = currentHero->getLocation();
+            MapPoint gatePoint = currentHero->getLocation();
             checkGatePurchase(gatePoint);
             checkGatePurchase(path[step].m_point);
             currentHero->m_movePoints = max(currentHero->m_movePoints - 100, 0);
@@ -4559,12 +4559,12 @@ static long totalArtifactValue(Hero* candidate, long playerId)
     long total = 0;
     long slot;
     for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
-        type_artifact backpackArtifact(
+        ArtifactRecord backpackArtifact(
             candidate->getBackpack(slot).m_artifactId);
         total += aiGetValueOfArtifact(backpackArtifact, playerId);
     }
     for (slot = 0; slot < 19; ++slot) {
-        type_artifact equippedArtifact(
+        ArtifactRecord equippedArtifact(
             candidate->getArtifact(ArtifactSlot(slot)).m_artifactId);
         total += aiGetValueOfArtifact(equippedArtifact, playerId);
     }
@@ -4630,7 +4630,7 @@ void aiBuildShip(const Hero* ourHero, long x, long y, long z)
 }
 
 VA(0x00431160, 0x1f3)  // dc 0x35a10
-long aiGetShipCost(const Hero* ourHero, type_point point)
+long aiGetShipCost(const Hero* ourHero, MapPoint point)
 {
     const PlayerData* player = &g_game->m_players[ourHero->m_owner];
     Town* shipyardTown =
@@ -4861,7 +4861,7 @@ long valueOfHiring(Town* currentTown, Hero* candidate,
         Hero* other = g_game->getHero(player->m_heroes[heroIndex]);
         if (other->m_z == candidate->m_z) {
             PathCell* cell = currentSearchArray->getCell(
-                type_point(other->m_x, other->m_y, other->m_z), 0);
+                MapPoint(other->m_x, other->m_y, other->m_z), 0);
 
             if (cell->m_visited) {
                 ++heroesTouched;
@@ -4885,10 +4885,10 @@ long valueOfHiring(Town* currentTown, Hero* candidate,
 }
 
 VA(0x00432220, 0x233)  // dc 0x35c40
-long aiValueOfObservatory(type_point origin, long playerId, long range)
+long aiValueOfObservatory(MapPoint origin, long playerId, long range)
 {
     long value = 0;
-    type_point point;
+    MapPoint point;
     unsigned short playerBit = static_cast<unsigned short>(1 << playerId);
     double distance = static_cast<double>(range) + 0.5;
     RECT rect;
@@ -5429,7 +5429,7 @@ long StatueOfLegionArtifact::getValue(
 // CFG blocks are instruction-exact. An authentic inline first-aid helper was
 // tested and rejected (88.3639%).
 VA(0x004336c0, 0x320)  // anchor-callee unique (hero::GetFirstAidFactor), dc 0x37194
-long aiGetValueOfArtifact(type_artifact artifact, const Hero* owner, unsigned char equipped, unsigned char exact)
+long aiGetValueOfArtifact(ArtifactRecord artifact, const Hero* owner, unsigned char equipped, unsigned char exact)
 {
     if (artifact.m_artifactId == ARTIFACT_NONE)
         return 0;
@@ -5532,7 +5532,7 @@ long aiGetValueOfArtifact(type_artifact artifact, const Hero* owner, unsigned ch
 }
 
 VA(0x004339e0, 0xb8)  // dc 0x37464
-long aiGetEquipValue(type_artifact artifact, const Hero* ourHero,
+long aiGetEquipValue(ArtifactRecord artifact, const Hero* ourHero,
                         unsigned char exact)
 {
     int slot;
@@ -5561,7 +5561,7 @@ long aiGetEquipValue(type_artifact artifact, const Hero* ourHero,
 }
 
 VA(0x00433aa0, 0x9e)  // dc 0x37514
-long aiGetValueOfArtifact(const type_artifact& artifact, long playerId)
+long aiGetValueOfArtifact(const ArtifactRecord& artifact, long playerId)
 {
     if (artifact.m_artifactId == -1)
         return 0;
@@ -5577,7 +5577,7 @@ long aiGetValueOfArtifact(const type_artifact& artifact, long playerId)
 }
 
 long removeNegativeArtifacts(Hero* ourHero);
-unsigned char addArtifact(Hero* ourHero, type_artifact artifact,
+unsigned char addArtifact(Hero* ourHero, ArtifactRecord artifact,
                            long* baseValue, Hero* sourceHero,
                            long sourceSlot, long* sourceValue,
                            long bestChange);
@@ -5586,7 +5586,7 @@ VA(0x00433b40, 0x6d)  // dc 0x37a58
 void aiEquipArtifacts(Hero* ourHero)
 {
     long baseValue = removeNegativeArtifacts(ourHero);
-    type_artifact artifact;
+    ArtifactRecord artifact;
     int backpackSlot = ourHero->getLastBackpackIndex() + 1;
     while (backpackSlot-- > 0) {
         artifact = ourHero->getBackpack(backpackSlot);
@@ -5600,7 +5600,7 @@ void aiEquipArtifacts(Hero* ourHero)
 VA(0x00433bb0, 0xad)  // dc 0x377f0
 long removeNegativeArtifacts(Hero* ourHero)
 {
-    type_artifact artifact;
+    ArtifactRecord artifact;
     long bestValue = getFullValue(ourHero);
     if (ourHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
         return bestValue;
@@ -5662,7 +5662,7 @@ long getFullValue(const Hero* ourHero)
     value += caster.getBestSpellValue(SPELL_VALUE_SPECIAL);
 
     for (int slot = 0; slot < 19; ++slot) {
-        type_artifact artifact = ourHero->getArtifact(ArtifactSlot(slot));
+        ArtifactRecord artifact = ourHero->getArtifact(ArtifactSlot(slot));
         if (artifact.m_artifactId != -1)
             value += aiGetValueOfArtifact(artifact, ourHero, 1, 1);
     }
@@ -5670,7 +5670,7 @@ long getFullValue(const Hero* ourHero)
 }
 
 VA(0x00433e20, 0x1bf)  // dc 0x37898
-unsigned char addArtifact(Hero* ourHero, type_artifact artifact,
+unsigned char addArtifact(Hero* ourHero, ArtifactRecord artifact,
                            long* baseValue, Hero* sourceHero,
                            long sourceSlot, long* sourceValue,
                            long bestChange)
@@ -5678,7 +5678,7 @@ unsigned char addArtifact(Hero* ourHero, type_artifact artifact,
     if (ourHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
         return 0;
 
-    type_artifact oldArtifact;
+    ArtifactRecord oldArtifact;
     int bestSlot = HeroScreenWindow::ARTIFACT_SLOT_COUNT;
     long bestValue;
     long bestSourceValue;
@@ -5749,7 +5749,7 @@ unsigned char addArtifact(Hero* ourHero, type_artifact artifact,
 VA(0x00433fe0, 0xf5)  // dc 0x37acc
 void aiSwapArtifacts(Hero* source, Hero* dest)
 {
-    type_artifact artifact;
+    ArtifactRecord artifact;
     long sourceValue = removeNegativeArtifacts(source);
     long destValue = removeNegativeArtifacts(dest);
 
@@ -6603,14 +6603,14 @@ void std::allocator<PathCell *>::~allocator<PathCell *>()
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x38b08, 0xC)
-unsigned std::vector<type_point,std::allocator<type_point> >::size()
+unsigned std::vector<MapPoint,std::allocator<MapPoint> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:204
 DC_ONLY(0x38b14, 0x20)
-const type_point* std::vector<type_point,std::allocator<type_point> >::operator[](unsigned __n)
+const MapPoint* std::vector<MapPoint,std::allocator<MapPoint> >::operator[](unsigned __n)
 {
     // @stub
 }
@@ -6883,7 +6883,7 @@ void std::_Vector_base<PathCell *,std::allocator<PathCell *> >::~_Vector_base<Pa
 
 // ..\stlport\stl_vector.h:180
 DC_ONLY(0x390a8, 0x4)
-const type_point* std::vector<type_point,std::allocator<type_point> >::begin()
+const MapPoint* std::vector<MapPoint,std::allocator<MapPoint> >::begin()
 {
     // @stub
 }

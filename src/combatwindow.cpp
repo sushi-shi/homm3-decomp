@@ -49,7 +49,7 @@ void checkCombatCheatCode(std::string& chatString)
         recognized = 1;
         currentHero->m_mana = 999;
         if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-            type_artifact spellbook(ARTIFACT_SPELLBOOK);
+            ArtifactRecord spellbook(ARTIFACT_SPELLBOOK);
             currentHero->giveArtifact(&spellbook, 1, 1);
         }
         for (int spell = 0; spell < Hero::NUM_SPELLS; spell++) {

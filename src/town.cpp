@@ -611,7 +611,7 @@ void Town::removeGarrisonHero()
     m_visitingHeroId = m_garrisonHeroId;
     m_garrisonHeroId = -1;
     Hero* placedHero = g_game->getHero(garrisonHero->m_id);
-    type_point point;
+    MapPoint point;
     point.m_x = m_mapX;
     point.m_y = m_mapY;
     point.m_z = m_mapZ;
@@ -662,7 +662,7 @@ void Town::swapHeroes()
 
     int player = currentTown->m_owner;
     Hero* placedHero = g_game->getHero(garrisonHero->m_id);
-    type_point point;
+    MapPoint point;
     point.m_x = currentTown->m_mapX;
     point.m_y = currentTown->m_mapY;
     point.m_z = currentTown->m_mapZ;
@@ -756,7 +756,7 @@ void Town::setSpellsAvailable()
 
 // E:\gamedcs\town.cpp:1226
 VA(0x005be930, 0x330)  // body (built-mask OR) + order-map, dc 0x166c08
-type_building_id Town::createBuilding(type_building_id building)
+BuildingId Town::createBuilding(BuildingId building)
 {
     m_built |= g_bitNumber[building];
     m_built &= ~s_includedBuildings[m_type][building];
@@ -849,18 +849,18 @@ void checkEndGame(int forceWin);
 
 // E:\gamedcs\town.cpp:1340
 VA(0x005bede0, 0x427)  // anchor-global, dc 0x166fc8
-type_building_id Town::buildBuilding(int buildingId,
+BuildingId Town::buildBuilding(int buildingId,
                                      unsigned char setBuiltFlag,
                                      unsigned char applySpecialEffect)
 {
-    type_building_id built;
+    BuildingId built;
     unsigned char hadFort = isCastle();
     unsigned char hadCapitol = isCapitol();
     // The parameter is int - DC-attested (`...QAA?AW4type_building_id@@
     // HEE@Z`) and required by the townmgr call sites - while
     // create_building's domain is the enum; the conversion is the
     // boundary between retail's own two spellings of the id.
-    built = createBuilding(type_building_id(buildingId));
+    built = createBuilding(BuildingId(buildingId));
 
     if (setBuiltFlag && buildingId != DOCK_WITH_BOAT_ID) {
         if (g_game->m_setup.m_difficulty < 2) {
@@ -918,7 +918,7 @@ VA(0x005bf210, 0x1A5)  // dc 0x1671cc
 void Town::updateShipyard()
 {
     if (m_active & g_bitNumber[DOCK_ID]) {
-        type_point point;
+        MapPoint point;
         point.m_x = m_dockSite;
         point.m_y = m_dockSiteY;
         point.m_z = m_mapZ;
@@ -941,7 +941,7 @@ void Town::updateShipyard()
 }
 
 VA(0x005bf3c0, 0x11E)  // dc 0x167274
-unsigned char Town::buyBuilding(type_building_id building)
+unsigned char Town::buyBuilding(BuildingId building)
 {
     if (m_owner < 0)
         return 0;
@@ -1074,7 +1074,7 @@ long Town::getLegionBonus(long dwelling) const
     } else {
         // Constructor form, not default-then-assign: it merges the y|z
         // bitfield unit into one clear-then-or (99.8469 -> 100.0000).
-        type_point point(m_mapX, m_mapY, m_mapZ);
+        MapPoint point(m_mapX, m_mapY, m_mapZ);
 
         NewmapCell* cell = currentGame->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
         if (cell->m_type == HERO)
@@ -1493,7 +1493,7 @@ void initializeBuildings(Town* currentTown, const TownExtra* townSetup)
         }
         for (i = 0; i < MAX_BUILDING_TYPE; i++) {
             if (toBuild & g_bitNumber[i])
-                currentTown->createBuilding(type_building_id(i));
+                currentTown->createBuilding(BuildingId(i));
         }
         return;
     }
@@ -1637,7 +1637,7 @@ __int64 Town::getBuildableMask() const
 }
 
 VA(0x005c1080, 0x64)  // dc 0x1688a0
-int* Town::getBuildCostArray(type_building_id building) const
+int* Town::getBuildCostArray(BuildingId building) const
 {
     if (building < SPECIAL_BUILDING_ID)
         return s_neutralBuildingCosts[building];
@@ -1647,14 +1647,14 @@ int* Town::getBuildCostArray(type_building_id building) const
 }
 
 VA(0x005c10f0, 0x8A)  // dc 0x1688f0
-void Town::getBuildCost(type_building_id building, int* resources) const
+void Town::getBuildCost(BuildingId building, int* resources) const
 {
     memcpy(resources, getBuildCostArray(building),
            NUM_RESOURCES * sizeof(int));
 }
 
 VA(0x005c1180, 0xA9)  // dc 0x168910
-short Town::getBuildCost(type_building_id building, GameResource* types,
+short Town::getBuildCost(BuildingId building, GameResource* types,
                          int* amounts) const
 {
     short count = 0;
@@ -1670,7 +1670,7 @@ short Town::getBuildCost(type_building_id building, GameResource* types,
 }
 
 VA(0x005c1230, 0x46)  // dc 0x168970
-HordeEffect* Town::getHordeEffect(type_building_id building) const
+HordeEffect* Town::getHordeEffect(BuildingId building) const
 {
     short slot;
     for (slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
@@ -1689,7 +1689,7 @@ int* Town::getSiloIncome() const
 }
 
 VA(0x005c12a0, 0x39)  // dc 0x1689ec
-unsigned char Town::isLegalBuilding(type_building_id building) const
+unsigned char Town::isLegalBuilding(BuildingId building) const
 {
     return (g_bitNumber[building] & m_available) != 0;
 }
@@ -1707,7 +1707,7 @@ void Town::setLegalBuildings(__int64 disabled_buildings)
 // E:\gamedcs\town.cpp:2300
 DC_ONLY(0x168a50, 0x48)
 // Before normalization (function): town::is_disabled.
-unsigned char Town::isDisabled(type_building_id building)
+unsigned char Town::isDisabled(BuildingId building)
 {
     // @stub
 }
@@ -1727,7 +1727,7 @@ void Town::hire(Hero* newHero, long playerId)
 
     player->m_resources[GOLD] -= g_heroGoldCost;
     Hero* hiredHero = g_game->getHero(heroId);
-    type_point point;
+    MapPoint point;
     point.m_x = m_mapX;
     point.m_y = m_mapY;
     point.m_z = m_mapZ;
@@ -1740,7 +1740,7 @@ VA(0x005c13b0, 0x83)  // dc 0x168b54
 void Town::placeInMap(int heroId, long playerId, unsigned char resetFlags)
 {
     Hero* newHero = g_game->getHero(heroId);
-    type_point point;
+    MapPoint point;
     point.m_x = m_mapX;
     point.m_y = m_mapY;
     point.m_z = m_mapZ;

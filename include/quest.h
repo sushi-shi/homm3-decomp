@@ -60,7 +60,7 @@ DATA(0x006a7b38) extern const char* g_seerName;
 DATA(0x0068320c) extern std::string (*g_questTextA)[52];
 DATA(0x00683210) extern std::string (*g_questTextB)[52];
 
-typedef type_point TQuestPosition;
+typedef MapPoint TQuestPosition;
 
 // Retail's factory at 0x573240 switches on exactly these nine values. The
 // class mapping is independently fixed by the slot-8 constants in the nine

@@ -13,7 +13,7 @@ unsigned char initializeSeerHutText();
 class AdventureMapWindow;
 class Hero;
 class NewmapCell;
-struct type_point;
+struct MapPoint;
 
 // Complete's seer-hut name table replaced Dreamcast's const-char pointer
 // array with Dinkumware strings; TSeerHut::GetName keeps the shared header
@@ -35,7 +35,7 @@ public:
     // one ordinary constructor definition in seerhut.cpp.
     QuestGuard();
     void doEvent(Hero* currentHero, bool humanPlayer,
-                 NewmapCell* eventCell, type_point point);
+                 NewmapCell* eventCell, MapPoint point);
     void read(AbstractFile* infile);
     std::string questGuardFn00572E40(int player);
     std::string questGuardFn00573040(int player);

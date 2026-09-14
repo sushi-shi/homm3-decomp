@@ -466,7 +466,7 @@ VA(0x004d75d0, 0x10A)  // dc 0xcac58
 void ObscuringObject::obscureCell(AdventureObjectType newType, long id)
 {
     if (!m_valid) {
-        type_point location;
+        MapPoint location;
         location.m_x = m_x;
         location.m_y = m_y;
         location.m_z = m_z;
@@ -527,7 +527,7 @@ bool ObscuringObject::save(void* outputHandle)
 }
 
 VA(0x004d7890, 0x64)  // dc 0xcae60
-void Hero::hire(int playerId, type_point point)
+void Hero::hire(int playerId, MapPoint point)
 {
     PlayerData* player = &g_game->m_players[playerId];
     int recruitSlot = 0;
@@ -541,7 +541,7 @@ void Hero::hire(int playerId, type_point point)
 }
 
 VA(0x004d7900, 0x11B)  // dc 0xcaedc
-void Hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
+void Hero::placeInMap(int playerId, MapPoint point, unsigned char resetFlags)
 {
     PlayerData* player = &g_game->m_players[playerId];
     g_game->recordShowHero(this, static_cast<signed char>(playerId),
@@ -728,7 +728,7 @@ int Hero::load(AbstractFile* infile, int saveVersion)
     infile->read(m_availableSpells, sizeof(m_availableSpells));
 
     if (saveVersion <= 30) {
-        infile->read(m_equipped, 18 * sizeof(type_artifact));
+        infile->read(m_equipped, 18 * sizeof(ArtifactRecord));
         m_equipped[EQUIPPED_SLOT_SOD_MISC].m_artifactId = ARTIFACT_NONE;
         m_equipped[EQUIPPED_SLOT_SOD_MISC].m_extra = -1;
     } else {
@@ -984,10 +984,10 @@ Hero::Hero()
 
     int i;
     for (i = 0; i < 19; i++)
-        m_equipped[i] = type_artifact();
+        m_equipped[i] = ArtifactRecord();
     memset(m_artifactSlotCounts, 0, sizeof(m_artifactSlotCounts));
     for (i = 0; i < 64; i++)
-        m_backpack[i] = type_artifact();
+        m_backpack[i] = ArtifactRecord();
     m_townSpecialGrantedMask.reset();
 
     g_heroScreenWindow = 0;
@@ -1033,10 +1033,10 @@ void Hero::initialize(short index)
     memset(m_availableSpells, 0, sizeof(m_availableSpells));
 
     short i;
-    std::fill(m_equipped, m_equipped + 19, type_artifact());
+    std::fill(m_equipped, m_equipped + 19, ArtifactRecord());
 
     memset(m_artifactSlotCounts, 0, sizeof(m_artifactSlotCounts));
-    std::fill(m_backpack, m_backpack + 64, type_artifact());
+    std::fill(m_backpack, m_backpack + 64, ArtifactRecord());
     m_backpackCount = 0;
     memset(m_skillLevel, 0, sizeof(m_skillLevel));
     memset(m_skillOrder, 0, sizeof(m_skillOrder));
@@ -1232,7 +1232,7 @@ void Hero::heroFn004D8B30(const HeroExtra* setup)
                 equipArtifact(&setup->m_artifacts[i], i);
         }
         for (i = 0; i < 64; i++)
-            m_backpack[i] = type_artifact();
+            m_backpack[i] = ArtifactRecord();
         for (i = 0; i < 64; i++) {
             if (setup->m_backpack[i].m_artifactId != ARTIFACT_NONE)
                 addToBackpack(&setup->m_backpack[i], -1);
@@ -1579,9 +1579,9 @@ void Hero::updateSpellList()
     std::copy(m_inSpellbook, m_inSpellbook + NUM_SPELLS, m_availableSpells);
 
     int remaining = 19;
-    const type_artifact* slot = m_equipped;
+    const ArtifactRecord* slot = m_equipped;
     do {
-        type_artifact current = *slot;
+        ArtifactRecord current = *slot;
         int artifactId = current.m_artifactId;
         long extra = current.m_extra;
         if (artifactId != ARTIFACT_NONE) {
@@ -1709,7 +1709,7 @@ void Hero::viewStat(int whichStat, int isQuickView)
 
 // the same dialog-type pair viewStat uses (4 quick, 1 normal),
 VA(0x004d9a00, 0x128)  // dc 0xcc75c
-void Hero::viewArtifact(const type_artifact* artifact, int isQuickView)
+void Hero::viewArtifact(const ArtifactRecord* artifact, int isQuickView)
 {
     if (artifact->m_artifactId == ARTIFACT_SPELL_SCROLL) {
         normalDialog(artifact->getDescription().c_str(),
@@ -1730,7 +1730,7 @@ VA(0x004d9b30, 0x18D)  // combination-artifact caller + settled retail ABI
 int Hero::heroFn004D9B30(int artifact)
 {
     // Complete's combination prompt receives an integer id; its record constructor retains the older DC TArtifact API.
-    type_artifact record(static_cast<Artifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+    ArtifactRecord record(static_cast<Artifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
     std::string text = record.getDescription();
     text += "\n\n";
     text += g_generalText->getText(734);
@@ -1763,7 +1763,7 @@ int Hero::heroFn004D9CC0(int artifact)
         g_combinationArtifacts[g_artifactTraits[artifact].m_targetCombo]
             .m_artifactId;
     // Complete's combination prompt receives an integer id; its record constructor retains the older DC TArtifact API.
-    type_artifact record(static_cast<Artifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+    ArtifactRecord record(static_cast<Artifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
     std::string text = record.getDescription();
     text += "\n\n";
     text += formatString(g_generalText->getText(733),
@@ -1787,7 +1787,7 @@ void Hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
     }
 
     if (gameLoaded && !remoteMove) {
-        type_point location;
+        MapPoint location;
         location.m_x = m_x;
         location.m_y = m_y;
         location.m_z = m_z;
@@ -2520,7 +2520,7 @@ void updateBackpack()
 }
 
 VA(0x004db350, 0x86)  // dc 0xcd86c
-void type_artifact::getRolloverText(char* buffer) const
+void ArtifactRecord::getRolloverText(char* buffer) const
 {
     if (m_artifactId == ARTIFACT_NONE)
         strcpy(buffer, g_emptyArtifactRolloverText);
@@ -2543,7 +2543,7 @@ void type_artifact::getRolloverText(char* buffer) const
 // armygrp.h already models, indexed by the record's second dword.
 
 VA(0x004db3e0, 0x277)  // anchor-bracket, dc 0xcd8b8
-std::string type_artifact::getDescription() const
+std::string ArtifactRecord::getDescription() const
 {
     if (m_artifactId != ARTIFACT_SPELL_SCROLL)
         return g_artifactTraits[m_artifactId].m_description;
@@ -2849,7 +2849,7 @@ void Hero::rotateBackpackLeft()
     long last = getLastBackpackIndex();
     if (last < 0)
         return;
-    type_artifact saved = m_backpack[last];
+    ArtifactRecord saved = m_backpack[last];
     for (long slot = last; slot > 0; slot--)
         m_backpack[slot] = m_backpack[slot - 1];
     m_backpack[0] = saved;
@@ -2861,7 +2861,7 @@ void Hero::rotateBackpackRight()
     long last = getLastBackpackIndex();
     if (last <= 0)
         return;
-    type_artifact saved = m_backpack[0];
+    ArtifactRecord saved = m_backpack[0];
     for (long slot = 0; slot < last; slot++)
         m_backpack[slot] = m_backpack[slot + 1];
     m_backpack[last] = saved;
@@ -2904,7 +2904,7 @@ unsigned char Hero::heroFn004DBF30(int combination, long slot)
 
     return equipArtifact(
         // The Complete combination table stores the added artifact ordinal; equipArtifact receives the canonical DC-typed record.
-        &type_artifact(static_cast<Artifact>(g_combinationArtifacts[combination].m_artifactId) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */),
+        &ArtifactRecord(static_cast<Artifact>(g_combinationArtifacts[combination].m_artifactId) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */),
         -1);
 }
 
@@ -2920,7 +2920,7 @@ void Hero::heroFn004DC070(long slot)
     for (int artifactId = 0; artifactId < 144; artifactId++) {
         if (components.test(artifactId)) {
             // Complete enumerates all 144 component bits, beyond DC's 128 artifact ids; each set bit becomes a typed artifact record.
-            type_artifact artifact(static_cast<Artifact>(artifactId) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+            ArtifactRecord artifact(static_cast<Artifact>(artifactId) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             equipArtifact(&artifact, -1);
         }
     }
@@ -3389,7 +3389,7 @@ void HeroScreenWindow::showSkills()
 static void handleArtifactClick(long code, unsigned char rightMouse)
 {
     long slot = code;
-    type_artifact record = g_currentHero->getArtifact(ArtifactSlot(slot));
+    ArtifactRecord record = g_currentHero->getArtifact(ArtifactSlot(slot));
 
     if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE) {
         if (rightMouse)
@@ -3543,7 +3543,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
 static void handleBackpackClick(long code, unsigned char rightMouse)
 {
     long index = code;
-    type_artifact record = g_currentHero->getBackpack(index);
+    ArtifactRecord record = g_currentHero->getBackpack(index);
 
     if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE) {
         if (rightMouse)
@@ -4687,7 +4687,7 @@ int heroView(int heroID, int noDismiss, int alreadyFaded, unsigned char quickVie
 
     if (g_currentPlayer->isLocalHuman()
         && g_currentPlayer->m_currHeroId == g_currentHero->m_id) {
-        type_point position;
+        MapPoint position;
         position.m_x = g_currentHero->m_x;
         position.m_y = g_currentHero->m_y;
         position.m_z = g_currentHero->m_z;
@@ -5028,7 +5028,7 @@ void Hero::transferArtifacts(Hero* src)
 {
     if (!src)
         return;
-    type_artifact artifact;
+    ArtifactRecord artifact;
     for (int slot = 0; slot < 19; slot++) {
         artifact = src->m_equipped[slot];
         if (artifact.m_artifactId == ARTIFACT_NONE ||
@@ -5269,7 +5269,7 @@ unsigned char Hero::heroFn004E2840(long artifact, long slot)
     if (m_equipped[slot].m_artifactId == ARTIFACT_NONE)
         return heroFn004E2550(artifact, slot);
 
-    type_artifact displaced = m_equipped[slot];
+    ArtifactRecord displaced = m_equipped[slot];
     removeArtifact(slot);
     unsigned char accepted;
     try {
@@ -5283,7 +5283,7 @@ unsigned char Hero::heroFn004E2840(long artifact, long slot)
 }
 
 VA(0x004e2a00, 0x1C7)  // dc 0xd39d8
-unsigned char Hero::equipArtifact(const type_artifact* artifact, long slot)
+unsigned char Hero::equipArtifact(const ArtifactRecord* artifact, long slot)
 {
     if (slot == -1) {
         slot = 0;
@@ -5304,7 +5304,7 @@ unsigned char Hero::equipArtifact(const type_artifact* artifact, long slot)
 
     if (artifact->m_artifactId == ARTIFACT_TITANS_THUNDER
         && m_equipped[17].m_artifactId == ARTIFACT_NONE) {
-        type_artifact spellbook(ARTIFACT_SPELLBOOK);
+        ArtifactRecord spellbook(ARTIFACT_SPELLBOOK);
         equipArtifact(&spellbook, 17);
     }
 
@@ -5364,7 +5364,7 @@ unsigned char Hero::equipArtifact(const type_artifact* artifact, long slot)
 VA(0x004e2bd0, 0x174)  // anchor-bracket, dc 0xd3ad0
 void Hero::removeArtifact(long slot)
 {
-    type_artifact artifact = m_equipped[slot];
+    ArtifactRecord artifact = m_equipped[slot];
     if (artifact.m_artifactId == ARTIFACT_NONE)
         return;
 
@@ -5450,7 +5450,7 @@ std::string Hero::getBackpackError(Artifact artifact) const
 }
 
 VA(0x004e2f90, 0xD1)  // dc 0xd3cfc
-unsigned char Hero::addToBackpack(const type_artifact* artifact, long slot)
+unsigned char Hero::addToBackpack(const ArtifactRecord* artifact, long slot)
 {
     if (m_backpackCount >= 64)
         return 0;
@@ -5506,7 +5506,7 @@ unsigned char Hero::addToBackpack(const type_artifact* artifact, long slot)
 // the equipment/backpack and end-check helper boundaries here. The remaining
 // per-site inlining decision needs positive Complete/VC6 evidence.
 VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
-unsigned char Hero::giveArtifact(const type_artifact* artifact,
+unsigned char Hero::giveArtifact(const ArtifactRecord* artifact,
                                  unsigned char announce,
                                  unsigned char checkEnd)
 {
@@ -6093,12 +6093,12 @@ int Hero::getSpellDurationBonus() const
 VA(0x004e4ec0, 0xD6)
 AdventureObjectType Hero::heroFn004E4EC0()
 {
-    type_point point;
+    MapPoint point;
     point.m_x = m_x;
     point.m_y = m_y;
     point.m_z = m_z;
 
-    type_point invalid;
+    MapPoint invalid;
     invalid.m_x = -1;
     invalid.m_y = -1;
     invalid.m_z = -1;
@@ -6114,8 +6114,8 @@ AdventureObjectType Hero::heroFn004E4EC0()
 VA(0x004e4fa0, 0xD7)  // dc 0xd4df0
 inline int Hero::getSpecialTerrain() const
 {
-    type_point location = getLocation();
-    if (location == type_point(-1, -1, -1))
+    MapPoint location = getLocation();
+    if (location == MapPoint(-1, -1, -1))
         return kMagicTerrainNone;
     NewmapCell* cell = g_game->getCell(location);
     return cell->getMagicTerrainType();
@@ -6341,7 +6341,7 @@ PlayerData* Hero::getPlayer() const
 }
 
 VA(0x004e56e0, 0x7C)  // dc 0xd52d0
-unsigned char Hero::isInPatrolRadius(type_point point) const
+unsigned char Hero::isInPatrolRadius(MapPoint point) const
 {
     if (m_patrolRadius < 0 || m_patrolX == kPatrolNone)
         return 1;
@@ -6428,7 +6428,7 @@ long Hero::getHitPointBonus(int creatureType) const
 VA(0x004e5ce0, 0xE7)  // dc 0xd5548
 unsigned char Hero::canLand() const
 {
-    type_point point;
+    MapPoint point;
     point.m_x = m_x;
     point.m_y = m_y;
     point.m_z = m_z;
@@ -6460,7 +6460,7 @@ int Hero::heroFn004E5DE0() const
 }
 
 VA(0x004e5e10, 0x11C)  // dc 0xd55c0
-unsigned char Hero::isInIdentifyRange(const type_point* location) const
+unsigned char Hero::isInIdentifyRange(const MapPoint* location) const
 {
     int identifyLevel = heroFn004E5DE0();
     int range = g_spellTraits[SPELL_VISIONS].m_masteryBonus[identifyLevel]
@@ -6471,7 +6471,7 @@ unsigned char Hero::isInIdentifyRange(const type_point* location) const
     if (m_z == location->m_z) {
         // Constructor form, not default-then-assign: it merges the y|z
         // bitfield unit into one clear-then-or (98.6813 -> 100.0000).
-        type_point heroLocation(m_x, m_y, m_z);
+        MapPoint heroLocation(m_x, m_y, m_z);
 
         int xDistance = location->m_x - heroLocation.m_x;
         int yDistance = location->m_y - heroLocation.m_y;
@@ -6484,7 +6484,7 @@ unsigned char Hero::isInIdentifyRange(const type_point* location) const
 VA(0x004e5f30, 0xBF)  // dc 0xd5644
 unsigned char Hero::isMobile() const
 {
-    type_point point;
+    MapPoint point;
     point.m_x = m_x;
     point.m_y = m_y;
     point.m_z = m_z;
@@ -6674,14 +6674,14 @@ int SCampaign::GetExpCap()
 
 // E:\gamedcs\netmsg.h:675
 DC_ONLY(0xd5964, 0x54)
-void CMCDeadHero::CMCDeadHero(signed char heroId, type_point point)
+void CMCDeadHero::CMCDeadHero(signed char heroId, MapPoint point)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:1226
 DC_ONLY(0xd59b8, 0x18)
-void type_artifact::`default constructor closure'()
+void ArtifactRecord::`default constructor closure'()
 {
     // @stub
 }

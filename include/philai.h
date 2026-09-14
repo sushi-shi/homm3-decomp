@@ -13,7 +13,7 @@ class NewmapCell;
 class PlayerData;
 struct BlackMarket;
 struct University;
-struct type_point;
+struct MapPoint;
 
 // The Dreamcast class roster has no data members for this coordinator;
 // its three public methods are the complete method roster.  Retail DoAI
@@ -49,9 +49,9 @@ long aiGetSpellValue(const Hero* ourHero, SpellID spell);
 // move-cost parameter in the decorated name (`AAJ`) as well as the local and
 // statement records. Complete retains the same register/stack ABI at
 // 0x528040.
-long aiValueOfEvent(const Hero* currentHero, type_point point,
+long aiValueOfEvent(const Hero* currentHero, MapPoint point,
                        long& moveCost);
-long aiValueOfEvent(const Hero* currentHero, type_point point);
+long aiValueOfEvent(const Hero* currentHero, MapPoint point);
 void aiJoinDecision(Hero* currentHero, CreatureType creature,
                       short amount);
 
@@ -90,7 +90,7 @@ int luckIncreaseValue(const Hero* currentHero, int value);
 __forceinline long valueOfMagusHut(long playerId);
 int valueOfMine(const Hero* currentHero, NewmapCell* cell);
 long valueOfMonsters(const Hero* currentHero, NewmapCell* cell,
-                       type_point point);
+                       MapPoint point);
 int valueOfMoveSource(const Hero* currentHero, long flag, short increase,
                          long& moveCost);
 int valueOfObelisk(NewmapCell* cell, long playerId);

@@ -33,7 +33,8 @@ extern const char* g_statDesc[4];
 // eClassHeretic, eClassDeathKnight, eClassNecromancer, eClassOverlord,
 // eClassWarlock, eClassBarbarian, eClassBattleMage, eClassBeastmaster,
 // eClassWitch, eClassPlanesWalker, eClassElementalist.
-enum THeroClass {
+// Before normalization (type): THeroClass.
+enum HeroClass {
     classKnight = 0,
     classCleric = 1,
     classRanger = 2,
@@ -54,7 +55,6 @@ enum THeroClass {
     classElementalist = 17,
     kNumHeroClasses = 18
 };
-typedef THeroClass HeroClass;
 
 // Hero/boat sprite sequence ids, transcribed COMPLETE from the
 // Dreamcast CodeView enum `hero_seqid` (the creature_seqid precedent in
@@ -139,7 +139,7 @@ public:
 
 private:
     unsigned char m_valid;  // +0x06
-    type_point m_obscuredLocation;  // +0x07
+    MapPoint m_obscuredLocation;  // +0x07
 
 public:
     char m_paddingBeforeObscuredType;
@@ -177,9 +177,9 @@ public:
     }
     // E:\gamedcs\Hero.h:157
     VA(0x0042ec70, 0x4f)  // exact body/callers x2, dc 0x1fb2c
-    type_point getLocation() const
+    MapPoint getLocation() const
     {
-        return type_point(m_x, m_y, m_z);
+        return MapPoint(m_x, m_y, m_z);
     }
     bool load(void* infile);
     // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView
@@ -246,7 +246,8 @@ SIZE(Boat, 0x28);
 
 #pragma pack(push, 1)
 
-struct type_artifact {
+// Before normalization (type): type_artifact.
+struct ArtifactRecord {
 public:
     Artifact m_artifactId;
     int m_extra;
@@ -257,7 +258,7 @@ public:
     // The generated offering constructor at dc 0x128714 calls this
     // constructor with -1. That proves the default argument: no separate
     // zero-argument type_artifact constructor exists in the DC class API.
-    explicit type_artifact(Artifact id = ARTIFACT_NONE)
+    explicit ArtifactRecord(Artifact id = ARTIFACT_NONE)
     {
         m_artifactId = id;
         m_extra = -1;
@@ -265,7 +266,7 @@ public:
     // Dreamcast Hero.h:214-218. A spell scroll is represented by artifact
     // id 1 and its SpellID payload; this semantic constructor is distinct
     // from the generic TArtifact constructor above.
-    explicit type_artifact(SpellID spell)
+    explicit ArtifactRecord(SpellID spell)
     {
         m_artifactId = ARTIFACT_SPELL_SCROLL;
         m_extra = spell;
@@ -646,7 +647,7 @@ public:
     int m_visionsPower;  // +0x129
 
 private:
-    type_artifact m_equipped[19];
+    ArtifactRecord m_equipped[19];
 
 public:
     // One byte per artifact slot class. remove_artifact decrements the
@@ -655,7 +656,7 @@ public:
     unsigned char m_artifactSlotCounts[15];  // +0x1c5
 
 private:
-    type_artifact m_backpack[64];
+    ArtifactRecord m_backpack[64];
     // +0x3d4, a cached backpack count. hero::get_number_in_backpack
     // (0x4d90c0) returns it with `movsx eax, byte [ecx+0x3d4]` on its
     // flag arm instead of walking the 64 slots, which is what proves
@@ -798,7 +799,7 @@ public:
     // bracket assignment to ViewArtifact is disproved by that name's exact
     // retail identity at 0x4d9a00; this remains an ordinal retail-only name.
     int heroFn004D9CC0(int artifact);
-    void viewArtifact(const type_artifact* artifact, int isQuickView);
+    void viewArtifact(const ArtifactRecord* artifact, int isQuickView);
     // 0x4e16d0 - repaints the hero screen's four primary-stat texts and
     // its luck and morale icon frames. Same gate, same reason.
     void updateStats();
@@ -837,7 +838,7 @@ public:
     // 0x4e5dd0 - one-argument setter for waterWalkLevel.
     void walkOnWater(int level);
     // 0x4e5e10 - tests whether a packed map point is inside Visions range.
-    unsigned char isInIdentifyRange(const type_point* location) const;
+    unsigned char isInIdentifyRange(const MapPoint* location) const;
 
 private:
     // 0x4e5ce0 - checks terrain, passability and blocking trigger objects.
@@ -867,7 +868,7 @@ public:
     long getLastBackpackIndex() const;
     // 0x004e56e0 - the patrol test: Manhattan distance from the patrol
     // anchor, same level, against patrolRadius.
-    unsigned char isInPatrolRadius(struct type_point point) const;
+    unsigned char isInPatrolRadius(struct MapPoint point) const;
     // 0x004e2d50 - the fourth backpack primitive; closes the hole a
     // removed slot leaves and drops `backpackCount`.
     void removeBackpackArtifact(short slot);
@@ -887,7 +888,7 @@ public:
     void removeArtifact(long slot);
     // 0x004e2a00 - equips an artifact record into an ordinal slot;
     // negative slot selects the first legal position.
-    unsigned char equipArtifact(const type_artifact* artifact, long slot);
+    unsigned char equipArtifact(const ArtifactRecord* artifact, long slot);
     // 0x004dc070 - disassembles the combination artifact in one equipped
     // slot, then equips each component into its first legal position.
     void heroFn004DC070(long slot);
@@ -899,7 +900,7 @@ public:
     void useSpell(int cost);
     // 0x004d7890 - consumes this hero from one player's tavern offers,
     // charges the standard gold cost and places the hero on the map.
-    void hire(int playerId, type_point point);
+    void hire(int playerId, MapPoint point);
     // E:\gamedcs\Hero.h:334, dc 0x1fbc8. DrawHeroPart and its shadow
     // twin call this header helper at each sprite draw; retail folds the
     // branchless facing > 4 body into the caller.
@@ -912,9 +913,9 @@ public:
     // 0x004e2f90 - inserts an artifact into the backpack, shifting the
     // tail up when the requested slot is occupied. `slot` < 0 means
     // "first free".
-    unsigned char addToBackpack(const type_artifact* artifact, long slot);
+    unsigned char addToBackpack(const ArtifactRecord* artifact, long slot);
     std::string getBackpackError(Artifact artifact) const;
-    unsigned char giveArtifact(const type_artifact* artifact,
+    unsigned char giveArtifact(const ArtifactRecord* artifact,
                                unsigned char announce,
                                unsigned char checkEnd);
     const char* heroFn004D8F70();
@@ -1096,12 +1097,12 @@ public:
     // LF_MFUNCTION returns const type_artifact&, with TArtifactSlot as the
     // equipped-slot domain. UI-decoded indices convert to that domain at use.
     // E:\gamedcs\Hero.h:965, dc 0x27e8c
-    const type_artifact& getArtifact(ArtifactSlot slot) const
+    const ArtifactRecord& getArtifact(ArtifactSlot slot) const
     {
         return m_equipped[slot];
     }
     // E:\gamedcs\Hero.h:970, dc 0x27e9c
-    const type_artifact& getBackpack(long slot) const
+    const ArtifactRecord& getBackpack(long slot) const
     {
         return m_backpack[slot];
     }
@@ -1124,9 +1125,9 @@ public:
     // header-inline helper in source. Retail folds its packed-point
     // construction into SetHeroContext and move_hero, so the canonical
     // declaration belongs to hero rather than either TU's private view.
-    type_point getTarget() const
+    MapPoint getTarget() const
     {
-        return type_point(m_pathTargetX, m_pathTargetY, m_pathTargetZ);
+        return MapPoint(m_pathTargetX, m_pathTargetY, m_pathTargetZ);
     }
 
     // DC hero.h:991 (0x37dc4) and the class signature record the const
@@ -1205,7 +1206,7 @@ public:
     // ORDINAL PLACEHOLDER.
     void heroFn004DC100(long slot);
     Boat* findSummonableBoat() const;
-    void placeInMap(int playerId, type_point point, unsigned char resetFlags);
+    void placeInMap(int playerId, MapPoint point, unsigned char resetFlags);
     int load(AbstractFile* infile, int saveVersion);
     int save(AbstractFile* outfile);
 };
@@ -1341,7 +1342,7 @@ int heroView(int heroID, int noDismiss, int alreadyFaded,
 // and every artifact-drag path treats the pair as one artifact record.
 // The second is the selected army slot used by the hero-screen message
 // paths. Both spellings are role-derived because no retail symbols survive.
-DATA(0x00698a88) extern type_artifact g_heroScreenDraggedArtifact;
+DATA(0x00698a88) extern ArtifactRecord g_heroScreenDraggedArtifact;
 DATA(0x00697738) extern int g_heroScreenArmySlot;
 // HeroView stores GetLocalPlayer()->FindHero(gpCurrentHero->id) here before
 // SetupHeroView. UpdateHeroLocator compares it with topHero + locator index.

@@ -32,8 +32,8 @@
 VA(0x0056a0d0, 0x282)  // anchor-global, dc 0x12b2e0
 int SearchArray::buildPath(const Hero* currentHero, long limit)
 {
-    type_point source(currentHero->m_x, currentHero->m_y, currentHero->m_z);
-    type_point dest(currentHero->m_pathTargetX, currentHero->m_pathTargetY,
+    MapPoint source(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    MapPoint dest(currentHero->m_pathTargetX, currentHero->m_pathTargetY,
                     currentHero->m_pathTargetZ);
     PathCell* currentPathCell;
 
@@ -77,7 +77,7 @@ int SearchArray::buildPath(const Hero* currentHero, long limit)
     return m_result.size();
 }
 
-long aiValueOfEvent(const Hero* currentHero, type_point point);
+long aiValueOfEvent(const Hero* currentHero, MapPoint point);
 int aiResourceCost(const PlayerData* player, const int* resources);
 
 #ifdef min
@@ -93,7 +93,7 @@ unsigned char checkAdjacentMonster(const Hero* currentHero,
                                      PathCell* entryPoint,
                                      SearchType searchType)
 {
-    type_point monster;
+    MapPoint monster;
     if (getMapExtra(entryPoint->m_point.m_x, entryPoint->m_point.m_y,
                     entryPoint->m_point.m_z)
         & MAP_EXTRA_MONSTER) {
@@ -123,12 +123,12 @@ unsigned char checkAdjacentMonster(const Hero* currentHero,
 // value; liths 100 per exit.
 VA(0x0056a400, 0x32F)  // exhaustive search.obj order-map, dc 0x12b4a8
 void SearchArray::enterLith(const Hero* currentHero,
-                             const std::vector<type_point>* list,
+                             const std::vector<MapPoint>* list,
                              long cellType, long excluded,
                              PathCell* entryPoint, long limit,
                              SearchType searchType)
 {
-    type_point monster;
+    MapPoint monster;
     if (entryPoint->m_cost > 0
         && checkAdjacentMonster(currentHero, entryPoint, searchType))
         return;
@@ -137,7 +137,7 @@ void SearchArray::enterLith(const Hero* currentHero,
     if (searchType >= const_AI_search && cellType != LITH_TWOWAY
         && count > 0) {
         for (int i = 0; i < count; i++) {
-            type_point exitPoint = (*list)[i];
+            MapPoint exitPoint = (*list)[i];
             NewmapCell* cell = g_game->m_worldMap.cell(exitPoint);
             if (cell->m_type == cellType && cell->m_extraInfo != excluded
                 && cell->m_isTrigger) {
@@ -154,7 +154,7 @@ void SearchArray::enterLith(const Hero* currentHero,
     }
     PathCell exitCell = *entryPoint;
     for (int i = 0; i < count; i++) {
-        type_point exitPoint = (*list)[i];
+        MapPoint exitPoint = (*list)[i];
         NewmapCell* cell = g_game->m_worldMap.cell(exitPoint);
         if (cell->m_type == HERO) {
             if (g_game->onSameTeam(g_game->getHero(cell->m_extraInfo)->m_owner,
@@ -189,7 +189,7 @@ VA(0x0056a730, 0x111)  // dc 0x12b7f4
 void SearchArray::enterGate(const PathCell* cell, const NewmapCell* mapCell,
                              long limit)
 {
-    type_point exitPoint = g_game->getUndergroundGateExit(mapCell);
+    MapPoint exitPoint = g_game->getUndergroundGateExit(mapCell);
     const int noGateExit = 0xff;
     if (exitPoint.m_x != noGateExit) {
         PathCell exitCell = *cell;
@@ -285,7 +285,7 @@ unsigned char SearchArray::enterHostileTrigger(const Hero* currentHero,
                                               PathCell& cell)
 {
     if (cell.m_point != cell.m_monster) {
-        type_point point = cell.m_point;
+        MapPoint point = cell.m_point;
         long value = aiValueOfEvent(currentHero, point);
         if (value <= -500000000)
             return 0;
@@ -420,8 +420,8 @@ static unsigned char checkSummonBoat(const Hero* currentHero)
     if (!currentHero->canSummonBoat())
         return 0;
 
-    type_point point = currentHero->getLocation();
-    type_point newPoint;
+    MapPoint point = currentHero->getLocation();
+    MapPoint newPoint;
     // DC has no breakpoint row for source line 502 between new_point (501)
     // and the loop (503). The original VC6-era spelling declares the
     // register-promoted counter separately; both target compilers erase it.
@@ -450,7 +450,7 @@ void SearchArray::checkTownPortal(const Hero* currentHero,
         return;
     if (startCell->m_inBoat)
         return;
-    std::vector<type_point> destinations;
+    std::vector<MapPoint> destinations;
     PlayerData* player = caster->getPlayer();
     int i;
     if (caster->getSpellLevel(SPELL_TOWN_PORTAL) >= eMasteryAdvanced) {
@@ -502,8 +502,8 @@ void SearchArray::checkTownPortal(const Hero* currentHero,
 
 // E:\gamedcs\search.cpp:621
 VA(0x0056b440, 0x8EC)  // exhaustive search.obj order-map, dc 0x12c36c
-void SearchArray::seedPosition(Hero* currentHero, type_point start,
-                               type_point target, int maxMobility,
+void SearchArray::seedPosition(Hero* currentHero, MapPoint start,
+                               MapPoint target, int maxMobility,
                                unsigned char isBoat,
                                SearchType searchType,
                                int curTempMobility,
@@ -598,7 +598,7 @@ void SearchArray::seedPosition(Hero* currentHero, type_point start,
     }
 
     g_advManager->m_seedingValid = 1;
-    type_point monster(-1, -1, -1);
+    MapPoint monster(-1, -1, -1);
     PathCell cell;
 
     if (!seedContinuation) {
@@ -629,7 +629,7 @@ void SearchArray::seedPosition(Hero* currentHero, type_point start,
 
         // Complete inserts the can-land rule before materializing this value;
         // retail keeps the constructor stores on the far side of both calls.
-        cell.m_lastPoint = type_point(-1, -1, -1);
+        cell.m_lastPoint = MapPoint(-1, -1, -1);
         cell.m_adjustedCost = 0;
 
         pushPoint(cell, cell, 2, 0, maxMobility, 0, monster, 0);
@@ -722,7 +722,7 @@ VA_COMPGEN(0x0056bd30, 0x33, VECTOR_ERASE, PathCell)
 // E:\gamedcs\game.h:1395
 DC_ONLY(0x12ca94, 0x14)
 // Before normalization (function): game::get_liths.
-const std::vector<type_point,std::allocator<type_point>* Game::getLiths(long color)
+const std::vector<MapPoint,std::allocator<MapPoint>* Game::getLiths(long color)
 {
     // @stub
 }
@@ -730,14 +730,14 @@ const std::vector<type_point,std::allocator<type_point>* Game::getLiths(long col
 // E:\gamedcs\game.h:1400
 DC_ONLY(0x12caa8, 0x14)
 // Before normalization (function): game::get_lith_exits.
-const std::vector<type_point,std::allocator<type_point>* Game::getLithExits(long color)
+const std::vector<MapPoint,std::allocator<MapPoint>* Game::getLithExits(long color)
 {
     // @stub
 }
 
 // E:\gamedcs\game.h:1405
 DC_ONLY(0x12cabc, 0xC)
-const std::vector<type_point,std::allocator<type_point>* Game::get_whirlpools()
+const std::vector<MapPoint,std::allocator<MapPoint>* Game::get_whirlpools()
 {
     // @stub
 }

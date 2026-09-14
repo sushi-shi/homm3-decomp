@@ -230,8 +230,8 @@ unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
         || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
-    type_point anyTownLoc(-1, -1, -1);
-    type_point grailTownLoc(m_townX, m_townY, m_townZ);
+    MapPoint anyTownLoc(-1, -1, -1);
+    MapPoint grailTownLoc(m_townX, m_townY, m_townZ);
 
     int player = 0;
     for (;;) {
@@ -239,7 +239,7 @@ unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
             for (int j = 0; j < g_game->m_players[player].m_numTowns; ++j) {
                 Town* thisTown = g_game->getTown(
                     g_game->m_players[player].m_townIds[j]);
-                type_point thisTownLoc(thisTown->m_mapX, thisTown->m_mapY,
+                MapPoint thisTownLoc(thisTown->m_mapX, thisTown->m_mapY,
                                          thisTown->m_mapZ);
                 bool hasGrail = false;
                 if (thisTownLoc == grailTownLoc
@@ -277,9 +277,9 @@ bool VictoryConditionStruct::checkForHeroDefeatWin(
 VA(0x005f2160, 0xFD)  // dc 0x1902c4
 unsigned char VictoryConditionStruct::isGrailTarget(Town* thisTown)
 {
-    type_point anyTownLoc(-1, -1, -1);
-    type_point grailTownLoc(m_townX, m_townY, m_townZ);
-    type_point thisTownLoc(thisTown->m_mapX, thisTown->m_mapY,
+    MapPoint anyTownLoc(-1, -1, -1);
+    MapPoint grailTownLoc(m_townX, m_townY, m_townZ);
+    MapPoint thisTownLoc(thisTown->m_mapX, thisTown->m_mapY,
                              thisTown->m_mapZ);
 
     if (thisTownLoc == grailTownLoc
@@ -323,10 +323,10 @@ unsigned char VictoryConditionStruct::checkForTownCaptureWin()
 
 VA(0x005f2390, 0x267)  // dc 0x19040c
 bool VictoryConditionStruct::checkForDefeatedMonsterWin(
-    const Hero* thisHero, const type_point monsterLoc)
+    const Hero* thisHero, const MapPoint monsterLoc)
 {
     if (m_type == VICTORY_CONDITION_DEFEAT_ALL_MONSTERS) {
-        type_point pos;
+        MapPoint pos;
         for (pos.m_z = 0; pos.m_z < g_game->m_worldMap.getNumLevels(); ++pos.m_z) {
             for (pos.m_y = 0; pos.m_y < g_mapHeight; ++pos.m_y) {
                 for (pos.m_x = 0; pos.m_x < g_mapWidth; ++pos.m_x) {
@@ -345,7 +345,7 @@ bool VictoryConditionStruct::checkForDefeatedMonsterWin(
     if (m_type == VICTORY_CONDITION_DEFEAT_MONSTER
         && g_currentPlayer
         && !g_game->m_playerDisabled[g_netLocalGamePos]) {
-        type_point pos(m_monsterX, m_monsterY, m_monsterZ);
+        MapPoint pos(m_monsterX, m_monsterY, m_monsterZ);
         if (monsterLoc.operator==(pos)) {
             m_playerWinner = thisHero->m_owner;
             m_gameWon = 1;
@@ -415,7 +415,7 @@ unsigned char VictoryConditionStruct::checkForTimeSurvival()
 
 VA(0x005f2860, 0x1DE)  // dc 0x190620
 unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
-    const Hero* thisHero, const type_point townLoc)
+    const Hero* thisHero, const MapPoint townLoc)
 {
     if (m_type != VICTORY_CONDITION_TRANSPORT_ARTIFACT
         || !g_currentPlayer
@@ -424,7 +424,7 @@ unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
 
     int team = g_game->getTeam(g_netLocalGamePos);
     if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
-        type_point target(m_townX, m_townY, m_townZ);
+        MapPoint target(m_townX, m_townY, m_townZ);
         if (!target.operator==(townLoc))
             return 0;
 
@@ -673,8 +673,8 @@ unsigned char LossConditionStruct::checkForDefeatedTownLoss(
     const int oldOwner, const Town* lostTown)
 {
     if (m_type == LOSS_CONDITION_LOSE_TOWN) {
-        type_point target(m_townX, m_townY, m_townZ);
-        type_point lost(lostTown->m_mapX, lostTown->m_mapY,
+        MapPoint target(m_townX, m_townY, m_townZ);
+        MapPoint lost(lostTown->m_mapX, lostTown->m_mapY,
                         lostTown->m_mapZ);
 
         if (lost.operator==(target)) {

@@ -78,14 +78,14 @@ public:
     // Retail's record_move (0x49cd50) expands this: the hero, its CURRENT
     // facing byte snapshotted into restore_flag, the step direction, the
     // hero's own map point into source and the caller's into destination.
-    RecordMoveHero(Hero* who, char direction, type_point destination);
+    RecordMoveHero(Hero* who, char direction, MapPoint destination);
     RecordMoveHero() {}
 
     Hero* m_currentHero;          // +0x08
-    type_point m_source;           // +0x0c - hero position before the move
+    MapPoint m_source;           // +0x0c - hero position before the move
     signed char m_restoreFlag;    // +0x10 - hero+0x47 snapshot (not serialized)
     signed char m_direction;       // +0x11
-    type_point m_destination;      // +0x12
+    MapPoint m_destination;      // +0x12
 };
 
 // Teleport reuses move_hero's whole serializer and its undo: slots 2, 3 and
@@ -97,7 +97,7 @@ public:
     // record_teleport (0x49cf50) reads hero+0x47 TWICE - once at the call
     // site for this argument and once inside the base body for
     // restore_flag - which is what proves the facing is forwarded here.
-    RecordTeleport(Hero* who, type_point destination);
+    RecordTeleport(Hero* who, MapPoint destination);
     RecordTeleport() {}
 
     static EventRecord* create();
@@ -186,11 +186,11 @@ public:
     virtual unsigned char save(AbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
-    RecordShowBoat(Boat* currentBoat, type_point location);
+    RecordShowBoat(Boat* currentBoat, MapPoint location);
     RecordShowBoat() {}
 
-    type_point m_location;           // +0x18 - replay destination
-    type_point m_previousLocation;  // +0x1c - restored by undo
+    MapPoint m_location;           // +0x18 - replay destination
+    MapPoint m_previousLocation;  // +0x1c - restored by undo
 };
 
 // A recorded object erasure. load/save (0x49b190/0x49b220) serialize four
@@ -205,11 +205,11 @@ public:
     virtual unsigned char save(AbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
-    RecordErase(type_point location, long objectId,
+    RecordErase(MapPoint location, long objectId,
                       unsigned long extraInfo, long objectIndex);
     RecordErase() {}
 
-    type_point m_location;         // +0x08
+    MapPoint m_location;         // +0x08
     int m_objectId;               // +0x0c
     unsigned int m_extraInfo;     // +0x10
     int m_objectIndex;            // +0x14
@@ -250,12 +250,12 @@ public:
     virtual unsigned char save(AbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
-    RecordShowHero(Hero* who, char newOwner, type_point location,
+    RecordShowHero(Hero* who, char newOwner, MapPoint location,
                           unsigned char onBoat);
     RecordShowHero() {}
 
-    type_point m_location;          // +0x10 - replay destination
-    type_point m_previousLocation; // +0x14 - restored by undo
+    MapPoint m_location;          // +0x10 - replay destination
+    MapPoint m_previousLocation; // +0x14 - restored by undo
     unsigned char m_onBoat;        // +0x18 - replay state
     unsigned char m_previousBoat;  // +0x19 - restored by undo
 };
@@ -280,7 +280,7 @@ public:
 class RecordShroud : public EventRecord {
 public:
 // Before normalization (type): type_record_shroud::type_shroud_change.
-    struct ShroudChange : public type_point {
+    struct ShroudChange : public MapPoint {
         unsigned short m_oldValue;
         unsigned short m_newValue;
     };

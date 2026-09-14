@@ -396,7 +396,7 @@ DATA(0x006912ac) extern const char* g_knownWitchSkillText;
 // not been admitted; these ordinal names expose only the values proved by
 // that function's return blocks.
 // Before normalization (type): e_looping_sound_id.
-enum ELoopingSoundId {
+enum LoopingSoundId {
     LOOPING_SOUND_INVALID = -1,
     LOOPING_SOUND_0 = 0,
     LOOPING_SOUND_1,
@@ -477,7 +477,7 @@ enum ELoopingSoundId {
 // Before normalization (type): soundNode.
 struct SoundNode {
 public:
-    ELoopingSoundId m_soundId;
+    LoopingSoundId m_soundId;
     int m_priority;
 };
 SIZE(SoundNode, 8);
@@ -969,8 +969,8 @@ public:
     CSprite* m_movingObjectSprite;  // +0xe0, transient object draw override
     // +0xe4. The five-argument UpdateRadar overload forwards this packed
     // point by value as the origin argument of the six-argument overload.
-    type_point m_radarOrigin;
-    type_point m_lastMapHover;  // +0xe8
+    MapPoint m_radarOrigin;
+    MapPoint m_lastMapHover;  // +0xe8
     int m_lastHoverX;  // +0xec
     int m_lastHoverY;  // +0xf0
     int m_scrollX;  // +0xf4, DC advManager::scrollX
@@ -1054,21 +1054,21 @@ public:
     BlackBoxData* getBlackBox(const ExtraInfoUnion* cell) const;
     TreasureData* getTreasureData(NewmapCell* cell) const;
     void redrawAdvScreen(unsigned char update, unsigned char forceSaveBorder);
-    NewmapCell* doAdvCommand(type_point* triggerPoint);
+    NewmapCell* doAdvCommand(MapPoint* triggerPoint);
     // advmgr.obj joins the gate for its own DoAdvCommand, whose route walker
 // hands the trigger cell straight to this dispatcher. The guard is SPLIT
 // around the one declarator rather than moved, so the preprocessed text
 // every events-view consumer sees is unchanged, line for line.
-    void doEvent(NewmapCell* eventCell, type_point point);
+    void doEvent(NewmapCell* eventCell, MapPoint point);
     void doAIEvent(NewmapCell* cell, Hero* currentHero,
-                   type_point point);
+                   MapPoint point);
     void deactivateCurrTown(unsigned char waitingPlayer);
     void demobilizeCurrHero(unsigned char waitingPlayer, unsigned char update);
     void deactivateCurrHero(unsigned char waitingPlayer);
     void heroSwap(Hero* leftHero, Hero* rightHero);
     void generatorEvent(Hero* who, NewmapCell* eventCell,
-                        type_point point);
-    void townEvent(NewmapCell* cell, type_point point,
+                        MapPoint point);
+    void townEvent(NewmapCell* cell, MapPoint point,
                    unsigned char humanPlayer);
     // monType IS `int` HERE and the Dreamcast's `W4TCreatureType@@` is not.
     // The reason is a call site, not taste: DoEventMine (0x4a39a0) passes
@@ -1083,7 +1083,7 @@ public:
     // call relocation's symbol name is not scored.
     int combatMonsterEvent(Hero* who, int monType,
                            int* numMons, NewmapCell* eventCell,
-                           type_point point, enum CreatureType monType2,
+                           MapPoint point, enum CreatureType monType2,
                            int numMons2, int numGroups2,
                            enum CreatureType monType3, int numMons3,
                            int numGroups3);
@@ -1091,18 +1091,18 @@ public:
     unsigned char doSystemOptions();
     void heroLoses(Hero* who, int vanishSound);
     void insertSound(int x, int y, int z, int soundPriority, int soundsType);
-    void eraseAndFizzle(NewmapCell* eventCell, type_point point,
+    void eraseAndFizzle(NewmapCell* eventCell, MapPoint point,
                         int fizzleSound);
-    int processSelect(const Message* msg, type_point* triggerPoint,
+    int processSelect(const Message* msg, MapPoint* triggerPoint,
                       NewmapCell** peventCell);
     int processDeSelect(const Message* msg, unsigned char* exitFlag,
-                        type_point* triggerPoint, NewmapCell** peventCell);
+                        MapPoint* triggerPoint, NewmapCell** peventCell);
     int processKeyPress(const Message* msg, unsigned char* exitFlag,
-                        type_point* triggerPoint, NewmapCell** peventCell);
+                        MapPoint* triggerPoint, NewmapCell** peventCell);
     void processRadarSelect(const Message* msg);
-    void processMapSelect(const Message* msg, type_point* triggerPoint,
+    void processMapSelect(const Message* msg, MapPoint* triggerPoint,
                           NewmapCell** peventCell);
-    void eraseObj(NewmapCell* thisCell, type_point point,
+    void eraseObj(NewmapCell* thisCell, MapPoint point,
                   unsigned char record);
     void overrideBottomView(BottomViewType view, int time);
     void hideRoute(int updateScreen, int removeTarget, int changeButton);
@@ -1121,14 +1121,14 @@ public:
     // two-call callee TownEvent has left once every other edge is
     // matched. Both retail call sites fill the left/right pairs in the
     // DC's own order.
-    int doCombat(type_point point, Hero* leftHero,
+    int doCombat(MapPoint point, Hero* leftHero,
                  ArmyGroup* leftArmyGroup, long rightPlayer,
                  class Town* rightTown, Hero* rightHero,
                  ArmyGroup* rightArmyGroup, int seed,
                  unsigned char finishHeroes,
                  unsigned char alternateLayout);
     int doNetCombat(class CNetMsg* netMsg);
-    void sendHeroTownData(type_point point, Hero* leftHero,
+    void sendHeroTownData(MapPoint point, Hero* leftHero,
                           ArmyGroup* leftArmyGroup, long rightPlayer,
                           Town* rightTown, Hero* rightHero,
                           ArmyGroup* rightArmyGroup, int seed,
@@ -1150,36 +1150,36 @@ private:
     void doEventArena(Hero* currentHero, NewmapCell* cell,
                       bool humanPlayer);
     void doEventArtifact(Hero* currentHero, NewmapCell* cell,
-                         type_point point, bool humanPlayer);
+                         MapPoint point, bool humanPlayer);
     void doArtifactSkillRequirement(Hero* currentHero,
-                                    NewmapCell* cell, type_point point,
+                                    NewmapCell* cell, MapPoint point,
                                     int skill, const char* dialogText,
                                     bool humanPlayer);
     void doEventFreeArtifact(Hero* currentHero, NewmapCell* cell,
-                             type_point point, bool humanPlayer);
+                             MapPoint point, bool humanPlayer);
     void fightForArtifact(Hero* currentHero, NewmapCell* cell,
-                          type_point point, bool humanPlayer);
+                          MapPoint point, bool humanPlayer);
     void doCustomArtifact(Hero* currentHero, NewmapCell* cell,
-                          type_point point, bool humanPlayer);
-    void giveArtifact(Hero* currentHero, type_point point,
+                          MapPoint point, bool humanPlayer);
+    void giveArtifact(Hero* currentHero, MapPoint point,
                       bool humanPlayer);
     void payForArtifact(Hero* currentHero, NewmapCell* cell,
-                        type_point point, const char* dialogText,
+                        MapPoint point, const char* dialogText,
                         short goldCost, short resourceCost,
                         bool humanPlayer);
     // The movement-only map event shares Pandora's Box's record and reward
     // machinery but does not prompt for acceptance.
     void handleMapEvent(Hero* currentHero, NewmapCell* cell,
-                        type_point point, bool humanPlayer);
+                        MapPoint point, bool humanPlayer);
     void doEventBlackBox(Hero* currentHero, NewmapCell* cell,
-                         type_point point, bool humanPlayer);
+                         MapPoint point, bool humanPlayer);
     // DC events.cpp:852 returns unsigned char and takes a byte player flag.
     // Retail 0x49fa90 returns its saved reward byte after string cleanup.
     unsigned char giveBlackBoxReward(const char* text, Hero* currentHero,
-                            NewmapCell* cell, type_point point,
+                            NewmapCell* cell, MapPoint point,
                             unsigned char humanPlayer, class BlackBoxData* blackBox);
     void doEventBoat(Hero* currentHero, NewmapCell* cell);
-    void doEventBorderGuard(type_point point, NewmapCell* cell,
+    void doEventBorderGuard(MapPoint point, NewmapCell* cell,
                             unsigned char humanPlayer);
     void doEventBorderTent(NewmapCell* cell, unsigned char humanPlayer);
     void doEventBouy(Hero* currentHero, NewmapCell* cell,
@@ -1188,10 +1188,10 @@ private:
     // the map point rides along for EraseAndFizzle, which erases the object
     // the hero just stepped on.
     void doEventCampfire(Hero* currentHero, NewmapCell* cell,
-                         type_point point, bool humanPlayer);
+                         MapPoint point, bool humanPlayer);
     void doEventCloverField(Hero* currentHero, NewmapCell* cell,
                             unsigned char humanPlayer);
-    void doEventCoverOfDarkness(NewmapCell* cell, type_point point,
+    void doEventCoverOfDarkness(NewmapCell* cell, MapPoint point,
                                 bool humanPlayer);
     // 0x4abdc0, DECLARED not defined - 1744 bytes this lane is not
     // reconstructing. LOCATED by do_event_dragon_city, which is its only
@@ -1205,24 +1205,24 @@ private:
     // `const char emptyRolloverText[]`, so the declarator is const-correct
     // rather than casting at the call.
     int creatureBankEvent(Hero* who, NewmapCell* cell,
-                          const char* text, type_point point,
+                          const char* text, MapPoint point,
                           unsigned char humanPlayer);
     void doEventCreatureBank(Hero* currentHero, NewmapCell* cell,
-                             type_point point, bool humanPlayer);
+                             MapPoint point, bool humanPlayer);
     // The creature dwelling (jump-table arms 0x11 and 0x14 share the one
     // call). Four parameters and `ret 0x10`, the DC's own order; the row
     // (0x4a18b0) stays claimed from events.cpp's carcass until its body
     // lands.
     void doEventCreatureGenerator(Hero* currentHero, NewmapCell* cell,
-                                  type_point point, bool humanPlayer);
+                                  MapPoint point, bool humanPlayer);
     void doEventDefenseTower(Hero* currentHero, NewmapCell* cell,
                              bool humanPlayer);
     void doEventDragonCity(Hero* currentHero, NewmapCell* cell,
-                              type_point point, bool humanPlayer);
+                              MapPoint point, bool humanPlayer);
     void doEventFaerieRing(Hero* currentHero, NewmapCell* cell,
                            unsigned char humanPlayer);
     void doEventFlotsam(Hero* currentHero, NewmapCell* cell,
-                        type_point point, bool humanPlayer);
+                        MapPoint point, bool humanPlayer);
     void doEventFountain(Hero* currentHero, ExtraInfoUnion* cell,
                          bool humanPlayer);
     void doEventFountainOfYouth(Hero* currentHero, NewmapCell* cell,
@@ -1243,7 +1243,7 @@ private:
     // `ret 0x10` - the map point rides along because the AI arm appraises
     // the tile with AI_value_of_event before it will pay.
     void doEventMagicSchool(Hero* currentHero, NewmapCell* cell,
-                            type_point point, bool humanPlayer);
+                            MapPoint point, bool humanPlayer);
     // The two mana refills. Both take the union pointer for the same
     // reason as the mills: only the +0x00 dword is ever touched, and the
     // well's whole use of it is a single `cell->value = 0`.
@@ -1256,13 +1256,13 @@ private:
     void doEventMermaid(Hero* currentHero, NewmapCell* cell,
                         unsigned char humanPlayer);
     void doEventMine(NewmapCell* cell, Hero* currentHero,
-                     type_point point, bool human);
+                     MapPoint point, bool human);
     void doEventMysticalGarden(Hero* currentHero, ExtraInfoUnion* cell,
                                bool humanPlayer);
     void doEventOasis(Hero* currentHero, NewmapCell* cell,
                       bool humanPlayer);
     void doEventPyramid(Hero* currentHero, NewmapCell* cell,
-                          type_point point, bool humanPlayer);
+                          MapPoint point, bool humanPlayer);
     void doEventPowerSchool(Hero* currentHero, NewmapCell* cell,
                             bool humanPlayer);
     void doEventRallyFlag(Hero* currentHero, NewmapCell* cell,
@@ -1270,19 +1270,19 @@ private:
     void doEventRefugeeCamp(Hero* currentHero, NewmapCell* cell,
                             bool humanPlayer);
     void doEventResource(NewmapCell* cell, Hero* currentHero,
-                         type_point point, bool humanPlayer);
+                         MapPoint point, bool humanPlayer);
     void doCustomResource(NewmapCell* cell, Hero* currentHero,
-                          type_point point, bool humanPlayer);
+                          MapPoint point, bool humanPlayer);
     void doEventScholar(Hero* currentHero, NewmapCell* cell,
-                        type_point point, bool humanPlayer);
+                        MapPoint point, bool humanPlayer);
     void doEventSeaChest(Hero* currentHero, NewmapCell* cell,
-                         type_point point, bool humanPlayer);
+                         MapPoint point, bool humanPlayer);
     void doEventSkeleton(Hero* currentHero, ExtraInfoUnion* cell,
                          bool humanPlayer);
     // The shipwreck survivor (jump-table arm 0x56). FOUR arguments and
     // `ret 0x10` - the point is EraseAndFizzle's again.
     void doEventSurvivor(Hero* currentHero, NewmapCell* cell,
-                         type_point point, bool humanPlayer);
+                         MapPoint point, bool humanPlayer);
     // The three shrine tiers share one handler.  Dreamcast publishes the
     // complete five-argument signature; retail's `ret 0x14` agrees and its
     // cell reads include both the packed spell lane and the visit mask.
@@ -1294,13 +1294,13 @@ private:
     void doEventSiren(Hero* currentHero, NewmapCell* cell,
                       bool humanPlayer);
     void doEventSpellScroll(Hero* currentHero, NewmapCell* cell,
-                            type_point point, bool humanPlayer);
+                            MapPoint point, bool humanPlayer);
     // The spell scroll (jump-table arm 0x5d) and the customised-cell
     // handler it delegates to. Both are the Dreamcast's own four-argument
     // signatures with `ret 0x10`; DoCustomSpellScroll is DECLARED only, as
     // a PRIVATE member, and its row (0x4a5a80) is not claimed here.
     void doCustomSpellScroll(Hero* currentHero, NewmapCell* cell,
-                             type_point point, bool humanPlayer);
+                             MapPoint point, bool humanPlayer);
     void doEventStables(Hero* currentHero, NewmapCell* cell,
                         bool humanPlayer);
     void doEventTemple(Hero* currentHero, NewmapCell* cell,
@@ -1315,7 +1315,7 @@ private:
     void doTreasureDialog(Hero* currentHero, int amount,
                           bool humanPlayer);
     void doEventTreasure(Hero* currentHero, NewmapCell* cell,
-                         type_point point, bool humanPlayer);
+                         MapPoint point, bool humanPlayer);
     void doEventTreeOfKnowledge(Hero* currentHero,
                                 ExtraInfoUnion* cell, bool humanPlayer);
     void doEventUndeadLair(Hero* currentHero, NewmapCell* cell,
@@ -1323,13 +1323,13 @@ private:
                               const char* emptyText,
                               const char* rewardText,
                               unsigned long visitedFlag,
-                              type_point point);
+                              MapPoint point);
     void doEventWagon(Hero* currentHero, ExtraInfoUnion* cell,
                       bool humanPlayer);
     void doEventWanderingMonster(NewmapCell* cell, Hero* currentHero,
-                                 type_point point, bool humanPlayer);
+                                 MapPoint point, bool humanPlayer);
     void doWanderingMonsterResult(NewmapCell* cell, Hero* currentHero,
-                                  type_point point, bool humanPlayer);
+                                  MapPoint point, bool humanPlayer);
     void doEventWarSchool(Hero* currentHero, ExtraInfoUnion* cell,
                           bool humanPlayer);
     void doEventWarriorTomb(Hero* currentHero, ExtraInfoUnion* cell,
@@ -1345,21 +1345,21 @@ private:
     void doEventWitchHut(Hero* currentHero, ExtraInfoUnion* cell,
                             bool humanPlayer);
     void monstersFight(Hero* currentHero, NewmapCell* cell,
-                        type_point point, bool humanPlayer);
+                        MapPoint point, bool humanPlayer);
     void monstersFlee(Hero* currentHero, NewmapCell* cell,
-                       type_point point, bool humanPlayer);
+                       MapPoint point, bool humanPlayer);
     void monstersGiveReward(Hero* currentHero, NewmapCell* cell,
                               bool humanPlayer);
     bool monstersJoin(Hero* currentHero, NewmapCell* cell,
-                       type_point point, bool wantToFight,
+                       MapPoint point, bool wantToFight,
                        bool humanPlayer);
     bool monstersSellOut(Hero* currentHero, NewmapCell* cell,
-                           type_point point, bool wantToFight,
+                           MapPoint point, bool wantToFight,
                            bool humanPlayer);
 
 public:
     void receiveHeroTownData(class CCombatInitMsg* combatInitMsg,
-                             int* fromWho, type_point& point,
+                             int* fromWho, MapPoint& point,
                              Hero** leftHero,
                              ArmyGroup** leftArmyGroup,
                              int* rightPlayer, Town** rightTown,
@@ -1393,7 +1393,7 @@ public:
                       unsigned char updateBottomView);
     void completeDraw(unsigned char forceDraw);
     void eventSound(int eventID, int extraInfo);
-    void setEnvironmentOrigin(type_point point, int reset);
+    void setEnvironmentOrigin(MapPoint point, int reset);
     // HeroView (0x4e1800) calls this on the dismiss path. hero.obj takes
     // the ONE declarator through its own gate rather than joining the
     // whole events view, whose other three members it never names -
@@ -1407,14 +1407,14 @@ private:
     // dozen bool-parameter handlers, and an unsigned char here makes VC6
     // renormalize (`test dl,dl / setne al`) at every one of those sites.
     void dispatchEvent(Hero* currentHero, NewmapCell* cell,
-                       type_point point, bool humanPlayer);
+                       MapPoint point, bool humanPlayer);
     // The three previously unnamed callees of the monolith pair, all
     // DECLARED and not defined here; their rows are not claimed from this
     // file and a call relocation's symbol name is not scored. Each of the
     // three is fixed by four independent screens at once:
 
     void doEventHero(Hero* currentHero, NewmapCell* cell,
-                       type_point point, bool humanPlayer);
+                       MapPoint point, bool humanPlayer);
     void doEventLithOneWay(Hero* currentHero, NewmapCell* cell,
                                bool humanPlayer);
     void doEventLithTwoWay(Hero* currentHero, NewmapCell* cell,
@@ -1424,9 +1424,9 @@ public:
     void drawAdventureCursor();
     // E:\gamedcs\AdvMgr.h:1245. DC's fixed viewport center is (6,5);
     // Complete's wider view uses (9,8), as the retail recentering paths prove.
-    type_point getMapCenter() const
+    MapPoint getMapCenter() const
     {
-        return type_point(m_radarOrigin.m_x + HERO_VIEW_TILE_X,
+        return MapPoint(m_radarOrigin.m_x + HERO_VIEW_TILE_X,
                           m_radarOrigin.m_y + HERO_VIEW_TILE_Y,
                           m_radarOrigin.m_z);
     }
@@ -1462,9 +1462,9 @@ public:
                               int baseY, int tilex, int tiley, int tilew,
                               int tileh);
     void drawAdventureMapGems();
-    int moreTreesNear(type_point point);
+    int moreTreesNear(MapPoint point);
     void viewPuzzle();
-    void updateRadar(type_point origin, unsigned char updateFlag,
+    void updateRadar(MapPoint origin, unsigned char updateFlag,
                      unsigned char partialUpdate, unsigned char viewMines,
                      unsigned char viewHeroes, unsigned char viewTowns);
     void updateRadar(unsigned char updateFlag,
@@ -1485,7 +1485,7 @@ public:
                         unsigned char drawChanges);
     void drawRolloverText(char* text);
     void setRolloverText(NewmapCell* testCell, int rx, int ry);
-    NewmapCell* getCell(type_point point);
+    NewmapCell* getCell(MapPoint point);
     void castSpell(SpellID whichSpell);
     void summonBoat(SkillMastery level);
     void skuttleBoat(SkillMastery level);
@@ -1500,7 +1500,7 @@ public:
     void disguise(SkillMastery level);
     void waterWalk(SkillMastery level);
     void townGate(SkillMastery level);
-    void teleportTo(Hero* who, type_point destination, const char* sampleName,
+    void teleportTo(Hero* who, MapPoint destination, const char* sampleName,
                     unsigned char isRemoteMove, unsigned char drawChanges,
                     unsigned char isReplay);
     void doAdventureOptions();
@@ -1510,18 +1510,18 @@ public:
     void updBottomView(unsigned char forceUpdate, unsigned char drawWindow,
                        unsigned char update);
     void showRoute(int updateScreen, int reseed, int changeButton);
-    void seedTo(type_point target);
+    void seedTo(MapPoint target);
     void forceNewHover();
     void screenScroll(int dir, int changeMouse);
     void checkScreenScroll();
-    unsigned char findAdjacentMonster(type_point point, type_point* result,
-                                      type_point excluded);
+    unsigned char findAdjacentMonster(MapPoint point, MapPoint* result,
+                                      MapPoint excluded);
     void loadRemote(unsigned char makeOrig);
     void startLocalPlayerTurn();
     int getCloudLookup(int srcX, int srcY, int z);
     void checkCastSpell();
     void trimLoopingSounds(int maxSoundsAllowed);
-    ELoopingSoundId getSoundId(int x, int y, int z);
+    LoopingSoundId getSoundId(int x, int y, int z);
     void disableButtons();
     void enableButtons();
     int mouseInScrollZone();
@@ -1529,7 +1529,7 @@ public:
     void viewWorld(int whatToDraw, SkillMastery level);
     int inMapArea(int x, int y);
     // Before normalization: advManager::get_mouse_map_point.
-    type_point getMouseMapPoint() const;
+    MapPoint getMouseMapPoint() const;
     unsigned short* getRouteArrayPtr(int x, int y, int z);
 
 private:
@@ -1561,7 +1561,7 @@ public:
     // is `i == 0`, and both `int*` slots are read back immediately
     // after the call as the no-move / fought-battle verdicts.
     NewmapCell* moveHero(int direction, unsigned char standEnd,
-                         type_point& triggerPoint, int* noMove,
+                         MapPoint& triggerPoint, int* noMove,
                          unsigned char computerMove, int* foughtBattle,
                          unsigned char isRemoteMove);
     int getMoveShowIt(Hero* currHero, int direction);
@@ -1584,10 +1584,10 @@ private:
     // three stack arguments, matching the DC prototype; the shipyard arm
     // hands it the trigger cell, a second copy of the map point and
     // playerData::IsLocalHuman's bool result unwidened.
-    void doEventShipyard(NewmapCell* cell, type_point point,
+    void doEventShipyard(NewmapCell* cell, MapPoint point,
                          unsigned char humanPlayer);
     void doEventPrison(Hero* currentHero, NewmapCell* cell,
-                       type_point point, bool humanPlayer);
+                       MapPoint point, bool humanPlayer);
     NewmapCell* endMoveHero(Hero* curr, NewmapCell* returnCell,
                               unsigned char isRemoteMove, long origX,
                               long origY, unsigned char standEnd,
@@ -1602,7 +1602,7 @@ private:
 };
 
 unsigned short getMapExtra(int x, int y, int z);
-inline int getMapExtra(type_point point)
+inline int getMapExtra(MapPoint point)
 {
     return ::getMapExtra(point.m_x, point.m_y, point.m_z);
 }

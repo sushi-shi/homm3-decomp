@@ -16,7 +16,7 @@
 #define HOMM3_NETGAME_H
 
 // Before normalization (type): eNetGameType.
-enum ENetGameType {
+enum NetGameType {
     MP_SINGLE = 0,
     MP_IPX = 1,
     MP_TCP = 2,
@@ -27,6 +27,6 @@ enum ENetGameType {
 
 // .bss 0x6989f0. Defined by the TU that owns the network setup (not
 // located) - extern only, no DATA claim, the bitNumber pattern.
-extern ENetGameType g_mpNetProtocol;
+extern NetGameType g_mpNetProtocol;
 
 #endif /* HOMM3_NETGAME_H */

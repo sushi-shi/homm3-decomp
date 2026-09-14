@@ -14,10 +14,10 @@
 
 // ai_player.cpp:4643. Kept local because findpath's narrow include set does
 // not otherwise depend on the ai_player class declarations.
-long aiGetShipCost(const Hero* ourHero, type_point point);
+long aiGetShipCost(const Hero* ourHero, MapPoint point);
 
 VA(0x004b1330, 0x3B)  // dc 0x9ed40
-bool type_point::isValid() const
+bool MapPoint::isValid() const
 {
     return m_x >= 0 && m_x < g_mapWidth && m_y >= 0 && m_y < g_mapHeight;
 }
@@ -91,7 +91,7 @@ void SearchArray::clear(long flyLevel, long startZ, long stopZ)
     if (width <= 0)
         return;
 
-    type_point point;
+    MapPoint point;
     point.m_x = static_cast<short>(m_validRectangle.left);
     for (point.m_z = static_cast<short>(startZ); point.m_z < stopZ; point.m_z++) {
         for (long fly = 0; fly <= flyLevel; fly++) {
@@ -210,12 +210,12 @@ int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
 }
 
 VA(0x004b18c0, 0x1A2)  // dc 0x9f184
-int getTerrainCost(Hero* currentHero, type_point start, int direction, int moveLeft)
+int getTerrainCost(Hero* currentHero, MapPoint start, int direction, int moveLeft)
 {
     const int destX = start.m_x + g_stepDeltaX[4 * direction];
     const int destY = start.m_y + g_stepDeltaY[4 * direction];
     NewmapCell* from = g_game->m_worldMap.cell(start.m_x, start.m_y, start.m_z);
-    type_point to(destX, destY, start.m_z);
+    MapPoint to(destX, destY, start.m_z);
     NewmapCell* dest = g_game->m_worldMap.cell(to.m_x, to.m_y, to.m_z);
     long flying = currentHero->m_flightLevel;
     long waterWalking = currentHero->m_waterWalkLevel;
@@ -265,7 +265,7 @@ int getTerrainCost(Hero* currentHero, type_point start, int direction, int moveL
 VA(0x004b1a70, 0x88D)  // anchor-bracket, dc 0x9f2a4
 void SearchArray::pushPoint(const PathCell& oldCell, PathCell& point,
                             int direction, int moveCost, int limit,
-                            long barrierValue, type_point monster,
+                            long barrierValue, MapPoint monster,
                             int isTrigger)
 {
     long cost = oldCell.m_cost + moveCost;
@@ -491,7 +491,7 @@ VA(0x004b2300, 0xA94)  // anchor-callee, dc 0x9f718
 void SearchArray::testPossibleDirections(Hero* currentHero, PathCell* source,
                                          long turnMobility, long maxMobility,
                                          unsigned char adjacentMonster,
-                                         type_point monsterLocation,
+                                         MapPoint monsterLocation,
                                          long pathfinding,
                                          SearchType searchType,
                                          long nativeTerrain)
@@ -604,8 +604,8 @@ void SearchArray::testPossibleDirections(Hero* currentHero, PathCell* source,
                     // eax,[ebp-0x2e]` on across_y), where reading
                     // `source->point.x` again gives a 16-bit `mov bx,ax /
                     // shl bx,6` off the member's own word container.
-                    type_point acrossX = source->m_point;
-                    type_point acrossY = source->m_point;
+                    MapPoint acrossX = source->m_point;
+                    MapPoint acrossY = source->m_point;
                     acrossX.m_x = acrossX.m_x + g_stepDeltaX[4 * direction];
                     acrossY.m_y = acrossY.m_y + g_stepDeltaY[4 * direction];
                     if (g_game->m_worldMap.cell(acrossX.m_x, acrossX.m_y,

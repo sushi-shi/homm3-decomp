@@ -6,7 +6,7 @@
 #include "advmgr_popup.h"
 #include "struct.h"
 
-struct type_point;
+struct MapPoint;
 
 class Bitmap816;
 class NewmapCell;
@@ -76,7 +76,7 @@ extern double g_puzzleGuessThreshold[];
 // The explicit Dreamcast return-buffer marker is represented by C++'s normal
 // by-value return. Retail's call from playerData::guess_grail_location has the
 // same hidden-result-pointer-in-ECX / player-in-EDX convention.
-type_point aiAttemptPuzzleGuess(long player);
+MapPoint aiAttemptPuzzleGuess(long player);
 
 // --- Bitmap816 ---
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:334, dc 0x11577c) void Bitmap816::mark_puzzle(unsigned char* visible, long dest_x, long dest_y);

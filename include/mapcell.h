@@ -974,7 +974,7 @@ public:
     // MapCell.cpp:1119/1131. Dreamcast publishes both members as const;
     // FindTrigger's AAH parameters are references, and get_trigger is the
     // source helper which retail expands into get_trigger_cell.
-    type_point getTrigger() const;
+    MapPoint getTrigger() const;
     CObjectType* getObjectTypePtr() const;
     AdventureObjectType getType() const;
     // MapCell.h:595. game::InsertObject byte-proves this header body: the
@@ -1864,7 +1864,7 @@ public:
     int getMapSize() const { return m_size; }
     const NewmapCell* cell(int x, int y, int z) const;
     NewmapCell* cell(int x, int y, int z);
-    NewmapCell* cell(type_point point);
+    NewmapCell* cell(MapPoint point);
     int getNumLevels();
 
 private:
@@ -1994,7 +1994,7 @@ private:
 public:
     // (0x4ad470) calls it at 0x4ae45a/0x4ae483 with (hero->id, opposing player)
     void newfullMapFn00505D20(int heroId, int player);
-    void newfullMapFn00505D60(type_point point, int player);
+    void newfullMapFn00505D60(MapPoint point, int player);
     void newfullMapFn00505DA0();
     // Retail-only helper at 0x505f20. Its behavior selects or appends the
     // matching object-type/sprite pair and writes the resulting type index.
@@ -2067,7 +2067,7 @@ inline NewmapCell* NewfullMap::cell(int x, int y, int z)
     return zCell(x, y, z);
 }
 
-inline NewmapCell* NewfullMap::cell(type_point point)
+inline NewmapCell* NewfullMap::cell(MapPoint point)
 {
     return zCell(point.m_x, point.m_y, point.m_z);
 }

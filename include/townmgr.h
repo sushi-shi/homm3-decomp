@@ -6,10 +6,10 @@
 #include "remote.h"
 #include "basemgr.h"
 
-struct type_point;
+struct MapPoint;
 
 unsigned char doTavern();
-void doMapTavern(type_point point);
+void doMapTavern(MapPoint point);
 
 // The nine columns of the thieves' guild table, in the order
 // SetupThievesGuild builds them and GetCategoryStats dispatches them.

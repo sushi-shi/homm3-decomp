@@ -277,7 +277,7 @@ void CampaignSpellScrollBonus::apply(int whichPlayer) const
     Hero* target = getCampaignBonusHero(m_hero, whichPlayer);
     if (target != 0) {
         // Complete reads this spell from an unsigned byte at 0x484050; the canonical scroll constructor takes DC SpellID.
-        type_artifact scroll(static_cast<SpellID>(m_spell) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+        ArtifactRecord scroll(static_cast<SpellID>(m_spell) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
         target->giveArtifact(&scroll, 0, 0);
     }
 }
@@ -457,7 +457,7 @@ void CampaignArtifactBonus::apply(int whichPlayer) const
     Hero* target = getCampaignBonusHero(m_hero, whichPlayer);
     if (target != 0) {
         // Complete reads this bonus as a signed word at 0x4848a0; the canonical artifact constructor takes DC TArtifact.
-        type_artifact granted(static_cast<Artifact>(m_artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+        ArtifactRecord granted(static_cast<Artifact>(m_artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
         target->giveArtifact(&granted, 0, 0);
     }
 }
@@ -1269,12 +1269,12 @@ void CampaignBrief::ScenarioStruct::initializeCrossoverHero(
     }
 
     if (m_retainPskills) {
-        type_artifact savedArtifacts[g_crossoverPrimaryArtifactSlots];
+        ArtifactRecord savedArtifacts[g_crossoverPrimaryArtifactSlots];
         for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot)
-            savedArtifacts[slot] = type_artifact();
+            savedArtifacts[slot] = ArtifactRecord();
 
         for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
-            type_artifact artifact = currentHero->getArtifact(ArtifactSlot(slot));
+            ArtifactRecord artifact = currentHero->getArtifact(ArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE) {
                 savedArtifacts[slot] = artifact;
                 currentHero->removeArtifact(slot);
@@ -1282,7 +1282,7 @@ void CampaignBrief::ScenarioStruct::initializeCrossoverHero(
         }
 
         for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
-            type_artifact artifact = sourceHero->getArtifact(ArtifactSlot(slot));
+            ArtifactRecord artifact = sourceHero->getArtifact(ArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE)
                 currentHero->equipArtifact(&artifact, slot);
         }
@@ -1293,7 +1293,7 @@ void CampaignBrief::ScenarioStruct::initializeCrossoverHero(
         }
 
         for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
-            type_artifact artifact = currentHero->getArtifact(ArtifactSlot(slot));
+            ArtifactRecord artifact = currentHero->getArtifact(ArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE)
                 currentHero->removeArtifact(slot);
         }
@@ -1371,19 +1371,19 @@ void CampaignBrief::ScenarioStruct::initializeCrossoverHero(
                 == ARTIFACT_SPELLBOOK
             && currentHero->getArtifact(ArtifactSlot(Hero::EQUIPPED_SLOT_SPELLBOOK)).m_artifactId
                 == ARTIFACT_NONE) {
-            type_artifact spellbook(ARTIFACT_SPELLBOOK);
+            ArtifactRecord spellbook(ARTIFACT_SPELLBOOK);
             currentHero->equipArtifact(&spellbook, -1);
         }
     }
 
     if (m_retainArtifacts) {
         for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
-            type_artifact artifact = currentHero->getArtifact(ArtifactSlot(slot));
+            ArtifactRecord artifact = currentHero->getArtifact(ArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE)
                 currentHero->removeArtifact(slot);
         }
         for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
-            type_artifact artifact = sourceHero->getArtifact(ArtifactSlot(slot));
+            ArtifactRecord artifact = sourceHero->getArtifact(ArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE)
                 currentHero->equipArtifact(&artifact, slot);
         }
@@ -1397,17 +1397,17 @@ void CampaignBrief::ScenarioStruct::initializeCrossoverHero(
         }
     } else {
         for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
-            type_artifact artifact = sourceHero->getArtifact(ArtifactSlot(slot));
+            ArtifactRecord artifact = sourceHero->getArtifact(ArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE
                 && m_crossoverArtifacts.test(artifact.m_artifactId)) {
-                type_artifact displaced = currentHero->getArtifact(ArtifactSlot(slot));
+                ArtifactRecord displaced = currentHero->getArtifact(ArtifactSlot(slot));
                 if (displaced.m_artifactId != ARTIFACT_NONE)
                     currentHero->removeArtifact(slot);
                 currentHero->equipArtifact(&artifact, slot);
             }
         }
         for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
-            type_artifact artifact = sourceHero->getBackpack(slot);
+            ArtifactRecord artifact = sourceHero->getBackpack(slot);
             if (artifact.m_artifactId != ARTIFACT_NONE
                 && m_crossoverArtifacts.test(artifact.m_artifactId)) {
                 currentHero->addToBackpack(&artifact, -1);
@@ -1425,7 +1425,7 @@ void CampaignBrief::ScenarioStruct::initializeCrossoverHero(
     currentHero->m_maxMovePoints = currentHero->m_movePoints
         = currentHero->getMobility();
 
-    type_point heroLocation(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    MapPoint heroLocation(currentHero->m_x, currentHero->m_y, currentHero->m_z);
     --heroLocation.m_x;
     NewmapCell* cell = g_game->m_worldMap.cell(heroLocation);
     if (cell->m_type == PRISON && cell->m_isTrigger)
@@ -1481,7 +1481,7 @@ void CampaignBrief::ScenarioStruct::placeStartingHero(
     currentHero->m_maxMovePoints = currentHero->m_movePoints
         = currentHero->getMobility();
 
-    type_point heroLocation(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    MapPoint heroLocation(currentHero->m_x, currentHero->m_y, currentHero->m_z);
     --heroLocation.m_x;
     if (heroLocation.m_x >= 0) {
         NewmapCell* cell = g_game->m_worldMap.cell(heroLocation);
@@ -1612,7 +1612,7 @@ void CampaignBrief::ScenarioStruct::placeCrossoverHeroes()
     }
 
     if (g_game->m_mapHeader.m_lossCondition.m_type == 1) {
-        type_point lossHero(g_game->m_mapHeader.m_lossCondition.m_heroX,
+        MapPoint lossHero(g_game->m_mapHeader.m_lossCondition.m_heroX,
                             g_game->m_mapHeader.m_lossCondition.m_heroY,
                             g_game->m_mapHeader.m_lossCondition.m_heroZ);
         NewmapCell* cell = g_game->m_worldMap.cell(lossHero);
@@ -1668,8 +1668,8 @@ void CampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
     int slot = m_options->slot5(this, choice);
     if (slot >= 0) {
         std::vector<Hero>& heroes = campaign->m_carryOverHeroes[slot];
-        type_artifact artifact;
-        std::vector<type_artifact> artifacts = campaign->m_carryoverArtifact[slot];
+        ArtifactRecord artifact;
+        std::vector<ArtifactRecord> artifacts = campaign->m_carryoverArtifact[slot];
 
         for (unsigned int heroIndex = 0;
              heroIndex < heroes.size(); ++heroIndex) {
@@ -1680,12 +1680,12 @@ void CampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
             int slotIndex;
             for (slotIndex = 0; slotIndex < g_crossoverEquippedArtifactSlots;
                  ++slotIndex) {
-                type_artifact heroArtifact = carried.getArtifact(ArtifactSlot(slotIndex));
+                ArtifactRecord heroArtifact = carried.getArtifact(ArtifactSlot(slotIndex));
                 if (heroArtifact.m_artifactId != ARTIFACT_NONE)
                     artifacts.push_back(heroArtifact);
             }
             for (slotIndex = 0; slotIndex < HERO_BACKPACK_CAPACITY; ++slotIndex) {
-                type_artifact heroArtifact = carried.getBackpack(slotIndex);
+                ArtifactRecord heroArtifact = carried.getBackpack(slotIndex);
                 if (heroArtifact.m_artifactId != ARTIFACT_NONE)
                     artifacts.push_back(heroArtifact);
             }
@@ -2448,7 +2448,7 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
         // out-of-line instantiation of a template in the TU, price the
         // COMDATs it takes with it, not just the row.
         m_carryOverHeroes.push_back(std::vector<Hero>());
-        m_carryoverArtifact.push_back(std::vector<type_artifact>());
+        m_carryoverArtifact.push_back(std::vector<ArtifactRecord>());
     }
 
     m_crossoverArrayIndex = scenario.m_index;
@@ -2603,9 +2603,9 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
         }
 
         for (unsigned int rest = pooled.size(); rest--;) {
-            std::vector<type_artifact>& pooledArtifacts = m_carryoverArtifact[pool];
+            std::vector<ArtifactRecord>& pooledArtifacts = m_carryoverArtifact[pool];
             const Hero& sourceHero = pooled[rest];
-            type_artifact artifact;
+            ArtifactRecord artifact;
             int slot;
             for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
                 artifact = sourceHero.getArtifact(ArtifactSlot(slot));
@@ -2759,13 +2759,13 @@ void SCampaign::load(AbstractFile* infile, int saveVersion)
 
                 for (int equippedSlot = 0; equippedSlot < 19;
                      ++equippedSlot) {
-                    type_artifact artifact = oldHero.m_equipped[equippedSlot];
+                    ArtifactRecord artifact = oldHero.m_equipped[equippedSlot];
                     if (artifact.m_artifactId != ARTIFACT_NONE)
                         newHero.equipArtifact(&artifact, equippedSlot);
                 }
                 for (int backpackSlot = 0; backpackSlot < 64;
                      ++backpackSlot) {
-                    type_artifact artifact = oldHero.m_backpack[backpackSlot];
+                    ArtifactRecord artifact = oldHero.m_backpack[backpackSlot];
                     if (artifact.m_artifactId != ARTIFACT_NONE)
                         newHero.addToBackpack(&artifact, backpackSlot);
                 }
@@ -2865,7 +2865,7 @@ void SCampaign::load(AbstractFile* infile, int saveVersion)
         for (int whichHero = 0; whichHero < heroCount; ++whichHero)
             heroPool[whichHero].load(infile, saveVersion);
 
-        std::vector<type_artifact>& artifactPool = m_carryoverArtifact[pool];
+        std::vector<ArtifactRecord>& artifactPool = m_carryoverArtifact[pool];
         int artifactCount;
         {
             short value;
@@ -3021,7 +3021,7 @@ void SCampaign::save(AbstractFile* outfile)
                  whichHero < heroPool.size(); ++whichHero)
                 heroPool[whichHero].save(outfile);
 
-            std::vector<type_artifact>& artifactPool = m_carryoverArtifact[index];
+            std::vector<ArtifactRecord>& artifactPool = m_carryoverArtifact[index];
             {
                 int intBuffer = artifactPool.size();
                 outfile->write(&intBuffer, 2);
@@ -3055,7 +3055,7 @@ void SCampaign::save(AbstractFile* outfile)
 // nested-element types are independently fixed by the +0x5c/+0x3c/+0x4c
 // member layouts and by the caller's 0x14/0x492/0x10/8-byte strides.
 VA_COMPGEN(0x004013D0, 0x28, VECTOR_CONSTRUCTOR_ITERATOR, LegacyCampaignHero)
-VA_COMPGEN(0x00404140, 0x03, VECTOR_DESTROY, type_artifact)
+VA_COMPGEN(0x00404140, 0x03, VECTOR_DESTROY, ArtifactRecord)
 VA_COMPGEN(0x0048B440, 0x21, VECTOR_SIZE, CampaignScenarioInfo)
 VA_COMPGEN(0x0048B470, 0x23, VECTOR_SIZE, Hero)
 VA_COMPGEN(0x004AF4E0, 0x13, VECTOR_SIZE, hero_vector)
@@ -3075,7 +3075,7 @@ VA_COMPGEN(0x0048CAE0, 0x2E4, VECTOR_INSERT, CampaignScenarioInfo)
 VA_COMPGEN(0x0048CDD0, 0x44, VECTOR_ERASE, CampaignScenarioInfo)
 VA_COMPGEN(0x0048D060, 0x331, VECTOR_INSERT, Hero)
 VA_COMPGEN(0x0048D3A0, 0x6D, VECTOR_ERASE, Hero)
-VA_COMPGEN(0x0054D330, 0x246, VECTOR_INSERT, type_artifact)
+VA_COMPGEN(0x0054D330, 0x246, VECTOR_INSERT, ArtifactRecord)
 
 VA(0x0048b200, 0x80)  // dc 0x7d374
 int SCampaign::getScore() const
@@ -3141,7 +3141,7 @@ void SCampaign::give_custom_items()
 
 // E:\gamedcs\hero.h:214
 DC_ONLY(0x7ea04, 0xA)
-void type_artifact::type_artifact(SpellID new_spell)
+void ArtifactRecord::ArtifactRecord(SpellID new_spell)
 {
     // @stub
 }
@@ -3249,7 +3249,7 @@ VA_COMPGEN(0x0048ce50, 0x210, VECTOR_INSERT, Hero)
 // vtable's construction path.
 VA_COMPGEN(0x0048d4b0, 0xE2, FILEBUF_INIT, char)
 
-VA_COMPGEN(0x0048dc10, 0x35, VECTOR_UCOPY, type_artifact)
+VA_COMPGEN(0x0048dc10, 0x35, VECTOR_UCOPY, ArtifactRecord)
 
 // COMDAT pairing: locale::locale(const locale&), agreement 1.000.
 // COMDAT pairing: locale's DEFAULT constructor, the other half of the ctor
@@ -3329,7 +3329,7 @@ VA_COMPGEN(0x0048ece0, 0x37, BITSET_TEST, Bitset129)
 
 VA_COMPGEN(0x0048ed20, 0x25, BITSET_TIDY, Bitset129)
 
-VA_COMPGEN(0x0054c6f0, 0x39, VECTOR_ERASE, type_artifact)
+VA_COMPGEN(0x0054c6f0, 0x39, VECTOR_ERASE, ArtifactRecord)
 
 VA_COMPGEN(0x0054ded0, 0x63, BITSET_SET, Bitset129)
 

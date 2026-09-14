@@ -88,11 +88,11 @@ public:
     // `?CheckForDefeatedMonsterWin@VictoryConditionStruct@@QAA_NPBVhero@@
     // Utype_point@@@Z` fixes the whole signature - public, bool, a const
     bool checkForDefeatedMonsterWin(const Hero* thisHero,
-                                    const type_point monsterLoc);
+                                    const MapPoint monsterLoc);
     unsigned char checkForFlaggedGeneratorWin();
     unsigned char checkForFlaggedMineWin();
     unsigned char checkForArtifactTransportWin(const Hero* thisHero,
-                                               const type_point townLoc);
+                                               const MapPoint townLoc);
     unsigned char isGrailTarget(Town* thisTown);
     unsigned char checkForTimeSurvival();
     unsigned char checkForArtifactWin();

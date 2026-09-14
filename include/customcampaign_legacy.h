@@ -66,8 +66,8 @@ struct LegacyCampaignHero : public ObscuringObject {
     unsigned char m_isSleeping; // +0x11c
     long m_bounty; // +0x11d
     std::bitset<48> m_townSpecialGrantedMask;  // +0x121
-    type_artifact m_equipped[18];              // +0x129
-    type_artifact m_backpack[64];              // +0x1b9
+    ArtifactRecord m_equipped[18];              // +0x129
+    ArtifactRecord m_backpack[64];              // +0x1b9
     signed char m_backpackCount;               // +0x3b9
     unsigned char m_inSpellbook[70];           // +0x3ba
     unsigned char m_availableSpells[70];       // +0x400

@@ -193,15 +193,15 @@ struct AIPuzzleTile {
         m_diggable = 1;
         m_visible = 0;
     }
-    AIPuzzleTile(NewmapCell* cell, type_point point);
+    AIPuzzleTile(NewmapCell* cell, MapPoint point);
     unsigned char operator==(const AIPuzzleTile* arg) const;
 };
 SIZE(AIPuzzleTile, 0x10);
 
-type_point matchPuzzle(long player, AIPuzzleTile (*puzzleMap)[17]);
+MapPoint matchPuzzle(long player, AIPuzzleTile (*puzzleMap)[17]);
 
 VA(0x0052c770, 0x140)  // dc 0x115538
-AIPuzzleTile::AIPuzzleTile(NewmapCell* cell, type_point point)
+AIPuzzleTile::AIPuzzleTile(NewmapCell* cell, MapPoint point)
 {
     m_objectType = 0;
     m_visible = 1;
@@ -334,7 +334,7 @@ static void createAIPuzzleMap(long player, unsigned char* visible,
                             long puzzleX, long puzzleY,
                             AIPuzzleTile (&puzzleMap)[19][17])
 {
-    type_point point;
+    MapPoint point;
     point.m_z = g_game->m_ultimateArtifactZ;
 
     for (int row = 0; row < 17; ++row) {
@@ -352,9 +352,9 @@ static void createAIPuzzleMap(long player, unsigned char* visible,
 
 // E:\gamedcs\puzzlewindow.cpp:614, dc 0x115838
 VA(0x0052c9b0, 0x55B)  // anchor-caller, dc 0x115f64
-type_point aiAttemptPuzzleGuess(long player)
+MapPoint aiAttemptPuzzleGuess(long player)
 {
-    type_point result;
+    MapPoint result;
 
     int found = g_game->setupPuzzlePieces(player, 1);
     double uncovered =
@@ -362,12 +362,12 @@ type_point aiAttemptPuzzleGuess(long player)
     if (g_puzzleGuessThreshold[g_game->m_setup.m_difficulty] <= uncovered) {
         unsigned char visible[17 * 19];
         if (markAIPuzzle(player, visible)) {
-            type_point origin = g_game->getPuzzleOrigin();
+            MapPoint origin = g_game->getPuzzleOrigin();
             AIPuzzleTile puzzleMap[19][17];
 
             createAIPuzzleMap(player, visible, origin.m_x, origin.m_y, puzzleMap);
 
-            type_point guess = matchPuzzle(player, puzzleMap);
+            MapPoint guess = matchPuzzle(player, puzzleMap);
             if (guess.m_x < 0)
                 return guess;
 
@@ -376,7 +376,7 @@ type_point aiAttemptPuzzleGuess(long player)
             result.m_z = -1;
 
             int best = 0x7fff;
-            type_point current;
+            MapPoint current;
             current.m_z = guess.m_z;
             for (current.m_x = guess.m_x - 2; current.m_x <= guess.m_x + 2;
                  ++current.m_x) {
@@ -387,7 +387,7 @@ type_point aiAttemptPuzzleGuess(long player)
                     if (!g_game->m_worldMap.cell(current)->isDiggable())
                         continue;
 
-                    type_point index;
+                    MapPoint index;
                     index.m_x = current.m_x - guess.m_x + 9;
                     index.m_y = current.m_y - guess.m_y + 8;
 
@@ -426,7 +426,7 @@ type_point aiAttemptPuzzleGuess(long player)
 // caller's score test.
 DC_ONLY(0x115a70, 0x176)
 static long checkMatch(long player, long firstX, long firstY,
-                        type_point origin,
+                        MapPoint origin,
                         AIPuzzleTile (*puzzleMap)[17])
 {
     long playerMask = 1 << player;
@@ -434,7 +434,7 @@ static long checkMatch(long player, long firstX, long firstY,
     origin.m_y = origin.m_y - firstY;
     long matches = 0;
 
-    type_point point;
+    MapPoint point;
     point.m_z = origin.m_z;
     for (; firstY < 17; ++firstY) {
         point.m_y = origin.m_y + firstY;
@@ -529,9 +529,9 @@ static long checkMatch(long player, long firstX, long firstY,
 // re-reading it per iteration, where we spread the copies over four slots and keep
 // min_x in ESI. Our frame is 0x84 against retail's 0x80 for that reason.
 VA(0x0052cf10, 0x5B4)  // anchor-caller AI_attempt_puzzle_guess +0x39d, dc 0x115be8
-type_point matchPuzzle(long player, AIPuzzleTile (*puzzleMap)[17])
+MapPoint matchPuzzle(long player, AIPuzzleTile (*puzzleMap)[17])
 {
-    type_point result;
+    MapPoint result;
     result.m_x = -1;
     result.m_y = -1;
     result.m_z = -1;
@@ -581,7 +581,7 @@ type_point matchPuzzle(long player, AIPuzzleTile (*puzzleMap)[17])
                                 g_mapHeight + firstY - 8);
     int endY = std::_cpp_min<long>(g_mapHeight, limitY);
 
-    type_point scan;
+    MapPoint scan;
     for (scan.m_z = 0; scan.m_z < g_game->m_worldMap.getNumLevels(); ++scan.m_z) {
         for (scan.m_y = startY; scan.m_y < endY; ++scan.m_y) {
             for (scan.m_x = startX; scan.m_x < endX; ++scan.m_x) {
@@ -603,7 +603,7 @@ type_point matchPuzzle(long player, AIPuzzleTile (*puzzleMap)[17])
     }
 
     if (ties > 2) {
-        type_point ambiguous;
+        MapPoint ambiguous;
         ambiguous.m_x = -1;
         ambiguous.m_y = -1;
         ambiguous.m_z = -1;

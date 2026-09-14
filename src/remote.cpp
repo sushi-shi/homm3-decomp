@@ -228,7 +228,7 @@ DATA(0x0069d804) unsigned char g_gameMode;
 DATA(0x0069d80d) unsigned char g_unnamed69d80d;
 DATA(0x0069d80e) unsigned char g_weMoved;
 DATA(0x0069d608) CNetPlayerInfo g_thisNetPlayerInfo;
-DATA(0x006989f0) ENetGameType g_mpNetProtocol;
+DATA(0x006989f0) NetGameType g_mpNetProtocol;
 // Dreamcast publishes gMapName as char[260]. LobbyLaunchConnect copies the
 // selected setup filename here before refreshing the scenario header; the
 // next retail cell at 0x6994e4 independently proves the 0x104-byte extent.
@@ -1326,7 +1326,7 @@ CNetMsg* getRemoteData(unsigned char removeFromQueue,
 }
 
 VA(0x00554410, 0x93)
-unsigned char initRemote(ENetGameType mpType, const char* userName)
+unsigned char initRemote(NetGameType mpType, const char* userName)
 {
     CNetPlayerInfo playerInfo;
 
@@ -2739,7 +2739,7 @@ CNetMsg* getRemoteData(unsigned char bRemoveFromBuffer, unsigned char* wasCompre
 
 // E:\gamedcs\remote.cpp:1390
 DC_ONLY(0x11ce14, 0x54)
-unsigned char initRemote(ENetGameType iMPType, const char* sUserName)
+unsigned char initRemote(NetGameType iMPType, const char* sUserName)
 {
     // @stub
 }
@@ -3653,14 +3653,14 @@ void CPlayerActiveMsg::CPlayerActiveMsg()
 
 // E:\gamedcs\netmsg.h:804
 DC_ONLY(0x11f73c, 0x28)
-void CPingMsg::CPingMsg(unsigned long pingTime, ERSMessages id)
+void CPingMsg::CPingMsg(unsigned long pingTime, RsMessages id)
 {
     // @stub
 }
 
 // E:\gamedcs\netmsg.h:815
 DC_ONLY(0x11f764, 0x28)
-void CPingResponseMsg::CPingResponseMsg(unsigned long pingTime, ERSMessages id)
+void CPingResponseMsg::CPingResponseMsg(unsigned long pingTime, RsMessages id)
 {
     // @stub
 }

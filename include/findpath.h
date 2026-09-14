@@ -41,7 +41,7 @@ enum SearchType {
 // Before normalization (type): pathCell.
 struct PathCell {
 public:
-    type_point m_point;
+    MapPoint m_point;
     unsigned int m_visited : 1;
     unsigned int m_isTrigger : 1;
     unsigned int m_inBoat : 1;
@@ -59,8 +59,8 @@ public:
     int m_deltaX : 5;
     int m_deltaY : 5;
     unsigned int m_flightCost : 6;
-    type_point m_lastPoint;
-    type_point m_monster;
+    MapPoint m_lastPoint;
+    MapPoint m_monster;
     long m_barrierValue;
     long m_dangerValue;
     unsigned short m_cost;
@@ -127,16 +127,16 @@ public:
         return &m_cellData[x];
     }
     VA(0x0042ecc0, 0x62)  // hd-crossbuild + exact body/callers x2, dc 0x20064
-    PathCell* getCell(type_point point, bool flying) const
+    PathCell* getCell(MapPoint point, bool flying) const
     {
         if (!m_cellData)
             return m_cellData;
         return &m_cellData[((point.m_z * 2 + flying) * g_mapHeight + point.m_y)
                          * g_mapWidth + point.m_x];
     }
-    long getDangerValue(type_point point) const;  // 0x42ed30 (ai_player.obj)
-    void seedPosition(Hero* currentHero, type_point start,
-                      type_point target, int maxMobility,
+    long getDangerValue(MapPoint point) const;  // 0x42ed30 (ai_player.obj)
+    void seedPosition(Hero* currentHero, MapPoint start,
+                      MapPoint target, int maxMobility,
                       unsigned char isBoat,
                       SearchType searchType,
                       int curTempMobility,
@@ -228,7 +228,7 @@ private:
     // gate seeders; both parameter lists are the DC roster's
     // (search.cpp:155 and :244).
     void enterLith(const Hero* currentHero,
-                    const std::vector<type_point>* list, long cellType,
+                    const std::vector<MapPoint>* list, long cellType,
                     long excluded, PathCell* entryPoint, long limit,
                     SearchType searchType);
     void enterTown(const Hero* currentHero, long startTown,
@@ -246,7 +246,7 @@ private:
     // DC findpath.cpp:271 proves both pathCell reference parameters.
     void pushPoint(const PathCell& oldCell, PathCell& point, int direction,
                    int moveCost, int limit, long barrierValue,
-                   type_point monster, int isTrigger);
+                   MapPoint monster, int isTrigger);
     // 0x4b3290. Rebuilds bIsMoatSlowed for one acting stack.
     void setMoat(const Army* currentArmy);
     // DC's first parameter here is const hero*. The current hero member
@@ -254,7 +254,7 @@ private:
     void testPossibleDirections(Hero* currentHero, PathCell* source,
                                 long turnMobility, long maxMobility,
                                 unsigned char adjacentMonster,
-                                type_point monsterLocation, long pathfinding,
+                                MapPoint monsterLocation, long pathfinding,
                                 SearchType searchType,
                                 long nativeTerrain);
     // Elements are pathCells BY VALUE: FindCombatPath (0x4b3400) pops
@@ -290,14 +290,14 @@ private:
 };
 
 // E:\gamedcs\FindPath.h:265, dc 0x37e98
-inline long* getDangerCell(long* dangerZones, type_point point)
+inline long* getDangerCell(long* dangerZones, MapPoint point)
 {
     return &dangerZones[(point.m_z * g_mapHeight + point.m_y) * g_mapWidth + point.m_x];
 }
 
 // E:\gamedcs\FindPath.h:270, dc 0x37eec
 VA(0x0042ed30, 0x4E)  // dc 0x37eec
-inline long SearchArray::getDangerValue(type_point point) const
+inline long SearchArray::getDangerValue(MapPoint point) const
 {
     if (!m_dangerZones)
         return 0;
@@ -365,7 +365,7 @@ unsigned char checkAdjacentMonster(const Hero* currentHero,
 int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
                        long pathfinding, long flying, long waterWalking,
                        unsigned char hasNomad);
-int getTerrainCost(Hero* currentHero, type_point start, int direction,
+int getTerrainCost(Hero* currentHero, MapPoint start, int direction,
                    int moveLeft);
 
 // --- combatManager ---

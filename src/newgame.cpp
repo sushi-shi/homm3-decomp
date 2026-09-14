@@ -249,8 +249,8 @@ void Game::getVictoryConditionText(char* text)
             break;
         }
         case VICTORY_CONDITION_BUILD_GRAIL: {
-            type_point townPos(victory.m_townX, victory.m_townY, victory.m_townZ);
-            if (townPos != type_point(-1, -1, -1)) {
+            MapPoint townPos(victory.m_townX, victory.m_townY, victory.m_townZ);
+            if (townPos != MapPoint(-1, -1, -1)) {
                 Town* targetTown = getTown(getTownId(
                     victory.m_townX, victory.m_townY, victory.m_townZ));
                 sprintf(text, (*g_generalText)[320],

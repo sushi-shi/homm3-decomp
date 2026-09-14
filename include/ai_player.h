@@ -13,7 +13,7 @@ class PlayerData;
 class SearchArray;
 class Town;
 class Generator;
-struct type_artifact;
+struct ArtifactRecord;
 
 // E:\gamedcs\ai_player.cpp:3013, dc 0x329f8
 void aiMarkDangerZones(Hero* currentHero, long* dangerZones);
@@ -23,19 +23,19 @@ void aiMarkDangerZones(Hero* currentHero, long* dangerZones);
 DATA(0x00660518) extern int g_heroLimits[5];
 DATA(0x0066052c) extern int g_globalLimits[5];
 
-long aiGetValueOfArtifact(type_artifact artifact, const Hero* owner,
+long aiGetValueOfArtifact(ArtifactRecord artifact, const Hero* owner,
                               unsigned char equipped, unsigned char exact);
-long aiGetValueOfArtifact(const type_artifact& artifact, long playerId);
+long aiGetValueOfArtifact(const ArtifactRecord& artifact, long playerId);
 void aiSwapArtifacts(Hero* source, Hero* destination);
-long aiGetEquipValue(type_artifact artifact, const Hero* ourHero,
+long aiGetEquipValue(ArtifactRecord artifact, const Hero* ourHero,
                         unsigned char exact);
 // This overload values the artifact across a player's heroes. CodeView
 // proves the const reference and long player id; retail retains 0x433aa0.
 // E:\gamedcs\ai_player.cpp:5684, dc 0x37514
-long aiGetValueOfArtifact(const type_artifact& artifact, long playerId);
+long aiGetValueOfArtifact(const ArtifactRecord& artifact, long playerId);
 long getFullValue(const Hero* ourHero);
 long removeNegativeArtifacts(Hero* ourHero);
-long aiGetShipCost(const Hero* ourHero, type_point point);
+long aiGetShipCost(const Hero* ourHero, MapPoint point);
 
 // Full DC layout (classes.csv: 152 B, 6 members, 2 statics) and every
 // offset is corroborated by a retail reader: reset_magus_hut_value
@@ -226,7 +226,7 @@ void aiArrangeArmy(ArmyGroup& currentArmy);
 // sets is_critical; find_all_destinations vectors these records.
 struct HeroDestination {
 public:
-    type_point m_point;
+    MapPoint m_point;
     long m_value;
     long m_moveCost;
     unsigned char m_isNearby;
@@ -272,7 +272,7 @@ extern unsigned char g_unnamed693718[];
 DATA(0x006925ac)
 extern long g_aiEventVisibilityValues[];
 
-long aiValueOfObservatory(struct type_point origin, long playerId, long range);
+long aiValueOfObservatory(struct MapPoint origin, long playerId, long range);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\ai_player.cpp:895, dc 0x2f5fc) long sum_player_dwellings(long player_id);

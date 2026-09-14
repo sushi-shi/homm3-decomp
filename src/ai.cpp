@@ -233,7 +233,7 @@ unsigned char CombatManager::aiCheckRetreat()
                     return 1;
 
                 long combatValue = 0;
-                type_artifact artifact;
+                ArtifactRecord artifact;
                 { for (long i = 0; i < 19; i++) {
                         artifact = m_heroes[m_currentSide]->getArtifact(ArtifactSlot(i));
                         if (artifact.m_artifactId == ARTIFACT_NONE)
@@ -2636,14 +2636,14 @@ long Army::getAdjacentHex(long direction)
 
 // E:\gamedcs\hero.h:965
 DC_ONLY(0x27e8c, 0x10)
-const type_artifact* Hero::getArtifact(ArtifactSlot slot)
+const ArtifactRecord* Hero::getArtifact(ArtifactSlot slot)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.h:970
 DC_ONLY(0x27e9c, 0x10)
-const type_artifact* Hero::getBackpack(long slot)
+const ArtifactRecord* Hero::getBackpack(long slot)
 {
     // @stub
 }

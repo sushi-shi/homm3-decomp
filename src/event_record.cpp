@@ -87,7 +87,7 @@ void EventRecord::undo()
 // corroborates the same packed x/y/z loads at both inline sites.
 inline RecordMoveHero::RecordMoveHero(Hero* currentHero,
                                                     char direction,
-                                                    type_point destination)
+                                                    MapPoint destination)
 {
     m_currentHero = currentHero;
     m_restoreFlag = currentHero->m_facing;
@@ -201,7 +201,7 @@ void RecordMoveHero::undo()
 // Dreamcast line 204 proves this remains a derived-to-base delegation rather
 // than a flattened duplicate of type_record_move_hero's assignments.
 inline RecordTeleport::RecordTeleport(Hero* currentHero,
-                                                  type_point destination)
+                                                  MapPoint destination)
     : RecordMoveHero(currentHero, currentHero->m_facing, destination)
 {
 }
@@ -502,7 +502,7 @@ void RecordHideBoat::undo()
 // helper into the packed x/y/z loads, so keep the source boundary even though
 // spelling the three fields directly produces the same candidate bytes.
 inline RecordShowBoat::RecordShowBoat(Boat* currentBoat,
-                                                    type_point location)
+                                                    MapPoint location)
     : RecordHideBoat(currentBoat, 0,
                             currentBoat->m_occupyingHero)
 {
@@ -583,7 +583,7 @@ void RecordShowBoat::undo()
 
 // E:\gamedcs\event_record.cpp:533
 DC_ONLY(0x8d220, 0x70)
-void RecordErase::RecordErase(type_point _location, long _object_id, unsigned long _extra_info, long _object_index)
+void RecordErase::RecordErase(MapPoint _location, long _object_id, unsigned long _extra_info, long _object_index)
 {
     // @stub
 }
@@ -597,7 +597,7 @@ EventRecord* RecordErase::create()
 
 #endif  // @carcass
 
-inline RecordErase::RecordErase(type_point location,
+inline RecordErase::RecordErase(MapPoint location,
                                             long objectId,
                                             unsigned long extraInfo,
                                             long objectIndex)
@@ -785,7 +785,7 @@ void RecordHideHero::undo()
 
 // E:\gamedcs\event_record.cpp:725
 DC_ONLY(0x8d708, 0xB6)
-void RecordShowHero::RecordShowHero(Hero* _hero, char _owner, type_point _location, unsigned char _is_boat)
+void RecordShowHero::RecordShowHero(Hero* _hero, char _owner, MapPoint _location, unsigned char _is_boat)
 {
     // @stub
 }
@@ -807,13 +807,13 @@ EventRecordType RecordShowHero::getType()
 #endif  // @carcass
 
 inline RecordShowHero::RecordShowHero(Hero* who, char newOwner,
-                                                    type_point location,
+                                                    MapPoint location,
                                                     unsigned char onBoat)
     : RecordHideHero(who, newOwner, 0)
 {
     m_previousBoat = (who->m_flags >> 18) & 1;
     m_onBoat = onBoat;
-    m_previousLocation = type_point(who->m_x, who->m_y, who->m_z);
+    m_previousLocation = MapPoint(who->m_x, who->m_y, who->m_z);
     m_location = location;
 }
 
@@ -1070,7 +1070,7 @@ VA(0x0049bf90, 0x1F1)  // dc 0x8dfe0
 void Game::recordClaimMine(long id, long newOwner)
 {
     Mine& currentMine = m_mines[id];
-    type_point location(currentMine.m_mapX, currentMine.m_mapY,
+    MapPoint location(currentMine.m_mapX, currentMine.m_mapY,
                         currentMine.m_mapZ);
     CMCClaimMine msg(id, newOwner);
     sendMapChange(&msg);
@@ -1087,7 +1087,7 @@ void Game::recordClaimTown(long id, long newOwner)
 }
 // E:\gamedcs\event_record.cpp:1061
 VA(0x0049c390, 0x1C2)  // anchor-vtable (constructs 0x63df1c), dc 0x8e0b8
-void Game::recordEraseObject(NewmapCell* cell, type_point point)
+void Game::recordEraseObject(NewmapCell* cell, MapPoint point)
 {
     m_eventRecords.push_back(new RecordErase(point,
                                                  cell->m_objectTypeIndex,
@@ -1116,13 +1116,13 @@ void Game::recordHideHero(Hero* who, char newOwner,
 }
 
 VA(0x0049c900, 0x217)  // dc 0x8e18c
-void Game::recordShowBoat(Boat* currentBoat, type_point point)
+void Game::recordShowBoat(Boat* currentBoat, MapPoint point)
 {
     m_eventRecords.push_back(new RecordShowBoat(currentBoat, point));
 }
 
 VA(0x0049cb20, 0x226)  // dc 0x8e1d0
-void Game::recordShowHero(Hero* who, signed char player, type_point point,
+void Game::recordShowHero(Hero* who, signed char player, MapPoint point,
                             unsigned char reset)
 {
     m_eventRecords.push_back(new RecordShowHero(who, player, point,
@@ -1130,7 +1130,7 @@ void Game::recordShowHero(Hero* who, signed char player, type_point point,
 }
 
 VA(0x0049cd50, 0x1FA)  // dc 0x8e270
-void Game::recordMove(Hero* who, int direction, type_point destination)
+void Game::recordMove(Hero* who, int direction, MapPoint destination)
 {
     m_eventRecords.push_back(new RecordMoveHero(who, direction,
                                                      destination));
@@ -1154,7 +1154,7 @@ void Game::recordPlayerDeath(char player_id)
 #endif  // @carcass
 
 VA(0x0049cf50, 0x20B)  // dc 0x8e2f8
-void Game::recordTeleport(Hero* who, type_point destination)
+void Game::recordTeleport(Hero* who, MapPoint destination)
 {
     m_eventRecords.push_back(new RecordTeleport(who, destination));
 }

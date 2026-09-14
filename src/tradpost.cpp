@@ -1586,7 +1586,7 @@ void doMarket()
 VA(0x005ea5d0, 0x103)  // dc 0x188bd4
 void SellArtifactWindow::updateSellArtifactWidget(Message* msg, long i)
 {
-    type_artifact art;
+    ArtifactRecord art;
     if (i < 18) {
         art = g_marketHero->getArtifact(ArtifactSlot(i));
     } else {
@@ -2900,7 +2900,7 @@ double getTradeRatio(GameResource source, GameResource dest, double efficiency)
 VA(0x005ecdc0, 0xbb)  // dc 0x18afd4
 void SellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
 {
-    type_artifact artifact;
+    ArtifactRecord artifact;
     if (inLeftResource < 18) {
         artifact = g_marketHero->getArtifact(ArtifactSlot(inLeftResource));
     }
@@ -3368,7 +3368,7 @@ int BuyArtifactWindow::windowHandler(Message& msg)
                 } else {
                     g_currentPlayer->m_resources[g_selectedArtifact] -=
                         g_giveQuantity * g_rightAmount;
-                    type_artifact artifact(
+                    ArtifactRecord artifact(
                         g_marketArtifacts[g_leftResource]);
                     g_marketHero->giveArtifact(&artifact, 1, 1);
                     g_marketArtifacts[g_leftResource] =
@@ -3472,7 +3472,7 @@ int BuyArtifactWindow::windowHandler(Message& msg)
             if (msg.m_codeY < BUY_ARTIFACT_SLOT_0_ID
                 || msg.m_codeY > BUY_ARTIFACT_SLOT_6_ID)
                 return MESSAGE_DISPATCH_CONSUME;
-            type_artifact artifact(
+            ArtifactRecord artifact(
                 g_marketArtifacts[
                     msg.m_codeY - BUY_ARTIFACT_SLOT_0_ID]);
             g_marketHero->viewArtifact(&artifact, 1);
@@ -3624,7 +3624,7 @@ int SellArtifactWindow::windowHandler(Message& msg)
                 return MESSAGE_DISPATCH_CONSUME;
             }
             int artifactSlot = msg.m_codeY - MARKET_ARTIFACT_SLOT_00_ID;
-            type_artifact artifact;
+            ArtifactRecord artifact;
             if (artifactSlot < 18) {
                 artifact = g_marketHero->getArtifact(ArtifactSlot(artifactSlot));
                 g_marketHero->viewArtifact(&artifact, 1);
@@ -3744,7 +3744,7 @@ void SellArtifactWindow::setRolloverText(int codeY)
     case MARKET_ARTIFACT_SLOT_20_ID: case MARKET_ARTIFACT_SLOT_21_ID:
     case MARKET_ARTIFACT_SLOT_22_ID: {
         long slot = codeY - MARKET_ARTIFACT_SLOT_00_ID;
-        type_artifact artifact;
+        ArtifactRecord artifact;
         if (slot < 18) {
             artifact = g_marketHero->getArtifact(ArtifactSlot(slot));
         } else {

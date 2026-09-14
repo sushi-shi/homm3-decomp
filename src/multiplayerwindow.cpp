@@ -22,7 +22,7 @@
 
 #include <direct.h>
 
-unsigned char initRemote(ENetGameType netGameType, const char* userName);
+unsigned char initRemote(NetGameType netGameType, const char* userName);
 unsigned char initConnection(char* address, _DPCOMPORTADDRESS* comportInfo);
 void remoteCleanup();
 
@@ -172,7 +172,7 @@ void CMultiPlayerWindowEdit::~CMultiPlayerWindowEdit()
 
 // E:\gamedcs\multiplayerwindow.cpp:174
 DC_ONLY(0x101f34, 0xE0)
-unsigned char CHeroSessions::getSessionInfo(unsigned long index, char* sessName, char* userName, int* numPlayers, CHeroSessions::ESessionStatus* status)
+unsigned char CHeroSessions::getSessionInfo(unsigned long index, char* sessName, char* userName, int* numPlayers, CHeroSessions::SessionStatus* status)
 {
     // @stub
 }
@@ -287,7 +287,7 @@ public:
 // E:\gamedcs\multiplayerwindow.cpp:174, dc 0x101f34
 inline bool CHeroSessions::getSessionInfo(unsigned long index, char* sessName,
                                           char* userName, int& numPlayers,
-                                          ESessionStatus& status)
+                                          SessionStatus& status)
 {
     CDPlaySession* session = get(index);
     if (!session)
@@ -823,7 +823,7 @@ void MultiPlayerWindow::update()
     int wx = m_x;
     int wy = m_y;
     int numPlayers;
-    CHeroSessions::ESessionStatus status;
+    CHeroSessions::SessionStatus status;
     unsigned long count = m_sessions->getCount();
     int shown = 0;
     unsigned char haveName = 0;
@@ -1198,7 +1198,7 @@ unsigned char MultiPlayerWindow::hostSession(const char* sessName, const char* p
 }
 
 VA(0x0050fbc0, 0x86)  // dc 0x100e18
-unsigned char MultiPlayerWindow::initRemote(ENetGameType netGameType, const char* extra, _DPCOMPORTADDRESS* comportInfo)
+unsigned char MultiPlayerWindow::initRemote(NetGameType netGameType, const char* extra, _DPCOMPORTADDRESS* comportInfo)
 {
     DPCAPS dpCaps;
 
@@ -1499,7 +1499,7 @@ unsigned char MultiPlayerWindow::onJoin()
     char userName[256];
     char sessName[256];
     int numPlayers;
-    CHeroSessions::ESessionStatus status;
+    CHeroSessions::SessionStatus status;
     if (!m_sessions->getSessionInfo(static_cast<unsigned long>(m_currentGame),
                                    sessName, userName,
                                    numPlayers, status))

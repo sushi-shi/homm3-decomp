@@ -26,7 +26,7 @@ class Town;
 // Before normalization (type): type_AI_combat_parameters.
 struct AICombatParameters;
 struct tagPOINT;
-struct type_artifact;
+struct ArtifactRecord;
 
 // Four inclusive drawing bounds copied as one value before a drawbridge
 // animation. Drawing.cpp's decoded readers prove the same min/max layout as
@@ -1069,7 +1069,7 @@ public:
 private:
     // The battle's packed adventure-map coordinate. GetBackgroundName
     // passes it by value to advManager::MoreTreesNear.
-    type_point m_mapPoint;  // +0x13ff0
+    MapPoint m_mapPoint;  // +0x13ff0
 
 public:
     Bitmap816* m_combatCellGridBitmap;  // +0x13ff4
@@ -1120,7 +1120,7 @@ public:
     unsigned char checkObstacleAttacks(Army* thisArmy,
                                          unsigned char isWalking);
     void lootDeadHero(int side,
-                      std::vector<type_artifact>& lootedArtifacts);
+                      std::vector<ArtifactRecord>& lootedArtifacts);
     void calculateGainedExperience(int side, int* experienceGained);
     unsigned char checkFireWall(long hex, Army* currentArmy,
                                   unsigned char isWalking);
@@ -1487,7 +1487,7 @@ private:
     bool showCreatureSpellError(char* buffer,
                                    const Army* currentArmy);
     void showEagleEye(int winningGroup, int dialogTimeout);
-    void showLootedArtifacts(std::vector<type_artifact>& lootedArtifacts,
+    void showLootedArtifacts(std::vector<ArtifactRecord>& lootedArtifacts,
                                int dialogTimeout);
     long simulateActions(std::vector<Army*>& list, long i,
                           long ourGroup);
@@ -1857,7 +1857,7 @@ public:
                                   std::vector<Army*>& targets);
     // DC ?SetupCombat@combatManager@@QAAXUtype_point@@PAVhero@@PAVarmyGroup@@
     // JPAVtown@@12HHH_N@Z - the S_PUB32 run types every parameter. The
-    void setupCombat(type_point point, Hero* leftHero,
+    void setupCombat(MapPoint point, Hero* leftHero,
                      ArmyGroup* leftArmyGroup, long rightPlayer,
                      Town* rightTown, Hero* rightHero,
                      ArmyGroup* rightArmyGroup, int x, int y, int seed,
