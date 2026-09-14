@@ -867,7 +867,11 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
         }
 
         {
-            TBitmapResourceHeader bmpHeader;
+            struct {
+                int m_dataSize;
+                int m_width;
+                int m_height;
+            } bmpHeader;
             lodFile->read(&bmpHeader, sizeof(bmpHeader));
             TAutoArrayPtr<unsigned char> data(
                 new unsigned char[bmpHeader.m_dataSize]);
@@ -2416,7 +2420,7 @@ CSprite* ResourceManager::getSprite(const char* name)
     unsigned char* fileData = new unsigned char[entry->m_size];
     lodFile->read(fileData, entry->m_size);
 
-    TSpriteDefHeader sdef;
+    SpriteDefHeader sdef;
     unsigned char* definitionPosition = fileData + sizeof(sdef);
     memcpy(&sdef, fileData, sizeof(sdef));
 

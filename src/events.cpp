@@ -2361,8 +2361,7 @@ void advManager::payForArtifact(hero* currentHero, NewmapCell* cell,
                                 short goldCost, short resourceCost,
                                 bool humanPlayer)
 {
-    int resourceType =
-        static_cast<long>(cell->m_extraInfo << 15) >> 28;
+    int resourceType = static_cast<long>(cell->m_extraInfo << 15) >> 28;
 
     if (humanPlayer) {
         short artifact = cell->m_objectIndex;
@@ -2457,7 +2456,7 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
                         guardList.add(treasure->m_guardians.m_armies[i],
                                        treasure->m_guardians.m_numTroops[i], -1);
                 }
-                int numArmies = guardList.getNumArmies();
+                long numArmies = guardList.getNumArmies();
                 firstGuardAmount =
                     armyGroup::getArmySizeName(guardList.m_numTroops[0], 2);
                 guards = getArmyName(guardList.m_armies[0], 2);
@@ -3167,7 +3166,8 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                     if (currentGenerator.m_guards.m_armies[i] != CREATURE_NONE)
                         break;
                 }
-                int guardType = currentGenerator.m_guards.m_armies[i];
+                TCreatureType guardType =
+                    TCreatureType(currentGenerator.m_guards.m_armies[i]);
                 long guardQty = currentGenerator.m_guards.getCreatureTotal();
                 overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
                 updBottomView(0, 1, 1);
@@ -3809,7 +3809,7 @@ void advManager::doEventLibrary(hero* currentHero, NewmapCell* cell,
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
-int aiChooseMagicSkill(hero* currentHero);
+TPrimarySkill aiChooseMagicSkill(hero* currentHero);
 
 // `game* g = gpGame;` is spelled out for the war school's reason: it is
 // what puts the player position first in the SIB of the inlined
@@ -3836,7 +3836,7 @@ void advManager::doEventMagicSchool(hero* currentHero, NewmapCell* cell,
         return;
     }
 
-    int skill = 2;
+    TPrimarySkill skill = ePriSkillPower;
     if (humanPlayer) {
         overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
         updBottomView(0, 1, 1);
@@ -3847,10 +3847,10 @@ void advManager::doEventMagicSchool(hero* currentHero, NewmapCell* cell,
         case DIALOG_RETURN_CANCEL:
             return;
         case DIALOG_RETURN_CHOICE_1:
-            skill = 2;
+            skill = ePriSkillPower;
             break;
         case DIALOG_RETURN_CHOICE_2:
-            skill = 3;
+            skill = ePriSkillKnowledge;
             break;
         }
     } else {
@@ -3963,18 +3963,18 @@ VA(0x004a39a0, 0x21D)  // dc 0x94314
 void advManager::doEventMine(NewmapCell* cell, hero* currentHero,
                              type_point point, bool human)
 {
-    mine& currentMine = g_game->m_mines[cell->m_extraInfo];
-    if (g_game->onSameTeam(currentMine.m_playerOwner, g_netLocalGamePos)) {
-        if (currentMine.m_playerOwner == g_netLocalGamePos && human)
-            doMonsterJoinDialog(currentHero, &currentMine.m_guards, 1);
+    mine* currentMine = &g_game->m_mines[cell->m_extraInfo];
+    if (g_game->onSameTeam(currentMine->m_playerOwner, g_netLocalGamePos)) {
+        if (currentMine->m_playerOwner == g_netLocalGamePos && human)
+            doMonsterJoinDialog(currentHero, &currentMine->m_guards, 1);
         return;
     }
 
-    if (currentMine.m_guards.hasCreatures()) {
+    if (currentMine->m_guards.hasCreatures()) {
         if (human) {
             overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
             updBottomView(0, 1, 1);
-            if (currentMine.m_playerOwner < 0)
+            if (currentMine->m_playerOwner < 0)
                 normalDialog(g_adventureEventText->getText(
                                  ADV_EVENT_TEXT_MINE_GUARDED),
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -3988,34 +3988,34 @@ void advManager::doEventMine(NewmapCell* cell, hero* currentHero,
             return;
         }
 
-        if (currentMine.m_playerOwner < 0
-            && currentMine.m_guards.getNumArmies() == 1) {
-            int guardCount = currentMine.m_guards.m_numTroops[0];
+        if (currentMine->m_playerOwner < 0
+            && currentMine->m_guards.getNumArmies() == 1) {
+            int guardCount = currentMine->m_guards.m_numTroops[0];
             if (combatMonsterEvent(
-                    currentHero, currentMine.m_guards.m_armies[0],
+                    currentHero, currentMine->m_guards.m_armies[0],
                     &guardCount, cell, point,
                     CREATURE_NONE, 0, 0,
                     CREATURE_NONE, 0, 0)) {
-                currentMine.m_guards.m_numTroops[0] = guardCount;
+                currentMine->m_guards.m_numTroops[0] = guardCount;
                 return;
             }
-            currentMine.m_guards.initialize();
+            currentMine->m_guards.initialize();
             if (human)
                 normalDialog(g_adventureEventText->getText(
                                  ADV_EVENT_TEXT_MINE_CLEARED),
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else if (doCombat(point, currentHero, &currentHero->m_army,
-                            currentMine.m_playerOwner, 0, 0,
-                            &currentMine.m_guards, -1, 1, 0)) {
+                            currentMine->m_playerOwner, 0, 0,
+                            &currentMine->m_guards, -1, 1, 0)) {
             return;
         }
         currentHero->restoreCell();
     }
 
     if (human)
-        normalDialog(g_mineEventText[currentMine.m_type], 1, -1, -1,
-                     currentMine.m_type,
-                     -g_mineCharacteristics[currentMine.m_type],
+        normalDialog(g_mineEventText[currentMine->m_type], 1, -1, -1,
+                     currentMine->m_type,
+                     -g_mineCharacteristics[currentMine->m_type],
                      -1, 0, -1, 0, -1, 0);
     g_game->claimMine(cell->m_extraInfo, g_netLocalGamePos, const_normal_action);
 }
@@ -4732,7 +4732,7 @@ void advManager::doEventSpellScroll(hero* currentHero, NewmapCell* cell,
         return;
     }
 
-    int spell = cell->m_extraInfo;
+    SpellID spell = cell->m_extraInfo;
     type_artifact scroll;
     scroll.m_artifactId = ARTIFACT_SPELL_SCROLL;
     scroll.m_extra = spell;
@@ -5686,7 +5686,7 @@ void advManager::doEventLithOneWay(hero* currentHero, NewmapCell* cell,
                                        bool humanPlayer)
 {
     type_point point;
-    if (!g_game->getRandomLithExit(cell->m_objectIndex, &point))
+    if (!g_game->getRandomLithExit(cell->m_objectIndex, point))
         return;
 
     NewmapCell* exitCell = g_game->m_worldMap.cell(point);
@@ -5714,7 +5714,7 @@ void advManager::doEventLithTwoWay(hero* currentHero, NewmapCell* cell,
                                        bool humanPlayer)
 {
     type_point point;
-    if (!g_game->getRandomLith(cell->m_objectIndex, cell->m_extraInfo, &point))
+    if (!g_game->getRandomLith(cell->m_objectIndex, cell->m_extraInfo, point))
         return;
 
     NewmapCell* exitCell = g_game->m_worldMap.cell(point);
@@ -5774,7 +5774,7 @@ inline void advManager::doEventWhirlpool(hero* currentHero,
                                            unsigned char humanPlayer)
 {
     type_point exitPoint;
-    if (g_game->getRandomWhirlpool(cell->m_extraInfo, &exitPoint)) {
+    if (g_game->getRandomWhirlpool(cell->m_extraInfo, exitPoint)) {
         stopCursor(1);
         g_advManager->teleportTo(currentHero, exitPoint, 0, 0, 1, 0);
     }
@@ -6602,7 +6602,7 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
                 return;
             }
             defender->m_army.mergeArmies(
-                const_cast<armyGroup*>(&thisTown->getArmy()));
+                *const_cast<armyGroup*>(&thisTown->getArmy()));
             defendingArmy = &defender->m_army;
         } else {
             if (thisTown->m_garrisonHeroId < 0)
@@ -6845,7 +6845,7 @@ VA(0x004abdc0, 0x6D0)  // anchor-callee ExtraInfoUnion::get_creature_bank, ret 0
 int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text, type_point point, unsigned char humanPlayer)
 {
     type_creature_bank& bank = cell->getCreatureBank();
-    int leaderMonster = -1;
+    TCreatureType leaderMonster = CREATURE_NONE;
     long creatureCount = bank.m_guards.getCreatureTotal();
     if (humanPlayer) {
         int best = 0;
@@ -6854,7 +6854,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
             if (type != CREATURE_NONE
                 && g_creatureTypeTraits[type].m_aiValue > best) {
                 best = g_creatureTypeTraits[type].m_aiValue;
-                leaderMonster = type;
+                leaderMonster = TCreatureType(type);
             }
         }
     }
@@ -7066,7 +7066,7 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
 
     demobilizeCurrHero(0, 1);
 
-    int eventSeed = point.m_x * 0x3c907 + point.m_z * 0x4bb5f
+    const int eventSeed = point.m_x * 0x3c907 + point.m_z * 0x4bb5f
                      + point.m_y * 0x4386d + 0x25ea7;
     sRand(eventSeed);
 
@@ -7315,7 +7315,7 @@ int advManager::doNetCombat(CNetMsg* netMsg)
     type_point point;
     int seed;
     signed char winner;
-    receiveHeroTownData(&combatInitMsg, &fromWho, &point,
+    receiveHeroTownData(&combatInitMsg, &fromWho, point,
                         &leftHero, &leftArmyGroup, &rightPlayer,
                         &rightTown, &rightHero, &rightArmyGroup,
                         &seed, &winner,
@@ -7615,7 +7615,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
                         armyGroup* trightArmyGroup;
                         signed char winnerId;
                         receiveHeroTownData(&dlg.m_combatInitMsg, &fromWho,
-                                            &point, &tleftHero, &tleftArmyGroup,
+                                            point, &tleftHero, &tleftArmyGroup,
                                             &tempRightPlayer, &trightTown,
                                             &trightHero, &trightArmyGroup, &seed,
                                             &winnerId, &g_combatFlag6985a3,
@@ -7907,7 +7907,7 @@ void advManager::sendHeroTownData(type_point point, hero* leftHero, armyGroup* l
 }
 
 VA(0x004aeee0, 0x3DF)  // dc 0x9c554
-void advManager::receiveHeroTownData(CCombatInitMsg* combatInitMsg, int* fromWho, type_point* point, hero** leftHero, armyGroup** leftArmyGroup, int* rightPlayer, town** rightTown, hero** rightHero, armyGroup** rightArmyGroup, int* seed, signed char* winner, unsigned char* retreatWin, unsigned char* combatSurrender)
+void advManager::receiveHeroTownData(CCombatInitMsg* combatInitMsg, int* fromWho, type_point& point, hero** leftHero, armyGroup** leftArmyGroup, int* rightPlayer, town** rightTown, hero** rightHero, armyGroup** rightArmyGroup, int* seed, signed char* winner, unsigned char* retreatWin, unsigned char* combatSurrender)
 {
     *leftHero = 0;
     *leftArmyGroup = 0;
@@ -7917,7 +7917,7 @@ void advManager::receiveHeroTownData(CCombatInitMsg* combatInitMsg, int* fromWho
     *rightPlayer = -1;
 
     *fromWho = combatInitMsg->m_netmsg.m_from;
-    *point = combatInitMsg->m_point;
+    point = combatInitMsg->m_point;
     int hasLeftHero = combatInitMsg->m_leftHero;
     int hasRightTown = combatInitMsg->m_rightTown;
     int hasRightHero = combatInitMsg->m_rightHero;

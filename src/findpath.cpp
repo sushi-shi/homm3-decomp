@@ -163,8 +163,8 @@ int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
 {
     long terrain = cell->m_groundSet;
     long road = cell->m_roadSet;
-    if (hasNomad && terrain == 1)
-        terrain = 0;
+    if (hasNomad && terrain == eTerrainSand)
+        terrain = eTerrainDirt;
     TAdventureObjectType special = cell->getSpecialTerrain();
     long cost;
     if (road != 0 && endRoad != 0)
@@ -1199,7 +1199,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
             if (!combatManager::validHex(adjacent))
                 continue;
 
-            long flightCost = 0;
+            int flightCost = 0;
             unsigned char moat = 0;
             if (!(currentArmy->is(1))) {
                 moat = isMoat(adjacent);

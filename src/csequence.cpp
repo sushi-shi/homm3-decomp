@@ -15,7 +15,7 @@ void CSequence::CSequence()
 #endif  // @carcass
 
 VA(0x0047b840, 0x44)  // dc 0x71f20
-CSequence::CSequence(const int num)
+CSequence::CSequence(int num)
 {
     m_numFrames = 0;
     m_allocatedFrames = num;

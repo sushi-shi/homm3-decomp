@@ -26,25 +26,30 @@ extern const char* g_statDesc[4];
 // Hero-class ids. Dreamcast CodeView supplies the original 0..15 ladder;
 // retail GetNewHeroId extends it with the two Conflux classes, indexes all
 // eighteen class-traits rows, and uses 18 as the no-class sentinel.
+// Before normalization (Dreamcast enumerators): eClassKnight, eClassCleric,
+// eClassRanger, eClassDruid, eClassAlchemist, eClassWizard, eClassPagan,
+// eClassHeretic, eClassDeathKnight, eClassNecromancer, eClassOverlord,
+// eClassWarlock, eClassBarbarian, eClassBattleMage, eClassBeastmaster,
+// eClassWitch, eClassPlanesWalker, eClassElementalist.
 enum THeroClass {
-    eClassKnight = 0,
-    eClassCleric = 1,
-    eClassRanger = 2,
-    eClassDruid = 3,
-    eClassAlchemist = 4,
-    eClassWizard = 5,
-    eClassPagan = 6,
-    eClassHeretic = 7,
-    eClassDeathKnight = 8,
-    eClassNecromancer = 9,
-    eClassOverlord = 10,
-    eClassWarlock = 11,
-    eClassBarbarian = 12,
-    eClassBattleMage = 13,
-    eClassBeastmaster = 14,
-    eClassWitch = 15,
-    eClassPlanesWalker = 16,
-    eClassElementalist = 17,
+    classKnight = 0,
+    classCleric = 1,
+    classRanger = 2,
+    classDruid = 3,
+    classAlchemist = 4,
+    classWizard = 5,
+    classPagan = 6,
+    classHeretic = 7,
+    classDeathKnight = 8,
+    classNecromancer = 9,
+    classOverlord = 10,
+    classWarlock = 11,
+    classBarbarian = 12,
+    classBattleMage = 13,
+    classBeastmaster = 14,
+    classWitch = 15,
+    classPlanesWalker = 16,
+    classElementalist = 17,
     kNumHeroClasses = 18
 };
 

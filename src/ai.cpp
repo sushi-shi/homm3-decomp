@@ -808,8 +808,8 @@ long combatManager::getAreaEffect(long side, const army* ourArmy, long markedEne
             if (spell == SPELL_FROST_RING || spell == SPELL_FIREBALL
                     || spell == SPELL_INFERNO
                     || spell == SPELL_METEOR_SHOWER) {
-                long mastery = castingHero->getSpellLevel(spell,
-                                                             m_magicTerrain);
+                TSkillMastery mastery =
+                    castingHero->getSpellLevel(spell, m_magicTerrain);
                 if (castingHero->getManaCost(spell, m_armyGroups[1 - side],
                                               m_magicTerrain)
                         > castingHero->m_mana)
@@ -1512,7 +1512,8 @@ unsigned char combatManager::chooseResurrectAction(const army* currentArmy, long
         return 0;
     army temp;
     if (currentArmy->m_creatureType == CREATURE_PIT_LORD)
-        temp.initialize(CREATURE_DEMON, 1, m_heroes[estimate->m_ourGroup],
+        temp.initialize(TCreatureType(CREATURE_DEMON), 1,
+                        m_heroes[estimate->m_ourGroup],
                         estimate->m_ourGroup, 0, 0);
     for (long i = m_numArmies[estimate->m_ourGroup]; i--; ) {
         const army* target = &m_armies[estimate->m_ourGroup][i];

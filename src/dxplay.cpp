@@ -678,27 +678,27 @@ unsigned char CDPlay::setPlayerName(unsigned long playerId, char* shortName, cha
 VA(0x004982a0, 0x115)  // dc 0x8b0d8
 unsigned char CDPlay::getPlayerName(unsigned long playerId, char* shortName, int maxShort, char* longName, int maxLong)
 {
-    CDPlayMsg msg;
+    CDPlayMsg name;
     unsigned long size = 0;
     m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerName(playerId, 0, &size);
     if (m_res != DPERR_BUFFERTOOSMALL)
         return 0;
     unsigned long allocSize = size + 1;
-    msg.m_data = new unsigned char[allocSize];
-    msg.m_dataSize = allocSize;
-    DPNAME* name = static_cast<DPNAME*>(static_cast<void*>(msg.m_data));
-    m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerName(playerId, name, &size);
+    name.m_data = new unsigned char[allocSize];
+    name.m_dataSize = allocSize;
+    DPNAME* dpName = static_cast<DPNAME*>(static_cast<void*>(name.m_data));
+    m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerName(playerId, dpName, &size);
     if (m_res < 0)
         return 0;
     if (shortName) {
-        if (name->m_shortNameA)
-            strncpy(shortName, name->m_shortNameA, maxShort);
+        if (dpName->m_shortNameA)
+            strncpy(shortName, dpName->m_shortNameA, maxShort);
         else
             shortName[0] = 0;
     }
     if (longName) {
-        if (name->m_longNameA)
-            strncpy(longName, name->m_longNameA, maxLong);
+        if (dpName->m_longNameA)
+            strncpy(longName, dpName->m_longNameA, maxLong);
         else
             longName[0] = 0;
     }
@@ -757,27 +757,27 @@ unsigned char CDPlay::setGroupName(unsigned long groupId, char* shortName, char*
 VA(0x00498500, 0x115)  // dc 0x8b2c4
 unsigned char CDPlay::getGroupName(unsigned long groupId, char* shortName, int maxShort, char* longName, int maxLong)
 {
-    CDPlayMsg msg;
+    CDPlayMsg name;
     unsigned long size = 0;
     m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupName(groupId, 0, &size);
     if (m_res != DPERR_BUFFERTOOSMALL)
         return 0;
     unsigned long allocSize = size + 1;
-    msg.m_data = new unsigned char[allocSize];
-    msg.m_dataSize = allocSize;
-    DPNAME* name = static_cast<DPNAME*>(static_cast<void*>(msg.m_data));
-    m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupName(groupId, name, &size);
+    name.m_data = new unsigned char[allocSize];
+    name.m_dataSize = allocSize;
+    DPNAME* dpName = static_cast<DPNAME*>(static_cast<void*>(name.m_data));
+    m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupName(groupId, dpName, &size);
     if (m_res < 0)
         return 0;
     if (shortName) {
-        if (name->m_shortNameA)
-            strncpy(shortName, name->m_shortNameA, maxShort);
+        if (dpName->m_shortNameA)
+            strncpy(shortName, dpName->m_shortNameA, maxShort);
         else
             shortName[0] = 0;
     }
     if (longName) {
-        if (name->m_longNameA)
-            strncpy(longName, name->m_longNameA, maxLong);
+        if (dpName->m_longNameA)
+            strncpy(longName, dpName->m_longNameA, maxLong);
         else
             longName[0] = 0;
     }
@@ -982,7 +982,7 @@ DPLCONNECTION* CDPlayLobby::getConnectionSettings(unsigned long appId, unsigned 
 // further 17 nested-guard and scoped-return forms also fail to improve it.
 // The unchanged baseline is retained; scope/goto variants score at most
 // 77.5439% and do not reproduce retail's fourth return path.
-// Restoring the DC-public bool return type is byte-flat at 88.4211%,
+// Restoring Complete's public bool return type is byte-flat at 88.4211%,
 // including both remote.cpp callers; it preserves the branch-folding residual.
 // Sixteen connection-validity result controls (two reproduced objects) are
 // also flat at 88.4210%: returning the already validated buffer, with implicit

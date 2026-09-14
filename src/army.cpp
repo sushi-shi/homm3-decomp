@@ -251,7 +251,7 @@ inline void army::waitSample(army::TSampleID which)
 }
 
 VA(0x0043d730, 0x17D)  // dc 0x439b0
-void army::initialize(int type, long number, const hero* owner,
+void army::initialize(TCreatureType type, long number, const hero* owner,
                       long newGroup, long newIndex, long newGridIndex)
 {
     initClean();
@@ -307,7 +307,8 @@ VA(0x0043d8b0, 0x135)  // dc 0x43d9c
 void army::init(int armyId, int newNumTroops, const hero* owner, int side,
                 int inIndex, int gridIndex, int origPos)
 {
-    initialize(armyId, newNumTroops, owner, side, inIndex, gridIndex);
+    initialize(TCreatureType(armyId), newNumTroops, owner, side, inIndex,
+               gridIndex);
     if (g_combatManager->validHex(m_gridIndex)) {
         hexcell* cell = &g_combatManager->m_cells[m_gridIndex];
         cell->m_armySide = static_cast<signed char>(m_combatSide);
@@ -827,7 +828,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
                 || m_currFrameType == cs_fidget))) {
         long step = 1;
         long xoff;
-        long yoff;
+        int yoff;
         if (m_facing == 0) {
             xoff = 0x34;
             yoff = -0x1e;
@@ -1770,7 +1771,7 @@ unsigned char army::checkSpecialAttack(army* target)
 VA(0x004409c0, 0x1F9)  // dc 0x464e0
 void army::doFireShield(long damageAmount)
 {
-    int side;
+    long side;
     int i;
     army* a;
     g_combatManager->resetLimitCreature();
@@ -2156,7 +2157,7 @@ void army::doAttack(int direction)
     if (!armyToAttack)
         return;
     int savedArmyToAttackFacing = armyToAttack->m_facing;
-    long counterDirection = armyToAttack->getAttackDirection(this);
+    int counterDirection = armyToAttack->getAttackDirection(this);
     if (armyToAttack->needToTurn(counterDirection)) {
         int savedSide = g_combatManager->m_actingSide;
         int savedSlot = g_combatManager->m_actingSlot;
@@ -2326,7 +2327,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
     m_isMoving = 1;
     m_joustBonus = last - stop + 1;
     for (long i = last; i >= stop; i--) {
-        long direction = g_searchArray->getStep(i);
+        const int direction = g_searchArray->getStep(i);
         long nextHex = getAdjacentCellIndex(m_gridIndex, direction);
         if (g_combatManager->shouldLowerDoor(this, nextHex)) {
             if (!atRest) {
@@ -4653,7 +4654,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
             || destIndex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_LAST_COLUMN)
         return 0;
 
-    hexcell* cell = &g_combatManager->m_cells[destIndex];
+    const hexcell* cell = &g_combatManager->m_cells[destIndex];
     if (g_combatManager->hexIsBlocked(destIndex))
         return 0;
     if (cell->m_armySide >= 0) {
@@ -5158,7 +5159,7 @@ unsigned char isValidCaliphSpell(SpellID spell, const army* target)
 #endif  // @carcass
 
 VA(0x00447eb0, 0x21)  // dc 0x4c210
-unsigned char isValidCaliphSpell(int spell, const army* target)
+unsigned char isValidCaliphSpell(SpellID spell, const army* target)
 {
     if (!(g_spellTraits[spell].m_flags & 0x800))
         return 0;

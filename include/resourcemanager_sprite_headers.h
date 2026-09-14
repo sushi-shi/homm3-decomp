@@ -6,14 +6,14 @@
 
 // Dreamcast function-local records (types 0x28ae and 0x55f6), with every
 // x86 field and stride independently visible in GetSprite's retail copies.
-struct TSpriteDefHeader {
+struct SpriteDefHeader {
     EResourceType m_type;
     int m_width;
     int m_height;
     int m_numSequences;
     unsigned char m_palette[768];
 };
-SIZE(TSpriteDefHeader, 0x310);
+SIZE(SpriteDefHeader, 0x310);
 
 struct TSpriteDataHeader {
     int m_sequenceNumber;

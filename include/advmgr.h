@@ -1327,7 +1327,7 @@ private:
 
 public:
     void receiveHeroTownData(class CCombatInitMsg* combatInitMsg,
-                             int* fromWho, type_point* point,
+                             int* fromWho, type_point& point,
                              hero** leftHero,
                              armyGroup** leftArmyGroup,
                              int* rightPlayer, town** rightTown,
@@ -1494,7 +1494,7 @@ public:
     void enableButtons();
     int mouseInScrollZone();
     void processMapChangeNew(class CMapChange* change);
-    void viewWorld(int whatToDraw, int level);
+    void viewWorld(int whatToDraw, TSkillMastery level);
     int inMapArea(int x, int y);
     type_point get_mouse_map_point() const;
     unsigned short* getRouteArrayPtr(int x, int y, int z);

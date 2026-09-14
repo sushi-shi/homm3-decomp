@@ -20,7 +20,7 @@ TCreatureTypeTraits g_creatureTypeTraitsStorage[150];
 }
 
 void initializeCreatureTypeTraits(int id,
-                                  const TSpreadsheetResource::TStringVector& values);
+    const std::vector<char*, std::allocator<char*> >& values);
 
 #if 0  // @carcass
 
@@ -192,7 +192,7 @@ private:
 // neighbouring column takes a dword.
 VA(0x0047b480, 0x322)  // dc 0x71b40
 void initializeCreatureTypeTraits(int id,
-                                  const TSpreadsheetResource::TStringVector& values)
+    const std::vector<char*, std::allocator<char*> >& values)
 {
     TCreatureTypeTraits& traits = g_creatureTypeTraitsStorage[id];
 

@@ -501,7 +501,7 @@ void generator::updateBonus()
     if (m_playerOwner < 0)
         return;
 
-    playerData* player = &g_game->m_players[m_playerOwner];
+    playerData& player = g_game->m_players[m_playerOwner];
     int creature = m_type[0];
     if (!g_game->m_f1f698 &&
         isBaseElemental(creature))
@@ -511,8 +511,8 @@ void generator::updateBonus()
     if (townType == -1)
         return;
 
-    for (int index = 0; index < player->m_numTowns; index++) {
-        town* currentTown = g_game->getTown(player->m_townIds[index]);
+    for (int index = 0; index < player.m_numTowns; index++) {
+        town* currentTown = g_game->getTown(player.m_townIds[index]);
         if (currentTown->m_type == townType)
             currentTown->changeGeneratorBonus(m_type[0], 1);
     }
@@ -620,7 +620,7 @@ VA(0x004b8a60, 0x88)  // dc 0xa3320
 void generator::grow(int unusedArg)
 {
     m_guards.initialize();
-    for (int i = 0; i < 4; i++) {
+    for (long i = 0; i < 4; i++) {
         if (m_type[i] != -1) {
             m_population[i] = g_creatureTypeTraits[m_type[i]].m_growthRate;
             if (g_creatureTypeTraits[m_type[i]].m_level >= 4)
@@ -826,7 +826,7 @@ VA(0x004b9340, 0x240)  // anchor-global (ClaimMine vector) + read-slot, dc 0xa3e
 int game::loadMinePool(TAbstractFile* infile, int saveVersion)
 {
     int count;
-    unsigned int x;
+    int x;
     char charBuffer;
     if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
         return -1;
@@ -1892,26 +1892,26 @@ int game::createBoat(int x, int y, int z, int owner, unsigned char isRemoteMove,
     if (id == -1)
         return -1;
 
-    boat* thisBoat = &m_boats[id];
+    boat& thisBoat = m_boats[id];
     if (!isRemoteMove) {
         type_point location(x, y, z);
         CMCBuildBoat change(location, g_netLocalGamePos);
         sendMapChange(&change);
-        recordShowBoat(thisBoat, location);
+        recordShowBoat(&thisBoat, location);
     }
 
-    thisBoat->initialize();
-    thisBoat->m_type = type;
-    thisBoat->m_x = x;
-    thisBoat->m_y = y;
-    thisBoat->m_z = z;
-    thisBoat->m_id = static_cast<unsigned char>(id);
-    thisBoat->m_allocated = 1;
-    thisBoat->m_facing = 2;
-    thisBoat->m_playerOwner = owner;
-    thisBoat->m_occupyingHero = -1;
-    thisBoat->m_occupied = 0;
-    thisBoat->obscureCell();
+    thisBoat.initialize();
+    thisBoat.m_type = type;
+    thisBoat.m_x = x;
+    thisBoat.m_y = y;
+    thisBoat.m_z = z;
+    thisBoat.m_id = static_cast<unsigned char>(id);
+    thisBoat.m_allocated = 1;
+    thisBoat.m_facing = 2;
+    thisBoat.m_playerOwner = owner;
+    thisBoat.m_occupyingHero = -1;
+    thisBoat.m_occupied = 0;
+    thisBoat.obscureCell();
     return id;
 }
 
@@ -1937,45 +1937,45 @@ VA(0x004bb400, 0x1DC)  // dc 0xa68d8
 int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 {
     int heroArray[HERO_COUNT];
-    int heroClass1 = 0;
-    int heroClass2 = 1;
+    THeroClass heroClass1 = classKnight;
+    THeroClass heroClass2 = classCleric;
 
     switch (alignment) {
     case TOWN_CASTLE:
-        heroClass1 = 0;
-        heroClass2 = 1;
+        heroClass1 = classKnight;
+        heroClass2 = classCleric;
         break;
     case TOWN_RAMPART:
-        heroClass1 = 3;
-        heroClass2 = 2;
+        heroClass1 = classDruid;
+        heroClass2 = classRanger;
         break;
     case TOWN_TOWER:
-        heroClass1 = 5;
-        heroClass2 = 4;
+        heroClass1 = classWizard;
+        heroClass2 = classAlchemist;
         break;
     case TOWN_INFERNO:
-        heroClass1 = 6;
-        heroClass2 = 7;
+        heroClass1 = classPagan;
+        heroClass2 = classHeretic;
         break;
     case TOWN_NECROPOLIS:
-        heroClass1 = 8;
-        heroClass2 = 9;
+        heroClass1 = classDeathKnight;
+        heroClass2 = classNecromancer;
         break;
     case TOWN_DUNGEON:
-        heroClass1 = 10;
-        heroClass2 = 11;
+        heroClass1 = classOverlord;
+        heroClass2 = classWarlock;
         break;
     case TOWN_STRONGHOLD:
-        heroClass1 = 12;
-        heroClass2 = 13;
+        heroClass1 = classBarbarian;
+        heroClass2 = classBattleMage;
         break;
     case TOWN_FORTRESS:
-        heroClass1 = 14;
-        heroClass2 = 15;
+        heroClass1 = classBeastmaster;
+        heroClass2 = classWitch;
         break;
     case TOWN_CONFLUX:
-        heroClass1 = 16;
-        heroClass2 = 17;
+        heroClass1 = classPlanesWalker;
+        heroClass2 = classElementalist;
         break;
     }
 
@@ -2025,7 +2025,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
         alignment = -1;
 
     memset(counts, 0, sizeof(counts));
-    for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+    for (heroClass = classKnight; heroClass < kNumHeroClasses;
          heroClass++) {
         weights[heroClass] =
             g_heroClasses[heroClass].m_foundInTownType[alignment];
@@ -2042,7 +2042,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     if (totalCount == 0)
         return -1;
 
-    for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+    for (heroClass = classKnight; heroClass < kNumHeroClasses;
          heroClass++) {
         if (counts[heroClass] == 0)
             weights[heroClass] = 0;
@@ -2051,12 +2051,12 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     if (g_game->m_f1f698 >= 2
         && *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW
         && alignment != TOWN_CONFLUX
-        && counts[eClassPlanesWalker] + counts[eClassElementalist]
+        && counts[classPlanesWalker] + counts[classElementalist]
             < totalCount) {
-        if (preferredClass != eClassPlanesWalker)
-            weights[eClassPlanesWalker] = 0;
-        if (preferredClass != eClassElementalist)
-            weights[eClassElementalist] = 0;
+        if (preferredClass != classPlanesWalker)
+            weights[classPlanesWalker] = 0;
+        if (preferredClass != classElementalist)
+            weights[classElementalist] = 0;
     }
 
     if (excluded < kNumHeroClasses
@@ -2066,13 +2066,13 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
 
     if (preferAlignment) {
         alignedCount = 0;
-        for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+        for (heroClass = classKnight; heroClass < kNumHeroClasses;
              heroClass++) {
             if (g_heroClasses[heroClass].m_townType == alignment)
                 alignedCount += weights[heroClass];
         }
         if (alignedCount > 0) {
-            for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+            for (heroClass = classKnight; heroClass < kNumHeroClasses;
                  heroClass++) {
                 if (g_heroClasses[heroClass].m_townType != alignment)
                     weights[heroClass] = 0;
@@ -2084,12 +2084,12 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
         heroClass = preferredClass;
     } else {
         totalCount = 0;
-        for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+        for (heroClass = classKnight; heroClass < kNumHeroClasses;
              heroClass++) {
             totalCount += weights[heroClass];
         }
         choice = random(1, totalCount);
-        for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+        for (heroClass = classKnight; heroClass < kNumHeroClasses;
              heroClass++) {
             choice -= weights[heroClass];
             if (choice <= 0)
@@ -2301,7 +2301,7 @@ void game::setupShipyards()
 {
     hero* obscuringHero = 0;
     boat* obscuringBoat = 0;
-    int i;
+    long i;
     for (i = 0; i < 8; ++i) {
         m_players[i].m_shipyards.clear();
     }
@@ -3714,7 +3714,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
                 ++numLivingPlayers;
         }
 
-        int map = m_campaign.m_currentMap;
+        const int map = m_campaign.m_currentMap;
         int campaignNumber = m_campaign.m_currentCampaign;
         if (numLivingPlayers == 1) {
             m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
@@ -3805,7 +3805,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
     }
 
     if (victory.m_type == VICTORY_CONDITION_DEFEAT_MONSTER) {
-        NewmapCell* thisCell = m_worldMap.cell(
+        const NewmapCell* thisCell = m_worldMap.cell(
             victory.m_monsterX, victory.m_monsterY, victory.m_monsterZ);
         if (thisCell->m_type == MONSTER && thisCell->m_isTrigger) {
             {
@@ -4670,7 +4670,7 @@ void game::randomizeEvents()
     int luckBonus;
     unsigned char resQty;
     EGameResource resType;
-    NewmapCell::TObjectCell thisObj;
+    NewmapCell::TObjectCell* thisObj;
 
     const unsigned long visitedBits = 0x00001fe0;
     const unsigned long poolIndexBits = 0x03ffe000;
@@ -5114,18 +5114,18 @@ void game::randomizeEvents()
                     break;
 
                 case WHIRLPOOL:
-                    thisObj = tempCell->m_objects[0];
-                    if ((thisObj.m_offsets & 0xf)
+                    thisObj = &tempCell->m_objects[0];
+                    if ((thisObj->m_offsets & 0xf)
                             == g_whirlpoolTriggerXOffset
-                        && (thisObj.m_offsets & 0xf0)
+                        && (thisObj->m_offsets & 0xf0)
                             == g_whirlpoolTriggerYOffset) {
                         tempCell->m_extraInfo = numWhirlpool++;
                     }
                     else {
                         int xOffset = static_cast<signed char>(
-                            thisObj.m_offsets << 4) >> 4;
+                            thisObj->m_offsets << 4) >> 4;
                         int yOffset =
-                            static_cast<signed char>(thisObj.m_offsets) >> 4;
+                            static_cast<signed char>(thisObj->m_offsets) >> 4;
                         tempCell->m_extraInfo = m_worldMap.cell(
                             x + xOffset - 2, y + yOffset - 1, z)->m_extraInfo;
                     }
@@ -7138,14 +7138,14 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
 VA(0x004c66e0, 0xCB)  // dc 0xb1748
 void game::claimMine(int mineId, int newPlayerOwner, type_action_type actionType)
 {
-    mine* currentMine = &m_mines[mineId];
-    type_point location(currentMine->m_mapX, currentMine->m_mapY,
-                        currentMine->m_mapZ);
+    mine& currentMine = m_mines[mineId];
+    type_point location(currentMine.m_mapX, currentMine.m_mapY,
+                        currentMine.m_mapZ);
 
     if (actionType == const_normal_action)
         recordClaimMine(mineId, newPlayerOwner);
 
-    currentMine->m_playerOwner = newPlayerOwner;
+    currentMine.m_playerOwner = newPlayerOwner;
     if (newPlayerOwner != -1)
         setVisibility(location.m_x, location.m_y, location.m_z,
                       newPlayerOwner, 3, 0);
@@ -7157,14 +7157,14 @@ void game::claimMine(int mineId, int newPlayerOwner, type_action_type actionType
 VA(0x004c67b0, 0x1A4)  // dc 0xb1828
 void game::claimGenerator(int generatorId, int newPlayerOwner)
 {
-    generator* currentGenerator = &m_generators[generatorId];
+    generator& currentGenerator = m_generators[generatorId];
     CMCClaimGenerator change(generatorId, newPlayerOwner);
     sendMapChange(&change);
 
-    currentGenerator->setOwner(newPlayerOwner);
+    currentGenerator.setOwner(newPlayerOwner);
     if (newPlayerOwner != -1) {
-        type_point location(currentGenerator->m_mapX, currentGenerator->m_mapY,
-                            currentGenerator->m_mapZ);
+        type_point location(currentGenerator.m_mapX, currentGenerator.m_mapY,
+                            currentGenerator.m_mapZ);
         setVisibility(location.m_x, location.m_y, location.m_z,
                       newPlayerOwner, 3, 0);
     }
@@ -7690,7 +7690,7 @@ void game::perMonth()
 VA(0x004c7930, 0x266)  // dc 0xb2ad4
 int game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
 {
-    playerData* p = &m_players[whichPlayer];
+    const playerData& p = m_players[whichPlayer];
     int gold = 0;
     int i;
 
@@ -7707,15 +7707,15 @@ int game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
         }
     }
 
-    gold += p->numOfGivenArtifact(
+    gold += p.numOfGivenArtifact(
                  g_productionArtifactEndlessSackOfGold) * 1000;
-    gold += p->numOfGivenArtifact(
+    gold += p.numOfGivenArtifact(
                  g_productionArtifactEndlessBagOfGold) * 750;
-    gold += p->numOfGivenArtifact(
+    gold += p.numOfGivenArtifact(
                  g_productionArtifactEndlessPurseOfGold) * 500;
 
-    for (i = 0; i < p->m_numHeroes; ++i)
-        gold += getHero(p->m_heroes[i])->getEstatesBonus();
+    for (i = 0; i < p.m_numHeroes; ++i)
+        gold += getHero(p.m_heroes[i])->getEstatesBonus();
 
     int humanId = whichPlayer;
     if (humanId >= 8 || humanId < 0)
@@ -7871,14 +7871,14 @@ void game::perDay()
 
     if (m_day == 1) {
         for (i = 0; i < m_towns.size(); ++i) {
-            town* currentTown = &m_towns[i];
-            if (currentTown->m_type == TOWN_RAMPART
-                && currentTown->hasBuilding(SPECIAL_BUILDING_ID, 1)) {
-                currentTown->m_pondResource = g_resources[random(0, 3)];
-                currentTown->m_pondAmount = random(1, 4);
+            town& currentTown = m_towns[i];
+            if (currentTown.m_type == TOWN_RAMPART
+                && currentTown.hasBuilding(SPECIAL_BUILDING_ID, 1)) {
+                currentTown.m_pondResource = g_resources[random(0, 3)];
+                currentTown.m_pondAmount = random(1, 4);
             } else {
-                currentTown->m_pondResource = -1;
-                currentTown->m_pondAmount = 0;
+                currentTown.m_pondResource = -1;
+                currentTown.m_pondAmount = 0;
             }
         }
     }
@@ -7957,19 +7957,19 @@ void game::setRecruits(int playerPos)
             && static_cast<unsigned short>(m_week) <= 2) {
             if (m_week == 1) {
                 for (heroId = 0; heroId < HERO_COUNT; ++heroId) {
-                    if (g_game->getHero(heroId)->m_heroClass == eClassCleric
+                    if (g_game->getHero(heroId)->m_heroClass == classCleric
                         && g_game->m_heroAvailability[heroId] == -1)
                         break;
                 }
             } else if (recruitSlot == 0) {
                 for (heroId = 0; heroId < HERO_COUNT; ++heroId) {
-                    if (g_game->getHero(heroId)->m_heroClass == eClassPagan
+                    if (g_game->getHero(heroId)->m_heroClass == classPagan
                         && g_game->m_heroAvailability[heroId] == -1)
                         break;
                 }
             } else {
                 for (heroId = 0; heroId < HERO_COUNT; ++heroId) {
-                    if (g_game->getHero(heroId)->m_heroClass == eClassHeretic
+                    if (g_game->getHero(heroId)->m_heroClass == classHeretic
                         && g_game->m_heroAvailability[heroId] == -1)
                         break;
                 }
@@ -8732,7 +8732,7 @@ void game::convertObject(NewmapCell* tempCell)
         }
     }
 
-    TAdventureObjectType oldType = newType->m_objectType;
+    int oldType = newType->m_objectType;
     newType->m_imageName = defName;
     newType->m_objectType = newObject;
     newType->m_extra = tempCell->m_objectIndex;
@@ -10491,7 +10491,7 @@ void game::setSpecialRumour()
     } else {
         type_point artifactLocation(m_ultimateArtifactX, m_ultimateArtifactY,
                                     m_ultimateArtifactZ);
-        NewmapCell* cell = g_advManager->getCell(artifactLocation);
+        const NewmapCell* cell = g_advManager->getCell(artifactLocation);
         sprintf(m_currentRumour,
                 g_generalText->getText(g_specialRumourGrailObjectText),
                 g_grailTerrainNames[cell->m_groundSet]);
@@ -10590,48 +10590,48 @@ void game::checkForTownEvent()
         (m_month * 4 + m_week - 5) * 7 + m_day);
 
     for (unsigned int i = 0; i < m_worldMap.m_townEventList.size(); ++i) {
-        TTownEvent* thisEvent = &m_worldMap.m_townEventList[i];
+        const TTownEvent& thisEvent = m_worldMap.m_townEventList[i];
         int playerIndex = g_netLocalGamePos;
         if (playerIndex >= 8 || playerIndex < 0)
             playerIndex = 0;
         if (!(m_players[playerIndex].m_isHuman
-                  ? thisEvent->m_applyToHuman
-                  : thisEvent->m_applyToComputer)) {
+                  ? thisEvent.m_applyToHuman
+                  : thisEvent.m_applyToComputer)) {
             continue;
         }
-        if (!(g_unnamed69ccc4 & thisEvent->m_playerFlags))
+        if (!(g_unnamed69ccc4 & thisEvent.m_playerFlags))
             continue;
 
-        if (thisEvent->m_firstTime == day) {
-            town* thisTown = getTown(thisEvent->m_townNum);
+        if (thisEvent.m_firstTime == day) {
+            town* thisTown = getTown(thisEvent.m_townNum);
             if (g_netLocalGamePos == thisTown->m_owner) {
-                giveTimeEventReward(thisEvent);
-                thisTown->giveEventReward(thisEvent);
+                giveTimeEventReward(&thisEvent);
+                thisTown->giveEventReward(&thisEvent);
             }
-        } else if (thisEvent->m_interval && day > thisEvent->m_firstTime
-                   && (day - thisEvent->m_firstTime) % thisEvent->m_interval == 0) {
-            town* thisTown = getTown(thisEvent->m_townNum);
+        } else if (thisEvent.m_interval && day > thisEvent.m_firstTime
+                   && (day - thisEvent.m_firstTime) % thisEvent.m_interval == 0) {
+            town* thisTown = getTown(thisEvent.m_townNum);
             if (g_netLocalGamePos == thisTown->m_owner) {
-                giveTimeEventReward(thisEvent);
-                thisTown->giveEventReward(thisEvent);
+                giveTimeEventReward(&thisEvent);
+                thisTown->giveEventReward(&thisEvent);
             }
         }
     }
 }
 
 VA(0x004cdb80, 0x231)  // dc 0xbb0e4
-unsigned char game::getRandomLith(const std::vector<type_point>* points,
-                                    type_point* result, long cellType,
+unsigned char game::getRandomLith(const std::vector<type_point>& points,
+                                    type_point& result, long cellType,
                                     long excluded) const
 {
-    long lithCount = points->size();
+    long lithCount = points.size();
     long openCount = 0;
     type_point exitPoint;
     long i;
     const NewmapCell* exitCell;
 
     for (i = 0; i < lithCount; ++i) {
-        exitPoint = (*points)[i];
+        exitPoint = points[i];
         exitCell = m_worldMap.cell(
             exitPoint.m_x, exitPoint.m_y, exitPoint.m_z);
         if (exitCell->m_type == HERO && exitCell->m_isTrigger
@@ -10650,21 +10650,21 @@ unsigned char game::getRandomLith(const std::vector<type_point>* points,
 
     openCount = random(1, openCount);
     for (i = 0; i < lithCount; ++i) {
-        exitPoint = (*points)[i];
+        exitPoint = points[i];
         exitCell = m_worldMap.cell(
             exitPoint.m_x, exitPoint.m_y, exitPoint.m_z);
         if (exitCell->m_type == HERO && exitCell->m_isTrigger
             && !onSameTeam(
                 m_heroes[exitCell->m_extraInfo].m_owner, g_netLocalGamePos)) {
             if (--openCount == 0) {
-                *result = exitPoint;
+                result = exitPoint;
                 return 1;
             }
         } else if (exitCell->m_type == cellType
                    && exitCell->m_extraInfo != excluded
                    && exitCell->m_isTrigger) {
             if (--openCount == 0) {
-                *result = exitPoint;
+                result = exitPoint;
                 return 1;
             }
         }
@@ -10673,21 +10673,21 @@ unsigned char game::getRandomLith(const std::vector<type_point>* points,
 }
 
 VA(0x004cddc0, 0x22)  // dc 0xbb3e0
-unsigned char game::getRandomLithExit(long color, type_point* result) const
+unsigned char game::getRandomLithExit(long color, type_point& result) const
 {
-    return getRandomLith(&m_lithExitPools[color], result, 0x2c, -1);
+    return getRandomLith(m_lithExitPools[color], result, 0x2c, -1);
 }
 
 VA(0x004cddf0, 0x24)  // dc 0xbb41c
-unsigned char game::getRandomLith(long color, long excluded, type_point* result) const
+unsigned char game::getRandomLith(long color, long excluded, type_point& result) const
 {
-    return getRandomLith(&m_lithPools[color], result, 0x2d, excluded);
+    return getRandomLith(m_lithPools[color], result, 0x2d, excluded);
 }
 
 VA(0x004cde20, 0x1D)  // dc 0xbb45c
-unsigned char game::getRandomWhirlpool(long excluded, type_point* result) const
+unsigned char game::getRandomWhirlpool(long excluded, type_point& result) const
 {
-    return getRandomLith(&m_whirlpools, result, 0x6f, excluded);
+    return getRandomLith(m_whirlpools, result, 0x6f, excluded);
 }
 
 VA(0x004cde40, 0xE0)  // dc 0xbb490
@@ -11106,7 +11106,7 @@ unsigned char saveObjectVector(TAbstractFile* outfile,
     if (outfile->write(&count, sizeof(short)) < sizeof(short))
         return 0;
 
-    for (int i = 0; i < static_cast<short>(count); ++i) {
+    for (long i = 0; i < static_cast<short>(count); ++i) {
         type_creature_bank& bank = (*srcVector)[i];
         outfile->write(&bank.m_guards, sizeof(bank.m_guards));
         outfile->write(bank.m_resources, sizeof(bank.m_resources));

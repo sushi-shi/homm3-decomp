@@ -1124,7 +1124,7 @@ unsigned char armyGroup::merge(armyGroup* ag)
 }
 
 VA(0x0044b820, 0x140)  // dc 0x4f5ec
-void armyGroup::mergeArmies(armyGroup* source)
+void armyGroup::mergeArmies(armyGroup& source)
 {
     for (;;) {
         int bestIndex = -1;
@@ -1142,11 +1142,11 @@ void armyGroup::mergeArmies(armyGroup* source)
             }
         }
         for (int j = 0; j < ARMY_GROUP_SLOT_COUNT; ++j) {
-            if (source->m_armies[j] == CREATURE_NONE)
+            if (source.m_armies[j] == CREATURE_NONE)
                 continue;
-            long gain = g_creatureTypeTraits[source->m_armies[j]].m_aiValue
-                        * source->m_numTroops[j];
-            if (!canJoin(source->m_armies[j]))
+            long gain = g_creatureTypeTraits[source.m_armies[j]].m_aiValue
+                        * source.m_numTroops[j];
+            if (!canJoin(source.m_armies[j]))
                 gain -= weakestValue;
             if (gain > bestGain) {
                 bestGain = gain;
@@ -1155,12 +1155,12 @@ void armyGroup::mergeArmies(armyGroup* source)
         }
         if (bestIndex < 0)
             return;
-        if (canJoin(source->m_armies[bestIndex])) {
-            add(source->m_armies[bestIndex], source->m_numTroops[bestIndex], -1);
-            source->dismiss(bestIndex);
+        if (canJoin(source.m_armies[bestIndex])) {
+            add(source.m_armies[bestIndex], source.m_numTroops[bestIndex], -1);
+            source.dismiss(bestIndex);
         } else {
-            std::swap(source->m_armies[bestIndex], m_armies[weakestIndex]);
-            std::swap(source->m_numTroops[bestIndex], m_numTroops[weakestIndex]);
+            std::swap(source.m_armies[bestIndex], m_armies[weakestIndex]);
+            std::swap(source.m_numTroops[bestIndex], m_numTroops[weakestIndex]);
         }
     }
 }

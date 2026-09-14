@@ -316,11 +316,11 @@ VA(0x004fcbd0, 0x5C)  // dc 0xec098
 TAdventureObjectType NewmapCell::getMapObject() const
 {
     if (m_type == HERO) {
-        hero* currentHero = g_game->getHero(m_extraInfo);
+        const hero* currentHero = g_game->getHero(m_extraInfo);
         return currentHero->getObscuredObject();
     }
     if (m_type == BOAT) {
-        boat* currentBoat = g_game->getBoat(m_extraInfo);
+        const boat* currentBoat = g_game->getBoat(m_extraInfo);
         return currentBoat->getObscuredObject();
     }
     return m_type;
@@ -391,7 +391,7 @@ VA(0x004fce20, 0x116)  // dc 0xec3b4
 TAdventureObjectType NewmapCell::getSpecialTerrain() const
 {
     if (m_type == HERO && (m_cellFlags & 0x1000)) {
-        hero* ourHero = g_game->getHero(m_extraInfo);
+        const hero* ourHero = g_game->getHero(m_extraInfo);
         if (ourHero->getObscuredObject() == GARRISON
                 && ourHero->obscuredIsTrigger()
                 && m_objectIndex == 1)
@@ -1701,7 +1701,7 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         thisBox->m_creatures.m_numTroops[i] = troops;
     }
 
-    unsigned char padding[8];
+    char padding[8];
     return infile->read(padding, sizeof(padding)) < sizeof(padding) ? -1 : 0;
 }
 
@@ -2361,7 +2361,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     // DC names one `disposition` byte. Sharing it as the switch result adds
     // retail's missing block and raises 97.12 -> 97.29. A separate promoted
     // selector is optimized back to the two-byte 97.12 shape.
-    signed char disposition;
+    char disposition;
     if (infile->read(&disposition, sizeof(disposition)) < sizeof(disposition))
         return -1;
 
@@ -2443,7 +2443,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0x87fbffff)
         | ((charBuffer & 1) << 18);
 
-    unsigned char padding[2];
+    char padding[2];
     if (infile->read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
 
@@ -3945,7 +3945,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 
     m_objectTypes.resize(count);
 
-    int i;
+    long i;
     for (i = 0; i < m_objectTypes.size(); ++i) {
         int status = readObjectType(infile, m_objectTypes[i]);
         if (status < 0)

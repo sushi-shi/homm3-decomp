@@ -405,7 +405,7 @@ void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
         h = m_height - y;
 
     if (w && h) {
-        unsigned long shiftMask =
+        unsigned int shiftMask =
             ((g_colorMaskRed >> 1) & g_colorMaskRed)
             | ((g_colorMaskGreen >> 1) & g_colorMaskGreen)
             | ((g_colorMaskBlue >> 1) & g_colorMaskBlue);
