@@ -675,7 +675,7 @@ bitmap16	?darken@Bitmap16Bit@@QAEXHHHH@Z	82.6377	82.6377	100.0000	0x4e5f0	tokens
 bitmap16	?darken@Bitmap16Bit@@QAEXHHHHPAVBitmap816@@HH@Z	86.8791	86.8791	100.0000	0x4e6a0	tokens1:55406208516b
 bitmap16	?draw@Bitmap16Bit@@QBEXHHHHPAGHHHHH_N@Z	75.0079	75.0079	83.5794	0x4e2b0	tokens1:0027fb71b84f
 bitmap16	?fillRect@Bitmap16Bit@@QAEXHHHHG@Z	82.1964	82.1964	100.0000	0x4e4c0	tokens1:c4a93a868a95
-bitmap16	?frameRect@Bitmap16Bit@@QAEXHHHHG@Z	95.2113	95.2113	100.0000	0x4e540	tokens1:0bf6fc1f7755
+bitmap16	?frameRect@Bitmap16Bit@@QAEXHHHHG@Z	100.0000	100.0000	100.0000	0x4e540	tokens1:fc850b56de41
 bitmap16	?getSize@Bitmap16Bit@@UBEIXZ	100.0000	100.0000	100.0000	0x4e240	tokens1:025ff51aaf8a
 bitmap16	?grab@Bitmap16Bit@@QAEXPBGHHHHH@Z	82.5581	82.5581	100.0000	0x4e3f0	tokens1:ab59600a8934
 bitmap16	?reference@Bitmap16Bit@@QAEXHHHPAG@Z	100.0000	100.0000	100.0000	0x4e250	tokens1:1c9550c59f97
@@ -1807,8 +1807,8 @@ forcefeedback	??0TImmMouseEffect@@QAE@PBUtagRECT@@JKKEE@Z	100.0000	100.0000	100.
 forcefeedback	??0const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAE@PAU_Node@12@@Z	100.0000	100.0000	100.0000	0xb7da0	-
 forcefeedback	??0t_create_failure@t_enclosure@force_feedback@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0xb6c60	-
 forcefeedback	??0t_enclosure@force_feedback@@QAE@PBUtagRECT@@JKKEE@Z	100.0000	100.0000	100.0000	0xb6a50	tokens1:5bc9a9ff65ed
-forcefeedback	??0t_initialize_failure@t_initializer@?%Z:\home\sheep\Projects\homm3\homm3-decomp-master\include\forcefeedback.h1168229266@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0xb6730	-
-forcefeedback	??0t_initializer@?%Z:\home\sheep\Projects\homm3\homm3-decomp-master\include\forcefeedback.h1168229266@@QAE@PAX0@Z	100.0000	100.0000	100.0000	0xb6260	tokens1:ab52bac4bd7b
+forcefeedback	??0t_initialize_failure@t_initializer@?%Z:\home\sheep\Projects\homm3\homm3-decomp-master\include\forcefeedback.h382431286@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0xb6730	-
+forcefeedback	??0t_initializer@?%Z:\home\sheep\Projects\homm3\homm3-decomp-master\include\forcefeedback.h382431286@@QAE@PAX0@Z	100.0000	100.0000	100.0000	0xb6260	tokens1:ab52bac4bd7b
 forcefeedback	??1?$auto_ptr@D@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7040	-
 forcefeedback	??1?$auto_ptr@VCImmEnclosure@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7020	-
 forcefeedback	??1?$auto_ptr@VCImmProject@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7050	-
@@ -1817,7 +1817,7 @@ forcefeedback	??8iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@Ut
 forcefeedback	??_GCImmEnclosure@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb6c30	-
 forcefeedback	??_GCImmMouse@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb6700	-
 forcefeedback	??_Gt_create_failure@t_enclosure@force_feedback@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bed0	-
-forcefeedback	??_Gt_initialize_failure@t_initializer@?%Z:\home\sheep\Projects\homm3\homm3-decomp-master\include\forcefeedback.h1168229266@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb66d0	-
+forcefeedback	??_Gt_initialize_failure@t_initializer@?%Z:\home\sheep\Projects\homm3\homm3-decomp-master\include\forcefeedback.h382431286@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb66d0	-
 forcefeedback	?_Construct@std@@YIXPAU?$pair@QAVCImmEnclosure@@UtagRECT@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0xb7fe0	-
 forcefeedback	?_Dec@const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xb7db0	-
 forcefeedback	?_Erase@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0xb79d0	-
@@ -2576,8 +2576,8 @@ mapcell	?newfullMapFn005042C0@NewfullMap@@QAEXXZ	99.8854	99.8854	99.8854	0x1042c
 mapcell	?newfullMapFn00505D20@NewfullMap@@QAEXHH@Z	100.0000	100.0000	100.0000	0x105d20	tokens1:3edeac15210c
 mapcell	?newfullMapFn00505D60@NewfullMap@@QAEXUtype_point@@H@Z	100.0000	100.0000	100.0000	0x105d60	tokens1:cefd21b4427a
 mapcell	?newfullMapFn00505DA0@NewfullMap@@QAEXXZ	100.0000	100.0000	100.0000	0x105da0	tokens1:7be449c55008
-mapcell	?newfullMapFn00505EA0@NewfullMap@@QAEPAVCObjectType@@HH@Z	84.0566	84.0566	100.0000	0x105ea0	tokens1:1998e3e6321e
-mapcell	?newfullMapFn00505F20@NewfullMap@@QAEXPAVCObject@@HHH@Z	97.7099	97.7099	100.0000	0x105f20	tokens1:93a8786a5050
+mapcell	?newfullMapFn00505EA0@NewfullMap@@QAEPAVCObjectType@@HH@Z	100.0000	100.0000	100.0000	0x105ea0	tokens1:d0558f0f06fb
+mapcell	?newfullMapFn00505F20@NewfullMap@@QAEXPAVCObject@@HHH@Z	100.0000	100.0000	100.0000	0x105f20	tokens1:20bc0913ba7d
 mapcell	?placeObject@NewfullMap@@QAEHHE@Z	100.0000	100.0000	100.0000	0x105b20	tokens1:871a8a79f552
 mapcell	?read@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	100.0000	100.0000	100.0000	0xfd690	tokens1:73c13649599e
 mapcell	?read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	99.4737	99.4737	99.4737	0xfc1a0	tokens1:3b54b1f33eaf
@@ -2829,7 +2829,7 @@ objecttype	?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	1
 objnames	??1?$TResourcePtr@VTTextResource@@@@QAE@XZ	100.0000	100.0000	100.0000	0x1bd90	tokens1:7135c54fe758
 objnames	?initializeAdventureObjectNames@@YIXXZ	97.9798	97.9798	100.0000	0x1b500	tokens1:58eb010a437f
 overview	??0TOverviewWindow@@QAE@XZ	90.4407	90.4407	90.4407	0x11fa40	tokens1:5c0db7c53df2
-overview	??1TOverviewWindow@@UAE@XZ	98.2143	100.0000	100.0000	0x120d90	tokens1:4bbeadbc8719
+overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	tokens1:2510f0c1a9f1
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
 overview	?doFlaggableButtons@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e7f0	tokens1:3e20dc6a7377
 overview	?doRollover@TOverviewWindow@@AAEXH@Z	97.8485	97.8485	98.5053	0x120e30	tokens1:8f824bbe5462
@@ -3133,7 +3133,7 @@ remote	?start@CGameTransferSmack@@QAEXXZ	100.0000	100.0000	100.0000	0x157480	tok
 remote	?start@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157d90	tokens1:214ef99f3b6e
 remote	?stop@CGameTransferSmack@@QAEXXZ	100.0000	100.0000	100.0000	0x1575e0	tokens1:e3dab08d9f74
 remote	?sysMsgCreatePlayerOrGroup@CDPlayHeroes@@UAEEPAUDPMSG_CREATEPLAYERORGROUP@@K@Z	100.0000	100.0000	100.0000	0x152b40	tokens1:bb605472a436
-remote	?sysMsgDestroyPlayerOrGroup@CDPlayHeroes@@UAEEPAUDPMSG_DESTROYPLAYERORGROUP@@K@Z	97.6166	97.6166	97.6166	0x152920	tokens1:4e9c5dc58f0c
+remote	?sysMsgDestroyPlayerOrGroup@CDPlayHeroes@@UAEEPAUDPMSG_DESTROYPLAYERORGROUP@@K@Z	100.0000	100.0000	100.0000	0x152920	tokens1:839311f94afb
 remote	?sysMsgHost@CDPlayHeroes@@UAEEPAUDPMSG_GENERIC@@K@Z	100.0000	100.0000	100.0000	0x152530	tokens1:b565b8445801
 remote	?sysMsgSessionLost@CDPlayHeroes@@UAEEPAUDPMSG_GENERIC@@K@Z	100.0000	100.0000	100.0000	0x152740	tokens1:35f576f793c0
 remote	?systemMsg@CChatManager@@QAAXPBDZZ	100.0000	100.0000	100.0000	0x153aa0	tokens1:02352e202ba4
@@ -3289,11 +3289,8 @@ rmg	?_Buynode@?$list@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@IAEPAU_Node@12@P
 rmg	?_Construct@std@@YIXPAUTRmgMapPosition@@ABU2@@Z	100.0000	100.0000	100.0000	0x14dd60	-
 rmg	?_Construct@std@@YIXPAUTRmgObjectPlacementRule@@ABU2@@Z	100.0000	100.0000	100.0000	0x14dd80	-
 rmg	?_Construct@std@@YIXPAUTRmgZoneConnection@@ABU2@@Z	100.0000	100.0000	100.0000	0x14de90	-
-rmg	?_Destroy@?$vector@UTRmgObjectPlacementRule@@V?$allocator@UTRmgObjectPlacementRule@@@std@@@std@@IAEXPAUTRmgObjectPlacementRule@@0@Z	100.0000	100.0000	100.0000	0x14c940	-
 rmg	?_Ucopy@?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@IAEPAUTRmgNoiseRegion@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x14d960	-
-rmg	?_Ucopy@?$vector@UTRmgObjectPlacementRule@@V?$allocator@UTRmgObjectPlacementRule@@@std@@@std@@IAEPAUTRmgObjectPlacementRule@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x14d8b0	-
 rmg	?_Ufill@?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@IAEXPAUTRmgNoiseRegion@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d9a0	-
-rmg	?_Ufill@?$vector@UTRmgObjectPlacementRule@@V?$allocator@UTRmgObjectPlacementRule@@@std@@@std@@IAEXPAUTRmgObjectPlacementRule@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d8f0	-
 rmg	?addGuard@TRmgTreasureGroup@@QAEEPAVtype_object@@@Z	89.9329	89.9329	89.9329	0x135110	tokens1:f4ab878c27a2
 rmg	?addObject@TRmgGeneratorBase@@UAEXPAVtype_object@@UTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x1371c0	tokens1:22feb86a5ef7
 rmg	?addObject@type_random_map@@QAEXPAVtype_object@@UTRmgMapPosition@@@Z	85.7977	85.7977	85.7977	0x131ea0	tokens1:3a1208aa54ff
@@ -3327,7 +3324,6 @@ rmg	?connectZones@type_random_map_generator@@QAEXXZ	93.6151	93.6151	93.6151	0x14
 rmg	?copy@std@@YIPAHPAH00@Z	100.0000	100.0000	100.0000	0x1093c0	-
 rmg	?copy@std@@YIPAHPBH0PAH@Z	100.0000	100.0000	100.0000	0x14df40	-
 rmg	?copy@std@@YIPAUTRmgMapPosition@@PAU2@00@Z	100.0000	100.0000	100.0000	0x14d9e0	-
-rmg	?copy_backward@std@@YIPAUTRmgObjectPlacementRule@@PAU2@00@Z	100.0000	100.0000	100.0000	0x14dbc0	-
 rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	78.0716	81.8175	81.8175	0x141140	tokens1:fbcb8cb2f93f
 rmg	?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z	95.6907	95.6907	95.6907	0x140b20	tokens1:294e09ffee58
 rmg	?createMonolithConnection@type_random_map_generator@@QAEXPAUTRmgZone@@PAUTRmgZoneConnection@@H@Z	91.9027	91.9027	91.9027	0x142ce0	tokens1:fcc50a4a6715
@@ -3351,7 +3347,6 @@ rmg	?erase@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAH0@Z	100.0000	100.0000	10
 rmg	?erase@?$vector@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@QAEPAUTPoint@@PAU3@@Z	100.0000	100.0000	100.0000	0x14cd70	-
 rmg	?erase@?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@QAEPAUTRmgMapPosition@@PAU3@@Z	100.0000	100.0000	100.0000	0x14c610	-
 rmg	?expandObstacleClearance@type_random_map_generator@@QAEXXZ	91.7350	91.7350	91.7350	0x13f880	tokens1:8731dbc9dcf4
-rmg	?fill@std@@YIXPAUTRmgObjectPlacementRule@@0ABU2@@Z	100.0000	100.0000	100.0000	0x14da20	-
 rmg	?fillIslandInterior@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x13cf50	tokens1:19036ca5993f
 rmg	?fillTreasureGroup@type_random_map_generator@@QAEHPAUTRmgZone@@PAUTRmgTreasureGroup@@EH@Z	97.8371	97.8371	97.8371	0x146520	tokens1:34468e1ccad7
 rmg	?fillZoneArea@type_random_map_generator@@QAEXPAUTRmgZone@@PAUTRmgBoundaryVertex@@@Z	90.0984	90.0984	90.0984	0x13d380	tokens1:f9e5b6157da2
@@ -3412,7 +3407,6 @@ rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEXPAHIABH@Z	100.0000	100.0000	
 rmg	?insert@?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@QAEPAUTRmgMapPosition@@PAU3@ABU3@@Z	100.0000	100.0000	100.0000	0x14c3f0	-
 rmg	?insert@?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@QAEXPAUTRmgMapPosition@@IABU3@@Z	100.0000	100.0000	100.0000	0x347a0	-
 rmg	?insert@?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@QAEXPAUTRmgNoiseRegion@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d5c0	-
-rmg	?insert@?$vector@UTRmgObjectPlacementRule@@V?$allocator@UTRmgObjectPlacementRule@@@std@@@std@@QAEPAUTRmgObjectPlacementRule@@PAU3@ABU3@@Z	100.0000	100.0000	100.0000	0x14c730	-
 rmg	?insert@?$vector@UTRmgZoneConnection@@V?$allocator@UTRmgZoneConnection@@@std@@@std@@QAEPAUTRmgZoneConnection@@PAU3@ABU3@@Z	100.0000	100.0000	100.0000	0x14c970	-
 rmg	?insetIslandZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	78.7719	78.7719	78.7719	0x13d1c0	tokens1:99662685d65e
 rmg	?isPlacementBlocked@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@HE@Z	90.2171	90.2171	90.2171	0x1318b0	tokens1:c5ac2c739792
@@ -3449,7 +3443,7 @@ rmg	?prepareJunctionZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	77.5209	
 rmg	?prepareWaterZoneConnections@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	95.3102	95.3102	95.3102	0x13f470	tokens1:469891cf50e8
 rmg	?prepareZoneConnections@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x144920	tokens1:01503d3c2b78
 rmg	?propagateZoneDistances@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	77.1353	77.1353	77.1353	0x13d8e0	tokens1:3faae5821842
-rmg	?readObjectPlacementRules@TRmgGeneratorBase@@QAEXXZ	99.5723	99.5723	99.7862	0x136560	tokens1:b2f242f43de7
+rmg	?readObjectPlacementRules@TRmgGeneratorBase@@QAEXXZ	99.7862	99.7862	99.7862	0x136560	tokens1:796bfe634b8f
 rmg	?readRmgTemplateZones@@YIXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHHH@Z	100.0000	100.0000	100.0000	0x138480	tokens1:c511771e17ea
 rmg	?recenterZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	95.5000	95.5000	95.5000	0x13d0d0	tokens1:c3fcb5d274c2
 rmg	?removeObject@type_random_map_generator@@QAEXPAVtype_object@@@Z	95.7733	95.7733	95.7733	0x14bc50	tokens1:a3dd761c2946
@@ -3502,6 +3496,12 @@ rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x1
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-
 rmg	__h3cg$rmg$static_dtor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed90	-
 rmg	__h3cg$rmg$static_dtor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f310	-
+rmg	__h3cg$rmg$std_copy_backward$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14dbc0	-
+rmg	__h3cg$rmg$std_fill$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14da20	-
+rmg	__h3cg$rmg$vector_destroy$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14c940	-
+rmg	__h3cg$rmg$vector_insert_single$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14c730	-
+rmg	__h3cg$rmg$vector_ucopy$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14d8b0	-
+rmg	__h3cg$rmg$vector_ufill$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14d8f0	-
 rmg_support	??0TRmgBoundaryVertex@@QAE@UTPoint@@PAUTRmgZone@@01@Z	100.0000	100.0000	100.0000	0x1fcef0	tokens1:127d76a3cf91
 rmg_support	??0TRmgLinePatternTable@@QAE@IPBH@Z	100.0000	100.0000	100.0000	0xf9be0	tokens1:9621d4a02b5a
 rmg_support	??0TRmgMapPosition@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1355c0	tokens1:a5034d506ad3

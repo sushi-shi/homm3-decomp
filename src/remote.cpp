@@ -160,8 +160,9 @@ unsigned char CDPlayHeroes::sysMsgDestroyPlayerOrGroup(
                     dpid);
         CPlayerDropMsg msg(dpid);
         queueMsg(&msg);
+        return 1;
     }
-    return 1;
+    return CDPlay::sysMsgDestroyPlayerOrGroup(message, toId);
 }
 
 VA(0x00552b40, 0x14)

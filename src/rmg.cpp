@@ -2731,8 +2731,8 @@ void TRmgGeneratorBase::readObjectPlacementRules()
         objectType = atoi(values[3]);
         subtype = atoi(values[4]);
         terrain = atoi(values[6]);
-        objectTypes.insert(objectTypes.end(), objectType);
-        terrains.insert(terrains.end(), terrain);
+        objectTypes.push_back(objectType);
+        terrains.push_back(terrain);
         subtypes.push_back(subtype);
         for (terrain = 0; terrain <= eTerrainWater; ++terrain)
             rule.m_terrainScores[terrain] = atoi(values[terrain + 7]);
