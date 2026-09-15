@@ -5,7 +5,8 @@
 #include <va.h>
 #include <string.h>
 
-class heroWindow;
+// Before normalization (type): heroWindow.
+class HeroWindow;
 
 // Dreamcast roster: id, codeX, codeY, qualifier, mouseX, mouseY,
 // extra, window, oldX@32, oldY@36 (40 B). The retail frames in
@@ -13,7 +14,8 @@ class heroWindow;
 // The Dreamcast xref graph also proves the default constructor at dc 0x2d58.
 // This is one class shape, not a per-TU optimizer view: the constructor is
 // canonical and VC6 may remove fields overwritten before their first read.
-class message {
+// Before normalization (type): message.
+class Message {
 public:
     int m_id;
     int m_codeX;
@@ -25,18 +27,18 @@ public:
         int m_extra;
         const char* m_extraText;
     };
-    heroWindow* m_window;
+    HeroWindow* m_window;
     // DC type 0x1020 proves this overload's declaration, but no body or
     // inline source row has been recovered. Keep the declaration alone;
     // overview's zero-initialization uses the proven default constructor.
-    message(int id, int codeX, int codeY, int qualifier,
-            int mouseX, int mouseY, int extra, heroWindow* window);
+    Message(int id, int codeX, int codeY, int qualifier,
+            int mouseX, int mouseY, int extra, HeroWindow* window);
     // Retail RS_CLICK constructs this 32-byte local at 0x588e3d before
     // setting codeY and passing it to OnWidgetDeselect. The retained body
     // zeroes offsets +0 through +0x1c and returns the receiver in EAX.
     // E:\gamedcs\struct.h:42, dc 0x2d58
     VA(0x00589190, 0x1c)  // RS_CLICK constructor + field stores, dc 0x2d58
-    message()
+    Message()
     {
         m_id = 0;
         m_codeX = 0;
@@ -48,7 +50,7 @@ public:
         m_window = 0;
     }
 };
-SIZE(message, 32);
+SIZE(Message, 32);
 
 // A packed map coordinate. The DC layout (classes.csv: 4 B, three
 // members) puts x at offset 0 and BOTH y and z at offset 2 - the
@@ -63,14 +65,15 @@ SIZE(message, 32);
 //   z: dword @ +2, shl 2, movsx ax, sar 12     -> signed  4 bits @ 10..13
 // and can_take_town (0x428410) builds one the other way round, masking
 // the three source bytes with 0x3ff, 0x3ff and 0xf before packing.
-struct type_point {
+// Before normalization (type): type_point.
+struct MapPoint {
 public:
     short m_x : 10;
     short m_y : 10;
     short m_z : 4;
-    type_point() {}
+    MapPoint() {}
     VA(0x004192b0, 0x44)  // anchor-callee, dc 0x1edb0
-    type_point(short newX, short newY, short newZ)
+    MapPoint(short newX, short newY, short newZ)
     {
         m_x = newX;
         m_y = newY;
@@ -81,12 +84,12 @@ public:
     // Dreamcast S_PUB32 is ??8type_point@@QBA_NABU0@@Z: bool return,
     // const member, const-reference operand.
     VA(0x0042ec20, 0x45)  // exact body + sole caller, dc 0x1ee20
-    bool operator==(const type_point& arg) const
+    bool operator==(const MapPoint& arg) const
     {
         return m_x == arg.m_x && m_y == arg.m_y && m_z == arg.m_z;
     }
     VA(0x00482340, 0x45)  // call edge + byte-identical point comparison, dc 0x37d2c
-    bool operator!=(const type_point& arg) const
+    bool operator!=(const MapPoint& arg) const
     {
         return m_x != arg.m_x || m_y != arg.m_y || m_z != arg.m_z;
     }
@@ -99,7 +102,7 @@ public:
     // bitfields sign-extended through the shl/movsx/sar triple. The z
     // plane takes no part, which is what makes it a MAP distance.
     // DC struct.h:120 proves const type_point& p2 (dc 0x22fe4).
-    int distanceSquared(const type_point& p2) const
+    int distanceSquared(const MapPoint& p2) const
     {
         int dx = m_x - p2.m_x;
         int dy = m_y - p2.m_y;

@@ -69,10 +69,10 @@ DATA(0x006604d0) static double g_defenseEstimates[5] = {
     0.5, 0.5, 1.0, 1.25, 1.25
 };
 
-float valueOfExperience(const hero* currentHero, const armyGroup& currentArmy);
+float valueOfExperience(const Hero* currentHero, const ArmyGroup& currentArmy);
 
 VA(0x00423c80, 0x79)  // dc 0x29978
-long type_monster_data::getEnchantmentValue(type_spell_choice& choice, const hero* castingHero, const hero* targetHero) const
+long AiMonsterData::getEnchantmentValue(SpellChoice& choice, const Hero* castingHero, const Hero* targetHero) const
 {
     if (m_totalValue == 0)
         return 0;
@@ -93,7 +93,7 @@ long type_monster_data::getEnchantmentValue(type_spell_choice& choice, const her
 // total_hit_points*damage_modifier is taken BEFORE the update, the
 // per-creature delta is a 64-bit imul/__alldiv, and damage_modifier is
 // rewritten as the new total over that pre-image.
-inline void type_monster_data::castEnchantment(long spellValue, unsigned char increase)
+inline void AiMonsterData::castEnchantment(long spellValue, unsigned char increase)
 {
     double previous = m_totalValue * m_combatValuePerHit;
     // 64-bit local, not a long: retail spills the __alldiv result's
@@ -112,7 +112,7 @@ inline void type_monster_data::castEnchantment(long spellValue, unsigned char in
 }
 
 VA(0x00423d00, 0xDA)  // dc 0x29b94
-long type_monster_data::getResurrectionValue(type_spell_choice& choice, const hero* castingHero) const
+long AiMonsterData::getResurrectionValue(SpellChoice& choice, const Hero* castingHero) const
 {
     if (m_originalNumber <= m_number)
         return 0;
@@ -121,7 +121,7 @@ long type_monster_data::getResurrectionValue(type_spell_choice& choice, const he
     long value = choice.getMasteryValue()
                  + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     if (castingHero)
-        value += const_cast<hero*>(castingHero)->getHeroSpellBonus(
+        value += const_cast<Hero*>(castingHero)->getHeroSpellBonus(
             choice.m_spell, g_creatureTypeTraits[m_type].m_level, value);
     long resurrected = min(static_cast<long>(value * m_combatValuePerHit) / m_value,
                            m_originalNumber - m_number);
@@ -132,9 +132,9 @@ long type_monster_data::getResurrectionValue(type_spell_choice& choice, const he
 // Retail expands this helper at cast_spell's selected target and emits no
 // out-of-line row. The Dreamcast supplies the helper boundary/name; the
 // statements below are reconstructed from the retail expansion.
-inline void type_monster_data::castResurrection(
-    type_spell_choice& choice,
-    const hero* castingHero)
+inline void AiMonsterData::castResurrection(
+    SpellChoice& choice,
+    const Hero* castingHero)
 {
     long resurrected = getResurrectionValue(choice, castingHero)
                        / m_value;
@@ -143,7 +143,7 @@ inline void type_monster_data::castResurrection(
 }
 
 VA(0x00423de0, 0xB1)  // dc 0x29ce0
-long type_monster_data::getSpellDamage(SpellID spell, const hero* castingHero, const hero* targetHero, long damage) const
+long AiMonsterData::getSpellDamage(SpellID spell, const Hero* castingHero, const Hero* targetHero, long damage) const
 {
     if (m_totalValue == 0)
         return 0;
@@ -153,14 +153,14 @@ long type_monster_data::getSpellDamage(SpellID spell, const hero* castingHero, c
     damage = modifySpellDamage(damage, spell, m_type);
     if (damage == 0)
         return 0;
-    damage = const_cast<hero*>(castingHero)->modifySpellDamage(spell, damage, 0);
+    damage = const_cast<Hero*>(castingHero)->modifySpellDamage(spell, damage, 0);
     if (damage == 0)
         return 0;
     return min(static_cast<long>(damage * m_combatValuePerHit), m_totalValue);
 }
 
 VA(0x00423ea0, 0x36)  // dc 0x29dec
-long type_monster_data::takeDamage(long damage)
+long AiMonsterData::takeDamage(long damage)
 {
     if (m_totalValue < damage) {
         damage = m_totalValue;
@@ -174,12 +174,12 @@ long type_monster_data::takeDamage(long damage)
 }
 
 VA(0x00423ee0, 0x233)  // dc 0x29e2c
-type_AI_combat_data::type_AI_combat_data(const hero* newHero, const armyGroup* newArmy, double baseModifier, const hero* enemyHero, const town* enemyTown, NewmapCell* mapCell)
+AICombatData::AICombatData(const Hero* newHero, const ArmyGroup* newArmy, double baseModifier, const Hero* enemyHero, const Town* enemyTown, NewmapCell* mapCell)
 {
-    m_currentHero = const_cast<hero*>(newHero);
-    m_currentArmy = const_cast<armyGroup*>(newArmy);
+    m_currentHero = const_cast<Hero*>(newHero);
+    m_currentArmy = const_cast<ArmyGroup*>(newArmy);
     checkWallArcheryPenalty(enemyTown);
-    m_enemyHero = const_cast<hero*>(enemyHero);
+    m_enemyHero = const_cast<Hero*>(enemyHero);
 
     if (newHero == 0)
         m_mana = 0;
@@ -235,9 +235,9 @@ type_AI_combat_data::type_AI_combat_data(const hero* newHero, const armyGroup* n
 // Preserve that initializer and the actual vector begin/end sort interface.
 
 VA(0x00424120, 0x66E)  // dc-callgraph unique, dc 0x29f58
-void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* enemyHero)
+void AICombatData::initializeCreatures(double baseModifier, const Hero* enemyHero)
 {
-    type_monster_data unit;
+    AiMonsterData unit;
     long speedBonus;
     double hitPoints;
     double forceModifier = baseModifier;
@@ -281,13 +281,13 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
     // GetHitPointBonus(int) per creature at 0x4242de. The audit's source-order
     // lead is this platform/ABI difference, not an omitted shared call.
     m_totalCombatValue = 0;
-    for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-        TCreatureType creature = m_currentArmy->m_armyTypes[i];
+    for (long i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        CreatureType creature = m_currentArmy->m_armyTypes[i];
         if (creature == CREATURE_NONE)
             continue;
 
         int creatureId = creature;
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[creatureId];
+        const CreatureTypeTraits& traits = g_creatureTypeTraits[creatureId];
         hitPoints = traits.m_hitPoints;
         if (m_currentHero) {
             hitBonus = m_currentHero->getHitPointBonus(creatureId);
@@ -333,7 +333,7 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
 }
 
 VA(0x00424790, 0xE5)  // dc 0x2a470
-void type_AI_combat_data::checkWallArcheryPenalty(const town* enemyTown)
+void AICombatData::checkWallArcheryPenalty(const Town* enemyTown)
 {
     m_wallArcheryPenalty = 0;
     m_wallSpeedLimit = 0;
@@ -371,8 +371,8 @@ void type_AI_combat_data::checkWallArcheryPenalty(const town* enemyTown)
 // expands the one call in initializeCreatures; that is not evidence for an
 // explicit inline keyword. All eight declaration/order controls are score-
 // flat; keep the ordinary canonical helper and its real read-only interface.
-type_speed_catagory type_AI_combat_data::getCatagory(
-    TCreatureType creature,
+SpeedCatagory AICombatData::getCatagory(
+    CreatureType creature,
     long speed) const
 {
     unsigned int attributes = g_creatureTypeTraits[creature].m_attributes;
@@ -384,23 +384,23 @@ type_speed_catagory type_AI_combat_data::getCatagory(
         catagory = const_slow;
     if (m_wallSpeedLimit > catagory && !(attributes & g_ctaFlying))
         catagory = m_wallSpeedLimit;
-    type_speed_catagory result;
+    SpeedCatagory result;
     memcpy(&result, &catagory, sizeof result);
     return result;
 }
 
 VA(0x00424880, 0xDB)  // dc 0x2a588
-void type_AI_combat_data::adjustArmy(unsigned char dismissHero)
+void AICombatData::adjustArmy(unsigned char dismissHero)
 {
     if (m_totalCombatValue == 0) {
-        for (short i = 0; i != armyGroup::ARMY_GROUP_SLOT_COUNT; i++)
+        for (short i = 0; i != ArmyGroup::ARMY_GROUP_SLOT_COUNT; i++)
             m_currentArmy->dismiss(i);
         if (m_currentHero && dismissHero)
             g_advManager->heroLoses(m_currentHero, 0);
         return;
     }
     for (short i = static_cast<short>(m_creatures.size()); i-- > 0; ) {
-        type_monster_data unit = m_creatures[i];
+        AiMonsterData unit = m_creatures[i];
         if (unit.m_index < 0)
             continue;
         if (unit.m_number == 0)
@@ -412,7 +412,7 @@ void type_AI_combat_data::adjustArmy(unsigned char dismissHero)
 
 // E:\gamedcs\ai_combat.cpp:437
 VA(0x00424960, 0x65)  // dc 0x2a644
-long type_AI_combat_data::getFastestSpeed() const
+long AICombatData::getFastestSpeed() const
 {
     long fastest = 0;
     for (long i = m_creatures.size(); i-- > 0; )
@@ -422,7 +422,7 @@ long type_AI_combat_data::getFastestSpeed() const
 }
 
 VA(0x004249d0, 0x218)  // dc 0x2a694
-long type_AI_combat_data::getNextChainLightningTarget(long excluded, const type_AI_combat_data& defender, long start, long damage) const
+long AICombatData::getNextChainLightningTarget(long excluded, const AICombatData& defender, long start, long damage) const
 {
     if (damage == 0)
         return -1;
@@ -454,7 +454,7 @@ long type_AI_combat_data::getNextChainLightningTarget(long excluded, const type_
 // and OPT:REF dropped the COMDAT. Spelled `inline` so our obj does not
 // carry a base-only function retail never shipped. It is the exact
 // value-side mirror of cast_chain_lightning.
-inline void type_AI_combat_data::getChainLightningValue(type_spell_choice& choice, const type_AI_combat_data& defender, long damage) const
+inline void AICombatData::getChainLightningValue(SpellChoice& choice, const AICombatData& defender, long damage) const
 {
     long excluded = 1 << choice.m_target;
     long target = choice.m_target;
@@ -470,7 +470,7 @@ inline void type_AI_combat_data::getChainLightningValue(type_spell_choice& choic
 }
 
 VA(0x00424bf0, 0x123)  // dc 0x2a7e4
-void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_combat_data& defender, long damage, long extraTargets) const
+void AICombatData::getAreaValue(SpellChoice& choice, const AICombatData& defender, long damage, long extraTargets) const
 {
     long targetIndex = defender.m_creatures[choice.m_target].m_index;
     for (unsigned i = 0; i < defender.m_creatures.size(); i++) {
@@ -487,7 +487,7 @@ void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_
 }
 
 VA(0x00424d20, 0x290)  // dc 0x2a868
-void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const type_AI_combat_data& defender) const
+void AICombatData::getDamageSpellValue(SpellChoice& choice, const AICombatData& defender) const
 {
     long damage = choice.getMasteryValue()
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
@@ -517,9 +517,9 @@ void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const t
 }
 
 VA(0x00424fb0, 0x145)  // dc 0x2a938
-void type_AI_combat_data::castChainLightning(type_spell_choice& choice, type_AI_combat_data& defender, long damage) const
+void AICombatData::castChainLightning(SpellChoice& choice, AICombatData& defender, long damage) const
 {
-    type_AI_combat_data& targetData = defender;
+    AICombatData& targetData = defender;
     long excluded = 1 << choice.m_target;
     long target = choice.m_target;
     for (long i = 0; i < 3; i++) {
@@ -537,7 +537,7 @@ void type_AI_combat_data::castChainLightning(type_spell_choice& choice, type_AI_
 }
 
 VA(0x00425100, 0x15A)  // dc 0x2a9e8
-void type_AI_combat_data::castAreaEffect(type_spell_choice& choice, type_AI_combat_data& defender, long damage, long extraTargets) const
+void AICombatData::castAreaEffect(SpellChoice& choice, AICombatData& defender, long damage, long extraTargets) const
 {
     long targetIndex = defender.m_creatures[choice.m_target].m_index;
     for (unsigned i = 0; i < defender.m_creatures.size(); i++) {
@@ -554,7 +554,7 @@ void type_AI_combat_data::castAreaEffect(type_spell_choice& choice, type_AI_comb
 }
 
 VA(0x00425260, 0x180)  // dc 0x2aa7c
-void type_AI_combat_data::castDamageSpell(type_spell_choice& choice, type_AI_combat_data& defender) const
+void AICombatData::castDamageSpell(SpellChoice& choice, AICombatData& defender) const
 {
     long damage = choice.getMasteryValue()
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
@@ -582,7 +582,7 @@ void type_AI_combat_data::castDamageSpell(type_spell_choice& choice, type_AI_com
 // Retail 0x425bd0 expands this const predicate before the one mana update.
 // Keep the ordinary helper and source call; the previous pasted scan enlarged
 // castSpell and changed its later mass-damage expansion decisions.
-unsigned char type_AI_combat_data::hasCreature(TCreatureType creature) const
+unsigned char AICombatData::hasCreature(CreatureType creature) const
 {
     for (long i = m_creatures.size(); i-- > 0; ) {
         if (m_creatures[i].m_type == creature && m_creatures[i].m_number > 0)
@@ -592,7 +592,7 @@ unsigned char type_AI_combat_data::hasCreature(TCreatureType creature) const
 }
 
 VA(0x004253e0, 0x12F)  // dc 0x2ab88
-long type_AI_combat_data::getMassDamageValue(type_spell_choice& choice, const hero* castingHero) const
+long AICombatData::getMassDamageValue(SpellChoice& choice, const Hero* castingHero) const
 {
     long value = 0;
     long damage = choice.getMasteryValue()
@@ -607,9 +607,9 @@ long type_AI_combat_data::getMassDamageValue(type_spell_choice& choice, const he
 // Its first nested get_mass_damage_value expands while the defender-side
 // call stays out of line. DC 0x2ac18 proves the const receiver; the ordinary
 // body retains that natural split without an invented inline qualifier.
-void type_AI_combat_data::getMassDamageValue(
-    type_spell_choice& choice,
-    type_AI_combat_data& defender) const
+void AICombatData::getMassDamageValue(
+    SpellChoice& choice,
+    AICombatData& defender) const
 {
     long ownDamage = getMassDamageValue(choice, m_currentHero);
     long defenderDamage = defender.getMassDamageValue(choice, m_currentHero);
@@ -630,9 +630,9 @@ void type_AI_combat_data::getMassDamageValue(
 // keeping the first inherited fence scores 88.5664. Both old fences are
 // removed. The remaining nested decisions close when castSpell recovers
 // its separate getSummoningValue boundary, as documented below.
-void type_AI_combat_data::castMassDamageSpell(
-    type_spell_choice& choice,
-    const hero* castingHero)
+void AICombatData::castMassDamageSpell(
+    SpellChoice& choice,
+    const Hero* castingHero)
 {
     long value = 0;
     long damage = choice.getMasteryValue()
@@ -650,11 +650,11 @@ void type_AI_combat_data::castMassDamageSpell(
 // row: /Ob2 inlined all four call sites in the two-side overload below
 // and OPT:REF dropped the body. The const signature and ordinary definition
 // preserve all four expansions; emission alone does not prove source inline.
-void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, const hero* castingHero) const
+void AICombatData::getEnchantmentValue(SpellChoice& choice, const Hero* castingHero) const
 {
     unsigned char mass = !spellTargetsASingleArmy(choice.m_spell, choice.m_mastery);
     for (long i = m_creatures.size(); i-- > 0; ) {
-        const type_monster_data& monster = m_creatures[i];
+        const AiMonsterData& monster = m_creatures[i];
         long value = monster.getEnchantmentValue(choice, castingHero, m_currentHero);
         if (mass) {
             choice.m_value += value;
@@ -666,7 +666,7 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, const h
 }
 
 VA(0x00425510, 0x382)  // dc 0x2ad58
-void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI_combat_data& defender) const
+void AICombatData::getEnchantmentValue(SpellChoice& choice, AICombatData& defender) const
 {
     if (!defender.m_canCastSpells
         && (choice.m_spell == SPELL_DISPEL
@@ -684,7 +684,7 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI
             return;
         // retail copies the whole 0x24-byte record with one rep movsd
         // (0x4256b7) and compares the ourChoice value after the second pass
-        type_spell_choice ourChoice = choice;
+        SpellChoice ourChoice = choice;
         defender.getEnchantmentValue(choice, m_currentHero);
         if (choice.m_mastery != eMasteryAdvanced)
             return;
@@ -701,7 +701,7 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI
 }
 
 VA(0x004258a0, 0x269)  // dc 0x2ae60
-void type_AI_combat_data::castEnchantment(type_spell_choice& choice, const hero* castingHero, unsigned char increase)
+void AICombatData::castEnchantment(SpellChoice& choice, const Hero* castingHero, unsigned char increase)
 {
     long value;
     if (spellTargetsASingleArmy(choice.m_spell, choice.m_mastery)) {
@@ -718,7 +718,7 @@ void type_AI_combat_data::castEnchantment(type_spell_choice& choice, const hero*
 
 // E:\gamedcs\ai_combat.cpp:871
 VA(0x00425b10, 0xB4)  // dc 0x2af04
-void type_AI_combat_data::castEnchantment(type_spell_choice& choice, type_AI_combat_data& defender)
+void AICombatData::castEnchantment(SpellChoice& choice, AICombatData& defender)
 {
     if (choice.m_spell == SPELL_DISPEL) {
         if (choice.m_mastery < eMasteryExpert) {
@@ -746,7 +746,7 @@ void type_AI_combat_data::castEnchantment(type_spell_choice& choice, type_AI_com
 // 924 scans downward, 926 gets the value, 927 compares strictly, and
 // 929/930 store value before target. Retail expands this ordinary helper
 // in castSpell; VC6 reduces its switch to the signed 38..39 range there.
-void type_AI_combat_data::getSummoningValue(type_spell_choice& choice) const
+void AICombatData::getSummoningValue(SpellChoice& choice) const
 {
     switch (choice.m_spell) {
     case SPELL_HYPNOTIZE:
@@ -758,7 +758,7 @@ void type_AI_combat_data::getSummoningValue(type_spell_choice& choice) const
     case SPELL_RESURRECTION:
     case SPELL_ANIMATE_DEAD:
         for (long i = m_creatures.size(); i-- > 0; ) {
-            const type_monster_data& monster = m_creatures[i];
+            const AiMonsterData& monster = m_creatures[i];
             long value = monster.getResurrectionValue(choice, m_currentHero);
             if (value > choice.m_value) {
                 choice.m_value = value;
@@ -772,7 +772,7 @@ void type_AI_combat_data::getSummoningValue(type_spell_choice& choice) const
 // DC943 has the same no-op/resurrection dispatch and 955 calls the
 // selected monster's cast_resurrection. Preserve this ordinary boundary
 // even though retail expands it and retains no separate body.
-void type_AI_combat_data::castSummoning(type_spell_choice& choice)
+void AICombatData::castSummoning(SpellChoice& choice)
 {
     switch (choice.m_spell) {
     case SPELL_HYPNOTIZE:
@@ -790,14 +790,14 @@ void type_AI_combat_data::castSummoning(type_spell_choice& choice)
 
 // E:\gamedcs\ai_combat.cpp:965
 VA(0x00425bd0, 0x593)  // anchor-global, dc 0x2b094
-void type_AI_combat_data::castSpell(
-    type_AI_combat_data& defender,
-    type_speed_catagory round)
+void AICombatData::castSpell(
+    AICombatData& defender,
+    SpeedCatagory round)
 {
     if (m_totalCombatValue == 0 || m_mana == 0 || !m_canCastSpells)
         return;
 
-    type_spell_choice bestChoice;
+    SpellChoice bestChoice;
     unsigned char recantersCloak = 0;
     if (m_currentHero->isWieldingArtifact(g_artifactRecantersCloak))
         recantersCloak = 1;
@@ -808,9 +808,9 @@ void type_AI_combat_data::castSpell(
     register long spellPower = m_currentHero->getPrimarySkill(2);
     long spellDuration = spellPower + m_currentHero->getSpellDurationBonus();
     long bestManaCost;
-    TSkillMastery mastery;
+    SkillMastery mastery;
 
-    for (SpellID spell = 10; spell < hero::NUM_SPELLS; spell++) {
+    for (SpellID spell = 10; spell < Hero::NUM_SPELLS; spell++) {
         if (!m_currentHero->spellIsAvailable(spell))
             continue;
 
@@ -825,7 +825,7 @@ void type_AI_combat_data::castSpell(
         if (manaCost > m_mana)
             continue;
 
-        type_spell_choice choice(spell, mastery, spellPower, spellDuration);
+        SpellChoice choice(spell, mastery, spellPower, spellDuration);
         switch (g_spellTraits[spell].m_flags & g_aiSpellClassMask) {
         case g_aiSpellDirectDamage:
             getDamageSpellValue(choice, defender);
@@ -882,9 +882,9 @@ void type_AI_combat_data::castSpell(
 // Retail inlines every use; these statements are reconstructed from the
 // repeated retail expansions. The Dreamcast contributes only the helper's
 // name/signature and retains an out-of-line body in that build.
-inline void type_AI_combat_data::castSpells(
-    type_AI_combat_data& defender,
-    type_speed_catagory round)
+inline void AICombatData::castSpells(
+    AICombatData& defender,
+    SpeedCatagory round)
 {
     if (getFastestSpeed() < defender.getFastestSpeed()) {
         defender.castSpell(*this, round);
@@ -904,7 +904,8 @@ inline void type_AI_combat_data::castSpells(
 // before take_damage; PC inflictDamage uses the retained range-based
 // inflictMeleeDamage helper. Keep the old roster entry without a false claim.
 DC_ONLY(0x2b380, 0x88)
-long type_AI_combat_data::inflict_catagory_damage(long damage, type_speed_catagory catagory)
+// Before normalization (function): type_AI_combat_data::inflict_catagory_damage.
+long AICombatData::inflictCatagoryDamage(long damage, SpeedCatagory catagory)
 {
     // @stub
 }
@@ -912,7 +913,7 @@ long type_AI_combat_data::inflict_catagory_damage(long damage, type_speed_catago
 #endif  // @carcass
 
 VA(0x00426170, 0x131)  // dc 0x2b408
-long type_AI_combat_data::inflictMeleeDamage(long damage, long start, long speedLimit)
+long AICombatData::inflictMeleeDamage(long damage, long start, long speedLimit)
 {
     long sum = 0;
     unsigned i;
@@ -939,7 +940,7 @@ long type_AI_combat_data::inflictMeleeDamage(long damage, long start, long speed
 }
 
 VA(0x004262b0, 0x4F)  // dc 0x2b5a4
-void type_AI_combat_data::kill()
+void AICombatData::kill()
 {
     m_totalCombatValue = 0;
     for (long i = m_creatures.size(); i-- > 0; ) {
@@ -949,7 +950,7 @@ void type_AI_combat_data::kill()
 }
 
 VA(0x00426300, 0x8D)  // dc 0x2b5ec
-void type_AI_combat_data::inflictDamage(long damage, long blockerSpeed)
+void AICombatData::inflictDamage(long damage, long blockerSpeed)
 {
     m_totalCombatValue -= damage;
     if (m_totalCombatValue <= 0) {
@@ -962,7 +963,7 @@ void type_AI_combat_data::inflictDamage(long damage, long blockerSpeed)
 }
 
 VA(0x00426390, 0xBB)  // dc 0x2b624
-long type_AI_combat_data::getAttack(type_speed_catagory speedLimit, unsigned char shootersBlocked) const
+long AICombatData::getAttack(SpeedCatagory speedLimit, unsigned char shootersBlocked) const
 {
     long value = 0;
     for (long i = m_creatures.size(); i-- > 0; ) {
@@ -979,7 +980,7 @@ long type_AI_combat_data::getAttack(type_speed_catagory speedLimit, unsigned cha
 }
 
 VA(0x00426450, 0x71)  // dc 0x2b7bc
-long type_AI_combat_data::getFinalMeleeValue() const
+long AICombatData::getFinalMeleeValue() const
 {
     long value = 0;
     for (long i = m_creatures.size(); i-- > 0; )
@@ -991,8 +992,8 @@ long type_AI_combat_data::getFinalMeleeValue() const
 // Retail inlines every use; these statements are reconstructed from the
 // repeated retail expansions. The Dreamcast contributes only the helper's
 // name/signature and retains an out-of-line body in that build.
-inline void type_AI_combat_data::doRangedCombat(
-    type_AI_combat_data& defender)
+inline void AICombatData::doRangedCombat(
+    AICombatData& defender)
 {
     long ourAttack = getAttack(const_ranged, 0);
     long theirAttack = defender.getAttack(const_ranged, 0);
@@ -1002,9 +1003,9 @@ inline void type_AI_combat_data::doRangedCombat(
 
 // E:\gamedcs\ai_combat.cpp:1240
 // Retail inlines every use; the Dreamcast body survives out of line.
-inline void type_AI_combat_data::doMeleeCombat(
-    type_speed_catagory attackerSpeed,
-    type_AI_combat_data& defender)
+inline void AICombatData::doMeleeCombat(
+    SpeedCatagory attackerSpeed,
+    AICombatData& defender)
 {
     long ourAttack = getAttack(attackerSpeed, 0);
     long theirAttack = defender.getAttack(const_slow, 1);
@@ -1014,8 +1015,8 @@ inline void type_AI_combat_data::doMeleeCombat(
 
 // E:\gamedcs\ai_combat.cpp:1255
 // Retail inlines every use; the Dreamcast body survives out of line.
-inline void type_AI_combat_data::doMeleeCombat(
-    type_AI_combat_data& defender)
+inline void AICombatData::doMeleeCombat(
+    AICombatData& defender)
 {
     long ourAttack = getAttack(const_slow, 1);
     long theirAttack = defender.getAttack(const_slow, 1);
@@ -1027,8 +1028,8 @@ inline void type_AI_combat_data::doMeleeCombat(
 // attributes 0x003 (explicit), unlike its 0x103 compiler-generated assignment
 // and destructor. Preserve this memberwise source boundary. The native vector
 // member owns its own separate retained copy constructor at 0x4276c0.
-inline type_AI_combat_data::type_AI_combat_data(
-    const type_AI_combat_data& other)
+inline AICombatData::AICombatData(
+    const AICombatData& other)
     : m_creatures(other.m_creatures),
       m_terrain(other.m_terrain),
       m_mana(other.m_mana),
@@ -1044,7 +1045,7 @@ inline type_AI_combat_data::type_AI_combat_data(
 }
 
 VA(0x004264d0, 0x2ED)  // dc 0x2b948
-void type_AI_combat_data::doGeneralMelee(type_AI_combat_data& defender)
+void AICombatData::doGeneralMelee(AICombatData& defender)
 {
     float attacker = static_cast<float>(getFinalMeleeValue());
     float target = static_cast<float>(defender.getFinalMeleeValue());
@@ -1065,9 +1066,9 @@ void type_AI_combat_data::doGeneralMelee(type_AI_combat_data& defender)
 }
 
 VA(0x004267c0, 0x3FD)  // dc 0x2bad8
-bool type_AI_combat_data::chooseMelee(
-    const type_AI_combat_data& enemy,
-    type_speed_catagory currentRound) const
+bool AICombatData::chooseMelee(
+    const AICombatData& enemy,
+    SpeedCatagory currentRound) const
 {
     long index;
     for (index = m_creatures.size(); index-- > 0; ) {
@@ -1087,8 +1088,8 @@ bool type_AI_combat_data::chooseMelee(
     for (meleeRound = const_slow;
          meleeRound >= currentRound;
          meleeRound--) {
-        type_AI_combat_data localData(*this);
-        type_AI_combat_data localEnemy(enemy);
+        AICombatData localData(*this);
+        AICombatData localEnemy(enemy);
 
         long round;
         for (round = currentRound; round < meleeRound; round++) {
@@ -1097,7 +1098,7 @@ bool type_AI_combat_data::chooseMelee(
             if (localEnemy.getTotal() <= 0)
                 break;
             localData.castSpells(
-                localEnemy, (type_speed_catagory)round);
+                localEnemy, (SpeedCatagory)round);
             localData.doRangedCombat(localEnemy);
         }
 
@@ -1107,9 +1108,9 @@ bool type_AI_combat_data::chooseMelee(
             if (localEnemy.getTotal() <= 0)
                 break;
             localData.castSpells(
-                localEnemy, (type_speed_catagory)round);
+                localEnemy, (SpeedCatagory)round);
             localData.doMeleeCombat(
-                (type_speed_catagory)round, localEnemy);
+                (SpeedCatagory)round, localEnemy);
         }
 
         localData.doGeneralMelee(localEnemy);
@@ -1125,7 +1126,7 @@ bool type_AI_combat_data::chooseMelee(
 }
 
 VA(0x00426bc0, 0x224)  // dc 0x2bc40
-void type_AI_combat_data::simulateCombat(type_AI_combat_data& defender)
+void AICombatData::simulateCombat(AICombatData& defender)
 {
     for (long round = 1; round < 4; round++) {
         if (getTotal() <= 0)
@@ -1133,16 +1134,16 @@ void type_AI_combat_data::simulateCombat(type_AI_combat_data& defender)
         if (defender.getTotal() <= 0)
             break;
         unsigned char weMelee = chooseMelee(
-            defender, (type_speed_catagory)round);
+            defender, (SpeedCatagory)round);
         unsigned char theyMelee = defender.chooseMelee(
-            *this, (type_speed_catagory)round);
-        castSpells(defender, (type_speed_catagory)round);
+            *this, (SpeedCatagory)round);
+        castSpells(defender, (SpeedCatagory)round);
         if (weMelee) {
             if (theyMelee)
                 doMeleeCombat(defender);
             else
                 doMeleeCombat(
-                    (type_speed_catagory)round, defender);
+                    (SpeedCatagory)round, defender);
         } else if (theyMelee) {
             defender.doMeleeCombat(*this);
         } else {
@@ -1153,11 +1154,11 @@ void type_AI_combat_data::simulateCombat(type_AI_combat_data& defender)
 }
 
 // E:\gamedcs\ai_combat.cpp:1398
-static void doEagleEye(hero* winner, hero* loser)
+static void doEagleEye(Hero* winner, Hero* loser)
 {
     if (winner->m_skillLevel[g_secondarySkillEagleEye] > 0
         && winner->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-        for (short spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (short spell = 0; spell < Hero::NUM_SPELLS; ++spell) {
             if (!loser->spellIsAvailable(spell)
                 || winner->spellIsAvailable(spell))
                 continue;
@@ -1181,17 +1182,17 @@ static void doEagleEye(hero* winner, hero* loser)
 // [esi+0x1c], esi stepping by 4 over seven iterations (0x426e36
 // .. 0x426e89) - i.e. the losing side's stacks.
 VA(0x00426df0, 0xED)  // corroborates (hd-crossbuild + ida), dc 0x2bd6c
-void createSkeletons(const hero* currentHero, const armyGroup* deadArmy, armyGroup& destination)
+void createSkeletons(const Hero* currentHero, const ArmyGroup* deadArmy, ArmyGroup& destination)
 {
     float factor = currentHero->getNecromancyFactor(1);
     if (factor <= 0.0f)
         return;
     factor += 0.02f;
-    TCreatureType skeleton = const_cast<hero*>(currentHero)->getNecromancyCreature();
+    CreatureType skeleton = const_cast<Hero*>(currentHero)->getNecromancyCreature();
     long total = 0;
     long skeletonHitPoints = g_creatureTypeTraits[skeleton].m_hitPoints;
     float skeletonHitPointsF = static_cast<float>(skeletonHitPoints);
-    for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+    for (long i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         long creature = deadArmy->m_armies[i];
         long count = deadArmy->m_numTroops[i];
         long hitPoints = g_creatureTypeTraits[creature].m_hitPoints;
@@ -1210,11 +1211,11 @@ void createSkeletons(const hero* currentHero, const armyGroup* deadArmy, armyGro
 
 // E:\gamedcs\ai_combat.cpp:1440, dc 0x2be54
 VA(0x00426ee0, 0x1D8)  // anchor-global, dc 0x2be54
-void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemyTown)
+void AICombatData::doAftermath(AICombatData& defender, Town* enemyTown)
 {
     unsigned char retreated = 0;
-    armyGroup* defeatedArmy = defender.getArmy();
-    hero* defeatedHero = defender.getHero();
+    ArmyGroup* defeatedArmy = defender.getArmy();
+    Hero* defeatedHero = defender.getHero();
 
     if (m_currentHero)
         m_currentHero->m_mana = static_cast<short>(m_mana);
@@ -1269,14 +1270,14 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
 // function a /GX frame (push -1 / push <ehfuncinfo> / mov eax,fs:[0])
 // and the two `mov [ebp-4], state` writes between the constructors.
 VA(0x004270c0, 0x149)  // anchor-global, dc 0x2c004
-unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup& defendingArmy, town* defendingTown, NewmapCell* cell)
+unsigned char aiQuickCombat(Hero* attackingHero, Hero* defendingHero, ArmyGroup& defendingArmy, Town* defendingTown, NewmapCell* cell)
 {
     float attackerModifier = random(75, 125) / 100.0f;
     float defenderModifier = random(75, 125) / 100.0f;
-    type_AI_combat_data attacker(attackingHero, &attackingHero->m_army,
+    AICombatData attacker(attackingHero, &attackingHero->m_army,
                                  attackerModifier, defendingHero,
                                  defendingTown, cell);
-    type_AI_combat_data defender(defendingHero, &defendingArmy,
+    AICombatData defender(defendingHero, &defendingArmy,
                                  defenderModifier, attackingHero, 0, cell);
     attacker.simulateCombat(defender);
     if (attacker.getTotal() > 0) {
@@ -1290,14 +1291,14 @@ unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup&
 // E:\gamedcs\ai_combat.cpp:1539
 // EH-bearing, same shape as AI_quick_combat.
 VA(0x00427210, 0x113)  // anchor-global, dc 0x2c140
-void aiAutoCombat(hero* attackingHero, hero* defendingHero, armyGroup& attackingArmy, armyGroup& defendingArmy, const town* defendingTown, NewmapCell* cell)
+void aiAutoCombat(Hero* attackingHero, Hero* defendingHero, ArmyGroup& attackingArmy, ArmyGroup& defendingArmy, const Town* defendingTown, NewmapCell* cell)
 {
     float attackerLuck = random(75, 125) / 100.0f;
     float defenderModifier = random(75, 125) / 100.0f;
-    type_AI_combat_data attacker(attackingHero, &attackingArmy,
+    AICombatData attacker(attackingHero, &attackingArmy,
                                  attackerLuck, defendingHero,
                                  defendingTown, cell);
-    type_AI_combat_data defender(defendingHero, &defendingArmy,
+    AICombatData defender(defendingHero, &defendingArmy,
                                  defenderModifier, attackingHero, 0, cell);
     attacker.simulateCombat(defender);
     attacker.adjustArmy(0);
@@ -1308,13 +1309,13 @@ void aiAutoCombat(hero* attackingHero, hero* defendingHero, armyGroup& attacking
 }
 
 VA(0x00427330, 0x318)  // dc 0x2c27c
-long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
-                        const armyGroup& defendingArmy,
-                        const town* defendingTown, NewmapCell* cell)
+long aiValueOfCombat(const Hero* attackingHero, const Hero* defendingHero,
+                        const ArmyGroup& defendingArmy,
+                        const Town* defendingTown, NewmapCell* cell)
 {
-    armyGroup localArmy = attackingHero->m_army;
+    ArmyGroup localArmy = attackingHero->m_army;
     double aggression = attackingHero->getAggression();
-    armyGroup localDefender = defendingArmy;
+    ArmyGroup localDefender = defendingArmy;
     double defenderLuck = 1.25;
     unsigned char humanCombat = 0;
 
@@ -1333,9 +1334,9 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
         || humanCombat)
         defenderLuck = g_defenseEstimates[g_game->m_setup.m_difficulty];
 
-    type_AI_combat_data attacker(attackingHero, &localArmy, aggression,
+    AICombatData attacker(attackingHero, &localArmy, aggression,
                                  defendingHero, defendingTown, cell);
-    type_AI_combat_data defender(defendingHero, &localDefender,
+    AICombatData defender(defendingHero, &localDefender,
                                  defenderLuck, attackingHero, 0, cell);
     attacker.simulateCombat(defender);
     if (attacker.getTotal() == 0)
@@ -1346,7 +1347,7 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
     float experienceValue = static_cast<float>(experience);
     experience = static_cast<long>(
         experienceValue
-        * const_cast<hero*>(attackingHero)->getExperienceBonusFactor());
+        * const_cast<Hero*>(attackingHero)->getExperienceBonusFactor());
     long value = static_cast<long>(
         valueOfExperience(attackingHero, localArmy)
         * experience);
@@ -1368,7 +1369,7 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
             defenderPlayer = defendingTown->m_owner;
         value = static_cast<long>(
             static_cast<float>(defendingArmy.getAIValue())
-            * type_AI_player::getAttackBonus(defenderPlayer)
+            * AIPlayer::getAttackBonus(defenderPlayer)
             + static_cast<float>(value));
 
         if (defendingHero) {
@@ -1394,7 +1395,7 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
 // at 0x427648 and the first approximate-strength overload starts at
 // 0x427650; all surrounding bodies and native STL tails are identified.
 DC_ONLY(0x2c5e8, 0x2C)
-long aiValueOfCombat(const hero* attacking_hero, TCreatureType type, long size, NewmapCell* cell)
+long aiValueOfCombat(const Hero* attacking_hero, CreatureType type, long size, NewmapCell* cell)
 {
     // @stub
 }
@@ -1402,7 +1403,7 @@ long aiValueOfCombat(const hero* attacking_hero, TCreatureType type, long size, 
 #endif  // @carcass
 
 VA(0x00427650, 0x33)  // dc 0x2c614
-long aiApproximateStrength(const hero* currentHero)
+long aiApproximateStrength(const Hero* currentHero)
 {
     return aiApproximateStrength(currentHero, currentHero->m_army);
 }
@@ -1410,7 +1411,7 @@ long aiApproximateStrength(const hero* currentHero)
 // E:\gamedcs\ai_combat.cpp:1674
 // LOCATED (hd-crossbuild + ida): same body with the group in edx.
 VA(0x00427690, 0x2F)  // corroborates (hd-crossbuild + ida), dc 0x2c628
-long aiApproximateStrength(const hero* currentHero, const armyGroup& currentArmy)
+long aiApproximateStrength(const Hero* currentHero, const ArmyGroup& currentArmy)
 {
     long value = currentArmy.getAIValue();
     if (currentHero == 0)
@@ -1422,50 +1423,50 @@ long aiApproximateStrength(const hero* currentHero, const armyGroup& currentArmy
 
 // E:\gamedcs\hero.h:669
 DC_ONLY(0x2c668, 0x28)
-int hero::getPrimarySkill(int skill)
+int Hero::getPrimarySkill(int skill)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.h:960
 DC_ONLY(0x2c690, 0x8)
-float hero::getAggression()
+float Hero::getAggression()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_combat.h:62
 DC_ONLY(0x2c698, 0xA)
-unsigned char type_monster_data::operator<(const type_monster_data* arg)
+unsigned char AiMonsterData::operator<(const AiMonsterData* arg)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_combat.h:245
 DC_ONLY(0x2c6a4, 0x4)
-long type_AI_combat_data::getMana()
+long AICombatData::getMana()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_combat.h:250
 DC_ONLY(0x2c6a8, 0x4)
-armyGroup* type_AI_combat_data::getArmy()
+ArmyGroup* AICombatData::getArmy()
 {
     // @stub
 }
 
 #endif  // @carcass
 
-VA_COMPGEN(0x004276c0, 0x87, VECTOR_COPY_CTOR, type_monster_data)
+VA_COMPGEN(0x004276c0, 0x87, VECTOR_COPY_CTOR, AiMonsterData)
 
-VA_COMPGEN(0x00427750, 0x21, VECTOR_SIZE, type_monster_data)
+VA_COMPGEN(0x00427750, 0x21, VECTOR_SIZE, AiMonsterData)
 
 #if 0  // @carcass
 
 // E:\gamedcs\ai_combat.h:260
 DC_ONLY(0x2c6b0, 0x4)
-hero* type_AI_combat_data::getHero()
+Hero* AICombatData::getHero()
 {
     // @stub
 }
@@ -1473,14 +1474,14 @@ hero* type_AI_combat_data::getHero()
 // E:\gamedcs\ai_combat.cpp:1356. No retail slot was found; the previously
 // assigned 0x4276c0 body is the vector copy constructor above.
 DC_ONLY(0x2c6b4, 0x54)
-void type_AI_combat_data::type_AI_combat_data(const type_AI_combat_data* __that)
+void AICombatData::AICombatData(const AICombatData* __that)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_combat.cpp:1356
 DC_ONLY(0x2c708, 0x18)
-void type_AI_combat_data::~type_AI_combat_data()
+void AICombatData::~AICombatData()
 {
     // @stub
 }
@@ -1494,406 +1495,406 @@ void type_AI_combat_data::~type_AI_combat_data()
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x2c720, 0x4)
-type_monster_data* std::vector<type_monster_data,std::allocator<type_monster_data> >::begin()
+AiMonsterData* std::vector<AiMonsterData,std::allocator<AiMonsterData> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0x2c724, 0x4)
-type_monster_data* std::vector<type_monster_data,std::allocator<type_monster_data> >::end()
+AiMonsterData* std::vector<AiMonsterData,std::allocator<AiMonsterData> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x2c728, 0x20)
-unsigned std::vector<type_monster_data,std::allocator<type_monster_data> >::size()
+unsigned std::vector<AiMonsterData,std::allocator<AiMonsterData> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x2c748, 0x24)
-type_monster_data* std::vector<type_monster_data,std::allocator<type_monster_data> >::operator[](unsigned __n)
+AiMonsterData* std::vector<AiMonsterData,std::allocator<AiMonsterData> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:204
 DC_ONLY(0x2c76c, 0x24)
-const type_monster_data* std::vector<type_monster_data,std::allocator<type_monster_data> >::operator[](unsigned __n)
+const AiMonsterData* std::vector<AiMonsterData,std::allocator<AiMonsterData> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x2c790, 0x1C)
-void std::vector<type_monster_data,std::allocator<type_monster_data> >::vector<type_monster_data,std::allocator<type_monster_data> >(const std::allocator<type_monster_data>* __a)
+void std::vector<AiMonsterData,std::allocator<AiMonsterData> >::vector<AiMonsterData,std::allocator<AiMonsterData> >(const std::allocator<AiMonsterData>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:236
 DC_ONLY(0x2c7ac, 0x60)
-void std::vector<type_monster_data,std::allocator<type_monster_data> >::vector<type_monster_data,std::allocator<type_monster_data> >(const std::vector<type_monster_data,std::allocator<type_monster_data>* __x)
+void std::vector<AiMonsterData,std::allocator<AiMonsterData> >::vector<AiMonsterData,std::allocator<AiMonsterData> >(const std::vector<AiMonsterData,std::allocator<AiMonsterData>* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0x2c80c, 0x28)
-void std::vector<type_monster_data,std::allocator<type_monster_data> >::~vector<type_monster_data,std::allocator<type_monster_data> >()
+void std::vector<AiMonsterData,std::allocator<AiMonsterData> >::~vector<AiMonsterData,std::allocator<AiMonsterData> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x2c834, 0x3C)
-void std::vector<type_monster_data,std::allocator<type_monster_data> >::push_back(const type_monster_data* __x)
+void std::vector<AiMonsterData,std::allocator<AiMonsterData> >::push_back(const AiMonsterData* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x2c870, 0x4)
-void std::allocator<type_monster_data>::allocator<type_monster_data>()
+void std::allocator<AiMonsterData>::allocator<AiMonsterData>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x2c874, 0x4)
-void std::allocator<type_monster_data>::~allocator<type_monster_data>()
+void std::allocator<AiMonsterData>::~allocator<AiMonsterData>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:153
 DC_ONLY(0x2c878, 0x8)
-std::allocator<type_monster_data> std::vector<type_monster_data,std::allocator<type_monster_data> >::get_allocator(__$ReturnUdt)
+std::allocator<AiMonsterData> std::vector<AiMonsterData,std::allocator<AiMonsterData> >::get_allocator(__$ReturnUdt)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:180
 DC_ONLY(0x2c880, 0x4)
-const type_monster_data* std::vector<type_monster_data,std::allocator<type_monster_data> >::begin()
+const AiMonsterData* std::vector<AiMonsterData,std::allocator<AiMonsterData> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x2c884, 0x2C)
-void std::_Vector_base<type_monster_data,std::allocator<type_monster_data> >::_Vector_base<type_monster_data,std::allocator<type_monster_data> >(const std::allocator<type_monster_data>* __a)
+void std::_Vector_base<AiMonsterData,std::allocator<AiMonsterData> >::_Vector_base<AiMonsterData,std::allocator<AiMonsterData> >(const std::allocator<AiMonsterData>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:94
 DC_ONLY(0x2c8b0, 0x4C)
-void std::_Vector_base<type_monster_data,std::allocator<type_monster_data> >::_Vector_base<type_monster_data,std::allocator<type_monster_data> >(unsigned __n, const std::allocator<type_monster_data>* __a)
+void std::_Vector_base<AiMonsterData,std::allocator<AiMonsterData> >::_Vector_base<AiMonsterData,std::allocator<AiMonsterData> >(unsigned __n, const std::allocator<AiMonsterData>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0x2c8fc, 0x40)
-void std::_Vector_base<type_monster_data,std::allocator<type_monster_data> >::~_Vector_base<type_monster_data,std::allocator<type_monster_data> >()
+void std::_Vector_base<AiMonsterData,std::allocator<AiMonsterData> >::~_Vector_base<AiMonsterData,std::allocator<AiMonsterData> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:101
 DC_ONLY(0x2c93c, 0x18)
-void std::_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >::~_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >()
+void std::_STL_alloc_proxy<AiMonsterData *,AiMonsterData,std::allocator<AiMonsterData> >::~_STL_alloc_proxy<AiMonsterData *,AiMonsterData,std::allocator<AiMonsterData> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x2c954, 0xC)
-void std::_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >::_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >(const std::allocator<type_monster_data>* __a, type_monster_data** __p)
+void std::_STL_alloc_proxy<AiMonsterData *,AiMonsterData,std::allocator<AiMonsterData> >::_STL_alloc_proxy<AiMonsterData *,AiMonsterData,std::allocator<AiMonsterData> >(const std::allocator<AiMonsterData>* __a, AiMonsterData** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x2c960, 0x28)
-type_monster_data* std::_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >::allocate(unsigned __n)
+AiMonsterData* std::_STL_alloc_proxy<AiMonsterData *,AiMonsterData,std::allocator<AiMonsterData> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x2c988, 0x2C)
-void std::_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >::deallocate(type_monster_data* __p, unsigned __n)
+void std::_STL_alloc_proxy<AiMonsterData *,AiMonsterData,std::allocator<AiMonsterData> >::deallocate(AiMonsterData* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x2c9b4, 0x28)
-type_monster_data* std::allocator<type_monster_data>::allocate(unsigned __n, const void* __formal)
+AiMonsterData* std::allocator<AiMonsterData>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x2c9dc, 0x20)
-void std::allocator<type_monster_data>::deallocate(type_monster_data* __p, unsigned __n)
+void std::allocator<AiMonsterData>::deallocate(AiMonsterData* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x2c9fc, 0xDC)
-void std::vector<type_monster_data,std::allocator<type_monster_data> >::_M_insert_overflow(type_monster_data* __position, const type_monster_data* __x, unsigned __fill_len)
+void std::vector<AiMonsterData,std::allocator<AiMonsterData> >::_M_insert_overflow(AiMonsterData* __position, const AiMonsterData* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.h:624
 DC_ONLY(0x2cad8, 0x64)
-void std::sort(type_monster_data* __first, type_monster_data* __last)
+void std::sort(AiMonsterData* __first, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x2cb3c, 0x38)
-type_monster_data* std::uninitialized_copy(const type_monster_data* __first, const type_monster_data* __last, type_monster_data* __result)
+AiMonsterData* std::uninitialized_copy(const AiMonsterData* __first, const AiMonsterData* __last, AiMonsterData* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x2cb74, 0x30)
-void std::destroy(type_monster_data* __first, type_monster_data* __last)
+void std::destroy(AiMonsterData* __first, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x2cba4, 0x44)
-void std::construct(type_monster_data* __p, const type_monster_data* __value)
+void std::construct(AiMonsterData* __p, const AiMonsterData* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x2cbe8, 0x4)
-std::allocator<type_monster_data>* std::__stl_alloc_rebind(std::allocator<type_monster_data>* __a, const type_monster_data* __formal)
+std::allocator<AiMonsterData>* std::__stl_alloc_rebind(std::allocator<AiMonsterData>* __a, const AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x2cbec, 0x38)
-type_monster_data* std::uninitialized_copy(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result)
+AiMonsterData* std::uninitialized_copy(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x2cc24, 0x38)
-type_monster_data* std::uninitialized_fill_n(type_monster_data* __first, unsigned __n, const type_monster_data* __x)
+AiMonsterData* std::uninitialized_fill_n(AiMonsterData* __first, unsigned __n, const AiMonsterData* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x2cc5c, 0x4)
-type_monster_data* std::value_type(const type_monster_data* __formal)
+AiMonsterData* std::value_type(const AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1081
 DC_ONLY(0x2cc60, 0xF4)
-void std::__introsort_loop(type_monster_data* __first, type_monster_data* __last, type_monster_data* __formal, int __depth_limit)
+void std::__introsort_loop(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __formal, int __depth_limit)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1057
 DC_ONLY(0x2cd54, 0x5C)
-void std::__final_insertion_sort(type_monster_data* __first, type_monster_data* __last)
+void std::__final_insertion_sort(AiMonsterData* __first, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x2cdb0, 0x1C)
-type_monster_data* std::__uninitialized_copy(const type_monster_data* __first, const type_monster_data* __last, type_monster_data* __result, type_monster_data* __formal)
+AiMonsterData* std::__uninitialized_copy(const AiMonsterData* __first, const AiMonsterData* __last, AiMonsterData* __result, AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x2cdcc, 0x1C)
-void std::__destroy(type_monster_data* __first, type_monster_data* __last, type_monster_data* __formal)
+void std::__destroy(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x2cde8, 0x1C)
-type_monster_data* std::__uninitialized_copy(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result, type_monster_data* __formal)
+AiMonsterData* std::__uninitialized_copy(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __result, AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x2ce04, 0x1C)
-type_monster_data* std::__uninitialized_fill_n(type_monster_data* __first, unsigned __n, const type_monster_data* __x, type_monster_data* __formal)
+AiMonsterData* std::__uninitialized_fill_n(AiMonsterData* __first, unsigned __n, const AiMonsterData* __x, AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.h:664
 DC_ONLY(0x2ce20, 0x38)
-void std::partial_sort(type_monster_data* __first, type_monster_data* __middle, type_monster_data* __last)
+void std::partial_sort(AiMonsterData* __first, AiMonsterData* __middle, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:44
 DC_ONLY(0x2ce58, 0x68)
-const type_monster_data* std::__median(const type_monster_data* __a, const type_monster_data* __b, const type_monster_data* __c)
+const AiMonsterData* std::__median(const AiMonsterData* __a, const AiMonsterData* __b, const AiMonsterData* __c)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:923
 DC_ONLY(0x2cec0, 0x6C)
-type_monster_data* std::__unguarded_partition(type_monster_data* __first, type_monster_data* __last, type_monster_data __pivot)
+AiMonsterData* std::__unguarded_partition(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData __pivot)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1012
 DC_ONLY(0x2cf2c, 0x68)
-void std::__insertion_sort(type_monster_data* __first, type_monster_data* __last)
+void std::__insertion_sort(AiMonsterData* __first, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1035
 DC_ONLY(0x2cf94, 0x30)
-void std::__unguarded_insertion_sort(type_monster_data* __first, type_monster_data* __last)
+void std::__unguarded_insertion_sort(AiMonsterData* __first, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x2cfc4, 0x3C)
-type_monster_data* std::__uninitialized_copy_aux(const type_monster_data* __first, const type_monster_data* __last, type_monster_data* __result, __false_type __formal)
+AiMonsterData* std::__uninitialized_copy_aux(const AiMonsterData* __first, const AiMonsterData* __last, AiMonsterData* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x2d000, 0x30)
-void std::__destroy_aux(type_monster_data* __first, type_monster_data* __last, __false_type __formal)
+void std::__destroy_aux(AiMonsterData* __first, AiMonsterData* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x2d030, 0x3C)
-type_monster_data* std::__uninitialized_copy_aux(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result, __false_type __formal)
+AiMonsterData* std::__uninitialized_copy_aux(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x2d06c, 0x3C)
-type_monster_data* std::__uninitialized_fill_n_aux(type_monster_data* __first, unsigned __n, const type_monster_data* __x, __false_type __formal)
+AiMonsterData* std::__uninitialized_fill_n_aux(AiMonsterData* __first, unsigned __n, const AiMonsterData* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1432
 DC_ONLY(0x2d0a8, 0xF4)
-void std::__partial_sort(type_monster_data* __first, type_monster_data* __middle, type_monster_data* __last, type_monster_data* __formal)
+void std::__partial_sort(AiMonsterData* __first, AiMonsterData* __middle, AiMonsterData* __last, AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:107
 DC_ONLY(0x2d19c, 0x30)
-void std::iter_swap(type_monster_data* __a, type_monster_data* __b)
+void std::iter_swap(AiMonsterData* __a, AiMonsterData* __b)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:987
 DC_ONLY(0x2d1cc, 0xAC)
-void std::__linear_insert(type_monster_data* __first, type_monster_data* __last, type_monster_data __val)
+void std::__linear_insert(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData __val)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1028
 DC_ONLY(0x2d278, 0x98)
-void std::__unguarded_insertion_sort_aux(type_monster_data* __first, type_monster_data* __last, type_monster_data* __formal)
+void std::__unguarded_insertion_sort_aux(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x2d310, 0x1C)
-void std::destroy(type_monster_data* __pointer)
+void std::destroy(AiMonsterData* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:207
 DC_ONLY(0x2d32c, 0x40)
-void std::make_heap(type_monster_data* __first, type_monster_data* __last)
+void std::make_heap(AiMonsterData* __first, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0x2d36c, 0x4)
-int* std::distance_type(const type_monster_data* __formal)
+int* std::distance_type(const AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.h:64
 DC_ONLY(0x2d370, 0x88)
-void std::__pop_heap(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result, type_monster_data __value, int* __formal)
+void std::__pop_heap(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __result, AiMonsterData __value, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.h:108
 DC_ONLY(0x2d3f8, 0x3C)
-void std::sort_heap(type_monster_data* __first, type_monster_data* __last)
+void std::sort_heap(AiMonsterData* __first, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:96
 DC_ONLY(0x2d434, 0x18)
-void std::__iter_swap(type_monster_data* __a, type_monster_data* __b, type_monster_data* __formal)
+void std::__iter_swap(AiMonsterData* __a, AiMonsterData* __b, AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0x2d44c, 0x50)
-type_monster_data* std::copy_backward(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result)
+AiMonsterData* std::copy_backward(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:960
 DC_ONLY(0x2d49c, 0x84)
-void std::__unguarded_linear_insert(type_monster_data* __last, type_monster_data __val)
+void std::__unguarded_linear_insert(AiMonsterData* __last, AiMonsterData __val)
 {
     // @stub
 }
@@ -1907,56 +1908,56 @@ void std::__destroy_aux()
 
 // ..\stlport\stl_heap.c:192
 DC_ONLY(0x2d524, 0xC8)
-void std::__make_heap(type_monster_data* __first, type_monster_data* __last, type_monster_data* __formal, int* __formal)
+void std::__make_heap(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:112
 DC_ONLY(0x2d5ec, 0x110)
-void std::__adjust_heap(type_monster_data* __first, int __holeIndex, int __len, type_monster_data __value)
+void std::__adjust_heap(AiMonsterData* __first, int __holeIndex, int __len, AiMonsterData __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:142
 DC_ONLY(0x2d6fc, 0x30)
-void std::pop_heap(type_monster_data* __first, type_monster_data* __last)
+void std::pop_heap(AiMonsterData* __first, AiMonsterData* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:79
 DC_ONLY(0x2d72c, 0x82)
-void std::swap(type_monster_data* __a, type_monster_data* __b)
+void std::swap(AiMonsterData* __a, AiMonsterData* __b)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0x2d7b0, 0xC)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const type_monster_data* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const AiMonsterData* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0x2d7bc, 0x68)
-type_monster_data* std::__copy_backward(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result, std::random_access_iterator_tag __formal, int* __formal)
+AiMonsterData* std::__copy_backward(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:44
 DC_ONLY(0x2d824, 0xC0)
-void std::__push_heap(type_monster_data* __first, int __holeIndex, int __topIndex, type_monster_data __value)
+void std::__push_heap(AiMonsterData* __first, int __holeIndex, int __topIndex, AiMonsterData __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:134
 DC_ONLY(0x2d8e4, 0x98)
-void std::__pop_heap_aux(type_monster_data* __first, type_monster_data* __last, type_monster_data* __formal)
+void std::__pop_heap_aux(AiMonsterData* __first, AiMonsterData* __last, AiMonsterData* __formal)
 {
     // @stub
 }
@@ -1967,10 +1968,10 @@ void std::__pop_heap_aux(type_monster_data* __first, type_monster_data* __last, 
 // three-argument vector::insert specialization in ai_combat.obj. Byte-
 // verified against the emitted COMDAT at 0.987 mnemonic agreement over 740
 // bytes - the largest single row the COMDAT pass recovered.
-VA_COMPGEN(0x00427780, 0x2E4, VECTOR_INSERT, type_monster_data)
+VA_COMPGEN(0x00427780, 0x2E4, VECTOR_INSERT, AiMonsterData)
 
 // COMDAT pairing: std::_Sort<type_monster_data>, agreement 0.983.
-VA_COMPGEN(0x00427a90, 0x19B, STD_SORT, type_monster_data)
+VA_COMPGEN(0x00427a90, 0x19B, STD_SORT, AiMonsterData)
 
 // COMDAT pairing: std::_Unguarded_partition<type_monster_data>, 0.913.
-VA_COMPGEN(0x00427c30, 0x64, STD_UNGUARDED_PARTITION, type_monster_data)
+VA_COMPGEN(0x00427c30, 0x64, STD_UNGUARDED_PARTITION, AiMonsterData)

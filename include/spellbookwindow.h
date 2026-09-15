@@ -6,12 +6,12 @@
 #include "spellschool.h"
 
 #include "herospec.h"
-class armyGroup;
-class bitmapBackedTextWidget;
-class bitmapBorder;
-class hero;
-class iconWidget;
-class textWidget;
+class ArmyGroup;
+class BitmapBackedTextWidget;
+class BitmapBorder;
+class Hero;
+class IconWidget;
+class TextWidget;
 
 typedef int SpellID;
 
@@ -20,23 +20,27 @@ typedef int SpellID;
 // its base is 0x60 bytes, and the loop at 0x59cf54 walks twelve SpellMap
 // entries. The widget-range pointers then occupy +0xac through +0xb4, and
 // the five individual widget pointers occupy +0xb8 through +0xc8.
-class TSpellbookWindow : public CAdvPopup {
+// Before normalization (type): TSpellbookWindow.
+class SpellbookWindow : public CAdvPopup {
 public:
-    enum TSpellContext {
+// Before normalization (type): TSpellbookWindow::TSpellContext.
+    enum SpellContext {
         eContextInvalid = -1,
         eContextCombat = 0,
         eContextAdventure = 1,
         eContextNeither = 2
     };
 
-    enum TSpellContextMask {
+// Before normalization (type): TSpellbookWindow::TSpellContextMask.
+    enum SpellContextMask {
         eCombatContextMask = 1,
         eAdventureContextMask = 2
     };
 
     // Dreamcast CodeView's class-local widget domain. Complete doubles the
     // spell rows per page but retains this complete 200..249 ID layout.
-    enum EOtherWidgetIDs {
+// Before normalization (type): SpellbookWindow::EOtherWidgetIDs.
+    enum OtherWidgetIDs {
         BACKGROUND_ID = 200,
         SPELL_LEVEL_0_ID = 201,
         SPELL_LEVEL_1_ID = 202,
@@ -91,27 +95,28 @@ public:
 
     enum { SPELLS_PER_PAGE = 12 };
 
-    class TSpellbookEntry {
+// Before normalization (type): TSpellbookWindow::TSpellbookEntry.
+    class SpellbookEntry {
     public:
-        TSpellbookEntry(SpellID id, TSpellSchool school,
-                        TSkillMastery mastery)
+        SpellbookEntry(SpellID id, SpellSchool school,
+                        SkillMastery mastery)
             : m_id(id), m_school(school), m_mastery(mastery)
         {
         }
-        bool operator<(const TSpellbookEntry& y) const;
+        bool operator<(const SpellbookEntry& y) const;
         SpellID m_id;
-        TSpellSchool m_school;
-        TSkillMastery m_mastery;
+        SpellSchool m_school;
+        SkillMastery m_mastery;
     };
 
-    TSpellbookWindow(const hero& h, const armyGroup* g,
-                     TSpellContext context, int magicTerrain);
-    virtual ~TSpellbookWindow();
+    SpellbookWindow(const Hero& h, const ArmyGroup* g,
+                     SpellContext context, int magicTerrain);
+    virtual ~SpellbookWindow();
     virtual int open(int newPriority, unsigned char update);
     virtual void close(unsigned char update);
 
     // E:\gamedcs\SpellbookWindow.h:222
-    void setSchool(TSpellSchool school)
+    void setSchool(SpellSchool school)
     {
         m_school = school;
         s_lastSchool = school;
@@ -122,7 +127,7 @@ public:
         return m_school;
     }
     // E:\gamedcs\SpellbookWindow.h:236
-    void setContext(TSpellContext context)
+    void setContext(SpellContext context)
     {
         if (context == eContextAdventure)
             m_contextMask = eAdventureContextMask;
@@ -148,41 +153,41 @@ public:
         gotoPage(m_page + 1);
     }
     static void reset();
-    virtual int windowHandler(message& msg);
+    virtual int windowHandler(Message& msg);
 
 private:
-    const TSpellContext m_allowedContext;       // +0x60
-    const hero* m_hero;                         // +0x64
-    const armyGroup* m_enemyGroup;              // +0x68
+    const SpellContext m_allowedContext;       // +0x60
+    const Hero* m_hero;                         // +0x64
+    const ArmyGroup* m_enemyGroup;              // +0x68
     int m_onMagicPlains;                        // +0x6c; retail widens DC's byte
-    TSpellSchool m_school;                      // +0x70
+    SpellSchool m_school;                      // +0x70
     unsigned m_contextMask;                     // +0x74
     int m_page;                                 // +0x78
     SpellID m_spellMap[SPELLS_PER_PAGE];        // +0x7c
-    iconWidget** m_spellLevelWidgets;           // +0xac
-    iconWidget** m_spellIconWidgets;            // +0xb0
-    textWidget** m_spellNameWidgets;            // +0xb4
-    iconWidget* m_headingWidget;                // +0xb8
-    bitmapBorder* m_nextPageWidget;              // +0xbc
-    bitmapBorder* m_previousPageWidget;          // +0xc0
-    iconWidget* m_schoolTabsWidget;              // +0xc4
-    bitmapBackedTextWidget* m_rolloverWidget;    // +0xc8
-    static TSpellContext s_lastContext;
-    static TSpellSchool s_lastSchool;
+    IconWidget** m_spellLevelWidgets;           // +0xac
+    IconWidget** m_spellIconWidgets;            // +0xb0
+    TextWidget** m_spellNameWidgets;            // +0xb4
+    IconWidget* m_headingWidget;                // +0xb8
+    BitmapBorder* m_nextPageWidget;              // +0xbc
+    BitmapBorder* m_previousPageWidget;          // +0xc0
+    IconWidget* m_schoolTabsWidget;              // +0xc4
+    BitmapBackedTextWidget* m_rolloverWidget;    // +0xc8
+    static SpellContext s_lastContext;
+    static SpellSchool s_lastSchool;
 
     static int s_lastPage;
 
     std::string getSpellDescription(SpellID spell,
-                                      const hero* currentHero,
+                                      const Hero* currentHero,
                                       unsigned char rollover);
 
     int convertID2HelpID(int id) const;
     static int getPositionFromSchool(unsigned schoolMask);
-    static TSpellSchool getSchoolFromPosition(int position);
+    static SpellSchool getSchoolFromPosition(int position);
     void displayNewSchool(int position);
 };
-SIZE(TSpellbookWindow, 0xcc);
-SIZE(TSpellbookWindow::TSpellbookEntry, 0x0c);
+SIZE(SpellbookWindow, 0xcc);
+SIZE(SpellbookWindow::SpellbookEntry, 0x0c);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\spellbookwindow.cpp:115, dc 0x14bc80) const char* get_level_string(SpellID spell);

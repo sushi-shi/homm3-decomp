@@ -18,7 +18,8 @@
 // remaining terrain specials (cursed ground, holy ground, evil fog,
 // clover field), none of which touches a spell school; they stay
 // unnamed rather than invented.
-enum TMagicTerrain {
+// Before normalization (type): TMagicTerrain.
+enum MagicTerrain {
     kMagicTerrainNone = -1,
     kMagicTerrainMagicPlains = 1,
     kMagicTerrainLucidPools = 6,

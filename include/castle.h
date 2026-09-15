@@ -4,7 +4,7 @@
 
 #include <va.h>
 
-class town;
+class Town;
 
 // Building-name tables, byte-proven by the retail lookup 0x4610e0:
 // four .bss string arrays keyed by (townType, buildingId) with the
@@ -23,14 +23,15 @@ extern const char* g_hallInfo[10];
 // Building-id domain landmarks the name lookup switches on (the
 // dwelling row, the town-row band start, the upgrade band start).
 // Names provisional.
-enum EBuildingId {
+// Before normalization (type): EBuildingId.
+enum BuildingIdRange {
     BUILDING_ID_DWELLING = 15,
     BUILDING_ID_TOWN_FIRST = 17,
     BUILDING_ID_UPGRADE_FIRST = 30
 };
 
 const char* getBuildingName(int townType, int buildingId);
-int canBuy(const town* currTown, int buildingId);
+int canBuy(const Town* currTown, int buildingId);
 
 // Retail extends the Dreamcast hall-screen table with Conflux while
 // preserving the original 18-byte row width. SetupCastle copies one row
@@ -42,7 +43,8 @@ extern const unsigned char g_numOfTownSpecStrScreen[9];
 
 // The four parallel widget bands driven by SetupCastle. Values are the
 // Complete message operands; the names are reconstructed from their roles.
-enum ECastleHallWidgetId {
+// Before normalization (type): ECastleHallWidgetId.
+enum CastleHallWidgetId {
     CASTLE_BUILDING_NONE = -1,
     CASTLE_BUILD_FRAME_FIRST_ID = 0x190,
     CASTLE_BUILD_NAME_FIRST_ID = 0x258,

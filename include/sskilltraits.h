@@ -7,13 +7,14 @@
 // The 28 secondary-skill rows loaded by herodefs.obj. Rollover text
 // independently proves the 16-byte stride and name at +0; retail's loader
 // fills the three mastery strings at +4/+8/+c.
-struct TSSkillTraits {
+// Before normalization (type): TSSkillTraits.
+struct SSkillTraits {
     const char* m_name;
     const char* m_levelNames[3];
 };
-SIZE(TSSkillTraits, 0x10);
+SIZE(SSkillTraits, 0x10);
 
-DATA(0x00698cf0) extern TSSkillTraits g_sSkillTraitsStorage[28];
-DATA(0x0067dcf0) extern const TSSkillTraits (&g_sSkillTraits)[28];
+DATA(0x00698cf0) extern SSkillTraits g_sSkillTraitsStorage[28];
+DATA(0x0067dcf0) extern const SSkillTraits (&g_sSkillTraits)[28];
 
 #endif  /* HOMM3_SSKILLTRAITS_H */

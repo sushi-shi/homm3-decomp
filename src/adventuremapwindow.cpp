@@ -27,7 +27,7 @@
 #include "widget.h"
 #include "winmgr.h"
 
-DATA(0x006a56e0) extern THelpText g_adventureWindowHelp[];
+DATA(0x006a56e0) extern HelpText g_adventureWindowHelp[];
 // 0x6a56e4 is g_adventureWindowHelp[0].m_rclick, not another array.
 // Dreamcast's gQuickViewText belongs to the distinct object-name table.
 
@@ -35,9 +35,9 @@ DATA(0x006a56e0) extern THelpText g_adventureWindowHelp[];
 // the second pointer; retaining both definitions preserves the original
 // adjacent data pair.
 DATA(0x0065f220)
-const char* TCheatCode::s_a = "abcdefghijklmnopqrstuvwxyz";
+const char* CheatCode::s_a = "abcdefghijklmnopqrstuvwxyz";
 DATA(0x0065f224)
-const char* TCheatCode::s_b = "nopqrstuvwxyzabcdefghijklm";
+const char* CheatCode::s_b = "nopqrstuvwxyzabcdefghijklm";
 
 // Retail's gosolo handler at 0x4022e0 calls Dinkumware's string assignment
 // at 0x404150. The shared <string> body expands here and remains emitted
@@ -53,7 +53,7 @@ const char* TCheatCode::s_b = "nopqrstuvwxyzabcdefghijklm";
 // additionally controls its mouse effect. This is a changed class boundary,
 // not evidence that an otherwise identical TADW wrapper was inlined away.
 DC_ONLY(0x370, 0x3E)
-void TAdventureMapWindow::sleepAllWidgets(unsigned char put_to_sleep)
+void AdventureMapWindow::sleepAllWidgets(unsigned char put_to_sleep)
 {
     // @stub
 }
@@ -93,7 +93,7 @@ void TAdventureMapWindow::sleepAllWidgets(unsigned char put_to_sleep)
 
 // E:\gamedcs\adventuremapwindow.cpp:505
 // RETAIL_LOCATED(0x00402b90, 0x24)  // anchor-global, dc 0xbf0
-void TAdventureMapWindow::animateBottomView(unsigned char in_background)
+void AdventureMapWindow::animateBottomView(unsigned char in_background)
 {
     // @stub
 }
@@ -130,7 +130,7 @@ void TAdventureMapWindow::animateBottomView(unsigned char in_background)
 // declarations in advmgr.h, and the five ids above need enumerators in
 // the same header's EWidgetIDs.
 // RETAIL_LOCATED(0x00402e70, 0x195)  // anchor-global, dc 0xd88
-unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
+unsigned char AdventureMapWindow::processRightSelect(const Message* msg)
 {
     // @stub
 }
@@ -154,28 +154,28 @@ unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
 // and everything else goes through convertID2HelpID into the SECOND
 // dword of the same 0x6a56e4 record row (0x6a56e0).
 // RETAIL_LOCATED(0x00403010, 0x20A)  // anchor-global, dc 0xed8
-unsigned char TAdventureMapWindow::processHover(int hx, int hy)
+unsigned char AdventureMapWindow::processHover(int hx, int hy)
 {
     // @stub
 }
 
 // E:\gamedcs\adventuremapwindow.cpp:1119
 // RETAIL_LOCATED(0x004039b0, 0x1EA)  // anchor-global, dc 0x1134
-void TAdventureMapWindow::updateQuestLogButton(unsigned char update)
+void AdventureMapWindow::updateQuestLogButton(unsigned char update)
 {
     // @stub
 }
 
 // E:\gamedcs\adventuremapwindow.cpp:1171
 // RETAIL_LOCATED(0x00403bf0, 0x4C)  // anchor-global, dc 0x113c
-void TAdventureMapWindow::updateSpellButton(const hero* this_hero)
+void AdventureMapWindow::updateSpellButton(const Hero* this_hero)
 {
     // @stub
 }
 
 // E:\gamedcs\adventuremapwindow.cpp:1216
 // RETAIL_LOCATED(0x00403cc0, 0x215)  // anchor-global, dc 0x118c
-void TAdventureMapWindow::setSleepImage(int image)
+void AdventureMapWindow::setSleepImage(int image)
 {
     // @stub
 }
@@ -189,7 +189,7 @@ class CAdventurMapChatEdit : public CGameChatEdit {
 public:
     CAdventurMapChatEdit(
         int x, int y, int w, int h, int textSize, char* text,
-        char* fontName, font::TColor color, font::EJustify justification,
+        char* fontName, Font::Color color, Font::Justify justification,
         char* backgroundIcon, int backgroundFrame, int id, int style,
         int readType, int insetX, int insetY);
     virtual void sendChat(const char* text, int toWho);
@@ -197,7 +197,7 @@ public:
 
 inline CAdventurMapChatEdit::CAdventurMapChatEdit(
     int x, int y, int w, int h, int textSize, char* text, char* fontName,
-    font::TColor color, font::EJustify justification, char* backgroundIcon,
+    Font::Color color, Font::Justify justification, char* backgroundIcon,
     int backgroundFrame, int id, int style, int readType, int insetX,
     int insetY)
     : CGameChatEdit(x, y, w, h, textSize, text, fontName, color,
@@ -207,9 +207,9 @@ inline CAdventurMapChatEdit::CAdventurMapChatEdit(
 }
 
 VA(0x00401400, 0xC5)
-int TAdventureMapWindow::open(int zOrder, unsigned char update)
+int AdventureMapWindow::open(int zOrder, unsigned char update)
 {
-    int result = heroWindow::open(zOrder, update);
+    int result = HeroWindow::open(zOrder, update);
     if (result == 0) {
         RECT area;
         area.left = 0;
@@ -217,8 +217,8 @@ int TAdventureMapWindow::open(int zOrder, unsigned char update)
         area.right = 800;
         area.bottom = 600;
         try {
-            TImmMouseEffect* effect =
-                new TImmMouseEffect(&area, 10000, 16, 10000, 1, 0);
+            ImmMouseEffect* effect =
+                new ImmMouseEffect(&area, 10000, 16, 10000, 1, 0);
             m_immersion = effect;
             effect->start();
         }
@@ -229,16 +229,16 @@ int TAdventureMapWindow::open(int zOrder, unsigned char update)
 }
 
 VA(0x004014d0, 0x3C)
-void TAdventureMapWindow::close(unsigned char update)
+void AdventureMapWindow::close(unsigned char update)
 {
-    delete static_cast<TImmMouseEffect*>(m_immersion);
+    delete static_cast<ImmMouseEffect*>(m_immersion);
     m_immersion = 0;
-    heroWindow::close(update);
+    HeroWindow::close(update);
 }
 
 VA(0x00401510, 0xCB5)  // dc 0x89c
-TAdventureMapWindow::TAdventureMapWindow()
-    : heroWindow(0, 0, 800, 600, 1),
+AdventureMapWindow::AdventureMapWindow()
+    : HeroWindow(0, 0, 800, 600, 1),
       m_topHero(0),
       m_topTown(0),
       m_immersion(0)
@@ -248,88 +248,88 @@ TAdventureMapWindow::TAdventureMapWindow()
 
     m_widgets.reserve(39);
 
-    m_widgets.push_back(new border(8, 8, 592, 544, MAP_ID, 1));
+    m_widgets.push_back(new Border(8, 8, 592, 544, MAP_ID, 1));
     m_mapWidget = m_widgets.back();
-    m_widgets.push_back(new border(630, 26, 144, 144, RADAR_ID, 1));
+    m_widgets.push_back(new Border(630, 26, 144, 144, RADAR_ID, 1));
     m_radarWidget = m_widgets.back();
-    m_widgets.push_back(new border(605, 389, 188, 182,
+    m_widgets.push_back(new Border(605, 389, 188, 182,
                                  SELECTION_WINDOW_ID, 1));
 
-    button* newButton = new button(
+    Button* newButton = new Button(
         679, 196, 32, 32, KINGDOM_OVERVIEW_ID,
         DATA_COMPGEN(0x0065F3C0, adventureIam002, "iam002.def"),
         0, 1, 0, 0, 2);
     newButton->setHotkey(0x25);
     m_widgets.push_back(newButton);
 
-    newButton = new button(
+    newButton = new Button(
         711, 196, 32, 32, ELEVATION_TOGGLE_ID,
         DATA_COMPGEN(0x0065F268, adventureIam010, "iam010.def"),
         0, 1, 0, 0, 2);
     newButton->setHotkey(0x16);
     m_widgets.push_back(newButton);
 
-    newButton = new button(
+    newButton = new Button(
         679, 228, 32, 32, QUEST_LOG_ID,
         DATA_COMPGEN(0x0065F3B4, adventureIam004, "iam004.def"),
         0, 1, 0, 0, 2);
     newButton->setHotkey(0x10);
     m_widgets.push_back(newButton);
 
-    newButton = new button(
+    newButton = new Button(
         711, 228, 32, 32, SLEEP_ID,
         DATA_COMPGEN(0x0065F250, adventureIam005, "iam005.def"),
         0, 1, 0, 0, 2);
     newButton->setHotkey(0x2c);
     m_widgets.push_back(newButton);
 
-    newButton = new button(
+    newButton = new Button(
         679, 260, 32, 32, MOVE_ID,
         DATA_COMPGEN(0x0065F3A8, adventureIam006, "iam006.def"),
         0, 1, 0, 0, 2);
     newButton->setHotkey(0x32);
     m_widgets.push_back(newButton);
 
-    newButton = new button(
+    newButton = new Button(
         711, 260, 32, 32, CAST_SPELL_ID,
         DATA_COMPGEN(0x0065F39C, adventureIam007, "iam007.def"),
         0, 1, 0, 0, 2);
     newButton->setHotkey(0x2e);
     m_widgets.push_back(newButton);
 
-    newButton = new button(
+    newButton = new Button(
         679, 292, 32, 32, ADVENTURE_OPTIONS_ID,
         DATA_COMPGEN(0x0065F390, adventureIam008, "iam008.def"),
         0, 1, 0, 0, 2);
     newButton->setHotkey(0x1e);
     m_widgets.push_back(newButton);
 
-    newButton = new button(
+    newButton = new Button(
         711, 292, 32, 32, SYSTEM_OPTIONS_ID,
         DATA_COMPGEN(0x0065F384, adventureIam009, "iam009.def"),
         0, 1, 0, 0, 2);
     newButton->setHotkey(0x18);
     m_widgets.push_back(newButton);
 
-    newButton = new button(
+    newButton = new Button(
         679, 324, 64, 32, NEXT_HERO_ID,
         DATA_COMPGEN(0x0065F378, adventureIam000, "iam000.def"),
         0, 1, 0, 0, 2);
     newButton->setHotkey(0x23);
     m_widgets.push_back(newButton);
 
-    newButton = new button(
+    newButton = new Button(
         679, 356, 64, 32, END_TURN_ID,
         DATA_COMPGEN(0x0065F36C, adventureIam001, "iam001.def"),
         0, 1, 0, 0, 2);
     newButton->setHotkey(0x12);
     m_widgets.push_back(newButton);
 
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         609, 196, 64, 16, HERO_UP_ID,
         DATA_COMPGEN(0x0065F360, adventureIam012, "iam012.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         609, 372, 64, 16, HERO_DOWN_ID,
         DATA_COMPGEN(0x0065F354, adventureIam013, "iam013.def"),
         0, 1, 0, 0, 2));
@@ -339,14 +339,14 @@ TAdventureMapWindow::TAdventureMapWindow()
     int i;
     int y = 212;
     for (i = 0; i < NUM_HERO_BUTTONS; ++i) {
-        m_heroPortraits[i] = new bitmapBorder(
+        m_heroPortraits[i] = new BitmapBorder(
             617, y, 48, 32, HERO_0_ID + i, 0, 0x800);
         m_widgets.push_back(m_heroPortraits[i]);
         y += 32;
     }
     y = 212;
     for (i = 0; i < NUM_HERO_BUTTONS; ++i) {
-        m_heroLocators[i] = new bitmapBorder(
+        m_heroLocators[i] = new BitmapBorder(
             617, y, 48, 32, HERO_LOCATOR_0_ID + i, 0, 0x800);
         m_widgets.push_back(m_heroLocators[i]);
         y += 32;
@@ -356,10 +356,10 @@ TAdventureMapWindow::TAdventureMapWindow()
         int widgetId = HERO_MOVEMENT_0_ID;
         int remaining = NUM_HERO_BUTTONS;
         do {
-            m_widgets.push_back(new iconWidget(
+            m_widgets.push_back(new IconWidget(
                 610, y, 8, 32, widgetId,
                 DATA_COMPGEN(0x0065F348, adventureImobil, "imobil.def"),
-                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+                0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
             ++widgetId;
             y += 32;
         } while (--remaining);
@@ -369,20 +369,20 @@ TAdventureMapWindow::TAdventureMapWindow()
         int widgetId = HERO_MANA_0_ID;
         int remaining = NUM_HERO_BUTTONS;
         do {
-            m_widgets.push_back(new iconWidget(
+            m_widgets.push_back(new IconWidget(
                 666, y, 8, 32, widgetId,
                 DATA_COMPGEN(0x0065F33C, adventureImana, "imana.def"),
-                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+                0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
             ++widgetId;
             y += 32;
         } while (--remaining);
     }
 
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         747, 196, 48, 16, TOWN_UP_ID,
         DATA_COMPGEN(0x0065F330, adventureIam014, "iam014.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         747, 372, 48, 16, TOWN_DOWN_ID,
         DATA_COMPGEN(0x0065F324, adventureIam015, "iam015.def"),
         0, 1, 0, 0, 2));
@@ -392,30 +392,30 @@ TAdventureMapWindow::TAdventureMapWindow()
         int widgetId = TOWN_0_ID;
         int remaining = NUM_TOWN_BUTTONS;
         do {
-            m_widgets.push_back(new iconWidget(
+            m_widgets.push_back(new IconWidget(
                 747, y, 48, 32, widgetId,
                 DATA_COMPGEN(0x0065F318, adventureItpa, "itpa.def"),
-                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+                0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
             ++widgetId;
             y += 32;
         } while (--remaining);
     }
 
-    m_rolloverTextWidget = new bitmapBackedTextWidget(
+    m_rolloverTextWidget = new BitmapBackedTextWidget(
         8, 556, 592, 18, 0,
         DATA_COMPGEN(0x0065F2F8, adventureSmallFont, "smalfont.fnt"),
         DATA_COMPGEN(0x0065F308, adventureRolloverBack, "AdRollvr.pcx"),
-        font::PRIMARY, ROLLOVER_TEXT_ID, font::CENTER_JUSTIFIED, 8);
+        Font::PRIMARY, ROLLOVER_TEXT_ID, Font::CENTER_JUSTIFIED, 8);
     m_widgets.push_back(m_rolloverTextWidget);
 
-    m_chatTextWidget = new textWidget(
+    m_chatTextWidget = new TextWidget(
         54, 100, 520, 440, 0,
         DATA_COMPGEN(0x0065F2EC, adventureMediumFont, "medfont.fnt"),
-        font::CHAT, CHAT_TEXT_ID, font::BOTTOM_JUSTIFIED, 0, 8);
+        Font::CHAT, CHAT_TEXT_ID, Font::BOTTOM_JUSTIFIED, 0, 8);
     {
-        widget* chatText = m_chatTextWidget;
-        std::vector<widget*>& widgets = m_widgets;
-        std::vector<widget*>::iterator chatTextEnd = widgets.end();
+        Widget* chatText = m_chatTextWidget;
+        std::vector<Widget*>& widgets = m_widgets;
+        std::vector<Widget*>::iterator chatTextEnd = widgets.end();
 #pragma inline_depth(0)
         widgets.insert(chatTextEnd, 1, chatText);
 #pragma inline_depth()
@@ -425,12 +425,12 @@ TAdventureMapWindow::TAdventureMapWindow()
         8, 556, 592, 18, 127,
         DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, ""),
         DATA_COMPGEN(0x0065F2F8, adventureChatSmallFont, "smalfont.fnt"),
-        font::WHITE, font::LEFT_JUSTIFIED,
+        Font::WHITE, Font::LEFT_JUSTIFIED,
         DATA_COMPGEN(0x0065F308, adventureChatBackground, "AdRollvr.pcx"),
         0, CHAT_EDIT_ID, 0x100, 0, 7, 5);
     m_widgets.push_back(m_chatEdit);
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
+    for (std::vector<Widget*>::iterator it = m_widgets.begin();
          it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
@@ -439,7 +439,7 @@ TAdventureMapWindow::TAdventureMapWindow()
     }
 
     m_bottomView = 0;
-    m_resourceDisplay = new TResourceDisplay(this, 0);
+    m_resourceDisplay = new ResourceDisplay(this, 0);
 }
 
 // Defined at its retail address below; SendChat is its only caller and
@@ -508,15 +508,15 @@ void CAdventurMapChatEdit::sendChat(const char* chat, int toWho)
 VA(0x00402450, 0x5D3)  // anchor-global, dc 0x3b0
 void checkAdvCheatCode(std::string& chatString)
 {
-    hero* currentHero = g_game->getCurrHero();
-    TCheatCode code(chatString.c_str());
+    Hero* currentHero = g_game->getCurrHero();
+    CheatCode code(chatString.c_str());
     bool cheatUsed = false;
 
     if (code.compare(DATA_COMPGEN(
             0x0063a480, advCheatTrinity, "ajpgevavgl"))
         && currentHero) {
         cheatUsed = true;
-        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
+        for (int slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
             if (currentHero->m_army.m_armies[slot] == -1)
                 currentHero->m_army.add(CREATURE_ARCHANGEL, 5, slot);
         }
@@ -525,7 +525,7 @@ void checkAdvCheatCode(std::string& chatString)
                    0x0063a48c, advCheatAgents, "ajpntragf"))
                && currentHero) {
         cheatUsed = true;
-        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
+        for (int slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
             if (currentHero->m_army.m_armies[slot] == -1)
                 currentHero->m_army.add(CREATURE_BLACK_KNIGHT, 10, slot);
         }
@@ -535,22 +535,22 @@ void checkAdvCheatCode(std::string& chatString)
                && currentHero) {
         cheatUsed = true;
         if (!currentHero->hasArtifact(ARTIFACT_AMMO_CART)) {
-            type_artifact artifact(ARTIFACT_AMMO_CART);
+            ArtifactRecord artifact(ARTIFACT_AMMO_CART);
             currentHero->giveArtifact(&artifact, 0, 0);
         }
         if (!currentHero->hasArtifact(ARTIFACT_BALLISTA)) {
-            type_artifact artifact(ARTIFACT_BALLISTA);
+            ArtifactRecord artifact(ARTIFACT_BALLISTA);
             currentHero->giveArtifact(&artifact, 0, 0);
         }
         if (!currentHero->hasArtifact(ARTIFACT_FIRST_AID_TENT)) {
-            type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
+            ArtifactRecord artifact(ARTIFACT_FIRST_AID_TENT);
             currentHero->giveArtifact(&artifact, 0, 0);
         }
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a4a8, advCheatNeo, "ajparb"))
                && currentHero) {
         cheatUsed = true;
-        int increment = hero::getExperienceIncrement(currentHero->m_level);
+        int increment = Hero::getExperienceIncrement(currentHero->m_level);
         currentHero->giveExperience(increment, 1, 1);
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a4b0, advCheatFollowTheWhiteRabbit,
@@ -621,10 +621,10 @@ void checkAdvCheatCode(std::string& chatString)
         cheatUsed = true;
         currentHero->m_mana = 999;
         if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-            type_artifact spellbook(ARTIFACT_SPELLBOOK);
+            ArtifactRecord spellbook(ARTIFACT_SPELLBOOK);
             currentHero->giveArtifact(&spellbook, 1, 1);
         }
-        for (int spell = 0; spell < hero::NUM_SPELLS; spell++)
+        for (int spell = 0; spell < Hero::NUM_SPELLS; spell++)
             currentHero->addSpell(spell);
         g_advManager->updBottomView(1, 1, 1);
     } else if (code.compare(DATA_COMPGEN(
@@ -651,10 +651,10 @@ void checkAdvCheatCode(std::string& chatString)
 }
 
 // slot 0 of ??_7TAdventureMapWindow@@6B@ (0x63a5e4) points at it.
-VA_COMPGEN(0x00402ae0, 0x21, SCALAR_DELETING_DTOR, TAdventureMapWindow)
+VA_COMPGEN(0x00402ae0, 0x21, SCALAR_DELETING_DTOR, AdventureMapWindow)
 
 VA(0x00402b10, 0x77)  // dc 0xb9c
-TAdventureMapWindow::~TAdventureMapWindow()
+AdventureMapWindow::~AdventureMapWindow()
 {
     if (m_resourceDisplay)
         delete m_resourceDisplay;
@@ -663,14 +663,14 @@ TAdventureMapWindow::~TAdventureMapWindow()
 }
 
 VA(0x00402b90, 0x24)
-void TAdventureMapWindow::animateBottomView(unsigned char inBackground)
+void AdventureMapWindow::animateBottomView(unsigned char inBackground)
 {
     if ((!inBackground || m_animateInBackground) && m_bottomView)
         m_bottomView->animate();
 }
 
 VA(0x00402bc0, 0x4E)  // dc 0xc1c
-void TAdventureMapWindow::drawBottomView(unsigned char update)
+void AdventureMapWindow::drawBottomView(unsigned char update)
 {
     if (m_bottomView) {
         m_bottomView->draw(0, 0xffff0001, 0xffff);
@@ -681,14 +681,14 @@ void TAdventureMapWindow::drawBottomView(unsigned char update)
 }
 
 VA(0x00402c10, 0x3C)  // dc 0xc5c
-void TAdventureMapWindow::setBottomView(type_bottom_view_window* newView)
+void AdventureMapWindow::setBottomView(BottomViewWindow* newView)
 {
     clearBottomView();
     m_bottomView = newView;
 }
 
 VA(0x00402c50, 0x218)  // dc 0xc7c
-int TAdventureMapWindow::convertID2HelpID(int id) const
+int AdventureMapWindow::convertID2HelpID(int id) const
 {
     if (id < 0)
         return -1;
@@ -777,9 +777,9 @@ static int g_lastAdventureHover = -1;
 // The two input handlers are identity/arity claims while their decoded
 // bodies remain on the dependency frontier documented in the carcass above.
 VA(0x00402e70, 0x195)  // dc 0xd88
-unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
+unsigned char AdventureMapWindow::processRightSelect(const Message* msg)
 {
-    playerData* player = g_game->getLocalPlayer();
+    PlayerData* player = g_game->getLocalPlayer();
 
     switch (msg->m_codeY) {
     case HERO_0_ID:
@@ -796,7 +796,7 @@ unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
         if (msg->m_codeY >= HERO_LOCATOR_0_ID)
             slot = msg->m_codeY - HERO_LOCATOR_0_ID;
 
-        widget* portrait = getWidget(msg->m_codeY);
+        Widget* portrait = getWidget(msg->m_codeY);
         if (!portrait)
             return 0;
 
@@ -813,7 +813,7 @@ unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
     case TOWN_2_ID:
     case TOWN_3_ID:
     case TOWN_4_ID: {
-        widget* portrait = getWidget(msg->m_codeY);
+        Widget* portrait = getWidget(msg->m_codeY);
         if (!portrait)
             return 0;
 
@@ -840,9 +840,9 @@ unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
 }
 
 VA(0x00403010, 0x20A)  // dc 0xed8
-unsigned char TAdventureMapWindow::processHover(int hx, int hy)
+unsigned char AdventureMapWindow::processHover(int hx, int hy)
 {
-    playerData* player = g_game->getLocalPlayer();
+    PlayerData* player = g_game->getLocalPlayer();
     if (m_chatEdit->m_hasFocus)
         return 1;
 
@@ -853,7 +853,7 @@ unsigned char TAdventureMapWindow::processHover(int hx, int hy)
         g_lastAdventureHover = hoverID;
 
         if (hoverID == -1) {
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
         } else if (hoverID <= HERO_LOCATOR_4_ID) {
             if (hoverID >= HERO_LOCATOR_0_ID)
                 goto hero_rollover;
@@ -901,7 +901,7 @@ hero_rollover: {
                 if (heroID == -1)
                     break;
 
-                hero* mapHero = g_game->getHero(heroID);
+                Hero* mapHero = g_game->getHero(heroID);
                 sprintf(g_text,
                     g_generalText->getText(
                         GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
@@ -916,7 +916,7 @@ town_rollover: {
                 if (townID == -1)
                     break;
 
-                const town* mapTown = g_game->getTown(townID);
+                const Town* mapTown = g_game->getTown(townID);
                 const char* townName = DATA_COMPGEN(
                     0x0063a608, adventureTownRolloverEmptyText, "");
                 const char* actualTownName = mapTown->m_name.begin();
@@ -940,9 +940,9 @@ generic_help:
                 rolloverText = g_adventureWindowHelp[helpID].m_text;
         }
 
-        message update;
+        Message update;
         update.m_extraText = rolloverText;
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_TEXT,
             ROLLOVER_TEXT_ID, update.m_extra);
         drawWindow(0, ROLLOVER_TEXT_ID, ROLLOVER_TEXT_ID);
         g_windowManager->updateScreen(m_x + m_rolloverTextWidget->m_x,
@@ -953,9 +953,9 @@ generic_help:
 }
 
 VA(0x00403220, 0x59)  // dc 0x10dc
-void TAdventureMapWindow::doHeroKnob(unsigned char up)
+void AdventureMapWindow::doHeroKnob(unsigned char up)
 {
-    playerData* player = g_game->getLocalPlayer();
+    PlayerData* player = g_game->getLocalPlayer();
     if (up) {
         if (m_topHero > 0)
             m_topHero--;
@@ -967,9 +967,9 @@ void TAdventureMapWindow::doHeroKnob(unsigned char up)
 }
 
 VA(0x00403280, 0x59)  // dc 0x10e0
-void TAdventureMapWindow::doTownKnob(unsigned char up)
+void AdventureMapWindow::doTownKnob(unsigned char up)
 {
-    playerData* player = g_game->getLocalPlayer();
+    PlayerData* player = g_game->getLocalPlayer();
     if (up) {
         if (m_topTown > 0)
             m_topTown--;
@@ -981,10 +981,10 @@ void TAdventureMapWindow::doTownKnob(unsigned char up)
 }
 
 VA(0x004032e0, 0x134)  // dc 0x10e4
-void TAdventureMapWindow::updateHeroLocators(int top, unsigned char drawWin,
+void AdventureMapWindow::updateHeroLocators(int top, unsigned char drawWin,
                                              unsigned char update)
 {
-    playerData* player = g_game->getLocalPlayer();
+    PlayerData* player = g_game->getLocalPlayer();
     if (!player->isHuman())
         return;
 
@@ -1001,14 +1001,14 @@ void TAdventureMapWindow::updateHeroLocators(int top, unsigned char drawWin,
         updateHeroLocator(i, 0, 0);
 
     if (!m_topHero)
-        widgetSetStatus(HERO_UP_ID, widget::WIDGET_DIMMED);
+        widgetSetStatus(HERO_UP_ID, Widget::WIDGET_DIMMED);
     else
-        widgetClearStatus(HERO_UP_ID, widget::WIDGET_DIMMED);
+        widgetClearStatus(HERO_UP_ID, Widget::WIDGET_DIMMED);
 
     if (player->m_numHeroes <= m_topHero + NUM_HERO_BUTTONS)
-        widgetSetStatus(HERO_DOWN_ID, widget::WIDGET_DIMMED);
+        widgetSetStatus(HERO_DOWN_ID, Widget::WIDGET_DIMMED);
     else
-        widgetClearStatus(HERO_DOWN_ID, widget::WIDGET_DIMMED);
+        widgetClearStatus(HERO_DOWN_ID, Widget::WIDGET_DIMMED);
 
     if (drawWin) {
         drawWindow(0, 0xffff0001, 0xffff);
@@ -1017,8 +1017,8 @@ void TAdventureMapWindow::updateHeroLocators(int top, unsigned char drawWin,
             int heroId = player->m_heroes[m_topHero + i];
             if (heroId != -1 && !g_completeDrawAllCells
                 && heroId == player->m_currHeroId) {
-                m_heroLocators[i]->sendMessage(widget::WIDGET_SET_STATUS,
-                                              widget::WIDGET_DRAWN);
+                m_heroLocators[i]->sendMessage(Widget::WIDGET_SET_STATUS,
+                                              Widget::WIDGET_DRAWN);
                 m_heroLocators[i]->setImage("hpsyyy.pcx");
                 m_heroLocators[i]->draw();
                 break;
@@ -1031,10 +1031,10 @@ void TAdventureMapWindow::updateHeroLocators(int top, unsigned char drawWin,
 }
 
 VA(0x00403420, 0x131)  // dc 0x10e8
-void TAdventureMapWindow::updateTownLocators(int top, unsigned char drawWin,
+void AdventureMapWindow::updateTownLocators(int top, unsigned char drawWin,
                                              unsigned char update)
 {
-    playerData* player = g_game->getLocalPlayer();
+    PlayerData* player = g_game->getLocalPlayer();
     if (!player->isHuman())
         return;
 
@@ -1051,14 +1051,14 @@ void TAdventureMapWindow::updateTownLocators(int top, unsigned char drawWin,
         updateTownLocator(i, 0, 0);
 
     if (!m_topTown)
-        widgetSetStatus(TOWN_UP_ID, widget::WIDGET_DIMMED);
+        widgetSetStatus(TOWN_UP_ID, Widget::WIDGET_DIMMED);
     else
-        widgetClearStatus(TOWN_UP_ID, widget::WIDGET_DIMMED);
+        widgetClearStatus(TOWN_UP_ID, Widget::WIDGET_DIMMED);
 
     if (player->m_numTowns <= m_topTown + NUM_TOWN_BUTTONS)
-        widgetSetStatus(TOWN_DOWN_ID, widget::WIDGET_DIMMED);
+        widgetSetStatus(TOWN_DOWN_ID, Widget::WIDGET_DIMMED);
     else
-        widgetClearStatus(TOWN_DOWN_ID, widget::WIDGET_DIMMED);
+        widgetClearStatus(TOWN_DOWN_ID, Widget::WIDGET_DIMMED);
 
     if (drawWin) {
         drawWindow(0, 0xffff0001, 0xffff);
@@ -1067,7 +1067,7 @@ void TAdventureMapWindow::updateTownLocators(int top, unsigned char drawWin,
             int townId = player->m_townIds[m_topTown + i];
             if (townId != -1 && !g_completeDrawAllCells
                 && townId == player->m_currTownId) {
-                broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+                broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_ICON_FRAME,
                                  TOWN_0_ID + i, 1);
                 drawWindow(0, TOWN_0_ID + i, TOWN_0_ID + i);
                 break;
@@ -1080,10 +1080,10 @@ void TAdventureMapWindow::updateTownLocators(int top, unsigned char drawWin,
 }
 
 VA(0x00403560, 0x23E)  // dc 0x10ec
-void TAdventureMapWindow::updateHeroLocator(int which, unsigned char drawWinSect,
+void AdventureMapWindow::updateHeroLocator(int which, unsigned char drawWinSect,
                                             unsigned char update)
 {
-    playerData* player = g_game->getLocalPlayer();
+    PlayerData* player = g_game->getLocalPlayer();
 
     if (which < 0) {
         if (player->m_currHeroId != -1) {
@@ -1100,25 +1100,25 @@ void TAdventureMapWindow::updateHeroLocator(int which, unsigned char drawWinSect
 
     int heroId = player->m_heroes[m_topHero + which];
     if (heroId != -1 && !g_completeDrawAllCells) {
-        hero* thisHero = &g_game->m_heroes[heroId];
-        widgetSetStatus(HERO_0_ID + which, widget::WIDGET_ACTIVE);
+        Hero* thisHero = &g_game->m_heroes[heroId];
+        widgetSetStatus(HERO_0_ID + which, Widget::WIDGET_ACTIVE);
         m_heroPortraits[which]->setImage(
             g_heroTraits[thisHero->m_portrait].m_smallPortraitName);
-        widgetSetStatus(HERO_MOVEMENT_0_ID + which, widget::WIDGET_ACTIVE);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+        widgetSetStatus(HERO_MOVEMENT_0_ID + which, Widget::WIDGET_ACTIVE);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_ICON_FRAME,
             HERO_MOVEMENT_0_ID + which, thisHero->getMobilityFrame());
-        widgetSetStatus(HERO_MANA_0_ID + which, widget::WIDGET_ACTIVE);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+        widgetSetStatus(HERO_MANA_0_ID + which, Widget::WIDGET_ACTIVE);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_ICON_FRAME,
             HERO_MANA_0_ID + which, thisHero->getManaFrame());
     } else {
         m_heroPortraits[which]->setImage("hpsxxx.pcx");
-        widgetClearStatus(HERO_0_ID + which, widget::WIDGET_ACTIVE);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+        widgetClearStatus(HERO_0_ID + which, Widget::WIDGET_ACTIVE);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_ICON_FRAME,
             HERO_MOVEMENT_0_ID + which, 0);
-        widgetClearStatus(HERO_MOVEMENT_0_ID + which, widget::WIDGET_ACTIVE);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+        widgetClearStatus(HERO_MOVEMENT_0_ID + which, Widget::WIDGET_ACTIVE);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_ICON_FRAME,
             HERO_MANA_0_ID + which, 0);
-        widgetClearStatus(HERO_MANA_0_ID + which, widget::WIDGET_ACTIVE);
+        widgetClearStatus(HERO_MANA_0_ID + which, Widget::WIDGET_ACTIVE);
     }
 
     int isCurrentHero = heroId != -1 && !g_completeDrawAllCells
@@ -1132,8 +1132,8 @@ void TAdventureMapWindow::updateHeroLocator(int which, unsigned char drawWinSect
         if (heroId != -1 && !g_completeDrawAllCells
             && heroId == player->m_currHeroId) {
             m_heroLocators[which]->setImage("hpsyyy.pcx");
-            m_heroLocators[which]->sendMessage(widget::WIDGET_SET_STATUS,
-                                              widget::WIDGET_DRAWN);
+            m_heroLocators[which]->sendMessage(Widget::WIDGET_SET_STATUS,
+                                              Widget::WIDGET_DRAWN);
             m_heroLocators[which]->draw();
         }
         if (update)
@@ -1142,27 +1142,27 @@ void TAdventureMapWindow::updateHeroLocator(int which, unsigned char drawWinSect
 }
 
 VA(0x004037a0, 0x117)  // dc 0x10f0
-void TAdventureMapWindow::updateTownLocator(int which, unsigned char drawWinSect,
+void AdventureMapWindow::updateTownLocator(int which, unsigned char drawWinSect,
                                             unsigned char update)
 {
-    playerData* player = g_game->getLocalPlayer();
+    PlayerData* player = g_game->getLocalPlayer();
     int townId = player->m_townIds[m_topTown + which];
 
     if (which < player->m_numTowns && !g_completeDrawAllCells) {
-        widgetSetStatus(TOWN_0_ID + which, widget::WIDGET_ACTIVE);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+        widgetSetStatus(TOWN_0_ID + which, Widget::WIDGET_ACTIVE);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_ICON_FRAME,
             TOWN_0_ID + which, g_game->getTown(townId)->getPortraitFrame(1));
     } else {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_ICON_FRAME,
             TOWN_0_ID + which, 0);
-        widgetClearStatus(TOWN_0_ID + which, widget::WIDGET_ACTIVE);
+        widgetClearStatus(TOWN_0_ID + which, Widget::WIDGET_ACTIVE);
     }
 
     if (drawWinSect) {
         drawWindow(0, TOWN_0_ID + which, TOWN_0_ID + which);
         if (which < player->m_numTowns && !g_completeDrawAllCells
             && townId == player->m_currTownId) {
-            broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+            broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_ICON_FRAME,
                              TOWN_0_ID + which, 1);
             drawWindow(0, TOWN_0_ID + which, TOWN_0_ID + which);
         }
@@ -1172,16 +1172,16 @@ void TAdventureMapWindow::updateTownLocator(int which, unsigned char drawWinSect
 }
 
 VA(0x004038c0, 0xEC)  // dc 0x10f4
-void TAdventureMapWindow::highlightLocators(unsigned char update)
+void AdventureMapWindow::highlightLocators(unsigned char update)
 {
-    playerData* player = g_game->getLocalPlayer();
+    PlayerData* player = g_game->getLocalPlayer();
 
     int i;
     for (i = 0; i < NUM_TOWN_BUTTONS; i++) {
         int townId = player->m_townIds[m_topTown + i];
         if (townId != -1 && !g_completeDrawAllCells
             && townId == player->m_currTownId) {
-            broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+            broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_ICON_FRAME,
                              TOWN_0_ID + i, 1);
             drawWindow(update, TOWN_0_ID + i, TOWN_0_ID + i);
             break;
@@ -1189,15 +1189,15 @@ void TAdventureMapWindow::highlightLocators(unsigned char update)
     }
 
     for (i = 0; i < NUM_HERO_BUTTONS; i++)
-        m_heroLocators[i]->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                      widget::WIDGET_DRAWN);
+        m_heroLocators[i]->sendMessage(Widget::WIDGET_CLEAR_STATUS,
+                                      Widget::WIDGET_DRAWN);
 
     for (i = 0; i < NUM_HERO_BUTTONS; i++) {
         int heroId = player->m_heroes[m_topHero + i];
         if (heroId != -1 && !g_completeDrawAllCells
             && heroId == player->m_currHeroId) {
-            m_heroLocators[i]->sendMessage(widget::WIDGET_SET_STATUS,
-                                          widget::WIDGET_DRAWN);
+            m_heroLocators[i]->sendMessage(Widget::WIDGET_SET_STATUS,
+                                          Widget::WIDGET_DRAWN);
             m_heroLocators[i]->setImage("hpsyyy.pcx");
             m_heroLocators[i]->draw();
             break;
@@ -1206,7 +1206,7 @@ void TAdventureMapWindow::highlightLocators(unsigned char update)
 }
 
 VA(0x004039b0, 0x1EA)  // dc 0x1134
-void TAdventureMapWindow::updateQuestLogButton(unsigned char update)
+void AdventureMapWindow::updateQuestLogButton(unsigned char update)
 {
     unsigned char enabled = 0;
     int player = g_game->getLocalPlayerGamePos();
@@ -1214,10 +1214,10 @@ void TAdventureMapWindow::updateQuestLogButton(unsigned char update)
     if (g_game->m_players[player].isLocalHuman()) {
         unsigned i;
         for (i = 0; i < g_game->m_worldMap.m_seerHutList.size(); i++) {
-            TSeerHut& hut = g_game->m_worldMap.m_seerHutList[i];
-            type_quest* quest = hut.m_quest;
+            SeerHut& hut = g_game->m_worldMap.m_seerHutList[i];
+            Quest* quest = hut.m_quest;
             if (quest
-                && quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
+                && quest->questTexts()[Quest::QUEST_TEXT_LOG].length()
                 && (hut.m_visitedPlayers
                     & (1 << static_cast<unsigned char>(player)))
                 && hut.m_quest) {
@@ -1227,10 +1227,10 @@ void TAdventureMapWindow::updateQuestLogButton(unsigned char update)
         }
 
         for (i = 0; i < g_game->m_worldMap.m_questGuardList.size(); i++) {
-            TQuestGuard& guard = g_game->m_worldMap.m_questGuardList[i];
-            type_quest* quest = guard.m_quest;
+            QuestGuard& guard = g_game->m_worldMap.m_questGuardList[i];
+            Quest* quest = guard.m_quest;
             if (quest
-                && quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
+                && quest->questTexts()[Quest::QUEST_TEXT_LOG].length()
                 && (guard.m_visitedPlayers
                     & (1 << static_cast<unsigned char>(player)))
                 && guard.m_quest) {
@@ -1240,7 +1240,7 @@ void TAdventureMapWindow::updateQuestLogButton(unsigned char update)
         }
     }
 
-    widget* questButton = getWidget(QUEST_LOG_ID);
+    Widget* questButton = getWidget(QUEST_LOG_ID);
     if (questButton) {
         questButton->enable(enabled);
         questButton->draw();
@@ -1251,7 +1251,7 @@ void TAdventureMapWindow::updateQuestLogButton(unsigned char update)
 }
 
 VA(0x00403ba0, 0x47)  // dc 0x1138
-void TAdventureMapWindow::updateSleepButton(const hero* thisHero)
+void AdventureMapWindow::updateSleepButton(const Hero* thisHero)
 {
     unsigned char enabled = 0;
     if (thisHero)
@@ -1260,12 +1260,12 @@ void TAdventureMapWindow::updateSleepButton(const hero* thisHero)
         enabled = 0;
 
     broadcastMessage(MESSAGE_WIDGET,
-        enabled ? widget::WIDGET_CLEAR_STATUS : widget::WIDGET_SET_STATUS,
-        SLEEP_ID, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        enabled ? Widget::WIDGET_CLEAR_STATUS : Widget::WIDGET_SET_STATUS,
+        SLEEP_ID, Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
 }
 
 VA(0x00403bf0, 0x4C)  // dc 0x113c
-void TAdventureMapWindow::updateSpellButton(const hero* thisHero)
+void AdventureMapWindow::updateSpellButton(const Hero* thisHero)
 {
     unsigned char enabled = 0;
     if (g_currentPlayer->isLocalHuman() && thisHero) {
@@ -1275,8 +1275,8 @@ void TAdventureMapWindow::updateSpellButton(const hero* thisHero)
     }
 
     broadcastMessage(MESSAGE_WIDGET,
-        enabled ? widget::WIDGET_CLEAR_STATUS : widget::WIDGET_SET_STATUS,
-        CAST_SPELL_ID, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        enabled ? Widget::WIDGET_CLEAR_STATUS : Widget::WIDGET_SET_STATUS,
+        CAST_SPELL_ID, Widget::WIDGET_UPDATE | Widget::WIDGET_DIMMED);
 }
 
 // The elevation toggle's two .data objects, in retail's own order: the
@@ -1301,19 +1301,19 @@ DATA(0x0065f240)
 static int g_sleepImage = -1;
 
 VA(0x00403c40, 0x78)  // dc 0x1188
-unsigned char TAdventureMapWindow::setElevationToggleImage(int level)
+unsigned char AdventureMapWindow::setElevationToggleImage(int level)
 {
     if (level != g_elevationToggleLevel) {
-        message iconMessage;
+        Message iconMessage;
         g_elevationToggleLevel = level;
         iconMessage.m_extraText = g_aszElevationIcons[level];
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_ICON_NAME,
             ELEVATION_TOGGLE_ID, iconMessage.m_extra);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_PLAYER_PALETTE_COLORS,
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_PLAYER_PALETTE_COLORS,
             ELEVATION_TOGGLE_ID, g_game->getLocalPlayerGamePos());
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_DRAW,
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_DRAW,
             ELEVATION_TOGGLE_ID, 0);
-        widgetSetStatus(ELEVATION_TOGGLE_ID, widget::WIDGET_UPDATE);
+        widgetSetStatus(ELEVATION_TOGGLE_ID, Widget::WIDGET_UPDATE);
         return 1;
     }
     return 0;
@@ -1328,29 +1328,29 @@ unsigned char TAdventureMapWindow::setElevationToggleImage(int level)
 // residual is a nested vector<int> inliner decision, not evidence to erase the
 // helper boundary again.
 VA(0x00403cc0, 0x215)  // anchor-global, dc 0x118c; real older body dc 0x2a74
-void TAdventureMapWindow::setSleepImage(int image)
+void AdventureMapWindow::setSleepImage(int image)
 {
     if (image != g_sleepImage) {
-        message iconMessage;
+        Message iconMessage;
         iconMessage.m_extraText = g_aszSleepIcons[image];
 
         g_sleepImage = image;
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_ICON_NAME,
             SLEEP_ID, iconMessage.m_extra);
         broadcastMessage(MESSAGE_WIDGET,
-            widget::WIDGET_SET_PLAYER_PALETTE_COLORS, SLEEP_ID,
+            Widget::WIDGET_SET_PLAYER_PALETTE_COLORS, SLEEP_ID,
             g_game->getLocalPlayerGamePos());
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_DRAW, SLEEP_ID, 0);
-        widgetSetStatus(SLEEP_ID, widget::WIDGET_UPDATE);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_DRAW, SLEEP_ID, 0);
+        widgetSetStatus(SLEEP_ID, Widget::WIDGET_UPDATE);
 
-        button* sleepButton = static_cast<button*>(getWidget(SLEEP_ID));
+        Button* sleepButton = static_cast<Button*>(getWidget(SLEEP_ID));
         sleepButton->clearHotkeys();
         sleepButton->setHotkey(g_aiSleepHotkeys[image]);
     }
 }
 
 VA(0x00403ee0, 0x1F)  // dc 0x1190
-void TAdventureMapWindow::clearBottomView()
+void AdventureMapWindow::clearBottomView()
 {
     if (m_bottomView) {
         delete m_bottomView;
@@ -1367,7 +1367,7 @@ void TAdventureMapWindow::clearBottomView()
 // DC1257's update guard and DC1261's UpdateScreen call are port-specific;
 // the 30-byte retail body has neither extra branch nor screen update.
 VA(0x00403f00, 0x1E)  // anchor-global, dc 0x11bc
-void TAdventureMapWindow::updateResourceDisplay(bool draw, bool update)
+void AdventureMapWindow::updateResourceDisplay(bool draw, bool update)
 {
     if (!draw)
         update = 0;
@@ -1375,7 +1375,7 @@ void TAdventureMapWindow::updateResourceDisplay(bool draw, bool update)
 }
 
 VA(0x00403f20, 0x3F)  // dc 0x11f4
-void TAdventureMapWindow::drawChatText(unsigned char update)
+void AdventureMapWindow::drawChatText(unsigned char update)
 {
     drawWindow(0, CHAT_TEXT_ID, CHAT_TEXT_ID);
     if (update)
@@ -1384,15 +1384,15 @@ void TAdventureMapWindow::drawChatText(unsigned char update)
 }
 
 // E:\gamedcs\adventuremapwindow.cpp:1273, dc 0x1238
-void TAdventureMapWindow::setAdvWinButtonPalette(int id, int player)
+void AdventureMapWindow::setAdvWinButtonPalette(int id, int player)
 {
-    widget* w = getWidget(id);
+    Widget* w = getWidget(id);
     if (w)
-        static_cast<button*>(w)->setPlayerPaletteColors(player);
+        static_cast<Button*>(w)->setPlayerPaletteColors(player);
 }
 
 VA(0x00403f60, 0x144)  // dc 0x125c
-void TAdventureMapWindow::updateButtons(unsigned char draw, unsigned char update)
+void AdventureMapWindow::updateButtons(unsigned char draw, unsigned char update)
 {
     int player = g_game->getLocalPlayerGamePos();
 
@@ -1436,7 +1436,7 @@ void TAdvMenu::~TAdvMenu()
 
 // E:\gamedcs\adventuremapwindow.cpp:1486
 DC_ONLY(0x1ab8, 0x64E)
-int TAdvMenu::windowHandler(message& msg)
+int TAdvMenu::windowHandler(Message& msg)
 {
     // @stub
 }
@@ -1499,7 +1499,7 @@ unsigned char TAdvMenu::setElevationToggleImage(int level)
 
 // E:\gamedcs\adventuremapwindow.cpp:2038
 DC_ONLY(0x2a28, 0x4C)
-void TAdvMenu::updateSpellButton(const hero* this_hero)
+void TAdvMenu::updateSpellButton(const Hero* this_hero)
 {
     // @stub
 }
@@ -1513,7 +1513,7 @@ void TAdvMenu::setSleepImage(int image)
 
 // E:\gamedcs\adventuremapwindow.cpp:2082
 DC_ONLY(0x2b3c, 0x40)
-void TAdvMenu::updateSleepButton(const hero* this_hero)
+void TAdvMenu::updateSleepButton(const Hero* this_hero)
 {
     // @stub
 }
@@ -1590,21 +1590,21 @@ char* std::uninitialized_copy(const char* __first, const char* __last, char* __r
 
 // E:\gamedcs\struct.h:42
 DC_ONLY(0x2d58, 0x1A)
-void message::message()
+void Message::Message()
 {
     // @stub
 }
 
 // E:\gamedcs\TextResource.h:66
 DC_ONLY(0x2d74, 0x18)
-const char* TTextResource::getText(int r)
+const char* TextResource::getText(int r)
 {
     // @stub
 }
 
 // E:\gamedcs\TextResource.h:73
 DC_ONLY(0x2d8c, 0x18)
-const char* TTextResource::operator[](int i)
+const char* TextResource::operator[](int i)
 {
     // @stub
 }
@@ -1618,41 +1618,41 @@ int min(int a, int b)
 
 // E:\gamedcs\Window.h:210
 DC_ONLY(0x2dcc, 0x16)
-int CHeroWindowEx::handleMessage(message* msg)
+int CHeroWindowEx::handleMessage(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\Widget.h:144
 DC_ONLY(0x2de4, 0x4)
-int widget::getRealHeight() const
+int Widget::getRealHeight() const
 {
     // @stub
 }
 
 // E:\gamedcs\Widget.h:147
 DC_ONLY(0x2de8, 0x4)
-int widget::getRealWidth() const
+int Widget::getRealWidth() const
 {
     // @stub
 }
 
 // E:\gamedcs\Widget.h:244
 DC_ONLY(0x2dec, 0x24)
-void widget::sleep(unsigned char go_to_sleep)
+void Widget::sleep(unsigned char go_to_sleep)
 {
     // @stub
 }
 
 // E:\gamedcs\button.h:104
-void button::setHotkey(int code)
+void Button::setHotkey(int code)
 {
     // @stub
 }
 
 // E:\gamedcs\button.h:120
 DC_ONLY(0x2e30, 0x18)
-void button::clear_hotkeys()
+void Button::clear_hotkeys()
 {
     // @stub
 }
@@ -1666,14 +1666,14 @@ int NewfullMap::getNumLevels()
 
 // E:\gamedcs\Hero.h:209
 DC_ONLY(0x2e54, 0xA)
-void type_artifact::type_artifact(TArtifact artifact)
+void ArtifactRecord::ArtifactRecord(Artifact artifact)
 {
     // @stub
 }
 
 // E:\gamedcs\Hero.h:976
 DC_ONLY(0x2e60, 0x1C)
-int hero::getExperienceIncrement()
+int Hero::getExperienceIncrement()
 {
     // @stub
 }
@@ -1687,63 +1687,63 @@ void `vector constructor iterator'(void* __t, unsigned __s, int __n, void (*)()*
 
 // E:\gamedcs\Game.h:972
 DC_ONLY(0x2eb0, 0x24)
-hero* game::getHero(int which)
+Hero* Game::getHero(int which)
 {
     // @stub
 }
 
 // E:\gamedcs\Game.h:991
 DC_ONLY(0x2ed4, 0x44)
-hero* game::getCurrHero()
+Hero* Game::getCurrHero()
 {
     // @stub
 }
 
 // E:\gamedcs\Game.h:992
 DC_ONLY(0x2f18, 0xC)
-int game::getCurrHeroId()
+int Game::getCurrHeroId()
 {
     // @stub
 }
 
 // E:\gamedcs\Game.h:1016
 DC_ONLY(0x2f24, 0x28)
-town* game::getTown(int which)
+Town* Game::getTown(int which)
 {
     // @stub
 }
 
 // E:\gamedcs\Game.h:1197
 DC_ONLY(0x2f4c, 0x1C)
-int game::getNumMapLevels()
+int Game::getNumMapLevels()
 {
     // @stub
 }
 
 // E:\gamedcs\Game.h:1423
 DC_ONLY(0x2f68, 0x1C)
-void TCheatCode::TCheatCode(const char* _code)
+void CheatCode::CheatCode(const char* _code)
 {
     // @stub
 }
 
 // E:\gamedcs\Game.h:1429
 DC_ONLY(0x2f84, 0x1C)
-unsigned char TCheatCode::compare(const char* arg)
+unsigned char CheatCode::compare(const char* arg)
 {
     // @stub
 }
 
 // E:\gamedcs\Game.h:1439
 DC_ONLY(0x2fa0, 0x88)
-void TCheatCode::encode(const char* _code)
+void CheatCode::encode(const char* _code)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.h:441
 DC_ONLY(0x3028, 0xA0)
-void CGameChatEdit::CGameChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+void CGameChatEdit::CGameChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, Font::Justify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
 {
     // @stub
 }
@@ -1771,14 +1771,14 @@ void CGameChatEdit::~CGameChatEdit()
 
 // E:\gamedcs\SeerHut.h:112
 DC_ONLY(0x3250, 0x22)
-unsigned char TSeerHut::questActiveforPlayer(const unsigned char playerNum)
+unsigned char SeerHut::questActiveforPlayer(const unsigned char playerNum)
 {
     // @stub
 }
 
 // E:\gamedcs\adventuremapwindow.cpp:257
 DC_ONLY(0x3274, 0x98)
-void CAdventurMapChatEdit::CAdventurMapChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+void CAdventurMapChatEdit::CAdventurMapChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, Font::Justify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
 {
     // @stub
 }
@@ -1799,7 +1799,7 @@ void CAdventurMapChatEdit::~CAdventurMapChatEdit()
 
 // E:\gamedcs\adventuremapwindow.cpp:486
 DC_ONLY(0x3460, 0x34)
-void* TAdventureMapWindow::`scalar deleting destructor'(unsigned __flags)
+void* AdventureMapWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -1883,28 +1883,28 @@ char** std::vector<char *,std::allocator<char *> >::operator[](unsigned __n)
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x35fc, 0x4)
-widget** std::vector<widget *,std::allocator<widget *> >::begin()
+Widget** std::vector<Widget *,std::allocator<Widget *> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0x3600, 0x4)
-widget** std::vector<widget *,std::allocator<widget *> >::end()
+Widget** std::vector<Widget *,std::allocator<Widget *> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:365
 DC_ONLY(0x3604, 0x18)
-widget** std::vector<widget *,std::allocator<widget *> >::back()
+Widget** std::vector<Widget *,std::allocator<Widget *> >::back()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x361c, 0x3C)
-void std::vector<widget *,std::allocator<widget *> >::push_back(widget** __x)
+void std::vector<Widget *,std::allocator<Widget *> >::push_back(Widget** __x)
 {
     // @stub
 }
@@ -1953,21 +1953,21 @@ std::bitset<10,unsigned std::bitset<10,unsigned long>::operator<<(__$ReturnUdt, 
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x3728, 0x20)
-unsigned std::vector<TSeerHut,std::allocator<TSeerHut> >::size()
+unsigned std::vector<SeerHut,std::allocator<SeerHut> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x3748, 0x24)
-TSeerHut* std::vector<TSeerHut,std::allocator<TSeerHut> >::operator[](unsigned __n)
+SeerHut* std::vector<SeerHut,std::allocator<SeerHut> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x376c, 0x24)
-town* std::vector<town,std::allocator<town> >::operator[](unsigned __n)
+Town* std::vector<Town,std::allocator<Town> >::operator[](unsigned __n)
 {
     // @stub
 }
@@ -2030,14 +2030,14 @@ std::bitset<10,unsigned* std::bitset<10,unsigned long>::operator<<=(unsigned __p
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x38a8, 0x4)
-TSeerHut* std::vector<TSeerHut,std::allocator<TSeerHut> >::begin()
+SeerHut* std::vector<SeerHut,std::allocator<SeerHut> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x38ac, 0x4)
-town* std::vector<town,std::allocator<town> >::begin()
+Town* std::vector<Town,std::allocator<Town> >::begin()
 {
     // @stub
 }
@@ -2205,14 +2205,14 @@ const int* cppMin(const int* _X, const int* _Y)
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x3b98, 0xCC)
-void std::vector<widget *,std::allocator<widget *> >::_M_insert_overflow(widget** __position, widget** __x, unsigned __fill_len)
+void std::vector<Widget *,std::allocator<Widget *> >::_M_insert_overflow(Widget** __position, Widget** __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:68
 DC_ONLY(0x3c64, 0x94)
-void std::vector<widget *,std::allocator<widget *> >::reserve(unsigned __n)
+void std::vector<Widget *,std::allocator<Widget *> >::reserve(unsigned __n)
 {
     // @stub
 }
@@ -2254,7 +2254,7 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_range_i
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x3f48, 0x28)
-void std::construct(widget** __p, widget** __value)
+void std::construct(Widget** __p, Widget** __value)
 {
     // @stub
 }
@@ -2338,28 +2338,28 @@ const char* std::basic_string<char,std::char_traits<char>,std::allocator<char> >
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x411c, 0xC)
-unsigned std::vector<widget *,std::allocator<widget *> >::size()
+unsigned std::vector<Widget *,std::allocator<Widget *> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:199
 DC_ONLY(0x4128, 0xC)
-unsigned std::vector<widget *,std::allocator<widget *> >::capacity()
+unsigned std::vector<Widget *,std::allocator<Widget *> >::capacity()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x4134, 0x28)
-widget** std::_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >::allocate(unsigned __n)
+Widget** std::_STL_alloc_proxy<Widget * *,Widget *,std::allocator<Widget *> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x415c, 0x2C)
-void std::_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >::deallocate(widget** __p, unsigned __n)
+void std::_STL_alloc_proxy<Widget * *,Widget *,std::allocator<Widget *> >::deallocate(Widget** __p, unsigned __n)
 {
     // @stub
 }
@@ -2415,14 +2415,14 @@ char* std::__char_traits_base<char,int>::move(char* __s1, const char* __s2, unsi
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x4250, 0x24)
-widget** std::allocator<widget *>::allocate(unsigned __n, const void* __formal)
+Widget** std::allocator<Widget *>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x4274, 0x1C)
-void std::allocator<widget *>::deallocate(widget** __p, unsigned __n)
+void std::allocator<Widget *>::deallocate(Widget** __p, unsigned __n)
 {
     // @stub
 }
@@ -2450,28 +2450,28 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::basic_s
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x42ec, 0x38)
-widget** std::uninitialized_copy(widget** __first, widget** __last, widget** __result)
+Widget** std::uninitialized_copy(Widget** __first, Widget** __last, Widget** __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x4324, 0x38)
-widget** std::uninitialized_fill_n(widget** __first, unsigned __n, widget** __x)
+Widget** std::uninitialized_fill_n(Widget** __first, unsigned __n, Widget** __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x435c, 0x30)
-void std::destroy(widget** __first, widget** __last)
+void std::destroy(Widget** __first, Widget** __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:514
 DC_ONLY(0x438c, 0x38)
-std::vector<widget *,std::allocator<widget *> >::_M_allocate_and_copy(unsigned __n, widget** __first, widget** __last)
+std::vector<Widget *,std::allocator<Widget *> >::_M_allocate_and_copy(unsigned __n, Widget** __first, Widget** __last)
 {
     // @stub
 }
@@ -2548,7 +2548,7 @@ char* std::__node_alloc<0,0>::_S_chunk_alloc(unsigned _p_size, int* __nobjs)
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x4604, 0x4)
-std::allocator<widget* std::__stl_alloc_rebind(std::allocator<widget* __a, widget** __formal)
+std::allocator<Widget* std::__stl_alloc_rebind(std::allocator<Widget* __a, Widget** __formal)
 {
     // @stub
 }
@@ -2569,28 +2569,28 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_append_
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x464c, 0x4)
-widget** std::value_type(widget** __formal)
+Widget** std::value_type(Widget** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x4650, 0x1C)
-widget** std::__uninitialized_copy(widget** __first, widget** __last, widget** __result, widget** __formal)
+Widget** std::__uninitialized_copy(Widget** __first, Widget** __last, Widget** __result, Widget** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x466c, 0x1C)
-widget** std::__uninitialized_fill_n(widget** __first, unsigned __n, widget** __x, widget** __formal)
+Widget** std::__uninitialized_fill_n(Widget** __first, unsigned __n, Widget** __x, Widget** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x4688, 0x1C)
-void std::__destroy(widget** __first, widget** __last, widget** __formal)
+void std::__destroy(Widget** __first, Widget** __last, Widget** __formal)
 {
     // @stub
 }
@@ -2632,21 +2632,21 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> >::append(con
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x4850, 0x3C)
-widget** std::__uninitialized_copy_aux(widget** __first, widget** __last, widget** __result, __false_type __formal)
+Widget** std::__uninitialized_copy_aux(Widget** __first, Widget** __last, Widget** __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x488c, 0x3C)
-widget** std::__uninitialized_fill_n_aux(widget** __first, unsigned __n, widget** __x, __false_type __formal)
+Widget** std::__uninitialized_fill_n_aux(Widget** __first, unsigned __n, Widget** __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x48c8, 0x30)
-void std::__destroy_aux(widget** __first, widget** __last, __false_type __formal)
+void std::__destroy_aux(Widget** __first, Widget** __last, __false_type __formal)
 {
     // @stub
 }
@@ -2709,7 +2709,7 @@ char* std::uninitialized_copy(char* __first, char* __last, char* __result)
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x49b4, 0x1C)
-void std::destroy(widget** __pointer)
+void std::destroy(Widget** __pointer)
 {
     // @stub
 }
@@ -2773,16 +2773,16 @@ char* std::__copy(char* __first, char* __last, char* __result, std::random_acces
 #endif  // @carcass
 
 VA(0x004040b0, 0x38)
-void TAdventureMapWindow::vslot8(unsigned char on)
+void AdventureMapWindow::vslot8(unsigned char on)
 {
-    heroWindow::vslot8(on);
+    HeroWindow::vslot8(on);
 
     if (on) {
         if (m_immersion)
-            static_cast<TImmMouseEffect*>(m_immersion)->stop();
+            static_cast<ImmMouseEffect*>(m_immersion)->stop();
     } else {
         if (m_immersion)
-            static_cast<TImmMouseEffect*>(m_immersion)->start();
+            static_cast<ImmMouseEffect*>(m_immersion)->start();
     }
 }
 
@@ -2815,7 +2815,7 @@ VA_COMPGEN(0x00404BD0, 0x108, BASIC_STRING_COPY, char)
 #if 0  // @carcass: Dinkumware instantiation emitted by this compiland
 
 VA(0x00404dc0, 0x9)  // COMDAT pairing (unique 9 B in this obj)
-void std::_Construct(widget** slot, widget* const& value)
+void std::_Construct(Widget** slot, Widget* const& value)
 {
     // @stub
 }

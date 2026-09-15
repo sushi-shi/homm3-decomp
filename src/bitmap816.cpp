@@ -33,8 +33,8 @@ void Bitmap816::Bitmap816(const char* name, int rbits, int rshift, int gbits, in
 
 VA(0x0044f800, 0xCA)  // dc 0x53960
 Bitmap816::Bitmap816(const char* name, int w, int h, unsigned char* data,
-                     TPalette16* palette16, int dataSize)
-    : resource(name, RESOURCE_TYPE_BITMAP),
+                     Palette16* palette16, int dataSize)
+    : Resource(name, RESOURCE_TYPE_BITMAP),
       m_imageSize(w * h), m_width(w), m_height(h), m_pitch(w), m_p16(palette16)
 {
     m_dataSize = dataSize ? dataSize : m_imageSize;
@@ -47,7 +47,7 @@ VA(0x0044f8d0, 0xF8)  // dc 0x53b0c
 Bitmap816::Bitmap816(const char* name, const char* path,
                      int rbits, int rshift, int gbits, int gshift,
                      int bbits, int bshift)
-    : resource(name, RESOURCE_TYPE_BITMAP),
+    : Resource(name, RESOURCE_TYPE_BITMAP),
       m_dataSize(0), m_imageSize(0), m_width(0), m_height(0), m_pitch(0), m_map(0)
 {
     char filename[264];
@@ -80,7 +80,7 @@ Bitmap816::~Bitmap816()
 
 // E:\gamedcs\bitmap816.cpp:163
 DC_ONLY(0x53c5c, 0x104)
-void Bitmap816::import(int w, int h, unsigned char* data, TPalette16* p16, int size)
+void Bitmap816::import(int w, int h, unsigned char* data, Palette16* p16, int size)
 {
     // @stub
 }
@@ -134,7 +134,7 @@ int Bitmap816::importPCXFile(const char* filename, int rbits, int rshift,
                              int gbits, int gshift, int bbits, int bshift)
 {
     PcxData pdat;
-    imgdes pcxfile;
+    Imgdes pcxfile;
     int error = pcxinfo(filename, &pdat);
     if (error)
         return 1;
@@ -300,7 +300,7 @@ void Bitmap816::setPalette(const unsigned short* pal)
 }
 
 VA(0x0044fe60, 0x16)  // dc 0x54294
-void Bitmap816::setPalette(TPalette24* pal24)
+void Bitmap816::setPalette(Palette24* pal24)
 {
     m_p24 = *pal24;
 }
@@ -308,6 +308,6 @@ void Bitmap816::setPalette(TPalette24* pal24)
 VA(0x0044fe80, 0x40)  // dc 0x5429c
 void Bitmap816::resetPalette()
 {
-    TPalette16 converted(m_p24);
+    Palette16 converted(m_p24);
     m_p16.m_colors = converted.m_colors;
 }

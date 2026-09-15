@@ -39,26 +39,26 @@ DATA(0x0069cbbc) static int g_overviewItemCounts[2];
 // Dreamcast names the overview screen's resource strip. Complete proves the
 // intervening pointer cell by both recruit-dialog refresh paths below.
 DATA(0x0069cbc4) static unsigned char g_overviewBackpackStart[8];
-DATA(0x0069cbcc) static TResourceDisplay* g_overviewBank;
+DATA(0x0069cbcc) static ResourceDisplay* g_overviewBank;
 DATA(0x0069cbd0) static int g_lastDynamicTop;
 // One artifact-page byte per local-player hero slot. The original source name
 // is not present in either symbol stream, so this spelling remains provisional.
-DATA(0x0069cbd4) static slider* g_overviewSlider;
+DATA(0x0069cbd4) static Slider* g_overviewSlider;
 // The hero-id half of the overview roster: UpdateBackpack indexes it with
 // giOverviewTop[giOverviewType] + iSlot, and the retail GetHero expansion
 // proves dword elements. The following four-dword gap is the town roster.
 DATA(0x0069cc10) static unsigned char g_overviewHeroArtifactPage[8];
 DATA(0x0069cbec) static int g_overviewHeroIds[8];
-DATA(0x0069cc1c) static textWidget* g_textWidgetTitle[3];
+DATA(0x0069cc1c) static TextWidget* g_textWidgetTitle[3];
 // The retail window is TOverviewWindow, whose derived layout is not needed by
 // this base-interface consumer and is deliberately not fabricated here.
 DATA(0x0069cc34) static int g_overviewItemCount;
-DATA(0x0069cc3c) static heroWindow* g_overWin;
-DATA(0x0069cc40) static textWidget** g_textWidgetDynamic;
-DATA(0x0069cc44) static iconWidget** g_iconWidgetDynamic;
-DATA(0x0069cc48) static bitmapBorder** g_bitmapBorderDynamic;
-DATA(0x0069cc4c) static button** g_buttonDynamic;
-DATA(0x0069cc50) static textButton** g_textButtonDynamic;
+DATA(0x0069cc3c) static HeroWindow* g_overWin;
+DATA(0x0069cc40) static TextWidget** g_textWidgetDynamic;
+DATA(0x0069cc44) static IconWidget** g_iconWidgetDynamic;
+DATA(0x0069cc48) static BitmapBorder** g_bitmapBorderDynamic;
+DATA(0x0069cc4c) static Button** g_buttonDynamic;
+DATA(0x0069cc50) static TextButton** g_textButtonDynamic;
 DATA(0x0069cc54) static int g_overviewType;
 DATA(0x0069cc58) static int g_overviewTop[2];
 // One Dreamcast-attested array: indices 0..1 and 3..5 are the two title
@@ -122,7 +122,7 @@ void updateBackpack(int slot);
 // are renames of locals this body already has - `iHero` is `heroNumber`, and
 // its `msg` is the block-scoped `message msg` in the artifact page.
 VA(0x0051bd50, 0x25DC)  // exhaustive body/caller identity, dc 0x104458
-void game::setupDynamicStuff(int update, int forceUpdate)
+void Game::setupDynamicStuff(int update, int forceUpdate)
 {
     int curBitmap;
     int curText;
@@ -196,36 +196,36 @@ void game::setupDynamicStuff(int update, int forceUpdate)
         if (g_overviewType == 1) {
             int lookup;
             int offsetToMon;
-            TCreatureType creature;
-            hero* occupyingHero;
+            CreatureType creature;
+            Hero* occupyingHero;
             // Retail reaches GetLocalPlayer through the global (0x51bf82
             // loads gpGame into ecx) while the GetTown expansion beside it
             // still uses `this` from [ebp-0x44]; the two are not the same
             // receiver in the source.
-            town* currTown = getTown(g_game->getLocalPlayer()->m_townIds[
+            Town* currTown = getTown(g_game->getLocalPlayer()->m_townIds[
                 g_overviewTop[g_overviewType] + row]);
 
-            g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+            g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                 22, row * 116 + 24, 701, 113, rowWidgetId + 2,
                 "OVSlot.def", 6, 0, 0, 0,
-                iconWidget::ICON_STYLE_PLAIN);
+                IconWidget::ICON_STYLE_PLAIN);
             if (!g_iconWidgetDynamic[slot + curBitmap])
                 memError();
             g_overWin->addWidget(g_iconWidgetDynamic[slot + curBitmap], -1);
             curBitmap++;
 
             strcpy(g_text, currTown->m_name.c_str());
-            g_textWidgetDynamic[slot + curText] = new textWidget(
+            g_textWidgetDynamic[slot + curText] = new TextWidget(
                 96, row * 116 + 32, 132, 19, g_text, "smalfont.fnt",
-                font::PRIMARY, rowWidgetId + 3,
-                font::CENTER_JUSTIFIED, 0, 8);
+                Font::PRIMARY, rowWidgetId + 3,
+                Font::CENTER_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
             curText++;
 
-            g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+            g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                 27, row * 116 + 30, 58, 64, rowWidgetId + 4,
                 "itpt.def", currTown->getPortraitFrame(false),
-                0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
             if (!g_iconWidgetDynamic[slot + curBitmap])
                 memError();
             g_overWin->addWidget(g_iconWidgetDynamic[slot + curBitmap], -1);
@@ -240,10 +240,10 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             else
                 lookup = 0;
 
-            g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+            g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                 91, row * 116 + 55, 38, 38, rowWidgetId + 51,
                 "itmtl.def", lookup, 0, 0, 0,
-                iconWidget::ICON_STYLE_PLAIN);
+                IconWidget::ICON_STYLE_PLAIN);
             if (!g_iconWidgetDynamic[slot + curBitmap])
                 memError();
             g_overWin->addWidget(g_iconWidgetDynamic[slot + curBitmap], -1);
@@ -258,20 +258,20 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             else
                 lookup = 3;
 
-            g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+            g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                 133, row * 116 + 55, 38, 38, rowWidgetId + 52,
                 "itmcl.def", lookup, 0, 0, 0,
-                iconWidget::ICON_STYLE_PLAIN);
+                IconWidget::ICON_STYLE_PLAIN);
             if (!g_iconWidgetDynamic[slot + curBitmap])
                 memError();
             g_overWin->addWidget(g_iconWidgetDynamic[slot + curBitmap], -1);
             curBitmap++;
 
             sprintf(g_text, "%d", currTown->getGoldIncome(1));
-            g_textWidgetDynamic[slot + curText] = new textWidget(
+            g_textWidgetDynamic[slot + curText] = new TextWidget(
                 180, row * 116 + 77, 62, 20, g_text, "smalfont.fnt",
-                font::PRIMARY, rowWidgetId + 68,
-                font::CENTER_JUSTIFIED, 0, 8);
+                Font::PRIMARY, rowWidgetId + 68,
+                Font::CENTER_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
             curText++;
 
@@ -279,7 +279,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             if (currTown->m_garrisonHeroId != -1)
                 occupyingHero = getHero(currTown->m_garrisonHeroId);
             if (occupyingHero) {
-                g_bitmapBorderDynamic[slot] = new bitmapBorder(
+                g_bitmapBorderDynamic[slot] = new BitmapBorder(
                     265, row * 116 + 30, 58, 64, rowWidgetId + 53,
                     g_heroTraits[occupyingHero->m_portrait].m_largePortraitName,
                     0x800);
@@ -289,18 +289,18 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             }
 
             for (item = 0; item < 7; item++) {
-                if (static_cast<const town*>(currTown)->getArmy()
+                if (static_cast<const Town*>(currTown)->getArmy()
                             .m_armies[item] != CREATURE_NONE
-                        && static_cast<const town*>(currTown)->getArmy()
+                        && static_cast<const Town*>(currTown)->getArmy()
                                .m_numTroops[item] > 0) {
-                    g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+                    g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                         monsterX[item] + 336,
                         monsterY[item] + row * 116 + 27,
                         32, 32, rowWidgetId + item + 5,
                         "cprsmall.def",
-                        static_cast<const town*>(currTown)->getArmy()
+                        static_cast<const Town*>(currTown)->getArmy()
                                 .m_armies[item] + 2,
-                        0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                        0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
                     g_overWin->addWidget(
@@ -308,14 +308,14 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                     curBitmap++;
 
                     sprintf(g_text, "%d",
-                            static_cast<const town*>(currTown)->getArmy()
+                            static_cast<const Town*>(currTown)->getArmy()
                                 .m_numTroops[item]);
-                    g_textWidgetDynamic[slot + curText] = new textWidget(
+                    g_textWidgetDynamic[slot + curText] = new TextWidget(
                         monsterX[item] + 347,
                         monsterY[item] + row * 116 + 48,
-                        20, 11, g_text, "tiny.fnt", font::PRIMARY,
+                        20, 11, g_text, "tiny.fnt", Font::PRIMARY,
                         rowWidgetId + item + 12,
-                        font::RIGHT_JUSTIFIED, 0, 8);
+                        Font::RIGHT_JUSTIFIED, 0, 8);
                     g_overWin->addWidget(
                         g_textWidgetDynamic[slot + curText], -1);
                     curText++;
@@ -326,7 +326,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             if (currTown->m_visitingHeroId != -1)
                 occupyingHero = getHero(currTown->m_visitingHeroId);
             if (occupyingHero) {
-                g_bitmapBorderDynamic[slot + 1] = new bitmapBorder(
+                g_bitmapBorderDynamic[slot + 1] = new BitmapBorder(
                     497, row * 116 + 30, 58, 64, rowWidgetId + 48,
                     g_heroTraits[occupyingHero->m_portrait].m_largePortraitName,
                     0x800);
@@ -337,13 +337,13 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                 for (item = 0; item < 7; item++) {
                     if (occupyingHero->m_army.m_armies[item] != CREATURE_NONE
                             && occupyingHero->m_army.m_numTroops[item] > 0) {
-                        g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+                        g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                             monsterX[item] + 568,
                             monsterY[item] + row * 116 + 27,
                             32, 32, rowWidgetId + item + 54,
                             "cprsmall.def",
                             occupyingHero->m_army.m_armies[item] + 2,
-                            0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                            0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
                         if (!g_iconWidgetDynamic[slot + curBitmap])
                             memError();
                         g_overWin->addWidget(
@@ -352,12 +352,12 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
                         sprintf(g_text, "%d",
                                 occupyingHero->m_army.m_numTroops[item]);
-                        g_textWidgetDynamic[slot + curText] = new textWidget(
+                        g_textWidgetDynamic[slot + curText] = new TextWidget(
                             monsterX[item] + 571,
                             monsterY[item] + row * 116 + 48,
-                            28, 11, g_text, "tiny.fnt", font::PRIMARY,
+                            28, 11, g_text, "tiny.fnt", Font::PRIMARY,
                             rowWidgetId + item + 61,
-                            font::RIGHT_JUSTIFIED, 0, 8);
+                            Font::RIGHT_JUSTIFIED, 0, 8);
                         g_overWin->addWidget(
                             g_textWidgetDynamic[slot + curText], -1);
                         curText++;
@@ -365,17 +365,17 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                 }
             }
 
-            g_textWidgetDynamic[slot + curText] = new textWidget(
+            g_textWidgetDynamic[slot + curText] = new TextWidget(
                 26, row * 116 + 102, 54, 32, (*g_generalText)[266],
-                "smalfont.fnt", static_cast<font::TColor>(7),
-                rowWidgetId + 97, font::LEFT_JUSTIFIED, 0, 8);
+                "smalfont.fnt", static_cast<Font::Color>(7),
+                rowWidgetId + 97, Font::LEFT_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
             curText++;
 
-            g_textWidgetDynamic[slot + curText] = new textWidget(
+            g_textWidgetDynamic[slot + curText] = new TextWidget(
                 373, row * 116 + 102, 56, 32, (*g_generalText)[267],
-                "smalfont.fnt", static_cast<font::TColor>(7),
-                rowWidgetId + 47, font::LEFT_JUSTIFIED, 0, 8);
+                "smalfont.fnt", static_cast<Font::Color>(7),
+                rowWidgetId + 47, Font::LEFT_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
             curText++;
 
@@ -389,11 +389,11 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
                     creature = g_townDwellingCreatures[
                         currTown->m_type * TOWN_DWELLING_SLOTS + lookup];
-                    g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+                    g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                         offsetToMon * 37 + 78, row * 116 + 102,
                         32, 32, rowWidgetId + lookup + 69,
                         "cprsmall.def", creature + 2, 0, 0, 0,
-                        iconWidget::ICON_STYLE_PLAIN);
+                        IconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
                     g_overWin->addWidget(
@@ -402,20 +402,20 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
                     sprintf(g_text, "+%d",
                             currTown->getGrowthRate(lookup));
-                    g_textWidgetDynamic[slot + curText] = new textWidget(
+                    g_textWidgetDynamic[slot + curText] = new TextWidget(
                         offsetToMon * 37 + 81, row * 116 + 123,
-                        28, 11, g_text, "tiny.fnt", font::PRIMARY,
+                        28, 11, g_text, "tiny.fnt", Font::PRIMARY,
                         rowWidgetId + lookup + 83,
-                        font::RIGHT_JUSTIFIED, 0, 8);
+                        Font::RIGHT_JUSTIFIED, 0, 8);
                     g_overWin->addWidget(
                         g_textWidgetDynamic[slot + curText], -1);
                     curText++;
 
-                    g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+                    g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                         offsetToMon * 37 + 431, row * 116 + 102,
                         32, 32, rowWidgetId + lookup + 19,
                         "cprsmall.def", creature + 2, 0, 0, 0,
-                        iconWidget::ICON_STYLE_PLAIN);
+                        IconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
                     g_overWin->addWidget(
@@ -423,11 +423,11 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                     curBitmap++;
 
                     sprintf(g_text, "%d", currTown->m_population[lookup]);
-                    g_textWidgetDynamic[slot + curText] = new textWidget(
+                    g_textWidgetDynamic[slot + curText] = new TextWidget(
                         offsetToMon * 37 + 434, row * 116 + 123,
-                        28, 11, g_text, "tiny.fnt", font::PRIMARY,
+                        28, 11, g_text, "tiny.fnt", Font::PRIMARY,
                         rowWidgetId + lookup + 33,
-                        font::RIGHT_JUSTIFIED, 0, 8);
+                        Font::RIGHT_JUSTIFIED, 0, 8);
                     g_overWin->addWidget(
                         g_textWidgetDynamic[slot + curText], -1);
                     curText++;
@@ -440,71 +440,71 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                 if (currTown->m_summoningType == CREATURE_NONE)
                     currTown->setSummoningGenerator();
                 if (currTown->m_summoningType != CREATURE_NONE) {
-                    g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+                    g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                         offsetToMon * 37 + 78, row * 116 + 102,
                         32, 32, rowWidgetId + 99,
                         "cprsmall.def", currTown->m_summoningType + 2,
-                        0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                        0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
                     g_overWin->addWidget(
                         g_iconWidgetDynamic[slot + curBitmap], -1);
                     curBitmap++;
 
-                    g_textWidgetDynamic[slot + curText] = new textWidget(
+                    g_textWidgetDynamic[slot + curText] = new TextWidget(
                         offsetToMon * 37 + 81, row * 116 + 123,
-                        28, 11, "+0", "tiny.fnt", font::PRIMARY,
-                        rowWidgetId + 100, font::RIGHT_JUSTIFIED, 0, 8);
+                        28, 11, "+0", "tiny.fnt", Font::PRIMARY,
+                        rowWidgetId + 100, Font::RIGHT_JUSTIFIED, 0, 8);
                     g_overWin->addWidget(
                         g_textWidgetDynamic[slot + curText], -1);
                     curText++;
 
-                    g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+                    g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                         offsetToMon * 37 + 431, row * 116 + 102,
                         32, 32, rowWidgetId + 101,
                         "cprsmall.def", currTown->m_summoningType + 2,
-                        0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                        0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
                     g_overWin->addWidget(
                         g_iconWidgetDynamic[slot + curBitmap], -1);
 
                     sprintf(g_text, "%d", currTown->m_summoningPopulation);
-                    g_textWidgetDynamic[slot + curText] = new textWidget(
+                    g_textWidgetDynamic[slot + curText] = new TextWidget(
                         offsetToMon * 37 + 434, row * 116 + 123,
-                        28, 11, g_text, "tiny.fnt", font::PRIMARY,
-                        rowWidgetId + 102, font::RIGHT_JUSTIFIED, 0, 8);
+                        28, 11, g_text, "tiny.fnt", Font::PRIMARY,
+                        rowWidgetId + 102, Font::RIGHT_JUSTIFIED, 0, 8);
                     g_overWin->addWidget(
                         g_textWidgetDynamic[slot + curText], -1);
                 }
             }
         } else {
             int offsetToMon;
-            hero* currHero = getHero(g_overviewHeroIds[
+            Hero* currHero = getHero(g_overviewHeroIds[
                 g_overviewTop[g_overviewType] + row]);
 
-            g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+            g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                 22, row * 116 + 24, 701, 113, rowWidgetId + 2,
                 "OVSlot.def",
                 4 + (g_overviewHeroArtifactPage[
                     g_overviewTop[g_overviewType] + row]
                         == OVERVIEW_HERO_BACKPACK_PAGE),
                 0, 0, 0,
-                iconWidget::ICON_STYLE_PLAIN);
+                IconWidget::ICON_STYLE_PLAIN);
             if (!g_iconWidgetDynamic[slot + curBitmap])
                 memError();
             g_overWin->addWidget(g_iconWidgetDynamic[slot + curBitmap], -1);
             curBitmap++;
 
             strcpy(g_text, currHero->m_name);
-            g_textWidgetDynamic[slot + curText] = new textWidget(
+            g_textWidgetDynamic[slot + curText] = new TextWidget(
                 97, row * 116 + 31, 185, 20, g_text, "smalfont.fnt",
-                font::PRIMARY, rowWidgetId + 185,
-                font::LEFT_JUSTIFIED, 0, 8);
+                Font::PRIMARY, rowWidgetId + 185,
+                Font::LEFT_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
             curText++;
 
-            g_bitmapBorderDynamic[slot + curBitmap] = new bitmapBorder(
+            g_bitmapBorderDynamic[slot + curBitmap] = new BitmapBorder(
                 27, row * 116 + 30, 58, 64, rowWidgetId + 103,
                 g_heroTraits[currHero->m_portrait].m_largePortraitName,
                 0x800);
@@ -515,20 +515,20 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
             for (item = 0; item < 4; item++) {
                 sprintf(g_text, "%d", currHero->getPrimarySkill(item));
-                g_textWidgetDynamic[slot + curText] = new textWidget(
+                g_textWidgetDynamic[slot + curText] = new TextWidget(
                     item * 36 + 102, row * 116 + 82,
-                    30, 20, g_text, "smalfont.fnt", font::PRIMARY,
+                    30, 20, g_text, "smalfont.fnt", Font::PRIMARY,
                     rowWidgetId + item + 154,
-                    font::CENTER_JUSTIFIED, 0, 8);
+                    Font::CENTER_JUSTIFIED, 0, 8);
                 g_overWin->addWidget(
                     g_textWidgetDynamic[slot + curText], -1);
                 curText++;
 
-                g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+                g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                     item * 36 + 100, row * 116 + 50,
                     32, 32, rowWidgetId + item + 182,
                     "pskil32.def", item, 0, 0, 0,
-                    iconWidget::ICON_STYLE_PLAIN);
+                    IconWidget::ICON_STYLE_PLAIN);
                 if (!g_iconWidgetDynamic[slot + curBitmap])
                     memError();
                 g_overWin->addWidget(
@@ -537,20 +537,20 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             }
 
             const int luck = limit(-3, currHero->getLuck(0, 0, 1), 3);
-            g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+            g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                 246, row * 116 + 52, 30, 20, rowWidgetId + 187,
                 "ILCK30.def", luck + 3, 0, 0, 0,
-                iconWidget::ICON_STYLE_PLAIN);
+                IconWidget::ICON_STYLE_PLAIN);
             if (!g_iconWidgetDynamic[slot + curBitmap])
                 memError();
             g_overWin->addWidget(g_iconWidgetDynamic[slot + curBitmap], -1);
             curBitmap++;
 
             int morale = limit(-3, currHero->getMorale(0, 0, 1), 3);
-            g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+            g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                 246, row * 116 + 77, 30, 20, rowWidgetId + 188,
                 "IMRL30.def", morale + 3, 0, 0, 0,
-                iconWidget::ICON_STYLE_PLAIN);
+                IconWidget::ICON_STYLE_PLAIN);
             if (!g_iconWidgetDynamic[slot + curBitmap])
                 memError();
             g_overWin->addWidget(g_iconWidgetDynamic[slot + curBitmap], -1);
@@ -560,11 +560,11 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             for (item = 0; item < 7; item++) {
                 if (currHero->m_army.m_armies[item] != CREATURE_NONE
                         && currHero->m_army.m_numTroops[item] > 0) {
-                    g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+                    g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                         offsetToMon - 11, row * 116 + 101,
                         32, 32, rowWidgetId + item + 105,
                         "cprsmall.def", currHero->m_army.m_armies[item] + 2,
-                        0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                        0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
                     g_overWin->addWidget(
@@ -572,11 +572,11 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                     curBitmap++;
 
                     sprintf(g_text, "%d", currHero->m_army.m_numTroops[item]);
-                    g_textWidgetDynamic[slot + curText] = new textWidget(
+                    g_textWidgetDynamic[slot + curText] = new TextWidget(
                         offsetToMon, row * 116 + 122,
-                        20, 11, g_text, "tiny.fnt", font::PRIMARY,
+                        20, 11, g_text, "tiny.fnt", Font::PRIMARY,
                         rowWidgetId + item + 112,
-                        font::RIGHT_JUSTIFIED, 0, 8);
+                        Font::RIGHT_JUSTIFIED, 0, 8);
                     g_overWin->addWidget(
                         g_textWidgetDynamic[slot + curText], -1);
                     curText++;
@@ -584,19 +584,19 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                 }
             }
 
-            g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+            g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                 398, row * 116 + 30, 32, 32, rowWidgetId + 193,
                 "un32.def", currHero->m_id, 0, 0, 0,
-                iconWidget::ICON_STYLE_PLAIN);
+                IconWidget::ICON_STYLE_PLAIN);
             if (!g_iconWidgetDynamic[slot + curBitmap])
                 memError();
             g_overWin->addWidget(g_iconWidgetDynamic[slot + curBitmap], -1);
             curBitmap++;
 
-            g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+            g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                 352, row * 116 + 29, 32, 32, rowWidgetId + 189,
                 "pskil32.def", 4, 0, 0, 0,
-                iconWidget::ICON_STYLE_PLAIN);
+                IconWidget::ICON_STYLE_PLAIN);
             if (!g_iconWidgetDynamic[slot + curBitmap])
                 memError();
             g_overWin->addWidget(g_iconWidgetDynamic[slot + curBitmap], -1);
@@ -606,17 +606,17 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                 sprintf(g_text, "%d", currHero->m_experience);
             else
                 sprintf(g_text, "%dk", currHero->m_experience / 1000);
-            g_textWidgetDynamic[slot + curText] = new textWidget(
+            g_textWidgetDynamic[slot + curText] = new TextWidget(
                 346, row * 116 + 49, 48, 20, g_text, "tiny.fnt",
-                font::PRIMARY, rowWidgetId + 190,
-                font::CENTER_JUSTIFIED, 0, 8);
+                Font::PRIMARY, rowWidgetId + 190,
+                Font::CENTER_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
             curText++;
 
-            g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+            g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                 302, row * 116 + 29, 32, 32, rowWidgetId + 191,
                 "pskil32.def", 5, 0, 0, 0,
-                iconWidget::ICON_STYLE_PLAIN);
+                IconWidget::ICON_STYLE_PLAIN);
             if (!g_iconWidgetDynamic[slot + curBitmap])
                 memError();
             g_overWin->addWidget(g_iconWidgetDynamic[slot + curBitmap], -1);
@@ -624,22 +624,22 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
             sprintf(g_text, "%d/%d", currHero->m_mana,
                     currHero->getMaxMana());
-            g_textWidgetDynamic[slot + curText] = new textWidget(
+            g_textWidgetDynamic[slot + curText] = new TextWidget(
                 294, row * 116 + 49, 48, 20, g_text, "tiny.fnt",
-                font::PRIMARY, rowWidgetId + 192,
-                font::CENTER_JUSTIFIED, 0, 8);
+                Font::PRIMARY, rowWidgetId + 192,
+                Font::CENTER_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
             curText++;
 
             for (item = 0; item < 8; item++) {
                 int lookup = currHero->getNthSS(item);
                 if (lookup != -1) {
-                    g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+                    g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                         item * 36 + 433, row * 116 + 29,
                         32, 32, rowWidgetId + item + 158,
                         "secsk32.def",
                         lookup * 3 + currHero->m_skillLevel[lookup] + 2,
-                        0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                        0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
                     g_overWin->addWidget(
@@ -648,14 +648,14 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                 }
             }
 
-            g_textWidgetDynamic[slot + curText] = new textWidget(
+            g_textWidgetDynamic[slot + curText] = new TextWidget(
                 294, row * 116 + 71, 93, 20, (*g_generalText)[259],
-                "smalfont.fnt", font::PRIMARY, rowWidgetId + 139,
-                font::CENTER_JUSTIFIED, 0, 8);
+                "smalfont.fnt", Font::PRIMARY, rowWidgetId + 139,
+                Font::CENTER_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
             curText++;
 
-            type_artifact artifact;
+            ArtifactRecord artifact;
             int heroNumber = g_overviewTop[g_overviewType] + row;
             if (g_overviewHeroArtifactPage[heroNumber]
                     == OVERVIEW_HERO_BACKPACK_PAGE) {
@@ -672,11 +672,11 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                     artifact = currHero->getBackpack(
                         (g_overviewBackpackStart[heroNumber] + item)
                             % lastBackpackIndex);
-                    g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+                    g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                         offsetToMon, row * 116 + 90,
                         44, 44, rowWidgetId + item + 130,
                         "artifact.def", artifact.m_artifactId,
-                        0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                        0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
                     g_overWin->addWidget(
@@ -686,11 +686,11 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                     if (artifact.m_artifactId == ARTIFACT_NONE)
                         g_overWin->widgetClearStatus(
                             rowWidgetId + item + 130,
-                            widget::WIDGET_DRAWN);
+                            Widget::WIDGET_DRAWN);
                     offsetToMon += 48;
                 }
 
-                g_buttonDynamic[row * 3] = new button(
+                g_buttonDynamic[row * 3] = new Button(
                     291, row * 116 + 90, 22, 46,
                     rowWidgetId + 194, "hsbtns5.def",
                     0, 1, 0, 0, 2);
@@ -698,7 +698,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                     memError();
                 g_overWin->addWidget(g_buttonDynamic[row * 3], -1);
 
-                g_buttonDynamic[row * 3 + 1] = new button(
+                g_buttonDynamic[row * 3 + 1] = new Button(
                     697, row * 116 + 90, 22, 46,
                     rowWidgetId + 195, "hsbtns3.def",
                     0, 1, 0, 0, 2);
@@ -708,15 +708,15 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             } else {
                 offsetToMon = 292;
                 for (item = 0; item < kNumArtifactSlots / 2; item++) {
-                    artifact = currHero->getArtifact(TArtifactSlot(
+                    artifact = currHero->getArtifact(ArtifactSlot(
                         (item + (kNumArtifactSlots / 2)
                             * g_overviewHeroArtifactPage[heroNumber])
                             % kNumArtifactSlots));
-                    g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
+                    g_iconWidgetDynamic[slot + curBitmap] = new IconWidget(
                         offsetToMon, row * 116 + 90,
                         44, 44, rowWidgetId + item + 119,
                         "artifact.def", artifact.m_artifactId,
-                        0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                        0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
                     g_overWin->addWidget(
@@ -724,37 +724,37 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                     curBitmap++;
 
                     if (artifact.m_artifactId == ARTIFACT_NONE) {
-                        message msg;
+                        Message msg;
                         msg.m_id = MESSAGE_WIDGET;
-                        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+                        msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
                         msg.m_codeY = rowWidgetId + item + 119;
-                        msg.m_extra = widget::WIDGET_DRAWN;
+                        msg.m_extra = Widget::WIDGET_DRAWN;
                         g_overWin->broadcastMessage(msg);
                     }
                     offsetToMon += 48;
                 }
             }
 
-            g_textButtonDynamic[row * 3] = new textButton(
+            g_textButtonDynamic[row * 3] = new TextButton(
                 386, row * 116 + 70, 108, 16,
                 rowWidgetId + 128, "OvButn3.def", (*g_generalText)[260],
-                "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
+                "smalfont.fnt", 0, 1, 0, 0, 2, Font::HEADING);
             if (!g_textButtonDynamic[row * 3])
                 memError();
             g_overWin->addWidget(g_textButtonDynamic[row * 3], -1);
 
-            g_textButtonDynamic[row * 3 + 1] = new textButton(
+            g_textButtonDynamic[row * 3 + 1] = new TextButton(
                 498, row * 116 + 70, 108, 16,
                 rowWidgetId + 129, "OvButn3.def", (*g_generalText)[262],
-                "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
+                "smalfont.fnt", 0, 1, 0, 0, 2, Font::HEADING);
             if (!g_textButtonDynamic[row * 3 + 1])
                 memError();
             g_overWin->addWidget(g_textButtonDynamic[row * 3 + 1], -1);
 
-            g_textButtonDynamic[row * 3 + 2] = new textButton(
+            g_textButtonDynamic[row * 3 + 2] = new TextButton(
                 610, row * 116 + 70, 108, 16,
                 rowWidgetId + 138, "OvButn3.def", (*g_generalText)[263],
-                "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
+                "smalfont.fnt", 0, 1, 0, 0, 2, Font::HEADING);
             if (!g_textButtonDynamic[row * 3 + 2])
                 memError();
             g_overWin->addWidget(g_textButtonDynamic[row * 3 + 2], -1);
@@ -762,18 +762,18 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             switch (g_overviewHeroArtifactPage[heroNumber]) {
             case OVERVIEW_HERO_EQUIPPED_PAGE_1:
                 g_overWin->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    rowWidgetId + 128, widget::WIDGET_HIGHLIGHTED);
+                    MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,
+                    rowWidgetId + 128, Widget::WIDGET_HIGHLIGHTED);
                 break;
             case OVERVIEW_HERO_EQUIPPED_PAGE_2:
                 g_overWin->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    rowWidgetId + 129, widget::WIDGET_HIGHLIGHTED);
+                    MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,
+                    rowWidgetId + 129, Widget::WIDGET_HIGHLIGHTED);
                 break;
             case OVERVIEW_HERO_BACKPACK_PAGE:
                 g_overWin->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    rowWidgetId + 138, widget::WIDGET_HIGHLIGHTED);
+                    MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,
+                    rowWidgetId + 138, Widget::WIDGET_HIGHLIGHTED);
                 break;
             }
         }
@@ -791,9 +791,9 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 // slider update, two-message protocol, per-mode title counts, and geometry.
 // E:\gamedcs\overview.cpp:1170
 VA(0x0051e330, 0x33A)
-void game::setupNewOverviewType(int whichType, unsigned char update)
+void Game::setupNewOverviewType(int whichType, unsigned char update)
 {
-    message msg;
+    Message msg;
 
     g_overviewType = whichType;
     g_overviewItemCount = g_overviewType == 0
@@ -818,12 +818,12 @@ void game::setupNewOverviewType(int whichType, unsigned char update)
     msg.m_mouseY = 0;
     msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+    msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
     msg.m_extra = 8;
     g_overWin->broadcastMessage(msg);
 
     msg.m_codeY = 195 + (g_overviewType != 0);
-    msg.m_codeX = widget::WIDGET_SET_STATUS;
+    msg.m_codeX = Widget::WIDGET_SET_STATUS;
     g_overWin->broadcastMessage(msg);
 
     unsigned short titleXOffs[6] = {
@@ -844,23 +844,23 @@ void game::setupNewOverviewType(int whichType, unsigned char update)
     if (g_overviewType == 0) {
         for (int title = 0; title < 2; title++) {
             strcpy(g_text, g_overviewText[title]);
-            g_textWidgetTitle[title] = new textWidget(
+            g_textWidgetTitle[title] = new TextWidget(
                 titleXOffs[g_overviewType * 3 + title], 3,
                 titleWidths[g_overviewType * 3 + title], 20, g_text,
                 "medfont.fnt",
-                font::PRIMARY, title + 110,
-                font::CENTER_JUSTIFIED, 0, 8);
+                Font::PRIMARY, title + 110,
+                Font::CENTER_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetTitle[title], -1);
         }
     } else {
         for (int title = 0; title < 3; title++) {
             strcpy(g_text, g_overviewText[title + 3]);
-            g_textWidgetTitle[title] = new textWidget(
+            g_textWidgetTitle[title] = new TextWidget(
                 titleXOffs[g_overviewType * 3 + title], 3,
                 titleWidths[g_overviewType * 3 + title], 20, g_text,
                 DATA_COMPGEN(0x0065f2ec, overviewMedfontFnt, "medfont.fnt"),
-                font::PRIMARY, title + 110,
-                font::CENTER_JUSTIFIED, 0, 8);
+                Font::PRIMARY, title + 110,
+                Font::CENTER_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetTitle[title], -1);
         }
     }
@@ -871,25 +871,25 @@ void game::setupNewOverviewType(int whichType, unsigned char update)
 }
 
 VA(0x0051e670, 0x14D)  // dc 0x106d18
-void TOverviewWindow::updateFlaggableIcon(int i)
+void OverviewWindow::updateFlaggableIcon(int i)
 {
-    message msg;
+    Message msg;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeY = i + OVERVIEW_FLAGGABLE_FIRST_ID;
 
     if (g_overviewFlaggableTop + i >= m_flaggableItems.size()) {
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.m_extra = widget::WIDGET_DRAWN;
+        msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
+        msg.m_extra = Widget::WIDGET_DRAWN;
         broadcastMessage(msg);
         m_flaggableCountWidgets[i]->sendMessage(
-            widget::WIDGET_CLEAR_STATUS,
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            Widget::WIDGET_CLEAR_STATUS,
+            Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
     } else {
-        msg.m_codeX = widget::WIDGET_SET_STATUS;
-        msg.m_extra = widget::WIDGET_DRAWN;
+        msg.m_codeX = Widget::WIDGET_SET_STATUS;
+        msg.m_extra = Widget::WIDGET_DRAWN;
         broadcastMessage(msg);
 
-        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
         msg.m_extra = m_flaggableItems[g_overviewFlaggableTop + i].m_itemType;
         broadcastMessage(msg);
 
@@ -898,8 +898,8 @@ void TOverviewWindow::updateFlaggableIcon(int i)
                 DATA_COMPGEN(0x006755b4, overviewFlaggableCountFormat, "%i"),
                 m_flaggableItems[g_overviewFlaggableTop + i].m_count).c_str());
         m_flaggableCountWidgets[i]->sendMessage(
-            widget::WIDGET_SET_STATUS,
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            Widget::WIDGET_SET_STATUS,
+            Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
     }
 }
 
@@ -907,7 +907,7 @@ void TOverviewWindow::updateFlaggableIcon(int i)
 // through the global overview-window pointer.
 // E:\gamedcs\overview.cpp:1279, dc 0x106d98
 VA(0x0051e7c0, 0x2A)  // called by WindowHandler and DoFlaggableButtons
-void TOverviewWindow::updateFlaggableIcons()
+void OverviewWindow::updateFlaggableIcons()
 {
     for (int i = 0; i < 7; ++i)
         updateFlaggableIcon(i);
@@ -915,7 +915,7 @@ void TOverviewWindow::updateFlaggableIcons()
 }
 
 VA(0x0051e7f0, 0xE0)  // dc 0x106dcc
-void TOverviewWindow::doFlaggableButtons(int which)
+void OverviewWindow::doFlaggableButtons(int which)
 {
     switch (which) {
     case OVERVIEW_FLAGGABLE_HOME:
@@ -953,12 +953,12 @@ void TOverviewWindow::doFlaggableButtons(int which)
 // include-set input to the four large bodies around this one.
 
 VA(0x0051e8d0, 0x57B)  // dc 0x106e90
-void game::overview()
+void Game::overview()
 {
     g_overviewReturnAction = -1;
     g_overviewReturnActionExtra = -1;
 
-    message msg;
+    Message msg;
     msg.m_id = MESSAGE_WIDGET;
 
     g_advManager->trimLoopingSounds(4);
@@ -968,11 +968,11 @@ void game::overview()
     for (int titleSlot = 0; titleSlot < 3; titleSlot++)
         g_textWidgetTitle[titleSlot] = 0;
 
-    g_textWidgetDynamic = new textWidget*[40 * 70];
-    g_iconWidgetDynamic = new iconWidget*[40 * 70];
-    g_bitmapBorderDynamic = new bitmapBorder*[40 * 70];
-    g_buttonDynamic = new button*[40 * 2];
-    g_textButtonDynamic = new textButton*[40 * 3];
+    g_textWidgetDynamic = new TextWidget*[40 * 70];
+    g_iconWidgetDynamic = new IconWidget*[40 * 70];
+    g_bitmapBorderDynamic = new BitmapBorder*[40 * 70];
+    g_buttonDynamic = new Button*[40 * 2];
+    g_textButtonDynamic = new TextButton*[40 * 3];
 
     int row;
     int item;
@@ -1006,13 +1006,13 @@ void game::overview()
         memset(g_overviewHeroArtifactPage, 0, g_overviewItemCounts[0]);
     }
 
-    g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+    g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
 
-    g_overWin = new TOverviewWindow();
+    g_overWin = new OverviewWindow();
     if (!g_overWin)
         memError();
 
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.m_codeX = Widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
     g_overWin->broadcastMessage(msg);
@@ -1022,7 +1022,7 @@ void game::overview()
 
     setWinText(g_overWin, 9);
 
-    g_overviewBank = new TResourceDisplay(g_overWin, 1);
+    g_overviewBank = new ResourceDisplay(g_overWin, 1);
     g_overviewBank->update(1, 0);
 
     signed char res[7];
@@ -1037,7 +1037,7 @@ void game::overview()
     }
 
     for (int resource = 0; resource < 7; resource++) {
-        msg.m_codeX = widget::WIDGET_SET_TEXT;
+        msg.m_codeX = Widget::WIDGET_SET_TEXT;
         msg.m_extraText = g_text;
         sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                 res[resource]);
@@ -1046,9 +1046,9 @@ void game::overview()
     }
 
     g_overviewFlaggableTop = 0;
-    static_cast<TOverviewWindow*>(g_overWin)->updateFlaggableIcons();
+    static_cast<OverviewWindow*>(g_overWin)->updateFlaggableIcons();
 
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 27;
     msg.m_extraText = g_text;
     sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
@@ -1131,20 +1131,20 @@ static void decrementBackpackStart(long slot)
 // Complete emits no standalone body: VC6 expands both calls below, preserving
 // the helper while producing the two retail constructor/dialog/destructor
 // sequences. Open-coding either site is the negative source-shape control.
-static inline void showArtifact(hero* currHero,
-                                 const type_artifact& artifact,
+static inline void showArtifact(Hero* currHero,
+                                 const ArtifactRecord& artifact,
                                  unsigned char rightMouse)
 {
     if (artifact.m_artifactId == ARTIFACT_SPELLBOOK) {
-        TSpellbookWindow spellBookWindow(
-            *currHero, 0, TSpellbookWindow::eContextNeither,
+        SpellbookWindow spellBookWindow(
+            *currHero, 0, SpellbookWindow::eContextNeither,
             currHero->getSpecialTerrain());
         spellBookWindow.doModal(0);
     } else if (artifact.m_artifactId != ARTIFACT_NONE) {
         normalDialog(
             artifact.getDescription().c_str(),
-            rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                        : hero::PRIMARY_STAT_DIALOG_TYPE,
+            rightMouse ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                        : Hero::PRIMARY_STAT_DIALOG_TYPE,
             -1, 28, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 }
@@ -1155,7 +1155,7 @@ static inline void showArtifact(hero* currHero,
 // equipped-artifact rules, the added experience/mana/specialty cases, the
 // split visiting/garrison town cases, and the summoning-portal recruit pair.
 VA(0x0051ee50, 0xBD0)  // exhaustive body/caller identity, dc 0x107a90
-int game::processIconSelect(int codeY, unsigned char rightMouse)
+int Game::processIconSelect(int codeY, unsigned char rightMouse)
 {
     int slot;
     int selectedIndex;
@@ -1172,7 +1172,7 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
             // Dreamcast's quotient iSlot.  Negative control: mutating iSlot
             // in this arm reaches 96.76% but emits four retail-absent
             // NormalDialog calls and a 119th CFG block.
-            hero* currHero = getHero(g_overviewHeroIds[selectedIndex]);
+            Hero* currHero = getHero(g_overviewHeroIds[selectedIndex]);
 
             switch (codeY) {
             case OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
@@ -1234,8 +1234,8 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
                 normalDialog(
                     g_sSkillTraits[skill].m_levelNames[
                         currHero->m_skillLevel[skill] - 1],
-                    rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                    rightMouse ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                     -1, -1, 20,
                     skill * 3 + currHero->m_skillLevel[skill] + 2,
                     -1, 0, -1, 0, -1, 0);
@@ -1253,7 +1253,7 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 8:
                 showArtifact(
                     currHero,
-                    currHero->getArtifact(TArtifactSlot(
+                    currHero->getArtifact(ArtifactSlot(
                         (codeY - 119
                          + 9 * g_overviewHeroArtifactPage[selectedIndex])
                         % 18)),
@@ -1287,33 +1287,33 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
             case OVERVIEW_HERO_PRIMARY_STAT_FIRST_ID + 3:
                 normalDialog(
                     g_statDesc[codeY - 182],
-                    rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                    rightMouse ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
 
             case OVERVIEW_HERO_MORALE_ID:
                 g_game->showMoraleInfo(
                     currHero,
-                    rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE);
+                    rightMouse ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE);
                 break;
             case OVERVIEW_HERO_LUCK_ID:
                 g_game->showLuckInfo(
                     currHero,
-                    rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE);
+                    rightMouse ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE);
                 break;
 
             case OVERVIEW_HERO_LEVEL_ID: {
                 int level = currHero->m_level;
                 sprintf(g_text, (*g_generalText)[3], level,
-                        hero::getExperience(level + 1),
+                        Hero::getExperience(level + 1),
                         currHero->m_experience);
                 normalDialog(
                     g_text,
-                    rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                    rightMouse ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             }
@@ -1323,8 +1323,8 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
                         currHero->m_mana, currHero->getMaxMana());
                 normalDialog(
                     g_text,
-                    rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                    rightMouse ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
 
@@ -1333,15 +1333,15 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
                        g_heroSpecificAbilities[currHero->m_id].m_longText);
                 normalDialog(
                     g_text,
-                    rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                    rightMouse ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             }
         }
 
         if (g_overviewType == 1) {
-            town* currTown = getTown(g_game->getLocalPlayer()->m_townIds[
+            Town* currTown = getTown(g_game->getLocalPlayer()->m_townIds[
                 g_overviewTop[g_overviewType] + slot]);
 
             switch (codeY) {
@@ -1402,10 +1402,10 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 4:
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 5:
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 6: {
-                hero* garrison = g_game->getHero(currTown->m_garrisonHeroId);
+                Hero* garrison = g_game->getHero(currTown->m_garrisonHeroId);
                 g_game->viewArmy(
-                    const_cast<armyGroup&>(
-                        static_cast<const town*>(currTown)->getArmy()),
+                    const_cast<ArmyGroup&>(
+                        static_cast<const Town*>(currTown)->getArmy()),
                     codeY - 5, 0, currTown, 119, 20,
                     !garrison || garrison->m_army.getNumArmies() > 1,
                     rightMouse);
@@ -1468,8 +1468,8 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
                 if (rightMouse) {
                     quickViewRecruit(currTown, codeY - 19);
                 } else {
-                    recruitUnit* recruit =
-                        new recruitUnit(currTown, codeY - 19, 0);
+                    RecruitUnit* recruit =
+                        new RecruitUnit(currTown, codeY - 19, 0);
                     if (!recruit)
                         memError();
                     g_executive->doDialog(recruit);
@@ -1485,9 +1485,9 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
                     quickViewRecruit(currTown->m_summoningType,
                                      &currTown->m_summoningPopulation);
                 } else {
-                    recruitUnit* recruit = new recruitUnit(
-                        &const_cast<armyGroup&>(
-                            static_cast<const town*>(currTown)->getArmy()),
+                    RecruitUnit* recruit = new RecruitUnit(
+                        &const_cast<ArmyGroup&>(
+                            static_cast<const Town*>(currTown)->getArmy()),
                         1, currTown->m_summoningType,
                         &currTown->m_summoningPopulation,
                         CREATURE_NONE, 0, CREATURE_NONE, 0,
@@ -1563,7 +1563,7 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
 }
 
 VA(0x0051fa20, 0x1C)  // dc 0x1084a0
-void overviewSliderCallback(int state, heroWindow* parentWindow)
+void overviewSliderCallback(int state, HeroWindow* parentWindow)
 {
     g_overviewTop[g_overviewType] = state;
     g_game->setupDynamicStuff(1, 0);
@@ -1610,42 +1610,42 @@ void overviewSliderCallback(int state, heroWindow* parentWindow)
 // Both library-level spellings the doctrine offers are therefore bounded,
 // and the site is a /Ob2 quotient with no admissible source lever.
 VA(0x0051fa40, 0x1311)  // exhaustive ctor/callback/dtor identity, dc 0x1084f0
-TOverviewWindow::TOverviewWindow()
+OverviewWindow::OverviewWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
     m_widgets.reserve(100);
 
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         0, 0, m_width, m_height, 0, "OvCast.pcx", 0x800));
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         22, 4, 702, 20, 197, "OvTitle.pcx", 0x800));
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         23, 25, 701, 113, 201, "OVSlot.def", 0, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN));
+        IconWidget::ICON_STYLE_PLAIN));
     // Complete widens the single Dreamcast overview slot into four stacked
     // rows; the repeated 116-pixel y stride and 200-id stride are explicit in
     // the retail constructor's next three operator-new/ctor/insert groups.
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         23, 141, 701, 113, 401, "OVSlot.def", 1, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         23, 257, 701, 113, 601, "OVSlot.def", 2, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         23, 373, 701, 113, 801, "OVSlot.def", 3, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new bitmapBorder(
+        IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new BitmapBorder(
         731, 45, 66, 398, 39, "FlagBack.pcx", 0x800));
 
     int i;
     for (i = 0; i < 7; ++i) {
-        m_widgets.push_back(new iconWidget(
+        m_widgets.push_back(new IconWidget(
             739, i * 57 + 47, 50, 50, i + 40, "FlagPort.def",
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-        m_flaggableCountWidgets.push_back(new textWidget(
+            0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+        m_flaggableCountWidgets.push_back(new TextWidget(
             739, i * 57 + 81, 50, 16, g_emptyRolloverText,
-            "smalfont.fnt", font::PRIMARY, -1,
-            font::RIGHT_JUSTIFIED, 0, 8));
+            "smalfont.fnt", Font::PRIMARY, -1,
+            Font::RIGHT_JUSTIFIED, 0, 8));
         m_widgets.insert(m_widgets.end(), m_flaggableCountWidgets.back());
     }
 
@@ -1656,82 +1656,82 @@ TOverviewWindow::TOverviewWindow()
     // push 0x36 / push 0x23 / OvMines.def / push 6` - i.e. the gold column
     // at x=500, widget id 35, frame 6, filling the gap between the sixth
     // mine and the eight 80-byte count labels below. 78.9277 -> 82.7097.
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         20, 494, 68, 54, 29, "OvMines.def", 0, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         100, 494, 68, 54, 30, "OvMines.def", 1, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         180, 494, 68, 54, 31, "OvMines.def", 2, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         260, 494, 68, 54, 32, "OvMines.def", 3, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         340, 494, 68, 54, 33, "OvMines.def", 4, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         420, 494, 68, 54, 34, "OvMines.def", 5, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         500, 494, 68, 54, 35, "OvMines.def", 6, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN));
+        IconWidget::ICON_STYLE_PLAIN));
 
-    m_widgets.push_back(new textWidget(
-        20, 539, 68, 20, 0, "smalfont.fnt", font::PRIMARY, 20,
-        font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
-        100, 539, 68, 20, 0, "smalfont.fnt", font::PRIMARY, 21,
-        font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
-        180, 539, 68, 20, 0, "smalfont.fnt", font::PRIMARY, 22,
-        font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
-        260, 539, 68, 20, 0, "smalfont.fnt", font::PRIMARY, 23,
-        font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
-        340, 539, 68, 20, 0, "smalfont.fnt", font::PRIMARY, 24,
-        font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
-        420, 539, 68, 20, 0, "smalfont.fnt", font::PRIMARY, 25,
-        font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
-        500, 539, 68, 20, 0, "smalfont.fnt", font::PRIMARY, 26,
-        font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
-        590, 539, 126, 20, 0, "smalfont.fnt", font::PRIMARY, 27,
-        font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
+        20, 539, 68, 20, 0, "smalfont.fnt", Font::PRIMARY, 20,
+        Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
+        100, 539, 68, 20, 0, "smalfont.fnt", Font::PRIMARY, 21,
+        Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
+        180, 539, 68, 20, 0, "smalfont.fnt", Font::PRIMARY, 22,
+        Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
+        260, 539, 68, 20, 0, "smalfont.fnt", Font::PRIMARY, 23,
+        Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
+        340, 539, 68, 20, 0, "smalfont.fnt", Font::PRIMARY, 24,
+        Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
+        420, 539, 68, 20, 0, "smalfont.fnt", Font::PRIMARY, 25,
+        Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
+        500, 539, 68, 20, 0, "smalfont.fnt", Font::PRIMARY, 26,
+        Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
+        590, 539, 126, 20, 0, "smalfont.fnt", Font::PRIMARY, 27,
+        Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new border(590, 505, 126, 57, 28, 1));
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new Border(590, 505, 126, 57, 28, 1));
+    m_widgets.push_back(new BitmapBorder(
         9, 555, 730, 19, 36, "TStatBar.pcx", 0x800));
-    m_widgets.push_back(new textWidget(
-        9, 556, 730, 18, 0, "smalfont.fnt", font::PRIMARY, 37,
-        font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
+        9, 556, 730, 18, 0, "smalfont.fnt", Font::PRIMARY, 37,
+        Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         733, 4, 61, 18, 12, "OvButn4.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         733, 466, 61, 18, 13, "OvButn4.def", 2, 3, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         733, 24, 61, 18, 15, "OvButn4.def", 4, 5, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         733, 446, 61, 18, 16, "OvButn4.def", 6, 7, 0, 0, 2));
 
-    g_overviewSlider = new slider(
+    g_overviewSlider = new Slider(
         4, 4, 16, 482, 10, 2, overviewSliderCallback,
-        slider::BROWN, 4, 0);
+        Slider::BROWN, 4, 0);
     m_widgets.push_back(g_overviewSlider);
 
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         748, 493, 48, 32, 195, "OvButn1.def", 0, 1, 0, 35, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         748, 528, 48, 32, 196, "OvButn6.def", 0, 1, 0, 20, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         748, 563, 48, 32, 0x7800, "OvButn1.def", 3, 4, 1, 28, 2));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -1741,7 +1741,7 @@ TOverviewWindow::TOverviewWindow()
     int localPlayer = g_game->getLocalPlayerGamePos();
 
     for (i = 0; i < g_game->m_mines.size(); ++i) {
-        mine& current = g_game->m_mines[i];
+        Mine& current = g_game->m_mines[i];
         if (current.m_playerOwner != localPlayer)
             continue;
 
@@ -1759,11 +1759,11 @@ TOverviewWindow::TOverviewWindow()
                 // against 78.2776 pinned, both under the 80.0954 the row
                 // banked in an older delink generation), so the debt buys
                 // nothing and goes.
-                overview_item_record record = { 'U', 0 };
+                OverviewItemRecord record = { 'U', 0 };
                 m_flaggableItems.push_back(record);
             }
             ++m_flaggableItems[item].m_count;
-        } else if (current.m_type == mine::MINE_TYPE_LIGHTHOUSE) {
+        } else if (current.m_type == Mine::MINE_TYPE_LIGHTHOUSE) {
             int item = m_flaggableItems.size();
             while (item--) {
                 if (m_flaggableItems[item].m_itemType == 'R')
@@ -1771,7 +1771,7 @@ TOverviewWindow::TOverviewWindow()
             }
             if (item < 0) {
                 item = m_flaggableItems.size();
-                overview_item_record record = { 'R', 0 };
+                OverviewItemRecord record = { 'R', 0 };
                 m_flaggableItems.push_back(record);
             }
             ++m_flaggableItems[item].m_count;
@@ -1779,7 +1779,7 @@ TOverviewWindow::TOverviewWindow()
     }
 
     for (i = 0; i < g_game->m_generators.size(); ++i) {
-        generator& current = g_game->m_generators[i];
+        Generator& current = g_game->m_generators[i];
         if (current.getOwner() != localPlayer)
             continue;
 
@@ -1792,14 +1792,14 @@ TOverviewWindow::TOverviewWindow()
         }
         if (item < 0) {
             item = m_flaggableItems.size();
-            overview_item_record record = { itemType, 0 };
+            OverviewItemRecord record = { itemType, 0 };
             m_flaggableItems.push_back(record);
         }
         ++m_flaggableItems[item].m_count;
     }
 
     for (i = 0; i < g_game->m_garrisons.size(); ++i) {
-        garrison& current = g_game->m_garrisons[i];
+        Garrison& current = g_game->m_garrisons[i];
         if (current.m_playerOwner != localPlayer)
             continue;
 
@@ -1814,7 +1814,7 @@ TOverviewWindow::TOverviewWindow()
             }
             if (item < 0) {
                 item = m_flaggableItems.size();
-                overview_item_record record = { 'S', 0 };
+                OverviewItemRecord record = { 'S', 0 };
                 m_flaggableItems.push_back(record);
             }
         } else {
@@ -1825,14 +1825,14 @@ TOverviewWindow::TOverviewWindow()
             }
             if (item < 0) {
                 item = m_flaggableItems.size();
-                overview_item_record record = { 'T', 0 };
+                OverviewItemRecord record = { 'T', 0 };
                 m_flaggableItems.push_back(record);
             }
         }
         ++m_flaggableItems[item].m_count;
     }
 
-    playerData& player = g_game->m_players[localPlayer];
+    PlayerData& player = g_game->m_players[localPlayer];
     for (i = 0; i < player.m_shipyards.size(); ++i) {
         int item = m_flaggableItems.size();
         while (item--) {
@@ -1841,7 +1841,7 @@ TOverviewWindow::TOverviewWindow()
         }
         if (item < 0) {
             item = m_flaggableItems.size();
-            overview_item_record record = { 'W', 0 };
+            OverviewItemRecord record = { 'W', 0 };
             // See the constructor's ladder note: this append and the flag-label
         // one are the only two of the 42 whose `insert(end(), x)` spelling
         // pays (+6.89 here).  NAMING THE VECTOR on top of it is another
@@ -1850,19 +1850,19 @@ TOverviewWindow::TOverviewWindow()
         // `this`, and it is one of the two frame dwords this body is short.
         // The same reference on the flag-label append LOSES 0.60, and both
         // together 0.61 - per-site, like everything else about this lever.
-        std::vector<overview_item_record>& items = m_flaggableItems;
+        std::vector<OverviewItemRecord>& items = m_flaggableItems;
         items.insert(items.end(), record);
         }
         ++m_flaggableItems[item].m_count;
     }
 }
 
-VA_COMPGEN(0x00520d60, 0x21, SCALAR_DELETING_DTOR, TOverviewWindow)
+VA_COMPGEN(0x00520d60, 0x21, SCALAR_DELETING_DTOR, OverviewWindow)
 
 VA(0x00520d90, 0x9C)  // dc 0x108f74
-TOverviewWindow::~TOverviewWindow()
+OverviewWindow::~OverviewWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -1875,17 +1875,17 @@ TOverviewWindow::~TOverviewWindow()
 // controls at slot+128, slot+129 and slot+138. Complete has no surviving
 // standalone copy; WindowHandler is expected to expand this helper.
 // E:\gamedcs\overview.cpp:2096
-void TOverviewWindow::clearButtons(int slot)
+void OverviewWindow::clearButtons(int slot)
 {
-    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+    broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS,
                      slot + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID,
-                     widget::WIDGET_HIGHLIGHTED);
-    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                     Widget::WIDGET_HIGHLIGHTED);
+    broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS,
                      slot + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID,
-                     widget::WIDGET_HIGHLIGHTED);
-    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                     Widget::WIDGET_HIGHLIGHTED);
+    broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS,
                      slot + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID,
-                     widget::WIDGET_HIGHLIGHTED);
+                     Widget::WIDGET_HIGHLIGHTED);
 }
 
 // Dreamcast proves this private helper, the message local, its constructor,
@@ -1893,11 +1893,11 @@ void TOverviewWindow::clearButtons(int slot)
 // Complete retains precisely that sequence at the tail of DoRollover, but
 // VC6 /Ob2 folds the helper body into its only caller.
 // E:\gamedcs\overview.cpp:2103
-void TOverviewWindow::updateRollover(char* text)
+void OverviewWindow::updateRollover(char* text)
 {
-    message msg;
+    Message msg;
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 37;
     msg.m_extraText = text;
     g_overWin->broadcastMessage(msg);
@@ -1917,7 +1917,7 @@ void TOverviewWindow::updateRollover(char* text)
 // Dreamcast retains only iSlot, so the repeated source expression is kept.
 // E:\gamedcs\overview.cpp:2115
 VA(0x00520e30, 0xB2C)  // vtable/caller/order-map + exhaustive body, dc 0x10906c
-void TOverviewWindow::doRollover(int codeY)
+void OverviewWindow::doRollover(int codeY)
 {
     int slot;
 
@@ -1929,7 +1929,7 @@ void TOverviewWindow::doRollover(int codeY)
         codeY = (codeY - 200) % 200;
 
         if (g_overviewType == 0) {
-            hero* currHero = g_game->getHero(
+            Hero* currHero = g_game->getHero(
                 g_overviewHeroIds[g_overviewTop[g_overviewType] + slot]);
 
             switch (codeY) {
@@ -2057,7 +2057,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 6:
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 7:
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 8:
-                currHero->getArtifact(TArtifactSlot(
+                currHero->getArtifact(ArtifactSlot(
                     (codeY - OVERVIEW_HERO_ARTIFACT_FIRST_ID
                      + 9 * g_overviewHeroArtifactPage[
                          g_overviewTop[g_overviewType] + slot]) % 18))
@@ -2092,7 +2092,7 @@ void TOverviewWindow::doRollover(int codeY)
                 break;
             }
         } else {
-            town* currTown = g_game->getTown(
+            Town* currTown = g_game->getTown(
                 g_game->getLocalPlayer()->m_townIds[
                     g_overviewTop[g_overviewType] + slot]);
             strcpy(g_text, g_emptyRolloverText);
@@ -2103,7 +2103,7 @@ void TOverviewWindow::doRollover(int codeY)
                 if (currTown->m_visitingHeroId < 0)
                     break;
                 {
-                    hero* currHero =
+                    Hero* currHero =
                         g_game->getHero(currTown->m_visitingHeroId);
                     sprintf(g_text,
                             (*g_generalText)[
@@ -2117,7 +2117,7 @@ void TOverviewWindow::doRollover(int codeY)
                 if (currTown->m_garrisonHeroId < 0)
                     break;
                 {
-                    hero* currHero =
+                    Hero* currHero =
                         g_game->getHero(currTown->m_garrisonHeroId);
                     sprintf(g_text,
                             (*g_generalText)[
@@ -2135,7 +2135,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 5:
             case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 6:
                 sprintf(g_text, g_heroScreenNameFormat,
-                        getArmyName(static_cast<const town*>(currTown)
+                        getArmyName(static_cast<const Town*>(currTown)
                                         ->getArmy().m_armies[
                             codeY
                             - OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID],
@@ -2150,7 +2150,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 5:
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 6:
                 sprintf(g_text, g_heroScreenNameFormat,
-                        getArmyName(static_cast<const town*>(currTown)
+                        getArmyName(static_cast<const Town*>(currTown)
                                         ->getArmy().m_armies[
                             codeY - OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID],
                                     2));
@@ -2426,7 +2426,7 @@ void doFlaggableButtons(int which)
 
 // E:\gamedcs\overview.cpp:1314
 DC_ONLY(0x106e90, 0x7D6)
-void game::overview()
+void Game::overview()
 {
     // @stub
 }
@@ -2455,7 +2455,7 @@ void game::overview()
 // controls are retained to alter the budget.
 // E:\gamedcs\overview.cpp:2546
 VA(0x00521960, 0xB03)  // vtable slot 9 + exhaustive call/CFG identity, dc 0x10997c
-int TOverviewWindow::windowHandler(message& msg)
+int OverviewWindow::windowHandler(Message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -2466,16 +2466,16 @@ int TOverviewWindow::windowHandler(message& msg)
 
     if (msg.m_id == MESSAGE_WIDGET) {
         switch (msg.m_codeX) {
-        case widget::WIDGET_RIGHT_SELECT:
+        case Widget::WIDGET_RIGHT_SELECT:
             rightMouse = 1;
             // The source intentionally shares the ordinary-select tail.
-        case widget::WIDGET_SELECT:
+        case Widget::WIDGET_SELECT:
             if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
                 rightMouse = 1;
             res = g_game->processIconSelect(msg.m_codeY, rightMouse);
             break;
 
-        case widget::WIDGET_DESELECT:
+        case Widget::WIDGET_DESELECT:
             switch (msg.m_codeY) {
             case OVERVIEW_FLAGGABLE_HOME_ID:
                 doFlaggableButtons(OVERVIEW_FLAGGABLE_HOME);
@@ -2705,8 +2705,8 @@ int TOverviewWindow::windowHandler(message& msg)
     }
 
     if (res == 1) {
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = Widget::WIDGET_END_DIALOG;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -2718,15 +2718,15 @@ void updateBackpack(int slot)
     int i = 0;
     int slotOff = slot * 200 + 200;
     int heroNumber = g_overviewTop[g_overviewType] + slot;
-    hero* currHero = g_game->getHero(g_overviewHeroIds[heroNumber]);
+    Hero* currHero = g_game->getHero(g_overviewHeroIds[heroNumber]);
     int lastBackpackIndex = currHero->getLastBackpackIndex() + 1;
-    type_artifact artifact;
+    ArtifactRecord artifact;
     // DC 0x1076c4 calls the default message constructor at 0x2d58.
     // Retail 0x522470 initializes the same zero fields before id/codeX.
-    message msg;
+    Message msg;
 
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
 
     for (; i < 8 && i < lastBackpackIndex; ++i) {
         msg.m_codeY = i + slotOff + 130;
@@ -2762,7 +2762,7 @@ static long getLastBackpackIndex(long heroNumber)
 {
     if (heroNumber >= g_game->getLocalPlayer()->m_numHeroes)
         return 0;
-    hero* currHero = g_game->getHero(
+    Hero* currHero = g_game->getHero(
         g_game->getLocalPlayer()->m_heroes[heroNumber]);
     return currHero->getLastBackpackIndex();
 }
@@ -2785,63 +2785,63 @@ void decrementBackpackStart(long slot)
 
 // E:\gamedcs\overview.cpp:1647
 DC_ONLY(0x1079fc, 0x94)
-void showArtifact(hero* currHero, const type_artifact& artifact, unsigned char right_mouse)
+void showArtifact(Hero* currHero, const ArtifactRecord& artifact, unsigned char right_mouse)
 {
     // @stub
 }
 
 // E:\gamedcs\overview.cpp:1663
 DC_ONLY(0x107a90, 0xA10)
-int game::processIconSelect(int codeY, unsigned char bRightMouse)
+int Game::processIconSelect(int codeY, unsigned char bRightMouse)
 {
     // @stub
 }
 
 // E:\gamedcs\overview.cpp:2086
 DC_ONLY(0x108f74, 0x68)
-void TOverviewWindow::~TOverviewWindow()
+void OverviewWindow::~OverviewWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\overview.cpp:2096
 DC_ONLY(0x108fdc, 0x50)
-void TOverviewWindow::clearButtons(int slot)
+void OverviewWindow::clearButtons(int slot)
 {
     // @stub
 }
 
 // E:\gamedcs\overview.cpp:2103
 DC_ONLY(0x10902c, 0x40)
-void TOverviewWindow::updateRollover(char* cText)
+void OverviewWindow::updateRollover(char* cText)
 {
     // @stub
 }
 
 // E:\gamedcs\overview.cpp:2115
 DC_ONLY(0x10906c, 0x90E)
-void TOverviewWindow::doRollover(int codeY)
+void OverviewWindow::doRollover(int codeY)
 {
     // @stub
 }
 
 // E:\gamedcs\overview.cpp:2546
 DC_ONLY(0x10997c, 0x87C)
-int TOverviewWindow::windowHandler(message& msg)
+int OverviewWindow::windowHandler(Message& msg)
 {
     // @stub
 }
 
 // E:\gamedcs\Hero.h:664
 DC_ONLY(0x10a1f8, 0x18)
-town* hero::getOccupiedTown()
+Town* Hero::getOccupiedTown()
 {
     // @stub
 }
 
 // E:\gamedcs\overview.cpp:2083
 DC_ONLY(0x10a210, 0x34)
-void* TOverviewWindow::`scalar deleting destructor'(unsigned __flags)
+void* OverviewWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

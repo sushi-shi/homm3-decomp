@@ -32,7 +32,7 @@ void ExtraInfoUnion::setCellVisited(short player)
 }
 
 VA(0x004fc000, 0x19A)  // dc 0xeb73c
-int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
+int NewfullMap::readTimedEventList(AbstractFile* infile, int saveVersion)
 {
     int count;
     if (infile->read(&count, sizeof(count)) < sizeof(count))
@@ -69,7 +69,7 @@ int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
 // site still calls the string destructor where retail calls _Tidy(true);
 // default depth expands the child too, so this boundary remains unresolved.
 VA(0x004fc1a0, 0x1EE)  // order-map: callers readTimedEventList + readTownData (inlined TTownEvent::Read), calls readString 0x4c6010; EH-bearing, dc 0xeb7d0
-int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
+int TimedEvent::read(AbstractFile* infile, int saveVersion)
 {
     int count;
     std::string throwAway;
@@ -118,7 +118,7 @@ int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
 }
 
 VA(0x004fc390, 0xA5)  // dc 0xeb9a0
-int NewfullMap::saveTimedEventList(TAbstractFile* outfile)
+int NewfullMap::saveTimedEventList(AbstractFile* outfile)
 {
     int count = m_timedEventList.size();
     if (static_cast<unsigned>(outfile->write(&count, sizeof(count)))
@@ -133,9 +133,9 @@ int NewfullMap::saveTimedEventList(TAbstractFile* outfile)
 }
 
 VA(0x004fc440, 0xB7)  // dc 0xeba38
-int TTimedEvent::save(TAbstractFile* outfile)
+int TimedEvent::save(AbstractFile* outfile)
 {
-    if (game::saveString(outfile, m_message) < 0)
+    if (Game::saveString(outfile, m_message) < 0)
         return -1;
     if (static_cast<unsigned>(outfile->write(m_resQty, sizeof(m_resQty)))
         < sizeof(m_resQty))
@@ -154,7 +154,7 @@ int TTimedEvent::save(TAbstractFile* outfile)
 }
 
 VA(0x004fc500, 0x19A)  // dc 0xebb0c
-int NewfullMap::loadTimedEventList(TAbstractFile* infile, int saveVersion)
+int NewfullMap::loadTimedEventList(AbstractFile* infile, int saveVersion)
 {
     int count;
     if (infile->read(&count, sizeof(count)) < sizeof(count))
@@ -169,9 +169,9 @@ int NewfullMap::loadTimedEventList(TAbstractFile* infile, int saveVersion)
 }
 
 VA(0x004fc6a0, 0xC8)  // dc 0xebbbc
-int TTimedEvent::load(TAbstractFile* infile, int saveVersion)
+int TimedEvent::load(AbstractFile* infile, int saveVersion)
 {
-    if (game::loadString(infile, m_message) < 0)
+    if (Game::loadString(infile, m_message) < 0)
         return -1;
     if (static_cast<unsigned>(infile->read(m_resQty, sizeof(m_resQty)))
         < sizeof(m_resQty))
@@ -195,12 +195,12 @@ int TTimedEvent::load(TAbstractFile* infile, int saveVersion)
 }
 
 // E:\gamedcs\mapcell.cpp:232, dc 0xebc90
-int TTownEvent::read(TAbstractFile* infile, int mapVersion)
+int TownEvent::read(AbstractFile* infile, int mapVersion)
 {
     unsigned char inBuf[6];
     char padding[4];
 
-    TTimedEvent::read(infile, mapVersion);
+    TimedEvent::read(infile, mapVersion);
 
     if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
         return -1;
@@ -217,7 +217,7 @@ int TTownEvent::read(TAbstractFile* infile, int mapVersion)
 }
 
 VA(0x004fc770, 0xFA)  // dc 0xebd24
-int NewfullMap::saveTownEventList(TAbstractFile* outfile)
+int NewfullMap::saveTownEventList(AbstractFile* outfile)
 {
     int count = m_townEventList.size();
     if (static_cast<unsigned>(outfile->write(&count, sizeof(count)))
@@ -235,9 +235,9 @@ int NewfullMap::saveTownEventList(TAbstractFile* outfile)
 // Retail saveTownEventList calls the base at 0x4fc80b and expands the
 // derived writes at 0x4fc81a/0x4fc82c/0x4fc83e. CodeView calls the
 // base at dc 0xebdca and deliberately ignores its result.
-int TTownEvent::save(TAbstractFile* outfile)
+int TownEvent::save(AbstractFile* outfile)
 {
-    TTimedEvent::save(outfile);
+    TimedEvent::save(outfile);
     if (static_cast<unsigned>(outfile->write(&m_townNum, 1)) < 1)
         return -1;
     if (static_cast<unsigned>(outfile->write(&m_buildBuildings, 8)) < 8)
@@ -248,7 +248,7 @@ int TTownEvent::save(TAbstractFile* outfile)
 }
 
 VA(0x004fc870, 0x1E4)  // dc 0xebe3c
-int NewfullMap::loadTownEventList(TAbstractFile* infile, int saveVersion)
+int NewfullMap::loadTownEventList(AbstractFile* infile, int saveVersion)
 {
     int count;
     if (infile->read(&count, sizeof(count)) < sizeof(count))
@@ -267,9 +267,9 @@ int NewfullMap::loadTownEventList(TAbstractFile* infile, int saveVersion)
 // caller pushes it at 0x4fc9d7 before the base call at 0x4fc9e6,
 // then expands the derived reads at 0x4fc9f5/0x4fca0b/0x4fca21.
 // CodeView calls the base at dc 0xebefa and ignores its result.
-int TTownEvent::load(TAbstractFile* infile, int saveVersion)
+int TownEvent::load(AbstractFile* infile, int saveVersion)
 {
-    TTimedEvent::load(infile, saveVersion);
+    TimedEvent::load(infile, saveVersion);
     if (static_cast<unsigned>(infile->read(&m_townNum, 1)) < 1)
         return -1;
     if (static_cast<unsigned>(infile->read(&m_buildBuildings, 8)) < 8)
@@ -283,7 +283,7 @@ int TTownEvent::load(TAbstractFile* infile, int saveVersion)
 // Dreamcast retains an out-of-line copy. Retail's corresponding source-order
 // slot is twelve bytes of NOP padding, while is_diggable contains this exact
 // vector lookup expanded in place, so the Windows helper is inline-only.
-inline CObject* NewmapCell::TObjectCell::getObject() const
+inline CObject* NewmapCell::ObjectCell::getObject() const
 {
     return &g_game->m_worldMap.m_objects[m_objectIndex];
 }
@@ -305,7 +305,7 @@ NewmapCell* NewmapCell::getTriggerCell()
         return 0;
 
     CObject* object = &g_game->m_worldMap.m_objects[m_objectTypeIndex];
-    type_point location = object->getTrigger();
+    MapPoint location = object->getTrigger();
 
     if (location.m_x < 0)
         return 0;
@@ -313,14 +313,14 @@ NewmapCell* NewmapCell::getTriggerCell()
 }
 
 VA(0x004fcbd0, 0x5C)  // dc 0xec098
-TAdventureObjectType NewmapCell::getMapObject() const
+AdventureObjectType NewmapCell::getMapObject() const
 {
     if (m_type == HERO) {
-        const hero* currentHero = g_game->getHero(m_extraInfo);
+        const Hero* currentHero = g_game->getHero(m_extraInfo);
         return currentHero->getObscuredObject();
     }
     if (m_type == BOAT) {
-        const boat* currentBoat = g_game->getBoat(m_extraInfo);
+        const Boat* currentBoat = g_game->getBoat(m_extraInfo);
         return currentBoat->getObscuredObject();
     }
     return m_type;
@@ -340,11 +340,11 @@ VA(0x004fcc80, 0x65)  // dc 0xec1c8
 unsigned char NewmapCell::cellIsTrigger() const
 {
     if (m_type == HERO) {
-        hero* obscurer = g_game->getHero(m_extraInfo);
+        Hero* obscurer = g_game->getHero(m_extraInfo);
         return obscurer->isOnMap() && obscurer->obscuredIsTrigger();
     }
     if (m_type == BOAT) {
-        boat* obscurer = &g_game->m_boats[m_extraInfo];
+        Boat* obscurer = &g_game->m_boats[m_extraInfo];
         return obscurer->isOnMap() && obscurer->obscuredIsTrigger();
     }
     return m_isTrigger;
@@ -358,7 +358,7 @@ unsigned char NewmapCell::isDiggable() const
     if (!(m_flags0011 & 0x40))
         return 0;
 
-    TAdventureObjectType objectType = getMapObject();
+    AdventureObjectType objectType = getMapObject();
     if (objectType != ANCHOR_POINT) {
         if (objectType != HOLY_GRAIL && objectType != NOTHING)
             return 0;
@@ -388,10 +388,10 @@ const unsigned char NewmapCell::hasTriggerableEvent() const
 }
 
 VA(0x004fce20, 0x116)  // dc 0xec3b4
-TAdventureObjectType NewmapCell::getSpecialTerrain() const
+AdventureObjectType NewmapCell::getSpecialTerrain() const
 {
     if (m_type == HERO && (m_cellFlags & 0x1000)) {
-        const hero* ourHero = g_game->getHero(m_extraInfo);
+        const Hero* ourHero = g_game->getHero(m_extraInfo);
         if (ourHero->getObscuredObject() == GARRISON
                 && ourHero->obscuredIsTrigger()
                 && m_objectIndex == 1)
@@ -578,7 +578,7 @@ void NewfullMap::init(int size, unsigned char twoLayers)
 // excluded class and will never carry a claim.
 
 VA(0x004fd690, 0x2B3)  // dc 0xec8f4
-int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
+int NewfullMap::read(AbstractFile* infile, int size, unsigned char twoLayers,
                      int mapVersion)
 {
     init(size, twoLayers);
@@ -677,7 +677,7 @@ int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
 // missing or extra local: docs/vc6/handle-order.md's C1-capped class.
 VA(0x004fd950, 0x268)  // caller Load 0xfdbc0; TQuestGuard ctor/load + vector resize/push_back
 void NewfullMap::newfullMapFn004FD950(
-    TAbstractFile* infile, int saveVersion)
+    AbstractFile* infile, int saveVersion)
 {
     int count;
     infile->read(&count, 2);
@@ -698,7 +698,7 @@ void NewfullMap::newfullMapFn004FD950(
 
 // E:\gamedcs\mapcell.cpp:679, dc 0xecb94
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
-int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
+int NewfullMap::load(AbstractFile* infile, int size, unsigned char twoLayers,
                      int saveVersion)
 {
     init(size, twoLayers);
@@ -784,7 +784,7 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
 // relationship permits the later loop to call private TSeerHut::save.
 
 VA(0x004fdf40, 0x2D1)  // order-map: calls saveTimedEventList 0xfc390, saveTownEventList 0xfc770, saveMapLayer 0xfe490 x2, saveMapObjects 0x104a40, TQuestGuard::save, dc 0xecdf8
-int NewfullMap::save(TAbstractFile* outfile, int size, unsigned char twoLayers)
+int NewfullMap::save(AbstractFile* outfile, int size, unsigned char twoLayers)
 {
     int count;
     count = saveMapLayer(outfile, size, 0);
@@ -882,7 +882,7 @@ int NewfullMap::save(TAbstractFile* outfile, int size, unsigned char twoLayers)
 // (95.40). The six stores are one merged read-modify-write either way; what
 // moves is only which pair VC6 combines first.
 VA(0x004fe220, 0x26B)  // order-map: leaf (file I/O devirtualized-inline); called x2 by Read 0xfd690 in the layer slot, dc 0xecf98
-int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
+int NewfullMap::readMapLayer(AbstractFile* infile, int size, int layer)
 {
     NewmapCell* thisCell = &m_cellData[m_size * m_size * layer];
 
@@ -947,7 +947,7 @@ int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
 }
 
 VA(0x004fe490, 0x22A)  // dc 0xed384
-int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
+int NewfullMap::saveMapLayer(AbstractFile* outfile, int size, int layer)
 {
     NewmapCell* thisCell = &m_cellData[m_size * m_size * layer];
 
@@ -1021,12 +1021,12 @@ union LegacyUpgradeExtraInfo {
 union CurrentUpgradeExtraInfo {
     unsigned long m_value;
     CurrentArtifactInfo m_artifactInfo;
-    type_skeleton_info m_skeletonInfo;
+    SkeletonInfo m_skeletonInfo;
     MonsterInfo m_monsterInfo;
-    type_pyramid_info m_pyramidInfo;
+    PyramidInfo m_pyramidInfo;
     TreasureInfo m_treasureInfo;
     CurrentUpgradeWagonInfo m_wagonInfo;
-    type_tomb_info m_tombInfo;
+    TombInfo m_tombInfo;
     CurrentVisitedInfo m_visitedInfo;
 };
 
@@ -1131,7 +1131,7 @@ void upgradeCellExtraInfo(NewmapCell* cell, int saveVersion)
 // carries sixteen bits and TAdventureObjectType is a full int, so the
 // widening is a real domain crossing, not a modelling slip.
 VA(0x004fe920, 0x2E5)  // dc 0xed688
-int NewfullMap::loadMapLayer(TAbstractFile* infile, int size, int layer,
+int NewfullMap::loadMapLayer(AbstractFile* infile, int size, int layer,
                              int saveVersion)
 {
     NewmapCell* thisCell = &m_cellData[m_size * m_size * layer];
@@ -1202,7 +1202,7 @@ int NewfullMap::loadMapLayer(TAbstractFile* infile, int size, int layer,
 
 // DC proves the ordinary helper, boatType/x/y locals and call order.
 // Retail readObject's BOAT arm expands this body and discards status.
-int NewfullMap::readBoatData(TAbstractFile* infile, CObject* boatObject)
+int NewfullMap::readBoatData(AbstractFile* infile, CObject* boatObject)
 {
     signed char boatType = static_cast<signed char>(
         m_objectTypes[boatObject->m_typeIndex].m_extra);
@@ -1222,12 +1222,12 @@ CObjectType* CObject::getObjectTypePtr() const
 
 // E:\gamedcs\mapcell.cpp:1119. Dreamcast retains this source helper as an
 // out-of-line SH4 body; Complete expands it into every admitted retail use.
-inline type_point CObject::getTrigger() const
+inline MapPoint CObject::getTrigger() const
 {
     int resultX;
     int resultY;
     findTrigger(resultX, resultY);
-    return type_point(resultX, resultY, m_z);
+    return MapPoint(resultX, resultY, m_z);
 }
 
 VA(0x004fec30, 0x106)  // dc 0xedab8
@@ -1256,9 +1256,9 @@ void CObject::findTrigger(int& resultX, int& resultY) const
 
 VA(0x004fed40, 0x102)  // dc 0xedbf8
 int NewfullMap::readGeneratorData(
-    TAbstractFile* infile, CObject* generatorObject)
+    AbstractFile* infile, CObject* generatorObject)
 {
-    generator tempGenerator;
+    Generator tempGenerator;
     signed char owner;
     char padding[3];
 
@@ -1286,7 +1286,7 @@ int NewfullMap::readGeneratorData(
 
 // readObject discards the -1/0 status, so retail
 // eliminates the final padding-read comparison from its inline expansion.
-int NewfullMap::readHolyGrailData(TAbstractFile* infile, CObject* grailObject)
+int NewfullMap::readHolyGrailData(AbstractFile* infile, CObject* grailObject)
 {
     char charBuffer;
     int count;
@@ -1307,7 +1307,7 @@ int NewfullMap::readHolyGrailData(TAbstractFile* infile, CObject* grailObject)
 
 // The discarded final status leaves only
 // the second virtual read in readObject's retail expansion.
-int NewfullMap::readShrineData(TAbstractFile* infile, CObject* shrineObject)
+int NewfullMap::readShrineData(AbstractFile* infile, CObject* shrineObject)
 {
     char charBuffer;
     int count;
@@ -1324,7 +1324,7 @@ int NewfullMap::readShrineData(TAbstractFile* infile, CObject* shrineObject)
 }
 
 VA(0x004fee50, 0xBC)  // dc 0xede58
-int NewfullMap::readTreasureData(TAbstractFile* infile, TreasureData* treasure)
+int NewfullMap::readTreasureData(AbstractFile* infile, TreasureData* treasure)
 {
     NewSMapHeader::readString(infile, treasure->m_message);
 
@@ -1334,7 +1334,7 @@ int NewfullMap::readTreasureData(TAbstractFile* infile, TreasureData* treasure)
     treasure->m_hasCustomGuardians = charBuffer != 0;
 
     if (treasure->m_hasCustomGuardians) {
-        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        for (int i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
             if (g_game->m_mapHeader.m_version
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
                 signed char creature;
@@ -1362,7 +1362,7 @@ int NewfullMap::readTreasureData(TAbstractFile* infile, TreasureData* treasure)
 // DC mapcell.cpp:1293 records this ordinary public member.
 // Complete expands it in Save; retained-body absence does not make it static.
 // The later file interface replaces DC gzwrite through void*.
-int NewfullMap::saveTreasureList(TAbstractFile* outfile)
+int NewfullMap::saveTreasureList(AbstractFile* outfile)
 {
     int count = m_customTreasure.size();
     if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
@@ -1375,9 +1375,9 @@ int NewfullMap::saveTreasureList(TAbstractFile* outfile)
 }
 
 VA(0x004fef10, 0x4D)  // dc 0xee020
-int NewfullMap::saveTreasureData(TAbstractFile* outfile, TreasureData* thisTreasure)
+int NewfullMap::saveTreasureData(AbstractFile* outfile, TreasureData* thisTreasure)
 {
-    game::saveString(outfile, thisTreasure->m_message);
+    Game::saveString(outfile, thisTreasure->m_message);
 
     unsigned char charBuffer = thisTreasure->m_hasCustomGuardians;
     if (static_cast<unsigned>(outfile->write(&charBuffer, 1)) < 1)
@@ -1388,7 +1388,7 @@ int NewfullMap::saveTreasureData(TAbstractFile* outfile, TreasureData* thisTreas
 }
 
 VA(0x004fef60, 0x1BD)  // dc 0xee090
-int NewfullMap::loadTreasureList(TAbstractFile* infile)
+int NewfullMap::loadTreasureList(AbstractFile* infile)
 {
     short count;
     if (static_cast<unsigned>(infile->read(&count, 2)) < 2)
@@ -1407,9 +1407,9 @@ int NewfullMap::loadTreasureList(TAbstractFile* infile)
 // CodeView proves this NewfullMap member. Complete expands the retained
 // callers; emission does not turn the source member into a file-static helper.
 // The record is a reference in the CodeView formal argument list.
-int NewfullMap::loadTreasureData(TAbstractFile* infile, TreasureData& thisTreasure)
+int NewfullMap::loadTreasureData(AbstractFile* infile, TreasureData& thisTreasure)
 {
-    game::loadString(infile, thisTreasure.m_message);
+    Game::loadString(infile, thisTreasure.m_message);
 
     unsigned char value;
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -1421,7 +1421,7 @@ int NewfullMap::loadTreasureData(TAbstractFile* infile, TreasureData& thisTreasu
 }
 
 VA(0x004ff120, 0x1C9)  // dc 0xee1a4
-int NewfullMap::readArtifactData(TAbstractFile* infile, CObject* artifactObject)
+int NewfullMap::readArtifactData(AbstractFile* infile, CObject* artifactObject)
 {
     int treasureIndex = m_customTreasure.size();
 
@@ -1447,7 +1447,7 @@ int NewfullMap::readArtifactData(TAbstractFile* infile, CObject* artifactObject)
 }
 
 VA(0x004ff2f0, 0x1D8)  // dc 0xee2e0
-int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject)
+int NewfullMap::readSpellScrollData(AbstractFile* infile, CObject* scrollObject)
 {
     int listSize = m_customTreasure.size();
 
@@ -1488,7 +1488,7 @@ int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject
 }
 
 VA(0x004ff4d0, 0x1DA)  // dc 0xee410
-int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
+int NewfullMap::readResourceData(AbstractFile* infile, CObject* resourceObject)
 {
     int listSize = m_customTreasure.size();
 
@@ -1577,7 +1577,7 @@ int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
 // and `clear()` is already the deepest spelling available.
 
 VA(0x004ff6b0, 0x535)  // order-map: calls armyGroup::Initialize + readTreasureData 0x4fee50; callers readBlackBoxData + readEventData (DC-isomorphic), dc 0xee56c
-int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+int NewfullMap::readBlackBox(AbstractFile* infile, BlackBoxData* thisBox,
                              int mapVersion)
 {
     signed char value;
@@ -1651,11 +1651,11 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
                 signed char narrow;
                 infile->read(&narrow, sizeof(narrow));
-                thisBox->m_artifacts[i] = TArtifact(narrow);
+                thisBox->m_artifacts[i] = Artifact(narrow);
             } else {
                 short wide;
                 infile->read(&wide, sizeof(wide));
-                thisBox->m_artifacts[i] = TArtifact(wide);
+                thisBox->m_artifacts[i] = Artifact(wide);
             }
         }
     }
@@ -1712,7 +1712,7 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
 // mapVersion is carried purely to hand to readBlackBox - this body never
 // inspects it, which is why the third parameter looks unused here.
 VA(0x004ffbf0, 0x1F5)  // dc 0xeea60
-int NewfullMap::readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject,
+int NewfullMap::readBlackBoxData(AbstractFile* infile, CObject* blackboxObject,
                                  int mapVersion)
 {
     int boxIndex = m_blackBoxes.size();
@@ -1734,7 +1734,7 @@ int NewfullMap::readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject,
 // DC mapcell.cpp:1729 records this ordinary public member.
 // Complete expands it in Save; retained-body absence does not make it static.
 // The later file interface replaces DC gzwrite through void*.
-int NewfullMap::saveBlackBoxList(TAbstractFile* outfile)
+int NewfullMap::saveBlackBoxList(AbstractFile* outfile)
 {
     int count = m_blackBoxes.size();
     if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
@@ -1761,7 +1761,7 @@ VA_COMPGEN(0x004ffdf0, 0xB0, IMPLICIT_DTOR, BlackBoxData)
 // three list loops compare against size() and so come out unsigned.
 
 VA(0x004ffea0, 0x35A)  // dc 0xeebdc
-int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
+int NewfullMap::saveBlackBox(AbstractFile* outfile, BlackBoxData* thisBox)
 {
     unsigned char value = thisBox->m_hasCustomTreasure;
     if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
@@ -1843,7 +1843,7 @@ int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
 }
 
 VA(0x00500200, 0x222)  // dc 0xef0a0
-int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
+int NewfullMap::loadBlackBoxList(AbstractFile* infile, int saveVersion)
 {
     short count;
     if (infile->read(&count, sizeof(count)) < sizeof(count))
@@ -1873,7 +1873,7 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 // loadMonsterList has.
 
 VA(0x00500430, 0x478)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic), dc 0xef158
-int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+int NewfullMap::loadBlackBox(AbstractFile* infile, BlackBoxData* thisBox,
                              int saveVersion)
 {
     signed char value;
@@ -1947,7 +1947,7 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     for (i = 0; i < count; ++i) {
         int artifact;
         infile->read(&artifact, sizeof(unsigned char));
-        thisBox->m_artifacts[i] = TArtifact(artifact & 0xff);
+        thisBox->m_artifacts[i] = Artifact(artifact & 0xff);
     }
 
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -1983,7 +1983,7 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
 }
 
 VA(0x005008b0, 0x27A)  // dc 0xef5dc
-int NewfullMap::readEventData(TAbstractFile* infile, CObject* eventObject,
+int NewfullMap::readEventData(AbstractFile* infile, CObject* eventObject,
                               int mapVersion)
 {
     int boxIndex = m_blackBoxes.size();
@@ -2041,7 +2041,7 @@ int NewfullMap::readSeerData(void* infile, CObject* seerObject)
 // teardown on both arms.
 
 VA(0x00500b30, 0x2AE)  // dc 0xefbb8
-int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
+int NewfullMap::readScholarData(AbstractFile* infile, CObject* scholarObject)
 {
     ScholarInfo* scholarInfo = &scholarObject->m_scholarInfo;
 
@@ -2113,7 +2113,7 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
 // Complete defers the later DC
 // trigger/terrain scan to loadShipyards; its readObject arm only initializes
 // the two boat coordinates after the reads, then discards the status.
-int NewfullMap::readShipyardData(TAbstractFile* infile, CObject* shipyardObject)
+int NewfullMap::readShipyardData(AbstractFile* infile, CObject* shipyardObject)
 {
     char charBuffer;
     int count;
@@ -2149,7 +2149,7 @@ static int g_shipyardOffsets[12][2] = {
 VA(0x00500de0, 0x239)
 void NewfullMap::loadShipyards()
 {
-    type_point newPoint;
+    MapPoint newPoint;
 
     for (int z = 0; z < m_hasTwoLevels + 1; ++z) {
         for (int y = 0; y < g_mapHeight; ++y) {
@@ -2193,9 +2193,9 @@ void NewfullMap::loadShipyards()
 }
 
 VA(0x00501020, 0x110)  // dc 0xeffec
-int NewfullMap::readMineData(TAbstractFile* infile, CObject* mineObject)
+int NewfullMap::readMineData(AbstractFile* infile, CObject* mineObject)
 {
-    mine tempMine;
+    Mine tempMine;
     signed char owner;
     char padding[3];
 
@@ -2224,10 +2224,10 @@ int NewfullMap::readMineData(TAbstractFile* infile, CObject* mineObject)
 }
 
 VA(0x00501130, 0x132)  // dc 0xf013c
-int NewfullMap::readAbandonedMineData(TAbstractFile* infile,
+int NewfullMap::readAbandonedMineData(AbstractFile* infile,
                                       CObject* mineObject)
 {
-    mine tempMine;
+    Mine tempMine;
     int mineTypes;
     char padding[3];
 
@@ -2272,7 +2272,7 @@ int NewfullMap::readAbandonedMineData(TAbstractFile* infile,
 }
 
 VA(0x00501270, 0x138)  // dc 0xf02a4
-int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
+int NewfullMap::readSignData(AbstractFile* infile, CObject* signObject)
 {
     Sign tempSign;
     char padding[4];
@@ -2331,7 +2331,7 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
 // 96.84 by extending its lifetime without shrinking the frame; the
 // `rawIdentifier` split above is banked at +0.58 so a collapse must beat that.
 VA(0x005013b0, 0x3DC)  // order-map: calls Random 0x50b230 + readString 0x4c6010 + vector<MonsterData> grow 0x506d70; called by readObject; EH-bearing, dc 0xf0390
-int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
+int NewfullMap::readMonsterData(AbstractFile* infile, CObject* monsterObject)
 {
     int customIndex = m_customMonsterList.size();
 
@@ -2447,7 +2447,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     if (infile->read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
 
-    type_point point;
+    MapPoint point;
     point.m_x = monsterObject->m_x;
     point.m_y = monsterObject->m_y;
     point.m_z = monsterObject->m_z;
@@ -2458,7 +2458,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
 // DC mapcell.cpp:2695 records this ordinary public member.
 // Complete expands it in Save; retained-body absence does not make it static.
 // The later file interface replaces DC gzwrite through void*.
-int NewfullMap::saveMonsterList(TAbstractFile* outfile)
+int NewfullMap::saveMonsterList(AbstractFile* outfile)
 {
     int count = m_customMonsterList.size();
     if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
@@ -2471,7 +2471,7 @@ int NewfullMap::saveMonsterList(TAbstractFile* outfile)
 }
 
 VA(0x00501790, 0x1E3)  // dc 0xf0788
-int NewfullMap::loadMonsterList(TAbstractFile* infile)
+int NewfullMap::loadMonsterList(AbstractFile* infile)
 {
     short count;
     if (infile->read(&count, sizeof(count)) < sizeof(count))
@@ -2486,9 +2486,9 @@ int NewfullMap::loadMonsterList(TAbstractFile* infile)
 }
 
 VA(0x00501980, 0x6B)  // dc 0xf0824
-int NewfullMap::saveMonsterData(TAbstractFile* outfile, MonsterData* thisMonster)
+int NewfullMap::saveMonsterData(AbstractFile* outfile, MonsterData* thisMonster)
 {
-    game::saveString(outfile, thisMonster->m_message);
+    Game::saveString(outfile, thisMonster->m_message);
 
     for (int i = 0; i < 7; ++i) {
         int value = thisMonster->m_resQty[i];
@@ -2504,9 +2504,9 @@ int NewfullMap::saveMonsterData(TAbstractFile* outfile, MonsterData* thisMonster
 // CodeView proves this NewfullMap member. Complete expands the retained
 // callers; emission does not turn the source member into a file-static helper.
 // The record is a reference in the CodeView formal argument list.
-int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
+int NewfullMap::loadMonsterData(AbstractFile* infile, MonsterData& thisMonster)
 {
-    game::loadString(infile, thisMonster.m_message);
+    Game::loadString(infile, thisMonster.m_message);
 
     for (int i = 0; i < 7; ++i) {
         int value;
@@ -2567,7 +2567,7 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // byte/short/value temporaries - regresses to 94.9926%; the x86 block locals
 // below are retained.
 VA(0x005019f0, 0x7CC)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
-int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
+int NewfullMap::readTownData(AbstractFile* infile, CObject* townObject,
                              int mapVersion)
 {
     char padding[3];
@@ -2605,7 +2605,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         return -1;
     tempTown.m_customArmies = charBuffer;
     if (tempTown.m_customArmies) {
-        for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
+        for (x = 0; x < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
             int creature;
             if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
                 signed char narrow;
@@ -2667,7 +2667,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         return -1;
 
     for (count = numTownEvents; count > 0; --count) {
-        TTownEvent thisEvent;
+        TownEvent thisEvent;
         thisEvent.read(infile, mapVersion);
         thisEvent.m_townNum = g_game->m_scenarioTowns.size();
         m_townEventList.push_back(thisEvent);
@@ -2765,7 +2765,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // stays zero and is passed unchanged to GetStartingHeroId.
 
 VA(0x005021c0, 0x835)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject, dc 0xf0df4
-int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
+int NewfullMap::readHeroData(AbstractFile* infile, CObject* heroObject,
                              int mapVersion)
 {
     // Dreamcast's raw CodeView records all thirteen source locals directly
@@ -2844,7 +2844,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             heroID = g_unnamed69fb24[charBuffer];
             g_unnamed69fb24[charBuffer] = -1;
         } else {
-            TTownType alignment;
+            TownType alignment;
             memcpy(&alignment, &g_game->m_setup.m_alignment[charBuffer],
                    sizeof(alignment));
             heroID = g_game->getStartingHeroId(alignment, charBuffer,
@@ -2903,7 +2903,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     infile->read(&charBuffer, sizeof(charBuffer));
     if (charBuffer) {
         heroData->m_customArmies = 1;
-        for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
+        for (x = 0; x < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
             if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
                 infile->read(&charBuffer, sizeof(charBuffer));
                 intBuffer = charBuffer;
@@ -2958,9 +2958,9 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
 
         // The fourth war-machine position is never serialized: every hero
         // starts with the catapult in it.
-        heroData->m_artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].m_artifactId
+        heroData->m_artifacts[Hero::EQUIPPED_SLOT_WAR_MACHINE_4].m_artifactId
             = ARTIFACT_CATAPULT;
-        heroData->m_artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].m_extra = -1;
+        heroData->m_artifacts[Hero::EQUIPPED_SLOT_WAR_MACHINE_4].m_extra = -1;
     }
 
     infile->read(&charBuffer, sizeof(charBuffer));
@@ -3035,10 +3035,10 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
 // the object's extraInfo left holding its index.
 
 VA(0x00502a00, 0x151)  // dc 0xf151c
-int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
+int NewfullMap::readGarrisonData(AbstractFile* infile, CObject* garrisonObject,
                                  int mapVersion)
 {
-    garrison newGarrison;
+    Garrison newGarrison;
 
     unsigned char owner;
     if (infile->read(&owner, sizeof(owner)) < sizeof(owner))
@@ -3049,7 +3049,7 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
     if (infile->read(pad, sizeof(pad)) < sizeof(pad))
         return -1;
 
-    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+    for (int slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
         int creature;
         if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
             signed char narrow;
@@ -3095,7 +3095,7 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
 VA(0x00502b60, 0x29B)
 void NewfullMap::soDTransformRandomDwellings()
 {
-    generator newGenerator;
+    Generator newGenerator;
 
     for (unsigned int index = 0; index < m_randomDwellings.size(); ++index) {
         RandomDwellingData& dwelling = m_randomDwellings[index];
@@ -3113,7 +3113,7 @@ void NewfullMap::soDTransformRandomDwellings()
             alignment = pickAlignment(dwelling.m_factionMask, 0);
         }
 
-        TCreatureType creature = g_townDwellingCreatures[
+        CreatureType creature = g_townDwellingCreatures[
             alignment * 2 * TOWN_DWELLING_COUNT
             + random(dwelling.m_minLevel, dwelling.m_maxLevel)];
 
@@ -3215,7 +3215,7 @@ void NewfullMap::soDTransformRandomDwellings()
 // Both guard/data insertion workers still expand where retail calls the
 // two-argument bodies, so this does not close that native-vector frontier.
 VA(0x00502e00, 0x832)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined, dc 0xf16c8
-int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
+int NewfullMap::readObject(AbstractFile* infile, CObject* tempObject,
                            int mapVersion)
 {
     int count;
@@ -3333,10 +3333,10 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         break;
 
     case SEER: {
-        TSeerHut tempHut;
+        SeerHut tempHut;
         tempHut.read(infile);
         {
-            std::vector<TSeerHut>::iterator hutEnd = m_seerHutList.end();
+            std::vector<SeerHut>::iterator hutEnd = m_seerHutList.end();
 #pragma inline_depth(0)
             m_seerHutList.insert(hutEnd, tempHut);
 #pragma inline_depth()
@@ -3468,7 +3468,7 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     }
 
     case QUEST_GUARD: {
-        TQuestGuard tempGuard;
+        QuestGuard tempGuard;
         tempGuard.read(infile);
         {
             m_questGuardList.push_back(tempGuard);
@@ -3502,7 +3502,7 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
 }
 
 VA(0x00503640, 0x8D)  // dc 0xf1b1c
-int NewfullMap::saveObject(TAbstractFile* outfile, CObject& tempObject)
+int NewfullMap::saveObject(AbstractFile* outfile, CObject& tempObject)
 {
     int count;
     char value = tempObject.m_x;
@@ -3528,7 +3528,7 @@ int NewfullMap::saveObject(TAbstractFile* outfile, CObject& tempObject)
 }
 
 VA(0x005036d0, 0xA4)  // dc 0xf1bf8
-int NewfullMap::loadObject(TAbstractFile* infile, CObject* tempObject)
+int NewfullMap::loadObject(AbstractFile* infile, CObject* tempObject)
 {
     unsigned char value;
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -3609,7 +3609,7 @@ int NewfullMap::loadObject(TAbstractFile* infile, CObject* tempObject)
 // reader/caller bytes unchanged. A short or byte buffer does not explain the
 // remaining int_buffer/enum-owner stack displacements.
 VA(0x00503780, 0x4C0)  // order-map: calls _strrev + sprintf + PointToSpriteResource 0x55cf50 x2 + the 0x55d0d0 resource reader x4 (DC call counts match exactly); called by readMapObjects, dc 0xf1cd8
-int NewfullMap::readObjectType(TAbstractFile* infile,
+int NewfullMap::readObjectType(AbstractFile* infile,
                                CObjectType& tempObjectType)
 {
     char imageName[100] = { 0 };
@@ -3685,7 +3685,7 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     if (count < sizeof(dummy))
         return -1;
 
-    TAdventureObjectType objectTypeRead;
+    AdventureObjectType objectTypeRead;
     count = infile->read(&objectTypeRead, sizeof(objectTypeRead));
     if (count < sizeof(objectTypeRead))
         return -1;
@@ -3726,10 +3726,10 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
 // The final Write returns 1, not 0, on success - the sbb/and/inc tail is a
 // `? -1 : 1` ternary, not the `? -1 : 0` every other serializer here ends on.
 VA(0x00503c40, 0x2B9)  // dc 0xf22cc
-int NewfullMap::saveObjectType(TAbstractFile* outfile,
+int NewfullMap::saveObjectType(AbstractFile* outfile,
                                CObjectType* tempObjectType)
 {
-    game::saveString(outfile, tempObjectType->m_imageName);
+    Game::saveString(outfile, tempObjectType->m_imageName);
 
     char value = tempObjectType->m_width;
     if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
@@ -3789,10 +3789,10 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
 // is a bool crossing where width and height are plain assignments.  And
 // like Save, this returns 1 on success rather than 0.
 VA(0x00503f00, 0x35D)  // dc 0xf2784
-int NewfullMap::loadObjectType(TAbstractFile* infile,
+int NewfullMap::loadObjectType(AbstractFile* infile,
                                CObjectType* tempObjectType)
 {
-    game::loadString(infile, tempObjectType->m_imageName);
+    Game::loadString(infile, tempObjectType->m_imageName);
 
     char value;
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -3836,7 +3836,7 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
     unsigned short typeValue;
     if (infile->read(&typeValue, sizeof(typeValue)) < sizeof(typeValue))
         return -1;
-    tempObjectType->m_objectType = TAdventureObjectType(typeValue);
+    tempObjectType->m_objectType = AdventureObjectType(typeValue);
 
     int extra;
     if (infile->read(&extra, sizeof(extra)) < sizeof(extra))
@@ -3935,7 +3935,7 @@ void NewfullMap::newfullMapFn005042C0()
 
 // E:\gamedcs\mapcell.cpp:3838
 VA(0x00504470, 0x5C9)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing, dc 0xf2c20
-int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
+int NewfullMap::readMapObjects(AbstractFile* infile, int mapVersion)
 {
     g_invalidPlacementList.clear();
 
@@ -4013,7 +4013,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 }
 
 VA(0x00504a40, 0x127)  // dc 0xf3018
-int NewfullMap::saveMapObjects(TAbstractFile* outfile)
+int NewfullMap::saveMapObjects(AbstractFile* outfile)
 {
     int count = m_objectTypes.size();
     if (outfile->write(&count, sizeof(count)) < sizeof(count))
@@ -4040,7 +4040,7 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
 // needs: both go straight into resize, which is loadBlackBox's shape.
 
 VA(0x00504b70, 0x4E9)  // dc 0xf318c
-int NewfullMap::loadMapObjects(TAbstractFile* infile)
+int NewfullMap::loadMapObjects(AbstractFile* infile)
 {
     int count;
     if (infile->read(&count, sizeof(count)) < sizeof(count))
@@ -4130,10 +4130,10 @@ void NewfullMap::generateHeightMap(const CObject* object,
 
 VA(0x00505230, 0x3D9)  // dc 0xf36b0
 void NewfullMap::stampObject(NewmapCell* thisCell,
-                             NewmapCell::TObjectCell* objectCell)
+                             NewmapCell::ObjectCell* objectCell)
 {
-    std::vector<NewmapCell::TObjectCell>& objectList = thisCell->m_objects;
-    std::vector<NewmapCell::TObjectCell>::iterator position
+    std::vector<NewmapCell::ObjectCell>& objectList = thisCell->m_objects;
+    std::vector<NewmapCell::ObjectCell>::iterator position
         = objectList.end();
     CObject* newObject = &m_objects[objectCell->m_objectIndex];
 
@@ -4141,7 +4141,7 @@ void NewfullMap::stampObject(NewmapCell* thisCell,
     generateHeightMap(newObject, heightMap);
 
     while (position != objectList.begin()) {
-        NewmapCell::TObjectCell& nextCellObjInfo = *(position - 1);
+        NewmapCell::ObjectCell& nextCellObjInfo = *(position - 1);
         if (objectCell->m_layer > nextCellObjInfo.m_layer)
             break;
 
@@ -4183,8 +4183,8 @@ void NewfullMap::stampObject(NewmapCell* thisCell,
                     int objBeingPlacedHeight = heightMap[objBeingPlacedX][objBeingPlacedY];
                     NewmapCell* cell = g_game->m_worldMap.cell(
                         x, y, newObject->m_z);
-                    std::vector<NewmapCell::TObjectCell>& onMapList = cell->m_objects;
-                    const NewmapCell::TObjectCell* scan = onMapList.begin();
+                    std::vector<NewmapCell::ObjectCell>& onMapList = cell->m_objects;
+                    const NewmapCell::ObjectCell* scan = onMapList.begin();
                     while (scan->m_objectIndex != nextCellObjInfo.m_objectIndex)
                         ++scan;
                     int objOnMapHeight = scan->m_layer;
@@ -4231,7 +4231,7 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
     if (thisCell->m_isBeachBorder && thisCell->m_groundSet != eTerrainWater)
         thisCell->m_typeValue = ANCHOR_POINT;
 
-    std::vector<NewmapCell::TObjectCell>::reverse_iterator it;
+    std::vector<NewmapCell::ObjectCell>::reverse_iterator it;
 
     for (it = thisCell->m_objects.rbegin(); it != thisCell->m_objects.rend();
          ++it) {
@@ -4316,11 +4316,11 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
 VA(0x00505a10, 0x108)  // dc 0xf42f0
 void NewfullMap::calculateCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
 {
-    hero* obscuringHero = 0;
-    boat* obscuringBoat = 0;
+    Hero* obscuringHero = 0;
+    Boat* obscuringBoat = 0;
     unsigned char restoreHero = 0;
     unsigned char restoreBoat = 0;
-    TAdventureObjectType visibleType = thisCell->getMapObject();
+    AdventureObjectType visibleType = thisCell->getMapObject();
 
     if (visibleType == EVENT)
         return;
@@ -4366,7 +4366,7 @@ int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
     signed char heightMap[8][6];
     generateHeightMap(object, heightMap);
 
-    TAdventureObjectType objectClass =
+    AdventureObjectType objectClass =
         g_game->m_worldMap.m_objectTypes[object->m_typeIndex].m_objectType;
 
     for (int col = 0; col < objectType->m_width; ++col) {
@@ -4397,7 +4397,7 @@ int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
                 continue;
             }
 
-            NewmapCell::TObjectCell objectCell;
+            NewmapCell::ObjectCell objectCell;
             objectCell.m_objectIndex = static_cast<unsigned short>(objectIndex);
             objectCell.m_offsets = static_cast<unsigned char>((col & 0xf)
                                                             | (row << 4));
@@ -4417,7 +4417,7 @@ void NewfullMap::newfullMapFn00505D20(int heroId, int player)
 }
 
 VA(0x00505d60, 0x3F)
-void NewfullMap::newfullMapFn00505D60(type_point point, int player)
+void NewfullMap::newfullMapFn00505D60(MapPoint point, int player)
 {
     for (unsigned int i = 0; i < m_mapObjectData.size(); ++i)
         m_mapObjectData[i]->newMapVFn28(point, player);
@@ -4426,12 +4426,12 @@ void NewfullMap::newfullMapFn00505D60(type_point point, int player)
 VA(0x00505da0, 0xF8)
 void NewfullMap::newfullMapFn00505DA0()
 {
-    TObjectTypeTable objectTypeTable;
+    ObjectTypeTable objectTypeTable;
     objectTypeTable.load(
         DATA_COMPGEN(0x0067fb84, objectTypeTableFilename, "objects.txt"));
 
     for (unsigned int i = 0; i < objectTypeTable.m_objectTypes.size(); ++i) {
-        TAdventureObjectType objectType =
+        AdventureObjectType objectType =
             objectTypeTable.m_objectTypes[i].m_objectType;
         m_objectTypeIndex[objectType].push_back(
             CObjectType(&objectTypeTable.m_objectTypes[i]));
@@ -4540,7 +4540,7 @@ void NewfullMap::newfullMapFn00505F20(CObject* object, int objectType,
 // DC CObjectType fieldlist 0x309c (class 0x309b) declares only the generated
 // default/copy constructors (attributes 0x103), with no TObjectType* overload.
 VA(0x00506080, 0x1D4)  // sole caller NewfullMapFn_00505DA0 + advmgr_objects.h address, retail-only
-CObjectType::CObjectType(TObjectType* source)
+CObjectType::CObjectType(ObjectType* source)
 {
     m_imageName = source->getImageName();
     m_width = source->getWidth();
@@ -4569,11 +4569,11 @@ VA_COMPGEN(0x005062a0, 0x21, VECTOR_SIZE, CObjectType)
 VA_COMPGEN(0x005062d0, 0x38, VECTOR_DTOR, TreasureData)
 VA_COMPGEN(0x00506310, 0x38, VECTOR_DTOR, MonsterData)
 VA_COMPGEN(0x00506350, 0x3B, VECTOR_DTOR, BlackBoxData)
-VA_COMPGEN(0x00506390, 0x312, VECTOR_RESIZE, TSeerHut)
-VA_COMPGEN(0x005066b0, 0x21, VECTOR_SIZE, TSeerHut)
-VA_COMPGEN(0x005066e0, 0x20, VECTOR_SIZE, TQuestGuard)
-VA_COMPGEN(0x00506700, 0x38, VECTOR_DTOR, TTimedEvent)
-VA_COMPGEN(0x00506740, 0x38, VECTOR_DTOR, TTownEvent)
+VA_COMPGEN(0x00506390, 0x312, VECTOR_RESIZE, SeerHut)
+VA_COMPGEN(0x005066b0, 0x21, VECTOR_SIZE, SeerHut)
+VA_COMPGEN(0x005066e0, 0x20, VECTOR_SIZE, QuestGuard)
+VA_COMPGEN(0x00506700, 0x38, VECTOR_DTOR, TimedEvent)
+VA_COMPGEN(0x00506740, 0x38, VECTOR_DTOR, TownEvent)
 VA_COMPGEN(0x00506880, 0x17, BITSET_TIDY, Bitset10)
 VA_COMPGEN(0x005068a0, 0xE0, VECTOR_ERASE, CObjectType)
 VA_COMPGEN(0x00506980, 0x340, VECTOR_INSERT, TreasureData)
@@ -4582,50 +4582,50 @@ VA_COMPGEN(0x00506d70, 0x32C, VECTOR_INSERT, MonsterData)
 VA_COMPGEN(0x005070a0, 0xA3, VECTOR_ERASE, MonsterData)
 VA_COMPGEN(0x00507150, 0x32E, VECTOR_INSERT, BlackBoxData)
 VA_COMPGEN(0x00507480, 0x14D, VECTOR_ERASE, BlackBoxData)
-VA_COMPGEN(0x005075d0, 0x26B, VECTOR_INSERT, TSeerHut)
-VA_COMPGEN(0x00507840, 0x61, VECTOR_ERASE, TSeerHut)
-VA_COMPGEN(0x005078b0, 0x217, VECTOR_INSERT, TQuestGuard)
-VA_COMPGEN(0x00507dd0, 0x47, VECTOR_ERASE, TQuestGuard)
-VA_COMPGEN(0x00507e20, 0x328, VECTOR_INSERT, TTimedEvent)
-VA_COMPGEN(0x00508150, 0xC2, VECTOR_ERASE, TTimedEvent)
-VA_COMPGEN(0x00508220, 0x23, VECTOR_DESTROY, TTimedEvent)
-VA_COMPGEN(0x00508250, 0x34E, VECTOR_INSERT, TTownEvent)
-VA_COMPGEN(0x005085a0, 0xF3, VECTOR_ERASE, TTownEvent)
-VA_COMPGEN(0x005086a0, 0x23, VECTOR_DESTROY, TTownEvent)
+VA_COMPGEN(0x005075d0, 0x26B, VECTOR_INSERT, SeerHut)
+VA_COMPGEN(0x00507840, 0x61, VECTOR_ERASE, SeerHut)
+VA_COMPGEN(0x005078b0, 0x217, VECTOR_INSERT, QuestGuard)
+VA_COMPGEN(0x00507dd0, 0x47, VECTOR_ERASE, QuestGuard)
+VA_COMPGEN(0x00507e20, 0x328, VECTOR_INSERT, TimedEvent)
+VA_COMPGEN(0x00508150, 0xC2, VECTOR_ERASE, TimedEvent)
+VA_COMPGEN(0x00508220, 0x23, VECTOR_DESTROY, TimedEvent)
+VA_COMPGEN(0x00508250, 0x34E, VECTOR_INSERT, TownEvent)
+VA_COMPGEN(0x005085a0, 0xF3, VECTOR_ERASE, TownEvent)
+VA_COMPGEN(0x005086a0, 0x23, VECTOR_DESTROY, TownEvent)
 VA_COMPGEN(0x005086d0, 0x53, VECTOR_ERASE, HeroPlaceholderData)
 VA_COMPGEN(0x00508730, 0x12E, VECTOR_ERASE, TownExtra)
-VA_COMPGEN(0x00508860, 0x44, VECTOR_ERASE, generator)
-VA_COMPGEN(0x005088b0, 0x58, VECTOR_UCOPY, TSeerHut)
-VA_COMPGEN(0x00508910, 0x4E, VECTOR_UFILL, TSeerHut)
-VA_COMPGEN(0x00508960, 0x3E, VECTOR_UCOPY, TQuestGuard)
-VA_COMPGEN(0x005089a0, 0x34, VECTOR_UFILL, TQuestGuard)
+VA_COMPGEN(0x00508860, 0x44, VECTOR_ERASE, Generator)
+VA_COMPGEN(0x005088b0, 0x58, VECTOR_UCOPY, SeerHut)
+VA_COMPGEN(0x00508910, 0x4E, VECTOR_UFILL, SeerHut)
+VA_COMPGEN(0x00508960, 0x3E, VECTOR_UCOPY, QuestGuard)
+VA_COMPGEN(0x005089a0, 0x34, VECTOR_UFILL, QuestGuard)
 // RandomDwellingData's instantiation precedes the byte-identical
 // HeroPlaceholderData instantiation in mapcell.obj and owns the folded body.
 VA_COMPGEN(0x005089e0, 0x30A, VECTOR_INSERT, RandomDwellingData)
-VA_COMPGEN(0x005090b0, 0x30C, VECTOR_INSERT, generator)
+VA_COMPGEN(0x005090b0, 0x30C, VECTOR_INSERT, Generator)
 // The mutable/const-source int-copy helpers at 0x5093c0/0x54df40 now expand
 // in mapcell. Both canonical <algorithm> specializations still emit in rmg,
 // where their enrollments live. The mutable form is also called for folded pointer
 // arrays; BlackBoxData's implicit assignment calls the separate const form.
-VA_COMPGEN(0x005093f0, 0x1A4, STD_COPY, TTimedEvent)
-VA_COMPGEN(0x005095e0, 0x3F, STD_COPY, type_university)
-VA_COMPGEN(0x00509620, 0x207, STD_COPY, type_creature_bank)
+VA_COMPGEN(0x005093f0, 0x1A4, STD_COPY, TimedEvent)
+VA_COMPGEN(0x005095e0, 0x3F, STD_COPY, University)
+VA_COMPGEN(0x00509620, 0x207, STD_COPY, CreatureBank)
 VA_COMPGEN(0x00509830, 0x168, STD_CONSTRUCT, TreasureData)
 VA_COMPGEN(0x005099a0, 0x16A, STD_CONSTRUCT, MonsterData)
 VA_COMPGEN(0x00509b10, 0x208, STD_CONSTRUCT, BlackBoxData)
-VA_COMPGEN(0x00509d20, 0x29, STD_CONSTRUCT, TSeerHut)
-VA_COMPGEN(0x00509d50, 0x0F, STD_CONSTRUCT, TQuestGuard)
-VA_COMPGEN(0x00509d60, 0x188, STD_CONSTRUCT, TTimedEvent)
-VA_COMPGEN(0x00509ef0, 0x1BA, STD_CONSTRUCT, TTownEvent)
+VA_COMPGEN(0x00509d20, 0x29, STD_CONSTRUCT, SeerHut)
+VA_COMPGEN(0x00509d50, 0x0F, STD_CONSTRUCT, QuestGuard)
+VA_COMPGEN(0x00509d60, 0x188, STD_CONSTRUCT, TimedEvent)
+VA_COMPGEN(0x00509ef0, 0x1BA, STD_CONSTRUCT, TownEvent)
 VA_COMPGEN(0x0050a0b0, 0x1DD, STD_CONSTRUCT, TownExtra)
 VA_COMPGEN(0x0050a290, 0x161, IMPLICIT_COPY_ASSIGN, MonsterData)
 VA_COMPGEN(0x0050a400, 0x2F6, IMPLICIT_COPY_ASSIGN, BlackBoxData)
-VA_COMPGEN(0x0050a700, 0x17A, IMPLICIT_COPY_ASSIGN, TTimedEvent)
-VA_COMPGEN(0x0050a880, 0x1A2, IMPLICIT_COPY_ASSIGN, TTownEvent)
+VA_COMPGEN(0x0050a700, 0x17A, IMPLICIT_COPY_ASSIGN, TimedEvent)
+VA_COMPGEN(0x0050a880, 0x1A2, IMPLICIT_COPY_ASSIGN, TownEvent)
 VA_COMPGEN(0x0050aa30, 0x1CD, IMPLICIT_COPY_ASSIGN, TownExtra)
 // vector<TArtifact>::operator= is the first emitted owner of the body also
 // called through the byte-identical vector<int> specialization.
-VA_COMPGEN(0x0050ac00, 0x188, VECTOR_COPY_ASSIGN, TArtifact)
+VA_COMPGEN(0x0050ac00, 0x188, VECTOR_COPY_ASSIGN, Artifact)
 VA_COMPGEN(0x0050ad90, 0x13, VECTOR_CAPACITY, SecondarySkillData)
 VA_COMPGEN(0x0050adb0, 0x2B, STD_COPY, SecondarySkillData)
 
@@ -4661,21 +4661,21 @@ void TreasureData::~TreasureData()
 
 // E:\gamedcs\MapCell.h:400
 DC_ONLY(0xf48d8, 0x30)
-void TTownEvent::TTownEvent()
+void TownEvent::TownEvent()
 {
     // @stub
 }
 
 // E:\gamedcs\MapCell.h:400
 DC_ONLY(0xf4908, 0x20)
-void TTimedEvent::TTimedEvent()
+void TimedEvent::TimedEvent()
 {
     // @stub
 }
 
 // E:\gamedcs\MapCell.h:400
 DC_ONLY(0xf4928, 0x1C)
-void TTimedEvent::~TTimedEvent()
+void TimedEvent::~TimedEvent()
 {
     // @stub
 }
@@ -4705,7 +4705,8 @@ void MonsterData::MonsterData()
 
 // E:\gamedcs\Hero.h:167
 DC_ONLY(0xf4abc, 0x32)
-unsigned char type_obscuring_object::get_obscured_trigger()
+// Before normalization (function): type_obscuring_object::get_obscured_trigger.
+unsigned char ObscuringObject::getObscuredTrigger()
 {
     // @stub
 }
@@ -4719,7 +4720,7 @@ void TownExtra::TownExtra()
 
 // E:\gamedcs\seerhut.h:108
 DC_ONLY(0xf4b38, 0x2A)
-void TSeerHut::TSeerHut()
+void SeerHut::SeerHut()
 {
     // @stub
 }
@@ -4743,7 +4744,7 @@ void MonsterData::~MonsterData()
 
 // E:\gamedcs\mapcell.cpp:2947
 DC_ONLY(0xf4c6c, 0x1C)
-void TTownEvent::~TTownEvent()
+void TownEvent::~TownEvent()
 {
     // @stub
 }
@@ -4799,7 +4800,7 @@ void std::allocator<SecondarySkillData>::~allocator<SecondarySkillData>()
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf4d78, 0x3C)
-void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::clear()
+void std::vector<enum Artifact,std::allocator<enum Artifact> >::clear()
 {
     // @stub
 }
@@ -4820,63 +4821,63 @@ void std::vector<enum SpellID,std::allocator<enum SpellID> >::clear()
 
 // ..\stlport\stl_vector.h:186
 DC_ONLY(0xf4e18, 0x50)
-std::reverse_iterator<NewmapCell::TObjectCell std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::rbegin(__$ReturnUdt)
+std::reverse_iterator<NewmapCell::ObjectCell std::vector<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::rbegin(__$ReturnUdt)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:190
 DC_ONLY(0xf4e68, 0x50)
-std::reverse_iterator<NewmapCell::TObjectCell std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::rend(__$ReturnUdt)
+std::reverse_iterator<NewmapCell::ObjectCell std::vector<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::rend(__$ReturnUdt)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:204
 DC_ONLY(0xf4eb8, 0x28)
-const NewmapCell::TObjectCell* std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::operator[](unsigned __n)
+const NewmapCell::ObjectCell* std::vector<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xf4ee0, 0x24)
-void std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >(const std::allocator<NewmapCell::TObjectCell>* __a)
+void std::vector<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::vector<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >(const std::allocator<NewmapCell::ObjectCell>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xf4f04, 0x34)
-void std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::~vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >()
+void std::vector<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::~vector<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:393
 DC_ONLY(0xf4f38, 0x108)
-NewmapCell::TObjectCell* std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::insert(NewmapCell::TObjectCell* __position, const NewmapCell::TObjectCell* __x)
+NewmapCell::ObjectCell* std::vector<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::insert(NewmapCell::ObjectCell* __position, const NewmapCell::ObjectCell* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:505
 DC_ONLY(0xf5040, 0x24)
-void std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::resize(unsigned __new_size)
+void std::vector<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::resize(unsigned __new_size)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xf5064, 0x8)
-void std::allocator<NewmapCell::TObjectCell>::allocator<NewmapCell::TObjectCell>()
+void std::allocator<NewmapCell::ObjectCell>::allocator<NewmapCell::ObjectCell>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xf506c, 0x6)
-void std::allocator<NewmapCell::TObjectCell>::~allocator<NewmapCell::TObjectCell>()
+void std::allocator<NewmapCell::ObjectCell>::~allocator<NewmapCell::ObjectCell>()
 {
     // @stub
 }
@@ -5177,133 +5178,133 @@ void std::allocator<BlackBoxData>::~allocator<BlackBoxData>()
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xf575c, 0x24)
-void std::vector<TSeerHut,std::allocator<TSeerHut> >::vector<TSeerHut,std::allocator<TSeerHut> >(const std::allocator<TSeerHut>* __a)
+void std::vector<SeerHut,std::allocator<SeerHut> >::vector<SeerHut,std::allocator<SeerHut> >(const std::allocator<SeerHut>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xf5780, 0x34)
-void std::vector<TSeerHut,std::allocator<TSeerHut> >::~vector<TSeerHut,std::allocator<TSeerHut> >()
+void std::vector<SeerHut,std::allocator<SeerHut> >::~vector<SeerHut,std::allocator<SeerHut> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0xf57b4, 0x54)
-void std::vector<TSeerHut,std::allocator<TSeerHut> >::push_back(const TSeerHut* __x)
+void std::vector<SeerHut,std::allocator<SeerHut> >::push_back(const SeerHut* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf5808, 0x3C)
-void std::vector<TSeerHut,std::allocator<TSeerHut> >::clear()
+void std::vector<SeerHut,std::allocator<SeerHut> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xf5844, 0x8)
-void std::allocator<TSeerHut>::allocator<TSeerHut>()
+void std::allocator<SeerHut>::allocator<SeerHut>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xf584c, 0x6)
-void std::allocator<TSeerHut>::~allocator<TSeerHut>()
+void std::allocator<SeerHut>::~allocator<SeerHut>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xf5854, 0x24)
-void std::vector<TTimedEvent,std::allocator<TTimedEvent> >::vector<TTimedEvent,std::allocator<TTimedEvent> >(const std::allocator<TTimedEvent>* __a)
+void std::vector<TimedEvent,std::allocator<TimedEvent> >::vector<TimedEvent,std::allocator<TimedEvent> >(const std::allocator<TimedEvent>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xf5878, 0x34)
-void std::vector<TTimedEvent,std::allocator<TTimedEvent> >::~vector<TTimedEvent,std::allocator<TTimedEvent> >()
+void std::vector<TimedEvent,std::allocator<TimedEvent> >::~vector<TimedEvent,std::allocator<TimedEvent> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:505
 DC_ONLY(0xf58ac, 0x48)
-void std::vector<TTimedEvent,std::allocator<TTimedEvent> >::resize(unsigned __new_size)
+void std::vector<TimedEvent,std::allocator<TimedEvent> >::resize(unsigned __new_size)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf58f4, 0x3C)
-void std::vector<TTimedEvent,std::allocator<TTimedEvent> >::clear()
+void std::vector<TimedEvent,std::allocator<TimedEvent> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xf5930, 0x8)
-void std::allocator<TTimedEvent>::allocator<TTimedEvent>()
+void std::allocator<TimedEvent>::allocator<TimedEvent>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xf5938, 0x6)
-void std::allocator<TTimedEvent>::~allocator<TTimedEvent>()
+void std::allocator<TimedEvent>::~allocator<TimedEvent>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xf5940, 0x24)
-void std::vector<TTownEvent,std::allocator<TTownEvent> >::vector<TTownEvent,std::allocator<TTownEvent> >(const std::allocator<TTownEvent>* __a)
+void std::vector<TownEvent,std::allocator<TownEvent> >::vector<TownEvent,std::allocator<TownEvent> >(const std::allocator<TownEvent>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xf5964, 0x34)
-void std::vector<TTownEvent,std::allocator<TTownEvent> >::~vector<TTownEvent,std::allocator<TTownEvent> >()
+void std::vector<TownEvent,std::allocator<TownEvent> >::~vector<TownEvent,std::allocator<TownEvent> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0xf5998, 0x54)
-void std::vector<TTownEvent,std::allocator<TTownEvent> >::push_back(const TTownEvent* __x)
+void std::vector<TownEvent,std::allocator<TownEvent> >::push_back(const TownEvent* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:505
 DC_ONLY(0xf59ec, 0x48)
-void std::vector<TTownEvent,std::allocator<TTownEvent> >::resize(unsigned __new_size)
+void std::vector<TownEvent,std::allocator<TownEvent> >::resize(unsigned __new_size)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf5a34, 0x3C)
-void std::vector<TTownEvent,std::allocator<TTownEvent> >::clear()
+void std::vector<TownEvent,std::allocator<TownEvent> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xf5a70, 0x8)
-void std::allocator<TTownEvent>::allocator<TTownEvent>()
+void std::allocator<TownEvent>::allocator<TownEvent>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xf5a78, 0x6)
-void std::allocator<TTownEvent>::~allocator<TTownEvent>()
+void std::allocator<TownEvent>::~allocator<TownEvent>()
 {
     // @stub
 }
@@ -5352,7 +5353,7 @@ void std::vector<TownExtra,std::allocator<TownExtra> >::clear()
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf5bc0, 0x3C)
-void std::vector<town,std::allocator<town> >::clear()
+void std::vector<Town,std::allocator<Town> >::clear()
 {
     // @stub
 }
@@ -5373,91 +5374,91 @@ void std::vector<Sign,std::allocator<Sign> >::clear()
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0xf5c8c, 0x54)
-void std::vector<mine,std::allocator<mine> >::push_back(const mine* __x)
+void std::vector<Mine,std::allocator<Mine> >::push_back(const Mine* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf5ce0, 0x3C)
-void std::vector<mine,std::allocator<mine> >::clear()
+void std::vector<Mine,std::allocator<Mine> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0xf5d1c, 0x54)
-void std::vector<generator,std::allocator<generator> >::push_back(const generator* __x)
+void std::vector<Generator,std::allocator<Generator> >::push_back(const Generator* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf5d70, 0x3C)
-void std::vector<generator,std::allocator<generator> >::clear()
+void std::vector<Generator,std::allocator<Generator> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0xf5dac, 0x54)
-void std::vector<garrison,std::allocator<garrison> >::push_back(const garrison* __x)
+void std::vector<Garrison,std::allocator<Garrison> >::push_back(const Garrison* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf5e00, 0x3C)
-void std::vector<garrison,std::allocator<garrison> >::clear()
+void std::vector<Garrison,std::allocator<Garrison> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf5e3c, 0x3C)
-void std::vector<boat,std::allocator<boat> >::clear()
+void std::vector<Boat,std::allocator<Boat> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf5e78, 0x3C)
-void std::vector<type_university,std::allocator<type_university> >::clear()
+void std::vector<University,std::allocator<University> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xf5eb4, 0x3C)
-void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::clear()
+void std::vector<CreatureBank,std::allocator<CreatureBank> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator.h:324
 DC_ONLY(0xf5ef0, 0x8)
-void std::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>()
+void std::reverse_iterator<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,NewmapCell::ObjectCell &,NewmapCell::ObjectCell *,int>::reverse_iterator<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,NewmapCell::ObjectCell &,NewmapCell::ObjectCell *,int>()
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator.h:327
 DC_ONLY(0xf5ef8, 0x28)
-std::reverse_iterator<NewmapCell::TObjectCell* std::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>::operator=(const std::reverse_iterator<NewmapCell::TObjectCell* __x)
+std::reverse_iterator<NewmapCell::ObjectCell* std::reverse_iterator<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,NewmapCell::ObjectCell &,NewmapCell::ObjectCell *,int>::operator=(const std::reverse_iterator<NewmapCell::ObjectCell* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator.h:333
 DC_ONLY(0xf5f20, 0x20)
-NewmapCell::TObjectCell* std::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>::operator->()
+NewmapCell::ObjectCell* std::reverse_iterator<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,NewmapCell::ObjectCell &,NewmapCell::ObjectCell *,int>::operator->()
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator.h:340
 DC_ONLY(0xf5f40, 0x48)
-std::reverse_iterator<NewmapCell::TObjectCell std::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>::operator++(__$ReturnUdt, int __formal)
+std::reverse_iterator<NewmapCell::ObjectCell std::reverse_iterator<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,NewmapCell::ObjectCell &,NewmapCell::ObjectCell *,int>::operator++(__$ReturnUdt, int __formal)
 {
     // @stub
 }
@@ -5527,28 +5528,28 @@ void std::vector<enum SpellID,std::allocator<enum SpellID> >::resize(unsigned __
 
 // ..\stlport\stl_vector.h:180
 DC_ONLY(0xf6268, 0xC)
-const NewmapCell::TObjectCell* std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::begin()
+const NewmapCell::ObjectCell* std::vector<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:499
 DC_ONLY(0xf6274, 0x90)
-void std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::resize(unsigned __new_size, const NewmapCell::TObjectCell* __x)
+void std::vector<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::resize(unsigned __new_size, const NewmapCell::ObjectCell* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xf6304, 0x44)
-void std::_Vector_base<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::_Vector_base<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >(const std::allocator<NewmapCell::TObjectCell>* __a)
+void std::_Vector_base<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::_Vector_base<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >(const std::allocator<NewmapCell::ObjectCell>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xf6348, 0x44)
-void std::_Vector_base<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::~_Vector_base<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >()
+void std::_Vector_base<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::~_Vector_base<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >()
 {
     // @stub
 }
@@ -5758,98 +5759,98 @@ void std::_Vector_base<BlackBoxData,std::allocator<BlackBoxData> >::~_Vector_bas
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0xf6c6c, 0xC)
-TSeerHut* std::vector<TSeerHut,std::allocator<TSeerHut> >::end()
+SeerHut* std::vector<SeerHut,std::allocator<SeerHut> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0xf6c78, 0x48)
-TSeerHut* std::vector<TSeerHut,std::allocator<TSeerHut> >::erase(TSeerHut* __first, TSeerHut* __last)
+SeerHut* std::vector<SeerHut,std::allocator<SeerHut> >::erase(SeerHut* __first, SeerHut* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xf6cc0, 0x44)
-void std::_Vector_base<TSeerHut,std::allocator<TSeerHut> >::_Vector_base<TSeerHut,std::allocator<TSeerHut> >(const std::allocator<TSeerHut>* __a)
+void std::_Vector_base<SeerHut,std::allocator<SeerHut> >::_Vector_base<SeerHut,std::allocator<SeerHut> >(const std::allocator<SeerHut>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xf6d04, 0x54)
-void std::_Vector_base<TSeerHut,std::allocator<TSeerHut> >::~_Vector_base<TSeerHut,std::allocator<TSeerHut> >()
+void std::_Vector_base<SeerHut,std::allocator<SeerHut> >::~_Vector_base<SeerHut,std::allocator<SeerHut> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0xf6d58, 0xC)
-TTimedEvent* std::vector<TTimedEvent,std::allocator<TTimedEvent> >::end()
+TimedEvent* std::vector<TimedEvent,std::allocator<TimedEvent> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0xf6d64, 0x48)
-TTimedEvent* std::vector<TTimedEvent,std::allocator<TTimedEvent> >::erase(TTimedEvent* __first, TTimedEvent* __last)
+TimedEvent* std::vector<TimedEvent,std::allocator<TimedEvent> >::erase(TimedEvent* __first, TimedEvent* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:499
 DC_ONLY(0xf6dac, 0x94)
-void std::vector<TTimedEvent,std::allocator<TTimedEvent> >::resize(unsigned __new_size, const TTimedEvent* __x)
+void std::vector<TimedEvent,std::allocator<TimedEvent> >::resize(unsigned __new_size, const TimedEvent* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xf6e40, 0x44)
-void std::_Vector_base<TTimedEvent,std::allocator<TTimedEvent> >::_Vector_base<TTimedEvent,std::allocator<TTimedEvent> >(const std::allocator<TTimedEvent>* __a)
+void std::_Vector_base<TimedEvent,std::allocator<TimedEvent> >::_Vector_base<TimedEvent,std::allocator<TimedEvent> >(const std::allocator<TimedEvent>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xf6e84, 0x54)
-void std::_Vector_base<TTimedEvent,std::allocator<TTimedEvent> >::~_Vector_base<TTimedEvent,std::allocator<TTimedEvent> >()
+void std::_Vector_base<TimedEvent,std::allocator<TimedEvent> >::~_Vector_base<TimedEvent,std::allocator<TimedEvent> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0xf6ed8, 0xC)
-TTownEvent* std::vector<TTownEvent,std::allocator<TTownEvent> >::end()
+TownEvent* std::vector<TownEvent,std::allocator<TownEvent> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0xf6ee4, 0x48)
-TTownEvent* std::vector<TTownEvent,std::allocator<TTownEvent> >::erase(TTownEvent* __first, TTownEvent* __last)
+TownEvent* std::vector<TownEvent,std::allocator<TownEvent> >::erase(TownEvent* __first, TownEvent* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:499
 DC_ONLY(0xf6f2c, 0x94)
-void std::vector<TTownEvent,std::allocator<TTownEvent> >::resize(unsigned __new_size, const TTownEvent* __x)
+void std::vector<TownEvent,std::allocator<TownEvent> >::resize(unsigned __new_size, const TownEvent* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xf6fc0, 0x44)
-void std::_Vector_base<TTownEvent,std::allocator<TTownEvent> >::_Vector_base<TTownEvent,std::allocator<TTownEvent> >(const std::allocator<TTownEvent>* __a)
+void std::_Vector_base<TownEvent,std::allocator<TownEvent> >::_Vector_base<TownEvent,std::allocator<TownEvent> >(const std::allocator<TownEvent>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xf7004, 0x54)
-void std::_Vector_base<TTownEvent,std::allocator<TTownEvent> >::~_Vector_base<TTownEvent,std::allocator<TTownEvent> >()
+void std::_Vector_base<TownEvent,std::allocator<TownEvent> >::~_Vector_base<TownEvent,std::allocator<TownEvent> >()
 {
     // @stub
 }
@@ -5884,28 +5885,28 @@ TownExtra* std::vector<TownExtra,std::allocator<TownExtra> >::erase(TownExtra* _
 
 // ..\stlport\stl_iterator.h:325
 DC_ONLY(0xf710c, 0x28)
-void std::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>(const std::reverse_iterator<NewmapCell::TObjectCell* __x)
+void std::reverse_iterator<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,NewmapCell::ObjectCell &,NewmapCell::ObjectCell *,int>::reverse_iterator<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,NewmapCell::ObjectCell &,NewmapCell::ObjectCell *,int>(const std::reverse_iterator<NewmapCell::ObjectCell* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator.h:326
 DC_ONLY(0xf7134, 0x10)
-void std::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>(NewmapCell::TObjectCell* __x)
+void std::reverse_iterator<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,NewmapCell::ObjectCell &,NewmapCell::ObjectCell *,int>::reverse_iterator<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,NewmapCell::ObjectCell &,NewmapCell::ObjectCell *,int>(NewmapCell::ObjectCell* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator.h:329
 DC_ONLY(0xf7144, 0xC)
-NewmapCell::TObjectCell* std::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>::base()
+NewmapCell::ObjectCell* std::reverse_iterator<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,NewmapCell::ObjectCell &,NewmapCell::ObjectCell *,int>::base()
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator.h:330
 DC_ONLY(0xf7150, 0xE)
-NewmapCell::TObjectCell* std::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>::operator*()
+NewmapCell::ObjectCell* std::reverse_iterator<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,NewmapCell::ObjectCell &,NewmapCell::ObjectCell *,int>::operator*()
 {
     // @stub
 }
@@ -5926,7 +5927,7 @@ void std::_STL_alloc_proxy<SecondarySkillData *,SecondarySkillData,std::allocato
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xf71a0, 0x1C)
-void std::_STL_alloc_proxy<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::~_STL_alloc_proxy<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >()
+void std::_STL_alloc_proxy<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::~_STL_alloc_proxy<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >()
 {
     // @stub
 }
@@ -5975,21 +5976,21 @@ void std::_STL_alloc_proxy<BlackBoxData *,BlackBoxData,std::allocator<BlackBoxDa
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xf7264, 0x1C)
-void std::_STL_alloc_proxy<TSeerHut *,TSeerHut,std::allocator<TSeerHut> >::~_STL_alloc_proxy<TSeerHut *,TSeerHut,std::allocator<TSeerHut> >()
+void std::_STL_alloc_proxy<SeerHut *,SeerHut,std::allocator<SeerHut> >::~_STL_alloc_proxy<SeerHut *,SeerHut,std::allocator<SeerHut> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xf7280, 0x1C)
-void std::_STL_alloc_proxy<TTimedEvent *,TTimedEvent,std::allocator<TTimedEvent> >::~_STL_alloc_proxy<TTimedEvent *,TTimedEvent,std::allocator<TTimedEvent> >()
+void std::_STL_alloc_proxy<TimedEvent *,TimedEvent,std::allocator<TimedEvent> >::~_STL_alloc_proxy<TimedEvent *,TimedEvent,std::allocator<TimedEvent> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xf729c, 0x1C)
-void std::_STL_alloc_proxy<TTownEvent *,TTownEvent,std::allocator<TTownEvent> >::~_STL_alloc_proxy<TTownEvent *,TTownEvent,std::allocator<TTownEvent> >()
+void std::_STL_alloc_proxy<TownEvent *,TownEvent,std::allocator<TownEvent> >::~_STL_alloc_proxy<TownEvent *,TownEvent,std::allocator<TownEvent> >()
 {
     // @stub
 }
@@ -6031,28 +6032,28 @@ void std::vector<enum SpellID,std::allocator<enum SpellID> >::insert(SpellID* __
 
 // ..\stlport\stl_vector.h:472
 DC_ONLY(0xf7384, 0x28)
-void std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::insert(NewmapCell::TObjectCell* __pos, unsigned __n, const NewmapCell::TObjectCell* __x)
+void std::vector<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::insert(NewmapCell::ObjectCell* __pos, unsigned __n, const NewmapCell::ObjectCell* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0xf73ac, 0x48)
-NewmapCell::TObjectCell* std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::erase(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last)
+NewmapCell::ObjectCell* std::vector<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::erase(NewmapCell::ObjectCell* __first, NewmapCell::ObjectCell* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xf73f4, 0x1E)
-void std::_STL_alloc_proxy<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::_STL_alloc_proxy<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >(const std::allocator<NewmapCell::TObjectCell>* __a, NewmapCell::TObjectCell** __p)
+void std::_STL_alloc_proxy<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::_STL_alloc_proxy<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >(const std::allocator<NewmapCell::ObjectCell>* __a, NewmapCell::ObjectCell** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xf7414, 0x30)
-void std::_STL_alloc_proxy<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::deallocate(NewmapCell::TObjectCell* __p, unsigned __n)
+void std::_STL_alloc_proxy<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::deallocate(NewmapCell::ObjectCell* __p, unsigned __n)
 {
     // @stub
 }
@@ -6164,56 +6165,56 @@ void std::_STL_alloc_proxy<BlackBoxData *,BlackBoxData,std::allocator<BlackBoxDa
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xf7684, 0x1E)
-void std::_STL_alloc_proxy<TSeerHut *,TSeerHut,std::allocator<TSeerHut> >::_STL_alloc_proxy<TSeerHut *,TSeerHut,std::allocator<TSeerHut> >(const std::allocator<TSeerHut>* __a, TSeerHut** __p)
+void std::_STL_alloc_proxy<SeerHut *,SeerHut,std::allocator<SeerHut> >::_STL_alloc_proxy<SeerHut *,SeerHut,std::allocator<SeerHut> >(const std::allocator<SeerHut>* __a, SeerHut** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xf76a4, 0x30)
-void std::_STL_alloc_proxy<TSeerHut *,TSeerHut,std::allocator<TSeerHut> >::deallocate(TSeerHut* __p, unsigned __n)
+void std::_STL_alloc_proxy<SeerHut *,SeerHut,std::allocator<SeerHut> >::deallocate(SeerHut* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:472
 DC_ONLY(0xf76d4, 0x28)
-void std::vector<TTimedEvent,std::allocator<TTimedEvent> >::insert(TTimedEvent* __pos, unsigned __n, const TTimedEvent* __x)
+void std::vector<TimedEvent,std::allocator<TimedEvent> >::insert(TimedEvent* __pos, unsigned __n, const TimedEvent* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xf76fc, 0x1E)
-void std::_STL_alloc_proxy<TTimedEvent *,TTimedEvent,std::allocator<TTimedEvent> >::_STL_alloc_proxy<TTimedEvent *,TTimedEvent,std::allocator<TTimedEvent> >(const std::allocator<TTimedEvent>* __a, TTimedEvent** __p)
+void std::_STL_alloc_proxy<TimedEvent *,TimedEvent,std::allocator<TimedEvent> >::_STL_alloc_proxy<TimedEvent *,TimedEvent,std::allocator<TimedEvent> >(const std::allocator<TimedEvent>* __a, TimedEvent** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xf771c, 0x30)
-void std::_STL_alloc_proxy<TTimedEvent *,TTimedEvent,std::allocator<TTimedEvent> >::deallocate(TTimedEvent* __p, unsigned __n)
+void std::_STL_alloc_proxy<TimedEvent *,TimedEvent,std::allocator<TimedEvent> >::deallocate(TimedEvent* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:472
 DC_ONLY(0xf774c, 0x28)
-void std::vector<TTownEvent,std::allocator<TTownEvent> >::insert(TTownEvent* __pos, unsigned __n, const TTownEvent* __x)
+void std::vector<TownEvent,std::allocator<TownEvent> >::insert(TownEvent* __pos, unsigned __n, const TownEvent* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xf7774, 0x1E)
-void std::_STL_alloc_proxy<TTownEvent *,TTownEvent,std::allocator<TTownEvent> >::_STL_alloc_proxy<TTownEvent *,TTownEvent,std::allocator<TTownEvent> >(const std::allocator<TTownEvent>* __a, TTownEvent** __p)
+void std::_STL_alloc_proxy<TownEvent *,TownEvent,std::allocator<TownEvent> >::_STL_alloc_proxy<TownEvent *,TownEvent,std::allocator<TownEvent> >(const std::allocator<TownEvent>* __a, TownEvent** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xf7794, 0x30)
-void std::_STL_alloc_proxy<TTownEvent *,TTownEvent,std::allocator<TTownEvent> >::deallocate(TTownEvent* __p, unsigned __n)
+void std::_STL_alloc_proxy<TownEvent *,TownEvent,std::allocator<TownEvent> >::deallocate(TownEvent* __p, unsigned __n)
 {
     // @stub
 }
@@ -6248,7 +6249,7 @@ void std::allocator<SecondarySkillData>::deallocate(SecondarySkillData* __p, uns
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xf7858, 0x28)
-void std::allocator<NewmapCell::TObjectCell>::deallocate(NewmapCell::TObjectCell* __p, unsigned __n)
+void std::allocator<NewmapCell::ObjectCell>::deallocate(NewmapCell::ObjectCell* __p, unsigned __n)
 {
     // @stub
 }
@@ -6276,21 +6277,21 @@ void std::allocator<BlackBoxData>::deallocate(BlackBoxData* __p, unsigned __n)
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xf7908, 0x2C)
-void std::allocator<TSeerHut>::deallocate(TSeerHut* __p, unsigned __n)
+void std::allocator<SeerHut>::deallocate(SeerHut* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xf7934, 0x2C)
-void std::allocator<TTimedEvent>::deallocate(TTimedEvent* __p, unsigned __n)
+void std::allocator<TimedEvent>::deallocate(TimedEvent* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xf7960, 0x2C)
-void std::allocator<TTownEvent>::deallocate(TTownEvent* __p, unsigned __n)
+void std::allocator<TownEvent>::deallocate(TownEvent* __p, unsigned __n)
 {
     // @stub
 }
@@ -6318,14 +6319,14 @@ void std::vector<enum SpellID,std::allocator<enum SpellID> >::_M_fill_insert(Spe
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0xf7c24, 0x11C)
-void std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::_M_insert_overflow(NewmapCell::TObjectCell* __position, const NewmapCell::TObjectCell* __x, unsigned __fill_len)
+void std::vector<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::_M_insert_overflow(NewmapCell::ObjectCell* __position, const NewmapCell::ObjectCell* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:283
 DC_ONLY(0xf7d40, 0x154)
-void std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::_M_fill_insert(NewmapCell::TObjectCell* __position, unsigned __n, const NewmapCell::TObjectCell* __x)
+void std::vector<NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::_M_fill_insert(NewmapCell::ObjectCell* __position, unsigned __n, const NewmapCell::ObjectCell* __x)
 {
     // @stub
 }
@@ -6395,28 +6396,28 @@ void std::vector<BlackBoxData,std::allocator<BlackBoxData> >::_M_fill_insert(Bla
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0xf8b1c, 0x130)
-void std::vector<TSeerHut,std::allocator<TSeerHut> >::_M_insert_overflow(TSeerHut* __position, const TSeerHut* __x, unsigned __fill_len)
+void std::vector<SeerHut,std::allocator<SeerHut> >::_M_insert_overflow(SeerHut* __position, const SeerHut* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:283
 DC_ONLY(0xf8c4c, 0x18C)
-void std::vector<TTimedEvent,std::allocator<TTimedEvent> >::_M_fill_insert(TTimedEvent* __position, unsigned __n, const TTimedEvent* __x)
+void std::vector<TimedEvent,std::allocator<TimedEvent> >::_M_fill_insert(TimedEvent* __position, unsigned __n, const TimedEvent* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0xf8dd8, 0x130)
-void std::vector<TTownEvent,std::allocator<TTownEvent> >::_M_insert_overflow(TTownEvent* __position, const TTownEvent* __x, unsigned __fill_len)
+void std::vector<TownEvent,std::allocator<TownEvent> >::_M_insert_overflow(TownEvent* __position, const TownEvent* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:283
 DC_ONLY(0xf8f08, 0x18C)
-void std::vector<TTownEvent,std::allocator<TTownEvent> >::_M_fill_insert(TTownEvent* __position, unsigned __n, const TTownEvent* __x)
+void std::vector<TownEvent,std::allocator<TownEvent> >::_M_fill_insert(TownEvent* __position, unsigned __n, const TownEvent* __x)
 {
     // @stub
 }
@@ -6430,7 +6431,7 @@ void std::vector<TownExtra,std::allocator<TownExtra> >::_M_insert_overflow(TownE
 
 // ..\stlport\stl_iterator.h:428
 DC_ONLY(0xf91c4, 0x2C)
-unsigned char std::operator!=(const std::reverse_iterator<NewmapCell::TObjectCell* __x, const std::reverse_iterator<NewmapCell::TObjectCell* __y)
+unsigned char std::operator!=(const std::reverse_iterator<NewmapCell::ObjectCell* __x, const std::reverse_iterator<NewmapCell::ObjectCell* __y)
 {
     // @stub
 }
@@ -6444,21 +6445,21 @@ void std::destroy(SecondarySkillData* __first, SecondarySkillData* __last)
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xf9220, 0x30)
-void std::destroy(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last)
+void std::destroy(NewmapCell::ObjectCell* __first, NewmapCell::ObjectCell* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0xf9250, 0x58)
-void std::construct(NewmapCell::TObjectCell* __p, const NewmapCell::TObjectCell* __value)
+void std::construct(NewmapCell::ObjectCell* __p, const NewmapCell::ObjectCell* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0xf92a8, 0x58)
-NewmapCell::TObjectCell* std::copy_backward(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, NewmapCell::TObjectCell* __result)
+NewmapCell::ObjectCell* std::copy_backward(NewmapCell::ObjectCell* __first, NewmapCell::ObjectCell* __last, NewmapCell::ObjectCell* __result)
 {
     // @stub
 }
@@ -6507,35 +6508,35 @@ void std::construct(BlackBoxData* __p, const BlackBoxData* __value)
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xf9460, 0x30)
-void std::destroy(TSeerHut* __first, TSeerHut* __last)
+void std::destroy(SeerHut* __first, SeerHut* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0xf9490, 0x78)
-void std::construct(TSeerHut* __p, const TSeerHut* __value)
+void std::construct(SeerHut* __p, const SeerHut* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xf9508, 0x30)
-void std::destroy(TTimedEvent* __first, TTimedEvent* __last)
+void std::destroy(TimedEvent* __first, TimedEvent* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xf9538, 0x30)
-void std::destroy(TTownEvent* __first, TTownEvent* __last)
+void std::destroy(TownEvent* __first, TownEvent* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0xf9568, 0x44)
-void std::construct(TTownEvent* __p, const TTownEvent* __value)
+void std::construct(TownEvent* __p, const TownEvent* __value)
 {
     // @stub
 }
@@ -6605,21 +6606,21 @@ BlackBoxData* std::copy(BlackBoxData* __first, BlackBoxData* __last, BlackBoxDat
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xf99b0, 0x58)
-TSeerHut* std::copy(TSeerHut* __first, TSeerHut* __last, TSeerHut* __result)
+SeerHut* std::copy(SeerHut* __first, SeerHut* __last, SeerHut* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xf9a08, 0x58)
-TTimedEvent* std::copy(TTimedEvent* __first, TTimedEvent* __last, TTimedEvent* __result)
+TimedEvent* std::copy(TimedEvent* __first, TimedEvent* __last, TimedEvent* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xf9a60, 0x58)
-TTownEvent* std::copy(TTownEvent* __first, TTownEvent* __last, TTownEvent* __result)
+TownEvent* std::copy(TownEvent* __first, TownEvent* __last, TownEvent* __result)
 {
     // @stub
 }
@@ -6640,7 +6641,7 @@ std::allocator<SecondarySkillData>* std::__stl_alloc_rebind(std::allocator<Secon
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xf9b1c, 0xA)
-std::allocator<NewmapCell::TObjectCell>* std::__stl_alloc_rebind(std::allocator<NewmapCell::TObjectCell>* __a, const NewmapCell::TObjectCell* __formal)
+std::allocator<NewmapCell::ObjectCell>* std::__stl_alloc_rebind(std::allocator<NewmapCell::ObjectCell>* __a, const NewmapCell::ObjectCell* __formal)
 {
     // @stub
 }
@@ -6668,21 +6669,21 @@ std::allocator<BlackBoxData>* std::__stl_alloc_rebind(std::allocator<BlackBoxDat
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xf9b4c, 0xA)
-std::allocator<TSeerHut>* std::__stl_alloc_rebind(std::allocator<TSeerHut>* __a, const TSeerHut* __formal)
+std::allocator<SeerHut>* std::__stl_alloc_rebind(std::allocator<SeerHut>* __a, const SeerHut* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xf9b58, 0xA)
-std::allocator<TTimedEvent>* std::__stl_alloc_rebind(std::allocator<TTimedEvent>* __a, const TTimedEvent* __formal)
+std::allocator<TimedEvent>* std::__stl_alloc_rebind(std::allocator<TimedEvent>* __a, const TimedEvent* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xf9b64, 0xA)
-std::allocator<TTownEvent>* std::__stl_alloc_rebind(std::allocator<TTownEvent>* __a, const TTownEvent* __formal)
+std::allocator<TownEvent>* std::__stl_alloc_rebind(std::allocator<TownEvent>* __a, const TownEvent* __formal)
 {
     // @stub
 }
@@ -6710,14 +6711,14 @@ void BlackBoxData::BlackBoxData(const BlackBoxData* __that)
 
 // ..\stlport\stl_alloc.h:970
 DC_ONLY(0xf9e1c, 0x78)
-void TTimedEvent::TTimedEvent(const TTimedEvent* __that)
+void TimedEvent::TimedEvent(const TimedEvent* __that)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:970
 DC_ONLY(0xf9e94, 0x108)
-void TTownEvent::TTownEvent(const TTownEvent* __that)
+void TownEvent::TownEvent(const TownEvent* __that)
 {
     // @stub
 }
@@ -6738,7 +6739,7 @@ void std::vector<enum SpellID,std::allocator<enum SpellID> >::vector<enum SpellI
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0xfa09c, 0x38)
-NewmapCell::TObjectCell* std::_STL_alloc_proxy<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::allocate(unsigned __n)
+NewmapCell::ObjectCell* std::_STL_alloc_proxy<NewmapCell::ObjectCell *,NewmapCell::ObjectCell,std::allocator<NewmapCell::ObjectCell> >::allocate(unsigned __n)
 {
     // @stub
 }
@@ -6766,14 +6767,14 @@ BlackBoxData* std::_STL_alloc_proxy<BlackBoxData *,BlackBoxData,std::allocator<B
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0xfa17c, 0x38)
-TSeerHut* std::_STL_alloc_proxy<TSeerHut *,TSeerHut,std::allocator<TSeerHut> >::allocate(unsigned __n)
+SeerHut* std::_STL_alloc_proxy<SeerHut *,SeerHut,std::allocator<SeerHut> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0xfa1b4, 0x38)
-TTownEvent* std::_STL_alloc_proxy<TTownEvent *,TTownEvent,std::allocator<TTownEvent> >::allocate(unsigned __n)
+TownEvent* std::_STL_alloc_proxy<TownEvent *,TownEvent,std::allocator<TownEvent> >::allocate(unsigned __n)
 {
     // @stub
 }
@@ -6815,7 +6816,7 @@ void std::_Vector_base<enum SpellID,std::allocator<enum SpellID> >::_Vector_base
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0xfa338, 0x38)
-NewmapCell::TObjectCell* std::allocator<NewmapCell::TObjectCell>::allocate(unsigned __n, const void* __formal)
+NewmapCell::ObjectCell* std::allocator<NewmapCell::ObjectCell>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
@@ -6843,14 +6844,14 @@ BlackBoxData* std::allocator<BlackBoxData>::allocate(unsigned __n, const void* _
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0xfa428, 0x3C)
-TSeerHut* std::allocator<TSeerHut>::allocate(unsigned __n, const void* __formal)
+SeerHut* std::allocator<SeerHut>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0xfa464, 0x3C)
-TTownEvent* std::allocator<TTownEvent>::allocate(unsigned __n, const void* __formal)
+TownEvent* std::allocator<TownEvent>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
@@ -6920,21 +6921,21 @@ void std::fill(SpellID* __first, SpellID* __last, const SpellID* __value)
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xfa7a4, 0x3C)
-NewmapCell::TObjectCell* std::uninitialized_copy(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, NewmapCell::TObjectCell* __result)
+NewmapCell::ObjectCell* std::uninitialized_copy(NewmapCell::ObjectCell* __first, NewmapCell::ObjectCell* __last, NewmapCell::ObjectCell* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0xfa7e0, 0x3C)
-NewmapCell::TObjectCell* std::uninitialized_fill_n(NewmapCell::TObjectCell* __first, unsigned __n, const NewmapCell::TObjectCell* __x)
+NewmapCell::ObjectCell* std::uninitialized_fill_n(NewmapCell::ObjectCell* __first, unsigned __n, const NewmapCell::ObjectCell* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:495
 DC_ONLY(0xfa81c, 0x44)
-void std::fill(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, const NewmapCell::TObjectCell* __value)
+void std::fill(NewmapCell::ObjectCell* __first, NewmapCell::ObjectCell* __last, const NewmapCell::ObjectCell* __value)
 {
     // @stub
 }
@@ -7067,77 +7068,77 @@ void std::fill(BlackBoxData* __first, BlackBoxData* __last, const BlackBoxData* 
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xfad2c, 0x3C)
-TSeerHut* std::uninitialized_copy(TSeerHut* __first, TSeerHut* __last, TSeerHut* __result)
+SeerHut* std::uninitialized_copy(SeerHut* __first, SeerHut* __last, SeerHut* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0xfad68, 0x3C)
-TSeerHut* std::uninitialized_fill_n(TSeerHut* __first, unsigned __n, const TSeerHut* __x)
+SeerHut* std::uninitialized_fill_n(SeerHut* __first, unsigned __n, const SeerHut* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0xfada4, 0x130)
-void std::vector<TTimedEvent,std::allocator<TTimedEvent> >::_M_insert_overflow(TTimedEvent* __position, const TTimedEvent* __x, unsigned __fill_len)
+void std::vector<TimedEvent,std::allocator<TimedEvent> >::_M_insert_overflow(TimedEvent* __position, const TimedEvent* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xfaed4, 0x3C)
-TTimedEvent* std::uninitialized_copy(TTimedEvent* __first, TTimedEvent* __last, TTimedEvent* __result)
+TimedEvent* std::uninitialized_copy(TimedEvent* __first, TimedEvent* __last, TimedEvent* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0xfaf10, 0x58)
-TTimedEvent* std::copy_backward(TTimedEvent* __first, TTimedEvent* __last, TTimedEvent* __result)
+TimedEvent* std::copy_backward(TimedEvent* __first, TimedEvent* __last, TimedEvent* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:495
 DC_ONLY(0xfaf68, 0x38)
-void std::fill(TTimedEvent* __first, TTimedEvent* __last, const TTimedEvent* __value)
+void std::fill(TimedEvent* __first, TimedEvent* __last, const TimedEvent* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0xfafa0, 0x3C)
-TTimedEvent* std::uninitialized_fill_n(TTimedEvent* __first, unsigned __n, const TTimedEvent* __x)
+TimedEvent* std::uninitialized_fill_n(TimedEvent* __first, unsigned __n, const TimedEvent* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xfafdc, 0x3C)
-TTownEvent* std::uninitialized_copy(TTownEvent* __first, TTownEvent* __last, TTownEvent* __result)
+TownEvent* std::uninitialized_copy(TownEvent* __first, TownEvent* __last, TownEvent* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0xfb018, 0x3C)
-TTownEvent* std::uninitialized_fill_n(TTownEvent* __first, unsigned __n, const TTownEvent* __x)
+TownEvent* std::uninitialized_fill_n(TownEvent* __first, unsigned __n, const TownEvent* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0xfb054, 0x58)
-TTownEvent* std::copy_backward(TTownEvent* __first, TTownEvent* __last, TTownEvent* __result)
+TownEvent* std::copy_backward(TownEvent* __first, TownEvent* __last, TownEvent* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:495
 DC_ONLY(0xfb0ac, 0x38)
-void std::fill(TTownEvent* __first, TTownEvent* __last, const TTownEvent* __value)
+void std::fill(TownEvent* __first, TownEvent* __last, const TownEvent* __value)
 {
     // @stub
 }
@@ -7158,7 +7159,7 @@ TownExtra* std::uninitialized_fill_n(TownExtra* __first, unsigned __n, const Tow
 
 // ..\stlport\stl_iterator.h:405
 DC_ONLY(0xfb15c, 0x30)
-unsigned char std::operator==(const std::reverse_iterator<NewmapCell::TObjectCell* __x, const std::reverse_iterator<NewmapCell::TObjectCell* __y)
+unsigned char std::operator==(const std::reverse_iterator<NewmapCell::ObjectCell* __x, const std::reverse_iterator<NewmapCell::ObjectCell* __y)
 {
     // @stub
 }
@@ -7179,21 +7180,21 @@ void std::__destroy(SecondarySkillData* __first, SecondarySkillData* __last, Sec
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xfb1b8, 0x8)
-NewmapCell::TObjectCell* std::value_type(const NewmapCell::TObjectCell* __formal)
+NewmapCell::ObjectCell* std::value_type(const NewmapCell::ObjectCell* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xfb1c0, 0x24)
-void std::__destroy(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, NewmapCell::TObjectCell* __formal)
+void std::__destroy(NewmapCell::ObjectCell* __first, NewmapCell::ObjectCell* __last, NewmapCell::ObjectCell* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0xfb1e4, 0x5E)
-NewmapCell::TObjectCell* std::__copy_backward(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, NewmapCell::TObjectCell* __result, std::random_access_iterator_tag __formal, int* __formal)
+NewmapCell::ObjectCell* std::__copy_backward(NewmapCell::ObjectCell* __first, NewmapCell::ObjectCell* __last, NewmapCell::ObjectCell* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
@@ -7242,42 +7243,42 @@ void std::__destroy(BlackBoxData* __first, BlackBoxData* __last, BlackBoxData* _
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xfb2c8, 0x8)
-TSeerHut* std::value_type(const TSeerHut* __formal)
+SeerHut* std::value_type(const SeerHut* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xfb2d0, 0x24)
-void std::__destroy(TSeerHut* __first, TSeerHut* __last, TSeerHut* __formal)
+void std::__destroy(SeerHut* __first, SeerHut* __last, SeerHut* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xfb2f4, 0x8)
-TTimedEvent* std::value_type(const TTimedEvent* __formal)
+TimedEvent* std::value_type(const TimedEvent* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xfb2fc, 0x24)
-void std::__destroy(TTimedEvent* __first, TTimedEvent* __last, TTimedEvent* __formal)
+void std::__destroy(TimedEvent* __first, TimedEvent* __last, TimedEvent* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xfb320, 0x8)
-TTownEvent* std::value_type(const TTownEvent* __formal)
+TownEvent* std::value_type(const TownEvent* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xfb328, 0x24)
-void std::__destroy(TTownEvent* __first, TTownEvent* __last, TTownEvent* __formal)
+void std::__destroy(TownEvent* __first, TownEvent* __last, TownEvent* __formal)
 {
     // @stub
 }
@@ -7438,63 +7439,63 @@ BlackBoxData* std::__copy(BlackBoxData* __first, BlackBoxData* __last, BlackBoxD
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0xfb6e4, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const TSeerHut* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const SeerHut* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0xfb6f8, 0x8)
-int* std::distance_type(const TSeerHut* __formal)
+int* std::distance_type(const SeerHut* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xfb700, 0x9C)
-TSeerHut* std::__copy(TSeerHut* __first, TSeerHut* __last, TSeerHut* __result, std::random_access_iterator_tag __formal, int* __formal)
+SeerHut* std::__copy(SeerHut* __first, SeerHut* __last, SeerHut* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0xfb79c, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const TTimedEvent* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const TimedEvent* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0xfb7b0, 0x8)
-int* std::distance_type(const TTimedEvent* __formal)
+int* std::distance_type(const TimedEvent* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xfb7b8, 0x60)
-TTimedEvent* std::__copy(TTimedEvent* __first, TTimedEvent* __last, TTimedEvent* __result, std::random_access_iterator_tag __formal, int* __formal)
+TimedEvent* std::__copy(TimedEvent* __first, TimedEvent* __last, TimedEvent* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0xfb818, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const TTownEvent* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const TownEvent* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0xfb82c, 0x8)
-int* std::distance_type(const TTownEvent* __formal)
+int* std::distance_type(const TownEvent* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xfb834, 0x60)
-TTownEvent* std::__copy(TTownEvent* __first, TTownEvent* __last, TTownEvent* __result, std::random_access_iterator_tag __formal, int* __formal)
+TownEvent* std::__copy(TownEvent* __first, TownEvent* __last, TownEvent* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
@@ -7564,28 +7565,28 @@ BlackBoxData* BlackBoxData::operator=(const BlackBoxData* __that)
 
 // ..\stlport\stl_alloc.h:970
 DC_ONLY(0xfbe2c, 0x94)
-TTimedEvent* TTimedEvent::operator=(const TTimedEvent* __that)
+TimedEvent* TimedEvent::operator=(const TimedEvent* __that)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:970
 DC_ONLY(0xfbec0, 0x7C)
-TTownEvent* TTownEvent::operator=(const TTownEvent* __that)
+TownEvent* TownEvent::operator=(const TownEvent* __that)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0xfbf3c, 0x38)
-TTimedEvent* std::_STL_alloc_proxy<TTimedEvent *,TTimedEvent,std::allocator<TTimedEvent> >::allocate(unsigned __n)
+TimedEvent* std::_STL_alloc_proxy<TimedEvent *,TimedEvent,std::allocator<TimedEvent> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0xfbf74, 0x3C)
-TTimedEvent* std::allocator<TTimedEvent>::allocate(unsigned __n, const void* __formal)
+TimedEvent* std::allocator<TimedEvent>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
@@ -7634,14 +7635,14 @@ std::vector<enum* std::vector<enum SpellID,std::allocator<enum SpellID> >::opera
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xfc380, 0x30)
-NewmapCell::TObjectCell* std::__uninitialized_copy(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, NewmapCell::TObjectCell* __result, NewmapCell::TObjectCell* __formal)
+NewmapCell::ObjectCell* std::__uninitialized_copy(NewmapCell::ObjectCell* __first, NewmapCell::ObjectCell* __last, NewmapCell::ObjectCell* __result, NewmapCell::ObjectCell* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0xfc3b0, 0x30)
-NewmapCell::TObjectCell* std::__uninitialized_fill_n(NewmapCell::TObjectCell* __first, unsigned __n, const NewmapCell::TObjectCell* __x, NewmapCell::TObjectCell* __formal)
+NewmapCell::ObjectCell* std::__uninitialized_fill_n(NewmapCell::ObjectCell* __first, unsigned __n, const NewmapCell::ObjectCell* __x, NewmapCell::ObjectCell* __formal)
 {
     // @stub
 }
@@ -7732,63 +7733,63 @@ BlackBoxData* std::__copy_backward(BlackBoxData* __first, BlackBoxData* __last, 
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xfc738, 0x30)
-TSeerHut* std::__uninitialized_copy(TSeerHut* __first, TSeerHut* __last, TSeerHut* __result, TSeerHut* __formal)
+SeerHut* std::__uninitialized_copy(SeerHut* __first, SeerHut* __last, SeerHut* __result, SeerHut* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0xfc768, 0x30)
-TSeerHut* std::__uninitialized_fill_n(TSeerHut* __first, unsigned __n, const TSeerHut* __x, TSeerHut* __formal)
+SeerHut* std::__uninitialized_fill_n(SeerHut* __first, unsigned __n, const SeerHut* __x, SeerHut* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0xfc798, 0x44)
-void std::construct(TTimedEvent* __p, const TTimedEvent* __value)
+void std::construct(TimedEvent* __p, const TimedEvent* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xfc7dc, 0x30)
-TTimedEvent* std::__uninitialized_copy(TTimedEvent* __first, TTimedEvent* __last, TTimedEvent* __result, TTimedEvent* __formal)
+TimedEvent* std::__uninitialized_copy(TimedEvent* __first, TimedEvent* __last, TimedEvent* __result, TimedEvent* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0xfc80c, 0x60)
-TTimedEvent* std::__copy_backward(TTimedEvent* __first, TTimedEvent* __last, TTimedEvent* __result, std::random_access_iterator_tag __formal, int* __formal)
+TimedEvent* std::__copy_backward(TimedEvent* __first, TimedEvent* __last, TimedEvent* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0xfc86c, 0x30)
-TTimedEvent* std::__uninitialized_fill_n(TTimedEvent* __first, unsigned __n, const TTimedEvent* __x, TTimedEvent* __formal)
+TimedEvent* std::__uninitialized_fill_n(TimedEvent* __first, unsigned __n, const TimedEvent* __x, TimedEvent* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xfc89c, 0x30)
-TTownEvent* std::__uninitialized_copy(TTownEvent* __first, TTownEvent* __last, TTownEvent* __result, TTownEvent* __formal)
+TownEvent* std::__uninitialized_copy(TownEvent* __first, TownEvent* __last, TownEvent* __result, TownEvent* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0xfc8cc, 0x30)
-TTownEvent* std::__uninitialized_fill_n(TTownEvent* __first, unsigned __n, const TTownEvent* __x, TTownEvent* __formal)
+TownEvent* std::__uninitialized_fill_n(TownEvent* __first, unsigned __n, const TownEvent* __x, TownEvent* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0xfc8fc, 0x60)
-TTownEvent* std::__copy_backward(TTownEvent* __first, TTownEvent* __last, TTownEvent* __result, std::random_access_iterator_tag __formal, int* __formal)
+TownEvent* std::__copy_backward(TownEvent* __first, TownEvent* __last, TownEvent* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
@@ -7816,7 +7817,7 @@ void std::__destroy_aux(SecondarySkillData* __first, SecondarySkillData* __last,
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xfc9f0, 0x34)
-void std::__destroy_aux(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, __false_type __formal)
+void std::__destroy_aux(NewmapCell::ObjectCell* __first, NewmapCell::ObjectCell* __last, __false_type __formal)
 {
     // @stub
 }
@@ -7844,21 +7845,21 @@ void std::__destroy_aux(BlackBoxData* __first, BlackBoxData* __last, __false_typ
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xfcac4, 0x34)
-void std::__destroy_aux(TSeerHut* __first, TSeerHut* __last, __false_type __formal)
+void std::__destroy_aux(SeerHut* __first, SeerHut* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xfcaf8, 0x34)
-void std::__destroy_aux(TTimedEvent* __first, TTimedEvent* __last, __false_type __formal)
+void std::__destroy_aux(TimedEvent* __first, TimedEvent* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xfcb2c, 0x34)
-void std::__destroy_aux(TTownEvent* __first, TTownEvent* __last, __false_type __formal)
+void std::__destroy_aux(TownEvent* __first, TownEvent* __last, __false_type __formal)
 {
     // @stub
 }
@@ -7935,14 +7936,14 @@ SpellID* std::copy(const SpellID* __first, const SpellID* __last, SpellID* __res
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xfcda8, 0x44)
-NewmapCell::TObjectCell* std::__uninitialized_copy_aux(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, NewmapCell::TObjectCell* __result, __false_type __formal)
+NewmapCell::ObjectCell* std::__uninitialized_copy_aux(NewmapCell::ObjectCell* __first, NewmapCell::ObjectCell* __last, NewmapCell::ObjectCell* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0xfcdec, 0x44)
-NewmapCell::TObjectCell* std::__uninitialized_fill_n_aux(NewmapCell::TObjectCell* __first, unsigned __n, const NewmapCell::TObjectCell* __x, __false_type __formal)
+NewmapCell::ObjectCell* std::__uninitialized_fill_n_aux(NewmapCell::ObjectCell* __first, unsigned __n, const NewmapCell::ObjectCell* __x, __false_type __formal)
 {
     // @stub
 }
@@ -7991,42 +7992,42 @@ BlackBoxData* std::__uninitialized_fill_n_aux(BlackBoxData* __first, unsigned __
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xfcfd4, 0x44)
-TSeerHut* std::__uninitialized_copy_aux(TSeerHut* __first, TSeerHut* __last, TSeerHut* __result, __false_type __formal)
+SeerHut* std::__uninitialized_copy_aux(SeerHut* __first, SeerHut* __last, SeerHut* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0xfd018, 0x44)
-TSeerHut* std::__uninitialized_fill_n_aux(TSeerHut* __first, unsigned __n, const TSeerHut* __x, __false_type __formal)
+SeerHut* std::__uninitialized_fill_n_aux(SeerHut* __first, unsigned __n, const SeerHut* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xfd05c, 0x44)
-TTimedEvent* std::__uninitialized_copy_aux(TTimedEvent* __first, TTimedEvent* __last, TTimedEvent* __result, __false_type __formal)
+TimedEvent* std::__uninitialized_copy_aux(TimedEvent* __first, TimedEvent* __last, TimedEvent* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0xfd0a0, 0x44)
-TTimedEvent* std::__uninitialized_fill_n_aux(TTimedEvent* __first, unsigned __n, const TTimedEvent* __x, __false_type __formal)
+TimedEvent* std::__uninitialized_fill_n_aux(TimedEvent* __first, unsigned __n, const TimedEvent* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xfd0e4, 0x44)
-TTownEvent* std::__uninitialized_copy_aux(TTownEvent* __first, TTownEvent* __last, TTownEvent* __result, __false_type __formal)
+TownEvent* std::__uninitialized_copy_aux(TownEvent* __first, TownEvent* __last, TownEvent* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0xfd128, 0x44)
-TTownEvent* std::__uninitialized_fill_n_aux(TTownEvent* __first, unsigned __n, const TTownEvent* __x, __false_type __formal)
+TownEvent* std::__uninitialized_fill_n_aux(TownEvent* __first, unsigned __n, const TownEvent* __x, __false_type __formal)
 {
     // @stub
 }
@@ -8075,21 +8076,21 @@ void std::destroy(BlackBoxData* __pointer)
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0xfd274, 0x20)
-void std::destroy(TSeerHut* __pointer)
+void std::destroy(SeerHut* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0xfd294, 0x20)
-void std::destroy(TTimedEvent* __pointer)
+void std::destroy(TimedEvent* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0xfd2b4, 0x20)
-void std::destroy(TTownEvent* __pointer)
+void std::destroy(TownEvent* __pointer)
 {
     // @stub
 }
@@ -8152,21 +8153,21 @@ void std::__destroy_aux(BlackBoxData* __pointer, __false_type __formal)
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0xfd45c, 0x8)
-void std::__destroy_aux(TSeerHut* __pointer, __false_type __formal)
+void std::__destroy_aux(SeerHut* __pointer, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0xfd464, 0x20)
-void std::__destroy_aux(TTimedEvent* __pointer, __false_type __formal)
+void std::__destroy_aux(TimedEvent* __pointer, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0xfd484, 0x20)
-void std::__destroy_aux(TTownEvent* __pointer, __false_type __formal)
+void std::__destroy_aux(TownEvent* __pointer, __false_type __formal)
 {
     // @stub
 }
@@ -8194,14 +8195,14 @@ void* BlackBoxData::`scalar deleting destructor'(unsigned __flags)
 
 // ..\stlport\stl_string.h:609
 DC_ONLY(0xfd54c, 0x38)
-void* TTimedEvent::`scalar deleting destructor'(unsigned __flags)
+void* TimedEvent::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:609
 DC_ONLY(0xfd584, 0x38)
-void* TTownEvent::`scalar deleting destructor'(unsigned __flags)
+void* TownEvent::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -8210,7 +8211,7 @@ void* TTownEvent::`scalar deleting destructor'(unsigned __flags)
 
 VA_COMPGEN(0x00508cf0, 0x3B9, VECTOR_INSERT, TownExtra)
 
-VA_COMPGEN(0x00507ad0, 0x2F9, VECTOR_INSERT, TQuestGuard)
+VA_COMPGEN(0x00507ad0, 0x2F9, VECTOR_INSERT, QuestGuard)
 
 // COMDAT pairing: bitset10::set, mnemonic agreement 1.000.
 VA_COMPGEN(0x00506820, 0x60, BITSET_SET, bitset10)

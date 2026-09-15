@@ -4,11 +4,11 @@
 #include <string.h>
 #include "textresource.h"
 
-VA_COMPGEN(0x005bbb70, 0x21, SCALAR_DELETING_DTOR, TTextResource)
+VA_COMPGEN(0x005bbb70, 0x21, SCALAR_DELETING_DTOR, TextResource)
 
 VA(0x005bbba0, 0x227)  // dc 0x163858
-TTextResource::TTextResource(const char* name, int size, const char* data)
-    : resource(name, RESOURCE_TYPE_TEXT)
+TextResource::TextResource(const char* name, int size, const char* data)
+    : Resource(name, RESOURCE_TYPE_TEXT)
 {
     m_data = new char[size];
     if (!m_data)
@@ -64,24 +64,24 @@ TTextResource::TTextResource(const char* name, int size, const char* data)
 }
 
 VA(0x005bbdd0, 0x4D)  // dc 0x1639a4
-TTextResource::~TTextResource()
+TextResource::~TextResource()
 {
     if (m_data)
         delete m_data;
 }
 
 VA(0x005bbe20, 0x1B)
-unsigned int TTextResource::getSize() const
+unsigned int TextResource::getSize() const
 {
     return sizeof(*this) + m_text.size();
 }
 
-VA_COMPGEN(0x005bbe40, 0x21, SCALAR_DELETING_DTOR, TSpreadsheetResource)
+VA_COMPGEN(0x005bbe40, 0x21, SCALAR_DELETING_DTOR, SpreadsheetResource)
 
 VA(0x005bbe70, 0x2E6)  // dc 0x163a70
-TSpreadsheetResource::TSpreadsheetResource(const char* name, int size,
+SpreadsheetResource::SpreadsheetResource(const char* name, int size,
                                             const char* data)
-    : resource(name, RESOURCE_TYPE_TEXT)
+    : Resource(name, RESOURCE_TYPE_TEXT)
 {
     m_dataSize = size;
     m_data = new char[size];
@@ -148,13 +148,13 @@ TSpreadsheetResource::TSpreadsheetResource(const char* name, int size,
 }
 
 VA(0x005bc160, 0x7)
-unsigned int TSpreadsheetResource::getSize() const
+unsigned int SpreadsheetResource::getSize() const
 {
     return sizeof(*this) + m_dataSize;
 }
 
 VA(0x005bc170, 0x7F)  // dc 0x163c30
-TSpreadsheetResource::~TSpreadsheetResource()
+SpreadsheetResource::~SpreadsheetResource()
 {
     for (TStringVector** it = m_spreadsheet.begin(); it != m_spreadsheet.end();
          ++it) {
@@ -170,28 +170,28 @@ TSpreadsheetResource::~TSpreadsheetResource()
 #if 0  // @carcass
 // E:\gamedcs\textresource.cpp:33
 DC_ONLY(0x163808, 0x50)
-TTextResource::TTextResource()
+TextResource::TextResource()
 {
     // @stub
 }
 
 // E:\gamedcs\textresource.cpp:177
 DC_ONLY(0x1639ec, 0x84)
-TSpreadsheetResource::TSpreadsheetResource()
+SpreadsheetResource::SpreadsheetResource()
 {
     // @stub
 }
 
 // E:\gamedcs\textresource.cpp:34
 DC_ONLY(0x163cf8, 0x34)
-void* TTextResource::`scalar deleting destructor'(unsigned __flags)
+void* TextResource::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\textresource.cpp:178
 DC_ONLY(0x163d2c, 0x34)
-void* TSpreadsheetResource::`scalar deleting destructor'(unsigned __flags)
+void* SpreadsheetResource::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

@@ -8,8 +8,8 @@
 
 void pollSound();
 
-class sample;
-class ds_memsample;
+class Sample;
+class DsMemsample;
 
 struct AILPrimaryBufferVtable {
     void* m_methods[15];
@@ -36,8 +36,8 @@ struct AILWaveFormat {
 // Dreamcast record; retail hands it straight to AIL_sample_status /
 // AIL_end_sample, so it is typed as the handle here.
 struct SAMPLE2 {
-    sample* m_resSample;
-    ds_memsample* m_playSample;
+    Sample* m_resSample;
+    DsMemsample* m_playSample;
 };
 
 // The 12-byte packet launch_sample heap-allocates (`new`, push 0xc) and
@@ -63,7 +63,7 @@ void clearMemSample(SAMPLE2 sample2);
 void waitEndSample(SAMPLE2 sample2, int milliWait);
 
 namespace ResourceManager {
-sample* getSample(const char* name);
+Sample* getSample(const char* name);
 }
 SAMPLE2 loadPlaySample(const char* sampleName);
 void waitEndSample(SAMPLE2 sample2, int milliWait);
@@ -73,7 +73,8 @@ void launchSample(const char* sampleName, int maxTime, int channel);
 // compares against are modelled, and each one's ROLE is byte-proven -
 // but the NAMES are unattested (the Miles headers' own spellings are
 // not in evidence in this tree), so they are role placeholders.
-enum EAilSampleStatus {
+// Before normalization (type): EAilSampleStatus.
+enum AilSampleStatus {
     AIL_SAMPLE_SLOT_FREE = 2,  // MemorySample takes the slot on this
     AIL_SAMPLE_PLAYING = 4,    // every "is it still running" test
     AIL_SAMPLE_RESUMABLE = 8   // ResumeSamples only resumes on this
@@ -82,21 +83,24 @@ enum EAilSampleStatus {
 // The AIL_stream_status twin; a separate function, so a separate
 // domain. Name unattested, role byte-proven (StopMP3 only serves and
 // re-spawns when the stream reads this).
-enum EAilStreamStatus {
+// Before normalization (type): EAilStreamStatus.
+enum AilStreamStatus {
     AIL_STREAM_PLAYING = 4
 };
 
 // The sample channel domain. PROVEN extent: the range table at
 // 0x684ab8 holds exactly four rows, and MemorySample's "no free slot"
 // path compares sample::field_28 against 4 - one past the last channel.
-enum ESoundChannel {
+// Before normalization (type): ESoundChannel.
+enum SoundChannel {
     SOUND_CHANNEL_COUNT = 4
 };
 
 // The PCM sample-width domain fills the wave format and selects
 // Open's fallback after a failed driver probe. Values are retail-byte proven;
 // names are role placeholders.
-enum ESoundBitsPerSample {
+// Before normalization (type): ESoundBitsPerSample.
+enum SoundBitsPerSample {
     SOUND_BITS_PER_SAMPLE_8 = 8,
     SOUND_BITS_PER_SAMPLE_16 = 16
 };
@@ -105,7 +109,8 @@ enum ESoundBitsPerSample {
 // 101 selects gUnk698760 and every other value selects gUnk698764;
 // SetMusicVolume passes 101, MemorySample and ModifySample pass 100.
 // NAMES are unattested ordinal placeholders.
-enum EVolumeType {
+// Before normalization (type): EVolumeType.
+enum VolumeType {
     VOLUME_TYPE_100 = 100,
     VOLUME_TYPE_101 = 101
 };
@@ -114,7 +119,8 @@ enum EVolumeType {
 // 1 and 100 share a body (set the sample volume; 100 additionally
 // writes the value back into gAilDriverState), 5 starts the sample.
 // NAMES are unattested ordinal placeholders.
-enum ESampleModifyFunction {
+// Before normalization (type): ESampleModifyFunction.
+enum SampleModifyFunction {
     SAMPLE_MODIFY_1 = 1,
     SAMPLE_MODIFY_5 = 5,
     SAMPLE_MODIFY_100 = 100
@@ -122,9 +128,11 @@ enum ESampleModifyFunction {
 
 // soundManager (baseManager base = 0x38, basemgr.h SIZE-asserted).
 
-class soundManager : public baseManager {
+// Before normalization (type): soundManager.
+class SoundManager : public BaseManager {
 public:
-    enum ESampleInfoOperation {
+// Before normalization (type): soundManager::ESampleInfoOperation.
+    enum SampleInfoOperation {
         SAMPLE_INFO_VOLUME = 1,
         SAMPLE_INFO_PLAYING = 4
     };
@@ -132,7 +140,7 @@ public:
     int m_mssHandle;
     AILDigitalDriver* m_ds;
     int m_samples;
-    ds_memsample* m_sampleHandles[14];
+    DsMemsample* m_sampleHandles[14];
     int m_sampleNum;
     // NH3API currentTerrainMusic; retail receiveSaveGame 0x4cbdb7 reads
     // +80 with MOVSX byte and later restores it through switchAmbientMusic.
@@ -145,13 +153,13 @@ public:
     CRITICAL_SECTION m_sectionMp3Change;
     CRITICAL_SECTION m_sectionMp3NameChange;
 
-    soundManager();
+    SoundManager();
     // DC SoundMgr.h:124 (dc 0xe6ebc). Complete's ShutDown (0x4f3690)
     // deletes the manager with this body expanded - the vftable store and the three
     // DeleteCriticalSection calls on +0x90 / +0xa8 / +0xc0 in that order.
     // Non-virtual: the retail vftable 0x63fe54 has only baseManager's
     // three slots.
-    ~soundManager()
+    ~SoundManager()
     {
         DeleteCriticalSection(&m_sectionSoundCall);
         DeleteCriticalSection(&m_sectionMp3Change);
@@ -161,14 +169,14 @@ public:
     virtual void close();
     // baseManager's third pure slot. Declared so kb's InitMainClasses can
     // `new` this manager; the vftable at 0x63fe54 already carries the slot.
-    virtual int main(message& msg);
-    ds_memsample* memorySample(sample* samplePointer);
-    int getSampleInfo(ds_memsample* inSample, short operation);
+    virtual int main(Message& msg);
+    DsMemsample* memorySample(Sample* samplePointer);
+    int getSampleInfo(DsMemsample* inSample, short operation);
     void switchAmbientMusic(int newMusicFileId);
     void stopAllSamples(int stopMusicToo);
-    void stopSample(ds_memsample* inSample);
-    void waitSample(ds_memsample* sample, int time);
-    void modifySample(ds_memsample* inSample, short functionId, long value);
+    void stopSample(DsMemsample* inSample);
+    void waitSample(DsMemsample* sample, int time);
+    void modifySample(DsMemsample* inSample, short functionId, long value);
     void adjustSoundVolumes();
     void adjustMusicVolumes();
     int musicPlaying();
@@ -291,107 +299,143 @@ extern unsigned char g_terrainMusicIds[9];
 // underscore (retail IAT: __imp___AIL_end_sample@4), which is Miles'
 // own header convention: `_AIL_*` dllimports behind `AIL_*` aliases.
 extern "C" {
-__declspec(dllimport) void __stdcall _AIL_end_sample(ds_memsample* sample);
-__declspec(dllimport) int __stdcall _AIL_sample_status(ds_memsample* sample);
-__declspec(dllimport) int __stdcall _AIL_sample_volume(ds_memsample* sample);
-__declspec(dllimport) void __stdcall _AIL_stop_sample(ds_memsample* sample);
-__declspec(dllimport) void __stdcall _AIL_resume_sample(ds_memsample* sample);
-__declspec(dllimport) void __stdcall _AIL_init_sample(ds_memsample* sample);
-__declspec(dllimport) void __stdcall _AIL_start_sample(ds_memsample* sample);
-__declspec(dllimport) int __stdcall _AIL_set_sample_file(ds_memsample* sample,
+// Before normalization (function): _AIL_end_sample.
+__declspec(dllimport) void __stdcall ailEndSample(DsMemsample* sample);
+// Before normalization (function): _AIL_sample_status.
+__declspec(dllimport) int __stdcall ailSampleStatus(DsMemsample* sample);
+// Before normalization (function): _AIL_sample_volume.
+__declspec(dllimport) int __stdcall ailSampleVolume(DsMemsample* sample);
+// Before normalization (function): _AIL_stop_sample.
+__declspec(dllimport) void __stdcall ailStopSample(DsMemsample* sample);
+// Before normalization (function): _AIL_resume_sample.
+__declspec(dllimport) void __stdcall ailResumeSample(DsMemsample* sample);
+// Before normalization (function): _AIL_init_sample.
+__declspec(dllimport) void __stdcall ailInitSample(DsMemsample* sample);
+// Before normalization (function): _AIL_start_sample.
+__declspec(dllimport) void __stdcall ailStartSample(DsMemsample* sample);
+// Before normalization (function): _AIL_set_sample_file.
+__declspec(dllimport) int __stdcall ailSetSampleFile(DsMemsample* sample,
                                                          const void* start,
                                                          int block);
-__declspec(dllimport) void __stdcall _AIL_set_sample_loop_count(ds_memsample* sample,
+// Before normalization (function): _AIL_set_sample_loop_count.
+__declspec(dllimport) void __stdcall ailSetSampleLoopCount(DsMemsample* sample,
                                                                 int loops);
-__declspec(dllimport) void __stdcall _AIL_set_sample_volume(ds_memsample* sample,
+// Before normalization (function): _AIL_set_sample_volume.
+__declspec(dllimport) void __stdcall ailSetSampleVolume(DsMemsample* sample,
                                                             int volume);
-__declspec(dllimport) int __stdcall _AIL_stream_status(void* stream);
-__declspec(dllimport) int __stdcall _AIL_stream_position(void* stream);
-__declspec(dllimport) int __stdcall _AIL_stream_volume(void* stream);
-__declspec(dllimport) void* __stdcall _AIL_open_stream(void* driver,
+// Before normalization (function): _AIL_stream_status.
+__declspec(dllimport) int __stdcall ailStreamStatus(void* stream);
+// Before normalization (function): _AIL_stream_position.
+__declspec(dllimport) int __stdcall ailStreamPosition(void* stream);
+// Before normalization (function): _AIL_stream_volume.
+__declspec(dllimport) int __stdcall ailStreamVolume(void* stream);
+// Before normalization (function): _AIL_open_stream.
+__declspec(dllimport) void* __stdcall ailOpenStream(void* driver,
                                                        const char* filename,
                                                        int streamMem);
-__declspec(dllimport) void __stdcall _AIL_set_stream_loop_count(void* stream,
+// Before normalization (function): _AIL_set_stream_loop_count.
+__declspec(dllimport) void __stdcall ailSetStreamLoopCount(void* stream,
                                                                 int loops);
-__declspec(dllimport) void __stdcall _AIL_start_stream(void* stream);
-__declspec(dllimport) void __stdcall _AIL_set_stream_position(void* stream,
+// Before normalization (function): _AIL_start_stream.
+__declspec(dllimport) void __stdcall ailStartStream(void* stream);
+// Before normalization (function): _AIL_set_stream_position.
+__declspec(dllimport) void __stdcall ailSetStreamPosition(void* stream,
                                                               int position);
-__declspec(dllimport) void __stdcall _AIL_set_stream_volume(void* stream, int volume);
-__declspec(dllimport) void __stdcall _AIL_service_stream(void* stream, int fillup);
-__declspec(dllimport) void __stdcall _AIL_pause_stream(void* stream, int pause);
-__declspec(dllimport) void __stdcall _AIL_close_stream(void* stream);
-__declspec(dllimport) void __stdcall _AIL_shutdown();
-__declspec(dllimport) void __stdcall _AIL_serve();
-__declspec(dllimport) void __stdcall _AIL_startup();
-__declspec(dllimport) int __stdcall _AIL_set_preference(int preference,
+// Before normalization (function): _AIL_set_stream_volume.
+__declspec(dllimport) void __stdcall ailSetStreamVolume(void* stream, int volume);
+// Before normalization (function): _AIL_service_stream.
+__declspec(dllimport) void __stdcall ailServiceStream(void* stream, int fillup);
+// Before normalization (function): _AIL_pause_stream.
+__declspec(dllimport) void __stdcall ailPauseStream(void* stream, int pause);
+// Before normalization (function): _AIL_close_stream.
+__declspec(dllimport) void __stdcall ailCloseStream(void* stream);
+// Before normalization (function): _AIL_shutdown.
+__declspec(dllimport) void __stdcall ailShutdown();
+// Before normalization (function): _AIL_serve.
+__declspec(dllimport) void __stdcall ailServe();
+// Before normalization (function): _AIL_startup.
+__declspec(dllimport) void __stdcall ailStartup();
+// Before normalization (function): _AIL_set_preference.
+__declspec(dllimport) int __stdcall ailSetPreference(int preference,
                                                         int value);
-__declspec(dllimport) int __stdcall _AIL_get_preference(int preference);
-__declspec(dllimport) void __stdcall _AIL_HWND();
-__declspec(dllimport) int __stdcall _AIL_waveOutOpen(
+// Before normalization (function): _AIL_get_preference.
+__declspec(dllimport) int __stdcall ailGetPreference(int preference);
+// Before normalization (function): _AIL_HWND.
+__declspec(dllimport) void __stdcall ailHWND();
+// Before normalization (function): _AIL_waveOutOpen.
+__declspec(dllimport) int __stdcall ailWaveOutOpen(
     AILDigitalDriver** driver, void* waveOut, int device,
     AILWaveFormat* format);
-__declspec(dllimport) void __stdcall _AIL_waveOutClose(
+// Before normalization (function): _AIL_waveOutClose.
+__declspec(dllimport) void __stdcall ailWaveOutClose(
     AILDigitalDriver* driver);
-__declspec(dllimport) void __stdcall _AIL_digital_configuration(
+// Before normalization (function): _AIL_digital_configuration.
+__declspec(dllimport) void __stdcall ailDigitalConfiguration(
     AILDigitalDriver* driver, int* rate, int* format, char* description);
-__declspec(dllimport) ds_memsample* __stdcall _AIL_allocate_sample_handle(
+// Before normalization (function): _AIL_allocate_sample_handle.
+__declspec(dllimport) DsMemsample* __stdcall ailAllocateSampleHandle(
     AILDigitalDriver* driver);
-__declspec(dllimport) unsigned char __stdcall _SmackSoundUseMSS(
+// Before normalization (function): _SmackSoundUseMSS.
+__declspec(dllimport) unsigned char __stdcall smacksoundusemss(
     AILDigitalDriver* driver);
 typedef void* (__stdcall* BinkOpenMilesProc)(void*);
-__declspec(dllimport) void* __stdcall _BinkOpenMiles(void* soundSystem);
-__declspec(dllimport) int __stdcall _BinkSetSoundSystem(
+// Before normalization (function): _BinkOpenMiles.
+__declspec(dllimport) void* __stdcall binkopenmiles(void* soundSystem);
+// Before normalization (function): _BinkSetSoundSystem.
+__declspec(dllimport) int __stdcall binksetsoundsystem(
     BinkOpenMilesProc openSound, AILDigitalDriver* driver);
 }
-#define AIL_end_sample _AIL_end_sample
-#define AIL_sample_status _AIL_sample_status
-#define AIL_sample_volume _AIL_sample_volume
-#define AIL_stop_sample _AIL_stop_sample
-#define AIL_resume_sample _AIL_resume_sample
-#define AIL_init_sample _AIL_init_sample
-#define AIL_start_sample _AIL_start_sample
-#define AIL_set_sample_file _AIL_set_sample_file
-#define AIL_set_sample_loop_count _AIL_set_sample_loop_count
-#define AIL_set_sample_volume _AIL_set_sample_volume
-#define AIL_stream_status _AIL_stream_status
-#define AIL_stream_position _AIL_stream_position
-#define AIL_stream_volume _AIL_stream_volume
-#define AIL_open_stream _AIL_open_stream
-#define AIL_set_stream_loop_count _AIL_set_stream_loop_count
-#define AIL_start_stream _AIL_start_stream
-#define AIL_set_stream_position _AIL_set_stream_position
-#define AIL_set_stream_volume _AIL_set_stream_volume
-#define AIL_service_stream _AIL_service_stream
-#define AIL_pause_stream _AIL_pause_stream
-#define AIL_close_stream _AIL_close_stream
-#define AIL_shutdown _AIL_shutdown
-#define AIL_serve _AIL_serve
-#define AIL_startup _AIL_startup
-#define AIL_set_preference _AIL_set_preference
-#define AIL_get_preference _AIL_get_preference
-#define AIL_HWND _AIL_HWND
-#define AIL_waveOutOpen _AIL_waveOutOpen
-#define AIL_waveOutClose _AIL_waveOutClose
-#define AIL_digital_configuration _AIL_digital_configuration
-#define AIL_allocate_sample_handle _AIL_allocate_sample_handle
-#define SmackSoundUseMSS _SmackSoundUseMSS
-#define BinkOpenMiles _BinkOpenMiles
-#define BinkSetSoundSystem _BinkSetSoundSystem
+#define AIL_end_sample ailEndSample
+#define AIL_sample_status ailSampleStatus
+#define AIL_sample_volume ailSampleVolume
+#define AIL_stop_sample ailStopSample
+#define AIL_resume_sample ailResumeSample
+#define AIL_init_sample ailInitSample
+#define AIL_start_sample ailStartSample
+#define AIL_set_sample_file ailSetSampleFile
+#define AIL_set_sample_loop_count ailSetSampleLoopCount
+#define AIL_set_sample_volume ailSetSampleVolume
+#define AIL_stream_status ailStreamStatus
+#define AIL_stream_position ailStreamPosition
+#define AIL_stream_volume ailStreamVolume
+#define AIL_open_stream ailOpenStream
+#define AIL_set_stream_loop_count ailSetStreamLoopCount
+#define AIL_start_stream ailStartStream
+#define AIL_set_stream_position ailSetStreamPosition
+#define AIL_set_stream_volume ailSetStreamVolume
+#define AIL_service_stream ailServiceStream
+#define AIL_pause_stream ailPauseStream
+#define AIL_close_stream ailCloseStream
+#define AIL_shutdown ailShutdown
+#define AIL_serve ailServe
+#define AIL_startup ailStartup
+#define AIL_set_preference ailSetPreference
+#define AIL_get_preference ailGetPreference
+#define AIL_HWND ailHWND
+#define AIL_waveOutOpen ailWaveOutOpen
+#define AIL_waveOutClose ailWaveOutClose
+#define AIL_digital_configuration ailDigitalConfiguration
+#define AIL_allocate_sample_handle ailAllocateSampleHandle
+#define SmackSoundUseMSS smacksoundusemss
+#define BinkOpenMiles binkopenmiles
+#define BinkSetSoundSystem binksetsoundsystem
 
 // The CRT thread spawner retail reaches with a plain `call __beginthread`
 // (msvcrt, __cdecl). Declared here rather than via <process.h> so the
 // TU's import-call forms stay under this header's control.
-extern "C" unsigned long __cdecl _beginthread(void(__cdecl* startAddress)(void*),
+// Before normalization (function): _beginthread.
+extern "C" unsigned long __cdecl beginthread(void(__cdecl* startAddress)(void*),
                                               unsigned stackSize,
                                               void* arglist);
-extern "C" void __cdecl _endthread(void);
+// Before normalization (function): _endthread.
+extern "C" void __cdecl endthread(void);
 
 // Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).
-extern soundManager* g_soundManager;
+extern SoundManager* g_soundManager;
 
 // E:\gamedcs\SoundMgr.h:140, dc 0xe6ef4
 VA(0x0059a7d0, 0x51)  // dc 0xe6ef4
-inline void soundManager::serviceSounds()
+inline void SoundManager::serviceSounds()
 {
     EnterCriticalSection(&m_sectionSoundCall);
     AIL_serve();

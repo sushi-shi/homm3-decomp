@@ -15,7 +15,7 @@
 // CodeView owns the value-list element and its inline comparisons here.
 #include "ai_creature_value.h"
 
-class hero;
+class Hero;
 
 // get_best_spell_value refuses to appraise any spell whose
 // SSpellTraits::level is above 2 while the caster wields artifact 0x53 -
@@ -38,7 +38,8 @@ const int g_artifactRecantersCloak = 0x53;
 // (AI_SPELL_DIRECT_DAMAGE .. AI_SPELL_CLASS_MASK) reached from
 // cast_spell; the values agree bit for bit and the two rosters stay
 // separate for the include-set reason its comment records.
-enum ESpellValueClass {
+// Before normalization (type): ESpellValueClass.
+enum SpellValueClass {
     SPELL_VALUE_DAMAGE = 0x8000,
     SPELL_VALUE_DAMAGE_ONCE = 0x10000,
     SPELL_VALUE_MASS_DAMAGE = 0x20000,
@@ -64,9 +65,10 @@ enum ESpellValueClass {
 // before asking for a spell value) and the vector at +0x14 through the
 // compiler-generated destructor it INLINES - `operator delete(+0x18)`
 // followed by zero stores to +0x18/+0x1c/+0x20.
-class type_spellvalue {
+// Before normalization (type): type_spellvalue.
+class Spellvalue {
 public:
-    type_spellvalue(const hero* newHero);
+    Spellvalue(const Hero* newHero);
     // CodeView LF_ONEMETHOD marks ~type_spellvalue compiler-generated
     // (compgenx, attributes 0x103). Let the vector member generate it;
     // ai.cpp enrolls the retained retail body.
@@ -103,19 +105,19 @@ protected:
     // into the constructor, but the Dreamcast member boundary and local
     // inventory remain authoritative source-shape evidence.
     void fillCreatureValueList();
-    long getDamageSpellValue(SpellID spell, TSkillMastery mastery,
+    long getDamageSpellValue(SpellID spell, SkillMastery mastery,
                                 long timesCastable, long combatValue) const;
-    long getEnchantmentValue(SpellID spell, TSkillMastery mastery,
+    long getEnchantmentValue(SpellID spell, SkillMastery mastery,
                                long timesCastable) const;
-    long getMassDamageSpellValue(SpellID spell, TSkillMastery mastery,
+    long getMassDamageSpellValue(SpellID spell, SkillMastery mastery,
                                      long timesCastable) const;
-    const hero* m_ourHero;  // +0x00
+    const Hero* m_ourHero;  // +0x00
     long m_stackValue;  // +0x04
     long m_power;  // +0x08
     long m_duration;  // +0x0c
     long m_mana;  // +0x10
-    std::vector<type_creature_value> m_list;  // +0x14
+    std::vector<CreatureValue> m_list;  // +0x14
 };
-SIZE(type_spellvalue, 0x24);
+SIZE(Spellvalue, 0x24);
 
 #endif  /* HOMM3_AI_SPELLVALUE_H */

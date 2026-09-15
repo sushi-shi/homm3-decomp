@@ -29,7 +29,7 @@
 // complete 0x60-byte layout, vtable shape, and owned portrait are retail
 // facts from 0x5680fd..0x56822c and 0x5693a0..0x5697c4. The class is
 // private to this dialog module; no original header location is established.
-class CScenarioPlayerInfoWidget : public widget {
+class CScenarioPlayerInfoWidget : public Widget {
 public:
     Bitmap816* m_panel;                 // +0x30
     Bitmap816* m_flag;                  // +0x34
@@ -42,7 +42,7 @@ public:
     int m_startingBonus;                // +0x50
     CSprite* m_bonusSprite;             // +0x54
     Bitmap816* m_heroPortrait;          // +0x58, owned
-    hero* m_startingHero;               // +0x5c
+    Hero* m_startingHero;               // +0x5c
 
     // Retail's inlined constructor ends with `mov word ptr [edi+0x10], dx`
     // (0x568160) - the widget id, `390 + playerPosition`, which is exactly
@@ -67,7 +67,7 @@ public:
     }
 
     virtual ~CScenarioPlayerInfoWidget();
-    virtual int main(message& msg) { return widget::main(msg); }
+    virtual int main(Message& msg) { return Widget::main(msg); }
     virtual void zBufferDraw(unsigned short*, int) const {}
     virtual void draw() const;
 };
@@ -89,54 +89,54 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     // The widget vector NAMED AS A REFERENCE across all 42 uses:
     // 96.3650 -> 96.5654.  Retail reads _First/_Last through the vector's
     // own address here, not folded off `this`.
-    std::vector<widget*>& widgets = m_widgets;
+    std::vector<Widget*>& widgets = m_widgets;
     widgets.reserve(100);
 
-    widgets.push_back(new bitmapBorder(
+    widgets.push_back(new BitmapBorder(
         393, 0, 370, 585, 100, "GSelPop1.pcx", 0x800));
-    widgets.push_back(new bitmapBorder(
+    widgets.push_back(new BitmapBorder(
         0, 0, 557, 585, 102, "AdvOptBk.pcx", 0x800));
 
     sprintf(g_text, "%s:", (*g_generalText)[493]);
-    widgets.push_back(new textWidget(
+    widgets.push_back(new TextWidget(
         411, 429, 334, 19, g_text, "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 132,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY_HIGHLIGHT, 132,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
     sprintf(g_text, "%s:", (*g_generalText)[219]);
-    widgets.push_back(new textWidget(
+    widgets.push_back(new TextWidget(
         662, 429, 84, 19, g_text, "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 133,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+        Font::PRIMARY_HIGHLIGHT, 133,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    widgets.push_back(new TextWidget(
         411, 429, 90, 19, (*g_generalText)[495], "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 134,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+        Font::PRIMARY_HIGHLIGHT, 134,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    widgets.push_back(new TextWidget(
         419, 21, 278, 18, (*g_generalText)[496], "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+        Font::PRIMARY_HIGHLIGHT, 100, Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    widgets.push_back(new TextWidget(
         419, 131, 278, 18, (*g_generalText)[497], "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 105, font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+        Font::PRIMARY_HIGHLIGHT, 105, Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    widgets.push_back(new TextWidget(
         419, 282, 278, 18, (*g_generalText)[498], "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+        Font::PRIMARY_HIGHLIGHT, 100, Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    widgets.push_back(new TextWidget(
         419, 338, 278, 18, (*g_generalText)[499], "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY_HIGHLIGHT, 100, Font::VERT_CENTER_JUSTIFIED, 0, 8));
 
-    iconWidget* mapSizeIcon = new iconWidget(
+    IconWidget* mapSizeIcon = new IconWidget(
         711, 22, 29, 23, 189, "scnrmpsz.def", 0, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN);
+        IconWidget::ICON_STYLE_PLAIN);
     widgets.push_back(mapSizeIcon);
 
     sprintf(g_text, "%s:", (*g_generalText)[391]);
-    widgets.push_back(new textWidget(
-        411, 397, 44, 23, g_text, "smalfont.fnt", font::WHITE, 100,
-        font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8));
+    widgets.push_back(new TextWidget(
+        411, 397, 44, 23, g_text, "smalfont.fnt", Font::WHITE, 100,
+        Font::VERT_CENTER_JUSTIFIED | Font::RIGHT_JUSTIFIED, 0, 8));
     sprintf(g_text, "%s:", (*g_generalText)[392]);
-    widgets.push_back(new textWidget(
-        576, 397, 58, 23, g_text, "smalfont.fnt", font::WHITE, 386,
-        font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8));
+    widgets.push_back(new TextWidget(
+        576, 397, 58, 23, g_text, "smalfont.fnt", Font::WHITE, 386,
+        Font::VERT_CENTER_JUSTIFIED | Font::RIGHT_JUSTIFIED, 0, 8));
 
     NewSMapHeader& mapHeader = g_game->m_mapHeader;
     // DC locals and lines 299..300 prove pointers, with initialization
@@ -144,72 +144,72 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     VictoryConditionStruct* vc = &mapHeader.m_victoryCondition;
     LossConditionStruct* lc = &mapHeader.m_lossCondition;
 
-    widgets.push_back(new textWidget(
+    widgets.push_back(new TextWidget(
         419, 39, 324, 30, mapHeader.m_mapName.c_str(),
-        "bigfont.fnt", font::HEADING_HIGHLIGHT, 100, 0, 0, 8));
+        "bigfont.fnt", Font::HEADING_HIGHLIGHT, 100, 0, 0, 8));
     widgets.push_back(new CScrollTextWidget(
         mapHeader.m_mapDescription.c_str(), 419, 149, 319, 115,
-        "smalfont.fnt", font::WHITE, slider::BLUE));
+        "smalfont.fnt", Font::WHITE, Slider::BLUE));
 
     // Retail +0x6c0/+0x743 passes justify=5 for the difficulty labels;
     // +0x7c3/+0x822 passes justify=4 for the victory/loss descriptions.
-    widgets.push_back(new textWidget(
+    widgets.push_back(new TextWidget(
         411, 448, 89, 48,
         g_unnamed6a77ec[mapHeader.m_difficulty], "smalfont.fnt",
-        font::WHITE, 100,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+        Font::WHITE, 100,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
     sprintf(tempText, "%d%%",
             g_difficultyRatingPercent[g_game->m_setup.m_difficulty]);
-    widgets.push_back(new textWidget(
-        663, 448, 83, 48, tempText, "smalfont.fnt", font::WHITE, 100,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+    widgets.push_back(new TextWidget(
+        663, 448, 83, 48, tempText, "smalfont.fnt", Font::WHITE, 100,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     g_game->getVictoryConditionText(victoryText);
     g_game->getLossConditionText(lossText);
-    widgets.push_back(new textWidget(
-        453, 299, 288, 32, victoryText, "smalfont.fnt", font::WHITE, 100,
-        font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
-        453, 358, 288, 32, lossText, "smalfont.fnt", font::WHITE, 100,
-        font::VERT_CENTER_JUSTIFIED, 0, 8));
+    widgets.push_back(new TextWidget(
+        453, 299, 288, 32, victoryText, "smalfont.fnt", Font::WHITE, 100,
+        Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    widgets.push_back(new TextWidget(
+        453, 358, 288, 32, lossText, "smalfont.fnt", Font::WHITE, 100,
+        Font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     int i;
     for (i = 0; i < 8; ++i) {
-        widgets.push_back(new iconWidget(
+        widgets.push_back(new IconWidget(
             457 + i * 15, 399, 15, 20, 112 + i, "itgflags.def",
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-        widgets.push_back(new iconWidget(
+            0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+        widgets.push_back(new IconWidget(
             637 + i * 15, 399, 15, 20, 120 + i, "itgflags.def",
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+            0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
     }
 
     widgets.push_back(new CHotspotWidget(453, 396, 310, 25, 387));
-    widgets.push_back(new textWidget(
+    widgets.push_back(new TextWidget(
         55, 84, 104, 36, (*g_generalText)[518], "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 339,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY_HIGHLIGHT, 339,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     int gameTypeId = 341;
     if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1
             || *g_videoGameState == SINGLE_SELECTION_CONTEXT_3)
         gameTypeId = 342;
-    widgets.push_back(new textWidget(
+    widgets.push_back(new TextWidget(
         160, 84, 75, 36, (*g_generalText)[519], "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, gameTypeId,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+        Font::PRIMARY_HIGHLIGHT, gameTypeId,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    widgets.push_back(new TextWidget(
         236, 84, 75, 36, (*g_generalText)[520], "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 343,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+        Font::PRIMARY_HIGHLIGHT, 343,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    widgets.push_back(new TextWidget(
         312, 84, 75, 36, (*g_generalText)[521], "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 344,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+        Font::PRIMARY_HIGHLIGHT, 344,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    widgets.push_back(new TextWidget(
         55, 528, 334, 20, (*g_generalText)[522], "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 340,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new button(
+        Font::PRIMARY_HIGHLIGHT, 340,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    widgets.push_back(new Button(
         581, 529, 166, 40, SCENARIO_INFO_ACCEPT_ID, "scnrback.def",
         0, 1, 0, 1, 2));
 
@@ -226,19 +226,19 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         m_flags[i] = ResourceManager::getBitmap816(tempName);
     }
 
-    slider* durationSlider = new slider(
-        55, 551, 194, 16, 338, 11, 0, slider::BLUE, 0, 0);
+    Slider* durationSlider = new Slider(
+        55, 551, 194, 16, 338, 11, 0, Slider::BLUE, 0, 0);
     durationSlider->setState(g_game->m_setup.m_turnDuration);
     widgets.push_back(durationSlider);
 
-    widgets.push_back(new textWidget(
+    widgets.push_back(new TextWidget(
         55, 18, 334, 59, (*g_generalText)[662], "bigfont.fnt",
-        font::HEADING_HIGHLIGHT, -1,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+        Font::HEADING_HIGHLIGHT, -1,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    widgets.push_back(new TextWidget(
         253, 550, 134, 18, g_turnDurationText[g_game->m_setup.m_turnDuration],
-        "smalfont.fnt", font::WHITE, -1,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+        "smalfont.fnt", Font::WHITE, -1,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     // Complete-only rows are absent from DC's body in the 366..412 gap;
     // that gap does not recover their source or explain their omission.
@@ -252,7 +252,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
             continue;
 
         int playerType;
-        CMapHeaderData::TPlayerSlotAttributes* slot =
+        CMapHeaderData::PlayerSlotAttributes* slot =
             &g_game->m_mapHeader.m_playerSlotAttributes[i];
         if (slot->m_canBeHuman)
             playerType = slot->m_canBeComputer ? 0 : 1;
@@ -261,7 +261,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         else
             continue;
 
-        hero* startingHero = g_game->getHero(g_game->m_setup.m_startingHero[i]);
+        Hero* startingHero = g_game->getHero(g_game->m_setup.m_startingHero[i]);
         CScenarioPlayerInfoWidget* row = new CScenarioPlayerInfoWidget(
             m_townPix, i + SCENARIO_INFO_PLAYER_ROW_FIRST_ID);
         row->m_panel = m_panels[i];
@@ -287,33 +287,33 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         ++rowPosition;
     }
 
-    iconWidget* victory = new iconWidget(
+    IconWidget* victory = new IconWidget(
         417, 302, 32, 24, -1, "scnrvict.def", 0, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN);
+        IconWidget::ICON_STYLE_PLAIN);
     if (vc->m_type >= 0)
         victory->setIconFrame(vc->m_type);
     else
         victory->setIconFrame(11);
     widgets.push_back(victory);
 
-    iconWidget* loss = new iconWidget(
+    IconWidget* loss = new IconWidget(
         417, 359, 32, 24, -1, "scnrloss.def", 0, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN);
+        IconWidget::ICON_STYLE_PLAIN);
     if (lc->m_type >= 0)
         loss->setIconFrame(lc->m_type);
     else
         loss->setIconFrame(3);
     widgets.push_back(loss);
 
-    widgets.push_back(new button(
+    widgets.push_back(new Button(
         503, 450, 30, 46, 107, "gspbut3.def", 0, 1, 0, 0, 2));
-    widgets.push_back(new button(
+    widgets.push_back(new Button(
         535, 450, 30, 46, 108, "gspbut4.def", 0, 1, 0, 0, 2));
-    widgets.push_back(new button(
+    widgets.push_back(new Button(
         567, 450, 30, 46, 109, "gspbut5.def", 0, 1, 0, 0, 2));
-    widgets.push_back(new button(
+    widgets.push_back(new Button(
         599, 450, 30, 46, 110, "gspbut6.def", 0, 1, 0, 0, 2));
-    widgets.push_back(new button(
+    widgets.push_back(new Button(
         631, 450, 30, 46, 111, "gspbut7.def", 0, 1, 0, 0, 2));
 
     addWidgetsToMessageStream();
@@ -356,18 +356,18 @@ void CScenarioPlayerInfoWidget::draw() const
     g_unnamed698a08->drawBoundedString(
         m_playerName, g_windowManager->m_screenBitmap,
         windowX + 59, windowY + m_playerPosition * 50 + 124,
-        97, 17, font::PRIMARY, font::CENTER_JUSTIFIED, -1);
+        97, 17, Font::PRIMARY, Font::CENTER_JUSTIFIED, -1);
     g_unnamed698a08->drawBoundedString(
         m_playerTypeText, g_windowManager->m_screenBitmap,
         windowX + 59, windowY + m_playerPosition * 50 + 145,
-        46, 24, font::WHITE,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
+        46, 24, Font::WHITE,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, -1);
     if (g_game->isMultiplayer()) {
         g_unnamed698a08->drawBoundedString(
             m_handicapText, g_windowManager->m_screenBitmap,
             windowX + 107, windowY + m_playerPosition * 50 + 145,
-            50, 24, font::WHITE,
-            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
+            50, 24, Font::WHITE,
+            Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, -1);
     }
 
     m_townSprite->draw(0, m_townType * 2 + 2, 0, 0,
@@ -378,8 +378,8 @@ void CScenarioPlayerInfoWidget::draw() const
     g_unnamed698a08->drawBoundedString(
         g_unnamed6a74f4[m_townType], g_windowManager->m_screenBitmap,
         windowX + 161, windowY + m_playerPosition * 50 + 156,
-        71, 16, font::WHITE,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
+        71, 16, Font::WHITE,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, -1);
 
     if (m_heroPortrait) {
         m_heroPortrait->draw(0, 0, m_heroPortrait->getWidth(), m_heroPortrait->getHeight(),
@@ -391,14 +391,14 @@ void CScenarioPlayerInfoWidget::draw() const
         g_unnamed698a08->drawBoundedString(
             m_startingHero->m_name, g_windowManager->m_screenBitmap,
             windowX + 237, windowY + m_playerPosition * 50 + 156,
-            71, 16, font::WHITE,
-            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
+            71, 16, Font::WHITE,
+            Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, -1);
     } else {
         g_unnamed698a08->drawBoundedString(
             g_generalText->getText(524), g_windowManager->m_screenBitmap,
             windowX + 237, windowY + m_playerPosition * 50 + 156,
-            71, 16, font::WHITE,
-            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
+            71, 16, Font::WHITE,
+            Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, -1);
     }
 
     int bonusFrame = 10;
@@ -427,14 +427,14 @@ void CScenarioPlayerInfoWidget::draw() const
         g_unnamed698a08->drawBoundedString(
             g_generalText->getText(523), g_windowManager->m_screenBitmap,
             windowX + 313, windowY + m_playerPosition * 50 + 156,
-            71, 16, font::WHITE,
-            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
+            71, 16, Font::WHITE,
+            Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, -1);
     } else {
         g_unnamed698a08->drawBoundedString(
             g_unnamed6a5e14[m_startingBonus], g_windowManager->m_screenBitmap,
             windowX + 313, windowY + m_playerPosition * 50 + 156,
-            71, 16, font::WHITE,
-            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
+            71, 16, Font::WHITE,
+            Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, -1);
     }
 }
 
@@ -478,33 +478,33 @@ VA(0x005698c0, 0xF2)  // dc 0x12ab20
 void CScenarioInfoDlg::updateAllyEnemyFlags()
 {
     int localPlayer = g_game->getLocalPlayerGamePos();
-    widget* flag;
+    Widget* flag;
     int i = 0;
     int nextEnemy = SCENARIO_INFO_ENEMY_FIRST_ID;
     int nextAlly = SCENARIO_INFO_ALLY_FIRST_ID;
 
     for (; i < 8; ++i) {
         flag = getWidget(i + SCENARIO_INFO_ENEMY_FIRST_ID);
-        flag->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                           widget::WIDGET_CLEAR_STATUS);
+        flag->sendMessage(Widget::WIDGET_CLEAR_STATUS,
+                           Widget::WIDGET_CLEAR_STATUS);
         flag = getWidget(i + SCENARIO_INFO_ALLY_FIRST_ID);
-        flag->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                           widget::WIDGET_CLEAR_STATUS);
+        flag->sendMessage(Widget::WIDGET_CLEAR_STATUS,
+                           Widget::WIDGET_CLEAR_STATUS);
 
         if (g_game->m_setup.m_playerPos[i] >= 0) {
             if (g_game->onSameTeam(i, localPlayer)) {
                 flag = getWidget(nextAlly);
-                flag->sendMessage(widget::WIDGET_SET_STATUS,
-                                   widget::WIDGET_CLEAR_STATUS);
+                flag->sendMessage(Widget::WIDGET_SET_STATUS,
+                                   Widget::WIDGET_CLEAR_STATUS);
                 getWidget(nextAlly)->sendMessage(
-                    widget::WIDGET_SET_ICON_FRAME, i);
+                    Widget::WIDGET_SET_ICON_FRAME, i);
                 ++nextAlly;
             } else {
                 flag = getWidget(nextEnemy);
-                flag->sendMessage(widget::WIDGET_SET_STATUS,
-                                   widget::WIDGET_CLEAR_STATUS);
+                flag->sendMessage(Widget::WIDGET_SET_STATUS,
+                                   Widget::WIDGET_CLEAR_STATUS);
                 getWidget(nextEnemy)->sendMessage(
-                    widget::WIDGET_SET_ICON_FRAME, i);
+                    Widget::WIDGET_SET_ICON_FRAME, i);
                 ++nextEnemy;
             }
         }
@@ -517,15 +517,15 @@ void CScenarioInfoDlg::updateAllyEnemyFlags()
 // so the declaration remains non-inline and VC6 /Ob2 owns the caller choice.
 void CScenarioInfoDlg::setDifficultyHiLite()
 {
-    message msg;
+    Message msg;
 
     for (int i = 107; i <= 111; ++i)
         getWidget(i)->enable(0);
 
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_STATUS;
+    msg.m_codeX = Widget::WIDGET_SET_STATUS;
     msg.m_codeY = g_game->m_setup.m_difficulty + 107;
-    msg.m_extra = widget::WIDGET_HIGHLIGHTED;
+    msg.m_extra = Widget::WIDGET_HIGHLIGHTED;
     broadcastMessage(msg);
 }
 
@@ -554,7 +554,7 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
             CTownDlg dlg(0);
             dlg.createWin(
                 m_townPix, townType * 2 + 2,
-                static_cast<TTownType>(townType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+                static_cast<TownType>(townType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             dlg.doModal(0);
         }
         return 1;
@@ -574,7 +574,7 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
             CScenarioPlayerInfoWidget* row =
                 static_cast<CScenarioPlayerInfoWidget*>(getWidget(
                     playerPosition + SCENARIO_INFO_PLAYER_ROW_FIRST_ID));
-            hero* startingHero = g_game->getHero(heroId);
+            Hero* startingHero = g_game->getHero(heroId);
             CHeroDlg dlg(0);
             dlg.createWin(row->m_heroPortrait, startingHero->m_name,
                           m_heroSpecificAbility, heroId,

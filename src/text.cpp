@@ -20,25 +20,25 @@
 // owning site is named in the comment above each such definition.
 
 DATA(0x006a5328)
-TTextResource* g_resourceNamesResource;
+TextResource* g_resourceNamesResource;
 
 // 0x006a5390 - datum claimed at include/game.h:2723 (gPrimarySkillNames)
 const char* g_statNames[4];
 
 DATA(0x006a53d0)
-TTextResource* g_mineNames;
+TextResource* g_mineNames;
 
 DATA(0x006a53d4)
 const char* g_specialBuildingNames[10][11];
 
 DATA(0x006a57b8)
-TTextResource* g_heroBioText;
+TextResource* g_heroBioText;
 
 DATA(0x006a58b8)
 const char* g_customCampRclick[67];
 
 DATA(0x006a5c24)
-TSpreadsheetResource* g_campaignRegionNamesResource;
+SpreadsheetResource* g_campaignRegionNamesResource;
 
 // 0x006a5c28 - datum claimed at src/townmgr.cpp:9175
 const char* g_castleInfo[7];
@@ -50,7 +50,7 @@ DATA(0x006a5d4c)
 const char* g_abbSecondarySkillLevels[3];
 
 DATA(0x006a5d5c)
-TTextResource* g_generalText;
+TextResource* g_generalText;
 
 // 0x006a5d84 - datum claimed at src/townmgr.cpp:421
 const char* g_townCommand[35];
@@ -62,7 +62,7 @@ const char* g_mineEventText[8];
 const char* g_tavernInfo[8];
 
 DATA(0x006a5e60)
-TSpreadsheetResource* g_campaignDialogResource;
+SpreadsheetResource* g_campaignDialogResource;
 
 // 0x006a5e64 - datum claimed at src/seerhut.cpp:290
 const char* g_resourceNames[8];
@@ -71,28 +71,28 @@ DATA(0x006a5e84)
 const char* g_terrainNames[10];
 
 DATA(0x006a5eac)
-TTextResource* g_hallText;
+TextResource* g_hallText;
 
 // 0x006a5ecc - datum claimed at src/hiscore.cpp:34 (gHighScoreDefaults0)
 char* g_highScoreCampaignDefault[11][4];
 
 DATA(0x006a5f7c)
-TTextResource* g_mineEventTextResource;
+TextResource* g_mineEventTextResource;
 
 DATA(0x006a6040)
-TSpreadsheetResource* g_specialBuildingText;
+SpreadsheetResource* g_specialBuildingText;
 
 // 0x006a6048 - datum claimed at src/game.cpp:10974
 const char* g_townNames[9][16];
 
 DATA(0x006a6288)
-TSpreadsheetResource* g_dwellingText;
+SpreadsheetResource* g_dwellingText;
 
 DATA(0x006a628c)
-TTextResource* g_tentColorText;
+TextResource* g_tentColorText;
 
 DATA(0x006a6290)
-TTextResource* g_townText;
+TextResource* g_townText;
 
 DATA(0x006a62a8)
 const char* g_dwellingNames[10][14];
@@ -101,7 +101,7 @@ DATA(0x006a64e4)
 const char* g_neutralBuildingNames[19];
 
 DATA(0x006a6568)
-TSpreadsheetResource* g_neutralBuildingText;
+SpreadsheetResource* g_neutralBuildingText;
 
 // 0x006a66d8 - datum claimed at src/hero.cpp:126 (gSharedHeroNames)
 const char* g_heroBio[163];
@@ -110,31 +110,31 @@ DATA(0x006a69c4)
 const char* g_dwellingInfo[10][14];
 
 DATA(0x006a6bf4)
-TTextResource* g_primaryStatNames;
+TextResource* g_primaryStatNames;
 
 DATA(0x006a6c48)
-TTextResource* g_advObjNames;
+TextResource* g_advObjNames;
 
 DATA(0x006a6c78)
-TTextResource* g_customCampText;
+TextResource* g_customCampText;
 
 // 0x006a7428 - datum claimed at src/castle.cpp:28
 const char* g_hallInfo[10];
 
 DATA(0x006a7450)
-TTextResource* g_creditsText;
+TextResource* g_creditsText;
 
 DATA(0x006a74d0)
 const char* g_mineDescriptions[8];
 
 DATA(0x006a751c)
-TTextResource* g_playerColors;
+TextResource* g_playerColors;
 
 DATA(0x006a7520)
 const char* g_borderColorNames[8];
 
 DATA(0x006a7550)
-TTextResource* g_ovText;
+TextResource* g_ovText;
 
 // 0x006a7570 - datum claimed at src/levelupwindow.cpp:46 (gSkillMasteryNames)
 const char* g_secondarySkillLevels[3];
@@ -143,16 +143,16 @@ DATA(0x006a7700)
 const char* g_credits[2];
 
 DATA(0x006a7708)
-TTextResource* g_castleText;
+TextResource* g_castleText;
 
 DATA(0x006a770c)
-TTextResource* g_terrainNamesResource;
+TextResource* g_terrainNamesResource;
 
 DATA(0x006a77c8)
-TTextResource* g_heroText;
+TextResource* g_heroText;
 
 DATA(0x006a77e8)
-TSpreadsheetResource* g_highScoreDefaults;
+SpreadsheetResource* g_highScoreDefaults;
 
 DATA(0x006a780c)
 const char* g_buildingInfoSpecial[10][11];
@@ -161,10 +161,10 @@ DATA(0x006a79ec)
 const char* g_quickViewText[232];
 
 DATA(0x006a7d8c)
-TSpreadsheetResource* g_townNameText;
+SpreadsheetResource* g_townNameText;
 
 DATA(0x006a7d90)
-TTextResource* g_tavernText;
+TextResource* g_tavernText;
 
 DATA(0x006a7df8)
 const char* g_colors[8];
@@ -176,7 +176,7 @@ const char* g_buildingInfoNeutral[28];
 const char* g_overviewText[16];
 
 DATA(0x006a7f00)
-TTextResource* g_secondarySkillLevelNames;
+TextResource* g_secondarySkillLevelNames;
 
 // 0x006a7f08 - datum claimed at src/hiscore.cpp:35 (gHighScoreDefaults1)
 char* g_highScoreStandardDefault[11][4];
@@ -189,76 +189,76 @@ const char* g_heroScreen[33];
 // --- Help.txt's 23 THelpText tables (below), Dreamcast-named ---
 
 // 0x006a52d0 - datum claimed at src/spellbookwindow.cpp:52 (gSpellbookHelpText)
-THelpText g_spellbookHelp[11];
+HelpText g_spellbookHelp[11];
 
 // 0x006a53a8 - datum claimed at src/tradpost.cpp:1341 (gGiveHelpText)
-THelpText g_giveResourceWindowHelp[5];
+HelpText g_giveResourceWindowHelp[5];
 
 DATA(0x006a55a8)
-THelpText g_combatOptionsHelp[39];
+HelpText g_combatOptionsHelp[39];
 
 // 0x006a56e0 - datum claimed at src/adventuremapwindow.cpp:29
-THelpText g_adventureWindowHelp[27];
+HelpText g_adventureWindowHelp[27];
 
 // 0x006a5868 - datum claimed at src/tradpost.cpp:1342 (gMarketHelpText)
-THelpText g_resourceWindowHelp[6];
+HelpText g_resourceWindowHelp[6];
 
 DATA(0x006a59c8)
-THelpText g_campaignBriefHelp[62];
+HelpText g_campaignBriefHelp[62];
 
 DATA(0x006a5f80)
-THelpText g_campaignWindowHelp[24];
+HelpText g_campaignWindowHelp[24];
 
 // 0x006a6530 - datum claimed at src/adventureoptionswindow.cpp:20
-THelpText g_adventureOptionsHelp[7];
+HelpText g_adventureOptionsHelp[7];
 
 DATA(0x006a6570)
-THelpText g_multiSelectionHelp[25];
+HelpText g_multiSelectionHelp[25];
 
 DATA(0x006a6638)
-THelpText g_sacrificeWindowHelp2[20];
+HelpText g_sacrificeWindowHelp2[20];
 
 // 0x006a6968 - datum claimed at src/combatcontrolsubwindow.cpp:28 (gCombatSubWindowHelp)
-THelpText g_combatWindowHelp[11];
+HelpText g_combatWindowHelp[11];
 
 DATA(0x006a6bf8)
-THelpText g_newGameHelp[5];
+HelpText g_newGameHelp[5];
 
 DATA(0x006a6c20)
-THelpText g_mainMenuHelp[5];
+HelpText g_mainMenuHelp[5];
 
 // 0x006a6c50 - datum claimed at src/tradpost.cpp:1343 (gSellArtHelpText)
-THelpText g_sellArtifactWindowHelp[5];
+HelpText g_sellArtifactWindowHelp[5];
 
 DATA(0x006a6c80)
-THelpText g_singleSelectionHelp[245];
+HelpText g_singleSelectionHelp[245];
 
 // 0x006a7458 - datum claimed at src/viewarmywindow.cpp:156
-THelpText g_viewArmyHelp[15];
+HelpText g_viewArmyHelp[15];
 
 DATA(0x006a7518)
-TSpreadsheetResource* g_helpText;
+SpreadsheetResource* g_helpText;
 
 // 0x006a7558 - datum claimed at src/recruit.cpp:72 (gRecruitMaximumRolloverText)
-THelpText g_recruitHelp[3];
+HelpText g_recruitHelp[3];
 
 DATA(0x006a7580)
-THelpText g_systemOptionsHelp[48];
+HelpText g_systemOptionsHelp[48];
 
 DATA(0x006a7750)
-THelpText g_mpHelp[8];
+HelpText g_mpHelp[8];
 
 DATA(0x006a77d0)
-THelpText g_transformerWindowHelp[3];
+HelpText g_transformerWindowHelp[3];
 
 // 0x006a7da8 - datum claimed at src/tradpost.cpp:1344 (gBuyArtHelpText)
-THelpText g_buyArtifactWindowHelp[5];
+HelpText g_buyArtifactWindowHelp[5];
 
 // 0x006a7dd8 - datum claimed at src/university_window.cpp:33 (gUniversityWindowHelp)
-THelpText g_universityWindowHelp2[4];
+HelpText g_universityWindowHelp2[4];
 
 // 0x006a7e98 - datum claimed at src/tradpost.cpp:1345 (gSellCreaHelpText)
-THelpText g_sellCreatureWindowHelp[5];
+HelpText g_sellCreatureWindowHelp[5];
 // --- Arraytxt.txt's 24 destination tables (below), Dreamcast-named ---
 
 // 0x006a532c - datum claimed at src/viewarmywindow.cpp:168 (gLuckTexts)
@@ -305,7 +305,7 @@ DATA(0x006a5eb0)
 const char* g_moraleText[7];
 
 DATA(0x006a6044)
-TTextResource* g_arrayText;
+TextResource* g_arrayText;
 
 DATA(0x006a6294)
 const char* g_townSizeNames[4];
@@ -751,7 +751,7 @@ unsigned char initializeHelpText()
 
     i = 3;
     for (j = 0; j < 5; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_mainMenuHelp[j].m_text = row[0];
@@ -759,7 +759,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 5; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_newGameHelp[j].m_text = row[0];
@@ -767,7 +767,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 245; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_singleSelectionHelp[j].m_text = row[0];
@@ -775,7 +775,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 25; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_multiSelectionHelp[j].m_text = row[0];
@@ -783,7 +783,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 27; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_adventureWindowHelp[j].m_text = row[0];
@@ -791,7 +791,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 48; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_systemOptionsHelp[j].m_text = row[0];
@@ -799,7 +799,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 7; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_adventureOptionsHelp[j].m_text = row[0];
@@ -807,7 +807,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 11; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_combatWindowHelp[j].m_text = row[0];
@@ -815,7 +815,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 39; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_combatOptionsHelp[j].m_text = row[0];
@@ -823,7 +823,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 15; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_viewArmyHelp[j].m_text = row[0];
@@ -831,7 +831,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 11; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_spellbookHelp[j].m_text = row[0];
@@ -839,7 +839,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 62; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_campaignBriefHelp[j].m_text = row[0];
@@ -847,7 +847,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 24; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_campaignWindowHelp[j].m_text = row[0];
@@ -855,7 +855,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 3; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_recruitHelp[j].m_text = row[0];
@@ -863,7 +863,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 8; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_mpHelp[j].m_text = row[0];
@@ -871,7 +871,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 20; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_sacrificeWindowHelp2[j].m_text = row[0];
@@ -879,7 +879,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 3; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_transformerWindowHelp[j].m_text = row[0];
@@ -887,7 +887,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 6; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_resourceWindowHelp[j].m_text = row[0];
@@ -895,7 +895,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 5; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_giveResourceWindowHelp[j].m_text = row[0];
@@ -903,7 +903,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 5; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_buyArtifactWindowHelp[j].m_text = row[0];
@@ -911,7 +911,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 5; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_sellArtifactWindowHelp[j].m_text = row[0];
@@ -919,7 +919,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 5; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_sellCreatureWindowHelp[j].m_text = row[0];
@@ -927,7 +927,7 @@ unsigned char initializeHelpText()
     }
     i += 2;
     for (j = 0; j < 4; j++, i++) {
-        const TSpreadsheetResource::TStringVector& row =
+        const SpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
         g_universityWindowHelp2[j].m_text = row[0];
@@ -1030,14 +1030,14 @@ unsigned char initializeArrayText()
 
 // E:\gamedcs\TextResource.h:113
 DC_ONLY(0x162910, 0x24)
-int TSpreadsheetResource::GetNumberOfColumns(int r)
+int SpreadsheetResource::GetNumberOfColumns(int r)
 {
     // @stub
 }
 
 // E:\gamedcs\TextResource.h:120
 DC_ONLY(0x162934, 0x28)
-const char* TSpreadsheetResource::getSpreadsheet(int r, int c)
+const char* SpreadsheetResource::getSpreadsheet(int r, int c)
 {
     // @stub
 }

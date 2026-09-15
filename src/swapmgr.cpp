@@ -29,7 +29,7 @@
 DATA(0x006a3d08) static int g_unnamed6a3d08;
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
 DATA(0x006a51c4) extern const char* g_statNames[];
-DATA(0x006a3d30) swapManager* g_swapManager;
+DATA(0x006a3d30) SwapManager* g_swapManager;
 
 // The shared includes.h helper is named by Reset's four Dreamcast xrefs
 // (dc 0x1ef5c), once around each morale/luck call. Retail's inlined clamp
@@ -39,7 +39,7 @@ DATA(0x006a3d30) swapManager* g_swapManager;
 // E:\gamedcs\swapmgr.cpp:120. Dreamcast proves the class identity and
 // constructor signature; retail independently proves the CNetMsg base plus
 // two complete hero snapshots and the 0x938-byte wire extent.
-CHeroUpdateMsg::CHeroUpdateMsg(hero* left, hero* right)
+CHeroUpdateMsg::CHeroUpdateMsg(Hero* left, Hero* right)
     : CNetMsg(RS_HERO_UPDATE, sizeof(CHeroUpdateMsg))
 {
     m_leftHero = *left;
@@ -60,7 +60,7 @@ CGiveMeStuffMsg::CGiveMeStuffMsg()
 
 inline CSwapManagerChatEdit::CSwapManagerChatEdit(
     int x, int y, int w, int h, int textSize, char* text, char* fontName,
-    font::TColor color, font::EJustify justification, char* backgroundIcon,
+    Font::Color color, Font::Justify justification, char* backgroundIcon,
     int backgroundFrame, int id, int style, int readType, int insetX,
     int insetY)
     : CGameChatEdit(x, y, w, h, textSize, text, fontName, color,
@@ -75,38 +75,38 @@ inline CSwapManagerChatEdit::CSwapManagerChatEdit(
 // Complete adds the SoD background and artifact slots plus the network arrow
 // split; retail fixes all constructor arguments below.
 VA(0x005aaa80, 0x38E9)
-TSwapWindow::TSwapWindow(hero** heroes)
-    : heroWindow(0, 0, 800, 600, 1)
+SwapWindow::SwapWindow(Hero** heroes)
+    : HeroWindow(0, 0, 800, 600, 1)
 {
     m_widgets.reserve(125);
 
     const char* background =
         g_game->m_f1f698 == GAME_VERSION_SOD ? "trade2.pcx" : "trade.pcx";
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         0, 0, m_width, m_height, 0, background, 0x800));
 
-    m_chatText = new textWidget(
+    m_chatText = new TextWidget(
         0x145, 0xfa, 0x94, 0x132, 0, "smalfont.fnt",
-        font::CHAT, 0x12d, font::BOTTOM_JUSTIFIED, 0, 8);
+        Font::CHAT, 0x12d, Font::BOTTOM_JUSTIFIED, 0, 8);
     m_chatEdit = new CSwapManagerChatEdit(
         4, 0x242, 0x2d4, 0x12, 0x7f, "", "smalfont.fnt",
-        font::WHITE, font::LEFT_JUSTIFIED, "TStatBar.pcx",
+        Font::WHITE, Font::LEFT_JUSTIFIED, "TStatBar.pcx",
         0, 0x12c, 0x100, 0, 7, 5);
 
     if (g_networkActive69954c && g_swapManager->m_humanPlayerTrade) {
-        m_leftArrow = new bitmapBorder(
+        m_leftArrow = new BitmapBorder(
             0x16e, 0xfa, 0x43, 0x10f, 0, "trarrowl.pcx", 0x800);
-        m_rightArrow = new bitmapBorder(
+        m_rightArrow = new BitmapBorder(
             0x16e, 0xfa, 0x43, 0x10f, 0, "trarrowr.pcx", 0x800);
         m_widgets.push_back(m_leftArrow);
         m_widgets.push_back(m_rightArrow);
-        m_receiveButton = new button(
+        m_receiveButton = new Button(
             0x15f, 0xbd, 0x62, 0x30, kSwapReceiveFromAlly,
             "trrecb.def", 0, 1, 0, 0, 2);
         updateArrows();
     } else {
         if (heroes[1]->m_owner != g_game->getLocalPlayerGamePos()) {
-            m_widgets.push_back(new bitmapBorder(
+            m_widgets.push_back(new BitmapBorder(
                 0x16e, 0xfa, 0x43, 0x10f, 0,
                 "trarrowr.pcx", 0x800));
         }
@@ -117,540 +117,540 @@ TSwapWindow::TSwapWindow(hero** heroes)
 
     m_widgets.push_back(m_chatText);
 
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         0x180, 0x11, 0x20, 0x20, 0x73, "pskil32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x180, 0x35, 0x20, 0x20, 0x74, "pskil32.def",
-        1, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        1, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x180, 0x59, 0x20, 0x20, 0x75, "pskil32.def",
-        2, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        2, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x180, 0x7d, 0x20, 0x20, 0x76, "pskil32.def",
-        3, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        3, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
 
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         0x43, 0x2d, 0x20, 0x20, 0x69, "un32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x67, 0x2d, 0x20, 0x20, 0x6f, "pskil32.def",
-        4, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        4, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x8b, 0x2d, 0x20, 0x20, 0x71, "pskil32.def",
-        5, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        5, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xb0, 0x2d, 0x1e, 0x14, 0x6b, "imrl30.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xd4, 0x2d, 0x1e, 0x14, 0x6d, "ilck30.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         0x14a, 0x1b, 0x2e, 0x14, 0, "smalfont.fnt",
-        font::PRIMARY, 3, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 3, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x14a, 0x3f, 0x2e, 0x14, 0, "smalfont.fnt",
-        font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 4, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x14a, 0x63, 0x2e, 0x14, 0, "smalfont.fnt",
-        font::PRIMARY, 5, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 5, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x14a, 0x87, 0x2e, 0x14, 0, "smalfont.fnt",
-        font::PRIMARY, 6, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 6, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x2c, 0x11, 0xc8, 0x14, 0, "smalfont.fnt",
-        font::PRIMARY, 0x57, font::RIGHT_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 0x57, Font::RIGHT_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x67, 0x3f, 0x20, 0x14, 0, "smalfont.fnt",
-        font::PRIMARY, 0x51, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 0x51, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x8b, 0x3f, 0x20, 0x14, 0, "smalfont.fnt",
-        font::PRIMARY, 0x53, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 0x53, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         0x0a, 0x2c, 0x34, 0x24, kSwapLeftQuestLog,
         "hsbtns4.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         0x0a, 0x84, 0x30, 0x1e, kSwapRefreshLeft,
         "tsbtns.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         0x2e, 0x203, 0x16, 0x2e, kSwapLeftBackpackLeft,
         "hsbtns3.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         0x12b, 0x203, 0x16, 0x2e, kSwapLeftBackpackRight,
         "hsbtns5.def", 0, 1, 0, 0, 2));
 
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         0x22e, 0x2d, 0x20, 0x20, 0x6a, "un32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x251, 0x2d, 0x20, 0x20, 0x70, "pskil32.def",
-        4, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        4, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x275, 0x2d, 0x20, 0x20, 0x72, "pskil32.def",
-        5, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        5, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x29a, 0x2d, 0x1e, 0x14, 0x6c, "imrl30.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x2be, 0x2d, 0x1e, 0x14, 0x6e, "ilck30.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         0x1a8, 0x1a, 0x2e, 0x14, 0, "smalfont.fnt",
-        font::PRIMARY, 8, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 8, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x1a8, 0x3e, 0x2e, 0x14, 0, "smalfont.fnt",
-        font::PRIMARY, 9, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 9, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x1a8, 0x62, 0x2e, 0x14, 0, "smalfont.fnt",
-        font::PRIMARY, 10, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 10, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x1a8, 0x86, 0x2e, 0x14, 0, "smalfont.fnt",
-        font::PRIMARY, 11, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 11, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x22b, 0x11, 0xc8, 0x14, 0, "smalfont.fnt",
-        font::PRIMARY, 0x58, font::LEFT_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 0x58, Font::LEFT_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x251, 0x3f, 0x20, 0x14, 0, "smalfont.fnt",
-        font::PRIMARY, 0x52, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 0x52, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x275, 0x3f, 0x20, 0x14, 0, "smalfont.fnt",
-        font::PRIMARY, 0x54, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 0x54, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         0x2e4, 0x2c, 0x34, 0x24, kSwapRightQuestLog,
         "hsbtns4.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         0x2e4, 0x84, 0x30, 0x1e, kSwapRefreshRight,
         "tsbtns.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         0x1dd, 0x203, 0x16, 0x2e, kSwapRightBackpackLeft,
         "hsbtns3.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         0x2da, 0x203, 0x16, 0x2e, kSwapRightBackpackRight,
         "hsbtns5.def", 0, 1, 0, 0, 2));
 
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         0x101, 0x0d, 0x3a, 0x40, 1, 0, 0x800));
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         0x1e5, 0x0d, 0x3a, 0x40, 2, 0, 0x800));
 
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         0x45, 0x83, 0x20, 0x20, 0x0d, "cprsmall.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x69, 0x83, 0x20, 0x20, 0x0e, "cprsmall.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x8d, 0x83, 0x20, 0x20, 0x0f, "cprsmall.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xb1, 0x83, 0x20, 0x20, 0x10, "cprsmall.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xd5, 0x83, 0x20, 0x20, 0x11, "cprsmall.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xf9, 0x83, 0x20, 0x20, 0x12, "cprsmall.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x11d, 0x83, 0x20, 0x20, 0x13, "cprsmall.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         0x46, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
-        font::PRIMARY, 0x41, font::RIGHT_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 0x41, Font::RIGHT_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x6a, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
-        font::PRIMARY, 0x42, font::RIGHT_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 0x42, Font::RIGHT_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x8e, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
-        font::PRIMARY, 0x43, font::RIGHT_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 0x43, Font::RIGHT_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0xb2, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
-        font::PRIMARY, 0x44, font::RIGHT_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 0x44, Font::RIGHT_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0xd6, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
-        font::PRIMARY, 0x45, font::RIGHT_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 0x45, Font::RIGHT_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0xfa, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
-        font::PRIMARY, 0x46, font::RIGHT_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 0x46, Font::RIGHT_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x11e, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
-        font::PRIMARY, 0x47, font::RIGHT_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 0x47, Font::RIGHT_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         0x1e7, 0x83, 0x20, 0x20, 0x14, "cprsmall.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x20b, 0x83, 0x20, 0x20, 0x15, "cprsmall.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x22f, 0x83, 0x20, 0x20, 0x16, "cprsmall.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x253, 0x83, 0x20, 0x20, 0x17, "cprsmall.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x277, 0x83, 0x20, 0x20, 0x18, "cprsmall.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x29b, 0x83, 0x20, 0x20, 0x19, "cprsmall.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x2bf, 0x83, 0x20, 0x20, 0x1a, "cprsmall.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         0x1e8, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
-        font::PRIMARY, 0x48, font::RIGHT_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 0x48, Font::RIGHT_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x20c, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
-        font::PRIMARY, 0x49, font::RIGHT_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 0x49, Font::RIGHT_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x230, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
-        font::PRIMARY, 0x4a, font::RIGHT_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 0x4a, Font::RIGHT_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x254, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
-        font::PRIMARY, 0x4b, font::RIGHT_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 0x4b, Font::RIGHT_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x278, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
-        font::PRIMARY, 0x4c, font::RIGHT_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 0x4c, Font::RIGHT_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x29c, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
-        font::PRIMARY, 0x4d, font::RIGHT_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(
+        Font::PRIMARY, 0x4d, Font::RIGHT_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(
         0x2c0, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
-        font::PRIMARY, 0x4e, font::RIGHT_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 0x4e, Font::RIGHT_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         0xae, 0xb4, 0x2c, 0x2c, 0x96, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xe9, 0x188, 0x2c, 0x2c, 0x97, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xae, 0xe6, 0x2c, 0x2c, 0x98, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x30, 0xdb, 0x2c, 0x2c, 0x99, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xe3, 0x14e, 0x2c, 0x2c, 0x9a, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xae, 0x119, 0x2c, 0x2c, 0x9b, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x60, 0xdb, 0x2c, 0x2c, 0x9c, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x113, 0x14e, 0x2c, 0x2c, 0x9d, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xb4, 0x1bd, 0x2c, 0x2c, 0x9e, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x30, 0x125, 0x2c, 0x2c, 0x9f, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x40, 0x157, 0x2c, 0x2c, 0xa0, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x50, 0x18a, 0x2c, 0x2c, 0xa1, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x60, 0x1bd, 0x2c, 0x2c, 0xa2, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xe5, 0xb4, 0x2c, 0x2c, 0xa3, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x113, 0xb4, 0x2c, 0x2c, 0xa4, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x113, 0xe2, 0x2c, 0x2c, 0xa5, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x113, 0x110, 0x2c, 0x2c, 0xa6, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x113, 0x1cd, 0x2c, 0x2c, 0xa7, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
     if (g_game->m_f1f698 == GAME_VERSION_SOD) {
-        m_widgets.push_back(new iconWidget(
+        m_widgets.push_back(new IconWidget(
             0x2e, 0x1bd, 0x2c, 0x2c, 0xa8, "artifact.def",
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+            0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
     }
 
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         0x25e, 0xb4, 0x2c, 0x2c, 0xa9, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x299, 0x188, 0x2c, 0x2c, 0xaa, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x25e, 0xe6, 0x2c, 0x2c, 0xab, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x1e0, 0xdb, 0x2c, 0x2c, 0xac, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x293, 0x14e, 0x2c, 0x2c, 0xad, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x25e, 0x119, 0x2c, 0x2c, 0xae, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x210, 0xdb, 0x2c, 0x2c, 0xaf, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x2c3, 0x14e, 0x2c, 0x2c, 0xb0, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x264, 0x1bd, 0x2c, 0x2c, 0xb1, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x1e0, 0x125, 0x2c, 0x2c, 0xb2, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x1f0, 0x157, 0x2c, 0x2c, 0xb3, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x200, 0x18a, 0x2c, 0x2c, 0xb4, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x210, 0x1bd, 0x2c, 0x2c, 0xb5, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x295, 0xb4, 0x2c, 0x2c, 0xb6, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x2c3, 0xb4, 0x2c, 0x2c, 0xb7, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x2c3, 0xe2, 0x2c, 0x2c, 0xb8, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x2c3, 0x110, 0x2c, 0x2c, 0xb9, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x2c3, 0x1cd, 0x2c, 0x2c, 0xba, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
     if (g_game->m_f1f698 == GAME_VERSION_SOD) {
-        m_widgets.push_back(new iconWidget(
+        m_widgets.push_back(new IconWidget(
             0x1de, 0x1bd, 0x2c, 0x2c, 0xbb, "artifact.def",
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+            0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
     }
 
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         0xae, 0xb4, 0x2c, 0x2c, 0x1b, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xe9, 0x188, 0x2c, 0x2c, 0x1c, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xae, 0xe6, 0x2c, 0x2c, 0x1d, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x30, 0xdb, 0x2c, 0x2c, 0x1e, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xe3, 0x14e, 0x2c, 0x2c, 0x1f, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xae, 0x119, 0x2c, 0x2c, 0x20, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x60, 0xdb, 0x2c, 0x2c, 0x21, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x113, 0x14e, 0x2c, 0x2c, 0x22, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xb4, 0x1bd, 0x2c, 0x2c, 0x23, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x30, 0x125, 0x2c, 0x2c, 0x24, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x40, 0x157, 0x2c, 0x2c, 0x25, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x50, 0x18a, 0x2c, 0x2c, 0x26, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x60, 0x1bd, 0x2c, 0x2c, 0x27, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xe5, 0xb4, 0x2c, 0x2c, 0x28, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x113, 0xb4, 0x2c, 0x2c, 0x29, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x113, 0xe2, 0x2c, 0x2c, 0x2a, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x113, 0x110, 0x2c, 0x2c, 0x2b, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x113, 0x1cd, 0x2c, 0x2c, 0x2c, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
     if (g_game->m_f1f698 == GAME_VERSION_SOD) {
-        m_widgets.push_back(new iconWidget(
+        m_widgets.push_back(new IconWidget(
             0x2e, 0x1bd, 0x2c, 0x2c, 0x2d, "artifact.def",
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+            0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
     }
 
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         0x25e, 0xb4, 0x2c, 0x2c, 0x2e, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x299, 0x188, 0x2c, 0x2c, 0x2f, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x25e, 0xe6, 0x2c, 0x2c, 0x30, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x1e0, 0xdb, 0x2c, 0x2c, 0x31, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x293, 0x14e, 0x2c, 0x2c, 0x32, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x25e, 0x119, 0x2c, 0x2c, 0x33, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x210, 0xdb, 0x2c, 0x2c, 0x34, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x2c3, 0x14e, 0x2c, 0x2c, 0x35, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x264, 0x1bd, 0x2c, 0x2c, 0x36, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x1e0, 0x125, 0x2c, 0x2c, 0x37, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x1f0, 0x157, 0x2c, 0x2c, 0x38, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x200, 0x18a, 0x2c, 0x2c, 0x39, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x210, 0x1bd, 0x2c, 0x2c, 0x3a, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x295, 0xb4, 0x2c, 0x2c, 0x3b, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x2c3, 0xb4, 0x2c, 0x2c, 0x3c, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x2c3, 0xe2, 0x2c, 0x2c, 0x3d, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x2c3, 0x110, 0x2c, 0x2c, 0x3e, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x2c3, 0x1cd, 0x2c, 0x2c, 0x3f, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
     if (g_game->m_f1f698 == GAME_VERSION_SOD) {
-        m_widgets.push_back(new iconWidget(
+        m_widgets.push_back(new IconWidget(
             0x1de, 0x1bd, 0x2c, 0x2c, 0x40, "artifact.def",
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+            0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
     }
 
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         0x44, 0x203, 0x2c, 0x2c, 0x59, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x72, 0x203, 0x2c, 0x2c, 0x5a, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xa0, 0x203, 0x2c, 0x2c, 0x5b, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xce, 0x203, 0x2c, 0x2c, 0x5c, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xfc, 0x203, 0x2c, 0x2c, 0x5d, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x1f4, 0x203, 0x2c, 0x2c, 0x5e, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x222, 0x203, 0x2c, 0x2c, 0x5f, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x250, 0x203, 0x2c, 0x2c, 0x60, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x27e, 0x203, 0x2c, 0x2c, 0x61, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x2ac, 0x203, 0x2c, 0x2c, 0x62, "artifact.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
 
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         0x1e, 0x57, 0x20, 0x20, 0xc8, "secsk32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x42, 0x57, 0x20, 0x20, 0xc9, "secsk32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x66, 0x57, 0x20, 0x20, 0xca, "secsk32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x8a, 0x57, 0x20, 0x20, 0xcb, "secsk32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xae, 0x57, 0x20, 0x20, 0xcc, "secsk32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xd2, 0x57, 0x20, 0x20, 0xcd, "secsk32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0xf6, 0x57, 0x20, 0x20, 0xce, "secsk32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x11a, 0x57, 0x20, 0x20, 0xcf, "secsk32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x1e4, 0x57, 0x20, 0x20, 0xd0, "secsk32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x208, 0x57, 0x20, 0x20, 0xd1, "secsk32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x22c, 0x57, 0x20, 0x20, 0xd2, "secsk32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x250, 0x57, 0x20, 0x20, 0xd3, "secsk32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x274, 0x57, 0x20, 0x20, 0xd4, "secsk32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x298, 0x57, 0x20, 0x20, 0xd5, "secsk32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x2bc, 0x57, 0x20, 0x20, 0xd6, "secsk32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new iconWidget(
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+    m_widgets.push_back(new IconWidget(
         0x2e0, 0x57, 0x20, 0x20, 0xd7, "secsk32.def",
-        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
 
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         4, 0x242, 0x2d4, 0x12, 0x7a, "TStatBar.pcx", 0x800));
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         4, 0x242, 0x2d4, 0x12, 0, "smalfont.fnt",
-        font::PRIMARY, 0x7b, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new button(
+        Font::PRIMARY, 0x7b, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new Button(
         0x2dc, 0x237, 0x40, 0x1e, 0x7800,
         "iOkay.def", 0, 1, 1, 0x1c, 2));
 
@@ -658,7 +658,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     if (m_receiveButton)
         m_widgets.push_back(m_receiveButton);
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
+    for (std::vector<Widget*>::iterator it = m_widgets.begin();
          it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
@@ -674,19 +674,19 @@ void CSwapManagerChatEdit::sendChat(const char* chat, int toWho)
     sendChatCleanup();
 }
 
-VA_COMPGEN(0x005ae390, 0x21, SCALAR_DELETING_DTOR, TSwapWindow)
+VA_COMPGEN(0x005ae390, 0x21, SCALAR_DELETING_DTOR, SwapWindow)
 
 VA(0x005ae3c0, 0x6B)  // dc 0x15c320
-TSwapWindow::~TSwapWindow()
+SwapWindow::~SwapWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
 }
 
 VA(0x005ae430, 0xCB)  // dc 0x15c384
-void TSwapWindow::updateArrows()
+void SwapWindow::updateArrows()
 {
     if (!m_leftArrow)
         return;
@@ -740,7 +740,7 @@ public:
 SIZE(CSwapMgrNetMsgHandler, 0x10);
 
 VA(0x005ae500, 0xA9)  // dc 0x15c470
-swapManager::swapManager(hero* leftHero, hero* rightHero)
+SwapManager::SwapManager(Hero* leftHero, Hero* rightHero)
 {
     m_heroes[0] = leftHero;
     m_heroes[1] = rightHero;
@@ -765,23 +765,23 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
     m_netMsgHandler = 0;
 }
 VA(0x005ae5b0, 0x19B)  // dc 0x15c534
-void swapManager::reset()
+void SwapManager::reset()
 {
-    message msg;
+    Message msg;
 
     m_sourceHeroIndex = m_destinationHeroIndex = m_armySelectionPending = m_sourceArmySlot = m_destinationArmySlot = -1;
     g_unnamed6a3d08 = 0;
 
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_STATUS;
-    msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
+    msg.m_codeX = Widget::WIDGET_SET_STATUS;
+    msg.m_extra = Widget::WIDGET_DIMMED_NODRAW;
     msg.m_codeY = 103;
     m_parent->broadcastMessage(msg);
 
     msg.m_codeY = 104;
     m_parent->broadcastMessage(msg);
 
-    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
     msg.m_codeY = 107;
     msg.m_extra = limit(-3, m_heroes[0]->getMorale(0, 0, 1), 3) + 3;
     m_parent->broadcastMessage(msg);
@@ -802,7 +802,7 @@ void swapManager::reset()
 // E:\gamedcs\swapmgr.cpp:655
 // The WinCE no-argument screen update became an explicit full-screen update
 // in Complete; the window draw boundary and return value remain shared.
-int swapManager::drawSwapWin()
+int SwapManager::drawSwapWin()
 {
     m_parent->drawWindow(0, 0xffff0001, 0xffff);
     g_windowManager->updateScreen(0, 0, 800, 600);
@@ -822,24 +822,24 @@ int swapManager::drawSwapWin()
 // downstream scratch-register choices. The bounded why-reg model found no
 // movable creation-order carrier.
 VA(0x005ae750, 0x3A2)  // full retail body + dc 0x15c66c dossier
-int swapManager::open(int newPriority)
+int SwapManager::open(int newPriority)
 {
     g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
-    m_parent = new TSwapWindow(m_heroes);
+    m_parent = new SwapWindow(m_heroes);
     if (!m_parent)
         memError();
 
     reset();
 
-    message msg;
+    Message msg;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = 13;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
     m_parent->broadcastMessage(msg);
 
-    msg.m_codeX = widget::WIDGET_SET_STATUS;
-    msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
+    msg.m_codeX = Widget::WIDGET_SET_STATUS;
+    msg.m_extra = Widget::WIDGET_DIMMED_NODRAW;
     msg.m_codeY = kSwapRefreshLeft;
     m_parent->broadcastMessage(msg);
     msg.m_codeY = kSwapRefreshRight;
@@ -852,13 +852,13 @@ int swapManager::open(int newPriority)
         msg.m_extraText =
             g_heroTraits[m_heroes[hero]->m_portrait].m_largePortraitName;
         m_parent->broadcastMessage(
-            MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, hero + 1,
+            MESSAGE_WIDGET, Widget::WIDGET_SET_IMAGE, hero + 1,
             msg.m_extra);
 
         sprintf(g_text, g_generalText->getText(139),
                 m_heroes[hero]->m_name, m_heroes[hero]->m_level,
                 m_heroes[hero]->heroFn004D8F70());
-        msg.m_codeX = widget::WIDGET_SET_TEXT;
+        msg.m_codeX = Widget::WIDGET_SET_TEXT;
         msg.m_codeY = hero + 87;
         msg.m_extraText = g_text;
         m_parent->broadcastMessage(msg);
@@ -874,7 +874,7 @@ int swapManager::open(int newPriority)
         msg.m_codeY = hero + 83;
         m_parent->broadcastMessage(msg);
 
-        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
         msg.m_codeY = hero + 105;
         msg.m_extra = m_heroes[hero]->m_id;
         m_parent->broadcastMessage(msg);
@@ -882,14 +882,14 @@ int swapManager::open(int newPriority)
         for (int skillIndex = 0; skillIndex < 8; ++skillIndex) {
             if (skillIndex < m_heroes[hero]->m_skillCount) {
                 int skill = m_heroes[hero]->getNthSS(skillIndex);
-                msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
                 msg.m_codeY = hero * 8 + skillIndex + 200;
                 msg.m_extra = m_heroes[hero]->m_skillLevel[skill]
                             + 3 * skill + 2;
             } else {
-                msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+                msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
                 msg.m_codeY = hero * 8 + skillIndex + 200;
-                msg.m_extra = widget::WIDGET_DRAWN;
+                msg.m_extra = Widget::WIDGET_DRAWN;
             }
             m_parent->broadcastMessage(msg);
         }
@@ -906,7 +906,7 @@ int swapManager::open(int newPriority)
         DATA_COMPGEN(0x00688524, swapTradeSelectorBitmapName,
                      "TradeSel.pcx"));
     g_windowManager->updateScreen(0, 0, 800, 600);
-    g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+    g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
 
     m_id = 0x100;
     m_priority = newPriority;
@@ -974,7 +974,7 @@ CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
 }
 
 VA(0x005aed20, 0x9B)  // dc 0x15ca44
-void swapManager::close()
+void SwapManager::close()
 {
     if (g_heroScreenDraggedArtifact.m_artifactId != -1)
     {
@@ -993,7 +993,7 @@ void swapManager::close()
     g_advManager->reseed(0, 0);
 }
 VA(0x005aedc0, 0x140)
-void swapManager::drawSelector()
+void SwapManager::drawSelector()
 {
     int x = 0;
     int y = 0;
@@ -1054,31 +1054,31 @@ void swapManager::drawSelector()
 
 // E:\gamedcs\swapmgr.cpp:914
 DC_ONLY(0x15cccc, 0x5E)
-inline void swapManager::updateArtifactWidget(long id, TArtifact artifact)
+inline void SwapManager::updateArtifactWidget(long id, Artifact artifact)
 {
-    message msg;
+    Message msg;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeY = id;
     if (artifact == ARTIFACT_NONE)
     {
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.m_extra = widget::WIDGET_DRAWN;
+        msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
+        msg.m_extra = Widget::WIDGET_DRAWN;
     }
     else
     {
-        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
         msg.m_extra = artifact;
         m_parent->broadcastMessage(msg);
-        msg.m_codeX = widget::WIDGET_SET_STATUS;
-        msg.m_extra = widget::WIDGET_DRAWN;
+        msg.m_codeX = Widget::WIDGET_SET_STATUS;
+        msg.m_extra = Widget::WIDGET_DRAWN;
     }
     m_parent->broadcastMessage(msg);
 }
 
 VA(0x005aef00, 0x24C)  // dc 0x15cd2c
-void swapManager::updateSlot(int hero, TArtifactSlot slot)
+void SwapManager::updateSlot(int hero, ArtifactSlot slot)
 {
-    int artifact = m_heroes[hero]->getArtifact(TArtifactSlot(slot)).m_artifactId;
+    int artifact = m_heroes[hero]->getArtifact(ArtifactSlot(slot)).m_artifactId;
     if (artifact == ARTIFACT_NONE)
     {
         int type = g_artifactSlotTraits[slot].m_type;
@@ -1096,7 +1096,7 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
                     artifact = 0x91;
                     break;
                 }
-                if (m_heroes[hero]->getArtifact(TArtifactSlot(i)).m_artifactId == ARTIFACT_NONE
+                if (m_heroes[hero]->getArtifact(ArtifactSlot(i)).m_artifactId == ARTIFACT_NONE
                     && --remaining == 0)
                     break;
             }
@@ -1111,11 +1111,11 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
         converted = artifact;
         updateArtifactWidget(
             hero * (kNumArtifactSlots + 1) + slot + 0x96,
-            TArtifact(converted));
+            Artifact(converted));
         converted = 0x90;
         updateArtifactWidget(
             hero * (kNumArtifactSlots + 1) + slot + 0x1b,
-            TArtifact(converted));
+            Artifact(converted));
     }
     else
     {
@@ -1126,13 +1126,13 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
         converted = artifact;
         updateArtifactWidget(
             hero * (kNumArtifactSlots + 1) + slot + 0x1b,
-            TArtifact(converted));
+            Artifact(converted));
     }
 }
 
 // Dreamcast preserves this helper as the nested two-hero, nineteen-slot
 // UpdateSlot walk. Complete /Ob2 expands it into both known retail callers.
-void swapManager::updateAllSlots()
+void SwapManager::updateAllSlots()
 {
     for (int hero = 0; hero < 2; ++hero)
         for (int slot = const_first_artifact_slot;
@@ -1141,17 +1141,17 @@ void swapManager::updateAllSlots()
             // Complete adds ordinal 18 to Dreamcast's public TArtifactSlot
             // domain; keep the proved callee ABI and make that revision
             // boundary explicit instead of flattening UpdateSlot to int.
-            updateSlot(hero, static_cast<TArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+            updateSlot(hero, static_cast<ArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
 }
 
 // E:\gamedcs\swapmgr.cpp:977
 // Dreamcast preserves this source helper boundary; Complete /Ob2 expands its
 // sole call into UpdateBackpack, where the parameterized subscript is what
 // produces retail's stride-eight induction variable.
-void swapManager::updateBackpackItem(int hero, int i)
+void SwapManager::updateBackpackItem(int hero, int i)
 {
-    message msg;
-    type_artifact artifact = m_heroes[hero]->getBackpack(i);
+    Message msg;
+    ArtifactRecord artifact = m_heroes[hero]->getBackpack(i);
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = 4;
     // Complete shifts the backpack widget band by two from Dreamcast's 0x57.
@@ -1173,9 +1173,9 @@ void swapManager::updateBackpackItem(int hero, int i)
 }
 
 VA(0x005af150, 0x157)  // dc 0x15cea4
-void swapManager::updateBackpack(int hero)
+void SwapManager::updateBackpack(int hero)
 {
-    message msg;
+    Message msg;
     msg.m_id = MESSAGE_WIDGET;
 
     for (int i = 0; i < 5; ++i)
@@ -1199,7 +1199,7 @@ void swapManager::updateBackpack(int hero)
 }
 
 VA(0x005af2b0, 0x2DD)  // dc 0x15cf54
-void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned char shift)
+void SwapManager::handleMonster(int hero, int monster, int rightMouse, unsigned char shift)
 {
     if (rightMouse)
     {
@@ -1223,10 +1223,10 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned 
             if (m_heroes[m_sourceHeroIndex]->m_owner == g_netLocalGamePos)
             {
                 g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                    MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS,
                     kSwapRefreshLeft, 0x4008);
                 g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                    MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS,
                     kSwapRefreshRight, 0x4008);
             }
         }
@@ -1270,12 +1270,12 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned 
 // binding divergence; restoring CanModHero's older direct returns is the
 // negative control and lowers this caller to 87.81%.
 VA(0x005af590, 0x3F7)  // Main roster/callees + full retail body, dc 0x15d150
-void swapManager::handleArtifactClick(long side, long id, unsigned char rightClick)
+void SwapManager::handleArtifactClick(long side, long id, unsigned char rightClick)
 {
-    TArtifactSlot slot =
-        static_cast<TArtifactSlot>(id) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
-    hero* ourHero = m_heroes[side];
-    type_artifact oldArtifact = ourHero->getArtifact(TArtifactSlot(slot));
+    ArtifactSlot slot =
+        static_cast<ArtifactSlot>(id) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+    Hero* ourHero = m_heroes[side];
+    ArtifactRecord oldArtifact = ourHero->getArtifact(ArtifactSlot(slot));
 
     if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId == ARTIFACT_NONE)
@@ -1336,7 +1336,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
             this->update();
             g_mouseManager->setPointer(
                 g_heroScreenDraggedArtifact.m_artifactId,
-                mouseManager::ARTIFACT_SET);
+                MouseManager::ARTIFACT_SET);
             reset();
         }
         return;
@@ -1364,7 +1364,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
             ourHero->heroFn004DC100(slot);
         g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
         this->update();
-        g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+        g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
         reset();
     } else if (canModHero(side)) {
         ourHero->removeArtifact(slot);
@@ -1375,17 +1375,17 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
         this->update();
         g_mouseManager->setPointer(
             g_heroScreenDraggedArtifact.m_artifactId,
-            mouseManager::ARTIFACT_SET);
+            MouseManager::ARTIFACT_SET);
         reset();
     }
 }
 
 // E:\gamedcs\swapmgr.cpp:1168
 VA(0x005af990, 0x251)  // roster bracket + body/callees, dc 0x15d2e0
-void swapManager::handleBackpackClick(long side, long id, unsigned char rightClick)
+void SwapManager::handleBackpackClick(long side, long id, unsigned char rightClick)
 {
-    hero* ourHero = m_heroes[side];
-    type_artifact oldArtifact = ourHero->getBackpack(id);
+    Hero* ourHero = m_heroes[side];
+    ArtifactRecord oldArtifact = ourHero->getBackpack(id);
 
     if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId != ARTIFACT_NONE && canModHero(side)) {
@@ -1399,7 +1399,7 @@ void swapManager::handleBackpackClick(long side, long id, unsigned char rightCli
             updateAllSlots();
             g_mouseManager->setPointer(
                 g_heroScreenDraggedArtifact.m_artifactId,
-                mouseManager::ARTIFACT_SET);
+                MouseManager::ARTIFACT_SET);
         }
     } else if (!rightClick) {
         if (!ourHero->addToBackpack(&g_heroScreenDraggedArtifact, id)) {
@@ -1414,18 +1414,18 @@ void swapManager::handleBackpackClick(long side, long id, unsigned char rightCli
         g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
         updateBackpack(side);
         updateAllSlots();
-        g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+        g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
     }
 }
 
 VA(0x005afbf0, 0x17A)  // dc 0x15d440
-void swapManager::sendHeroUpdate()
+void SwapManager::sendHeroUpdate()
 {
     if (g_networkActive69954c && m_humanPlayerTrade && m_givingToAlly) {
         int otherPlayer = getOtherHero()->m_owner;
         if (!m_netMsgHandler->getAbortPopupMsg()) {
-            hero* leftHero = m_heroes[0];
-            hero* rightHero = m_heroes[1];
+            Hero* leftHero = m_heroes[0];
+            Hero* rightHero = m_heroes[1];
             CHeroUpdateMsg msg(leftHero, rightHero);
             transmitRemoteData(&msg, otherPlayer, true, true);
         }
@@ -1435,7 +1435,7 @@ void swapManager::sendHeroUpdate()
 // E:\gamedcs\swapmgr.cpp:1660. Dreamcast keeps this one-statement helper;
 // Complete folds it into both exits of Main.
 DC_ONLY(0x15de34, 0xC)
-inline int swapManager::exitSwapManager(message& msg)
+inline int SwapManager::exitSwapManager(Message& msg)
 {
     msg.m_id = MESSAGE_EXECUTIVE;
     msg.m_codeX = EXECUTIVE_COMMAND_RETURN_RESULT;
@@ -1446,7 +1446,7 @@ inline int swapManager::exitSwapManager(message& msg)
 // dispatcher has no corresponding instructions at Main's attested call site;
 // keep the source boundary while recording that proven revision removal.
 DC_ONLY(0x15de40, 0x4C8)
-inline void swapManager::swapSide()
+inline void SwapManager::swapSide()
 {
 }
 
@@ -1477,7 +1477,7 @@ CHeroUpdateMsg::~CHeroUpdateMsg()
 // A combined inner selector scores 80.3929%; conditional left/right forms
 // reach 83.6259%/83.4984%, below 84.0502%. Canonical helper order is retained.
 VA(0x005afdf0, 0xABB)  // full retail dispatcher + dc 0x15d4ac dossier
-int swapManager::main(message& msg)
+int SwapManager::main(Message& msg)
 {
     int exitFlag = 0;
     unsigned char rightMouse =
@@ -1525,12 +1525,12 @@ int swapManager::main(message& msg)
         case MESSAGE_WIDGET:
             switch (msg.m_codeX)
             {
-            case widget::WIDGET_DESELECT:
+            case Widget::WIDGET_DESELECT:
                 if (!rightMouse)
                     onWidgetDeselect(msg, exitFlag);
                 break;
 
-            case widget::WIDGET_END_DIALOG:
+            case Widget::WIDGET_END_DIALOG:
                 if (g_networkActive69954c && m_humanPlayerTrade)
                 {
                     CTradeRequestDoneMsg requestDone;
@@ -1540,8 +1540,8 @@ int swapManager::main(message& msg)
                 exitFlag = 1;
                 break;
 
-            case widget::WIDGET_SELECT:
-            case widget::WIDGET_RIGHT_SELECT:
+            case Widget::WIDGET_SELECT:
+            case Widget::WIDGET_RIGHT_SELECT:
                 switch (msg.m_codeY)
                 {
                 {
@@ -1592,8 +1592,8 @@ int swapManager::main(message& msg)
                         normalDialog(
                             g_text,
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, 20,
                             m_heroes[skillHero]->m_skillLevel[skill]
                                 + 3 * skill + 2,
@@ -1775,8 +1775,8 @@ int swapManager::main(message& msg)
                         g_game->showMoraleInfo(
                             m_heroes[0],
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE);
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE);
                     break;
 
                 case kSwapRolloverLuckLeft:
@@ -1785,8 +1785,8 @@ int swapManager::main(message& msg)
                         g_game->showLuckInfo(
                             m_heroes[0],
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE);
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE);
                     break;
 
                 case kSwapRolloverText9Left:
@@ -1795,13 +1795,13 @@ int swapManager::main(message& msg)
                     {
                         sprintf(g_text, g_generalText->getText(3),
                                 m_heroes[0]->m_level,
-                                hero::getExperience(m_heroes[0]->m_level + 1),
+                                Hero::getExperience(m_heroes[0]->m_level + 1),
                                 m_heroes[0]->m_experience);
                         normalDialog(
                             g_text,
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -1816,8 +1816,8 @@ int swapManager::main(message& msg)
                         normalDialog(
                             g_text,
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -1831,8 +1831,8 @@ int swapManager::main(message& msg)
                         normalDialog(
                             g_text,
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -1846,8 +1846,8 @@ int swapManager::main(message& msg)
                         g_game->showMoraleInfo(
                             m_heroes[1],
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE);
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE);
                     break;
 
                 case kSwapRolloverLuckRight:
@@ -1856,8 +1856,8 @@ int swapManager::main(message& msg)
                         g_game->showLuckInfo(
                             m_heroes[1],
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE);
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE);
                     break;
 
                 case kSwapRolloverText9Right:
@@ -1866,13 +1866,13 @@ int swapManager::main(message& msg)
                     {
                         sprintf(g_text, g_generalText->getText(3),
                                 m_heroes[1]->m_level,
-                                hero::getExperience(m_heroes[1]->m_level + 1),
+                                Hero::getExperience(m_heroes[1]->m_level + 1),
                                 m_heroes[1]->m_experience);
                         normalDialog(
                             g_text,
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -1887,8 +1887,8 @@ int swapManager::main(message& msg)
                         normalDialog(
                             g_text,
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -1902,8 +1902,8 @@ int swapManager::main(message& msg)
                         normalDialog(
                             g_text,
                             rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                                ? Hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : Hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -1996,7 +1996,7 @@ int swapManager::main(message& msg)
 // in the right-skill mastery-byte load. The emitted addresses and semantics
 // agree, so neither flat label spelling is replaced with a source-false alias.
 VA(0x005b08b0, 0x4EF)  // retail byte table + DC statement roster, dc 0x15e308
-void swapManager::setRolloverText(int codeY)
+void SwapManager::setRolloverText(int codeY)
 {
     if (m_parent->m_chatEdit->m_hasFocus)
         return;
@@ -2127,7 +2127,7 @@ void swapManager::setRolloverText(int codeY)
     case kSwapRolloverLeftArtifact16: case kSwapRolloverLeftArtifact17:
     case kSwapRolloverLeftArtifact18:
         m_heroes[0]
-            ->getArtifact(static_cast<TArtifactSlot>(codeY - kSwapRolloverLeftArtifact0) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
+            ->getArtifact(static_cast<ArtifactSlot>(codeY - kSwapRolloverLeftArtifact0) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
             .getRolloverText(g_text);
         break;
 
@@ -2149,7 +2149,7 @@ void swapManager::setRolloverText(int codeY)
     case kSwapRolloverRightArtifact16: case kSwapRolloverRightArtifact17:
     case kSwapRolloverRightArtifact18:
         m_heroes[1]
-            ->getArtifact(static_cast<TArtifactSlot>(codeY - kSwapRolloverRightArtifact0) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
+            ->getArtifact(static_cast<ArtifactSlot>(codeY - kSwapRolloverRightArtifact0) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
             .getRolloverText(g_text);
         break;
 
@@ -2171,7 +2171,7 @@ void swapManager::setRolloverText(int codeY)
             int m_payload;
         } converted;
         converted.m_pointer = g_text;
-        m_parent->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+        m_parent->broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_TEXT,
                                  0x7b, converted.m_payload);
     }
     m_parent->drawWindow(0, 0x7a, 0x7b);
@@ -2184,7 +2184,7 @@ void swapManager::setRolloverText(int codeY)
 // HandleMonster expands the helper while retaining the GetNumArmies and
 // ViewArmy call order; retail fixes the first-selected hero/second slot pair.
 DC_ONLY(0x15e85c, 0x5E)
-void swapManager::viewMon()
+void SwapManager::viewMon()
 {
     g_game->viewArmy(m_heroes[m_sourceHeroIndex]->m_army, m_destinationArmySlot, m_heroes[m_sourceHeroIndex],
                      0, 0x77, 0x14,
@@ -2195,63 +2195,63 @@ void swapManager::viewMon()
 
 // E:\gamedcs\swapmgr.cpp:2030
 DC_ONLY(0x15e8bc, 0x142)
-void swapManager::swapMons()
+void SwapManager::swapMons()
 {
     // @stub
 }
 
 // E:\gamedcs\swapmgr.cpp:2140
 DC_ONLY(0x15eb90, 0x1A)
-void swapManager::onChatUpdate()
+void SwapManager::onChatUpdate()
 {
     // @stub
 }
 
 // E:\gamedcs\swapmgr.cpp:2147
 DC_ONLY(0x15ebac, 0xAA)
-void swapManager::handleHeroUpdateMsg(CNetMsg* pNetMsg)
+void SwapManager::handleHeroUpdateMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\swapmgr.cpp:2231
 DC_ONLY(0x15edf8, 0x2A)
-unsigned char swapManager::isLeftHero()
+unsigned char SwapManager::isLeftHero()
 {
     // @stub
 }
 
 // E:\gamedcs\swapmgr.cpp:2259
 DC_ONLY(0x15ee74, 0x22)
-hero* swapManager::GetOurHero()
+Hero* SwapManager::GetOurHero()
 {
     // @stub
 }
 
 // E:\gamedcs\swapmgr.cpp:2267
 DC_ONLY(0x15ee98, 0x82)
-bool swapManager::canModHero(int hero)
+bool SwapManager::canModHero(int hero)
 {
     // @stub
 }
 
 // E:\gamedcs\swapmgr.cpp:2298
 DC_ONLY(0x15ef60, 0x70)
-void swapManager::onGiveMeStuffMsg()
+void SwapManager::onGiveMeStuffMsg()
 {
     // @stub
 }
 
 // E:\gamedcs\basemgr.h:41
 DC_ONLY(0x15efd0, 0x4)
-void baseManager::SetStatus(short newStatus)
+void BaseManager::SetStatus(short newStatus)
 {
     // @stub
 }
 
 // E:\gamedcs\swapmgr.cpp:192
 DC_ONLY(0x15f0a4, 0x98)
-void CSwapManagerChatEdit::CSwapManagerChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+void CSwapManagerChatEdit::CSwapManagerChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, Font::Justify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
 {
     // @stub
 }
@@ -2272,7 +2272,7 @@ void CSwapManagerChatEdit::~CSwapManagerChatEdit()
 
 // E:\gamedcs\swapmgr.cpp:454
 DC_ONLY(0x15f1b0, 0x34)
-void* TSwapWindow::`scalar deleting destructor'(unsigned __flags)
+void* SwapWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -2294,15 +2294,15 @@ CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* pNetMsg)
 #endif  // @carcass
 
 VA(0x005b0da0, 0x141)  // dc 0x15e8bc
-void swapManager::swapMons()
+void SwapManager::swapMons()
 {
     int nonemptyTroops = 0;
     for (int slot = 0; slot < 7; ++slot)
         if (m_heroes[m_sourceHeroIndex]->m_army.m_armies[slot] != CREATURE_NONE
             && m_heroes[m_sourceHeroIndex]->m_army.m_numTroops[slot] > 0)
             ++nonemptyTroops;
-    armyGroup* source = &m_heroes[m_sourceHeroIndex]->m_army;
-    armyGroup* destination = &m_heroes[m_destinationHeroIndex]->m_army;
+    ArmyGroup* source = &m_heroes[m_sourceHeroIndex]->m_army;
+    ArmyGroup* destination = &m_heroes[m_destinationHeroIndex]->m_army;
 
     if (destination->m_armies[m_destinationArmySlot] == source->m_armies[m_sourceArmySlot]) {
         if (source->getNumArmies() == 1)
@@ -2326,9 +2326,9 @@ void swapManager::swapMons()
 
 // E:\gamedcs\swapmgr.cpp:2072, dc 0x15ea00
 VA(0x005b0ef0, 0x1D4)  // body/callee corroborates, dc 0x15ea00
-void swapManager::update()
+void SwapManager::update()
 {
-    message msg;
+    Message msg;
     msg.m_id = MESSAGE_WIDGET;
 
     int i;
@@ -2393,7 +2393,7 @@ void swapManager::update()
 // E:\gamedcs\swapmgr.cpp:2140. The older build retains this refresh
 // boundary; Complete expands its Update body at Main's chat-refresh site.
 DC_ONLY(0x15eb90, 0x1A)
-inline void swapManager::onChatUpdate()
+inline void SwapManager::onChatUpdate()
 {
     drawSwapWin();
     update();
@@ -2403,7 +2403,7 @@ inline void swapManager::onChatUpdate()
 // Dreamcast proves two snapshot assignments followed by the popup guard and
 // UpdateBackpack(0/1), Update, DrawSwapWin helper order. Retail independently
 // proves Complete's 0x492-byte hero layout and expands this entire boundary.
-void swapManager::handleHeroUpdateMsg(CNetMsg* netMsg)
+void SwapManager::handleHeroUpdateMsg(CNetMsg* netMsg)
 {
     CHeroUpdateMsg* update = static_cast<CHeroUpdateMsg*>(netMsg);
     g_game->m_heroes[update->m_leftHero.m_id] = update->m_leftHero;
@@ -2430,7 +2430,7 @@ void swapManager::handleHeroUpdateMsg(CNetMsg* netMsg)
 // the source-false negative control and the banked MAX prevents that local
 // scheduling artifact from overriding the positive Dreamcast fact.
 VA(0x005b10d0, 0x2A8)  // switch ids/callees + ret 8, dc 0x15ec58
-void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
+void SwapManager::onWidgetDeselect(Message& msg, int& exitFlag)
 {
     switch (msg.m_codeY)
     {
@@ -2490,7 +2490,7 @@ void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
             && m_humanPlayerTrade)
         {
             CTradeRequestDoneMsg requestDone;
-            hero* otherHero = getOtherHero();
+            Hero* otherHero = getOtherHero();
             transmitRemoteData(&requestDone, otherHero->m_owner, 0, 1);
         }
         exitFlag = 1;
@@ -2501,7 +2501,7 @@ void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
 // E:\gamedcs\swapmgr.cpp:2231, dc 0x15edf8.
 // The retained COMDAT belongs to this canonical inline definition.
 VA(0x005b1380, 0x1C)
-inline bool swapManager::isLeftHero()
+inline bool SwapManager::isLeftHero()
 {
     if (m_heroes[0]->m_owner == g_game->getLocalPlayerGamePos())
         return true;
@@ -2509,7 +2509,7 @@ inline bool swapManager::isLeftHero()
 }
 
 // E:\gamedcs\swapmgr.cpp:2241, dc 0x15ee24.
-inline unsigned char swapManager::isRightHero()
+inline unsigned char SwapManager::isRightHero()
 {
     if (m_heroes[1]->m_owner == g_game->getLocalPlayerGamePos())
         return true;
@@ -2517,14 +2517,14 @@ inline unsigned char swapManager::isRightHero()
 }
 
 // E:\gamedcs\swapmgr.cpp:2251, dc 0x15ee50.
-inline hero* swapManager::getOtherHero()
+inline Hero* SwapManager::getOtherHero()
 {
     if (isLeftHero())
         return m_heroes[1];
     return m_heroes[0];
 }
 
-bool swapManager::canModHero(int whichHero)
+bool SwapManager::canModHero(int whichHero)
 {
     // Complete lowers this helper as false guards followed by one true tail in
     // handle_backpack_click, HandleMonster and SwapMons.  Restoring the older
@@ -2546,21 +2546,21 @@ bool swapManager::canModHero(int whichHero)
 }
 
 // E:\gamedcs\swapmgr.cpp:2287
-void swapManager::onReceiveFromAlly()
+void SwapManager::onReceiveFromAlly()
 {
     m_givingToAlly = 0;
     m_parent->updateArrows();
     drawSwapWin();
 
     CGiveMeStuffMsg giveMeStuff;
-    hero* otherHero = getOtherHero();
+    Hero* otherHero = getOtherHero();
     transmitRemoteData(&giveMeStuff, otherHero->m_owner, 0, 1);
 }
 
 // E:\gamedcs\swapmgr.cpp:2298
 // Dreamcast proves the three-statement helper; Complete expands it in the
 // give-me-stuff dispatcher arm and expands DrawSwapWin one level further.
-void swapManager::onGiveMeStuffMsg()
+void SwapManager::onGiveMeStuffMsg()
 {
     m_givingToAlly = 1;
     m_parent->updateArrows();

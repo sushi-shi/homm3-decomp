@@ -283,7 +283,7 @@ void ds_genericsample::wait(unsigned long timeout)
 
 // E:\gamedcs\h3\ds_engine.cpp:893
 DC_ONLY(0x8896c, 0x190)
-unsigned char ds_memsample::play(int loops)
+unsigned char DsMemsample::play(int loops)
 {
     // @stub
 }
@@ -318,14 +318,14 @@ unsigned char ds_genericsample::Paused()
 
 // E:\gamedcs\h3\ds_engine.cpp:1013
 DC_ONLY(0x88bf0, 0x48)
-void ds_memsample::ds_memsample(wavfile* wav, unsigned char autoremove, unsigned char readdata)
+void DsMemsample::DsMemsample(wavfile* wav, unsigned char autoremove, unsigned char readdata)
 {
     // @stub
 }
 
 // E:\gamedcs\h3\ds_engine.cpp:1018
 DC_ONLY(0x88c38, 0x68)
-void ds_memsample::ds_memsample(ds_memsample* other_sample)
+void DsMemsample::DsMemsample(DsMemsample* other_sample)
 {
     // @stub
 }
@@ -430,7 +430,7 @@ unsigned char ds_engine::ChannelFree(unsigned long index)
 
 // E:\gamedcs\h3\ds_engine.cpp:1283
 DC_ONLY(0x89328, 0xBA)
-unsigned char ds_engine::PlaySample(ds_memsample* sample, int loops, unsigned char wait)
+unsigned char ds_engine::PlaySample(DsMemsample* sample, int loops, unsigned char wait)
 {
     // @stub
 }
@@ -451,21 +451,21 @@ void ds_engine::ClearTrash()
 
 // E:\gamedcs\h3\ds_engine.cpp:1338
 DC_ONLY(0x89454, 0x88)
-ds_memsample* ds_engine::getSample(const char* name)
+DsMemsample* ds_engine::getSample(const char* name)
 {
     // @stub
 }
 
 // E:\gamedcs\h3\ds_engine.cpp:1356
 DC_ONLY(0x894dc, 0x84)
-ds_memsample* ds_engine::CacheSample(const char* name)
+DsMemsample* ds_engine::CacheSample(const char* name)
 {
     // @stub
 }
 
 // E:\gamedcs\h3\ds_engine.cpp:1387
 DC_ONLY(0x89560, 0x5C)
-unsigned char ds_engine::CacheRemove(ds_memsample** sample)
+unsigned char ds_engine::CacheRemove(DsMemsample** sample)
 {
     // @stub
 }
@@ -521,7 +521,7 @@ unsigned char ds_engine::SetupChannels(unsigned long count)
 
 // E:\gamedcs\h3\ds_engine.cpp:1544
 DC_ONLY(0x898d8, 0x30)
-ds_memsample* ds_engine::Channel(unsigned long index)
+DsMemsample* ds_engine::Channel(unsigned long index)
 {
     // @stub
 }
@@ -556,7 +556,7 @@ IDirectSound* ds_engine::GetDS()
 
 // E:\gamedcs\h3\ds_engine.cpp:1612
 DC_ONLY(0x899e8, 0x44)
-void ds_memsample::~ds_memsample()
+void DsMemsample::~DsMemsample()
 {
     // @stub
 }
@@ -591,7 +591,7 @@ void* ds_streamsample::`scalar deleting destructor'(unsigned __flags)
 
 // E:\gamedcs\h3\ds_engine.cpp:1220
 DC_ONLY(0x89b04, 0x34)
-void* ds_memsample::`scalar deleting destructor'(unsigned __flags)
+void* DsMemsample::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -654,84 +654,84 @@ void tree<unsigned long>::clear(unsigned char delete_data)
 
 // E:\gamedcs\h3\ds_engine.cpp:1670
 DC_ONLY(0x89cbc, 0xC)
-void tree<ds_memsample>::tree<ds_memsample>()
+void tree<DsMemsample>::tree<DsMemsample>()
 {
     // @stub
 }
 
 // E:\gamedcs\h3\ds_engine.cpp:1677
 DC_ONLY(0x89cc8, 0x18)
-void tree<ds_memsample>::~tree<ds_memsample>()
+void tree<DsMemsample>::~tree<DsMemsample>()
 {
     // @stub
 }
 
 // E:\gamedcs\h3\ds_engine.cpp:1654
 DC_ONLY(0x89ce0, 0x38)
-ds_memsample* tree<ds_memsample>::GetItem(const char* name)
+DsMemsample* tree<DsMemsample>::GetItem(const char* name)
 {
     // @stub
 }
 
 // E:\gamedcs\h3\ds_engine.cpp:1701
 DC_ONLY(0x89d18, 0x24)
-ds_memsample* tree<ds_memsample>::getIndex(unsigned long index)
+DsMemsample* tree<DsMemsample>::getIndex(unsigned long index)
 {
     // @stub
 }
 
 // E:\gamedcs\h3\ds_engine.cpp:1805
 DC_ONLY(0x89d3c, 0x50)
-unsigned char tree<ds_memsample>::SetIndexData(unsigned long index, ds_memsample* data, unsigned char delete_data)
+unsigned char tree<DsMemsample>::SetIndexData(unsigned long index, DsMemsample* data, unsigned char delete_data)
 {
     // @stub
 }
 
 // E:\gamedcs\h3\ds_engine.cpp:1886
 DC_ONLY(0x89d8c, 0x58)
-void tree<ds_memsample>::AddItem(const char* name, ds_memsample* data)
+void tree<DsMemsample>::AddItem(const char* name, DsMemsample* data)
 {
     // @stub
 }
 
 // E:\gamedcs\h3\ds_engine.cpp:1735
 DC_ONLY(0x89de4, 0xBC)
-unsigned char tree<ds_memsample>::RemoveIndex(unsigned long index, unsigned char delete_data)
+unsigned char tree<DsMemsample>::RemoveIndex(unsigned long index, unsigned char delete_data)
 {
     // @stub
 }
 
 // E:\gamedcs\h3\ds_engine.cpp:1778
 DC_ONLY(0x89ea0, 0x50)
-unsigned char tree<ds_memsample>::RemoveData(ds_memsample* data, unsigned char delete_data)
+unsigned char tree<DsMemsample>::RemoveData(DsMemsample* data, unsigned char delete_data)
 {
     // @stub
 }
 
 // E:\gamedcs\h3\ds_engine.cpp:1901
 DC_ONLY(0x89ef0, 0x5C)
-void tree<ds_memsample>::clear(unsigned char delete_data)
+void tree<DsMemsample>::clear(unsigned char delete_data)
 {
     // @stub
 }
 
 // E:\gamedcs\h3\ds_engine.cpp:1847
 DC_ONLY(0x89f4c, 0x2E)
-unsigned char tree<ds_memsample>::SetDataNULL(ds_memsample* data)
+unsigned char tree<DsMemsample>::SetDataNULL(DsMemsample* data)
 {
     // @stub
 }
 
 // E:\gamedcs\h3\ds_engine.cpp:1827
 DC_ONLY(0x89f7c, 0x28)
-unsigned char tree<ds_memsample>::Find_Data(ds_memsample* data)
+unsigned char tree<DsMemsample>::Find_Data(DsMemsample* data)
 {
     // @stub
 }
 
 // E:\gamedcs\h3\ds_engine.cpp:1919
 DC_ONLY(0x89fa4, 0x4)
-int tree<ds_memsample>::Count()
+int tree<DsMemsample>::Count()
 {
     // @stub
 }
@@ -752,14 +752,14 @@ void node<unsigned long>::node<unsigned long>(const char* name, unsigned long* d
 
 // E:\gamedcs\h3\ds_engine.cpp:1683
 DC_ONLY(0x8a010, 0x2E)
-node<ds_memsample>* tree<ds_memsample>::GetNode(unsigned long index)
+node<DsMemsample>* tree<DsMemsample>::GetNode(unsigned long index)
 {
     // @stub
 }
 
 // E:\gamedcs\h3\ds_engine.cpp:1634
 DC_ONLY(0x8a040, 0x34)
-void node<ds_memsample>::node<ds_memsample>(const char* name, ds_memsample* data, node<ds_memsample>* next)
+void node<DsMemsample>::node<DsMemsample>(const char* name, DsMemsample* data, node<DsMemsample>* next)
 {
     // @stub
 }

@@ -18,7 +18,7 @@
 #include "viewarmywindow.h"
 #include "winmgr.h"
 
-static const TCreatureType g_deathCreature[145] = {
+static const CreatureType g_deathCreature[145] = {
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
@@ -77,98 +77,98 @@ static const long g_constCreatureOfferings[2][2] = {
 
 // E:\gamedcs\sacrifice_window.cpp:125
 DC_ONLY(0x123e8c, 0x7C)
-void type_artifact_offering::set(const type_artifact* arg, TArtifactSlot slot, const hero* this_hero)
+void ArtifactOffering::set(const ArtifactRecord* arg, ArtifactSlot slot, const Hero* this_hero)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:170
 DC_ONLY(0x123f08, 0x80)
-void type_doll_slot_widget::type_doll_slot_widget(const type_doll_slot_definition* def, long _id)
+void DollSlotWidget::DollSlotWidget(const DollSlotDefinition* def, long _id)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:178
 DC_ONLY(0x123f88, 0x28)
-unsigned char type_doll_slot_widget::handleClick(unsigned char down_click, unsigned char right_click)
+unsigned char DollSlotWidget::handleClick(unsigned char down_click, unsigned char right_click)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:204
 DC_ONLY(0x123fb0, 0x78)
-void type_backpack_slot_widget::type_backpack_slot_widget(const type_icon_definition* def, long _slot, long _id)
+void BackpackSlotWidget::BackpackSlotWidget(const IconDefinition* def, long _slot, long _id)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:213
 DC_ONLY(0x124028, 0x28)
-unsigned char type_backpack_slot_widget::handleClick(unsigned char down_click, unsigned char right_click)
+unsigned char BackpackSlotWidget::handleClick(unsigned char down_click, unsigned char right_click)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:235
 DC_ONLY(0x124050, 0x74)
-void type_artifact_offering_widget::type_artifact_offering_widget(long new_x, long new_y, long new_width, long new_height, long new_item_number, long new_id, const char* image)
+void ArtifactOfferingWidget::ArtifactOfferingWidget(long new_x, long new_y, long new_width, long new_height, long new_item_number, long new_id, const char* image)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:243
 DC_ONLY(0x1240c4, 0x28)
-unsigned char type_artifact_offering_widget::handleClick(unsigned char down_click, unsigned char right_click)
+unsigned char ArtifactOfferingWidget::handleClick(unsigned char down_click, unsigned char right_click)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:263
 DC_ONLY(0x1240ec, 0x80)
-void type_army_slot_widget::type_army_slot_widget(long new_x, long new_y, long new_w, long new_h, long new_slot, long new_id, const char* image, unsigned char _left_pane)
+void ArmySlotWidget::ArmySlotWidget(long new_x, long new_y, long new_w, long new_h, long new_slot, long new_id, const char* image, unsigned char _left_pane)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:272
 DC_ONLY(0x12416c, 0x30)
-unsigned char type_army_slot_widget::handleClick(unsigned char down_click, unsigned char right_click)
+unsigned char ArmySlotWidget::handleClick(unsigned char down_click, unsigned char right_click)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:287
 DC_ONLY(0x12419c, 0x51C)
-void type_sacrifice_window::type_sacrifice_window(hero* new_hero, int cur_player)
+void SacrificeWindow::SacrificeWindow(Hero* new_hero, int cur_player)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:360
 DC_ONLY(0x1246b8, 0x7A8)
-void type_sacrifice_window::createArtifactWidgets(long* widget_id, int cur_player)
+void SacrificeWindow::createArtifactWidgets(long* widget_id, int cur_player)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:536
 DC_ONLY(0x124e60, 0x76A)
-void type_sacrifice_window::createCreatureWidgets(long* widget_id, int cur_player)
+void SacrificeWindow::createCreatureWidgets(long* widget_id, int cur_player)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:699
 DC_ONLY(0x1255cc, 0x258)
-long type_sacrifice_window::createCreatureIcons(long icon_x, long icon_y, long columns, long rows, long item_number, long* widget_id, iconWidget** icon_widgets, iconWidget** selection_widgets, textWidget** text_widgets, unsigned char left_pane)
+long SacrificeWindow::createCreatureIcons(long icon_x, long icon_y, long columns, long rows, long item_number, long* widget_id, IconWidget** icon_widgets, IconWidget** selection_widgets, TextWidget** text_widgets, unsigned char left_pane)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:752
 DC_ONLY(0x125824, 0x88)
-void type_sacrifice_window::~type_sacrifice_window()
+void SacrificeWindow::~SacrificeWindow()
 {
     // @stub
 }
@@ -182,238 +182,238 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> convertWithCo
 
 // E:\gamedcs\sacrifice_window.cpp:784
 DC_ONLY(0x125998, 0xB2)
-void type_sacrifice_window::updateExperience()
+void SacrificeWindow::updateExperience()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:800
 DC_ONLY(0x125a4c, 0x5E)
-void updateArtifactWidget(iconWidget* slot_widget, type_artifact artifact)
+void updateArtifactWidget(IconWidget* slot_widget, ArtifactRecord artifact)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:821
 DC_ONLY(0x125aac, 0x90)
-void updateOffering(iconWidget* artifact_widget, textWidget* value_widget, const type_artifact_offering* offering)
+void updateOffering(IconWidget* artifact_widget, TextWidget* value_widget, const ArtifactOffering* offering)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:841
 DC_ONLY(0x125b3c, 0xF6)
-void type_sacrifice_window::updateSlot(TArtifactSlot slot)
+void SacrificeWindow::updateSlot(ArtifactSlot slot)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:865
 DC_ONLY(0x125c34, 0x2A)
-void type_sacrifice_window::updateAllSlots()
+void SacrificeWindow::updateAllSlots()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:880
 DC_ONLY(0x125c60, 0x17E)
-void type_sacrifice_window::setArtifactMode()
+void SacrificeWindow::setArtifactMode()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:914
 DC_ONLY(0x125de0, 0x28)
-long sacrificeValue(TCreatureType creature)
+long sacrificeValue(CreatureType creature)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:924
 DC_ONLY(0x125e08, 0x25A)
-void type_sacrifice_window::updateCreatureOffering(type_creature_offering* creature)
+void SacrificeWindow::updateCreatureOffering(CreatureOffering* creature)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:990
 DC_ONLY(0x126064, 0x180)
-void type_sacrifice_window::setCreatureMode()
+void SacrificeWindow::setCreatureMode()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1036
 DC_ONLY(0x1261e4, 0x70)
-void type_sacrifice_window::pickUpArtifact(type_artifact artifact, TArtifactSlot slot, unsigned char new_artifact)
+void SacrificeWindow::pickUpArtifact(ArtifactRecord artifact, ArtifactSlot slot, unsigned char new_artifact)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1053
 DC_ONLY(0x126254, 0x90)
-void type_sacrifice_window::putDownArtifact(unsigned char change_experience)
+void SacrificeWindow::putDownArtifact(unsigned char change_experience)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1071
 DC_ONLY(0x1262e4, 0x13A)
-void type_sacrifice_window::artifactClick(TArtifactSlot slot, unsigned char right_click)
+void SacrificeWindow::artifactClick(ArtifactSlot slot, unsigned char right_click)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1127
 DC_ONLY(0x126420, 0xBA)
-void type_sacrifice_window::updateBackpack()
+void SacrificeWindow::updateBackpack()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1150
 DC_ONLY(0x1264dc, 0xDC)
-void type_sacrifice_window::backpackClick(long slot, unsigned char right_click)
+void SacrificeWindow::backpackClick(long slot, unsigned char right_click)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1189
 DC_ONLY(0x1265b8, 0x88)
-void type_sacrifice_window::updateArtifactOffering(long slot)
+void SacrificeWindow::updateArtifactOffering(long slot)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1200
 DC_ONLY(0x126640, 0xDC)
-void type_sacrifice_window::offeringClick(long slot, unsigned char right_click)
+void SacrificeWindow::offeringClick(long slot, unsigned char right_click)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1236
 DC_ONLY(0x12671c, 0x90)
-int type_sacrifice_window::scrollBackpackLeft(message* msg)
+int SacrificeWindow::scrollBackpackLeft(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1262
 DC_ONLY(0x1267ac, 0x6E)
-int type_sacrifice_window::scrollBackpackRight(message* msg)
+int SacrificeWindow::scrollBackpackRight(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1289
 DC_ONLY(0x12681c, 0x88)
-unsigned char type_sacrifice_window::addArtifact(type_artifact artifact, TArtifactSlot source)
+unsigned char SacrificeWindow::addArtifact(ArtifactRecord artifact, ArtifactSlot source)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1310
 DC_ONLY(0x1268a4, 0xA0)
-void type_sacrifice_window::emptyBackpack()
+void SacrificeWindow::emptyBackpack()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1338
 DC_ONLY(0x126944, 0x68)
-int type_sacrifice_window::emptyBackpack(message* msg)
+int SacrificeWindow::emptyBackpack(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1365
 DC_ONLY(0x1269ac, 0xC4)
-int type_sacrifice_window::allArtifacts(message* msg)
+int SacrificeWindow::allArtifacts(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1407
 DC_ONLY(0x126a70, 0x1EC)
-int type_sacrifice_window::sacrifice(message* msg)
+int SacrificeWindow::sacrifice(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1472
 DC_ONLY(0x126c5c, 0x66)
-int type_sacrifice_window::sacrificeCreatures(message* msg)
+int SacrificeWindow::sacrificeCreatures(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1499
 DC_ONLY(0x126cc4, 0x5A)
-void type_sacrifice_window::returnArtifact(const type_artifact_offering* artifact)
+void SacrificeWindow::returnArtifact(const ArtifactOffering* artifact)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1521
 DC_ONLY(0x126d20, 0x78)
-void type_sacrifice_window::clear()
+void SacrificeWindow::clear()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1544
 DC_ONLY(0x126d98, 0x8A)
-int type_sacrifice_window::exitClick(message* msg)
+int SacrificeWindow::exitClick(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1572
 DC_ONLY(0x126e24, 0xB2)
-void type_sacrifice_window::setCreatureSacrifice(long slot, long new_amount)
+void SacrificeWindow::setCreatureSacrifice(long slot, long new_amount)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1599
 DC_ONLY(0x126ed8, 0x54)
-long type_sacrifice_window::getMaxAmount(long slot)
+long SacrificeWindow::getMaxAmount(long slot)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1626
 DC_ONLY(0x126f2c, 0xBE)
-int type_sacrifice_window::allCreatures(message* msg)
+int SacrificeWindow::allCreatures(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1663
 DC_ONLY(0x126fec, 0x78)
-int type_sacrifice_window::maxCreatures(message* msg)
+int SacrificeWindow::maxCreatures(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1692
 DC_ONLY(0x127064, 0x8C)
-int type_sacrifice_window::sacrificeArtifacts(message* msg)
+int SacrificeWindow::sacrificeArtifacts(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1721
 DC_ONLY(0x1270f0, 0x29E)
-void type_sacrifice_window::creatureClick(long slot, unsigned char right_click, unsigned char left_pane)
+void SacrificeWindow::creatureClick(long slot, unsigned char right_click, unsigned char left_pane)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1796
 DC_ONLY(0x127390, 0x74)
-void type_sacrifice_window::creatureSliderChange(int state, heroWindow* parent_window)
+void SacrificeWindow::creatureSliderChange(int state, HeroWindow* parent_window)
 {
     // @stub
 }
@@ -426,14 +426,14 @@ void type_sacrifice_window::creatureSliderChange(int state, heroWindow* parent_w
 // into both arms. Blocked only on naming those two helpers - neither has a
 // call edge that fixes which roster entry it is.
 DC_ONLY(0x127404, 0x38)
-void type_sacrifice_window::doModal(unsigned char fadeIn)
+void SacrificeWindow::doModal(unsigned char fadeIn)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1830
 DC_ONLY(0x12743c, 0x48)
-void type_sacrifice_window::handleWidgetHover(widget* current_widget)
+void SacrificeWindow::handleWidgetHover(Widget* current_widget)
 {
     // @stub
 }
@@ -443,231 +443,231 @@ void type_sacrifice_window::handleWidgetHover(widget* current_widget)
 // transformer-slot rows is ExitDialog, not this. WindowHandler has no retail
 // row of its own in this bracket; ExitDialog is reconstructed below.
 DC_ONLY(0x127484, 0x36)
-int type_sacrifice_window::windowHandler(message& msg)
+int SacrificeWindow::windowHandler(Message& msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1859
 DC_ONLY(0x1274bc, 0x38)
-int type_sacrifice_window::exitDialog(message& msg)
+int SacrificeWindow::exitDialog(Message& msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1891
 DC_ONLY(0x1274f4, 0xA4)
-void type_transformer_slot::type_transformer_slot(long new_x, long new_y, long new_w, long new_h, long new_group, long new_slot, long new_id, const char* image)
+void TransformerSlot::TransformerSlot(long new_x, long new_y, long new_w, long new_h, long new_group, long new_slot, long new_id, const char* image)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1900
 DC_ONLY(0x127598, 0x26)
-unsigned char type_transformer_slot::handleClick(unsigned char down_click, unsigned char right_click)
+unsigned char TransformerSlot::handleClick(unsigned char down_click, unsigned char right_click)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2056
 DC_ONLY(0x1275c0, 0x448)
-void type_skeleton_window::type_skeleton_window(armyGroup* new_army)
+void SkeletonWindow::SkeletonWindow(ArmyGroup* new_army)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2129
 DC_ONLY(0x127a08, 0x84)
-void type_skeleton_window::~type_skeleton_window()
+void SkeletonWindow::~SkeletonWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2144
 DC_ONLY(0x127a8c, 0x3E)
-void type_skeleton_window::unselect()
+void SkeletonWindow::unselect()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2157
 DC_ONLY(0x127acc, 0x9C)
-void type_skeleton_window::updateButtons()
+void SkeletonWindow::updateButtons()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2172
 DC_ONLY(0x127b68, 0x2E8)
-void type_skeleton_window::update(long group, long index)
+void SkeletonWindow::update(long group, long index)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2216
 DC_ONLY(0x127e50, 0x1F6)
-void type_skeleton_window::creatureClick(long side, long slot, unsigned char right_click)
+void SkeletonWindow::creatureClick(long side, long slot, unsigned char right_click)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2281
 DC_ONLY(0x128048, 0x36)
-int type_skeleton_window::windowHandler(message& msg)
+int SkeletonWindow::windowHandler(Message& msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2293
 DC_ONLY(0x128080, 0x16)
-int type_skeleton_window::exitDialog(message& msg)
+int SkeletonWindow::exitDialog(Message& msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2306
 DC_ONLY(0x128098, 0x48)
-void type_skeleton_window::handleWidgetHover(widget* current_widget)
+void SkeletonWindow::handleWidgetHover(Widget* current_widget)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2326
 DC_ONLY(0x1280e0, 0x1CE)
-void type_skeleton_window::createCreatureIcons(long icon_x, long icon_y, long columns, long rows, long group_number, long item_number, long* widget_id, iconWidget** icon_widgets, iconWidget** selection_widgets, textWidget** text_widgets)
+void SkeletonWindow::createCreatureIcons(long icon_x, long icon_y, long columns, long rows, long group_number, long item_number, long* widget_id, IconWidget** icon_widgets, IconWidget** selection_widgets, TextWidget** text_widgets)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2385
 DC_ONLY(0x1282b0, 0x5E)
-void moveAllArmies(armyGroup* source, armyGroup* dest)
+void moveAllArmies(ArmyGroup* source, ArmyGroup* dest)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2407
 DC_ONLY(0x128310, 0x9A)
-int type_skeleton_window::allCreatures(message* msg)
+int SkeletonWindow::allCreatures(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2441
 DC_ONLY(0x1283ac, 0xBC)
-int type_skeleton_window::exitClick(message* msg)
+int SkeletonWindow::exitClick(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2471
 DC_ONLY(0x128468, 0x134)
-int type_skeleton_window::sacrifice(message* msg)
+int SkeletonWindow::sacrifice(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\Widget.h:225
 DC_ONLY(0x12859c, 0xC)
-void widget::clear_hover_widget()
+void Widget::clear_hover_widget()
 {
     // @stub
 }
 
 // E:\gamedcs\slider.h:104
 DC_ONLY(0x1285a8, 0x8)
-int slider::getMaximum()
+int Slider::getMaximum()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:172
 DC_ONLY(0x1285b0, 0x34)
-void* type_doll_slot_widget::`scalar deleting destructor'(unsigned __flags)
+void* DollSlotWidget::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:172
 DC_ONLY(0x1285e4, 0x18)
-void type_doll_slot_widget::~type_doll_slot_widget()
+void DollSlotWidget::~DollSlotWidget()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:206
 DC_ONLY(0x1285fc, 0x34)
-void* type_backpack_slot_widget::`scalar deleting destructor'(unsigned __flags)
+void* BackpackSlotWidget::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:206
 DC_ONLY(0x128630, 0x18)
-void type_backpack_slot_widget::~type_backpack_slot_widget()
+void BackpackSlotWidget::~BackpackSlotWidget()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:237
 DC_ONLY(0x128648, 0x34)
-void* type_artifact_offering_widget::`scalar deleting destructor'(unsigned __flags)
+void* ArtifactOfferingWidget::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:237
 DC_ONLY(0x12867c, 0x18)
-void type_artifact_offering_widget::~type_artifact_offering_widget()
+void ArtifactOfferingWidget::~ArtifactOfferingWidget()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:266
 DC_ONLY(0x128694, 0x34)
-void* type_army_slot_widget::`scalar deleting destructor'(unsigned __flags)
+void* ArmySlotWidget::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:266
 DC_ONLY(0x1286c8, 0x18)
-void type_army_slot_widget::~type_army_slot_widget()
+void ArmySlotWidget::~ArmySlotWidget()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:352
 DC_ONLY(0x1286e0, 0x34)
-void* type_sacrifice_window::`scalar deleting destructor'(unsigned __flags)
+void* SacrificeWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:352
 DC_ONLY(0x128714, 0x1C)
-void type_artifact_offering::type_artifact_offering()
+void ArtifactOffering::ArtifactOffering()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1894
 DC_ONLY(0x128730, 0x34)
-void* type_transformer_slot::`scalar deleting destructor'(unsigned __flags)
+void* TransformerSlot::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1894
 DC_ONLY(0x128764, 0x18)
-void type_transformer_slot::~type_transformer_slot()
+void TransformerSlot::~TransformerSlot()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2123
 DC_ONLY(0x12877c, 0x34)
-void* type_skeleton_window::`scalar deleting destructor'(unsigned __flags)
+void* SkeletonWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -681,385 +681,385 @@ char* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::inse
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x1287fc, 0xC)
-unsigned std::vector<type_artifact_offering,std::allocator<type_artifact_offering> >::size()
+unsigned std::vector<ArtifactOffering,std::allocator<ArtifactOffering> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x128808, 0x20)
-type_artifact_offering* std::vector<type_artifact_offering,std::allocator<type_artifact_offering> >::operator[](unsigned __n)
+ArtifactOffering* std::vector<ArtifactOffering,std::allocator<ArtifactOffering> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x128828, 0x1C)
-void std::vector<type_artifact_offering,std::allocator<type_artifact_offering> >::vector<type_artifact_offering,std::allocator<type_artifact_offering> >(const std::allocator<type_artifact_offering>* __a)
+void std::vector<ArtifactOffering,std::allocator<ArtifactOffering> >::vector<ArtifactOffering,std::allocator<ArtifactOffering> >(const std::allocator<ArtifactOffering>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0x128844, 0x28)
-void std::vector<type_artifact_offering,std::allocator<type_artifact_offering> >::~vector<type_artifact_offering,std::allocator<type_artifact_offering> >()
+void std::vector<ArtifactOffering,std::allocator<ArtifactOffering> >::~vector<ArtifactOffering,std::allocator<ArtifactOffering> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x12886c, 0x3C)
-void std::vector<type_artifact_offering,std::allocator<type_artifact_offering> >::push_back(const type_artifact_offering* __x)
+void std::vector<ArtifactOffering,std::allocator<ArtifactOffering> >::push_back(const ArtifactOffering* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x1288a8, 0x4)
-void std::allocator<type_artifact_offering>::allocator<type_artifact_offering>()
+void std::allocator<ArtifactOffering>::allocator<ArtifactOffering>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x1288ac, 0x4)
-void std::allocator<type_artifact_offering>::~allocator<type_artifact_offering>()
+void std::allocator<ArtifactOffering>::~allocator<ArtifactOffering>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x1288b0, 0x20)
-textWidget** std::vector<textWidget *,std::allocator<textWidget *> >::operator[](unsigned __n)
+TextWidget** std::vector<TextWidget *,std::allocator<TextWidget *> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x1288d0, 0x1C)
-void std::vector<textWidget *,std::allocator<textWidget *> >::vector<textWidget *,std::allocator<textWidget *> >(const std::allocator<textWidget* __a)
+void std::vector<TextWidget *,std::allocator<TextWidget *> >::vector<TextWidget *,std::allocator<TextWidget *> >(const std::allocator<TextWidget* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0x1288ec, 0x28)
-void std::vector<textWidget *,std::allocator<textWidget *> >::~vector<textWidget *,std::allocator<textWidget *> >()
+void std::vector<TextWidget *,std::allocator<TextWidget *> >::~vector<TextWidget *,std::allocator<TextWidget *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x128914, 0x3C)
-void std::vector<textWidget *,std::allocator<textWidget *> >::push_back(textWidget** __x)
+void std::vector<TextWidget *,std::allocator<TextWidget *> >::push_back(TextWidget** __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x128950, 0x4)
-void std::allocator<textWidget *>::allocator<textWidget *>()
+void std::allocator<TextWidget *>::allocator<TextWidget *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x128954, 0x4)
-void std::allocator<textWidget *>::~allocator<textWidget *>()
+void std::allocator<TextWidget *>::~allocator<TextWidget *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x128958, 0xC)
-unsigned std::vector<iconWidget *,std::allocator<iconWidget *> >::size()
+unsigned std::vector<IconWidget *,std::allocator<IconWidget *> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x128964, 0x20)
-iconWidget** std::vector<iconWidget *,std::allocator<iconWidget *> >::operator[](unsigned __n)
+IconWidget** std::vector<IconWidget *,std::allocator<IconWidget *> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x128984, 0x1C)
-void std::vector<iconWidget *,std::allocator<iconWidget *> >::vector<iconWidget *,std::allocator<iconWidget *> >(const std::allocator<iconWidget* __a)
+void std::vector<IconWidget *,std::allocator<IconWidget *> >::vector<IconWidget *,std::allocator<IconWidget *> >(const std::allocator<IconWidget* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0x1289a0, 0x28)
-void std::vector<iconWidget *,std::allocator<iconWidget *> >::~vector<iconWidget *,std::allocator<iconWidget *> >()
+void std::vector<IconWidget *,std::allocator<IconWidget *> >::~vector<IconWidget *,std::allocator<IconWidget *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x1289c8, 0x3C)
-void std::vector<iconWidget *,std::allocator<iconWidget *> >::push_back(iconWidget** __x)
+void std::vector<IconWidget *,std::allocator<IconWidget *> >::push_back(IconWidget** __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x128a04, 0x4)
-void std::allocator<iconWidget *>::allocator<iconWidget *>()
+void std::allocator<IconWidget *>::allocator<IconWidget *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x128a08, 0x4)
-void std::allocator<iconWidget *>::~allocator<iconWidget *>()
+void std::allocator<IconWidget *>::~allocator<IconWidget *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x128a0c, 0xC)
-unsigned std::vector<sample *,std::allocator<sample *> >::size()
+unsigned std::vector<Sample *,std::allocator<Sample *> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x128a18, 0x20)
-sample** std::vector<sample *,std::allocator<sample *> >::operator[](unsigned __n)
+Sample** std::vector<Sample *,std::allocator<Sample *> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x128a38, 0x1C)
-void std::vector<sample *,std::allocator<sample *> >::vector<sample *,std::allocator<sample *> >(const std::allocator<sample* __a)
+void std::vector<Sample *,std::allocator<Sample *> >::vector<Sample *,std::allocator<Sample *> >(const std::allocator<Sample* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0x128a54, 0x28)
-void std::vector<sample *,std::allocator<sample *> >::~vector<sample *,std::allocator<sample *> >()
+void std::vector<Sample *,std::allocator<Sample *> >::~vector<Sample *,std::allocator<Sample *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x128a7c, 0x3C)
-void std::vector<sample *,std::allocator<sample *> >::push_back(sample** __x)
+void std::vector<Sample *,std::allocator<Sample *> >::push_back(Sample** __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x128ab8, 0x4)
-void std::allocator<sample *>::allocator<sample *>()
+void std::allocator<Sample *>::allocator<Sample *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x128abc, 0x4)
-void std::allocator<sample *>::~allocator<sample *>()
+void std::allocator<Sample *>::~allocator<Sample *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x128ac0, 0x4)
-type_artifact_offering* std::vector<type_artifact_offering,std::allocator<type_artifact_offering> >::begin()
+ArtifactOffering* std::vector<ArtifactOffering,std::allocator<ArtifactOffering> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x128ac4, 0x2C)
-void std::_Vector_base<type_artifact_offering,std::allocator<type_artifact_offering> >::_Vector_base<type_artifact_offering,std::allocator<type_artifact_offering> >(const std::allocator<type_artifact_offering>* __a)
+void std::_Vector_base<ArtifactOffering,std::allocator<ArtifactOffering> >::_Vector_base<ArtifactOffering,std::allocator<ArtifactOffering> >(const std::allocator<ArtifactOffering>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0x128af0, 0x30)
-void std::_Vector_base<type_artifact_offering,std::allocator<type_artifact_offering> >::~_Vector_base<type_artifact_offering,std::allocator<type_artifact_offering> >()
+void std::_Vector_base<ArtifactOffering,std::allocator<ArtifactOffering> >::~_Vector_base<ArtifactOffering,std::allocator<ArtifactOffering> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x128b20, 0x4)
-textWidget** std::vector<textWidget *,std::allocator<textWidget *> >::begin()
+TextWidget** std::vector<TextWidget *,std::allocator<TextWidget *> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x128b24, 0x2C)
-void std::_Vector_base<textWidget *,std::allocator<textWidget *> >::_Vector_base<textWidget *,std::allocator<textWidget *> >(const std::allocator<textWidget* __a)
+void std::_Vector_base<TextWidget *,std::allocator<TextWidget *> >::_Vector_base<TextWidget *,std::allocator<TextWidget *> >(const std::allocator<TextWidget* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0x128b50, 0x30)
-void std::_Vector_base<textWidget *,std::allocator<textWidget *> >::~_Vector_base<textWidget *,std::allocator<textWidget *> >()
+void std::_Vector_base<TextWidget *,std::allocator<TextWidget *> >::~_Vector_base<TextWidget *,std::allocator<TextWidget *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x128b80, 0x4)
-iconWidget** std::vector<iconWidget *,std::allocator<iconWidget *> >::begin()
+IconWidget** std::vector<IconWidget *,std::allocator<IconWidget *> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x128b84, 0x2C)
-void std::_Vector_base<iconWidget *,std::allocator<iconWidget *> >::_Vector_base<iconWidget *,std::allocator<iconWidget *> >(const std::allocator<iconWidget* __a)
+void std::_Vector_base<IconWidget *,std::allocator<IconWidget *> >::_Vector_base<IconWidget *,std::allocator<IconWidget *> >(const std::allocator<IconWidget* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0x128bb0, 0x30)
-void std::_Vector_base<iconWidget *,std::allocator<iconWidget *> >::~_Vector_base<iconWidget *,std::allocator<iconWidget *> >()
+void std::_Vector_base<IconWidget *,std::allocator<IconWidget *> >::~_Vector_base<IconWidget *,std::allocator<IconWidget *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x128be0, 0x4)
-sample** std::vector<sample *,std::allocator<sample *> >::begin()
+Sample** std::vector<Sample *,std::allocator<Sample *> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x128be4, 0x2C)
-void std::_Vector_base<sample *,std::allocator<sample *> >::_Vector_base<sample *,std::allocator<sample *> >(const std::allocator<sample* __a)
+void std::_Vector_base<Sample *,std::allocator<Sample *> >::_Vector_base<Sample *,std::allocator<Sample *> >(const std::allocator<Sample* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0x128c10, 0x30)
-void std::_Vector_base<sample *,std::allocator<sample *> >::~_Vector_base<sample *,std::allocator<sample *> >()
+void std::_Vector_base<Sample *,std::allocator<Sample *> >::~_Vector_base<Sample *,std::allocator<Sample *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:469
 DC_ONLY(0x128c40, 0x18)
-void std::_STL_alloc_proxy<type_artifact_offering *,type_artifact_offering,std::allocator<type_artifact_offering> >::~_STL_alloc_proxy<type_artifact_offering *,type_artifact_offering,std::allocator<type_artifact_offering> >()
+void std::_STL_alloc_proxy<ArtifactOffering *,ArtifactOffering,std::allocator<ArtifactOffering> >::~_STL_alloc_proxy<ArtifactOffering *,ArtifactOffering,std::allocator<ArtifactOffering> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:469
 DC_ONLY(0x128c58, 0x18)
-void std::_STL_alloc_proxy<textWidget * *,textWidget *,std::allocator<textWidget *> >::~_STL_alloc_proxy<textWidget * *,textWidget *,std::allocator<textWidget *> >()
+void std::_STL_alloc_proxy<TextWidget * *,TextWidget *,std::allocator<TextWidget *> >::~_STL_alloc_proxy<TextWidget * *,TextWidget *,std::allocator<TextWidget *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:469
 DC_ONLY(0x128c70, 0x18)
-void std::_STL_alloc_proxy<iconWidget * *,iconWidget *,std::allocator<iconWidget *> >::~_STL_alloc_proxy<iconWidget * *,iconWidget *,std::allocator<iconWidget *> >()
+void std::_STL_alloc_proxy<IconWidget * *,IconWidget *,std::allocator<IconWidget *> >::~_STL_alloc_proxy<IconWidget * *,IconWidget *,std::allocator<IconWidget *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:469
 DC_ONLY(0x128c88, 0x18)
-void std::_STL_alloc_proxy<sample * *,sample *,std::allocator<sample *> >::~_STL_alloc_proxy<sample * *,sample *,std::allocator<sample *> >()
+void std::_STL_alloc_proxy<Sample * *,Sample *,std::allocator<Sample *> >::~_STL_alloc_proxy<Sample * *,Sample *,std::allocator<Sample *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x128ca0, 0xC)
-void std::_STL_alloc_proxy<type_artifact_offering *,type_artifact_offering,std::allocator<type_artifact_offering> >::_STL_alloc_proxy<type_artifact_offering *,type_artifact_offering,std::allocator<type_artifact_offering> >(const std::allocator<type_artifact_offering>* __a, type_artifact_offering** __p)
+void std::_STL_alloc_proxy<ArtifactOffering *,ArtifactOffering,std::allocator<ArtifactOffering> >::_STL_alloc_proxy<ArtifactOffering *,ArtifactOffering,std::allocator<ArtifactOffering> >(const std::allocator<ArtifactOffering>* __a, ArtifactOffering** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x128cac, 0x2C)
-void std::_STL_alloc_proxy<type_artifact_offering *,type_artifact_offering,std::allocator<type_artifact_offering> >::deallocate(type_artifact_offering* __p, unsigned __n)
+void std::_STL_alloc_proxy<ArtifactOffering *,ArtifactOffering,std::allocator<ArtifactOffering> >::deallocate(ArtifactOffering* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x128cd8, 0xC)
-void std::_STL_alloc_proxy<textWidget * *,textWidget *,std::allocator<textWidget *> >::_STL_alloc_proxy<textWidget * *,textWidget *,std::allocator<textWidget *> >(const std::allocator<textWidget* __a, textWidget*** __p)
+void std::_STL_alloc_proxy<TextWidget * *,TextWidget *,std::allocator<TextWidget *> >::_STL_alloc_proxy<TextWidget * *,TextWidget *,std::allocator<TextWidget *> >(const std::allocator<TextWidget* __a, TextWidget*** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x128ce4, 0x2C)
-void std::_STL_alloc_proxy<textWidget * *,textWidget *,std::allocator<textWidget *> >::deallocate(textWidget** __p, unsigned __n)
+void std::_STL_alloc_proxy<TextWidget * *,TextWidget *,std::allocator<TextWidget *> >::deallocate(TextWidget** __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x128d10, 0xC)
-void std::_STL_alloc_proxy<iconWidget * *,iconWidget *,std::allocator<iconWidget *> >::_STL_alloc_proxy<iconWidget * *,iconWidget *,std::allocator<iconWidget *> >(const std::allocator<iconWidget* __a, iconWidget*** __p)
+void std::_STL_alloc_proxy<IconWidget * *,IconWidget *,std::allocator<IconWidget *> >::_STL_alloc_proxy<IconWidget * *,IconWidget *,std::allocator<IconWidget *> >(const std::allocator<IconWidget* __a, IconWidget*** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x128d1c, 0x2C)
-void std::_STL_alloc_proxy<iconWidget * *,iconWidget *,std::allocator<iconWidget *> >::deallocate(iconWidget** __p, unsigned __n)
+void std::_STL_alloc_proxy<IconWidget * *,IconWidget *,std::allocator<IconWidget *> >::deallocate(IconWidget** __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x128d48, 0xC)
-void std::_STL_alloc_proxy<sample * *,sample *,std::allocator<sample *> >::_STL_alloc_proxy<sample * *,sample *,std::allocator<sample *> >(const std::allocator<sample* __a, sample*** __p)
+void std::_STL_alloc_proxy<Sample * *,Sample *,std::allocator<Sample *> >::_STL_alloc_proxy<Sample * *,Sample *,std::allocator<Sample *> >(const std::allocator<Sample* __a, Sample*** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x128d54, 0x2C)
-void std::_STL_alloc_proxy<sample * *,sample *,std::allocator<sample *> >::deallocate(sample** __p, unsigned __n)
+void std::_STL_alloc_proxy<Sample * *,Sample *,std::allocator<Sample *> >::deallocate(Sample** __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x128d80, 0x1C)
-void std::allocator<type_artifact_offering>::deallocate(type_artifact_offering* __p, unsigned __n)
+void std::allocator<ArtifactOffering>::deallocate(ArtifactOffering* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x128d9c, 0x1C)
-void std::allocator<textWidget *>::deallocate(textWidget** __p, unsigned __n)
+void std::allocator<TextWidget *>::deallocate(TextWidget** __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x128db8, 0x1C)
-void std::allocator<iconWidget *>::deallocate(iconWidget** __p, unsigned __n)
+void std::allocator<IconWidget *>::deallocate(IconWidget** __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x128dd4, 0x1C)
-void std::allocator<sample *>::deallocate(sample** __p, unsigned __n)
+void std::allocator<Sample *>::deallocate(Sample** __p, unsigned __n)
 {
     // @stub
 }
@@ -1073,175 +1073,175 @@ char* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_i
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x128ee4, 0xD0)
-void std::vector<type_artifact_offering,std::allocator<type_artifact_offering> >::_M_insert_overflow(type_artifact_offering* __position, const type_artifact_offering* __x, unsigned __fill_len)
+void std::vector<ArtifactOffering,std::allocator<ArtifactOffering> >::_M_insert_overflow(ArtifactOffering* __position, const ArtifactOffering* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x128fb4, 0xCC)
-void std::vector<textWidget *,std::allocator<textWidget *> >::_M_insert_overflow(textWidget** __position, textWidget** __x, unsigned __fill_len)
+void std::vector<TextWidget *,std::allocator<TextWidget *> >::_M_insert_overflow(TextWidget** __position, TextWidget** __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x129080, 0xCC)
-void std::vector<iconWidget *,std::allocator<iconWidget *> >::_M_insert_overflow(iconWidget** __position, iconWidget** __x, unsigned __fill_len)
+void std::vector<IconWidget *,std::allocator<IconWidget *> >::_M_insert_overflow(IconWidget** __position, IconWidget** __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x12914c, 0xCC)
-void std::vector<sample *,std::allocator<sample *> >::_M_insert_overflow(sample** __position, sample** __x, unsigned __fill_len)
+void std::vector<Sample *,std::allocator<Sample *> >::_M_insert_overflow(Sample** __position, Sample** __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x129218, 0x30)
-void std::destroy(type_artifact_offering* __first, type_artifact_offering* __last)
+void std::destroy(ArtifactOffering* __first, ArtifactOffering* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x129248, 0x34)
-void std::construct(type_artifact_offering* __p, const type_artifact_offering* __value)
+void std::construct(ArtifactOffering* __p, const ArtifactOffering* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x12927c, 0x30)
-void std::destroy(textWidget** __first, textWidget** __last)
+void std::destroy(TextWidget** __first, TextWidget** __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x1292ac, 0x28)
-void std::construct(textWidget** __p, textWidget** __value)
+void std::construct(TextWidget** __p, TextWidget** __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x1292d4, 0x30)
-void std::destroy(iconWidget** __first, iconWidget** __last)
+void std::destroy(IconWidget** __first, IconWidget** __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x129304, 0x28)
-void std::construct(iconWidget** __p, iconWidget** __value)
+void std::construct(IconWidget** __p, IconWidget** __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x12932c, 0x30)
-void std::destroy(sample** __first, sample** __last)
+void std::destroy(Sample** __first, Sample** __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x12935c, 0x28)
-void std::construct(sample** __p, sample** __value)
+void std::construct(Sample** __p, Sample** __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x129384, 0x4)
-std::allocator<type_artifact_offering>* std::__stl_alloc_rebind(std::allocator<type_artifact_offering>* __a, const type_artifact_offering* __formal)
+std::allocator<ArtifactOffering>* std::__stl_alloc_rebind(std::allocator<ArtifactOffering>* __a, const ArtifactOffering* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x129388, 0x4)
-std::allocator<textWidget* std::__stl_alloc_rebind(std::allocator<textWidget* __a, textWidget** __formal)
+std::allocator<TextWidget* std::__stl_alloc_rebind(std::allocator<TextWidget* __a, TextWidget** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x12938c, 0x4)
-std::allocator<iconWidget* std::__stl_alloc_rebind(std::allocator<iconWidget* __a, iconWidget** __formal)
+std::allocator<IconWidget* std::__stl_alloc_rebind(std::allocator<IconWidget* __a, IconWidget** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x129390, 0x4)
-std::allocator<sample* std::__stl_alloc_rebind(std::allocator<sample* __a, sample** __formal)
+std::allocator<Sample* std::__stl_alloc_rebind(std::allocator<Sample* __a, Sample** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x129394, 0x28)
-type_artifact_offering* std::_STL_alloc_proxy<type_artifact_offering *,type_artifact_offering,std::allocator<type_artifact_offering> >::allocate(unsigned __n)
+ArtifactOffering* std::_STL_alloc_proxy<ArtifactOffering *,ArtifactOffering,std::allocator<ArtifactOffering> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x1293bc, 0xC)
-unsigned std::vector<textWidget *,std::allocator<textWidget *> >::size()
+unsigned std::vector<TextWidget *,std::allocator<TextWidget *> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x1293c8, 0x28)
-textWidget** std::_STL_alloc_proxy<textWidget * *,textWidget *,std::allocator<textWidget *> >::allocate(unsigned __n)
+TextWidget** std::_STL_alloc_proxy<TextWidget * *,TextWidget *,std::allocator<TextWidget *> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x1293f0, 0x28)
-iconWidget** std::_STL_alloc_proxy<iconWidget * *,iconWidget *,std::allocator<iconWidget *> >::allocate(unsigned __n)
+IconWidget** std::_STL_alloc_proxy<IconWidget * *,IconWidget *,std::allocator<IconWidget *> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x129418, 0x28)
-sample** std::_STL_alloc_proxy<sample * *,sample *,std::allocator<sample *> >::allocate(unsigned __n)
+Sample** std::_STL_alloc_proxy<Sample * *,Sample *,std::allocator<Sample *> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x129440, 0x28)
-type_artifact_offering* std::allocator<type_artifact_offering>::allocate(unsigned __n, const void* __formal)
+ArtifactOffering* std::allocator<ArtifactOffering>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x129468, 0x24)
-textWidget** std::allocator<textWidget *>::allocate(unsigned __n, const void* __formal)
+TextWidget** std::allocator<TextWidget *>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x12948c, 0x24)
-iconWidget** std::allocator<iconWidget *>::allocate(unsigned __n, const void* __formal)
+IconWidget** std::allocator<IconWidget *>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x1294b0, 0x24)
-sample** std::allocator<sample *>::allocate(unsigned __n, const void* __formal)
+Sample** std::allocator<Sample *>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
@@ -1255,280 +1255,280 @@ void std::construct(char* __p, const char* __value)
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x1294fc, 0x38)
-type_artifact_offering* std::uninitialized_copy(type_artifact_offering* __first, type_artifact_offering* __last, type_artifact_offering* __result)
+ArtifactOffering* std::uninitialized_copy(ArtifactOffering* __first, ArtifactOffering* __last, ArtifactOffering* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x129534, 0x38)
-type_artifact_offering* std::uninitialized_fill_n(type_artifact_offering* __first, unsigned __n, const type_artifact_offering* __x)
+ArtifactOffering* std::uninitialized_fill_n(ArtifactOffering* __first, unsigned __n, const ArtifactOffering* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x12956c, 0x38)
-textWidget** std::uninitialized_copy(textWidget** __first, textWidget** __last, textWidget** __result)
+TextWidget** std::uninitialized_copy(TextWidget** __first, TextWidget** __last, TextWidget** __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x1295a4, 0x38)
-textWidget** std::uninitialized_fill_n(textWidget** __first, unsigned __n, textWidget** __x)
+TextWidget** std::uninitialized_fill_n(TextWidget** __first, unsigned __n, TextWidget** __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x1295dc, 0x38)
-iconWidget** std::uninitialized_copy(iconWidget** __first, iconWidget** __last, iconWidget** __result)
+IconWidget** std::uninitialized_copy(IconWidget** __first, IconWidget** __last, IconWidget** __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x129614, 0x38)
-iconWidget** std::uninitialized_fill_n(iconWidget** __first, unsigned __n, iconWidget** __x)
+IconWidget** std::uninitialized_fill_n(IconWidget** __first, unsigned __n, IconWidget** __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x12964c, 0x38)
-sample** std::uninitialized_copy(sample** __first, sample** __last, sample** __result)
+Sample** std::uninitialized_copy(Sample** __first, Sample** __last, Sample** __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x129684, 0x38)
-sample** std::uninitialized_fill_n(sample** __first, unsigned __n, sample** __x)
+Sample** std::uninitialized_fill_n(Sample** __first, unsigned __n, Sample** __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x1296bc, 0x4)
-type_artifact_offering* std::value_type(const type_artifact_offering* __formal)
+ArtifactOffering* std::value_type(const ArtifactOffering* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x1296c0, 0x1C)
-void std::__destroy(type_artifact_offering* __first, type_artifact_offering* __last, type_artifact_offering* __formal)
+void std::__destroy(ArtifactOffering* __first, ArtifactOffering* __last, ArtifactOffering* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x1296dc, 0x4)
-textWidget** std::value_type(textWidget** __formal)
+TextWidget** std::value_type(TextWidget** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x1296e0, 0x1C)
-void std::__destroy(textWidget** __first, textWidget** __last, textWidget** __formal)
+void std::__destroy(TextWidget** __first, TextWidget** __last, TextWidget** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x1296fc, 0x4)
-iconWidget** std::value_type(iconWidget** __formal)
+IconWidget** std::value_type(IconWidget** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x129700, 0x1C)
-void std::__destroy(iconWidget** __first, iconWidget** __last, iconWidget** __formal)
+void std::__destroy(IconWidget** __first, IconWidget** __last, IconWidget** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x12971c, 0x4)
-sample** std::value_type(sample** __formal)
+Sample** std::value_type(Sample** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x129720, 0x1C)
-void std::__destroy(sample** __first, sample** __last, sample** __formal)
+void std::__destroy(Sample** __first, Sample** __last, Sample** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x12973c, 0x1C)
-type_artifact_offering* std::__uninitialized_copy(type_artifact_offering* __first, type_artifact_offering* __last, type_artifact_offering* __result, type_artifact_offering* __formal)
+ArtifactOffering* std::__uninitialized_copy(ArtifactOffering* __first, ArtifactOffering* __last, ArtifactOffering* __result, ArtifactOffering* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x129758, 0x1C)
-type_artifact_offering* std::__uninitialized_fill_n(type_artifact_offering* __first, unsigned __n, const type_artifact_offering* __x, type_artifact_offering* __formal)
+ArtifactOffering* std::__uninitialized_fill_n(ArtifactOffering* __first, unsigned __n, const ArtifactOffering* __x, ArtifactOffering* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x129774, 0x1C)
-textWidget** std::__uninitialized_copy(textWidget** __first, textWidget** __last, textWidget** __result, textWidget** __formal)
+TextWidget** std::__uninitialized_copy(TextWidget** __first, TextWidget** __last, TextWidget** __result, TextWidget** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x129790, 0x1C)
-textWidget** std::__uninitialized_fill_n(textWidget** __first, unsigned __n, textWidget** __x, textWidget** __formal)
+TextWidget** std::__uninitialized_fill_n(TextWidget** __first, unsigned __n, TextWidget** __x, TextWidget** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x1297ac, 0x1C)
-iconWidget** std::__uninitialized_copy(iconWidget** __first, iconWidget** __last, iconWidget** __result, iconWidget** __formal)
+IconWidget** std::__uninitialized_copy(IconWidget** __first, IconWidget** __last, IconWidget** __result, IconWidget** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x1297c8, 0x1C)
-iconWidget** std::__uninitialized_fill_n(iconWidget** __first, unsigned __n, iconWidget** __x, iconWidget** __formal)
+IconWidget** std::__uninitialized_fill_n(IconWidget** __first, unsigned __n, IconWidget** __x, IconWidget** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x1297e4, 0x1C)
-sample** std::__uninitialized_copy(sample** __first, sample** __last, sample** __result, sample** __formal)
+Sample** std::__uninitialized_copy(Sample** __first, Sample** __last, Sample** __result, Sample** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x129800, 0x1C)
-sample** std::__uninitialized_fill_n(sample** __first, unsigned __n, sample** __x, sample** __formal)
+Sample** std::__uninitialized_fill_n(Sample** __first, unsigned __n, Sample** __x, Sample** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x12981c, 0x30)
-void std::__destroy_aux(type_artifact_offering* __first, type_artifact_offering* __last, __false_type __formal)
+void std::__destroy_aux(ArtifactOffering* __first, ArtifactOffering* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x12984c, 0x30)
-void std::__destroy_aux(textWidget** __first, textWidget** __last, __false_type __formal)
+void std::__destroy_aux(TextWidget** __first, TextWidget** __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x12987c, 0x30)
-void std::__destroy_aux(iconWidget** __first, iconWidget** __last, __false_type __formal)
+void std::__destroy_aux(IconWidget** __first, IconWidget** __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x1298ac, 0x30)
-void std::__destroy_aux(sample** __first, sample** __last, __false_type __formal)
+void std::__destroy_aux(Sample** __first, Sample** __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x1298dc, 0x3C)
-type_artifact_offering* std::__uninitialized_copy_aux(type_artifact_offering* __first, type_artifact_offering* __last, type_artifact_offering* __result, __false_type __formal)
+ArtifactOffering* std::__uninitialized_copy_aux(ArtifactOffering* __first, ArtifactOffering* __last, ArtifactOffering* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x129918, 0x3C)
-type_artifact_offering* std::__uninitialized_fill_n_aux(type_artifact_offering* __first, unsigned __n, const type_artifact_offering* __x, __false_type __formal)
+ArtifactOffering* std::__uninitialized_fill_n_aux(ArtifactOffering* __first, unsigned __n, const ArtifactOffering* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x129954, 0x3C)
-textWidget** std::__uninitialized_copy_aux(textWidget** __first, textWidget** __last, textWidget** __result, __false_type __formal)
+TextWidget** std::__uninitialized_copy_aux(TextWidget** __first, TextWidget** __last, TextWidget** __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x129990, 0x3C)
-textWidget** std::__uninitialized_fill_n_aux(textWidget** __first, unsigned __n, textWidget** __x, __false_type __formal)
+TextWidget** std::__uninitialized_fill_n_aux(TextWidget** __first, unsigned __n, TextWidget** __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x1299cc, 0x3C)
-iconWidget** std::__uninitialized_copy_aux(iconWidget** __first, iconWidget** __last, iconWidget** __result, __false_type __formal)
+IconWidget** std::__uninitialized_copy_aux(IconWidget** __first, IconWidget** __last, IconWidget** __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x129a08, 0x3C)
-iconWidget** std::__uninitialized_fill_n_aux(iconWidget** __first, unsigned __n, iconWidget** __x, __false_type __formal)
+IconWidget** std::__uninitialized_fill_n_aux(IconWidget** __first, unsigned __n, IconWidget** __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x129a44, 0x3C)
-sample** std::__uninitialized_copy_aux(sample** __first, sample** __last, sample** __result, __false_type __formal)
+Sample** std::__uninitialized_copy_aux(Sample** __first, Sample** __last, Sample** __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x129a80, 0x3C)
-sample** std::__uninitialized_fill_n_aux(sample** __first, unsigned __n, sample** __x, __false_type __formal)
+Sample** std::__uninitialized_fill_n_aux(Sample** __first, unsigned __n, Sample** __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x129abc, 0x1C)
-void std::destroy(type_artifact_offering* __pointer)
+void std::destroy(ArtifactOffering* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x129ad8, 0x1C)
-void std::destroy(textWidget** __pointer)
+void std::destroy(TextWidget** __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x129af4, 0x1C)
-void std::destroy(iconWidget** __pointer)
+void std::destroy(IconWidget** __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x129b10, 0x1C)
-void std::destroy(sample** __pointer)
+void std::destroy(Sample** __pointer)
 {
     // @stub
 }
@@ -1543,8 +1543,8 @@ void std::__destroy_aux()
 #endif  // @carcass
 
 VA(0x0055fc30, 0xab)  // dc 0x123e8c
-void type_artifact_offering::set(const type_artifact* artifact, long slot,
-                                 const hero* owner)
+void ArtifactOffering::set(const ArtifactRecord* artifact, long slot,
+                                 const Hero* owner)
 {
     long artifactClass =
         g_artifactTraits[artifact->m_artifactId].m_artifactClass;
@@ -1573,9 +1573,9 @@ void type_artifact_offering::set(const type_artifact* artifact, long slot,
 
 // E:\gamedcs\sacrifice_window.cpp:170
 // All Complete calls are expanded into the artifact widget builder.
-inline type_doll_slot_widget::type_doll_slot_widget(
-    const type_doll_slot_definition& def, long id)
-    : iconWidget(def.m_x, def.m_y, def.m_width, def.m_height, id, def.m_image,
+inline DollSlotWidget::DollSlotWidget(
+    const DollSlotDefinition& def, long id)
+    : IconWidget(def.m_x, def.m_y, def.m_width, def.m_height, id, def.m_image,
                  0, 0, 0, 0, 16)
 {
     m_slot = def.m_slot;
@@ -1583,9 +1583,9 @@ inline type_doll_slot_widget::type_doll_slot_widget(
 
 // E:\gamedcs\sacrifice_window.cpp:204
 // All Complete calls are expanded into the artifact widget builder.
-inline type_backpack_slot_widget::type_backpack_slot_widget(
-    const type_icon_definition& def, long newSlot, long id)
-    : iconWidget(def.m_x, def.m_y, def.m_width, def.m_height, id, def.m_image,
+inline BackpackSlotWidget::BackpackSlotWidget(
+    const IconDefinition& def, long newSlot, long id)
+    : IconWidget(def.m_x, def.m_y, def.m_width, def.m_height, id, def.m_image,
                  0, 0, 0, 0, 16)
 {
     m_slot = newSlot;
@@ -1593,10 +1593,10 @@ inline type_backpack_slot_widget::type_backpack_slot_widget(
 
 // E:\gamedcs\sacrifice_window.cpp:235
 // All Complete calls are expanded into the artifact widget builder.
-inline type_artifact_offering_widget::type_artifact_offering_widget(
+inline ArtifactOfferingWidget::ArtifactOfferingWidget(
     long x, long y, long width, long height, long newItemNumber,
     long id, const char* image)
-    : iconWidget(x, y, width, height, id, image, 0, 0, 0, 0, 16)
+    : IconWidget(x, y, width, height, id, image, 0, 0, 0, 0, 16)
 {
     m_itemNumber = newItemNumber;
 }
@@ -1607,11 +1607,11 @@ inline type_artifact_offering_widget::type_artifact_offering_widget(
 // body shape, and forwarding to artifact_click - the equipped-slot handler.
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x0055fce0, 0x26)  // linkorder + iconWidget parent/+0x48 read, dc 0x123f88
-bool type_doll_slot_widget::handleClick(
+bool DollSlotWidget::handleClick(
     bool downClick, bool rightClick)
 {
     if (downClick) {
-        static_cast<type_sacrifice_window*>(m_parentWindow)->artifactClick(
+        static_cast<SacrificeWindow*>(m_parentWindow)->artifactClick(
             m_slot, rightClick);
         return 1;
     }
@@ -1620,11 +1620,11 @@ bool type_doll_slot_widget::handleClick(
 
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x0055fd10, 0x26)
-bool type_backpack_slot_widget::handleClick(
+bool BackpackSlotWidget::handleClick(
     bool downClick, bool rightClick)
 {
     if (downClick) {
-        static_cast<type_sacrifice_window*>(m_parentWindow)->backpackClick(
+        static_cast<SacrificeWindow*>(m_parentWindow)->backpackClick(
             m_slot, rightClick);
         return 1;
     }
@@ -1633,11 +1633,11 @@ bool type_backpack_slot_widget::handleClick(
 
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x0055fd40, 0x26)
-bool type_artifact_offering_widget::handleClick(
+bool ArtifactOfferingWidget::handleClick(
     bool downClick, bool rightClick)
 {
     if (downClick) {
-        static_cast<type_sacrifice_window*>(m_parentWindow)->offeringClick(
+        static_cast<SacrificeWindow*>(m_parentWindow)->offeringClick(
             m_itemNumber, rightClick);
         return 1;
     }
@@ -1650,7 +1650,7 @@ bool type_artifact_offering_widget::handleClick(
 // canonical source identity despite the three earlier folded aliases.
 // E:\gamedcs\sacrifice_window.cpp:1894
 VA_COMPGEN(0x0055fd70, 0x21, SCALAR_DELETING_DTOR,
-           type_transformer_slot)
+           TransformerSlot)
 
 // E:\gamedcs\sacrifice_window.cpp:272
 // The army-slot member of the same family, 0x2a rather than 0x26 because it
@@ -1659,11 +1659,11 @@ VA_COMPGEN(0x0055fd70, 0x21, SCALAR_DELETING_DTOR,
 // pair matches the Dreamcast constructor's (new_slot, _left_pane).
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x0055fda0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x12416c
-bool type_army_slot_widget::handleClick(
+bool ArmySlotWidget::handleClick(
     bool downClick, bool rightClick)
 {
     if (downClick) {
-        static_cast<type_sacrifice_window*>(m_parentWindow)->creatureClick(
+        static_cast<SacrificeWindow*>(m_parentWindow)->creatureClick(
             m_slot, rightClick, m_leftPane);
         return 1;
     }
@@ -1674,10 +1674,10 @@ bool type_army_slot_widget::handleClick(
 // Complete expands both calls in create_creature_icons and retains no
 // separately claimable copy. The base constructor arguments and the three
 // trailing stores are byte-proven by those two expansions.
-type_army_slot_widget::type_army_slot_widget(
+ArmySlotWidget::ArmySlotWidget(
     long newX, long newY, long newW, long newH, long newSlot,
     long newId, const char* image, unsigned char newLeftPane)
-    : iconWidget(newX, newY, newW, newH, newId, image,
+    : IconWidget(newX, newY, newW, newH, newId, image,
                  0, 0, 0, 0, 16)
 {
     m_slot = newSlot;
@@ -1685,7 +1685,7 @@ type_army_slot_widget::type_army_slot_widget(
 }
 
 VA(0x0055fdd0, 0x574)  // dc 0x12419c
-type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
+SacrificeWindow::SacrificeWindow(Hero* newHero, int curPlayer)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
     m_currentHero = newHero;
@@ -1696,47 +1696,47 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
     m_type = 18;
 
     long widgetId = 100;
-    widget* newWidget;
+    Widget* newWidget;
     m_widgets.reserve(150);
     createArtifactWidgets(widgetId, curPlayer);
     createCreatureWidgets(widgetId, curPlayer);
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         24, 414, 104, 50,
         g_generalText->getText(SACRIFICE_GENERAL_TEXT_NEXT_LEVEL),
-        "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
+        "smalfont.fnt", Font::HEADING, widgetId++, 1, 0, 8));
 
-    m_experienceWidget = new textWidget(
+    m_experienceWidget = new TextWidget(
         44, 468, 66, 16, g_emptyRolloverText, "smalfont.fnt",
-        font::PRIMARY, widgetId++, 1, 0, 8);
+        Font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_experienceWidget);
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         24, 492, 104, 42,
         g_generalText->getText(SACRIFICE_GENERAL_TEXT_TOTAL_EXPERIENCE),
-        "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
+        "smalfont.fnt", Font::HEADING, widgetId++, 1, 0, 8));
 
-    m_experienceTotalWidget = new textWidget(
+    m_experienceTotalWidget = new TextWidget(
         41, 536, 66, 16, g_emptyRolloverText, "smalfont.fnt",
-        font::PRIMARY, widgetId++, 1, 0, 8);
+        Font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_experienceTotalWidget);
 
-    m_sacrificeButton = new type_func_button(
+    m_sacrificeButton = new FuncButton(
         269, 520, 64, 32, widgetId++, "AltSacr.def",
         sacrifice, 0, 1);
     m_widgets.push_back(m_sacrificeButton);
 
-    newWidget = new type_func_button(
+    newWidget = new FuncButton(
         515, 520, 64, 30, widgetId++, "iOkay.def",
         exitClick, 0, 1);
-    static_cast<type_func_button*>(newWidget)->setHotkey(28);
+    static_cast<FuncButton*>(newWidget)->setHotkey(28);
     newWidget->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_EXIT_BUTTON].m_text, 0, 1);
     m_widgets.push_back(newWidget);
 
-    m_rolloverText = new textWidget(
+    m_rolloverText = new TextWidget(
         8, 567, 584, 18, g_emptyRolloverText, "smalfont.fnt",
-        font::PRIMARY, widgetId++, 1, 0, 8);
+        Font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_rolloverText);
 
     int townType = g_heroClasses[m_currentHero->m_heroClass].m_townType;
@@ -1745,7 +1745,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
     m_canSacrificeCreatures = townType > TOWN_TOWER;
     m_totalExperience = 0;
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -1755,20 +1755,20 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
 
 // E:\gamedcs\sacrifice_window.cpp:360
 VA(0x00560380, 0xD67)  // ctor caller + dc name/order/locals, dc 0x1246b8
-void type_sacrifice_window::createArtifactWidgets(
+void SacrificeWindow::createArtifactWidgets(
     long& widgetId, int curPlayer)
 {
     m_artifactWidgets.reserve(80);
 
-    bitmapBorder* background = new bitmapBorder(
+    BitmapBorder* background = new BitmapBorder(
         0, 0, 600, 593, widgetId++,
         g_game->m_f1f698 >= 2 ? "AltrArt2.pcx" : "AltarArt.pcx", 0x800);
     background->setPlayerPaletteColors(curPlayer);
     m_widgets.push_back(background);
     m_artifactWidgets.push_back(background);
 
-    type_doll_slot_definition def;
-    iconWidget* currentIconWidget;
+    DollSlotDefinition def;
+    IconWidget* currentIconWidget;
     def.m_width = 44;
     def.m_height = 44;
     def.m_image = "artifact.def";
@@ -1779,13 +1779,13 @@ void type_sacrifice_window::createArtifactWidgets(
         def.m_y = g_slotDefinitions[i][1];
         def.m_slot = i;
 
-        currentIconWidget = new iconWidget(
+        currentIconWidget = new IconWidget(
             def.m_x, def.m_y, def.m_width, def.m_height, widgetId++, def.m_image,
             0, 0, 0, 0, 16);
         m_widgets.push_back(currentIconWidget);
         m_slotBackWidgets.push_back(currentIconWidget);
 
-        currentIconWidget = new type_doll_slot_widget(def, widgetId++);
+        currentIconWidget = new DollSlotWidget(def, widgetId++);
         m_widgets.push_back(currentIconWidget);
         m_slotWidgets.push_back(currentIconWidget);
         m_artifactWidgets.push_back(currentIconWidget);
@@ -1794,20 +1794,20 @@ void type_sacrifice_window::createArtifactWidgets(
     def.m_x = 43;
     def.m_y = 352;
     for (i = 0; i < 5; ++i) {
-        currentIconWidget = new type_backpack_slot_widget(def, i, widgetId++);
+        currentIconWidget = new BackpackSlotWidget(def, i, widgetId++);
         def.m_x += 44;
         m_widgets.push_back(currentIconWidget);
         m_backpackWidgets.push_back(currentIconWidget);
         m_artifactWidgets.push_back(currentIconWidget);
     }
 
-    m_leftBackpackButton = new type_func_button(
+    m_leftBackpackButton = new FuncButton(
         20, 352, 22, 46, widgetId++, "hsbtns3.def",
         scrollBackpackLeft, 0, 1);
     m_widgets.push_back(m_leftBackpackButton);
     m_artifactWidgets.push_back(m_leftBackpackButton);
 
-    m_rightBackpackButton = new type_func_button(
+    m_rightBackpackButton = new FuncButton(
         264, 352, 22, 46, widgetId++, "hsbtns5.def",
         scrollBackpackRight, 0, 1);
     m_widgets.push_back(m_rightBackpackButton);
@@ -1815,23 +1815,23 @@ void type_sacrifice_window::createArtifactWidgets(
 
     // Original local: artifact_offering; DC line 446 invokes the generated
     // default constructor, whose base call supplies TArtifact(-1).
-    type_artifact_offering artifactOffering;
+    ArtifactOffering artifactOffering;
     long itemCount = 0;
-    textWidget* currentTextWidget;
+    TextWidget* currentTextWidget;
     for (long j = 0; j < 5; ++j) {
         long itemX = g_rowStart[j][0];
         int itemY = g_rowStart[j][1];
         long textX = itemX - 2;
         long textY = itemY + 47;
         for (count = g_rowSize[j]; count > 0; --count) {
-            currentTextWidget = new textWidget(
+            currentTextWidget = new TextWidget(
                 textX, textY, 48, 16, g_emptyRolloverText,
-                "smalfont.fnt", font::PRIMARY, widgetId++, 1, 0, 8);
+                "smalfont.fnt", Font::PRIMARY, widgetId++, 1, 0, 8);
             m_widgets.push_back(currentTextWidget);
             m_artifactWidgets.push_back(currentTextWidget);
             m_artifactValueWidgets.push_back(currentTextWidget);
 
-            currentIconWidget = new type_artifact_offering_widget(
+            currentIconWidget = new ArtifactOfferingWidget(
                 itemX, itemY, 44, 44, itemCount++,
                 widgetId++, "artifact.def");
             m_widgets.push_back(currentIconWidget);
@@ -1844,14 +1844,14 @@ void type_sacrifice_window::createArtifactWidgets(
         }
     }
 
-    m_currentArtifactValue = new textWidget(
+    m_currentArtifactValue = new TextWidget(
         269, 492, 66, 16,
         DATA_COMPGEN(0x00682a08, artifactZeroText, "0"),
-        "smalfont.fnt", font::PRIMARY, widgetId++, 1, 0, 8);
+        "smalfont.fnt", Font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_currentArtifactValue);
     m_artifactWidgets.push_back(m_currentArtifactValue);
 
-    m_currentArtifactWidget = new iconWidget(
+    m_currentArtifactWidget = new IconWidget(
         279, 440, 44, 44, widgetId++, "artifact.def",
         0, 0, 0, 0, 16);
     m_currentArtifactWidget->setHelpText(
@@ -1859,7 +1859,7 @@ void type_sacrifice_window::createArtifactWidgets(
     m_widgets.push_back(m_currentArtifactWidget);
     m_artifactWidgets.push_back(m_currentArtifactWidget);
 
-    m_emptyBackpackButton = new type_func_button(
+    m_emptyBackpackButton = new FuncButton(
         146, 520, 64, 32, widgetId++, "AltEmBk.def",
         emptyBackpack, 0, 1);
     m_emptyBackpackButton->setHelpText(
@@ -1867,7 +1867,7 @@ void type_sacrifice_window::createArtifactWidgets(
     m_widgets.push_back(m_emptyBackpackButton);
     m_artifactWidgets.push_back(m_emptyBackpackButton);
 
-    m_allArtifactsButton = new type_func_button(
+    m_allArtifactsButton = new FuncButton(
         392, 520, 64, 32, widgetId++, "AltFill.def",
         allArtifacts, 0, 1);
     m_allArtifactsButton->setHelpText(
@@ -1875,7 +1875,7 @@ void type_sacrifice_window::createArtifactWidgets(
     m_widgets.push_back(m_allArtifactsButton);
     m_artifactWidgets.push_back(m_allArtifactsButton);
 
-    m_creaturesButton = new type_func_button(
+    m_creaturesButton = new FuncButton(
         515, 421, 64, 32, widgetId++, "AltSacC.def",
         sacrificeCreatures, 0, 1);
     m_creaturesButton->setHelpText(
@@ -1884,30 +1884,30 @@ void type_sacrifice_window::createArtifactWidgets(
     m_widgets.push_back(m_creaturesButton);
     m_artifactWidgets.push_back(m_creaturesButton);
 
-    currentTextWidget = new textWidget(
+    currentTextWidget = new TextWidget(
         317, 23, 256, 18,
         g_generalText->getText(SACRIFICE_GENERAL_TEXT_ARTIFACTS_TITLE),
-        "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8);
+        "smalfont.fnt", Font::HEADING, widgetId++, 1, 0, 8);
     m_widgets.push_back(currentTextWidget);
     m_artifactWidgets.push_back(currentTextWidget);
 
-    currentTextWidget = new textWidget(
+    currentTextWidget = new TextWidget(
         159, 415, 283, 18,
         g_generalText->getText(SACRIFICE_GENERAL_TEXT_CREATURES_TITLE),
-        "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8);
+        "smalfont.fnt", Font::HEADING, widgetId++, 1, 0, 8);
     m_widgets.push_back(currentTextWidget);
     m_artifactWidgets.push_back(currentTextWidget);
 }
 
 VA(0x005610f0, 0xE73)  // dc 0x124e60
-void type_sacrifice_window::createCreatureWidgets(
+void SacrificeWindow::createCreatureWidgets(
     long& widgetId, int curPlayer)
 {
     std::string buffer;
     long count;
     m_creatureWidgets.reserve(60);
 
-    bitmapBorder* background = new bitmapBorder(
+    BitmapBorder* background = new BitmapBorder(
         0, 0, 600, 593, widgetId++, "AltarMon.pcx", 0x800);
     background->setPlayerPaletteColors(curPlayer);
     m_widgets.push_back(background);
@@ -1917,35 +1917,35 @@ void type_sacrifice_window::createCreatureWidgets(
         g_generalText->getText(SACRIFICE_GENERAL_TEXT_HERO_NAME),
         m_currentHero->m_name);
 
-    textWidget* currentTextWidget = new textWidget(
+    TextWidget* currentTextWidget = new TextWidget(
         28, 21, 256, 18, buffer.c_str(), "smalfont.fnt",
-        font::HEADING, widgetId++, 1, 0, 8);
+        Font::HEADING, widgetId++, 1, 0, 8);
     m_widgets.push_back(currentTextWidget);
     m_creatureWidgets.push_back(currentTextWidget);
 
-    m_creatureNameWidget = new textWidget(
+    m_creatureNameWidget = new TextWidget(
         29, 56, 256, 42, g_emptyRolloverText, "medfont.fnt",
-        font::HEADING, widgetId++, 1, 0, 8);
+        Font::HEADING, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_creatureNameWidget);
     m_creatureWidgets.push_back(m_creatureNameWidget);
 
-    currentTextWidget = new textWidget(
+    currentTextWidget = new TextWidget(
         317, 21, 256, 18,
         g_generalText->getText(SACRIFICE_GENERAL_TEXT_SOURCE_CREATURES),
-        "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8);
+        "smalfont.fnt", Font::HEADING, widgetId++, 1, 0, 8);
     m_widgets.push_back(currentTextWidget);
     m_creatureWidgets.push_back(currentTextWidget);
 
-    currentTextWidget = new textWidget(
+    currentTextWidget = new TextWidget(
         318, 56, 256, 42,
         g_generalText->getText(SACRIFICE_GENERAL_TEXT_OFFERED_CREATURES),
-        "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8);
+        "smalfont.fnt", Font::HEADING, widgetId++, 1, 0, 8);
     m_widgets.push_back(currentTextWidget);
     m_creatureWidgets.push_back(currentTextWidget);
 
-    iconWidget* newIconWidgets[7];
-    iconWidget* selectionFrames[7];
-    textWidget* newTextWidgets[7];
+    IconWidget* newIconWidgets[7];
+    IconWidget* selectionFrames[7];
+    TextWidget* newTextWidgets[7];
     long itemNumber = 0;
 
     for (long defIndex = 0; defIndex < 2; ++defIndex) {
@@ -1975,7 +1975,7 @@ void type_sacrifice_window::createCreatureWidgets(
             g_constSourceSizes[defIndex][1], itemNumber, widgetId,
             newIconWidgets, selectionFrames, newTextWidgets, 0);
         for (long i = 0; i < count; ++i) {
-            type_creature_offering& offering =
+            CreatureOffering& offering =
                 m_creatureOfferings[itemNumber + i];
             offering.m_selectionWidget = newIconWidgets[i];
             offering.m_experienceText = newTextWidgets[i];
@@ -1984,16 +1984,16 @@ void type_sacrifice_window::createCreatureWidgets(
         itemNumber += count;
     }
 
-    m_currentCreature.m_creatureCountText = new textWidget(
+    m_currentCreature.m_creatureCountText = new TextWidget(
         145, 493, 66, 16, g_emptyRolloverText, "smalfont.fnt",
-        font::PRIMARY, widgetId++, 1, 0, 8);
+        Font::PRIMARY, widgetId++, 1, 0, 8);
     m_currentCreature.m_creatureCountText->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_CREATURE_AMOUNT].m_text,
         0, 1);
     m_widgets.push_back(m_currentCreature.m_creatureCountText);
     m_creatureWidgets.push_back(m_currentCreature.m_creatureCountText);
 
-    m_currentCreature.m_iconWidget = new type_army_slot_widget(
+    m_currentCreature.m_iconWidget = new ArmySlotWidget(
         149, 421, 58, 64, -1, widgetId++, "Twcrport.def", 1);
     m_currentCreature.m_iconWidget->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_SOURCE_CREATURE].m_text,
@@ -2002,16 +2002,16 @@ void type_sacrifice_window::createCreatureWidgets(
     m_creatureWidgets.push_back(m_currentCreature.m_iconWidget);
     m_currentCreature.m_sourceSelectionFrame = 0;
 
-    m_currentCreature.m_experienceText = new textWidget(
+    m_currentCreature.m_experienceText = new TextWidget(
         391, 493, 66, 16, g_emptyRolloverText, "smalfont.fnt",
-        font::PRIMARY, widgetId++, 1, 0, 8);
+        Font::PRIMARY, widgetId++, 1, 0, 8);
     m_currentCreature.m_experienceText->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_OFFERING_AMOUNT].m_text,
         0, 1);
     m_widgets.push_back(m_currentCreature.m_experienceText);
     m_creatureWidgets.push_back(m_currentCreature.m_experienceText);
 
-    m_currentCreature.m_selectionWidget = new type_army_slot_widget(
+    m_currentCreature.m_selectionWidget = new ArmySlotWidget(
         395, 421, 58, 64, -2, widgetId++, "TwCrPort.def", 0);
     m_currentCreature.m_selectionWidget->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_OFFERING_CREATURE].m_text,
@@ -2020,15 +2020,15 @@ void type_sacrifice_window::createCreatureWidgets(
     m_creatureWidgets.push_back(m_currentCreature.m_selectionWidget);
     m_currentCreature.m_offeringSelectionFrame = 0;
 
-    m_creatureSlider = new slider(
+    m_creatureSlider = new Slider(
         230, 479, 138, 16, widgetId++, 1, creatureSliderChange,
-        slider::BROWN, 0, 0);
+        Slider::BROWN, 0, 0);
     m_creatureSlider->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_CREATURE_SLIDER].m_text, 0, 1);
     m_widgets.push_back(m_creatureSlider);
     m_creatureWidgets.push_back(m_creatureSlider);
 
-    m_maxCreaturesButton = new type_func_button(
+    m_maxCreaturesButton = new FuncButton(
         146, 520, 64, 32, widgetId++, "IrcBtns.def",
         maxCreatures, 0, 1);
     m_maxCreaturesButton->setHelpText(
@@ -2036,7 +2036,7 @@ void type_sacrifice_window::createCreatureWidgets(
     m_widgets.push_back(m_maxCreaturesButton);
     m_creatureWidgets.push_back(m_maxCreaturesButton);
 
-    m_allCreaturesButton = new type_func_button(
+    m_allCreaturesButton = new FuncButton(
         392, 520, 64, 32, widgetId++, "AltArmy.def",
         allCreatures, 0, 1);
     m_allCreaturesButton->setHelpText(
@@ -2044,7 +2044,7 @@ void type_sacrifice_window::createCreatureWidgets(
     m_widgets.push_back(m_allCreaturesButton);
     m_creatureWidgets.push_back(m_allCreaturesButton);
 
-    m_artifactsButton = new type_func_button(
+    m_artifactsButton = new FuncButton(
         515, 421, 54, 32, widgetId++, "AltArt.def",
         sacrificeArtifacts, 0, 1);
     m_artifactsButton->setHelpText(
@@ -2056,10 +2056,10 @@ void type_sacrifice_window::createCreatureWidgets(
 }
 
 VA(0x00561f70, 0x427)  // dc 0x1255cc
-long type_sacrifice_window::createCreatureIcons(
+long SacrificeWindow::createCreatureIcons(
     long iconX, long iconY, long columns, long rows, long itemNumber,
-    long& widgetId, iconWidget** iconWidgets,
-    iconWidget** selectionWidgets, textWidget** textWidgets,
+    long& widgetId, IconWidget** iconWidgets,
+    IconWidget** selectionWidgets, TextWidget** textWidgets,
     unsigned char leftPane)
 {
     long count = 0;
@@ -2068,22 +2068,22 @@ long type_sacrifice_window::createCreatureIcons(
 
     for (long row = 0; row < rows; ++row) {
         for (long column = 0; column < columns; ++column) {
-            textWidgets[count] = new textWidget(
+            textWidgets[count] = new TextWidget(
                 textX, textY, 66, 16, g_emptyRolloverText,
-                "smalfont.fnt", font::PRIMARY, widgetId++, 1, 0, 8);
+                "smalfont.fnt", Font::PRIMARY, widgetId++, 1, 0, 8);
             textWidgets[count]->setHelpText(
                 g_sacrificeWindowHelp[SACRIFICE_HELP_CREATURE_SLOT].m_text,
                 0, 1);
             m_widgets.push_back(textWidgets[count]);
             m_creatureWidgets.push_back(textWidgets[count]);
 
-            iconWidgets[count] = new type_army_slot_widget(
+            iconWidgets[count] = new ArmySlotWidget(
                 iconX, iconY, 58, 64, itemNumber + count, widgetId++,
                 "twcrport.def", leftPane);
             m_widgets.push_back(iconWidgets[count]);
             m_creatureWidgets.push_back(iconWidgets[count]);
 
-            selectionWidgets[count] = new type_army_slot_widget(
+            selectionWidgets[count] = new ArmySlotWidget(
                 iconX, iconY, 58, 64, itemNumber + count, widgetId++,
                 "TwCrPort.def", leftPane);
             m_widgets.push_back(selectionWidgets[count]);
@@ -2105,10 +2105,10 @@ long type_sacrifice_window::createCreatureIcons(
 // Vtable 0x641620 slot 0 is the canonical VC6 deleting wrapper for the
 // destructor below.
 VA_COMPGEN(0x00560350, 0x21, SCALAR_DELETING_DTOR,
-           type_sacrifice_window)
+           SacrificeWindow)
 
 VA(0x005623a0, 0x15b)  // dc 0x125824
-type_sacrifice_window::~type_sacrifice_window()
+SacrificeWindow::~SacrificeWindow()
 {
     deleteWidgets();
 }
@@ -2131,11 +2131,11 @@ std::string convertWithCommas(long value)
 }
 
 VA(0x00562500, 0x15a)  // dc 0x125998
-void type_sacrifice_window::updateExperience()
+void SacrificeWindow::updateExperience()
 {
     std::string text;
     text = convertWithCommas(
-        hero::getExperience(m_currentHero->m_level + 1)
+        Hero::getExperience(m_currentHero->m_level + 1)
         - m_currentHero->m_experience);
     m_experienceWidget->setText(text.c_str());
 
@@ -2147,7 +2147,7 @@ void type_sacrifice_window::updateExperience()
 VA(0x00562660, 0x1d5)  // dc 0x1258ac
 std::string convertWithCommas(long value);
 
-void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact)
+void updateArtifactWidget(IconWidget* slotWidget, ArtifactRecord artifact)
 {
     if (artifact.m_artifactId == ARTIFACT_NONE) {
         slotWidget->setVisible(0);
@@ -2161,11 +2161,11 @@ void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact)
 }
 
 VA(0x00562840, 0x166)  // dc 0x125b3c
-void type_sacrifice_window::updateSlot(long slot)
+void SacrificeWindow::updateSlot(long slot)
 {
-    TArtifactSlot artifactSlot;
+    ArtifactSlot artifactSlot;
     memcpy(&artifactSlot, &slot, sizeof artifactSlot);
-    type_artifact artifact = m_currentHero->getArtifact(artifactSlot);
+    ArtifactRecord artifact = m_currentHero->getArtifact(artifactSlot);
 
     if (m_holdingArtifact.m_artifactId != ARTIFACT_NONE
         && m_currentHero->heroFn004E2840(
@@ -2188,7 +2188,7 @@ void type_sacrifice_window::updateSlot(long slot)
 }
 
 VA(0x005629e0, 0x33)  // dc 0x125c34
-void type_sacrifice_window::updateAllSlots()
+void SacrificeWindow::updateAllSlots()
 {
     long slotCount = g_game->m_f1f698 >= 2 ? 19 : 18;
     for (long slot = 0; slot < slotCount; ++slot)
@@ -2196,7 +2196,7 @@ void type_sacrifice_window::updateAllSlots()
 }
 
 VA(0x00562a20, 0x24e)  // dc 0x125c60
-void type_sacrifice_window::setArtifactMode()
+void SacrificeWindow::setArtifactMode()
 {
     unsigned long i;
     for (i = 0; i < m_creatureWidgets.size(); ++i)
@@ -2235,18 +2235,18 @@ void type_sacrifice_window::setArtifactMode()
 }
 
 VA(0x00562c70, 0x124)  // dc 0x125aac
-void updateOffering(iconWidget* artifactWidget, textWidget* valueWidget,
-                     const type_artifact_offering* offering)
+void updateOffering(IconWidget* artifactWidget, TextWidget* valueWidget,
+                     const ArtifactOffering* offering)
 {
-    type_artifact artifact = *offering;
+    ArtifactRecord artifact = *offering;
     if (artifact.m_artifactId == -1) {
-        artifactWidget->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                      widget::WIDGET_DRAWN);
+        artifactWidget->sendMessage(Widget::WIDGET_CLEAR_STATUS,
+                                      Widget::WIDGET_DRAWN);
         artifactWidget->setHelpText(0, 0, 1);
     } else {
         artifactWidget->setIconFrame(artifact.m_artifactId);
-        artifactWidget->sendMessage(widget::WIDGET_SET_STATUS,
-                                      widget::WIDGET_DRAWN);
+        artifactWidget->sendMessage(Widget::WIDGET_SET_STATUS,
+                                      Widget::WIDGET_DRAWN);
         artifactWidget->setHelpText(
             g_artifactTraits[artifact.m_artifactId].m_name, 0, 1);
     }
@@ -2269,7 +2269,7 @@ void updateOffering(iconWidget* artifactWidget, textWidget* valueWidget,
 // E:\gamedcs\sacrifice_window.cpp:914
 // Inlined at both retail callers. The AI-value load at +0x40 and the signed
 // divide-by-forty reciprocal fix this integer value exactly.
-long sacrificeValue(TCreatureType creature)
+long sacrificeValue(CreatureType creature)
 {
     return g_creatureTypeTraits[creature].m_aiValue / 40 * 5;
 }
@@ -2301,10 +2301,10 @@ long sacrificeValue(TCreatureType creature)
 // at fn+0x20 and cascades.  The two block-scoped strings do not overlay on
 // either side, so the cycle is an allocation order, not a lifetime fact.
 VA(0x00562da0, 0x3a2)  // dc order/name/signature + retail field graph, dc 0x125e08
-void type_sacrifice_window::updateCreatureOffering(
-    type_creature_offering* creature)
+void SacrificeWindow::updateCreatureOffering(
+    CreatureOffering* creature)
 {
-    TCreatureType creatureType;
+    CreatureType creatureType;
     long available;
     if (creature->m_group < 0) {
         creatureType = CREATURE_NONE;
@@ -2361,7 +2361,7 @@ void type_sacrifice_window::updateCreatureOffering(
 }
 
 VA(0x00563150, 0x141)  // dc 0x126064
-void type_sacrifice_window::setCreatureMode()
+void SacrificeWindow::setCreatureMode()
 {
     unsigned long i;
     for (i = 0; i < m_artifactWidgets.size(); ++i)
@@ -2397,8 +2397,8 @@ void type_sacrifice_window::setCreatureMode()
 // Retail expands this helper at the click sites. The DC line map fixes the
 // source order and argument ABI; the Complete mouse-pointer and refresh call
 // graph independently proves the body.
-void type_sacrifice_window::pickUpArtifact(
-    type_artifact artifact, long slot, unsigned char newArtifact)
+void SacrificeWindow::pickUpArtifact(
+    ArtifactRecord artifact, long slot, unsigned char newArtifact)
 {
     m_holdingArtifact.set(&artifact, slot, m_currentHero);
     if (newArtifact) {
@@ -2408,7 +2408,7 @@ void type_sacrifice_window::pickUpArtifact(
     updateOffering(m_currentArtifactWidget, m_currentArtifactValue,
                     &m_holdingArtifact);
     g_mouseManager->setPointer(m_holdingArtifact.m_artifactId,
-                               mouseManager::ARTIFACT_SET);
+                               MouseManager::ARTIFACT_SET);
     updateAllSlots();
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
@@ -2417,7 +2417,7 @@ void type_sacrifice_window::pickUpArtifact(
 // The Dreamcast line table and xref graph prove this helper boundary at each
 // artifact-drop site. Complete folds the false change-experience arm into
 // sacrifice, but retains the helper's redraw as a distinct inline tail.
-void type_sacrifice_window::putDownArtifact(
+void SacrificeWindow::putDownArtifact(
     unsigned char changeExperience)
 {
     if (changeExperience) {
@@ -2427,16 +2427,16 @@ void type_sacrifice_window::putDownArtifact(
     m_holdingArtifact.m_artifactId = ARTIFACT_NONE;
     updateOffering(m_currentArtifactWidget, m_currentArtifactValue,
                     &m_holdingArtifact);
-    g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+    g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
     updateAllSlots();
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 VA(0x005632a0, 0x417)  // dc 0x1262e4
-void type_sacrifice_window::artifactClick(
+void SacrificeWindow::artifactClick(
     long slot, unsigned char rightClick)
 {
-    type_artifact oldArtifact = m_currentHero->getArtifact(TArtifactSlot(slot));
+    ArtifactRecord oldArtifact = m_currentHero->getArtifact(ArtifactSlot(slot));
 
     if (m_holdingArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId == ARTIFACT_NONE)
@@ -2448,8 +2448,8 @@ void type_sacrifice_window::artifactClick(
         }
 
         if (oldArtifact.m_artifactId == ARTIFACT_SPELLBOOK) {
-            TSpellbookWindow spellbook(
-                *m_currentHero, 0, TSpellbookWindow::eContextNeither,
+            SpellbookWindow spellbook(
+                *m_currentHero, 0, SpellbookWindow::eContextNeither,
                 m_currentHero->getSpecialTerrain());
             spellbook.doModal(0);
             return;
@@ -2487,7 +2487,7 @@ void type_sacrifice_window::artifactClick(
 // E:\gamedcs\sacrifice_window.cpp:1127
 // Complete expands this helper into both halves of backpack_click. Its widget
 // vector walk and shared scrolling-state byte are directly visible there.
-void type_sacrifice_window::updateBackpack()
+void SacrificeWindow::updateBackpack()
 {
     for (unsigned long i = 0; i < m_backpackWidgets.size(); ++i)
         updateArtifactWidget(m_backpackWidgets[i],
@@ -2504,10 +2504,10 @@ void type_sacrifice_window::updateBackpack()
 // it or displays the backpack error.
 // E:\gamedcs\sacrifice_window.cpp:1150
 VA(0x005636c0, 0x31a)  // widget call edge + dc name/order, dc 0x1264dc
-void type_sacrifice_window::backpackClick(
+void SacrificeWindow::backpackClick(
     long slot, unsigned char rightClick)
 {
-    type_artifact oldArtifact = m_currentHero->getBackpack(slot);
+    ArtifactRecord oldArtifact = m_currentHero->getBackpack(slot);
 
     if (m_holdingArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
@@ -2536,10 +2536,10 @@ void type_sacrifice_window::backpackClick(
 }
 
 VA(0x005639e0, 0x5b)  // dc 0x125a4c
-void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact);
+void updateArtifactWidget(IconWidget* slotWidget, ArtifactRecord artifact);
 
 VA(0x00563a40, 0x31)  // dc 0x1265b8
-void type_sacrifice_window::updateArtifactOffering(long slot)
+void SacrificeWindow::updateArtifactOffering(long slot)
 {
     updateOffering(m_artifactOfferingWidgets[slot],
                     m_artifactValueWidgets[slot],
@@ -2547,10 +2547,10 @@ void type_sacrifice_window::updateArtifactOffering(long slot)
 }
 
 VA(0x00563a80, 0x31b)  // dc 0x126640
-void type_sacrifice_window::offeringClick(
+void SacrificeWindow::offeringClick(
     long slot, unsigned char rightClick)
 {
-    type_artifact_offering oldArtifact = m_artifactOfferings[slot];
+    ArtifactOffering oldArtifact = m_artifactOfferings[slot];
 
     if (m_holdingArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
@@ -2574,9 +2574,9 @@ void type_sacrifice_window::offeringClick(
 }
 
 VA(0x00563da0, 0x152)
-int type_sacrifice_window::scrollBackpackLeft(message& msg)
+int SacrificeWindow::scrollBackpackLeft(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
         normalDialog(
             g_sacrificeWindowHelp[
                 SACRIFICE_HELP_SCROLL_BACKPACK_LEFT].m_rclick,
@@ -2584,10 +2584,10 @@ int type_sacrifice_window::scrollBackpackLeft(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.m_codeX == widget::WIDGET_DESELECT
+    if (msg.m_codeX == Widget::WIDGET_DESELECT
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.m_window);
+        SacrificeWindow* window =
+            static_cast<SacrificeWindow*>(msg.m_window);
         window->m_currentHero->rotateBackpackLeft();
         window->updateBackpack();
         window->drawWindow(
@@ -2598,9 +2598,9 @@ int type_sacrifice_window::scrollBackpackLeft(message& msg)
 }
 
 VA(0x00563f00, 0x152)
-int type_sacrifice_window::scrollBackpackRight(message& msg)
+int SacrificeWindow::scrollBackpackRight(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
         normalDialog(
             g_sacrificeWindowHelp[
                 SACRIFICE_HELP_SCROLL_BACKPACK_RIGHT].m_rclick,
@@ -2608,10 +2608,10 @@ int type_sacrifice_window::scrollBackpackRight(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.m_codeX == widget::WIDGET_DESELECT
+    if (msg.m_codeX == Widget::WIDGET_DESELECT
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.m_window);
+        SacrificeWindow* window =
+            static_cast<SacrificeWindow*>(msg.m_window);
         window->m_currentHero->rotateBackpackRight();
         window->updateBackpack();
         window->drawWindow(
@@ -2625,8 +2625,8 @@ int type_sacrifice_window::scrollBackpackRight(message& msg)
 // Complete expands this helper into both artifact-batch callbacks. It fills
 // the first empty offering, adds that record's scaled value, and refreshes
 // the corresponding pair of offering widgets.
-unsigned char type_sacrifice_window::addArtifact(
-    type_artifact artifact, long source)
+unsigned char SacrificeWindow::addArtifact(
+    ArtifactRecord artifact, long source)
 {
     unsigned long i;
     for (i = 0; i < m_artifactOfferings.size(); ++i) {
@@ -2645,9 +2645,9 @@ unsigned char type_sacrifice_window::addArtifact(
 // E:\gamedcs\sacrifice_window.cpp:1310
 // The helper is expanded at each callback. Retail scans the fixed 64-record
 // backpack for its next occupied slot and stops if the offering pane fills.
-void type_sacrifice_window::emptyBackpack()
+void SacrificeWindow::emptyBackpack()
 {
-    type_artifact artifact;
+    ArtifactRecord artifact;
     while (m_currentHero->getNumberInBackpack(1) > 0) {
         long i;
         for (i = 0; i < SACRIFICE_BACKPACK_ARTIFACT_COUNT; ++i) {
@@ -2663,19 +2663,19 @@ void type_sacrifice_window::emptyBackpack()
 }
 
 VA(0x00564060, 0x2d3)
-int type_sacrifice_window::emptyBackpack(message& msg)
+int SacrificeWindow::emptyBackpack(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
         normalDialog(
             g_sacrificeWindowHelp[SACRIFICE_HELP_EMPTY_BACKPACK].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.m_codeX == widget::WIDGET_DESELECT
+    if (msg.m_codeX == Widget::WIDGET_DESELECT
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.m_window);
+        SacrificeWindow* window =
+            static_cast<SacrificeWindow*>(msg.m_window);
         window->emptyBackpack();
         window->updateExperience();
         window->drawWindow(
@@ -2702,22 +2702,22 @@ int type_sacrifice_window::emptyBackpack(message& msg)
 // empty-backpack callback (and force-inlining update_backpack also regresses
 // backpack_click), so the source-authentic call graph is retained.
 VA(0x00564340, 0x35f)  // callback address-take + dc name/signature/order
-int type_sacrifice_window::allArtifacts(message& msg)
+int SacrificeWindow::allArtifacts(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
         normalDialog(
             g_sacrificeWindowHelp[SACRIFICE_HELP_ALL_ARTIFACTS].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.m_codeX == widget::WIDGET_DESELECT
+    if (msg.m_codeX == Widget::WIDGET_DESELECT
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.m_window);
-        type_artifact artifact;
+        SacrificeWindow* window =
+            static_cast<SacrificeWindow*>(msg.m_window);
+        ArtifactRecord artifact;
         for (long slot = 0; slot < SACRIFICE_EQUIPPED_SLOT_COUNT; ++slot) {
-            artifact = window->m_currentHero->getArtifact(TArtifactSlot(slot));
+            artifact = window->m_currentHero->getArtifact(ArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE) {
                 if (!window->addArtifact(artifact, slot))
                     break;
@@ -2735,9 +2735,9 @@ int type_sacrifice_window::allArtifacts(message& msg)
 }
 
 VA(0x005646a0, 0x269)
-int type_sacrifice_window::sacrifice(message& msg)
+int SacrificeWindow::sacrifice(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
         normalDialog(
             g_sacrificeWindowHelp[
                 SACRIFICE_HELP_SACRIFICE_ARTIFACTS].m_rclick,
@@ -2745,10 +2745,10 @@ int type_sacrifice_window::sacrifice(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.m_codeX == widget::WIDGET_DESELECT
+    if (msg.m_codeX == Widget::WIDGET_DESELECT
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.m_window);
+        SacrificeWindow* window =
+            static_cast<SacrificeWindow*>(msg.m_window);
         if (window->m_sacrificingArtifacts) {
             for (unsigned long i = 0;
                  i < window->m_artifactOfferings.size(); ++i) {
@@ -2758,10 +2758,10 @@ int type_sacrifice_window::sacrifice(message& msg)
             if (window->m_holdingArtifact.m_artifactId != ARTIFACT_NONE)
                 window->putDownArtifact(0);
         } else {
-            armyGroup* army = &window->m_currentHero->m_army;
+            ArmyGroup* army = &window->m_currentHero->m_army;
             long group;
             for (group = 0;
-                 group < armyGroup::ARMY_GROUP_SLOT_COUNT; ++group) {
+                 group < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++group) {
                 army->m_numTroops[group] -=
                     window->m_creatureOfferings[group].m_amount;
                 if (army->m_numTroops[group] <= 0)
@@ -2797,9 +2797,9 @@ int type_sacrifice_window::sacrifice(message& msg)
 }
 
 VA(0x00564910, 0x164)
-int type_sacrifice_window::sacrificeCreatures(message& msg)
+int SacrificeWindow::sacrificeCreatures(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
         normalDialog(
             g_sacrificeWindowHelp[
                 SACRIFICE_HELP_SACRIFICE_CREATURES_BUTTON].m_rclick,
@@ -2807,10 +2807,10 @@ int type_sacrifice_window::sacrificeCreatures(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.m_codeX == widget::WIDGET_DESELECT
+    if (msg.m_codeX == Widget::WIDGET_DESELECT
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.m_window);
+        SacrificeWindow* window =
+            static_cast<SacrificeWindow*>(msg.m_window);
         window->clear();
         window->setCreatureMode();
         window->drawWindow(
@@ -2824,8 +2824,8 @@ int type_sacrifice_window::sacrificeCreatures(message& msg)
 // Complete expands it into clear. The same order is independently repeated
 // by ExitDialog: original equipped slot, any legal equipped slot, backpack,
 // then a final arbitrary equipped-slot fallback.
-void type_sacrifice_window::returnArtifact(
-    const type_artifact_offering& artifact)
+void SacrificeWindow::returnArtifact(
+    const ArtifactOffering& artifact)
 {
     if (artifact.m_source < 19) {
         if (m_currentHero->equipArtifact(&artifact, artifact.m_source))
@@ -2841,7 +2841,7 @@ void type_sacrifice_window::returnArtifact(
 // The Dreamcast line map places clear at source line 1521. Complete expands
 // it into sacrifice_artifacts; retail's vector walk, held-record cleanup and
 // terminal total reset expose the entire body.
-void type_sacrifice_window::clear()
+void SacrificeWindow::clear()
 {
     for (unsigned long i = 0; i < m_artifactOfferings.size(); ++i) {
         if (m_artifactOfferings[i].m_artifactId != ARTIFACT_NONE) {
@@ -2858,36 +2858,36 @@ void type_sacrifice_window::clear()
 }
 
 VA(0x00564a80, 0x171)
-int type_sacrifice_window::exitClick(message& msg)
+int SacrificeWindow::exitClick(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
         normalDialog(
             g_sacrificeWindowHelp[SACRIFICE_HELP_EXIT_BUTTON].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.m_codeX == widget::WIDGET_DESELECT
+    if (msg.m_codeX == Widget::WIDGET_DESELECT
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.m_window);
+        SacrificeWindow* window =
+            static_cast<SacrificeWindow*>(msg.m_window);
         window->clear();
         msg.m_id = MESSAGE_WIDGET;
         g_windowManager->m_dialogReturn = 0;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = Widget::WIDGET_END_DIALOG;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
 }
 
 VA(0x00564c00, 0xe6)
-void type_sacrifice_window::setCreatureSacrifice(long slot, long newAmount)
+void SacrificeWindow::setCreatureSacrifice(long slot, long newAmount)
 {
     if (m_creatureOfferings[slot].m_amount == newAmount)
         return;
 
-    TCreatureType creatureType = m_currentHero->m_army.m_armyTypes[slot];
+    CreatureType creatureType = m_currentHero->m_army.m_armyTypes[slot];
     long value = sacrificeValue(creatureType);
     long oldExperience = static_cast<long>(
         (value * m_creatureOfferings[slot].m_amount)
@@ -2907,39 +2907,39 @@ void type_sacrifice_window::setCreatureSacrifice(long slot, long newAmount)
 // E:\gamedcs\sacrifice_window.cpp:1599
 // Retail expands this helper at both callers. The scan preserves one troop
 // only when every other army slot has already been offered to its limit.
-long type_sacrifice_window::getMaxAmount(long slot) const
+long SacrificeWindow::getMaxAmount(long slot) const
 {
     long amount = m_currentHero->m_army.m_numTroops[slot];
     if (amount <= 0)
         return 0;
 
     long other;
-    for (other = 0; other < armyGroup::ARMY_GROUP_SLOT_COUNT; ++other) {
+    for (other = 0; other < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++other) {
         if (other != slot
             && m_creatureOfferings[other].m_amount
                 < m_currentHero->m_army.m_numTroops[other])
             break;
     }
-    if (other == armyGroup::ARMY_GROUP_SLOT_COUNT)
+    if (other == ArmyGroup::ARMY_GROUP_SLOT_COUNT)
         --amount;
     return amount;
 }
 
 VA(0x00564cf0, 0xe9)
-int type_sacrifice_window::allCreatures(message& msg)
+int SacrificeWindow::allCreatures(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
         normalDialog(
             g_sacrificeWindowHelp[SACRIFICE_HELP_ALL_CREATURES].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.m_codeX == widget::WIDGET_DESELECT
+    if (msg.m_codeX == Widget::WIDGET_DESELECT
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.m_window);
-        long slot = armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
+        SacrificeWindow* window =
+            static_cast<SacrificeWindow*>(msg.m_window);
+        long slot = ArmyGroup::ARMY_GROUP_SLOT_COUNT - 1;
         do {
             window->setCreatureSacrifice(
                 slot, window->getMaxAmount(slot));
@@ -2955,19 +2955,19 @@ int type_sacrifice_window::allCreatures(message& msg)
 }
 
 VA(0x00564de0, 0x88)
-int type_sacrifice_window::maxCreatures(message& msg)
+int SacrificeWindow::maxCreatures(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
         normalDialog(
             g_sacrificeWindowHelp[SACRIFICE_HELP_MAX_CREATURES].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.m_codeX == widget::WIDGET_DESELECT
+    if (msg.m_codeX == Widget::WIDGET_DESELECT
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.m_window);
+        SacrificeWindow* window =
+            static_cast<SacrificeWindow*>(msg.m_window);
         int maximum = window->m_creatureSlider->getMaximum() - 1;
         window->m_creatureSlider->setState(maximum);
         creatureSliderChange(maximum, window);
@@ -2977,9 +2977,9 @@ int type_sacrifice_window::maxCreatures(message& msg)
 }
 
 VA(0x00564e70, 0x164)
-int type_sacrifice_window::sacrificeArtifacts(message& msg)
+int SacrificeWindow::sacrificeArtifacts(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
         normalDialog(
             g_sacrificeWindowHelp[
                 SACRIFICE_HELP_SACRIFICE_ARTIFACTS_BUTTON].m_rclick,
@@ -2987,10 +2987,10 @@ int type_sacrifice_window::sacrificeArtifacts(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.m_codeX == widget::WIDGET_DESELECT
+    if (msg.m_codeX == Widget::WIDGET_DESELECT
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.m_window);
+        SacrificeWindow* window =
+            static_cast<SacrificeWindow*>(msg.m_window);
         window->clear();
         window->setArtifactMode();
         window->drawWindow(
@@ -3001,7 +3001,7 @@ int type_sacrifice_window::sacrificeArtifacts(message& msg)
 }
 
 VA(0x00564fe0, 0x394)  // dc 0x1270f0
-void type_sacrifice_window::creatureClick(
+void SacrificeWindow::creatureClick(
     long slot, unsigned char rightClick, unsigned char leftPane)
 {
     if (rightClick || slot == m_currentCreature.m_group || slot < 0) {
@@ -3017,12 +3017,12 @@ void type_sacrifice_window::creatureClick(
             return;
         }
 
-        TCreatureType creatureType = m_currentHero->m_army.m_armyTypes[slot];
+        CreatureType creatureType = m_currentHero->m_army.m_armyTypes[slot];
         long amount = m_creatureOfferings[slot].m_amount;
         if (leftPane)
             amount = m_currentHero->m_army.m_numTroops[slot] - amount;
         if (creatureType != CREATURE_NONE && amount > 0) {
-            TViewArmyWindow viewArmyWindow(
+            ViewArmyWindow viewArmyWindow(
                 creatureType, 0x77, 0x20,
                 static_cast<unsigned char>(!rightClick));
             viewArmyWindow.centerWindow(-1, -1);
@@ -3066,11 +3066,11 @@ void type_sacrifice_window::creatureClick(
 }
 
 VA(0x00565380, 0x2e)
-void type_sacrifice_window::creatureSliderChange(
-    int state, heroWindow* parentWindow)
+void SacrificeWindow::creatureSliderChange(
+    int state, HeroWindow* parentWindow)
 {
-    type_sacrifice_window* window =
-        static_cast<type_sacrifice_window*>(parentWindow);
+    SacrificeWindow* window =
+        static_cast<SacrificeWindow*>(parentWindow);
     window->setCreatureSacrifice(window->m_currentCreature.m_group, state);
     window->updateExperience();
     window->drawWindow(
@@ -3078,17 +3078,17 @@ void type_sacrifice_window::creatureSliderChange(
 }
 
 VA(0x005653b0, 0x37)  // dc 0x127404
-int type_sacrifice_window::doModal(unsigned char fadeIn)
+int SacrificeWindow::doModal(unsigned char fadeIn)
 {
     if (m_canSacrificeArtifacts)
         setArtifactMode();
     else
         setCreatureMode();
-    return heroWindow::doModal(fadeIn);
+    return HeroWindow::doModal(fadeIn);
 }
 
 VA(0x005653f0, 0x3b)  // dc 0x12743c
-void type_sacrifice_window::handleWidgetHover(widget* currentWidget)
+void SacrificeWindow::handleWidgetHover(Widget* currentWidget)
 {
     if (!currentWidget->getHelpText())
         m_rolloverText->setText(g_emptyRolloverText);
@@ -3105,13 +3105,13 @@ void type_sacrifice_window::handleWidgetHover(widget* currentWidget)
 // DC line 1866 calls return_artifact. The existing ordinary returnArtifact
 // expands naturally here and preserves 100% while removing three failure joins.
 VA(0x00565430, 0x80)  // anchor-vtable slot 14, dc 0x1274bc
-int type_sacrifice_window::exitDialog(message& msg)
+int SacrificeWindow::exitDialog(Message& msg)
 {
-    type_artifact_offering* artifact = &m_holdingArtifact;
+    ArtifactOffering* artifact = &m_holdingArtifact;
     msg.m_id = MESSAGE_WIDGET;
     g_windowManager->m_dialogReturn = 0;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
+    msg.m_codeY = Widget::WIDGET_END_DIALOG;
+    msg.m_codeX = Widget::WIDGET_END_DIALOG;
 
     if (artifact->m_artifactId != -1) {
         returnArtifact(*artifact);
@@ -3120,15 +3120,15 @@ int type_sacrifice_window::exitDialog(message& msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
-VA_COMPGEN(0x005654b0, 0x5, IMPLICIT_DTOR, type_transformer_slot)  // dc 0x128764
+VA_COMPGEN(0x005654b0, 0x5, IMPLICIT_DTOR, TransformerSlot)  // dc 0x128764
 
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x005654c0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x127598
-bool type_transformer_slot::handleClick(
+bool TransformerSlot::handleClick(
     bool downClick, bool rightClick)
 {
     if (downClick) {
-        static_cast<type_skeleton_window*>(m_parentWindow)->creatureClick(
+        static_cast<SkeletonWindow*>(m_parentWindow)->creatureClick(
             m_group, m_slot, rightClick);
         return 1;
     }
@@ -3138,10 +3138,10 @@ bool type_transformer_slot::handleClick(
 // E:\gamedcs\sacrifice_window.cpp:1891
 // Complete expands both calls in the transformer icon grid and retains no
 // separately claimable constructor body.
-type_transformer_slot::type_transformer_slot(
+TransformerSlot::TransformerSlot(
     long newX, long newY, long newW, long newH, long newGroup,
     long newSlot, long newId, const char* image)
-    : iconWidget(newX, newY, newW, newH, newId, image,
+    : IconWidget(newX, newY, newW, newH, newId, image,
                  0, 0, 0, 0, 16)
 {
     m_slot = newSlot;
@@ -3154,10 +3154,10 @@ type_transformer_slot::type_transformer_slot(
 // 0x641694, and its callee 0x565f60 stores that same vtable. The vtable
 // itself is referenced exactly twice - here and in the 0xa3c constructor at
 // 0x5654f0 - so neither row is an /OPT:ICF fold.
-VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
+VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, SkeletonWindow)
 
 VA(0x005654f0, 0xA3C)  // dc 0x1275c0
-type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
+SkeletonWindow::SkeletonWindow(ArmyGroup* newArmy)
     : CAdvPopup(100, 67, 600, 485, 18)
 {
     long widgetId = 100;
@@ -3167,33 +3167,33 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     m_selectedGroup = -1;
     m_selectedIndex = -1;
 
-    bitmapBorder* background = new bitmapBorder(
+    BitmapBorder* background = new BitmapBorder(
         0, 0, 600, 485, widgetId++, "SkTrnBk.pcx", 0x800);
     background->setPlayerPaletteColors(
         g_game->getLocalPlayerGamePos());
     m_widgets.push_back(background);
 
-    std::vector<widget*>& widgets = m_widgets;
-    widgets.insert(widgets.end(), new textWidget(
+    std::vector<Widget*>& widgets = m_widgets;
+    widgets.insert(widgets.end(), new TextWidget(
         25, 21, 257, 18,
         g_generalText->getText(
             SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_TITLE),
-        "smalfont.fnt", font::HEADING, -1, 1, 0, 8));
-    m_widgets.push_back(new textWidget(
+        "smalfont.fnt", Font::HEADING, -1, 1, 0, 8));
+    m_widgets.push_back(new TextWidget(
         320, 21, 257, 18,
         g_generalText->getText(
             SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_TITLE),
-        "smalfont.fnt", font::HEADING, -1, 1, 0, 8));
-    m_widgets.push_back(new textWidget(
+        "smalfont.fnt", Font::HEADING, -1, 1, 0, 8));
+    m_widgets.push_back(new TextWidget(
         25, 55, 257, 42,
         g_generalText->getText(
             SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_DESCRIPTION),
-        "medfont.fnt", font::HEADING, -1, 1, 0, 8));
-    m_widgets.push_back(new textWidget(
+        "medfont.fnt", Font::HEADING, -1, 1, 0, 8));
+    m_widgets.push_back(new TextWidget(
         320, 55, 257, 42,
         g_generalText->getText(
             SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_DESCRIPTION),
-        "medfont.fnt", font::HEADING, -1, 1, 0, 8));
+        "medfont.fnt", Font::HEADING, -1, 1, 0, 8));
 
     createCreatureIcons(
         45, 109, 3, 2, 0, 0, widgetId,
@@ -3208,7 +3208,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
         417, 305, 1, 1, 1, 6, widgetId,
         &m_armyWidget[1][6], &m_selectBorder[1][6], &m_armyLabel[1][6]);
 
-    m_allCreaturesButton = new type_func_button(
+    m_allCreaturesButton = new FuncButton(
         146, 416, 64, 32, widgetId++, "AltArmy.def",
         allCreatures, 0, 1);
     m_allCreaturesButton->setHelpText(
@@ -3216,7 +3216,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
         0, 1);
     m_widgets.push_back(m_allCreaturesButton);
 
-    m_sacrificeButton = new type_func_button(
+    m_sacrificeButton = new FuncButton(
         269, 416, 64, 32, widgetId++, "AltSacr.def",
         sacrifice, 0, 1);
     m_sacrificeButton->setHelpText(
@@ -3225,25 +3225,25 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     m_sacrificeButton->enable(0);
     m_widgets.push_back(m_sacrificeButton);
 
-    type_func_button* exitButton = new type_func_button(
+    FuncButton* exitButton = new FuncButton(
         392, 416, 64, 32, widgetId++, "iCancel.def",
         exitClick, 0, 1);
     exitButton->setHelpText(
         g_transformerWindowHelp[TRANSFORMER_HELP_EXIT].m_text, 0, 1);
     m_widgets.push_back(exitButton);
 
-    m_rolloverText = new textWidget(
+    m_rolloverText = new TextWidget(
         8, 459, 585, 19, g_emptyRolloverText, "smalfont.fnt",
-        font::PRIMARY, widgetId++, 1, 0, 8);
+        Font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_rolloverText);
 
-    for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i)
+    for (long i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i)
         update(0, i);
     addWidgetsToMessageStream();
 }
 
 VA(0x00565f60, 0xC2)  // dc 0x127a08
-type_skeleton_window::~type_skeleton_window()
+SkeletonWindow::~SkeletonWindow()
 {
     for (unsigned int i = 0; i < m_deathSamples.size(); i++) {
         g_soundManager->stopSample(m_deathSamples[i]->m_memSample.m_memSampleHandle);
@@ -3256,24 +3256,24 @@ type_skeleton_window::~type_skeleton_window()
 // All Complete callers inline this source helper. The DC call edges and the
 // repeated retail expansion prove the transformed-army scan and the two
 // terminal button states.
-inline void type_skeleton_window::updateButtons()
+inline void SkeletonWindow::updateButtons()
 {
     long i;
-    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+    for (i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         long type = m_armies[1]->m_armyTypes[i];
         if (type == CREATURE_NONE)
             continue;
         if (type != g_deathCreature[type])
             break;
     }
-    m_sacrificeButton->enable(i < armyGroup::ARMY_GROUP_SLOT_COUNT);
+    m_sacrificeButton->enable(i < ArmyGroup::ARMY_GROUP_SLOT_COUNT);
     m_allCreaturesButton->enable(m_armies[0]->hasCreatures());
 }
 
 VA(0x00566030, 0x45D)  // dc 0x127b68
-void type_skeleton_window::update(long group, long index)
+void SkeletonWindow::update(long group, long index)
 {
-    TCreatureType type = m_armies[group]->m_armyTypes[index];
+    CreatureType type = m_armies[group]->m_armyTypes[index];
     if (type == CREATURE_NONE) {
         m_armyWidget[group][index]->setVisible(0);
         m_armyLabel[group][index]->setVisible(0);
@@ -3328,15 +3328,15 @@ void type_skeleton_window::update(long group, long index)
 }
 
 VA(0x00566490, 0x258)
-void type_skeleton_window::creatureClick(
+void SkeletonWindow::creatureClick(
     long side, long slot, unsigned char rightClick)
 {
-    TCreatureType creatureType = m_armies[side]->m_armyTypes[slot];
+    CreatureType creatureType = m_armies[side]->m_armyTypes[slot];
 
     if (rightClick
         || (slot == m_selectedIndex && side == m_selectedGroup)) {
         if (creatureType != CREATURE_NONE) {
-            TViewArmyWindow viewArmyWindow(
+            ViewArmyWindow viewArmyWindow(
                 creatureType, 0x77, 0x20,
                 static_cast<unsigned char>(!rightClick));
             viewArmyWindow.centerWindow(-1, -1);
@@ -3349,7 +3349,7 @@ void type_skeleton_window::creatureClick(
         m_selectedIndex = slot;
         m_selectedGroup = side;
         m_selectBorder[side][slot]->sendMessage(
-            widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+            Widget::WIDGET_SET_STATUS, Widget::WIDGET_DRAWN);
         m_selectBorder[side][slot]->draw();
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     } else {
@@ -3369,11 +3369,11 @@ void type_skeleton_window::creatureClick(
             m_armies[m_selectedGroup]->m_numTroops[m_selectedIndex] = troops;
         }
         m_selectBorder[m_selectedGroup][m_selectedIndex]->sendMessage(
-            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+            Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_DRAWN);
         update(side, slot);
         update(m_selectedGroup, m_selectedIndex);
 
-        widget::clearHoverWidget();
+        Widget::clearHoverWidget();
         m_selectedGroup = -1;
         m_selectedIndex = -1;
 
@@ -3386,7 +3386,7 @@ void type_skeleton_window::creatureClick(
 // Slot 9, sitting two rows past creature_click 0x566490 - the call target the
 // transformer slot above pins - in the Dreamcast roster's order.
 VA(0x005666f0, 0x2e)  // anchor-callee (CAdvPopup slot 9) + linkorder, dc 0x128048
-int type_skeleton_window::windowHandler(message& msg)
+int SkeletonWindow::windowHandler(Message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -3397,7 +3397,7 @@ int type_skeleton_window::windowHandler(message& msg)
 }
 
 VA(0x00566720, 0x38)  // dc 0x128098
-void type_skeleton_window::handleWidgetHover(widget* currentWidget)
+void SkeletonWindow::handleWidgetHover(Widget* currentWidget)
 {
     if (!currentWidget->getHelpText())
         m_rolloverText->setText(g_emptyRolloverText);
@@ -3407,11 +3407,11 @@ void type_skeleton_window::handleWidgetHover(widget* currentWidget)
 }
 
 VA(0x00566760, 0x28f)  // dc 0x1280e0
-void type_skeleton_window::createCreatureIcons(
+void SkeletonWindow::createCreatureIcons(
     long iconX, long iconY, long columns, long rows,
     long groupNumber, long itemNumber, long& widgetId,
-    iconWidget** iconWidgets, iconWidget** selectionWidgets,
-    textWidget** textWidgets)
+    IconWidget** iconWidgets, IconWidget** selectionWidgets,
+    TextWidget** textWidgets)
 {
     long row;
     long count = 0;
@@ -3421,23 +3421,23 @@ void type_skeleton_window::createCreatureIcons(
 
     for (row = 0; row < rows; ++row) {
         for (column = 0; column < columns; ++column) {
-            textWidgets[count] = new textWidget(
+            textWidgets[count] = new TextWidget(
                 textX, textY, 66, 16, g_emptyRolloverText,
-                "smalfont.fnt", font::PRIMARY, widgetId++, 1, 0, 8);
+                "smalfont.fnt", Font::PRIMARY, widgetId++, 1, 0, 8);
             m_widgets.push_back(textWidgets[count]);
 
-            iconWidgets[count] = new type_transformer_slot(
+            iconWidgets[count] = new TransformerSlot(
                 iconX, iconY, 58, 64, groupNumber, itemNumber + count,
                 widgetId++, "twcrport.def");
             m_widgets.push_back(iconWidgets[count]);
 
-            selectionWidgets[count] = new type_transformer_slot(
+            selectionWidgets[count] = new TransformerSlot(
                 iconX, iconY, 58, 64, groupNumber, itemNumber + count,
                 widgetId++, "TwCrPort.def");
             m_widgets.push_back(selectionWidgets[count]);
             selectionWidgets[count]->setIconFrame(1);
             selectionWidgets[count]->sendMessage(
-                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+                Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_DRAWN);
 
             ++count;
             textX += 83;
@@ -3454,9 +3454,9 @@ void type_skeleton_window::createCreatureIcons(
 // DC names this helper and records both transformer callbacks as callers.
 // Complete expands both calls: occupied source slots move into the same
 // destination slot when free, otherwise armyGroup::Add chooses a slot.
-inline void moveAllArmies(armyGroup* source, armyGroup* dest)
+inline void moveAllArmies(ArmyGroup* source, ArmyGroup* dest)
 {
-    for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+    for (long i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         if (source->m_armyTypes[i] == CREATURE_NONE)
             continue;
         long destIndex = i;
@@ -3468,9 +3468,9 @@ inline void moveAllArmies(armyGroup* source, armyGroup* dest)
 }
 
 VA(0x005669f0, 0x137)  // dc 0x128310
-int type_skeleton_window::allCreatures(message& msg)
+int SkeletonWindow::allCreatures(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT
         && (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         normalDialog(
             g_transformerWindowHelp[TRANSFORMER_HELP_ALL_CREATURES].m_rclick,
@@ -3478,12 +3478,12 @@ int type_skeleton_window::allCreatures(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.m_codeX == widget::WIDGET_DESELECT
+    if (msg.m_codeX == Widget::WIDGET_DESELECT
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        type_skeleton_window* window =
-            static_cast<type_skeleton_window*>(msg.m_window);
+        SkeletonWindow* window =
+            static_cast<SkeletonWindow*>(msg.m_window);
         moveAllArmies(window->m_armies[0], window->m_armies[1]);
-        for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        for (long i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
             window->update(0, i);
             window->update(1, i);
         }
@@ -3496,9 +3496,9 @@ int type_skeleton_window::allCreatures(message& msg)
 }
 
 VA(0x00566b30, 0xE4)  // dc 0x1283ac
-int type_skeleton_window::exitClick(message& msg)
+int SkeletonWindow::exitClick(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT
         && (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         normalDialog(
             g_transformerWindowHelp[TRANSFORMER_HELP_EXIT].m_rclick,
@@ -3506,24 +3506,24 @@ int type_skeleton_window::exitClick(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.m_codeX == widget::WIDGET_DESELECT
+    if (msg.m_codeX == Widget::WIDGET_DESELECT
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        type_skeleton_window* window =
-            static_cast<type_skeleton_window*>(msg.m_window);
+        SkeletonWindow* window =
+            static_cast<SkeletonWindow*>(msg.m_window);
         moveAllArmies(window->m_armies[1], window->m_armies[0]);
         msg.m_id = MESSAGE_WIDGET;
         g_windowManager->m_dialogReturn = 0;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = Widget::WIDGET_END_DIALOG;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
 }
 
 VA(0x00566c20, 0x15F)  // dc 0x128468
-int type_skeleton_window::sacrifice(message& msg)
+int SkeletonWindow::sacrifice(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT
         && (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         normalDialog(
             g_transformerWindowHelp[TRANSFORMER_HELP_SACRIFICE].m_rclick,
@@ -3531,12 +3531,12 @@ int type_skeleton_window::sacrifice(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.m_codeX == widget::WIDGET_DESELECT
+    if (msg.m_codeX == Widget::WIDGET_DESELECT
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        type_skeleton_window* window =
-            static_cast<type_skeleton_window*>(msg.m_window);
-        for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-            TCreatureType type = window->m_armies[1]->m_armyTypes[i];
+        SkeletonWindow* window =
+            static_cast<SkeletonWindow*>(msg.m_window);
+        for (long i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+            CreatureType type = window->m_armies[1]->m_armyTypes[i];
             if (type == CREATURE_NONE || type == g_deathCreature[type])
                 continue;
 
@@ -3544,7 +3544,7 @@ int type_skeleton_window::sacrifice(message& msg)
                     DATA_COMPGEN(0x006609e0, transformerKillSampleFormat,
                                  "%skill.82M"),
                     g_creatureTypeTraits[type].m_samplePrefix);
-            sample* newSample = ResourceManager::getSample(g_text);
+            Sample* newSample = ResourceManager::getSample(g_text);
             window->m_deathSamples.push_back(newSample);
             g_soundManager->memorySample(newSample);
             window->m_armies[1]->m_armyTypes[i] = g_deathCreature[type];

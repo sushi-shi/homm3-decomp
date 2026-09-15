@@ -9,13 +9,14 @@
 
 #include "struct.h"
 
-class army;
-class hero;
+class Army;
+class Hero;
 class NewmapCell;
 
 // Dreamcast CodeView supplies the complete domain and names; SeedTo's retail
 // call proves const_normal_search == 0 on x86.
-enum type_search_type {
+// Before normalization (type): type_search_type.
+enum SearchType {
     const_normal_search = 0,
     const_AI_treasure_search,
     const_AI_allied_search,
@@ -37,9 +38,10 @@ enum type_search_type {
 // Path reconstruction uses lastCanStop to select the flying or ground predecessor.
 // The trigger flag lets AI movement process an event at the starting tile.
 #pragma pack(push, 1)
-struct pathCell {
+// Before normalization (type): pathCell.
+struct PathCell {
 public:
-    type_point m_point;
+    MapPoint m_point;
     unsigned int m_visited : 1;
     unsigned int m_isTrigger : 1;
     unsigned int m_inBoat : 1;
@@ -57,8 +59,8 @@ public:
     int m_deltaX : 5;
     int m_deltaY : 5;
     unsigned int m_flightCost : 6;
-    type_point m_lastPoint;
-    type_point m_monster;
+    MapPoint m_lastPoint;
+    MapPoint m_monster;
     long m_barrierValue;
     long m_dangerValue;
     unsigned short m_cost;
@@ -70,7 +72,7 @@ public:
     // searchArray::Init's array preamble does not prove a user-written body.
 };
 #pragma pack(pop)
-SIZE(pathCell, 30);
+SIZE(PathCell, 30);
 
 // Retail .data 0x6783c8 / 0x6783cc - the world's x- and y-extents. Every
 // cell index in the engine is ((z * MAP_HEIGHT + y) * MAP_WIDTH + x);
@@ -87,7 +89,8 @@ extern int g_mapHeight;
 // cellData and bIsMoatSlowed (a heap map, not a flag) before the
 // implicit vector teardowns. valid_rectangle (0x28..0x37) stays
 // uninitialized by the ctor - Init fills it.
-class searchArray {
+// Before normalization (type): searchArray.
+class SearchArray {
 private:
     int m_maxQueueCount;
     unsigned char m_payTransitionCosts;
@@ -101,15 +104,15 @@ private:
     int m_waterWalkLevel;
     int m_flightLevel;
     unsigned char m_limitReached;
-    pathCell* m_cellData;
+    PathCell* m_cellData;
 
 public:
     // Dreamcast fieldlist: valid_rectangle at +0x28. Init fills the bounds;
     // the constructor leaves them uninitialized. Preserve the aggregate so
     // setRectangle keeps its original one-statement assignment.
     tagRECT m_validRectangle;
-    searchArray();
-    ~searchArray();
+    SearchArray();
+    ~SearchArray();
     void close();
     // Retail 0x4b3b90 checks receiver+0x24 for null, then indexes the
     // 30-byte pathCell array and returns ret 4. FindCombatPath calls at
@@ -117,28 +120,28 @@ public:
     // expansions of DC mark_enemy's get_hex call.
     // E:\gamedcs\FindPath.h:194, dc 0x27fe8
     VA(0x004b3b90, 0x20)  // caller/get_hex correlation, dc 0x27fe8
-    pathCell* getHex(long x) const
+    PathCell* getHex(long x) const
     {
         if (m_cellData == 0)
             return 0;
         return &m_cellData[x];
     }
     VA(0x0042ecc0, 0x62)  // hd-crossbuild + exact body/callers x2, dc 0x20064
-    pathCell* getCell(type_point point, bool flying) const
+    PathCell* getCell(MapPoint point, bool flying) const
     {
         if (!m_cellData)
             return m_cellData;
         return &m_cellData[((point.m_z * 2 + flying) * g_mapHeight + point.m_y)
                          * g_mapWidth + point.m_x];
     }
-    long getDangerValue(type_point point) const;  // 0x42ed30 (ai_player.obj)
-    void seedPosition(hero* currentHero, type_point start,
-                      type_point target, int maxMobility,
+    long getDangerValue(MapPoint point) const;  // 0x42ed30 (ai_player.obj)
+    void seedPosition(Hero* currentHero, MapPoint start,
+                      MapPoint target, int maxMobility,
                       unsigned char isBoat,
-                      type_search_type searchType,
+                      SearchType searchType,
                       int curTempMobility,
                       unsigned char seedContinuation);
-    int buildPath(const hero* currentHero, long limit);
+    int buildPath(const Hero* currentHero, long limit);
 
     void clearPath()
     {
@@ -157,7 +160,7 @@ public:
     {
         return m_result[i]->m_direction;
     }
-    const pathCell* getStepCell(long i) const
+    const PathCell* getStepCell(long i) const
     {
         return m_result[i];
     }
@@ -166,8 +169,8 @@ public:
     // the boundaries visible in C++ even where the selected lowering is a
     // vector::size call or direct field/index arithmetic.
     long getVisitedCount() const { return m_visitedPoints.size(); }
-    pathCell* getVisitedCell(long index) { return m_visitedPoints[index]; }
-    long getTravelTime(const army* currentArmy, long hex) const;
+    PathCell* getVisitedCell(long index) { return m_visitedPoints[index]; }
+    long getTravelTime(const Army* currentArmy, long hex) const;
     // findpath.h:242 in the DC roster (ai.obj carries the only 10-byte
     // out-of-line copy). The PARAMETER IS A SHORT, and that is what the
     // retail bodies prove: move_toward (0x41f580) and FindCombatPath
@@ -184,13 +187,13 @@ public:
     bool limitWasReached() const { return m_limitReached != 0; }
     // 0x4b3f10. Clears the two drawbridge hexes in the moat map.
     void lowerDoor();
-    unsigned char findCombatPath(const army* currentArmy, long currentGroup,
+    unsigned char findCombatPath(const Army* currentArmy, long currentGroup,
                                  long destination, unsigned char inPlacementPhase,
                                  long limit, long baseSpeed);  // 0x4b3400
     // 0x4b2ff0. Rebuilds the teleport-reachable combat cells, then keeps
     // enemy occupied cells marked when they border that reachable set.
-    void markTeleport(const army* currentArmy, long currentGroup);
-    void seedCombatPosition(const army* thisArmy, long currentGroup,
+    void markTeleport(const Army* currentArmy, long currentGroup);
+    void seedCombatPosition(const Army* thisArmy, long currentGroup,
                             long limit, unsigned char inPlacementPhase,
                             long baseSpeed);
     // Dreamcast FindPath.h:252. MoveHero brackets its move_hero call with
@@ -206,33 +209,33 @@ public:
     }
 
 private:
-    bool buildCombatPath(const army* currentArmy, int startHex,
+    bool buildCombatPath(const Army* currentArmy, int startHex,
                          int endHex, int destination);
     // DC findpath.cpp:1187. ValidHex belongs to the ordinary helper;
     // retail eliminates it at the first, already-checked caller site.
     bool checkEnemyArmies(long hex, long cost, long currentGroup,
                           long destination);
-    void checkTownPortal(const hero* currentHero,
-                           const pathCell* startCell, long maxMobility);
+    void checkTownPortal(const Hero* currentHero,
+                           const PathCell* startCell, long maxMobility);
     // 0x4b1530. Empties the three vectors, then zeroes the cellData rows
     // inside the valid rectangle for every (z, fly-plane) combination.
     void clear(long flyLevel, long startZ, long stopZ);
-    void enterGate(const pathCell* cell, const NewmapCell* mapCell,
+    void enterGate(const PathCell* cell, const NewmapCell* mapCell,
                     long limit);
-    unsigned char enterHostileTrigger(const hero* currentHero,
-                                     pathCell& cell);
+    unsigned char enterHostileTrigger(const Hero* currentHero,
+                                     PathCell& cell);
     // search.obj 0x56a400 / 0x56a730, the lith-family and underground
     // gate seeders; both parameter lists are the DC roster's
     // (search.cpp:155 and :244).
-    void enterLith(const hero* currentHero,
-                    const std::vector<type_point>* list, long cellType,
-                    long excluded, pathCell* entryPoint, long limit,
-                    type_search_type searchType);
-    void enterTown(const hero* currentHero, long startTown,
-                    const pathCell* currentPathCell, long limit,
-                    type_search_type searchType);
-    unsigned char enterTrigger(const hero* currentHero, pathCell* cell,
-                                long limit, type_search_type searchType);
+    void enterLith(const Hero* currentHero,
+                    const std::vector<MapPoint>* list, long cellType,
+                    long excluded, PathCell* entryPoint, long limit,
+                    SearchType searchType);
+    void enterTown(const Hero* currentHero, long startTown,
+                    const PathCell* currentPathCell, long limit,
+                    SearchType searchType);
+    unsigned char enterTrigger(const Hero* currentHero, PathCell* cell,
+                                long limit, SearchType searchType);
     // 0x4b1460 / 0x4b1500. Init frees whatever Close would have freed
     // and then re-allocates both maps; SeedCombatPosition calls it
     // whenever cellData is still null.
@@ -241,23 +244,23 @@ private:
     void pushCombatPoint(int index, int direction, int cost,
                          int flightCost, int limit);  // 0x4b3bb0
     // DC findpath.cpp:271 proves both pathCell reference parameters.
-    void pushPoint(const pathCell& oldCell, pathCell& point, int direction,
+    void pushPoint(const PathCell& oldCell, PathCell& point, int direction,
                    int moveCost, int limit, long barrierValue,
-                   type_point monster, int isTrigger);
+                   MapPoint monster, int isTrigger);
     // 0x4b3290. Rebuilds bIsMoatSlowed for one acting stack.
-    void setMoat(const army* currentArmy);
+    void setMoat(const Army* currentArmy);
     // DC's first parameter here is const hero*. The current hero member
     // declarations require a mutable pointer; retail cannot distinguish it.
-    void testPossibleDirections(hero* currentHero, pathCell* source,
+    void testPossibleDirections(Hero* currentHero, PathCell* source,
                                 long turnMobility, long maxMobility,
                                 unsigned char adjacentMonster,
-                                type_point monsterLocation, long pathfinding,
-                                type_search_type searchType,
+                                MapPoint monsterLocation, long pathfinding,
+                                SearchType searchType,
                                 long nativeTerrain);
     // Elements are pathCells BY VALUE: FindCombatPath (0x4b3400) pops
     // the back with `mov esi,[queue+8]; add esi,-0x1e; mov [queue+8],esi`
     // - a 30-byte stride on _Last, which only a by-value pathCell gives.
-    std::vector<pathCell> m_queue;
+    std::vector<PathCell> m_queue;
     // ELEMENT TYPE PROVEN, 2026-08-08. move_toward (0x41f580) walks
     // this vector's extent with `sar 2` (4-byte elements) and then
     // dereferences `[_First + 4*i]` at +4 to read a pathCell bitfield -
@@ -265,7 +268,7 @@ private:
     // placeholder. FindCombatPath (0x4b3400) corroborates: it loads
     // `[result._First]` and immediately reads `word [that + 8]`,
     // pathCell::last_point.
-    std::vector<pathCell*> m_result;
+    std::vector<PathCell*> m_result;
     // ELEMENT TYPE PROVEN, 2026-08-14, by PushPoint (0x4b1a70) - the one
     // located body that touches it. Its tail inserts into this vector with
     // the four-byte stride (`sub ecx,eax; sar ecx,2` for the capacity test,
@@ -276,7 +279,7 @@ private:
     // argument list at the comma, which is why the admitted placeholder was
     // `int`; queue is pinned by its 30-byte stride, result and this one by
     // their 4-byte strides plus what retail stores through them.
-    std::vector<pathCell*> m_visitedPoints;
+    std::vector<PathCell*> m_visitedPoints;
     // One byte per combat hex, indexed by a SIGN-EXTENDED hex
     // (`movsx edx, si; cmp byte [edx + eax], 0` in move_toward
     // 0x41f580) - a map, as the dtor's `delete` already implied.
@@ -287,14 +290,14 @@ private:
 };
 
 // E:\gamedcs\FindPath.h:265, dc 0x37e98
-inline long* getDangerCell(long* dangerZones, type_point point)
+inline long* getDangerCell(long* dangerZones, MapPoint point)
 {
     return &dangerZones[(point.m_z * g_mapHeight + point.m_y) * g_mapWidth + point.m_x];
 }
 
 // E:\gamedcs\FindPath.h:270, dc 0x37eec
 VA(0x0042ed30, 0x4E)  // dc 0x37eec
-inline long searchArray::getDangerValue(type_point point) const
+inline long SearchArray::getDangerValue(MapPoint point) const
 {
     if (!m_dangerZones)
         return 0;
@@ -314,7 +317,7 @@ extern const long g_townSiegeStrength63bd18[];
 
 // Retail .bss 0x699284; the DATA claim lands with findpath.cpp's
 // globals when that TU's data is modeled.
-extern searchArray* g_searchArray;
+extern SearchArray* g_searchArray;
 
 // The eight-direction step table at 0x678150, four bytes a row:
 // (dx, dy, 0x10, 0) for N, NE, E, SE, S, SW, W, NW in that order.
@@ -323,15 +326,17 @@ extern searchArray* g_searchArray;
 // stride-four aliases remain temporarily for already-exact legacy callers,
 // while reconstructed source uses the aggregate and lets reloc normalization
 // canonicalize owner+field-addend against retail's interior symbols.
-struct tilePoint {
+// Before normalization (type): tilePoint.
+struct TilePoint {
 public:
     signed char m_x;
     signed char m_y;
     short m_frameOffset;
 };
-SIZE(tilePoint, 4);
+SIZE(TilePoint, 4);
 
-enum EMapDirection {
+// Before normalization (type): EMapDirection.
+enum MapDirection {
     MAP_DIRECTION_NORTH = 0,
     MAP_DIRECTION_NORTHEAST = 1,
     MAP_DIRECTION_EAST = 2,
@@ -343,7 +348,7 @@ enum EMapDirection {
     MAP_DIRECTION_COUNT = 8
 };
 
-DATA(0x00678150) extern tilePoint g_normalDirTable[8];
+DATA(0x00678150) extern TilePoint g_normalDirTable[8];
 extern const signed char g_stepDeltaX[];   // 0x678150, stride 4
 extern const signed char g_stepDeltaY[];   // 0x678151, stride 4
 
@@ -354,13 +359,13 @@ extern const signed char g_stepDeltaY[];   // 0x678151, stride 4
 // roster's search.cpp:113 row - the free three-argument predicate that
 // immediately follows BuildPath in both link orders, 182 DC bytes against
 // retail's 158.
-unsigned char checkAdjacentMonster(const hero* currentHero,
-                                     pathCell* entryPoint,
-                                     type_search_type searchType);
+unsigned char checkAdjacentMonster(const Hero* currentHero,
+                                     PathCell* entryPoint,
+                                     SearchType searchType);
 int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
                        long pathfinding, long flying, long waterWalking,
                        unsigned char hasNomad);
-int getTerrainCost(hero* currentHero, type_point start, int direction,
+int getTerrainCost(Hero* currentHero, MapPoint start, int direction,
                    int moveLeft);
 
 // --- combatManager ---

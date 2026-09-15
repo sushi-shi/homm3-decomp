@@ -8,11 +8,12 @@
 
 // PROVEN retail layout: both ctor and dtor access only the allocation
 // pointer at +0; callers allocate four bytes for the object.
-class TFileVersionInfo {
+// Before normalization (type): TFileVersionInfo.
+class FileVersionInfo {
 public:
     char* m_data;
-    TFileVersionInfo(const char* filename);
-    ~TFileVersionInfo();
+    FileVersionInfo(const char* filename);
+    ~FileVersionInfo();
     // DC's source-visible wrapper. Complete expands it at the selection
     // window call site into the ProductVersion GetVersionInfo call.
     unsigned char getProductVersion(std::string* productVersion) const
@@ -23,7 +24,7 @@ public:
 private:
     unsigned char getVersionInfo(const char* name, std::string* buffer) const;
 };
-SIZE(TFileVersionInfo, 4);
+SIZE(FileVersionInfo, 4);
 
 // --- TFileVersionInfo ---
 

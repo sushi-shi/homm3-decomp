@@ -14,7 +14,7 @@
 // values with its TOWN_* alias spellings; the DC TTownType enum
 // corroborates 0..7 (Conflux is Complete-era, absent from the AB-age
 // DC roster).
-enum TTownType {
+enum TownType {
     // Dreamcast NB11 type 0x1ab5: the unassigned/neutral town sentinel.
     eTownNeutral = -1,
     TOWN_CASTLE = 0x0,
@@ -49,7 +49,8 @@ enum TTownType {
 //     table (included_buildings, gHierarchyMask) and the bound of
 //     CalcNumLevelArchers' bitNumber walk (end symbol 0x66cef8 =
 //     bitNumber + 44).
-enum type_building_id {
+// Before normalization (type): type_building_id.
+enum BuildingId {
     MAGE_GUILD_ID = 0,
     MAGE_GUILD2_ID = 1,
     MAGE_GUILD3_ID = 2,
@@ -105,7 +106,8 @@ enum type_building_id {
 // NUM_RESOURCES is a source constant, not an EGameResource member: the
 // complete Dreamcast CodeView enum does not contain it.
 #define NUM_RESOURCES 7
-enum EGameResource {
+// Before normalization (type): EGameResource.
+enum GameResource {
     const_no_resource = -1,
     WOOD = 0,
     MERCURY = 1,
@@ -165,7 +167,8 @@ extern int g_heroGoldCost;
 // DC struct.h roster: exactly two dwords. make_gift's retail vector
 // advances by eight bytes and writes the resource id followed by the
 // displayed quantity before inserting an entry.
-struct type_dialog_resource {
+// Before normalization (type): type_dialog_resource.
+struct DialogResource {
 public:
     // Retail only proves a four-byte resource index in the dialog vector;
     // the DC enum name is semantic evidence, not an x86 layout requirement.
@@ -175,18 +178,19 @@ public:
     // signed long cannot produce.
     unsigned long m_qualifier;
 };
-SIZE(type_dialog_resource, 8);
+SIZE(DialogResource, 8);
 
 // DC LF_INTERFACE `type_horde_effect`, size 8, three members at the
 // offsets initialize_hordes writes: creature @0, bonus @4 (16-bit
 // store), dwelling @6 (16-bit store).
-struct type_horde_effect {
+// Before normalization (type): type_horde_effect.
+struct HordeEffect {
 public:
-    TCreatureType m_creature;
+    CreatureType m_creature;
     short m_bonus;
     short m_dwelling;
 };
-SIZE(type_horde_effect, 8);
+SIZE(HordeEffect, 8);
 
 class TownExtra {
 public:
@@ -198,7 +202,7 @@ public:
     __int64 m_buildingDisabledMask;
     char m_hasFort;
     char m_customArmies;
-    armyGroup m_townArmy;
+    ArmyGroup m_townArmy;
     char m_customName;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_name;
     // A char in the Dreamcast record, a DWORD here: readTownData assigns it
@@ -232,11 +236,12 @@ SIZE(TownExtra, 0x88);
 // view of this header gains the type name (the initialize_game_data
 // include-set canary measured exactly this forward declaration at
 // 100.0 -> 96.09 when it sat here ungated, 2026-08-20).
-class TTownEvent;
+class TownEvent;
 
 extern __int64 g_bitNumber[];
 
-class town {
+// Before normalization (type): town.
+class Town {
 public:
     enum { TOWN_DOCK_SITE_NONE = 0xff };
     // Index of this town in gpGame->towns (byte, sign-extended).
@@ -294,7 +299,7 @@ public:
     // akCreatureTypeTraits with it). Not gated: it is a rename plus an
     // int-to-enum retype of an EXISTING member, so no view of this class
     // gains or loses a declarator.
-    TCreatureType m_summoningType;
+    CreatureType m_summoningType;
     // +0x40. DC `summoningPopulation`, a T_SHORT at its own 56 - the row
     // straight after `summoningType` at 52.
     // Sliced 2026-08-14 for townManager::SetupWell (0x5dd5fa), which
@@ -328,7 +333,7 @@ public:
     std::bitset<70> m_spells;
     // The town's own troops (ctor constructs an armyGroup at +0xe0 and
     // then fills the seven type slots with -1).
-    armyGroup m_garrison;
+    ArmyGroup m_garrison;
 
 protected:
     int m_generatorBonus[14];
@@ -352,7 +357,7 @@ public:
     __int64 m_built;
     __int64 m_active;
     __int64 m_available;
-    void applySpecialBuildingEffect(hero* townHero);
+    void applySpecialBuildingEffect(Hero* townHero);
     unsigned char canBuildDock() const;
     // DC Town.h:299 / :305 header inlines, declaration-only here
     // (?get_building_mask@town@@QBA_JXZ kept out of line by the DC
@@ -366,7 +371,7 @@ public:
     // DC Town.h:299/300 returns full_building_mask (+0x150 in DC).
     // Retail's +0x158 band is m_active; getBuildableMask expands this read.
     __int64 getBuildingMask() const { return m_active; }
-    long getCastleGrowthBonus(TCreatureType creature) const;
+    long getCastleGrowthBonus(CreatureType creature) const;
     // DC Town.h:305-306, dc 0x181404, returns generatorBonus[dwelling].
     // set_bonus_display calls this header helper; retail 0x5c5b40 expands it.
     long getGeneratorBonus(long dwelling) const { return m_generatorBonus[dwelling]; }
@@ -384,9 +389,9 @@ public:
     // point-return local and 79.06 with this constructor expression, versus
     // the local clone's 98.75/100 peaks. Those measurements do not refute
     // the CodeView constructor call or justify a second helper definition.
-    type_point getLocation() const
+    MapPoint getLocation() const
     {
-        return type_point(m_mapX, m_mapY, m_mapZ);
+        return MapPoint(m_mapX, m_mapY, m_mapZ);
     }
     void calcNumLevelArchers(int* numArchers, int* archerLevel);
 
@@ -413,35 +418,35 @@ public:
     }
     void setSummoningGenerator();
     int getPortraitFrame(bool isSmall) const;
-    town();
+    Town();
     unsigned char canBuild(short buildingId) const;
     unsigned char canEverBuild(int buildingId) const;
     // 0x5bfe50.
-    void changeGeneratorBonus(TCreatureType creature, long change);
+    void changeGeneratorBonus(CreatureType creature, long change);
     // 0x5be930. Declared for update_shipyard's direct call; the body is
     // still outside the admitted surface.
-    type_building_id createBuilding(type_building_id building);
-    unsigned char buyBuilding(type_building_id building);
+    BuildingId createBuilding(BuildingId building);
+    unsigned char buyBuilding(BuildingId building);
     void destroyExtraCapitol();
-    void getBuildCost(type_building_id building, int* resources) const;
-    short getBuildCost(type_building_id building, EGameResource* types,
+    void getBuildCost(BuildingId building, int* resources) const;
+    short getBuildCost(BuildingId building, GameResource* types,
                          int* amounts) const;
-    int* getBuildCostArray(type_building_id building) const;
+    int* getBuildCostArray(BuildingId building) const;
     __int64 getBuildableMask() const;
     // 0x5bfb60. Weekly base, castle, artifact, horde, generator, and Grail
     // growth for one dwelling slot.
     short getGrowthRate(short dwelling) const;
-    type_horde_effect* getHordeEffect(type_building_id building) const;
+    HordeEffect* getHordeEffect(BuildingId building) const;
     int* getSiloIncome() const;
     // 0x5bfeb0 (dc 0x167c3c) and 0x5c0670 (dc 0x16842c), reconstructed
     // in the owning TU; gated so no other view of this class gains the
     // declarators.
-    void giveEventReward(const TTownEvent* thisEvent);
+    void giveEventReward(const TownEvent* thisEvent);
     // 0x5bfdd0.
-    void increasePopulation(TCreatureType bonusCreature,
-                             TCreatureType alternateBonus, long bonusAmount);
+    void increasePopulation(CreatureType bonusCreature,
+                             CreatureType alternateBonus, long bonusAmount);
     void initialize(const TownExtra* townSetup);
-    unsigned char isLegalBuilding(type_building_id building) const;
+    unsigned char isLegalBuilding(BuildingId building) const;
     // Dreamcast's LF_FIELDLIST puts these immediately before update_shipyard,
     // in this order. BuildBuilding calls both, and retail inlines both into
     // that owner.
@@ -453,9 +458,9 @@ public:
     int hasGarrison();
     // 0x5bede0. DC signature; buy_building is the only claimed caller
     // and it pushes exactly these three.
-    type_building_id buildBuilding(int buildingId, unsigned char setBuiltFlag,
+    BuildingId buildBuilding(int buildingId, unsigned char setBuiltFlag,
                                    unsigned char applySpecialEffect);
-    int load(TAbstractFile* infile, int saveVersion);
+    int load(AbstractFile* infile, int saveVersion);
     // 0x5bd2f0 (body in town.obj, not yet reconstructed). game::Save's
     // town-pool loop is the only consumer here: it calls it on towns[i]
     // with edi striding 0x168 == sizeof(town). Retail's body writes the
@@ -464,9 +469,9 @@ public:
     // what identifies it. Gated rather than added outright - a bare
     // member declarator on a class this widely included is the
     // include-set wall's own trigger shape.
-    int save(TAbstractFile* outfile);
+    int save(AbstractFile* outfile);
     // 0x5c12e0. Charges and places one of the player's tavern offers.
-    void hire(hero* newHero, long playerId);
+    void hire(Hero* newHero, long playerId);
     // game.obj joins the gate for GiveSpells alone: CreateTownHeroes
 // (0x4ca040) closes each starting town with `GiveSpells(NULL)` right
 // after PlaceInMap. Widening the existing guard rather than adding a
@@ -474,7 +479,7 @@ public:
     // 0x5be030 remains outside the admitted surface; hire needs its
     // direct town-spell handoff, and advManager::TownEvent closes every
     // successful visit with it.
-    void giveSpells(hero* forceHero) const;
+    void giveSpells(Hero* forceHero) const;
     // advmgr.obj joins the gate for View alone: DoAdvCommand's two town arms
 // call it, one on gpGame->GetTown(currTownId) and one on the town the
 // current hero obscures. The guard is SPLIT around the single declarator
@@ -492,7 +497,7 @@ public:
     // create_included_masks. Definition + DATA claim in src/town.cpp.
     static __int64 s_includedBuildings[9][44];
     // ?get_army@town@@QAAAAVarmyGroup@@XZ / ...QBAABVarmyGroup@@XZ;
-    const class armyGroup& getArmy() const;
+    const ArmyGroup& getArmy() const;
     // The NON-const half of that DC pair, declared 2026-08-14 for
     // TCastleWindow::WindowHandler 0x5dcf80: the summoning-portal row
     // hands the town's garrison straight to a `recruitUnit`, whose first
@@ -509,7 +514,7 @@ public:
     // summoning-portal rows write `&townToView->get_army()`, which is
     // `'&' requires l-value` against a pointer return and correct against a
     // reference.
-    class armyGroup& getArmy();
+    ArmyGroup& getArmy();
     // 0x5be2d0. Removes this town from its owner's roster and marks
     // both this record and gpGame->towns[id] unowned.
     void deallocate();
@@ -517,7 +522,7 @@ public:
     static void initializeHordes();
     static unsigned char initializeBuildingCostsTables();
     const char* getTypeName() const;
-    TTerrainType getNativeTerrain() const;
+    TerrainType getNativeTerrain() const;
     // The garrisoned hero steps out onto the town tile (0x5be390).
     void removeGarrisonHero();
     static int upgradedDwellingID(int id);
@@ -527,7 +532,7 @@ protected:
     // 0x6887a0, nine 4-entry rows of 8 bytes (0x6887a0..0x6888c0);
     // initialize_hordes walks it with a 0x10 (two-entry) inner step
     // nine times, which is what pins the row count at 9.
-    static type_horde_effect s_constHordeEffects[9][4];
+    static HordeEffect s_constHordeEffects[9][4];
     static int s_dwellingCosts[9][14][NUM_RESOURCES];
     // The three build-cost tables get_build_cost_array switches
     // between, all DC-attested town statics whose retail .bss extents
@@ -551,7 +556,7 @@ protected:
     static int s_neutralBuildingCosts[SPECIAL_BUILDING_ID][NUM_RESOURCES];
     static int s_specialBuildingCosts[9][9][NUM_RESOURCES];
 };
-SIZE(town, 360);
+SIZE(Town, 360);
 
 // DC public gTownSizeNames; retail 0x6a6294 is indexed by the four hall
 // levels in TQuickTownWindow. Its owning data compiland is not yet located.
@@ -586,7 +591,8 @@ extern __int64 g_townEligibleBuildMask[9];
 // 0x160-stride rows to 0x6983f8). Owner TU unlocated - extern only.
 extern __int64 g_hierarchyMask[9][44];
 
-enum ETownConstants {
+// Before normalization (type): ETownConstants.
+enum TownConstants {
     // The "no dock site" sentinel CanBuildDock tests for.
     TOWN_DOCK_SITE_NONE = 0xff,
     // Nine town types x 44 building-id slots, byte-derived from
@@ -611,7 +617,8 @@ enum ETownConstants {
 // One-based dwelling tier used by the retail artifact-growth helper.
 // Tier one has no corresponding growth artifact, so only the switch's
 // populated domain is named here.
-enum ETownDwellingTier {
+// Before normalization (type): ETownDwellingTier.
+enum TownDwellingTier {
     TOWN_DWELLING_TIER_2 = 2,
     TOWN_DWELLING_TIER_3 = 3,
     TOWN_DWELLING_TIER_4 = 4,
@@ -645,11 +652,11 @@ extern int g_siloIncome[9][NUM_RESOURCES];
 // BEFORE scaling (`[4*(esi+slot) + table]`, one reloc, no second base
 // register) - a two-dimensional subscript compiles to the three-term
 // form instead. Name INVENTED (no DC symbol); owner TU unlocated.
-extern TCreatureType g_townDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
+extern CreatureType g_townDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
 // Biased view of the upgraded half of the same first town row. Retail
 // GiveTroopsToNeutralTown carries a distinct relocation to this address.
 DATA(0x006747d0)
-extern TCreatureType g_townUpgradedDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
+extern CreatureType g_townUpgradedDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
 
 // Retail .data 0x6782a4: ordinary spell counts for guild levels one
 // through five. initialize_spells generates one extra candidate per row so
@@ -666,7 +673,7 @@ extern const signed char g_mageGuildBaseSpellCounts[5];
 // assigns a row entry back into its type_building_id argument, which
 // the enum element type carries without a cast, while every int reader
 // (get_horde's return, the bitNumber indexes) narrows implicitly.
-extern const type_building_id g_hordeBuildings[4];
+extern const BuildingId g_hordeBuildings[4];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\town.cpp:1760, dc 0x167a8c) void show_creature_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards);

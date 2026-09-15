@@ -10,9 +10,9 @@
 
 class CNetMsg;
 class CNetMsgHandler;
-class textWidget;
-class sample;
-class ds_memsample;
+class TextWidget;
+class Sample;
+class DsMemsample;
 
 // DC's nested char[21][8] type gives this class its complete 0xac-byte
 // layout. Retail OnOK independently proves the same 21-byte stride and the
@@ -182,7 +182,7 @@ public:
     char m_paddingBeforeLastWidget[3];
 
 protected:
-    textWidget* m_lastWidget;  // +0x18
+    TextWidget* m_lastWidget;  // +0x18
     int m_maxLines;  // +0x1c
     int m_position;  // +0x20
     unsigned char m_chatKilled;  // +0x24
@@ -194,7 +194,7 @@ public:
     // Retail PC adds the live Miles handle that AddChat/TurnDurationMsg
     // reuse. The DC record lacks it: isSysMsg moves from +0x25 to
     // +0x2c, and the five resource pointers move by eight bytes.
-    ds_memsample* m_chatMemSample;  // +0x28
+    DsMemsample* m_chatMemSample;  // +0x28
 
 protected:
     unsigned char m_isSysMsg;  // +0x2c
@@ -204,7 +204,7 @@ public:
     // The sample pointer at +0x30 requires these three alignment bytes.
     char m_paddingBeforeChatSample[3];
 
-    void updateWidget(textWidget* widget, unsigned char killOld, int numLines);
+    void updateWidget(TextWidget* widget, unsigned char killOld, int numLines);
     void pauseTimeOuts();
     void resumeTimeOuts();
     void clearChat();
@@ -218,25 +218,26 @@ public:
     unsigned char hasOldChat();
 
 protected:
-    sample* m_chatSample;  // +0x30
-    sample* m_playerDropSample;  // +0x34
-    sample* m_sysMsgSample;  // +0x38
-    sample* m_turnDurSample;  // +0x3c
-    sample* m_playerEnterSample;  // +0x40
+    Sample* m_chatSample;  // +0x30
+    Sample* m_playerDropSample;  // +0x34
+    Sample* m_sysMsgSample;  // +0x38
+    Sample* m_turnDurSample;  // +0x3c
+    Sample* m_playerEnterSample;  // +0x40
     // remote.cpp:1060/1065, DC 0x11c71c/0x11c738; the publics prove
     // protected access. AddChat calls the first canonical helper, while
     // KillOldChat calls the second. Retail expands these source calls.
     int getNextFreeMsgNbr();
     int getNextMsgNbr(int msgNbr);
     void killOldChat();
-    void updateWidgetText(int numLines, textWidget* widget);
+    void updateWidgetText(int numLines, TextWidget* widget);
 };
 SIZE(CChatManager::CChatStr, 0x88);
 SIZE(CChatManager, 0x44);
 
 DATA(0x0069d7b0) extern CChatManager g_chatMan;
 
-enum ENetMessageRecipient {
+// Before normalization (type): ENetMessageRecipient.
+enum NetMessageRecipient {
     NET_MESSAGE_RECIPIENT_ALL = 0x7f
 };
 
@@ -246,20 +247,20 @@ enum ENetMessageRecipient {
 // textEntryWidget extent). The retail bodies independently confirm the base
 // tail offsets: IsOpen reads cursorIndex at +0x58 and the edit actions use
 // Text at +0x30.
-class CChatEdit : public textEntryWidget {
+class CChatEdit : public TextEntryWidget {
 public:
     CChatEdit(int x, int y, int w, int h, int textSize, char* text,
-              char* fontName, font::TColor color,
-              font::EJustify justification,
+              char* fontName, Font::Color color,
+              Font::Justify justification,
               char* backgroundIcon, int backgroundFrame, int id, int style,
               int readType, int insetX, int insetY);
     virtual ~CChatEdit();
-    virtual int onKeyPress(message* msg);  // slot 15
-    virtual unsigned char ignoreKey(message* msg);  // slot 16
+    virtual int onKeyPress(Message* msg);  // slot 15
+    virtual unsigned char ignoreKey(Message* msg);  // slot 16
     virtual void updateScreen();  // slot 19
-    virtual int onEnter(message msg);  // slot 20
-    virtual int onEscape(message msg);  // slot 21
-    virtual int onFunctionKey(message msg, int toWho);  // slot 22
+    virtual int onEnter(Message msg);  // slot 20
+    virtual int onEscape(Message msg);  // slot 21
+    virtual int onFunctionKey(Message msg, int toWho);  // slot 22
     virtual bool isOpen();  // slot 23
     virtual void sendChat(const char* text, int toWho) = 0;  // slot 24
 };
@@ -270,12 +271,12 @@ public:
 class CGameChatEdit : public CChatEdit {
 public:
     CGameChatEdit(int x, int y, int w, int h, int textSize, char* text,
-                  char* fontName, font::TColor color,
-                  font::EJustify justification, char* backgroundIcon,
+                  char* fontName, Font::Color color,
+                  Font::Justify justification, char* backgroundIcon,
                   int backgroundFrame, int id, int style, int readType,
                   int insetX, int insetY);
-    virtual int onKeyPress(message* msg);
-    virtual int onEscape(message msg);
+    virtual int onKeyPress(Message* msg);
+    virtual int onEscape(Message msg);
     virtual void sendChatCleanup();
     virtual void activate();
     unsigned char m_activated;
@@ -285,7 +286,7 @@ public:
 // E:\gamedcs\remote.h:441
 inline CGameChatEdit::CGameChatEdit(
     int x, int y, int w, int h, int textSize, char* text, char* fontName,
-    font::TColor color, font::EJustify justification, char* backgroundIcon,
+    Font::Color color, Font::Justify justification, char* backgroundIcon,
     int backgroundFrame, int id, int style, int readType, int insetX,
     int insetY)
     : CChatEdit(x, y, w, h, textSize, text, fontName, color, justification,
@@ -297,7 +298,7 @@ inline CGameChatEdit::CGameChatEdit(
 
 // E:\gamedcs\remote.h:446
 VA(0x004021f0, 0x42)  // dc 0x30c8
-inline int CGameChatEdit::onKeyPress(message* msg)
+inline int CGameChatEdit::onKeyPress(Message* msg)
 {
     if (m_activated)
         return CChatEdit::onKeyPress(msg);
@@ -311,7 +312,7 @@ inline int CGameChatEdit::onKeyPress(message* msg)
 
 // E:\gamedcs\remote.h:460
 VA(0x00402240, 0x3C)  // dc 0x3110
-inline int CGameChatEdit::onEscape(message msg)
+inline int CGameChatEdit::onEscape(Message msg)
 {
     m_activated = 0;
     m_parentWindow->setFocus(-1);

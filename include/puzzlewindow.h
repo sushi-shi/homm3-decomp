@@ -6,16 +6,17 @@
 #include "advmgr_popup.h"
 #include "struct.h"
 
-struct type_point;
+struct MapPoint;
 
 class Bitmap816;
 class NewmapCell;
-class TResourceDisplay;
+class ResourceDisplay;
 
 // DC's 0x58-byte CAdvPopup grows to retail's proven 0x60-byte base. The
 // remaining fields translate directly: one piece-count byte, the resource
 // display pointer, 48 puzzle bitmaps, and the selected puzzle index.
-class TPuzzleWindow : public CAdvPopup {
+// Before normalization (type): TPuzzleWindow.
+class PuzzleWindow : public CAdvPopup {
 public:
     enum {
         ACCEPT_ID = 0x7802,
@@ -35,19 +36,19 @@ public:
     // this alignment gap; the reference layout retains the same boundary.
     char m_paddingBeforePuzzleResourceBar[3];
 
-    TPuzzleWindow(int puzzlenum);
-    virtual ~TPuzzleWindow();
+    PuzzleWindow(int puzzlenum);
+    virtual ~PuzzleWindow();
     int updatePuzzle(int full);
-    virtual int windowHandler(message& msg);
+    virtual int windowHandler(Message& msg);
 
 private:
-    TResourceDisplay* m_puzzleResourceBar;
+    ResourceDisplay* m_puzzleResourceBar;
     Bitmap816* m_puzzlePieces[48];
     int m_puzWhich;
 
     int convertID2HelpID(int id) const;
 };
-SIZE(TPuzzleWindow, 0x12c);
+SIZE(PuzzleWindow, 0x12c);
 
 extern std::bitset<48> g_puzzlePiecesRemoved;
 extern short g_puzzlePieceOrder[];
@@ -75,7 +76,7 @@ extern double g_puzzleGuessThreshold[];
 // The explicit Dreamcast return-buffer marker is represented by C++'s normal
 // by-value return. Retail's call from playerData::guess_grail_location has the
 // same hidden-result-pointer-in-ECX / player-in-EDX convention.
-type_point aiAttemptPuzzleGuess(long player);
+MapPoint aiAttemptPuzzleGuess(long player);
 
 // --- Bitmap816 ---
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:334, dc 0x11577c) void Bitmap816::mark_puzzle(unsigned char* visible, long dest_x, long dest_y);

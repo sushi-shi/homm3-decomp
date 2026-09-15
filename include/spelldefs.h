@@ -16,7 +16,8 @@ inline unsigned char isMindSpell(int spell)
 // Retail spell-class flag roles in SSpellTraits::field_c. Names are
 // behavior-derived; values and mastery thresholds are byte-proven by
 // SpellTargetsASingleArmy.
-enum ESpellTargetFlags {
+// Before normalization (type): ESpellTargetFlags.
+enum SpellTargetFlags {
     SPELL_TARGET_ALWAYS_SINGLE = 0x10,
     SPELL_TARGET_MASS_AT_ADVANCED = 0x20,
     SPELL_TARGET_MASS_AT_EXPERT = 0x40,

@@ -27,7 +27,7 @@ unsigned char spellTargetsASingleArmy(int spell, int sslevel)
 VA(0x0059e090, 0xB7)  // dc 0x14e2c8
 unsigned char initializeSpellTraitsTable()
 {
-    TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
+    SpreadsheetResource* resource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0068830c, spellTraitsSpreadsheetName,
                      "sptraits.txt"));
     if (!resource)
@@ -66,12 +66,13 @@ unsigned char initializeSpellTraitsTable()
 namespace {
 
 // CodeView field pStr; each loader owns its own private string class.
-class TAutoStrPtr {
+// Before normalization (type): TAutoStrPtr.
+class AutoStrPtr {
 public:
     // E:\gamedcs\spelldefs.cpp:320, dc 0x14e78c
-    TAutoStrPtr() : m_string(0) {}
+    AutoStrPtr() : m_string(0) {}
     // E:\gamedcs\spelldefs.cpp:321, dc 0x14e794
-    ~TAutoStrPtr() { delete[] m_string; }
+    ~AutoStrPtr() { delete[] m_string; }
     // E:\gamedcs\spelldefs.cpp:323, dc 0x14e7ac
     void set(char* value) { m_string = value; }
     // E:\gamedcs\spelldefs.cpp:325, dc 0x14e7b0
@@ -91,14 +92,14 @@ static void initializeSpellTraits(
 
     DATA_COMPGEN_GUARD(0x006a3650, spellStringsGuard, spellNames)
     DATA(0x006a350c)
-    static TAutoStrPtr spellNames[81];
+    static AutoStrPtr spellNames[81];
 
     spellNames[id].set(new char[strlen(resource[0]) + 1]);
     strcpy(spellNames[id].get(), resource[0]);
     traits.m_name = spellNames[id].get();
 
     DATA(0x006a3654)
-    static TAutoStrPtr abbreviatedSpellNames[81];
+    static AutoStrPtr abbreviatedSpellNames[81];
 
     abbreviatedSpellNames[id].set(new char[strlen(resource[1]) + 1]);
     strcpy(abbreviatedSpellNames[id].get(), resource[1]);
@@ -140,7 +141,7 @@ static void initializeSpellTraits(
     }
 
     DATA(0x006a3798)
-    static TAutoStrPtr spellDescriptions[81][4];
+    static AutoStrPtr spellDescriptions[81][4];
 
     for (i = 0; i < 4; ++i) {
         spellDescriptions[id][i].set(
@@ -159,18 +160,18 @@ VA_COMPGEN(0x0059e4f0, 0x14, STATIC_DTOR, spellNames)
 
 // E:\gamedcs\spelldefs.cpp:320
 DC_ONLY(0x14e78c, 0x8)
-void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr() { /* @stub */ }
+void `anonymous namespace'::AutoStrPtr::AutoStrPtr() { /* @stub */ }
 
 // E:\gamedcs\spelldefs.cpp:321
 DC_ONLY(0x14e794, 0x18)
-void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr() { /* @stub */ }
+void `anonymous namespace'::AutoStrPtr::~AutoStrPtr() { /* @stub */ }
 
 // E:\gamedcs\spelldefs.cpp:323
 DC_ONLY(0x14e7ac, 0x4)
-void `anonymous namespace'::TAutoStrPtr::set(char* pStr) { /* @stub */ }
+void `anonymous namespace'::AutoStrPtr::set(char* pStr) { /* @stub */ }
 
 // E:\gamedcs\spelldefs.cpp:325
 DC_ONLY(0x14e7b0, 0x4)
-char* `anonymous namespace'::TAutoStrPtr::get() { /* @stub */ }
+char* `anonymous namespace'::AutoStrPtr::get() { /* @stub */ }
 
 #endif

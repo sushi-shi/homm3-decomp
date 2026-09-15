@@ -26,7 +26,7 @@
 VA(0x0045e250, 0x160)
 unsigned char initializeCampaignMusicTable()
 {
-    TResourcePtr<TTextResource> textResource(
+    ResourcePtr<TextResource> textResource(
         ResourceManager::getText(
             DATA_COMPGEN(0x0066c484, campaignMusicTextName, "CmpMusic.txt")));
     if (!textResource.get())
@@ -40,7 +40,7 @@ unsigned char initializeCampaignMusicTable()
     DATA_COMPGEN_GUARD(0x00694e18, campaignMusicTracksGuard, campaignMusicTracks)
     VA_COMPGEN(0x0045e3b0, 0x16, STATIC_DTOR, campaignMusicTracks)
     DATA(0x00694e20)
-    static TAutoArrayPtr<char> campaignMusicTracks(new char[strSize]);
+    static AutoArrayPtr<char> campaignMusicTracks(new char[strSize]);
     if (!campaignMusicTracks.get())
         return 0;
 

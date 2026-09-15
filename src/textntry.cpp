@@ -46,7 +46,7 @@ public:
 
 // E:\gamedcs\textntry.cpp:60
 DC_ONLY(0x16298c, 0x5C)
-void textEntryWidget::textEntryWidget()
+void TextEntryWidget::TextEntryWidget()
 {
     // @stub
 }
@@ -56,11 +56,11 @@ void textEntryWidget::textEntryWidget()
 #endif  // @carcass
 
 VA(0x005ba920, 0x1B5)  // dc 0x1629e8
-textEntryWidget::textEntryWidget(int x, int y, int w, int h, int textSize,
-    const char* text, const char* fontName, font::TColor color,
+TextEntryWidget::TextEntryWidget(int x, int y, int w, int h, int textSize,
+    const char* text, const char* fontName, Font::Color color,
     unsigned justification, const char* backgroundIcon, int backgroundFrame,
     int id, int style, int readType, int insetX, int insetY)
-    : textWidget(x, y, w, h, text, fontName, color, id, justification, 0, 0x100)
+    : TextWidget(x, y, w, h, text, fontName, color, id, justification, 0, 0x100)
 {
     m_cursorIndex = 0;
     m_autoDraw = 0;
@@ -91,10 +91,10 @@ textEntryWidget::textEntryWidget(int x, int y, int w, int h, int textSize,
     m_cursorIndex = static_cast<unsigned short>(m_text.size());
 }
 
-VA_COMPGEN(0x005ba8f0, 0x21, SCALAR_DELETING_DTOR, textEntryWidget)
+VA_COMPGEN(0x005ba8f0, 0x21, SCALAR_DELETING_DTOR, TextEntryWidget)
 
 VA(0x005baae0, 0x62)  // dc 0x162af8
-textEntryWidget::~textEntryWidget()
+TextEntryWidget::~TextEntryWidget()
 {
     if (m_textBack)
         m_textBack->dispose();
@@ -103,7 +103,7 @@ textEntryWidget::~textEntryWidget()
 }
 
 VA(0x005bab50, 0x49)  // dc 0x162b50
-void textEntryWidget::setFocus(unsigned char state)
+void TextEntryWidget::setFocus(unsigned char state)
 {
     m_hasFocus = state;
     if (m_autoDraw) {
@@ -114,7 +114,7 @@ void textEntryWidget::setFocus(unsigned char state)
 }
 
 VA(0x005baba0, 0xA4)  // dc 0x162bbc
-char textEntryWidget::getCharPressed(message* msg)
+char TextEntryWidget::getCharPressed(Message* msg)
 {
     char pressed = 0;
 
@@ -229,7 +229,7 @@ void CTextEntrySave::~CTextEntrySave()
 DATA(0x00697780) int g_unnamed697780;
 
 VA(0x005bac50, 0x4FD)  // dc 0x162c2c
-int textEntryWidget::onKeyPress(message* msg)
+int TextEntryWidget::onKeyPress(Message* msg)
 {
     if (!m_hasFocus)
         return 0;
@@ -321,7 +321,7 @@ int textEntryWidget::onKeyPress(message* msg)
 }
 
 VA(0x005bb150, 0x2A6)  // dc 0x162f2c
-int textEntryWidget::main(message& msg)
+int TextEntryWidget::main(Message& msg)
 {
     if (m_sleepCount > 0)
         return 0;
@@ -405,11 +405,11 @@ int textEntryWidget::main(message& msg)
                 return 0;
             break;
     }
-    return widget::main(msg);
+    return Widget::main(msg);
 }
 
 VA(0x005bb400, 0x254)  // dc 0x163150
-void textEntryWidget::draw() const
+void TextEntryWidget::draw() const
 {
     if (!(m_status & WIDGET_DRAWN))
         return;
@@ -439,28 +439,28 @@ void textEntryWidget::draw() const
         if (m_hasFocus)
             m_font->drawBoundedString(shown, g_windowManager->m_screenBitmap,
                 m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
-                m_boxWidth, m_boxHeight, font::TColor(m_color), m_justify, m_cursorIndex);
+                m_boxWidth, m_boxHeight, Font::Color(m_color), m_justify, m_cursorIndex);
         else
             m_font->drawBoundedString(shown, g_windowManager->m_screenBitmap,
                 m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
-                m_boxWidth, m_boxHeight, font::TColor(m_color), m_justify, -1);
+                m_boxWidth, m_boxHeight, Font::Color(m_color), m_justify, -1);
     } else if (m_hasFocus) {
         m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
             m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
             m_boxWidth, m_boxHeight,
-            font::TColor((m_status & WIDGET_DIMMED) ? font::PRIMARY_DIM : m_color),
+            Font::Color((m_status & WIDGET_DIMMED) ? Font::PRIMARY_DIM : m_color),
             m_justify, m_cursorIndex);
     } else {
         m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
             m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
             m_boxWidth, m_boxHeight,
-            font::TColor((m_status & WIDGET_DIMMED) ? font::PRIMARY_DIM : m_color),
+            Font::Color((m_status & WIDGET_DIMMED) ? Font::PRIMARY_DIM : m_color),
             m_justify, -1);
     }
 }
 
 VA(0x005bb660, 0x2E7)  // dc 0x1633d8
-void textEntryWidget::setupDisplayString(char* core, unsigned short inCursorIndex)
+void TextEntryWidget::setupDisplayString(char* core, unsigned short inCursorIndex)
 {
     if (GameTime::isPast(g_timers[0])) {
         m_cursorFlashOn = static_cast<unsigned char>(1 - m_cursorFlashOn);
@@ -495,14 +495,14 @@ void textEntryWidget::setupDisplayString(char* core, unsigned short inCursorInde
 }
 
 VA(0x005bb950, 0xD0)  // dc 0x1635dc
-void textEntryWidget::setText(const char* newText)
+void TextEntryWidget::setText(const char* newText)
 {
     m_text = newText;
     m_cursorIndex = static_cast<unsigned short>(m_text.size());
 }
 
 VA(0x005bba20, 0x22)  // dc 0x163600
-unsigned char textEntryWidget::ignoreKey(message* msg)
+unsigned char TextEntryWidget::ignoreKey(Message* msg)
 {
     switch (msg->m_codeX) {
         case KEYCODE_ESCAPE:
@@ -514,26 +514,26 @@ unsigned char textEntryWidget::ignoreKey(message* msg)
 }
 
 VA(0x005bba50, 0x8)  // dc 0x163620
-void textEntryWidget::onSetFocus()
+void TextEntryWidget::onSetFocus()
 {
     setFocus(1);
 }
 
 VA(0x005bba60, 0x8)  // dc 0x163638
-void textEntryWidget::onKillFocus()
+void TextEntryWidget::onKillFocus()
 {
     setFocus(0);
 }
 
 VA(0x005bba70, 0x44)  // dc 0x163650
-void textEntryWidget::saveBackground() const
+void TextEntryWidget::saveBackground() const
 {
     if (m_saveBack)
         m_saveBack->save(m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y);
 }
 
 VA(0x005bbac0, 0x82)  // dc 0x16367c
-void textEntryWidget::setAutoDraw(unsigned char b)
+void TextEntryWidget::setAutoDraw(unsigned char b)
 {
     m_autoDraw = b;
     if (b && !m_textBack && !m_saveBack)

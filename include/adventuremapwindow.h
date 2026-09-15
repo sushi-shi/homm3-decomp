@@ -5,12 +5,12 @@
 #include "advmgr.h"
 
 // E:\gamedcs\AdventureMapWindow.h:238, dc 0xbd0a0.
-inline void TAdventureMapWindow::setBackgroundAnimation(unsigned char enable)
+inline void AdventureMapWindow::setBackgroundAnimation(unsigned char enable)
 {
     m_animateInBackground = enable;
 }
 
-class message;
+class Message;
 
 void sendChat(const char* chat, int toWho);
 // Retail .bss 0x69954c, the network-session latch (remote.h owns the

@@ -9,7 +9,8 @@
 // Dreamcast CodeView supplies the names/order; retail's help-text selector
 // bounds the player bit, then indexes this domain through a 400-byte traits
 // record. Only the currently consumed name field is exposed.
-enum type_creature_bank_type {
+// Before normalization (type): type_creature_bank_type.
+enum CreatureBankType {
     CREATURE_BANK_CYCLOPS = 0,
     CREATURE_BANK_DWARF,
     CREATURE_BANK_GRIFFIN,
@@ -29,7 +30,8 @@ enum type_creature_bank_type {
 // dispatches on armyGroup::GetNumArmies() and handles exactly these three -
 // one stack becomes five groups, two become 2+3 and three become 2+2 - so
 // the domain is real even though no external source names it. PROVISIONAL.
-enum type_creature_bank_guard_shape {
+// Before normalization (type): type_creature_bank_guard_shape.
+enum CreatureBankGuardShape {
     CREATURE_BANK_GUARDS_ONE_STACK = 1,
     CREATURE_BANK_GUARDS_TWO_STACKS = 2,
     CREATURE_BANK_GUARDS_THREE_STACKS = 3
@@ -38,10 +40,11 @@ enum type_creature_bank_guard_shape {
 // Retail's constructor at 0x47aad0 walks four records at a 0x60 stride and
 // invokes armyGroup::armyGroup at the start of each. The still-unread tail
 // is kept opaque until initialize_creature_bank names its reward fields.
-struct type_creature_bank_level {
-    armyGroup m_guards;
+// Before normalization (type): type_creature_bank_level.
+struct CreatureBankLevel {
+    ArmyGroup m_guards;
     int m_resources[7];
-    TCreatureType m_rewardCreature;
+    CreatureType m_rewardCreature;
     signed char m_rewardCreatures;
     signed char m_chance;
     signed char m_upgradeChance;
@@ -53,28 +56,29 @@ struct type_creature_bank_level {
     // The retail table walks 0x60-byte records; this byte aligns their extent.
     char m_tailPadding;
 
-    type_creature_bank_level();
+    CreatureBankLevel();
 };
-SIZE(type_creature_bank_level, 0x60);
+SIZE(CreatureBankLevel, 0x60);
 
 // The constructor first initializes the retail 16-byte Dinkumware string
 // consumed by the help-text selector, then the four levels above. This
 // independently closes the 0x190 stride; only the old anonymous tail is
 // retired.
-struct type_creature_bank_traits {
+// Before normalization (type): type_creature_bank_traits.
+struct CreatureBankTraits {
     std::string m_name;
-    type_creature_bank_level m_levels[4];
+    CreatureBankLevel m_levels[4];
 
-    type_creature_bank_traits();
+    CreatureBankTraits();
 };
-SIZE(type_creature_bank_traits, 0x190);
+SIZE(CreatureBankTraits, 0x190);
 
-extern const type_creature_bank_traits* g_constCreatureBankTraits;
+extern const CreatureBankTraits* g_constCreatureBankTraits;
 
 // CODEVIEW(E:\gamedcs\creature_bank.cpp:32, dc 0x70fe0): file-static
 // CODEVIEW(E:\gamedcs\creature_bank.cpp:146, dc 0x71218) void split_slot(armyGroup* army_group, long slot, long groups);
-void initializeCreatureBank(type_creature_bank* bank,
-                              type_creature_bank_type type);
+void initializeCreatureBank(CreatureBank* bank,
+                              CreatureBankType type);
 
 // --- std ---
 // CODEVIEW(..\stlport\stl_vector.h:368, dc 0x71548) void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::push_back(const TArtifact* __x);

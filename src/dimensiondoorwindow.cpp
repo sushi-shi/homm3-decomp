@@ -15,49 +15,49 @@
 
 // E:\gamedcs\dimensiondoorwindow.cpp:53
 DC_ONLY(0x827f8, 0x140)
-void TDimensionDoorWindow::TDimensionDoorWindow()
+void DimensionDoorWindow::DimensionDoorWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:74
 DC_ONLY(0x82938, 0x68)
-void TDimensionDoorWindow::~TDimensionDoorWindow()
+void DimensionDoorWindow::~DimensionDoorWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:100
 DC_ONLY(0x829a0, 0x1E2)
-int TDimensionDoorWindow::windowHandler(message& msg)
+int DimensionDoorWindow::windowHandler(Message& msg)
 {
     // @stub
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:208
 DC_ONLY(0x82b84, 0x16)
-int TDimensionDoorWindow::exitDialog(message& msg)
+int DimensionDoorWindow::exitDialog(Message& msg)
 {
     // @stub
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:235
 DC_ONLY(0x82b9c, 0x114)
-void TSkuttleBoatWindow::TSkuttleBoatWindow()
+void SkuttleBoatWindow::SkuttleBoatWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:254
 DC_ONLY(0x82cb0, 0x62)
-void TSkuttleBoatWindow::~TSkuttleBoatWindow()
+void SkuttleBoatWindow::~SkuttleBoatWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:280
 DC_ONLY(0x82d14, 0x1BC)
-int TSkuttleBoatWindow::windowHandler(message& msg)
+int SkuttleBoatWindow::windowHandler(Message& msg)
 {
     // @stub
 }
@@ -65,16 +65,16 @@ int TSkuttleBoatWindow::windowHandler(message& msg)
 #endif  // @carcass
 
 VA(0x004916f0, 0x164)  // dc 0x827f8
-TDimensionDoorWindow::TDimensionDoorWindow()
+DimensionDoorWindow::DimensionDoorWindow()
     : CAdvPopup(0, 0, 800, 600, 1)
 {
     m_widgets.reserve(2);
 
-    widget* mapWidget = g_advManager->m_advWindow->m_mapWidget;
-    m_widgets.push_back(new border(mapWidget->m_x, mapWidget->m_y,
+    Widget* mapWidget = g_advManager->m_advWindow->m_mapWidget;
+    m_widgets.push_back(new Border(mapWidget->m_x, mapWidget->m_y,
         mapWidget->m_width, mapWidget->m_height, 0, 1));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -82,12 +82,12 @@ TDimensionDoorWindow::TDimensionDoorWindow()
     }
 }
 
-VA_COMPGEN(0x00491860, 0x21, SCALAR_DELETING_DTOR, TDimensionDoorWindow)
+VA_COMPGEN(0x00491860, 0x21, SCALAR_DELETING_DTOR, DimensionDoorWindow)
 
 VA(0x00491890, 0x6B)  // dc 0x82938
-TDimensionDoorWindow::~TDimensionDoorWindow()
+DimensionDoorWindow::~DimensionDoorWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -104,7 +104,7 @@ TDimensionDoorWindow::~TDimensionDoorWindow()
 
 // E:\gamedcs\dimensiondoorwindow.cpp:100
 VA(0x00491900, 0x1B9)  // vtable slot 9 + source order, dc 0x829a0
-int TDimensionDoorWindow::windowHandler(message& msg)
+int DimensionDoorWindow::windowHandler(Message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -137,41 +137,41 @@ int TDimensionDoorWindow::windowHandler(message& msg)
                 g_advManager->m_lastHoverX = cellX;
                 g_advManager->m_lastHoverY = cellY;
                 NewmapCell* cell = g_advManager->getCell(
-                    g_advManager->get_mouse_map_point());
+                    g_advManager->getMouseMapPoint());
                 if (!(cell->m_flags0011 & 0x100) && !cell->m_isTrigger) {
                     g_windowManager->m_dialogReturn = 1;
                     g_mouseManager->setPointer(ADV_DIMENSION_DOOR_POINTER,
-                        mouseManager::ADVENTURE_SET);
+                        MouseManager::ADVENTURE_SET);
                 } else {
                     g_windowManager->m_dialogReturn = 0;
                     g_mouseManager->setPointer(ADV_ARROW_POINTER,
-                        mouseManager::ADVENTURE_SET);
+                        MouseManager::ADVENTURE_SET);
                 }
             }
         } else {
             g_windowManager->m_dialogReturn = 0;
             g_mouseManager->setPointer(ADV_ARROW_POINTER,
-                mouseManager::ADVENTURE_SET);
+                MouseManager::ADVENTURE_SET);
         }
         break;
 
     case MESSAGE_WIDGET:
         switch (msg.m_codeX) {
-        case widget::WIDGET_SELECT:
+        case Widget::WIDGET_SELECT:
             if (msg.m_codeY != 0)
                 break;
             if (g_windowManager->m_dialogReturn != 1)
                 break;
             msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+            msg.m_codeX = msg.m_codeY = Widget::WIDGET_END_DIALOG;
             return MESSAGE_DISPATCH_FORWARD;
-        case widget::WIDGET_DESELECT:
+        case Widget::WIDGET_DESELECT:
             if (msg.m_codeY == DIALOG_RETURN_CANCEL) {
                 g_windowManager->m_dialogReturn = 0;
                 exitFlag = true;
             }
             break;
-        case widget::WIDGET_RIGHT_SELECT:
+        case Widget::WIDGET_RIGHT_SELECT:
             if (msg.m_codeY == 0) {
                 g_windowManager->m_dialogReturn = 0;
                 exitFlag = true;
@@ -182,7 +182,7 @@ int TDimensionDoorWindow::windowHandler(message& msg)
     }
     if (exitFlag) {
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = msg.m_codeY = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -194,7 +194,7 @@ int TDimensionDoorWindow::windowHandler(message& msg)
 
 // E:\gamedcs\dimensiondoorwindow.cpp:208
 VA(0x00491ac0, 0x2C)  // vtable slot 14 + source order, dc 0x82b84
-int TDimensionDoorWindow::exitDialog(message& msg)
+int DimensionDoorWindow::exitDialog(Message& msg)
 {
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = msg.m_codeY = 10;
@@ -203,16 +203,16 @@ int TDimensionDoorWindow::exitDialog(message& msg)
 }
 
 VA(0x00491af0, 0x164)  // dc 0x82b9c
-TSkuttleBoatWindow::TSkuttleBoatWindow()
+SkuttleBoatWindow::SkuttleBoatWindow()
     : CAdvPopup(0, 0, 800, 600, 1)
 {
     m_widgets.reserve(2);
 
-    widget* mapWidget = g_advManager->m_advWindow->m_mapWidget;
-    m_widgets.push_back(new border(mapWidget->m_x, mapWidget->m_y,
+    Widget* mapWidget = g_advManager->m_advWindow->m_mapWidget;
+    m_widgets.push_back(new Border(mapWidget->m_x, mapWidget->m_y,
         mapWidget->m_width, mapWidget->m_height, 0, 1));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -220,12 +220,12 @@ TSkuttleBoatWindow::TSkuttleBoatWindow()
     }
 }
 
-VA_COMPGEN(0x00491c60, 0x21, SCALAR_DELETING_DTOR, TSkuttleBoatWindow)
+VA_COMPGEN(0x00491c60, 0x21, SCALAR_DELETING_DTOR, SkuttleBoatWindow)
 
 VA(0x00491c90, 0x6B)  // dc 0x82cb0
-TSkuttleBoatWindow::~TSkuttleBoatWindow()
+SkuttleBoatWindow::~SkuttleBoatWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -235,7 +235,7 @@ TSkuttleBoatWindow::~TSkuttleBoatWindow()
 // DC 0x82d14 uses the same exit-flag/common message tail. Restoring it removes
 // two gotos at 100%; duplicated direct exits score 81.9421%.
 VA(0x00491d00, 0x1A9)  // vtable slot 9 + source order, dc 0x82d14
-int TSkuttleBoatWindow::windowHandler(message& msg)
+int SkuttleBoatWindow::windowHandler(Message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -268,35 +268,35 @@ int TSkuttleBoatWindow::windowHandler(message& msg)
                 g_advManager->m_lastHoverX = cellX;
                 g_advManager->m_lastHoverY = cellY;
                 NewmapCell* cell = g_advManager->getCell(
-                    g_advManager->get_mouse_map_point());
+                    g_advManager->getMouseMapPoint());
                 if (cell->m_type == BOAT && cell->m_isTrigger) {
                     g_windowManager->m_dialogReturn = 1;
                     g_mouseManager->setPointer(ADV_SKUTTLE_BOAT_POINTER,
-                        mouseManager::ADVENTURE_SET);
+                        MouseManager::ADVENTURE_SET);
                 } else {
                     g_windowManager->m_dialogReturn = 0;
                     g_mouseManager->setPointer(ADV_ARROW_POINTER,
-                        mouseManager::ADVENTURE_SET);
+                        MouseManager::ADVENTURE_SET);
                 }
             }
         } else {
             g_windowManager->m_dialogReturn = 0;
             g_mouseManager->setPointer(ADV_ARROW_POINTER,
-                mouseManager::ADVENTURE_SET);
+                MouseManager::ADVENTURE_SET);
         }
         break;
 
     case MESSAGE_WIDGET:
         switch (msg.m_codeX) {
-        case widget::WIDGET_SELECT:
+        case Widget::WIDGET_SELECT:
             if (msg.m_codeY != 0)
                 break;
             if (g_windowManager->m_dialogReturn != 1)
                 break;
             msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+            msg.m_codeX = msg.m_codeY = Widget::WIDGET_END_DIALOG;
             return MESSAGE_DISPATCH_FORWARD;
-        case widget::WIDGET_RIGHT_SELECT:
+        case Widget::WIDGET_RIGHT_SELECT:
             if (msg.m_codeY == 0) {
                 g_windowManager->m_dialogReturn = 0;
                 exitFlag = true;
@@ -307,7 +307,7 @@ int TSkuttleBoatWindow::windowHandler(message& msg)
     }
     if (exitFlag) {
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = msg.m_codeY = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -315,7 +315,7 @@ int TSkuttleBoatWindow::windowHandler(message& msg)
 
 // E:\gamedcs\dimensiondoorwindow.cpp:395
 VA(0x00491eb0, 0x2c)  // vtable slot 14 + source order, dc 0x82ed0
-int TSkuttleBoatWindow::exitDialog(message& msg)
+int SkuttleBoatWindow::exitDialog(Message& msg)
 {
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = msg.m_codeY = 10;
@@ -327,14 +327,14 @@ int TSkuttleBoatWindow::exitDialog(message& msg)
 
 // E:\gamedcs\dimensiondoorwindow.cpp:71
 DC_ONLY(0x82eec, 0x34)
-void* TDimensionDoorWindow::`scalar deleting destructor'(unsigned __flags)
+void* DimensionDoorWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:250
 DC_ONLY(0x82f20, 0x34)
-void* TSkuttleBoatWindow::`scalar deleting destructor'(unsigned __flags)
+void* SkuttleBoatWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

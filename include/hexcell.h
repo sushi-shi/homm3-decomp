@@ -5,13 +5,14 @@
 #include <va.h>
 #include "struct.h"  // SLimitData, for limits()
 
-class army;
+class Army;
 
 // Head model from the retail ctor 0x4e7150 and GenerateMap 0x4642d0.
 // The seven leading screen-geometry shorts use the names and offsets in
 // Dreamcast CodeView; their x/y formulas and the remaining initialized
 // fields are independently byte-proven by the retail GenerateMap body.
-class hexcell {
+// Before normalization (type): hexcell.
+class Hexcell {
 public:
     // Screen-space bounds initialized by combatManager::GenerateMap.
     // Names remain ordinal until drawing/hit-test readers establish the
@@ -85,13 +86,13 @@ public:
     SLimitData m_obstacleLimitData; // +0x50
     SLimitData m_cloudLimitData;    // +0x60
 
-    hexcell();
+    Hexcell();
     // Const on their own S_PUB32 publics (?get_army@hexcell@@QBAPAVarmy@@XZ,
     // ?get_dead_army@hexcell@@QBAPAVarmy@@H@Z) - the roster text at the
     // foot of this header cannot express that, and combatManager's own
     // const enemy_is_adjacent could not compile without it.
-    army* getArmy() const;
-    army* getDeadArmy(int i) const;
+    Army* getArmy() const;
+    Army* getDeadArmy(int i) const;
     // DC HexCell.h:85. The Complete UpdateGrid caller expands the returned
     // four-word rectangle and SLimitData::Include into one union loop.
     SLimitData limits() const
@@ -111,6 +112,6 @@ public:
         return m_armySide >= 0;
     }
 };
-SIZE(hexcell, 0x70);
+SIZE(Hexcell, 0x70);
 
 #endif  /* HOMM3_HEXCELL_H */

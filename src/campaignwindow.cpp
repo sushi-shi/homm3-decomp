@@ -17,7 +17,7 @@
 
 // Source-private in the Dreamcast compiland. Retail's constructor stores the
 // active dialog here and its destructor clears it before destroying the base.
-DATA(0x00694e2c) static TCampaignWindow* g_campaignWindow;
+DATA(0x00694e2c) static CampaignWindow* g_campaignWindow;
 
 // Complete-only campaign-preview table at retail 0x66c498. Each 0x50-byte
 // row has eight descriptor dwords followed by a 12-dword snapshot of the
@@ -35,10 +35,10 @@ DATA(0x00694e2c) static TCampaignWindow* g_campaignWindow;
 // DC line 81 calls widget::hide; keep the ordinary helper and its source
 // calls. Complete adds a null guard: both retail handler expansions test
 // GetWidget's result before sending WIDGET_CLEAR_STATUS (DC has no guard).
-void TCampaignWindow::hideText()
+void CampaignWindow::hideText()
 {
     for (int line = PREVIEW_FIRST_ID; line <= PREVIEW_LAST_ID; ++line) {
-        widget* text = getWidget(line);
+        Widget* text = getWidget(line);
         if (text)
             text->hide();
     }
@@ -49,18 +49,18 @@ void TCampaignWindow::hideText()
 // gBinkVideo so the next row opens a fresh one, then hang the row's still on
 // the window. The destructor and the hover handler restore that snapshot.
 VA(0x0045e7c0, 0x27A)
-void TCampaignWindow::openPreview(int campaignIndex)
+void CampaignWindow::openPreview(int campaignIndex)
 {
     SCampaignPreview* preview = &g_campaignPreviews[campaignIndex];
 
     videoOpen(preview->m_video, preview->m_x, preview->m_y, PREVIEW_WIDTH,
               PREVIEW_HEIGHT, 1, 0, 1);
     g_binkPaused = 0;
-    _BinkPause(g_binkVideo, 0);
+    binkpause(g_binkVideo, 0);
     memcpy(preview->m_binkState, &g_binkVideo, 12 * sizeof(int));
     g_binkVideo = 0;
 
-    m_widgets.push_back(new bitmapBorder16(preview->m_x, preview->m_y,
+    m_widgets.push_back(new BitmapBorder16(preview->m_x, preview->m_y,
         PREVIEW_WIDTH, PREVIEW_HEIGHT, preview->m_widgetId, preview->m_image,
         0x800));
 }
@@ -104,8 +104,8 @@ void TCampaignWindow::openPreview(int campaignIndex)
 // 98.4726 peak the shadow bought.
 
 VA(0x0045ea40, 0x692)  // campbkx2.pcx + vtable/global stores; Complete adds newGame, dc 0x5b570
-TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
-    : heroWindow(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0)
+CampaignWindow::CampaignWindow(unsigned char newGame, int newCampaign)
+    : HeroWindow(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0)
 {
     g_campaignWindow = this;
     m_lastActive = 0;
@@ -181,11 +181,11 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
     // is not reachable from the caller's site count" and do not re-sweep it.
     m_widgets.reserve(NWIDGETS);
 
-    m_widgets.push_back(new bitmapBorder16(0, 0, WINDOW_SCREEN_WIDTH,
+    m_widgets.push_back(new BitmapBorder16(0, 0, WINDOW_SCREEN_WIDTH,
         WINDOW_SCREEN_HEIGHT, BACKGROUND_ID,
         newCampaign == CAMPAIGN_SET_SOD ? "campbkx2.pcx" : "campback.pcx",
         0x800));
-    m_widgets.push_back(new button(658, 480, 132, 106, DIALOG_RETURN_CANCEL,
+    m_widgets.push_back(new Button(658, 480, 132, 106, DIALOG_RETURN_CANCEL,
         "cmpscan.def", 0, 1, 0, 0, 2));
 
     for (int row = 0; row < 20; ++row) {
@@ -196,12 +196,12 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
     if ((newCampaign == CAMPAIGN_SET_ROE && !m_campaignAvailable[6])
             || newCampaign == CAMPAIGN_SET_AB
             || (newCampaign == CAMPAIGN_SET_SOD && !m_campaignAvailable[19]))
-        m_widgets.push_back(new bitmapBorder16(385, 401, 238, 143,
+        m_widgets.push_back(new BitmapBorder16(385, 401, 238, 143,
             BACKGROUND_ID, "campnosc.pcx", 0x800));
 
     if (!m_campaignAvailable[CAMPAIGN_ROW_AB_SEALED]
             && newCampaign == CAMPAIGN_SET_AB)
-        m_widgets.push_back(new bitmapBorder16(30, 414, 204, 119,
+        m_widgets.push_back(new BitmapBorder16(30, 414, 204, 119,
             BACKGROUND_ID, "camp1fwX.pcx", 0x800));
 
     int last;
@@ -219,21 +219,21 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
 
     for (int campaign = m_firstCampaign; campaign <= last; ++campaign) {
         if (g_game->m_campaign.m_campaignCompleted[campaign])
-            m_widgets.push_back(new bitmapBorder(
+            m_widgets.push_back(new BitmapBorder(
                 g_campaignPreviews[campaign].m_x + 6,
                 g_campaignPreviews[campaign].m_y + 74, 42, 40,
                 campaign - m_firstCampaign + CHECK_FIRST_ID,
                 "CampChk.pcx", 0x800));
-        m_widgets.push_back(new textWidget(
+        m_widgets.push_back(new TextWidget(
             g_campaignPreviews[campaign].m_textX,
             g_campaignPreviews[campaign].m_textY,
             g_campaignPreviews[campaign].m_textWidth, 34,
             g_campaignWindowHelp[campaign + 1].m_text, "medfont.fnt",
-            font::HEADING_HIGHLIGHT,
+            Font::HEADING_HIGHLIGHT,
             campaign - m_firstCampaign + PREVIEW_FIRST_ID, 5, 0, 8));
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -243,14 +243,14 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
     hideText();
 }
 
-VA_COMPGEN(0x0045f0e0, 0x21, SCALAR_DELETING_DTOR, TCampaignWindow)
+VA_COMPGEN(0x0045f0e0, 0x21, SCALAR_DELETING_DTOR, CampaignWindow)
 
 VA_COMPGEN(0x0045f110, 0x100, IMPLICIT_DTOR, SCampaign)
 
 VA_COMPGEN(0x0045f9e0, 0x265, VECTOR_COPY_ASSIGN, CampaignScenarioInfo)
 
 VA(0x0045f210, 0xAE)  // dc 0x5bd00
-TCampaignWindow::~TCampaignWindow()
+CampaignWindow::~CampaignWindow()
 {
     // Six Complete campaign previews retain independent copies of the Bink
     // globals. Restore each live copy, close it, then preserve the cleared
@@ -265,14 +265,14 @@ TCampaignWindow::~TCampaignWindow()
     }
 
     g_campaignWindow = 0;
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
 }
 
 VA(0x0045f2c0, 0x2C)  // dc 0x5bd68
-void TCampaignWindow::doModal()
+void CampaignWindow::doModal()
 {
     g_soundManager->startMP3("MainMenu", 0, 1);
     g_windowManager->doDialog(this, campaignWindowHandler, 0);
@@ -286,7 +286,7 @@ DATA(0x0066cad8) static int g_lastCampaignHoverId;
 // E:\gamedcs\campaignwindow.cpp:291
 
 VA(0x0045f2f0, 0x26C)  // DoModal address-take + Complete video/widget CFG, dc 0x5bd94
-int campaignWindowHandler(message& msg)
+int campaignWindowHandler(Message& msg)
 {
     int exitFlag = 0;
 
@@ -296,35 +296,35 @@ int campaignWindowHandler(message& msg)
             g_binkUpdateWidth, g_binkUpdateHeight);
     }
     if (msg.m_id == MESSAGE_WIDGET) {
-        if (msg.m_codeX == widget::WIDGET_DESELECT) {
+        if (msg.m_codeX == Widget::WIDGET_DESELECT) {
             int id = msg.m_codeY;
             switch (id) {
-            case TCampaignWindow::CAMPAIGN_FIRST_ID:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 1:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 2:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 3:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 4:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 5:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 6:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 7:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 8:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 9:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 10:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 11:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 12:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 13:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 14:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 15:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 16:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 17:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 18:
-            case TCampaignWindow::CAMPAIGN_FIRST_ID + 19:
+            case CampaignWindow::CAMPAIGN_FIRST_ID:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 1:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 2:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 3:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 4:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 5:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 6:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 7:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 8:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 9:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 10:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 11:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 12:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 13:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 14:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 15:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 16:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 17:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 18:
+            case CampaignWindow::CAMPAIGN_FIRST_ID + 19:
                 g_game->m_campaign.selectCampaign(
-                    id - TCampaignWindow::CAMPAIGN_FIRST_ID,
+                    id - CampaignWindow::CAMPAIGN_FIRST_ID,
                     g_campaignFileNames[
-                        id - TCampaignWindow::CAMPAIGN_FIRST_ID]);
+                        id - CampaignWindow::CAMPAIGN_FIRST_ID]);
                 g_binkPaused = 1;
-                _BinkPause(g_binkVideo, 1);
+                binkpause(g_binkVideo, 1);
                 // Fall through: selection and cancel both close the dialog.
             case DIALOG_RETURN_CANCEL:
                 exitFlag = 1;
@@ -333,7 +333,7 @@ int campaignWindowHandler(message& msg)
         }
     } else if (msg.m_id == MESSAGE_KEY_DOWN) {
         switch (msg.m_codeX) {
-        case TCampaignWindow::DIALOG_CLOSE_KEY:
+        case CampaignWindow::DIALOG_CLOSE_KEY:
             exitFlag = 1;
             msg.m_codeY = DIALOG_RETURN_CANCEL;
             break;
@@ -344,8 +344,8 @@ int campaignWindowHandler(message& msg)
         if (hoverID != g_lastCampaignHoverId) {
             g_lastCampaignHoverId = hoverID;
 
-            if (hoverID >= TCampaignWindow::CAMPAIGN_FIRST_ID
-                    && hoverID <= TCampaignWindow::CAMPAIGN_LAST_ID) {
+            if (hoverID >= CampaignWindow::CAMPAIGN_FIRST_ID
+                    && hoverID <= CampaignWindow::CAMPAIGN_LAST_ID) {
                 // The ROW pointer, not the state block: retail keeps
                 // `&gCampaignPreviews[hover - 108]` live across the sweep and
                 // only reaches the snapshot with a `lea esi,[edi+0x20]` at the
@@ -353,26 +353,26 @@ int campaignWindowHandler(message& msg)
                 // into the base and swaps the sweep's counter register.
                 SCampaignPreview* preview =
                     &g_campaignPreviews[hoverID
-                        - TCampaignWindow::CAMPAIGN_FIRST_ID];
+                        - CampaignWindow::CAMPAIGN_FIRST_ID];
                 g_campaignWindow->hideText();
                 g_campaignWindow->getWidget(hoverID
                         - g_campaignWindow->m_firstCampaign - 7)->show();
                 memcpy(&g_binkVideo, preview->m_binkState, 12 * sizeof(int));
                 g_binkPaused = 0;
-                _BinkPause(g_binkVideo, 0);
+                binkpause(g_binkVideo, 0);
                 BinkManager::restartBink();
             } else {
                 g_binkPaused = 1;
-                _BinkPause(g_binkVideo, 1);
+                binkpause(g_binkVideo, 1);
                 g_campaignWindow->hideText();
             }
 
             if (hoverID == DIALOG_RETURN_CANCEL)
                 g_campaignWindow->getWidget(DIALOG_RETURN_CANCEL)->sendMessage(
-                    widget::WIDGET_SET_STATUS, widget::WIDGET_HIGHLIGHTED);
+                    Widget::WIDGET_SET_STATUS, Widget::WIDGET_HIGHLIGHTED);
             else
                 g_campaignWindow->getWidget(DIALOG_RETURN_CANCEL)->sendMessage(
-                    widget::WIDGET_CLEAR_STATUS, widget::WIDGET_HIGHLIGHTED);
+                    Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_HIGHLIGHTED);
             g_campaignWindow->drawWindow(0, 0xffff0001, 0xffff);
             g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
                 WINDOW_SCREEN_HEIGHT);
@@ -382,18 +382,18 @@ int campaignWindowHandler(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     msg.m_id = MESSAGE_WIDGET;
     g_windowManager->m_dialogReturn = msg.m_codeY;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
+    msg.m_codeY = Widget::WIDGET_END_DIALOG;
+    msg.m_codeX = Widget::WIDGET_END_DIALOG;
     return MESSAGE_DISPATCH_FORWARD;
 }
 
 // E:\gamedcs\campaignwindow.cpp:258
 #if 0  // @carcass -- represented by VA_COMPGEN above
 DC_ONLY(0x5bf44, 0x34)
-void* TCampaignWindow::`scalar deleting destructor'(unsigned __flags)
+void* CampaignWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 #endif
 
-VA_COMPGEN(0x004601f0, 0x1A4, VECTOR_COPY_ASSIGN, type_artifact)
+VA_COMPGEN(0x004601f0, 0x1A4, VECTOR_COPY_ASSIGN, ArtifactRecord)

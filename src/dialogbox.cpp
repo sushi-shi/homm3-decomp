@@ -11,32 +11,32 @@
 #include "winmgr.h"
 
 VA(0x0048fdc0, 0x6F)  // dc 0x81748
-TDialogBox::TDialogBox(int winX, int winY, int winWidth,
+DialogBoxWindow::DialogBoxWindow(int winX, int winY, int winWidth,
                        int winHeight, unsigned winType)
-    : heroWindow(winX, winY, winWidth, winHeight, winType)
+    : HeroWindow(winX, winY, winWidth, winHeight, winType)
 {
     setup(winX, winY, winWidth, winHeight);
 }
 
-VA_COMPGEN(0x0048fe30, 0x21, SCALAR_DELETING_DTOR, TDialogBox)
+VA_COMPGEN(0x0048fe30, 0x21, SCALAR_DELETING_DTOR, DialogBoxWindow)
 
 VA(0x0048fe60, 0x2A)  // dc 0x817b0
-TDialogBox::TDialogBox(unsigned winType)
-    : heroWindow(0, 0, 800, 600, winType)
+DialogBoxWindow::DialogBoxWindow(unsigned winType)
+    : HeroWindow(0, 0, 800, 600, winType)
 {
 }
 
 VA(0x0048fe90, 0x6B)  // dc 0x817f8
-TDialogBox::~TDialogBox()
+DialogBoxWindow::~DialogBoxWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
 }
 
 VA(0x0048ff00, 0x833)  // dc 0x8185c
-unsigned char TDialogBox::setup(int winX, int winY,
+unsigned char DialogBoxWindow::setup(int winX, int winY,
                                 int winWidth, int winHeight)
 {
     m_x = winX;
@@ -56,7 +56,7 @@ unsigned char TDialogBox::setup(int winX, int winY,
     int column;
     for (row = 0; row < tilesHigh; ++row) {
         for (column = 0; column < tilesWide; ++column) {
-            m_widgets.push_back(new bitmapBorder(
+            m_widgets.push_back(new BitmapBorder(
                 column * TILE_SIZE, row * TILE_SIZE,
                 TILE_SIZE, TILE_SIZE, id++, "diboxbck.pcx", 0x800));
         }
@@ -65,7 +65,7 @@ unsigned char TDialogBox::setup(int winX, int winY,
     const int moreWidth = m_width - tilesWide * TILE_SIZE;
     if (moreWidth > 0 && tilesHigh > 0) {
         for (row = 0; row < tilesHigh; ++row) {
-            m_widgets.push_back(new bitmapBorder(
+            m_widgets.push_back(new BitmapBorder(
                 tilesWide * TILE_SIZE, row * TILE_SIZE,
                 moreWidth, TILE_SIZE, id++, "diboxbck.pcx", 0x800));
         }
@@ -74,57 +74,57 @@ unsigned char TDialogBox::setup(int winX, int winY,
     const int moreHeight = m_height - tilesHigh * TILE_SIZE;
     if (moreHeight > 0 && tilesWide > 0) {
         for (column = 0; column < tilesWide; ++column) {
-            m_widgets.push_back(new bitmapBorder(
+            m_widgets.push_back(new BitmapBorder(
                 column * TILE_SIZE, tilesHigh * TILE_SIZE,
                 TILE_SIZE, moreHeight, id++, "diboxbck.pcx", 0x800));
         }
     }
 
     if (moreWidth > 0 && moreHeight > 0) {
-        m_widgets.push_back(new bitmapBorder(
+        m_widgets.push_back(new BitmapBorder(
             tilesWide * TILE_SIZE, tilesHigh * TILE_SIZE,
             moreWidth, moreHeight, id++, "diboxbck.pcx", 0x800));
     }
 
     m_beginId = id;
 
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         0, 0, EDGE_SIZE, EDGE_SIZE, id++, "dialgbox.def",
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         m_width - EDGE_SIZE, 0, EDGE_SIZE, EDGE_SIZE, id++, "dialgbox.def",
         1, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         0, m_height - EDGE_SIZE, EDGE_SIZE, EDGE_SIZE, id++, "dialgbox.def",
         2, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         m_width - EDGE_SIZE, m_height - EDGE_SIZE,
         EDGE_SIZE, EDGE_SIZE, id++, "dialgbox.def",
         3, 0, 0, 0, 0x10));
 
     int edge;
     for (edge = 1; edge < tilesWide2 - 1; ++edge) {
-        m_widgets.push_back(new iconWidget(
+        m_widgets.push_back(new IconWidget(
             edge * EDGE_SIZE, 0, EDGE_SIZE, EDGE_SIZE,
             id++, "dialgbox.def", 6, 0, 0, 0, 0x10));
-        m_widgets.push_back(new iconWidget(
+        m_widgets.push_back(new IconWidget(
             edge * EDGE_SIZE, m_height - EDGE_SIZE,
             EDGE_SIZE, EDGE_SIZE, id++, "dialgbox.def",
             7, 0, 0, 0, 0x10));
     }
 
     for (edge = 1; edge < tilesHigh2 - 1; ++edge) {
-        m_widgets.push_back(new iconWidget(
+        m_widgets.push_back(new IconWidget(
             0, edge * EDGE_SIZE, EDGE_SIZE, EDGE_SIZE,
             id++, "dialgbox.def", 4, 0, 0, 0, 0x10));
-        m_widgets.push_back(new iconWidget(
+        m_widgets.push_back(new IconWidget(
             m_width - EDGE_SIZE, edge * EDGE_SIZE,
             EDGE_SIZE, EDGE_SIZE, id++, "dialgbox.def",
             5, 0, 0, 0, 0x10));
     }
 
     m_endId = id - 1;
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -140,13 +140,13 @@ VA_COMPGEN(0x00490770, 0x6B, IMPLICIT_DTOR, CTextDialog)
 
 VA(0x004907e0, 0x31)  // dc 0x81e00
 CTextDialog::CTextDialog(unsigned winType)
-    : TDialogBox(winType)
+    : DialogBoxWindow(winType)
 {
     m_textWidget = 0;
 }
 
 VA(0x00490820, 0x26B)  // dc 0x81e38
-unsigned char CTextDialog::setup(const char* text, font* currentFont)
+unsigned char CTextDialog::setup(const char* text, Font* currentFont)
 {
     int winX;
     int winY;
@@ -158,18 +158,18 @@ unsigned char CTextDialog::setup(const char* text, font* currentFont)
     m_y = winY;
     m_width = winWidth;
     m_height = winHeight;
-    TDialogBox::setup(winX, winY, winWidth, winHeight);
+    DialogBoxWindow::setup(winX, winY, winWidth, winHeight);
 
-    m_textWidget = new textWidget(
+    m_textWidget = new TextWidget(
         20, 40, winWidth - 40, winHeight - 40,
-        text, currentFont->getName(), font::PRIMARY, -1, 1, 0, 8);
+        text, currentFont->getName(), Font::PRIMARY, -1, 1, 0, 8);
     m_widgets.push_back(m_textWidget);
     addWidget(m_textWidget, -1);
     return 1;
 }
 
 VA(0x00490a90, 0x8C)  // dc 0x81f00
-void CTextDialog::calcDimensions(const char* text, font* currentFont,
+void CTextDialog::calcDimensions(const char* text, Font* currentFont,
                                  int& winX, int& winY,
                                  int& winWidth, int& winHeight)
 {
@@ -187,12 +187,12 @@ void CTextDialog::calcDimensions(const char* text, font* currentFont,
 }
 
 VA(0x00490b20, 0x2C)  // dc 0x81f98
-int CTextDialog::exitDialog(message& msg)
+int CTextDialog::exitDialog(Message& msg)
 {
     msg.m_id = MESSAGE_WIDGET;
     g_windowManager->m_dialogReturn = msg.m_codeY;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
+    msg.m_codeY = Widget::WIDGET_END_DIALOG;
+    msg.m_codeX = Widget::WIDGET_END_DIALOG;
     return MESSAGE_DISPATCH_FORWARD;
 }
 
@@ -207,7 +207,7 @@ void CTextDialog::updateText(const char* newText)
 
 // The text-taking constructor is likewise absent as a distinct retail row.
 DC_ONLY(0x81d8c, 0x74)
-void CTextDialog::CTextDialog(const char* cText, font* pFont,
+void CTextDialog::CTextDialog(const char* cText, Font* pFont,
                               unsigned winType)
 {
     // @stub

@@ -15,14 +15,14 @@
 
 // E:\gamedcs\textwdgt.cpp:36
 DC_ONLY(0x164c14, 0x6C)
-void textWidget::textWidget()
+void TextWidget::TextWidget()
 {
     // @stub
 }
 
 // E:\gamedcs\textwdgt.cpp:62
 DC_ONLY(0x164c80, 0xA4)
-void textWidget::textWidget(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, const char* textString, const char* textFontName, font::TColor color, int textWidgetId, unsigned justify, int back_color, int textWidgetStyle, unsigned char focusable)
+void TextWidget::TextWidget(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, const char* textString, const char* textFontName, Font::Color color, int textWidgetId, unsigned justify, int back_color, int textWidgetStyle, unsigned char focusable)
 {
     // @stub
 }
@@ -31,7 +31,7 @@ void textWidget::textWidget(int textWidgetX, int textWidgetY, int textWidgetWidt
 
 #endif  // @carcass
 
-VA_COMPGEN(0x005bc250, 0x21, SCALAR_DELETING_DTOR, textWidget)
+VA_COMPGEN(0x005bc250, 0x21, SCALAR_DELETING_DTOR, TextWidget)
 
 // E:\gamedcs\textwdgt.cpp:62 - the twelve-argument constructor the whole
 // image builds its labels with. `ret 0x2c` is eleven stack dwords, which is
@@ -54,10 +54,10 @@ VA_COMPGEN(0x005bc250, 0x21, SCALAR_DELETING_DTOR, textWidget)
 // emitted run one place left against source order, so the source has to be
 // written `Color; BackColor; Justify;` to land retail's order.
 VA(0x005bc280, 0x12D)  // anchor-vtable 0x642db0 + ret 0x2c, dc 0x164c80
-textWidget::textWidget(int x, int y, int w, int h, const char* text,
-                       const char* fontName, font::TColor color, int id,
+TextWidget::TextWidget(int x, int y, int w, int h, const char* text,
+                       const char* fontName, Font::Color color, int id,
                        unsigned justify, int backColor, int style)
-    : widget(static_cast<short>(x), static_cast<short>(y),
+    : Widget(static_cast<short>(x), static_cast<short>(y),
              static_cast<short>(w), static_cast<short>(h),
              static_cast<short>(id), 8)
 {
@@ -74,7 +74,7 @@ textWidget::textWidget(int x, int y, int w, int h, const char* text,
 }
 
 VA(0x005bc3b0, 0x8A)  // dc 0x164d24
-textWidget::~textWidget()
+TextWidget::~TextWidget()
 {
     m_font->dispose();
 }
@@ -83,14 +83,14 @@ textWidget::~textWidget()
 
 // E:\gamedcs\textwdgt.cpp:102
 DC_ONLY(0x164d68, 0x6C)
-void textWidget::initialize(int x, int y, int w, int h, int id, int style, const char* _text, const char* _font, font::TColor _color, unsigned _justify, unsigned char focusable)
+void TextWidget::initialize(int x, int y, int w, int h, int id, int style, const char* _text, const char* _font, Font::Color _color, unsigned _justify, unsigned char focusable)
 {
     // @stub
 }
 
 // E:\gamedcs\textwdgt.cpp:120
 DC_ONLY(0x164dd4, 0x1A8)
-int textWidget::main(message& msg)
+int TextWidget::main(Message& msg)
 {
     // @stub
 }
@@ -100,7 +100,7 @@ int textWidget::main(message& msg)
 // E:\gamedcs\textwdgt.cpp:120
 
 VA(0x005bc440, 0x1AD)  // vtable 0x642db0 slot 2 + widget-message protocol, dc 0x164dd4
-int textWidget::main(message& msg)
+int TextWidget::main(Message& msg)
 {
     if (m_sleepCount > 0) {
         return 0;
@@ -108,7 +108,7 @@ int textWidget::main(message& msg)
 
     if (!(m_status & WIDGET_ACTIVE)) {
         if (msg.m_id == MESSAGE_WIDGET) {
-            return widget::main(msg);
+            return Widget::main(msg);
         } else {
             return 0;
         }
@@ -129,7 +129,7 @@ int textWidget::main(message& msg)
             break;
         case WIDGET_SET_COLOR:
             if (msg.m_codeY == m_id) {
-                setColor(font::TColor(msg.m_extra));
+                setColor(Font::Color(msg.m_extra));
                 return MESSAGE_DISPATCH_CONSUME;
             }
             break;
@@ -185,15 +185,15 @@ int textWidget::main(message& msg)
 
     }
 
-    return widget::main(msg);
+    return Widget::main(msg);
 }
 
-void textWidget::zBufferDraw(unsigned short* zBuffer, int id) const
+void TextWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 {
 }
 
 VA(0x005bc5f0, 0x92)  // dc 0x164f80
-void textWidget::draw() const
+void TextWidget::draw() const
 {
     if (m_status & WIDGET_DRAWN) {
         int drawX = m_x + m_parentWindow->m_x;
@@ -210,12 +210,12 @@ void textWidget::draw() const
             colorScheme = m_color;
         m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
                                 drawX, drawY, m_width, m_height,
-                                font::TColor(colorScheme), m_justify, -1);
+                                Font::Color(colorScheme), m_justify, -1);
     }
 }
 
 VA(0x005bc690, 0x1)  // dc 0x165034
-void textWidget::dim() const
+void TextWidget::dim() const
 {
 }
 
@@ -230,7 +230,7 @@ void iconBackedTextWidget::iconBackedTextWidget()
 
 // E:\gamedcs\textwdgt.cpp:272
 DC_ONLY(0x165090, 0x7E)
-void iconBackedTextWidget::iconBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, font::TColor color, int id, unsigned justify, int style)
+void iconBackedTextWidget::iconBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, Font::Color color, int id, unsigned justify, int style)
 {
     // @stub
 }
@@ -251,35 +251,35 @@ void iconBackedTextWidget::draw()
 
 // E:\gamedcs\textwdgt.cpp:319
 DC_ONLY(0x165184, 0x54)
-void bitmapBackedTextWidget::bitmapBackedTextWidget()
+void BitmapBackedTextWidget::BitmapBackedTextWidget()
 {
     // @stub
 }
 
 // E:\gamedcs\textwdgt.cpp:325
 DC_ONLY(0x1651d8, 0x7A)
-void bitmapBackedTextWidget::bitmapBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, font::TColor color, int id, unsigned justify, int style)
+void BitmapBackedTextWidget::BitmapBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, Font::Color color, int id, unsigned justify, int style)
 {
     // @stub
 }
 
 // E:\gamedcs\textwdgt.cpp:348
 DC_ONLY(0x165258, 0x9C)
-void bitmapBackedTextWidget::draw()
+void BitmapBackedTextWidget::draw()
 {
     // @stub
 }
 
 // E:\gamedcs\TextWdgt.h:78
 DC_ONLY(0x1652f4, 0x6)
-void textWidget::SetColor(font::TColor new_color)
+void TextWidget::SetColor(Font::Color new_color)
 {
     // @stub
 }
 
 // E:\gamedcs\textwdgt.cpp:42
 DC_ONLY(0x1652fc, 0x34)
-void* textWidget::`scalar deleting destructor'(unsigned __flags)
+void* TextWidget::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -300,26 +300,26 @@ void iconBackedTextWidget::~iconBackedTextWidget()
 
 // E:\gamedcs\textwdgt.cpp:320
 DC_ONLY(0x16537c, 0x34)
-void* bitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
+void* BitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 #endif  // @carcass
 
-VA_COMPGEN(0x005bc6a0, 0x21, SCALAR_DELETING_DTOR, bitmapBackedTextWidget)
+VA_COMPGEN(0x005bc6a0, 0x21, SCALAR_DELETING_DTOR, BitmapBackedTextWidget)
 
 // E:\gamedcs\textwdgt.cpp:320
 // CodeView dc 0x1653b0: CV_fldattr_t.compgenx marks this destructor
 // as implicit. Its retained retail body performs only base/member teardown.
-VA_COMPGEN(0x005bc6d0, 0x8A, IMPLICIT_DTOR, bitmapBackedTextWidget)
+VA_COMPGEN(0x005bc6d0, 0x8A, IMPLICIT_DTOR, BitmapBackedTextWidget)
 
 VA(0x005bc760, 0x7B)  // dc 0x1651d8
-bitmapBackedTextWidget::bitmapBackedTextWidget(
+BitmapBackedTextWidget::BitmapBackedTextWidget(
     int x, int y, int w, int h, const char* text, const char* fontName,
-    const char* backName, font::TColor color, int id, unsigned justify,
+    const char* backName, Font::Color color, int id, unsigned justify,
     int style)
-    : textWidget(x, y, w, h, text, fontName, color, id, justify, 0, style)
+    : TextWidget(x, y, w, h, text, fontName, color, id, justify, 0, style)
 {
     m_image = ResourceManager::getBitmap816(backName);
 }
@@ -334,7 +334,7 @@ bitmapBackedTextWidget::bitmapBackedTextWidget(
 // CUR 100 -> 99.8710; its MAX/HIST stay 100 and no banked peak is lost.
 #if 0  // @carcass
 VA(0x005bc7e0, 0x3)  // anchor-vtable (0x642dbc, 0x642df4), dc 0x164f7c
-void textWidget::zBufferDraw(unsigned short* zBuffer, int id) const
+void TextWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 {
     // @stub
 }
@@ -342,12 +342,12 @@ void textWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 
 // E:\gamedcs\textwdgt.cpp:345. Dreamcast dc 0x165254 proves a separate
 // ordinary empty override; retail folds it with textWidget's body above.
-void bitmapBackedTextWidget::zBufferDraw(unsigned short* zBuffer, int id) const
+void BitmapBackedTextWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 {
 }
 
 VA(0x005bc7f0, 0x7c)  // dc 0x165258
-void bitmapBackedTextWidget::draw() const
+void BitmapBackedTextWidget::draw() const
 {
     int drawX = m_x + m_parentWindow->m_x;
     int drawY = m_y + m_parentWindow->m_y;
@@ -355,5 +355,5 @@ void bitmapBackedTextWidget::draw() const
     int blitHeight = min(m_image->getHeight(), m_height);
     m_image->draw(0, 0, blitWidth, blitHeight,
                 g_windowManager->m_screenBitmap, drawX, drawY, 0);
-    textWidget::draw();
+    TextWidget::draw();
 }

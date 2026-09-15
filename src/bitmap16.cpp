@@ -58,7 +58,7 @@ VA_COMPGEN(0x0044e020, 0x21, SCALAR_DELETING_DTOR, Bitmap16Bit)
 
 VA(0x0044df70, 0xA3)
 Bitmap16Bit::Bitmap16Bit(int w, int h)
-    : resource(0, RESOURCE_TYPE_NONE),
+    : Resource(0, RESOURCE_TYPE_NONE),
       m_imageSize(w * h * 2), m_width(w), m_height(h), m_pitch(w * 2)
 {
     m_dataSize = m_imageSize;
@@ -73,7 +73,7 @@ Bitmap16Bit::Bitmap16Bit(int w, int h)
 
 VA(0x0044e050, 0xA5)  // in-span, name/type base ctor + vftable 0x63b9c8
 Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h)
-    : resource(name, RESOURCE_TYPE_BITMAP16),
+    : Resource(name, RESOURCE_TYPE_BITMAP16),
       m_imageSize(w * h * 2), m_width(w), m_height(h), m_pitch(w * 2),
       m_referenced(0)
 {

@@ -7,19 +7,20 @@
 #include "struct.h"
 
 class Bitmap16Bit;
-class heroWindow;
+class HeroWindow;
 
 // The dialog pump's per-message handler: retail calls it through
 // `lea ecx,[msg]; call [ebp+0xc]` - one argument, no stack, i.e. the
 // /Gr default fastcall applied to a function pointer. Returns an
 // EMessageDispatchResult.
-typedef int (*TDialogHandler)(message& msg);
+typedef int (*TDialogHandler)(Message& msg);
 
 // heroWindowManager::dialogReturn's domain: only the byte-proven
 // value is listed (AppWndProc's WM_CLOSE confirm test at 0x4f7cb9);
 // NH3API window_manager.hpp DialogReturnType spelling - the roster
 // grows as consumers prove values.
-enum EDialogReturnType {
+// Before normalization (type): EDialogReturnType.
+enum DialogReturnType {
     DIALOG_RETURN_TIMEOUT = 9999,
     DIALOG_RETURN_CANCEL = 0x7801,
     DIALOG_RETURN_OK = 0x7802,
@@ -51,7 +52,8 @@ enum EDialogReturnType {
 // widget::Dim reads the screen at [gpWindowManager+0x40], so retail
 // dropped one of the two hover ints - the pad below spans 0x38..0x3f
 // until those members earn byte-proven names.
-class heroWindowManager : public baseManager {
+// Before normalization (type): heroWindowManager.
+class HeroWindowManager : public BaseManager {
 public:
     // +0x38: NormalDialog's result slot (AppWndProc's WM_CLOSE tests
     // it against 0x7805, the confirm-OK command).
@@ -75,19 +77,19 @@ public:
     // source the Save/Release pair works on. Dreamcast supplies the
     // bmpFizzleSource member name.
     Bitmap16Bit* m_bmpFizzleSource;
-    heroWindowManager();
+    HeroWindowManager();
     virtual int open(int newPriority);
     virtual void close();
-    virtual int main(message& msg);
-    void addWindow(heroWindow* newWindow, int newPriority,
+    virtual int main(Message& msg);
+    void addWindow(HeroWindow* newWindow, int newPriority,
                    unsigned char update);
-    void removeWindow(heroWindow* killWindow);
+    void removeWindow(HeroWindow* killWindow);
     int broadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra);
-    int doDialog(heroWindow* dialogWindow, TDialogHandler dialogFunction,
+    int doDialog(HeroWindow* dialogWindow, TDialogHandler dialogFunction,
                  int fadeIn);
-    int doDialogDraw(heroWindow* dialogWindow, TDialogHandler dialogFunction,
+    int doDialogDraw(HeroWindow* dialogWindow, TDialogHandler dialogFunction,
                      TDialogHandler dialogDrawFunction, int fadeIn);
-    void doQuickView(heroWindow* window);
+    void doQuickView(HeroWindow* window);
     void updateScreen(int x, int y, int w, int h);
     void fadeScreen(int inOut, int speed, unsigned char expectFadein);
     void saveFizzleSourceX(int startX, int startY, int width, int height);
@@ -110,7 +112,7 @@ public:
     // FizzleForwardX and FadeToBlack and byte-shaped: it deletes
     // field_4C through the virtual slot-0 tail and nulls it.
     void releaseFizzleSource();
-    int convertToHover(message& msg);
+    int convertToHover(Message& msg);
     void fadeToBlack(int speed, unsigned char expectFadein);
     void fadeFromBlack(int speed);
 
@@ -118,17 +120,17 @@ private:
     // The window list, byte-proven by RemoveWindow (located
     // 2026-08-06 by homm3.analysis.dc_callgraph): headWindow@0x50,
     // tailWindow@0x54, lastActive@0x58, activeWindow@0x5c.
-    heroWindow* m_headWindow;
-    heroWindow* m_tailWindow;
+    HeroWindow* m_headWindow;
+    HeroWindow* m_tailWindow;
 
 public:
-    heroWindow* m_lastActive;
-    heroWindow* m_activeWindow;
+    HeroWindow* m_lastActive;
+    HeroWindow* m_activeWindow;
 };
 
 // Retail .bss 0x699280 (DC ?gpWindowManager@@3PAVheroWindowManager@@A);
 // the DATA claim lands with winmgr.cpp.
-extern heroWindowManager* g_windowManager;
+extern HeroWindowManager* g_windowManager;
 
 // Three cross-TU dialog globals DoDialog drives. None of them is
 // winmgr-owned - they are declared here (the gUnnamed69d808 precedent)

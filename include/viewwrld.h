@@ -5,7 +5,7 @@
 #include "advmgr_popup.h"
 #include "struct.h"
 
-class type_func_button;
+class FuncButton;
 
 // Dreamcast supplies the shared four-member tail after CAdvPopup. Complete
 // keeps that tail, adds two level-selector buttons between RolloverWidget and
@@ -15,7 +15,8 @@ class type_func_button;
 // SurfaceButton@+0x64, UndergroundButton@+0x68, origin@+0x6c and the two
 // dimensions at +0x70/+0x74; the inherited 0x60-byte base fixes the remaining
 // Dreamcast RolloverWidget at +0x60.
-class TViewWorldWindow : public CAdvPopup {
+// Before normalization (type): TViewWorldWindow.
+class ViewWorldWindow : public CAdvPopup {
 public:
     // The constructor's own append order fixes every id below: the three
     // magnification buttons carry VWMag1/VWMag2/VWMag4.def at 16, 17 and
@@ -24,7 +25,7 @@ public:
     // 0x7802 accept id. Spellings are role-based - neither corpus names
     // them - and the scale each magnification arm installs is what fixes
     // WHICH is which (16 -> 7.68f, 17 -> 11.84f, 18 -> 16.0f).
-    enum EOtherWidgetIDs {
+    enum OtherWidgetIDs {
         MAP_ID = 0,
         MAGNIFY_FAR_ID = 16,
         MAGNIFY_MID_ID = 17,
@@ -42,40 +43,40 @@ private:
     // CodeView type 0x1A89 is pointer-to-const-widget, not a button pointer.
     // Like the dimension-door twin, this inherited source member is not
     // initialized by the constructor.
-    const widget* m_rolloverWidget;
-    type_func_button* m_surfaceButton;
-    type_func_button* m_undergroundButton;
-    type_point m_origin;
+    const Widget* m_rolloverWidget;
+    FuncButton* m_surfaceButton;
+    FuncButton* m_undergroundButton;
+    MapPoint m_origin;
     int m_viewableWidth;
     int m_viewableHeight;
     // Complete's two level callbacks (0x5fbdf0 / 0x5fbec0) are free
     // functions the constructor hands to the level buttons; they read
     // and write origin and the extents directly.
-    friend int viewWorldSurfaceHandler(message& msg);
-    friend int viewWorldUndergroundHandler(message& msg);
+    friend int viewWorldSurfaceHandler(Message& msg);
+    friend int viewWorldUndergroundHandler(Message& msg);
     // advManager::ViewWorld reads origin and both extents straight out of
     // its stack-constructed window to feed VWCompleteDraw's five
     // arguments, so the owner of that entry sees the same private tail the
     // two callbacks above do.
-    friend class advManager;
+    friend class AdvManager;
 
 public:
-    TViewWorldWindow();
-    virtual ~TViewWorldWindow();
-    void init(type_point newCenter, unsigned char updateFlag);
+    ViewWorldWindow();
+    virtual ~ViewWorldWindow();
+    void init(MapPoint newCenter, unsigned char updateFlag);
     using CAdvPopup::drawWindow;
     void drawWindow();
-    virtual int windowHandler(message& msg);
+    virtual int windowHandler(Message& msg);
 
 private:
     int convertID2HelpID(int id) const;
     void updateRadar(int mrx, int mry, float radarDivisor);
-    void updateViewWorld(message* msg);
+    void updateViewWorld(Message* msg);
 };
-SIZE(TViewWorldWindow, 0x78);
+SIZE(ViewWorldWindow, 0x78);
 
-int viewWorldSurfaceHandler(message& msg);
-int viewWorldUndergroundHandler(message& msg);
+int viewWorldSurfaceHandler(Message& msg);
+int viewWorldUndergroundHandler(Message& msg);
 
 // The "adventure repaint suppressed" latch whose DATA claim advmgr.cpp
 // holds (src/advmgr.cpp:6277), recorded there as having no located writer.

@@ -1371,7 +1371,7 @@ VA_COMPGEN(0x0049a020, 0x73, SCALAR_DELETING_DTOR, CAutoArray)
 // The body is the base list. RTTI proves the empty TDebugBreak base;
 // its canonical empty default constructor is visible in exceptions.h. The
 VA(0x0049a0c0, 0xF9)
-TRuntimeError::TRuntimeError(const char* text)
+RuntimeError::RuntimeError(const char* text)
     : std::runtime_error(std::string(text))
 {
 }

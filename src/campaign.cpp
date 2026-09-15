@@ -30,11 +30,11 @@
 #include "window.h"
 #include "winmgr.h"
 
-static int campaignSetSodHandler(message& msg);
-static int campaignSetArmHandler(message& msg);
-static int campaignSetCusHandler(message& msg);
-static int campaignSetExitHandler(message& msg);
-static int campaignSetRoeHandler(message& msg);
+static int campaignSetSodHandler(Message& msg);
+static int campaignSetArmHandler(Message& msg);
+static int campaignSetCusHandler(Message& msg);
+static int campaignSetExitHandler(Message& msg);
+static int campaignSetRoeHandler(Message& msg);
 
 // The rollover latch the handler keeps between messages: the widget id the
 // mouse was last over, -1 for none. Retail .data 0x660dc8, the one dword in
@@ -82,14 +82,14 @@ DATA(0x0063bc00) static const short g_campaignSetExitRect[4] = { 576, 464, 126, 
 // enough to reach that plateau; it does not explain retail's alternating
 // allocation/reserve, widget-entry and hotkey homes. No such local is retained.
 VA(0x00456ec0, 0x337)  // anchor-string CSSsod.def + anchor-vtable 0x63bc08 + DoCampaignWindow's stack object, retail-only
-TCampaignSetWindow::TCampaignSetWindow()
-    : heroWindow(0, 0, 800, 600, 0)
+CampaignSetWindow::CampaignSetWindow()
+    : HeroWindow(0, 0, 800, 600, 0)
 {
     m_widgets.reserve(4);
 
     int widgetId = SOD_PLATE_ID;
 
-    type_func_button* sodPlate = new type_func_button(
+    FuncButton* sodPlate = new FuncButton(
         534, 8, 201, 119, widgetId++,
         DATA_COMPGEN(0x00660dfc, campaignSetSodSprite, "CSSsod.def"),
         campaignSetSodHandler, 0, 1);
@@ -97,7 +97,7 @@ TCampaignSetWindow::TCampaignSetWindow()
     sodPlate->setHotkey(0x1f);
 
     if (*g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
-        type_func_button* armPlate = new type_func_button(
+        FuncButton* armPlate = new FuncButton(
             486, 242, 305, 119, widgetId++,
             DATA_COMPGEN(0x00660df0, campaignSetArmSprite, "CSSarm.def"),
             campaignSetArmHandler, 0, 1);
@@ -105,7 +105,7 @@ TCampaignSetWindow::TCampaignSetWindow()
         armPlate->setHotkey(0x1e);
     }
 
-    type_func_button* roePlate = new type_func_button(
+    FuncButton* roePlate = new FuncButton(
         g_campaignSetRoeRect[0], g_campaignSetRoeRect[1],
         g_campaignSetRoeRect[2], g_campaignSetRoeRect[3], widgetId++,
         DATA_COMPGEN(0x00660de4, campaignSetRoeSprite, "CSSroe.def"),
@@ -113,7 +113,7 @@ TCampaignSetWindow::TCampaignSetWindow()
     m_widgets.push_back(roePlate);
     roePlate->setHotkey(0x13);
 
-    type_func_button* cusPlate = new type_func_button(
+    FuncButton* cusPlate = new FuncButton(
         g_campaignSetCusRect[0], g_campaignSetCusRect[1],
         g_campaignSetCusRect[2], g_campaignSetCusRect[3], widgetId++,
         DATA_COMPGEN(0x00660dd8, campaignSetCusSprite, "CSScus.def"),
@@ -121,7 +121,7 @@ TCampaignSetWindow::TCampaignSetWindow()
     m_widgets.push_back(cusPlate);
     cusPlate->setHotkey(0x2e);
 
-    type_func_button* exitPlate = new type_func_button(
+    FuncButton* exitPlate = new FuncButton(
         g_campaignSetExitRect[0], g_campaignSetExitRect[1],
         g_campaignSetExitRect[2], g_campaignSetExitRect[3], widgetId,
         DATA_COMPGEN(0x00660dcc, campaignSetExitSprite, "CSSexit.def"),
@@ -132,10 +132,10 @@ TCampaignSetWindow::TCampaignSetWindow()
     addWidgetsToMessageStream();
 }
 
-VA_COMPGEN(0x00457200, 0x21, SCALAR_DELETING_DTOR, TCampaignSetWindow)
+VA_COMPGEN(0x00457200, 0x21, SCALAR_DELETING_DTOR, CampaignSetWindow)
 
 VA(0x00457230, 0x4E)
-TCampaignSetWindow::~TCampaignSetWindow()
+CampaignSetWindow::~CampaignSetWindow()
 {
     deleteWidgets();
 }
@@ -144,92 +144,92 @@ TCampaignSetWindow::~TCampaignSetWindow()
 // row and a left-release with the modal result DoCampaignWindow switches
 // on; the Exit plate answers the shared 0x7801 dialog-cancel id.
 VA(0x00457280, 0x64)
-static int campaignSetSodHandler(message& msg)
+static int campaignSetSodHandler(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_SOD_HELP), 4, -1, -1,
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(g_generalText->getText(CampaignSetWindow::CAMPAIGN_SET_SOD_HELP), 4, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
-    if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
+    if (msg.m_codeX == Widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = TCampaignSetWindow::CAMPAIGN_SET_SOD_ID;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = CampaignSetWindow::CAMPAIGN_SET_SOD_ID;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
 }
 
 VA(0x004572f0, 0x64)
-static int campaignSetArmHandler(message& msg)
+static int campaignSetArmHandler(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_ARM_HELP), 4, -1, -1,
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(g_generalText->getText(CampaignSetWindow::CAMPAIGN_SET_ARM_HELP), 4, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
-    if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
+    if (msg.m_codeX == Widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = TCampaignSetWindow::CAMPAIGN_SET_AB_ID;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = CampaignSetWindow::CAMPAIGN_SET_AB_ID;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
 }
 
 VA(0x00457360, 0x64)
-static int campaignSetCusHandler(message& msg)
+static int campaignSetCusHandler(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_CUS_HELP), 4, -1, -1,
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(g_generalText->getText(CampaignSetWindow::CAMPAIGN_SET_CUS_HELP), 4, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
-    if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
+    if (msg.m_codeX == Widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = TCampaignSetWindow::CUSTOM_CAMPAIGN_ID;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = CampaignSetWindow::CUSTOM_CAMPAIGN_ID;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
 }
 
 VA(0x004573d0, 0x64)
-static int campaignSetExitHandler(message& msg)
+static int campaignSetExitHandler(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_EXIT_HELP), 4, -1,
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(g_generalText->getText(CampaignSetWindow::CAMPAIGN_SET_EXIT_HELP), 4, -1,
                      -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
-    if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
+    if (msg.m_codeX == Widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeY = DIALOG_RETURN_CANCEL;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
 }
 
 VA(0x00457440, 0x60)
-static int campaignSetRoeHandler(message& msg)
+static int campaignSetRoeHandler(Message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_ROE_HELP), 4, -1, -1,
+    if (msg.m_codeX == Widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(g_generalText->getText(CampaignSetWindow::CAMPAIGN_SET_ROE_HELP), 4, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
-    if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
+    if (msg.m_codeX == Widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = TCampaignSetWindow::CAMPAIGN_SET_ROE_ID;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = CampaignSetWindow::CAMPAIGN_SET_ROE_ID;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
 }
 
 VA(0x004574a0, 0x2C)
-void TCampaignSetWindow::doModal()
+void CampaignSetWindow::doModal()
 {
     g_soundManager->startMP3(
         DATA_COMPGEN(0x00660e08, campaignSetMusic, "MainMenu"), 0, 1);
@@ -237,7 +237,7 @@ void TCampaignSetWindow::doModal()
 }
 
 VA(0x004574d0, 0xC4)
-int TCampaignSetWindow::handleMessage(message& msg)
+int CampaignSetWindow::handleMessage(Message& msg)
 {
     unsigned char hoverChanged = 0;
 
@@ -249,9 +249,9 @@ int TCampaignSetWindow::handleMessage(message& msg)
             hoverChanged = 1;
             if (g_campaignSetHoverId != -1)
                 getWidget(g_campaignSetHoverId)
-                    ->sendMessage(widget::WIDGET_CLEAR_STATUS, 0x10);
+                    ->sendMessage(Widget::WIDGET_CLEAR_STATUS, 0x10);
             if (hovered != -1)
-                getWidget(hovered)->sendMessage(widget::WIDGET_SET_STATUS,
+                getWidget(hovered)->sendMessage(Widget::WIDGET_SET_STATUS,
                                                  0x10);
             g_campaignSetHoverId = hovered;
         }

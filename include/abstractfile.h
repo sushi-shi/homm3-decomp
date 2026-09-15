@@ -6,7 +6,8 @@
 // virtual calls use slot 1 to read and slot 2 to write (this in ECX,
 // (buffer, size) on the stack). Keep that three-slot ABI canonical for every
 // consumer rather than substituting an opaque pure-virtual placeholder.
-class TAbstractFile {
+// Before normalization (type): TAbstractFile.
+class AbstractFile {
 public:
     // Retail expands this body in TGzFile::~TGzFile (0x4d6d60) and
     // t_memory_file::~t_memory_file (0x512b00). Their constructor cleanups
@@ -15,7 +16,7 @@ public:
     // 0x487e00. A retained copy therefore does not imply an ordinary
     // declaration. Defining it only in customcampaign.cpp is the negative
     // control: the two derived destructors call it and fall to 80/87.69%.
-    virtual ~TAbstractFile() {}
+    virtual ~AbstractFile() {}
     virtual int read(void* data, int size) = 0;
     virtual int write(const void* data, int size) = 0;
 };

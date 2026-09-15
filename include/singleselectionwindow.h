@@ -18,7 +18,8 @@
 // (Demon 0x30 opens it, 0x35..0x37 close it); the wait dialog rerolls
 // its random flavor creature past both. TU-private for the same
 // include-set reason army.h scopes its own creature ids.
-enum EWaitDialogCreatures {
+// Before normalization (type): EWaitDialogCreatures.
+enum WaitDialogCreatures {
     WAIT_CREATURE_DEVIL = 0x36,
     WAIT_CREATURE_ARCH_DEVIL = 0x37
 };
@@ -30,7 +31,8 @@ enum EWaitDialogCreatures {
 // ECampaignSets pages by (byte table at 0x584bd4: 7x0, 6x1, 7x2).
 // Title identities are deliberately not imported (the
 // EGameCampaignOrdinal precedent).
-enum ECampaignOrdinal {
+// Before normalization (type): ECampaignOrdinal.
+enum CampaignOrdinal {
     CAMPAIGN_ROE_0 = 0,
     CAMPAIGN_ROE_1 = 1,
     CAMPAIGN_ROE_2 = 2,
@@ -55,7 +57,8 @@ enum ECampaignOrdinal {
 
 // The sort columns SortMaps' jump table dispatches (`how`), in the file
 // list's column order. Values are the RS_SORT_MAPS payload rungs.
-enum ESortMapsColumn {
+// Before normalization (type): ESortMapsColumn.
+enum SortMapsColumn {
     SORT_MAPS_BY_NAME = 0,
     SORT_MAPS_BY_PLAYERS = 1,
     SORT_MAPS_BY_VERSION = 2,
@@ -67,14 +70,16 @@ enum ESortMapsColumn {
 // field_18A0[6] selects one of the first three filter buttons; the fourth
 // button is the aggregate choice. The underlying category names are not yet
 // attested, so only the byte-proven aggregate member is named.
-enum EScenarioFilterCategory {
+// Before normalization (type): EScenarioFilterCategory.
+enum ScenarioFilterCategory {
     SCENARIO_FILTER_CATEGORY_ANY = 3
 };
 
 // Widget ids consumed by TSingleSelectionWindow::OnWidgetDeselect. The
 // constructor, retail jump table, and Dreamcast's named handler calls agree
 // on these ranges.
-enum ESingleSelectionWidgetId {
+// Before normalization (type): ESingleSelectionWidgetId.
+enum SingleSelectionWidgetId {
     SSW_DIFFICULTY_FIRST = 107,
     SSW_DIFFICULTY_LAST = 111,
     SSW_SCENARIO_OPTIONS = 128,
@@ -152,19 +157,22 @@ enum ESingleSelectionWidgetId {
 // equals 3, the only value recoverable here. House ordinal placeholder,
 // exactly the textntry.h EField68 rule - names the domain member so the
 // branch is not a magic compare, without claiming an attested identity.
-enum EWindowMode6989f0 {
+// Before normalization (type): EWindowMode6989f0.
+enum WindowMode6989f0 {
     WINDOW_MODE_6989F0_3 = 3
 };
 
 // Constructor-only domains. DC gives gameMode as int; retail proves the two
 // non-default commands by their load/save setup arms. The context values are
 // intentionally ordinal until the gpVideoGameState owner supplies names.
-enum ESingleSelectionGameMode {
+// Before normalization (type): ESingleSelectionGameMode.
+enum SingleSelectionGameMode {
     SINGLE_SELECTION_LOAD_GAME = 1,
     SINGLE_SELECTION_SAVE_GAME = 2
 };
 
-enum ESingleSelectionLaunchContext {
+// Before normalization (type): ESingleSelectionLaunchContext.
+enum SingleSelectionLaunchContext {
     SINGLE_SELECTION_LAUNCHED_FROM_CAMPAIGN = 101
 };
 
@@ -185,16 +193,16 @@ public:
 // Forward-declared for TSingleSelectionWindow's slider members
 // (+0x1838..+0x1844); the full layouts stay in the private header so this
 // public header's include closure is unchanged for advmgr/townmgr.
-class slider;
+class Slider;
 class Bitmap816;
 class CSaveScreen;
 class CSprite;
-class textEntryWidget;
+class TextEntryWidget;
 class CNewPlayerUpdateMan;
 class CChatWidget;
-class textWidget;
-class textButton;
-class button;
+class TextWidget;
+class TextButton;
+class Button;
 struct GameSelectionHeadersStruct;
 
 // Difficulty mirror (DC lastDiff), teardown mode and constructor headings.
@@ -215,7 +223,8 @@ extern const char* g_unnamed6a7e18[];
 // scenario-info row renderer. No source symbol survives for the retail table.
 extern const char* g_unnamed6a5e14[];
 
-enum ESingleSelectionGameContext {
+// Before normalization (type): ESingleSelectionGameContext.
+enum SingleSelectionGameContext {
     SINGLE_SELECTION_CONTEXT_1 = 1,
     // The middle context RebuildFilteredPlayerSetup groups with
     // SINGLE_SELECTION_CONTEXT_3 when it picks the synthesized map's
@@ -420,7 +429,8 @@ SIZE(CSingleSelectionNetMsgHandler, 0x10);
 // UpdateAllyEnemyFlags body adds the DC-named saved-background pointer
 // flagBack at +0x1870. The constructor further proves the DC-named embedded
 // netMsgHandler at +0x1888; the tail after it remains under reconstruction.
-class TSingleSelectionWindow : public CAdvPopup {
+// Before normalization (type): TSingleSelectionWindow.
+class SingleSelectionWindow : public CAdvPopup {
 public:
     // DC CNewPlayerUpdateProc::Go at singleselectionwindow.cpp:1277
     // loads private gameVersion directly for the message constructor
@@ -506,7 +516,7 @@ public:
     // Role-derived: entering random-map options sets this flag;
     // updateGameVars uses the synthesized localHeader when it is set.
     unsigned char m_randomMapSelected;
-    textEntryWidget* m_saveGameEdit;  // 0x380
+    TextEntryWidget* m_saveGameEdit;  // 0x380
     // Dreamcast mode is a byte at +0x374 between saveGameEdit (+0x370)
     // and pNewPlayerUpdateMan (+0x378). Both retail pointer anchors shift
     // by +0x10, preserving this slot. No retail mode access located.
@@ -552,10 +562,10 @@ public:
 private:
     // The window handler scrolls the file slider. On teardown, doModal resets
     // the duration slider to 11 (unlimited turns).
-    slider* m_chatSlider;  // 0x1838
-    slider* m_fileSlider;  // 0x183c
-    slider* m_durationSlider;  // 0x1840
-    slider* m_nameSlider;  // 0x1844
+    Slider* m_chatSlider;  // 0x1838
+    Slider* m_fileSlider;  // 0x183c
+    Slider* m_durationSlider;  // 0x1840
+    Slider* m_nameSlider;  // 0x1844
     CChatWidget* m_chatWidget;  // 0x1848 (DC chatWidget)
     // The DC chatWidget..flagBack member run (dc 2848..2888) maps onto
     // retail 0x1848..0x1870 LINEARLY (constant delta 3368, every
@@ -564,8 +574,8 @@ private:
     // The two 4-seat name columns: UpdateNameLists (0x58c960) rebuilds
     // their text (virtual SetText, slot 13) and the TurnChat pair
     // shows/hides them.
-    textWidget* m_nameList1;  // 0x184c (DC nameList1)
-    textWidget* m_nameList2;  // 0x1850 (DC nameList2)
+    TextWidget* m_nameList1;  // 0x184c (DC nameList1)
+    TextWidget* m_nameList2;  // 0x1850 (DC nameList2)
     // DC mapChanged/readingMaps; no reconstructed body exercises them
     // yet - position is the linear-run proof above.
     unsigned char m_mapChanged;  // 0x1854
@@ -579,7 +589,7 @@ public:
 private:
     // DC chatEdit (a CCombatChatEdit there): TurnChatOn (0x58ca80)
     // focuses its id on chat-open. Base-typed until its widget lands.
-    textEntryWidget* m_chatEdit;  // 0x1858
+    TextEntryWidget* m_chatEdit;  // 0x1858
     int m_sortWhich;  // 0x185c
 
 public:
@@ -602,7 +612,7 @@ public:
 private:
     // DC chatToggle: the show/hide-chat textButton whose label the
     // TurnChat pair rewrites from general-text rows 532/533.
-    textButton* m_chatToggle;  // 0x1868
+    TextButton* m_chatToggle;  // 0x1868
     unsigned char m_receivingMaps;  // 0x186c (DC receivingMaps), cleared on header-end
 
 public:
@@ -643,25 +653,25 @@ public:
     // select the disabled/highlight frames and register them with the window.
     // The six loop bases and counts in retail prove every boundary below; the
     // ordinal names avoid claiming meanings not present in the older DC UI.
-    button* m_filterCountAButtons[9];  // 0x18c0, ids 0x11f..0x127
-    button* m_filterCountBButtons[9];  // 0x18e4, ids 0x129..0x131
-    button* m_filterCountCButtons[9];  // 0x1908, ids 0x133..0x13b
-    button* m_filterCountDButtons[8];  // 0x192c, ids 0x13d..0x144
-    button* m_filterWaterButtons[4];  // 0x194c, ids 0x146..0x149
-    button* m_filterStrengthButtons[4];  // 0x195c, ids 0x14b..0x14e
+    Button* m_filterCountAButtons[9];  // 0x18c0, ids 0x11f..0x127
+    Button* m_filterCountBButtons[9];  // 0x18e4, ids 0x129..0x131
+    Button* m_filterCountCButtons[9];  // 0x1908, ids 0x133..0x13b
+    Button* m_filterCountDButtons[8];  // 0x192c, ids 0x13d..0x144
+    Button* m_filterWaterButtons[4];  // 0x194c, ids 0x146..0x149
+    Button* m_filterStrengthButtons[4];  // 0x195c, ids 0x14b..0x14e
     // Retail-only tail member (no DC counterpart - DC's roster ends at
     // netMsgHandler): the widget the TurnChat pair shows with widget 105
     // when chat is OFF and hides when it is ON, always addressed
     // directly, never through GetWidget.
     // Role-derived: construction creates a CScrollTextWidget here;
     // updateGameVars (0x583580) fills it from the selected map description.
-    widget* m_descriptionWidget;  // 0x196c
+    Widget* m_descriptionWidget;  // 0x196c
 
-    TSingleSelectionWindow(int gameMode);
-    virtual ~TSingleSelectionWindow();
+    SingleSelectionWindow(int gameMode);
+    virtual ~SingleSelectionWindow();
     virtual int doModal(unsigned char fadeIn);
     void updatePlayerPositions(unsigned char updateCurPlayer);
-    virtual int windowHandler(message& msg);  // slot 9
+    virtual int windowHandler(Message& msg);  // slot 9
     void onChatWindowSlider(int newIndex);
     void onDurationSlider(int newIndex);
     void onFileMenuSlider(int newIndex);
@@ -671,7 +681,7 @@ private:
     virtual unsigned char processRightSelect(int id);  // slot 11
 
 public:
-    virtual int exitDialog(message& msg);   // slot 14
+    virtual int exitDialog(Message& msg);   // slot 14
     int update();
     const char* getMapName(int which);
     const char* getFileName(int which);
@@ -689,7 +699,7 @@ public:
     void onPlayerPosClick(int pos);
     int getThisPlayerGamePos();
     void setDifficultyHiLite();
-    int onWidgetDeselect(message* msg, unsigned char* exitFlag,
+    int onWidgetDeselect(Message* msg, unsigned char* exitFlag,
                          unsigned char remoteClick);
     unsigned char canChooseTown(int gamePos);
     unsigned char canChooseHero(int gamePos);
@@ -698,7 +708,7 @@ public:
     int getHeroInPos(int gamePos);
     // Dreamcast names the enum return, and Complete's inlined nine-town
     // callers retain that enum-typed local and mask lowering.
-    TTownType getDisplayTown(int gamePos);
+    TownType getDisplayTown(int gamePos);
     const char* getHeroName(int gamePos);
     void onNameChange(int gamePos, const char* newName);
     unsigned char highlightFile(char* filename);
@@ -756,7 +766,7 @@ public:
     void turnChatOff(unsigned char update);
     void onTownUpdateMsg(CNetMsg* netMsg, bool inPopup);
     void updateNameLists();
-    void updateTown(int pos, TTownType town, unsigned char inPopup);
+    void updateTown(int pos, TownType town, unsigned char inPopup);
     void setNewPlayerSlot(CNetPlayerInfo* playerInfo);
     void setupLoadGameMode();
     void setupNewGameMode();
@@ -801,7 +811,7 @@ public:
 private:
     CNetPlayerHandlerPlayer* getThisPlayer();
 };
-SIZE(TSingleSelectionWindow, 0x1970);
+SIZE(SingleSelectionWindow, 0x1970);
 
 // Four cross-TU cells advmgr's SaveGame drives; the selection window's
 // own TU is their natural owner, so they are declared here (the

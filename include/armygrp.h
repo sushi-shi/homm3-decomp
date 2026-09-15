@@ -16,11 +16,15 @@ template<class E> struct char_traits;
 template<class E, class Tr, class A> class basic_string;
 }
 
+class Town;
+class Hero;
+
 // Bootstrap domain: only the sentinel is modeled; the full creature
 // roster gets its own header when a consumer needs the values.
 // (Dreamcast CodeView types armies[] and IsMember's parameter as
 // TCreatureType; retail compares slots against -1.)
-enum TCreatureType {
+// Before normalization (type): TCreatureType.
+enum CreatureType {
     CREATURE_NONE = -1,
     // The two griffins, byte-proven by ai_tactical's
     // get_counterstroke_value (0x439e80): it doubles the counterstrike
@@ -278,7 +282,8 @@ typedef int SpellID;
 // ai_combat's damage-spell dispatch). NH3API spells.hpp spellings;
 // the DC SpellID enum corroborates every value (eSpellStoneGaze for
 // SPELL_STONE).
-enum ESpellId {
+// Before normalization (type): ESpellId.
+enum SpellId {
     SPELL_SUMMON_BOAT = 0x0,
     // advManager::SkuttleBoat (0x41cdf0) is the witness and it proves the
     // id twice in one body: it takes its traits row at `akSpellTraits +
@@ -561,7 +566,7 @@ struct SSpellTraits {
     const char* m_abbreviatedName;
     int m_level;                // the dragons' magic-immunity gate
     union {
-        TSpellSchool m_school;  // typed consumer view
+        SpellSchool m_school;  // typed consumer view
         unsigned int m_schoolBits;  // loader's OR-accumulator view
     };                        // +0x1c
     // +0x20, the per-mastery MANA COST row: GetManaCost indexes it
@@ -605,7 +610,8 @@ unsigned char spellTargetsASingleArmy(int spell, int sslevel);
 // field lifts neutral-town luck. NH3API terrain.hpp EMagicTerrain
 // spellings. NewmapCell::get_magic_terrain_type (0x4fcf40) proves the
 // remaining return values against its five-way special-terrain switch.
-enum EMagicTerrain {
+// Before normalization (type): EMagicTerrain.
+enum MagicTerrainType {
     MAGIC_TERRAIN_INVALID = -1,
     MAGIC_TERRAIN_COAST = 0,
     MAGIC_TERRAIN_MAGIC_PLAINS = 0x1,
@@ -627,7 +633,8 @@ enum EMagicTerrain {
 // (idx*29 dwords in HasAllUndead/get_AI_value), attributes @0x10 and
 // AI_value @0x40 from the same bodies; field names are the NH3API
 // roster, which lands exactly on those offsets with cost[7].
-struct TCreatureTypeTraits {
+// Before normalization (type): TCreatureTypeTraits.
+struct CreatureTypeTraits {
     int m_townType;
     int m_level;
     const char* m_samplePrefix;
@@ -659,7 +666,7 @@ struct TCreatureTypeTraits {
     int m_wanderingLow;
     int m_wanderingHigh;
 };
-SIZE(TCreatureTypeTraits, 116);
+SIZE(CreatureTypeTraits, 116);
 
 // attributes bits proven by retail tests: 0x40000 by HasAllUndead
 // (0x44ab20); 0x40 by GetAlignments (0x44abb0), which skips such
@@ -691,7 +698,7 @@ const unsigned int g_ctaAlive = 0x10;
 // The traits table is reached through a stored pointer (reference
 // global): retail loads [0x6747b0] before indexing. NH3API names it
 // akCreatureTypeTraits (a const reference to the 150-entry array).
-DATA(0x006747b0) extern const TCreatureTypeTraits (&g_creatureTypeTraits)[150];
+DATA(0x006747b0) extern const CreatureTypeTraits (&g_creatureTypeTraits)[150];
 
 // Creature-card background image by town alignment (CrBkgCas.pcx first,
 // CrBkgEle.pcx last). Retail indexes this biased base with -1 for the
@@ -719,7 +726,7 @@ DATA(0x006a5bb8) extern const char* g_apszArmySizeNames[9][3];
 // legal index. grass, grass, snow, lava, dirt, subterranean, rough,
 // swamp, grass. The NAME is a bootstrap invention (no Dreamcast/NH3API
 // name survives for this table) - replace on evidence.
-DATA(0x00643698) extern const TTerrainType g_nativeTerrains[9];
+DATA(0x00643698) extern const TerrainType g_nativeTerrains[9];
 
 // GetMorale's two town-building tests were bootstrapped here as
 // separate `unsigned int[2]` mask objects (gTavernMask /
@@ -736,7 +743,8 @@ DATA(0x00643698) extern const TTerrainType g_nativeTerrains[9];
 // elementals keep their town alignment; zero -> they census as
 // neutral; likely the expansion/map-version gate).
 
-class armyGroup {
+// Before normalization (type): armyGroup.
+class ArmyGroup {
 public:
     enum { ARMY_GROUP_SLOT_COUNT = 7 };
 
@@ -754,81 +762,81 @@ public:
     // one in townmgr.cpp.
     union {
         int m_armies[ARMY_GROUP_SLOT_COUNT];
-        TCreatureType m_armyTypes[ARMY_GROUP_SLOT_COUNT];
+        CreatureType m_armyTypes[ARMY_GROUP_SLOT_COUNT];
     };
 
-    armyGroup();
-    armyGroup(TCreatureType type, int amount);
+    ArmyGroup();
+    ArmyGroup(CreatureType type, int amount);
     int m_numTroops[ARMY_GROUP_SLOT_COUNT];
     void initialize();
     int getAlignments(unsigned char* alignments) const;
     long getAIValue() const;
     int getCreatureTotal() const;
-    int getCreatureTotal(TCreatureType monType) const;
-    unsigned char isMember(TCreatureType monType) const;
+    int getCreatureTotal(CreatureType monType) const;
+    unsigned char isMember(CreatureType monType) const;
     int canJoin(int monType) const;
     unsigned char hasAllUndead() const;
     // Dreamcast armygrp.cpp:668. Complete retains the same source helper at
     // its morale consumers; VC6 /Ob2 expands the loop and /OPT:REF removes
     // the unreferenced out-of-line copy from retail.
     unsigned char hasSomeUndead() const;
-    unsigned char merge(armyGroup* ag);
-    void mergeArmies(armyGroup& source);
-    void splitArmy(int srcIndex, armyGroup* ag, int destIndex,
+    unsigned char merge(ArmyGroup* ag);
+    void mergeArmies(ArmyGroup& source);
+    void splitArmy(int srcIndex, ArmyGroup* ag, int destIndex,
                    unsigned char inSrcRestricted,
                    unsigned char inDestRestricted);
     unsigned char hasCreatures() const;
-    TTerrainType getNativeTerrain() const;
-    int getLuck(const class hero* ownerHero, const class town* ownerTown,
-                const class hero* otherHero, const armyGroup* otherGroup,
+    TerrainType getNativeTerrain() const;
+    int getLuck(const Hero* ownerHero, const Town* ownerTown,
+                const Hero* otherHero, const ArmyGroup* otherGroup,
                 unsigned char onCursedGround,
                 unsigned char applyLimits) const;
-    int getMorale(const class hero* ownerHero, const class town* ownerTown,
-                  const class hero* otherHero, const armyGroup* otherGroup,
+    int getMorale(const Hero* ownerHero, const Town* ownerTown,
+                  const Hero* otherHero, const ArmyGroup* otherGroup,
                   unsigned char onCursedGround,
                   unsigned char groupAlignments,
                   unsigned char applyLimits) const;
-    int getArmyMorale(int index, const class hero* ownerHero,
-                      const class town* ownerTown, int mode,
+    int getArmyMorale(int index, const Hero* ownerHero,
+                      const Town* ownerTown, int mode,
                       unsigned char arg5,
                       unsigned char applyLimits) const;
-    int getArmyLuck(int index, const class hero* ownerHero,
-                    const class town* ownerTown, int mode,
+    int getArmyLuck(int index, const Hero* ownerHero,
+                    const Town* ownerTown, int mode,
                     unsigned char applyLimits) const;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
-        getMoraleDescription(TCreatureType creature, int morale,
-                               const class hero* ownerHero,
-                               const class town* ownerTown,
-                               const class hero* otherHero,
-                               const armyGroup* otherGroup,
+        getMoraleDescription(CreatureType creature, int morale,
+                               const Hero* ownerHero,
+                               const Town* ownerTown,
+                               const Hero* otherHero,
+                               const ArmyGroup* otherGroup,
                                int magicTerrain,
                                unsigned char groupAlignments) const;
     // Retail Complete added CREATURE and widened the final magic-terrain
     // parameter relative to the older Dreamcast prototype. The body indexes
     // creature traits from the first argument and returns with `ret 20h`.
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
-        getLuckDescription(TCreatureType creature, int luck,
-                             const class hero* ourHero,
-                             const class town* ourTown,
-                             const class hero* enemyHero,
-                             const armyGroup* enemyGroup,
+        getLuckDescription(CreatureType creature, int luck,
+                             const Hero* ourHero,
+                             const Town* ourTown,
+                             const Hero* enemyHero,
+                             const ArmyGroup* enemyGroup,
                              int magicTerrain) const;
-    int save(TAbstractFile* outfile);
-    int load(TAbstractFile* infile);
+    int save(AbstractFile* outfile);
+    int load(AbstractFile* infile);
     int add(int armyType, int newNumTroops, int newIndex);
     void dismiss(int whichIndex);
-    void swap(int srcIndex, armyGroup* destGroup, int destIndex);
+    void swap(int srcIndex, ArmyGroup* destGroup, int destIndex);
     int getNumArmies() const;
     static const char* getArmySizeName(int howMany, int nameSet);
 };
-SIZE(armyGroup, 56);
+SIZE(ArmyGroup, 56);
 
 // Live prototypes (claimed armygrp.cpp bodies; ai_combat's spell-work
 // chain calls both).
-float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType,
-                            const class hero* const castingHero,
-                            const class hero* const targetHero);            // 0x44a4d0
-long modifySpellDamage(long damage, SpellID spell, TCreatureType creature);  // 0x44b4b0
+float getSpellWorkChance(SpellID spell, CreatureType targetArmyType,
+                            const Hero* const castingHero,
+                            const Hero* const targetHero);            // 0x44a4d0
+long modifySpellDamage(long damage, SpellID spell, CreatureType creature);  // 0x44b4b0
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\armygrp.cpp:341, dc 0x4e644) float get_spell_work_chance(SpellID spell, TCreatureType target_army_type, const hero* casting_hero, const hero* target_hero);

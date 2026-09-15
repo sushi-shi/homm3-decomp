@@ -45,32 +45,32 @@ BINK* BinkManager::getBinkFilePtr(const char* filename, int binkOptions)
 
     if (*g_videoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES) {
         for (i = 0; i < g_videoCount1; i++) {
-            if (_strcmpi(g_videoHeader1[i].m_name, name) == 0) {
+            if (strcmpi(g_videoHeader1[i].m_name, name) == 0) {
                 SetFilePointer(g_videoFile1, g_videoHeader1[i].m_offset, 0,
                     FILE_BEGIN);
                 g_soundManager->serviceSounds();
-                return _BinkOpen(g_videoFile1,
+                return binkopen(g_videoFile1,
                     binkOptions | g_binkOpenFromArchive);
             }
         }
     }
 
     for (i = 0; i < g_videoCount2; i++) {
-        if (_strcmpi(g_videoHeader2[i].m_name, name) == 0) {
+        if (strcmpi(g_videoHeader2[i].m_name, name) == 0) {
             SetFilePointer(g_videoFile2, g_videoHeader2[i].m_offset, 0, FILE_BEGIN);
             g_soundManager->serviceSounds();
-            return _BinkOpen(g_videoFile2,
+            return binkopen(g_videoFile2,
                 binkOptions | g_binkOpenFromArchive);
         }
     }
 
     if (g_videoFile3) {
         for (i = 0; i < g_videoCount3; i++) {
-            if (_strcmpi(g_videoHeader3[i].m_name, name) == 0) {
+            if (strcmpi(g_videoHeader3[i].m_name, name) == 0) {
                 SetFilePointer(g_videoFile3, g_videoHeader3[i].m_offset, 0,
                     FILE_BEGIN);
                 g_soundManager->serviceSounds();
-                return _BinkOpen(g_videoFile3,
+                return binkopen(g_videoFile3,
                     binkOptions | g_binkOpenFromArchive);
             }
         }
@@ -78,11 +78,11 @@ BINK* BinkManager::getBinkFilePtr(const char* filename, int binkOptions)
 
     if (*g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
         for (i = 0; i < g_videoCount1; i++) {
-            if (_strcmpi(g_videoHeader1[i].m_name, name) == 0) {
+            if (strcmpi(g_videoHeader1[i].m_name, name) == 0) {
                 SetFilePointer(g_videoFile1, g_videoHeader1[i].m_offset, 0,
                     FILE_BEGIN);
                 g_soundManager->serviceSounds();
-                return _BinkOpen(g_videoFile1,
+                return binkopen(g_videoFile1,
                     binkOptions | g_binkOpenFromArchive);
             }
         }
@@ -101,7 +101,7 @@ void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
         g_binkSoundReady = 0;
 
     videoClose();
-    g_binkSurfaceType = _BinkDDSurfaceType(g_ddsBack);
+    g_binkSurfaceType = binkddsurfacetype(g_ddsBack);
     g_binkVideoId = id;
     g_binkPaused = 0;
 
@@ -147,16 +147,16 @@ void BinkManager::drawCurrentBinkFrame()
     Bink* video;
     if (g_binkVideo && g_binkFrameReady) {
         if (g_binkVideo->m_frameNum == 1)
-            _BinkDoFrame(g_binkVideo);
+            binkdoframe(g_binkVideo);
         video = g_binkVideo;
     } else if (g_binkVideo2 && g_binkFrameReady) {
         if (g_binkVideo2->m_frameNum == 1)
-            _BinkDoFrame(g_binkVideo2);
+            binkdoframe(g_binkVideo2);
         video = g_binkVideo2;
     } else {
         return;
     }
-    _BinkCopyToBuffer(video, g_binkBuffer, g_binkPitch, g_binkHeight, 0, 0,
+    binkcopytobuffer(video, g_binkBuffer, g_binkPitch, g_binkHeight, 0, 0,
                       g_binkSurfaceType);
 }
 
@@ -164,9 +164,9 @@ VA(0x0044da50, 0x4D)  // dc 0x50a8c
 void BinkManager::restartBink()
 {
     if (g_binkVideo) {
-        _BinkGoto(g_binkVideo, 1, 1);
-        _BinkDoFrame(g_binkVideo);
-        _BinkCopyToBuffer(g_binkVideo, g_binkBuffer, g_binkPitch, g_binkHeight,
+        binkgoto(g_binkVideo, 1, 1);
+        binkdoframe(g_binkVideo);
+        binkcopytobuffer(g_binkVideo, g_binkBuffer, g_binkPitch, g_binkHeight,
                           0, 0, g_binkSurfaceType);
     }
 }
@@ -178,13 +178,13 @@ void BinkManager::nextBinkFrame()
     Bink* video = g_binkVideo;
     if (!video)
         video = g_binkVideo2;
-    if (video && g_binkFrameReady && !_BinkWait(video)) {
+    if (video && g_binkFrameReady && !binkwait(video)) {
         g_binkDirty = 1;
         if (g_binkPaused)
             return;
 
-        _BinkDoFrame(video);
-        _BinkCopyToBuffer(video, g_binkBuffer, g_binkPitch, g_binkHeight, 0, 0,
+        binkdoframe(video);
+        binkcopytobuffer(video, g_binkBuffer, g_binkPitch, g_binkHeight, 0, 0,
                           g_binkSurfaceType);
 
         if (video->m_frameNum == video->m_frames) {
@@ -193,20 +193,20 @@ void BinkManager::nextBinkFrame()
                     if (g_videoDescriptors[g_binkVideoId].m_fadeOnAbort)
                         g_windowManager->fadeScreen(1, 4, 0);
                     g_soundManager->serviceSounds();
-                    _BinkClose(g_binkVideo);
+                    binkclose(g_binkVideo);
                     g_binkVideo = 0;
                     video = g_binkVideo2;
                     if (g_videoDescriptors[g_binkVideoId].m_fadeInSecondTrack) {
-                        _BinkDoFrame(video);
-                        _BinkCopyToBuffer(video, g_binkBuffer, g_binkPitch,
+                        binkdoframe(video);
+                        binkcopytobuffer(video, g_binkBuffer, g_binkPitch,
                                           g_binkHeight, 0, 0, g_binkSurfaceType);
                         g_windowManager->fadeScreen(0, 4, 0);
                     }
                 } else {
-                    _BinkNextFrame(video);
+                    binknextframe(video);
                 }
             } else {
-                _BinkGetSummary(video, &g_binkSummary);
+                binkgetsummary(video, &g_binkSummary);
                 BinkManager::closeBink();
                 if (g_videoDescriptors[g_binkVideoId].m_fadeOnAbort)
                     g_windowManager->fadeScreen(1, 4, 0);
@@ -215,7 +215,7 @@ void BinkManager::nextBinkFrame()
                 return;
             }
         } else {
-            _BinkNextFrame(video);
+            binknextframe(video);
         }
         if (g_binkUseDirtyRects)
             videoDrawRects();
@@ -230,12 +230,12 @@ VA(0x0044dcc0, 0x60)  // dc 0x50a94
 void BinkManager::closeBink()
 {
     if (g_binkVideo) {
-        _BinkPause(g_binkVideo, 1);
-        _BinkClose(g_binkVideo);
+        binkpause(g_binkVideo, 1);
+        binkclose(g_binkVideo);
     }
     if (g_binkVideo2) {
-        _BinkPause(g_binkVideo2, 1);
-        _BinkClose(g_binkVideo2);
+        binkpause(g_binkVideo2, 1);
+        binkclose(g_binkVideo2);
     }
     g_binkVideo2 = 0;
     g_binkVideo = 0;
@@ -308,7 +308,7 @@ int BinkManager::playBink(int id, int x, int y, int w, int h)
             pollSound();
             process1WindowsMessage();
             {
-                message msg = g_inputManager->getEvent();
+                Message msg = g_inputManager->getEvent();
                 switch (msg.m_id) {
                     case MESSAGE_KEY_DOWN:
                         if (msg.m_codeX == KEYCODE_F4)

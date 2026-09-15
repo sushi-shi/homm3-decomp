@@ -65,7 +65,7 @@ void LODFile::find(unsigned begin, unsigned end, const char* itemName)
         }
 
         unsigned half = (end - begin) / 2;
-        int order = _strcmpi(itemName, m_subindex[begin + half].m_name);
+        int order = strcmpi(itemName, m_subindex[begin + half].m_name);
         if (order == 0) {
             m_matchindex = begin + half;
             return;
@@ -76,7 +76,7 @@ void LODFile::find(unsigned begin, unsigned end, const char* itemName)
                 continue;
             } else {
                 for (unsigned i = begin; i < end; i++) {
-                    if (_strcmpi(itemName, m_subindex[i].m_name) == 0) {
+                    if (strcmpi(itemName, m_subindex[i].m_name) == 0) {
                         m_matchindex = i;
                         return;
                     }
@@ -90,7 +90,7 @@ void LODFile::find(unsigned begin, unsigned end, const char* itemName)
                 continue;
             } else {
                 for (unsigned j = begin; j < end; j++) {
-                    if (_strcmpi(itemName, m_subindex[j].m_name) == 0) {
+                    if (strcmpi(itemName, m_subindex[j].m_name) == 0) {
                         m_matchindex = j;
                         return;
                     }
@@ -130,7 +130,8 @@ char* LODFile::getErrorString(int LODErr)
 
 // E:\gamedcs\lodfile.cpp:341
 DC_ONLY(0xe955c, 0xF6)
-void LODFile::set_filemap(unsigned char on)
+// Before normalization (function): LODFile::set_filemap.
+void LODFile::setFilemap(unsigned char on)
 {
     // @stub
 }

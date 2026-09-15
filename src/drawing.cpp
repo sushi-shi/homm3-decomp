@@ -76,16 +76,16 @@ DATA(0x006989ec) int g_processingCombatAction;
 // ValidHex guard, controlling-side accessor and four shared cases prove that
 // the helper boundary survived at source level.
 static void getCreatureSpellMessage(char* buffer,
-                                       const army* currentArmy,
+                                       const Army* currentArmy,
                                        long currentHex)
 {
-    if (!combatManager::validHex(currentHex)) {
+    if (!CombatManager::validHex(currentHex)) {
         buffer[0] = 0;
         return;
     }
 
     int currentSide = currentArmy->getControllingSide();
-    army* targetArmy;
+    Army* targetArmy;
     switch (currentArmy->m_creatureType) {
     case CREATURE_ARCHANGEL:
         targetArmy = g_combatManager->findResurrectionTarget(
@@ -96,7 +96,7 @@ static void getCreatureSpellMessage(char* buffer,
         targetArmy = g_combatManager->m_cells[currentHex].getArmy();
         sprintf(buffer, (*g_generalText)[302], targetArmy->getName());
         break;
-    case army::ARMY_CREATURE_PIT_LORD:
+    case Army::ARMY_CREATURE_PIT_LORD:
         targetArmy = g_combatManager->findDemonicResurrectionTarget(
             currentSide, currentHex);
         sprintf(buffer, (*g_generalText)[301], targetArmy->getName());
@@ -176,8 +176,8 @@ static std::string formatRounded(long amount, long high)
         (amount + 500) / 1000);
 }
 
-static std::string getEstimatedDamage(const army* currentArmy,
-                                        army* targetArmy,
+static std::string getEstimatedDamage(const Army* currentArmy,
+                                        Army* targetArmy,
                                         unsigned char ranged,
                                         long distance)
 {
@@ -188,7 +188,7 @@ static std::string getEstimatedDamage(const army* currentArmy,
     if (currentArmy->m_spellInfluence[41] || currentArmy->m_spellInfluence[42]) {
         low = high = currentArmy->computeBaseDamage(1);
     } else if (currentArmy->m_creatureType == CREATURE_BALLISTA) {
-        hero* controller = currentArmy->getController();
+        Hero* controller = currentArmy->getController();
         low *= controller->getPrimarySkill(0) + 1;
         high *= controller->getPrimarySkill(0) + 1;
     }
@@ -210,14 +210,14 @@ static std::string getEstimatedDamage(const army* currentArmy,
 }
 
 VA(0x004922f0, 0x54C)  // dc 0x8354c
-bool combatManager::showCreatureSpellError(
-    char* buffer, const army* currentArmy)
+bool CombatManager::showCreatureSpellError(
+    char* buffer, const Army* currentArmy)
 {
     if (validHex(m_lastCellIndex) && (currentArmy->m_creatureType == CREATURE_ARCHANGEL
-            || currentArmy->m_creatureType == army::ARMY_CREATURE_PIT_LORD
+            || currentArmy->m_creatureType == Army::ARMY_CREATURE_PIT_LORD
             || currentArmy->m_creatureType == CREATURE_OGRE_MAGE)) {
-        hexcell* cell;
-        army* targetArmy;
+        Hexcell* cell;
+        Army* targetArmy;
         int i;
 
         cell = &m_cells[m_lastCellIndex];
@@ -246,7 +246,7 @@ bool combatManager::showCreatureSpellError(
             return false;
         }
         if (!(targetArmy->is(1u << 21))
-                && currentArmy->m_creatureType == army::ARMY_CREATURE_PIT_LORD) {
+                && currentArmy->m_creatureType == Army::ARMY_CREATURE_PIT_LORD) {
             return false;
         }
 
@@ -290,10 +290,10 @@ bool combatManager::showCreatureSpellError(
             return true;
         }
 
-        case army::ARMY_CREATURE_PIT_LORD: {
+        case Army::ARMY_CREATURE_PIT_LORD: {
             if (!(targetArmy->is(1u << 4))) {
                 sprintf(buffer, (*g_generalText)[702],
-                        getArmyName(army::ARMY_CREATURE_DEMON, 2));
+                        getArmyName(Army::ARMY_CREATURE_DEMON, 2));
                 return true;
             }
             if (currentArmy->getResurrectionSize(targetArmy) > 0) {
@@ -301,10 +301,10 @@ bool combatManager::showCreatureSpellError(
             }
             if (targetArmy->m_numTroops == 1) {
                 sprintf(buffer, (*g_generalText)[703], targetArmy->getName(),
-                        getArmyName(army::ARMY_CREATURE_DEMON, 2));
+                        getArmyName(Army::ARMY_CREATURE_DEMON, 2));
             } else {
                 sprintf(buffer, (*g_generalText)[704], targetArmy->getName(),
-                        getArmyName(army::ARMY_CREATURE_DEMON, 2));
+                        getArmyName(Army::ARMY_CREATURE_DEMON, 2));
             }
             return true;
         }
@@ -337,14 +337,14 @@ bool combatManager::showCreatureSpellError(
 
 // E:\gamedcs\drawing.cpp:326, dc 0x838f0
 VA(0x00492840, 0xB8E)  // retail CFG/calls + DC source shape, dc 0x838f0
-void combatManager::combatMessage(int command)
+void CombatManager::combatMessage(int command)
 {
     if (!m_combatShowIt
-            || static_cast<const combatManager*>(this)->isQuickCombat())
+            || static_cast<const CombatManager*>(this)->isQuickCombat())
         return;
 
-    army* currentArmy = getCurrentArmy();
-    army* targetArmy = 0;
+    Army* currentArmy = getCurrentArmy();
+    Army* targetArmy = 0;
     // TCombatWindow's native bool parameter receives this flag directly.
     bool priority = false;
     if (currentArmy->m_side >= 0 && currentArmy->m_slot >= 0)
@@ -418,7 +418,7 @@ void combatManager::combatMessage(int command)
 
     case COMBAT_COMMAND_VIEW_ARMY:
         if (validHex(m_lastCellIndex)) {
-            army* viewedArmy = m_cells[m_lastCellIndex].getArmy();
+            Army* viewedArmy = m_cells[m_lastCellIndex].getArmy();
             if (viewedArmy)
                 sprintf(g_text, (*g_generalText)[298],
                         viewedArmy->getName(1));
@@ -469,8 +469,8 @@ void combatManager::combatMessage(int command)
 }
 
 VA(0x004933d0, 0x27A)  // dc 0x833b4
-static std::string getEstimatedDamage(const army* currentArmy,
-                                        army* targetArmy,
+static std::string getEstimatedDamage(const Army* currentArmy,
+                                        Army* targetArmy,
                                         unsigned char ranged,
                                         long distance);
 
@@ -478,7 +478,7 @@ VA(0x00493650, 0xBD)  // dc 0x832d8
 static std::string formatRounded(long amount, long high);
 
 VA(0x00493710, 0x63)  // dc 0x83db0
-void combatManager::resetLimitCreature()
+void CombatManager::resetLimitCreature()
 {
     memset(m_creatureEffect, 0, sizeof m_creatureEffect);
     m_heroEffect[0] = 0;
@@ -490,9 +490,9 @@ void combatManager::resetLimitCreature()
 }
 
 VA(0x00493780, 0x44)
-void combatManager::updateCombatArea()
+void CombatManager::updateCombatArea()
 {
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()
+    if (!static_cast<const CombatManager*>(this)->isQuickCombat()
             && m_combatShowIt) {
         g_windowManager->updateScreen(
             g_combatDrawLimits694f18.m_minX,
@@ -507,7 +507,7 @@ void combatManager::updateCombatArea()
 // E:\gamedcs\drawing.cpp:513, dc 0x83ec0.
 // Complete passes the rectangle by const reference; UpdateMouseGrid
 // and FlyTo share this drawing-module definition.
-void combatManager::updateCombatArea(const SLimitData& area)
+void CombatManager::updateCombatArea(const SLimitData& area)
 {
     g_windowManager->updateScreen(
         area.m_minX, area.m_minY, area.width(), area.height());
@@ -515,7 +515,7 @@ void combatManager::updateCombatArea(const SLimitData& area)
 
 // E:\gamedcs\drawing.cpp:598, dc 0x8405c.
 // The fixed PC combat viewport needs no scrolling.
-bool combatManager::scrollTo(SLimitData, bool, bool, bool)
+bool CombatManager::scrollTo(SLimitData, bool, bool, bool)
 {
     return false;
 }
@@ -524,7 +524,7 @@ bool combatManager::scrollTo(SLimitData, bool, bool, bool)
 // constructs SLimitData(x, y, x + width, y + height) at line 680 and delegates
 // to the ordinary extent overload. SpellEffect calls it at line 2653; the
 // fixed PC viewport folds the false result into UpdateCombatArea's path.
-bool combatManager::scrollTo(int x, int y, int width, int height, bool draw,
+bool CombatManager::scrollTo(int x, int y, int width, int height, bool draw,
                              bool doscrollX, bool doscrollY)
 {
     return scrollTo(SLimitData(x, y, x + width, y + height),
@@ -535,63 +535,63 @@ bool combatManager::scrollTo(int x, int y, int width, int height, bool draw,
 
 // E:\gamedcs\drawing.cpp:492
 DC_ONLY(0x83e58, 0x34)
-void combatManager::updateCombatArea()
+void CombatManager::updateCombatArea()
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:506
 DC_ONLY(0x83e8c, 0x34)
-void combatManager::FullUpdate()
+void CombatManager::FullUpdate()
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:520
 DC_ONLY(0x83ee8, 0x9C)
-void combatManager::updateCombatArea(int x, int y, int width, int height)
+void CombatManager::updateCombatArea(int x, int y, int width, int height)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:554
 DC_ONLY(0x83f84, 0xD6)
-unsigned char combatManager::ScrollCombatArea(int dx, int dy, unsigned char abs, unsigned char draw)
+unsigned char CombatManager::ScrollCombatArea(int dx, int dy, unsigned char abs, unsigned char draw)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:666
 DC_ONLY(0x841d4, 0x52)
-unsigned char combatManager::scrollTo(int x, int y, unsigned char draw, unsigned char doscroll_x, unsigned char doscroll_y)
+unsigned char CombatManager::scrollTo(int x, int y, unsigned char draw, unsigned char doscroll_x, unsigned char doscroll_y)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:672
 DC_ONLY(0x84228, 0x1E)
-unsigned char combatManager::ScrollToPixel(int x, int y, unsigned char draw)
+unsigned char CombatManager::ScrollToPixel(int x, int y, unsigned char draw)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:689
 // RETAIL_LOCATED(0x004937d0, 0x155): not reconstructed; dc-callgraph unique, dc 0x842a8
-void combatManager::setupGridForArmy(const army* thisArmy)
+void CombatManager::setupGridForArmy(const Army* thisArmy)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:755
 // RETAIL_LIVE(0x00493930, 0x3c0): reconstructed below; anchor-global, dc 0x84420
-int combatManager::updateGrid(int bPostGridIsClean, int bSetupGrid)
+int CombatManager::updateGrid(int bPostGridIsClean, int bSetupGrid)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:919
 // RETAIL_LOCATED(0x00493cf0, 0x1ab): not reconstructed; dc-callgraph unique, dc 0x847dc
-void combatManager::drawBackground()
+void CombatManager::drawBackground()
 {
     // @stub
 }
@@ -599,7 +599,7 @@ void combatManager::drawBackground()
 // E:\gamedcs\drawing.cpp:982
 // RETAIL_LIVE(0x00493ea0, 0x4ca): reconstructed below; dc order/callgraph,
 // dc 0x849c4; Complete adds a trailing force-refresh flag
-void combatManager::updateMouseGrid(int iNewMouseGridIndex,
+void CombatManager::updateMouseGrid(int iNewMouseGridIndex,
                                     std::vector<long>& hexes,
                                     unsigned char forceUpdate)
 {
@@ -608,84 +608,84 @@ void combatManager::updateMouseGrid(int iNewMouseGridIndex,
 
 // E:\gamedcs\drawing.cpp:1113
 DC_ONLY(0x84dac, 0x80)
-void combatManager::updateMouseGrid(int iNewMouseGridIndex, int bAllowDuringAction)
+void CombatManager::updateMouseGrid(int iNewMouseGridIndex, int bAllowDuringAction)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1141
 // RETAIL_LOCATED(0x00494440, 0x7d5): not reconstructed; anchor-global, dc 0x84e2c
-void combatManager::drawFrame(unsigned char update, unsigned char bLimitCreatureEffect, unsigned char bLimitDraw, int iDelay, unsigned char bRefreshBackground, unsigned char bDoDelayTil)
+void CombatManager::drawFrame(unsigned char update, unsigned char bLimitCreatureEffect, unsigned char bLimitDraw, int iDelay, unsigned char bRefreshBackground, unsigned char bDoDelayTil)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1399
 DC_ONLY(0x853f4, 0x84)
-void combatManager::drawObstacleAt(int hex_index)
+void CombatManager::drawObstacleAt(int hex_index)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1426
 // RETAIL_LIVE(0x00494c20, 0x31c): reconstructed below; callee-set, dc 0x85478
-void combatManager::drawWallAt(int hex_index, int dx)
+void CombatManager::drawWallAt(int hex_index, int dx)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1581
 DC_ONLY(0x857d4, 0x70)
-void combatManager::drawDeadOccupants(int index)
+void CombatManager::drawDeadOccupants(int index)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1602
 // RETAIL_LIVE(0x00494f40, 0x147): reconstructed below; callee-set, dc 0x85844
-void combatManager::drawOccupant(int index, int iDrawPriority, int bNumBoxOnly)
+void CombatManager::drawOccupant(int index, int iDrawPriority, int bNumBoxOnly)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1661
 // RETAIL_LIVE(0x00495090, 0x114): reconstructed below; dc caller edge, dc 0x85978
-int combatManager::drawArcher(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped)
+int CombatManager::drawArcher(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1699
 // RETAIL_LIVE(0x004951b0, 0xfd): reconstructed below; caller-edge, dc 0x85a48
-int combatManager::drawCreature(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int id, unsigned char isFlipped, int iColor)
+int CombatManager::drawCreature(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int id, unsigned char isFlipped, int iColor)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1738
 DC_ONLY(0x85b50, 0xDA)
-int combatManager::drawCreatureAlpha(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped, int iColor)
+int CombatManager::drawCreatureAlpha(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped, int iColor)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1772
 // RETAIL_LIVE(0x004952b0, 0xfb): reconstructed below; caller-edge, dc 0x85c2c
-int combatManager::drawCombatHero(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped)
+int CombatManager::drawCombatHero(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1804
 // RETAIL_LIVE(0x004953b0, 0x144): reconstructed below; caller-edge, dc 0x85d00
-int combatManager::drawSpellEffect(const CSprite* sprite, int frame, int x, int y, unsigned char isFlipped, unsigned char isAlpha)
+int CombatManager::drawSpellEffect(const CSprite* sprite, int frame, int x, int y, unsigned char isFlipped, unsigned char isAlpha)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1836
 // RETAIL_LIVE(0x00495500, 0x142): reconstructed below; caller-edge, dc 0x85e3c
-int combatManager::drawSpriteObject(const CSprite* sprite, int frame, int x, int y, unsigned char isFlipped)
+int CombatManager::drawSpriteObject(const CSprite* sprite, int frame, int x, int y, unsigned char isFlipped)
 {
     // @stub
 }
@@ -694,11 +694,11 @@ int combatManager::drawSpriteObject(const CSprite* sprite, int frame, int x, int
 
 // E:\gamedcs\drawing.cpp:689
 VA(0x004937d0, 0x155)  // dc 0x842a8
-void combatManager::setupGridForArmy(const army* thisArmy)
+void CombatManager::setupGridForArmy(const Army* thisArmy)
 {
     if (isQuickCombat())
         return;
-    if (thisArmy->m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
+    if (thisArmy->m_creatureType == Army::ARMY_CREATURE_ARROW_TOWER)
         return;
     if (!g_unnamed698758.m_showCombatGrid && !m_creaturePlacement)
         return;
@@ -729,12 +729,12 @@ void combatManager::setupGridForArmy(const army* thisArmy)
 }
 
 VA(0x00493930, 0x3c0)  // dc 0x84420
-int combatManager::updateGrid(int postGridIsClean, int setupGrid)
+int CombatManager::updateGrid(int postGridIsClean, int setupGrid)
 {
     if (isQuickCombat())
         return 0;
 
-    army* currentArmy = getCurrentArmy();
+    Army* currentArmy = getCurrentArmy();
     if (setupGrid) {
         if (isComputerAction()
                 || !m_sideIsLocalHuman[currentArmy->getControllingSide()])
@@ -847,9 +847,9 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
 }
 
 VA(0x00493cf0, 0x1ab)  // dc 0x847dc
-void combatManager::drawBackground()
+void CombatManager::drawBackground()
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (static_cast<const CombatManager*>(this)->isQuickCombat())
         return;
     if (m_backgroundDrawn)
         return;
@@ -867,7 +867,7 @@ void combatManager::drawBackground()
     }
 
     if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE && m_moatOn) {
-        TWallTraits* traits =
+        WallTraits* traits =
             &s_wallTraits[m_defendingTown->m_type][WALL_TRAITS_ROW_MOAT];
         Bitmap816* bitmap = m_combatIcons[WALL_TRAITS_ROW_MOAT][0];
         if (bitmap) {
@@ -896,7 +896,7 @@ void combatManager::drawBackground()
 
 // E:\gamedcs\drawing.cpp:982
 VA(0x00493ea0, 0x4ca)  // dc 0x849c4
-void combatManager::updateMouseGrid(int newMouseGridIndex,
+void CombatManager::updateMouseGrid(int newMouseGridIndex,
                                     std::vector<long>& hexes,
                                     unsigned char forceUpdate)
 {
@@ -908,7 +908,7 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
     static std::vector<long> oldHexes;
 
     if (m_battleOver
-            || static_cast<const combatManager*>(this)->isQuickCombat()
+            || static_cast<const CombatManager*>(this)->isQuickCombat()
             || !g_unnamed698758.m_showCombatMouseHex)
         return;
     if (newMouseGridIndex == lastMouseGridIndex && !forceUpdate)
@@ -917,7 +917,7 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
     int i;
     int copyHeight;
     for (i = 0; i < oldHexes.size(); ++i) {
-        hexcell& cell = m_cells[oldHexes[i]];
+        Hexcell& cell = m_cells[oldHexes[i]];
         copyHeight = 52;
         if (cell.m_hexUly > 504)
             copyHeight = 556 - cell.m_hexUly;
@@ -933,7 +933,7 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
         memset(offsetUsed, 0, sizeof(offsetUsed));
         int offset = 0;
         for (i = 0; i < hexes.size(); ++i) {
-            hexcell& cell = m_cells[hexes[i]];
+            Hexcell& cell = m_cells[hexes[i]];
             while (offsetUsed[offset] && offset < 19)
                 ++offset;
 
@@ -950,7 +950,7 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
     }
 
     for (i = 0; i < hexes.size(); ++i) {
-        hexcell& cell = m_cells[hexes[i]];
+        Hexcell& cell = m_cells[hexes[i]];
         m_saveScreenPostGrid->darken(cell.m_hexUlx, cell.m_hexUly, 45, 52,
                            m_combatShadowBitmap, 0, 0);
     }
@@ -966,13 +966,13 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
     m_limitToExtent = 1;
 
     for (i = 0; i < oldHexes.size(); ++i) {
-        const hexcell& cell = m_cells[oldHexes[i]];
+        const Hexcell& cell = m_cells[oldHexes[i]];
         extent.include(SLimitData(cell.m_hexUlx, cell.m_hexUly,
                                   cell.m_hexUlx + 44,
                                   cell.m_hexUly + 51));
     }
     for (i = 0; i < hexes.size(); ++i) {
-        const hexcell& cell = m_cells[hexes[i]];
+        const Hexcell& cell = m_cells[hexes[i]];
         extent.include(SLimitData(cell.m_hexUlx, cell.m_hexUly,
                                   cell.m_hexUlx + 44,
                                   cell.m_hexUly + 51));
@@ -996,7 +996,7 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 }
 
 VA(0x00494390, 0xA7)  // dc 0x84dac
-void combatManager::updateMouseGrid(int newMouseGridIndex,
+void CombatManager::updateMouseGrid(int newMouseGridIndex,
                                     int allowDuringAction)
 {
     if (g_processingCombatAction && !allowDuringAction)
@@ -1048,14 +1048,14 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 // DrawFrame's DC public symbol ends _N00H00: five native Boolean flags.
 // E:\gamedcs\drawing.cpp:1141
 VA(0x00494440, 0x7d5)  // anchor-global + retail arity, dc 0x84e2c
-void combatManager::drawFrame(bool update,
+void CombatManager::drawFrame(bool update,
                               bool limitCreatureEffect,
                               bool limitDraw, int delay,
                               bool refreshBackground,
                               bool doDelayTil)
 {
     if (m_battleOver
-            || static_cast<const combatManager*>(this)->isQuickCombat()
+            || static_cast<const CombatManager*>(this)->isQuickCombat()
             || !m_combatShowIt)
         return;
 
@@ -1102,9 +1102,9 @@ void combatManager::drawFrame(bool update,
     int column;
     for (row = 0; row < 11; row++) {
         for (column = 1; column < COMBAT_GRID_LAST_COLUMN; column++) {
-            hexcell& cell = m_cells[getHexIndex(column, row)];
+            Hexcell& cell = m_cells[getHexIndex(column, row)];
             if (cell.m_attributes & 1) {
-                TObstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
+                Obstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
                 if (obstacle.m_shape->m_underlay) {
                     if (obstacle.m_isVisible
                             || (obstacle.m_owner == m_currentSide
@@ -1120,7 +1120,7 @@ void combatManager::drawFrame(bool update,
     }
 
     if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE) {
-        const TWallTraits& traits =
+        const WallTraits& traits =
             s_wallTraits[m_defendingTown->m_type][eWallSectionBackWall];
         drawObject(m_combatIcons[eWallSectionBackWall][0],
                    traits.m_x, traits.m_y);
@@ -1150,7 +1150,7 @@ void combatManager::drawFrame(bool update,
         if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE
                 && row == COMBAT_GATE_ROW
                 && m_drawbridgeState != DRAWBRIDGE_UP) {
-            const TWallTraits& traits =
+            const WallTraits& traits =
                 s_wallTraits[m_defendingTown->m_type][eWallSectionDoor];
             drawObject(m_combatIcons[eWallSectionDoor][m_drawbridgeState],
                        traits.m_x, traits.m_y);
@@ -1193,7 +1193,7 @@ void combatManager::drawFrame(bool update,
                 && row == COMBAT_GATE_ROW
                 && m_drawbridgeState == DRAWBRIDGE_DOWN
                 && m_combatIcons[eWallSectionDoorRope][1]) {
-            const TWallTraits& traits =
+            const WallTraits& traits =
                 s_wallTraits[m_defendingTown->m_type][eWallSectionDoorRope];
             drawObject(m_combatIcons[eWallSectionDoorRope][1],
                        traits.m_x, traits.m_y);
@@ -1240,11 +1240,11 @@ void combatManager::drawFrame(bool update,
 // DrawFrame, but the source boundary and statement grouping remain positive
 // CodeView evidence.
 DC_ONLY(0x853f4, 0x84)
-void combatManager::drawObstacleAt(int hexIndex)
+void CombatManager::drawObstacleAt(int hexIndex)
 {
-    hexcell& cell = m_cells[hexIndex];
+    Hexcell& cell = m_cells[hexIndex];
     if (cell.m_attributes & 1) {
-        TObstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
+        Obstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
         if (!obstacle.m_shape->m_underlay) {
             if (obstacle.m_isVisible
                     || (obstacle.m_owner == m_currentSide
@@ -1258,12 +1258,12 @@ void combatManager::drawObstacleAt(int hexIndex)
 }
 
 VA(0x00494c20, 0x31c)  // dc 0x85478
-void combatManager::drawWallAt(int hexIndex, int dx)
+void CombatManager::drawWallAt(int hexIndex, int dx)
 {
-    const TWallTraits* const wtTable = s_wallTraits[m_defendingTown->m_type];
+    const WallTraits* const wtTable = s_wallTraits[m_defendingTown->m_type];
 
     for (int wall = eWallSectionDoor; wall < kNumWallSections; wall++) {
-        const TWallTraits& traits = wtTable[wall];
+        const WallTraits& traits = wtTable[wall];
         int wallHex = traits.m_hex;
         Bitmap816* image = m_combatIcons[wall][m_wallStanding[wall]];
         if (wallHex == -1 || !image)
@@ -1287,7 +1287,7 @@ void combatManager::drawWallAt(int hexIndex, int dx)
             } else if (hexIndex
                     == wallHex - dx * COMBAT_GRID_ROW_STRIDE
                         - rowIsOdd(gridY(wallHex)) + 1) {
-                const hexcell& cell = m_cells[wallHex];
+                const Hexcell& cell = m_cells[wallHex];
                 const int sw = image->getWidth() - cell.m_hexUlx + traits.m_x
                                - COMBAT_WALL_HEX_WIDTH;
                 if (sw > 0) {
@@ -1300,7 +1300,7 @@ void combatManager::drawWallAt(int hexIndex, int dx)
 
             if (hexIndex == wallHex) {
                 int width = COMBAT_WALL_HEX_WIDTH;
-                const hexcell& cell = m_cells[wallHex];
+                const Hexcell& cell = m_cells[wallHex];
                 int sourceX = cell.m_hexUlx - traits.m_x;
                 int destX = cell.m_hexUlx;
                 if (sourceX < 0) {
@@ -1322,7 +1322,7 @@ void combatManager::drawWallAt(int hexIndex, int dx)
             if (wall == eWallSectionMainBuildingCover
                     || wall == eWallSectionLowerTowerCover
                     || wall == eWallSectionUpperTowerCover) {
-                TArcher* archer;
+                Archer* archer;
                 if (wall == eWallSectionMainBuildingCover)
                     archer = &m_archers[0];
                 else if (wall == eWallSectionLowerTowerCover)
@@ -1371,26 +1371,26 @@ void combatManager::drawWallAt(int hexIndex, int dx)
 // statement boundary visible to the compiler. Ordinary auto-inlining retains
 // all exact callers; no explicit inline keyword is needed or evidenced.
 DC_ONLY(0x857d4, 0x70)
-void combatManager::drawDeadOccupants(int index)
+void CombatManager::drawDeadOccupants(int index)
 {
-    hexcell& cell = m_cells[index];
+    Hexcell& cell = m_cells[index];
     for (int body = 0; body < cell.m_bodiesInHex; body++) {
-        army* dead = cell.getDeadArmy(body);
+        Army* dead = cell.getDeadArmy(body);
         if (cell.m_deadPartOfDouble[body] != dead->m_facing)
             dead->drawToBuffer(cell.m_refX, cell.m_refY, 0);
     }
 }
 
 VA(0x00494f40, 0x147)  // dc 0x85844
-void combatManager::drawOccupant(int index, int drawPriority,
+void CombatManager::drawOccupant(int index, int drawPriority,
                                  int numBoxOnly)
 {
     if (!validHex(index))
         return;
 
-    const hexcell& hex = m_cells[index];
+    const Hexcell& hex = m_cells[index];
     int row = gridY(index);
-    army* occupant = hex.getArmy();
+    Army* occupant = hex.getArmy();
     if (drawPriority != COMBAT_DRAW_PRIORITY_ANY
             && drawPriority != occupant->m_drawPriority)
         return;
@@ -1422,7 +1422,7 @@ void combatManager::drawOccupant(int index, int drawPriority,
 }
 
 VA(0x00495090, 0x114)  // dc 0x85978
-int combatManager::drawArcher(const CSprite* sprite, int sequence, int frame,
+int CombatManager::drawArcher(const CSprite* sprite, int sequence, int frame,
                               int x, int y, SLimitData* limits,
                               bool isFlipped,
                               unsigned char colorRow)
@@ -1454,7 +1454,7 @@ int combatManager::drawArcher(const CSprite* sprite, int sequence, int frame,
 }
 
 VA(0x004951b0, 0xfd)  // dc 0x85a48
-int combatManager::drawCreature(const CSprite* sprite, int sequence, int frame,
+int CombatManager::drawCreature(const CSprite* sprite, int sequence, int frame,
                                 int x, int y, SLimitData* limits, int id,
                                 bool isFlipped, int color)
 {
@@ -1482,7 +1482,7 @@ int combatManager::drawCreature(const CSprite* sprite, int sequence, int frame,
 }
 
 VA(0x004952b0, 0xfb)  // dc 0x85c2c
-int combatManager::drawCombatHero(const CSprite* sprite, int sequence,
+int CombatManager::drawCombatHero(const CSprite* sprite, int sequence,
                                   int frame, int x, int y,
                                   SLimitData* limits,
                                   bool isFlipped)
@@ -1511,7 +1511,7 @@ int combatManager::drawCombatHero(const CSprite* sprite, int sequence,
 }
 
 VA(0x004953b0, 0x144)  // dc 0x85d00
-int combatManager::drawSpellEffect(const CSprite* sprite, int frame,
+int CombatManager::drawSpellEffect(const CSprite* sprite, int frame,
                                    int x, int y,
                                    bool isFlipped,
                                    bool isAlpha)
@@ -1544,7 +1544,7 @@ int combatManager::drawSpellEffect(const CSprite* sprite, int frame,
 }
 
 VA(0x00495500, 0x142)  // dc 0x85e3c
-int combatManager::drawSpriteObject(const CSprite* sprite, int frame,
+int CombatManager::drawSpriteObject(const CSprite* sprite, int frame,
                                     int x, int y,
                                     bool isFlipped)
 {
@@ -1573,7 +1573,7 @@ int combatManager::drawSpriteObject(const CSprite* sprite, int frame,
 }
 
 VA(0x00495650, 0xD9)  // dc 0x85f1c
-int combatManager::drawCreatureAndHeroSubwindows()
+int CombatManager::drawCreatureAndHeroSubwindows()
 {
     if (m_combatWindow->m_heroSubWindows[0]->isShown())
         m_combatWindow->m_heroSubWindows[0]->draw(
@@ -1601,9 +1601,9 @@ int combatManager::drawCreatureAndHeroSubwindows()
 }
 
 VA(0x00495730, 0x73)  // dc 0x85f70
-int combatManager::drawObstacle(const hexcell& cell)
+int CombatManager::drawObstacle(const Hexcell& cell)
 {
-    TObstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
+    Obstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
     int yOffset = 42 * (obstacle.m_shape->m_minRow - 1);
     return drawSpriteObject(
         obstacle.m_sprite,
@@ -1612,7 +1612,7 @@ int combatManager::drawObstacle(const hexcell& cell)
 }
 
 VA(0x004957b0, 0x125)  // dc 0x85fd4
-int combatManager::drawWall(const Bitmap816* image, int x, int y,
+int CombatManager::drawWall(const Bitmap816* image, int x, int y,
                             int width, int height, int dx, int dy)
 {
     SLimitData limits(dx, dy, dx + width - 1, dy + height - 1);
@@ -1637,7 +1637,7 @@ int combatManager::drawWall(const Bitmap816* image, int x, int y,
 }
 
 VA(0x004958e0, 0x129)  // dc 0x86098
-int combatManager::drawObject(const Bitmap816* image, int x, int y)
+int CombatManager::drawObject(const Bitmap816* image, int x, int y)
 {
     SLimitData limits(x, y,
                       x + image->getWidth() - 1,
@@ -1663,10 +1663,10 @@ int combatManager::drawObject(const Bitmap816* image, int x, int y)
 }
 
 VA(0x00495a10, 0x1d7)  // dc 0x861cc
-int combatManager::drawMoatOverlay(int index)
+int CombatManager::drawMoatOverlay(int index)
 {
-    const hexcell& cell = m_cells[index];
-    const TWallTraits& traits =
+    const Hexcell& cell = m_cells[index];
+    const WallTraits& traits =
         s_wallTraits[m_defendingTown->m_type][WALL_TRAITS_ROW_MOAT];
     SLimitData moatExtent(cell.m_hexUlx, cell.m_hexUly + 36,
                            cell.m_hexUlx + 43, cell.m_hexUly + 41);
@@ -1714,7 +1714,7 @@ int combatManager::drawMoatOverlay(int index)
 }
 
 VA(0x00495bf0, 0x35e)  // dc 0x86380
-void combatManager::computeMaxExtent()
+void CombatManager::computeMaxExtent()
 {
     int side;
     for (side = 0; side < 2; side++) {
@@ -1744,7 +1744,7 @@ void combatManager::computeMaxExtent()
     }
 
     if (m_obstacles.size()) {
-        for (TObstacle* obstacle = m_obstacles.begin();
+        for (Obstacle* obstacle = m_obstacles.begin();
              obstacle != m_obstacles.end(); obstacle++) {
             CSprite* sprite = obstacle->m_sprite;
             if (sprite && sprite->getNumFrames(0) > 1) {
@@ -1762,7 +1762,7 @@ void combatManager::computeMaxExtent()
         if (m_archerEffect[archerIndex] && m_archers[archerIndex].m_sprite) {
             m_saveBiggestExtent = 1;
             m_computeExtentOnly = 1;
-            TArcher& archer = m_archers[archerIndex];
+            Archer& archer = m_archers[archerIndex];
             int drawX;
             if (!archer.m_facing) {
                 drawX = archer.m_x - archer.m_sprite->getWidth()
@@ -1792,7 +1792,7 @@ void combatManager::computeMaxExtent()
 }
 
 VA(0x00495f50, 0x17c)  // dc 0x866ac
-void combatManager::computeExtent(const CSprite* sprite, int sequence,
+void CombatManager::computeExtent(const CSprite* sprite, int sequence,
                                   int frame, int x, int y,
                                   SLimitData* limits, int isFlipped,
                                   bool saveBiggestExtent)
@@ -1822,7 +1822,7 @@ void combatManager::computeExtent(const CSprite* sprite, int sequence,
 }
 
 VA(0x004960d0, 0x76a)  // dc 0x867bc
-void combatManager::cycleCombatScreen()
+void CombatManager::cycleCombatScreen()
 {
     resetLimitCreature();
 
@@ -1861,10 +1861,10 @@ void combatManager::cycleCombatScreen()
     memset(cycleMonster, 0, sizeof(cycleMonster));
     for (side = 0; side < 2; side++) {
         for (int slot = 0; slot < m_numArmies[side]; slot++) {
-            army* stack = &m_armies[side][slot];
+            Army* stack = &m_armies[side][slot];
             if (!(stack->is(1u << 21))
                     && !stack->isIncapacitated()
-                    && stack->m_creatureType != army::ARMY_CREATURE_ARROW_TOWER
+                    && stack->m_creatureType != Army::ARMY_CREATURE_ARROW_TOWER
                     && (stack->m_currFrameType == cs_fidget
                         || (stack->m_currFrameType == cs_wait
                             && stack->m_stdIcon->getNumFrames(cs_fidget) > 0
@@ -1944,7 +1944,7 @@ void combatManager::cycleCombatScreen()
                 if (!cycleMonster[side][slot])
                     continue;
 
-                army* stack = &m_armies[side][slot];
+                Army* stack = &m_armies[side][slot];
                 if (stack->m_currFrameType == cs_wait) {
                     stack->m_currFrameType = cs_fidget;
                     stack->m_currFrameIndex = 0;
@@ -1999,10 +1999,10 @@ void combatManager::cycleCombatScreen()
 }
 
 VA(0x00496840, 0x1c5)  // dc 0x86ea0
-void combatManager::spellEffect(int effect, army* targetArmy, int delay,
+void CombatManager::spellEffect(int effect, Army* targetArmy, int delay,
                                 bool doWince)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (static_cast<const CombatManager*>(this)->isQuickCombat())
         return;
     if (effect == -1)
         return;
@@ -2048,10 +2048,10 @@ void combatManager::spellEffect(int effect, army* targetArmy, int delay,
 }
 
 VA(0x00496a10, 0x23d)  // dc 0x8703c
-void combatManager::spellEffect(int effect, int hex, int delay,
+void CombatManager::spellEffect(int effect, int hex, int delay,
                                 bool leaveLastFrame)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (static_cast<const CombatManager*>(this)->isQuickCombat())
         return;
     if (effect == -1)
         return;
@@ -2060,7 +2060,7 @@ void combatManager::spellEffect(int effect, int hex, int delay,
     if (effect >= 83)
         return;
 
-    TSpellEffectTraits traits = g_spellEffectTraits[effect];
+    SpellEffectTraits traits = g_spellEffectTraits[effect];
     if (!traits.m_name)
         return;
 
@@ -2106,63 +2106,63 @@ void combatManager::spellEffect(int effect, int hex, int delay,
 
 // E:\gamedcs\drawing.cpp:1948
 DC_ONLY(0x85f70, 0x64)
-int combatManager::drawObstacle(const hexcell& c)
+int CombatManager::drawObstacle(const Hexcell& c)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1963
 DC_ONLY(0x85fd4, 0xC2)
-int combatManager::drawWall(const Bitmap816* image, int x, int y, int w, int h, int dx, int dy)
+int CombatManager::drawWall(const Bitmap816* image, int x, int y, int w, int h, int dx, int dy)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1991
 DC_ONLY(0x86098, 0x134)
-int combatManager::drawObject(const Bitmap816* image, int x, int y)
+int CombatManager::drawObject(const Bitmap816* image, int x, int y)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:2019
 DC_ONLY(0x861cc, 0x1B2)
-int combatManager::drawMoatOverlay(int index)
+int CombatManager::drawMoatOverlay(int index)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:2093
 // RETAIL_LOCATED(0x00495bf0, 0x35e): not reconstructed; anchor-global, dc 0x86380
-void combatManager::computeMaxExtent()
+void CombatManager::computeMaxExtent()
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:2214
 // RETAIL_LOCATED(0x00495f50, 0x17c): not reconstructed; dc-bracket forced, dc 0x866ac
-void combatManager::computeExtent(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int isFlipped, unsigned char SaveBiggestExtent)
+void CombatManager::computeExtent(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int isFlipped, unsigned char SaveBiggestExtent)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:2257
 // RETAIL_LOCATED(0x004960d0, 0x76a): not reconstructed; anchor-global, dc 0x867bc
-void combatManager::cycleCombatScreen()
+void CombatManager::cycleCombatScreen()
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:2524
 DC_ONLY(0x86ea0, 0x19C)
-void combatManager::spellEffect(int effect, army* target_army, int iDelay, unsigned char bDoWince)
+void CombatManager::spellEffect(int effect, Army* target_army, int iDelay, unsigned char bDoWince)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:2593
 DC_ONLY(0x8703c, 0x23A)
-void combatManager::spellEffect(int effect, int hex, int iDelay, unsigned char leave_last_frame)
+void CombatManager::spellEffect(int effect, int hex, int iDelay, unsigned char leave_last_frame)
 {
     // @stub
 }
@@ -2190,21 +2190,21 @@ bool SLimitData::isEmpty() const
 
 // E:\gamedcs\Army.h:881
 DC_ONLY(0x872f4, 0xA)
-bool army::isInAreaHighlight()
+bool Army::isInAreaHighlight()
 {
     // @stub
 }
 
 // E:\gamedcs\HexCell.h:85
 DC_ONLY(0x87300, 0x44)
-SLimitData hexcell::limits(__$ReturnUdt)
+SLimitData Hexcell::limits(__$ReturnUdt)
 {
     // @stub
 }
 
 // E:\gamedcs\CombatControlSubWindow.h:148
 DC_ONLY(0x87344, 0x8)
-unsigned char TCombatHeroSubWindow::isShown()
+unsigned char CombatHeroSubWindow::isShown()
 {
     // @stub
 }

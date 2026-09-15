@@ -4,15 +4,17 @@
 
 #include "window.h"
 
-class hero;
+class Hero;
 
 // Retail's constructor initializes heroWindow directly and the deleting
 // destructor passes the same allocation head back to operator delete. No
 // derived storage is touched; the DC 0x44 size differs only by its 12-byte
 // vector/base layout, while retail inherits the byte-proven 0x4c base.
-class TQuickHeroWindow : public heroWindow {
+// Before normalization (type): TQuickHeroWindow.
+class QuickHeroWindow : public HeroWindow {
 public:
-    enum TViewLevel {
+// Before normalization (type): TQuickHeroWindow::TViewLevel.
+    enum ViewLevel {
         ViewNone = 0,
         ViewSome = 1,
         ViewAll = 2
@@ -22,7 +24,8 @@ public:
     // -1 inactive sentinel in hero::disguiseLevel. Kept local to this narrow
     // consumer view so hero.h's optimizer-sensitive include closure does not
     // acquire the wider hero-specialty domain header.
-    enum EDisguiseLevel {
+// Before normalization (type): QuickHeroWindow::EDisguiseLevel.
+    enum DisguiseLevel {
         DisguiseInvalid = -1,
         DisguiseNone = 0,
         DisguiseBasic = 1,
@@ -30,7 +33,7 @@ public:
         DisguiseExpert = 3
     };
 
-    enum EWidgetIDs {
+    enum WidgetIDs {
         BACKGROUND_ID = 2000,
         PORTRAIT_ID = 2001,
         NAME_ID = 2002,
@@ -43,11 +46,11 @@ public:
 
     enum { NWIDGETS = 25 };
 
-    TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel);
-    virtual ~TQuickHeroWindow();
+    QuickHeroWindow(Hero* thisHero, ViewLevel viewLevel);
+    virtual ~QuickHeroWindow();
     void quickWindowWait();
 };
-SIZE(TQuickHeroWindow, 0x4c);
+SIZE(QuickHeroWindow, 0x4c);
 
 // --- TQuickHeroWindow ---
 // CODEVIEW(E:\gamedcs\quickherowindow.cpp:37, dc 0x1170bc) void TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TQuickHeroWindow::TViewLevel view_level);

@@ -26,7 +26,8 @@
 // A/B-measured 2026-08-08 against the `typedef int` it replaced, ZERO
 // of the 977 scored functions in all 52 units moved by so much as a
 // byte.
-enum TSpellSchool {
+// Before normalization (type): TSpellSchool.
+enum SpellSchool {
     const_invalid_school = 0,
     eSchoolAir = 1,
     eSchoolFire = 2,

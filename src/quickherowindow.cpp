@@ -44,13 +44,13 @@ DATA(0x00682378) static int g_armyPos[7][2] = {
 // both window destructors are independently exact.
 
 VA(0x0052ead0, 0x8C8)  // heroqvbk.pcx + vtable/allocation block, dc 0x1170bc
-TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
-    : heroWindow(200, 200, 194, 186, 0x12)
+QuickHeroWindow::QuickHeroWindow(Hero* thisHero, ViewLevel viewLevel)
+    : HeroWindow(200, 200, 194, 186, 0x12)
 {
-    std::vector<widget*>& widgets = m_widgets;
+    std::vector<Widget*>& widgets = m_widgets;
     widgets.reserve(NWIDGETS);
 
-    bitmapBorder* background = new bitmapBorder(
+    BitmapBorder* background = new BitmapBorder(
         0, 0, 194, 186, BACKGROUND_ID, "heroqvbk.pcx", 0x800);
     background->setPlayerPaletteColors(
         thisHero->m_owner >= 0
@@ -58,50 +58,50 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
             : g_game->getLocalPlayerGamePos());
     widgets.push_back(background);
 
-    widgets.push_back(new bitmapBorder(
+    widgets.push_back(new BitmapBorder(
         12, 13, 58, 64, PORTRAIT_ID,
         g_heroTraits[thisHero->m_portrait].m_largePortraitName, 0x800));
 
-    widgets.push_back(new textWidget(
-        75, 13, 107, 17, thisHero->m_name, "smalfont.fnt", font::WHITE,
+    widgets.push_back(new TextWidget(
+        75, 13, 107, 17, thisHero->m_name, "smalfont.fnt", Font::WHITE,
         NAME_ID, 0, 0, 8));
 
     if (viewLevel >= ViewAll) {
         int widgetId = PRIMARY_SKILL_1_ID;
         for (int stat = 0; stat < 4; ++stat) {
             sprintf(g_text, "%d", thisHero->getPrimarySkill(stat));
-            widgets.push_back(new textWidget(
+            widgets.push_back(new TextWidget(
                 g_skillLoc[stat].x,
                 g_skillLoc[stat].y,
-                23, 16, g_text, "smalfont.fnt", font::WHITE,
+                23, 16, g_text, "smalfont.fnt", Font::WHITE,
                 widgetId, 1, 0, 8));
             ++widgetId;
         }
 
-        widgets.push_back(new textWidget(
+        widgets.push_back(new TextWidget(
             154, 104, 27, 13,
             formatString("%d", thisHero->m_mana).c_str(), "tiny.fnt",
-            font::WHITE, MANA_ID, 1, 0, 8));
+            Font::WHITE, MANA_ID, 1, 0, 8));
 
         int morale = limit(
             -3, thisHero->getMorale(0, 0, 1), 3);
-        widgets.push_back(new iconWidget(
+        widgets.push_back(new IconWidget(
             14, 86, 22, 12, MORALE_ID, "imrl22.def", morale + 3,
             0, 0, 0, 0x10));
 
         int luck = limit(
             -3, thisHero->getLuck(0, 0, 1), 3);
-        widgets.push_back(new iconWidget(
+        widgets.push_back(new IconWidget(
             14, 103, 22, 12, LUCK_ID, "ilck22.def", luck + 3,
             0, 0, 0, 0x10));
     }
 
     if (viewLevel >= ViewSome && thisHero->m_army.getNumArmies() > 0) {
         int disguiseCreature = CREATURE_NONE;
-        if (thisHero->m_disguiseLevel != TQuickHeroWindow::DisguiseInvalid &&
-            thisHero->m_disguiseLevel <= TQuickHeroWindow::DisguiseAdvanced) {
+        if (thisHero->m_disguiseLevel != QuickHeroWindow::DisguiseInvalid &&
+            thisHero->m_disguiseLevel <= QuickHeroWindow::DisguiseAdvanced) {
             const int* currentArmy = thisHero->m_army.m_armies;
-            for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
+            for (int slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT;
                  ++slot, ++currentArmy) {
                 int creature = *currentArmy;
                 // Retail compares the slot ordinal, not the creature loaded just
@@ -112,7 +112,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
                          g_creatureTypeTraits[disguiseCreature].m_aiValue))
                     disguiseCreature = creature;
             }
-        } else if (thisHero->m_disguiseLevel == TQuickHeroWindow::DisguiseExpert) {
+        } else if (thisHero->m_disguiseLevel == QuickHeroWindow::DisguiseExpert) {
             int creature = g_game->m_f1f698 ? 145 : 118;
             int owner = thisHero->m_owner;
             while (creature--) {
@@ -134,14 +134,14 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
         // display separately. Do not recover armies by indexing backwards
         // out of the neighboring numTroops member.
         int displaySlot = 0;
-        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        for (int slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
             int creature = thisHero->m_army.m_armies[slot];
             if (creature == CREATURE_NONE)
                 continue;
             if (disguiseCreature != CREATURE_NONE)
                 creature = disguiseCreature;
 
-            widgets.push_back(new iconWidget(
+            widgets.push_back(new IconWidget(
                 g_armyPos[displaySlot][0],
                 g_armyPos[displaySlot][1], 32, 32, widgetId++,
                 "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
@@ -158,18 +158,18 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
                 else
                     quantityText << count / 1000 << "k" << std::ends;
 
-                widgets.push_back(new textWidget(
+                widgets.push_back(new TextWidget(
                     g_armyPos[displaySlot][0],
                     g_armyPos[displaySlot][1] + 34, 32, 11,
-                    quantityText.str(), "tiny.fnt", font::WHITE,
+                    quantityText.str(), "tiny.fnt", Font::WHITE,
                     widgetId++, 1, 0, 8));
             } else {
-                quantityText << armyGroup::getArmySizeName(count, 0)
+                quantityText << ArmyGroup::getArmySizeName(count, 0)
                               << std::ends;
-                widgets.push_back(new textWidget(
+                widgets.push_back(new TextWidget(
                     g_armyPos[displaySlot][0],
                     g_armyPos[displaySlot][1] + 34, 32, 11,
-                    quantityText.str(), "tiny.fnt", font::WHITE,
+                    quantityText.str(), "tiny.fnt", Font::WHITE,
                     widgetId++, 1, 0, 8));
             }
             quantityText.freeze(false);
@@ -177,18 +177,18 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
         }
     }
 
-    for (widget** it = widgets.begin(); it != widgets.end(); ++it) {
+    for (Widget** it = widgets.begin(); it != widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
     }
 }
 
-VA_COMPGEN(0x0052f3a0, 0x21, SCALAR_DELETING_DTOR, TQuickHeroWindow)
+VA_COMPGEN(0x0052f3a0, 0x21, SCALAR_DELETING_DTOR, QuickHeroWindow)
 
 VA(0x0052f3d0, 0x6B)  // dc 0x1177b4
-TQuickHeroWindow::~TQuickHeroWindow()
+QuickHeroWindow::~QuickHeroWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -202,7 +202,7 @@ VA_COMPGEN(0x0052f440, 0x47, BASIC_IOS_INIT, char)
 // quicktownwindow span, so this TU has no distinct contribution to claim.
 #if 0  // @carcass
 DC_ONLY(0x117818, 0x30)
-void TQuickHeroWindow::quickWindowWait()
+void QuickHeroWindow::quickWindowWait()
 {
     // @stub
 }
@@ -211,7 +211,7 @@ void TQuickHeroWindow::quickWindowWait()
 // E:\gamedcs\quickherowindow.cpp:209
 #if 0  // @carcass -- represented by VA_COMPGEN above
 DC_ONLY(0x117848, 0x34)
-void* TQuickHeroWindow::`scalar deleting destructor'(unsigned __flags)
+void* QuickHeroWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

@@ -36,7 +36,8 @@
 // Binary API descriptors use the pristine vendor boundary declarations.
 // FEELIT_EFFECT (0x48) and FEELIT_ENCLOSURE (0x38) match IFC 2.0.3.
 // RTTI 0x6778c0 proves t_initializer in this file's unnamed namespace.
-namespace { class t_initializer; }
+// Before normalization (type): t_initializer.
+namespace { class Initializer; }
 
 // The error-policy singleton. `?m_dwErrHandlingFlags@CIFCErrors@@0KA` is
 // the ONLY member the image touches, and the trailing `0KA` types it as a
@@ -49,7 +50,7 @@ private:
     // (`mov eax,[__imp_?m_dwErrHandlingFlags@CIFCErrors@@0KA] / mov
     // [eax],1`), which only a friend can do; the vendor header must have
     // named retail's own initializer class here.
-    friend class t_initializer;
+    friend class Initializer;
 };
 
 class CImmProject;
@@ -110,7 +111,8 @@ public:
     int Initialize(void* instance, void* hwnd, unsigned long flags);
 
 protected:
-    virtual int prepare_device();
+    // Before normalization: CImmMouse::prepare_device.
+    virtual int prepareDevice();
     virtual void reset();
 
 protected:
@@ -129,7 +131,8 @@ public:
 };
 
 // SDK ECacheState (ImmEffectSuite.h); external enumerator spellings.
-enum ECacheState {
+// Before normalization (type): ECacheState.
+enum CacheState {
     IMMCACHE_NOT_ON_DEVICE,
     IMMCACHE_ON_DEVICE,
     IMMCACHE_SWAPPED_OUT
@@ -152,7 +155,7 @@ public:
 protected:
     // IFC20.dll 2.0.3 constructor RVA 0x48d0 initializes these slots;
     // cache helpers and exported priority/device getters fix their roles.
-    ECacheState m_cacheState;     // +04, SDK m_CacheState.
+    CacheState m_cacheState;     // +04, SDK m_CacheState.
     int m_inCurrentSuite;         // +08, SDK m_bInCurrentSuite.
     short m_priority;            // +0c, SDK m_Priority; +0e alignment.
     unsigned long m_lastStarted; // +10, SDK m_dwLastStarted; Start 0x5206.
@@ -256,7 +259,8 @@ DATA(0x00696d80) extern CImmDevice* g_immDevice;
 DATA(0x00696d84) extern CImmProject* g_immProject;
 DATA(0x00696d88) extern CImmCompoundEffect* g_immEffect;
 
-namespace force_feedback { class t_enclosure; }
+// Before normalization (type): force_feedback::t_enclosure.
+namespace force_feedback { class Enclosure; }
 
 unsigned char playImmEffect(const char* effectName, int count);  // 0x4b69f0
 

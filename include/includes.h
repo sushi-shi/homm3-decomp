@@ -54,23 +54,25 @@ inline int limit(int minimum, int value, int maximum)
 // vector<bool>, a platform-library divergence rather than x86 evidence.
 // Original CodeView fields: Low, NumbersLeft, Available. Project spelling
 // follows the m_ scope prefix and lowerCamelCase convention.
-class TPickANumber {
+// Before normalization (type): TPickANumber.
+class PickANumber {
 protected:
     int m_low;
 
 public:
     int m_numbersLeft;
     std::vector<unsigned char> m_available;
-    TPickANumber(int lowBound, int high);
+    PickANumber(int lowBound, int high);
     int pick();
 };
 
 // E:\gamedcs\includes.h:175/178. The written inline constructor
 // passes [0, 15] to the base; Reset is expanded into ProcessOnMapTowns.
 // game.obj emits the Dreamcast copies but does not own their source bodies.
-class TPickRandomTownName : public TPickANumber {
+// Before normalization (type): TPickRandomTownName.
+class PickRandomTownName : public PickANumber {
 public:
-    TPickRandomTownName() : TPickANumber(0, 15) {}
+    PickRandomTownName() : PickANumber(0, 15) {}
     // E:\gamedcs\includes.h:178, dc 0xbc7ec
     void reset()
     {

@@ -44,10 +44,10 @@ static const int g_spellGivingArtifacts[9] = {
 // admission; declaring the byte-proven addresses here makes this function's
 // data references authoritative without pretending the cinits are claims.
 DATA(0x006939f8)
-static TArtifactTraits g_artifactTraitsStorage[144];
+static ArtifactTraits g_artifactTraitsStorage[144];
 
 DATA(0x00694bf8)
-static TArtifactSlotTraits g_artifactSlotTraitsStorage[19];
+static ArtifactSlotTraits g_artifactSlotTraitsStorage[19];
 
 } // namespace
 
@@ -96,25 +96,25 @@ static std::bitset<144> makeArtifactComponentMask(unsigned count, ...)
 // 0x6938d8 + 24*i by a six-dword `rep movsd`, which is the record's own
 // two-argument constructor inlined plus its implicit copy.
 DATA(0x006938d8)
-const TCombinationArtifact g_combinationArtifactTable[12] = {
-    TCombinationArtifact(0x81,
+const CombinationArtifact g_combinationArtifactTable[12] = {
+    CombinationArtifact(0x81,
         makeArtifactComponentMask(6, 0x24, 0x21, 0x23, 0x1f, 0x20, 0x22)),
-    TCombinationArtifact(0x82, makeArtifactComponentMask(3, 0x36, 0x37, 0x38)),
-    TCombinationArtifact(0x83, makeArtifactComponentMask(3, 0x5f, 0x60, 0x5e)),
-    TCombinationArtifact(0x84,
+    CombinationArtifact(0x82, makeArtifactComponentMask(3, 0x36, 0x37, 0x38)),
+    CombinationArtifact(0x83, makeArtifactComponentMask(3, 0x5f, 0x60, 0x5e)),
+    CombinationArtifact(0x84,
         makeArtifactComponentMask(4, 0x14, 0x08, 0x1a, 0x0e)),
-    TCombinationArtifact(0x85,
+    CombinationArtifact(0x85,
         makeArtifactComponentMask(5, 0x76, 0x77, 0x78, 0x79, 0x7a)),
-    TCombinationArtifact(0x86,
+    CombinationArtifact(0x86,
         makeArtifactComponentMask(9, 0x2c, 0x2b, 0x2a, 0x26, 0x27,
                                   0x25, 0x2d, 0x29, 0x28)),
-    TCombinationArtifact(0x87,
+    CombinationArtifact(0x87,
         makeArtifactComponentMask(4, 0x18, 0x0c, 0x1e, 0x12)),
-    TCombinationArtifact(0x88, makeArtifactComponentMask(2, 0x7b, 0x47)),
-    TCombinationArtifact(0x89, makeArtifactComponentMask(3, 0x3c, 0x3d, 0x3e)),
-    TCombinationArtifact(0x8a, makeArtifactComponentMask(3, 0x49, 0x4a, 0x4b)),
-    TCombinationArtifact(0x8b, makeArtifactComponentMask(3, 0x4c, 0x4e, 0x4d)),
-    TCombinationArtifact(0x8c,
+    CombinationArtifact(0x88, makeArtifactComponentMask(2, 0x7b, 0x47)),
+    CombinationArtifact(0x89, makeArtifactComponentMask(3, 0x3c, 0x3d, 0x3e)),
+    CombinationArtifact(0x8a, makeArtifactComponentMask(3, 0x49, 0x4a, 0x4b)),
+    CombinationArtifact(0x8b, makeArtifactComponentMask(3, 0x4c, 0x4e, 0x4d)),
+    CombinationArtifact(0x8c,
         makeArtifactComponentMask(4, 0x6f, 0x6d, 0x6e, 0x71)),
 };
 
@@ -144,16 +144,16 @@ const std::bitset<19> g_artifactSlotMasks[15] = {
 };
 
 DATA(0x00660b64)
-const TArtifactSlotTraits* g_artifactSlotTraits = g_artifactSlotTraitsStorage;
+const ArtifactSlotTraits* g_artifactSlotTraits = g_artifactSlotTraitsStorage;
 
 DATA(0x00660b68)
-const TArtifactTraits* g_artifactTraits = g_artifactTraitsStorage;
+const ArtifactTraits* g_artifactTraits = g_artifactTraitsStorage;
 
 DATA(0x00660b6c)
-const TCombinationArtifact* g_combinationArtifacts = g_combinationArtifactTable;
+const CombinationArtifact* g_combinationArtifacts = g_combinationArtifactTable;
 
 static void initializeArtifactTraits(int id,
-    const TSpreadsheetResource::TStringVector& resource);
+    const SpreadsheetResource::TStringVector& resource);
 
 // E:\gamedcs\artifact.cpp:56, dc 0x4fec0. Complete requires 146 rows,
 // packs names/descriptions into one owned buffer, derives the slot classes,
@@ -184,7 +184,7 @@ VA(0x0044cd50, 0x5E8)  // anchor-strings/caller, dc 0x4fec0
 unsigned char initializeArtifactTraitsTable()
 {
     {
-        TResourcePtr<TSpreadsheetResource> traitsSheet(
+        ResourcePtr<SpreadsheetResource> traitsSheet(
             ResourceManager::getSpreadsheet(
                 DATA_COMPGEN(0x00660b80, artifactTraitsSpreadsheetName,
                              "artraits.txt")));
@@ -203,15 +203,15 @@ unsigned char initializeArtifactTraitsTable()
         DATA_COMPGEN_GUARD(0x006938d4, artifactStringsGuard, artifactStrings)
         VA_COMPGEN(0x0044d360, 0x16, STATIC_DTOR, artifactStrings)
         DATA(0x00694c90)
-        static TAutoArrayPtr<char> artifactStrings(new char[stringBytes]);
+        static AutoArrayPtr<char> artifactStrings(new char[stringBytes]);
         if (!artifactStrings.get())
             return 0;
 
         char* destination = artifactStrings.get();
         for (row = 2; row < 146; ++row) {
-            const TSpreadsheetResource::TStringVector& values =
+            const SpreadsheetResource::TStringVector& values =
                 traitsSheet->getRow(row);
-            TArtifactTraits& traits = g_artifactTraitsStorage[row - 2];
+            ArtifactTraits& traits = g_artifactTraitsStorage[row - 2];
             const char* source = values[0];
             unsigned length = strlen(source) + 1;
             memcpy(destination, source, length);
@@ -236,25 +236,25 @@ unsigned char initializeArtifactTraitsTable()
 
     int combo;
     for (combo = 0; combo < 12; ++combo) {
-        const TCombinationArtifact& combination =
+        const CombinationArtifact& combination =
             g_combinationArtifacts[combo];
-        TArtifactTraits& assembled =
+        ArtifactTraits& assembled =
             g_artifactTraitsStorage[combination.m_artifactId];
         assembled.m_comboType = combo;
         assembled.m_cost = 0;
-        TConstBitsetIterator<144> current(combination.m_components, 0);
-        TConstBitsetIterator<144> end(combination.m_components, 144);
-        for (; (current = std::find_if(current, end, TBitIsSet())) != end;
+        ConstBitsetIterator<144> current(combination.m_components, 0);
+        ConstBitsetIterator<144> end(combination.m_components, 144);
+        for (; (current = std::find_if(current, end, BitIsSet())) != end;
              ++current) {
             int component = current.position();
-            TArtifactTraits& componentTraits = g_artifactTraitsStorage[component];
+            ArtifactTraits& componentTraits = g_artifactTraitsStorage[component];
             componentTraits.m_targetCombo = combo;
             assembled.m_cost += componentTraits.m_cost;
         }
     }
 
     {
-        TResourcePtr<TSpreadsheetResource> slotsSheet(
+        ResourcePtr<SpreadsheetResource> slotsSheet(
             ResourceManager::getSpreadsheet(
                 DATA_COMPGEN(0x00660b70, artifactSlotsSpreadsheetName,
                              "artslots.txt")));
@@ -269,7 +269,7 @@ unsigned char initializeArtifactTraitsTable()
 
         VA_COMPGEN(0x0044d340, 0x16, STATIC_DTOR, artifactSlotStrings)
         DATA(0x00694c98)
-        static TAutoArrayPtr<char> artifactSlotStrings(new char[stringBytes]);
+        static AutoArrayPtr<char> artifactSlotStrings(new char[stringBytes]);
         if (!artifactSlotStrings.get())
             return 0;
 
@@ -316,9 +316,9 @@ unsigned char initializeArtifactTraitsTable()
 // 23), while _Tidy and equality remain rejected at the next nesting level.
 // The residual is not explained by the removed cache alone.
 static void initializeArtifactTraits(int id,
-    const TSpreadsheetResource::TStringVector& resource)
+    const SpreadsheetResource::TStringVector& resource)
 {
-    TArtifactTraits& traits = g_artifactTraitsStorage[id];
+    ArtifactTraits& traits = g_artifactTraitsStorage[id];
 
     traits.m_cost = atoi(resource[1]);
     std::bitset<19> allowableSlots;
@@ -353,49 +353,49 @@ static void initializeArtifactTraits(int id,
 
 // E:\gamedcs\TextResource.h:108
 DC_ONLY(0x5088c, 0x18)
-int TSpreadsheetResource::getNumberOfRows()
+int SpreadsheetResource::getNumberOfRows()
 {
     // @stub
 }
 
 // E:\gamedcs\TextResource.h:128
 DC_ONLY(0x508a4, 0x18)
-const std::vector<char* TSpreadsheetResource::getRow(int r)
+const std::vector<char* SpreadsheetResource::getRow(int r)
 {
     // @stub
 }
 
 // E:\gamedcs\artifact.cpp:33
 DC_ONLY(0x508bc, 0x8)
-void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr()
+void `anonymous namespace'::AutoStrPtr::AutoStrPtr()
 {
     // @stub
 }
 
 // E:\gamedcs\artifact.cpp:34
 DC_ONLY(0x508c4, 0x18)
-void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr()
+void `anonymous namespace'::AutoStrPtr::~AutoStrPtr()
 {
     // @stub
 }
 
 // E:\gamedcs\artifact.cpp:36
 DC_ONLY(0x508dc, 0x4)
-void `anonymous namespace'::TAutoStrPtr::set(char* pStr)
+void `anonymous namespace'::AutoStrPtr::set(char* pStr)
 {
     // @stub
 }
 
 // E:\gamedcs\artifact.cpp:38
 DC_ONLY(0x508e0, 0x4)
-char* `anonymous namespace'::TAutoStrPtr::get()
+char* `anonymous namespace'::AutoStrPtr::get()
 {
     // @stub
 }
 
 // E:\gamedcs\artifact.cpp:49
 DC_ONLY(0x508e4, 0x20)
-void TArtifactTraits::TArtifactTraits()
+void ArtifactTraits::ArtifactTraits()
 {
     // @stub
 }

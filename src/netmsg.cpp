@@ -29,7 +29,8 @@
 // The class name is provisional. Retail vtable 0x640264 proves the three
 // TAbstractFile slots; constructor expansions at 0x512cad and 0x512e28 prove
 // the owned and borrowed forms. No original header location is established.
-class t_memory_file : public TAbstractFile {
+// Before normalization (type): t_memory_file.
+class MemoryFile : public AbstractFile {
 public:
     // Both constructors are defined inline in this module-local class.
     // Retail expands
@@ -44,21 +45,21 @@ public:
     // Assigning in the body puts the two stores adjacent, VC6 drops the
     // base one, and what is left is retail's single `mov [this], 0x640264`
     // ahead of the flag.
-    t_memory_file()
+    MemoryFile()
     {
         m_ownsBuffer = 1;
         m_buffer = new char[100];
         m_capacity = 100;
         m_position = 0;
     }
-    t_memory_file(char* buffer, unsigned int capacity)
+    MemoryFile(char* buffer, unsigned int capacity)
     {
         m_ownsBuffer = 0;
         m_buffer = buffer;
         m_capacity = capacity;
         m_position = 0;
     }
-    virtual ~t_memory_file();
+    virtual ~MemoryFile();
     virtual int read(void* data, int size);
     virtual int write(const void* data, int size);
 
@@ -69,10 +70,10 @@ public:
     unsigned int m_capacity;     // +0x0c
     unsigned int m_position;     // +0x10
 };
-SIZE(t_memory_file, 0x14);
+SIZE(MemoryFile, 0x14);
 
 VA(0x00512b00, 0x24)
-t_memory_file::~t_memory_file()
+MemoryFile::~MemoryFile()
 {
     if (m_ownsBuffer) {
         delete[] m_buffer;
@@ -80,7 +81,7 @@ t_memory_file::~t_memory_file()
 }
 
 VA(0x00512b30, 0x43)
-int t_memory_file::read(void* data, int size)
+int MemoryFile::read(void* data, int size)
 {
     if (m_position + size > m_capacity) {
         size = m_capacity - m_position;
@@ -91,7 +92,7 @@ int t_memory_file::read(void* data, int size)
 }
 
 VA(0x00512b80, 0x9D)
-int t_memory_file::write(const void* data, int size)
+int MemoryFile::write(const void* data, int size)
 {
     if (m_position + size > m_capacity) {
         unsigned int grown = m_capacity + 100;
@@ -113,22 +114,22 @@ int t_memory_file::write(const void* data, int size)
 }
 
 VA(0x00512c20, 0x22)  // anchor-vtable 0x640270; anchor-caller 0x5887a0
-t_complex_net_message::t_complex_net_message()
+ComplexNetMessage::ComplexNetMessage()
     : m_netmsg(RS_GAME_TRANSMIT_INIT, 0)
 {
 }
 
 VA(0x00512c50, 0x27)  // anchor-vtable 0x640270; anchor-caller 0x4aeb50
-t_complex_net_message::t_complex_net_message(eRS_Messages subType)
+ComplexNetMessage::ComplexNetMessage(RsMessages subType)
     : m_netmsg(subType, 0)
 {
 }
 
 VA(0x00512c80, 0xBA)
-unsigned char t_complex_net_message::remoteFn00512C80(
+unsigned char ComplexNetMessage::remoteFn00512C80(
     unsigned long dpid, bool compressMsg, bool guaranteed)
 {
-    t_memory_file outfile;
+    MemoryFile outfile;
     outfile.write(&m_netmsg, sizeof(CNetMsg));
     write(&outfile);
     CNetMsg* wire = static_cast<CNetMsg*>(static_cast<void*>(outfile.m_buffer));
@@ -137,10 +138,10 @@ unsigned char t_complex_net_message::remoteFn00512C80(
 }
 
 VA(0x00512d40, 0xBA)
-unsigned char t_complex_net_message::remoteFn00512D40(
+unsigned char ComplexNetMessage::remoteFn00512D40(
     int toWho, bool compressMsg, bool guaranteed)
 {
-    t_memory_file outfile;
+    MemoryFile outfile;
     outfile.write(&m_netmsg, sizeof(CNetMsg));
     write(&outfile);
     CNetMsg* wire = static_cast<CNetMsg*>(static_cast<void*>(outfile.m_buffer));
@@ -149,9 +150,9 @@ unsigned char t_complex_net_message::remoteFn00512D40(
 }
 
 VA(0x00512e00, 0xBF)
-unsigned char t_complex_net_message::remoteFn00512E00(CNetMsg* netMsg)
+unsigned char ComplexNetMessage::remoteFn00512E00(CNetMsg* netMsg)
 {
-    t_memory_file infile(static_cast<char*>(static_cast<void*>(netMsg)),
+    MemoryFile infile(static_cast<char*>(static_cast<void*>(netMsg)),
                          netMsg->m_size);
     infile.read(&m_netmsg, sizeof(CNetMsg));
     if (!read(&infile)) {
@@ -160,4 +161,4 @@ unsigned char t_complex_net_message::remoteFn00512E00(CNetMsg* netMsg)
     return 1;
 }
 
-VA_COMPGEN(0x00512ad0, 0x21, SCALAR_DELETING_DTOR, t_memory_file)
+VA_COMPGEN(0x00512ad0, 0x21, SCALAR_DELETING_DTOR, MemoryFile)

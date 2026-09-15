@@ -27,7 +27,7 @@
 // The three-state relative-row family reproduces all objects: integral byte
 // offsets score 61.1976%, multiplied row indices 48.6694%; neither improves.
 VA(0x00603b20, 0x2d2)  // anchor-caller PCX importers + paired row/bit helper calls
-int __stdcall flipimage(imgdes* source, imgdes* destination)
+int __stdcall flipimage(Imgdes* source, Imgdes* destination)
 {
     int status = victorValidateBitmap(source);
     if (!status) {

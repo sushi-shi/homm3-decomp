@@ -10,18 +10,19 @@
 #include "herospec.h"
 #include "spellschool.h"
 
-class hero;
-class searchArray;
+class Hero;
+class SearchArray;
 // findpath.h's cell record; get_attack_time takes one by pointer and
 // this header does not need the definition.
-struct pathCell;
+struct PathCell;
 
 // PROVEN (2026-08-07) by set_melee_enemies (0x43bf20): a 16-byte record
 // written as {army*, damage, 1, damage} at this+0x50 + i*0x10, with the
 // whole 0x140-byte block cleared by one rep stosd of 0x50 dwords.
-struct type_AI_enemy_data {
+// Before normalization (type): type_AI_enemy_data.
+struct AIEnemyData {
 public:
-    const army* m_enemy;  // +0x00
+    const Army* m_enemy;  // +0x00
     long m_damage;  // +0x04
     long m_count;  // +0x08
     long m_totalDamage;  // +0x0c
@@ -44,25 +45,27 @@ public:
 // argument), and type_spell_choice's ctors (0x436950/0x436980) store
 // the same four words plus a 1-byte 1 at +0x10 before their own
 // members - so the record ends at +0x14 and derives.
-struct type_enchant_data {
+// Before normalization (type): type_enchant_data.
+struct EnchantData {
 public:
     SpellID m_spell;  // +0x00
-    TSkillMastery m_mastery;  // +0x04
+    SkillMastery m_mastery;  // +0x04
     long m_power;  // +0x08
     long m_duration;  // +0x0c
     // Both ctors seed it to 1; no located consumer reads it yet.
     unsigned char m_checkResistance;  // +0x10
 
-    type_enchant_data(SpellID newSpell, TSkillMastery newMastery,
+    EnchantData(SpellID newSpell, SkillMastery newMastery,
                       long newPower, long newDuration);
     long getMasteryValue() const;
 };
-SIZE(type_enchant_data, 0x14);
+SIZE(EnchantData, 0x14);
 
 // PROVEN layout (2026-08-07): both ctors (0x436950 default,
 // 0x436980 four-argument) write -1/-1/0 into +0x14/+0x18/+0x1c and a
 // zero byte at +0x20 after the type_enchant_data prefix.
-struct type_spell_choice : public type_enchant_data {
+// Before normalization (type): type_spell_choice.
+struct SpellChoice : public EnchantData {
 public:
     // Names from ai_combat.obj's consumers: target indexes the
     // defender's monster vector in get_area_value (0x424c00), field_18
@@ -74,18 +77,18 @@ public:
     long m_value;  // +0x1c (0)
     unsigned char m_castNow;  // +0x20 (0)
 
-    type_spell_choice();
-    type_spell_choice(SpellID newSpell, TSkillMastery newMastery,
+    SpellChoice();
+    SpellChoice(SpellID newSpell, SkillMastery newMastery,
                       long newPower, long newDuration);
 };
-SIZE(type_spell_choice, 0x24);
+SIZE(SpellChoice, 0x24);
 
 // PROVEN layout (2026-08-07): the ctor (0x435ec0) writes every field
 // below in order; get_simple_attack_effect (0x435b90) forwards +0/+4/+8
 // into army::get_loss_combat_value as (lowest_attack, lowest_defense,
 // kills_only) and branches on the byte at +9. The record ends at 0x28
 // because type_AI_spellcaster embeds it at +0x20 and owns +0x48.
-struct type_AI_combat_parameters {
+struct AICombatParameters {
 public:
     long m_lowestAttack;  // +0x00
     long m_lowestDefense;  // +0x04
@@ -108,43 +111,44 @@ public:
     long m_ourGroup;  // +0x20
     // Original Dreamcast type_AI_combat_parameters::enemy_group; retail field role agrees.
     long m_enemyGroup;  // +0x24
-    type_AI_combat_parameters(const combatManager* combat, long side);
-    long getExchangeEffect(const army& currentArmy, const army& enemy,
+    AICombatParameters(const CombatManager* combat, long side);
+    long getExchangeEffect(const Army& currentArmy, const Army& enemy,
                              long distance) const;
 
     long getGroup() const { return m_ourGroup; }
-    long getRangedAttackValue(const army& currentArmy, const army& enemy) const;
-    long getSimpleAttackEffect(const army& currentArmy, long ourTotal,
-                                  const army& enemy, long enemyTotal,
+    long getRangedAttackValue(const Army& currentArmy, const Army& enemy) const;
+    long getSimpleAttackEffect(const Army& currentArmy, long ourTotal,
+                                  const Army& enemy, long enemyTotal,
                                   unsigned char ranged, long distance) const;
-    long getSimpleAttackEffect(const army& currentArmy, const army& enemy,
+    long getSimpleAttackEffect(const Army& currentArmy, const Army& enemy,
                                   unsigned char ranged, long distance) const;
-    void simulateAttack(const army& currentArmy, long& ourHits,
-                         const army& enemy, long& enemyHits,
+    void simulateAttack(const Army& currentArmy, long& ourHits,
+                         const Army& enemy, long& enemyHits,
                          unsigned char ranged, long distance) const;
     // DC ai_tactical.cpp:200..390 proves const army references, referenced
     // hit outputs, and const combat-query receivers across this family.
     // Retail uses those same pointer-width ABI slots and writes only the hit
     // outputs, so preserve the canonical interfaces at every source call.
-    void simulateSingleAttack(const army& currentArmy, long& ourHits,
-                                const army& enemy, long& enemyHits,
+    void simulateSingleAttack(const Army& currentArmy, long& ourHits,
+                                const Army& enemy, long& enemyHits,
                                 unsigned char ranged, long distance) const;
 };
-SIZE(type_AI_combat_parameters, 0x28);
+SIZE(AICombatParameters, 0x28);
 
 // PROVEN layout (2026-08-07): the ctor (0x4360c0) writes +0/4/8/c/10/
 // 14/18/1c/20/24/28 and find_attack_hex (0x436840) reads +8 (enemy),
 // +0 (attacker) and +0x20 (the chosen hex).
-struct type_AI_attack_hex_chooser {
+// Before normalization (type): type_AI_attack_hex_chooser.
+struct AIAttackHexChooser {
 public:
-    const army* m_attackArmy;  // +0x00
+    const Army* m_attackArmy;  // +0x00
 
 protected:
     long m_speed;  // +0x04
 
 public:
-    const army* m_enemyArmy;  // +0x08
-    searchArray* m_searchData;  // +0x0c
+    const Army* m_enemyArmy;  // +0x08
+    SearchArray* m_searchData;  // +0x0c
     const long* m_enemyAttackArray;  // +0x10
     long m_enemyTroopsLeft;  // +0x14
     long m_ourTroops;  // +0x18
@@ -155,15 +159,15 @@ protected:
 
 public:
     long m_bestAttackTime;  // +0x24
-    const type_AI_combat_parameters* m_data;  // +0x28
+    const AICombatParameters* m_data;  // +0x28
 
-    type_AI_attack_hex_chooser(const army* attacker, const army* defender,
-                               const long* attackArray, searchArray* search,
-                               const type_AI_combat_parameters* combatData);
+    AIAttackHexChooser(const Army* attacker, const Army* defender,
+                               const long* attackArray, SearchArray* search,
+                               const AICombatParameters* combatData);
     unsigned char findAttackHex();
     // dc 0x3d154. Inlined into check_adjacent_hexes and carrying no
     // retail body of its own.
-    long getAttackTime(const pathCell* cell) const;
+    long getAttackTime(const PathCell* cell) const;
     // DC ai_tactical.h:471..482 (0x27fdc/0x27fe0/0x27fe4) returns
     // best_attack_time, best_hex and best_value, at the retail-proven offsets.
     long getAttackTime() const { return m_bestAttackTime; }
@@ -181,14 +185,15 @@ protected:
 // the embedded parameters at +0x20, the deputy caster at +0x48 with
 // its owning flag at +0x4c) and the 0x410 operator-new size in the
 // same body. Interior fields past +0x4c stay padded.
-struct type_AI_spellcaster {
+// Before normalization (type): type_AI_spellcaster.
+struct AISpellcaster {
 public:
     // +0x00 is the compiler's own vptr (vftable 0x63b7d8, one slot:
     // the scalar deleting destructor at 0x436bf0).
-    hero* m_ourHero;  // +0x04 combat->[0x53cc + side*4]
+    Hero* m_ourHero;  // +0x04 combat->[0x53cc + side*4]
 
 protected:
-    hero* m_enemyHero;  // +0x08 combat->[0x53cc + enemy_side*4]
+    Hero* m_enemyHero;  // +0x08 combat->[0x53cc + enemy_side*4]
 
 public:
     long m_side;  // +0x0c
@@ -205,9 +210,9 @@ public:
     // aligns the following four-byte field or aggregate.
     char m_paddingBeforeEstimate[0x2];
     // Original Dreamcast type_AI_spellcaster::estimate; retail field role agrees.
-    type_AI_combat_parameters m_estimate;  // +0x20
+    AICombatParameters m_estimate;  // +0x20
     // Original Dreamcast type_AI_spellcaster::enemy_caster; retail field role agrees.
-    type_AI_spellcaster* m_enemyCaster;  // +0x48
+    AISpellcaster* m_enemyCaster;  // +0x48
     // Original Dreamcast type_AI_spellcaster::owns_enemy_caster; retail field role agrees.
     unsigned char m_ownsEnemyCaster;  // +0x4c
     // Dreamcast and retail byte-field boundaries agree: this gap
@@ -218,13 +223,13 @@ public:
     // get_defense_boost_value (0x4387c0) sums total_damage from BOTH
     // (this + i*16 + 0x5c and this + i*16 + 0x19c).
     // Original Dreamcast type_AI_spellcaster::melee_enemies; retail field role agrees.
-    type_AI_enemy_data m_meleeEnemies[20];  // +0x50
-    type_AI_enemy_data m_attacks[20];  // +0x190
+    AIEnemyData m_meleeEnemies[20];  // +0x50
+    AIEnemyData m_attacks[20];  // +0x190
 
     // dc 0x3d604 (ai_tactical.cpp:793). ai.cpp's choose_creature_spell
     // (0x420d20) builds one on the stack with exactly (this, side, 1)
     // and the 0x420 frame the 0x410 operator-new size predicts.
-    type_AI_spellcaster(combatManager* combat, long side,
+    AISpellcaster(CombatManager* combat, long side,
                         unsigned char creatureSpell);
     // dc 0x3d6f0. The DEPUTY's constructor - the one the public ctor
     // reaches through `new` for the other side's caster, with `parent`
@@ -232,15 +237,15 @@ public:
     // clear. Retail carries NO out-of-line body for it (the carve cuts
     // no row between type_spell_choice's ctor at 0x436980 and the
     // public ctor at 0x4369c0), so it is `inline` at its definition.
-    type_AI_spellcaster(type_AI_spellcaster* parent, combatManager* combat,
+    AISpellcaster(AISpellcaster* parent, CombatManager* combat,
                         long side, unsigned char creatureSpell);
-    virtual ~type_AI_spellcaster();
-    long getCaliphValue(const army* target) const;
+    virtual ~AISpellcaster();
+    long getCaliphValue(const Army* target) const;
     // 0x43c330 / 0x43c4a0. choose_creature_spell dispatches to them on
     // creatureType - 0x5b (Dragon Fly) to the first, 0x25 (Master Genie)
     // to the second - which is the pairing that settled the 0x420d20 /
     // 0x420f00 twin question in the first place.
-    long getOgreMageValue(const army* target) const;
+    long getOgreMageValue(const Army* target) const;
 
 protected:
     // dc 0x425a8. "Is anything left on the other side that can still
@@ -257,84 +262,84 @@ protected:
     // bitIndex*16, and bails when it is null. The DC roster's
     // set_worst_enemies (dc 0x42170) is the only unlocated writer left
     // that fits, so the name is provisional.
-    type_AI_enemy_data m_worstEnemies[20];  // +0x2d0
+    AIEnemyData m_worstEnemies[20];  // +0x2d0
 
 public:
     long getFaerieDragonSpellValue(long hex, long power, SpellID spell);
 
 protected:
-    void considerChainLightning(type_spell_choice* choice) const;
-    long getAgeValue(const army* enemy, type_enchant_data caster) const;
-    long getAirProtectionValue(const army* ourArmy,
-                                  type_enchant_data caster) const;
-    long getAirShieldValue(const army* ourArmy, type_enchant_data caster) const;
-    long getAntimagicValue(const army* ourArmy, type_enchant_data caster) const;
+    void considerChainLightning(SpellChoice* choice) const;
+    long getAgeValue(const Army* enemy, EnchantData caster) const;
+    long getAirProtectionValue(const Army* ourArmy,
+                                  EnchantData caster) const;
+    long getAirShieldValue(const Army* ourArmy, EnchantData caster) const;
+    long getAntimagicValue(const Army* ourArmy, EnchantData caster) const;
     long getAreaEffectValue(SpellID spell, long baseDamage,
-                               TSkillMastery mastery, long hex) const;
+                               SkillMastery mastery, long hex) const;
     // DC ai_tactical.cpp:1158/1186: get_attack_boost_value, const overloads.
-    long getAttackBoostValue(const army* ourArmy, const army* enemy,
+    long getAttackBoostValue(const Army* ourArmy, const Army* enemy,
                             long oldDamage, long duration, double increase) const;
-    long getAttackBoostValue(const army* ourArmy, const army* enemy,
+    long getAttackBoostValue(const Army* ourArmy, const Army* enemy,
                             long duration, double increase) const;
-    long getAttackSkillValue(const army* ourArmy, const army* enemy,
+    long getAttackSkillValue(const Army* ourArmy, const Army* enemy,
                                 long duration, long bonus) const;
-    long getBacklashValue(const army* ourArmy, type_enchant_data caster) const;
-    long getBerserkValue(const army* enemy, type_enchant_data caster) const;
-    long getBlessValue(const army* ourArmy, type_enchant_data caster) const;
-    long getBloodLustValue(const army* ourArmy, type_enchant_data caster) const;
-    long getBlindValue(const army* enemy, type_enchant_data caster) const;
-    long getCancelValue(army* currentArmy, unsigned char badSpellsOnly) const;
-    long getChainLightningValue(long power, TSkillMastery mastery,
-                                   army* target) const;
-    long getCloneValue(const army* ourArmy, type_enchant_data caster) const;
-    long getCounterstrokeValue(const army* ourArmy, type_enchant_data caster) const;
-    long getCureValue(const army* ourArmy, type_enchant_data caster) const;
-    long getCurseValue(const army* enemy, type_enchant_data caster) const;
+    long getBacklashValue(const Army* ourArmy, EnchantData caster) const;
+    long getBerserkValue(const Army* enemy, EnchantData caster) const;
+    long getBlessValue(const Army* ourArmy, EnchantData caster) const;
+    long getBloodLustValue(const Army* ourArmy, EnchantData caster) const;
+    long getBlindValue(const Army* enemy, EnchantData caster) const;
+    long getCancelValue(Army* currentArmy, unsigned char badSpellsOnly) const;
+    long getChainLightningValue(long power, SkillMastery mastery,
+                                   Army* target) const;
+    long getCloneValue(const Army* ourArmy, EnchantData caster) const;
+    long getCounterstrokeValue(const Army* ourArmy, EnchantData caster) const;
+    long getCureValue(const Army* ourArmy, EnchantData caster) const;
+    long getCurseValue(const Army* enemy, EnchantData caster) const;
     long getDamageValue(SpellID spell, long baseDamage,
-                          const hero* targetHero, const army* target) const;
-    long getDamageSpellValue(const army* enemy, type_enchant_data caster) const;
-    long getDefenseBoostValue(const army* ourArmy, const army* enemy,
+                          const Hero* targetHero, const Army* target) const;
+    long getDamageSpellValue(const Army* enemy, EnchantData caster) const;
+    long getDefenseBoostValue(const Army* ourArmy, const Army* enemy,
                                  long duration, double increase) const;
-    long getDefenseSkillValue(const army* ourArmy, long duration,
+    long getDefenseSkillValue(const Army* ourArmy, long duration,
                                  long bonus) const;
-    long getDiseaseValue(const army* enemy, type_enchant_data caster) const;
-    long getDispelValue(const army* ourArmy, type_enchant_data caster) const;
+    long getDiseaseValue(const Army* enemy, EnchantData caster) const;
+    long getDispelValue(const Army* ourArmy, EnchantData caster) const;
     // DC ai_tactical.cpp:2116, get_duration. Retail protection expands it.
     double getDuration(long turns, unsigned char movedThisTurn) const;
-    long getDisruptiveRayValue(const army* enemy, type_enchant_data caster) const;
-    long getEarthProtectionValue(const army* ourArmy,
-                                    type_enchant_data caster) const;
-    long getFireProtectionValue(const army* ourArmy,
-                                   type_enchant_data caster) const;
-    long getFireShieldValue(const army* ourArmy, type_enchant_data caster) const;
-    long getForgetfulnessValue(const army* enemy, type_enchant_data caster) const;
+    long getDisruptiveRayValue(const Army* enemy, EnchantData caster) const;
+    long getEarthProtectionValue(const Army* ourArmy,
+                                    EnchantData caster) const;
+    long getFireProtectionValue(const Army* ourArmy,
+                                   EnchantData caster) const;
+    long getFireShieldValue(const Army* ourArmy, EnchantData caster) const;
+    long getForgetfulnessValue(const Army* enemy, EnchantData caster) const;
     // The luck twin of get_mirth_value / get_sorrow_value below;
     // get_enchantment_function (0x43b690) address-takes it for the
     // SPELL_FORTUNE row of its dispatch.
-    long getFortuneValue(const army* ourArmy, type_enchant_data caster) const;
-    long getFrenzyValue(const army* ourArmy, type_enchant_data caster) const;
-    long getHasteValue(const army* ourArmy, type_enchant_data caster) const;
-    long getHypnotizeValue(const army* enemy, type_enchant_data caster) const;
+    long getFortuneValue(const Army* ourArmy, EnchantData caster) const;
+    long getFrenzyValue(const Army* ourArmy, EnchantData caster) const;
+    long getHasteValue(const Army* ourArmy, EnchantData caster) const;
+    long getHypnotizeValue(const Army* enemy, EnchantData caster) const;
     long getMassDamageEffect(long enemyDamage, long friendlyDamage) const;
-    long getMirthValue(const army* ourArmy, type_enchant_data caster) const;
-    long getMisfortuneValue(const army* enemy, type_enchant_data caster) const;
-    long getMuckAndMireValue(const army* enemy, type_enchant_data caster) const;
-    long getPoisonValue(const army* enemy, type_enchant_data caster) const;
-    long getPrayerValue(const army* ourArmy, type_enchant_data caster) const;
-    long getPrecisionValue(const army* ourArmy, type_enchant_data caster) const;
-    long getProtectionValue(const army* ourArmy, TSpellSchool school,
+    long getMirthValue(const Army* ourArmy, EnchantData caster) const;
+    long getMisfortuneValue(const Army* enemy, EnchantData caster) const;
+    long getMuckAndMireValue(const Army* enemy, EnchantData caster) const;
+    long getPoisonValue(const Army* enemy, EnchantData caster) const;
+    long getPrayerValue(const Army* ourArmy, EnchantData caster) const;
+    long getPrecisionValue(const Army* ourArmy, EnchantData caster) const;
+    long getProtectionValue(const Army* ourArmy, SpellSchool school,
                               long level, long duration, long amount) const;
-    long getShieldValue(const army* ourArmy, type_enchant_data caster) const;
-    long getSlayerValue(const army* ourArmy, type_enchant_data caster) const;
-    long getSorrowValue(const army* enemy, type_enchant_data caster) const;
-    long getSpeedValue(const army* ourArmy, long increase, long duration) const;
-    long getToughSkinValue(const army* ourArmy, type_enchant_data caster) const;
-    long getTraitorValue(const army* enemy, const army* target) const;
-    long getWaterProtectionValue(const army* ourArmy,
-                                    type_enchant_data caster) const;
-    long getWeaknessValue(const army* enemy, type_enchant_data caster) const;
-    unsigned char shouldAttackNow(const army& enemy) const;
-    long unimplemented(const army* enemy, type_enchant_data caster) const;
+    long getShieldValue(const Army* ourArmy, EnchantData caster) const;
+    long getSlayerValue(const Army* ourArmy, EnchantData caster) const;
+    long getSorrowValue(const Army* enemy, EnchantData caster) const;
+    long getSpeedValue(const Army* ourArmy, long increase, long duration) const;
+    long getToughSkinValue(const Army* ourArmy, EnchantData caster) const;
+    long getTraitorValue(const Army* enemy, const Army* target) const;
+    long getWaterProtectionValue(const Army* ourArmy,
+                                    EnchantData caster) const;
+    long getWeaknessValue(const Army* enemy, EnchantData caster) const;
+    unsigned char shouldAttackNow(const Army& enemy) const;
+    long unimplemented(const Army* enemy, EnchantData caster) const;
     // The shape of every row in get_enchantment_function's table, and
     // the shape get_cancel_value (0x439a80) and get_caliph_value
     // (0x43c4a0) call back through: retail's `call dword ptr [ebp-x]`
@@ -342,37 +347,37 @@ protected:
     // pointer-to-member-function, which is one code address wide. CodeView
     // declares these pricers const; their callback type keeps that receiver
     // qualifier too (get_enchantment_function, ai_tactical.cpp:2884).
-    typedef long (type_AI_spellcaster::*TEnchantValue)(const army*,
-                                                       type_enchant_data) const;
+    typedef long (AISpellcaster::*TEnchantValue)(const Army*,
+                                                       EnchantData) const;
 
 public:
     unsigned char castSpell(unsigned char retreating);
 
 protected:
-    void considerAreaEffect(type_spell_choice* choice) const;
-    void considerEarthquake(type_spell_choice* choice) const;
-    void considerEnchantment(type_spell_choice* choice, long group) const;
-    void considerResurrect(type_spell_choice* choice) const;
-    void considerSacrifice(type_spell_choice& choice,
-                            const army* candidateHealedArmy, long candidateTargetHex) const;
-    void considerSacrifice(type_spell_choice& choice) const;
-    void considerSingleEnchantment(type_spell_choice* choice, long group) const;
-    void considerSpell(type_spell_choice* choice) const;
-    void considerSummon(type_spell_choice& choice) const;
+    void considerAreaEffect(SpellChoice* choice) const;
+    void considerEarthquake(SpellChoice* choice) const;
+    void considerEnchantment(SpellChoice* choice, long group) const;
+    void considerResurrect(SpellChoice* choice) const;
+    void considerSacrifice(SpellChoice& choice,
+                            const Army* candidateHealedArmy, long candidateTargetHex) const;
+    void considerSacrifice(SpellChoice& choice) const;
+    void considerSingleEnchantment(SpellChoice* choice, long group) const;
+    void considerSpell(SpellChoice* choice) const;
+    void considerSummon(SpellChoice& choice) const;
     // DC 0x3de90: const member with a writable type_spell_choice reference.
-    void considerMassDamage(type_spell_choice& choice) const;
-    void considerTeleport(type_spell_choice* choice) const;
+    void considerMassDamage(SpellChoice& choice) const;
+    void considerTeleport(SpellChoice* choice) const;
     void findEnemyAttacks();
     TEnchantValue getEnchantmentFunction(SpellID spell) const;
     // These pricers expand into consider_spell (0x43bb20), and the carve
     // has no retained row for them. That does not itself prove source inline;
     // the group, mass and summon definitions are ordinary source helpers.
     long getGroupDamageValue(SpellID spell, long baseDamage, long group,
-                                hero* targetHero) const;
+                                Hero* targetHero) const;
     void setMeleeEnemies();
     unsigned char spellsNotRequired() const;
 };
-SIZE(type_AI_spellcaster, 0x410);
+SIZE(AISpellcaster, 0x410);
 
 // --- globals ---
 // Retail 0x660858, four dwords {1, 1, 2, 3} read as [mastery]: how many
@@ -396,15 +401,15 @@ double valueOfLuckAndMorale(long value, long change,
                                 double badValueMultiplier);
 double aiValueOfMorale(long morale, long change);
 double aiValueOfLuck(long luck, long change);
-long aiGetAttackDamage(const army& currentArmy, long ourHits,
-                          const army& enemy, unsigned char ranged,
+long aiGetAttackDamage(const Army& currentArmy, long ourHits,
+                          const Army& enemy, unsigned char ranged,
                           long distance);
-long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex,
-                          long troopCount, const army* enemy, long enemyHex,
-                          const type_AI_combat_parameters* estimate);
-long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex,
-                      long troopCount, const army* enemy, long enemyHex,
-                      const type_AI_combat_parameters* estimate);
+long getMultiHeadBonus(long ourGroup, const Army* ourArmy, long ourHex,
+                          long troopCount, const Army* enemy, long enemyHex,
+                          const AICombatParameters* estimate);
+long getBreathBonus(long ourGroup, const Army* ourArmy, long ourHex,
+                      long troopCount, const Army* enemy, long enemyHex,
+                      const AICombatParameters* estimate);
 
 // --- army ---
 // CODEVIEW(E:\gamedcs\Army.h:724, dc 0x429c0) int army::GetMorale(unsigned char apply_limits);

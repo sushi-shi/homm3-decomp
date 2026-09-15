@@ -18,34 +18,35 @@
 
 class Bitmap16Bit;
 
-class type_text_slider;
+class TextSlider;
 
 // The scenario-description scroller shared by the selection window and the
 // stand-alone scenario-info popup. Retail fixes its original type identity,
 // constructor ABI, member offsets, and complete 0x5c extent.
-class type_text_scroller : public widget {
+// Before normalization (type): type_text_scroller.
+class TextScroller : public Widget {
 public:
-    type_text_scroller(const char* text, int x, int y, int w, int h,
-                       const char* fontName, font::TColor color,
-                       slider::EGraphics graphics);
-    virtual ~type_text_scroller();
-    virtual int open(int priority, heroWindow* parent);
-    virtual int main(message& msg);
+    TextScroller(const char* text, int x, int y, int w, int h,
+                       const char* fontName, Font::Color color,
+                       Slider::Graphics graphics);
+    virtual ~TextScroller();
+    virtual int open(int priority, HeroWindow* parent);
+    virtual int main(Message& msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     virtual void draw() const;
     void setText(const char* text);
     void refresh(int knobRange);
     const char* m_fontFilename;
     std::vector<std::string> m_textLines;
-    std::vector<textWidget*> m_lineImages;
-    type_text_slider* m_textSlider;
+    std::vector<TextWidget*> m_lineImages;
+    TextSlider* m_textSlider;
     Bitmap16Bit* m_background;
 };
-SIZE(type_text_scroller, 0x5c);
+SIZE(TextScroller, 0x5c);
 
 // Compatibility spelling for already reconstructed callers. Being a typedef,
 // it emits the retail `type_text_scroller` decorated names rather than a
 // second source-false class identity.
-typedef type_text_scroller CScrollTextWidget;
+typedef TextScroller CScrollTextWidget;
 
 #endif  /* HOMM3_TEXTSCROLLER_H */

@@ -55,8 +55,8 @@ static int g_leftRightSave;
 // E:\gamedcs\button.cpp:43
 // No claim: retail dropped the standalone copy (OPT:REF), but the body
 // survives inlined at the head of the textButton ctor 0x456a50.
-button::button()
-    : widget(0, 0, 0, 0, 0, 0)
+Button::Button()
+    : Widget(0, 0, 0, 0, 0, 0)
 {
     m_buttonIcon = 0;
     m_normalFrame = 0;
@@ -73,14 +73,14 @@ button::button()
 // tail, returning this. Retail places the three button-family sdds
 // each just AHEAD of the class they belong to (the DC build appends
 // all three at the tail), the same widget.obj/resource.cpp ordering.
-VA_COMPGEN(0x00455ec0, 0x21, SCALAR_DELETING_DTOR, button)
+VA_COMPGEN(0x00455ec0, 0x21, SCALAR_DELETING_DTOR, Button)
 
 // E:\gamedcs\button.cpp:69
 // Retail dropped DC's trailing focus parameter outright (ret 0x2c,
 // eleven args).
 VA(0x00455ef0, 0x1F7)  // linkorder bracket; GetSprite/widget-ctor callees byte-proven, dc 0x57130
-button::button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style)
-    : widget(x, y, w, h, id, style)
+Button::Button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style)
+    : Widget(x, y, w, h, id, style)
 {
     m_disabledFrame = 2;
     m_normalFrame = normal;
@@ -92,7 +92,7 @@ button::button(int x, int y, int w, int h, int id, const char* image, int normal
 }
 
 VA(0x004560f0, 0x9A)  // dc 0x571ec
-inline button::~button()
+inline Button::~Button()
 {
     m_buttonIcon->dispose();
 }
@@ -101,9 +101,9 @@ inline button::~button()
 // Main:163 calls this ordinary helper. Retail expands its successful
 // palette update and disposal, then returns on both success and failure.
 // The icon reload/disposal belongs to Main's separate SET_ICON_NAME arm.
-void button::setPalette(const char* paletteName)
+void Button::setPalette(const char* paletteName)
 {
-    TPalette16* newPalette = ResourceManager::getPalette(paletteName);
+    Palette16* newPalette = ResourceManager::getPalette(paletteName);
     if (newPalette) {
         m_buttonIcon->setPalette(newPalette->m_data);
         newPalette->dispose();
@@ -117,11 +117,11 @@ void button::setPalette(const char* paletteName)
 // order controls preserve DC order: this placement closes TextButton at 100%,
 // versus 99.2% after selected. All scored siblings retain their prior bytes.
 // Keep the ordinary helper boundary.
-void button::initialize(int x, int y, int w, int h, int id,
+void Button::initialize(int x, int y, int w, int h, int id,
                         const char* image, int normal, int selected,
                         unsigned char end, int hotkey, int style)
 {
-    widget::initialize(x, y, w, h, id, style);
+    Widget::initialize(x, y, w, h, id, style);
     m_disabledFrame = 2;
     m_normalFrame = normal;
     m_highlightedFrame = 3;
@@ -135,7 +135,7 @@ void button::initialize(int x, int y, int w, int h, int id,
 // E:\gamedcs\struct.h:411, dc 0x1eed4
 // E:\gamedcs\button.cpp:131
 VA(0x00456190, 0x6CF)  // linkorder bracket; Select/widget-Main/manager callees byte-proven, dc 0x572d0
-int button::main(message& msg)
+int Button::main(Message& msg)
 {
     if (m_style == WIDGET_STYLE_AUTO_REPEAT && (m_status & WIDGET_SELECTED)) {
         unsigned long repeatTime = g_timers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT];
@@ -147,7 +147,7 @@ int button::main(message& msg)
     if (!(m_status & WIDGET_ACTIVE)) {
         if (msg.m_id != MESSAGE_WIDGET)
             return 0;
-        return widget::main(msg);
+        return Widget::main(msg);
     }
     unsigned char isDisabled = 0;
     if (m_status & WIDGET_DISABLED)
@@ -158,18 +158,18 @@ int button::main(message& msg)
         if (msg.m_codeY != m_id)
             break;
         switch (msg.m_codeX) {
-        case widget::WIDGET_SET_PALETTE:
+        case Widget::WIDGET_SET_PALETTE:
             setPalette(msg.m_extraText);
             return 1;
-        case widget::WIDGET_SET_ICON_NAME:
+        case Widget::WIDGET_SET_ICON_NAME:
             if (m_buttonIcon)
                 m_buttonIcon->dispose();
             m_buttonIcon = ResourceManager::getSprite(msg.m_extraText);
             return 1;
-        case widget::WIDGET_SET_TEXT:
+        case Widget::WIDGET_SET_TEXT:
             setText(msg.m_extraText);
             return 1;
-        case widget::WIDGET_SET_PLAYER_PALETTE_COLORS:
+        case Widget::WIDGET_SET_PLAYER_PALETTE_COLORS:
             setPlayerPaletteColors(msg.m_extra);
             return 1;
         }
@@ -264,7 +264,7 @@ int button::main(message& msg)
             || rightY >= m_y + m_height)
             return 0;
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_RIGHT_SELECT;
+        msg.m_codeX = Widget::WIDGET_RIGHT_SELECT;
         msg.m_codeY = m_id;
         msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
         return 2;
@@ -274,7 +274,7 @@ int button::main(message& msg)
             return 0;
         break;
     }
-    return widget::main(msg);
+    return Widget::main(msg);
 }
 
 #if 0  // @carcass
@@ -289,7 +289,7 @@ int button::main(message& msg)
 // canonical GameTime::Get; DC also proves the message reference formal.
 // E:\gamedcs\button.cpp:366
 VA(0x00456860, 0xDA)  // linkorder bracket; MemorySample/UpdateScreen callees byte-proven, dc 0x57730
-int button::select(message& msg)
+int Button::select(Message& msg)
 {
     m_status |= WIDGET_SELECTED;
     if (s_clickSample) {
@@ -304,7 +304,7 @@ int button::select(message& msg)
     draw();
     g_windowManager->updateScreen(m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SELECT;
+    msg.m_codeX = Widget::WIDGET_SELECT;
     msg.m_codeY = m_id;
     g_timers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT] = GameTime::get() + BUTTON_REPEAT_DELAY_TICKS;
     g_leftRightSave = msg.m_qualifier & 0x300;
@@ -313,7 +313,7 @@ int button::select(message& msg)
 
 // Complete omits the combat-screen offset adjustment used in Dreamcast.
 // E:\gamedcs\button.cpp:401, dc 0x57854
-int button::deselect(message& msg)
+int Button::deselect(Message& msg)
 {
     if (!(m_status & WIDGET_SELECTED))
         return 0;
@@ -323,9 +323,9 @@ int button::deselect(message& msg)
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeY = m_id;
     if (m_endDialog == 1)
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
     else
-        msg.m_codeX = widget::WIDGET_DESELECT;
+        msg.m_codeX = Widget::WIDGET_DESELECT;
     msg.m_qualifier = g_leftRightSave;
     g_leftRightSave = 0;
     return 2;
@@ -337,13 +337,13 @@ int button::deselect(message& msg)
 // 0x4eab20/0x4eab30: load sprite at +0x30, then its +0x30/+0x34 dimension.
 // Keep these distinct source overrides; their physical bodies are already
 // claimed by iconwdgt.cpp, so they do not create duplicate RVA claims.
-int button::getRealWidth() const
+int Button::getRealWidth() const
 {
     return m_buttonIcon->getWidth();
 }
 
 // E:\gamedcs\button.cpp:435
-int button::getRealHeight() const
+int Button::getRealHeight() const
 {
     return m_buttonIcon->getHeight();
 }
@@ -351,7 +351,7 @@ int button::getRealHeight() const
 // E:\gamedcs\button.cpp:441
 // DC57938 is an empty const two-argument override. All three PC button
 // slot-3 entries fold to textWidget's ret-8 representative at 0x5bc7e0.
-void button::zBufferDraw(unsigned short* zBuffer, int id) const
+void Button::zBufferDraw(unsigned short* zBuffer, int id) const
 {
 }
 
@@ -361,7 +361,7 @@ void button::zBufferDraw(unsigned short* zBuffer, int id) const
 // frame past the sequence-0 count clamps to 0.
 // E:\gamedcs\button.cpp:446
 VA(0x00456940, 0x99)  // vtable-slot 4 of button (0x63bb54), dc 0x5793c
-void button::draw() const
+void Button::draw() const
 {
     if (!(m_status & WIDGET_DRAWN))
         return;
@@ -389,13 +389,13 @@ void button::draw() const
 // DC57a24 is empty; all three PC slot-8 entries fold to the bare ret at
 // 0x5bc690, already claimed by textWidget. Inheriting widget::dim instead
 // incorrectly introduces its screen-darkening operation.
-void button::dim() const
+void Button::dim() const
 {
 }
 
 // E:\gamedcs\button.cpp:477
 VA(0x004569e0, 0x2E)  // anchor-global, dc 0x57a28
-void button::setPlayerPaletteColors(int whichPlayer)
+void Button::setPlayerPaletteColors(int whichPlayer)
 {
     ::setPlayerPaletteColors(m_buttonIcon->getPalette(), whichPlayer);
     ::setPlayerPaletteColors(m_buttonIcon->getPalette24(), whichPlayer);
@@ -410,9 +410,9 @@ void button::setPlayerPaletteColors(int whichPlayer)
 // /Ob2-inlined nothing because widget::_vslot12 has no definition
 // visible here (widget.h declares it only, the Close idiom).
 VA(0x00456a10, 0x10)  // anchor-vtable (slot 12 of 0x63bb54/0x63bb88/0x63bbbc), retail-only
-void button::vslot12(int on)
+void Button::vslot12(int on)
 {
-    widget::vslot12(on);
+    Widget::vslot12(on);
 }
 
 #if 0  // @carcass
@@ -422,7 +422,7 @@ void button::vslot12(int on)
 // two retail references: the fourteen-argument ctor 0x456a50 and destructor
 // 0x456bf0. No other constructor vptr store or gap body fits this overload.
 DC_ONLY(0x57a5c, 0x58)
-void textButton::textButton()
+void TextButton::TextButton()
 {
     // @stub
 }
@@ -432,12 +432,12 @@ void textButton::textButton()
 // E:\gamedcs\button.cpp:488 - textButton::`scalar deleting destructor'
 // (dc 0x57e14). Slot 0 of textButton's vtable 0x63bb88; the 33-byte
 // row calls ??1textButton (0x456bf0) and carries the flags&1 tail.
-VA_COMPGEN(0x00456a20, 0x21, SCALAR_DELETING_DTOR, textButton)
+VA_COMPGEN(0x00456a20, 0x21, SCALAR_DELETING_DTOR, TextButton)
 
 // E:\gamedcs\button.cpp:508, dc 0x57ab4
 VA(0x00456a50, 0x193)  // linkorder bracket; initialize/GetSprite/GetFont callees byte-proven, dc 0x57ab4
-textButton::textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor newColor)
-    : button()
+TextButton::TextButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, Font::Color newColor)
+    : Button()
 {
     initialize(x, y, w, h, id, image, normal, selected, end, hotkey, style);
     setText(text);
@@ -447,22 +447,22 @@ textButton::textButton(int x, int y, int w, int h, int id, const char* image, co
 
 // E:\gamedcs\button.cpp:519
 VA(0x00456bf0, 0xAB)  // anchor-global, dc 0x57b5c
-textButton::~textButton()
+TextButton::~TextButton()
 {
     m_font->dispose();
 }
 
 VA(0x00456ca0, 0x82)  // dc 0x57b98
-void textButton::draw() const
+void TextButton::draw() const
 {
     if (!(m_status & WIDGET_DRAWN))
         return;
-    button::draw();
+    Button::draw();
     short buttonStatus = m_status;
     int color = m_textColor;
     if (buttonStatus & (WIDGET_DIMMED | WIDGET_DISABLED))
         color += 2;
-    heroWindow* parent = m_parentWindow;
+    HeroWindow* parent = m_parentWindow;
     int drawY;
     if (buttonStatus & WIDGET_SELECTED)
         drawY = m_y + parent->m_y;
@@ -474,15 +474,15 @@ void textButton::draw() const
     else
         drawX = m_x + parent->m_x;
     m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
-                            drawX, drawY, m_width, m_height, font::TColor(color), 5, -1);
+                            drawX, drawY, m_width, m_height, Font::Color(color), 5, -1);
 }
 
 VA(0x00456d30, 0x46)  // dc 0x57c4c
-type_func_button::type_func_button(long x, long y, long w, long h, long id,
+FuncButton::FuncButton(long x, long y, long w, long h, long id,
                                    const char* image,
                                    handler_type newHandler,
                                    int normal, int selected)
-    : button(x, y, w, h, id, image, normal, selected, 0, 0, 2)
+    : Button(x, y, w, h, id, image, normal, selected, 0, 0, 2)
 {
     m_handler = newHandler;
 }
@@ -494,7 +494,7 @@ type_func_button::type_func_button(long x, long y, long w, long h, long id,
 // nine-argument ctor 0x456d30. The definition-record overload has no vptr
 // store or unclaimed body slot in the fully accounted button band.
 DC_ONLY(0x57cdc, 0x6A)
-void type_func_button::type_func_button(const type_icon_definition* def, int _id, int (*)()* _handler)
+void FuncButton::FuncButton(const IconDefinition* def, int _id, int (*)()* _handler)
 {
     // @stub
 }
@@ -505,7 +505,7 @@ void type_func_button::type_func_button(const type_icon_definition* def, int _id
 // destructor' (dc 0x57e48). Slot 0 of type_func_button's vtable
 // 0x63bbbc; the 33-byte row calls ??1type_func_button (0x456db0) and
 // carries the flags&1 tail.
-VA_COMPGEN(0x00456d80, 0x21, SCALAR_DELETING_DTOR, type_func_button)
+VA_COMPGEN(0x00456d80, 0x21, SCALAR_DELETING_DTOR, FuncButton)
 
 // E:\gamedcs\button.cpp:559
 // Byte-identical in shape to ~button: the derived vtable store followed
@@ -513,15 +513,15 @@ VA_COMPGEN(0x00456d80, 0x21, SCALAR_DELETING_DTOR, type_func_button)
 // elimination; ~textButton keeps both because Font->Dispose intervenes).
 // E:\gamedcs\button.cpp:559
 VA(0x00456db0, 0x9A)  // anchor-global, dc 0x57e7c
-type_func_button::~type_func_button()
+FuncButton::~FuncButton()
 {
 }
 
 // E:\gamedcs\button.cpp:574
 VA(0x00456e50, 0x44)  // vtable-slot 2 of type_func_button (0x63bbbc), dc 0x57d48
-int type_func_button::main(message& msg)
+int FuncButton::main(Message& msg)
 {
-    int result = button::main(msg);
+    int result = Button::main(msg);
     if (result != 1 && (m_status & WIDGET_ACTIVE) && m_sleepCount <= 0
         && msg.m_id == MESSAGE_WIDGET && msg.m_codeY == m_id) {
         msg.m_window = m_parentWindow;
@@ -534,35 +534,35 @@ int type_func_button::main(message& msg)
 
 // E:\gamedcs\Button.h:78
 DC_ONLY(0x57da4, 0x18)
-void button::setText(const char* new_text)
+void Button::setText(const char* new_text)
 {
     // @stub
 }
 
 // E:\gamedcs\CSprite.h:284
 DC_ONLY(0x57dbc, 0x24)
-TPalette24* CSprite::getPalette24()
+Palette24* CSprite::getPalette24()
 {
     // @stub
 }
 
 // E:\gamedcs\button.cpp:51
 DC_ONLY(0x57de0, 0x34)
-void* button::`scalar deleting destructor'(unsigned __flags)
+void* Button::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\button.cpp:488
 DC_ONLY(0x57e14, 0x34)
-void* textButton::`scalar deleting destructor'(unsigned __flags)
+void* TextButton::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\button.cpp:559
 DC_ONLY(0x57e48, 0x34)
-void* type_func_button::`scalar deleting destructor'(unsigned __flags)
+void* FuncButton::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -637,4 +637,4 @@ void std::_STL_alloc_proxy<int *,int,std::allocator<int> >::_STL_alloc_proxy<int
 #endif  // @carcass
 
 DATA(0x00694da4)
-sample* button::s_clickSample;
+Sample* Button::s_clickSample;

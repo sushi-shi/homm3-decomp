@@ -4,17 +4,18 @@
 
 #include "advmgr_popup.h"
 
-class hero;
-class message;
+class Hero;
+class Message;
 
 // Retail's vtable at 0x63fe60 has the inherited CAdvPopup shape: slot 0 is
 // the scalar-deleting destructor at 0x4f9700 and slot 9 is WindowHandler at
 // 0x4f9780.  The destructor touches no tail state, and the constructor's
 // allocation/call sites allocate only the CAdvPopup-sized object; no derived
 // data members are presently evidenced.
-class TLevelUpWindow : public CAdvPopup {
+// Before normalization (type): TLevelUpWindow.
+class LevelUpWindow : public CAdvPopup {
 public:
-    enum EOtherWidgetIDs {
+    enum OtherWidgetIDs {
         BACKGROUND_ID = 2000,
         PORTRAIT_ID,
         TEXT1_ID,
@@ -30,18 +31,20 @@ public:
         SKILLBORDER_1_ID,
         SKILLBORDER_2_ID
     };
-    enum ERetailDialogIDs {
+// Before normalization (type): LevelUpWindow::ERetailDialogIDs.
+    enum RetailDialogIDs {
         LEVELUP_ACCEPT_ID = 0x7802
     };
-    enum ESelectionKeys {
+// Before normalization (type): LevelUpWindow::ESelectionKeys.
+    enum SelectionKeys {
         LEVELUP_SELECT_LEFT_KEY = 2,
         LEVELUP_SELECT_RIGHT_KEY = 3
     };
 
-    TLevelUpWindow(hero* thisHero, int gainedSkill,
+    LevelUpWindow(Hero* thisHero, int gainedSkill,
                    int firstChoice, int secondChoice);
-    virtual ~TLevelUpWindow();
-    virtual int windowHandler(message& msg); // slot 9
+    virtual ~LevelUpWindow();
+    virtual int windowHandler(Message& msg); // slot 9
 
     int m_leftSkill;   // +0x60 retail (+0x58 DC)
     int m_rightSkill;  // +0x64 retail (+0x5c DC)
@@ -49,7 +52,7 @@ public:
 private:
     int m_selected;     // +0x68 retail (+0x60 DC)
 };
-SIZE(TLevelUpWindow, 0x6c);
+SIZE(LevelUpWindow, 0x6c);
 
 // --- TLevelUpWindow ---
 // CODEVIEW(E:\gamedcs\levelupwindow.cpp:155, dc 0xe9058) void* TLevelUpWindow::`scalar deleting destructor'(unsigned __flags);

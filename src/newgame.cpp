@@ -25,7 +25,7 @@ long getAlignmentCount(int legalAlignments)
 }
 
 VA(0x005132d0, 0x50)  // dc 0x1034b4
-TTownType pickAlignment(int legalAlignments, unsigned char getFirstAvail)
+TownType pickAlignment(int legalAlignments, unsigned char getFirstAvail)
 {
     long count = getAlignmentCount(legalAlignments);
     int which = 1;
@@ -36,7 +36,7 @@ TTownType pickAlignment(int legalAlignments, unsigned char getFirstAvail)
     for (int i = 0; i < 9; ++i) {
         if (legalAlignments & (1 << i)) {
             if (--which == 0) {
-                TTownType alignment;
+                TownType alignment;
                 memcpy(&alignment, &i, sizeof alignment);
                 return alignment;
             }
@@ -56,8 +56,8 @@ const int g_mapFormatAb = 21;
 const int g_setupPlayerPosComputer = 10;
 
 VA(0x00513320, 0x41A)  // dc 0x1034fc
-void game::initNewGame(int difficulty, int version,
-                       NewSMapHeader* mapHeader, TAbstractFile* infile)
+void Game::initNewGame(int difficulty, int version,
+                       NewSMapHeader* mapHeader, AbstractFile* infile)
 {
     int humanCount = 0;
 
@@ -134,10 +134,10 @@ void game::initNewGame(int difficulty, int version,
 
 // Complete uses the nine-town alignment mask for both helpers.
 // E:\gamedcs\newgame.cpp:355, dc 0x1037f8.
-TTownType pickPrevAlignment(int legalAlignments, TTownType type)
+TownType pickPrevAlignment(int legalAlignments, TownType type)
 {
     do {
-        type = static_cast<TTownType>(type - 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+        type = static_cast<TownType>(type - 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
         if (type < -1)
             type = TOWN_CONFLUX;
         else if (type == -1)
@@ -147,21 +147,21 @@ TTownType pickPrevAlignment(int legalAlignments, TTownType type)
 }
 
 // E:\gamedcs\newgame.cpp:368, dc 0x10380c.
-TTownType pickNextAlignment(int legalAlignments, TTownType type)
+TownType pickNextAlignment(int legalAlignments, TownType type)
 {
     do {
-        type = static_cast<TTownType>(type + 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+        type = static_cast<TownType>(type + 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
         if (type > TOWN_CONFLUX)
-            type = static_cast<TTownType>(-1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+            type = static_cast<TownType>(-1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
     } while (type != -1 && !(legalAlignments & (1 << type)));
     return type;
 }
 
 VA(0x00513740, 0xBC)  // dc 0x103824
-void game::showScenInfo()
+void Game::showScenInfo()
 {
     if (g_unk69774c) {
-        TCampaignBrief campaignBrief(0, 1);
+        CampaignBrief campaignBrief(0, 1);
         campaignBrief.doModal();
         if (g_windowManager->m_dialogReturn == NEWGAME_CAMPAIGN_BRIEF_EXIT)
             g_gameCommand = NEWGAME_COMMAND_QUIT;
@@ -172,13 +172,13 @@ void game::showScenInfo()
 }
 
 VA(0x00513800, 0x1D5)  // dc 0x103888
-void game::getLossConditionText(char* text)
+void Game::getLossConditionText(char* text)
 {
     LossConditionStruct& loss = m_mapHeader.m_lossCondition;
     if (loss.m_type != -1) {
         switch (loss.m_type) {
         case LOSS_CONDITION_LOSE_TOWN: {
-            town* targetTown = getTown(getTownId(
+            Town* targetTown = getTown(getTownId(
                 loss.m_townX, loss.m_townY, loss.m_townZ));
             const char* targetType;
             if (targetTown->isCastle())
@@ -190,7 +190,7 @@ void game::getLossConditionText(char* text)
             break;
         }
         case LOSS_CONDITION_LOSE_HERO: {
-            hero* targetHero = getHero(loss.m_heroId);
+            Hero* targetHero = getHero(loss.m_heroId);
             sprintf(text, (*g_generalText)[226], targetHero->m_name);
             break;
         }
@@ -208,13 +208,13 @@ void game::getLossConditionText(char* text)
 }
 
 VA(0x005139e0, 0x64C)  // dc 0x103a08
-void game::getVictoryConditionText(char* text)
+void Game::getVictoryConditionText(char* text)
 {
     VictoryConditionStruct& victory = m_mapHeader.m_victoryCondition;
     if (victory.m_type != -1) {
         switch (victory.m_type) {
         case VICTORY_CONDITION_CAPTURE_TOWN: {
-            town* targetTown = getTown(getTownId(
+            Town* targetTown = getTown(getTownId(
                 victory.m_townX, victory.m_townY, victory.m_townZ));
             const char* targetType;
             if (targetTown->isCastle())
@@ -226,7 +226,7 @@ void game::getVictoryConditionText(char* text)
             break;
         }
         case VICTORY_CONDITION_DEFEAT_HERO: {
-            hero* targetHero = getHero(victory.m_heroId);
+            Hero* targetHero = getHero(victory.m_heroId);
             sprintf(text, (*g_generalText)[230], targetHero->m_name);
             break;
         }
@@ -243,15 +243,15 @@ void game::getVictoryConditionText(char* text)
                     g_resourceNames[victory.m_resourceType]);
             break;
         case VICTORY_CONDITION_UPGRADE_TOWN: {
-            town* targetTown = getTown(getTownId(
+            Town* targetTown = getTown(getTownId(
                 victory.m_townX, victory.m_townY, victory.m_townZ));
             sprintf(text, (*g_generalText)[319], targetTown->m_name.c_str());
             break;
         }
         case VICTORY_CONDITION_BUILD_GRAIL: {
-            type_point townPos(victory.m_townX, victory.m_townY, victory.m_townZ);
-            if (townPos != type_point(-1, -1, -1)) {
-                town* targetTown = getTown(getTownId(
+            MapPoint townPos(victory.m_townX, victory.m_townY, victory.m_townZ);
+            if (townPos != MapPoint(-1, -1, -1)) {
+                Town* targetTown = getTown(getTownId(
                     victory.m_townX, victory.m_townY, victory.m_townZ));
                 sprintf(text, (*g_generalText)[320],
                         targetTown->m_name.c_str());
@@ -315,7 +315,7 @@ void game::getVictoryConditionText(char* text)
             strcpy(text, (*g_generalText)[325]);
             break;
         case VICTORY_CONDITION_TRANSPORT_ARTIFACT: {
-            town* targetTown = getTown(getTownId(
+            Town* targetTown = getTown(getTownId(
                 victory.m_townX, victory.m_townY, victory.m_townZ));
             sprintf(text, (*g_generalText)[326],
                     g_artifactTraits[victory.m_artifactNum].m_name,
@@ -334,21 +334,21 @@ void game::getVictoryConditionText(char* text)
 
 // E:\gamedcs\newgame.cpp:337
 DC_ONLY(0x1037f4, 0x4)
-void game::SetupNetPlayerNames()
+void Game::SetupNetPlayerNames()
 {
     // @stub
 }
 
 // E:\gamedcs\newgame.cpp:668
 DC_ONLY(0x103a08, 0x5AC)
-void game::getVictoryConditionText(char* rText)
+void Game::getVictoryConditionText(char* rText)
 {
     // @stub
 }
 
 // E:\gamedcs\newgame.cpp:826
 DC_ONLY(0x103fb4, 0x244)
-int game::GetSideDesc(char* rText, int iStartPos, int iEndPos)
+int Game::GetSideDesc(char* rText, int iStartPos, int iEndPos)
 {
     // @stub
 }

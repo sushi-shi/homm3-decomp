@@ -6,7 +6,8 @@
 // evidence/dreamcast/enums.csv (31 enumerators; the DC spellings, minus
 // aliases that name no distinct skill). Retail corroborates the domain in
 // hero specialty lookups and type_university's four elemental-school slots.
-enum TSecondarySkill {
+// Before normalization (type): TSecondarySkill.
+enum SecondarySkill {
     eSecSkillNone = -1,
     kNumSecSkillsPerHero = 8,
     eSecSkillPathfinding = 0,

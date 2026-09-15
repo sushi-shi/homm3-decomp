@@ -27,6 +27,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -175,6 +176,22 @@ def _canonical_definition_text(raw: str, masked: str, after: int,
     return raw[line_start:definition.body_close + 1]
 
 
+def canonical_source_types(definition: str,
+                           type_lineage: dict[str, str]) -> str:
+    """Fingerprint the compiler-facing type identity behind clean aliases."""
+    from homm3.retail_labels.source import mask_lexical_noise
+    masked = mask_lexical_noise(definition)
+    pieces = []
+    cursor = 0
+    for match in re.finditer(r'\b[A-Za-z_]\w*\b', masked):
+        pieces.append(definition[cursor:match.start()])
+        token = definition[match.start():match.end()]
+        pieces.append(type_lineage.get(token, token))
+        cursor = match.end()
+    pieces.append(definition[cursor:])
+    return ''.join(pieces)
+
+
 def source_hashes(*, legacy: bool = False) -> dict[tuple[str, str], str]:
     """Hash each VA-owned function's own definition, keyed like objdiff.
 
@@ -187,7 +204,12 @@ def source_hashes(*, legacy: bool = False) -> dict[tuple[str, str], str]:
 
     from homm3.build import configure
     from homm3.core.cpp_tokens import fingerprint
+    from homm3.match.source_ownership import read_type_lineage
     from homm3.retail_labels import source
+    # Identifier-only normalization does not invalidate a byte-match peak.
+    # Canonicalize authored names through their evidence lineage whether or
+    # not a preprocessor alias still controls the compiler spelling.
+    type_lineage = read_type_lineage(common.HOMM3_DIR)
 
     by_identity: dict[tuple[str, int], list[tuple[str, str]]] = {}
     for key, rva in function_rvas().items():
@@ -215,6 +237,7 @@ def source_hashes(*, legacy: bool = False) -> dict[tuple[str, str], str]:
                     raw, masked, end + 1, key[1])
                 if definition is None:
                     continue
+                definition = canonical_source_types(definition, type_lineage)
                 hashes[key] = (hashlib.sha1(definition.encode("utf-8", "replace")).hexdigest()[:12]
                                if legacy else fingerprint(definition))
     # Canonical header bodies carry their own VA annotations. Their retail
@@ -234,6 +257,7 @@ def source_hashes(*, legacy: bool = False) -> dict[tuple[str, str], str]:
             for key in keys_by_rva.get(rva, ()):
                 definition = _canonical_definition_text(raw, masked, end + 1, key[1])
                 if definition is not None:
+                    definition = canonical_source_types(definition, type_lineage)
                     hashes[key] = (hashlib.sha1(definition.encode("utf-8", "replace")).hexdigest()[:12]
                                    if legacy else fingerprint(definition))
     return hashes

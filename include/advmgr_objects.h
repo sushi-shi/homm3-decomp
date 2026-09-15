@@ -9,33 +9,36 @@
 #include "objecttype.h"
 
 class CSprite;
-class textWidget;
-class hero;
-class boat;
+class TextWidget;
+class Hero;
+// Before normalization (type): boat.
+class Boat;
 
 // Dreamcast CodeView names the three pointer members and fixes this helper at
 // 12 bytes. Retail's destructor and get_trigger_cell body independently
 // confirm the same offsets and pointer roles.
-class type_cell_adjuster {
+// Before normalization (type): type_cell_adjuster.
+class CellAdjuster {
 public:
     enum {
         MOBILE_HERO_CELL_X = 9,
         MOBILE_HERO_CELL_Y = 8
     };
     // Ordinary DC constructor; body stays in advmgr.cpp before its callers.
-    type_cell_adjuster();
-    ~type_cell_adjuster();
+    CellAdjuster();
+    ~CellAdjuster();
     NewmapCell* getTriggerCell(NewmapCell* mapCell, int x, int y);
     void restoreCell();
 
 protected:
-    hero* m_obscuringHero;
-    boat* m_obscuringBoat;
-    hero* m_mobileHero;
+    Hero* m_obscuringHero;
+    Boat* m_obscuringBoat;
+    Hero* m_mobileHero;
 };
-SIZE(type_cell_adjuster, 0xc);
+SIZE(CellAdjuster, 0xc);
 
-enum ECompleteDrawFps {
+// Before normalization (type): ECompleteDrawFps.
+enum CompleteDrawFps {
     COMPLETE_DRAW_FPS_FRAME_COUNT = 100
 };
 
@@ -49,7 +52,8 @@ DATA(0x0069136c) extern int
 DATA(0x006912ec) extern char g_completeDrawFpsText[];
 DATA(0x00660388) extern char g_completeDrawFpsFormat[];
 
-enum EGetSoundObjectIndex {
+// Before normalization (type): EGetSoundObjectIndex.
+enum GetSoundObjectIndex {
     GET_SOUND_BANK_0 = 0,
     GET_SOUND_BANK_1,
     GET_SOUND_BANK_2,
@@ -72,7 +76,8 @@ enum EGetSoundObjectIndex {
 
 // Only the creature ids selected by GetSoundId's retail switch are named.
 // Ordinal spellings avoid importing an external semantic creature roster.
-enum EGetSoundCreatureId {
+// Before normalization (type): EGetSoundCreatureId.
+enum GetSoundCreatureId {
     GET_SOUND_CREATURE_000 = 0,
     GET_SOUND_CREATURE_002 = 2,
     GET_SOUND_CREATURE_004 = 4,
@@ -133,8 +138,8 @@ enum EGetSoundCreatureId {
     GET_SOUND_CREATURE_115 = 115
 };
 
-DATA(0x0063d570) extern TCreatureType g_creatureGenerator1Types[];
-DATA(0x00677938) extern TCreatureType g_creatureGenerator4Types[][4];
+DATA(0x0063d570) extern CreatureType g_creatureGenerator1Types[];
+DATA(0x00677938) extern CreatureType g_creatureGenerator4Types[][4];
 
 class CObjectType;
 
@@ -143,7 +148,8 @@ class CObjectType;
 // `neg bl / sbb ebx,ebx / and ebx,0x63 / inc ebx` at its tail, 0x63 + 1.
 // readMapObjects cases on the second value to collect the type indices it
 // then reports against. GATED to the one TU that reads it.
-enum EReadObjectTypeResult {
+// Before normalization (type): EReadObjectTypeResult.
+enum ReadObjectTypeResult {
     READ_OBJECT_TYPE_OK = 1,
     READ_OBJECT_TYPE_DEFAULT_MASK = 100
 };

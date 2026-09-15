@@ -10,7 +10,8 @@
 // Keep the existing byte-proven ordinals in this single enum so overload
 // resolution preserves the artifact domain in every caller. This header
 // contains only the domain, without artifact traits or STL dependencies.
-enum TArtifact {
+// Before normalization (type): TArtifact.
+enum Artifact {
     ARTIFACT_NONE = -1,
     // Retail witness: hero::TransferArtifacts (0x4e23d0) refuses to move
     // an artifact whose id is -1, 2, 0 or one of the four war machines

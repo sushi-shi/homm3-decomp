@@ -9,7 +9,7 @@
 #include "bitmap16.h"
 
 VA(0x005fe340, 0x62)  // dc 0x196b4c
-widget::widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle)
+Widget::Widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle)
     : m_sleepCount(0)
 {
     m_x = widgetX;
@@ -28,10 +28,10 @@ widget::widget(short widgetX, short widgetY, short widgetWidth, short widgetHeig
     m_freeText = 0;
 }
 
-VA_COMPGEN(0x005fe3b0, 0x5C, SCALAR_DELETING_DTOR, widget)
+VA_COMPGEN(0x005fe3b0, 0x5C, SCALAR_DELETING_DTOR, Widget)
 
 VA(0x005fe410, 0x1D)  // dc 0x196bd4
-widget::widget()
+Widget::Widget()
     : m_sleepCount(0)
 {
     m_rollOver = 0;
@@ -41,7 +41,7 @@ widget::widget()
 }
 
 VA(0x005fe430, 0x45)  // dc 0x196c10
-widget::~widget()
+Widget::~Widget()
 {
     if (s_lastHoverWidget == this)
         s_lastHoverWidget = 0;
@@ -54,7 +54,7 @@ widget::~widget()
 }
 
 VA(0x005fe480, 0x4E)  // dc 0x196c6c
-void widget::initialize(int x, int y, int w, int h, int id, int style)
+void Widget::initialize(int x, int y, int w, int h, int id, int style)
 {
     m_parentWindow = 0;
     m_prevWidget = 0;
@@ -70,7 +70,7 @@ void widget::initialize(int x, int y, int w, int h, int id, int style)
 }
 
 VA(0x005fe4d0, 0x17)  // dc 0x196cbc
-int widget::open(int newPriority, heroWindow* parent)
+int Widget::open(int newPriority, HeroWindow* parent)
 {
     m_priority = newPriority;
     m_parentWindow = parent;
@@ -81,7 +81,7 @@ int widget::open(int newPriority, heroWindow* parent)
 
 // E:\gamedcs\widget.cpp:235
 DC_ONLY(0x196ccc, 0x4)
-void widget::Close()
+void Widget::Close()
 {
     // @stub
 }
@@ -89,7 +89,7 @@ void widget::Close()
 #endif  // @carcass
 
 VA(0x005fe4f0, 0x2C8)  // dc 0x196cd0
-int widget::main(message& msg)
+int Widget::main(Message& msg)
 {
     if (m_sleepCount > 0)
         return 0;
@@ -176,9 +176,9 @@ int widget::main(message& msg)
 }
 
 VA(0x005fe7c0, 0x40)  // dc 0x196f88
-int widget::sendMessage(widget::ECommands command, int extra)
+int Widget::sendMessage(Widget::Commands command, int extra)
 {
-    message msg;
+    Message msg;
     msg.m_qualifier = 0;
     msg.m_mouseX = 0;
     msg.m_mouseY = 0;
@@ -191,14 +191,14 @@ int widget::sendMessage(widget::ECommands command, int extra)
 }
 
 VA(0x005fe800, 0x32)  // dc 0x196fc8
-void widget::dim() const
+void Widget::dim() const
 {
     g_windowManager->m_screenBitmap->darken(
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
 }
 
 VA(0x005fe840, 0xE9)  // dc 0x196ffc
-void widget::setHelpText(const char* text, const char* rclick, unsigned char copyText)
+void Widget::setHelpText(const char* text, const char* rclick, unsigned char copyText)
 {
     if (m_rollOver) {
         if (m_freeText)
@@ -228,16 +228,16 @@ void widget::setHelpText(const char* text, const char* rclick, unsigned char cop
 }
 
 VA(0x005fe930, 0xC)  // dc 0x1970a8
-void widget::processHover()
+void Widget::processHover()
 {
     m_parentWindow->handleWidgetHover(this);
 }
 
 VA(0x005fe940, 0x83)  // dc 0x1970c0
-void widget::enable(unsigned char arg)
+void Widget::enable(unsigned char arg)
 {
     if (arg) {
-        message msg;
+        Message msg;
         msg.m_qualifier = 0;
         msg.m_mouseX = 0;
         msg.m_mouseY = 0;
@@ -248,7 +248,7 @@ void widget::enable(unsigned char arg)
         msg.m_extra = WIDGET_DISABLED;
         main(msg);
     } else {
-        message msg;
+        Message msg;
         msg.m_qualifier = 0;
         msg.m_mouseX = 0;
         msg.m_mouseY = 0;
@@ -265,4 +265,4 @@ void widget::enable(unsigned char arg)
 // retail link order above, at 0x5fe3b0.
 
 DATA(0x006aac68)
-widget* widget::s_lastHoverWidget;
+Widget* Widget::s_lastHoverWidget;

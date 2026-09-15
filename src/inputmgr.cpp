@@ -13,7 +13,7 @@
 VA(0x004ec0e0, 0x1AB)  // dc 0xdc894
 int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long longParam)
 {
-    message* e;
+    Message* e;
 
     if (g_inputManager == 0)
         return 1;
@@ -64,35 +64,35 @@ int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long
 
 // E:\gamedcs\inputmgr.cpp:274
 DC_ONLY(0xdcc4c, 0x7EC)
-void inputManager::FocusTheWidget(int direction)
+void InputManager::FocusTheWidget(int direction)
 {
     // @stub
 }
 
 // E:\gamedcs\inputmgr.cpp:523
 DC_ONLY(0xdd438, 0x164)
-int inputManager::CheckLeft(int x, int y, int width, int height, int id, unsigned char nd)
+int InputManager::CheckLeft(int x, int y, int width, int height, int id, unsigned char nd)
 {
     // @stub
 }
 
 // E:\gamedcs\inputmgr.cpp:586
 DC_ONLY(0xdd59c, 0x166)
-int inputManager::CheckRight(int x, int y, int width, int height, int id, unsigned char nd)
+int InputManager::CheckRight(int x, int y, int width, int height, int id, unsigned char nd)
 {
     // @stub
 }
 
 // E:\gamedcs\inputmgr.cpp:650
 DC_ONLY(0xdd704, 0x13C)
-int inputManager::CheckUp(int x, int y, int width, int height, int id, unsigned char nd)
+int InputManager::CheckUp(int x, int y, int width, int height, int id, unsigned char nd)
 {
     // @stub
 }
 
 // E:\gamedcs\inputmgr.cpp:714
 DC_ONLY(0xdd840, 0x13C)
-int inputManager::CheckDown(int x, int y, int width, int height, int id, unsigned char nd)
+int InputManager::CheckDown(int x, int y, int width, int height, int id, unsigned char nd)
 {
     // @stub
 }
@@ -102,7 +102,7 @@ int inputManager::CheckDown(int x, int y, int width, int height, int id, unsigne
 VA(0x004ec290, 0x1CC)  // dc 0xdcaa0
 int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long longParam)
 {
-    message* e;
+    Message* e;
     int x;
     int y;
 
@@ -178,7 +178,7 @@ int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long lo
 // its canonical default constructor; repeating its stores in an additional
 // derived wrapper would introduce a second clear pass absent from retail.
 VA(0x004ec460, 0x6F)  // dc 0xdd97c
-inputManager::inputManager()
+InputManager::InputManager()
 {
     m_keyboardFilter = 1;
     m_keyCodeType = 1;
@@ -191,7 +191,7 @@ inputManager::inputManager()
 }
 
 VA(0x004ec4d0, 0x6D)  // dc 0xdd9e4
-int inputManager::open(int keyboardFilter)
+int InputManager::open(int keyboardFilter)
 {
     memset(m_buffer, 0, sizeof(m_buffer));
     m_tail = 0;
@@ -206,7 +206,7 @@ int inputManager::open(int keyboardFilter)
 }
 
 VA(0x004ec540, 0x1E)  // dc 0xdda30
-void inputManager::close()
+void InputManager::close()
 {
     if (m_status != 1)
         return;
@@ -217,13 +217,13 @@ void inputManager::close()
 }
 
 VA(0x004ec560, 0x5)  // dc 0xdda50
-int inputManager::main(message& msg)
+int InputManager::main(Message& msg)
 {
     return 0;
 }
 
 VA(0x004ec570, 0x18)  // dc 0xdda54
-void inputManager::flush()
+void InputManager::flush()
 {
     process1WindowsMessage();
     m_tail = 0;
@@ -233,9 +233,9 @@ void inputManager::flush()
 // canonical message clear, and both call the already-claimed
 
 VA(0x004ec590, 0xAE)  // dc 0xdda74
-message inputManager::getEvent()
+Message InputManager::getEvent()
 {
-    message msg;
+    Message msg;
 
     pollSound();
     if (m_status == STATUS_ACTIVE && m_head != m_tail) {
@@ -253,9 +253,9 @@ message inputManager::getEvent()
 }
 
 VA(0x004ec640, 0xAD)  // dc 0xddc14
-message inputManager::peekEvent()
+Message InputManager::peekEvent()
 {
-    message msg;
+    Message msg;
 
     pollSound();
     if (m_status == STATUS_ACTIVE && m_head != m_tail) {
@@ -276,14 +276,14 @@ message inputManager::peekEvent()
 
 // E:\gamedcs\inputmgr.cpp:970
 DC_ONLY(0xddd08, 0x42)
-int inputManager::GetCurrQuals()
+int InputManager::GetCurrQuals()
 {
     // @stub
 }
 
 // E:\gamedcs\inputmgr.cpp:984
 DC_ONLY(0xddd4c, 0x12)
-void inputManager::SetKeyCodeType(int newType)
+void InputManager::SetKeyCodeType(int newType)
 {
     // @stub
 }
@@ -292,7 +292,7 @@ void inputManager::SetKeyCodeType(int newType)
 #endif  // @carcass
 
 VA(0x004ec6f0, 0x1C6)  // dc 0xddd60
-void inputManager::asciiConvert(message* msg)
+void InputManager::asciiConvert(Message* msg)
 {
     if ((msg->m_codeX >= KEYCODE_F1 && msg->m_codeX <= KEYCODE_F10)
         || msg->m_codeX == KEYCODE_F11 || msg->m_codeX == KEYCODE_F12)
@@ -328,7 +328,7 @@ void inputManager::asciiConvert(message* msg)
 }
 
 VA(0x004ec8c0, 0x340)  // dc 0xdde74
-void inputManager::makeScanCodeTable()
+void InputManager::makeScanCodeTable()
 {
     for (unsigned index = 0; index < 128; index++)
         m_scanCodeTable[index] = static_cast<short>(index << 8);
@@ -424,9 +424,9 @@ void inputManager::makeScanCodeTable()
 }
 
 VA(0x004ecc00, 0xCA)  // dc 0xde044
-void inputManager::forceMouseMove()
+void InputManager::forceMouseMove()
 {
-    message* e;
+    Message* e;
     int quals;
 
     if (m_bufferBusy)
@@ -455,7 +455,7 @@ void inputManager::forceMouseMove()
 
 // E:\gamedcs\inputmgr.cpp:1169
 DC_ONLY(0xde0e8, 0xC48)
-void VRKeyboard::VRKeyboard(textWidget* w, int _min, int _max)
+void VRKeyboard::VRKeyboard(TextWidget* w, int _min, int _max)
 {
     // @stub
 }
@@ -469,7 +469,7 @@ void VRKeyboard::~VRKeyboard()
 
 // E:\gamedcs\inputmgr.cpp:1231
 DC_ONLY(0xded94, 0x138)
-int VRKeyboard::windowHandler(message& msg)
+int VRKeyboard::windowHandler(Message& msg)
 {
     // @stub
 }

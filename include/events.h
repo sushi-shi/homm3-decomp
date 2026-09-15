@@ -5,14 +5,15 @@
 #include <va.h>
 #include "armygrp.h"  // SpellID, used by spell_level_order
 
-class garrison;
-class hero;
+class Garrison;
+class Hero;
 
 // E:\gamedcs\events.cpp:1883 (dc 0x9cdc0). The exchange dialog sorts
 // spells by descending level, then alphabetically within a level. The body
 // remains beside its original events.cpp source location so VC6 sees the
 // ordinary inline member before the two std::sort instantiations.
-struct spell_level_order {
+// Before normalization (type): spell_level_order.
+struct SpellLevelOrder {
     unsigned char operator()(SpellID first, SpellID second) const;
 };
 
@@ -21,7 +22,7 @@ struct spell_level_order {
 // because townmgr.h rides in recruit.cpp's closure and one declarator there
 // costs recruitUnit::Update (the known include-set-sensitive row, and
 // recruit.cpp's own +0x1b0 note records the same trade).
-void doEventGarrison(hero* inHero, garrison* thisGarrison);
+void doEventGarrison(Hero* inHero, Garrison* thisGarrison);
 
 // Retail .data 0x691208, the byte directly ahead of gUnnamed691209 (the
 // "gosolo" handed-to-AI byte advmgr.h declares and documents). DoCombat's
@@ -40,8 +41,8 @@ DATA(0x00691208) extern unsigned char g_unnamed691208;
 // collides with herospec.h's), and a declarator in either would ride
 // into every AI TU's closure besides. ai_combat.cpp / ai_player.cpp
 // keep the defining claims.
-class armyGroup;
-class town;
+class ArmyGroup;
+class Town;
 class NewmapCell;
 
 // The domain of combatManager::field_13d48 (+0x13d48), the post-combat
@@ -52,7 +53,8 @@ class NewmapCell;
 // header's closure are exactly the include-set perturbation command's
 // GetCommand row has twice measured; move them beside field_13d48 when
 // the field's cmbtmgr writers reconstruct.
-enum ECombatWinner {
+// Before normalization (type): ECombatWinner.
+enum CombatWinner {
     COMBAT_WINNER_NONE = -1,
     COMBAT_WINNER_LEFT = 0,
     COMBAT_WINNER_RIGHT = 1
@@ -67,12 +69,12 @@ public:
     ~CTurnDurationPause();
 };
 
-unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
-                              armyGroup& defendingArmy, town* defendingTown,
+unsigned char aiQuickCombat(Hero* attackingHero, Hero* defendingHero,
+                              ArmyGroup& defendingArmy, Town* defendingTown,
                               NewmapCell* cell);
 // Dreamcast ai_player.cpp:2817 proves the enemy reference parameter.
-void splitArmies(hero* currentHero, const hero* enemyHero,
-                  const armyGroup& enemy);
+void splitArmies(Hero* currentHero, const Hero* enemyHero,
+                  const ArmyGroup& enemy);
 
 // Named indices into advevent.txt, the adventure-object text resource
 // events.obj loads through InitializeAdventureEventText (0x49e0e0).
@@ -84,7 +86,8 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
 // exactly where it falls: war school 158..160, warrior's tomb 161..163,
 // water wheel 164/165, watering hole 166/167, whirlpool 168, windmill
 // 169/170, witch hut 171..173.
-enum EAdventureEventText {
+// Before normalization (type): EAdventureEventText.
+enum AdventureEventText {
     // DoEventArena (0x49e7d0), and this pair is the enum's anchor: rows 0
     // and 1, the very first in the file, because "arena" is the first
     // adventure object alphabetically. 0 is the iMBType-10 two-picture
@@ -481,7 +484,8 @@ enum EAdventureEventText {
 // reach an arm. The VALUES are the luck the fountain grants, which is why
 // the enumerators are spelled as the amounts; only the cursed tier and
 // the three positive ones carry a hero flag bit, so 0 has no arm.
-enum EFountainLuck {
+// Before normalization (type): EFountainLuck.
+enum FountainLuck {
     FOUNTAIN_LUCK_CURSED = -1,
     FOUNTAIN_LUCK_NONE = 0,
     FOUNTAIN_LUCK_PLUS_1 = 1,
@@ -515,7 +519,8 @@ enum SeaChestRewardTypes {
 // slots, sending anything larger straight to the pick-up. The
 // enumerators are spelled for what each slot pays, which is what the
 // four advevent.txt rows above describe.
-enum EFlotsamSize {
+// Before normalization (type): EFlotsamSize.
+enum FlotsamSize {
     FLOTSAM_NOTHING = 0,
     FLOTSAM_WOOD = 1,
     FLOTSAM_WOOD_AND_GOLD = 2,
@@ -528,7 +533,8 @@ enum EFlotsamSize {
 // switches over to pick one of the four advevent.txt rows above. The
 // domain is complete and closed by construction: retail range-checks the
 // widened value against 3 and lets nothing else through.
-enum EStablesResult {
+// Before normalization (type): EStablesResult.
+enum StablesResult {
     STABLES_NOTHING = 0,
     STABLES_MOVEMENT = 1,
     STABLES_UPGRADE = 2,
@@ -561,7 +567,8 @@ DATA(0x00699540) extern int g_unnamed699540;
 // argument of advManager::HeroLoses. Retail lowers the two arms as a
 // SWITCH (`sub eax,0 / je` then `dec eax / jne`), and every value outside
 // the pair suppresses the flash entirely.
-enum EFizzleSound {
+// Before normalization (type): EFizzleSound.
+enum FizzleSound {
     FIZZLE_SOUND_KILL_FADE = 0,
     FIZZLE_SOUND_PICKUP = 1
 };

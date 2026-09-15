@@ -41,7 +41,7 @@ DATA(0x0068d2d0) const unsigned char g_victorPcxScratchRows[5] = {1,1,1,2,2};
 // Three fresh relative-row forms reproduce three objects: integral byte
 // offsets score 79.9470%, multiplied row indices 76.5172%; retain the guard.
 VA(0x00603e00, 0x494)  // anchor-caller PCX importers + RLE/plane/palette helper sequence
-int __stdcall loadpcx(const char* filename, imgdes* image)
+int __stdcall loadpcx(const char* filename, Imgdes* image)
 {
     int status = victorValidateBitmap(image);
     if (status)

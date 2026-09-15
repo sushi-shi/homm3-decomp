@@ -12,7 +12,7 @@
 // 0x462 stride exactly. The gaps below therefore retain the old fields,
 // including identifyLevel, which the current hero stores elsewhere.
 #pragma pack(push, 1)
-struct LegacyCampaignHero : public type_obscuring_object {
+struct LegacyCampaignHero : public ObscuringObject {
     short m_mana;                              // +0x018
     int m_id;                                  // +0x01a
     signed char m_owner;                       // +0x01e
@@ -50,24 +50,24 @@ struct LegacyCampaignHero : public type_obscuring_object {
     unsigned long m_shrine3Flags; // +0x087
     unsigned char m_levelSeed;                 // +0x08b
     unsigned char m_lastWisdom;                // +0x08c
-    armyGroup m_army;                          // +0x08d
+    ArmyGroup m_army;                          // +0x08d
     signed char m_skillLevel[28];              // +0x0c5
     unsigned char m_skillOrder[28];            // +0x0e1
     int m_skillCount;                          // +0x0fd
     unsigned long m_flags; // +0x101
     float m_turnExperienceToRvRatio; // +0x105
     signed char m_dWalkSpellsCast; // +0x109
-    TSkillMastery m_disguiseLevel; // +0x10a
-    TSkillMastery m_flightLevel; // +0x10e
-    TSkillMastery m_waterWalkLevel; // +0x112
-    TSkillMastery m_identifyLevel; // +0x116
+    SkillMastery m_disguiseLevel; // +0x10a
+    SkillMastery m_flightLevel; // +0x10e
+    SkillMastery m_waterWalkLevel; // +0x112
+    SkillMastery m_identifyLevel; // +0x116
     signed char m_moraleBonus; // +0x11a
     signed char m_luckBonus; // +0x11b
     unsigned char m_isSleeping; // +0x11c
     long m_bounty; // +0x11d
     std::bitset<48> m_townSpecialGrantedMask;  // +0x121
-    type_artifact m_equipped[18];              // +0x129
-    type_artifact m_backpack[64];              // +0x1b9
+    ArtifactRecord m_equipped[18];              // +0x129
+    ArtifactRecord m_backpack[64];              // +0x1b9
     signed char m_backpackCount;               // +0x3b9
     unsigned char m_inSpellbook[70];           // +0x3ba
     unsigned char m_availableSpells[70];       // +0x400
@@ -82,7 +82,8 @@ struct LegacyCampaignHero : public type_obscuring_object {
 SIZE(LegacyCampaignHero, 0x462);
 
 // Dreamcast TCarryOverPoolNumber, values e_pool_1/e_pool_2/e_pool_choice/e_pool_both.
-enum TCarryOverPoolNumber {
+// Before normalization (type): TCarryOverPoolNumber.
+enum CarryOverPoolNumber {
     ePool1 = 0,
     ePool2 = 1,
     ePoolChoice = 2,
@@ -92,7 +93,7 @@ enum TCarryOverPoolNumber {
 // Packed saved counterpart of Dreamcast TArtifactRequirement. These old
 // data records are read wholesale; no current runtime constructor is implied.
 struct LegacyCampaignArtifactRequirement {
-    TArtifact m_artifact;
+    Artifact m_artifact;
     signed char m_guardBit;
 };
 SIZE(LegacyCampaignArtifactRequirement, 5);
@@ -104,8 +105,8 @@ struct LegacyCampaignMapTraits {
     int m_expCap;
     signed char m_numIncomingHeroes;
     signed char m_numOutgoingHeroes;
-    TCarryOverPoolNumber m_incomingHeroPool;
-    TCarryOverPoolNumber m_outgoingHeroPool;
+    CarryOverPoolNumber m_incomingHeroPool;
+    CarryOverPoolNumber m_outgoingHeroPool;
     LegacyCampaignArtifactRequirement m_artifactReq[2];
     signed char m_startingPosition[2];
     signed char m_difficulty;

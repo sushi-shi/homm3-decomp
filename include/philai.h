@@ -5,20 +5,21 @@
 #include "armygrp.h"
 #include "herospec.h"  // TSecondarySkill, the appraisals' skill parameter
 
-class hero;
-class town;
-class garrison;
-class generator;
+class Hero;
+class Town;
+class Garrison;
+class Generator;
 class NewmapCell;
-class playerData;
-struct TBlackMarket;
-struct type_university;
-struct type_point;
+class PlayerData;
+struct BlackMarket;
+struct University;
+struct MapPoint;
 
 // The Dreamcast class roster has no data members for this coordinator;
 // its three public methods are the complete method roster.  Retail DoAI
 // likewise uses `this` only to dispatch GetTurnAIVars.
-class philAI {
+// Before normalization (type): philAI.
+class PhilAI {
 public:
     enum {
         ONE_ACTIVE_HERO = 1,
@@ -32,7 +33,7 @@ public:
         AI_HERO_MOVE_SLEEP_DAY = 7
     };
 
-    philAI();
+    PhilAI();
     void doAI(int whichPlayer);
     void getTurnAIVars(int whichPlayer);
 };
@@ -42,90 +43,90 @@ public:
 // No original name is known; retain the ordinal until source evidence exists.
 void unnamed526d20(int playerId, int* costs, int flag);
 
-long aiGetSpellValue(const hero* ourHero, SpellID spell);
+long aiGetSpellValue(const Hero* ourHero, SpellID spell);
 
 // Dreamcast line 3834 publishes the reference-qualified
 // move-cost parameter in the decorated name (`AAJ`) as well as the local and
 // statement records. Complete retains the same register/stack ABI at
 // 0x528040.
-long aiValueOfEvent(const hero* currentHero, type_point point,
+long aiValueOfEvent(const Hero* currentHero, MapPoint point,
                        long& moveCost);
-long aiValueOfEvent(const hero* currentHero, type_point point);
-void aiJoinDecision(hero* currentHero, TCreatureType creature,
+long aiValueOfEvent(const Hero* currentHero, MapPoint point);
+void aiJoinDecision(Hero* currentHero, CreatureType creature,
                       short amount);
 
 // Source-real appraisal boundaries used by AI_value_of_event. Several are
 // expanded or revision-adapted in Complete, but keeping these declarations
 // makes the recovered Dreamcast dispatch state explicit while their bodies
 // are promoted independently.
-long valueOfBlackMarket(const hero* currentHero,
+long valueOfBlackMarket(const Hero* currentHero,
                            const NewmapCell* cell);
-int valueOfArena(const hero* currentHero, NewmapCell* cell);
-int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell);
-int valueOfBlackBox(const hero* currentHero, NewmapCell* cell);
-int valueOfCampfire(playerData* player, NewmapCell* cell);
-int valueOfDefenseTower(const hero* currentHero, NewmapCell* cell);
-long valueOfBank(const hero* currentHero, NewmapCell* cell);
-int valueOfGenerator(const hero* currentHero, int x, int y, int z,
+int valueOfArena(const Hero* currentHero, NewmapCell* cell);
+int valueOfMapArtifact(const Hero* currentHero, NewmapCell* cell);
+int valueOfBlackBox(const Hero* currentHero, NewmapCell* cell);
+int valueOfCampfire(PlayerData* player, NewmapCell* cell);
+int valueOfDefenseTower(const Hero* currentHero, NewmapCell* cell);
+long valueOfBank(const Hero* currentHero, NewmapCell* cell);
+int valueOfGenerator(const Hero* currentHero, int x, int y, int z,
                      NewmapCell* cell, int moveCost);
-long valueOfGarrison(const hero* currentHero, NewmapCell* cell);
-long valueOfIdol(const hero* currentHero, long moveCost);
-int valueOfFlotsam(playerData* player);
-int valueOfGarden(const hero* currentHero, NewmapCell* cell);
-__forceinline int valueOfLeanTo(NewmapCell* cell, playerData* player);
+long valueOfGarrison(const Hero* currentHero, NewmapCell* cell);
+long valueOfIdol(const Hero* currentHero, long moveCost);
+int valueOfFlotsam(PlayerData* player);
+int valueOfGarden(const Hero* currentHero, NewmapCell* cell);
+__forceinline int valueOfLeanTo(NewmapCell* cell, PlayerData* player);
 __forceinline long valueOfHeroEvent(
-    const hero* currentHero, NewmapCell* cell, short x, short y, short z,
+    const Hero* currentHero, NewmapCell* cell, short x, short y, short z,
     short moveCost);
-__forceinline long valueOfHillFort(const hero* currentHero,
+__forceinline long valueOfHillFort(const Hero* currentHero,
                                       long moveCost);
-__forceinline int valueOfLibrary(const hero* currentHero,
+__forceinline int valueOfLibrary(const Hero* currentHero,
                                  NewmapCell* cell);
 __forceinline int valueOfLighthouse(NewmapCell* cell);
-int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell);
-__forceinline int valueOfMercenaryCamp(const hero* currentHero,
+int valueOfMagicSchool(const Hero* currentHero, NewmapCell* cell);
+__forceinline int valueOfMercenaryCamp(const Hero* currentHero,
                                        NewmapCell* cell);
-int moraleIncreaseValue(const hero* currentHero, int value);
-int luckIncreaseValue(const hero* currentHero, int value);
+int moraleIncreaseValue(const Hero* currentHero, int value);
+int luckIncreaseValue(const Hero* currentHero, int value);
 __forceinline long valueOfMagusHut(long playerId);
-int valueOfMine(const hero* currentHero, NewmapCell* cell);
-long valueOfMonsters(const hero* currentHero, NewmapCell* cell,
-                       type_point point);
-int valueOfMoveSource(const hero* currentHero, long flag, short increase,
+int valueOfMine(const Hero* currentHero, NewmapCell* cell);
+long valueOfMonsters(const Hero* currentHero, NewmapCell* cell,
+                       MapPoint point);
+int valueOfMoveSource(const Hero* currentHero, long flag, short increase,
                          long& moveCost);
 int valueOfObelisk(NewmapCell* cell, long playerId);
-int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell);
-int valueOfPrison(NewmapCell* cell, playerData* player);
-long valueOfPyramid(const hero* currentHero, NewmapCell* cell);
-long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
+int valueOfPowerSchool(const Hero* currentHero, NewmapCell* cell);
+int valueOfPrison(NewmapCell* cell, PlayerData* player);
+long valueOfPyramid(const Hero* currentHero, NewmapCell* cell);
+long getValueOfSpring(const Hero* currentHero, const NewmapCell* cell,
                          unsigned short moveCost);
-long getValueOfWell(const hero* currentHero, unsigned short moveCost);
-int valueOfRallyFlag(const hero* currentHero, long& moveCost);
-int valueOfRefugeeCamp(const hero* currentHero, NewmapCell* cell);
-long valueOfResource(const hero* currentHero, NewmapCell* cell,
-                     playerData* player);
-int valueOfSeaChest(const hero* currentHero, NewmapCell* cell);
-int valueOfSkeleton(const hero* currentHero, NewmapCell* cell);
-int valueOfScroll(const hero* currentHero, NewmapCell* cell);
-__forceinline int valueOfShrine(const hero* currentHero, NewmapCell* cell);
-int valueOfSirens(const hero* currentHero);
-int valueOfStables(const hero* currentHero, long& moveCost);
-long valueOfTown(const hero* currentHero, int x, int y, int z,
+long getValueOfWell(const Hero* currentHero, unsigned short moveCost);
+int valueOfRallyFlag(const Hero* currentHero, long& moveCost);
+int valueOfRefugeeCamp(const Hero* currentHero, NewmapCell* cell);
+long valueOfResource(const Hero* currentHero, NewmapCell* cell,
+                     PlayerData* player);
+int valueOfSeaChest(const Hero* currentHero, NewmapCell* cell);
+int valueOfSkeleton(const Hero* currentHero, NewmapCell* cell);
+int valueOfScroll(const Hero* currentHero, NewmapCell* cell);
+__forceinline int valueOfShrine(const Hero* currentHero, NewmapCell* cell);
+int valueOfSirens(const Hero* currentHero);
+int valueOfStables(const Hero* currentHero, long& moveCost);
+long valueOfTown(const Hero* currentHero, int x, int y, int z,
                    short moveCost);
-int valueOfTreasure(const hero* currentHero);
-int valueOfTree(const hero* currentHero, NewmapCell* cell);
+int valueOfTreasure(const Hero* currentHero);
+int valueOfTree(const Hero* currentHero, NewmapCell* cell);
 int valueOfWagon(NewmapCell* cell, long playerId);
-long valueOfWarFactory(const hero* currentHero, long moveCost);
-int valueOfWarSchool(const hero* currentHero, NewmapCell* cell);
-int valueOfWitchHut(const hero* currentHero, NewmapCell* cell);
+long valueOfWarFactory(const Hero* currentHero, long moveCost);
+int valueOfWarSchool(const Hero* currentHero, NewmapCell* cell);
+int valueOfWitchHut(const Hero* currentHero, NewmapCell* cell);
 
-void aiEnterTown(hero* currentHero, town* currentTown);
+void aiEnterTown(Hero* currentHero, Town* currentTown);
 
-void aiEnterGarrison(hero* currentHero, garrison* ourGarrison);
-void aiPurchaseCreatures(hero* currentHero, generator* currentGenerator);
-void aiVisitBlackMarket(hero* currentHero, TBlackMarket* blackMarket);
-void aiVisitHillFort(hero* currentHero);
-void aiVisitUniversity(hero* currentHero, type_university* university);
-void aiVisitWarFactory(hero* currentHero);
+void aiEnterGarrison(Hero* currentHero, Garrison* ourGarrison);
+void aiPurchaseCreatures(Hero* currentHero, Generator* currentGenerator);
+void aiVisitBlackMarket(Hero* currentHero, BlackMarket* blackMarket);
+void aiVisitHillFort(Hero* currentHero);
+void aiVisitUniversity(Hero* currentHero, University* university);
+void aiVisitWarFactory(Hero* currentHero);
 
 // Retail .data 0x678370, the row immediately after tradpost.h's
 // fTradingPostEfficency (0x678344): three consecutive eleven-float rows
@@ -144,9 +145,9 @@ extern float g_artifactPurchaseEfficency[];
 // they cannot be declared static here: VC6 rejects a static function that
 // is declared and called but never defined (C2129). Move them back into
 // philai.cpp as statics when the bodies land.
-long getSkillValue(const hero* ourHero, TSecondarySkill skill,
+long getSkillValue(const Hero* ourHero, SecondarySkill skill,
                      unsigned char complexChoice);
-unsigned char wantsSkill(const hero* ourHero, TSecondarySkill skill,
+unsigned char wantsSkill(const Hero* ourHero, SecondarySkill skill,
                           unsigned char complexChoice);
 
 // --- globals ---

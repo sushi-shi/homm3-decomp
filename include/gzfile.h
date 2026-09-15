@@ -20,15 +20,17 @@
 // The handle is a member initializer: the retained constructor stores the
 // base vptr before gzopen and its own vptr afterward. A body assignment
 // reversed that observed boundary in the prior 92.76% control.
-class TGzFile : public TAbstractFile {
+// Before normalization (type): TGzFile.
+class GzFile : public AbstractFile {
 public:
     // Retail RTTI at 0x677d48 and its two-entry catchable-type array prove
     // this empty std::exception-derived tag. game::SaveGame catches it by
     // value when opening the output stream fails.
-    class TOpenFailure : public std::exception {
+// Before normalization (type): TGzFile::TOpenFailure.
+    class OpenFailure : public std::exception {
     };
-    TGzFile(const char* path, const char* mode);
-    ~TGzFile();
+    GzFile(const char* path, const char* mode);
+    ~GzFile();
     virtual int read(void* data, int size);
     virtual int write(const void* data, int size);
     void* m_file;  // +0x04, the gzFile handle gzopen returned

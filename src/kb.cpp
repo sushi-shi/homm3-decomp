@@ -354,7 +354,7 @@ int earlySetup()
         while (1) {
             if (i >= g_videoHeaderCount)
                 break;
-            if (!_strcmpi(g_videoHeader3[i].m_name,
+            if (!strcmpi(g_videoHeader3[i].m_name,
                           DATA_COMPGEN(0x0067f5ec, expansionTwoVideoName,
                               "h3x2_rne1.smk"))) {
                 found = 1;
@@ -367,7 +367,7 @@ int earlySetup()
             while (1) {
                 if (i >= g_videoHeaderCount)
                     break;
-                if (!_strcmpi(g_videoHeader3[i].m_name,
+                if (!strcmpi(g_videoHeader3[i].m_name,
                               DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
                                   "h3abab1.smk"))) {
                     g_cdDriveNumber = 6;
@@ -381,7 +381,7 @@ int earlySetup()
         }
     }
 
-    button::s_clickSample = ResourceManager::getSample(
+    Button::s_clickSample = ResourceManager::getSample(
         DATA_COMPGEN(0x0067f5d4, buttonClickSampleName, "button.wav"));
     initVars();
     initializeCampaignMapTraitsTable();
@@ -392,25 +392,25 @@ int earlySetup()
 VA(0x004edb40, 0x256)  // dc 0xdf4e4
 void initMainClasses()
 {
-    g_executive = new executive;
-    g_inputManager = new inputManager;
-    g_mouseManager = new mouseManager;
-    g_windowManager = new heroWindowManager;
-    g_soundManager = new soundManager;
-    g_highScoreManager = new highScoreManager;
-    g_game = new game;
-    g_advManager = new advManager;
-    g_combatManager = new combatManager;
-    g_townManager = new townManager;
-    g_searchArray = new searchArray;
+    g_executive = new Executive;
+    g_inputManager = new InputManager;
+    g_mouseManager = new MouseManager;
+    g_windowManager = new HeroWindowManager;
+    g_soundManager = new SoundManager;
+    g_highScoreManager = new HighScoreManager;
+    g_game = new Game;
+    g_advManager = new AdvManager;
+    g_combatManager = new CombatManager;
+    g_townManager = new TownManager;
+    g_searchArray = new SearchArray;
     g_unnamed69928c = new CAITurnDriver69928c;
 }
 
 VA(0x004edda0, 0x407)  // dc 0xdfa3c
 void creditsWait()
 {
-    message msg;
-    font* creditsFont = ResourceManager::getFont("Credits.fnt");
+    Message msg;
+    Font* creditsFont = ResourceManager::getFont("Credits.fnt");
     int done = 0;
     int textHeight = creditsFont->lineLength(g_credits[0], 328)
         * creditsFont->m_fs.m_height;
@@ -431,7 +431,7 @@ void creditsWait()
     credits->fillRect(0, 0, credits->getWidth(), credits->getHeight(), 1);
     creditsFont->drawBoundedString(g_credits[0], credits, 0, 0,
                                    credits->getWidth(), credits->getHeight(),
-                                   font::TColor(284), 5, -1);
+                                   Font::Color(284), 5, -1);
     g_inputManager->flush();
     if (videoNeedsUpdate())
         videoDrawRects();
@@ -480,7 +480,7 @@ void creditsWait()
                     if (endOffset < 435)
                         g_smallFont->drawBoundedString(
                             g_credits[1], g_windowManager->m_screenBitmap, 460, 10,
-                            328, 580, font::CHAT, 8, -1);
+                            328, 580, Font::CHAT, 8, -1);
                 } else {
                     done = 1;
                 }
@@ -582,14 +582,14 @@ int pickLoadGame()
 
 // E:\gamedcs\kb.cpp:2270
 DC_ONLY(0xe1b90, 0x4)
-int NullHandler(message* msg)
+int NullHandler(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:2279
 DC_ONLY(0xe1b94, 0x62)
-int waitHandler(message* msg)
+int waitHandler(Message* msg)
 {
     // @stub
 }
@@ -598,14 +598,14 @@ int waitHandler(message* msg)
 // RETAIL_LOCATED(0x004f08d0, 0x20C): anchor-callee + dialog-global shape.
 // Its order-checked retail claim lives below; this row preserves DC source order.
 DC_ONLY(0xe1ccc, 0x118)
-int normalDialogHandler(message* msg)
+int normalDialogHandler(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:2442
 DC_ONLY(0xe1de4, 0x74)
-void type_normal_dialog_frame::type_normal_dialog_frame(long _x, long _y, long _w, long _h, long _id, EGameResource _resource, long _qualifier)
+void NormalDialogFrame::NormalDialogFrame(long _x, long _y, long _w, long _h, long _id, GameResource _resource, long _qualifier)
 {
     // @stub
 }
@@ -776,7 +776,7 @@ static void kbFn004EE1B0(int videoId, const char* frameName)
         {
             bool done = 0;
             process1WindowsMessage();
-            message msg = g_inputManager->getEvent();
+            Message msg = g_inputManager->getEvent();
             switch (msg.m_id) {
             case MESSAGE_KEY_DOWN:
                 if (msg.m_codeX == KEYCODE_F4)
@@ -819,7 +819,7 @@ void lostGame()
         if (!videoPlaying())
             break;
         process1WindowsMessage();
-        message msg = g_inputManager->getEvent();
+        Message msg = g_inputManager->getEvent();
         switch (msg.m_id) {
         case MESSAGE_KEY_DOWN:
             if (msg.m_codeX == KEYCODE_F4)
@@ -974,7 +974,7 @@ int oldmain()
     g_bigFont = ResourceManager::getFont("bigfont.fnt");
     g_calligraphicFont = ResourceManager::getFont("Calli10R.fnt");
 
-    g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+    g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
     setupCDRom();
 
     if (g_soundManager->open(-1))
@@ -1069,8 +1069,8 @@ int oldmain()
         g_gameSelectBack->draw(0, 0, g_gameSelectBack->getWidth(),
                              g_gameSelectBack->getHeight(),
                              g_windowManager->m_screenBitmap, 0, 0, false);
-        g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
-        if (g_gameCommand != TMainMenu::QUIT_ID)
+        g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
+        if (g_gameCommand != MainMenu::QUIT_ID)
             g_windowManager->m_colorCyclingOn = 1;
 
         if (g_dPlayReady) {
@@ -1085,16 +1085,16 @@ int oldmain()
             } else if (g_dPlay && g_dPlay->isHost()) {
                 videoResume();
                 {
-                    TMainMenu mainMenu;
+                    MainMenu mainMenu;
                     mainMenu.doModal();
                 }
                 videoPause();
 
                 if (g_windowManager->m_dialogReturn
-                    == TMainMenu::LOAD_GAME_ID) {
+                    == MainMenu::LOAD_GAME_ID) {
                     g_windowManager->m_dialogReturn = -1;
                     {
-                        TSingleSelectionWindow selectionWindow(1);
+                        SingleSelectionWindow selectionWindow(1);
                         selectionWindow.doModal(0);
                     }
                     if (g_windowManager->m_dialogReturn
@@ -1103,11 +1103,11 @@ int oldmain()
                     else
                         videoResume();
                 } else if (g_windowManager->m_dialogReturn
-                           == TMainMenu::NEW_GAME_ID) {
+                           == MainMenu::NEW_GAME_ID) {
                     g_windowManager->m_dialogReturn = -1;
                     g_game->m_isTutorial = 0;
                     {
-                        TSingleSelectionWindow selectionWindow(0);
+                        SingleSelectionWindow selectionWindow(0);
                         selectionWindow.doModal(0);
                     }
                     if (g_windowManager->m_dialogReturn
@@ -1132,7 +1132,7 @@ int oldmain()
             } else {
                 g_game->m_isTutorial = 0;
                 {
-                    TSingleSelectionWindow selectionWindow(0);
+                    SingleSelectionWindow selectionWindow(0);
                     selectionWindow.doModal(0);
                 }
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL
@@ -1149,13 +1149,13 @@ int oldmain()
                     videoResume();
             }
         } else if (g_gameCommand != -1
-                   && g_gameCommand != TMainMenu::MAIN_MENU_ID) {
+                   && g_gameCommand != MainMenu::MAIN_MENU_ID) {
             command = g_gameCommand;
             g_gameCommand = -1;
         } else {
             g_inSetupDialog = 1;
             {
-                TMainMenu mainMenu;
+                MainMenu mainMenu;
                 mainMenu.doModal();
             }
             g_inSetupDialog = 0;
@@ -1163,20 +1163,20 @@ int oldmain()
         }
 
         switch (command) {
-        case TMainMenu::NEW_GAME_ID: {
+        case MainMenu::NEW_GAME_ID: {
             if (!doNewGame())
                 continue;
             break;
         }
 
-        case TMainMenu::LOAD_GAME_ID: {
+        case MainMenu::LOAD_GAME_ID: {
             if (!doLoadGame())
                 continue;
             g_unnamed699584 = 0;
             break;
         }
 
-        case TMainMenu::HIGH_SCORE_ID:
+        case MainMenu::HIGH_SCORE_ID:
             videoPause();
             g_highScoreManager->viewHiScore();
             videoResume();
@@ -1185,20 +1185,20 @@ int oldmain()
                            g_windowManager->m_screenBitmap, 0, 0, false);
             continue;
 
-        case TMainMenu::CREDITS_ID:
+        case MainMenu::CREDITS_ID:
             showCredits();
             continue;
 
-        case TMainMenu::RESTART_ID: {
-            g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+        case MainMenu::RESTART_ID: {
+            g_mouseManager->setPointer(1, MouseManager::ADVENTURE_SET);
             showProgressBar();
             incProgressBar(1);
 
-            playerData playerSave[8];
+            PlayerData playerSave[8];
             for (int i = 0; i < 8; ++i)
                 playerSave[i] = g_game->m_players[i];
 
-            TTownType alignment[8];
+            TownType alignment[8];
             memcpy(alignment, g_game->m_setup.m_alignment, sizeof(alignment));
 
             if (g_unk69774c)
@@ -1209,7 +1209,7 @@ int oldmain()
                 g_game->resetGame(g_game->m_setup.m_difficulty, 0, 0);
 
             if (g_unk69774c) {
-                TCampaignBrief::CampaignHeaderStruct campaignBrief(
+                CampaignBrief::CampaignHeaderStruct campaignBrief(
                     g_game->m_campaign.getCampaignFileName().c_str());
                 int briefingChoice = g_game->m_campaign.m_briefingChoice;
                 int currentMap = g_game->m_campaign.m_currentMap;
@@ -1248,11 +1248,11 @@ int oldmain()
             break;
         }
 
-        case TMainMenu::QUIT_ID:
+        case MainMenu::QUIT_ID:
             unused = 1;
             break;
 
-        case TMainMenu::SAVE_GAME_ID:
+        case MainMenu::SAVE_GAME_ID:
         default:
             break;
         }
@@ -1293,8 +1293,8 @@ int oldmain()
                     transmitRemoteData(&combatTypeMsg, 0x7f, false, true);
                 }
 
-                if (command == TMainMenu::NEW_GAME_ID
-                    || command == TMainMenu::RESTART_ID
+                if (command == MainMenu::NEW_GAME_ID
+                    || command == MainMenu::RESTART_ID
                     || g_unnamed699584) {
                     g_unnamed699584 = 0;
                     launchSample(
@@ -1313,7 +1313,7 @@ int oldmain()
                 g_executive->removeManager(g_advManager);
                 g_windowManager->fadeScreen(1, 4, false);
 
-                if (g_gameCommand != TMainMenu::RESTART_ID)
+                if (g_gameCommand != MainMenu::RESTART_ID)
                     remoteCleanup();
                 if (g_dPlayReady)
                     unused = 1;
@@ -1323,7 +1323,7 @@ int oldmain()
         if (campaignScored || g_gameOver) {
             remoteCleanup();
             g_completeDrawEnabled = 1;
-            g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+            g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
             sprintf(g_unnamed699294, (*g_generalText)[116],
                     g_game->getCurrentTurn());
 
@@ -1333,7 +1333,7 @@ int oldmain()
                 SCampaign& campaign = g_game->m_campaign;
 
                 if (g_defeatedAllPlayers != g_gameResultCampaignMapScored) {
-                    TCampaignBrief::CampaignHeaderStruct campaignBrief(
+                    CampaignBrief::CampaignHeaderStruct campaignBrief(
                         campaign.getCampaignFileName().c_str());
                     campaignBrief.load();
                     campaign.completeCurrentMap(&campaignBrief);
@@ -1378,7 +1378,7 @@ int oldmain()
                         g_unk69774c = 1;
                         while (1) {
                             {
-                                TCampaignWindow campaignWindow(
+                                CampaignWindow campaignWindow(
                                     0, nextCampaign);
                                 campaignWindow.doModal();
                             }
@@ -1388,7 +1388,7 @@ int oldmain()
                                 == DIALOG_RETURN_CANCEL)
                                 break;
                             {
-                                TCampaignBrief campaignBriefWindow(0, 0);
+                                CampaignBrief campaignBriefWindow(0, 0);
                                 campaignBriefWindow.doModal();
                             }
                             if (g_windowManager->m_dialogReturn
@@ -1409,7 +1409,7 @@ int oldmain()
                         g_unk69774c = 1;
                         while (1) {
                             {
-                                TCampaignWindow campaignWindow(
+                                CampaignWindow campaignWindow(
                                     0, nextCampaign);
                                 campaignWindow.doModal();
                             }
@@ -1419,7 +1419,7 @@ int oldmain()
                                 == DIALOG_RETURN_CANCEL)
                                 break;
                             {
-                                TCampaignBrief campaignBriefWindow(0, 0);
+                                CampaignBrief campaignBriefWindow(0, 0);
                                 campaignBriefWindow.doModal();
                             }
                             if (g_windowManager->m_dialogReturn
@@ -1428,7 +1428,7 @@ int oldmain()
                         }
                     }
                 } else {
-                    TCampaignBrief campaignBriefWindow(0, 0);
+                    CampaignBrief campaignBriefWindow(0, 0);
                     campaignBriefWindow.doModal();
                 }
 
@@ -1486,16 +1486,16 @@ static int doNewGame()
     int exitNewGame = 0;
     while (!exitNewGame) {
         {
-            TGameTypeWindow gameTypeWindow(0);
+            GameTypeWindow gameTypeWindow(0);
             gameTypeWindow.doModal();
         }
 
-        if (g_windowManager->m_dialogReturn != TGameTypeWindow::QUIT_ID
-            && g_windowManager->m_dialogReturn != TGameTypeWindow::CAMPAIGN_ID)
+        if (g_windowManager->m_dialogReturn != GameTypeWindow::QUIT_ID
+            && g_windowManager->m_dialogReturn != GameTypeWindow::CAMPAIGN_ID)
             videoPause();
 
         switch (static_cast<short>(g_windowManager->m_dialogReturn)) {
-        case TGameTypeWindow::SINGLE_ID:
+        case GameTypeWindow::SINGLE_ID:
             // DC kb.cpp:1875 and retail oldmain+0x940 retain this call.
             // The old inline pin is unnecessary after the menu/source fixes:
             // ordinary depth is byte-flat (2026-09-07); cb 157 exceeds the
@@ -1504,14 +1504,14 @@ static int doNewGame()
                 exitNewGame = 1;
             break;
 
-        case TGameTypeWindow::CAMPAIGN_ID:
+        case GameTypeWindow::CAMPAIGN_ID:
             if (doCampaignWindow())
                 exitNewGame = 1;
             else
                 g_unk69774c = 0;
             break;
 
-        case TGameTypeWindow::MULTIPLAYER_ID:
+        case GameTypeWindow::MULTIPLAYER_ID:
             // INLINE BOUNDARY: DoNewGame -> DoMultiPlayerWindow and
             // DoSinglePlayerWindow. Dreamcast kb.cpp:1896/1898 and retail
             // oldmain+0x933/+0x940 retain both calls. The pin that held this
@@ -1524,9 +1524,9 @@ static int doNewGame()
                 exitNewGame = 1;
             break;
 
-        case TGameTypeWindow::TUTORIAL_ID: {
+        case GameTypeWindow::TUTORIAL_ID: {
             g_game->m_isTutorial = 1;
-            g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(1, MouseManager::ADVENTURE_SET);
             showProgressBar();
             incProgressBar(1);
 
@@ -1560,14 +1560,14 @@ static int doNewGame()
                 incProgressBar(1);
                 exitNewGame = 1;
             } else {
-                g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+                g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
                 normalDialog((*g_generalText)[743], 1, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
             }
             break;
         }
 
-        case TGameTypeWindow::QUIT_ID:
+        case GameTypeWindow::QUIT_ID:
             videoRestart();
             exitNewGame = 1;
             break;
@@ -1584,7 +1584,7 @@ static int doNewGame()
     }
 
     g_inSetupDialog = 0;
-    return g_windowManager->m_dialogReturn != TGameTypeWindow::QUIT_ID;
+    return g_windowManager->m_dialogReturn != GameTypeWindow::QUIT_ID;
 }
 
 // E:\gamedcs\kb.cpp:1962. Dreamcast proves the helper boundary and nested
@@ -1611,18 +1611,18 @@ static unsigned char doCampaignWindow()
 
     while (1) {
         {
-            TCampaignSetWindow campaignSetWindow;
+            CampaignSetWindow campaignSetWindow;
             campaignSetWindow.doModal();
         }
 
         switch (g_windowManager->m_dialogReturn) {
-        case TCampaignSetWindow::CAMPAIGN_SET_SOD_ID: {
+        case CampaignSetWindow::CAMPAIGN_SET_SOD_ID: {
             videoPause();
             g_unk69774c = 1;
 
             while (1) {
                 {
-                    TCampaignWindow campaignWindow(1, 2);
+                    CampaignWindow campaignWindow(1, 2);
                     campaignWindow.doModal();
                 }
 
@@ -1635,7 +1635,7 @@ static unsigned char doCampaignWindow()
                 }
 
                 {
-                    TCampaignBrief campaignBrief(1, 0);
+                    CampaignBrief campaignBrief(1, 0);
                     campaignBrief.doModal();
                 }
                 if (g_windowManager->m_dialogReturn
@@ -1645,13 +1645,13 @@ static unsigned char doCampaignWindow()
             break;
         }
 
-        case TCampaignSetWindow::CAMPAIGN_SET_AB_ID: {
+        case CampaignSetWindow::CAMPAIGN_SET_AB_ID: {
             videoPause();
             g_unk69774c = 1;
 
             while (1) {
                 {
-                    TCampaignWindow campaignWindow(1, 1);
+                    CampaignWindow campaignWindow(1, 1);
                     campaignWindow.doModal();
                 }
 
@@ -1664,7 +1664,7 @@ static unsigned char doCampaignWindow()
                 }
 
                 {
-                    TCampaignBrief campaignBrief(1, 0);
+                    CampaignBrief campaignBrief(1, 0);
                     campaignBrief.doModal();
                 }
                 if (g_windowManager->m_dialogReturn
@@ -1674,13 +1674,13 @@ static unsigned char doCampaignWindow()
             break;
         }
 
-        case TCampaignSetWindow::CAMPAIGN_SET_ROE_ID: {
+        case CampaignSetWindow::CAMPAIGN_SET_ROE_ID: {
             videoPause();
             g_unk69774c = 1;
 
             while (1) {
                 {
-                    TCampaignWindow campaignWindow(1, 0);
+                    CampaignWindow campaignWindow(1, 0);
                     campaignWindow.doModal();
                 }
 
@@ -1693,7 +1693,7 @@ static unsigned char doCampaignWindow()
                 }
 
                 {
-                    TCampaignBrief campaignBrief(1, 0);
+                    CampaignBrief campaignBrief(1, 0);
                     campaignBrief.doModal();
                 }
                 if (g_windowManager->m_dialogReturn
@@ -1703,14 +1703,14 @@ static unsigned char doCampaignWindow()
             break;
         }
 
-        case TCampaignSetWindow::CUSTOM_CAMPAIGN_ID: {
+        case CampaignSetWindow::CUSTOM_CAMPAIGN_ID: {
             videoPause();
-            TCustomCampaignWindow customCampaignWindow;
+            CustomCampaignWindow customCampaignWindow;
             customCampaignWindow.doModal(0);
             if (g_windowManager->m_dialogReturn) {
                 g_unk69774c = 1;
                 {
-                    TCampaignBrief campaignBrief(1, 0);
+                    CampaignBrief campaignBrief(1, 0);
                     campaignBrief.doModal();
                     if (g_windowManager->m_dialogReturn
                         != DIALOG_RETURN_CANCEL)
@@ -1744,7 +1744,7 @@ static int doSinglePlayerWindow()
 {
     g_game->m_isTutorial = 0;
     {
-        TSingleSelectionWindow singleSelectionWindow(0);
+        SingleSelectionWindow singleSelectionWindow(0);
         singleSelectionWindow.doModal(0);
     }
 
@@ -1774,7 +1774,7 @@ VA(0x004f0590, 0x71)
 static int doMultiPlayerWindow()
 {
     {
-        TMultiPlayerWindow multiPlayerWindow;
+        MultiPlayerWindow multiPlayerWindow;
         multiPlayerWindow.doModal(0);
     }
     return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL;
@@ -1803,15 +1803,15 @@ static int doLoadGame()
     int exitLoadGame = 0;
     while (!exitLoadGame) {
         {
-            TGameTypeWindow gameTypeWindow(1);
+            GameTypeWindow gameTypeWindow(1);
             gameTypeWindow.doModal();
         }
 
-        if (g_windowManager->m_dialogReturn != TGameTypeWindow::QUIT_ID)
+        if (g_windowManager->m_dialogReturn != GameTypeWindow::QUIT_ID)
             videoPause();
 
         switch (static_cast<short>(g_windowManager->m_dialogReturn)) {
-        case TGameTypeWindow::SINGLE_ID:
+        case GameTypeWindow::SINGLE_ID:
             // INLINE BOUNDARY: DoLoadGame -> PickLoadGame. Dreamcast
             // kb.cpp:2096 and retail oldmain+0xc68 retain the call;
             // ordinary depth expands the modal object into oldmain.
@@ -1821,7 +1821,7 @@ static int doLoadGame()
 #pragma inline_depth()
             break;
 
-        case TGameTypeWindow::CAMPAIGN_ID:
+        case GameTypeWindow::CAMPAIGN_ID:
             // Same proven PickLoadGame boundary, retail oldmain+0xc54.
             // Unpinned: removing this one alone is oldmain 77.56300 ->
             // 77.93137 and it combines with DoNewGame's for 78.01930. The
@@ -1834,7 +1834,7 @@ static int doLoadGame()
             }
             break;
 
-        case TGameTypeWindow::MULTIPLAYER_ID:
+        case GameTypeWindow::MULTIPLAYER_ID:
             // INLINE BOUNDARY: DoLoadGame -> DoMultiPlayerWindow and
             // PickLoadGame. Dreamcast kb.cpp:2110/2112 and retail
             // oldmain+0xc5f/+0xc68 retain both calls. Ordinary depth expands
@@ -1845,7 +1845,7 @@ static int doLoadGame()
 #pragma inline_depth()
             break;
 
-        case TGameTypeWindow::TUTORIAL_ID:
+        case GameTypeWindow::TUTORIAL_ID:
             g_game->m_isTutorial = 1;
             // INLINE BOUNDARY: DoLoadGame -> PickLoadGame. Dreamcast
             // kb.cpp:2122 names the call and retail oldmain's tutorial-load
@@ -1857,7 +1857,7 @@ static int doLoadGame()
 #pragma inline_depth()
             break;
 
-        case TGameTypeWindow::QUIT_ID:
+        case GameTypeWindow::QUIT_ID:
         case DIALOG_RETURN_CANCEL:
             videoRestart();
             exitLoadGame = 1;
@@ -1876,14 +1876,14 @@ static int doLoadGame()
 
     g_inSetupDialog = 0;
     return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL
-        && g_windowManager->m_dialogReturn != TGameTypeWindow::QUIT_ID;
+        && g_windowManager->m_dialogReturn != GameTypeWindow::QUIT_ID;
 }
 
 VA(0x004f0610, 0x77)
 static int pickLoadGame()
 {
     {
-        TSingleSelectionWindow singleSelectionWindow(1);
+        SingleSelectionWindow singleSelectionWindow(1);
         singleSelectionWindow.doModal(0);
     }
     return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL;
@@ -1978,7 +1978,7 @@ int g_normalDialogMbType;
 DATA(0x00699588)
 int g_normalDialogStart;
 DATA(0x00699590)
-static TDialogBox* g_normalDialogWindow;
+static DialogBoxWindow* g_normalDialogWindow;
 
 // E:\gamedcs\kb.cpp:2332
 // The dialog's forced answer: the default button for the message-box
@@ -1987,7 +1987,7 @@ static TDialogBox* g_normalDialogWindow;
 // exits in retail, so it has no body of its own.
 // DC records message& and a zero-remainder first arm at kb.cpp:2345/2346;
 // retail expands the same branch order into NormalDialogHandler (+0x164).
-static int exitNormalDialog(message& msg)
+static int exitNormalDialog(Message& msg)
 {
     switch (g_normalDialogMbType) {
     case NORMAL_DIALOG_DEFAULT:
@@ -2015,7 +2015,7 @@ static int exitNormalDialog(message& msg)
 }
 
 VA(0x004f08d0, 0x20C)  // dc 0xe1ccc
-int normalDialogHandler(message& msg)
+int normalDialogHandler(Message& msg)
 {
     if (g_advManager && g_advManager->m_advWindow)
         g_advManager->m_advWindow->animateBottomView(1);
@@ -2045,18 +2045,18 @@ int normalDialogHandler(message& msg)
 }
 
 // E:\gamedcs\kb.cpp:2442, dc 0xe1de4.
-type_normal_dialog_frame::type_normal_dialog_frame(
+NormalDialogFrame::NormalDialogFrame(
     long x, long y, long w, long h, long id,
-    EGameResource newResource, long newQualifier)
-    : coloredBorderFrame(x, y, w, h, id, g_systemPalette->m_data[45], 0x400)
+    GameResource newResource, long newQualifier)
+    : ColoredBorderFrame(x, y, w, h, id, g_systemPalette->m_data[45], 0x400)
 {
     m_resource = newResource;
     m_qualifier = newQualifier;
 }
 
-VA_COMPGEN(0x004f0ae0, 0x21, SCALAR_DELETING_DTOR, type_normal_dialog_frame)
+VA_COMPGEN(0x004f0ae0, 0x21, SCALAR_DELETING_DTOR, NormalDialogFrame)
 
-VA_COMPGEN(0x004f0b10, 0x5, IMPLICIT_DTOR, type_normal_dialog_frame)
+VA_COMPGEN(0x004f0b10, 0x5, IMPLICIT_DTOR, NormalDialogFrame)
 
 // E:\gamedcs\kb.cpp:2549
 // Every message the normal dialog's own widgets do not consume ends here.
@@ -2074,7 +2074,7 @@ VA_COMPGEN(0x004f0b10, 0x5, IMPLICIT_DTOR, type_normal_dialog_frame)
 // skill arm needs.
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x004f0b20, 0x491)  // anchor-vtable + jump-table domain, dc 0xe1e58
-bool type_normal_dialog_frame::handleClick(bool downClick,
+bool NormalDialogFrame::handleClick(bool downClick,
                                                      bool rightClick)
 {
     if (downClick && rightClick) {
@@ -2113,7 +2113,7 @@ bool type_normal_dialog_frame::handleClick(bool downClick,
             break;
         case RES_ARTIFACT: {
             // The Complete resource message packs an artifact ordinal in its low word and scroll payload in its high word; the constructor keeps DC TArtifact.
-            type_artifact artifact(static_cast<TArtifact>(LOWORD(m_qualifier)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+            ArtifactRecord artifact(static_cast<Artifact>(LOWORD(m_qualifier)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             artifact.m_extra = HIWORD(m_qualifier);
 
             if (artifact.m_artifactId == ARTIFACT_SPELL_SCROLL)
@@ -2166,7 +2166,7 @@ bool type_normal_dialog_frame::handleClick(bool downClick,
 }
 
 VA(0x004f0fc0, 0x1C3)  // dc 0xe206c
-int eventWindowHandler(message& msg)
+int eventWindowHandler(Message& msg)
 {
     if (g_dialogDeadline697784 && GameTime::isPast(g_dialogDeadline697784)) {
         msg.m_id = MESSAGE_WIDGET;
@@ -2177,15 +2177,15 @@ int eventWindowHandler(message& msg)
         return MESSAGE_DISPATCH_FORWARD;
     }
     if (msg.m_id == MESSAGE_WIDGET
-        && msg.m_codeX == widget::WIDGET_DESELECT) {
+        && msg.m_codeX == Widget::WIDGET_DESELECT) {
         switch (msg.m_codeY) {
         case DIALOG_RETURN_CHOICE_1:
             if (g_normalDialogMbType == NORMAL_DIALOG_CHOOSE_OPTIONAL
                 || g_normalDialogMbType == NORMAL_DIALOG_CHOOSE) {
-                widget* first =
+                Widget* first =
                     getCurrentNormalDialog()->getWidget(DIALOG_RETURN_CHOICE_1);
                 first->setVisible(1);
-                widget* second =
+                Widget* second =
                     getCurrentNormalDialog()->getWidget(DIALOG_RETURN_CHOICE_2);
                 second->setVisible(0);
                 getCurrentNormalDialog()->getWidget(DIALOG_RETURN_OK)->enable(1);
@@ -2197,10 +2197,10 @@ int eventWindowHandler(message& msg)
         case DIALOG_RETURN_CHOICE_2:
             if (g_normalDialogMbType == NORMAL_DIALOG_CHOOSE_OPTIONAL
                 || g_normalDialogMbType == NORMAL_DIALOG_CHOOSE) {
-                widget* first =
+                Widget* first =
                     getCurrentNormalDialog()->getWidget(DIALOG_RETURN_CHOICE_1);
                 first->setVisible(0);
-                widget* second =
+                Widget* second =
                     getCurrentNormalDialog()->getWidget(DIALOG_RETURN_CHOICE_2);
                 second->setVisible(1);
                 getCurrentNormalDialog()->getWidget(DIALOG_RETURN_OK)->enable(1);
@@ -2236,7 +2236,7 @@ int eventWindowHandler(message& msg)
 }
 
 VA(0x004f1190, 0x5)  // dc 0xe225c
-int trueFalseDialogHandler(message* msg)
+int trueFalseDialogHandler(Message* msg)
 {
     return eventWindowHandler(*msg);
 }
@@ -2252,7 +2252,7 @@ void playerDead(int whichPlayer)
     g_combatFlag6985a3 = 0;
     g_combatFlag697744 = 0;
 
-    playerData* player = &g_game->m_players[whichPlayer];
+    PlayerData* player = &g_game->m_players[whichPlayer];
     g_game->m_playerDisabled[whichPlayer] = 1;
 
     for (level = 0; level < g_game->getNumMapLevels(); level++) {
@@ -2263,7 +2263,7 @@ void playerDead(int whichPlayer)
                 if (cell->m_isTrigger && cell->m_typeValue == SHIPYARD &&
                     cell->m_shipyardInfo.m_owner == whichPlayer) {
                     g_game->claimShipyard(
-                        type_point(static_cast<short>(x),
+                        MapPoint(static_cast<short>(x),
                                    static_cast<short>(y),
                                    static_cast<short>(level)), -1);
                 }
@@ -2292,7 +2292,7 @@ void playerDead(int whichPlayer)
     for (i = 0; i < 2; i++) {
         int recruitId = player->m_recruits[i];
         if (recruitId != -1 && g_game->m_heroAvailability[recruitId] ==
-                hero::HERO_AVAILABILITY_TAVERN_POOL)
+                Hero::HERO_AVAILABILITY_TAVERN_POOL)
             g_game->m_heroAvailability[recruitId] = -1;
     }
 
@@ -2340,7 +2340,7 @@ static void checkPlayerLoss()
     for (int i = 0; i < g_gamePlayerCount; i++) {
         if (g_game->m_playerDisabled[i])
             continue;
-        playerData& player = g_game->m_players[i];
+        PlayerData& player = g_game->m_players[i];
         if (player.m_numHeroes == 0
             && player.m_numTowns == 0) {
             playerDead(i);
@@ -2721,7 +2721,7 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
                 gameLost = 1;
             }
 
-            town* thisTown = g_game->getTown(g_game->getTownId(
+            Town* thisTown = g_game->getTown(g_game->getTownId(
                 victoryCondition.m_townX, victoryCondition.m_townY,
                 victoryCondition.m_townZ));
             if (gameWon) {
@@ -2950,7 +2950,7 @@ unsigned char displayLCWinLoss(LossConditionStruct& lossCondition,
         if (lossCondition.m_gameLost
             && g_game->onSameTeam(localPos, lossCondition.m_playerLoser)) {
             gameLost = 1;
-            town* lostTown = g_game->getTown(
+            Town* lostTown = g_game->getTown(
                 g_game->getTownId(lossCondition.m_townX,
                                   lossCondition.m_townY,
                                   lossCondition.m_townZ));
@@ -3113,7 +3113,7 @@ void checkEndGame(int forceWin)
 }
 
 VA(0x004f32a0, 0x29c)  // dc 0xe3a64
-void game::showMoraleInfo(hero* thisHero, int mbType)
+void Game::showMoraleInfo(Hero* thisHero, int mbType)
 {
     int icon;
     int morale = thisHero->getMorale(0, 0, 1);
@@ -3141,7 +3141,7 @@ void game::showMoraleInfo(hero* thisHero, int mbType)
 }
 
 VA(0x004f3540, 0x14B)
-void game::showLuckInfo(hero* thisHero, int mbType)
+void Game::showLuckInfo(Hero* thisHero, int mbType)
 {
     int icon;
     int luck = thisHero->getLuck(0, 0, 1);
@@ -3248,8 +3248,8 @@ void shutDown(const char* inExitMessage)
 
 // The two compiler-generated destructors DeleteMainClasses instantiates:
 // retail retains kb.obj's copies immediately after ShutDown.
-VA_COMPGEN(0x004f3940, 0xA9, IMPLICIT_DTOR, combatManager)
-VA_COMPGEN(0x004f39f0, 0x6D, IMPLICIT_DTOR, advManager)
+VA_COMPGEN(0x004f3940, 0xA9, IMPLICIT_DTOR, CombatManager)
+VA_COMPGEN(0x004f39f0, 0x6D, IMPLICIT_DTOR, AdvManager)
 
 // E:\gamedcs\kb.cpp:4187; Complete's body is empty (see kb.h).
 DC_ONLY(0xe4530, 0x78)
@@ -3325,7 +3325,7 @@ static unsigned char loadGameData()
         return 0;
     if (!initializeSSkillTraitsTable())
         return 0;
-    if (!town::initializeBuildingCostsTables())
+    if (!Town::initializeBuildingCostsTables())
         return 0;
     if (!initializeVCDescriptions())
         return 0;
@@ -3335,7 +3335,7 @@ static unsigned char loadGameData()
         return 0;
     if (!initializeExtraInfoText())
         return 0;
-    if (!combatManager::loadWallTraitsTable())
+    if (!CombatManager::loadWallTraitsTable())
         return 0;
     if (!initializeHelpText())
         return 0;
@@ -3460,14 +3460,14 @@ int checkMem()
 
 // E:\gamedcs\kb.cpp:5531
 DC_ONLY(0xe60dc, 0xC14)
-void doNormalDialog(TNormalDialogInfo dialog_info)
+void doNormalDialog(NormalDialogInfo dialog_info)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:5909
 // RETAIL_LOCATED(0x004f7690, 0x312)  // anchor-global, dc 0xe6cf0
-void extendedDialog(const char* text, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* resources, long x, long y, long timeout)
+void extendedDialog(const char* text, std::vector<DialogResource,std::allocator<DialogResource>* resources, long x, long y, long timeout)
 {
     // @stub
 }
@@ -3488,21 +3488,21 @@ unsigned short* getMapExtraPtr(int x, int y, int z)
 
 // E:\gamedcs\MouseMgr.h:215
 DC_ONLY(0xe6eb4, 0x6)
-mouseManager::EPointerSet mouseManager::getSet()
+MouseManager::PointerSet MouseManager::getSet()
 {
     // @stub
 }
 
 // E:\gamedcs\SoundMgr.h:124
 DC_ONLY(0xe6ebc, 0x38)
-void soundManager::~soundManager()
+void SoundManager::~SoundManager()
 {
     // @stub
 }
 
 // E:\gamedcs\SoundMgr.h:140
 DC_ONLY(0xe6ef4, 0x4)
-void soundManager::serviceSounds()
+void SoundManager::serviceSounds()
 {
     // @stub
 }
@@ -3572,49 +3572,49 @@ void CTimer::enable()
 
 // E:\gamedcs\kb.cpp:542
 DC_ONLY(0xe70ac, 0x34)
-void* searchArray::`scalar deleting destructor'(unsigned __flags)
+void* SearchArray::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:542
 DC_ONLY(0xe70e0, 0x34)
-void* combatManager::`scalar deleting destructor'(unsigned __flags)
+void* CombatManager::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:542
 DC_ONLY(0xe7114, 0x34)
-void* advManager::`scalar deleting destructor'(unsigned __flags)
+void* AdvManager::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:542
 DC_ONLY(0xe7148, 0x34)
-void* highScoreManager::`scalar deleting destructor'(unsigned __flags)
+void* HighScoreManager::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:542
 DC_ONLY(0xe717c, 0x34)
-void* soundManager::`scalar deleting destructor'(unsigned __flags)
+void* SoundManager::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:542
 DC_ONLY(0xe71b0, 0x54)
-void combatManager::~combatManager()
+void CombatManager::~CombatManager()
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:542
 DC_ONLY(0xe7204, 0x30)
-void advManager::~advManager()
+void AdvManager::~AdvManager()
 {
     // @stub
 }
@@ -3628,7 +3628,7 @@ void std::set<enum SpellID,std::less<enum SpellID>,std::allocator<enum SpellID> 
 
 // E:\gamedcs\kb.cpp:1837
 DC_ONLY(0xe724c, 0x194)
-playerData* playerData::operator=(const playerData* __that)
+PlayerData* PlayerData::operator=(const PlayerData* __that)
 {
     // @stub
 }
@@ -3637,49 +3637,49 @@ playerData* playerData::operator=(const playerData* __that)
 
 // E:\gamedcs\kb.cpp:5466
 DC_ONLY(0xe742c, 0x34)
-void TNormalDialogInfo::TNormalDialogInfo()
+void NormalDialogInfo::NormalDialogInfo()
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:5466
 DC_ONLY(0xe7460, 0x30)
-void TNormalDialogInfo::~TNormalDialogInfo()
+void NormalDialogInfo::~NormalDialogInfo()
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:5466
 DC_ONLY(0xe7490, 0x24)
-void type_dialog_icon::type_dialog_icon()
+void DialogIcon::DialogIcon()
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:5466
 DC_ONLY(0xe74b4, 0x24)
-void type_dialog_icon::~type_dialog_icon()
+void DialogIcon::~DialogIcon()
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:5528
 DC_ONLY(0xe74d8, 0x84)
-void TNormalDialogInfo::TNormalDialogInfo(const TNormalDialogInfo* __that)
+void NormalDialogInfo::NormalDialogInfo(const NormalDialogInfo* __that)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:5528
 DC_ONLY(0xe755c, 0x60)
-void type_dialog_icon::type_dialog_icon(const type_dialog_icon* __that)
+void DialogIcon::DialogIcon(const DialogIcon* __that)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xe75bc, 0x28)
-void std::vector<resource *,std::allocator<resource *> >::~vector<resource *,std::allocator<resource *> >()
+void std::vector<Resource *,std::allocator<Resource *> >::~vector<Resource *,std::allocator<Resource *> >()
 {
     // @stub
 }
@@ -3693,14 +3693,14 @@ void std::_Rb_tree<enum SpellID,enum SpellID,std::_Identity<enum SpellID>,std::l
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xe7608, 0x28)
-void std::vector<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::~vector<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >()
+void std::vector<CombatManager::Obstacle,std::allocator<CombatManager::Obstacle> >::~vector<CombatManager::Obstacle,std::allocator<CombatManager::Obstacle> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xe7630, 0x30)
-void std::_Vector_base<resource *,std::allocator<resource *> >::~_Vector_base<resource *,std::allocator<resource *> >()
+void std::_Vector_base<Resource *,std::allocator<Resource *> >::~_Vector_base<Resource *,std::allocator<Resource *> >()
 {
     // @stub
 }
@@ -3714,14 +3714,14 @@ void std::_Rb_tree_base<enum SpellID,std::allocator<enum SpellID> >::~_Rb_tree_b
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xe7688, 0x40)
-void std::_Vector_base<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::~_Vector_base<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >()
+void std::_Vector_base<CombatManager::Obstacle,std::allocator<CombatManager::Obstacle> >::~_Vector_base<CombatManager::Obstacle,std::allocator<CombatManager::Obstacle> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:179
 DC_ONLY(0xe76c8, 0x18)
-void std::_STL_alloc_proxy<resource * *,resource *,std::allocator<resource *> >::~_STL_alloc_proxy<resource * *,resource *,std::allocator<resource *> >()
+void std::_STL_alloc_proxy<Resource * *,Resource *,std::allocator<Resource *> >::~_STL_alloc_proxy<Resource * *,Resource *,std::allocator<Resource *> >()
 {
     // @stub
 }
@@ -3735,119 +3735,119 @@ void std::_STL_alloc_proxy<std::_Rb_tree_node<enum SpellID> *,std::_Rb_tree_node
 
 // ..\stlport\stl_string.h:179
 DC_ONLY(0xe76f8, 0x18)
-void std::_STL_alloc_proxy<combatManager::TObstacle *,combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::~_STL_alloc_proxy<combatManager::TObstacle *,combatManager::TObstacle,std::allocator<combatManager::TObstacle> >()
+void std::_STL_alloc_proxy<CombatManager::Obstacle *,CombatManager::Obstacle,std::allocator<CombatManager::Obstacle> >::~_STL_alloc_proxy<CombatManager::Obstacle *,CombatManager::Obstacle,std::allocator<CombatManager::Obstacle> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xe7710, 0x2C)
-void std::_STL_alloc_proxy<resource * *,resource *,std::allocator<resource *> >::deallocate(resource** __p, unsigned __n)
+void std::_STL_alloc_proxy<Resource * *,Resource *,std::allocator<Resource *> >::deallocate(Resource** __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xe773c, 0x1C)
-void std::allocator<resource *>::deallocate(resource** __p, unsigned __n)
+void std::allocator<Resource *>::deallocate(Resource** __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:207
 DC_ONLY(0xe7758, 0xDC)
-std::vector<type_point,std::allocator<type_point>* std::vector<type_point,std::allocator<type_point> >::operator=(const std::vector<type_point,std::allocator<type_point>* __x)
+std::vector<MapPoint,std::allocator<MapPoint>* std::vector<MapPoint,std::allocator<MapPoint> >::operator=(const std::vector<MapPoint,std::allocator<MapPoint>* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xe7834, 0x30)
-void std::destroy(resource** __first, resource** __last)
+void std::destroy(Resource** __first, Resource** __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xe7864, 0x4)
-std::allocator<resource* std::__stl_alloc_rebind(std::allocator<resource* __a, resource** __formal)
+std::allocator<Resource* std::__stl_alloc_rebind(std::allocator<Resource* __a, Resource** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:199
 DC_ONLY(0xe7868, 0xC)
-unsigned std::vector<type_point,std::allocator<type_point> >::capacity()
+unsigned std::vector<MapPoint,std::allocator<MapPoint> >::capacity()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:514
 DC_ONLY(0xe7874, 0x38)
-std::vector<type_point,std::allocator<type_point> >::_M_allocate_and_copy(unsigned __n, const type_point* __first, const type_point* __last)
+std::vector<MapPoint,std::allocator<MapPoint> >::_M_allocate_and_copy(unsigned __n, const MapPoint* __first, const MapPoint* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xe78ac, 0x50)
-type_point* std::copy(const type_point* __first, const type_point* __last, type_point* __result)
+MapPoint* std::copy(const MapPoint* __first, const MapPoint* __last, MapPoint* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xe78fc, 0x38)
-type_point* std::uninitialized_copy(const type_point* __first, const type_point* __last, type_point* __result)
+MapPoint* std::uninitialized_copy(const MapPoint* __first, const MapPoint* __last, MapPoint* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xe7934, 0x4)
-resource** std::value_type(resource** __formal)
+Resource** std::value_type(Resource** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xe7938, 0x1C)
-void std::__destroy(resource** __first, resource** __last, resource** __formal)
+void std::__destroy(Resource** __first, Resource** __last, Resource** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xe7954, 0x32)
-type_point* std::__copy(const type_point* __first, const type_point* __last, type_point* __result, std::random_access_iterator_tag __formal, int* __formal)
+MapPoint* std::__copy(const MapPoint* __first, const MapPoint* __last, MapPoint* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xe7988, 0x1C)
-type_point* std::__uninitialized_copy(const type_point* __first, const type_point* __last, type_point* __result, type_point* __formal)
+MapPoint* std::__uninitialized_copy(const MapPoint* __first, const MapPoint* __last, MapPoint* __result, MapPoint* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xe79a4, 0x30)
-void std::__destroy_aux(resource** __first, resource** __last, __false_type __formal)
+void std::__destroy_aux(Resource** __first, Resource** __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xe79d4, 0x3C)
-type_point* std::__uninitialized_copy_aux(const type_point* __first, const type_point* __last, type_point* __result, __false_type __formal)
+MapPoint* std::__uninitialized_copy_aux(const MapPoint* __first, const MapPoint* __last, MapPoint* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0xe7a10, 0x1C)
-void std::destroy(resource** __pointer)
+void std::destroy(Resource** __pointer)
 {
     // @stub
 }
@@ -3873,8 +3873,8 @@ void fileError(const char* buf)
 VA(0x004f3ab0, 0x374)  // dc 0xe3e48
 void congratsWait(int mode, char* rank, int base, int score, int dayz)
 {
-    message msg;
-    font* currentFont = ResourceManager::getFont("HiScore.fnt");
+    Message msg;
+    Font* currentFont = ResourceManager::getFont("HiScore.fnt");
     const char* labels[5] = {
         g_generalText->getText(439),
         g_generalText->getText(440),
@@ -3892,7 +3892,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
     for (i = 0; i < CONGRATS_COLUMN_COUNT; i++) {
         x = i * 160;
         currentFont->drawBoundedString(labels[i], g_windowManager->m_screenBitmap,
-                                 x, 450, 160, 100, font::TColor(281), 5, -1);
+                                 x, 450, 160, 100, Font::Color(281), 5, -1);
         switch (i) {
         case CONGRATS_COLUMN_DAYS:
             sprintf(temp, DATA_COMPGEN(0x00660a1c, dialogDecimalFormat,
@@ -3914,7 +3914,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
             break;
         }
         currentFont->drawBoundedString(temp, g_windowManager->m_screenBitmap,
-                                 x, 540, 160, 50, font::TColor(281), 5, -1);
+                                 x, 540, 160, 50, Font::Color(281), 5, -1);
     }
     g_windowManager->updateScreen(0, 0, 800, 600);
     while (!smk && videoPlaying()) {
@@ -3937,7 +3937,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
                     x = i * 160;
                     currentFont->drawBoundedString(labels[i],
                                              g_windowManager->m_screenBitmap,
-                                             x, 450, 160, 100, font::TColor(281), 5, -1);
+                                             x, 450, 160, 100, Font::Color(281), 5, -1);
                     switch (i) {
                     case CONGRATS_COLUMN_DAYS:
                         sprintf(temp, DATA_COMPGEN(0x00660a1c,
@@ -3961,7 +3961,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
                     }
                     currentFont->drawBoundedString(temp,
                                              g_windowManager->m_screenBitmap,
-                                             x, 540, 160, 50, font::TColor(281), 5, -1);
+                                             x, 540, 160, 50, Font::Color(281), 5, -1);
                 }
                 videoDrawRects();
             }
@@ -3975,10 +3975,10 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
 }
 
 VA(0x004f3e30, 0x7A)  // dc 0xe4298
-short game::getBaseMapScore() const
+short Game::getBaseMapScore() const
 {
     short turn = getCurrentTurn();
-    playerData* player = g_game->getLocalPlayer();
+    PlayerData* player = g_game->getLocalPlayer();
     int gamePos = g_game->getLocalPlayerGamePos();
 
     return static_cast<short>((g_unnamed69950c == gamePos ? 25 : 0)
@@ -3988,7 +3988,7 @@ short game::getBaseMapScore() const
 }
 
 VA(0x004f3eb0, 0xA7)  // dc 0xe4300
-short game::getMapScore() const
+short Game::getMapScore() const
 {
     return static_cast<short>(static_cast<float>(getBaseMapScore())
                               * g_mapScoreDifficultyFactor[m_setup.m_difficulty]);
@@ -4031,7 +4031,7 @@ void showCongrats(int hsType)
         land = getCampaignName();
     }
 
-    int monType = highScoreManager::getMonType(score, hsType);
+    int monType = HighScoreManager::getMonType(score, hsType);
     sprintf(temp, monType >= 0 && monType <= 150
                        ? g_creatureTypeTraits[monType].m_name
                        : "");
@@ -4073,11 +4073,11 @@ void memError()
 VA(0x004f4310, 0x35)  // dc 0xe45a8
 int gameUnsaved()
 {
-    if (g_advManager && g_advManager->m_status == baseManager::STATUS_ACTIVE)
+    if (g_advManager && g_advManager->m_status == BaseManager::STATUS_ACTIVE)
         return 1;
-    if (g_combatManager && g_combatManager->m_status == baseManager::STATUS_ACTIVE)
+    if (g_combatManager && g_combatManager->m_status == BaseManager::STATUS_ACTIVE)
         return 1;
-    if (g_townManager && g_townManager->m_status == baseManager::STATUS_ACTIVE)
+    if (g_townManager && g_townManager->m_status == BaseManager::STATUS_ACTIVE)
         return 1;
     return 0;
 }
@@ -4085,7 +4085,7 @@ int gameUnsaved()
 VA(0x004f4350, 0x7F2)  // dc 0xe49b0
 int handleAppSpecificMenuCommands(int idItem)
 {
-    hero* currentHero = 0;
+    Hero* currentHero = 0;
     if (g_currentPlayer && g_game->getCurrHeroId() != -1)
         currentHero = g_game->getCurrHero();
 
@@ -4232,7 +4232,7 @@ int handleAppSpecificMenuCommands(int idItem)
             g_game->m_isCheater = 1;
             if (g_unk69774c)
                 g_game->m_campaign.m_isCheater = 1;
-            if (g_combatManager->m_status == baseManager::STATUS_ACTIVE)
+            if (g_combatManager->m_status == BaseManager::STATUS_ACTIVE)
                 currentHero = g_combatManager->m_heroes[g_combatManager->m_currentSide];
             if (currentHero) {
                 currentHero->setSS(
@@ -4248,34 +4248,34 @@ int handleAppSpecificMenuCommands(int idItem)
             g_game->m_isCheater = 1;
             if (g_unk69774c)
                 g_game->m_campaign.m_isCheater = 1;
-            TArtifact artifactId;
+            Artifact artifactId;
             {
-                artifactId = TArtifact(idItem - APP_MENU_ARTIFACT_FIRST);
+                artifactId = Artifact(idItem - APP_MENU_ARTIFACT_FIRST);
             }
-            type_artifact artifact(artifactId);
+            ArtifactRecord artifact(artifactId);
             if (currentHero)
                 currentHero->giveArtifact(&artifact, 0, 0);
         }
 
         else if (idItem >= APP_MENU_SPELL_ALL
                 && idItem < APP_MENU_SPELL_LAST) {
-            if (g_combatManager->m_status == baseManager::STATUS_ACTIVE)
+            if (g_combatManager->m_status == BaseManager::STATUS_ACTIVE)
                 currentHero = g_combatManager->m_heroes[g_combatManager->m_currentSide];
             if (currentHero) {
-                type_artifact artifact(ARTIFACT_NONE);
+                ArtifactRecord artifact(ARTIFACT_NONE);
                 g_game->m_isCheater = 1;
                 if (g_unk69774c)
                     g_game->m_campaign.m_isCheater = 1;
                 if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
                     {
-                        artifact.m_artifactId = TArtifact(ARTIFACT_SPELLBOOK);
+                        artifact.m_artifactId = Artifact(ARTIFACT_SPELLBOOK);
                     }
                     currentHero->giveArtifact(&artifact, 1, 1);
                 }
 
                 switch (idItem) {
                 case APP_MENU_SPELL_ALL: {
-                    for (int spell = 0; spell < hero::NUM_SPELLS; spell++)
+                    for (int spell = 0; spell < Hero::NUM_SPELLS; spell++)
                         currentHero->addSpell(spell);
                     break;
                 }
@@ -4284,7 +4284,7 @@ int handleAppSpecificMenuCommands(int idItem)
                 case APP_MENU_SPELL_SCHOOL_SECOND:
                 case APP_MENU_SPELL_SCHOOL_THIRD:
                 case APP_MENU_SPELL_SCHOOL_FOURTH: {
-                    for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+                    for (int spell = 0; spell < Hero::NUM_SPELLS; spell++) {
                         if (g_spellTraits[spell].m_schoolBits
                                 & (1 << (idItem - APP_MENU_SPELL_SCHOOL_FIRST)))
                             currentHero->addSpell(spell);
@@ -4297,7 +4297,7 @@ int handleAppSpecificMenuCommands(int idItem)
                 case APP_MENU_SPELL_LEVEL_THREE:
                 case APP_MENU_SPELL_LEVEL_FOUR:
                 case APP_MENU_SPELL_LEVEL_FIVE: {
-                    for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+                    for (int spell = 0; spell < Hero::NUM_SPELLS; spell++) {
                         if (g_spellTraits[spell].m_level
                                 == idItem - APP_MENU_SPELL_LEVEL_BASE)
                             currentHero->addSpell(spell);
@@ -4378,7 +4378,7 @@ void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg)
                     for (i = 0;
                          i < g_game->m_players[g_netLocalGamePos].m_numHeroes;
                          i++) {
-                        hero* currentHero = &g_game->m_heroes
+                        Hero* currentHero = &g_game->m_heroes
                             [g_game->m_players[g_netLocalGamePos].m_heroes[i]];
                         currentHero->m_maxMovePoints = currentHero->m_movePoints =
                             currentHero->getMobility();
@@ -4386,7 +4386,7 @@ void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg)
                     for (i = 0; i < 2; i++) {
                         if (g_game->m_players[g_netLocalGamePos].m_recruits[i]
                             != -1) {
-                            hero* currentHero = g_game->getHero(
+                            Hero* currentHero = g_game->getHero(
                                 g_game->m_players[g_netLocalGamePos]
                                     .m_recruits[i]);
                             currentHero->m_maxMovePoints = currentHero->m_movePoints =
@@ -4396,10 +4396,10 @@ void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg)
                     for (i = 0;
                          i < g_game->m_players[g_netLocalGamePos].m_numTowns;
                          i++) {
-                        town* currentTown = g_game->getTown(
+                        Town* currentTown = g_game->getTown(
                             g_game->m_players[g_netLocalGamePos].m_townIds[i]);
                         if (currentTown->m_garrisonHeroId >= 0) {
-                            hero* currentHero =
+                            Hero* currentHero =
                                 g_game->getHero(currentTown->m_garrisonHeroId);
                             currentHero->m_maxMovePoints = currentHero->m_movePoints =
                                 currentHero->getMobility();
@@ -4424,7 +4424,7 @@ void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg)
 // the Complete-only Conflux enum insertion, every field offset, packed
 // qualifier interpretation, table stride, literal, and the final CFG.
 VA(0x004f4eb0, 0xEC9)  // linkorder + anchor-callee, dc 0xe52b8
-void type_dialog_icon::set(EGameResource resource, long qualifier)
+void DialogIcon::set(GameResource resource, long qualifier)
 {
     // Residual (99.1667%): all 133 CFG blocks and all 64 branches agree.
     // Retail retains two nested basic_string::_Eos calls in the two
@@ -4742,7 +4742,7 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 // Element references/pointers fall to 99.7143/99.7186%; center-icon bindings
 // do not help. All 45 exact kb siblings stayed exact.
 VA(0x004f5d80, 0x51C)  // anchor-caller (get_quickview_size/NormalDialog) + dc-order-map, dc 0xe5960
-void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
+void calculateNormalDialogSize(NormalDialogInfo& dialogInfo)
 {
     long widestIcon = 0;
     long spacing = 0;
@@ -4785,7 +4785,7 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
                                          + perRow * widestIcon + 40);
     }
 
-    font* currentFont = g_mediumFont;
+    Font* currentFont = g_mediumFont;
     dialogInfo.m_textExpansion = false;
     dialogInfo.m_textWidgetWidth = max(
         256, currentFont->longestWordLength(dialogInfo.m_dialogText.c_str()));
@@ -4916,7 +4916,7 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
 VA(0x004f62a0, 0x162)  // dc 0xe5ed4
 void getQuickviewSize(const char* text, int* width, int* height)
 {
-    TNormalDialogInfo dialogInfo;
+    NormalDialogInfo dialogInfo;
     dialogInfo.m_dialogText = text;
     dialogInfo.m_mbType = NORMAL_DIALOG_POPUP;
     dialogInfo.m_x = -1;
@@ -4932,7 +4932,7 @@ void getQuickviewSize(const char* text, int* width, int* height)
 // retail loads at 0x4f0fc0 corroborate the same getter expansion. Keep the
 // ordinary helper in its owning TU and the DC source order after sizing.
 DC_ONLY(0xe5f60, 0x6)
-TDialogBox* getCurrentNormalDialog()
+DialogBoxWindow* getCurrentNormalDialog()
 {
     return g_normalDialogWindow;
 }
@@ -4942,10 +4942,10 @@ TDialogBox* getCurrentNormalDialog()
 // destructor iterator (0x4c stride, ??1type_dialog_icon as the element
 // hook) and then dialog_text's Dinkumware teardown - members in reverse
 // declaration order, exactly as this header models them.
-VA_COMPGEN(0x004f6410, 0x74, IMPLICIT_DTOR, TNormalDialogInfo)
+VA_COMPGEN(0x004f6410, 0x74, IMPLICIT_DTOR, NormalDialogInfo)
 
-VA_COMPGEN(0x004f6490, 0x2A, CLASS_CTOR, type_dialog_icon)
-VA_COMPGEN(0x004f64c0, 0x6D, IMPLICIT_DTOR, type_dialog_icon)
+VA_COMPGEN(0x004f6490, 0x2A, CLASS_CTOR, DialogIcon)
+VA_COMPGEN(0x004f64c0, 0x6D, IMPLICIT_DTOR, DialogIcon)
 
 VA(0x004f6530, 0x34)  // dc 0xe5f68
 void normalDialogTimeOut(const char* text, int mbType, int timeOut,
@@ -4966,20 +4966,20 @@ void normalDialog(const char* text, int mbType, int x, int y,
     int resType1, int resExtra1, int resType2, int resExtra2,
     int special, int timeout, int resType3, int resExtra3)
 {
-    TNormalDialogInfo dialogInfo;
+    NormalDialogInfo dialogInfo;
     dialogInfo.m_dialogText = text;
     dialogInfo.m_x = x;
     dialogInfo.m_y = y;
-    dialogInfo.m_mbType = static_cast<EMBType>(mbType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+    dialogInfo.m_mbType = static_cast<MBType>(mbType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
     dialogInfo.m_special = special;
     dialogInfo.m_timeout = timeout;
     dialogInfo.m_width = 256;
     dialogInfo.m_height = 128;
     dialogInfo.m_textWidgetX = 20;
     dialogInfo.m_textWidgetY = 30;
-    dialogInfo.m_icons[0].set(static_cast<EGameResource>(resType1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resExtra1);
-    dialogInfo.m_icons[1].set(static_cast<EGameResource>(resType2) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resExtra2);
-    dialogInfo.m_icons[2].set(static_cast<EGameResource>(resType3) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resExtra3);
+    dialogInfo.m_icons[0].set(static_cast<GameResource>(resType1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resExtra1);
+    dialogInfo.m_icons[1].set(static_cast<GameResource>(resType2) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resExtra2);
+    dialogInfo.m_icons[2].set(static_cast<GameResource>(resType3) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resExtra3);
     for (int i = 3; i < 8; i++)
         dialogInfo.m_icons[i].set(const_no_resource, -1);
     calculateNormalDialogSize(dialogInfo);
@@ -4990,8 +4990,8 @@ DATA(0x00699254)
 static int g_unnamed699254;
 
 void pollSound();
-int normalDialogHandler(message& msg);
-static int waitHandler(message& msg);
+int normalDialogHandler(Message& msg);
+static int waitHandler(Message& msg);
 
 // The implicit copy constructor of type_dialog_icon, emitted because
 // DoNormalDialog takes its TNormalDialogInfo BY VALUE and the aggregate's
@@ -5000,10 +5000,10 @@ static int waitHandler(message& msg);
 // (0x4f78dd) building that by-value argument; the body copies the two
 // selectors, both std::strings and the nine trailing dwords, and returns
 // `this` with `ret 4`, which is exactly the generated form.
-VA_COMPGEN(0x004f6810, 0x179, IMPLICIT_COPY_CTOR, type_dialog_icon)
+VA_COMPGEN(0x004f6810, 0x179, IMPLICIT_COPY_CTOR, DialogIcon)
 
 VA(0x004f6990, 0xC8C)  // dc 0xe60dc
-void doNormalDialog(TNormalDialogInfo dialogInfo)
+void doNormalDialog(NormalDialogInfo dialogInfo)
 {
     if (!g_videoPaused
             && !g_turnDuration69d630.isOn()
@@ -5031,7 +5031,7 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
 
     int saveNormalDialogType;
     int saveNormalDialogSelection;
-    TDialogBox* saveNormalDialogWindow;
+    DialogBoxWindow* saveNormalDialogWindow;
     g_normalDialogStart = GameTime::get();
     saveNormalDialogWindow = g_normalDialogWindow;
     saveNormalDialogType = g_normalDialogMbType;
@@ -5039,14 +5039,14 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
     g_normalDialogMbType = dialogInfo.m_mbType;
     g_normalDialogSelection = -1;
 
-    g_normalDialogWindow = new TDialogBox(
+    g_normalDialogWindow = new DialogBoxWindow(
         dialogInfo.m_x, dialogInfo.m_y,
         dialogInfo.m_width, dialogInfo.m_height, 0x12);
     if (!g_normalDialogWindow) {
         memError();
     }
 
-    playerData* localPlayer = g_game->getLocalPlayer();
+    PlayerData* localPlayer = g_game->getLocalPlayer();
     if (localPlayer) {
         for (int id = g_normalDialogWindow->m_beginId;
              id <= g_normalDialogWindow->m_endId; ++id) {
@@ -5055,24 +5055,24 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
         }
     }
 
-    std::vector<widget*> widgets;
+    std::vector<Widget*> widgets;
 
     if (dialogInfo.m_textExpansion) {
-        widgets.push_back(new type_text_scroller(
+        widgets.push_back(new TextScroller(
             dialogInfo.m_dialogText.c_str(),
             dialogInfo.m_textWidgetX, dialogInfo.m_textWidgetY,
             dialogInfo.m_textWidgetWidth, dialogInfo.m_textWidgetHeight,
             DATA_COMPGEN(0x0065f2ec, normalDialogMediumFont,
                          "medfont.fnt"),
-            font::PRIMARY, slider::BROWN));
+            Font::PRIMARY, Slider::BROWN));
     } else {
-        widgets.push_back(new textWidget(
+        widgets.push_back(new TextWidget(
             dialogInfo.m_textWidgetX, dialogInfo.m_textWidgetY,
             dialogInfo.m_textWidgetWidth, dialogInfo.m_textWidgetHeight,
             dialogInfo.m_dialogText.c_str(),
             DATA_COMPGEN(0x0065f2ec, normalDialogMediumFont,
                          "medfont.fnt"),
-            font::PRIMARY, 1, font::CENTER_JUSTIFIED, 0, 8));
+            Font::PRIMARY, 1, Font::CENTER_JUSTIFIED, 0, 8));
     }
 
     int leftButtonLoc = dialogInfo.m_width / 2 - 74;
@@ -5087,11 +5087,11 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
 
     switch (dialogInfo.m_mbType) {
     case NORMAL_DIALOG_YESNO: {
-        bitmapBorder* acceptBorder = new bitmapBorder(
+        BitmapBorder* acceptBorder = new BitmapBorder(
             leftButtonLoc, buttonY, 66, 32, 0x7869,
             DATA_COMPGEN(0x0067016c, normalDialogButtonBorder,
                          "Box64x30.pcx"), 0x800);
-        button* acceptButton = new button(
+        Button* acceptButton = new Button(
             leftButtonLoc + 1, buttonY + 1, 64, 30,
             DIALOG_RETURN_ACCEPT,
             DATA_COMPGEN(0x00670160, normalDialogOkayButton, "iOkay.def"),
@@ -5099,11 +5099,11 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
         widgets.push_back(acceptBorder);
         widgets.push_back(acceptButton);
 
-        bitmapBorder* declineBorder = new bitmapBorder(
+        BitmapBorder* declineBorder = new BitmapBorder(
             rightButtonLoc, buttonY, 66, 32, 0x786a,
             DATA_COMPGEN(0x0067016c, normalDialogButtonBorder,
                          "Box64x30.pcx"), 0x800);
-        button* declineButton = new button(
+        Button* declineButton = new Button(
             rightButtonLoc + 1, buttonY + 1, 64, 30,
             DIALOG_RETURN_DECLINE,
             DATA_COMPGEN(0x00660b04, normalDialogCancelButton,
@@ -5116,11 +5116,11 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
 
     case NORMAL_DIALOG_ORDINAL_3:
     case NORMAL_DIALOG_CHOOSE_OPTIONAL: {
-        bitmapBorder* cancelBorder = new bitmapBorder(
+        BitmapBorder* cancelBorder = new BitmapBorder(
             rightButtonLoc, buttonY, 66, 32, 0x7865,
             DATA_COMPGEN(0x0067016c, normalDialogButtonBorder,
                          "Box64x30.pcx"), 0x800);
-        button* cancelButton = new button(
+        Button* cancelButton = new Button(
             rightButtonLoc + 1, buttonY + 1, 64, 30,
             DIALOG_RETURN_CANCEL,
             DATA_COMPGEN(0x00660b04, normalDialogCancelButton,
@@ -5129,11 +5129,11 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
         widgets.push_back(cancelBorder);
         widgets.push_back(cancelButton);
 
-        bitmapBorder* okayBorder = new bitmapBorder(
+        BitmapBorder* okayBorder = new BitmapBorder(
             leftButtonLoc, buttonY, 66, 32, 0x7866,
             DATA_COMPGEN(0x0067016c, normalDialogButtonBorder,
                          "Box64x30.pcx"), 0x800);
-        button* okayButton = new button(
+        Button* okayButton = new Button(
             leftButtonLoc + 1, buttonY + 1, 64, 30,
             DIALOG_RETURN_OK,
             DATA_COMPGEN(0x00670160, normalDialogOkayButton, "iOkay.def"),
@@ -5147,11 +5147,11 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
 
     case NORMAL_DIALOG_DEFAULT:
     case NORMAL_DIALOG_ORDINAL_5: {
-        bitmapBorder* okayBorder = new bitmapBorder(
+        BitmapBorder* okayBorder = new BitmapBorder(
             centerButtonLoc, buttonY, 66, 32, 0x7866,
             DATA_COMPGEN(0x0067016c, normalDialogButtonBorder,
                          "Box64x30.pcx"), 0x800);
-        button* okayButton = new button(
+        Button* okayButton = new Button(
             centerButtonLoc + 1, buttonY + 1, 64, 30,
             DIALOG_RETURN_OK,
             DATA_COMPGEN(0x00670160, normalDialogOkayButton, "iOkay.def"),
@@ -5162,11 +5162,11 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
     }
 
     case NORMAL_DIALOG_CHOOSE: {
-        bitmapBorder* okayBorder = new bitmapBorder(
+        BitmapBorder* okayBorder = new BitmapBorder(
             centerButtonLoc, buttonY, 66, 32, 0x7866,
             DATA_COMPGEN(0x0067016c, normalDialogButtonBorder,
                          "Box64x30.pcx"), 0x800);
-        button* okayButton = new button(
+        Button* okayButton = new Button(
             centerButtonLoc + 1, buttonY + 1, 64, 30,
             DIALOG_RETURN_OK,
             DATA_COMPGEN(0x00670160, normalDialogOkayButton, "iOkay.def"),
@@ -5178,11 +5178,11 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
     }
 
     case NORMAL_DIALOG_ORDINAL_6: {
-        bitmapBorder* cancelBorder = new bitmapBorder(
+        BitmapBorder* cancelBorder = new BitmapBorder(
             centerButtonLoc, buttonY, 66, 32, 0x7865,
             DATA_COMPGEN(0x0067016c, normalDialogButtonBorder,
                          "Box64x30.pcx"), 0x800);
-        button* cancelButton = new button(
+        Button* cancelButton = new Button(
             centerButtonLoc + 1, buttonY + 1, 64, 30,
             DIALOG_RETURN_CANCEL,
             DATA_COMPGEN(0x00660b04, normalDialogCancelButton,
@@ -5198,21 +5198,21 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
          iconIndex < 8
              && dialogInfo.m_icons[iconIndex].m_resource != const_no_resource;
          ++iconIndex) {
-        iconWidget* image = new iconWidget(
+        IconWidget* image = new IconWidget(
             dialogInfo.m_icons[iconIndex].m_spriteX,
             dialogInfo.m_icons[iconIndex].m_spriteY,
             dialogInfo.m_icons[iconIndex].m_spriteWidth,
             dialogInfo.m_icons[iconIndex].m_spriteHeight,
             -1, dialogInfo.m_icons[iconIndex].m_spriteName.c_str(),
             dialogInfo.m_icons[iconIndex].m_spriteFrameIndex,
-            0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+            0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
         if (!image) {
             memError();
         }
         widgets.push_back(image);
 
         if (dialogInfo.m_icons[iconIndex].m_text.length() > 0) {
-            textWidget* text = new textWidget(
+            TextWidget* text = new TextWidget(
                 dialogInfo.m_icons[iconIndex].m_textX,
                 dialogInfo.m_icons[iconIndex].m_textY,
                 dialogInfo.m_icons[iconIndex].m_textWidth,
@@ -5220,14 +5220,14 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
                 dialogInfo.m_icons[iconIndex].m_text.c_str(),
                 DATA_COMPGEN(0x0065f2f8, normalDialogSmallFont,
                              "smalfont.fnt"),
-                font::PRIMARY, -1, font::CENTER_JUSTIFIED, 0, 8);
+                Font::PRIMARY, -1, Font::CENTER_JUSTIFIED, 0, 8);
             if (!text) {
                 memError();
             }
             widgets.push_back(text);
         }
 
-        type_normal_dialog_frame* frame = new type_normal_dialog_frame(
+        NormalDialogFrame* frame = new NormalDialogFrame(
             dialogInfo.m_icons[iconIndex].m_spriteX - 1,
             dialogInfo.m_icons[iconIndex].m_spriteY - 1,
             dialogInfo.m_icons[iconIndex].m_spriteWidth + 2,
@@ -5245,12 +5245,12 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
         long textHeight = g_mediumFont->m_fs.m_height;
         long textX = (dialogInfo.m_width - textWidth) / 2;
         long textY = dialogInfo.m_icons[0].m_textY - textHeight;
-        textWidget* special = new textWidget(
+        TextWidget* special = new TextWidget(
             textX, textY, textWidth, textHeight,
             g_generalText->getText(GENERAL_TEXT_LEVEL_UP_OR),
             DATA_COMPGEN(0x0065f2ec, normalDialogMediumFont,
                          "medfont.fnt"),
-            font::PRIMARY, -1, font::CENTER_JUSTIFIED, 0, 8);
+            Font::PRIMARY, -1, Font::CENTER_JUSTIFIED, 0, 8);
         if (!special) {
             memError();
         }
@@ -5260,10 +5260,10 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
     for (int widgetIndex = 0; widgetIndex < widgets.size(); ++widgetIndex)
         g_normalDialogWindow->addWidget(widgets[widgetIndex], -1);
 
-    mouseManager::EPointerSet oldSet = g_mouseManager->getSet();
+    MouseManager::PointerSet oldSet = g_mouseManager->getSet();
     int oldFrame = g_mouseManager->getFrame();
     g_mouseManager->showPointer(1);
-    g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+    g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
 
     videoPause();
     if (g_unnamed691209)
@@ -5292,19 +5292,19 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
 }
 
 VA(0x004f7620, 0x66)  // dc 0xe1b94
-static int waitHandler(message& msg)
+static int waitHandler(Message& msg)
 {
     g_unnamed699254 = 1;
     pollSound();
     if (msg.m_id == MESSAGE_WIDGET
-            && msg.m_codeX == widget::WIDGET_DESELECT
+            && msg.m_codeX == Widget::WIDGET_DESELECT
             && msg.m_codeY >= 0x7800
             && msg.m_codeY <= DIALOG_RETURN_OK) {
         g_unnamed699254 = 0;
         g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = Widget::WIDGET_END_DIALOG;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -5319,7 +5319,7 @@ static int waitHandler(message& msg)
 // by-value argument is built.
 VA(0x004f7690, 0x312)  // anchor-global + dc parameter list, dc 0xe6cf0
 void extendedDialog(const char* text,
-                     std::vector<type_dialog_resource>& resources,
+                     std::vector<DialogResource>& resources,
                      long x, long y, long timeout)
 {
     unsigned int shown = 0;
@@ -5329,7 +5329,7 @@ void extendedDialog(const char* text,
         if (count > 8)
             count = 8;
 
-        TNormalDialogInfo dialogInfo;
+        NormalDialogInfo dialogInfo;
         dialogInfo.m_dialogText = text;
         dialogInfo.m_x = x;
         dialogInfo.m_y = y;
@@ -5343,7 +5343,7 @@ void extendedDialog(const char* text,
 
         int icon;
         for (icon = 0; icon < count; ++icon) {
-            dialogInfo.m_icons[icon].set(static_cast<EGameResource>(resources[shown].m_resource) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resources[shown].m_qualifier);
+            dialogInfo.m_icons[icon].set(static_cast<GameResource>(resources[shown].m_resource) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resources[shown].m_qualifier);
             ++shown;
         }
         for (; icon < 8; ++icon)

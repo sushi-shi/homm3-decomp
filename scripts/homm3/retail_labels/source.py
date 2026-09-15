@@ -690,7 +690,8 @@ def rva_of(addr_text: str, where: str) -> int:
 
 
 def scan_file(path, functions: set[int],
-              problems: list[str] | None = None) -> list[dict]:
+              problems: list[str] | None = None,
+              type_lineage: dict[str, str] | None = None) -> list[dict]:
     """All annotation rows of one src file, in scan (TEXT) order. Names
     are the RAW pre-join spellings; `channel` is the pre-join
     provenance.
@@ -852,6 +853,9 @@ def scan_file(path, functions: set[int],
                 if stop:
                     break
             declaration = " ".join(declaration_lines)
+            if type_lineage:
+                from homm3.match.source_ownership import recovered_type_spelling
+                declaration = recovered_type_spelling(declaration, type_lineage)
             signature = _vector_helper_signature(declaration, source=True)
             if signature is not None:
                 rows[-1]["vector_helper_signature"] = signature
@@ -2685,11 +2689,12 @@ def src_files() -> list:
 
 
 def _extract_one(path, functions: set, ir_names: dict | None,
-                 problems: list[str], banked_inlines: dict | None = None) -> list[dict]:
+                 problems: list[str], banked_inlines: dict | None = None,
+                 type_lineage: dict[str, str] | None = None) -> list[dict]:
     """One unit's rows, IR-bound where clang reached the TU and lexically
     joined for the rest."""
     unit = path.stem
-    rows = scan_file(path, functions, problems)
+    rows = scan_file(path, functions, problems, type_lineage)
     taken = set()
     if ir_names is not None:
         taken = ir_bind(unit, rows, ir_names, problems, banked_inlines)
@@ -2764,8 +2769,9 @@ def run(only_units: list[str] | None = None,
 
     no_ir = []
     rows_by_unit = {}
-    from homm3.match.source_ownership import collect
+    from homm3.match.source_ownership import collect, read_type_lineage
     definitions, errors, _reached = collect()
+    type_lineage = read_type_lineage(common.HOMM3_DIR)
     problems.extend(f'{error} (FATAL)' for error in errors)
     from homm3.match.status import load_baseline
     banked = {(unit, row.rva) for (unit, _name), row in load_baseline().items()
@@ -2776,7 +2782,7 @@ def run(only_units: list[str] | None = None,
         ir_names = ast_names(path, definitions, ir_names, problems)
         rows_by_unit[path.stem] = _extract_one(
             path, functions, ir_names, problems,
-            banked_inline_names(path, definitions, banked))
+            banked_inline_names(path, definitions, banked), type_lineage)
     headers.project(header_paths, functions,
                     {p.stem: names for p, names in zip(todo, ir_maps)},
                     rows_by_unit, problems)

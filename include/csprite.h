@@ -8,15 +8,16 @@
 #include "resource.h"
 #include "palette.h"
 
-class palette;
-class paletteHiColor;
-class TPalette24;
+class Palette;
+class PaletteHiColor;
+class Palette24;
 
 // Creature sprite sequence ids (DC CodeView enum creature_seqid,
 // NH3API creatures.hpp identical): only the transition pair
 // iconWidget's idle machine dispatches on is listed - grow the roster
 // as consumers prove values.
-enum creature_seqid {
+// Before normalization (type): creature_seqid.
+enum CreatureSeqid {
     cs_walk = 0,
     cs_fidget = 1,
     cs_wait = 2,
@@ -55,7 +56,7 @@ enum creature_seqid {
 // dropped SpecialCacheFlag/Sp_loaded and hoisted s ahead of p).
 // Retail vtable 0x63d6b0: slot 0 = scalar deleting dtor (0x47b8f0),
 // slot 1 = Dispose (0x55d1a0), slot 2 = resource size (0x47bd50).
-class CSprite : public resource {
+class CSprite : public Resource {
 public:
     CSprite(const char* name, int sprtype, int w, int h);
     virtual ~CSprite();  // slot 0
@@ -73,10 +74,10 @@ private:
     CSequence** m_s;
 
 public:
-    TPalette16* m_p;
+    Palette16* m_p;
     // DC CodeView type 0x17d1 is TPalette24*. Retail ResetPalette confirms
     // it by passing p24+0x1c (the resource head) to the raw palette ctor.
-    TPalette24* m_p24;
+    Palette24* m_p24;
 
 private:
     int m_numSequences;
@@ -160,18 +161,18 @@ public:
     void setPalette(const unsigned short* pal);
     // Complete expands this wrapper in ResetPalette.
     // E:\gamedcs\CSprite.h:259, dc 0x744e4
-    void setPalette(TPalette16& pal)
+    void setPalette(Palette16& pal)
     {
         if (m_p)
             delete m_p;
-        m_p = new TPalette16(&pal);
+        m_p = new Palette16(&pal);
     }
     void resetPalette();
     unsigned short* getPalette();
     void colorCycle(int begin, int end, int step);
     static int getNumSeqs(int type);
     // Original GetPalette24, CSprite.h:284, dc 0x57dbc.
-    TPalette24& getPalette24() { return *m_p24; }
+    Palette24& getPalette24() { return *m_p24; }
     // Header inline, DC CSprite.h:293 (dc 0x1f1dc, emitted into
     // advmgr.obj there). Byte-proven by iconwdgt's frame walkers: each
     // USE re-expands the guard (the else arm constant-folds to a

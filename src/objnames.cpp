@@ -23,14 +23,14 @@
 // (*)[16]` pointer at 0x660428 that every reader goes through holds
 // exactly this address.
 DATA(0x00691698)
-TAdvObjectTraits g_adventureObjectTraitRows[ADVENTURE_OBJECT_TRAIT_COUNT];
+AdvObjectTraits g_adventureObjectTraitRows[ADVENTURE_OBJECT_TRAIT_COUNT];
 
 // The five .rdata override tables the loader replays over the zeroed
 // rows, in the order it walks them. Each is a list of adventure-object
 // ids; only the first carries a second column, the objnames.txt row that
 // id reads its name from.
 DATA(0x0063a6e4)
-static const TAdvObjectNameRow g_adventureObjectNameRows[] = {
+static const AdvObjectNameRow g_adventureObjectNameRows[] = {
     {165, 114}, {166, 115}, {167, 116}, {168, 117}, {169, 118}, {170,
     119}, {171, 120}, {172, 121}, {173, 122}, {174, 123}, {175, 124},
     {176, 125}, {177, 126}, {178, 127}, {179, 128}, {180, 129}, {181,
@@ -92,7 +92,7 @@ void initializeAdventureObjectNames()
     static std::auto_ptr<char> nameBuffer;
 
     int i;
-    TAdvObjectTraits* row = g_adventureObjectTraitRows;
+    AdvObjectTraits* row = g_adventureObjectTraitRows;
     for (i = 0; i < ADVENTURE_OBJECT_TRAIT_COUNT; ++i, ++row) {
         row->m_trait1 = 0;
         row->m_trait2 = 0;
@@ -125,11 +125,11 @@ void initializeAdventureObjectNames()
         g_adventureObjectTraitRows[g_adventureObjectTrait1Ids[i]].m_trait1 = 1;
     }
 
-    TTextResource* names = ResourceManager::getText(
+    TextResource* names = ResourceManager::getText(
         DATA_COMPGEN(0x006604b4, objectNamesFileName, "objnames.txt"));
-    TResourcePtr<TTextResource> guard(names);
+    ResourcePtr<TextResource> guard(names);
     if (names == 0)
-        throw TRuntimeError();
+        throw RuntimeError();
 
     unsigned int total = 0;
     unsigned int line;
@@ -138,7 +138,7 @@ void initializeAdventureObjectNames()
 
     nameBuffer = std::auto_ptr<char>(new char[total]);
     if (nameBuffer.get() == 0)
-        throw TAllocationFailure();
+        throw AllocationFailure();
 
     char* next = nameBuffer.get();
     for (line = 0; line < ADVENTURE_OBJECT_TRAIT_COUNT; ++line) {

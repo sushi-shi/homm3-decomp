@@ -96,7 +96,7 @@
 #include <io.h>
 #include <sys/stat.h>
 
-type_point aiAttemptPuzzleGuess(long player);
+MapPoint aiAttemptPuzzleGuess(long player);
 
 // Retail/HD evidence names the hourglass animation phase; NextPlayer is its
 // game.obj writer. The second dword is the byte-proven autosave preference
@@ -111,14 +111,14 @@ DATA(0x00698770) int g_unnamed698770;
 // do not own them. The per-TU /MT profile supplies the external _Lockit
 // calls used by the native tree scopes (0x60b598/0x60b634).
 
-unsigned char saveObjectVector(TAbstractFile* outfile, std::vector<generator>& srcVector);
-unsigned char saveObjectVector(TAbstractFile* outfile,
-                                 std::vector<type_creature_bank>* srcVector);
+unsigned char saveObjectVector(AbstractFile* outfile, std::vector<Generator>& srcVector);
+unsigned char saveObjectVector(AbstractFile* outfile,
+                                 std::vector<CreatureBank>* srcVector);
 // The Load mirror of save_object_vector (retail 0x4d2870), reached only
 // by game::Load's tail. Same /Gr shape: file in ecx, vector in edx.
-unsigned char loadObjectVector(TAbstractFile* infile, std::vector<generator>& destVector);
-unsigned char loadObjectVector(TAbstractFile* infile,
-                                 std::vector<type_creature_bank>* destVector);
+unsigned char loadObjectVector(AbstractFile* infile, std::vector<Generator>& destVector);
+unsigned char loadObjectVector(AbstractFile* infile,
+                                 std::vector<CreatureBank>* destVector);
 
 const int g_savedCreatureNone = 0xff;
 const int g_savedMapCoordinateNone = 0xff;
@@ -222,7 +222,7 @@ DATA(0x00696d9c) extern const char* g_cannedRumours[256];
 // randtvrn.txt itself, kept alive because the table above points into it.
 // InitializeRandomTavernText is its only writer and nothing else in the
 // image reads the slot.
-DATA(0x00697294) extern TTextResource* g_randomTavernText;
+DATA(0x00697294) extern TextResource* g_randomTavernText;
 
 const int g_allRandomArtifactClasses = 0x1e;
 const int g_campaignArmyOverrideHero = 45;
@@ -371,7 +371,7 @@ void HeroExtra::heroExtraFn004B8450(int heroId)
     m_owner = -1;
     m_id = heroId;
     m_objRef = 0;
-    m_location = type_point(-1, -1, -1);
+    m_location = MapPoint(-1, -1, -1);
     m_patrolRadius = -1;
     m_hasCustomName = 0;
     m_customExperience = 0;
@@ -388,7 +388,7 @@ void HeroExtra::heroExtraFn004B8450(int heroId)
 }
 
 VA(0x004b8550, 0x48)  // dc 0xa2da0
-generator::generator()
+Generator::Generator()
     : m_genClass(-1), m_genType(-1)
 {
     m_playerOwner = -1;
@@ -403,7 +403,7 @@ generator::generator()
 }
 
 VA(0x004b85a0, 0x13B)  // dc 0xa2e48
-unsigned char generator::load(TAbstractFile* infile)
+unsigned char Generator::load(AbstractFile* infile)
 {
     if (infile->read(&m_playerOwner, sizeof(m_playerOwner)) !=
         sizeof(m_playerOwner))
@@ -418,7 +418,7 @@ unsigned char generator::load(TAbstractFile* infile)
         infile->read(&loaded, 1);
         int creature = loaded & 0xff;
         {
-            m_type[slot] = TCreatureType(creature);
+            m_type[slot] = CreatureType(creature);
         }
         if (creature == g_savedCreatureNone)
             m_type[slot] = CREATURE_NONE;
@@ -441,7 +441,7 @@ unsigned char generator::load(TAbstractFile* infile)
 }
 
 VA(0x004b86e0, 0xB1)  // dc 0xa2fdc
-unsigned char generator::save(TAbstractFile* outfile)
+unsigned char Generator::save(AbstractFile* outfile)
 {
     outfile->write(&m_playerOwner, sizeof(m_playerOwner));
     outfile->write(&m_genClass, sizeof(m_genClass));
@@ -476,12 +476,12 @@ unsigned char generator::save(TAbstractFile* outfile)
 // differing, so the call stays a call - and stays pinned, because our
 // CL inlines a 67-byte callee here that retail does not.
 DC_ONLY(0xa30c4, 0xB2)
-inline void generator::removeBonus()
+inline void Generator::removeBonus()
 {
     if (m_playerOwner < 0)
         return;
 
-    playerData* player = &g_game->m_players[m_playerOwner];
+    PlayerData* player = &g_game->m_players[m_playerOwner];
 #pragma inline_depth(0)
     int townType = g_game->getAlignment(m_type[0]);
 #pragma inline_depth()
@@ -489,19 +489,19 @@ inline void generator::removeBonus()
         return;
 
     for (int index = 0; index < player->m_numTowns; index++) {
-        town* currentTown = g_game->getTown(player->m_townIds[index]);
+        Town* currentTown = g_game->getTown(player->m_townIds[index]);
         if (currentTown->m_type == townType)
             currentTown->changeGeneratorBonus(m_type[0], -1);
     }
 }
 
 VA(0x004b87a0, 0xB8)  // dc 0xa3178
-void generator::updateBonus()
+void Generator::updateBonus()
 {
     if (m_playerOwner < 0)
         return;
 
-    playerData& player = g_game->m_players[m_playerOwner];
+    PlayerData& player = g_game->m_players[m_playerOwner];
     int creature = m_type[0];
     if (!g_game->m_f1f698 &&
         isBaseElemental(creature))
@@ -512,7 +512,7 @@ void generator::updateBonus()
         return;
 
     for (int index = 0; index < player.m_numTowns; index++) {
-        town* currentTown = g_game->getTown(player.m_townIds[index]);
+        Town* currentTown = g_game->getTown(player.m_townIds[index]);
         if (currentTown->m_type == townType)
             currentTown->changeGeneratorBonus(m_type[0], 1);
     }
@@ -520,20 +520,20 @@ void generator::updateBonus()
 
 // E:\gamedcs\game.cpp:557
 DC_ONLY(0xa3250, 0x38)
-inline void generator::setOwner(long owner)
+inline void Generator::setOwner(long owner)
 {
     if (owner == m_playerOwner)
         return;
 
     if (m_playerOwner >= 0) {
-        playerData* player = &g_game->m_players[m_playerOwner];
+        PlayerData* player = &g_game->m_players[m_playerOwner];
         int creature = m_type[0];
         if (g_game->m_f1f698 ||
             !isBaseElemental(creature)) {
             int townType = g_creatureTypeTraits[creature].m_townType;
             if (townType != -1) {
                 for (int index = 0; index < player->m_numTowns; index++) {
-                    town* currentTown =
+                    Town* currentTown =
                         g_game->getTown(player->m_townIds[index]);
                     if (currentTown->m_type == townType)
                         currentTown->changeGeneratorBonus(m_type[0], -1);
@@ -547,7 +547,7 @@ inline void generator::setOwner(long owner)
 }
 
 VA(0x004b8860, 0x1F7)  // dc 0xa3288
-void generator::initialize(long newOwner)
+void Generator::initialize(long newOwner)
 {
     for (int slot = 0; slot < 4; slot++) {
         m_type[slot] = CREATURE_NONE;
@@ -555,7 +555,7 @@ void generator::initialize(long newOwner)
     }
     m_guards.initialize();
 
-    TCreatureType* types;
+    CreatureType* types;
     int typeCount;
     if (m_genClass == CREATURE_GENERATOR_1) {
         int generatorType = m_genType;
@@ -581,14 +581,14 @@ void generator::initialize(long newOwner)
         return;
 
     if (m_playerOwner >= 0) {
-        playerData* player = &g_game->m_players[m_playerOwner];
+        PlayerData* player = &g_game->m_players[m_playerOwner];
         int creature = m_type[0];
         if (g_game->m_f1f698 ||
             !isBaseElemental(creature)) {
             int townType = g_creatureTypeTraits[creature].m_townType;
             if (townType != -1) {
                 for (int index = 0; index < player->m_numTowns; index++) {
-                    town* currentTown =
+                    Town* currentTown =
                         g_game->getTown(player->m_townIds[index]);
                     if (currentTown->m_type == townType)
                         currentTown->changeGeneratorBonus(m_type[0], -1);
@@ -599,14 +599,14 @@ void generator::initialize(long newOwner)
 
     m_playerOwner = newOwner;
     if (m_playerOwner >= 0) {
-        playerData* player = &g_game->m_players[m_playerOwner];
+        PlayerData* player = &g_game->m_players[m_playerOwner];
         int creature = m_type[0];
         if (g_game->m_f1f698 ||
             !isBaseElemental(creature)) {
             int townType = g_creatureTypeTraits[creature].m_townType;
             if (townType != -1) {
                 for (int index = 0; index < player->m_numTowns; index++) {
-                    town* currentTown =
+                    Town* currentTown =
                         g_game->getTown(player->m_townIds[index]);
                     if (currentTown->m_type == townType)
                         currentTown->changeGeneratorBonus(m_type[0], 1);
@@ -617,7 +617,7 @@ void generator::initialize(long newOwner)
 }
 
 VA(0x004b8a60, 0x88)  // dc 0xa3320
-void generator::grow(int unusedArg)
+void Generator::grow(int unusedArg)
 {
     m_guards.initialize();
     for (long i = 0; i < 4; i++) {
@@ -630,7 +630,7 @@ void generator::grow(int unusedArg)
 }
 
 // DC game.cpp:627 fixes the resource parameter as EGameResource.
-static long getDayBonus(EGameResource resource, long weekBonus, long day)
+static long getDayBonus(GameResource resource, long weekBonus, long day)
 {
     long result = weekBonus / 7;
     long remainder = weekBonus % 7;
@@ -641,11 +641,11 @@ static long getDayBonus(EGameResource resource, long weekBonus, long day)
 
 // E:\gamedcs\game.cpp:643
 VA(0x004b8af0, 0x573)  // mine/town/player production consumers, dc 0xa3474
-void game::calculateProduction()
+void Game::calculateProduction()
 {
     long playerId;
     long i;
-    EGameResource resource;
+    GameResource resource;
     // DC calculate_production keeps its EGameResource induction variable.
     // Widen the ordinal locally without adding a conversion call boundary.
     double playerHandicap;
@@ -660,7 +660,7 @@ void game::calculateProduction()
 
     long mineId;
     for (mineId = 0; mineId < m_mines.size(); ++mineId) {
-        mine& currentMine = m_mines[mineId];
+        Mine& currentMine = m_mines[mineId];
         if (currentMine.m_playerOwner >= 0 && currentMine.m_type < GOLD) {
             m_players[currentMine.m_playerOwner]
                 .m_ai.m_turnProductionResource[currentMine.m_type] +=
@@ -676,11 +676,11 @@ void game::calculateProduction()
     memset(crystalDragonIncome, 0, sizeof(crystalDragonIncome));
     long townId;
     for (townId = 0; townId < m_towns.size(); ++townId) {
-        town& currentTown = m_towns[townId];
+        Town& currentTown = m_towns[townId];
         if (currentTown.m_owner < 0)
             continue;
 
-        playerData& currentPlayer = m_players[currentTown.m_owner];
+        PlayerData& currentPlayer = m_players[currentTown.m_owner];
         long* production = currentPlayer.m_ai.m_turnProductionResource;
         if (currentTown.hasBuilding(MARKETPLACE_SILO_ID, 0)) {
             int* siloIncome = currentTown.getSiloIncome();
@@ -694,8 +694,8 @@ void game::calculateProduction()
         {
             int storage;
             storage = g_productionCreatureCrystalDragon;
-            if (static_cast<const town&>(currentTown).getArmy()
-                    .getCreatureTotal(TCreatureType(storage)) > 0)
+            if (static_cast<const Town&>(currentTown).getArmy()
+                    .getCreatureTotal(CreatureType(storage)) > 0)
                 crystalDragonIncome[currentTown.m_owner] = 1;
         }
 
@@ -711,7 +711,7 @@ void game::calculateProduction()
     for (playerId = 0; playerId < 8; ++playerId) {
         if (m_playerDisabled[playerId])
             continue;
-        playerData& currentPlayer = m_players[playerId];
+        PlayerData& currentPlayer = m_players[playerId];
         long (&production)[NUM_RESOURCES] = currentPlayer.m_ai.m_turnProductionResource;
         int cornucopias = currentPlayer.numOfGivenArtifact(
             g_productionArtifactCornucopia) * 5;
@@ -731,13 +731,13 @@ void game::calculateProduction()
     }
 
     for (i = 0; i < HERO_COUNT; ++i) {
-        const hero& currHero = m_heroes[i];
+        const Hero& currHero = m_heroes[i];
         if (currHero.m_owner == -1)
             continue;
         {
             int storage;
             storage = g_productionCreatureCrystalDragon;
-            if (currHero.m_army.getCreatureTotal(TCreatureType(storage)) > 0)
+            if (currHero.m_army.getCreatureTotal(CreatureType(storage)) > 0)
                 crystalDragonIncome[currHero.m_owner] = 1;
         }
         long (&production)[NUM_RESOURCES] =
@@ -758,14 +758,14 @@ void game::calculateProduction()
         for (playerId = 0; playerId < 8; ++playerId) {
             if (isHuman(playerId) || m_playerDisabled[playerId])
                 continue;
-            playerData& currentPlayer = m_players[playerId];
+            PlayerData& currentPlayer = m_players[playerId];
             long (&production)[NUM_RESOURCES] = currentPlayer.m_ai.m_turnProductionResource;
             production[WOOD] += getDayBonus(
                 WOOD, production[WOOD] * 7 / 4, m_day);
             production[ORE] += getDayBonus(
                 ORE, production[ORE] * 7 / 4, m_day);
             for (resource = WOOD; resource < GOLD;
-                 resource = EGameResource(resource + 1)) {
+                 resource = GameResource(resource + 1)) {
                 long weeklyBonus = (m_setup.m_difficulty - 2) * production[resource];
                 production[resource] += getDayBonus(
                     resource, weeklyBonus, m_day);
@@ -776,17 +776,17 @@ void game::calculateProduction()
     for (playerId = 0; playerId < 8; ++playerId) {
         if (!m_setup.m_handicap[playerId] || m_playerDisabled[playerId])
             continue;
-        playerData& currentPlayer = m_players[playerId];
+        PlayerData& currentPlayer = m_players[playerId];
         playerHandicap = g_productionHandicap[m_setup.m_handicap[playerId]];
         long (&production)[NUM_RESOURCES] = currentPlayer.m_ai.m_turnProductionResource;
         for (resource = WOOD; resource < GOLD;
-                 resource = EGameResource(resource + 1))
+                 resource = GameResource(resource + 1))
             production[resource] -= production[resource] * playerHandicap;
     }
 }
 
 VA(0x004b9070, 0x1B3)  // dc 0xa3c68
-int game::loadSignPool(TAbstractFile* infile)
+int Game::loadSignPool(AbstractFile* infile)
 {
     signed char count;
     if (infile->read(&count, sizeof(count)) < sizeof(count))
@@ -805,7 +805,7 @@ int game::loadSignPool(TAbstractFile* infile)
 }
 
 VA(0x004b9270, 0xCF)  // dc 0xa3d50
-int game::saveSignPool(TAbstractFile* outfile)
+int Game::saveSignPool(AbstractFile* outfile)
 {
     unsigned char count = static_cast<unsigned char>(m_signs.size());
     if (outfile->write(&count, sizeof(count)) < sizeof(count))
@@ -823,7 +823,7 @@ int game::saveSignPool(TAbstractFile* outfile)
 }
 
 VA(0x004b9340, 0x240)  // anchor-global (ClaimMine vector) + read-slot, dc 0xa3e5c
-int game::loadMinePool(TAbstractFile* infile, int saveVersion)
+int Game::loadMinePool(AbstractFile* infile, int saveVersion)
 {
     int count;
     int x;
@@ -849,9 +849,9 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
         if (saveVersion >= 25) {
             m_mines[x].m_guards.load(infile);
         } else {
-            armyGroup* guards = &m_mines[x].m_guards;
+            ArmyGroup* guards = &m_mines[x].m_guards;
             guards->initialize();
-            legacyMineGuard legacy;
+            LegacyMineGuard legacy;
             infile->read(&legacy.m_type, sizeof(legacy.m_type));
             infile->read(&legacy.m_amount, sizeof(legacy.m_amount));
             int typeValue = legacy.m_type;
@@ -874,7 +874,7 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
 }
 
 VA(0x004b9580, 0x165)  // dc 0xa410c
-int game::saveMinePool(TAbstractFile* outfile)
+int Game::saveMinePool(AbstractFile* outfile)
 {
     unsigned char count = static_cast<unsigned char>(m_mines.size());
     if (outfile->write(&count, sizeof(count)) < sizeof(count))
@@ -907,7 +907,7 @@ int game::saveMinePool(TAbstractFile* outfile)
 }
 
 VA(0x004b96f0, 0x1CB)  // dc 0xa438c
-int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
+int Game::loadGarrisonPool(AbstractFile* infile, int saveVersion)
 {
     int count;
     if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
@@ -944,7 +944,7 @@ int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
 }
 
 VA(0x004b98c0, 0x139)  // dc 0xa4548
-int game::saveGarrisonPool(TAbstractFile* outfile)
+int Game::saveGarrisonPool(AbstractFile* outfile)
 {
     unsigned char count = static_cast<unsigned char>(m_garrisons.size());
     if (outfile->write(&count, sizeof(count)) < sizeof(count))
@@ -974,7 +974,7 @@ int game::saveGarrisonPool(TAbstractFile* outfile)
 }
 
 VA(0x004b9a00, 0x239)  // dc 0xa46e8
-int game::loadBoatPool(TAbstractFile* infile)
+int Game::loadBoatPool(AbstractFile* infile)
 {
     unsigned short ushortBuffer;
     int count;
@@ -1027,7 +1027,7 @@ int game::loadBoatPool(TAbstractFile* infile)
 }
 
 VA(0x004b9c40, 0x1AD)  // dc 0xa4980
-int game::saveBoatPool(TAbstractFile* outfile)
+int Game::saveBoatPool(AbstractFile* outfile)
 {
     unsigned short ushortBuffer;
     int count;
@@ -1082,7 +1082,7 @@ int game::saveBoatPool(TAbstractFile* outfile)
 // two reads through TAbstractFile instead of Dreamcast's gzread handle.
 // Original locals: count, char_buffer.
 DC_ONLY(0xa4c08, 0x5E)
-int game::loadObeliskPool(TAbstractFile* infile)
+int Game::loadObeliskPool(AbstractFile* infile)
 {
     char charBuffer;
     int count = infile->read(&charBuffer, sizeof(charBuffer));
@@ -1099,7 +1099,7 @@ int game::loadObeliskPool(TAbstractFile* infile)
 // The ordinary writer mirrors the reader; retail expands it in game::save.
 // Original locals: count, char_buffer.
 DC_ONLY(0xa4c68, 0x5E)
-int game::saveObeliskPool(TAbstractFile* outfile)
+int Game::saveObeliskPool(AbstractFile* outfile)
 {
     char charBuffer = m_numObelisks;
     int count = outfile->write(&charBuffer, sizeof(charBuffer));
@@ -1112,12 +1112,12 @@ int game::saveObeliskPool(TAbstractFile* outfile)
 }
 
 VA(0x004b9df0, 0x2D)  // dc 0xa4cc8
-playerData::playerData()
+PlayerData::PlayerData()
 {
 }
 
 VA(0x004b9e20, 0x115)  // dc 0xa4d58
-void playerData::init()
+void PlayerData::init()
 {
     m_numHeroes = 0;
     m_currHeroId = -1;
@@ -1155,7 +1155,7 @@ void playerData::init()
 }
 
 VA(0x004b9f40, 0x71)  // dc 0xa4e80
-bool playerData::hasCapitol()
+bool PlayerData::hasCapitol()
 {
     int i = 0;
     int towns = m_numTowns;
@@ -1170,10 +1170,10 @@ bool playerData::hasCapitol()
 }
 
 VA(0x004b9fc0, 0x167)  // dc 0xa4ee8
-unsigned char playerData::addGarrisonHero(town* ourTown)
+unsigned char PlayerData::addGarrisonHero(Town* ourTown)
 {
     int i;
-    hero* ourHero;
+    Hero* ourHero;
     int found;
 
     if (ourTown->m_visitingHeroId < 0)
@@ -1182,8 +1182,8 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
         return 0;
 
     ourHero = g_game->getHero(ourTown->m_visitingHeroId);
-    if (!ourHero->m_army.merge(const_cast<armyGroup*>(
-            &static_cast<const town*>(ourTown)->getArmy())))
+    if (!ourHero->m_army.merge(const_cast<ArmyGroup*>(
+            &static_cast<const Town*>(ourTown)->getArmy())))
         return 0;
 
     g_game->recordHideHero(ourHero, ourHero->m_owner, 0);
@@ -1215,7 +1215,7 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
 }
 
 VA(0x004ba130, 0x34)  // dc 0xa5108
-void playerData::assignNetInfo(CNetPlayerInfo* netPlayerInfo)
+void PlayerData::assignNetInfo(CNetPlayerInfo* netPlayerInfo)
 {
     strncpy(m_name, netPlayerInfo->m_name, 20);
     m_dpid = netPlayerInfo->m_dpid;
@@ -1226,14 +1226,14 @@ void playerData::assignNetInfo(CNetPlayerInfo* netPlayerInfo)
 
 // E:\gamedcs\game.cpp:1383
 DC_ONLY(0xa50ac, 0x5C)
-void playerData::SetName(char* cNewName)
+void PlayerData::SetName(char* cNewName)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:1395
 DC_ONLY(0xa5138, 0x2E)
-void playerData::GetNetInfo(CNetPlayerInfo* pNetPlayerInfo)
+void PlayerData::GetNetInfo(CNetPlayerInfo* pNetPlayerInfo)
 {
     // @stub
 }
@@ -1241,7 +1241,7 @@ void playerData::GetNetInfo(CNetPlayerInfo* pNetPlayerInfo)
 #endif  // @carcass
 
 VA(0x004ba170, 0x4E)  // dc 0xa5168
-void playerData::clearNetInfo()
+void PlayerData::clearNetInfo()
 {
     strcpy(m_name, g_generalText->getText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
     m_dpid = 0;
@@ -1250,7 +1250,7 @@ void playerData::clearNetInfo()
 }
 
 VA(0x004ba1c0, 0x50)
-int __fastcall readHeroId(TAbstractFile* infile, int mapVersion)
+int __fastcall readHeroId(AbstractFile* infile, int mapVersion)
 {
     unsigned long value;
     infile->read(&value, sizeof(unsigned char));
@@ -1267,7 +1267,7 @@ int __fastcall readHeroId(TAbstractFile* infile, int mapVersion)
 }
 
 VA(0x004ba210, 0x50)
-int __fastcall loadHeroId(TAbstractFile* infile, int saveVersion)
+int __fastcall loadHeroId(AbstractFile* infile, int saveVersion)
 {
     unsigned long value;
     infile->read(&value, sizeof(unsigned char));
@@ -1284,7 +1284,7 @@ int __fastcall loadHeroId(TAbstractFile* infile, int saveVersion)
 }
 
 VA(0x004ba260, 0x401)  // dc 0xa51b0
-int playerData::load(TAbstractFile* infile, int saveVersion)
+int PlayerData::load(AbstractFile* infile, int saveVersion)
 {
     char value;
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -1379,7 +1379,7 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 // where load loops over it, and the trailing combination-artifact word
 // is unconditional.
 VA(0x004ba670, 0x36A)  // anchor-global, dc 0xa55a8
-int playerData::save(TAbstractFile* outfile)
+int PlayerData::save(AbstractFile* outfile)
 {
     unsigned long flags;
     int number;
@@ -1519,14 +1519,14 @@ int playerData::save(TAbstractFile* outfile)
 
 // E:\gamedcs\game.cpp:1668
 DC_ONLY(0xa5998, 0x54)
-int game::LoadPlayerData(void* infile)
+int Game::LoadPlayerData(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:1683
 DC_ONLY(0xa59ec, 0x54)
-int game::SavePlayerData(void* outfile)
+int Game::SavePlayerData(void* outfile)
 {
     // @stub
 }
@@ -1538,7 +1538,7 @@ int game::SavePlayerData(void* outfile)
 // version to town::load. DC returns the element error unchanged, while the
 // game::load caller maps any negative result to -1.
 DC_ONLY(0xa5a40, 0xB6)
-int game::loadTownPool(TAbstractFile* infile, int saveVersion)
+int Game::loadTownPool(AbstractFile* infile, int saveVersion)
 {
     unsigned char townCount;
     int count = infile->read(&townCount, sizeof(townCount));
@@ -1559,7 +1559,7 @@ int game::loadTownPool(TAbstractFile* infile, int saveVersion)
 // loop and element error return; ordinary inlining replaces the copied loop
 // and its pinned condition in game::save.
 DC_ONLY(0xa5af8, 0xA4)
-int game::saveTownPool(TAbstractFile* outfile)
+int Game::saveTownPool(AbstractFile* outfile)
 {
     unsigned char townCount = m_towns.size();
     int count = outfile->write(&townCount, sizeof(townCount));
@@ -1577,14 +1577,14 @@ int game::saveTownPool(TAbstractFile* outfile)
 
 // E:\gamedcs\game.cpp:1745
 DC_ONLY(0xa5b9c, 0x56)
-int game::SaveHeroPool(void* outfile)
+int Game::SaveHeroPool(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:1760
 DC_ONLY(0xa5bf4, 0x56)
-int game::LoadHeroPool(void* infile)
+int Game::LoadHeroPool(void* infile)
 {
     // @stub
 }
@@ -1592,7 +1592,7 @@ int game::LoadHeroPool(void* infile)
 #endif  // @carcass
 
 VA(0x004ba9e0, 0x2D)  // dc 0xa5c4c
-int playerData::findHero(int id) const
+int PlayerData::findHero(int id) const
 {
     if (id != -1) {
         for (int i = 0; i < m_numHeroes; i++) {
@@ -1604,7 +1604,7 @@ int playerData::findHero(int id) const
 }
 
 VA(0x004baa10, 0x2E)  // dc 0xa5c98
-int playerData::findTown(int id) const
+int PlayerData::findTown(int id) const
 {
     if (id != -1) {
         for (int i = 0; i < m_numTowns; i++) {
@@ -1616,17 +1616,17 @@ int playerData::findTown(int id) const
 }
 
 VA(0x004baa40, 0xFA)  // dc 0xa5d10
-int playerData::nextHero()
+int PlayerData::nextHero()
 {
     int cur = findHero(m_currHeroId);
 
     for (int i = cur + 1; i < m_numHeroes; i++) {
-        hero* h = g_game->getHero(m_heroes[i]);
+        Hero* h = g_game->getHero(m_heroes[i]);
         if (h->isMobile() && !h->m_isSleeping)
             return m_heroes[i];
     }
     for (int j = 0; j <= cur; j++) {
-        hero* h = g_game->getHero(m_heroes[j]);
+        Hero* h = g_game->getHero(m_heroes[j]);
         if (h->isMobile() && !h->m_isSleeping)
             return m_heroes[j];
     }
@@ -1634,7 +1634,7 @@ int playerData::nextHero()
 }
 
 VA(0x004bab40, 0x43)  // dc 0xa5e0c
-int playerData::nextTown()
+int PlayerData::nextTown()
 {
     if (m_numTowns > 0) {
         if (g_currentPlayer->m_currTownId == -1)
@@ -1648,7 +1648,7 @@ int playerData::nextTown()
 }
 
 VA(0x004bab90, 0x10)  // dc 0xa5eb0
-bool playerData::hasMobileHero()
+bool PlayerData::hasMobileHero()
 {
     return nextHero() != -1;
 }
@@ -1669,7 +1669,7 @@ int getNumObelisks(int whichPlayer)
 
 // E:\gamedcs\game.cpp:1873
 DC_ONLY(0xa5f30, 0xBE)
-int playerData::BuildingsOwned(int townType, int buildingId, int mageLevel)
+int PlayerData::BuildingsOwned(int townType, int buildingId, int mageLevel)
 {
     // @stub
 }
@@ -1677,24 +1677,24 @@ int playerData::BuildingsOwned(int townType, int buildingId, int mageLevel)
 #endif  // @carcass
 
 VA(0x004babd0, 0xDC)  // dc 0xa5ff0
-int playerData::numOfGivenArtifact(int whichArtifact) const
+int PlayerData::numOfGivenArtifact(int whichArtifact) const
 {
     int count = 0;
 
     for (int heroIndex = 0; heroIndex < m_numHeroes; heroIndex++) {
-        hero* currentHero = g_game->getHero(m_heroes[heroIndex]);
+        Hero* currentHero = g_game->getHero(m_heroes[heroIndex]);
         for (int slot = 0; slot < 19; slot++) {
-            if (currentHero->getArtifact(TArtifactSlot(slot)).m_artifactId == whichArtifact)
+            if (currentHero->getArtifact(ArtifactSlot(slot)).m_artifactId == whichArtifact)
                 count++;
         }
     }
 
     for (int townIndex = 0; townIndex < m_numTowns; townIndex++) {
-        town* currentTown = g_game->getTown(m_townIds[townIndex]);
+        Town* currentTown = g_game->getTown(m_townIds[townIndex]);
         if (currentTown->m_garrisonHeroId >= 0) {
-            hero* currentHero = g_game->getHero(currentTown->m_garrisonHeroId);
+            Hero* currentHero = g_game->getHero(currentTown->m_garrisonHeroId);
             for (int slot = 0; slot < 19; slot++) {
-                if (currentHero->getArtifact(TArtifactSlot(slot)).m_artifactId == whichArtifact)
+                if (currentHero->getArtifact(ArtifactSlot(slot)).m_artifactId == whichArtifact)
                     count++;
             }
         }
@@ -1704,18 +1704,18 @@ int playerData::numOfGivenArtifact(int whichArtifact) const
 }
 
 VA(0x004bacb0, 0xCA)  // hd-crossbuild + anchor-callee
-bool playerData::hasGivenArtifact(int artifact)
+bool PlayerData::hasGivenArtifact(int artifact)
 {
     for (int heroIndex = 0; heroIndex < m_numHeroes; heroIndex++) {
-        hero* currentHero = g_game->getHero(m_heroes[heroIndex]);
+        Hero* currentHero = g_game->getHero(m_heroes[heroIndex]);
         if (currentHero->isWieldingArtifact(artifact))
             return true;
     }
 
     for (int townIndex = 0; townIndex < m_numTowns; townIndex++) {
-        town* currentTown = g_game->getTown(m_townIds[townIndex]);
+        Town* currentTown = g_game->getTown(m_townIds[townIndex]);
         if (currentTown->m_garrisonHeroId >= 0) {
-            hero* currentHero = g_game->getHero(currentTown->m_garrisonHeroId);
+            Hero* currentHero = g_game->getHero(currentTown->m_garrisonHeroId);
             if (currentHero->isWieldingArtifact(artifact))
                 return true;
         }
@@ -1725,7 +1725,7 @@ bool playerData::hasGivenArtifact(int artifact)
 }
 
 VA(0x004bad80, 0x1A)  // dc 0xa6114
-bool playerData::isLocalHuman() const
+bool PlayerData::isLocalHuman() const
 {
     if (m_isHuman && m_isLocal)
         return true;
@@ -1733,17 +1733,17 @@ bool playerData::isLocalHuman() const
 }
 
 VA(0x004bada0, 0xC)  // dc 0xa6144
-bool playerData::isHuman() const
+bool PlayerData::isHuman() const
 {
     return m_isHuman ? true : false;
 }
 
 VA(0x004badb0, 0x9C)  // dc 0xa6180
-char* playerData::getName()
+char* PlayerData::getName()
 {
-    if ((!m_isHuman && _strcmpi(m_name, g_generalText->getText(
+    if ((!m_isHuman && strcmpi(m_name, g_generalText->getText(
             GENERAL_TEXT_DEFAULT_PLAYER_NAME)) == 0) ||
-        (m_isHuman && _strcmpi(m_name, DATA_COMPGEN(0x00677d30, defaultHumanName, "Player")) == 0)) {
+        (m_isHuman && strcmpi(m_name, DATA_COMPGEN(0x00677d30, defaultHumanName, "Player")) == 0)) {
         strcpy(m_name, g_playerColorNames[m_color]);
     }
     m_name[0] = toupper(m_name[0]);
@@ -1751,14 +1751,14 @@ char* playerData::getName()
 }
 
 VA(0x004bae50, 0x1B)  // dc 0xa6230
-void playerData::guessGrailLocation(long playerId)
+void PlayerData::guessGrailLocation(long playerId)
 {
-    type_point guess = aiAttemptPuzzleGuess(playerId);
+    MapPoint guess = aiAttemptPuzzleGuess(playerId);
     m_puzzleGuess = guess;
 }
 
 VA(0x004bae70, 0x55)  // dc 0xa6274
-int game::mineTypesOwned(int whichPlayer, int mineType)
+int Game::mineTypesOwned(int whichPlayer, int mineType)
 {
     int count = 0;
 
@@ -1807,7 +1807,7 @@ void computeUALoc(int whichPlayer)
 // explicit float casts and a named numerator all remain 98.9637%; a named
 // denominator gives 95.5130% (six states, four emitted objects).
 VA(0x004baf00, 0x25A)  // linkorder, dc 0xa6350
-int game::setupPuzzlePieces(int whichPlayer, int countOnly)
+int Game::setupPuzzlePieces(int whichPlayer, int countOnly)
 {
     long piece;
     float percentObelisksFound;
@@ -1863,13 +1863,13 @@ int game::setupPuzzlePieces(int whichPlayer, int countOnly)
 }
 
 VA(0x004bb160, 0x7)  // dc 0xa65c4
-NewfullMap* game::getWorldMapData()
+NewfullMap* Game::getWorldMapData()
 {
     return &m_worldMap;
 }
 
 VA(0x004bb170, 0xD6)  // dc 0xa65d4
-int game::getNewBoatId()
+int Game::getNewBoatId()
 {
     unsigned int i;
     for (i = 0; i < m_boats.size(); i++) {
@@ -1878,7 +1878,7 @@ int game::getNewBoatId()
     }
 
     if (m_boats.size() < 64) {
-        boat newBoat;
+        Boat newBoat;
         m_boats.push_back(newBoat);
         return m_boats.size() - 1;
     }
@@ -1886,15 +1886,15 @@ int game::getNewBoatId()
 }
 
 VA(0x004bb250, 0x1AA)  // dc 0xa6690
-int game::createBoat(int x, int y, int z, int owner, unsigned char isRemoteMove, signed char type)
+int Game::createBoat(int x, int y, int z, int owner, unsigned char isRemoteMove, signed char type)
 {
     int id = getNewBoatId();
     if (id == -1)
         return -1;
 
-    boat& thisBoat = m_boats[id];
+    Boat& thisBoat = m_boats[id];
     if (!isRemoteMove) {
-        type_point location(x, y, z);
+        MapPoint location(x, y, z);
         CMCBuildBoat change(location, g_netLocalGamePos);
         sendMapChange(&change);
         recordShowBoat(&thisBoat, location);
@@ -1919,14 +1919,14 @@ int game::createBoat(int x, int y, int z, int owner, unsigned char isRemoteMove,
 
 // E:\gamedcs\game.cpp:2158
 DC_ONLY(0xa67bc, 0x94)
-int game::Scan(signed char* whichList, int start, int length)
+int Game::Scan(signed char* whichList, int start, int length)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:2173
 DC_ONLY(0xa6850, 0x86)
-int game::RandomScan(signed char* whichList, int start, int length, signed char scanValue)
+int Game::RandomScan(signed char* whichList, int start, int length, signed char scanValue)
 {
     // @stub
 }
@@ -1934,11 +1934,11 @@ int game::RandomScan(signed char* whichList, int start, int length, signed char 
 #endif  // @carcass
 
 VA(0x004bb400, 0x1DC)  // dc 0xa68d8
-int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
+int Game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 {
     int heroArray[HERO_COUNT];
-    THeroClass heroClass1 = classKnight;
-    THeroClass heroClass2 = classCleric;
+    HeroClass heroClass1 = classKnight;
+    HeroClass heroClass2 = classCleric;
 
     switch (alignment) {
     case TOWN_CASTLE:
@@ -2004,9 +2004,9 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 
 // E:\gamedcs\game.cpp:2275
 VA(0x004bb5e0, 0x282)  // anchor-global, dc 0xa6cd4
-int game::getNewHeroId(int playerPos, THeroClass excluded,
+int Game::getNewHeroId(int playerPos, HeroClass excluded,
                        unsigned char preferAlignment,
-                       THeroClass preferredClass)
+                       HeroClass preferredClass)
 {
     int heroClass;
     long totalCount;
@@ -2110,7 +2110,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
 }
 
 VA(0x004bb870, 0x89)  // dc 0xa6fd4
-int game::getTownId(int x, int y, int z)
+int Game::getTownId(int x, int y, int z)
 {
     for (unsigned i = 0; i < m_towns.size(); i++) {
         if (m_towns[i].m_mapX == x && m_towns[i].m_mapY == y && m_towns[i].m_mapZ == z)
@@ -2123,14 +2123,14 @@ int game::getTownId(int x, int y, int z)
 
 // E:\gamedcs\game.cpp:2390
 DC_ONLY(0xa707c, 0x90)
-int game::GetHeroId(type_point hero_location)
+int Game::GetHeroId(MapPoint hero_location)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:2405
 DC_ONLY(0xa710c, 0xA6)
-int game::GetMineId(int x, int y, int z)
+int Game::GetMineId(int x, int y, int z)
 {
     // @stub
 }
@@ -2138,7 +2138,7 @@ int game::GetMineId(int x, int y, int z)
 #endif  // @carcass
 
 VA(0x004bb900, 0x87)  // dc 0xa71b4
-int game::getGeneratorId(int x, int y, int z)
+int Game::getGeneratorId(int x, int y, int z)
 {
     for (unsigned i = 0; i < m_generators.size(); i++) {
         if (m_generators[i].m_mapX == x && m_generators[i].m_mapY == y &&
@@ -2149,7 +2149,7 @@ int game::getGeneratorId(int x, int y, int z)
 }
 
 VA(0x004bb990, 0x1CF)
-int __fastcall game::loadString(TAbstractFile* infile, std::string& s)
+int __fastcall Game::loadString(AbstractFile* infile, std::string& s)
 {
     int count;
     short length;
@@ -2177,7 +2177,7 @@ int __fastcall game::loadString(TAbstractFile* infile, std::string& s)
 
 // E:\gamedcs\game.cpp:2433
 DC_ONLY(0xa7278, 0xA6)
-int game::GetGarrisonId(int x, int y, int z)
+int Game::GetGarrisonId(int x, int y, int z)
 {
     // @stub
 }
@@ -2206,7 +2206,7 @@ void GenerateStandardFileName(char* cLongName, char* cRetName)
 #endif  // @carcass
 
 VA(0x004bbb60, 0xBB)  // dc 0xa750c
-int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
+int __fastcall Game::saveString(AbstractFile* outfile, std::string& s)
 {
     HOMM3_RELEASE_VERIFY(outfile != 0);
     int count;
@@ -2230,7 +2230,7 @@ int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
 }
 
 VA(0x004bbc20, 0x21E)  // dc 0xa75d0
-int game::saveRumours(TAbstractFile* outfile)
+int Game::saveRumours(AbstractFile* outfile)
 {
     unsigned char boolBuffer;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
@@ -2247,7 +2247,7 @@ int game::saveRumours(TAbstractFile* outfile)
         < sizeof(rumourListSize))
         return -1;
 
-    for (TRumour* rit = m_rumours.begin(); rit != m_rumours.end(); ++rit) {
+    for (Rumour* rit = m_rumours.begin(); rit != m_rumours.end(); ++rit) {
         if (saveString(outfile, rit->m_text) < 0)
             return -1;
         boolBuffer = rit->m_unavailable;
@@ -2259,7 +2259,7 @@ int game::saveRumours(TAbstractFile* outfile)
 }
 
 VA(0x004bbe40, 0x294)  // dc 0xa77c8
-int game::loadRumours(TAbstractFile* infile)
+int Game::loadRumours(AbstractFile* infile)
 {
     unsigned char value;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
@@ -2276,7 +2276,7 @@ int game::loadRumours(TAbstractFile* infile)
         return -1;
 
     m_rumours.resize(count);
-    for (TRumour* it = m_rumours.begin(); it != m_rumours.end(); ++it) {
+    for (Rumour* it = m_rumours.begin(); it != m_rumours.end(); ++it) {
         if (loadString(infile, it->m_text) < 0)
             return -1;
         if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -2297,16 +2297,16 @@ int game::loadRumours(TAbstractFile* infile)
 // now retains std::copy in the earlier clear path (81.3920%, HIST 100%).
 // Keep the wrappers and diagnose that separate inliner decision.
 VA(0x004bcb30, 0x26C)  // sole caller game::Load, dc 0xa8144
-void game::setupShipyards()
+void Game::setupShipyards()
 {
-    hero* obscuringHero = 0;
-    boat* obscuringBoat = 0;
+    Hero* obscuringHero = 0;
+    Boat* obscuringBoat = 0;
     long i;
     for (i = 0; i < 8; ++i) {
         m_players[i].m_shipyards.clear();
     }
 
-    type_point location;
+    MapPoint location;
     for (location.m_z = 0;
          location.m_z < g_game->m_worldMap.getNumLevels();
          ++location.m_z) {
@@ -2328,9 +2328,9 @@ void game::setupShipyards()
                         static_cast<void*>(&mapCell->m_extraInfo));
                 if (mapCell->m_type == SHIPYARD && mapCell->m_isTrigger &&
                     shipyardInfo->m_owner >= 0) {
-                    std::vector<type_point>& shipyards =
+                    std::vector<MapPoint>& shipyards =
                         m_players[shipyardInfo->m_owner].m_shipyards;
-                    type_point* shipyardEnd = shipyards.end();
+                    MapPoint* shipyardEnd = shipyards.end();
 #pragma inline_depth(0)
                     shipyards.insert(shipyardEnd, 1, location);
 #pragma inline_depth()
@@ -2351,14 +2351,14 @@ void game::setupShipyards()
 
 // E:\gamedcs\game.cpp:2654.
 DC_ONLY(0xa795c, 0xC6)
-int game::saveBlackMarkets(TAbstractFile* outfile)
+int Game::saveBlackMarkets(AbstractFile* outfile)
 {
     char blackMarketListSize = m_blackMarkets.size();
     int count = outfile->write(&blackMarketListSize, sizeof(blackMarketListSize));
     if (count < sizeof(blackMarketListSize))
         return -1;
-    count = outfile->write(&m_blackMarkets[0], blackMarketListSize * sizeof(TBlackMarket));
-    if (count < blackMarketListSize * sizeof(TBlackMarket))
+    count = outfile->write(&m_blackMarkets[0], blackMarketListSize * sizeof(BlackMarket));
+    if (count < blackMarketListSize * sizeof(BlackMarket))
         return -1;
     return 0;
 }
@@ -2369,7 +2369,7 @@ int game::saveBlackMarkets(TAbstractFile* outfile)
 // DC calls clear, resize and operator[]. The ordinary helper restores one
 // caller cleanup boundary; its natural expansion needs no inline-depth pin.
 DC_ONLY(0xa7a24, 0x98)
-int game::loadBlackMarkets(TAbstractFile* infile)
+int Game::loadBlackMarkets(AbstractFile* infile)
 {
     m_blackMarkets.clear();
     char blackMarketListSize;
@@ -2377,8 +2377,8 @@ int game::loadBlackMarkets(TAbstractFile* infile)
     if (count < sizeof(blackMarketListSize))
         return -1;
     m_blackMarkets.resize(blackMarketListSize);
-    count = infile->read(&m_blackMarkets[0], blackMarketListSize * sizeof(TBlackMarket));
-    if (count < blackMarketListSize * sizeof(TBlackMarket))
+    count = infile->read(&m_blackMarkets[0], blackMarketListSize * sizeof(BlackMarket));
+    if (count < blackMarketListSize * sizeof(BlackMarket))
         return -1;
     return 0;
 }
@@ -2398,7 +2398,7 @@ int game::loadBlackMarkets(TAbstractFile* infile)
 // call from its default fill and raises Load to 81.2284. The elemental-school
 // initializer belongs only to the Conflux consumers (see type_university).
 template <class T>
-bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
+bool loadVector(AbstractFile* infile, std::vector<T>& destVector)
 {
     short count;
     if (infile->read(&count, sizeof(count)) < sizeof(count))
@@ -2417,7 +2417,7 @@ bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
 // The point/long writer, resize, size, _Ucopy and _Ufill instances emit
 // identical raw code; retail's folded calls do not require a type adapter.
 template <class T>
-bool saveVector(TAbstractFile* outfile, std::vector<T>& srcVector)
+bool saveVector(AbstractFile* outfile, std::vector<T>& srcVector)
 {
     int count = srcVector.size();
     if (outfile->write(&count, sizeof(short)) < sizeof(short))
@@ -2433,7 +2433,7 @@ bool saveVector(TAbstractFile* outfile, std::vector<T>& srcVector)
 // ordinary overload taking the generator vector by reference, short count and
 // long i. Complete substitutes TAbstractFile for the Dreamcast gz handle.
 DC_ONLY(0xc1950, 0x98)
-unsigned char loadObjectVector(TAbstractFile* infile, std::vector<generator>& destVector)
+unsigned char loadObjectVector(AbstractFile* infile, std::vector<Generator>& destVector)
 {
     short count;
     if (infile->read(&count, sizeof(count)) < sizeof(count))
@@ -2450,7 +2450,7 @@ unsigned char loadObjectVector(TAbstractFile* infile, std::vector<generator>& de
 // Original save_object_vector; src_vector -> srcVector. The ordinary overload
 // is expanded by game::save; keep the count short and the vector by reference.
 DC_ONLY(0xc1d38, 0x9C)
-unsigned char saveObjectVector(TAbstractFile* outfile, std::vector<generator>& srcVector)
+unsigned char saveObjectVector(AbstractFile* outfile, std::vector<Generator>& srcVector)
 {
     short count = srcVector.size();
     if (outfile->write(&count, sizeof(count)) < sizeof(count))
@@ -2466,9 +2466,9 @@ unsigned char saveObjectVector(TAbstractFile* outfile, std::vector<generator>& s
 // Retail inlines this record reader into load_object_vector. The fixed
 // bands are the 0x38-byte army, seven 4-byte resources, the creature id and
 // reward count; the trailing short sizes the four-byte artifact vector.
-inline unsigned char type_creature_bank::load(void* input)
+inline unsigned char CreatureBank::load(void* input)
 {
-    TAbstractFile* infile = static_cast<TAbstractFile*>(input);
+    AbstractFile* infile = static_cast<AbstractFile*>(input);
     short artifactCount;
 
     if (infile->read(&m_guards, sizeof(m_guards)) != sizeof(m_guards))
@@ -2481,15 +2481,15 @@ inline unsigned char type_creature_bank::load(void* input)
     if (infile->read(&m_rewardCreatures, sizeof(m_rewardCreatures)) !=
         sizeof(m_rewardCreatures))
         return 0;
-    std::vector<TArtifact>& artifactVector = m_artifacts;
+    std::vector<Artifact>& artifactVector = m_artifacts;
     if (infile->read(&artifactCount, sizeof(artifactCount)) <
         sizeof(artifactCount))
         return 0;
 
     artifactVector.resize(artifactCount);
     if (infile->read(artifactVector.begin(),
-                     artifactCount * sizeof(TArtifact)) <
-        artifactCount * sizeof(TArtifact))
+                     artifactCount * sizeof(Artifact)) <
+        artifactCount * sizeof(Artifact))
         return 0;
     return 1;
 }
@@ -2498,14 +2498,14 @@ inline unsigned char type_creature_bank::load(void* input)
 
 // E:\gamedcs\game.cpp:2790
 DC_ONLY(0xa7b60, 0x64)
-unsigned char type_creature_bank::save(void* outfile)
+unsigned char CreatureBank::save(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:2806
 DC_ONLY(0xa7bec, 0x558)
-int game::GetSaveGameHeaders(void* infile)
+int Game::GetSaveGameHeaders(void* infile)
 {
     // @stub
 }
@@ -2674,7 +2674,7 @@ int game::GetSaveGameHeaders(void* infile)
 // both reach the retail-style empty-range guard but select the same 91.7116,
 // 77-branch inliner phase. All three lower spellings were reverted.
 VA(0x004bcda0, 0xEC2)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
-int game::load(TAbstractFile* infile)
+int Game::load(AbstractFile* infile)
 {
     SavedGameHeader saved;
     if (saved.load(infile))
@@ -2949,7 +2949,7 @@ int game::load(TAbstractFile* infile)
 VA_COMPGEN(0x004bdc70, 0x309, IMPLICIT_COPY_ASSIGN, SCampaign)
 
 VA(0x004be140, 0x11E)
-int SGameSetupOptions::save(TAbstractFile* outfile)
+int SGameSetupOptions::save(AbstractFile* outfile)
 {
     char charBuffer;
 
@@ -2985,9 +2985,9 @@ int SGameSetupOptions::save(TAbstractFile* outfile)
 }
 
 VA(0x004be260, 0x188)
-int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
+int SGameSetupOptions::load(AbstractFile* infile, int saveVersion)
 {
-    TAbstractFile* input = infile;
+    AbstractFile* input = infile;
     {
         char charBuffer;
 
@@ -3178,7 +3178,7 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 //     write's (0x1e before 0x1c) where retail emits them in order.
 
 VA(0x004be3f0, 0xAA5)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
-int game::save(TAbstractFile* outfile)
+int Game::save(AbstractFile* outfile)
 {
     char byteValue;
     unsigned char extraByteValue;
@@ -3418,14 +3418,16 @@ int game::save(TAbstractFile* outfile)
 
 // E:\gamedcs\game.cpp:3275
 DC_ONLY(0xa8ba0, 0xCC)
-int hero_power(hero* this_hero)
+// Before normalization (function): hero_power.
+int heroPower(Hero* this_hero)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:3288
 DC_ONLY(0xa8c6c, 0x62)
-int compare_heroes(const void* arg1, const void* arg2)
+// Before normalization (function): compare_heroes.
+int compareHeroes(const void* arg1, const void* arg2)
 {
     // @stub
 }
@@ -3433,7 +3435,7 @@ int compare_heroes(const void* arg1, const void* arg2)
 #endif  // @carcass
 
 VA(0x004beea0, 0x2F6)  // dc 0xa99d0
-unsigned char game::saveGame(const char* filename, unsigned char determineSuffix, unsigned char campaignWinMode, unsigned char compressIt, unsigned char xferFile)
+unsigned char Game::saveGame(const char* filename, unsigned char determineSuffix, unsigned char campaignWinMode, unsigned char compressIt, unsigned char xferFile)
 {
     char nameNoExtension[351] = {0};
     char saveName[351] = {0};
@@ -3490,12 +3492,12 @@ unsigned char game::saveGame(const char* filename, unsigned char determineSuffix
 
     try {
         {
-            TGzFile outfile(fullPath, compression);
+            GzFile outfile(fullPath, compression);
             save(&outfile);
         }
         saveGameTimer.stop();
         return 1;
-    } catch (TGzFile::TOpenFailure) {
+    } catch (GzFile::OpenFailure) {
         normalDialog(
             formatString(
                 g_generalText->getText(g_saveGameFailureGeneralText),
@@ -3506,7 +3508,7 @@ unsigned char game::saveGame(const char* filename, unsigned char determineSuffix
 }
 
 VA(0x004bf1a0, 0x183)
-void game::setupOrigData()
+void Game::setupOrigData()
 {
     int i;
 
@@ -3538,7 +3540,7 @@ void game::setupOrigData()
         m_uniqueSystemId[i * sizeof(int)] = 0;
 
     m_numObelisks = 0;
-    advManager* manager = g_advManager;
+    AdvManager* manager = g_advManager;
     manager->m_curHeroMobile = 0;
     for (i = 0; i < sizeof(m_heroAvailability); ++i)
         m_heroAvailability[i] = -1;
@@ -3564,7 +3566,7 @@ void game::setupOrigData()
 }
 
 VA(0x004bf330, 0x23B)
-int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
+int Game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
 {
     setupOrigData();
     if (isOrigData)
@@ -3587,7 +3589,7 @@ int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
     }
 
     try {
-        TGzFile infile(
+        GzFile infile(
             buf, DATA_COMPGEN(0x00677d6c, gzReadMode, "rb"));
 
         int i;
@@ -3602,15 +3604,15 @@ int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
 
         load(&infile);
         return 1;
-    } catch (TGzFile::TOpenFailure) {
+    } catch (GzFile::OpenFailure) {
         return 0;
     }
 }
 
 VA(0x004bf570, 0x203)
-void game::giveTroopsToNeutralTown(int townId)
+void Game::giveTroopsToNeutralTown(int townId)
 {
-    town* currentTown = &m_towns[townId];
+    Town* currentTown = &m_towns[townId];
     long weekNumber = static_cast<short>(
         (m_month * 4 + m_week - 5) * 7 + m_day) / 7;
     int maxRoll = std::_cpp_min(weekNumber, static_cast<long>(8)) + 1;
@@ -3625,10 +3627,10 @@ void game::giveTroopsToNeutralTown(int townId)
     }
 
     int townType = currentTown->m_type;
-    armyGroup* townArmy = &currentTown->getArmy();
-    TCreatureType creature;
-    TCreatureType upgradedCreature;
-    TCreatureType upgradedValue = g_townUpgradedDwellingCreatures[
+    ArmyGroup* townArmy = &currentTown->getArmy();
+    CreatureType creature;
+    CreatureType upgradedCreature;
+    CreatureType upgradedValue = g_townUpgradedDwellingCreatures[
         townType * TOWN_DWELLING_SLOTS + monsterLevel];
     creature = g_townDwellingCreatures[
         townType * TOWN_DWELLING_SLOTS + monsterLevel];
@@ -3640,7 +3642,7 @@ void game::giveTroopsToNeutralTown(int townId)
     if (!townArmy->canJoin(creature)) {
         long worstArmy = -1;
         long worstValue = g_creatureTypeTraits[creature].m_aiValue * amount;
-        for (long slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        for (long slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
             long value = g_creatureTypeTraits[townArmy->m_armies[slot]].m_aiValue
                        * townArmy->m_numTroops[slot];
             if (value < worstValue) {
@@ -3666,7 +3668,7 @@ void game::giveTroopsToNeutralTown(int townId)
         currentTown->m_population[upgradedSlot] -= amount;
 
     if (creature != upgradedCreature && random(1, 100) <= 5) {
-        for (long slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        for (long slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
             if (townArmy->m_armies[slot] == creature)
                 townArmy->m_armies[slot] = upgradedCreature;
         }
@@ -3702,7 +3704,7 @@ void game::giveTroopsToNeutralTown(int townId)
 // with the full contribution and all relocation names/addends unchanged.
 // The earlier failure scopes used break and do not predict this lowering.
 VA(0x004bf780, 0x6E2)  // order-map + whole-function identity, dc 0xaa7e0
-void game::validateVictoryLossConditions(unsigned char checkMapLocations)
+void Game::validateVictoryLossConditions(unsigned char checkMapLocations)
 {
     signed char victoryType = m_mapHeader.m_victoryCondition.m_type;
     if (victoryType == VICTORY_CONDITION_ARTIFACT
@@ -3782,12 +3784,12 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
     VictoryConditionStruct& victory = m_mapHeader.m_victoryCondition;
     if (victoryType == VICTORY_CONDITION_DEFEAT_HERO) {
         int* victoryHeroLocation = &victory.m_heroX;
-        type_point vcheroLoc(victoryHeroLocation[0],
+        MapPoint vcheroLoc(victoryHeroLocation[0],
                               victoryHeroLocation[1],
                               victoryHeroLocation[2]);
         victory.m_heroId = -1;
         for (int i = 0; i < HERO_COUNT; ++i) {
-            type_point poolheroLoc(m_heroes[i].m_x, m_heroes[i].m_y, m_heroes[i].m_z);
+            MapPoint poolheroLoc(m_heroes[i].m_x, m_heroes[i].m_y, m_heroes[i].m_z);
             if (vcheroLoc.operator==(poolheroLoc)) {
                 int team = m_heroes[i].m_owner;
                 if (team >= 0)
@@ -3809,7 +3811,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
             victory.m_monsterX, victory.m_monsterY, victory.m_monsterZ);
         if (thisCell->m_type == MONSTER && thisCell->m_isTrigger) {
             {
-                victory.m_creatureType = TCreatureType(thisCell->m_objectIndex);
+                victory.m_creatureType = CreatureType(thisCell->m_objectIndex);
             }
         } else {
             victory.m_type = -1;
@@ -3819,7 +3821,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
     }
 
     if (victory.m_type == VICTORY_CONDITION_CAPTURE_TOWN) {
-        town* thisTown = getTown(getTownId(
+        Town* thisTown = getTown(getTownId(
             victory.m_townX, victory.m_townY, victory.m_townZ));
         int team = thisTown->m_owner;
         if (team >= 0)
@@ -3830,10 +3832,10 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
 
     LossConditionStruct& loss = m_mapHeader.m_lossCondition;
     if (loss.m_type == LOSS_CONDITION_LOSE_HERO) {
-        type_point lcheroLoc(loss.m_heroX, loss.m_heroY, loss.m_heroZ);
+        MapPoint lcheroLoc(loss.m_heroX, loss.m_heroY, loss.m_heroZ);
         loss.m_heroId = -1;
         for (int i = 0; i < HERO_COUNT; ++i) {
-            type_point poolheroLoc(m_heroes[i].m_x, m_heroes[i].m_y, m_heroes[i].m_z);
+            MapPoint poolheroLoc(m_heroes[i].m_x, m_heroes[i].m_y, m_heroes[i].m_z);
             if (lcheroLoc.operator==(poolheroLoc)) {
                 int numHumanTeams = 0;
                 for (int team = 0; team < 8; ++team) {
@@ -3861,7 +3863,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
     }
 
     if (loss.m_type == LOSS_CONDITION_LOSE_TOWN) {
-        town* thisTown = getTown(getTownId(
+        Town* thisTown = getTown(getTownId(
             loss.m_townX, loss.m_townY, loss.m_townZ));
         int numHumanTeams = 0;
         int owner;
@@ -3892,7 +3894,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
 
 // E:\gamedcs\game.cpp:4236
 VA(0x004bfe70, 0x6A8)  // dc 0xaada4
-void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
+void Game::newMap(AbstractFile* mapFile, int* playerHeroFaces,
                   NewMapCampaignContext* campaignContext, int gameVersion)
 {
     g_inSetup698400 = 1;
@@ -3978,7 +3980,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
         for (int j = 0; j < 2; ++j) {
             int heroId = m_players[recruitPlayer].m_recruits[j];
             if (heroId >= 0) {
-                hero* recruitHero = getHero(heroId);
+                Hero* recruitHero = getHero(heroId);
                 if (!(recruitHero->m_flags & 0x20000)) {
                     m_heroAvailability[heroId] = -1;
                     m_players[recruitPlayer].m_recruits[j] = -1;
@@ -3995,12 +3997,12 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
     validateVictoryLossConditions(1);
 
     if (g_unk69774c && m_campaign.m_currentCampaign == GAME_CAMPAIGN_14) {
-        hero* campaignHero = &m_heroes[45];
-        if (campaignHero->getArtifact(TArtifactSlot(hero::EQUIPPED_SLOT_SPELLBOOK)).m_artifactId
+        Hero* campaignHero = &m_heroes[45];
+        if (campaignHero->getArtifact(ArtifactSlot(Hero::EQUIPPED_SLOT_SPELLBOOK)).m_artifactId
             != -1)
-            campaignHero->removeArtifact(hero::EQUIPPED_SLOT_SPELLBOOK);
+            campaignHero->removeArtifact(Hero::EQUIPPED_SLOT_SPELLBOOK);
         if (m_campaign.m_currentMap == GAME_SCENARIO_2) {
-            type_artifact alliance(ARTIFACT_ANGELIC_ALLIANCE);
+            ArtifactRecord alliance(ARTIFACT_ANGELIC_ALLIANCE);
             campaignHero->giveArtifact(&alliance, 0, 0);
         }
     }
@@ -4044,9 +4046,9 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                 int heroId = g_game->m_setup.m_startingHero[setupPlayer];
                 if (heroId == -1)
                     heroId = m_players[setupPlayer].m_heroes[0];
-                hero* bonusHero = getHero(heroId);
+                Hero* bonusHero = getHero(heroId);
                 if (bonusHero != NULL) {
-                    type_artifact artifact(getRandomArtifactId(2));
+                    ArtifactRecord artifact(getRandomArtifactId(2));
                     bonusHero->giveArtifact(&artifact, 1, 1);
                 }
                 break;
@@ -4135,7 +4137,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
 // a separate stream scope and success after try remain 99.4000%; a shared
 // success local drops to 85.4000%. No source alternative is adopted.
 VA(0x004c0520, 0x106)  // anchor-callers + contiguous catch funclets, retail-only
-unsigned char game::newMap(const char* mapPath, const char* mapName,
+unsigned char Game::newMap(const char* mapPath, const char* mapName,
                            int* playerHeroFaces, int gameVersion)
 {
     try {
@@ -4144,17 +4146,17 @@ unsigned char game::newMap(const char* mapPath, const char* mapName,
                DATA_COMPGEN(0x00677dac, newMapPathSeparator, "\\"));
         strcat(g_text, mapName);
 
-        TGzFile mapFile(
+        GzFile mapFile(
             g_text, DATA_COMPGEN(0x00677d6c, newMapGzReadMode, "rb"));
         newMap(&mapFile, playerHeroFaces, NULL, gameVersion);
         return 1;
-    } catch (TGzFile::TOpenFailure) {
+    } catch (GzFile::OpenFailure) {
         return 0;
     }
 }
 
 VA(0x004c0630, 0xB1)  // dc 0xab8d0
-void game::setupFirstPlayer()
+void Game::setupFirstPlayer()
 {
     // DC locals: startingPos, localPlayer. The calls at dc 0xab8f8 and
     // 0xab942 name IsHuman and GetLocalPlayerGamePos. Retail 0x4c0636
@@ -4187,7 +4189,7 @@ static void randomizeScholar(NewmapCell* cell)
     if (info->getScholarAward() != const_scholar_primary_skill) {
         // DC game.cpp:4515 keeps Random inside the SetScholar expression.
         info->setScholar(info->getScholarAward(),
-            TPrimarySkill(random(0, 3)),
+            PrimarySkill(random(0, 3)),
             info->getScholarSecondarySkill(), info->getScholarSpell());
     }
 }
@@ -4249,12 +4251,12 @@ static void randomizeWagon(NewmapCell* cell)
     int i = random(0, 99);
     // DC game.cpp:4662 has both Random calls in SetWagon's expression.
     // Keep them there; the conversion itself has no recovered helper.
-    info->setWagon(EGameResource(random(0, 5)),
+    info->setWagon(GameResource(random(0, 5)),
         static_cast<short>(random(2, 5)));
     if (i < 10)
         info->emptyWagon();
     else if (i < 50) {
-        TArtifact artifact = g_game->getRandomArtifactId(6);
+        Artifact artifact = g_game->getRandomArtifactId(6);
         info->setWagon(artifact);
     }
 }
@@ -4361,13 +4363,13 @@ static void randomizePyramid(NewmapCell* cell)
 // The direct count-in-loop spelling duplicates the popcount loop and falls to
 // 87.05.
 VA(0x004c06f0, 0x179)  // dc-order + member receiver, dc 0xac048
-void game::randomizeUniversity(NewmapCell* cell)
+void Game::randomizeUniversity(NewmapCell* cell)
 {
-    type_university university;
+    University university;
     std::bitset<28> availableSkills;
     long choice;
     long i;
-    TSecondarySkill skill;
+    SecondarySkill skill;
     for (i = 0; i < 28; ++i)
         availableSkills.set(i, !g_game->m_ssDisabled[i]);
 
@@ -4378,7 +4380,7 @@ void game::randomizeUniversity(NewmapCell* cell)
         for (;;) {
             if (!availableSkills.test(skill)) {
                 {
-                    skill = TSecondarySkill(skill + 1);
+                    skill = SecondarySkill(skill + 1);
                 }
                 continue;
             }
@@ -4386,7 +4388,7 @@ void game::randomizeUniversity(NewmapCell* cell)
                 break;
             --choice;
             {
-                skill = TSecondarySkill(skill + 1);
+                skill = SecondarySkill(skill + 1);
             }
         }
 
@@ -4398,11 +4400,11 @@ void game::randomizeUniversity(NewmapCell* cell)
     const unsigned long cellVisitedBits = 0x00001fe0;
     const unsigned long universityIndexBits = 0x01ffe000;
     cell->m_extraInfo &= ~cellVisitedBits;
-    std::vector<type_university>* universityList = &m_universities;
+    std::vector<University>* universityList = &m_universities;
     unsigned long universityIndex = universityList->size() & 0xfff;
     cell->m_extraInfo = (cell->m_extraInfo & ~universityIndexBits)
         | (universityIndex << 13);
-    type_university* universityTail = universityList->end();
+    University* universityTail = universityList->end();
 #pragma inline_depth(0)
     universityList->insert(universityTail, 1, university);
 #pragma inline_depth()
@@ -4446,7 +4448,7 @@ static void randomizeWitchHut(NewmapCell* cell)
 }
 
 VA(0x004c0870, 0x22A)  // dc 0xac1a4
-void game::randomizeHolyGrail()
+void Game::randomizeHolyGrail()
 {
     if (m_ultimateRadius == 0 && m_ultimateArtifactX != -1) {
         m_ultimateArtifactPresent = 1;
@@ -4510,7 +4512,7 @@ void game::randomizeHolyGrail()
 }
 
 VA(0x004c0aa0, 0xBE)  // dc 0xac494
-void game::initRandomArtifacts()
+void Game::initRandomArtifacts()
 {
     std::copy(m_artifactDisabled,
               m_artifactDisabled + sizeof(m_artifactDisabled), m_artifactUsed);
@@ -4531,13 +4533,13 @@ void game::initRandomArtifacts()
 
 // E:\\gamedcs\\game.cpp:4950
 VA(0x004c0b60, 0x160)  // dc-order + NewMap caller, dc 0xac63c
-void game::matchUndergroundGates()
+void Game::matchUndergroundGates()
 {
     long distance;
-    type_point currentGate;
+    MapPoint currentGate;
     long i;
     long j;
-    type_point exitPoint;
+    MapPoint exitPoint;
     long bestDistance = 0;
     long closest;
 
@@ -4640,7 +4642,7 @@ void game::matchUndergroundGates()
 // roster costs -100 (x2, two helper rows stop existing as separate
 // symbols), -10.85, -5.13, -1.01 and -0.88.
 VA(0x004c0cc0, 0x1668)  // NewMap caller + dc order, dc 0xac910
-void game::randomizeEvents()
+void Game::randomizeEvents()
 {
     unsigned long numLithTwoWay = 0;
     unsigned long numMagicSpring = 0;
@@ -4666,11 +4668,11 @@ void game::randomizeEvents()
     int id;
     unsigned long numLithOneWay = 0;
     unsigned long numMysticalGarden = 0;
-    TBlackMarket thisMarket;
+    BlackMarket thisMarket;
     int luckBonus;
     unsigned char resQty;
-    EGameResource resType;
-    NewmapCell::TObjectCell* thisObj;
+    GameResource resType;
+    NewmapCell::ObjectCell* thisObj;
 
     const unsigned long visitedBits = 0x00001fe0;
     const unsigned long poolIndexBits = 0x03ffe000;
@@ -4736,11 +4738,11 @@ void game::randomizeEvents()
                         tempCell->m_extraInfo =
                             ((m_creatureBanks.size() & 0xfff) << 13)
                             | (tempCell->m_extraInfo & ~poolIndexBits);
-                        type_creature_bank bank;
+                        CreatureBank bank;
                         {
                             int converted;
                             converted = tempCell->m_objectIndex;
-                            initializeCreatureBank(&bank, type_creature_bank_type(converted));
+                            initializeCreatureBank(&bank, CreatureBankType(converted));
                         }
                         m_creatureBanks.push_back(bank);
                     }
@@ -4792,7 +4794,7 @@ void game::randomizeEvents()
                         tempCell->m_extraInfo =
                             ((m_creatureBanks.size() & 0xfff) << 13)
                             | (tempCell->m_extraInfo & ~poolIndexBits);
-                        type_creature_bank bank;
+                        CreatureBank bank;
                         initializeCreatureBank(&bank,
                                                  CREATURE_BANK_DERELICT);
                         m_creatureBanks.push_back(bank);
@@ -4807,7 +4809,7 @@ void game::randomizeEvents()
                         tempCell->m_extraInfo =
                             ((m_creatureBanks.size() & 0xfff) << 13)
                             | (tempCell->m_extraInfo & ~poolIndexBits);
-                        type_creature_bank bank;
+                        CreatureBank bank;
                         initializeCreatureBank(&bank,
                                                  CREATURE_BANK_SEPULCHER);
                         m_creatureBanks.push_back(bank);
@@ -4822,7 +4824,7 @@ void game::randomizeEvents()
                         tempCell->m_extraInfo =
                             ((m_creatureBanks.size() & 0xfff) << 13)
                             | (tempCell->m_extraInfo & ~poolIndexBits);
-                        type_creature_bank bank;
+                        CreatureBank bank;
                         initializeCreatureBank(&bank,
                                                  CREATURE_BANK_SHIPWRECK);
                         m_creatureBanks.push_back(bank);
@@ -4837,7 +4839,7 @@ void game::randomizeEvents()
                         tempCell->m_extraInfo =
                             ((m_creatureBanks.size() & 0xfff) << 13)
                             | (tempCell->m_extraInfo & ~poolIndexBits);
-                        type_creature_bank bank;
+                        CreatureBank bank;
                         initializeCreatureBank(&bank,
                                                  CREATURE_BANK_DRAGON);
                         m_creatureBanks.push_back(bank);
@@ -4870,9 +4872,9 @@ void game::randomizeEvents()
                 case GARRISON:
                     {
                         id = tempCell->m_extraInfo;
-                        garrison* g = &m_garrisons[id];
+                        Garrison* g = &m_garrisons[id];
                         int newOwner = g->m_playerOwner;
-                        type_point location(g->m_mapX, g->m_mapY, g->m_mapZ);
+                        MapPoint location(g->m_mapX, g->m_mapY, g->m_mapZ);
 #pragma inline_depth(0)
                         CMCClaimGarrison change(id, newOwner);
 #pragma inline_depth()
@@ -4889,7 +4891,7 @@ void game::randomizeEvents()
                         ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
                             static_cast<void*>(&tempCell->m_extraInfo));
                         {
-                            resType = EGameResource(random(0, 5));
+                            resType = GameResource(random(0, 5));
                         }
                         resQty = static_cast<unsigned char>(random(1, 5));
                         info->setLeanTo(numLeanTo++, resQty, resType);
@@ -4914,10 +4916,10 @@ void game::randomizeEvents()
 
                 case LITH_ONEWAY_EXIT:
                     {
-                        std::vector<type_point>* pool =
+                        std::vector<MapPoint>* pool =
                             &m_lithExitPools[tempCell->m_objectIndex];
                         tempCell->m_extraInfo = pool->size();
-                        type_point point(x, y, z);
+                        MapPoint point(x, y, z);
                         pool->push_back(point);
                     }
                     break;
@@ -4925,7 +4927,7 @@ void game::randomizeEvents()
                 case UNDERGROUND_GATE:
                     {
                         tempCell->m_extraInfo = m_undergroundGateExits.size();
-                        type_point point(x, y, z);
+                        MapPoint point(x, y, z);
                         m_undergroundGateExits.push_back(point);
                         m_undergroundGatePairs.push_back(-1);
                     }
@@ -4933,10 +4935,10 @@ void game::randomizeEvents()
 
                 case LITH_TWOWAY:
                     {
-                        std::vector<type_point>* pool =
+                        std::vector<MapPoint>* pool =
                             &m_lithPools[tempCell->m_objectIndex];
                         tempCell->m_extraInfo = pool->size();
-                        type_point point(x, y, z);
+                        MapPoint point(x, y, z);
                         pool->push_back(point);
                     }
                     break;
@@ -5011,7 +5013,7 @@ void game::randomizeEvents()
 
                 case REFUGEE_CAMP:
                     {
-                        TCreatureType creature = getRandomMonster(0, 6);
+                        CreatureType creature = getRandomMonster(0, 6);
                         tempCell->m_objectIndex = creature;
                         tempCell->m_extraInfo =
                             g_creatureTypeTraits[creature].m_growthRate;
@@ -5059,7 +5061,7 @@ void game::randomizeEvents()
                         if (oldOwner != -1) {
                             tempCell->m_extraInfo =
                                 (tempCell->m_extraInfo & 0xffffff00) | 0xff;
-                            type_point location(x, y, z);
+                            MapPoint location(x, y, z);
                             claimShipyard(location, oldOwner);
                         }
                     }
@@ -5130,8 +5132,8 @@ void game::randomizeEvents()
                             x + xOffset - 2, y + yOffset - 1, z)->m_extraInfo;
                     }
                     {
-                        type_point point(x, y, z);
-                        type_point* whirlpoolEnd = m_whirlpools.end();
+                        MapPoint point(x, y, z);
+                        MapPoint* whirlpoolEnd = m_whirlpools.end();
 #pragma inline_depth(0)
                         m_whirlpools.insert(whirlpoolEnd, 1, point);
 #pragma inline_depth()
@@ -5144,7 +5146,7 @@ void game::randomizeEvents()
                             static_cast<void*>(&tempCell->m_extraInfo));
                         resQty = static_cast<unsigned char>(random(3, 6));
                         {
-                            resType = EGameResource(random(1, 5));
+                            resType = GameResource(random(1, 5));
                         }
                         info->setWindmill(resType, resQty);
                     }
@@ -5164,7 +5166,7 @@ void game::randomizeEvents()
 
 // CodeView dc 0xbd58c: CV_fldattr_t.compgenx marks this destructor
 // as implicit. Its retained retail body performs only base/member teardown.
-VA_COMPGEN(0x004c2420, 0x26, IMPLICIT_DTOR, type_creature_bank)
+VA_COMPGEN(0x004c2420, 0x26, IMPLICIT_DTOR, CreatureBank)
 
 // Complete reads a scenario from the already-open map stream. The PC path
 // keeps the three retail map generations distinct while normalizing their
@@ -5191,7 +5193,7 @@ VA_COMPGEN(0x004c2420, 0x26, IMPLICIT_DTOR, type_creature_bank)
 // expansion and removed the byte-neutral rumours.resize pin. Removing the
 // remaining copy-loop/skills pins together did not improve banked MAX.
 VA(0x004c2450, 0x88E)  // sole NewMap caller + full stream/callee sequence
-bool game::loadMap(TAbstractFile* mapFile)
+bool Game::loadMap(AbstractFile* mapFile)
 {
     if (m_mapHeader.read(mapFile, m_campaign.m_currentMap) < 0)
         return false;
@@ -5203,7 +5205,7 @@ bool game::loadMap(TAbstractFile* mapFile)
     g_searchArray->close();
 
     if (m_f1f698 < 1)
-        memset(m_heroAvailability + 128, hero::HERO_AVAILABILITY_TAVERN_POOL,
+        memset(m_heroAvailability + 128, Hero::HERO_AVAILABILITY_TAVERN_POOL,
                HERO_COUNT - 128);
 
     int artifact;
@@ -5272,7 +5274,7 @@ bool game::loadMap(TAbstractFile* mapFile)
         std::bitset<70> serializedSpells(0);
         unsigned char spellBits[9];
         mapFile->read(spellBits, sizeof(spellBits));
-        for (unsigned int spellBit = 0; spellBit < hero::NUM_SPELLS;
+        for (unsigned int spellBit = 0; spellBit < Hero::NUM_SPELLS;
              ++spellBit) {
             std::bitset<70>::reference serializedBit =
                 serializedSpells[spellBit];
@@ -5288,7 +5290,7 @@ bool game::loadMap(TAbstractFile* mapFile)
         }
 
         const std::bitset<70> serializedSpellCopy = serializedSpells;
-        for (unsigned int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (unsigned int spell = 0; spell < Hero::NUM_SPELLS; ++spell) {
             if (serializedSpellCopy[spell]) {
                 for (artifact = 0; artifact < 144; ++artifact) {
                     if (g_artifactTraits[artifact].m_givesSpells) {
@@ -5319,7 +5321,7 @@ bool game::loadMap(TAbstractFile* mapFile)
         for (int skill = 0; skill < sizeof(m_ssDisabled); ++skill)
             m_ssDisabled[skill] = serializedSkillCopy[skill];
     } else {
-        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (int spell = 0; spell < Hero::NUM_SPELLS; ++spell) {
             m_spellDisabledInfo[spell] =
                 (g_spellTraits[spell].m_flags & 0x2000) != 0;
         }
@@ -5337,9 +5339,9 @@ bool game::loadMap(TAbstractFile* mapFile)
     // The rumour list NAMED AS A REFERENCE: retail reads its _First/_Last
     // through the vector's own address rather than folding the member offset
     // off gpGame.  75.9944 -> 76.5443.
-    std::vector<TRumour>& rRumours = m_rumours;
+    std::vector<Rumour>& rRumours = m_rumours;
     rRumours.resize(rumourCount);
-    for (TRumour* rumour = rRumours.begin(); rumour != rRumours.end();
+    for (Rumour* rumour = rRumours.begin(); rumour != rRumours.end();
          ++rumour) {
         std::string throwAway;
         int result = NewSMapHeader::readString(mapFile, throwAway);
@@ -5353,11 +5355,11 @@ bool game::loadMap(TAbstractFile* mapFile)
 
     if (m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA
         && m_mapHeader.m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        std::map<int, type_map_hero_info>::iterator it =
+        std::map<int, MapHeroInfo>::iterator it =
             m_mapHeader.m_heroPlayerSetups.begin();
         for (; it != m_mapHeader.m_heroPlayerSetups.end();) {
             HeroExtra* setupRecord = &m_heroSetup[it->first];
-            type_map_hero_info* headerRecord = &it->second;
+            MapHeroInfo* headerRecord = &it->second;
             if (headerRecord->m_portrait != -1) {
                 setupRecord->m_customPortraitNumber = 1;
                 setupRecord->m_portraitNumber = headerRecord->m_portrait;
@@ -5408,7 +5410,7 @@ bool game::loadMap(TAbstractFile* mapFile)
 // the returned string temporary as the direct assign argument while pinning
 // only assign itself, reproducing the complete normal-path cleanup transcript.
 VA(0x004c2ce0, 0x3A8)  // sole caller LoadMap + HeroExtra field-offset walk
-void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
+void Game::readMapHeroSetups(AbstractFile* mapFile, int mapVersion)
 {
     for (int heroId = 0; heroId < HERO_COUNT; ++heroId) {
         HeroExtra* heroRecord = &m_heroSetup[heroId];
@@ -5457,7 +5459,7 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
                 mapFile->read(&artifact, sizeof(artifact));
                 heroRecord->m_artifacts[equipped] =
                     // Complete map input stores a signed 16-bit artifact ordinal; the in-memory record retains DC's TArtifact constructor.
-                    type_artifact(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+                    ArtifactRecord(static_cast<Artifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             }
 
             short backpackCount;
@@ -5470,11 +5472,11 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
                 mapFile->read(&artifact, sizeof(artifact));
                 heroRecord->m_backpack[carried] =
                     // Complete map input stores a signed 16-bit artifact ordinal; the in-memory record retains DC's TArtifact constructor.
-                    type_artifact(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+                    ArtifactRecord(static_cast<Artifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             }
 
-            heroRecord->m_artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4] =
-                type_artifact(ARTIFACT_CATAPULT);
+            heroRecord->m_artifacts[Hero::EQUIPPED_SLOT_WAR_MACHINE_4] =
+                ArtifactRecord(ARTIFACT_CATAPULT);
         }
 
         char customName;
@@ -5497,7 +5499,7 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
             heroRecord->m_customSpells = 1;
             unsigned char spellMask[9];
             mapFile->read(spellMask, sizeof(spellMask));
-            for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+            for (int spell = 0; spell < Hero::NUM_SPELLS; ++spell) {
                 heroRecord->m_spells.set(
                     spell,
                     (spellMask[spell / 8] & (1 << (spell % 8))) != 0);
@@ -5519,7 +5521,7 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
 }
 
 VA(0x004c3200, 0x398)
-int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
+int NewSMapHeader::readVictoryCondition(char type, AbstractFile* infile)
 {
     char charBuffer;
 
@@ -5534,12 +5536,12 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
             int intBuffer;
             infile->read(&intBuffer, sizeof(char));
             m_victoryCondition.m_artifactNum =
-                static_cast<TArtifact>(intBuffer & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                static_cast<Artifact>(intBuffer & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         } else {
             short shortBuffer;
             infile->read(&shortBuffer, sizeof(shortBuffer));
             m_victoryCondition.m_artifactNum =
-                static_cast<TArtifact>(shortBuffer); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                static_cast<Artifact>(shortBuffer); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         }
         break;
     }
@@ -5549,13 +5551,13 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
             int intBuffer;
             infile->read(&intBuffer, sizeof(char));
             {
-                m_victoryCondition.m_creatureType = TCreatureType(intBuffer & 0xff);
+                m_victoryCondition.m_creatureType = CreatureType(intBuffer & 0xff);
             }
         } else {
             short shortBuffer;
             infile->read(&shortBuffer, sizeof(shortBuffer));
             {
-                m_victoryCondition.m_creatureType = TCreatureType(shortBuffer);
+                m_victoryCondition.m_creatureType = CreatureType(shortBuffer);
             }
         }
         {
@@ -5569,7 +5571,7 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
     case VICTORY_CONDITION_TOTAL_RESOURCES: {
         {
             char resource;
-            infile->read(&resource, sizeof(resource));
+            infile->read(&resource, sizeof(Resource));
             m_victoryCondition.m_resourceType = resource;
         }
         {
@@ -5666,7 +5668,7 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
         int intBuffer;
         infile->read(&intBuffer, sizeof(char));
         m_victoryCondition.m_artifactNum =
-            static_cast<TArtifact>(intBuffer & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+            static_cast<Artifact>(intBuffer & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         infile->read(&intBuffer, sizeof(char));
         m_victoryCondition.m_townX = intBuffer & 0xff;
         infile->read(&intBuffer, sizeof(char));
@@ -5682,7 +5684,7 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
 }
 
 VA(0x004c35a0, 0x2E8)
-int NewSMapHeader::saveVictoryCondition(char type, TAbstractFile* outfile)
+int NewSMapHeader::saveVictoryCondition(char type, AbstractFile* outfile)
 {
     int intBuffer;
     int count;
@@ -5813,7 +5815,7 @@ int NewSMapHeader::saveVictoryCondition(char type, TAbstractFile* outfile)
 // are only VC6 stack coloring. Shared DC buffers, shared post-flag case temps
 // and function-scope Complete temps all displaced otherwise-exact homes.
 VA(0x004c3890, 0x3E4)  // sole Load caller + retail body; dc 0xaeb64
-int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
+int NewSMapHeader::loadVictoryCondition(char type, AbstractFile* infile,
                                         int saveVersion)
 {
     int intBuffer;
@@ -5830,7 +5832,7 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
         int artifact;
         infile->read(&artifact, sizeof(char));
         m_victoryCondition.m_artifactNum =
-            static_cast<TArtifact>(artifact & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+            static_cast<Artifact>(artifact & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         return 0;
     }
 
@@ -5838,7 +5840,7 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
         int creature;
         infile->read(&creature, sizeof(char));
         {
-            m_victoryCondition.m_creatureType = TCreatureType(creature & 0xff);
+            m_victoryCondition.m_creatureType = CreatureType(creature & 0xff);
         }
         count = infile->read(&intBuffer, sizeof(intBuffer));
         if (count < sizeof(intBuffer))
@@ -5945,7 +5947,7 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
         int transport;
         infile->read(&transport, sizeof(char));
         m_victoryCondition.m_artifactNum =
-            static_cast<TArtifact>(transport & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+            static_cast<Artifact>(transport & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         infile->read(&transport, sizeof(char));
         m_victoryCondition.m_townX = transport & 0xff;
         infile->read(&transport, sizeof(char));
@@ -5960,7 +5962,7 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
 }
 
 VA(0x004c3c80, 0x10B)
-int NewSMapHeader::readLossCondition(char type, TAbstractFile* infile)
+int NewSMapHeader::readLossCondition(char type, AbstractFile* infile)
 {
     short shortValue;
     int value;
@@ -5995,7 +5997,7 @@ int NewSMapHeader::readLossCondition(char type, TAbstractFile* infile)
 
 // Complete adds saveVersion; every retained return pops three arguments.
 VA(0x004c3d90, 0x15E)  // DC loadLossCondition + sole Load caller + ret 0xc, dc 0xaf488
-int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
+int NewSMapHeader::loadLossCondition(char type, AbstractFile* infile,
                                      int saveVersion)
 {
     short timeLimit;
@@ -6052,8 +6054,8 @@ int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
 // one-byte default-placeholder count; their ids use only 0xff as a sentinel.
 
 VA(0x004c3ef0, 0x498)  // sole NewSMapHeader::Read caller + slot stride/layout
-void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
-    TAbstractFile* infile, int mapVersion)
+void CMapHeaderData::PlayerSlotAttributes::readMapPlayerSlot(
+    AbstractFile* infile, int mapVersion)
 {
     {
         signed char charBuffer;
@@ -6173,7 +6175,7 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
 // blocks' own block-scoped `count`, which the shared local subsumes.
 // Complete adds the campaign-map ordinal to the stream reader (ret 8).
 VA(0x004c4390, 0x92E)  // DC Read + LoadMap/Get callers + stream order, dc 0xaf64c
-int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
+int NewSMapHeader::read(AbstractFile* infile, int campaignMap)
 {
     char padding[g_mapHeaderPaddingSize];
 
@@ -6229,7 +6231,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
     // Complete-only tail uses a separate returned string for each hero name.
     std::string strTemp;
 
-    TPlayerSlotAttributes* player = m_playerSlotAttributes;
+    PlayerSlotAttributes* player = m_playerSlotAttributes;
     for (int i = 0; i < g_mapHeaderPlayerCount; ++i, ++player) {
         player->readMapPlayerSlot(infile, m_version);
         if (player->m_canBeHuman && !player->m_canBeComputer)
@@ -6309,11 +6311,11 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
         }
 
         std::copy(
-            bitset_iterator<g_mapHeaderLegacyHeroCount>(
+            BitsetIterator<g_mapHeaderLegacyHeroCount>(
                 availableHeroesMask, 0),
-            bitset_iterator<g_mapHeaderLegacyHeroCount>(
+            BitsetIterator<g_mapHeaderLegacyHeroCount>(
                 availableHeroesMask, g_mapHeaderLegacyHeroCount),
-            bitset_iterator<g_mapHeaderHeroCount>(m_availableHeroes, 0));
+            BitsetIterator<g_mapHeaderHeroCount>(m_availableHeroes, 0));
 
         if (!g_unk69774c) {
             for (int i = g_mapHeaderCompleteLegacyHeroFirst;
@@ -6378,9 +6380,9 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
                 }
 
                 m_heroPlayerSetups.insert(
-                    std::pair<const int, type_map_hero_info>(
+                    std::pair<const int, MapHeroInfo>(
                         heroKey,
-                        type_map_hero_info(heroId, heroName, availability)));
+                        MapHeroInfo(heroId, heroName, availability)));
             } while (--count != 0);
         }
     }
@@ -6391,7 +6393,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
 }
 
 VA(0x004c4cc0, 0x130)
-type_map_hero_info::type_map_hero_info(int portrait, std::string name,
+MapHeroInfo::MapHeroInfo(int portrait, std::string name,
                                       std::bitset<8> availability)
     : m_portrait(portrait), m_name(name), m_players(availability)
 {
@@ -6402,7 +6404,7 @@ type_map_hero_info::type_map_hero_info(int portrait, std::string name,
 // all-player default, and artifact victory conditions reserve their target
 // before random artifact placement starts.
 VA(0x004c4e30, 0xD3)  // sole new-map caller + map-header/member layout
-void game::applyMapHeaderAvailability()
+void Game::applyMapHeaderAvailability()
 {
     for (int heroId = 0; heroId < HERO_COUNT; ++heroId) {
         if (m_mapHeader.m_availableHeroes.test(heroId))
@@ -6411,7 +6413,7 @@ void game::applyMapHeaderAvailability()
             m_heroAvailability[heroId] = 0x40;
     }
 
-    for (std::map<int, type_map_hero_info>::iterator it =
+    for (std::map<int, MapHeroInfo>::iterator it =
              m_mapHeader.m_heroPlayerSetups.begin();
          it != m_mapHeader.m_heroPlayerSetups.end(); ++it) {
         std::bitset<8> allPlayers;
@@ -6439,7 +6441,7 @@ void game::applyMapHeaderAvailability()
 // codegen-significant: the second inline candidate moves the throw phase and
 // falls to 79.19%.
 VA(0x004c4f10, 0x71D)  // game::Save caller + DC identity + stream-write order
-int NewSMapHeader::save(TAbstractFile* outfile)
+int NewSMapHeader::save(AbstractFile* outfile)
 {
     char enumBuffer;
     int count;
@@ -6465,9 +6467,9 @@ int NewSMapHeader::save(TAbstractFile* outfile)
         < sizeof(boolBuffer))
         return -1;
 
-    if (game::saveString(outfile, m_mapName) < 0)
+    if (Game::saveString(outfile, m_mapName) < 0)
         return -1;
-    if (game::saveString(outfile, m_mapDescription) < 0)
+    if (Game::saveString(outfile, m_mapDescription) < 0)
         return -1;
 
     ucharBuffer = m_difficulty;
@@ -6478,7 +6480,7 @@ int NewSMapHeader::save(TAbstractFile* outfile)
     charBuffer = m_maxHeroLevel;
     outfile->write(&charBuffer, sizeof(charBuffer));
 
-    TPlayerSlotAttributes* player = m_playerSlotAttributes;
+    PlayerSlotAttributes* player = m_playerSlotAttributes;
     for (i = 0; i < 8; ++i, ++player) {
 
         boolBuffer = player->m_canBeHuman;
@@ -6537,7 +6539,7 @@ int NewSMapHeader::save(TAbstractFile* outfile)
 
             std::string s;
             s = player->m_nonRandomHeroCustomName;
-            if (game::saveString(outfile, s) < 0)
+            if (Game::saveString(outfile, s) < 0)
                 return -1;
         }
     }
@@ -6590,7 +6592,7 @@ int NewSMapHeader::save(TAbstractFile* outfile)
 
     ucharBuffer = m_heroPlayerSetups.size();
     outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    for (std::map<int, type_map_hero_info>::iterator it =
+    for (std::map<int, MapHeroInfo>::iterator it =
              m_heroPlayerSetups.begin();
          it != m_heroPlayerSetups.end(); ++it) {
         enumBuffer = it->first;
@@ -6619,7 +6621,7 @@ int NewSMapHeader::save(TAbstractFile* outfile)
 // use the same pre-25 remap as the other saved-game readers.
 
 VA(0x004c5630, 0x7CD)  // DC Load + saved-header callers + helper edges, dc 0xb0754
-int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
+int NewSMapHeader::load(AbstractFile* infile, int saveVersion)
 {
     char enumBuffer;
     int count;
@@ -6646,9 +6648,9 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         return -1;
     m_hasTwoLayers = boolBuffer != 0;
 
-    if (game::loadString(infile, m_mapName) < 0)
+    if (Game::loadString(infile, m_mapName) < 0)
         return -1;
-    if (game::loadString(infile, m_mapDescription) < 0)
+    if (Game::loadString(infile, m_mapDescription) < 0)
         return -1;
 
     if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
@@ -6667,7 +6669,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     m_minNumHumanPlayers = 0;
     m_maxNumHumanPlayers = 0;
 
-    TPlayerSlotAttributes* player = m_playerSlotAttributes;
+    PlayerSlotAttributes* player = m_playerSlotAttributes;
     for (i = 0; i < 8; ++i, ++player) {
         if (infile->read(&boolBuffer, sizeof(boolBuffer))
             < sizeof(boolBuffer))
@@ -6731,7 +6733,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
             std::string strTemp;
             player->m_nonRandomHeroCustomPortrait =
                 loadHeroId(infile, saveVersion);
-            game::loadString(infile, strTemp);
+            Game::loadString(infile, strTemp);
             strcpy(player->m_nonRandomHeroCustomName, strTemp.c_str());
         } else {
             player->m_nonRandomHeroCustomPortrait = -1;
@@ -6803,8 +6805,8 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         }
 
         m_heroPlayerSetups.insert(
-            std::pair<const int, type_map_hero_info>(
-                heroKey, type_map_hero_info(heroId, strTemp, availability)));
+            std::pair<const int, MapHeroInfo>(
+                heroKey, MapHeroInfo(heroId, strTemp, availability)));
     } while (--count != 0);
 
     return 0;
@@ -6820,13 +6822,13 @@ int NewSMapHeader::get(const char* path, const char* filename,
     fullPath += filename;
 
     try {
-        TGzFile infile(
+        GzFile infile(
             fullPath.c_str(),
             DATA_COMPGEN(0x00677d6c, newMapGetGzReadMode, "rb"));
         int result = read(&infile, campaignMap);
         if (result < 0)
             return -1;
-    } catch (TGzFile::TOpenFailure) {
+    } catch (GzFile::OpenFailure) {
         return -1;
     }
     return 0;
@@ -6834,7 +6836,7 @@ int NewSMapHeader::get(const char* path, const char* filename,
 
 // DC NewSMapHeader::readString (0xb1110), static with a string reference.
 VA(0x004c6010, 0x1CE)  // dc 0xb1110
-int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
+int __fastcall NewSMapHeader::readString(AbstractFile* infile, std::string& s)
 {
     int count;
     int length;
@@ -6862,21 +6864,21 @@ int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
 
 // E:\gamedcs\game.cpp:4029
 DC_ONLY(0xaa6f8, 0xE8)
-void game::GiveTroopsToNeutralTowns()
+void Game::GiveTroopsToNeutralTowns()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:4050
 DC_ONLY(0xaa7e0, 0x5C4)
-void game::validateVictoryLossConditions(unsigned char check_map_locations)
+void Game::validateVictoryLossConditions(unsigned char check_map_locations)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:4236
 DC_ONLY(0xaada4, 0xB2A)
-void game::newMap(char* MapName, THeroID* playerHeroFaces)
+void Game::newMap(char* MapName, THeroID* playerHeroFaces)
 {
     // @stub
 }
@@ -6953,7 +6955,7 @@ void randomizeWitchHut(NewmapCell* cell)
 
 // E:\gamedcs\game.cpp:5600
 DC_ONLY(0xadb88, 0x3B0)
-int game::loadMap(char* mapName)
+int Game::loadMap(char* mapName)
 {
     // @stub
 }
@@ -7031,9 +7033,9 @@ int NewSMapHeader::get(const char* filename)
 #endif  // @carcass
 
 VA(0x004c61e0, 0x4A8)  // dc 0xb1230
-void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove, unsigned char checkEndGame)
+void Game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove, unsigned char checkEndGame)
 {
-    town* thisTown = &m_towns[townId];
+    Town* thisTown = &m_towns[townId];
     long oldOwner = thisTown->m_owner;
     long i;
     if (oldOwner == newPlayerOwner)
@@ -7078,8 +7080,8 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
     if (isRemoteMove)
         return;
 
-    const_cast<armyGroup&>(
-        static_cast<const town*>(thisTown)->getArmy()).initialize();
+    const_cast<ArmyGroup&>(
+        static_cast<const Town*>(thisTown)->getArmy()).initialize();
     if (thisTown->m_owner != -1) {
         m_players[newPlayerOwner].m_townIds[m_players[newPlayerOwner].m_numTowns] =
             static_cast<char>(townId);
@@ -7111,11 +7113,11 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
     for (i = 0; i < m_generators.size(); i++) {
         if (m_generators[i].getOwner() == oldOwner
             || m_generators[i].getOwner() == newPlayerOwner) {
-            generator* thisGenerator = &m_generators[i];
+            Generator* thisGenerator = &m_generators[i];
             if (thisGenerator->getOwner() < 0)
                 continue;
 
-            playerData* player = &g_game->m_players[thisGenerator->getOwner()];
+            PlayerData* player = &g_game->m_players[thisGenerator->getOwner()];
             int creature = thisGenerator->m_type[0];
             if (!g_game->m_f1f698 &&
                 isBaseElemental(creature))
@@ -7126,7 +7128,7 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
                 continue;
 
             for (int index = 0; index < player->m_numTowns; index++) {
-                town* currentTown = g_game->getTown(player->m_townIds[index]);
+                Town* currentTown = g_game->getTown(player->m_townIds[index]);
                 if (currentTown->m_type == townType)
                     currentTown->changeGeneratorBonus(
                         thisGenerator->m_type[0], 1);
@@ -7136,10 +7138,10 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
 }
 
 VA(0x004c66e0, 0xCB)  // dc 0xb1748
-void game::claimMine(int mineId, int newPlayerOwner, type_action_type actionType)
+void Game::claimMine(int mineId, int newPlayerOwner, ActionType actionType)
 {
-    mine& currentMine = m_mines[mineId];
-    type_point location(currentMine.m_mapX, currentMine.m_mapY,
+    Mine& currentMine = m_mines[mineId];
+    MapPoint location(currentMine.m_mapX, currentMine.m_mapY,
                         currentMine.m_mapZ);
 
     if (actionType == const_normal_action)
@@ -7155,15 +7157,15 @@ void game::claimMine(int mineId, int newPlayerOwner, type_action_type actionType
 }
 
 VA(0x004c67b0, 0x1A4)  // dc 0xb1828
-void game::claimGenerator(int generatorId, int newPlayerOwner)
+void Game::claimGenerator(int generatorId, int newPlayerOwner)
 {
-    generator& currentGenerator = m_generators[generatorId];
+    Generator& currentGenerator = m_generators[generatorId];
     CMCClaimGenerator change(generatorId, newPlayerOwner);
     sendMapChange(&change);
 
     currentGenerator.setOwner(newPlayerOwner);
     if (newPlayerOwner != -1) {
-        type_point location(currentGenerator.m_mapX, currentGenerator.m_mapY,
+        MapPoint location(currentGenerator.m_mapX, currentGenerator.m_mapY,
                             currentGenerator.m_mapZ);
         setVisibility(location.m_x, location.m_y, location.m_z,
                       newPlayerOwner, 3, 0);
@@ -7174,10 +7176,10 @@ void game::claimGenerator(int generatorId, int newPlayerOwner)
 }
 
 VA(0x004c6960, 0xC9)  // dc 0xb1988
-void game::claimGarrison(int garrisonId, int newPlayerOwner)
+void Game::claimGarrison(int garrisonId, int newPlayerOwner)
 {
-    garrison& currentGarrison = m_garrisons[garrisonId];
-    type_point location(currentGarrison.m_mapX, currentGarrison.m_mapY,
+    Garrison& currentGarrison = m_garrisons[garrisonId];
+    MapPoint location(currentGarrison.m_mapX, currentGarrison.m_mapY,
                         currentGarrison.m_mapZ);
     sendMapChange(&CMCClaimGarrison(garrisonId, newPlayerOwner));
 
@@ -7188,9 +7190,9 @@ void game::claimGarrison(int garrisonId, int newPlayerOwner)
 }
 
 VA(0x004c6a30, 0x21F)  // dc 0xb1a50
-void game::claimShipyard(type_point location, int newPlayerOwner)
+void Game::claimShipyard(MapPoint location, int newPlayerOwner)
 {
-    hero* obscuringHero = 0;
+    Hero* obscuringHero = 0;
     NewmapCell* mapCell = m_worldMap.cell(location);
     if (mapCell->m_type == HERO) {
         obscuringHero = g_game->getHero(mapCell->m_extraInfo);
@@ -7202,7 +7204,7 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
             static_cast<void*>(&mapCell->m_extraInfo));
     if (shipyardInfo->m_owner != newPlayerOwner) {
         if (shipyardInfo->m_owner >= 0) {
-            playerData* oldPlayer = &m_players[shipyardInfo->m_owner];
+            PlayerData* oldPlayer = &m_players[shipyardInfo->m_owner];
             long index = 0;
             while (index < oldPlayer->m_shipyards.size()) {
                 if (oldPlayer->m_shipyards[index].m_x == location.m_x &&
@@ -7233,14 +7235,14 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
 }
 
 VA(0x004c6c50, 0x2EB)  // dc 0xb1c8c
-void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
-                    const town* thisTown, int x, int y,
+void Game::viewArmy(ArmyGroup& group, int iarmy, const Hero* thisHero,
+                    const Town* thisTown, int x, int y,
                     unsigned char showDismiss, unsigned char isQuickView)
 {
-    TCreatureType armyType = group.m_armyTypes[iarmy];
+    CreatureType armyType = group.m_armyTypes[iarmy];
     const int numTroops = group.m_numTroops[iarmy];
     unsigned char hasAngelicAlliance = 0;
-    TCreatureType upgradeToType = CREATURE_NONE;
+    CreatureType upgradeToType = CREATURE_NONE;
 
     if (thisTown && getAlignment(armyType) == thisTown->m_type) {
         int i = DWELLING_0_ID;
@@ -7249,7 +7251,7 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                                            * TOWN_DWELLING_COUNT
                                        + i - DWELLING_0_ID]
                     == armyType
-                && thisTown->hasBuilding(town::upgradedDwellingID(i), true)) {
+                && thisTown->hasBuilding(Town::upgradedDwellingID(i), true)) {
                 upgradeToType = upgradedCreatureType(armyType);
                 break;
             }
@@ -7259,7 +7261,7 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
     }
 
     if (thisHero) {
-        const THeroSpecificAbility& ability =
+        const HeroSpecificAbility& ability =
             g_heroSpecificAbilities[thisHero->m_id];
         if (ability.m_type == eHeroAbilityCreatureUpgrade) {
             if (armyType == ability.m_creature
@@ -7284,7 +7286,7 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                     ARTIFACT_ANGELIC_ALLIANCE);
     }
 
-    TViewArmyWindow* viewArmyWindow = new TViewArmyWindow(
+    ViewArmyWindow* viewArmyWindow = new ViewArmyWindow(
         &group, iarmy, thisHero, thisTown, x, y, upgradeToType, showDismiss,
         !isQuickView, hasAngelicAlliance);
     if (isQuickView) {
@@ -7292,10 +7294,10 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
     } else {
         viewArmyWindow->doModal();
         switch (g_windowManager->m_dialogReturn) {
-        case TViewArmyWindow::DISMISS_ID:
+        case ViewArmyWindow::DISMISS_ID:
             group.dismiss(iarmy);
             break;
-        case TViewArmyWindow::UPGRADE_ID: {
+        case ViewArmyWindow::UPGRADE_ID: {
             long upgradeCost[NUM_RESOURCES];
             getUpgradeCost(armyType, upgradeToType, numTroops, upgradeCost);
             for (int i = 0; i < NUM_RESOURCES; i++)
@@ -7312,7 +7314,7 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
 
 // E:\gamedcs\game.cpp:7572
 DC_ONLY(0xb1f1c, 0x42)
-int game::GetRandomNumTroops(int whichMon)
+int Game::GetRandomNumTroops(int whichMon)
 {
     // @stub
 }
@@ -7345,14 +7347,14 @@ void startAITheme()
 }
 
 VA(0x004c6f80, 0x4F)  // dc 0xb1fa4
-void game::turnOnAIMusic()
+void Game::turnOnAIMusic()
 {
     startAITheme();
     g_soundManager->m_playSounds = 0;
 }
 
 VA(0x004c6fd0, 0x10)  // dc 0xb1fc0
-void game::turnOffAIMusic()
+void Game::turnOffAIMusic()
 {
     g_soundManager->m_playSounds = 1;
 }
@@ -7362,7 +7364,7 @@ void game::turnOffAIMusic()
 // E:\gamedcs\game.cpp:7603
 // Live retail reconstruction follows this carcass bracket.
 DC_ONLY(0xb1fd0, 0xB04)
-void game::nextPlayer()
+void Game::nextPlayer()
 {
     // @stub
 }
@@ -7404,7 +7406,7 @@ void game::nextPlayer()
 // 0) or with a carrier statement; if a reader for iHumans ever turns up
 // in the retail bytes, this loop comes back for free.
 VA(0x004c6fe0, 0x947)  // dc-name/order + retail caller/callee/body, dc 0xb1fd0
-void game::nextPlayer()
+void Game::nextPlayer()
 {
     int toWho;
     int weekSave;
@@ -7518,7 +7520,7 @@ void game::nextPlayer()
     clearEventRecords(static_cast<char>(g_netLocalGamePos));
 
     for (i = 0; i < g_currentPlayer->m_numHeroes; ++i) {
-        hero* currentHero = &m_heroes[g_currentPlayer->m_heroes[i]];
+        Hero* currentHero = &m_heroes[g_currentPlayer->m_heroes[i]];
         int mobility = currentHero->getMobility();
         currentHero->m_maxMovePoints = mobility;
         currentHero->m_movePoints = mobility;
@@ -7526,16 +7528,16 @@ void game::nextPlayer()
     for (i = 0; i < 2; ++i) {
         int recruitId = g_currentPlayer->m_recruits[i];
         if (recruitId != -1) {
-            hero* currentHero = &m_heroes[recruitId];
+            Hero* currentHero = &m_heroes[recruitId];
             int mobility = currentHero->getMobility();
             currentHero->m_maxMovePoints = mobility;
             currentHero->m_movePoints = mobility;
         }
     }
     for (i = 0; i < g_currentPlayer->m_numTowns; ++i) {
-        town* currentTown = getTown(g_currentPlayer->m_townIds[i]);
+        Town* currentTown = getTown(g_currentPlayer->m_townIds[i]);
         if (currentTown->m_visitingHeroId >= 0) {
-            hero* currentHero = getHero(currentTown->m_visitingHeroId);
+            Hero* currentHero = getHero(currentTown->m_visitingHeroId);
             int mobility = currentHero->getMobility();
             currentHero->m_maxMovePoints = mobility;
             currentHero->m_movePoints = mobility;
@@ -7544,12 +7546,12 @@ void game::nextPlayer()
     }
 
     if (!g_currentPlayer->isLocalHuman()) {
-        g_mouseManager->setPointer(2, mouseManager::DEFAULT_SET);
+        g_mouseManager->setPointer(2, MouseManager::DEFAULT_SET);
         g_advManager->hideRoute(1, 0, 1);
         startAITheme();
         g_soundManager->m_playSounds = 0;
         setNoDialogMenus(0);
-        g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_8, -1);
+        g_advManager->overrideBottomView(AdvManager::BOTTOM_VIEW_8, -1);
         showComputerScreen();
         g_completeDrawEnabled = 0;
 
@@ -7578,7 +7580,7 @@ void game::nextPlayer()
             g_advManager->updateRadar(1, 1, 0, 0, 0);
             g_unnamed69d810 = g_netLocalGamePos;
         }
-        g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_DEFAULT, -1);
+        g_advManager->overrideBottomView(AdvManager::BOTTOM_VIEW_DEFAULT, -1);
     } else {
         setNoDialogMenus(1);
         g_inputManager->flush();
@@ -7610,77 +7612,80 @@ void game::nextPlayer()
 
 // E:\gamedcs\game.cpp:7898
 DC_ONLY(0xb2ad4, 0x55C)
-int game::computeDailyGold(int iWhichPlayer, unsigned char include_silo)
+int Game::computeDailyGold(int iWhichPlayer, unsigned char include_silo)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:7958
 DC_ONLY(0xb3030, 0x14C)
-unsigned char game::growCoverOfDarkness()
+unsigned char Game::growCoverOfDarkness()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:7978
 DC_ONLY(0xb317c, 0x6DA)
-void game::resetAllPlayerVisibility()
+void Game::resetAllPlayerVisibility()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:8094
 DC_ONLY(0xb3858, 0x532)
-void game::perDay()
+void Game::perDay()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:8266
 DC_ONLY(0xb3d8c, 0x74)
-void game::clear_recruits(THeroID* m_recruits)
+// Before normalization (function): game::clear_recruits.
+void Game::clearRecruits(THeroID* m_recruits)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:8290
 DC_ONLY(0xb3e00, 0x5E)
-THeroID get_new_hero(THeroClass hero_class)
+// Before normalization (function): get_new_hero.
+THeroID getNewHero(HeroClass heroClass)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:8308
 DC_ONLY(0xb3e60, 0x1EE)
-void game::set_weekly_recruits(THeroID* m_recruits, TTownType alignment)
+// Before normalization (function): game::set_weekly_recruits.
+void Game::setWeeklyRecruits(THeroID* m_recruits, TownType alignment)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:8358
 DC_ONLY(0xb4050, 0xA4)
-void game::replaceRecruit(THeroID* m_recruits, long recruit_slot, TTownType alignment)
+void Game::replaceRecruit(THeroID* m_recruits, long recruit_slot, TownType alignment)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:8373
 DC_ONLY(0xb40f4, 0xEA)
-void game::setRecruits()
+void Game::setRecruits()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:8398
 DC_ONLY(0xb41e0, 0x5D8)
-void game::perWeek()
+void Game::perWeek()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:8593
 DC_ONLY(0xb47b8, 0x39E)
-void game::perMonth()
+void Game::perMonth()
 {
     // @stub
 }
@@ -7688,9 +7693,9 @@ void game::perMonth()
 #endif  // @carcass
 
 VA(0x004c7930, 0x266)  // dc 0xb2ad4
-int game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
+int Game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
 {
-    const playerData& p = m_players[whichPlayer];
+    const PlayerData& p = m_players[whichPlayer];
     int gold = 0;
     int i;
 
@@ -7737,11 +7742,11 @@ int game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
 }
 
 VA(0x004c7ba0, 0xAC)
-bool game::growCoverOfDarkness()
+bool Game::growCoverOfDarkness()
 {
     bool changed = false;
     for (int i = 0; i < m_towns.size(); ++i) {
-        town* currentTown = &m_towns[i];
+        Town* currentTown = &m_towns[i];
         if (m_towns[i].m_type == TOWN_NECROPOLIS
             && currentTown->hasBuilding(SPECIAL_BUILDING_ID, 0)) {
             g_game->resetVisibility(currentTown->m_mapX, currentTown->m_mapY,
@@ -7754,7 +7759,7 @@ bool game::growCoverOfDarkness()
 }
 
 VA(0x004c7c50, 0x389)  // dc 0xb317c
-void game::resetAllPlayerVisibility()
+void Game::resetAllPlayerVisibility()
 {
     int i;
     for (i = 0; i < HERO_COUNT; ++i) {
@@ -7826,7 +7831,7 @@ void game::resetAllPlayerVisibility()
 }
 
 VA(0x004c7fe0, 0x462)  // dc 0xb3858
-void game::perDay()
+void Game::perDay()
 {
     ++m_day;
     if (!g_gameOver) {
@@ -7855,7 +7860,7 @@ void game::perDay()
     }
 
     for (i = 0; i < HERO_COUNT; ++i) {
-        hero* currHero = &m_heroes[i];
+        Hero* currHero = &m_heroes[i];
         currHero->m_flags &= 0xfffdfffeU;
         currHero->m_disguiseLevel = -1;
         currHero->m_flightLevel = -1;
@@ -7871,7 +7876,7 @@ void game::perDay()
 
     if (m_day == 1) {
         for (i = 0; i < m_towns.size(); ++i) {
-            town& currentTown = m_towns[i];
+            Town& currentTown = m_towns[i];
             if (currentTown.m_type == TOWN_RAMPART
                 && currentTown.hasBuilding(SPECIAL_BUILDING_ID, 1)) {
                 currentTown.m_pondResource = g_resources[random(0, 3)];
@@ -7897,7 +7902,7 @@ void game::perDay()
         checkEndGame(0);
 
     for (i = 0; i < HERO_COUNT; ++i) {
-        hero* currHero = &m_heroes[i];
+        Hero* currHero = &m_heroes[i];
         int maxMana = currHero->getMaxMana();
         if (currHero->isWieldingArtifact(g_artifactWizardsWellId)) {
             if (maxMana > currHero->m_mana)
@@ -7913,16 +7918,16 @@ void game::perDay()
     }
 
     for (i = 0; i < m_towns.size(); ++i) {
-        town* currTown = getTown(i);
+        Town* currTown = getTown(i);
         if (currTown->hasBuilding(MAGE_GUILD_ID, 1)) {
             if (currTown->m_visitingHeroId != -1) {
-                hero* currHero = getHero(currTown->m_visitingHeroId);
+                Hero* currHero = getHero(currTown->m_visitingHeroId);
                 int maxMana = currHero->getMaxMana();
                 if (maxMana > currHero->m_mana)
                     currHero->m_mana = static_cast<short>(maxMana);
             }
             if (currTown->m_garrisonHeroId != -1) {
-                hero* currHero = getHero(currTown->m_garrisonHeroId);
+                Hero* currHero = getHero(currTown->m_garrisonHeroId);
                 int maxMana = currHero->getMaxMana();
                 if (maxMana > currHero->m_mana)
                     currHero->m_mana = static_cast<short>(maxMana);
@@ -7934,22 +7939,22 @@ void game::perDay()
 }
 
 VA(0x004c8450, 0x248)
-void game::setRecruits(int playerPos)
+void Game::setRecruits(int playerPos)
 {
-    playerData* player = &m_players[playerPos];
-    type_artifact artifact;
+    PlayerData* player = &m_players[playerPos];
+    ArtifactRecord artifact;
     int recruitSlot;
 
     for (recruitSlot = 0; recruitSlot < 2; ++recruitSlot) {
         if (player->m_recruits[recruitSlot] >= 0)
             continue;
 
-        THeroClass otherClass;
+        HeroClass otherClass;
         if (player->m_recruits[1 - recruitSlot] < 0)
             otherClass = kNumHeroClasses;
         else
         {
-            otherClass = THeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
+            otherClass = HeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
         }
 
         int heroId;
@@ -7984,7 +7989,7 @@ void game::setRecruits(int playerPos)
             continue;
 
         m_heroAvailability[heroId] = 64;
-        hero* newHero = &m_heroes[heroId];
+        Hero* newHero = &m_heroes[heroId];
         int backpackSlot = HERO_BACKPACK_CAPACITY - 1;
         do {
             artifact = newHero->getBackpack(backpackSlot);
@@ -7999,13 +8004,13 @@ void game::setRecruits(int playerPos)
 }
 
 VA(0x004c86a0, 0xD5)
-void game::replaceRecruit(int playerPos, long recruitSlot)
+void Game::replaceRecruit(int playerPos, long recruitSlot)
 {
-    THeroClass otherClass = kNumHeroClasses;
-    playerData* player = &m_players[playerPos];
+    HeroClass otherClass = kNumHeroClasses;
+    PlayerData* player = &m_players[playerPos];
     if (player->m_recruits[1 - recruitSlot] != -1)
     {
-        otherClass = THeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
+        otherClass = HeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
     }
 
     int heroId = getNewHeroId(playerPos, otherClass, 0, kNumHeroClasses);
@@ -8031,17 +8036,17 @@ void game::replaceRecruit(int playerPos, long recruitSlot)
 // residual is the opening creature-week scan's C1 handle-state ESI/EDI role
 // permutation (`this` versus `i`), which why-reg proves source-unaddressable.
 VA(0x004c8780, 0x7B7)  // PerDay/PerMonth bracket + dc lines/callees, dc 0xb41e0
-void game::perWeek()
+void Game::perWeek()
 {
-    hero* obscuringHero;
+    Hero* obscuringHero;
     int align;
-    TCreatureType alternateBonus;
+    CreatureType alternateBonus;
     long bonusAmount;
     int x;
     int y;
     int i;
     int z;
-    TCreatureType bonusCreature;
+    CreatureType bonusCreature;
     NewmapCell* mapCell;
 
     bonusCreature = CREATURE_NONE;
@@ -8084,7 +8089,7 @@ void game::perWeek()
         }
         g_weekTypeExtra = align;
         {
-            bonusCreature = TCreatureType(align);
+            bonusCreature = CreatureType(align);
         }
     }
 
@@ -8093,10 +8098,10 @@ void game::perWeek()
             && m_towns[i].hasBuilding(HOLY_GRAIL_ID, 0)) {
             g_weekType = g_weekTypeInfernoGrail;
             {
-                bonusCreature = TCreatureType(g_creatureImpId);
+                bonusCreature = CreatureType(g_creatureImpId);
             }
             {
-                alternateBonus = TCreatureType(g_creatureFamiliarId);
+                alternateBonus = CreatureType(g_creatureFamiliarId);
             }
             bonusAmount = g_creatureTypeTraits[g_creatureImpId].m_growthRate;
             g_weekTypeExtra = g_creatureImpId;
@@ -8118,7 +8123,7 @@ void game::perWeek()
             int heroId = m_players[i].m_recruits[j];
             if (heroId >= 0) {
 #pragma inline_depth(0)
-                hero* recruitHero = getHero(heroId);
+                Hero* recruitHero = getHero(heroId);
 #pragma inline_depth()
                 if (!(recruitHero->m_flags & g_heroRecruitReservedFlag)) {
                     m_heroAvailability[heroId] = -1;
@@ -8134,7 +8139,7 @@ void game::perWeek()
     }
 
     for (i = 0; i < m_generators.size(); ++i) {
-        generator* currentGenerator = &m_generators[i];
+        Generator* currentGenerator = &m_generators[i];
 #pragma inline_depth(0)
         currentGenerator->grow(0);
 #pragma inline_depth()
@@ -8194,7 +8199,7 @@ void game::perWeek()
                 }
 
                 case REFUGEE_CAMP: {
-                    TCreatureType creature = g_game->getRandomMonster(0, 6);
+                    CreatureType creature = g_game->getRandomMonster(0, 6);
                     mapCell->m_objectIndex = creature;
                     mapCell->m_extraInfo =
                         g_creatureTypeTraits[creature].m_growthRate;
@@ -8211,9 +8216,9 @@ void game::perWeek()
                     ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
                         static_cast<void*>(&mapCell->m_extraInfo));
                     int resQty = random(3, 6);
-                    EGameResource resType;
+                    GameResource resType;
                     {
-                        resType = EGameResource(random(1, 5));
+                        resType = GameResource(random(1, 5));
                     }
                     info->setWindmill(resType, resQty);
                     break;
@@ -8241,7 +8246,7 @@ void game::perWeek()
     }
 
     for (i = 0; i < HERO_COUNT; ++i) {
-        hero* currHero = &m_heroes[i];
+        Hero* currHero = &m_heroes[i];
         if (currHero->m_flags & g_heroWeeklyVisitFlag)
             currHero->m_flags -= g_heroWeeklyVisitFlag;
     }
@@ -8271,7 +8276,7 @@ void game::perWeek()
     for (i = 0; i < 8; ++i) {
         if (!m_playerDisabled[i]) {
             for (int j = 0; j < m_players[i].m_numTowns; ++j) {
-                town* currentTown = getTown(m_players[i].m_townIds[j]);
+                Town* currentTown = getTown(m_players[i].m_townIds[j]);
                 if (currentTown->m_type == TOWN_DUNGEON
                     && currentTown->hasBuilding(EXTRA_1_ID, 0))
                     currentTown->setSummoningGenerator();
@@ -8281,7 +8286,7 @@ void game::perWeek()
 }
 
 VA(0x004c8f40, 0x378)  // dc 0xb47b8
-void game::perMonth()
+void Game::perMonth()
 {
     const int numcreaturemonthcreatures = 14;
     int growth;
@@ -8291,7 +8296,7 @@ void game::perMonth()
     NewmapCell* tempCell;
     int z;
     int j;
-    town* currTown;
+    Town* currTown;
 
     ++m_month;
     int monthRoll = random(1, g_monthRollMax);
@@ -8406,7 +8411,7 @@ void game::perMonth()
 // Explicitly pinning the late strike calls makes that block exact but shifts
 // the final scan and scores 91.63%; making the offset volatile scores 82.28%.
 VA(0x004c92c0, 0x202)  // anchor-global, dc 0xb4b58
-TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
+CreatureType Game::getRandomMonster(int minLevel, int maxLevel)
 {
     int i;
     int totalInClass;
@@ -8417,9 +8422,9 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
     monsterOk.set();
 
     if (!m_f1f698) {
-        bitset_iterator<CREATURE_CATAPULT> it;
-        it = bitset_iterator<CREATURE_CATAPULT>(monsterOk, CREATURE_PIXIE);
-        bitset_iterator<CREATURE_CATAPULT> end(monsterOk, CREATURE_CATAPULT);
+        BitsetIterator<CREATURE_CATAPULT> it;
+        it = BitsetIterator<CREATURE_CATAPULT>(monsterOk, CREATURE_PIXIE);
+        BitsetIterator<CREATURE_CATAPULT> end(monsterOk, CREATURE_CATAPULT);
         for (; it != end; ++it) {
 #pragma inline_depth(0)
             *it = false;
@@ -8464,11 +8469,11 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
         }
         ++x;
     }
-    return TCreatureType(x);
+    return CreatureType(x);
 }
 
 VA(0x004c94d0, 0xCD)  // dc 0xb4c84
-TArtifact game::getRandomArtifactId(int artifactClass)
+Artifact Game::getRandomArtifactId(int artifactClass)
 {
     int unallocatedInClass;
     int totalInClass;
@@ -8500,7 +8505,7 @@ TArtifact game::getRandomArtifactId(int artifactClass)
             }
         }
         m_artifactUsed[i] = 1;
-        return TArtifact(i);
+        return Artifact(i);
     } else {
         curCount = 0;
         for (i = 0; i < 144; ++i) {
@@ -8518,11 +8523,11 @@ TArtifact game::getRandomArtifactId(int artifactClass)
 }
 
 VA(0x004c95a0, 0x18E)  // dc 0xb4e04
-SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
+SpellID Game::getRandomSpell(const std::bitset<5> spellLevels)
 {
     int availableCount = 0;
     int spell;
-    for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+    for (spell = 0; spell < Hero::NUM_SPELLS; ++spell) {
         if (spellLevels.test(g_spellTraits[spell].m_level - 1)
             && g_spellTraits[spell].m_school != const_invalid_school
             && !m_spellAllocInfo[spell]) {
@@ -8533,7 +8538,7 @@ SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
     int ordinal = 0;
     if (availableCount != 0) {
         int selected = random(0, availableCount - 1);
-        for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (spell = 0; spell < Hero::NUM_SPELLS; ++spell) {
             if (spellLevels.test(g_spellTraits[spell].m_level - 1)
                 && g_spellTraits[spell].m_school != const_invalid_school
                 && !m_spellAllocInfo[spell]) {
@@ -8547,7 +8552,7 @@ SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
     }
 
     ordinal = 0;
-    for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+    for (spell = 0; spell < Hero::NUM_SPELLS; ++spell) {
         if (spellLevels.test(g_spellTraits[spell].m_level - 1)
             && g_spellTraits[spell].m_school != const_invalid_school
             && !m_spellDisabledInfo[spell]) {
@@ -8568,7 +8573,7 @@ SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
 // row is `ret 0xc` - three stack arguments, i.e. the p=4 prototype
 // below, not this p=1 one. RandomizeHeroPool was inlined away.
 DC_ONLY(0xb4fa0, 0xF4)
-void game::RandomizeHeroPool()
+void Game::RandomizeHeroPool()
 {
     // @stub
 }
@@ -8580,10 +8585,10 @@ void game::RandomizeHeroPool()
 #endif  // @carcass
 
 VA(0x004c9730, 0x159)  // dc 0xb5094
-void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
+void Game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
 {
-    armyGroup* currentArmy = &m_heroes[hero].m_army;
-    const THeroTraits* traits = &g_heroTraits[hero];
+    ArmyGroup* currentArmy = &m_heroes[hero].m_army;
+    const HeroTraits* traits = &g_heroTraits[hero];
 
     if (g_unk69774c
         && hero == g_campaignArmyOverrideHero
@@ -8593,7 +8598,7 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
     }
 
     long i;
-    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+    for (i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         currentArmy->m_armies[i] = -1;
         currentArmy->m_numTroops[i] = 0;
     }
@@ -8609,11 +8614,11 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
     i = 1;
     if (random(1, 100) <= 88 && traits->m_secondStack != -1) {
         if (traits->m_secondStack == CREATURE_BALLISTA) {
-            type_artifact artifact;
+            ArtifactRecord artifact;
             artifact.m_artifactId = ARTIFACT_BALLISTA;
             m_heroes[hero].giveArtifact(&artifact, 0, 0);
         } else if (traits->m_secondStack == CREATURE_FIRST_AID_TENT) {
-            type_artifact artifact;
+            ArtifactRecord artifact;
             artifact.m_artifactId = ARTIFACT_FIRST_AID_TENT;
             m_heroes[hero].giveArtifact(&artifact, 0, 0);
         } else {
@@ -8632,7 +8637,7 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
 }
 
 VA(0x004c9890, 0xFD)  // dc 0xb52fc
-void game::insertObject(int x, int y, int z, int objType, int objectIndex, int m_extraInfo)
+void Game::insertObject(int x, int y, int z, int objType, int objectIndex, int m_extraInfo)
 {
     if (objType == RANDOM_MONSTER)
         objType = MONSTER;
@@ -8682,7 +8687,7 @@ void game::insertObject(int x, int y, int z, int objType, int objectIndex, int m
 // DC names only thisTown, so the two extra locals remain PC codegen hypotheses;
 // all tested types and scopes plateau at the same register/stack schedule.
 VA(0x004c9990, 0x43A)  // anchor-global, dc 0xb54f8
-void game::convertObject(NewmapCell* tempCell)
+void Game::convertObject(NewmapCell* tempCell)
 {
     char defName[100];
 
@@ -8692,7 +8697,7 @@ void game::convertObject(NewmapCell* tempCell)
     m_worldMap.m_objectTypes.push_back(m_worldMap.m_objectTypes[object->m_typeIndex]);
     CObjectType* newType = &m_worldMap.m_objectTypes.back();
 
-    TAdventureObjectType newObject = NOTHING;
+    AdventureObjectType newObject = NOTHING;
     if (tempCell->m_isTrigger) {
         newObject = tempCell->getMapObject();
         switch (newObject) {
@@ -8713,7 +8718,7 @@ void game::convertObject(NewmapCell* tempCell)
             break;
         case RANDOM_TOWN:
         case TOWN: {
-            town* thisTown = g_game->getTown(tempCell->getMapExtraInfo());
+            Town* thisTown = g_game->getTown(tempCell->getMapExtraInfo());
             __int64 buildings = thisTown->m_built;
             if (buildings & g_bitNumber[HALL_CAPITOL_ID]) {
                 strcpy(defName, g_townCapitolObjectDefs[tempCell->m_objectIndex]);
@@ -8747,7 +8752,7 @@ void game::convertObject(NewmapCell* tempCell)
                 continue;
             NewmapCell* cell = m_worldMap.cell(object->m_x - ix,
                                              object->m_y - iy, object->m_z);
-            for (NewmapCell::TObjectCell* entry = cell->m_objects.begin();
+            for (NewmapCell::ObjectCell* entry = cell->m_objects.begin();
                  entry != cell->m_objects.end(); entry++) {
                 if (entry->m_objectIndex == objectId) {
                     object->m_typeIndex = static_cast<unsigned short>(
@@ -8765,7 +8770,7 @@ void game::convertObject(NewmapCell* tempCell)
 // 4 minor, 8 major, 16 relic, and RANDOM_ARTIFACT's 14 is
 // treasure|minor|major, i.e. every class except relics.
 VA(0x004c9dd0, 0x270)  // dc 0xb5910
-void game::processRandomObjects()
+void Game::processRandomObjects()
 {
     int y, z, x;
     NewmapCell* tempCell;
@@ -8886,7 +8891,7 @@ void game::processRandomObjects()
 // Restoring that canonical accessor and local name is byte-flat at 98.6076%;
 // the remaining difference is inside GetTownId's coordinate comparison.
 VA(0x004ca040, 0x1F1)  // linkorder, dc 0xb5cdc
-void game::createTownHeroes(int* startingHeroIds)
+void Game::createTownHeroes(int* startingHeroIds)
 {
     // MAX 99.6203 is NOT reachable as written: it was measured with this
     // loop spelled `i != 8`, an unnamed domain compare that fails the
@@ -8895,7 +8900,7 @@ void game::createTownHeroes(int* startingHeroIds)
         if (!m_mapHeader.m_playerSlotAttributes[i].m_generateHero)
             continue;
 
-        town* thisTown = getTown(
+        Town* thisTown = getTown(
             getTownId(m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_x,
                       m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_y,
                       m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_z));
@@ -8919,14 +8924,14 @@ void game::createTownHeroes(int* startingHeroIds)
             && g_game->m_campaign.m_currentCampaign == g_startLevelCampaign
             && g_game->m_campaign.m_currentMap == g_startLevelScenario)
             m_heroes[heroId].giveExperience(
-                hero::getExperience(g_game->m_heroes[g_startLevelHeroId].m_level
+                Hero::getExperience(g_game->m_heroes[g_startLevelHeroId].m_level
                                     + g_startLevelBonus),
                 1, 0);
     }
 }
 
 VA(0x004ca240, 0xF6)  // dc 0xb5f80
-void game::makeTerrainVisible(int whichPlayer, unsigned short visMask)
+void Game::makeTerrainVisible(int whichPlayer, unsigned short visMask)
 {
     unsigned char players = 0;
     if (whichPlayer >= 0 && whichPlayer < 8) {
@@ -8951,7 +8956,7 @@ void game::makeTerrainVisible(int whichPlayer, unsigned short visMask)
 }
 
 VA(0x004ca340, 0x6F)  // dc 0xb6054
-void game::giveArmy(armyGroup* thisMonInfo, int monType, int monNum, int slot)
+void Game::giveArmy(ArmyGroup* thisMonInfo, int monType, int monNum, int slot)
 {
     if (slot >= 0) {
         thisMonInfo->m_armies[slot] = monType;
@@ -8974,10 +8979,10 @@ void game::giveArmy(armyGroup* thisMonInfo, int monType, int monNum, int slot)
 }
 
 VA(0x004ca3b0, 0x58)  // dc 0xb6114
-int game::experienceValueOfStack(const armyGroup* whichGroup, const hero* whichHero)
+int Game::experienceValueOfStack(const ArmyGroup* whichGroup, const Hero* whichHero)
 {
     int value = 0;
-    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+    for (int i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         if (whichGroup->m_numTroops[i] > 0)
             value += g_creatureTypeTraits[whichGroup->m_armies[i]].m_hitPoints
                      * whichGroup->m_numTroops[i];
@@ -8991,28 +8996,28 @@ int game::experienceValueOfStack(const armyGroup* whichGroup, const hero* whichH
 
 // E:\gamedcs\game.cpp:9596
 DC_ONLY(0xb61d0, 0x128)
-void game::setupAdjacentMons()
+void Game::setupAdjacentMons()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:9636
 DC_ONLY(0xb62f8, 0x64)
-void game::cancelComputerScreen()
+void Game::cancelComputerScreen()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:9660
 DC_ONLY(0xb635c, 0x1DC)
-void game::showComputerScreen()
+void Game::showComputerScreen()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:9720
 DC_ONLY(0xb6538, 0x108)
-void game::showHeroesLogo()
+void Game::showHeroesLogo()
 {
     // @stub
 }
@@ -9021,10 +9026,10 @@ void game::showHeroesLogo()
 #endif  // @carcass
 
 VA(0x004ca410, 0x116)  // dc 0xb61d0
-void game::setupAdjacentMons()
+void Game::setupAdjacentMons()
 {
-    type_point excluded(0xff, 0xff, 0xff);
-    type_point monster;
+    MapPoint excluded(0xff, 0xff, 0xff);
+    MapPoint monster;
     int x;
     int y;
     int z;
@@ -9034,7 +9039,7 @@ void game::setupAdjacentMons()
         for (x = 0; x < g_mapWidth; ++x) {
             for (y = 0; y < g_mapHeight; ++y) {
                 if (g_advManager->findAdjacentMonster(
-                        type_point(x, y, z), &monster, excluded)) {
+                        MapPoint(x, y, z), &monster, excluded)) {
                     unsigned short* extraByte = getMapExtraPtr(x, y, z);
                     *extraByte |= MAP_EXTRA_MONSTER;
                 } else {
@@ -9047,7 +9052,7 @@ void game::setupAdjacentMons()
 }
 
 VA(0x004ca530, 0x80)  // dc 0xb62f8
-void game::cancelComputerScreen()
+void Game::cancelComputerScreen()
 {
     g_completeDrawEnabled = 1;
     g_advManager->updateRadar(1, 1, 0, 0, 0);
@@ -9058,7 +9063,7 @@ void game::cancelComputerScreen()
 }
 
 VA(0x004ca5b0, 0x1C9)
-void game::showComputerScreen()
+void Game::showComputerScreen()
 {
     g_advManager->m_advWindow->getWidget(8)->enable(0);
     g_advManager->m_advWindow->getWidget(7)->enable(0);
@@ -9094,7 +9099,7 @@ void game::showComputerScreen()
 }
 
 VA(0x004ca780, 0xB4)
-void game::showHeroesLogo()
+void Game::showHeroesLogo()
 {
     CNetMsgHandler* netMsgHandler;
     Bitmap816* heroLogo;
@@ -9125,17 +9130,17 @@ void game::showHeroesLogo()
 }
 
 VA(0x004ca840, 0x19C)  // dc 0xb6640
-void game::waitForPlayer(char* text, int playerId)
+void Game::waitForPlayer(char* text, int playerId)
 {
     if (!g_unnamed6993dc || g_unnamed699274 <= 1 || g_networkActive69954c)
         return;
 
-    g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+    g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
     g_completeDrawAllCells = 1;
     if (g_currentPlayer->m_isHuman && g_currentPlayer->m_isLocal)
-        g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_1, 9999999);
+        g_advManager->overrideBottomView(AdvManager::BOTTOM_VIEW_1, 9999999);
     else
-        g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_DEFAULT, 9999999);
+        g_advManager->overrideBottomView(AdvManager::BOTTOM_VIEW_DEFAULT, 9999999);
 
     g_soundManager->m_playSounds = 1;
     g_soundManager->stopMP3();
@@ -9164,7 +9169,7 @@ void game::waitForPlayer(char* text, int playerId)
 
 // E:\gamedcs\game.cpp:9798
 DC_ONLY(0xb6878, 0x6)
-void game::SetupTowns()
+void Game::SetupTowns()
 {
     // @stub
 }
@@ -9185,28 +9190,29 @@ void resetRandomTownNames()
 
 // E:\gamedcs\game.cpp:9833
 DC_ONLY(0xb69f4, 0x290)
-void game::processOnMapTowns()
+void Game::processOnMapTowns()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:9912
 DC_ONLY(0xb6c84, 0x57E)
-void initialize_hero(hero* current_hero, const HeroExtra* setup)
+// Before normalization (function): initialize_hero.
+void initializeHero(Hero* current_hero, const HeroExtra* setup)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:10060
 DC_ONLY(0xb7204, 0x350)
-void game::processOnMapHeroes()
+void Game::processOnMapHeroes()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:10132
 DC_ONLY(0xb7554, 0xC)
-void game::checkHeroConsistency()
+void Game::checkHeroConsistency()
 {
     // @stub
 }
@@ -9239,7 +9245,7 @@ void game::checkHeroConsistency()
 // return-only or decompiler-shaped placeholder is the explicit negative
 // control and is not an admissible reconstruction.
 DC_ONLY(0xb7560, 0x1064)
-int game::transmitSaveGame(int iToWho, int thisPlayerDead, unsigned char inGame, unsigned char makeOrig)
+int Game::transmitSaveGame(int iToWho, int thisPlayerDead, unsigned char inGame, unsigned char makeOrig)
 {
     // @stub
 }
@@ -9267,21 +9273,21 @@ int game::transmitSaveGame(int iToWho, int thisPlayerDead, unsigned char inGame,
 // above, a flat return-only or pseudocode transcription is the explicit
 // negative control, not source recovery.
 DC_ONLY(0xb85c4, 0xE44)
-int game::receiveSaveGame(int iFileSize, int iFullGameCRC, int iFromWho, unsigned char inGame, unsigned char isDiff)
+int Game::receiveSaveGame(int iFileSize, int iFullGameCRC, int iFromWho, unsigned char inGame, unsigned char isDiff)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11028
 DC_ONLY(0xb9408, 0x5C6)
-void game::doNewTurn()
+void Game::doNewTurn()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11170
 DC_ONLY(0xb99d0, 0x62)
-int game::getBoatsBuilt()
+int Game::getBoatsBuilt()
 {
     // @stub
 }
@@ -9299,7 +9305,7 @@ int game::getBoatsBuilt()
 // TPickRandomTownName objects and its element wrapper proves [0, 15].
 DATA(0x006971a0)
 // Previous project spelling: gRandomTownNames.
-static TPickRandomTownName g_randomTownNames[9];
+static PickRandomTownName g_randomTownNames[9];
 
 // The Complete table has a 17-pointer faction stride. The picker intentionally
 // uses only indices 0..15; the seventeenth entry is outside its random domain.
@@ -9326,10 +9332,10 @@ inline void resetRandomTownNames()
 
 // E:\gamedcs\game.cpp:9833
 VA(0x004caa70, 0x39C)  // DC name/order + retail map/vector/string shape, dc 0xb69f4
-void game::processOnMapTowns()
+void Game::processOnMapTowns()
 {
     int numMapLayers;
-    town* currTown;
+    Town* currTown;
     int x;
     int y;
     NewmapCell* tempCell;
@@ -9383,13 +9389,13 @@ void game::processOnMapTowns()
 }
 
 VA(0x004cae10, 0x1B1)
-void game::processOnMapHeroes()
+void Game::processOnMapHeroes()
 {
     HeroExtra* heroExtra;
-    hero* currHero;
+    Hero* currHero;
     int i;
     NewmapCell* townCell;
-    type_point townLoc;
+    MapPoint townLoc;
 
     for (i = 0; i < HERO_COUNT; ++i) {
         heroExtra = &m_heroSetup[i];
@@ -9399,7 +9405,7 @@ void game::processOnMapHeroes()
             townCell = m_worldMap.cell(townLoc.m_x, townLoc.m_y, townLoc.m_z);
             if (townCell->m_type == TOWN && townCell->m_isTrigger
                 && m_heroAvailability[heroExtra->m_id]
-                    != hero::HERO_AVAILABILITY_PRISON) {
+                    != Hero::HERO_AVAILABILITY_PRISON) {
                 --heroExtra->m_location.m_x;
             }
 
@@ -9407,7 +9413,7 @@ void game::processOnMapHeroes()
             currHero->heroFn004D8B30(heroExtra);
 
             if (m_heroAvailability[heroExtra->m_id]
-                != hero::HERO_AVAILABILITY_PRISON) {
+                != Hero::HERO_AVAILABILITY_PRISON) {
                 m_players[currHero->m_owner].m_heroes[
                     m_players[currHero->m_owner].m_numHeroes] = currHero->m_id;
                 ++m_players[currHero->m_owner].m_numHeroes;
@@ -9460,7 +9466,7 @@ void game::processOnMapHeroes()
 // isDiff/diffSize declarations were byte-flat in earlier controls. Missing DC
 // queueSize/attempts/pNetMsg have no independent retail semantics proven yet.
 VA(0x004cafd0, 0xD14)  // retail body + typed catch + continuation/tables
-int game::transmitSaveGame(int toWho, int thisPlayerDead,
+int Game::transmitSaveGame(int toWho, int thisPlayerDead,
                            unsigned char inGame, unsigned char makeOrig)
 {
     CNetMsgHandlerPause netMsgHandlerPause;
@@ -9475,7 +9481,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     g_soundManager->switchAmbientMusic(-1);
     g_soundManager->m_playSounds = changeSounds;
 
-    if (g_advManager->m_status == baseManager::STATUS_ACTIVE)
+    if (g_advManager->m_status == BaseManager::STATUS_ACTIVE)
         g_advManager->bvMessage((*g_generalText)[99]);
 
     saveGame(g_loadedGameName, 0, 0, !inGame, 1);
@@ -9511,11 +9517,11 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
             File::deleteFile(diffFilename);
             int returnValue;
             try {
-                TGzFile compressedFile(diffFilename,
+                GzFile compressedFile(diffFilename,
                               DATA_COMPGEN(0x00677f9c,
                                            xferDiffWriteMode, "wb6"));
                 returnValue = compressedFile.write(diff, diffSize);
-            } catch (TGzFile::TOpenFailure) {
+            } catch (GzFile::OpenFailure) {
                 fileError(diffFilename);
                 shutDown(0);
             }
@@ -9761,13 +9767,13 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
 }
 
 VA(0x004cbd40, 0xA83)  // retail body + dc 0xb85c4 source shape
-int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
+int Game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
                           unsigned char inGame, unsigned char isDiff)
 {
     CNetMsgHandlerPause netMsgHandlerPause;
     g_advManager->trimLoopingSounds(4);
 
-    if (g_advManager->m_status == baseManager::STATUS_ACTIVE)
+    if (g_advManager->m_status == BaseManager::STATUS_ACTIVE)
         g_advManager->bvMessage((*g_generalText)[100]);
 
     int lastDataReceiveTime = GameTime::get();
@@ -10018,11 +10024,11 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
         unsigned char* newSave = new unsigned char[diffSize];
         unsigned long bytesRead;
         try {
-            TGzFile gzfile(
+            GzFile gzfile(
                 diffFilename,
                 DATA_COMPGEN(0x00677d6c, gzReadMode, "rb"));
             bytesRead = gzfile.read(newSave, diffSize);
-        } catch (TGzFile::TOpenFailure) {
+        } catch (GzFile::OpenFailure) {
             fileError(diffFilename);
             shutDown(0);
         }
@@ -10077,9 +10083,9 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
     delete[] blockReceived;
     delete[] data;
 
-    if (g_advManager->m_status == baseManager::STATUS_ACTIVE) {
+    if (g_advManager->m_status == BaseManager::STATUS_ACTIVE) {
         g_advManager->overrideBottomView(
-            advManager::BOTTOM_VIEW_DEFAULT, -1);
+            AdvManager::BOTTOM_VIEW_DEFAULT, -1);
         g_advManager->updBottomView(1, 1, 1);
     }
 
@@ -10097,7 +10103,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
 }
 
 VA(0x004cc7d0, 0x5FE)  // dc 0xb9408
-void game::doNewTurn()
+void Game::doNewTurn()
 {
     int newHero;
     char sample[13];
@@ -10123,7 +10129,7 @@ void game::doNewTurn()
     g_advManager->m_advWindow->updateResourceDisplay(1, 1);
     g_advManager->setInitialMapOrigin();
     g_advManager->redrawAdvScreen(0, 0);
-    g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_1, -1);
+    g_advManager->overrideBottomView(AdvManager::BOTTOM_VIEW_1, -1);
     g_advManager->updBottomView(1, 1, 0);
     g_windowManager->updateScreen(0, 0, 800, 600);
 
@@ -10202,14 +10208,14 @@ void game::doNewTurn()
 
     g_soundManager->m_playSounds = 1;
     launchSample(sample, 30000, 3);
-    g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+    g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
     g_advManager->m_advWindow->setBackgroundAnimation(1);
     normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     g_advManager->m_advWindow->setBackgroundAnimation(0);
 }
 
 VA(0x004ccdd0, 0x56)  // dc 0xb99d0
-int game::getBoatsBuilt()
+int Game::getBoatsBuilt()
 {
     int count = 0;
     for (unsigned int i = 0; i < m_boats.size(); i++) {
@@ -10220,11 +10226,11 @@ int game::getBoatsBuilt()
 }
 
 VA(0x004cce30, 0xB8)  // dc 0xb9a34
-int game::getNumThievesGuilds(int whichPlayer)
+int Game::getNumThievesGuilds(int whichPlayer)
 {
     int count = 0;
     for (int i = 0; i < m_players[whichPlayer].m_numTowns; i++) {
-        town* currentTown =
+        Town* currentTown =
             &g_game->m_towns[m_players[whichPlayer].m_townIds[i]];
         if ((currentTown->m_built & g_bitNumber[TAVERN_ID]) ||
             (currentTown->m_type == TOWN_CASTLE &&
@@ -10236,7 +10242,7 @@ int game::getNumThievesGuilds(int whichPlayer)
 }
 
 VA(0x004ccef0, 0x23)  // dc 0xb9b24
-void game::setMapSize(int width, int height)
+void Game::setMapSize(int width, int height)
 {
     g_mapWidth = width;
     g_mapHeight = height;
@@ -10247,77 +10253,77 @@ void game::setMapSize(int width, int height)
 
 // E:\gamedcs\game.cpp:11221
 DC_ONLY(0xb9b54, 0x44)
-int game::HeroIDToHeroPos(playerData* pPlayer, int id)
+int Game::HeroIDToHeroPos(PlayerData* pPlayer, int id)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11231
 DC_ONLY(0xb9b98, 0x6C)
-int game::TownIDToTownPos(playerData* pPlayer, int id)
+int Game::TownIDToTownPos(PlayerData* pPlayer, int id)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11241
 DC_ONLY(0xb9c04, 0xA6)
-void game::SetMarketArtifacts()
+void Game::SetMarketArtifacts()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11252
 DC_ONLY(0xb9cac, 0xAA)
-void game::SetSummoningGenerators()
+void Game::SetSummoningGenerators()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11273
 DC_ONLY(0xb9d58, 0x122)
-void game::setCannedRumour()
+void Game::setCannedRumour()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11311
 DC_ONLY(0xb9e7c, 0x1C2)
-void game::setMapRumour()
+void Game::setMapRumour()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11358
 DC_ONLY(0xba040, 0xBC4)
-void game::setSpecialRumour()
+void Game::setSpecialRumour()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11445
 DC_ONLY(0xbac04, 0xA0)
-void game::SetupNewRumour()
+void Game::SetupNewRumour()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11459
 DC_ONLY(0xbaca4, 0x20C)
-void game::giveTimeEventReward(const TTimedEvent* thisEvent)
+void Game::giveTimeEventReward(const TimedEvent* thisEvent)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11499
 DC_ONLY(0xbaeb0, 0x44)
-void game::GiveTownEventReward(const TTownEvent* thisEvent)
+void Game::GiveTownEventReward(const TownEvent* thisEvent)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11512
 DC_ONLY(0xbaef4, 0xF8)
-void game::checkForTimeEvent()
+void Game::checkForTimeEvent()
 {
     // @stub
 }
@@ -10326,7 +10332,7 @@ void game::checkForTimeEvent()
 #endif  // @carcass
 
 VA(0x004ccf20, 0x8E)  // dc 0xb9d58
-void game::setCannedRumour()
+void Game::setCannedRumour()
 {
     int available = 0;
     int i;
@@ -10354,7 +10360,7 @@ void game::setCannedRumour()
 }
 
 VA(0x004ccfb0, 0x1BD)
-void game::setMapRumour()
+void Game::setMapRumour()
 {
     int rumourIndex;
     int x;
@@ -10390,7 +10396,7 @@ void game::setMapRumour()
 }
 
 VA(0x004cd170, 0x59B)  // dc 0xba040
-void game::setSpecialRumour()
+void Game::setSpecialRumour()
 {
     if (random(1, 100) < g_specialRumourChance && getCurrentTurn() > 1) {
         long values[8];
@@ -10489,7 +10495,7 @@ void game::setSpecialRumour()
                     g_questMonsterDirections[direction]);
         }
     } else {
-        type_point artifactLocation(m_ultimateArtifactX, m_ultimateArtifactY,
+        MapPoint artifactLocation(m_ultimateArtifactX, m_ultimateArtifactY,
                                     m_ultimateArtifactZ);
         const NewmapCell* cell = g_advManager->getCell(artifactLocation);
         sprintf(m_currentRumour,
@@ -10499,10 +10505,10 @@ void game::setSpecialRumour()
 }
 
 VA(0x004cd710, 0x200)
-void game::giveTimeEventReward(const TTimedEvent* thisEvent)
+void Game::giveTimeEventReward(const TimedEvent* thisEvent)
 {
-    std::vector<type_dialog_resource> rewards;
-    type_dialog_resource reward;
+    std::vector<DialogResource> rewards;
+    DialogResource reward;
     int j;
     int resToShow;
     int i;
@@ -10541,7 +10547,7 @@ void game::giveTimeEventReward(const TTimedEvent* thisEvent)
                 && m_campaign.m_currentMap
                     == g_campaignPopulationEventScenario) {
                 for (i = 0; i < g_currentPlayer->m_numTowns; ++i) {
-                    town* currentTown = getTown(g_currentPlayer->m_townIds[i]);
+                    Town* currentTown = getTown(g_currentPlayer->m_townIds[i]);
                     for (j = 0; j < 4; ++j) {
                         currentTown->m_population[j]
                             = currentTown->m_population[j] / 2;
@@ -10555,13 +10561,13 @@ void game::giveTimeEventReward(const TTimedEvent* thisEvent)
 }
 
 VA(0x004cd910, 0xF5)  // unique body/order + 0x34-byte TTimedEvent stride
-void game::checkForTimeEvent()
+void Game::checkForTimeEvent()
 {
     int day = static_cast<short>(
         (m_month * 4 + m_week - 5) * 7 + m_day);
 
     for (unsigned int i = 0; i < m_worldMap.m_timedEventList.size(); ++i) {
-        TTimedEvent* thisEvent = &m_worldMap.m_timedEventList[i];
+        TimedEvent* thisEvent = &m_worldMap.m_timedEventList[i];
         int playerIndex = g_netLocalGamePos;
         if (playerIndex >= 8 || playerIndex < 0)
             playerIndex = 0;
@@ -10584,13 +10590,13 @@ void game::checkForTimeEvent()
 }
 
 VA(0x004cda10, 0x164)  // dc 0xbafec
-void game::checkForTownEvent()
+void Game::checkForTownEvent()
 {
     int day = static_cast<short>(
         (m_month * 4 + m_week - 5) * 7 + m_day);
 
     for (unsigned int i = 0; i < m_worldMap.m_townEventList.size(); ++i) {
-        const TTownEvent& thisEvent = m_worldMap.m_townEventList[i];
+        const TownEvent& thisEvent = m_worldMap.m_townEventList[i];
         int playerIndex = g_netLocalGamePos;
         if (playerIndex >= 8 || playerIndex < 0)
             playerIndex = 0;
@@ -10603,14 +10609,14 @@ void game::checkForTownEvent()
             continue;
 
         if (thisEvent.m_firstTime == day) {
-            town* thisTown = getTown(thisEvent.m_townNum);
+            Town* thisTown = getTown(thisEvent.m_townNum);
             if (g_netLocalGamePos == thisTown->m_owner) {
                 giveTimeEventReward(&thisEvent);
                 thisTown->giveEventReward(&thisEvent);
             }
         } else if (thisEvent.m_interval && day > thisEvent.m_firstTime
                    && (day - thisEvent.m_firstTime) % thisEvent.m_interval == 0) {
-            town* thisTown = getTown(thisEvent.m_townNum);
+            Town* thisTown = getTown(thisEvent.m_townNum);
             if (g_netLocalGamePos == thisTown->m_owner) {
                 giveTimeEventReward(&thisEvent);
                 thisTown->giveEventReward(&thisEvent);
@@ -10620,13 +10626,13 @@ void game::checkForTownEvent()
 }
 
 VA(0x004cdb80, 0x231)  // dc 0xbb0e4
-unsigned char game::getRandomLith(const std::vector<type_point>& points,
-                                    type_point& result, long cellType,
+unsigned char Game::getRandomLith(const std::vector<MapPoint>& points,
+                                    MapPoint& result, long cellType,
                                     long excluded) const
 {
     long lithCount = points.size();
     long openCount = 0;
-    type_point exitPoint;
+    MapPoint exitPoint;
     long i;
     const NewmapCell* exitCell;
 
@@ -10673,36 +10679,36 @@ unsigned char game::getRandomLith(const std::vector<type_point>& points,
 }
 
 VA(0x004cddc0, 0x22)  // dc 0xbb3e0
-unsigned char game::getRandomLithExit(long color, type_point& result) const
+unsigned char Game::getRandomLithExit(long color, MapPoint& result) const
 {
     return getRandomLith(m_lithExitPools[color], result, 0x2c, -1);
 }
 
 VA(0x004cddf0, 0x24)  // dc 0xbb41c
-unsigned char game::getRandomLith(long color, long excluded, type_point& result) const
+unsigned char Game::getRandomLith(long color, long excluded, MapPoint& result) const
 {
     return getRandomLith(m_lithPools[color], result, 0x2d, excluded);
 }
 
 VA(0x004cde20, 0x1D)  // dc 0xbb45c
-unsigned char game::getRandomWhirlpool(long excluded, type_point& result) const
+unsigned char Game::getRandomWhirlpool(long excluded, MapPoint& result) const
 {
     return getRandomLith(m_whirlpools, result, 0x6f, excluded);
 }
 
 VA(0x004cde40, 0xE0)  // dc 0xbb490
-type_point game::getUndergroundGateExit(const NewmapCell* cell) const
+MapPoint Game::getUndergroundGateExit(const NewmapCell* cell) const
 {
     long exitGate = m_undergroundGatePairs[cell->m_extraInfo];
     if (exitGate < 0)
-        return type_point(0xff, 0xff, 0xff);
+        return MapPoint(0xff, 0xff, 0xff);
 
-    type_point exitPoint = m_undergroundGateExits[exitGate];
+    MapPoint exitPoint = m_undergroundGateExits[exitGate];
     const NewmapCell* exitCell = m_worldMap.cell(exitPoint.m_x, exitPoint.m_y, exitPoint.m_z);
     if (exitCell->m_type == HERO && exitCell->m_isTrigger)
         return exitPoint;
     if (exitCell->m_type != UNDERGROUND_GATE)
-        return type_point(0xff, 0xff, 0xff);
+        return MapPoint(0xff, 0xff, 0xff);
     return exitPoint;
 }
 
@@ -10738,7 +10744,7 @@ type_point game::getUndergroundGateExit(const NewmapCell* cell) const
 // 92.3721 to 92.2795. The implicit-member boundary is therefore bounded
 // without sacrificing an exact function.
 VA(0x004cdf20, 0x585)  // anchor-global, dc 0xbb62c
-game::game()
+Game::Game()
 {
     m_difficultyRating = 0;
     m_newCampaignStarted = 0;
@@ -10788,20 +10794,20 @@ VA_COMPGEN(0x004ce520, 0x4A, IMPLICIT_DTOR, HeroExtra)
 
 // CodeView dc 0xbd630: CV_fldattr_t.compgenx marks this destructor
 // as implicit. Its retained retail body performs only base/member teardown.
-VA_COMPGEN(0x004ce570, 0x32, IMPLICIT_DTOR, playerData)
+VA_COMPGEN(0x004ce570, 0x32, IMPLICIT_DTOR, PlayerData)
 
 // E:\gamedcs\game.cpp:11749
 
 VA(0x004ce5b0, 0x346)  // dc 0xbbd28
-game::~game()
+Game::~Game()
 {
     clearEventRecords();
 }
 
 VA(0x004ce900, 0x3B)  // dc 0xbbe68
-boat* game::getHeroBoat(int id, unsigned char occupied)
+Boat* Game::getHeroBoat(int id, unsigned char occupied)
 {
-    for (boat* i = m_boats.begin(); i != m_boats.end(); i++) {
+    for (Boat* i = m_boats.begin(); i != m_boats.end(); i++) {
         if (i->m_allocated && i->m_occupyingHero == id && i->m_occupied == occupied)
             return i;
     }
@@ -10809,7 +10815,7 @@ boat* game::getHeroBoat(int id, unsigned char occupied)
 }
 
 VA(0x004ce940, 0x27)  // dc 0xbbee4
-bool game::isHuman(int gamePos) const
+bool Game::isHuman(int gamePos) const
 {
     if (gamePos >= 8 || gamePos < 0)
         gamePos = 0;
@@ -10817,7 +10823,7 @@ bool game::isHuman(int gamePos) const
 }
 
 VA(0x004ce970, 0x3C)  // dc 0xbbfcc
-bool game::isLocalHuman(int gamePos) const
+bool Game::isLocalHuman(int gamePos) const
 {
     if (gamePos >= 8 || gamePos < 0)
         return false;
@@ -10825,13 +10831,13 @@ bool game::isLocalHuman(int gamePos) const
 }
 
 VA(0x004ce9b0, 0x6A)  // dc 0xbc010
-playerData* game::getLocalPlayer()
+PlayerData* Game::getLocalPlayer()
 {
     return &m_players[getLocalPlayerGamePos()];
 }
 
 VA(0x004cea20, 0x4E)  // dc 0xbc038
-int game::getLocalPlayerGamePos() const
+int Game::getLocalPlayerGamePos() const
 {
     if (g_mpNetProtocol == MP_HOTSEAT) {
         int pos = g_netLocalGamePos;
@@ -10852,9 +10858,9 @@ int game::getLocalPlayerGamePos() const
 }
 
 VA(0x004cea70, 0xE7)  // dc 0xbc0c0
-type_point game::getPuzzleOrigin() const
+MapPoint Game::getPuzzleOrigin() const
 {
-    type_point result;
+    MapPoint result;
     result.m_x = m_ultimateArtifactX - 9;
     result.m_y = m_ultimateArtifactY - 8;
     result.m_z = m_ultimateArtifactZ;
@@ -10867,7 +10873,7 @@ type_point game::getPuzzleOrigin() const
 }
 
 VA(0x004ceb60, 0xBD)  // dc 0xbc1fc
-char* game::getPlayerName(int gamePos)
+char* Game::getPlayerName(int gamePos)
 {
     if (gamePos >= 8 || gamePos < 0)
         gamePos = 0;
@@ -10875,7 +10881,7 @@ char* game::getPlayerName(int gamePos)
 }
 
 VA(0x004cec20, 0x25)  // dc 0xbc23c
-int game::getGamePosFromDPID(unsigned long dpid) const
+int Game::getGamePosFromDPID(unsigned long dpid) const
 {
     for (int i = 0; i < 8; i++) {
         if (m_players[i].m_dpid == dpid)
@@ -10885,7 +10891,7 @@ int game::getGamePosFromDPID(unsigned long dpid) const
 }
 
 VA(0x004cec50, 0x3E)  // dc 0xbc2b8
-bool game::isLastHuman(int gamePos) const
+bool Game::isLastHuman(int gamePos) const
 {
     int i = gamePos + 1;
 
@@ -10899,7 +10905,7 @@ bool game::isLastHuman(int gamePos) const
 }
 
 VA(0x004cec90, 0x18)  // dc 0xbc300
-bool game::isMultiplayer() const
+bool Game::isMultiplayer() const
 {
     if (g_videoPaused || g_mpNetProtocol == MP_HOTSEAT)
         return true;
@@ -10907,7 +10913,7 @@ bool game::isMultiplayer() const
 }
 
 VA(0x004cecb0, 0x81)
-void game::resetGame(int difficulty, int version,
+void Game::resetGame(int difficulty, int version,
                      NewSMapHeader* defaultMapHeader)
 {
     for (int playerIndex = 0; playerIndex < 8; ++playerIndex)
@@ -10920,12 +10926,12 @@ void game::resetGame(int difficulty, int version,
     initNewGame(difficulty, version, defaultMapHeader, 0);
     g_turnDuration69d630.clear();
     g_thisNetGotAdventureControl = 0;
-    TSpellbookWindow::reset();
+    SpellbookWindow::reset();
     memset(m_borderTentVisitFlags, 0, sizeof(m_borderTentVisitFlags));
 }
 
 VA(0x004ced40, 0x1D0)  // sole caller 0x5013b0 + game+0x4e7bc vector layout
-void game::recordMonsterIdentifier(int identifier, type_point point)
+void Game::recordMonsterIdentifier(int identifier, MapPoint point)
 {
     MonsterIdentifier record;
     record.m_identifier = identifier;
@@ -10936,14 +10942,14 @@ void game::recordMonsterIdentifier(int identifier, type_point point)
 // Quest-monster setup resolves the most recently recorded object with this
 // identifier; absent objects use the packed all-minus-one point sentinel.
 VA(0x004cef10, 0x68)  // sole semantic caller 0x56ef20 + reverse 8-byte walk
-type_point game::gameFn004CEF10(int identifier)
+MapPoint Game::gameFn004CEF10(int identifier)
 {
     for (unsigned int i = m_monsterIdentifiers.size(); i-- != 0;) {
         if (m_monsterIdentifiers[i].m_identifier == identifier)
             return m_monsterIdentifiers[i].m_point;
     }
 
-    type_point point;
+    MapPoint point;
     point.m_x = -1;
     point.m_y = -1;
     point.m_z = -1;
@@ -10956,8 +10962,8 @@ VA_COMPGEN(0x004bdf80, 0x1B1, IMPLICIT_DTOR, SavedGameHeader)
 // by the vector helpers below.
 VA_COMPGEN(0x004b9230, 0x3E, IMPLICIT_DTOR, Sign)
 
-VA_COMPGEN(0x004c4df0, 0x3E, PAIR_CONST_INT_DTOR, type_map_hero_info)
-VA_COMPGEN(0x004caa40, 0x26, IMPLICIT_DTOR, TPickRandomTownName)
+VA_COMPGEN(0x004c4df0, 0x3E, PAIR_CONST_INT_DTOR, MapHeroInfo)
+VA_COMPGEN(0x004caa40, 0x26, IMPLICIT_DTOR, PickRandomTownName)
 VA_COMPGEN(0x004cbcf0, 0x4B, IMPLICIT_DTOR, CGameTransferDlg)
 
 // InitNewGame's exception path retains Dinkumware's string-taking
@@ -10973,44 +10979,44 @@ VA_COMPGEN(0x004cf010, 0x2E, BITSET_COUNT, Bitset145)
 VA_COMPGEN(0x004cf9a0, 0x63, BITSET_SET, Bitset144)
 
 VA_COMPGEN(0x004cf0b0, 0x3B, VECTOR_DTOR, TownExtra)
-VA_COMPGEN(0x004cf0f0, 0x2D6, VECTOR_RESIZE, TBlackMarket)
-VA_COMPGEN(0x004cf3d0, 0x3B, VECTOR_DTOR, town)
-VA_COMPGEN(0x004cf410, 0x2A1, VECTOR_RESIZE, town)
-VA_COMPGEN(0x004cf6c0, 0x23, VECTOR_SIZE, town)
+VA_COMPGEN(0x004cf0f0, 0x2D6, VECTOR_RESIZE, BlackMarket)
+VA_COMPGEN(0x004cf3d0, 0x3B, VECTOR_DTOR, Town)
+VA_COMPGEN(0x004cf410, 0x2A1, VECTOR_RESIZE, Town)
+VA_COMPGEN(0x004cf6c0, 0x23, VECTOR_SIZE, Town)
 VA_COMPGEN(0x004cf6f0, 0x38, VECTOR_DTOR, Sign)
-VA_COMPGEN(0x004cf730, 0x13, VECTOR_SIZE, mine)
-VA_COMPGEN(0x004cf750, 0x21, VECTOR_SIZE, boat)
-VA_COMPGEN(0x004cf780, 0x38, VECTOR_DTOR, type_creature_bank)
-VA_COMPGEN(0x004cf7c0, 0x38, VECTOR_DTOR, TRumour)
+VA_COMPGEN(0x004cf730, 0x13, VECTOR_SIZE, Mine)
+VA_COMPGEN(0x004cf750, 0x21, VECTOR_SIZE, Boat)
+VA_COMPGEN(0x004cf780, 0x38, VECTOR_DTOR, CreatureBank)
+VA_COMPGEN(0x004cf7c0, 0x38, VECTOR_DTOR, Rumour)
 VA_COMPGEN(0x004cf800, 0x67, BITSET_REFERENCE_ASSIGN, Bitset5)
 VA_COMPGEN(0x004cf870, 0x53, BITSET_CTOR, Bitset28)
 VA_COMPGEN(0x004cf8d0, 0x1C, BITSET_COUNT, Bitset28)
 VA_COMPGEN(0x004cf8f0, 0x67, BITSET_REFERENCE_ASSIGN, Bitset28)
-VA_COMPGEN(0x004cfa40, 0x13, VECTOR_CAPACITY, type_university)
+VA_COMPGEN(0x004cfa40, 0x13, VECTOR_CAPACITY, University)
 VA_COMPGEN(0x004cfa60, 0x63, BITSET_SET, Bitset145)
 VA_COMPGEN(0x004cfad0, 0x37, BITSET_TEST, Bitset145)
 // readMapPlayerSlot retains the three-argument insert reached by its expanded
 // resize. The 0x14-byte stride and type_map_hero_identity copy/destructor
 // callees distinguish this specialization from the other vector inserts.
-VA_COMPGEN(0x004cfb10, 0x31C, VECTOR_INSERT, type_map_hero_identity)
+VA_COMPGEN(0x004cfb10, 0x31C, VECTOR_INSERT, MapHeroIdentity)
 VA_COMPGEN(0x004cfef0, 0x34, BITSET_TEST, Bitset8)
 VA_COMPGEN(0x004d0070, 0x63, BITSET_SET, Bitset156)
-VA_COMPGEN(0x004d00e0, 0x2FC, VECTOR_INSERT, TBlackMarket)
-VA_COMPGEN(0x004d03e0, 0x44, VECTOR_ERASE, TBlackMarket)
-VA_COMPGEN(0x004d0430, 0x31C, VECTOR_INSERT, town)
-VA_COMPGEN(0x004d0750, 0x6D, VECTOR_ERASE, town)
-VA_COMPGEN(0x004d07c0, 0x26, VECTOR_DESTROY, town)
+VA_COMPGEN(0x004d00e0, 0x2FC, VECTOR_INSERT, BlackMarket)
+VA_COMPGEN(0x004d03e0, 0x44, VECTOR_ERASE, BlackMarket)
+VA_COMPGEN(0x004d0430, 0x31C, VECTOR_INSERT, Town)
+VA_COMPGEN(0x004d0750, 0x6D, VECTOR_ERASE, Town)
+VA_COMPGEN(0x004d07c0, 0x26, VECTOR_DESTROY, Town)
 VA_COMPGEN(0x004d07f0, 0x31C, VECTOR_INSERT, Sign)
 VA_COMPGEN(0x004d0b10, 0x8F, VECTOR_ERASE, Sign)
-VA_COMPGEN(0x004d0ba0, 0x26B, VECTOR_INSERT, mine)
-VA_COMPGEN(0x004d0e10, 0x44, VECTOR_ERASE, mine)
-VA_COMPGEN(0x004d0e60, 0x20A, VECTOR_INSERT, boat)
-VA_COMPGEN(0x004d1070, 0x2E4, VECTOR_INSERT, boat)
-VA_COMPGEN(0x004d1360, 0x44, VECTOR_ERASE, boat)
-VA_COMPGEN(0x004d13b0, 0x23, VECTOR_DESTROY, type_creature_bank)
-VA_COMPGEN(0x004d13e0, 0x300, VECTOR_INSERT, TRumour)
-VA_COMPGEN(0x004d16e0, 0x7F, VECTOR_ERASE, TRumour)
-VA_COMPGEN(0x004d1760, 0x23, VECTOR_DESTROY, TRumour)
+VA_COMPGEN(0x004d0ba0, 0x26B, VECTOR_INSERT, Mine)
+VA_COMPGEN(0x004d0e10, 0x44, VECTOR_ERASE, Mine)
+VA_COMPGEN(0x004d0e60, 0x20A, VECTOR_INSERT, Boat)
+VA_COMPGEN(0x004d1070, 0x2E4, VECTOR_INSERT, Boat)
+VA_COMPGEN(0x004d1360, 0x44, VECTOR_ERASE, Boat)
+VA_COMPGEN(0x004d13b0, 0x23, VECTOR_DESTROY, CreatureBank)
+VA_COMPGEN(0x004d13e0, 0x300, VECTOR_INSERT, Rumour)
+VA_COMPGEN(0x004d16e0, 0x7F, VECTOR_ERASE, Rumour)
+VA_COMPGEN(0x004d1760, 0x23, VECTOR_DESTROY, Rumour)
 VA_COMPGEN(0x004d17b0, 0x11, BITSET_FLIP, Bitset28)
 VA_COMPGEN(0x004d17d0, 0x34, BITSET_TEST, Bitset28)
 VA_COMPGEN(0x004d1810, 0x15, BITSET_ANY, Bitset28)
@@ -11021,54 +11027,54 @@ VA_COMPGEN(0x004d1810, 0x15, BITSET_ANY, Bitset28)
 VA_COMPGEN(0x004d1920, 0x359, VECTOR_INSERT, CObjectType)
 VA_COMPGEN(0x004d1c80, 0xCB, BITSET_XRAN, Bitset70)
 VA_COMPGEN(0x004d2090, 0xCB, BITSET_XRAN, Bitset156)
-VA_COMPGEN(0x004d2160, 0x31, VECTOR_UFILL, TBlackMarket)
+VA_COMPGEN(0x004d2160, 0x31, VECTOR_UFILL, BlackMarket)
 // The black-market vector's retained uninitialized copy advances by its
 // proven 28-byte stride.  The emitted specialization matches all 59 bytes.
-VA_COMPGEN(0x0054d920, 0x3B, VECTOR_UCOPY, TBlackMarket)
-VA_COMPGEN(0x004d21a0, 0x3E, VECTOR_UCOPY, town)
-VA_COMPGEN(0x004d21e0, 0x2C, VECTOR_UFILL, town)
-VA_COMPGEN(0x004d2210, 0x3B, VECTOR_UCOPY, boat)
-VA_COMPGEN(0x004d2250, 0x31, VECTOR_UFILL, boat)
-VA_COMPGEN(0x004d2290, 0x372, VECTOR_INSERT, type_creature_bank)
+VA_COMPGEN(0x0054d920, 0x3B, VECTOR_UCOPY, BlackMarket)
+VA_COMPGEN(0x004d21a0, 0x3E, VECTOR_UCOPY, Town)
+VA_COMPGEN(0x004d21e0, 0x2C, VECTOR_UFILL, Town)
+VA_COMPGEN(0x004d2210, 0x3B, VECTOR_UCOPY, Boat)
+VA_COMPGEN(0x004d2250, 0x31, VECTOR_UFILL, Boat)
+VA_COMPGEN(0x004d2290, 0x372, VECTOR_INSERT, CreatureBank)
 VA_COMPGEN(0x004d2610, 0xCB, BITSET_XRAN, Bitset5)
 VA_COMPGEN(0x004d26e0, 0xCB, BITSET_XRAN, Bitset28)
 
-VA_COMPGEN(0x004d3630, 0x250, STD_CONSTRUCT, town)
+VA_COMPGEN(0x004d3630, 0x250, STD_CONSTRUCT, Town)
 VA_COMPGEN(0x004d3880, 0x16F, STD_CONSTRUCT, Sign)
-VA_COMPGEN(0x004d39f0, 0x14, STD_CONSTRUCT, boat)
-VA_COMPGEN(0x004d3a10, 0x15B, STD_CONSTRUCT, TRumour)
+VA_COMPGEN(0x004d39f0, 0x14, STD_CONSTRUCT, Boat)
+VA_COMPGEN(0x004d3a10, 0x15B, STD_CONSTRUCT, Rumour)
 VA_COMPGEN(0x004d3b70, 0x1BA, STD_CONSTRUCT, CObjectType)
-VA_COMPGEN(0x004d3d30, 0xBF, STD_CONSTRUCT, type_creature_bank)
-VA_COMPGEN(0x004d3df0, 0x2C2, IMPLICIT_COPY_ASSIGN, town)
+VA_COMPGEN(0x004d3d30, 0xBF, STD_CONSTRUCT, CreatureBank)
+VA_COMPGEN(0x004d3df0, 0x2C2, IMPLICIT_COPY_ASSIGN, Town)
 VA_COMPGEN(0x004d40c0, 0x19B, IMPLICIT_COPY_ASSIGN, CObjectType)
-VA_COMPGEN(0x004d4260, 0x1E3, IMPLICIT_COPY_ASSIGN, type_creature_bank)
+VA_COMPGEN(0x004d4260, 0x1E3, IMPLICIT_COPY_ASSIGN, CreatureBank)
 VA_COMPGEN(0x004d4450, 0x3E, IMPLICIT_DTOR, TownExtra)
 VA_COMPGEN(0x004d4490, 0x67, BITSET_REFERENCE_ASSIGN, Bitset8)
-VA_COMPGEN(0x004d4500, 0x2CF, VECTOR_RESIZE, generator)
-VA_COMPGEN(0x004d47d0, 0x23, VECTOR_SIZE, generator)
-VA_COMPGEN(0x004d4800, 0x25E, VECTOR_RESIZE, type_university)
-VA_COMPGEN(0x004d4a60, 0x40, VECTOR_UFILL, type_university)
-VA_COMPGEN(0x004d4aa0, 0x1F1, VECTOR_RESIZE, type_point)
+VA_COMPGEN(0x004d4500, 0x2CF, VECTOR_RESIZE, Generator)
+VA_COMPGEN(0x004d47d0, 0x23, VECTOR_SIZE, Generator)
+VA_COMPGEN(0x004d4800, 0x25E, VECTOR_RESIZE, University)
+VA_COMPGEN(0x004d4a60, 0x40, VECTOR_UFILL, University)
+VA_COMPGEN(0x004d4aa0, 0x1F1, VECTOR_RESIZE, MapPoint)
 // NewSMapHeader::Read materializes the eight-player availability setter and
 // the four-dword default mask initializer. Their immediate bounds/fill counts
 // distinguish these two retained bitset widths from the neighboring rows.
 VA_COMPGEN(0x004d4cc0, 0x60, BITSET_SET, Bitset8)
 // The 0x6c-byte copy stride followed by type_creature_bank tail destruction
 // identifies the intervening range erase rather than a generic vector helper.
-VA_COMPGEN(0x004d4d20, 0xBF, VECTOR_ERASE, type_creature_bank)
+VA_COMPGEN(0x004d4d20, 0xBF, VECTOR_ERASE, CreatureBank)
 VA_COMPGEN(0x004d4de0, 0x63, BITSET_SET, Bitset128)
 VA_COMPGEN(0x004d4e50, 0x37, BITSET_TEST, Bitset128)
 VA_COMPGEN(0x004d4e90, 0x1A, BITSET_TIDY, Bitset128)
 VA_COMPGEN(0x004d4eb0, 0xCB, BITSET_XRAN, Bitset12)
-VA_COMPGEN(0x004d4f80, 0x3B, VECTOR_UCOPY, generator)
-VA_COMPGEN(0x004d4fc0, 0x31, VECTOR_UFILL, generator)
+VA_COMPGEN(0x004d4f80, 0x3B, VECTOR_UCOPY, Generator)
+VA_COMPGEN(0x004d4fc0, 0x31, VECTOR_UFILL, Generator)
 VA_COMPGEN(0x004d5000, 0xCB, BITSET_XRAN, Bitset128)
 
 // E:\gamedcs\game.cpp:2733
 VA(0x004d2870, 0x24D)
 unsigned char loadObjectVector(
-    TAbstractFile* infile,
-    std::vector<type_creature_bank>* destVector)
+    AbstractFile* infile,
+    std::vector<CreatureBank>* destVector)
 {
     short count;
     if (infile->read(&count, sizeof(count)) < sizeof(count))
@@ -11086,28 +11092,28 @@ unsigned char loadObjectVector(
 // Their one active implementation appears at the DC source-order boundary.
 #if 0  // @carcass -- claim-only template instances
 VA(0x004d2ac0, 0x60)  // point/long ICF twin, dc 0xc1dd4 / 0xc1e58
-bool saveVector(TAbstractFile* outfile, std::vector<type_point>& srcVector)
+bool saveVector(AbstractFile* outfile, std::vector<MapPoint>& srcVector)
 {
     // @stub
 }
 
 VA(0x004d2b20, 0x60)  // university stride and sole Save call, dc 0xc1edc
-bool saveVector(TAbstractFile* outfile, std::vector<type_university>& srcVector)
+bool saveVector(AbstractFile* outfile, std::vector<University>& srcVector)
 {
     // @stub
 }
 #endif
 
 VA(0x004d2b80, 0x102)  // dc 0xc1f64
-unsigned char saveObjectVector(TAbstractFile* outfile,
-                                 std::vector<type_creature_bank>* srcVector)
+unsigned char saveObjectVector(AbstractFile* outfile,
+                                 std::vector<CreatureBank>* srcVector)
 {
     int count = srcVector->size();
     if (outfile->write(&count, sizeof(short)) < sizeof(short))
         return 0;
 
     for (long i = 0; i < static_cast<short>(count); ++i) {
-        type_creature_bank& bank = (*srcVector)[i];
+        CreatureBank& bank = (*srcVector)[i];
         outfile->write(&bank.m_guards, sizeof(bank.m_guards));
         outfile->write(bank.m_resources, sizeof(bank.m_resources));
         outfile->write(&bank.m_rewardCreature, sizeof(bank.m_rewardCreature));
@@ -11118,8 +11124,8 @@ unsigned char saveObjectVector(TAbstractFile* outfile,
             return 0;
         if (outfile->write(bank.m_artifacts.begin(),
                            static_cast<short>(artifactCount) *
-                               sizeof(TArtifact)) <
-            static_cast<short>(artifactCount) * sizeof(TArtifact))
+                               sizeof(Artifact)) <
+            static_cast<short>(artifactCount) * sizeof(Artifact))
             return 0;
     }
     return 1;
@@ -11129,21 +11135,22 @@ unsigned char saveObjectVector(TAbstractFile* outfile,
 
 // E:\gamedcs\game.cpp:11869
 DC_ONLY(0xbc320, 0x64)
-int game::GetLastHuman()
+int Game::GetLastHuman()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11884
 DC_ONLY(0xbc384, 0x94)
-void game::mark_campaign_map_won()
+// Before normalization (function): game::mark_campaign_map_won.
+void Game::markCampaignMapWon()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11895
 DC_ONLY(0xbc418, 0xE8)
-void game::resetGame()
+void Game::resetGame()
 {
     // @stub
 }
@@ -11220,14 +11227,14 @@ std::_Bit_reference std::vector<bool,std::allocator<bool> >::operator[](std::_Bi
 
 // E:\gamedcs\includes.h:175
 DC_ONLY(0xbc7c8, 0x24)
-void TPickRandomTownName::TPickRandomTownName()
+void PickRandomTownName::PickRandomTownName()
 {
     // @stub
 }
 
 // E:\gamedcs\includes.h:178
 DC_ONLY(0xbc7ec, 0x7C)
-void TPickRandomTownName::reset()
+void PickRandomTownName::reset()
 {
     // @stub
 }
@@ -11262,14 +11269,14 @@ void ExtraInfoUnion::clearVisitedBits()
 
 // E:\gamedcs\MapCell.h:1012
 DC_ONLY(0xbc974, 0x3A)
-void ExtraInfoUnion::FillGarden(EGameResource resource)
+void ExtraInfoUnion::FillGarden(GameResource resource)
 {
     // @stub
 }
 
 // E:\gamedcs\MapCell.h:1028
 DC_ONLY(0xbc9b0, 0x54)
-void ExtraInfoUnion::SetGarden(short id, EGameResource resource)
+void ExtraInfoUnion::SetGarden(short id, GameResource resource)
 {
     // @stub
 }
@@ -11283,56 +11290,56 @@ void ExtraInfoUnion::SetMagicSpring(short id, unsigned char full)
 
 // E:\gamedcs\MapCell.h:1084
 DC_ONLY(0xbca4c, 0x7C)
-void ExtraInfoUnion::setScholar(ScholarAwards award, TPrimarySkill primary, TSecondarySkill secondary, SpellID spell)
+void ExtraInfoUnion::setScholar(ScholarAwards award, PrimarySkill primary, SecondarySkill secondary, SpellID spell)
 {
     // @stub
 }
 
 // E:\gamedcs\MapCell.h:1176
 DC_ONLY(0xbcac8, 0x74)
-void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
+void ExtraInfoUnion::setWagon(GameResource resource, short amount)
 {
     // @stub
 }
 
 // E:\gamedcs\MapCell.h:1185
 DC_ONLY(0xbcb3c, 0x58)
-void ExtraInfoUnion::setWagon(TArtifact artifact)
+void ExtraInfoUnion::setWagon(Artifact artifact)
 {
     // @stub
 }
 
 // E:\gamedcs\MapCell.h:1208
 DC_ONLY(0xbcb94, 0x48)
-void ExtraInfoUnion::set_tomb(TArtifact artifact)
+void ExtraInfoUnion::set_tomb(Artifact artifact)
 {
     // @stub
 }
 
 // E:\gamedcs\MapCell.h:1251
 DC_ONLY(0xbcbdc, 0x3C)
-void ExtraInfoUnion::setWitchSkill(TSecondarySkill skill)
+void ExtraInfoUnion::setWitchSkill(SecondarySkill skill)
 {
     // @stub
 }
 
 // E:\gamedcs\Hero.h:188
 DC_ONLY(0xbcc18, 0x28)
-void boat::boat()
+void Boat::Boat()
 {
     // @stub
 }
 
 // E:\gamedcs\Town.h:337
 DC_ONLY(0xbcc40, 0x74)
-unsigned char town::isCastle()
+unsigned char Town::isCastle()
 {
     // @stub
 }
 
 // E:\gamedcs\Town.h:342
 DC_ONLY(0xbccb4, 0x28)
-unsigned char town::isCapitol()
+unsigned char Town::isCapitol()
 {
     // @stub
 }
@@ -11374,7 +11381,7 @@ void SCampaign::SCampaign()
 
 // E:\gamedcs\Game.h:458
 DC_ONLY(0xbce00, 0x52)
-void mine::mine()
+void Mine::Mine()
 {
     // @stub
 }
@@ -11388,7 +11395,7 @@ void Sign::Sign()
 
 // E:\gamedcs\Game.h:856
 DC_ONLY(0xbce7c, 0x38)
-unsigned char game::isComputerTeam(int teamNum)
+unsigned char Game::isComputerTeam(int teamNum)
 {
     // @stub
 }
@@ -11409,14 +11416,14 @@ int SavedGameHeader::save(void* outfile)
 
 // E:\gamedcs\Game.h:1390
 DC_ONLY(0xbd05c, 0x44)
-short game::getCurrentTurn()
+short Game::getCurrentTurn()
 {
     // @stub
 }
 
 // E:\gamedcs\AdventureMapWindow.h:238
 DC_ONLY(0xbd0a0, 0x14)
-void TAdventureMapWindow::set_background_animation(unsigned char enable)
+void AdventureMapWindow::set_background_animation(unsigned char enable)
 {
     // @stub
 }
@@ -11493,14 +11500,14 @@ void CMCClaimGarrison::CMCClaimGarrison(int garrisonId, int playerPos)
 
 // E:\gamedcs\netmsg.h:633
 DC_ONLY(0xbd2c8, 0x6C)
-void CMCClaimShipYard::CMCClaimShipYard(type_point point, int playerPos)
+void CMCClaimShipYard::CMCClaimShipYard(MapPoint point, int playerPos)
 {
     // @stub
 }
 
 // E:\gamedcs\netmsg.h:649
 DC_ONLY(0xbd334, 0x6C)
-void CMCBuildBoat::CMCBuildBoat(type_point point, int playerPos)
+void CMCBuildBoat::CMCBuildBoat(MapPoint point, int playerPos)
 {
     // @stub
 }
@@ -11556,14 +11563,14 @@ void* Buffer::`scalar deleting destructor'(unsigned __flags)
 
 // E:\gamedcs\game.cpp:5595
 DC_ONLY(0xbd534, 0x58)
-void type_creature_bank::type_creature_bank()
+void CreatureBank::CreatureBank()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:5595
 DC_ONLY(0xbd58c, 0x20)
-void type_creature_bank::~type_creature_bank()
+void CreatureBank::~CreatureBank()
 {
     // @stub
 }
@@ -11572,7 +11579,7 @@ void type_creature_bank::~type_creature_bank()
 // Retail 0x4caa40 is claimed above through its exact implicit destructor
 // public; this row records the independent Dreamcast name and order.
 DC_ONLY(0xbd5ac, 0x1C)
-void TPickRandomTownName::~TPickRandomTownName()
+void PickRandomTownName::~PickRandomTownName()
 {
     // @stub
 }
@@ -11590,7 +11597,7 @@ void CGameTransferDlg::~CGameTransferDlg()
 
 // E:\gamedcs\game.cpp:11746
 DC_ONLY(0xbd654, 0x44)
-void std::vector<type_point,std::allocator<type_point> >::`default constructor closure'()
+void std::vector<MapPoint,std::allocator<MapPoint> >::`default constructor closure'()
 {
     // @stub
 }
@@ -11667,28 +11674,28 @@ std::bitset<48,unsigned* std::bitset<48,unsigned long>::reset()
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xbd8ec, 0x24)
-void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::vector<enum TArtifact,std::allocator<enum TArtifact> >(const std::allocator<enum* __a)
+void std::vector<enum Artifact,std::allocator<enum Artifact> >::vector<enum Artifact,std::allocator<enum Artifact> >(const std::allocator<enum* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xbd910, 0x34)
-void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::~vector<enum TArtifact,std::allocator<enum TArtifact> >()
+void std::vector<enum Artifact,std::allocator<enum Artifact> >::~vector<enum Artifact,std::allocator<enum Artifact> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xbd944, 0x8)
-void std::allocator<enum TArtifact>::allocator<enum TArtifact>()
+void std::allocator<enum Artifact>::allocator<enum Artifact>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xbd94c, 0x6)
-void std::allocator<enum TArtifact>::~allocator<enum TArtifact>()
+void std::allocator<enum Artifact>::~allocator<enum Artifact>()
 {
     // @stub
 }
@@ -11730,91 +11737,91 @@ void std::vector<CSprite *,std::allocator<CSprite *> >::push_back(CSprite** __x)
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0xbdaa0, 0x2C)
-unsigned std::vector<TTimedEvent,std::allocator<TTimedEvent> >::size()
+unsigned std::vector<TimedEvent,std::allocator<TimedEvent> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0xbdacc, 0x2C)
-TTimedEvent* std::vector<TTimedEvent,std::allocator<TTimedEvent> >::operator[](unsigned __n)
+TimedEvent* std::vector<TimedEvent,std::allocator<TimedEvent> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0xbdaf8, 0x2C)
-unsigned std::vector<TTownEvent,std::allocator<TTownEvent> >::size()
+unsigned std::vector<TownEvent,std::allocator<TownEvent> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0xbdb24, 0x2C)
-TTownEvent* std::vector<TTownEvent,std::allocator<TTownEvent> >::operator[](unsigned __n)
+TownEvent* std::vector<TownEvent,std::allocator<TownEvent> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0xbdb50, 0xC)
-type_point* std::vector<type_point,std::allocator<type_point> >::begin()
+MapPoint* std::vector<MapPoint,std::allocator<MapPoint> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0xbdb5c, 0x28)
-type_point* std::vector<type_point,std::allocator<type_point> >::operator[](unsigned __n)
+MapPoint* std::vector<MapPoint,std::allocator<MapPoint> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xbdb84, 0x24)
-void std::vector<type_point,std::allocator<type_point> >::vector<type_point,std::allocator<type_point> >(const std::allocator<type_point>* __a)
+void std::vector<MapPoint,std::allocator<MapPoint> >::vector<MapPoint,std::allocator<MapPoint> >(const std::allocator<MapPoint>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xbdba8, 0x34)
-void std::vector<type_point,std::allocator<type_point> >::~vector<type_point,std::allocator<type_point> >()
+void std::vector<MapPoint,std::allocator<MapPoint> >::~vector<MapPoint,std::allocator<MapPoint> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0xbdbdc, 0x54)
-void std::vector<type_point,std::allocator<type_point> >::push_back(const type_point* __x)
+void std::vector<MapPoint,std::allocator<MapPoint> >::push_back(const MapPoint* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:480
 DC_ONLY(0xbdc30, 0x60)
-type_point* std::vector<type_point,std::allocator<type_point> >::erase(type_point* __position)
+MapPoint* std::vector<MapPoint,std::allocator<MapPoint> >::erase(MapPoint* __position)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xbdc90, 0x3C)
-void std::vector<type_point,std::allocator<type_point> >::clear()
+void std::vector<MapPoint,std::allocator<MapPoint> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xbdccc, 0x8)
-void std::allocator<type_point>::allocator<type_point>()
+void std::allocator<MapPoint>::allocator<MapPoint>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xbdcd4, 0x6)
-void std::allocator<type_point>::~allocator<type_point>()
+void std::allocator<MapPoint>::~allocator<MapPoint>()
 {
     // @stub
 }
@@ -11863,91 +11870,91 @@ void std::allocator<TownExtra>::~allocator<TownExtra>()
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0xbdd9c, 0x2C)
-unsigned std::vector<TBlackMarket,std::allocator<TBlackMarket> >::size()
+unsigned std::vector<BlackMarket,std::allocator<BlackMarket> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xbddc8, 0x24)
-void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::vector<TBlackMarket,std::allocator<TBlackMarket> >(const std::allocator<TBlackMarket>* __a)
+void std::vector<BlackMarket,std::allocator<BlackMarket> >::vector<BlackMarket,std::allocator<BlackMarket> >(const std::allocator<BlackMarket>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xbddec, 0x34)
-void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::~vector<TBlackMarket,std::allocator<TBlackMarket> >()
+void std::vector<BlackMarket,std::allocator<BlackMarket> >::~vector<BlackMarket,std::allocator<BlackMarket> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0xbde20, 0x54)
-void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::push_back(const TBlackMarket* __x)
+void std::vector<BlackMarket,std::allocator<BlackMarket> >::push_back(const BlackMarket* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:505
 DC_ONLY(0xbde74, 0x24)
-void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::resize(unsigned __new_size)
+void std::vector<BlackMarket,std::allocator<BlackMarket> >::resize(unsigned __new_size)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0xbde98, 0x3C)
-void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::clear()
+void std::vector<BlackMarket,std::allocator<BlackMarket> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xbded4, 0x8)
-void std::allocator<TBlackMarket>::allocator<TBlackMarket>()
+void std::allocator<BlackMarket>::allocator<BlackMarket>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xbdedc, 0x6)
-void std::allocator<TBlackMarket>::~allocator<TBlackMarket>()
+void std::allocator<BlackMarket>::~allocator<BlackMarket>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xbdee4, 0x24)
-void std::vector<town,std::allocator<town> >::vector<town,std::allocator<town> >(const std::allocator<town>* __a)
+void std::vector<Town,std::allocator<Town> >::vector<Town,std::allocator<Town> >(const std::allocator<Town>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xbdf08, 0x34)
-void std::vector<town,std::allocator<town> >::~vector<town,std::allocator<town> >()
+void std::vector<Town,std::allocator<Town> >::~vector<Town,std::allocator<Town> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:505
 DC_ONLY(0xbdf3c, 0x44)
-void std::vector<town,std::allocator<town> >::resize(unsigned __new_size)
+void std::vector<Town,std::allocator<Town> >::resize(unsigned __new_size)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xbdf80, 0x8)
-void std::allocator<town>::allocator<town>()
+void std::allocator<Town>::allocator<Town>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xbdf88, 0x6)
-void std::allocator<town>::~allocator<town>()
+void std::allocator<Town>::~allocator<Town>()
 {
     // @stub
 }
@@ -11996,322 +12003,322 @@ void std::allocator<Sign>::~allocator<Sign>()
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0xbe054, 0x2C)
-unsigned std::vector<mine,std::allocator<mine> >::size()
+unsigned std::vector<Mine,std::allocator<Mine> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xbe080, 0x24)
-void std::vector<mine,std::allocator<mine> >::vector<mine,std::allocator<mine> >(const std::allocator<mine>* __a)
+void std::vector<Mine,std::allocator<Mine> >::vector<Mine,std::allocator<Mine> >(const std::allocator<Mine>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xbe0a4, 0x34)
-void std::vector<mine,std::allocator<mine> >::~vector<mine,std::allocator<mine> >()
+void std::vector<Mine,std::allocator<Mine> >::~vector<Mine,std::allocator<Mine> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:505
 DC_ONLY(0xbe0d8, 0x34)
-void std::vector<mine,std::allocator<mine> >::resize(unsigned __new_size)
+void std::vector<Mine,std::allocator<Mine> >::resize(unsigned __new_size)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xbe10c, 0x8)
-void std::allocator<mine>::allocator<mine>()
+void std::allocator<Mine>::allocator<Mine>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xbe114, 0x6)
-void std::allocator<mine>::~allocator<mine>()
+void std::allocator<Mine>::~allocator<Mine>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0xbe11c, 0x2C)
-unsigned std::vector<generator,std::allocator<generator> >::size()
+unsigned std::vector<Generator,std::allocator<Generator> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xbe148, 0x24)
-void std::vector<generator,std::allocator<generator> >::vector<generator,std::allocator<generator> >(const std::allocator<generator>* __a)
+void std::vector<Generator,std::allocator<Generator> >::vector<Generator,std::allocator<Generator> >(const std::allocator<Generator>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xbe16c, 0x34)
-void std::vector<generator,std::allocator<generator> >::~vector<generator,std::allocator<generator> >()
+void std::vector<Generator,std::allocator<Generator> >::~vector<Generator,std::allocator<Generator> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xbe1a0, 0x8)
-void std::allocator<generator>::allocator<generator>()
+void std::allocator<Generator>::allocator<Generator>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xbe1a8, 0x6)
-void std::allocator<generator>::~allocator<generator>()
+void std::allocator<Generator>::~allocator<Generator>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0xbe1b0, 0x16)
-unsigned std::vector<garrison,std::allocator<garrison> >::size()
+unsigned std::vector<Garrison,std::allocator<Garrison> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xbe1c8, 0x24)
-void std::vector<garrison,std::allocator<garrison> >::vector<garrison,std::allocator<garrison> >(const std::allocator<garrison>* __a)
+void std::vector<Garrison,std::allocator<Garrison> >::vector<Garrison,std::allocator<Garrison> >(const std::allocator<Garrison>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xbe1ec, 0x34)
-void std::vector<garrison,std::allocator<garrison> >::~vector<garrison,std::allocator<garrison> >()
+void std::vector<Garrison,std::allocator<Garrison> >::~vector<Garrison,std::allocator<Garrison> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:505
 DC_ONLY(0xbe220, 0x38)
-void std::vector<garrison,std::allocator<garrison> >::resize(unsigned __new_size)
+void std::vector<Garrison,std::allocator<Garrison> >::resize(unsigned __new_size)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xbe258, 0x8)
-void std::allocator<garrison>::allocator<garrison>()
+void std::allocator<Garrison>::allocator<Garrison>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xbe260, 0x6)
-void std::allocator<garrison>::~allocator<garrison>()
+void std::allocator<Garrison>::~allocator<Garrison>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0xbe268, 0xC)
-boat* std::vector<boat,std::allocator<boat> >::end()
+Boat* std::vector<Boat,std::allocator<Boat> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0xbe274, 0x2C)
-unsigned std::vector<boat,std::allocator<boat> >::size()
+unsigned std::vector<Boat,std::allocator<Boat> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xbe2a0, 0x24)
-void std::vector<boat,std::allocator<boat> >::vector<boat,std::allocator<boat> >(const std::allocator<boat>* __a)
+void std::vector<Boat,std::allocator<Boat> >::vector<Boat,std::allocator<Boat> >(const std::allocator<Boat>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xbe2c4, 0x34)
-void std::vector<boat,std::allocator<boat> >::~vector<boat,std::allocator<boat> >()
+void std::vector<Boat,std::allocator<Boat> >::~vector<Boat,std::allocator<Boat> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0xbe2f8, 0x54)
-void std::vector<boat,std::allocator<boat> >::push_back(const boat* __x)
+void std::vector<Boat,std::allocator<Boat> >::push_back(const Boat* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:505
 DC_ONLY(0xbe34c, 0x38)
-void std::vector<boat,std::allocator<boat> >::resize(unsigned __new_size)
+void std::vector<Boat,std::allocator<Boat> >::resize(unsigned __new_size)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xbe384, 0x8)
-void std::allocator<boat>::allocator<boat>()
+void std::allocator<Boat>::allocator<Boat>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xbe38c, 0x6)
-void std::allocator<boat>::~allocator<boat>()
+void std::allocator<Boat>::~allocator<Boat>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0xbe394, 0x16)
-unsigned std::vector<type_university,std::allocator<type_university> >::size()
+unsigned std::vector<University,std::allocator<University> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xbe3ac, 0x24)
-void std::vector<type_university,std::allocator<type_university> >::vector<type_university,std::allocator<type_university> >(const std::allocator<type_university>* __a)
+void std::vector<University,std::allocator<University> >::vector<University,std::allocator<University> >(const std::allocator<University>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xbe3d0, 0x34)
-void std::vector<type_university,std::allocator<type_university> >::~vector<type_university,std::allocator<type_university> >()
+void std::vector<University,std::allocator<University> >::~vector<University,std::allocator<University> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0xbe404, 0x54)
-void std::vector<type_university,std::allocator<type_university> >::push_back(const type_university* __x)
+void std::vector<University,std::allocator<University> >::push_back(const University* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xbe458, 0x8)
-void std::allocator<type_university>::allocator<type_university>()
+void std::allocator<University>::allocator<University>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xbe460, 0x6)
-void std::allocator<type_university>::~allocator<type_university>()
+void std::allocator<University>::~allocator<University>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0xbe468, 0x2C)
-unsigned std::vector<type_creature_bank,std::allocator<type_creature_bank> >::size()
+unsigned std::vector<CreatureBank,std::allocator<CreatureBank> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xbe494, 0x24)
-void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::vector<type_creature_bank,std::allocator<type_creature_bank> >(const std::allocator<type_creature_bank>* __a)
+void std::vector<CreatureBank,std::allocator<CreatureBank> >::vector<CreatureBank,std::allocator<CreatureBank> >(const std::allocator<CreatureBank>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xbe4b8, 0x34)
-void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::~vector<type_creature_bank,std::allocator<type_creature_bank> >()
+void std::vector<CreatureBank,std::allocator<CreatureBank> >::~vector<CreatureBank,std::allocator<CreatureBank> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0xbe4ec, 0x54)
-void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::push_back(const type_creature_bank* __x)
+void std::vector<CreatureBank,std::allocator<CreatureBank> >::push_back(const CreatureBank* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xbe540, 0x8)
-void std::allocator<type_creature_bank>::allocator<type_creature_bank>()
+void std::allocator<CreatureBank>::allocator<CreatureBank>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xbe548, 0x6)
-void std::allocator<type_creature_bank>::~allocator<type_creature_bank>()
+void std::allocator<CreatureBank>::~allocator<CreatureBank>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0xbe550, 0xC)
-game::TRumour* std::vector<game::TRumour,std::allocator<game::TRumour> >::begin()
+Game::Rumour* std::vector<Game::Rumour,std::allocator<Game::Rumour> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0xbe55c, 0xC)
-game::TRumour* std::vector<game::TRumour,std::allocator<game::TRumour> >::end()
+Game::Rumour* std::vector<Game::Rumour,std::allocator<Game::Rumour> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0xbe568, 0x16)
-unsigned std::vector<game::TRumour,std::allocator<game::TRumour> >::size()
+unsigned std::vector<Game::Rumour,std::allocator<Game::Rumour> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0xbe580, 0x2C)
-game::TRumour* std::vector<game::TRumour,std::allocator<game::TRumour> >::operator[](unsigned __n)
+Game::Rumour* std::vector<Game::Rumour,std::allocator<Game::Rumour> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xbe5ac, 0x24)
-void std::vector<game::TRumour,std::allocator<game::TRumour> >::vector<game::TRumour,std::allocator<game::TRumour> >(const std::allocator<game::TRumour>* __a)
+void std::vector<Game::Rumour,std::allocator<Game::Rumour> >::vector<Game::Rumour,std::allocator<Game::Rumour> >(const std::allocator<Game::Rumour>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xbe5d0, 0x34)
-void std::vector<game::TRumour,std::allocator<game::TRumour> >::~vector<game::TRumour,std::allocator<game::TRumour> >()
+void std::vector<Game::Rumour,std::allocator<Game::Rumour> >::~vector<Game::Rumour,std::allocator<Game::Rumour> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:505
 DC_ONLY(0xbe604, 0x44)
-void std::vector<game::TRumour,std::allocator<game::TRumour> >::resize(unsigned __new_size)
+void std::vector<Game::Rumour,std::allocator<Game::Rumour> >::resize(unsigned __new_size)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xbe648, 0x8)
-void std::allocator<game::TRumour>::allocator<game::TRumour>()
+void std::allocator<Game::Rumour>::allocator<Game::Rumour>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xbe650, 0x6)
-void std::allocator<game::TRumour>::~allocator<game::TRumour>()
+void std::allocator<Game::Rumour>::~allocator<Game::Rumour>()
 {
     // @stub
 }
@@ -12325,77 +12332,77 @@ const long* std::vector<long,std::allocator<long> >::operator[](unsigned __n)
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xbe680, 0x24)
-void std::vector<type_event_record *,std::allocator<type_event_record *> >::vector<type_event_record *,std::allocator<type_event_record *> >(const std::allocator<type_event_record* __a)
+void std::vector<EventRecord *,std::allocator<EventRecord *> >::vector<EventRecord *,std::allocator<EventRecord *> >(const std::allocator<EventRecord* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xbe6a4, 0x34)
-void std::vector<type_event_record *,std::allocator<type_event_record *> >::~vector<type_event_record *,std::allocator<type_event_record *> >()
+void std::vector<EventRecord *,std::allocator<EventRecord *> >::~vector<EventRecord *,std::allocator<EventRecord *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xbe6d8, 0x8)
-void std::allocator<type_event_record *>::allocator<type_event_record *>()
+void std::allocator<EventRecord *>::allocator<EventRecord *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xbe6e0, 0x6)
-void std::allocator<type_event_record *>::~allocator<type_event_record *>()
+void std::allocator<EventRecord *>::~allocator<EventRecord *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0xbe6e8, 0x30)
-unsigned std::vector<hero,std::allocator<hero> >::size()
+unsigned std::vector<Hero,std::allocator<Hero> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0xbe718, 0x30)
-hero* std::vector<hero,std::allocator<hero> >::operator[](unsigned __n)
+Hero* std::vector<Hero,std::allocator<Hero> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0xbe748, 0x24)
-void std::vector<hero,std::allocator<hero> >::vector<hero,std::allocator<hero> >(const std::allocator<hero>* __a)
+void std::vector<Hero,std::allocator<Hero> >::vector<Hero,std::allocator<Hero> >(const std::allocator<Hero>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0xbe76c, 0x34)
-void std::vector<hero,std::allocator<hero> >::~vector<hero,std::allocator<hero> >()
+void std::vector<Hero,std::allocator<Hero> >::~vector<Hero,std::allocator<Hero> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0xbe7a0, 0x58)
-void std::vector<hero,std::allocator<hero> >::push_back(const hero* __x)
+void std::vector<Hero,std::allocator<Hero> >::push_back(const Hero* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0xbe7f8, 0x8)
-void std::allocator<hero>::allocator<hero>()
+void std::allocator<Hero>::allocator<Hero>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0xbe800, 0x6)
-void std::allocator<hero>::~allocator<hero>()
+void std::allocator<Hero>::~allocator<Hero>()
 {
     // @stub
 }
@@ -12409,21 +12416,21 @@ void Sign::~Sign()
 
 // ..\stlport\stl_string.h:537
 DC_ONLY(0xbe828, 0x24)
-void garrison::garrison()
+void Garrison::Garrison()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:537
 DC_ONLY(0xbe84c, 0x20)
-void game::TRumour::TRumour()
+void Game::Rumour::Rumour()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:537
 DC_ONLY(0xbe86c, 0x1C)
-void game::TRumour::~TRumour()
+void Game::Rumour::~Rumour()
 {
     // @stub
 }
@@ -12458,14 +12465,14 @@ void std::_Base_bitset<2,unsigned long>::_M_do_reset()
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xbe950, 0x44)
-void std::_Vector_base<enum TArtifact,std::allocator<enum TArtifact> >::_Vector_base<enum TArtifact,std::allocator<enum TArtifact> >(const std::allocator<enum* __a)
+void std::_Vector_base<enum Artifact,std::allocator<enum Artifact> >::_Vector_base<enum Artifact,std::allocator<enum Artifact> >(const std::allocator<enum* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xbe994, 0x44)
-void std::_Vector_base<enum TArtifact,std::allocator<enum TArtifact> >::~_Vector_base<enum TArtifact,std::allocator<enum TArtifact> >()
+void std::_Vector_base<enum Artifact,std::allocator<enum Artifact> >::~_Vector_base<enum Artifact,std::allocator<enum Artifact> >()
 {
     // @stub
 }
@@ -12479,42 +12486,42 @@ CObjectType* std::vector<CObjectType,std::allocator<CObjectType> >::end()
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0xbe9e4, 0xC)
-TTimedEvent* std::vector<TTimedEvent,std::allocator<TTimedEvent> >::begin()
+TimedEvent* std::vector<TimedEvent,std::allocator<TimedEvent> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0xbe9f0, 0xC)
-TTownEvent* std::vector<TTownEvent,std::allocator<TTownEvent> >::begin()
+TownEvent* std::vector<TownEvent,std::allocator<TownEvent> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0xbe9fc, 0xC)
-type_point* std::vector<type_point,std::allocator<type_point> >::end()
+MapPoint* std::vector<MapPoint,std::allocator<MapPoint> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0xbea08, 0x48)
-type_point* std::vector<type_point,std::allocator<type_point> >::erase(type_point* __first, type_point* __last)
+MapPoint* std::vector<MapPoint,std::allocator<MapPoint> >::erase(MapPoint* __first, MapPoint* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xbea50, 0x44)
-void std::_Vector_base<type_point,std::allocator<type_point> >::_Vector_base<type_point,std::allocator<type_point> >(const std::allocator<type_point>* __a)
+void std::_Vector_base<MapPoint,std::allocator<MapPoint> >::_Vector_base<MapPoint,std::allocator<MapPoint> >(const std::allocator<MapPoint>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xbea94, 0x44)
-void std::_Vector_base<type_point,std::allocator<type_point> >::~_Vector_base<type_point,std::allocator<type_point> >()
+void std::_Vector_base<MapPoint,std::allocator<MapPoint> >::~_Vector_base<MapPoint,std::allocator<MapPoint> >()
 {
     // @stub
 }
@@ -12542,56 +12549,56 @@ void std::_Vector_base<TownExtra,std::allocator<TownExtra> >::~_Vector_base<Town
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0xbeb7c, 0xC)
-TBlackMarket* std::vector<TBlackMarket,std::allocator<TBlackMarket> >::end()
+BlackMarket* std::vector<BlackMarket,std::allocator<BlackMarket> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0xbeb88, 0x48)
-TBlackMarket* std::vector<TBlackMarket,std::allocator<TBlackMarket> >::erase(TBlackMarket* __first, TBlackMarket* __last)
+BlackMarket* std::vector<BlackMarket,std::allocator<BlackMarket> >::erase(BlackMarket* __first, BlackMarket* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:499
 DC_ONLY(0xbebd0, 0x94)
-void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::resize(unsigned __new_size, const TBlackMarket* __x)
+void std::vector<BlackMarket,std::allocator<BlackMarket> >::resize(unsigned __new_size, const BlackMarket* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xbec64, 0x44)
-void std::_Vector_base<TBlackMarket,std::allocator<TBlackMarket> >::_Vector_base<TBlackMarket,std::allocator<TBlackMarket> >(const std::allocator<TBlackMarket>* __a)
+void std::_Vector_base<BlackMarket,std::allocator<BlackMarket> >::_Vector_base<BlackMarket,std::allocator<BlackMarket> >(const std::allocator<BlackMarket>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xbeca8, 0x54)
-void std::_Vector_base<TBlackMarket,std::allocator<TBlackMarket> >::~_Vector_base<TBlackMarket,std::allocator<TBlackMarket> >()
+void std::_Vector_base<BlackMarket,std::allocator<BlackMarket> >::~_Vector_base<BlackMarket,std::allocator<BlackMarket> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:499
 DC_ONLY(0xbecfc, 0x94)
-void std::vector<town,std::allocator<town> >::resize(unsigned __new_size, const town* __x)
+void std::vector<Town,std::allocator<Town> >::resize(unsigned __new_size, const Town* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xbed90, 0x44)
-void std::_Vector_base<town,std::allocator<town> >::_Vector_base<town,std::allocator<town> >(const std::allocator<town>* __a)
+void std::_Vector_base<Town,std::allocator<Town> >::_Vector_base<Town,std::allocator<Town> >(const std::allocator<Town>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xbedd4, 0x54)
-void std::_Vector_base<town,std::allocator<town> >::~_Vector_base<town,std::allocator<town> >()
+void std::_Vector_base<Town,std::allocator<Town> >::~_Vector_base<Town,std::allocator<Town> >()
 {
     // @stub
 }
@@ -12619,126 +12626,126 @@ void std::_Vector_base<Sign,std::allocator<Sign> >::~_Vector_base<Sign,std::allo
 
 // ..\stlport\stl_vector.h:499
 DC_ONLY(0xbef40, 0x94)
-void std::vector<mine,std::allocator<mine> >::resize(unsigned __new_size, const mine* __x)
+void std::vector<Mine,std::allocator<Mine> >::resize(unsigned __new_size, const Mine* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xbefd4, 0x44)
-void std::_Vector_base<mine,std::allocator<mine> >::_Vector_base<mine,std::allocator<mine> >(const std::allocator<mine>* __a)
+void std::_Vector_base<Mine,std::allocator<Mine> >::_Vector_base<Mine,std::allocator<Mine> >(const std::allocator<Mine>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xbf018, 0x54)
-void std::_Vector_base<mine,std::allocator<mine> >::~_Vector_base<mine,std::allocator<mine> >()
+void std::_Vector_base<Mine,std::allocator<Mine> >::~_Vector_base<Mine,std::allocator<Mine> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xbf06c, 0x44)
-void std::_Vector_base<generator,std::allocator<generator> >::_Vector_base<generator,std::allocator<generator> >(const std::allocator<generator>* __a)
+void std::_Vector_base<Generator,std::allocator<Generator> >::_Vector_base<Generator,std::allocator<Generator> >(const std::allocator<Generator>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xbf0b0, 0x54)
-void std::_Vector_base<generator,std::allocator<generator> >::~_Vector_base<generator,std::allocator<generator> >()
+void std::_Vector_base<Generator,std::allocator<Generator> >::~_Vector_base<Generator,std::allocator<Generator> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:499
 DC_ONLY(0xbf104, 0x90)
-void std::vector<garrison,std::allocator<garrison> >::resize(unsigned __new_size, const garrison* __x)
+void std::vector<Garrison,std::allocator<Garrison> >::resize(unsigned __new_size, const Garrison* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xbf194, 0x44)
-void std::_Vector_base<garrison,std::allocator<garrison> >::_Vector_base<garrison,std::allocator<garrison> >(const std::allocator<garrison>* __a)
+void std::_Vector_base<Garrison,std::allocator<Garrison> >::_Vector_base<Garrison,std::allocator<Garrison> >(const std::allocator<Garrison>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xbf1d8, 0x44)
-void std::_Vector_base<garrison,std::allocator<garrison> >::~_Vector_base<garrison,std::allocator<garrison> >()
+void std::_Vector_base<Garrison,std::allocator<Garrison> >::~_Vector_base<Garrison,std::allocator<Garrison> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:499
 DC_ONLY(0xbf21c, 0x94)
-void std::vector<boat,std::allocator<boat> >::resize(unsigned __new_size, const boat* __x)
+void std::vector<Boat,std::allocator<Boat> >::resize(unsigned __new_size, const Boat* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xbf2b0, 0x44)
-void std::_Vector_base<boat,std::allocator<boat> >::_Vector_base<boat,std::allocator<boat> >(const std::allocator<boat>* __a)
+void std::_Vector_base<Boat,std::allocator<Boat> >::_Vector_base<Boat,std::allocator<Boat> >(const std::allocator<Boat>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xbf2f4, 0x54)
-void std::_Vector_base<boat,std::allocator<boat> >::~_Vector_base<boat,std::allocator<boat> >()
+void std::_Vector_base<Boat,std::allocator<Boat> >::~_Vector_base<Boat,std::allocator<Boat> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xbf348, 0x44)
-void std::_Vector_base<type_university,std::allocator<type_university> >::_Vector_base<type_university,std::allocator<type_university> >(const std::allocator<type_university>* __a)
+void std::_Vector_base<University,std::allocator<University> >::_Vector_base<University,std::allocator<University> >(const std::allocator<University>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xbf38c, 0x44)
-void std::_Vector_base<type_university,std::allocator<type_university> >::~_Vector_base<type_university,std::allocator<type_university> >()
+void std::_Vector_base<University,std::allocator<University> >::~_Vector_base<University,std::allocator<University> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xbf3d0, 0x44)
-void std::_Vector_base<type_creature_bank,std::allocator<type_creature_bank> >::_Vector_base<type_creature_bank,std::allocator<type_creature_bank> >(const std::allocator<type_creature_bank>* __a)
+void std::_Vector_base<CreatureBank,std::allocator<CreatureBank> >::_Vector_base<CreatureBank,std::allocator<CreatureBank> >(const std::allocator<CreatureBank>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xbf414, 0x54)
-void std::_Vector_base<type_creature_bank,std::allocator<type_creature_bank> >::~_Vector_base<type_creature_bank,std::allocator<type_creature_bank> >()
+void std::_Vector_base<CreatureBank,std::allocator<CreatureBank> >::~_Vector_base<CreatureBank,std::allocator<CreatureBank> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:499
 DC_ONLY(0xbf468, 0x90)
-void std::vector<game::TRumour,std::allocator<game::TRumour> >::resize(unsigned __new_size, const game::TRumour* __x)
+void std::vector<Game::Rumour,std::allocator<Game::Rumour> >::resize(unsigned __new_size, const Game::Rumour* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xbf4f8, 0x44)
-void std::_Vector_base<game::TRumour,std::allocator<game::TRumour> >::_Vector_base<game::TRumour,std::allocator<game::TRumour> >(const std::allocator<game::TRumour>* __a)
+void std::_Vector_base<Game::Rumour,std::allocator<Game::Rumour> >::_Vector_base<Game::Rumour,std::allocator<Game::Rumour> >(const std::allocator<Game::Rumour>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xbf53c, 0x44)
-void std::_Vector_base<game::TRumour,std::allocator<game::TRumour> >::~_Vector_base<game::TRumour,std::allocator<game::TRumour> >()
+void std::_Vector_base<Game::Rumour,std::allocator<Game::Rumour> >::~_Vector_base<Game::Rumour,std::allocator<Game::Rumour> >()
 {
     // @stub
 }
@@ -12752,49 +12759,49 @@ const long* std::vector<long,std::allocator<long> >::begin()
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xbf58c, 0x44)
-void std::_Vector_base<type_event_record *,std::allocator<type_event_record *> >::_Vector_base<type_event_record *,std::allocator<type_event_record *> >(const std::allocator<type_event_record* __a)
+void std::_Vector_base<EventRecord *,std::allocator<EventRecord *> >::_Vector_base<EventRecord *,std::allocator<EventRecord *> >(const std::allocator<EventRecord* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xbf5d0, 0x44)
-void std::_Vector_base<type_event_record *,std::allocator<type_event_record *> >::~_Vector_base<type_event_record *,std::allocator<type_event_record *> >()
+void std::_Vector_base<EventRecord *,std::allocator<EventRecord *> >::~_Vector_base<EventRecord *,std::allocator<EventRecord *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0xbf614, 0xC)
-hero* std::vector<hero,std::allocator<hero> >::begin()
+Hero* std::vector<Hero,std::allocator<Hero> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0xbf620, 0x44)
-void std::_Vector_base<hero,std::allocator<hero> >::_Vector_base<hero,std::allocator<hero> >(const std::allocator<hero>* __a)
+void std::_Vector_base<Hero,std::allocator<Hero> >::_Vector_base<Hero,std::allocator<Hero> >(const std::allocator<Hero>* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0xbf664, 0x54)
-void std::_Vector_base<hero,std::allocator<hero> >::~_Vector_base<hero,std::allocator<hero> >()
+void std::_Vector_base<Hero,std::allocator<Hero> >::~_Vector_base<Hero,std::allocator<Hero> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xbf6b8, 0x1C)
-void std::_STL_alloc_proxy<enum TArtifact *,enum TArtifact,std::allocator<enum TArtifact> >::~_STL_alloc_proxy<enum TArtifact *,enum TArtifact,std::allocator<enum TArtifact> >()
+void std::_STL_alloc_proxy<enum Artifact *,enum Artifact,std::allocator<enum Artifact> >::~_STL_alloc_proxy<enum Artifact *,enum Artifact,std::allocator<enum Artifact> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xbf6d4, 0x1C)
-void std::_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >::~_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >()
+void std::_STL_alloc_proxy<MapPoint *,MapPoint,std::allocator<MapPoint> >::~_STL_alloc_proxy<MapPoint *,MapPoint,std::allocator<MapPoint> >()
 {
     // @stub
 }
@@ -12808,14 +12815,14 @@ void std::_STL_alloc_proxy<TownExtra *,TownExtra,std::allocator<TownExtra> >::~_
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xbf70c, 0x1C)
-void std::_STL_alloc_proxy<TBlackMarket *,TBlackMarket,std::allocator<TBlackMarket> >::~_STL_alloc_proxy<TBlackMarket *,TBlackMarket,std::allocator<TBlackMarket> >()
+void std::_STL_alloc_proxy<BlackMarket *,BlackMarket,std::allocator<BlackMarket> >::~_STL_alloc_proxy<BlackMarket *,BlackMarket,std::allocator<BlackMarket> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xbf728, 0x1C)
-void std::_STL_alloc_proxy<town *,town,std::allocator<town> >::~_STL_alloc_proxy<town *,town,std::allocator<town> >()
+void std::_STL_alloc_proxy<Town *,Town,std::allocator<Town> >::~_STL_alloc_proxy<Town *,Town,std::allocator<Town> >()
 {
     // @stub
 }
@@ -12829,63 +12836,63 @@ void std::_STL_alloc_proxy<Sign *,Sign,std::allocator<Sign> >::~_STL_alloc_proxy
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xbf760, 0x1C)
-void std::_STL_alloc_proxy<mine *,mine,std::allocator<mine> >::~_STL_alloc_proxy<mine *,mine,std::allocator<mine> >()
+void std::_STL_alloc_proxy<Mine *,Mine,std::allocator<Mine> >::~_STL_alloc_proxy<Mine *,Mine,std::allocator<Mine> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xbf77c, 0x1C)
-void std::_STL_alloc_proxy<generator *,generator,std::allocator<generator> >::~_STL_alloc_proxy<generator *,generator,std::allocator<generator> >()
+void std::_STL_alloc_proxy<Generator *,Generator,std::allocator<Generator> >::~_STL_alloc_proxy<Generator *,Generator,std::allocator<Generator> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xbf798, 0x1C)
-void std::_STL_alloc_proxy<garrison *,garrison,std::allocator<garrison> >::~_STL_alloc_proxy<garrison *,garrison,std::allocator<garrison> >()
+void std::_STL_alloc_proxy<Garrison *,Garrison,std::allocator<Garrison> >::~_STL_alloc_proxy<Garrison *,Garrison,std::allocator<Garrison> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xbf7b4, 0x1C)
-void std::_STL_alloc_proxy<boat *,boat,std::allocator<boat> >::~_STL_alloc_proxy<boat *,boat,std::allocator<boat> >()
+void std::_STL_alloc_proxy<Boat *,Boat,std::allocator<Boat> >::~_STL_alloc_proxy<Boat *,Boat,std::allocator<Boat> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xbf7d0, 0x1C)
-void std::_STL_alloc_proxy<type_university *,type_university,std::allocator<type_university> >::~_STL_alloc_proxy<type_university *,type_university,std::allocator<type_university> >()
+void std::_STL_alloc_proxy<University *,University,std::allocator<University> >::~_STL_alloc_proxy<University *,University,std::allocator<University> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xbf7ec, 0x1C)
-void std::_STL_alloc_proxy<type_creature_bank *,type_creature_bank,std::allocator<type_creature_bank> >::~_STL_alloc_proxy<type_creature_bank *,type_creature_bank,std::allocator<type_creature_bank> >()
+void std::_STL_alloc_proxy<CreatureBank *,CreatureBank,std::allocator<CreatureBank> >::~_STL_alloc_proxy<CreatureBank *,CreatureBank,std::allocator<CreatureBank> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xbf808, 0x1C)
-void std::_STL_alloc_proxy<game::TRumour *,game::TRumour,std::allocator<game::TRumour> >::~_STL_alloc_proxy<game::TRumour *,game::TRumour,std::allocator<game::TRumour> >()
+void std::_STL_alloc_proxy<Game::Rumour *,Game::Rumour,std::allocator<Game::Rumour> >::~_STL_alloc_proxy<Game::Rumour *,Game::Rumour,std::allocator<Game::Rumour> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xbf824, 0x1C)
-void std::_STL_alloc_proxy<type_event_record * *,type_event_record *,std::allocator<type_event_record *> >::~_STL_alloc_proxy<type_event_record * *,type_event_record *,std::allocator<type_event_record *> >()
+void std::_STL_alloc_proxy<EventRecord * *,EventRecord *,std::allocator<EventRecord *> >::~_STL_alloc_proxy<EventRecord * *,EventRecord *,std::allocator<EventRecord *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:122
 DC_ONLY(0xbf840, 0x1C)
-void std::_STL_alloc_proxy<hero *,hero,std::allocator<hero> >::~_STL_alloc_proxy<hero *,hero,std::allocator<hero> >()
+void std::_STL_alloc_proxy<Hero *,Hero,std::allocator<Hero> >::~_STL_alloc_proxy<Hero *,Hero,std::allocator<Hero> >()
 {
     // @stub
 }
@@ -12906,21 +12913,21 @@ unsigned long* std::_Base_bitset<2,unsigned long>::_M_hiword()
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xbf88c, 0x1E)
-void std::_STL_alloc_proxy<enum TArtifact *,enum TArtifact,std::allocator<enum TArtifact> >::_STL_alloc_proxy<enum TArtifact *,enum TArtifact,std::allocator<enum TArtifact> >(const std::allocator<enum* __a, TArtifact** __p)
+void std::_STL_alloc_proxy<enum Artifact *,enum Artifact,std::allocator<enum Artifact> >::_STL_alloc_proxy<enum Artifact *,enum Artifact,std::allocator<enum Artifact> >(const std::allocator<enum* __a, Artifact** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xbf8ac, 0x1E)
-void std::_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >::_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >(const std::allocator<type_point>* __a, type_point** __p)
+void std::_STL_alloc_proxy<MapPoint *,MapPoint,std::allocator<MapPoint> >::_STL_alloc_proxy<MapPoint *,MapPoint,std::allocator<MapPoint> >(const std::allocator<MapPoint>* __a, MapPoint** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xbf8cc, 0x30)
-void std::_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >::deallocate(type_point* __p, unsigned __n)
+void std::_STL_alloc_proxy<MapPoint *,MapPoint,std::allocator<MapPoint> >::deallocate(MapPoint* __p, unsigned __n)
 {
     // @stub
 }
@@ -12941,56 +12948,56 @@ void std::_STL_alloc_proxy<TownExtra *,TownExtra,std::allocator<TownExtra> >::de
 
 // ..\stlport\stl_vector.h:472
 DC_ONLY(0xbf94c, 0x28)
-void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::insert(TBlackMarket* __pos, unsigned __n, const TBlackMarket* __x)
+void std::vector<BlackMarket,std::allocator<BlackMarket> >::insert(BlackMarket* __pos, unsigned __n, const BlackMarket* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xbf974, 0x1E)
-void std::_STL_alloc_proxy<TBlackMarket *,TBlackMarket,std::allocator<TBlackMarket> >::_STL_alloc_proxy<TBlackMarket *,TBlackMarket,std::allocator<TBlackMarket> >(const std::allocator<TBlackMarket>* __a, TBlackMarket** __p)
+void std::_STL_alloc_proxy<BlackMarket *,BlackMarket,std::allocator<BlackMarket> >::_STL_alloc_proxy<BlackMarket *,BlackMarket,std::allocator<BlackMarket> >(const std::allocator<BlackMarket>* __a, BlackMarket** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xbf994, 0x30)
-void std::_STL_alloc_proxy<TBlackMarket *,TBlackMarket,std::allocator<TBlackMarket> >::deallocate(TBlackMarket* __p, unsigned __n)
+void std::_STL_alloc_proxy<BlackMarket *,BlackMarket,std::allocator<BlackMarket> >::deallocate(BlackMarket* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0xbf9c4, 0xC)
-town* std::vector<town,std::allocator<town> >::end()
+Town* std::vector<Town,std::allocator<Town> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:472
 DC_ONLY(0xbf9d0, 0x28)
-void std::vector<town,std::allocator<town> >::insert(town* __pos, unsigned __n, const town* __x)
+void std::vector<Town,std::allocator<Town> >::insert(Town* __pos, unsigned __n, const Town* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0xbf9f8, 0x48)
-town* std::vector<town,std::allocator<town> >::erase(town* __first, town* __last)
+Town* std::vector<Town,std::allocator<Town> >::erase(Town* __first, Town* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xbfa40, 0x1E)
-void std::_STL_alloc_proxy<town *,town,std::allocator<town> >::_STL_alloc_proxy<town *,town,std::allocator<town> >(const std::allocator<town>* __a, town** __p)
+void std::_STL_alloc_proxy<Town *,Town,std::allocator<Town> >::_STL_alloc_proxy<Town *,Town,std::allocator<Town> >(const std::allocator<Town>* __a, Town** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xbfa60, 0x30)
-void std::_STL_alloc_proxy<town *,town,std::allocator<town> >::deallocate(town* __p, unsigned __n)
+void std::_STL_alloc_proxy<Town *,Town,std::allocator<Town> >::deallocate(Town* __p, unsigned __n)
 {
     // @stub
 }
@@ -13032,189 +13039,189 @@ void std::_STL_alloc_proxy<Sign *,Sign,std::allocator<Sign> >::deallocate(Sign* 
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0xbfb5c, 0xC)
-mine* std::vector<mine,std::allocator<mine> >::end()
+Mine* std::vector<Mine,std::allocator<Mine> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:472
 DC_ONLY(0xbfb68, 0x28)
-void std::vector<mine,std::allocator<mine> >::insert(mine* __pos, unsigned __n, const mine* __x)
+void std::vector<Mine,std::allocator<Mine> >::insert(Mine* __pos, unsigned __n, const Mine* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0xbfb90, 0x48)
-mine* std::vector<mine,std::allocator<mine> >::erase(mine* __first, mine* __last)
+Mine* std::vector<Mine,std::allocator<Mine> >::erase(Mine* __first, Mine* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xbfbd8, 0x1E)
-void std::_STL_alloc_proxy<mine *,mine,std::allocator<mine> >::_STL_alloc_proxy<mine *,mine,std::allocator<mine> >(const std::allocator<mine>* __a, mine** __p)
+void std::_STL_alloc_proxy<Mine *,Mine,std::allocator<Mine> >::_STL_alloc_proxy<Mine *,Mine,std::allocator<Mine> >(const std::allocator<Mine>* __a, Mine** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xbfbf8, 0x30)
-void std::_STL_alloc_proxy<mine *,mine,std::allocator<mine> >::deallocate(mine* __p, unsigned __n)
+void std::_STL_alloc_proxy<Mine *,Mine,std::allocator<Mine> >::deallocate(Mine* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xbfc28, 0x1E)
-void std::_STL_alloc_proxy<generator *,generator,std::allocator<generator> >::_STL_alloc_proxy<generator *,generator,std::allocator<generator> >(const std::allocator<generator>* __a, generator** __p)
+void std::_STL_alloc_proxy<Generator *,Generator,std::allocator<Generator> >::_STL_alloc_proxy<Generator *,Generator,std::allocator<Generator> >(const std::allocator<Generator>* __a, Generator** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xbfc48, 0x30)
-void std::_STL_alloc_proxy<generator *,generator,std::allocator<generator> >::deallocate(generator* __p, unsigned __n)
+void std::_STL_alloc_proxy<Generator *,Generator,std::allocator<Generator> >::deallocate(Generator* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0xbfc78, 0xC)
-garrison* std::vector<garrison,std::allocator<garrison> >::end()
+Garrison* std::vector<Garrison,std::allocator<Garrison> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:472
 DC_ONLY(0xbfc84, 0x28)
-void std::vector<garrison,std::allocator<garrison> >::insert(garrison* __pos, unsigned __n, const garrison* __x)
+void std::vector<Garrison,std::allocator<Garrison> >::insert(Garrison* __pos, unsigned __n, const Garrison* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0xbfcac, 0x48)
-garrison* std::vector<garrison,std::allocator<garrison> >::erase(garrison* __first, garrison* __last)
+Garrison* std::vector<Garrison,std::allocator<Garrison> >::erase(Garrison* __first, Garrison* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xbfcf4, 0x1E)
-void std::_STL_alloc_proxy<garrison *,garrison,std::allocator<garrison> >::_STL_alloc_proxy<garrison *,garrison,std::allocator<garrison> >(const std::allocator<garrison>* __a, garrison** __p)
+void std::_STL_alloc_proxy<Garrison *,Garrison,std::allocator<Garrison> >::_STL_alloc_proxy<Garrison *,Garrison,std::allocator<Garrison> >(const std::allocator<Garrison>* __a, Garrison** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xbfd14, 0x30)
-void std::_STL_alloc_proxy<garrison *,garrison,std::allocator<garrison> >::deallocate(garrison* __p, unsigned __n)
+void std::_STL_alloc_proxy<Garrison *,Garrison,std::allocator<Garrison> >::deallocate(Garrison* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:472
 DC_ONLY(0xbfd44, 0x28)
-void std::vector<boat,std::allocator<boat> >::insert(boat* __pos, unsigned __n, const boat* __x)
+void std::vector<Boat,std::allocator<Boat> >::insert(Boat* __pos, unsigned __n, const Boat* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0xbfd6c, 0x48)
-boat* std::vector<boat,std::allocator<boat> >::erase(boat* __first, boat* __last)
+Boat* std::vector<Boat,std::allocator<Boat> >::erase(Boat* __first, Boat* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xbfdb4, 0x1E)
-void std::_STL_alloc_proxy<boat *,boat,std::allocator<boat> >::_STL_alloc_proxy<boat *,boat,std::allocator<boat> >(const std::allocator<boat>* __a, boat** __p)
+void std::_STL_alloc_proxy<Boat *,Boat,std::allocator<Boat> >::_STL_alloc_proxy<Boat *,Boat,std::allocator<Boat> >(const std::allocator<Boat>* __a, Boat** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xbfdd4, 0x30)
-void std::_STL_alloc_proxy<boat *,boat,std::allocator<boat> >::deallocate(boat* __p, unsigned __n)
+void std::_STL_alloc_proxy<Boat *,Boat,std::allocator<Boat> >::deallocate(Boat* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xbfe04, 0x1E)
-void std::_STL_alloc_proxy<type_university *,type_university,std::allocator<type_university> >::_STL_alloc_proxy<type_university *,type_university,std::allocator<type_university> >(const std::allocator<type_university>* __a, type_university** __p)
+void std::_STL_alloc_proxy<University *,University,std::allocator<University> >::_STL_alloc_proxy<University *,University,std::allocator<University> >(const std::allocator<University>* __a, University** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xbfe24, 0x30)
-void std::_STL_alloc_proxy<type_university *,type_university,std::allocator<type_university> >::deallocate(type_university* __p, unsigned __n)
+void std::_STL_alloc_proxy<University *,University,std::allocator<University> >::deallocate(University* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xbfe54, 0x1E)
-void std::_STL_alloc_proxy<type_creature_bank *,type_creature_bank,std::allocator<type_creature_bank> >::_STL_alloc_proxy<type_creature_bank *,type_creature_bank,std::allocator<type_creature_bank> >(const std::allocator<type_creature_bank>* __a, type_creature_bank** __p)
+void std::_STL_alloc_proxy<CreatureBank *,CreatureBank,std::allocator<CreatureBank> >::_STL_alloc_proxy<CreatureBank *,CreatureBank,std::allocator<CreatureBank> >(const std::allocator<CreatureBank>* __a, CreatureBank** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xbfe74, 0x30)
-void std::_STL_alloc_proxy<type_creature_bank *,type_creature_bank,std::allocator<type_creature_bank> >::deallocate(type_creature_bank* __p, unsigned __n)
+void std::_STL_alloc_proxy<CreatureBank *,CreatureBank,std::allocator<CreatureBank> >::deallocate(CreatureBank* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:472
 DC_ONLY(0xbfea4, 0x28)
-void std::vector<game::TRumour,std::allocator<game::TRumour> >::insert(game::TRumour* __pos, unsigned __n, const game::TRumour* __x)
+void std::vector<Game::Rumour,std::allocator<Game::Rumour> >::insert(Game::Rumour* __pos, unsigned __n, const Game::Rumour* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0xbfecc, 0x48)
-game::TRumour* std::vector<game::TRumour,std::allocator<game::TRumour> >::erase(game::TRumour* __first, game::TRumour* __last)
+Game::Rumour* std::vector<Game::Rumour,std::allocator<Game::Rumour> >::erase(Game::Rumour* __first, Game::Rumour* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xbff14, 0x1E)
-void std::_STL_alloc_proxy<game::TRumour *,game::TRumour,std::allocator<game::TRumour> >::_STL_alloc_proxy<game::TRumour *,game::TRumour,std::allocator<game::TRumour> >(const std::allocator<game::TRumour>* __a, game::TRumour** __p)
+void std::_STL_alloc_proxy<Game::Rumour *,Game::Rumour,std::allocator<Game::Rumour> >::_STL_alloc_proxy<Game::Rumour *,Game::Rumour,std::allocator<Game::Rumour> >(const std::allocator<Game::Rumour>* __a, Game::Rumour** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xbff34, 0x30)
-void std::_STL_alloc_proxy<game::TRumour *,game::TRumour,std::allocator<game::TRumour> >::deallocate(game::TRumour* __p, unsigned __n)
+void std::_STL_alloc_proxy<Game::Rumour *,Game::Rumour,std::allocator<Game::Rumour> >::deallocate(Game::Rumour* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xbff64, 0x1E)
-void std::_STL_alloc_proxy<type_event_record * *,type_event_record *,std::allocator<type_event_record *> >::_STL_alloc_proxy<type_event_record * *,type_event_record *,std::allocator<type_event_record *> >(const std::allocator<type_event_record* __a, type_event_record*** __p)
+void std::_STL_alloc_proxy<EventRecord * *,EventRecord *,std::allocator<EventRecord *> >::_STL_alloc_proxy<EventRecord * *,EventRecord *,std::allocator<EventRecord *> >(const std::allocator<EventRecord* __a, EventRecord*** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0xbff84, 0x1E)
-void std::_STL_alloc_proxy<hero *,hero,std::allocator<hero> >::_STL_alloc_proxy<hero *,hero,std::allocator<hero> >(const std::allocator<hero>* __a, hero** __p)
+void std::_STL_alloc_proxy<Hero *,Hero,std::allocator<Hero> >::_STL_alloc_proxy<Hero *,Hero,std::allocator<Hero> >(const std::allocator<Hero>* __a, Hero** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0xbffa4, 0x30)
-void std::_STL_alloc_proxy<hero *,hero,std::allocator<hero> >::deallocate(hero* __p, unsigned __n)
+void std::_STL_alloc_proxy<Hero *,Hero,std::allocator<Hero> >::deallocate(Hero* __p, unsigned __n)
 {
     // @stub
 }
@@ -13235,7 +13242,7 @@ unsigned std::_Base_bitset<2,unsigned long>::_S_whichbit(unsigned __pos)
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xbfff8, 0x28)
-void std::allocator<type_point>::deallocate(type_point* __p, unsigned __n)
+void std::allocator<MapPoint>::deallocate(MapPoint* __p, unsigned __n)
 {
     // @stub
 }
@@ -13249,14 +13256,14 @@ void std::allocator<TownExtra>::deallocate(TownExtra* __p, unsigned __n)
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xc004c, 0x2C)
-void std::allocator<TBlackMarket>::deallocate(TBlackMarket* __p, unsigned __n)
+void std::allocator<BlackMarket>::deallocate(BlackMarket* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xc0078, 0x30)
-void std::allocator<town>::deallocate(town* __p, unsigned __n)
+void std::allocator<Town>::deallocate(Town* __p, unsigned __n)
 {
     // @stub
 }
@@ -13270,56 +13277,56 @@ void std::allocator<Sign>::deallocate(Sign* __p, unsigned __n)
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xc00d4, 0x2C)
-void std::allocator<mine>::deallocate(mine* __p, unsigned __n)
+void std::allocator<Mine>::deallocate(Mine* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xc0100, 0x2C)
-void std::allocator<generator>::deallocate(generator* __p, unsigned __n)
+void std::allocator<Generator>::deallocate(Generator* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xc012c, 0x2C)
-void std::allocator<garrison>::deallocate(garrison* __p, unsigned __n)
+void std::allocator<Garrison>::deallocate(Garrison* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xc0158, 0x2C)
-void std::allocator<boat>::deallocate(boat* __p, unsigned __n)
+void std::allocator<Boat>::deallocate(Boat* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xc0184, 0x2C)
-void std::allocator<type_university>::deallocate(type_university* __p, unsigned __n)
+void std::allocator<University>::deallocate(University* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xc01b0, 0x2C)
-void std::allocator<type_creature_bank>::deallocate(type_creature_bank* __p, unsigned __n)
+void std::allocator<CreatureBank>::deallocate(CreatureBank* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xc01dc, 0x2C)
-void std::allocator<game::TRumour>::deallocate(game::TRumour* __p, unsigned __n)
+void std::allocator<Game::Rumour>::deallocate(Game::Rumour* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0xc0208, 0x30)
-void std::allocator<hero>::deallocate(hero* __p, unsigned __n)
+void std::allocator<Hero>::deallocate(Hero* __p, unsigned __n)
 {
     // @stub
 }
@@ -13347,28 +13354,28 @@ void std::vector<CSprite *,std::allocator<CSprite *> >::_M_insert_overflow(CSpri
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0xc05b4, 0x11C)
-void std::vector<type_point,std::allocator<type_point> >::_M_insert_overflow(type_point* __position, const type_point* __x, unsigned __fill_len)
+void std::vector<MapPoint,std::allocator<MapPoint> >::_M_insert_overflow(MapPoint* __position, const MapPoint* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0xc06d0, 0x130)
-void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::_M_insert_overflow(TBlackMarket* __position, const TBlackMarket* __x, unsigned __fill_len)
+void std::vector<BlackMarket,std::allocator<BlackMarket> >::_M_insert_overflow(BlackMarket* __position, const BlackMarket* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:283
 DC_ONLY(0xc0800, 0x224)
-void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::_M_fill_insert(TBlackMarket* __position, unsigned __n, const TBlackMarket* __x)
+void std::vector<BlackMarket,std::allocator<BlackMarket> >::_M_fill_insert(BlackMarket* __position, unsigned __n, const BlackMarket* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:283
 DC_ONLY(0xc0a24, 0x28C)
-void std::vector<town,std::allocator<town> >::_M_fill_insert(town* __position, unsigned __n, const town* __x)
+void std::vector<Town,std::allocator<Town> >::_M_fill_insert(Town* __position, unsigned __n, const Town* __x)
 {
     // @stub
 }
@@ -13382,49 +13389,49 @@ void std::vector<Sign,std::allocator<Sign> >::_M_fill_insert(Sign* __position, u
 
 // ..\stlport\stl_vector.c:283
 DC_ONLY(0xc0e20, 0x184)
-void std::vector<mine,std::allocator<mine> >::_M_fill_insert(mine* __position, unsigned __n, const mine* __x)
+void std::vector<Mine,std::allocator<Mine> >::_M_fill_insert(Mine* __position, unsigned __n, const Mine* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:283
 DC_ONLY(0xc0fa4, 0x1E8)
-void std::vector<garrison,std::allocator<garrison> >::_M_fill_insert(garrison* __position, unsigned __n, const garrison* __x)
+void std::vector<Garrison,std::allocator<Garrison> >::_M_fill_insert(Garrison* __position, unsigned __n, const Garrison* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0xc118c, 0x130)
-void std::vector<boat,std::allocator<boat> >::_M_insert_overflow(boat* __position, const boat* __x, unsigned __fill_len)
+void std::vector<Boat,std::allocator<Boat> >::_M_insert_overflow(Boat* __position, const Boat* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:283
 DC_ONLY(0xc12bc, 0x1D0)
-void std::vector<boat,std::allocator<boat> >::_M_fill_insert(boat* __position, unsigned __n, const boat* __x)
+void std::vector<Boat,std::allocator<Boat> >::_M_fill_insert(Boat* __position, unsigned __n, const Boat* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0xc148c, 0x120)
-void std::vector<type_university,std::allocator<type_university> >::_M_insert_overflow(type_university* __position, const type_university* __x, unsigned __fill_len)
+void std::vector<University,std::allocator<University> >::_M_insert_overflow(University* __position, const University* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0xc15ac, 0x130)
-void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::_M_insert_overflow(type_creature_bank* __position, const type_creature_bank* __x, unsigned __fill_len)
+void std::vector<CreatureBank,std::allocator<CreatureBank> >::_M_insert_overflow(CreatureBank* __position, const CreatureBank* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:283
 DC_ONLY(0xc16dc, 0x170)
-void std::vector<game::TRumour,std::allocator<game::TRumour> >::_M_fill_insert(game::TRumour* __position, unsigned __n, const game::TRumour* __x)
+void std::vector<Game::Rumour,std::allocator<Game::Rumour> >::_M_fill_insert(Game::Rumour* __position, unsigned __n, const Game::Rumour* __x)
 {
     // @stub
 }
@@ -13450,7 +13457,7 @@ unsigned char saveVector(void* outfile, std::vector<enum* src_vector)
 
 // E:\gamedcs\game.cpp:2698
 DC_ONLY(0xc19e8, 0x80)
-unsigned char load_vector(void* infile, std::vector<type_point,std::allocator<type_point>* dest_vector)
+unsigned char load_vector(void* infile, std::vector<MapPoint,std::allocator<MapPoint>* dest_vector)
 {
     // @stub
 }
@@ -13464,21 +13471,21 @@ unsigned char load_vector(void* infile, std::vector<long,std::allocator<long>* d
 
 // E:\gamedcs\game.cpp:2698
 DC_ONLY(0xc1ae8, 0x84)
-unsigned char load_vector(void* infile, std::vector<type_university,std::allocator<type_university>* dest_vector)
+unsigned char load_vector(void* infile, std::vector<University,std::allocator<University>* dest_vector)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:2733
 DC_ONLY(0xc1b6c, 0x98)
-unsigned char loadObjectVector(void* infile, std::vector<type_creature_bank,std::allocator<type_creature_bank>* dest_vector)
+unsigned char loadObjectVector(void* infile, std::vector<CreatureBank,std::allocator<CreatureBank>* dest_vector)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0xc1c04, 0x134)
-void std::vector<hero,std::allocator<hero> >::_M_insert_overflow(hero* __position, const hero* __x, unsigned __fill_len)
+void std::vector<Hero,std::allocator<Hero> >::_M_insert_overflow(Hero* __position, const Hero* __x, unsigned __fill_len)
 {
     // @stub
 }
@@ -13490,7 +13497,7 @@ void std::vector<hero,std::allocator<hero> >::_M_insert_overflow(hero* __positio
 
 // E:\gamedcs\game.cpp:2716
 DC_ONLY(0xc1dd4, 0x84)
-unsigned char saveVector(void* outfile, std::vector<type_point,std::allocator<type_point>* src_vector)
+unsigned char saveVector(void* outfile, std::vector<MapPoint,std::allocator<MapPoint>* src_vector)
 {
     // @stub
 }
@@ -13504,14 +13511,14 @@ unsigned char saveVector(void* outfile, std::vector<long,std::allocator<long>* s
 
 // E:\gamedcs\game.cpp:2716
 DC_ONLY(0xc1edc, 0x88)
-unsigned char saveVector(void* outfile, std::vector<type_university,std::allocator<type_university>* src_vector)
+unsigned char saveVector(void* outfile, std::vector<University,std::allocator<University>* src_vector)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:2754
 DC_ONLY(0xc1f64, 0x9C)
-unsigned char saveObjectVector(void* outfile, std::vector<type_creature_bank,std::allocator<type_creature_bank>* src_vector)
+unsigned char saveObjectVector(void* outfile, std::vector<CreatureBank,std::allocator<CreatureBank>* src_vector)
 {
     // @stub
 }
@@ -13539,28 +13546,28 @@ void std::construct(CSprite** __p, CSprite** __value)
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xc20d8, 0x30)
-void std::destroy(type_point* __first, type_point* __last)
+void std::destroy(MapPoint* __first, MapPoint* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0xc2108, 0x58)
-void std::construct(type_point* __p, const type_point* __value)
+void std::construct(MapPoint* __p, const MapPoint* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xc2160, 0x58)
-type_point* std::copy(type_point* __first, type_point* __last, type_point* __result)
+MapPoint* std::copy(MapPoint* __first, MapPoint* __last, MapPoint* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0xc21b8, 0x20)
-void std::destroy(type_point* __pointer)
+void std::destroy(MapPoint* __pointer)
 {
     // @stub
 }
@@ -13574,21 +13581,21 @@ void std::destroy(TownExtra* __first, TownExtra* __last)
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xc2208, 0x30)
-void std::destroy(TBlackMarket* __first, TBlackMarket* __last)
+void std::destroy(BlackMarket* __first, BlackMarket* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0xc2238, 0xF4)
-void std::construct(TBlackMarket* __p, const TBlackMarket* __value)
+void std::construct(BlackMarket* __p, const BlackMarket* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xc232c, 0x30)
-void std::destroy(town* __first, town* __last)
+void std::destroy(Town* __first, Town* __last)
 {
     // @stub
 }
@@ -13602,98 +13609,98 @@ void std::destroy(Sign* __first, Sign* __last)
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xc238c, 0x30)
-void std::destroy(mine* __first, mine* __last)
+void std::destroy(Mine* __first, Mine* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xc23bc, 0x30)
-void std::destroy(generator* __first, generator* __last)
+void std::destroy(Generator* __first, Generator* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xc23ec, 0x30)
-void std::destroy(garrison* __first, garrison* __last)
+void std::destroy(Garrison* __first, Garrison* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xc241c, 0x30)
-void std::destroy(boat* __first, boat* __last)
+void std::destroy(Boat* __first, Boat* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0xc244c, 0x9C)
-void std::construct(boat* __p, const boat* __value)
+void std::construct(Boat* __p, const Boat* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xc24e8, 0x30)
-void std::destroy(type_university* __first, type_university* __last)
+void std::destroy(University* __first, University* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0xc2518, 0x64)
-void std::construct(type_university* __p, const type_university* __value)
+void std::construct(University* __p, const University* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xc257c, 0x30)
-void std::destroy(type_creature_bank* __first, type_creature_bank* __last)
+void std::destroy(CreatureBank* __first, CreatureBank* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0xc25ac, 0x44)
-void std::construct(type_creature_bank* __p, const type_creature_bank* __value)
+void std::construct(CreatureBank* __p, const CreatureBank* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xc25f0, 0x30)
-void std::destroy(game::TRumour* __first, game::TRumour* __last)
+void std::destroy(Game::Rumour* __first, Game::Rumour* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0xc2620, 0x30)
-void std::destroy(hero* __first, hero* __last)
+void std::destroy(Hero* __first, Hero* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0xc2650, 0x168)
-void std::construct(hero* __p, const hero* __value)
+void std::construct(Hero* __p, const Hero* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xc27b8, 0x58)
-TBlackMarket* std::copy(TBlackMarket* __first, TBlackMarket* __last, TBlackMarket* __result)
+BlackMarket* std::copy(BlackMarket* __first, BlackMarket* __last, BlackMarket* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xc2810, 0xA)
-std::allocator<type_point>* std::__stl_alloc_rebind(std::allocator<type_point>* __a, const type_point* __formal)
+std::allocator<MapPoint>* std::__stl_alloc_rebind(std::allocator<MapPoint>* __a, const MapPoint* __formal)
 {
     // @stub
 }
@@ -13707,21 +13714,21 @@ std::allocator<TownExtra>* std::__stl_alloc_rebind(std::allocator<TownExtra>* __
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xc2828, 0xA)
-std::allocator<TBlackMarket>* std::__stl_alloc_rebind(std::allocator<TBlackMarket>* __a, const TBlackMarket* __formal)
+std::allocator<BlackMarket>* std::__stl_alloc_rebind(std::allocator<BlackMarket>* __a, const BlackMarket* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xc2834, 0x58)
-town* std::copy(town* __first, town* __last, town* __result)
+Town* std::copy(Town* __first, Town* __last, Town* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xc288c, 0xA)
-std::allocator<town>* std::__stl_alloc_rebind(std::allocator<town>* __a, const town* __formal)
+std::allocator<Town>* std::__stl_alloc_rebind(std::allocator<Town>* __a, const Town* __formal)
 {
     // @stub
 }
@@ -13742,84 +13749,84 @@ std::allocator<Sign>* std::__stl_alloc_rebind(std::allocator<Sign>* __a, const S
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xc28fc, 0x58)
-mine* std::copy(mine* __first, mine* __last, mine* __result)
+Mine* std::copy(Mine* __first, Mine* __last, Mine* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xc2954, 0xA)
-std::allocator<mine>* std::__stl_alloc_rebind(std::allocator<mine>* __a, const mine* __formal)
+std::allocator<Mine>* std::__stl_alloc_rebind(std::allocator<Mine>* __a, const Mine* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xc2960, 0xA)
-std::allocator<generator>* std::__stl_alloc_rebind(std::allocator<generator>* __a, const generator* __formal)
+std::allocator<Generator>* std::__stl_alloc_rebind(std::allocator<Generator>* __a, const Generator* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xc296c, 0x58)
-garrison* std::copy(garrison* __first, garrison* __last, garrison* __result)
+Garrison* std::copy(Garrison* __first, Garrison* __last, Garrison* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xc29c4, 0xA)
-std::allocator<garrison>* std::__stl_alloc_rebind(std::allocator<garrison>* __a, const garrison* __formal)
+std::allocator<Garrison>* std::__stl_alloc_rebind(std::allocator<Garrison>* __a, const Garrison* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xc29d0, 0x58)
-boat* std::copy(boat* __first, boat* __last, boat* __result)
+Boat* std::copy(Boat* __first, Boat* __last, Boat* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xc2a28, 0xA)
-std::allocator<boat>* std::__stl_alloc_rebind(std::allocator<boat>* __a, const boat* __formal)
+std::allocator<Boat>* std::__stl_alloc_rebind(std::allocator<Boat>* __a, const Boat* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xc2a34, 0xA)
-std::allocator<type_university>* std::__stl_alloc_rebind(std::allocator<type_university>* __a, const type_university* __formal)
+std::allocator<University>* std::__stl_alloc_rebind(std::allocator<University>* __a, const University* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xc2a40, 0xA)
-std::allocator<type_creature_bank>* std::__stl_alloc_rebind(std::allocator<type_creature_bank>* __a, const type_creature_bank* __formal)
+std::allocator<CreatureBank>* std::__stl_alloc_rebind(std::allocator<CreatureBank>* __a, const CreatureBank* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xc2a4c, 0x58)
-game::TRumour* std::copy(game::TRumour* __first, game::TRumour* __last, game::TRumour* __result)
+Game::Rumour* std::copy(Game::Rumour* __first, Game::Rumour* __last, Game::Rumour* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xc2aa4, 0xA)
-std::allocator<game::TRumour>* std::__stl_alloc_rebind(std::allocator<game::TRumour>* __a, const game::TRumour* __formal)
+std::allocator<Game::Rumour>* std::__stl_alloc_rebind(std::allocator<Game::Rumour>* __a, const Game::Rumour* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0xc2ab0, 0xA)
-std::allocator<hero>* std::__stl_alloc_rebind(std::allocator<hero>* __a, const hero* __formal)
+std::allocator<Hero>* std::__stl_alloc_rebind(std::allocator<Hero>* __a, const Hero* __formal)
 {
     // @stub
 }
@@ -13833,7 +13840,7 @@ void Sign::Sign(const Sign* __that)
 
 // ..\stlport\stl_alloc.h:970
 DC_ONLY(0xc2af4, 0x38)
-void game::TRumour::TRumour(const game::TRumour* __that)
+void Game::Rumour::Rumour(const Game::Rumour* __that)
 {
     // @stub
 }
@@ -13847,21 +13854,21 @@ void CObjectType::CObjectType(const CObjectType* __that)
 
 // ..\stlport\stl_alloc.h:970
 DC_ONLY(0xc2be4, 0xEC)
-void type_creature_bank::type_creature_bank(const type_creature_bank* __that)
+void CreatureBank::CreatureBank(const CreatureBank* __that)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:236
 DC_ONLY(0xc2cd0, 0x80)
-void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::vector<enum TArtifact,std::allocator<enum TArtifact> >(const std::vector<enum* __x)
+void std::vector<enum Artifact,std::allocator<enum Artifact> >::vector<enum Artifact,std::allocator<enum Artifact> >(const std::vector<enum* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:505
 DC_ONLY(0xc2d50, 0x28)
-void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::resize(unsigned __new_size)
+void std::vector<enum Artifact,std::allocator<enum Artifact> >::resize(unsigned __new_size)
 {
     // @stub
 }
@@ -13917,63 +13924,63 @@ void std::_STL_alloc_proxy<CSprite * *,CSprite *,std::allocator<CSprite *> >::de
 
 // ..\stlport\stl_vector.h:505
 DC_ONLY(0xc2ec8, 0x34)
-void std::vector<type_point,std::allocator<type_point> >::resize(unsigned __new_size)
+void std::vector<MapPoint,std::allocator<MapPoint> >::resize(unsigned __new_size)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0xc2efc, 0x38)
-type_point* std::_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >::allocate(unsigned __n)
+MapPoint* std::_STL_alloc_proxy<MapPoint *,MapPoint,std::allocator<MapPoint> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0xc2f34, 0x38)
-TBlackMarket* std::_STL_alloc_proxy<TBlackMarket *,TBlackMarket,std::allocator<TBlackMarket> >::allocate(unsigned __n)
+BlackMarket* std::_STL_alloc_proxy<BlackMarket *,BlackMarket,std::allocator<BlackMarket> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:505
 DC_ONLY(0xc2f6c, 0x38)
-void std::vector<generator,std::allocator<generator> >::resize(unsigned __new_size)
+void std::vector<Generator,std::allocator<Generator> >::resize(unsigned __new_size)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0xc2fa4, 0x38)
-boat* std::_STL_alloc_proxy<boat *,boat,std::allocator<boat> >::allocate(unsigned __n)
+Boat* std::_STL_alloc_proxy<Boat *,Boat,std::allocator<Boat> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:505
 DC_ONLY(0xc2fdc, 0x24)
-void std::vector<type_university,std::allocator<type_university> >::resize(unsigned __new_size)
+void std::vector<University,std::allocator<University> >::resize(unsigned __new_size)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0xc3000, 0x38)
-type_university* std::_STL_alloc_proxy<type_university *,type_university,std::allocator<type_university> >::allocate(unsigned __n)
+University* std::_STL_alloc_proxy<University *,University,std::allocator<University> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:505
 DC_ONLY(0xc3038, 0x4C)
-void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::resize(unsigned __new_size)
+void std::vector<CreatureBank,std::allocator<CreatureBank> >::resize(unsigned __new_size)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0xc3084, 0x38)
-type_creature_bank* std::_STL_alloc_proxy<type_creature_bank *,type_creature_bank,std::allocator<type_creature_bank> >::allocate(unsigned __n)
+CreatureBank* std::_STL_alloc_proxy<CreatureBank *,CreatureBank,std::allocator<CreatureBank> >::allocate(unsigned __n)
 {
     // @stub
 }
@@ -13987,28 +13994,28 @@ void std::vector<long,std::allocator<long> >::resize(unsigned __new_size)
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0xc30e4, 0x38)
-hero* std::_STL_alloc_proxy<hero *,hero,std::allocator<hero> >::allocate(unsigned __n)
+Hero* std::_STL_alloc_proxy<Hero *,Hero,std::allocator<Hero> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:153
 DC_ONLY(0xc311c, 0x14)
-std::allocator<enum std::vector<enum TArtifact,std::allocator<enum TArtifact> >::get_allocator(__$ReturnUdt)
+std::allocator<enum std::vector<enum Artifact,std::allocator<enum Artifact> >::get_allocator(__$ReturnUdt)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:499
 DC_ONLY(0xc3130, 0x90)
-void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::resize(unsigned __new_size, const TArtifact* __x)
+void std::vector<enum Artifact,std::allocator<enum Artifact> >::resize(unsigned __new_size, const Artifact* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:94
 DC_ONLY(0xc31c0, 0x74)
-void std::_Vector_base<enum TArtifact,std::allocator<enum TArtifact> >::_Vector_base<enum TArtifact,std::allocator<enum TArtifact> >(unsigned __n, const std::allocator<enum* __a)
+void std::_Vector_base<enum Artifact,std::allocator<enum Artifact> >::_Vector_base<enum Artifact,std::allocator<enum Artifact> >(unsigned __n, const std::allocator<enum* __a)
 {
     // @stub
 }
@@ -14057,63 +14064,63 @@ void std::allocator<CSprite *>::deallocate(CSprite** __p, unsigned __n)
 
 // ..\stlport\stl_vector.h:499
 DC_ONLY(0xc3364, 0x90)
-void std::vector<type_point,std::allocator<type_point> >::resize(unsigned __new_size, const type_point* __x)
+void std::vector<MapPoint,std::allocator<MapPoint> >::resize(unsigned __new_size, const MapPoint* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0xc33f4, 0x38)
-type_point* std::allocator<type_point>::allocate(unsigned __n, const void* __formal)
+MapPoint* std::allocator<MapPoint>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0xc342c, 0x3C)
-TBlackMarket* std::allocator<TBlackMarket>::allocate(unsigned __n, const void* __formal)
+BlackMarket* std::allocator<BlackMarket>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:499
 DC_ONLY(0xc3468, 0x94)
-void std::vector<generator,std::allocator<generator> >::resize(unsigned __new_size, const generator* __x)
+void std::vector<Generator,std::allocator<Generator> >::resize(unsigned __new_size, const Generator* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0xc34fc, 0x3C)
-boat* std::allocator<boat>::allocate(unsigned __n, const void* __formal)
+Boat* std::allocator<Boat>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:499
 DC_ONLY(0xc3538, 0x90)
-void std::vector<type_university,std::allocator<type_university> >::resize(unsigned __new_size, const type_university* __x)
+void std::vector<University,std::allocator<University> >::resize(unsigned __new_size, const University* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0xc35c8, 0x3C)
-type_university* std::allocator<type_university>::allocate(unsigned __n, const void* __formal)
+University* std::allocator<University>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:499
 DC_ONLY(0xc3604, 0x94)
-void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::resize(unsigned __new_size, const type_creature_bank* __x)
+void std::vector<CreatureBank,std::allocator<CreatureBank> >::resize(unsigned __new_size, const CreatureBank* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0xc3698, 0x3C)
-type_creature_bank* std::allocator<type_creature_bank>::allocate(unsigned __n, const void* __formal)
+CreatureBank* std::allocator<CreatureBank>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
@@ -14127,98 +14134,98 @@ void std::vector<long,std::allocator<long> >::resize(unsigned __new_size, const 
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0xc3764, 0x40)
-hero* std::allocator<hero>::allocate(unsigned __n, const void* __formal)
+Hero* std::allocator<Hero>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0xc37a4, 0xC)
-TArtifact* std::vector<enum TArtifact,std::allocator<enum TArtifact> >::end()
+Artifact* std::vector<enum Artifact,std::allocator<enum Artifact> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:472
 DC_ONLY(0xc37b0, 0x28)
-void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::insert(TArtifact* __pos, unsigned __n, const TArtifact* __x)
+void std::vector<enum Artifact,std::allocator<enum Artifact> >::insert(Artifact* __pos, unsigned __n, const Artifact* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0xc37d8, 0x48)
-TArtifact* std::vector<enum TArtifact,std::allocator<enum TArtifact> >::erase(TArtifact* __first, TArtifact* __last)
+Artifact* std::vector<enum Artifact,std::allocator<enum Artifact> >::erase(Artifact* __first, Artifact* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:472
 DC_ONLY(0xc3820, 0x28)
-void std::vector<type_point,std::allocator<type_point> >::insert(type_point* __pos, unsigned __n, const type_point* __x)
+void std::vector<MapPoint,std::allocator<MapPoint> >::insert(MapPoint* __pos, unsigned __n, const MapPoint* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0xc3848, 0xC)
-generator* std::vector<generator,std::allocator<generator> >::end()
+Generator* std::vector<Generator,std::allocator<Generator> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:472
 DC_ONLY(0xc3854, 0x28)
-void std::vector<generator,std::allocator<generator> >::insert(generator* __pos, unsigned __n, const generator* __x)
+void std::vector<Generator,std::allocator<Generator> >::insert(Generator* __pos, unsigned __n, const Generator* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0xc387c, 0x48)
-generator* std::vector<generator,std::allocator<generator> >::erase(generator* __first, generator* __last)
+Generator* std::vector<Generator,std::allocator<Generator> >::erase(Generator* __first, Generator* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0xc38c4, 0xC)
-type_university* std::vector<type_university,std::allocator<type_university> >::end()
+University* std::vector<University,std::allocator<University> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:472
 DC_ONLY(0xc38d0, 0x28)
-void std::vector<type_university,std::allocator<type_university> >::insert(type_university* __pos, unsigned __n, const type_university* __x)
+void std::vector<University,std::allocator<University> >::insert(University* __pos, unsigned __n, const University* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0xc38f8, 0x48)
-type_university* std::vector<type_university,std::allocator<type_university> >::erase(type_university* __first, type_university* __last)
+University* std::vector<University,std::allocator<University> >::erase(University* __first, University* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0xc3940, 0xC)
-type_creature_bank* std::vector<type_creature_bank,std::allocator<type_creature_bank> >::end()
+CreatureBank* std::vector<CreatureBank,std::allocator<CreatureBank> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:472
 DC_ONLY(0xc394c, 0x28)
-void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::insert(type_creature_bank* __pos, unsigned __n, const type_creature_bank* __x)
+void std::vector<CreatureBank,std::allocator<CreatureBank> >::insert(CreatureBank* __pos, unsigned __n, const CreatureBank* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0xc3974, 0x48)
-type_creature_bank* std::vector<type_creature_bank,std::allocator<type_creature_bank> >::erase(type_creature_bank* __first, type_creature_bank* __last)
+CreatureBank* std::vector<CreatureBank,std::allocator<CreatureBank> >::erase(CreatureBank* __first, CreatureBank* __last)
 {
     // @stub
 }
@@ -14288,84 +14295,84 @@ void std::destroy(CSprite** __first, CSprite** __last)
 
 // ..\stlport\stl_vector.c:283
 DC_ONLY(0xc3bb4, 0x154)
-void std::vector<type_point,std::allocator<type_point> >::_M_fill_insert(type_point* __position, unsigned __n, const type_point* __x)
+void std::vector<MapPoint,std::allocator<MapPoint> >::_M_fill_insert(MapPoint* __position, unsigned __n, const MapPoint* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xc3d08, 0x3C)
-type_point* std::uninitialized_copy(type_point* __first, type_point* __last, type_point* __result)
+MapPoint* std::uninitialized_copy(MapPoint* __first, MapPoint* __last, MapPoint* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0xc3d44, 0x3C)
-type_point* std::uninitialized_fill_n(type_point* __first, unsigned __n, const type_point* __x)
+MapPoint* std::uninitialized_fill_n(MapPoint* __first, unsigned __n, const MapPoint* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xc3d80, 0x3C)
-TBlackMarket* std::uninitialized_copy(TBlackMarket* __first, TBlackMarket* __last, TBlackMarket* __result)
+BlackMarket* std::uninitialized_copy(BlackMarket* __first, BlackMarket* __last, BlackMarket* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0xc3dbc, 0x3C)
-TBlackMarket* std::uninitialized_fill_n(TBlackMarket* __first, unsigned __n, const TBlackMarket* __x)
+BlackMarket* std::uninitialized_fill_n(BlackMarket* __first, unsigned __n, const BlackMarket* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0xc3df8, 0x58)
-TBlackMarket* std::copy_backward(TBlackMarket* __first, TBlackMarket* __last, TBlackMarket* __result)
+BlackMarket* std::copy_backward(BlackMarket* __first, BlackMarket* __last, BlackMarket* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:495
 DC_ONLY(0xc3e50, 0xE0)
-void std::fill(TBlackMarket* __first, TBlackMarket* __last, const TBlackMarket* __value)
+void std::fill(BlackMarket* __first, BlackMarket* __last, const BlackMarket* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0xc3f30, 0x134)
-void std::vector<town,std::allocator<town> >::_M_insert_overflow(town* __position, const town* __x, unsigned __fill_len)
+void std::vector<Town,std::allocator<Town> >::_M_insert_overflow(Town* __position, const Town* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xc4064, 0x3C)
-town* std::uninitialized_copy(town* __first, town* __last, town* __result)
+Town* std::uninitialized_copy(Town* __first, Town* __last, Town* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0xc40a0, 0x58)
-town* std::copy_backward(town* __first, town* __last, town* __result)
+Town* std::copy_backward(Town* __first, Town* __last, Town* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:495
 DC_ONLY(0xc40f8, 0x11E)
-void std::fill(town* __first, town* __last, const town* __value)
+void std::fill(Town* __first, Town* __last, const Town* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0xc4218, 0x3C)
-town* std::uninitialized_fill_n(town* __first, unsigned __n, const town* __x)
+Town* std::uninitialized_fill_n(Town* __first, unsigned __n, const Town* __x)
 {
     // @stub
 }
@@ -14407,245 +14414,245 @@ Sign* std::uninitialized_fill_n(Sign* __first, unsigned __n, const Sign* __x)
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0xc447c, 0x130)
-void std::vector<mine,std::allocator<mine> >::_M_insert_overflow(mine* __position, const mine* __x, unsigned __fill_len)
+void std::vector<Mine,std::allocator<Mine> >::_M_insert_overflow(Mine* __position, const Mine* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xc45ac, 0x3C)
-mine* std::uninitialized_copy(mine* __first, mine* __last, mine* __result)
+Mine* std::uninitialized_copy(Mine* __first, Mine* __last, Mine* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0xc45e8, 0x58)
-mine* std::copy_backward(mine* __first, mine* __last, mine* __result)
+Mine* std::copy_backward(Mine* __first, Mine* __last, Mine* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:495
 DC_ONLY(0xc4640, 0x46)
-void std::fill(mine* __first, mine* __last, const mine* __value)
+void std::fill(Mine* __first, Mine* __last, const Mine* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0xc4688, 0x3C)
-mine* std::uninitialized_fill_n(mine* __first, unsigned __n, const mine* __x)
+Mine* std::uninitialized_fill_n(Mine* __first, unsigned __n, const Mine* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0xc46c4, 0x120)
-void std::vector<garrison,std::allocator<garrison> >::_M_insert_overflow(garrison* __position, const garrison* __x, unsigned __fill_len)
+void std::vector<Garrison,std::allocator<Garrison> >::_M_insert_overflow(Garrison* __position, const Garrison* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xc47e4, 0x3C)
-garrison* std::uninitialized_copy(garrison* __first, garrison* __last, garrison* __result)
+Garrison* std::uninitialized_copy(Garrison* __first, Garrison* __last, Garrison* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0xc4820, 0x58)
-garrison* std::copy_backward(garrison* __first, garrison* __last, garrison* __result)
+Garrison* std::copy_backward(Garrison* __first, Garrison* __last, Garrison* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:495
 DC_ONLY(0xc4878, 0xBE)
-void std::fill(garrison* __first, garrison* __last, const garrison* __value)
+void std::fill(Garrison* __first, Garrison* __last, const Garrison* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0xc4938, 0x3C)
-garrison* std::uninitialized_fill_n(garrison* __first, unsigned __n, const garrison* __x)
+Garrison* std::uninitialized_fill_n(Garrison* __first, unsigned __n, const Garrison* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xc4974, 0x3C)
-boat* std::uninitialized_copy(boat* __first, boat* __last, boat* __result)
+Boat* std::uninitialized_copy(Boat* __first, Boat* __last, Boat* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0xc49b0, 0x3C)
-boat* std::uninitialized_fill_n(boat* __first, unsigned __n, const boat* __x)
+Boat* std::uninitialized_fill_n(Boat* __first, unsigned __n, const Boat* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0xc49ec, 0x58)
-boat* std::copy_backward(boat* __first, boat* __last, boat* __result)
+Boat* std::copy_backward(Boat* __first, Boat* __last, Boat* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:495
 DC_ONLY(0xc4a44, 0x82)
-void std::fill(boat* __first, boat* __last, const boat* __value)
+void std::fill(Boat* __first, Boat* __last, const Boat* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:283
 DC_ONLY(0xc4ac8, 0x16C)
-void std::vector<type_university,std::allocator<type_university> >::_M_fill_insert(type_university* __position, unsigned __n, const type_university* __x)
+void std::vector<University,std::allocator<University> >::_M_fill_insert(University* __position, unsigned __n, const University* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xc4c34, 0x3C)
-type_university* std::uninitialized_copy(type_university* __first, type_university* __last, type_university* __result)
+University* std::uninitialized_copy(University* __first, University* __last, University* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0xc4c70, 0x3C)
-type_university* std::uninitialized_fill_n(type_university* __first, unsigned __n, const type_university* __x)
+University* std::uninitialized_fill_n(University* __first, unsigned __n, const University* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:283
 DC_ONLY(0xc4cac, 0x194)
-void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::_M_fill_insert(type_creature_bank* __position, unsigned __n, const type_creature_bank* __x)
+void std::vector<CreatureBank,std::allocator<CreatureBank> >::_M_fill_insert(CreatureBank* __position, unsigned __n, const CreatureBank* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xc4e40, 0x3C)
-type_creature_bank* std::uninitialized_copy(type_creature_bank* __first, type_creature_bank* __last, type_creature_bank* __result)
+CreatureBank* std::uninitialized_copy(CreatureBank* __first, CreatureBank* __last, CreatureBank* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0xc4e7c, 0x3C)
-type_creature_bank* std::uninitialized_fill_n(type_creature_bank* __first, unsigned __n, const type_creature_bank* __x)
+CreatureBank* std::uninitialized_fill_n(CreatureBank* __first, unsigned __n, const CreatureBank* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0xc4eb8, 0x120)
-void std::vector<game::TRumour,std::allocator<game::TRumour> >::_M_insert_overflow(game::TRumour* __position, const game::TRumour* __x, unsigned __fill_len)
+void std::vector<Game::Rumour,std::allocator<Game::Rumour> >::_M_insert_overflow(Game::Rumour* __position, const Game::Rumour* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xc4fd8, 0x3C)
-game::TRumour* std::uninitialized_copy(game::TRumour* __first, game::TRumour* __last, game::TRumour* __result)
+Game::Rumour* std::uninitialized_copy(Game::Rumour* __first, Game::Rumour* __last, Game::Rumour* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0xc5014, 0x58)
-game::TRumour* std::copy_backward(game::TRumour* __first, game::TRumour* __last, game::TRumour* __result)
+Game::Rumour* std::copy_backward(Game::Rumour* __first, Game::Rumour* __last, Game::Rumour* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:495
 DC_ONLY(0xc506c, 0x38)
-void std::fill(game::TRumour* __first, game::TRumour* __last, const game::TRumour* __value)
+void std::fill(Game::Rumour* __first, Game::Rumour* __last, const Game::Rumour* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0xc50a4, 0x3C)
-game::TRumour* std::uninitialized_fill_n(game::TRumour* __first, unsigned __n, const game::TRumour* __x)
+Game::Rumour* std::uninitialized_fill_n(Game::Rumour* __first, unsigned __n, const Game::Rumour* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:283
 DC_ONLY(0xc50e0, 0x138)
-void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::_M_fill_insert(TArtifact* __position, unsigned __n, const TArtifact* __x)
+void std::vector<enum Artifact,std::allocator<enum Artifact> >::_M_fill_insert(Artifact* __position, unsigned __n, const Artifact* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:283
 DC_ONLY(0xc5218, 0x25C)
-void std::vector<generator,std::allocator<generator> >::_M_fill_insert(generator* __position, unsigned __n, const generator* __x)
+void std::vector<Generator,std::allocator<Generator> >::_M_fill_insert(Generator* __position, unsigned __n, const Generator* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xc5474, 0x3C)
-hero* std::uninitialized_copy(hero* __first, hero* __last, hero* __result)
+Hero* std::uninitialized_copy(Hero* __first, Hero* __last, Hero* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0xc54b0, 0x3C)
-hero* std::uninitialized_fill_n(hero* __first, unsigned __n, const hero* __x)
+Hero* std::uninitialized_fill_n(Hero* __first, unsigned __n, const Hero* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xc54ec, 0x8)
-type_point* std::value_type(const type_point* __formal)
+MapPoint* std::value_type(const MapPoint* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xc54f4, 0x24)
-void std::__destroy(type_point* __first, type_point* __last, type_point* __formal)
+void std::__destroy(MapPoint* __first, MapPoint* __last, MapPoint* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0xc5518, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const type_point* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const MapPoint* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0xc552c, 0x8)
-int* std::distance_type(const type_point* __formal)
+int* std::distance_type(const MapPoint* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xc5534, 0x60)
-type_point* std::__copy(type_point* __first, type_point* __last, type_point* __result, std::random_access_iterator_tag __formal, int* __formal)
+MapPoint* std::__copy(MapPoint* __first, MapPoint* __last, MapPoint* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0xc5594, 0x8)
-void std::__destroy_aux(type_point* __pointer, __false_type __formal)
+void std::__destroy_aux(MapPoint* __pointer, __false_type __formal)
 {
     // @stub
 }
@@ -14666,28 +14673,28 @@ void std::__destroy(TownExtra* __first, TownExtra* __last, TownExtra* __formal)
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xc55c8, 0x8)
-TBlackMarket* std::value_type(const TBlackMarket* __formal)
+BlackMarket* std::value_type(const BlackMarket* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xc55d0, 0x24)
-void std::__destroy(TBlackMarket* __first, TBlackMarket* __last, TBlackMarket* __formal)
+void std::__destroy(BlackMarket* __first, BlackMarket* __last, BlackMarket* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xc55f4, 0x8)
-town* std::value_type(const town* __formal)
+Town* std::value_type(const Town* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xc55fc, 0x24)
-void std::__destroy(town* __first, town* __last, town* __formal)
+void std::__destroy(Town* __first, Town* __last, Town* __formal)
 {
     // @stub
 }
@@ -14708,154 +14715,154 @@ void std::__destroy(Sign* __first, Sign* __last, Sign* __formal)
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xc564c, 0x8)
-mine* std::value_type(const mine* __formal)
+Mine* std::value_type(const Mine* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xc5654, 0x24)
-void std::__destroy(mine* __first, mine* __last, mine* __formal)
+void std::__destroy(Mine* __first, Mine* __last, Mine* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xc5678, 0x8)
-generator* std::value_type(const generator* __formal)
+Generator* std::value_type(const Generator* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xc5680, 0x24)
-void std::__destroy(generator* __first, generator* __last, generator* __formal)
+void std::__destroy(Generator* __first, Generator* __last, Generator* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xc56a4, 0x8)
-garrison* std::value_type(const garrison* __formal)
+Garrison* std::value_type(const Garrison* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xc56ac, 0x24)
-void std::__destroy(garrison* __first, garrison* __last, garrison* __formal)
+void std::__destroy(Garrison* __first, Garrison* __last, Garrison* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xc56d0, 0x8)
-boat* std::value_type(const boat* __formal)
+Boat* std::value_type(const Boat* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xc56d8, 0x24)
-void std::__destroy(boat* __first, boat* __last, boat* __formal)
+void std::__destroy(Boat* __first, Boat* __last, Boat* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xc56fc, 0x8)
-type_university* std::value_type(const type_university* __formal)
+University* std::value_type(const University* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xc5704, 0x24)
-void std::__destroy(type_university* __first, type_university* __last, type_university* __formal)
+void std::__destroy(University* __first, University* __last, University* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xc5728, 0x8)
-type_creature_bank* std::value_type(const type_creature_bank* __formal)
+CreatureBank* std::value_type(const CreatureBank* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xc5730, 0x24)
-void std::__destroy(type_creature_bank* __first, type_creature_bank* __last, type_creature_bank* __formal)
+void std::__destroy(CreatureBank* __first, CreatureBank* __last, CreatureBank* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xc5754, 0x8)
-game::TRumour* std::value_type(const game::TRumour* __formal)
+Game::Rumour* std::value_type(const Game::Rumour* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xc575c, 0x24)
-void std::__destroy(game::TRumour* __first, game::TRumour* __last, game::TRumour* __formal)
+void std::__destroy(Game::Rumour* __first, Game::Rumour* __last, Game::Rumour* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0xc5780, 0x8)
-hero* std::value_type(const hero* __formal)
+Hero* std::value_type(const Hero* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0xc5788, 0x24)
-void std::__destroy(hero* __first, hero* __last, hero* __formal)
+void std::__destroy(Hero* __first, Hero* __last, Hero* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0xc57ac, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const TBlackMarket* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const BlackMarket* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0xc57c0, 0x8)
-int* std::distance_type(const TBlackMarket* __formal)
+int* std::distance_type(const BlackMarket* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xc57c8, 0x110)
-TBlackMarket* std::__copy(TBlackMarket* __first, TBlackMarket* __last, TBlackMarket* __result, std::random_access_iterator_tag __formal, int* __formal)
+BlackMarket* std::__copy(BlackMarket* __first, BlackMarket* __last, BlackMarket* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0xc58d8, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const town* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const Town* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0xc58ec, 0x8)
-int* std::distance_type(const town* __formal)
+int* std::distance_type(const Town* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xc58f4, 0x15C)
-town* std::__copy(town* __first, town* __last, town* __result, std::random_access_iterator_tag __formal, int* __formal)
+Town* std::__copy(Town* __first, Town* __last, Town* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
@@ -14883,91 +14890,91 @@ Sign* std::__copy(Sign* __first, Sign* __last, Sign* __result, std::random_acces
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0xc5ac0, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const mine* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const Mine* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0xc5ad4, 0x8)
-int* std::distance_type(const mine* __formal)
+int* std::distance_type(const Mine* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xc5adc, 0x74)
-mine* std::__copy(mine* __first, mine* __last, mine* __result, std::random_access_iterator_tag __formal, int* __formal)
+Mine* std::__copy(Mine* __first, Mine* __last, Mine* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0xc5b50, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const garrison* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const Garrison* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0xc5b64, 0x8)
-int* std::distance_type(const garrison* __formal)
+int* std::distance_type(const Garrison* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xc5b6c, 0xE0)
-garrison* std::__copy(garrison* __first, garrison* __last, garrison* __result, std::random_access_iterator_tag __formal, int* __formal)
+Garrison* std::__copy(Garrison* __first, Garrison* __last, Garrison* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0xc5c4c, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const boat* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const Boat* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0xc5c60, 0x8)
-int* std::distance_type(const boat* __formal)
+int* std::distance_type(const Boat* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xc5c68, 0xBC)
-boat* std::__copy(boat* __first, boat* __last, boat* __result, std::random_access_iterator_tag __formal, int* __formal)
+Boat* std::__copy(Boat* __first, Boat* __last, Boat* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0xc5d24, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const game::TRumour* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const Game::Rumour* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0xc5d38, 0x8)
-int* std::distance_type(const game::TRumour* __formal)
+int* std::distance_type(const Game::Rumour* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xc5d40, 0x54)
-game::TRumour* std::__copy(game::TRumour* __first, game::TRumour* __last, game::TRumour* __result, std::random_access_iterator_tag __formal, int* __formal)
+Game::Rumour* std::__copy(Game::Rumour* __first, Game::Rumour* __last, Game::Rumour* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xc5d94, 0x3C)
-TArtifact* std::uninitialized_copy(const TArtifact* __first, const TArtifact* __last, TArtifact* __result)
+Artifact* std::uninitialized_copy(const Artifact* __first, const Artifact* __last, Artifact* __result)
 {
     // @stub
 }
@@ -14995,28 +15002,28 @@ std::allocator<CSprite* std::__stl_alloc_rebind(std::allocator<CSprite* __a, CSp
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xc5df4, 0x58)
-TArtifact* std::copy(TArtifact* __first, TArtifact* __last, TArtifact* __result)
+Artifact* std::copy(Artifact* __first, Artifact* __last, Artifact* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xc5e4c, 0x58)
-generator* std::copy(generator* __first, generator* __last, generator* __result)
+Generator* std::copy(Generator* __first, Generator* __last, Generator* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xc5ea4, 0x58)
-type_university* std::copy(type_university* __first, type_university* __last, type_university* __result)
+University* std::copy(University* __first, University* __last, University* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xc5efc, 0x58)
-type_creature_bank* std::copy(type_creature_bank* __first, type_creature_bank* __last, type_creature_bank* __result)
+CreatureBank* std::copy(CreatureBank* __first, CreatureBank* __last, CreatureBank* __result)
 {
     // @stub
 }
@@ -15030,14 +15037,14 @@ Sign* Sign::operator=(const Sign* __that)
 
 // ..\stlport\stl_alloc.h:326
 DC_ONLY(0xc5f8c, 0x38)
-game::TRumour* game::TRumour::operator=(const game::TRumour* __that)
+Game::Rumour* Game::Rumour::operator=(const Game::Rumour* __that)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0xc5fc4, 0x38)
-town* std::_STL_alloc_proxy<town *,town,std::allocator<town> >::allocate(unsigned __n)
+Town* std::_STL_alloc_proxy<Town *,Town,std::allocator<Town> >::allocate(unsigned __n)
 {
     // @stub
 }
@@ -15051,28 +15058,28 @@ Sign* std::_STL_alloc_proxy<Sign *,Sign,std::allocator<Sign> >::allocate(unsigne
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0xc6034, 0x38)
-mine* std::_STL_alloc_proxy<mine *,mine,std::allocator<mine> >::allocate(unsigned __n)
+Mine* std::_STL_alloc_proxy<Mine *,Mine,std::allocator<Mine> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0xc606c, 0x38)
-garrison* std::_STL_alloc_proxy<garrison *,garrison,std::allocator<garrison> >::allocate(unsigned __n)
+Garrison* std::_STL_alloc_proxy<Garrison *,Garrison,std::allocator<Garrison> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0xc60a4, 0x38)
-game::TRumour* std::_STL_alloc_proxy<game::TRumour *,game::TRumour,std::allocator<game::TRumour> >::allocate(unsigned __n)
+Game::Rumour* std::_STL_alloc_proxy<Game::Rumour *,Game::Rumour,std::allocator<Game::Rumour> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0xc60dc, 0x40)
-town* std::allocator<town>::allocate(unsigned __n, const void* __formal)
+Town* std::allocator<Town>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
@@ -15086,21 +15093,21 @@ Sign* std::allocator<Sign>::allocate(unsigned __n, const void* __formal)
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0xc6158, 0x3C)
-mine* std::allocator<mine>::allocate(unsigned __n, const void* __formal)
+Mine* std::allocator<Mine>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0xc6194, 0x3C)
-garrison* std::allocator<garrison>::allocate(unsigned __n, const void* __formal)
+Garrison* std::allocator<Garrison>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0xc61d0, 0x3C)
-game::TRumour* std::allocator<game::TRumour>::allocate(unsigned __n, const void* __formal)
+Game::Rumour* std::allocator<Game::Rumour>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
@@ -15191,77 +15198,77 @@ void std::__destroy(CSprite** __first, CSprite** __last, CSprite** __formal)
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0xc63b0, 0x58)
-type_point* std::copy_backward(type_point* __first, type_point* __last, type_point* __result)
+MapPoint* std::copy_backward(MapPoint* __first, MapPoint* __last, MapPoint* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:495
 DC_ONLY(0xc6408, 0x44)
-void std::fill(type_point* __first, type_point* __last, const type_point* __value)
+void std::fill(MapPoint* __first, MapPoint* __last, const MapPoint* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xc644c, 0x30)
-type_point* std::__uninitialized_copy(type_point* __first, type_point* __last, type_point* __result, type_point* __formal)
+MapPoint* std::__uninitialized_copy(MapPoint* __first, MapPoint* __last, MapPoint* __result, MapPoint* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0xc647c, 0x30)
-type_point* std::__uninitialized_fill_n(type_point* __first, unsigned __n, const type_point* __x, type_point* __formal)
+MapPoint* std::__uninitialized_fill_n(MapPoint* __first, unsigned __n, const MapPoint* __x, MapPoint* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xc64ac, 0x30)
-TBlackMarket* std::__uninitialized_copy(TBlackMarket* __first, TBlackMarket* __last, TBlackMarket* __result, TBlackMarket* __formal)
+BlackMarket* std::__uninitialized_copy(BlackMarket* __first, BlackMarket* __last, BlackMarket* __result, BlackMarket* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0xc64dc, 0x30)
-TBlackMarket* std::__uninitialized_fill_n(TBlackMarket* __first, unsigned __n, const TBlackMarket* __x, TBlackMarket* __formal)
+BlackMarket* std::__uninitialized_fill_n(BlackMarket* __first, unsigned __n, const BlackMarket* __x, BlackMarket* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0xc650c, 0x10C)
-TBlackMarket* std::__copy_backward(TBlackMarket* __first, TBlackMarket* __last, TBlackMarket* __result, std::random_access_iterator_tag __formal, int* __formal)
+BlackMarket* std::__copy_backward(BlackMarket* __first, BlackMarket* __last, BlackMarket* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0xc6618, 0x134)
-void std::construct(town* __p, const town* __value)
+void std::construct(Town* __p, const Town* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xc674c, 0x30)
-town* std::__uninitialized_copy(town* __first, town* __last, town* __result, town* __formal)
+Town* std::__uninitialized_copy(Town* __first, Town* __last, Town* __result, Town* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0xc677c, 0x158)
-town* std::__copy_backward(town* __first, town* __last, town* __result, std::random_access_iterator_tag __formal, int* __formal)
+Town* std::__copy_backward(Town* __first, Town* __last, Town* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0xc68d4, 0x30)
-town* std::__uninitialized_fill_n(town* __first, unsigned __n, const town* __x, town* __formal)
+Town* std::__uninitialized_fill_n(Town* __first, unsigned __n, const Town* __x, Town* __formal)
 {
     // @stub
 }
@@ -15296,231 +15303,231 @@ Sign* std::__uninitialized_fill_n(Sign* __first, unsigned __n, const Sign* __x, 
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0xc69fc, 0x58)
-void std::construct(mine* __p, const mine* __value)
+void std::construct(Mine* __p, const Mine* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xc6a54, 0x30)
-mine* std::__uninitialized_copy(mine* __first, mine* __last, mine* __result, mine* __formal)
+Mine* std::__uninitialized_copy(Mine* __first, Mine* __last, Mine* __result, Mine* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0xc6a84, 0x70)
-mine* std::__copy_backward(mine* __first, mine* __last, mine* __result, std::random_access_iterator_tag __formal, int* __formal)
+Mine* std::__copy_backward(Mine* __first, Mine* __last, Mine* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0xc6af4, 0x30)
-mine* std::__uninitialized_fill_n(mine* __first, unsigned __n, const mine* __x, mine* __formal)
+Mine* std::__uninitialized_fill_n(Mine* __first, unsigned __n, const Mine* __x, Mine* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0xc6b24, 0xD4)
-void std::construct(garrison* __p, const garrison* __value)
+void std::construct(Garrison* __p, const Garrison* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xc6bf8, 0x30)
-garrison* std::__uninitialized_copy(garrison* __first, garrison* __last, garrison* __result, garrison* __formal)
+Garrison* std::__uninitialized_copy(Garrison* __first, Garrison* __last, Garrison* __result, Garrison* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0xc6c28, 0xD4)
-garrison* std::__copy_backward(garrison* __first, garrison* __last, garrison* __result, std::random_access_iterator_tag __formal, int* __formal)
+Garrison* std::__copy_backward(Garrison* __first, Garrison* __last, Garrison* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0xc6cfc, 0x30)
-garrison* std::__uninitialized_fill_n(garrison* __first, unsigned __n, const garrison* __x, garrison* __formal)
+Garrison* std::__uninitialized_fill_n(Garrison* __first, unsigned __n, const Garrison* __x, Garrison* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xc6d2c, 0x30)
-boat* std::__uninitialized_copy(boat* __first, boat* __last, boat* __result, boat* __formal)
+Boat* std::__uninitialized_copy(Boat* __first, Boat* __last, Boat* __result, Boat* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0xc6d5c, 0x30)
-boat* std::__uninitialized_fill_n(boat* __first, unsigned __n, const boat* __x, boat* __formal)
+Boat* std::__uninitialized_fill_n(Boat* __first, unsigned __n, const Boat* __x, Boat* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0xc6d8c, 0xB0)
-boat* std::__copy_backward(boat* __first, boat* __last, boat* __result, std::random_access_iterator_tag __formal, int* __formal)
+Boat* std::__copy_backward(Boat* __first, Boat* __last, Boat* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0xc6e3c, 0x58)
-type_university* std::copy_backward(type_university* __first, type_university* __last, type_university* __result)
+University* std::copy_backward(University* __first, University* __last, University* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:495
 DC_ONLY(0xc6e94, 0x52)
-void std::fill(type_university* __first, type_university* __last, const type_university* __value)
+void std::fill(University* __first, University* __last, const University* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xc6ee8, 0x30)
-type_university* std::__uninitialized_copy(type_university* __first, type_university* __last, type_university* __result, type_university* __formal)
+University* std::__uninitialized_copy(University* __first, University* __last, University* __result, University* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0xc6f18, 0x30)
-type_university* std::__uninitialized_fill_n(type_university* __first, unsigned __n, const type_university* __x, type_university* __formal)
+University* std::__uninitialized_fill_n(University* __first, unsigned __n, const University* __x, University* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0xc6f48, 0x58)
-type_creature_bank* std::copy_backward(type_creature_bank* __first, type_creature_bank* __last, type_creature_bank* __result)
+CreatureBank* std::copy_backward(CreatureBank* __first, CreatureBank* __last, CreatureBank* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:495
 DC_ONLY(0xc6fa0, 0x38)
-void std::fill(type_creature_bank* __first, type_creature_bank* __last, const type_creature_bank* __value)
+void std::fill(CreatureBank* __first, CreatureBank* __last, const CreatureBank* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xc6fd8, 0x30)
-type_creature_bank* std::__uninitialized_copy(type_creature_bank* __first, type_creature_bank* __last, type_creature_bank* __result, type_creature_bank* __formal)
+CreatureBank* std::__uninitialized_copy(CreatureBank* __first, CreatureBank* __last, CreatureBank* __result, CreatureBank* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0xc7008, 0x30)
-type_creature_bank* std::__uninitialized_fill_n(type_creature_bank* __first, unsigned __n, const type_creature_bank* __x, type_creature_bank* __formal)
+CreatureBank* std::__uninitialized_fill_n(CreatureBank* __first, unsigned __n, const CreatureBank* __x, CreatureBank* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0xc7038, 0x44)
-void std::construct(game::TRumour* __p, const game::TRumour* __value)
+void std::construct(Game::Rumour* __p, const Game::Rumour* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xc707c, 0x30)
-game::TRumour* std::__uninitialized_copy(game::TRumour* __first, game::TRumour* __last, game::TRumour* __result, game::TRumour* __formal)
+Game::Rumour* std::__uninitialized_copy(Game::Rumour* __first, Game::Rumour* __last, Game::Rumour* __result, Game::Rumour* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0xc70ac, 0x54)
-game::TRumour* std::__copy_backward(game::TRumour* __first, game::TRumour* __last, game::TRumour* __result, std::random_access_iterator_tag __formal, int* __formal)
+Game::Rumour* std::__copy_backward(Game::Rumour* __first, Game::Rumour* __last, Game::Rumour* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0xc7100, 0x30)
-game::TRumour* std::__uninitialized_fill_n(game::TRumour* __first, unsigned __n, const game::TRumour* __x, game::TRumour* __formal)
+Game::Rumour* std::__uninitialized_fill_n(Game::Rumour* __first, unsigned __n, const Game::Rumour* __x, Game::Rumour* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0xc7130, 0x58)
-TArtifact* std::copy_backward(TArtifact* __first, TArtifact* __last, TArtifact* __result)
+Artifact* std::copy_backward(Artifact* __first, Artifact* __last, Artifact* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:495
 DC_ONLY(0xc7188, 0x28)
-void std::fill(TArtifact* __first, TArtifact* __last, const TArtifact* __value)
+void std::fill(Artifact* __first, Artifact* __last, const Artifact* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0xc71b0, 0x130)
-void std::vector<generator,std::allocator<generator> >::_M_insert_overflow(generator* __position, const generator* __x, unsigned __fill_len)
+void std::vector<Generator,std::allocator<Generator> >::_M_insert_overflow(Generator* __position, const Generator* __x, unsigned __fill_len)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0xc72e0, 0x3C)
-generator* std::uninitialized_copy(generator* __first, generator* __last, generator* __result)
+Generator* std::uninitialized_copy(Generator* __first, Generator* __last, Generator* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0xc731c, 0x58)
-generator* std::copy_backward(generator* __first, generator* __last, generator* __result)
+Generator* std::copy_backward(Generator* __first, Generator* __last, Generator* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:495
 DC_ONLY(0xc7374, 0xF8)
-void std::fill(generator* __first, generator* __last, const generator* __value)
+void std::fill(Generator* __first, Generator* __last, const Generator* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0xc746c, 0x3C)
-generator* std::uninitialized_fill_n(generator* __first, unsigned __n, const generator* __x)
+Generator* std::uninitialized_fill_n(Generator* __first, unsigned __n, const Generator* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xc74a8, 0x30)
-hero* std::__uninitialized_copy(hero* __first, hero* __last, hero* __result, hero* __formal)
+Hero* std::__uninitialized_copy(Hero* __first, Hero* __last, Hero* __result, Hero* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0xc74d8, 0x30)
-hero* std::__uninitialized_fill_n(hero* __first, unsigned __n, const hero* __x, hero* __formal)
+Hero* std::__uninitialized_fill_n(Hero* __first, unsigned __n, const Hero* __x, Hero* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xc7508, 0x34)
-void std::__destroy_aux(type_point* __first, type_point* __last, __false_type __formal)
+void std::__destroy_aux(MapPoint* __first, MapPoint* __last, __false_type __formal)
 {
     // @stub
 }
@@ -15534,14 +15541,14 @@ void std::__destroy_aux(TownExtra* __first, TownExtra* __last, __false_type __fo
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xc7570, 0x34)
-void std::__destroy_aux(TBlackMarket* __first, TBlackMarket* __last, __false_type __formal)
+void std::__destroy_aux(BlackMarket* __first, BlackMarket* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xc75a4, 0x38)
-void std::__destroy_aux(town* __first, town* __last, __false_type __formal)
+void std::__destroy_aux(Town* __first, Town* __last, __false_type __formal)
 {
     // @stub
 }
@@ -15555,168 +15562,168 @@ void std::__destroy_aux(Sign* __first, Sign* __last, __false_type __formal)
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xc7610, 0x34)
-void std::__destroy_aux(mine* __first, mine* __last, __false_type __formal)
+void std::__destroy_aux(Mine* __first, Mine* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xc7644, 0x34)
-void std::__destroy_aux(generator* __first, generator* __last, __false_type __formal)
+void std::__destroy_aux(Generator* __first, Generator* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xc7678, 0x34)
-void std::__destroy_aux(garrison* __first, garrison* __last, __false_type __formal)
+void std::__destroy_aux(Garrison* __first, Garrison* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xc76ac, 0x34)
-void std::__destroy_aux(boat* __first, boat* __last, __false_type __formal)
+void std::__destroy_aux(Boat* __first, Boat* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xc76e0, 0x34)
-void std::__destroy_aux(type_university* __first, type_university* __last, __false_type __formal)
+void std::__destroy_aux(University* __first, University* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xc7714, 0x34)
-void std::__destroy_aux(type_creature_bank* __first, type_creature_bank* __last, __false_type __formal)
+void std::__destroy_aux(CreatureBank* __first, CreatureBank* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xc7748, 0x34)
-void std::__destroy_aux(game::TRumour* __first, game::TRumour* __last, __false_type __formal)
+void std::__destroy_aux(Game::Rumour* __first, Game::Rumour* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0xc777c, 0x38)
-void std::__destroy_aux(hero* __first, hero* __last, __false_type __formal)
+void std::__destroy_aux(Hero* __first, Hero* __last, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xc77b4, 0x30)
-TArtifact* std::__uninitialized_copy(const TArtifact* __first, const TArtifact* __last, TArtifact* __result, TArtifact* __formal)
+Artifact* std::__uninitialized_copy(const Artifact* __first, const Artifact* __last, Artifact* __result, Artifact* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0xc77e4, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const TArtifact* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const Artifact* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0xc77f8, 0x8)
-int* std::distance_type(const TArtifact* __formal)
+int* std::distance_type(const Artifact* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xc7800, 0x40)
-TArtifact* std::__copy(TArtifact* __first, TArtifact* __last, TArtifact* __result, std::random_access_iterator_tag __formal, int* __formal)
+Artifact* std::__copy(Artifact* __first, Artifact* __last, Artifact* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0xc7840, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const generator* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const Generator* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0xc7854, 0x8)
-int* std::distance_type(const generator* __formal)
+int* std::distance_type(const Generator* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xc785c, 0x138)
-generator* std::__copy(generator* __first, generator* __last, generator* __result, std::random_access_iterator_tag __formal, int* __formal)
+Generator* std::__copy(Generator* __first, Generator* __last, Generator* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0xc7994, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const type_university* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const University* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0xc79a8, 0x8)
-int* std::distance_type(const type_university* __formal)
+int* std::distance_type(const University* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xc79b0, 0x6C)
-type_university* std::__copy(type_university* __first, type_university* __last, type_university* __result, std::random_access_iterator_tag __formal, int* __formal)
+University* std::__copy(University* __first, University* __last, University* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0xc7a1c, 0x14)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const type_creature_bank* __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const CreatureBank* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0xc7a30, 0x8)
-int* std::distance_type(const type_creature_bank* __formal)
+int* std::distance_type(const CreatureBank* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xc7a38, 0x60)
-type_creature_bank* std::__copy(type_creature_bank* __first, type_creature_bank* __last, type_creature_bank* __result, std::random_access_iterator_tag __formal, int* __formal)
+CreatureBank* std::__copy(CreatureBank* __first, CreatureBank* __last, CreatureBank* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:739
 DC_ONLY(0xc7a98, 0x100)
-type_creature_bank* type_creature_bank::operator=(const type_creature_bank* __that)
+CreatureBank* CreatureBank::operator=(const CreatureBank* __that)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0xc7b98, 0x38)
-generator* std::_STL_alloc_proxy<generator *,generator,std::allocator<generator> >::allocate(unsigned __n)
+Generator* std::_STL_alloc_proxy<Generator *,Generator,std::allocator<Generator> >::allocate(unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0xc7bd0, 0x3C)
-generator* std::allocator<generator>::allocate(unsigned __n, const void* __formal)
+Generator* std::allocator<Generator>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
@@ -15786,49 +15793,49 @@ void std::__destroy_aux(CSprite** __first, CSprite** __last, __false_type __form
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0xc7e40, 0x5E)
-type_point* std::__copy_backward(type_point* __first, type_point* __last, type_point* __result, std::random_access_iterator_tag __formal, int* __formal)
+MapPoint* std::__copy_backward(MapPoint* __first, MapPoint* __last, MapPoint* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xc7ea0, 0x44)
-type_point* std::__uninitialized_copy_aux(type_point* __first, type_point* __last, type_point* __result, __false_type __formal)
+MapPoint* std::__uninitialized_copy_aux(MapPoint* __first, MapPoint* __last, MapPoint* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0xc7ee4, 0x44)
-type_point* std::__uninitialized_fill_n_aux(type_point* __first, unsigned __n, const type_point* __x, __false_type __formal)
+MapPoint* std::__uninitialized_fill_n_aux(MapPoint* __first, unsigned __n, const MapPoint* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xc7f28, 0x44)
-TBlackMarket* std::__uninitialized_copy_aux(TBlackMarket* __first, TBlackMarket* __last, TBlackMarket* __result, __false_type __formal)
+BlackMarket* std::__uninitialized_copy_aux(BlackMarket* __first, BlackMarket* __last, BlackMarket* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0xc7f6c, 0x44)
-TBlackMarket* std::__uninitialized_fill_n_aux(TBlackMarket* __first, unsigned __n, const TBlackMarket* __x, __false_type __formal)
+BlackMarket* std::__uninitialized_fill_n_aux(BlackMarket* __first, unsigned __n, const BlackMarket* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xc7fb0, 0x4C)
-town* std::__uninitialized_copy_aux(town* __first, town* __last, town* __result, __false_type __formal)
+Town* std::__uninitialized_copy_aux(Town* __first, Town* __last, Town* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0xc7ffc, 0x48)
-town* std::__uninitialized_fill_n_aux(town* __first, unsigned __n, const town* __x, __false_type __formal)
+Town* std::__uninitialized_fill_n_aux(Town* __first, unsigned __n, const Town* __x, __false_type __formal)
 {
     // @stub
 }
@@ -15849,154 +15856,154 @@ Sign* std::__uninitialized_fill_n_aux(Sign* __first, unsigned __n, const Sign* _
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xc80cc, 0x44)
-mine* std::__uninitialized_copy_aux(mine* __first, mine* __last, mine* __result, __false_type __formal)
+Mine* std::__uninitialized_copy_aux(Mine* __first, Mine* __last, Mine* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0xc8110, 0x44)
-mine* std::__uninitialized_fill_n_aux(mine* __first, unsigned __n, const mine* __x, __false_type __formal)
+Mine* std::__uninitialized_fill_n_aux(Mine* __first, unsigned __n, const Mine* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xc8154, 0x44)
-garrison* std::__uninitialized_copy_aux(garrison* __first, garrison* __last, garrison* __result, __false_type __formal)
+Garrison* std::__uninitialized_copy_aux(Garrison* __first, Garrison* __last, Garrison* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0xc8198, 0x44)
-garrison* std::__uninitialized_fill_n_aux(garrison* __first, unsigned __n, const garrison* __x, __false_type __formal)
+Garrison* std::__uninitialized_fill_n_aux(Garrison* __first, unsigned __n, const Garrison* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xc81dc, 0x44)
-boat* std::__uninitialized_copy_aux(boat* __first, boat* __last, boat* __result, __false_type __formal)
+Boat* std::__uninitialized_copy_aux(Boat* __first, Boat* __last, Boat* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0xc8220, 0x44)
-boat* std::__uninitialized_fill_n_aux(boat* __first, unsigned __n, const boat* __x, __false_type __formal)
+Boat* std::__uninitialized_fill_n_aux(Boat* __first, unsigned __n, const Boat* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0xc8264, 0x66)
-type_university* std::__copy_backward(type_university* __first, type_university* __last, type_university* __result, std::random_access_iterator_tag __formal, int* __formal)
+University* std::__copy_backward(University* __first, University* __last, University* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xc82cc, 0x44)
-type_university* std::__uninitialized_copy_aux(type_university* __first, type_university* __last, type_university* __result, __false_type __formal)
+University* std::__uninitialized_copy_aux(University* __first, University* __last, University* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0xc8310, 0x44)
-type_university* std::__uninitialized_fill_n_aux(type_university* __first, unsigned __n, const type_university* __x, __false_type __formal)
+University* std::__uninitialized_fill_n_aux(University* __first, unsigned __n, const University* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0xc8354, 0x60)
-type_creature_bank* std::__copy_backward(type_creature_bank* __first, type_creature_bank* __last, type_creature_bank* __result, std::random_access_iterator_tag __formal, int* __formal)
+CreatureBank* std::__copy_backward(CreatureBank* __first, CreatureBank* __last, CreatureBank* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xc83b4, 0x44)
-type_creature_bank* std::__uninitialized_copy_aux(type_creature_bank* __first, type_creature_bank* __last, type_creature_bank* __result, __false_type __formal)
+CreatureBank* std::__uninitialized_copy_aux(CreatureBank* __first, CreatureBank* __last, CreatureBank* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0xc83f8, 0x44)
-type_creature_bank* std::__uninitialized_fill_n_aux(type_creature_bank* __first, unsigned __n, const type_creature_bank* __x, __false_type __formal)
+CreatureBank* std::__uninitialized_fill_n_aux(CreatureBank* __first, unsigned __n, const CreatureBank* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xc843c, 0x44)
-game::TRumour* std::__uninitialized_copy_aux(game::TRumour* __first, game::TRumour* __last, game::TRumour* __result, __false_type __formal)
+Game::Rumour* std::__uninitialized_copy_aux(Game::Rumour* __first, Game::Rumour* __last, Game::Rumour* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0xc8480, 0x44)
-game::TRumour* std::__uninitialized_fill_n_aux(game::TRumour* __first, unsigned __n, const game::TRumour* __x, __false_type __formal)
+Game::Rumour* std::__uninitialized_fill_n_aux(Game::Rumour* __first, unsigned __n, const Game::Rumour* __x, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.c:207
 DC_ONLY(0xc84c4, 0x164)
-std::vector<enum* std::vector<enum TArtifact,std::allocator<enum TArtifact> >::operator=(const std::vector<enum* __x)
+std::vector<enum* std::vector<enum Artifact,std::allocator<enum Artifact> >::operator=(const std::vector<enum* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0xc8628, 0x40)
-TArtifact* std::__copy_backward(TArtifact* __first, TArtifact* __last, TArtifact* __result, std::random_access_iterator_tag __formal, int* __formal)
+Artifact* std::__copy_backward(Artifact* __first, Artifact* __last, Artifact* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0xc8668, 0x110)
-void std::construct(generator* __p, const generator* __value)
+void std::construct(Generator* __p, const Generator* __value)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0xc8778, 0x30)
-generator* std::__uninitialized_copy(generator* __first, generator* __last, generator* __result, generator* __formal)
+Generator* std::__uninitialized_copy(Generator* __first, Generator* __last, Generator* __result, Generator* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0xc87a8, 0x128)
-generator* std::__copy_backward(generator* __first, generator* __last, generator* __result, std::random_access_iterator_tag __formal, int* __formal)
+Generator* std::__copy_backward(Generator* __first, Generator* __last, Generator* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0xc88d0, 0x30)
-generator* std::__uninitialized_fill_n(generator* __first, unsigned __n, const generator* __x, generator* __formal)
+Generator* std::__uninitialized_fill_n(Generator* __first, unsigned __n, const Generator* __x, Generator* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xc8900, 0x4C)
-hero* std::__uninitialized_copy_aux(hero* __first, hero* __last, hero* __result, __false_type __formal)
+Hero* std::__uninitialized_copy_aux(Hero* __first, Hero* __last, Hero* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0xc894c, 0x48)
-hero* std::__uninitialized_fill_n_aux(hero* __first, unsigned __n, const hero* __x, __false_type __formal)
+Hero* std::__uninitialized_fill_n_aux(Hero* __first, unsigned __n, const Hero* __x, __false_type __formal)
 {
     // @stub
 }
@@ -16010,14 +16017,14 @@ void std::destroy(TownExtra* __pointer)
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0xc89b4, 0x20)
-void std::destroy(TBlackMarket* __pointer)
+void std::destroy(BlackMarket* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0xc89d4, 0x20)
-void std::destroy(town* __pointer)
+void std::destroy(Town* __pointer)
 {
     // @stub
 }
@@ -16031,70 +16038,70 @@ void std::destroy(Sign* __pointer)
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0xc8a14, 0x20)
-void std::destroy(mine* __pointer)
+void std::destroy(Mine* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0xc8a34, 0x20)
-void std::destroy(generator* __pointer)
+void std::destroy(Generator* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0xc8a54, 0x20)
-void std::destroy(garrison* __pointer)
+void std::destroy(Garrison* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0xc8a74, 0x20)
-void std::destroy(boat* __pointer)
+void std::destroy(Boat* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0xc8a94, 0x20)
-void std::destroy(type_university* __pointer)
+void std::destroy(University* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0xc8ab4, 0x20)
-void std::destroy(type_creature_bank* __pointer)
+void std::destroy(CreatureBank* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0xc8ad4, 0x20)
-void std::destroy(game::TRumour* __pointer)
+void std::destroy(Game::Rumour* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0xc8af4, 0x20)
-void std::destroy(hero* __pointer)
+void std::destroy(Hero* __pointer)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xc8b14, 0x44)
-TArtifact* std::__uninitialized_copy_aux(const TArtifact* __first, const TArtifact* __last, TArtifact* __result, __false_type __formal)
+Artifact* std::__uninitialized_copy_aux(const Artifact* __first, const Artifact* __last, Artifact* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:199
 DC_ONLY(0xc8b58, 0x16)
-unsigned std::vector<enum TArtifact,std::allocator<enum TArtifact> >::capacity()
+unsigned std::vector<enum Artifact,std::allocator<enum Artifact> >::capacity()
 {
     // @stub
 }
@@ -16122,28 +16129,28 @@ void std::destroy(CSprite** __pointer)
 
 // ..\stlport\stl_vector.h:514
 DC_ONLY(0xc8bd0, 0x40)
-std::vector<enum TArtifact,std::allocator<enum TArtifact> >::_M_allocate_and_copy(unsigned __n, const TArtifact* __first, const TArtifact* __last)
+std::vector<enum Artifact,std::allocator<enum Artifact> >::_M_allocate_and_copy(unsigned __n, const Artifact* __first, const Artifact* __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0xc8c10, 0x58)
-TArtifact* std::copy(const TArtifact* __first, const TArtifact* __last, TArtifact* __result)
+Artifact* std::copy(const Artifact* __first, const Artifact* __last, Artifact* __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0xc8c68, 0x44)
-generator* std::__uninitialized_copy_aux(generator* __first, generator* __last, generator* __result, __false_type __formal)
+Generator* std::__uninitialized_copy_aux(Generator* __first, Generator* __last, Generator* __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0xc8cac, 0x44)
-generator* std::__uninitialized_fill_n_aux(generator* __first, unsigned __n, const generator* __x, __false_type __formal)
+Generator* std::__uninitialized_fill_n_aux(Generator* __first, unsigned __n, const Generator* __x, __false_type __formal)
 {
     // @stub
 }
@@ -16157,14 +16164,14 @@ void std::__destroy_aux(TownExtra* __pointer, __false_type __formal)
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0xc8cf8, 0x8)
-void std::__destroy_aux(TBlackMarket* __pointer, __false_type __formal)
+void std::__destroy_aux(BlackMarket* __pointer, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0xc8d00, 0x8)
-void std::__destroy_aux(town* __pointer, __false_type __formal)
+void std::__destroy_aux(Town* __pointer, __false_type __formal)
 {
     // @stub
 }
@@ -16178,56 +16185,56 @@ void std::__destroy_aux(Sign* __pointer, __false_type __formal)
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0xc8d28, 0x8)
-void std::__destroy_aux(mine* __pointer, __false_type __formal)
+void std::__destroy_aux(Mine* __pointer, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0xc8d30, 0x8)
-void std::__destroy_aux(generator* __pointer, __false_type __formal)
+void std::__destroy_aux(Generator* __pointer, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0xc8d38, 0x8)
-void std::__destroy_aux(garrison* __pointer, __false_type __formal)
+void std::__destroy_aux(Garrison* __pointer, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0xc8d40, 0x8)
-void std::__destroy_aux(boat* __pointer, __false_type __formal)
+void std::__destroy_aux(Boat* __pointer, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0xc8d48, 0x8)
-void std::__destroy_aux(type_university* __pointer, __false_type __formal)
+void std::__destroy_aux(University* __pointer, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0xc8d50, 0x20)
-void std::__destroy_aux(type_creature_bank* __pointer, __false_type __formal)
+void std::__destroy_aux(CreatureBank* __pointer, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0xc8d70, 0x20)
-void std::__destroy_aux(game::TRumour* __pointer, __false_type __formal)
+void std::__destroy_aux(Game::Rumour* __pointer, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:53
 DC_ONLY(0xc8d90, 0x8)
-void std::__destroy_aux(hero* __pointer, __false_type __formal)
+void std::__destroy_aux(Hero* __pointer, __false_type __formal)
 {
     // @stub
 }
@@ -16241,14 +16248,14 @@ void* Sign::`scalar deleting destructor'(unsigned __flags)
 
 // ..\stlport\stl_vector.h:609
 DC_ONLY(0xc8dd0, 0x38)
-void* type_creature_bank::`scalar deleting destructor'(unsigned __flags)
+void* CreatureBank::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:609
 DC_ONLY(0xc8e08, 0x38)
-void* game::TRumour::`scalar deleting destructor'(unsigned __flags)
+void* Game::Rumour::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -16276,7 +16283,7 @@ void std::__destroy_aux(CSprite** __pointer, __false_type __formal)
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0xc8e70, 0x40)
-TArtifact* std::__copy(const TArtifact* __first, const TArtifact* __last, TArtifact* __result, std::random_access_iterator_tag __formal, int* __formal)
+Artifact* std::__copy(const Artifact* __first, const Artifact* __last, Artifact* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
@@ -16301,22 +16308,22 @@ VA_COMPGEN(0x004cff30, 0x17, BITSET_TIDY, Bitset8)
 VA_COMPGEN(0x004d1790, 0x15, BITSET_TIDY, Bitset5)
 VA_COMPGEN(0x004d1830, 0x17, BITSET_TIDY, Bitset28)
 VA_COMPGEN(0x004cf040, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset156)
-VA_COMPGEN(0x004cfe30, 0x8F, VECTOR_ERASE, type_map_hero_identity)
-VA_COMPGEN(0x004cfec0, 0x23, VECTOR_DESTROY, type_map_hero_identity)
-VA_COMPGEN(0x004d2050, 0x32, TREE_MIN, type_map_hero_info)
-VA_COMPGEN(0x004cff50, 0x115, TREE_INSERT, type_map_hero_info)
-VA_COMPGEN(0x004d1d50, 0x2F9, TREE_NODE_INSERT, type_map_hero_info)
-VA_COMPGEN(0x004d27b0, 0xB3, TREE_CONST_ITERATOR_DEC, type_map_hero_info)
+VA_COMPGEN(0x004cfe30, 0x8F, VECTOR_ERASE, MapHeroIdentity)
+VA_COMPGEN(0x004cfec0, 0x23, VECTOR_DESTROY, MapHeroIdentity)
+VA_COMPGEN(0x004d2050, 0x32, TREE_MIN, MapHeroInfo)
+VA_COMPGEN(0x004cff50, 0x115, TREE_INSERT, MapHeroInfo)
+VA_COMPGEN(0x004d1d50, 0x2F9, TREE_NODE_INSERT, MapHeroInfo)
+VA_COMPGEN(0x004d27b0, 0xB3, TREE_CONST_ITERATOR_DEC, MapHeroInfo)
 
 // COMDAT pairing: std::copy<type_map_hero_identity>, agreement 0.987
 // (156 base vs 152 retail instructions).
-VA_COMPGEN(0x004d2e50, 0x18C, STD_COPY, type_map_hero_identity)
+VA_COMPGEN(0x004d2e50, 0x18C, STD_COPY, MapHeroIdentity)
 
 // COMDAT pairing: std::copy_backward<town>, agreement 0.984.
-VA_COMPGEN(0x004d32e0, 0x344, STD_COPY_BACKWARD, town)
+VA_COMPGEN(0x004d32e0, 0x344, STD_COPY_BACKWARD, Town)
 
 // COMDAT pairing: std::fill<town>, agreement 0.992.
-VA_COMPGEN(0x004d2fe0, 0x2FC, STD_FILL, town)
+VA_COMPGEN(0x004d2fe0, 0x2FC, STD_FILL, Town)
 
 // COMDAT pairing: _tree::1?$_Tree, mnemonic agreement 0.959.
 VA_COMPGEN(0x004b61f0, 0x6E, IMPLICIT_DTOR, _tree)
@@ -16324,7 +16331,7 @@ VA_COMPGEN(0x004b61f0, 0x6E, IMPLICIT_DTOR, _tree)
 // COMDAT pairing: out_of_range::1out_of_range, mnemonic agreement 0.909.
 VA_COMPGEN(0x004b6be0, 0x4B, IMPLICIT_DTOR, out_of_range)
 
-VA_COMPGEN(0x0045c200, 0x53E, TREE_ERASE_ITERATOR, type_map_hero_info)
+VA_COMPGEN(0x0045c200, 0x53E, TREE_ERASE_ITERATOR, MapHeroInfo)
 
 // COMDAT pairing: bitset<129>::_Xran. This address arrived on lane 16 as
 // `bitset145` from a 0.978 similarity score; the bound compare refutes that.
@@ -16380,17 +16387,17 @@ VA_COMPGEN(0x0045f810, 0x1CD, VECTOR_COPY_ASSIGN, type_artifact_vector)
 // COMDAT pairing: vector<type_university>::_Ucopy. Five instantiations of
 // _Ucopy resemble this address; type_university wins on agreement (0.907
 // against 0.810 for the next) and `ret 0xc` matches its three pointers.
-VA_COMPGEN(0x00434c70, 0x49, VECTOR_UCOPY, type_university)
+VA_COMPGEN(0x00434c70, 0x49, VECTOR_UCOPY, University)
 
 VA_COMPGEN(0x00487bd0, 0x160, CLASS_CTOR, out_of_range)
 
 // Slot 5 of that zip: vector<hero>::~vector, the row ~SCampaign,
 // vector<vector<hero>>::operator= and vector<vector<hero>>::insert all reach.
-VA_COMPGEN(0x0045fc50, 0x3B, VECTOR_DTOR, hero)
+VA_COMPGEN(0x0045fc50, 0x3B, VECTOR_DTOR, Hero)
 
 // hero declares no destructor, so this is the implicit teardown its own
 // vector<hero>::~vector and scalar-deleting dtor call.
-VA_COMPGEN(0x0045fc90, 0x4A, IMPLICIT_DTOR, hero)
+VA_COMPGEN(0x0045fc90, 0x4A, IMPLICIT_DTOR, Hero)
 
 VA_COMPGEN(0x0045fe60, 0x53, SCALAR_DELETING_DTOR, vector)
 VA_COMPGEN(0x0045fec0, 0x3A, SCALAR_DELETING_DTOR, vector)
@@ -16398,12 +16405,12 @@ VA_COMPGEN(0x0045fec0, 0x3A, SCALAR_DELETING_DTOR, vector)
 // Slot 1 of vector<vector<hero>>::~vector: hero's scalar deleting dtor, also
 // reached from vector<hero>::operator=, PruneCrossoverHeroes and
 // vector<vector<hero>>::erase.
-VA_COMPGEN(0x0045ff00, 0x21, SCALAR_DELETING_DTOR, hero)
+VA_COMPGEN(0x0045ff00, 0x21, SCALAR_DELETING_DTOR, Hero)
 
 // COMDAT pairing: _Tree<int, pair<const int, type_map_hero_info>>::_Erase,
 // agreement 0.952 at an exactly equal 173-byte extent; this object is the
 // only one that instantiates the tree.
-VA_COMPGEN(0x0045c8b0, 0xAD, TREE_ERASE, type_map_hero_info)
+VA_COMPGEN(0x0045c8b0, 0xAD, TREE_ERASE, MapHeroInfo)
 
 VA_COMPGEN(0x0048d480, 0x28, BITSET_TIDY, Bitset145)
 VA_COMPGEN(0x0048c0b0, 0x28, BITSET_TIDY, Bitset144)

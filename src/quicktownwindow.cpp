@@ -54,12 +54,12 @@ DATA(0x006823b8) static int g_quickTownArmyPositions[7][2] = {
 // to +4 (98.2053) but never reaches the ceiling, and guard + two inserts is
 // 98.3983.
 VA(0x00530120, 0x67D)  // townqvbk/itpt literals + town helpers, dc 0x117e48
-TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TViewLevel viewLevel)
-    : heroWindow(200, 200, 194, 186, 0x12)
+QuickTownWindow::QuickTownWindow(const Town* thisTown, QuickTownWindow::ViewLevel viewLevel)
+    : HeroWindow(200, 200, 194, 186, 0x12)
 {
     m_widgets.reserve(NWIDGETS);
 
-    bitmapBorder* background = new bitmapBorder(
+    BitmapBorder* background = new BitmapBorder(
         0, 0, 194, 186, BACKGROUND_ID, "townqvbk.pcx", 0x800);
     background->setPlayerPaletteColors(
         thisTown->m_owner != -1
@@ -67,13 +67,13 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
             : g_game->getLocalPlayerGamePos());
     m_widgets.push_back(background);
 
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         12, 13, 58, 64, PORTRAIT_ID, "itpt.def",
         thisTown->getPortraitFrame(false), 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         75, 12, 107, 16, thisTown->m_name.c_str(), "smalfont.fnt",
-        font::WHITE, NAME_ID, 0, 0, 8));
+        Font::WHITE, NAME_ID, 0, 0, 8));
 
     std::string townSizeName;
     int hallLevel;
@@ -88,12 +88,12 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
     townSizeName = g_townSizeNames[hallLevel];
 
     if (viewLevel >= ViewAll) {
-        m_widgets.push_back(new iconWidget(
+        m_widgets.push_back(new IconWidget(
             76, 42, 34, 34, HALL_LEVEL_ID, "itmtls.def", hallLevel,
             0, 0, 0, 0x10));
 
         if (thisTown->m_garrisonHeroId != -1) {
-            m_widgets.push_back(new bitmapBorder(
+            m_widgets.push_back(new BitmapBorder(
                 158, 86, 22, 30, GARRISON_HERO_ID, "townqkgh.pcx",
                 0x800));
         }
@@ -108,10 +108,10 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
             // is part of the declared array, not a separate local below it.
             // Its enum ordinal advance needs the explicit standard-C++ cast;
             // the resulting increment and all array accesses match retail.
-            EGameResource resource[3];
+            GameResource resource[3];
             int resourceCount = 0;
             for (resource[0] = WOOD; resource[0] <= GOLD;
-                 resource[0] = static_cast<EGameResource>(resource[0] + 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */) {
+                 resource[0] = static_cast<GameResource>(resource[0] + 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */) {
                 if (siloIncome[resource[0]]) {
                     ++resourceCount;
                     resource[resourceCount] = resource[0];
@@ -124,16 +124,16 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
             // Named bonus objects recover that home; moving every allocation
             // into push_back or naming unrelated early widgets was worse.
             if (resourceCount == DOUBLE_RESOURCE_BONUS) {
-                iconWidget* firstBonus = new iconWidget(
+                IconWidget* firstBonus = new IconWidget(
                     15, 86, 20, 18, RESOURCE_BONUS_ID, "smalres.def",
                     resource[1], 0, 0, 0, 0x10);
                 m_widgets.push_back(firstBonus);
-                iconWidget* secondBonus = new iconWidget(
+                IconWidget* secondBonus = new IconWidget(
                     15, 98, 20, 18, RESOURCE_BONUS_ID, "smalres.def",
                     resource[2], 0, 0, 0, 0x10);
                 m_widgets.push_back(secondBonus);
             } else if (resourceCount == SINGLE_RESOURCE_BONUS) {
-                iconWidget* singleBonus = new iconWidget(
+                IconWidget* singleBonus = new IconWidget(
                     15, 92, 22, 18, RESOURCE_BONUS_ID, "smalres.def",
                     resource[1], 0, 0, 0, 0x10);
                 m_widgets.push_back(singleBonus);
@@ -141,8 +141,8 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
         }
 
         sprintf(g_text, "%d", thisTown->getGoldIncome(1));
-        m_widgets.push_back(new textWidget(
-            153, 65, 27, 11, g_text, "tiny.fnt", font::WHITE,
+        m_widgets.push_back(new TextWidget(
+            153, 65, 27, 11, g_text, "tiny.fnt", Font::WHITE,
             GOLD_PER_DAY_ID, 1, 0, 8));
     }
 
@@ -157,49 +157,49 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
         castleLevel = 2;
     else
         castleLevel = 3;
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         114, 42, 34, 34, CASTLE_LEVEL_ID, "itmcls.def", castleLevel,
         0, 0, 0, 0x10));
 
     initializeArmyDisplay(thisTown->getArmy(), viewLevel);
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
     }
 }
 
 VA(0x005307d0, 0x145)  // dc 0x1183b8
-TQuickTownWindow::TQuickTownWindow(const garrison* thisGarrison,
-                                   TQuickTownWindow::TViewLevel viewLevel)
-    : heroWindow(200, 200, 188, 182, 0x12)
+QuickTownWindow::QuickTownWindow(const Garrison* thisGarrison,
+                                   QuickTownWindow::ViewLevel viewLevel)
+    : HeroWindow(200, 200, 188, 182, 0x12)
 {
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         0, 0, 194, 186, BACKGROUND_ID, "townqvbk.pcx", 0x800));
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         77, 13, 110, 24, g_quickViewGarrisonText, "smalfont.fnt",
-        font::WHITE, NAME_ID, 0, 0, 8));
+        Font::WHITE, NAME_ID, 0, 0, 8));
 
     initializeArmyDisplay(thisGarrison->m_garrisonArmy, viewLevel);
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
     }
 }
 
-VA_COMPGEN(0x005307a0, 0x21, SCALAR_DELETING_DTOR, TQuickTownWindow)
+VA_COMPGEN(0x005307a0, 0x21, SCALAR_DELETING_DTOR, QuickTownWindow)
 
 VA(0x00530920, 0x6B)  // dc 0x1184c4
-TQuickTownWindow::~TQuickTownWindow()
+QuickTownWindow::~QuickTownWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
 }
 
 VA(0x00530990, 0x303)  // dc 0x118564
-void TQuickTownWindow::initializeArmyDisplay(
-    const armyGroup& currentArmyGroup, TQuickTownWindow::TViewLevel viewLevel)
+void QuickTownWindow::initializeArmyDisplay(
+    const ArmyGroup& currentArmyGroup, QuickTownWindow::ViewLevel viewLevel)
 {
     int numArmies = currentArmyGroup.getNumArmies();
     if (numArmies <= 0 || viewLevel < ViewArmyTypes)
@@ -207,12 +207,12 @@ void TQuickTownWindow::initializeArmyDisplay(
 
     int widgetId = ARMY_1_SPRITE_ID;
     int displaySlot = 0;
-    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+    for (int slot = 0; slot < ArmyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
         int creature = currentArmyGroup.m_armies[slot];
         if (creature == CREATURE_NONE)
             continue;
 
-        m_widgets.push_back(new iconWidget(
+        m_widgets.push_back(new IconWidget(
             g_quickTownArmyPositions[displaySlot][0],
             g_quickTownArmyPositions[displaySlot][1], 32, 32, widgetId++,
             "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
@@ -226,18 +226,18 @@ void TQuickTownWindow::initializeArmyDisplay(
                 else
                     quantityText << count / 1000 << "k" << std::ends;
 
-                m_widgets.push_back(new textWidget(
+                m_widgets.push_back(new TextWidget(
                     g_quickTownArmyPositions[displaySlot][0],
                     g_quickTownArmyPositions[displaySlot][1] + 34, 32, 13,
-                    quantityText.str(), "smalfont.fnt", font::WHITE, -1,
+                    quantityText.str(), "smalfont.fnt", Font::WHITE, -1,
                     1, 0, 8));
             } else {
-                quantityText << armyGroup::getArmySizeName(count, 0)
+                quantityText << ArmyGroup::getArmySizeName(count, 0)
                               << std::ends;
-                m_widgets.push_back(new textWidget(
+                m_widgets.push_back(new TextWidget(
                     g_quickTownArmyPositions[displaySlot][0],
                     g_quickTownArmyPositions[displaySlot][1] + 34, 32, 13,
-                    quantityText.str(), "smalfont.fnt", font::WHITE,
+                    quantityText.str(), "smalfont.fnt", Font::WHITE,
                     widgetId++, 1, 0, 8));
             }
             quantityText.freeze(false);
@@ -247,7 +247,7 @@ void TQuickTownWindow::initializeArmyDisplay(
 }
 
 VA(0x00530ca0, 0x84)  // dc 0x118794
-void TQuickTownWindow::center(long newX, long newY)
+void QuickTownWindow::center(long newX, long newY)
 {
     m_x = limit(m_width / 2, newX,
               WINDOW_SCREEN_WIDTH - m_width / 2 - 1) - m_width / 2;
@@ -256,7 +256,7 @@ void TQuickTownWindow::center(long newX, long newY)
 }
 
 VA(0x00530d30, 0xD)
-void TQuickTownWindow::quickWindowWait()
+void QuickTownWindow::quickWindowWait()
 {
     g_windowManager->doQuickView(this);
 }
@@ -264,7 +264,7 @@ void TQuickTownWindow::quickWindowWait()
 // E:\gamedcs\quicktownwindow.cpp:139
 #if 0  // @carcass -- represented by VA_COMPGEN above
 DC_ONLY(0x118848, 0x34)
-void* TQuickTownWindow::`scalar deleting destructor'(unsigned __flags)
+void* QuickTownWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

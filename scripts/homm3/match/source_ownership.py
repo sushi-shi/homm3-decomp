@@ -48,6 +48,8 @@ class Definition:
     return_type: str = ""
     inline_origin: tuple[int, int] = ()
     declaration_only_type: int = 0
+    canonical_argument_types: tuple[str, ...] = ()
+    canonical_return_type: str = ""
 
 
 @dataclass(frozen=True)
@@ -195,6 +197,80 @@ def procedure_name(name: str) -> str:
 def type_identity(name: str) -> str:
     """Ignore elaborated-type syntax, preserving typedefs and qualifiers."""
     return re.sub(r'\s+', '', re.sub(r'\b(?:class|struct|enum|union)\s+', '', name))
+
+
+def normalized_alias_type(spelled: str, canonical: str) -> str:
+    """Canonicalize only CleanName aliases of recovered TCleanName tags.
+
+    General typedef canonicalization loses meaningful source domains (for
+    example an integer spell id versus TArtifact).  The normalization aliases
+    introduced by this project have one deliberately narrow, reversible form.
+    """
+    spelled_id = type_identity(spelled)
+    canonical_id = type_identity(canonical)
+    clean_canonical = type_identity(re.sub(r'\bT(?=[A-Z])', '', canonical))
+    return canonical if spelled_id != canonical_id and spelled_id == clean_canonical else spelled
+
+
+def read_type_lineage(root: Path) -> dict[str, str]:
+    """Map current type tokens to recovered spellings from owning comments."""
+    lineage = {}
+    marker = re.compile(r'Before normalization \(type\): ([\w:]+)\.')
+    declaration = re.compile(r'\b(?:class|struct|union|enum)\s+(\w+)\b')
+    for base in ('include', 'src'):
+        for path in sorted((root / base).rglob('*')):
+            if path.suffix.lower() not in {'.h', '.hpp', '.inl', '.c', '.cpp', '.cxx'}:
+                continue
+            lines = path.read_text().splitlines()
+            for index, line in enumerate(lines):
+                match = marker.search(line)
+                if not match:
+                    continue
+                old = match.group(1).rsplit('::', 1)[-1]
+                current = None
+                for candidate in lines[index + 1:index + 9]:
+                    found = declaration.search(candidate)
+                    if found:
+                        current = found.group(1)
+                        break
+                if current is None:
+                    continue
+                previous = lineage.get(current)
+                if previous is not None and previous != old:
+                    raise ValueError(
+                        f'conflicting type lineage for {current}: {previous}, {old}')
+                lineage[current] = old
+    return lineage
+
+
+def read_compiler_type_lineage(root: Path) -> dict[str, str]:
+    """Return only clean names backed by active compiler-identity macros."""
+    lineage = read_type_lineage(root)
+    macros = set()
+    define = re.compile(r'(?m)^\s*#define\s+([A-Za-z_]\w*)\s+'
+                        r'([A-Za-z_]\w*)\s*$')
+    for base in ('include', 'src'):
+        for path in sorted((root / base).rglob('*')):
+            if path.suffix.lower() not in {'.h', '.hpp', '.inl', '.c', '.cpp', '.cxx'}:
+                continue
+            macros.update(define.findall(path.read_text()))
+    return {current: old for current, old in lineage.items()
+            if (current, old) in macros}
+
+
+def recovered_type_spelling(spelling: str, lineage: dict[str, str]) -> str:
+    """Translate authored clean type tokens back to their DC evidence names."""
+    return re.sub(
+        r'\b[A-Za-z_]\w*\b',
+        lambda match: lineage.get(match.group(), match.group()), spelling)
+
+
+def current_type_spelling(spelling: str, lineage: dict[str, str]) -> str:
+    """Translate preprocessed legacy tags to their authored clean names."""
+    current = {old: new for new, old in lineage.items()}
+    return re.sub(
+        r'\b[A-Za-z_]\w*\b',
+        lambda match: current.get(match.group(), match.group()), spelling)
 
 
 def reference_stubs_only(raw: str) -> bool:
@@ -429,9 +505,11 @@ def resolve_instances(definitions, requests, unit, root, args):
     probes = []
     expected = {}
     errors = []
+    type_lineage = read_type_lineage(root)
     for index, token_offset in requests:
         d = definitions[index]
-        owner, separator, member = d.instance.rpartition('::')
+        selector = current_type_spelling(d.instance, type_lineage)
+        owner, separator, member = selector.rpartition('::')
         if (not separator or '<' not in owner
                 or not re.fullmatch(r'[A-Za-z_][\w:<>, *&]*', owner)
                 or not re.fullmatch(r'(?:~?[A-Za-z_]\w*|operator\*|operator\(\))', member)):
@@ -445,7 +523,7 @@ def resolve_instances(definitions, requests, unit, root, args):
             probes.append(f'typedef {owner} {alias};\n'
                           f'int {name} = ((({owner}*)0)->~{alias}(), 0);')
         else:
-            probes.append(f'auto {name} = &{d.instance};')
+            probes.append(f'auto {name} = &{selector};')
         expected[name] = (index, token_offset)
     if not probes:
         return definitions, errors
@@ -488,7 +566,8 @@ def resolve_instances(definitions, requests, unit, root, args):
         # Check the destructor spelling too: the alias expression above
         # identifies the owner's destructor, not an arbitrary trailing name.
         if d.instance.rpartition('::')[2].startswith('~'):
-            selected = d.instance.rpartition('::')[2]
+            selected = current_type_spelling(
+                d.instance, type_lineage).rpartition('::')[2]
             if selected != ref.spelling.split('<', 1)[0]:
                 errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: invalid destructor selector {d.instance!r}')
                 continue
@@ -613,7 +692,13 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
                 instances[0][1] if instances else "",
                 return_type=('void' if cursor.kind in {k.CONSTRUCTOR, k.DESTRUCTOR}
                              else cursor.result_type.spelling),
-                inline_origin=inline_origin, declaration_only_type=declaration_type))
+                inline_origin=inline_origin, declaration_only_type=declaration_type,
+                canonical_argument_types=tuple(
+                    c.type.get_canonical().spelling for c in cursor.get_children()
+                    if c.kind == k.PARM_DECL),
+                canonical_return_type=(
+                    'void' if cursor.kind in {k.CONSTRUCTOR, k.DESTRUCTOR}
+                    else cursor.result_type.get_canonical().spelling)))
             if instances:
                 instance_requests.append((first, cursor.location.offset))
                 extras = []
@@ -711,7 +796,9 @@ def read_filter(path: Path, fields: tuple[str, ...]):
 
 
 def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
-            win_only: dict, *, symbols=None) -> tuple[list[str], dict]:
+            win_only: dict, *, symbols=None,
+            type_lineage: dict[str, str] | None = None) -> tuple[list[str], dict]:
+    type_lineage = type_lineage or {}
     inline_errors = []
     if any(d.inline_origin for d in definitions):
         if symbols is None:
@@ -735,8 +822,13 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
     counts = Counter()
     for d in definitions:
         where = f'{d.file}:{d.line} {d.name}'
-        key = (d.file, d.name, d.signature)
-        candidates = by_name.get(procedure_name(d.name), [])
+        # Compatibility macros deliberately make Clang and VC6 observe the
+        # recovered tags. Reviewed filters describe the clean authored source.
+        key = (d.file,
+               current_type_spelling(d.name, type_lineage),
+               current_type_spelling(d.signature, type_lineage))
+        recovered_name = recovered_type_spelling(d.name, type_lineage)
+        candidates = by_name.get(procedure_name(recovered_name), [])
         if d.dc_offset:
             bridged = [o for o in origins if o.offset == d.dc_offset
                        and (o.file, o.name, str(o.line)) not in dc_only]
@@ -765,7 +857,16 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
         else:
             signature_mismatch = [o for o in candidates if o.argument_types is not None]
             candidates = [o for o in candidates if o.argument_types is None]
-        definition_arguments = tuple(d.argument_types) + (('...',) if d.variadic else ())
+        authored_arguments = tuple(
+            recovered_type_spelling(normalized_alias_type(spelled, canonical),
+                                    type_lineage)
+            for spelled, canonical in zip(d.argument_types,
+                                          d.canonical_argument_types or d.argument_types))
+        authored_return = recovered_type_spelling(
+            normalized_alias_type(d.return_type,
+                                  d.canonical_return_type or d.return_type),
+            type_lineage)
+        definition_arguments = tuple(authored_arguments) + (('...',) if d.variadic else ())
         narrowed = [o for o in candidates if o.argument_types is not None
                     and tuple(type_identity(t) for t in o.argument_types)
                     == tuple(type_identity(t) for t in definition_arguments)]
@@ -794,8 +895,8 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
                      and o.argument_types is not None
                      and tuple(type_identity(t) for t in o.argument_types)
                      == tuple(type_identity(t) for t in definition_arguments)
-                     and o.const == d.const and o.return_type and d.return_type
-                     and type_identity(o.return_type) == type_identity(d.return_type)]
+                     and o.const == d.const and o.return_type and authored_return
+                     and type_identity(o.return_type) == type_identity(authored_return)]
             if (len(exact) != 1 or len(written) != 1 or not d.inline or not d.member
                     or d.class_offset is None or not d.file.startswith('include/')
                     or d.inline_origin or d.va is not None):
@@ -820,9 +921,9 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
             # Require both parsed return types; old/partial inventories cannot
             # authorize this distinction. An emitted DC body still needs its
             # proper owner rather than this declaration-only exception.
-            changed_return = (written and d.return_type
+            changed_return = (written and authored_return
                               and all(o.declaration_only and o.return_type
-                                      and type_identity(o.return_type) != type_identity(d.return_type)
+                                      and type_identity(o.return_type) != type_identity(authored_return)
                                       for o in written))
             if written and not changed_return:
                 errors.append(f'FILTER {where}: Windows-only exemption hides a CodeView counterpart')
@@ -943,8 +1044,9 @@ def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
     errors.extend(failures)
     win_only, failures = read_filter(root / 'config/win_only.tsv', ('file', 'function', 'signature'))
     errors.extend(failures)
-    violations, counts = compare(definitions, read_dc(root, include_declarations=True),
-                                 dc_only, win_only)
+    violations, counts = compare(
+        definitions, read_dc(root, include_declarations=True), dc_only, win_only,
+        type_lineage=read_type_lineage(root))
     errors.extend(violations)
     claims = all_claims()
     from homm3.match.status import load_baseline

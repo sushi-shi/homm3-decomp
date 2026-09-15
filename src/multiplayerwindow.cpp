@@ -22,7 +22,7 @@
 
 #include <direct.h>
 
-unsigned char initRemote(eNetGameType netGameType, const char* userName);
+unsigned char initRemote(NetGameType netGameType, const char* userName);
 unsigned char initConnection(char* address, _DPCOMPORTADDRESS* comportInfo);
 void remoteCleanup();
 
@@ -30,7 +30,7 @@ void remoteCleanup();
 
 // E:\gamedcs\multiplayerwindow.cpp:94
 DC_ONLY(0xffaac, 0x12)
-void AddHelp(THelpText* pHelpText, const char* rollover, const char* RightClick)
+void AddHelp(HelpText* pHelpText, const char* rollover, const char* RightClick)
 {
     // @stub
 }
@@ -44,7 +44,7 @@ void DeleteTempSaveGame(const char* filename)
 
 // E:\gamedcs\multiplayerwindow.cpp:1005
 DC_ONLY(0x100408, 0x28)
-void sliderGames(int state, heroWindow* parent_window)
+void sliderGames(int state, HeroWindow* parent_window)
 {
     // @stub
 }
@@ -53,7 +53,7 @@ void sliderGames(int state, heroWindow* parent_window)
 
 // E:\gamedcs\multiplayerwindow.cpp:1344
 DC_ONLY(0x100c44, 0x5A)
-void TMultiPlayerWindow::RefreshSessions()
+void MultiPlayerWindow::RefreshSessions()
 {
     // @stub
 }
@@ -62,14 +62,14 @@ void TMultiPlayerWindow::RefreshSessions()
 
 // E:\gamedcs\multiplayerwindow.cpp:1449
 DC_ONLY(0x100e94, 0x3A)
-void TMultiPlayerWindow::CheckSessions()
+void MultiPlayerWindow::CheckSessions()
 {
     // @stub
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:1461
 DC_ONLY(0x100ed0, 0xC2)
-unsigned char TMultiPlayerWindow::onModemHost()
+unsigned char MultiPlayerWindow::onModemHost()
 {
     // @stub
 }
@@ -92,7 +92,7 @@ unsigned char TMultiPlayerWindow::onModemHost()
 
 // E:\gamedcs\multiplayerwindow.cpp:1944
 DC_ONLY(0x10196c, 0x294)
-unsigned char TMultiPlayerWindow::onSearch()
+unsigned char MultiPlayerWindow::onSearch()
 {
     // @stub
 }
@@ -105,7 +105,7 @@ unsigned char TMultiPlayerWindow::onSearch()
 
 // E:\gamedcs\multiplayerwindow.cpp:2061
 DC_ONLY(0x101cfc, 0x5C)
-unsigned char TMultiPlayerWindow::IsNT()
+unsigned char MultiPlayerWindow::IsNT()
 {
     // @stub
 }
@@ -149,7 +149,7 @@ void CHotSeatMan::addPlayer(const char* sName)
 
 // E:\gamedcs\multiplayerwindow.cpp:141
 DC_ONLY(0x101e00, 0x98)
-void CMultiPlayerWindowEdit::CMultiPlayerWindowEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+void CMultiPlayerWindowEdit::CMultiPlayerWindowEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, Font::Justify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
 {
     // @stub
 }
@@ -172,14 +172,14 @@ void CMultiPlayerWindowEdit::~CMultiPlayerWindowEdit()
 
 // E:\gamedcs\multiplayerwindow.cpp:174
 DC_ONLY(0x101f34, 0xE0)
-unsigned char CHeroSessions::getSessionInfo(unsigned long index, char* sessName, char* userName, int* numPlayers, CHeroSessions::eSessionStatus* status)
+unsigned char CHeroSessions::getSessionInfo(unsigned long index, char* sessName, char* userName, int* numPlayers, CHeroSessions::SessionStatus* status)
 {
     // @stub
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:263
 DC_ONLY(0x102014, 0xA0)
-void CMPEdit::CMPEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+void CMPEdit::CMPEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, Font::Justify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
 {
     // @stub
 }
@@ -224,7 +224,7 @@ void CMPEdit::~CMPEdit()
 DC_ONLY(0x102210, 0x98)
 void CMPInputEdit::CMPInputEdit(int x, int y, int w, int h, int textSize,
                                 const char* text, const char* fontName,
-                                font::TColor color, unsigned justification,
+                                Font::Color color, unsigned justification,
                                 const char* backgroundIcon,
                                 int backgroundFrame, int id, int style,
                                 int readType, int insetX, int insetY)
@@ -267,27 +267,27 @@ void CMPInputDlg::disableOK()
 // its only addition is the slot-15 key-handler override that gives it a
 // distinct vtable (retail 0x640054, stored by the TMultiPlayerWindow
 // constructor).
-class CMultiPlayerWindowEdit : public textEntryWidget {
+class CMultiPlayerWindowEdit : public TextEntryWidget {
 public:
     // E:\gamedcs\multiplayerwindow.cpp:141, dc 0x101e00
     CMultiPlayerWindowEdit(int x, int y, int w, int h, int textSize,
                            const char* text, const char* fontName,
-                           font::TColor color, unsigned justification,
+                           Font::Color color, unsigned justification,
                            const char* backgroundIcon, int backgroundFrame,
                            int id, int style, int readType, int insetX,
                            int insetY)
-        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
+        : TextEntryWidget(x, y, w, h, textSize, text, fontName, color,
                           justification, backgroundIcon, backgroundFrame, id,
                           style, readType, insetX, insetY)
     {
     }
-    virtual int onKeyPress(message* msg);  // slot 15, retail 0x50ed60
+    virtual int onKeyPress(Message* msg);  // slot 15, retail 0x50ed60
 };
 
 // E:\gamedcs\multiplayerwindow.cpp:174, dc 0x101f34
 inline bool CHeroSessions::getSessionInfo(unsigned long index, char* sessName,
                                           char* userName, int& numPlayers,
-                                          eSessionStatus& status)
+                                          SessionStatus& status)
 {
     CDPlaySession* session = get(index);
     if (!session)
@@ -329,7 +329,7 @@ inline bool CHeroSessions::getSessionInfo(unsigned long index, char* sessName,
 // the most recently loaded game (checked for the remote-temp prefix).
 DATA(0x0069880a) char g_loadedGameName[13];
 DATA(0x00698817) char g_localPlayerName[21];
-DATA(0x006a6578) THelpText g_multiPlayerHelp[30];
+DATA(0x006a6578) HelpText g_multiPlayerHelp[30];
 
 // Armed by all three retail host paths before they create a DirectPlay
 // session. No public symbol survives for the dword, so the name is ordinal.
@@ -372,13 +372,13 @@ DATA(0x006a7788) char* g_searchAddressHelp;
 // DC CHotSeatEdit::OnKeyPress calls CMPEdit::OnKeyPress directly at line 861.
 // Different constructor expansion in CMPInputDlg and CHotSeatDlg does not
 // establish different base classes; keep the common base and its real calls.
-class CMPEdit : public textEntryWidget {
+class CMPEdit : public TextEntryWidget {
 public:
     CMPEdit* m_nextEdit;   // +0x70
     CMPEdit* m_prevEdit;   // +0x74
 
     CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
-            const char* fontName, font::TColor color, unsigned justification,
+            const char* fontName, Font::Color color, unsigned justification,
             const char* backgroundIcon, int backgroundFrame, int id,
             int style, int readType, int insetX, int insetY);
     // DC 0x1020b8 stores the argument at this+0x70.
@@ -388,7 +388,7 @@ public:
     // E:\gamedcs\multiplayerwindow.cpp:274, dc 0x1020bc
     void setPrevEdit(CMPEdit* prevEdit) { m_prevEdit = prevEdit; }
     virtual void setFocus(unsigned char state);
-    virtual int onKeyPress(message* msg);
+    virtual int onKeyPress(Message* msg);
     virtual void onNextEdit();
     virtual void onPrevEdit();                   // slot 20, retail 0x510870
 };
@@ -398,7 +398,7 @@ public:
     // E:\gamedcs\multiplayerwindow.cpp:383, dc 0x102210
     VA(0x00511cd0, 0x62)  // exact body + selected-COMDAT ownership, dc 0x102210
     CMPInputEdit(int x, int y, int w, int h, int textSize, const char* text,
-                 const char* fontName, font::TColor color,
+                 const char* fontName, Font::Color color,
                  unsigned justification, const char* backgroundIcon,
                  int backgroundFrame, int id, int style, int readType,
                  int insetX, int insetY)
@@ -407,7 +407,7 @@ public:
                   insetY)
     {
     }
-    virtual int onKeyPress(message* msg);         // slot 15, retail 0x50de50
+    virtual int onKeyPress(Message* msg);         // slot 15, retail 0x50de50
 };
 
 // This dialog-specific edit stays with the private CMPEdit hierarchy.
@@ -420,7 +420,7 @@ public:
 class CHotSeatEdit : public CMPEdit {
 public:
     CHotSeatEdit(int x, int y, int w, int h, int textSize, const char* text,
-                 const char* fontName, font::TColor color,
+                 const char* fontName, Font::Color color,
                  unsigned justification, const char* backgroundIcon,
                  int backgroundFrame, int id, int style, int readType,
                  int insetX, int insetY)
@@ -430,7 +430,7 @@ public:
     {
     }
     virtual void onKillFocus();
-    virtual int onKeyPress(message* msg);
+    virtual int onKeyPress(Message* msg);
 };
 
 // CMPInputDlg - a CHeroWindowEx text-entry dialog (host name / password).
@@ -464,14 +464,14 @@ public:
 
     CMPInputEdit* m_field1;  // +0x50
     CMPInputEdit* m_field2;  // +0x54
-    textWidget* m_header1;   // +0x58
-    textWidget* m_header2;   // +0x5c
-    textWidget* m_rollover;  // +0x60
+    TextWidget* m_header1;   // +0x58
+    TextWidget* m_header2;   // +0x5c
+    TextWidget* m_rollover;  // +0x60
 
     __forceinline CMPInputDlg(int maxChars1, int maxChars2);
     virtual ~CMPInputDlg();
     virtual int onWidgetDeselect(int id, bool& exitFlag);
-    virtual textWidget* getRolloverWidget();
+    virtual TextWidget* getRolloverWidget();
     unsigned char onOK();
     virtual void updateOK();  // slot 14, retail 0x510980
     __forceinline void disableOK();
@@ -483,33 +483,33 @@ __forceinline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
     : CHeroWindowEx(284, 194, 232, 212, 18)
 {
     m_widgets.reserve(6);
-    m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, BACKGROUND_ID,
+    m_widgets.push_back(new BitmapBorder(0, 0, m_width, m_height, BACKGROUND_ID,
                                        "MuDialog.pcx", 0x800));
 
     m_field1 = new CMPInputEdit(17, 66, 198, 23, maxChars1, "", "smalfont.fnt",
-                              font::WHITE, 0, 0, 0, FIELD1_ID, 0x100, 0, 7, 5);
+                              Font::WHITE, 0, 0, 0, FIELD1_ID, 0x100, 0, 7, 5);
     m_field2 = new CMPInputEdit(17, 115, 198, 23, maxChars2, "", "smalfont.fnt",
-                              font::WHITE, 0, 0, 0, FIELD2_ID, 0x100, 0, 7, 5);
+                              Font::WHITE, 0, 0, 0, FIELD2_ID, 0x100, 0, 7, 5);
     m_field1->setNextEdit(m_field2);
     m_field2->setNextEdit(m_field1);
     m_field1->setPrevEdit(m_field2);
     m_field2->setPrevEdit(m_field1);
 
-    m_header1 = new textWidget(17, 43, 198, 18, "", "smalfont.fnt", font::WHITE,
+    m_header1 = new TextWidget(17, 43, 198, 18, "", "smalfont.fnt", Font::WHITE,
                              -1, 1, 0, 8);
-    m_header2 = new textWidget(17, 92, 198, 18, "", "smalfont.fnt", font::WHITE,
+    m_header2 = new TextWidget(17, 92, 198, 18, "", "smalfont.fnt", Font::WHITE,
                              -1, 1, 0, 8);
 
     m_widgets.push_back(m_field1);
     m_widgets.push_back(m_field2);
     m_widgets.push_back(m_header1);
     m_widgets.push_back(m_header2);
-    m_widgets.push_back(new button(26, 143, 64, 32, OKAY_ID, "mubchck.def", 0, 1,
+    m_widgets.push_back(new Button(26, 143, 64, 32, OKAY_ID, "mubchck.def", 0, 1,
                                  0, 28, 2));
-    m_widgets.push_back(new button(142, 143, 64, 32, BACK_ID, "mubcanc.def", 0, 1,
+    m_widgets.push_back(new Button(142, 143, 64, 32, BACK_ID, "mubcanc.def", 0, 1,
                                  0, 1, 2));
 
-    m_rollover = new textWidget(8, 186, 216, 18, 0, "smalfont.fnt", font::PRIMARY,
+    m_rollover = new TextWidget(8, 186, 216, 18, 0, "smalfont.fnt", Font::PRIMARY,
                               ROLLOVER_ID, 1, 32, 8);
     m_widgets.push_back(m_rollover);
 
@@ -526,7 +526,7 @@ __forceinline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
 // its active-field/empty-text guard, proving that VC6 inlined the boundary.
 inline unsigned char CMPInputDlg::onOK()
 {
-    if (m_field1->m_status & widget::WIDGET_ACTIVE) {
+    if (m_field1->m_status & Widget::WIDGET_ACTIVE) {
         if (!strlen(m_field1->m_text.c_str()))
             return 0;
     }
@@ -568,13 +568,13 @@ inline void CHotSeatDlg::updateOK()
 
 // E:\gamedcs\multiplayerwindow.cpp:1005
 // Slider callback for the session list; scrolls the displayed window of games.
-void sliderGames(int state, heroWindow* parentWindow)
+void sliderGames(int state, HeroWindow* parentWindow)
 {
-    static_cast<TMultiPlayerWindow*>(parentWindow)->m_currentIndex = state;
+    static_cast<MultiPlayerWindow*>(parentWindow)->m_currentIndex = state;
 }
 
 VA(0x0050de50, 0x8F)  // dc 0xffac0
-int CMPInputEdit::onKeyPress(message* msg)
+int CMPInputEdit::onKeyPress(Message* msg)
 {
     int handled;
 
@@ -589,7 +589,7 @@ int CMPInputEdit::onKeyPress(message* msg)
         onNextEdit();
         handled = 1;
     } else {
-        handled = textEntryWidget::onKeyPress(msg);
+        handled = TextEntryWidget::onKeyPress(msg);
     }
 
     static_cast<CMPInputDlg*>(m_parentWindow)->updateOK();
@@ -599,14 +599,14 @@ int CMPInputEdit::onKeyPress(message* msg)
 VA(0x0050dee0, 0x7F)  // dc 0xffaec
 void CHotSeatEdit::onKillFocus()
 {
-    textEntryWidget::onKillFocus();
+    TextEntryWidget::onKillFocus();
     static_cast<CHotSeatDlg*>(m_parentWindow)->onKillFocus(m_id);
 }
 
 // share CMPEdit's ring layout and inherited navigation slots. Preserve the
 // qualified base call instead of casting between unrelated class copies.
 VA(0x0050df60, 0xEE)  // dc 0xffb0c
-int CHotSeatEdit::onKeyPress(message* msg)
+int CHotSeatEdit::onKeyPress(Message* msg)
 {
     int handled = CMPEdit::onKeyPress(msg);
 
@@ -630,7 +630,7 @@ int CHotSeatEdit::onKeyPress(message* msg)
 // widgets through a local before the insert (rather than re-reading the member)
 // was worth +1.5.
 VA(0x0050e050, 0xCFC)  // anchor-vtable 0x6400a0 + CHeroWindowEx base + DeleteFileA + 800x600 dims, dc 0xffb70
-TMultiPlayerWindow::TMultiPlayerWindow()
+MultiPlayerWindow::MultiPlayerWindow()
     : CHeroWindowEx(0, 0, 800, 600, 0)
 {
     m_x = 173;
@@ -643,35 +643,35 @@ TMultiPlayerWindow::TMultiPlayerWindow()
 
     m_widgets.reserve(77);
 
-    m_widgets.push_back(new bitmapBorder(0, 0, 454, 490, 100, "mupopup.pcx", 0x800));
+    m_widgets.push_back(new BitmapBorder(0, 0, 454, 490, 100, "mupopup.pcx", 0x800));
 
     m_hotSeat = 0;
     if (!g_noCdRom)
-        m_hotSeat = new button(373, 78, 64, 48, 102, "muBhot.def", 0, 1, 0, 0, 2);
+        m_hotSeat = new Button(373, 78, 64, 48, 102, "muBhot.def", 0, 1, 0, 0, 2);
 
-    m_ipx = new button(373, 135, 64, 48, 103, "muBipx.def", 0, 1, 0, 0, 2);
-    m_tcp = new button(373, 192, 64, 48, 104, "muBtcp.def", 0, 1, 0, 0, 2);
-    m_modem = new button(373, 249, 64, 48, 105, "muBmodm.def", 0, 1, 0, 0, 2);
-    m_direct = new button(373, 306, 64, 48, 106, "muBdrct.def", 0, 1, 0, 0, 2);
-    m_online = new button(373, 363, 64, 48, 101, "mubonl.def", 0, 1, 0, 0, 2);
+    m_ipx = new Button(373, 135, 64, 48, 103, "muBipx.def", 0, 1, 0, 0, 2);
+    m_tcp = new Button(373, 192, 64, 48, 104, "muBtcp.def", 0, 1, 0, 0, 2);
+    m_modem = new Button(373, 249, 64, 48, 105, "muBmodm.def", 0, 1, 0, 0, 2);
+    m_direct = new Button(373, 306, 64, 48, 106, "muBdrct.def", 0, 1, 0, 0, 2);
+    m_online = new Button(373, 363, 64, 48, 101, "mubonl.def", 0, 1, 0, 0, 2);
 
     m_host = 0;
     if (!g_noCdRom)
-        m_host = new button(373, 78, 64, 48, 107, "muBhost.def", 0, 1, 0, 0, 2);
+        m_host = new Button(373, 78, 64, 48, 107, "muBhost.def", 0, 1, 0, 0, 2);
 
-    m_join = new button(373, 135, 64, 48, 108, "muBjoin.def", 0, 1, 0, 0, 2);
-    m_search = new button(373, 192, 64, 48, 109, "muBsrch.def", 0, 1, 0, 0, 2);
-    m_cancel = new button(373, 424, 64, 48, 124, "muBcanc.def", 0, 1, 0, 1, 2);
+    m_join = new Button(373, 135, 64, 48, 108, "muBjoin.def", 0, 1, 0, 0, 2);
+    m_search = new Button(373, 192, 64, 48, 109, "muBsrch.def", 0, 1, 0, 0, 2);
+    m_cancel = new Button(373, 424, 64, 48, 124, "muBcanc.def", 0, 1, 0, 1, 2);
 
-    m_sessNameHeader = new textWidget(216 - m_x, 146 - m_y, 127, 18,
+    m_sessNameHeader = new TextWidget(216 - m_x, 146 - m_y, 127, 18,
                                     g_generalText->getText(41), "smalfont.fnt",
-                                    font::PRIMARY, 127, 1, 0, 8);
-    m_userNameHeader = new textWidget(346 - m_x, 146 - m_y, 127, 18,
+                                    Font::PRIMARY, 127, 1, 0, 8);
+    m_userNameHeader = new TextWidget(346 - m_x, 146 - m_y, 127, 18,
                                     g_generalText->getText(42), "smalfont.fnt",
-                                    font::PRIMARY, 128, 1, 0, 8);
+                                    Font::PRIMARY, 128, 1, 0, 8);
     m_playerName = new CMultiPlayerWindowEdit(19, 436, 334, 18, 21,
                                             g_localPlayerName, "smalfont.fnt",
-                                            font::WHITE, 0, 0, 0, 125, 0x100, 0,
+                                            Font::WHITE, 0, 0, 0, 125, 0x100, 0,
                                             7, 5);
 
     if (m_hotSeat)
@@ -689,29 +689,29 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_widgets.push_back(m_userNameHeader);
     m_widgets.push_back(m_playerName);
 
-    m_rolloverWidget = new textWidget(8, 465, 438, 18, 0, "smalfont.fnt",
-                                    font::PRIMARY, 123, 1, 32, 8);
+    m_rolloverWidget = new TextWidget(8, 465, 438, 18, 0, "smalfont.fnt",
+                                    Font::PRIMARY, 123, 1, 32, 8);
     m_widgets.push_back(m_rolloverWidget);
 
-    widget* gs = new slider(337, 81, 16, 330, 122, 10, sliderGames,
-                            slider::BLUE, 0, 0);
+    Widget* gs = new Slider(337, 81, 16, 330, 122, 10, sliderGames,
+                            Slider::BLUE, 0, 0);
     m_gameSlider = gs;
     m_widgets.push_back(gs);
 
     int sessionRowY = 112;
     for (int i = 0; sessionRowY < 412; sessionRowY += 25, i++)
         m_widgets.insert(m_widgets.end(),
-                       new textWidget(18, sessionRowY, 317, 22, 0,
-                                      "smalfont.fnt", font::PRIMARY, 110 + i, 1,
+                       new TextWidget(18, sessionRowY, 317, 22, 0,
+                                      "smalfont.fnt", Font::PRIMARY, 110 + i, 1,
                                       0, 8));
 
-    widget* mapBorder = new bitmapBorder(16, 77, 338, 335, 129, "mumap.pcx", 0x800);
+    Widget* mapBorder = new BitmapBorder(16, 77, 338, 335, 129, "mumap.pcx", 0x800);
     m_splash = mapBorder;
     m_widgets.push_back(mapBorder);
 
     addWidgetsToMessageStream();
     setFocus(m_playerName->m_id);
-    static_cast<slider*>(m_gameSlider)->setResolution(0);
+    static_cast<Slider*>(m_gameSlider)->setResolution(0);
 
     m_sessions = new CHeroSessions;
     m_sessTimer = 0;
@@ -738,12 +738,12 @@ TMultiPlayerWindow::TMultiPlayerWindow()
 }
 
 VA(0x0050ed60, 0x43)  // dc 0x101e98
-int CMultiPlayerWindowEdit::onKeyPress(message* msg)
+int CMultiPlayerWindowEdit::onKeyPress(Message* msg)
 {
     if (getCharPressed(msg) == KEYCODE_ENTER)
         return 0;
 
-    int result = textEntryWidget::onKeyPress(msg);
+    int result = TextEntryWidget::onKeyPress(msg);
     if (!result)
         return 0;
     g_multiPlayerWindow->update();
@@ -753,10 +753,10 @@ int CMultiPlayerWindowEdit::onKeyPress(message* msg)
 VA_COMPGEN(0x0050ede0, 0x21, SCALAR_DELETING_DTOR, CHeroSessions)
 VA_COMPGEN(0x00558350, 0x54, IMPLICIT_DTOR, CHeroSessions)
 
-VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, TMultiPlayerWindow)
+VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, MultiPlayerWindow)
 
 VA(0x0050ee40, 0xAB)  // dc 0x100430
-TMultiPlayerWindow::~TMultiPlayerWindow()
+MultiPlayerWindow::~MultiPlayerWindow()
 {
     g_multiPlayerWindow = 0;
     m_gameState->dispose();
@@ -766,55 +766,55 @@ TMultiPlayerWindow::~TMultiPlayerWindow()
 }
 
 VA(0x0050eef0, 0xC9)  // dc 0x100498
-void TMultiPlayerWindow::goSessionList()
+void MultiPlayerWindow::goSessionList()
 {
     m_inSessionList = 1;
     m_showSplash = 0;
-    m_splash->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_splash->sendMessage(Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
     if (m_hotSeat)
-        m_hotSeat->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_ipx->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_tcp->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_modem->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_direct->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_hotSeat->sendMessage(Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_ipx->sendMessage(Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_tcp->sendMessage(Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_modem->sendMessage(Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_direct->sendMessage(Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_search->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_online->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_userNameHeader->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_sessNameHeader->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_host->sendMessage(Widget::WIDGET_SET_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_join->sendMessage(Widget::WIDGET_SET_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_search->sendMessage(Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_online->sendMessage(Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_userNameHeader->sendMessage(Widget::WIDGET_SET_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_sessNameHeader->sendMessage(Widget::WIDGET_SET_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
 }
 
 VA(0x0050efc0, 0x12B)  // dc 0x10051c
-void TMultiPlayerWindow::goMainMenu()
+void MultiPlayerWindow::goMainMenu()
 {
     m_inSessionList = 0;
     m_showSplash = 1;
     m_sessTimer = 0;
     m_hostJoinScreen = 0;
-    m_splash->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_splash->sendMessage(Widget::WIDGET_SET_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
     if (m_hotSeat)
-        m_hotSeat->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_ipx->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_tcp->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_modem->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_direct->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_hotSeat->sendMessage(Widget::WIDGET_SET_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_ipx->sendMessage(Widget::WIDGET_SET_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_tcp->sendMessage(Widget::WIDGET_SET_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_modem->sendMessage(Widget::WIDGET_SET_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_direct->sendMessage(Widget::WIDGET_SET_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_search->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_online->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_userNameHeader->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_sessNameHeader->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    widget* w = getWidget(126);
+        m_host->sendMessage(Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_join->sendMessage(Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_search->sendMessage(Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_online->sendMessage(Widget::WIDGET_SET_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_userNameHeader->sendMessage(Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_sessNameHeader->sendMessage(Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    Widget* w = getWidget(126);
     if (w)
-        w->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->sendMessage(Widget::WIDGET_CLEAR_STATUS, Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
     m_sessions->destroy();
 }
 
 VA(0x0050f0f0, 0x3E6)  // anchor-callee: sole big drawing method (font::DrawBoundedString x3, CSprite::Draw, session-name strncpy/sprintf), size 0.99x DC, dc 0x1005fc
-void TMultiPlayerWindow::update()
+void MultiPlayerWindow::update()
 {
     char userBuf[256];
     char nameBuf[256];
@@ -823,7 +823,7 @@ void TMultiPlayerWindow::update()
     int wx = m_x;
     int wy = m_y;
     int numPlayers;
-    CHeroSessions::eSessionStatus status;
+    CHeroSessions::SessionStatus status;
     unsigned long count = m_sessions->getCount();
     int shown = 0;
     unsigned char haveName = 0;
@@ -862,14 +862,14 @@ void TMultiPlayerWindow::update()
                     int fontColor = isSelected ? 5 : 1;
                     g_unnamed698a08->drawBoundedString(
                         nameBuf, g_windowManager->m_screenBitmap, wx + 0x2b, wy,
-                        0x80, 0x16, font::TColor(fontColor), 5, -1);
+                        0x80, 0x16, Font::Color(fontColor), 5, -1);
                     g_unnamed698a08->drawBoundedString(
                         userBuf, g_windowManager->m_screenBitmap, wx + 0xad, wy,
-                        0x80, 0x16, font::TColor(fontColor), 5, -1);
+                        0x80, 0x16, Font::Color(fontColor), 5, -1);
                     sprintf(countBuf, "%d", numPlayers);
                     g_unnamed698a08->drawBoundedString(
                         countBuf, g_windowManager->m_screenBitmap, wx + 0x130,
-                        wy, 0x1e, 0x16, font::TColor(fontColor), 5, -1);
+                        wy, 0x1e, 0x16, Font::Color(fontColor), 5, -1);
                     ++row;
                     wy += 0x19;
                 } while (row < count);
@@ -916,7 +916,7 @@ void TMultiPlayerWindow::update()
 // Complete inlines this body into OnHost. Keeping the source boundary is
 // material: VC6 leaves the nested member InitRemote call out of line, exactly
 // as retail does.
-unsigned char TMultiPlayerWindow::onModemHost()
+unsigned char MultiPlayerWindow::onModemHost()
 {
     if (!initRemote(g_mpNetProtocol, 0, 0)) {
         normalDialog(g_generalText->getText(448), 1, -1, -1,
@@ -941,7 +941,7 @@ unsigned char TMultiPlayerWindow::onModemHost()
 // Complete emits no standalone bodies; the corresponding retail case arms
 // contain the complete inlined bodies, including Complete's expanded IPX
 // session setup and the later widget-status API.
-inline unsigned char TMultiPlayerWindow::onIPX()
+inline unsigned char MultiPlayerWindow::onIPX()
 {
     g_mpNetProtocol = MP_IPX;
     if (::initRemote(MP_IPX, m_playerName->m_text.c_str()) &&
@@ -954,15 +954,15 @@ inline unsigned char TMultiPlayerWindow::onIPX()
 
         if (m_host)
             m_host->sendMessage(
-                widget::WIDGET_SET_STATUS,
-                widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        m_join->sendMessage(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+                Widget::WIDGET_SET_STATUS,
+                Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+        m_join->sendMessage(Widget::WIDGET_SET_STATUS,
+                           Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         m_join->enable(0);
         m_sessions->destroy();
         g_dPlay->enumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
         m_sessTimer = GameTime::get();
-        static_cast<slider*>(m_gameSlider)->updateResolution(
+        static_cast<Slider*>(m_gameSlider)->updateResolution(
             m_sessions->getCount() - 12);
         update();
         return 1;
@@ -973,24 +973,24 @@ inline unsigned char TMultiPlayerWindow::onIPX()
     return 0;
 }
 
-inline unsigned char TMultiPlayerWindow::onModem()
+inline unsigned char MultiPlayerWindow::onModem()
 {
     g_mpNetProtocol = MP_MODEM;
     m_hostJoinScreen = 1;
-    m_splash->sendMessage(widget::WIDGET_SET_STATUS,
-                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_splash->sendMessage(Widget::WIDGET_SET_STATUS,
+                         Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_SET_STATUS,
-                       widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_host->sendMessage(Widget::WIDGET_SET_STATUS,
+                           Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_join->sendMessage(Widget::WIDGET_SET_STATUS,
+                       Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
     m_join->enable(1);
     update();
     return 1;
 }
 
 VA(0x0050f4e0, 0x458)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
-int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
+int MultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
 {
     bool connectionFailed = 0;
     switch (id) {
@@ -1127,7 +1127,7 @@ return_to_main_menu:
 VA(0x0050f940, 0xC5)  // anchor-vtable 0x6400a0 slot 9 (WindowHandler); ret 4 = (this,message*)->int.
                       // 197 B vs DC 40: retail inlines the timer-gated session refresh (PollSound +
                       // GameTime::Get) that DC keeps in RefreshSessions/CheckSessions. dc 0x100c1c
-int TMultiPlayerWindow::windowHandler(message& msg)
+int MultiPlayerWindow::windowHandler(Message& msg)
 {
     pollSound();
     unsigned long timer = m_sessTimer;
@@ -1135,7 +1135,7 @@ int TMultiPlayerWindow::windowHandler(message& msg)
         m_sessions->destroy();
         g_dPlay->enumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
         m_sessTimer = GameTime::get();
-        static_cast<slider*>(m_gameSlider)->updateResolution(
+        static_cast<Slider*>(m_gameSlider)->updateResolution(
             m_sessions->getCount() - 12);
         update();
         m_sessTimer = GameTime::get();
@@ -1145,7 +1145,7 @@ int TMultiPlayerWindow::windowHandler(message& msg)
 }
 
 VA(0x0050fa10, 0x9F)  // dc 0x100ca0
-unsigned char TMultiPlayerWindow::joinSession(CDPlaySession* session, const char* password)
+unsigned char MultiPlayerWindow::joinSession(CDPlaySession* session, const char* password)
 {
     if (!g_dPlay->joinSession(&session->m_guidInstance,
                              const_cast<char*>(password)))
@@ -1165,7 +1165,7 @@ unsigned char TMultiPlayerWindow::joinSession(CDPlaySession* session, const char
 }
 
 VA(0x0050fab0, 0x106)  // dc 0x100d0c
-unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* password)
+unsigned char MultiPlayerWindow::hostSession(const char* sessName, const char* password)
 {
     char fullName[256];
     sprintf(fullName,
@@ -1198,7 +1198,7 @@ unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* 
 }
 
 VA(0x0050fbc0, 0x86)  // dc 0x100e18
-unsigned char TMultiPlayerWindow::initRemote(eNetGameType netGameType, const char* extra, _DPCOMPORTADDRESS* comportInfo)
+unsigned char MultiPlayerWindow::initRemote(NetGameType netGameType, const char* extra, _DPCOMPORTADDRESS* comportInfo)
 {
     DPCAPS dpCaps;
 
@@ -1216,24 +1216,24 @@ unsigned char TMultiPlayerWindow::initRemote(eNetGameType netGameType, const cha
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:2043, dc 0x101ca4
-inline unsigned char TMultiPlayerWindow::onDirect()
+inline unsigned char MultiPlayerWindow::onDirect()
 {
     g_mpNetProtocol = MP_SERIAL;
     m_hostJoinScreen = 1;
-    m_splash->sendMessage(widget::WIDGET_SET_STATUS,
-                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_splash->sendMessage(Widget::WIDGET_SET_STATUS,
+                         Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_SET_STATUS,
-                       widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_host->sendMessage(Widget::WIDGET_SET_STATUS,
+                           Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
+    m_join->sendMessage(Widget::WIDGET_SET_STATUS,
+                       Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
     m_join->enable(1);
     update();
     return 1;
 }
 
 VA(0x0050fc50, 0x14F)  // dc 0x100f94
-unsigned char TMultiPlayerWindow::onDirectHost()
+unsigned char MultiPlayerWindow::onDirectHost()
 {
     if (!initRemote(MP_SERIAL, 0, 0)) {
         normalDialog(g_generalText->getText(450), 1, -1, -1,
@@ -1260,7 +1260,7 @@ unsigned char TMultiPlayerWindow::onDirectHost()
 }
 
 VA(0x0050fda0, 0x2B7)  // dc 0x101058
-unsigned char TMultiPlayerWindow::onHost()
+unsigned char MultiPlayerWindow::onHost()
 {
     if (g_mpNetProtocol == MP_MODEM)
         return onModemHost();
@@ -1295,11 +1295,11 @@ unsigned char TMultiPlayerWindow::onHost()
 
 VA(0x00510760, 0x62)  // dc 0x102014
 CMPEdit::CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
-                 const char* fontName, font::TColor color,
+                 const char* fontName, Font::Color color,
                  unsigned justification, const char* backgroundIcon,
                  int backgroundFrame, int id, int style, int readType,
                  int insetX, int insetY)
-    : textEntryWidget(x, y, w, h, textSize, text, fontName, color, justification,
+    : TextEntryWidget(x, y, w, h, textSize, text, fontName, color, justification,
                       backgroundIcon, backgroundFrame, id, style, readType,
                       insetX, insetY)
 {
@@ -1308,7 +1308,7 @@ CMPEdit::CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
 }
 
 VA(0x005107d0, 0x73)  // dc 0x1020c4
-int CMPEdit::onKeyPress(message* msg)
+int CMPEdit::onKeyPress(Message* msg)
 {
     if (!m_hasFocus)
         return 0;
@@ -1325,27 +1325,27 @@ int CMPEdit::onKeyPress(message* msg)
         return 1;
     }
 
-    return textEntryWidget::onKeyPress(msg);
+    return TextEntryWidget::onKeyPress(msg);
 }
 
 VA(0x00510850, 0x1B)  // dc 0x10215c; m_nextEdit/status/id + parent SetFocus
 void CMPEdit::onNextEdit()
 {
-    if (m_nextEdit && (m_nextEdit->m_status & widget::WIDGET_ACTIVE))
+    if (m_nextEdit && (m_nextEdit->m_status & Widget::WIDGET_ACTIVE))
         m_parentWindow->setFocus(m_nextEdit->m_id);
 }
 
 VA(0x00510870, 0x1B)  // dc 0x102184; m_prevEdit/status/id + parent SetFocus
 void CMPEdit::onPrevEdit()
 {
-    if (m_prevEdit && (m_prevEdit->m_status & widget::WIDGET_ACTIVE))
+    if (m_prevEdit && (m_prevEdit->m_status & Widget::WIDGET_ACTIVE))
         m_parentWindow->setFocus(m_prevEdit->m_id);
 }
 
 VA(0x00510890, 0x10)  // dc 0x1021ac
 void CMPEdit::setFocus(unsigned char state)
 {
-    textEntryWidget::setFocus(state);
+    TextEntryWidget::setFocus(state);
 }
 
 VA(0x005108a0, 0x4E)  // dc 0x102718
@@ -1376,7 +1376,7 @@ int CMPInputDlg::onWidgetDeselect(int id, bool& exitFlag)
 }
 
 VA(0x00510970, 0x4)  // dc 0x1027ec
-textWidget* CMPInputDlg::getRolloverWidget()
+TextWidget* CMPInputDlg::getRolloverWidget()
 {
     return m_rollover;
 }
@@ -1384,7 +1384,7 @@ textWidget* CMPInputDlg::getRolloverWidget()
 VA(0x00510980, 0x5D)  // dc 0x1027f4
 void CMPInputDlg::updateOK()
 {
-    if (m_field1->m_status & widget::WIDGET_ACTIVE) {
+    if (m_field1->m_status & Widget::WIDGET_ACTIVE) {
         if (!strlen(m_field1->m_text.c_str()))
             getWidget(OKAY_ID)->enable(0);
         else
@@ -1396,7 +1396,7 @@ void CMPInputDlg::updateOK()
 VA_COMPGEN(0x005109e0, 0x21, SCALAR_DELETING_DTOR, CMPInputDlg)
 
 VA(0x00510a10, 0x298)  // dc 0x1011b8
-unsigned char TMultiPlayerWindow::onModemJoin()
+unsigned char MultiPlayerWindow::onModemJoin()
 {
     if (!initRemote(MP_MODEM, 0, 0)) {
         if (g_dPlay->getLastError() != g_dplayErrorUserCancel)
@@ -1438,7 +1438,7 @@ unsigned char TMultiPlayerWindow::onModemJoin()
 }
 
 VA(0x00510cb0, 0x282)  // dc 0x101374
-unsigned char TMultiPlayerWindow::onDirectJoin()
+unsigned char MultiPlayerWindow::onDirectJoin()
 {
     if (!initRemote(MP_SERIAL, 0, 0)) {
         normalDialog(g_generalText->getText(450), 1, -1, -1,
@@ -1483,7 +1483,7 @@ unsigned char TMultiPlayerWindow::onDirectJoin()
 }
 
 VA(0x00510f40, 0x380)  // dc 0x101510
-unsigned char TMultiPlayerWindow::onJoin()
+unsigned char MultiPlayerWindow::onJoin()
 {
     if (g_mpNetProtocol == MP_MODEM)
         return onModemJoin();
@@ -1499,7 +1499,7 @@ unsigned char TMultiPlayerWindow::onJoin()
     char userName[256];
     char sessName[256];
     int numPlayers;
-    CHeroSessions::eSessionStatus status;
+    CHeroSessions::SessionStatus status;
     if (!m_sessions->getSessionInfo(static_cast<unsigned long>(m_currentGame),
                                    sessName, userName,
                                    numPlayers, status))
@@ -1544,7 +1544,7 @@ unsigned char getIPAddress(char* ipAddress)
 {
     WSADATA wsaData;
     char hostName[256];
-    TIPv4SocketAddress address;
+    IPv4SocketAddress address;
 
     if (WSAStartup(MAKEWORD(1, 1), &wsaData))
         return 0;
@@ -1574,7 +1574,7 @@ unsigned char getIPAddress(char* ipAddress)
 }
 
 VA(0x005113f0, 0x263)  // dc 0x101784
-unsigned char TMultiPlayerWindow::onTCP()
+unsigned char MultiPlayerWindow::onTCP()
 {
     char ipAddress[80];
 
@@ -1594,8 +1594,8 @@ unsigned char TMultiPlayerWindow::onTCP()
     if (getIPAddress(ipAddress)) {
         if (!getWidget(IP_ADDRESS_ID)) {
             char addressText[256];
-            textWidget* ipWidget = new textWidget(
-                0, 16, m_width, 50, 0, "bigfont.fnt", font::PRIMARY,
+            TextWidget* ipWidget = new TextWidget(
+                0, 16, m_width, 50, 0, "bigfont.fnt", Font::PRIMARY,
                 IP_ADDRESS_ID, 1, 0, 8);
             m_widgets.push_back(ipWidget);
             addWidget(ipWidget, -1);
@@ -1607,7 +1607,7 @@ unsigned char TMultiPlayerWindow::onTCP()
     m_sessions->destroy();
     g_dPlay->enumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
     m_sessTimer = GameTime::get();
-    static_cast<slider*>(m_gameSlider)->updateResolution(
+    static_cast<Slider*>(m_gameSlider)->updateResolution(
         m_sessions->getCount() - 12);
     update();
     return 1;
@@ -1621,7 +1621,7 @@ unsigned char TMultiPlayerWindow::onTCP()
 // the Dreamcast xref graph independently records exactly four NormalDialog
 // calls plus JoinSession, InitRemote, CAutoArray::Destroy and CHourGlass.
 VA(0x00511660, 0x666)  // caller slot + complete TCP search flow, dc 0x10196c
-unsigned char TMultiPlayerWindow::onSearch()
+unsigned char MultiPlayerWindow::onSearch()
 {
     // Current 89.766%, banked MAX 91.324%: all 13 retail branch tests are
     // present, but C1 feeds
@@ -1695,7 +1695,7 @@ unsigned char TMultiPlayerWindow::onSearch()
 }
 
 VA(0x00511d40, 0xD1)  // dc 0x101c00
-unsigned char TMultiPlayerWindow::onHotSeat()
+unsigned char MultiPlayerWindow::onHotSeat()
 {
     CHotSeatDlg dlg;
     dlg.doModal(0);
@@ -1710,16 +1710,16 @@ CHotSeatDlg::CHotSeatDlg()
     : CHeroWindowEx(218, 96, 363, 407, 18)
 {
     m_widgets.reserve(19);
-    m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, BACKGROUND_ID,
+    m_widgets.push_back(new BitmapBorder(0, 0, m_width, m_height, BACKGROUND_ID,
                                        "muhotsea.pcx", 0x800));
-    m_widgets.push_back(new textWidget(0, 30, m_width, 150,
+    m_widgets.push_back(new TextWidget(0, 30, m_width, 150,
                                      g_generalText->getText(447), "bigfont.fnt",
-                                     font::WHITE, HEADER_ID, 1, 0, 8));
+                                     Font::WHITE, HEADER_ID, 1, 0, 8));
 
     int sy = 178;
     for (int i = 0; i < 8; i++) {
         m_edit[i] = new CHotSeatEdit(277 - m_x, sy - m_y, 281, 18, 21, "",
-                                   "smalfont.fnt", font::WHITE, 0, 0, 0,
+                                   "smalfont.fnt", Font::WHITE, 0, 0, 0,
                                    FIRST_EDIT_ID + i, 0x100, 0, 7, 5);
         m_edit[i]->setHelpText(g_hotSeatEditRollover, g_hotSeatEditRightClick, 0);
         m_widgets.push_back(m_edit[i]);
@@ -1734,13 +1734,13 @@ CHotSeatDlg::CHotSeatDlg()
     m_edit[0]->setPrevEdit(m_edit[7]);
     m_edit[7]->setNextEdit(m_edit[0]);
 
-    m_widgets.push_back(new button(95, 338, 64, 32, OKAY_ID, "mubchck.def", 0, 1,
+    m_widgets.push_back(new Button(95, 338, 64, 32, OKAY_ID, "mubchck.def", 0, 1,
                                  0, 28, 2));
-    m_widgets.push_back(new button(205, 338, 64, 32, BACK_ID, "mubcanc.def", 0, 1,
+    m_widgets.push_back(new Button(205, 338, 64, 32, BACK_ID, "mubcanc.def", 0, 1,
                                  0, 1, 2));
 
-    m_rollover = new textWidget(10, 382, m_width - 20, 18, 0, "smalfont.fnt",
-                                font::PRIMARY, ROLLOVER_ID, 1, 32, 8);
+    m_rollover = new TextWidget(10, 382, m_width - 20, 18, 0, "smalfont.fnt",
+                                Font::PRIMARY, ROLLOVER_ID, 1, 32, 8);
     m_widgets.push_back(m_rollover);
 
     addWidgetsToMessageStream();
@@ -1748,7 +1748,7 @@ CHotSeatDlg::CHotSeatDlg()
     setFocus(m_edit[0]->m_id);
     for (j = 0; j < 8; j++)
         m_edit[j]->setAutoDraw(1);
-    widget* w = getWidget(OKAY_ID);
+    Widget* w = getWidget(OKAY_ID);
     w->setHelpText(g_dialogOkHelp, 0, 0);
     w->enable(0);
     w = getWidget(BACK_ID);
@@ -1805,7 +1805,7 @@ unsigned char CHotSeatDlg::onOK()
 }
 
 VA(0x00512530, 0x4)  // dc 0x102e1c
-textWidget* CHotSeatDlg::getRolloverWidget()
+TextWidget* CHotSeatDlg::getRolloverWidget()
 {
     return m_rollover;
 }
@@ -1813,7 +1813,7 @@ textWidget* CHotSeatDlg::getRolloverWidget()
 #if 0  // @carcass
 // E:\gamedcs\multiplayerwindow.cpp:786
 DC_ONLY(0x102e24, 0x140)
-int CHotSeatDlg::windowHandler(message& msg)
+int CHotSeatDlg::windowHandler(Message& msg)
 {
     // @stub
 }

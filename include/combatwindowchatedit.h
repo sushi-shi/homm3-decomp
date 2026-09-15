@@ -12,13 +12,13 @@
 class CCombatChatEdit : public CGameChatEdit {
 public:
     CCombatChatEdit(int x, int y, int w, int h, int textSize, char* text,
-                    char* fontName, font::TColor color,
-                    font::EJustify justification, char* backgroundIcon,
+                    char* fontName, Font::Color color,
+                    Font::Justify justification, char* backgroundIcon,
                     int backgroundFrame, int id, int style, int readType,
                     int insetX, int insetY);
-    virtual int onKeyPress(message* msg);              // slot 15
+    virtual int onKeyPress(Message* msg);              // slot 15
     virtual void updateScreen();                       // slot 19
-    virtual int onEscape(message msg);                 // slot 21
+    virtual int onEscape(Message msg);                 // slot 21
     virtual void sendChat(const char* text, int toWho); // slot 24
 };
 SIZE(CCombatChatEdit, 0x74);

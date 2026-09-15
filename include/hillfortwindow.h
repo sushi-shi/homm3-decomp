@@ -5,7 +5,7 @@
 #include "armygrp.h"
 #include "window.h"
 
-class message;
+class Message;
 
 extern const float g_afUpgradeCostFactor[7];
 
@@ -29,7 +29,8 @@ extern const float g_afUpgradeCostFactor[7];
 //     totalCost with `lea edi,[this+0x27c]` / `mov ecx,7` / `rep stosd`.
 static void updateHillFort(unsigned char update);
 
-class THillFortWindow : public heroWindow {
+// Before normalization (type): THillFortWindow.
+class HillFortWindow : public HeroWindow {
     // Recovered UpdateHillFort calls this window's private Recalculate.
     friend void updateHillFort(unsigned char update);
 public:
@@ -38,7 +39,7 @@ public:
     // 0xca/0xcb, HandleClick brackets 0xcb..0xda and normalizes the
     // CREATURE_NUM row onto the CREATURE_PORTRAIT row with `add esi,-7`,
     // and the handler maps 0x105..0x10b onto the seven slots.
-    enum EWidgetIDs {
+    enum WidgetIDs {
         BACKGROUND_ID = 200,
         ROLLOVER_ID = 201,
         TITLE_ID = 202,
@@ -122,13 +123,14 @@ public:
     // non-gold accumulation loop writes; and the four trailing dwords
     // are the creature type, its count, its dwelling level and the
     // tri-state the two icon tables index.
-    struct TUpgradeSlot {
+// Before normalization (type): THillFortWindow::TUpgradeSlot.
+    struct UpgradeSlot {
         char m_countText[10];         // +0x00
         char m_goldCost[10];      // +0x0a
         char m_resourceCost[12];  // +0x14
         long m_cost[7];             // +0x20
         int m_resourceIndex;        // +0x3c
-        TCreatureType m_type;                 // +0x40 (TCreatureType domain)
+        CreatureType m_type;                 // +0x40 (TCreatureType domain)
         int m_count;                // +0x44
         int m_level;                // +0x48
         int m_state;                // +0x4c
@@ -137,43 +139,44 @@ public:
     // slot[].state and UpgradeAllButtonState share this domain: it is
     // the index into the two .rdata icon tables (0x63eb34 / 0x63eb40),
     // whose entries are aphlf1y/aphlf1g/aphlf1r and aphlf4y/4g/4r.
-    enum EUpgradeState {
+// Before normalization (type): HillFortWindow::EUpgradeState.
+    enum UpgradeState {
         UPGRADE_STATE_NONE = 0,
         UPGRADE_STATE_AFFORDABLE = 1,
         UPGRADE_STATE_TOO_EXPENSIVE = 2
     };
 
-    THillFortWindow();
-    virtual ~THillFortWindow();
+    HillFortWindow();
+    virtual ~HillFortWindow();
     void doModal();
 
 private:
-    TUpgradeSlot m_slot[armyGroup::ARMY_GROUP_SLOT_COUNT];   // +0x4c
-    long m_totalCost[armyGroup::ARMY_GROUP_SLOT_COUNT];      // +0x27c
+    UpgradeSlot m_slot[ArmyGroup::ARMY_GROUP_SLOT_COUNT];   // +0x4c
+    long m_totalCost[ArmyGroup::ARMY_GROUP_SLOT_COUNT];      // +0x27c
     int m_upgradeAllButtonState;                             // +0x298
-    widget* m_rolloverWidget;                                // +0x29c
+    Widget* m_rolloverWidget;                                // +0x29c
 
 public:
     // DC free HillFortWindowHandler (0xd7458) calls these private methods;
     // retail 0x4e8850 retains the same callback relationship.
-    friend int hillFortWindowHandler(message& msg);
+    friend int hillFortWindowHandler(Message& msg);
 
 private:
-    void handleClick(message& msg);
+    void handleClick(Message& msg);
     void recalculate(unsigned char drawDimmedButtons);
     void upgradeSlot(int which, unsigned char showMessage);
 private:
     // DC fieldlist 0x5209 marks these helpers private; the callback calls them.
-    friend int hillFortWindowHandler(message& msg);
+    friend int hillFortWindowHandler(Message& msg);
     // Original: UpgradeAll, hillfortwindow.cpp:500.
     void upgradeAll();
     // Original: GetCreatureType, HillFortWindow.h:170; const receiver proven.
-    TCreatureType getCreatureType(int slotnum) const { return m_slot[slotnum].m_type; }
+    CreatureType getCreatureType(int slotnum) const { return m_slot[slotnum].m_type; }
 };
-SIZE(THillFortWindow, 0x2a0);
+SIZE(HillFortWindow, 0x2a0);
 
 // Retail /Gr passes the message by reference in ECX, matching DoDialog.
-int hillFortWindowHandler(message& msg);
+int hillFortWindowHandler(Message& msg);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\hillfortwindow.cpp:192, dc 0xd6bd4) bool CanAfford(const long* cost, const long* playerRes);

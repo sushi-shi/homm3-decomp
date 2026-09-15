@@ -9,30 +9,30 @@
 #include "winmgr.h"
 
 VA(0x005aa340, 0x41)  // dc 0x158d34
-TSubWindow::TSubWindow()
+SubWindow::SubWindow()
     : m_x(0), m_y(0), m_width(0), m_height(0), m_parentWindow(0),
       m_lowId(0xffff), m_highId(0xffff0001), m_background(0)
 {
 }
 
-VA_COMPGEN(0x005aa390, 0x21, SCALAR_DELETING_DTOR, TSubWindow)
+VA_COMPGEN(0x005aa390, 0x21, SCALAR_DELETING_DTOR, SubWindow)
 
 VA(0x005aa3c0, 0x4F)  // dc 0x158dac
-TSubWindow::TSubWindow(int inX, int inY, int w, int h, heroWindow* parentWindow)
+SubWindow::SubWindow(int inX, int inY, int w, int h, HeroWindow* parentWindow)
     : m_x(inX), m_y(inY), m_width(w), m_height(h), m_parentWindow(parentWindow),
       m_lowId(0xffff), m_highId(0xffff0001), m_background(0)
 {
 }
 
 VA(0x005aa410, 0x60)  // dc 0x158e14
-TSubWindow::~TSubWindow()
+SubWindow::~SubWindow()
 {
     if (m_background)
         delete m_background;
 }
 
 VA(0x005aa470, 0x25)  // dc 0x158e60
-void TSubWindow::initialize(int inX, int inY, int w, int h, heroWindow* parentWindow)
+void SubWindow::initialize(int inX, int inY, int w, int h, HeroWindow* parentWindow)
 {
     m_x = inX;
     m_y = inY;
@@ -42,7 +42,7 @@ void TSubWindow::initialize(int inX, int inY, int w, int h, heroWindow* parentWi
 }
 
 VA(0x005aa4a0, 0x45)  // dc 0x158e7c
-void TSubWindow::addWidget(widget* newWidget, int newPriority)
+void SubWindow::addWidget(Widget* newWidget, int newPriority)
 {
     newWidget->m_x += static_cast<short>(m_x);
     newWidget->m_y += static_cast<short>(m_y);
@@ -56,14 +56,14 @@ void TSubWindow::addWidget(widget* newWidget, int newPriority)
 // E:\gamedcs\subwindow.cpp:111
 #if 0  // @carcass: no retail row in the AddWidget..Draw bracket
 DC_ONLY(0x158ebc, 0x12)
-void TSubWindow::removeWidget(widget* killWidget)
+void SubWindow::removeWidget(Widget* killWidget)
 {
     // @stub
 }
 #endif
 
 VA(0x005aa4f0, 0x63)  // dc 0x158ed0
-void TSubWindow::draw(unsigned char update, int lowID, int highID)
+void SubWindow::draw(unsigned char update, int lowID, int highID)
 {
     if (lowID == WINDOW_ALL_WIDGETS_LOW)
         lowID = m_lowId;
@@ -77,7 +77,7 @@ void TSubWindow::draw(unsigned char update, int lowID, int highID)
 }
 
 VA(0x005aa560, 0xA1)  // dc 0x158f4c
-void TSubWindow::saveBackground()
+void SubWindow::saveBackground()
 {
     m_background = new Bitmap16Bit(m_width, m_height);
     pollSound();
@@ -89,7 +89,7 @@ void TSubWindow::saveBackground()
 }
 
 VA(0x005aa610, 0x7A)  // dc 0x158fa4
-void TSubWindow::restoreBackground()
+void SubWindow::restoreBackground()
 {
     if (m_background) {
         int drawX = m_x + m_parentWindow->m_x;

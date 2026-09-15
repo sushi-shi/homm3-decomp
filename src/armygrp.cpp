@@ -37,7 +37,7 @@
 // sites below. homm3_limit.h owns its shared reference-selector chain.
 
 DATA(0x00693878)
-static TSplitWindow* g_splitWindow;
+static SplitWindow* g_splitWindow;
 
 // Runtime-loaded combat-stat description lines. Their storage addresses and
 // uses are retail-proven here; the text-resource loader owns the definitions.
@@ -59,11 +59,11 @@ DATA(0x006a5858) extern const char* g_holyGroundGoodMoraleText;
 DATA(0x006a585c) extern const char* g_evilFogGoodMoraleText;
 DATA(0x006a5860) extern const char* g_evilFogEvilMoraleText;
 
-inline void TSplitWindow::updateSplitArmy(unsigned char update)
+inline void SplitWindow::updateSplitArmy(unsigned char update)
 {
-    message msg;
+    Message msg;
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
 
     sprintf(g_text, "%d", m_sourceTroops);
     msg.m_codeY = 4;
@@ -80,7 +80,7 @@ inline void TSplitWindow::updateSplitArmy(unsigned char update)
 }
 
 VA(0x004496a0, 0x16)  // dc 0x4dae4
-unsigned char armyGroup::hasCreatures() const
+unsigned char ArmyGroup::hasCreatures() const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] != CREATURE_NONE)
@@ -90,7 +90,7 @@ unsigned char armyGroup::hasCreatures() const
 }
 
 VA(0x004496c0, 0xC3)  // dc 0x4db88
-void splitSliderCallback(int state, heroWindow*)
+void splitSliderCallback(int state, HeroWindow*)
 {
     g_splitWindow->m_destinationTroops =
         g_splitWindow->m_minimumTransfer + state;
@@ -100,64 +100,64 @@ void splitSliderCallback(int state, heroWindow*)
 }
 
 VA(0x00449790, 0x65B)  // dc 0x4dbb8
-TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
+SplitWindow::SplitWindow(int x2, int y2, CreatureType thisArmy)
     : CAdvPopup(x2, y2, 0x12a, 0x151, 0x12)
 {
     m_creature = thisArmy;
     m_widgets.reserve(13);
 
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         0, 0, m_width, m_height, 0, "GPuCrDiv.pcx", 0x800));
 
     sprintf(g_text,
             (*g_generalText)[GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER],
             g_creatureTypeTraits[m_creature].m_pluralName);
-    m_widgets.push_back(new textWidget(
-        0, 20, m_width, 30, g_text, "bigfont.fnt", font::HEADING,
+    m_widgets.push_back(new TextWidget(
+        0, 20, m_width, 30, g_text, "bigfont.fnt", Font::HEADING,
         1, 1, 0, 8));
 
     strcpy(g_text, g_creatureBackgrounds[
         g_game->getAlignment(m_creature)]);
 
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         20, 54, 100, 130, -1, g_text, 0x800));
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         177, 54, 100, 130, -1, g_text, 0x800));
 
     strcpy(g_text, g_creatureTypeTraits[m_creature].m_spriteName);
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         20, 54, 100, 130, 2, g_text, 0, 2, 0, 0, 0x12));
-    m_widgets.push_back(new iconWidget(
+    m_widgets.push_back(new IconWidget(
         177, 54, 100, 130, 3, g_text, 0, 2, 0, 0, 0x12));
 
-    m_sourceEntry = new textEntryWidget(
-        20, 218, 101, 37, 10, "99999", "bigfont.fnt", font::WHITE, 5,
+    m_sourceEntry = new TextEntryWidget(
+        20, 218, 101, 37, 10, "99999", "bigfont.fnt", Font::WHITE, 5,
         0, 0, 4, 0, 4, 0, 0);
     m_widgets.push_back(m_sourceEntry);
-    m_destinationEntry = new textEntryWidget(
-        177, 218, 101, 37, 10, "99999", "bigfont.fnt", font::WHITE, 5,
+    m_destinationEntry = new TextEntryWidget(
+        177, 218, 101, 37, 10, "99999", "bigfont.fnt", Font::WHITE, 5,
         0, 0, 5, 0, 4, 0, 0);
     m_widgets.push_back(m_destinationEntry);
 
-    m_splitSlider = new slider(
+    m_splitSlider = new Slider(
         21, 194, 257, 16, 6, 10, splitSliderCallback,
-        slider::BROWN, 0, 0);
+        Slider::BROWN, 0, 0);
     m_widgets.push_back(m_splitSlider);
 
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         8, 312, 282, 17, 7, "StatBar.pcx", 0x800));
-    m_widgets.push_back(new textWidget(
-        8, 312, 282, 17, 0, "smalfont.fnt", font::PRIMARY,
+    m_widgets.push_back(new TextWidget(
+        8, 312, 282, 17, 0, "smalfont.fnt", Font::PRIMARY,
         8, 1, 0, 8));
 
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         20, 263, 64, 32, DIALOG_RETURN_SPLIT_ACCEPT,
         "iOk6432.def", 0, 1, 1, 0x1c, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         214, 263, 64, 30, 0x7801,
         "iCancel.def", 0, 1, 1, 1, 2));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -165,23 +165,23 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
     }
 }
 
-VA_COMPGEN(0x00449df0, 0x21, SCALAR_DELETING_DTOR, TSplitWindow)
+VA_COMPGEN(0x00449df0, 0x21, SCALAR_DELETING_DTOR, SplitWindow)
 
 VA_COMPGEN(0x0044c680, 0x60, BITSET_SET, Bitset9)
 
 VA(0x00449e20, 0x6B)  // dc 0x4e11c
-TSplitWindow::~TSplitWindow()
+SplitWindow::~SplitWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
 }
 
 VA(0x00449e90, 0x2EF)  // dc 0x4e180
-void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned char inSrcRestricted, unsigned char inDestRestricted)
+void ArmyGroup::splitArmy(int srcIndex, ArmyGroup* ag, int destIndex, unsigned char inSrcRestricted, unsigned char inDestRestricted)
 {
-    g_splitWindow = new TSplitWindow(0xb1, 0x14, m_armyTypes[srcIndex]);
+    g_splitWindow = new SplitWindow(0xb1, 0x14, m_armyTypes[srcIndex]);
     if (!g_splitWindow)
         memError();
 
@@ -190,14 +190,14 @@ void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
     g_splitWindow->m_totalTroops =
         g_splitWindow->m_sourceTroops + g_splitWindow->m_destinationTroops;
 
-    message msg;
+    Message msg;
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.m_codeX = Widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
     g_splitWindow->broadcastMessage(msg);
 
-    msg.m_codeX = widget::WIDGET_SET_SLIDER_RESOLUTION;
+    msg.m_codeX = Widget::WIDGET_SET_SLIDER_RESOLUTION;
     msg.m_codeY = 6;
     if ((inSrcRestricted && getNumArmies() == 1)
         || (inDestRestricted && ag->getNumArmies() == 1)) {
@@ -214,7 +214,7 @@ void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
     else
         g_splitWindow->m_minimumTransfer = 0;
 
-    msg.m_codeX = widget::WIDGET_SET_SLIDER_STATE;
+    msg.m_codeX = Widget::WIDGET_SET_SLIDER_STATE;
     msg.m_extra = g_splitWindow->m_destinationTroops
         - g_splitWindow->m_minimumTransfer;
     g_splitWindow->broadcastMessage(msg);
@@ -247,7 +247,7 @@ void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
 
 // E:\gamedcs\armygrp.cpp:208. Retail /Ob2 expands the sole call below and
 // /OPT:REF removes the out-of-line copy.
-inline void TSplitWindow::setRolloverText(int codeY)
+inline void SplitWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
     case DIALOG_RETURN_SPLIT_CANCEL:
@@ -264,14 +264,14 @@ inline void TSplitWindow::setRolloverText(int codeY)
         break;
     }
 
-    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 8, int(g_text));
+    broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_TEXT, 8, int(g_text));
     drawWindow(0, 7, 8);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x138, 0x11a, 0x11);
 }
 
 // E:\gamedcs\armygrp.cpp:229, dc 0x4e428
 VA(0x0044a180, 0x2DF)  // dc 0x4e428 (+ 0x4e388 inlined)
-int TSplitWindow::windowHandler(message& msg)
+int SplitWindow::windowHandler(Message& msg)
 {
     unsigned char closeDialog = false, updateArmy = false;
     int result = CAdvPopup::windowHandler(msg);
@@ -281,8 +281,8 @@ int TSplitWindow::windowHandler(message& msg)
     switch (msg.m_id) {
     case MESSAGE_WIDGET:
         switch (msg.m_codeX) {
-        case widget::WIDGET_SELECT:
-            msg.m_codeX = widget::WIDGET_GET_TEXT;
+        case Widget::WIDGET_SELECT:
+            msg.m_codeX = Widget::WIDGET_GET_TEXT;
             broadcastMessage(msg);
 
             switch (msg.m_codeY) {
@@ -307,7 +307,7 @@ int TSplitWindow::windowHandler(message& msg)
             updateArmy = true;
             break;
 
-        case widget::WIDGET_DESELECT:
+        case Widget::WIDGET_DESELECT:
             switch (msg.m_codeY) {
             case DIALOG_RETURN_SPLIT_CLOSE:
             case DIALOG_RETURN_SPLIT_CANCEL:
@@ -334,8 +334,8 @@ int TSplitWindow::windowHandler(message& msg)
     }
 
     if (closeDialog == true) {
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = Widget::WIDGET_END_DIALOG;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     if (updateArmy)
@@ -350,7 +350,7 @@ int TSplitWindow::windowHandler(message& msg)
 //   E:\gamedcs\armygrp.cpp:62   TSplitWindow::UpdateSplitArmy(uchar)
 //     -> inlined into SplitSliderCallback (0x4496c0)
 DC_ONLY(0x4db08, 0x80)
-void TSplitWindow::updateSplitArmy(unsigned char bUpdate)
+void SplitWindow::updateSplitArmy(unsigned char bUpdate)
 {
     // @stub
 }
@@ -358,7 +358,7 @@ void TSplitWindow::updateSplitArmy(unsigned char bUpdate)
 //   E:\gamedcs\armygrp.cpp:208  TSplitWindow::SetRolloverText(int)
 //     -> reconstructed above and inlined into WindowHandler (0x44a180)
 DC_ONLY(0x4e388, 0xA0)
-void TSplitWindow::setRolloverText(int codeY)
+void SplitWindow::setRolloverText(int codeY)
 {
     // @stub
 }
@@ -400,10 +400,10 @@ const std::bitset<9>& armyGrpFn0044A460()
 // corrections, verified separately from the byte similarity score.
 
 VA(0x0044a4d0, 0x52E)  // linkorder, dc 0x4e644
-float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero* const castingHero, const hero* const targetHero)
+float getSpellWorkChance(SpellID spell, CreatureType targetArmyType, const Hero* const castingHero, const Hero* const targetHero)
 {
     float chance;
-    const TCreatureTypeTraits* creatureRec = &g_creatureTypeTraits[targetArmyType];
+    const CreatureTypeTraits* creatureRec = &g_creatureTypeTraits[targetArmyType];
     unsigned int attrs = creatureRec->m_attributes;
     const SSpellTraits* spellRec = &g_spellTraits[spell];
     if (targetHero && spellRec->m_level <= 4
@@ -574,7 +574,7 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
 }
 
 VA(0x0044aa00, 0x3A)  // dc 0x4ea38
-int armyGroup::save(TAbstractFile* outfile)
+int ArmyGroup::save(AbstractFile* outfile)
 {
     if (outfile->write(m_armies, sizeof(m_armies)) < sizeof(m_armies))
         return -1;
@@ -584,7 +584,7 @@ int armyGroup::save(TAbstractFile* outfile)
 }
 
 VA(0x0044aa40, 0x3A)  // dc 0x4ea78
-int armyGroup::load(TAbstractFile* infile)
+int ArmyGroup::load(AbstractFile* infile)
 {
     if (infile->read(m_armies, sizeof(m_armies)) < sizeof(m_armies))
         return -1;
@@ -594,14 +594,14 @@ int armyGroup::load(TAbstractFile* infile)
 }
 
 VA(0x0044aa80, 0x1F)  // dc 0x4eab8
-armyGroup::armyGroup()
+ArmyGroup::ArmyGroup()
 {
     memset(m_armies, 0xFF, sizeof(m_armies));
     memset(m_numTroops, 0, sizeof(m_numTroops));
 }
 
 VA(0x0044aaa0, 0x5A)  // dc 0x4ead0
-armyGroup::armyGroup(TCreatureType type, int amount)
+ArmyGroup::ArmyGroup(CreatureType type, int amount)
 {
     memset(m_armies, 0xFF, sizeof(m_armies));
     memset(m_numTroops, 0, sizeof(m_numTroops));
@@ -615,14 +615,14 @@ armyGroup::armyGroup(TCreatureType type, int amount)
 }
 
 VA(0x0044ab00, 0x1D)  // dc 0x4eb2c
-void armyGroup::initialize()
+void ArmyGroup::initialize()
 {
     memset(m_armies, 0xFF, sizeof(m_armies));
     memset(m_numTroops, 0, sizeof(m_numTroops));
 }
 
 VA(0x0044ab20, 0x3A)  // dc 0x4eb50
-unsigned char armyGroup::hasAllUndead() const
+unsigned char ArmyGroup::hasAllUndead() const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
@@ -637,7 +637,7 @@ unsigned char armyGroup::hasAllUndead() const
 // LINKER-ELIMINATED in retail: /Ob2 expands this member at its morale
 // consumers and /OPT:REF drops the remaining copy, so the 0x4ab20..0x4ab80
 // image gap contains Dismiss rather than this body.
-unsigned char armyGroup::hasSomeUndead() const
+unsigned char ArmyGroup::hasSomeUndead() const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
@@ -649,14 +649,14 @@ unsigned char armyGroup::hasSomeUndead() const
 }
 
 VA(0x0044ab60, 0x19)  // dc 0x4ebc0
-void armyGroup::dismiss(int whichIndex)
+void ArmyGroup::dismiss(int whichIndex)
 {
     m_armies[whichIndex] = CREATURE_NONE;
     m_numTroops[whichIndex] = 0;
 }
 
 VA(0x0044ab80, 0x21)  // dc 0x4ebd0
-unsigned char armyGroup::isMember(TCreatureType monType) const
+unsigned char ArmyGroup::isMember(CreatureType monType) const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == monType)
@@ -666,7 +666,7 @@ unsigned char armyGroup::isMember(TCreatureType monType) const
 }
 
 VA(0x0044abb0, 0x97)  // dc 0x4ebf0
-int armyGroup::getAlignments(unsigned char* alignments) const
+int ArmyGroup::getAlignments(unsigned char* alignments) const
 {
     unsigned char local[10];
     if (!alignments)
@@ -675,7 +675,7 @@ int armyGroup::getAlignments(unsigned char* alignments) const
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[m_armies[i]];
+        const CreatureTypeTraits& traits = g_creatureTypeTraits[m_armies[i]];
         if (traits.m_attributes & g_ctaSiegeWeapon)
             continue;
         int alignment;
@@ -697,7 +697,7 @@ int armyGroup::getAlignments(unsigned char* alignments) const
 
 // E:\gamedcs\armygrp.cpp:748
 DC_ONLY(0x4ec98, 0x16)
-int armyGroup::GetHomogeneityMoraleAdjust() const
+int ArmyGroup::GetHomogeneityMoraleAdjust() const
 {
     // @stub
 }
@@ -705,7 +705,7 @@ int armyGroup::GetHomogeneityMoraleAdjust() const
 #endif  // @carcass
 
 VA(0x0044ac50, 0x2E)  // dc 0x4ecb0
-int armyGroup::canJoin(int monType) const
+int ArmyGroup::canJoin(int monType) const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == monType || m_armies[i] == CREATURE_NONE)
@@ -715,7 +715,7 @@ int armyGroup::canJoin(int monType) const
 }
 
 VA(0x0044ac80, 0x39)  // dc 0x4ecdc
-long armyGroup::getAIValue() const
+long ArmyGroup::getAIValue() const
 {
     long value = 0;
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
@@ -726,7 +726,7 @@ long armyGroup::getAIValue() const
 }
 
 VA(0x0044acc0, 0x14)  // dc 0x4ed28
-int armyGroup::getNumArmies() const
+int ArmyGroup::getNumArmies() const
 {
     int numArmies = 0;
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
@@ -737,7 +737,7 @@ int armyGroup::getNumArmies() const
 }
 
 VA(0x0044ace0, 0x76)  // dc 0x4ed4c
-int armyGroup::add(int armyType, int newNumTroops, int newIndex)
+int ArmyGroup::add(int armyType, int newNumTroops, int newIndex)
 {
     if (newIndex == -1) {
         for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
@@ -765,7 +765,7 @@ int armyGroup::add(int armyType, int newNumTroops, int newIndex)
 }
 
 VA(0x0044ad60, 0x36)  // dc 0x4edcc
-void armyGroup::swap(int srcIndex, armyGroup* destGroup, int destIndex)
+void ArmyGroup::swap(int srcIndex, ArmyGroup* destGroup, int destIndex)
 {
     int army = m_armies[srcIndex];
     m_armies[srcIndex] = destGroup->m_armies[destIndex];
@@ -779,7 +779,7 @@ void armyGroup::swap(int srcIndex, armyGroup* destGroup, int destIndex)
 
 // E:\gamedcs\armygrp.cpp:885
 DC_ONLY(0x4ee08, 0x180)
-void armyGroup::DamageGroup(float casualtyRate)
+void ArmyGroup::DamageGroup(float casualtyRate)
 {
     // @stub
 }
@@ -787,7 +787,7 @@ void armyGroup::DamageGroup(float casualtyRate)
 #endif  // @carcass
 
 VA(0x0044ada0, 0x16)  // dc 0x4ef88
-int armyGroup::getCreatureTotal() const
+int ArmyGroup::getCreatureTotal() const
 {
     int total = 0;
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; i++) {
@@ -798,7 +798,7 @@ int armyGroup::getCreatureTotal() const
 }
 
 VA(0x0044adc0, 0x20)  // dc 0x4efb8
-int armyGroup::getCreatureTotal(TCreatureType monType) const
+int ArmyGroup::getCreatureTotal(CreatureType monType) const
 {
     int total = 0;
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; i++) {
@@ -809,7 +809,7 @@ int armyGroup::getCreatureTotal(TCreatureType monType) const
 }
 
 VA(0x0044ade0, 0x79)  // dc 0x4efec
-const char* armyGroup::getArmySizeName(int howMany, int nameSet)
+const char* ArmyGroup::getArmySizeName(int howMany, int nameSet)
 {
     if (howMany < 5)
         return g_apszArmySizeNames[0][nameSet];
@@ -831,8 +831,8 @@ const char* armyGroup::getArmySizeName(int howMany, int nameSet)
 }
 
 VA(0x0044ae60, 0x29A)  // dc 0x4f078
-int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
-                         const hero* otherHero, const armyGroup* otherGroup,
+int ArmyGroup::getMorale(const Hero* ownerHero, const Town* ownerTown,
+                         const Hero* otherHero, const ArmyGroup* otherGroup,
                          unsigned char onCursedGround,
                          unsigned char groupAlignments,
                          unsigned char applyLimits) const
@@ -879,7 +879,7 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
 // 0, arg5, 0) - SEVEN pushes; Complete also adds the grouping argument
 // to DC's six-argument GetMorale. mode==3 -> (elementals/f_1f698 gate) townType
 VA(0x0044b100, 0x1C9)  // dc 0x4f160
-int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char arg5, unsigned char applyLimits) const
+int ArmyGroup::getArmyMorale(int index, const Hero* ownerHero, const Town* ownerTown, int mode, unsigned char arg5, unsigned char applyLimits) const
 {
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
@@ -945,13 +945,13 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
 }
 
 VA(0x0044b2d0, 0xEB)  // dc 0x4f20c
-int armyGroup::getLuck(const hero* ownerHero, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char onCursedGround, unsigned char applyLimits) const
+int ArmyGroup::getLuck(const Hero* ownerHero, const Town* ownerTown, const Hero* otherHero, const ArmyGroup* otherGroup, unsigned char onCursedGround, unsigned char applyLimits) const
 {
     if (onCursedGround)
         return 0;
-    if ((ownerHero && const_cast<hero*>(ownerHero)
+    if ((ownerHero && const_cast<Hero*>(ownerHero)
                           ->isWieldingArtifact(ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))
-        || (otherHero && const_cast<hero*>(otherHero)
+        || (otherHero && const_cast<Hero*>(otherHero)
                              ->isWieldingArtifact(ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR)))
         return 0;
     int luck = 0;
@@ -970,7 +970,7 @@ int armyGroup::getLuck(const hero* ownerHero, const town* ownerTown, const hero*
 }
 
 VA(0x0044b3c0, 0xED)  // dc 0x4f2e8
-int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char applyLimits) const
+int ArmyGroup::getArmyLuck(int index, const Hero* ownerHero, const Town* ownerTown, int mode, unsigned char applyLimits) const
 {
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
@@ -1006,7 +1006,7 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
 }
 
 VA(0x0044b4b0, 0x162)  // dc 0x4f328
-long modifySpellDamage(long damage, SpellID spell, TCreatureType creature)
+long modifySpellDamage(long damage, SpellID spell, CreatureType creature)
 {
     switch (creature) {
     case CREATURE_AIR_ELEMENTAL:
@@ -1057,10 +1057,10 @@ long modifySpellDamage(long damage, SpellID spell, TCreatureType creature)
 }
 
 VA(0x0044b620, 0x1FE)  // dc 0x4f3cc
-unsigned char armyGroup::merge(armyGroup* ag)
+unsigned char ArmyGroup::merge(ArmyGroup* ag)
 {
-    armyGroup ag1;
-    armyGroup ag2;
+    ArmyGroup ag1;
+    ArmyGroup ag2;
     int i;
     for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         ag1.m_armies[i] = m_armies[i];
@@ -1124,7 +1124,7 @@ unsigned char armyGroup::merge(armyGroup* ag)
 }
 
 VA(0x0044b820, 0x140)  // dc 0x4f5ec
-void armyGroup::mergeArmies(armyGroup& source)
+void ArmyGroup::mergeArmies(ArmyGroup& source)
 {
     for (;;) {
         int bestIndex = -1;
@@ -1172,10 +1172,10 @@ void armyGroup::mergeArmies(armyGroup& source)
 // Complete's neutral alignment requires the ten-byte array below.
 
 VA(0x0044b960, 0x859)  // retail-body signature, dc 0x4f708
-std::string armyGroup::getMoraleDescription(
-    TCreatureType creature, int morale, const hero* ownerHero,
-    const town* ownerTown, const hero* otherHero,
-    const armyGroup* otherGroup, int magicTerrain,
+std::string ArmyGroup::getMoraleDescription(
+    CreatureType creature, int morale, const Hero* ownerHero,
+    const Town* ownerTown, const Hero* otherHero,
+    const ArmyGroup* otherGroup, int magicTerrain,
     unsigned char groupAlignments) const
 {
     if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND)
@@ -1288,7 +1288,7 @@ std::string armyGroup::getMoraleDescription(
     if (hasSomeUndead())
         result += g_undeadMoraleText;
 
-    TCreatureType angelType;
+    CreatureType angelType;
     if (isMember(CREATURE_ANGEL) || isMember(CREATURE_ARCHANGEL)) {
         angelType = CREATURE_ANGEL;
         if (isMember(CREATURE_ARCHANGEL))
@@ -1298,7 +1298,7 @@ std::string armyGroup::getMoraleDescription(
     }
 
     if (otherGroup) {
-        TCreatureType dragonType = CREATURE_NONE;
+        CreatureType dragonType = CREATURE_NONE;
         if (otherGroup->isMember(CREATURE_BONE_DRAGON))
             dragonType = CREATURE_BONE_DRAGON;
         if (otherGroup->isMember(CREATURE_GHOST_DRAGON))
@@ -1441,10 +1441,10 @@ std::string armyGroup::getMoraleDescription(
 // town-type accessor reaches the same bytes, but no such accessor is attested
 // in the Dreamcast class record; the ordinary local is retained instead.
 VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
-std::string armyGroup::getLuckDescription(
-    TCreatureType creature, int luck, const hero* ourHero,
-    const town* ourTown, const hero* enemyHero,
-    const armyGroup* enemyGroup, int magicTerrain) const
+std::string ArmyGroup::getLuckDescription(
+    CreatureType creature, int luck, const Hero* ourHero,
+    const Town* ourTown, const Hero* enemyHero,
+    const ArmyGroup* enemyGroup, int magicTerrain) const
 {
     if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND)
         return g_cursedGroundLuckText;
@@ -1503,7 +1503,7 @@ std::string armyGroup::getLuckDescription(
     }
 
     if (enemyGroup) {
-        TCreatureType devilType = CREATURE_NONE;
+        CreatureType devilType = CREATURE_NONE;
         if (enemyGroup->isMember(CREATURE_DEVIL))
             devilType = CREATURE_DEVIL;
         if (enemyGroup->isMember(CREATURE_ARCH_DEVIL))
@@ -1536,9 +1536,9 @@ std::string armyGroup::getLuckDescription(
 }
 
 VA(0x0044c590, 0x76)  // dc 0x4fc98
-TTerrainType armyGroup::getNativeTerrain() const
+TerrainType ArmyGroup::getNativeTerrain() const
 {
-    TTerrainType native = TERRAIN_NONE;
+    TerrainType native = TERRAIN_NONE;
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
@@ -1547,7 +1547,7 @@ TTerrainType armyGroup::getNativeTerrain() const
             alignment = -1;
         else
             alignment = g_creatureTypeTraits[m_armies[i]].m_townType;
-        TTerrainType terrain = g_nativeTerrains[alignment];
+        TerrainType terrain = g_nativeTerrains[alignment];
         if (native != TERRAIN_NONE) {
             if (terrain != native)
                 return TERRAIN_NONE;
@@ -1561,7 +1561,7 @@ TTerrainType armyGroup::getNativeTerrain() const
 
 // E:\gamedcs\armygrp.cpp:131
 DC_ONLY(0x4fd54, 0x34)
-void* TSplitWindow::`scalar deleting destructor'(unsigned __flags)
+void* SplitWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -1582,7 +1582,7 @@ std::allocator<char> std::basic_string<char,std::char_traits<char>,std::allocato
 
 // ..\stlport\stl_algobase.h:79
 DC_ONLY(0x4fddc, 0xA)
-void std::swap(TCreatureType* __a, TCreatureType* __b)
+void std::swap(CreatureType* __a, CreatureType* __b)
 {
     // @stub
 }

@@ -50,17 +50,17 @@
 // through the back edge.
 
 VA(0x0041e190, 0x2A8)  // order-map(DC ai.obj head) + anchor-callee find_AI_targets, dc 0x23450
-int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int averageDamage)
+int CombatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int averageDamage)
 {
     double damage;
     long bestValue = 0;
     long result = -1;
-    type_AI_combat_parameters estimate(this, 1 - targetGroup);
+    AICombatParameters estimate(this, 1 - targetGroup);
 
     findAITargets(targetGroup, 0, 0, &estimate, 0);
 
     { for (long i = 0; i < m_numArmies[targetGroup]; i++) {
-            army* currentArmy = &m_armies[targetGroup][i];
+            Army* currentArmy = &m_armies[targetGroup][i];
             if (currentArmy->is(1u << 21))
                 continue;
             damage = averageDamage;
@@ -87,7 +87,7 @@ int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int av
         return result;
 
     { { for (long i = 0; i < m_numArmies[targetGroup]; i++) {
-                army* currentArmy = &m_armies[targetGroup][i];
+                Army* currentArmy = &m_armies[targetGroup][i];
                 if (currentArmy->is(1u << 21))
                     continue;
                 damage = averageDamage;
@@ -111,13 +111,13 @@ int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int av
 }
 
 VA(0x0041e440, 0x129)  // dc 0x23750
-unsigned char combatManager::failedSiege()
+unsigned char CombatManager::failedSiege()
 {
-    DATA(0x0063abc0) static const TWallTargetId walls[4] = {
+    DATA(0x0063abc0) static const WallTargetId walls[4] = {
         WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_4, WALL_TARGET_5
     };
 
-    army* currentArmy = m_armies[m_currentSide];
+    Army* currentArmy = m_armies[m_currentSide];
     if (m_fortificationLevel == COMBAT_FORTIFICATION_NONE)
         return 0;
     if (m_drawbridgeState != DRAWBRIDGE_UP)
@@ -143,7 +143,7 @@ unsigned char combatManager::failedSiege()
         }
     }
 
-    army* enemyArmy = m_armies[1 - m_currentSide];
+    Army* enemyArmy = m_armies[1 - m_currentSide];
     { for (long i = 0; i < m_numArmies[1 - m_currentSide]; i++, enemyArmy++) {
             unsigned char dead = static_cast<unsigned char>(
                 static_cast<unsigned>(enemyArmy->m_monInfo.m_attributes) >> 21);
@@ -197,7 +197,7 @@ unsigned char combatManager::failedSiege()
 // subscripting the fight-value walk instead of walking a named pointer
 // (95.33 -> 95.39).
 VA(0x0041e570, 0x546)  // order-map(DC ai.obj head) + anchor-callee failed_siege, dc 0x2389c
-unsigned char combatManager::aiCheckRetreat()
+unsigned char CombatManager::aiCheckRetreat()
 {
     if (m_heroes[m_currentSide]
         && (m_sideIsAi[m_currentSide]
@@ -212,11 +212,11 @@ unsigned char combatManager::aiCheckRetreat()
         long count = 0;
         unsigned char besiegedTownOnly = 0;
         long i = 0;
-        playerData* player = &g_game->m_players[m_heroes[m_currentSide]->m_owner];
+        PlayerData* player = &g_game->m_players[m_heroes[m_currentSide]->m_owner];
         long numTowns = player->m_numTowns;
         if (numTowns > 0) {
             { for (; i < numTowns; i++) {
-                    town* currentTown = g_game->getTown(player->m_townIds[i]);
+                    Town* currentTown = g_game->getTown(player->m_townIds[i]);
                     if (currentTown->hasBuilding(TAVERN_ID, 1)) {
                         count++;
                         if (m_defendingTown == currentTown)
@@ -233,9 +233,9 @@ unsigned char combatManager::aiCheckRetreat()
                     return 1;
 
                 long combatValue = 0;
-                type_artifact artifact;
+                ArtifactRecord artifact;
                 { for (long i = 0; i < 19; i++) {
-                        artifact = m_heroes[m_currentSide]->getArtifact(TArtifactSlot(i));
+                        artifact = m_heroes[m_currentSide]->getArtifact(ArtifactSlot(i));
                         if (artifact.m_artifactId == ARTIFACT_NONE)
                             continue;
                         long artifactValue = aiGetValueOfArtifact(
@@ -264,7 +264,7 @@ unsigned char combatManager::aiCheckRetreat()
                     simulateCombat(m_currentSide, 1);
 
                     long remaining = m_numArmies[m_currentSide];
-                    army* currentArmy = m_armies[m_currentSide];
+                    Army* currentArmy = m_armies[m_currentSide];
                     while (remaining-- > 0) {
                         if (!(currentArmy->is(1u << 21))
                             && !(currentArmy->is(1u << 6))
@@ -279,7 +279,7 @@ unsigned char combatManager::aiCheckRetreat()
                         { for (long side = 0; side < 2; side++) {
                                 long fightValue = 0;
                                 { for (long i = 0; i < 20; i++) {
-                                        army* sideArmy = &m_armies[side][i];
+                                        Army* sideArmy = &m_armies[side][i];
                                         if (sideArmy->m_creatureType < 0)
                                             continue;
                                         if (sideArmy->m_numTroops <= 0)
@@ -341,10 +341,10 @@ unsigned char combatManager::aiCheckRetreat()
 }
 
 VA(0x0041eac0, 0xB8)  // dc 0x23f2c
-long combatManager::getTotalCombatValue(long side, long lowestAttack, long lowestDefense, unsigned char includeCripples) const
+long CombatManager::getTotalCombatValue(long side, long lowestAttack, long lowestDefense, unsigned char includeCripples) const
 {
     long total = 0;
-    const army* currentArmy = m_armies[side];
+    const Army* currentArmy = m_armies[side];
     for (long i = 0; i < m_numArmies[side]; i++, currentArmy++) {
         unsigned char dead = static_cast<unsigned char>(
             static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 21);
@@ -364,15 +364,15 @@ long combatManager::getTotalCombatValue(long side, long lowestAttack, long lowes
 }
 
 VA(0x0041eb80, 0x220)  // dc 0x240e4
-long combatManager::chooseShooterTarget(const army* currentArmy, type_AI_combat_parameters* data, long* bestValue) const
+long CombatManager::chooseShooterTarget(const Army* currentArmy, AICombatParameters* data, long* bestValue) const
 {
     long bestTarget = -1;
     long hex;
     long ourGroup = data->m_ourGroup;
     long enemyGroup = data->m_enemyGroup;
     unsigned char isAreaEffect = 0;
-    const army* bestArmy = 0;
-    std::vector<army*> targets;
+    const Army* bestArmy = 0;
+    std::vector<Army*> targets;
 
     if (currentArmy->m_creatureType == CREATURE_MAGOG
             || currentArmy->m_creatureType == CREATURE_LICH
@@ -380,7 +380,7 @@ long combatManager::chooseShooterTarget(const army* currentArmy, type_AI_combat_
         isAreaEffect = 1;
 
     for (long i = 0; i < m_numArmies[enemyGroup]; i++) {
-        const army* target = &m_armies[enemyGroup][i];
+        const Army* target = &m_armies[enemyGroup][i];
         unsigned char dead = static_cast<unsigned char>(
             static_cast<unsigned>(target->m_monInfo.m_attributes) >> 21);
         if ((dead & 1) != 0 || target->m_creatureType == CREATURE_ARROW_TOWER)
@@ -428,13 +428,13 @@ long combatManager::chooseShooterTarget(const army* currentArmy, type_AI_combat_
 // the body drops such a target and prices every other one.
 
 VA(0x0041eda0, 0xFD)  // dc 0x2400c
-long getAreaAttackValue(const army* currentArmy, long hex, long ourGroup, type_AI_combat_parameters* data)
+long getAreaAttackValue(const Army* currentArmy, long hex, long ourGroup, AICombatParameters* data)
 {
-    std::vector<army*> targets;
+    std::vector<Army*> targets;
     long total = 0;
     g_combatManager->markHexAreaEffect(hex, 1, 1, targets);
     for (unsigned i = targets.size(); i-- != 0; ) {
-        army* target = targets[i];
+        Army* target = targets[i];
         if ((currentArmy->is(1u << 18)) && (target->is(1u << 18))
                 && target->m_gridIndex != hex
                 && target->getSecondGridIndex() != hex)
@@ -448,9 +448,9 @@ long getAreaAttackValue(const army* currentArmy, long hex, long ourGroup, type_A
 }
 
 VA(0x0041eea0, 0x1B9)  // dc 0x2429c
-unsigned char combatManager::chooseCyclopsAction(long bestValue, long side, type_AI_combat_parameters* estimate)
+unsigned char CombatManager::chooseCyclopsAction(long bestValue, long side, AICombatParameters* estimate)
 {
-    DATA(0x0063abd0) static const TWallTargetId walls[4] = {
+    DATA(0x0063abd0) static const WallTargetId walls[4] = {
         WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_4, WALL_TARGET_5
     };
 
@@ -471,7 +471,7 @@ unsigned char combatManager::chooseCyclopsAction(long bestValue, long side, type
     findAITargets(side, 0, 0, estimate, 0);
     count = 0;
     { for (long i = 0; i < m_numArmies[side]; i++) {
-            army* currentArmy = &m_armies[side][i];
+            Army* currentArmy = &m_armies[side][i];
             if (!currentArmy->getAITarget())
                 count += currentArmy->getTotalCombatValue(
                     estimate->m_lowestAttack, estimate->m_lowestDefense);
@@ -509,10 +509,10 @@ unsigned char combatManager::chooseCyclopsAction(long bestValue, long side, type
 }
 
 VA(0x0041f060, 0xD1)  // dc 0x2452c
-void combatManager::chooseShooterAction(const army* currentArmy, unsigned char simulated, long side)
+void CombatManager::chooseShooterAction(const Army* currentArmy, unsigned char simulated, long side)
 {
     long bestValue = 0;
-    type_AI_combat_parameters data(this, side);
+    AICombatParameters data(this, side);
     data.m_simulated = simulated;
     findAITargets(1 - side, 0, 0, &data, 0);
     long actionValue = chooseShooterTarget(currentArmy, &data, &bestValue);
@@ -544,8 +544,9 @@ void combatManager::chooseShooterAction(const army* currentArmy, unsigned char s
 //     || (x->field_190 == y->field_190 && x->bitIndex < y->bitIndex)
 // - descending on the move key, ascending on the stack index so equal
 // keys stay in slot order.
-struct func_moves_before {
-    unsigned char operator()(const army* a, const army* b);
+// Before normalization (type): func_moves_before.
+struct FuncMovesBefore {
+    unsigned char operator()(const Army* a, const Army* b);
 };
 
 // E:\gamedcs\ai.cpp:610
@@ -558,7 +559,7 @@ struct func_moves_before {
 // materialises the constant 1 in EAX (`mov eax, 1`), compares both
 // counters against it with `jg`, and then REUSES that same AL as the
 // mask for the `test al, cl` bit test below.
-static long getMoveOrder(const army* currentArmy)
+static long getMoveOrder(const Army* currentArmy)
 {
     if (currentArmy->m_creatureType == CREATURE_FIRST_AID_TENT
             || currentArmy->m_creatureType == CREATURE_AMMO_CART)
@@ -568,7 +569,7 @@ static long getMoveOrder(const army* currentArmy)
     unsigned char waited = static_cast<unsigned char>(
         static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 26);
     if ((waited & 1) != 0
-            || const_cast<army*>(currentArmy)->isIncapacitated())
+            || const_cast<Army*>(currentArmy)->isIncapacitated())
         return currentArmy->getSpeed() - 1000;
     unsigned char reversed = static_cast<unsigned char>(
         static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 25);
@@ -578,12 +579,12 @@ static long getMoveOrder(const army* currentArmy)
 }
 
 VA(0x0041f140, 0x23F)  // dc 0x24694
-void combatManager::findMoveOrder(std::vector<army*>* result)
+void CombatManager::findMoveOrder(std::vector<Army*>* result)
 {
-    std::vector<army*> order;
+    std::vector<Army*> order;
     for (long side = 0; side < 2; side++) {
         for (long i = 0; i < m_numArmies[side]; i++) {
-            army* currentArmy = &m_armies[side][i];
+            Army* currentArmy = &m_armies[side][i];
             if (currentArmy->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
             unsigned char dead = static_cast<unsigned char>(
@@ -594,7 +595,7 @@ void combatManager::findMoveOrder(std::vector<army*>* result)
             order.push_back(currentArmy);
         }
     }
-    std::sort(order.begin(), order.end(), func_moves_before());
+    std::sort(order.begin(), order.end(), FuncMovesBefore());
     long wantSide = m_actingSide;
     for (unsigned i = 0; i < order.size(); i++) {
         if (order[i]->m_combatSide != wantSide) {
@@ -623,8 +624,8 @@ void combatManager::findMoveOrder(std::vector<army*>* result)
 // expansion belongs to getAttackChange below; this helper has no retained
 // standalone retail row. The neighboring 0x41f380 is IsIncapacitated.
 DC_ONLY(0x248b4, 0x180)
-static long getAttackValue(const army* currentArmy, const army* enemy,
-                           long enemyHitPoints, type_AI_combat_parameters& data)
+static long getAttackValue(const Army* currentArmy, const Army* enemy,
+                           long enemyHitPoints, AICombatParameters& data)
 {
     if (enemyHitPoints <= 0)
         return 0;
@@ -642,7 +643,7 @@ static long getAttackValue(const army* currentArmy, const army* enemy,
 }
 
 VA(0x0041f3b0, 0x1C2)  // dc 0x24a34
-long combatManager::getAttackChange(const army* currentArmy, const army* enemy, type_AI_combat_parameters& data)
+long CombatManager::getAttackChange(const Army* currentArmy, const Army* enemy, AICombatParameters& data)
 {
     if (enemy->getSpellTime(70) || enemy->m_retaliationCount == 0)
         return 0;
@@ -655,7 +656,7 @@ long combatManager::getAttackChange(const army* currentArmy, const army* enemy, 
     enemyHits -= aiGetAttackDamage(*currentArmy, ourHits, *enemy, 0, 0);
     if (enemyHits <= 0)
         return 0;
-    const army* friendly = m_armies[m_currentSide];
+    const Army* friendly = m_armies[m_currentSide];
     for (long i = 0; i < m_numArmies[m_currentSide]; i++, friendly++) {
         if (friendly->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
@@ -672,7 +673,7 @@ long combatManager::getAttackChange(const army* currentArmy, const army* enemy, 
 }
 
 VA(0x0041f580, 0x304)  // dc 0x24b64
-unsigned char combatManager::moveToward(const army* currentArmy, long targetHex, const long* enemyAttacks, unsigned char considerWaiting)
+unsigned char CombatManager::moveToward(const Army* currentArmy, long targetHex, const long* enemyAttacks, unsigned char considerWaiting)
 {
     if (!currentArmy->m_spellInfluence[72] && currentArmy->getSpeed()) {
         g_searchArray->findCombatPath(currentArmy, m_currentSide, targetHex,
@@ -716,11 +717,11 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
                         pathIndex--, step--, moveLeft--) {
                     if (moveLeft <= 0)
                         break;
-                    hex = const_cast<army*>(currentArmy)->getAdjacentCellIndex(
+                    hex = const_cast<Army*>(currentArmy)->getAdjacentCellIndex(
                             hex, g_searchArray->getStep(pathIndex));
                     if (hex < 0 || hex >= 187)
                         break;
-                    const pathCell* cell = g_searchArray->getHex(hex);
+                    const PathCell* cell = g_searchArray->getHex(hex);
                     if (cell->m_flightCost == 0) {
                         long secondHex = (currentArmy->m_monInfo.m_attributes & 1)
                                 ? hex + (currentArmy->m_facing != 0 ? 1 : -1) : hex;
@@ -766,7 +767,7 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
 }
 
 VA(0x0041f890, 0x8F)  // dc 0x24e5c
-unsigned char combatManager::canCastSpells(long side, unsigned char heroSpell) const
+unsigned char CombatManager::canCastSpells(long side, unsigned char heroSpell) const
 {
     if (!heroSpell && m_magicTerrain == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS)
         return 0;
@@ -785,10 +786,10 @@ unsigned char combatManager::canCastSpells(long side, unsigned char heroSpell) c
 }
 
 VA(0x0041f920, 0x234)  // dc 0x24ef4
-long combatManager::getAreaEffect(long side, const army* ourArmy, long markedEnemies, const type_AI_combat_parameters* estimate) const
+long CombatManager::getAreaEffect(long side, const Army* ourArmy, long markedEnemies, const AICombatParameters* estimate) const
 {
     long total = 0;
-    const army* enemy = m_armies[side];
+    const Army* enemy = m_armies[side];
     for (long i = 0; i < m_numArmies[side]; i++, enemy++) {
         if ((markedEnemies & (1 << enemy->m_bitIndex)) == 0)
             continue;
@@ -800,15 +801,15 @@ long combatManager::getAreaEffect(long side, const army* ourArmy, long markedEne
                                                1, 0);
     }
     if (canCastSpells(side, 1)) {
-        hero* castingHero = m_heroes[side];
+        Hero* castingHero = m_heroes[side];
         long best = 0;
-        for (SpellID spell = 10; spell < hero::NUM_SPELLS; spell++) {
+        for (SpellID spell = 10; spell < Hero::NUM_SPELLS; spell++) {
             if (!castingHero->spellIsAvailable(spell))
                 continue;
             if (spell == SPELL_FROST_RING || spell == SPELL_FIREBALL
                     || spell == SPELL_INFERNO
                     || spell == SPELL_METEOR_SHOWER) {
-                TSkillMastery mastery =
+                SkillMastery mastery =
                     castingHero->getSpellLevel(spell, m_magicTerrain);
                 if (castingHero->getManaCost(spell, m_armyGroups[1 - side],
                                               m_magicTerrain)
@@ -840,7 +841,8 @@ long combatManager::getAreaEffect(long side, const army* ourArmy, long markedEne
 // NO RETAIL SLOT - a two-parameter static with one call site, folded
 // into whichever of get_area_effect / mark_friendly_armies uses it.
 DC_ONLY(0x250e0, 0x42)
-long get_enemy_attack_limit(const army* our_army, const type_AI_combat_parameters* estimate)
+// Before normalization (function): get_enemy_attack_limit.
+long getEnemyAttackLimit(const Army* our_army, const AICombatParameters* estimate)
 {
     // @stub
 }
@@ -848,7 +850,7 @@ long get_enemy_attack_limit(const army* our_army, const type_AI_combat_parameter
 #endif  // @carcass
 
 VA(0x0041fb60, 0x1F6)  // dc 0x25124
-void combatManager::markFriendlyArmies(const army* ourArmy, long* enemyAttacks, long markedEnemies, const type_AI_combat_parameters* estimate) const
+void CombatManager::markFriendlyArmies(const Army* ourArmy, long* enemyAttacks, long markedEnemies, const AICombatParameters* estimate) const
 {
     long enemySide = estimate->m_enemyGroup;
     long areaEffect = getAreaEffect(enemySide, ourArmy, markedEnemies,
@@ -859,7 +861,7 @@ void combatManager::markFriendlyArmies(const army* ourArmy, long* enemyAttacks, 
     long floorValue = -ourArmy->getLossCombatValue(
             estimate->m_lowestAttack, estimate->m_lowestDefense,
             ourArmy->canShoot(0), hitPoints, 0);
-    const army* friendly = m_armies[estimate->m_ourGroup];
+    const Army* friendly = m_armies[estimate->m_ourGroup];
     for (long i = 0; i < m_numArmies[estimate->m_ourGroup]; i++, friendly++) {
         if (friendly->is(1u << 21))
             continue;
@@ -908,9 +910,9 @@ void combatManager::markFriendlyArmies(const army* ourArmy, long* enemyAttacks, 
     }
 }
 
-void findAttackHexes(const army* ourArmy, long targetHex, long start,
+void findAttackHexes(const Army* ourArmy, long targetHex, long start,
                        long stop, long limitCost,
-                       const searchArray* currentSearchArray,
+                       const SearchArray* currentSearchArray,
                        std::vector<long>* result);
 
 // E:\gamedcs\ai.cpp:1121
@@ -933,7 +935,7 @@ void findAttackHexes(const army* ourArmy, long targetHex, long start,
 // the ENEMY's, and the enemy's facing picks both the tail hex and which
 // half of the direction ring is searched.
 DC_ONLY(0x253a8, 0xA4)
-static void findAttackHexes(const army* ourArmy, const army* enemy, const searchArray* currentSearchArray, std::vector<long>* result)
+static void findAttackHexes(const Army* ourArmy, const Army* enemy, const SearchArray* currentSearchArray, std::vector<long>* result)
 {
     long sides = (ourArmy->is(1u << 0)) ? 8 : 6;
     findAttackHexes(ourArmy, ourArmy->m_gridIndex, 0, sides,
@@ -982,9 +984,9 @@ static void findAttackHexes(const army* ourArmy, const army* enemy, const search
 // the `facing ? 1 : -1` temp.
 // E:\gamedcs\ai.cpp:1152
 VA(0x0041fd60, 0x2F6)  // anchor-callee, dc 0x2544c
-void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy, long* enemyAttacks, long limitValue, searchArray* currentSearchArray, type_AI_combat_parameters* estimate) const
+void CombatManager::markMultiheadedEnemy(const Army* ourArmy, const Army* enemy, long* enemyAttacks, long limitValue, SearchArray* currentSearchArray, AICombatParameters* estimate) const
 {
-    const army* other = m_armies[estimate->m_ourGroup];
+    const Army* other = m_armies[estimate->m_ourGroup];
     long value = -estimate->getSimpleAttackEffect(*(enemy), *(ourArmy), 0, 0);
     std::vector<long> hexes;
     unsigned char priced[COMBAT_GRID_CELLS];
@@ -1000,7 +1002,7 @@ void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy,
             continue;
         if (!m_cells[other->m_gridIndex].m_validMove)
             continue;
-        const pathCell* cell = currentSearchArray->getHex(other->m_gridIndex);
+        const PathCell* cell = currentSearchArray->getHex(other->m_gridIndex);
         if (cell->m_cost > enemy->getSpeed())
             continue;
         unsigned char counted[COMBAT_GRID_CELLS];
@@ -1034,13 +1036,13 @@ void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy,
 }
 
 VA(0x00420060, 0x1FB)  // dc 0x25308
-void findAttackHexes(const army* ourArmy, long targetHex, long start, long stop, long limitCost, const searchArray* currentSearchArray, std::vector<long>* result)
+void findAttackHexes(const Army* ourArmy, long targetHex, long start, long stop, long limitCost, const SearchArray* currentSearchArray, std::vector<long>* result)
 {
     for (long direction = start; direction < stop; direction++) {
         long hex = ourArmy->getAdjacentHex(targetHex, direction);
         if (hex < 0 || hex >= COMBAT_GRID_CELLS)
             continue;
-        const pathCell* cell = currentSearchArray->getHex(hex);
+        const PathCell* cell = currentSearchArray->getHex(hex);
         if (!cell->m_visited)
             continue;
         if (cell->m_cost > limitCost)
@@ -1050,7 +1052,7 @@ void findAttackHexes(const army* ourArmy, long targetHex, long start, long stop,
 }
 
 VA(0x00420260, 0x368)  // dc 0x256a0
-void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, long* dangerousEnemies, type_AI_combat_parameters* estimate) const
+void CombatManager::markEnemyAttacks(const Army* ourArmy, long* enemyAttacks, long* dangerousEnemies, AICombatParameters* estimate) const
 {
     long side = estimate->m_ourGroup;
     long enemySide = estimate->m_enemyGroup;
@@ -1058,7 +1060,7 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
     long floorValue = -ourArmy->getLossCombatValue(
             estimate->m_lowestAttack, estimate->m_lowestDefense,
             ourArmy->canShoot(0), hitPoints, 0);
-    const army* enemy = m_armies[enemySide];
+    const Army* enemy = m_armies[enemySide];
     *dangerousEnemies = 0;
     for (long i = 0; i < m_numArmies[enemySide]; i++, enemy++) {
         if (enemy->m_spellInfluence[62])
@@ -1081,13 +1083,13 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
                                           enemy->getSpeed() + 1, 0,
                                           enemy->getSpeed() + 1);
         long j;
-        const army* friendly = m_armies[side];
+        const Army* friendly = m_armies[side];
         for (j = 0; j < m_numArmies[side]; j++, friendly++) {
             if (friendly->is(1u << 21))
                 continue;
             if (friendly->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
-            const pathCell* cell = g_searchArray->getHex(friendly->m_gridIndex);
+            const PathCell* cell = g_searchArray->getHex(friendly->m_gridIndex);
             if (m_cells[friendly->m_gridIndex].m_validMove
                     && cell->m_cost <= enemy->getSpeed())
                 break;
@@ -1104,7 +1106,7 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
         if (value >= 0)
             continue;
         for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
-            const pathCell* cell = g_searchArray->getHex(hex);
+            const PathCell* cell = g_searchArray->getHex(hex);
             if (!cell->m_visited)
                 continue;
             enemyAttacks[hex] += value;
@@ -1114,7 +1116,7 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
         if (enemy->m_monInfo.m_attributes & 1) {
             long direction = enemy->m_facing ? 1 : 4;
             for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
-                const pathCell* cell = g_searchArray->getHex(hex);
+                const PathCell* cell = g_searchArray->getHex(hex);
                 if (!cell->m_visited)
                     continue;
                 if (g_searchArray->isMoat(static_cast<short>(hex)))
@@ -1122,7 +1124,7 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
                 long adjacent = m_adjacentCells[hex][direction];
                 if (adjacent < 0 || adjacent >= COMBAT_GRID_CELLS)
                     continue;
-                const pathCell* other = g_searchArray->getHex(adjacent);
+                const PathCell* other = g_searchArray->getHex(adjacent);
                 if (other->m_visited)
                     continue;
                 enemyAttacks[adjacent] += value;
@@ -1148,7 +1150,7 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
 
 // E:\gamedcs\ai.cpp:1357
 VA(0x004205d0, 0x185)  // linkorder, dc 0x25998
-unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const army* client, long* bestHex, long* openHexes, searchArray* currentSearchArray)
+unsigned char CombatManager::chooseDefenseHex(const Army* currentArmy, const Army* client, long* bestHex, long* openHexes, SearchArray* currentSearchArray)
 {
     long bestTime;
     long bestContact;
@@ -1161,12 +1163,12 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
         long hex = client->getAdjacentHex(client->m_gridIndex, direction);
         if (hex < 0 || hex >= COMBAT_GRID_CELLS)
             continue;
-        hexcell* cell = &m_cells[hex];
-        army* occupant = cell->getArmy();
+        Hexcell* cell = &m_cells[hex];
+        Army* occupant = cell->getArmy();
         if (occupant != 0 && occupant != currentArmy)
             continue;
         (*openHexes)++;
-        const pathCell* path = currentSearchArray->getHex(hex);
+        const PathCell* path = currentSearchArray->getHex(hex);
         if (!path->m_visited)
             continue;
         long time = m_creaturePlacement
@@ -1202,14 +1204,14 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
 }
 
 VA(0x00420760, 0x187)  // dc 0x25b0c
-unsigned char combatManager::attemptShooterDefense(const army* currentArmy, searchArray* currentSearchArray, const type_AI_combat_parameters* estimate)
+unsigned char CombatManager::attemptShooterDefense(const Army* currentArmy, SearchArray* currentSearchArray, const AICombatParameters* estimate)
 {
     long hex;
 
     long bestHex = -1;
-    const army* client = m_armies[m_currentSide];
+    const Army* client = m_armies[m_currentSide];
     long openHexes = 0;
-    const army* bestClient = 0;
+    const Army* bestClient = 0;
     long bestTime = 0;
     long bestValue = 0;
     for (long i = 0; i < m_numArmies[m_currentSide]; i++, client++) {
@@ -1254,7 +1256,7 @@ unsigned char combatManager::attemptShooterDefense(const army* currentArmy, sear
 }
 
 VA(0x004208f0, 0x184)  // dc 0x25c80
-unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyAttacks, const searchArray* currentSearchArray)
+unsigned char CombatManager::chooseToRun(const Army* ourArmy, const long* enemyAttacks, const SearchArray* currentSearchArray)
 {
     if (g_game->m_setup.m_difficulty < 2
         && !m_sideIsAi[ourArmy->m_combatSide])
@@ -1277,7 +1279,7 @@ unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyA
     long bestDistance = 0;
     long bestHex = -1;
     for (long hex = 0; hex < COMBAT_GRID_CELLS; ++hex) {
-        const pathCell* cell = currentSearchArray->getHex(hex);
+        const PathCell* cell = currentSearchArray->getHex(hex);
         if (!cell->m_visited || cell->m_flightCost > 0)
             continue;
 
@@ -1314,7 +1316,7 @@ unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyA
 // a shot does, so it belongs in the shooting column.
 
 VA(0x00420a80, 0x264)  // dc 0x25df8
-unsigned char combatManager::hasRangedAdvantage(type_AI_combat_parameters* data)
+unsigned char CombatManager::hasRangedAdvantage(AICombatParameters* data)
 {
     long totalValue[2];
     long shooterValue[2];
@@ -1322,7 +1324,7 @@ unsigned char combatManager::hasRangedAdvantage(type_AI_combat_parameters* data)
     for (long side = 0; side < 2; side++) {
         shooterValue[side] = 0;
         totalValue[side] = 0;
-        const army* stack = m_armies[side];
+        const Army* stack = m_armies[side];
         for (long i = 0; i < m_numArmies[side]; i++, stack++) {
             if (!(stack->is(1u << 21))
                     && !stack->m_spellInfluence[62] && !stack->m_spellInfluence[70]
@@ -1336,7 +1338,7 @@ unsigned char combatManager::hasRangedAdvantage(type_AI_combat_parameters* data)
             }
         }
         if (m_heroes[side] != 0 && canCastSpells(side, 1)) {
-            type_spellvalue valuer(m_heroes[side]);
+            Spellvalue valuer(m_heroes[side]);
             valuer.setStackValue(totalValue[side]);
             shooterValue[side] += valuer.getBestSpellValue(0x8000);
         }
@@ -1368,7 +1370,7 @@ unsigned char combatManager::hasRangedAdvantage(type_AI_combat_parameters* data)
 // compgenx, attributes 0x103; dc 0x28050). Retail's 0x627a40 unwind funclet
 // uses this retained Dinkumware vector teardown; the implicit member also
 // supplies each caller's expansion without a fabricated source body.
-VA_COMPGEN(0x00420cf0, 0x26, IMPLICIT_DTOR, type_spellvalue)
+VA_COMPGEN(0x00420cf0, 0x26, IMPLICIT_DTOR, Spellvalue)
 
 // E:\gamedcs\ai.cpp:1635
 // The Master Genie / Dragon Fly chooser: it walks OUR OWN side from the
@@ -1390,18 +1392,18 @@ VA_COMPGEN(0x00420cf0, 0x26, IMPLICIT_DTOR, type_spellvalue)
 
 // E:\gamedcs\ai.cpp:1635
 VA(0x00420d20, 0x1D5)  // anchor-callee, dc 0x2600c
-unsigned char combatManager::chooseCreatureSpell(const army* currentArmy, long* bestValue, type_AI_combat_parameters* estimate)
+unsigned char CombatManager::chooseCreatureSpell(const Army* currentArmy, long* bestValue, AICombatParameters* estimate)
 {
     long side = estimate->m_ourGroup;
     long count = m_numArmies[side];
     long bestHex = -1;
     long ourValue = currentArmy->getTotalCombatValue(
             estimate->m_lowestAttack, estimate->m_lowestDefense);
-    type_AI_spellcaster caster(this, estimate->m_ourGroup, 1);
+    AISpellcaster caster(this, estimate->m_ourGroup, 1);
     if (*bestValue != 0 && random(1, 100) <= 30)
         return 0;
     for (long i = count; i-- > 0; ) {
-        const army* target = &m_armies[side][i];
+        const Army* target = &m_armies[side][i];
         if (target == currentArmy)
             continue;
         if (target->m_creatureType == CREATURE_ARROW_TOWER)
@@ -1454,12 +1456,12 @@ unsigned char combatManager::chooseCreatureSpell(const army* currentArmy, long* 
 // contribute the private bool/reference declarator below, but that stronger
 // source typing is likewise byte-identical and does not change the wall.
 VA(0x00420f00, 0xFB)
-bool combatManager::sodChooseFaerieDragonSpell(
-        const army* currentArmy, long& bestValue,
-        type_AI_combat_parameters& estimate)
+bool CombatManager::sodChooseFaerieDragonSpell(
+        const Army* currentArmy, long& bestValue,
+        AICombatParameters& estimate)
 {
     long bestHex = -1;
-    type_AI_spellcaster caster(this, estimate.m_ourGroup, 1);
+    AISpellcaster caster(this, estimate.m_ourGroup, 1);
     for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
         if (inInvisibleColumn(hex))
             continue;
@@ -1503,20 +1505,20 @@ bool combatManager::sodChooseFaerieDragonSpell(
 // retail does not have.
 // E:\gamedcs\ai.cpp:1694
 VA(0x00421000, 0x275)  // anchor-callee, dc 0x26140
-unsigned char combatManager::chooseResurrectAction(const army* currentArmy, long* bestValue, type_AI_combat_parameters* estimate)
+unsigned char CombatManager::chooseResurrectAction(const Army* currentArmy, long* bestValue, AICombatParameters* estimate)
 {
     long bestHex = -1;
     if ((currentArmy->m_creatureType != CREATURE_ARCHANGEL
             && currentArmy->m_creatureType != CREATURE_PIT_LORD)
             || currentArmy->m_monInfo.m_hasSpell <= 0)
         return 0;
-    army temp;
+    Army temp;
     if (currentArmy->m_creatureType == CREATURE_PIT_LORD)
-        temp.initialize(TCreatureType(CREATURE_DEMON), 1,
+        temp.initialize(CreatureType(CREATURE_DEMON), 1,
                         m_heroes[estimate->m_ourGroup],
                         estimate->m_ourGroup, 0, 0);
     for (long i = m_numArmies[estimate->m_ourGroup]; i--; ) {
-        const army* target = &m_armies[estimate->m_ourGroup][i];
+        const Army* target = &m_armies[estimate->m_ourGroup][i];
         if (target == currentArmy)
             continue;
         if (target->m_creatureType == CREATURE_ARROW_TOWER)
@@ -1569,7 +1571,7 @@ unsigned char combatManager::chooseResurrectAction(const army* currentArmy, long
 }
 
 VA(0x00421280, 0x166)  // dc 0x26464
-unsigned char combatManager::chooseSpellAction(const army* currentArmy, long* bestValue, type_AI_combat_parameters* estimate)
+unsigned char CombatManager::chooseSpellAction(const Army* currentArmy, long* bestValue, AICombatParameters* estimate)
 {
     if (m_creaturePlacement)
         return 0;
@@ -1604,7 +1606,7 @@ unsigned char combatManager::chooseSpellAction(const army* currentArmy, long* be
 // castle already.
 
 VA(0x004213f0, 0xF5)  // dc 0x264fc
-unsigned char combatManager::shouldStayInCastle(type_AI_combat_parameters* estimate)
+unsigned char CombatManager::shouldStayInCastle(AICombatParameters* estimate)
 {
     if (!m_fortificationLevel)
         return 0;
@@ -1619,7 +1621,7 @@ unsigned char combatManager::shouldStayInCastle(type_AI_combat_parameters* estim
     } }
     if (!hasRangedAdvantage(estimate))
         return 0;
-    const army* ourArmy = &m_armies[estimate->m_ourGroup][0];
+    const Army* ourArmy = &m_armies[estimate->m_ourGroup][0];
     for (long i = 0; i < m_numArmies[estimate->m_ourGroup]; i++, ourArmy++) {
         if ((ourArmy->is(1u << 21)) == 0
                 && ourArmy->m_creatureType != CREATURE_ARROW_TOWER
@@ -1635,12 +1637,12 @@ unsigned char combatManager::shouldStayInCastle(type_AI_combat_parameters* estim
 // the next armygrp change rather than reached across for.
 
 VA(0x004214f0, 0x94)  // dc 0x26600
-void combatManager::markFirewalls(const army* currentArmy, long* enemyAttacks, type_AI_combat_parameters* estimate)
+void CombatManager::markFirewalls(const Army* currentArmy, long* enemyAttacks, AICombatParameters* estimate)
 {
     for (long i = 0; i < 187; i++) {
         if ((m_cells[i].m_attributes & 0x10) == 0)
             continue;
-        TObstacle* obstacle = &getObstacle(m_cells[i].m_obstacleIndex);
+        Obstacle* obstacle = &getObstacle(m_cells[i].m_obstacleIndex);
         long base = obstacle->m_spellDamage;
         long damage = modifySpellDamage(base, 0xd,
                                         m_heroes[obstacle->m_owner],
@@ -1653,8 +1655,8 @@ void combatManager::markFirewalls(const army* currentArmy, long* enemyAttacks, t
 }
 
 VA(0x00421590, 0xE1)
-void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
-                         type_AI_combat_parameters* estimate)
+void CombatManager::markMoat(const Army* currentArmy, long* enemyAttacks,
+                         AICombatParameters* estimate)
 {
     if (!m_moatOn)
         return;
@@ -1769,7 +1771,7 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 
 // E:\gamedcs\ai.cpp:1896
 VA(0x00421680, 0x8F9)  // linkorder, dc 0x266d4
-unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned char teleport, long* actionValue, type_AI_combat_parameters* estimate)
+unsigned char CombatManager::chooseMeleeTarget(const Army* currentArmy, unsigned char teleport, long* actionValue, AICombatParameters* estimate)
 {
     long enemyAttacks[COMBAT_GRID_CELLS];
 
@@ -1781,7 +1783,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     // fact.  The same change at the sibling declarations (line 1955,
     // AICheckRetreat's caller) LOSES 13.6, so it is per-body.
     const long& side = estimate->m_ourGroup;
-    const army* bestEnemy = 0;
+    const Army* bestEnemy = 0;
     long bestValue = 0;
     long bestTroops = 0;
     long bestTime = 0;
@@ -1813,7 +1815,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     unsigned char stayInCastle = shouldStayInCastle(estimate);
 
     for (long i = 0; i < m_numArmies[estimate->m_enemyGroup]; i++) {
-        const army* enemy = &m_armies[estimate->m_enemyGroup][i];
+        const Army* enemy = &m_armies[estimate->m_enemyGroup][i];
         if (enemy->is(1u << 21))
             continue;
         if (enemy->m_creatureType == CREATURE_ARROW_TOWER)
@@ -1821,7 +1823,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
         if (estimate->m_simulated && enemy->getTotalHitPoints(1) == 0)
             continue;
         if (currentArmy->getSpeed() == 0 || currentArmy->m_spellInfluence[72]) {
-            const pathCell* stand = g_searchArray->getHex(enemy->m_gridIndex);
+            const PathCell* stand = g_searchArray->getHex(enemy->m_gridIndex);
             if (stand->m_cost > 0)
                 continue;
         }
@@ -1841,12 +1843,12 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                 && currentArmy->m_creatureType != CREATURE_FIRST_AID_TENT
                 && currentArmy->m_creatureType != CREATURE_AMMO_CART
                 && !(enemy->is(1u << 19))) {
-            const pathCell* reach = g_searchArray->getHex(enemy->m_gridIndex);
+            const PathCell* reach = g_searchArray->getHex(enemy->m_gridIndex);
             if (reach->m_cost <= currentArmy->getSpeed())
                 change = getAttackChange(currentArmy, enemy, *estimate);
         }
 
-        type_AI_attack_hex_chooser chooser(currentArmy, enemy, enemyAttacks,
+        AIAttackHexChooser chooser(currentArmy, enemy, enemyAttacks,
                                            g_searchArray, estimate);
         if (!chooser.findAttackHex())
             continue;
@@ -1857,7 +1859,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                 && currentArmy->m_creatureType != CREATURE_AMMO_CART) {
             long distance = 0;
             if (chooser.m_bestAttackTime == 1) {
-                const pathCell* attackCell = g_searchArray->getHex(chooser.getBestHex());
+                const PathCell* attackCell = g_searchArray->getHex(chooser.getBestHex());
                 distance = attackCell->m_cost;
             }
             change += estimate->getSimpleAttackEffect(*(currentArmy), *(enemy), 0, distance);
@@ -1907,8 +1909,8 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                             continue;
                         if (bestEnemy->m_topCreatureDamage
                                 == enemy->m_topCreatureDamage) {
-                            const pathCell* held = g_searchArray->getHex(bestHex);
-                            const pathCell* offered
+                            const PathCell* held = g_searchArray->getHex(bestHex);
+                            const PathCell* offered
                                     = g_searchArray->getHex(chooser.getBestHex());
                             if (held->m_cost < offered->m_cost)
                                 continue;
@@ -1953,7 +1955,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
         if (m_fortificationLevel > 0 && m_currentSide == 0) {
             long hex = g_castleWallColumns[currentArmy->m_gridIndex / 17];
             while (hex > currentArmy->m_gridIndex) {
-                const pathCell* cell = g_searchArray->getHex(hex);
+                const PathCell* cell = g_searchArray->getHex(hex);
                 if (cell->m_visited) {
                     if (!isInMoat(hex, 0)) {
                         if (!(currentArmy->m_monInfo.m_attributes & 1))
@@ -2008,9 +2010,9 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
 }
 
 VA(0x00421f80, 0xD5)  // dc 0x26ee0
-long combatManager::chooseMeleeAction(const army* currentArmy, unsigned char teleport, unsigned char simulated, long side)
+long CombatManager::chooseMeleeAction(const Army* currentArmy, unsigned char teleport, unsigned char simulated, long side)
 {
-    type_AI_combat_parameters data(this, side);
+    AICombatParameters data(this, side);
     data.m_simulated = simulated;
     findMoveOrder(0);
     findAITargets(side, currentArmy, 1, &data, 0);
@@ -2028,7 +2030,7 @@ long combatManager::chooseMeleeAction(const army* currentArmy, unsigned char tel
 }
 
 VA(0x00422060, 0x18E)  // dc 0x26fa8
-void combatManager::placeShooter(const army* currentArmy)
+void CombatManager::placeShooter(const Army* currentArmy)
 {
     long bestHex;
     long bestOpenHexes;
@@ -2054,7 +2056,7 @@ void combatManager::placeShooter(const army* currentArmy)
             long adjacent = currentArmy->getAdjacentHex(newHex, dir);
             if (!validHex(adjacent))
                 continue;
-            army* other = m_cells[adjacent].getArmy();
+            Army* other = m_cells[adjacent].getArmy();
             if (other != 0 && other != currentArmy) {
                 if (other->is(1u << 2))
                     value = 1000;
@@ -2118,11 +2120,11 @@ void combatManager::placeShooter(const army* currentArmy)
 // local holding Is(...), `2 | !Is(...)`, dropping the parentheses;
 // `2 + !Is(...)` falls to 97.5510 and `3 - (Is(...) & 1)` to 90.9694.
 VA(0x004221f0, 0xD0)  // anchor-callee, dc 0x27138
-void combatManager::doCompAI(int whichGroup)
+void CombatManager::doCompAI(int whichGroup)
 {
     m_lastMovedArmy = 0;
     turnOffHighlighter(1);
-    army* currentArmy = getCurrentArmy();
+    Army* currentArmy = getCurrentArmy();
     currentArmy->m_side = -1;
     currentArmy->m_slot = -1;
     long action;
@@ -2159,7 +2161,7 @@ void combatManager::doCompAI(int whichGroup)
 // in which case the order is dropped and move_toward walks instead.
 
 VA(0x004222c0, 0x175)  // dc 0x27200
-void combatManager::berserkAttack(army* currentArmy, const army* target)
+void CombatManager::berserkAttack(Army* currentArmy, const Army* target)
 {
     currentArmy->m_side = target->m_combatSide;
     currentArmy->m_slot = target->m_bitIndex;
@@ -2184,7 +2186,7 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
         return;
     }
     long step = g_searchArray->getStepCell(1)->m_point.m_x;
-    const pathCell* cell = g_searchArray->getHex(target->m_gridIndex);
+    const PathCell* cell = g_searchArray->getHex(target->m_gridIndex);
     if (cell->m_cost > currentArmy->getSpeed()) {
         currentArmy->m_side = -1;
         currentArmy->m_slot = -1;
@@ -2203,7 +2205,7 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
 // helper returning references to its own by-value arguments; the
 // includes.h min wrapper owns the copies and returns the selected value.
 VA(0x00422440, 0x99)  // dc 0x27318
-long combatManager::computeFireShieldDamage(long damage, const army* attacker, const army* target, long targetHits) const
+long CombatManager::computeFireShieldDamage(long damage, const Army* attacker, const Army* target, long targetHits) const
 {
     if (!target->m_spellInfluence[29] && target->m_creatureType != CREATURE_EFREET_SULTAN)
         return 0;
@@ -2213,8 +2215,8 @@ long combatManager::computeFireShieldDamage(long damage, const army* attacker, c
         return 0;
     damage = static_cast<long>(target->getFireShieldStrength()
                                * min(targetHits, damage));
-    hero* targetHero = attacker->getController();
-    hero* castingHero = target->getController();
+    Hero* targetHero = attacker->getController();
+    Hero* castingHero = target->getController();
     return modifySpellDamage(damage, SPELL_FIRE_SHIELD, castingHero,
                              targetHero, attacker, 0);
 }
@@ -2224,7 +2226,7 @@ long combatManager::computeFireShieldDamage(long damage, const army* attacker, c
 // first, then breath_attack, before computing fire-shield retaliation.
 // Keeping that meaningful ranged guard is byte-flat for these melee calls,
 // which all pass zero, but preserves the helper's recovered semantics.
-static void simulateSimpleAttack(army* currentArmy, army* target,
+static void simulateSimpleAttack(Army* currentArmy, Army* target,
                                    long distance, unsigned char ranged,
                                    unsigned char breathAttack)
 {
@@ -2244,8 +2246,8 @@ static void simulateSimpleAttack(army* currentArmy, army* target,
 }
 
 VA(0x004224e0, 0x2B4)  // dc 0x2746c
-void combatManager::simulateMeleeAttack(army* currentArmy, long hex,
-                                          army* target, long enemyHex,
+void CombatManager::simulateMeleeAttack(Army* currentArmy, long hex,
+                                          Army* target, long enemyHex,
                                           long ourGroup)
 {
     if (currentArmy->is(1u << 19)) {
@@ -2259,7 +2261,7 @@ void combatManager::simulateMeleeAttack(army* currentArmy, long hex,
             long adjacent = currentArmy->getAdjacentHex(hex, direction);
             if (!validHex(adjacent))
                 continue;
-            army* victim = m_cells[adjacent].getArmy();
+            Army* victim = m_cells[adjacent].getArmy();
             if (!victim)
                 continue;
             long bit = 1 << victim->m_bitIndex;
@@ -2283,7 +2285,7 @@ void combatManager::simulateMeleeAttack(army* currentArmy, long hex,
         behindHex = currentArmy->getAdjacentCellIndex(behindHex, direction);
         if (!validHex(behindHex))
             return;
-        army* behind = m_cells[behindHex].getArmy();
+        Army* behind = m_cells[behindHex].getArmy();
         if (!behind || behind == target)
             return;
         simulateSimpleAttack(currentArmy, behind, 0, 0, 1);
@@ -2291,7 +2293,7 @@ void combatManager::simulateMeleeAttack(army* currentArmy, long hex,
 }
 
 VA(0x004227a0, 0xDB)  // dc 0x275e8
-void combatManager::simulateMeleeAttack(army* currentArmy, army* target,
+void CombatManager::simulateMeleeAttack(Army* currentArmy, Army* target,
                                           long ourGroup)
 {
     long hex = m_nextActionExtra;
@@ -2318,13 +2320,13 @@ void combatManager::simulateMeleeAttack(army* currentArmy, army* target,
 }
 
 VA(0x00422880, 0x1B5)  // dc 0x27698
-long combatManager::simulateActions(std::vector<army*>& list, long i,
+long CombatManager::simulateActions(std::vector<Army*>& list, long i,
                                      long ourGroup)
 {
-    type_AI_combat_parameters data(this, ourGroup);
+    AICombatParameters data(this, ourGroup);
 
     for (; i < list.size(); i++) {
-        army* currentArmy = list[i];
+        Army* currentArmy = list[i];
         if (currentArmy->isIncapacitated()
             || (static_cast<unsigned char>(
                     static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 21)
@@ -2352,7 +2354,7 @@ long combatManager::simulateActions(std::vector<army*>& list, long i,
         long hex = m_nextActionGridIndex;
         if (hex < 0 || hex >= COMBAT_GRID_CELLS)
             continue;
-        army* target = m_cells[hex].getArmy();
+        Army* target = m_cells[hex].getArmy();
         if (!target)
             continue;
         if (shooting) {
@@ -2370,9 +2372,9 @@ long combatManager::simulateActions(std::vector<army*>& list, long i,
 }
 
 VA(0x00422a40, 0xD8)  // dc 0x277f4
-void combatManager::simulateCombat(long ourGroup, unsigned char checkingSurrender)
+void CombatManager::simulateCombat(long ourGroup, unsigned char checkingSurrender)
 {
-    std::vector<army*> order;
+    std::vector<Army*> order;
     long saved3c = m_nextAction;
     long saved40 = m_nextActionExtra;
     long saved44 = m_nextActionGridIndex;
@@ -2393,17 +2395,17 @@ void combatManager::simulateCombat(long ourGroup, unsigned char checkingSurrende
 
 // E:\gamedcs\ai.cpp:2608
 VA(0x00422b20, 0x278)  // anchor-caller(choose_shooter_action/choose_melee_action) + anchor-callee(SeedCombatPosition), dc 0x27888
-void combatManager::findAITargets(long ourGroup, const army* currentArmy,
+void CombatManager::findAITargets(long ourGroup, const Army* currentArmy,
                                     unsigned char meleeOnly,
-                                    const type_AI_combat_parameters* data,
-                                    searchArray* currentSearchArray)
+                                    const AICombatParameters* data,
+                                    SearchArray* currentSearchArray)
 {
     long enemyGroup = 1 - ourGroup;
     if (currentSearchArray == 0)
         currentSearchArray = g_searchArray;
 
     for (long i = 0; i < m_numArmies[ourGroup]; i++) {
-        army* ours = &m_armies[ourGroup][i];
+        Army* ours = &m_armies[ourGroup][i];
         m_armies[ourGroup][i].m_aiTarget = 0;
         m_armies[ourGroup][i].m_aiTargetValue = 0;
         m_armies[ourGroup][i].m_aiPossibleTargets = 0;
@@ -2443,7 +2445,7 @@ void combatManager::findAITargets(long ourGroup, const army* currentArmy,
         }
 
         for (long j = 0; j < m_numArmies[enemyGroup]; j++) {
-            army* theirs = &m_armies[enemyGroup][j];
+            Army* theirs = &m_armies[enemyGroup][j];
             if (theirs->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
             if (meleeOnly && theirs->m_expectedMoveOrder >= ours->m_expectedMoveOrder)
@@ -2472,7 +2474,7 @@ void combatManager::findAITargets(long ourGroup, const army* currentArmy,
 }
 
 VA(0x00422da0, 0x1AD)  // dc 0x27b18
-unsigned char combatManager::doSpellAI()
+unsigned char CombatManager::doSpellAI()
 {
     m_nextAction = 0;
     if (m_spellsCast[m_currentSide])
@@ -2488,7 +2490,7 @@ unsigned char combatManager::doSpellAI()
         && g_game->isHuman(m_playerIds[m_currentSide])
         && !((m_autoCombatOn || g_unk691209)
              && g_unnamed698758.m_combatAutoSpells)
-        && !static_cast<const combatManager*>(this)->isQuickCombat())
+        && !static_cast<const CombatManager*>(this)->isQuickCombat())
         return 0;
     long side = m_currentSide;
     if (m_onAntiMagicGarrison)
@@ -2502,7 +2504,7 @@ unsigned char combatManager::doSpellAI()
     if (m_heroes[1] && m_heroes[1]->isWieldingArtifact(0x7e))
         return 0;
 
-    type_AI_spellcaster caster(this, m_currentSide, 0);
+    AISpellcaster caster(this, m_currentSide, 0);
     if (caster.castSpell(aiCheckRetreat()))
         return 1;
     m_nextAction = 0;
@@ -2513,98 +2515,98 @@ unsigned char combatManager::doSpellAI()
 
 // E:\gamedcs\ai_spellvalue.h:124
 DC_ONLY(0x27c74, 0x4)
-void type_spellvalue::setStackValue(long arg)
+void Spellvalue::setStackValue(long arg)
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:718
 DC_ONLY(0x27c78, 0x24)
-bool army::canCastResurrect() const
+bool Army::canCastResurrect() const
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:736
 DC_ONLY(0x27c9c, 0x30)
-int army::offsetToFront(int direction)
+int Army::offsetToFront(int direction)
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:752
 DC_ONLY(0x27ccc, 0x16)
-void army::clearAIValues()
+void Army::clearAIValues()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:765
 DC_ONLY(0x27ce4, 0xE)
-bool army::is(unsigned attribute)
+bool Army::is(unsigned attribute)
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:770
 DC_ONLY(0x27cf4, 0x8)
-long army::getAIExpectedDamage()
+long Army::getAIExpectedDamage()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:775
 DC_ONLY(0x27cfc, 0x8)
-const army* army::getAITarget()
+const Army* Army::getAITarget()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:780
 DC_ONLY(0x27d04, 0x8)
-long army::getAITargetValue()
+long Army::getAITargetValue()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:785
 DC_ONLY(0x27d0c, 0x28)
-long army::getAITargetTime()
+long Army::getAITargetTime()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:790
 DC_ONLY(0x27d34, 0x8)
-long army::getAIPossibleTargets()
+long Army::getAIPossibleTargets()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:795
 DC_ONLY(0x27d3c, 0x8)
-int army::getOwningSide()
+int Army::getOwningSide()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:800
 DC_ONLY(0x27d44, 0x30)
-int army::getControllingSide()
+int Army::getControllingSide()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:820
 DC_ONLY(0x27d74, 0x12)
-long army::getSpellTime(SpellID spell)
+long Army::getSpellTime(SpellID spell)
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:830
 DC_ONLY(0x27d88, 0x14)
-bool army::isActive()
+bool Army::isActive()
 {
     // @stub
 }
@@ -2613,182 +2615,184 @@ bool army::isActive()
 
 // E:\gamedcs\Army.h:847
 DC_ONLY(0x27dd8, 0x44)
-bool army::canRetaliate(const army* attacker)
+bool Army::canRetaliate(const Army* attacker)
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:855
 DC_ONLY(0x27e1c, 0x54)
-bool army::cannotAttack()
+bool Army::cannotAttack()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:864
 DC_ONLY(0x27e70, 0x1C)
-long army::getAdjacentHex(long direction)
+long Army::getAdjacentHex(long direction)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.h:965
 DC_ONLY(0x27e8c, 0x10)
-const type_artifact* hero::getArtifact(TArtifactSlot slot)
+const ArtifactRecord* Hero::getArtifact(ArtifactSlot slot)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.h:970
 DC_ONLY(0x27e9c, 0x10)
-const type_artifact* hero::getBackpack(long slot)
+const ArtifactRecord* Hero::getBackpack(long slot)
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1150
 DC_ONLY(0x27eac, 0x1C)
-int combatManager::TWallTarget::getBlockedHex()
+int CombatManager::WallTarget::getBlockedHex()
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1460
 DC_ONLY(0x27ec8, 0x12)
-unsigned char combatManager::validHex(int iHex)
+unsigned char CombatManager::validHex(int iHex)
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1473
 DC_ONLY(0x27edc, 0x20)
-long combatManager::getWallStrength(TWallTargetId target)
+long CombatManager::getWallStrength(WallTargetId target)
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1478
 DC_ONLY(0x27efc, 0x2C)
-army* combatManager::getCurrentArmy()
+Army* CombatManager::getCurrentArmy()
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1494
 DC_ONLY(0x27f28, 0xC)
-unsigned char combatManager::is_in_second_phase()
+// Before normalization (function): combatManager::is_in_second_phase.
+unsigned char CombatManager::isInSecondPhase()
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1513
 DC_ONLY(0x27f34, 0x18)
-int combatManager::gridY(int index)
+int CombatManager::gridY(int index)
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1519
 DC_ONLY(0x27f4c, 0x18)
-int combatManager::gridX(int index)
+int CombatManager::gridX(int index)
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1525
 DC_ONLY(0x27f64, 0x3C)
-unsigned char combatManager::inInvisibleColumn(int index)
+unsigned char CombatManager::inInvisibleColumn(int index)
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1542
 DC_ONLY(0x27fa0, 0x34)
-combatManager::TObstacle* combatManager::getObstacle(int index)
+CombatManager::Obstacle* CombatManager::getObstacle(int index)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.h:82
 DC_ONLY(0x27fd4, 0x4)
-long type_AI_combat_parameters::get_enemy_group()
+// Before normalization (function): type_AI_combat_parameters::get_enemy_group.
+long AICombatParameters::getEnemyGroup()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.h:87
 DC_ONLY(0x27fd8, 0x4)
-long type_AI_combat_parameters::getGroup()
+long AICombatParameters::getGroup()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.h:471
 DC_ONLY(0x27fdc, 0x4)
-long type_AI_attack_hex_chooser::getAttackTime()
+long AIAttackHexChooser::getAttackTime()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.h:476
 DC_ONLY(0x27fe0, 0x4)
-long type_AI_attack_hex_chooser::get_best_hex()
+long AIAttackHexChooser::get_best_hex()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.h:481
 DC_ONLY(0x27fe4, 0x4)
-long type_AI_attack_hex_chooser::get_hex_value()
+long AIAttackHexChooser::get_hex_value()
 {
     // @stub
 }
 
 // E:\gamedcs\FindPath.h:194
 DC_ONLY(0x27fe8, 0x16)
-pathCell* searchArray::getHex(long x)
+PathCell* SearchArray::getHex(long x)
 {
     // @stub
 }
 
 // E:\gamedcs\FindPath.h:226
 DC_ONLY(0x28000, 0x18)
-const pathCell* searchArray::getStepCell(long i)
+const PathCell* SearchArray::getStepCell(long i)
 {
     // @stub
 }
 
 // E:\gamedcs\FindPath.h:242
 DC_ONLY(0x28018, 0xA)
-unsigned char searchArray::isMoat(short index)
+unsigned char SearchArray::isMoat(short index)
 {
     // @stub
 }
 
 // E:\gamedcs\ai.cpp:597
 DC_ONLY(0x28024, 0x2A)
-unsigned char func_moves_before::operator()(const army* first, const army* second)
+unsigned char FuncMovesBefore::operator()(const Army* first, const Army* second)
 {
     // @stub
 }
 
 // E:\gamedcs\ai.cpp:1626
 DC_ONLY(0x28050, 0x18)
-void type_spellvalue::~type_spellvalue()
+void Spellvalue::~Spellvalue()
 {
     // @stub
 }
 
 // E:\gamedcs\ai.cpp:1786
 DC_ONLY(0x28068, 0x54)
-void army::~army()
+void Army::~Army()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0x280bc, 0x28)
-void std::vector<type_creature_value,std::allocator<type_creature_value> >::~vector<type_creature_value,std::allocator<type_creature_value> >()
+void std::vector<CreatureValue,std::allocator<CreatureValue> >::~vector<CreatureValue,std::allocator<CreatureValue> >()
 {
     // @stub
 }
@@ -2809,70 +2813,70 @@ void std::allocator<enum SpellID>::~allocator<enum SpellID>()
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x2813c, 0x4)
-army** std::vector<army *,std::allocator<army *> >::begin()
+Army** std::vector<Army *,std::allocator<Army *> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:181
 DC_ONLY(0x28140, 0x4)
-army** std::vector<army *,std::allocator<army *> >::end()
+Army** std::vector<Army *,std::allocator<Army *> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x28144, 0xC)
-unsigned std::vector<army *,std::allocator<army *> >::size()
+unsigned std::vector<Army *,std::allocator<Army *> >::size()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x28150, 0x20)
-army** std::vector<army *,std::allocator<army *> >::operator[](unsigned __n)
+Army** std::vector<Army *,std::allocator<Army *> >::operator[](unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x28170, 0x1C)
-void std::vector<army *,std::allocator<army *> >::vector<army *,std::allocator<army *> >(const std::allocator<army* __a)
+void std::vector<Army *,std::allocator<Army *> >::vector<Army *,std::allocator<Army *> >(const std::allocator<Army* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0x2818c, 0x28)
-void std::vector<army *,std::allocator<army *> >::~vector<army *,std::allocator<army *> >()
+void std::vector<Army *,std::allocator<Army *> >::~vector<Army *,std::allocator<Army *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:368
 DC_ONLY(0x281b4, 0x3C)
-void std::vector<army *,std::allocator<army *> >::push_back(army** __x)
+void std::vector<Army *,std::allocator<Army *> >::push_back(Army** __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x281f0, 0x4)
-void std::allocator<army *>::allocator<army *>()
+void std::allocator<Army *>::allocator<Army *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x281f4, 0x4)
-void std::allocator<army *>::~allocator<army *>()
+void std::allocator<Army *>::~allocator<Army *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x281f8, 0x24)
-combatManager::TObstacle* std::vector<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::operator[](unsigned __n)
+CombatManager::Obstacle* std::vector<CombatManager::Obstacle,std::allocator<CombatManager::Obstacle> >::operator[](unsigned __n)
 {
     // @stub
 }
@@ -2935,7 +2939,7 @@ void std::allocator<long>::~allocator<long>()
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0x28308, 0x40)
-void std::_Vector_base<type_creature_value,std::allocator<type_creature_value> >::~_Vector_base<type_creature_value,std::allocator<type_creature_value> >()
+void std::_Vector_base<CreatureValue,std::allocator<CreatureValue> >::~_Vector_base<CreatureValue,std::allocator<CreatureValue> >()
 {
     // @stub
 }
@@ -2949,21 +2953,21 @@ void std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x2835c, 0x2C)
-void std::_Vector_base<army *,std::allocator<army *> >::_Vector_base<army *,std::allocator<army *> >(const std::allocator<army* __a)
+void std::_Vector_base<Army *,std::allocator<Army *> >::_Vector_base<Army *,std::allocator<Army *> >(const std::allocator<Army* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0x28388, 0x30)
-void std::_Vector_base<army *,std::allocator<army *> >::~_Vector_base<army *,std::allocator<army *> >()
+void std::_Vector_base<Army *,std::allocator<Army *> >::~_Vector_base<Army *,std::allocator<Army *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x283b8, 0x4)
-combatManager::TObstacle* std::vector<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::begin()
+CombatManager::Obstacle* std::vector<CombatManager::Obstacle,std::allocator<CombatManager::Obstacle> >::begin()
 {
     // @stub
 }
@@ -3005,14 +3009,14 @@ void std::_Vector_base<long,std::allocator<long> >::~_Vector_base<long,std::allo
 
 // ..\stlport\stl_string.h:180
 DC_ONLY(0x2845c, 0x18)
-void std::_STL_alloc_proxy<type_creature_value *,type_creature_value,std::allocator<type_creature_value> >::~_STL_alloc_proxy<type_creature_value *,type_creature_value,std::allocator<type_creature_value> >()
+void std::_STL_alloc_proxy<CreatureValue *,CreatureValue,std::allocator<CreatureValue> >::~_STL_alloc_proxy<CreatureValue *,CreatureValue,std::allocator<CreatureValue> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_string.h:180
 DC_ONLY(0x28474, 0x18)
-void std::_STL_alloc_proxy<army * *,army *,std::allocator<army *> >::~_STL_alloc_proxy<army * *,army *,std::allocator<army *> >()
+void std::_STL_alloc_proxy<Army * *,Army *,std::allocator<Army *> >::~_STL_alloc_proxy<Army * *,Army *,std::allocator<Army *> >()
 {
     // @stub
 }
@@ -3026,28 +3030,28 @@ void std::_STL_alloc_proxy<long *,long,std::allocator<long> >::~_STL_alloc_proxy
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x284a4, 0x2C)
-void std::_STL_alloc_proxy<type_creature_value *,type_creature_value,std::allocator<type_creature_value> >::deallocate(type_creature_value* __p, unsigned __n)
+void std::_STL_alloc_proxy<CreatureValue *,CreatureValue,std::allocator<CreatureValue> >::deallocate(CreatureValue* __p, unsigned __n)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x284d0, 0x4)
-void std::allocator<type_creature_value>::~allocator<type_creature_value>()
+void std::allocator<CreatureValue>::~allocator<CreatureValue>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x284d4, 0xC)
-void std::_STL_alloc_proxy<army * *,army *,std::allocator<army *> >::_STL_alloc_proxy<army * *,army *,std::allocator<army *> >(const std::allocator<army* __a, army*** __p)
+void std::_STL_alloc_proxy<Army * *,Army *,std::allocator<Army *> >::_STL_alloc_proxy<Army * *,Army *,std::allocator<Army *> >(const std::allocator<Army* __a, Army*** __p)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1025
 DC_ONLY(0x284e0, 0x2C)
-void std::_STL_alloc_proxy<army * *,army *,std::allocator<army *> >::deallocate(army** __p, unsigned __n)
+void std::_STL_alloc_proxy<Army * *,Army *,std::allocator<Army *> >::deallocate(Army** __p, unsigned __n)
 {
     // @stub
 }
@@ -3068,7 +3072,7 @@ void std::_STL_alloc_proxy<long *,long,std::allocator<long> >::deallocate(long* 
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x28544, 0x20)
-void std::allocator<type_creature_value>::deallocate(type_creature_value* __p, unsigned __n)
+void std::allocator<CreatureValue>::deallocate(CreatureValue* __p, unsigned __n)
 {
     // @stub
 }
@@ -3082,7 +3086,7 @@ void std::allocator<enum SpellID>::deallocate(SpellID* __p, unsigned __n)
 
 // ..\stlport\stl_alloc.h:552
 DC_ONLY(0x28580, 0x1C)
-void std::allocator<army *>::deallocate(army** __p, unsigned __n)
+void std::allocator<Army *>::deallocate(Army** __p, unsigned __n)
 {
     // @stub
 }
@@ -3103,7 +3107,7 @@ void std::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>::~_Deque_base
 
 // ..\stlport\stl_vector.c:248
 DC_ONLY(0x28608, 0xCC)
-void std::vector<army *,std::allocator<army *> >::_M_insert_overflow(army** __position, army** __x, unsigned __fill_len)
+void std::vector<Army *,std::allocator<Army *> >::_M_insert_overflow(Army** __position, Army** __x, unsigned __fill_len)
 {
     // @stub
 }
@@ -3117,21 +3121,21 @@ void std::vector<long,std::allocator<long> >::_M_insert_overflow(long* __positio
 
 // ..\stlport\stl_algo.h:636
 DC_ONLY(0x287a0, 0x64)
-void std::sort(army** __first, army** __last, func_moves_before __comp)
+void std::sort(Army** __first, Army** __last, FuncMovesBefore __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:79
 DC_ONLY(0x28804, 0xA)
-void std::swap(army** __a, army** __b)
+void std::swap(Army** __a, Army** __b)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x28810, 0x30)
-void std::destroy(type_creature_value* __first, type_creature_value* __last)
+void std::destroy(CreatureValue* __first, CreatureValue* __last)
 {
     // @stub
 }
@@ -3145,14 +3149,14 @@ void std::destroy(std::_Deque_iterator<enum __first, std::_Deque_iterator<enum _
 
 // ..\stlport\stl_construct.h:128
 DC_ONLY(0x288a0, 0x30)
-void std::destroy(army** __first, army** __last)
+void std::destroy(Army** __first, Army** __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:85
 DC_ONLY(0x288d0, 0x28)
-void std::construct(army** __p, army** __value)
+void std::construct(Army** __p, Army** __value)
 {
     // @stub
 }
@@ -3180,14 +3184,14 @@ long* std::copy(long* __first, long* __last, long* __result)
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x289a0, 0x4)
-std::allocator<type_creature_value>* std::__stl_alloc_rebind(std::allocator<type_creature_value>* __a, const type_creature_value* __formal)
+std::allocator<CreatureValue>* std::__stl_alloc_rebind(std::allocator<CreatureValue>* __a, const CreatureValue* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:968
 DC_ONLY(0x289a4, 0x4)
-std::allocator<army* std::__stl_alloc_rebind(std::allocator<army* __a, army** __formal)
+std::allocator<Army* std::__stl_alloc_rebind(std::allocator<Army* __a, Army** __formal)
 {
     // @stub
 }
@@ -3229,7 +3233,7 @@ void std::_STL_alloc_proxy<enum SpellID * *,enum SpellID *,std::allocator<enum S
 
 // ..\stlport\stl_alloc.h:1022
 DC_ONLY(0x28a0c, 0x28)
-army** std::_STL_alloc_proxy<army * *,army *,std::allocator<army *> >::allocate(unsigned __n)
+Army** std::_STL_alloc_proxy<Army * *,Army *,std::allocator<Army *> >::allocate(unsigned __n)
 {
     // @stub
 }
@@ -3243,7 +3247,7 @@ long* std::_STL_alloc_proxy<long *,long,std::allocator<long> >::allocate(unsigne
 
 // ..\stlport\stl_alloc.h:547
 DC_ONLY(0x28a5c, 0x24)
-army** std::allocator<army *>::allocate(unsigned __n, const void* __formal)
+Army** std::allocator<Army *>::allocate(unsigned __n, const void* __formal)
 {
     // @stub
 }
@@ -3271,14 +3275,14 @@ void std::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>::_M_destroy_n
 
 // ..\stlport\stl_uninitialized.h:97
 DC_ONLY(0x28afc, 0x38)
-army** std::uninitialized_copy(army** __first, army** __last, army** __result)
+Army** std::uninitialized_copy(Army** __first, Army** __last, Army** __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:263
 DC_ONLY(0x28b34, 0x38)
-army** std::uninitialized_fill_n(army** __first, unsigned __n, army** __x)
+Army** std::uninitialized_fill_n(Army** __first, unsigned __n, Army** __x)
 {
     // @stub
 }
@@ -3299,7 +3303,7 @@ long* std::uninitialized_fill_n(long* __first, unsigned __n, const long* __x)
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x28bdc, 0x4)
-army** std::value_type(army** __formal)
+Army** std::value_type(Army** __formal)
 {
     // @stub
 }
@@ -3313,28 +3317,28 @@ int std::__lg(int __n)
 
 // ..\stlport\stl_algo.c:1102
 DC_ONLY(0x28bf8, 0x9C)
-void std::__introsort_loop(army** __first, army** __last, army** __formal, int __depth_limit, func_moves_before __comp)
+void std::__introsort_loop(Army** __first, Army** __last, Army** __formal, int __depth_limit, FuncMovesBefore __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1068
 DC_ONLY(0x28c94, 0x54)
-void std::__final_insertion_sort(army** __first, army** __last, func_moves_before __comp)
+void std::__final_insertion_sort(Army** __first, Army** __last, FuncMovesBefore __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:262
 DC_ONLY(0x28ce8, 0x4)
-type_creature_value* std::value_type(const type_creature_value* __formal)
+CreatureValue* std::value_type(const CreatureValue* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x28cec, 0x1C)
-void std::__destroy(type_creature_value* __first, type_creature_value* __last, type_creature_value* __formal)
+void std::__destroy(CreatureValue* __first, CreatureValue* __last, CreatureValue* __formal)
 {
     // @stub
 }
@@ -3355,7 +3359,7 @@ void std::__destroy(std::_Deque_iterator<enum __first, std::_Deque_iterator<enum
 
 // ..\stlport\stl_construct.h:121
 DC_ONLY(0x28d60, 0x1C)
-void std::__destroy(army** __first, army** __last, army** __formal)
+void std::__destroy(Army** __first, Army** __last, Army** __formal)
 {
     // @stub
 }
@@ -3411,14 +3415,14 @@ void std::_STL_alloc_proxy<unsigned int,enum SpellID,std::allocator<enum SpellID
 
 // ..\stlport\stl_uninitialized.h:88
 DC_ONLY(0x28dfc, 0x1C)
-army** std::__uninitialized_copy(army** __first, army** __last, army** __result, army** __formal)
+Army** std::__uninitialized_copy(Army** __first, Army** __last, Army** __result, Army** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:255
 DC_ONLY(0x28e18, 0x1C)
-army** std::__uninitialized_fill_n(army** __first, unsigned __n, army** __x, army** __formal)
+Army** std::__uninitialized_fill_n(Army** __first, unsigned __n, Army** __x, Army** __formal)
 {
     // @stub
 }
@@ -3439,42 +3443,42 @@ long* std::__uninitialized_fill_n(long* __first, unsigned __n, const long* __x, 
 
 // ..\stlport\stl_algo.h:677
 DC_ONLY(0x28e6c, 0x40)
-void std::partial_sort(army** __first, army** __middle, army** __last, func_moves_before __comp)
+void std::partial_sort(Army** __first, Army** __middle, Army** __last, FuncMovesBefore __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:65
 DC_ONLY(0x28eac, 0x94)
-army** std::__median(army** __a, army** __b, army** __c, func_moves_before __comp)
+Army** std::__median(Army** __a, Army** __b, Army** __c, FuncMovesBefore __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:941
 DC_ONLY(0x28f40, 0x70)
-army** std::__unguarded_partition(army** __first, army** __last, army* __pivot, func_moves_before __comp)
+Army** std::__unguarded_partition(Army** __first, Army** __last, Army* __pivot, FuncMovesBefore __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1020
 DC_ONLY(0x28fb0, 0x40)
-void std::__insertion_sort(army** __first, army** __last, func_moves_before __comp)
+void std::__insertion_sort(Army** __first, Army** __last, FuncMovesBefore __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1050
 DC_ONLY(0x28ff0, 0x34)
-void std::__unguarded_insertion_sort(army** __first, army** __last, func_moves_before __comp)
+void std::__unguarded_insertion_sort(Army** __first, Army** __last, FuncMovesBefore __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x29024, 0x30)
-void std::__destroy_aux(type_creature_value* __first, type_creature_value* __last, __false_type __formal)
+void std::__destroy_aux(CreatureValue* __first, CreatureValue* __last, __false_type __formal)
 {
     // @stub
 }
@@ -3488,7 +3492,7 @@ void std::__destroy_aux(std::_Deque_iterator<enum __first, std::_Deque_iterator<
 
 // ..\stlport\stl_construct.h:110
 DC_ONLY(0x290a8, 0x30)
-void std::__destroy_aux(army** __first, army** __last, __false_type __formal)
+void std::__destroy_aux(Army** __first, Army** __last, __false_type __formal)
 {
     // @stub
 }
@@ -3530,14 +3534,14 @@ void std::_Deque_iterator_base<enum SpellID,std::_Buf_size_traits<enum SpellID,0
 
 // ..\stlport\stl_uninitialized.h:70
 DC_ONLY(0x2913c, 0x3C)
-army** std::__uninitialized_copy_aux(army** __first, army** __last, army** __result, __false_type __formal)
+Army** std::__uninitialized_copy_aux(Army** __first, Army** __last, Army** __result, __false_type __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_uninitialized.h:239
 DC_ONLY(0x29178, 0x3C)
-army** std::__uninitialized_fill_n_aux(army** __first, unsigned __n, army** __x, __false_type __formal)
+Army** std::__uninitialized_fill_n_aux(Army** __first, unsigned __n, Army** __x, __false_type __formal)
 {
     // @stub
 }
@@ -3558,35 +3562,35 @@ long* std::__uninitialized_fill_n_aux(long* __first, unsigned __n, const long* _
 
 // ..\stlport\stl_algo.c:1443
 DC_ONLY(0x291e4, 0x84)
-void std::__partial_sort(army** __first, army** __middle, army** __last, army** __formal, func_moves_before __comp)
+void std::__partial_sort(Army** __first, Army** __middle, Army** __last, Army** __formal, FuncMovesBefore __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:107
 DC_ONLY(0x29268, 0x30)
-void std::iter_swap(army** __a, army** __b)
+void std::iter_swap(Army** __a, Army** __b)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1000
 DC_ONLY(0x29298, 0x54)
-void std::__linear_insert(army** __first, army** __last, army* __val, func_moves_before __comp)
+void std::__linear_insert(Army** __first, Army** __last, Army* __val, FuncMovesBefore __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:1042
 DC_ONLY(0x292ec, 0x34)
-void std::__unguarded_insertion_sort_aux(army** __first, army** __last, army** __formal, func_moves_before __comp)
+void std::__unguarded_insertion_sort_aux(Army** __first, Army** __last, Army** __formal, FuncMovesBefore __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x29320, 0x1C)
-void std::destroy(type_creature_value* __pointer)
+void std::destroy(CreatureValue* __pointer)
 {
     // @stub
 }
@@ -3607,7 +3611,7 @@ void std::destroy(SpellID* __pointer)
 
 // ..\stlport\stl_construct.h:59
 DC_ONLY(0x29364, 0x1C)
-void std::destroy(army** __pointer)
+void std::destroy(Army** __pointer)
 {
     // @stub
 }
@@ -3621,49 +3625,49 @@ long* std::fill_n(long* __first, unsigned __n, const long* __value)
 
 // ..\stlport\stl_heap.c:235
 DC_ONLY(0x29398, 0x4C)
-void std::make_heap(army** __first, army** __last, func_moves_before __comp)
+void std::make_heap(Army** __first, Army** __last, FuncMovesBefore __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0x293e4, 0x4)
-int* std::distance_type(army** __formal)
+int* std::distance_type(Army** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.h:85
 DC_ONLY(0x293e8, 0x34)
-void std::__pop_heap(army** __first, army** __last, army** __result, army* __value, func_moves_before __comp, int* __formal)
+void std::__pop_heap(Army** __first, Army** __last, Army** __result, Army* __value, FuncMovesBefore __comp, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.h:118
 DC_ONLY(0x2941c, 0x3C)
-void std::sort_heap(army** __first, army** __last, func_moves_before __comp)
+void std::sort_heap(Army** __first, Army** __last, FuncMovesBefore __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:96
 DC_ONLY(0x29458, 0x18)
-void std::__iter_swap(army** __a, army** __b, army** __formal)
+void std::__iter_swap(Army** __a, Army** __b, Army** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:442
 DC_ONLY(0x29470, 0x50)
-army** std::copy_backward(army** __first, army** __last, army** __result)
+Army** std::copy_backward(Army** __first, Army** __last, Army** __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_algo.c:974
 DC_ONLY(0x294c0, 0x40)
-void std::__unguarded_linear_insert(army** __last, army* __val, func_moves_before __comp)
+void std::__unguarded_linear_insert(Army** __last, Army* __val, FuncMovesBefore __comp)
 {
     // @stub
 }
@@ -3691,49 +3695,49 @@ void std::__destroy_aux()
 
 // ..\stlport\stl_heap.c:218
 DC_ONLY(0x2950c, 0x5C)
-void std::__make_heap(army** __first, army** __last, func_moves_before __comp, army** __formal, int* __formal)
+void std::__make_heap(Army** __first, Army** __last, FuncMovesBefore __comp, Army** __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:151
 DC_ONLY(0x29568, 0x9C)
-void std::__adjust_heap(army** __first, int __holeIndex, int __len, army* __value, func_moves_before __comp)
+void std::__adjust_heap(Army** __first, int __holeIndex, int __len, Army* __value, FuncMovesBefore __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:183
 DC_ONLY(0x29604, 0x34)
-void std::pop_heap(army** __first, army** __last, func_moves_before __comp)
+void std::pop_heap(Army** __first, Army** __last, FuncMovesBefore __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0x29638, 0xC)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, army** __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, Army** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:382
 DC_ONLY(0x29644, 0x22)
-army** std::__copy_backward(army** __first, army** __last, army** __result, std::random_access_iterator_tag __formal, int* __formal)
+Army** std::__copy_backward(Army** __first, Army** __last, Army** __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:78
 DC_ONLY(0x29668, 0x70)
-void std::__push_heap(army** __first, int __holeIndex, int __topIndex, army* __value, func_moves_before __comp)
+void std::__push_heap(Army** __first, int __holeIndex, int __topIndex, Army* __value, FuncMovesBefore __comp)
 {
     // @stub
 }
 
 // ..\stlport\stl_heap.c:173
 DC_ONLY(0x296d8, 0x40)
-void std::__pop_heap_aux(army** __first, army** __last, army** __formal, func_moves_before __comp)
+void std::__pop_heap_aux(Army** __first, Army** __last, Army** __formal, FuncMovesBefore __comp)
 {
     // @stub
 }
@@ -3742,9 +3746,9 @@ void std::__pop_heap_aux(army** __first, army** __last, army** __formal, func_mo
 
 // COMDAT pairing: vector<army*>::size - ai.obj's own copy, 19 B against
 // the 19-byte emitted COMDAT and the only candidate of that size here.
-VA_COMPGEN(0x00423110, 0x13, VECTOR_SIZE, army)
+VA_COMPGEN(0x00423110, 0x13, VECTOR_SIZE, Army)
 
-VA_COMPGEN(0x00423130, 0x209, VECTOR_INSERT, army)
+VA_COMPGEN(0x00423130, 0x209, VECTOR_INSERT, Army)
 
 // COMDAT pairing: std::_Sort<army*, func_moves_before>, agreement 0.973.
 VA_COMPGEN(0x00423630, 0x186, STD_SORT, army_ptr_func_moves_before)
@@ -3760,7 +3764,7 @@ VA_COMPGEN(0x004237c0, 0x5E, STD_UNGUARDED_INSERT, army_ptr_func_moves_before)
 
 // E:\gamedcs\ai.cpp:597, dc 0x28024
 VA(0x004235c0, 0x44)  // retained comparator + CodeView identity
-unsigned char func_moves_before::operator()(const army* a, const army* b)
+unsigned char FuncMovesBefore::operator()(const Army* a, const Army* b)
 {
     if (a->m_expectedMoveOrder > b->m_expectedMoveOrder)
         return true;

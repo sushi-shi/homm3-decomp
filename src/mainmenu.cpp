@@ -24,12 +24,12 @@
 #include "winmgr.h"
 
 // DC S_LPROC32 identifies this ordinary callback as TU-local.
-static int mainMenuHandler(message& msg);
+static int mainMenuHandler(Message& msg);
 
 // Set after the one-time missing-CD notice has been shown. The constructor
 // uses it only as the persistent suppression latch; the disk-space check has
 // its own DC-named static below.
-DATA(0x00699660) static TMainMenu* g_mainMenu;
+DATA(0x00699660) static MainMenu* g_mainMenu;
 DATA(0x00699674) static unsigned char g_cdMessageShown;
 DATA(0x00699678) static unsigned long g_lastDiskSpaceCheck;
 
@@ -42,10 +42,10 @@ DATA(0x0069957c) extern int g_cdDriveNumber;
 
 // DC public gMainMenuHelp; InitializeHelpText fills the same five retail
 // THelpText rows at this address.
-DATA(0x006a6c24) extern THelpText g_mainMenuHelp[5];
+DATA(0x006a6c24) extern HelpText g_mainMenuHelp[5];
 
 DATA(0x0063ff28)
-static const TMainMenuButtonRect g_mainMenuButtonRects[5] = {
+static const MainMenuButtonRect g_mainMenuButtonRects[5] = {
     {540,  10, 207, 121},
     {532, 132, 226, 120},
     {524, 251, 239, 106},
@@ -54,35 +54,35 @@ static const TMainMenuButtonRect g_mainMenuButtonRects[5] = {
 };
 
 VA(0x004fb2a0, 0x385)  // dc 0xea2ec
-TMainMenu::TMainMenu()
-    : heroWindow(0, 0, 800, 600, 0)
+MainMenu::MainMenu()
+    : HeroWindow(0, 0, 800, 600, 0)
 {
     g_mainMenu = this;
     m_showCdMessage = g_noCdRom && !g_cdMessageShown;
 
     m_widgets.reserve(NWIDGETS);
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         g_mainMenuButtonRects[0].m_x, g_mainMenuButtonRects[0].m_y,
         g_mainMenuButtonRects[0].m_width, g_mainMenuButtonRects[0].m_height,
         NEW_GAME_ID, "mmenung.def", 0, 1, 0, 49, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         g_mainMenuButtonRects[1].m_x, g_mainMenuButtonRects[1].m_y,
         g_mainMenuButtonRects[1].m_width, g_mainMenuButtonRects[1].m_height,
         LOAD_GAME_ID, "mmenulg.def", 0, 1, 0, 38, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         g_mainMenuButtonRects[2].m_x, g_mainMenuButtonRects[2].m_y,
         g_mainMenuButtonRects[2].m_width, g_mainMenuButtonRects[2].m_height,
         HIGH_SCORE_ID, "mmenuhs.def", 0, 1, 0, 35, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         g_mainMenuButtonRects[3].m_x, g_mainMenuButtonRects[3].m_y,
         g_mainMenuButtonRects[3].m_width, g_mainMenuButtonRects[3].m_height,
         CREDITS_ID, "mmenucr.def", 0, 1, 0, 46, 2));
-    m_widgets.push_back(new button(
+    m_widgets.push_back(new Button(
         g_mainMenuButtonRects[4].m_x, g_mainMenuButtonRects[4].m_y,
         g_mainMenuButtonRects[4].m_width, g_mainMenuButtonRects[4].m_height,
         QUIT_ID, "mmenuqt.def", 0, 1, 0, 1, 2));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -99,20 +99,20 @@ TMainMenu::TMainMenu()
     }
 }
 
-VA_COMPGEN(0x004fb630, 0x21, SCALAR_DELETING_DTOR, TMainMenu)
+VA_COMPGEN(0x004fb630, 0x21, SCALAR_DELETING_DTOR, MainMenu)
 
 VA(0x004fb660, 0x75)
-TMainMenu::~TMainMenu()
+MainMenu::~MainMenu()
 {
     g_mainMenu = 0;
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
 }
 
 VA(0x004fb6e0, 0x2C)  // dc 0xea5ec
-void TMainMenu::doModal()
+void MainMenu::doModal()
 {
     g_soundManager->startMP3("MainMenu", 0, 1);
     g_windowManager->doDialog(this, mainMenuHandler, 0);
@@ -126,7 +126,7 @@ void TMainMenu::doModal()
 // pushes it, then loads/pushes +0x14 as findWidget's first stack argument.
 
 VA(0x004fb710, 0x484)  // admitted row includes the jump table/padding; decoded body ends at +0x46d, dc 0xea618
-static int mainMenuHandler(message& msg)
+static int mainMenuHandler(Message& msg)
 {
     unsigned char updatePlease = 0;
     unsigned char hoverChanged = 0;
@@ -136,7 +136,7 @@ static int mainMenuHandler(message& msg)
             normalDialog(g_generalText->getText(GENERAL_TEXT_MAIN_MENU_LOW_DISK),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             updatePlease = 1;
-            g_windowManager->m_dialogReturn = TMainMenu::QUIT_ID;
+            g_windowManager->m_dialogReturn = MainMenu::QUIT_ID;
         }
         g_checkDiskSpace = 0;
     }
@@ -170,15 +170,15 @@ static int mainMenuHandler(message& msg)
         g_windowManager->fadeScreen(0, 4, 0);
 
     if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
-        if ((msg.m_codeX == widget::WIDGET_SELECT ||
-             msg.m_codeX == widget::WIDGET_RIGHT_SELECT)) {
+        if ((msg.m_codeX == Widget::WIDGET_SELECT ||
+             msg.m_codeX == Widget::WIDGET_RIGHT_SELECT)) {
             int helpID;
             switch (msg.m_codeY) {
-            case TMainMenu::NEW_GAME_ID:  helpID = 0; break;
-            case TMainMenu::LOAD_GAME_ID: helpID = 1; break;
-            case TMainMenu::HIGH_SCORE_ID: helpID = 2; break;
-            case TMainMenu::CREDITS_ID: helpID = 3; break;
-            case TMainMenu::QUIT_ID: helpID = 4; break;
+            case MainMenu::NEW_GAME_ID:  helpID = 0; break;
+            case MainMenu::LOAD_GAME_ID: helpID = 1; break;
+            case MainMenu::HIGH_SCORE_ID: helpID = 2; break;
+            case MainMenu::CREDITS_ID: helpID = 3; break;
+            case MainMenu::QUIT_ID: helpID = 4; break;
             default: helpID = -1; break;
             }
             if (helpID >= 0 && !g_dPlayReady)
@@ -186,13 +186,13 @@ static int mainMenuHandler(message& msg)
                              -1, 0, -1, 0, -1, 0, -1, 0);
         }
     } else if (msg.m_id == MESSAGE_WIDGET) {
-        if (msg.m_codeY < TMainMenu::NEW_GAME_ID ||
-            msg.m_codeY > TMainMenu::QUIT_ID)
+        if (msg.m_codeY < MainMenu::NEW_GAME_ID ||
+            msg.m_codeY > MainMenu::QUIT_ID)
             return 0;
 
-        if (msg.m_codeX == widget::WIDGET_DESELECT) {
+        if (msg.m_codeX == Widget::WIDGET_DESELECT) {
             bool confirmed = 1;
-            if (msg.m_codeY == TMainMenu::QUIT_ID) {
+            if (msg.m_codeY == MainMenu::QUIT_ID) {
                 videoPause();
                 if (!g_dPlayReady) {
                     normalDialog((*g_generalText)[GENERAL_TEXT_QUIT],
@@ -215,23 +215,23 @@ static int mainMenuHandler(message& msg)
         if (hoverID != g_lastImHoverId) {
             hoverChanged = 1;
             g_lastImHoverId = hoverID;
-            for (int id = TMainMenu::NEW_GAME_ID;
-                 id <= TMainMenu::QUIT_ID; ++id) {
-                widget* w = g_mainMenu->getWidget(id);
+            for (int id = MainMenu::NEW_GAME_ID;
+                 id <= MainMenu::QUIT_ID; ++id) {
+                Widget* w = g_mainMenu->getWidget(id);
                 if (w)
-                    w->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                    widget::WIDGET_HIGHLIGHTED);
+                    w->sendMessage(Widget::WIDGET_CLEAR_STATUS,
+                                    Widget::WIDGET_HIGHLIGHTED);
             }
             if (hoverID != -1) {
                 g_mainMenu->getWidget(hoverID)->sendMessage(
-                    widget::WIDGET_SET_STATUS, widget::WIDGET_HIGHLIGHTED);
+                    Widget::WIDGET_SET_STATUS, Widget::WIDGET_HIGHLIGHTED);
             }
         }
     }
 
     if (videoNeedsUpdate() || hoverChanged) {
-        g_mainMenu->drawWindow(0, TMainMenu::NEW_GAME_ID,
-                               TMainMenu::QUIT_ID);
+        g_mainMenu->drawWindow(0, MainMenu::NEW_GAME_ID,
+                               MainMenu::QUIT_ID);
         g_windowManager->updateScreen(520, 4, 250, 567);
         videoDrawRects();
     }
@@ -240,7 +240,7 @@ static int mainMenuHandler(message& msg)
         if (g_dPlayReady) {
             unsigned long lastCheck = g_lastDiskSpaceCheck;
             if (static_cast<long>(GameTime::get() - lastCheck) > 10000)
-                g_windowManager->m_dialogReturn = TMainMenu::NEW_GAME_ID;
+                g_windowManager->m_dialogReturn = MainMenu::NEW_GAME_ID;
             else
                 return MESSAGE_DISPATCH_CONSUME;
         } else {
@@ -249,8 +249,8 @@ static int mainMenuHandler(message& msg)
     }
 
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
+    msg.m_codeY = Widget::WIDGET_END_DIALOG;
+    msg.m_codeX = Widget::WIDGET_END_DIALOG;
     return MESSAGE_DISPATCH_FORWARD;
 }
 
@@ -279,7 +279,7 @@ void VideomodeChoice::Test()
 
 // E:\gamedcs\mainmenu.cpp:410
 DC_ONLY(0xeb248, 0xF4)
-int VideomodeChoice::windowHandler(message& msg)
+int VideomodeChoice::windowHandler(Message& msg)
 {
     // @stub
 }

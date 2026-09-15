@@ -15,7 +15,7 @@ namespace {
 // compiland's parser below; the source initializer for its zero state is a
 // separate admission, as it is for artifact.obj's own pair.
 DATA(0x006703b8)
-TCreatureTypeTraits g_creatureTypeTraitsStorage[150];
+CreatureTypeTraits g_creatureTypeTraitsStorage[150];
 
 }
 
@@ -26,7 +26,7 @@ void initializeCreatureTypeTraits(int id,
 
 // E:\gamedcs\creaturetype.cpp:202
 DC_ONLY(0x718dc, 0x20)
-TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr)
+CreatureType GetBaseCreature(TownType townType, int baseCreatureNbr)
 {
     // @stub
 }
@@ -34,9 +34,9 @@ TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr)
 #endif
 
 VA(0x0047b120, 0x5D)  // dc 0x718fc
-int isBaseCreature(TCreatureType monType)
+int isBaseCreature(CreatureType monType)
 {
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[monType];
+    const CreatureTypeTraits& traits = g_creatureTypeTraits[monType];
     int townType = traits.m_townType;
     if (townType == -1)
         return 0;
@@ -53,7 +53,7 @@ int isBaseCreature(TCreatureType monType)
 }
 
 VA(0x0047b180, 0x16)  // dc 0x71934
-unsigned char isSiegeWeapon(TCreatureType creature)
+unsigned char isSiegeWeapon(CreatureType creature)
 {
     if (creature >= CREATURE_CATAPULT && creature <= CREATURE_AMMO_CART)
         return 1;
@@ -61,9 +61,9 @@ unsigned char isSiegeWeapon(TCreatureType creature)
 }
 
 VA(0x0047b1a0, 0x71)  // dc 0x71948
-TCreatureType upgradedCreatureType(TCreatureType type)
+CreatureType upgradedCreatureType(CreatureType type)
 {
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
+    const CreatureTypeTraits& traits = g_creatureTypeTraits[type];
     int townType = traits.m_townType;
     if (townType == -1)
         return CREATURE_NONE;
@@ -81,10 +81,10 @@ TCreatureType upgradedCreatureType(TCreatureType type)
 }
 
 VA(0x0047B220, 0x6D)
-TCreatureType downgradedCreatureType(TCreatureType type)
+CreatureType downgradedCreatureType(CreatureType type)
 {
     do {
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
+        const CreatureTypeTraits& traits = g_creatureTypeTraits[type];
         int townType = traits.m_townType;
         int creatureIndex;
         if (townType == -1)
@@ -107,7 +107,7 @@ TCreatureType downgradedCreatureType(TCreatureType type)
 VA(0x0047b290, 0x1E9)  // dc 0x71968
 unsigned char initializeCreatureTypeTraitsTable()
 {
-    TSpreadsheetResource* traitsSheet = ResourceManager::getSpreadsheet(
+    SpreadsheetResource* traitsSheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00675514, creatureTraitsSpreadsheetName,
                      "crtraits.txt"));
     if (!traitsSheet)
@@ -172,12 +172,13 @@ unsigned char initializeCreatureTypeTraitsTable()
 namespace {
 
 // CodeView field pStr; each loader owns its own private string class.
-class TAutoStrPtr {
+// Before normalization (type): TAutoStrPtr.
+class AutoStrPtr {
 public:
     // E:\gamedcs\creaturetype.cpp:399, dc 0x71eec
-    TAutoStrPtr() : m_string(0) {}
+    AutoStrPtr() : m_string(0) {}
     // E:\gamedcs\creaturetype.cpp:402, dc 0x71ef4
-    ~TAutoStrPtr() { delete[] m_string; }
+    ~AutoStrPtr() { delete[] m_string; }
     // E:\gamedcs\creaturetype.cpp:404, dc 0x71f0c
     void set(char* value) { m_string = value; }
     // E:\gamedcs\creaturetype.cpp:406, dc 0x71f10
@@ -194,19 +195,19 @@ VA(0x0047b480, 0x322)  // dc 0x71b40
 void initializeCreatureTypeTraits(int id,
     const std::vector<char*, std::allocator<char*> >& values)
 {
-    TCreatureTypeTraits& traits = g_creatureTypeTraitsStorage[id];
+    CreatureTypeTraits& traits = g_creatureTypeTraitsStorage[id];
 
     DATA_COMPGEN_GUARD(0x00696640, creatureTypeStringsGuard,
                        creatureTypeNames)
     DATA(0x006963e8)
-    static TAutoStrPtr creatureTypeNames[150];
+    static AutoStrPtr creatureTypeNames[150];
 
     creatureTypeNames[id].set(new char[strlen(values[0]) + 1]);
     strcpy(creatureTypeNames[id].get(), values[0]);
     traits.m_name = creatureTypeNames[id].get();
 
     DATA(0x00696644)
-    static TAutoStrPtr creatureTypePluralNames[150];
+    static AutoStrPtr creatureTypePluralNames[150];
 
     creatureTypePluralNames[id].set(new char[strlen(values[1]) + 1]);
     strcpy(creatureTypePluralNames[id].get(), values[1]);
@@ -235,7 +236,7 @@ void initializeCreatureTypeTraits(int id,
     traits.m_wanderingHigh = atoi(values[22]);
 
     DATA(0x00696190)
-    static TAutoStrPtr creatureTypeAbilities[150];
+    static AutoStrPtr creatureTypeAbilities[150];
 
     creatureTypeAbilities[id].set(new char[strlen(values[23]) + 1]);
     strcpy(creatureTypeAbilities[id].get(), values[23]);
@@ -246,28 +247,28 @@ void initializeCreatureTypeTraits(int id,
 
 // E:\gamedcs\creaturetype.cpp:399
 DC_ONLY(0x71eec, 0x8)
-void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr()
+void `anonymous namespace'::AutoStrPtr::AutoStrPtr()
 {
     // @stub
 }
 
 // E:\gamedcs\creaturetype.cpp:402
 DC_ONLY(0x71ef4, 0x18)
-void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr()
+void `anonymous namespace'::AutoStrPtr::~AutoStrPtr()
 {
     // @stub
 }
 
 // E:\gamedcs\creaturetype.cpp:404
 DC_ONLY(0x71f0c, 0x4)
-void `anonymous namespace'::TAutoStrPtr::set(char* pStr)
+void `anonymous namespace'::AutoStrPtr::set(char* pStr)
 {
     // @stub
 }
 
 // E:\gamedcs\creaturetype.cpp:406
 DC_ONLY(0x71f10, 0x4)
-char* `anonymous namespace'::TAutoStrPtr::get()
+char* `anonymous namespace'::AutoStrPtr::get()
 {
     // @stub
 }

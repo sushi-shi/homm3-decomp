@@ -6,12 +6,14 @@
 #include <string.h>
 #include "palette.h"
 
-union TFloatLongBits {
+// Before normalization (type): TFloatLongBits.
+union FloatLongBits {
     unsigned long m_bits;
     float m_value;
 };
 
-union TDoubleLongBits {
+// Before normalization (type): TDoubleLongBits.
+union DoubleLongBits {
     double m_value;
     long m_words[2];
 };
@@ -21,8 +23,8 @@ union TDoubleLongBits {
 static __forceinline long ftol(double d)
 {
     const unsigned long magic = 0x59c00000;
-    TFloatLongBits magicValue;
-    TDoubleLongBits result;
+    FloatLongBits magicValue;
+    DoubleLongBits result;
     result.m_value = d;
     magicValue.m_bits = magic;
     result.m_value += magicValue.m_value;
@@ -40,35 +42,35 @@ long ftol(double d)
 
 // E:\gamedcs\palette.cpp:73
 DC_ONLY(0x10a3ac, 0x6E)
-void TPalette16::TPalette16(const TRGBA* rgba, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
+void Palette16::Palette16(const RGBA* rgba, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:79
 DC_ONLY(0x10a41c, 0x7C)
-void TPalette16::TPalette16(const tagRGBQUAD* quad, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
+void Palette16::Palette16(const tagRGBQUAD* quad, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:116
 DC_ONLY(0x10a5e0, 0xC2)
-void TPalette16::TPalette16(const TRGBA* rgba)
+void Palette16::Palette16(const RGBA* rgba)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:140
 DC_ONLY(0x10a6a4, 0xD8)
-void TPalette16::TPalette16(const tagRGBQUAD* quad)
+void Palette16::Palette16(const tagRGBQUAD* quad)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:165
 DC_ONLY(0x10a77c, 0xD6)
-void TPalette16::TPalette16(const char* name, const TPalette24& p24)
+void Palette16::Palette16(const char* name, const Palette24& p24)
 {
     // @stub
 }
@@ -77,44 +79,44 @@ void TPalette16::TPalette16(const char* name, const TPalette24& p24)
 #endif  // @carcass
 
 VA(0x00522650, 0x16)  // dc 0x10a2a8
-TPalette16::TPalette16()
-    : resource(0, RESOURCE_TYPE_NONE)
+Palette16::Palette16()
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
 }
 
-VA_COMPGEN(0x00522670, 0x21, SCALAR_DELETING_DTOR, TPalette16)
+VA_COMPGEN(0x00522670, 0x21, SCALAR_DELETING_DTOR, Palette16)
 
 // The raw 16-bit table overload: 0x80 dwords straight into the payload at
 // +0x1c, the same shape TPalette24's raw-data constructor has at 0x522e80.
 VA(0x005226a0, 0x2D)  // dc 0x10a2f0
-TPalette16::TPalette16(const unsigned short* newData)
-    : resource(0, RESOURCE_TYPE_NONE)
+Palette16::Palette16(const unsigned short* newData)
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(m_data, newData, sizeof(m_data));
 }
 
 VA(0x005226d0, 0x9D)  // dc 0x10a338
-TPalette16::TPalette16(const TPalette24& p24, int rbits, int rshift,
+Palette16::Palette16(const Palette24& p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
     convert24to16(p24.m_palette, rbits, rshift, gbits, gshift,
                   bbits, bshift);
 }
 
 VA(0x00522770, 0x9F)  // dc 0x10a498
-TPalette16::TPalette16(const char* name, const TPalette24& p24,
+Palette16::Palette16(const char* name, const Palette24& p24,
                        int rbits, int rshift, int gbits, int gshift,
                        int bbits, int bshift)
-    : resource(name, RESOURCE_TYPE_PALETTE)
+    : Resource(name, RESOURCE_TYPE_PALETTE)
 {
     convert24to16(p24.m_palette, rbits, rshift, gbits, gshift,
                   bbits, bshift);
 }
 
 VA(0x00522810, 0xC6)  // dc 0x10a508
-TPalette16::TPalette16(const TPalette24& p24)
-    : resource(0, RESOURCE_TYPE_NONE)
+Palette16::Palette16(const Palette24& p24)
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
     unsigned short* dst = m_data;
     const unsigned int redScale = (s_redMask + s_redMask) & ~s_redMask;
@@ -134,14 +136,14 @@ TPalette16::TPalette16(const TPalette24& p24)
 // it - both the TPalette24 shapes with the 0x200-byte table in place of the
 // 0x300-byte one, and the assignment keeps the resource identity.
 VA(0x005228e0, 0x30)  // dc 0x10a854
-TPalette16::TPalette16(const TPalette16* copy)
-    : resource(0, RESOURCE_TYPE_NONE)
+Palette16::Palette16(const Palette16* copy)
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(m_data, copy->m_data, sizeof(m_data));
 }
 
 VA(0x00522910, 0x21)  // dc 0x10a8a0
-TPalette16* TPalette16::operator=(const TPalette16* from)
+Palette16* Palette16::operator=(const Palette16* from)
 {
     if (this != from)
         memcpy(m_data, from->m_data, sizeof(m_data));
@@ -149,7 +151,7 @@ TPalette16* TPalette16::operator=(const TPalette16* from)
 }
 
 VA(0x00522940, 0xB)  // dc 0x10a8e0
-TPalette16::~TPalette16()
+Palette16::~Palette16()
 {
 }
 
@@ -161,7 +163,7 @@ TPalette16::~TPalette16()
 // The 72-state family distinguishes actual channel-value lifetimes from casts:
 // named ushort channels give both callers 100%; inline casts alone leave
 // 94.8548/94.9365. The destination-pointer form preserves the recorded p16.
-void TPalette16::convert24to16(const unsigned char* p24, int rbits, int rshift,
+void Palette16::convert24to16(const unsigned char* p24, int rbits, int rshift,
                                int gbits, int gshift, int bbits, int bshift)
 {
     unsigned short* destination = m_data;
@@ -178,7 +180,7 @@ void TPalette16::convert24to16(const unsigned char* p24, int rbits, int rshift,
 }
 
 VA(0x00522950, 0xBE)  // dc 0x10aa98
-void TPalette16::cycle(int begin, int end, int step)
+void Palette16::cycle(int begin, int end, int step)
 {
     if (step > 0) {
         for (int i = 0; i < step; ++i) {
@@ -198,7 +200,7 @@ void TPalette16::cycle(int begin, int end, int step)
 }
 
 VA(0x00522a10, 0x122)  // dc 0x10b1ec
-void TPalette16::adjustSaturation(float amount)
+void Palette16::adjustSaturation(float amount)
 {
     const unsigned int redNorm =
         std::numeric_limits<int>::max() / s_redMask;
@@ -236,42 +238,42 @@ void TPalette16::adjustSaturation(float amount)
 
 // E:\gamedcs\palette.cpp:236
 DC_ONLY(0x10a998, 0x7E)
-void TPalette16::ConvertRGBAto16(const TRGBA* rgba, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
+void Palette16::ConvertRGBAto16(const RGBA* rgba, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:262
 DC_ONLY(0x10aa18, 0x7E)
-void TPalette16::ConvertRGBQUADto16(const tagRGBQUAD* quad, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
+void Palette16::ConvertRGBQUADto16(const tagRGBQUAD* quad, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:288
 // Retail body reconstructed above at 0x00522950; dc 0x10aa98.
-void TPalette16::cycle(int begin, int end, int step)
+void Palette16::cycle(int begin, int end, int step)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:315
 DC_ONLY(0x10ab44, 0x416)
-void TPalette16::colorize(float hue, float saturation)
+void Palette16::colorize(float hue, float saturation)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:360
 DC_ONLY(0x10af5c, 0x28E)
-void TPalette16::AdjustHue(float hue, float amount)
+void Palette16::AdjustHue(float hue, float amount)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:412
 // Retail body reconstructed above at 0x00522a10; dc 0x10b1ec.
-void TPalette16::adjustSaturation(float amount)
+void Palette16::adjustSaturation(float amount)
 {
     // @stub
 }
@@ -280,7 +282,7 @@ void TPalette16::adjustSaturation(float amount)
 // No retail body: this Dreamcast-only AdjustValue row is replaced at the
 // corresponding x86 position by TPalette16's resource-size vtable slot.
 DC_ONLY(0x10b320, 0x164)
-void TPalette16::AdjustValue(float amount)
+void Palette16::AdjustValue(float amount)
 {
     // @stub
 }
@@ -288,13 +290,13 @@ void TPalette16::AdjustValue(float amount)
 #endif  // @carcass
 
 VA(0x00522b40, 0x6)  // TPalette16 vtable 0x640368 slot 2
-unsigned int TPalette16::getSize() const
+unsigned int Palette16::getSize() const
 {
     return sizeof(*this);
 }
 
 VA(0x00522b50, 0x1F5)  // dc 0x10b484
-void TPalette16::adjustHSV(float hue, float hueAdjust,
+void Palette16::adjustHSV(float hue, float hueAdjust,
                            float saturationAdjust, float valueAdjust)
 {
     const unsigned int redNorm =
@@ -355,7 +357,7 @@ void TPalette16::adjustHSV(float hue, float hueAdjust,
 }
 
 VA(0x00522d50, 0xD6)  // dc 0x10b7ac
-void TPalette16::gray()
+void Palette16::gray()
 {
     const unsigned int redNorm =
         std::numeric_limits<int>::max() / s_redMask;
@@ -381,23 +383,23 @@ void TPalette16::gray()
 #undef max
 
 VA(0x00522e30, 0x16)  // null-name resource ctor + TPalette24 vtable
-TPalette24::TPalette24()
-    : resource(0, RESOURCE_TYPE_NONE)
+Palette24::Palette24()
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
 }
 
-VA_COMPGEN(0x00522e50, 0x21, SCALAR_DELETING_DTOR, TPalette24)
+VA_COMPGEN(0x00522e50, 0x21, SCALAR_DELETING_DTOR, Palette24)
 
 VA(0x00522e80, 0x2D)  // dc 0x10b904
-TPalette24::TPalette24(const unsigned char* data)
-    : resource(0, RESOURCE_TYPE_NONE)
+Palette24::Palette24(const unsigned char* data)
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(m_palette, data, sizeof(m_palette));
 }
 
 VA(0x00522eb0, 0x42)  // dc 0x10b94c
-TPalette24::TPalette24(const TRGBA* rgba)
-    : resource(0, RESOURCE_TYPE_NONE)
+Palette24::Palette24(const RGBA* rgba)
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
     for (int index = 0; index < 256; ++index) {
         m_palette[3 * index + 0] = rgba->m_red;
@@ -408,14 +410,14 @@ TPalette24::TPalette24(const TRGBA* rgba)
 }
 
 VA(0x00522f00, 0x30)  // dc 0x10ba3c
-TPalette24::TPalette24(const TPalette24* copy)
-    : resource(0, RESOURCE_TYPE_NONE)
+Palette24::Palette24(const Palette24* copy)
+    : Resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(m_palette, copy->m_palette, sizeof(m_palette));
 }
 
 VA(0x00522f30, 0x21)  // payload-only assignment; resource identity retained
-TPalette24& TPalette24::operator=(const TPalette24& from)
+Palette24& Palette24::operator=(const Palette24& from)
 {
     if (this != &from)
         memcpy(m_palette, from.m_palette, sizeof(m_palette));
@@ -423,18 +425,18 @@ TPalette24& TPalette24::operator=(const TPalette24& from)
 }
 
 VA(0x00522f60, 0x0b)  // TPalette24 vtable 0x640374 + resource dtor tail
-TPalette24::~TPalette24() throw()
+Palette24::~Palette24() throw()
 {
 }
 
 VA(0x00522f70, 0x06)  // TPalette24 vtable 0x640374 slot 2
-unsigned int TPalette24::getSize() const
+unsigned int Palette24::getSize() const
 {
     return sizeof(*this);
 }
 
 VA(0x00522f80, 0x20E)  // dc 0x10bfd4
-void TPalette24::adjustHSV(float hue, float hueAdjust,
+void Palette24::adjustHSV(float hue, float hueAdjust,
                            float saturationAdjust, float valueAdjust)
 {
     const unsigned int redNorm =
@@ -589,91 +591,91 @@ void hsvToRGB(float h, float s, float v,
 
 // E:\gamedcs\palette.cpp:496
 // Retail body reconstructed above at 0x00522b50; dc 0x10b484.
-void TPalette16::adjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)
+void Palette16::adjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:571
 // Retail body reconstructed above at 0x00522d50; dc 0x10b7ac.
-void TPalette16::gray()
+void Palette16::gray()
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:598
 // Retail body reconstructed above; dc 0x10b898.
-void TPalette24::TPalette24()
+void Palette24::Palette24()
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:603
 // Retail body reconstructed above at 0x00522e80; dc 0x10b904.
-void TPalette24::TPalette24(const unsigned char* data)
+void Palette24::Palette24(const unsigned char* data)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:609
 // Retail body reconstructed above at 0x00522eb0; dc 0x10b94c.
-void TPalette24::TPalette24(const TRGBA* rgba)
+void Palette24::Palette24(const RGBA* rgba)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:622
 // RETAIL_LOCATED(0x00522eb0, 0x42): not reconstructed; dc-bracket forced, dc 0x10b9c4
-void TPalette24::TPalette24(const tagRGBQUAD* quad)
+void Palette24::Palette24(const tagRGBQUAD* quad)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:635
 // RETAIL_LOCATED(0x00522f00, 0x30): not reconstructed; dc-bracket forced, dc 0x10ba3c
-void TPalette24::TPalette24(const TPalette24* copy)
+void Palette24::Palette24(const Palette24* copy)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:640
 // RETAIL_LOCATED(0x00522f30, 0x21): not reconstructed; dc-bracket forced, dc 0x10ba88
-TPalette24* TPalette24::operator=(const TPalette24* from)
+Palette24* Palette24::operator=(const Palette24* from)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:650
 // Retail body reconstructed above; dc 0x10baac.
-void TPalette24::~TPalette24()
+void Palette24::~Palette24()
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:655
 DC_ONLY(0x10baf0, 0x102)
-void TPalette24::cycle(int begin, int end, int step)
+void Palette24::cycle(int begin, int end, int step)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:685
 DC_ONLY(0x10bbf4, 0x364)
-void TPalette24::colorize(float hue, float saturation)
+void Palette24::colorize(float hue, float saturation)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:723
 DC_ONLY(0x10bf58, 0x7A)
-void TPalette24::gray()
+void Palette24::gray()
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:740
 // Retail body reconstructed above at 0x00522f80; dc 0x10bfd4.
-void TPalette24::adjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)
+void Palette24::adjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)
 {
     // @stub
 }
@@ -694,14 +696,14 @@ void hsvToRGB(float h, float s, float v, unsigned* r, unsigned* g, unsigned* b)
 
 // E:\gamedcs\palette.cpp:57
 DC_ONLY(0x10c8b0, 0x34)
-void* TPalette16::`scalar deleting destructor'(unsigned __flags)
+void* Palette16::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:599
 DC_ONLY(0x10c8e4, 0x34)
-void* TPalette24::`scalar deleting destructor'(unsigned __flags)
+void* Palette24::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

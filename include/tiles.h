@@ -21,7 +21,8 @@
 // builder below, which clears exactly the three entries whose dy is -1 on the
 // top row, the three whose dy is +1 on the bottom row, the three whose dx is
 // -1 in column zero and the three whose dx is +1 in the last column.
-enum ETileDirection {
+// Before normalization (type): ETileDirection.
+enum TileDirection {
     TILE_DIR_NORTH = 0,
     TILE_DIR_NORTHEAST = 1,
     TILE_DIR_EAST = 2,
@@ -33,8 +34,8 @@ enum ETileDirection {
     TILE_DIR_COUNT = 8
 };
 
-struct TPoint;
-extern TPoint g_tileDirections[TILE_DIR_COUNT];
+struct Point;
+extern Point g_tileDirections[TILE_DIR_COUNT];
 
 void __fastcall buildTileNeighbourMask(int width, int height, int x, int y,
                                        unsigned char* neighbourExists);

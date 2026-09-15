@@ -21,7 +21,8 @@ enum {
 // first byte has an attested role - mapcell.h names it the trigger-object
 // landing veto and cursor/findpath read byte +1 - so the remaining flags
 // keep neutral spellings.
-struct TAdvObjectTraits {
+// Before normalization (type): TAdvObjectTraits.
+struct AdvObjectTraits {
     unsigned char m_blocksLanding;  // +0x00
     unsigned char m_trait1;         // +0x01
     unsigned char m_trait2;         // +0x02
@@ -29,16 +30,17 @@ struct TAdvObjectTraits {
     int m_nameRow;                  // +0x08
     unsigned char m_trait3;         // +0x0c
 };
-SIZE(TAdvObjectTraits, 0x10);
+SIZE(AdvObjectTraits, 0x10);
 
 // One row of the loader's first .rdata override table: the object id and
 // the objnames.txt line its name comes from.
-struct TAdvObjectNameRow {
+// Before normalization (type): TAdvObjectNameRow.
+struct AdvObjectNameRow {
     int m_objectType;
     int m_nameRow;
 };
 
-extern TAdvObjectTraits g_adventureObjectTraitRows[ADVENTURE_OBJECT_TRAIT_COUNT];
+extern AdvObjectTraits g_adventureObjectTraitRows[ADVENTURE_OBJECT_TRAIT_COUNT];
 
 void initializeAdventureObjectNames();
 

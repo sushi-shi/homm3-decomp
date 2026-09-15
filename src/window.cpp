@@ -45,7 +45,7 @@ static SWinSetup g_winSetup[37] = {
 };
 
 VA(0x005fe9f0, 0x5E)  // dc 0x197138
-heroWindow::heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType)
+HeroWindow::HeroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType)
     : m_sleepCount(0)
 {
     m_nextWindow = m_prevWindow = 0;
@@ -61,17 +61,17 @@ heroWindow::heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned
     m_focusId = -1;
 }
 
-VA_COMPGEN(0x005fea50, 0x21, SCALAR_DELETING_DTOR, heroWindow)
+VA_COMPGEN(0x005fea50, 0x21, SCALAR_DELETING_DTOR, HeroWindow)
 
 VA(0x005fea80, 0x60)  // dc 0x1971d0
-heroWindow::~heroWindow()
+HeroWindow::~HeroWindow()
 {
     if (m_background)
         delete m_background;
 }
 
 VA(0x005feae0, 0x17A)  // dc 0x19721c
-int heroWindow::open(int newPriority, unsigned char update)
+int HeroWindow::open(int newPriority, unsigned char update)
 {
     if (m_status & WINDOW_STATE_OPEN)
         return 3;
@@ -103,13 +103,13 @@ int heroWindow::open(int newPriority, unsigned char update)
 }
 
 VA(0x005fec60, 0x49)  // dc 0x1972e0
-void heroWindow::close(unsigned char update)
+void HeroWindow::close(unsigned char update)
 {
     if ((m_type & WINDOW_FLAG_SAVE_BACKGROUND) && (m_status & WINDOW_STATE_OPEN))
         restoreBackground(update);
-    widget* current = m_tailWidget;
+    Widget* current = m_tailWidget;
     while (current) {
-        widget* prev = current->m_prevWidget;
+        Widget* prev = current->m_prevWidget;
         removeWidget(current);
         current = prev;
     }
@@ -120,14 +120,14 @@ void heroWindow::close(unsigned char update)
 
 // E:\gamedcs\window.cpp:194
 DC_ONLY(0x19731c, 0x4)
-int heroWindow::handleMessage(message* msg)
+int HeroWindow::handleMessage(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\window.cpp:202
 DC_ONLY(0x197320, 0x4)
-void heroWindow::handleWidgetHover()
+void HeroWindow::handleWidgetHover()
 {
     // @stub
 }
@@ -135,9 +135,9 @@ void heroWindow::handleWidgetHover()
 #endif  // @carcass
 
 VA(0x005fecb0, 0xA5)  // dc 0x197324
-void heroWindow::addWidget(widget* newWidget, int newPriority)
+void HeroWindow::addWidget(Widget* newWidget, int newPriority)
 {
-    widget* current = m_tailWidget;
+    Widget* current = m_tailWidget;
     if (newPriority == -1) {
         if (!current)
             newPriority = 0;
@@ -168,31 +168,31 @@ void heroWindow::addWidget(widget* newWidget, int newPriority)
 }
 
 VA(0x005fed60, 0x7A)  // dc 0x1973b4
-void heroWindow::removeWidget(widget* killWidget)
+void HeroWindow::removeWidget(Widget* killWidget)
 {
     if (!killWidget)
         return;
     killWidget->close();
     if (killWidget == m_headWidget) {
-        widget* next = killWidget->m_nextWidget;
+        Widget* next = killWidget->m_nextWidget;
         m_headWidget = next;
         if (!next)
             m_tailWidget = 0;
         else
             next->m_prevWidget = 0;
     } else if (killWidget == m_tailWidget) {
-        widget* prev = killWidget->m_prevWidget;
+        Widget* prev = killWidget->m_prevWidget;
         m_tailWidget = prev;
         prev->m_nextWidget = 0;
     } else {
         killWidget->m_prevWidget->m_nextWidget = killWidget->m_nextWidget;
         killWidget->m_nextWidget->m_prevWidget = killWidget->m_prevWidget;
     }
-    widget* prev = killWidget->m_prevWidget;
+    Widget* prev = killWidget->m_prevWidget;
     if (!prev) {
         m_headWidget = m_tailWidget = 0;
     } else {
-        widget* next = killWidget->m_nextWidget;
+        Widget* next = killWidget->m_nextWidget;
         prev->m_nextWidget = next;
         if (next)
             next->m_prevWidget = prev;
@@ -203,7 +203,7 @@ void heroWindow::removeWidget(widget* killWidget)
 
 // E:\gamedcs\window.cpp:346
 DC_ONLY(0x19742c, 0x54)
-void heroWindow::RemoveAndDeleteWidget(int inID)
+void HeroWindow::RemoveAndDeleteWidget(int inID)
 {
     // @stub
 }
@@ -221,12 +221,12 @@ void heroWindow::RemoveAndDeleteWidget(int inID)
 // still serves the external callers - auto-inlining with
 // unconditional emission (see the profile note in units.toml).
 VA(0x005fede0, 0x5E)  // linkorder bracket; widget Main-slot calls byte-proven, dc 0x197480
-int heroWindow::broadcastMessage(message& msg)
+int HeroWindow::broadcastMessage(Message& msg)
 {
     int result = 0;
-    widget* current = m_tailWidget;
+    Widget* current = m_tailWidget;
     if (m_focusId != -1) {
-        widget* focused = getWidget(m_focusId);
+        Widget* focused = getWidget(m_focusId);
         if (focused) {
             result = focused->main(msg);
             if (result)
@@ -243,9 +243,9 @@ int heroWindow::broadcastMessage(message& msg)
 }
 
 VA(0x005fee40, 0x8C)  // dc 0x197530
-int heroWindow::broadcastMessage(int id, int codeX, int codeY, int extra)
+int HeroWindow::broadcastMessage(int id, int codeX, int codeY, int extra)
 {
-    message msg;
+    Message msg;
     msg.m_id = id;
     msg.m_codeX = codeX;
     msg.m_codeY = codeY;
@@ -258,9 +258,9 @@ int heroWindow::broadcastMessage(int id, int codeX, int codeY, int extra)
 }
 
 VA(0x005feed0, 0x8E)  // dc 0x197570
-int heroWindow::widgetSetStatus(int id, int status)
+int HeroWindow::widgetSetStatus(int id, int status)
 {
-    message msg;
+    Message msg;
     msg.m_codeY = id;
     msg.m_qualifier = 0;
     msg.m_mouseX = 0;
@@ -268,14 +268,14 @@ int heroWindow::widgetSetStatus(int id, int status)
     msg.m_extra = status;
     msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_STATUS;
+    msg.m_codeX = Widget::WIDGET_SET_STATUS;
     return broadcastMessage(msg);
 }
 
 VA(0x005fef60, 0x8E)  // dc 0x19758c
-int heroWindow::widgetClearStatus(int id, int status)
+int HeroWindow::widgetClearStatus(int id, int status)
 {
-    message msg;
+    Message msg;
     msg.m_codeY = id;
     msg.m_qualifier = 0;
     msg.m_mouseX = 0;
@@ -283,14 +283,14 @@ int heroWindow::widgetClearStatus(int id, int status)
     msg.m_extra = status;
     msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+    msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
     return broadcastMessage(msg);
 }
 
 VA(0x005feff0, 0x22)  // dc 0x1975a8
-widget* heroWindow::getWidget(int id)
+Widget* HeroWindow::getWidget(int id)
 {
-    widget* current = m_tailWidget;
+    Widget* current = m_tailWidget;
     while (current) {
         if (current->m_id == id)
             return current;
@@ -300,9 +300,9 @@ widget* heroWindow::getWidget(int id)
 }
 
 VA(0x005ff020, 0xDE)  // dc 0x1975d8
-void heroWindow::drawWindow(unsigned char update, int lowID, int highID)
+void HeroWindow::drawWindow(unsigned char update, int lowID, int highID)
 {
-    message msg;
+    Message msg;
     msg.m_codeY = 0;
     msg.m_qualifier = 0;
     msg.m_mouseX = 0;
@@ -310,8 +310,8 @@ void heroWindow::drawWindow(unsigned char update, int lowID, int highID)
     msg.m_extra = 0;
     msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_DRAW;
-    widget* current = m_headWidget;
+    msg.m_codeX = Widget::WIDGET_DRAW;
+    Widget* current = m_headWidget;
     while (current) {
         pollSound();
         if (lowID == WINDOW_ALL_WIDGETS_LOW && highID == WINDOW_ALL_WIDGETS_HIGH)
@@ -333,7 +333,7 @@ void heroWindow::drawWindow(unsigned char update, int lowID, int highID)
 
 // E:\gamedcs\window.cpp:571
 DC_ONLY(0x197690, 0xDC)
-void heroWindow::DrawWindowX(unsigned char update, int iLowID, int iHighID)
+void HeroWindow::DrawWindowX(unsigned char update, int iLowID, int iHighID)
 {
     // @stub
 }
@@ -341,7 +341,7 @@ void heroWindow::DrawWindowX(unsigned char update, int iLowID, int iHighID)
 #endif  // @carcass
 
 VA(0x005ff100, 0xBD)  // dc 0x19776c
-int heroWindow::saveBackground()
+int HeroWindow::saveBackground()
 {
     if (m_type & WINDOW_FLAG_SHADOWED)
         m_background = new Bitmap16Bit(m_width + 8, m_height + 8);
@@ -355,7 +355,7 @@ int heroWindow::saveBackground()
 }
 
 VA(0x005ff1c0, 0x7E)  // dc 0x1977dc
-void heroWindow::restoreBackground(unsigned char update)
+void HeroWindow::restoreBackground(unsigned char update)
 {
     if (!m_background)
         return;
@@ -374,7 +374,7 @@ void heroWindow::restoreBackground(unsigned char update)
 
 // E:\gamedcs\window.cpp:707
 DC_ONLY(0x197874, 0x106)
-void heroWindow::MoveWindow(int deltaX, int deltaY)
+void HeroWindow::MoveWindow(int deltaX, int deltaY)
 {
     // @stub
 }
@@ -398,7 +398,7 @@ void heroWindow::MoveWindow(int deltaX, int deltaY)
 // reproduced object: braces around the default, clamp and damage-bound pairs,
 // crossed with separate saved-local declarations, leave 92.8767% unchanged.
 VA(0x005ff240, 0x162)  // anchor-global, dc 0x19797c
-void heroWindow::centerWindow(int centerX, int centerY)
+void HeroWindow::centerWindow(int centerX, int centerY)
 {
     int startX = m_x;
     int startY = m_y;
@@ -437,27 +437,27 @@ void heroWindow::centerWindow(int centerX, int centerY)
 }
 
 VA(0x005ff3b0, 0x23)  // dc 0x197ad0
-int heroWindow::findWidget(int mx, int my) const
+int HeroWindow::findWidget(int mx, int my) const
 {
-    widget* found = findWidgetPtr(mx, my);
+    Widget* found = findWidgetPtr(mx, my);
     if (found)
         return found->m_id;
     return -1;
 }
 
 VA(0x005ff3e0, 0x7D)  // dc 0x197aec
-widget* heroWindow::findWidgetPtr(int mx, int my) const
+Widget* HeroWindow::findWidgetPtr(int mx, int my) const
 {
     mx -= m_x;
     my -= m_y;
-    for (widget* const* it = m_widgets.end(); it != m_widgets.begin(); --it) {
-        widget* found = it[-1];
+    for (Widget* const* it = m_widgets.end(); it != m_widgets.begin(); --it) {
+        Widget* found = it[-1];
         if (mx >= found->m_x && my >= found->m_y
             && mx < found->m_x + found->m_width
             && my < found->m_y + found->m_height
-            && (found->m_status & widget::WIDGET_ACTIVE)
-            && !(found->m_status & widget::WIDGET_DIMMED)
-            && !(found->m_status & widget::WIDGET_DIMMED_NODRAW))
+            && (found->m_status & Widget::WIDGET_ACTIVE)
+            && !(found->m_status & Widget::WIDGET_DIMMED)
+            && !(found->m_status & Widget::WIDGET_DIMMED_NODRAW))
             return found;
     }
     return 0;
@@ -467,7 +467,7 @@ widget* heroWindow::findWidgetPtr(int mx, int my) const
 
 // E:\gamedcs\window.cpp:893
 DC_ONLY(0x197bdc, 0x2A)
-void heroWindow::EnableAllWidgets(unsigned char enable)
+void HeroWindow::EnableAllWidgets(unsigned char enable)
 {
     // @stub
 }
@@ -475,23 +475,23 @@ void heroWindow::EnableAllWidgets(unsigned char enable)
 #endif  // @carcass
 
 VA(0x005ff460, 0x21)  // dc 0x197c08
-int heroWindow::doModal(unsigned char fadeIn)
+int HeroWindow::doModal(unsigned char fadeIn)
 {
     return g_windowManager->doDialog(this, heroWindowHandler, fadeIn);
 }
 
 VA(0x005ff490, 0x6C)  // dc 0x197c24
-void heroWindow::setFocus(int id)
+void HeroWindow::setFocus(int id)
 {
     if (m_focusId != -1) {
-        widget* current = getWidget(m_focusId);
+        Widget* current = getWidget(m_focusId);
         m_focusId = -1;
         if (current)
             current->onKillFocus();
     }
     m_focusId = id;
     if (id != -1) {
-        widget* current = getWidget(id);
+        Widget* current = getWidget(id);
         if (current)
             current->onSetFocus();
     }
@@ -510,15 +510,15 @@ void heroWindow::setFocus(int id)
 // vtable slot 3, which independently corroborates handle_message's
 // slot in the roster in window.h. Defined here so that DoModal's
 // address-take resolves; that claim is what scores the pair.
-int heroWindow::heroWindowHandler(message& msg)
+int HeroWindow::heroWindowHandler(Message& msg)
 {
     return msg.m_window->handleMessage(msg);
 }
 
 VA(0x005ff510, 0x60)  // dc 0x197c8c
-void heroWindow::deleteWidgets()
+void HeroWindow::deleteWidgets()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -526,9 +526,9 @@ void heroWindow::deleteWidgets()
 }
 
 VA(0x005ff570, 0x32)  // dc 0x197cd4
-void heroWindow::addWidgetsToMessageStream()
+void HeroWindow::addWidgetsToMessageStream()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -538,7 +538,7 @@ void heroWindow::addWidgetsToMessageStream()
 
 // Nested sleeps notify widgets only on the first sleep and final wake.
 VA(0x005ff5b0, 0x33)  // anchor-callee, callers byte-proven
-void heroWindow::sleepAllWidgets(unsigned char sleep)
+void HeroWindow::sleepAllWidgets(unsigned char sleep)
 {
     if (sleep) {
         if (m_sleepCount++ == 0)
@@ -550,16 +550,16 @@ void heroWindow::sleepAllWidgets(unsigned char sleep)
 }
 
 VA(0x005ff5f0, 0x4F)
-void heroWindow::vslot8(unsigned char on)
+void HeroWindow::vslot8(unsigned char on)
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it)
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it)
         (*it)->sleep(on);
 }
 
 VA(0x005ff640, 0x61)  // dc 0x197d48
 CHeroWindowEx::CHeroWindowEx(int winX, int winY, int winWidth, int winHeight,
                              unsigned winType)
-    : heroWindow(winX, winY, winWidth, winHeight, winType)
+    : HeroWindow(winX, winY, winWidth, winHeight, winType)
 {
     m_rolloverId = -1;
 }
@@ -569,10 +569,10 @@ VA_COMPGEN(0x005ff6b0, 0x21, SCALAR_DELETING_DTOR, CHeroWindowEx)
 VA(0x005ff6e0, 0xAE)  // dc 0x197d9c
 unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
 {
-    textWidget* rollover = getRolloverWidget();
+    TextWidget* rollover = getRolloverWidget();
     if (!rollover)
         return 0;
-    widget* hit = findWidgetPtr(mouseX, mouseY);
+    Widget* hit = findWidgetPtr(mouseX, mouseY);
     int id = -1;
     if (hit)
         id = hit->m_id;
@@ -584,9 +584,9 @@ unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
             text = hit->getHelpText();
             if (!text)
                 text = emptyText;
-            g_mouseManager->setPointer(1, mouseManager::DEFAULT_SET);
+            g_mouseManager->setPointer(1, MouseManager::DEFAULT_SET);
         } else {
-            g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+            g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
         }
         rollover->setText(text);
         drawWindow(0, rollover->m_id, rollover->m_id);
@@ -599,7 +599,7 @@ unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
 VA(0x005ff790, 0x82)  // dc 0x197e58
 unsigned char CHeroWindowEx::processRightSelect(int id)
 {
-    widget* current = getWidget(id);
+    Widget* current = getWidget(id);
     if (!current)
         return 0;
     const char* text = current->getRclickText();
@@ -617,28 +617,28 @@ unsigned char CHeroWindowEx::processRightSelect(int id)
 // order), and the no-match arm returns 0 WITHOUT re-testing the exit
 // flag - retail jumps straight to the shared `xor eax,eax` tail.
 VA(0x005ff820, 0xA5)  // anchor-vtable (slot 9 of 0x243ce8), dc 0x197eb4
-int CHeroWindowEx::windowHandler(message& msg)
+int CHeroWindowEx::windowHandler(Message& msg)
 {
     bool exitFlag = 0;
 
     if ((msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
-        && (msg.m_codeX == widget::WIDGET_SELECT
-            || msg.m_codeX == widget::WIDGET_RIGHT_SELECT)) {
+        && (msg.m_codeX == Widget::WIDGET_SELECT
+            || msg.m_codeX == Widget::WIDGET_RIGHT_SELECT)) {
         if (processRightSelect(msg.m_codeY))
             return 1;
     } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
         if (processHover(msg.m_mouseX, msg.m_mouseY))
             return 1;
     } else if (msg.m_id == MESSAGE_WIDGET
-               && msg.m_codeX == widget::WIDGET_DESELECT) {
+               && msg.m_codeX == Widget::WIDGET_DESELECT) {
         onWidgetDeselect(msg.m_codeY, exitFlag);
     } else {
         return 0;
     }
     if (exitFlag) {
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = Widget::WIDGET_END_DIALOG;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         return 2;
     }
     return 0;
@@ -655,17 +655,17 @@ int CHeroWindowEx::onWidgetDeselect(int id, bool& exitFlag)
 }
 
 VA(0x005ff8d0, 0x3)  // dc 0x197f4c
-textWidget* CHeroWindowEx::getRolloverWidget()
+TextWidget* CHeroWindowEx::getRolloverWidget()
 {
     return 0;
 }
 
 VA(0x005ff8e0, 0x75)  // dc 0x197f50
-void CHeroWindowEx::setHelpText(THelpText* helpText, int start, int stop,
+void CHeroWindowEx::setHelpText(HelpText* helpText, int start, int stop,
                                 unsigned char copyText)
 {
     for (int i = start; i < stop; i++) {
-        widget* current = getWidget(i);
+        Widget* current = getWidget(i);
         if (current)
             current->setHelpText(helpText[i - start].m_text,
                                    helpText[i - start].m_rclick, copyText);
@@ -675,7 +675,7 @@ void CHeroWindowEx::setHelpText(THelpText* helpText, int start, int stop,
 VA(0x005ff960, 0xC3)  // dc 0x197fd8
 unsigned char initializeWinSetupText()
 {
-    TTextResource* textResource = ResourceManager::getText(
+    TextResource* textResource = ResourceManager::getText(
         DATA_COMPGEN(0x0068c838, winSetupTextName, "jktext.txt"));
     if (!textResource)
         return 0;
@@ -723,9 +723,9 @@ unsigned char initializeWinSetupText()
 }
 
 VA(0x005ffa30, 0xC1)  // dc 0x198130
-void setWinText(heroWindow* win, int winId)
+void setWinText(HeroWindow* win, int winId)
 {
-    message msg;
+    Message msg;
     msg.m_id = 0;
     msg.m_codeX = 0;
     msg.m_codeY = 0;
@@ -737,7 +737,7 @@ void setWinText(heroWindow* win, int winId)
     for (unsigned i = 0; i < 37; ++i) {
         if (g_winSetup[i].m_windowId == winId) {
             msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_SET_TEXT;
+            msg.m_codeX = Widget::WIDGET_SET_TEXT;
             msg.m_codeY = g_winSetup[i].m_widgetId;
             msg.m_extraText = g_winSetup[i].m_text;
             win->broadcastMessage(msg);
@@ -749,7 +749,7 @@ void setWinText(heroWindow* win, int winId)
 
 // E:\gamedcs\window.cpp:68
 DC_ONLY(0x1981ac, 0x34)
-void* heroWindow::`scalar deleting destructor'(unsigned __flags)
+void* HeroWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -763,119 +763,119 @@ void* CHeroWindowEx::`scalar deleting destructor'(unsigned __flags)
 
 // ..\stlport\stl_vector.h:188
 DC_ONLY(0x198214, 0x38)
-std::reverse_iterator<widget std::vector<widget *,std::allocator<widget *> >::rbegin(__$ReturnUdt)
+std::reverse_iterator<widget std::vector<Widget *,std::allocator<Widget *> >::rbegin(__$ReturnUdt)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:192
 DC_ONLY(0x19824c, 0x38)
-std::reverse_iterator<widget std::vector<widget *,std::allocator<widget *> >::rend(__$ReturnUdt)
+std::reverse_iterator<widget std::vector<Widget *,std::allocator<Widget *> >::rend(__$ReturnUdt)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:506
 DC_ONLY(0x198284, 0x38)
-void std::vector<widget *,std::allocator<widget *> >::clear()
+void std::vector<Widget *,std::allocator<Widget *> >::clear()
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator.h:325
 DC_ONLY(0x1982bc, 0x20)
-void std::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>(const std::reverse_iterator<widget* __x)
+void std::reverse_iterator<Widget * const *,Widget *,Widget * const &,Widget * const *,int>::reverse_iterator<Widget * const *,Widget *,Widget * const &,Widget * const *,int>(const std::reverse_iterator<Widget* __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator.h:330
 DC_ONLY(0x1982dc, 0x6)
-widget** std::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>::operator*()
+Widget** std::reverse_iterator<Widget * const *,Widget *,Widget * const &,Widget * const *,int>::operator*()
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator.h:340
 DC_ONLY(0x1982e4, 0x38)
-std::reverse_iterator<widget std::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>::operator++(__$ReturnUdt, int __formal)
+std::reverse_iterator<widget std::reverse_iterator<Widget * const *,Widget *,Widget * const &,Widget * const *,int>::operator++(__$ReturnUdt, int __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:180
 DC_ONLY(0x19831c, 0x4)
-widget** std::vector<widget *,std::allocator<widget *> >::begin()
+Widget** std::vector<Widget *,std::allocator<Widget *> >::begin()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:182
 DC_ONLY(0x198320, 0x4)
-widget** std::vector<widget *,std::allocator<widget *> >::end()
+Widget** std::vector<Widget *,std::allocator<Widget *> >::end()
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:490
 DC_ONLY(0x198324, 0x3C)
-widget** std::vector<widget *,std::allocator<widget *> >::erase(widget** __first, widget** __last)
+Widget** std::vector<Widget *,std::allocator<Widget *> >::erase(Widget** __first, Widget** __last)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator.h:326
 DC_ONLY(0x198360, 0x6)
-void std::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>(widget** __x)
+void std::reverse_iterator<Widget * const *,Widget *,Widget * const &,Widget * const *,int>::reverse_iterator<Widget * const *,Widget *,Widget * const &,Widget * const *,int>(Widget** __x)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator.h:329
 DC_ONLY(0x198368, 0x4)
-widget** std::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>::base()
+Widget** std::reverse_iterator<Widget * const *,Widget *,Widget * const &,Widget * const *,int>::base()
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator.h:428
 DC_ONLY(0x19836c, 0x1C)
-unsigned char std::operator!=(const std::reverse_iterator<widget* __x, const std::reverse_iterator<widget* __y)
+unsigned char std::operator!=(const std::reverse_iterator<Widget* __x, const std::reverse_iterator<Widget* __y)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:322
 DC_ONLY(0x198388, 0x50)
-widget** std::copy(widget** __first, widget** __last, widget** __result)
+Widget** std::copy(Widget** __first, Widget** __last, Widget** __result)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator.h:405
 DC_ONLY(0x1983d8, 0x2C)
-unsigned char std::operator==(const std::reverse_iterator<widget* __x, const std::reverse_iterator<widget* __y)
+unsigned char std::operator==(const std::reverse_iterator<Widget* __x, const std::reverse_iterator<Widget* __y)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:243
 DC_ONLY(0x198404, 0xC)
-std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, widget** __formal)
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, Widget** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_iterator_base.h:291
 DC_ONLY(0x198410, 0x4)
-int* std::distance_type(widget** __formal)
+int* std::distance_type(Widget** __formal)
 {
     // @stub
 }
 
 // ..\stlport\stl_algobase.h:209
 DC_ONLY(0x198414, 0x1E)
-widget** std::__copy(widget** __first, widget** __last, widget** __result, std::random_access_iterator_tag __formal, int* __formal)
+Widget** std::__copy(Widget** __first, Widget** __last, Widget** __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }

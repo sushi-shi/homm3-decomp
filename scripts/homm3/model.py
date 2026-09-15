@@ -126,11 +126,31 @@ def selftest() -> list[str]:
     return failures
 
 
+def _compgen_rows(src_claims):
+    """Return compiler-function claims with the model's global name dedup.
+
+    Delinked target symbols use the same ``_<rva>`` suffix as the main model
+    when two source claims have one semantic raw name.  The manifest must use
+    that spelling too or the normalized-object gate sees the second function
+    as unclaimed.
+    """
+    seen_names = set()
+    rows = []
+    for claim in src_claims:
+        name = claim.meta.get("raw", claim.name)
+        if name in seen_names:
+            name = f"{name}_{claim.rva:x}"
+        seen_names.add(name)
+        if claim.meta.get("ckind"):
+            rows.append((claim, name))
+    return rows
+
+
 def _write_compgen(src_claims) -> None:
     """The source-owned compiler-function manifest, RAW names by design:
     a `$E<n>` ordinal is volatile, so normalization keys these bodies by
     unit + owner, never by the joined spelling."""
-    rows = [c for c in src_claims if c.meta.get("ckind")]
+    rows = _compgen_rows(src_claims)
     COMPGEN_OUT.parent.mkdir(parents=True, exist_ok=True)
     with COMPGEN_OUT.open("w", newline="") as fh:
         fh.write("# GENERATED: python3 -m homm3.model - source-owned "
@@ -139,8 +159,8 @@ def _write_compgen(src_claims) -> None:
             fh.write(prov + "\n")
         writer = csv.writer(fh, delimiter="\t")
         writer.writerow(["unit", "name", "kind", "owner", "size"])
-        for c in sorted(rows, key=lambda c: (c.unit, c.rva)):
-            writer.writerow([c.unit, c.meta["raw"], c.meta["ckind"],
+        for c, name in sorted(rows, key=lambda row: (row[0].unit, row[0].rva)):
+            writer.writerow([c.unit, name, c.meta["ckind"],
                              c.meta["owner"], f"0x{c.size:x}"])
 
 

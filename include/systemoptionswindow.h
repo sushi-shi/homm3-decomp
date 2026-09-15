@@ -12,7 +12,8 @@
 // the quit confirm (general text 68); the other values are forwarded whole
 // to the exit-command latch at 0x6976d8, so their labels stay ordinal
 // placeholders until that consumer names them.
-enum ESystemOptionsCommand {
+// Before normalization (type): ESystemOptionsCommand.
+enum SystemOptionsCommand {
     // 101 has no producer in this window - advManager::ProcessKeyPress's
     // N arm latches it directly, one below the 102 its L arm latches, so
     // the band starts here. Ordinal placeholder like its neighbours.
@@ -34,11 +35,12 @@ enum ESystemOptionsCommand {
     SYSOPT_COMMAND_111 = 111
 };
 
-class TSystemOptionsWindow : public CAdvPopup {
+// Before normalization (type): TSystemOptionsWindow.
+class SystemOptionsWindow : public CAdvPopup {
 public:
     // Dreamcast EOtherWidgetIDs, verbatim; retail's handler independently
     // proves every range and preference mapping.
-    enum EOtherWidgetIDs {
+    enum OtherWidgetIDs {
         BACKGROUND_ID = 200,
         MUSIC_VOLUME_0_ID = 201,
         MUSIC_VOLUME_1_ID = 202,
@@ -93,19 +95,19 @@ public:
     // this alignment gap; the reference layout retains the same boundary.
     char m_paddingBeforeQuickCombatSave[3];
 
-    TSystemOptionsWindow();
-    virtual ~TSystemOptionsWindow();
+    SystemOptionsWindow();
+    virtual ~SystemOptionsWindow();
     void doModal();
-    virtual int windowHandler(message& msg);
+    virtual int windowHandler(Message& msg);
     void updateSystemOptions(unsigned char firstUpdate);
 
 private:
     int m_quickCombatSave;           // +0x64
     int convertID2HelpID(int id) const;
 };
-SIZE(TSystemOptionsWindow, 0x68);
+SIZE(SystemOptionsWindow, 0x68);
 
-DATA(0x006a7584) extern THelpText g_systemOptionsHelp[48];
+DATA(0x006a7584) extern HelpText g_systemOptionsHelp[48];
 
 // --- TSystemOptionsWindow ---
 // CODEVIEW(E:\gamedcs\systemoptionswindow.cpp:43, dc 0x15f588) void TSystemOptionsWindow::TSystemOptionsWindow();

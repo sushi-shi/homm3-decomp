@@ -4,7 +4,8 @@
 
 class CMapChange;
 
-enum ECursorMoveTuning {
+// Before normalization (type): ECursorMoveTuning.
+enum CursorMoveTuning {
     CURSOR_INSTANT_WALK_SPEED = 4,
     CURSOR_IRREGULAR_STEP_PIXELS = 10,
     CURSOR_IRREGULAR_MIDDLE_STEP_PIXELS = 12,

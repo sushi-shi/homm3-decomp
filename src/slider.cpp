@@ -19,20 +19,20 @@
 DATA(0x0069fdd4)
 static int g_leftRightSave;
 
-VA_COMPGEN(0x00596020, 0x21, SCALAR_DELETING_DTOR, slider)
+VA_COMPGEN(0x00596020, 0x21, SCALAR_DELETING_DTOR, Slider)
 
 // E:\gamedcs\slider.cpp:35
 // No standalone Complete entry survives; keep the cross-build body out of
 // the retail object until a caller proves whether it was inlined or dropped.
 #if 0  // @carcass -- no retail entry
 DC_ONLY(0x1499f0, 0x58)
-slider::slider()
+Slider::Slider()
 {
 }
 #endif
 
 VA(0x00596050, 0x7D)  // dc 0x149a48
-void slider::initialize(const char* resourceName)
+void Slider::initialize(const char* resourceName)
 {
     if (m_width > m_height) {
         m_length = m_width;
@@ -55,10 +55,10 @@ void slider::initialize(const char* resourceName)
 }
 
 VA(0x005960D0, 0xA8)  // dc 0x149ae8
-slider::slider(int x, int y, int w, int h, int id, int num,
-               TSliderFunction func, EGraphics graphics, int page,
+Slider::Slider(int x, int y, int w, int h, int id, int num,
+               TSliderFunction func, Graphics graphics, int page,
                unsigned char hotKey)
-    : widget(x, y, w, h, id, 1)
+    : Widget(x, y, w, h, id, 1)
 {
     m_pageSize = page;
     if (w > h) {
@@ -82,14 +82,14 @@ slider::slider(int x, int y, int w, int h, int id, int num,
 }
 
 VA(0x00596180, 0x59)  // dc 0x149ba4
-slider::~slider()
+Slider::~Slider()
 {
     m_sliderBitmap->dispose();
     m_sliderSprite->dispose();
 }
 
 VA(0x005961E0, 0x4C)  // dc 0x149bec
-void slider::setState(int state)
+void Slider::setState(int state)
 {
     if (state < 0)
         state = 0;
@@ -105,7 +105,7 @@ void slider::setState(int state)
 }
 
 VA(0x00596230, 0x2A2)  // dc 0x149c90
-void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
+void Slider::keyAccel(int x1, int x2, int x3, int x4, int key)
 {
     m_status |= WIDGET_SELECTED;
     m_sliderSprite->drawInterface(
@@ -180,7 +180,7 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
 }
 
 VA(0x005964E0, 0x4A0)  // dc 0x149f04
-int slider::main(message& msg)
+int Slider::main(Message& msg)
 {
     if (m_style == WIDGET_STYLE_AUTO_REPEAT && (m_status & WIDGET_SELECTED)) {
         unsigned long repeatTime = g_timers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT];
@@ -191,7 +191,7 @@ int slider::main(message& msg)
     if (!(m_status & WIDGET_ACTIVE)) {
         if (msg.m_id != MESSAGE_WIDGET)
             return 0;
-        return widget::main(msg);
+        return Widget::main(msg);
     }
 
     unsigned char isDisabled = 0;
@@ -328,11 +328,11 @@ int slider::main(message& msg)
     }
     }
 
-    return widget::main(msg);
+    return Widget::main(msg);
 }
 
 VA(0x00596980, 0x167)  // dc 0x14a380
-int slider::select(message* msg, unsigned char dragging)
+int Slider::select(Message* msg, unsigned char dragging)
 {
     m_status |= WIDGET_SELECTED;
 
@@ -385,7 +385,7 @@ int slider::select(message* msg, unsigned char dragging)
 }
 
 VA(0x00596AF0, 0x143)  // dc 0x14a508
-int slider::deselect(message* msg)
+int Slider::deselect(Message* msg)
 {
     if (!(m_status & WIDGET_SELECTED))
         return 0;
@@ -437,15 +437,15 @@ int slider::deselect(message* msg)
 // units (vtable targets 0x4eab20/30 and 0x5bc7e0).
 #if 0  // @carcass -- ICF/header COMDAT, no slider.obj home
 DC_ONLY(0x14a67c, 0x16)
-int slider::getRealWidth() const { /* @stub: DC calls the sprite GetWidth. */ }
+int Slider::getRealWidth() const { /* @stub: DC calls the sprite GetWidth. */ }
 DC_ONLY(0x14a694, 0x16)
-int slider::getRealHeight() const { /* @stub: DC calls the sprite GetHeight. */ }
+int Slider::getRealHeight() const { /* @stub: DC calls the sprite GetHeight. */ }
 DC_ONLY(0x14a6ac, 0x4)
-void slider::zBufferDraw() {}
+void Slider::zBufferDraw() {}
 #endif
 
 VA(0x00596C40, 0x3D5)  // dc 0x14a6b0
-void slider::draw() const
+void Slider::draw() const
 {
     if (m_width > m_height) {
         if ((m_status & WIDGET_SELECTED) && m_clickX - m_x < m_knobStart) {
@@ -523,7 +523,7 @@ void slider::draw() const
 }
 
 VA(0x00597020, 0x84)  // dc 0x14aaa0
-void slider::setKnob(int inX)
+void Slider::setKnob(int inX)
 {
     if (m_width > m_height)
         inX -= m_knobStart / 2 + m_x + m_knobStart;
@@ -543,7 +543,7 @@ void slider::setKnob(int inX)
 }
 
 VA(0x005970B0, 0x35)  // dc 0x14ab4c
-void slider::updateResolution(int num)
+void Slider::updateResolution(int num)
 {
     if (num != m_numStates) {
         if (num > 0)
@@ -555,7 +555,7 @@ void slider::updateResolution(int num)
 }
 
 VA(0x005970F0, 0x2A)  // dc 0x14ab7c
-void slider::setResolution(int num)
+void Slider::setResolution(int num)
 {
     m_knobPos = m_knobStart;
     m_oldState = 0;
@@ -567,19 +567,19 @@ void slider::setResolution(int num)
 }
 
 VA(0x00597120, 0x5)  // dc 0x14aba0
-void slider::onSetFocus()
+void Slider::onSetFocus()
 {
     m_scrolling = 1;
 }
 
 VA(0x00597130, 0x5)  // dc 0x14aba8
-void slider::onKillFocus()
+void Slider::onKillFocus()
 {
     m_scrolling = 0;
 }
 
 VA(0x00597140, 0x45)  // dc 0x14abb0
-void slider::enable(unsigned char arg)
+void Slider::enable(unsigned char arg)
 {
     if (arg) {
         sendMessage(WIDGET_CLEAR_STATUS, WIDGET_DISABLED);

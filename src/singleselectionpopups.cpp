@@ -79,13 +79,13 @@ VA_COMPGEN(0x00575260, 0x21, SCALAR_DELETING_DTOR, CHotspotWidget)  // vtbl 0x64
 // it to 90.06 - the `--branches` DUP-EXIT with the guard block moved. Not
 // source-reachable, same as border::Main.
 VA(0x00575290, 0x179)  // anchor-vtable CHotspotWidget vtbl 0x6419a4 slot2 (Main override), ret 4, dc 0x12dea8
-int CHotspotWidget::main(message& msg)
+int CHotspotWidget::main(Message& msg)
 {
     if (m_sleepCount > 0)
         return 0;
 
     if (!(m_status & WIDGET_ACTIVE))
-        return widget::main(msg);
+        return Widget::main(msg);
 
     unsigned char isDisabled = 0;
     if (m_status & WIDGET_DISABLED)
@@ -127,7 +127,7 @@ int CHotspotWidget::main(message& msg)
         msg.m_codeY = m_id;
         return 2;
     }
-    return widget::main(msg);
+    return Widget::main(msg);
 }
 
 // ============================================================================
@@ -147,13 +147,13 @@ unsigned char CBonusDlg::createWin(const char* title, CSprite* sprite, int frame
 {
     if (!setup(300, 225, 200, 150))
         return 0;
-    add(new textWidget(10, 26, m_width - 20, 36, title, "medfont.fnt",
-        font::PRIMARY, -1, 1, 0, 8));
+    add(new TextWidget(10, 26, m_width - 20, 36, title, "medfont.fnt",
+        Font::PRIMARY, -1, 1, 0, 8));
     add(new CSpriteWidget((m_width - sprite->getWidth()) / 2, 60, sprite, frame));
-    add(new textWidget(10, 95, m_width - 20, 18, botTitle, "smalfont.fnt",
-        font::PRIMARY, -1, 1, 0, 8));
-    add(new textWidget(15, 120, m_width - 30, m_height - 120, description,
-        "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
+    add(new TextWidget(10, 95, m_width - 20, 18, botTitle, "smalfont.fnt",
+        Font::PRIMARY, -1, 1, 0, 8));
+    add(new TextWidget(15, 120, m_width - 30, m_height - 120, description,
+        "smalfont.fnt", Font::PRIMARY, -1, 1, 0, 8));
     return 1;
 }
 
@@ -195,20 +195,20 @@ unsigned char CBonusDlg::createWin(const char* title, Bitmap816* image, const ch
 {
     if (!setup(300, 225, 200, 150))
         return 0;
-    add(new textWidget(10, 26, m_width - 20, 36, title, "medfont.fnt",
-        font::PRIMARY, -1, 1, 0, 8));
+    add(new TextWidget(10, 26, m_width - 20, 36, title, "medfont.fnt",
+        Font::PRIMARY, -1, 1, 0, 8));
     add(new CBitmapWidget((m_width - image->getWidth()) / 2, 60, image));
-    add(new textWidget(10, 95, m_width - 20, 18, botTitle, "smalfont.fnt",
-        font::PRIMARY, -1, 1, 0, 8));
-    add(new textWidget(15, 120, m_width - 30, m_height - 120, description,
-        "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
+    add(new TextWidget(10, 95, m_width - 20, 18, botTitle, "smalfont.fnt",
+        Font::PRIMARY, -1, 1, 0, 8));
+    add(new TextWidget(15, 120, m_width - 30, m_height - 120, description,
+        "smalfont.fnt", Font::PRIMARY, -1, 1, 0, 8));
     return 1;
 }
 
 VA(0x00575a10, 0x10)  // dc 0x12f0ac
-int CSpriteWidget::main(message& msg)
+int CSpriteWidget::main(Message& msg)
 {
-    return widget::main(msg);
+    return Widget::main(msg);
 }
 
 // ============================================================================
@@ -260,23 +260,23 @@ unsigned char CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSp
     if (!setup(250, 172, 300, 256))
         return 0;
 
-    add(new textWidget(30, 26, m_width - 60, 36,
-        g_generalText->getText(78), "medfont.fnt", font::PRIMARY,
+    add(new TextWidget(30, 26, m_width - 60, 36,
+        g_generalText->getText(78), "medfont.fnt", Font::PRIMARY,
         -1, 1, 0, 8));
     add(new CBitmapWidget((m_width - heroPick->getWidth()) / 2, 56, heroPick));
 
     sprintf(tempText, DATA_COMPGEN(
         0x0066033c, rolloverOwnedObjectFormat, "%s - %s"), heroName, desc);
-    add(new textWidget(30, 91, m_width - 60, 18, tempText,
-        "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
+    add(new TextWidget(30, 91, m_width - 60, 18, tempText,
+        "smalfont.fnt", Font::PRIMARY, -1, 1, 0, 8));
 
-    add(new textWidget(30, 122, m_width - 60, 36,
-        g_generalText->getText(79), "medfont.fnt", font::PRIMARY,
+    add(new TextWidget(30, 122, m_width - 60, 36,
+        g_generalText->getText(79), "medfont.fnt", Font::PRIMARY,
         -1, 1, 0, 8));
     add(new CSpriteWidget((m_width - specialtyIcon->getWidth()) / 2, 149,
         specialtyIcon, frame));
-    add(new textWidget(30, specialtyIcon->getHeight() + 151, m_width - 60, 36,
-        specialtyName, "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
+    add(new TextWidget(30, specialtyIcon->getHeight() + 151, m_width - 60, 36,
+        specialtyName, "smalfont.fnt", Font::PRIMARY, -1, 1, 0, 8));
     return 1;
 }
 
@@ -294,20 +294,20 @@ VA_COMPGEN(0x00575e30, 0x21, SCALAR_DELETING_DTOR, CHeroDlg)  // vtbl 0x641a68/0
 
 // E:\gamedcs\singleselectionpopups.cpp:302
 VA(0x00575e60, 0x670)  // anchor-vtable CTownDlg::CreateWin inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0xc (3 args), dc 0x12e708
-unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
+unsigned char CTownDlg::createWin(CSprite* town, int frame, TownType townType)
 {
     if (!setup(272, 140, 256, 320))
         return 0;
 
-    add(new textWidget(10, 26, m_width - 20, 36,
-        g_generalText->getText(81), "medfont.fnt", font::PRIMARY,
+    add(new TextWidget(10, 26, m_width - 20, 36,
+        g_generalText->getText(81), "medfont.fnt", Font::PRIMARY,
         -1, 1, 0, 8));
     add(new CSpriteWidget((m_width - town->getWidth()) / 2, 60, town, frame));
-    add(new textWidget(10, 95, m_width - 20, 18,
-        g_unnamed6a74f4[townType], "smalfont.fnt", font::PRIMARY,
+    add(new TextWidget(10, 95, m_width - 20, 18,
+        g_unnamed6a74f4[townType], "smalfont.fnt", Font::PRIMARY,
         -1, 1, 0, 8));
-    add(new textWidget(10, 127, m_width - 20, 36,
-        g_generalText->getText(80), "medfont.fnt", font::PRIMARY,
+    add(new TextWidget(10, 127, m_width - 20, 36,
+        g_generalText->getText(80), "medfont.fnt", Font::PRIMARY,
         -1, 1, 0, 8));
 
     int centerX = m_width / 2;
@@ -317,14 +317,14 @@ unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
     int slot;
     for (slot = 0; slot < 3; ++slot) {
         int creature = g_townDwellingCreatures[creatureBase + slot];
-        iconWidget* portrait = new iconWidget(
+        IconWidget* portrait = new IconWidget(
             iconX, 159, 32, 32, slot, "cprsmall.def",
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+            0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
         add(portrait);
         portrait->setIconFrame(creature + 2);
-        add(new textWidget(textX, 193, 52, 32,
+        add(new TextWidget(textX, 193, 52, 32,
             g_creatureTypeTraits[creature].m_name, "tiny.fnt",
-            font::PRIMARY, -1, 1, 0, 8));
+            Font::PRIMARY, -1, 1, 0, 8));
         iconX += 52;
         textX += 52;
     }
@@ -333,14 +333,14 @@ unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
     textX = iconX - 10;
     for (slot = 3; slot < TOWN_DWELLING_COUNT; ++slot) {
         int creature = g_townDwellingCreatures[creatureBase + slot];
-        iconWidget* portrait = new iconWidget(
+        IconWidget* portrait = new IconWidget(
             iconX, 235, 32, 32, slot, "cprsmall.def",
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+            0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
         add(portrait);
         portrait->setIconFrame(creature + 2);
-        add(new textWidget(textX, 267, 52, 32,
+        add(new TextWidget(textX, 267, 52, 32,
             g_creatureTypeTraits[creature].m_name, "tiny.fnt",
-            font::PRIMARY, -1, 1, 0, 8));
+            Font::PRIMARY, -1, 1, 0, 8));
         iconX += 52;
         textX += 52;
     }
@@ -380,24 +380,24 @@ unsigned char CTeamAlignmentDlg::createWin()
     if (!setup(272, (600 - dialogHeight) / 2, 256, dialogHeight))
         return 0;
 
-    add(new textWidget(10, 20, m_width - 20, 36,
-        g_generalText->getText(658), "medfont.fnt", font::PRIMARY,
+    add(new TextWidget(10, 20, m_width - 20, 36,
+        g_generalText->getText(658), "medfont.fnt", Font::PRIMARY,
         -1, 1, 0, 8));
 
     for (int team = 0; team < m_numTeams; ++team) {
         int y = team * 50 + 56;
         sprintf(tempText, g_generalText->getText(657), team + 1);
-        add(new textWidget(10, y, m_width - 20, 18, tempText,
-            "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
+        add(new TextWidget(10, y, m_width - 20, 18, tempText,
+            "smalfont.fnt", Font::PRIMARY, -1, 1, 0, 8));
 
         int rowWidth = countNumPlayers(team) * 18 - 3;
         xStart = (m_width - rowWidth) / 2;
         for (int player = 0; player < 8; ++player) {
             if (m_teamMasks[team] & (1 << player)) {
-                iconWidget* flag = new iconWidget(
+                IconWidget* flag = new IconWidget(
                     xStart, y + 20, 15, 20, -1, "itgflags.def",
-                    0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
-                flag->sendMessage(widget::WIDGET_SET_ICON_FRAME, player);
+                    0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
+                flag->sendMessage(Widget::WIDGET_SET_ICON_FRAME, player);
                 add(flag);
                 xStart += 18;
             }
@@ -460,13 +460,13 @@ void CSingleSelPopup::CSingleSelPopup(int type, unsigned char newGameMode)
 }
 // E:\gamedcs\singleselectionpopups.h:39
 DC_ONLY(0x12eef4, 0x34)   // inlined
-void CSingleSelPopup::add(widget* w)
+void CSingleSelPopup::add(Widget* w)
 {
     // @stub
 }
 // E:\gamedcs\singleselectionpopups.h:75
 DC_ONLY(0x12efc0, 0x1C)   // inlined / thunk
-int CSingleSelPopup::exitDialog(message& msg)
+int CSingleSelPopup::exitDialog(Message& msg)
 {
     // @stub
 }
@@ -503,7 +503,7 @@ void CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* pImage)
 // --- CBitmapWidget::Main: ICF-folded onto CSpriteWidget::Main (0x575a10). ---
 // E:\gamedcs\singleselectionpopups.cpp:93
 DC_ONLY(0x12f1e0, 0x18)   // folds -> 0x575a10 (return widget::Main)
-int CBitmapWidget::main(message& msg)
+int CBitmapWidget::main(Message& msg)
 {
     // @stub
 }
@@ -595,21 +595,21 @@ const char* getStartingResourceDescription(int town)
 // quicktownwindow..recruit span and is left unclaimed.
 
 VA(0x00576F00, 0x190)
-TRandomMapProgress::TRandomMapProgress(int totalSteps)
-    : TProgressSink(totalSteps)
+RandomMapProgress::RandomMapProgress(int totalSteps)
+    : ProgressSink(totalSteps)
 {
     m_barSprite = ResourceManager::getSprite(
         DATA_COMPGEN(0x0067F5AC, progressBarSpriteName, "loadprog.def"));
     m_drawnPosition = 0;
-    m_window = new TDialogBox(240, 236, 320, 128, 0x12);
+    m_window = new DialogBoxWindow(240, 236, 320, 128, 0x12);
 
     const char* caption = g_generalText->getText(761);
     int captionWidth = g_mediumFont->getStringWidth(caption);
     int captionX = (m_window->m_width - captionWidth) / 2;
-    textWidget* captionWidget = new textWidget(
+    TextWidget* captionWidget = new TextWidget(
         captionX, 30, captionWidth, 20, caption,
         DATA_COMPGEN(0x0065F2EC, progressBarFontName, "medfont.fnt"),
-        font::PRIMARY, -1, 1, 0, 8);
+        Font::PRIMARY, -1, 1, 0, 8);
     m_widgets.push_back(captionWidget);
 
     for (unsigned int i = 0; i < m_widgets.size(); i++)
@@ -620,10 +620,10 @@ TRandomMapProgress::TRandomMapProgress(int totalSteps)
 }
 
 // Slot 0 of vtable 0x641b14.
-VA_COMPGEN(0x00577090, 0x21, SCALAR_DELETING_DTOR, TRandomMapProgress)
+VA_COMPGEN(0x00577090, 0x21, SCALAR_DELETING_DTOR, RandomMapProgress)
 
 VA(0x005770C0, 0xBE)
-TRandomMapProgress::~TRandomMapProgress()
+RandomMapProgress::~RandomMapProgress()
 {
     g_windowManager->removeWindow(m_window);
     delete m_window;
@@ -634,7 +634,7 @@ TRandomMapProgress::~TRandomMapProgress()
 }
 
 VA(0x00577180, 0x17F)
-void TRandomMapProgress::loadProgFn00577180()
+void RandomMapProgress::loadProgFn00577180()
 {
     if (!m_barSprite)
         return;
@@ -672,14 +672,14 @@ void TRandomMapProgress::loadProgFn00577180()
 
 // Slot 1 of vtable 0x641b14 - the base's SetTotal override.
 VA(0x00577300, 0x12)
-void TRandomMapProgress::setTotal(int totalSteps)
+void RandomMapProgress::setTotal(int totalSteps)
 {
     m_steps = totalSteps;
     loadProgFn00577180();
 }
 
 VA(0x00577320, 0x31)
-void TRandomMapProgress::advance(int amount)
+void RandomMapProgress::advance(int amount)
 {
     m_done = min(m_done + amount, m_steps);
     loadProgFn00577180();
@@ -691,4 +691,4 @@ void TRandomMapProgress::advance(int amount)
 // insert - cross-unit reach that only a shared COMDAT has. dialogbox 0x8dba0
 // (49 B, identical similarity) is reached only from unresolved labels inside
 // its own two segments.
-VA_COMPGEN(0x00574ce0, 0x2F, VECTOR_UCOPY, widget)
+VA_COMPGEN(0x00574ce0, 0x2F, VECTOR_UCOPY, Widget)

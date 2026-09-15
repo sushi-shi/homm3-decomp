@@ -23,14 +23,16 @@ struct IDirectDrawSurface;
 // ResourceManager::GetSprite - which returns CSprite*. The
 // SPointerSprite bootstrap view is retired.
 
-class mouseManager : public baseManager {
+// Before normalization (type): mouseManager.
+class MouseManager : public BaseManager {
 public:
     // DC CodeView enum mouseManager::EPointerSet, verbatim (the kb.cpp
     // roster attests GetSet() returning it). field_4c holds the
     // current set - the ctor's -1 store is INVALID_SET/SAME_SET, and
     // CheckUpdate's frame-cycling gate fires on SPELL_SET, the one
     // animated pointer family.
-    enum EPointerSet {
+// Before normalization (type): mouseManager::EPointerSet.
+    enum PointerSet {
         SAME_SET = -1,
         INVALID_SET = -1,
         DEFAULT_SET = 0x0,
@@ -42,7 +44,7 @@ public:
     };
     int m_noChangePointer;
     RECT m_savedRect;
-    EPointerSet m_set;
+    PointerSet m_set;
     int m_frame;
     CSprite* m_sprite;
     int m_imageX;
@@ -59,17 +61,17 @@ public:
     int m_currentY;
     int m_busy;
     CRITICAL_SECTION m_sectionMouse;
-    mouseManager();
+    MouseManager();
     //   3 ??_GmouseManager 0x50cbc0, with ~mouseManager inlined into it.
     // The written destructor belongs in mousemgr.cpp (CodeView line 344);
     // its expansion inside a generated wrapper does not imply header ownership.
     virtual int open(int newPriority);
     virtual void close();  // slot 1, retail 0x50cc40
-    virtual int main(message& msg);  // slot 2, folded onto 0x4ec560
-    virtual ~mouseManager();
+    virtual int main(Message& msg);  // slot 2, folded onto 0x4ec560
+    virtual ~MouseManager();
     void hidePointer();
     void showPointer(bool restore);
-    void setPointer(int newFrame, EPointerSet newSet);
+    void setPointer(int newFrame, PointerSet newSet);
     void mouseCoords(int& x, int& y);
     void update(bool forceIt);
     void checkUpdate();
@@ -89,7 +91,7 @@ public:
     {
         return m_frame;
     }
-    EPointerSet getSet() const
+    PointerSet getSet() const
     {
         return m_set;
     }
@@ -118,7 +120,7 @@ private:
 };
 
 // Retail .bss 0x699260 (DC ?gpMouseManager@@3PAVmouseManager@@A).
-extern mouseManager* g_mouseManager;
+extern MouseManager* g_mouseManager;
 
 // The three DirectDraw surfaces owned and loaded by mousemgr.cpp. The
 // wingraph lifecycle releases the same cells during graphics shutdown.

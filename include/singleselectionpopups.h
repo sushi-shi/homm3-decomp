@@ -14,7 +14,8 @@ class CSprite;
 
 class CSprite;
 class Bitmap816;
-enum TTownType;
+// Before normalization (type): TTownType.
+enum TownType;
 
 const char* getStartingResourceName(int town);
 const char* getStartingResourceDescription(int town);
@@ -25,11 +26,11 @@ const char* getStartingResourceDescription(int town);
 // parameter: `ret 0x14` is five dwords). Vtable 0x6419a4; zBufferDraw/Draw
 // are the folded shared empties (0x404140 / 0x404df0) so they stay
 // declaration-only, and the scalar deleting dtor tail-jumps to ~widget.
-class CHotspotWidget : public widget {
+class CHotspotWidget : public Widget {
 public:
     CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId);
     virtual ~CHotspotWidget();
-    virtual int main(message& msg);  // slot 2, retail 0x575290
+    virtual int main(Message& msg);  // slot 2, retail 0x575290
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     virtual void draw() const;             // slot 4, folded onto 0x404df0
 };
@@ -37,14 +38,14 @@ public:
 // Retail's constructor allocates 0x38 bytes and writes the sprite and frame
 // immediately after widget's proven 0x30-byte base. Its vtable at 0x641a00
 // independently fixes the four overrides below.
-class CSpriteWidget : public widget {
+class CSpriteWidget : public Widget {
 public:
     CSprite* m_sprite;
     int m_frame;
 
     CSpriteWidget(int xPos, int yPos, CSprite* sprite, int spriteFrame);
     virtual ~CSpriteWidget();
-    virtual int main(message& msg);  // slot 2, retail 0x575a10
+    virtual int main(Message& msg);  // slot 2, retail 0x575a10
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     virtual void draw() const;             // slot 4, retail 0x575750
 };
@@ -54,12 +55,12 @@ SIZE(CSpriteWidget, 0x38);
 // byte-proven by Draw reading it at [this+0x30]. Vtable 0x641a34; Main
 // ICF-folds onto CSpriteWidget::Main (0x575a10, `return widget::Main`) and
 // zBufferDraw onto the shared empty.
-class CBitmapWidget : public widget {
+class CBitmapWidget : public Widget {
 public:
     Bitmap816* m_image;
 
     CBitmapWidget(int xPos, int yPos, Bitmap816* image);
-    virtual int main(message& msg);  // slot 2, folds onto 0x575a10
+    virtual int main(Message& msg);  // slot 2, folds onto 0x575a10
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     virtual void draw() const;             // slot 4, retail 0x575a20
 };
@@ -71,25 +72,25 @@ class CNetMsgHandler;
 // inlined into the derived dialogs, and only handle_message (slot 3 of every
 // derived vtable, 0x575430) survives out of line. Adds one byte, gameMode,
 // at +0x54 - the first byte past the 0x54-byte TDialogBox base.
-class CSingleSelPopup : public TDialogBox {
+class CSingleSelPopup : public DialogBoxWindow {
 public:
     unsigned char m_gameMode;
 
     CSingleSelPopup(int type, unsigned char newGameMode)
-        : TDialogBox(type)
+        : DialogBoxWindow(type)
     {
         m_gameMode = newGameMode;
     }
     // Inlined into every CreateWin: push the widget onto the window's vector
     // and register it with priority -1 (dc 0x12eef4).
-    void add(widget* w)
+    void add(Widget* w)
     {
         m_widgets.push_back(w);
         addWidget(w, -1);
     }
 
     VA(0x00575430, 0x8f)  // dc 0x12ef28
-    virtual int handleMessage(message& msg)
+    virtual int handleMessage(Message& msg)
     {
         if (msg.m_id != MESSAGE_RIGHT_BUTTON_UP) {
             if (g_videoPaused && g_dPlay) {
@@ -99,18 +100,18 @@ public:
                     if (handler->getAbortPopupMsg()) {
                         msg.m_id = MESSAGE_WIDGET;
                         g_windowManager->m_dialogReturn = msg.m_codeY;
-                        msg.m_codeY = widget::WIDGET_END_DIALOG;
-                        msg.m_codeX = widget::WIDGET_END_DIALOG;
+                        msg.m_codeY = Widget::WIDGET_END_DIALOG;
+                        msg.m_codeX = Widget::WIDGET_END_DIALOG;
                         return 2;
                     }
                 }
             }
-            return heroWindow::handleMessage(msg);
+            return HeroWindow::handleMessage(msg);
         }
         msg.m_id = MESSAGE_WIDGET;
         g_windowManager->m_dialogReturn = msg.m_codeY;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = Widget::WIDGET_END_DIALOG;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         return 2;
     }
 };
@@ -140,7 +141,7 @@ public:
 class CTownDlg : public CSingleSelPopup {
 public:
     CTownDlg(unsigned char newGameMode);        // retail 0x575e10
-    unsigned char createWin(CSprite* town, int frame, TTownType townType);
+    unsigned char createWin(CSprite* town, int frame, TownType townType);
 };
 
 // The team-alignment picker adds a team-mask table at +0x58 and a count at
@@ -163,10 +164,11 @@ protected:
 // 0x641b14 names three of its four bodies outright (0x577090 scalar deleting
 // destructor, 0x577300 SetTotal, 0x577320 Advance); the constructor 0x576f00
 // and the repaint 0x577180 reach the rest.  Ordinal name.
-class TRandomMapProgress : public TProgressSink {
+// Before normalization (type): TRandomMapProgress.
+class RandomMapProgress : public ProgressSink {
 public:
-    std::vector<widget*> m_widgets;   // +0x0c
-    heroWindow* m_window;             // +0x1c
+    std::vector<Widget*> m_widgets;   // +0x0c
+    HeroWindow* m_window;             // +0x1c
     CSprite* m_barSprite;             // +0x20
     // The last permille-ish position Draw painted, cached so a repaint at an
     // unchanged position costs nothing.  Retail compares the fresh
@@ -178,8 +180,8 @@ public:
     // 0x28 bytes; 0x2c is an extent bound, not a proven retail sizeof.
     char m_pad28[4];
 
-    TRandomMapProgress(int totalSteps);
-    virtual ~TRandomMapProgress();
+    RandomMapProgress(int totalSteps);
+    virtual ~RandomMapProgress();
     virtual void setTotal(int totalSteps);
     virtual void advance(int amount);
     // Ordinal name, retained from the earlier singleselectionwindow.h model
@@ -187,6 +189,6 @@ public:
     void loadProgFn00577180();  // retail 0x577180
 };
 // Check this provisional view; exact retail extent remains unresolved.
-SIZE(TRandomMapProgress, 0x2c);
+SIZE(RandomMapProgress, 0x2c);
 
 #endif  /* HOMM3_SINGLESELECTIONPOPUPS_H */

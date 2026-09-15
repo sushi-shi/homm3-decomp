@@ -10,10 +10,10 @@
 // E:\gamedcs\seerhut.cpp:50, dc 0x12cd28
 unsigned char initializeSeerHutText();
 
-class TAdventureMapWindow;
-class hero;
+class AdventureMapWindow;
+class Hero;
 class NewmapCell;
-struct type_point;
+struct MapPoint;
 
 // Complete's seer-hut name table replaced Dreamcast's const-char pointer
 // array with Dinkumware strings; TSeerHut::GetName keeps the shared header
@@ -24,23 +24,23 @@ DATA(0x0069fab8) extern std::vector<std::string>* g_seerHutNamesPointer;
 
 // Retail's constructor family and NewfullMap vector walks prove the packed
 // five-byte guard record: a quest pointer followed by the visited-player mask.
-class TAbstractFile;
+class AbstractFile;
 
-class TQuestGuard {
+class QuestGuard {
 public:
-    type_quest* m_quest;
+    Quest* m_quest;
     unsigned char m_visitedPlayers;
     // readObject (0x502e00) retains constructor 0x572b50 on its quest-guard
     // local. This Complete-only class has no DC inline declaration; keep
     // one ordinary constructor definition in seerhut.cpp.
-    TQuestGuard();
-    void doEvent(hero* currentHero, bool humanPlayer,
-                 NewmapCell* eventCell, type_point point);
-    void read(TAbstractFile* infile);
+    QuestGuard();
+    void doEvent(Hero* currentHero, bool humanPlayer,
+                 NewmapCell* eventCell, MapPoint point);
+    void read(AbstractFile* infile);
     std::string questGuardFn00572E40(int player);
     std::string questGuardFn00573040(int player);
     std::string questGuardFn00572D60();
-    int save(TAbstractFile* outfile);
+    int save(AbstractFile* outfile);
     // Complete retains the Dreamcast TSeerHut predicate on the new shared
     // quest-guard base.  DoQuestLog proves that its final two tests are the
     // visited-player bit followed by a fresh quest-pointer read.
@@ -48,18 +48,19 @@ public:
         const unsigned char playerNum) const
     {
         return m_quest
-            && m_quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
+            && m_quest->questTexts()[Quest::QUEST_TEXT_LOG].length()
             && (m_visitedPlayers & (1 << playerNum))
             && m_quest;
     }
-    int load(TAbstractFile* infile, int saveVersion);
+    int load(AbstractFile* infile, int saveVersion);
 };
-SIZE(TQuestGuard, 0x5);
+SIZE(QuestGuard, 0x5);
 
 // Dreamcast names this reward domain on TSeerData. Retail's ten-way helper
 // dispatch and the three adjacent users preserve the same 0..10 values even
 // though the x86 build split the reward into its own 12-byte record.
-enum TSeerRewardType {
+// Before normalization (type): TSeerRewardType.
+enum SeerRewardType {
     eRewardNone = 0,
     eRewardExperience = 1,
     eRewardMana = 2,
@@ -75,12 +76,14 @@ enum TSeerRewardType {
 
 // Bytes +5..+0x10 of TSeerHut. The constructor initializes the common type
 // word; the remaining eight bytes are the selected reward's payload.
-struct TSeerReward {
+// Before normalization (type): TSeerReward.
+struct SeerReward {
 public:
     // DC TPrimarySkill values. Kept nested because the canonical global
     // secondary-skill header is intentionally outside game.h's wide include
     // closure; these are exactly the four case labels this record needs.
-    enum TPrimarySkillType {
+// Before normalization (type): TSeerReward::TPrimarySkillType.
+    enum PrimarySkillType {
         ePriSkillAttack = 0,
         ePriSkillDefense = 1,
         ePriSkillPower = 2,
@@ -115,29 +118,30 @@ public:
             signed int : 16;
         } m_creature;
     } m_value;
-    TSeerReward() : m_rewardType(0) {}
-    int getValue(const hero* currentHero);
-    void giveReward(hero* currentHero, bool humanPlayer);
-    int getRewardExtra(const hero* thisHero);
+    SeerReward() : m_rewardType(0) {}
+    int getValue(const Hero* currentHero);
+    void giveReward(Hero* currentHero, bool humanPlayer);
+    int getRewardExtra(const Hero* thisHero);
 };
-SIZE(TSeerReward, 0xc);
+SIZE(SeerReward, 0xc);
 
-struct TSeerData {
-    type_quest* m_quest;              // Prior role: quest.
+// Before normalization (type): TSeerData.
+struct SeerData {
+    Quest* m_quest;              // Prior role: quest.
     unsigned char m_visitedPlayers;  // Prior role: visitedPlayers.
-    TSeerReward m_reward;            // Prior role: reward.
+    SeerReward m_reward;            // Prior role: reward.
 };
-SIZE(TSeerData, 0x11);
+SIZE(SeerData, 0x11);
 
 // Retail indexes NewfullMap::SeerHutList with a 0x13 stride. Preserve the
 // Dreamcast-proven private TSeerData base with the revised Complete payload.
-class TSeerHut : private TSeerData {
+class SeerHut : private SeerData {
 public:
     // readObject's SEER arm tests the private base's quest pointer before
     // registering the deserialized record in the +0xb0 pool. These consumers
     // retain friendship while ordinary access stays on TSeerHut's surface.
     friend class NewfullMap;
-    friend class TAdventureMapWindow;
+    friend class AdventureMapWindow;
 
 private:
     // Dreamcast preserves this private source boundary. Complete replaces
@@ -147,7 +151,7 @@ private:
     // Dreamcast's next private helper owns the completion dialog and reward
     // application. Complete revises both models, while retaining the source
     // boundary inside DoSeerEvent's human arm.
-    inline void doCompletionDialog(hero* currentHero, bool humanPlayer);
+    inline void doCompletionDialog(Hero* currentHero, bool humanPlayer);
     // Dreamcast proves this nested no-local switch helper as the first call
     // made by DoCompletionDialog. Complete retains the boundary while
     // shifting the primary-skill icon domain by one.
@@ -164,7 +168,7 @@ public:
     unsigned char m_completedByPlayer;
     // E:\gamedcs\SeerHut.h:108, dc 0xf4b38
     VA(0x00573580, 0x13)
-    TSeerHut()
+    SeerHut()
     {
         m_quest = 0;
         m_visitedPlayers = 0;
@@ -173,12 +177,12 @@ public:
     }
     // Dreamcast supplies the surviving public name/signature; retail's
     // Complete-era body replaces the monolith with the virtual quest family.
-    void doSeerEvent(hero* currentHero, bool humanPlayer);
-    int getValue(hero* currentHero);
-    void read(TAbstractFile* infile);
+    void doSeerEvent(Hero* currentHero, bool humanPlayer);
+    int getValue(Hero* currentHero);
+    void read(AbstractFile* infile);
 
 private:
-    void load(TAbstractFile* infile, int saveVersion);
+    void load(AbstractFile* infile, int saveVersion);
 
 public:
     std::string seerHutFn005741B0(int player) const;
@@ -195,13 +199,13 @@ public:
     unsigned char questActiveforPlayer(
         const unsigned char playerNum) const
     {
-        type_quest* thisQuest = m_quest;
+        Quest* thisQuest = m_quest;
         if (!thisQuest)
             return 0;
 
         const std::string* questTexts = thisQuest->questTextRow()
-            + type_quest::QUEST_TEXT_COLUMNS * thisQuest->questType();
-        return questTexts[type_quest::QUEST_TEXT_LOG].length()
+            + Quest::QUEST_TEXT_COLUMNS * thisQuest->questType();
+        return questTexts[Quest::QUEST_TEXT_LOG].length()
             && (m_visitedPlayers & (1 << playerNum))
             && m_quest;
     }
@@ -216,9 +220,9 @@ private:
     // 0x573fd0, the SeerHutList twin of TQuestGuard::save and reached the
     // same way from NewfullMap::Save. Declared separately because the
     // seer and guard records each own their serialization interface.
-    int save(TAbstractFile* outfile);
+    int save(AbstractFile* outfile);
 };
-SIZE(TSeerHut, 0x13);
+SIZE(SeerHut, 0x13);
 
 #pragma pack(pop)
 

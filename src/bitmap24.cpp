@@ -201,7 +201,7 @@ VA_COMPGEN(0x0044ed20, 0x21, SCALAR_DELETING_DTOR, Bitmap24Bit)
 VA(0x0044ed50, 0xAA)
 Bitmap24Bit::Bitmap24Bit(const char* name, int w, int h,
                          const unsigned char* source, int size)
-    : resource(name, RESOURCE_TYPE_BITMAP24),
+    : Resource(name, RESOURCE_TYPE_BITMAP24),
       m_imageSize(w * h * 3), m_width(w), m_height(h)
 {
     m_dataSize = size ? size : m_imageSize;
@@ -212,7 +212,7 @@ Bitmap24Bit::Bitmap24Bit(const char* name, int w, int h,
 
 VA(0x0044ee00, 0xC0)
 Bitmap24Bit::Bitmap24Bit(const char* name, const char* path)
-    : resource(name, RESOURCE_TYPE_BITMAP24),
+    : Resource(name, RESOURCE_TYPE_BITMAP24),
       m_dataSize(0), m_imageSize(0), m_width(0), m_height(0), m_data(0)
 {
     char filename[261];
@@ -232,7 +232,7 @@ VA(0x0044eef0, 0xDB)  // dc 0x5281c
 int Bitmap24Bit::importPCXFile(const char* filename)
 {
     PcxData pdat;
-    imgdes pcxfile;
+    Imgdes pcxfile;
     int error = pcxinfo(filename, &pdat);
     if (error)
         return 1;

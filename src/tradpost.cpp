@@ -22,9 +22,9 @@
 #include "remote.h"
 #include "customcampaign.h"
 
-void tradeResourceSlider(int state, heroWindow* parentWindow);
-void giveResourceSlider(int state, heroWindow* parentWindow);
-void sellCreatureSlider(int state, heroWindow* parentWindow);
+void tradeResourceSlider(int state, HeroWindow* parentWindow);
+void giveResourceSlider(int state, HeroWindow* parentWindow);
+void sellCreatureSlider(int state, HeroWindow* parentWindow);
 
 // Market state the slider callbacks reach (declared ahead of their
 // definitions inside the dialog band below; the rest of the file-static
@@ -34,9 +34,9 @@ void sellCreatureSlider(int state, heroWindow* parentWindow);
 // DoMarket news one per gMarketWindow value, keeps its pointer here for
 // the modal loop, and deletes it on close.
 DATA(0x006aaab0) static int g_rightAmount;
-DATA(0x006aaab4) static TTradeResourceWindow* g_tradeWindow;
-DATA(0x006aaa8c) static TGiveResourceWindow* g_giveWindow;
-DATA(0x006aaabc) static TSellCreatureWindow* g_sellCreatureWindow;
+DATA(0x006aaab4) static TradeResourceWindow* g_tradeWindow;
+DATA(0x006aaa8c) static GiveResourceWindow* g_giveWindow;
+DATA(0x006aaabc) static SellCreatureWindow* g_sellCreatureWindow;
 
 // --- the five marketplace dialog (constructor, ??_G, destructor) triples ---
 // Retail emits each dialog as (constructor, ??_G, destructor) in image order;
@@ -54,195 +54,195 @@ DATA(0x006aaabc) static TSellCreatureWindow* g_sellCreatureWindow;
 // state table, which is also why /OPT:ICF could not fold them.
 
 VA(0x005df5f0, 0x200c)  // dc 0x181a88
-TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
+TradeResourceWindow::TradeResourceWindow(int x2, int y2)
     : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
     m_widgets.reserve(144);
 
-    m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 0,
+    m_widgets.push_back(new BitmapBorder(0, 0, m_width, m_height, 0,
         DATA_COMPGEN(0x0068c53c, tradeResourcesBackground, "TPMrkReS.pcx"),
         0x800));
-    m_widgets.push_back(new textWidget(0, 15, m_width, 30, 0,
+    m_widgets.push_back(new TextWidget(0, 15, m_width, 30, 0,
         DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
-        font::HEADING, 1, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(319, 47, 250, 77, 0,
+        Font::HEADING, 1, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(319, 47, 250, 77, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 2,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new iconWidget(141, 457, 32, 32, 3,
+        Font::PRIMARY, 2,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new IconWidget(141, 457, 32, 32, 3,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(429, 457, 32, 32, 11,
+    m_widgets.push_back(new IconWidget(429, 457, 32, 32, 11,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new textWidget(124, 497, 66, 20, 0,
+    m_widgets.push_back(new TextWidget(124, 497, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 497, 66, 20, 0,
+        Font::PRIMARY, 4, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 497, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 12, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(28, 140, 257, 20, 0,
+        Font::PRIMARY, 12, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(28, 140, 257, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 14, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(317, 139, 257, 20, 0,
+        Font::PRIMARY, 14, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(317, 139, 257, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 15, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 15, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new button(306, 520, 64, 32, 5,
+    m_widgets.push_back(new Button(306, 520, 64, 32, 5,
         DATA_COMPGEN(0x0068c530, marketDealButtonSprite, "TPMrkB.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(18, 521, 64, 32, 17,
+    m_widgets.push_back(new Button(18, 521, 64, 32, 17,
         DATA_COMPGEN(0x0068c520, marketButton1Sprite, "TPMrkBu1.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(18, 451, 64, 32, 18,
+    m_widgets.push_back(new Button(18, 451, 64, 32, 18,
         DATA_COMPGEN(0x0068c510, marketButton2Sprite, "TPMrkBu2.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(515, 451, 64, 32, 20,
+    m_widgets.push_back(new Button(515, 451, 64, 32, 20,
         DATA_COMPGEN(0x0068c500, marketButton4Sprite, "TPMrkBu4.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(228, 520, 64, 32, 7,
+    m_widgets.push_back(new Button(228, 520, 64, 32, 7,
         DATA_COMPGEN(0x0068c4f0, marketButton6Sprite, "TPMrkBu6.def"),
         0, 1, 0, 0, 2));
 
-    m_widgets.push_back(new iconWidget(58, 190, 32, 32, 21,
+    m_widgets.push_back(new IconWidget(58, 190, 32, 32, 21,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(141, 190, 32, 32, 22,
+    m_widgets.push_back(new IconWidget(141, 190, 32, 32, 22,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         1, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(223, 190, 32, 32, 23,
+    m_widgets.push_back(new IconWidget(223, 190, 32, 32, 23,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         2, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(58, 269, 32, 32, 24,
+    m_widgets.push_back(new IconWidget(58, 269, 32, 32, 24,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         3, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(141, 269, 32, 32, 25,
+    m_widgets.push_back(new IconWidget(141, 269, 32, 32, 25,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         4, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(223, 269, 32, 32, 26,
+    m_widgets.push_back(new IconWidget(223, 269, 32, 32, 26,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         5, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(141, 348, 32, 32, 27,
+    m_widgets.push_back(new IconWidget(141, 348, 32, 32, 27,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(41, 230, 66, 20, 0,
+    m_widgets.push_back(new TextWidget(41, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 35, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 230, 66, 20, 0,
+        Font::PRIMARY, 35, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(124, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 36, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(207, 230, 66, 20, 0,
+        Font::PRIMARY, 36, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(207, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 37, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(41, 309, 66, 20, 0,
+        Font::PRIMARY, 37, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(41, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 38, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 309, 66, 20, 0,
+        Font::PRIMARY, 38, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(124, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 39, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(207, 309, 66, 20, 0,
+        Font::PRIMARY, 39, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(207, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 40, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 388, 66, 20, 0,
+        Font::PRIMARY, 40, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(124, 388, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 41, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 41, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new bitmapBorder(37, 180, 74, 70, MARKET_SELL_WOOD_ID,
+    m_widgets.push_back(new BitmapBorder(37, 180, 74, 70, MARKET_SELL_WOOD_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(120, 180, 74, 70,
+    m_widgets.push_back(new BitmapBorder(120, 180, 74, 70,
         MARKET_SELL_MERCURY_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(203, 180, 74, 70, MARKET_SELL_ORE_ID,
+    m_widgets.push_back(new BitmapBorder(203, 180, 74, 70, MARKET_SELL_ORE_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(37, 259, 74, 70, MARKET_SELL_SULFUR_ID,
+    m_widgets.push_back(new BitmapBorder(37, 259, 74, 70, MARKET_SELL_SULFUR_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(120, 259, 74, 70,
+    m_widgets.push_back(new BitmapBorder(120, 259, 74, 70,
         MARKET_SELL_CRYSTAL_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(203, 259, 74, 70, MARKET_SELL_GEMS_ID,
+    m_widgets.push_back(new BitmapBorder(203, 259, 74, 70, MARKET_SELL_GEMS_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(120, 338, 74, 70, MARKET_SELL_GOLD_ID,
+    m_widgets.push_back(new BitmapBorder(120, 338, 74, 70, MARKET_SELL_GOLD_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
 
-    m_widgets.push_back(new iconWidget(346, 190, 32, 32, 42,
+    m_widgets.push_back(new IconWidget(346, 190, 32, 32, 42,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(429, 190, 32, 32, 43,
+    m_widgets.push_back(new IconWidget(429, 190, 32, 32, 43,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         1, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(512, 190, 32, 32, 44,
+    m_widgets.push_back(new IconWidget(512, 190, 32, 32, 44,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         2, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(346, 269, 32, 32, 45,
+    m_widgets.push_back(new IconWidget(346, 269, 32, 32, 45,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         3, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(429, 269, 32, 32, 46,
+    m_widgets.push_back(new IconWidget(429, 269, 32, 32, 46,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         4, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(512, 269, 32, 32, 47,
+    m_widgets.push_back(new IconWidget(512, 269, 32, 32, 47,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         5, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(429, 348, 32, 32, 48,
+    m_widgets.push_back(new IconWidget(429, 348, 32, 32, 48,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(328, 230, 66, 20, 0,
+    m_widgets.push_back(new TextWidget(328, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 77, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 230, 66, 20, 0,
+        Font::PRIMARY, 77, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 78, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 230, 66, 20, 0,
+        Font::PRIMARY, 78, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(494, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 79, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(328, 309, 66, 20, 0,
+        Font::PRIMARY, 79, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(328, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 80, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 309, 66, 20, 0,
+        Font::PRIMARY, 80, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 81, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 309, 66, 20, 0,
+        Font::PRIMARY, 81, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(494, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 82, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 388, 66, 20, 0,
+        Font::PRIMARY, 82, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 388, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 83, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 83, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new bitmapBorder(325, 180, 74, 70, MARKET_BUY_WOOD_ID,
+    m_widgets.push_back(new BitmapBorder(325, 180, 74, 70, MARKET_BUY_WOOD_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(408, 180, 74, 70,
+    m_widgets.push_back(new BitmapBorder(408, 180, 74, 70,
         MARKET_BUY_MERCURY_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(491, 180, 74, 70, MARKET_BUY_ORE_ID,
+    m_widgets.push_back(new BitmapBorder(491, 180, 74, 70, MARKET_BUY_ORE_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(325, 259, 74, 70, MARKET_BUY_SULFUR_ID,
+    m_widgets.push_back(new BitmapBorder(325, 259, 74, 70, MARKET_BUY_SULFUR_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(408, 259, 74, 70,
+    m_widgets.push_back(new BitmapBorder(408, 259, 74, 70,
         MARKET_BUY_CRYSTAL_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(491, 259, 74, 70, MARKET_BUY_GEMS_ID,
+    m_widgets.push_back(new BitmapBorder(491, 259, 74, 70, MARKET_BUY_GEMS_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(408, 338, 74, 70, MARKET_BUY_GOLD_ID,
+    m_widgets.push_back(new BitmapBorder(408, 338, 74, 70, MARKET_BUY_GOLD_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
 
-    m_resourceSlider = new slider(231, 490, 137, 16, 6, 11,
-        tradeResourceSlider, slider::BROWN, 0, 0);
+    m_resourceSlider = new Slider(231, 490, 137, 16, 6, 11,
+        tradeResourceSlider, Slider::BROWN, 0, 0);
     m_widgets.push_back(m_resourceSlider);
 
-    m_widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
+    m_widgets.push_back(new BitmapBorder(8, 568, 585, 18, 146,
         DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"), 0x800));
-    m_widgets.push_back(new textWidget(8, 568, 585, 18, 0,
+    m_widgets.push_back(new TextWidget(8, 568, 585, 18, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 147, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 147, Font::CENTER_JUSTIFIED, 0, 8));
 
-    button* okButton = new button(515, 520, 64, 32, MARKET_COMMAND_ID,
+    Button* okButton = new Button(515, 520, 64, 32, MARKET_COMMAND_ID,
         DATA_COMPGEN(0x0065f470, okWideButtonSprite, "iOk6432.def"),
         0, 1, 1, 28, 2);
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -251,215 +251,215 @@ TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
 }
 
 VA(0x005e1600, 0x14)  // dc 0x181a34
-void tradeResourceSlider(int state, heroWindow* parentWindow)
+void tradeResourceSlider(int state, HeroWindow* parentWindow)
 {
     g_rightAmount = state;
     g_tradeWindow->update(1);
 }
 
-VA_COMPGEN(0x005e1620, 0x21, SCALAR_DELETING_DTOR, TTradeResourceWindow)
+VA_COMPGEN(0x005e1620, 0x21, SCALAR_DELETING_DTOR, TradeResourceWindow)
 
 VA(0x005e1650, 0x6B)  // dc 0x182dc0
-TTradeResourceWindow::~TTradeResourceWindow()
+TradeResourceWindow::~TradeResourceWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
 }
 
 VA(0x005e16c0, 0x1fab)  // dc 0x182e24
-TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
+GiveResourceWindow::GiveResourceWindow(int x2, int y2)
     : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
     m_widgets.reserve(151);
 
-    m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 0,
+    m_widgets.push_back(new BitmapBorder(0, 0, m_width, m_height, 0,
         DATA_COMPGEN(0x0068c56c, giveResourcesBackground, "TPMrkPtS.pcx"),
         0x800));
-    m_widgets.push_back(new textWidget(0, 15, m_width, 30, 0,
+    m_widgets.push_back(new TextWidget(0, 15, m_width, 30, 0,
         DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
-        font::HEADING, 1, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(33, 47, 250, 77, 0,
+        Font::HEADING, 1, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(33, 47, 250, 77, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 2,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new iconWidget(141, 457, 32, 32, 3,
+        Font::PRIMARY, 2,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new IconWidget(141, 457, 32, 32, 3,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(416, 451, 58, 64, 13,
+    m_widgets.push_back(new IconWidget(416, 451, 58, 64, 13,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new textWidget(124, 497, 66, 20, 0,
+    m_widgets.push_back(new TextWidget(124, 497, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 517, 66, 20, 0,
+        Font::PRIMARY, 4, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 517, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 12, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(28, 140, 257, 20, 0,
+        Font::PRIMARY, 12, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(28, 140, 257, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 14, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(317, 48, 257, 20, 0,
+        Font::PRIMARY, 14, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(317, 48, 257, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 15, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 15, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new button(306, 520, 64, 32, 5,
+    m_widgets.push_back(new Button(306, 520, 64, 32, 5,
         DATA_COMPGEN(0x0068c530, marketDealButtonSprite, "TPMrkB.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(515, 451, 64, 32, 16,
+    m_widgets.push_back(new Button(515, 451, 64, 32, 16,
         DATA_COMPGEN(0x0068c55c, marketButton5Sprite, "TPMrkBu5.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(18, 451, 64, 32, 18,
+    m_widgets.push_back(new Button(18, 451, 64, 32, 18,
         DATA_COMPGEN(0x0068c510, marketButton2Sprite, "TPMrkBu2.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(228, 520, 64, 32, 7,
+    m_widgets.push_back(new Button(228, 520, 64, 32, 7,
         DATA_COMPGEN(0x0068c4f0, marketButton6Sprite, "TPMrkBu6.def"),
         0, 1, 0, 0, 2));
 
-    m_widgets.push_back(new iconWidget(58, 190, 32, 32, 21,
+    m_widgets.push_back(new IconWidget(58, 190, 32, 32, 21,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(141, 190, 32, 32, 22,
+    m_widgets.push_back(new IconWidget(141, 190, 32, 32, 22,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         1, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(223, 190, 32, 32, 23,
+    m_widgets.push_back(new IconWidget(223, 190, 32, 32, 23,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         2, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(58, 269, 32, 32, 24,
+    m_widgets.push_back(new IconWidget(58, 269, 32, 32, 24,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         3, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(141, 269, 32, 32, 25,
+    m_widgets.push_back(new IconWidget(141, 269, 32, 32, 25,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         4, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(223, 269, 32, 32, 26,
+    m_widgets.push_back(new IconWidget(223, 269, 32, 32, 26,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         5, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(141, 348, 32, 32, 27,
+    m_widgets.push_back(new IconWidget(141, 348, 32, 32, 27,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(41, 230, 66, 20, 0,
+    m_widgets.push_back(new TextWidget(41, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 35, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 230, 66, 20, 0,
+        Font::PRIMARY, 35, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(124, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 36, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(207, 230, 66, 20, 0,
+        Font::PRIMARY, 36, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(207, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 37, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(41, 309, 66, 20, 0,
+        Font::PRIMARY, 37, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(41, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 38, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 309, 66, 20, 0,
+        Font::PRIMARY, 38, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(124, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 39, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(207, 309, 66, 20, 0,
+        Font::PRIMARY, 39, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(207, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 40, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 388, 66, 20, 0,
+        Font::PRIMARY, 40, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(124, 388, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 41, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 41, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new bitmapBorder(37, 180, 74, 70, MARKET_SELL_WOOD_ID,
+    m_widgets.push_back(new BitmapBorder(37, 180, 74, 70, MARKET_SELL_WOOD_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(120, 180, 74, 70,
+    m_widgets.push_back(new BitmapBorder(120, 180, 74, 70,
         MARKET_SELL_MERCURY_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(203, 180, 74, 70, MARKET_SELL_ORE_ID,
+    m_widgets.push_back(new BitmapBorder(203, 180, 74, 70, MARKET_SELL_ORE_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(37, 259, 74, 70, MARKET_SELL_SULFUR_ID,
+    m_widgets.push_back(new BitmapBorder(37, 259, 74, 70, MARKET_SELL_SULFUR_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(120, 259, 74, 70,
+    m_widgets.push_back(new BitmapBorder(120, 259, 74, 70,
         MARKET_SELL_CRYSTAL_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(203, 259, 74, 70, MARKET_SELL_GEMS_ID,
+    m_widgets.push_back(new BitmapBorder(203, 259, 74, 70, MARKET_SELL_GEMS_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(120, 338, 74, 70, MARKET_SELL_GOLD_ID,
+    m_widgets.push_back(new BitmapBorder(120, 338, 74, 70, MARKET_SELL_GOLD_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
 
-    m_widgets.push_back(new iconWidget(333, 84, 58, 64, 49,
+    m_widgets.push_back(new IconWidget(333, 84, 58, 64, 49,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(416, 84, 58, 64, 50,
+    m_widgets.push_back(new IconWidget(416, 84, 58, 64, 50,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
         1, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(499, 84, 58, 64, 51,
+    m_widgets.push_back(new IconWidget(499, 84, 58, 64, 51,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
         2, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(333, 202, 58, 64, 52,
+    m_widgets.push_back(new IconWidget(333, 202, 58, 64, 52,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
         3, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(416, 202, 58, 64, 53,
+    m_widgets.push_back(new IconWidget(416, 202, 58, 64, 53,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
         4, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(499, 202, 58, 64, 54,
+    m_widgets.push_back(new IconWidget(499, 202, 58, 64, 54,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
         5, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(416, 320, 58, 64, 55,
+    m_widgets.push_back(new IconWidget(416, 320, 58, 64, 55,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
         6, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(328, 151, 66, 20, 0,
+    m_widgets.push_back(new TextWidget(328, 151, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 77, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 151, 66, 20, 0,
+        Font::PRIMARY, 77, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 151, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 78, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 151, 66, 20, 0,
+        Font::PRIMARY, 78, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(494, 151, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 79, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(328, 269, 66, 20, 0,
+        Font::PRIMARY, 79, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(328, 269, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 80, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 269, 66, 20, 0,
+        Font::PRIMARY, 80, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 269, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 81, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 269, 66, 20, 0,
+        Font::PRIMARY, 81, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(494, 269, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 82, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 387, 66, 20, 0,
+        Font::PRIMARY, 82, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 387, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 83, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 83, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new bitmapBorder(326, 81, 72, 91,
+    m_widgets.push_back(new BitmapBorder(326, 81, 72, 91,
         GIVE_RECIPIENT_SLOT_0_ID,
         DATA_COMPGEN(0x0068c54c, giveCellSprite, "TPMrkSe2.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(409, 81, 72, 91,
+    m_widgets.push_back(new BitmapBorder(409, 81, 72, 91,
         GIVE_RECIPIENT_SLOT_1_ID,
         DATA_COMPGEN(0x0068c54c, giveCellSprite, "TPMrkSe2.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(492, 81, 72, 91,
+    m_widgets.push_back(new BitmapBorder(492, 81, 72, 91,
         GIVE_RECIPIENT_SLOT_2_ID,
         DATA_COMPGEN(0x0068c54c, giveCellSprite, "TPMrkSe2.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(326, 199, 72, 91,
+    m_widgets.push_back(new BitmapBorder(326, 199, 72, 91,
         GIVE_RECIPIENT_SLOT_3_ID,
         DATA_COMPGEN(0x0068c54c, giveCellSprite, "TPMrkSe2.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(409, 199, 72, 91,
+    m_widgets.push_back(new BitmapBorder(409, 199, 72, 91,
         GIVE_RECIPIENT_SLOT_4_ID,
         DATA_COMPGEN(0x0068c54c, giveCellSprite, "TPMrkSe2.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(492, 199, 72, 91,
+    m_widgets.push_back(new BitmapBorder(492, 199, 72, 91,
         GIVE_RECIPIENT_SLOT_5_ID,
         DATA_COMPGEN(0x0068c54c, giveCellSprite, "TPMrkSe2.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(409, 317, 72, 91,
+    m_widgets.push_back(new BitmapBorder(409, 317, 72, 91,
         GIVE_RECIPIENT_SLOT_6_ID,
         DATA_COMPGEN(0x0068c54c, giveCellSprite, "TPMrkSe2.pcx"), 0x800));
 
-    m_resourceSlider = new slider(231, 490, 137, 16, 6, 11,
-        giveResourceSlider, slider::BROWN, 0, 0);
+    m_resourceSlider = new Slider(231, 490, 137, 16, 6, 11,
+        giveResourceSlider, Slider::BROWN, 0, 0);
     m_widgets.push_back(m_resourceSlider);
 
-    m_widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
+    m_widgets.push_back(new BitmapBorder(8, 568, 585, 18, 146,
         DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"), 0x800));
-    m_widgets.push_back(new textWidget(8, 568, 585, 18, 0,
+    m_widgets.push_back(new TextWidget(8, 568, 585, 18, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 147, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 147, Font::CENTER_JUSTIFIED, 0, 8));
 
-    button* okButton = new button(515, 520, 64, 32, MARKET_COMMAND_ID,
+    Button* okButton = new Button(515, 520, 64, 32, MARKET_COMMAND_ID,
         DATA_COMPGEN(0x0065f470, okWideButtonSprite, "iOk6432.def"),
         0, 1, 1, 28, 2);
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -468,211 +468,211 @@ TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
 }
 
 VA(0x005e3670, 0x14)  // dc 0x181a50
-void giveResourceSlider(int state, heroWindow* parentWindow)
+void giveResourceSlider(int state, HeroWindow* parentWindow)
 {
     g_rightAmount = state;
     g_giveWindow->update(1);
 }
 
-VA_COMPGEN(0x005e3690, 0x21, SCALAR_DELETING_DTOR, TGiveResourceWindow)
+VA_COMPGEN(0x005e3690, 0x21, SCALAR_DELETING_DTOR, GiveResourceWindow)
 
 VA(0x005e36c0, 0x6B)  // dc 0x183ecc
-TGiveResourceWindow::~TGiveResourceWindow()
+GiveResourceWindow::~GiveResourceWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
 }
 
 VA(0x005e3730, 0x1f56)  // dc 0x183f30
-TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
+BuyArtifactWindow::BuyArtifactWindow(int x2, int y2)
     : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
     m_widgets.reserve(144);
 
-    m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 0,
+    m_widgets.push_back(new BitmapBorder(0, 0, m_width, m_height, 0,
         DATA_COMPGEN(0x0068c58c, buyArtifactBackground, "TPMrkAbS.pcx"),
         0x800));
-    m_widgets.push_back(new textWidget(0, 15, m_width, 30, 0,
+    m_widgets.push_back(new TextWidget(0, 15, m_width, 30, 0,
         DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
-        font::HEADING, 1, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(319, 50, 250, 77, 0,
+        Font::HEADING, 1, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(319, 50, 250, 77, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 2,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new iconWidget(141, 457, 32, 32, 3,
+        Font::PRIMARY, 2,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new IconWidget(141, 457, 32, 32, 3,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(424, 448, 44, 44, 8,
+    m_widgets.push_back(new IconWidget(424, 448, 44, 44, 8,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new textWidget(124, 497, 66, 20, 0,
+    m_widgets.push_back(new TextWidget(124, 497, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 497, 66, 20, 0,
+        Font::PRIMARY, 4, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 497, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 12, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(28, 140, 257, 20, 0,
+        Font::PRIMARY, 12, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(28, 140, 257, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 14, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(317, 139, 257, 20, 0,
+        Font::PRIMARY, 14, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(317, 139, 257, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 15, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 15, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new button(268, 520, 64, 32, 5,
+    m_widgets.push_back(new Button(268, 520, 64, 32, 5,
         DATA_COMPGEN(0x0068c530, marketDealButtonSprite, "TPMrkB.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(515, 451, 64, 32, 16,
+    m_widgets.push_back(new Button(515, 451, 64, 32, 16,
         DATA_COMPGEN(0x0068c55c, marketButton5Sprite, "TPMrkBu5.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(18, 521, 64, 32, 17,
+    m_widgets.push_back(new Button(18, 521, 64, 32, 17,
         DATA_COMPGEN(0x0068c520, marketButton1Sprite, "TPMrkBu1.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(18, 451, 64, 32, 19,
+    m_widgets.push_back(new Button(18, 451, 64, 32, 19,
         DATA_COMPGEN(0x0068c57c, marketButton3Sprite, "TPMrkBu3.def"),
         0, 1, 0, 0, 2));
 
-    m_widgets.push_back(new iconWidget(58, 190, 32, 32, 21,
+    m_widgets.push_back(new IconWidget(58, 190, 32, 32, 21,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(141, 190, 32, 32, 22,
+    m_widgets.push_back(new IconWidget(141, 190, 32, 32, 22,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         1, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(223, 190, 32, 32, 23,
+    m_widgets.push_back(new IconWidget(223, 190, 32, 32, 23,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         2, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(58, 269, 32, 32, 24,
+    m_widgets.push_back(new IconWidget(58, 269, 32, 32, 24,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         3, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(141, 269, 32, 32, 25,
+    m_widgets.push_back(new IconWidget(141, 269, 32, 32, 25,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         4, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(223, 269, 32, 32, 26,
+    m_widgets.push_back(new IconWidget(223, 269, 32, 32, 26,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         5, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(141, 348, 32, 32, 27,
+    m_widgets.push_back(new IconWidget(141, 348, 32, 32, 27,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(41, 230, 66, 20, 0,
+    m_widgets.push_back(new TextWidget(41, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 35, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 230, 66, 20, 0,
+        Font::PRIMARY, 35, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(124, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 36, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(207, 230, 66, 20, 0,
+        Font::PRIMARY, 36, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(207, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 37, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(41, 309, 66, 20, 0,
+        Font::PRIMARY, 37, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(41, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 38, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 309, 66, 20, 0,
+        Font::PRIMARY, 38, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(124, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 39, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(207, 309, 66, 20, 0,
+        Font::PRIMARY, 39, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(207, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 40, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 388, 66, 20, 0,
+        Font::PRIMARY, 40, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(124, 388, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 41, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 41, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new bitmapBorder(37, 180, 74, 70, MARKET_SELL_WOOD_ID,
+    m_widgets.push_back(new BitmapBorder(37, 180, 74, 70, MARKET_SELL_WOOD_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(120, 180, 74, 70,
+    m_widgets.push_back(new BitmapBorder(120, 180, 74, 70,
         MARKET_SELL_MERCURY_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(203, 180, 74, 70, MARKET_SELL_ORE_ID,
+    m_widgets.push_back(new BitmapBorder(203, 180, 74, 70, MARKET_SELL_ORE_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(37, 259, 74, 70, MARKET_SELL_SULFUR_ID,
+    m_widgets.push_back(new BitmapBorder(37, 259, 74, 70, MARKET_SELL_SULFUR_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(120, 259, 74, 70,
+    m_widgets.push_back(new BitmapBorder(120, 259, 74, 70,
         MARKET_SELL_CRYSTAL_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(203, 259, 74, 70, MARKET_SELL_GEMS_ID,
+    m_widgets.push_back(new BitmapBorder(203, 259, 74, 70, MARKET_SELL_GEMS_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(120, 338, 74, 70, MARKET_SELL_GOLD_ID,
+    m_widgets.push_back(new BitmapBorder(120, 338, 74, 70, MARKET_SELL_GOLD_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
 
-    m_widgets.push_back(new iconWidget(341, 182, 44, 44, 56,
+    m_widgets.push_back(new IconWidget(341, 182, 44, 44, 56,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(424, 182, 44, 44, 57,
+    m_widgets.push_back(new IconWidget(424, 182, 44, 44, 57,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(506, 182, 44, 44, 58,
+    m_widgets.push_back(new IconWidget(506, 182, 44, 44, 58,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(341, 261, 44, 44, 59,
+    m_widgets.push_back(new IconWidget(341, 261, 44, 44, 59,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(424, 261, 44, 44, 60,
+    m_widgets.push_back(new IconWidget(424, 261, 44, 44, 60,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(506, 261, 44, 44, 61,
+    m_widgets.push_back(new IconWidget(506, 261, 44, 44, 61,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(424, 340, 44, 44, 62,
+    m_widgets.push_back(new IconWidget(424, 340, 44, 44, 62,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(328, 230, 66, 20, 0,
+    m_widgets.push_back(new TextWidget(328, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 77, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 230, 66, 20, 0,
+        Font::PRIMARY, 77, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 78, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 230, 66, 20, 0,
+        Font::PRIMARY, 78, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(494, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 79, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(328, 309, 66, 20, 0,
+        Font::PRIMARY, 79, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(328, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 80, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 309, 66, 20, 0,
+        Font::PRIMARY, 80, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 81, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 309, 66, 20, 0,
+        Font::PRIMARY, 81, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(494, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 82, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 388, 66, 20, 0,
+        Font::PRIMARY, 82, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 388, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 83, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 83, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new bitmapBorder(325, 180, 74, 70,
+    m_widgets.push_back(new BitmapBorder(325, 180, 74, 70,
         BUY_ARTIFACT_SLOT_0_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(408, 180, 74, 70,
+    m_widgets.push_back(new BitmapBorder(408, 180, 74, 70,
         BUY_ARTIFACT_SLOT_1_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(491, 180, 74, 70,
+    m_widgets.push_back(new BitmapBorder(491, 180, 74, 70,
         BUY_ARTIFACT_SLOT_2_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(325, 259, 74, 70,
+    m_widgets.push_back(new BitmapBorder(325, 259, 74, 70,
         BUY_ARTIFACT_SLOT_3_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(408, 259, 74, 70,
+    m_widgets.push_back(new BitmapBorder(408, 259, 74, 70,
         BUY_ARTIFACT_SLOT_4_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(491, 259, 74, 70,
+    m_widgets.push_back(new BitmapBorder(491, 259, 74, 70,
         BUY_ARTIFACT_SLOT_5_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(408, 338, 74, 70,
+    m_widgets.push_back(new BitmapBorder(408, 338, 74, 70,
         BUY_ARTIFACT_SLOT_6_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
 
-    m_widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
+    m_widgets.push_back(new BitmapBorder(8, 568, 585, 18, 146,
         DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"), 0x800));
-    m_widgets.push_back(new textWidget(8, 568, 585, 18, 0,
+    m_widgets.push_back(new TextWidget(8, 568, 585, 18, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 147, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 147, Font::CENTER_JUSTIFIED, 0, 8));
 
-    button* okButton = new button(515, 520, 64, 32, MARKET_COMMAND_ID,
+    Button* okButton = new Button(515, 520, 64, 32, MARKET_COMMAND_ID,
         DATA_COMPGEN(0x0065f470, okWideButtonSprite, "iOk6432.def"),
         0, 1, 1, 28, 2);
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -680,288 +680,288 @@ TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
     }
 }
 
-VA_COMPGEN(0x005e5690, 0x21, SCALAR_DELETING_DTOR, TBuyArtifactWindow)
+VA_COMPGEN(0x005e5690, 0x21, SCALAR_DELETING_DTOR, BuyArtifactWindow)
 
 VA(0x005e56c0, 0x6B)  // dc 0x1851a4
-TBuyArtifactWindow::~TBuyArtifactWindow()
+BuyArtifactWindow::~BuyArtifactWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
 }
 
 VA(0x005e5730, 0x24a7)  // dc 0x185208
-TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
+SellArtifactWindow::SellArtifactWindow(int x2, int y2)
     : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
     m_widgets.reserve(144);
 
-    m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 0,
+    m_widgets.push_back(new BitmapBorder(0, 0, m_width, m_height, 0,
         DATA_COMPGEN(0x0068c5ac, sellArtifactBackground, "TPMrkAsS.pcx"),
         0x800));
-    m_widgets.push_back(new textWidget(0, 15, m_width, 30, 0,
+    m_widgets.push_back(new TextWidget(0, 15, m_width, 30, 0,
         DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
-        font::HEADING, 1, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(319, 50, 250, 77, 0,
+        Font::HEADING, 1, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(319, 50, 250, 77, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 2,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new iconWidget(429, 480, 32, 32, 11,
+        Font::PRIMARY, 2,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new IconWidget(429, 480, 32, 32, 11,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(135, 469, 44, 44, 9,
+    m_widgets.push_back(new IconWidget(135, 469, 44, 44, 9,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new textWidget(124, 519, 66, 20, 0,
+    m_widgets.push_back(new TextWidget(124, 519, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 520, 66, 20, 0,
+        Font::PRIMARY, 4, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 520, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 12, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(28, 48, 257, 20, 0,
+        Font::PRIMARY, 12, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(28, 48, 257, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 14, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(317, 139, 257, 20, 0,
+        Font::PRIMARY, 14, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(317, 139, 257, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 15, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 15, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new button(268, 520, 64, 32, 5,
+    m_widgets.push_back(new Button(268, 520, 64, 32, 5,
         DATA_COMPGEN(0x0068c530, marketDealButtonSprite, "TPMrkB.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(515, 471, 64, 32, 16,
+    m_widgets.push_back(new Button(515, 471, 64, 32, 16,
         DATA_COMPGEN(0x0068c55c, marketButton5Sprite, "TPMrkBu5.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(18, 521, 64, 32, 17,
+    m_widgets.push_back(new Button(18, 521, 64, 32, 17,
         DATA_COMPGEN(0x0068c520, marketButton1Sprite, "TPMrkBu1.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(18, 471, 64, 32, 18,
+    m_widgets.push_back(new Button(18, 471, 64, 32, 18,
         DATA_COMPGEN(0x0068c510, marketButton2Sprite, "TPMrkBu2.def"),
         0, 1, 0, 0, 2));
 
-    m_widgets.push_back(new iconWidget(346, 190, 32, 32, 42,
+    m_widgets.push_back(new IconWidget(346, 190, 32, 32, 42,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(429, 190, 32, 32, 43,
+    m_widgets.push_back(new IconWidget(429, 190, 32, 32, 43,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         1, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(512, 190, 32, 32, 44,
+    m_widgets.push_back(new IconWidget(512, 190, 32, 32, 44,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         2, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(346, 269, 32, 32, 45,
+    m_widgets.push_back(new IconWidget(346, 269, 32, 32, 45,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         3, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(429, 269, 32, 32, 46,
+    m_widgets.push_back(new IconWidget(429, 269, 32, 32, 46,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         4, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(512, 269, 32, 32, 47,
+    m_widgets.push_back(new IconWidget(512, 269, 32, 32, 47,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         5, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(429, 348, 32, 32, 48,
+    m_widgets.push_back(new IconWidget(429, 348, 32, 32, 48,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(328, 230, 66, 20, 0,
+    m_widgets.push_back(new TextWidget(328, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 77, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 230, 66, 20, 0,
+        Font::PRIMARY, 77, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 78, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 230, 66, 20, 0,
+        Font::PRIMARY, 78, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(494, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 79, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(328, 309, 66, 20, 0,
+        Font::PRIMARY, 79, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(328, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 80, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 309, 66, 20, 0,
+        Font::PRIMARY, 80, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 81, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 309, 66, 20, 0,
+        Font::PRIMARY, 81, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(494, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 82, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 388, 66, 20, 0,
+        Font::PRIMARY, 82, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 388, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 83, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 83, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new bitmapBorder(325, 180, 74, 70, MARKET_BUY_WOOD_ID,
+    m_widgets.push_back(new BitmapBorder(325, 180, 74, 70, MARKET_BUY_WOOD_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(408, 180, 74, 70,
+    m_widgets.push_back(new BitmapBorder(408, 180, 74, 70,
         MARKET_BUY_MERCURY_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(491, 180, 74, 70, MARKET_BUY_ORE_ID,
+    m_widgets.push_back(new BitmapBorder(491, 180, 74, 70, MARKET_BUY_ORE_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(325, 259, 74, 70, MARKET_BUY_SULFUR_ID,
+    m_widgets.push_back(new BitmapBorder(325, 259, 74, 70, MARKET_BUY_SULFUR_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(408, 259, 74, 70,
+    m_widgets.push_back(new BitmapBorder(408, 259, 74, 70,
         MARKET_BUY_CRYSTAL_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(491, 259, 74, 70, MARKET_BUY_GEMS_ID,
+    m_widgets.push_back(new BitmapBorder(491, 259, 74, 70, MARKET_BUY_GEMS_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(408, 338, 74, 70, MARKET_BUY_GOLD_ID,
+    m_widgets.push_back(new BitmapBorder(408, 338, 74, 70, MARKET_BUY_GOLD_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
 
-    m_widgets.push_back(new iconWidget(148, 76, 44, 44, 84,
+    m_widgets.push_back(new IconWidget(148, 76, 44, 44, 84,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(207, 288, 44, 44, 85,
+    m_widgets.push_back(new IconWidget(207, 288, 44, 44, 85,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(148, 126, 44, 44, 86,
+    m_widgets.push_back(new IconWidget(148, 126, 44, 44, 86,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(22, 115, 44, 44, 87,
+    m_widgets.push_back(new IconWidget(22, 115, 44, 44, 87,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(201, 230, 44, 44, 88,
+    m_widgets.push_back(new IconWidget(201, 230, 44, 44, 88,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(148, 177, 44, 44, 89,
+    m_widgets.push_back(new IconWidget(148, 177, 44, 44, 89,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(70, 115, 44, 44, 90,
+    m_widgets.push_back(new IconWidget(70, 115, 44, 44, 90,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(249, 230, 44, 44, 91,
+    m_widgets.push_back(new IconWidget(249, 230, 44, 44, 91,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(154, 341, 44, 44, 92,
+    m_widgets.push_back(new IconWidget(154, 341, 44, 44, 92,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(22, 189, 44, 44, 93,
+    m_widgets.push_back(new IconWidget(22, 189, 44, 44, 93,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(38, 239, 44, 44, 94,
+    m_widgets.push_back(new IconWidget(38, 239, 44, 44, 94,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(54, 290, 44, 44, 95,
+    m_widgets.push_back(new IconWidget(54, 290, 44, 44, 95,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(70, 341, 44, 44, 96,
+    m_widgets.push_back(new IconWidget(70, 341, 44, 44, 96,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(203, 76, 44, 44, 97,
+    m_widgets.push_back(new IconWidget(203, 76, 44, 44, 97,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(249, 76, 44, 44, 98,
+    m_widgets.push_back(new IconWidget(249, 76, 44, 44, 98,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(249, 122, 44, 44, 99,
+    m_widgets.push_back(new IconWidget(249, 122, 44, 44, 99,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(249, 168, 44, 44, 100,
+    m_widgets.push_back(new IconWidget(249, 168, 44, 44, 100,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(249, 357, 44, 44, 101,
+    m_widgets.push_back(new IconWidget(249, 357, 44, 44, 101,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(42, 411, 44, 44, 102,
+    m_widgets.push_back(new IconWidget(42, 411, 44, 44, 102,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(88, 411, 44, 44, 103,
+    m_widgets.push_back(new IconWidget(88, 411, 44, 44, 103,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(134, 411, 44, 44, 104,
+    m_widgets.push_back(new IconWidget(134, 411, 44, 44, 104,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(180, 411, 44, 44, 105,
+    m_widgets.push_back(new IconWidget(180, 411, 44, 44, 105,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(226, 411, 44, 44, 106,
+    m_widgets.push_back(new IconWidget(226, 411, 44, 44, 106,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new button(18, 410, 22, 46,
+    m_widgets.push_back(new Button(18, 410, 22, 46,
         MARKET_ARTIFACT_LEFT_ARROW_ID,
         DATA_COMPGEN(0x00679d48, heroScreenLeftArrowSprite, "hsbtns3.def"),
         0, 1, 0, 75, 2));
-    m_widgets.push_back(new button(271, 410, 22, 46,
+    m_widgets.push_back(new Button(271, 410, 22, 46,
         MARKET_ARTIFACT_RIGHT_ARROW_ID,
         DATA_COMPGEN(0x00679d3c, heroScreenRightArrowSprite, "hsbtns5.def"),
         0, 1, 0, 77, 2));
 
-    m_widgets.push_back(new bitmapBorder(146, 74, 48, 48,
+    m_widgets.push_back(new BitmapBorder(146, 74, 48, 48,
         MARKET_ARTIFACT_SLOT_00_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(205, 286, 48, 48,
+    m_widgets.push_back(new BitmapBorder(205, 286, 48, 48,
         MARKET_ARTIFACT_SLOT_01_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(146, 124, 48, 48,
+    m_widgets.push_back(new BitmapBorder(146, 124, 48, 48,
         MARKET_ARTIFACT_SLOT_02_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(20, 113, 48, 48,
+    m_widgets.push_back(new BitmapBorder(20, 113, 48, 48,
         MARKET_ARTIFACT_SLOT_03_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(199, 228, 48, 48,
+    m_widgets.push_back(new BitmapBorder(199, 228, 48, 48,
         MARKET_ARTIFACT_SLOT_04_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(146, 175, 48, 48,
+    m_widgets.push_back(new BitmapBorder(146, 175, 48, 48,
         MARKET_ARTIFACT_SLOT_05_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(68, 113, 48, 48,
+    m_widgets.push_back(new BitmapBorder(68, 113, 48, 48,
         MARKET_ARTIFACT_SLOT_06_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(247, 228, 48, 48,
+    m_widgets.push_back(new BitmapBorder(247, 228, 48, 48,
         MARKET_ARTIFACT_SLOT_07_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(152, 339, 48, 48,
+    m_widgets.push_back(new BitmapBorder(152, 339, 48, 48,
         MARKET_ARTIFACT_SLOT_08_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(20, 187, 48, 48,
+    m_widgets.push_back(new BitmapBorder(20, 187, 48, 48,
         MARKET_ARTIFACT_SLOT_09_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(36, 237, 48, 48,
+    m_widgets.push_back(new BitmapBorder(36, 237, 48, 48,
         MARKET_ARTIFACT_SLOT_10_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(52, 288, 48, 48,
+    m_widgets.push_back(new BitmapBorder(52, 288, 48, 48,
         MARKET_ARTIFACT_SLOT_11_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(68, 339, 48, 48,
+    m_widgets.push_back(new BitmapBorder(68, 339, 48, 48,
         MARKET_ARTIFACT_SLOT_12_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(201, 74, 48, 48,
+    m_widgets.push_back(new BitmapBorder(201, 74, 48, 48,
         MARKET_ARTIFACT_SLOT_13_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(247, 74, 48, 48,
+    m_widgets.push_back(new BitmapBorder(247, 74, 48, 48,
         MARKET_ARTIFACT_SLOT_14_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(247, 120, 48, 48,
+    m_widgets.push_back(new BitmapBorder(247, 120, 48, 48,
         MARKET_ARTIFACT_SLOT_15_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(247, 166, 48, 48,
+    m_widgets.push_back(new BitmapBorder(247, 166, 48, 48,
         MARKET_ARTIFACT_SLOT_16_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(247, 355, 48, 48,
+    m_widgets.push_back(new BitmapBorder(247, 355, 48, 48,
         MARKET_ARTIFACT_SLOT_17_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(40, 409, 48, 48,
+    m_widgets.push_back(new BitmapBorder(40, 409, 48, 48,
         MARKET_ARTIFACT_SLOT_18_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(86, 409, 48, 48,
+    m_widgets.push_back(new BitmapBorder(86, 409, 48, 48,
         MARKET_ARTIFACT_SLOT_19_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(132, 409, 48, 48,
+    m_widgets.push_back(new BitmapBorder(132, 409, 48, 48,
         MARKET_ARTIFACT_SLOT_20_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(178, 409, 48, 48,
+    m_widgets.push_back(new BitmapBorder(178, 409, 48, 48,
         MARKET_ARTIFACT_SLOT_21_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(224, 409, 48, 48,
+    m_widgets.push_back(new BitmapBorder(224, 409, 48, 48,
         MARKET_ARTIFACT_SLOT_22_ID,
         DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
 
-    m_widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
+    m_widgets.push_back(new BitmapBorder(8, 568, 585, 18, 146,
         DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"), 0x800));
-    m_widgets.push_back(new textWidget(8, 568, 585, 18, 0,
+    m_widgets.push_back(new TextWidget(8, 568, 585, 18, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 147, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 147, Font::CENTER_JUSTIFIED, 0, 8));
 
-    button* okButton = new button(515, 520, 64, 32, MARKET_COMMAND_ID,
+    Button* okButton = new Button(515, 520, 64, 32, MARKET_COMMAND_ID,
         DATA_COMPGEN(0x0065f470, okWideButtonSprite, "iOk6432.def"),
         0, 1, 1, 28, 2);
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -969,223 +969,223 @@ TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
     }
 }
 
-VA_COMPGEN(0x005e7be0, 0x21, SCALAR_DELETING_DTOR, TSellArtifactWindow)
+VA_COMPGEN(0x005e7be0, 0x21, SCALAR_DELETING_DTOR, SellArtifactWindow)
 
 VA(0x005e7c10, 0x6B)  // dc 0x186c34
-TSellArtifactWindow::~TSellArtifactWindow()
+SellArtifactWindow::~SellArtifactWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
 }
 
 VA(0x005e7c80, 0x1fd5)  // dc 0x186c98
-TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
+SellCreatureWindow::SellCreatureWindow(int x2, int y2)
     : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
     m_widgets.reserve(144);
 
-    m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 0,
+    m_widgets.push_back(new BitmapBorder(0, 0, m_width, m_height, 0,
         DATA_COMPGEN(0x0068c5cc, sellCreatureBackground, "TPMrkCrS.pcx"),
         0x800));
-    m_widgets.push_back(new textWidget(0, 15, m_width, 30, 0,
+    m_widgets.push_back(new TextWidget(0, 15, m_width, 30, 0,
         DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
-        font::HEADING, 1, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(319, 47, 250, 77, 0,
+        Font::HEADING, 1, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(319, 47, 250, 77, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 2,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new iconWidget(429, 457, 32, 32, 11,
+        Font::PRIMARY, 2,
+        Font::CENTER_JUSTIFIED | Font::VERT_CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new IconWidget(429, 457, 32, 32, 11,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(128, 450, 58, 64, 10,
+    m_widgets.push_back(new IconWidget(128, 450, 58, 64, 10,
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new textWidget(124, 518, 66, 20, 0,
+    m_widgets.push_back(new TextWidget(124, 518, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 497, 66, 20, 0,
+        Font::PRIMARY, 4, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 497, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 12, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(28, 93, 257, 20, 0,
+        Font::PRIMARY, 12, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(28, 93, 257, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 14, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(317, 139, 257, 20, 0,
+        Font::PRIMARY, 14, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(317, 139, 257, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 15, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 15, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new button(306, 520, 64, 32, 5,
+    m_widgets.push_back(new Button(306, 520, 64, 32, 5,
         DATA_COMPGEN(0x0068c530, marketDealButtonSprite, "TPMrkB.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(515, 451, 64, 32, 16,
+    m_widgets.push_back(new Button(515, 451, 64, 32, 16,
         DATA_COMPGEN(0x0068c55c, marketButton5Sprite, "TPMrkBu5.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(18, 521, 64, 32, 17,
+    m_widgets.push_back(new Button(18, 521, 64, 32, 17,
         DATA_COMPGEN(0x0068c520, marketButton1Sprite, "TPMrkBu1.def"),
         0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(228, 520, 64, 32, 7,
+    m_widgets.push_back(new Button(228, 520, 64, 32, 7,
         DATA_COMPGEN(0x0068c4f0, marketButton6Sprite, "TPMrkBu6.def"),
         0, 1, 0, 0, 2));
 
-    m_widgets.push_back(new textWidget(41, 230, 66, 20, 0,
+    m_widgets.push_back(new TextWidget(41, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 35, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 230, 66, 20, 0,
+        Font::PRIMARY, 35, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(124, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 36, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(207, 230, 66, 20, 0,
+        Font::PRIMARY, 36, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(207, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 37, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(41, 309, 66, 20, 0,
+        Font::PRIMARY, 37, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(41, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 38, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 309, 66, 20, 0,
+        Font::PRIMARY, 38, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(124, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 39, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(207, 309, 66, 20, 0,
+        Font::PRIMARY, 39, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(207, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 40, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 388, 66, 20, 0,
+        Font::PRIMARY, 40, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(124, 388, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 41, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 41, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new iconWidget(346, 190, 32, 32, 42,
+    m_widgets.push_back(new IconWidget(346, 190, 32, 32, 42,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(429, 190, 32, 32, 43,
+    m_widgets.push_back(new IconWidget(429, 190, 32, 32, 43,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         1, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(512, 190, 32, 32, 44,
+    m_widgets.push_back(new IconWidget(512, 190, 32, 32, 44,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         2, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(346, 269, 32, 32, 45,
+    m_widgets.push_back(new IconWidget(346, 269, 32, 32, 45,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         3, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(429, 269, 32, 32, 46,
+    m_widgets.push_back(new IconWidget(429, 269, 32, 32, 46,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         4, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(512, 269, 32, 32, 47,
+    m_widgets.push_back(new IconWidget(512, 269, 32, 32, 47,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         5, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(429, 348, 32, 32, 48,
+    m_widgets.push_back(new IconWidget(429, 348, 32, 32, 48,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(328, 230, 66, 20, 0,
+    m_widgets.push_back(new TextWidget(328, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 77, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 230, 66, 20, 0,
+        Font::PRIMARY, 77, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 78, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 230, 66, 20, 0,
+        Font::PRIMARY, 78, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(494, 230, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 79, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(328, 309, 66, 20, 0,
+        Font::PRIMARY, 79, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(328, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 80, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 309, 66, 20, 0,
+        Font::PRIMARY, 80, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 81, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 309, 66, 20, 0,
+        Font::PRIMARY, 81, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(494, 309, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 82, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 388, 66, 20, 0,
+        Font::PRIMARY, 82, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new TextWidget(411, 388, 66, 20, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 83, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 83, Font::CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new bitmapBorder(325, 180, 74, 70, MARKET_BUY_WOOD_ID,
+    m_widgets.push_back(new BitmapBorder(325, 180, 74, 70, MARKET_BUY_WOOD_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(408, 180, 74, 70,
+    m_widgets.push_back(new BitmapBorder(408, 180, 74, 70,
         MARKET_BUY_MERCURY_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(491, 180, 74, 70, MARKET_BUY_ORE_ID,
+    m_widgets.push_back(new BitmapBorder(491, 180, 74, 70, MARKET_BUY_ORE_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(325, 259, 74, 70, MARKET_BUY_SULFUR_ID,
+    m_widgets.push_back(new BitmapBorder(325, 259, 74, 70, MARKET_BUY_SULFUR_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(408, 259, 74, 70,
+    m_widgets.push_back(new BitmapBorder(408, 259, 74, 70,
         MARKET_BUY_CRYSTAL_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(491, 259, 74, 70, MARKET_BUY_GEMS_ID,
+    m_widgets.push_back(new BitmapBorder(491, 259, 74, 70, MARKET_BUY_GEMS_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
-    m_widgets.push_back(new bitmapBorder(408, 338, 74, 70, MARKET_BUY_GOLD_ID,
+    m_widgets.push_back(new BitmapBorder(408, 338, 74, 70, MARKET_BUY_GOLD_ID,
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
 
-    m_widgets.push_back(new iconWidget(45, 123, 58, 64, 132,
+    m_widgets.push_back(new IconWidget(45, 123, 58, 64, 132,
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(128, 123, 58, 64, 133,
+    m_widgets.push_back(new IconWidget(128, 123, 58, 64, 133,
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(211, 123, 58, 64, 134,
+    m_widgets.push_back(new IconWidget(211, 123, 58, 64, 134,
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(45, 221, 58, 64, 135,
+    m_widgets.push_back(new IconWidget(45, 221, 58, 64, 135,
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(128, 221, 58, 64, 136,
+    m_widgets.push_back(new IconWidget(128, 221, 58, 64, 136,
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(211, 221, 58, 64, 137,
+    m_widgets.push_back(new IconWidget(211, 221, 58, 64, 137,
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new iconWidget(128, 319, 58, 64, 138,
+    m_widgets.push_back(new IconWidget(128, 319, 58, 64, 138,
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
         0, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new bitmapBorder(38, 120, 72, 90, MARKET_CREATURE_SLOT_0_ID,
+    m_widgets.push_back(new BitmapBorder(38, 120, 72, 90, MARKET_CREATURE_SLOT_0_ID,
         DATA_COMPGEN(0x0068c5bc, creatureCellSprite, "TPMrkSe4.pcx"),
         0x800));
-    m_widgets.push_back(new bitmapBorder(121, 120, 72, 90,
+    m_widgets.push_back(new BitmapBorder(121, 120, 72, 90,
         MARKET_CREATURE_SLOT_1_ID,
         DATA_COMPGEN(0x0068c5bc, creatureCellSprite, "TPMrkSe4.pcx"),
         0x800));
-    m_widgets.push_back(new bitmapBorder(204, 120, 72, 90,
+    m_widgets.push_back(new BitmapBorder(204, 120, 72, 90,
         MARKET_CREATURE_SLOT_2_ID,
         DATA_COMPGEN(0x0068c5bc, creatureCellSprite, "TPMrkSe4.pcx"),
         0x800));
-    m_widgets.push_back(new bitmapBorder(38, 218, 72, 90,
+    m_widgets.push_back(new BitmapBorder(38, 218, 72, 90,
         MARKET_CREATURE_SLOT_3_ID,
         DATA_COMPGEN(0x0068c5bc, creatureCellSprite, "TPMrkSe4.pcx"),
         0x800));
-    m_widgets.push_back(new bitmapBorder(121, 218, 72, 90,
+    m_widgets.push_back(new BitmapBorder(121, 218, 72, 90,
         MARKET_CREATURE_SLOT_4_ID,
         DATA_COMPGEN(0x0068c5bc, creatureCellSprite, "TPMrkSe4.pcx"),
         0x800));
-    m_widgets.push_back(new bitmapBorder(204, 218, 72, 90,
+    m_widgets.push_back(new BitmapBorder(204, 218, 72, 90,
         MARKET_CREATURE_SLOT_5_ID,
         DATA_COMPGEN(0x0068c5bc, creatureCellSprite, "TPMrkSe4.pcx"),
         0x800));
-    m_widgets.push_back(new bitmapBorder(121, 316, 72, 90,
+    m_widgets.push_back(new BitmapBorder(121, 316, 72, 90,
         MARKET_CREATURE_SLOT_6_ID,
         DATA_COMPGEN(0x0068c5bc, creatureCellSprite, "TPMrkSe4.pcx"),
         0x800));
 
-    m_creatureSlider = new slider(231, 490, 137, 16, 6, 11,
-        sellCreatureSlider, slider::BROWN, 0, 0);
+    m_creatureSlider = new Slider(231, 490, 137, 16, 6, 11,
+        sellCreatureSlider, Slider::BROWN, 0, 0);
     m_widgets.push_back(m_creatureSlider);
 
-    m_widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
+    m_widgets.push_back(new BitmapBorder(8, 568, 585, 18, 146,
         DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"), 0x800));
-    m_widgets.push_back(new textWidget(8, 568, 585, 18, 0,
+    m_widgets.push_back(new TextWidget(8, 568, 585, 18, 0,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
-        font::PRIMARY, 147, font::CENTER_JUSTIFIED, 0, 8));
+        Font::PRIMARY, 147, Font::CENTER_JUSTIFIED, 0, 8));
 
-    button* okButton = new button(515, 520, 64, 32, MARKET_COMMAND_ID,
+    Button* okButton = new Button(515, 520, 64, 32, MARKET_COMMAND_ID,
         DATA_COMPGEN(0x0065f470, okWideButtonSprite, "iOk6432.def"),
         0, 1, 1, 28, 2);
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -1194,18 +1194,18 @@ TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
 }
 
 VA(0x005e9c60, 0x14)  // dc 0x181a6c
-void sellCreatureSlider(int state, heroWindow* parentWindow)
+void sellCreatureSlider(int state, HeroWindow* parentWindow)
 {
     g_rightAmount = state;
     g_sellCreatureWindow->update(1);
 }
 
-VA_COMPGEN(0x005e9c80, 0x21, SCALAR_DELETING_DTOR, TSellCreatureWindow)
+VA_COMPGEN(0x005e9c80, 0x21, SCALAR_DELETING_DTOR, SellCreatureWindow)
 
 VA(0x005e9cb0, 0x6B)  // dc 0x18838c
-TSellCreatureWindow::~TSellCreatureWindow()
+SellCreatureWindow::~SellCreatureWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -1266,11 +1266,11 @@ void doMarketplace()
 // read by SetRolloverText; the .rclick side (the odd 4-byte cells retail keeps
 // between them) is the 8-byte stride byte-proven by the widget ids' fixed
 // element offsets. tradpost-private (no other unit references this band).
-DATA(0x006a53a8) static THelpText g_giveHelpText[5];
-DATA(0x006a5868) static THelpText g_marketHelpText[6];
-DATA(0x006a6c50) static THelpText g_sellArtHelpText[5];
-DATA(0x006a7da8) static THelpText g_buyArtHelpText[5];
-DATA(0x006a7e98) static THelpText g_sellCreaHelpText[5];
+DATA(0x006a53a8) static HelpText g_giveHelpText[5];
+DATA(0x006a5868) static HelpText g_marketHelpText[6];
+DATA(0x006a6c50) static HelpText g_sellArtHelpText[5];
+DATA(0x006a7da8) static HelpText g_buyArtHelpText[5];
+DATA(0x006a7e98) static HelpText g_sellCreaHelpText[5];
 
 DATA(0x006aaa70) static unsigned char g_backpackStart;
 
@@ -1281,8 +1281,8 @@ DATA(0x006aaa70) static unsigned char g_backpackStart;
 // preserves every section and relocation destination across all five header
 // consumers under the evidenced DoBlackMarket signature rename. No copied
 // list, cast adapter, or alternate declaration replaces the old union.
-DATA(0x006aaa74) static TArtifact* g_marketArtifacts;
-DATA(0x006aaa78) static hero* g_marketHero;
+DATA(0x006aaa74) static Artifact* g_marketArtifacts;
+DATA(0x006aaa78) static Hero* g_marketHero;
 DATA(0x006aaa90) static int g_selectedArtifact;
 DATA(0x006aaa98) static int g_marketCount;
 DATA(0x006aaaa4) static int g_marketWindow;
@@ -1291,8 +1291,8 @@ DATA(0x006aaac4) static int g_marketSource;
 // The remaining two constructed dialog objects (their trade/give/creature
 // siblings and gRightAmount are declared ahead of the dialog band above,
 // where the slider callbacks reach them).
-DATA(0x006aaae4) static TBuyArtifactWindow* g_buyWindow;
-DATA(0x006aaac8) static TSellArtifactWindow* g_sellArtWindow;
+DATA(0x006aaae4) static BuyArtifactWindow* g_buyWindow;
+DATA(0x006aaac8) static SellArtifactWindow* g_sellArtWindow;
 
 // The shared trade selection reset before every window opens (DoMarket) and
 // driven by the resource-trade handlers. gLeftResource/gRightResource(=
@@ -1354,7 +1354,7 @@ static void countMarkets()
 {
     g_marketCount = 0;
     for (int i = 0; i < g_currentPlayer->m_numTowns; ++i) {
-        town* currentTown = g_game->getTown(g_currentPlayer->m_townIds[i]);
+        Town* currentTown = g_game->getTown(g_currentPlayer->m_townIds[i]);
         if (currentTown->hasBuilding(MARKETPLACE_ID, true))
             ++g_marketCount;
     }
@@ -1383,7 +1383,7 @@ void doArtifactMerchants()
 }
 
 VA(0x005e9e60, 0x38)  // dc 0x188518
-void doFreelancersGuild(hero* inHero)
+void doFreelancersGuild(Hero* inHero)
 {
     g_marketCount = 5;
     g_marketHero = inHero;
@@ -1394,7 +1394,7 @@ void doFreelancersGuild(hero* inHero)
 }
 
 VA(0x005e9ea0, 0x13b)
-void doFreelancersGuild(town* currentTown)
+void doFreelancersGuild(Town* currentTown)
 {
     if (currentTown->m_visitingHeroId == -1) {
         sprintf(g_text, (*g_generalText)[274],
@@ -1435,7 +1435,7 @@ void doTradingPost()
 }
 
 VA(0x005ea100, 0x2A)  // dc 0x1886d4
-void doBlackMarket(hero* inHero, TArtifact* blackArtifacts)
+void doBlackMarket(Hero* inHero, Artifact* blackArtifacts)
 {
     g_marketHero = inHero;
     g_marketArtifacts = blackArtifacts;
@@ -1463,17 +1463,17 @@ void doBlackMarket(hero* inHero, TArtifact* blackArtifacts)
 VA(0x005ea130, 0x49c)  // anchor-callee (from 6 entry points) + linkorder, dc 0x188708
 void doMarket()
 {
-    message msg;
+    Message msg;
 
     g_windowX = 0x64;
     g_windowY = 3;
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
     g_mouseManager->showPointer(1);
 
     while (g_marketWindow != MARKET_COMMAND_ID) {
         switch (g_marketWindow) {
         case MARKET_WINDOW_TRADE:
-            g_tradeWindow = new TTradeResourceWindow(g_windowX, g_windowY);
+            g_tradeWindow = new TradeResourceWindow(g_windowX, g_windowY);
             if (g_tradeWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1492,7 +1492,7 @@ void doMarket()
             break;
 
         case MARKET_WINDOW_GIVE: {
-            g_giveWindow = new TGiveResourceWindow(g_windowX, g_windowY);
+            g_giveWindow = new GiveResourceWindow(g_windowX, g_windowY);
             if (g_giveWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1519,7 +1519,7 @@ void doMarket()
         }
 
         case MARKET_WINDOW_BUY:
-            g_buyWindow = new TBuyArtifactWindow(g_windowX, g_windowY);
+            g_buyWindow = new BuyArtifactWindow(g_windowX, g_windowY);
             if (g_buyWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1538,7 +1538,7 @@ void doMarket()
             break;
 
         case MARKET_WINDOW_SELL_ARTIFACT:
-            g_sellArtWindow = new TSellArtifactWindow(g_windowX, g_windowY);
+            g_sellArtWindow = new SellArtifactWindow(g_windowX, g_windowY);
             if (g_sellArtWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1557,7 +1557,7 @@ void doMarket()
             break;
 
         case MARKET_WINDOW_SELL_CREATURE:
-            g_sellCreatureWindow = new TSellCreatureWindow(g_windowX, g_windowY);
+            g_sellCreatureWindow = new SellCreatureWindow(g_windowX, g_windowY);
             if (g_sellCreatureWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1584,11 +1584,11 @@ void doMarket()
 }
 
 VA(0x005ea5d0, 0x103)  // dc 0x188bd4
-void TSellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
+void SellArtifactWindow::updateSellArtifactWidget(Message* msg, long i)
 {
-    type_artifact art;
+    ArtifactRecord art;
     if (i < 18) {
-        art = g_marketHero->getArtifact(TArtifactSlot(i));
+        art = g_marketHero->getArtifact(ArtifactSlot(i));
     } else {
         long numInBackpack = g_marketHero->getNumberInBackpack(1);
         if (numInBackpack < 6)
@@ -1625,34 +1625,34 @@ void TSellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
 // DC call sites also settle the easily-confused names: Disabled is the single
 // status-5 broadcast, while Off is the status-6 broadcast.  Keep the same
 // mapping for both sell windows.
-inline void TSellArtifactWindow::setWidgetOn(short id)
+inline void SellArtifactWindow::setWidgetOn(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 5, id, 6);
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
 }
 
-inline void TSellArtifactWindow::setWidgetOff(short id)
+inline void SellArtifactWindow::setWidgetOff(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
 }
 
-inline void TSellArtifactWindow::setWidgetDisabled(short id)
+inline void SellArtifactWindow::setWidgetDisabled(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
 }
 
-inline void TSellCreatureWindow::setWidgetOn(short id)
+inline void SellCreatureWindow::setWidgetOn(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 5, id, 6);
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
 }
 
-inline void TSellCreatureWindow::setWidgetOff(short id)
+inline void SellCreatureWindow::setWidgetOff(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
 }
 
-inline void TSellCreatureWindow::setWidgetDisabled(short id)
+inline void SellCreatureWindow::setWidgetDisabled(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
 }
@@ -1661,105 +1661,105 @@ inline void TSellCreatureWindow::setWidgetDisabled(short id)
 
 // E:\gamedcs\tradpost.cpp:905
 DC_ONLY(0x188cc8, 0x38)
-void TTradeResourceWindow::setWidgetOn(short id)
+void TradeResourceWindow::setWidgetOn(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:911
 DC_ONLY(0x188d00, 0x34)
-void TTradeResourceWindow::setWidgetOff(short id)
+void TradeResourceWindow::setWidgetOff(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:918
 DC_ONLY(0x188d34, 0x1C)
-void TTradeResourceWindow::setWidgetDisabled(short id)
+void TradeResourceWindow::setWidgetDisabled(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:923
 DC_ONLY(0x188d50, 0x38)
-void TGiveResourceWindow::setWidgetOn(short id)
+void GiveResourceWindow::setWidgetOn(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:929
 DC_ONLY(0x188d88, 0x34)
-void TGiveResourceWindow::setWidgetOff(short id)
+void GiveResourceWindow::setWidgetOff(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:936
 DC_ONLY(0x188dbc, 0x1C)
-void TGiveResourceWindow::setWidgetDisabled(short id)
+void GiveResourceWindow::setWidgetDisabled(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:941
 DC_ONLY(0x188dd8, 0x38)
-void TBuyArtifactWindow::setWidgetOn(short id)
+void BuyArtifactWindow::setWidgetOn(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:947
 DC_ONLY(0x188e10, 0x68)
-void TBuyArtifactWindow::setWidgetOff(short id)
+void BuyArtifactWindow::setWidgetOff(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:954
 DC_ONLY(0x188e78, 0x1C)
-void TBuyArtifactWindow::setWidgetDisabled(short id)
+void BuyArtifactWindow::setWidgetDisabled(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:959
 DC_ONLY(0x188e94, 0x38)
-void TSellArtifactWindow::setWidgetOn(short id)
+void SellArtifactWindow::setWidgetOn(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:965
 DC_ONLY(0x188ecc, 0x34)
-void TSellArtifactWindow::setWidgetOff(short id)
+void SellArtifactWindow::setWidgetOff(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:972
 DC_ONLY(0x188f00, 0x1C)
-void TSellArtifactWindow::setWidgetDisabled(short id)
+void SellArtifactWindow::setWidgetDisabled(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:977
 DC_ONLY(0x188f1c, 0x38)
-void TSellCreatureWindow::setWidgetOn(short id)
+void SellCreatureWindow::setWidgetOn(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:983
 DC_ONLY(0x188f54, 0x34)
-void TSellCreatureWindow::setWidgetOff(short id)
+void SellCreatureWindow::setWidgetOff(short id)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:990
 DC_ONLY(0x188f88, 0x1C)
-void TSellCreatureWindow::setWidgetDisabled(short id)
+void SellCreatureWindow::setWidgetDisabled(short id)
 {
     // @stub
 }
@@ -1792,12 +1792,12 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 // formatting scope scores 86.9674%. Keep the proven helper and its full
 // three-output contract instead of copied arithmetic in this caller.
 VA(0x005ea6e0, 0x862)  // ordermap clean run + arity ret 4, dc 0x188fa4
-void TTradeResourceWindow::update(unsigned char update)
+void TradeResourceWindow::update(unsigned char update)
 {
     int tempMaxUnitsToTrade;
     int tempLeftDenominated;
     int tempTradeRatio;
-    message msg;
+    Message msg;
     msg.m_id = MESSAGE_WIDGET;
 
     if (g_selectedArtifact != -1 && g_leftResource != -1 &&
@@ -1826,7 +1826,7 @@ void TTradeResourceWindow::update(unsigned char update)
                                         : (*g_generalText)[164]);
     }
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 2;
     msg.m_extraText = g_text;
     broadcastMessage(msg);
@@ -1850,35 +1850,35 @@ void TTradeResourceWindow::update(unsigned char update)
     broadcastMessage(msg);
 
     strcpy(g_text, (*g_generalText)[169]);
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0xf;
     msg.m_extraText = g_text;
     broadcastMessage(msg);
 
     if (g_selectedArtifact != -1 && g_leftResource != -1 &&
         g_selectedArtifact != g_leftResource) {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,   6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 5,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   7,   6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 7,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   3,   6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 3,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   4,   6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xb, 6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xb, 0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xc, 6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   5,   6);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 5,   0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   7,   6);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 7,   0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   3,   6);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 3,   0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   4,   6);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 4,   0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   0xb, 6);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 0xb, 0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   0xc, 6);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 0xc, 0x1000);
         m_resourceSlider->enable(1);
     } else {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   7,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xb, 0x1006);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1006);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 3,   0x1006);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1006);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   5,   0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   7,   0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 0xb, 0x1006);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 4,   0x1006);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 3,   0x1006);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 0xc, 0x1006);
         m_resourceSlider->setState(0);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   6,   0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   6,   0x1000);
     }
 
     if (g_marketSource != MARKET_SOURCE_TRADING_POST && g_marketHero != 0 &&
@@ -1886,31 +1886,31 @@ void TTradeResourceWindow::update(unsigned char update)
         (g_townManager->m_townToView->m_type == TOWN_TOWER ||
          g_townManager->m_townToView->m_type == TOWN_DUNGEON) &&
         (g_townManager->m_townToView->m_built & g_bitNumber[17])) {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_RIGHT_LABEL_ID, 6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_RIGHT_LABEL_ID, 0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   MARKET_RIGHT_LABEL_ID, 6);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, MARKET_RIGHT_LABEL_ID, 0x1000);
     } else {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_RIGHT_LABEL_ID, 0x1006);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, MARKET_RIGHT_LABEL_ID, 0x1006);
     }
 
     if (g_marketSource != MARKET_SOURCE_TRADING_POST && g_marketHero != 0 &&
         g_marketSource != MARKET_SOURCE_FREELANCER &&
         g_townManager->m_townToView->m_type == TOWN_STRONGHOLD &&
         (g_townManager->m_townToView->m_built & g_bitNumber[21])) {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_TITLE_ID, 6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_TITLE_ID, 0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   MARKET_TITLE_ID, 6);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, MARKET_TITLE_ID, 0x1000);
     } else {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_TITLE_ID, 0x1006);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, MARKET_TITLE_ID, 0x1006);
     }
 
     for (unsigned int side = 0; side < 2; ++side) {
         if (g_selectedArtifact != -1 && g_leftResource != -1 &&
             g_selectedArtifact != g_leftResource) {
             if (side == 0) {
-                msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
                 msg.m_codeY = 3;
                 msg.m_extra = g_selectedArtifact;
                 broadcastMessage(msg);
-                msg.m_codeX = widget::WIDGET_SET_TEXT;
+                msg.m_codeX = Widget::WIDGET_SET_TEXT;
                 msg.m_codeY = 4;
                 msg.m_extraText = g_text;
                 if (g_ratioInverted)
@@ -1920,13 +1920,13 @@ void TTradeResourceWindow::update(unsigned char update)
                     sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                             g_rightAmount * g_giveQuantity);
             } else {
-                msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
                 msg.m_codeY = 0xb;
                 msg.m_extra = g_leftResource;
                 broadcastMessage(msg);
                 sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                         g_ratioInverted ? g_rightAmount * g_giveQuantity : g_rightAmount);
-                msg.m_codeX = widget::WIDGET_SET_TEXT;
+                msg.m_codeX = Widget::WIDGET_SET_TEXT;
                 msg.m_codeY = 0xc;
                 msg.m_extraText = g_text;
             }
@@ -1934,7 +1934,7 @@ void TTradeResourceWindow::update(unsigned char update)
         }
 
         for (int i = 0; i < 7; ++i) {
-            msg.m_codeX = widget::WIDGET_SET_STATUS;
+            msg.m_codeX = Widget::WIDGET_SET_STATUS;
             if (side == 0) {
                 msg.m_extra = 6;
                 msg.m_codeY = 0x15 + i;
@@ -1943,19 +1943,19 @@ void TTradeResourceWindow::update(unsigned char update)
                 broadcastMessage(msg);
                 msg.m_codeY = 0x23 + i;
                 broadcastMessage(msg);
-                msg.m_codeX = widget::WIDGET_SET_TEXT;
+                msg.m_codeX = Widget::WIDGET_SET_TEXT;
                 msg.m_codeY = 0x23 + i;
                 msg.m_extraText = g_text;
                 sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                         g_currentPlayer->m_resources[i]);
                 broadcastMessage(msg);
-                msg.m_codeX = widget::WIDGET_SET_Y;
+                msg.m_codeX = Widget::WIDGET_SET_Y;
                 msg.m_extra = g_resourceValueWidgetY[i];
                 broadcastMessage(msg);
-                msg.m_codeX = (g_selectedArtifact == i) ? widget::WIDGET_SET_STATUS
-                                                     : widget::WIDGET_CLEAR_STATUS;
+                msg.m_codeX = (g_selectedArtifact == i) ? Widget::WIDGET_SET_STATUS
+                                                     : Widget::WIDGET_CLEAR_STATUS;
                 msg.m_codeY = MARKET_SELL_WOOD_ID + i;
-                msg.m_extra = widget::WIDGET_DRAWN;
+                msg.m_extra = Widget::WIDGET_DRAWN;
                 broadcastMessage(msg);
             } else {
                 msg.m_extra = 6;
@@ -1965,7 +1965,7 @@ void TTradeResourceWindow::update(unsigned char update)
                 broadcastMessage(msg);
                 msg.m_codeY = 0x4d + i;
                 broadcastMessage(msg);
-                msg.m_codeX = widget::WIDGET_SET_TEXT;
+                msg.m_codeX = Widget::WIDGET_SET_TEXT;
                 msg.m_codeY = 0x4d + i;
                 msg.m_extraText = g_text;
                 if (g_selectedArtifact != -1) {
@@ -1984,10 +1984,10 @@ void TTradeResourceWindow::update(unsigned char update)
                     sprintf(g_text, g_emptyRolloverText);
                 }
                 broadcastMessage(msg);
-                msg.m_codeX = (g_leftResource == i) ? widget::WIDGET_SET_STATUS
-                                                 : widget::WIDGET_CLEAR_STATUS;
+                msg.m_codeX = (g_leftResource == i) ? Widget::WIDGET_SET_STATUS
+                                                 : Widget::WIDGET_CLEAR_STATUS;
                 msg.m_codeY = MARKET_BUY_WOOD_ID + i;
-                msg.m_extra = widget::WIDGET_DRAWN;
+                msg.m_extra = Widget::WIDGET_DRAWN;
                 broadcastMessage(msg);
             }
         }
@@ -1998,9 +1998,9 @@ void TTradeResourceWindow::update(unsigned char update)
 }
 
 VA(0x005eaf50, 0x744)  // dc 0x1895a8
-void TGiveResourceWindow::update(bool update)
+void GiveResourceWindow::update(bool update)
 {
-    message msg;
+    Message msg;
     msg.m_id = MESSAGE_WIDGET;
 
     if (g_selectedArtifact != -1 && g_leftResource != -1) {
@@ -2214,9 +2214,9 @@ void TGiveResourceWindow::update(bool update)
 // Keeping the singular/plural assignment inside its quantity arm removes
 // have_word and improves 88.6580% to 89.2899%; DC 1479-1495 scopes support it.
 VA(0x005eb6a0, 0x7d9)  // ordermap clean run + arity ret 4, dc 0x189aac
-void TBuyArtifactWindow::update(unsigned char update)
+void BuyArtifactWindow::update(unsigned char update)
 {
-    message msg;
+    Message msg;
     msg.m_id = MESSAGE_WIDGET;
 
     if (g_selectedArtifact != -1 && g_leftResource != -1) {
@@ -2241,7 +2241,7 @@ void TBuyArtifactWindow::update(unsigned char update)
                                         : (*g_generalText)[164]);
     }
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 2;
     msg.m_extraText = g_text;
     broadcastMessage(msg);
@@ -2263,56 +2263,56 @@ void TBuyArtifactWindow::update(unsigned char update)
     broadcastMessage(msg);
 
     strcpy(g_text, (*g_generalText)[169]);
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0xf;
     msg.m_extraText = g_text;
     broadcastMessage(msg);
 
     if (g_selectedArtifact == -1 || g_leftResource == -1) {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1006);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 8,   0x1006);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1006);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 3,   0x1006);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   5,   0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 4,   0x1006);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 8,   0x1006);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 0xc, 0x1006);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 3,   0x1006);
     } else {
         if (g_rightAmount != 0) {
-            broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5, 6);
-            broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 5, 0x1000);
+            broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   5, 6);
+            broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 5, 0x1000);
         } else {
-            broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5, 0x1000);
+            broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   5, 0x1000);
         }
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   4,   6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   3,   6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 3,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   8,   6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 8,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xc, 6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   4,   6);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 4,   0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   3,   6);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 3,   0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   8,   6);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 8,   0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   0xc, 6);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, 0xc, 0x1000);
     }
 
     if (g_marketSource == MARKET_SOURCE_BLACK_MARKET ||
         g_marketSource == MARKET_SOURCE_FREELANCER) {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_COUNT_ID,      0x1006);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_LABEL_ID,      0x1006);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_BUY_RIGHT_LABEL_ID, 0x1006);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_COUNT_ID,      0x1006);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_LABEL_ID,      0x1006);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, MARKET_BUY_RIGHT_LABEL_ID, 0x1006);
     } else {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_LEFT_COUNT_ID,      6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_COUNT_ID,      0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_LEFT_LABEL_ID,      6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_LABEL_ID,      0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_BUY_RIGHT_LABEL_ID, 6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_BUY_RIGHT_LABEL_ID, 0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   MARKET_LEFT_COUNT_ID,      6);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_COUNT_ID,      0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   MARKET_LEFT_LABEL_ID,      6);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_LABEL_ID,      0x1000);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_SET_STATUS,   MARKET_BUY_RIGHT_LABEL_ID, 6);
+        broadcastMessage(MESSAGE_WIDGET, Widget::WIDGET_CLEAR_STATUS, MARKET_BUY_RIGHT_LABEL_ID, 0x1000);
     }
 
     for (int col = 0; col < 2; ++col) {
         if (g_selectedArtifact != -1 && g_leftResource != -1) {
             if (col == 0) {
-                msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
                 msg.m_extra = g_selectedArtifact;
                 msg.m_codeY = 3;
                 broadcastMessage(msg);
-                msg.m_codeX = widget::WIDGET_SET_TEXT;
+                msg.m_codeX = Widget::WIDGET_SET_TEXT;
                 msg.m_codeY = 4;
                 msg.m_extraText = g_text;
                 if (g_ratioInverted)
@@ -2323,13 +2323,13 @@ void TBuyArtifactWindow::update(unsigned char update)
                             g_rightAmount * g_giveQuantity);
                 broadcastMessage(msg);
             } else {
-                msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
                 msg.m_codeY = 8;
                 msg.m_extra = g_marketArtifacts[g_leftResource];
                 broadcastMessage(msg);
                 sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                         g_rightAmount);
-                msg.m_codeX = widget::WIDGET_SET_TEXT;
+                msg.m_codeX = Widget::WIDGET_SET_TEXT;
                 msg.m_codeY = 0xc;
                 msg.m_extraText = g_text;
                 broadcastMessage(msg);
@@ -2338,7 +2338,7 @@ void TBuyArtifactWindow::update(unsigned char update)
 
         for (int i = 0; i < 7; ++i) {
             if (col == 0) {
-                msg.m_codeX = widget::WIDGET_SET_STATUS;
+                msg.m_codeX = Widget::WIDGET_SET_STATUS;
                 msg.m_extra = 6;
                 msg.m_codeY = 0x15 + i;
                 broadcastMessage(msg);
@@ -2346,24 +2346,24 @@ void TBuyArtifactWindow::update(unsigned char update)
                 broadcastMessage(msg);
                 msg.m_codeY = 0x23 + i;
                 broadcastMessage(msg);
-                msg.m_codeX = widget::WIDGET_SET_TEXT;
+                msg.m_codeX = Widget::WIDGET_SET_TEXT;
                 msg.m_extraText = g_text;
                 sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                         g_currentPlayer->m_resources[i]);
                 msg.m_codeY = 0x23 + i;
                 broadcastMessage(msg);
-                msg.m_codeX = widget::WIDGET_SET_Y;
+                msg.m_codeX = Widget::WIDGET_SET_Y;
                 msg.m_extra = g_resourceValueWidgetY[i];
                 broadcastMessage(msg);
-                msg.m_codeX = (g_selectedArtifact == i) ? widget::WIDGET_SET_STATUS
-                                                     : widget::WIDGET_CLEAR_STATUS;
+                msg.m_codeX = (g_selectedArtifact == i) ? Widget::WIDGET_SET_STATUS
+                                                     : Widget::WIDGET_CLEAR_STATUS;
                 msg.m_codeY = MARKET_SELL_WOOD_ID + i;
-                msg.m_extra = widget::WIDGET_DRAWN;
+                msg.m_extra = Widget::WIDGET_DRAWN;
                 broadcastMessage(msg);
             } else {
                 msg.m_extra = 6;
                 if (g_marketArtifacts[i] != ARTIFACT_NONE) {
-                    msg.m_codeX = widget::WIDGET_SET_STATUS;
+                    msg.m_codeX = Widget::WIDGET_SET_STATUS;
                     msg.m_codeY = 0x38 + i;
                     broadcastMessage(msg);
                     msg.m_codeY = 0x4d + i;
@@ -2387,16 +2387,16 @@ void TBuyArtifactWindow::update(unsigned char update)
                     } else {
                         sprintf(g_text, g_emptyRolloverText);
                     }
-                    msg.m_codeX = widget::WIDGET_SET_TEXT;
+                    msg.m_codeX = Widget::WIDGET_SET_TEXT;
                     msg.m_codeY = 0x4d + i;
                     msg.m_extraText = g_text;
                     broadcastMessage(msg);
-                    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+                    msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
                     msg.m_codeY = 0x38 + i;
                     msg.m_extra = g_marketArtifacts[i];
                     broadcastMessage(msg);
                 } else {
-                    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+                    msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
                     msg.m_codeY = 0x38 + i;
                     broadcastMessage(msg);
                     msg.m_codeY = 0x4d + i;
@@ -2405,10 +2405,10 @@ void TBuyArtifactWindow::update(unsigned char update)
                     msg.m_codeY = 0x3f + i;
                     broadcastMessage(msg);
                 }
-                msg.m_codeX = (g_leftResource == i) ? widget::WIDGET_SET_STATUS
-                                                 : widget::WIDGET_CLEAR_STATUS;
+                msg.m_codeX = (g_leftResource == i) ? Widget::WIDGET_SET_STATUS
+                                                 : Widget::WIDGET_CLEAR_STATUS;
                 msg.m_codeY = 0x3f + i;
-                msg.m_extra = widget::WIDGET_DRAWN;
+                msg.m_extra = Widget::WIDGET_DRAWN;
                 broadcastMessage(msg);
             }
         }
@@ -2419,12 +2419,12 @@ void TBuyArtifactWindow::update(unsigned char update)
 }
 
 VA(0x005ebe80, 0x6cb)  // dc 0x18a02c
-void TSellArtifactWindow::update(unsigned char update)
+void SellArtifactWindow::update(unsigned char update)
 {
     int tempMaxUnitsToTrade;
     int tempLeftDenominated;
     int tempTradeRatio;
-    message msg;
+    Message msg;
     int art;
     int rightQty;
     msg.m_id = MESSAGE_WIDGET;
@@ -2435,7 +2435,7 @@ void TSellArtifactWindow::update(unsigned char update)
         else
             rightQty = 1;
         if (g_selectedArtifact < 18) {
-            art = g_marketHero->getArtifact(TArtifactSlot(g_selectedArtifact)).m_artifactId;
+            art = g_marketHero->getArtifact(ArtifactSlot(g_selectedArtifact)).m_artifactId;
         } else {
             art = g_marketHero->getBackpack(
                 (g_backpackStart + g_selectedArtifact - 18)
@@ -2452,7 +2452,7 @@ void TSellArtifactWindow::update(unsigned char update)
         sprintf(g_text, (*g_generalText)[164]);
     }
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 2;
     msg.m_extraText = g_text;
     broadcastMessage(msg);
@@ -2466,7 +2466,7 @@ void TSellArtifactWindow::update(unsigned char update)
     broadcastMessage(msg);
 
     strcpy(g_text, (*g_generalText)[169]);
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeX = Widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0xf;
     msg.m_extraText = g_text;
     broadcastMessage(msg);
@@ -2492,11 +2492,11 @@ void TSellArtifactWindow::update(unsigned char update)
 
     for (int i2 = 0; i2 < 2; ++i2) {
         if (g_selectedArtifact != -1 && g_leftResource != -1) {
-            msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+            msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
             if (i2 == 0) {
                 msg.m_codeY = 9;
                 if (g_selectedArtifact < 18) {
-                    msg.m_extra = g_marketHero->getArtifact(TArtifactSlot(
+                    msg.m_extra = g_marketHero->getArtifact(ArtifactSlot(
                         g_selectedArtifact)).m_artifactId;
                 } else {
                     msg.m_extra = g_marketHero->getBackpack(
@@ -2504,7 +2504,7 @@ void TSellArtifactWindow::update(unsigned char update)
                         % g_marketHero->getNumberInBackpack(1)).m_artifactId;
                 }
                 broadcastMessage(msg);
-                msg.m_codeX = widget::WIDGET_SET_TEXT;
+                msg.m_codeX = Widget::WIDGET_SET_TEXT;
                 msg.m_codeY = 4;
                 msg.m_extraText = g_text;
                 if (g_ratioInverted)
@@ -2513,7 +2513,7 @@ void TSellArtifactWindow::update(unsigned char update)
                     sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                             g_rightAmount * g_giveQuantity);
             } else {
-                msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
                 msg.m_extra = g_leftResource;
                 msg.m_codeY = 0xb;
                 broadcastMessage(msg);
@@ -2522,7 +2522,7 @@ void TSellArtifactWindow::update(unsigned char update)
                             g_rightAmount * g_giveQuantity);
                 else
                     sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), g_rightAmount);
-                msg.m_codeX = widget::WIDGET_SET_TEXT;
+                msg.m_codeX = Widget::WIDGET_SET_TEXT;
                 msg.m_codeY = 0xc;
                 msg.m_extraText = g_text;
             }
@@ -2532,14 +2532,14 @@ void TSellArtifactWindow::update(unsigned char update)
         for (int i = 0; i < 7; ++i) {
             if (i2 == 1) {
                 msg.m_codeY = i + 0x2a;
-                msg.m_codeX = widget::WIDGET_SET_STATUS;
+                msg.m_codeX = Widget::WIDGET_SET_STATUS;
                 msg.m_extra = 6;
                 broadcastMessage(msg);
                 msg.m_codeY = i + 0x3f;
                 broadcastMessage(msg);
                 msg.m_codeY = i + 0x4d;
                 broadcastMessage(msg);
-                msg.m_codeX = widget::WIDGET_SET_TEXT;
+                msg.m_codeX = Widget::WIDGET_SET_TEXT;
                 msg.m_codeY = i + 0x4d;
                 msg.m_extraText = g_text;
                 if (g_selectedArtifact != -1) {
@@ -2553,16 +2553,16 @@ void TSellArtifactWindow::update(unsigned char update)
                     sprintf(g_text, g_emptyRolloverText);
                 }
                 broadcastMessage(msg);
-                msg.m_codeX = (g_leftResource == i) ? widget::WIDGET_SET_STATUS
-                                                 : widget::WIDGET_CLEAR_STATUS;
+                msg.m_codeX = (g_leftResource == i) ? Widget::WIDGET_SET_STATUS
+                                                 : Widget::WIDGET_CLEAR_STATUS;
                 msg.m_codeY = i + 0x3f;
-                msg.m_extra = widget::WIDGET_DRAWN;
+                msg.m_extra = Widget::WIDGET_DRAWN;
                 broadcastMessage(msg);
             }
         }
         if (i2 == 0) {
             for (int slot = 0; slot < 0x17; ++slot) {
-                msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+                msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
                 msg.m_codeY = slot + 0x6b;
                 msg.m_extra = 6;
                 broadcastMessage(msg);
@@ -2591,12 +2591,12 @@ void TSellArtifactWindow::update(unsigned char update)
 // store reorders added 2--6 slots and volatile-local controls added 83--298.
 // There is no evidence-backed carrier for the last callee-save tie.
 VA(0x005ec550, 0x7ba)  // ordermap clean run + arity ret 4, dc 0x18a550
-void TSellCreatureWindow::update(bool update)
+void SellCreatureWindow::update(bool update)
 {
     int tempMaxUnitsToTrade;
     int tempLeftDenominated;
     int tempTradeRatio;
-    message msg;
+    Message msg;
     int rightQty;
     int leftQty;
     msg.m_id = MESSAGE_WIDGET;
@@ -2814,7 +2814,7 @@ void TSellCreatureWindow::update(bool update)
 // rounded ratios and the resource-limited maximum. Complete expands this
 // ordinary helper in Update; the discarded maximum then disappears.
 DC_ONLY(0x18ad48, 0x140)
-void TTradeResourceWindow::computeTradeRatios(int inLeftResource,
+void TradeResourceWindow::computeTradeRatios(int inLeftResource,
     int inRightResource, int* inTradeRatio, int* inLeftDenominated,
     int* inMaxUnitsToTrade)
 {
@@ -2837,42 +2837,42 @@ void TTradeResourceWindow::computeTradeRatios(int inLeftResource,
 
 // E:\gamedcs\tradpost.cpp:2202
 DC_ONLY(0x18ae88, 0x6C)  // inlined away on x86 (no carve slot)
-void TGiveResourceWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
+void GiveResourceWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2209
 DC_ONLY(0x18aef4, 0xE0)  // inlined away on x86 (no carve slot)
-void TBuyArtifactWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
+void BuyArtifactWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2286
 DC_ONLY(0x18b2e8, 0x40)  // inlined away on x86 (no carve slot)
-void TTradeResourceWindow::setupNewTrade()
+void TradeResourceWindow::setupNewTrade()
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2294
 DC_ONLY(0x18b328, 0x40)  // inlined away on x86 (no carve slot)
-void TGiveResourceWindow::setupNewTrade()
+void GiveResourceWindow::setupNewTrade()
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2302
 DC_ONLY(0x18b368, 0x40)  // inlined away on x86 (no carve slot)
-void TBuyArtifactWindow::setupNewTrade()
+void BuyArtifactWindow::setupNewTrade()
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2319
 DC_ONLY(0x18b3d4, 0x40)  // inlined away on x86 (no carve slot)
-void TSellCreatureWindow::setupNewTrade()
+void SellCreatureWindow::setupNewTrade()
 {
     // @stub
 }
@@ -2880,13 +2880,13 @@ void TSellCreatureWindow::setupNewTrade()
 #endif  // @carcass
 
 VA(0x005ecd10, 0x0B)
-long getMarketValue(EGameResource resource)
+long getMarketValue(GameResource resource)
 {
     return g_marketValues[resource];
 }
 
 VA(0x005ecd20, 0x94)  // dc 0x18ab9c
-double getTradeRatio(EGameResource source, EGameResource dest, double efficiency)
+double getTradeRatio(GameResource source, GameResource dest, double efficiency)
 {
     double ratio = static_cast<double>(g_marketValues[dest])
                  / (static_cast<double>(g_marketValues[source]) * efficiency);
@@ -2898,11 +2898,11 @@ double getTradeRatio(EGameResource source, EGameResource dest, double efficiency
 }
 
 VA(0x005ecdc0, 0xbb)  // dc 0x18afd4
-void TSellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
+void SellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
 {
-    type_artifact artifact;
+    ArtifactRecord artifact;
     if (inLeftResource < 18) {
-        artifact = g_marketHero->getArtifact(TArtifactSlot(inLeftResource));
+        artifact = g_marketHero->getArtifact(ArtifactSlot(inLeftResource));
     }
     else
         artifact = g_marketHero->getBackpack(inLeftResource - 18);
@@ -2927,7 +2927,7 @@ void TSellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightReso
 // that it inverts to units-per-resource. The tradeable count is the stack size
 // (less one when it is the hero's only army) divided by the ratio.
 VA(0x005ece80, 0x157)  // anchor-callee (TSellCreatureWindow::Update+WindowHandler) + GetNumArmies, dc 0x18b114
-void TSellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
+void SellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
 {
     float denominator = static_cast<float>(g_creatureTypeTraits[
                             g_marketHero->m_army.m_armies[inLeftResource]].m_cost[6])
@@ -2972,7 +2972,7 @@ void TSellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightReso
 // ComputeTradeRatios definitions.
 
 // E:\gamedcs\tradpost.cpp:2312
-void TSellArtifactWindow::setupNewTrade()
+void SellArtifactWindow::setupNewTrade()
 {
     computeTradeRatios(g_selectedArtifact, g_leftResource,
         &g_giveQuantity, &g_ratioInverted, &g_maxTradeUnits);
@@ -2980,10 +2980,10 @@ void TSellArtifactWindow::setupNewTrade()
 }
 
 // E:\gamedcs\tradpost.cpp:2327
-void TSellArtifactWindow::updateMarketBackpack()
+void SellArtifactWindow::updateMarketBackpack()
 {
     long numInBackpack = g_marketHero->getNumberInBackpack(1);
-    message icon;
+    Message icon;
     icon.m_codeY = 0;
     icon.m_qualifier = 0;
     icon.m_mouseX = 0;
@@ -2991,7 +2991,7 @@ void TSellArtifactWindow::updateMarketBackpack()
     icon.m_extra = 0;
     icon.m_window = 0;
     icon.m_id = MESSAGE_WIDGET;
-    icon.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+    icon.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
     for (int k = 0; k < 5 && k < numInBackpack; ++k) {
         icon.m_codeY = k + 0x66;
         icon.m_extra = g_marketHero->getBackpack(
@@ -3001,7 +3001,7 @@ void TSellArtifactWindow::updateMarketBackpack()
 }
 
 // E:\gamedcs\tradpost.cpp:2344
-void TSellArtifactWindow::incrementBackpackStart()
+void SellArtifactWindow::incrementBackpackStart()
 {
     long numInBackpack = g_marketHero->getNumberInBackpack(1);
     if (numInBackpack > 5) {
@@ -3012,7 +3012,7 @@ void TSellArtifactWindow::incrementBackpackStart()
 }
 
 // E:\gamedcs\tradpost.cpp:2356
-void TSellArtifactWindow::decrementBackpackStart()
+void SellArtifactWindow::decrementBackpackStart()
 {
     long numInBackpack = g_marketHero->getNumberInBackpack(1);
     if (numInBackpack > 5) {
@@ -3030,7 +3030,7 @@ void TSellArtifactWindow::decrementBackpackStart()
 // exchange ratio through the inlined ComputeTradeRatios. Hover events copy the
 // rollover string.
 VA(0x005ecfe0, 0x3ba)  // anchor-vtable 0x6439f8 slot 9, dc 0x18b540
-int TTradeResourceWindow::windowHandler(message& msg)
+int TradeResourceWindow::windowHandler(Message& msg)
 {
     int r = CAdvPopup::windowHandler(msg);
     if (r != 0)
@@ -3043,7 +3043,7 @@ int TTradeResourceWindow::windowHandler(message& msg)
             return 1;
 
     switch (msg.m_codeX) {
-    case widget::WIDGET_DESELECT:
+    case Widget::WIDGET_DESELECT:
         switch (msg.m_codeY) {
         case MARKET_LEFT_PANEL_ID:
             if (g_rightAmount == 0)
@@ -3078,7 +3078,7 @@ int TTradeResourceWindow::windowHandler(message& msg)
             return 1;
         }
         break;
-    case widget::WIDGET_SELECT:
+    case Widget::WIDGET_SELECT:
         switch (msg.m_codeY) {
         case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
         case MARKET_SELL_ORE_ID: case MARKET_SELL_SULFUR_ID:
@@ -3148,7 +3148,7 @@ int TTradeResourceWindow::windowHandler(message& msg)
 
     update(1);
     if (exit) {
-        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = msg.m_codeY = Widget::WIDGET_END_DIALOG;
         return 2;
     }
     return 1;
@@ -3163,7 +3163,7 @@ int TTradeResourceWindow::windowHandler(message& msg)
 }
 
 VA(0x005ed3a0, 0x1a2)  // dc 0x18b7c4
-void TTradeResourceWindow::setRolloverText(int codeY)
+void TradeResourceWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
     case MARKET_LEFT_PANEL_ID:  strcpy(g_text, g_marketHelpText[0].m_text); break;
@@ -3186,7 +3186,7 @@ void TTradeResourceWindow::setRolloverText(int codeY)
     case MARKET_COMMAND_ID: strcpy(g_text, g_marketHelpText[5].m_text); break;
     default: strcpy(g_text, g_emptyRolloverText); break;
     }
-    message update;
+    Message update;
     update.m_extraText = g_text;
     broadcastMessage(0x200, 3, 0x93, update.m_extra);
     drawWindow(0, 0x92, 0x93);
@@ -3200,7 +3200,7 @@ void TTradeResourceWindow::setRolloverText(int codeY)
 // the gift moves the resource into the recipient's row and, when the recipient
 // is a networked human, transmits the gift message. Hover copies the rollover.
 VA(0x005ed550, 0x2f1)  // anchor-vtable 0x643a34 slot 9, dc 0x18b8d4
-int TGiveResourceWindow::windowHandler(message& msg)
+int GiveResourceWindow::windowHandler(Message& msg)
 {
     int r = CAdvPopup::windowHandler(msg);
     if (r != 0)
@@ -3213,7 +3213,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
             return 1;
 
         switch (msg.m_codeX) {
-        case widget::WIDGET_SELECT:
+        case Widget::WIDGET_SELECT:
             switch (msg.m_codeY) {
             case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
             case MARKET_SELL_ORE_ID: case MARKET_SELL_SULFUR_ID:
@@ -3254,7 +3254,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
             }
             break;
 
-        case widget::WIDGET_DESELECT:
+        case Widget::WIDGET_DESELECT:
             switch (msg.m_codeY) {
             case MARKET_LEFT_PANEL_ID: {
                 if (g_rightAmount == 0)
@@ -3295,7 +3295,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
 
         update(1);
         if (exit) {
-            msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+            msg.m_codeX = msg.m_codeY = Widget::WIDGET_END_DIALOG;
             return 2;
         }
         return 1;
@@ -3310,7 +3310,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
 }
 
 VA(0x005ed850, 0x190)  // dc 0x18bb40
-void TGiveResourceWindow::setRolloverText(int codeY)
+void GiveResourceWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
     case MARKET_LEFT_PANEL_ID:  strcpy(g_text, g_giveHelpText[0].m_text); break;
@@ -3333,7 +3333,7 @@ void TGiveResourceWindow::setRolloverText(int codeY)
     case MARKET_COMMAND_ID: strcpy(g_text, g_giveHelpText[4].m_text); break;
     default: strcpy(g_text, g_emptyRolloverText); break;
     }
-    message update;
+    Message update;
     update.m_extraText = g_text;
     broadcastMessage(0x200, 3, 0x93, update.m_extra);
     drawWindow(0, 0x92, 0x93);
@@ -3347,7 +3347,7 @@ void TGiveResourceWindow::setRolloverText(int codeY)
 // the artifact, empty the slot) or the two tab-command panels; subtype 0xe
 // right-clicks an artifact slot into its info popup. Hover copies the rollover.
 VA(0x005ed9e0, 0x3e2)  // anchor-vtable 0x643a70 slot 9, dc 0x18bc64
-int TBuyArtifactWindow::windowHandler(message& msg)
+int BuyArtifactWindow::windowHandler(Message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -3368,7 +3368,7 @@ int TBuyArtifactWindow::windowHandler(message& msg)
                 } else {
                     g_currentPlayer->m_resources[g_selectedArtifact] -=
                         g_giveQuantity * g_rightAmount;
-                    type_artifact artifact(
+                    ArtifactRecord artifact(
                         g_marketArtifacts[g_leftResource]);
                     g_marketHero->giveArtifact(&artifact, 1, 1);
                     g_marketArtifacts[g_leftResource] =
@@ -3472,7 +3472,7 @@ int TBuyArtifactWindow::windowHandler(message& msg)
             if (msg.m_codeY < BUY_ARTIFACT_SLOT_0_ID
                 || msg.m_codeY > BUY_ARTIFACT_SLOT_6_ID)
                 return MESSAGE_DISPATCH_CONSUME;
-            type_artifact artifact(
+            ArtifactRecord artifact(
                 g_marketArtifacts[
                     msg.m_codeY - BUY_ARTIFACT_SLOT_0_ID]);
             g_marketHero->viewArtifact(&artifact, 1);
@@ -3502,7 +3502,7 @@ int TBuyArtifactWindow::windowHandler(message& msg)
 }
 
 VA(0x005eddd0, 0x188)  // dc 0x18bee8
-void TBuyArtifactWindow::setRolloverText(int codeY)
+void BuyArtifactWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
     case MARKET_LEFT_PANEL_ID:      strcpy(g_text, g_buyArtHelpText[0].m_text); break;
@@ -3519,7 +3519,7 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
     case BUY_ARTIFACT_SLOT_2_ID: case BUY_ARTIFACT_SLOT_3_ID:
     case BUY_ARTIFACT_SLOT_4_ID: case BUY_ARTIFACT_SLOT_5_ID:
     case BUY_ARTIFACT_SLOT_6_ID: {
-        TArtifact art =
+        Artifact art =
             g_marketArtifacts[codeY - BUY_ARTIFACT_SLOT_0_ID];
         if (art == ARTIFACT_NONE)
             strcpy(g_text, g_emptyRolloverText);
@@ -3530,7 +3530,7 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
     case MARKET_COMMAND_ID: strcpy(g_text, g_buyArtHelpText[4].m_text); break;
     default: strcpy(g_text, g_emptyRolloverText); break;
     }
-    message update;
+    Message update;
     update.m_extraText = g_text;
     broadcastMessage(0x200, 3, 0x93, update.m_extra);
     drawWindow(0, 0x92, 0x93);
@@ -3547,7 +3547,7 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
 // the rollover string.
 
 VA(0x005edf60, 0x75f)  // anchor-vtable 0x643aac slot 9, dc 0x18c00c
-int TSellArtifactWindow::windowHandler(message& msg)
+int SellArtifactWindow::windowHandler(Message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -3624,9 +3624,9 @@ int TSellArtifactWindow::windowHandler(message& msg)
                 return MESSAGE_DISPATCH_CONSUME;
             }
             int artifactSlot = msg.m_codeY - MARKET_ARTIFACT_SLOT_00_ID;
-            type_artifact artifact;
+            ArtifactRecord artifact;
             if (artifactSlot < 18) {
-                artifact = g_marketHero->getArtifact(TArtifactSlot(artifactSlot));
+                artifact = g_marketHero->getArtifact(ArtifactSlot(artifactSlot));
                 g_marketHero->viewArtifact(&artifact, 1);
                 return MESSAGE_DISPATCH_CONSUME;
             } else {
@@ -3710,14 +3710,14 @@ int TSellArtifactWindow::windowHandler(message& msg)
     if (updateFlag)
         update(true);
     if (exitFlag) {
-        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = msg.m_codeY = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
 }
 
 VA(0x005ee6c0, 0x1cf)  // dc 0x18c378
-void TSellArtifactWindow::setRolloverText(int codeY)
+void SellArtifactWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
     case MARKET_LEFT_PANEL_ID: strcpy(g_text, g_sellArtHelpText[0].m_text); break;
@@ -3744,9 +3744,9 @@ void TSellArtifactWindow::setRolloverText(int codeY)
     case MARKET_ARTIFACT_SLOT_20_ID: case MARKET_ARTIFACT_SLOT_21_ID:
     case MARKET_ARTIFACT_SLOT_22_ID: {
         long slot = codeY - MARKET_ARTIFACT_SLOT_00_ID;
-        type_artifact artifact;
+        ArtifactRecord artifact;
         if (slot < 18) {
-            artifact = g_marketHero->getArtifact(TArtifactSlot(slot));
+            artifact = g_marketHero->getArtifact(ArtifactSlot(slot));
         } else {
             long backpackIndex = ((g_backpackStart & 0xff) + slot - 18)
                                  % g_marketHero->getNumberInBackpack(1);
@@ -3757,7 +3757,7 @@ void TSellArtifactWindow::setRolloverText(int codeY)
     }
     default: strcpy(g_text, g_emptyRolloverText); break;
     }
-    message update;
+    Message update;
     update.m_extraText = g_text;
     broadcastMessage(0x200, 3, 0x93, update.m_extra);
     drawWindow(0, 0x92, 0x93);
@@ -3770,7 +3770,7 @@ void TSellArtifactWindow::setRolloverText(int codeY)
 // the sell/max panels and the two tab-command buttons; subtype 0xe right-clicks
 // an army slot into ViewArmy. Hover copies the rollover string.
 VA(0x005ee890, 0x33f)  // anchor-vtable 0x643ae8 slot 9, dc 0x18c4bc
-int TSellCreatureWindow::windowHandler(message& msg)
+int SellCreatureWindow::windowHandler(Message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -3902,7 +3902,7 @@ int TSellCreatureWindow::windowHandler(message& msg)
 }
 
 VA(0x005eebd0, 0x1a1)  // dc 0x18c7b0
-void TSellCreatureWindow::setRolloverText(int codeY)
+void SellCreatureWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
     case MARKET_LEFT_PANEL_ID:
@@ -3939,7 +3939,7 @@ void TSellCreatureWindow::setRolloverText(int codeY)
         strcpy(g_text, g_emptyRolloverText);
         break;
     }
-    message update;
+    Message update;
     update.m_extraText = g_text;
     broadcastMessage(0x200, 3, 0x93, update.m_extra);
     drawWindow(0, 0x92, 0x93);

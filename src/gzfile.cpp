@@ -13,32 +13,32 @@
 #include "gzfile.h"
 
 VA(0x004d6c50, 0x76)
-TGzFile::TGzFile(const char* path, const char* mode)
+GzFile::GzFile(const char* path, const char* mode)
     : m_file(gzopen(path, mode))
 {
     if (m_file == 0)
-        throw TOpenFailure();
+        throw OpenFailure();
 }
 
-VA_COMPGEN(0x004d6cd0, 0x21, SCALAR_DELETING_DTOR, TGzFile)
-VA_COMPGEN(0x004d6d00, 0x5, IMPLICIT_DTOR, TOpenFailure)
-VA_COMPGEN(0x004d6d10, 0x1C, IMPLICIT_COPY_CTOR, TOpenFailure)
-VA_COMPGEN(0x004d6d30, 0x21, SCALAR_DELETING_DTOR, TOpenFailure)
+VA_COMPGEN(0x004d6cd0, 0x21, SCALAR_DELETING_DTOR, GzFile)
+VA_COMPGEN(0x004d6d00, 0x5, IMPLICIT_DTOR, OpenFailure)
+VA_COMPGEN(0x004d6d10, 0x1C, IMPLICIT_COPY_CTOR, OpenFailure)
+VA_COMPGEN(0x004d6d30, 0x21, SCALAR_DELETING_DTOR, OpenFailure)
 
 VA(0x004d6d60, 0x19)
-TGzFile::~TGzFile()
+GzFile::~GzFile()
 {
     gzclose(m_file);
 }
 
 VA(0x004d6d80, 0x16)
-int TGzFile::read(void* data, int size)
+int GzFile::read(void* data, int size)
 {
     return gzread(m_file, data, size);
 }
 
 VA(0x004d6da0, 0x16)
-int TGzFile::write(const void* data, int size)
+int GzFile::write(const void* data, int size)
 {
     return gzwrite(m_file, const_cast<void*>(data), size);
 }

@@ -10,14 +10,14 @@
 
 // Shared saved game snapshot; original Dreamcast name: saveHeader.
 // campaignbrief.cpp owns retail 0x69fdc4.
-extern game* g_saveHeader;
+extern Game* g_saveHeader;
 
-class bitmapBorder;
-class button;
-class coloredBorderFrame;
-class iconWidget;
-class type_func_button;
-class type_text_scroller;
+class BitmapBorder;
+class Button;
+class ColoredBorderFrame;
+class IconWidget;
+class FuncButton;
+class TextScroller;
 
 // Retail's vector insert and constructor cleanup both prove this exact
 // source-level aggregate: a NewSMapHeader, the trivially copied setup record,
@@ -25,7 +25,8 @@ class type_text_scroller;
 // The four map extents NewSMapHeader::Size takes; TCampaignBrief::Select
 // maps them onto the WHICHMAP icon's frames 0..3 (anything else is frame
 // 4). Declared with its one consumer.
-enum EMapSize {
+// Before normalization (type): EMapSize.
+enum MapSize {
     MAP_SIZE_SMALL = 36,
     MAP_SIZE_MEDIUM = 72,
     MAP_SIZE_LARGE = 108,
@@ -63,11 +64,13 @@ SIZE(CampaignScenarioPreview, 0x4d4);
 // decoded; their first parameter is the same opaque per-scenario record in
 // all three (it carries a byte vector at +0x18, an int row at +0x4c, a
 // vector at +0x70 and a five-dword bit block at +0x90).
-class TCampaignStartOption;
+// Before normalization (type): TCampaignStartOption.
+class CampaignStartOption;
 
 // Retail Complete diverges from the Dreamcast class after heroWindow, but
 // fixes every field used by the campaign constructor and destructor.
-class TCampaignBrief : public heroWindow {
+// Before normalization (type): TCampaignBrief.
+class CampaignBrief : public HeroWindow {
 public:
     struct ScenarioStruct;
     struct CampaignHeaderStruct;
@@ -119,7 +122,7 @@ public:
         std::vector<int> m_heroPlaceholders;
         std::bitset<145> m_crossoverCreatures;
         std::bitset<144> m_crossoverArtifacts;
-        TCampaignStartOption* m_options;
+        CampaignStartOption* m_options;
 
         ScenarioStruct();
         // Retail 0x487e40 (`ret 0xc`): reads one scenario record out of
@@ -127,7 +130,7 @@ public:
         // scenario count (the prerequisite bitmap's width) and the third
         // the campaign file version. Name provisional - no Dreamcast row
         // covers this Complete-only type.
-        void read(TAbstractFile* infile, int numScenarios,
+        void read(AbstractFile* infile, int numScenarios,
                   int campaignVersion);
         // Complete's campaign-map loader calls this on the selected
         // scenario record for each matching map hero placeholder.  The
@@ -135,7 +138,7 @@ public:
         // arguments are fixed by the 0x10-byte placeholder stride and the
         // 0x492-byte carry-over hero vector stride.
         void initializeCrossoverHero(HeroPlaceholderData* placeholder,
-                                     hero* sourceHero);
+                                     Hero* sourceHero);
         // Retail 0x487020, the placeholder half of the same pass: a map
         // hero placeholder with no carried hero behind it becomes a live
         // hero of the player's own alignment (or the carried record is
@@ -167,13 +170,14 @@ public:
     struct CampaignHeaderStruct {
         // Complete's Load body sets OPEN_FAILED when its reader factory
         // returns null and VERSION_UNSUPPORTED when campaign_version < 4.
-        enum EFileError {
+// Before normalization (type): CampaignBrief::CampaignHeaderStruct::EFileError.
+        enum FileError {
             CAMPAIGN_FILE_OK = 0,
             CAMPAIGN_FILE_OPEN_FAILED = 1,
             CAMPAIGN_FILE_VERSION_UNSUPPORTED = 2
         };
 
-        EFileError m_fileError;
+        FileError m_fileError;
         std::string m_fileName;
         int m_campaignVersion;
         int m_regionMap;
@@ -212,7 +216,7 @@ public:
     // the background, campaign text, flags and three region-image states.
     // Keeping the names in the class also restores the real C1 declaration
     // environment instead of steering /Ob2 from a stripped-down surrogate.
-    enum EOtherWidgetIDs {
+    enum OtherWidgetIDs {
         BACKGROUND_ID = 100,
         CAMPAIGN_NAME_ID,
         CAMPAIGN_DESCRIPTION_ID,
@@ -358,16 +362,16 @@ public:
     CampaignHeaderStruct* m_campaign;
     int m_field68;
     int m_selectedScenario;
-    coloredBorderFrame* m_startBonusBorders[3];
-    bitmapBorder* m_bitmapBonusImages[3];
-    iconWidget* m_spriteBonusImages[3];
-    button* m_difficultyButtons[5];
-    type_func_button* m_difficultyDecrButton;
-    type_func_button* m_difficultyIncrButton;
-    type_text_scroller* m_scroller;
+    ColoredBorderFrame* m_startBonusBorders[3];
+    BitmapBorder* m_bitmapBonusImages[3];
+    IconWidget* m_spriteBonusImages[3];
+    Button* m_difficultyButtons[5];
+    FuncButton* m_difficultyDecrButton;
+    FuncButton* m_difficultyIncrButton;
+    TextScroller* m_scroller;
 
-    TCampaignBrief(unsigned char newCampaign, unsigned char viewFromGame);
-    virtual ~TCampaignBrief();
+    CampaignBrief(unsigned char newCampaign, unsigned char viewFromGame);
+    virtual ~CampaignBrief();
     void addBonusIcons();
     void updateBonusIcons();
     void doModal();
@@ -384,16 +388,16 @@ private:
     // private helper, proving the owning header grants it friendship;
     // campaignbrief.cpp declares the static ahead of this header so the
     // friend binds to it.
-    friend int campaignBriefHandler(message& msg);
+    friend int campaignBriefHandler(Message& msg);
     // The DC class type contains this private member in addition to the
     // same-named file-scope helper emitted by campaignbrief.obj.
     void showTerritorySmacker(unsigned char evilPost);
     int convertID2HelpID(int id) const;
 };
-SIZE(TCampaignBrief::MapTextStruct, 0x18);
-SIZE(TCampaignBrief::ScenarioStruct, 0xa8);
-SIZE(TCampaignBrief::CampaignHeaderStruct, 0x5c);
-SIZE(TCampaignBrief, 0xb4);
+SIZE(CampaignBrief::MapTextStruct, 0x18);
+SIZE(CampaignBrief::ScenarioStruct, 0xa8);
+SIZE(CampaignBrief::CampaignHeaderStruct, 0x5c);
+SIZE(CampaignBrief, 0xb4);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\campaignbrief.cpp:202, dc 0x58244) void CampaignWait(int which);

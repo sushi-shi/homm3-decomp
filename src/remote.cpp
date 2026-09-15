@@ -228,7 +228,7 @@ DATA(0x0069d804) unsigned char g_gameMode;
 DATA(0x0069d80d) unsigned char g_unnamed69d80d;
 DATA(0x0069d80e) unsigned char g_weMoved;
 DATA(0x0069d608) CNetPlayerInfo g_thisNetPlayerInfo;
-DATA(0x006989f0) eNetGameType g_mpNetProtocol;
+DATA(0x006989f0) NetGameType g_mpNetProtocol;
 // Dreamcast publishes gMapName as char[260]. LobbyLaunchConnect copies the
 // selected setup filename here before refreshing the scenario header; the
 // next retail cell at 0x6994e4 independently proves the 0x104-byte extent.
@@ -846,7 +846,7 @@ void CChatManager::addChat(const char* format, ...)
             && g_soundManager->getSampleInfo(
                 m_chatMemSample, AIL_SAMPLE_PLAYING))
             return;
-        sample* chatSample = m_chatSample;
+        Sample* chatSample = m_chatSample;
         if (chatSample) {
             int soundWasEnabled = g_soundManager->m_playSounds;
             g_soundManager->m_playSounds = 1;
@@ -875,7 +875,7 @@ void __cdecl CChatManager::turnDurationMsg(const char* format, ...)
 
     unsigned char canDisplay = 1;
     if (g_advManager
-        && g_advManager->m_status == baseManager::STATUS_SUSPENDED)
+        && g_advManager->m_status == BaseManager::STATUS_SUSPENDED)
         canDisplay = 0;
 
     if (g_dPlay) {
@@ -898,7 +898,7 @@ void __cdecl CChatManager::turnDurationMsg(const char* format, ...)
         m_isSysMsg = 0;
     }
 
-    sample* sampleToPlay = m_turnDurSample;
+    Sample* sampleToPlay = m_turnDurSample;
     if (m_chatMemSample
         && g_soundManager->getSampleInfo(
             m_chatMemSample, AIL_SAMPLE_PLAYING))
@@ -929,7 +929,7 @@ void __cdecl CChatManager::systemMsg(const char* format, ...)
 
     m_isSysMsg = 1;
     addChat(finalText);
-    sample* sampleToPlay = m_sysMsgSample;
+    Sample* sampleToPlay = m_sysMsgSample;
     m_isSysMsg = 0;
 
     if (m_chatMemSample
@@ -962,7 +962,7 @@ void CChatManager::playerDropMsg(const char* format, ...)
 
     m_isSysMsg = 1;
     addChat(finalText);
-    sample* sampleToPlay = m_playerDropSample;
+    Sample* sampleToPlay = m_playerDropSample;
 
     if (!(m_chatMemSample
           && g_soundManager->getSampleInfo(
@@ -996,7 +996,7 @@ void __cdecl CChatManager::playerEnterMsg(const char* format, ...)
 
     m_isSysMsg = 1;
     addChat(finalText);
-    sample* sampleToPlay = m_playerEnterSample;
+    Sample* sampleToPlay = m_playerEnterSample;
 
     if (!(m_chatMemSample
           && g_soundManager->getSampleInfo(
@@ -1015,7 +1015,7 @@ void __cdecl CChatManager::playerEnterMsg(const char* format, ...)
 }
 
 VA(0x00553d00, 0xA1)  // dc 0x11c6bc
-void CChatManager::updateWidget(textWidget* widget, unsigned char killOld, int numLines)
+void CChatManager::updateWidget(TextWidget* widget, unsigned char killOld, int numLines)
 {
     if (m_pauseTime == 0) {
         int msgNbr = m_currMsg;
@@ -1121,7 +1121,7 @@ void CChatManager::UpdateNewChat()
 #endif  // @carcass
 
 VA(0x00553ee0, 0x163)  // dc 0x11c8d0
-void CChatManager::updateWidgetText(int numLines, textWidget* widget)
+void CChatManager::updateWidgetText(int numLines, TextWidget* widget)
 {
     int lineCounts[20];
 
@@ -1231,10 +1231,10 @@ void CChatManager::setPosition(int newPos)
 
 VA(0x005541a0, 0x5A)  // dc 0x11cb48
 CChatEdit::CChatEdit(int x, int y, int w, int h, int textSize, char* text,
-    char* fontName, font::TColor color, font::EJustify justification,
+    char* fontName, Font::Color color, Font::Justify justification,
     char* backgroundIcon, int backgroundFrame, int id, int style,
     int readType, int insetX, int insetY)
-    : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
+    : TextEntryWidget(x, y, w, h, textSize, text, fontName, color,
           justification, backgroundIcon, backgroundFrame, id, style,
           readType, insetX, insetY)
 {
@@ -1249,7 +1249,7 @@ void CChatEdit::updateScreen()
 }
 
 VA(0x00554240, 0xEA)  // dc 0x11cc2c
-int CChatEdit::onKeyPress(message* msg)
+int CChatEdit::onKeyPress(Message* msg)
 {
     int key = getCharPressed(msg);
     switch (key) {
@@ -1268,13 +1268,13 @@ int CChatEdit::onKeyPress(message* msg)
             return onFunctionKey(*msg, key - KEYCODE_F1);
     }
 
-    int result = textEntryWidget::onKeyPress(msg);
+    int result = TextEntryWidget::onKeyPress(msg);
     updateScreen();
     return result;
 }
 
 VA(0x00554330, 0x44)  // dc 0x11cd14
-int CChatEdit::onFunctionKey(message msg, int toWho)
+int CChatEdit::onFunctionKey(Message msg, int toWho)
 {
     if (m_text.size() > 0)
         sendChat(m_text.c_str(), toWho);
@@ -1285,7 +1285,7 @@ int CChatEdit::onFunctionKey(message msg, int toWho)
 }
 
 VA(0x00554380, 0x3E)  // dc 0x11cd64
-int CChatEdit::onEnter(message msg)
+int CChatEdit::onEnter(Message msg)
 {
     if (m_text.size() > 0)
         sendChat(m_text.c_str(), NET_MESSAGE_RECIPIENT_ALL);
@@ -1296,7 +1296,7 @@ int CChatEdit::onEnter(message msg)
 }
 
 VA(0x005543c0, 0x1F)  // dc 0x11cdb0
-int CChatEdit::onEscape(message msg)
+int CChatEdit::onEscape(Message msg)
 {
     setupDisplayString(
         DATA_COMPGEN(0x00691210, chatEditEmptyText, ""), 0);
@@ -1313,7 +1313,7 @@ bool CChatEdit::isOpen()
 }
 
 VA(0x005543f0, 0x5)  // dc 0x11cdf8
-unsigned char CChatEdit::ignoreKey(message* msg)
+unsigned char CChatEdit::ignoreKey(Message* msg)
 {
     return 0;
 }
@@ -1326,7 +1326,7 @@ CNetMsg* getRemoteData(unsigned char removeFromQueue,
 }
 
 VA(0x00554410, 0x93)
-unsigned char initRemote(eNetGameType mpType, const char* userName)
+unsigned char initRemote(NetGameType mpType, const char* userName)
 {
     CNetPlayerInfo playerInfo;
 
@@ -1419,7 +1419,7 @@ void pollRemote()
 VA(0x005547c0, 0x25A)  // dc 0x11d020
 void sendChat(const char* chatString, int toWho)
 {
-    if (_strcmpi(chatString,
+    if (strcmpi(chatString,
                  g_generalText->getText(GENERAL_TEXT_CHAT_PING_COMMAND)) == 0) {
         if (toWho == NET_MESSAGE_RECIPIENT_ALL) {
             g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_CHAT_PING_ALL));
@@ -1437,7 +1437,7 @@ void sendChat(const char* chatString, int toWho)
     const char* outgoingChat = chatString;
 
     if (toWho != NET_MESSAGE_RECIPIENT_ALL) {
-        playerData* recipient = &g_game->m_players[toWho];
+        PlayerData* recipient = &g_game->m_players[toWho];
         char* recipientName = recipient->m_name;
         if (!recipient->isHuman())
             recipientName = DATA_COMPGEN(
@@ -1499,7 +1499,7 @@ CAnimatedDlg::~CAnimatedDlg()
 
 VA(0x00554b10, 0x20)  // dc 0x11d290
 unsigned char CAnimatedDlg::setup(
-    const char* text, font* textFont, const char* spriteName, int sequence)
+    const char* text, Font* textFont, const char* spriteName, int sequence)
 {
     m_spriteName = spriteName;
     m_seq = sequence;
@@ -1542,7 +1542,7 @@ void CAnimatedDlg::calcSpriteDimensions(
 
 VA(0x00554c30, 0xB8)  // dc 0x11d394
 void CAnimatedDlg::calcDimensions(
-    const char* text, font* textFont, int& winX, int& winY,
+    const char* text, Font* textFont, int& winX, int& winY,
     int& winWidth, int& winHeight)
 {
     CTextDialog::calcDimensions(
@@ -1581,7 +1581,7 @@ void CAnimatedDlg::drawSprite()
 }
 
 VA(0x00554d90, 0x80)  // dc 0x11d558
-int CAnimatedDlg::handleMessage(message& msg)
+int CAnimatedDlg::handleMessage(Message& msg)
 {
     tickAnimation();
     return 0;
@@ -1608,14 +1608,14 @@ void CAnimatedDlg::drawWindow(unsigned char update, int lowID, int highID)
         if (g_game->getLocalPlayer()) {
             for (int id = m_beginId; id <= m_endId; ++id)
                 broadcastMessage(
-                    0x200, widget::WIDGET_SET_PLAYER_PALETTE_COLORS,
+                    0x200, Widget::WIDGET_SET_PLAYER_PALETTE_COLORS,
                     id, g_game->getLocalPlayerGamePos());
         }
         m_palUpdated = 1;
     }
 
-    heroWindow::drawWindow(update, lowID, highID);
-    heroWindow::drawWindow(update, lowID, highID);
+    HeroWindow::drawWindow(update, lowID, highID);
+    HeroWindow::drawWindow(update, lowID, highID);
     drawSprite();
 }
 
@@ -1666,7 +1666,7 @@ bool CWaitForReadyPlayersDlg::allPlayersReady()
 
 // E:\gamedcs\remote.cpp:1813 - forget the dropped player's DirectPlay
 // identity and close only once every remaining human has checked in.
-int CWaitForReadyPlayersDlg::onPlayerDrop(CNetMsg* netMsg, message& msg)
+int CWaitForReadyPlayersDlg::onPlayerDrop(CNetMsg* netMsg, Message& msg)
 {
     int gamePos = g_game->getGamePosFromDPID(netMsg->m_dpidFrom);
     if (gamePos != -1)
@@ -1701,7 +1701,7 @@ void waitForReadyToPlayMsg()
 }
 
 VA(0x00555190, 0x319)  // dc 0x11f9f0
-int CWaitForReadyPlayersDlg::handleMessage(message& msg)
+int CWaitForReadyPlayersDlg::handleMessage(Message& msg)
 {
     CAnimatedDlg::handleMessage(msg);
     pollSound();
@@ -2210,12 +2210,12 @@ void onPlayerDropUpdateMsg(unsigned long dpid)
                             "OnPlayerDropUpdateMsg (%d)"),
                 dpid);
 
-    g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(1, MouseManager::ADVENTURE_SET);
     CTextDialog dlg(0x12);
     dlg.setup(g_generalText->getText(GENERAL_TEXT_PLAYER_DROP_RELOAD),
               g_mediumFont);
     dlg.open(0, 1);
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
 
     CHourGlass hourGlass(1);
     if (!g_game->loadGame(g_unnamed698758.m_scFile, 0, 0))
@@ -2230,7 +2230,7 @@ void onPlayerDropUpdateMsg(unsigned long dpid)
         g_game->m_players[playerPos].clearNetInfo();
 
     // Retail keeps this gpGame read live across the two local-seat queries.
-    game* currentGame = g_game;
+    Game* currentGame = g_game;
     int localPlayer = currentGame->getLocalPlayerGamePos();
     g_netLocalGamePos = localPlayer;
     g_unnamed69d810 = localPlayer;
@@ -2363,7 +2363,7 @@ void CLevelPickWaitDlg::waitForLevels(int fromWho)
 VA_COMPGEN(0x00556b70, 0x21, SCALAR_DELETING_DTOR, CLevelPickWaitDlg)
 
 VA(0x00556c20, 0x2F5)  // dc 0x11e718
-int CLevelPickWaitDlg::handleMessage(message& msg)
+int CLevelPickWaitDlg::handleMessage(Message& msg)
 {
     CAnimatedDlg::handleMessage(msg);
     pollSound();
@@ -2402,7 +2402,7 @@ int CLevelPickWaitDlg::handleMessage(message& msg)
 // E:\gamedcs\remote.cpp:2546. Retail expands this source boundary into the
 // dispatcher. A drop from the player whose level choice is pending marks the
 // modal and closes it; every other drop is still handed to the global handler.
-int CLevelPickWaitDlg::onPlayerDrop(CNetMsg* netMsg, message& msg)
+int CLevelPickWaitDlg::onPlayerDrop(CNetMsg* netMsg, Message& msg)
 {
     int gamePos = g_game->getGamePosFromDPID(netMsg->m_dpidFrom);
     if (gamePos == m_fromWho) {
@@ -2417,7 +2417,7 @@ int CLevelPickWaitDlg::onPlayerDrop(CNetMsg* netMsg, message& msg)
 // The incoming level-update packet restores the raw four-byte skill band,
 // rather than the clamped gameplay accessor. Name provisional; retain an
 // ordinary body before its caller so VC6 can expand the copy.
-void hero::setPrimarySkills(const signed char* stats)
+void Hero::setPrimarySkills(const signed char* stats)
 {
     memcpy(m_stats, stats, sizeof(m_stats));
 }
@@ -2429,7 +2429,7 @@ void CLevelPickWaitDlg::onHeroLevelUpdate(CNetMsg* netMsg)
 {
     CHeroLevelUpdateMsg* levelMsg =
         static_cast<CHeroLevelUpdateMsg*>(netMsg);
-    hero* targetHero = g_game->getHero(levelMsg->m_hero);
+    Hero* targetHero = g_game->getHero(levelMsg->m_hero);
     if (targetHero) {
         memcpy(targetHero->m_skillLevel, levelMsg->m_ssLevel,
                sizeof(levelMsg->m_ssLevel));
@@ -2462,7 +2462,7 @@ void CWaitForRemoteBattleDlg::wait(int playerPos)
 }
 
 VA(0x005570f0, 0x1E9)  // dc 0x11e9a0
-int CWaitForRemoteBattleDlg::handleMessage(message& msg)
+int CWaitForRemoteBattleDlg::handleMessage(Message& msg)
 {
     CAnimatedDlg::handleMessage(msg);
     pollSound();
@@ -2505,7 +2505,7 @@ int CWaitForRemoteBattleDlg::handleMessage(message& msg)
 // E:\gamedcs\remote.cpp:2660. Retail expands the helper into the dispatcher:
 // it resolves and processes every dropped DPID, but closes this modal only
 // when the dropped player is the combat peer it is waiting for.
-int CWaitForRemoteBattleDlg::onPlayerDrop(CNetMsg* netMsg, message& msg)
+int CWaitForRemoteBattleDlg::onPlayerDrop(CNetMsg* netMsg, Message& msg)
 {
     int gamePos = g_game->getGamePosFromDPID(netMsg->m_dpidFrom);
     handlePlayerDrop(netMsg->m_dpidFrom);
@@ -2614,7 +2614,7 @@ void CGameTransferSmack::setPercentage(float pct)
     if (m_drawText) {
         g_mediumFont->drawBoundedString(
             text, g_windowManager->m_screenBitmap, m_x, m_y, 160, 160,
-            font::PRIMARY, 5, -1);
+            Font::PRIMARY, 5, -1);
     }
     g_windowManager->updateScreen(m_x, m_y, 160, 160);
 }
@@ -2662,7 +2662,7 @@ CGameTransferDlg::CGameTransferDlg(unsigned char sending)
 VA_COMPGEN(0x00557760, 0x21, SCALAR_DELETING_DTOR, CGameTransferDlg)
 
 VA(0x00557790, 0x51)  // dc 0x11eed8
-void CGameTransferDlg::calcDimensions(const char* text, font* currentFont,
+void CGameTransferDlg::calcDimensions(const char* text, Font* currentFont,
                                       int& winX, int& winY,
                                       int& winWidth, int& winHeight)
 {
@@ -2676,7 +2676,7 @@ void CGameTransferDlg::calcDimensions(const char* text, font* currentFont,
 // E:\gamedcs\remote.cpp:1293
 #if 0  // @carcass
 DC_ONLY(0x11cb48, 0xAC)
-void CChatEdit::CChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+void CChatEdit::CChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, Font::Justify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
 {
     // @stub
 }
@@ -2690,28 +2690,28 @@ void CChatEdit::updateScreen()
 
 // E:\gamedcs\remote.cpp:1303
 DC_ONLY(0x11cc2c, 0xE6)
-int CChatEdit::onKeyPress(message* msg)
+int CChatEdit::onKeyPress(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1331
 DC_ONLY(0x11cd14, 0x50)
-int CChatEdit::onFunctionKey(message msg, int toWho)
+int CChatEdit::onFunctionKey(Message msg, int toWho)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1345
 DC_ONLY(0x11cd64, 0x4A)
-int CChatEdit::onEnter(message msg)
+int CChatEdit::onEnter(Message msg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1359
 DC_ONLY(0x11cdb0, 0x2A)
-int CChatEdit::onEscape(message msg)
+int CChatEdit::onEscape(Message msg)
 {
     // @stub
 }
@@ -2725,7 +2725,7 @@ unsigned char CChatEdit::isOpen()
 
 // E:\gamedcs\remote.cpp:1375
 DC_ONLY(0x11cdf8, 0x4)
-unsigned char CChatEdit::ignoreKey(message* msg)
+unsigned char CChatEdit::ignoreKey(Message* msg)
 {
     // @stub
 }
@@ -2739,7 +2739,7 @@ CNetMsg* getRemoteData(unsigned char bRemoveFromBuffer, unsigned char* wasCompre
 
 // E:\gamedcs\remote.cpp:1390
 DC_ONLY(0x11ce14, 0x54)
-unsigned char initRemote(eNetGameType iMPType, const char* sUserName)
+unsigned char initRemote(NetGameType iMPType, const char* sUserName)
 {
     // @stub
 }
@@ -2802,7 +2802,7 @@ void CAnimatedDlg::~CAnimatedDlg()
 
 // E:\gamedcs\remote.cpp:1553
 DC_ONLY(0x11d290, 0x20)
-unsigned char CAnimatedDlg::setup(const char* cText, font* pFont, const char* sSprite, int seq)
+unsigned char CAnimatedDlg::setup(const char* cText, Font* pFont, const char* sSprite, int seq)
 {
     // @stub
 }
@@ -2816,7 +2816,7 @@ void CAnimatedDlg::calcSpriteDimensions(CSprite* pSprite, int* maxWidth, int* ma
 
 // E:\gamedcs\remote.cpp:1606
 DC_ONLY(0x11d394, 0xFC)
-void CAnimatedDlg::calcDimensions(const char* cText, font* pFont, int* winX, int* winY, int* winWidth, int* winHeight)
+void CAnimatedDlg::calcDimensions(const char* cText, Font* pFont, int* winX, int* winY, int* winWidth, int* winHeight)
 {
     // @stub
 }
@@ -2830,7 +2830,7 @@ void CAnimatedDlg::drawSprite()
 
 // E:\gamedcs\remote.cpp:1651
 DC_ONLY(0x11d558, 0x12)
-int CAnimatedDlg::handleMessage(message* msg)
+int CAnimatedDlg::handleMessage(Message* msg)
 {
     // @stub
 }
@@ -2991,14 +2991,14 @@ void CLevelPickWaitDlg::waitForLevels(int fromWho)
 
 // E:\gamedcs\remote.cpp:2503
 DC_ONLY(0x11e718, 0x130)
-int CLevelPickWaitDlg::handleMessage(message* msg)
+int CLevelPickWaitDlg::handleMessage(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2546
 DC_ONLY(0x11e848, 0x4C)
-int CLevelPickWaitDlg::onPlayerDrop(CNetMsg* pNetMsg, message* msg)
+int CLevelPickWaitDlg::onPlayerDrop(CNetMsg* pNetMsg, Message* msg)
 {
     // @stub
 }
@@ -3026,14 +3026,14 @@ void CWaitForRemoteBattleDlg::wait(int playerPos)
 
 // E:\gamedcs\remote.cpp:2613
 DC_ONLY(0x11e9a0, 0x158)
-int CWaitForRemoteBattleDlg::handleMessage(message* msg)
+int CWaitForRemoteBattleDlg::handleMessage(Message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2660
 DC_ONLY(0x11eaf8, 0x46)
-int CWaitForRemoteBattleDlg::onPlayerDrop(CNetMsg* pNetMsg, message* msg)
+int CWaitForRemoteBattleDlg::onPlayerDrop(CNetMsg* pNetMsg, Message* msg)
 {
     // @stub
 }
@@ -3138,7 +3138,7 @@ void CGameTransferDlg::CGameTransferDlg(unsigned char sending)
 
 // E:\gamedcs\remote.cpp:2821
 DC_ONLY(0x11eed8, 0x5C)
-void CGameTransferDlg::calcDimensions(const char* cText, font* pFont, int* winX, int* winY, int* winWidth, int* winHeight)
+void CGameTransferDlg::calcDimensions(const char* cText, Font* pFont, int* winX, int* winY, int* winWidth, int* winHeight)
 {
     // @stub
 }
@@ -3517,7 +3517,7 @@ inline void CHourGlass::stop()
     if (m_thread)
         stopMouseThread();
     else
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
 }
 
 inline void CHourGlass::start()
@@ -3525,7 +3525,7 @@ inline void CHourGlass::start()
     if (m_thread)
         startMouseThread();
     else
-        g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(1, MouseManager::ADVENTURE_SET);
 }
 
 // COMDAT pairing: deque<CNetMsg*>'s own destructor, 160 B against
@@ -3653,14 +3653,14 @@ void CPlayerActiveMsg::CPlayerActiveMsg()
 
 // E:\gamedcs\netmsg.h:804
 DC_ONLY(0x11f73c, 0x28)
-void CPingMsg::CPingMsg(unsigned long pingTime, eRS_Messages id)
+void CPingMsg::CPingMsg(unsigned long pingTime, RsMessages id)
 {
     // @stub
 }
 
 // E:\gamedcs\netmsg.h:815
 DC_ONLY(0x11f764, 0x28)
-void CPingResponseMsg::CPingResponseMsg(unsigned long pingTime, eRS_Messages id)
+void CPingResponseMsg::CPingResponseMsg(unsigned long pingTime, RsMessages id)
 {
     // @stub
 }
@@ -3751,7 +3751,7 @@ void CWaitForReadyPlayersDlg::wait()
 
 // E:\gamedcs\remote.cpp:1738
 DC_ONLY(0x11f9f0, 0x200)
-int CWaitForReadyPlayersDlg::handleMessage(message* msg)
+int CWaitForReadyPlayersDlg::handleMessage(Message* msg)
 {
     // @stub
 }
@@ -3765,7 +3765,7 @@ unsigned char CWaitForReadyPlayersDlg::allPlayersReady()
 
 // E:\gamedcs\remote.cpp:1813
 DC_ONLY(0x11fc3c, 0x70)
-int CWaitForReadyPlayersDlg::onPlayerDrop(CNetMsg* pNetMsg, message* msg)
+int CWaitForReadyPlayersDlg::onPlayerDrop(CNetMsg* pNetMsg, Message* msg)
 {
     // @stub
 }

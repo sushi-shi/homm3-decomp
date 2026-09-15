@@ -4,7 +4,7 @@
 #include "u2dvers.h"
 
 VA(0x005eeda0, 0x4C)  // dc 0x18e3b0
-TFileVersionInfo::TFileVersionInfo(const char* filename)
+FileVersionInfo::FileVersionInfo(const char* filename)
 {
     unsigned long ignoredHandle;
     unsigned long size = GetFileVersionInfoSizeA(
@@ -19,14 +19,14 @@ TFileVersionInfo::TFileVersionInfo(const char* filename)
 }
 
 VA(0x005eedf0, 0xE)  // dc 0x18e3b4
-TFileVersionInfo::~TFileVersionInfo()
+FileVersionInfo::~FileVersionInfo()
 {
     if (m_data)
         delete[] m_data;
 }
 
 VA(0x005eee00, 0x265)  // dc 0x18e3b8
-unsigned char TFileVersionInfo::getVersionInfo(const char* name, std::string* buffer) const
+unsigned char FileVersionInfo::getVersionInfo(const char* name, std::string* buffer) const
 {
     unsigned char found = 0;
     if (m_data) {

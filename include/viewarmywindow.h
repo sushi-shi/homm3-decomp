@@ -9,13 +9,13 @@
 #include "advmgr_popup.h"
 #include "armygrp.h"
 
-class army;
-class armyGroup;
-class hero;
-class town;
-class bitmapBackedTextWidget;
-class iconWidget;
-struct TCreatureTypeTraits;
+class Army;
+class ArmyGroup;
+class Hero;
+class Town;
+class BitmapBackedTextWidget;
+class IconWidget;
+struct CreatureTypeTraits;
 
 // DC's named tail begins at +0x58 after its 0x58-byte CAdvPopup. Retail's
 // proven CAdvPopup is 0x60, and each of the two STLport 12-byte strings
@@ -24,32 +24,33 @@ struct TCreatureTypeTraits;
 // sites bound the resulting 0xb8-byte object.
 // The DC class records agree on method order and private helper/member
 // ownership. Retail allocation and member accesses independently fix layout.
-class TViewArmyWindow : public CAdvPopup {
+// Before normalization (type): TViewArmyWindow.
+class ViewArmyWindow : public CAdvPopup {
 public:
     // Complete retains public action IDs; the older DC enum records UPGRADE_ID.
-    enum EWidgetIDs {
+    enum WidgetIDs {
         UPGRADE_ID = 300,
         OK_ID = 301,
         ACCEPT_ID = 0x7802,
         DISMISS_ID = 0x7803
     };
 
-    TViewArmyWindow(int armyType, int x0, int y0, unsigned char showOk);
-    TViewArmyWindow(const army* thisArmy, int x0, int y0,
+    ViewArmyWindow(int armyType, int x0, int y0, unsigned char showOk);
+    ViewArmyWindow(const Army* thisArmy, int x0, int y0,
                     unsigned char showOk);
     // Complete adds the tenth groupAlignments argument (ret 0x28) and
     // uses the mutable group pointer required by GetArmyMorale/GetArmyLuck.
-    TViewArmyWindow(armyGroup* group, int iarmy, const hero* thisHero,
-                    const town* thisTown, int x0, int y0, int upgrade,
+    ViewArmyWindow(ArmyGroup* group, int iarmy, const Hero* thisHero,
+                    const Town* thisTown, int x0, int y0, int upgrade,
                     unsigned char showDismiss, unsigned char showOk,
                     unsigned char groupAlignments);
-    virtual ~TViewArmyWindow();
+    virtual ~ViewArmyWindow();
     void doModal();
     void quickView();
-    virtual int windowHandler(message& msg);
+    virtual int windowHandler(Message& msg);
 
 private:
-    enum EOtherWidgetIDs {
+    enum OtherWidgetIDs {
         BACKGROUND_ID = 200,
         SPRITE_ID = 201,
         SPRITE_BACKGROUND_ID = 202,
@@ -85,20 +86,20 @@ private:
 
     // Original declaration order from both complete DC class records,
     // 0x1a93/0x4aff. Bodies and named source-call boundaries remain in the TU.
-    void createBackgroundWidget(const hero* thisHero);
+    void createBackgroundWidget(const Hero* thisHero);
     void createNameWidget(const char* name);
     void createPortraitWidget(const char* spriteName, int townType, int count);
     void createAttackWidget(int normalAttackSkill, int currentAttackSkill);
     void createDefenseWidget(int normalDefenseSkill, int currentDefenseSkill);
-    void createDamageWidget(const TCreatureTypeTraits& traits, const hero* ourHero);
-    void createShotsWidget(const TCreatureTypeTraits& traits,
+    void createDamageWidget(const CreatureTypeTraits& traits, const Hero* ourHero);
+    void createShotsWidget(const CreatureTypeTraits& traits,
                            int normalShots, int currentShots);
     void createHitpointsWidget(int normalHitpoints, int currentHitpoints);
     void createHitpointsLeftWidget(int hitpointsLeft);
     void createSpeedWidget(int normalSpeed, int currentSpeed);
     void createMoraleWidget(int newMorale);
     void createLuckWidget(int newLuck);
-    void createSpellInfluenceWidgets(const army* thisArmy);
+    void createSpellInfluenceWidgets(const Army* thisArmy);
     void createOkWidget();
     void createUpgradeWidget();
     void createDismissWidget();
@@ -106,7 +107,7 @@ private:
     int convertID2HelpID(int id) const;
 
     // retail keeps this four-byte field at +0x60. Upgrade below is int.
-    TCreatureType m_armyType;
+    CreatureType m_armyType;
     int m_armySize;
     int m_morale;
     std::string m_moraleHelp;
@@ -120,11 +121,11 @@ private:
     // before Influence. DC records 14 real members and no padding field.
     int m_influence[3];
     int m_duration[3];
-    bitmapBackedTextWidget* m_rolloverWidget;
-    iconWidget* m_spriteWidget;
+    BitmapBackedTextWidget* m_rolloverWidget;
+    IconWidget* m_spriteWidget;
 
 };
-SIZE(TViewArmyWindow, 0xb8);
+SIZE(ViewArmyWindow, 0xb8);
 
 // --- TViewArmyWindow ---
 // CODEVIEW(E:\gamedcs\viewarmywindow.cpp:55, dc 0x190abc) void TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0, unsigned char show_ok);

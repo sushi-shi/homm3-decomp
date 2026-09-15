@@ -42,14 +42,14 @@ int CSequence::addFrame(const char* name)
 
 // E:\gamedcs\csequence.cpp:79
 DC_ONLY(0x71fc8, 0x72)
-int CSequence::addFrame(const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding)
+int CSequence::addFrame(const char* name, int w, int h, unsigned char* data, int csize, EncodingMethod encoding)
 {
     // @stub
 }
 
 // E:\gamedcs\csequence.cpp:91
 DC_ONLY(0x7203c, 0x8A)
-int CSequence::addFrame(const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding, int m_croppedWidth, int m_croppedHeight, int m_croppedX, int m_croppedY)
+int CSequence::addFrame(const char* name, int w, int h, unsigned char* data, int csize, EncodingMethod encoding, int m_croppedWidth, int m_croppedHeight, int m_croppedX, int m_croppedY)
 {
     // @stub
 }

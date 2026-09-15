@@ -4,17 +4,18 @@
 
 #include "subwindow.h"
 
-class bitmapBorder;
-class border;
-class heroWindow;
-class textWidget;
+class BitmapBorder;
+class Border;
+class HeroWindow;
+class TextWidget;
 
 // PROVEN retail layout, size 0x78. The constructor stores the seven
 // text pointers at +0x38..+0x50, the seven border pointers at
 // +0x54..+0x6c, the bitmap background at +0x70 and the final status
 // text at +0x74. TSubWindow is exactly 0x34 bytes; isSmall occupies
 // the derived head byte at +0x34.
-class TResourceDisplay : public TSubWindow {
+// Before normalization (type): TResourceDisplay.
+class ResourceDisplay : public SubWindow {
 public:
     // The widget-id bands the constructor stamps in its resource loop
     // (0x3e9 + i on the seven textWidgets, 0x3f1 + i on the seven
@@ -22,7 +23,7 @@ public:
     // text on both bands one id wider - the shared building-record
     // table it indexes carries eight rows. Names INVENTED from the
     // constructor's own loop; no DC symbol covers the ids.
-    enum EWidgetIDs {
+    enum WidgetIDs {
         RESOURCE_TEXT_0_ID = 0x3e9,
         RESOURCE_TEXT_1_ID = 0x3ea,
         RESOURCE_TEXT_2_ID = 0x3eb,
@@ -49,19 +50,19 @@ public:
     char m_paddingBeforeResourceWidgets[3];
 
 private:
-    textWidget* m_resourceWidgets[7];
+    TextWidget* m_resourceWidgets[7];
 
 public:
-    border* m_resourceIconWidgets[7];
-    bitmapBorder* m_backgroundWidget;
-    textWidget* m_dayWidget;
+    Border* m_resourceIconWidgets[7];
+    BitmapBorder* m_backgroundWidget;
+    TextWidget* m_dayWidget;
 
-    TResourceDisplay(heroWindow* parent, bool isSmall);
-    virtual ~TResourceDisplay();
+    ResourceDisplay(HeroWindow* parent, bool isSmall);
+    virtual ~ResourceDisplay();
     void update(bool draw, bool update);
     void clear();
 };
-SIZE(TResourceDisplay, 0x78);
+SIZE(ResourceDisplay, 0x78);
 
 // --- TResourceDisplay ---
 // CODEVIEW(E:\gamedcs\resourcedisplay.cpp:40, dc 0x120c54) void TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char is_small);

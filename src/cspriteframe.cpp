@@ -16,8 +16,8 @@ DATA(0x006968a6) unsigned char g_rleLiteralRunCode;
 VA(0x0047c2b0, 0xa7)
 CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
                            unsigned char* data, int csize,
-                           TEncodingMethod encoding)
-    : resource(name, RESOURCE_TYPE_SPRITE),
+                           EncodingMethod encoding)
+    : Resource(name, RESOURCE_TYPE_SPRITE),
       m_imageSize(w * h), m_encodingMethod(encoding), m_width(w), m_height(h),
       m_croppedWidth(w), m_croppedHeight(h), m_croppedX(0), m_croppedY(0), m_pitch(w)
 {
@@ -30,9 +30,9 @@ CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
 VA(0x0047c360, 0xc9)
 CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
                            unsigned char* data, int csize,
-                           TEncodingMethod encoding,
+                           EncodingMethod encoding,
                            int cw, int ch, int cx, int cy)
-    : resource(name, RESOURCE_TYPE_SPRITE),
+    : Resource(name, RESOURCE_TYPE_SPRITE),
       m_imageSize(cw * ch), m_encodingMethod(encoding), m_width(w), m_height(h),
       m_croppedWidth(cw), m_croppedHeight(ch), m_croppedX(cx), m_croppedY(cy),
       m_pitch(cw)
@@ -105,7 +105,7 @@ int CSpriteFrame::Crop()
 
 // E:\gamedcs\cspriteframe.cpp:768
 DC_ONLY(0x75094, 0x44)
-void CSpriteFrame::Encode(TEncodingMethod method)
+void CSpriteFrame::Encode(EncodingMethod method)
 {
     // @stub
 }
@@ -133,42 +133,42 @@ void CSpriteFrame::EncodeAdvObj()
 
 // E:\gamedcs\cspriteframe.cpp:2234
 DC_ONLY(0x76060, 0x324)
-void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned short flagcolor)
+void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, Palette16* pal, unsigned char hflip, unsigned short flagcolor)
 {
     // @stub
 }
 
 // E:\gamedcs\cspriteframe.cpp:2444
 DC_ONLY(0x76384, 0x302)
-void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned short flagcolor, unsigned char hflip)
+void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, Palette16* pal, unsigned short flagcolor, unsigned char hflip)
 {
     // @stub
 }
 
 // E:\gamedcs\cspriteframe.cpp:2645
 DC_ONLY(0x76688, 0x2FE)
-void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
+void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, Palette16* pal, unsigned char hflip)
 {
     // @stub
 }
 
 // E:\gamedcs\cspriteframe.cpp:2856
 DC_ONLY(0x76988, 0x762)
-void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped)
+void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, Palette16* pal, unsigned char hFlipped, unsigned char vFlipped)
 {
     // @stub
 }
 
 // E:\gamedcs\cspriteframe.cpp:3365
 DC_ONLY(0x770ec, 0x576)
-void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped)
+void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, Palette16* pal, unsigned char hFlipped, unsigned char vFlipped)
 {
     // @stub
 }
 
 // E:\gamedcs\cspriteframe.cpp:3776
 DC_ONLY(0x77664, 0x338)
-void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned char alpha)
+void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, Palette16* pal, unsigned char hflip, unsigned char alpha)
 {
     // @stub
 }
@@ -182,21 +182,21 @@ void CSpriteFrame::ClipScaled50(int* sx, int* sy, int* sw, int* sh, int* dx, int
 
 // E:\gamedcs\cspriteframe.cpp:4054
 DC_ONLY(0x77b6c, 0x1EA)
-void CSpriteFrame::DrawAdvObjWithFlagScaled50(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned short flagcolor)
+void CSpriteFrame::DrawAdvObjWithFlagScaled50(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, Palette16* pal, unsigned short flagcolor)
 {
     // @stub
 }
 
 // E:\gamedcs\cspriteframe.cpp:4187
 DC_ONLY(0x77d58, 0x240)
-void CSpriteFrame::DrawAdvObjShadowScaled50(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal)
+void CSpriteFrame::DrawAdvObjShadowScaled50(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, Palette16* pal)
 {
     // @stub
 }
 
 // E:\gamedcs\cspriteframe.cpp:4330
 DC_ONLY(0x77f98, 0x606)
-void CSpriteFrame::DrawTileScaled50(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped)
+void CSpriteFrame::DrawTileScaled50(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, Palette16* pal, unsigned char hFlipped, unsigned char vFlipped)
 {
     // @stub
 }
@@ -210,21 +210,21 @@ void CSpriteFrame::ClipScaled25(int* sx, int* sy, int* sw, int* sh, int* dx, int
 
 // E:\gamedcs\cspriteframe.cpp:4907
 DC_ONLY(0x78774, 0x208)
-void CSpriteFrame::DrawAdvObjWithFlagScaled25(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned short flagcolor)
+void CSpriteFrame::DrawAdvObjWithFlagScaled25(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, Palette16* pal, unsigned short flagcolor)
 {
     // @stub
 }
 
 // E:\gamedcs\cspriteframe.cpp:5054
 DC_ONLY(0x7897c, 0x262)
-void CSpriteFrame::DrawAdvObjShadowScaled25(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal)
+void CSpriteFrame::DrawAdvObjShadowScaled25(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, Palette16* pal)
 {
     // @stub
 }
 
 // E:\gamedcs\cspriteframe.cpp:5201
 DC_ONLY(0x78be0, 0x67E)
-void CSpriteFrame::DrawTileScaled25(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped)
+void CSpriteFrame::DrawTileScaled25(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, Palette16* pal, unsigned char hFlipped, unsigned char vFlipped)
 {
     // @stub
 }
@@ -368,7 +368,7 @@ inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
 VA(0x0047c570, 0x465)  // unique PC/DC renderer identity; retail byte verdict
 void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
                         unsigned short* dst, int dx, int dy, int dw, int dh,
-                        int dpitch, TPalette16& pal, unsigned char hflip,
+                        int dpitch, Palette16& pal, unsigned char hflip,
                         unsigned char tblit) const
 {
     if (m_encodingMethod == eEncodeTilesetRLE || m_encodingMethod == eEncodeRaw) {
@@ -538,7 +538,7 @@ VA(0x0047c9e0, 0x6BC)  // unique PC/DC renderer identity; retail byte verdict
 void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                                     unsigned short* dst, int dx, int dy,
                                     int dw, int dh, int dpitch,
-                                    TPalette16& pal, unsigned char hflip,
+                                    Palette16& pal, unsigned char hflip,
                                     unsigned short outcolor,
                                     unsigned char alpha) const
 {
@@ -807,7 +807,7 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
 VA(0x0047d0a0, 0x44B) // retail packed-cell decoder + DC source identity
 void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                                   unsigned short* dst, int dx, int dy, int dw,
-                                  int dh, int dpitch, TPalette16& pal,
+                                  int dh, int dpitch, Palette16& pal,
                                   unsigned char hflip,
                                   unsigned short flagcolor) const
 {
@@ -994,7 +994,7 @@ VA(0x0047d4f0, 0x43C)  // anchor-caller (DrawSpellEffect 0x47efca) + DC source i
 void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                                            unsigned short* dst, int dx, int dy,
                                            int dw, int dh, int dpitch,
-                                           TPalette16& pal,
+                                           Palette16& pal,
                                            unsigned short flagcolor,
                                            unsigned char hflip) const
 {
@@ -1182,7 +1182,7 @@ VA(0x0047d930, 0x40F)  // anchor-callee (CSprite::DrawAdvObjShadow/DrawHeroShado
 void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                                         unsigned short* dst, int dx, int dy,
                                         int dw, int dh, int dpitch,
-                                        TPalette16& pal,
+                                        Palette16& pal,
                                         unsigned char hflip) const
 {
     unsigned int cellsPerLine;
@@ -1377,7 +1377,7 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
 VA(0x0047dd40, 0xAD8) // retail raw/tileset decoder + DC source identity
 void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                             int dx, int dy, int dw, int dh, int dpitch,
-                            TPalette16& pal, unsigned char hflip,
+                            Palette16& pal, unsigned char hflip,
                             unsigned char vflip) const
 {
     const unsigned short* lineOffset;
@@ -1845,7 +1845,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
 VA(0x0047e820, 0x740)  // anchor-callee (CSprite::DrawTileShadow/DrawShroudTile) + DC source identity
 void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                   unsigned short* dst, int dx, int dy, int dw,
-                                  int dh, int dpitch, TPalette16& pal,
+                                  int dh, int dpitch, Palette16& pal,
                                   unsigned char hflip,
                                   unsigned char vflip) const
 {
@@ -2195,7 +2195,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
 VA(0x0047ef60, 0x47C)  // anchor-callee (CSprite::DrawSpellEffect) + DC source identity
 void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
                                    unsigned short* dst, int dx, int dy, int dw,
-                                   int dh, int dpitch, TPalette16& pal,
+                                   int dh, int dpitch, Palette16& pal,
                                    unsigned char hflip,
                                    unsigned char alpha) const
 {

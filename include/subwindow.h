@@ -6,8 +6,8 @@
 #include "va.h"
 
 class Bitmap16Bit;
-class heroWindow;
-class widget;
+class HeroWindow;
+class Widget;
 
 // PROVEN retail layout (size 0x34). Both constructors at 0x5aa340 and
 // 0x5aa3c0 store x/y/width/height at +4..+0x10, construct VC6's
@@ -15,7 +15,7 @@ class widget;
 // store parentWindow/lowId/highId/background at +0x24..+0x30.
 // The sole vtable entry at 0x64234c is the scalar deleting destructor
 // 0x5aa390, so only the destructor is virtual.
-class TSubWindow {
+class SubWindow {
 public:
     int m_x;
     int m_y;
@@ -23,20 +23,20 @@ public:
     int m_height;
 
 protected:
-    std::vector<widget*> m_widgets;
-    heroWindow* m_parentWindow;
+    std::vector<Widget*> m_widgets;
+    HeroWindow* m_parentWindow;
 
 public:
     int m_lowId;
     int m_highId;
 
-    TSubWindow();
-    TSubWindow(int x, int y, int w, int h, heroWindow* parentWindow);
-    virtual ~TSubWindow();
+    SubWindow();
+    SubWindow(int x, int y, int w, int h, HeroWindow* parentWindow);
+    virtual ~SubWindow();
 
-    void initialize(int x, int y, int w, int h, heroWindow* parentWindow);
-    void addWidget(widget* newWidget, int newPriority);
-    void removeWidget(widget* killWidget);
+    void initialize(int x, int y, int w, int h, HeroWindow* parentWindow);
+    void addWidget(Widget* newWidget, int newPriority);
+    void removeWidget(Widget* killWidget);
     void draw(unsigned char update, int lowID, int highID);
     void saveBackground();
     void restoreBackground();
@@ -44,7 +44,7 @@ public:
 private:
     Bitmap16Bit* m_background;
 };
-SIZE(TSubWindow, 0x34);
+SIZE(SubWindow, 0x34);
 
 // --- TSubWindow ---
 // CODEVIEW(E:\gamedcs\subwindow.cpp:111, dc 0x158ebc) void TSubWindow::RemoveWidget(widget* killWidget);

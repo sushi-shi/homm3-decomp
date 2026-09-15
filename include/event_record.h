@@ -9,9 +9,9 @@
 // adds no declarators. hero/boat/NewmapCell appear only as pointer members.
 #include "struct.h"
 
-class TAbstractFile;
-class hero;
-class boat;
+class AbstractFile;
+class Hero;
+class Boat;
 class NewmapCell;
 
 // The world extents both visibility sweeps clamp against. DECLARATIONS
@@ -24,7 +24,8 @@ extern int g_mapHeight;
 
 // Record discriminant returned by get_type(); values byte-proven from the
 // retail get_type bodies (mov eax,N / ret) reached through each class vtable.
-enum type_event_record_type {
+// Before normalization (type): type_event_record_type.
+enum EventRecordType {
     RECORD_MOVE_HERO    = 1,
     RECORD_TELEPORT     = 2,
     RECORD_CLAIM_MINE   = 3,
@@ -48,13 +49,13 @@ enum type_event_record_type {
 // else. Slots 4 and 5 are the empty bodies at 0x485d80 (`ret 4`) and
 // 0x5bc690 (`ret`), both /OPT:ICF folds shared with unrelated compilands, so
 // neither replay nor undo has a body this TU can own.
-class type_event_record {
+class EventRecord {
 public:
-    type_event_record();
-    virtual ~type_event_record();
-    virtual type_event_record_type getType() const = 0;
-    virtual unsigned char load(TAbstractFile* infile, int version);
-    virtual unsigned char save(TAbstractFile* outfile);
+    EventRecord();
+    virtual ~EventRecord();
+    virtual EventRecordType getType() const = 0;
+    virtual unsigned char load(AbstractFile* infile, int version);
+    virtual unsigned char save(AbstractFile* outfile);
     virtual void replay(unsigned char draw);
     virtual void undo();
     signed char m_playerId;  // +0x04
@@ -65,57 +66,60 @@ public:
 // direction(+0x11), source(+0xc) and destination(+0x12); the +0x10 byte holds
 // the pre-move hero attribute (hero+0x47) and is captured at record time, not
 // serialized. undo (0x49a910) restores source, +0x10 and re-obscures the cell.
-class type_record_move_hero : public type_event_record {
+// Before normalization (type): type_record_move_hero.
+class RecordMoveHero : public EventRecord {
 public:
-    static type_event_record* create();
-    virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    static EventRecord* create();
+    virtual EventRecordType getType() const OVERRIDE;
+    virtual unsigned char load(AbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(AbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
     // Retail's record_move (0x49cd50) expands this: the hero, its CURRENT
     // facing byte snapshotted into restore_flag, the step direction, the
     // hero's own map point into source and the caller's into destination.
-    type_record_move_hero(hero* who, char direction, type_point destination);
-    type_record_move_hero() {}
+    RecordMoveHero(Hero* who, char direction, MapPoint destination);
+    RecordMoveHero() {}
 
-    hero* m_currentHero;          // +0x08
-    type_point m_source;           // +0x0c - hero position before the move
+    Hero* m_currentHero;          // +0x08
+    MapPoint m_source;           // +0x0c - hero position before the move
     signed char m_restoreFlag;    // +0x10 - hero+0x47 snapshot (not serialized)
     signed char m_direction;       // +0x11
-    type_point m_destination;      // +0x12
+    MapPoint m_destination;      // +0x12
 };
 
 // Teleport reuses move_hero's whole serializer and its undo: slots 2, 3 and
 // 5 of its vtable (0x63dea4) are literally move_hero's addresses. Only
 // get_type and replay differ.
-class type_record_teleport : public type_record_move_hero {
+// Before normalization (type): type_record_teleport.
+class RecordTeleport : public RecordMoveHero {
 public:
     // record_teleport (0x49cf50) reads hero+0x47 TWICE - once at the call
     // site for this argument and once inside the base body for
     // restore_flag - which is what proves the facing is forwarded here.
-    type_record_teleport(hero* who, type_point destination);
-    type_record_teleport() {}
+    RecordTeleport(Hero* who, MapPoint destination);
+    RecordTeleport() {}
 
-    static type_event_record* create();
-    virtual type_event_record_type getType() const OVERRIDE;
+    static EventRecord* create();
+    virtual EventRecordType getType() const OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
 };
 
 // Retail serializes these four fields in address order except that the two
 // owner bytes are written old-then-new. replay reads new_owner at +0x0c;
 // undo reads old_owner at +0x0d and restores mines[id].playerOwner.
-class type_record_claim_mine : public type_event_record {
+// Before normalization (type): type_record_claim_mine.
+class RecordClaimMine : public EventRecord {
 public:
-    static type_event_record* create();
-    virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    static EventRecord* create();
+    virtual EventRecordType getType() const OVERRIDE;
+    virtual unsigned char load(AbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(AbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 
-    type_record_claim_mine(long id, char newOwner);
-    type_record_claim_mine() {}
+    RecordClaimMine(long id, char newOwner);
+    RecordClaimMine() {}
 
     int m_id;                 // +0x08
     signed char m_newOwner;  // +0x0c
@@ -124,13 +128,14 @@ public:
 
 // The town variant has the same four-field tail. replay writes new_owner to
 // towns[id].owner; undo restores old_owner from the following byte.
-class type_record_claim_town : public type_record_claim_mine {
+// Before normalization (type): type_record_claim_town.
+class RecordClaimTown : public RecordClaimMine {
 public:
-    type_record_claim_town(long id, char newOwner);
-    type_record_claim_town() {}
+    RecordClaimTown(long id, char newOwner);
+    RecordClaimTown() {}
 
-    static type_event_record* create();
-    virtual type_event_record_type getType() const OVERRIDE;
+    static EventRecord* create();
+    virtual EventRecordType getType() const OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 };
@@ -140,22 +145,23 @@ public:
 // +0xd) and two hero IDs (+0x10/+0x14, int in memory, 16-bit on disk) are only
 // present in save versions [0x12,0x1e] except 0x1c, or >= 0x23; older saves
 // default them to {1,0,-1,-1}.
-class type_record_hide_boat : public type_event_record {
+// Before normalization (type): type_record_hide_boat.
+class RecordHideBoat : public EventRecord {
 public:
-    static type_event_record* create();
-    virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    static EventRecord* create();
+    virtual EventRecordType getType() const OVERRIDE;
+    virtual unsigned char load(AbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(AbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
     // The +0xc/+0x10 pair is the state replay installs and comes from the
     // caller; the +0xd/+0x14 pair is the boat's CURRENT state, snapshotted
     // here for undo.
-    type_record_hide_boat(boat* currentBoat, unsigned char occupied,
+    RecordHideBoat(Boat* currentBoat, unsigned char occupied,
                           int occupyingHero);
-    type_record_hide_boat() {}
+    RecordHideBoat() {}
 
-    boat* m_currentBoat;      // +0x08
+    Boat* m_currentBoat;      // +0x08
     // Replay 0x49ae80 installs the caller's new occupancy/hero pair;
     // the constructor supplies these role-derived names (PC-only fields).
     unsigned char m_occupied;  // +0x0c - replay occupancy (old-save default 1)
@@ -171,37 +177,39 @@ public:
 // is why they read as dwords in load/save - but replay unpacks +0x18 into the
 // boat's x/y/z and undo unpacks +0x1c, both with the 10/10/4 bitfield shifts,
 // and that is what types them.
-class type_record_show_boat : public type_record_hide_boat {
+// Before normalization (type): type_record_show_boat.
+class RecordShowBoat : public RecordHideBoat {
 public:
-    static type_event_record* create();
-    virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    static EventRecord* create();
+    virtual EventRecordType getType() const OVERRIDE;
+    virtual unsigned char load(AbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(AbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
-    type_record_show_boat(boat* currentBoat, type_point location);
-    type_record_show_boat() {}
+    RecordShowBoat(Boat* currentBoat, MapPoint location);
+    RecordShowBoat() {}
 
-    type_point m_location;           // +0x18 - replay destination
-    type_point m_previousLocation;  // +0x1c - restored by undo
+    MapPoint m_location;           // +0x18 - replay destination
+    MapPoint m_previousLocation;  // +0x1c - restored by undo
 };
 
 // A recorded object erasure. load/save (0x49b190/0x49b220) serialize four
 // dwords after player_id, in declaration order: the map location, the erased
 // object's id, its extra-info word and its object-list index.
-class type_record_erase : public type_event_record {
+// Before normalization (type): type_record_erase.
+class RecordErase : public EventRecord {
 public:
-    static type_event_record* create();
-    virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    static EventRecord* create();
+    virtual EventRecordType getType() const OVERRIDE;
+    virtual unsigned char load(AbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(AbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
-    type_record_erase(type_point location, long objectId,
+    RecordErase(MapPoint location, long objectId,
                       unsigned long extraInfo, long objectIndex);
-    type_record_erase() {}
+    RecordErase() {}
 
-    type_point m_location;         // +0x08
+    MapPoint m_location;         // +0x08
     int m_objectId;               // +0x0c
     unsigned int m_extraInfo;     // +0x10
     int m_objectIndex;            // +0x14
@@ -210,20 +218,21 @@ public:
 // Dreamcast names the complete tail; retail independently proves each
 // offset through load/save/replay/undo. The final byte records whether the
 // hero was a town garrison, in which case undo must not put it on the map.
-class type_record_hide_hero : public type_event_record {
+// Before normalization (type): type_record_hide_hero.
+class RecordHideHero : public EventRecord {
 public:
-    static type_event_record* create();
-    virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    static EventRecord* create();
+    virtual EventRecordType getType() const OVERRIDE;
+    virtual unsigned char load(AbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(AbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 
-    type_record_hide_hero(hero* who, char newOwner,
+    RecordHideHero(Hero* who, char newOwner,
                           unsigned char townGarrison);
-    type_record_hide_hero() {}
+    RecordHideHero() {}
 
-    hero* m_currentHero;          // +0x08
+    Hero* m_currentHero;          // +0x08
     signed char m_newOwner;       // +0x0c
     signed char m_prevOwner;      // +0x0d
     unsigned char m_townGarrison; // +0x0e
@@ -232,32 +241,34 @@ public:
 // show_hero extends hide_hero with the replay and undo map locations followed
 // by the corresponding aboard-boat flags. Retail replay reads the first pair;
 // undo reads the second pair.
-class type_record_show_hero : public type_record_hide_hero {
+// Before normalization (type): type_record_show_hero.
+class RecordShowHero : public RecordHideHero {
 public:
-    static type_event_record* create();
-    virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    static EventRecord* create();
+    virtual EventRecordType getType() const OVERRIDE;
+    virtual unsigned char load(AbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(AbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
-    type_record_show_hero(hero* who, char newOwner, type_point location,
+    RecordShowHero(Hero* who, char newOwner, MapPoint location,
                           unsigned char onBoat);
-    type_record_show_hero() {}
+    RecordShowHero() {}
 
-    type_point m_location;          // +0x10 - replay destination
-    type_point m_previousLocation; // +0x14 - restored by undo
+    MapPoint m_location;          // +0x10 - replay destination
+    MapPoint m_previousLocation; // +0x14 - restored by undo
     unsigned char m_onBoat;        // +0x18 - replay state
     unsigned char m_previousBoat;  // +0x19 - restored by undo
 };
 
-class type_record_player_death : public type_event_record {
+// Before normalization (type): type_record_player_death.
+class RecordPlayerDeath : public EventRecord {
 public:
-    static type_event_record* create();
-    virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    static EventRecord* create();
+    virtual EventRecordType getType() const OVERRIDE;
+    virtual unsigned char load(AbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(AbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
-    type_record_player_death() {}
+    RecordPlayerDeath() {}
 
     // Retail replay sign-extends this serialized byte for both the player-name
     // lookup and the dialog payload; the role is still unknown, but its
@@ -265,18 +276,20 @@ public:
     signed char m_extra;  // +0x08 - second serialized byte (role TBD)
 };
 
-class type_record_shroud : public type_event_record {
+// Before normalization (type): type_record_shroud.
+class RecordShroud : public EventRecord {
 public:
-    struct type_shroud_change : public type_point {
+// Before normalization (type): type_record_shroud::type_shroud_change.
+    struct ShroudChange : public MapPoint {
         unsigned short m_oldValue;
         unsigned short m_newValue;
     };
 
-    static type_event_record* create();
+    static EventRecord* create();
 
-    virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    virtual EventRecordType getType() const OVERRIDE;
+    virtual unsigned char load(AbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(AbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 
@@ -287,7 +300,7 @@ public:
     void addChange(int x, int y, int z, short oldValue, short newValue);
     long getChangeCount();
 
-    std::vector<type_shroud_change> m_changes;  // +0x08 (allocator at +0x08)
+    std::vector<ShroudChange> m_changes;  // +0x08 (allocator at +0x08)
 };
 
 // --- globals ---

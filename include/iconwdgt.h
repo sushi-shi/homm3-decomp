@@ -8,7 +8,8 @@
 // Dreamcast roster shifted by the retail widget base (48): Sprite@0x30,
 // Frame@0x34, seqId@0x38, IsFlipped@0x3c, PostPostWalkSequence@0x40,
 // BackColor@0x44. Vtable 0x63ec48; the dtor Disposes the sprite.
-class iconWidget : public widget {
+// Before normalization (type): iconWidget.
+class IconWidget : public Widget {
 public:
     // The three widget::style values iconWidget::Draw (0x4eab40)
     // dispatches on, byte-derived from its `sub eax,0x10 / dec / dec`
@@ -19,7 +20,8 @@ public:
     // slack, vertically flush to the bottom less two); CREATURE runs
     // the clipped portrait path that measures itself off the cs_wait
     // frame's crop box.
-    enum EIconStyle {
+// Before normalization (type): iconWidget::EIconStyle.
+    enum IconStyle {
         ICON_STYLE_PLAIN = 0x10,
         ICON_STYLE_CENTERED = 0x11,
         ICON_STYLE_CREATURE = 0x12
@@ -55,11 +57,11 @@ public:
     int m_postPostWalkSequence;
     unsigned short m_backColor;
 
-    iconWidget(int x, int y, int w, int h, int id, const char* image,
+    IconWidget(int x, int y, int w, int h, int id, const char* image,
                int frame, int sequence, bool flipped,
                unsigned backColor, int style);
-    virtual ~iconWidget();  // retail 0x4ea7b0
-    virtual int main(message& msg);
+    virtual ~IconWidget();  // retail 0x4ea7b0
+    virtual int main(Message& msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     virtual void draw() const;
     virtual int getRealHeight() const;

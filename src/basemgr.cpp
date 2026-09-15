@@ -6,7 +6,7 @@
 // #include "basemgr.h"
 
 VA(0x0044d530, 0x45)  // dc 0x50a28
-baseManager::baseManager()
+BaseManager::BaseManager()
     : m_nextManager(0),
       m_prevManager(0)
 {

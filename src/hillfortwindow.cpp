@@ -27,7 +27,7 @@ static void updateHillFort(unsigned char firstUpdate);
 
 // Retail's constructor stores the active dialog here and its destructor
 // clears the same slot before the widget-vector teardown.
-DATA(0x00699194) static THillFortWindow* g_hillFortWindow;
+DATA(0x00699194) static HillFortWindow* g_hillFortWindow;
 
 // The last widget the rollover text was built for. Retail's own static:
 // .data 0x67f184 seeded to -1, the dword immediately before this TU's
@@ -59,39 +59,39 @@ const float g_afUpgradeCostFactor[7] = {
 };
 
 VA(0x004e75f0, 0x7E9)  // dc 0xd641c
-THillFortWindow::THillFortWindow()
-    : heroWindow(0x32, 0x32, 0x28c, 0x15c, 2)
+HillFortWindow::HillFortWindow()
+    : HeroWindow(0x32, 0x32, 0x28c, 0x15c, 2)
 {
     g_hillFortWindow = this;
-    hero* currentHero = g_game->getCurrHero();
+    Hero* currentHero = g_game->getCurrHero();
 
     m_widgets.reserve(NWIDGETS);
 
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         0, 0, 0x28c, 0x15c, BACKGROUND_ID,
         DATA_COMPGEN(0x0067f1e0, hillFortBackground, "APhlftBk.pcx"),
         0x800));
-    m_widgets.push_back(new textWidget(
+    m_widgets.push_back(new TextWidget(
         0, 0x14, 0x28c, 0x15c, g_adventureObjectNames[HILL_FORT],
         DATA_COMPGEN(0x00660b24, hillFortBigFont, "bigfont.fnt"),
-        font::HEADING, TITLE_ID, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new bitmapBorder(
+        Font::HEADING, TITLE_ID, Font::CENTER_JUSTIFIED, 0, 8));
+    m_widgets.push_back(new BitmapBorder(
         0x1e, 0x3c, 0x3a, 0x40, HERO_PORTRAIT_ID,
         g_heroTraits[currentHero->m_portrait].m_largePortraitName, 0x800));
-    m_widgets.push_back(new bitmapBackedTextWidget(
+    m_widgets.push_back(new BitmapBackedTextWidget(
         7, 0x142, 0x27d, 0x13, 0,
         DATA_COMPGEN(0x0065f2f8, hillFortSmallFont, "smalfont.fnt"),
         DATA_COMPGEN(0x0067f1d0, hillFortRolloverBackground,
                      "APhlftrt.pcx"),
-        font::PRIMARY, ROLLOVER_ID, font::CENTER_JUSTIFIED, 8));
+        Font::PRIMARY, ROLLOVER_ID, Font::CENTER_JUSTIFIED, 8));
     m_rolloverWidget = m_widgets.back();
 
-    m_widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new BitmapBorder(
         0x125, 0x112, 0x42, 0x20, BACKGROUND_ID,
         DATA_COMPGEN(0x0067016c, hillFortOkayBorder, "Box64x30.pcx"),
         0x800));
 
-    button* okay = new button(
+    Button* okay = new Button(
         0x126, 0x113, 0x40, 0x1e, DIALOG_RETURN_OK,
         DATA_COMPGEN(0x00670160, hillFortOkayButton, "iOkay.def"),
         0, 1, 0, 0, 2);
@@ -101,7 +101,7 @@ THillFortWindow::THillFortWindow()
 
     int i;
     int x = 0x68;
-    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; x += 0x4c, ++i) {
+    for (i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; x += 0x4c, ++i) {
         int id = CREATURE_PORTRAIT_1_ID + i;
         int numId = CREATURE_NUM_1_ID + i;
         int goldIconId = GOLD_ICON_1_ID + i;
@@ -110,66 +110,66 @@ THillFortWindow::THillFortWindow()
         int resCostId = RES_COST_1_ID + i;
         int numY = 0x7c - g_calligraphicFont->m_fs.m_height;
 
-        m_widgets.push_back(new iconWidget(
+        m_widgets.push_back(new IconWidget(
             x + 3, 0x3c, 0x3a, 0x40, id,
             DATA_COMPGEN(0x006601e0, hillFortCreatureSprite,
                          "twcrport.def"),
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-        m_widgets.push_back(new textWidget(
+            0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+        m_widgets.push_back(new TextWidget(
             x + 3, numY, 0x3a, 0x40, "",
             DATA_COMPGEN(0x006700b4, hillFortCountFont, "Verd10B.fnt"),
-            font::PRIMARY, numId, font::RIGHT_JUSTIFIED, 0, 8));
-        m_widgets.push_back(new iconWidget(
+            Font::PRIMARY, numId, Font::RIGHT_JUSTIFIED, 0, 8));
+        m_widgets.push_back(new IconWidget(
             x, 0x80, 0x3e, 0x12, goldIconId,
             DATA_COMPGEN(0x00660cd4, hillFortResourceSprite,
                          "smalres.def"),
-            6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-        m_widgets.push_back(new textWidget(
+            6, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+        m_widgets.push_back(new TextWidget(
             x, 0x80, 0x3e, 0x12, "",
             DATA_COMPGEN(0x0065f2f8, hillFortSmallFont, "smalfont.fnt"),
-            font::PRIMARY, goldCostId, font::RIGHT_JUSTIFIED, 0, 8));
-        m_widgets.push_back(new iconWidget(
+            Font::PRIMARY, goldCostId, Font::RIGHT_JUSTIFIED, 0, 8));
+        m_widgets.push_back(new IconWidget(
             x, 0x94, 0x3e, 0x12, resIconId,
             DATA_COMPGEN(0x00660cd4, hillFortResourceSprite,
                          "smalres.def"),
-            6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-        m_widgets.push_back(new textWidget(
+            6, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+        m_widgets.push_back(new TextWidget(
             x, 0x94, 0x3e, 0x12, "",
             DATA_COMPGEN(0x0065f2f8, hillFortSmallFont, "smalfont.fnt"),
-            font::PRIMARY, resCostId, font::RIGHT_JUSTIFIED, 0, 8));
+            Font::PRIMARY, resCostId, Font::RIGHT_JUSTIFIED, 0, 8));
     }
 
     x = 0x68;
-    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; x += 0x4c, ++i) {
-        m_widgets.push_back(new iconWidget(
+    for (i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; x += 0x4c, ++i) {
+        m_widgets.push_back(new IconWidget(
             x, 0xed, 0x3e, 0x14, TOTAL_RES_ICON_1_ID + i,
             DATA_COMPGEN(0x00660cd4, hillFortResourceSprite,
                          "smalres.def"),
-            i, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-        m_widgets.push_back(new textWidget(
+            i, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN));
+        m_widgets.push_back(new TextWidget(
             x, 0xed, 0x3e, 0x14, "",
             DATA_COMPGEN(0x0065f2f8, hillFortSmallFont, "smalfont.fnt"),
-            font::PRIMARY, TOTAL_RES_COST_1_ID + i,
-            font::RIGHT_JUSTIFIED, 0, 8));
+            Font::PRIMARY, TOTAL_RES_COST_1_ID + i,
+            Font::RIGHT_JUSTIFIED, 0, 8));
     }
 
     x = 0x6b;
-    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; x += 0x4c, ++i) {
-        button* upgrade = new button(
+    for (i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; x += 0x4c, ++i) {
+        Button* upgrade = new Button(
             x, 0xab, 0x3a, 0x1d, UPGRADE_BUTTON_1_ID + i,
             g_aszUpgradeIcons[UPGRADE_STATE_TOO_EXPENSIVE], 0, 1, 0, 0, 2);
         upgrade->setHotkey(i + 2);
         m_widgets.push_back(upgrade);
     }
 
-    button* upgradeAll = new button(
+    Button* upgradeAll = new Button(
         0x1e, 0xe8, 0x3a, 0x1d, UPGRADE_ALL_BUTTON_ID,
         DATA_COMPGEN(0x0067f1a0, hillFortUpgradeAllButton, "aphlf4y.def"),
         0, 1, 0, 0, 2);
     upgradeAll->setHotkey(0x1e);
     m_widgets.push_back(upgradeAll);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
@@ -179,13 +179,13 @@ THillFortWindow::THillFortWindow()
     updateHillFort(1);
 }
 
-VA_COMPGEN(0x004e7de0, 0x21, SCALAR_DELETING_DTOR, THillFortWindow)
+VA_COMPGEN(0x004e7de0, 0x21, SCALAR_DELETING_DTOR, HillFortWindow)
 
 VA(0x004e7e10, 0x75)  // dc 0xd6b2c
-THillFortWindow::~THillFortWindow()
+HillFortWindow::~HillFortWindow()
 {
     g_hillFortWindow = 0;
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -194,14 +194,14 @@ THillFortWindow::~THillFortWindow()
 // E:\gamedcs\hillfortwindow.cpp:178
 #if 0  // @carcass: retail inlines this switch into the dialog handler
 DC_ONLY(0xd6b94, 0x1A)
-int THillFortWindow::convertID2HelpID(int id)
+int HillFortWindow::convertID2HelpID(int id)
 {
     // @stub
 }
 #endif
 
 VA(0x004e7e90, 0x1F)  // dc 0xd6bb0
-void THillFortWindow::doModal()
+void HillFortWindow::doModal()
 {
     recalculate(0);
     g_windowManager->doDialog(this, hillFortWindowHandler, 0);
@@ -211,7 +211,7 @@ void THillFortWindow::doModal()
 DC_ONLY(0xd6bd4, 0x22)
 inline bool canAfford(const long* cost, const long* playerRes)
 {
-    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+    for (int i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         if (cost[i] > playerRes[i])
             return 0;
     }
@@ -286,9 +286,9 @@ inline bool canAfford(const long* cost, const long* playerRes)
 // specific to the loop whose derived id feeds six different widget bands.
 
 VA(0x004e7eb0, 0x64D)  // source/call order + DoModal/handler call sites, dc 0xd6bf8
-void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
+void HillFortWindow::recalculate(unsigned char drawDimmedButtons)
 {
-    message msg;
+    Message msg;
     msg.m_id = 0;
     msg.m_codeX = 0;
     msg.m_codeY = 0;
@@ -298,7 +298,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
     msg.m_extra = 0;
     msg.m_window = 0;
 
-    hero* currHero = g_game->getCurrHero();
+    Hero* currHero = g_game->getCurrHero();
 
     unsigned char upgradeAllValid = 0;
     unsigned char allUpgraded = 1;
@@ -309,8 +309,8 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
     // add edi,-0xd4 / cmp edi,7 / jl`); computing `id` from `i` inside the
     // body instead leaves `i` memory-homed and every widget id rebuilt with
     // its own `lea`, which cost 44 of the 62 blocks.
-    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-        TUpgradeSlot& s = m_slot[i];
+    for (int i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        UpgradeSlot& s = m_slot[i];
         s.m_countText[0] = 0;
         s.m_goldCost[0] = 0;
         s.m_resourceCost[0] = 0;
@@ -321,7 +321,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
         sprintf(s.m_countText, "%d", s.m_count);
         memset(s.m_cost, 0, sizeof s.m_cost);
 
-        TCreatureType type = s.m_type;
+        CreatureType type = s.m_type;
         if ((g_game->m_f1f698 != 0
              || (type != CREATURE_AIR_ELEMENTAL && type != CREATURE_EARTH_ELEMENTAL
                  && type != CREATURE_FIRE_ELEMENTAL
@@ -333,13 +333,13 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
                 strcpy(s.m_goldCost, (*g_generalText)[345]);
                 strcpy(s.m_resourceCost, g_emptyRolloverText);
             } else {
-                TCreatureType upgraded;
+                CreatureType upgraded;
                 {
-                    TCreatureType baseType = s.m_type;
+                    CreatureType baseType = s.m_type;
                     upgraded = g_game->upgradedCreatureType(baseType);
                 }
                 {
-                    TCreatureType baseType = s.m_type;
+                    CreatureType baseType = s.m_type;
                     getUpgradeCost(baseType, upgraded, s.m_count, s.m_cost);
                 }
                 s.m_cost[6] = static_cast<int>(
@@ -372,43 +372,43 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
 
         if (s.m_type != CREATURE_NONE && s.m_count > 0) {
             msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+            msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
             msg.m_codeY = portraitId;
             msg.m_extra = s.m_type + 2;
             broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_SET_TEXT;
+            msg.m_codeX = Widget::WIDGET_SET_TEXT;
             msg.m_codeY = numId;
             msg.m_extraText = s.m_countText;
             broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_SET_TEXT;
+            msg.m_codeX = Widget::WIDGET_SET_TEXT;
             msg.m_codeY = goldCostId;
             msg.m_extraText = s.m_goldCost;
             broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
             if (s.m_resourceIndex == -1) {
-                msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+                msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
                 msg.m_codeY = resIconId;
-                msg.m_extra = widget::WIDGET_CLEAR_STATUS;
+                msg.m_extra = Widget::WIDGET_CLEAR_STATUS;
                 broadcastMessage(msg);
             } else {
-                msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.m_codeX = Widget::WIDGET_SET_ICON_FRAME;
                 msg.m_codeY = resIconId;
                 msg.m_extra = s.m_resourceIndex;
                 broadcastMessage(msg);
 
                 msg.m_id = MESSAGE_WIDGET;
-                msg.m_codeX = widget::WIDGET_SET_TEXT;
+                msg.m_codeX = Widget::WIDGET_SET_TEXT;
                 msg.m_codeY = resCostId;
                 msg.m_extraText = s.m_resourceCost;
                 broadcastMessage(msg);
             }
 
-            TCreatureType stateType = s.m_type;
+            CreatureType stateType = s.m_type;
             if ((g_game->m_f1f698 == 0
                  && (stateType == CREATURE_AIR_ELEMENTAL
                      || stateType == CREATURE_EARTH_ELEMENTAL
@@ -423,66 +423,66 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
             }
 
             msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_SET_ICON_NAME;
+            msg.m_codeX = Widget::WIDGET_SET_ICON_NAME;
             msg.m_codeY = buttonId;
             msg.m_extraText = g_aszUpgradeIcons[s.m_state];
             broadcastMessage(msg);
         } else {
             msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = portraitId;
-            msg.m_extra = widget::WIDGET_CLEAR_STATUS;
+            msg.m_extra = Widget::WIDGET_CLEAR_STATUS;
             broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = numId;
-            msg.m_extra = widget::WIDGET_CLEAR_STATUS;
+            msg.m_extra = Widget::WIDGET_CLEAR_STATUS;
             broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = goldIconId;
-            msg.m_extra = widget::WIDGET_CLEAR_STATUS;
+            msg.m_extra = Widget::WIDGET_CLEAR_STATUS;
             broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = resIconId;
-            msg.m_extra = widget::WIDGET_CLEAR_STATUS;
+            msg.m_extra = Widget::WIDGET_CLEAR_STATUS;
             broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_SET_STATUS;
+            msg.m_codeX = Widget::WIDGET_SET_STATUS;
             msg.m_codeY = buttonId;
-            msg.m_extra = drawDimmedButtons ? widget::WIDGET_DIMMED
-                                          : widget::WIDGET_DIMMED_NODRAW;
+            msg.m_extra = drawDimmedButtons ? Widget::WIDGET_DIMMED
+                                          : Widget::WIDGET_DIMMED_NODRAW;
             broadcastMessage(msg);
         }
     }
 
     char totalCostText[10];
-    for (int t = 0; t < armyGroup::ARMY_GROUP_SLOT_COUNT; t++) {
+    for (int t = 0; t < ArmyGroup::ARMY_GROUP_SLOT_COUNT; t++) {
         int totalID = TOTAL_RES_COST_1_ID + t;
         if (m_totalCost[t] > 0) {
             sprintf(totalCostText, "%d", m_totalCost[t]);
             msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_SET_TEXT;
+            msg.m_codeX = Widget::WIDGET_SET_TEXT;
             msg.m_codeY = totalID;
             msg.m_extraText = totalCostText;
             broadcastMessage(msg);
         } else {
             strcpy(totalCostText, g_emptyRolloverText);
             msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_SET_TEXT;
+            msg.m_codeX = Widget::WIDGET_SET_TEXT;
             msg.m_codeY = totalID;
             msg.m_extraText = totalCostText;
             broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.m_codeX = Widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = totalID - 7;
-            msg.m_extra = widget::WIDGET_CLEAR_STATUS;
+            msg.m_extra = Widget::WIDGET_CLEAR_STATUS;
             broadcastMessage(msg);
         }
     }
@@ -495,14 +495,14 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
         m_upgradeAllButtonState = UPGRADE_STATE_TOO_EXPENSIVE;
 
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_ICON_NAME;
+    msg.m_codeX = Widget::WIDGET_SET_ICON_NAME;
     msg.m_codeY = UPGRADE_ALL_BUTTON_ID;
     msg.m_extraText = g_aszUpgradeAllIcons[m_upgradeAllButtonState];
     broadcastMessage(msg);
 }
 
 VA(0x004e8500, 0x18F)  // dc 0xd7124
-void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
+void HillFortWindow::upgradeSlot(int which, unsigned char showMessage)
 {
     switch (m_slot[which].m_state) {
     case UPGRADE_STATE_NONE:
@@ -513,21 +513,21 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
 
     case UPGRADE_STATE_AFFORDABLE:
         if (m_slot[which].m_type != CREATURE_NONE && m_slot[which].m_count > 0) {
-            TCreatureType type = m_slot[which].m_type;
+            CreatureType type = m_slot[which].m_type;
             if ((g_game->m_f1f698 != 0
                  || (type != CREATURE_AIR_ELEMENTAL
                      && type != CREATURE_EARTH_ELEMENTAL
                      && type != CREATURE_FIRE_ELEMENTAL
                      && type != CREATURE_WATER_ELEMENTAL))
                 && static_cast<unsigned char>(isBaseCreature(type))) {
-                TCreatureType upgraded;
+                CreatureType upgraded;
                 {
-                    TCreatureType baseType = m_slot[which].m_type;
+                    CreatureType baseType = m_slot[which].m_type;
                     upgraded = g_game->upgradedCreatureType(baseType);
                 }
 
                 g_game->getCurrHero()->m_army.m_armies[which] = upgraded;
-                for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++)
+                for (int i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; i++)
                     g_currentPlayer->m_resources[i] -= m_slot[which].m_cost[i];
             }
         }
@@ -545,7 +545,7 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
 // DC504/508 owns the two dialogs; 514..515 loops over seven UpgradeSlot
 // calls. Retail expands this ordinary helper in the handler at 0x4e8944.
 // No retained retail row is required for the source boundary to exist.
-void THillFortWindow::upgradeAll()
+void HillFortWindow::upgradeAll()
 {
     switch (m_upgradeAllButtonState) {
     case UPGRADE_STATE_NONE:
@@ -557,14 +557,14 @@ void THillFortWindow::upgradeAll()
                      -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     case UPGRADE_STATE_AFFORDABLE:
-        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++)
+        for (int i = 0; i < ArmyGroup::ARMY_GROUP_SLOT_COUNT; i++)
             upgradeSlot(i, 0);
         break;
     }
 }
 
 VA(0x004e8690, 0x1B8)  // dc 0xd72f4
-void THillFortWindow::handleClick(message& msg)
+void HillFortWindow::handleClick(Message& msg)
 {
     unsigned char rightClick =
         (static_cast<unsigned int>(msg.m_qualifier) >> 9) & 1;
@@ -601,7 +601,7 @@ void THillFortWindow::handleClick(message& msg)
                 g_hillFortWindow->getCreatureType(msg.m_codeY - CREATURE_PORTRAIT_1_ID);
             if (creature == CREATURE_NONE)
                 break;
-            TViewArmyWindow viewArmy(creature, 0x77, 0x20, !rightClick);
+            ViewArmyWindow viewArmy(creature, 0x77, 0x20, !rightClick);
             viewArmy.centerWindow(-1, -1);
             if (rightClick)
                 viewArmy.quickView();
@@ -614,7 +614,7 @@ void THillFortWindow::handleClick(message& msg)
 
 // E:\gamedcs\hillfortwindow.cpp:612
 VA(0x004e8850, 0x369)  // DoModal address-take, dc 0xd7458
-int hillFortWindowHandler(message& msg)
+int hillFortWindowHandler(Message& msg)
 {
     pollSound();
     bool closeWindow = 0;
@@ -622,29 +622,29 @@ int hillFortWindowHandler(message& msg)
     if (msg.m_id == MESSAGE_KEY_DOWN) {
     } else if (msg.m_id == MESSAGE_WIDGET) {
         switch (msg.m_codeX) {
-        case widget::WIDGET_SELECT:
-        case widget::WIDGET_RIGHT_SELECT:
+        case Widget::WIDGET_SELECT:
+        case Widget::WIDGET_RIGHT_SELECT:
             g_hillFortWindow->handleClick(msg);
             break;
-        case widget::WIDGET_DESELECT:
+        case Widget::WIDGET_DESELECT:
             if (msg.m_codeY == DIALOG_RETURN_OK) {
                 closeWindow = 1;
             } else {
                 bool refreshWindow = 0;
                 switch (msg.m_codeY) {
-                case THillFortWindow::UPGRADE_BUTTON_1_ID:
-                case THillFortWindow::UPGRADE_BUTTON_2_ID:
-                case THillFortWindow::UPGRADE_BUTTON_3_ID:
-                case THillFortWindow::UPGRADE_BUTTON_4_ID:
-                case THillFortWindow::UPGRADE_BUTTON_5_ID:
-                case THillFortWindow::UPGRADE_BUTTON_6_ID:
-                case THillFortWindow::UPGRADE_BUTTON_7_ID:
+                case HillFortWindow::UPGRADE_BUTTON_1_ID:
+                case HillFortWindow::UPGRADE_BUTTON_2_ID:
+                case HillFortWindow::UPGRADE_BUTTON_3_ID:
+                case HillFortWindow::UPGRADE_BUTTON_4_ID:
+                case HillFortWindow::UPGRADE_BUTTON_5_ID:
+                case HillFortWindow::UPGRADE_BUTTON_6_ID:
+                case HillFortWindow::UPGRADE_BUTTON_7_ID:
                     g_hillFortWindow->upgradeSlot(
-                        msg.m_codeY - THillFortWindow::UPGRADE_BUTTON_1_ID, 1);
+                        msg.m_codeY - HillFortWindow::UPGRADE_BUTTON_1_ID, 1);
                     refreshWindow = 1;
                     break;
 
-                case THillFortWindow::UPGRADE_ALL_BUTTON_ID:
+                case HillFortWindow::UPGRADE_ALL_BUTTON_ID:
                     g_hillFortWindow->upgradeAll();
                     refreshWindow = 1;
                     break;
@@ -663,66 +663,66 @@ int hillFortWindowHandler(message& msg)
             return MESSAGE_DISPATCH_CONSUME;
 
         g_hillFortHoverId = hoverID;
-        g_mouseManager->setPointer(1, mouseManager::DEFAULT_SET);
+        g_mouseManager->setPointer(1, MouseManager::DEFAULT_SET);
 
         switch (hoverID) {
-        case THillFortWindow::HERO_PORTRAIT_ID:
+        case HillFortWindow::HERO_PORTRAIT_ID:
             sprintf(g_text,
                     (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
                     g_game->getCurrHero()->m_name, g_game->getCurrHero()->heroFn004D8F70());
             msg.m_extraText = g_text;
             break;
 
-        case THillFortWindow::UPGRADE_ALL_BUTTON_ID:
+        case HillFortWindow::UPGRADE_ALL_BUTTON_ID:
             msg.m_extraText = (*g_generalText)[433];
             break;
 
-        case THillFortWindow::CREATURE_PORTRAIT_1_ID:
-        case THillFortWindow::CREATURE_PORTRAIT_2_ID:
-        case THillFortWindow::CREATURE_PORTRAIT_3_ID:
-        case THillFortWindow::CREATURE_PORTRAIT_4_ID:
-        case THillFortWindow::CREATURE_PORTRAIT_5_ID:
-        case THillFortWindow::CREATURE_PORTRAIT_6_ID:
-        case THillFortWindow::CREATURE_PORTRAIT_7_ID:
+        case HillFortWindow::CREATURE_PORTRAIT_1_ID:
+        case HillFortWindow::CREATURE_PORTRAIT_2_ID:
+        case HillFortWindow::CREATURE_PORTRAIT_3_ID:
+        case HillFortWindow::CREATURE_PORTRAIT_4_ID:
+        case HillFortWindow::CREATURE_PORTRAIT_5_ID:
+        case HillFortWindow::CREATURE_PORTRAIT_6_ID:
+        case HillFortWindow::CREATURE_PORTRAIT_7_ID:
             msg.m_extraText = g_creatureTypeTraits[
                 g_hillFortWindow->getCreatureType(
-                    hoverID - THillFortWindow::CREATURE_PORTRAIT_1_ID)].m_pluralName;
+                    hoverID - HillFortWindow::CREATURE_PORTRAIT_1_ID)].m_pluralName;
             break;
 
-        case THillFortWindow::UPGRADE_BUTTON_1_ID:
-        case THillFortWindow::UPGRADE_BUTTON_2_ID:
-        case THillFortWindow::UPGRADE_BUTTON_3_ID:
-        case THillFortWindow::UPGRADE_BUTTON_4_ID:
-        case THillFortWindow::UPGRADE_BUTTON_5_ID:
-        case THillFortWindow::UPGRADE_BUTTON_6_ID:
-        case THillFortWindow::UPGRADE_BUTTON_7_ID:
+        case HillFortWindow::UPGRADE_BUTTON_1_ID:
+        case HillFortWindow::UPGRADE_BUTTON_2_ID:
+        case HillFortWindow::UPGRADE_BUTTON_3_ID:
+        case HillFortWindow::UPGRADE_BUTTON_4_ID:
+        case HillFortWindow::UPGRADE_BUTTON_5_ID:
+        case HillFortWindow::UPGRADE_BUTTON_6_ID:
+        case HillFortWindow::UPGRADE_BUTTON_7_ID:
             sprintf(g_text, (*g_generalText)[319],
                     g_creatureTypeTraits[
                         g_hillFortWindow->getCreatureType(
-                            hoverID - THillFortWindow::UPGRADE_BUTTON_1_ID)].m_pluralName);
+                            hoverID - HillFortWindow::UPGRADE_BUTTON_1_ID)].m_pluralName);
             msg.m_extraText = g_text;
             break;
 
         default:
-            g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+            g_mouseManager->setPointer(0, MouseManager::DEFAULT_SET);
             msg.m_extraText = g_emptyRolloverText;
             break;
         }
 
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_TEXT;
-        msg.m_codeY = THillFortWindow::ROLLOVER_ID;
+        msg.m_codeX = Widget::WIDGET_SET_TEXT;
+        msg.m_codeY = HillFortWindow::ROLLOVER_ID;
         g_hillFortWindow->broadcastMessage(msg);
-        g_hillFortWindow->drawWindow(1, THillFortWindow::ROLLOVER_ID,
-                                     THillFortWindow::ROLLOVER_ID);
+        g_hillFortWindow->drawWindow(1, HillFortWindow::ROLLOVER_ID,
+                                     HillFortWindow::ROLLOVER_ID);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
     if (closeWindow) {
         msg.m_id = MESSAGE_WIDGET;
         g_windowManager->m_dialogReturn = msg.m_codeY;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = Widget::WIDGET_END_DIALOG;
+        msg.m_codeX = Widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -737,10 +737,10 @@ int hillFortWindowHandler(message& msg)
 static void updateHillFort(unsigned char firstUpdate)
 {
     if (firstUpdate) {
-        message msg;
+        Message msg;
         msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-        msg.m_codeY = THillFortWindow::BACKGROUND_ID;
+        msg.m_codeX = Widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+        msg.m_codeY = HillFortWindow::BACKGROUND_ID;
         msg.m_extra = g_game->getLocalPlayerGamePos();
         g_hillFortWindow->broadcastMessage(msg);
     } else {

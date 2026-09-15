@@ -87,22 +87,33 @@ extern BINKSUMMARY g_binkSummary;
 // The binkw32 import surface (leading underscore, the RAD convention -
 // see smackmgr.h; smackmgr.cpp aliases the names back).
 extern "C" {
-__declspec(dllimport) int __stdcall _BinkPause(Bink* bnk, int pause);
-__declspec(dllimport) int __stdcall _BinkDDSurfaceType(IDirectDrawSurface* dds);
-__declspec(dllimport) int __stdcall _BinkGetRects(Bink* bnk, unsigned long flags);
-__declspec(dllimport) int __stdcall _BinkGoto(Bink* bnk,
+// Before normalization (function): _BinkPause.
+__declspec(dllimport) int __stdcall binkpause(Bink* bnk, int pause);
+// Before normalization (function): _BinkDDSurfaceType.
+__declspec(dllimport) int __stdcall binkddsurfacetype(IDirectDrawSurface* dds);
+// Before normalization (function): _BinkGetRects.
+__declspec(dllimport) int __stdcall binkgetrects(Bink* bnk, unsigned long flags);
+// Before normalization (function): _BinkGoto.
+__declspec(dllimport) int __stdcall binkgoto(Bink* bnk,
                                               unsigned long frame,
                                               int flags);
-__declspec(dllimport) int __stdcall _BinkDoFrame(Bink* bnk);
-__declspec(dllimport) int __stdcall _BinkCopyToBuffer(
+// Before normalization (function): _BinkDoFrame.
+__declspec(dllimport) int __stdcall binkdoframe(Bink* bnk);
+// Before normalization (function): _BinkCopyToBuffer.
+__declspec(dllimport) int __stdcall binkcopytobuffer(
     Bink* bnk, void* destination, int pitch, unsigned long height,
     unsigned long x, unsigned long y, unsigned long flags);
-__declspec(dllimport) Bink* __stdcall _BinkOpen(void* handle,
+// Before normalization (function): _BinkOpen.
+__declspec(dllimport) Bink* __stdcall binkopen(void* handle,
                                                 unsigned long flags);
-__declspec(dllimport) void __stdcall _BinkClose(Bink* bnk);
-__declspec(dllimport) int __stdcall _BinkWait(Bink* bnk);
-__declspec(dllimport) void __stdcall _BinkNextFrame(Bink* bnk);
-__declspec(dllimport) void __stdcall _BinkGetSummary(Bink* bnk,
+// Before normalization (function): _BinkClose.
+__declspec(dllimport) void __stdcall binkclose(Bink* bnk);
+// Before normalization (function): _BinkWait.
+__declspec(dllimport) int __stdcall binkwait(Bink* bnk);
+// Before normalization (function): _BinkNextFrame.
+__declspec(dllimport) void __stdcall binknextframe(Bink* bnk);
+// Before normalization (function): _BinkGetSummary.
+__declspec(dllimport) void __stdcall binkgetsummary(Bink* bnk,
                                                      BINKSUMMARY* sum);
 }
 

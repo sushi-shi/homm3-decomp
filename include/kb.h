@@ -7,8 +7,8 @@
 #include "border.h"
 #include "town.h"
 
-class message;
-class TDialogBox;
+class Message;
+class DialogBoxWindow;
 class VictoryConditionStruct;
 class LossConditionStruct;
 
@@ -17,8 +17,9 @@ class LossConditionStruct;
 // two four-byte selectors, two VC6 strings, then seven dwords. The paired
 // position fields remain split until a shared point type with an eight-byte
 // retail layout is admitted.
-struct type_dialog_icon {
-    EGameResource m_resource;
+// Before normalization (type): type_dialog_icon.
+struct DialogIcon {
+    GameResource m_resource;
     long m_qualifier;
     std::string m_spriteName;
     std::string m_text;
@@ -32,15 +33,16 @@ struct type_dialog_icon {
     long m_textHeight;
     long m_textWidth;
 
-    void set(EGameResource resource, long qualifier);
+    void set(GameResource resource, long qualifier);
 };
-SIZE(type_dialog_icon, 0x4c);
+SIZE(DialogIcon, 0x4c);
 
 // Dreamcast CodeView publishes the five named members of EMBType. Complete's
 // DoNormalDialog jump table independently proves that the domain remains dense
 // through ten and uses the five intervening values too. Their source names did
 // not survive, so keep ordinal placeholders for those Complete-only facts.
-enum EMBType {
+// Before normalization (type): EMBType.
+enum MBType {
     NORMAL_DIALOG_DEFAULT = 1,
     NORMAL_DIALOG_YESNO = 2,
     NORMAL_DIALOG_ORDINAL_3 = 3,
@@ -59,7 +61,8 @@ enum EMBType {
 // the final 0x2a0 extent. The special members are intentionally implicit:
 // CodeView marks them compiler-generated, and retail expands this aggregate's
 // teardown while retaining type_dialog_icon's element destructor boundary.
-struct TNormalDialogInfo {
+// Before normalization (type): TNormalDialogInfo.
+struct NormalDialogInfo {
     std::string m_dialogText;
     int m_x;
     int m_y;
@@ -73,40 +76,43 @@ struct TNormalDialogInfo {
     // NH3API confirms the three-byte gap between text_expansion at
     // +0x30 and icons at +0x34. Retail kb.cpp uses the one-byte flag.
     char m_paddingBeforeIcons[3];
-    type_dialog_icon m_icons[8];
-    EMBType m_mbType;
+    DialogIcon m_icons[8];
+    MBType m_mbType;
     int m_special;
     int m_timeout;
 };
-SIZE(TNormalDialogInfo, 0x2a0);
+SIZE(NormalDialogInfo, 0x2a0);
 
 // The normal-dialog rollover frame has one canonical project-wide model.
 // Retail's inlined constructor proves the base extent, derived vtable store
 // and the two four-byte tail members.
-class type_normal_dialog_frame : public coloredBorderFrame {
+// Before normalization (type): type_normal_dialog_frame.
+class NormalDialogFrame : public ColoredBorderFrame {
 public:
-    EGameResource m_resource;
+    GameResource m_resource;
     long m_qualifier;
 
-    type_normal_dialog_frame(long x, long y, long w, long h, long id,
-                             EGameResource resource, long qualifier);
+    NormalDialogFrame(long x, long y, long w, long h, long id,
+                             GameResource resource, long qualifier);
     virtual bool handleClick(bool downClick,
                                        bool rightClick);
 };
-SIZE(type_normal_dialog_frame, 0x40);
+SIZE(NormalDialogFrame, 0x40);
 
 // homm2's KB timer array survives (DC glTimers: unsigned long[10];
 // retail base 0x698998 - button::Select stores slot 2 at 0x6989a0).
 // Slot 2's name is the homm2 2.1 KB.h value. UpdateScreen independently
 // proves slot 0's adventure-animation role from retail.
-enum EKbTimerSlots {
+// Before normalization (type): EKbTimerSlots.
+enum KbTimerSlots {
     GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT = 0,
     GLOBAL_BUTTON_REPEAT_TIMER_SLOT = 2
 };
 
 // GetTeamNames selects the natural-language conjunction only for a team of
 // exactly two active players; larger teams use comma-separated forms.
-enum EKbTeamNameCount {
+// Before normalization (type): EKbTeamNameCount.
+enum KbTeamNameCount {
     TEAM_NAMES_PAIR = 2
 };
 
@@ -115,7 +121,8 @@ enum EKbTeamNameCount {
 // proves every retained value through its two jump tables and four range
 // guards. The combat-debug members whose source names did not survive keep
 // ordinal spellings instead of acquiring guessed semantics.
-enum EAppMenuCommand {
+// Before normalization (type): EAppMenuCommand.
+enum AppMenuCommand {
     APP_MENU_FORCE_VICTORY = 0x9c7b,
     APP_MENU_FORCE_DEFEAT = 0x9c7c,
     APP_MENU_TOGGLE_VIEW_ALL = 0x9c7e,
@@ -153,7 +160,8 @@ enum EAppMenuCommand {
     APP_MENU_SPELL_LAST = 0xb415
 };
 
-enum EAppMenuConstant {
+// Before normalization (type): EAppMenuConstant.
+enum AppMenuConstant {
     APP_MENU_REVEAL_COORDINATE = 30,
     APP_MENU_REVEAL_RADIUS = 180,
     APP_MENU_MOVEMENT_BONUS = 299999,
@@ -165,7 +173,8 @@ enum EAppMenuConstant {
     APP_MENU_SPELL_POINTS = 999
 };
 
-enum ECheckEndGameForcedResult {
+// Before normalization (type): ECheckEndGameForcedResult.
+enum CheckEndGameForcedResult {
     END_GAME_FORCE_VICTORY = 1,
     END_GAME_FORCE_DEFEAT = 2
 };
@@ -175,7 +184,8 @@ enum ECheckEndGameForcedResult {
 // column ordinal, and each arm is what names the column: the calendar day
 // count, the base map score, the difficulty row from the ARRAYTXT table,
 // the rated final score, and the rank string ShowCongrats formats.
-enum ECongratsColumn {
+// Before normalization (type): ECongratsColumn.
+enum CongratsColumn {
     CONGRATS_COLUMN_DAYS = 0,
     CONGRATS_COLUMN_BASE_SCORE = 1,
     CONGRATS_COLUMN_DIFFICULTY = 2,
@@ -201,25 +211,25 @@ DATA(0x006989f8) extern unsigned short* g_mapExtra;
 // modeled TU so far - the hill fort constructor's per-slot count widget
 // takes its y as `0x7c - font->height`, reading font+0x21, i.e.
 // TFontSpec::height at font+0x1c+5. Declare the rest as readers land.
-class font;
+class Font;
 // DC ?Credits@@3PAPBDA / ?smallFont@@3PAVfont@@A. CreditsWait reads the
 // scrolling text from Credits[0] and its closing line from Credits[1]
 // (retail .bss 0x6a7700 / 0x6a7704) and draws the latter with smallFont
 // (.bss 0x698a08, one of the three fonts ShutDown disposes). Their owning
 // compilands are not located yet.
 extern const char* g_credits[];
-extern font* g_smallFont;
+extern Font* g_smallFont;
 // The first cell of the same run: army::DrawToBuffer (0x43e140) draws
 // the troop-count box's number with it, which is the reader the note
 // above was waiting on.
-DATA(0x00698a14) extern font* g_calligraphicFont;
+DATA(0x00698a14) extern Font* g_calligraphicFont;
 // The third cell of the same canonical font run.  CWaitForReadyPlayersDlg
 // passes it to CAnimatedDlg::Setup.
-DATA(0x00698a04) extern font* g_tinyFont;
+DATA(0x00698a04) extern Font* g_tinyFont;
 // The fourth cell of the run (bigfont.fnt): the lobby window's panel
 // titles (TSingleSelectionWindow::Update, 0x584550) draw with it.
-DATA(0x00698a0c) extern font* g_mediumFont;
-DATA(0x00698a10) extern font* g_bigFont;
+DATA(0x00698a0c) extern Font* g_mediumFont;
+DATA(0x00698a10) extern Font* g_bigFont;
 
 unsigned short getMapExtra(int x, int y, int z);
 unsigned short* getMapExtraPtr(int x, int y, int z);
@@ -248,14 +258,14 @@ void normalDialog(const char* text, int mbType, int x, int y,
 void normalDialogTimeOut(const char* text, int mbType, int timeOut,
     int x, int y, int resType1, int resExtra1, int resType2,
     int resExtra2, int special, int resType3, int resExtra3); // 0x4f6530
-void doNormalDialog(TNormalDialogInfo dialogInfo);              // 0x4f6990
+void doNormalDialog(NormalDialogInfo dialogInfo);              // 0x4f6990
 // DC kb.cpp:5385 (dc 0xe5960); retail 0x4f5d80 (1,296 B), unclaimed.
 // NormalDialog sizes its info block through it before DoNormalDialog.
-void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo);
-int eventWindowHandler(message& msg);
-TDialogBox* getCurrentNormalDialog();
+void calculateNormalDialogSize(NormalDialogInfo& dialogInfo);
+int eventWindowHandler(Message& msg);
+DialogBoxWindow* getCurrentNormalDialog();
 void extendedDialog(const char* text,
-    std::vector<type_dialog_resource>& resources,
+    std::vector<DialogResource>& resources,
     long x, long y, long timeout);
 void __fastcall getQuickviewSize(const char* text, int* width,
                                    int* height);                 // 0x4f62a0
@@ -307,7 +317,7 @@ extern int g_gameOver;
 // this word and philAI::DoAI is its only reader; no source symbol survives,
 // so keep the address-ordinal spelling instead of inventing a role name.
 extern int g_unnamed6994f0;
-int trueFalseDialogHandler(message* msg);
+int trueFalseDialogHandler(Message* msg);
 
 // kb.cpp's shared text scratch buffer (.bss 0x6973d8 in kb's band;
 // kbwin's WinMain sprintf's the already-running message into it,

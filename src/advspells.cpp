@@ -19,7 +19,7 @@
 #include "includes.h"
 
 VA(0x0041c2f0, 0x192)  // dc 0x2194c
-void advManager::checkCastSpell()
+void AdvManager::checkCastSpell()
 {
     if (g_game->getCurrHeroId() == -1)
         return;
@@ -27,12 +27,12 @@ void advManager::checkCastSpell()
     mobilizeCurrHero(0, 0, 1);
     completeDraw(0);
     updateScreen(0, 0);
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(0, MouseManager::ADVENTURE_SET);
 
-    hero* currentHero = g_game->getCurrHero();
+    Hero* currentHero = g_game->getCurrHero();
     {
-        TSpellbookWindow spellBookWindow(*currentHero, 0,
-                                   TSpellbookWindow::eContextAdventure,
+        SpellbookWindow spellBookWindow(*currentHero, 0,
+                                   SpellbookWindow::eContextAdventure,
                                    currentHero->getSpecialTerrain());
         spellBookWindow.doModal(0);
     }
@@ -40,7 +40,7 @@ void advManager::checkCastSpell()
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
         return;
 
-    TAdventureObjectType objectType = currentHero->heroFn004E4EC0();
+    AdventureObjectType objectType = currentHero->heroFn004E4EC0();
     if (objectType == CURSED_GROUND) {
         if (g_spellTraits[g_windowManager->m_dialogReturn].m_level > 1) {
             normalDialog(
@@ -68,13 +68,13 @@ void advManager::checkCastSpell()
 // its own game::GetCurrHero, and the two ViewWorld arms hand their own case
 // value to both ViewWorld and GetManaCost.
 VA(0x0041c490, 0x404)  // linkorder + anchor-callee hero::Fly / get_spell_level, dc 0x21a2c
-void advManager::castSpell(SpellID whichSpell)
+void AdvManager::castSpell(SpellID whichSpell)
 {
-    hero* who = g_game->getCurrHero();
+    Hero* who = g_game->getCurrHero();
     if (who == 0)
         return;
 
-    TSkillMastery level
+    SkillMastery level
         = who->getSpellLevel(whichSpell, who->getSpecialTerrain());
 
     switch (whichSpell) {
@@ -150,15 +150,15 @@ void advManager::castSpell(SpellID whichSpell)
 // actual successful cell test while preserving search order and refusal
 // side effects; no new helper is inferred from that flag.
 VA(0x0041c8a0, 0x54D)  // anchor-callee hero::find_summonable_boat + game::CreateBoat, dc 0x21b84
-void advManager::summonBoat(TSkillMastery level)
+void AdvManager::summonBoat(SkillMastery level)
 {
     const SSpellTraits& traits = g_spellTraits[SPELL_SUMMON_BOAT];
 
-    hero* who = g_game->getCurrHero();
+    Hero* who = g_game->getCurrHero();
     if (who == 0)
         return;
 
-    type_point point(who->m_x, who->m_y, who->m_z);
+    MapPoint point(who->m_x, who->m_y, who->m_z);
     if (getCell(point)->m_groundSet == eTerrainWater) {
         if (g_game->isLocalHuman(who->m_owner)) {
             sprintf(g_text,
@@ -178,7 +178,7 @@ void advManager::summonBoat(TSkillMastery level)
         y = who->m_y + g_normalDirTable[direction].m_y;
         if (x >= 0 && x < g_mapWidth && y >= 0
             && y < g_mapHeight) {
-            NewmapCell* cell = getCell(type_point(x, y, who->m_z));
+            NewmapCell* cell = getCell(MapPoint(x, y, who->m_z));
             if (cell->m_typeValue == 0 && cell->m_groundSet == eTerrainWater) {
                 foundWater = true;
                 break;
@@ -195,7 +195,7 @@ void advManager::summonBoat(TSkillMastery level)
 
     }
     if (sRandom(1, 100) <= traits.m_masteryBonus[level]) {
-        boat* theBoat = who->findSummonableBoat();
+        Boat* theBoat = who->findSummonableBoat();
         if (theBoat != 0) {
             theBoat->restoreCell();
             // Only fizzle the boat's OLD square while it is on the radar
@@ -252,12 +252,12 @@ void advManager::summonBoat(TSkillMastery level)
 
 // E:\gamedcs\advspells.cpp:328
 VA(0x0041cdf0, 0x29D)  // anchor-vtable TSkuttleBoatWindow ctor/dtor, dc 0x22054
-void advManager::skuttleBoat(TSkillMastery level)
+void AdvManager::skuttleBoat(SkillMastery level)
 {
     const SSpellTraits& traits = g_spellTraits[SPELL_SCUTTLE_BOAT];
 
     {
-        TSkuttleBoatWindow skuttleWindow;
+        SkuttleBoatWindow skuttleWindow;
         skuttleWindow.doModal(0);
     }
 
@@ -268,15 +268,15 @@ void advManager::skuttleBoat(TSkillMastery level)
         return;
     }
 
-    hero* who = g_game->getCurrHero();
+    Hero* who = g_game->getCurrHero();
 
     if (sRandom(1, 100)
         <= g_spellTraits[SPELL_SCUTTLE_BOAT].m_masteryBonus[level]) {
         // The CONST get_map_center overload is the one retail calls here
         // (?get_map_center@advManager@@QBE...); /OPT:ICF folded the pair onto
         // one row, so the receiver cast costs no bytes and buys the name.
-        boat& theBoat = g_game->m_boats[
-            getCell(get_mouse_map_point())
+        Boat& theBoat = g_game->m_boats[
+            getCell(getMouseMapPoint())
                 ->m_extraInfo];
         theBoat.restoreCell();
 
@@ -325,10 +325,10 @@ void advManager::skuttleBoat(TSkillMastery level)
 // The traits reference and mastery parameter retain their recorded types;
 // TSpellTraits is the older source name for SSpellTraits.
 VA(0x0041d090, 0x2C6)  // anchor-vtable TDimensionDoorWindow ctor/dtor + anchor-callee TeleportTo, dc 0x2225c
-void advManager::dimensionDoor(TSkillMastery level)
+void AdvManager::dimensionDoor(SkillMastery level)
 {
     const SSpellTraits& traits = g_spellTraits[SPELL_DIMENSION_DOOR];
-    hero* who = g_game->getCurrHero();
+    Hero* who = g_game->getCurrHero();
     if (who->m_movePoints <= 0) {
         if (g_game->isLocalHuman(who->m_owner)) {
             normalDialog(
@@ -338,7 +338,7 @@ void advManager::dimensionDoor(TSkillMastery level)
         return;
     }
 
-    TSkillMastery mastery = who->getSpellLevel(SPELL_DIMENSION_DOOR);
+    SkillMastery mastery = who->getSpellLevel(SPELL_DIMENSION_DOOR);
     if (who->m_dWalkSpellsCast >= traits.m_masteryBonus[mastery]) {
         if (g_game->isLocalHuman(who->m_owner)) {
             sprintf(g_text,
@@ -350,11 +350,11 @@ void advManager::dimensionDoor(TSkillMastery level)
     }
 
     {
-        TDimensionDoorWindow doorWin;
+        DimensionDoorWindow doorWin;
         doorWin.doModal(0);
     }
 
-    type_point destination = get_mouse_map_point();
+    MapPoint destination = getMouseMapPoint();
     if (destination.isValid() && g_windowManager->m_dialogReturn == 1) {
         NewmapCell* cell = getCell(destination);
         if (((who->m_flags & 0x40000) != 0
@@ -423,11 +423,11 @@ void advManager::dimensionDoor(TSkillMastery level)
 // Original local names: TGWindow, closest_town, closest_distance_2,
 // hero_loc, town_loc; normalized below without changing their scopes.
 VA(0x0041d360, 0x5C8)  // anchor-vtable TTownGateWindow ctor/dtor, dc 0x22510
-void advManager::townGate(TSkillMastery level)
+void AdvManager::townGate(SkillMastery level)
 {
     const SSpellTraits& traits = g_spellTraits[SPELL_TOWN_PORTAL];
     const int movementCost[4] = {300, 300, 300, 200};
-    hero* who = g_game->getCurrHero();
+    Hero* who = g_game->getCurrHero();
 
     int cost = movementCost[level];
     if (who->m_movePoints < cost) {
@@ -464,7 +464,7 @@ void advManager::townGate(TSkillMastery level)
 
     int selectedTown;
     if (level >= eMasteryAdvanced) {
-        TTownGateWindow tgWindow(1);
+        TownGateWindow tgWindow(1);
         for (unsigned i = 0; i < g_game->m_towns.size(); i++) {
             if (g_game->onSameTeam(who->m_owner, g_game->m_towns[i].m_owner)) {
                 if (g_game->getTown(i)->m_visitingHeroId == -1) {
@@ -477,10 +477,10 @@ void advManager::townGate(TSkillMastery level)
     } else {
         int closestTown = -1;
         int closestDistance2 = (std::numeric_limits<int>::max)();
-        type_point heroLoc = who->getLocation();
+        MapPoint heroLoc = who->getLocation();
         for (unsigned i = 0; i < g_game->m_towns.size(); i++) {
             if (g_game->onSameTeam(who->m_owner, g_game->m_towns[i].m_owner)) {
-                type_point townLoc = g_game->getTown(i)->getLocation();
+                MapPoint townLoc = g_game->getTown(i)->getLocation();
                 if (heroLoc.distanceSquared(townLoc)
                     < closestDistance2) {
                     closestDistance2
@@ -495,7 +495,7 @@ void advManager::townGate(TSkillMastery level)
     if (selectedTown == -1)
         return;
 
-    town* destination = &g_game->m_towns[selectedTown];
+    Town* destination = &g_game->m_towns[selectedTown];
     if (destination->m_visitingHeroId != -1) {
         if (g_game->isLocalHuman(who->m_owner)) {
             normalDialog(
@@ -521,9 +521,9 @@ void advManager::townGate(TSkillMastery level)
 // Visions. Raises the caster's own visions level, posts the confirmation
 // line and charges the mana; the sample runs across all of it.
 DC_ONLY(0x228e8, 0xDC)
-void advManager::identify(TSkillMastery level)
+void AdvManager::identify(SkillMastery level)
 {
-    hero* who = g_game->getCurrHero();
+    Hero* who = g_game->getCurrHero();
     SAMPLE2 sample = loadPlaySample(g_spellTraits[SPELL_VISIONS].m_sample);
     who->m_visionsPower = level;
     if (g_game->isLocalHuman(who->m_owner)) {
@@ -539,10 +539,10 @@ void advManager::identify(TSkillMastery level)
 // wearing the boots (artifact 0x5a), and nothing happens; aboard a boat the
 // helper answers no and the spell runs.
 DC_ONLY(0x229c4, 0x7A)
-void advManager::waterWalk(TSkillMastery level)
+void AdvManager::waterWalk(SkillMastery level)
 {
     const SSpellTraits* traits = &g_spellTraits[SPELL_WATER_WALK];
-    hero* who = g_game->getCurrHero();
+    Hero* who = g_game->getCurrHero();
     if (who->canWalkOnWater(0))
         return;
 
@@ -556,9 +556,9 @@ void advManager::waterWalk(TSkillMastery level)
 // E:\gamedcs\advspells.cpp:654
 // Disguise. The shortest of the four: set the level, charge, wait.
 DC_ONLY(0x22a40, 0x5A)
-void advManager::disguise(TSkillMastery level)
+void AdvManager::disguise(SkillMastery level)
 {
-    hero* who = g_game->getCurrHero();
+    Hero* who = g_game->getCurrHero();
     SAMPLE2 sample = loadPlaySample(g_spellTraits[SPELL_DISGUISE].m_sample);
     who->m_disguiseLevel = level;
     who->useSpell(who->getManaCost(SPELL_DISGUISE));
@@ -571,10 +571,10 @@ void advManager::disguise(TSkillMastery level)
 // retail re-reads the boat bit for that second test rather than reusing the
 // one IsFlying already made. hero::Fly charges the mana itself.
 DC_ONLY(0x22a9c, 0xEC)
-void advManager::flight(TSkillMastery level)
+void AdvManager::flight(SkillMastery level)
 {
     const SSpellTraits* traits = &g_spellTraits[SPELL_FLY];
-    hero* who = g_game->getCurrHero();
+    Hero* who = g_game->getCurrHero();
     if (who->isFlying(0))
         return;
 
@@ -597,7 +597,7 @@ void advManager::flight(TSkillMastery level)
 // draw_changes decides whether the sample plays and whether the visibility
 // scan runs at all.
 VA(0x0041d930, 0x464)  // dc 0x22b88
-void advManager::teleportTo(hero* who, type_point destination,
+void AdvManager::teleportTo(Hero* who, MapPoint destination,
                             const char* sampleName,
                             unsigned char isRemoteMove,
                             unsigned char drawChanges,
@@ -700,7 +700,7 @@ void advManager::teleportTo(hero* who, type_point destination,
 #if 0  // @carcass: remaining untouched bodies (continued)
 // E:\gamedcs\struct.h:120
 DC_ONLY(0x22fe4, 0x2E)
-int type_point::distanceSquared(const type_point* p2)
+int MapPoint::distanceSquared(const MapPoint* p2)
 {
     // @stub
 }
@@ -728,42 +728,42 @@ void SLimitData::clip(const SLimitData* clip_limits)
 
 // E:\gamedcs\Hero.h:707
 DC_ONLY(0x23058, 0x34)
-int hero::getManaCost(int iWhichSpell)
+int Hero::getManaCost(int iWhichSpell)
 {
     // @stub
 }
 
 // E:\gamedcs\Hero.h:718
 DC_ONLY(0x2308c, 0x30)
-TSkillMastery hero::getSpellLevel(SpellID spell)
+SkillMastery Hero::getSpellLevel(SpellID spell)
 {
     // @stub
 }
 
 // E:\gamedcs\WinMgr.h:181
 DC_ONLY(0x230bc, 0x48)
-void heroWindowManager::SaveFizzleSource(const SLimitData* limits)
+void HeroWindowManager::SaveFizzleSource(const SLimitData* limits)
 {
     // @stub
 }
 
 // E:\gamedcs\WinMgr.h:187
 DC_ONLY(0x23104, 0x50)
-void heroWindowManager::FizzleForward(const SLimitData* limits, int fadeTime)
+void HeroWindowManager::FizzleForward(const SLimitData* limits, int fadeTime)
 {
     // @stub
 }
 
 // E:\gamedcs\netmsg.h:532
 DC_ONLY(0x23154, 0x1C)
-void CMapChange::CMapChange(eRS_Messages id, unsigned long size)
+void CMapChange::CMapChange(RsMessages id, unsigned long size)
 {
     // @stub
 }
 
 // E:\gamedcs\netmsg.h:563
 DC_ONLY(0x23170, 0x54)
-void CMCTeleportHero::CMCTeleportHero(signed char heroId, type_point point)
+void CMCTeleportHero::CMCTeleportHero(signed char heroId, MapPoint point)
 {
     // @stub
 }
@@ -777,7 +777,7 @@ int std::_Integer_limits<int,-2147483648,2147483647,-1>::max()
 
 // ..\stlport\stl_vector.h:195
 DC_ONLY(0x231d0, 0x20)
-unsigned std::vector<town,std::allocator<town> >::size()
+unsigned std::vector<Town,std::allocator<Town> >::size()
 {
     // @stub
 }

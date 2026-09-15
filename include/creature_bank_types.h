@@ -16,16 +16,16 @@
 // field record identifies resources as T_INT4[7], which also makes the row's
 // proven AI_resource_cost(const int*) call type-correct. The three alignment
 // bytes before artifacts stay implicit so generated copies skip them.
-struct type_creature_bank {
+struct CreatureBank {
 public:
-    armyGroup m_guards;
+    ArmyGroup m_guards;
     int m_resources[7];
-    TCreatureType m_rewardCreature;
+    CreatureType m_rewardCreature;
     signed char m_rewardCreatures;
-    std::vector<TArtifact> m_artifacts;
+    std::vector<Artifact> m_artifacts;
     unsigned char load(void* infile);
-    ~type_creature_bank();
+    ~CreatureBank();
 };
-SIZE(type_creature_bank, 0x6c);
+SIZE(CreatureBank, 0x6c);
 
 #endif  // HOMM3_CREATURE_BANK_TYPES_H

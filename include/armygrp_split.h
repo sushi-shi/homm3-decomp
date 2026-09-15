@@ -9,26 +9,29 @@
 #include "textntry.h"
 #include "widget.h"
 
-class message;
+class Message;
 
 // Widget and dialog-return domains proven by TSplitWindow's constructor and
 // handler. The 0x7800 close result has no stronger semantic name yet.
-enum TSplitWidgetId {
+// Before normalization (type): TSplitWidgetId.
+enum SplitWidgetId {
     SPLIT_WIDGET_SOURCE_ENTRY = 4,
     SPLIT_WIDGET_DESTINATION_ENTRY = 5
 };
 
-enum TSplitDialogReturn {
+// Before normalization (type): TSplitDialogReturn.
+enum SplitDialogReturn {
     DIALOG_RETURN_SPLIT_CLOSE = 0x7800,
     DIALOG_RETURN_SPLIT_CANCEL = 0x7801
 };
 
 // Retail allocates 0x80 bytes for this source-private dialog.
-class TSplitWindow : public CAdvPopup {
+// Before normalization (type): TSplitWindow.
+class SplitWindow : public CAdvPopup {
 public:
-    slider* m_splitSlider;                // +0x60, widget id 6
-    textEntryWidget* m_sourceEntry;       // +0x64, widget id 4
-    textEntryWidget* m_destinationEntry;  // +0x68, widget id 5
+    Slider* m_splitSlider;                // +0x60, widget id 6
+    TextEntryWidget* m_sourceEntry;       // +0x64, widget id 4
+    TextEntryWidget* m_destinationEntry;  // +0x68, widget id 5
     int m_totalTroops;             // +0x6c
     int m_sourceTroops;            // +0x70
     int m_destinationTroops;       // +0x74
@@ -41,14 +44,14 @@ private:
     char m_paddingBeforeCreature[2];
 
 public:
-    TCreatureType m_creature;      // +0x7c
+    CreatureType m_creature;      // +0x7c
 
-    TSplitWindow(int x2, int y2, TCreatureType thisArmy);
-    virtual ~TSplitWindow();
+    SplitWindow(int x2, int y2, CreatureType thisArmy);
+    virtual ~SplitWindow();
     inline void updateSplitArmy(unsigned char update);
     inline void setRolloverText(int codeY);
-    virtual int windowHandler(message& msg);
+    virtual int windowHandler(Message& msg);
 };
-SIZE(TSplitWindow, 0x80);
+SIZE(SplitWindow, 0x80);
 
 #endif  /* HOMM3_ARMYGRP_SPLIT_H */

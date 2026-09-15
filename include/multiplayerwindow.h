@@ -23,12 +23,13 @@ extern int g_unnamed699288;
 // Cast-free storage for the Winsock bind call in GetIPAddress. Both views are
 // the same 16-byte IPv4 socket-address record; keeping the union in the domain
 // header avoids a TU-local layout view.
-union TIPv4SocketAddress {
+// Before normalization (type): TIPv4SocketAddress.
+union IPv4SocketAddress {
 public:
     sockaddr_in m_internet;
     sockaddr m_generic;
 };
-SIZE(TIPv4SocketAddress, 0x10);
+SIZE(IPv4SocketAddress, 0x10);
 
 // The private edit hierarchy is defined in multiplayerwindow.cpp.
 class CHotSeatEdit;
@@ -50,8 +51,8 @@ public:
         BACK_ID = 520
     };
     CHotSeatEdit* m_edit[8];  // +0x50
-    textWidget* m_rollover;  // +0x70
-    THelpText m_hotSeatHelp[20];
+    TextWidget* m_rollover;  // +0x70
+    HelpText m_hotSeatHelp[20];
     CHotSeatDlg();
     virtual ~CHotSeatDlg();
     virtual int onWidgetDeselect(int id, bool& exitFlag);
@@ -64,7 +65,7 @@ public:
     int getPlayerCount();
     void updateOK();
     unsigned char onOK();
-    virtual textWidget* getRolloverWidget();
+    virtual TextWidget* getRolloverWidget();
 };
 SIZE(CHotSeatDlg, 0x114);
 
@@ -72,13 +73,14 @@ class CSprite;
 
 class CHeroSessions : public CAutoArray<CDPlaySession> {
 public:
-    enum eSessionStatus {
+// Before normalization (type): CHeroSessions::eSessionStatus.
+    enum SessionStatus {
         closed,
         open,
         password
     };
     bool getSessionInfo(unsigned long index, char* sessName, char* userName,
-                        int& numPlayers, eSessionStatus& status);
+                        int& numPlayers, SessionStatus& status);
 };
 SIZE(CHeroSessions, 0x14);
 
@@ -97,9 +99,11 @@ SIZE(CHeroSessions, 0x14);
 // headers); they are modelled as their widget/textWidget base here because
 // every reconstructed body reaches them only through widget::send_message /
 // textWidget::Text, and narrowing the include set avoids the declarator wall.
-class TMultiPlayerWindow : public CHeroWindowEx {
+// Before normalization (type): TMultiPlayerWindow.
+class MultiPlayerWindow : public CHeroWindowEx {
 public:
-    enum EWidgetId {
+// Before normalization (type): MultiPlayerWindow::EWidgetId.
+    enum WidgetId {
         ONLINE_ID = 101,
         HOT_SEAT_ID = 102,
         IPX_ID = 103,
@@ -126,13 +130,13 @@ public:
     unsigned long m_sessTimer;  // +0x64
     unsigned long m_sessionRefreshTimeout;  // +0x68
     char m_localIpAddress[80];  // +0x6c
-    textWidget* m_playerName;  // +0xbc (DC textEntryWidget*)
+    TextWidget* m_playerName;  // +0xbc (DC textEntryWidget*)
     unsigned char m_hostJoinScreen;  // +0xc0
-    widget* m_splash;  // +0xc4 (DC bitmapBorder*)
+    Widget* m_splash;  // +0xc4 (DC bitmapBorder*)
 
-    TMultiPlayerWindow();
-    virtual ~TMultiPlayerWindow();
-    unsigned char initRemote(eNetGameType netGameType, const char* extra,
+    MultiPlayerWindow();
+    virtual ~MultiPlayerWindow();
+    unsigned char initRemote(NetGameType netGameType, const char* extra,
                              _DPCOMPORTADDRESS* comportInfo);
     unsigned char joinSession(CDPlaySession* session, const char* password);
     unsigned char hostSession(const char* sessName, const char* password);
@@ -151,36 +155,36 @@ public:
     void update();
     void goSessionList();
     void goMainMenu();
-    virtual int windowHandler(message& msg);
+    virtual int windowHandler(Message& msg);
     virtual int onWidgetDeselect(int id, bool& exitFlag);
     // E:\gamedcs\MultiPlayerWindow.h:91, dc 0x101da0
     VA(0x0050ed50, 0x7)  // dc 0x101da0
-    virtual textWidget* getRolloverWidget()
+    virtual TextWidget* getRolloverWidget()
     {
         return m_rolloverWidget;
     }
 
 private:
-    widget* m_hotSeat;  // +0xc8 (DC button*)
-    widget* m_ipx;  // +0xcc
-    widget* m_tcp;  // +0xd0
-    widget* m_modem;  // +0xd4
-    widget* m_direct;  // +0xd8
-    widget* m_online;  // +0xdc
-    widget* m_host;  // +0xe0
-    widget* m_join;  // +0xe4
-    widget* m_search;  // +0xe8
-    widget* m_cancel;  // +0xec
-    widget* m_gameSlider;  // +0xf0 (DC slider*)
-    textWidget* m_sessNameHeader;  // +0xf4
-    textWidget* m_userNameHeader;  // +0xf8
-    textWidget* m_rolloverWidget;  // +0xfc
+    Widget* m_hotSeat;  // +0xc8 (DC button*)
+    Widget* m_ipx;  // +0xcc
+    Widget* m_tcp;  // +0xd0
+    Widget* m_modem;  // +0xd4
+    Widget* m_direct;  // +0xd8
+    Widget* m_online;  // +0xdc
+    Widget* m_host;  // +0xe0
+    Widget* m_join;  // +0xe4
+    Widget* m_search;  // +0xe8
+    Widget* m_cancel;  // +0xec
+    Widget* m_gameSlider;  // +0xf0 (DC slider*)
+    TextWidget* m_sessNameHeader;  // +0xf4
+    TextWidget* m_userNameHeader;  // +0xf8
+    TextWidget* m_rolloverWidget;  // +0xfc
 };
-SIZE(TMultiPlayerWindow, 0x100);
+SIZE(MultiPlayerWindow, 0x100);
 
 // The singleton the ctor latches to `this` (0x50e050+0x66) and the dtor
 // nulls (0x50ee40+0x51). No DC public names it - provisional house name.
-DATA(0x0069ca28) extern TMultiPlayerWindow* g_multiPlayerWindow;
+DATA(0x0069ca28) extern MultiPlayerWindow* g_multiPlayerWindow;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:94, dc 0xffaac) void AddHelp(THelpText* pHelpText, const char* rollover, const char* RightClick);

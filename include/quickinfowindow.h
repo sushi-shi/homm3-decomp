@@ -8,26 +8,29 @@
 // The retail caller allocates exactly 0x54 bytes and the destructor merely
 // installs vtable 0x6406cc before tail-calling TDialogBox::~TDialogBox. Thus
 // this class adds no storage to the byte-proven 0x54-byte base.
-class TQuickCreatureWindow : public TDialogBox {
+// Before normalization (type): TQuickCreatureWindow.
+class QuickCreatureWindow : public DialogBoxWindow {
 public:
-    enum TViewLevel {
+// Before normalization (type): TQuickCreatureWindow::TViewLevel.
+    enum ViewLevel {
         ViewNone = 0,
         ViewAll = 1
     };
 
-    enum TDisposition {
+// Before normalization (type): TQuickCreatureWindow::TDisposition.
+    enum Disposition {
         Flee = 0,
         Attack = 1,
         Join = 2,
         JoinPrice = 3
     };
 
-    TQuickCreatureWindow(TViewLevel viewLevel, TCreatureType id, int count,
-                         TDisposition disposition, int cost);
-    virtual ~TQuickCreatureWindow();
+    QuickCreatureWindow(ViewLevel viewLevel, CreatureType id, int count,
+                         Disposition disposition, int cost);
+    virtual ~QuickCreatureWindow();
     void quickWindowWait();
 };
-SIZE(TQuickCreatureWindow, 0x54);
+SIZE(QuickCreatureWindow, 0x54);
 
 // --- TQuickCreatureWindow ---
 // CODEVIEW(E:\gamedcs\quickinfowindow.cpp:88, dc 0x117b8c) void TQuickCreatureWindow::QuickWindowWait();

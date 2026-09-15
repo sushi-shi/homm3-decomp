@@ -24,90 +24,90 @@
 // the image reads the two dwords below it, so the table could in principle
 // begin earlier, and the eleven-row extent is a floor rather than a
 // measured end.
-DATA(0x006a6968) extern THelpText g_combatSubWindowHelp[11];
+DATA(0x006a6968) extern HelpText g_combatSubWindowHelp[11];
 
 #if 0  // @carcass
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:44
 DC_ONLY(0x64a84, 0x468)
-void type_combat_sub_window::type_combat_sub_window(heroWindow* parent, const char* background_sprite_name)
+void CombatSubWindow::CombatSubWindow(HeroWindow* parent, const char* background_sprite_name)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:122
 DC_ONLY(0x64eec, 0x74)
-void type_combat_sub_window::~type_combat_sub_window()
+void CombatSubWindow::~CombatSubWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:148
 DC_ONLY(0x64f68, 0x64)
-void type_combat_sub_window::disableAllButtons()
+void CombatSubWindow::disableAllButtons()
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:177
 DC_ONLY(0x64fcc, 0x278)
-void TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
+void CombatControlSubWindow::CombatControlSubWindow(HeroWindow* parent)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:222
 DC_ONLY(0x65244, 0x2C)
-void TCombatControlSubWindow::~TCombatControlSubWindow()
+void CombatControlSubWindow::~CombatControlSubWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:249
 DC_ONLY(0x65274, 0x24)
-void TCombatControlSubWindow::setRollover(const char* new_text)
+void CombatControlSubWindow::setRollover(const char* new_text)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:282
 DC_ONLY(0x652a8, 0x1A4)
-void TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
+void CombatPlacementSubWindow::CombatPlacementSubWindow(HeroWindow* parent)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:317
 DC_ONLY(0x6544c, 0x2C)
-void TCombatPlacementSubWindow::~TCombatPlacementSubWindow()
+void CombatPlacementSubWindow::~CombatPlacementSubWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:327
 DC_ONLY(0x65478, 0x28)
-void TCombatPlacementSubWindow::disableAllButtons()
+void CombatPlacementSubWindow::disableAllButtons()
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:343
 DC_ONLY(0x654a0, 0x638)
-void TCombatHeroSubWindow::TCombatHeroSubWindow(int x, int y, int w, int h, heroWindow* parent)
+void CombatHeroSubWindow::CombatHeroSubWindow(int x, int y, int w, int h, HeroWindow* parent)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:407
 DC_ONLY(0x65ad8, 0x68)
-void TCombatHeroSubWindow::~TCombatHeroSubWindow()
+void CombatHeroSubWindow::~CombatHeroSubWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:428
 DC_ONLY(0x65b40, 0x144)
-void TCombatHeroSubWindow::update(const hero* info, const hero* otherHero, unsigned char on_cursed_ground)
+void CombatHeroSubWindow::update(const Hero* info, const Hero* otherHero, unsigned char on_cursed_ground)
 {
     // @stub
 }
@@ -134,14 +134,14 @@ void TCombatHeroSubWindow::update(const hero* info, const hero* otherHero, unsig
 // sub-window, and only when both sides are AI.
 
 VA(0x0046b610, 0x570)  // dc 0x64a84
-type_combat_sub_window::type_combat_sub_window(
-    heroWindow* parent, const char* backgroundSpriteName)
-    : TSubWindow(0, 556, 800, 44, parent)
+CombatSubWindow::CombatSubWindow(
+    HeroWindow* parent, const char* backgroundSpriteName)
+    : SubWindow(0, 556, 800, 44, parent)
 {
     m_rolloverWidget = 0;
     m_widgets.reserve(10);
 
-    bitmapBorder* background = new bitmapBorder(0, 0, 800, 44, 0x7d0,
+    BitmapBorder* background = new BitmapBorder(0, 0, 800, 44, 0x7d0,
         backgroundSpriteName, 0x800);
     int gamePos = g_combatManager->m_playerIds[g_combatManager->m_currentSide];
     if (gamePos < 0)
@@ -150,67 +150,67 @@ type_combat_sub_window::type_combat_sub_window(
     m_widgets.push_back(background);
 
     // The hotkeys are scancodes: S, R, O, A, C, W, then D and SPACE.
-    button* b = new button(54, 5, 48, 36, 0x7d1, "icm001.def",
+    Button* b = new Button(54, 5, 48, 36, 0x7d1, "icm001.def",
         0, 1, 0, 0, 2);
     b->setHelpText(g_combatSubWindowHelp[0].m_text,
         g_combatSubWindowHelp[0].m_rclick, 1);
     b->setHotkey(0x1f);
     m_widgets.push_back(b);
 
-    b = new button(105, 5, 48, 36, 0x7d2, "icm002.def", 0, 1, 0, 0, 2);
+    b = new Button(105, 5, 48, 36, 0x7d2, "icm002.def", 0, 1, 0, 0, 2);
     b->setHelpText(g_combatSubWindowHelp[1].m_text,
         g_combatSubWindowHelp[1].m_rclick, 1);
     b->setHotkey(0x13);
     m_widgets.push_back(b);
 
-    b = new button(3, 5, 48, 36, 0x7d3, "icm003.def", 0, 1, 0, 0, 2);
+    b = new Button(3, 5, 48, 36, 0x7d3, "icm003.def", 0, 1, 0, 0, 2);
     b->setHelpText(g_combatSubWindowHelp[2].m_text,
         g_combatSubWindowHelp[2].m_rclick, 1);
     b->setHotkey(0x18);
     m_widgets.push_back(b);
 
-    b = new button(156, 5, 48, 36, 0x7d4, "icm004.def", 0, 1, 0, 0, 2);
+    b = new Button(156, 5, 48, 36, 0x7d4, "icm004.def", 0, 1, 0, 0, 2);
     b->setHelpText(g_combatSubWindowHelp[3].m_text,
         g_combatSubWindowHelp[3].m_rclick, 1);
     b->setHotkey(0x1e);
     m_widgets.push_back(b);
 
-    b = new button(645, 5, 48, 36, 0x7d8, "icm005.def", 0, 1, 0, 0, 2);
+    b = new Button(645, 5, 48, 36, 0x7d8, "icm005.def", 0, 1, 0, 0, 2);
     b->setHelpText(g_combatSubWindowHelp[6].m_text,
         g_combatSubWindowHelp[6].m_rclick, 1);
     b->setHotkey(0x2e);
     m_widgets.push_back(b);
 
-    b = new button(696, 5, 48, 36, 0x7d9, "icm006.def", 0, 1, 0, 0, 2);
+    b = new Button(696, 5, 48, 36, 0x7d9, "icm006.def", 0, 1, 0, 0, 2);
     b->setHelpText(g_combatSubWindowHelp[7].m_text,
         g_combatSubWindowHelp[7].m_rclick, 1);
     b->setHotkey(0x11);
     m_widgets.push_back(b);
 
-    b = new button(747, 5, 48, 36, 0x7da, "icm007.def", 0, 1, 0, 0, 2);
+    b = new Button(747, 5, 48, 36, 0x7da, "icm007.def", 0, 1, 0, 0, 2);
     b->setHelpText(g_combatSubWindowHelp[8].m_text,
         g_combatSubWindowHelp[8].m_rclick, 1);
     b->setHotkey(0x20);
     b->setHotkey(0x39);
     m_widgets.push_back(b);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (Widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
     }
 
     if (g_combatManager->m_sideIsAi[0] && g_combatManager->m_sideIsAi[1])
-        parent->widgetSetStatus(0x7d4, widget::WIDGET_DIMMED_NODRAW);
+        parent->widgetSetStatus(0x7d4, Widget::WIDGET_DIMMED_NODRAW);
 }
 
-VA_COMPGEN(0x0046bb80, 0x21, SCALAR_DELETING_DTOR, type_combat_sub_window)
+VA_COMPGEN(0x0046bb80, 0x21, SCALAR_DELETING_DTOR, CombatSubWindow)
 
 VA(0x0046bbb0, 0x78)  // dc 0x64eec
-type_combat_sub_window::~type_combat_sub_window()
+CombatSubWindow::~CombatSubWindow()
 {
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
+    for (std::vector<Widget*>::iterator it = m_widgets.begin();
          it != m_widgets.end(); ++it) {
-        widget* item = *it;
+        Widget* item = *it;
         if (item) {
             m_parentWindow->removeWidget(item);
             delete item;
@@ -253,91 +253,91 @@ type_combat_sub_window::~type_combat_sub_window()
 // (ret 8). Keep the bodies and original long arguments (JJ), despite
 // the generated carcass prototypes having lost both parameters.
 DC_ONLY(0x64f60, 0x4)
-void type_combat_sub_window::setRollover(const char*)
+void CombatSubWindow::setRollover(const char*)
 {
 }
 
 DC_ONLY(0x64f64, 0x4)
-void type_combat_sub_window::setRolloverButtons(long, long)
+void CombatSubWindow::setRolloverButtons(long, long)
 {
 }
 
 VA(0x0046bc30, 0x26D)  // dc 0x64fcc
-TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
-    : type_combat_sub_window(parent, "cbar.pcx")
+CombatControlSubWindow::CombatControlSubWindow(HeroWindow* parent)
+    : CombatSubWindow(parent, "cbar.pcx")
 {
-    std::vector<widget*> newWidgets;
+    std::vector<Widget*> newWidgets;
 
-    m_rolloverWidget = new bitmapBackedTextWidget(214, 7, 400, 32, "",
-        "smalfont.fnt", "cRollovr.pcx", font::PRIMARY, 0x7d5, 1, 8);
+    m_rolloverWidget = new BitmapBackedTextWidget(214, 7, 400, 32, "",
+        "smalfont.fnt", "cRollovr.pcx", Font::PRIMARY, 0x7d5, 1, 8);
     m_rolloverWidget->setHelpText(g_combatSubWindowHelp[4].m_text,
         g_combatSubWindowHelp[4].m_rclick, 1);
     newWidgets.push_back(m_rolloverWidget);
 
-    m_logScrollUpButton = new type_func_button(624, 5, 18, 17, 0x7d6,
-        "ComSlide.def", TCombatWindow::scrollUp, 0, 1);
+    m_logScrollUpButton = new FuncButton(624, 5, 18, 17, 0x7d6,
+        "ComSlide.def", CombatWindow::scrollUp, 0, 1);
     m_logScrollUpButton->setHelpText(g_combatSubWindowHelp[5].m_text,
         g_combatSubWindowHelp[5].m_rclick, 1);
     m_logScrollUpButton->setDisabledFrame(1);
     m_logScrollUpButton->setHotkey(KEYCODE_KP_8);
     newWidgets.push_back(m_logScrollUpButton);
 
-    m_logScrollDownButton = new type_func_button(624, 24, 18, 17, 0x7d7,
-        "ComSlide.def", TCombatWindow::scrollDown, 2, 3);
+    m_logScrollDownButton = new FuncButton(624, 24, 18, 17, 0x7d7,
+        "ComSlide.def", CombatWindow::scrollDown, 2, 3);
     m_logScrollDownButton->setHelpText(g_combatSubWindowHelp[5].m_text,
         g_combatSubWindowHelp[5].m_rclick, 1);
     m_logScrollDownButton->setHotkey(KEYCODE_KP_2);
     m_logScrollDownButton->setDisabledFrame(3);
     newWidgets.push_back(m_logScrollDownButton);
 
-    for (widget** it = newWidgets.begin(); it != newWidgets.end(); ++it) {
+    for (Widget** it = newWidgets.begin(); it != newWidgets.end(); ++it) {
         m_widgets.push_back(*it);
         if (*it)
             addWidget(*it, -1);
     }
 
-    m_logScrollUpButton->sendMessage(widget::WIDGET_SET_STATUS,
-        widget::WIDGET_DIMMED);
-    m_logScrollDownButton->sendMessage(widget::WIDGET_SET_STATUS,
-        widget::WIDGET_DIMMED);
+    m_logScrollUpButton->sendMessage(Widget::WIDGET_SET_STATUS,
+        Widget::WIDGET_DIMMED);
+    m_logScrollDownButton->sendMessage(Widget::WIDGET_SET_STATUS,
+        Widget::WIDGET_DIMMED);
 }
 
 // UNBLOCKED by the constructor above: its 0x63d420 store is the only
 // image-wide reference to this class's table.
-VA_COMPGEN(0x0046bea0, 0x21, SCALAR_DELETING_DTOR, TCombatControlSubWindow)
+VA_COMPGEN(0x0046bea0, 0x21, SCALAR_DELETING_DTOR, CombatControlSubWindow)
 
 VA(0x0046bed0, 0x78)  // dc 0x65244
-TCombatControlSubWindow::~TCombatControlSubWindow()
+CombatControlSubWindow::~CombatControlSubWindow()
 {
 }
 
 // DC227..246 retains an empty derived override with the same JJ ABI.
 // Retail control-table slot 2 shares the base method's ret-8 fold.
 DC_ONLY(0x65270, 0x4)
-void TCombatControlSubWindow::setRolloverButtons(long, long)
+void CombatControlSubWindow::setRolloverButtons(long, long)
 {
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:249
 VA(0x0046bf50, 0x32)  // vtable 0x63d420 slot 1 + rollover widget at +0x34, dc 0x65274
-void TCombatControlSubWindow::setRollover(const char* newText)
+void CombatControlSubWindow::setRollover(const char* newText)
 {
     m_rolloverWidget->setText(newText);
-    m_rolloverWidget->sendMessage(widget::WIDGET_DRAW, 0);
-    m_rolloverWidget->sendMessage(widget::WIDGET_SET_STATUS,
-                                 widget::WIDGET_UPDATE);
+    m_rolloverWidget->sendMessage(Widget::WIDGET_DRAW, 0);
+    m_rolloverWidget->sendMessage(Widget::WIDGET_SET_STATUS,
+                                 Widget::WIDGET_UPDATE);
 }
 
 VA(0x0046bf90, 0xB2)  // dc 0x64f68
-void type_combat_sub_window::disableAllButtons()
+void CombatSubWindow::disableAllButtons()
 {
-    m_parentWindow->widgetSetStatus(0x7d1, widget::WIDGET_DIMMED_NODRAW);
-    m_parentWindow->widgetSetStatus(0x7d2, widget::WIDGET_DIMMED_NODRAW);
-    m_parentWindow->widgetSetStatus(0x7d3, widget::WIDGET_DIMMED_NODRAW);
-    m_parentWindow->widgetSetStatus(0x7d4, widget::WIDGET_DIMMED_NODRAW);
-    m_parentWindow->widgetSetStatus(0x7d8, widget::WIDGET_DIMMED_NODRAW);
-    m_parentWindow->widgetSetStatus(0x7d9, widget::WIDGET_DIMMED_NODRAW);
-    m_parentWindow->widgetSetStatus(0x7da, widget::WIDGET_DIMMED_NODRAW);
+    m_parentWindow->widgetSetStatus(0x7d1, Widget::WIDGET_DIMMED_NODRAW);
+    m_parentWindow->widgetSetStatus(0x7d2, Widget::WIDGET_DIMMED_NODRAW);
+    m_parentWindow->widgetSetStatus(0x7d3, Widget::WIDGET_DIMMED_NODRAW);
+    m_parentWindow->widgetSetStatus(0x7d4, Widget::WIDGET_DIMMED_NODRAW);
+    m_parentWindow->widgetSetStatus(0x7d8, Widget::WIDGET_DIMMED_NODRAW);
+    m_parentWindow->widgetSetStatus(0x7d9, Widget::WIDGET_DIMMED_NODRAW);
+    m_parentWindow->widgetSetStatus(0x7da, Widget::WIDGET_DIMMED_NODRAW);
     m_parentWindow->drawWindow(0, WINDOW_ALL_WIDGETS_LOW,
                              WINDOW_ALL_WIDGETS_HIGH);
     g_windowManager->updateScreen(m_x, m_y, m_width, m_height);
@@ -348,9 +348,9 @@ void type_combat_sub_window::disableAllButtons()
 // Retain the override and canonical source call instead of only inheriting
 // the base slot. The base body is visible here, as in the original TU.
 DC_ONLY(0x65298, 0x10)
-void TCombatControlSubWindow::disableAllButtons()
+void CombatControlSubWindow::disableAllButtons()
 {
-    type_combat_sub_window::disableAllButtons();
+    CombatSubWindow::disableAllButtons();
 }
 
 // The battlefield-placement bar: two buttons over the family base, and
@@ -362,28 +362,28 @@ void TCombatControlSubWindow::disableAllButtons()
 // nothing from the base's 1392 bytes and lands without them.
 
 VA(0x0046c050, 0x18C)  // dc 0x65310
-TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
-    : type_combat_sub_window(parent, "CoPlacbr.pcx")
+CombatPlacementSubWindow::CombatPlacementSubWindow(HeroWindow* parent)
+    : CombatSubWindow(parent, "CoPlacbr.pcx")
 {
-    std::vector<widget*> buttons;
+    std::vector<Widget*> buttons;
 
     // 0x8fc has no attested name; 0x7802 is winmgr.h's DIALOG_RETURN_OK
     // value, but nothing here proves this id is that domain, so both stay
     // literal. The hotkeys are the SPACE and ENTER scancodes.
-    widget* b = new button(213, 4, 198, 36, 0x8fc, "ICM011.def",
+    Widget* b = new Button(213, 4, 198, 36, 0x8fc, "ICM011.def",
         0, 1, 0, 0x39, 2);
     b->setHelpText(g_combatSubWindowHelp[9].m_text,
         g_combatSubWindowHelp[9].m_rclick, 1);
     buttons.push_back(b);
 
-    b = new button(419, 4, 198, 36, 0x7802, "ICM012.def",
+    b = new Button(419, 4, 198, 36, 0x7802, "ICM012.def",
         0, 1, 0, 0x1c, 2);
     b->setHelpText(g_combatSubWindowHelp[10].m_text,
         g_combatSubWindowHelp[10].m_rclick, 1);
     buttons.push_back(b);
 
-    for (widget** it = buttons.begin(); it != buttons.end(); ++it) {
-        widget* w = *it;
+    for (Widget** it = buttons.begin(); it != buttons.end(); ++it) {
+        Widget* w = *it;
         if (w) {
             m_widgets.push_back(w);
             addWidget(w, -1);
@@ -391,98 +391,98 @@ TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
     }
 }
 
-VA_COMPGEN(0x0046c1e0, 0x21, SCALAR_DELETING_DTOR, TCombatPlacementSubWindow)
+VA_COMPGEN(0x0046c1e0, 0x21, SCALAR_DELETING_DTOR, CombatPlacementSubWindow)
 
 VA(0x0046c210, 0x78)  // dc 0x6544c
-TCombatPlacementSubWindow::~TCombatPlacementSubWindow()
+CombatPlacementSubWindow::~CombatPlacementSubWindow()
 {
 }
 
 VA(0x0046c290, 0xD6)  // dc 0x65478
-void TCombatPlacementSubWindow::disableAllButtons()
+void CombatPlacementSubWindow::disableAllButtons()
 {
-    m_parentWindow->widgetSetStatus(0x8fc, widget::WIDGET_DIMMED_NODRAW);
-    m_parentWindow->widgetSetStatus(0x7802, widget::WIDGET_DIMMED_NODRAW);
-    type_combat_sub_window::disableAllButtons();
+    m_parentWindow->widgetSetStatus(0x8fc, Widget::WIDGET_DIMMED_NODRAW);
+    m_parentWindow->widgetSetStatus(0x7802, Widget::WIDGET_DIMMED_NODRAW);
+    CombatSubWindow::disableAllButtons();
 }
 
 VA(0x0046c370, 0x7FC)  // dc 0x654a0
-TCombatHeroSubWindow::TCombatHeroSubWindow(
-    int x, int y, int w, int h, heroWindow* parent)
-    : TSubWindow(x, y, w, h, parent)
+CombatHeroSubWindow::CombatHeroSubWindow(
+    int x, int y, int w, int h, HeroWindow* parent)
+    : SubWindow(x, y, w, h, parent)
 {
     m_widgets.reserve(12);
 
-    m_backgroundWidget = new bitmapBorder(
+    m_backgroundWidget = new BitmapBorder(
         0, 0, 78, 202, 0x834, "CHrPop.pcx", 0x800);
     m_widgets.push_back(m_backgroundWidget);
-    m_portrait = new bitmapBorder(10, 6, 58, 64, 0x835, 0, 0x800);
+    m_portrait = new BitmapBorder(10, 6, 58, 64, 0x835, 0, 0x800);
     m_widgets.push_back(m_portrait);
 
     sprintf(g_text, "%s:", (*g_generalText)[381]);
-    m_widgets.push_back(new textWidget(
-        9, 75, 60, 12, g_text, "tiny.fnt", font::WHITE,
+    m_widgets.push_back(new TextWidget(
+        9, 75, 60, 12, g_text, "tiny.fnt", Font::WHITE,
         0x836, 0, 0, 8));
-    m_attackText = new textWidget(
-        9, 75, 60, 12, 0, "tiny.fnt", font::WHITE,
+    m_attackText = new TextWidget(
+        9, 75, 60, 12, 0, "tiny.fnt", Font::WHITE,
         0x837, 2, 0, 8);
     m_widgets.push_back(m_attackText);
 
     sprintf(g_text, "%s:", (*g_generalText)[382]);
-    m_widgets.push_back(new textWidget(
-        9, 87, 60, 12, g_text, "tiny.fnt", font::WHITE,
+    m_widgets.push_back(new TextWidget(
+        9, 87, 60, 12, g_text, "tiny.fnt", Font::WHITE,
         0x838, 0, 0, 8));
-    m_defenseText = new textWidget(
-        9, 87, 60, 12, 0, "tiny.fnt", font::WHITE,
+    m_defenseText = new TextWidget(
+        9, 87, 60, 12, 0, "tiny.fnt", Font::WHITE,
         0x839, 2, 0, 8);
     m_widgets.push_back(m_defenseText);
 
     sprintf(g_text, "%s:", (*g_generalText)[383]);
-    m_widgets.push_back(new textWidget(
-        9, 99, 60, 12, g_text, "tiny.fnt", font::WHITE,
+    m_widgets.push_back(new TextWidget(
+        9, 99, 60, 12, g_text, "tiny.fnt", Font::WHITE,
         0x83a, 0, 0, 8));
-    m_powerText = new textWidget(
-        9, 99, 60, 12, 0, "tiny.fnt", font::WHITE,
+    m_powerText = new TextWidget(
+        9, 99, 60, 12, 0, "tiny.fnt", Font::WHITE,
         0x83b, 2, 0, 8);
     m_widgets.push_back(m_powerText);
 
     sprintf(g_text, "%s:", (*g_generalText)[384]);
-    m_widgets.push_back(new textWidget(
-        9, 111, 60, 12, g_text, "tiny.fnt", font::WHITE,
+    m_widgets.push_back(new TextWidget(
+        9, 111, 60, 12, g_text, "tiny.fnt", Font::WHITE,
         0x83c, 0, 0, 8));
-    m_knowledgeText = new textWidget(
-        9, 111, 60, 12, 0, "tiny.fnt", font::WHITE,
+    m_knowledgeText = new TextWidget(
+        9, 111, 60, 12, 0, "tiny.fnt", Font::WHITE,
         0x83d, 2, 0, 8);
     m_widgets.push_back(m_knowledgeText);
 
     sprintf(g_text, "%s:", (*g_generalText)[385]);
-    m_widgets.push_back(new textWidget(
-        9, 131, 60, 12, g_text, "tiny.fnt", font::PRIMARY,
+    m_widgets.push_back(new TextWidget(
+        9, 131, 60, 12, g_text, "tiny.fnt", Font::PRIMARY,
         0x83e, 0, 0, 8));
-    m_moraleIcon = new iconWidget(
+    m_moraleIcon = new IconWidget(
         47, 131, 22, 12, 0x83f, "imrls.def", 0, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN);
+        IconWidget::ICON_STYLE_PLAIN);
     m_widgets.push_back(m_moraleIcon);
 
     sprintf(g_text, "%s:", (*g_generalText)[386]);
-    m_widgets.push_back(new textWidget(
-        9, 143, 60, 12, g_text, "tiny.fnt", font::PRIMARY,
+    m_widgets.push_back(new TextWidget(
+        9, 143, 60, 12, g_text, "tiny.fnt", Font::PRIMARY,
         0x840, 0, 0, 8));
-    m_luckIcon = new iconWidget(
+    m_luckIcon = new IconWidget(
         47, 143, 22, 12, 0x841, "ilcks.def", 0, 0, 0, 0,
-        iconWidget::ICON_STYLE_PLAIN);
+        IconWidget::ICON_STYLE_PLAIN);
     m_widgets.push_back(m_luckIcon);
 
-    m_manaText = new textWidget(
-        7, 165, 64, 30, 0, "tiny.fnt", font::WHITE,
+    m_manaText = new TextWidget(
+        7, 165, 64, 30, 0, "tiny.fnt", Font::WHITE,
         0x842, 5, 0, 8);
     m_widgets.push_back(m_manaText);
 
-    for (std::vector<widget*>::iterator current = m_widgets.begin();
+    for (std::vector<Widget*>::iterator current = m_widgets.begin();
          current != m_widgets.end(); ++current) {
-        widget* w = *current;
+        Widget* w = *current;
         if (w)
-            w->m_status &= ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            w->m_status &= ~(Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         addWidget(w, -1);
     }
 
@@ -498,12 +498,12 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
 // survives. The surviving reference is what lets the wrapper be claimed
 // with it, exactly as for the family base.
 
-VA_COMPGEN(0x0046cb70, 0x21, SCALAR_DELETING_DTOR, TCombatHeroSubWindow)
+VA_COMPGEN(0x0046cb70, 0x21, SCALAR_DELETING_DTOR, CombatHeroSubWindow)
 
 VA(0x0046cba0, 0x6B)  // dc 0x65ad8
-TCombatHeroSubWindow::~TCombatHeroSubWindow()
+CombatHeroSubWindow::~CombatHeroSubWindow()
 {
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
+    for (std::vector<Widget*>::iterator it = m_widgets.begin();
          it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
@@ -511,11 +511,11 @@ TCombatHeroSubWindow::~TCombatHeroSubWindow()
 }
 
 VA(0x0046cc10, 0x1D7)  // dc 0x65b40
-void TCombatHeroSubWindow::update(const hero& info, const hero* otherHero,
+void CombatHeroSubWindow::update(const Hero& info, const Hero* otherHero,
                                   bool onCursedGround)
 {
     char buffer[64];
-    hero& mutableInfo = const_cast<hero&>(info);
+    Hero& mutableInfo = const_cast<Hero&>(info);
 
     m_backgroundWidget->setPlayerPaletteColors(info.m_owner);
     m_portrait->setImage(g_heroTraits[info.m_portrait].m_largePortraitName);
@@ -540,15 +540,15 @@ void TCombatHeroSubWindow::update(const hero& info, const hero* otherHero,
 }
 
 VA(0x0046cdf0, 0x74)  // dc 0x65c84
-void TCombatHeroSubWindow::show()
+void CombatHeroSubWindow::show()
 {
     if (!m_shown) {
         saveBackground();
-        for (std::vector<widget*>::iterator current = m_widgets.begin();
+        for (std::vector<Widget*>::iterator current = m_widgets.begin();
              current != m_widgets.end(); ++current) {
             if (*current)
-                (*current)->m_status |= widget::WIDGET_ACTIVE |
-                                      widget::WIDGET_DRAWN;
+                (*current)->m_status |= Widget::WIDGET_ACTIVE |
+                                      Widget::WIDGET_DRAWN;
         }
         draw(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         g_windowManager->updateScreen(
@@ -558,14 +558,14 @@ void TCombatHeroSubWindow::show()
 }
 
 VA(0x0046ce70, 0x3A)  // dc 0x65cf8
-void TCombatHeroSubWindow::unShow()
+void CombatHeroSubWindow::unShow()
 {
     if (m_shown) {
-        for (std::vector<widget*>::iterator current = m_widgets.begin();
+        for (std::vector<Widget*>::iterator current = m_widgets.begin();
              current != m_widgets.end(); ++current) {
             if (*current)
-                (*current)->m_status &= ~(widget::WIDGET_ACTIVE |
-                                        widget::WIDGET_DRAWN);
+                (*current)->m_status &= ~(Widget::WIDGET_ACTIVE |
+                                        Widget::WIDGET_DRAWN);
         }
         restoreBackground();
         m_shown = false;
@@ -614,132 +614,132 @@ void TCombatHeroSubWindow::unShow()
 // push_back loses the exact reserve/full-arm lowering (97.27%); keep the
 // canonical vector interface and both proven loop bodies.
 VA(0x0046ceb0, 0xCD1)  // roster order + vtable 0x63d444 + CCrPop/SpellInf, dc 0x65dbc
-TCombatCreatureSubWindow::TCombatCreatureSubWindow(
-    int x, int y, int w, int h, heroWindow* parent, int viewLevel)
-    : TSubWindow(x, y, w, h, parent), m_viewLevel(viewLevel)
+CombatCreatureSubWindow::CombatCreatureSubWindow(
+    int x, int y, int w, int h, HeroWindow* parent, int viewLevel)
+    : SubWindow(x, y, w, h, parent), m_viewLevel(viewLevel)
 {
     m_widgets.reserve(11);
 
     if (viewLevel == 1) {
-        m_backgroundWidget = new bitmapBorder(
+        m_backgroundWidget = new BitmapBorder(
             0, 0, 78, 288, 0x898, "CCrPop.pcx", 0x800);
         m_widgets.push_back(m_backgroundWidget);
-        m_creatureIcon = new iconWidget(
+        m_creatureIcon = new IconWidget(
             10, 6, 58, 64, 0x899, "TwCrPort.def", 0, 0, 0, 0,
-            iconWidget::ICON_STYLE_PLAIN);
+            IconWidget::ICON_STYLE_PLAIN);
         m_widgets.push_back(m_creatureIcon);
 
         const char* attackName = (*g_generalText)[381];
         sprintf(g_text, "%s:", attackName);
-        m_widgets.push_back(new textWidget(
-            9, 75, 60, 12, g_text, "tiny.fnt", font::WHITE,
+        m_widgets.push_back(new TextWidget(
+            9, 75, 60, 12, g_text, "tiny.fnt", Font::WHITE,
             0x89a, 0, 0, 8));
-        m_attackText = new textWidget(
-            9, 75, 60, 12, 0, "tiny.fnt", font::WHITE,
+        m_attackText = new TextWidget(
+            9, 75, 60, 12, 0, "tiny.fnt", Font::WHITE,
             0x89b, 2, 0, 8);
         m_widgets.push_back(m_attackText);
 
         const char* defenseName = (*g_generalText)[382];
         sprintf(g_text, "%s:", defenseName);
-        m_widgets.push_back(new textWidget(
-            9, 87, 60, 12, g_text, "tiny.fnt", font::WHITE,
+        m_widgets.push_back(new TextWidget(
+            9, 87, 60, 12, g_text, "tiny.fnt", Font::WHITE,
             0x89c, 0, 0, 8));
-        m_defenseText = new textWidget(
-            9, 87, 60, 12, 0, "tiny.fnt", font::WHITE,
+        m_defenseText = new TextWidget(
+            9, 87, 60, 12, 0, "tiny.fnt", Font::WHITE,
             0x89d, 2, 0, 8);
         m_widgets.push_back(m_defenseText);
 
         const char* damageName = (*g_generalText)[387];
         sprintf(g_text, "%s:", damageName);
-        m_widgets.push_back(new textWidget(
-            9, 99, 60, 12, g_text, "tiny.fnt", font::WHITE,
+        m_widgets.push_back(new TextWidget(
+            9, 99, 60, 12, g_text, "tiny.fnt", Font::WHITE,
             0x89e, 0, 0, 8));
-        m_damageText = new textWidget(
-            9, 99, 60, 12, 0, "tiny.fnt", font::WHITE,
+        m_damageText = new TextWidget(
+            9, 99, 60, 12, 0, "tiny.fnt", Font::WHITE,
             0x89f, 2, 0, 8);
         m_widgets.push_back(m_damageText);
 
         const char* speedName = (*g_generalText)[390];
         sprintf(g_text, "%s:", speedName);
-        m_widgets.push_back(new textWidget(
-            9, 111, 60, 12, g_text, "tiny.fnt", font::WHITE,
+        m_widgets.push_back(new TextWidget(
+            9, 111, 60, 12, g_text, "tiny.fnt", Font::WHITE,
             0x8a0, 0, 0, 8));
-        m_speedText = new textWidget(
-            9, 111, 60, 12, 0, "tiny.fnt", font::WHITE,
+        m_speedText = new TextWidget(
+            9, 111, 60, 12, 0, "tiny.fnt", Font::WHITE,
             0x8a1, 2, 0, 8);
         m_widgets.push_back(m_speedText);
 
         const char* moraleName = (*g_generalText)[385];
         sprintf(g_text, "%s:", moraleName);
-        m_widgets.push_back(new textWidget(
-            9, 131, 60, 12, g_text, "tiny.fnt", font::WHITE,
+        m_widgets.push_back(new TextWidget(
+            9, 131, 60, 12, g_text, "tiny.fnt", Font::WHITE,
             0x8a2, 0, 0, 8));
-        m_moraleIcon = new iconWidget(
+        m_moraleIcon = new IconWidget(
             47, 131, 22, 12, 0x8a3, "imrls.def", 0, 0, 0, 0,
-            iconWidget::ICON_STYLE_PLAIN);
+            IconWidget::ICON_STYLE_PLAIN);
         m_widgets.push_back(m_moraleIcon);
 
         const char* luckName = (*g_generalText)[386];
         sprintf(g_text, "%s:", luckName);
-        m_widgets.push_back(new textWidget(
-            9, 143, 60, 12, g_text, "tiny.fnt", font::WHITE,
+        m_widgets.push_back(new TextWidget(
+            9, 143, 60, 12, g_text, "tiny.fnt", Font::WHITE,
             0x8a4, 0, 0, 8));
-        m_luckIcon = new iconWidget(
+        m_luckIcon = new IconWidget(
             47, 143, 22, 12, 0x8a5, "ilcks.def", 0, 0, 0, 0,
-            iconWidget::ICON_STYLE_PLAIN);
+            IconWidget::ICON_STYLE_PLAIN);
         m_widgets.push_back(m_luckIcon);
 
-        m_countText = new textWidget(
-            10, 8, 58, 64, 0, "Verd10B.fnt", font::WHITE,
+        m_countText = new TextWidget(
+            10, 8, 58, 64, 0, "Verd10B.fnt", Font::WHITE,
             0x8a6, 10, 0, 8);
         m_widgets.push_back(m_countText);
 
         int spellY = 169;
         for (int i = 0; i < 3; ++i) {
-            m_spellIcons[i] = new iconWidget(
+            m_spellIcons[i] = new IconWidget(
                 15, spellY, 48, 36, 0x8a7 + i, "spellint.def",
-                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
             m_widgets.push_back(m_spellIcons[i]);
             spellY += 38;
         }
-        m_spellText = new textWidget(
-            15, 169, 48, 36, g_emptyRolloverText, "tiny.fnt", font::PRIMARY,
+        m_spellText = new TextWidget(
+            15, 169, 48, 36, g_emptyRolloverText, "tiny.fnt", Font::PRIMARY,
             0x8aa, 1, 0, 8);
     } else {
-        m_backgroundWidget = new bitmapBorder(
+        m_backgroundWidget = new BitmapBorder(
             0, 0, 78, 126, 0x898, "SpellInf.pcx", 0x800);
         m_widgets.push_back(m_backgroundWidget);
 
         int spellY = 7;
         for (int i = 0; i < 3; ++i) {
-            m_spellIcons[i] = new iconWidget(
+            m_spellIcons[i] = new IconWidget(
                 15, spellY, 48, 36, 0x8a7 + i, "spellint.def",
-                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                0, 0, 0, 0, IconWidget::ICON_STYLE_PLAIN);
             m_widgets.push_back(m_spellIcons[i]);
             spellY += 38;
         }
-        m_spellText = new textWidget(
-            15, 7, 48, 36, g_emptyRolloverText, "tiny.fnt", font::PRIMARY,
+        m_spellText = new TextWidget(
+            15, 7, 48, 36, g_emptyRolloverText, "tiny.fnt", Font::PRIMARY,
             0x8aa, 1, 0, 8);
     }
 
     m_widgets.push_back(m_spellText);
-    for (std::vector<widget*>::iterator current = m_widgets.begin();
+    for (std::vector<Widget*>::iterator current = m_widgets.begin();
          current != m_widgets.end(); ++current) {
-        widget* w = *current;
+        Widget* w = *current;
         if (w)
-            w->m_status &= ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            w->m_status &= ~(Widget::WIDGET_ACTIVE | Widget::WIDGET_DRAWN);
         addWidget(w, -1);
     }
     m_shown = false;
 }
 
-VA_COMPGEN(0x0046db90, 0x21, SCALAR_DELETING_DTOR, TCombatCreatureSubWindow)
+VA_COMPGEN(0x0046db90, 0x21, SCALAR_DELETING_DTOR, CombatCreatureSubWindow)
 
 VA(0x0046dbc0, 0x6B)  // dc 0x665e0
-TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
+CombatCreatureSubWindow::~CombatCreatureSubWindow()
 {
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
+    for (std::vector<Widget*>::iterator it = m_widgets.begin();
          it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
@@ -749,7 +749,7 @@ TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
 // E:\gamedcs\combatcontrolsubwindow.cpp:688
 
 VA(0x0046dc30, 0x2C2)  // roster order + "%d(%d)" pair + the three spell icons, dc 0x66648
-void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
+void CombatCreatureSubWindow::update(const Army& info, const Hero* owner)
 {
     char buffer[64];
 
@@ -758,7 +758,7 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
 
     if (m_viewLevel == 1) {
         m_creatureIcon->setIconFrame(info.m_creatureType + 2);
-        const TCreatureTypeTraits& normalTraits =
+        const CreatureTypeTraits& normalTraits =
             g_creatureTypeTraits[info.m_creatureType];
 
         unsigned char canShoot = info.canShoot(0);
@@ -811,15 +811,15 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
 }
 
 VA(0x0046df00, 0x73)  // dc 0x668e8
-void TCombatCreatureSubWindow::show()
+void CombatCreatureSubWindow::show()
 {
     if (!m_shown) {
         saveBackground();
-        for (std::vector<widget*>::iterator current = m_widgets.begin();
+        for (std::vector<Widget*>::iterator current = m_widgets.begin();
              current != m_widgets.end(); ++current) {
             if (*current)
-                (*current)->m_status |= widget::WIDGET_ACTIVE |
-                                      widget::WIDGET_DRAWN;
+                (*current)->m_status |= Widget::WIDGET_ACTIVE |
+                                      Widget::WIDGET_DRAWN;
         }
         draw(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         g_windowManager->updateScreen(
@@ -829,14 +829,14 @@ void TCombatCreatureSubWindow::show()
 }
 
 VA(0x0046df80, 0x3A)  // dc 0x66970
-void TCombatCreatureSubWindow::unShow()
+void CombatCreatureSubWindow::unShow()
 {
     if (m_shown) {
-        for (std::vector<widget*>::iterator current = m_widgets.begin();
+        for (std::vector<Widget*>::iterator current = m_widgets.begin();
              current != m_widgets.end(); ++current) {
             if (*current)
-                (*current)->m_status &= ~(widget::WIDGET_ACTIVE |
-                                        widget::WIDGET_DRAWN);
+                (*current)->m_status &= ~(Widget::WIDGET_ACTIVE |
+                                        Widget::WIDGET_DRAWN);
         }
         restoreBackground();
         m_shown = false;
@@ -847,112 +847,112 @@ void TCombatCreatureSubWindow::unShow()
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:562
 DC_ONLY(0x65dbc, 0x824)
-void TCombatCreatureSubWindow::TCombatCreatureSubWindow(int x, int y, int w, int h, heroWindow* parent, int view_level)
+void CombatCreatureSubWindow::CombatCreatureSubWindow(int x, int y, int w, int h, HeroWindow* parent, int view_level)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:666
 DC_ONLY(0x665e0, 0x68)
-void TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
+void CombatCreatureSubWindow::~CombatCreatureSubWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:688
 DC_ONLY(0x66648, 0x2A0)
-void TCombatCreatureSubWindow::update(const army* info, const hero* owner)
+void CombatCreatureSubWindow::update(const Army* info, const Hero* owner)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:773
 DC_ONLY(0x668e8, 0x88)
-void TCombatCreatureSubWindow::show()
+void CombatCreatureSubWindow::show()
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:820
 DC_ONLY(0x66970, 0x84)
-void TCombatCreatureSubWindow::unShow()
+void CombatCreatureSubWindow::unShow()
 {
     // @stub
 }
 
 // E:\gamedcs\button.h:99
 DC_ONLY(0x669f4, 0x6)
-void button::setDisabledFrame(long frame)
+void Button::setDisabledFrame(long frame)
 {
     // @stub
 }
 
 // E:\gamedcs\Hero.h:634
 DC_ONLY(0x669fc, 0x3C)
-int hero::getMaxMana()
+int Hero::getMaxMana()
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:116
 DC_ONLY(0x66a38, 0x34)
-void* type_combat_sub_window::`scalar deleting destructor'(unsigned __flags)
+void* CombatSubWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:214
 DC_ONLY(0x66a6c, 0x34)
-void* TCombatControlSubWindow::`scalar deleting destructor'(unsigned __flags)
+void* CombatControlSubWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:308
 DC_ONLY(0x66aa0, 0x34)
-void* TCombatPlacementSubWindow::`scalar deleting destructor'(unsigned __flags)
+void* CombatPlacementSubWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:396
 DC_ONLY(0x66ad4, 0x34)
-void* TCombatHeroSubWindow::`scalar deleting destructor'(unsigned __flags)
+void* CombatHeroSubWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:655
 DC_ONLY(0x66b08, 0x34)
-void* TCombatCreatureSubWindow::`scalar deleting destructor'(unsigned __flags)
+void* CombatCreatureSubWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:218
 DC_ONLY(0x66b3c, 0x1C)
-void std::vector<widget *,std::allocator<widget *> >::vector<widget *,std::allocator<widget *> >(const std::allocator<widget* __a)
+void std::vector<Widget *,std::allocator<Widget *> >::vector<Widget *,std::allocator<Widget *> >(const std::allocator<Widget* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:288
 DC_ONLY(0x66b58, 0x28)
-void std::vector<widget *,std::allocator<widget *> >::~vector<widget *,std::allocator<widget *> >()
+void std::vector<Widget *,std::allocator<Widget *> >::~vector<Widget *,std::allocator<Widget *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:527
 DC_ONLY(0x66b80, 0x4)
-void std::allocator<widget *>::allocator<widget *>()
+void std::allocator<Widget *>::allocator<Widget *>()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:537
 DC_ONLY(0x66b84, 0x4)
-void std::allocator<widget *>::~allocator<widget *>()
+void std::allocator<Widget *>::~allocator<Widget *>()
 {
     // @stub
 }
@@ -966,14 +966,14 @@ const SpellID* std::deque<enum SpellID,std::allocator<enum SpellID>,0>::operator
 
 // ..\stlport\stl_vector.h:89
 DC_ONLY(0x66ba0, 0x2C)
-void std::_Vector_base<widget *,std::allocator<widget *> >::_Vector_base<widget *,std::allocator<widget *> >(const std::allocator<widget* __a)
+void std::_Vector_base<Widget *,std::allocator<Widget *> >::_Vector_base<Widget *,std::allocator<Widget *> >(const std::allocator<Widget* __a)
 {
     // @stub
 }
 
 // ..\stlport\stl_vector.h:101
 DC_ONLY(0x66bcc, 0x30)
-void std::_Vector_base<widget *,std::allocator<widget *> >::~_Vector_base<widget *,std::allocator<widget *> >()
+void std::_Vector_base<Widget *,std::allocator<Widget *> >::~_Vector_base<Widget *,std::allocator<Widget *> >()
 {
     // @stub
 }
@@ -987,20 +987,20 @@ SpellID* std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,s
 
 // ..\stlport\stl_string.h:469
 DC_ONLY(0x66c24, 0x18)
-void std::_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >::~_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >()
+void std::_STL_alloc_proxy<Widget * *,Widget *,std::allocator<Widget *> >::~_STL_alloc_proxy<Widget * *,Widget *,std::allocator<Widget *> >()
 {
     // @stub
 }
 
 // ..\stlport\stl_alloc.h:1004
 DC_ONLY(0x66c3c, 0xC)
-void std::_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >::_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >(const std::allocator<widget* __a, widget*** __p)
+void std::_STL_alloc_proxy<Widget * *,Widget *,std::allocator<Widget *> >::_STL_alloc_proxy<Widget * *,Widget *,std::allocator<Widget *> >(const std::allocator<Widget* __a, Widget*** __p)
 {
     // @stub
 }
 
 #endif  // @carcass
 
-VA_COMPGEN(0x0046a650, 0x26, VECTOR_DTOR, widget)
+VA_COMPGEN(0x0046a650, 0x26, VECTOR_DTOR, Widget)
 
 VA_COMPGEN(0x004491c0, 0x69, DEQUE_CONST_ITERATOR_ADD, int)
