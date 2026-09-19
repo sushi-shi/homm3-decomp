@@ -1,4 +1,3 @@
-// textwdgt.cpp - E:\gamedcs\textwdgt.cpp (compiland textwdgt.obj)
 #include <va.h>
 #include "textwdgt.h"
 #include "bitmap16.h"

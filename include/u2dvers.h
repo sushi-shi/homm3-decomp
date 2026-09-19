@@ -1,4 +1,3 @@
-// u2dvers.h - u2dvers.cpp (compiland u2dvers.obj)
 #ifndef HOMM3_U2DVERS_H
 #define HOMM3_U2DVERS_H
 

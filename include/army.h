@@ -1,4 +1,3 @@
-// army.h - army.cpp (compiland army.obj)
 #ifndef HOMM3_ARMY_H
 #define HOMM3_ARMY_H
 

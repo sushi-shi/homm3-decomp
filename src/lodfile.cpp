@@ -1,5 +1,3 @@
-// lodfile.cpp - E:\gamedcs\lodfile.cpp (compiland lodfile.obj)
-
 #include <va.h>
 #include <string.h>
 #include "lodfile.h"

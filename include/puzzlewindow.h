@@ -1,4 +1,3 @@
-// puzzlewindow.h - puzzlewindow.cpp (compiland puzzlewindow.obj)
 #ifndef HOMM3_PUZZLEWINDOW_H
 #define HOMM3_PUZZLEWINDOW_H
 

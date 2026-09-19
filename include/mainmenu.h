@@ -1,4 +1,3 @@
-// mainmenu.h - mainmenu.cpp (compiland mainmenu.obj)
 #ifndef HOMM3_MAINMENU_H
 #define HOMM3_MAINMENU_H
 

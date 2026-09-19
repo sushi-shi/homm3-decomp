@@ -1,4 +1,3 @@
-// DC_precompiledheaders.h - DC_precompiledheaders.cpp (compiland DC_precompiledheaders.obj)
 #ifndef HOMM3_DC_PRECOMPILEDHEADERS_H
 #define HOMM3_DC_PRECOMPILEDHEADERS_H
 

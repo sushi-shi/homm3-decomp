@@ -1,4 +1,3 @@
-// csequence.h - csequence.cpp (compiland csequence.obj)
 #ifndef HOMM3_CSEQUENCE_H
 #define HOMM3_CSEQUENCE_H
 

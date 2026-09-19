@@ -1,4 +1,3 @@
-// hero.h - hero.cpp (compiland hero.obj)
 #ifndef HOMM3_HERO_H
 #define HOMM3_HERO_H
 

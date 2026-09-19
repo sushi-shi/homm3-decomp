@@ -1,4 +1,3 @@
-// creature_bank.cpp - E:\gamedcs\creature_bank.cpp (compiland creature_bank.obj)
 #include <va.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,4 +1,3 @@
-// binkmanager.h - binkmanager.cpp (compiland binkmanager.obj)
 #ifndef HOMM3_BINKMANAGER_H
 #define HOMM3_BINKMANAGER_H
 

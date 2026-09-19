@@ -1,4 +1,3 @@
-// game.h - game.cpp (compiland game.obj)
 #ifndef HOMM3_GAME_H
 #define HOMM3_GAME_H
 

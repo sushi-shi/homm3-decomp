@@ -1,4 +1,3 @@
-// advspells.cpp - E:\gamedcs\advspells.cpp (compiland advspells.obj)
 #include <va.h>
 #include <limits>
 #include "advmgr.h"

@@ -1,4 +1,3 @@
-// campaignbrief.h - campaignbrief.cpp (compiland campaignbrief.obj)
 #ifndef HOMM3_CAMPAIGNBRIEF_H
 #define HOMM3_CAMPAIGNBRIEF_H
 

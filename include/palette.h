@@ -1,4 +1,3 @@
-// palette.h - palette.cpp (compiland palette.obj)
 #ifndef HOMM3_PALETTE_H
 #define HOMM3_PALETTE_H
 

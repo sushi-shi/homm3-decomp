@@ -1,4 +1,3 @@
-// newgame.h - newgame.cpp (compiland newgame.obj)
 #ifndef HOMM3_NEWGAME_H
 #define HOMM3_NEWGAME_H
 

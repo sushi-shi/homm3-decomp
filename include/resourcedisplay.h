@@ -1,4 +1,3 @@
-// resourcedisplay.h - resourcedisplay.cpp (compiland resourcedisplay.obj)
 #ifndef HOMM3_RESOURCEDISPLAY_H
 #define HOMM3_RESOURCEDISPLAY_H
 

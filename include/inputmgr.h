@@ -1,4 +1,3 @@
-// inputmgr.h - inputmgr.cpp (compiland inputmgr.obj)
 #ifndef HOMM3_INPUTMGR_H
 #define HOMM3_INPUTMGR_H
 

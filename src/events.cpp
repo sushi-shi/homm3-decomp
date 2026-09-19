@@ -1,4 +1,3 @@
-// events.cpp - E:\gamedcs\events.cpp (compiland events.obj)
 #include <algorithm>
 #include "creaturetype.h"
 #include <stdio.h>

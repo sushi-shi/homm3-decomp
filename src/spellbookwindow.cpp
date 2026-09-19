@@ -1,4 +1,3 @@
-// spellbookwindow.cpp - E:\gamedcs\spellbookwindow.cpp (compiland spellbookwindow.obj)
 #include <va.h>
 #include <algorithm>
 #include <string.h>

@@ -1,4 +1,3 @@
-// systemoptionswindow.h - systemoptionswindow.cpp (compiland systemoptionswindow.obj)
 #ifndef HOMM3_SYSTEMOPTIONSWINDOW_H
 #define HOMM3_SYSTEMOPTIONSWINDOW_H
 

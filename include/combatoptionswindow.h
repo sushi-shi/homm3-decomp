@@ -1,4 +1,3 @@
-// combatoptionswindow.h - combatoptionswindow.cpp (compiland combatoptionswindow.obj)
 #ifndef HOMM3_COMBATOPTIONSWINDOW_H
 #define HOMM3_COMBATOPTIONSWINDOW_H
 

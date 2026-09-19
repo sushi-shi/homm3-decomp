@@ -1,4 +1,3 @@
-// window.h - window.cpp (compiland window.obj)
 #ifndef HOMM3_WINDOW_H
 #define HOMM3_WINDOW_H
 

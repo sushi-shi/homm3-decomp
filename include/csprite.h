@@ -1,4 +1,3 @@
-// csprite.h - csprite.cpp (compiland csprite.obj)
 #ifndef HOMM3_CSPRITE_H
 #define HOMM3_CSPRITE_H
 

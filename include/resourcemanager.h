@@ -1,4 +1,3 @@
-// resourcemanager.h - resourcemanager.cpp (compiland resourcemanager.obj)
 #ifndef HOMM3_RESOURCEMANAGER_H
 #define HOMM3_RESOURCEMANAGER_H
 

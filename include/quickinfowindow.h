@@ -1,4 +1,3 @@
-// quickinfowindow.h - quickinfowindow.cpp (compiland quickinfowindow.obj)
 #ifndef HOMM3_QUICKINFOWINDOW_H
 #define HOMM3_QUICKINFOWINDOW_H
 

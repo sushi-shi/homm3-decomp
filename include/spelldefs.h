@@ -1,4 +1,3 @@
-// spelldefs.h - spelldefs.cpp (compiland spelldefs.obj)
 #ifndef HOMM3_SPELLDEFS_H
 #define HOMM3_SPELLDEFS_H
 

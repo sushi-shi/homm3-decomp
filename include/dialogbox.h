@@ -1,4 +1,3 @@
-// dialogbox.h - dialogbox.cpp (compiland dialogbox.obj)
 #ifndef HOMM3_DIALOGBOX_H
 #define HOMM3_DIALOGBOX_H
 

@@ -1,4 +1,3 @@
-// dimensiondoorwindow.h - dimensiondoorwindow.cpp (compiland dimensiondoorwindow.obj)
 #ifndef HOMM3_DIMENSIONDOORWINDOW_H
 #define HOMM3_DIMENSIONDOORWINDOW_H
 

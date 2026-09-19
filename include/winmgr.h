@@ -1,4 +1,3 @@
-// winmgr.h - winmgr.cpp (compiland winmgr.obj)
 #ifndef HOMM3_WINMGR_H
 #define HOMM3_WINMGR_H
 

@@ -1,4 +1,3 @@
-// viewarmywindow.h - viewarmywindow.cpp (compiland viewarmywindow.obj)
 #ifndef HOMM3_VIEWARMYWINDOW_H
 #define HOMM3_VIEWARMYWINDOW_H
 

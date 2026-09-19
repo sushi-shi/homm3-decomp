@@ -1,4 +1,3 @@
-// campaignbrief.cpp - E:\gamedcs\campaignbrief.cpp (compiland campaignbrief.obj)
 #include <va.h>
 #include <stdio.h>
 #include <string.h>

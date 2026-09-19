@@ -1,4 +1,3 @@
-// winmgr.cpp - E:\gamedcs\winmgr.cpp (compiland winmgr.obj)
 #include <va.h>
 #include "winmgr.h"
 #include "message.h"

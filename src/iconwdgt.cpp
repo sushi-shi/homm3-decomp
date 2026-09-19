@@ -1,4 +1,3 @@
-// iconwdgt.cpp - E:\gamedcs\iconwdgt.cpp (compiland iconwdgt.obj)
 #include "terrain.h"
 #include <va.h>
 #include "iconwdgt.h"

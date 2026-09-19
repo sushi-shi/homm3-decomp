@@ -1,4 +1,3 @@
-// overview.h - overview.cpp (compiland overview.obj)
 #ifndef HOMM3_OVERVIEW_H
 #define HOMM3_OVERVIEW_H
 

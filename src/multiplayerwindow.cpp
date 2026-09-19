@@ -1,4 +1,3 @@
-// multiplayerwindow.cpp - E:\gamedcs\multiplayerwindow.cpp (compiland multiplayerwindow.obj)
 #include <va.h>
 #include "multiplayerwindow.h"
 #include "multiplayerwindow_globals.h"

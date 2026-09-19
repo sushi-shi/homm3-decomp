@@ -1,4 +1,3 @@
-// ai_player.h - ai_player.cpp (compiland ai_player.obj)
 #ifndef HOMM3_AI_PLAYER_H
 #define HOMM3_AI_PLAYER_H
 

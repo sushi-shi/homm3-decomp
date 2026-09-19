@@ -1,4 +1,3 @@
-// drawing.h - drawing.cpp (compiland drawing.obj)
 #ifndef HOMM3_DRAWING_H
 #define HOMM3_DRAWING_H
 

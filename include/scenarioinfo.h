@@ -1,4 +1,3 @@
-// scenarioinfo.h - scenarioinfo.cpp (compiland scenarioinfo.obj)
 #ifndef HOMM3_SCENARIOINFO_H
 #define HOMM3_SCENARIOINFO_H
 

@@ -1,4 +1,3 @@
-// drawing.cpp - E:\gamedcs\drawing.cpp (compiland drawing.obj)
 #include <va.h>
 #include <string.h>
 #include "drawing.h"

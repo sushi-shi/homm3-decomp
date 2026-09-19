@@ -1,4 +1,3 @@
-// onexit.c - d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\onexit.c (compiland onexit.obj)
 // 2 functions in link order.
 #include <va.h>
 // #include "onexit.h"

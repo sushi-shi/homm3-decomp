@@ -1,4 +1,3 @@
-// textntry.cpp - E:\gamedcs\textntry.cpp (compiland textntry.obj)
 // 21 functions in link order.
 #include <va.h>
 #include <string.h>

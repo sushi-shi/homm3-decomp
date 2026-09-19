@@ -1,4 +1,3 @@
-// bitmap24.h - bitmap24.cpp (compiland bitmap24.obj)
 #ifndef HOMM3_BITMAP24_H
 #define HOMM3_BITMAP24_H
 

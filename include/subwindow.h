@@ -1,4 +1,3 @@
-// subwindow.h - subwindow.cpp (compiland subwindow.obj)
 #ifndef HOMM3_SUBWINDOW_H
 #define HOMM3_SUBWINDOW_H
 

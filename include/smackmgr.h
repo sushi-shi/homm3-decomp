@@ -1,4 +1,3 @@
-// smackmgr.h - smackmgr.cpp (compiland smackmgr.obj)
 #ifndef HOMM3_SMACKMGR_H
 #define HOMM3_SMACKMGR_H
 

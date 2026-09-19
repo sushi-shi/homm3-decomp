@@ -1,4 +1,3 @@
-// armygrp.h - armygrp.cpp (compiland armygrp.obj)
 #ifndef HOMM3_ARMYGRP_H
 #define HOMM3_ARMYGRP_H
 

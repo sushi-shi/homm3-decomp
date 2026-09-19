@@ -1,4 +1,3 @@
-// textresource.h - textresource.cpp (compiland textresource.obj)
 #ifndef HOMM3_TEXTRESOURCE_H
 #define HOMM3_TEXTRESOURCE_H
 

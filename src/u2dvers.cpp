@@ -1,4 +1,3 @@
-// u2dvers.cpp - E:\gamedcs\u2dvers.cpp (compiland u2dvers.obj)
 // 3 functions in link order.
 #include <va.h>
 #include "u2dvers.h"

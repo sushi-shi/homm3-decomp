@@ -1,4 +1,3 @@
-// bottomviewsubwindow.h - bottomviewsubwindow.cpp (compiland bottomviewsubwindow.obj)
 #ifndef HOMM3_BOTTOMVIEWSUBWINDOW_H
 #define HOMM3_BOTTOMVIEWSUBWINDOW_H
 

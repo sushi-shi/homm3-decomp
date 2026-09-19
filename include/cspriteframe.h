@@ -1,4 +1,3 @@
-// cspriteframe.h - cspriteframe.cpp (compiland cspriteframe.obj)
 #ifndef HOMM3_CSPRITEFRAME_H
 #define HOMM3_CSPRITEFRAME_H
 

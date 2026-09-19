@@ -1,4 +1,3 @@
-// combatcontrolsubwindow.cpp - E:\gamedcs\combatcontrolsubwindow.cpp (compiland combatcontrolsubwindow.obj)
 #include <va.h>
 #include "combatcontrolsubwindow.h"
 #include "border.h"

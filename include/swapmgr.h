@@ -1,4 +1,3 @@
-// swapmgr.h - swapmgr.cpp (compiland swapmgr.obj)
 #ifndef HOMM3_SWAPMGR_H
 #define HOMM3_SWAPMGR_H
 

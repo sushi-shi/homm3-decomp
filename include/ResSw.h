@@ -1,4 +1,3 @@
-// ResSw.h - ResSw.cpp (compiland ResSw.obj)
 #ifndef HOMM3_RESSW_H
 #define HOMM3_RESSW_H
 

@@ -1,4 +1,3 @@
-// hiscore.h - hiscore.cpp (compiland hiscore.obj)
 #ifndef HOMM3_HISCORE_H
 #define HOMM3_HISCORE_H
 

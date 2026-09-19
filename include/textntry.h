@@ -1,4 +1,3 @@
-// textntry.h - textntry.cpp (compiland textntry.obj)
 #ifndef HOMM3_TEXTNTRY_H
 #define HOMM3_TEXTNTRY_H
 

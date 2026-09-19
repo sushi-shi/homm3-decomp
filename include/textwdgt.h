@@ -1,4 +1,3 @@
-// textwdgt.h - textwdgt.cpp (compiland textwdgt.obj)
 #ifndef HOMM3_TEXTWDGT_H
 #define HOMM3_TEXTWDGT_H
 

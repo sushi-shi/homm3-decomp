@@ -1,4 +1,3 @@
-// wingraph.h - wingraph.cpp (compiland wingraph.obj)
 #ifndef HOMM3_WINGRAPH_H
 #define HOMM3_WINGRAPH_H
 

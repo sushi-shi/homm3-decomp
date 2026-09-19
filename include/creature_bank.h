@@ -1,4 +1,3 @@
-// creature_bank.h - creature_bank.cpp (compiland creature_bank.obj)
 #ifndef HOMM3_CREATURE_BANK_H
 #define HOMM3_CREATURE_BANK_H
 

@@ -1,4 +1,3 @@
-// campaignmap.h - prototypes of campaignmap.cpp (compiland campaignmap.obj)
 #ifndef HOMM3_CAMPAIGNMAP_H
 #define HOMM3_CAMPAIGNMAP_H
 

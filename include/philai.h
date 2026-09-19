@@ -1,4 +1,3 @@
-// philai.h - philai.cpp (compiland philai.obj)
 #ifndef HOMM3_PHILAI_H
 #define HOMM3_PHILAI_H
 

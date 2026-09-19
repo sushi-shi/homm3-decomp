@@ -1,4 +1,3 @@
-// tradpost.h - tradpost.cpp (compiland tradpost.obj)
 #ifndef HOMM3_TRADPOST_H
 #define HOMM3_TRADPOST_H
 

@@ -1,5 +1,3 @@
-// cmbtmgr.cpp - E:\gamedcs\cmbtmgr.cpp (compiland cmbtmgr.obj)
-
 // LOCATE SWEEP 2026-08-08 (span 0x62760..0x6a45c, 72 carve rows). Each
 // bracket between two already-proven claims was order-mapped onto the
 // DC roster and every pairing checked against `ret N` (thiscall, so

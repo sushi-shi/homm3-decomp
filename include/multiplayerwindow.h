@@ -1,4 +1,3 @@
-// multiplayerwindow.h - multiplayerwindow.cpp (compiland multiplayerwindow.obj)
 #ifndef HOMM3_MULTIPLAYERWINDOW_H
 #define HOMM3_MULTIPLAYERWINDOW_H
 

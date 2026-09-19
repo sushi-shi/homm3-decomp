@@ -1,4 +1,3 @@
-// spells.cpp - E:\gamedcs\spells.cpp (compiland spells.obj)
 #include <va.h>
 #include <windows.h>  // tagPOINT, the CodeView axial-coordinate type
 // AreaEffect hands akSpellTraits[spell].m_effect (+0x08) to drawing's

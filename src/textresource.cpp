@@ -1,4 +1,3 @@
-// textresource.cpp - E:\gamedcs\textresource.cpp (compiland textresource.obj)
 #include <va.h>
 #include <string.h>
 #include "textresource.h"

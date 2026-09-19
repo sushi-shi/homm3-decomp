@@ -1,4 +1,3 @@
-// artifact.cpp - E:\gamedcs\artifact.cpp (compiland artifact.obj)
 // helper and ownership wrappers into the table initializer. The adjacent
 // bitset bodies are Dinkumware COMDATs, not source claims.
 #include <va.h>

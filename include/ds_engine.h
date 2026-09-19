@@ -1,4 +1,3 @@
-// ds_engine.h - ds_engine.cpp (compiland ds_engine.obj)
 // Dreamcast-only DirectSound backend. Retail PC uses Miles/AIL in soundmgr;
 // these prototypes remain evidence comments and this header exposes no retail
 // class layout.

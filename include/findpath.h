@@ -1,4 +1,3 @@
-// findpath.h - findpath.cpp (compiland findpath.obj)
 #ifndef HOMM3_FINDPATH_H
 #define HOMM3_FINDPATH_H
 

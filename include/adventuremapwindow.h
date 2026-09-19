@@ -1,4 +1,3 @@
-// adventuremapwindow.h - adventuremapwindow.cpp (compiland adventuremapwindow.obj)
 #ifndef HOMM3_ADVENTUREMAPWINDOW_H
 #define HOMM3_ADVENTUREMAPWINDOW_H
 

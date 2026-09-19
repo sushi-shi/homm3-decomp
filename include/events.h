@@ -1,4 +1,3 @@
-// events.h - events.cpp (compiland events.obj)
 #ifndef HOMM3_EVENTS_H
 #define HOMM3_EVENTS_H
 

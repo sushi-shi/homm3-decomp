@@ -1,4 +1,3 @@
-// combatresultswindow.cpp - E:\gamedcs\combatresultswindow.cpp (compiland combatresultswindow.obj)
 #include <va.h>
 #include <stdio.h>
 #include <string.h>

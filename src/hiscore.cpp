@@ -1,4 +1,3 @@
-// hiscore.cpp - E:\gamedcs\hiscore.cpp (compiland hiscore.obj)
 #include <va.h>
 #include <windows.h>
 #include <fcntl.h>

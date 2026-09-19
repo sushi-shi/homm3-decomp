@@ -1,4 +1,3 @@
-// lodfile.h - lodfile.cpp (compiland lodfile.obj)
 #ifndef HOMM3_LODFILE_H
 #define HOMM3_LODFILE_H
 

@@ -1,4 +1,3 @@
-// misc.h - misc.cpp (compiland misc.obj)
 #ifndef HOMM3_MISC_H
 #define HOMM3_MISC_H
 

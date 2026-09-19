@@ -1,4 +1,3 @@
-// seerhut.cpp - E:\gamedcs\seerhut.cpp (compiland seerhut.obj)
 #include <va.h>
 #include "creaturetype.h"
 #include <algorithm>

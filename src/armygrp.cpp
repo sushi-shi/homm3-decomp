@@ -1,4 +1,3 @@
-// armygrp.cpp - E:\gamedcs\armygrp.cpp (compiland armygrp.obj)
 #include "includes.h"
 #include <va.h>
 #include <algorithm>

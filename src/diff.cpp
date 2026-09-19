@@ -1,4 +1,3 @@
-// diff.cpp - E:\gamedcs\diff.cpp (compiland diff.obj)
 #include <string.h>
 #include <va.h>
 #include "terrain.h"

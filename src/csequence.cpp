@@ -1,4 +1,3 @@
-// csequence.cpp - E:\gamedcs\csequence.cpp (compiland csequence.obj)
 // 7 functions in link order.
 #include <va.h>
 #include "csequence.h"

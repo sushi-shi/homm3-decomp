@@ -1,4 +1,3 @@
-// border.cpp - E:\gamedcs\border.cpp (compiland border.obj)
 #include "terrain.h"
 #include <va.h>
 #include <string.h>

@@ -1,4 +1,3 @@
-// gametypewindow.h - gametypewindow.cpp (compiland gametypewindow.obj)
 #ifndef HOMM3_GAMETYPEWINDOW_H
 #define HOMM3_GAMETYPEWINDOW_H
 

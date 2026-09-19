@@ -1,5 +1,3 @@
-// ai_player.cpp - E:\gamedcs\ai_player.cpp (compiland ai_player.obj)
-
 // end_turn's marketplace gate is a town::HasBuilding call in the
 // Dreamcast body (dc 0x2e7d8 line 452, `mov #14,r5 / mov #1,r6`); see
 // town.h for why the inline's visibility is scoped.

@@ -1,4 +1,3 @@
-// sample.cpp - E:\gamedcs\sample.cpp (compiland sample.obj)
 // 2 functions in link order.
 #include "terrain.h"
 #include <va.h>

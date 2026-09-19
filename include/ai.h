@@ -1,4 +1,3 @@
-// ai.h - ai.cpp (compiland ai.obj)
 #ifndef HOMM3_AI_H
 #define HOMM3_AI_H
 

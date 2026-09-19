@@ -1,5 +1,3 @@
-// singleselectionpopups.cpp - E:\gamedcs\singleselectionpopups.cpp (compiland singleselectionpopups.obj)
-
 // Popup-dialog family. Three widget subclasses of widget (CHotspotWidget,
 // CSpriteWidget, CBitmapWidget) and four TDialogBox-derived single-selection
 // dialogs (CBonusDlg, CHeroDlg, CTownDlg, CTeamAlignmentDlg) whose common

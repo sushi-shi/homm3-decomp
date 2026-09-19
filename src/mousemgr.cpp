@@ -1,4 +1,3 @@
-// mousemgr.cpp - E:\gamedcs\mousemgr.cpp (compiland mousemgr.obj)
 #include "terrain.h"
 #include <va.h>
 #include <windows.h>

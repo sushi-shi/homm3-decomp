@@ -1,4 +1,3 @@
-// mapcell.h - mapcell.cpp (compiland mapcell.obj)
 #ifndef HOMM3_MAPCELL_H
 #define HOMM3_MAPCELL_H
 

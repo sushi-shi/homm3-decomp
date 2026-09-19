@@ -1,4 +1,3 @@
-// spells.h - spells.cpp (compiland spells.obj)
 #ifndef HOMM3_SPELLS_H
 #define HOMM3_SPELLS_H
 

@@ -1,4 +1,3 @@
-// artifact.h - artifact.cpp (compiland artifact.obj)
 #ifndef HOMM3_ARTIFACT_H
 #define HOMM3_ARTIFACT_H
 

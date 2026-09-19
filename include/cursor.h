@@ -1,4 +1,3 @@
-// cursor.h - cursor.cpp (compiland cursor.obj)
 #ifndef HOMM3_CURSOR_H
 #define HOMM3_CURSOR_H
 

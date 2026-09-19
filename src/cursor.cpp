@@ -1,4 +1,3 @@
-// cursor.cpp - E:\gamedcs\cursor.cpp (compiland cursor.obj)
 #include <va.h>
 #include "game.h"
 #include "advmgr.h"

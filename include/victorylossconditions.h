@@ -1,4 +1,3 @@
-// victorylossconditions.h - victorylossconditions.cpp (compiland victorylossconditions.obj)
 #ifndef HOMM3_VICTORYLOSSCONDITIONS_H
 #define HOMM3_VICTORYLOSSCONDITIONS_H
 

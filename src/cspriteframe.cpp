@@ -1,4 +1,3 @@
-// cspriteframe.cpp - E:\gamedcs\cspriteframe.cpp (compiland cspriteframe.obj)
 #include <va.h>
 #include <string.h>
 #include "cspriteframe.h"

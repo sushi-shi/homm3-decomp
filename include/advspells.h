@@ -1,4 +1,3 @@
-// advspells.h - advspells.cpp (compiland advspells.obj)
 #ifndef HOMM3_ADVSPELLS_H
 #define HOMM3_ADVSPELLS_H
 

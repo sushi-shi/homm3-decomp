@@ -1,4 +1,3 @@
-// playvideo.cpp - E:\gamedcs\playvideo.cpp (compiland playvideo.obj)
 // 1 functions in link order.
 #include <va.h>
 // #include "playvideo.h"

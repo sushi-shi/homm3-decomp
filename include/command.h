@@ -1,4 +1,3 @@
-// command.h - command.cpp (compiland command.obj)
 #ifndef HOMM3_COMMAND_H
 #define HOMM3_COMMAND_H
 

@@ -1,4 +1,3 @@
-// kb.cpp - E:\gamedcs\kb.cpp (compiland kb.obj)
 #include <va.h>
 #include <windows.h>
 #include <stdio.h>

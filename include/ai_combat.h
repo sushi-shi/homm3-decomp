@@ -1,4 +1,3 @@
-// ai_combat.h - ai_combat.cpp (compiland ai_combat.obj)
 #ifndef HOMM3_AI_COMBAT_H
 #define HOMM3_AI_COMBAT_H
 

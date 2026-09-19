@@ -1,4 +1,3 @@
-// customcampaign.cpp - E:\gamedcs\customcampaign.cpp (compiland customcampaign.obj)
 // 11 functions in the Dreamcast roster; 20 compiler-generated $-thunks
 // omitted. Retail's currently proven 0x8b200..0x8b2d7 unit span contains the
 // two exact methods below. The flanking cursor/customcampaign and

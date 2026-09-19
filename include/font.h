@@ -1,4 +1,3 @@
-// font.h - font.cpp (compiland font.obj)
 #ifndef HOMM3_FONT_H
 #define HOMM3_FONT_H
 

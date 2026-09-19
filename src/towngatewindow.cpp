@@ -1,4 +1,3 @@
-// towngatewindow.cpp - E:\gamedcs\towngatewindow.cpp (compiland towngatewindow.obj)
 #include <va.h>
 #include <string.h>
 #include "towngatewindow.h"

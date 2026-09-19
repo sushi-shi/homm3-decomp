@@ -1,4 +1,3 @@
-// townmgr.cpp - E:\gamedcs\townmgr.cpp (compiland townmgr.obj)
 #include <va.h>
 #include "creaturetype.h"
 #include <stdio.h>

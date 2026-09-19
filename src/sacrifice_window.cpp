@@ -1,4 +1,3 @@
-// sacrifice_window.cpp - E:\gamedcs\sacrifice_window.cpp (compiland sacrifice_window.obj)
 #include <va.h>
 #include "creaturetype.h"
 #include "sacrifice_window.h"

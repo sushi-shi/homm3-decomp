@@ -1,4 +1,3 @@
-// remote.cpp - E:\gamedcs\remote.cpp (compiland remote.obj)
 #include <string.h>
 #include <zlib.h>
 #include <va.h>

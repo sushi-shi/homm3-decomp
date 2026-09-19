@@ -1,4 +1,3 @@
-// basemgr.cpp - E:\gamedcs\basemgr.cpp (compiland basemgr.obj)
 // 1 functions in link order.
 #include <va.h>
 #include <string.h>

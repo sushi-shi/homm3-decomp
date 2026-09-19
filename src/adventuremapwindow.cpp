@@ -1,4 +1,3 @@
-// adventuremapwindow.cpp - E:\gamedcs\adventuremapwindow.cpp (compiland adventuremapwindow.obj)
 #include <va.h>
 #include <stdio.h>
 #include "adventuremapwindow.h"

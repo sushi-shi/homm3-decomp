@@ -1,4 +1,3 @@
-// bitmap16.cpp - E:\gamedcs\bitmap16.cpp (compiland bitmap16.obj)
 #include <va.h>
 #include <limits>
 #include <math.h>

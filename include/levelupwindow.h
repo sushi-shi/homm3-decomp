@@ -1,4 +1,3 @@
-// levelupwindow.h - levelupwindow.cpp (compiland levelupwindow.obj)
 #ifndef HOMM3_LEVELUPWINDOW_H
 #define HOMM3_LEVELUPWINDOW_H
 

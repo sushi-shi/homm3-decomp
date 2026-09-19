@@ -1,4 +1,3 @@
-// town.h - town.cpp (compiland town.obj)
 #ifndef HOMM3_TOWN_H
 #define HOMM3_TOWN_H
 

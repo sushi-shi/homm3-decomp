@@ -1,4 +1,3 @@
-// quicktownwindow.h - quicktownwindow.cpp (compiland quicktownwindow.obj)
 #ifndef HOMM3_QUICKTOWNWINDOW_H
 #define HOMM3_QUICKTOWNWINDOW_H
 

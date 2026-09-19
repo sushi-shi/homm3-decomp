@@ -1,4 +1,3 @@
-// kbwin.h - kbwin.cpp (compiland kbwin.obj)
 #ifndef HOMM3_KBWIN_H
 #define HOMM3_KBWIN_H
 

@@ -1,5 +1,3 @@
-// dxplay.cpp - E:\gamedcs\dxplay.cpp (compiland dxplay.obj)
-
 // Retail emits this TU in the drawing->event_record gap (0x96c50..0x9a1e0,
 // bracket from evidence/link-order/gaps.tsv); ds_engine, the other alphabetical
 // candidate for that gap, is NOT resident here - GetErrorDesc's DPERR switch,

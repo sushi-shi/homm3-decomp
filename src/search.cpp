@@ -1,4 +1,3 @@
-// search.cpp - E:\gamedcs\search.cpp (compiland search.obj)
 #include <va.h>
 #include "herospec.h"
 #include "findpath.h"

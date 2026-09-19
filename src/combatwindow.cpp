@@ -1,4 +1,3 @@
-// combatwindow.cpp - E:\gamedcs\combatwindow.cpp (compiland combatwindow.obj)
 #include <va.h>
 #include "combatwindow.h"
 #include "combatwindowchatedit.h"

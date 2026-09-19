@@ -1,4 +1,3 @@
-// bitmap16.h - bitmap16.cpp (compiland bitmap16.obj)
 #ifndef HOMM3_BITMAP16_H
 #define HOMM3_BITMAP16_H
 

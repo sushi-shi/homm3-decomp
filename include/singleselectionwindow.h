@@ -1,4 +1,3 @@
-// singleselectionwindow.h - singleselectionwindow.cpp (compiland singleselectionwindow.obj)
 #ifndef HOMM3_SINGLESELECTIONWINDOW_H
 #define HOMM3_SINGLESELECTIONWINDOW_H
 

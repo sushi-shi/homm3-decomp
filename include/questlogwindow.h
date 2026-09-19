@@ -1,4 +1,3 @@
-// questlogwindow.h - questlogwindow.cpp (compiland questlogwindow.obj)
 #ifndef HOMM3_QUESTLOGWINDOW_H
 #define HOMM3_QUESTLOGWINDOW_H
 

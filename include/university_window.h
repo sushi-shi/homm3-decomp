@@ -1,4 +1,3 @@
-// university_window.h - university_window.cpp (compiland university_window.obj)
 #ifndef HOMM3_UNIVERSITY_WINDOW_H
 #define HOMM3_UNIVERSITY_WINDOW_H
 

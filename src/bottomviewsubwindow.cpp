@@ -1,4 +1,3 @@
-// bottomviewsubwindow.cpp - E:\gamedcs\bottomviewsubwindow.cpp (compiland bottomviewsubwindow.obj)
 #include <va.h>
 #include <crt_stdio.h>
 #include <strstream>

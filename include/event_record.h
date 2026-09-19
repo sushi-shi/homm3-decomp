@@ -1,4 +1,3 @@
-// event_record.h - event_record.cpp (compiland event_record.obj)
 #ifndef HOMM3_EVENT_RECORD_H
 #define HOMM3_EVENT_RECORD_H
 

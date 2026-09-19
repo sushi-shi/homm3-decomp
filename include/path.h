@@ -1,4 +1,3 @@
-// path.h - path.cpp (compiland path.obj)
 #ifndef HOMM3_PATH_H
 #define HOMM3_PATH_H
 

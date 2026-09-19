@@ -1,4 +1,3 @@
-// border.h - border.cpp (compiland border.obj)
 #ifndef HOMM3_BORDER_H
 #define HOMM3_BORDER_H
 

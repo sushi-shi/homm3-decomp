@@ -1,4 +1,3 @@
-// dxplay.h - dxplay.cpp (compiland dxplay.obj)
 #ifndef HOMM3_DXPLAY_H
 #define HOMM3_DXPLAY_H
 

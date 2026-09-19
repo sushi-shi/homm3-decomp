@@ -1,4 +1,3 @@
-// town.cpp - E:\gamedcs\town.cpp (compiland town.obj)
 #include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
 #include "creaturetype.h"
 #include "terrain.h"

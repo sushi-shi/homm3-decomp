@@ -1,4 +1,3 @@
-// text.h - text.cpp (compiland text.obj)
 #ifndef HOMM3_TEXT_H
 #define HOMM3_TEXT_H
 

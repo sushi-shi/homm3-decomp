@@ -1,4 +1,3 @@
-// sacrifice_window.h - sacrifice_window.cpp (compiland sacrifice_window.obj)
 #ifndef HOMM3_SACRIFICE_WINDOW_H
 #define HOMM3_SACRIFICE_WINDOW_H
 

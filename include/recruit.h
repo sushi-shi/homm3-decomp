@@ -1,4 +1,3 @@
-// recruit.h - recruit.cpp (compiland recruit.obj)
 #ifndef HOMM3_RECRUIT_H
 #define HOMM3_RECRUIT_H
 

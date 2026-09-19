@@ -1,4 +1,3 @@
-// remote.h - remote.cpp (compiland remote.obj)
 #ifndef HOMM3_REMOTE_H
 #define HOMM3_REMOTE_H
 

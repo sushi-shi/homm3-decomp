@@ -1,4 +1,3 @@
-// ai_tactical.cpp - E:\gamedcs\ai_tactical.cpp (compiland ai_tactical.obj)
 #include <va.h>
 #include <math.h>
 #include <string.h>

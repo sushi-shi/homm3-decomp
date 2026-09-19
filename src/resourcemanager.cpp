@@ -1,4 +1,3 @@
-// resourcemanager.cpp - E:\gamedcs\resourcemanager.cpp (compiland resourcemanager.obj)
 #include <va.h>
 #include <yvals.h>
 #include <stdio.h>

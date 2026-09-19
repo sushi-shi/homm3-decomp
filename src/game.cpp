@@ -1,4 +1,3 @@
-// game.cpp - E:\gamedcs\game.cpp (compiland game.obj)
 // calculate_production and playerData::HasCapitol read the town masks
 // through town::HasBuilding in the Dreamcast bodies (dc 0xa3474 lines
 // with r5 = 15/22/17, dc 0xa4e80 with r5 = 13); see town.h for why the

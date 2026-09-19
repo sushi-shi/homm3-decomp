@@ -1,4 +1,3 @@
-// advmgr.h - advmgr.cpp (compiland advmgr.obj)
 #ifndef HOMM3_ADVMGR_H
 #define HOMM3_ADVMGR_H
 

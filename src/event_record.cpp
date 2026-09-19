@@ -1,4 +1,3 @@
-// event_record.cpp - E:\gamedcs\event_record.cpp (compiland event_record.obj)
 #include <math.h>
 #include <va.h>
 #include "event_record.h"

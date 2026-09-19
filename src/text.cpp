@@ -1,4 +1,3 @@
-// text.cpp - E:\gamedcs\text.cpp (compiland text.obj)
 #include <ctype.h>
 
 #include <va.h>

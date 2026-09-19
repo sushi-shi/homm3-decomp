@@ -1,4 +1,3 @@
-// global.cpp - E:\gamedcs\global.cpp (compiland global.obj)
 #include <va.h>
 // #include "global.h"
 

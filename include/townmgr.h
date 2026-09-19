@@ -1,4 +1,3 @@
-// townmgr.h - townmgr.cpp (compiland townmgr.obj)
 #ifndef HOMM3_TOWNMGR_H
 #define HOMM3_TOWNMGR_H
 

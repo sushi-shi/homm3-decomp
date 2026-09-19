@@ -1,4 +1,3 @@
-// ai.cpp - E:\gamedcs\ai.cpp (compiland ai.obj)
 #include <va.h>
 #include "includes.h"
 #include <algorithm>

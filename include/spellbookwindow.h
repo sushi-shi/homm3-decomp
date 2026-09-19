@@ -1,4 +1,3 @@
-// spellbookwindow.h - spellbookwindow.cpp (compiland spellbookwindow.obj)
 #ifndef HOMM3_SPELLBOOKWINDOW_H
 #define HOMM3_SPELLBOOKWINDOW_H
 

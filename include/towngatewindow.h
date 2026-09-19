@@ -1,4 +1,3 @@
-// towngatewindow.h - towngatewindow.cpp (compiland towngatewindow.obj)
 #ifndef HOMM3_TOWNGATEWINDOW_H
 #define HOMM3_TOWNGATEWINDOW_H
 

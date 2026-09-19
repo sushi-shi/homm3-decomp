@@ -1,4 +1,3 @@
-// adventureoptionswindow.h - adventureoptionswindow.cpp (compiland adventureoptionswindow.obj)
 #ifndef HOMM3_ADVENTUREOPTIONSWINDOW_H
 #define HOMM3_ADVENTUREOPTIONSWINDOW_H
 

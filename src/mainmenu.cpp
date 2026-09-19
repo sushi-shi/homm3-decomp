@@ -1,5 +1,3 @@
-// mainmenu.cpp - E:\gamedcs\mainmenu.cpp (compiland mainmenu.obj)
-
 // Retail contribution (inside the lodfile->mapcell gap 0xfac34..0xfbf90):
 //   terrain.h $E head 0xfaeb0..0xfb29f (12 bitset<10> init/atexit thunks, excluded
 //   class), then 5 real rows 0xfb2a0..0xfbb94; mapcell's own $E head follows at

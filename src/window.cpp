@@ -1,4 +1,3 @@
-// window.cpp - E:\gamedcs\window.cpp (compiland window.obj)
 #include <va.h>
 #include <stdlib.h>
 #include <string.h>

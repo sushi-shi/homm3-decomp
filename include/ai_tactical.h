@@ -1,4 +1,3 @@
-// ai_tactical.h - ai_tactical.cpp (compiland ai_tactical.obj)
 #ifndef HOMM3_AI_TACTICAL_H
 #define HOMM3_AI_TACTICAL_H
 

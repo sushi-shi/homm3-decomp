@@ -1,4 +1,3 @@
-// quickherowindow.h - quickherowindow.cpp (compiland quickherowindow.obj)
 #ifndef HOMM3_QUICKHEROWINDOW_H
 #define HOMM3_QUICKHEROWINDOW_H
 

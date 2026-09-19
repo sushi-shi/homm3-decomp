@@ -1,4 +1,3 @@
-// combatcontrolsubwindow.h - combatcontrolsubwindow.cpp (compiland combatcontrolsubwindow.obj)
 #ifndef HOMM3_COMBATCONTROLSUBWINDOW_H
 #define HOMM3_COMBATCONTROLSUBWINDOW_H
 

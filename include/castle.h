@@ -1,4 +1,3 @@
-// castle.h - castle.cpp (compiland castle.obj)
 #ifndef HOMM3_CASTLE_H
 #define HOMM3_CASTLE_H
 

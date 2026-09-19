@@ -1,4 +1,3 @@
-// wingraph.cpp - E:\gamedcs\wingraph.cpp (compiland wingraph.obj)
 #include <va.h>
 #include <ddraw.h>
 #include <string.h>

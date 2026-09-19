@@ -1,4 +1,3 @@
-// mousemgr.h - mousemgr.cpp (compiland mousemgr.obj)
 #ifndef HOMM3_MOUSEMGR_H
 #define HOMM3_MOUSEMGR_H
 

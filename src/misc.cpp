@@ -1,4 +1,3 @@
-// misc.cpp - E:\gamedcs\misc.cpp (compiland misc.obj)
 #include <va.h>
 #include <stdlib.h>
 #include <stdarg.h>

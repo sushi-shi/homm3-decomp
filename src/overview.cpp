@@ -1,4 +1,3 @@
-// overview.cpp - E:\gamedcs\overview.cpp (compiland overview.obj)
 #include <va.h>
 #include <windows.h>
 #include <stdio.h>

@@ -1,5 +1,3 @@
-// singleselectionwindow.cpp - E:\gamedcs\singleselectionwindow.cpp (compiland singleselectionwindow.obj)
-
 #include <algorithm>
 #include <io.h>
 #include <direct.h>

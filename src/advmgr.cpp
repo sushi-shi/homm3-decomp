@@ -1,5 +1,3 @@
-// advmgr.cpp - E:\gamedcs\advmgr.cpp (compiland advmgr.obj)
-
 // LOCATE SWEEP 2026-08-08 (span 0x5de0..0x1b0da, 112 carve rows). The
 // DC roster was order-mapped bracket by bracket and every pairing was
 // checked against `ret N` arity (thiscall = this in ecx, so ret N ==

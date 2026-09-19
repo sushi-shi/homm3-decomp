@@ -1,5 +1,3 @@
-// ai_combat.cpp - E:\gamedcs\ai_combat.cpp (compiland ai_combat.obj)
-
 // NEW LEVER (2026-08-07, byte-proven here by AI_quick_combat and
 // AI_auto_combat): under /GX the scope-exit destructor sequence keeps
 // the EH state variable live across every call a destructor makes,

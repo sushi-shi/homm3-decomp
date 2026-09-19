@@ -1,4 +1,3 @@
-// iconwdgt.h - iconwdgt.cpp (compiland iconwdgt.obj)
 #ifndef HOMM3_ICONWDGT_H
 #define HOMM3_ICONWDGT_H
 

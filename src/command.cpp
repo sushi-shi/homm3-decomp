@@ -1,4 +1,3 @@
-// command.cpp - E:\gamedcs\command.cpp (compiland command.obj)
 // Both DC command routines below retain army::GetName as the source boundary,
 // while the original CreatureType.h body supplies its nested GetArmyName
 // expansion.  Omitting that header-inline body loses 16 retail CFG blocks.

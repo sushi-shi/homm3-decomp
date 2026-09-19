@@ -1,4 +1,3 @@
-// cmbtmgr.h - cmbtmgr.cpp (compiland cmbtmgr.obj)
 #ifndef HOMM3_CMBTMGR_H
 #define HOMM3_CMBTMGR_H
 

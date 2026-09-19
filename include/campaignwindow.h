@@ -1,4 +1,3 @@
-// campaignwindow.h - campaignwindow.cpp (compiland campaignwindow.obj)
 #ifndef HOMM3_CAMPAIGNWINDOW_H
 #define HOMM3_CAMPAIGNWINDOW_H
 

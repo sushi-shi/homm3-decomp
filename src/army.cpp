@@ -1,5 +1,3 @@
-// army.cpp - E:\gamedcs\army.cpp (compiland army.obj)
-
 #include <algorithm>
 #include <math.h>
 #include <stdlib.h>

@@ -1,4 +1,3 @@
-// soundmgr.h - soundmgr.cpp (compiland soundmgr.obj)
 #ifndef HOMM3_SOUNDMGR_H
 #define HOMM3_SOUNDMGR_H
 

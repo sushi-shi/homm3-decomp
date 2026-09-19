@@ -1,4 +1,3 @@
-// strip.h - strip.cpp (compiland strip.obj)
 #ifndef HOMM3_STRIP_H
 #define HOMM3_STRIP_H
 

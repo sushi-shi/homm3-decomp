@@ -1,4 +1,3 @@
-// hillfortwindow.h - hillfortwindow.cpp (compiland hillfortwindow.obj)
 #ifndef HOMM3_HILLFORTWINDOW_H
 #define HOMM3_HILLFORTWINDOW_H
 

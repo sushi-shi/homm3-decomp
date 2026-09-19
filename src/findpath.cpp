@@ -1,4 +1,3 @@
-// findpath.cpp - E:\gamedcs\findpath.cpp (compiland findpath.obj)
 #include <va.h>
 #include <stdlib.h>
 #include <string.h>

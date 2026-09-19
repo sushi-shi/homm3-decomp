@@ -1,4 +1,3 @@
-// kb.h - kb.cpp (compiland kb.obj)
 #ifndef HOMM3_KB_H
 #define HOMM3_KB_H
 

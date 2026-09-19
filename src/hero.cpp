@@ -1,4 +1,3 @@
-// hero.cpp - E:\gamedcs\hero.cpp (compiland hero.obj)
 // town::HasBuilding - hero::GetLuck's Grail gate is a real CALL to the
 // Town.h inline (retail `push 1 / push 0x1a / call 0x4305a0`), so this
 // compiland needs the declarator. It has to be defined before the FIRST

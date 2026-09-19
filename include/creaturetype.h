@@ -1,4 +1,3 @@
-// creaturetype.h - creaturetype.cpp (compiland creaturetype.obj)
 #ifndef HOMM3_CREATURETYPE_H
 #define HOMM3_CREATURETYPE_H
 

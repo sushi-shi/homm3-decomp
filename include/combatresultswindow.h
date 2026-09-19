@@ -1,4 +1,3 @@
-// combatresultswindow.h - combatresultswindow.cpp (compiland combatresultswindow.obj)
 #ifndef HOMM3_COMBATRESULTSWINDOW_H
 #define HOMM3_COMBATRESULTSWINDOW_H
 

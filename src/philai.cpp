@@ -1,4 +1,3 @@
-// philai.cpp - E:\gamedcs\philai.cpp (compiland philai.obj)
 #include <va.h>
 #include "creaturetype.h"
 #include <algorithm>

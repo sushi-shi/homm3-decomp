@@ -1,4 +1,3 @@
-// viewwrld.h - viewwrld.cpp (compiland viewwrld.obj)
 #ifndef HOMM3_VIEWWRLD_H
 #define HOMM3_VIEWWRLD_H
 
