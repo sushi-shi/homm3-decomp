@@ -13,8 +13,10 @@ import csv
 from dataclasses import asdict, dataclass, replace
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
+import tempfile
 
 from homm3.core import common, clang
 from homm3 import manifest
@@ -529,6 +531,13 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
     instance_requests = []
     instance_groups = []
     reached = set()
+    # Include files with no declarations too: a macro-only include can change
+    # ownership facts in its consumer. This also covers included .cpp files.
+    for inclusion in tu.get_includes():
+        try:
+            reached.add(Path(inclusion.include.name).relative_to(root).as_posix())
+        except ValueError:
+            pass
 
     def visit(cursor):
         loc = cursor.location
@@ -644,36 +653,87 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
 def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
     units = [u for u in manifest.units(root / 'config/units.toml')
              if u['source'].startswith('src/')]
-    # Conservative cache key: changing any owned source/header invalidates all
-    # TUs, including consumers that do not emit an out-of-line inline copy.
+    # Source-only edits reparse their TU and any TU including that source.
+    # Header/config changes still invalidate every TU conservatively, including
+    # inactive includes and header additions that change include resolution.
+    admitted = {u['source'] for u in units}
     digest = hashlib.sha256(Path(__file__).read_bytes())
+    digest.update(str(root.resolve()).encode())
     for dependency in ('scripts/homm3/core/clang.py', 'scripts/homm3/vc6/_source.py',
-                       'scripts/homm3/manifest.py'):
+                       'scripts/homm3/manifest.py', 'scripts/homm3/retail_labels/source.py'):
         digest.update((root / dependency).read_bytes())
-    for base in ('src', 'include', 'config'):
+    mirror = clang.mirror()  # construct shared mirror before starting workers
+    from clang import cindex
+    library = Path(cindex.conf.get_filename())
+    digest.update(str(library).encode())
+    if library.is_file():
+        stat = library.stat()
+        digest.update(f'{stat.st_size}:{stat.st_mtime_ns}'.encode())
+    content = {}
+    for base in ('src', 'include', 'config', 'vendor'):
         for path in sorted((root / base).rglob('*')):
             if path.is_file() and path.suffix.lower() in {'.h', '.hpp', '.inl', '.c', '.cpp', '.cxx', '.toml'}:
-                digest.update(str(path.relative_to(root)).encode())
-                digest.update(path.read_bytes())
-    cache = root / 'build/source-ownership/definitions.json'
+                relative = path.relative_to(root).as_posix()
+                content[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+                digest.update(relative.encode())
+                if relative not in admitted:
+                    digest.update(content[relative].encode())
+    if mirror:
+        for path in sorted(mirror.rglob('*')):
+            if path.is_file():
+                checksum = hashlib.sha256(path.read_bytes()).hexdigest()
+                digest.update(path.relative_to(mirror).as_posix().encode())
+                digest.update(checksum.encode())
+                try:
+                    content[path.relative_to(root).as_posix()] = checksum
+                except ValueError:
+                    pass  # External mirrors are covered by the shared key.
+    cache = root / 'build/source-ownership/units'
+    cache.mkdir(parents=True, exist_ok=True)
     key = digest.hexdigest()
-    if not fresh and cache.is_file():
-        saved = json.loads(cache.read_text())
-        if saved['key'] == key:
-            return ([Definition(**r) for r in saved['definitions']],
-                    saved['errors'], saved['reached'])
-    clang.mirror()  # construct shared mirror before starting workers
+
+    def cached_scan(unit):
+        source = unit['source']
+        path = cache / (hashlib.sha256(source.encode()).hexdigest() + '.json')
+        if not fresh:
+            try:
+                saved = json.loads(path.read_text())
+                if (saved['key'] == key and not saved['errors']
+                        and source in saved['inputs']
+                        and all(h is not None and content.get(p) == h
+                                for p, h in saved['inputs'].items())):
+                    return ([Definition(**r) for r in saved['definitions']],
+                            saved['errors'], saved['reached'])
+            except (OSError, ValueError, KeyError, TypeError, AttributeError):
+                pass  # Disposable cache; a damaged entry must trigger a scan.
+        definitions, errors, reached = scan_unit(unit, root)
+        dependencies = {os.path.normpath(p) for p in [*reached, source]}
+        saved = dict(key=key, definitions=[asdict(d) for d in definitions],
+                     errors=errors, reached=reached,
+                     inputs={p: content.get(p) for p in sorted(dependencies)})
+        # Unknown dependencies cannot be reused without a content identity.
+        if all(value is not None for value in saved['inputs'].values()):
+            temporary = None
+            try:
+                with tempfile.NamedTemporaryFile(mode='w', dir=cache, delete=False) as stream:
+                    temporary = Path(stream.name)
+                    json.dump(saved, stream)
+                os.replace(temporary, path)
+            finally:
+                if temporary is not None:
+                    temporary.unlink(missing_ok=True)
+        return definitions, errors, reached
+
     with ThreadPoolExecutor(max_workers=jobs) as pool:
-        results = list(pool.map(lambda u: scan_unit(u, root), units))
+        results = list(pool.map(cached_scan, units))
         reached = {p for _, _, paths in results for p in paths}
         orphan_headers = [dict(source=p.relative_to(root).as_posix())
                           for p in sorted((root / 'include').rglob('*'))
                           if p.suffix.lower() in {'.h', '.hpp', '.inl'}
                           and p.relative_to(root).as_posix() not in reached]
-        results.extend(pool.map(lambda u: scan_unit(u, root), orphan_headers))
+        results.extend(pool.map(cached_scan, orphan_headers))
     unique = {}
     errors = []
-    admitted = {u['source'] for u in units}
     for path in sorted((root / 'src').rglob('*')):
         if path.suffix.lower() not in {'.c', '.cpp', '.cxx'}:
             continue
@@ -687,9 +747,6 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
         for d in definitions:
             unique[(d.file, d.offset, d.name, d.signature)] = d
     definitions = sorted(unique.values(), key=lambda d: (d.file, d.offset, d.signature))
-    cache.parent.mkdir(parents=True, exist_ok=True)
-    cache.write_text(json.dumps(dict(key=key, definitions=[asdict(d) for d in definitions],
-                                    errors=errors, reached=sorted(reached)), indent=2) + '\n')
     return definitions, errors, sorted(reached)
 
 

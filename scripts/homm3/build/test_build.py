@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from homm3.build import build, configure, delink, normalize_objs
 from homm3.cleanliness import board
+from homm3.core import inputs
 from homm3.match import banked_rows, single_view, source_ownership, status, verify_va_claims
 
 
@@ -22,6 +23,7 @@ class BuildModeTest(unittest.TestCase):
         self.target.write_bytes(b"existing retail target")
         self.events = []
         self.mocks = {}
+        self.preflight = self.enterContext(patch.object(inputs, "stage_executable"))
         self.enterContext(patch.object(build, "ROOT", self.root))
         self.enterContext(patch.object(status, "REPORT", self.root / "build/objdiff/report.json"))
         self.enterContext(patch.object(status, "overall_line", return_value="report"))
@@ -55,6 +57,12 @@ class BuildModeTest(unittest.TestCase):
                                       "single_view", "ownership", "cleanliness", "readme"])
         self.mocks["compile"].assert_called_once_with("ninja")
         self.mocks["normalize"].assert_not_called()  # delink already normalizes
+        self.assertEqual(self.preflight.call_count, 2)
+
+    def test_missing_pinned_input_fails_before_compile_or_ledger_changes(self):
+        self.preflight.side_effect = inputs.InputError("Dreamcast executable missing")
+        self.assertEqual(build.main([]), 1)
+        self.assertEqual(self.events, [])
 
     def test_full_build_also_initializes_missing_targets(self):
         self.target.unlink()
@@ -75,6 +83,7 @@ class BuildModeTest(unittest.TestCase):
         self.assertEqual(self.target.read_bytes(), b"existing retail target")
         self.mocks["delink"].assert_not_called()
         self.mocks["checkpoint"].assert_not_called()
+        self.preflight.assert_not_called()
 
     def test_fast_build_cannot_silently_bootstrap_a_delink(self):
         self.target.unlink()

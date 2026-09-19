@@ -39,6 +39,15 @@ def main(argv=None) -> int:
               file=sys.stderr)
         return 1
 
+    if not fast:
+        from homm3.core import inputs
+        try:
+            for executable in (inputs.RETAIL, inputs.DREAMCAST):
+                inputs.stage_executable(executable)
+        except inputs.InputError as exc:
+            print(f"[build] {exc}", file=sys.stderr)
+            return 1
+
     configure.main()
     if _run("ninja", *ninja_args):
         return 1

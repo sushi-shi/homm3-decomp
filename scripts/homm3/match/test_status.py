@@ -14,6 +14,9 @@ from homm3.match.status import (_canonical_definition_text, _definition_text,
 
 
 class UpdateRowsTest(unittest.TestCase):
+    def setUp(self):
+        self.enterContext(mock.patch("homm3.match.status.require_built_sources"))
+
     def test_rva_migrates_history_across_label_promotion(self):
         old = {("unit", "flat_name"): MatchRow(75.0, 90.0, 95.0, 0x1234)}
         rows, stats = update_rows(

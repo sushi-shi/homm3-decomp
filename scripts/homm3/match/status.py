@@ -84,7 +84,43 @@ class MatchRow:
         return self.max
 
 
+def require_fresh_comparisons() -> None:
+    """Validate every comparison input, including the raw-object stamp chain."""
+    from homm3.build.normalized_freshness import freshness_problems
+    config = OBJDIFF_DIR / "objdiff.json"
+    if not config.is_file():
+        common.die("comparison configuration missing; run `homm3 build`")
+    seen = set()
+    problems = []
+    for unit in json.loads(config.read_text()).get("units", []):
+        for side in ("base_path", "target_path"):
+            path = (OBJDIFF_DIR / unit[side]).resolve()
+            if not path.is_file():
+                problems.append(f"{path} is missing")
+            elif (OBJDIFF_DIR / "normalized").resolve() not in path.parents:
+                problems.append(f"{path} is not a normalized comparison object")
+            else:
+                problems.extend(freshness_problems(path, seen))
+    if problems:
+        common.die("stale normalized comparison objects; run `homm3 build`:\n  "
+                   + "\n  ".join(problems[:10]))
+
+
+def require_built_sources() -> None:
+    """Never bank old object scores under the edited source's new hash.
+
+    Ask Ninja about its real command/dependency graph without building anything.
+    Normalized stamps alone cannot detect a source edit before recompilation.
+    """
+    result = subprocess.run(["ninja", "-n", "objects"], cwd=common.HOMM3_DIR,
+                            capture_output=True, text=True)
+    if result.returncode or result.stdout.strip() != "ninja: no work to do.":
+        common.die("candidate sources are not built; run `homm3 build` before "
+                   "checking or updating scores:\n" + (result.stdout + result.stderr)[-3000:])
+
+
 def load_report() -> dict:
+    require_fresh_comparisons()
     executable = shutil.which("objdiff-cli")
     if not executable:
         common.die("objdiff-cli not found - enter the dev shell")
@@ -488,6 +524,8 @@ def update_rows(current: dict, previous: dict, rvas: dict,
 
 
 def cmd_update(report: dict) -> int:
+    require_built_sources()
+    require_fresh_comparisons()
     previous = load_baseline()
     previous, recovered = seed_historical_maxima(
         previous, historical_maxima_from_git())
@@ -536,6 +574,7 @@ def checkpoint_drops(current: dict, hashes: dict,
 
 
 def cmd_check(report: dict) -> int:
+    require_built_sources()
     rows = load_baseline()
     if not rows:
         print("[status] no baseline yet - run `homm3 status update`")
@@ -747,6 +786,10 @@ def main(argv=None) -> int:
         print("[status] --gate is obsolete: score checkpoints are "
               "observational")
     command = argv[0] if argv else "summary"
+    if command not in ("summary", "functions", "update", "check"):
+        print(f"usage: homm3 status [functions [FILTER...]|update|check] "
+              f"[--write-readme] (got {command!r})", file=sys.stderr)
+        return 2
     report = load_report()
     if readme:
         write_readme(report)
@@ -756,12 +799,7 @@ def main(argv=None) -> int:
         return cmd_functions(report, argv[1:])
     if command == "update":
         return cmd_update(report)
-    if command == "check":
-        return cmd_check(report)
-    print(f"usage: homm3 status [functions [FILTER...]|update "
-          f"|check] [--write-readme] "
-          f"(got {command!r})", file=sys.stderr)
-    return 2
+    return cmd_check(report)
 
 
 if __name__ == "__main__":
