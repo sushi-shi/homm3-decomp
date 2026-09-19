@@ -6536,12 +6536,13 @@ unsigned char type_random_map_generator::placeObjectInZone(type_object* object, 
 // cover the entrance's lower and side neighbors. A reachable positive-cost
 // cell uses its path predecessor; a zero-cost cell selects a same-zone open
 // neighbor, falling back to the cell directly below. All names are provisional.
-// Residual (68.4070%): both retained calls and all nine branch tests agree;
-// coordinate/register lifetimes grow the frame from 0x3c to 0x40 and spill
-// the zone index. The offset array's initialization instructions agree.
-// A named unsigned movement cost and all eight value/scalar map-access
-// combinations are byte-flat; a signed cost scores 66.0465%. Keep the
-// canonical map-position calls and the array-derived neighbor count.
+// Exact with canonical position addition at the search, fallback and marking
+// sites, a copied marking offset, and the byte-valued gate query. The initial
+// scalar lookup and named unsigned movement cost recover the level/zone homes.
+// Copy then += peaks at 68.4070%; returned additions reach 92.1453%, the query
+// boundaries 96.7907%, and the translated fallback 99.8953%. Declaring the
+// result coordinate beside the offsets restores the final three-load order.
+// Both retained calls, all 466 bytes, and the five local offsets reproduce.
 VA(0x00542B00, 0x1D2) // anchor-callers 0x542ec5/0x54304f; Complete-only, ret 0x10
 unsigned char type_random_map_generator::placeMonolithBorder(
     TRmgMapPosition position, TRmgZone* zone)
@@ -6549,35 +6550,34 @@ unsigned char type_random_map_generator::placeMonolithBorder(
     TPoint offsets[5] = {
         TPoint(0, 1), TPoint(1, 0), TPoint(-1, 0), TPoint(1, 1), TPoint(-1, 1)
     };
+    TRmgMapPosition borderPosition;
     const int directionCount = sizeof(offsets) / sizeof(offsets[0]);
     buildZoneConnectionPaths();
-    TRmgMapItem* item = m_map.getMapItem(position);
+    TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
     int zoneIndex = item->m_zoneState.m_zone;
-    if (item->m_movement.m_cost >= 30000)
+    unsigned movementCost = item->m_movement.m_cost;
+    if (movementCost >= 30000)
         return 0;
-    TRmgMapPosition borderPosition;
-    if (item->m_movement.m_cost > 0) {
+    if (movementCost > 0) {
         borderPosition = item->m_previousTile;
     } else {
         int direction;
         for (direction = 0; direction < directionCount; ++direction) {
-            borderPosition = position;
-            borderPosition += offsets[direction];
+            borderPosition = position + offsets[direction];
             TRmgMapItem* nearby = m_map.getMapItem(borderPosition);
             if (nearby->m_zoneState.m_zone == zoneIndex
-                && nearby->m_tileData.m_subterraneanGate)
+                && nearby->hasSubterraneanGate())
                 break;
         }
         if (direction == directionCount) {
-            borderPosition = position;
-            ++borderPosition.m_y;
+            borderPosition = position + TPoint(0, 1);
         }
     }
     int border = placeBorderObject(borderPosition, 1, zone);
     if (border >= 0) {
         for (int direction = 0; direction < directionCount; ++direction) {
-            TRmgMapPosition nearby = position;
-            nearby += offsets[direction];
+            TPoint offset = offsets[direction];
+            TRmgMapPosition nearby = position + offset;
             TRmgMapItem* neighbor = m_map.getMapItem(nearby);
             if (!neighbor->m_connection.m_present) {
                 neighbor->m_tileData.m_subterraneanGate = 0;

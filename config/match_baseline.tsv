@@ -3439,7 +3439,7 @@ rmg	?placeExtraMines@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100
 rmg	?placeKeyTentGuard@type_random_map_generator@@QAEEPAVtype_object@@H@Z	67.7917	67.7917	67.7917	0x14b8c0	tokens1:e1d8916b190d
 rmg	?placeMineSite@type_random_map_generator@@QAEEPAVtype_object@@PAUTRmgZone@@EH@Z	84.2575	84.2575	84.2575	0x145580	tokens1:2e092f7c082d
 rmg	?placeMines@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x145f60	tokens1:16b8b8557dc1
-rmg	?placeMonolithBorder@type_random_map_generator@@QAEEUTRmgMapPosition@@PAUTRmgZone@@@Z	68.4070	68.4070	68.4070	0x142b00	tokens1:957bdfa26855
+rmg	?placeMonolithBorder@type_random_map_generator@@QAEEUTRmgMapPosition@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x142b00	tokens1:685605c34938
 rmg	?placeObjectInZone@type_random_map_generator@@QAEEPAVtype_object@@PAUTRmgZone@@@Z	93.5774	93.5774	93.5774	0x142930	tokens1:66b48dce3036
 rmg	?placePrimaryTown@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x144a50	tokens1:cb6e3e278377
 rmg	?placeQuestArtifact@type_random_map_generator@@QAEEPAVrmgQuestArtifactObject@@@Z	72.8017	72.8017	72.8017	0x14b490	tokens1:a9014807bb72
