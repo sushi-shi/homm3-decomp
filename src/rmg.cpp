@@ -10349,13 +10349,11 @@ VA_COMPGEN(0x0054D0F0, 0x2D, LIST_BUYNODE, TPoint)
 // later subtractions and five arithmetic operations remain calls. Flattening
 // that boundary or exposing the edge-navigation body inside the helper does
 // not reproduce the retained call sequence. No inline-depth pin is needed.
-// Dot inputs bind by const reference; by-value inputs peak at 87.7394% with
-// the previous origin-local caller, versus 93.7676% with reference inputs
-// (64 ownership states, 61 distinct objects). Preserve y-before-x products.
-static int getRmgDotProduct(const TRmgVector& first, const TRmgVector& second)
-{
-    return first.m_y * second.m_y + first.m_x * second.m_x;
-}
+// The tiny by-value vector dot lives in the header, matching the analogous
+// explicitly-inline Graphics Gems helper. Both calls expand; ordinary and
+// in-class definitions produce the same buildVertices bytes, while the member
+// ownership is what restores retail's arithmetic allocation. Preserve its
+// y-before-x products and the left-operand receivers below.
 
 // Circumcenter of the triangle with these three sites: the perpendicular
 // bisector of the origin-to-second side, scaled by the projected sides.
@@ -10367,21 +10365,27 @@ static TPoint computeRmgCircumcenter(TPoint third, TPoint origin, TPoint second)
     TRmgVector perpendicular(-axis.m_y, axis.m_x);
     TRmgVector secondSide = third - second;
     TRmgVector thirdSide = origin - third;
-    return origin + (axis + perpendicular * getRmgDotProduct(secondSide, thirdSide)
-        / getRmgDotProduct(perpendicular, thirdSide)) / 2;
+    return origin + (axis + perpendicular * secondSide.dot(thirdSide)
+        / perpendicular.dot(thirdSide)) / 2;
 }
 
-// Residual 97.5070%: input coordinate-load scheduling and the first setter's
-// y reload differ; all seven calls and the intervening arithmetic agree.
-// The 48 site-materialization/argument-order states emitted 24 distinct
-// objects; three orders with only the opposite site materialized share this
-// peak. All other scored functions stay unchanged. Follow-up controls do not
-// improve it: caller/setter binding (36 states), parent bindings (55), axis
-// and return lifetimes (55), canonical operator construction (36), parameter
-// ownership (25), setter construction (12), side/dot order (37), and direct
-// initialization (25). Native triangle/ring checks preserve integer division,
-// all three position/flag writes, inactive edges and graph links. Earlier
-// 56-state by-value-dot argument/order/binding probes peaked at 87.7394%.
+// Residual 98.2254%: retail and candidate have the same 0x78 frame, eight CFG
+// blocks, seven named calls/relocations, function length and return. Bytes are
+// exact through +0x5a and from +0x6e through the complete three-edge setter
+// tail. In the remaining twelve rows, candidate loads second.y into EDX before
+// the third site; retail uses EDX for third.x/y first, reloads origin.x, then
+// loads second.y. The by-value member dot plus the setter's named snapshot
+// raised the prior 97.5070% peak and recovered the entire tail.
+//
+// New-parent controls exhaust caller site snapshots (8 states), canonical
+// point-subtraction construction (6), axis binding (5), three-parameter value/
+// reference ownership (8), setter ownership/construction (4), and ordinary
+// versus in-class dot placement/ownership (4). All valid subtraction bodies
+// retain the independently exact 0x20 operator at 0x5fdd40. None improves the
+// short input-load schedule. Earlier free-dot families cover argument order,
+// parent/result lifetimes and canonical arithmetic bodies. Native triangle/
+// ring checks preserve integer division, all three position/flag writes,
+// inactive edges and graph links.
 VA(0x005FDB40, 0x16E) // anchor-caller 0x53e050; Complete-only, thiscall ret 0
 void TRmgVoronoi::buildVertices()
 {

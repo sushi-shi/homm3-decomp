@@ -433,6 +433,13 @@ struct TRmgVector {
     TRmgVector operator+(TRmgVector other) const;
     TRmgVector operator*(int scale) const;
     TRmgVector operator/(int divisor) const;
+    // The analogous Graphics Gems vector dot is a tiny header inline. Retail
+    // likewise expands both calls in buildVertices and retains no separate
+    // body; the by-value operand also recovers that caller's register homes.
+    int dot(TRmgVector other) const
+    {
+        return m_y * other.m_y + m_x * other.m_x;
+    }
 };
 
 // Retail's common direction table contains eight consecutive two-dword
@@ -1621,7 +1628,10 @@ struct TRmgBoundaryVertex {
     }
     void setPosition(const TPoint& position)
     {
-        m_position = position;
+        // A named snapshot gives buildVertices retail's final two-coordinate
+        // transfer before each of its three expanded stores.
+        TPoint copy = position;
+        m_position = copy;
         m_positionComputed = 1;
     }
 };
