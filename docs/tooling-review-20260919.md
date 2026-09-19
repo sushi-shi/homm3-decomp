@@ -7,11 +7,14 @@ for the first improvements: correctness and redundant compiler work dominate.
 ## Changes in this patch
 
 - **Reject stale score inputs.** `status` now checks normalized-object provenance
-  before invoking objdiff. `check` and `update` also ask Ninja whether the source,
+  before invoking objdiff. All status views also ask Ninja whether the source,
   headers or compiler commands need rebuilding; `update` verifies provenance
   again before writing. Previously, a raw-object edit could leave status at 100%
   while a fresh comparison scored 99.96032%, and `update` could bank that old
-  100% under the edited source's new hash. CUR/MAX/HIST evolution is unchanged.
+  100% under the edited source's new hash. Read-only views refuse unbuilt sources
+  too: agreeing raw/normalized objects can both predate a merge. Ninja's pending
+  work is identified through a controlled `NINJA_STATUS` marker, not its human
+  no-work message. CUR/MAX/HIST evolution is unchanged.
 - **Finish commands when the output reader closes.** Piping output to `head`
   previously caused forwarding-thread exceptions and Python exit 120. The
   logger and forwarding threads now discard output after a broken pipe while
@@ -99,7 +102,7 @@ and failing children, missing executable inputs, cache corruption, parse errors,
 forced scans, and real Clang include dependencies. Full-project build and timing
 results:
 
-- 593 tests across all non-VC6 Python tooling packages pass. The pre-existing
+- 598 tests across all non-VC6 Python tooling packages pass. The pre-existing
   VC6 fixture failures above are outside that passing set.
 - Full pinned build passes all gates: 4,083 / 4,765 functions exact, 95.96%
   fuzzy; no score or baseline changes; 4,936 ownership definitions, no violations.
@@ -120,3 +123,36 @@ The old global source key required a full scan after any source edit. Shared
 header or parser changes still require that scan with the conservative new key.
 The whole-project controls caught nested CRT includes and relative Miles/IFC
 vendor includes; both now participate in cache identity and dedicated tests.
+
+Actual Git merge controls now populate the cache, merge source or header changes,
+and compare the next cached collection against a forced fresh scan. They retain
+the original file size and timestamp to prove invalidation uses contents.
+Header-only merges invalidate both fixture consumers despite unchanged `.cpp`
+files. A copied-cache control proves another worktree requires fresh scans.
+The cache includes the absolute worktree root, so these timings do not promise
+reuse of another worktree's ownership cache.
+
+## Further profiling: frequent worktree creation and merges
+
+A full warm-build cProfile and a cold RMG ownership scan identified work that
+does not require a persistent cache shared between worktrees:
+
+- The build calls `source_hashes` four times (current/legacy for check/update),
+  accounting for 13.83 seconds under the profiler. Compute both fingerprints
+  from one source snapshot and pass them to both consumers.
+- The build calls `_base_authority_scan` 484 times for 152 units (14.86 profiled
+  seconds). Reuse each object's parsed authority within that invocation, tied
+  to the actual object bytes rather than its filename.
+- `_demangle_key` handles 157,527 calls (12.64 profiled seconds, overlapping the
+  authority scans). Its result depends only on the symbol string. A separate
+  experiment over 33,448 real symbol inputs reduced 0.652 seconds to 0.235 seconds
+  with a bounded in-process memo, producing identical results. This experiment
+  does not modify production code or reuse filesystem state across merges.
+- A cold RMG scan took 1.68 profiled seconds: 0.34 seconds in repeated path
+  relativization and 0.21 seconds splitting strings. Reuse path and line indexes
+  within the parse; that also helps the first build in a new worktree.
+
+These profiled times include instrumentation overhead and overlap; they cannot
+be added into a promised speedup. The warm build passed all gates with unchanged
+scores. Current evidence makes invocation-scoped reuse the next priority over
+introducing another cross-worktree disk cache.

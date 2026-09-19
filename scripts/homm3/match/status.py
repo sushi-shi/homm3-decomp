@@ -27,6 +27,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -112,11 +113,16 @@ def require_built_sources() -> None:
     Ask Ninja about its real command/dependency graph without building anything.
     Normalized stamps alone cannot detect a source edit before recompilation.
     """
+    # NINJA_STATUS is emitted for each scheduled edge, including in dry-run
+    # mode. Use our own marker, not Ninja's human/translated no-work message.
+    marker = "[homm3 pending build edge] "
     result = subprocess.run(["ninja", "-n", "objects"], cwd=common.HOMM3_DIR,
+                            env=dict(os.environ, NINJA_STATUS=marker),
                             capture_output=True, text=True)
-    if result.returncode or result.stdout.strip() != "ninja: no work to do.":
+    if result.returncode or marker in result.stdout:
         common.die("candidate sources are not built; run `homm3 build` before "
-                   "checking or updating scores:\n" + (result.stdout + result.stderr)[-3000:])
+                   "reading, checking or updating current scores:\n"
+                   + (result.stdout + result.stderr)[-3000:])
 
 
 def load_report() -> dict:
@@ -790,6 +796,7 @@ def main(argv=None) -> int:
         print(f"usage: homm3 status [functions [FILTER...]|update|check] "
               f"[--write-readme] (got {command!r})", file=sys.stderr)
         return 2
+    require_built_sources()
     report = load_report()
     if readme:
         write_readme(report)

@@ -1,6 +1,10 @@
 """Cache reuse must retain the ownership gate's complete input coverage."""
 from pathlib import Path
+from dataclasses import asdict
 import json
+import os
+import shutil
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -51,6 +55,14 @@ class OwnershipCacheTest(unittest.TestCase):
         self.collect()
         self.edit("src/a.cpp")
         self.assertEqual(self.collect()[1], ["src/a.cpp", "src/b.cpp"])
+
+    def test_copying_a_cache_into_another_worktree_requires_new_scans(self):
+        first, _ = self.collect()
+        other = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        shutil.copytree(self.root, other, dirs_exist_ok=True)
+        self.root = other
+        self.assertEqual(self.collect(), (first, ["src/a.cpp", "src/b.cpp"]))
+        self.assertEqual(self.collect(), (first, []))
 
     def test_mirrored_standard_headers_are_cacheable_and_invalidate_all(self):
         mirror = self.root / "build/gen/msvc-include"
@@ -117,3 +129,54 @@ class OwnershipCacheTest(unittest.TestCase):
         after, scanned = self.collect()
         self.assertEqual(scanned, ["src/a.cpp", "src/b.cpp"])
         self.assertEqual(before, after)
+
+    def assert_merge_refreshes(self, relative, old_name, new_name, expected_scans):
+        if not shutil.which('git'):
+            self.skipTest('requires Git')
+        self.scan.side_effect = self.real_scan
+        (self.root / 'include/header.h').write_text('struct Header { void old_h() {} };\n')
+        for name in ('a', 'b'):
+            (self.root / f'src/{name}.cpp').write_text(
+                f'#include "header.h"\nvoid old_{name}() {{}}\n')
+
+        def git(*args):
+            return subprocess.run(['git', '-c', 'user.name=Cache Test',
+                                   '-c', 'user.email=cache@example.invalid',
+                                   '-c', 'commit.gpgsign=false',
+                                   '-c', 'core.hooksPath=/dev/null', *args],
+                cwd=self.root, env=dict(os.environ, GIT_CONFIG_NOSYSTEM='1',
+                                       GIT_CONFIG_GLOBAL=os.devnull),
+                check=True, text=True, capture_output=True)
+
+        git('init', '-b', 'main')
+        git('add', 'src', 'include', 'config')
+        git('commit', '-m', 'Original source')
+        before, _ = self.collect()
+        self.assertEqual(before[1], [])
+        self.assertEqual(self.collect()[1], [])  # establish an actual cache hit
+        path = self.root / relative
+        previous_stat = path.stat()
+        git('checkout', '-b', 'incoming')
+        path.write_text(path.read_text().replace(old_name, new_name))
+        git('commit', '-am', 'Change declaration')
+        git('checkout', 'main')
+        git('merge', '--no-ff', '--no-edit', 'incoming')
+        # Even a same-size merge with its original timestamp must invalidate.
+        self.assertEqual(path.stat().st_size, previous_stat.st_size)
+        os.utime(path, ns=(previous_stat.st_atime_ns, previous_stat.st_mtime_ns))
+        after, scanned = self.collect()
+        self.assertEqual(scanned, expected_scans)
+        fresh, _ = self.collect(fresh=True)
+        canonical = lambda result: json.dumps(
+            [[asdict(d) for d in result[0]], result[1], result[2]], sort_keys=True)
+        self.assertEqual(canonical(after), canonical(fresh))
+        self.assertNotEqual(canonical(before), canonical(after))
+        self.assertTrue(any(new_name in d.name for d in after[0]))
+        self.assertFalse(any(old_name in d.name for d in after[0]))
+
+    def test_source_merge_reuses_only_unchanged_units(self):
+        self.assert_merge_refreshes('src/a.cpp', 'old_a', 'new_a', ['src/a.cpp'])
+
+    def test_header_merge_invalidates_consumers_with_unchanged_sources(self):
+        self.assert_merge_refreshes('include/header.h', 'old_h', 'new_h',
+                                    ['src/a.cpp', 'src/b.cpp'])

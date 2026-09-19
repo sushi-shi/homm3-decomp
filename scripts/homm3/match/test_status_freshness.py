@@ -78,3 +78,31 @@ class FreshnessTest(unittest.TestCase):
         with patch.object(status, "load_report") as report:
             self.assertEqual(status.main(["show"]), 2)
             report.assert_not_called()
+
+    def test_no_work_does_not_depend_on_ninjas_human_message(self):
+        result = subprocess.CompletedProcess([], 0, "notice: using Ninja wrapper\n", "")
+        with patch.object(status.subprocess, "run", return_value=result) as run:
+            status.require_built_sources()
+            marker = run.call_args.kwargs["env"]["NINJA_STATUS"]
+            result.stdout = marker + "copy source object\n"
+            with self.assertRaises(SystemExit):
+                status.require_built_sources()
+
+    @unittest.skipUnless(shutil.which("ninja"), "requires Ninja")
+    def test_read_only_views_reject_unbuilt_source_before_loading_scores(self):
+        (self.root / "source").write_text("before merge")
+        (self.root / "build.ninja").write_text(
+            "rule copy\n  command = cp source compiled\n"
+            "build compiled: copy source\nbuild objects: phony compiled\n")
+        subprocess.run(["ninja", "objects"], cwd=self.root, check=True, capture_output=True)
+        (self.root / "source").write_text("after merge")
+        # Normalized objects and their stamps still agree with the old raw
+        # object. Only checking that chain would silently show pre-merge scores.
+        status.require_fresh_comparisons()
+        for argv in ([], ["functions", "unit"], ["--write-readme"]):
+            with self.subTest(argv=argv), patch.object(status, "load_report") as report, \
+                    patch.object(status, "write_readme"), patch.object(status, "cmd_summary"), \
+                    patch.object(status, "cmd_functions"):
+                with self.assertRaises(SystemExit):
+                    status.main(argv)
+                report.assert_not_called()
