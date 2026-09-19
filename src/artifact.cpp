@@ -171,7 +171,7 @@ static void initializeArtifactTraits(int id,
 // TResourcePtr/TAutoArrayPtr express those Windows lifetimes. The older set/get
 // names do not imply additional Windows allocations or disposal calls.
 
-// Residual (80.8218% current, 81.3762% MAX): nested bitset<19> _Tidy and
+// Residual (80.8218%, historical peak 81.9921%): nested bitset<19> _Tidy and
 // equality calls stay out of line where retail expands them. The size loop hoists
 // the sheet's row-vector base, and late range-error construction differs.
 // The combination loop now has retail's owner/offset end checks, set-bit
@@ -188,8 +188,11 @@ static void initializeArtifactTraits(int id,
 // are byte-neutral. These source boundaries replace the fabricated carrier.
 // Earlier named-row/declaration/volatile-accumulator probes did not resolve
 // the first-loop hoist; retain the direct row accesses and ordinary locals.
+// DC public ?InitializeArtifactTraitsTable@@YA_NXZ proves bool; the SH4
+// dossier renders its byte-sized procedure result as unsigned char. Complete
+// returns only AL 0/1, and the sole kb caller tests that Boolean result.
 VA(0x0044cd50, 0x5E8)  // anchor-strings/caller, dc 0x4fec0
-unsigned char initializeArtifactTraitsTable()
+bool initializeArtifactTraitsTable()
 {
     {
         TResourcePtr<TSpreadsheetResource> traitsSheet(
