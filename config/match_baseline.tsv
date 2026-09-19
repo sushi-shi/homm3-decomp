@@ -3304,7 +3304,7 @@ rmg	?assignRmgTeams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	tokens1:
 rmg	?buildOutline@TRmgObjectPropertiesRef@@QAEXXZ	100.0000	100.0000	100.0000	0x132c80	tokens1:5fe6bc9d378e
 rmg	?buildOverlapPriorities@TRmgObjectPropertiesRef@@QAEXXZ	100.0000	100.0000	100.0000	0x132e40	tokens1:a2a79f6c6820
 rmg	?buildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	83.7153	83.7153	83.7153	0x147880	tokens1:a36b7e3854c0
-rmg	?buildVertices@TRmgVoronoi@@QAEXXZ	87.7394	87.7394	87.7394	0x1fdb40	tokens1:1135b403408e
+rmg	?buildVertices@TRmgVoronoi@@QAEXXZ	97.5070	97.5070	97.5070	0x1fdb40	tokens1:033ac7148a3e
 rmg	?buildZoneBoundaries@type_random_map_generator@@QAEXPAUTRmgTemplate@@H@Z	93.5031	96.3209	96.3209	0x13e050	tokens1:7c74a96a943a
 rmg	?buildZoneConnectionPaths@type_random_map_generator@@QAEXXZ	99.3582	99.3582	99.3582	0x1405d0	tokens1:f5ba89d634de
 rmg	?calculateQuestZoneDistances@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	77.7594	77.7594	77.7594	0x14b180	tokens1:274a5d25b2a4

@@ -100,6 +100,18 @@ preceding MAX. The invariant is CUR <= MAX <= HIST: MAX is monotone for an
 unchanged function hash, a proven edit resets MAX to CUR, and HIST retains the
 all-time peak. Tooling prioritizes MAX; HIST is a lead for recovering lost peaks.
 
+## Holista for hard cases
+
+For difficult matching plateaus, use the repository's
+[Holista skill](.claude/skills/holista/SKILL.md). Pair the primary matcher, who
+owns experiments and adoption, with a second worker named Holista, who proposes
+coherent C++ as the original developers might have written it. Look for expanded
+helper patterns and natural declaration, statement, loop, and lifetime structure.
+Test related changes together: a temporary score or CFG drop can recover when
+the complete source model is implemented. Keep those intermediate differences
+distinct from contradictions of proven behavior, ABI, layout, or source facts;
+the final implementation still requires retail verification.
+
 ## Helper boundaries and inlining
 
 Preserve one canonical helper, its proven declaration, and source calls. Match

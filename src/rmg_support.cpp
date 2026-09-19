@@ -421,6 +421,8 @@ void TRmgVoronoi::removeEdge(TRmgBoundaryVertex* edge)
 }
 
 // Provisional shared edge-side predicate, used by locate and legalization.
+// docs/rmg-voronoi-provenance.md records the adaptation evidence and its
+// limits; this resemblance does not establish an original name/declaration.
 // Graphics Gems IV delaunay/quadedge.C's RightOf(x, e) is ccw(x, Dest, Org)
 // over TriArea; Complete uses integer by-value TPoint and the canonical
 // orientation below in the same cyclic order. The ccw layer is ordinary:
