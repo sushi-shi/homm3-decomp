@@ -6509,11 +6509,11 @@ unsigned char type_random_map_generator::createSubterraneanGate(
 // minimum x/y by the prototype footprint minus one, and walks y then x.
 // The chosen candidate is assigned back to that coordinate before the
 // virtual call; keep both the real coordinate copy and the placement helper.
-// The source family recovers retail's height-before-width adjustment and
-// keeps an assigned loop coordinate (93.5774%). All 15 blocks and six calls
-// agree in shape/order; the final success block remains one instruction
-// short. Direct/copy-selected arguments lose its duplicate homes; public
-// vector insertion alternatives do not resolve that retained copy either.
+// A named unsigned random index restores the selected coordinate's duplicate
+// homes and the final success block (99.9286%). All six calls agree. Only
+// the independent minimum-X/maximum-Y loads at +0x10c/+0x10f are reversed.
+// Loop forms, snapshot/declaration lifetimes, public vector insertion and
+// allocator ownership do not resolve that scheduling difference.
 VA(0x00542930, 0x1C6) // anchor-callee 0x540e81; thiscall, ret 8; retail-only
 unsigned char type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* zone)
 {
@@ -6535,7 +6535,8 @@ unsigned char type_random_map_generator::placeObjectInZone(type_object* object, 
     }
     if (!candidates.size())
         return 0;
-    position = candidates[rand() % candidates.size()];
+    unsigned int selected = rand() % candidates.size();
+    position = candidates[selected];
     addObject(object, position);
     return 1;
 }
@@ -7557,9 +7558,14 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
 // Direct caller 0x544a50 proves four stack arguments and byte success.
 // Retail rejects alignment -1, selects a town prototype, tests placement,
 // constructs a 0x28-byte object and sets the zone's primary town position.
-// First reconstruction: 76.3310%. Candidate has three extra CFG blocks;
-// inspect vector cleanup and the selected-position copy before changing
-// the nearest-site rule or the verified town construction boundary.
+// Partial 92.0724%: canonical trigger subtraction restores the retained
+// type_object constructor; a named unsigned selection restores the chosen
+// coordinate copy, and Y-before-X locals recover the distance calculation.
+// clear() still expands erase into copy/_Destroy; retail retains the folded
+// range-erase body. Direct erase loses the constructor boundary; resize(0)
+// retains erase but adds a size call and conditional absent from retail.
+// Initial zone/prototype snapshots remain differently scheduled. Value,
+// assignment, getter and scalar-lookup controls do not settle those homes.
 VA(0x00545250, 0x324)
 unsigned char type_random_map_generator::tryPlacePrimaryTown(
     TRmgZone* zone, int alignment, int player, unsigned char townOption)
@@ -7579,13 +7585,13 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
         for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
             if (m_map.getMapItem(nearby)->m_zoneState.m_zone != zoneIndex)
                 continue;
-            int dx = nearby.m_x - position.m_x;
             int dy = nearby.m_y - position.m_y;
+            int dx = nearby.m_x - position.m_x;
             int distance = dx * dx + dy * dy;
             if (distance <= bestDistance && m_map.canPlaceObject(properties, nearby, zone)) {
                 if (distance < bestDistance) {
                     bestDistance = distance;
-                    candidates.erase(candidates.begin(), candidates.end());
+                    candidates.clear();
                 }
                 candidates.push_back(nearby);
             }
@@ -7594,10 +7600,11 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
     if (!candidates.size())
         return 0;
     rmgTownObject* town = new rmgTownObject(properties, m_nextObjectId++, player, townOption);
-    position = candidates[rand() % candidates.size()];
+    unsigned int selected = rand() % candidates.size();
+    position = candidates[selected];
     addObject(town, position);
-    position.m_x -= prototype->m_triggerCell.m_x;
-    position.m_y -= prototype->m_triggerCell.m_y;
+    position -= TPoint(prototype->m_triggerCell.m_x,
+        prototype->m_triggerCell.m_y);
     zone->m_position = position;
     zone->m_active = 1;
     m_roadTargets.push_back(position);
@@ -7611,8 +7618,15 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
 }
 
 // Site selector called at 0x545aee. Complete-only names are provisional.
-// First reconstruction: 84.2575%. Preserve the ordered distance, border
-// count and score filters, including their separate candidate resets.
+// Partial 99.5863%: clear() restores all three candidate-reset boundaries;
+// canonical town translation, an outline-point snapshot and a named unsigned
+// selection recover their value lifetimes. Y-before-X distance locals and
+// bounds-before-ranking initialization restore the arithmetic and zero store.
+// Preserve the ordered distance, border-count and score filters. Only the
+// position-copy/buildOutline receiver and first map receiver are scheduled
+// differently. Position lifetimes, coordinate helpers, footprint arithmetic,
+// branch forms and allocator controls leave those two groups unresolved.
+// The three _Destroy calls fold to the retail artifact-vector ret-8 body.
 VA(0x00545580, 0x401)
 unsigned char type_random_map_generator::placeMineSite(type_object* object,
     TRmgZone* zone, unsigned char startingMine, int spacing)
@@ -7620,15 +7634,14 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
     TRmgObjectPropertiesRef* properties = object->m_properties;
     TObjectType* prototype = properties->m_prototype;
     std::vector<TRmgMapPosition> candidates;
+    TRmgZoneBounds bounds = zone->m_bounds;
     int bestBorderCount = 0;
     int bestDistance = 40000;
-    TRmgZoneBounds bounds = zone->m_bounds;
     int zoneIndex = zone->m_slot->m_zoneIndex;
     TRmgMapPosition townPosition;
     if (startingMine) {
         townPosition = zone->m_position;
-        townPosition.m_x += prototype->m_triggerCell.m_x;
-        townPosition.m_y += prototype->m_triggerCell.m_y;
+        townPosition += TPoint(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
     }
     bounds.m_minimumY += prototype->getHeight() - 1;
     bounds.m_minimumX += prototype->getWidth() - 1;
@@ -7640,8 +7653,8 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
             if (item->m_zoneState.m_zone != zoneIndex || !m_map.canPlaceObject(properties, position, zone))
                 continue;
             if (startingMine) {
-                int dx = position.m_x - townPosition.m_x;
                 int dy = position.m_y - townPosition.m_y;
+                int dx = position.m_x - townPosition.m_x;
                 int distance = dx * dx + dy * dy;
                 if (distance > bestDistance || distance < 16)
                     continue;
@@ -7651,7 +7664,7 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
                     bestDistance = distance;
                     bestBorderCount = 0;
                     spacing = 0;
-                    candidates.erase(candidates.begin(), candidates.end());
+                    candidates.clear();
                 }
             }
             int score = item->m_zoneState.m_score;
@@ -7659,8 +7672,9 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
                 continue;
             int borderCount = 0;
             for (unsigned int i = 0; i < properties->m_outline.size(); ++i) {
-                int x = position.m_x + properties->m_outline[i].m_x;
-                int y = position.m_y + properties->m_outline[i].m_y;
+                TPoint offset = properties->m_outline[i];
+                int x = position.m_x + offset.m_x;
+                int y = position.m_y + offset.m_y;
                 if (x < 0 || x >= m_map.m_mapWidth || y < 0 || y >= m_map.m_mapHeight || y > position.m_y)
                     continue;
                 TRmgMapItem* nearby = m_map.getMapItem(x, y, position.m_z);
@@ -7673,19 +7687,20 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
             if (borderCount < bestBorderCount)
                 continue;
             if (borderCount > bestBorderCount) {
-                candidates.erase(candidates.begin(), candidates.end());
+                candidates.clear();
                 bestBorderCount = borderCount;
             }
             if (score > spacing) {
                 spacing = score;
-                candidates.erase(candidates.begin(), candidates.end());
+                candidates.clear();
             }
             candidates.push_back(position);
         }
     }
     if (!candidates.size())
         return 0;
-    position = candidates[rand() % candidates.size()];
+    unsigned int selected = rand() % candidates.size();
+    position = candidates[selected];
     addObject(object, position);
     return 1;
 }
