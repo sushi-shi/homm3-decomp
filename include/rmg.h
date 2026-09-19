@@ -983,7 +983,7 @@ public:
     int m_experience;                       // +0x28, prison definition experience
 
     rmgHeroObject(TRmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, int objectId, int heroIndex,
+        type_random_map_generator* generator, const int& objectId, int heroIndex,
         int experience);
 
     virtual void unknownOperation();
@@ -1531,6 +1531,7 @@ struct TRmgZone {
     std::vector<TPoint> m_entrances;   // +0x404
 
     TRmgZone(TRmgTownSlot* slot);
+    void decrementObjectCount(TAdventureObjectType objectType);
     void chooseTerrain();
     ~TRmgZone();
     int getTerrain() const

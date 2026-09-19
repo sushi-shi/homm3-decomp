@@ -713,6 +713,9 @@ int __fastcall selectTerrainTransition(
 // slot 3 remain in order. Coordinate getters/fields, named value snapshots,
 // member initialization and an ordinary size/storage helper did not recover
 // that nested boundary. Scoped output is retained only as an experiment control.
+// Thirteen follow-up states test default/named cache values, returned-value
+// ownership and ordinary cache initialization/resize helpers. Reproduced
+// results remain at or below 35.3347%; keep the proven virtual output ABI.
 VA(0x005B45F0, 0x26D)
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)

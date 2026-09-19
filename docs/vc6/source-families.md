@@ -2011,6 +2011,13 @@ PYTHONPATH=scripts python scripts/experiments/generate-rmg-key-color-helper-fami
 
 ### Object-removal coordinate ownership (0x54bc50)
 
+The generator below is retired after recovering 100% in the current source.
+A five-state JSON family reproduced the ordinary zone decrement helper: enum
+value/reference and integer value recover all 686 bytes; integer reference
+leaves 97.3733%, and the direct caller update leaves 95.7733%. The full build
+passes all gates. Shared zone-count and key-color searches remain because
+other callers are unfinished. Temporary manifests and results stay in `build/`.
+
 `generate-rmg-object-removal-family.py` starts from the retail-only 88.4667%
 body. Its sixty input-position/index/map-coordinate states produce 48 code
 identities and ten reproduced finalists. Unsigned `TRmgGridPoint` indices

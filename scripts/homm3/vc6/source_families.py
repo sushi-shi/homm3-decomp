@@ -346,6 +346,11 @@ def main(argv=None):
         snapshot.mkdir()
         shutil.copytree(root / "include", snapshot / "include")
         shutil.copytree(root / "src", snapshot / "src", ignore=shutil.ignore_patterns("build"))
+        # cc_wrap resolves project inputs and include roots inside each isolated
+        # tree. Freeze the configuration alongside source, never link live config.
+        (snapshot / "config").mkdir()
+        for name in ("project.toml", "units.toml"):
+            shutil.copy2(root / "config" / name, snapshot / "config" / name)
         (snapshot / "vendor").symlink_to(root / "vendor", target_is_directory=True)
     rows = status.load_baseline()
     plans = []

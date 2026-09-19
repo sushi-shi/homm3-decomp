@@ -1162,6 +1162,13 @@ TRmgZone::~TRmgZone()
 {
 }
 
+// Provisional Complete-only bookkeeping boundary, inferred from the
+// expansion in removeObject (0x54bc50); no separate retained body is known.
+void TRmgZone::decrementObjectCount(TAdventureObjectType objectType)
+{
+    --m_objectCountByType[objectType];
+}
+
 // Both the level-occupancy pass and the bounds pass in FilterZonePositions
 // copy the whole coordinate before selecting a component. That retained
 // value-copy shape motivates this ordinary accessor; no DC name is known.
@@ -1802,7 +1809,7 @@ void rmgSeerHutObject::write(TAbstractFile* outfile, int version)
 // construction. Vtable 0x640b14 slot 1 clears that byte when the reservation
 // is released.
 rmgHeroObject::rmgHeroObject(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, int objectId, int heroIndex,
+    type_random_map_generator* generator, const int& objectId, int heroIndex,
     int experience)
     : type_object(properties)
 {
@@ -2129,15 +2136,10 @@ type_object* type_resource_lump_def::generate(TRmgObjectPropertiesRef* propertie
 // a hero, returns null on exhaustion, and expands the 0x2c-byte object's
 // constructor with the definition's experience and the next generator id.
 // Complete-only: no Dreamcast counterpart; constructor spelling provisional.
-// Residual (95.1754%): the selector's nested decrement/test retains retail's
-// call at 0x5348dc naturally, while its standalone body remains exact.
-// The combined && form expands it and gives 9.0702%; nested/continue forms
-// give 63.7193% before constructor refinement. Assigning heroIndex before
-// objectId recovers the base-position stores and derived-vptr ordering.
-// The 16 initializer/body combinations peak at 94.6316%; 30 constructor
-// assignment-order forms peak here, and all six integer-parameter orders
-// are flat. Retail still loads experience later and stores the first
-// placement byte before the position fields. No other RMG scores changed.
+// Passing the post-incremented object id by const reference keeps its
+// temporary alive through construction and reproduces all 147 retail bytes.
+// The eight value/reference combinations confirm that experience remains a
+// value; the hero index is neutral. A value id leaves 95.1754%.
 VA(0x005348D0, 0x93) // anchor-definition/object vtables + selectPrisonHero
 type_object* type_prison_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)
@@ -10184,25 +10186,11 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
 // Complete-only removal helper; callers retain ownership of the object.
 // Both retail find loops test the returned iterator against null, including
 // the end-iterator path (0x54bc95 and 0x54be6d). Preserve that observed test.
-// Unsigned grid indices and a full destination position restore retail's
-// 0x2c frame, coordinate homes and complete footprint-loop instruction stream.
-// The 60-state coordinate and finite 41-state level families reproduce
-// 95.6800% without sibling movement. Retain the real position accessor.
-// Residual: the zone count still expands to load/decrement/store instead
-// of retail's memory decrement; entrance arithmetic and color registers
-// differ. Sixty counter-spelling/type-cache probes are neutral per parent.
-// Sixty zone-type/item/owner probes reach 95.7022% only through different
-// color registers, not the missing counter sequence; no such edit adopted.
-// Earlier scalar controls: positive bounds and iterator scope are neutral;
-// shared mask index 77.3911%, entrance position/accessor 85.0578%.
-// See generate-rmg-object-removal-family.py and its independent cell oracle.
-// Snapshotting the object kind and nested trigger point before the map query
-// raises matching to 95.7733%. Keep the existing direct per-zone decrement;
-// the separate inferred decrement helper from the old branch is not needed.
-// A two-state joint test of an ordinary int& zone-count accessor at all three
-// increment/decrement/limit consumers reproduces identical caller bytes.
-// The accessor fully expands; its returned lvalue does not recover memory DEC
-// or alter the entrance/color homes. Fixed-array storage stays unchanged.
+// Grid coordinates and the prototype snapshots preserve the footprint walk.
+// The ordinary zone bookkeeping helper expands to retail's indexed
+// memory DEC; flattening it splits the update and leaves 95.7733%.
+// Current VC6 reproduces all 686 bytes with enum/int value or enum-reference
+// parameters; int-reference leaves 97.3733%. Keep the existing enum domain.
 VA(0x0054BC50, 0x2AE) // anchor-callee 0x5338e0/0x54b490; retail-only
 void type_random_map_generator::removeObject(type_object* object)
 {
@@ -10218,7 +10206,7 @@ void type_random_map_generator::removeObject(type_object* object)
         int zone = m_map.getMapItem(position.m_x - trigger.m_x,
             position.m_y - trigger.m_y, position.m_z)->m_zoneState.m_zone;
         if (zone >= 0) {
-            --m_zones[zone]->m_objectCountByType[objectType];
+            m_zones[zone]->decrementObjectCount(objectType);
         }
     }
     if (prototype->m_objectType == BORDER_GUARD) {
