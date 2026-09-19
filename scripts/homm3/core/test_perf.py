@@ -10,6 +10,11 @@ from homm3.core.perf import profile_environment, summarize_profiles
 
 
 class ProfileCoverageTest(unittest.TestCase):
+    def test_missing_profile_is_not_reported_as_zero_calls(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(RuntimeError, 'no Python profiles captured'):
+                summarize_profiles(Path(directory))
+
     def test_worker_and_child_calls_are_counted_once(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

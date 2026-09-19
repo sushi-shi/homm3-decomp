@@ -117,8 +117,11 @@ def profile_environment(output: Path, env: dict) -> dict:
 
 
 def summarize_profiles(directory: Path) -> dict:
+    captures = list(directory.glob('*.prof'))
+    if not captures:
+        raise RuntimeError(f'no Python profiles captured in {directory}; check startup-hook errors in the command log')
     functions = {}
-    for path in directory.glob('*.prof'):
+    for path in captures:
         for (file, line, name), (primitive, calls, own, cumulative, _) in pstats.Stats(str(path)).stats.items():
             key = (file, line, name)
             row = functions.setdefault(key, [0, 0, 0., 0.])
@@ -222,6 +225,8 @@ def main(argv=None):
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--profile', action='store_true')
     args = parser.parse_args(argv)
+    if args.profile and sys.version_info < (3, 13):
+        parser.error('--profile requires the pinned Python 3.13 or newer')
     if args.repeat < 2:
         parser.error('--repeat must be at least 2')
     roots = [args.baseline.resolve(), args.candidate.resolve()]
