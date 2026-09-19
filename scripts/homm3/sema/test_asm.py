@@ -1,5 +1,6 @@
 """Unit tests for code/data boundaries in semantic disassembly."""
 
+from homm3.build import refresh as build_refresh
 import unittest
 
 from homm3.sema import _asm
@@ -210,15 +211,15 @@ class RefreshUnitTests(unittest.TestCase):
         self.dir = tempfile.TemporaryDirectory()
         ninja = Path(self.dir.name) / "build.ninja"
         ninja.write_text("# fixture\n")
-        self._saved = (_asm.NINJA_FILE, _asm.REFRESH_LOCK, normalize_objs.normalize_unit)
-        _asm.NINJA_FILE = ninja
-        _asm.REFRESH_LOCK = Path(self.dir.name) / "lock"
+        self._saved = (build_refresh.NINJA_FILE, build_refresh.REFRESH_LOCK, normalize_objs.normalize_unit)
+        build_refresh.NINJA_FILE = ninja
+        build_refresh.REFRESH_LOCK = Path(self.dir.name) / "lock"
         self.wrote = 0
         normalize_objs.normalize_unit = lambda unit, symbol_rvas=None: {"wrote": self.wrote}
 
     def tearDown(self):
         from homm3.build import normalize_objs
-        _asm.NINJA_FILE, _asm.REFRESH_LOCK, normalize_objs.normalize_unit = self._saved
+        build_refresh.NINJA_FILE, build_refresh.REFRESH_LOCK, normalize_objs.normalize_unit = self._saved
         self.dir.cleanup()
 
     def test_fresh_unit_costs_one_ninja_call_and_no_report(self):
@@ -246,7 +247,7 @@ class RefreshUnitTests(unittest.TestCase):
         self.assertIn("--no-build", err.getvalue())
 
     def test_no_ninja_graph_means_no_refresh(self):
-        _asm.NINJA_FILE = _asm.NINJA_FILE.with_name("absent.ninja")
+        build_refresh.NINJA_FILE = build_refresh.NINJA_FILE.with_name("absent.ninja")
         run = self._Run()
         self.assertIsNone(_asm.refresh_unit("philai", run=run))
         self.assertEqual(run.calls, [])

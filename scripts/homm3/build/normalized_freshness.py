@@ -83,8 +83,11 @@ def implementation_inputs() -> dict[str, Path]:
     when the stamp format or validation contract changes.
     """
     directory = Path(__file__).parent
-    return {'tool:' + name: directory / name for name in (
-        'normalized_freshness.py', 'normalize_objs.py', 'canonicalize_data_symbols.py')}
+    paths = {"tool:" + name: directory / name for name in (
+        "normalized_freshness.py", "normalize_objs.py", "canonicalize_data_symbols.py")}
+    for name in ("project.py", "image.py", "inputs.py"):
+        paths["tool:core/" + name] = directory.parent / "core" / name
+    return paths
 
 
 def stamp_path(output: Path) -> Path:

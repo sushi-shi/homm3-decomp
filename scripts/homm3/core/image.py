@@ -30,7 +30,8 @@ class Image:
 
     def __init__(self, path):
         self.path = path
-        self.data = open(path, "rb").read()
+        with open(path, "rb") as stream:
+            self.data = stream.read()
         data = self.data
         if data[:2] != b"MZ":
             _die(f"{path}: not a PE image")

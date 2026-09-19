@@ -79,7 +79,7 @@ def source_file(path: str) -> str:
     return name
 
 
-def read_dc(root: Path = ROOT, *, include_declarations: bool = False) -> list[Origin]:
+def read_dc(root: Path = ROOT, *, include_declarations: bool = False, project=None) -> list[Origin]:
     """Read procedure locations, optionally adding unlocated field-list identities.
 
     Location-only consumers such as the local-class cleanliness metric must
@@ -87,7 +87,10 @@ def read_dc(root: Path = ROOT, *, include_declarations: bool = False) -> list[Or
     """
     from homm3.core import inputs
     from homm3.core.nb11_types import Types
-    symbols = inputs.dreamcast_symbols()
+    from homm3.core.project import Project
+    project = project or Project(root)
+    root = project.root
+    symbols = inputs.dreamcast_symbols(project)
     types = Types.from_symbols(symbols)
     generated = generated_members(types)
     origins = []
@@ -583,7 +586,7 @@ def resolve_instances(definitions, requests, unit, root, args):
     return definitions, errors
 
 
-def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str], list[str]]:
+def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None) -> tuple[list[Definition], list[str], list[str]]:
     """Fail visibly on parse errors; never turn an unreadable TU into no bodies."""
     from clang import cindex
     import ctypes
@@ -596,10 +599,11 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
     # Inventory the matching compiler's project branches, including written
     # definitions hidden from the editor behind !defined(__clang__). Keep
     # annotations available through va.h without selecting editor-only code.
-    args = ['--driver-mode=cl', '/TP', *clang.FLAGS, '-U__clang__',
-            '-D_MSC_VER=' + clang.MSC_VER, '-DHOMM3_SOURCE_OWNERSHIP',
-            '-imsvc', str(clang.mirror()),
-            '/I' + str(root / 'include'), '/I' + str(root / 'vendor/zlib-1.1.3')]
+    from homm3.core.compiler_profile import Profiles
+    from homm3.core.project import Project
+    profiles = profiles or Profiles(Project(root))
+    args = [*profiles.for_source(root / unit['source']), '-U__clang__',
+            '-D_MSC_VER=' + clang.MSC_VER, '-DHOMM3_SOURCE_OWNERSHIP']
     tu = cindex.Index.create().parse(
         str(root / unit['source']), args=args,
         options=cindex.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
@@ -749,9 +753,13 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
     digest = hashlib.sha256(Path(__file__).read_bytes())
     digest.update(str(root.resolve()).encode())
     for dependency in ('scripts/homm3/core/clang.py', 'scripts/homm3/vc6/_source.py',
-                       'scripts/homm3/manifest.py', 'scripts/homm3/retail_labels/source.py'):
+                       'scripts/homm3/manifest.py', 'scripts/homm3/retail_labels/source.py',
+                       'scripts/homm3/core/compiler_profile.py', 'scripts/homm3/core/project.py'):
         digest.update((root / dependency).read_bytes())
-    mirror = clang.mirror()  # construct shared mirror before starting workers
+    from homm3.core.compiler_profile import Profiles
+    from homm3.core.project import Project
+    profiles = Profiles(Project(root))
+    mirror = profiles.mirror  # shared, constructed before workers
     from clang import cindex
     library = Path(cindex.conf.get_filename())
     digest.update(str(library).encode())
@@ -795,7 +803,7 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
                             saved['errors'], saved['reached'])
             except (OSError, ValueError, KeyError, TypeError, AttributeError):
                 pass  # Disposable cache; a damaged entry must trigger a scan.
-        definitions, errors, reached = scan_unit(unit, root)
+        definitions, errors, reached = scan_unit(unit, root, profiles=profiles)
         dependencies = {os.path.normpath(p) for p in [*reached, source]}
         input_hashes = {p: content.get(p) for p in sorted(dependencies)}
         saved = dict(key=key, definitions=[asdict(d) for d in definitions],
@@ -861,8 +869,7 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
     inline_errors = []
     if any(d.inline_origin for d in definitions):
         if symbols is None:
-            from homm3.core import inputs
-            symbols = inputs.dreamcast_symbols()
+            raise ValueError("inline ownership comparison requires explicit reference symbols")
         recovered, inline_errors = inline_origins(definitions, origins, symbols)
         origins = [*origins, *recovered]
     by_name = defaultdict(list)
@@ -1092,6 +1099,11 @@ class AuditResult(TypedDict):
 
 def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False, *, origins=None) -> AuditResult:
     from homm3.retail_labels.fragments import all_claims
+    from homm3.core.project import Project
+    from homm3.core import inputs
+    project = Project(root)
+    root = project.root
+    image_base = project.specification["inputs"]["retail"]["image_base"]
     definitions, errors, reached = collect(root, jobs, fresh)
     errors.extend(active_stub_definitions(definitions, root))
     dc_only, failures = read_filter(root / 'config/dc_only.tsv', ('file', 'function', 'line'))
@@ -1099,31 +1111,33 @@ def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False, *, origins=None
     win_only, failures = read_filter(root / 'config/win_only.tsv', ('file', 'function', 'signature'))
     errors.extend(failures)
     violations, counts = compare(definitions,
-                                 read_dc(root, include_declarations=True) if origins is None else origins,
-                                 dc_only, win_only)
+                                 read_dc(root, include_declarations=True, project=project) if origins is None else origins,
+                                 dc_only, win_only,
+                                 symbols=inputs.dreamcast_symbols(project)
+                                 if any(d.inline_origin for d in definitions) else None)
     errors.extend(violations)
-    claims = all_claims()
+    claims = all_claims(project.fragments)
     from homm3.match.status import load_baseline
     errors.extend(header_claim_ownership(
-        definitions, claims, load_baseline(root / 'config/match_baseline.tsv')))
-    errors.extend(claim_identity(definitions, claims))
+        definitions, claims, load_baseline(root / 'config/match_baseline.tsv'), image_base=image_base))
+    errors.extend(claim_identity(definitions, claims, image_base=image_base))
     return {'definitions': len(definitions), 'counts': counts, 'violations': errors,
-            'unpaired_generated_claims': unpaired_generated_claims(claims), 'reached': reached}
+            'unpaired_generated_claims': unpaired_generated_claims(claims, image_base=image_base), 'reached': reached}
 
 
-def header_claim_ownership(definitions: list[Definition], claims, banked=None) -> list[str]:
+def header_claim_ownership(definitions: list[Definition], claims, banked=None, *, image_base=common.IMAGE_BASE) -> list[str]:
     """A matching inactive .cpp stub cannot substitute for the header VA."""
     by_name = defaultdict(set)
     for claim in claims:
         if claim.kind == 'func' and claim.channel.startswith('src-VA'):
-            by_name[claim.name].add(claim.rva + common.IMAGE_BASE)
+            by_name[claim.name].add(claim.rva + image_base)
     # Removing an annotation also removes its source claim. The ledger still
     # knows that exact mangled identity, including when CUR is now unmatched.
     # Check it independently so the missing annotation cannot erase the gate's
     # own evidence that this header body needs a retail binding.
     for (_unit, name), row in (banked or {}).items():
         if row.rva is not None:
-            by_name[name].add(row.rva + common.IMAGE_BASE)
+            by_name[name].add(row.rva + image_base)
     errors = []
     for d in claim_definitions(definitions):
         if not d.file.startswith('include/') or not d.mangled:
@@ -1135,20 +1149,20 @@ def header_claim_ownership(definitions: list[Definition], claims, banked=None) -
     return errors
 
 
-def claim_identity(definitions: list[Definition], claims) -> list[str]:
+def claim_identity(definitions: list[Definition], claims, *, image_base=common.IMAGE_BASE) -> list[str]:
     """Retaining an RVA under a raw placeholder is not retaining its identity."""
     from homm3.retail_labels.source import vc6_function_name
     by_address = defaultdict(set)
     for claim in claims:
         if claim.kind == 'func':
-            by_address[claim.rva + common.IMAGE_BASE].add(claim.name)
+            by_address[claim.rva + image_base].add(claim.name)
     return [f'CLAIM_IDENTITY {d.file}:{d.line} {d.name}: {hex(d.va)} must name '
             f'{d.mangled!r}, extracted {sorted(by_address[d.va])!r}'
             for d in claim_definitions(definitions) if d.va is not None and d.mangled
             and vc6_function_name(d.mangled, by_address[d.va], Path(d.file).stem) is None]
 
 
-def unpaired_generated_claims(claims) -> list[str]:
+def unpaired_generated_claims(claims, *, image_base=common.IMAGE_BASE) -> list[str]:
     """Report code-emission debt separately from written-source ownership.
 
     A library/implicit body may stop emitting after its callers change. Its
@@ -1159,7 +1173,7 @@ def unpaired_generated_claims(claims) -> list[str]:
     do not expect a named public.
     """
     from homm3.retail_labels.source import ANONYMOUS_COMPGEN_KINDS
-    return [f'{c.unit}: {hex(c.rva + common.IMAGE_BASE)} '
+    return [f'{c.unit}: {hex(c.rva + image_base)} '
             f'{c.meta["ckind"]} {c.meta.get("owner", "")}: '
             'no VC6 function paired with the source enrollment'
             for c in claims if c.kind == 'func'

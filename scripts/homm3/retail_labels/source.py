@@ -949,12 +949,12 @@ def ir_va_names(ir: str) -> dict:
     return out
 
 
-def unit_ir_names(path) -> dict | None:
+def unit_ir_names(path, profiles=None) -> dict | None:
     """The unit's IR name map, or None when clang could not read the TU
     (no toolchain, or a source construct cl accepts and clang does not).
     None is always reported by the caller - a silent empty map would look
     exactly like a TU with no claims."""
-    ir = clang.emit_ir(path)
+    ir = clang.emit_ir(path, profiles=profiles)
     return None if ir is None else ir_va_names(ir)
 
 
@@ -2755,7 +2755,7 @@ def banked_inline_names(path: Path, definitions, banked: set) -> dict:
 
 
 def run(only_units: list[str] | None = None,
-        jobs: int | None = None) -> tuple[list[str], list[str], list[str]]:
+        jobs: int | None = None, *, policy) -> tuple[list[str], list[str], list[str]]:
     """Extract fragments; returns (changed units, pruned fragments,
     problems). Fragment writes are content-idempotent so an unchanged TU
     never dirties downstream freshness probes.
@@ -2786,19 +2786,20 @@ def run(only_units: list[str] | None = None,
                         "join; run inside `nix develop`")
         ir_maps = [None] * len(todo)
     else:
-        clang.mirror()          # once, before the pool shares it
+        from homm3.core.compiler_profile import Profiles
+        from homm3.core.project import Project
+        from functools import partial
+        profiles = Profiles(Project(common.HOMM3_DIR))
         workers = jobs or min(16, (os.cpu_count() or 4))
         with ThreadPoolExecutor(max_workers=workers) as pool:
-            ir_maps = list(pool.map(unit_ir_names, todo))
+            ir_maps = list(pool.map(partial(unit_ir_names, profiles=profiles), todo))
 
     no_ir = []
     rows_by_unit = {}
     from homm3.match.source_ownership import collect
     definitions, errors, _reached = collect()
     problems.extend(f'{error} (FATAL)' for error in errors)
-    from homm3.match.status import load_baseline
-    banked = {(unit, row.rva) for (unit, _name), row in load_baseline().items()
-              if row.rva is not None}
+    banked = frozenset(policy.bindings)
     for path, ir_names in zip(todo, ir_maps):
         if ir_names is None:
             no_ir.append(path.stem)
@@ -2808,7 +2809,7 @@ def run(only_units: list[str] | None = None,
             banked_inline_names(path, definitions, banked))
     headers.project(header_paths, functions,
                     {p.stem: names for p, names in zip(todo, ir_maps)},
-                    rows_by_unit, problems, ownership=(definitions, errors, _reached))
+                    rows_by_unit, problems, policy=policy, ownership=(definitions, errors, _reached))
     for path in todo:
         rows = sorted(rows_by_unit[path.stem], key=lambda r: (r['rva'], r['kind']))
         banner = [f"# GENERATED claim fragment for unit {path.stem} - the "
@@ -3622,8 +3623,15 @@ def main(argv=None) -> int:
         return 2 if broken else 0
     if not a.unit and not a.all:
         ap.error("pick --unit U or --all")
-    changed, pruned, problems = run(a.unit if not a.all else None, a.jobs)
-    if a.unit is None:
+    return extract(a.unit if not a.all else None, a.jobs)
+
+
+def extract(only_units=None, jobs=None) -> int:
+    from homm3.model import carrier_policy
+    from homm3.match.status import load_baseline
+    policy = carrier_policy(load_baseline())
+    changed, pruned, problems = run(only_units, jobs, policy=policy)
+    if only_units is None:
         # The gate proves it can fail before it judges the tree.
         broken = selftest()
         if broken:

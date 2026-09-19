@@ -28,7 +28,7 @@ from homm3.analysis.source_facts import name_key
 from homm3.analysis.access_facts import load_cindex, is_project_file, dc_visibility, correlate, owning_member_keys
 from homm3.build import compilation_database
 from homm3.core import clang, common
-from homm3.core.cc_wrap import ZLIB_INC
+from homm3.core.project import Project
 from homm3.core.nb11_types import Types
 from homm3.retail_labels.source import mask_lexical_noise
 
@@ -234,7 +234,7 @@ def main() -> int:
 
     commands = compilation_database.commands(
         manifest.load(root / "config/units.toml"), root, clang.clang_bin(),
-        [mirror, root / "include", root / ZLIB_INC])
+        [mirror, *Project(root).includes])
     commands = [r for r in commands if Path(r["file"]).exists()]
     if args.module:
         want = {m.removesuffix(".cpp") for m in args.module}

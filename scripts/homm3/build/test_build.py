@@ -32,11 +32,11 @@ class BuildModeTest(unittest.TestCase):
         self.stderr = self.enterContext(contextlib.redirect_stderr(io.StringIO()))
 
         for name, module, function, result in [
-            ("configure", configure, "main", None),
+            ("configure", configure, "configure", None),
             ("compile", build, "_run", 0),
-            ("delink", delink, "main", 0),
-            ("normalize", normalize_objs, "main", 0),
-            ("report", status, "load_report", {}),
+            ("delink", delink, "run", 0),
+            ("normalize", normalize_objs, "normalize_all", 0),
+            ("report", status, "refresh_report", {}),
             ("fingerprints", status, "source_hash_pair", ({}, {})),
             ("history", status, "baseline_history", ''),
             ("check", status, "cmd_check", None),
@@ -95,7 +95,7 @@ class BuildModeTest(unittest.TestCase):
     def test_full_build_also_initializes_missing_targets(self):
         self.target.unlink()
         self.assertEqual(build.main([]), 0)
-        self.mocks["delink"].assert_called_once_with([])
+        self.mocks["delink"].assert_called_once_with()
 
     def test_failed_source_gate_still_refreshes_readme_and_remains_fatal(self):
         self.mocks["claims"].side_effect = lambda: ["invalid source claim"]
@@ -125,14 +125,16 @@ class BuildModeTest(unittest.TestCase):
         self.mocks["report"].assert_not_called()
 
     def test_failed_delink_cannot_update_checkpoint(self):
-        self.mocks["delink"].side_effect = lambda *args: 1
-        self.assertEqual(build.main([]), 1)
+        self.mocks["delink"].side_effect = RuntimeError("delink failed")
+        with self.assertRaisesRegex(RuntimeError, "delink failed"):
+            build.main([])
         self.mocks["report"].assert_not_called()
         self.mocks["checkpoint"].assert_not_called()
 
     def test_failed_normalization_cannot_report_a_fast_build(self):
-        self.mocks["normalize"].side_effect = lambda *args: 1
-        self.assertEqual(build.main(["--fast", "cursor"]), 1)
+        self.mocks["normalize"].side_effect = RuntimeError("normalization failed")
+        with self.assertRaisesRegex(RuntimeError, "normalization failed"):
+            build.main(["--fast", "cursor"])
         self.mocks["report"].assert_not_called()
 
     def test_removed_units_prune_cache_even_when_old_raw_objects_remain(self):

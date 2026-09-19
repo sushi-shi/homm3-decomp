@@ -1064,7 +1064,7 @@ def _summary_facts(ctx, base_text, target_text, rva, name, unit, ordinal,
              "divergence": div, "source": source, "source_loaded": source_loaded,
              "why_bytes": why_bytes, "source_details": source_details}
     _lines, agree, nxt = _summary_lines(facts)
-    facts.update(agree=agree, next_view=nxt, ordinal=ordinal, va=rva + 0x400000)
+    facts.update(agree=agree, next_view=nxt, ordinal=ordinal, va=rva + ctx.image.image_base)
     return facts
 
 

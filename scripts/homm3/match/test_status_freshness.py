@@ -36,7 +36,7 @@ class FreshnessTest(unittest.TestCase):
         self.raw.write_bytes(b"rebuilt object")
         with patch.object(status.subprocess, "run") as run:
             with self.assertRaises(SystemExit):
-                status.load_report()
+                status.refresh_report()
             run.assert_not_called()
         with patch.object(status, "require_built_sources"), \
                 patch.object(status, "write_baseline") as write:
@@ -75,7 +75,7 @@ class FreshnessTest(unittest.TestCase):
                     subprocess.run(["ninja", "objects"], cwd=self.root, check=True, capture_output=True)
 
     def test_invalid_subcommand_does_not_generate_a_report(self):
-        with patch.object(status, "load_report") as report:
+        with patch.object(status, "refresh_report") as report:
             self.assertEqual(status.main(["show"]), 2)
             report.assert_not_called()
 
@@ -100,7 +100,7 @@ class FreshnessTest(unittest.TestCase):
         # object. Only checking that chain would silently show pre-merge scores.
         status.require_fresh_comparisons()
         for argv in ([], ["functions", "unit"], ["--write-readme"]):
-            with self.subTest(argv=argv), patch.object(status, "load_report") as report, \
+            with self.subTest(argv=argv), patch.object(status, "refresh_report") as report, \
                     patch.object(status, "write_readme"), patch.object(status, "cmd_summary"), \
                     patch.object(status, "cmd_functions"):
                 with self.assertRaises(SystemExit):

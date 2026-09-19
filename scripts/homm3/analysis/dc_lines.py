@@ -40,21 +40,14 @@ Usage
 `<dc-offset>` is the `dc 0x...` tag a `VA()` comment carries, i.e. a
 section-1 offset.
 
-Address bases (measured off the DC PE header, and NOT what an earlier draft
-of the doc said): the image base is **0x10000** and `.text` is at va 0x1000,
-so a literal-pool VA is `dc_offset + 0x11000` and the raw file offset is
-`0x400 + dc_offset`. `.rdata`/`.data`/`.pdata` are sections 2..4 at
-va 0x19e000 / 0x1a8000 / 0x1e1000.
+Address and file offsets come from the executable's parsed PE layout.
 """
 import argparse
 import sys
 
 from ..core import inputs, nb11
 
-IMGBASE = 0x10000
-SECVA = {1: 0x1000, 2: 0x19E000, 3: 0x1A8000, 4: 0x1E1000}
-TEXT_RAW = 0x400
-POOL_BASE = IMGBASE + SECVA[1]          # dc offset -> literal-pool VA
+from homm3.core.pe_layout import Layout
 
 
 def load_symbols() -> nb11.Symbols:
@@ -85,11 +78,14 @@ class Sh4(object):
     each register.
     """
 
-    def __init__(self, data):
+    def __init__(self, data, layout=None):
         self.data = data
+        self.layout = layout or Layout.parse(data)
+        self.text_raw = self.layout.sections[0].raw_offset
+        self.pool_base = self.layout.base(1)
 
     def hw(self, dc):
-        o = TEXT_RAW + dc
+        o = self.text_raw + dc
         return int.from_bytes(self.data[o:o + 2], "little")
 
     def pool(self, dc):
@@ -97,8 +93,8 @@ class Sh4(object):
         w = self.hw(dc)
         if (w >> 12) != 0xD:
             return None
-        tgt = (((dc + POOL_BASE + 4) & ~3) - POOL_BASE) + (w & 0xFF) * 4
-        o = TEXT_RAW + tgt
+        tgt = (((dc + self.pool_base + 4) & ~3) - self.pool_base) + (w & 0xFF) * 4
+        o = self.text_raw + tgt
         return int.from_bytes(self.data[o:o + 4], "little")
 
     def scan(self, start, end):
@@ -116,7 +112,7 @@ class Sh4(object):
                 d = w & 0xFFF
                 if d & 0x800:
                     d -= 0x1000
-                calls.append(dc + 4 + d * 2 + POOL_BASE)
+                calls.append(dc + 4 + d * 2 + self.pool_base)
             elif (w & 0xFF00) in (0x8900, 0x8B00, 0x8D00, 0x8F00):
                 branches += 1                          # bt/bf/bt.s/bf.s
             dc += 2
@@ -176,20 +172,20 @@ def _dump_asm(sh4, data, start, end, syms, out):
         return
     md = capstone.Cs(capstone.CS_ARCH_SH,
                      capstone.CS_MODE_SH4 | capstone.CS_MODE_LITTLE_ENDIAN)
-    raw = data[TEXT_RAW + start:TEXT_RAW + end]
+    raw = data[sh4.text_raw + start:sh4.text_raw + end]
     dc = start
     while dc < end:
         decoded = False
-        for ins in md.disasm(raw[dc - start:], dc + POOL_BASE):
+        for ins in md.disasm(raw[dc - start:], dc + sh4.pool_base):
             note = ""
-            v = sh4.pool(ins.address - POOL_BASE)
+            v = sh4.pool(ins.address - sh4.pool_base)
             if v is not None:
                 nm = syms.get(v)
                 note = "   ; %s" % (nm if nm else "= 0x%x" % v)
             print("          %05x  %-9s %-26s%s"
-                  % (ins.address - POOL_BASE, ins.mnemonic, ins.op_str, note),
+                  % (ins.address - sh4.pool_base, ins.mnemonic, ins.op_str, note),
                   file=out)
-            dc = ins.address - POOL_BASE + ins.size
+            dc = ins.address - sh4.pool_base + ins.size
             decoded = True
         if dc < end:
             # a literal pool sits inside the body; step over one halfword

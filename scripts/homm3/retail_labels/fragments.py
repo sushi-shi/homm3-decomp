@@ -31,12 +31,12 @@ HEADER = ["rva", "size", "name", "kind", "channel", "raw", "dtor",
           "ckind", "owner"]
 
 
-def fragment_path(unit: str) -> Path:
-    return FRAGMENTS / f"{unit}.tsv"
+def fragment_path(unit: str, directory: Path = FRAGMENTS) -> Path:
+    return directory / f"{unit}.tsv"
 
 
-def unit_claims(unit: str) -> list[Claim]:
-    path = fragment_path(unit)
+def unit_claims(unit: str, directory: Path = FRAGMENTS) -> list[Claim]:
+    path = fragment_path(unit, directory)
     if not path.is_file():
         return []
     _b, _h, raw = read_tsv(path)
@@ -50,11 +50,11 @@ def unit_claims(unit: str) -> list[Claim]:
     return out
 
 
-def all_claims() -> list[Claim]:
+def all_claims(directory: Path = FRAGMENTS) -> list[Claim]:
     """Every fragment's claims, units in sorted-stem order, rows in scan
     order - the exact order the model's dedup replay requires."""
     out: list[Claim] = []
-    if FRAGMENTS.is_dir():
-        for path in sorted(FRAGMENTS.glob("*.tsv")):
-            out.extend(unit_claims(path.stem))
+    if directory.is_dir():
+        for path in sorted(directory.glob("*.tsv")):
+            out.extend(unit_claims(path.stem, directory))
     return out

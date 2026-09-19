@@ -28,7 +28,6 @@ import csv
 import io
 import json
 import os
-import shutil
 import subprocess
 import sys
 from dataclasses import dataclass, replace
@@ -127,18 +126,16 @@ def require_built_sources() -> None:
                    + (result.stdout + result.stderr)[-3000:])
 
 
-def load_report() -> dict:
+def load_report(path: Path = REPORT) -> dict:
+    """Read a previously produced report; never build or run objdiff."""
+    return json.loads(path.read_text())
+
+
+def refresh_report() -> dict:
+    """Validate comparison inputs, produce a report, then read its result."""
+    from homm3.build.report import generate
     require_fresh_comparisons()
-    executable = shutil.which("objdiff-cli")
-    if not executable:
-        common.die("objdiff-cli not found - enter the dev shell")
-    result = subprocess.run([executable, "report", "generate",
-                             "-o", "report.json"],
-                            cwd=OBJDIFF_DIR, capture_output=True, text=True)
-    if result.returncode != 0:
-        sys.stderr.write(result.stdout + result.stderr)
-        common.die("objdiff-cli report generate failed")
-    return json.loads(REPORT.read_text())
+    return load_report(generate(OBJDIFF_DIR))
 
 
 def fn_fuzzy(report: dict) -> dict:
@@ -826,7 +823,7 @@ def main(argv=None) -> int:
               f"[--write-readme] (got {command!r})", file=sys.stderr)
         return 2
     require_built_sources()
-    report = load_report()
+    report = refresh_report()
     if readme:
         write_readme(report)
     if command == "summary":

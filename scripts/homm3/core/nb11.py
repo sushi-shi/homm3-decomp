@@ -8,6 +8,8 @@ This reader supplies navigation facts; the existing corpus retains decoded types
 """
 from __future__ import annotations
 
+from homm3.core.pe_layout import Layout
+
 from dataclasses import dataclass, field
 from bisect import bisect_left
 from functools import cached_property, lru_cache
@@ -84,6 +86,7 @@ class Procedure:
 
 @dataclass
 class Symbols:
+    layout: Layout | None = None
     procedures: dict[int, Procedure] = field(default_factory=dict)
     names: dict[int, str] = field(default_factory=dict)
     source_lines: dict[str, list[tuple[str, int, int]]] = field(default_factory=dict)
@@ -102,7 +105,7 @@ class Symbols:
         return rows[bisect_left(addresses, offset):bisect_left(addresses, offset + size)]
 
 
-def _stream(data: bytes) -> tuple[_View, dict[int, int]]:
+def _stream(data: bytes) -> tuple[_View, Layout]:
     image = _View(data)
     if image.part(0, 2) != b"MZ":
         raise NB11Error("Dreamcast executable is not a PE image")
@@ -115,14 +118,11 @@ def _stream(data: bytes) -> tuple[_View, dict[int, int]]:
     magic, = image.unpack("<H", optional)
     if machine != 0x1a6 or magic != 0x10b or optional_size < 152:
         raise NB11Error("expected a Dreamcast SH4 PE32 image with a debug directory")
-    image_base, = image.unpack("<I", optional + 28)
-    sections = []
-    bases = {}
-    for index in range(count):
-        entry = optional + optional_size + index * 40
-        _virtual_size, rva, size, raw = image.unpack("<4I", entry + 8)
-        sections.append((rva, size, raw))
-        bases[index + 1] = image_base + rva
+    try:
+        layout = Layout.parse(data)
+    except ValueError as exc:
+        raise NB11Error(str(exc)) from exc
+    sections = [(s.rva, s.raw_size, s.raw_offset) for s in layout.sections]
 
     debug_rva, debug_size = image.unpack("<II", optional + 96 + 6 * 8)
     if not debug_size or debug_size % 28:
@@ -138,7 +138,7 @@ def _stream(data: bytes) -> tuple[_View, dict[int, int]]:
             stream = _View(image.part(raw, size))
             if stream.part(0, 4) != b"NB11":
                 raise NB11Error("expected embedded NB11 CodeView symbols")
-            return stream, bases
+            return stream, layout
     raise NB11Error("Dreamcast executable has no CodeView debug entry")
 
 
@@ -291,7 +291,8 @@ def _source_lines(view: _View) -> list[tuple[str, int, int]]:
 @lru_cache(maxsize=1)
 def parse(data: bytes) -> Symbols:
     """Parse verified image bytes; cache only by the complete byte content."""
-    stream, bases = _stream(data)
+    stream, layout = _stream(data)
+    bases = {i: layout.base(i) for i in range(1, len(layout.sections) + 1)}
     entries = _entries(stream)
     modules = {}
     for kind, module, view in entries:
@@ -299,7 +300,7 @@ def parse(data: bytes) -> Symbols:
             segments, = view.unpack("<H", 4)
             name = view.string(8 + segments * 12)
             modules[module] = name.replace("/", "\\").rsplit("\\", 1)[-1]
-    result = Symbols()
+    result = Symbols(layout=layout)
     # Match cvdump's name precedence: public linkage names before source names.
     order = {0x12a: 0, 0x125: 1, 0x129: 2, 0x134: 3}
     for kind, module, view in sorted(entries, key=lambda entry: order.get(entry[0], 4)):

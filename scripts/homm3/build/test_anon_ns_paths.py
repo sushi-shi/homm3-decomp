@@ -148,6 +148,8 @@ class AnonymousNamespacePathsTest(unittest.TestCase):
                          initializer(changed))
 
     def test_table_change_invalidates_both_paired_copies(self):
+        self.enterContext(patch.object(normalize_objs, "retail_image_base", return_value=0x400000))
+        (self.root / "config/project.toml").write_text("[inputs.retail]\nimage_base=4194304\n")
         self.write_table(CANONICAL, unit="probe")
         objdiff = self.root / "objdiff"
         old = initializer(r"Z:\checkout\forcefeedback.h123")

@@ -6,6 +6,8 @@ ledger, source files and README are never updated by this command.
 """
 from __future__ import annotations
 
+from homm3.core.project import Project
+
 import argparse
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -307,7 +309,7 @@ def main(argv=None) -> int:
                                   mirror=str(mirror), mirror_patch_version=clang.PATCH_VERSION,
                                   mode="Manifest-derived clang-cl editor ABI/defines and SDK mirror; "
                                        "`-Weverything -Wsystem-headers -fsyntax-only`; unlimited errors/template notes.")
-        rows = commands(dict(data, unit=units), root, exe, [mirror, root / "include", root / cc_wrap.ZLIB_INC])
+        rows = commands(dict(data, unit=units), root, exe, [mirror, *Project(root).includes])
         for unit, row in zip(units, rows):
             command = [a for a in row["arguments"] if a not in {"-Wno-everything", "/c"}]
             command[1:1] = ["/clang:" + option for option in CLANG_OPTIONS]
@@ -321,7 +323,7 @@ def main(argv=None) -> int:
                                  mode="Actual per-TU matching flags with `/W4`, compiling fresh disposable objects through Wine.")
         env = dict(os.environ)
         env.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
-        env["INCLUDE"] = ";".join(cc_wrap.winepath_w(p) for p in [msvc / "include", root / "include", root / cc_wrap.ZLIB_INC])
+        env["INCLUDE"] = ";".join(cc_wrap.winepath_w(p) for p in [msvc / "include", *Project(root).includes])
         cc_wrap.ensure_wineserver()
         for unit in units:
             obj = out / "objects" / (unit["unit"] + ".obj")

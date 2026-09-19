@@ -27,7 +27,7 @@ from homm3.analysis.dc_lines import load_symbols
 from homm3.analysis.source_facts import name_key
 from homm3.build import compilation_database
 from homm3.core import clang, common
-from homm3.core.cc_wrap import ZLIB_INC
+from homm3.core.project import Project
 from homm3.core.nb11_types import Types
 from homm3.retail_labels.source import mask_lexical_noise
 
@@ -256,7 +256,7 @@ def make_plan(modules):
     ranks, conflicts = recorded_order(types)
     dc = access.dc_visibility(types)
     commands = compilation_database.commands(manifest.load(root / "config/units.toml"), root,
-        clang.clang_bin(), [mirror, root / "include", root / ZLIB_INC])
+        clang.clang_bin(), [mirror, *Project(root).includes])
     commands = [r for r in commands if Path(r["file"]).exists()
                 and (not modules or Path(r["file"]).stem in modules)]
     index, seen, sources = ci.Index.create(), set(), {}

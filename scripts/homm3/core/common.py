@@ -20,6 +20,8 @@ import os
 import sys
 from pathlib import Path
 
+from homm3.core.project import Project
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 HOMM3_DIR = Path(os.environ.get("HOMM3_DIR") or next(
     (p for p in SCRIPT_DIR.parents if (p / "flake.nix").exists()), SCRIPT_DIR))
@@ -27,11 +29,13 @@ HOMM3_DIR = Path(os.environ.get("HOMM3_DIR") or next(
 # removal); config/ holds hand-admitted retail inventories + build manifests
 EVIDENCE_DIR = HOMM3_DIR / "evidence"
 
-TARGET_SHA256 = "057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274"
-TARGET_SIZE = 2732032
-IMAGE_BASE = 0x400000
-
-BUILD_EXE = HOMM3_DIR / "build/orig/HEROES3.EXE"
+# Offline annotation/provenance facts are admitted project data. Operations
+# that read executable bytes use Project.image and its parsed layout.
+_spec = Project(HOMM3_DIR).specification['inputs']['retail']
+TARGET_SHA256 = _spec['sha256']
+TARGET_SIZE = _spec['size']
+IMAGE_BASE = _spec['image_base']
+BUILD_EXE = HOMM3_DIR / _spec['path']
 
 
 def die(msg: str) -> None:
@@ -76,13 +80,17 @@ def load_image():
     from homm3.core.image import Image
     exe = resolve_exe()
     info = gate_exe(exe)
-    return Image(str(exe)), info
+    image = Image(str(exe))
+    if image.image_base != IMAGE_BASE:
+        die(f"image base {image.image_base:#x} != admitted {IMAGE_BASE:#x}")
+    info["image_base"] = image.image_base
+    return image, info
 
 
 def provenance(generator: str, extra: list[str] | None = None) -> list[str]:
     lines = [
         f"# generator: {generator}",
-        f"# exe: HEROES3.EXE sha256={TARGET_SHA256} size={TARGET_SIZE}",
+        f"# exe: {BUILD_EXE.name} sha256={TARGET_SHA256} size={TARGET_SIZE}",
         f"# date: {datetime.date.today().isoformat()}",
         "# ANALYSIS OUTPUT, NOT RETAIL EVIDENCE",
     ]

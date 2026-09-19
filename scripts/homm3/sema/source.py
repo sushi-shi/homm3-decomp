@@ -6,6 +6,8 @@ have been proven identical across the two compilations.
 """
 from __future__ import annotations
 
+from homm3.core.project import Project
+
 import bisect
 from dataclasses import dataclass
 import json
@@ -118,8 +120,7 @@ def _first_body_line(lines: list[str], begin_line: int) -> int:
 def _cache_inputs(source: Path) -> list[Path]:
     inputs = [source.resolve()]
     inputs.extend(Path(path) for path in scan_header_deps(
-        source, common.HOMM3_DIR / "include",
-        common.HOMM3_DIR / cc_wrap.ZLIB_INC))
+        source, *Project(common.HOMM3_DIR).includes))
     return sorted(set(inputs), key=str)
 
 
@@ -128,6 +129,7 @@ def _cache_payload(unit: str, source: Path, flags: list[str]) -> dict:
         "schema": STAMP_SCHEMA,
         "unit": unit,
         "flags": list(flags),
+        "includes": [str(p) for p in Project(common.HOMM3_DIR).includes],
         "inputs": {
             os.path.relpath(path, common.HOMM3_DIR): common.sha256_of(path)
             for path in _cache_inputs(source)
