@@ -220,6 +220,8 @@ def main():
                 body = option["replace"]
                 if body not in bodies:
                     bodies.append(body)
+    if authored not in bodies:
+        bodies.append(authored)
     positive_count = len(bodies)
     for old, new in (
         ("advance(6900 /", "advance(7000 /"),

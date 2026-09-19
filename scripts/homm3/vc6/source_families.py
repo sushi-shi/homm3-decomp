@@ -36,7 +36,7 @@ from homm3.match import status
 from homm3.vc6 import tu_state_sweep as scoring
 from homm3.vc6._unit import flags_for_unit, source_for_unit
 
-VERSION = 5
+VERSION = 7
 
 
 @dataclass(frozen=True)
@@ -178,8 +178,20 @@ def render(originals, axes, choices):
     return result
 
 
+def projected_max_scores(row, previous, hashes):
+    """Apply the ledger's source attribution without writing a checkpoint."""
+    current = {tuple(name.split("|", 1)): value for name, value in row["scores"].items()}
+    rvas = {key: old.rva for key, old in previous.items()}
+    projected, _stats = status.update_rows(current, previous, rvas, hashes)
+    return {"|".join(key): projected[key].max for key in current}
+
+
+def ranking_scores(row):
+    return row.get("max_scores", row["scores"])
+
+
 def rank(row):
-    scores = row["scores"].values()
+    scores = ranking_scores(row).values()
     return (sum(value == 100 for value in scores), sum(scores), row["id"])
 
 
@@ -190,12 +202,12 @@ def select_elites(records, keep, baseline=None):
     remaining = list(unique.values())
     selected = remaining[:max(1, keep // 2)]
     remaining = remaining[len(selected):]
-    names = {name for row in remaining for name in row["scores"]}
+    names = {name for row in remaining for name in ranking_scores(row)}
     while remaining and len(selected) < keep:
         peaks = {name: max((baseline or {}).get(name, 0),
-                          max((r["scores"].get(name, 0) for r in selected), default=0)) for name in names}
+                          max((ranking_scores(r).get(name, 0) for r in selected), default=0)) for name in names}
         winner = max(remaining, key=lambda row: (
-            sum(max(0, row["scores"].get(name, 0) - peaks[name]) for name in names), rank(row)))
+            sum(max(0, ranking_scores(row).get(name, 0) - peaks[name]) for name in names), rank(row)))
         selected.append(winner)
         remaining.remove(winner)
     return selected
@@ -254,7 +266,7 @@ def compile_candidate(candidate_root, unit, output):
     return obj
 
 
-def evaluate(snapshot, output, plans, originals, axes, choices, *, repeat=False):
+def evaluate(snapshot, output, plans, originals, axes, choices, *, previous, repeat=False):
     sources = render(originals, axes, choices)
     key = digest(json.dumps(sources, sort_keys=True).encode())[:24]
     trial = output / "candidates" / key / ("repeat" if repeat else "first")
@@ -287,6 +299,10 @@ def evaluate(snapshot, output, plans, originals, axes, choices, *, repeat=False)
             row["scores"].update({plan.unit + "|" + symbol: round(value, 4) for symbol, value in scores.items()})
             identities.append(code_identity(base))
         row["object_hash"] = digest(json.dumps(identities).encode())
+        hashes = status.source_hashes(source_root=candidate_root,
+                                      only_units={plan.unit for plan in plans})
+        row["function_source_hashes"] = {"|".join(key): value for key, value in hashes.items()}
+        row["max_scores"] = projected_max_scores(row, previous, hashes)
     except Exception as exc:
         row.update(error=str(exc), scores={})
     row["seconds"] = time.monotonic() - started
@@ -346,16 +362,19 @@ def main(argv=None):
     zero = (0,) * len(axes)
     if render(originals, axes, zero) != originals:
         raise ValueError("the first option on every axis must preserve the original source")
-    control = evaluate(snapshot, output, plans, originals, axes, zero)
+    control = evaluate(snapshot, output, plans, originals, axes, zero, previous=rows)
     expected = {"|".join(key): row.cur or 0 for key, row in rows.items() if key[0] in units}
     if control["scores"] != expected:
         raise RuntimeError(f"unchanged-source control failed: {control.get('error', 'scores differ from current build')}")
     corner = tuple(len(axis.options) - 1 for axis in axes)
-    smoke = evaluate(snapshot, output, plans, originals, axes, corner)
+    smoke = evaluate(snapshot, output, plans, originals, axes, corner, previous=rows)
     if not smoke["scores"]:
         raise RuntimeError(f"opposite-corner compile failed: {smoke.get('error')}")
-    repeated = evaluate(snapshot, output, plans, originals, axes, corner, repeat=True)
-    if repeated["scores"] != smoke["scores"] or repeated.get("object_hash") != smoke.get("object_hash"):
+    repeated = evaluate(snapshot, output, plans, originals, axes, corner, previous=rows, repeat=True)
+    if (repeated["scores"] != smoke["scores"] or
+            repeated.get("object_hash") != smoke.get("object_hash") or
+            repeated["max_scores"] != smoke["max_scores"] or
+            repeated["function_source_hashes"] != smoke["function_source_hashes"]):
         raise RuntimeError("opposite-corner code/relocations did not reproduce")
     print("[source-families] unchanged-source control and opposite-corner compile/reproduction passed", flush=True)
     if args.smoke_only:
@@ -372,13 +391,13 @@ def main(argv=None):
         with ThreadPoolExecutor(max_workers=args.jobs) as pool:
             while population:
                 attempted.extend(population)
-                futures = [pool.submit(evaluate, snapshot, output, plans, originals, axes, choice) for choice in population]
+                futures = [pool.submit(evaluate, snapshot, output, plans, originals, axes, choice, previous=rows) for choice in population]
                 for future in as_completed(futures):
                     row = future.result()
                     records.append(row)
-                    state = f"{rank(row)[0]} exact" if row["scores"] else "FAILED"
+                    state = "" if row["scores"] else " FAILED"
                     valid = sum(bool(record["scores"]) for record in records)
-                    print(f"[source-families] g{generation + 1} {valid}/{args.width} scored; {len(records)} attempted; {row['id']} {state}", flush=True)
+                    print(f"[source-families] g{generation + 1} {valid}/{args.width} scored; {len(records)} attempted; {row['id']}{state}", flush=True)
                 valid = sum(bool(row["scores"]) for row in records)
                 if valid >= args.width:
                     break
@@ -387,12 +406,14 @@ def main(argv=None):
                 population = next_population(axes, checkpoint["elites"], seen | set(attempted), args.width - valid, rng)
         all_records = checkpoint["records"] + records
         elites = select_elites(all_records, args.keep,
-                              {"|".join(key): row.cur or 0 for key, row in rows.items()})
+                              {"|".join(key): row.max for key, row in rows.items()})
         # A second isolated compile validates each retained source candidate.
         for elite in elites:
-            reproduced = evaluate(snapshot, output, plans, originals, axes, elite["choices"], repeat=True)
+            reproduced = evaluate(snapshot, output, plans, originals, axes, elite["choices"], previous=rows, repeat=True)
             if (reproduced["scores"] != elite["scores"] or
-                    reproduced.get("object_hash") != elite["object_hash"]):
+                    reproduced.get("object_hash") != elite["object_hash"] or
+                    reproduced["function_source_hashes"] != elite["function_source_hashes"] or
+                    reproduced["max_scores"] != elite["max_scores"]):
                 raise RuntimeError(f"non-reproducible frontier: {elite['id']}")
         if scoring._files_digest(watched) != source_digest or scoring._shared_inputs_digest() != inputs:
             raise RuntimeError("source/toolchain/targets/ledger changed during search; refusing stale checkpoint")
@@ -412,8 +433,12 @@ def main(argv=None):
             best = max(observations, key=lambda row: row["scores"][name])
             low = min(row["scores"][name] for row in observations)
             high = best["scores"][name]
-            if low != old.cur or high != old.cur:
-                frontier["changes"].append(dict(unit=key[0], symbol=key[1], cur=old.cur, max=old.max, hist=old.hist, low=low, high=high, candidate=best["id"]))
+            lowest_max = min(observations, key=lambda row: row["max_scores"][name])
+            highest_max = max(observations, key=lambda row: row["max_scores"][name])
+            low_max = lowest_max["max_scores"][name]
+            high_max = highest_max["max_scores"][name]
+            if low_max < old.max or high_max > old.max:
+                frontier["changes"].append(dict(unit=key[0], symbol=key[1], cur=old.cur, max=old.max, hist=old.hist, low=low, high=high, low_max=low_max, high_max=high_max, candidate=best["id"], low_max_candidate=lowest_max["id"], high_max_candidate=highest_max["id"]))
                 if high > old.max:
                     print(f"  {key[0]} {key[1]} MAX {old.max:.4f} -> observed {high:.4f} [{best['id']}]", flush=True)
         scoring._write_json(output / f"generation-{generation + 1:04d}.json", frontier)

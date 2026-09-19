@@ -91,6 +91,11 @@ TRmgGridRectangle::TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGrid
 // retail; a direct proxy construction, reading the land through the
 // painter first, building the mask first, and accessor coordinates do
 // not swap them (84-97%).
+// Follow-up selection ownership/lifetime/decision forms (60 states) and
+// table-interface/receiver/snapshot forms (60 states) preserve 97.3461%.
+// All six direct calls remain correct; the selected-output copy is still
+// required. A two-state painter pointer/reference contract produces identical
+// function bytes across all seven consumers. No speculative API is retained.
 VA(0x004F9F00, 0x146) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
@@ -275,8 +280,10 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
     }
 }
 
+template<class Coordinate>
+// VA instance: TRmgCoordinatePoint<unsigned int>::TRmgCoordinatePoint(const TPoint&)
 VA(0x004FA520, 0x16) // anchor-callee 0x4f9f77; thiscall, ret 4
-TRmgGridPoint::TRmgGridPoint(const TPoint& point)
+TRmgCoordinatePoint<Coordinate>::TRmgCoordinatePoint(const TPoint& point)
     : m_x(point.m_x), m_y(point.m_y)
 {
 }
@@ -699,6 +706,13 @@ int __fastcall selectTerrainTransition(
     return 0;
 }
 
+// The short output lifetime can arise from the expanded value-size helper;
+// exact stack reuse did not prove the artificial block in the earlier model.
+// Residual (35.3347%): the value helper expands, but vector::insert(count,value)
+// remains a call where retail expands it. Both _Tree::_Init calls and virtual
+// slot 3 remain in order. Coordinate getters/fields, named value snapshots,
+// member initialization and an ordinary size/storage helper did not recover
+// that nested boundary. Scoped output is retained only as an experiment control.
 VA(0x005B45F0, 0x26D)
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
@@ -1013,6 +1027,11 @@ unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 // versus 91.3389%; it preserves gap construction but changes the loop CFG.
 // A cycle-complete result with either a loop-head test or bottom break
 // scores 86.0995% or 86.1619% for bool/byte/int, below 91.3389%.
+// At the current 93.6307%, all 46 calls and the complete CFG agree. The
+// 16 coordinate-accessor forms preserve those calls and all sibling scores.
+// Value accessors for the unchanged coordinate restore retail's fresh scalar
+// copy and terrain reload, but retain the reversed ESI/EDI roles and change
+// scheduling (85.9764..93.6307%). The lifetime mechanism is insufficient alone.
 VA(0x005B5440, 0x628) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 {
@@ -1397,6 +1416,12 @@ void rmgTerrainPainter::buildNeighbourKinds(
     }
 }
 
+// Both diagonal residuals are the upper clamp comparison: retail uses
+// CMP value,maximum / JG, while canonical tLimit uses the reverse / JL.
+// Changing shared tLimit to value > maximum restores both callers, but loses
+// six exact rows: retained tLimit, heroQuickView, monsterQuickView, armyGroup
+// split, splitwindow and quicktowncenter. Keep its proven maximum < value
+// body; the identity of this Complete-only RMG clamp remains unresolved.
 VA(0x005B6BA0, 0x24C)
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
@@ -1571,18 +1596,19 @@ rmgTerrainPainter::~rmgTerrainPainter()
 // Initialization and node insertion match all 168/766 bytes.
 // Node insertion's _Construct call at 0x5b877c shares the 15-byte two-dword
 // copy at 0x5b8cc0 with type_dialog_resource; both emitted bodies agree.
-// Public insert reaches 79.83%: its named call sequence agrees, but VC6 elides the lock
-// scope's EH frame and emits four returns where retail shares one tail.
-// Preserve the canonical Dinkumware implementation and real comparator.
-VA_COMPGEN(0x005B7CD0, 0x156, TREE_INSERT, TRmgGridPoint)
-VA_COMPGEN(0x005B8670, 0xA8, TREE_INIT, TRmgGridPoint)
-VA_COMPGEN(0x005B8720, 0x2FE, TREE_NODE_INSERT, TRmgGridPoint)
+// The concrete-point control reaches 79.83%: VC6 compiles its comparator
+// before insertion, elides the lock's EH frame and changes the return tails.
+// The generic coordinate owner defers its ordinary template comparator and
+// reproduces all 342 bytes, including the lock unwind, without altering STL.
+VA_COMPGEN(0x005B7CD0, 0x156, TREE_INSERT, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005B8670, 0xA8, TREE_INIT, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005B8720, 0x2FE, TREE_NODE_INSERT, TRmgCoordinatePoint_unsigned_int)
 // Public insert's predecessor test calls this node walk; its color field
 // at +0x14 and nil references identify the same terrain point-set instance.
 // The naturally emitted body matches all 179 bytes.
-VA_COMPGEN(0x005B8AA0, 0xB3, TREE_CONST_ITERATOR_DEC, TRmgGridPoint)
+VA_COMPGEN(0x005B8AA0, 0xB3, TREE_CONST_ITERATOR_DEC, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B7F60, 0x59, TREE_ERASE_KEY, TRmgGridPoint)
+VA_COMPGEN(0x005B7F60, 0x59, TREE_ERASE_KEY, TRmgCoordinatePoint_unsigned_int)
 
 // The retained erase(key) calls 0x5b7e30 with two iterators and a hidden
 // result pointer. Its whole-range branch recursively clears nodes through
@@ -1591,18 +1617,21 @@ VA_COMPGEN(0x005B7F60, 0x59, TREE_ERASE_KEY, TRmgGridPoint)
 // Dinkumware bodies are naturally emitted by the existing set operations.
 // All 289/1295/126 bytes match respectively. The retained _Lockit destructor
 // at 0x60b634 releases the CRT lock through LeaveCriticalSection.
-VA_COMPGEN(0x005B7E30, 0x121, TREE_ERASE_RANGE, TRmgGridPoint)
-VA_COMPGEN(0x005B8090, 0x50F, TREE_ERASE_ITERATOR, TRmgGridPoint)
-VA_COMPGEN(0x005B85F0, 0x7E, TREE_ERASE, TRmgGridPoint)
+VA_COMPGEN(0x005B7E30, 0x121, TREE_ERASE_RANGE, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005B8090, 0x50F, TREE_ERASE_ITERATOR, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005B85F0, 0x7E, TREE_ERASE, TRmgCoordinatePoint_unsigned_int)
 
 // Both erase overloads and the admitted distance loop retain this successor
 // walk. Its 0x6a52c4 nil references prove the terrain point-set ownership;
 // the naturally emitted TRmgGridPoint specialization matches all 163 bytes.
 // This replaces the provisional TPoint claim and its artificial emission
 // wrapper in rmg.cpp. The two specializations have distinct nil symbols.
-VA_COMPGEN(0x005B8BC0, 0xA3, TREE_CONST_ITERATOR_INC, TRmgGridPoint)
+VA_COMPGEN(0x005B8BC0, 0xA3, TREE_CONST_ITERATOR_INC, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B7FC0, 0x57, TREE_FIND, TRmgGridPoint)
+// The canonical coordinate comparator uses its getX/getY interface. Its
+// retained 32-byte body stays exact, and the expanded comparison here now
+// loads node-y before key-y as retail does. Direct fields leave 99.4634%.
+VA_COMPGEN(0x005B7FC0, 0x57, TREE_FIND, TRmgCoordinatePoint_unsigned_int)
 
 VA_COMPGEN(0x005B8020, 0x35, VECTOR_ERASE, TRmgPackedTerrainCell)
 
@@ -1610,14 +1639,14 @@ VA_COMPGEN(0x005B8060, 0x24, VECTOR_UFILL, unsigned_char)
 
 // PaintPoint and TRmgTerrainBrush::changeTerrain retain this one-dword
 // iterator wrapper around the tree's raw-node lower bound.
-VA_COMPGEN(0x005B85A0, 0x17, TREE_LOWER_BOUND, TRmgGridPoint)
+VA_COMPGEN(0x005B85A0, 0x17, TREE_LOWER_BOUND, TRmgCoordinatePoint_unsigned_int)
 // PaintPoint retains the two-bound wrapper returning its iterator pair.
-VA_COMPGEN(0x005B85C0, 0x2C, TREE_EQUAL_RANGE, TRmgGridPoint)
-VA_COMPGEN(0x005B8A20, 0x17, TREE_UPPER_BOUND, TRmgGridPoint)
+VA_COMPGEN(0x005B85C0, 0x2C, TREE_EQUAL_RANGE, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005B8A20, 0x17, TREE_UPPER_BOUND, TRmgCoordinatePoint_unsigned_int)
 
 // The retained public wrappers above delegate to these raw-node searches.
-VA_COMPGEN(0x005B8A40, 0x59, TREE_LBOUND, TRmgGridPoint)
-VA_COMPGEN(0x005B8B60, 0x59, TREE_UBOUND, TRmgGridPoint)
+VA_COMPGEN(0x005B8A40, 0x59, TREE_LBOUND, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005B8B60, 0x59, TREE_UBOUND, TRmgCoordinatePoint_unsigned_int)
 
 VA_COMPGEN(0x005B4860, 0x6E, IMPLICIT_DTOR, set)
 
@@ -1625,11 +1654,14 @@ VA_COMPGEN(0x005B4860, 0x6E, IMPLICIT_DTOR, set)
 // public distance wrapper and its category-dispatched overload. The wrapper
 // increments the caller's count directly; the unused tag argument accounts
 // for the tagged body's missing self-store.
-VA_COMPGEN(0x005B8C70, 0x2B, STD_DISTANCE, TRmgGridPoint)
-VA_COMPGEN(0x005B8CD0, 0x28, STD_DISTANCE_TAGGED, TRmgGridPoint)
+VA_COMPGEN(0x005B8C70, 0x2B, STD_DISTANCE, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005B8CD0, 0x28, STD_DISTANCE_TAGGED, TRmgCoordinatePoint_unsigned_int)
 
+template<class Coordinate>
+// VA instance: operator< <unsigned int>
 VA(0x005B8CA0, 0x20) // anchor-callee 0x5b4e96; fastcall, two point references
-bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right)
+bool operator<(const TRmgCoordinatePoint<Coordinate>& left,
+    const TRmgCoordinatePoint<Coordinate>& right)
 {
-    return left.m_y < right.m_y || (left.m_y == right.m_y && left.m_x < right.m_x);
+    return left.getY() < right.getY() || (left.getY() == right.getY() && left.getX() < right.getX());
 }

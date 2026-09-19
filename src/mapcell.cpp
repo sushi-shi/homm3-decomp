@@ -4438,14 +4438,6 @@ void NewfullMap::newfullMapFn00505DA0()
     }
 }
 
-// Safety failure shared by the two required-definition searches below.
-// Their callers immediately consume the result; throwing leaves them no null
-// or invalid record to dereference. This path is absent in retail.
-static void missingMapObjectDefinition()
-{
-    throw std::out_of_range("Map object definition not found");
-}
-
 VA(0x00505ea0, 0x80)  // linkorder + this@+0xdc=objectTypeIndex; reverse-find CObjectType by extra, caller game::ConvertObject, retail-only
 CObjectType* NewfullMap::newfullMapFn00505EA0(int objectType, int extra)
 {
@@ -4454,8 +4446,6 @@ CObjectType* NewfullMap::newfullMapFn00505EA0(int objectType, int extra)
         if (m_objectTypeIndex[objectType][i].m_extra == extra)
             break;
     }
-    if (i < 0)
-        missingMapObjectDefinition();
     return &m_objectTypeIndex[objectType][i];
 }
 
@@ -4500,9 +4490,6 @@ void NewfullMap::newfullMapFn00505F20(CObject* object, int objectType,
                 break;
         }
     }
-
-    if (i < 0)
-        missingMapObjectDefinition();
 
     if (static_cast<short>(m_objectTypeIndex[objectType][i].m_objectTypeIndex) < 0) {
         m_objectTypeIndex[objectType][i].m_objectTypeIndex =

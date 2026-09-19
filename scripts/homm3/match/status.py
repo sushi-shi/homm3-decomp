@@ -219,7 +219,8 @@ def _canonical_definition_text(raw: str, masked: str, after: int,
     return raw[line_start:definition.body_close + 1]
 
 
-def _source_definitions():
+def _source_definitions(*, source_root: Path | None = None,
+                        only_units: set[str] | None = None):
     """Yield each VA-owned function's own definition, keyed like objdiff.
 
     The source VA supplies stable retail identity, avoiding a lossy
@@ -230,15 +231,19 @@ def _source_definitions():
     from homm3.build import configure
     from homm3.retail_labels import source
 
+    root = source_root if source_root is not None else common.HOMM3_DIR
     by_identity: dict[tuple[str, int], list[tuple[str, str]]] = {}
     for key, rva in function_rvas().items():
-        by_identity.setdefault((key[0], rva), []).append(key)
+        if only_units is None or key[0] in only_units:
+            by_identity.setdefault((key[0], rva), []).append(key)
 
     _build, _profiles, units = configure.load_manifest()
     va_head, _arity, _prototype = source.MACRO_HEADS["VA"]
     for unit in units:
         unit_name = unit["unit"]
-        path = common.HOMM3_DIR / unit["source"]
+        if only_units is not None and unit_name not in only_units:
+            continue
+        path = root / unit["source"]
         raw = path.read_text(errors="replace")
         masked = source.mask_lexical_noise(raw)
         for _start, end, args, _raw_args in source.macro_invocations(
@@ -263,7 +268,7 @@ def _source_definitions():
     keys_by_rva = {}
     for (_unit, rva), keys in by_identity.items():
         keys_by_rva.setdefault(rva, []).extend(keys)
-    for path in claim_files():
+    for path in claim_files(root):
         raw = path.read_text(errors="replace")
         masked = source.mask_lexical_noise(raw)
         for _start, end, args, _raw_args in source.macro_invocations(masked, va_head, raw):
@@ -281,10 +286,13 @@ def _legacy_hash(definition: str) -> str:
     return hashlib.sha1(definition.encode("utf-8", "replace")).hexdigest()[:12]
 
 
-def source_hashes(*, legacy: bool = False) -> dict[tuple[str, str], str]:
+def source_hashes(*, legacy: bool = False, source_root: Path | None = None,
+                  only_units: set[str] | None = None) -> dict[tuple[str, str], str]:
+    """Fingerprint live or isolated candidate definitions using admitted RVAs."""
     from homm3.core.cpp_tokens import fingerprint
     digest = _legacy_hash if legacy else fingerprint
-    return {key: digest(definition) for key, definition in _source_definitions()}
+    return {key: digest(definition) for key, definition in
+            _source_definitions(source_root=source_root, only_units=only_units)}
 
 
 def source_hash_pair() -> tuple[dict, dict]:

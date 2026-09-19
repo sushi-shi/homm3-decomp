@@ -7,17 +7,28 @@ import tempfile
 import unittest
 
 from homm3.vc6.source_families import (
-    Axis, Option, identity_symbol, load_manifest, next_population, render, select_elites,
+    Axis, Option, identity_symbol, load_manifest, next_population, render,
+    projected_max_scores, select_elites,
 )
 
 
 class SourceFamiliesTests(unittest.TestCase):
-    def test_distributed_starter_matches_current_source(self):
-        root = Path(__file__).resolve().parents[3]
-        _, originals, axes = load_manifest(
-            root / "scripts/experiments/rmg-grid-source-family.json", root)
-        self.assertEqual([len(axis.options) for axis in axes], [2, 2, 3, 6])
-        self.assertEqual(render(originals, axes, (0, 0, 0, 0)), originals)
+    def test_historical_example_preserves_its_unchanged_control(self):
+        repository = Path(__file__).resolve().parents[3]
+        manifest = repository / "scripts/experiments/rmg-grid-source-family.json"
+        payload = json.loads(manifest.read_text())
+        # This example predates generic coordinate ownership. Exercise its
+        # schema against its declared input, rather than requiring current
+        # game source to retain a superseded reconstruction.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            header = root / payload["source"]
+            header.parent.mkdir(parents=True)
+            header.write_text("\n\n".join(axis["find"] for axis in payload["axes"]))
+            _, originals, axes = load_manifest(manifest, root)
+            self.assertEqual([len(axis.options) for axis in axes], [2, 2, 3, 6])
+            self.assertEqual(render(originals, axes, (0, 0, 0, 0)), originals)
+            self.assertNotEqual(render(originals, axes, (1, 1, 2, 5)), originals)
 
     def test_anonymous_scope_identity_preserves_semantics_not_path_nonce(self):
         first = r'?g_directions@?%Z:\tmp\first\rmg.cpp123@@3PAUTPoint@@A'
@@ -90,6 +101,45 @@ class SourceFamiliesTests(unittest.TestCase):
         ]
         elites = select_elites(records, 2)
         self.assertEqual({row["object_hash"] for row in elites}, {"a", "c"})
+
+    def test_held_max_does_not_displace_a_better_reconstruction(self):
+        from homm3.match.status import MatchRow
+
+        previous = {("u", "target"): MatchRow(90, 90, 90, 1, "target-old"),
+                    ("u", "sibling"): MatchRow(100, 100, 100, 2, "same")}
+        better = {"id": "better", "object_hash": "a",
+                  "scores": {"u|target": 95, "u|sibling": 70}}
+        weaker = {"id": "weaker", "object_hash": "b",
+                  "scores": {"u|target": 94, "u|sibling": 100}}
+        hashes = {("u", "target"): "target-new", ("u", "sibling"): "same"}
+        for row in (better, weaker):
+            row["max_scores"] = projected_max_scores(row, previous, hashes)
+        self.assertEqual(better["max_scores"]["u|sibling"], 100)
+        self.assertEqual(select_elites([better, weaker], 1)[0]["id"], "better")
+        self.assertEqual(better["scores"]["u|sibling"], 70)
+        self.assertEqual(previous[("u", "sibling")].cur, 100)
+
+    def test_proven_source_edit_resets_projected_max_but_unknown_does_not(self):
+        from homm3.match.status import MatchRow
+
+        previous = {("u", "f"): MatchRow(90, 100, 100, 1, "old")}
+        row = {"scores": {"u|f": 80}}
+        self.assertEqual(projected_max_scores(row, previous, {}), {"u|f": 100})
+        self.assertEqual(projected_max_scores(row, previous, {("u", "f"): "old"}),
+                         {"u|f": 100})
+        self.assertEqual(projected_max_scores(row, previous, {("u", "f"): "new"}),
+                         {"u|f": 80})
+
+    def test_specialist_ranking_uses_projected_max(self):
+        records = [
+            {"id": "a", "object_hash": "a", "scores": {"held": 50, "x": 100, "y": 90},
+             "max_scores": {"held": 100, "x": 100, "y": 90}},
+            {"id": "b", "object_hash": "b", "scores": {"held": 100, "x": 99, "y": 90},
+             "max_scores": {"held": 100, "x": 99, "y": 90}},
+            {"id": "c", "object_hash": "c", "scores": {"held": 70, "x": 90, "y": 95},
+             "max_scores": {"held": 100, "x": 90, "y": 95}},
+        ]
+        self.assertEqual([row["id"] for row in select_elites(records, 2)], ["a", "c"])
 
 
 if __name__ == "__main__":

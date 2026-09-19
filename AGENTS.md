@@ -107,6 +107,11 @@ For difficult matching plateaus, use the repository's
 owns experiments and adoption, with a second worker named Holista, who proposes
 coherent C++ as the original developers might have written it. Look for expanded
 helper patterns and natural declaration, statement, loop, and lifetime structure.
+Short temporary lifetimes and stack reuse are clues to inlined helpers and
+returned objects. Challenge artificial caller blocks even in exact functions;
+recover the canonical helper and its natural call sites, including nested
+expansions. Braces added solely to reproduce stack reuse are diagnostics, not
+recovered source.
 Test related changes together: a temporary score or CFG drop can recover when
 the complete source model is implemented. Keep those intermediate differences
 distinct from contradictions of proven behavior, ABI, layout, or source facts;

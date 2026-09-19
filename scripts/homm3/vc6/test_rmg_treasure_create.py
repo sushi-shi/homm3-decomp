@@ -44,8 +44,12 @@ class RmgTreasureCreateTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which("g++"), "native selection oracle requires g++")
     def test_all_states_against_independent_selection_oracle(self):
         header = (self.root / "include/rmg.h").read_text()
-        object_header = (self.root / "include/advmgr_objects.h").read_text()
+        object_header = (self.root / "include/objecttype.h").read_text()
+        mapcell_header = (self.root / "include/mapcell.h").read_text()
         support = (self.root / "src/rmg_support.cpp").read_text()
+        constructor_owners = [text for text in (self.source, support)
+                              if "TRmgMapPosition::TRmgMapPosition(" in text]
+        self.assertEqual(len(constructor_owners), 1)
         program = (self.root / "scripts/experiments/rmg-treasure-create-oracle.cpp").read_text()
 
         def block(text, marker):
@@ -56,13 +60,13 @@ class RmgTreasureCreateTests(unittest.TestCase):
         accessors = [line.strip() for line in object_header.splitlines()
             if re.match(r"\s*int get(?:Width|Height)\(\) const \{", line)]
         self.assertEqual(len(accessors), 2)
-        bit_position = re.search(r"static unsigned(?: int)? getBitPos\([^}]+}", object_header)
+        bit_position = re.search(r"static unsigned(?: int)? getBitPos\([^}]+}", mapcell_header)
         self.assertIsNotNone(bit_position)
         methods, checks = [], []
 
         def candidate(label, method, positive):
-            methods.append("struct " + label + " : CreateRoot { type_object* createTreasureObject(TRmgZone*, int, int, int*, "
-                "unsigned char, unsigned char, unsigned char, TRmgMapPosition); };\n"
+            signature = method[:method.index("\n{")].replace("type_random_map_generator::", "")
+            methods.append("struct " + label + " : CreateRoot { " + signature + "; };\n"
                 + method.replace("type_random_map_generator::", label + "::"))
             checks.append("if (" + ("!" if positive else "") + "check<" + label + ">()) { std::fprintf(stderr, \"failed "
                 + label + "\\n\"); return 1; }")
@@ -71,7 +75,7 @@ class RmgTreasureCreateTests(unittest.TestCase):
         bodies += [body for parent in tuple(bodies) for _, body in self.module.refinements(parent)]
         if os.environ.get("HOMM3_TREASURE_CREATE_MANIFEST"):
             _, originals, axes = source_families.load_manifest(Path(os.environ["HOMM3_TREASURE_CREATE_MANIFEST"]), self.root)
-            for i in range(60):
+            for i in range(len(axes[0].options)):
                 bodies.append(self.module.helpers().definition(source_families.render(originals, axes, (i,))[self.module.SOURCE], self.module.FUNCTION))
         for i, method in enumerate(dict.fromkeys(bodies)):
             candidate("Candidate" + str(i), method, True)
@@ -93,7 +97,7 @@ class RmgTreasureCreateTests(unittest.TestCase):
             self.assertIn(before, self.module.BASELINE)
             candidate("Wrong" + label, self.module.BASELINE.replace(before, after), False)
         for marker, replacement in (("VALUE_TYPES", "\n".join(types)),
-                ("VALUE_HELPERS", self.module.helpers().definition(support, "TRmgMapPosition::TRmgMapPosition")),
+                ("VALUE_HELPERS", self.module.helpers().definition(constructor_owners[0], "TRmgMapPosition::TRmgMapPosition")),
                 ("ACCESSORS", "\n".join(accessors)), ("BIT_POSITION", bit_position.group()),
                 ("CANDIDATES", "\n".join(methods)), ("CHECKS", "\n".join(checks))):
             program = program.replace("// @" + marker + "@", replacement)

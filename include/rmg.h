@@ -500,18 +500,24 @@ int getRmgSquaredDistance(TPoint first, TPoint second);
 // bound at 0x5b8a40 compares y, then x, with jb/jae. Its retained constructor
 // at 0x5b76b0 reads both arguments through pointers. This role name is
 // provisional; the signed geometry TPoint is a separate recovered surface.
-struct TRmgGridPoint {
-    unsigned int m_x;
-    unsigned int m_y;
+// Those const-reference coordinates and the free comparator's position among
+// the retail template bodies support a generic coordinate owner. Its unsigned
+// specialization keeps both retained constructors exact and emits the comparator
+// after tree insertion, preserving the latter's lock exception frame. This is
+// a Complete/x86 source hypothesis, not a Dreamcast-proven original type name.
+template<class Coordinate> struct TRmgCoordinatePoint {
+    Coordinate m_x;
+    Coordinate m_y;
 
-    TRmgGridPoint() {}
+    TRmgCoordinatePoint() {}
 
     // The four late point constructions in RepairTerrainPoint pass x and y by
     // reference. The retained two-store body is 24 bytes including ret 8.
+    // VA instance: TRmgCoordinatePoint<unsigned int>::TRmgCoordinatePoint(const unsigned int&, const unsigned int&)
     VA(0x005B76B0, 0x18)
-    TRmgGridPoint(const unsigned int& newX, const unsigned int& newY)
+    TRmgCoordinatePoint(const Coordinate& newX, const Coordinate& newY)
         : m_x(newX), m_y(newY) {}
-    TRmgGridPoint(const TPoint& point);
+    TRmgCoordinatePoint(const TPoint& point);
 
     // Coordinate accessors: each use is a free inline site, and the terrain
     // painter's diagonal checks need those sites to divide their budgets so
@@ -519,14 +525,14 @@ struct TRmgGridPoint {
     // paintRectangle walks its rectangle through them so its body stays
     // above the saved-body cliff. Every other body still reads the public
     // fields, and each migration is measured on its own.
-    unsigned int getX() const { return m_x; }
-    unsigned int getY() const { return m_y; }
-    void setX(unsigned int newX) { m_x = newX; }
-    void setY(unsigned int newY) { m_y = newY; }
+    Coordinate getX() const { return m_x; }
+    Coordinate getY() const { return m_y; }
+    void setX(Coordinate newX) { m_x = newX; }
+    void setY(Coordinate newY) { m_y = newY; }
 
     // paintTransitions steps one column with a grid-side compound add; the
     // retained add at 0x4fa540 is TPoint's, so this one stays inline.
-    TRmgGridPoint& operator+=(const TPoint& offset)
+    TRmgCoordinatePoint& operator+=(const TPoint& offset)
     {
         m_x += offset.m_x;
         m_y += offset.m_y;
@@ -538,7 +544,11 @@ struct TRmgGridPoint {
     }
 };
 
-bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right);
+typedef TRmgCoordinatePoint<unsigned int> TRmgGridPoint;
+
+template<class Coordinate>
+bool operator<(const TRmgCoordinatePoint<Coordinate>& left,
+    const TRmgCoordinatePoint<Coordinate>& right);
 
 struct TRmgZoneBounds {
     int m_minimumX;
@@ -641,8 +651,11 @@ struct TRmgZoneCellState {
 struct TRmgGroundTile {
     // All three painter adapters exchange integer kinds. The terrain setter
     // 0x532190 writes that generic integer directly, and getter 0x5322c0
-    // sign-extends six bits. No Dreamcast enum declaration exists here;
-    // signed storage replaces the earlier terrain-enum inference.
+    // sign-extends six bits. No Dreamcast enum declaration exists here.
+    // Signed storage remains provisional: the existing TTerrainType field
+    // plus casts in both integer setters emits identical setter/getter and
+    // connection-pass bytes in eight field/local models. Integer setter
+    // parameters alone do not distinguish those source declarations.
     signed m_landType : 6;
     // Retail terrain adapter 0x532190 stores an eight-bit frame at bit 6;
     // getter 0x532288 sign-extends it. River adapter 0x532520 writes the
@@ -1087,7 +1100,18 @@ public:
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
     virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
-    virtual TRmgGridPoint getSize() = 0;
+    // Slot 3 returns its explicit output reference. The adapters consume
+    // that returned reference, which distinguishes this from a hidden value
+    // result: together the map and both adapter bodies reproduce retail.
+    virtual TRmgGridPoint& getSize(TRmgGridPoint& output) = 0;
+    // Provisional Complete-only convenience overload. Its output temporary
+    // belongs to this value query, shared by the adapters and terrain painter.
+    // Source placement is inferred; the virtual slot retains its proven ABI.
+    TRmgGridPoint getSize()
+    {
+        TRmgGridPoint size;
+        return getSize(size);
+    }
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
     virtual int getLand(const TRmgGridPoint& point) = 0;
     virtual int getOverlay(const TRmgGridPoint& point) = 0;
@@ -1163,13 +1187,16 @@ public:
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setOverlay(const TRmgGridPoint& point, int value);
-    virtual TRmgGridPoint getSize();
+    using TRmgMapInterface::getSize;
+    virtual TRmgGridPoint& getSize(TRmgGridPoint& output);
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
     virtual int getLand(const TRmgGridPoint& point);
     virtual int getOverlay(const TRmgGridPoint& point);
 
     void clear();
-    void addObject(type_object* object, TRmgMapPosition position);
+    // Retail insertion supplies pointer prvalues to both STL reference
+    // parameters; source reference contract inferred at 0x531ea0.
+    void addObject(type_object& object, TRmgMapPosition position);
     void markCoastalTiles();
     void floodConnectionCosts(TRmgMapPosition position, unsigned char waterZone);
 
