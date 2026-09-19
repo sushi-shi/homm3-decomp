@@ -1,4 +1,3 @@
-// quicktownwindow.cpp - E:\gamedcs\quicktownwindow.cpp (compiland quicktownwindow.obj)
 #include "includes.h"
 #include <va.h>
 // DC's retained HasBuilding callee (r11) serves all seven hall, silo and

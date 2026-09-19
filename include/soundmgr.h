@@ -1,4 +1,3 @@
-// soundmgr.h - prototypes of soundmgr.cpp (compiland soundmgr.obj)
 #ifndef HOMM3_SOUNDMGR_H
 #define HOMM3_SOUNDMGR_H
 
@@ -405,11 +404,5 @@ inline void soundManager::serviceSounds()
     Sleep(1);
     LeaveCriticalSection(&m_sectionSoundCall);
 }
-
-// --- globals ---
-
-// --- soundManager ---
-// CODEVIEW(E:\gamedcs\soundmgr.cpp:322, dc 0x14b240) int soundManager::Open(int newPriority);
-// CODEVIEW(E:\gamedcs\soundmgr.cpp:464, dc 0x14b2a4) int soundManager::Main(message* msg);
 
 #endif  /* HOMM3_SOUNDMGR_H */

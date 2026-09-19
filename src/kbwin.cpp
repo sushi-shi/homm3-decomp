@@ -1,4 +1,3 @@
-// kbwin.cpp - E:\gamedcs\kbwin.cpp (compiland kbwin.obj)
 #include "terrain.h"
 #include <va.h>
 #include <windows.h>

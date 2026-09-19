@@ -1,4 +1,3 @@
-// combatresultswindow.h - prototypes of combatresultswindow.cpp (compiland combatresultswindow.obj)
 #ifndef HOMM3_COMBATRESULTSWINDOW_H
 #define HOMM3_COMBATRESULTSWINDOW_H
 
@@ -79,9 +78,5 @@ extern int g_combatResultFlag695014;
 extern const char* const g_combatResultMusic[6];
 
 int combatResultsWindowHandler(message& msg);
-
-// --- TCombatResultsWindow ---
-// CODEVIEW(E:\gamedcs\combatresultswindow.cpp:72, dc 0x68364) void TCombatResultsWindow::TCombatResultsWindow(const hero* attacker, const hero* defender, int my_side, int winning_side, unsigned char is_siege, int experience);
-// CODEVIEW(E:\gamedcs\combatresultswindow.cpp:334, dc 0x693a4) void* TCombatResultsWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_COMBATRESULTSWINDOW_H */

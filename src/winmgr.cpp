@@ -1,4 +1,3 @@
-// winmgr.cpp - E:\gamedcs\winmgr.cpp (compiland winmgr.obj)
 #include <va.h>
 #include "winmgr.h"
 #include "message.h"
@@ -594,20 +593,6 @@ void heroWindowManager::Flash(int startX, int startY, int width, int height, int
 // E:\gamedcs\winmgr.cpp:1545
 DC_ONLY(0x19be28, 0x394)
 void heroWindowManager::FadeBlit(int sx, int sy, int sw, int sh, const Bitmap816* src_bmp, int dx, int dy, unsigned char tblit, int nframes, int period)
-{
-    // @stub
-}
-
-// E:\gamedcs\Bitmap816.h:73
-DC_ONLY(0x19c5e8, 0x8)
-const TPalette16* Bitmap816::getPalette()
-{
-    // @stub
-}
-
-// E:\gamedcs\Bitmap816.h:104
-DC_ONLY(0x19c5f0, 0xE)
-const unsigned char* Bitmap816::getMap(int x, int y)
 {
     // @stub
 }

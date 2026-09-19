@@ -1,4 +1,3 @@
-// spelldefs.cpp - E:\gamedcs\spelldefs.cpp (compiland spelldefs.obj)
 #include <va.h>
 #include <stdlib.h>
 #include <string.h>

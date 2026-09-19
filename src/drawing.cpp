@@ -1,4 +1,3 @@
-// drawing.cpp - E:\gamedcs\drawing.cpp (compiland drawing.obj)
 #include <va.h>
 #include <string.h>
 #include "drawing.h"
@@ -2170,90 +2169,6 @@ void combatManager::spellEffect(int effect, int hex, int iDelay, unsigned char l
 // E:\gamedcs\drawing.cpp:2662
 DC_ONLY(0x87278, 0x30)
 void Rescale(int* x, int* y, unsigned char offset)
-{
-    // @stub
-}
-
-// E:\gamedcs\struct.h:284
-DC_ONLY(0x872a8, 0x32)
-bool SLimitData::intersects(const SLimitData& check_limits) const
-{
-    // @stub
-}
-
-// E:\gamedcs\struct.h:300
-DC_ONLY(0x872dc, 0x16)
-bool SLimitData::isEmpty() const
-{
-    // @stub
-}
-
-// E:\gamedcs\Army.h:881
-DC_ONLY(0x872f4, 0xA)
-bool army::isInAreaHighlight()
-{
-    // @stub
-}
-
-// E:\gamedcs\HexCell.h:85
-DC_ONLY(0x87300, 0x44)
-SLimitData hexcell::limits(__$ReturnUdt)
-{
-    // @stub
-}
-
-// E:\gamedcs\CombatControlSubWindow.h:148
-DC_ONLY(0x87344, 0x8)
-unsigned char TCombatHeroSubWindow::isShown()
-{
-    // @stub
-}
-
-// E:\gamedcs\CSpriteFrame.h:88
-DC_ONLY(0x8734c, 0x4)
-int CSpriteFrame::getCroppedHeight()
-{
-    // @stub
-}
-
-// E:\gamedcs\CSprite.h:151
-DC_ONLY(0x87350, 0x44)
-int CSprite::getCroppedHeight(int seq, int frame)
-{
-    // @stub
-}
-
-// E:\gamedcs\CSprite.h:342
-DC_ONLY(0x87394, 0xA4)
-void CSprite::drawCreature(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned short outcolor)
-{
-    // @stub
-}
-
-// E:\gamedcs\CSprite.h:348
-DC_ONLY(0x87438, 0xA4)
-void CSprite::drawCreatureAlpha(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned short outcolor)
-{
-    // @stub
-}
-
-// E:\gamedcs\CSprite.h:444
-DC_ONLY(0x874dc, 0xA0)
-void CSprite::drawCombatHero(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip)
-{
-    // @stub
-}
-
-// E:\gamedcs\CSprite.h:450
-DC_ONLY(0x8757c, 0xA4)
-void CSprite::drawSpellEffect(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned char alpha)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.h:326
-DC_ONLY(0x87620, 0x20)
-unsigned char CChatManager::chatChanged()
 {
     // @stub
 }

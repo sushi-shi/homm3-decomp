@@ -1,4 +1,3 @@
-// monframeinfo.cpp - E:\gamedcs\monframeinfo.cpp (compiland monframeinfo.obj)
 // 2 functions in link order.
 #include <va.h>
 #include <stdlib.h>

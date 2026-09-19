@@ -1,4 +1,3 @@
-// cspriteframe.cpp - E:\gamedcs\cspriteframe.cpp (compiland cspriteframe.obj)
 #include <va.h>
 #include <string.h>
 #include "cspriteframe.h"
@@ -239,13 +238,6 @@ void* CSpriteFrame::`scalar deleting destructor'(unsigned __flags)
 // E:\gamedcs\cspriteframe.cpp:1265
 DC_ONLY(0x79294, 0x184)
 void CSpriteFrame::clip(int* sx, int* sy, int* sw, int* sh, int* dx, int* dy, int dw, int dh, unsigned char bHFlip, unsigned char bVFlip)
-{
-    // @stub
-}
-
-// ..\stlport\stl_limits.h:140
-DC_ONLY(0x79418, 0x8)
-unsigned char std::_Integer_limits<unsigned char,0,255,-1>::max()
 {
     // @stub
 }

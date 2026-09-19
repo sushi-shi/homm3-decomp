@@ -1,4 +1,3 @@
-// monframeinfo.h - prototypes of monframeinfo.cpp (compiland monframeinfo.obj)
 #ifndef HOMM3_MONFRAMEINFO_H
 #define HOMM3_MONFRAMEINFO_H
 

@@ -1,4 +1,3 @@
-// sample.h - prototypes of sample.cpp (compiland sample.obj)
 #ifndef HOMM3_SAMPLE_H
 #define HOMM3_SAMPLE_H
 

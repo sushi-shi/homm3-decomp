@@ -1,4 +1,3 @@
-// hexcell.h - prototypes of hexcell.cpp (compiland hexcell.obj)
 #ifndef HOMM3_HEXCELL_H
 #define HOMM3_HEXCELL_H
 

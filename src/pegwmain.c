@@ -1,4 +1,3 @@
-// pegwmain.c - d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\pegwmain.c (compiland pegwmain.obj)
 // 1 functions in link order.
 #include <va.h>
 // #include "pegwmain.h"

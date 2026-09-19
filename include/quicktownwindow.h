@@ -1,4 +1,3 @@
-// quicktownwindow.h - prototypes of quicktownwindow.cpp (compiland quicktownwindow.obj)
 #ifndef HOMM3_QUICKTOWNWINDOW_H
 #define HOMM3_QUICKTOWNWINDOW_H
 
@@ -53,10 +52,5 @@ public:
                                  TViewLevel viewLevel);
 };
 SIZE(TQuickTownWindow, 0x4c);
-
-// --- TQuickTownWindow ---
-// CODEVIEW(E:\gamedcs\quicktownwindow.cpp:39, dc 0x117e48) void TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TViewLevel view_level);
-// CODEVIEW(E:\gamedcs\quicktownwindow.cpp:260, dc 0x1187f8) void TQuickTownWindow::QuickWindowWait();
-// CODEVIEW(E:\gamedcs\quicktownwindow.cpp:139, dc 0x118848) void* TQuickTownWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_QUICKTOWNWINDOW_H */

@@ -1,4 +1,3 @@
-// resourcedisplay.cpp - E:\gamedcs\resourcedisplay.cpp (compiland resourcedisplay.obj)
 #include <va.h>
 #include <stdio.h>
 #include "border.h"

@@ -1,4 +1,3 @@
-// overview.cpp - E:\gamedcs\overview.cpp (compiland overview.obj)
 #include <va.h>
 #include <windows.h>
 #include <stdio.h>
@@ -2826,13 +2825,6 @@ void TOverviewWindow::doRollover(int codeY)
 // E:\gamedcs\overview.cpp:2546
 DC_ONLY(0x10997c, 0x87C)
 int TOverviewWindow::windowHandler(message& msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\Hero.h:664
-DC_ONLY(0x10a1f8, 0x18)
-town* hero::getOccupiedTown()
 {
     // @stub
 }

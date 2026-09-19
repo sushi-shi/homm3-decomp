@@ -1,4 +1,3 @@
-// dxplay.h - prototypes of dxplay.cpp (compiland dxplay.obj)
 #ifndef HOMM3_DXPLAY_H
 #define HOMM3_DXPLAY_H
 
@@ -227,7 +226,6 @@ class CDPlayMsg {
 public:
     unsigned char* m_data;
     unsigned long m_dataSize;
-    // CODEVIEW(E:\gamedcs\dxplay.h:137, dc 0x8bda8).  The constructor's
     // separate line rows prove body assignments rather than an initializer list;
     // Complete folds the helper into its callers while preserving both stores.
     CDPlayMsg()
@@ -235,13 +233,11 @@ public:
         m_data = 0;
         m_dataSize = 0;
     }
-    // CODEVIEW(E:\gamedcs\dxplay.h:145, dc 0x8bdb4)
     VA(0x00497790, 0x21)  // annotation-only anchor for the active header-inline COMDAT
     ~CDPlayMsg()
     {
         destroy();
     }
-    // CODEVIEW(E:\gamedcs\dxplay.h:150, dc 0x8bdcc).  Dreamcast proves the
     // early size guard, conditional delete, allocation, and size store; retail's
     // inlined cmp/jb fixes this equivalent operand order.
     unsigned char allocSize(unsigned long dSize)
@@ -254,7 +250,6 @@ public:
         m_dataSize = dSize;
         return 1;
     }
-    // CODEVIEW(E:\gamedcs\dxplay.h:164, dc 0x8be0c)
     unsigned char destroy()
     {
         if (!m_data)
@@ -574,73 +569,5 @@ protected:
         const GUID* type, unsigned long size, const void* data);
 };
 SIZE(CDPlayLobby, 0x60);
-
-// --- globals ---
-// CODEVIEW(C:\WCEDreamcast\inc\objbase.h:519, dc 0x8bc84) int operator==(const _GUID* guidOne, const _GUID* guidOther);
-
-// --- CAutoArray<CDPlayAddressElement> ---
-// CODEVIEW(E:\gamedcs\array.h:37, dc 0x8c118) void CAutoArray<CDPlayAddressElement>::CAutoArray<CDPlayAddressElement>();
-// CODEVIEW(E:\gamedcs\array.h:73, dc 0x8c1e4) unsigned char CAutoArray<CDPlayAddressElement>::Add(CDPlayAddressElement* element);
-// CODEVIEW(E:\gamedcs\array.h:113, dc 0x8c278) unsigned char CAutoArray<CDPlayAddressElement>::Delete(unsigned long elementNbr);
-// CODEVIEW(E:\gamedcs\array.h:127, dc 0x8c2b4) unsigned char CAutoArray<CDPlayAddressElement>::Insert(unsigned long nextElementNbr, CDPlayAddressElement* element);
-// CODEVIEW(..\stlport\stl_bvector.h:144, dc 0x8c35c) void* CAutoArray<CDPlayAddressElement>::`scalar deleting destructor'(unsigned __flags);
-
-// --- CAutoArray<CDPlayConnection> ---
-// CODEVIEW(E:\gamedcs\array.h:51, dc 0x8bfac) void CAutoArray<CDPlayConnection>::Destroy(unsigned char deleteData);
-
-// --- CAutoArray<CDPlayGroup> ---
-// CODEVIEW(E:\gamedcs\array.h:51, dc 0x8c010) void CAutoArray<CDPlayGroup>::Destroy(unsigned char deleteData);
-
-// --- CAutoArray<CDPlayPlayer> ---
-// CODEVIEW(E:\gamedcs\array.h:51, dc 0x8c068) void CAutoArray<CDPlayPlayer>::Destroy(unsigned char deleteData);
-
-// --- CAutoArray<CDPlaySession> ---
-
-// --- CDPlay ---
-// CODEVIEW(E:\gamedcs\dxplay.cpp:66, dc 0x8a074) void CDPlay::CDPlay();
-// CODEVIEW(E:\gamedcs\dxplay.cpp:890, dc 0x8af4c) unsigned char CDPlay::SysMsgDestroyPlayerOrGroup(DPMSG_DESTROYPLAYERORGROUP* pSysMsg, unsigned long toID);
-// CODEVIEW(E:\gamedcs\dxplay.h:441, dc 0x8bf1c) unsigned char CDPlay::SysMsgAddPlayerToGroup(DPMSG_ADDPLAYERTOGROUP* pSysMsg, unsigned long toID);
-// CODEVIEW(E:\gamedcs\dxplay.h:442, dc 0x8bf20) unsigned char CDPlay::SysMsgChat(DPMSG_CHAT* pSysMsg, unsigned long toID);
-// CODEVIEW(E:\gamedcs\dxplay.h:443, dc 0x8bf24) unsigned char CDPlay::SysMsgDeleteGroupFromGroup(DPMSG_ADDGROUPTOGROUP* pSysMsg, unsigned long toID);
-// CODEVIEW(E:\gamedcs\dxplay.h:444, dc 0x8bf28) unsigned char CDPlay::SysMsgDeletePlayerFromGroup(DPMSG_ADDPLAYERTOGROUP* pSysMsg, unsigned long toID);
-// CODEVIEW(E:\gamedcs\dxplay.h:445, dc 0x8bf2c) unsigned char CDPlay::SysMsgSecureMessage(DPMSG_SECUREMESSAGE* pSysMsg, unsigned long toID);
-// CODEVIEW(E:\gamedcs\dxplay.h:446, dc 0x8bf30) unsigned char CDPlay::SysMsgSessionLost(DPMSG_GENERIC* pSysMsg, unsigned long toID);
-// CODEVIEW(E:\gamedcs\dxplay.h:447, dc 0x8bf34) unsigned char CDPlay::SysMsgSetPlayerOrGroupData(DPMSG_SETPLAYERORGROUPDATA* pSysMsg, unsigned long toID);
-// CODEVIEW(E:\gamedcs\dxplay.h:448, dc 0x8bf38) unsigned char CDPlay::SysMsgSetPlayerOrGroupName(DPMSG_SETPLAYERORGROUPNAME* pSysMsg, unsigned long toID);
-// CODEVIEW(E:\gamedcs\dxplay.h:449, dc 0x8bf3c) unsigned char CDPlay::SysMsgSetSessionDesc(DPMSG_SETSESSIONDESC* pSysMsg, unsigned long toID);
-// CODEVIEW(E:\gamedcs\dxplay.h:450, dc 0x8bf40) unsigned char CDPlay::SysMsgStartSession(DPMSG_STARTSESSION* pSysMsg, unsigned long toID);
-// CODEVIEW(E:\gamedcs\dxplay.cpp:89, dc 0x8bf44) void* CDPlay::`scalar deleting destructor'(unsigned __flags);
-
-// --- CDPlayAddressElement ---
-// CODEVIEW(E:\gamedcs\dxplay.h:244, dc 0x8be8c) void CDPlayAddressElement::CDPlayAddressElement(const _GUID* lpGuid, const void* pData, unsigned long dataSize);
-// CODEVIEW(E:\gamedcs\dxplay.h:257, dc 0x8bed0) void CDPlayAddressElement::~CDPlayAddressElement();
-// CODEVIEW(..\stlport\stl_bvector.h:144, dc 0x8c390) void* CDPlayAddressElement::`scalar deleting destructor'(unsigned __flags);
-
-// --- CDPlayConnection ---
-// CODEVIEW(E:\gamedcs\dxplay.h:113, dc 0x8bd2c) void CDPlayConnection::CDPlayConnection(const _GUID* lpGuid, unsigned long connSize, void* lpConn, char* name);
-// CODEVIEW(E:\gamedcs\dxplay.h:125, dc 0x8bd90) void CDPlayConnection::~CDPlayConnection();
-// CODEVIEW(..\stlport\stl_bvector.h:144, dc 0x8c328) void* CDPlayConnection::`scalar deleting destructor'(unsigned __flags);
-
-// --- CDPlayGroup ---
-// CODEVIEW(E:\gamedcs\dxplay.h:231, dc 0x8be70) void CDPlayGroup::CDPlayGroup(char* sName, unsigned long dpid);
-
-// --- CDPlayLobby ---
-// CODEVIEW(E:\gamedcs\dxplay.cpp:1351, dc 0x8b69c) unsigned char CDPlayLobby::TestLobbied();
-// CODEVIEW(E:\gamedcs\dxplay.cpp:1476, dc 0x8b808) unsigned char CDPlayLobby::SendStandardLobbyMsg(unsigned long dwAppId, void* pData, unsigned long dwSize);
-// CODEVIEW(E:\gamedcs\dxplay.cpp:1490, dc 0x8b864) unsigned char CDPlayLobby::SendLobbyMsg(unsigned long dwAppId, void* pData, unsigned long dwSize);
-// CODEVIEW(E:\gamedcs\dxplay.cpp:1503, dc 0x8b8a8) unsigned char CDPlayLobby::ReceiveLobbyMsg(unsigned long dwAppId, CDPlayMsg* pMsg);
-// CODEVIEW(E:\gamedcs\dxplay.cpp:1802, dc 0x8b960) unsigned char CDPlayLobby::HandleSystemLobbyMsg(unsigned long dwAppId, CDPlayMsg* pMsg);
-// CODEVIEW(E:\gamedcs\dxplay.cpp:1215, dc 0x8bf78) void* CDPlayLobby::`scalar deleting destructor'(unsigned __flags);
-
-// --- CDPlayMsg ---
-// CODEVIEW(E:\gamedcs\dxplay.h:137, dc 0x8bda8) void CDPlayMsg::CDPlayMsg();
-// CODEVIEW(E:\gamedcs\dxplay.h:150, dc 0x8bdcc) unsigned char CDPlayMsg::AllocSize(unsigned long dSize);
-// CODEVIEW(E:\gamedcs\dxplay.h:177, dc 0x8be38) unsigned long CDPlayMsg::GetId();
-
-// --- CDPlayPlayer ---
-// CODEVIEW(E:\gamedcs\dxplay.h:203, dc 0x8be48) void CDPlayPlayer::CDPlayPlayer(char* sName, unsigned long dpid);
-
-// --- CDPlaySession ---
-// CODEVIEW(E:\gamedcs\dxplay.h:57, dc 0x8bca0) void CDPlaySession::CDPlaySession(const DPSESSIONDESC2* lpSession);
 
 #endif  /* HOMM3_DXPLAY_H */

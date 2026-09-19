@@ -1,4 +1,3 @@
-// levelupwindow.h - prototypes of levelupwindow.cpp (compiland levelupwindow.obj)
 #ifndef HOMM3_LEVELUPWINDOW_H
 #define HOMM3_LEVELUPWINDOW_H
 
@@ -50,8 +49,5 @@ private:
     int m_selected;     // +0x68 retail (+0x60 DC)
 };
 SIZE(TLevelUpWindow, 0x6c);
-
-// --- TLevelUpWindow ---
-// CODEVIEW(E:\gamedcs\levelupwindow.cpp:155, dc 0xe9058) void* TLevelUpWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_LEVELUPWINDOW_H */

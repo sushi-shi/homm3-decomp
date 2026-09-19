@@ -1,4 +1,3 @@
-// combatoptionswindow.h - prototypes of combatoptionswindow.cpp (compiland combatoptionswindow.obj)
 #ifndef HOMM3_COMBATOPTIONSWINDOW_H
 #define HOMM3_COMBATOPTIONSWINDOW_H
 
@@ -110,17 +109,5 @@ extern THelpText g_combatOptionsHelp[39];
 // misc.cpp spells (`xor eax,eax` / `mov eax,1` feeding ten six-byte
 // stores) accounts for retail 0x50b700's 0x44 bytes exactly. Declared
 // once in its owner's header; this TU just includes misc.h.
-
-// --- globals ---
-// CODEVIEW(E:\\gamedcs\\combatoptionswindow.cpp:278, dc 0x67b7c) int CombatOptionsWindowHandler(message* msg);
-// CODEVIEW(E:\\gamedcs\\combatoptionswindow.cpp:664, dc 0x68098) void UpdateCombatOptions(unsigned char bFirstUpdate);
-
-// --- TCombatOptionsWindow ---
-// CODEVIEW(E:\\gamedcs\\combatoptionswindow.cpp:194, dc 0x67a14) int TCombatOptionsWindow::convertID2HelpID(int id);
-// CODEVIEW(E:\\gamedcs\\combatoptionswindow.cpp:230, dc 0x67a78) void TCombatOptionsWindow::HighlightCombatSpeed();
-// CODEVIEW(E:\\gamedcs\\combatoptionswindow.cpp:243, dc 0x67acc) void TCombatOptionsWindow::HighlightGrid();
-// CODEVIEW(E:\\gamedcs\\combatoptionswindow.cpp:254, dc 0x67af0) void TCombatOptionsWindow::HighlightMovementShadow();
-// CODEVIEW(E:\\gamedcs\\combatoptionswindow.cpp:265, dc 0x67b14) void TCombatOptionsWindow::HighlightMouseShadow();
-// CODEVIEW(E:\\gamedcs\\combatoptionswindow.cpp:171, dc 0x680d0) void* TCombatOptionsWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_COMBATOPTIONSWINDOW_H */

@@ -1,4 +1,3 @@
-// exec.cpp - E:\gamedcs\exec.cpp (compiland exec.obj)
 #include "terrain.h"
 #include <va.h>
 #include "exec.h"

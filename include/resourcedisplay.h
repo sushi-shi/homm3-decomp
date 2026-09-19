@@ -1,4 +1,3 @@
-// resourcedisplay.h - prototypes of resourcedisplay.cpp (compiland resourcedisplay.obj)
 #ifndef HOMM3_RESOURCEDISPLAY_H
 #define HOMM3_RESOURCEDISPLAY_H
 
@@ -62,9 +61,5 @@ public:
     void clear();
 };
 SIZE(TResourceDisplay, 0x78);
-
-// --- TResourceDisplay ---
-// CODEVIEW(E:\gamedcs\resourcedisplay.cpp:40, dc 0x120c54) void TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char is_small);
-// CODEVIEW(E:\gamedcs\resourcedisplay.cpp:101, dc 0x1211ec) void* TResourceDisplay::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_RESOURCEDISPLAY_H */

@@ -1,4 +1,3 @@
-// palette.h - prototypes of palette.cpp (compiland palette.obj)
 #ifndef HOMM3_PALETTE_H
 #define HOMM3_PALETTE_H
 
@@ -142,32 +141,5 @@ extern TPalette24* g_playerPalette24;
 namespace ResourceManager {
 TPalette16* getPalette(const char* name);
 }
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\palette.cpp:45, dc 0x10a244) long ftol(double d);
-
-// --- TPalette16 ---
-// CODEVIEW(E:\gamedcs\palette.cpp:73, dc 0x10a3ac) void TPalette16::TPalette16(const TRGBA* rgba, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift);
-// CODEVIEW(E:\gamedcs\palette.cpp:79, dc 0x10a41c) void TPalette16::TPalette16(const tagRGBQUAD* quad, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift);
-// CODEVIEW(E:\gamedcs\palette.cpp:116, dc 0x10a5e0) void TPalette16::TPalette16(const TRGBA* rgba);
-// CODEVIEW(E:\gamedcs\palette.cpp:140, dc 0x10a6a4) void TPalette16::TPalette16(const tagRGBQUAD* quad);
-// CODEVIEW(E:\gamedcs\palette.cpp:165, dc 0x10a77c) void TPalette16::TPalette16(const char* name, const TPalette24& p24);
-// CODEVIEW(E:\gamedcs\palette.cpp:210, dc 0x10a910) void TPalette16::Convert24to16(const unsigned char* p24, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift);
-// CODEVIEW(E:\gamedcs\palette.cpp:236, dc 0x10a998) void TPalette16::ConvertRGBAto16(const TRGBA* rgba, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift);
-// CODEVIEW(E:\gamedcs\palette.cpp:262, dc 0x10aa18) void TPalette16::ConvertRGBQUADto16(const tagRGBQUAD* quad, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift);
-// CODEVIEW(E:\gamedcs\palette.cpp:315, dc 0x10ab44) void TPalette16::Colorize(float hue, float saturation);
-// CODEVIEW(E:\gamedcs\palette.cpp:360, dc 0x10af5c) void TPalette16::AdjustHue(float hue, float amount);
-// CODEVIEW(E:\gamedcs\palette.cpp:454, dc 0x10b320) void TPalette16::AdjustValue(float amount);
-// CODEVIEW(E:\gamedcs\palette.cpp:57, dc 0x10c8b0) void* TPalette16::`scalar deleting destructor'(unsigned __flags);
-
-// --- TPalette24 ---
-// CODEVIEW(E:\gamedcs\palette.cpp:598, dc 0x10b898) void TPalette24::TPalette24();
-// CODEVIEW(E:\gamedcs\palette.cpp:622, dc 0x10b9c4) void TPalette24::TPalette24(const tagRGBQUAD* quad);
-// CODEVIEW(E:\gamedcs\palette.cpp:640, dc 0x10ba88) TPalette24* TPalette24::operator=(const TPalette24* from);
-// CODEVIEW(E:\gamedcs\palette.cpp:650, dc 0x10baac) void TPalette24::~TPalette24();
-// CODEVIEW(E:\gamedcs\palette.cpp:655, dc 0x10baf0) void TPalette24::Cycle(int begin, int end, int step);
-// CODEVIEW(E:\gamedcs\palette.cpp:685, dc 0x10bbf4) void TPalette24::Colorize(float hue, float saturation);
-// CODEVIEW(E:\gamedcs\palette.cpp:723, dc 0x10bf58) void TPalette24::Gray();
-// CODEVIEW(E:\gamedcs\palette.cpp:599, dc 0x10c8e4) void* TPalette24::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_PALETTE_H */

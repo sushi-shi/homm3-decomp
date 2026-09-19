@@ -1,4 +1,3 @@
-// bitmap8.cpp - E:\gamedcs\bitmap8.cpp (compiland bitmap8.obj)
 // 9 functions in link order.
 #include <va.h>
 // #include "bitmap8.h"

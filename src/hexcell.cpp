@@ -1,4 +1,3 @@
-// hexcell.cpp - E:\gamedcs\hexcell.cpp (compiland hexcell.obj)
 // 3 functions in link order.
 #include "terrain.h"
 #include <va.h>

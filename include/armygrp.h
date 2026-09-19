@@ -1,4 +1,3 @@
-// armygrp.h - prototypes of armygrp.cpp (compiland armygrp.obj)
 #ifndef HOMM3_ARMYGRP_H
 #define HOMM3_ARMYGRP_H
 
@@ -687,7 +686,6 @@ const unsigned int g_ctaAlive = 0x10;
 // level<=4 spells (the decode note's "Orb of Inhibition" inference
 // does not survive the NH3API roster: inhibition is 0x7e).
 
-
 // The traits table is reached through a stored pointer (reference
 // global): retail loads [0x6747b0] before indexing. NH3API names it
 // akCreatureTypeTraits (a const reference to the 150-entry array).
@@ -830,26 +828,12 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType,
                             const class hero* const targetHero);            // 0x44a4d0
 long modifySpellDamage(long damage, SpellID spell, TCreatureType creature);  // 0x44b4b0
 
-// --- globals ---
-// CODEVIEW(E:\gamedcs\armygrp.cpp:341, dc 0x4e644) float get_spell_work_chance(SpellID spell, TCreatureType target_army_type, const hero* casting_hero, const hero* target_hero);
-
 // --- TSplitWindow ---
-// CODEVIEW(E:\gamedcs\armygrp.cpp:62, dc 0x4db08) void TSplitWindow::UpdateSplitArmy(unsigned char bUpdate);
-// CODEVIEW(E:\gamedcs\armygrp.cpp:208, dc 0x4e388) void TSplitWindow::SetRolloverText(int codeY);
-// CODEVIEW(E:\gamedcs\armygrp.cpp:131, dc 0x4fd54) void* TSplitWindow::`scalar deleting destructor'(unsigned __flags);
 
 // E:\gamedcs\armygrp.cpp:668, dc 0x4eb88
 // E:\gamedcs\armygrp.cpp:748, dc 0x4ec98
 // E:\gamedcs\armygrp.cpp:885, dc 0x4ee08
 // E:\gamedcs\armygrp.cpp:1347, dc 0x4f708
 // E:\gamedcs\armygrp.cpp:1464, dc 0x4fab4
-
-// --- std ---
-// CODEVIEW(..\stlport\stl_string.h:296, dc 0x4fd88) void std::basic_string<char,std::char_traits<char>,std::allocator<char> >::basic_string<char,std::char_traits<char>,std::allocator<char> >(const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __s);
-// CODEVIEW(..\stlport\stl_string.h:272, dc 0x4fdd4) std::allocator<char> std::basic_string<char,std::char_traits<char>,std::allocator<char> >::get_allocator(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_algobase.h:79, dc 0x4fddc) void std::swap(TCreatureType* __a, TCreatureType* __b);
-// CODEVIEW(..\stlport\stl_algobase.h:79, dc 0x4fde8) void std::swap(int* __a, int* __b);
-// CODEVIEW(..\stlport\stl_string.h:464, dc 0x4fdf4) std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_range_initialize(char* __f, char* __l);
-// CODEVIEW(..\stlport\stl_string.h:454, dc 0x4fe30) std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_range_initialize(char* __f, char* __l, std::forward_iterator_tag __formal);
 
 #endif  /* HOMM3_ARMYGRP_H */

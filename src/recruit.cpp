@@ -1,4 +1,3 @@
-// recruit.cpp - E:\gamedcs\recruit.cpp (compiland recruit.obj)
 #include "terrain.h"
 #include <stdio.h>
 #include <xutility>

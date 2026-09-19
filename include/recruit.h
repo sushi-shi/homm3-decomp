@@ -1,4 +1,3 @@
-// recruit.h - prototypes of recruit.cpp (compiland recruit.obj)
 #ifndef HOMM3_RECRUIT_H
 #define HOMM3_RECRUIT_H
 
@@ -209,26 +208,5 @@ public:
     void setRolloverText(int codeY);
 };
 SIZE(recruitUnit, 188);
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\recruit.cpp:473, dc 0x119d64) TArtifact SiegeMonsterToSiegeArtifact(TCreatureType siegeMon);
-// CODEVIEW(E:\gamedcs\recruit.cpp:693, dc 0x11a2f4) int ExitRecruitUnit(message* msg);
-
-// --- TRecruitQuickWindow ---
-// CODEVIEW(E:\gamedcs\recruit.cpp:1219, dc 0x11af24) void TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2);
-// CODEVIEW(E:\gamedcs\recruit.cpp:1221, dc 0x11b570) void* TRecruitQuickWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- TRecruitWindow ---
-// CODEVIEW(E:\gamedcs\recruit.cpp:192, dc 0x118bb4) void TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource, recruitUnit* recruit_info);
-// CODEVIEW(E:\gamedcs\recruit.cpp:302, dc 0x119820) void TRecruitWindow::add_creature_widgets(long start_x, long start_y, long name_y, TCreatureType creature, long slot);
-// CODEVIEW(E:\gamedcs\recruit.cpp:288, dc 0x11b53c) void* TRecruitWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- recruitUnit ---
-// CODEVIEW(E:\gamedcs\recruit.cpp:511, dc 0x119dcc) void recruitUnit::Update(unsigned char new_monster, long slot);
-// CODEVIEW(E:\gamedcs\recruit.cpp:666, dc 0x11a280) void recruitUnit::SetRolloverText(int codeY);
-// CODEVIEW(E:\gamedcs\recruit.cpp:704, dc 0x11a30c) int recruitUnit::Main(message* msg);
-// CODEVIEW(E:\gamedcs\recruit.cpp:1082, dc 0x11ac7c) void recruitUnit::UpdateCost();
-// CODEVIEW(E:\gamedcs\recruit.cpp:1120, dc 0x11ad04) void recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char bGroupIsTownGarrison, TCreatureType _MonType1, short* _numMon1, TCreatureType _MonType2, short* _numMon2, TCreatureType _MonType3, short* _numMon3, TCreatureType _MonType4, short* _numMon4);
-// CODEVIEW(E:\gamedcs\recruit.cpp:1158, dc 0x11adb4) void recruitUnit::recruitUnit(hero* _thisHero, TCreatureType _MonType1, short* _numMon1, TCreatureType _MonType2, short* _numMon2, TCreatureType _MonType3, short* _numMon3, TCreatureType _MonType4, short* _numMon4);
 
 #endif  /* HOMM3_RECRUIT_H */

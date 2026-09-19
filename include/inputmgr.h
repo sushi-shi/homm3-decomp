@@ -1,4 +1,3 @@
-// inputmgr.h - prototypes of inputmgr.cpp (compiland inputmgr.obj)
 #ifndef HOMM3_INPUTMGR_H
 #define HOMM3_INPUTMGR_H
 
@@ -141,20 +140,5 @@ extern inputManager* g_inputManager;
 // AppWndProc forwards the keyboard/mouse arms through them).
 int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long longParam);  // 0x4ec0e0
 int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long longParam);     // 0x4ec290
-
-// --- VRKeyboard ---
-// CODEVIEW(E:\gamedcs\inputmgr.cpp:1169, dc 0xde0e8) void VRKeyboard::VRKeyboard(textWidget* w, int _min, int _max);
-// CODEVIEW(E:\gamedcs\inputmgr.cpp:1225, dc 0xded30) void VRKeyboard::~VRKeyboard();
-// CODEVIEW(E:\gamedcs\inputmgr.cpp:1231, dc 0xded94) int VRKeyboard::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\inputmgr.cpp:1219, dc 0xdeecc) void* VRKeyboard::`scalar deleting destructor'(unsigned __flags);
-
-// --- inputManager ---
-// CODEVIEW(E:\gamedcs\inputmgr.cpp:274, dc 0xdcc4c) void inputManager::FocusTheWidget(int direction);
-// CODEVIEW(E:\gamedcs\inputmgr.cpp:523, dc 0xdd438) int inputManager::CheckLeft(int x, int y, int width, int height, int id, unsigned char nd);
-// CODEVIEW(E:\gamedcs\inputmgr.cpp:586, dc 0xdd59c) int inputManager::CheckRight(int x, int y, int width, int height, int id, unsigned char nd);
-// CODEVIEW(E:\gamedcs\inputmgr.cpp:650, dc 0xdd704) int inputManager::CheckUp(int x, int y, int width, int height, int id, unsigned char nd);
-// CODEVIEW(E:\gamedcs\inputmgr.cpp:714, dc 0xdd840) int inputManager::CheckDown(int x, int y, int width, int height, int id, unsigned char nd);
-// CODEVIEW(E:\gamedcs\inputmgr.cpp:970, dc 0xddd08) int inputManager::GetCurrQuals();
-// CODEVIEW(E:\gamedcs\inputmgr.cpp:984, dc 0xddd4c) void inputManager::SetKeyCodeType(int newType);
 
 #endif  /* HOMM3_INPUTMGR_H */

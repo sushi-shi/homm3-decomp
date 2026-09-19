@@ -1,4 +1,3 @@
-// text.cpp - E:\gamedcs\text.cpp (compiland text.obj)
 #include <ctype.h>
 
 #include <va.h>
@@ -1025,42 +1024,3 @@ unsigned char initializeArrayText()
         g_moatDamageMessages[j] = g_arrayText->getText(i);
     return 1;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\TextResource.h:113
-DC_ONLY(0x162910, 0x24)
-int TSpreadsheetResource::GetNumberOfColumns(int r)
-{
-    // @stub
-}
-
-// E:\gamedcs\TextResource.h:120
-DC_ONLY(0x162934, 0x28)
-const char* TSpreadsheetResource::getSpreadsheet(int r, int c)
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:195
-DC_ONLY(0x16295c, 0xC)
-unsigned std::vector<char *,std::allocator<char *> >::size()
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:203
-DC_ONLY(0x162968, 0x20)
-char** std::vector<char *,std::allocator<char *> >::operator[](unsigned __n)
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:179
-DC_ONLY(0x162988, 0x4)
-char** std::vector<char *,std::allocator<char *> >::begin()
-{
-    // @stub
-}
-
-#endif  // @carcass

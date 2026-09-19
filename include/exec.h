@@ -1,4 +1,3 @@
-// exec.h - prototypes of exec.cpp (compiland exec.obj)
 #ifndef HOMM3_EXEC_H
 #define HOMM3_EXEC_H
 

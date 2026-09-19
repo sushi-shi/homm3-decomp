@@ -1,4 +1,3 @@
-// palette.cpp - E:\gamedcs\palette.cpp (compiland palette.obj)
 // 39 functions in link order.
 #include <va.h>
 #include <limits>
