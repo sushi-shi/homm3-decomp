@@ -1,5 +1,6 @@
-// helper and ownership wrappers into the table initializer. The adjacent
-// bitset bodies are Dinkumware COMDATs, not source claims.
+// Artifact traits, slot classes and combination recipes. The static traits
+// helper and ownership wrappers expand into the table initializer. Adjacent
+// bitset bodies are Dinkumware COMDATs, not authored game routines.
 #include <va.h>
 #include <bitset>
 #include <algorithm>
@@ -38,10 +39,10 @@ static const int g_spellGivingArtifacts[9] = {
     1, 128, 123, 124, 86, 87, 88, 89, 135
 };
 
-// These two tables are initialized by artifact.obj's excluded cinit family
-// at 0x44c700..0x44cd4f. Their storage and source initializers are a separate
-// admission; declaring the byte-proven addresses here makes this function's
-// data references authoritative without pretending the cinits are claims.
+// Complete traits storage. These addresses and enlarged record counts are
+// proved by the table parser and its consumers. DC's per-record bitset field
+// becomes a compact slot-class index; its old constructor is not a Windows
+// source claim. The two recipe/mask cinits below are separate table owners.
 DATA(0x006939f8)
 static TArtifactTraits g_artifactTraitsStorage[144];
 
@@ -117,12 +118,15 @@ const TCombinationArtifact g_combinationArtifactTable[12] = {
         makeArtifactComponentMask(4, 0x6f, 0x6d, 0x6e, 0x71)),
 };
 
-// The fifteen allowable-slot classes InitializeArtifactTraitsTable searches
-// linearly, read out of the cinit at 0x44cc00. Class 0 is the empty set and
-// is the one entry retail builds with the plain default constructor, which
-// is why `bitset<19>::_Tidy` survives out of line at 0x44d3e0; the two
-// multi-slot classes are the ring pair (6, 7) and the misc/backpack group
-// (9, 10, 11, 12, 18).
+// The fifteen allowable-slot classes searched by the traits initializer,
+// recovered from 0x44cc00. Class 0 is empty; classes 7 and 9 are the ring
+// pair (6, 7) and misc/backpack group (9, 10, 11, 12, 18).
+// Retail retains _Tidy(0) for the first entry. Neither default construction
+// nor explicit/implicit zero-value construction reproduces that boundary:
+// all expand it and produce a 326-byte cinit versus retail's 325 bytes, with
+// later copy-register changes.
+// The neighboring combination cinit matches all 664 bytes / 24 relocations.
+// Both cinits remain outside the ordinary function-score inventory.
 DATA(0x00693898)
 const std::bitset<19> g_artifactSlotMasks[15] = {
     std::bitset<19>(),
@@ -143,10 +147,10 @@ const std::bitset<19> g_artifactSlotMasks[15] = {
 };
 
 DATA(0x00660b64)
-const TArtifactSlotTraits* g_artifactSlotTraits = g_artifactSlotTraitsStorage;
+const TArtifactSlotTraits (&g_artifactSlotTraits)[19] = g_artifactSlotTraitsStorage;
 
 DATA(0x00660b68)
-const TArtifactTraits* g_artifactTraits = g_artifactTraitsStorage;
+const TArtifactTraits (&g_artifactTraits)[144] = g_artifactTraitsStorage;
 
 DATA(0x00660b6c)
 const TCombinationArtifact* g_combinationArtifacts = g_combinationArtifactTable;
@@ -161,9 +165,14 @@ static void initializeArtifactTraits(int id,
 // parameters. Complete's pooled string copies belong to the caller; adding
 // a char*& buffer parameter to the helper is a weaker retail hypothesis.
 // The resource guards and static array owners reproduce retail cleanup.
+// DC uses Dispose and per-string TAutoStrPtr arrays. Complete's resources
+// dispose through vtable+4; its two pooled owners have an ownership byte and
+// pointer, proved by the retained 0x44d340/0x44d360 destructors. The canonical
+// TResourcePtr/TAutoArrayPtr express those Windows lifetimes. The older set/get
+// names do not imply additional Windows allocations or disposal calls.
 
-// Residual (81.376236%): the nested bitset<19> _Tidy and equality calls stay
-// out of line where retail expands them. The first size loop still hoists
+// Residual (80.8218% current, 81.3762% MAX): nested bitset<19> _Tidy and
+// equality calls stay out of line where retail expands them. The size loop hoists
 // the sheet's row-vector base, and late range-error construction differs.
 // The combination loop now has retail's owner/offset end checks, set-bit
 // search, returned-iterator copy and retained bitset<144>::test call.
@@ -313,7 +322,9 @@ unsigned char initializeArtifactTraitsTable()
 // the reads changes this helper from cb=330 to 351 and its child budget from
 // 65 to 64. The proxy assignment still exceeds its remaining budget (43 vs
 // 23), while _Tidy and equality remain rejected at the next nesting level.
-// The residual is not explained by the removed cache alone.
+// The residual is not explained by the removed cache alone. Naming the
+// consumed slot proxy gives 80.5782% but still retains proxy assignment,
+// _Tidy and both equality calls; it fails the expected expansion prediction.
 static void initializeArtifactTraits(int id,
     const TSpreadsheetResource::TStringVector& resource)
 {
