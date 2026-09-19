@@ -93,13 +93,14 @@ def require_fresh_comparisons() -> None:
         common.die("comparison configuration missing; run `homm3 build`")
     seen = set()
     context = ValidationContext()
+    normalized_root = context.resolve(OBJDIFF_DIR / "normalized")
     problems = []
     for unit in json.loads(config.read_text()).get("units", []):
         for side in ("base_path", "target_path"):
-            path = (OBJDIFF_DIR / unit[side]).resolve()
+            path = context.resolve(OBJDIFF_DIR / unit[side])
             if not path.is_file():
                 problems.append(f"{path} is missing")
-            elif (OBJDIFF_DIR / "normalized").resolve() not in path.parents:
+            elif normalized_root not in path.parents:
                 problems.append(f"{path} is not a normalized comparison object")
             else:
                 problems.extend(freshness_problems(path, seen, context=context))

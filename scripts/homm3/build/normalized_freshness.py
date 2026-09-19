@@ -52,7 +52,9 @@ class ValidationContext:
 
     def resolve(self, path: Path) -> Path:
         if path not in self.paths:
-            self.paths[path] = path.resolve()
+            resolved = path.resolve()
+            self.paths[path] = resolved
+            self.paths[resolved] = resolved
         return self.paths[path]
 
     def digest(self, path: Path) -> str:

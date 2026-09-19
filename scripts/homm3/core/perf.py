@@ -32,6 +32,7 @@ SCENARIOS = {
     'status': ['status'],
     'sema': ['sema', 'diff', '0x00554400', '--summary'],
     'source': ['sema', 'diff', '0x00554400', '--source'],
+    'source-cold': ['sema', 'diff', '0x00554400', '--source'],
     'audit-one': ['dreamcast', 'audit', '0x00554400', '--json'],
     'audit-bitmap16': ['dreamcast', 'audit', '--module', 'bitmap16', '--json'],
     'audit-winmgr': ['dreamcast', 'audit', '--module', 'winmgr', '--json'],
@@ -166,6 +167,9 @@ def _run(root: Path, scenario: str, output: Path, profile=False) -> dict:
             'src/bitmap16.cpp' if scenario.startswith('source-edit-') else None)
     original = (root / edit).read_bytes() if edit else None
     try:
+        if scenario == 'source-cold':
+            for suffix in ('', '.d', '.stamp.json'):
+                (root / 'build/debug' / ('remote.obj' + suffix)).unlink(missing_ok=True)
         if edit:
             with (root / edit).open('ab') as stream:
                 # Equal edits for each paired baseline/candidate measurement,
@@ -184,7 +188,7 @@ def _run(root: Path, scenario: str, output: Path, profile=False) -> dict:
                       user_seconds=usage.ru_utime, system_seconds=usage.ru_stime,
                       children_maxrss_kb=usage.ru_maxrss,
                       memory_note='wait4 command-tree maximum RSS, not aggregate concurrent RSS')
-        allowed = {0, 1, 2} if scenario.startswith('audit-') else {0, 1} if scenario in ('sema', 'source') else {0}
+        allowed = {0, 1, 2} if scenario.startswith('audit-') else {0, 1} if scenario in ('sema', 'source', 'source-cold') else {0}
         if process.returncode not in allowed:
             raise RuntimeError(f'{scenario} failed with exit {process.returncode}; see {output}')
         if profile:

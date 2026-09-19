@@ -16,6 +16,7 @@ import os
 import sys
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 from homm3.build.normalized_freshness import (
     freshness_problems, stamp_path, write_stamp,
@@ -102,6 +103,32 @@ def test_missing_implementation_provenance_is_refused():
         assert any('required tool:' in p for p in freshness_problems(normalized))
 
 
+def test_changed_implementation_is_refused():
+    with tempfile.TemporaryDirectory() as tmp:
+        tool = Path(tmp) / 'transform.py'
+        tool.write_text('old implementation')
+        with patch('homm3.build.normalized_freshness.implementation_inputs',
+                   return_value={'tool:transform.py': tool}):
+            _, normalized = _tree(Path(tmp))
+            assert not freshness_problems(normalized)
+            stat = tool.stat()
+            tool.write_text('new implementation')
+            os.utime(tool, ns=(stat.st_atime_ns, stat.st_mtime_ns))
+            assert any('tool:transform.py input changed' in p
+                       for p in freshness_problems(normalized))
+
+
+def test_corrupted_sidecar_is_refused():
+    with tempfile.TemporaryDirectory() as tmp:
+        raw, normalized = _tree(Path(tmp))
+        sidecar = normalized.with_suffix('.symbols.tsv')
+        sidecar.write_text('original symbols')
+        write_stamp(normalized, {'raw': raw})
+        assert not freshness_problems(normalized)
+        sidecar.write_text('damaged symbols')
+        assert any('sidecar changed' in p for p in freshness_problems(normalized))
+
+
 def test_malformed_records_are_refused():
     with tempfile.TemporaryDirectory() as tmp:
         _, normalized = _tree(Path(tmp))
@@ -121,6 +148,8 @@ _CONTROLS = (
     test_same_size_timestamp_replacement_is_refused,
     test_corrupted_output_is_refused,
     test_missing_implementation_provenance_is_refused,
+    test_changed_implementation_is_refused,
+    test_corrupted_sidecar_is_refused,
     test_malformed_records_are_refused,
 )
 
