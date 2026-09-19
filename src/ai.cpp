@@ -2502,30 +2502,6 @@ unsigned char combatManager::doSpellAI()
 
 #if 0  // @carcass
 
-// E:\gamedcs\Army.h:840 - dc 0x27d9c, promoted to VA(0x0041f380) above.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // E:\gamedcs\ai.cpp:597
 DC_ONLY(0x28024, 0x2A)
 unsigned char func_moves_before::operator()(const army* first, const army* second)
