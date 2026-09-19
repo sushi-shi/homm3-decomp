@@ -64,11 +64,13 @@ const int g_townNameFixedLength = 13;
 // retail also homes the name length in the dead `saveVersion` parameter
 // home at [ebp+0xc] (it loads the dword and masks 0xffff), so its frame
 // stays 0x54 where ours takes a fourth slot at [ebp-0x10] and 0x58.
-// Measured and byte-flat or worse: nameLength's declaration position
-// (function top, before/after spellBuf), short vs unsigned short, reading
-// into `saveVersion` itself (97.60), and hoisting `m_name = g_text` out of
-// the two arms (88.68). Swapping the two char locals' declaration order is
-// byte-flat.
+// A 40-member source family over the local block, the length read and the
+// name assignment ceilings at this same 98.1694 with 14 distinct objects, so
+// the slot is not reachable from declaration order, scope or width: byte-flat
+// are nameLength at function top (int or unsigned short), spellBuf first,
+// posBuffer first, and an undeclared assignment; worse are an unsigned short
+// nameLength read (98.10), reading into `saveVersion` itself (97.60) and
+// hoisting `m_name = g_text` out of the two arms (88.68).
 
 VA(0x005bcd60, 0x586)  // carcass promotion, dc 0x165628; anchor-callee armyGroup::load + LoadHeroId; callers game::Load and CCombatInitMsg::read
 int town::load(TAbstractFile* infile, int saveVersion)

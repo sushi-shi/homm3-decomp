@@ -7,8 +7,8 @@ import tempfile
 import unittest
 
 from homm3.vc6.source_families import (
-    Axis, Option, identity_symbol, load_manifest, next_population, render,
-    projected_max_scores, select_elites,
+    Axis, Option, build_snapshot, identity_symbol, load_manifest,
+    next_population, render, projected_max_scores, select_elites,
 )
 
 
@@ -29,6 +29,30 @@ class SourceFamiliesTests(unittest.TestCase):
                         repeat.replace('autostrptr.h', 'other.h'),
                         repeat.replace('QAE@XZ', 'QAE@H@Z')):
             self.assertNotEqual(identity_symbol(first), identity_symbol(changed))
+
+    def test_snapshot_carries_every_tree_a_candidate_compile_resolves(self):
+        # A candidate is compiled with HOMM3_DIR set to its own tree, so cc_wrap
+        # reads the project specification from there. Dropping config/ out of the
+        # snapshot made every run die on the unchanged-source control with
+        # FileNotFoundError on <candidate>/config/project.toml.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "root"
+            for name in ("include", "src", "vendor", "config"):
+                (root / name).mkdir(parents=True)
+            (root / "config/project.toml").write_text("[inputs.retail]\n")
+            (root / "src/unit.cpp").write_text("int unit;\n")
+            (root / "src/build").mkdir()
+            (root / "src/build/stale.obj").write_text("x")
+            snapshot = build_snapshot(root, Path(tmp) / "snapshot")
+            # Whatever cc_wrap resolves from the candidate root must be reachable.
+            self.assertTrue((snapshot / "config/project.toml").is_file())
+            self.assertTrue((snapshot / "src/unit.cpp").is_file())
+            self.assertTrue((snapshot / "include").is_dir())
+            # Read-only trees are shared, edited trees are real copies.
+            self.assertTrue((snapshot / "config").is_symlink())
+            self.assertTrue((snapshot / "vendor").is_symlink())
+            self.assertFalse((snapshot / "src").is_symlink())
+            self.assertFalse((snapshot / "src/build").exists())
 
     def manifest(self, root, payload):
         path = root / "family.json"

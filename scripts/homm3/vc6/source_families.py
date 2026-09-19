@@ -246,6 +246,24 @@ def next_population(axes, parents, seen, width, rng):
     return picked
 
 
+# Every candidate tree is compiled with HOMM3_DIR pointing at itself, so the
+# snapshot has to carry everything cc_wrap resolves from that root - not just
+# the sources the family edits. COPIED_TREES are edited per candidate and so
+# must be real copies; LINKED_TREES are read-only and are shared by symlink.
+COPIED_TREES = ("include", "src")
+LINKED_TREES = ("vendor", "config")
+
+
+def build_snapshot(root, snapshot):
+    """Freeze the trees a candidate compile reads, so no live file is touched."""
+    snapshot.mkdir(parents=True, exist_ok=True)
+    for name in COPIED_TREES:
+        shutil.copytree(root / name, snapshot / name, ignore=shutil.ignore_patterns("build"))
+    for name in LINKED_TREES:
+        (snapshot / name).symlink_to(root / name, target_is_directory=True)
+    return snapshot
+
+
 def compile_candidate(candidate_root, unit, output):
     source = source_for_unit(unit)
     flags = flags_for_unit(unit)
@@ -343,10 +361,7 @@ def main(argv=None):
     scoring._write_json(output / "input.json", payload)
     snapshot = output / "snapshot"
     if not snapshot.exists():
-        snapshot.mkdir()
-        shutil.copytree(root / "include", snapshot / "include")
-        shutil.copytree(root / "src", snapshot / "src", ignore=shutil.ignore_patterns("build"))
-        (snapshot / "vendor").symlink_to(root / "vendor", target_is_directory=True)
+        build_snapshot(root, snapshot)
     rows = status.load_baseline()
     plans = []
     for unit, source in zip(units, sources):

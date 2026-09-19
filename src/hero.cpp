@@ -1443,7 +1443,10 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
 // for retail. Measured byte-flat: default arm first/last, dropping its `break`,
 // moving the CATAPULT arm last, `long`/`TArtifact` artifact, switching on a copy
 // of the parameter, declaring `slot` outside the loop, `long slot`, and the
-// while form. Measured WORSE: reassigning the parameter in the arms and dropping
+// while form - and EXHAUSTIVELY so: a 64-member source family over the switch
+// head, the default arm and the loop form produced ONE object for all 64
+// combinations, so nothing in this body reaches the residual. Measured WORSE:
+// reassigning the parameter in the arms and dropping
 // the default (89.86 - VC6 then enregisters the parameter at entry and the
 // not-matched block disappears entirely), initialising `artifact` from the
 // parameter before the switch (89.86, same cause), and reversing the equipped
