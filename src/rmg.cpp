@@ -1210,6 +1210,7 @@ void TRmgZone::setLevelPosition(TRmgMapPosition position)
 // length body adds a call absent here; exposing it removes six retail calls
 // across five other callers, including three exact functions. Arithmetic
 // local variants do not restore those boundaries. Keep one support-TU body.
+// Earlier size declarations and a two-element size array also leave 96.4286%.
 VA(0x00532BD0, 0xA8) // anchor-callee 0x53b4b7/0x53b5ae; thiscall, ret 4
 unsigned char TRmgZone::canConnect(const TRmgZone* other) const
 {
@@ -5715,12 +5716,13 @@ void type_random_map_generator::openConnectionPath(
 // slot 117 in the RoE exclusion or require a prototype in the eligibility
 // count: neither extra check occurs in the retail body. The two variation
 // draws are ordered; the first remainder is reduced by the second.
-// Source-family residual (95.6907%): predecrement restores 30 retail CFG
-// blocks, with 27 exact shapes and all four calls. Assigning the version
-// limit before exclusion and writing derived fields in the constructor body
-// restores the corresponding lifetimes; the limit setup, count spill and
-// constructor store scheduling remain different. Local/parameter count and
-// paired/delta draws were measured; keeping the real intermediate is best.
+// Exact 576-byte body: exclusion and eligibility share the creature counter.
+// The RoE exclusion ends at 117; the next predecrement begins eligibility at
+// 116 without clearing slot 117. A separate limit leaves setup moves reordered.
+// The compound random-difference expression reproduces the count spill and
+// first-draw-minus-second-draw sequence. Named delta statements leave 96.5155%;
+// a separate reverse pointer/count exclusion reaches 99.9381%. Constructor
+// value/reference combinations are neutral; keep its value arguments.
 VA(0x00540B20, 0x240) // anchor-callee 0x54203b; thiscall, ret 8; retail-only
 type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
 {
@@ -5738,14 +5740,12 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
         prototypeIndices[properties->m_prototype->m_subtype] = index;
     }
     int eligibleCount = 0;
-    int creatureLimit = RMG_GUARD_CREATURE_COUNT;
+    int creature = RMG_GUARD_CREATURE_COUNT;
     if (m_mapVersion < RMG_MAP_ARMAGEDDONS_BLADE) {
-        creatureLimit = RMG_GUARD_ROE_CREATURE_LIMIT;
-        for (int creature = RMG_GUARD_CREATURE_COUNT - 1;
-             creature >= RMG_GUARD_ROE_EXCLUDED_FIRST; --creature)
+        while (--creature >= RMG_GUARD_ROE_EXCLUDED_FIRST)
             prototypeIndices[creature] = -1;
     }
-    for (int creature = creatureLimit; --creature >= 0;) {
+    for (--creature; creature >= 0; --creature) {
         const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
         if ((traits.m_wanderingHigh + traits.m_wanderingLow) / 2 * traits.m_aiValue <= value
             && value <= traits.m_aiValue * RMG_GUARD_MAXIMUM_COUNT
@@ -5767,9 +5767,7 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
     int count = (value + aiValue / 2) / aiValue;
     int variation = count / 4 + 1;
     if (variation > 1) {
-        int delta = rand() % variation;
-        delta -= rand() % variation;
-        count += delta;
+        count = count + (rand() % variation - rand() % variation);
     }
     return new rmgMonsterObject(properties, m_nextObjectId++, count);
 }

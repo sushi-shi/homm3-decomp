@@ -3331,7 +3331,7 @@ rmg	?copy@std@@YIPAHPBH0PAH@Z	100.0000	100.0000	100.0000	0x14df40	-
 rmg	?copy@std@@YIPAUTRmgMapPosition@@PAU2@00@Z	100.0000	100.0000	100.0000	0x14d9e0	-
 rmg	?copy_backward@std@@YIPAUTRmgObjectPlacementRule@@PAU2@00@Z	100.0000	100.0000	100.0000	0x14dbc0	-
 rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	75.1860	81.8175	81.8175	0x141140	tokens1:fbcb8cb2f93f
-rmg	?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z	95.6907	95.6907	95.6907	0x140b20	tokens1:294e09ffee58
+rmg	?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x140b20	tokens1:688fb984af00
 rmg	?createMonolithConnection@type_random_map_generator@@QAEXPAUTRmgZone@@PAUTRmgZoneConnection@@H@Z	91.5328	91.9027	91.9027	0x142ce0	tokens1:fcc50a4a6715
 rmg	?createRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	71.7387	85.9575	85.9575	0x148df0	tokens1:0cd7b4ed44dd
 rmg	?createRiverToObject@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	73.6823	89.6141	89.6141	0x148500	tokens1:5aa284f80bef

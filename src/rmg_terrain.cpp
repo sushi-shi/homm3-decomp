@@ -1426,6 +1426,8 @@ void rmgTerrainPainter::buildNeighbourKinds(
 // six exact rows: retained tLimit, heroQuickView, monsterQuickView, armyGroup
 // split, splitwindow and quicktowncenter. Keep its proven maximum < value
 // body; the identity of this Complete-only RMG clamp remains unresolved.
+// Nested canonical min/max selectors, including both argument orders and the
+// standard reference selectors, lower both diagonals; no composition is adopted.
 VA(0x005B6BA0, 0x24C)
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
