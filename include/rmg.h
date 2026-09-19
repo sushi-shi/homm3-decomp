@@ -592,7 +592,9 @@ struct TRmgNoiseMidpoints {
 SIZE(TRmgNoiseMidpoints, 0x10);
 
 void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
-    int centerValue, TRmgNoiseRegion region, TRmgNoiseMidpoints midpoints);
+    TRmgNoiseRegion region,
+    TRmgNoiseMidpoints midpoints,
+    int centerValue);
 
 enum ERmgConnectionConstants {
     RMG_SHIPYARD_WATER_OFFSET_COUNT = 4,

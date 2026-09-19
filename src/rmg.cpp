@@ -4946,7 +4946,9 @@ void type_random_map_generator::paintZoneTerrain()
 
 // The midpoint-noise generator passes its work vector in ECX, center sample
 // in EDX, then the complete nine-dword region and four edge midpoints by
-// value. Each nondegenerate quadrant preserves the original variation.
+// value. Center is last in the source signature; putting it before the
+// records preserves this ABI/body but changes the caller's argument setup.
+// Each nondegenerate quadrant preserves the original variation.
 // Retail 0x53ed00 consumes these records as a stack and clamps final samples
 // to bytes; the terrain painter at 0x53efa0 consumes the resulting noise.
 // Exact 798-byte body: a Y/X midpoint array restores all three scalar stack
@@ -4956,7 +4958,9 @@ void type_random_map_generator::paintZoneTerrain()
 // artifact-vector representative at 0x404140; both retained bodies are ret 8.
 VA(0x0053E9E0, 0x31E) // anchor-callee 0x53ed91; Complete-only, fastcall ret 0x34
 void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
-    int centerValue, TRmgNoiseRegion region, TRmgNoiseMidpoints midpoints)
+    TRmgNoiseRegion region,
+    TRmgNoiseMidpoints midpoints,
+    int centerValue)
 {
     int middle[2] = { (region.m_bounds.m_minimumY + region.m_bounds.m_maximumY) / 2, (region.m_bounds.m_minimumX + region.m_bounds.m_maximumX) / 2 };
     TRmgNoiseRegion part = region;
@@ -5024,22 +5028,27 @@ TRmgZoneConnection* TRmgTownSlot::findConnection(int destinationZone)
 // Retail 0x53f048 passes the byte mask in ECX, width in EDX and height
 // on the stack. This free fastcall boundary has no Dreamcast counterpart.
 void __fastcall generateRmgIslandMask(unsigned char* mask, int width, int height);
-// First reconstruction: 82.2075%. All 28 CFG blocks agree. Four blocks
-// differ in size, including root initialization and the common subdivision
-// call; preserve the nine-dword work item and four-edge by-value boundary.
+// Exact 667-byte body. The subdivision's center is the last source argument:
+// fastcall still passes it in EDX, but VC6 prepares it before copying the two
+// records and shares the complete argument-pack tail between both calls.
+// Center-before-records leaves 88.4813%; center-last reaches 99.9585%.
+// Initializing the Y edge pair before X restores the last two zero-register
+// choices. Both separate stores and the equivalent assignment chain match.
+// Keep each random displacement's range / 2 expression: naming a shared half
+// changes its register lifetime. The 798-byte subdivision remains exact.
 VA(0x0053ED00, 0x29B)
 void __fastcall generateRmgIslandMask(unsigned char* mask, int width, int height)
 {
     std::vector<TRmgNoiseRegion> patches;
-    TRmgNoiseRegion patch;
-    patch.m_bounds.m_minimumX = 0;
-    patch.m_bounds.m_minimumY = 0;
-    patch.m_bounds.m_maximumX = height;
-    patch.m_bounds.m_maximumY = width;
-    patch.m_corners[0] = patch.m_corners[1] = patch.m_corners[2] = patch.m_corners[3] = 0;
-    patch.m_variation = (height + width) / 4 + 1;
-    TRmgNoiseMidpoints edges = { 0, 0, 0, 0 };
-    subdivideRmgNoiseRegion(patches, patch.m_variation / 2, patch, edges);
+    TRmgNoiseRegion patch = {
+        { 0, 0, height, width }, { 0, 0, 0, 0 }, (height + width) / 4 + 1
+    };
+    TRmgNoiseMidpoints edges;
+    edges.m_minYValue = 0;
+    edges.m_maxYValue = 0;
+    edges.m_minXValue = 0;
+    edges.m_maxXValue = 0;
+    subdivideRmgNoiseRegion(patches, patch, edges, patch.m_variation / 2);
     while (patches.size()) {
         patch = patches.back();
         patches.erase(patches.end() - 1);
@@ -5063,15 +5072,14 @@ void __fastcall generateRmgIslandMask(unsigned char* mask, int width, int height
             + patch.m_corners[1] + patch.m_corners[0]) / 4;
         int range = patch.m_variation;
         if (range > 1) {
-            int half = range / 2;
-            edges.m_minXValue += rand() % range - half;
-            edges.m_minYValue += rand() % range - half;
-            edges.m_maxXValue += rand() % range - half;
-            edges.m_maxYValue += rand() % range - half;
-            center += rand() % range - half;
+            edges.m_minXValue += rand() % range - range / 2;
+            edges.m_minYValue += rand() % range - range / 2;
+            edges.m_maxXValue += rand() % range - range / 2;
+            edges.m_maxYValue += rand() % range - range / 2;
+            center += rand() % range - range / 2;
         }
         patch.m_variation = (range - 1) / 2 + 1;
-        subdivideRmgNoiseRegion(patches, center, patch, edges);
+        subdivideRmgNoiseRegion(patches, patch, edges, center);
     }
 }
 
