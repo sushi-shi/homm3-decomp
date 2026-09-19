@@ -1434,6 +1434,20 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
 }
 
 // E:\gamedcs\hero.cpp:1466
+// Residual (96.5278%): 11 of 11 blocks, both branch targets, the jump table's
+// four arms in source order and the equipped-slot walk are exact. Eight bytes
+// differ, all one decision: retail loads the parameter into EAX, consumes it in
+// place (`add eax,-0x91`) for the switch index, and RELOADS `[ebp+8]` in the
+// not-matched arm; ours keeps the load in EDX (`lea eax,[edx-0x91]`) and reuses
+// it (`mov esi,edx`), i.e. VC6 CSEs the two parameter reads for us and did not
+// for retail. Measured byte-flat: default arm first/last, dropping its `break`,
+// moving the CATAPULT arm last, `long`/`TArtifact` artifact, switching on a copy
+// of the parameter, declaring `slot` outside the loop, `long slot`, and the
+// while form. Measured WORSE: reassigning the parameter in the arms and dropping
+// the default (89.86 - VC6 then enregisters the parameter at entry and the
+// not-matched block disappears entirely), initialising `artifact` from the
+// parameter before the switch (89.86, same cause), and reversing the equipped
+// compare (96.25). DC records no locals for this body.
 VA(0x004d9260, 0x68)  // dc-bracket forced, dc 0xcc2a8
 void hero::destroySiegeWeaponArtifact(int creatureType)
 {

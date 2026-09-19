@@ -700,6 +700,19 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 // where we still hold them in registers across the guard, plus the one
 // under-inlined `memoryBuffer->GetMap(0,0)` inside VWScaleToScreenBuffer's
 // row loop, which retail folds to `mov ebx,[memoryBuffer] / mov ebx,[ebx+0x30]`.
+// THAT UNDER-INLINE IS NOW PRICED EXACTLY (`predict-inline --trace`): this body
+// has cb 977, so budget 1954; by the VWScaleToScreenBuffer site it is down to
+// 1383, giving the nested pool (1383-241)/1 = 1142 and then
+// (1142-356)/6 = 131 at VWClipScaleToScreenBuffer's depth. Its three GetMap
+// expansions cost 45 each and the third is refused with 41 left - short by 4.
+// Any of these closes it: this body's cb >= 989 (+12), the depth-1 spend before
+// the scale call 24 lower, one fewer call site in VWScaleToScreenBuffer
+// (divisor 6 -> 5 gives 157), or VWClipScaleToScreenBuffer's cb <= 332.
+// Measured and byte-flat: merging the two clip guards, plain-`if` clamps,
+// splitting the entry guard into two or four ifs, and naming the type_point
+// local. Measured worse: caching GetMap(0,0) in a local across the row loop
+// (unit 96.76 -> 95.77 - retail reloads it), and dropping the clamp upper
+// bounds (this body +1.36, unit -2.03).
 VA(0x005f8be0, 0x636)  // exhaustive dc-order-map + VWCompleteDraw call order (5th layer), dc 0x1943ec
 void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
 {

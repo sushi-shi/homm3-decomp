@@ -8023,12 +8023,22 @@ void game::replaceRecruit(int playerPos, long recruitSlot)
 // relationship from PerDay and predecessor relationship to PerMonth close the
 // otherwise ambiguous Dreamcast bracket.
 
-// Residual (99.8370%): all 128 retail blocks, branch targets, operations and
-// relocations agree. Restoring the Dreamcast-proven IsCastle source boundary
-// made the entire neutral-town arm exact; Complete's retail bytes separately
-// select HasBuilding's built-mask lane for the Summoning Portal test. The sole
-// residual is the opening creature-week scan's C1 handle-state ESI/EDI role
-// permutation (`this` versus `i`), which why-reg proves source-unaddressable.
+// Residual (98.8948%, HIST 99.8370%): restoring the Dreamcast-proven IsCastle
+// source boundary made the entire neutral-town arm exact; Complete's retail
+// bytes separately select HasBuilding's built-mask lane for the Summoning
+// Portal test. The residual is the opening creature-week scan's C1 handle-state
+// ESI/EDI role permutation (`this` versus `i`), which why-reg proves
+// source-unaddressable: the reference binds `i` to ESI and `this` to EDI, so
+// `i` would have to be the earlier-created call-crossing pseudo, and `this` is
+// created first whatever the declaration order. THE 99.8370 HIST WAS REACHED BY
+// THIS EXACT src_hash (1078057cac97 at f8570b07/a5348767, CUR 98.8948 in the
+// same row), so the permutation is a TU-state effect that some include closure
+// already produced - not a lost source shape. Byte-flat here: `int i = 0` at the
+// declaration, moving `i` first in the declaration block, assigning `i` before
+// the two CREATURE_NONE stores, and binding the MONSTER arm's packed dword to a
+// local. The MONSTER arm's own four-byte split (retail consumes the loaded
+// m_extraInfo in place and reloads it for the preserved lanes, ours copies it)
+// rides on the same allocator phase.
 VA(0x004c8780, 0x7B7)  // PerDay/PerMonth bracket + dc lines/callees, dc 0xb41e0
 void game::perWeek()
 {
