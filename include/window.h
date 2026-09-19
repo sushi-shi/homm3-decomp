@@ -1,4 +1,4 @@
-// window.h - prototypes of window.cpp (compiland window.obj)
+// window.h - window.cpp (compiland window.obj)
 #ifndef HOMM3_WINDOW_H
 #define HOMM3_WINDOW_H
 
@@ -200,20 +200,5 @@ protected:
 
 unsigned char initializeWinSetupText();
 void setWinText(heroWindow* win, int winId);
-
-// --- CHeroWindowEx ---
-// CODEVIEW(E:\gamedcs\window.cpp:1122, dc 0x197f48) int CHeroWindowEx::OnWidgetDeselect(int id, bool& bExitFlag);
-// CODEVIEW(E:\gamedcs\window.cpp:969, dc 0x1981e0) void* CHeroWindowEx::`scalar deleting destructor'(unsigned __flags);
-
-// --- heroWindow ---
-// CODEVIEW(E:\gamedcs\window.cpp:194, dc 0x19731c) int heroWindow::handle_message(message* msg);
-// CODEVIEW(E:\gamedcs\window.cpp:202, dc 0x197320) void heroWindow::handle_widget_hover();
-// CODEVIEW(E:\gamedcs\window.cpp:346, dc 0x19742c) void heroWindow::RemoveAndDeleteWidget(int inID);
-// CODEVIEW(E:\gamedcs\window.cpp:571, dc 0x197690) void heroWindow::DrawWindowX(unsigned char update, int iLowID, int iHighID);
-// CODEVIEW(E:\gamedcs\window.cpp:707, dc 0x197874) void heroWindow::MoveWindow(int deltaX, int deltaY);
-// CODEVIEW(E:\gamedcs\window.cpp:778, dc 0x19797c) void heroWindow::CenterWindow(int centerX, int centerY);
-// CODEVIEW(E:\gamedcs\window.cpp:893, dc 0x197bdc) void heroWindow::EnableAllWidgets(unsigned char enable);
-// CODEVIEW(E:\gamedcs\window.cpp:934, dc 0x197c74) int heroWindow::HeroWindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\window.cpp:68, dc 0x1981ac) void* heroWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_WINDOW_H */

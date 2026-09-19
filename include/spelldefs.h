@@ -1,4 +1,4 @@
-// spelldefs.h - prototypes of spelldefs.cpp (compiland spelldefs.obj)
+// spelldefs.h - spelldefs.cpp (compiland spelldefs.obj)
 #ifndef HOMM3_SPELLDEFS_H
 #define HOMM3_SPELLDEFS_H
 
@@ -34,13 +34,5 @@ unsigned char initializeSpellTraitsTable();
 // adjacent 81*136-byte backing array directly. Name is provisional because
 // only the public DC array name survives.
 extern SSpellTraits g_spellTraitsImp[81];
-
-// --- globals ---
-
-// --- `anonymous namespace' ---
-// CODEVIEW(E:\gamedcs\spelldefs.cpp:320, dc 0x14e78c) void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr();
-// CODEVIEW(E:\gamedcs\spelldefs.cpp:321, dc 0x14e794) void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr();
-// CODEVIEW(E:\gamedcs\spelldefs.cpp:323, dc 0x14e7ac) void `anonymous namespace'::TAutoStrPtr::set(char* pStr);
-// CODEVIEW(E:\gamedcs\spelldefs.cpp:325, dc 0x14e7b0) char* `anonymous namespace'::TAutoStrPtr::get();
 
 #endif  /* HOMM3_SPELLDEFS_H */

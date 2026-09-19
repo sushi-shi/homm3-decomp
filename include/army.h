@@ -1,4 +1,4 @@
-// army.h - prototypes of army.cpp (compiland army.obj)
+// army.h - army.cpp (compiland army.obj)
 #ifndef HOMM3_ARMY_H
 #define HOMM3_ARMY_H
 
@@ -1820,58 +1820,5 @@ unsigned char spellIsValidOnTarget(int spell, const army* target);
 // E:\gamedcs\army.cpp:5469, dc 0x4c1b8
 // E:\gamedcs\includes.h:117, dc 0x4c9c0
 // E:\gamedcs\DC_precompiledheaders.h:41, dc 0x4d044
-
-// --- army ---
-// CODEVIEW(E:\gamedcs\army.cpp:52, dc 0x436b8) void army::army();
-// CODEVIEW(E:\gamedcs\army.cpp:77, dc 0x437ac) void army::set_retaliation_count();
-// CODEVIEW(E:\gamedcs\army.cpp:109, dc 0x438a8) void army::WaitSample(army::TSampleID which);
-// CODEVIEW(E:\gamedcs\army.cpp:117, dc 0x438e8) void army::InitClean();
-// CODEVIEW(E:\gamedcs\army.cpp:288, dc 0x43e80) void army::LoadResources();
-// CODEVIEW(E:\gamedcs\army.cpp:477, dc 0x4424c) void army::FreeResources();
-// CODEVIEW(E:\gamedcs\army.cpp:596, dc 0x444a8) void army::DrawToBuffer(int x, int y, int bNumBoxOnly);
-// CODEVIEW(E:\gamedcs\army.cpp:891, dc 0x44d50) double army::ComputeKarma();
-// CODEVIEW(E:\gamedcs\army.cpp:1034, dc 0x45164) unsigned char army::set_inside_area_effect(unsigned char arg);
-// CODEVIEW(E:\gamedcs\army.cpp:1062, dc 0x45204) void army::EndWalk();
-// CODEVIEW(E:\gamedcs\army.cpp:1171, dc 0x453c8) void army::animate_missile(army* armyToAttack);
-// CODEVIEW(E:\gamedcs\army.cpp:1356, dc 0x458a0) void army::range_attack(army* armyToAttack);
-// CODEVIEW(E:\gamedcs\army.cpp:1629, dc 0x45fc0) long army::get_clockwise(long direction);
-// CODEVIEW(E:\gamedcs\army.cpp:1643, dc 0x46008) long army::get_counter_clockwise(long direction);
-// CODEVIEW(E:\gamedcs\army.cpp:1896, dc 0x46658) void army::do_post_attack(army* target, int iDamage, int iKilled, int total_life);
-// CODEVIEW(E:\gamedcs\army.cpp:2044, dc 0x46bec) unsigned char army::do_attack(army* armyToAttack, int direction);
-// CODEVIEW(E:\gamedcs\army.cpp:2386, dc 0x472f4) unsigned char army::WalkTo(int destIndex, unsigned char restore_facing);
-// CODEVIEW(E:\gamedcs\army.cpp:2528, dc 0x475ec) void army::CheckLuck();
-// CODEVIEW(E:\gamedcs\army.cpp:2680, dc 0x478fc) double army::get_defense_damage_modifier(unsigned char ranged_attack);
-// CODEVIEW(E:\gamedcs\army.cpp:2820, dc 0x47cf4) double army::get_unit_combat_value(long lowest_attack, long lowest_defense, unsigned char ranged, const army* excluded);
-// CODEVIEW(E:\gamedcs\army.cpp:2988, dc 0x484d0) float army::get_fire_shield_strength();
-// CODEVIEW(E:\gamedcs\army.cpp:3230, dc 0x48c10) int army::ComputeDefenderDamageBonuses(int base_damage);
-// CODEVIEW(E:\gamedcs\army.cpp:3406, dc 0x49260) long army::DamageEnemy(army* enemy, int* iDamage, int* iKilled, unsigned char bIsShot);
-// CODEVIEW(E:\gamedcs\army.cpp:3481, dc 0x4935c) unsigned long army::Strength();
-// CODEVIEW(E:\gamedcs\army.cpp:3631, dc 0x49694) void army::CancelSpellType(int iSpellType);
-// CODEVIEW(E:\gamedcs\army.cpp:3660, dc 0x496dc) void army::adjust_hitpoints();
-// CODEVIEW(E:\gamedcs\army.cpp:3675, dc 0x49748) void army::CancelIndividualSpell(int spell);
-// CODEVIEW(E:\gamedcs\army.cpp:3802, dc 0x499ac) void army::CancelAllSpells();
-// CODEVIEW(E:\gamedcs\army.cpp:3816, dc 0x499e8) void army::SetSpellInfluence(int spell, int power, TSkillMastery mastery, const hero* casting_hero);
-// CODEVIEW(E:\gamedcs\army.cpp:4129, dc 0x4a2e8) void army::DecrementSpellRounds();
-// CODEVIEW(E:\gamedcs\army.cpp:4158, dc 0x4a348) void army::get_berserk_targets(std::vector<army* armies);
-// CODEVIEW(E:\gamedcs\army.cpp:4427, dc 0x4a8b8) unsigned char army::move_to(int hex, unsigned char restore_facing);
-// CODEVIEW(E:\gamedcs\army.cpp:4577, dc 0x4aacc) void army::attack_wall(TWallTargetId wall, long levelsDestroyed);
-// CODEVIEW(E:\gamedcs\army.cpp:4739, dc 0x4b070) void army::Cure(int level, int iSpellPower, const hero* casting_hero);
-// CODEVIEW(E:\gamedcs\army.cpp:4779, dc 0x4b170) int army::TopY();
-// CODEVIEW(E:\gamedcs\army.cpp:4784, dc 0x4b190) int army::BottomY();
-// CODEVIEW(E:\gamedcs\army.cpp:4800, dc 0x4b20c) int army::RightX();
-// CODEVIEW(E:\gamedcs\army.cpp:4812, dc 0x4b278) int army::LeftX();
-// CODEVIEW(E:\gamedcs\army.cpp:4825, dc 0x4b2e4) int army::FrontX();
-// CODEVIEW(E:\gamedcs\army.cpp:4864, dc 0x4b3e8) unsigned char army::is_adjacent(const army* other_army);
-// CODEVIEW(E:\gamedcs\army.cpp:4881, dc 0x4b428) int army::OtherArmyAdjacent(int OAgroup, int OAindex);
-// CODEVIEW(E:\gamedcs\army.cpp:4891, dc 0x4b454) void army::Turn(unsigned char play_animation);
-// CODEVIEW(E:\gamedcs\army.cpp:5396, dc 0x4c004) void army::cast_resurrect(long hex);
-// CODEVIEW(E:\gamedcs\army.cpp:5419, dc 0x4c084) void army::cast_demonic_resurrect(long hex);
-// CODEVIEW(E:\gamedcs\army.cpp:5546, dc 0x4c374) long army::get_valid_caliph_spells(const army* target);
-// CODEVIEW(E:\gamedcs\army.cpp:5717, dc 0x4c778) void army::consider_attack(const army* enemy, long value, long attack_distance);
-// CODEVIEW(E:\gamedcs\Army.h:760, dc 0x4c9ec) bool army::NeedToTurn(int direction);
-// CODEVIEW(E:\gamedcs\Army.h:810, dc 0x4ca0c) const char* army::GetName();
-// CODEVIEW(E:\gamedcs\Army.h:815, dc 0x4ca2c) const char* army::GetName(int count);
-// CODEVIEW(E:\gamedcs\Army.h:869, dc 0x4ca44) long army::get_attack_direction(const army* enemy);
-// CODEVIEW(E:\gamedcs\Army.h:875, dc 0x4ca60) bool army::LeavesNoBody();
 
 #endif  /* HOMM3_ARMY_H */

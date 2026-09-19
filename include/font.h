@@ -1,4 +1,4 @@
-// font.h - prototypes of font.cpp (compiland font.obj)
+// font.h - font.cpp (compiland font.obj)
 #ifndef HOMM3_FONT_H
 #define HOMM3_FONT_H
 
@@ -164,13 +164,5 @@ private:
 // the house ordinal placeholder. Owner TU unlocated - extern only, no
 // DATA claim (the gpWindowManager / gTownSizeNames pattern).
 extern font* g_unnamed698a08;
-
-// --- font ---
-// CODEVIEW(E:\gamedcs\font.cpp:33, dc 0xa1ba8) void font::font();
-// CODEVIEW(E:\gamedcs\font.cpp:56, dc 0xa1ce4) int font::GetColor(font::TColor color_scheme, unsigned char highlighted);
-// CODEVIEW(E:\gamedcs\font.cpp:123, dc 0xa1e30) void font::DrawCursor(Bitmap16Bit* bitmap, int x, int y, int color, int clipX, int clipY, int clipWidth, int clipHeight, unsigned char highlighted);
-// CODEVIEW(E:\gamedcs\font.cpp:246, dc 0xa209c) void font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, font::TColor color);
-// CODEVIEW(E:\gamedcs\font.cpp:254, dc 0xa2108) void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, font::TColor color_scheme, unsigned justification, int cursorPos);
-// CODEVIEW(E:\gamedcs\font.cpp:35, dc 0xa27c4) void* font::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_FONT_H */

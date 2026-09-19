@@ -1,4 +1,4 @@
-// findpath.h - prototypes of findpath.cpp (compiland findpath.obj)
+// findpath.h - findpath.cpp (compiland findpath.obj)
 #ifndef HOMM3_FINDPATH_H
 #define HOMM3_FINDPATH_H
 
@@ -362,19 +362,5 @@ int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
                        unsigned char hasNomad);
 int getTerrainCost(hero* currentHero, type_point start, int direction,
                    int moveLeft);
-
-// --- pathCell ---
-// CODEVIEW(E:\gamedcs\findpath.cpp:79, dc 0xa115c) void pathCell::pathCell();
-
-// --- searchArray ---
-// CODEVIEW(E:\gamedcs\findpath.cpp:271, dc 0x9f2a4) void searchArray::PushPoint(const pathCell* old_cell, pathCell* point, int direction, int move_cost, int limit, long barrier_value, type_point monster, int isTrigger);
-// CODEVIEW(E:\gamedcs\findpath.cpp:461, dc 0x9f718) void searchArray::TestPossibleDirections(const hero* current_hero, pathCell* source, long turn_mobility, long maxMobility, unsigned char adjacent_monster, type_point monster_location, TSkillMastery iPathfinding, type_search_type search_type, TTerrainType native_terrain);
-// CODEVIEW(E:\gamedcs\findpath.cpp:877, dc 0xa02c8) unsigned char searchArray::valid_move_adjacent(const army* current_army, int hex);
-// CODEVIEW(E:\gamedcs\findpath.cpp:905, dc 0xa0390) unsigned char searchArray::valid_move_adjacent(const army* current_army, const army* enemy);
-// CODEVIEW(E:\gamedcs\findpath.cpp:921, dc 0xa03fc) void searchArray::SeedCombatPosition(const army* thisArmy, long current_group, long limit, unsigned char in_placement_phase, long base_speed);
-// CODEVIEW(E:\gamedcs\findpath.cpp:1136, dc 0xa0970) unsigned char searchArray::build_combat_path(const army* current_army, int start_hex, int end_hex, int destination);
-// CODEVIEW(E:\gamedcs\findpath.cpp:1172, dc 0xa0a44) void searchArray::mark_enemy(long hex, long cost);
-// CODEVIEW(E:\gamedcs\findpath.cpp:1187, dc 0xa0a8c) unsigned char searchArray::check_enemy_armies(long hex, long cost, long current_group, long destination);
-// CODEVIEW(E:\gamedcs\findpath.cpp:1218, dc 0xa0b18) unsigned char searchArray::FindCombatPath(const army* current_army, long current_group, long destination, unsigned char in_placement_phase, long limit, long base_speed);
 
 #endif  /* HOMM3_FINDPATH_H */

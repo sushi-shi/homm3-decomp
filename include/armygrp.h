@@ -1,4 +1,4 @@
-// armygrp.h - prototypes of armygrp.cpp (compiland armygrp.obj)
+// armygrp.h - armygrp.cpp (compiland armygrp.obj)
 #ifndef HOMM3_ARMYGRP_H
 #define HOMM3_ARMYGRP_H
 
@@ -829,13 +829,7 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType,
                             const class hero* const targetHero);            // 0x44a4d0
 long modifySpellDamage(long damage, SpellID spell, TCreatureType creature);  // 0x44b4b0
 
-// --- globals ---
-// CODEVIEW(E:\gamedcs\armygrp.cpp:341, dc 0x4e644) float get_spell_work_chance(SpellID spell, TCreatureType target_army_type, const hero* casting_hero, const hero* target_hero);
-
 // --- TSplitWindow ---
-// CODEVIEW(E:\gamedcs\armygrp.cpp:62, dc 0x4db08) void TSplitWindow::UpdateSplitArmy(unsigned char bUpdate);
-// CODEVIEW(E:\gamedcs\armygrp.cpp:208, dc 0x4e388) void TSplitWindow::SetRolloverText(int codeY);
-// CODEVIEW(E:\gamedcs\armygrp.cpp:131, dc 0x4fd54) void* TSplitWindow::`scalar deleting destructor'(unsigned __flags);
 
 // E:\gamedcs\armygrp.cpp:668, dc 0x4eb88
 // E:\gamedcs\armygrp.cpp:748, dc 0x4ec98

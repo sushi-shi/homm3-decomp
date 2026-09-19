@@ -1,4 +1,4 @@
-// castle.h - prototypes of castle.cpp (compiland castle.obj)
+// castle.h - castle.cpp (compiland castle.obj)
 #ifndef HOMM3_CASTLE_H
 #define HOMM3_CASTLE_H
 
@@ -73,11 +73,5 @@ enum ECastleHallWidgetId {
     CASTLE_ROLLOVER_DRAW_FIRST_ID = 0x1f5,
     CASTLE_ROLLOVER_TEXT_ID = 0x1f6
 };
-
-// --- THallWindow ---
-// CODEVIEW(E:\gamedcs\castle.cpp:572, dc 0x5c884) int THallWindow::WindowHandler(message* msg);
-
-// --- townManager ---
-// CODEVIEW(E:\gamedcs\castle.cpp:328, dc 0x5c278) void townManager::SetupCastle(heroWindow* inCasWin, int bIsReset);
 
 #endif  /* HOMM3_CASTLE_H */

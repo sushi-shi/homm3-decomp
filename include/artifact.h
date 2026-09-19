@@ -1,4 +1,4 @@
-// artifact.h - prototypes of artifact.cpp (compiland artifact.obj)
+// artifact.h - artifact.cpp (compiland artifact.obj)
 #ifndef HOMM3_ARTIFACT_H
 #define HOMM3_ARTIFACT_H
 
@@ -134,18 +134,5 @@ DATA(0x0063e758)
 extern const signed char g_artifactPrimarySkillBonuses[][4];
 DATA(0x0063e998)
 extern const signed char g_artifactPrimarySkillBonusesEnd[];
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\artifact.cpp:56, dc 0x4fec0) unsigned char InitializeArtifactTraitsTable();
-// CODEVIEW(E:\gamedcs\artifact.cpp:112, dc 0x50058) void InitializeArtifactTraits(int id, const std::vector<char* resource);
-
-// --- TArtifactTraits ---
-// CODEVIEW(E:\gamedcs\artifact.cpp:49, dc 0x508e4) void TArtifactTraits::TArtifactTraits();
-
-// --- `anonymous namespace' ---
-// CODEVIEW(E:\gamedcs\artifact.cpp:33, dc 0x508bc) void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr();
-// CODEVIEW(E:\gamedcs\artifact.cpp:34, dc 0x508c4) void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr();
-// CODEVIEW(E:\gamedcs\artifact.cpp:36, dc 0x508dc) void `anonymous namespace'::TAutoStrPtr::set(char* pStr);
-// CODEVIEW(E:\gamedcs\artifact.cpp:38, dc 0x508e0) char* `anonymous namespace'::TAutoStrPtr::get();
 
 #endif  /* HOMM3_ARTIFACT_H */

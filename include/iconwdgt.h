@@ -1,4 +1,4 @@
-// iconwdgt.h - prototypes of iconwdgt.cpp (compiland iconwdgt.obj)
+// iconwdgt.h - iconwdgt.cpp (compiland iconwdgt.obj)
 #ifndef HOMM3_ICONWDGT_H
 #define HOMM3_ICONWDGT_H
 
@@ -74,15 +74,5 @@ public:
     void nextRandomFrame();
     void nextRandomSiegeEngineFrame();
 };
-
-// --- iconWidget ---
-// CODEVIEW(E:\gamedcs\iconwdgt.cpp:35, dc 0xd92fc) void iconWidget::iconWidget();
-// CODEVIEW(E:\gamedcs\iconwdgt.cpp:75, dc 0xd93f4) void iconWidget::initialize(int x, int y, int w, int h, int id, const char* image, int frame, int sequence, unsigned char flipped, unsigned back_color, int style, unsigned char focusable);
-// CODEVIEW(E:\gamedcs\iconwdgt.cpp:119, dc 0xd94a4) int iconWidget::Main(message* msg);
-// CODEVIEW(E:\gamedcs\iconwdgt.cpp:275, dc 0xd96e4) void iconWidget::zBufferDraw();
-// CODEVIEW(E:\gamedcs\iconwdgt.cpp:444, dc 0xd9ca4) void iconWidget::SetIconSequence(int new_sequence);
-// CODEVIEW(E:\gamedcs\iconwdgt.cpp:452, dc 0xd9cac) void iconWidget::SetPalette(const char* palette_name);
-// CODEVIEW(E:\gamedcs\iconwdgt.cpp:462, dc 0xd9ce0) void iconWidget::SetPlayerPaletteColors(int whichPlayer);
-// CODEVIEW(E:\gamedcs\iconwdgt.cpp:41, dc 0xda018) void* iconWidget::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_ICONWDGT_H */

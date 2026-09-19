@@ -1,4 +1,4 @@
-// hero.h - prototypes of hero.cpp (compiland hero.obj)
+// hero.h - hero.cpp (compiland hero.obj)
 #ifndef HOMM3_HERO_H
 #define HOMM3_HERO_H
 
@@ -1322,12 +1322,6 @@ DATA(0x0067dce8) extern const THeroTraits (&g_heroTraits)[156];
 
 // E:\gamedcs\hero.cpp:267, dc 0xca7e8
 std::bitset<70> markArtifactSpells(int artifactId);
-// CODEVIEW(E:\gamedcs\hero.cpp:1527, dc 0xcc360) void mark_spells(unsigned char* spell_list, TSpellSchool school);
-// CODEVIEW(E:\gamedcs\hero.cpp:2014, dc 0xccf78) TSecondarySkill get_skill_award(const hero* current_hero, TSkillMastery min_level, TSkillMastery max_level, TSecondarySkill excluded);
-// CODEVIEW(E:\gamedcs\hero.cpp:2340, dc 0xcd68c) void update_artifact_slot(long id, TArtifact artifact);
-// CODEVIEW(E:\gamedcs\hero.cpp:2393, dc 0xcd76c) void UpdateBackpackItem(int i);
-// CODEVIEW(E:\gamedcs\hero.cpp:2726, dc 0xcdf30) void handle_artifact_click(long code, unsigned char right_mouse);
-// CODEVIEW(E:\gamedcs\hero.cpp:3181, dc 0xcea3c) void handle_backpack_click(long code, unsigned char right_mouse);
 int heroView(int heroID, int noDismiss, int alreadyFaded,
              unsigned char quickView);
 
@@ -1468,43 +1462,5 @@ SIZE(THeroScreenWindow, 0x68);
 // inferred from those three reads; ORDINAL PLACEHOLDER name.
 DATA(0x00698a78) extern THeroScreenWindow* g_heroScreenWindow;
 DATA(0x00698a44) extern int g_heroScreenArmyStripLive;
-
-// CODEVIEW(E:\gamedcs\hero.cpp:1594, dc 0xcc49c) void THeroScreenWindow::HeroMessageUpdate(char* cText);
-// CODEVIEW(E:\gamedcs\hero.cpp:3239, dc 0xcec1c) void THeroScreenWindow::ShowWidgets();
-// CODEVIEW(E:\gamedcs\hero.cpp:3421, dc 0xcf3ac) void THeroScreenWindow::show_skills();
-// CODEVIEW(E:\gamedcs\hero.cpp:3486, dc 0xcf54c) int THeroScreenWindow::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\hero.cpp:4231, dc 0xd2d24) void THeroScreenWindow::UpdateHeroLocators();
-// CODEVIEW(E:\gamedcs\hero.cpp:4186, dc 0xd59d0) void* THeroScreenWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- hero ---
-// CODEVIEW(E:\gamedcs\hero.cpp:254, dc 0xca7c0) const char* hero::GetSpecificAbilityText();
-// CODEVIEW(E:\gamedcs\hero.cpp:577, dc 0xcaf98) int hero::load(void* infile);
-// CODEVIEW(E:\gamedcs\hero.cpp:1208, dc 0xcbdb8) void hero::hero();
-// CODEVIEW(E:\gamedcs\hero.cpp:1233, dc 0xcbe80) void hero::initialize(short index);
-// CODEVIEW(E:\gamedcs\hero.cpp:1466, dc 0xcc2a8) void hero::DestroySiegeWeaponArtifact(int creature_type);
-// CODEVIEW(E:\gamedcs\hero.cpp:1632, dc 0xcc540) void hero::UpdateArmies();
-// CODEVIEW(E:\gamedcs\hero.cpp:1862, dc 0xccc8c) int hero::GetLevel(int iExperience);
-// CODEVIEW(E:\gamedcs\hero.cpp:2147, dc 0xcd17c) void hero::CheckLevel();
-// CODEVIEW(E:\gamedcs\hero.cpp:2849, dc 0xce260) std::basic_string<char,std::char_traits<char>,std::allocator<char> hero::get_morale_description(__$ReturnUdt);
-// CODEVIEW(E:\gamedcs\hero.cpp:3021, dc 0xce648) std::basic_string<char,std::char_traits<char>,std::allocator<char> hero::get_luck_description(__$ReturnUdt);
-// CODEVIEW(E:\gamedcs\hero.cpp:4689, dc 0xd38d8) unsigned char hero::HasSecondarySkill(int iWhich);
-// CODEVIEW(E:\gamedcs\hero.cpp:4919, dc 0xd3ad0) void hero::remove_artifact(TArtifactSlot slot);
-// CODEVIEW(E:\gamedcs\hero.cpp:5044, dc 0xd3de4) void hero::GiveArtifact(const type_artifact* artifact, int bCheckEnd, unsigned char equip_it);
-// CODEVIEW(E:\gamedcs\hero.cpp:5064, dc 0xd3e40) int hero::GiveRandomArtifact();
-// CODEVIEW(E:\gamedcs\hero.cpp:5709, dc 0xd49a8) float hero::GetLogisticsFactor();
-// CODEVIEW(E:\gamedcs\hero.cpp:5734, dc 0xd49f0) long hero::GetNavigationFactor();
-// CODEVIEW(E:\gamedcs\hero.cpp:5758, dc 0xd4a40) float hero::GetSorceryFactor();
-// CODEVIEW(E:\gamedcs\hero.cpp:6025, dc 0xd4ed0) TSpellSchool hero::GetHighestSchool(TSpellSchool school_mask) const;
-// CODEVIEW(E:\gamedcs\hero.cpp:6493, dc 0xd5800) void hero::reset_artifacts();
-// CODEVIEW(E:\gamedcs\Hero.h:702, dc 0xd58f8) unsigned char hero::HasArmy(TCreatureType type);
-// CODEVIEW(E:\gamedcs\Hero.h:712, dc 0xd5914) TSkillMastery hero::GetSpellSchoolLevel(TSpellSchool school_mask);
-
-// --- type_artifact ---
-// CODEVIEW(E:\gamedcs\hero.cpp:2450, dc 0xcd8b8) std::basic_string<char,std::char_traits<char>,std::allocator<char> type_artifact::get_description(__$ReturnUdt);
-// CODEVIEW(E:\gamedcs\hero.cpp:1226, dc 0xd59b8) void type_artifact::`default constructor closure'();
-
-// --- type_obscuring_object ---
-// CODEVIEW(E:\gamedcs\hero.cpp:380, dc 0xcaac8) mine* type_obscuring_object::get_obscured_mine();
-// CODEVIEW(E:\gamedcs\Hero.h:162, dc 0xd58cc) unsigned char type_obscuring_object::obscures_town();
 
 #endif  /* HOMM3_HERO_H */

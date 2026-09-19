@@ -1,4 +1,4 @@
-// sacrifice_window.h - prototypes of sacrifice_window.cpp (compiland sacrifice_window.obj)
+// sacrifice_window.h - sacrifice_window.cpp (compiland sacrifice_window.obj)
 #ifndef HOMM3_SACRIFICE_WINDOW_H
 #define HOMM3_SACRIFICE_WINDOW_H
 
@@ -389,70 +389,5 @@ SIZE(type_transformer_slot, 0x50);
 std::string convertWithCommas(long value);
 void updateOffering(iconWidget* artifactWidget, textWidget* valueWidget,
                      const type_artifact_offering* offering);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:914, dc 0x125de0) long sacrifice_value(TCreatureType creature);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:2385, dc 0x1282b0) void move_all_armies(armyGroup* source, armyGroup* dest);
-
-// --- type_army_slot_widget ---
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:263, dc 0x1240ec) void type_army_slot_widget::type_army_slot_widget(long new_x, long new_y, long new_w, long new_h, long new_slot, long new_id, const char* image, unsigned char _left_pane);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:266, dc 0x128694) void* type_army_slot_widget::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:266, dc 0x1286c8) void type_army_slot_widget::~type_army_slot_widget();
-
-// --- type_artifact_offering ---
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:352, dc 0x128714) void type_artifact_offering::type_artifact_offering();
-
-// --- type_artifact_offering_widget ---
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:235, dc 0x124050) void type_artifact_offering_widget::type_artifact_offering_widget(long new_x, long new_y, long new_width, long new_height, long new_item_number, long new_id, const char* image);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:243, dc 0x1240c4) unsigned char type_artifact_offering_widget::handle_click(unsigned char down_click, unsigned char right_click);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:237, dc 0x128648) void* type_artifact_offering_widget::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:237, dc 0x12867c) void type_artifact_offering_widget::~type_artifact_offering_widget();
-
-// --- type_backpack_slot_widget ---
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:204, dc 0x123fb0) void type_backpack_slot_widget::type_backpack_slot_widget(const type_icon_definition* def, long _slot, long _id);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:213, dc 0x124028) unsigned char type_backpack_slot_widget::handle_click(unsigned char down_click, unsigned char right_click);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:206, dc 0x1285fc) void* type_backpack_slot_widget::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:206, dc 0x128630) void type_backpack_slot_widget::~type_backpack_slot_widget();
-
-// --- type_doll_slot_widget ---
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:170, dc 0x123f08) void type_doll_slot_widget::type_doll_slot_widget(const type_doll_slot_definition* def, long _id);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:172, dc 0x1285b0) void* type_doll_slot_widget::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:172, dc 0x1285e4) void type_doll_slot_widget::~type_doll_slot_widget();
-
-// --- type_sacrifice_window ---
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:360, dc 0x1246b8) void type_sacrifice_window::create_artifact_widgets(long* widget_id, int cur_player);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:924, dc 0x125e08) void type_sacrifice_window::update_creature_offering(type_creature_offering* creature);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1036, dc 0x1261e4) void type_sacrifice_window::pick_up_artifact(type_artifact artifact, TArtifactSlot slot, unsigned char new_artifact);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1053, dc 0x126254) void type_sacrifice_window::put_down_artifact(unsigned char change_experience);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1127, dc 0x126420) void type_sacrifice_window::update_backpack();
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1150, dc 0x1264dc) void type_sacrifice_window::backpack_click(long slot, unsigned char right_click);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1236, dc 0x12671c) int type_sacrifice_window::scroll_backpack_left(message* msg);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1262, dc 0x1267ac) int type_sacrifice_window::scroll_backpack_right(message* msg);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1289, dc 0x12681c) unsigned char type_sacrifice_window::add_artifact(type_artifact artifact, TArtifactSlot source);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1310, dc 0x1268a4) void type_sacrifice_window::empty_backpack();
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1338, dc 0x126944) int type_sacrifice_window::empty_backpack(message* msg);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1365, dc 0x1269ac) int type_sacrifice_window::all_artifacts(message* msg);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1407, dc 0x126a70) int type_sacrifice_window::sacrifice(message* msg);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1472, dc 0x126c5c) int type_sacrifice_window::sacrifice_creatures(message* msg);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1499, dc 0x126cc4) void type_sacrifice_window::return_artifact(const type_artifact_offering* artifact);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1521, dc 0x126d20) void type_sacrifice_window::clear();
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1544, dc 0x126d98) int type_sacrifice_window::exit_click(message* msg);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1572, dc 0x126e24) void type_sacrifice_window::set_creature_sacrifice(long slot, long new_amount);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1599, dc 0x126ed8) long type_sacrifice_window::get_max_amount(long slot);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1626, dc 0x126f2c) int type_sacrifice_window::all_creatures(message* msg);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1663, dc 0x126fec) int type_sacrifice_window::max_creatures(message* msg);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1692, dc 0x127064) int type_sacrifice_window::sacrifice_artifacts(message* msg);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1796, dc 0x127390) void type_sacrifice_window::creature_slider_change(int state, heroWindow* parent_window);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1846, dc 0x127484) int type_sacrifice_window::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:352, dc 0x1286e0) void* type_sacrifice_window::`scalar deleting destructor'(unsigned __flags);
-
-// --- type_skeleton_window ---
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:2144, dc 0x127a8c) void type_skeleton_window::unselect();
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:2157, dc 0x127acc) void type_skeleton_window::update_buttons();
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:2216, dc 0x127e50) void type_skeleton_window::creature_click(long side, long slot, unsigned char right_click);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:2293, dc 0x128080) int type_skeleton_window::ExitDialog(message* msg);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:2123, dc 0x12877c) void* type_skeleton_window::`scalar deleting destructor'(unsigned __flags);
-
-// --- type_transformer_slot ---
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1891, dc 0x1274f4) void type_transformer_slot::type_transformer_slot(long new_x, long new_y, long new_w, long new_h, long new_group, long new_slot, long new_id, const char* image);
-// CODEVIEW(E:\gamedcs\sacrifice_window.cpp:1894, dc 0x128730) void* type_transformer_slot::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_SACRIFICE_WINDOW_H */

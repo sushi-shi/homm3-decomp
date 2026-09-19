@@ -1,4 +1,4 @@
-// misc.h - prototypes of misc.cpp (compiland misc.obj)
+// misc.h - misc.cpp (compiland misc.obj)
 #ifndef HOMM3_MISC_H
 #define HOMM3_MISC_H
 
@@ -43,16 +43,7 @@ extern char g_regCdRomPath[350];     // .bss 0x698838
 extern int g_showIntro;              // .bss 0x6993c0
 
 // --- globals ---
-// CODEVIEW(E:\gamedcs\misc.cpp:151, dc 0xfd8a4) void GenerateUniqueSystemID();
-// CODEVIEW(E:\gamedcs\misc.cpp:170, dc 0xfd958) void CheckConfigFile();
-// CODEVIEW(E:\gamedcs\misc.cpp:352, dc 0xfdb78) void SetDefaultSystemOptions();
-// CODEVIEW(E:\gamedcs\misc.cpp:403, dc 0xfdbc0) void ReadPrefsFromRegistry();
-// CODEVIEW(E:\gamedcs\misc.cpp:603, dc 0xfe060) int IsCDDrive(int drive);
 long fileSize(char* filename);
-// CODEVIEW(E:\gamedcs\misc.cpp:796, dc 0xfe0d0) int SRandom(int iLower, int iUpper);
-
-// --- TPickANumber ---
-// CODEVIEW(E:\gamedcs\misc.cpp:884, dc 0xfe208) void TPickANumber::MarkOut(int number);
 
 // --- std ---
 

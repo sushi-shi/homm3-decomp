@@ -1,17 +1,5 @@
-// search.h - prototypes of search.cpp (compiland search.obj)
+// search.h - search.cpp (compiland search.obj)
 #ifndef HOMM3_SEARCH_H
 #define HOMM3_SEARCH_H
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\search.cpp:113, dc 0x12b3f0) unsigned char check_adjacent_monster(const hero* current_hero, pathCell* entry_point, type_search_type search_type);
-// CODEVIEW(E:\gamedcs\search.cpp:494, dc 0x12bedc) unsigned char check_summon_boat(const hero* current_hero);
-
-// --- searchArray ---
-// CODEVIEW(E:\gamedcs\search.cpp:32, dc 0x12b2e0) int searchArray::BuildPath(const hero* current_hero, long limit);
-// CODEVIEW(E:\gamedcs\search.cpp:155, dc 0x12b4a8) void searchArray::enter_lith(const hero* current_hero, const std::vector<type_point,std::allocator<type_point>* list, long cell_type, long excluded, pathCell* entry_point, long limit, type_search_type search_type);
-// CODEVIEW(E:\gamedcs\search.cpp:264, dc 0x12b900) void searchArray::board_boat(const hero* current_hero, pathCell* cell);
-// CODEVIEW(E:\gamedcs\search.cpp:283, dc 0x12b988) void searchArray::enter_town(const hero* current_hero, long start_town, const pathCell* path_cell, long limit, type_search_type search_type);
-// CODEVIEW(E:\gamedcs\search.cpp:393, dc 0x12bc3c) unsigned char searchArray::enter_trigger(const hero* current_hero, pathCell* cell, long limit, type_search_type search_type);
-// CODEVIEW(E:\gamedcs\search.cpp:621, dc 0x12c36c) void searchArray::SeedPosition(hero* current_hero, type_point start, type_point target, int maxMobility, unsigned char is_boat, type_search_type search_type, int iCurTempMobility, unsigned char bSeedContinuation);
 
 #endif  /* HOMM3_SEARCH_H */

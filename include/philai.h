@@ -1,4 +1,4 @@
-// philai.h - prototypes of philai.cpp (compiland philai.obj)
+// philai.h - philai.cpp (compiland philai.obj)
 #ifndef HOMM3_PHILAI_H
 #define HOMM3_PHILAI_H
 
@@ -148,57 +148,5 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
                      unsigned char complexChoice);
 unsigned char wantsSkill(const hero* ourHero, TSecondarySkill skill,
                           unsigned char complexChoice);
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\philai.cpp:58, dc 0x10d458) int OnMySide(int iWhichPlayer);
-// CODEVIEW(E:\gamedcs\philai.cpp:102, dc 0x10d510) void ShowStatus();
-// CODEVIEW(E:\gamedcs\philai.cpp:123, dc 0x10d518) void IncrementHourGlass();
-// CODEVIEW(E:\gamedcs\philai.cpp:150, dc 0x10d57c) void RestoreMouse(unsigned char mouse_was_visible);
-// CODEVIEW(E:\gamedcs\philai.cpp:165, dc 0x10d5b4) void check_for_town(hero* current_hero);
-// CODEVIEW(E:\gamedcs\philai.cpp:207, dc 0x10d684) void upgrade_creatures(hero* current_hero, const town* current_town);
-// CODEVIEW(E:\gamedcs\philai.cpp:326, dc 0x10da30) void buy_artifacts(hero* current_hero, TArtifact* artifact_list, long market_count);
-// CODEVIEW(E:\gamedcs\philai.cpp:370, dc 0x10dae8) long value_of_black_market(const hero* current_hero, const NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\philai.cpp:445, dc 0x10dcc4) void buy_special_building(const hero* current_hero, town* current_town);
-// CODEVIEW(E:\gamedcs\philai.cpp:519, dc 0x10dea8) long value_of_war_factory(const hero* current_hero, TArtifact engine, long move_cost);
-// CODEVIEW(E:\gamedcs\philai.cpp:561, dc 0x10e064) void visit_war_factory(hero* current_hero, TArtifact engine);
-// CODEVIEW(E:\gamedcs\philai.cpp:583, dc 0x10e0f8) void AI_visit_war_factory(hero* current_hero);
-// CODEVIEW(E:\gamedcs\philai.cpp:636, dc 0x10e22c) const hero* get_best_hero(long player_id);
-// CODEVIEW(E:\gamedcs\philai.cpp:662, dc 0x10e298) unsigned char should_garrison_town(const hero* current_hero, const town* current_town);
-// CODEVIEW(E:\gamedcs\philai.cpp:833, dc 0x10e6e8) void mark_shipyards(playerData* player);
-// CODEVIEW(E:\gamedcs\philai.cpp:896, dc 0x10e894) void clear_shipyards(playerData* player);
-// CODEVIEW(E:\gamedcs\philai.cpp:1056, dc 0x10ec58) void MoveHero(hero* current_hero, long* danger_zones, unsigned char is_last_hero, unsigned char* explore_mode);
-// CODEVIEW(E:\gamedcs\philai.cpp:1239, dc 0x10f0d0) void move_all_heroes(long player_id, long* danger_zones);
-// CODEVIEW(E:\gamedcs\philai.cpp:1833, dc 0x1102e4) int ComputeUpgradeValue(hero* current_hero, int iSourceType, int iDestType);
-// CODEVIEW(E:\gamedcs\philai.cpp:1854, dc 0x110390) int ValueOfArena(const hero* current_hero, NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\philai.cpp:1883, dc 0x110408) int ValueOfMapArtifact(const hero* current_hero, NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\philai.cpp:1972, dc 0x1105d8) int ValueOfBlackBox(const hero* current_hero, NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\philai.cpp:2115, dc 0x1108e0) int ValueOfCampfire(playerData* player, NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\philai.cpp:2194, dc 0x110c58) int ValueOfDefenseTower(const hero* current_hero, NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\philai.cpp:2220, dc 0x110cf8) long value_of_garrison(const hero* current_hero, NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\philai.cpp:2250, dc 0x110db4) long value_of_idol(const hero* current_hero, long move_cost);
-// CODEVIEW(E:\gamedcs\philai.cpp:2274, dc 0x110f88) int ValueOfFlotsam(playerData* player);
-// CODEVIEW(E:\gamedcs\philai.cpp:2283, dc 0x111004) int ValueOfGarden(const hero* current_hero, NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\philai.cpp:2294, dc 0x111028) int ValueOfLeanTo(NewmapCell* cell, playerData* player);
-// CODEVIEW(E:\gamedcs\philai.cpp:2392, dc 0x111328) long value_of_hero_event(const hero* current_hero, NewmapCell* cell, short x, short y, short z, short move_cost);
-// CODEVIEW(E:\gamedcs\philai.cpp:2465, dc 0x1114f4) long value_of_hill_fort(const hero* current_hero, long move_cost);
-// CODEVIEW(E:\gamedcs\philai.cpp:2550, dc 0x11173c) int ValueOfLibrary(const hero* current_hero, NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\philai.cpp:2567, dc 0x1117d0) int ValueOfLighthouse(NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\philai.cpp:2615, dc 0x1118f8) int ValueOfMercenaryCamp(const hero* current_hero, NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\philai.cpp:2775, dc 0x111e18) long value_of_magus_hut(long player_id);
-// CODEVIEW(E:\gamedcs\philai.cpp:2811, dc 0x111f54) long value_of_pyramid(const hero* current_hero, NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\philai.cpp:2948, dc 0x112488) int ValueOfSkeleton(const hero* current_hero, NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\philai.cpp:2997, dc 0x1125ec) int ValueOfShrine(const hero* current_hero, NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\philai.cpp:3469, dc 0x1135ac) long get_skill_value(const hero* our_hero, TSecondarySkill skill, unsigned char complex_choice);
-// CODEVIEW(E:\gamedcs\philai.cpp:3834, dc 0x113e24) long AI_value_of_event(const hero* current_hero, type_point point, long* move_cost);
-
-// --- philAI ---
-// CODEVIEW(E:\gamedcs\philai.cpp:1261, dc 0x10f16c) void philAI::DoAI(int whichPlayer);
-// CODEVIEW(E:\gamedcs\philai.cpp:1770, dc 0x110018) void philAI::GetTurnAIVars(int whichPlayer);
-
-// --- type_spellvalue ---
-// CODEVIEW(E:\gamedcs\philai.cpp:1339, dc 0x10f37c) void type_spellvalue::type_spellvalue(const hero* new_hero);
-// CODEVIEW(E:\gamedcs\philai.cpp:1529, dc 0x10f94c) long type_spellvalue::get_summoning_value(long damage, long times_castable);
-// CODEVIEW(E:\gamedcs\philai.cpp:1610, dc 0x10fc6c) void type_spellvalue::fill_creature_value_list();
-// CODEVIEW(E:\gamedcs\philai.cpp:1699, dc 0x10fe64) long type_spellvalue::get_value_of_increase(long base_value, long power_change, long duration_change, long mana_change);
 
 #endif  /* HOMM3_PHILAI_H */

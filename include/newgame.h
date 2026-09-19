@@ -1,4 +1,4 @@
-// newgame.h - prototypes of newgame.cpp (compiland newgame.obj)
+// newgame.h - newgame.cpp (compiland newgame.obj)
 #ifndef HOMM3_NEWGAME_H
 #define HOMM3_NEWGAME_H
 
@@ -32,13 +32,5 @@ extern const char* g_resourceNames[7];
 // game.h exposes them only to its own view). The defeat-monster arm of
 // GetVictoryConditionText indexes them by the map-third direction.
 extern const char* g_questMonsterDirections[9];
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\newgame.cpp:355, dc 0x1037f8) TTownType pick_prev_alignment(unsigned char legal_alignments, TTownType type);
-// CODEVIEW(E:\gamedcs\newgame.cpp:368, dc 0x10380c) TTownType pick_next_alignment(unsigned char legal_alignments, TTownType type);
-
-// --- game ---
-// CODEVIEW(E:\gamedcs\newgame.cpp:337, dc 0x1037f4) void game::SetupNetPlayerNames();
-// CODEVIEW(E:\gamedcs\newgame.cpp:826, dc 0x103fb4) int game::GetSideDesc(char* rText, int iStartPos, int iEndPos);
 
 #endif  /* HOMM3_NEWGAME_H */

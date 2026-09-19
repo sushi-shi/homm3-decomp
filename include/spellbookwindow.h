@@ -1,4 +1,4 @@
-// spellbookwindow.h - prototypes of spellbookwindow.cpp (compiland spellbookwindow.obj)
+// spellbookwindow.h - spellbookwindow.cpp (compiland spellbookwindow.obj)
 #ifndef HOMM3_SPELLBOOKWINDOW_H
 #define HOMM3_SPELLBOOKWINDOW_H
 
@@ -183,24 +183,5 @@ private:
 };
 SIZE(TSpellbookWindow, 0xcc);
 SIZE(TSpellbookWindow::TSpellbookEntry, 0x0c);
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\spellbookwindow.cpp:115, dc 0x14bc80) const char* get_level_string(SpellID spell);
-
-// --- TSpellbookWindow ---
-// CODEVIEW(E:\gamedcs\spellbookwindow.cpp:128, dc 0x14bcf4) std::basic_string<char,std::char_traits<char>,std::allocator<char> TSpellbookWindow::get_spell_description(__$ReturnUdt, SpellID spell, const hero* current_hero, unsigned char rollover);
-// CODEVIEW(E:\gamedcs\spellbookwindow.cpp:680, dc 0x14ce10) void TSpellbookWindow::DisplayNewSchool(int position);
-// CODEVIEW(E:\gamedcs\spellbookwindow.cpp:702, dc 0x14ce68) int TSpellbookWindow::convertID2HelpID(int id);
-// CODEVIEW(E:\gamedcs\spellbookwindow.cpp:755, dc 0x14cecc) int TSpellbookWindow::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\SpellbookWindow.h:209, dc 0x14d320) void TSpellbookWindow::TSpellbookEntry::TSpellbookEntry(SpellID id_, TSpellSchool school_, TSkillMastery mastery_);
-// CODEVIEW(E:\gamedcs\SpellbookWindow.h:222, dc 0x14d32c) void TSpellbookWindow::SetSchool(TSpellSchool school);
-// CODEVIEW(E:\gamedcs\SpellbookWindow.h:230, dc 0x14d33c) unsigned TSpellbookWindow::GetSchool();
-// CODEVIEW(E:\gamedcs\SpellbookWindow.h:236, dc 0x14d344) void TSpellbookWindow::SetContext(TSpellbookWindow::TSpellContext context);
-// CODEVIEW(E:\gamedcs\SpellbookWindow.h:248, dc 0x14d364) unsigned TSpellbookWindow::GetContextMask();
-// CODEVIEW(E:\gamedcs\SpellbookWindow.h:258, dc 0x14d36c) void TSpellbookWindow::PreviousPage();
-// CODEVIEW(E:\gamedcs\SpellbookWindow.h:264, dc 0x14d388) void TSpellbookWindow::NextPage();
-// CODEVIEW(E:\gamedcs\spellbookwindow.cpp:82, dc 0x14d3a4) int TSpellbookWindow::GetPositionFromSchool(unsigned school_mask);
-// CODEVIEW(E:\gamedcs\spellbookwindow.cpp:103, dc 0x14d3cc) TSpellSchool TSpellbookWindow::GetSchoolFromPosition(int j);
-// CODEVIEW(E:\gamedcs\spellbookwindow.cpp:465, dc 0x14d3e0) void* TSpellbookWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_SPELLBOOKWINDOW_H */

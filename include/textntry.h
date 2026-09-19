@@ -1,4 +1,4 @@
-// textntry.h - prototypes of textntry.cpp (compiland textntry.obj)
+// textntry.h - textntry.cpp (compiland textntry.obj)
 #ifndef HOMM3_TEXTNTRY_H
 #define HOMM3_TEXTNTRY_H
 
@@ -103,16 +103,5 @@ protected:
 // No SIZE() assert: the class rides std::string, whose extent differs
 // between the VC6 arm (0x10, giving textWidget 0x50 and this 0x70) and
 // the clang editor arm.
-
-// --- CTextEntrySave ---
-// CODEVIEW(E:\gamedcs\textntry.cpp:38, dc 0x16370c) void CTextEntrySave::CTextEntrySave(int w, int h);
-// CODEVIEW(E:\gamedcs\textntry.cpp:44, dc 0x163750) void CTextEntrySave::Save(int x, int y);
-// CODEVIEW(E:\gamedcs\textntry.cpp:50, dc 0x16377c) unsigned char CTextEntrySave::IsSaved();
-// CODEVIEW(E:\gamedcs\textntry.cpp:51, dc 0x163788) void* CTextEntrySave::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\textntry.cpp:51, dc 0x1637bc) void CTextEntrySave::~CTextEntrySave();
-
-// --- textEntryWidget ---
-// CODEVIEW(E:\gamedcs\textntry.cpp:60, dc 0x16298c) void textEntryWidget::textEntryWidget();
-// CODEVIEW(E:\gamedcs\textntry.cpp:71, dc 0x1637d4) void* textEntryWidget::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_TEXTNTRY_H */

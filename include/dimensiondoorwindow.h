@@ -1,4 +1,4 @@
-// dimensiondoorwindow.h - prototypes of dimensiondoorwindow.cpp (compiland dimensiondoorwindow.obj)
+// dimensiondoorwindow.h - dimensiondoorwindow.cpp (compiland dimensiondoorwindow.obj)
 #ifndef HOMM3_DIMENSIONDOORWINDOW_H
 #define HOMM3_DIMENSIONDOORWINDOW_H
 
@@ -46,11 +46,5 @@ private:
     textWidget* m_rolloverWidget;
 };
 SIZE(TSkuttleBoatWindow, 0x64);
-
-// --- TDimensionDoorWindow ---
-// CODEVIEW(E:\gamedcs\dimensiondoorwindow.cpp:71, dc 0x82eec) void* TDimensionDoorWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- TSkuttleBoatWindow ---
-// CODEVIEW(E:\gamedcs\dimensiondoorwindow.cpp:250, dc 0x82f20) void* TSkuttleBoatWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_DIMENSIONDOORWINDOW_H */

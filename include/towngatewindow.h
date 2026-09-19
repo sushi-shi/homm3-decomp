@@ -1,4 +1,4 @@
-// towngatewindow.h - prototypes of towngatewindow.cpp (compiland towngatewindow.obj)
+// towngatewindow.h - towngatewindow.cpp (compiland towngatewindow.obj)
 #ifndef HOMM3_TOWNGATEWINDOW_H
 #define HOMM3_TOWNGATEWINDOW_H
 
@@ -54,9 +54,5 @@ private:
     void updateTownLocators();
 };
 SIZE(TTownGateWindow, 0x7c);
-
-// --- TTownGateWindow ---
-// CODEVIEW(E:\gamedcs\towngatewindow.cpp:168, dc 0x1699e8) void TTownGateWindow::UpdateTownLocators();
-// CODEVIEW(E:\gamedcs\towngatewindow.cpp:98, dc 0x169c98) void* TTownGateWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_TOWNGATEWINDOW_H */

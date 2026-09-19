@@ -1,4 +1,4 @@
-// kbwin.h - prototypes of kbwin.cpp (compiland kbwin.obj)
+// kbwin.h - kbwin.cpp (compiland kbwin.obj)
 #ifndef HOMM3_KBWIN_H
 #define HOMM3_KBWIN_H
 
@@ -87,13 +87,10 @@ extern SMenuEnableStatus g_menuEnableStatus[KBWIN_MENU_ENTRY_COUNT];
                                         // its only known consumer)
 
 // --- globals ---
-// CODEVIEW(E:\gamedcs\kbwin.cpp:166, dc 0xe7d20) int AppInit(void* hInst, void* hPrev, int sw);
 // The video bring-up hook. Retail's body is EMPTY - it ICF-folded onto the
 // image's shared one-byte `ret` - but the CALL survives in
 // heroWindowManager::Open, which is what makes the declarator needed here
 // rather than only in the CODEVIEW roster below.
 void initVideo();                                        // 0x5bc690 (ICF)
-
-// CODEVIEW(E:\gamedcs\kbwin.cpp:851, dc 0xe80b4) void InitVideo();
 
 #endif  /* HOMM3_KBWIN_H */

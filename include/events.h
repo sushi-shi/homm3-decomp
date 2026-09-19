@@ -1,4 +1,4 @@
-// events.h - prototypes of events.cpp (compiland events.obj)
+// events.h - events.cpp (compiland events.obj)
 #ifndef HOMM3_EVENTS_H
 #define HOMM3_EVENTS_H
 
@@ -565,50 +565,5 @@ enum EFizzleSound {
     FIZZLE_SOUND_KILL_FADE = 0,
     FIZZLE_SOUND_PICKUP = 1
 };
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\events.cpp:838, dc 0x91308) void add_reward(std::basic_string<char,std::char_traits<char>,std::allocator<char>* text, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* alternate, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards, EGameResource resource, long qualifier);
-// CODEVIEW(E:\gamedcs\events.cpp:1898, dc 0x93464) void exchange_spells(hero* first_hero, hero* second_hero);
-
-// --- CLevelPickWaitDlg ---
-// CODEVIEW(E:\gamedcs\events.cpp:6709, dc 0x9cf4c) void CLevelPickWaitDlg::~CLevelPickWaitDlg();
-
-// --- CTurnDurationPause ---
-// CODEVIEW(E:\gamedcs\events.cpp:6248, dc 0x9ce40) void CTurnDurationPause::CTurnDurationPause();
-// CODEVIEW(E:\gamedcs\events.cpp:6261, dc 0x9ceb0) void CTurnDurationPause::~CTurnDurationPause();
-
-// --- CWaitForRemoteBattleDlg ---
-// CODEVIEW(E:\gamedcs\events.cpp:6709, dc 0x9cf24) void CWaitForRemoteBattleDlg::~CWaitForRemoteBattleDlg();
-
-// --- advManager ---
-// CODEVIEW(E:\gamedcs\events.cpp:317, dc 0x903b4) void advManager::DoEventShipyard(NewmapCell* cell, type_point point, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:412, dc 0x906c0) void advManager::EventSound(NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\events.cpp:498, dc 0x90878) void advManager::DoEventFreeArtifact(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:629, dc 0x90c58) void advManager::DoArtifactSkillRequirement(hero* current_hero, NewmapCell* cell, type_point point, TSecondarySkill skill, const char* dialog_text, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:647, dc 0x90d10) TreasureData* advManager::get_treasure_data(NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\events.cpp:656, dc 0x90d34) void advManager::DoCustomArtifact(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:760, dc 0x91104) void advManager::DoEventArtifact(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:852, dc 0x9138c) unsigned char advManager::GiveBlackBoxReward(const char* text, hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player, BlackBoxData* BlackBox);
-// CODEVIEW(E:\gamedcs\events.cpp:1114, dc 0x91bfc) BlackBoxData* advManager::get_black_box(const ExtraInfoUnion* cell);
-// CODEVIEW(E:\gamedcs\events.cpp:1266, dc 0x91fec) void advManager::DoEventBorderGuard(type_point point, NewmapCell* cell, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:1287, dc 0x920e0) void advManager::DoEventBorderTent(NewmapCell* cell, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:1305, dc 0x92188) void advManager::DoEventBouy(hero* current_hero, NewmapCell* cell, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:1330, dc 0x92220) void advManager::DoEventCloverField(hero* current_hero, NewmapCell* cell, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:1505, dc 0x92814) void advManager::DoEventCreatureGenerator(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:1707, dc 0x92f08) void advManager::DoEventFaerieRing(hero* current_hero, NewmapCell* cell, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:2140, dc 0x93d34) void advManager::DoEventLighthouse(NewmapCell* cell, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:2324, dc 0x94274) void advManager::DoEventMermaid(hero* current_hero, NewmapCell* cell, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:3039, dc 0x957fc) void advManager::DoEventShrine(hero* current_hero, NewmapCell* cell, const char* prompt, GlobalInfoFlags type, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:3133, dc 0x95b54) void advManager::DoCustomSpellScroll(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:3377, dc 0x962dc) void advManager::DoTreasureDialog(hero* current_hero, int amount, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:4282, dc 0x981ec) void advManager::do_event_whirlpool(hero* current_hero, NewmapCell* cell, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:4302, dc 0x9824c) void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:5568, dc 0x9a528) short advManager::RecruitEvent(hero* who, TCreatureType creature, short available);
-// CODEVIEW(E:\gamedcs\events.cpp:5661, dc 0x9a898) int advManager::CreatureBankEvent(hero* who, NewmapCell* cell, char* cText, type_point point, unsigned char human_player);
-// CODEVIEW(E:\gamedcs\events.cpp:5851, dc 0x9af34) int advManager::CombatMonsterEvent(hero* who, TCreatureType monType, int* numMons, NewmapCell* eventCell, type_point point, TCreatureType monType2, int numMons2, int numGroups2, TCreatureType monType3, int numMons3, int numGroups3);
-// CODEVIEW(E:\gamedcs\events.cpp:6283, dc 0x9b970) int advManager::DoCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long iRightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int iSeed, unsigned char bFinishHeroes, unsigned char alternate_layout);
-
-// --- spell_level_order ---
-// CODEVIEW(E:\gamedcs\events.cpp:1883, dc 0x9cdc0) unsigned char spell_level_order::operator()(SpellID first, SpellID second);
 
 #endif  /* HOMM3_EVENTS_H */

@@ -1,4 +1,4 @@
-// mapcell.h - prototypes of mapcell.cpp (compiland mapcell.obj)
+// mapcell.h - mapcell.cpp (compiland mapcell.obj)
 #ifndef HOMM3_MAPCELL_H
 #define HOMM3_MAPCELL_H
 
@@ -1213,64 +1213,6 @@ void upgradeCellExtraInfo(NewmapCell* cell, int saveVersion);
 // the remaining bytes stay opaque.
 DATA(0x00660428)
 extern const unsigned char (*g_adventureObjectLandBlocked)[16];
-
-// --- BlackBoxData ---
-// CODEVIEW(E:\gamedcs\MapCell.h:364, dc 0xf47cc) void BlackBoxData::BlackBoxData();
-
-// --- CObject ---
-// CODEVIEW(E:\gamedcs\mapcell.cpp:1119, dc 0xeda4c) type_point CObject::get_trigger() const;
-// CODEVIEW(E:\gamedcs\MapCell.h:587, dc 0xf4944) void CObject::CObject();
-// CODEVIEW(E:\gamedcs\MapCell.h:1269, dc 0xf4a78) TAdventureObjectType CObject::get_type() const;
-
-// --- MonsterData ---
-// CODEVIEW(E:\gamedcs\MapCell.h:735, dc 0xf4a50) void MonsterData::MonsterData();
-// CODEVIEW(E:\gamedcs\mapcell.cpp:2692, dc 0xf4c50) void MonsterData::~MonsterData();
-
-// --- NewfullMap ---
-// CODEVIEW(E:\gamedcs\mapcell.cpp:530, dc 0xec6a4) void NewfullMap::~NewfullMap();
-// CODEVIEW(E:\gamedcs\mapcell.cpp:537, dc 0xec724) void NewfullMap::Close(); // inlined in retail; old 0x4fd460 claim disproven
-// CODEVIEW(E:\gamedcs\mapcell.cpp:679, dc 0xecb94) int NewfullMap::Load(void* infile, int size, unsigned char two_layers);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:759, dc 0xecdf8) int NewfullMap::Save(void* outfile, int size, unsigned char two_layers);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:809, dc 0xecf98) int NewfullMap::readMapLayer(void* infile, int size, int layer);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:1095, dc 0xed984) int NewfullMap::readBoatData(void* infile, CObject* boatObject);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:1199, dc 0xedd14) int NewfullMap::readHolyGrailData(void* infile, CObject* grailObject);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:1224, dc 0xedde8) int NewfullMap::readShrineData(void* infile, CObject* shrineObject);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:1293, dc 0xedf80) int NewfullMap::saveTreasureList(void* outfile);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:1362, dc 0xee12c) int NewfullMap::loadTreasureData(void* infile, TreasureData* thisTreasure);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:1524, dc 0xee56c) int NewfullMap::readBlackBox(void* infile, BlackBoxData* thisBox);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:1729, dc 0xeeb3c) int NewfullMap::saveBlackBoxList(void* outfile);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:1914, dc 0xef158) int NewfullMap::loadBlackBox(void* infile, BlackBoxData* thisBox);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:2124, dc 0xef7c8) int NewfullMap::readSeerData(void* infile, CObject* seerObject);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:2383, dc 0xefe28) int NewfullMap::readShipyardData(void* infile, CObject* shipyardObject);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:2579, dc 0xf0390) int NewfullMap::readMonsterData(void* infile, CObject* monsterObject);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:2695, dc 0xf06e8) int NewfullMap::saveMonsterList(void* outfile);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:2768, dc 0xf08b8) int NewfullMap::loadMonsterData(void* infile, MonsterData* thisMonster);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:2798, dc 0xf094c) int NewfullMap::readTownData(void* infile, CObject* townObject);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:2951, dc 0xf0df4) int NewfullMap::readHeroData(void* infile, CObject* heroObject);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:3290, dc 0xf16c8) int NewfullMap::readObject(void* infile, CObject* tempObject);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:3514, dc 0xf1cd8) int NewfullMap::readObjectType(void* infile, CObjectType* tempObjectType);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:3838, dc 0xf2c20) int NewfullMap::readMapObjects(void* infile);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:4404, dc 0xf4740) int NewfullMap::placeObjects();
-
-// --- NewmapCell ---
-// CODEVIEW(E:\gamedcs\mapcell.cpp:354, dc 0xebf6c) CObject* NewmapCell::TObjectCell::get_object() const;
-// CODEVIEW(E:\gamedcs\mapcell.cpp:544, dc 0xf4b64) void* NewmapCell::`vector deleting destructor'(unsigned __flags);
-
-// --- TTimedEvent ---
-// CODEVIEW(E:\gamedcs\mapcell.cpp:85, dc 0xeb7d0) int TTimedEvent::Read(void* infile);
-// CODEVIEW(E:\gamedcs\MapCell.h:400, dc 0xf4908) void TTimedEvent::TTimedEvent();
-// CODEVIEW(E:\gamedcs\MapCell.h:400, dc 0xf4928) void TTimedEvent::~TTimedEvent();
-
-// --- TTownEvent ---
-// CODEVIEW(E:\gamedcs\mapcell.cpp:232, dc 0xebc90) int TTownEvent::Read(void* infile);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:283, dc 0xebdbc) int TTownEvent::Save(void* outfile);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:329, dc 0xebeec) int TTownEvent::Load(void* infile);
-// CODEVIEW(E:\gamedcs\MapCell.h:400, dc 0xf48d8) void TTownEvent::TTownEvent();
-// CODEVIEW(E:\gamedcs\mapcell.cpp:2947, dc 0xf4c6c) void TTownEvent::~TTownEvent();
-
-// --- TreasureData ---
-// CODEVIEW(E:\gamedcs\MapCell.h:333, dc 0xf4790) void TreasureData::TreasureData();
-// CODEVIEW(E:\gamedcs\MapCell.h:364, dc 0xf48bc) void TreasureData::~TreasureData();
 
 // --- type_obscuring_object ---
 

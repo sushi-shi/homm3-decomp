@@ -1,4 +1,4 @@
-// strip.h - prototypes of strip.cpp (compiland strip.obj)
+// strip.h - strip.cpp (compiland strip.obj)
 #ifndef HOMM3_STRIP_H
 #define HOMM3_STRIP_H
 
@@ -74,11 +74,5 @@ protected:
     void drawSelector(int i);
 };
 SIZE(strip, 0x78);
-
-// --- strip ---
-// CODEVIEW(E:\gamedcs\strip.cpp:70, dc 0x1588e4) void strip::~strip();
-// CODEVIEW(E:\gamedcs\strip.cpp:124, dc 0x158a00) void strip::DrawNumber(int i);
-// CODEVIEW(E:\gamedcs\strip.cpp:139, dc 0x158a80) void strip::DrawOwner(int frame);
-// CODEVIEW(E:\gamedcs\strip.cpp:253, dc 0x158cbc) void strip::DrawSelector(int i);
 
 #endif  /* HOMM3_STRIP_H */

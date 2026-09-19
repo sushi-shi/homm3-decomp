@@ -1,4 +1,4 @@
-// adventureoptionswindow.h - prototypes of adventureoptionswindow.cpp (compiland adventureoptionswindow.obj)
+// adventureoptionswindow.h - adventureoptionswindow.cpp (compiland adventureoptionswindow.obj)
 #ifndef HOMM3_ADVENTUREOPTIONSWINDOW_H
 #define HOMM3_ADVENTUREOPTIONSWINDOW_H
 
@@ -42,9 +42,5 @@ private:
     int convertID2HelpID(int id) const;
 };
 SIZE(TAdventureOptionsWindow, 0x64);
-
-// --- TAdventureOptionsWindow ---
-// CODEVIEW(E:\gamedcs\adventureoptionswindow.cpp:112, dc 0x51b0) int TAdventureOptionsWindow::convertID2HelpID(int id);
-// CODEVIEW(E:\gamedcs\adventureoptionswindow.cpp:101, dc 0x53e0) void* TAdventureOptionsWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_ADVENTUREOPTIONSWINDOW_H */

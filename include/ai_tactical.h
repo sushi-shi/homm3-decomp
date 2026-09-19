@@ -1,4 +1,4 @@
-// ai_tactical.h - prototypes of ai_tactical.cpp (compiland ai_tactical.obj)
+// ai_tactical.h - ai_tactical.cpp (compiland ai_tactical.obj)
 #ifndef HOMM3_AI_TACTICAL_H
 #define HOMM3_AI_TACTICAL_H
 
@@ -405,44 +405,5 @@ long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex,
 long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex,
                       long troopCount, const army* enemy, long enemyHex,
                       const type_AI_combat_parameters* estimate);
-
-// --- army ---
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:2183, dc 0x42aa8) void army::army(const army* __that);
-
-// --- type_AI_attack_hex_chooser ---
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:511, dc 0x3cf50) long type_AI_attack_hex_chooser::get_hex_attack_value(long hex, long& checked);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:575, dc 0x3d154) long type_AI_attack_hex_chooser::get_attack_time(const pathCell* cell);
-
-// --- type_AI_combat_parameters ---
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:215, dc 0x3c854) void type_AI_combat_parameters::simulate_single_attack(const army* current_army, long* our_hits, const army* enemy, long* enemy_hits, unsigned char ranged, long distance);
-
-// --- type_AI_spellcaster ---
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:779, dc 0x3d5dc) void type_AI_spellcaster::initialize(combatManager* combat, long side);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:793, dc 0x3d604) void type_AI_spellcaster::type_AI_spellcaster(combatManager* combat, long side, unsigned char creature_spell);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:817, dc 0x3d6f0) void type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent, combatManager* combat, long side, unsigned char creature_spell);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:837, dc 0x3d7b0) unsigned char type_AI_spellcaster::is_last_action();
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:965, dc 0x3dabc) long type_AI_spellcaster::get_group_damage_value(SpellID spell, long base_damage, long group, hero* target_hero);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:1035, dc 0x3dc50) void type_AI_spellcaster::consider_area_effect(type_spell_choice* choice);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:1126, dc 0x3de90) void type_AI_spellcaster::consider_mass_damage(type_spell_choice* choice);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:1158, dc 0x3df5c) long type_AI_spellcaster::get_attack_boost_value(const army* our_army, const army* enemy, long old_damage, long duration, double increase);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:1186, dc 0x3e120) long type_AI_spellcaster::get_attack_boost_value(const army* our_army, const army* enemy, long duration, double increase);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:1218, dc 0x3e280) long type_AI_spellcaster::get_frenzy_value(const army* our_army, type_enchant_data caster);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:1767, dc 0x3f9d0) long type_AI_spellcaster::get_move_order_change_value(const army* our_army);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:1788, dc 0x3fa24) long type_AI_spellcaster::get_muck_and_mire_value(const army* enemy, type_enchant_data caster);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:2116, dc 0x40130) double type_AI_spellcaster::get_duration(long turns, unsigned char moved_this_turn);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:2553, dc 0x40ec0) void type_AI_spellcaster::consider_teleport(type_spell_choice* choice);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:2608, dc 0x4101c) void type_AI_spellcaster::consider_resurrect(type_spell_choice* choice);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:2685, dc 0x41278) void type_AI_spellcaster::consider_sacrifice(type_spell_choice* choice, const army* healed_army, long target_hex);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:3093, dc 0x41e5c) void type_AI_spellcaster::consider_summon(type_spell_choice* choice);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:3191, dc 0x420ac) void type_AI_spellcaster::set_melee_enemies();
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:3221, dc 0x42170) void type_AI_spellcaster::set_worst_enemies();
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:3237, dc 0x42220) void type_AI_spellcaster::add_enemy(type_AI_enemy_data* sum, const army* our_army, const army* enemy, unsigned char ranged);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:3254, dc 0x4227c) void type_AI_spellcaster::find_enemy_attacks();
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:3377, dc 0x425a8) void type_AI_spellcaster::check_simulation();
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:3398, dc 0x42610) unsigned char type_AI_spellcaster::spells_not_required();
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:807, dc 0x42a74) void* type_AI_spellcaster::`scalar deleting destructor'(unsigned __flags);
-
-// --- type_enchant_data ---
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:744, dc 0x3d524) void type_enchant_data::type_enchant_data(SpellID new_spell, TSkillMastery new_mastery, long new_power, long new_duration);
 
 #endif  /* HOMM3_AI_TACTICAL_H */

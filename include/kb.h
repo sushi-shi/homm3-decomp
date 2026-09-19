@@ -1,4 +1,4 @@
-// kb.h - prototypes of kb.cpp (compiland kb.obj)
+// kb.h - kb.cpp (compiland kb.obj)
 #ifndef HOMM3_KB_H
 #define HOMM3_KB_H
 
@@ -324,81 +324,5 @@ void incProgressBar(unsigned char update);
 void showProgressBar();
 void drawProgressCount();
 void unloadProgressBar();
-// CODEVIEW(E:\gamedcs\kb.cpp:481, dc 0xdf6d0) void DeleteMainClasses();
-// CODEVIEW(E:\gamedcs\kb.cpp:553, dc 0xdf840) void EarlyShutdown(const char* cTitle, const char* cBody);
-// CODEVIEW(E:\gamedcs\kb.cpp:580, dc 0xdf854) void SetupCDRom();
-// CODEVIEW(E:\gamedcs\kb.cpp:645, dc 0xdf91c) int EarlySetup();
-// CODEVIEW(E:\gamedcs\kb.cpp:814, dc 0xdff5c) void ShowCredits();
-// CODEVIEW(E:\gamedcs\kb.cpp:962, dc 0xe0158) int oldmain();
-// CODEVIEW(E:\gamedcs\kb.cpp:1841, dc 0xe130c) int DoNewGame();
-// CODEVIEW(E:\gamedcs\kb.cpp:1962, dc 0xe15b0) int DoCampaignWindow(unsigned char newGame);
-// CODEVIEW(E:\gamedcs\kb.cpp:1988, dc 0xe1630) int DoSinglePlayerWindow();
-// CODEVIEW(E:\gamedcs\kb.cpp:2036, dc 0xe1740) int DoMultiPlayerWindow();
-// CODEVIEW(E:\gamedcs\kb.cpp:2059, dc 0xe1778) int DoLoadGame();
-// CODEVIEW(E:\gamedcs\kb.cpp:2145, dc 0xe1950) int PickLoadGame();
-// CODEVIEW(E:\gamedcs\kb.cpp:2174, dc 0xe1990) int InterpretCommandLine();
-// CODEVIEW(E:\gamedcs\kb.cpp:2270, dc 0xe1b90) int NullHandler(message* msg);
-// CODEVIEW(E:\gamedcs\kb.cpp:2332, dc 0xe1bf8) int ExitNormalDialog(message* msg);
-// CODEVIEW(E:\gamedcs\kb.cpp:2720, dc 0xe24a0) void check_player_loss();
-// CODEVIEW(E:\gamedcs\kb.cpp:2867, dc 0xe2930) void SendPlayerWon();
-// CODEVIEW(E:\gamedcs\kb.cpp:2878, dc 0xe296c) void SendPlayerLost();
-// CODEVIEW(E:\gamedcs\kb.cpp:2888, dc 0xe29a8) unsigned char DisplayVCWinLoss(VictoryConditionStruct* VictoryCondition, int* bGameWon, int* bGameLost, unsigned char remoteCheck);
-// CODEVIEW(E:\gamedcs\kb.cpp:3419, dc 0xe34c4) int GetEnemyCount();
-// CODEVIEW(E:\gamedcs\kb.cpp:3440, dc 0xe3558) unsigned char DisplayLCWinLoss(LossConditionStruct* LossCondition, int* bGameWon, int* bGameLost, unsigned char remoteCheck);
-// CODEVIEW(E:\gamedcs\kb.cpp:3763, dc 0xe3a04) void InitVars();
-// CODEVIEW(E:\gamedcs\kb.cpp:4102, dc 0xe4330) void ShowCongrats(int hsType);
-// CODEVIEW(E:\gamedcs\kb.cpp:4187, dc 0xe4530) void EarlyShutDownSystem();
-// CODEVIEW(E:\gamedcs\kb.cpp:4214, dc 0xe45dc) unsigned char LoadGameData();
-// CODEVIEW(E:\gamedcs\kb.cpp:4781, dc 0xe519c) int GetNextHumanPlayer(int start);
-// CODEVIEW(E:\gamedcs\kb.cpp:4855, dc 0xe52a8) int CheckMem();
-// CODEVIEW(E:\gamedcs\kb.cpp:5206, dc 0xe5960) void CalculateNormalDialogSize(TNormalDialogInfo& dialog_info);
-// CODEVIEW(E:\gamedcs\kb.cpp:5478, dc 0xe5f60) TDialogBox* GetCurrentNormalDialog();
-// CODEVIEW(E:\gamedcs\kb.cpp:5499, dc 0xe5fbc) void NormalDialog(const char* cText, int iMBType, int x, int y, int iResType1, int iResExtra1, int iResType2, int iResExtra2, int iSpecial, int iTimeout, int iResType3, int iResExtra3);
-// CODEVIEW(E:\gamedcs\kb.cpp:5909, dc 0xe6cf0) void extended_dialog(const char* text, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* resources, long x, long y, long timeout);
-// CODEVIEW(E:\gamedcs\kb.cpp:5954, dc 0xe6e2c) unsigned short GetMapExtra(int x, int y, int z);
-// CODEVIEW(E:\gamedcs\kb.cpp:5960, dc 0xe6e50) unsigned short* GetMapExtraPtr(int x, int y, int z);
-
-// --- TNormalDialogInfo ---
-// CODEVIEW(E:\gamedcs\kb.cpp:5466, dc 0xe742c) void TNormalDialogInfo::TNormalDialogInfo();
-// CODEVIEW(E:\gamedcs\kb.cpp:5466, dc 0xe7460) void TNormalDialogInfo::~TNormalDialogInfo();
-// CODEVIEW(E:\gamedcs\kb.cpp:5528, dc 0xe74d8) void TNormalDialogInfo::TNormalDialogInfo(const TNormalDialogInfo* __that);
-
-// --- advManager ---
-// CODEVIEW(E:\gamedcs\kb.cpp:542, dc 0xe7114) void* advManager::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\kb.cpp:542, dc 0xe7204) void advManager::~advManager();
-
-// --- combatManager ---
-// CODEVIEW(E:\gamedcs\kb.cpp:542, dc 0xe70e0) void* combatManager::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\kb.cpp:542, dc 0xe71b0) void combatManager::~combatManager();
-
-// --- game ---
-// CODEVIEW(E:\gamedcs\kb.cpp:3830, dc 0xe3b84) void game::ShowLuckInfo(hero* thisHero, int iMBType);
-
-// --- highScoreManager ---
-// CODEVIEW(E:\gamedcs\kb.cpp:542, dc 0xe7148) void* highScoreManager::`scalar deleting destructor'(unsigned __flags);
-
-// --- playerData ---
-// CODEVIEW(E:\gamedcs\kb.cpp:1837, dc 0xe724c) playerData* playerData::operator=(const playerData* __that);
-
-// --- searchArray ---
-// CODEVIEW(E:\gamedcs\kb.cpp:542, dc 0xe70ac) void* searchArray::`scalar deleting destructor'(unsigned __flags);
-
-// --- soundManager ---
-// CODEVIEW(E:\gamedcs\kb.cpp:542, dc 0xe717c) void* soundManager::`scalar deleting destructor'(unsigned __flags);
-
-// --- std ---
-// CODEVIEW(E:\gamedcs\kb.cpp:542, dc 0xe7234) void std::set<enum SpellID,std::less<enum SpellID>,std::allocator<enum SpellID> >::~set<enum SpellID,std::less<enum SpellID>,std::allocator<enum SpellID> >();
-
-// --- type_dialog_icon ---
-// CODEVIEW(E:\gamedcs\kb.cpp:4897, dc 0xe52b8) void type_dialog_icon::set(EGameResource _resource, long _qualifier);
-// CODEVIEW(E:\gamedcs\kb.cpp:5466, dc 0xe7490) void type_dialog_icon::type_dialog_icon();
-// CODEVIEW(E:\gamedcs\kb.cpp:5466, dc 0xe74b4) void type_dialog_icon::~type_dialog_icon();
-// CODEVIEW(E:\gamedcs\kb.cpp:5528, dc 0xe755c) void type_dialog_icon::type_dialog_icon(const type_dialog_icon* __that);
-
-// --- type_normal_dialog_frame ---
-// CODEVIEW(E:\gamedcs\kb.cpp:2442, dc 0xe1de4) void type_normal_dialog_frame::type_normal_dialog_frame(long _x, long _y, long _w, long _h, long _id, EGameResource _resource, long _qualifier);
-// CODEVIEW(E:\gamedcs\kb.cpp:2452, dc 0xe1e58) unsigned char type_normal_dialog_frame::handle_click(unsigned char down_click, unsigned char right_click);
-// CODEVIEW(E:\gamedcs\kb.cpp:2445, dc 0xe73e0) void* type_normal_dialog_frame::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\kb.cpp:2445, dc 0xe7414) void type_normal_dialog_frame::~type_normal_dialog_frame();
 
 #endif  /* HOMM3_KB_H */

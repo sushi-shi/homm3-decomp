@@ -1,4 +1,4 @@
-// mainmenu.h - prototypes of mainmenu.cpp (compiland mainmenu.obj)
+// mainmenu.h - mainmenu.cpp (compiland mainmenu.obj)
 #ifndef HOMM3_MAINMENU_H
 #define HOMM3_MAINMENU_H
 
@@ -55,24 +55,8 @@ private:
 };
 SIZE(TMainMenu, 0x54);
 
-
-
 // SetupCDDrive's result. Dreamcast kb.cpp's static SetupCDRom and retail
 // oldmain both dispatch on this value before the front-end is opened.
 extern int g_cdDriveNumber;
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\mainmenu.cpp:135, dc 0xea618) int MainMenuHandler(message* msg);
-
-// --- TMainMenu ---
-// CODEVIEW(E:\gamedcs\mainmenu.cpp:113, dc 0xea578) void TMainMenu::~TMainMenu();
-// CODEVIEW(E:\gamedcs\mainmenu.cpp:109, dc 0xeb33c) void* TMainMenu::`scalar deleting destructor'(unsigned __flags);
-
-// --- VideomodeChoice ---
-// CODEVIEW(E:\gamedcs\mainmenu.cpp:308, dc 0xea9b0) void VideomodeChoice::VideomodeChoice();
-// CODEVIEW(E:\gamedcs\mainmenu.cpp:360, dc 0xeb080) void VideomodeChoice::~VideomodeChoice();
-// CODEVIEW(E:\gamedcs\mainmenu.cpp:369, dc 0xeb0e4) void VideomodeChoice::Test();
-// CODEVIEW(E:\gamedcs\mainmenu.cpp:410, dc 0xeb248) int VideomodeChoice::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\mainmenu.cpp:357, dc 0xeb370) void* VideomodeChoice::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_MAINMENU_H */

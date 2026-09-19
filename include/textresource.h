@@ -1,4 +1,4 @@
-// textresource.h - prototypes of textresource.cpp (compiland textresource.obj)
+// textresource.h - textresource.cpp (compiland textresource.obj)
 #ifndef HOMM3_TEXTRESOURCE_H
 #define HOMM3_TEXTRESOURCE_H
 
@@ -353,16 +353,5 @@ private:
 SIZE(TSpreadsheetResource, 52);
 
 extern TTextResource* g_generalText;  // retail .data 0x6a5d5c
-
-// --- TSpreadsheetResource ---
-// CODEVIEW(E:\gamedcs\textresource.cpp:177, dc 0x1639ec) void TSpreadsheetResource::TSpreadsheetResource();
-// CODEVIEW(E:\gamedcs\textresource.cpp:178, dc 0x163d2c) void* TSpreadsheetResource::`scalar deleting destructor'(unsigned __flags);
-
-// --- TTextResource ---
-// CODEVIEW(E:\gamedcs\textresource.cpp:33, dc 0x163808) void TTextResource::TTextResource();
-// CODEVIEW(E:\gamedcs\textresource.cpp:34, dc 0x163cf8) void* TTextResource::`scalar deleting destructor'(unsigned __flags);
-
-// --- std ---
-// CODEVIEW(E:\gamedcs\textresource.cpp:298, dc 0x163d60) void* std::vector<char *,std::allocator<char *> >::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_TEXTRESOURCE_H */

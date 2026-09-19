@@ -1,4 +1,4 @@
-// bottomviewsubwindow.h - prototypes of bottomviewsubwindow.cpp (compiland bottomviewsubwindow.obj)
+// bottomviewsubwindow.h - bottomviewsubwindow.cpp (compiland bottomviewsubwindow.obj)
 #ifndef HOMM3_BOTTOMVIEWSUBWINDOW_H
 #define HOMM3_BOTTOMVIEWSUBWINDOW_H
 
@@ -147,36 +147,5 @@ public:
     virtual ~TBottomViewMessage();
 };
 SIZE(TBottomViewMessage, 0x34);
-
-// --- TBottomViewEnemyTurn ---
-// CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:646, dc 0x56bbc) long TBottomViewEnemyTurn::sum_mobility(long player_id);
-// CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:643, dc 0x57038) void* TBottomViewEnemyTurn::`scalar deleting destructor'(unsigned __flags);
-
-// --- TBottomViewHero ---
-// CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:222, dc 0x558a8) void TBottomViewHero::TBottomViewHero(heroWindow* parent);
-// CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:339, dc 0x56f54) void* TBottomViewHero::`scalar deleting destructor'(unsigned __flags);
-
-// --- TBottomViewKingdom ---
-// CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:515, dc 0x563b8) void TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent);
-// CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:586, dc 0x56fec) void* TBottomViewKingdom::`scalar deleting destructor'(unsigned __flags);
-
-// --- TBottomViewMessage ---
-// CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:209, dc 0x56f08) void* TBottomViewMessage::`scalar deleting destructor'(unsigned __flags);
-
-// --- TBottomViewNewTurn ---
-// CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:118, dc 0x56e70) void* TBottomViewNewTurn::`scalar deleting destructor'(unsigned __flags);
-
-// --- TBottomViewResourceMessage ---
-// CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:146, dc 0x554ac) void TBottomViewResourceMessage::TBottomViewResourceMessage(heroWindow* parent, int res, int quantity, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message);
-// CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:183, dc 0x56ebc) void* TBottomViewResourceMessage::`scalar deleting destructor'(unsigned __flags);
-
-// --- TBottomViewTown ---
-// CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:352, dc 0x55df4) void TBottomViewTown::TBottomViewTown(heroWindow* parent);
-// CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:503, dc 0x56fa0) void* TBottomViewTown::`scalar deleting destructor'(unsigned __flags);
-
-// --- type_bottom_view_window ---
-// CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:39, dc 0x550b8) void type_bottom_view_window::type_bottom_view_window(heroWindow* parent_window);
-// CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:64, dc 0x55188) void type_bottom_view_window::animate();
-// CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:41, dc 0x56e3c) void* type_bottom_view_window::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_BOTTOMVIEWSUBWINDOW_H */

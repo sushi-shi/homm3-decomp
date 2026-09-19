@@ -1,4 +1,4 @@
-// remote.h - prototypes of remote.cpp (compiland remote.obj)
+// remote.h - remote.cpp (compiland remote.obj)
 #ifndef HOMM3_REMOTE_H
 #define HOMM3_REMOTE_H
 
@@ -545,11 +545,6 @@ extern char g_mapName[260];
 extern int g_networkActive69954c;
 extern int g_unnamed6994e4;
 
-// CODEVIEW(E:\gamedcs\remote.cpp:102, dc 0x11b8c4) void DPSD(int iDPErr, char* cFile, int iLine);
-// CODEVIEW(E:\gamedcs\remote.cpp:1390, dc 0x11ce14) unsigned char InitRemote(eNetGameType iMPType, const char* sUserName);
-// CODEVIEW(E:\gamedcs\remote.cpp:1411, dc 0x11ce68) void RemoteCleanup();
-// CODEVIEW(E:\gamedcs\remote.cpp:1438, dc 0x11cf34) int TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo, unsigned char compressMsg, unsigned char guaranteed);
-// CODEVIEW(E:\gamedcs\remote.cpp:1446, dc 0x11cf64)
 void destroyMsg(CNetMsg* netMsg);
 void handlePlayerDrop(unsigned long dpid);
 void onPlayerDropUpdateMsg(unsigned long dpid);
@@ -561,87 +556,5 @@ void handleNormalWinMsg(CNetMsg* netMsg);
 void receiveChat(char* chat, int fromWho);
 
 int transmitRemoteData(CNetMsg* msg, int toWho, bool compressMsg, bool guaranteed);
-// CODEVIEW(E:\gamedcs\remote.cpp:1454, dc 0x11cf94) void PollRemote();
-// CODEVIEW(E:\gamedcs\remote.cpp:1829, dc 0x11d6c8) void WaitForReadyToPlayMsg();
-// CODEVIEW(E:\gamedcs\remote.cpp:1960, dc 0x11d9ac) unsigned char HandleMPlayerLaunch();
-// CODEVIEW(E:\gamedcs\remote.cpp:2045, dc 0x11dbbc) unsigned char LobbyLaunchConnect();
-// CODEVIEW(E:\gamedcs\remote.cpp:2150, dc 0x11dde8) int GetPlayerPos(unsigned long dpid);
-// CODEVIEW(E:\gamedcs\remote.cpp:2161, dc 0x11de9c) int GetPriorPlayer(int gamePos);
-// CODEVIEW(E:\gamedcs\remote.cpp:2174, dc 0x11dec8) unsigned char IsValidHuman(CAutoArray<CDPlayPlayer>* playerArray, unsigned long dpid);
-// CODEVIEW(E:\gamedcs\remote.cpp:2289, dc 0x11e0f4) void HandleNewHost();
-// CODEVIEW(E:\gamedcs\remote.cpp:2317, dc 0x11e1cc) void OnPlayerDropUpdateMsg(unsigned long dpid);
-// CODEVIEW(E:\gamedcs\remote.cpp:3142, dc 0x11f550) unsigned char GetQueueSize(int toWho, unsigned long* numMsgs, unsigned long* queueSize);
-
-// --- CAnimatedDlg ---
-// CODEVIEW(E:\gamedcs\remote.cpp:1544, dc 0x11f87c) void* CAnimatedDlg::`scalar deleting destructor'(unsigned __flags);
-
-// --- CChatEdit ---
-// CODEVIEW(E:\gamedcs\remote.cpp:1294, dc 0x11f848) void* CChatEdit::`scalar deleting destructor'(unsigned __flags);
-
-// --- CChatManager ---
-// CODEVIEW(E:\gamedcs\remote.cpp:804, dc 0x11c298) void CChatManager::CChatManager(int maxChatLines);
-// CODEVIEW(E:\gamedcs\remote.cpp:829, dc 0x11c314) void CChatManager::~CChatManager();
-// CODEVIEW(E:\gamedcs\remote.cpp:904, dc 0x11c4ac) void CChatManager::TurnDurationMsg(const char* cChatMsg);
-// CODEVIEW(E:\gamedcs\remote.cpp:1060, dc 0x11c71c) int CChatManager::GetNextFreeMsgNbr();
-// CODEVIEW(E:\gamedcs\remote.cpp:1065, dc 0x11c738) int CChatManager::GetNextMsgNbr(int msgNbr);
-// CODEVIEW(E:\gamedcs\remote.cpp:1115, dc 0x11c87c) void CChatManager::UpdateNewChat();
-// CODEVIEW(E:\gamedcs\remote.cpp:1213, dc 0x11ca60) unsigned char CChatManager::HasChat();
-// CODEVIEW(E:\gamedcs\remote.h:291, dc 0x11f7d0) void CChatManager::CChatStr::CChatStr();
-
-// --- CDPlayHeroes ---
-// CODEVIEW(E:\gamedcs\remote.cpp:146, dc 0x11b96c) void CDPlayHeroes::CDPlayHeroes();
-// CODEVIEW(E:\gamedcs\remote.cpp:160, dc 0x11ba80) void CDPlayHeroes::DestroyMsgQueue();
-// CODEVIEW(E:\gamedcs\remote.cpp:204, dc 0x11bb40) unsigned char CDPlayHeroes::SysMsgDestroyPlayerOrGroup(DPMSG_DESTROYPLAYERORGROUP* pSysMsg, unsigned long toID);
-// CODEVIEW(E:\gamedcs\remote.cpp:214, dc 0x11bb60) unsigned char CDPlayHeroes::SysMsgCreatePlayerOrGroup(DPMSG_CREATEPLAYERORGROUP* pSysMsg, unsigned long toID);
-// CODEVIEW(E:\gamedcs\remote.cpp:350, dc 0x11bd5c) CNetMsg* CDPlayHeroes::GetRemoteData(unsigned char removeFromQueue, unsigned char* wasCompressed);
-// CODEVIEW(E:\gamedcs\remote.cpp:407, dc 0x11be50) unsigned char CDPlayHeroes::TransmitRemoteData(CNetMsg* pMsg, int toWho, unsigned char compressMsg, unsigned char guaranteed);
-// CODEVIEW(E:\gamedcs\remote.cpp:425, dc 0x11be94) CNetMsg* CDPlayHeroes::CompressMsg(CNetMsg* pNetMsg);
-// CODEVIEW(E:\gamedcs\remote.cpp:463, dc 0x11bf40) CNetMsg* CDPlayHeroes::UncompressMsg(CNetMsg* pNetMsg);
-// CODEVIEW(E:\gamedcs\remote.cpp:496, dc 0x11bfec) unsigned char CDPlayHeroes::TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo, unsigned char compressMsg, unsigned char guaranteed);
-// CODEVIEW(E:\gamedcs\remote.cpp:578, dc 0x11c04c) unsigned char CDPlayHeroes::SendIt(CNetMsg* pMsg, unsigned long dpidTo, unsigned char guaranteed);
-// CODEVIEW(E:\gamedcs\remote.cpp:685, dc 0x11c1d8) void CDPlayHeroes::HandleHostXFer();
-// CODEVIEW(E:\gamedcs\remote.cpp:690, dc 0x11c1f8) void CDPlayHeroes::HandlePlayerDrop(unsigned long dpid);
-// CODEVIEW(E:\gamedcs\remote.cpp:697, dc 0x11c228) void CDPlayHeroes::HandleNewPlayer();
-// CODEVIEW(E:\gamedcs\remote.cpp:702, dc 0x11c22c) void CDPlayHeroes::QueueMsg(CNetMsg* pNetMsg);
-// CODEVIEW(E:\gamedcs\remote.cpp:152, dc 0x11f814) void* CDPlayHeroes::`scalar deleting destructor'(unsigned __flags);
-
-// --- CGameTransferDlg ---
-// CODEVIEW(E:\gamedcs\remote.cpp:2818, dc 0x11fdbc) void* CGameTransferDlg::`scalar deleting destructor'(unsigned __flags);
-
-// --- CGameTransferSmack ---
-// CODEVIEW(E:\gamedcs\remote.cpp:2784, dc 0x11ede8) void CGameTransferSmack::DrawCurrentFrame();
-
-// --- CHourGlass ---
-// CODEVIEW(E:\gamedcs\remote.cpp:3125, dc 0x11f4f8) void CHourGlass::Stop();
-// CODEVIEW(E:\gamedcs\remote.cpp:3134, dc 0x11f524) void CHourGlass::Start();
-
-// --- CLevelPickWaitDlg ---
-// CODEVIEW(E:\gamedcs\remote.cpp:2546, dc 0x11e848) int CLevelPickWaitDlg::OnPlayerDrop(CNetMsg* pNetMsg, message* msg);
-// CODEVIEW(E:\gamedcs\remote.cpp:2567, dc 0x11e894) void CLevelPickWaitDlg::OnHeroLevelUpdate(CNetMsg* pNetMsg);
-// CODEVIEW(E:\gamedcs\remote.cpp:2482, dc 0x11fd08) void* CLevelPickWaitDlg::`scalar deleting destructor'(unsigned __flags);
-
-// --- CLogFile ---
-// CODEVIEW(E:\gamedcs\remote.h:224, dc 0x11f7b4) void CLogFile::CLogFile(char* sLogFileName);
-
-// --- CSaveScreen ---
-// CODEVIEW(E:\gamedcs\remote.cpp:2677, dc 0x11fd70) void* CSaveScreen::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\remote.cpp:2677, dc 0x11fda4) void CSaveScreen::~CSaveScreen();
-
-// --- CTurnDuration ---
-// CODEVIEW(E:\gamedcs\remote.cpp:2912, dc 0x11f060) void CTurnDuration::CTurnDuration();
-// CODEVIEW(E:\gamedcs\remote.cpp:2950, dc 0x11f108) void CTurnDuration::CheckForWarning();
-// CODEVIEW(E:\gamedcs\remote.cpp:3070, dc 0x11f3ec) void CTurnDuration::AddTime(unsigned long howMuch);
-
-// --- CWaitForReadyPlayersDlg ---
-// CODEVIEW(E:\gamedcs\remote.cpp:1708, dc 0x11f8b0) void CWaitForReadyPlayersDlg::CWaitForReadyPlayersDlg();
-// CODEVIEW(E:\gamedcs\remote.cpp:1718, dc 0x11f928) void CWaitForReadyPlayersDlg::Wait();
-// CODEVIEW(E:\gamedcs\remote.cpp:1798, dc 0x11fbf0) unsigned char CWaitForReadyPlayersDlg::AllPlayersReady();
-// CODEVIEW(E:\gamedcs\remote.cpp:1813, dc 0x11fc3c) int CWaitForReadyPlayersDlg::OnPlayerDrop(CNetMsg* pNetMsg, message* msg);
-// CODEVIEW(E:\gamedcs\remote.cpp:1820, dc 0x11fcac) void* CWaitForReadyPlayersDlg::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\remote.cpp:1820, dc 0x11fce0) void CWaitForReadyPlayersDlg::~CWaitForReadyPlayersDlg();
-
-// --- CWaitForRemoteBattleDlg ---
-// CODEVIEW(E:\gamedcs\remote.cpp:2660, dc 0x11eaf8) int CWaitForRemoteBattleDlg::OnPlayerDrop(CNetMsg* pNetMsg, message* msg);
-// CODEVIEW(E:\gamedcs\remote.cpp:2595, dc 0x11fd3c) void* CWaitForRemoteBattleDlg::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_REMOTE_H */

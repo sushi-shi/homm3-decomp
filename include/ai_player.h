@@ -1,4 +1,4 @@
-// ai_player.h - prototypes of ai_player.cpp (compiland ai_player.obj)
+// ai_player.h - ai_player.cpp (compiland ai_player.obj)
 #ifndef HOMM3_AI_PLAYER_H
 #define HOMM3_AI_PLAYER_H
 
@@ -270,88 +270,7 @@ extern long g_aiEventVisibilityValues[];
 
 long aiValueOfObservatory(struct type_point origin, long playerId, long range);
 
-// --- globals ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:895, dc 0x2f5fc) long sum_player_dwellings(long player_id);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:1045, dc 0x2f998) long value_of_silo(town* current_town, playerData* player);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:1147, dc 0x2fdac) long value_of_building(town* current_town, type_building_id building, unsigned char* prohibited_creatures, int* extra_cost);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:1279, dc 0x30048) __int64 get_requirements(const town* current_town, type_building_id building);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:1313, dc 0x30150) void get_full_cost(const town* current_town, int* result, __int64 requirements);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:1367, dc 0x302e0) void mark_values(long* full_value, long total_value, __int64 requirements);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:1808, dc 0x31030) int MaxBuyableCreatures(const long* funds, TCreatureType type, int limit);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:2022, dc 0x31514) void move_creatures(armyGroup* army, TCreatureType type, short amount);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:2171, dc 0x317d4) short calculate_improvement(const hero* current_hero, const hero* second_hero);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:2817, dc 0x32670) void split_armies(hero* current_hero, const hero* enemy_hero, const armyGroup& enemy);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:2952, dc 0x3285c) void AI_arrange_army_for_combat(hero* current_hero, const hero* enemy_hero, const armyGroup* enemy);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:3013, dc 0x329f8) void AI_mark_danger_zones(hero* current_hero, long* danger_zones);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:3044, dc 0x32a84) long mark_destinations(hero* current_hero, long max_distance, searchArray* search_array, unsigned short* friendly_distances, type_search_type search_type);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:3164, dc 0x32e30) void check_holy_grail(const hero* current_hero, const searchArray* search_array, std::vector<HeroDestination,std::allocator<HeroDestination>* destinations, const unsigned short* friendly_distances);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:3225, dc 0x33038) long find_all_destinations(hero* current_hero, searchArray* search_array, std::vector<HeroDestination,std::allocator<HeroDestination>* destinations, long max_distance, unsigned char hiring_hero, unsigned char allow_spells, unsigned char explore_mode);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:3390, dc 0x33404) void mark_strategic_map(hero* current_hero, long* strategic_map, std::vector<HeroDestination,std::allocator<HeroDestination>* destinations);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:3498, dc 0x33854) int net_value_of_location(hero* current_hero, HeroDestination* destination, long* strategic_map, pathCell* path_cell, searchArray* search_array);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:3573, dc 0x33a4c) void unblock_lith(hero* current_hero, HeroDestination* destination, long* best_distance);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:3645, dc 0x33cf8) int AI_choose_destination(hero* current_hero, long max_distance, HeroDestination* best_point, long* best_raw_value, unsigned char allow_spells, unsigned char explore_mode);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:3813, dc 0x34164) void ConsiderHidingMouse(hero* current_hero, int direction);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:4000, dc 0x34630) unsigned char attempt_teleport(hero* current_hero, std::vector<pathCell,std::allocator<pathCell>* path, long step);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:4155, dc 0x34a7c) void check_gate_purchase(type_point point);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:4179, dc 0x34b08) void AI_AttemptMove(hero* current_hero, HeroDestination* best_point, long* best_raw_value, unsigned char explore_mode);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:4320, dc 0x34fb8) long value_of_hiring(town* current_town, hero* candidate, searchArray* search_array);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:4457, dc 0x35400) long total_artifact_value(hero* candidate, long player_id);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:4565, dc 0x357ec) town* get_shipyard_town(const playerData* player, long x, long y, long z);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:4583, dc 0x35888) unsigned char get_map_shipyard(const playerData* player, long x, long y, long z);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:4930, dc 0x35f08) void initialize_artifact_effects();
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5557, dc 0x37194) long AI_get_value_of_artifact(type_artifact artifact, const hero* owner, unsigned char equipped, unsigned char exact);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5684, dc 0x37514) long AI_get_value_of_artifact(const type_artifact& artifact, long player_id);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:4924, dc 0x3814c) void `vector destructor iterator'(void* __t, unsigned __s, int __n, void (*)()* __f);
-
-// --- HeroDestination ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:3213, dc 0x380f0) void HeroDestination::HeroDestination();
-
-// --- std ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:4924, dc 0x38118) void std::vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >::`default constructor closure'();
-
-// --- type_AI_creature_purchaser ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:2524, dc 0x31ffc) void type_AI_creature_purchaser::set(TCreatureType type, short* amount);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:2535, dc 0x32038) long type_AI_creature_purchaser::do_best_purchase(unsigned char trade_allowed);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:2657, dc 0x322f8) long type_AI_creature_purchaser::get_purchase_value(const armyGroup* new_army, short new_morale, const armyGroup* new_adjacent_army, const long* new_funds);
-// CODEVIEW(E:\gamedcs\ai_player.h:313, dc 0x37e20) void type_AI_creature_purchaser::set_subtract_mode(unsigned char arg);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:224, dc 0x380d8) void type_AI_creature_purchaser::~type_AI_creature_purchaser();
-
-// --- type_AI_creature_swapper ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:2209, dc 0x31864) long type_AI_creature_swapper::get_swap_value(const hero* current_hero, const armyGroup* source_army, const hero* second_hero);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:2282, dc 0x31a00) long type_AI_creature_swapper::choose_weakest_army(unsigned char is_shooter, unsigned char check_alignments);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:2350, dc 0x31af4) long type_AI_creature_swapper::value_of_adding_army(TCreatureType type, short count, short* slot, unsigned char must_replace_creature);
-
-// --- type_AI_initializer ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:6012, dc 0x37bbc) void type_AI_initializer::type_AI_initializer();
-
-// --- type_AI_player ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:230, dc 0x2e094) long type_AI_player::get_resource_value(int* resources);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:258, dc 0x2e188) void type_AI_player::calculate_demand();
-// CODEVIEW(E:\gamedcs\ai_player.cpp:504, dc 0x2ea20) void type_AI_player::make_gift(long player_id);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:752, dc 0x2f280) void type_AI_player::calculate_reserve();
-// CODEVIEW(E:\gamedcs\ai_player.cpp:1383, dc 0x30334) unsigned char type_AI_player::check_trade_supply(const int* cost, long number, int* supply, std::vector<long,std::allocator<long>* trade_qty);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:1474, dc 0x305b4) unsigned char type_AI_player::can_trade_resources(const int* cost, int* supply, std::vector<long,std::allocator<long>* trade_qty);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:1686, dc 0x30d6c) unsigned char type_AI_player::purchase_building(unsigned char* prohibited_creatures);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:1838, dc 0x31094) void type_AI_player::purchase_buildings();
-// CODEVIEW(E:\gamedcs\ai_player.cpp:1850, dc 0x310f4) void type_AI_player::buy_creatures(hero* current_hero, town* current_town);
-// CODEVIEW(E:\gamedcs\ai_player.h:263, dc 0x37dec) void type_AI_player::init(short new_team);
-// CODEVIEW(E:\gamedcs\ai_player.h:273, dc 0x37df0) void type_AI_player::clear_magus_hut_value();
-// CODEVIEW(E:\gamedcs\ai_player.h:278, dc 0x37df8) double type_AI_player::get_resource_value(EGameResource resource);
-
-// --- type_antiluck_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5406, dc 0x36c40) void type_antiluck_artifact::type_antiluck_artifact();
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5407, dc 0x385e0) void* type_antiluck_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5407, dc 0x38614) void type_antiluck_artifact::~type_antiluck_artifact();
-
-// --- type_antimagic_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5347, dc 0x369dc) void type_antimagic_artifact::type_antimagic_artifact(long _max_level);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5349, dc 0x38548) void* type_antimagic_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5349, dc 0x3857c) void type_antimagic_artifact::~type_antimagic_artifact();
-
 // --- type_antimorale_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5380, dc 0x36ab4) void type_antimorale_artifact::type_antimorale_artifact();
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5381, dc 0x38594) void* type_antimorale_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5381, dc 0x385c8) void type_antimorale_artifact::~type_antimorale_artifact();
 
 // Artifact-effect layout and virtual slot order are shared by the Dreamcast
 // roster and the retail get_value bodies.
@@ -587,93 +506,5 @@ public:
     long m_amount;
     enum EGameResource m_resource;
 };
-
-// --- type_artifact_effect ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5043, dc 0x361c8) void type_artifact_effect::type_artifact_effect();
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5044, dc 0x38184) void* type_artifact_effect::`scalar deleting destructor'(unsigned __flags);
-
-// --- type_combat_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5075, dc 0x38204) void* type_combat_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5075, dc 0x38238) void type_combat_artifact::~type_combat_artifact();
-
-// --- type_creature_growth_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5495, dc 0x36fec) void type_creature_growth_artifact::type_creature_growth_artifact(long new_level, long new_bonus);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5498, dc 0x386c4) void* type_creature_growth_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5498, dc 0x386f8) void type_creature_growth_artifact::~type_creature_growth_artifact();
-
-// --- type_duration_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5267, dc 0x367cc) void type_duration_artifact::type_duration_artifact(long new_bonus);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5268, dc 0x384b0) void* type_duration_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5268, dc 0x384e4) void type_duration_artifact::~type_duration_artifact();
-
-// --- type_garrison_purchaser ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:195, dc 0x2dfb8) void type_garrison_purchaser::type_garrison_purchaser(long new_player);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:202, dc 0x2dfec) void type_garrison_purchaser::clear_marks();
-// CODEVIEW(E:\gamedcs\ai_player.cpp:209, dc 0x2dff0) unsigned char type_garrison_purchaser::is_marked(const town* our_town);
-
-// --- type_income_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5477, dc 0x36ee8) void type_income_artifact::type_income_artifact(long new_amount, EGameResource new_resource);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5480, dc 0x38678) void* type_income_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5480, dc 0x386ac) void type_income_artifact::~type_income_artifact();
-
-// --- type_knowledge_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5127, dc 0x363b4) void type_knowledge_artifact::type_knowledge_artifact(long new_bonus);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5128, dc 0x382e8) void* type_knowledge_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5128, dc 0x3831c) void type_knowledge_artifact::~type_knowledge_artifact();
-
-// --- type_luck_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5243, dc 0x366d8) void type_luck_artifact::type_luck_artifact(long new_bonus);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5244, dc 0x38464) void* type_luck_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5244, dc 0x38498) void type_luck_artifact::~type_luck_artifact();
-
-// --- type_might_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5090, dc 0x362e0) void type_might_artifact::type_might_artifact(long new_bonus);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5091, dc 0x38250) void* type_might_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5091, dc 0x38284) void type_might_artifact::~type_might_artifact();
-
-// --- type_morale_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5219, dc 0x365e4) void type_morale_artifact::type_morale_artifact(long new_bonus);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5220, dc 0x38418) void* type_morale_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5220, dc 0x3844c) void type_morale_artifact::~type_morale_artifact();
-
-// --- type_movement_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5182, dc 0x364dc) void type_movement_artifact::type_movement_artifact(long new_bonus);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5183, dc 0x38380) void* type_movement_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5183, dc 0x383b4) void type_movement_artifact::~type_movement_artifact();
-
-// --- type_necromancy_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5145, dc 0x36414) void type_necromancy_artifact::type_necromancy_artifact(long new_bonus);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5152, dc 0x36450) long type_necromancy_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char __formal);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5146, dc 0x38334) void* type_necromancy_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5146, dc 0x38368) void type_necromancy_artifact::~type_necromancy_artifact();
-
-// --- type_power_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5109, dc 0x36350) void type_power_artifact::type_power_artifact(long new_bonus);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5110, dc 0x3829c) void* type_power_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5110, dc 0x382d0) void type_power_artifact::~type_power_artifact();
-
-// --- type_school_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5285, dc 0x36838) void type_school_artifact::type_school_artifact(TSpellSchool new_school, long new_bonus);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5287, dc 0x384fc) void* type_school_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5287, dc 0x38530) void type_school_artifact::~type_school_artifact();
-
-// --- type_scouting_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5057, dc 0x36214) void type_scouting_artifact::type_scouting_artifact(long new_bonus);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5059, dc 0x381b8) void* type_scouting_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5059, dc 0x381ec) void type_scouting_artifact::~type_scouting_artifact();
-
-// --- type_spellcaster_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5198, dc 0x36558) void type_spellcaster_artifact::type_spellcaster_artifact(long new_bonus);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5199, dc 0x383cc) void* type_spellcaster_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5199, dc 0x38400) void type_spellcaster_artifact::~type_spellcaster_artifact();
-
-// --- type_tome_artifact ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5433, dc 0x36dd4) void type_tome_artifact::type_tome_artifact(TSpellSchool new_school);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5435, dc 0x3862c) void* type_tome_artifact::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5435, dc 0x38660) void type_tome_artifact::~type_tome_artifact();
-
-// --- type_town_threat_checker ---
-// CODEVIEW(E:\gamedcs\ai_player.cpp:89, dc 0x2dd40) void type_town_threat_checker::type_town_threat_checker(long new_player);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:179, dc 0x2dfa0) unsigned char type_town_threat_checker::is_marked(const town* our_town);
 
 #endif  /* HOMM3_AI_PLAYER_H */

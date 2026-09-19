@@ -1,4 +1,4 @@
-// mousemgr.h - prototypes of mousemgr.cpp (compiland mousemgr.obj)
+// mousemgr.h - mousemgr.cpp (compiland mousemgr.obj)
 #ifndef HOMM3_MOUSEMGR_H
 #define HOMM3_MOUSEMGR_H
 
@@ -125,16 +125,5 @@ extern mouseManager* g_mouseManager;
 extern IDirectDrawSurface* g_ddsMouseSurface;         // 0x6aacc4
 extern IDirectDrawSurface* g_ddsMouseSaveSurface;     // 0x6aacc8
 extern IDirectDrawSurface* g_ddsMouseScratchSurface;  // 0x6aaccc
-
-// --- mouseManager ---
-// CODEVIEW(E:\gamedcs\mousemgr.cpp:344, dc 0xfea50) void mouseManager::~mouseManager();
-// CODEVIEW(E:\gamedcs\mousemgr.cpp:431, dc 0xfeb18) int mouseManager::Main(message* msg);
-// CODEVIEW(E:\gamedcs\mousemgr.cpp:526, dc 0xfec54) void mouseManager::Update(unsigned char bForceIt);
-// CODEVIEW(E:\gamedcs\mousemgr.cpp:798, dc 0xff268) void mouseManager::SaveAndDraw(IDirectDrawSurface4* dst_surface, IDirectDrawSurface4* save_surface, const tagRECT* dst_rect, int x, int y);
-// CODEVIEW(E:\gamedcs\mousemgr.cpp:844, dc 0xff328) void mouseManager::RestoreUnderlying(IDirectDrawSurface4* surface, const tagRECT* dst_rect);
-// CODEVIEW(E:\gamedcs\mousemgr.cpp:934, dc 0xff448) void mouseManager::GetPointerPosition();
-// CODEVIEW(E:\gamedcs\mousemgr.cpp:955, dc 0xff484) void mouseManager::CheckUpdate();
-// CODEVIEW(E:\gamedcs\MouseMgr.h:204, dc 0xff774) unsigned char mouseManager::isBusy();
-// CODEVIEW(E:\gamedcs\mousemgr.cpp:332, dc 0xff818) void* mouseManager::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_MOUSEMGR_H */

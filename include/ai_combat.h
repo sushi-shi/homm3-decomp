@@ -1,4 +1,4 @@
-// ai_combat.h - prototypes of ai_combat.cpp (compiland ai_combat.obj)
+// ai_combat.h - ai_combat.cpp (compiland ai_combat.obj)
 #ifndef HOMM3_AI_COMBAT_H
 #define HOMM3_AI_COMBAT_H
 
@@ -255,37 +255,5 @@ long aiValueOfCombat(const hero* attackingHero,
 
 long aiApproximateStrength(const hero* currentHero);
 long aiApproximateStrength(const hero* currentHero, const armyGroup& currentArmy);
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:1398, dc 0x2bcd8) void do_eagle_eye(hero* winner, hero* loser);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:1656, dc 0x2c5e8) long AI_value_of_combat(const hero* attacking_hero, TCreatureType type, long size, NewmapCell* cell);
-
-// --- type_AI_combat_data ---
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:221, dc 0x29f58) void type_AI_combat_data::initialize_creatures(double base_modifier, const hero* enemy_hero);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:381, dc 0x2a52c) type_speed_catagory type_AI_combat_data::get_catagory(TCreatureType creature, long speed);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:498, dc 0x2a764) void type_AI_combat_data::get_chain_lightning_value(type_spell_choice* choice, const type_AI_combat_data* defender, long damage);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:694, dc 0x2ab3c) unsigned char type_AI_combat_data::has_creature(TCreatureType creature);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:731, dc 0x2ac18) void type_AI_combat_data::get_mass_damage_value(type_spell_choice* choice, type_AI_combat_data* defender);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:747, dc 0x2ac58) void type_AI_combat_data::cast_mass_damage_spell(type_spell_choice* choice, const hero* casting_hero);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:768, dc 0x2ace4) void type_AI_combat_data::get_enchantment_value(type_spell_choice* choice, const hero* casting_hero);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:907, dc 0x2afb8) void type_AI_combat_data::get_summoning_value(type_spell_choice* choice);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:941, dc 0x2b038) void type_AI_combat_data::cast_summoning(type_spell_choice* choice);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:965, dc 0x2b094) void type_AI_combat_data::cast_spell(type_AI_combat_data* defender, type_speed_catagory round);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:1082, dc 0x2b32c) void type_AI_combat_data::cast_spells(type_AI_combat_data* defender, type_speed_catagory round);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:1100, dc 0x2b380) long type_AI_combat_data::inflict_catagory_damage(long damage, type_speed_catagory catagory);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:1224, dc 0x2b890) void type_AI_combat_data::do_ranged_combat(type_AI_combat_data* defender);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:1240, dc 0x2b8cc) void type_AI_combat_data::do_melee_combat(type_speed_catagory attacker_speed, type_AI_combat_data* defender);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:1255, dc 0x2b90c) void type_AI_combat_data::do_melee_combat(type_AI_combat_data* defender);
-// CODEVIEW(E:\gamedcs\ai_combat.h:245, dc 0x2c6a4) long type_AI_combat_data::get_mana();
-// CODEVIEW(E:\gamedcs\ai_combat.h:250, dc 0x2c6a8) armyGroup* type_AI_combat_data::get_army();
-// CODEVIEW(E:\gamedcs\ai_combat.h:255, dc 0x2c6ac) long type_AI_combat_data::get_total();
-// CODEVIEW(E:\gamedcs\ai_combat.h:260, dc 0x2c6b0) hero* type_AI_combat_data::get_hero();
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:1356, dc 0x2c6b4) void type_AI_combat_data::type_AI_combat_data(const type_AI_combat_data* __that);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:1356, dc 0x2c708) void type_AI_combat_data::~type_AI_combat_data();
-
-// --- type_monster_data ---
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:56, dc 0x29a30) void type_monster_data::cast_enchantment(long spell_value, unsigned char increase);
-// CODEVIEW(E:\gamedcs\ai_combat.cpp:110, dc 0x29cac) void type_monster_data::cast_resurrection(type_spell_choice* choice, const hero* casting_hero);
-// CODEVIEW(E:\gamedcs\ai_combat.h:62, dc 0x2c698) unsigned char type_monster_data::operator<(const type_monster_data* arg);
 
 #endif  /* HOMM3_AI_COMBAT_H */

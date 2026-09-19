@@ -1,4 +1,4 @@
-// csprite.h - prototypes of csprite.cpp (compiland csprite.obj)
+// csprite.h - csprite.cpp (compiland csprite.obj)
 #ifndef HOMM3_CSPRITE_H
 #define HOMM3_CSPRITE_H
 
@@ -325,55 +325,5 @@ public:
                         dst->getPitch(), hflip, alpha);
     }
 };
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\csprite.cpp:38, dc 0x72100) void mmdbf(const unsigned short* ptstrFormat);
-// CODEVIEW(E:\gamedcs\csprite.cpp:978, dc 0x73b64) void addPal16(CSprite* sprite, const TPalette16* pal);
-// CODEVIEW(E:\gamedcs\csprite.cpp:986, dc 0x73bac) void addPal24(CSprite* sprite, const TPalette24* pal);
-
-// --- CSequence ---
-// CODEVIEW(E:\gamedcs\csprite.cpp:142, dc 0x7457c) void* CSequence::`scalar deleting destructor'(unsigned __flags);
-
-// --- CSprite ---
-// CODEVIEW(E:\gamedcs\csprite.cpp:82, dc 0x7215c) void CSprite::CSprite();
-// CODEVIEW(E:\gamedcs\csprite.cpp:92, dc 0x721dc) void CSprite::CSprite(const char* name, int sprtype, int w, int h);
-// CODEVIEW(E:\gamedcs\csprite.cpp:116, dc 0x72284) void CSprite::~CSprite();
-// CODEVIEW(E:\gamedcs\csprite.cpp:147, dc 0x7234c) void CSprite::clear();
-// CODEVIEW(E:\gamedcs\csprite.cpp:180, dc 0x723d8) void CSprite::AllocateSeq(int seqnum, int numFrames);
-// CODEVIEW(E:\gamedcs\csprite.cpp:187, dc 0x72418) void CSprite::AddFrame(int seqnum, const char* name);
-// CODEVIEW(E:\gamedcs\csprite.cpp:194, dc 0x72430) int CSprite::AddFrame(int seqnum, const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding, int CroppedWidth, int CroppedHeight, int CroppedX, int CroppedY);
-// CODEVIEW(E:\gamedcs\csprite.cpp:200, dc 0x7248c) int CSprite::AddFrame(int seqnum, const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding);
-// CODEVIEW(E:\gamedcs\csprite.cpp:206, dc 0x724c8) int CSprite::AddFrame(int seqnum, CSpriteFrame* frame);
-// CODEVIEW(E:\gamedcs\csprite.cpp:232, dc 0x725b8) const unsigned short* CSprite::GetPalette();
-// CODEVIEW(E:\gamedcs\csprite.cpp:274, dc 0x72784) void CSprite::DrawCreatureAlpha(int seqnum, int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip, unsigned short outcolor);
-// CODEVIEW(E:\gamedcs\csprite.cpp:282, dc 0x72814) void CSprite::DrawAdvObj(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\csprite.cpp:290, dc 0x7289c) void CSprite::DrawAdvObjWithFlag(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned short outcolor, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\csprite.cpp:298, dc 0x72944) void CSprite::DrawAdvObjWithFlagAlpha(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned short outcolor, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\csprite.cpp:306, dc 0x729d0) void CSprite::DrawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\csprite.cpp:314, dc 0x72a58) void CSprite::DrawPointer(int framenum, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\csprite.cpp:325, dc 0x72ac4) void CSprite::DrawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\csprite.cpp:338, dc 0x72b4c) void CSprite::DrawTile(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip, unsigned char vflip);
-// CODEVIEW(E:\gamedcs\csprite.cpp:346, dc 0x72bd8) void CSprite::DrawTileShadow(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip, unsigned char vflip);
-// CODEVIEW(E:\gamedcs\csprite.cpp:365, dc 0x72c64) void CSprite::DrawShroudTile(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip, unsigned char vflip);
-// CODEVIEW(E:\gamedcs\csprite.cpp:372, dc 0x72d10) void CSprite::DrawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\csprite.cpp:380, dc 0x72d98) void CSprite::DrawHeroShadow(int seqnum, int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\csprite.cpp:388, dc 0x72e20) void CSprite::DrawHeroAlpha(int seqnum, int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\csprite.cpp:396, dc 0x72ea8) void CSprite::DrawCombatHero(int seqnum, int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\csprite.cpp:404, dc 0x72f34) void CSprite::DrawSpellEffect(int seqnum, int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip, unsigned char alpha);
-// CODEVIEW(E:\gamedcs\csprite.cpp:411, dc 0x72fc4) void CSprite::DrawAdvObjWithFlagScaled50(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned short outcolor);
-// CODEVIEW(E:\gamedcs\csprite.cpp:418, dc 0x73060) void CSprite::DrawAdvObjShadowScaled50(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch);
-// CODEVIEW(E:\gamedcs\csprite.cpp:425, dc 0x730d8) void CSprite::DrawTileScaled50(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hFlipped, unsigned char vFlipped);
-// CODEVIEW(E:\gamedcs\csprite.cpp:432, dc 0x73164) void CSprite::DrawAdvObjWithFlagScaled25(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned short outcolor);
-// CODEVIEW(E:\gamedcs\csprite.cpp:439, dc 0x731e8) void CSprite::DrawAdvObjShadowScaled25(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch);
-// CODEVIEW(E:\gamedcs\csprite.cpp:446, dc 0x73260) void CSprite::DrawTileScaled25(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hFlipped, unsigned char vFlipped);
-// CODEVIEW(E:\gamedcs\csprite.cpp:454, dc 0x732ec) int CSprite::GetSpriteType(const char* name);
-// CODEVIEW(E:\gamedcs\csprite.cpp:506, dc 0x733b4) const char* CSprite::GetSpriteTypeName(const int type);
-// CODEVIEW(E:\gamedcs\csprite.cpp:574, dc 0x7342c) int CSprite::GetNumSeqs(int type);
-// CODEVIEW(E:\gamedcs\csprite.cpp:605, dc 0x73468) int CSprite::GetSequenceID(int type, const char* name);
-// CODEVIEW(E:\gamedcs\csprite.cpp:774, dc 0x73880) const char* CSprite::GetSequenceName(int type, int num);
-// CODEVIEW(E:\gamedcs\csprite.cpp:947, dc 0x73b10) void CSprite::SpriteDataDelete();
-// CODEVIEW(E:\gamedcs\csprite.cpp:998, dc 0x73bf4) void CSprite::SpriteDataReload();
-// CODEVIEW(E:\gamedcs\CSprite.h:259, dc 0x744e4) void CSprite::SetPalette(TPalette16& pal);
-// CODEVIEW(E:\gamedcs\csprite.cpp:86, dc 0x74548) void* CSprite::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_CSPRITE_H */

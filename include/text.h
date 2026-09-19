@@ -1,4 +1,4 @@
-// text.h - prototypes of text.cpp (compiland text.obj)
+// text.h - text.cpp (compiland text.obj)
 #ifndef HOMM3_TEXT_H
 #define HOMM3_TEXT_H
 
@@ -37,9 +37,5 @@ unsigned char initializeCreditsText();               // 0x5b9840
 unsigned char initializeTentColorText();             // 0x5b9880
 unsigned char initializeHelpText();                  // 0x5b98b0
 unsigned char initializeArrayText();                 // 0x5b9cc0
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\text.cpp:49, dc 0x160ff4) void CheckTextResource();
-// CODEVIEW(E:\gamedcs\text.cpp:86, dc 0x160ff8) void CheckSpreadsheetResource();
 
 #endif  /* HOMM3_TEXT_H */

@@ -1,4 +1,4 @@
-// smackmgr.h - prototypes of smackmgr.cpp (compiland smackmgr.obj)
+// smackmgr.h - smackmgr.cpp (compiland smackmgr.obj)
 #ifndef HOMM3_SMACKMGR_H
 #define HOMM3_SMACKMGR_H
 
@@ -199,12 +199,5 @@ extern int g_videoCount3;
 extern void* g_videoFile1;
 extern void* g_videoFile2;
 extern void* g_videoFile3;
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\smackmgr.cpp:328, dc 0x14ac60) void VideoDrawRects();
-// CODEVIEW(E:\gamedcs\smackmgr.cpp:631, dc 0x14acc8) void DeleteSoundHeaders();
-
-// --- SmackManager ---
-// CODEVIEW(E:\gamedcs\smackmgr.cpp:811, dc 0x14ad24) void SmackManager::SetPixelFormat(unsigned long red_mask, unsigned long green_mask, unsigned long blue_mask);
 
 #endif  /* HOMM3_SMACKMGR_H */

@@ -1,4 +1,4 @@
-// ai.h - prototypes of ai.cpp (compiland ai.obj)
+// ai.h - ai.cpp (compiland ai.obj)
 #ifndef HOMM3_AI_H
 #define HOMM3_AI_H
 
@@ -93,30 +93,5 @@ enum EAreaAttackCreature {
 // --- globals ---
 long getAreaAttackValue(const army* currentArmy, long hex, long ourGroup,
                            type_AI_combat_parameters* data);
-// CODEVIEW(E:\gamedcs\ai.cpp:610, dc 0x24604) long get_move_order(const army* current_army);
-// CODEVIEW(E:\gamedcs\ai.cpp:696, dc 0x248b4) long get_attack_value(const army* current_army, const army* enemy, long enemy_hit_points, type_AI_combat_parameters& data);
-// CODEVIEW(E:\gamedcs\ai.cpp:1000, dc 0x250e0) long get_enemy_attack_limit(const army* our_army, const type_AI_combat_parameters* estimate);
-// CODEVIEW(E:\gamedcs\ai.cpp:1121, dc 0x253a8) void find_attack_hexes(const army* our_army, const army* enemy, const searchArray* search_array, std::vector<long,std::allocator<long>* result);
-// CODEVIEW(E:\gamedcs\ai.cpp:2397, dc 0x273d8) void simulate_simple_attack(army* current_army, army* target, long distance, unsigned char ranged, unsigned char breath_attack);
-
-// --- army ---
-// CODEVIEW(E:\gamedcs\ai.cpp:1786, dc 0x28068) void army::~army();
-
-// --- combatManager ---
-// CODEVIEW(E:\gamedcs\ai.cpp:43, dc 0x23450) int combatManager::ChooseBallistaTarget(int target_group, int attack_skill, int average_damage);
-// CODEVIEW(E:\gamedcs\ai.cpp:162, dc 0x2389c) unsigned char combatManager::AICheckRetreat();
-// CODEVIEW(E:\gamedcs\ai.cpp:1152, dc 0x2544c) void combatManager::mark_multiheaded_enemy(const army* our_army, const army* enemy, long* enemy_attacks, long limit_value, searchArray* search_array, const type_AI_combat_parameters* estimate);
-// CODEVIEW(E:\gamedcs\ai.cpp:1357, dc 0x25998) unsigned char combatManager::choose_defense_hex(const army* current_army, const army* client, long* best_hex, long* open_hexes, const searchArray* search_array);
-// CODEVIEW(E:\gamedcs\ai.cpp:1635, dc 0x2600c) unsigned char combatManager::choose_creature_spell(const army* current_army, long* best_value, type_AI_combat_parameters* estimate);
-// CODEVIEW(E:\gamedcs\ai.cpp:1694, dc 0x26140) unsigned char combatManager::choose_resurrect_action(const army* current_army, long* best_value, type_AI_combat_parameters* estimate);
-// CODEVIEW(E:\gamedcs\ai.cpp:1896, dc 0x266d4) unsigned char combatManager::choose_melee_target(const army* current_army, unsigned char teleport, long* action_value, type_AI_combat_parameters* estimate);
-// CODEVIEW(E:\gamedcs\ai.cpp:2272, dc 0x27138) void combatManager::DoCompAI(int whichGroup);
-// CODEVIEW(E:\gamedcs\ai.cpp:2608, dc 0x27888) void combatManager::find_AI_targets(long our_group, const army* current_army, unsigned char melee_only, const type_AI_combat_parameters* data, searchArray* search_array);
-
-// --- func_moves_before ---
-// CODEVIEW(E:\gamedcs\ai.cpp:597, dc 0x28024) unsigned char func_moves_before::operator()(const army* first, const army* second);
-
-// --- type_spellvalue ---
-// CODEVIEW(E:\gamedcs\ai.cpp:1626, dc 0x28050) void type_spellvalue::~type_spellvalue();
 
 #endif  /* HOMM3_AI_H */

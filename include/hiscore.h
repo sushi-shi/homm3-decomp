@@ -1,4 +1,4 @@
-// hiscore.h - prototypes of hiscore.cpp (compiland hiscore.obj)
+// hiscore.h - hiscore.cpp (compiland hiscore.obj)
 #ifndef HOMM3_HISCORE_H
 #define HOMM3_HISCORE_H
 
@@ -153,31 +153,5 @@ private:
     Bitmap816* m_hiScoreBack[2];
 };
 SIZE(THighScoreWindow, 0x110);
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\hiscore.cpp:738, dc 0xd7bf4) void WriteHighScores();
-// CODEVIEW(E:\gamedcs\hiscore.cpp:1014, dc 0xd8848) void UpdateCreatures();
-
-// --- CHSInputDlg ---
-// CODEVIEW(E:\gamedcs\hiscore.cpp:293, dc 0xd8ebc) void CHSInputDlg::CHSInputDlg(int maxChars1);
-// CODEVIEW(E:\gamedcs\hiscore.cpp:357, dc 0xd91cc) unsigned char CHSInputDlg::OnOK();
-// CODEVIEW(E:\gamedcs\hiscore.cpp:371, dc 0xd920c) int CHSInputDlg::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\hiscore.cpp:382, dc 0xd9294) void* CHSInputDlg::`scalar deleting destructor'(unsigned __flags);
-
-// --- CHighScoreEdit ---
-// CODEVIEW(E:\gamedcs\hiscore.cpp:225, dc 0xd8e08) void CHighScoreEdit::OnNextEdit();
-// CODEVIEW(E:\gamedcs\hiscore.cpp:239, dc 0xd8e30) void CHighScoreEdit::OnPrevEdit();
-// CODEVIEW(E:\gamedcs\hiscore.cpp:252, dc 0xd8e58) void CHighScoreEdit::SetFocus(unsigned char state);
-// CODEVIEW(E:\gamedcs\hiscore.cpp:256, dc 0xd8e70) void* CHighScoreEdit::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\hiscore.cpp:256, dc 0xd8ea4) void CHighScoreEdit::~CHighScoreEdit();
-
-// --- THighScoreWindow ---
-// CODEVIEW(E:\gamedcs\hiscore.cpp:858, dc 0xd7e3c) void THighScoreWindow::THighScoreWindow();
-// CODEVIEW(E:\gamedcs\hiscore.cpp:940, dc 0xd8400) void THighScoreWindow::DoModal();
-// CODEVIEW(E:\gamedcs\hiscore.cpp:929, dc 0xd92c8) void* THighScoreWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- highScoreManager ---
-// CODEVIEW(E:\gamedcs\hiscore.cpp:711, dc 0xd7b88) void highScoreManager::Close();
-// CODEVIEW(E:\gamedcs\hiscore.cpp:721, dc 0xd7bcc) int highScoreManager::Main(message* msg);
 
 #endif  /* HOMM3_HISCORE_H */

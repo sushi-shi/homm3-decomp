@@ -1,4 +1,4 @@
-// advmgr.h - prototypes of advmgr.cpp (compiland advmgr.obj)
+// advmgr.h - advmgr.cpp (compiland advmgr.obj)
 #ifndef HOMM3_ADVMGR_H
 #define HOMM3_ADVMGR_H
 
@@ -1601,68 +1601,5 @@ void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,
 // Dreamcast public ?giHighMemBuffer@@3HA; retail TrimLoopingSounds fixes the
 // dword at 0x67f570 through its divide-by-100 adjustment.
 extern int g_highMemBuffer;
-// CODEVIEW(E:\gamedcs\advmgr.cpp:2708, dc 0xb208) void set_town_help(char* buffer, const NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:2721, dc 0xb258) void set_hero_help(char* buffer, const NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:2736, dc 0xb2b8) void set_pyramid_help(char* buffer, const NewmapCell* cell, const hero* current_hero, const char* separator);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:2762, dc 0xb3bc) void get_creature_bank_help_text(char* buffer, NewmapCell* cell, type_creature_bank_type type, long player_id, const char* separator, unsigned char show_full_list);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:2919, dc 0xbaac) void set_wagon_help_text(char* buffer, NewmapCell* cell, const char* separator);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:2941, dc 0xbb44) void set_tomb_help_text(char* buffer, NewmapCell* cell, const char* separator);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:2959, dc 0xbc00) void set_water_wheel_help_text(char* buffer, NewmapCell* cell, const char* separator);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:2981, dc 0xbcac) void set_windmill_help_text(char* buffer, NewmapCell* cell, const char* separator);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:9063, dc 0x19420) TSkillMastery get_identify_level(type_point point);
-// CODEVIEW(E:\gamedcs\AdvMgr.h:1254, dc 0x1f084) int GetMapExtra(type_point point);
-
-// --- CAdvMgrNetMsgHandler ---
-// CODEVIEW(E:\gamedcs\advmgr.cpp:651, dc 0x5fc8) void CAdvMgrNetMsgHandler::HandleGiftRequestMsg(CNetMsg* pNetMsg);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:1084, dc 0x20298) void CAdvMgrNetMsgHandler::CAdvMgrNetMsgHandler();
-
-// --- CAdvPopup ---
-// CODEVIEW(E:\gamedcs\advmgr.cpp:11525, dc 0x202e8) void* CAdvPopup::`scalar deleting destructor'(unsigned __flags);
-
-// --- TDrawParts ---
-// CODEVIEW(E:\gamedcs\AdvMgr.h:187, dc 0x1eff0) void TDrawParts::TDrawParts();
-
-// --- advManager ---
-// CODEVIEW(E:\gamedcs\advmgr.cpp:734, dc 0x66f4) void advManager::advManager();
-// CODEVIEW(E:\gamedcs\advmgr.cpp:837, dc 0x6b24) int advManager::Open(int newPriority);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:1092, dc 0x74ec) void advManager::Close();
-// CODEVIEW(E:\gamedcs\advmgr.cpp:1229, dc 0x79b0) void advManager::GetCursorSampleSet(int walkSpeed);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:1245, dc 0x7a04) type_point advManager::get_mouse_map_point(__$ReturnUdt);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:1253, dc 0x7a8c) NewmapCell* advManager::DoAdvCommand(type_point* trigger_point);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:1688, dc 0x8b70) int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, type_point* trigger_point, NewmapCell** peventCell);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:2031, dc 0x9614) void advManager::ProcessAdvMenu(message* msg);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:2434, dc 0xa88c) void advManager::ProcessMapSelect(const message* msg, type_point* trigger_point, NewmapCell** peventCell);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:2624, dc 0xaf3c) void advManager::ProcessMapSelect2(const message* msg, type_point* trigger_point, NewmapCell** peventCell);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:3146, dc 0xc13c) void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:4385, dc 0xed7c) int advManager::ProcessWaitingHover(int mouseX, int mouseY);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:4514, dc 0xf23c) type_adventure_cursor advManager::get_garrison_cursor(NewmapCell* currCell);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:4556, dc 0xf3a8) int advManager::ProcessHover(int mouseX, int mouseY);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:4840, dc 0xfd84) int advManager::ProcessSearch(int x, int y, int z);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:5941, dc 0x12334) void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:6239, dc 0x12fcc) void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:6805, dc 0x142e0) void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:7019, dc 0x14b08) NewmapCell* advManager::GetCell(int x, int y, int z);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:7037, dc 0x14bec) void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsigned char bPartialUpdate, unsigned char view_mines, unsigned char view_heros, unsigned char view_towns);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:7543, dc 0x15fdc) void advManager::QuickInfo(int cellX, int cellY, int z);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:8816, dc 0x18c2c) void advManager::ClearBottomView();
-// CODEVIEW(E:\gamedcs\advmgr.cpp:8968, dc 0x19098) void advManager::BVResMsg(const char* cMsg, int iResType, int iResQty);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:8994, dc 0x19194) void advManager::BVMessage(const char* cMsg);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:9115, dc 0x19674) void advManager::TownQuickView(int townId, int x, int y, unsigned char display_drop_shadow);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:9243, dc 0x19cdc) void advManager::garrison_quick_view(int id, int x, int y);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:9476, dc 0x1a65c) void advManager::SetTownContext(int townId, unsigned char waitingPlayer, unsigned char update);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:9544, dc 0x1a878) void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPlayer, unsigned char draw_changes);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:9929, dc 0x1b520) void advManager::CheckLoadSample(e_looping_sound_id id_num);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:9945, dc 0x1b5a8) e_looping_sound_id advManager::GetSoundId(int x, int y, int z);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:10558, dc 0x1c580) void advManager::CheckDimHero();
-// CODEVIEW(E:\gamedcs\advmgr.cpp:10624, dc 0x1c7e4) void advManager::ScreenScroll(int iDir, int bChangeMouse);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:10756, dc 0x1ccf8) int advManager::MouseInScrollZone();
-// CODEVIEW(E:\gamedcs\advmgr.cpp:11220, dc 0x1e068) void advManager::ViewPuzzle();
-// CODEVIEW(E:\gamedcs\advmgr.cpp:11287, dc 0x1e360) void advManager::PuzzleDraw(int startX, int startY, int z, int ultX, int ultY);
-// CODEVIEW(E:\gamedcs\advmgr.cpp:11352, dc 0x1e598) void advManager::DoAdvMenu();
-// CODEVIEW(E:\gamedcs\advmgr.cpp:11501, dc 0x1eb78) unsigned short advManager::GetRouteArray(int x, int y, int z);
-
-// --- type_cell_adjuster ---
-// CODEVIEW(E:\gamedcs\advmgr.cpp:3054, dc 0xbeac) void type_cell_adjuster::type_cell_adjuster();
-// CODEVIEW(E:\gamedcs\advmgr.cpp:3111, dc 0xc038) void type_cell_adjuster::restore_cell();
 
 #endif  /* HOMM3_ADVMGR_H */

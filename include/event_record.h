@@ -1,4 +1,4 @@
-// event_record.h - prototypes of event_record.cpp (compiland event_record.obj)
+// event_record.h - event_record.cpp (compiland event_record.obj)
 #ifndef HOMM3_EVENT_RECORD_H
 #define HOMM3_EVENT_RECORD_H
 
@@ -289,97 +289,5 @@ public:
 
     std::vector<type_shroud_change> m_changes;  // +0x08 (allocator at +0x08)
 };
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\event_record.cpp:65, dc 0x8c6b8) void set_player(char new_player);
-
-// --- game ---
-// CODEVIEW(E:\gamedcs\event_record.cpp:1061, dc 0x8e0b8) void game::record_erase_object(NewmapCell* cell, type_point point);
-// CODEVIEW(E:\gamedcs\event_record.cpp:1071, dc 0x8e108) void game::record_hide_boat(boat* current_boat);
-// CODEVIEW(E:\gamedcs\event_record.cpp:1115, dc 0x8e2bc) void game::record_player_death(char player_id);
-// CODEVIEW(E:\gamedcs\event_record.cpp:1136, dc 0x8e33c) void game::SetVisibility(const int startX, const int startY, const int z, const int whichPlayer, int range, unsigned char remote_move);
-// CODEVIEW(E:\gamedcs\event_record.cpp:1189, dc 0x8e54c) void game::ResetVisibility(int start_x, int start_y, int z, int whichPlayer, int range);
-// CODEVIEW(E:\gamedcs\event_record.cpp:1367, dc 0x8ea88) unsigned char game::replay_available();
-
-// --- type_event_record ---
-// CODEVIEW(E:\gamedcs\event_record.cpp:36, dc 0x8c624) void type_event_record::type_event_record();
-// CODEVIEW(E:\gamedcs\event_record.cpp:81, dc 0x8c708) void type_event_record::replay();
-// CODEVIEW(E:\gamedcs\event_record.cpp:88, dc 0x8c70c) void type_event_record::undo();
-// CODEVIEW(E:\gamedcs\event_record.h:64, dc 0x8ec5c) char type_event_record::get_player_id();
-// CODEVIEW(E:\gamedcs\event_record.cpp:38, dc 0x8f330) void* type_event_record::`scalar deleting destructor'(unsigned __flags);
-
-// --- type_record_claim_mine ---
-// CODEVIEW(E:\gamedcs\event_record.cpp:237, dc 0x8cb2c) void type_record_claim_mine::type_record_claim_mine(long _id, char _owner);
-// CODEVIEW(E:\gamedcs\event_record.cpp:255, dc 0x8cbb0) type_event_record_type type_record_claim_mine::get_type();
-// CODEVIEW(E:\gamedcs\event_record.h:128, dc 0x8eda0) void type_record_claim_mine::type_record_claim_mine();
-// CODEVIEW(E:\gamedcs\event_record.h:128, dc 0x8eddc) void* type_record_claim_mine::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\event_record.h:128, dc 0x8ee10) void type_record_claim_mine::~type_record_claim_mine();
-
-// --- type_record_claim_town ---
-// CODEVIEW(E:\gamedcs\event_record.cpp:321, dc 0x8ccfc) void type_record_claim_town::type_record_claim_town(long _id, char _new_owner);
-// CODEVIEW(E:\gamedcs\event_record.cpp:339, dc 0x8cd84) type_event_record_type type_record_claim_town::get_type();
-// CODEVIEW(E:\gamedcs\event_record.h:149, dc 0x8ee28) void type_record_claim_town::type_record_claim_town();
-// CODEVIEW(E:\gamedcs\event_record.h:149, dc 0x8ee64) void* type_record_claim_town::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\event_record.h:149, dc 0x8ee98) void type_record_claim_town::~type_record_claim_town();
-
-// --- type_record_erase ---
-// CODEVIEW(E:\gamedcs\event_record.cpp:533, dc 0x8d220) void type_record_erase::type_record_erase(type_point _location, long _object_id, unsigned long _extra_info, long _object_index);
-// CODEVIEW(E:\gamedcs\event_record.h:214, dc 0x8eff0) void type_record_erase::type_record_erase();
-// CODEVIEW(E:\gamedcs\event_record.h:214, dc 0x8f044) void* type_record_erase::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\event_record.h:214, dc 0x8f078) void type_record_erase::~type_record_erase();
-
-// --- type_record_hide_boat ---
-// CODEVIEW(E:\gamedcs\event_record.cpp:376, dc 0x8ce74) void type_record_hide_boat::type_record_hide_boat(boat* _current_boat);
-// CODEVIEW(E:\gamedcs\event_record.h:169, dc 0x8eeb0) void type_record_hide_boat::type_record_hide_boat();
-// CODEVIEW(E:\gamedcs\event_record.h:169, dc 0x8eeec) void* type_record_hide_boat::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\event_record.h:169, dc 0x8ef20) void type_record_hide_boat::~type_record_hide_boat();
-
-// --- type_record_hide_hero ---
-// CODEVIEW(E:\gamedcs\event_record.cpp:628, dc 0x8d4b0) void type_record_hide_hero::type_record_hide_hero(hero* _hero, char _owner);
-// CODEVIEW(E:\gamedcs\event_record.cpp:646, dc 0x8d528) type_event_record_type type_record_hide_hero::get_type();
-// CODEVIEW(E:\gamedcs\event_record.h:238, dc 0x8f090) void type_record_hide_hero::type_record_hide_hero();
-// CODEVIEW(E:\gamedcs\event_record.h:238, dc 0x8f0cc) void* type_record_hide_hero::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\event_record.h:238, dc 0x8f100) void type_record_hide_hero::~type_record_hide_hero();
-
-// --- type_record_move_hero ---
-// CODEVIEW(E:\gamedcs\event_record.cpp:96, dc 0x8c710) void type_record_move_hero::type_record_move_hero(hero* _hero, char _direction, type_point _destination);
-// CODEVIEW(E:\gamedcs\event_record.cpp:186, dc 0x8c9ec) void type_record_move_hero::undo();
-// CODEVIEW(E:\gamedcs\event_record.h:85, dc 0x8ec60) void type_record_move_hero::type_record_move_hero();
-// CODEVIEW(E:\gamedcs\event_record.h:85, dc 0x8eccc) void* type_record_move_hero::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\event_record.h:85, dc 0x8ed00) void type_record_move_hero::~type_record_move_hero();
-
-// --- type_record_player_death ---
-// CODEVIEW(E:\gamedcs\event_record.cpp:842, dc 0x8da80) void type_record_player_death::type_record_player_death(char _player_id);
-// CODEVIEW(E:\gamedcs\event_record.cpp:905, dc 0x8dc20) void type_record_player_death::undo();
-// CODEVIEW(E:\gamedcs\event_record.h:286, dc 0x8f1d0) void type_record_player_death::type_record_player_death();
-// CODEVIEW(E:\gamedcs\event_record.h:286, dc 0x8f20c) void* type_record_player_death::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\event_record.h:286, dc 0x8f240) void type_record_player_death::~type_record_player_death();
-
-// --- type_record_show_boat ---
-// CODEVIEW(E:\gamedcs\event_record.cpp:449, dc 0x8cfa8) void type_record_show_boat::type_record_show_boat(boat* _current_boat, type_point _location);
-// CODEVIEW(E:\gamedcs\event_record.h:190, dc 0x8ef38) void type_record_show_boat::type_record_show_boat();
-// CODEVIEW(E:\gamedcs\event_record.h:190, dc 0x8efa4) void* type_record_show_boat::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\event_record.h:190, dc 0x8efd8) void type_record_show_boat::~type_record_show_boat();
-
-// --- type_record_show_hero ---
-// CODEVIEW(E:\gamedcs\event_record.cpp:725, dc 0x8d708) void type_record_show_hero::type_record_show_hero(hero* _hero, char _owner, type_point _location, unsigned char _is_boat);
-// CODEVIEW(E:\gamedcs\event_record.cpp:744, dc 0x8d7e8) type_event_record_type type_record_show_hero::get_type();
-// CODEVIEW(E:\gamedcs\event_record.h:262, dc 0x8f118) void type_record_show_hero::type_record_show_hero();
-// CODEVIEW(E:\gamedcs\event_record.h:262, dc 0x8f184) void* type_record_show_hero::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\event_record.h:262, dc 0x8f1b8) void type_record_show_hero::~type_record_show_hero();
-
-// --- type_record_shroud ---
-// CODEVIEW(E:\gamedcs\event_record.cpp:912, dc 0x8dc24) void type_record_shroud::type_record_shroud();
-// CODEVIEW(E:\gamedcs\event_record.cpp:978, dc 0x8ddec) void type_record_shroud::add_change(int x, int y, int z, short old_value, short new_value);
-// CODEVIEW(E:\gamedcs\event_record.h:319, dc 0x8f258) long type_record_shroud::get_change_count();
-// CODEVIEW(E:\gamedcs\event_record.cpp:913, dc 0x8f364) void* type_record_shroud::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\event_record.cpp:913, dc 0x8f398) void type_record_shroud::~type_record_shroud();
-// CODEVIEW(E:\gamedcs\event_record.cpp:953, dc 0x8f3c0) void type_record_shroud::type_shroud_change::type_shroud_change();
-
-// --- type_record_teleport ---
-// CODEVIEW(E:\gamedcs\event_record.cpp:204, dc 0x8ca54) void type_record_teleport::type_record_teleport(hero* _hero, type_point _destination);
-// CODEVIEW(E:\gamedcs\event_record.h:108, dc 0x8ed18) void type_record_teleport::type_record_teleport();
-// CODEVIEW(E:\gamedcs\event_record.h:108, dc 0x8ed54) void* type_record_teleport::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\event_record.h:108, dc 0x8ed88) void type_record_teleport::~type_record_teleport();
 
 #endif  /* HOMM3_EVENT_RECORD_H */

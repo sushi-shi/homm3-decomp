@@ -1,4 +1,4 @@
-// command.h - prototypes of command.cpp (compiland command.obj)
+// command.h - command.cpp (compiland command.obj)
 #ifndef HOMM3_COMMAND_H
 #define HOMM3_COMMAND_H
 
@@ -88,37 +88,5 @@ extern int g_thisNetGotAdventureControl;
 // array name; retail ResetRound indexes [1-currentSide], producing relocs to
 // both the base and its second element.
 DATA(0x0069773c) extern int g_combatControlNetPos[2];
-
-// --- combatManager ---
-// CODEVIEW(E:\gamedcs\command.cpp:63, dc 0x6af98) unsigned char combatManager::automate_catapult();
-// CODEVIEW(E:\gamedcs\command.cpp:193, dc 0x6b12c) unsigned char combatManager::automate_first_aid_tent();
-// CODEVIEW(E:\gamedcs\command.cpp:291, dc 0x6b318) int combatManager::Main(message* msg);
-// CODEVIEW(E:\gamedcs\command.cpp:475, dc 0x6b66c) void combatManager::SetCombatDirections(int hex);
-// CODEVIEW(E:\gamedcs\command.cpp:709, dc 0x6ba7c) unsigned char combatManager::SelectAttackDir(int iGridIndex);
-// CODEVIEW(E:\gamedcs\command.cpp:860, dc 0x6bde0) void combatManager::HighlightHex(int hex);
-// CODEVIEW(E:\gamedcs\command.cpp:866, dc 0x6be08) void combatManager::HighlightHex(int x, int y);
-// CODEVIEW(E:\gamedcs\command.cpp:872, dc 0x6be24) int combatManager::MoveToValidHex(int from, int direction);
-// CODEVIEW(E:\gamedcs\command.cpp:888, dc 0x6be74) int combatManager::ValidAttackHex(int hex);
-// CODEVIEW(E:\gamedcs\command.cpp:907, dc 0x6bea4) int combatManager::GetPointer(int inCombatCommand, int iHexIndex);
-// CODEVIEW(E:\gamedcs\command.cpp:1001, dc 0x6c070) int combatManager::ProcessCombatMsg(message* msg);
-// CODEVIEW(E:\gamedcs\command.cpp:1522, dc 0x6cb78) unsigned char combatManager::DoKeyboardNavigation(message* msg);
-// CODEVIEW(E:\gamedcs\command.cpp:1571, dc 0x6cc80) void combatManager::InitMouse(unsigned char initfirst);
-// CODEVIEW(E:\gamedcs\command.cpp:1591, dc 0x6ccc0) void combatManager::MoveCursor(int x, int y, unsigned char abs, unsigned char clientcoords);
-// CODEVIEW(E:\gamedcs\command.cpp:1625, dc 0x6cdcc) void combatManager::MoveCursorCombatXY(int x, int y);
-// CODEVIEW(E:\gamedcs\command.cpp:1638, dc 0x6ce2c) void combatManager::GetHexXY(int hex, int* x, int* y);
-// CODEVIEW(E:\gamedcs\command.cpp:1645, dc 0x6ce60) int combatManager::MoveCursorTo(int gridIndex, unsigned char isdir);
-// CODEVIEW(E:\gamedcs\command.cpp:1676, dc 0x6cee4) void combatManager::MoveCursorMenu(int x, int y);
-// CODEVIEW(E:\gamedcs\command.cpp:1724, dc 0x6cfe8) void combatManager::ClientToCombat(int* x, int* y);
-// CODEVIEW(E:\gamedcs\command.cpp:1732, dc 0x6d004) void combatManager::CombatToScreen(int* x, int* y);
-// CODEVIEW(E:\gamedcs\command.cpp:1746, dc 0x6d060) void combatManager::ResetRound();
-// CODEVIEW(E:\gamedcs\command.cpp:1964, dc 0x6d58c) int combatManager::GetCommand(int newIndex);
-// CODEVIEW(E:\gamedcs\command.cpp:2800, dc 0x6e990) int combatManager::DoSurrender();
-// CODEVIEW(E:\gamedcs\command.cpp:2992, dc 0x6edbc) void combatManager::CheckCastleAttack();
-// CODEVIEW(E:\gamedcs\command.cpp:3038, dc 0x6ee60) void combatManager::CheckGetAIMove();
-// CODEVIEW(E:\gamedcs\command.cpp:3131, dc 0x6f198) void combatManager::GetControl();
-// CODEVIEW(E:\gamedcs\command.cpp:3461, dc 0x6f984) int combatManager::ProcessNextAction(message* msg, unsigned char automaticTurn);
-// CODEVIEW(E:\gamedcs\command.cpp:3819, dc 0x70398) void combatManager::SetCombatViewArmy(int iNewCombatViewArmy);
-// CODEVIEW(E:\gamedcs\command.cpp:4001, dc 0x70920) void combatManager::CheckAutoScrolling();
-// CODEVIEW(E:\gamedcs\command.cpp:4023, dc 0x709a8) void combatManager::ShiftXY(message* msg);
 
 #endif  /* HOMM3_COMMAND_H */

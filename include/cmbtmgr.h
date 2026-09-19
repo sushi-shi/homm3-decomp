@@ -1,4 +1,4 @@
-// cmbtmgr.h - prototypes of cmbtmgr.cpp (compiland cmbtmgr.obj)
+// cmbtmgr.h - cmbtmgr.cpp (compiland cmbtmgr.obj)
 #ifndef HOMM3_CMBTMGR_H
 #define HOMM3_CMBTMGR_H
 
@@ -2103,29 +2103,5 @@ void getMissileStartingPosition(int armyType, int x, int y, int facing,
                                 const CSprite* missile, int* startX,
                                 int* startY, int* armyDir,
                                 int* missileFrame);
-
-// --- CNetMsgHandlerPause ---
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:893, dc 0x63a88) void* CNetMsgHandlerPause::`scalar deleting destructor'(unsigned __flags);
-
-// --- combatManager ---
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:1004, dc 0x5e09c) void combatManager::LoadArmies(unsigned char is_surrounded);
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:1151, dc 0x5e3d8) void combatManager::FreeArmies();
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:1348, dc 0x5e690) void combatManager::InitNonVisualVars();
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:1498, dc 0x5e948) void combatManager::CheckNativeTerrain();
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:1971, dc 0x5f1d0) void combatManager::CombineGroups(armyGroup* src, armyGroup* dest);
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:2364, dc 0x5f934) void combatManager::SetNextArmy(int group, int index);
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:2603, dc 0x5feac) void combatManager::KeepAttack(combatManager::TArcherID iTowerPos);
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:2727, dc 0x6021c) float combatManager::ComputeDamageModifier(int attack, int defense);
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:2738, dc 0x60220) int combatManager::ExperienceValueOfStack(int whichGroup);
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:2859, dc 0x60538) void combatManager::SetupAndLoadObstacles();
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:3299, dc 0x60ce0) void combatManager::MakeCreaturesVanish();
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:3426, dc 0x610e0) void combatManager::TestRaiseDoor();
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:3640, dc 0x614f0) void combatManager::ShootBallisticMissile(int startX, int startY, int destX, int destY, const CSprite* missile);
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:3902, dc 0x61e60) void combatManager::ShootMissile(int startX, int startY, int destX, int destY, const float* angles, const CSprite* missile);
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:4158, dc 0x62560) void combatManager::PowEffect(TSpellEffectID spellEffect, int bResetLimitCreature);
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:4669, dc 0x63268) unsigned char combatManager::DoorCanBeLowered();
-// CODEVIEW(E:\gamedcs\CmbtMgr.h:1500, dc 0x63a44) int combatManager::GetHexIndex(int x, int y);
-// CODEVIEW(E:\gamedcs\CmbtMgr.h:1506, dc 0x63a50) unsigned char combatManager::RowIsOdd(int y);
-// CODEVIEW(E:\gamedcs\CmbtMgr.h:1537, dc 0x63a5c) hexcell* combatManager::GetCell(int x, int y);
 
 #endif  /* HOMM3_CMBTMGR_H */

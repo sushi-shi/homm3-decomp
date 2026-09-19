@@ -1,14 +1,5 @@
-// crt0dat.h - prototypes of crt0dat.c (compiland crt0dat.obj)
+// crt0dat.h - crt0dat.c (compiland crt0dat.obj)
 #ifndef HOMM3_CRT0DAT_H
 #define HOMM3_CRT0DAT_H
-
-// --- globals ---
-// CODEVIEW(d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\crt0dat.c:14, dc 0x19cd30) void _cinit();
-// CODEVIEW(d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\crt0dat.c:22, dc 0x19cd64) void exit(int code);
-// CODEVIEW(d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\crt0dat.c:26, dc 0x19cd7c) void _exit(int code);
-// CODEVIEW(d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\crt0dat.c:30, dc 0x19cd94) void _cexit();
-// CODEVIEW(d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\crt0dat.c:34, dc 0x19cdb0) void _c_exit();
-// CODEVIEW(d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\crt0dat.c:40, dc 0x19cdcc) void doexit(int code, int quick, int retcaller);
-// CODEVIEW(d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\crt0dat.c:57, dc 0x19ce54) void _initterm(void (*)()** pfbegin, void (*)()** pfend);
 
 #endif  /* HOMM3_CRT0DAT_H */

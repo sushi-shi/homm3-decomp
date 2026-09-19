@@ -1,4 +1,4 @@
-// bitmap816.h - prototypes of bitmap816.cpp (compiland bitmap816.obj)
+// bitmap816.h - bitmap816.cpp (compiland bitmap816.obj)
 #ifndef HOMM3_BITMAP816_H
 #define HOMM3_BITMAP816_H
 
@@ -67,14 +67,5 @@ public:
         unsigned short* zBuffer, int dx, int dy, int id) const;
 };
 SIZE(Bitmap816, 0x56c);
-
-// --- Bitmap816 ---
-// CODEVIEW(E:\gamedcs\bitmap816.cpp:36, dc 0x53854) void Bitmap816::Bitmap816(int w, int h);
-// CODEVIEW(E:\gamedcs\bitmap816.cpp:125, dc 0x53a68) void Bitmap816::Bitmap816(const char* name, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift);
-// CODEVIEW(E:\gamedcs\bitmap816.cpp:163, dc 0x53c5c) void Bitmap816::import(int w, int h, unsigned char* data, TPalette16* p16, int size);
-// CODEVIEW(E:\gamedcs\bitmap816.cpp:221, dc 0x53d60) void Bitmap816::clear();
-// CODEVIEW(E:\gamedcs\bitmap816.cpp:506, dc 0x5427c) void Bitmap816::SetPalette(const unsigned short* pal);
-// CODEVIEW(E:\gamedcs\bitmap816.h:74, dc 0x54300) TPalette24* Bitmap816::GetPalette24();
-// CODEVIEW(E:\gamedcs\bitmap816.cpp:73, dc 0x54308) void* Bitmap816::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_BITMAP816_H */

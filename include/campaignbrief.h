@@ -1,4 +1,4 @@
-// campaignbrief.h - prototypes of campaignbrief.cpp (compiland campaignbrief.obj)
+// campaignbrief.h - campaignbrief.cpp (compiland campaignbrief.obj)
 #ifndef HOMM3_CAMPAIGNBRIEF_H
 #define HOMM3_CAMPAIGNBRIEF_H
 
@@ -394,36 +394,5 @@ SIZE(TCampaignBrief::MapTextStruct, 0x18);
 SIZE(TCampaignBrief::ScenarioStruct, 0xa8);
 SIZE(TCampaignBrief::CampaignHeaderStruct, 0x5c);
 SIZE(TCampaignBrief, 0xb4);
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:202, dc 0x58244) void CampaignWait(int which);
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:365, dc 0x58774) void ShowTerritorySmacker(unsigned char bEvil2Post);
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:649, dc 0x59300) void ExtractCampaignMap(int* numPreReqs, unsigned char single_map_only, unsigned char write_file);
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:1076, dc 0x5a324) int CampaignBriefHandler(message* msg);
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:1409, dc 0x5ab84) void ReadRamDisc(int RamDiscNr, void* buffer, long size, unsigned long* bytesRead);
-
-// --- CHeroDlg ---
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:1391, dc 0x5af4c) void CHeroDlg::~CHeroDlg();
-
-// --- NewSMapHeader ---
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:192, dc 0x5ae54) void NewSMapHeader::~NewSMapHeader();
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:1007, dc 0x5aeb4) NewSMapHeader* NewSMapHeader::operator=(const NewSMapHeader* __that);
-
-// --- TCampaignBrief ---
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:392, dc 0x587c4) void TCampaignBrief::Select(int which);
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:437, dc 0x58938) void TCampaignBrief::ResetMapAndDescription(int which);
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:452, dc 0x589a4) void TCampaignBrief::ClearSelected();
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:462, dc 0x58a28) void TCampaignBrief::SetupCurrentTerritory();
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:481, dc 0x58a9c) void TCampaignBrief::UpdateAllyEnemyFlags();
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:520, dc 0x58c00) void TCampaignBrief::UpdateBonusIcons();
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:584, dc 0x58dac) void TCampaignBrief::AddBonusIcons();
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:764, dc 0x594b8) void TCampaignBrief::TCampaignBrief(unsigned char newCampaign, unsigned char bViewFromGame);
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:1054, dc 0x5a2b4) int TCampaignBrief::convertID2HelpID(int id);
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:192, dc 0x5ade8) void TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct();
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:192, dc 0x5ae10) void TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct();
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:1007, dc 0x5ae80) void* TCampaignBrief::`scalar deleting destructor'(unsigned __flags);
-
-// --- game ---
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:1050, dc 0x5af18) void* game::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_CAMPAIGNBRIEF_H */

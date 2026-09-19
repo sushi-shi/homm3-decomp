@@ -1,4 +1,4 @@
-// town.h - prototypes of town.cpp (compiland town.obj)
+// town.h - town.cpp (compiland town.obj)
 #ifndef HOMM3_TOWN_H
 #define HOMM3_TOWN_H
 
@@ -667,25 +667,5 @@ extern const signed char g_mageGuildBaseSpellCounts[5];
 // the enum element type carries without a cast, while every int reader
 // (get_horde's return, the bitNumber indexes) narrows implicitly.
 extern const type_building_id g_hordeBuildings[4];
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\town.cpp:1760, dc 0x167a8c) void show_creature_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards);
-// CODEVIEW(E:\gamedcs\town.cpp:2017, dc 0x168330) void initialize_army(town* current_town, const TownExtra* town_setup);
-// CODEVIEW(E:\gamedcs\town.cpp:2476, dc 0x168d50) void InitializeBuildingCosts(int* costs, const std::vector<char* resource);
-
-// --- town ---
-// CODEVIEW(E:\gamedcs\town.cpp:458, dc 0x165628) int town::load(void* infile);
-// CODEVIEW(E:\gamedcs\town.cpp:616, dc 0x165988) int town::save(void* outfile);
-// CODEVIEW(E:\gamedcs\town.cpp:1111, dc 0x166864) void town::SwapHeroes();
-// CODEVIEW(E:\gamedcs\town.cpp:1206, dc 0x166b64) void town::set_spells_available();
-// CODEVIEW(E:\gamedcs\town.cpp:1226, dc 0x166c08) type_building_id town::create_building(type_building_id building);
-// CODEVIEW(E:\gamedcs\town.cpp:1340, dc 0x166fc8) type_building_id town::BuildBuilding(int buildingId, unsigned char SetBuiltFlag, unsigned char apply_special_effect);
-// CODEVIEW(E:\gamedcs\town.cpp:1793, dc 0x167c3c) void town::give_event_reward(const TTownEvent* thisEvent);
-// CODEVIEW(E:\gamedcs\town.cpp:2084, dc 0x168494) void town::update_full_building_mask();
-// CODEVIEW(E:\gamedcs\town.cpp:2097, dc 0x168504) unsigned char town::can_build(short building_id);
-// CODEVIEW(E:\gamedcs\town.cpp:2291, dc 0x168a10) void town::set_legal_buildings(__int64 disabled_buildings);
-// CODEVIEW(E:\gamedcs\town.cpp:2300, dc 0x168a50) unsigned char town::is_disabled(type_building_id building);
-// CODEVIEW(E:\gamedcs\town.cpp:2375, dc 0x168bd0) armyGroup* town::get_army();
-// CODEVIEW(E:\gamedcs\Town.h:331, dc 0x168dfc) void town::set_mask(__int64 new_mask);
 
 #endif  /* HOMM3_TOWN_H */

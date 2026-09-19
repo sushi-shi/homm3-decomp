@@ -1,13 +1,5 @@
-// ResSw.h - prototypes of ResSw.cpp (compiland ResSw.obj)
+// ResSw.h - ResSw.cpp (compiland ResSw.obj)
 #ifndef HOMM3_RESSW_H
 #define HOMM3_RESSW_H
-
-// --- ResolutionSwitch ---
-// CODEVIEW(E:\gamedcs\ResSw.cpp:30, dc 0x123b10) void ResolutionSwitch::ResolutionSwitch();
-// CODEVIEW(E:\gamedcs\ResSw.cpp:36, dc 0x123b54) void ResolutionSwitch::~ResolutionSwitch();
-// CODEVIEW(E:\gamedcs\ResSw.cpp:42, dc 0x123b74) void ResolutionSwitch::S_to_800();
-// CODEVIEW(E:\gamedcs\ResSw.cpp:53, dc 0x123b94) void ResolutionSwitch::S_to_600();
-// CODEVIEW(E:\gamedcs\ResSw.cpp:65, dc 0x123bb4) void ResolutionSwitch::Switch();
-// CODEVIEW(E:\gamedcs\ResSw.cpp:32, dc 0x123bf8) void* ResolutionSwitch::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_RESSW_H */

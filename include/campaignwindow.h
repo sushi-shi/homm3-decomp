@@ -1,4 +1,4 @@
-// campaignwindow.h - prototypes of campaignwindow.cpp (compiland campaignwindow.obj)
+// campaignwindow.h - campaignwindow.cpp (compiland campaignwindow.obj)
 #ifndef HOMM3_CAMPAIGNWINDOW_H
 #define HOMM3_CAMPAIGNWINDOW_H
 
@@ -152,13 +152,5 @@ extern THelpText g_campaignWindowHelp[24];
 // table that starts immediately after the 0x66cad8 hover latch. No DATA
 // claim yet: the fold means the table's own extent is not carved.
 extern const char* g_campaignFileNames[20];
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\campaignwindow.cpp:291, dc 0x5bd94) int CampaignWindowHandler(message* msg);
-
-// --- TCampaignWindow ---
-// CODEVIEW(E:\gamedcs\campaignwindow.cpp:78, dc 0x5b53c) void TCampaignWindow::HideText();
-// CODEVIEW(E:\gamedcs\campaignwindow.cpp:86, dc 0x5b570) void TCampaignWindow::TCampaignWindow(int newCampaign);
-// CODEVIEW(E:\gamedcs\campaignwindow.cpp:258, dc 0x5bf44) void* TCampaignWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_CAMPAIGNWINDOW_H */

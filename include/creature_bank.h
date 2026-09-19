@@ -1,4 +1,4 @@
-// creature_bank.h - prototypes of creature_bank.cpp (compiland creature_bank.obj)
+// creature_bank.h - creature_bank.cpp (compiland creature_bank.obj)
 #ifndef HOMM3_CREATURE_BANK_H
 #define HOMM3_CREATURE_BANK_H
 
@@ -71,15 +71,7 @@ SIZE(type_creature_bank_traits, 0x190);
 
 extern const type_creature_bank_traits* g_constCreatureBankTraits;
 
-// CODEVIEW(E:\gamedcs\creature_bank.cpp:32, dc 0x70fe0): file-static
-// CODEVIEW(E:\gamedcs\creature_bank.cpp:146, dc 0x71218) void split_slot(armyGroup* army_group, long slot, long groups);
 void initializeCreatureBank(type_creature_bank* bank,
                               type_creature_bank_type type);
-
-// --- type_creature_bank_level ---
-// CODEVIEW(E:\gamedcs\creature_bank.cpp:25, dc 0x7152c) void type_creature_bank_level::type_creature_bank_level();
-
-// --- type_creature_bank_traits ---
-// CODEVIEW(E:\gamedcs\creature_bank.cpp:25, dc 0x71514) void type_creature_bank_traits::~type_creature_bank_traits();
 
 #endif  /* HOMM3_CREATURE_BANK_H */

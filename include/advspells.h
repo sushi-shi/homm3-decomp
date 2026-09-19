@@ -1,4 +1,4 @@
-// advspells.h - prototypes of advspells.cpp (compiland advspells.obj)
+// advspells.h - advspells.cpp (compiland advspells.obj)
 #ifndef HOMM3_ADVSPELLS_H
 #define HOMM3_ADVSPELLS_H
 
@@ -37,14 +37,5 @@ DATA(0x00691250) extern SLimitData g_advMapViewLimits;
 // exactly what event_record.h does with the same pair.
 extern int g_mapWidth;
 extern int g_mapHeight;
-
-// --- advManager ---
-// CODEVIEW(E:\gamedcs\advspells.cpp:171, dc 0x21b84) void advManager::SummonBoat(TSkillMastery level);
-// CODEVIEW(E:\gamedcs\advspells.cpp:328, dc 0x22054) void advManager::SkuttleBoat(TSkillMastery level);
-// CODEVIEW(E:\gamedcs\advspells.cpp:485, dc 0x22510) void advManager::TownGate(TSkillMastery level);
-// CODEVIEW(E:\gamedcs\advspells.cpp:605, dc 0x228e8) void advManager::Identify(TSkillMastery level);
-// CODEVIEW(E:\gamedcs\advspells.cpp:629, dc 0x229c4) void advManager::WaterWalk(TSkillMastery level);
-// CODEVIEW(E:\gamedcs\advspells.cpp:654, dc 0x22a40) void advManager::Disguise(TSkillMastery level);
-// CODEVIEW(E:\gamedcs\advspells.cpp:674, dc 0x22a9c) void advManager::Flight(TSkillMastery level);
 
 #endif  /* HOMM3_ADVSPELLS_H */

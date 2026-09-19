@@ -1,4 +1,4 @@
-// subwindow.h - prototypes of subwindow.cpp (compiland subwindow.obj)
+// subwindow.h - subwindow.cpp (compiland subwindow.obj)
 #ifndef HOMM3_SUBWINDOW_H
 #define HOMM3_SUBWINDOW_H
 
@@ -45,9 +45,5 @@ private:
     Bitmap16Bit* m_background;
 };
 SIZE(TSubWindow, 0x34);
-
-// --- TSubWindow ---
-// CODEVIEW(E:\gamedcs\subwindow.cpp:111, dc 0x158ebc) void TSubWindow::RemoveWidget(widget* killWidget);
-// CODEVIEW(E:\gamedcs\subwindow.cpp:44, dc 0x159094) void* TSubWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_SUBWINDOW_H */
