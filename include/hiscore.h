@@ -86,6 +86,9 @@ public:
                    int style, int readType, int insetX, int insetY);
     // DC195 takes message&; the shared text-entry interface still uses message*.
     virtual int onKeyPress(message* msg);  // slot 15, retail 0x4e9710
+    virtual void setFocus(unsigned char state);  // inherited slot 14
+    virtual void onNextEdit();  // appended slot 19
+    virtual void onPrevEdit();  // appended slot 20
 };
 SIZE(CHighScoreEdit, 0x78);
 
@@ -107,7 +110,6 @@ public:
     // DC301 forwards maxChars1 to CHighScoreEdit; retail passes 40.
     CHSInputDlg(int maxChars);
     virtual ~CHSInputDlg();
-    virtual int windowHandler(message& msg);
     virtual int onWidgetDeselect(int id, bool& exitFlag);
     virtual textWidget* getRolloverWidget();
     bool onOK();
@@ -165,9 +167,6 @@ SIZE(THighScoreWindow, 0x110);
 // CODEVIEW(E:\gamedcs\hiscore.cpp:382, dc 0xd9294) void* CHSInputDlg::`scalar deleting destructor'(unsigned __flags);
 
 // --- CHighScoreEdit ---
-// CODEVIEW(E:\gamedcs\hiscore.cpp:225, dc 0xd8e08) void CHighScoreEdit::OnNextEdit();
-// CODEVIEW(E:\gamedcs\hiscore.cpp:239, dc 0xd8e30) void CHighScoreEdit::OnPrevEdit();
-// CODEVIEW(E:\gamedcs\hiscore.cpp:252, dc 0xd8e58) void CHighScoreEdit::SetFocus(unsigned char state);
 // CODEVIEW(E:\gamedcs\hiscore.cpp:256, dc 0xd8e70) void* CHighScoreEdit::`scalar deleting destructor'(unsigned __flags);
 // CODEVIEW(E:\gamedcs\hiscore.cpp:256, dc 0xd8ea4) void CHighScoreEdit::~CHighScoreEdit();
 
@@ -177,8 +176,6 @@ SIZE(THighScoreWindow, 0x110);
 // CODEVIEW(E:\gamedcs\hiscore.cpp:929, dc 0xd92c8) void* THighScoreWindow::`scalar deleting destructor'(unsigned __flags);
 
 // --- highScoreManager ---
-// CODEVIEW(E:\gamedcs\hiscore.cpp:711, dc 0xd7b88) void highScoreManager::Close();
-// CODEVIEW(E:\gamedcs\hiscore.cpp:721, dc 0xd7bcc) int highScoreManager::Main(message* msg);
 
 // --- textWidget ---
 // CODEVIEW(E:\gamedcs\TextWdgt.h:67, dc 0xd8d14) const char* textWidget::GetText();

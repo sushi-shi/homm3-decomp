@@ -74,12 +74,6 @@ void type_bottom_view_window::~type_bottom_view_window()
     // @stub
 }
 
-// E:\gamedcs\bottomviewsubwindow.cpp:64
-DC_ONLY(0x55188, 0x4)
-void type_bottom_view_window::animate()
-{
-    // @stub
-}
 
 // E:\gamedcs\bottomviewsubwindow.cpp:77
 // RETAIL_LOCATED(0x00450dd0, 0x319)  // anchor-vtable + anchor-caller
@@ -167,12 +161,6 @@ void widget::setVisible(unsigned char arg)
     // @stub
 }
 
-// E:\gamedcs\Widget.h:271
-DC_ONLY(0x56e20, 0x1C)
-void widget::force_update()
-{
-    // @stub
-}
 
 // E:\gamedcs\bottomviewsubwindow.cpp:41
 DC_ONLY(0x56e3c, 0x34)
@@ -392,6 +380,13 @@ static const char* g_newWeekIcons[5] = {
 // spending itself down across the body, not a source difference; both arms
 // are the same `text = format_string(...)` statement.
 
+// Original: type_bottom_view_window::animate; bottomviewsubwindow.cpp:64, dc 0x55188
+// The empty base hook is ICF-folded to retail's shared ret at 0x5bc690;
+// the base and five presentation-only subclass vtables retain that slot.
+void type_bottom_view_window::animate()
+{
+}
+
 VA(0x00450dd0, 0x319)  // dc 0x5518c
 TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
     : type_bottom_view_window(parent)
@@ -456,7 +451,7 @@ void TBottomViewNewTurn::animate()
     m_icon->setIconFrame(m_frame);
     m_icon->draw();
     m_backdrop->draw();
-    m_icon->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+    m_icon->forceUpdate();
     m_lastStepTime = GameTime::get();
 }
 
@@ -1254,7 +1249,7 @@ void TBottomViewEnemyTurn::animate()
         m_lastPlayerPos = g_netLocalGamePos;
         m_crest->setIconFrame(g_netLocalGamePos);
         m_crest->draw();
-        m_crest->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+        m_crest->forceUpdate();
         if (g_currentPlayer->isHuman()) {
             m_hourGlass->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                     widget::WIDGET_DRAWN);
@@ -1298,10 +1293,10 @@ void TBottomViewEnemyTurn::animate()
     m_sand->setIconFrame(m_frame);
     m_sand->draw();
     m_hourGlass->draw();
-    m_hourGlass->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+    m_hourGlass->forceUpdate();
     m_crest->setIconFrame(g_netLocalGamePos);
     m_crest->draw();
-    m_crest->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+    m_crest->forceUpdate();
 }
 
 // COMDAT pairing: basic_streambuf::1?$basic_streambuf, mnemonic agreement 1.000.

@@ -120,12 +120,14 @@ public:
     // at 0x125c that the size query adds to it. DC has no such member -
     // its port left the resource size query on a different slot shape.
     int m_dataSize;
+    font();
     font(const char* name, const TFontSpec& fontspec, int dsize,
          unsigned char* d);  // retail 0x4b5070
     virtual ~font();
     virtual unsigned int getSize() const;
     void setPalette(const TPalette16& newPalette);
     void drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const;
+    void drawString(const char* text, Bitmap16Bit* bitmap, int x, int y, TColor color);
     void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, font::TColor colorScheme, unsigned justification, int cursorPos);
     int lineLength(const char* str, int boxWidth) const;
     int lineWidth(const char* text) const;
@@ -166,10 +168,8 @@ private:
 extern font* g_unnamed698a08;
 
 // --- font ---
-// CODEVIEW(E:\gamedcs\font.cpp:33, dc 0xa1ba8) void font::font();
 // CODEVIEW(E:\gamedcs\font.cpp:56, dc 0xa1ce4) int font::GetColor(font::TColor color_scheme, unsigned char highlighted);
 // CODEVIEW(E:\gamedcs\font.cpp:123, dc 0xa1e30) void font::DrawCursor(Bitmap16Bit* bitmap, int x, int y, int color, int clipX, int clipY, int clipWidth, int clipHeight, unsigned char highlighted);
-// CODEVIEW(E:\gamedcs\font.cpp:246, dc 0xa209c) void font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, font::TColor color);
 // CODEVIEW(E:\gamedcs\font.cpp:254, dc 0xa2108) void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, font::TColor color_scheme, unsigned justification, int cursorPos);
 // CODEVIEW(E:\gamedcs\font.cpp:35, dc 0xa27c4) void* font::`scalar deleting destructor'(unsigned __flags);
 

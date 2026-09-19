@@ -42,18 +42,21 @@ public:
     unsigned char isSaved() { return m_saved; }
 };
 
-#if 0  // @carcass
-
-// E:\gamedcs\textntry.cpp:60
-DC_ONLY(0x16298c, 0x5C)
-void textEntryWidget::textEntryWidget()
+// Original: textEntryWidget::textEntryWidget; textntry.cpp:60, dc 0x16298c.
+textEntryWidget::textEntryWidget() : textWidget()
 {
-    // @stub
+    m_cursorIndex = 0;
+    m_maxLength = 0;
+    m_textBack = 0;
+    m_displayStart = 0;
+    m_style = 0x100;
+    m_hasFocus = 0;
+    m_autoDraw = 0;
+    // DC lines 63 and 69 both initialize textBack; the intervening stores
+    // set the editor's style/focus flags, and line 70 clears saveBack.
+    m_textBack = 0;
+    m_saveBack = 0;
 }
-
-// E:\gamedcs\textntry.cpp:158
-
-#endif  // @carcass
 
 VA(0x005ba920, 0x1B5)  // dc 0x1629e8
 textEntryWidget::textEntryWidget(int x, int y, int w, int h, int textSize,

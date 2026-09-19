@@ -988,7 +988,7 @@ void swapManager::close()
     if (g_dPlay)
         g_dPlay->setNetMsgHandler(m_previousNetMsgHandler);
     delete m_netMsgHandler;
-    g_advManager->m_status = 1;
+    g_advManager->setStatus(STATUS_ACTIVE);
     g_advManager->enableButtons();
     g_advManager->reseed(0, 0);
 }
@@ -2221,13 +2221,6 @@ unsigned char swapManager::isLeftHero()
     // @stub
 }
 
-// E:\gamedcs\swapmgr.cpp:2259
-DC_ONLY(0x15ee74, 0x22)
-hero* swapManager::GetOurHero()
-{
-    // @stub
-}
-
 // E:\gamedcs\swapmgr.cpp:2267
 DC_ONLY(0x15ee98, 0x82)
 bool swapManager::canModHero(int hero)
@@ -2242,12 +2235,6 @@ void swapManager::onGiveMeStuffMsg()
     // @stub
 }
 
-// E:\gamedcs\basemgr.h:41
-DC_ONLY(0x15efd0, 0x4)
-void baseManager::SetStatus(short newStatus)
-{
-    // @stub
-}
 
 // E:\gamedcs\swapmgr.cpp:192
 DC_ONLY(0x15f0a4, 0x98)
@@ -2522,6 +2509,14 @@ inline hero* swapManager::getOtherHero()
     if (isLeftHero())
         return m_heroes[1];
     return m_heroes[0];
+}
+
+// Original: swapManager::GetOurHero; swapmgr.cpp:2259, dc 0x15ee74.
+hero* swapManager::getOurHero()
+{
+    if (isLeftHero())
+        return m_heroes[0];
+    return m_heroes[1];
 }
 
 bool swapManager::canModHero(int whichHero)

@@ -159,6 +159,7 @@ public:
     friend int hillFortWindowHandler(message& msg);
 
 private:
+    int convertID2HelpID(int id) const;
     void handleClick(message& msg);
     void recalculate(unsigned char drawDimmedButtons);
     void upgradeSlot(int which, unsigned char showMessage);

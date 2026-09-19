@@ -149,14 +149,15 @@ public:
     virtual int open(int newPriority, heroWindow* parent);  // slot 1
     // Non-virtual on DC and in retail: heroWindow::RemoveWidget calls
     // it DIRECTLY (0x5bc690 - a /Gy header-COMDAT the link kept from an
-    // earlier obj, ICF-folded with other empty bodies). Declared only;
-    // no local definition, so calls stay extern.
+    // earlier obj, ICF-folded with other empty bodies). The ordinary
+    // definition remains in widget.cpp.
     void close();
     // DC Main(message&) is shared by the widget overrides; retail passes
     // the same address through slot 2.
     virtual int main(message& msg) = 0;  // slot 2
-    // Complete widened the Dreamcast nil-argument draw hook. The shared
-    // vtable representative at 0x5bc7e0 is `ret 8`, and
+    // The formal DC type supplies the two draw arguments even where
+    // optimized parameter records are empty. The shared representative
+    // at 0x5bc7e0 is `ret 8`, and
     // TCampaignBrief dispatches this slot with the z-buffer and widget id.
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const = 0;  // slot 3
     // Original Draw, zBufferDraw and Dim have const receivers in CodeView.
@@ -222,6 +223,10 @@ public:
         else
             sendMessage(WIDGET_CLEAR_STATUS, WIDGET_DRAWN);
     }
+
+    // Original: widget::force_update; Widget.h:271, dc 0x56e20.
+    // Bottom-view updates expand this same status message in Complete.
+    void forceUpdate() { sendMessage(WIDGET_SET_STATUS, WIDGET_UPDATE); }
 
 protected:
     // Dreamcast: protected static widget* last_hover_widget

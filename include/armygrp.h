@@ -22,6 +22,9 @@ template<class E, class Tr, class A> class basic_string;
 // TCreatureType; retail compares slots against -1.)
 enum TCreatureType {
     CREATURE_NONE = -1,
+    // Original TCreatureType::Pikeman, ordinal zero; GetBaseCreature
+    // returns this value on its out-of-range dwelling arm.
+    CREATURE_PIKEMAN = 0,
     // The two griffins, byte-proven by ai_tactical's
     // get_counterstroke_value (0x439e80): it doubles the counterstrike
     // multiplier for 4 and refuses the spell outright for 5, which is
@@ -712,15 +715,6 @@ DATA(0x00682910) extern const char* g_creatureBackgrounds[9];
 // bootstrap invention (no Dreamcast/NH3API name survives for these).
 DATA(0x006a5bb8) extern const char* g_apszArmySizeNames[9][3];
 
-// Native terrain by ALIGNMENT (townType order; -1 = none), .rdata:
-// the full table starts one entry earlier at 0x643694 with the -1 row,
-// and retail indexes through this biased base exactly as GetAlignments
-// biases its census by +1 - so alignment -1 (gated elementals) is a
-// legal index. grass, grass, snow, lava, dirt, subterranean, rough,
-// swamp, grass. The NAME is a bootstrap invention (no Dreamcast/NH3API
-// name survives for this table) - replace on evidence.
-DATA(0x00643698) extern const TTerrainType g_nativeTerrains[9];
-
 // GetMorale's two town-building tests were bootstrapped here as
 // separate `unsigned int[2]` mask objects (gTavernMask /
 // gBrotherhoodOfTheSwordMask) while another lane owned town.h. They
@@ -762,6 +756,8 @@ public:
     int m_numTroops[ARMY_GROUP_SLOT_COUNT];
     void initialize();
     int getAlignments(unsigned char* alignments) const;
+    int getHomogeneityMoraleAdjust() const;
+    void damageGroup(float casualtyRate);
     long getAIValue() const;
     int getCreatureTotal() const;
     int getCreatureTotal(TCreatureType monType) const;

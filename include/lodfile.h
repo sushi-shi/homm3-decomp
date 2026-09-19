@@ -66,8 +66,19 @@ private:
     void* getDataPtr(const char* itemName);
 
 public:
+    enum EError {
+        LOD_NO_ERROR = 0,
+        LOD_NOT_OPEN = 1,
+        LOD_ALREADY_EXISTS = 2,
+        LOD_CHAPTER_NOT_FOUND = 3,
+        LOD_ITEM_NOT_FOUND = 4,
+        LOD_NO_IO_BUFFER = 5
+    };
     int m_numEntries;
     std::vector<LODEntry> m_subindex;
+    unsigned char exist(const char* itemName);
+    char* getErrorString(int lodError);
+    void sort();
     void clear();
     unsigned char pointAt(const char* itemName);
     int read(void* dest, int numBytes);
@@ -80,7 +91,6 @@ public:
 SIZE(LODFile, 0x18c);
 
 // --- globals ---
-// CODEVIEW(E:\gamedcs\lodfile.cpp:393, dc 0xe9654) int compare(const void* arg1, const void* arg2);
 
 // --- LODEntry ---
 // CODEVIEW(E:\gamedcs\lodfile.cpp:226, dc 0xe92f8) void LODEntry::LODEntry();
@@ -88,10 +98,7 @@ SIZE(LODFile, 0x18c);
 // --- LODFile ---
 // CODEVIEW(E:\gamedcs\lodfile.cpp:53, dc 0xe90c0) int LODFile::GetFileSize();
 // CODEVIEW(E:\gamedcs\lodfile.cpp:72, dc 0xe9100) void* LODFile::getDataPtr(const char* item_name);
-// CODEVIEW(E:\gamedcs\lodfile.cpp:112, dc 0xe9198) unsigned char LODFile::exist(const char* item_name);
-// CODEVIEW(E:\gamedcs\lodfile.cpp:189, dc 0xe92b4) char* LODFile::getErrorString(int LODErr);
 // CODEVIEW(E:\gamedcs\lodfile.cpp:341, dc 0xe955c) void LODFile::set_filemap(unsigned char on);
-// CODEVIEW(E:\gamedcs\lodfile.cpp:402, dc 0xe9668) void LODFile::sort();
 
 // --- LODHeader ---
 // CODEVIEW(E:\gamedcs\lodfile.cpp:266, dc 0xe93bc) void LODHeader::LODHeader();

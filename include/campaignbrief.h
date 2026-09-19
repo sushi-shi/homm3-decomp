@@ -398,7 +398,7 @@ SIZE(TCampaignBrief, 0xb4);
 // --- globals ---
 // CODEVIEW(E:\gamedcs\campaignbrief.cpp:202, dc 0x58244) void CampaignWait(int which);
 // CODEVIEW(E:\gamedcs\campaignbrief.cpp:365, dc 0x58774) void ShowTerritorySmacker(unsigned char bEvil2Post);
-// CODEVIEW(E:\gamedcs\campaignbrief.cpp:649, dc 0x59300) void ExtractCampaignMap(int* numPreReqs, unsigned char single_map_only, unsigned char write_file);
+// CODEVIEW(E:\gamedcs\campaignbrief.cpp:649, dc 0x59300) void ExtractCampaignMap(int& numPreReqs, unsigned char single_map_only, unsigned char write_file);
 // CODEVIEW(E:\gamedcs\campaignbrief.cpp:1076, dc 0x5a324) int CampaignBriefHandler(message* msg);
 // CODEVIEW(E:\gamedcs\campaignbrief.cpp:1409, dc 0x5ab84) void ReadRamDisc(int RamDiscNr, void* buffer, long size, unsigned long* bytesRead);
 

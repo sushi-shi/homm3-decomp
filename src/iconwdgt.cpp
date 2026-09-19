@@ -15,18 +15,15 @@
 
 int random(int min, int max);
 
-#if 0  // @carcass
-
-// E:\gamedcs\iconwdgt.cpp:35
-DC_ONLY(0xd92fc, 0x54)
-void iconWidget::iconWidget()
+// Original: iconWidget::iconWidget; iconwdgt.cpp:35, dc 0xd92fc.
+iconWidget::iconWidget() : widget(0, 0, 0, 0, 0, 0)
 {
-    // @stub
+    m_sprite = 0;
+    m_frame = 0;
+    m_seqId = 0;
+    m_backColor = 0;
+    m_isFlipped = 0;
 }
-
-// E:\gamedcs\iconwdgt.cpp:88
-
-#endif  // @carcass
 
 VA_COMPGEN(0x004ea6f0, 0x21, SCALAR_DELETING_DTOR, iconWidget)
 
@@ -42,6 +39,22 @@ iconWidget::iconWidget(int x, int y, int w, int h, int id, const char* image,
       m_postPostWalkSequence(cs_wait)
 {
     m_sprite = image ? ResourceManager::getSprite(image) : 0;
+}
+
+// Original: iconWidget::initialize; iconwdgt.cpp:75, dc 0xd93f4.
+// Complete removed widget's focusable field (DC +0x20); preserve the
+// source interface without writing that obsolete controller-state slot.
+void iconWidget::initialize(int x, int y, int w, int h, int id,
+    const char* image, int frame, int sequence, unsigned char flipped,
+    unsigned int backColor, int style, unsigned char focusable)
+{
+    widget::initialize(x, y, w, h, id, style);
+    m_sprite = ResourceManager::getSprite(image);
+    m_frame = frame;
+    m_seqId = sequence;
+    m_isFlipped = flipped != 0;
+    m_backColor = static_cast<unsigned short>(backColor);
+    m_postPostWalkSequence = cs_wait;
 }
 
 VA(0x004ea7b0, 0x55)  // dc 0xd9464
@@ -162,16 +175,12 @@ int iconWidget::main(message& msg)
     return widget::main(msg);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\iconwdgt.cpp:275
-DC_ONLY(0xd96e4, 0x4)
-void iconWidget::zBufferDraw()
+// Original: iconWidget::zBufferDraw; iconwdgt.cpp:275, dc 0xd96e4.
+// CodeView's formal type proves two arguments despite the old nil-argument
+// carcass. Retail folds this empty hook onto the shared ret-8 at 0x5bc7e0.
+void iconWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 {
-    // @stub
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\iconwdgt.cpp:257
 // Promoted from DC_ONLY 2026-08-08 on four independent corroborations:

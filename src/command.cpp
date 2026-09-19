@@ -527,23 +527,20 @@ VA_COMPGEN(0x0047a670, 0x11, TREE_BEGIN, int_set)
 
 #if 0  // @carcass
 
+// The DC modal SelectAttackDir/MoveToValidHex and cursor-navigation family
+// use inmenu/combat_pos/combat_row/defaultinput/no_scrolling at this+0x38..45,
+// plus ca_scroll_x/y at +0x13444/48. Complete removes those fields: its
+// netMsgHandlerPause is already at +0x38, and the archers follow the three
+// debug bytes without a scroll-origin pair (see cmbtmgr.h). ProcessCombatMsg
+// 0x474d80 instead consumes absolute mouse coordinates, calls GetGridIndex
+// and CheckSetMouseDirection (0x474a00), and dispatches keyboard shortcuts.
+// Its attack selection has no modal vector-of-hexes cursor loop. Exact
+// removed interfaces are documented in dc_only.tsv; generic highlight,
+// direction lookup and hex-center helpers remain ordinary source above/below.
+
 // E:\gamedcs\command.cpp:709
 DC_ONLY(0x6ba7c, 0x362)
 unsigned char combatManager::SelectAttackDir(int iGridIndex)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:860
-DC_ONLY(0x6bde0, 0x28)
-void combatManager::HighlightHex(int hex)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:866
-DC_ONLY(0x6be08, 0x1C)
-void combatManager::HighlightHex(int x, int y)
 {
     // @stub
 }
@@ -555,14 +552,32 @@ int combatManager::MoveToValidHex(int from, int direction)
     // @stub
 }
 
-// E:\gamedcs\command.cpp:888
-DC_ONLY(0x6be74, 0x2E)
-int combatManager::ValidAttackHex(int hex)
+#endif  // @carcass
+
+// Original: combatManager::HighlightHex; command.cpp:860, dc 0x6bde0.
+void combatManager::highlightHex(int hex)
 {
-    // @stub
+    updateMouseGrid(hex, 0);
+    drawFrame(1, 0, 0, 0, 1, 0);
 }
 
-#endif  // @carcass
+// Original: combatManager::HighlightHex; command.cpp:866, dc 0x6be08.
+void combatManager::highlightHex(int x, int y)
+{
+    highlightHex(getGridIndex(x, y));
+}
+
+// Original: combatManager::ValidAttackHex; command.cpp:888, dc 0x6be74.
+int combatManager::validAttackHex(int hex)
+{
+    if (hex < 0)
+        return -1;
+    for (int direction = 0; direction < COMBAT_ATTACK_ANGLE_COUNT; ++direction) {
+        if (m_combatDirections[1][direction] == hex)
+            return direction;
+    }
+    return -1;
+}
 
 // E:\gamedcs\command.cpp:907. The DC line table proves this helper boundary
 // and its two-comparison body. Complete expands the helper into
@@ -1060,10 +1075,8 @@ int combatManager::processCombatMsg(message& msg)
     case MESSAGE_KEY_DOWN:
         switch (msg.m_codeX) {
         case KEYCODE_F5:
-            g_unnamed698758.m_combatArmyInfoLevel =
-                (g_unnamed698758.m_combatArmyInfoLevel + 1) % 3;
-            drawFrame(1, 0, 0, 0, 1, 0);
-            writePrefs();
+            setCombatViewArmy(
+                (g_unnamed698758.m_combatArmyInfoLevel + 1) % 3);
             break;
 
         case KEYCODE_F6:
@@ -1160,13 +1173,6 @@ void combatManager::MoveCursorCombatXY(int x, int y)
     // @stub
 }
 
-// E:\gamedcs\command.cpp:1638
-DC_ONLY(0x6ce2c, 0x32)
-void combatManager::GetHexXY(int hex, int* x, int* y)
-{
-    // @stub
-}
-
 // E:\gamedcs\command.cpp:1645
 DC_ONLY(0x6ce60, 0x84)
 int combatManager::MoveCursorTo(int gridIndex, unsigned char isdir)
@@ -1231,6 +1237,13 @@ int combatManager::checkWin(message* msg)
 // pointer remote-position locals, reversed endpoint spelling, and an explicit
 // highlighter expansion were measured and were byte-identical or worse. The
 // DC statement row independently requires the TurnOffHighlighter call here.
+// Original: combatManager::GetHexXY; command.cpp:1638, dc 0x6ce2c.
+void combatManager::getHexXY(int hex, int& x, int& y)
+{
+    x = (m_cells[hex].m_hexUlx + m_cells[hex].m_hexBrx) / 2;
+    y = (m_cells[hex].m_hexUly + m_cells[hex].m_hexBry) / 2;
+}
+
 VA(0x00475ed0, 0x32F)  // unique retail body + order-map, dc 0x6d060
 void combatManager::resetRound()
 {
@@ -1950,7 +1963,7 @@ void combatManager::doVictory(int winningGroup)
             m_heroes[1]->applyBattleLossTemps();
     }
 
-    stopCombatSounds();
+    freeArmies();
     if (!static_cast<const combatManager*>(this)->isQuickCombat())
         m_combatWindow->combatMessage("", 0, 0);
     g_mouseManager->m_noChangePointer = 0;
@@ -2052,6 +2065,13 @@ void combatManager::turnOffHighlighter(unsigned char draw_it)
     // @stub
 }
 
+// DC CheckCastleAttack fires every surviving keep/tower once under the
+// CastleAttackDone latch, then advances a finished stack or calls DoSpellAI.
+// Complete Main (0x4740d0) instead treats CREATURE_ARROW_TOWER as the current
+// army: it tests that tower's wall, then schedules action12 or AutomateArcher.
+// The old all-towers volley is retired; the retained latch reset alone does
+// not establish a source call to this older procedure.
+
 // E:\gamedcs\command.cpp:2992
 DC_ONLY(0x6edbc, 0xA2)
 void combatManager::CheckCastleAttack()
@@ -2108,13 +2128,6 @@ void combatManager::resetCyclingCreatures()
 // E:\gamedcs\command.cpp:3790
 DC_ONLY(0x702bc, 0xDA)
 void combatManager::resetCycleTimers()
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:3819
-DC_ONLY(0x70398, 0x28)
-void combatManager::SetCombatViewArmy(int iNewCombatViewArmy)
 {
     // @stub
 }
@@ -2857,6 +2870,16 @@ void combatManager::resetCycleTimers()
     }
 }
 
+// Original: combatManager::SetCombatViewArmy; command.cpp:3819, dc 0x70398.
+// Complete ProcessCombatMsg's F5 arm (0x474d80) expands this preference
+// write, frame refresh and WritePrefs sequence.
+void combatManager::setCombatViewArmy(int newCombatViewArmy)
+{
+    g_unnamed698758.m_combatArmyInfoLevel = newCombatViewArmy;
+    drawFrame(1, 0, 0, 0, 1, 0);
+    writePrefs();
+}
+
 VA(0x00479fc0, 0x131)  // dc 0x703c0
 void combatManager::setCombatGrid(int combatShowEntireGrid,
                                   int combatShowMouseHex,
@@ -3081,13 +3104,6 @@ void CCombatMainMsg::CCombatMainMsg(int nextAction, int nextActionExtra, int nex
 // E:\gamedcs\netmsg.h:758
 DC_ONLY(0x70aa4, 0x20)
 void CEndPlacementPhaseMsg::CEndPlacementPhaseMsg()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.h:249
-DC_ONLY(0x70ac4, 0x4)
-void CLogFile::log()
 {
     // @stub
 }

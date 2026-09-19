@@ -75,6 +75,7 @@ public:
     void combatMessage(const char* newText, bool keep,
                         bool priority);
     void drawChatText(unsigned char update);
+    void drawChatEdit(unsigned char update);
     void onChatActivate(unsigned char active);
 };
 SIZE(TCombatWindow, 0x8c);

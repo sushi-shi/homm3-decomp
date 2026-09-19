@@ -47,7 +47,7 @@ enum type_event_record_type {
 // is the CRT's __purecall stub (`push 0x19 / call __amsg_exit`) and nothing
 // else. Slots 4 and 5 are the empty bodies at 0x485d80 (`ret 4`) and
 // 0x5bc690 (`ret`), both /OPT:ICF folds shared with unrelated compilands, so
-// neither replay nor undo has a body this TU can own.
+// both retain their ordinary source definitions here without duplicate RVA claims.
 class type_event_record {
 public:
     type_event_record();
@@ -57,6 +57,8 @@ public:
     virtual unsigned char save(TAbstractFile* outfile);
     virtual void replay(unsigned char draw);
     virtual void undo();
+    // E:\gamedcs\event_record.h:64, dc 0x8ec5c.
+    char getPlayerId() const { return m_playerId; }
     signed char m_playerId;  // +0x04
 };
 
@@ -258,6 +260,8 @@ public:
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     type_record_player_death() {}
+    type_record_player_death(char playerId);
+    virtual void undo() OVERRIDE;
 
     // Retail replay sign-extends this serialized byte for both the player-name
     // lookup and the dialog payload; the role is still unknown, but its
@@ -285,7 +289,8 @@ public:
     // row between save (0x49bdf0) and replay (0x49be60) - so Complete
     // expanded both into game::SetVisibility / game::ResetVisibility.
     void addChange(int x, int y, int z, short oldValue, short newValue);
-    long getChangeCount();
+    // E:\gamedcs\event_record.h:319, dc 0x8f258.
+    long getChangeCount() const { return m_changes.size(); }
 
     std::vector<type_shroud_change> m_changes;  // +0x08 (allocator at +0x08)
 };

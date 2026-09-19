@@ -82,13 +82,19 @@ void robAppBlit(tagRECT* comb_rect)
     // @stub
 }
 
+// DC-only null/global-mdr1 viewport wrapper; Complete RobAppBlit0x5ffe70
+// requires a rectangle and derives desktop/cursor coordinates. See dc_only.tsv.
 // E:\gamedcs\wingraph.cpp:370
 DC_ONLY(0x19902c, 0x26)
-void ddAppBlit(const tagRECT* mregion)
+void ddAppBlit(const tagRECT& mregion)
 {
     // @stub
 }
 
+// DC-only translated combat viewport: this entry writes lastdx/lastdy and
+// mdr1, then forwards to RobAppBlit. Complete's 0x5ffe70 obtains the destination
+// from ClientToScreen and composes the cursor using mouseManager::m_savedRect;
+// it contains no translated-combat rectangle state. See dc_only.tsv.
 // E:\gamedcs\wingraph.cpp:529
 DC_ONLY(0x199054, 0x90)
 void DDAppBlitX(const tagRECT* region, int dx, int dy)
@@ -96,9 +102,11 @@ void DDAppBlitX(const tagRECT* region, int dx, int dy)
     // @stub
 }
 
+// Empty WinCE Surface4 front-copy stub. Complete uses the Surface1
+// DDBlit/DDRestoreFrontBuffer desktop path; see dc_only.tsv.
 // E:\gamedcs\wingraph.cpp:861
 DC_ONLY(0x19916c, 0x4)
-void DDBlitFromFront()
+static void DDBlitFromFront(IDirectDrawSurface4*, const tagRECT&, tagRECT, unsigned long)
 {
     // @stub
 }
@@ -117,6 +125,8 @@ IDirectDrawSurface4* ddCreateSurface(unsigned long width, unsigned long height, 
     // @stub
 }
 
+// Console-only Gr_in_Surf/sel_surface_width packing into a Surface4.
+// Complete DDCreateSurface0x6005f0 preserves dimensions with Surface1; see dc_only.tsv.
 // E:\gamedcs\wingraph.cpp:1110
 DC_ONLY(0x199490, 0x108)
 IDirectDrawSurface4* BMCreateSurface(unsigned long width, unsigned long height)
@@ -1439,7 +1449,7 @@ void resizeWindow(int windowX, int windowY)
 // (85.4440 -> 91.8531, and it is what closes every branch); reading
 // iWindowX/iWindowY into locals ABOVE the `if (!bWindowedMode)`, which is
 // where retail loads them (91.8567 -> 94.5813); and declaring the three
-// saved masks blue/green/red rather than red/green/blue, worth 0.0036.
+// saved masks red/green/blue rather than blue/green/red, worth 0.0036.
 VA(0x00601a00, 0x31C)  // anchor-caller (SetFullScreenStatus) + dc order, dc 0x19a234
 unsigned char ddSetFullScreenStatus(int newStatus)
 {
@@ -1458,14 +1468,14 @@ unsigned char ddSetFullScreenStatus(int newStatus)
     videoPause();
     Sleep(100);
 
-    unsigned long savedBlue = 0;
-    unsigned long savedGreen = 0;
     unsigned long savedRed = 0;
+    unsigned long savedGreen = 0;
+    unsigned long savedBlue = 0;
     if (!g_closingApp) {
         savedScreen.grab(g_windowManager->m_screenBitmap, 0, 0);
-        savedBlue = g_colorMaskBlue;
-        savedGreen = g_colorMaskGreen;
-        savedRed = g_colorMaskRed;
+        savedRed = Bitmap16Bit::s_redMask;
+        savedGreen = Bitmap16Bit::s_greenMask;
+        savedBlue = Bitmap16Bit::s_blueMask;
     }
 
     ddCleanUpWinGraphics();
@@ -1490,8 +1500,8 @@ unsigned char ddSetFullScreenStatus(int newStatus)
     g_winGraphBusy = 1;
 
     if (!g_closingApp) {
-        if (savedBlue != g_colorMaskBlue || savedGreen != g_colorMaskGreen
-            || savedRed != g_colorMaskRed) {
+        if (savedRed != Bitmap16Bit::s_redMask || savedGreen != Bitmap16Bit::s_greenMask
+            || savedBlue != Bitmap16Bit::s_blueMask) {
             savedScreen.remap(savedGreen == GREEN_MASK_565
                                   ? BITMAP_GREEN_BITS_565
                                   : BITMAP_GREEN_BITS_1555);

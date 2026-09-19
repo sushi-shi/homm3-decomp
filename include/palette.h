@@ -7,6 +7,8 @@
 
 // Dreamcast CodeView type 0x184c; retail's TPalette24 constructor consumes
 // this exact four-byte stride and copies the first three channels.
+struct tagRGBQUAD;
+
 struct TRGBA {
     unsigned char m_red;
     unsigned char m_green;
@@ -47,6 +49,7 @@ public:
     TPalette24();
     TPalette24(const unsigned char* data);
     TPalette24(const TRGBA* rgba);
+    TPalette24(const tagRGBQUAD* quad);
     // DC LF_MEMBER Palette at +0x1c, type 0x1a26: unsigned char[768].
     // Retail copies the same 0x300-byte payload; preserve the native array.
     unsigned char m_palette[768];
@@ -58,6 +61,9 @@ public:
     // here erases that chain (the map collapses to one entry).
     virtual ~TPalette24();
     virtual unsigned int getSize() const;
+    void cycle(int begin, int end, int step);
+    void colorize(float hue, float saturation);
+    void gray();
     void adjustHSV(float hue, float hueAdjust, float saturationAdjust,
                    float valueAdjust);
 };
@@ -80,6 +86,11 @@ public:
     TPalette16();
     TPalette16(const unsigned short* data);
     TPalette16(const TPalette24& p24);
+    TPalette16(const TRGBA* rgba);
+    TPalette16(const tagRGBQUAD* quad);
+    TPalette16(const char* name, const TPalette24& p24);
+    TPalette16(const tagRGBQUAD* quad, int rbits, int rshift,
+               int gbits, int gshift, int bbits, int bshift);
     TPalette16(const TPalette24& p24,
                int rbits, int rshift, int gbits, int gshift,
                int bbits, int bshift);
@@ -116,6 +127,9 @@ public:
     void cycle(int begin, int end, int step);
     void gray();
     void adjustSaturation(float amount);
+    void colorize(float hue, float saturation);
+    void adjustHue(float hue, float amount);
+    void adjustValue(float amount);
     void adjustHSV(float hue, float hueAdjust, float saturationAdjust,
                    float valueAdjust);
 
@@ -123,6 +137,10 @@ private:
     // DC palette.cpp:210 (dc 0x10a910). Retail keeps NO out-of-line copy -
     // /Ob2 expanded it into each of its constructor call sites - but the
     // boundary is the DC roster's own, not an invention.
+    void convertRGBAto16(const TRGBA* rgba, int rbits, int rshift,
+                         int gbits, int gshift, int bbits, int bshift);
+    void convertRGBQUADto16(const tagRGBQUAD* quad, int rbits, int rshift,
+                            int gbits, int gshift, int bbits, int bshift);
     void convert24to16(const unsigned char* p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift);
 };

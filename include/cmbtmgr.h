@@ -1076,7 +1076,21 @@ public:
     unsigned char isWinner(int thisSide) const;
     unsigned char combatIsOver() const;
     void resetHitByCreature();
+    // DC LF_MFUNCTION records have no this type: these are static helpers.
+    static TWallTargetId getTargetWallIndex(int gridIndex);
+    static unsigned char inCastle(int index);
+    static unsigned char leftOfMoat(int index);
+    static void getMissileStartingPosition(int armyType, int x, int y, int facing,
+                                          int destX, int destY,
+                                          const CSprite* missile, int* startX,
+                                          int* startY, int* armyDir,
+                                          int* missileFrame);
     void damageWall(TWallTargetId targetWall, int damage);
+    void highlightHex(int hex);
+    void highlightHex(int x, int y);
+    int validAttackHex(int hex);
+    void getHexXY(int hex, int& x, int& y);
+    void setCombatViewArmy(int newCombatViewArmy);
     int getGridIndex(int x, int y) const;
     // The SGTWDEF explosion frame army::attack_wall (0x445fd0) lets
     // play before it lands the DamageWall - the wall visibly breaks
@@ -1112,7 +1126,7 @@ public:
     // ?show_eagle_eye@combatManager@@AAAXHH@Z (two ints),
     // ?DoVictory@combatManager@@QAAXH@Z (one int) and
     // ?show_looted_artifacts@combatManager@@AAAXAAV?$vector@Utype_artifact@@...@Z,
-    void stopCombatSounds();
+    void freeArmies();
     void close();
     void initializeArchers();
     void updateArmyLuckAndMorale();
@@ -1498,6 +1512,7 @@ public:
     void viewCastleBallista(int isQuickInfo);
     void markTowerArmy(const army* tower);
     void demonicResurrection(const army* caster, army* target);
+    void removeCorpse(army* corpse);
     void removeCorpse(hexcell* hex, long side, long slot);  // 0x5a7320
     unsigned char hasValidSpellTarget(SpellID spellId, long mastery,
                                       long castingSide,
@@ -1759,6 +1774,11 @@ public:
     // lists it among DoCompAI's callees and retail carries no
     // out-of-line copy, so it is the /Ob2 inline-away case.
     army* getCurrentArmy() { return &m_armies[m_actingSide][m_actingSlot]; }
+    // Original: combatManager::get_current_army; CmbtMgr.h:1483, dc 0x1581b8.
+    const army* getCurrentArmy() const
+    {
+        return &m_armies[m_actingSide][m_actingSlot];
+    }
     // E:\gamedcs\CmbtMgr.h:1488. Dreamcast proves the single-expression
     // helper and its four ordered bounds. Complete widens the window to the
     // retail 800x556 combat area; ProcessCombatMsg retains the source call
@@ -1768,6 +1788,8 @@ public:
     {
         return x >= 0 && x < 800 && y >= 0 && y < 556;
     }
+    // Original: combatManager::is_in_second_phase; CmbtMgr.h:1494, dc 0x27f28.
+    unsigned char isInSecondPhase() const { return m_inSecondPhase; }
     // Dreamcast S_PUB32 fixes this entire inline band: GetHexIndex and GridX
     // are static int helpers, RowIsOdd is a const bool member, and
     // InInvisibleColumn is static bool. Their CodeView lines also fix this
@@ -1822,7 +1844,7 @@ public:
     army* findDemonicResurrectionTarget(int armyGroup, int targetIndex);
     void markAreaEffect(SpellID spell, long hex, long mastery,
                           std::vector<army*>& targets);
-    void markHexAreaEffect(long hex, long radius,
+    void markAreaEffect(long hex, long radius,
                               unsigned char includeCenter,
                               std::vector<army*>& targets);
     void markBerserkAreaEffect(long hex, long mastery,
@@ -1843,8 +1865,11 @@ private:
     // (`A` access), which costs nothing here and is recorded rather than
     // acted on: this header keeps one public block.
     void loadArmies(unsigned char isSurrounded);
+    void checkNativeTerrain();
+    void combineGroups(armyGroup* src, armyGroup* dest);
 
 public:
+    static float computeDamageModifier(int attack, int defense);
     unsigned char unnamed464d40(army* selected);
     unsigned char unnamed464f50(const army* incumbent, const army* candidate);
     virtual int main(message& msg);
@@ -2080,8 +2105,6 @@ extern const unsigned char g_moatColumns[];
 // BOOTSTRAP INVENTION.
 extern const unsigned char g_outerMoatColumns[];
 
-unsigned char inCastle(int index);
-unsigned char leftOfMoat(int index);
 
 // The five wall segments the castle AI checks, at 0x63abe0: the
 // TWallSection values {6, 8, 9, 10, 12}, i.e. wallTargets rows 1..5 by
@@ -2096,13 +2119,6 @@ unsigned char leftOfMoat(int index);
 extern const long g_castleWallGateTargets[5];   // 0x63abe0
 extern const long g_castleWallGateTargetsEnd[]; // 0x63abf4, one past
 
-int getTargetWallIndex(int gridIndex);
-
-void getMissileStartingPosition(int armyType, int x, int y, int facing,
-                                int destX, int destY,
-                                const CSprite* missile, int* startX,
-                                int* startY, int* armyDir,
-                                int* missileFrame);
 
 // --- CNetMsgHandlerPause ---
 // CODEVIEW(E:\gamedcs\cmbtmgr.cpp:893, dc 0x63a88) void* CNetMsgHandlerPause::`scalar deleting destructor'(unsigned __flags);

@@ -28,6 +28,9 @@ public:
     char m_mgrName[32];
     int m_status;
 
+    // Original: baseManager::SetStatus; basemgr.h:41, dc 0x15efd0.
+    void setStatus(short newStatus) { m_status = newStatus; }
+
     baseManager();
     virtual int open(int) = 0;         // slot 0
     virtual void close() = 0;          // slot 1

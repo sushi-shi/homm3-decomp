@@ -203,16 +203,20 @@ void searchArray::enterGate(const pathCell* cell, const NewmapCell* mapCell,
     }
 }
 
-#if 0  // @carcass -- Dreamcast-only row
-
-// E:\gamedcs\search.cpp:264
-DC_ONLY(0x12b900, 0x88)
-void searchArray::board_boat(const hero* current_hero, pathCell* cell)
+// Original: searchArray::board_boat; search.cpp:264, dc 0x12b900.
+// Complete expands this ordinary helper in enterTrigger's boat arm.
+void searchArray::boardBoat(const hero* currentHero, pathCell& cell)
 {
-    // @stub
+    if (m_payTransitionCosts && !cell.m_inBoat) {
+        cell.m_cost += cell.m_moveLeft;
+        cell.m_moveLeft = m_seaMovement;
+        cell.m_flying = 0;
+        cell.m_waterWalking = 0;
+    }
+    cell.m_inBoat = 1;
+    getCell(cell.m_point, !cell.m_canStop)->m_inBoat = 1;
 }
 
-#endif  // @carcass
 
 // E:\gamedcs\search.cpp:283
 // Castle Gate travel between the player's Inferno towns. The AI search
@@ -361,14 +365,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
             return 0;
         if (searchType < const_AI_search)
             return 0;
-        if (m_payTransitionCosts) {
-            cell->m_cost += cell->m_moveLeft;
-            cell->m_moveLeft = m_seaMovement;
-            cell->m_flying = 0;
-            cell->m_waterWalking = 0;
-        }
-        cell->m_inBoat = 1;
-        getCell(cell->m_point, !cell->m_canStop)->m_inBoat = 1;
+        boardBoat(currentHero, *cell);
         return 1;
     case UNDERGROUND_GATE:
         if (searchType < const_AI_enemy_search)
@@ -381,13 +378,13 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
     case LITH_ONEWAY_ENTRANCE:
         if (searchType < const_AI_enemy_search)
             return 0;
-        enterLith(currentHero, &g_game->m_lithExitPools[mapCell->m_objectIndex],
+        enterLith(currentHero, &g_game->getLithExits(mapCell->m_objectIndex),
                    LITH_ONEWAY_EXIT, -1, cell, limit, searchType);
         return 0;
     case LITH_TWOWAY:
         if (searchType < const_AI_enemy_search)
             return 0;
-        enterLith(currentHero, &g_game->m_lithPools[mapCell->m_objectIndex],
+        enterLith(currentHero, &g_game->getLiths(mapCell->m_objectIndex),
                    LITH_TWOWAY, mapCell->m_extraInfo, cell, limit,
                    searchType);
         return 0;
@@ -717,20 +714,6 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
 VA_COMPGEN(0x0056bd30, 0x33, VECTOR_ERASE, pathCell)
 
 #if 0  // @carcass -- Dreamcast-only rows
-
-// E:\gamedcs\game.h:1395
-DC_ONLY(0x12ca94, 0x14)
-const std::vector<type_point,std::allocator<type_point>* game::get_liths(long color)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.h:1400
-DC_ONLY(0x12caa8, 0x14)
-const std::vector<type_point,std::allocator<type_point>* game::get_lith_exits(long color)
-{
-    // @stub
-}
 
 // E:\gamedcs\game.h:1405
 DC_ONLY(0x12cabc, 0xC)

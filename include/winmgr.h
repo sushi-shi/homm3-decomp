@@ -7,6 +7,7 @@
 #include "struct.h"
 
 class Bitmap16Bit;
+class Bitmap816;
 class heroWindow;
 
 // The dialog pump's per-message handler: retail calls it through
@@ -88,11 +89,31 @@ public:
     int doDialogDraw(heroWindow* dialogWindow, TDialogHandler dialogFunction,
                      TDialogHandler dialogDrawFunction, int fadeIn);
     void doQuickView(heroWindow* window);
+    void updateScreen();
     void updateScreen(int x, int y, int w, int h);
+    void screenShot();
+    void saveFizzleSource(int startX, int startY, int width, int height);
+    void fizzleForward(int startX, int startY, int width, int height, int fadeTime);
+    void nextFlashFrame(int startX, int startY, int width, int height, int fadeTime);
+    void flash(int startX, int startY, int width, int height, int fadeTime);
+    void fadeBlit(int sx, int sy, int sw, int sh, const Bitmap816* srcBitmap,
+                  int dx, int dy, unsigned char transparent, int frames, int period);
     void fadeScreen(int inOut, int speed, unsigned char expectFadein);
     void saveFizzleSourceX(int startX, int startY, int width, int height);
     void fizzleForwardX(int startX, int startY, int width, int height,
                         int fadeTime);
+    // Original: heroWindowManager::SaveFizzleSource; WinMgr.h:181, dc 0x230bc.
+    void saveFizzleSource(const SLimitData& limits)
+    {
+        saveFizzleSource(limits.m_minX, limits.m_minY,
+                         limits.width(), limits.height());
+    }
+    // Original: heroWindowManager::FizzleForward; WinMgr.h:187, dc 0x23104.
+    void fizzleForward(const SLimitData& limits, int fadeTime)
+    {
+        fizzleForward(limits.m_minX, limits.m_minY,
+                      limits.width(), limits.height(), fadeTime);
+    }
     // WinMgr.h:193..200 (dc 0x70af0/0x70b40) proves the const-reference
     // rectangle overloads and their Width/Height calls. Complete uses the X
     // pixel path at the adventure-spell sites as well as in combat drawing.
@@ -115,6 +136,8 @@ public:
     void fadeFromBlack(int speed);
 
 private:
+    void blitToScreenWithPointer(int x, int y, int w, int h);
+
     // The window list, byte-proven by RemoveWindow (located
     // 2026-08-06 by homm3.analysis.dc_callgraph): headWindow@0x50,
     // tailWindow@0x54, lastActive@0x58, activeWindow@0x5c.

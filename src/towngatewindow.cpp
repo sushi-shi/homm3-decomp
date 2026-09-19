@@ -284,13 +284,6 @@ unsigned char game::getNumAllies(int playerNum)
     // @stub
 }
 
-// E:\gamedcs\game.h:1022
-DC_ONLY(0x169c60, 0x1C)
-const town* game::getTown(int which)
-{
-    // @stub
-}
-
 // E:\gamedcs\game.h:1027
 DC_ONLY(0x169c7c, 0x1C)
 const char* game::getTownName(int iTownId)

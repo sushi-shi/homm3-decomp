@@ -88,6 +88,14 @@ CSprite* getSprite(const char* name);
 Bitmap816* getBitmap816(const char* name);
 }
 
+// Original: townManager::TownNativeTerrains. Complete's full table is
+// {-1,2,2,3,7,0,6,5,4,2}; GetNativeTerrain biases town type -1 by one.
+DATA(0x00643694) const TTerrainType townManager::s_townNativeTerrains[10] = {
+    TERRAIN_NONE, eTerrainGrass, eTerrainGrass, eTerrainSnow, eTerrainLava,
+    eTerrainDirt, eTerrainSubterranean, eTerrainRough, eTerrainSwamp,
+    eTerrainGrass
+};
+
 // Shared state of the tavern chooser. DoTavern selects a recruit into the
 // hero pointer; the flag distinguishes map-object hiring from town hiring.
 // Roles and storage are retail-byte-proven; names are provisional.
@@ -382,20 +390,6 @@ void townObject::~townObject()
     // @stub
 }
 
-// E:\gamedcs\townmgr.cpp:1913
-DC_ONLY(0x16a224, 0x42)
-void townObject::DrawOutline()
-{
-    // @stub
-}
-
-// E:\gamedcs\townmgr.cpp:1919
-DC_ONLY(0x16a268, 0x48)
-void townObject::DrawHotspot()
-{
-    // @stub
-}
-
 #endif  // @carcass
 
 // The two townObject tables, indexed together by `iObjPos +
@@ -411,7 +405,7 @@ DATA(0x0068a38c) extern const char* const g_townObjectNames[];
 DATA(0x0068a9bc) extern const short g_townObjectPositions[][3];
 
 // The town screen's network dispatch. HandleGiftMsg (0x5c66b0) forwards
-// to the adventure handler's TRADE path with the same `this` - a direct,
+// to the adventure handler's gift path with the same `this` - a direct,
 // non-virtual base call, so the derivation is at offset 0 - and then
 // refreshes the resource bar it was constructed with. That refresh reads
 // the bar through +0xc, which is exactly past CNetMsgHandler's 12-byte
@@ -437,7 +431,7 @@ public:
     {
         m_resourceDisplay = display;
     }
-    void handleGiftMsg(CNetMsg* netMsg);
+    virtual void handleGiftMsg(CNetMsg* netMsg) OVERRIDE;
 };
 SIZE(CTownNetMsgHandler, 0x10);
 
@@ -483,6 +477,37 @@ townObject::townObject(int townType, int objPos, const char* basename)
         m_objOutline = 0;
         m_objHotspot = 0;
     }
+}
+
+// Original: townObject::~townObject; townmgr.cpp:1900, dc 0x16a1a4
+// The border is owned outright; the icon, outline and hotspot are shared
+// ResourceManager objects. This ordinary destructor expands in UnloadTown.
+townObject::~townObject()
+{
+    delete m_objBorder;
+    m_objIcon->dispose();
+    if (m_objOutline)
+        m_objOutline->dispose();
+    if (m_objHotspot)
+        m_objHotspot->dispose();
+}
+
+// Original: townObject::DrawOutline; townmgr.cpp:1913, dc 0x16a224
+void townObject::drawOutline()
+{
+    if (m_objOutline && g_townOutlines)
+        m_objOutline->draw(0, 0, m_w, m_h,
+                           g_windowManager->m_screenBitmap, m_x, m_y, 1);
+}
+
+// Original: townObject::DrawHotspot; townmgr.cpp:1919, dc 0x16a268
+void townObject::drawHotspot()
+{
+    if (m_objHotspot)
+        m_objHotspot->zBufferDraw(
+            0, 0, m_w, m_h,
+            static_cast<TTownScreenWindow*>(g_townManager->m_townWindow)->m_zBuffer,
+            m_x, m_y, m_objId + 1);
 }
 
 // E:\gamedcs\townmgr.cpp:1925 - the panorama's per-object blitter and
@@ -570,15 +595,10 @@ void townObject::draw(int incFrame, unsigned char drawHotspots)
                               g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
             }
         }
-        if (g_unnamed6aa9e8 == m_objId && m_objOutline && g_townOutlines)
-            m_objOutline->draw(0, 0, m_w, m_h, g_windowManager->m_screenBitmap, m_x, m_y,
-                             1);
-        if (drawHotspots && m_objHotspot)
-            m_objHotspot->zBufferDraw(
-                0, 0, m_w, m_h,
-                static_cast<TTownScreenWindow*>(g_townManager->m_townWindow)
-                    ->m_zBuffer,
-                m_x, m_y, m_objId + 1);
+        if (g_unnamed6aa9e8 == m_objId)
+            drawOutline();
+        if (drawHotspots)
+            drawHotspot();
     }
 }
 
@@ -1262,13 +1282,13 @@ int townManager::open(int newPriority)
 // The town page's one network hook: a gift arriving while the player is
 // inside a town is handled exactly as the adventure map handles it, and
 // then the town's own resource bar is redrawn so the new stock shows.
-// The forward is the BASE's trade-request handler, called directly on
+// The forward is the base gift handler, called directly on
 // this same object.
 
 VA(0x005c66b0, 0x20)  // dc 0x18146c
 void CTownNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
 {
-    CAdvMgrNetMsgHandler::handleTradeRequestMsg(netMsg);
+    CAdvMgrNetMsgHandler::handleGiftMsg(netMsg);
     m_resourceDisplay->update(1, 1);
 }
 
@@ -1324,32 +1344,6 @@ void townManager::updateTownInfo()
     m_townWindow->broadcastMessage(msg);
 
     static_cast<TTownScreenWindow*>(m_townWindow)->setBonusDisplay(m_townToView);
-}
-
-// The panorama object's destructor, INLINE: retail emits no out-of-line
-// body for it anywhere in the image (townmgr.obj's first carve row is
-// the constructor at 0x5c2ea0), and its one expansion is the `delete`
-// inside UnloadTown below. It is spelled here rather than in the class
-// because border, CSprite and Bitmap816 all have to be complete, and
-// townmgr.h's include closure is load-bearing for the rest of the file.
-
-// The asymmetry between the four members is retail's, not a guess: the
-// border is `delete`d (vtable slot 0 with a pushed 1 - the scalar
-// deleting destructor), the icon is Disposed UNGUARDED, and the outline
-// and hotspot are Disposed behind a null test each. Sprites are the
-// shared resource-manager objects the constructor got from GetSprite,
-// so releasing a reference is all the object may do; the border is the
-// only thing it owns outright.
-
-// E:\gamedcs\townmgr.cpp:1900
-inline townObject::~townObject()
-{
-    delete m_objBorder;
-    m_objIcon->dispose();
-    if (m_objOutline)
-        m_objOutline->dispose();
-    if (m_objHotspot)
-        m_objHotspot->dispose();
 }
 
 // Putting a town on the screen. The page's five text/icon widgets are
@@ -1416,6 +1410,22 @@ void TTownScreenWindow::bonusRightClick(long id)
         normalDialog(popupText, 4, w->m_x + w->m_width, w->m_y, 0x15, creature,
                      -1, 0, -1, 0, -1, 0);
     }
+}
+
+// Original: townManager::ChangeTown; townmgr.cpp:2833, dc 0x16b9e4
+// DC first evicts the console sprite cache. Complete owns ordinary cached
+// resources and has no Sp_loaded/cache-reload path; its four expanded calls
+// begin at StartMouseThread and retain the setup/message/stop sequence.
+void townManager::changeTown(unsigned char fade)
+{
+    startMouseThread();
+    setupExtraStuff();
+    setupTown(fade);
+    message msg;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeY = -1;
+    setCommandAndText(&msg);
+    stopMouseThread();
 }
 
 // E:\gamedcs\townmgr.cpp:2897
@@ -1859,9 +1869,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 // army, divide and town-locator arms format or dispatch instead
 // (SetHeroCommand / SetArmyCommand / select_army). SetCommandAndText2
 // (dc 0x16ceb4) has no distinct retail carve row here. The tail is
-// townManager::ShowText INLINED (/Ob2's single-call-site rule, the
-// TCastleWindow::SetRolloverText precedent) - spelling it as a member
-// would force the out-of-line copy retail does not have.
+// the ordinary ShowText helper, which Complete expands at this call site.
 // Residual (92.05%): register-role transpositions with the structure
 // exact - the CFG, the cluster tree (dword table -1-biased, two byte
 // maps, the range-tested resource/exit chain) and every arm's content
@@ -2182,14 +2190,7 @@ void townManager::setCommandAndText(message* msg)
         break;
     }
 
-    message textMessage;
-    textMessage.m_id = MESSAGE_WIDGET;
-    textMessage.m_codeX = widget::WIDGET_SET_TEXT;
-    textMessage.m_codeY = 0x97;
-    textMessage.m_extraText = m_statusText;
-    m_townWindow->broadcastMessage(textMessage);
-    m_townWindow->drawWindow(0, 0x97, 0x97);
-    g_windowManager->updateScreen(7, 0x22b, 0x2de, 0x13);
+    showText();
 }
 
 // Latches which troop slot the page has selected and writes the status
@@ -2256,6 +2257,21 @@ void townManager::armyCommand(strip* whichStrip, int i, int shift,
             selectArmy(whichStrip, i, joinDialog);
         }
     }
+}
+
+// Original: townManager::ShowText; townmgr.cpp:3841, dc 0x16d23c
+// Complete's status bar occupies (7,555,734,19); DC's older town page
+// redraws a different rectangle. The message, draw and update boundary stays.
+void townManager::showText()
+{
+    message textMessage;
+    textMessage.m_id = MESSAGE_WIDGET;
+    textMessage.m_codeX = widget::WIDGET_SET_TEXT;
+    textMessage.m_codeY = 0x97;
+    textMessage.m_extraText = m_statusText;
+    m_townWindow->broadcastMessage(textMessage);
+    m_townWindow->drawWindow(0, 0x97, 0x97);
+    g_windowManager->updateScreen(7, 0x22b, 0x2de, 0x13);
 }
 
 VA(0x005c8190, 0x14C8)  // dc 0x16d298
@@ -2382,9 +2398,13 @@ DATA(0x006a9e00) extern int g_heroWidgetMap[];
 DATA(0x006a98ec) extern int g_creatureWidgetMap1[];
 DATA(0x006aa660) extern armyGroup g_creatureArmies[];
 
-// Located, not reconstructed: the thieves' guild rollover-text setter and
-// its message handler. show_side (dc 0x16df0c) has no distinct retail carve
-// row (inlined into the ctor/SetupThievesGuild).
+// Dreamcast show_side (townmgr.cpp:3951, dc 0x16df0c) paginates one
+// player column with arrow widgets 42/43. It reads a scroll index at
+// this+0xbbc and visibility/widget-id arrays at +0x78/+0x2b8. Complete
+// instead constructs all eight columns in the 800x600 page above and
+// setupThievesGuild (0x5dda10) places their contents at 66-pixel intervals.
+// Its 0x84-byte object has owners[8] and the resource bar, without those
+// pagination arrays; windowHandler has no arrow-selection arms.
 
 // Residual (94.18%): the register-homing family plus the compressed-switch
 // encoding, and why-branch finds no source-addressable lever (all D9 case-order
@@ -2537,6 +2557,13 @@ int TThievesGuildWindow::windowHandler(message& msg)
 // ten gave 99.6605; a single ten-argument call stayed at 85.9895. Scalar
 // VERIFY comparisons stayed at 85.9895 and validation-helper variants at
 // 93.2122. These are observations about C2 budgeting, not recovered source.
+// Dreamcast townManager::show_hall_side (townmgr.cpp:5583, dc 0x174990)
+// clamps scroll_offset to 0..3, enables arrows 181/182 and moves a nine-slot
+// subset into a 3x3 page. Complete constructs the complete faction grid
+// here; the retail x/y tables are visible at 0x5c9c3c onward. Its manager
+// drops scroll_offset/lastHoverAK: currTown is at +0x38, where DC stored
+// scroll_offset. setupCastle (0x461190) updates the full grid and the
+// hall handler (0x461ab0) has no pagination actions.
 VA(0x005c9be0, 0x2CF0)  // dc 0x16e6cc
 THallWindow::THallWindow(int which)
     : CAdvPopup(0, 0, 800, 600, 0)
@@ -3020,6 +3047,21 @@ int TMageGuildWindow::windowHandler(message& msg)
     return 1;
 }
 
+// Original: townManager::create_popup_bank; townmgr.cpp:4728, dc 0x1712c4
+void townManager::createPopupBank(heroWindow* parent)
+{
+    if (m_dialogResourceDisplay) {
+        delete m_dialogResourceDisplay;
+        m_dialogResourceDisplay = 0;
+    }
+    m_dialogResourceDisplay = new TResourceDisplay(parent, 1);
+    m_dialogResourceDisplay->update(1, 0);
+    // Complete's two callers also install the popup resource bar into the
+    // active network handler; the older DC helper has no subscription step.
+    if (m_netMsgHandler)
+        m_netMsgHandler->setResourceDisplay(m_dialogResourceDisplay);
+}
+
 // The town page's mage guild button, and the spellbook toll in front of
 // it. The hero it asks about is the VISITING slot first and the garrison
 // slot second - ONE conditional expression over two game::GetHero
@@ -3071,15 +3113,7 @@ void townManager::handleMageGuildClick()
         memError();
     setupMage(m_hallWindow);
 
-    heroWindow* guildPage = m_hallWindow;
-    if (m_dialogResourceDisplay) {
-        delete m_dialogResourceDisplay;
-        m_dialogResourceDisplay = 0;
-    }
-    m_dialogResourceDisplay = new TResourceDisplay(guildPage, 1);
-    m_dialogResourceDisplay->update(1, 0);
-    if (m_netMsgHandler)
-        m_netMsgHandler->setResourceDisplay(m_dialogResourceDisplay);
+    createPopupBank(m_hallWindow);
 
     m_hallWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
@@ -3349,18 +3383,30 @@ void type_garrison_base_window::setCommandAndText(message* msg)
         break;
     }
 
+    showText();
+    drawWindow(0, 0xc8, 0xc9);
+    g_windowManager->updateScreen(m_x + 7, m_y + 0x171, 0x217, 0x13);
+}
+
+// Original: type_garrison_base_window::ShowText; townmgr.cpp:4998, dc 0x172c68
+void type_garrison_base_window::showText()
+{
     message textMessage;
-    textMessage.m_extraText = g_townManager->m_statusText;
-    textMessage.m_qualifier = 0;
-    textMessage.m_mouseX = 0;
-    textMessage.m_mouseY = 0;
-    textMessage.m_window = 0;
     textMessage.m_id = MESSAGE_WIDGET;
     textMessage.m_codeX = widget::WIDGET_SET_TEXT;
     textMessage.m_codeY = 0xc9;
+    textMessage.m_extraText = g_townManager->m_statusText;
     broadcastMessage(textMessage);
-    drawWindow(0, 0xc8, 0xc9);
-    g_windowManager->updateScreen(m_x + 7, m_y + 0x171, 0x217, 0x13);
+}
+
+// Original: type_garrison_base_window::ViewArmy; townmgr.cpp:5012, dc 0x172ca0
+void type_garrison_base_window::viewArmy()
+{
+    int slot = g_townManager->m_currIndex;
+    strip* thisStrip = g_townManager->m_currStrip;
+    armyGroup* group = thisStrip->m_group;
+    if (group->m_armies[slot] != -1)
+        g_game->viewArmy(*group, slot, thisStrip->m_thisHero, 0, 119, 20, 0, 1);
 }
 
 // The garrison dialog's handler. It reads its window out of the MESSAGE
@@ -3382,18 +3428,11 @@ void type_garrison_base_window::setCommandAndText(message* msg)
 // latch and repaints BOTH strips with the creature that is being divided.
 
 // E:\gamedcs\townmgr.cpp
-// Residual (95.6600%): the RIGHT_SELECT pair and a gpTownManager binding
-// mirror. Retail writes `mgr->field_128 = codeY - <base>` in BOTH slot arms
-// - once as `mov ecx,[gp] / mov [ecx+0x128],eax` and once as
-// `mov eax,[gp] / mov [eax+0x128],edx` - and the differing registers are
-// what stop its cross-jumper merging them; our arms compile to the same two
-// instructions in the same registers, so C2 sinks them into one shared join
-// the top arm `jmp`s to. Source order, arm order and the fall-through arm
-// all already agree, so there is no statement to move: this is the
-// merged-block family from the side where RETAIL duplicates.
-// Everything else is downstream binding (eax<->ecx<->edx through the
-// selectedStrip/slot reads and the DIVIDE arm's two Draw calls) plus the
-// jump-table and byte-table reloc addends, which cost nothing.
+// Residual: the two RIGHT_SELECT arms merge their index stores in this
+// compile; retail keeps both stores. viewArmy expands fully. DC records its
+// index read at 5012 before the strip/group reads at 5013; Complete allocates
+// the expanded strip/index values in the opposite register order. Restoring
+// the helper preserves those source facts (95.58%, preceding peak 95.66%).
 VA(0x005d0910, 0x228)  // anchor-vtable 0x643818 slot 9 + anchor-callee(SetCommandAndText 0x5d05f0 + DoCommand) + arity(ret 4), dc 0x172cf4
 int type_garrison_base_window::windowHandler(message& msg)
 {
@@ -3456,16 +3495,7 @@ int type_garrison_base_window::windowHandler(message& msg)
             default:
                 return 1;
             }
-            {
-                townManager* mgr = g_townManager;
-                strip* thisStrip = mgr->m_currStrip;
-                int slot = mgr->m_currIndex;
-                armyGroup* group = thisStrip->m_group;
-                if (group->m_armies[slot] != -1) {
-                    g_game->viewArmy(*group, slot, thisStrip->m_thisHero, 0,
-                                     0x77, 0x14, 0, 1);
-                }
-            }
+            win->viewArmy();
             return 1;
 
         case widget::WIDGET_DESELECT:
@@ -3921,6 +3951,40 @@ TShipWindow::~TShipWindow()
     }
 }
 
+// Original: TShipWindow::SetRightClickText; townmgr.cpp:5461, dc 0x174654
+void TShipWindow::setRightClickText(int)
+{
+}
+
+// Original: TShipWindow::SetRolloverText; townmgr.cpp:5465, dc 0x174658
+void TShipWindow::setRolloverText(int codeY)
+{
+    switch (codeY) {
+    // The text-to-button pairing is retail's, traced through the
+    // dispatch rather than assumed: `sub esi,0x7801 / je L1` sends
+    // CANCEL to the block that reads [rows + 0x960] = row 600, and
+    // `dec esi / je L2` sends BUY to [rows + 0x95c] = row 599. The
+    // arms are laid out in the REVERSE of their case values, which
+    // is this sunk-body switch's own convention and not a source
+    // order - swapping the two case labels is byte-flat.
+    case CANCEL_BUTTON_ID:
+        strcpy(g_text, (*g_generalText)[600]);
+        break;
+    case BUY_BUTTON_ID:
+        strcpy(g_text, (*g_generalText)[599]);
+        break;
+    default:
+        strcpy(g_text, g_emptyRolloverText);
+        break;
+    }
+    message textMessage;
+    textMessage.m_extraText = g_text;
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 8,
+                     textMessage.m_extra);
+    drawWindow(0, 7, 8);
+    g_windowManager->updateScreen(m_x + 8, m_y + 0x16b, 0x138, 0x11);
+}
+
 // And the hover cell is the WINDOW MANAGER's lastHover, not a member of
 // its own - the blacksmith keeps its own at +0x60, this dialog uses the
 // global one.
@@ -3938,30 +4002,7 @@ int TShipWindow::windowHandler(message& msg)
         g_windowManager->convertToHover(msg);
         if (msg.m_codeY != g_windowManager->m_lastHover) {
             g_windowManager->m_lastHover = msg.m_codeY;
-            switch (msg.m_codeY) {
-            // The text-to-button pairing is retail's, traced through the
-            // dispatch rather than assumed: `sub esi,0x7801 / je L1` sends
-            // CANCEL to the block that reads [rows + 0x960] = row 600, and
-            // `dec esi / je L2` sends BUY to [rows + 0x95c] = row 599. The
-            // arms are laid out in the REVERSE of their case values, which
-            // is this sunk-body switch's own convention and not a source
-            // order - swapping the two case labels is byte-flat.
-            case CANCEL_BUTTON_ID:
-                strcpy(g_text, g_generalText->getText(600));
-                break;
-            case BUY_BUTTON_ID:
-                strcpy(g_text, g_generalText->getText(599));
-                break;
-            default:
-                strcpy(g_text, g_emptyRolloverText);
-                break;
-            }
-            message textMessage;
-            textMessage.m_extraText = g_text;
-            broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 8,
-                             textMessage.m_extra);
-            drawWindow(0, 7, 8);
-            g_windowManager->updateScreen(m_x + 8, m_y + 0x16b, 0x138, 0x11);
+            setRolloverText(msg.m_codeY);
         }
         return 1;
     }
@@ -4003,15 +4044,7 @@ void townManager::doHall()
         memError();
     setupCastle(m_hallWindow, 0);
 
-    heroWindow* page = m_hallWindow;
-    if (m_dialogResourceDisplay) {
-        delete m_dialogResourceDisplay;
-        m_dialogResourceDisplay = 0;
-    }
-    m_dialogResourceDisplay = new TResourceDisplay(page, 1);
-    m_dialogResourceDisplay->update(1, 0);
-    if (m_netMsgHandler)
-        m_netMsgHandler->setResourceDisplay(m_dialogResourceDisplay);
+    createPopupBank(m_hallWindow);
 
     m_hallWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
@@ -4711,14 +4744,7 @@ building_popup:
                         g_unnamed6aaa50 = index;
                         int id = player->m_townIds[index];
                         m_townToView = g_game->getTown(id);
-                        startMouseThread();
-                        setupExtraStuff();
-                        setupTown(1);
-                        message textMessage;
-                        textMessage.m_id = MESSAGE_WIDGET;
-                        textMessage.m_codeY = -1;
-                        setCommandAndText(&textMessage);
-                        stopMouseThread();
+                        changeTown(1);
                     }
                 }
                 break;
@@ -4987,14 +5013,7 @@ building_popup:
                 g_unnamed6aaa50++;
                 int id = player->m_townIds[g_unnamed6aaa50];
                 m_townToView = g_game->getTown(id);
-                startMouseThread();
-                setupExtraStuff();
-                setupTown(1);
-                message textMessage;
-                textMessage.m_id = MESSAGE_WIDGET;
-                textMessage.m_codeY = -1;
-                setCommandAndText(&textMessage);
-                stopMouseThread();
+                changeTown(1);
             }
             break;
         case KEYCODE_KP_8:
@@ -5005,14 +5024,7 @@ building_popup:
                 g_unnamed6aaa50--;
                 int id = player->m_townIds[g_unnamed6aaa50];
                 m_townToView = g_game->getTown(id);
-                startMouseThread();
-                setupExtraStuff();
-                setupTown(1);
-                message textMessage;
-                textMessage.m_id = MESSAGE_WIDGET;
-                textMessage.m_codeY = -1;
-                setCommandAndText(&textMessage);
-                stopMouseThread();
+                changeTown(1);
             }
             break;
         }
@@ -5604,23 +5616,46 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
     return g_windowManager->m_dialogReturn == TBuyBuildWindow::BUY_BUTTON_ID;
 }
 
+// Original: TBuyBuildWindow::SetRolloverText; townmgr.cpp:7489, dc 0x179900
+void TBuyBuildWindow::setRolloverText(int codeY)
+{
+    switch (codeY) {
+    case BUY_BUTTON_ID:
+        sprintf(g_text, (*g_generalText)[596],
+                getBuildingName(g_townManager->m_townToView->m_type,
+                                m_buildingId));
+        break;
+    case CANCEL_BUTTON_ID:
+        sprintf(g_text, (*g_generalText)[597],
+                getBuildingName(g_townManager->m_townToView->m_type,
+                                m_buildingId));
+        break;
+    default:
+        strcpy(g_text, g_emptyRolloverText);
+        break;
+    }
+
+    // The recovered broadcast ABI carries the text address in its 32-bit
+    // integer payload (DC 0x179900:7504; retail 0x5d6810). There is no
+    // temporary message in this helper.
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 7,
+                     reinterpret_cast<int>(g_text));
+    drawWindow(1, 6, 7);
+}
+
+// Original: TBuyBuildWindow::SetRightClickText; townmgr.cpp:7509, dc 0x1799b8
+void TBuyBuildWindow::setRightClickText(int)
+{
+}
+
 // The buy-a-building panel's handler, and the compiland's cleanest
 // vtable anchor: 0x643944 slot 9 IS this address, and slot 9 is
 // heroWindow::WindowHandler. It forwards to CAdvPopup's handler first,
 // then does one job of its own - the hover rollover line, refreshed only
 // when the widget under the cursor actually changes.
 
-// The dialog's own SetRolloverText has NO retail body. The Dreamcast
-// roster puts TBuyBuildWindow::SetRolloverText (dc 0x179900, line 7489)
-// and SetRightClickText (dc 0x1799b8, a four-byte `return`) immediately
-// ahead of this row, but retail's carve has nothing between BuyBuild's
-// last byte (0x5d680a) and 0x5d6810, and the three rows that DO follow
-// close exactly on CycleOutline / BuildObj / SetupMage (366/196,
-// 1135/842, 445/424 - all inside the SH4->x86 band). So the rollover
-// body is inlined here at its single call site and its /Gy COMDAT went
-// unreferenced, which is why its three statements are transcribed in
-// place: declaring the helper would force VC6 to emit the out-of-line
-// copy retail does not have (the TCastleWindow::ShowText precedent).
+// Both rollover helpers are ordinary townmgr.cpp members immediately before
+// their handlers in DC. Complete expands them at the hover-change calls.
 
 // Retail cross-jumps the two sprintf arms into one shared tail - the
 // format string and the two GetBuildingName arguments are set up per
@@ -5635,33 +5670,18 @@ int TBuyBuildWindow::windowHandler(message& msg)
     if (result)
         return result;
 
-    if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+    switch (msg.m_id) {
+    case MESSAGE_WIDGET:
+        if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT)
+            setRightClickText(msg.m_codeY);
+        break;
+    case MESSAGE_MOUSE_MOVE:
         g_windowManager->convertToHover(msg);
-        if (msg.m_codeY != g_windowManager->m_lastHover) {
-            g_windowManager->m_lastHover = msg.m_codeY;
-
-            switch (msg.m_codeY) {
-            case BUY_BUTTON_ID:
-                sprintf(g_text, g_generalText->getText(596),
-                        getBuildingName(g_townManager->m_townToView->m_type,
-                                        m_buildingId));
-                break;
-            case CANCEL_BUTTON_ID:
-                sprintf(g_text, g_generalText->getText(597),
-                        getBuildingName(g_townManager->m_townToView->m_type,
-                                        m_buildingId));
-                break;
-            default:
-                strcpy(g_text, g_emptyRolloverText);
-                break;
-            }
-
-            message textMessage;
-            textMessage.m_extraText = g_text;
-            broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 7,
-                             textMessage.m_extra);
-            drawWindow(1, 6, 7);
-        }
+        if (msg.m_codeY == g_windowManager->m_lastHover)
+            return 1;
+        g_windowManager->m_lastHover = msg.m_codeY;
+        setRolloverText(msg.m_codeY);
+        break;
     }
     return 1;
 }
@@ -6214,13 +6234,6 @@ int townManager::Open(int newPriority)
     // @stub
 }
 
-// E:\gamedcs\townmgr.cpp:2833
-DC_ONLY(0x16b9e4, 0xAC)
-void townManager::ChangeTown(unsigned char fade)
-{
-    // @stub
-}
-
 // E:\gamedcs\townmgr.cpp:2855
 DC_ONLY(0x16ba90, 0x114)
 void townManager::updateTownInfo()
@@ -6344,13 +6357,6 @@ void townManager::ArmyCommand(strip* whichStrip, int i, int shift, unsigned char
     // @stub
 }
 
-// E:\gamedcs\townmgr.cpp:3841
-DC_ONLY(0x16d23c, 0x5A)
-void townManager::ShowText()
-{
-    // @stub
-}
-
 // E:\gamedcs\townmgr.cpp:3859
 DC_ONLY(0x16d298, 0xBF8)
 void TThievesGuildWindow::TThievesGuildWindow(int num_guilds)
@@ -6400,13 +6406,6 @@ void TMageGuildWindow::setRolloverText(int codeY)
     // @stub
 }
 
-// E:\gamedcs\townmgr.cpp:4728
-DC_ONLY(0x1712c4, 0x5A)
-void townManager::create_popup_bank(heroWindow* parent)
-{
-    // @stub
-}
-
 // E:\gamedcs\townmgr.cpp:4806
 DC_ONLY(0x171554, 0x1530)
 void type_garrison_base_window::type_garrison_base_window(hero* inHero, int garrison_owner, armyGroup* garrison_army)
@@ -6417,20 +6416,6 @@ void type_garrison_base_window::type_garrison_base_window(hero* inHero, int garr
 // E:\gamedcs\townmgr.cpp:4940
 DC_ONLY(0x172af0, 0x178)
 void type_garrison_base_window::setCommandAndText(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\townmgr.cpp:4998
-DC_ONLY(0x172c68, 0x38)
-void type_garrison_base_window::ShowText()
-{
-    // @stub
-}
-
-// E:\gamedcs\townmgr.cpp:5012
-DC_ONLY(0x172ca0, 0x52)
-void type_garrison_base_window::viewArmy()
 {
     // @stub
 }
@@ -6515,20 +6500,6 @@ void doBlacksmith(int heroID, int type)
 // E:\gamedcs\townmgr.cpp:5394
 DC_ONLY(0x173ee4, 0x704)
 void TShipWindow::TShipWindow(int townType)
-{
-    // @stub
-}
-
-// E:\gamedcs\townmgr.cpp:5461
-DC_ONLY(0x174654, 0x4)
-void TShipWindow::setRightClickText()
-{
-    // @stub
-}
-
-// E:\gamedcs\townmgr.cpp:5465
-DC_ONLY(0x174658, 0x84)
-void TShipWindow::setRolloverText(int codeY)
 {
     // @stub
 }
@@ -6620,6 +6591,14 @@ void townManager::resetStrips()
     // @stub
 }
 
+// Platform difference: DC TTownMenu is a separate modal CAdvPopup with its
+// own widget vector and garrison/hero strips (ctor0x1770bc, handler0x178638).
+// Complete Open0x5c63c0/SetupTown0x5c6870 own TTownScreenWindow instead;
+// NewStrips0x5c6e10 attaches strips to that persistent window and
+// UnloadTown0x5c70b0 deletes them. Main0x5d3240 uses SetCommandAndText
+// 0x5c77a0, not the modal SetCommandAndText2 decoder. The exact retired
+// interfaces remain listed with these anchors in config/dc_only.tsv.
+
 // E:\gamedcs\townmgr.cpp:6966
 DC_ONLY(0x1770bc, 0x150C)
 void TTownMenu::TTownMenu()
@@ -6697,20 +6676,6 @@ void TBuyBuildWindow::setPrerequisiteText(const town* current_town, type_buildin
 // MEMBER of the constructed window at +0x30.
 DC_ONLY(0x1793b4, 0x54A)
 int townManager::buyBuild(int buildingId, int infoOnly, int bQuickView)
-{
-    // @stub
-}
-
-// E:\gamedcs\townmgr.cpp:7489
-DC_ONLY(0x179900, 0xB6)
-void TBuyBuildWindow::setRolloverText(int codeY)
-{
-    // @stub
-}
-
-// E:\gamedcs\townmgr.cpp:7509
-DC_ONLY(0x1799b8, 0x4)
-void TBuyBuildWindow::setRightClickText()
 {
     // @stub
 }
@@ -7087,25 +7052,9 @@ void townManager::doTownGate()
         town* fromTown = m_townToView;
         town* toTown = g_game->getTown(selectedTown);
         m_townToView = toTown;
-        hero* movingHero = g_game->getHero(fromTown->m_visitingHeroId);
-        g_advManager->teleportTo(movingHero, toTown->getLocation(),
-                                 0, 0, 0, 0);
-        toTown->giveSpells(0);
+        moveHero(fromTown, toTown);
 
-        startMouseThread();
-        setupExtraStuff();
-        setupTown(1);
-        message msg;
-        msg.m_codeX = 0;
-        msg.m_qualifier = 0;
-        msg.m_mouseX = 0;
-        msg.m_mouseY = 0;
-        msg.m_extra = 0;
-        msg.m_window = 0;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = -1;
-        setCommandAndText(&msg);
-        stopMouseThread();
+        changeTown(1);
 
         m_townToView->applySpecialBuildingEffect(
             g_game->getHero(m_townToView->m_visitingHeroId));
@@ -7114,25 +7063,20 @@ void townManager::doTownGate()
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\townmgr.cpp:8243
-DC_ONLY(0x17b428, 0x62)
+// Original: townManager::MoveHero; townmgr.cpp:8243, dc 0x17b428
 void townManager::moveHero(town* fromTown, town* toTown)
 {
-    // @stub
+    int heroId = fromTown->m_visitingHeroId;
+    hero* movingHero = g_game->getHero(heroId);
+    g_advManager->teleportTo(movingHero, toTown->getLocation(), 0, 0, 0, 0);
+    toTown->giveSpells(0);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\townmgr.cpp:8642
 DC_ONLY(0x17f160, 0x398)
 void TCastleWindow::show_scroller()
-{
-    // @stub
-}
-
-// E:\gamedcs\townmgr.cpp:8762
-DC_ONLY(0x17f4f8, 0x54)
-void TCastleWindow::ShowText()
 {
     // @stub
 }
@@ -7844,9 +7788,13 @@ TCastleWindow::~TCastleWindow()
 //   0x5df160  0x9f    SortStats                       CLAIMED, exact
 //   0x5df200  0x20    excluded class (compiland tail)
 
-// TCastleWindow::show_scroller (dc 0x17f160, 920 SH4 B) has NO retail
-// row in this span and no gap fits it: /Ob2's single-call-site rule
-// expanded it, as it did ShowText.
+// Dreamcast TCastleWindow::show_scroller (townmgr.cpp:8642, dc 0x17f160)
+// uses scroll_offset at +0x58 and arrows 101/102 to reveal two dwelling
+// rows, moving twelve widget families. Complete's constructor at 0x5d86f0
+// places all seven/eight dwellings in two columns over four rows. The DC
+// field is removed: after Complete's 0x60-byte CAdvPopup base, use8 is
+// immediately at +0x60, then CastleBank at +0x64 and SpriteWidget at +0x68.
+// Its windowHandler at 0x5dcf80 has no scroll-arrow actions.
 // ---------------------------------------------------------------------
 
 // Four .bss cells this page reads and nothing in the admitted surface
@@ -7870,6 +7818,21 @@ DATA(0x006a5c28) extern const char* g_unnamed6a5c28[6];
 // both long before this page does.
 DATA(0x006a5c40) extern const char* g_unnamed6a5c40;
 
+// Original: TCastleWindow::ShowText; townmgr.cpp:8762, dc 0x17f4f8
+// Complete retains the broadcast/draw sequence with its 19-pixel status bar;
+// the older DC screen uses a 21-pixel update rectangle.
+void TCastleWindow::showText()
+{
+    message textMessage;
+    textMessage.m_id = MESSAGE_WIDGET;
+    textMessage.m_codeX = widget::WIDGET_SET_TEXT;
+    textMessage.m_codeY = 0x8a;
+    textMessage.m_extraText = g_text;
+    broadcastMessage(textMessage);
+    drawWindow(0, 0x89, 0x8a);
+    g_windowManager->updateScreen(10, 0x22c, 0x2d6, 0x13);
+}
+
 // E:\gamedcs\townmgr.cpp:8776
 // The fort page's rollover line. `msg->codeY` is the widget under the
 // cursor and each band of codes names a different thing: the six cost
@@ -7877,11 +7840,7 @@ DATA(0x006a5c40) extern const char* g_unnamed6a5c40;
 // once the dwelling is actually built), the two town-screen building
 // bands, and the exit button. Anything else clears the line.
 
-// TCastleWindow::ShowText is INLINED here - /Ob2's single-call-site rule,
-// which is also why the DC's separate ShowText (dc 0x17f4f8) has no
-// retail row - so its three statements are transcribed in place rather
-// than spelled as a member: declaring one would force VC6 to emit the
-// out-of-line copy retail does not have.
+// Complete expands the ordinary ShowText member at the shared tail.
 
 // TWO branch senses carry this row and they are worth 33.7 points
 // between them. Retail's `cmp eax,0x3f1 / jge` sends the HIGH band
@@ -7944,14 +7903,7 @@ void TCastleWindow::setRolloverText(message* msg)
         sprintf(g_text, g_unnamed6a5c40, g_buildingNamesCommon[m_castleType]);
     }
 
-    message textMessage;
-    textMessage.m_id = MESSAGE_WIDGET;
-    textMessage.m_codeX = widget::WIDGET_SET_TEXT;
-    textMessage.m_codeY = 0x8a;
-    textMessage.m_extraText = g_text;
-    broadcastMessage(textMessage);
-    drawWindow(0, 0x89, 0x8a);
-    g_windowManager->updateScreen(10, 0x22c, 0x2d6, 0x13);
+    showText();
 }
 
 // E:\gamedcs\townmgr.cpp:8833

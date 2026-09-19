@@ -520,6 +520,13 @@ bool combatManager::scrollTo(SLimitData, bool, bool, bool)
     return false;
 }
 
+// Original: combatManager::ScrollTo; drawing.cpp:666, dc 0x841d4.
+unsigned char combatManager::scrollTo(int x, int y, unsigned char draw,
+    unsigned char doscrollX, unsigned char doscrollY)
+{
+    return scrollTo(SLimitData(x, y, x + 1, y + 1), draw, doscrollX, doscrollY);
+}
+
 // E:\gamedcs\drawing.cpp:679, dc 0x84248. ScrollTo's rectangle overload
 // constructs SLimitData(x, y, x + width, y + height) at line 680 and delegates
 // to the ordinary extent overload. SpellEffect calls it at line 2653; the
@@ -540,6 +547,14 @@ void combatManager::updateCombatArea()
     // @stub
 }
 
+// DC FullUpdate/UpdateCombatArea(x,y,w,h), ScrollCombatArea, ScrollToPixel
+// and Rescale operate on the removed ca_scroll_x/y origin and translated
+// destination (8,32). Complete's retained UpdateCombatArea0x493780 and
+// DrawFrame0x494440 submit the fixed client rectangle via UpdateScreen0x602bd0;
+// the two scroll-origin members are absent before the retained archer records.
+// Preserve the ordinary ScrollTo facades used by source calls, while these
+// exact translated-viewport interfaces are reviewed in dc_only.tsv.
+
 // E:\gamedcs\drawing.cpp:506
 DC_ONLY(0x83e8c, 0x34)
 void combatManager::FullUpdate()
@@ -557,13 +572,6 @@ void combatManager::updateCombatArea(int x, int y, int width, int height)
 // E:\gamedcs\drawing.cpp:554
 DC_ONLY(0x83f84, 0xD6)
 unsigned char combatManager::ScrollCombatArea(int dx, int dy, unsigned char abs, unsigned char draw)
-{
-    // @stub
-}
-
-// E:\gamedcs\drawing.cpp:666
-DC_ONLY(0x841d4, 0x52)
-unsigned char combatManager::scrollTo(int x, int y, unsigned char draw, unsigned char doscroll_x, unsigned char doscroll_y)
 {
     // @stub
 }
@@ -658,13 +666,6 @@ int combatManager::drawArcher(const CSprite* sprite, int sequence, int frame, in
 // E:\gamedcs\drawing.cpp:1699
 // RETAIL_LIVE(0x004951b0, 0xfd): reconstructed below; caller-edge, dc 0x85a48
 int combatManager::drawCreature(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int id, unsigned char isFlipped, int iColor)
-{
-    // @stub
-}
-
-// E:\gamedcs\drawing.cpp:1738
-DC_ONLY(0x85b50, 0xDA)
-int combatManager::drawCreatureAlpha(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped, int iColor)
 {
     // @stub
 }
@@ -1481,6 +1482,29 @@ int combatManager::drawCreature(const CSprite* sprite, int sequence, int frame,
     return 1;
 }
 
+// Original: combatManager::DrawCreatureAlpha; drawing.cpp:1738, dc 0x85b50.
+int combatManager::drawCreatureAlpha(const CSprite* sprite, int sequence,
+    int frame, int x, int y, SLimitData* limits, bool isFlipped, int color)
+{
+    SLimitData computedLimits;
+    if (!limits)
+        limits = &computedLimits;
+    if (m_saveBiggestExtent || m_limitToExtent) {
+        computeExtent(sprite, sequence, frame, x, y, limits, isFlipped,
+                      m_saveBiggestExtent);
+        if (m_computeExtentOnly)
+            return 0;
+    }
+    if (m_limitToExtent) {
+        if (!limits->intersects(m_drawbridgeBounds))
+            return 0;
+    }
+    sprite->drawCreatureAlpha(sequence, frame, 0, 0,
+        sprite->getWidth(), sprite->getHeight(), g_windowManager->m_screenBitmap,
+        x, y, isFlipped, static_cast<unsigned short>(color));
+    return 1;
+}
+
 VA(0x004952b0, 0xfb)  // dc 0x85c2c
 int combatManager::drawCombatHero(const CSprite* sprite, int sequence,
                                   int frame, int x, int y,
@@ -2226,13 +2250,6 @@ int CSprite::getCroppedHeight(int seq, int frame)
 // E:\gamedcs\CSprite.h:342
 DC_ONLY(0x87394, 0xA4)
 void CSprite::drawCreature(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned short outcolor)
-{
-    // @stub
-}
-
-// E:\gamedcs\CSprite.h:348
-DC_ONLY(0x87438, 0xA4)
-void CSprite::drawCreatureAlpha(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned short outcolor)
 {
     // @stub
 }

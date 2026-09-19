@@ -79,6 +79,7 @@ public:
     // Dreamcast ends the 0x70-byte editor with autoDraw at +0x6e.
     // NH3API confirms that the last byte is alignment in the PC object.
     char m_paddingAfterAutoDraw[1];
+    textEntryWidget();
     textEntryWidget(int x, int y, int w, int h, int textSize,
                     const char* text, const char* fontName,
                     font::TColor color, unsigned justification,

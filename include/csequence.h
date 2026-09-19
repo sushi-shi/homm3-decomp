@@ -3,6 +3,7 @@
 #define HOMM3_CSEQUENCE_H
 
 #include "va.h"
+#include "cspriteframe.h"
 
 class CSprite;
 class CSpriteFrame;
@@ -17,7 +18,14 @@ private:
     CSpriteFrame** m_f;
 
     friend class CSprite;
+    int addFrame(const char* name);
+    int addFrame(const char* name, int w, int h, unsigned char* data,
+                 int csize, TEncodingMethod encoding);
+    int addFrame(const char* name, int w, int h, unsigned char* data,
+                 int csize, TEncodingMethod encoding,
+                 int croppedWidth, int croppedHeight, int croppedX, int croppedY);
     int addFrame(CSpriteFrame* frame);
+    CSequence();
     CSequence(int num);
     ~CSequence();
 };

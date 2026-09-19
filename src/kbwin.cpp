@@ -25,13 +25,11 @@
 // IAT form from mmsystem.h via <windows.h> and must never see
 // winmm_thunks.h's plain declaration (see that header).
 
+static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw);
+
 VA(0x004f7a30, 0x1CF)  // dc 0xe7c90
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR cmdLine, int sw)
 {
-    WNDCLASSA appClass;
-    RECT windowRect;
-    DWORD windowStyle;
-    DWORD windowExStyle;
     DWORD lastError;
 
     g_instance = instance;
@@ -54,6 +52,22 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR cmdLine
     timeBeginPeriod(1);
     if (!earlySetup())
         return 0;
+    if (!appInit(instance, previousInstance, sw))
+        return 0;
+    oldmain();
+    return 0;
+}
+
+// Original: AppInit; kbwin.cpp:166, dc 0xe7d20
+// Complete uses ANSI window APIs and initializes the desktop Imm mouse;
+// DC uses wide WinCE APIs and its own DirectInput/sound initialization.
+// The ordinary helper expands into WinMain at 0x4f7a30 in Complete.
+static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw)
+{
+    WNDCLASSA appClass;
+    RECT windowRect;
+    DWORD windowStyle;
+    DWORD windowExStyle;
     if (!previousInstance) {
         appClass.hCursor = 0;
         appClass.hIcon = LoadIconA(instance, MAKEINTRESOURCEA(0x73));
@@ -88,8 +102,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR cmdLine
     initGraphics();
     SetCursor(LoadCursorA(0, IDC_ARROW));
     initImmMouse(g_instance, g_hwndApp);
-    oldmain();
-    return 0;
+    return 1;
 }
 
 // AppWndProc retains its AppCommand call at +0x359. The inline policy on
@@ -275,6 +288,13 @@ LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messag
 }
 #pragma auto_inline(on)
 
+// Original: UpdateDfltMenu; kbwin.cpp:680, dc 0xe8018.
+// The released menu-update hook has an empty body. The adjacent 0x4f8140
+// procedure is the four-argument About callback, not this one-argument hook.
+void updateDfltMenu(HMENU menu)
+{
+}
+
 VA(0x004f8140, 0x37)  // address-taken DialogBoxParamA callback, retail-only
 BOOL CALLBACK appAbout(HWND dialog, UINT message, WPARAM messageParam, LPARAM messageData)
 {
@@ -386,16 +406,12 @@ void GameTime::delay(int interval)
     GameTime::delayTil(GameTime::get() + interval);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\kbwin.cpp:851
-DC_ONLY(0xe80b4, 0x30)
+// Original: InitVideo; kbwin.cpp:851, dc 0xe80b4
+// Empty hook; heroWindowManager::open retains the call to retail's
+// shared ICF ret at 0x5bc690.
 void initVideo()
 {
-    // @stub
 }
-
-#endif  // @carcass
 
 DATA(0x00699600)
 HWND g_hwndApp;

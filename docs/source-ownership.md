@@ -41,12 +41,61 @@ homm3 source-ownership
 homm3 source-ownership --json
 ```
 
+The separate bidirectional census checks that every Dreamcast procedure is
+accounted for as well as every active authored definition:
+
+```
+homm3 source-inventory
+homm3 source-inventory --module advmgr --module townmgr
+homm3 source-inventory --json
+homm3 source-inventory --tsv build/reconciliation/inventory.tsv
+```
+
+Full builds run both checks. The census writes
+`build/reconciliation/inventory.tsv` and `inventory.json`; any unexplained
+entry or invalid identity fails the gate. A module view limits displayed rows,
+while exclusion integrity and raw-roster validation remain repository-wide.
+Clang collection errors are failures, never empty successful inventories.
+
+Each DC procedure emission has a row under its actual compiland. Repeated
+header emissions and concrete template instances can resolve to one canonical
+authored body with the proven owner and signature. Positively recovered inline
+origins are also listed. This compares source identities, not the number of
+functions emitted by different compilers: a helper expanded by retail still
+needs its canonical source body and callers. An inactive `DC_ONLY` carcass
+does not account for that body.
+
+The statuses distinguish `matched`, `documented_dc_only`,
+`documented_win_only`, `missing_source`, `missing_dc`, and `invalid_source`.
+Only the first three account for an entry. A match establishes source identity;
+the VC6 byte comparison measures reconstruction accuracy separately. Complete
+retail address admission and a high byte score do not establish complete source
+coverage or prove that an assigned name is correct.
+
+The census verifies the generated procedure roster against every procedure in
+the pinned executable's raw NB11 records. Missing, extra, duplicate, or renamed
+rows fail. Regenerate it with
+`python3 -m homm3.analysis.dc_extract --functions`; never hand-edit the evidence
+CSV. This path reads module ownership directly from NB11 and avoids the legacy
+text importer's inherited-module error for CRT library members.
+
 `config/dc_only.tsv` excludes exact CodeView identities (source file, function,
 source line) with a documented platform/pressing reason. An unreconstructed
 function is not automatically DC-only. `config/win_only.tsv` admits exact
 Windows definition identities (physical file, qualified function, signature)
 without a Dreamcast counterpart. It cannot waive a misplaced DC function.
 Unused entries and duplicate or incomplete entries are errors.
+The bidirectional census also rejects a DC exclusion that hides a live,
+same-owner counterpart with the same interface, even if both tables contain
+exclusions. A genuine pressing-specific signature change can need one exact row
+in each table, with retail evidence explaining the relationship. Offset hints
+cannot borrow a differently named function or another identifiable overload.
+
+External-library and compiler-emission differences also need exact reviewed
+rows. Their reasons must distinguish an implicit member supplied by the source
+class, a retired platform operation, and library code owned by a vendor source.
+Those are accounting dispositions, not assertions that every listed routine is
+absent from retail. Missing implementation alone is never a disposition.
 
 Ordinary definitions retain retail RVA progression in their owning source
 modules, enforced by the VA gate. They do not advance the separate CodeView
@@ -196,9 +245,12 @@ implementation of the same declaration. An exact `win_only.tsv` row can admit
 that change only when both parsed return types are known and different, and
 the DC counterpart has no recovered body. For example, Complete's
 `checkSetMouseDirection` returns a pointer-change byte consumed by its caller,
-whereas DC only declares a `void` method. The same or an unknown return type
-still rejects the exemption; an emitted or recovered DC body still needs its
-proper source owner.
+whereas DC only declares a `void` method. An emitted or recovered DC body still
+needs its proper source owner. When only a matching declaration survives, an
+exact reviewed `win_only.tsv` entry can also document that the body's DC
+owner/order is unknown. Such an entry must state that evidence limit; it is not
+proof of Windows-only semantics and cannot waive a conflicting signature or an
+available procedure origin.
 For example, the `TAutoArrayPtr<char>` and `TResourcePtr<TTextResource>` copy
 constructors have distinct ordinary field-list declarations, while only their
 pointer constructors have procedure records. Their unused, guessed transfer

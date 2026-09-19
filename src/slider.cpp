@@ -21,15 +21,16 @@ static int g_leftRightSave;
 
 VA_COMPGEN(0x00596020, 0x21, SCALAR_DELETING_DTOR, slider)
 
-// E:\gamedcs\slider.cpp:35
-// No standalone Complete entry survives; keep the cross-build body out of
-// the retail object until a caller proves whether it was inlined or dropped.
-#if 0  // @carcass -- no retail entry
-DC_ONLY(0x1499f0, 0x58)
-slider::slider()
+// Original: slider::slider; slider.cpp:35, dc 0x1499f0.
+slider::slider() : widget(0, 0, 0, 0, 0, 0)
 {
+    m_numStates = 0;
+    m_sliderSprite = 0;
+    m_sliderFunction = 0;
+    m_pageSize = 0;
+    m_scrolling = 0;
+    m_lastFocus = -1;
 }
-#endif
 
 VA(0x00596050, 0x7D)  // dc 0x149a48
 void slider::initialize(const char* resourceName)
@@ -433,16 +434,19 @@ int slider::deselect(message* msg)
     return 2;
 }
 
-// Retail folds these header-sized bodies into representatives owned by other
-// units (vtable targets 0x4eab20/30 and 0x5bc7e0).
-#if 0  // @carcass -- ICF/header COMDAT, no slider.obj home
-DC_ONLY(0x14a67c, 0x16)
-int slider::getRealWidth() const { /* @stub: DC calls the sprite GetWidth. */ }
-DC_ONLY(0x14a694, 0x16)
-int slider::getRealHeight() const { /* @stub: DC calls the sprite GetHeight. */ }
-DC_ONLY(0x14a6ac, 0x4)
-void slider::zBufferDraw() {}
-#endif
+// Original: slider::GetRealWidth; slider.cpp:602, dc 0x14a67c.
+// These accessors share iconWidget's retail representatives 0x4eab20/30.
+int slider::getRealWidth() const { return m_sliderSprite->getWidth(); }
+
+// Original: slider::GetRealHeight; slider.cpp:606, dc 0x14a694.
+int slider::getRealHeight() const { return m_sliderSprite->getHeight(); }
+
+// Original: slider::zBufferDraw; slider.cpp:610, dc 0x14a6ac.
+// CodeView's formal type proves this two-argument const hook; retail folds
+// it onto the empty ret-8 representative at 0x5bc7e0.
+void slider::zBufferDraw(unsigned short* zBuffer, int id) const
+{
+}
 
 VA(0x00596C40, 0x3D5)  // dc 0x14a6b0
 void slider::draw() const

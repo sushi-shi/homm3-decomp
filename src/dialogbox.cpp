@@ -138,6 +138,13 @@ VA_COMPGEN(0x00490740, 0x21, SCALAR_DELETING_DTOR, CTextDialog)
 
 VA_COMPGEN(0x00490770, 0x6B, IMPLICIT_DTOR, CTextDialog)
 
+// Original: CTextDialog::CTextDialog; dialogbox.cpp:139, dc 0x81d8c.
+CTextDialog::CTextDialog(const char* text, font* currentFont, unsigned winType)
+    : TDialogBox(winType), m_textWidget(0)
+{
+    setup(text, currentFont);
+}
+
 VA(0x004907e0, 0x31)  // dc 0x81e00
 CTextDialog::CTextDialog(unsigned winType)
     : TDialogBox(winType)
@@ -202,15 +209,3 @@ void CTextDialog::updateText(const char* newText)
     if (m_textWidget)
         m_textWidget->setText(newText);
 }
-
-#if 0  // @carcass: retail has no distinct out-of-line bodies
-
-// The text-taking constructor is likewise absent as a distinct retail row.
-DC_ONLY(0x81d8c, 0x74)
-void CTextDialog::CTextDialog(const char* cText, font* pFont,
-                              unsigned winType)
-{
-    // @stub
-}
-
-#endif  // @carcass

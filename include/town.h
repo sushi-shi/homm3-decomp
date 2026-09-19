@@ -8,6 +8,8 @@
 #include <vector>
 #include "armygrp.h"
 
+class TownExtra;  // canonical definition in Game.h
+
 // Town/faction ids - the domain of town::type and of the creature
 // traits' townType column (armygrp's alignment switches case on it:
 // good 0-2 / evil 3-5 / neutral 6-8). NH3API terrain.hpp TTownType
@@ -187,28 +189,6 @@ public:
     short m_dwelling;
 };
 SIZE(type_horde_effect, 8);
-
-class TownExtra {
-public:
-    int m_objRef;
-    char m_playerOwner;
-    char m_customBuildings;
-    // Six bytes of stream reach each of these two; the record keeps eight.
-    __int64 m_buildingBuiltMask;
-    __int64 m_buildingDisabledMask;
-    char m_hasFort;
-    char m_customArmies;
-    armyGroup m_townArmy;
-    char m_customName;
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_name;
-    // A char in the Dreamcast record, a DWORD here: readTownData assigns it
-    // from CObjectType::extra and from setup.alignment[], both int.
-    int m_townType;
-    char m_isGrouped;
-    std::bitset<70> m_spells;
-    std::bitset<70> m_fixedSpells;
-};
-SIZE(TownExtra, 0x88);
 
 // Head model. sizeof(town) == 360 is now closed from BOTH ends: the
 // ai_player town-array stride measured 360 last lane, and `available`
@@ -399,6 +379,12 @@ public:
             return (m_built & g_bitNumber[buildingId]) != 0;
         }
     }
+    // Original: town::set_mask; Town.h:331, dc 0x168dfc.
+    void setMask(__int64 newMask)
+    {
+        m_built = newMask;
+        updateFullBuildingMask();
+    }
     // E:\gamedcs\Town.h:337. One canonical header body for all consumers.
     unsigned char isCastle() const
     {
@@ -442,6 +428,8 @@ public:
                              TCreatureType alternateBonus, long bonusAmount);
     void initialize(const TownExtra* townSetup);
     unsigned char isLegalBuilding(type_building_id building) const;
+    void setLegalBuildings(__int64 disabledBuildings);
+    unsigned char isDisabled(type_building_id building) const;
     // Dreamcast's LF_FIELDLIST puts these immediately before update_shipyard,
     // in this order. BuildBuilding calls both, and retail inlines both into
     // that owner.
@@ -493,22 +481,8 @@ public:
     static __int64 s_includedBuildings[9][44];
     // ?get_army@town@@QAAAAVarmyGroup@@XZ / ...QBAABVarmyGroup@@XZ;
     const class armyGroup& getArmy() const;
-    // The NON-const half of that DC pair, declared 2026-08-14 for
-    // TCastleWindow::WindowHandler 0x5dcf80: the summoning-portal row
-    // hands the town's garrison straight to a `recruitUnit`, whose first
-    // parameter is a plain `armyGroup*`, and retail's `call 0x5c1460 /
-    // push eax` is that overload's return used as a pointer - which is
-    // also the shape the DC declares (`armyGroup* town::get_army()`).
-    // Never defined: /OPT:ICF folded the two bodies onto the one row the
-    // const half already claims. UNGATED 2026-08-20 by the view audit.
-
-    // RETURNS A REFERENCE, not a pointer. The DC mangled name settles it:
-    // ?get_army@town@@QAAAAVarmyGroup@@XZ - `QAAAAV` is a reference return,
-    // where a pointer would be `QAAPAV`. The pointer spelling came from the
-    // dump's C prototype printer and contradicted every call site: townmgr's
-    // summoning-portal rows write `&townToView->get_army()`, which is
-    // `'&' requires l-value` against a pointer return and correct against a
-    // reference.
+    // DC town.cpp:2375 proves the ordinary non-const reference twin. Its
+    // Complete callers share the const twin's retained address 0x5c1460.
     class armyGroup& getArmy();
     // 0x5be2d0. Removes this town from its owner's roster and marks
     // both this record and gpGame->towns[id] unowned.
@@ -619,13 +593,10 @@ enum ETownDwellingTier {
     TOWN_DWELLING_TIER_6 = 6
 };
 
-// Retail .bss 0x6a74f4, the per-town-type name-pointer table
-// town::GetTypeName (0x5c1450) hands out: `movsx eax,[this+4]` then
-// `mov eax,[4*eax + 0x6a74f4]`. The nine-row bound is the same
-// TOWN_TYPE_COUNT every other per-type table in this header carries -
-// the index IS town::type. Name INVENTED (no DC symbol covers it);
-// house ordinal placeholder. Owner TU unlocated - extern only.
-extern const char* g_unnamed6a74f4[TOWN_TYPE_COUNT];
+// Original: gTownTypeNames. text.cpp owns the ten-entry table at 0x6a74f0;
+// entry zero is the neutral type -1. Retail's 0x6a74f4 operands are entry
+// one of that same allocation, not a separate nine-entry object.
+extern const char* g_townTypeNames[10];
 
 // Retail .data 0x688eb4: nine 7-int rows (one per town type) that
 // get_silo_income hands out whole and get_gold_income reads the GOLD

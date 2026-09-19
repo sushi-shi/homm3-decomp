@@ -446,10 +446,9 @@ void TCombatWindow::drawChatText(unsigned char update)
     }
 }
 
-VA(0x004732f0, 0x59)
-void TCombatWindow::drawWindow(unsigned char update, int low, int high)
+// Original: TCombatWindow::DrawChatEdit; combatwindow.cpp:615, dc 0x6a2c0
+void TCombatWindow::drawChatEdit(unsigned char update)
 {
-    heroWindow::drawWindow(update, low, high);
     if (m_chatEdit && m_chatEdit->m_hasFocus) {
         m_chatEdit->draw();
         if (update) {
@@ -458,6 +457,13 @@ void TCombatWindow::drawWindow(unsigned char update, int low, int high)
                 m_chatEdit->m_width, m_chatEdit->m_height);
         }
     }
+}
+
+VA(0x004732f0, 0x59)
+void TCombatWindow::drawWindow(unsigned char update, int low, int high)
+{
+    heroWindow::drawWindow(update, low, high);
+    drawChatEdit(update);
 }
 
 #if 0  // @carcass: remaining combat-window bodies are not reconstructed yet
@@ -525,12 +531,6 @@ void TCombatWindow::drawChatText(unsigned char update)
     // @stub
 }
 
-// E:\gamedcs\combatwindow.cpp:615
-DC_ONLY(0x6a2c0, 0x50)
-void TCombatWindow::DrawChatEdit(unsigned char update)
-{
-    // @stub
-}
 
 #endif  // @carcass
 

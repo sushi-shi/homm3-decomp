@@ -116,8 +116,7 @@ enum eRS_Messages {
     RS_READY_TO_PLAY = 1012,
     RS_ALL_READY_TO_PLAY = 1013,
     // The lobby keepalive pair (DC rungs verbatim); singleselectionwindow's
-    // OnPingMsg builds the response as a CPingMsg, whose ctor takes this
-    // enum.
+    // OnPingMsg builds a CPingResponseMsg, whose ctor takes this enum.
     RS_SETUP_PING = 1047,
     RS_SETUP_PING_RESPONSE = 1048,
     RS_GIFT = 1074,
@@ -150,6 +149,11 @@ public:
         this->m_size = size;
         m_dpidFrom = 0;
         m_uncompressedSize = 0;
+    }
+    // Original: CNetMsg::IsCompressed; netmsg.h:179, dc 0x11f5f4
+    unsigned char isCompressed()
+    {
+        return m_uncompressedSize && m_uncompressedSize != m_size;
     }
 };
 SIZE(CNetMsg, 20);
@@ -428,6 +432,13 @@ public:
     }
 };
 SIZE(CPlayerDropMsg, 0x18);
+
+class CSetAsHostMsg : public CNetMsg {
+public:
+    // Original: CSetAsHostMsg::CSetAsHostMsg; netmsg.h:433, dc 0x11f6d4
+    CSetAsHostMsg() : CNetMsg(RS_SET_AS_HOST, sizeof(CSetAsHostMsg)) {}
+};
+SIZE(CSetAsHostMsg, 0x14);
 
 class CPlayerDroppedMsg : public CNetMsg {
 public:
@@ -820,6 +831,13 @@ public:
 };
 SIZE(CTradeRequestMsg, 0x938);
 
+class CPlayerActiveMsg : public CNetMsg {
+public:
+    // Original: CPlayerActiveMsg::CPlayerActiveMsg; netmsg.h:793, dc 0x11f71c
+    CPlayerActiveMsg() : CNetMsg(RS_PLAYER_ACTIVE, sizeof(CPlayerActiveMsg)) {}
+};
+SIZE(CPlayerActiveMsg, 0x14);
+
 // netmsg.h:804 in the Dreamcast roster. Retail SendChat independently
 // proves the one-dword payload, 0x18-byte extent and constructor store order.
 class CPingMsg : public CNetMsg {
@@ -868,6 +886,13 @@ public:
 };
 
 SIZE(CGiftRequestMsg, 28);
+
+class CSessionLostMsg : public CNetMsg {
+public:
+    // Original: CSessionLostMsg::CSessionLostMsg; netmsg.h:852, dc 0x11f78c
+    CSessionLostMsg() : CNetMsg(RS_SESSION_LOST, sizeof(CSessionLostMsg)) {}
+};
+SIZE(CSessionLostMsg, 0x14);
 
 // The normal-win notification carries only the winning network game slot.
 // Retail's handler reads the dword immediately after CNetMsg at +0x14;

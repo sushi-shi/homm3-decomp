@@ -200,6 +200,7 @@ public:
 
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
     virtual int doModal(unsigned char fadeIn);                 // slot 6
+    virtual int windowHandler(message& msg);                   // slot 9
     virtual int exitDialog(message& msg);                      // slot 14
 
 private:
@@ -338,6 +339,7 @@ public:
     void creatureClick(long side, long slot, unsigned char rightClick);
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
     virtual int windowHandler(message& msg);                   // slot 9
+    virtual int exitDialog(message& msg);                      // slot 14
 
 private:
     void createCreatureIcons(
@@ -345,6 +347,7 @@ private:
         long groupNumber, long itemNumber, long& widgetId,
         iconWidget** iconWidgets, iconWidget** selectionWidgets,
         textWidget** textWidgets);
+    void unselect();
     void update(long group, long index);
     void updateButtons();
     static int allCreatures(message& msg);

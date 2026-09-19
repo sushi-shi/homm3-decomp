@@ -1620,151 +1620,104 @@ void TSellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
     msg->m_codeY = i + 0x6b;
 }
 
-// Retail inlines all three helpers into Update; the Dreamcast public roster
-// and xref graph prove their source identities and the short parameter.  The
-// DC call sites also settle the easily-confused names: Disabled is the single
-// status-5 broadcast, while Off is the status-6 broadcast.  Keep the same
-// mapping for both sell windows.
-inline void TSellArtifactWindow::setWidgetOn(short id)
-{
-    broadcastMessage(MESSAGE_WIDGET, 5, id, 6);
-    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
-}
-
-inline void TSellArtifactWindow::setWidgetOff(short id)
-{
-    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
-}
-
-inline void TSellArtifactWindow::setWidgetDisabled(short id)
-{
-    broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
-}
-
-inline void TSellCreatureWindow::setWidgetOn(short id)
-{
-    broadcastMessage(MESSAGE_WIDGET, 5, id, 6);
-    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
-}
-
-inline void TSellCreatureWindow::setWidgetOff(short id)
-{
-    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
-}
-
-inline void TSellCreatureWindow::setWidgetDisabled(short id)
-{
-    broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
-}
-
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\tradpost.cpp:905
-DC_ONLY(0x188cc8, 0x38)
+// DC SetWidgetOff also clears widget::focusable after GetWidget (e.g.
+// 0x188d00, lines 913-914). Complete removes that field from widget's
+// proved layout; its retained Update bodies only contain the broadcasts.
+// These are ordinary TU helpers even where VC6 expands their calls.
+// Original: TTradeResourceWindow::SetWidgetOn; tradpost.cpp:905, dc 0x188cc8.
 void TTradeResourceWindow::setWidgetOn(short id)
 {
-    // @stub
+    broadcastMessage(MESSAGE_WIDGET, 5, id, 6);
+    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
 }
 
-// E:\gamedcs\tradpost.cpp:911
-DC_ONLY(0x188d00, 0x34)
+// Original: TTradeResourceWindow::SetWidgetOff; tradpost.cpp:911, dc 0x188d00.
 void TTradeResourceWindow::setWidgetOff(short id)
 {
-    // @stub
+    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
 }
 
-// E:\gamedcs\tradpost.cpp:918
-DC_ONLY(0x188d34, 0x1C)
+// Original: TTradeResourceWindow::SetWidgetDisabled; tradpost.cpp:918, dc 0x188d34.
 void TTradeResourceWindow::setWidgetDisabled(short id)
 {
-    // @stub
+    broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
 }
 
-// E:\gamedcs\tradpost.cpp:923
-DC_ONLY(0x188d50, 0x38)
+// Original: TGiveResourceWindow::SetWidgetOn; tradpost.cpp:923, dc 0x188d50.
 void TGiveResourceWindow::setWidgetOn(short id)
 {
-    // @stub
+    broadcastMessage(MESSAGE_WIDGET, 5, id, 6);
+    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
 }
 
-// E:\gamedcs\tradpost.cpp:929
-DC_ONLY(0x188d88, 0x34)
+// Original: TGiveResourceWindow::SetWidgetOff; tradpost.cpp:929, dc 0x188d88.
 void TGiveResourceWindow::setWidgetOff(short id)
 {
-    // @stub
+    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
 }
 
-// E:\gamedcs\tradpost.cpp:936
-DC_ONLY(0x188dbc, 0x1C)
+// Original: TGiveResourceWindow::SetWidgetDisabled; tradpost.cpp:936, dc 0x188dbc.
 void TGiveResourceWindow::setWidgetDisabled(short id)
 {
-    // @stub
+    broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
 }
 
-// E:\gamedcs\tradpost.cpp:941
-DC_ONLY(0x188dd8, 0x38)
+// Original: TBuyArtifactWindow::SetWidgetOn; tradpost.cpp:941, dc 0x188dd8.
 void TBuyArtifactWindow::setWidgetOn(short id)
 {
-    // @stub
+    broadcastMessage(MESSAGE_WIDGET, 5, id, 6);
+    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
 }
 
-// E:\gamedcs\tradpost.cpp:947
-DC_ONLY(0x188e10, 0x68)
+// Original: TBuyArtifactWindow::SetWidgetOff; tradpost.cpp:947, dc 0x188e10.
 void TBuyArtifactWindow::setWidgetOff(short id)
 {
-    // @stub
+    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
 }
 
-// E:\gamedcs\tradpost.cpp:954
-DC_ONLY(0x188e78, 0x1C)
+// Original: TBuyArtifactWindow::SetWidgetDisabled; tradpost.cpp:954, dc 0x188e78.
 void TBuyArtifactWindow::setWidgetDisabled(short id)
 {
-    // @stub
+    broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
 }
 
-// E:\gamedcs\tradpost.cpp:959
-DC_ONLY(0x188e94, 0x38)
+// Original: TSellArtifactWindow::SetWidgetOn; tradpost.cpp:959, dc 0x188e94.
 void TSellArtifactWindow::setWidgetOn(short id)
 {
-    // @stub
+    broadcastMessage(MESSAGE_WIDGET, 5, id, 6);
+    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
 }
 
-// E:\gamedcs\tradpost.cpp:965
-DC_ONLY(0x188ecc, 0x34)
+// Original: TSellArtifactWindow::SetWidgetOff; tradpost.cpp:965, dc 0x188ecc.
 void TSellArtifactWindow::setWidgetOff(short id)
 {
-    // @stub
+    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
 }
 
-// E:\gamedcs\tradpost.cpp:972
-DC_ONLY(0x188f00, 0x1C)
+// Original: TSellArtifactWindow::SetWidgetDisabled; tradpost.cpp:972, dc 0x188f00.
 void TSellArtifactWindow::setWidgetDisabled(short id)
 {
-    // @stub
+    broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
 }
 
-// E:\gamedcs\tradpost.cpp:977
-DC_ONLY(0x188f1c, 0x38)
+// Original: TSellCreatureWindow::SetWidgetOn; tradpost.cpp:977, dc 0x188f1c.
 void TSellCreatureWindow::setWidgetOn(short id)
 {
-    // @stub
+    broadcastMessage(MESSAGE_WIDGET, 5, id, 6);
+    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
 }
 
-// E:\gamedcs\tradpost.cpp:983
-DC_ONLY(0x188f54, 0x34)
+// Original: TSellCreatureWindow::SetWidgetOff; tradpost.cpp:983, dc 0x188f54.
 void TSellCreatureWindow::setWidgetOff(short id)
 {
-    // @stub
+    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
 }
 
-// E:\gamedcs\tradpost.cpp:990
-DC_ONLY(0x188f88, 0x1C)
+// Original: TSellCreatureWindow::SetWidgetDisabled; tradpost.cpp:990, dc 0x188f88.
 void TSellCreatureWindow::setWidgetDisabled(short id)
 {
-    // @stub
+    broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\tradpost.cpp:995
 // Refreshes the resource-trade dialog: the exchange-description line (with
@@ -1857,28 +1810,22 @@ void TTradeResourceWindow::update(unsigned char update)
 
     if (g_selectedArtifact != -1 && g_leftResource != -1 &&
         g_selectedArtifact != g_leftResource) {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,   6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 5,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   7,   6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 7,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   3,   6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 3,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   4,   6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xb, 6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xb, 0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xc, 6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1000);
+        setWidgetOn(5);
+        setWidgetOn(7);
+        setWidgetOn(3);
+        setWidgetOn(4);
+        setWidgetOn(0xb);
+        setWidgetOn(0xc);
         m_resourceSlider->enable(1);
     } else {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   7,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xb, 0x1006);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1006);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 3,   0x1006);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1006);
+        setWidgetDisabled(5);
+        setWidgetDisabled(7);
+        setWidgetOff(0xb);
+        setWidgetOff(4);
+        setWidgetOff(3);
+        setWidgetOff(0xc);
         m_resourceSlider->setState(0);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   6,   0x1000);
+        setWidgetDisabled(6);
     }
 
     if (g_marketSource != MARKET_SOURCE_TRADING_POST && g_marketHero != 0 &&
@@ -1886,20 +1833,18 @@ void TTradeResourceWindow::update(unsigned char update)
         (g_townManager->m_townToView->m_type == TOWN_TOWER ||
          g_townManager->m_townToView->m_type == TOWN_DUNGEON) &&
         (g_townManager->m_townToView->m_built & g_bitNumber[17])) {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_RIGHT_LABEL_ID, 6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_RIGHT_LABEL_ID, 0x1000);
+        setWidgetOn(MARKET_RIGHT_LABEL_ID);
     } else {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_RIGHT_LABEL_ID, 0x1006);
+        setWidgetOff(MARKET_RIGHT_LABEL_ID);
     }
 
     if (g_marketSource != MARKET_SOURCE_TRADING_POST && g_marketHero != 0 &&
         g_marketSource != MARKET_SOURCE_FREELANCER &&
         g_townManager->m_townToView->m_type == TOWN_STRONGHOLD &&
         (g_townManager->m_townToView->m_built & g_bitNumber[21])) {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_TITLE_ID, 6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_TITLE_ID, 0x1000);
+        setWidgetOn(MARKET_TITLE_ID);
     } else {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_TITLE_ID, 0x1006);
+        setWidgetOff(MARKET_TITLE_ID);
     }
 
     for (unsigned int side = 0; side < 2; ++side) {
@@ -2047,28 +1992,22 @@ void TGiveResourceWindow::update(bool update)
 
     int widgetOff = 6;
     if (g_selectedArtifact != -1 && g_leftResource != -1) {
-        broadcastMessage(MESSAGE_WIDGET, 5, 5, widgetOff);
-        broadcastMessage(MESSAGE_WIDGET, widgetOff, 5, 0x1000);
-        broadcastMessage(MESSAGE_WIDGET, 5, 4, widgetOff);
-        broadcastMessage(MESSAGE_WIDGET, widgetOff, 4, 0x1000);
-        broadcastMessage(MESSAGE_WIDGET, 5, 12, widgetOff);
-        broadcastMessage(MESSAGE_WIDGET, widgetOff, 12, 0x1000);
-        broadcastMessage(MESSAGE_WIDGET, 5, 7, widgetOff);
-        broadcastMessage(MESSAGE_WIDGET, widgetOff, 7, 0x1000);
-        broadcastMessage(MESSAGE_WIDGET, 5, 3, widgetOff);
-        broadcastMessage(MESSAGE_WIDGET, widgetOff, 3, 0x1000);
-        broadcastMessage(MESSAGE_WIDGET, 5, 13, widgetOff);
-        broadcastMessage(MESSAGE_WIDGET, widgetOff, 13, 0x1000);
+        setWidgetOn(5);
+        setWidgetOn(4);
+        setWidgetOn(12);
+        setWidgetOn(7);
+        setWidgetOn(3);
+        setWidgetOn(13);
         m_resourceSlider->enable(1);
     } else {
-        broadcastMessage(MESSAGE_WIDGET, 5, 5, 0x1000);
-        broadcastMessage(MESSAGE_WIDGET, 6, 4, 0x1006);
-        broadcastMessage(MESSAGE_WIDGET, 6, 12, 0x1006);
-        broadcastMessage(MESSAGE_WIDGET, 5, 7, 0x1000);
-        broadcastMessage(MESSAGE_WIDGET, 6, 3, 0x1006);
-        broadcastMessage(MESSAGE_WIDGET, 6, 13, 0x1006);
+        setWidgetDisabled(5);
+        setWidgetOff(4);
+        setWidgetOff(12);
+        setWidgetDisabled(7);
+        setWidgetOff(3);
+        setWidgetOff(13);
         m_resourceSlider->setState(0);
-        broadcastMessage(MESSAGE_WIDGET, 5, 6, 0x1000);
+        setWidgetDisabled(6);
     }
 
     if (g_marketSource != MARKET_SOURCE_TRADING_POST && g_marketHero
@@ -2077,15 +2016,9 @@ void TGiveResourceWindow::update(bool update)
             || g_townManager->m_townToView->m_type == TOWN_DUNGEON)
         && (g_townManager->m_townToView->m_built
             & g_bitNumber[17])) {
-        broadcastMessage(MESSAGE_WIDGET, 5, MARKET_RIGHT_LABEL_ID,
-                         widgetOff);
-        broadcastMessage(MESSAGE_WIDGET, widgetOff,
-                         MARKET_RIGHT_LABEL_ID,
-                         0x1000);
+        setWidgetOn(MARKET_RIGHT_LABEL_ID);
     } else {
-        broadcastMessage(MESSAGE_WIDGET, widgetOff,
-                         MARKET_RIGHT_LABEL_ID,
-                         0x1006);
+        setWidgetOff(MARKET_RIGHT_LABEL_ID);
     }
 
     for (int side = 0; side < 2; ++side) {
@@ -2216,6 +2149,9 @@ void TGiveResourceWindow::update(bool update)
 VA(0x005eb6a0, 0x7d9)  // ordermap clean run + arity ret 4, dc 0x189aac
 void TBuyArtifactWindow::update(unsigned char update)
 {
+    int tempMaxUnitsToTrade;
+    int tempLeftDenominated;
+    int tempTradeRatio;
     message msg;
     msg.m_id = MESSAGE_WIDGET;
 
@@ -2269,40 +2205,32 @@ void TBuyArtifactWindow::update(unsigned char update)
     broadcastMessage(msg);
 
     if (g_selectedArtifact == -1 || g_leftResource == -1) {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1006);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 8,   0x1006);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1006);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 3,   0x1006);
+        setWidgetDisabled(5);
+        setWidgetOff(4);
+        setWidgetOff(8);
+        setWidgetOff(0xc);
+        setWidgetOff(3);
     } else {
         if (g_rightAmount != 0) {
-            broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5, 6);
-            broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 5, 0x1000);
+            setWidgetOn(5);
         } else {
-            broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5, 0x1000);
+            setWidgetDisabled(5);
         }
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   4,   6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   3,   6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 3,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   8,   6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 8,   0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xc, 6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1000);
+        setWidgetOn(4);
+        setWidgetOn(3);
+        setWidgetOn(8);
+        setWidgetOn(0xc);
     }
 
     if (g_marketSource == MARKET_SOURCE_BLACK_MARKET ||
         g_marketSource == MARKET_SOURCE_FREELANCER) {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_COUNT_ID,      0x1006);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_LABEL_ID,      0x1006);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_BUY_RIGHT_LABEL_ID, 0x1006);
+        setWidgetOff(MARKET_LEFT_COUNT_ID);
+        setWidgetOff(MARKET_LEFT_LABEL_ID);
+        setWidgetOff(MARKET_BUY_RIGHT_LABEL_ID);
     } else {
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_LEFT_COUNT_ID,      6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_COUNT_ID,      0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_LEFT_LABEL_ID,      6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_LABEL_ID,      0x1000);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_BUY_RIGHT_LABEL_ID, 6);
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_BUY_RIGHT_LABEL_ID, 0x1000);
+        setWidgetOn(MARKET_LEFT_COUNT_ID);
+        setWidgetOn(MARKET_LEFT_LABEL_ID);
+        setWidgetOn(MARKET_BUY_RIGHT_LABEL_ID);
     }
 
     for (int col = 0; col < 2; ++col) {
@@ -2372,18 +2300,10 @@ void TBuyArtifactWindow::update(unsigned char update)
                     msg.m_codeY = 0x3f + i;
                     broadcastMessage(msg);
                     if (g_selectedArtifact != -1) {
-                        float valEff = static_cast<float>(g_artifactMarketValues[g_selectedArtifact])
-                                     * g_artifactPurchaseEfficency[g_marketCount];
-                        float cost = static_cast<float>(
-                            g_artifactTraits[g_marketArtifacts[i]].m_cost);
-                        long q;
-                        if (valEff == 0.0f || cost == 0.0f)
-                            q = 0;
-                        else {
-                            float ratio = cost / valEff;
-                            q = static_cast<long>(ratio + 0.5);
-                        }
-                        sprintf(g_text, DATA_COMPGEN(0x0068c5dc, inverseRatioFormat, "1/%d"), q);
+                        computeTradeRatios(g_selectedArtifact, i,
+                            &tempTradeRatio, &tempLeftDenominated,
+                            &tempMaxUnitsToTrade);
+                        sprintf(g_text, DATA_COMPGEN(0x0068c5dc, inverseRatioFormat, "1/%d"), tempTradeRatio);
                     } else {
                         sprintf(g_text, g_emptyRolloverText);
                     }
@@ -2809,76 +2729,6 @@ void TSellCreatureWindow::update(bool update)
         drawWindow(1, -65535, 65535);
 }
 
-// E:\gamedcs\tradpost.cpp:2181
-// bInLeftDenominated, iInMaxUnitsToTrade. DC 2184..2197 proves both
-// rounded ratios and the resource-limited maximum. Complete expands this
-// ordinary helper in Update; the discarded maximum then disappears.
-DC_ONLY(0x18ad48, 0x140)
-void TTradeResourceWindow::computeTradeRatios(int inLeftResource,
-    int inRightResource, int* inTradeRatio, int* inLeftDenominated,
-    int* inMaxUnitsToTrade)
-{
-    float ratio = static_cast<float>(g_marketValues[inRightResource])
-        / (static_cast<float>(g_marketValues[inLeftResource])
-           * g_tradingPostEfficency[g_marketCount]);
-    if (ratio >= 1.0f) {
-        *inLeftDenominated = 0;
-        *inTradeRatio = static_cast<long>(ratio + 0.5);
-        *inMaxUnitsToTrade =
-            g_currentPlayer->m_resources[inLeftResource] / *inTradeRatio;
-    } else {
-        *inLeftDenominated = 1;
-        *inTradeRatio = static_cast<long>(1.0f / ratio + 0.5);
-        *inMaxUnitsToTrade = g_currentPlayer->m_resources[inLeftResource];
-    }
-}
-
-#if 0  // @carcass
-
-// E:\gamedcs\tradpost.cpp:2202
-DC_ONLY(0x18ae88, 0x6C)  // inlined away on x86 (no carve slot)
-void TGiveResourceWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2209
-DC_ONLY(0x18aef4, 0xE0)  // inlined away on x86 (no carve slot)
-void TBuyArtifactWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2286
-DC_ONLY(0x18b2e8, 0x40)  // inlined away on x86 (no carve slot)
-void TTradeResourceWindow::setupNewTrade()
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2294
-DC_ONLY(0x18b328, 0x40)  // inlined away on x86 (no carve slot)
-void TGiveResourceWindow::setupNewTrade()
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2302
-DC_ONLY(0x18b368, 0x40)  // inlined away on x86 (no carve slot)
-void TBuyArtifactWindow::setupNewTrade()
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2319
-DC_ONLY(0x18b3d4, 0x40)  // inlined away on x86 (no carve slot)
-void TSellCreatureWindow::setupNewTrade()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x005ecd10, 0x0B)
 long getMarketValue(EGameResource resource)
 {
@@ -2895,6 +2745,64 @@ double getTradeRatio(EGameResource source, EGameResource dest, double efficiency
     else
         ratio = 1.0 / static_cast<double>(static_cast<long>(1.0 / ratio));
     return ratio;
+}
+
+// E:\gamedcs\tradpost.cpp:2181
+// bInLeftDenominated, iInMaxUnitsToTrade. DC 2184..2197 proves both
+// rounded ratios and the resource-limited maximum. Complete expands this
+// ordinary helper in Update; the discarded maximum then disappears.
+DC_ONLY(0x18ad48, 0x140)
+void TTradeResourceWindow::computeTradeRatios(int inLeftResource,
+    int inRightResource, int* inTradeRatio, int* inLeftDenominated,
+    int* inMaxUnitsToTrade)
+{
+    float leftValue = static_cast<float>(g_marketValues[inLeftResource])
+        * g_tradingPostEfficency[g_marketCount];
+    float ratio = static_cast<float>(g_marketValues[inRightResource]) / leftValue;
+    if (ratio >= 1.0f) {
+        *inLeftDenominated = 0;
+        *inTradeRatio = static_cast<long>(ratio + 0.5);
+        *inMaxUnitsToTrade =
+            g_currentPlayer->m_resources[inLeftResource] / *inTradeRatio;
+    } else {
+        *inLeftDenominated = 1;
+        *inTradeRatio = static_cast<long>(1.0f / ratio + 0.5);
+        *inMaxUnitsToTrade = g_currentPlayer->m_resources[inLeftResource];
+    }
+}
+
+// Original: TGiveResourceWindow::ComputeTradeRatios; tradpost.cpp:2202, dc 0x18ae88.
+void TGiveResourceWindow::computeTradeRatios(int inLeftResource,
+    int inRightResource, int* inTradeRatio, int* inLeftDenominated,
+    int* inMaxUnitsToTrade)
+{
+    *inLeftDenominated = 0;
+    *inTradeRatio = 1;
+    *inMaxUnitsToTrade = g_currentPlayer->m_resources[inLeftResource];
+}
+
+// Original: TBuyArtifactWindow::ComputeTradeRatios; tradpost.cpp:2209, dc 0x18aef4.
+// Both DC's double pool at 0x18b10c and Complete's fadd at 0x5ebd51 /
+// 0x5edccf use 0.5. The formerly flattened handler used 0.999, hidden by
+// relocation masking despite a 100% instruction match.
+void TBuyArtifactWindow::computeTradeRatios(int inLeftResource,
+    int inRightResource, int* inTradeRatio, int* inLeftDenominated,
+    int* inMaxUnitsToTrade)
+{
+    *inLeftDenominated = 0;
+    float leftValue = static_cast<float>(g_artifactMarketValues[inLeftResource])
+        * g_artifactPurchaseEfficency[g_marketCount];
+    float artifactValue = static_cast<float>(
+        g_artifactTraits[g_marketArtifacts[inRightResource]].m_cost);
+    if (leftValue == 0.0f || artifactValue == 0.0f) {
+        *inTradeRatio = 0;
+        *inMaxUnitsToTrade = 0;
+    } else {
+        float ratio = artifactValue / leftValue;
+        *inTradeRatio = static_cast<long>(ratio + 0.5);
+        *inMaxUnitsToTrade = g_currentPlayer->m_resources[inLeftResource]
+            / *inTradeRatio;
+    }
 }
 
 VA(0x005ecdc0, 0xbb)  // dc 0x18afd4
@@ -2971,12 +2879,48 @@ void TSellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightReso
 // their placement here restores the original source order after both surviving
 // ComputeTradeRatios definitions.
 
+// Original: TTradeResourceWindow::SetupNewTrade; tradpost.cpp:2286, dc 0x18b2e8.
+void TTradeResourceWindow::setupNewTrade()
+{
+    computeTradeRatios(g_selectedArtifact, g_leftResource,
+        &g_giveQuantity, &g_ratioInverted, &g_maxTradeUnits);
+    m_resourceSlider->setResolution(g_maxTradeUnits + 1);
+    g_rightAmount = 0;
+}
+
+// Original: TGiveResourceWindow::SetupNewTrade; tradpost.cpp:2294, dc 0x18b328.
+void TGiveResourceWindow::setupNewTrade()
+{
+    computeTradeRatios(g_selectedArtifact, g_leftResource,
+        &g_giveQuantity, &g_ratioInverted, &g_maxTradeUnits);
+    m_resourceSlider->setResolution(g_maxTradeUnits + 1);
+    g_rightAmount = 0;
+}
+
+// Original: TBuyArtifactWindow::SetupNewTrade; tradpost.cpp:2302, dc 0x18b368.
+void TBuyArtifactWindow::setupNewTrade()
+{
+    computeTradeRatios(g_selectedArtifact, g_leftResource,
+        &g_giveQuantity, &g_ratioInverted, &g_maxTradeUnits);
+    g_rightAmount = g_currentPlayer->m_resources[g_selectedArtifact]
+        >= g_giveQuantity;
+}
+
 // E:\gamedcs\tradpost.cpp:2312
 void TSellArtifactWindow::setupNewTrade()
 {
     computeTradeRatios(g_selectedArtifact, g_leftResource,
         &g_giveQuantity, &g_ratioInverted, &g_maxTradeUnits);
     g_rightAmount = 1;
+}
+
+// Original: TSellCreatureWindow::SetupNewTrade; tradpost.cpp:2319, dc 0x18b3d4.
+void TSellCreatureWindow::setupNewTrade()
+{
+    computeTradeRatios(g_selectedArtifact, g_leftResource,
+        &g_giveQuantity, &g_ratioInverted, &g_maxTradeUnits);
+    m_creatureSlider->setResolution(g_maxTradeUnits + 1);
+    g_rightAmount = 0;
 }
 
 // E:\gamedcs\tradpost.cpp:2327
@@ -3090,22 +3034,7 @@ int TTradeResourceWindow::windowHandler(message& msg)
             int buyRes = g_leftResource;
             g_selectedArtifact = sellRes;
             if (buyRes != -1) {
-                float denom = static_cast<float>(g_marketValues[sellRes])
-                            * g_tradingPostEfficency[g_marketCount];
-                float ratio = static_cast<float>(g_marketValues[buyRes]) / denom;
-                if (ratio >= 1.0f) {
-                    g_ratioInverted = 0;
-                    g_giveQuantity = static_cast<long>(ratio + 0.5);
-                    g_maxTradeUnits =
-                        g_currentPlayer->m_resources[sellRes] / g_giveQuantity;
-                } else {
-                    g_ratioInverted = 1;
-                    g_giveQuantity =
-                        static_cast<long>(1.0f / ratio + 0.5);
-                    g_maxTradeUnits = g_currentPlayer->m_resources[sellRes];
-                }
-                m_resourceSlider->setResolution(g_maxTradeUnits + 1);
-                g_rightAmount = 0;
+                setupNewTrade();
             }
             break;
         }
@@ -3119,22 +3048,7 @@ int TTradeResourceWindow::windowHandler(message& msg)
             int sellRes = g_selectedArtifact;
             g_leftResource = buyRes;
             if (sellRes != -1) {
-                float denom = static_cast<float>(g_marketValues[sellRes])
-                            * g_tradingPostEfficency[g_marketCount];
-                float ratio = static_cast<float>(g_marketValues[buyRes]) / denom;
-                if (ratio >= 1.0f) {
-                    g_ratioInverted = 0;
-                    g_giveQuantity = static_cast<long>(ratio + 0.5);
-                    g_maxTradeUnits =
-                        g_currentPlayer->m_resources[sellRes] / g_giveQuantity;
-                } else {
-                    g_ratioInverted = 1;
-                    g_giveQuantity =
-                        static_cast<long>(1.0f / ratio + 0.5);
-                    g_maxTradeUnits = g_currentPlayer->m_resources[sellRes];
-                }
-                m_resourceSlider->setResolution(g_maxTradeUnits + 1);
-                g_rightAmount = 0;
+                setupNewTrade();
             }
             break;
         }
@@ -3224,11 +3138,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
                     return 1;
                 g_selectedArtifact = res;
                 if (g_leftResource != -1) {
-                    g_ratioInverted = 0;
-                    g_giveQuantity = 1;
-                    g_maxTradeUnits = g_currentPlayer->m_resources[g_selectedArtifact];
-                    m_resourceSlider->setResolution(g_maxTradeUnits + 1);
-                    g_rightAmount = 0;
+                    setupNewTrade();
                 }
                 break;
             }
@@ -3241,11 +3151,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
                     return 1;
                 g_leftResource = recip;
                 if (g_selectedArtifact != -1) {
-                    g_ratioInverted = 0;
-                    g_giveQuantity = 1;
-                    g_maxTradeUnits = g_currentPlayer->m_resources[g_selectedArtifact];
-                    m_resourceSlider->setResolution(g_maxTradeUnits + 1);
-                    g_rightAmount = 0;
+                    setupNewTrade();
                 }
                 break;
             }
@@ -3406,26 +3312,7 @@ int TBuyArtifactWindow::windowHandler(message& msg)
                     return MESSAGE_DISPATCH_CONSUME;
                 g_selectedArtifact = source;
                 if (g_leftResource != -1) {
-                    g_ratioInverted = 0;
-                    float leftValue =
-                        static_cast<float>(g_artifactMarketValues[source])
-                        * g_artifactPurchaseEfficency[g_marketCount];
-                    float artifactValue = static_cast<float>(
-                        g_artifactTraits[
-                            g_marketArtifacts[
-                                g_leftResource]].m_cost);
-                    if (leftValue == 0.0f || artifactValue == 0.0f) {
-                        g_giveQuantity = 0;
-                        g_maxTradeUnits = 0;
-                    } else {
-                        float ratio = artifactValue / leftValue;
-                        g_giveQuantity = static_cast<long>(ratio + 0.999);
-                        g_maxTradeUnits =
-                            g_currentPlayer->m_resources[source]
-                            / g_giveQuantity;
-                    }
-                    g_rightAmount =
-                        g_currentPlayer->m_resources[source] >= g_giveQuantity;
+                    setupNewTrade();
                 }
                 break;
             }
@@ -3439,26 +3326,7 @@ int TBuyArtifactWindow::windowHandler(message& msg)
                     return MESSAGE_DISPATCH_CONSUME;
                 g_leftResource = destination;
                 if (g_selectedArtifact != -1) {
-                    int source = g_selectedArtifact;
-                    g_ratioInverted = 0;
-                    float leftValue =
-                        static_cast<float>(g_artifactMarketValues[source])
-                        * g_artifactPurchaseEfficency[g_marketCount];
-                    float artifactValue = static_cast<float>(
-                        g_artifactTraits[
-                            g_marketArtifacts[destination]].m_cost);
-                    if (leftValue == 0.0f || artifactValue == 0.0f) {
-                        g_giveQuantity = 0;
-                        g_maxTradeUnits = 0;
-                    } else {
-                        float ratio = artifactValue / leftValue;
-                        g_giveQuantity = static_cast<long>(ratio + 0.999);
-                        g_maxTradeUnits =
-                            g_currentPlayer->m_resources[source]
-                            / g_giveQuantity;
-                    }
-                    g_rightAmount =
-                        g_currentPlayer->m_resources[source] >= g_giveQuantity;
+                    setupNewTrade();
                 }
                 break;
             }
@@ -3846,11 +3714,7 @@ int TSellCreatureWindow::windowHandler(message& msg)
                     return MESSAGE_DISPATCH_CONSUME;
                 g_leftResource = destination;
                 if (g_selectedArtifact != -1) {
-                    computeTradeRatios(g_selectedArtifact, destination,
-                                       &g_giveQuantity, &g_ratioInverted,
-                                       &g_maxTradeUnits);
-                    m_creatureSlider->setResolution(g_maxTradeUnits + 1);
-                    g_rightAmount = 0;
+                    setupNewTrade();
                 }
                 break;
             }
@@ -3865,11 +3729,7 @@ int TSellCreatureWindow::windowHandler(message& msg)
                     return MESSAGE_DISPATCH_CONSUME;
                 g_selectedArtifact = creatureSlot;
                 if (g_leftResource != -1) {
-                    computeTradeRatios(creatureSlot, g_leftResource,
-                                       &g_giveQuantity, &g_ratioInverted,
-                                       &g_maxTradeUnits);
-                    m_creatureSlider->setResolution(g_maxTradeUnits + 1);
-                    g_rightAmount = 0;
+                    setupNewTrade();
                 }
                 break;
             }

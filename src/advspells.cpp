@@ -740,20 +740,6 @@ TSkillMastery hero::getSpellLevel(SpellID spell)
     // @stub
 }
 
-// E:\gamedcs\WinMgr.h:181
-DC_ONLY(0x230bc, 0x48)
-void heroWindowManager::SaveFizzleSource(const SLimitData* limits)
-{
-    // @stub
-}
-
-// E:\gamedcs\WinMgr.h:187
-DC_ONLY(0x23104, 0x50)
-void heroWindowManager::FizzleForward(const SLimitData* limits, int fadeTime)
-{
-    // @stub
-}
-
 // E:\gamedcs\netmsg.h:532
 DC_ONLY(0x23154, 0x1C)
 void CMapChange::CMapChange(eRS_Messages id, unsigned long size)

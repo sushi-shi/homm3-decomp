@@ -59,6 +59,12 @@ DATA(0x006a6cb8) static THelpText g_campaignDifficultyHelp[5];
 int campaignDifficultyHandler(message& msg);
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
+// DC CampaignWait(int), dc 0x58244, indexes cCampaignDialog/voice-over
+// tables and draws a numbered bitmap. Complete uses the scenario-owned
+// MapTextStruct::play (0x488fb0): its receiver supplies video/audio/subtitles
+// read by ScenarioStruct::read (0x487e40), and videoOpen drives the PC movie.
+// The free index-based interface is retired; the scrolling/speech operation
+// survives in that record member in customcampaign.cpp.
 // E:\gamedcs\campaignbrief.cpp:202
 DC_ONLY(0x58244, 0x530)
 void CampaignWait(int which)
@@ -66,6 +72,11 @@ void CampaignWait(int which)
     // @stub
 }
 
+// DC ShowTerritorySmacker, dc 0x58774, chooses CampaignWait(23) or
+// MusicFileIndex[currentCampaign] + currentMap. Complete selects the loaded
+// scenario's prologue/epilogue through SCampaign::playScenarioPrologue and
+// playScenarioEpilogue (0x48a270/0x48a2a0), both taking the campaign header.
+// Its boolean special-case/global-table interface has no Complete owner.
 // E:\gamedcs\campaignbrief.cpp:365
 DC_ONLY(0x58774, 0x50)
 void showTerritorySmacker(unsigned char bEvil2Post)
@@ -79,7 +90,7 @@ void showTerritorySmacker(unsigned char bEvil2Post)
 // description as a second widget message; Complete hands it to the
 // scroller (type_text_scroller::SetText, 0x5ba6e0) instead.
 DC_ONLY(0x58938, 0x6A)
-inline void TCampaignBrief::resetMapAndDescription(int which)
+void TCampaignBrief::resetMapAndDescription(int which)
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
@@ -90,13 +101,11 @@ inline void TCampaignBrief::resetMapAndDescription(int which)
     m_scroller->setText(m_scenarios[which].m_mapDescription.c_str());
 }
 
-// E:\gamedcs\campaignbrief.cpp:452. Complete keeps this and
-// ResetMapAndDescription as header-style inlines: neither has a retail
-// body, and Select carries both expanded - which is what makes
-// vector::size a NESTED candidate there, called out of line at both
-// loop tests (0x423110, the pointer-vector size COMDAT).
+// E:\gamedcs\campaignbrief.cpp:452. Select expands this ordinary TU
+// helper and ResetMapAndDescription. Retail retains vector::size at the loop
+// tests (0x423110); expansion does not establish an inline source specifier.
 DC_ONLY(0x589a4, 0x84)
-inline void TCampaignBrief::clearSelected()
+void TCampaignBrief::clearSelected()
 {
     for (int i = 0; i < static_cast<int>(m_campaign->m_scenarios.size()); i++) {
         if (m_scenarios[i].m_available)
@@ -162,15 +171,26 @@ void TCampaignBrief::select(int which)
 VA_COMPGEN(0x00457cb0, 0x2B8, IMPLICIT_COPY_ASSIGN, CMapHeaderData)
 VA_COMPGEN(0x0054DEB0, 0x13, VECTOR_CAPACITY, Int)
 
-#if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
-// E:\gamedcs\campaignbrief.cpp:462
-DC_ONLY(0x58a28, 0x74)
+// Original: TCampaignBrief::SetupCurrentTerritory; campaignbrief.cpp:462, dc 0x58a28.
+// Complete moves currentTerritory into the window and availability/setup into
+// CampaignScenarioPreview. The constructor still expands this ordinary helper
+// between the campaign description and selected-map controls (DC line 913).
 void TCampaignBrief::setupCurrentTerritory()
 {
-    // @stub
+    if (g_campaignBriefViewFromGame) {
+        m_selectedScenario = g_game->m_campaign.m_currentMap;
+    } else {
+        for (unsigned int selectedIndex = 0;
+             selectedIndex < static_cast<int>(m_scenarios.size());
+             ++selectedIndex) {
+            if (m_scenarios[selectedIndex].m_available) {
+                m_selectedScenario = selectedIndex;
+                g_game->m_setup = m_scenarios[selectedIndex].m_gameSetup;
+                break;
+            }
+        }
+    }
 }
-
-#endif
 
 // The local player's slot in the selected scenario, DC ?playerSlot@@3HA;
 // retail .bss 0x694dcc, written by UpdateAllyEnemyFlags below.
@@ -224,9 +244,15 @@ void TCampaignBrief::updateAllyEnemyFlags()
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 
+// DC ExtractCampaignMap, dc 0x59300, copies a bitmap resource into one
+// 0x20808-byte RamDisc then parses the global CampaignHeader with ReadRamDisc.
+// Complete CampaignHeaderStruct::load (0x488880) owns a file/resource stream,
+// inflates its header and reads dynamic ScenarioStruct records. Embedded maps
+// are read by loadScenario/loadMapHeader (0x488810/0x487d30); no fixed RAM-disc
+// buffer or free numPreReqs/singleMapOnly/writeFile interface remains.
 // E:\gamedcs\campaignbrief.cpp:649
 DC_ONLY(0x59300, 0x1B8)
-void ExtractCampaignMap(int* numPreReqs, unsigned char single_map_only, unsigned char write_file)
+void ExtractCampaignMap(int& numPreReqs, unsigned char single_map_only, unsigned char write_file)
 {
     // @stub
 }
@@ -467,6 +493,9 @@ void TCampaignBrief::updateDifficultyButtons()
 // body's nine zero-initialised `for` counters are `unsigned int`, not `int`.
 // They only pay TOGETHER - 89.0593 / 90.0586 / 90.1377 / 90.9771 / 91.1880 as
 // they accumulate - and the fifth through ninth all fall back.
+// Current residual (85.29%): setupCurrentTerritory expands, but nested STL
+// construction, string assignment and widget-insert boundaries still differ.
+// Keep the ordinary helper and its source calls while resolving those sites.
 VA(0x004590c0, 0x1319)  // anchor-caller/callee/string/vtable, dc 0x594b8
 TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
                                unsigned char viewFromGame)
@@ -641,19 +670,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
                         font::WHITE, CAMPAIGN_DESCRIPTION_ID, 0, 0, 8));
     }
 
-    if (g_campaignBriefViewFromGame) {
-        m_selectedScenario = g_game->m_campaign.m_currentMap;
-    } else {
-        for (unsigned int selectedIndex = 0;
-             selectedIndex < static_cast<int>(m_scenarios.size());
-             ++selectedIndex) {
-            if (m_scenarios[selectedIndex].m_available) {
-                m_selectedScenario = selectedIndex;
-                g_game->m_setup = m_scenarios[selectedIndex].m_gameSetup;
-                break;
-            }
-        }
-    }
+    setupCurrentTerritory();
 
     widgets.insert(widgets.end(), new textWidget(
                     481, 213, viewFromGame ? 217 : 281, 32,
@@ -1215,6 +1232,10 @@ std::string getCampaignName()
 
 #if 0  // Remaining Dreamcast-only carcass.
 
+// DC ReadRamDisc, dc 0x5ab84, copies from pRamDisc[which] + *bytesRead,
+// advances the caller's cursor and mirrors it at RamDisc+0x20800 (stride
+// 0x20808). Complete campaign readers seek std::streambuf and use TAbstractFile
+// over TGzInflateBuf (0x487d30/0x488880), so this RAM-disc cursor API is retired.
 // E:\gamedcs\campaignbrief.cpp:1409
 DC_ONLY(0x5ab84, 0x60)
 void ReadRamDisc(int RamDiscNr, void* buffer, long size, unsigned long* bytesRead)

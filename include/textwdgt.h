@@ -19,12 +19,16 @@ public:
     font::TColor m_color;
     int m_backColor;
     unsigned int m_justify;
+    textWidget();
     textWidget(int x, int y, int w, int h, const char* text,
                const char* fontName, font::TColor color, int id,
                unsigned justify, int backColor, int style);
     textWidget(int x, int y, int w, int h, const char* text,
                const char* fontName, font::TColor color, int id,
                unsigned justify, int backColor, unsigned char focusable);
+    void initialize(int x, int y, int w, int h, int id, int style,
+                    const char* text, const char* fontName, font::TColor color,
+                    unsigned int justify, unsigned char focusable);
     virtual ~textWidget();  // retail 0x5bc3b0
     virtual int main(message& msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
@@ -42,6 +46,24 @@ public:
     void setColor(font::TColor newColor) { m_color = newColor; }
 };
 
+class CSprite;
+// DC's sprite-backed label. Its Background and BackgroundFrame members are
+// borrowed drawing inputs; the generated destructor tears down textWidget.
+// No standalone Complete address or vtable is asserted for this class.
+class iconBackedTextWidget : public textWidget {
+public:
+    iconBackedTextWidget();
+    iconBackedTextWidget(int x, int y, int w, int h, const char* text,
+                         const char* fontName, const char* backName,
+                         font::TColor color, int id, unsigned int justify,
+                         int style);
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
+    virtual void draw() const;
+private:
+    CSprite* m_background;
+    int m_backgroundFrame;
+};
+
 class Bitmap816;
 class Bitmap16Bit;
 
@@ -54,6 +76,7 @@ public:
     // result here, and Draw 0x5bc7f0 blits out of it after clamping the
     // widget extent against its +0x24/+0x28 Width/Height.
     Bitmap816* m_image;
+    bitmapBackedTextWidget();
     bitmapBackedTextWidget(int x, int y, int w, int h, const char* text,
                            const char* fontName, const char* backName,
                            font::TColor color, int id, unsigned justify,

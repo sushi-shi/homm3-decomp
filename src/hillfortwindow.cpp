@@ -191,14 +191,15 @@ THillFortWindow::~THillFortWindow()
     }
 }
 
-// E:\gamedcs\hillfortwindow.cpp:178
-#if 0  // @carcass: retail inlines this switch into the dialog handler
-DC_ONLY(0xd6b94, 0x1A)
-int THillFortWindow::convertID2HelpID(int id)
+// Original: THillFortWindow::convertID2HelpID; hillfortwindow.cpp:178, dc 0xd6b94.
+// Complete's handler uses named widget cases directly; this source query
+// retains the DC help-table range, including every background and cost row.
+int THillFortWindow::convertID2HelpID(int id) const
 {
-    // @stub
+    if (id < BACKGROUND_ID || id > UPGRADE_BUTTON_7_ID)
+        return -1;
+    return id - BACKGROUND_ID;
 }
-#endif
 
 VA(0x004e7e90, 0x1F)  // dc 0xd6bb0
 void THillFortWindow::doModal()

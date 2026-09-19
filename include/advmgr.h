@@ -1360,7 +1360,9 @@ public:
                       unsigned char forceDraw,
                       unsigned char updateBottomView);
     void completeDraw(unsigned char forceDraw);
+    void eventSound(NewmapCell* cell);
     void eventSound(int eventID, int extraInfo);
+    short recruitEvent(hero* who, TCreatureType creature, short available);
     void setEnvironmentOrigin(type_point point, int reset);
     // HeroView (0x4e1800) calls this on the dismiss path. hero.obj takes
     // the ONE declarator through its own gate rather than joining the
@@ -1453,6 +1455,14 @@ public:
                         unsigned char drawChanges);
     void drawRolloverText(char* text);
     void setRolloverText(NewmapCell* testCell, int rx, int ry);
+    void clearBottomView();
+    void getCursorSampleSet(int walkSpeed);
+    void processMapSelect2(const message& msg, type_point& triggerPoint, NewmapCell*& eventCell);
+    NewmapCell* getCell(int x, int y, int z);
+    void checkLoadSample(e_looping_sound_id idNum);
+    void checkDimHero();
+    void puzzleDraw(int startX, int startY, int z, int ultX, int ultY);
+    unsigned short getRouteArray(int x, int y, int z);
     NewmapCell* getCell(type_point point);
     void castSpell(SpellID whichSpell);
     void summonBoat(TSkillMastery level);

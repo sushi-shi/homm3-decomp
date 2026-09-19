@@ -733,6 +733,10 @@ void writePrefs()
     writePrefsToRegistry();
 }
 
+// DC IsCDDrive (misc.cpp:603, 0xfe060) accepts every drive; its
+// caller SetupCDDrive returns a fixed 7 as well. Complete 0x50c1c0
+// retains that fixed result, so no drive-enumeration/classification
+// expression survives in this pinned executable. See config/dc_only.tsv.
 VA(0x0050c1c0, 0x6)  // dc 0xfe064
 int setupCDDrive()
 {
@@ -850,6 +854,15 @@ int TPickANumber::pick()
     return m_low + idx;
 }
 
+// Original: TPickANumber::MarkOut; misc.cpp:884, dc 0xfe208
+void TPickANumber::markOut(int number)
+{
+    if (isAvailable(number)) {
+        --m_numbersLeft;
+        m_available[number - m_low] = 0;
+    }
+}
+
 VA(0x0050c7a0, 0x42)  // dc 0xfe248
 unsigned long getAvailableDiskSpace()
 {
@@ -866,12 +879,6 @@ unsigned long getAvailableDiskSpace()
 
 #if 0  // @carcass
 
-// E:\gamedcs\misc.cpp:884
-DC_ONLY(0xfe208, 0x40)
-void TPickANumber::MarkOut(int number)
-{
-    // @stub
-}
 
 // ..\stlport\stl_bvector.h:54
 DC_ONLY(0xfe2b8, 0x10)
@@ -908,12 +915,6 @@ unsigned char std::vector<bool,std::allocator<bool> >::operator[](unsigned __n)
     // @stub
 }
 
-// E:\gamedcs\includes.h:166
-DC_ONLY(0xfe374, 0x24)
-unsigned char TPickANumber::IsAvailable(int number)
-{
-    // @stub
-}
 
 // ..\stlport\stl_bvector.h:245
 DC_ONLY(0xfe398, 0x1C)

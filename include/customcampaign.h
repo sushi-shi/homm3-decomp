@@ -47,6 +47,22 @@ public:
 };
 SIZE(CampaignScenarioInfo, 0x14);
 
+// The DC campaign backend stored map_traits[8][32] at SCampaign+1408,
+// each 36-byte TCustomCampaignTraits owning two 8-byte TArtifactRequirement
+// records. Its init/set/constructor helpers and InitCampaignMapTraits populated
+// that fixed table (dc 0x7cc8c/0x7cccc/0x7cd4c, 0xbcd20..0xbcd90).
+// Complete's 0x7c-byte SCampaign instead owns dynamic hero/artifact pools and
+// CampaignScenarioInfo progress records; ScenarioStruct::read (0x487e40) loads
+// per-scenario retention flags and crossover artifact masks from the campaign
+// file. The fixed-table helpers have no storage-compatible desktop owner.
+// DC GetExpCap (CustomCampaign.h:225, dc 0xd5944) indexed that table; retail
+// hero::giveExperience (0x4e33b0) reads NewSMapHeader::m_maxHeroLevel and converts
+// the level through getExperience. DC game::mark_campaign_map_won (0xbc384)
+// wrote three fixed progress arrays. Complete's SCampaign::completeCurrentMap
+// (0x489820) owns the dynamic scenario record, completion order and crossover
+// pools, and is called directly by oldmain. These retired interfaces are
+// recorded individually in config/dc_only.tsv.
+
 class SCampaign {
 public:
     enum {

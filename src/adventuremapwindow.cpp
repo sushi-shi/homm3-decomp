@@ -1327,7 +1327,7 @@ unsigned char TAdventureMapWindow::setElevationToggleImage(int level)
 // 240-trial, 12-family target-local state campaign remained at 86.6667%; the
 // residual is a nested vector<int> inliner decision, not evidence to erase the
 // helper boundary again.
-VA(0x00403cc0, 0x215)  // anchor-global, dc 0x118c; real older body dc 0x2a74
+VA(0x00403cc0, 0x215)  // anchor-global, dc 0x118c
 void TAdventureMapWindow::setSleepImage(int image)
 {
     if (image != g_sleepImage) {
@@ -1383,7 +1383,9 @@ void TAdventureMapWindow::drawChatText(unsigned char update)
             m_chatTextWidget->m_width, m_chatTextWidget->m_height);
 }
 
-// E:\gamedcs\adventuremapwindow.cpp:1273, dc 0x1238
+// Original: TAdvMenu::SetAdvWinButtonPalette; adventuremapwindow.cpp:1273, dc 0x1238.
+// Complete owns these menu buttons directly in TAdventureMapWindow; its
+// updateButtons body at 0x403f60 expands GetWidget and the button palette call.
 void TAdventureMapWindow::setAdvWinButtonPalette(int id, int player)
 {
     widget* w = getWidget(id);
@@ -1412,6 +1414,15 @@ void TAdventureMapWindow::updateButtons(unsigned char draw, unsigned char update
 }
 
 #if 0  // @carcass
+
+// Platform difference: DC puts a second copy of the adventure controls in
+// TAdvMenu, a modal CAdvPopup (ctor0x1284, handler0x1ab8, dtor0x1a40).
+// Complete constructs the buttons directly in TAdventureMapWindow0x401510
+// and updates them through0x403220..0x403f60; advManager owns dispatch.
+// These additional modal methods are accounted individually in dc_only.tsv.
+// Their operations survive in the persistent window; they are not missing
+// standalone retail claims. SetAdvWinButtonPalette above has its own proven
+// source-identity bridge and is deliberately retained as a canonical helper.
 
 // E:\gamedcs\adventuremapwindow.cpp:1307
 DC_ONLY(0x1284, 0x708)

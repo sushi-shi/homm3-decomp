@@ -27,6 +27,10 @@ private:
 
 }
 
+static void initializeHeroTraits(int id, const TSpreadsheetResource::TStringVector& values);
+static void initializeHeroClassTraits(int id, const TSpreadsheetResource::TStringVector& values);
+static void initializeSSkillTraits(int id, const TSpreadsheetResource::TStringVector& values);
+
 VA(0x004e67a0, 0x176)  // dc 0xd5a40
 unsigned char initializeHeroTraitsTable()
 {
@@ -44,24 +48,7 @@ unsigned char initializeHeroTraitsTable()
     int id = 0;
     int row = 2;
     for (; id < 156; ++id, ++row) {
-        const TSpreadsheetResource::TStringVector& values =
-            resource->getRow(row);
-        THeroTraits& traits = g_heroTraitsStorage[id];
-
-        DATA_COMPGEN_GUARD(0x00698b99, heroStringsGuard, heroStrings)
-        DATA(0x00698eb0)
-        static TAutoStrPtr heroStrings[156];
-
-        heroStrings[id].set(new char[strlen(values[0]) + 1]);
-        strcpy(heroStrings[id].get(), values[0]);
-
-        traits.m_defaultName = heroStrings[id].get();
-        traits.m_firstStackLow = atoi(values[1]);
-        traits.m_firstStackHigh = atoi(values[2]);
-        traits.m_secondStackLow = atoi(values[4]);
-        traits.m_secondStackHigh = atoi(values[5]);
-        traits.m_thirdStackLow = atoi(values[7]);
-        traits.m_thirdStackHigh = atoi(values[8]);
+        initializeHeroTraits(id, resource->getRow(row));
     }
 
     resource->dispose();
@@ -85,36 +72,7 @@ unsigned char initializeHeroClassTraitsTable()
     int id = 0;
     int row = 2;
     for (; id < 18; ++id, ++row) {
-        const TSpreadsheetResource::TStringVector& values =
-            resource->getRow(row);
-        THeroClassTraits& traits = g_heroClassTraits[id];
-
-        DATA_COMPGEN_GUARD(0x00698b9a, heroClassStringsGuard,
-                          heroClassStrings)
-        DATA(0x00699120)
-        static TAutoStrPtr heroClassStrings[18];
-
-        heroClassStrings[id].set(new char[strlen(values[0]) + 1]);
-        strcpy(heroClassStrings[id].get(), values[0]);
-        traits.m_className = heroClassStrings[id].get();
-        traits.m_aggression = static_cast<float>(atof(values[1]));
-
-        int column;
-        for (column = 0; column < 4; ++column)
-            traits.m_initialPrimarySkill[column] =
-                static_cast<signed char>(atoi(values[column + 2]));
-        for (column = 0; column < 4; ++column)
-            traits.m_gainPrimarySkillChance[column] =
-                static_cast<signed char>(atoi(values[column + 6]));
-        for (column = 0; column < 4; ++column)
-            traits.m_gainPrimarySkillChance10P[column] =
-                static_cast<signed char>(atoi(values[column + 10]));
-        for (column = 0; column < 28; ++column)
-            traits.m_gainSecondarySkillChance[column] =
-                static_cast<signed char>(atoi(values[column + 14]));
-        for (column = 0; column < 9; ++column)
-            traits.m_foundInTownType[column] =
-                static_cast<signed char>(atoi(values[column + 42]));
+        initializeHeroClassTraits(id, resource->getRow(row));
     }
 
     resource->dispose();
@@ -138,73 +96,101 @@ unsigned char initializeSSkillTraitsTable()
     int id = 0;
     int row = 2;
     for (; id < 28; ++id, ++row) {
-        const TSpreadsheetResource::TStringVector& values =
-            resource->getRow(row);
-        TSSkillTraits& traits = g_sSkillTraitsStorage[id];
-
-        DATA_COMPGEN_GUARD(0x00698b98, secondarySkillStringsGuard,
-                          secondarySkillNames)
-        DATA(0x00698b28)
-        static TAutoStrPtr secondarySkillNames[28];
-
-        secondarySkillNames[id].set(new char[strlen(values[0]) + 1]);
-        strcpy(secondarySkillNames[id].get(), values[0]);
-        traits.m_name = secondarySkillNames[id].get();
-
-        DATA(0x00698b9c)
-        static TAutoStrPtr secondarySkillLevelNames[28][3];
-
-        int level;
-        for (level = 0; level < 3; ++level) {
-            secondarySkillLevelNames[id][level].set(
-                new char[strlen(values[level + 1]) + 1]);
-            strcpy(secondarySkillLevelNames[id][level].get(),
-                   values[level + 1]);
-            traits.m_levelNames[level] =
-                secondarySkillLevelNames[id][level].get();
-        }
+        initializeSSkillTraits(id, resource->getRow(row));
     }
 
     resource->dispose();
     return 1;
 }
 
+// The DC table loaders call these ordinary static functions. Complete's
+// table bodies retain the same row parsing and private string ownership,
+// including the expanded static initialization and destruction families.
+// Original: InitializeHeroTraits; herodefs.cpp:409, dc 0xd5bc0
+static void initializeHeroTraits(int id, const TSpreadsheetResource::TStringVector& values)
+{
+    THeroTraits& traits = g_heroTraitsStorage[id];
+
+    DATA_COMPGEN_GUARD(0x00698b99, heroStringsGuard, heroStrings)
+    DATA(0x00698eb0)
+    static TAutoStrPtr heroStrings[156];
+
+    heroStrings[id].set(new char[strlen(values[0]) + 1]);
+    strcpy(heroStrings[id].get(), values[0]);
+
+    traits.m_defaultName = heroStrings[id].get();
+    traits.m_firstStackLow = atoi(values[1]);
+    traits.m_firstStackHigh = atoi(values[2]);
+    traits.m_secondStackLow = atoi(values[4]);
+    traits.m_secondStackHigh = atoi(values[5]);
+    traits.m_thirdStackLow = atoi(values[7]);
+    traits.m_thirdStackHigh = atoi(values[8]);
+}
+
+// Original: InitializeHeroClassTraits; herodefs.cpp:441, dc 0xd5d28
+static void initializeHeroClassTraits(int id, const TSpreadsheetResource::TStringVector& values)
+{
+    THeroClassTraits& traits = g_heroClassTraits[id];
+
+    DATA_COMPGEN_GUARD(0x00698b9a, heroClassStringsGuard,
+                      heroClassStrings)
+    DATA(0x00699120)
+    static TAutoStrPtr heroClassStrings[18];
+
+    heroClassStrings[id].set(new char[strlen(values[0]) + 1]);
+    strcpy(heroClassStrings[id].get(), values[0]);
+    traits.m_className = heroClassStrings[id].get();
+    traits.m_aggression = static_cast<float>(atof(values[1]));
+
+    int column;
+    for (column = 0; column < 4; ++column)
+        traits.m_initialPrimarySkill[column] =
+            static_cast<signed char>(atoi(values[column + 2]));
+    for (column = 0; column < 4; ++column)
+        traits.m_gainPrimarySkillChance[column] =
+            static_cast<signed char>(atoi(values[column + 6]));
+    for (column = 0; column < 4; ++column)
+        traits.m_gainPrimarySkillChance10P[column] =
+            static_cast<signed char>(atoi(values[column + 10]));
+    for (column = 0; column < 28; ++column)
+        traits.m_gainSecondarySkillChance[column] =
+            static_cast<signed char>(atoi(values[column + 14]));
+    for (column = 0; column < 9; ++column)
+        traits.m_foundInTownType[column] =
+            static_cast<signed char>(atoi(values[column + 42]));
+}
+
+// Original: InitializeSSkillTraits; herodefs.cpp:489, dc 0xd5ee8
+static void initializeSSkillTraits(int id, const TSpreadsheetResource::TStringVector& values)
+{
+    TSSkillTraits& traits = g_sSkillTraitsStorage[id];
+
+    DATA_COMPGEN_GUARD(0x00698b98, secondarySkillStringsGuard,
+                      secondarySkillNames)
+    DATA(0x00698b28)
+    static TAutoStrPtr secondarySkillNames[28];
+
+    secondarySkillNames[id].set(new char[strlen(values[0]) + 1]);
+    strcpy(secondarySkillNames[id].get(), values[0]);
+    traits.m_name = secondarySkillNames[id].get();
+
+    DATA(0x00698b9c)
+    static TAutoStrPtr secondarySkillLevelNames[28][3];
+
+    int level;
+    for (level = 0; level < 3; ++level) {
+        secondarySkillLevelNames[id][level].set(
+            new char[strlen(values[level + 1]) + 1]);
+        strcpy(secondarySkillLevelNames[id][level].get(),
+               values[level + 1]);
+        traits.m_levelNames[level] =
+            secondarySkillLevelNames[id][level].get();
+    }
+}
+
 #if 0  // @carcass -- withdrawn inlined helpers and cinit rows
 
 // E:\gamedcs\terrain.h:70
-
-// Where the seven really went. The three Initialize*Traits rows are
-// DC `static` with exactly one call site each - their Table function -
-// so /Ob2 single-call-site inlining consumes them and no out-of-line
-// retail body exists. The arithmetic corroborates: DC caller+callee
-// 114+268=382 / 114+422=536 / 152+404=556 against retail's Table sizes
-// 374 / 482 / 456 gives 0.98 / 0.90 / 0.82, one tight cluster inside the
-// SH4->x86 band, where each Table taken alone would be 3.0-4.2x.
-// The four TAutoStrPtr methods are anonymous-namespace accessors of
-// DC size 8 / 24 / 4 / 4 bytes; mapping any of them onto a 95-byte body
-// is 4x to 24x, far outside the band. They inline away entirely.
-// ----------------------------------------------------------------------
-
-// E:\gamedcs\herodefs.cpp:409
-DC_ONLY(0xd5bc0, 0x10C)
-void InitializeHeroTraits(int id, const std::vector<char* resource)
-{
-    // @stub
-}
-
-// E:\gamedcs\herodefs.cpp:441
-DC_ONLY(0xd5d28, 0x1A6)
-void InitializeHeroClassTraits(int id, const std::vector<char* resource)
-{
-    // @stub
-}
-
-// E:\gamedcs\herodefs.cpp:489
-DC_ONLY(0xd5ee8, 0x194)
-void InitializeSSkillTraits(int id, const std::vector<char* resource)
-{
-    // @stub
-}
 
 // E:\gamedcs\herodefs.cpp:391
 DC_ONLY(0xd60d4, 0x8)

@@ -264,6 +264,15 @@ public:
         m_dataSize = 0;
         return 1;
     }
+    // Original: CDPlayMsg::GetId; dxplay.h:177, dc 0x8be38.
+    // ReceiveSystemMsg0x497910 expands the null-data sentinel and the
+    // payload's first dword load. The bytes are a DirectPlay message.
+    unsigned long getId()
+    {
+        if (!m_data)
+            return 0xFFFFFFFF;
+        return *static_cast<const unsigned long*>(static_cast<const void*>(m_data));
+    }
 };
 SIZE(CDPlayMsg, 0x08);
 
@@ -436,26 +445,69 @@ protected:
     {
         return 1;
     }
+    // Complete base/lobby vtables0x63dc28/0x63dd20 slots44..54 share
+    // the return-true body0x496cd0 (mov al,1; ret8). DC's distinct
+    // in-class virtual defaults remain distinct source methods.
+    // Original: CDPlay::SysMsgAddPlayerToGroup; dxplay.h:441, dc 0x8bf1c.
     virtual unsigned char sysMsgAddPlayerToGroup(
-        DPMSG_ADDPLAYERTOGROUP* message, unsigned long toId);
+        DPMSG_ADDPLAYERTOGROUP* message, unsigned long toId)
+    {
+        return 1;
+    }
+    // Original: CDPlay::SysMsgChat; dxplay.h:442, dc 0x8bf20.
     virtual unsigned char sysMsgChat(
-        DPMSG_CHAT* message, unsigned long toId);
+        DPMSG_CHAT* message, unsigned long toId)
+    {
+        return 1;
+    }
+    // Original: CDPlay::SysMsgDeleteGroupFromGroup; dxplay.h:443, dc 0x8bf24.
     virtual unsigned char sysMsgDeleteGroupFromGroup(
-        DPMSG_ADDGROUPTOGROUP* message, unsigned long toId);
+        DPMSG_ADDGROUPTOGROUP* message, unsigned long toId)
+    {
+        return 1;
+    }
+    // Original: CDPlay::SysMsgDeletePlayerFromGroup; dxplay.h:444, dc 0x8bf28.
     virtual unsigned char sysMsgDeletePlayerFromGroup(
-        DPMSG_ADDPLAYERTOGROUP* message, unsigned long toId);
+        DPMSG_ADDPLAYERTOGROUP* message, unsigned long toId)
+    {
+        return 1;
+    }
+    // Original: CDPlay::SysMsgSecureMessage; dxplay.h:445, dc 0x8bf2c.
     virtual unsigned char sysMsgSecureMessage(
-        DPMSG_SECUREMESSAGE* message, unsigned long toId);
+        DPMSG_SECUREMESSAGE* message, unsigned long toId)
+    {
+        return 1;
+    }
+    // Original: CDPlay::SysMsgSessionLost; dxplay.h:446, dc 0x8bf30.
     virtual unsigned char sysMsgSessionLost(
-        DPMSG_GENERIC* message, unsigned long toId);
+        DPMSG_GENERIC* message, unsigned long toId)
+    {
+        return 1;
+    }
+    // Original: CDPlay::SysMsgSetPlayerOrGroupData; dxplay.h:447, dc 0x8bf34.
     virtual unsigned char sysMsgSetPlayerOrGroupData(
-        DPMSG_SETPLAYERORGROUPDATA* message, unsigned long toId);
+        DPMSG_SETPLAYERORGROUPDATA* message, unsigned long toId)
+    {
+        return 1;
+    }
+    // Original: CDPlay::SysMsgSetPlayerOrGroupName; dxplay.h:448, dc 0x8bf38.
     virtual unsigned char sysMsgSetPlayerOrGroupName(
-        DPMSG_SETPLAYERORGROUPNAME* message, unsigned long toId);
+        DPMSG_SETPLAYERORGROUPNAME* message, unsigned long toId)
+    {
+        return 1;
+    }
+    // Original: CDPlay::SysMsgSetSessionDesc; dxplay.h:449, dc 0x8bf3c.
     virtual unsigned char sysMsgSetSessionDesc(
-        DPMSG_SETSESSIONDESC* message, unsigned long toId);
+        DPMSG_SETSESSIONDESC* message, unsigned long toId)
+    {
+        return 1;
+    }
+    // Original: CDPlay::SysMsgStartSession; dxplay.h:450, dc 0x8bf40.
     virtual unsigned char sysMsgStartSession(
-        DPMSG_STARTSESSION* message, unsigned long toId);
+        DPMSG_STARTSESSION* message, unsigned long toId)
+    {
+        return 1;
+    }
     virtual unsigned char sysMsgHost(
         DPMSG_GENERIC* message, unsigned long toId);
     virtual unsigned char sysMsgCreatePlayerOrGroup(
@@ -535,6 +587,10 @@ public:
     unsigned char setConnectionSettings(
         unsigned long appId, DPLCONNECTION* connection);
     unsigned char connect();
+    unsigned char sendStandardLobbyMsg(unsigned long appId, void* data,
+                                       unsigned long size);
+    unsigned char sendLobbyMsg(unsigned long appId, void* data, unsigned long size);
+    unsigned char receiveLobbyMsg(unsigned long appId, CDPlayMsg* msg);
     bool testLobbied();
     virtual unsigned char enumLobbyConnections(
         CAutoArray<CDPlayConnection>* connections);

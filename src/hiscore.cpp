@@ -44,6 +44,29 @@ int highScoreWindowHandler(message& msg);
 // the default branch's hiscore.h location.
 
 
+// Original: CHighScoreEdit::OnNextEdit; hiscore.cpp:225, dc 0xd8e08.
+// Retail CHighScoreEdit vtable 0x63ebf4 shares slots 19/20 with CMPEdit
+// (0x510850/0x510870), whose two edit links have the same offsets.
+void CHighScoreEdit::onNextEdit()
+{
+    if (m_nextEdit && (m_nextEdit->m_status & widget::WIDGET_ACTIVE))
+        m_parentWindow->setFocus(m_nextEdit->m_id);
+}
+
+// Original: CHighScoreEdit::OnPrevEdit; hiscore.cpp:239, dc 0xd8e30.
+void CHighScoreEdit::onPrevEdit()
+{
+    if (m_prevEdit && (m_prevEdit->m_status & widget::WIDGET_ACTIVE))
+        m_parentWindow->setFocus(m_prevEdit->m_id);
+}
+
+// Original: CHighScoreEdit::SetFocus; hiscore.cpp:252, dc 0xd8e58.
+// Slot 14 shares CMPEdit's forwarding body at 0x510890.
+void CHighScoreEdit::setFocus(unsigned char state)
+{
+    textEntryWidget::setFocus(state);
+}
+
 // DC names the three CHeroWindowEx-tail pointers at +0x4c/+0x50/+0x54.
 // Retail's proven CHeroWindowEx is four bytes wider, putting them at
 // +0x50/+0x54/+0x58; GetRolloverWidget 0x4e97f0 directly confirms the
@@ -145,6 +168,19 @@ int highScoreManager::open(int newPriority)
         _read(file, m_highScores, sizeof(m_highScores));
         _close(file);
     }
+    return 0;
+}
+
+// Original: highScoreManager::Close; hiscore.cpp:711, dc 0xd7b88.
+// Retail manager vtable 0x63eb8c shares the empty close at 0x5bc690.
+void highScoreManager::close()
+{
+}
+
+// Original: highScoreManager::Main; hiscore.cpp:721, dc 0xd7bcc.
+// Its next vtable slot shares the zero-return body at 0x4ec560.
+int highScoreManager::main(message& msg)
+{
     return 0;
 }
 
@@ -258,6 +294,11 @@ int CHighScoreEdit::onKeyPress(message* msg)
     int shift = GetKeyState(VK_SHIFT);
     return textEntryWidget::onKeyPress(msg);
 }
+
+// DC CHSInputDlg::WindowHandler (hiscore.cpp:371, dc 0xd920c) creates
+// VRKeyboard, copies its result to the edit, then synthesizes dialog close.
+// Complete uses native text entry: vtable 0x63ebbc slot 9 is the inherited
+// CHeroWindowEx::windowHandler (0x5ff820). There is no console override.
 
 VA(0x004e9740, 0x4E)  // dc 0xd914c
 CHSInputDlg::~CHSInputDlg()
@@ -685,19 +726,7 @@ int highScoreManager::Open(int newPriority)
     // @stub
 }
 
-// E:\gamedcs\hiscore.cpp:711
-DC_ONLY(0xd7b88, 0x44)
-void highScoreManager::Close()
-{
-    // @stub
-}
 
-// E:\gamedcs\hiscore.cpp:721
-DC_ONLY(0xd7bcc, 0x4)
-int highScoreManager::main(message* msg)
-{
-    // @stub
-}
 
 // E:\gamedcs\hiscore.cpp:732
 DC_ONLY(0xd7bd0, 0x22)
@@ -783,26 +812,8 @@ int CHighScoreEdit::onKeyPress(message* msg)
     // @stub
 }
 
-// E:\gamedcs\hiscore.cpp:225
-DC_ONLY(0xd8e08, 0x28)
-void CHighScoreEdit::onNextEdit()
-{
-    // @stub
-}
 
-// E:\gamedcs\hiscore.cpp:239
-DC_ONLY(0xd8e30, 0x28)
-void CHighScoreEdit::onPrevEdit()
-{
-    // @stub
-}
 
-// E:\gamedcs\hiscore.cpp:252
-DC_ONLY(0xd8e58, 0x18)
-void CHighScoreEdit::setFocus(unsigned char state)
-{
-    // @stub
-}
 
 // E:\gamedcs\hiscore.cpp:256
 DC_ONLY(0xd8e70, 0x34)

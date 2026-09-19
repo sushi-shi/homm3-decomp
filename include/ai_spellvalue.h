@@ -107,6 +107,7 @@ protected:
                                 long timesCastable, long combatValue) const;
     long getEnchantmentValue(SpellID spell, TSkillMastery mastery,
                                long timesCastable) const;
+    long getSummoningValue(long damage, long timesCastable) const;
     long getMassDamageSpellValue(SpellID spell, TSkillMastery mastery,
                                      long timesCastable) const;
     const hero* m_ourHero;  // +0x00

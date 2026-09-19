@@ -184,6 +184,12 @@ CSpriteWidget::CSpriteWidget(int xPos, int yPos, CSprite* sprite, int frameArg)
     m_frame %= sprite->getNumFrames(0);
 }
 
+// Original: CSpriteWidget::zBufferDraw; singleselectionpopups.cpp:67, dc 0x12f0c4.
+// Vtable0x641a00 slot3 shares the empty ret8 body at0x404140.
+void CSpriteWidget::zBufferDraw(unsigned short* zBuffer, int id) const
+{
+}
+
 CSpriteWidget::~CSpriteWidget()
 {
 }
@@ -236,6 +242,18 @@ CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* image)
 }
 
 // E:\gamedcs\singleselectionpopups.cpp:121, dc 0x12f2ec.
+// Original: CBitmapWidget::Main; singleselectionpopups.cpp:93, dc 0x12f1e0.
+// Vtable0x641a34 slot2 folds to CSpriteWidget::main0x575a10.
+int CBitmapWidget::main(message& msg)
+{
+    return widget::main(msg);
+}
+
+// Original: CBitmapWidget::zBufferDraw; singleselectionpopups.cpp:99, dc 0x12f1f8.
+void CBitmapWidget::zBufferDraw(unsigned short* zBuffer, int id) const
+{
+}
+
 CHotspotWidget::~CHotspotWidget()
 {
 }
@@ -304,7 +322,7 @@ unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
         -1, 1, 0, 8));
     add(new CSpriteWidget((m_width - town->getWidth()) / 2, 60, town, frame));
     add(new textWidget(10, 95, m_width - 20, 18,
-        g_unnamed6a74f4[townType], "smalfont.fnt", font::PRIMARY,
+        g_townTypeNames[townType + 1], "smalfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
     add(new textWidget(10, 127, m_width - 20, 36,
         g_generalText->getText(80), "medfont.fnt", font::PRIMARY,
@@ -464,12 +482,6 @@ void CSingleSelPopup::add(widget* w)
 {
     // @stub
 }
-// E:\gamedcs\singleselectionpopups.h:75
-DC_ONLY(0x12efc0, 0x1C)   // inlined / thunk
-int CSingleSelPopup::exitDialog(message& msg)
-{
-    // @stub
-}
 // E:\gamedcs\singleselectionpopups.h:79
 DC_ONLY(0x12efdc, 0x34)   // base never directly instantiated
 void* CSingleSelPopup::scalar_deleting_destructor(unsigned __flags)
@@ -501,39 +513,9 @@ void CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* pImage)
 }
 
 // --- CBitmapWidget::Main: ICF-folded onto CSpriteWidget::Main (0x575a10). ---
-// E:\gamedcs\singleselectionpopups.cpp:93
-DC_ONLY(0x12f1e0, 0x18)   // folds -> 0x575a10 (return widget::Main)
-int CBitmapWidget::main(message& msg)
-{
-    // @stub
-}
 
 // --- Trivial zBufferDraw / Draw stubs: ICF-folded onto shared empties
 //     0x404140 / 0x404df0 outside this TU (excluded class). ---
-// E:\gamedcs\singleselectionpopups.h:120
-DC_ONLY(0x12f010, 0x4)    // folds -> 0x404140
-void CHotspotWidget::zBufferDraw()
-{
-    // @stub
-}
-// E:\gamedcs\singleselectionpopups.h:121
-DC_ONLY(0x12f014, 0x4)    // folds -> 0x404df0
-void CHotspotWidget::draw()
-{
-    // @stub
-}
-// E:\gamedcs\singleselectionpopups.cpp:67
-DC_ONLY(0x12f0c4, 0x4)    // folds -> 0x404140
-void CSpriteWidget::zBufferDraw()
-{
-    // @stub
-}
-// E:\gamedcs\singleselectionpopups.cpp:99
-DC_ONLY(0x12f1f8, 0x4)    // folds -> 0x404140
-void CBitmapWidget::zBufferDraw()
-{
-    // @stub
-}
 
 #endif  // @carcass
 

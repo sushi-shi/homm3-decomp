@@ -705,11 +705,14 @@ public:
     BlackBoxData* getBlackBox() const;
     type_creature_bank& getCreatureBank() const;
     void clearVisitedBits();
+    short getCustomIndex() const;
     short getItemId() const;
     bool playerKnowsCell(short player) const;
     void setCellVisited(short player);
     unsigned char gardenIsFull() const;
     enum EGameResource getGardenResource() const;
+    void fillGarden(EGameResource resource);
+    void setGarden(short id, EGameResource resource);
     void setGardenEmpty();
     int getPyramidSpell() const;
     bool pyramidIsGuarded() const;
@@ -718,6 +721,7 @@ public:
     void setLeanTo(short id, short amount, int resource);
     unsigned char magicSpringIsFull() const;
     void fillMagicSpring(unsigned char full);
+    void setMagicSpring(short id, unsigned char full);
     void setPyramid(bool guards, int newSpell);
     ScholarAwards getScholarAward() const;
     TPrimarySkill getScholarPrimarySkill() const;
@@ -959,20 +963,18 @@ public:
     type_point getTrigger() const;
     CObjectType* getObjectTypePtr() const;
     TAdventureObjectType getType() const;
-    // MapCell.h:595. game::InsertObject byte-proves this header body: the
-    // coordinates narrow to bytes, type starts at zero, extra info remains a
-    // dword, and each dynamic object receives a random animation phase.
-
-    // The DEFAULT ARGUMENTS are byte-proven from the other end, by
-    // loadMapObjects' `objects.resize(count)`: the `_Ty()` temporary
-    // Dinkumware's resize materialises at the call site stores 0xff into
-    // each coordinate, 0xffff into typeIndex and 0xffffffff into extraInfo,
-    // then rolls the animation phase - this body verbatim, in this order,
-    // with those five values. game::InsertObject's explicit five-argument
-    // call is unaffected.
-    CObject(unsigned char newX = 0xff, unsigned char newY = 0xff,
-            unsigned char newZ = 0xff, unsigned short newType = 0xffff,
-            unsigned long newExtraInfo = 0xffffffff)
+    // Original: CObject::CObject; MapCell.h:587, dc 0xf4944.
+    // loadMapObjects' vector resize expands the distinct default ctor;
+    // the recorded overload is not a five-argument ctor with defaults.
+    CObject() : m_x(0xff), m_y(0xff), m_z(0xff), m_typeIndex(0xffff)
+    {
+        m_extraInfo = 0xffffffff;
+        m_animationOffset = static_cast<unsigned char>(random(0, 255));
+    }
+    // Original: CObject::CObject; MapCell.h:595, dc 0xbc868.
+    // game::InsertObject expands this coordinate/type/extra-info overload.
+    CObject(unsigned char newX, unsigned char newY, unsigned char newZ,
+            unsigned short newType, unsigned long newExtraInfo)
     {
         m_x = newX;
         m_y = newY;
@@ -1887,6 +1889,7 @@ public:
     int loadObject(TAbstractFile* infile, CObject* object);
 
 private:
+    void close();
     void init(int size, unsigned char twoLayers);
     // `ret 0xc`: the layer index is the third argument, and the return is
     // the cell count (size * size), not a status.
@@ -1944,6 +1947,7 @@ public:
     int readEventData(TAbstractFile* infile, CObject* eventObject,
                       int mapVersion);
     int readMonsterData(TAbstractFile* infile, CObject* monsterObject);
+    int readSeerData(TAbstractFile* infile, CObject* seerObject);
     int readScholarData(TAbstractFile* infile, CObject* scholarObject);
     // The map-object dispatcher. `ret 0xc`: three arguments, and the third
     // is the map version every version-sensitive reader below takes - it is
@@ -1991,6 +1995,7 @@ public:
     void stampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);
     void generateHeightMap(const CObject* object, signed char heightMap[8][6]);
     int placeObject(int objectIndex, unsigned char setExtraInfo);
+    int placeObjects();
 };
 
 // Canonical inline definitions in Dreamcast MapCell.h source-line order.
@@ -2091,6 +2096,12 @@ inline int ExtraInfoUnion::getCampfireResource() const { return m_campfireInfo.m
 
 inline void ExtraInfoUnion::clearVisitedBits() { m_cellVisitedInfo.m_visited = 0; }
 
+// Original: ExtraInfoUnion::get_custom_index; MapCell.h:974, dc 0x9c7c8.
+// Complete narrows MonsterInfo::index from DC's 12 bits to eight; retail
+// MonstersGiveReward (0x4a6b30) and DoWanderingMonsterResult (0x4a7740)
+// both extract that eight-bit field before indexing the custom list.
+inline short ExtraInfoUnion::getCustomIndex() const { return m_monsterInfo.m_index; }
+
 inline short ExtraInfoUnion::getItemId() const { return m_skeletonInfo.m_id; }
 
 inline void ExtraInfoUnion::setLeanTo(short id, short amount, int resource)
@@ -2121,6 +2132,13 @@ inline unsigned char ExtraInfoUnion::magicSpringIsFull() const { return m_magicS
 
 inline void ExtraInfoUnion::fillMagicSpring(unsigned char full) { m_magicSpringInfo.m_full = full; }
 
+// Original: ExtraInfoUnion::FillGarden; MapCell.h:1012, dc 0xbc974
+inline void ExtraInfoUnion::fillGarden(EGameResource resource)
+{
+    m_gardenInfo.m_resource = resource;
+    m_gardenInfo.m_full = 1;
+}
+
 // The mystical-garden trio (MapCell.h:1018/1023/1035). GardenIsFull
 // is `unsigned char () const` and its `(value >> 10) & 1` shape is
 // what retail inlines; a direct bitfield test would fold to a byte
@@ -2129,7 +2147,22 @@ inline unsigned char ExtraInfoUnion::gardenIsFull() const { return m_gardenInfo.
 
 inline enum EGameResource ExtraInfoUnion::getGardenResource() const { return m_gardenInfo.m_resource; }
 
+// Original: ExtraInfoUnion::SetGarden; MapCell.h:1028, dc 0xbc9b0
+inline void ExtraInfoUnion::setGarden(short id, EGameResource resource)
+{
+    m_gardenInfo.m_id = id;
+    m_gardenInfo.m_resource = resource;
+    m_gardenInfo.m_full = 1;
+}
+
 inline void ExtraInfoUnion::setGardenEmpty() { m_gardenInfo.m_full = 0; }
+
+// Original: ExtraInfoUnion::SetMagicSpring; MapCell.h:1040, dc 0xbca04
+inline void ExtraInfoUnion::setMagicSpring(short id, unsigned char full)
+{
+    m_magicSpringInfo.m_id = id;
+    m_magicSpringInfo.m_full = full;
+}
 
 // MapCell.h:1046/1051, dc 0x9c864 / 0x9c870. do_event_pyramid
 // (0x4a4230) proves the signed spell lane and bit-zero guarded flag.

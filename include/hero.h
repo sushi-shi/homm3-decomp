@@ -94,32 +94,6 @@ enum EHeroBackpackLimit {
     HERO_BACKPACK_CAPACITY = 64
 };
 
-// Dreamcast's public wearable-position type. Complete adds a nineteenth
-// equipped position, but retains the same dword parameter ABI and may pass
-// that retail-only ordinal through functions which use this shared type.
-enum TArtifactSlot {
-    eArtifactSlotHead = 0,
-    eArtifactSlotShoulders,
-    eArtifactSlotNeck,
-    eArtifactSlotRightHand,
-    eArtifactSlotLeftHand,
-    eArtifactSlotTorso,
-    eArtifactSlotRightRing,
-    eArtifactSlotLeftRing,
-    eArtifactSlotFeet,
-    eArtifactSlotMisc1,
-    eArtifactSlotMisc2,
-    eArtifactSlotMisc3,
-    eArtifactSlotMisc4,
-    eArtifactSlotWarMachine1,
-    eArtifactSlotWarMachine2,
-    eArtifactSlotWarMachine3,
-    eArtifactSlotWarMachine4,
-    eArtifactSlotSpellbook,
-    kNumArtifactSlots,
-    const_first_artifact_slot = eArtifactSlotHead
-};
-
 // Shared packed prefix of heroes and boats. Dreamcast CodeView proves both
 // inheritance edges and supplies the member identities; retail proves the
 // 0x18-byte extent and every serialized offset. Retail packs type_point at
@@ -145,7 +119,10 @@ public:
     char m_paddingBeforeExtraInfo[3];
 
     type_obscuring_object();
+    class mine* getObscuredMine() const;
     class town* getObscuredTown() const;
+    // Original: type_obscuring_object::get_obscured_type; Hero.h:116, dc 0x1fb04
+    TAdventureObjectType getObscuredType() const { return m_obscuredType; }
     // E:\gamedcs\hero.h:117. The Dreamcast tiny helper is the direct byte
     // accessor; retail expands it to the same +0x10 load at its callers.
     bool obscuredIsTrigger() const
@@ -182,6 +159,8 @@ public:
     {
         return m_valid && m_wasTrigger && m_obscuredType == TOWN;
     }
+    // Original: type_obscuring_object::get_obscured_trigger; Hero.h:167, dc 0xf4abc
+    unsigned char getObscuredTrigger() const { return m_valid && m_wasTrigger; }
     void restoreCell();
     bool save(void* outfile);
 
@@ -226,6 +205,8 @@ public:
     unsigned char m_occupied;  // +0x24
     char m_paddingAfterOccupied[3];
     boat() : m_allocated(0) {}
+    // Original: boat::GetHflip; Hero.h:190, dc 0x1fb8c
+    unsigned char getHflip() { return m_facing > 4; }
     hero_seqid getStandSequence();
     // Hero.h:196 in Dreamcast. Complete expands this ordinary header helper
     // in MoveHero, CreateBoat and the event-record undo path; retaining the
@@ -763,6 +744,7 @@ public:
     // 0x4d97f0, `ret 0` with no arguments and `this` a HERO. Its message
     // construction, seven-slot loop and widget branches are the retail
     // lowering of Dreamcast hero::UpdateArmies (dc 0xcc540).
+    void heroScreenUpdate();
     void updateArmies();
     // hero.obj's own view of the same two. GiveExperience calls
     // CheckLevel on both of its arms, and GetLevel (dc 0xccc8c) is a
@@ -775,13 +757,9 @@ public:
     // combat it starts. Declared only; the body is not reconstructed and
     // the row is not claimed from here.
     void checkLevel();
-    // 0x4d8b30, `ret 4`, a hero MEMBER: it copies one map/scenario setup
-    // record into this hero. The Dreamcast keeps the counterpart as the
-    // free function initialize_hero(hero*, const HeroExtra*)
-    // (E:\gamedcs\game.cpp:9912, dc 0xb6c84); retail moved it into
-    // hero.cpp as a member, so the name stays an ORDINAL PLACEHOLDER.
-    // Gated with HeroExtra itself, which is what the parameter is.
-    void heroFn004D8B30(const class HeroExtra* setup);
+    // Map/scenario setup application. Complete moved DC initialize_hero
+    // (game.cpp:9912, dc 0xb6c84) to this member, retail 0x4d8b30, ret 4.
+    void initialize(const class HeroExtra* setup);
     int heroFn004D9B30(int artifact);
     // 0x4d9cc0, the ASSEMBLE partner of the row above and the same
     // shape: `ret 4`, `this` unused, one artifact id in. It resolves the
@@ -806,15 +784,16 @@ public:
     // artifact being dragged may drop into an equipment slot.
     // THeroScreenWindow::update_slot calls it THISCALL on gpCurrentHero
     // with both ids on the stack. It is NOT DC's artifactAllowedInSlot
-    // (dc 0x37d88, an artifact.h FREE inline of 44 B already
-    // reconstructed in ai_player.cpp) - retail's is a 412-byte hero
-    // member. ORDINAL PLACEHOLDER name.
+    // (dc 0x37d88, the artifact.h free inline): this member uses that
+    // primitive and adds occupancy/combination checks and displaced-slot
+    // restoration. ORDINAL PLACEHOLDER name.
     unsigned char heroFn004E2840(long artifact, long slot);
     void upgradeCreatures(int sourceCreatureType, int destCreatureType);
     // The mobility pair at 0x4e4990 / 0x4e4d90: the no-arg form reads
     // the boat bit out of `flags` and forwards to the other.
     // Dreamcast hero.cpp:5709/5734; ordinary movement helpers expanded here.
     float getLogisticsFactor() const;
+    float getSorceryFactor() const;
     // 0x4e5550 - checks spell access, mana, boat reachability and pool space.
     unsigned char canSummonBoat() const;
     long getNavigationFactor() const;
@@ -924,6 +903,7 @@ public:
     // Declared for playerData::NextHero, which inlines nothing of it -
     // it is a real call from game.obj.
     unsigned char isMobile() const;
+    const char* getSpecificAbilityText();
     const char* getSpecificAbilityTextShort();
     int valueOfSpell(SpellID spell) const;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
@@ -941,6 +921,8 @@ public:
     int getSpellDurationBonus() const;
     int giveExperience(int howMuch, int checkForLevelUp,
                        unsigned char showCapWindow);
+    int giveRandomArtifact();
+    void resetArtifacts();
     void giveResource(int whichRes, int howMuch);
     int getVisibility() const;
     float getMagicResistanceFactor() const;
@@ -1065,6 +1047,13 @@ public:
         return getManaCost(
             whichSpell, 0,
             getSpecialTerrain());
+    }
+    // Original: hero::GetSpellSchoolLevel; Hero.h:712, dc 0xd5914.
+    // Complete's two-argument member0x4e5100 accepts the terrain id so the
+    // four expansion magic terrains remain distinct from Magic Plains.
+    TSkillMastery getSpellSchoolLevel(TSpellSchool schoolMask) const
+    {
+        return getSpellSchoolLevel(schoolMask, getSpecialTerrain());
     }
     // E:\gamedcs\Hero.h:718, dc 0x2308c
     TSkillMastery getSpellLevel(SpellID spell) const
@@ -1449,6 +1438,7 @@ public:
     virtual int windowHandler(class message& msg);
     void updateSlot(TArtifactSlot slot);
     void updateAllSlots();
+    void heroMessageUpdate(char* text);
     void updateHeroScreenStatusBar(class message* msg);
     void updateHeroLocator(int which);
     void updateHeroLocators();
@@ -1475,7 +1465,6 @@ SIZE(THeroScreenWindow, 0x68);
 DATA(0x00698a78) extern THeroScreenWindow* g_heroScreenWindow;
 DATA(0x00698a44) extern int g_heroScreenArmyStripLive;
 
-// CODEVIEW(E:\gamedcs\hero.cpp:1594, dc 0xcc49c) void THeroScreenWindow::HeroMessageUpdate(char* cText);
 // CODEVIEW(E:\gamedcs\hero.cpp:3239, dc 0xcec1c) void THeroScreenWindow::ShowWidgets();
 // CODEVIEW(E:\gamedcs\hero.cpp:3421, dc 0xcf3ac) void THeroScreenWindow::show_skills();
 // CODEVIEW(E:\gamedcs\hero.cpp:3486, dc 0xcf54c) int THeroScreenWindow::WindowHandler(message* msg);
@@ -1485,7 +1474,6 @@ DATA(0x00698a44) extern int g_heroScreenArmyStripLive;
 // --- boat ---
 
 // --- hero ---
-// CODEVIEW(E:\gamedcs\hero.cpp:254, dc 0xca7c0) const char* hero::GetSpecificAbilityText();
 // CODEVIEW(E:\gamedcs\hero.cpp:577, dc 0xcaf98) int hero::load(void* infile);
 // CODEVIEW(E:\gamedcs\hero.cpp:1208, dc 0xcbdb8) void hero::hero();
 // CODEVIEW(E:\gamedcs\hero.cpp:1233, dc 0xcbe80) void hero::initialize(short index);
@@ -1498,12 +1486,9 @@ DATA(0x00698a44) extern int g_heroScreenArmyStripLive;
 // CODEVIEW(E:\gamedcs\hero.cpp:4689, dc 0xd38d8) unsigned char hero::HasSecondarySkill(int iWhich);
 // CODEVIEW(E:\gamedcs\hero.cpp:4919, dc 0xd3ad0) void hero::remove_artifact(TArtifactSlot slot);
 // CODEVIEW(E:\gamedcs\hero.cpp:5044, dc 0xd3de4) void hero::GiveArtifact(const type_artifact* artifact, int bCheckEnd, unsigned char equip_it);
-// CODEVIEW(E:\gamedcs\hero.cpp:5064, dc 0xd3e40) int hero::GiveRandomArtifact();
 // CODEVIEW(E:\gamedcs\hero.cpp:5709, dc 0xd49a8) float hero::GetLogisticsFactor();
 // CODEVIEW(E:\gamedcs\hero.cpp:5734, dc 0xd49f0) long hero::GetNavigationFactor();
-// CODEVIEW(E:\gamedcs\hero.cpp:5758, dc 0xd4a40) float hero::GetSorceryFactor();
 // CODEVIEW(E:\gamedcs\hero.cpp:6025, dc 0xd4ed0) TSpellSchool hero::GetHighestSchool(TSpellSchool school_mask) const;
-// CODEVIEW(E:\gamedcs\hero.cpp:6493, dc 0xd5800) void hero::reset_artifacts();
 // CODEVIEW(E:\gamedcs\Hero.h:702, dc 0xd58f8) unsigned char hero::HasArmy(TCreatureType type);
 // CODEVIEW(E:\gamedcs\Hero.h:712, dc 0xd5914) TSkillMastery hero::GetSpellSchoolLevel(TSpellSchool school_mask);
 
@@ -1515,7 +1500,6 @@ DATA(0x00698a44) extern int g_heroScreenArmyStripLive;
 // CODEVIEW(E:\gamedcs\hero.cpp:1226, dc 0xd59b8) void type_artifact::`default constructor closure'();
 
 // --- type_obscuring_object ---
-// CODEVIEW(E:\gamedcs\hero.cpp:380, dc 0xcaac8) mine* type_obscuring_object::get_obscured_mine();
 // CODEVIEW(E:\gamedcs\Hero.h:162, dc 0xd58cc) unsigned char type_obscuring_object::obscures_town();
 
 #endif  /* HOMM3_HERO_H */

@@ -3,6 +3,7 @@
 #define HOMM3_CREATURETYPE_H
 
 #include "armygrp.h"
+#include "town.h"
 
 #include "creaturetype_fwd.h"
 
@@ -29,7 +30,7 @@ inline const char* getArmyName(int type, int count)
         || (type) == CREATURE_FIRE_ELEMENTAL || (type) == CREATURE_WATER_ELEMENTAL)
 
 // --- globals ---
-// CODEVIEW(E:\gamedcs\creaturetype.cpp:202, dc 0x718dc) TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr);
+TCreatureType getBaseCreature(TTownType townType, int baseCreatureNbr);
 
 // --- `anonymous namespace' ---
 // CODEVIEW(E:\gamedcs\creaturetype.cpp:399, dc 0x71eec) void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr();

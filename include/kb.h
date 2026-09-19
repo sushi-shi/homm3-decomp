@@ -337,7 +337,8 @@ void unloadProgressBar();
 // CODEVIEW(E:\gamedcs\kb.cpp:2059, dc 0xe1778) int DoLoadGame();
 // CODEVIEW(E:\gamedcs\kb.cpp:2145, dc 0xe1950) int PickLoadGame();
 // CODEVIEW(E:\gamedcs\kb.cpp:2174, dc 0xe1990) int InterpretCommandLine();
-// CODEVIEW(E:\gamedcs\kb.cpp:2270, dc 0xe1b90) int NullHandler(message* msg);
+// Original: NullHandler, kb.cpp:2270.
+int nullHandler(message& msg);
 // CODEVIEW(E:\gamedcs\kb.cpp:2332, dc 0xe1bf8) int ExitNormalDialog(message* msg);
 // CODEVIEW(E:\gamedcs\kb.cpp:2720, dc 0xe24a0) void check_player_loss();
 // CODEVIEW(E:\gamedcs\kb.cpp:2867, dc 0xe2930) void SendPlayerWon();

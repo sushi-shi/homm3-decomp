@@ -32,13 +32,6 @@ __declspec(nothrow) void __cdecl operator delete(void* value);
 
 #if 0  // @carcass: older Dreamcast quest model, not retail SoD source order
 
-// E:\gamedcs\seerhut.cpp:139
-DC_ONLY(0x12d084, 0x4C)
-void TSeerHut::SetRandomName(TSeerHut* thisHut)
-{
-    // @stub
-}
-
 // E:\gamedcs\seerhut.cpp:148
 DC_ONLY(0x12d0e4, 0x74)
 void TSeerHut::doSeerEvent(hero* current_hero, unsigned char human_player)
@@ -194,6 +187,24 @@ TSeerHut* std::__copy_backward(TSeerHut* __first, TSeerHut* __last, TSeerHut* __
 }
 
 #endif  // @carcass
+
+// DC dialog ownership changed with the quest representation. In the old
+// TSeerHut (dc0x12d238..0x12d4dc), one artifact and text-row byte drive
+// progress/proposal, acceptance/refusal and immediate-reward prompts.
+// Complete doSeerEvent0x573670 loads the quest pointer and invokes its
+// virtual slots4/5 for proposal/progress. The artifact quest owns its vector
+// of requirements and generated/custom text in0x56f8a0/0x56fbc0. The hut
+// marks visits before checking satisfaction, then uses one completion offer;
+// declining it returns, without the old separate refusal/acceptance dialogs.
+// Thus DoAlreadyHaveProposalDialog and the two acknowledgement helpers
+// belong to the retired single-artifact interaction, not missing wrappers.
+//
+// DC SaveSeerList0x12d7e8/LoadSeerList0x12d854 are static methods that
+// always select gpGame's seer pool and check each old record result. Complete
+// NewfullMap::save0x4fdf40/load0x4fdbc0 operate on this map's +0x60 pool.
+// Both retain the two-byte count; load passes saveVersion and registers each
+// new polymorphic quest in this map's +0xb0 object-data pool. Those receiver
+// and ownership changes supersede the old global static list interfaces.
 
 // --- retail's virtual quest family ------------------------------------
 // The Dreamcast port has no counterpart for any of these: its TSeerHut
@@ -2252,6 +2263,33 @@ int TQuestGuard::save(TAbstractFile* outfile)
     }
 }
 
+// Original: TSeerHut::SetRandomName; seerhut.cpp:139, dc 0x12d084
+// DC uses one static TPickANumber(0,47). Complete read0x574610 expands
+// the same static reference interface with the revised dynamic name table:
+// construct availability, remove names used by this map, then select one.
+void TSeerHut::setRandomName(TSeerHut& thisHut)
+{
+    std::vector<unsigned char> nameAvailable(g_seerHutNamesPointer->size());
+    unsigned int name;
+    for (name = 0; name < nameAvailable.size(); ++name)
+        nameAvailable[name] = 1;
+
+    unsigned int hut;
+    for (hut = 0; hut < g_game->m_worldMap.m_seerHutList.size(); ++hut)
+        nameAvailable[g_game->m_worldMap.m_seerHutList[hut].m_nameIndex] = 0;
+
+    int pick = rand()
+        % (nameAvailable.size() - g_game->m_worldMap.m_seerHutList.size());
+    unsigned int chosen;
+    for (chosen = 0; chosen < nameAvailable.size(); ++chosen) {
+        if (nameAvailable[chosen]) {
+            if (--pick < 0)
+                break;
+        }
+    }
+    thisHut.m_nameIndex = chosen;
+}
+
 VA(0x005735a0, 0xC3)
 int TSeerHut::getValue(hero* currentHero)
 {
@@ -2346,7 +2384,8 @@ void TSeerHut::doEmptyDialog()
 // completion text and its reward object owns application, but retail folds
 // this revised helper into DoSeerEvent and cross-jumps its accepted arm with
 // the AI reward tail.
-inline void TSeerHut::doCompletionDialog(
+// Original: TSeerHut::DoCompletionDialog; seerhut.cpp:185, dc 0x12d1a8
+void TSeerHut::doCompletionDialog(
     hero* currentHero, bool humanPlayer)
 {
     normalDialog(m_quest->getCompletionText().c_str(),
@@ -2365,7 +2404,8 @@ inline void TSeerHut::doCompletionDialog(
 // Dreamcast seerhut.cpp:414 (dc 0x12d758) records this as a separate,
 // no-local switch helper called first by DoCompletionDialog. Retail's inlined
 // copy preserves the ten reward arms and Complete's shifted skill pictures.
-inline int TSeerHut::getRewardType()
+// Original: TSeerHut::GetRewardType; seerhut.cpp:414, dc 0x12d758
+int TSeerHut::getRewardType()
 {
     switch (m_reward.m_rewardType) {
     case eRewardExperience:
@@ -2476,6 +2516,9 @@ int TSeerReward::getValue(const hero* currentHero)
     }
 }
 
+// DC TSeerHut::GiveReward (seerhut.cpp:266, dc0x12d4dc) owns the older
+// equivalent switch. Complete doSeerEvent passes this+5 at0x573919; the
+// retained body reads its type at+0, proving the separate TSeerReward owner.
 VA(0x00573c80, 0x290)
 void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
 {
@@ -2577,6 +2620,9 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
     }
 }
 
+// DC TSeerHut::GetRewardExtra (seerhut.cpp:373, dc0x12d6d8) queries the
+// same reward domain. Complete's completion offer passes this+5 to0x573f10,
+// which reads type+0/payload+4/+8: the interface moved to TSeerReward.
 VA(0x00573f10, 0xBC)
 int TSeerReward::getRewardExtra(const hero* thisHero)
 {
@@ -2656,7 +2702,7 @@ std::string TSeerHut::getSeerLogText()
 VA(0x005741b0, 0x22C)
 std::string TSeerHut::seerHutFn005741B0(int player) const
 {
-    if (!(m_visitedPlayers & (1 << static_cast<unsigned char>(player))))
+    if (!playerHasInfo(static_cast<unsigned char>(player)))
         return g_seerName;
 
     std::string text;
@@ -2675,7 +2721,7 @@ std::string TSeerHut::seerHutFn005741B0(int player) const
 VA(0x005743e0, 0x22C)
 std::string TSeerHut::seerHutFn005743E0(int player) const
 {
-    if (!(m_visitedPlayers & (1 << static_cast<unsigned char>(player))))
+    if (!playerHasInfo(static_cast<unsigned char>(player)))
         return g_seerName;
 
     std::string text;
@@ -2743,6 +2789,11 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
 // 82.72%, and is not retained. Naming the artifact falls to 93.70%; an explicit
 // signed comparison is byte-flat. Keep the canonical shared constructor and
 // caller-specific natural inliner state rather than pinning either caller.
+// Current residual (0% reported similarity): the canonical SetRandomName
+// remains out of line where retail expands its allocation/random-selection
+// tail, and the legacy artifact-quest arm retains extra nested construction.
+// The earlier 94.24% body above predates restoration of this helper boundary;
+// it remains a historical lead, not the score of the current implementation.
 VA(0x00574610, 0x480)  // anchor-caller readObject SEER arm; bracket seerhut..singleselectionpopups
 void TSeerHut::read(TAbstractFile* infile)
 {
@@ -2876,25 +2927,7 @@ void TSeerHut::read(TAbstractFile* infile)
         infile->read(&shortBuffer, sizeof(shortBuffer));
     }
 
-    std::vector<unsigned char> nameAvailable(g_seerHutNamesPointer->size());
-    unsigned int name;
-    for (name = 0; name < nameAvailable.size(); ++name)
-        nameAvailable[name] = 1;
-
-    unsigned int hut;
-    for (hut = 0; hut < g_game->m_worldMap.m_seerHutList.size(); ++hut)
-        nameAvailable[g_game->m_worldMap.m_seerHutList[hut].m_nameIndex] = 0;
-
-    int pick = rand()
-        % (nameAvailable.size() - g_game->m_worldMap.m_seerHutList.size());
-    unsigned int chosen;
-    for (chosen = 0; chosen < nameAvailable.size(); ++chosen) {
-        if (nameAvailable[chosen]) {
-            if (--pick < 0)
-                break;
-        }
-    }
-    m_nameIndex = chosen;
+    setRandomName(*this);
 }
 
 VA(0x00574A90, 0x24A)  // dc 0x12d8e4

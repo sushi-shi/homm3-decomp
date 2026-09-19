@@ -376,7 +376,7 @@ void CScenarioPlayerInfoWidget::draw() const
                      windowX + 173, windowY + m_playerPosition * 50 + 124,
                      0, 1);
     g_unnamed698a08->drawBoundedString(
-        g_unnamed6a74f4[m_townType], g_windowManager->m_screenBitmap,
+        g_townTypeNames[m_townType + 1], g_windowManager->m_screenBitmap,
         windowX + 161, windowY + m_playerPosition * 50 + 156,
         71, 16, font::WHITE,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);

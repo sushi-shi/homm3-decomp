@@ -563,7 +563,7 @@ void town::view(int alreadyFaded)
     else if (threshold > 0x320)
         g_unnamed699548 = 1;
 
-    g_townManager->m_townToView = this;
+    g_townManager->setTown(this);
     g_executive->callManager(g_townManager);
 
     town* viewedTown = g_townManager->m_townToView;
@@ -1373,6 +1373,50 @@ void showCreatureRewards(const town* thisTown,
 void initializeBuildings(town* currentTown, const TownExtra* townSetup);
 unsigned char checkShipyardSquare(town* currentTown, long x, long y);
 
+// Original: initialize_army; town.cpp:2017, dc 0x168330.
+// Complete expands the ordinary initializer into town::initialize. Its custom
+// army path additionally resolves the map format's negative random-tier IDs;
+// DC's older body copied those creature IDs directly. Both use getArmy's
+// canonical garrison/hero selection at every read and write.
+static void initializeArmy(town* currentTown, const TownExtra* townSetup)
+{
+    if (townSetup->m_customArmies) {
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
+            currentTown->getArmy().m_numTroops[slot] =
+                townSetup->m_townArmy.m_numTroops[slot];
+            if (currentTown->getArmy().m_numTroops[slot] > 0) {
+                int troop = townSetup->m_townArmy.m_armies[slot];
+                if (troop <= -2) {
+                    int tier = (-2 - troop) / 2;
+                    if (troop & 1)
+                        tier += TOWN_DWELLING_COUNT;
+                    troop = g_townDwellingCreatures[
+                        currentTown->m_type * (2 * TOWN_DWELLING_COUNT) + tier];
+                }
+                currentTown->getArmy().m_armies[slot] = troop;
+            } else {
+                currentTown->getArmy().m_armies[slot] = -1;
+            }
+        }
+    } else {
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
+            currentTown->getArmy().m_armies[slot] = -1;
+            currentTown->getArmy().m_numTroops[slot] = 0;
+        }
+        if (currentTown->m_owner < 0) {
+            for (int tier = 0; tier < 4; tier++) {
+                if (random(1, 100) <= g_townInitArmyChance[tier]) {
+                    int creature = g_townDwellingCreatures[
+                        currentTown->m_type * (2 * TOWN_DWELLING_COUNT) + tier];
+                    currentTown->getArmy().add(creature,
+                        random(g_townInitArmyLow[tier], g_townInitArmyHigh[tier]),
+                        -1);
+                }
+            }
+        }
+    }
+}
+
 VA(0x005c0670, 0x24E)  // dc 0x16842c
 void town::initialize(const TownExtra* townSetup)
 {
@@ -1380,59 +1424,9 @@ void town::initialize(const TownExtra* townSetup)
     m_owner = -1;
     memset(m_generatorBonus, 0, sizeof(m_generatorBonus));
     g_game->claimTown(m_id, townSetup->m_playerOwner, 0, 0);
-    if (townSetup->m_customArmies) {
-#pragma inline_depth(0)
-        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
-             slot++) {
-            (m_garrisonHeroId < 0 ? m_garrison
-                                : g_game->getHero(m_garrisonHeroId)->m_army)
-                .m_numTroops[slot] = townSetup->m_townArmy.m_numTroops[slot];
-            if ((m_garrisonHeroId < 0
-                     ? m_garrison
-                     : g_game->getHero(m_garrisonHeroId)->m_army)
-                    .m_numTroops[slot] > 0) {
-                int troop = townSetup->m_townArmy.m_armies[slot];
-                if (troop <= -2) {
-                    int tier = (-2 - troop) / 2;
-                    if (troop & 1)
-                        tier += TOWN_DWELLING_COUNT;
-                    troop = g_townDwellingCreatures[
-                        m_type * (2 * TOWN_DWELLING_COUNT) + tier];
-                }
-                (m_garrisonHeroId < 0
-                     ? m_garrison
-                     : g_game->getHero(m_garrisonHeroId)->m_army)
-                    .m_armies[slot] = troop;
-            } else {
-                getArmy().m_armies[slot] = -1;
-            }
-        }
-#pragma inline_depth()
-    } else {
-        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
-             slot++) {
-            getArmy().m_armies[slot] = -1;
-            getArmy().m_numTroops[slot] = 0;
-        }
-        if (m_owner < 0) {
-            for (int tier = 0; tier < 4; tier++) {
-                if (random(1, 100) <= g_townInitArmyChance[tier]) {
-                    int creature = g_townDwellingCreatures[
-                        m_type * (2 * TOWN_DWELLING_COUNT) + tier];
-                    getArmy().add(creature,
-                                    random(g_townInitArmyLow[tier],
-                                           g_townInitArmyHigh[tier]),
-                                    -1);
-                }
-            }
-        }
-    }
+    initializeArmy(this, townSetup);
     initializeBuildings(this, townSetup);
-    m_active = m_built;
-    for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
-        if (m_built & g_bitNumber[i])
-            m_active |= s_includedBuildings[m_type][i];
-    }
+    updateFullBuildingMask();
     m_spells = townSetup->m_spells;
     initializeSpells(townSetup);
 }
@@ -1443,12 +1437,7 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
     int i;
     memset(currentTown->m_population, 0, sizeof(currentTown->m_population));
     currentTown->m_built = 0;
-    currentTown->m_active = 0;
-    for (i = 0; i < MAX_BUILDING_TYPE; i++) {
-        if (currentTown->m_built & g_bitNumber[i])
-            currentTown->m_active |=
-                town::s_includedBuildings[currentTown->m_type][i];
-    }
+    currentTown->updateFullBuildingMask();
     currentTown->createBuilding(HALL_VILLAGE_ID);
 
     __int64 unavailable = 0;
@@ -1476,8 +1465,7 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
             unavailable |= g_bitNumber[HORDE_UPG_ID];
         if (unavailable & g_bitNumber[HORDE_2_ID])
             unavailable |= g_bitNumber[HORDE_2_UPG_ID];
-        currentTown->m_available =
-            g_townEligibleBuildMask[currentTown->m_type] & ~unavailable;
+        currentTown->setLegalBuildings(unavailable);
 
         __int64 toBuild = 0;
         for (i = 0; i < MAX_BUILDING_TYPE; i++) {
@@ -1498,8 +1486,7 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
         return;
     }
 
-    currentTown->m_available =
-        g_townEligibleBuildMask[currentTown->m_type] & ~unavailable;
+    currentTown->setLegalBuildings(unavailable);
     if (townSetup->m_hasFort)
         currentTown->createBuilding(CASTLE_FORT_ID);
     if (currentTown->m_owner >= 0) {
@@ -1547,17 +1534,6 @@ unsigned char checkShipyardSquare(town* currentTown, long x, long y)
     }
     return 0;
 }
-
-// No retail row for either of these two - inlined into town::initialize
-// (initialize_army) and into its callers (update_full_building_mask).
-// E:\gamedcs\town.cpp:2017
-#if 0  // @carcass
-DC_ONLY(0x168330, 0xFC)
-void initialize_army(town* current_town, const TownExtra* town_setup)
-{
-    // @stub
-}
-#endif  // @carcass
 
 // E:\gamedcs\town.cpp:2084
 void town::updateFullBuildingMask()
@@ -1693,23 +1669,19 @@ unsigned char town::isLegalBuilding(type_building_id building) const
     return (g_bitNumber[building] & m_available) != 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\town.cpp:2291
-DC_ONLY(0x168a10, 0x3E)
-void town::set_legal_buildings(__int64 disabled_buildings)
+// Original: town::set_legal_buildings; town.cpp:2291, dc 0x168a10.
+void town::setLegalBuildings(__int64 disabledBuildings)
 {
-    // @stub
+    m_available = g_townEligibleBuildMask[m_type] & ~disabledBuildings;
 }
 
-// E:\gamedcs\town.cpp:2300
-DC_ONLY(0x168a50, 0x48)
-unsigned char town::is_disabled(type_building_id building)
+// Original: town::is_disabled; town.cpp:2300, dc 0x168a50.
+unsigned char town::isDisabled(type_building_id building) const
 {
-    // @stub
+    if (isLegalBuilding(building))
+        return 0;
+    return (g_townEligibleBuildMask[m_type] & g_bitNumber[building]) != 0;
 }
-
-#endif  // @carcass
 
 VA(0x005c12e0, 0xC9)  // dc 0x168a98
 void town::hire(hero* newHero, long playerId)
@@ -1747,13 +1719,23 @@ void town::placeInMap(int heroId, long playerId, unsigned char resetFlags)
 VA(0x005c1440, 0xC)  // dc 0x168ba0
 TTerrainType town::getNativeTerrain() const
 {
-    return g_nativeTerrains[m_type];
+    return townManager::getNativeTerrain(m_type);
 }
 
 VA(0x005c1450, 0xC)  // dc 0x168bb8
 const char* town::getTypeName() const
 {
-    return g_unnamed6a74f4[m_type];
+    return townManager::getTownTypeName(m_type);
+}
+
+// Original: town::get_army; town.cpp:2375, dc 0x168bd0.
+// This ordinary non-const twin returns the same selected army address as the
+// const overload. Complete callers of both interfaces share 0x5c1460.
+armyGroup& town::getArmy()
+{
+    if (m_garrisonHeroId < 0)
+        return m_garrison;
+    return g_game->getHero(m_garrisonHeroId)->m_army;
 }
 
 VA(0x005c1460, 0x38)  // dc 0x168bf8
@@ -1843,19 +1825,7 @@ unsigned char town::initializeBuildingCostsTables()
 
 #if 0  // @carcass
 
-// E:\gamedcs\Town.h:331
-DC_ONLY(0x168dfc, 0x28)
-void town::set_mask(__int64 new_mask)
-{
-    // @stub
-}
 
-// E:\gamedcs\TownMgr.h:686
-DC_ONLY(0x168e24, 0x6)
-void townManager::setTown(town* m_townToView)
-{
-    // @stub
-}
 
 // ..\stlport\stl_bitset.h:402
 DC_ONLY(0x168e2c, 0x24)

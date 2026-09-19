@@ -30,12 +30,17 @@ private:
 public:
     TPalette16 m_p16;
     TPalette24 m_p24;
+    Bitmap816(int w, int h);
     Bitmap816(const char* name, int w, int h, unsigned char* data,
               TPalette16* palette16, int dataSize);
+    Bitmap816(const char* name, int rbits, int rshift,
+              int gbits, int gshift, int bbits, int bshift);
     Bitmap816(const char* name, const char* path,
               int rbits, int rshift, int gbits, int gshift,
               int bbits, int bshift);
     virtual ~Bitmap816();
+    void import(int w, int h, unsigned char* data, TPalette16& p16, int size);
+    void clear();
     void zBufferDraw(int sx, int sy, int sw, int sh, unsigned short* dst,
         int dx, int dy, int dw, int dh, int dpitch, int id) const;
     void draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx,
@@ -54,8 +59,20 @@ public:
     // addresses rows through Pitch. Masked Darken's retail loads independently
     // confirm that distinction; do not replace this helper with m_pitch.
     int getPitch() const { return m_width; }
+    // Original: Bitmap816::GetPalette; Bitmap816.h:72, dc 0x2017c
+    TPalette16& getPalette() { return m_p16; }
+    // Original: Bitmap816::GetPalette; Bitmap816.h:73, dc 0x19c5e8.
+    const TPalette16& getPalette() const { return m_p16; }
+    // Original: Bitmap816::GetPalette24; Bitmap816.h:74, dc 0x54300
+    // Complete embeds both palettes; DC stored pointers to the same types.
+    TPalette24& getPalette24() { return m_p24; }
     // DC Bitmap816.h:98/99 (0x52570), expanded in masked Darken.
     unsigned char* getMap(int x, int y) { return m_map + m_pitch * y + x; }
+    // Original: Bitmap816::GetMap; Bitmap816.h:104, dc 0x19c5f0.
+    const unsigned char* getMap(int x, int y) const
+    {
+        return m_map + m_pitch * y + x;
+    }
 
 private:
     int importPCXFile(const char* filename, int rbits, int rshift,

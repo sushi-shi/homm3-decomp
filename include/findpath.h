@@ -89,6 +89,9 @@ extern int g_mapHeight;
 // uninitialized by the ctor - Init fills it.
 class searchArray {
 private:
+    void boardBoat(const hero* currentHero, pathCell& cell);
+    unsigned char validMoveAdjacent(const army* currentArmy, int hex);
+    unsigned char validMoveAdjacent(const army* currentArmy, const army& enemy);
     int m_maxQueueCount;
     unsigned char m_payTransitionCosts;
     int m_thisTurnsMovement;
@@ -372,8 +375,6 @@ int getTerrainCost(hero* currentHero, type_point start, int direction,
 // --- searchArray ---
 // CODEVIEW(E:\gamedcs\findpath.cpp:271, dc 0x9f2a4) void searchArray::PushPoint(const pathCell* old_cell, pathCell* point, int direction, int move_cost, int limit, long barrier_value, type_point monster, int isTrigger);
 // CODEVIEW(E:\gamedcs\findpath.cpp:461, dc 0x9f718) void searchArray::TestPossibleDirections(const hero* current_hero, pathCell* source, long turn_mobility, long maxMobility, unsigned char adjacent_monster, type_point monster_location, TSkillMastery iPathfinding, type_search_type search_type, TTerrainType native_terrain);
-// CODEVIEW(E:\gamedcs\findpath.cpp:877, dc 0xa02c8) unsigned char searchArray::valid_move_adjacent(const army* current_army, int hex);
-// CODEVIEW(E:\gamedcs\findpath.cpp:905, dc 0xa0390) unsigned char searchArray::valid_move_adjacent(const army* current_army, const army* enemy);
 // CODEVIEW(E:\gamedcs\findpath.cpp:921, dc 0xa03fc) void searchArray::SeedCombatPosition(const army* thisArmy, long current_group, long limit, unsigned char in_placement_phase, long base_speed);
 // CODEVIEW(E:\gamedcs\findpath.cpp:1136, dc 0xa0970) unsigned char searchArray::build_combat_path(const army* current_army, int start_hex, int end_hex, int destination);
 // CODEVIEW(E:\gamedcs\findpath.cpp:1172, dc 0xa0a44) void searchArray::mark_enemy(long hex, long cost);

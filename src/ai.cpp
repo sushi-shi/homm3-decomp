@@ -151,7 +151,7 @@ unsigned char combatManager::failedSiege()
                 continue;
             if (enemyArmy->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
-            if (!inCastle(enemyArmy->m_gridIndex))
+            if (!combatManager::inCastle(enemyArmy->m_gridIndex))
                 return 0;
         }
     }
@@ -369,7 +369,7 @@ long combatManager::chooseShooterTarget(const army* currentArmy, type_AI_combat_
     long bestTarget = -1;
     long hex;
     long ourGroup = data->m_ourGroup;
-    long enemyGroup = data->m_enemyGroup;
+    long enemyGroup = data->getEnemyGroup();
     unsigned char isAreaEffect = 0;
     const army* bestArmy = 0;
     std::vector<army*> targets;
@@ -432,7 +432,7 @@ long getAreaAttackValue(const army* currentArmy, long hex, long ourGroup, type_A
 {
     std::vector<army*> targets;
     long total = 0;
-    g_combatManager->markHexAreaEffect(hex, 1, 1, targets);
+    g_combatManager->markAreaEffect(hex, 1, 1, targets);
     for (unsigned i = targets.size(); i-- != 0; ) {
         army* target = targets[i];
         if ((currentArmy->is(1u << 18)) && (target->is(1u << 18))
@@ -572,7 +572,7 @@ static long getMoveOrder(const army* currentArmy)
         return currentArmy->getSpeed() - 1000;
     unsigned char reversed = static_cast<unsigned char>(
         static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 25);
-    if ((reversed & 1) != 0 || g_combatManager->m_inSecondPhase)
+    if ((reversed & 1) != 0 || g_combatManager->isInSecondPhase())
         return -currentArmy->getSpeed();
     return currentArmy->getSpeed();
 }
@@ -693,7 +693,7 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
             m_nextActionGridIndex = hex;
             if (m_creaturePlacement)
                 moveLeft = pathIndex + 1;
-            if (m_creaturePlacement || m_inSecondPhase)
+            if (m_creaturePlacement || isInSecondPhase())
                 considerWaiting = 0;
             if (g_game->m_setup.m_difficulty < 2 && !m_sideIsAi[currentArmy->m_combatSide])
                 considerWaiting = 0;
@@ -834,31 +834,26 @@ long combatManager::getAreaEffect(long side, const army* ourArmy, long markedEne
                                            ourArmy->canShoot(0), total, 0);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\ai.cpp:1000
-// NO RETAIL SLOT - a two-parameter static with one call site, folded
-// into whichever of get_area_effect / mark_friendly_armies uses it.
-DC_ONLY(0x250e0, 0x42)
-long get_enemy_attack_limit(const army* our_army, const type_AI_combat_parameters* estimate)
+// Original: get_enemy_attack_limit; ai.cpp:1000, dc 0x250e0
+static long getEnemyAttackLimit(const army* ourArmy,
+                                const type_AI_combat_parameters& estimate)
 {
-    // @stub
+    long hitPoints = ourArmy->getTotalHitPoints(estimate.m_simulated);
+    return -ourArmy->getLossCombatValue(
+        estimate.m_lowestAttack, estimate.m_lowestDefense,
+        ourArmy->canShoot(0), hitPoints, 0);
 }
 
-#endif  // @carcass
 
 VA(0x0041fb60, 0x1F6)  // dc 0x25124
 void combatManager::markFriendlyArmies(const army* ourArmy, long* enemyAttacks, long markedEnemies, const type_AI_combat_parameters* estimate) const
 {
-    long enemySide = estimate->m_enemyGroup;
+    long enemySide = estimate->getEnemyGroup();
     long areaEffect = getAreaEffect(enemySide, ourArmy, markedEnemies,
                                        estimate);
     unsigned char checked[COMBAT_GRID_CELLS];
     memset(checked, 0, COMBAT_GRID_CELLS);
-    long hitPoints = ourArmy->getTotalHitPoints(estimate->m_simulated);
-    long floorValue = -ourArmy->getLossCombatValue(
-            estimate->m_lowestAttack, estimate->m_lowestDefense,
-            ourArmy->canShoot(0), hitPoints, 0);
+    long floorValue = getEnemyAttackLimit(ourArmy, *estimate);
     const army* friendly = m_armies[estimate->m_ourGroup];
     for (long i = 0; i < m_numArmies[estimate->m_ourGroup]; i++, friendly++) {
         if (friendly->is(1u << 21))
@@ -1053,11 +1048,8 @@ VA(0x00420260, 0x368)  // dc 0x256a0
 void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, long* dangerousEnemies, type_AI_combat_parameters* estimate) const
 {
     long side = estimate->m_ourGroup;
-    long enemySide = estimate->m_enemyGroup;
-    long hitPoints = ourArmy->getTotalHitPoints(estimate->m_simulated);
-    long floorValue = -ourArmy->getLossCombatValue(
-            estimate->m_lowestAttack, estimate->m_lowestDefense,
-            ourArmy->canShoot(0), hitPoints, 0);
+    long enemySide = estimate->getEnemyGroup();
+    long floorValue = getEnemyAttackLimit(ourArmy, *estimate);
     const army* enemy = m_armies[enemySide];
     *dangerousEnemies = 0;
     for (long i = 0; i < m_numArmies[enemySide]; i++, enemy++) {
@@ -1361,7 +1353,7 @@ unsigned char combatManager::hasRangedAdvantage(type_AI_combat_parameters* data)
         }
     }
 
-    return shooterValue[data->m_ourGroup] > shooterValue[data->m_enemyGroup];
+    return shooterValue[data->m_ourGroup] > shooterValue[data->getEnemyGroup()];
 }
 
 // CodeView's type_spellvalue destructor is compiler-generated (LF_ONEMETHOD
@@ -1623,7 +1615,7 @@ unsigned char combatManager::shouldStayInCastle(type_AI_combat_parameters* estim
     for (long i = 0; i < m_numArmies[estimate->m_ourGroup]; i++, ourArmy++) {
         if ((ourArmy->is(1u << 21)) == 0
                 && ourArmy->m_creatureType != CREATURE_ARROW_TOWER
-                && !inCastle(ourArmy->m_gridIndex))
+                && !combatManager::inCastle(ourArmy->m_gridIndex))
             return 0;
     }
     return 1;
@@ -1812,8 +1804,8 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                                           m_creaturePlacement, -1);
     unsigned char stayInCastle = shouldStayInCastle(estimate);
 
-    for (long i = 0; i < m_numArmies[estimate->m_enemyGroup]; i++) {
-        const army* enemy = &m_armies[estimate->m_enemyGroup][i];
+    for (long i = 0; i < m_numArmies[estimate->getEnemyGroup()]; i++) {
+        const army* enemy = &m_armies[estimate->getEnemyGroup()][i];
         if (enemy->is(1u << 21))
             continue;
         if (enemy->m_creatureType == CREATURE_ARROW_TOWER)
@@ -1825,9 +1817,9 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
             if (stand->m_cost > 0)
                 continue;
         }
-        if (stayInCastle && !inCastle(enemy->m_gridIndex)
+        if (stayInCastle && !combatManager::inCastle(enemy->m_gridIndex)
                 && (!(enemy->m_monInfo.m_attributes & 1)
-                    || !inCastle(enemy->getSecondGridIndex())))
+                    || !combatManager::inCastle(enemy->getSecondGridIndex())))
             continue;
 
         long change = 0;
@@ -1979,7 +1971,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                 && hasRangedAdvantage(estimate))) {
         *actionValue = 0;
         if (!estimate->m_simulated
-                && getAreaEffect(estimate->m_enemyGroup, currentArmy,
+                && getAreaEffect(estimate->getEnemyGroup(), currentArmy,
                                    dangerousEnemies,
                                    estimate) == 0
                 && attemptShooterDefense(currentArmy, g_searchArray, estimate))
@@ -2019,7 +2011,7 @@ long combatManager::chooseMeleeAction(const army* currentArmy, unsigned char tel
         return actionValue;
     if (!simulated && chooseSpellAction(currentArmy, &actionValue, &data))
         return actionValue;
-    if (!m_inSecondPhase && (g_game->m_setup.m_difficulty >= 2 || m_sideIsAi[side])) {
+    if (!isInSecondPhase() && (g_game->m_setup.m_difficulty >= 2 || m_sideIsAi[side])) {
         m_nextAction = 8;
         return 0;
     }
@@ -2674,12 +2666,6 @@ army* combatManager::getCurrentArmy()
     // @stub
 }
 
-// E:\gamedcs\cmbtmgr.h:1494
-DC_ONLY(0x27f28, 0xC)
-unsigned char combatManager::is_in_second_phase()
-{
-    // @stub
-}
 
 // E:\gamedcs\cmbtmgr.h:1513
 DC_ONLY(0x27f34, 0x18)
@@ -2709,12 +2695,6 @@ combatManager::TObstacle* combatManager::getObstacle(int index)
     // @stub
 }
 
-// E:\gamedcs\ai_tactical.h:82
-DC_ONLY(0x27fd4, 0x4)
-long type_AI_combat_parameters::get_enemy_group()
-{
-    // @stub
-}
 
 // E:\gamedcs\ai_tactical.h:87
 DC_ONLY(0x27fd8, 0x4)

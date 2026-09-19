@@ -41,6 +41,14 @@ enum EBitmapGreenBits {
 
 class Bitmap16Bit : public resource {
 public:
+    // Original class statics red_mask/green_mask/blue_mask. Complete's
+    // ResourceManager::setPixelFormat stores its arguments at 0x694d68,
+    // 0x694d60 and 0x694d64 respectively. PCX bytes are BGR, so its first
+    // byte uses s_blueMask; the earlier global names reversed red and blue.
+    static unsigned int s_redMask;
+    static unsigned int s_greenMask;
+    static unsigned int s_blueMask;
+
     // Slot 0 is the scalar deleting destructor: heroWindow deletes its
     // background through [vptr]+flag 1. Slot 2 reports the resource's
     // total in-memory extent: the 0x38-byte object plus DataSize.
@@ -60,6 +68,10 @@ public:
     virtual unsigned int getSize() const;
     Bitmap16Bit(int w, int h);
     Bitmap16Bit(const char* name, int w, int h);
+    Bitmap16Bit(const char* name, int w, int h,
+                const unsigned short* data, int size);
+    Bitmap16Bit(const char* name, const char* path);
+    void import(int w, int h, const unsigned short* data, int size);
     void reference(int w, int h, int pitch, unsigned short* data);
     void draw(int srcX, int srcY, int srcWidth, int srcHeight, unsigned short* dst, int dstX, int dstY, int dstWidth, int dstHeight, int dstPitch, bool flipped) const;
     void grab(const unsigned short* src, int srcX, int srcY, int srcWidth, int srcHeight, int srcPitch);
@@ -82,12 +94,22 @@ public:
     // The float overload, DC bitmap16.cpp:873. advManager::ViewPuzzle is the
     // retail caller that proves the (hue, saturation) pair as raw dwords.
     void colorize(int x, int y, int w, int h, float hue, float saturation);
+    void gray(int x, int y, int w, int h);
+    void grabAndBlur(const Bitmap16Bit* src, int sx, int sy);
     // Header accessors (DC Bitmap16.h:111-113, 150/156). They are kept
     // inline because Complete's ResourceManager expands them into its
     // bitmap-remap blit rather than calling the emitted DC copies.
     int getWidth() const { return m_width; }
     int getHeight() const { return m_height; }
     int getPitch() const { return m_pitch; }
+    // Original: Bitmap16Bit::SetPixelFormat; Bitmap16.h:142, dc 0x122b8c
+    static void setPixelFormat(unsigned int red, unsigned int green, unsigned int blue)
+    {
+        s_redMask = red;
+        s_greenMask = green;
+        s_blueMask = blue;
+    }
+
     VA(0x004efff0, 0x19)  // COMDAT owner (kb.obj emits ?GetMap@Bitmap16Bit@@QAEPAGHH@Z), body in bitmap16.h
     unsigned short* getMap(int x, int y)
     {
@@ -119,24 +141,11 @@ public:
              src->getPitch());
     }
     void remap(int oldGreenBits);
+
+private:
+    int importPCXFile(const char* filename);
 };
 SIZE(Bitmap16Bit, 0x38);
-
-// The live 16-bit pixel format, filled from the DirectDraw surface
-// description and read by every bitmap16.obj blender (Darken, Colorize,
-// the 24->16 importer) as well as winmgr's two fades.
-
-// GREEN is PROVEN: wingraph 0x601bfe saves 0x694d60 across a mode
-// change and feeds `mask == 0x7e0 ? 6 : 5` to Bitmap16Bit::Remap, whose
-// parameter the DC roster names old_green_bits. RED/BLUE follow from
-// term order, corroborated twice: Bitmap16Bit::Darken (0x44e5f0) and
-// both fades emit their three `(px & m) >> n & m` terms in the order
-// 0x694d64, 0x694d60, 0x694d68, and the 24->16 importer at 0x44f0f4
-// pairs source byte 0 with 0x694d64, byte 1 (green in every 24-bit
-// order) with 0x694d60 and byte 2 with 0x694d68 - i.e. R, G, B.
-DATA(0x00694d60) extern unsigned long g_colorMaskGreen;
-DATA(0x00694d64) extern unsigned long g_colorMaskRed;
-DATA(0x00694d68) extern unsigned long g_colorMaskBlue;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\bitmap16.cpp:59, dc 0x50a9c) long ftol(double d);

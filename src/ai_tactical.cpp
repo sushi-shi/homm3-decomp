@@ -118,6 +118,11 @@ double aiValueOfLuck(long luck, long change)
                                    g_aiBadLuckValue);
 }
 
+// DC ai_tactical.cpp:2183, dc 0x42aa8, is army's implicit copy constructor:
+// one borrowed call-site line, member/array copies, then deque<SpellID> and
+// four vector<army*> copy constructors. Complete additionally copies resource
+// handles through their refcounting members. The natural implicit constructor
+// supplies the retained 0x437a00 body; do not add a second authored constructor.
 VA_COMPGEN(0x00437a00, 0x6FA, IMPLICIT_COPY_CTOR, army)
 
 VA(0x00435980, 0x2A)  // dc 0x3c810
@@ -374,14 +379,13 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
 
 // E:\gamedcs\ai_tactical.cpp:575
 // How many turns this stack needs to reach the hex `cell` describes.
-// No retail body - the carve cuts nothing between the chooser's
-// constructor at 0x4360c0 and check_adjacent_hexes at 0x436300 - so it
-// is `inline`, and the RETURN is what the caller's shape needs: retail
+// Complete expands this ordinary TU helper into check_adjacent_hexes.
+// Its return boundary is visible in the caller: retail
 // leaves the answer in EAX across all four exits and stores it ONCE,
 // where the same statements written out in the caller store to the
 // slot at every assignment.
 DC_ONLY(0x3d154, 0x8E)
-inline long type_AI_attack_hex_chooser::getAttackTime(const pathCell* cell) const
+long type_AI_attack_hex_chooser::getAttackTime(const pathCell* cell) const
 {
     if (m_speed == 0)
         return 0 < cell->m_cost ? 100 : 1;
@@ -609,31 +613,27 @@ type_spell_choice::type_spell_choice(SpellID newSpell, TSkillMastery newMastery,
     m_castNow = 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\ai_tactical.cpp:779
-DC_ONLY(0x3d5dc, 0x28)
+// Original: type_AI_spellcaster::initialize; ai_tactical.cpp:779, dc 0x3d5dc.
+// Both constructors call this ordinary helper in DC. Complete expands the
+// same side/hero/flag initialization before the remaining setup operations.
 void type_AI_spellcaster::initialize(combatManager* combat, long side)
 {
-    // @stub
+    m_side = side;
+    m_enemySide = 1 - side;
+    m_ourHero = combat->m_heroes[side];
+    m_enemyHero = combat->m_heroes[m_enemySide];
+    m_winLikely = 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:817
 DC_ONLY(0x3d6f0, 0x72)
-inline type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent,
+type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent,
                                                 combatManager* combat, long side,
                                                 unsigned char creatureSpell)
     : m_estimate(combat, side)
 {
-    long enemy = 1 - side;
-    this->m_isCreatureSpell = creatureSpell;
-    this->m_side = side;
-    m_enemySide = enemy;
-    m_ourHero = combat->m_heroes[side];
-    m_enemyHero = combat->m_heroes[enemy];
-    m_winLikely = 0;
+    m_isCreatureSpell = creatureSpell;
+    initialize(combat, side);
     m_enemyCaster = parent;
     m_ownsEnemyCaster = 0;
     checkSimulation();
@@ -673,12 +673,8 @@ type_AI_spellcaster::type_AI_spellcaster(combatManager* combat, long side,
     : m_estimate(combat, side)
 {
     long enemy = 1 - side;
-    this->m_isCreatureSpell = creatureSpell;
-    this->m_side = side;
-    m_enemySide = enemy;
-    m_ourHero = combat->m_heroes[side];
-    m_enemyHero = combat->m_heroes[enemy];
-    m_winLikely = 0;
+    m_isCreatureSpell = creatureSpell;
+    initialize(combat, side);
     combat->findMoveOrder(0);
     combat->simulateCombat(side, 0);
     checkSimulation();
@@ -704,7 +700,7 @@ type_AI_spellcaster::~type_AI_spellcaster()
 // the helper naturally at its three callers. Absence of a retained retail
 // body does not justify an explicit inline keyword.
 DC_ONLY(0x3d7b0, 0x86)
-inline unsigned char type_AI_spellcaster::isLastAction() const
+unsigned char type_AI_spellcaster::isLastAction() const
 {
     const army* current = g_combatManager->getCurrentArmy();
     long total = g_combatManager->m_numArmies[m_side];
@@ -861,26 +857,22 @@ long type_AI_spellcaster::getAreaEffectValue(SpellID spell, long baseDamage, TSk
 // the best get_area_effect_value, skipping only the two off-field
 // margin columns - and it re-tests the 0..187 range in front of that
 // column test, which is why retail emits a range guard the loop bound
-// already guarantees.
+// already guarantees. DC1039/1042 name getMasteryValue and
+// InInvisibleColumn: retain those nested calls inside the ordinary helper.
 DC_ONLY(0x3dc50, 0x72)
-inline void type_AI_spellcaster::considerAreaEffect(type_spell_choice* choice) const
+void type_AI_spellcaster::considerAreaEffect(type_spell_choice& choice) const
 {
-    long baseDamage = g_spellTraits[choice->m_spell].m_powerFactor * choice->m_power
-                       + g_spellTraits[choice->m_spell].m_masteryBonus[choice->m_mastery];
+    long baseDamage = g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power
+                       + choice.getMasteryValue();
     for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
-        if (hex >= 0 && hex < COMBAT_GRID_CELLS) {
-            long column = hex % COMBAT_GRID_ROW_STRIDE;
-            if (column == 0)
-                continue;
-            if (column == COMBAT_GRID_LAST_COLUMN)
-                continue;
-        }
-        long value = getAreaEffectValue(choice->m_spell, baseDamage,
-                                           choice->m_mastery, hex);
-        if (value > choice->m_value) {
-            choice->m_target = hex;
-            choice->m_value = value;
-            choice->m_castNow = 1;
+        if (combatManager::inInvisibleColumn(hex))
+            continue;
+        long value = getAreaEffectValue(choice.m_spell, baseDamage,
+                                           choice.m_mastery, hex);
+        if (value > choice.m_value) {
+            choice.m_target = hex;
+            choice.m_value = value;
+            choice.m_castNow = 1;
         }
     }
 }
@@ -1472,16 +1464,18 @@ long type_AI_spellcaster::getBlindValue(const army* enemy, type_enchant_data cas
     return value;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\ai_tactical.cpp:1767
-DC_ONLY(0x3f9d0, 0x52)
-long type_AI_spellcaster::get_move_order_change_value(const army* our_army)
+// Original: type_AI_spellcaster::get_move_order_change_value; ai_tactical.cpp:1767, dc 0x3f9d0.
+// The two exchange estimates and null-target return expand in both Complete
+// callers, getMuckAndMireValue and getSpeedValue.
+long type_AI_spellcaster::getMoveOrderChangeValue(const army* ourArmy) const
 {
-    // @stub
+    const army* enemy = ourArmy->getAITarget();
+    if (enemy == 0)
+        return 0;
+    long ourValue = m_estimate.getExchangeEffect(*ourArmy, *enemy, 0);
+    long enemyValue = -m_estimate.getExchangeEffect(*enemy, *ourArmy, 0);
+    return ourValue - enemyValue;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1788
 // Muck and mire is priced as a SLOW: it reads the Slow mastery row
@@ -1558,14 +1552,7 @@ long type_AI_spellcaster::getMuckAndMireValue(const army* enemy, type_enchant_da
                 continue;
             if (ourArmy->getSpeed() <= newSpeed)
                 continue;
-            long effect;
-            const army* target = ourArmy->getAITarget();
-            if (target == 0) {
-                effect = 0;
-            } else {
-                long ours = m_estimate.getExchangeEffect(*(ourArmy), *(target), 0);
-                effect = m_estimate.getExchangeEffect(*(target), *(ourArmy), 0) + ours;
-            }
+            long effect = getMoveOrderChangeValue(ourArmy);
             if (effect > value)
                 value = effect;
         }
@@ -1629,15 +1616,9 @@ long type_AI_spellcaster::getSpeedValue(const army* ourArmy, long increase, long
     if (newTime == 1) {
         const army* target = ourArmy->getAITarget();
         if (target->getSpeed() >= oldSpeed && target->getSpeed() < newSpeed) {
-            const army* enemy = ourArmy->getAITarget();
-            if (enemy) {
-                long ours = m_estimate.getExchangeEffect(*(ourArmy), *(enemy), 0);
-                value = m_estimate.getExchangeEffect(*(enemy), *(ourArmy), 0) + ours;
-                if (value < 0)
-                    value = 0;
-            } else {
+            value = getMoveOrderChangeValue(ourArmy);
+            if (value < 0)
                 value = 0;
-            }
         }
     }
     if (newTime < oldTime) {
@@ -2661,7 +2642,7 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
             continue;
         if (enemy->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
-        if (inCastle(enemy->m_gridIndex))
+        if (combatManager::inCastle(enemy->m_gridIndex))
             break;
     }
     if (count < 0)
@@ -2760,7 +2741,7 @@ void type_AI_spellcaster::considerSpell(type_spell_choice* choice) const
     case SPELL_FIREBALL:
     case SPELL_INFERNO:
     case SPELL_METEOR_SHOWER:
-        considerAreaEffect(choice);
+        considerAreaEffect(*choice);
         return;
     case SPELL_SACRIFICE:
         considerSacrifice(*choice);
@@ -2804,23 +2785,29 @@ void type_AI_spellcaster::setMeleeEnemies()
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\ai_tactical.cpp:3221
-DC_ONLY(0x42170, 0xAE)
-void type_AI_spellcaster::set_worst_enemies()
+// Original: type_AI_spellcaster::set_worst_enemies; ai_tactical.cpp:3221, dc 0x42170.
+void type_AI_spellcaster::setWorstEnemies()
 {
-    // @stub
+    for (long i = 0; i < g_combatManager->m_numArmies[m_side]; i++) {
+        m_worstEnemies[i] = m_meleeEnemies[i];
+        if (m_attacks[i].m_damage > m_worstEnemies[i].m_damage)
+            m_worstEnemies[i] = m_attacks[i];
+    }
 }
 
-// E:\gamedcs\ai_tactical.cpp:3237
-DC_ONLY(0x42220, 0x5A)
-void type_AI_spellcaster::add_enemy(type_AI_enemy_data* sum, const army* our_army, const army* enemy, unsigned char ranged)
+// Original: type_AI_spellcaster::add_enemy; ai_tactical.cpp:3237, dc 0x42220.
+void type_AI_spellcaster::addEnemy(type_AI_enemy_data& sum, const army* ourArmy,
+                                 const army* enemy, unsigned char ranged)
 {
-    // @stub
+    long damage = enemy->getAverageDamage(ourArmy, ranged, enemy->m_numTroops, 0, 0);
+    sum.m_count++;
+    sum.m_totalDamage += damage;
+    if (damage > sum.m_damage) {
+        sum.m_damage = damage;
+        sum.m_enemy = enemy;
+    }
+    m_enemyCanAttack |= 1 << enemy->m_bitIndex;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:3254
 // The full two-sided census: set_melee_enemies fills enemies[] with the
@@ -2830,11 +2817,9 @@ void type_AI_spellcaster::add_enemy(type_AI_enemy_data* sum, const army* our_arm
 // the one already recorded, back into enemies[]. worst_enemies[] is
 // then the per-stack maximum of the two.
 
-// The DC roster's add_enemy (dc 0x42220) and set_worst_enemies
-// (dc 0x42170) have NO retail slot: the count/total/max update stands
-// open at both census sites and the merge loop stands open at the tail,
-// so retail's source spells all three out here. Writing them as members
-// would put two bodies in the image that retail does not carry.
+// Complete expands addEnemy at both census sites and setWorstEnemies at
+// the tail. Their ordinary definitions above preserve the DC source calls
+// and the reference parameter used for each enemy-data accumulator.
 
 VA(0x0043c040, 0x2E6)  // anchor-global, dc 0x4227c
 void type_AI_spellcaster::findEnemyAttacks()
@@ -2845,7 +2830,7 @@ void type_AI_spellcaster::findEnemyAttacks()
     memset(m_attacks, 0, sizeof(m_attacks));
     setMeleeEnemies();
     const army* ourArmy = &g_combatManager->m_armies[m_side][0];
-    { for (long i = 0; i < g_combatManager->m_numArmies[m_side]; i++, ourArmy++) {
+    for (long i = 0; i < g_combatManager->m_numArmies[m_side]; i++, ourArmy++) {
         unsigned char flags = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 21);
         if (flags & 1)
             continue;
@@ -2869,35 +2854,18 @@ void type_AI_spellcaster::findEnemyAttacks()
             if (enemy->getTotalHitPoints(1) == 0)
                 continue;
             if (enemy->canShoot(0)) {
-                long damage = enemy->getAverageDamage(ourArmy, 1, enemy->m_numTroops, 0, 0);
-                m_attacks[i].m_count++;
-                m_attacks[i].m_totalDamage += damage;
-                if (damage > m_attacks[i].m_damage) {
-                    m_attacks[i].m_damage = damage;
-                    m_attacks[i].m_enemy = enemy;
-                }
+                addEnemy(m_attacks[i], ourArmy, enemy, 1);
             } else {
                 if (enemy == meleeEnemy)
                     continue;
                 if ((enemy->getAIPossibleTargets() & (1 << i)) == 0)
                     continue;
                 m_canBeAttacked |= 1 << j;
-                long damage = enemy->getAverageDamage(ourArmy, 0, enemy->m_numTroops, 0, 0);
-                m_meleeEnemies[i].m_count++;
-                m_meleeEnemies[i].m_totalDamage += damage;
-                if (damage > m_meleeEnemies[i].m_damage) {
-                    m_meleeEnemies[i].m_damage = damage;
-                    m_meleeEnemies[i].m_enemy = enemy;
-                }
+                addEnemy(m_meleeEnemies[i], ourArmy, enemy, 0);
             }
-            m_enemyCanAttack |= 1 << enemy->m_bitIndex;
         }
-    } }
-    { for (long i = 0; i < g_combatManager->m_numArmies[m_side]; i++) {
-        m_worstEnemies[i] = m_meleeEnemies[i];
-        if (m_attacks[i].m_damage > m_worstEnemies[i].m_damage)
-            m_worstEnemies[i] = m_attacks[i];
-    } }
+    }
+    setWorstEnemies();
 }
 
 VA(0x0043c330, 0x16C)  // dc 0x423f4
@@ -3062,7 +3030,7 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
 // act (creature bit 6 clear). The walk is the TU's `count-- > 0`
 // pointer form, the same one consider_teleport carries.
 DC_ONLY(0x425a8, 0x68)
-inline void type_AI_spellcaster::checkSimulation()
+void type_AI_spellcaster::checkSimulation()
 {
     const army* enemy = g_combatManager->m_armies[m_enemySide];
     long count = g_combatManager->m_numArmies[m_enemySide];

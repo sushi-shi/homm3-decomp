@@ -25,6 +25,7 @@
 // SSpellTraits' m_sample slice: army.cpp is its only consumer and this
 // header sits inside initialize.cpp's include closure (see the field).
 #include "armygrp.h"
+#include "townmgr.h"
 #include "bitmap16.h"
 #include "cmbtmgr.h"
 #include "combatwindow.h"
@@ -121,17 +122,21 @@ army::~army()
 {
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:77
-DC_ONLY(0x437ac, 0x84)
+// Original: army::set_retaliation_count; army.cpp:77, dc 0x437ac.
+// Init and ResetRound expand this ordinary helper in Complete. DC line 80
+// increments the Griffin allowance; VC6 folds the known initial value to 2.
 void army::setRetaliationCount()
 {
-    // @stub
+    m_retaliationCount = 1;
+    if (m_creatureType == ARMY_CREATURE_GRIFFIN)
+        m_retaliationCount++;
+    if (m_creatureType == ARMY_CREATURE_ROYAL_GRIFFIN)
+        m_retaliationCount = 5000;
+    if (m_spellInfluence[SPELL_COUNTERSTRIKE])
+        m_retaliationCount += m_counterstrokeBonus;
+    if (is(1u << 6))
+        m_retaliationCount = 0;
 }
-
-// E:\gamedcs\army.cpp:93
-#endif  // @carcass
 
 VA(0x0043d540, 0x34)  // dc 0x43830
 void army::playSample(army::TSampleID id)
@@ -269,7 +274,7 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
         owner->heroFn004E6120(type, traits);
     if (g_combatManager->m_magicTerrain
             != COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS
-        && g_nativeTerrains[m_monInfo.m_townType]
+        && townManager::getNativeTerrain(m_monInfo.m_townType)
                == g_combatManager->m_terrainType)
         m_onNativeTerrain = 1;
     else
@@ -325,15 +330,7 @@ void army::init(int armyId, int newNumTroops, const hero* owner, int side,
         addAura();
     }
     m_originalIndex = origPos;
-    m_retaliationCount = 1;
-    if (m_creatureType == ARMY_CREATURE_GRIFFIN)
-        m_retaliationCount = 2;
-    if (m_creatureType == ARMY_CREATURE_ROYAL_GRIFFIN)
-        m_retaliationCount = 5000;
-    if (m_spellInfluence[SPELL_COUNTERSTRIKE])
-        m_retaliationCount += m_counterstrokeBonus;
-    if (is(1u << 6))
-        m_retaliationCount = 0;
+    setRetaliationCount();
 }
 
 VA(0x0043d9f0, 0x525)
@@ -563,6 +560,13 @@ void army::loadResources()
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:477
+// Retired raw-resource owner API. DC0x4424c guards quick combat, disposes
+// stdIcon/missileIcon and eight sample pointers, then zeroes those pointers.
+// Complete replaces those raw fields with TResourceHandle members: its copy
+// ctor0x437a00 increments references, and destructor0x43d400 invokes an
+// eight-element destructor iterator at +0x170 then disposes +0x168/+0x164.
+// FreeArmies0x4639e0 therefore retains only StopAllSamples; neither Close nor
+// DoVictory contains the DC release loop. See config/dc_only.tsv.
 DC_ONLY(0x4424c, 0xCC)
 void army::freeResources()
 {
@@ -862,19 +866,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
                 g_windowManager->m_screenBitmap->colorize(
                     numboxX + 1, numboxY + 1, 0x1c, 9, 0.75f, 0.8f);
             } else {
-                long sum = 0;
-                long absSum = 0;
-                for (long i = 0; i < 0x51; i++) {
-                    if (m_spellInfluence[i] != 0) {
-                        sum += g_spellTraits[i].m_karma;
-                        absSum += abs(g_spellTraits[i].m_karma);
-                    }
-                }
-                double affinity;
-                if (absSum == 0)
-                    affinity = 0.0;
-                else
-                    affinity = sum / static_cast<double>(absSum);
+                double affinity = computeKarma();
                 g_windowManager->m_screenBitmap->colorize(
                     numboxX + 1, numboxY + 1, 0x1c, 9,
                     static_cast<float>((affinity + 1.0) * 0.1667f),
@@ -904,48 +896,23 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
             long ey;
             switch (x & 0xf) {
             case SPELL_EFFECT_PLACE_OVERHEAD:
-                ex = g_combatManager->m_cells[m_gridIndex].m_refX;
-                if (m_monInfo.m_attributes & 1)
-                    ex += m_facing ? 22 : -22;
-                ex -= g_combatManager->m_powSprite->getWidth() / 2;
-                ey = g_combatManager->m_cells[m_gridIndex].m_refY
-                     - g_combatManager->m_powSprite->getHeight();
+                ex = midX() - g_combatManager->m_powSprite->getWidth() / 2;
+                ey = bottomY() - g_combatManager->m_powSprite->getHeight();
                 break;
             case SPELL_EFFECT_PLACE_CENTERED:
-                ex = g_combatManager->m_cells[m_gridIndex].m_refX;
-                if (m_monInfo.m_attributes & 1)
-                    ex += m_facing ? 22 : -22;
-                ex -= g_combatManager->m_powSprite->getWidth() / 2;
-                ey = g_combatManager->m_cells[m_gridIndex].m_refY
-                     - g_combatManager->m_powSprite->getHeight() / 2
-                     - m_imageHeight / 2;
+                ex = midX() - g_combatManager->m_powSprite->getWidth() / 2;
+                ey = midY() - g_combatManager->m_powSprite->getHeight() / 2;
                 break;
             case SPELL_EFFECT_PLACE_ABOVE:
-                ex = g_combatManager->m_cells[m_gridIndex].m_refX;
-                if (m_monInfo.m_attributes & 1)
-                    ex += m_facing ? 22 : -22;
-                ex -= g_combatManager->m_powSprite->getWidth() / 2;
-                ey = g_combatManager->m_cells[m_gridIndex].m_refY
-                     - g_combatManager->m_powSprite->getHeight()
-                     - m_imageHeight;
+                ex = midX() - g_combatManager->m_powSprite->getWidth() / 2;
+                ey = topY() - g_combatManager->m_powSprite->getHeight();
                 break;
-            case SPELL_EFFECT_PLACE_FLANK: {
-                long edge = m_stdIcon->getFrame(cs_wait, 0)->getCroppedX()
-                            + m_stdIcon->getFrame(cs_wait, 0)->getCroppedWidth()
-                            - 196;
-                if (m_facing == 0)
-                    ex = g_combatManager->m_cells[m_gridIndex].m_refX
-                         - edge;
-                else
-                    ex = g_combatManager->m_cells[m_gridIndex].m_refX
-                         + edge;
+            case SPELL_EFFECT_PLACE_FLANK:
+                ex = frontX();
                 if (m_facing == 0)
                     ex -= g_combatManager->m_powSprite->getWidth();
-                ey = g_combatManager->m_cells[m_gridIndex].m_refY
-                     - g_combatManager->m_powSprite->getHeight() / 2
-                     - m_imageHeight / 2;
+                ey = midY() - g_combatManager->m_powSprite->getHeight() / 2;
                 break;
-            }
             default:
                 // Faithful artifact: the fallback aims BOTH coordinates
                 // at the recycled x slot (retail reads [ebp+8] twice -
@@ -962,16 +929,25 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:891
-DC_ONLY(0x44d50, 0xC2)
+// Original: army::ComputeKarma; army.cpp:891, dc 0x44d50.
+// Complete expands the same weighted spell-karma calculation in DrawToBuffer;
+// its spell table grew from DC's 80 entries to 81.
 double army::computeKarma() const
 {
-    // @stub
+    if (m_numSpellInfluences == 0)
+        return 0.0;
+    long sum = 0;
+    long absSum = 0;
+    for (long i = 0; i < 81; i++) {
+        if (m_spellInfluence[i] != 0) {
+            sum += g_spellTraits[i].m_karma;
+            absSum += abs(g_spellTraits[i].m_karma);
+        }
+    }
+    if (absSum == 0)
+        return 0.0;
+    return sum / static_cast<double>(absSum);
 }
-
-#endif  // @carcass
 
 // Append `arg` to `array` unless it is already there, answering whether
 // it went in.
@@ -1128,27 +1104,20 @@ unsigned char army::setInsideAreaEffect(unsigned char arg)
     return 1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:1062
-// NO RETAIL BODY, AND THE BRACKET PROVES IT. The carve has exactly ONE
-// row between remove_bindings (0x43ee10, 0x1C2) and Walk (0x43f0b0) -
-// 0x43efe0 / 207 B - and the Dreamcast roster has TWO here, so one of
-// the pair has no retail slot. 0x43efe0 is set_inside_area_effect: it
-// takes ONE byte argument, compares it against +0x4f1
-// (is_area_effect_target), stores it, and ends `ret 4`, which
-// EndWalk() - no arguments - cannot. Retail therefore emits no
-// out-of-line EndWalk anywhere, and its four statements are written at
-// Walk's `if (end_walk)` instead. The shape below is byte-exact for
-// this call site; whether retail's source kept the name as a header
-// inline or spelled the statements out is NOT decided here.
-DC_ONLY(0x45204, 0x50)
+// Original: army::EndWalk; army.cpp:1062, dc 0x45204.
+// Ordinary helper expanded in both Walk and WalkTo. The standalone retail
+// slot in this DC pair belongs to SetInsideAreaEffect, not EndWalk.
 void army::endWalk()
 {
-    // @stub
+    if (g_combatManager->isQuickCombat())
+        return;
+    playSample(POST_WALK_SAMPLE);
+    if (m_armySample[WALK_SAMPLE])
+        g_soundManager->stopSample(
+            m_armySample[WALK_SAMPLE]->m_memSample.m_memSampleHandle);
+    playAnimation(cs_postwalk, -1, 0);
+    playAnimation(cs_wait, 1, 0);
 }
-
-#endif  // @carcass
 
 // One hex of a walk: turn to face the step if it needs turning, publish
 // the from/to pair the redraw reads, play the walk animation, and move
@@ -1194,15 +1163,8 @@ void army::walk(int direction, unsigned char endWalk,
     g_walkingTo = -1;
     g_walkingTo2 = -1;
     m_drawPriority = 4;
-    if (endWalk) {
-        if (!g_combatManager->isQuickCombat()) {
-            playSample(POST_WALK_SAMPLE);
-            if (m_armySample[WALK_SAMPLE])
-                g_soundManager->stopSample(m_armySample[WALK_SAMPLE]->m_memSample.m_memSampleHandle);
-            playAnimation(21, -1, 0);
-            playAnimation(2, 1, 0);
-        }
-    }
+    if (endWalk)
+        this->endWalk();
 }
 
 // E:\gamedcs\army.cpp:1171
@@ -1250,7 +1212,7 @@ void army::animateMissile(army* armyToAttack)
     int startX;
     int startY;
     int missileFrame;
-    getMissileStartingPosition(m_creatureType,
+    combatManager::getMissileStartingPosition(m_creatureType,
                                g_combatManager->m_cells[m_gridIndex].m_refX,
                                g_combatManager->m_cells[m_gridIndex].m_refY,
                                m_facing, targetX, targetY, m_missileIcon,
@@ -2331,15 +2293,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
         long nextHex = getAdjacentCellIndex(m_gridIndex, direction);
         if (g_combatManager->shouldLowerDoor(this, nextHex)) {
             if (!atRest) {
-                if (!static_cast<const combatManager*>(g_combatManager)
-                         ->isQuickCombat()) {
-                    playSample(POST_WALK_SAMPLE);
-                    if (m_armySample[WALK_SAMPLE])
-                        g_soundManager->stopSample(
-                            m_armySample[WALK_SAMPLE]->m_memSample.m_memSampleHandle);
-                    playAnimation(cs_postwalk, -1, 0);
-                    playAnimation(cs_wait, 1, 0);
-                }
+                endWalk();
                 m_currFrameType = cs_wait;
                 m_currFrameIndex = 0;
                 g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
@@ -3058,7 +3012,7 @@ double army::computeAttackerDamageReduction(const army* defender,
     if ((is(1u << 2)) && !isShooting && !(is(1u << 12)))
         reduction *= 0.5;
     if (m_residualBlindness && m_residualParalyze) {
-        double penalty = cppMin<double>(
+        double penalty = min(
             m_blindFactor, g_spellTraits[SPELL_BLIND].m_masteryBonus[2] / 100.0);
         reduction = penalty * reduction;
     } else if (m_residualBlindness)
@@ -3215,21 +3169,14 @@ int army::damage(int damage)
     return killed;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:3481
-// The carve has ONE row between Damage (0x444090, 0x8F, ending 0x44411f)
-// and CancelSpellType (0x4444d0) - 0x444120 / 0x3A6 - and the DC roster
-// has TWO here, so one of the pair has no retail body. It is this one:
-// 44 bytes of SH4 for a `Strength()` accessor is the in-class-inline
-// shape, and 0x444120 ends `ret 4` which a no-argument member cannot.
-DC_ONLY(0x4935c, 0x44)
+// Original: army::Strength; army.cpp:3481, dc 0x4935c.
+// DC3482 multiplies the current troop count by baseFightValue (traits+46).
+// Complete widens that traits field to int at +64; this source API has no
+// separately claimed retained retail body.
 unsigned long army::strength()
 {
-    // @stub
+    return m_numTroops * g_creatureTypeTraits[m_creatureType].m_baseFightValue;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\army.cpp:3492
 // LOCATED 2026-08-14, and ResetRound's own tail is the proof: it ends
@@ -3415,8 +3362,10 @@ void army::cancelSpellType(int spellType)
     }
 }
 
-// E:\gamedcs\army.cpp:3660
-inline void army::adjustHitpoints()
+// Original: army::adjust_hitpoints; army.cpp:3660, dc 0x496dc
+// ResetRound and the AGE/POISON spell paths expand this ordinary helper.
+// The by-value min wrapper preserves its two argument copies in retail.
+void army::adjustHitpoints()
 {
     if (m_spellInfluence[SPELL_AGE])
         m_monInfo.m_hitPoints = static_cast<int>(
@@ -3793,17 +3742,23 @@ void army::setSpellInfluence(int spell, int power, int mastery,
     m_spellInfluenceQueue.push_back(spell);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:4129
-DC_ONLY(0x4a2e8, 0x5E)
+// Original: army::DecrementSpellRounds; army.cpp:4129, dc 0x4a2e8.
+// ResetRound expands the spell/vanish countdown. Complete has 81 spell
+// entries; the older DC loop at line 4133 ends at 80.
 void army::decrementSpellRounds()
 {
-    // @stub
-}
+    for (int spell = 0; spell < 81; spell++) {
+        if (m_spellInfluence[spell] > 0 && spell != SPELL_FRENZY) {
+            if (m_spellInfluence[spell] == 1)
+                cancelIndividualSpell(spell);
+            else
+                m_spellInfluence[spell]--;
+        }
+    }
 
-// E:\gamedcs\army.cpp:4249
-#endif  // @carcass
+    if (m_roundsLeftBeforeVanish > 0)
+        m_roundsLeftBeforeVanish--;
+}
 
 // The legal victims of a berserked stack: every living stack on either
 // side except this one and the arrow towers, kept only while it ties or
@@ -4093,7 +4048,7 @@ void army::attackWall(int targetGridIndex)
     TWallTargetId wall;
     {
         // GetTargetWallIndex returns int in Complete and an enum in Dreamcast.
-        wall = TWallTargetId(getTargetWallIndex(targetGridIndex));
+        wall = TWallTargetId(combatManager::getTargetWallIndex(targetGridIndex));
     }
     hero* controller = getController();
     long level;
@@ -4400,23 +4355,17 @@ int army::midY() const
     return g_combatManager->m_cells[m_gridIndex].m_refY - m_imageHeight / 2;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:4779
-DC_ONLY(0x4b170, 0x20)
+// Original: army::TopY; army.cpp:4779, dc 0x4b170.
 int army::topY() const
 {
-    // @stub
+    return g_combatManager->m_cells[m_gridIndex].m_refY - m_imageHeight;
 }
 
-// E:\gamedcs\army.cpp:4784
-DC_ONLY(0x4b190, 0x16)
+// Original: army::BottomY; army.cpp:4784, dc 0x4b190.
 int army::bottomY() const
 {
-    // @stub
+    return g_combatManager->m_cells[m_gridIndex].m_refY;
 }
-
-#endif  // @carcass
 
 VA(0x00446660, 0x35)  // dc 0x4b1a8
 int army::midX() const
@@ -4427,31 +4376,41 @@ int army::midX() const
     return x;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:4800
-DC_ONLY(0x4b20c, 0x6C)
+// Original: army::RightX; army.cpp:4800, dc 0x4b20c.
 int army::rightX() const
 {
-    // @stub
+    int offset;
+    if (m_facing == 0)
+        offset = 196 - m_stdIcon->getCroppedX(cs_wait, 0);
+    else
+        offset = m_stdIcon->getCroppedX(cs_wait, 0)
+                 + m_stdIcon->getCroppedWidth(cs_wait, 0) - 196;
+    return g_combatManager->m_cells[m_gridIndex].m_refX + offset;
 }
 
-// E:\gamedcs\army.cpp:4812
-DC_ONLY(0x4b278, 0x6C)
+// Original: army::LeftX; army.cpp:4812, dc 0x4b278.
 int army::leftX() const
 {
-    // @stub
+    int offset;
+    if (m_facing == 0)
+        offset = 196 - m_stdIcon->getCroppedX(cs_wait, 0)
+                 - m_stdIcon->getCroppedWidth(cs_wait, 0);
+    else
+        offset = m_stdIcon->getCroppedX(cs_wait, 0) - 196;
+    return g_combatManager->m_cells[m_gridIndex].m_refX + offset;
 }
 
-// E:\gamedcs\army.cpp:4825
-DC_ONLY(0x4b2e4, 0x6E)
+// Original: army::FrontX; army.cpp:4825, dc 0x4b2e4.
+// DrawToBuffer expands the helper and its two CSprite accessors.
 int army::frontX() const
 {
-    // @stub
+    int offset = m_stdIcon->getCroppedX(cs_wait, 0)
+                 + m_stdIcon->getCroppedWidth(cs_wait, 0) - 196;
+    if (m_facing == 0)
+        return g_combatManager->m_cells[m_gridIndex].m_refX - offset;
+    else
+        return g_combatManager->m_cells[m_gridIndex].m_refX + offset;
 }
-
-// E:\gamedcs\army.cpp:4839
-#endif  // @carcass
 
 VA(0x004466a0, 0x1E)  // dc 0x4b354
 int army::getSecondGridIndex() const
@@ -4473,24 +4432,21 @@ unsigned char army::isAdjacent(int hex) const
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:4864
-DC_ONLY(0x4b3e8, 0x3E)
-unsigned char army::isAdjacent(const army& other_army) const
+// Original: army::is_adjacent; army.cpp:4864, dc 0x4b3e8.
+unsigned char army::isAdjacent(const army& otherArmy) const
 {
-    // @stub
+    if (isAdjacent(otherArmy.m_gridIndex))
+        return 1;
+    if (otherArmy.is(1u))
+        return isAdjacent(otherArmy.getSecondGridIndex());
+    return 0;
 }
 
-// E:\gamedcs\army.cpp:4881
-DC_ONLY(0x4b428, 0x2A)
-int army::otherArmyAdjacent(int OAgroup, int OAindex)
+// Original: army::OtherArmyAdjacent; army.cpp:4881, dc 0x4b428.
+int army::otherArmyAdjacent(int group, int index)
 {
-    // @stub
+    return isAdjacent(g_combatManager->m_armies[group][index]);
 }
-
-// E:\gamedcs\army.cpp:4891
-#endif  // @carcass
 
 // Residual (91.7125%): control flow is exact. Candidate CL hoists the literal
 // 1 into EBX, costing a push/pop and replacing retail's immediate tests,
@@ -4775,42 +4731,18 @@ void army::resetRound()
 
     m_monInfo.m_attributes &= 0xf8ffffff;
     m_resetThisRound = 0;
-    m_retaliationCount = 1;
-    if (m_creatureType == ARMY_CREATURE_GRIFFIN)
-        m_retaliationCount = 2;
-    if (m_creatureType == ARMY_CREATURE_ROYAL_GRIFFIN)
-        m_retaliationCount = 5000;
-    if (m_spellInfluence[SPELL_COUNTERSTRIKE])
-        m_retaliationCount += m_counterstrokeBonus;
-    if (is(1u << 6))
-        m_retaliationCount = 0;
+    setRetaliationCount();
 
     if (g_combatManager->m_creaturePlacement)
         return;
 
-    for (int spell = 0; spell < 81; spell++) {
-        if (m_spellInfluence[spell] > 0 && spell != SPELL_FRENZY) {
-            if (m_spellInfluence[spell] == 1)
-                cancelIndividualSpell(spell);
-            else
-                m_spellInfluence[spell]--;
-        }
-    }
-
-    if (m_roundsLeftBeforeVanish > 0)
-        m_roundsLeftBeforeVanish--;
+    decrementSpellRounds();
 
     if (m_spellInfluence[SPELL_POISON] > 0) {
         int oldHitPoints = m_monInfo.m_hitPoints;
         double factor = cppMax<double>(m_poisonPenalty - 0.1f, 0.5);
         m_poisonPenalty = static_cast<float>(factor);
-        if (m_spellInfluence[SPELL_AGE])
-            m_monInfo.m_hitPoints = static_cast<int>(
-                m_origHitPoints * m_poisonPenalty * 0.5f + 0.95f);
-        else
-            m_monInfo.m_hitPoints = static_cast<int>(
-                m_origHitPoints * m_poisonPenalty + 0.95f);
-        m_topCreatureDamage = cppMin(m_topCreatureDamage, m_monInfo.m_hitPoints - 1);
+        adjustHitpoints();
         if (oldHitPoints - m_monInfo.m_hitPoints > 0) {
             m_showPowEffect = 1;
             m_someUnitsDamaged = 1;
@@ -4968,51 +4900,77 @@ unsigned char army::canCastSpell(long hex) const
     return 0;
 }
 
-// RETAIL-ONLY: the shared spell-validity worker army.h describes -
-// is_valid_caliph_spell (0x447eb0) TAIL-JUMPS to it, can_cast_spell above
-// calls it, and Unnamed447fe0 calls it twice. Two fastcall register
-// arguments and a bare `ret`, so it is a free function, which rules out
-// the three one-argument group_has_* statics the DC roster has left in
-// this bracket. Name is army.h's, a bootstrap invention.
+// Original: army::cast_resurrect; army.cpp:5396, dc 0x4c004.
+// CastSpell expands both resurrection helpers in Complete.
+void army::castResurrect(long hex)
+{
+    army* target = g_combatManager->findResurrectionTarget(
+        getControllingSide(), hex, 1);
+    if (!target)
+        return;
+    SAMPLE2 sound;
+    if (!g_combatManager->isQuickCombat())
+        sound = loadPlaySample(DATA_COMPGEN(
+            0x00660af4, resurrectSampleName, "Resurect.wav"));
+    g_combatManager->resurrect(target, m_numTroops * 100, 0);
+    if (!g_combatManager->isQuickCombat())
+        waitEndSample(sound, -1);
+}
 
-// Would the Genie's roll actually CHANGE anything for the target it
-// landed on? A spell already standing on the stack is never re-cast,
-// ValidSpellTargetArmy answers the immunity/first-target half, and the
-// switch is the per-spell "would it matter" test: protections and the
-// mirror only matter while the enemy hero can cast (wields the
-// spellbook slot), Cure needs damage to heal, the two melee-side
-// screens need a live shooter (Air Shield) or a live melee attacker
-// (Shield / Fire Shield) among the enemy stacks, Precision needs the
-// target itself shooting and Bloodlust the opposite.
+// Original: army::cast_demonic_resurrect; army.cpp:5419, dc 0x4c084.
+void army::castDemonicResurrect(long hex)
+{
+    army* target = g_combatManager->findDemonicResurrectionTarget(
+        getControllingSide(), hex);
+    if (!target)
+        return;
+    g_combatManager->demonicResurrection(this, target);
+}
 
-// THIS BODY IS WHY can_shoot HAS AN OUT-OF-LINE COPY AT ALL (the note
-// on 0x4428f0): the two loop sites below are the sites VC6 declines,
-// while the Precision/Bloodlust tail sites expand - Bloodlust's only
-// partially, leaving the OffsetToFront COMDAT call and the
-// army::enemy_is_adjacent wrapper call retail shows.
+// Original: group_has_melee; army.cpp:5433, dc 0x4c0f0.
+// DC5437/5455/5473 all count down with i-- > 0. Complete expands these
+// static helpers in its broader spell-validity worker, preserving the
+// CannotAttack and CanShoot boundaries inside the two capability scans.
+static unsigned char groupHasMelee(long group)
+{
+    long i = g_combatManager->m_numArmies[group];
+    while (i-- > 0) {
+        army* enemy = &g_combatManager->m_armies[group][i];
+        if (!enemy->cannotAttack() && !enemy->canShoot(0))
+            return 1;
+    }
+    return 0;
+}
 
-// WHAT EACH SPELLING MEASURED (0.00 -> 41.65 -> 85.84 -> 87.41 ->
-// 91.07): the switch arms are laid out in SOURCE order exactly as
-// written; the two loop arms carry statement-scoped
-// `#pragma inline_depth(0)` pins on their can_shoot calls because our
-// CL otherwise expands both (retail declines them - the pins are what
-// force can_shoot's out-of-line COMDAT exactly as retail's own
-// rejected sites do); the loop idiom is `i = n; while (i-- > 0)`
-// (the `for (i=n-1; i>=0; i--)` spelling emits dec/js and loses the
-// count-copy retail has); `1 - side` must be a NAMED LOCAL `group` in
-// all three loop arms or the front end folds numArmies/armies into
-// two different displacement constants where retail indexes both off
-// one register; Prayer needs the uchar cast `(uchar)~Is(1u << 26)` for
-// retail's `not al` (bare `~Is(1u << 26)` emits `not eax`); the
-// protections arm must RETURN the `&&` expression (the int
-// materialization `mov eax,1`/`xor eax,eax` retail has - the
-// early-return spelling emits byte `xor al,al` and a private
-// epilogue); Precision is `return can_shoot(0);` EXPANDED (writing
-// the same tests longhand duplicates five zero-exits retail shares,
-// 91.07 -> 87.41-class); Bloodlust longhand-with-flag beats
-// `return !can_shoot(0);` (87.02) because our expansion of the
-// negated call diverges harder than the flag form's exits.
+// Original: group_has_shooters; army.cpp:5451, dc 0x4c154.
+static unsigned char groupHasShooters(long group)
+{
+    long i = g_combatManager->m_numArmies[group];
+    while (i-- > 0) {
+        army* enemy = &g_combatManager->m_armies[group][i];
+        if (!enemy->cannotAttack() && enemy->canShoot(0))
+            return 1;
+    }
+    return 0;
+}
 
+// Original: group_has_dragons; army.cpp:5469, dc 0x4c1b8.
+static unsigned char groupHasDragons(long group)
+{
+    long i = g_combatManager->m_numArmies[group];
+    while (i-- > 0) {
+        army* enemy = &g_combatManager->m_armies[group][i];
+        if (enemy->is(1u << 7))
+            return 1;
+    }
+    return 0;
+}
+
+// Complete's shared spell-validity worker is a desktop addition: the
+// older DC is_valid_caliph_spell contains these per-spell tests itself.
+// Both reuse the three ordinary group helpers above. The two loop sites
+// retain CanShoot calls in retail; their real helper nesting replaces the
+// former statement-scoped inline-depth pins on pasted loop bodies.
 VA(0x00447a80, 0x429)  // anchor-callee (four call sites, one of them the
                        // tail-jump from 0x447eb0), retail-only slot
 unsigned char spellIsValidOnTarget(int spell, const army* target)
@@ -5037,126 +4995,22 @@ unsigned char spellIsValidOnTarget(int spell, const army* target)
         return target->m_topCreatureDamage > 0;
     case SPELL_PRAYER:
         return static_cast<unsigned char>(~target->is(1u << 26)) & 1;
-    case SPELL_SLAYER: {
-        long group = 1 - side;
-        long i = g_combatManager->m_numArmies[group];
-        while (i-- > 0) {
-            if (g_combatManager->m_armies[group][i].is(1u << 7))
-                return 1;
-        }
-        return 0;
-    }
+    case SPELL_SLAYER:
+        return groupHasDragons(1 - side);
     case SPELL_SHIELD:
-    case SPELL_FIRE_SHIELD: {
-        long group = 1 - side;
-        long i = g_combatManager->m_numArmies[group];
-        while (i-- > 0) {
-            army* enemy = &g_combatManager->m_armies[group][i];
-            if (!enemy->m_spellInfluence[62] && !enemy->m_spellInfluence[70]
-                && !enemy->m_spellInfluence[74] && !(enemy->is(1u << 21))
-                && enemy->m_creatureType != CREATURE_FIRST_AID_TENT
-                && enemy->m_creatureType != CREATURE_AMMO_CART) {
-#pragma inline_depth(0)
-                if (!enemy->canShoot(0))
-                    return 1;
-#pragma inline_depth()
-            }
-        }
-        return 0;
-    }
-    case SPELL_AIR_SHIELD: {
-        long group = 1 - side;
-        long i = g_combatManager->m_numArmies[group];
-        while (i-- > 0) {
-            army* enemy = &g_combatManager->m_armies[group][i];
-            if (!enemy->m_spellInfluence[62] && !enemy->m_spellInfluence[70]
-                && !enemy->m_spellInfluence[74] && !(enemy->is(1u << 21))
-                && enemy->m_creatureType != CREATURE_FIRST_AID_TENT
-                && enemy->m_creatureType != CREATURE_AMMO_CART) {
-#pragma inline_depth(0)
-                if (enemy->canShoot(0))
-                    return 1;
-#pragma inline_depth()
-            }
-        }
-        return 0;
-    }
+    case SPELL_FIRE_SHIELD:
+        return groupHasMelee(1 - side);
+    case SPELL_AIR_SHIELD:
+        return groupHasShooters(1 - side);
     case SPELL_PRECISION:
         return target->canShoot(0);
-    case SPELL_BLOODLUST: {
-        unsigned char shoots;
-        if (target->m_creatureType == army::ARMY_CREATURE_BALLISTA
-            || target->m_creatureType == army::ARMY_CREATURE_ARROW_TOWER) {
-            shoots = 1;
-        } else if (!(target->is(1u << 2)) || target->m_monInfo.m_numShots <= 0) {
-            shoots = 0;
-        } else {
-            hero* controller = target->getController();
-            shoots = 1;
-            if (!controller
-                || !controller->isWieldingArtifact(
-                       ARTIFACT_BOW_OF_THE_SHARPSHOOTER)) {
-                if (target->enemyIsAdjacent(0))
-                    shoots = 0;
-            }
-            if (shoots && target->m_spellInfluence[61]
-                && target->m_forgetfulnessLevel >= 2)
-                shoots = 0;
-        }
-        return !shoots;
-    }
+    case SPELL_BLOODLUST:
+        return !target->canShoot(0);
     }
     return 1;
 }
 
-#if 0  // @carcass
 
-// E:\gamedcs\army.cpp:5396
-DC_ONLY(0x4c004, 0x80)
-void army::castResurrect(long hex)
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:5419
-DC_ONLY(0x4c084, 0x6C)
-void army::castDemonicResurrect(long hex)
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:5433
-DC_ONLY(0x4c0f0, 0x64)
-unsigned char group_has_melee(long group)
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:5451
-DC_ONLY(0x4c154, 0x64)
-unsigned char group_has_shooters(long group)
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:5469
-DC_ONLY(0x4c1b8, 0x56)
-unsigned char group_has_dragons(long group)
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:5488
-unsigned char isValidCaliphSpell(SpellID spell, const army* target)
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:5546
-// The DC row army::get_valid_caliph_spells has NO retail slot in this
-// run: 0x447eb0 is is_valid_caliph_spell (claimed below, see army.h for
-// the refutation) and 0x447a80 is the retail-only shared worker.
-#endif  // @carcass
 
 VA(0x00447eb0, 0x21)  // dc 0x4c210
 unsigned char isValidCaliphSpell(SpellID spell, const army* target)
@@ -5170,7 +5024,7 @@ unsigned char isValidCaliphSpell(SpellID spell, const army* target)
 // Complete's x86 optimizer expands this source helper into both callers. The
 // named boundary remains part of the recovered source even though retail has
 // no separate emitted slot for it.
-inline long army::getValidCaliphSpells(const army* target) const
+long army::getValidCaliphSpells(const army* target) const
 {
     long count = 0;
     for (SpellID spell = 10; spell < 70; spell++) {
@@ -5354,29 +5208,12 @@ void army::castSpell(long hex)
     }
     m_monInfo.m_hasSpell--;
     switch (m_creatureType) {
-    case CREATURE_ARCHANGEL: {
-        army* target = g_combatManager->findResurrectionTarget(
-            getControllingSide(), hex, 1);
-        if (target) {
-            SAMPLE2 sample;
-            if (!static_cast<const combatManager*>(g_combatManager)
-                     ->isQuickCombat())
-                sample = loadPlaySample(DATA_COMPGEN(
-                    0x00660af4, resurrectSampleName, "Resurect.wav"));
-            g_combatManager->resurrect(target, m_numTroops * 100, 0);
-            if (!static_cast<const combatManager*>(g_combatManager)
-                     ->isQuickCombat())
-                waitEndSample(sample, -1);
-        }
+    case CREATURE_ARCHANGEL:
+        castResurrect(hex);
         break;
-    }
-    case ARMY_CREATURE_PIT_LORD: {
-        army* target = g_combatManager->findDemonicResurrectionTarget(
-            getControllingSide(), hex);
-        if (target)
-            g_combatManager->demonicResurrection(this, target);
+    case ARMY_CREATURE_PIT_LORD:
+        castDemonicResurrect(hex);
         break;
-    }
     case CREATURE_MASTER_GENIE:
         castCaliphSpell(hex);
         break;
@@ -5635,13 +5472,6 @@ unsigned char hexcell::hasArmy()
 // E:\gamedcs\CmbtMgr.h:1555
 DC_ONLY(0x4cc74, 0x18)
 void combatManager::markCreatureEffect(int group, int index)
-{
-    // @stub
-}
-
-// E:\gamedcs\TownMgr.h:745
-DC_ONLY(0x4cc8c, 0x10)
-TTerrainType townManager::getNativeTerrain(int type)
 {
     // @stub
 }

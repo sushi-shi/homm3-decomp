@@ -13,6 +13,7 @@
 // town::HasBuilding (dc 0x4fab4 line 1499, `mov #21,r5 / mov #1,r6`);
 // see town.h for why the inline's visibility is scoped.
 #include "armygrp.h"
+#include "townmgr.h"
 #include "spelldefs.h"
 #include "creaturetype.h"
 #include "game.h"
@@ -693,16 +694,13 @@ int armyGroup::getAlignments(unsigned char* alignments) const
     return count;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\armygrp.cpp:748
-DC_ONLY(0x4ec98, 0x16)
-int armyGroup::GetHomogeneityMoraleAdjust() const
+// Original: armyGroup::GetHomogeneityMoraleAdjust; armygrp.cpp:748, dc 0x4ec98
+// Complete getMorale additionally groups allied alignments before applying
+// this adjustment, so that path keeps its explicit alignment census.
+int armyGroup::getHomogeneityMoraleAdjust() const
 {
-    // @stub
+    return 2 - getAlignments(0);
 }
-
-#endif  // @carcass
 
 VA(0x0044ac50, 0x2E)  // dc 0x4ecb0
 int armyGroup::canJoin(int monType) const
@@ -775,16 +773,32 @@ void armyGroup::swap(int srcIndex, armyGroup* destGroup, int destIndex)
     destGroup->m_numTroops[destIndex] = troops;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\armygrp.cpp:885
-DC_ONLY(0x4ee08, 0x180)
-void armyGroup::DamageGroup(float casualtyRate)
+// Original: armyGroup::DamageGroup; armygrp.cpp:885, dc 0x4ee08
+void armyGroup::damageGroup(float casualtyRate)
 {
-    // @stub
+    int limit = static_cast<int>(casualtyRate * 100.0);
+    unsigned char first = 1;
+    for (int slot = 0; slot < ARMY_GROUP_SLOT_COUNT; ++slot) {
+        if (m_armies[slot] != CREATURE_NONE) {
+            int casualties = 0;
+            for (int troop = 0; troop < m_numTroops[slot]; ++troop) {
+                if (sRandom(0, 100) < limit)
+                    ++casualties;
+            }
+            if (first && casualties == m_numTroops[slot]
+                && casualtyRate < 0.999)
+                --casualties;
+            m_numTroops[slot] -= casualties;
+            if (m_numTroops[slot] <= 0 || casualtyRate >= 1.0) {
+                m_numTroops[slot] = 0;
+                m_armies[slot] = CREATURE_NONE;
+            }
+            first = 0;
+        } else {
+            m_numTroops[slot] = 0;
+        }
+    }
 }
-
-#endif  // @carcass
 
 VA(0x0044ada0, 0x16)  // dc 0x4ef88
 int armyGroup::getCreatureTotal() const
@@ -1547,7 +1561,7 @@ TTerrainType armyGroup::getNativeTerrain() const
             alignment = -1;
         else
             alignment = g_creatureTypeTraits[m_armies[i]].m_townType;
-        TTerrainType terrain = g_nativeTerrains[alignment];
+        TTerrainType terrain = townManager::getNativeTerrain(alignment);
         if (native != TERRAIN_NONE) {
             if (terrain != native)
                 return TERRAIN_NONE;

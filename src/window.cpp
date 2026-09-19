@@ -116,23 +116,19 @@ void heroWindow::close(unsigned char update)
     m_status = 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\window.cpp:194
-DC_ONLY(0x19731c, 0x4)
-int heroWindow::handleMessage(message* msg)
+// Original: heroWindow::handle_message; window.cpp:194, dc 0x19731c.
+// Retail base vtable0x643cc4 slot3 shares the return-zero body0x4ec560.
+int heroWindow::handleMessage(message& msg)
 {
-    // @stub
+    return 0;
 }
 
-// E:\gamedcs\window.cpp:202
-DC_ONLY(0x197320, 0x4)
-void heroWindow::handleWidgetHover()
+// Original: heroWindow::handle_widget_hover; window.cpp:202, dc 0x197320.
+// Base vtable slot4 shares the empty ret4 body0x485d80.
+void heroWindow::handleWidgetHover(widget* current)
 {
-    // @stub
 }
 
-#endif  // @carcass
 
 VA(0x005fecb0, 0xA5)  // dc 0x197324
 void heroWindow::addWidget(widget* newWidget, int newPriority)
@@ -199,16 +195,19 @@ void heroWindow::removeWidget(widget* killWidget)
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\window.cpp:346
-DC_ONLY(0x19742c, 0x54)
-void heroWindow::RemoveAndDeleteWidget(int inID)
+// Original: heroWindow::RemoveAndDeleteWidget; window.cpp:346, dc 0x19742c.
+// The recorded release body only unlinks matching widgets; the source-line
+// gap after RemoveWidget does not establish a missing delete statement.
+void heroWindow::removeAndDeleteWidget(int id)
 {
-    // @stub
+    widget* current = m_headWidget;
+    while (current) {
+        widget* next = current->m_nextWidget;
+        if (current->m_id == id)
+            removeWidget(current);
+        current = next;
+    }
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\window.cpp:381
 // DC's message& parameter and GetWidget(m_focusId) call at 391 are canonical.
@@ -332,6 +331,12 @@ void heroWindow::drawWindow(unsigned char update, int lowID, int highID)
 #if 0  // @carcass
 
 // E:\gamedcs\window.cpp:571
+// DC DrawWindowX redraws widgets, rescales the window origin through
+// Rescale and unconditionally sends a six-coordinate UpdateScreen for
+// the translated combat viewport. Complete's drawWindow at 0x5ff020
+// instead draws video and updates the client rectangle, optionally with
+// its shadow; the rescale/translated-viewport surface was removed.
+// The ordinary drawWindow source identity is retained separately.
 DC_ONLY(0x197690, 0xDC)
 void heroWindow::DrawWindowX(unsigned char update, int iLowID, int iHighID)
 {
@@ -370,16 +375,40 @@ void heroWindow::restoreBackground(unsigned char update)
     m_background = 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\window.cpp:707
-DC_ONLY(0x197874, 0x106)
-void heroWindow::MoveWindow(int deltaX, int deltaY)
+// Original: heroWindow::MoveWindow; window.cpp:707, dc 0x197874.
+// This relative-motion API uses the same saved-background operations as
+// Complete's retained CenterWindow0x5ff240, with desktop800x600 clipping.
+// No retained standalone MoveWindow address is claimed.
+void heroWindow::moveWindow(int deltaX, int deltaY)
 {
-    // @stub
+    int startX = m_x;
+    int startY = m_y;
+    int newX = m_x + deltaX;
+    int newY = m_y + deltaY;
+    int startW = m_width;
+    int startH = m_height;
+    if (newX < 0)
+        newX = 0;
+    if (newY < 0)
+        newY = 0;
+    if (m_width + newX > WINDOW_SCREEN_WIDTH)
+        newX = WINDOW_SCREEN_WIDTH - m_width;
+    if (m_height + newY > WINDOW_SCREEN_HEIGHT)
+        newY = WINDOW_SCREEN_HEIGHT - m_height;
+    m_background->draw(0, 0, m_background->getWidth(), m_background->getHeight(),
+                       g_windowManager->m_screenBitmap, m_x, m_y, false);
+    m_x = newX;
+    m_y = newY;
+    m_background->grab(g_windowManager->m_screenBitmap, m_x, m_y);
+    drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    startW += abs(m_x - startX);
+    startH += abs(m_y - startY);
+    if (m_x < startX)
+        startX = m_x;
+    if (m_y < startY)
+        startY = m_y;
+    g_windowManager->updateScreen(startX, startY, startW, startH);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\window.cpp:778
 // DC 825 calls GetWidth/GetHeight and the bitmap-pointer Draw overload;
@@ -463,16 +492,15 @@ widget* heroWindow::findWidgetPtr(int mx, int my) const
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\window.cpp:893
-DC_ONLY(0x197bdc, 0x2A)
-void heroWindow::EnableAllWidgets(unsigned char enable)
+// Original: heroWindow::EnableAllWidgets; window.cpp:893, dc 0x197bdc.
+void heroWindow::enableAllWidgets(unsigned char enable)
 {
-    // @stub
+    widget* current = m_headWidget;
+    while (current) {
+        current->enable(enable);
+        current = current->m_nextWidget;
+    }
 }
-
-#endif  // @carcass
 
 VA(0x005ff460, 0x21)  // dc 0x197c08
 int heroWindow::doModal(unsigned char fadeIn)

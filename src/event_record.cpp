@@ -62,23 +62,20 @@ static void setPlayer(char newPlayer)
     g_currentPlayer = &g_game->m_players[newPlayer];
     g_unnamed69ccc4 = 1 << newPlayer;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:81
-DC_ONLY(0x8c708, 0x4)
-void type_event_record::replay()
+// Retail base vtable slot4 folds to the empty ret4 body at0x485d80.
+void type_event_record::replay(unsigned char draw)
 {
-    // @stub
 }
+
 
 // E:\gamedcs\event_record.cpp:88
-DC_ONLY(0x8c70c, 0x4)
+// Retail base vtable slot5 folds to the empty ret body at0x5bc690.
 void type_event_record::undo()
 {
-    // @stub
 }
 
-#endif  // @carcass
 
 // E:\gamedcs\event_record.cpp:96
 // NO RETAIL BODY: VC6 expands this constructor at record_move and
@@ -257,14 +254,15 @@ type_event_record* type_record_claim_mine::create()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\event_record.cpp:255
-DC_ONLY(0x8cbb0, 0x4)
-type_event_record_type type_record_claim_mine::getType()
+// Retail derived vtable slot1 folds to 0x56e3d0: mov eax,3; ret.
+type_event_record_type type_record_claim_mine::getType() const
 {
-    // @stub
+    return RECORD_CLAIM_MINE;
 }
 
-#endif  // @carcass
 
 VA(0x0049aa40, 0x27)  // dc 0x8cb88
 type_event_record* type_record_claim_mine::create()
@@ -343,17 +341,18 @@ type_event_record* type_record_claim_town::create()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\event_record.cpp:339
 // type_record_claim_town::get_type has no retail body of its own: slot 1 of
 // its vtable (0x63ded4) is 0x16ebc0, outside this compiland's span, where
 // /OPT:ICF folded the `mov eax,4 / ret` onto an identical body elsewhere.
-DC_ONLY(0x8cd84, 0x54)
-type_event_record_type type_record_claim_town::getType()
+// Retail derived vtable slot1 folds to 0x56ebc0: mov eax,4; ret.
+type_event_record_type type_record_claim_town::getType() const
 {
-    // @stub
+    return RECORD_CLAIM_TOWN;
 }
 
-#endif  // @carcass
 
 VA(0x0049abf0, 0x27)  // dc 0x8cd5c
 type_event_record* type_record_claim_town::create()
@@ -685,14 +684,15 @@ type_event_record* type_record_hide_hero::create()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\event_record.cpp:646
-DC_ONLY(0x8d528, 0x4)
-type_event_record_type type_record_hide_hero::getType()
+// Retail derived vtable slot1 folds to 0x5721f0: mov eax,8; ret.
+type_event_record_type type_record_hide_hero::getType() const
 {
-    // @stub
+    return RECORD_HIDE_HERO;
 }
 
-#endif  // @carcass
 
 inline type_record_hide_hero::type_record_hide_hero(hero* who, char newOwner,
                                                     unsigned char townGarrison)
@@ -797,13 +797,6 @@ type_event_record* type_record_show_hero::create()
     // @stub
 }
 
-// E:\gamedcs\event_record.cpp:744
-DC_ONLY(0x8d7e8, 0x4)
-type_event_record_type type_record_show_hero::getType()
-{
-    // @stub
-}
-
 #endif  // @carcass
 
 inline type_record_show_hero::type_record_show_hero(hero* who, char newOwner,
@@ -822,6 +815,13 @@ VA(0x0049b6a0, 0x27)  // dc 0x8d7c0
 type_event_record* type_record_show_hero::create()
 {
     return new type_record_show_hero();
+}
+
+// E:\gamedcs\event_record.cpp:744
+// Retail derived vtable slot1 folds to 0x572810: mov eax,9; ret.
+type_event_record_type type_record_show_hero::getType() const
+{
+    return RECORD_SHOW_HERO;
 }
 
 VA(0x0049b6d0, 0x85)  // dc 0x8d7ec
@@ -892,14 +892,15 @@ void type_record_show_hero::undo()
     else
         m_currentHero->m_flags &= ~0x40000;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:842
-DC_ONLY(0x8da80, 0x40)
-void type_record_player_death::type_record_player_death(char _player_id)
+// DC843 stores the requested player at+8, distinct from the base acting-seat byte at+4.
+type_record_player_death::type_record_player_death(char playerId)
 {
-    // @stub
+    m_extra = playerId;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:850
 DC_ONLY(0x8dac0, 0x26)
@@ -950,14 +951,14 @@ void type_record_player_death::replay(unsigned char draw)
                      -1, 0);
     }
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:905
-DC_ONLY(0x8dc20, 0x4)
+// The player-death undo slot shares the empty base undo body in retail.
 void type_record_player_death::undo()
 {
-    // @stub
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:912. NO RETAIL BODY: create expands it.
 DC_ONLY(0x8dc24, 0x8C)
@@ -970,6 +971,8 @@ void type_record_shroud::type_record_shroud()
 
 VA_COMPGEN(0x0049bbd0, 0x21, SCALAR_DELETING_DTOR, type_record_shroud)
 
+// DC0x8f398 has only vector/base cleanup, supplied by the implicit C++
+// destructor; its exact emission is documented in config/dc_only.tsv.
 // The implicit destructor the wrapper above calls: the change vector's
 // _Tidy inlined (`operator delete(_First)` then the three-pointer clear)
 // followed by the base's vptr store.
@@ -1135,7 +1138,6 @@ void game::recordMove(hero* who, int direction, type_point destination)
     m_eventRecords.push_back(new type_record_move_hero(who, direction,
                                                      destination));
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:1115
 // NO RETAIL BODY. The nine recorders between shroud::undo and SetVisibility
@@ -1144,13 +1146,12 @@ void game::recordMove(hero* who, int direction, type_point destination)
 // type_record_teleport's 0x63dea4, not type_record_player_death's 0x63df64.
 // Whatever the PC revision does on player death, it does not go through an
 // out-of-line recorder here.
-DC_ONLY(0x8e2bc, 0x3C)
-void game::record_player_death(char player_id)
+// DC1116 constructs the typed record and calls push_back. No standalone retail address is claimed.
+void game::recordPlayerDeath(char playerId)
 {
-    // @stub
+    m_eventRecords.push_back(new type_record_player_death(playerId));
 }
 
-#endif  // @carcass
 
 VA(0x0049cf50, 0x20B)  // dc 0x8e2f8
 void game::recordTeleport(hero* who, type_point destination)
@@ -1207,7 +1208,7 @@ void game::setVisibility(int startX, int startY, int z, int whichPlayer,
         }
     }
 
-    if (!remoteMove && record->m_changes.size() != 0 && !g_completeDrawMessageBypass)
+    if (!remoteMove && record->getChangeCount() != 0 && !g_completeDrawMessageBypass)
     {
         // Retail CALLS insert(iterator, n, const T&) here where the smaller
         // game::record_* bodies expand it, so the site is pinned - with
@@ -1264,7 +1265,7 @@ void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
 
     // The EMPTY arm is the one retail lays out inline (`jne` forward to the
     // queue), so the test is spelled == 0, not != 0.
-    if (record->m_changes.size() == 0) {
+    if (record->getChangeCount() == 0) {
         delete record;
     } else {
         // Retail CALLS insert(iterator, n, const T&) here where the smaller
@@ -1290,11 +1291,11 @@ VA(0x0049d6c0, 0xD3)  // dc 0x8e77c
 void game::clearEventRecords(char playerId)
 {
     int i = 0;
-    while (i < m_eventRecords.size() && m_eventRecords[i]->m_playerId != playerId)
+    while (i < m_eventRecords.size() && m_eventRecords[i]->getPlayerId() != playerId)
         ++i;
     if (i == m_eventRecords.size())
         return;
-    while (i < m_eventRecords.size() && m_eventRecords[i]->m_playerId == playerId)
+    while (i < m_eventRecords.size() && m_eventRecords[i]->getPlayerId() == playerId)
         ++i;
     for (int j = 0; j < i; ++j)
         delete m_eventRecords[j];
@@ -1384,13 +1385,6 @@ unsigned char game::replayAvailable()
 // E:\gamedcs\event_record.cpp:1380
 DC_ONLY(0x8ead0, 0xF4)
 unsigned char game::loadRecordedEvents(void* infile)
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.h:64
-DC_ONLY(0x8ec5c, 0x4)
-char type_event_record::get_player_id()
 {
     // @stub
 }
@@ -1601,13 +1595,6 @@ void* type_record_player_death::`scalar deleting destructor'(unsigned __flags)
 // E:\gamedcs\event_record.h:286
 DC_ONLY(0x8f240, 0x18)
 void type_record_player_death::~type_record_player_death()
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.h:319
-DC_ONLY(0x8f258, 0x18)
-long type_record_shroud::getChangeCount()
 {
     // @stub
 }
@@ -2199,7 +2186,7 @@ VA(0x0049da70, 0x41)
 unsigned char game::replayAvailable() const
 {
     for (unsigned i = 0; i < m_eventRecords.size(); ++i) {
-        if (m_eventRecords[i]->m_playerId != g_netLocalGamePos)
+        if (m_eventRecords[i]->getPlayerId() != g_netLocalGamePos)
             return 1;
     }
     return 0;

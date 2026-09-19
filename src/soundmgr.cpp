@@ -306,6 +306,13 @@ void soundManager::pauseSamples()
     stopMP3();
 }
 
+// Original: soundManager::Main; soundmgr.cpp:464, dc 0x14b2a4.
+// The slot at retail vftable 0x63fe54 likewise uses the shared zero return.
+int soundManager::main(message& msg)
+{
+    return 0;
+}
+
 VA(0x00599d90, 0xEA)  // dc 0x14b2a8
 void soundManager::stopAllSamples(int stopMusicToo)
 {

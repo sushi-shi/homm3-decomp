@@ -345,23 +345,18 @@ const char* g_humanCpu[3];
 
 DATA(0x006a8098)
 const char* g_newLoadSaveText[3];
-#if 0  // @carcass
-
-// E:\gamedcs\text.cpp:49
-DC_ONLY(0x160ff4, 0x4)
-void CheckTextResource()
+// These checks have empty release bodies in the DC image. The line gaps
+// do not recover the elided debug checks, so none are invented here.
+// Original: CheckTextResource; text.cpp:49, dc 0x160ff4.
+static void checkTextResource(const TTextResource&, int, const char*)
 {
-    // @stub
 }
 
-// E:\gamedcs\text.cpp:86
-DC_ONLY(0x160ff8, 0x4)
-void CheckSpreadsheetResource()
+// Original: CheckSpreadsheetResource; text.cpp:86, dc 0x160ff8.
+static void checkSpreadsheetResource(const TSpreadsheetResource&, int, int,
+                                     const char*)
 {
-    // @stub
 }
-
-#endif  // @carcass
 
 VA(0x005b90f0, 0x19)  // dc 0x160ffc
 unsigned char initializeGeneralText()
@@ -528,13 +523,13 @@ unsigned char initializeNeutralBuildingText()
     if (!g_neutralBuildingText)
         return 0;
     for (int i = 0; i < 19; i++) {
-        if (static_cast<int>(g_neutralBuildingText->getRow(i).size()) > 1)
+        if (g_neutralBuildingText->getNumberOfColumns(i) > 1)
             g_neutralBuildingNames[i] = g_neutralBuildingText->getRow(i)[0];
         else
             g_neutralBuildingNames[i] = DATA_COMPGEN(0x00691210, textEmptyText, "");
     }
     for (int j = 0; j < 28; j++) {
-        if (static_cast<int>(g_neutralBuildingText->getRow(j).size()) > 1)
+        if (g_neutralBuildingText->getNumberOfColumns(j) > 1)
             g_buildingInfoNeutral[j] = g_neutralBuildingText->getRow(j)[1];
         else
             g_buildingInfoNeutral[j] = DATA_COMPGEN(0x00691210, textEmptyText, "");
@@ -552,7 +547,7 @@ unsigned char initializeSpecialBuildingText()
     int n = 0;
     for (int faction = 0; faction < 10; faction++) {
         for (int slot = 0; slot < 11; slot++) {
-            if (static_cast<int>(g_specialBuildingText->getRow(n).size()) > 1) {
+            if (g_specialBuildingText->getNumberOfColumns(n) > 1) {
                 g_specialBuildingNames[faction][slot] =
                     g_specialBuildingText->getRow(n)[0];
                 g_buildingInfoSpecial[faction][slot] =
@@ -579,7 +574,7 @@ unsigned char initializeDwellingText()
     int n = 0;
     for (int faction = 0; faction < 10; faction++) {
         for (int slot = 0; slot < 14; slot++) {
-            if (static_cast<int>(g_dwellingText->getRow(n).size()) > 0) {
+            if (g_dwellingText->getNumberOfColumns(n) > 0) {
                 g_dwellingNames[faction][slot] = g_dwellingText->getRow(n)[0];
                 g_dwellingInfo[faction][slot] = g_dwellingText->getRow(n)[1];
             } else {
@@ -604,7 +599,7 @@ unsigned char initializeTownNameText()
     int n = 0;
     for (int faction = 0; faction < 9; faction++) {
         for (int slot = 0; slot < 16; slot++) {
-            if (static_cast<int>(g_townNameText->getRow(n).size()) > 0)
+            if (g_townNameText->getNumberOfColumns(n) > 0)
                 g_townNames[faction][slot] = g_townNameText->getRow(n)[0];
             else
                 g_townNames[faction][slot] =
@@ -1028,12 +1023,6 @@ unsigned char initializeArrayText()
 
 #if 0  // @carcass
 
-// E:\gamedcs\TextResource.h:113
-DC_ONLY(0x162910, 0x24)
-int TSpreadsheetResource::GetNumberOfColumns(int r)
-{
-    // @stub
-}
 
 // E:\gamedcs\TextResource.h:120
 DC_ONLY(0x162934, 0x28)

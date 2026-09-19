@@ -32,13 +32,7 @@ int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long
         break;
     }
     if (e->m_id != 0) {
-        int quals = 0;
-        if (GetKeyState(VK_CONTROL) & 0x8000)
-            quals = MESSAGE_MODIFIER_CONTROL;
-        if (GetKeyState(VK_MENU) & 0x8000)
-            quals |= MESSAGE_MODIFIER_ALT;
-        if (GetKeyState(VK_SHIFT) & 0x8000)
-            quals |= MESSAGE_MODIFIER_SHIFT;
+        int quals = g_inputManager->getCurrQuals();
         e->m_qualifier = quals;
         g_inputManager->m_tail++;
         g_inputManager->m_tail %= 64;
@@ -62,6 +56,10 @@ int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long
 
 #if 0  // @carcass
 
+// Console spatial-focus family: FocusTheWidget invokes the four rectangle
+// scans below and moves the controller pointer. Complete's mouse bridge
+// 0x4ec290 receives native WM_MOUSE coordinates; Main0x4ec560 is empty.
+// The retired controller dispatch is documented alongside DC_input.cxx.
 // E:\gamedcs\inputmgr.cpp:274
 DC_ONLY(0xdcc4c, 0x7EC)
 void inputManager::FocusTheWidget(int direction)
@@ -155,13 +153,7 @@ int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long lo
         e->m_mouseY = y;
     }
     if (e->m_id != 0) {
-        int quals = 0;
-        if (GetKeyState(VK_CONTROL) & 0x8000)
-            quals = MESSAGE_MODIFIER_CONTROL;
-        if (GetKeyState(VK_MENU) & 0x8000)
-            quals |= MESSAGE_MODIFIER_ALT;
-        if (GetKeyState(VK_SHIFT) & 0x8000)
-            quals |= MESSAGE_MODIFIER_SHIFT;
+        int quals = g_inputManager->getCurrQuals();
         e->m_qualifier = quals;
         g_inputManager->m_tail++;
         g_inputManager->m_tail %= 64;
@@ -272,24 +264,32 @@ message inputManager::peekEvent()
     return msg;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\inputmgr.cpp:970
-DC_ONLY(0xddd08, 0x42)
-int inputManager::GetCurrQuals()
+// Original: inputManager::GetCurrQuals; inputmgr.cpp:970, dc 0xddd08.
+// DC973..978 and the retained keyboard/mouse bridges use the same three
+// GetKeyState queries in control/alt/shift order. Complete expands this
+// ordinary helper in keyboardMessageHandler, mouseMessageHandler and
+// forceMouseMove; the member does not read its receiver.
+int inputManager::getCurrQuals()
 {
-    // @stub
+    int quals = 0;
+    if (GetKeyState(VK_CONTROL) & 0x8000)
+        quals |= MESSAGE_MODIFIER_CONTROL;
+    if (GetKeyState(VK_MENU) & 0x8000)
+        quals |= MESSAGE_MODIFIER_ALT;
+    if (GetKeyState(VK_SHIFT) & 0x8000)
+        quals |= MESSAGE_MODIFIER_SHIFT;
+    return quals;
 }
 
-// E:\gamedcs\inputmgr.cpp:984
-DC_ONLY(0xddd4c, 0x12)
-void inputManager::SetKeyCodeType(int newType)
+// Original: inputManager::SetKeyCodeType; inputmgr.cpp:984, dc 0xddd4c.
+// DC985 stores the mode and calls Flush. Complete retains m_keyCodeType
+// at +0x950 and tests it in GetEvent/PeekEvent. No retained setter VA or
+// new call site is asserted for this ordinary source API.
+void inputManager::setKeyCodeType(int newType)
 {
-    // @stub
+    m_keyCodeType = newType;
+    flush();
 }
-
-// E:\gamedcs\inputmgr.cpp:991
-#endif  // @carcass
 
 VA(0x004ec6f0, 0x1C6)  // dc 0xddd60
 void inputManager::asciiConvert(message* msg)
@@ -437,13 +437,7 @@ void inputManager::forceMouseMove()
     g_mouseManager->mouseCoords(e->m_codeX, e->m_codeY);
     e->m_mouseX = e->m_codeX;
     e->m_mouseY = e->m_codeY;
-    quals = 0;
-    if (GetKeyState(VK_CONTROL) & 0x8000)
-        quals |= MESSAGE_MODIFIER_CONTROL;
-    if (GetKeyState(VK_MENU) & 0x8000)
-        quals |= MESSAGE_MODIFIER_ALT;
-    if (GetKeyState(VK_SHIFT) & 0x8000)
-        quals |= MESSAGE_MODIFIER_SHIFT;
+    quals = getCurrQuals();
     e->m_qualifier = quals;
     m_tail = (m_tail + 1) % 64;
     if (m_head == m_tail)
@@ -453,6 +447,10 @@ void inputManager::forceMouseMove()
 
 #if 0  // @carcass
 
+// VRKeyboard is DC's CAdvPopup-derived on-screen character-button keyboard.
+// Complete's editor handles physical keys in textEntryWidget::onKeyPress
+// 0x5bac50 and inputManager::asciiConvert0x4ec6f0; it has no second popup
+// keyboard family after the inputmgr band ending at ForceMouseMove0x4ecc00.
 // E:\gamedcs\inputmgr.cpp:1169
 DC_ONLY(0xde0e8, 0xC48)
 void VRKeyboard::VRKeyboard(textWidget* w, int _min, int _max)

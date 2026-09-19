@@ -102,6 +102,9 @@ public:
 // Dreamcast SortMaps (dc 0x13b780) instead uses qsort with alphaCompare,
 // numberCompare, sizeCompare, victoryCompare and lossCompare. Complete's
 // predicates carry direction and, for name/version, a network-name flag.
+// DC numberComp (source890) is the old three-way integer adapter;
+// Complete predicates compare directly and return bool. The six old free
+// comparator identities have exact reviewed rows in config/dc_only.tsv.
 // Their semantic class names remain provisional. The five retained written
 // operator() definitions below own their VA annotations directly; they are
 // not compiler-generated functions. The size predicate expands in retail's
@@ -352,7 +355,7 @@ public:
 // The free game-selection message pump (retail dialogDrawFunction, dc
 // 0x145128), passed by address to DoDialogDraw alongside HeroWindowHandler.
 // message& (not message*) so it binds the int(*)(message&) TDialogHandler.
-int update(message& msg);
+static int update(message& msg);
 
 // E:\gamedcs\singleselectionwindow.cpp:164
 // Dreamcast preserves these two helpers as standalone functions. Complete
@@ -395,16 +398,24 @@ inline const char* getResourceBonusDescription(int townType)
     }
 }
 
-#if 0  // @carcass: untouched bodies outside the admitted retail function
-
-// E:\gamedcs\singleselectionwindow.cpp:209
-DC_ONLY(0x12f84c, 0x20)
-unsigned char SavedGameExists(char* filename)
+// Original: SavedGameExists; singleselectionwindow.cpp:209, dc 0x12f84c.
+// DC retains the tempText[100] declaration and SaveValid's call at line249,
+// but its platform body returns false at line226. Complete expands the
+// desktop check in SaveValid 0x577360: format the extension, enter games,
+// open read-only, restore the parent directory, then close a found file.
+unsigned char savedGameExists(char* filename)
 {
-    // @stub
+    char tempText[100];
+    sprintf(tempText, "%s%s", filename, g_unnamed691268);
+    _chdir("games");
+    int file = _open(tempText, 0);
+    _chdir("..");
+    if (file != -1) {
+        _close(file);
+        return 1;
+    }
+    return 0;
 }
-
-#endif  // @carcass
 
 // COMDAT pairing: singleselectionwindow.obj is the only compiland in the
 // tree that emits ?copy@std@@YIPAV?$vector@Vhero@@... (710 B), and 710 is
@@ -439,14 +450,8 @@ unsigned char saveValid(const char* filename)
     strcpy(name, filename);
     strtok(name, ".");
     if (strlen(name) != 0) {
-        char path[100];
         g_windowManager->m_dialogReturn = DIALOG_RETURN_ACCEPT;
-        sprintf(path, "%s%s", name, g_unnamed691268);
-        _chdir("games");
-        int file = _open(path, 0);
-        _chdir("..");
-        if (file != -1) {
-            _close(file);
+        if (savedGameExists(name)) {
             sprintf(g_text, g_generalText->getText(494), name);
             normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -1245,23 +1250,20 @@ CNetPlayerHandlerPlayer* CNetPlayerHandler::getPlayerInPos(int pos)
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:1089
-DC_ONLY(0x130654, 0x1A)
+// DC GetCompPlayerInPos; DrawHeroAdvancedOption expands the null
+// fallback through it (lea into the computer bank).
+// E:\gamedcs\singleselectionwindow.cpp:1089, dc 0x130654
 CNetPlayerHandlerPlayer* CNetPlayerHandler::getCompPlayerInPos(int pos)
 {
-    // @stub
+    return &m_computerPlayers[pos];
 }
-
-#endif  // @carcass
 
 VA(0x00577be0, 0xaf)  // dc 0x130670
 unsigned char CNetPlayerHandler::addNewPlayer(CNetPlayerInfo* netPlayer)
 {
     if (m_playersCount >= MAX_PLAYERS)
         return 0;
-    if (getNetPos(netPlayer->m_dpid) != -1)
+    if (playerExists(netPlayer->m_dpid))
         return 1;
     for (int i = 0; i < MAX_PLAYERS; ++i) {
         if (m_humanPlayers[i].m_dpid == 0) {
@@ -1287,23 +1289,28 @@ bool CNetPlayerHandler::deletePlayer(unsigned long dpid)
     return true;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:1138
-DC_ONLY(0x130778, 0x3C)
+// DC GetGamePos (dc 0x130778): the netPos local, an early `return -1`
+// on the not-found arm (DC B1 `mov #-1,r0; bra`) and the playerPos
+// load as the fall-through - the arm order UpdatePlayerPositions'
+// retail expansion keeps (found path in line, -1 jumps to the join).
+// E:\gamedcs\singleselectionwindow.cpp:1138, dc 0x130778
 int CNetPlayerHandler::getGamePos(unsigned long dpid)
 {
-    // @stub
+    int netPos = getNetPos(dpid);
+    if (netPos == -1)
+        return -1;
+    return m_humanPlayers[netPos].m_playerPos;
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:1148
-DC_ONLY(0x1307b4, 0x26)
-unsigned char CNetPlayerHandler::PlayerExists(unsigned long dpid)
+// Original: CNetPlayerHandler::PlayerExists; singleselectionwindow.cpp:1148, dc 0x1307b4.
+// AddNewPlayer calls this
+// helper at DC1104; retail 0x577be0 expands its GetNetPos comparison.
+unsigned char CNetPlayerHandler::playerExists(unsigned long dpid)
 {
-    // @stub
+    if (getNetPos(dpid) != -1)
+        return 1;
+    return 0;
 }
-
-#endif  // @carcass
 
 VA(0x00577ce0, 0x2e)  // dc 0x1307dc
 CNetPlayerHandlerPlayer* CNetPlayerHandler::getPlayer(unsigned long dpid)
@@ -1328,52 +1335,24 @@ unsigned char CNetPlayerHandler::isFaceTaken(int face, int exclude)
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:1193
-DC_ONLY(0x130898, 0x40)
-int CNetPlayerHandler::getNetPos(unsigned long dpid)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1204
-DC_ONLY(0x1308d8, 0x2C)
-unsigned char CNetPlayerHandler::SetComputer(int pos)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
-// DC GetCompPlayerInPos; DrawHeroAdvancedOption expands the null
-// fallback through it (lea into the computer bank).
-// E:\gamedcs\singleselectionwindow.cpp:1089, dc 0x130654
-inline CNetPlayerHandlerPlayer* CNetPlayerHandler::getCompPlayerInPos(int pos)
-{
-    return &m_computerPlayers[pos];
-}
-
-// DC GetGamePos (dc 0x130778): the netPos local, an early `return -1`
-// on the not-found arm (DC B1 `mov #-1,r0; bra`) and the playerPos
-// load as the fall-through - the arm order UpdatePlayerPositions'
-// retail expansion keeps (found path in line, -1 jumps to the join).
-// E:\gamedcs\singleselectionwindow.cpp:1138, dc 0x130778
-inline int CNetPlayerHandler::getGamePos(unsigned long dpid)
-{
-    int netPos = getNetPos(dpid);
-    if (netPos == -1)
-        return -1;
-    return m_humanPlayers[netPos].m_playerPos;
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:1193, dc 0x130898
-inline int CNetPlayerHandler::getNetPos(unsigned long dpid)
+int CNetPlayerHandler::getNetPos(unsigned long dpid)
 {
     for (int i = 0; i < MAX_PLAYERS; ++i)
         if (m_humanPlayers[i].m_dpid == dpid)
             return i;
     return -1;
+}
+
+// Original: CNetPlayerHandler::SetComputer; singleselectionwindow.cpp:1204, dc 0x1308d8.
+// DC1205 obtains the human in this seat and DC1208 unassigns it.
+// No retained retail body/caller is claimed for this ordinary source API.
+unsigned char CNetPlayerHandler::setComputer(int pos)
+{
+    CNetPlayerHandlerPlayer* player = getPlayerInPos(pos);
+    if (player)
+        player->m_playerPos = -1;
+    return 1;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1214
@@ -1386,16 +1365,24 @@ int CNetPlayerHandler::getUnassignedPlayerPos()
     return -1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:1225
-DC_ONLY(0x130968, 0x88)
+// Original: CNetPlayerHandler::GetPlayerCount; singleselectionwindow.cpp:1225, dc 0x130968.
+// DC1226..1242 records count/i, IsHuman and the optional assigned-seat
+// test. Preserve the ordinary API without asserting a retained retail body.
 int CNetPlayerHandler::getPlayerCount(unsigned char assignedOnly)
 {
-    // @stub
+    int count = 0;
+    for (int i = 0; i < MAX_PLAYERS; ++i) {
+        if (m_humanPlayers[i].isHuman()) {
+            if (assignedOnly) {
+                if (m_humanPlayers[i].m_playerPos != -1)
+                    ++count;
+            } else {
+                ++count;
+            }
+        }
+    }
+    return count;
 }
-
-#endif  // @carcass
 
 VA(0x00577d70, 0x6C)  // anchor-vtable t_map_list_update vtbl 0x641d38 slot0; Complete-only 0x43b header-count msg from the +0x1044/+0x1048 pair
 void t_map_list_update::go()
@@ -1708,6 +1695,14 @@ public:
     public:
         unsigned char m_saved;  // +0x38
         CChatSave(int w, int h) : Bitmap16Bit(w, h), m_saved(0) {}
+        // Original: CChatWidget::CChatSave::Save;
+        // singleselectionwindow.cpp:1625, dc 0x148c50. DC1626 sets the
+        // flag before DC1627 calls Bitmap16Bit's bitmap overload.
+        void save(int x, int y)
+        {
+            m_saved = 1;
+            grab(g_windowManager->m_screenBitmap, x, y);
+        }
         unsigned char isSaved() { return m_saved; }
     };
 
@@ -1722,6 +1717,28 @@ public:
 
     virtual ~CChatWidget();
     virtual void draw() const;  // slot 4
+
+    // Original: CChatWidget::SaveBackground;
+    // singleselectionwindow.cpp:1685, dc 0x148e48. DC1686/1687 is the
+    // null-return guard; DC1689 calls the nested Save with parent offsets.
+    void saveBackground() const
+    {
+        if (!m_save)
+            return;
+        m_save->save(m_x + m_parentWindow->m_x,
+                     m_y + m_parentWindow->m_y);
+    }
+
+    // Original: CChatWidget::RestoreBackground;
+    // singleselectionwindow.cpp:1693, dc 0x148e98. DC1695 calls the
+    // bitmap-object Draw overload; Complete expands that forwarding call.
+    void restoreBackground() const
+    {
+        m_save->draw(0, 0, m_width, m_height,
+                     g_windowManager->m_screenBitmap,
+                     m_x + m_parentWindow->m_x,
+                     m_y + m_parentWindow->m_y, false);
+    }
 
     CChatSave* m_save;  // +0x50
 };
@@ -1751,9 +1768,8 @@ public:
 // E:\gamedcs\singleselectionwindow.cpp:1805
 // The lobby player-name editor (one per name row, widget ids 353..360).
 // vtable 0x241c14 overrides slot 11 (OnKillFocus) and slot 15 (OnKeyPress);
-// both bodies expand the shared commit helper OnEnter, which DC keeps out
-// of line (dc 0x149238) and retail fully inlines - no retail row exists
-// for it, so its definition must be `inline` (cpp-local, this TU only).
+// both bodies expand the ordinary commit helper OnEnter, which DC keeps
+// out of line (dc 0x149238).
 class CEnterNameEdit : public textEntryWidget {
 public:
     CEnterNameEdit(int x, int y, int w, int h, int textSize,
@@ -1772,15 +1788,15 @@ public:
     int onEnter();
 };
 
-// The shared name-commit helper both CEnterNameEdit overrides expand. DC
-// keeps it out of line (dc 0x149238, 88 B); retail has no row for it - the
-// two overrides carry its whole body - so the definition is `inline`.
+// The ordinary name-commit helper both CEnterNameEdit overrides expand.
+// DC singleselectionwindow.cpp1820..1833 records the hide/getText and
+// OnNameChange calls; Complete expands them in OnKeyPress and OnKillFocus.
 // The committed name lands in three places: the lobby slot record, the
 // persisted prefs nickname, and the row's read-only name text widget
 // (id pos+345). player->sName on the not-found path is address arithmetic
 // only, exactly as retail compiles it.
-// E:\gamedcs\singleselectionwindow.cpp:1820, dc 0x149238
-inline int CEnterNameEdit::onEnter()
+// Original: CEnterNameEdit::OnEnter; singleselectionwindow.cpp:1820, dc 0x149238.
+int CEnterNameEdit::onEnter()
 {
     int pos = m_id - 353;
     hide();
@@ -2455,30 +2471,17 @@ void CChatSlider::setState(int state)
 VA_COMPGEN(0x0057ca50, 0x21, SCALAR_DELETING_DTOR, CChatSlider)
 VA_COMPGEN(0x0057ca80, 0x05, IMPLICIT_DTOR, CChatSlider)
 
+// Original: CChatWidget::Draw; singleselectionwindow.cpp:1675, dc 0x148df4.
+// DC1676..1681 calls IsSaved, SaveBackground/RestoreBackground, then
+// textWidget::Draw. Retail 0x57ca90 expands the three chat helpers and
+// Bitmap16Bit's forwarding overloads, retaining the raw Grab/Draw calls.
 VA(0x0057ca90, 0xA9)  // dc 0x148df4
 void CChatWidget::draw() const
 {
-    CChatSave* save = m_save;
-    if (!save->isSaved()) {
-        if (save) {
-            int py = m_y + m_parentWindow->m_y;
-            int px = m_x + m_parentWindow->m_x;
-            save->m_saved = 1;
-            save->grab(g_windowManager->m_screenBitmap->getMap(0, 0), px, py,
-                       g_windowManager->m_screenBitmap->getWidth(),
-                       g_windowManager->m_screenBitmap->getHeight(),
-                       g_windowManager->m_screenBitmap->getPitch());
-            textWidget::draw();
-            return;
-        }
-    } else {
-        save->draw(0, 0, m_width, m_height,
-                   g_windowManager->m_screenBitmap->getMap(0, 0),
-                   m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
-                   g_windowManager->m_screenBitmap->getWidth(),
-                   g_windowManager->m_screenBitmap->getHeight(),
-                   g_windowManager->m_screenBitmap->getPitch(), 0);
-    }
+    if (!m_save->isSaved())
+        saveBackground();
+    else
+        restoreBackground();
     textWidget::draw();
 }
 
@@ -4247,23 +4250,33 @@ const char* TSingleSelectionWindow::getMapName(int which)
     return m_selectionHeaders[which].m_setup.m_filename;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:4122
-DC_ONLY(0x139c14, 0x90)
-void GetVCText(VictoryConditionStruct* vc, char* sText)
+// Original: GetVCText; singleselectionwindow.cpp:4122, dc 0x139c14.
+// DC4123 copies the description before the conditional second write;
+// DC4127 calls operator[] for the "or" word. DrawBasicMapInfo DC4196
+// calls this ordinary helper; retail expands it inside 0x5840f0.
+// Complete retains the type and description across strcpy (retail +0x21c:
+// dl holds the type, [ebp-0xc] the description); cache them in this helper.
+void getVCText(VictoryConditionStruct* vc, char* text)
 {
-    // @stub
+    signed char vcType = vc->m_type;
+    const char* desc = g_victoryConditionDesc[vcType + 1];
+    strcpy(text, desc);
+    if (vcType != -1 && vc->m_allowNormalVictory != 0)
+        sprintf(text,
+                DATA_COMPGEN(0x006837b4, vcOrFormat, "%s %s %s"),
+                desc,
+                (*g_generalText)[5], g_victoryConditionDesc[0]);
+    else
+        strcpy(text, desc);
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:4136
-DC_ONLY(0x139ca4, 0x28)
-void GetLCText(LossConditionStruct* lc, char* sText)
+// Original: GetLCText; singleselectionwindow.cpp:4136, dc 0x139ca4.
+// DC4137 copies the indexed loss description; the source call at DC4197
+// follows GetVCText and precedes both text draws, as in retail 0x5840f0.
+void getLCText(LossConditionStruct* lc, char* text)
 {
-    // @stub
+    strcpy(text, g_lossConditionDesc[lc->m_type + 1]);
 }
-
-#endif  // @carcass
 
 VA(0x005840f0, 0x45C)  // dc 0x139ccc
 void TSingleSelectionWindow::drawBasicMapInfo()
@@ -4305,18 +4318,9 @@ void TSingleSelectionWindow::drawBasicMapInfo()
     if (m_chatShowing != 0)
         return;
     char vcText[256];
-    signed char vcType = vc->m_type;
-    const char* desc = g_victoryConditionDesc[vcType + 1];
-    strcpy(vcText, desc);
-    if (vcType != -1 && vc->m_allowNormalVictory != 0)
-        sprintf(vcText,
-                DATA_COMPGEN(0x006837b4, vcOrFormat, "%s %s %s"),
-                desc, g_generalText->getText(5),
-                g_victoryConditionDesc[0]);
-    else
-        strcpy(vcText, desc);
     char lcText[256];
-    strcpy(lcText, g_lossConditionDesc[lc->m_type + 1]);
+    getVCText(vc, vcText);
+    getLCText(lc, lcText);
     g_unnamed698a08->drawBoundedString(vcText,
         g_windowManager->m_screenBitmap, 456, 305, 288, 32, font::WHITE, 4, -1);
     g_unnamed698a08->drawBoundedString(lcText,
@@ -4341,6 +4345,10 @@ void TSingleSelectionWindow::drawBasicMapInfo()
 
 #if 0  // @carcass
 
+// DC's advanced-options viewport uses MaxPlayers as the my_index scroll
+// bound (WindowHandler DC6118/6121). Complete Update 0x584550 draws all
+// eight slots; its WindowHandler 0x587d00 has no such scroll arm.
+// Exact platform-UI disposition: config/dc_only.tsv.
 // E:\gamedcs\singleselectionwindow.cpp:4219
 DC_ONLY(0x13a2f8, 0x86)
 int TSingleSelectionWindow::MaxPlayers()
@@ -4483,16 +4491,8 @@ int TSingleSelectionWindow::update()
             }
         }
         if (m_inAdvancedOptions) {
+            updateNames();
             int pos;
-            for (pos = 0; pos < 8; ++pos) {
-                CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(pos);
-                textWidget* w =
-                    static_cast<textWidget*>(getWidget(pos + 345));
-                if (p == 0)
-                    w->setText(g_generalText->getText(469));
-                else
-                    w->setText(p->m_name);
-            }
             g_bigFont->drawBoundedString(
                 g_generalText->getText(516), g_windowManager->m_screenBitmap,
                 58, 24, 334, 25, font::HEADING_HIGHLIGHT, 1, -1);
@@ -6473,20 +6473,29 @@ void CNewPlayerUpdateMan::playerDropped(unsigned long dpid)
     }
 }
 
+// Original: TSingleSelectionWindow::OnPingMsg; singleselectionwindow.cpp:6649,
+// dc 0x140414. DC6651 constructs CPingResponseMsg, the distinct response
+// class with the same payload as CPingMsg; retail 0x5894f0 stores opcode
+// 0x418 and 0x5894e6 echoes the request's time into its 0x18-byte object.
 VA(0x005894D0, 0x40)  // dc 0x140414
 void TSingleSelectionWindow::onPingMsg(CNetMsg* netMsg)
 {
-    CPingMsg response(static_cast<CPingMsg*>(netMsg)->m_pingTime,
+    CPingResponseMsg response(static_cast<CPingMsg*>(netMsg)->m_pingTime,
                       RS_SETUP_PING_RESPONSE);
     transmitRemoteDataDPID(&response, netMsg->m_dpidFrom, false, true);
 }
 
+// Original: TSingleSelectionWindow::OnPingResponseMsg;
+// singleselectionwindow.cpp:6655, dc 0x140450. DC's typed pMsg is
+// CPingResponseMsg*, and DC6659 calls TTextResource::operator[]. Retail
+// reads the same +0x14 time and +4 sender. Equal message layouts do not
+// establish a platform type difference or justify using CPingMsg here.
 VA(0x00589510, 0xA3)  // dc 0x140450
 void TSingleSelectionWindow::onPingResponseMsg(CNetMsg* netMsg, unsigned char inPopup)
 {
-    CPingMsg* msg = static_cast<CPingMsg*>(netMsg);
+    CPingResponseMsg* msg = static_cast<CPingResponseMsg*>(netMsg);
     char text[0x100];
-    sprintf(text, g_generalText->getText(67),
+    sprintf(text, (*g_generalText)[67],
             GameTime::elapsedSince(msg->m_pingTime));
     receiveChat(msg->m_dpidFrom, text, inPopup);
 }
@@ -6658,6 +6667,10 @@ unsigned char TSingleSelectionWindow::sendPlayerPositions(unsigned long dpidTo)
     // @stub
 }
 
+// DC's synchronous init/row-loop/end API uses the obsolete two-argument
+// CGameHeaderInfoMsg constructor. Complete OnNewPlayerMsg 0x589fa0 starts
+// NewPlayer 0x58a280 and the Go/Tick/Finish transfer state machine, with
+// list flags, throttling and confirmation. Exact disposition: dc_only.tsv.
 // E:\gamedcs\singleselectionwindow.cpp:6990
 DC_ONLY(0x140dbc, 0x126)
 unsigned char TSingleSelectionWindow::SendGameHeaders(unsigned long dpidTo)
@@ -6747,12 +6760,16 @@ unsigned char TSingleSelectionWindow::isHost()
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:7139
-DC_ONLY(0x141448, 0x8)
-void TSingleSelectionWindow::OnNameSlider(int newIndex)
+#endif  // @carcass
+
+// Original: TSingleSelectionWindow::OnNameSlider; singleselectionwindow.cpp:7139, dc 0x141448.
+// DC's entire body is parameter homes followed by return at7140; the
+// original callback performs no operation. No retail address is claimed.
+void TSingleSelectionWindow::onNameSlider(int newIndex)
 {
-    // @stub
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:7143
 DC_ONLY(0x141450, 0x68)
@@ -6885,23 +6902,9 @@ TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
 
 #if 0  // @carcass
 
-// E:\gamedcs\singleselectionwindow.cpp:8256
-DC_ONLY(0x1438b8, 0x9A)
-void TSingleSelectionWindow::UpdateNames()
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:8643
 DC_ONLY(0x145008, 0xA0)
 int TSingleSelectionWindow::calcPosition(int playerPos)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:8749
-DC_ONLY(0x145128, 0x22)
-int update(message* msg)
 {
     // @stub
 }
@@ -8191,6 +8194,22 @@ void TSingleSelectionWindow::onNameChange(int gamePos, const char* newName)
     drawHeroAdvancedOption(gamePos, 1, -1);
 }
 
+// Original: TSingleSelectionWindow::UpdateNames;
+// singleselectionwindow.cpp:8256, dc 0x1438b8. Update calls it at DC4340.
+// Each row resolves its seated player and name widget, then chooses the
+// computer label or player name. Complete expands this loop in 0x584550.
+void TSingleSelectionWindow::updateNames()
+{
+    for (int i = 0; i < 8; ++i) {
+        CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(i);
+        textWidget* name = static_cast<textWidget*>(getWidget(i + 345));
+        if (!player)
+            name->setText((*g_generalText)[469]);
+        else
+            name->setText(player->m_name);
+    }
+}
+
 VA(0x0058D3E0, 0x122)  // dc 0x143954
 unsigned char TSingleSelectionWindow::highlightFile(char* filename)
 {
@@ -8249,7 +8268,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                         176, iconY, 0, 1);
         int textY = rowY + 162;
         // (textY/iconY keep retail's dead-slot homes)
-        g_tinyFont->drawBoundedString(g_unnamed6a74f4[position],
+        g_tinyFont->drawBoundedString(g_townTypeNames[position + 1],
             g_windowManager->m_screenBitmap, 164, textY, 71, 16, font::WHITE, 5, -1);
         int face = getDisplayFace(playerPos);
         if (face != -1) {
@@ -8337,7 +8356,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             m_townPix->draw(0, town * 2 + 2, 0, 0, m_townPix->getWidth(),
                 m_townPix->getHeight(), g_windowManager->m_screenBitmap, 176,
                 rowY + 130, 0, 1);
-            g_tinyFont->drawBoundedString(g_unnamed6a74f4[town],
+            g_tinyFont->drawBoundedString(g_townTypeNames[town + 1],
                 g_windowManager->m_screenBitmap, 164, rowY + 162, 71, 16,
                 font::WHITE, 5, -1);
         }
@@ -8531,6 +8550,18 @@ void TSingleSelectionWindow::onDeleteFile()
     }
 }
 
+// Original: Update; singleselectionwindow.cpp:8749, dc 0x145128.
+// DoModal takes this callback's address at retail 0x584c2d. Its eleven
+// bytes at 0x58e2d0 load the selection-window global and tail-jump to
+// TSingleSelectionWindow::update (0x584550), followed by five pad NOPs.
+// The DC message& parameter survives in the callback interface; Complete's
+// window update is nullary, so this forwarding body does not use it.
+VA(0x0058e2d0, 0xB)  // anchor-address-take DoModal + tail target
+static int update(message& msg)
+{
+    return g_unnamed69fbe8->update();
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:8758, dc 0x14514c
 inline CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler()
 {
@@ -8614,6 +8645,14 @@ CNetMsg* CSingleSelectionNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
 
 #if 0  // @carcass
 
+// Dreamcast-only VM backend, source8847..9754: MapleEnumerateDevices /
+// MapleCreateDevice provide IFlashDevice/IFlashFile interfaces, device/file
+// descriptors, capacity dialogues and multipart save assembly. Complete uses
+// disk directories and CRT/Win32 file I/O: SaveValid 0x577360, OnDeleteFile
+// 0x58dfb0, highScoreManager::open 0x4e90a0 and writeHighScores expanded at 0x4e91d0.
+// GetDateTime below reads the VM enumeration's cached date string; Complete
+// drawBasicMapInfo 0x5840f0 instead converts each header's FILETIME.
+// These thirteen exact source identities are reviewed in config/dc_only.tsv.
 // E:\gamedcs\singleselectionwindow.cpp:8847
 DC_ONLY(0x1453ec, 0xB0)
 int EnumMapleDevicesCallback(const MAPLEDEVICEINSTANCE* pmdi, void* pvContext)
@@ -8785,13 +8824,6 @@ void CNetPlayerHandlerPlayer::clear()
 // E:\gamedcs\SingleSelectionWindow.h:138
 DC_ONLY(0x147610, 0x1A)
 void CNetPlayerHandlerPlayer::resetAdvancedOptions()
-{
-    // @stub
-}
-
-// E:\gamedcs\Button.h:136
-DC_ONLY(0x14762c, 0x24)
-void textButton::setText(const char* new_text)
 {
     // @stub
 }
@@ -9111,13 +9143,6 @@ void CChatWidget::CChatSave::CChatSave(int w, int h)
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:1625
-DC_ONLY(0x148c50, 0x3C)
-void CChatWidget::CChatSave::save(int x, int y)
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:1631
 DC_ONLY(0x148c8c, 0x12)
 unsigned char CChatWidget::CChatSave::isSaved()
@@ -9135,20 +9160,6 @@ void CChatWidget::CChatWidget(int textWidgetX, int textWidgetY, int textWidgetWi
 // E:\gamedcs\singleselectionwindow.cpp:1670
 DC_ONLY(0x148d78, 0x7C)
 void CChatWidget::~CChatWidget()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1685
-DC_ONLY(0x148e48, 0x50)
-void CChatWidget::saveBackground()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1693
-DC_ONLY(0x148e98, 0x74)
-void CChatWidget::restoreBackground()
 {
     // @stub
 }

@@ -200,6 +200,12 @@ unsigned char initializeArtifactTraitsTable()
             stringBytes += strlen(description) + strlen(name) + 2;
         }
 
+        // DC artifact.cpp:33..38 used an anonymous four-byte TAutoStrPtr:
+        // null construction, a direct pointer set/get, and unconditional
+        // destruction. Complete replaces it with TAutoArrayPtr<char>.
+        // The retained destructor 0x44d360 tests ownership at 0x694c90
+        // before deleting the pointer at 0x694c94; the second buffer uses
+        // the same eight-byte layout and conditional destructor 0x44d340.
         DATA_COMPGEN_GUARD(0x006938d4, artifactStringsGuard, artifactStrings)
         VA_COMPGEN(0x0044d360, 0x16, STATIC_DTOR, artifactStrings)
         DATA(0x00694c90)

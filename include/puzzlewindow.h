@@ -19,6 +19,7 @@ class TPuzzleWindow : public CAdvPopup {
 public:
     enum {
         ACCEPT_ID = 0x7802,
+        ACCEPT_HELP_ID = 5,
         DIALOG_CLOSE_KEY = 1,
         DIALOG_ACCEPT_KEY = 28,
         BACKGROUND_ID = 200,

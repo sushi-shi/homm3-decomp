@@ -70,8 +70,9 @@ public:
 unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
                               armyGroup& defendingArmy, town* defendingTown,
                               NewmapCell* cell);
-// Dreamcast ai_player.cpp:2817 proves the enemy reference parameter.
-void splitArmies(hero* currentHero, const hero* enemyHero,
+// Original: AI_arrange_army_for_combat; ai_player.cpp:2952, dc 0x3285c.
+// The public wrapper consolidates, splits and arranges before DoCombat.
+void aiArrangeArmyForCombat(hero* currentHero, const hero* enemyHero,
                   const armyGroup& enemy);
 
 // Named indices into advevent.txt, the adventure-object text resource

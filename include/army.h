@@ -747,7 +747,6 @@ public:
                     long newGroup, long newIndex, long newGridIndex);
     void initClean();
     void loadResources();
-    void freeResources();
     void resetRound();
     void endWalk();
     void walk(int direction, unsigned char endWalk,
@@ -760,7 +759,7 @@ public:
     long adjustDamage(army* enemy, long baseDamage, unsigned char isShot,
                        unsigned char simulated, long distance,
                        long* fireDamage) const;
-    inline void adjustHitpoints();
+    void adjustHitpoints();
     unsigned char attackHex(int hex, unsigned char restoreFacing);
     unsigned char doAttack(army* armyToAttack, int direction);
     void doAttack(int direction);
@@ -840,7 +839,7 @@ public:
                                  const army* excluded) const;
     long getValidCaliphSpells(const army* target) const;
     int getBestDirection(int start, int target, int direction);
-    unsigned char isAdjacent(const army* otherArmy) const;
+    unsigned char isAdjacent(const army& otherArmy) const;
     unsigned char isAdjacent(int hex) const;
     unsigned char isEnemy(const army* arg) const;
     bool isInAura() const;

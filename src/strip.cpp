@@ -35,6 +35,11 @@ strip::strip(int inX, int inY, int inPos, int newIcons, int newIconFrame,
     drawIcons(update, CREATURE_NONE);
 }
 
+// Original: strip::~strip; strip.cpp:70, dc 0x1588e4.
+strip::~strip()
+{
+}
+
 VA(0x005a9d80, 0x30)  // dc 0x1588e8
 void strip::draw(TCreatureType divideCreature)
 {
