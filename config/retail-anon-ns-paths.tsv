@@ -1,0 +1,17 @@
+# Canonical paths for VC6 anonymous namespace scopes (?%<path><hash>@).
+#
+# VC6 embeds the absolute source-file path + CRC32 hash into the mangled
+# names of anonymous-namespace COMDATs.  That path is machine-specific,
+# so the normalization step replaces it with the retail RTTI-proven
+# original-developer path.
+#
+# Evidence: retail RTTI type descriptor at 0x6778c0
+# (.?AVt_initialize_failure@t_initializer@?%C:\Dev\Heroes 3 Exp 2\Game\
+# ForceFeedback.cpp210603558@@).
+#
+# unit: owning compiland; the alias never applies in other units.
+# source_basename: case-insensitive filename that appears before the hash
+# in our compiled anonymous namespace scope.
+# canonical_scope: the <path><hash> body between ?% and @, preserved in RTTI.
+unit	source_basename	canonical_scope
+forcefeedback	forcefeedback.h	C:\Dev\Heroes 3 Exp 2\Game\ForceFeedback.cpp210603558
