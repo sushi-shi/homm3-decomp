@@ -651,7 +651,7 @@ armygrp	?swap@armyGroup@@QAEXHPAV1@H@Z	100.0000	100.0000	100.0000	0x4ad60	tokens
 armygrp	?windowHandler@TSplitWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x4a180	tokens1:47849d4f36a2
 artifact	?_Tidy@?$bitset@$0BD@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x4d3e0	-
 artifact	?_Xran@?$bitset@$0BD@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x4d400	-
-artifact	?initializeArtifactTraitsTable@@YI_NXZ	83.8990	83.8990	83.8990	0x4cd50	tokens1:58431adf718e
+artifact	?initializeArtifactTraitsTable@@YI_NXZ	86.8713	86.8713	86.8713	0x4cd50	tokens1:349788d48bf4
 artifact	?makeArtifactComponentMask@@YA?AV?$bitset@$0JA@@std@@IZZ	100.0000	100.0000	100.0000	0x4c830	tokens1:ebe2ba8fb1b5
 artifact	?makeArtifactSlotMask@@YA?AV?$bitset@$0BD@@std@@IZZ	100.0000	100.0000	100.0000	0x4c720	tokens1:e3aa43646715
 artifact	?set@?$bitset@$0BD@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x4d380	-

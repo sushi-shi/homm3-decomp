@@ -182,11 +182,16 @@ static void initializeArtifactTraits(int id,
 // Either raw-query phase gives 83.8990%; both keep that result. The 16-state
 // pool-cursor reuse control gives 82.7881..83.4951% and changes no established
 // source fact, so retain the owner queries at the pool check and cursor setup.
-// Residual (83.8990%): nested bitset<19> _Tidy, proxy assignment and equality
-// calls stay out of line where retail expands them. The size loop still
-// hoists the sheet's row-vector base. Late range-error construction now
-// reaches the retail _Grow call, but keeps the literal-string _Tidy at the
-// wrong site and retains the copy constructor that retail expands.
+// Complete's added traits sizing pass uses the existing cell accessor.
+// This recovers the retail row-base reload, both row loads and loop schedule:
+// its 83 bytes differ only in two displacements for one length temporary.
+// The four-state cell/row-accessor control gives 86.8713% for traits only,
+// 85.5960% for both sizing passes and 83.8990% for slots only or neither.
+// The original spelling is inferred; the canonical interfaces stay intact.
+// Residual (86.8713%): nested bitset<19> _Tidy, proxy assignment and equality
+// calls stay out of line where retail expands them. Late range-error
+// construction reaches the retail _Grow call, but keeps the literal-string
+// _Tidy at the wrong site and retains the copy constructor retail expands.
 // The combination loop now has retail's owner/offset end checks, set-bit
 // search, returned-iterator copy and retained bitset<144>::test call.
 
@@ -200,7 +205,7 @@ static void initializeArtifactTraits(int id,
 // gives 81.376236%; reversing their strlen addends and removing unused stdio
 // are byte-neutral. These source boundaries replace the fabricated carrier.
 // Earlier named-row/declaration/volatile-accumulator probes did not resolve
-// the first-loop hoist; retain the direct row accesses and ordinary locals.
+// the first-loop hoist; the canonical cell accessor above does.
 // DC public ?InitializeArtifactTraitsTable@@YA_NXZ proves bool; the SH4
 // dossier renders its byte-sized procedure result as unsigned char. Complete
 // returns only AL 0/1, and the sole kb caller tests that Boolean result.
@@ -219,8 +224,8 @@ bool initializeArtifactTraitsTable()
         unsigned stringBytes = 0;
         int row;
         for (row = 2; row < 146; ++row) {
-            const char* name = traitsSheet->getRow(row)[0];
-            const char* description = traitsSheet->getRow(row)[22];
+            const char* name = traitsSheet->getSpreadsheet(row, 0);
+            const char* description = traitsSheet->getSpreadsheet(row, 22);
             stringBytes += strlen(description) + strlen(name) + 2;
         }
 
@@ -335,9 +340,10 @@ bool initializeArtifactTraitsTable()
 // preserves all seven exact siblings. A lower score does not contradict
 // the positive source-call evidence; the cached form remains a failed lead.
 // Restoring those reads changes this helper's C2 cost from 330 to 351.
-// With both raw spreadsheet pointers, the caller costs 1022 (budget 2044),
-// and this helper receives 74. Proxy assignment still exceeds its remaining
-// budget (43 versus 33); _Tidy and equality are also rejected one level down.
+// With raw spreadsheet pointers and the traits sizing cell accessor, the
+// caller costs 1008 (budget 2016), and this helper receives 68. Proxy
+// assignment still exceeds its remaining budget (43 versus 27); _Tidy and
+// equality are also rejected one level down, at budgets 6 and 5.
 // Naming the consumed slot proxy in the earlier owner-query model gave
 // 80.5782% and kept all three unwanted calls, failing its expansion prediction.
 static void initializeArtifactTraits(int id,
