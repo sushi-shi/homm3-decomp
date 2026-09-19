@@ -953,8 +953,9 @@ private:
     void doPostAttack(army* target, int attackDamage, int killedCount,
                         int totalLife);
     void doHydraAttack(int direction);
-    bool findFlyerAttackCell(int hex, int direction) const;
-    bool findFlyerAttackCell(int hex) const;
+    // DC find_flyer_attack_cell parameters are start/target and target.
+    bool findFlyerAttackCell(int start, int target) const;
+    bool findFlyerAttackCell(int target) const;
     bool leavesNoBody() const;
     unsigned char simpleMove(int hex, unsigned char restoreFacing);
     double computeKarma() const;

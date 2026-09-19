@@ -1442,7 +1442,7 @@ drawing	?drawBackground@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x93cf0
 drawing	?drawCombatHero@combatManager@@QAEHPBVCSprite@@HHHHPAUSLimitData@@_N@Z	100.0000	100.0000	100.0000	0x952b0	tokens1:1cd6d59bceb5
 drawing	?drawCreature@combatManager@@QAEHPBVCSprite@@HHHHPAUSLimitData@@H_NH@Z	100.0000	100.0000	100.0000	0x951b0	tokens1:fa5fcc0d6e5e
 drawing	?drawCreatureAndHeroSubwindows@combatManager@@QAEHXZ	100.0000	100.0000	100.0000	0x95650	tokens1:929117ab861e
-drawing	?drawFrame@combatManager@@QAEX_N00H00@Z	100.0000	100.0000	100.0000	0x94440	tokens1:4cf942e80af1
+drawing	?drawFrame@combatManager@@QAEX_N00H00@Z	98.0274	100.0000	100.0000	0x94440	tokens1:4cf942e80af1
 drawing	?drawMoatOverlay@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x95a10	tokens1:68e856cf10b1
 drawing	?drawObject@combatManager@@QAEHPBVBitmap816@@HH@Z	100.0000	100.0000	100.0000	0x958e0	tokens1:b28c0defab25
 drawing	?drawObstacle@combatManager@@QAEHABVhexcell@@@Z	100.0000	100.0000	100.0000	0x95730	tokens1:2285a78ef14a
@@ -1460,7 +1460,7 @@ drawing	?spellEffect@combatManager@@QAEXHHH_N@Z	100.0000	100.0000	100.0000	0x96a
 drawing	?spellEffect@combatManager@@QAEXHPAVarmy@@H_N@Z	100.0000	100.0000	100.0000	0x96840	tokens1:1c9bbf9bc056
 drawing	?updateCombatArea@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x93780	tokens1:583a4e4d0599
 drawing	?updateGrid@combatManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x93930	tokens1:64170fa86810
-drawing	?updateMouseGrid@combatManager@@QAEXHAAV?$vector@JV?$allocator@J@std@@@std@@E@Z	100.0000	100.0000	100.0000	0x93ea0	tokens1:34c69f57d20c
+drawing	?updateMouseGrid@combatManager@@QAEXHAAV?$vector@JV?$allocator@J@std@@@std@@E@Z	96.4030	100.0000	100.0000	0x93ea0	tokens1:34c69f57d20c
 drawing	?updateMouseGrid@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x94390	tokens1:c89f7e107edc
 drawing	__h3cg$drawing$static_dtor$oldHexes	100.0000	100.0000	100.0000	0x94370	-
 dxplay	??0CDPlayLobby@@QAE@XZ	100.0000	100.0000	100.0000	0x98870	tokens1:194ce54e4405
@@ -1649,7 +1649,7 @@ events	?combatMonsterEvent@advManager@@QAEHPAVhero@@HPAHPAVNewmapCell@@Utype_poi
 events	?creatureBankEvent@advManager@@AAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	85.5134	85.5134	91.5889	0xabdc0	tokens1:03a93d87c351
 events	?dispatchEvent@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.4678	99.4678	99.9911	0xa84f0	tokens1:8b917fa1c2b5
 events	?doAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xacca0	tokens1:cf82ee4e903c
-events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	97.9862	97.9862	99.1139	0xad470	tokens1:2d83bc2e13a0
+events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	97.7426	97.9862	99.1139	0xad470	tokens1:2d83bc2e13a0
 events	?doCustomArtifact@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	98.2381	99.1492	0x9f070	tokens1:39c8f6f6fe4b
 events	?doCustomResource@advManager@@AAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	tokens1:b81446f75003
 events	?doCustomSpellScroll@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80	tokens1:591aac4cfd7e
@@ -1780,7 +1780,7 @@ findpath	?pushPoint@searchArray@@AAEXABUpathCell@@AAU2@HHHJUtype_point@@H@Z	99.0
 findpath	?seedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	89.8177	89.8177	89.8177	0xb2da0	tokens1:6c37d1a0b254
 findpath	?setMoat@searchArray@@AAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0xb3290	tokens1:ca0f8750e2fe
 findpath	?testPossibleDirections@searchArray@@AAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	99.2000	99.2000	99.2000	0xb2300	tokens1:a620637a23b4
-fly	?fly@army@@QAEHH@Z	72.2571	72.2571	100.0000	0xb4a40	tokens1:19a73657774d
+fly	?fly@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4a40	tokens1:d0f15fe19f8e
 fly	?flyTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb49c0	tokens1:d2f0a09622ae
 fly	?teleport@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4f10	tokens1:510f2033602c
 fly	?teleportTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb4e90	tokens1:b59dcfa99ac6
