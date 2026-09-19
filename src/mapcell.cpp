@@ -3685,11 +3685,15 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     if (count < sizeof(dummy))
         return -1;
 
-    TAdventureObjectType objectTypeRead;
-    count = infile->read(&objectTypeRead, sizeof(objectTypeRead));
-    if (count < sizeof(objectTypeRead))
+    // The object type is read through the int staging value and copied into
+    // the typed member, exactly as the trait fixup below copies into it: a
+    // separate TAdventureObjectType local takes its own frame slot and pushes
+    // every later displacement by four (99.9633 against retail's 0x8c frame).
+    count = infile->read(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
-    tempObjectType.m_objectType = objectTypeRead;
+    memcpy(&tempObjectType.m_objectType, &value,
+           sizeof(tempObjectType.m_objectType));
     if (usedDefaultMask) {
         sprintf(g_text,
                 DATA_COMPGEN(0x0067fb10, readObjectTypeMissingMask,

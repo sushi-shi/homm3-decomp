@@ -3972,7 +3972,12 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
         }
     }
 
-    return cppMin(value, 5000000L);
+    // The by-value includes.h wrapper, not the bare selector: retail copies
+    // both arguments into their own homes ([ebp+0x10] restored, [ebp+0xc] set
+    // from the immediate) before the address select and the dereference, which
+    // is what that wrapper's extra layer emits. cppMin alone binds `value` in
+    // place and CSEs the cap into a register (99.8200).
+    return min(value, 5000000L);
 }
 
 VA(0x0052b090, 0x14e)  // dc 0x112830

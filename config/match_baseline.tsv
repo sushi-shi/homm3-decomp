@@ -2594,7 +2594,7 @@ mapcell	?readMapObjects@NewfullMap@@AAEHPAVTAbstractFile@@H@Z	83.0000	83.0000	97
 mapcell	?readMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101020	tokens1:706e9138dbe0
 mapcell	?readMonsterData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	97.2906	97.2906	97.2906	0x1013b0	tokens1:c5c88227c5d9
 mapcell	?readObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	60.9729	60.9729	97.4369	0x102e00	tokens1:d5d1f63002b2
-mapcell	?readObjectType@NewfullMap@@QAEHPAVTAbstractFile@@AAVCObjectType@@@Z	99.9633	99.9633	100.0000	0x103780	tokens1:cb383f342ef9
+mapcell	?readObjectType@NewfullMap@@QAEHPAVTAbstractFile@@AAVCObjectType@@@Z	100.0000	100.0000	100.0000	0x103780	tokens1:ca213f4d325a
 mapcell	?readResourceData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xff4d0	tokens1:716431395207
 mapcell	?readScholarData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x100b30	tokens1:18c2cfbfaec7
 mapcell	?readSignData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101270	tokens1:abcb8e413b4f
@@ -2954,7 +2954,7 @@ philai	?valueOfSeaChest@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.000
 philai	?valueOfSirens@@YIHPBVhero@@@Z	100.0000	100.0000	100.0000	0x12a960	tokens1:d76959857b8a
 philai	?valueOfSpell@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x127aa0	tokens1:7d3e992cd725
 philai	?valueOfStables@@YIHPBVhero@@AAJ@Z	100.0000	100.0000	100.0000	0x12aac0	tokens1:d04473eaa133
-philai	?valueOfTown@@YIJPBVhero@@HHHF@Z	99.8237	99.8237	100.0000	0x12ab80	tokens1:034ecab62975
+philai	?valueOfTown@@YIJPBVhero@@HHHF@Z	100.0000	100.0000	100.0000	0x12ab80	tokens1:fdcaa7dd93eb
 philai	?valueOfTownBuildings@@YIJPBVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x12b1e0	tokens1:d15bb47467bc
 philai	?valueOfTreasure@@YIHPBVhero@@@Z	100.0000	100.0000	100.0000	0x12b4e0	tokens1:4c2711662515
 philai	?valueOfTree@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b5a0	tokens1:d87cd1474245
