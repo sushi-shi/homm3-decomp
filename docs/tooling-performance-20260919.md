@@ -181,48 +181,11 @@ three independent worktrees per revision, without warm-up. `source-cold` removes
 only remote's disposable debug object, dependency file and stamp before each
 invocation to measure the first `/Z7` compile; `source` measures its reuse.
 
+## Local measurement artifacts
 
-## Recorded samples
-
-[Generated samples and profile totals](../evidence/tooling-performance-20260919.json)
-retain every elapsed/CPU/RSS sample, quartiles, paired reductions, revision/tool
-metadata, Python/C call totals, process counts and external launch counts.
-Detailed logs, raw `.prof` files and per-function profile summaries remain under
-`/tmp/homm3-perf-final/`, `/tmp/homm3-perf-path-fix/` and
-`/tmp/homm3-perf-workflows/`. Fresh-worktree build artifacts are retained too.
-
-The compact artifact is derived without changing measured values. After rerunning
-the same three experiment groups with the output names above, regenerate it with
-the following Python from the repository root:
-
-```python
-"""Compact raw core.perf results without discarding timing samples or call totals."""
-import json
-from pathlib import Path
-
-experiments = []
-for name in ('final', 'path-fix', 'workflows'):
-    directory = Path('/tmp/homm3-perf-' + name)
-    raw = json.loads((directory / 'results.json').read_text())
-    experiment = {key: raw[key] for key in ('metadata', 'summary')}
-    experiment['artifacts'] = str(directory)
-    experiment['runs'] = [{k: v for k, v in run.items() if k != 'log'}
-                          for run in raw['runs']]
-    experiment['profiles'] = []
-    for index, run in enumerate(raw.get('profiles', [])):
-        profile = run['profile']
-        experiment['profiles'].append(dict(
-            scenario=run['scenario'], side=index % 2,
-            instrumented_seconds=run['seconds'],
-            python_calls=profile['python_calls'], c_calls=profile['c_calls'],
-            python_processes=len(profile['processes']),
-            observed_threads=sum(p['threads'] for p in profile['processes']),
-            launches=profile['launches']))
-    experiments.append(experiment)
-result = dict(schema=1,
-    timing='Fresh CLI processes; alternating order; profiling excluded from timing samples. Three independent cold worktrees per revision; other sample counts are explicit in runs. OS page caches and provisioned Wine prefix are warm.',
-    profiles='CPython 3.13 cProfile covers worker threads and Python children. Python and C calls separated. Native internals and interpreter/profiler setup excluded. Inclusive profile timings must not be summed.',
-    memory='wait4 maximum RSS is the largest process in the command tree, not aggregate concurrent RSS.',
-    experiments=experiments)
-Path('evidence/tooling-performance-20260919.json').write_text(json.dumps(result,indent=2)+'\n')
-```
+Individual samples, metadata, logs, raw `.prof` files and per-function profile
+summaries remain locally under `/tmp/homm3-perf-final/`,
+`/tmp/homm3-perf-path-fix/` and `/tmp/homm3-perf-workflows/`. Each directory's
+`results.json` records timing samples and profile totals. Fresh-worktree build
+artifacts are retained too. These temporary artifacts are not checked into Git;
+the benchmark runner above reproduces them.
