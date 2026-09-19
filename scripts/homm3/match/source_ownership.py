@@ -380,6 +380,8 @@ def instance_annotations(raw: str, start: int, declaration: int):
         stripped = line.strip()
         if stripped and not stripped.startswith(('//', 'VA(')):
             break
+        if stripped.startswith('VA(') and '{' in source.mask_lexical_noise(line):
+            break  # a preceding one-line definition is not this claim's prefix
         beginning -= len(line)
     attached = raw[beginning:declaration]
     hints = [(m.start(), 'hint', m.group(1)) for m in re.finditer(
@@ -428,16 +430,55 @@ def resolve_instances(definitions, requests, unit, root, args):
     kinds = cindex.CursorKind
     probes = []
     expected = {}
+    constructor_parameters = {}
     errors = []
     for index, token_offset in requests:
         d = definitions[index]
+        name = f'__homm3_va_instance_{index}'
+        constructor = re.fullmatch(
+            r'([A-Za-z_][\w:<>, *&]*<[^()]+>)::([A-Za-z_]\w*)\(([^()]*)\)',
+            d.instance)
+        function = re.fullmatch(
+            r'((?:[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*|operator<)\s*'
+            r'<[\w:<>, *&]+>)', d.instance)
+        if constructor:
+            owner, member, arguments = constructor.groups()
+            if member != owner.split('<', 1)[0].rpartition('::')[2]:
+                errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: invalid constructor selector {d.instance!r}')
+                continue
+            parameters, start, depth = [], 0, 0
+            for position, character in enumerate(arguments + ','):
+                depth += (character == '<') - (character == '>')
+                if character == ',' and depth == 0:
+                    parameters.append(arguments[start:position].strip())
+                    start = position + 1
+            if not arguments.strip():
+                parameters = []
+            if depth or any(not re.fullmatch(r'[A-Za-z_][\w:<>, *&]*', p)
+                            for p in parameters):
+                errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: invalid constructor parameter types {d.instance!r}')
+                continue
+            # A constructor has no address. Only the unsaved AST sees these
+            # typed lvalues; no probe is compiled or added to game source.
+            aliases = [f'{name}_parameter_{i}' for i in range(len(parameters))]
+            probes.extend(f'typedef {parameter} {alias};'
+                          for parameter, alias in zip(parameters, aliases))
+            constructor_parameters[name] = aliases
+            values = ', '.join('*static_cast<' + p.rstrip('& ').strip() + '*>(0)'
+                               for p in parameters)
+            probes.append(f'auto {name} = new {owner}({values});')
+            expected[name] = (index, token_offset)
+            continue
+        if function:
+            probes.append(f'auto {name} = &{d.instance};')
+            expected[name] = (index, token_offset)
+            continue
         owner, separator, member = d.instance.rpartition('::')
         if (not separator or '<' not in owner
                 or not re.fullmatch(r'[A-Za-z_][\w:<>, *&]*', owner)
                 or not re.fullmatch(r'(?:~?[A-Za-z_]\w*|operator\*|operator\(\))', member)):
             errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: invalid class-member selector {d.instance!r}')
             continue
-        name = f'__homm3_va_instance_{index}'
         if member.startswith('~'):
             # A destructor cannot have its address taken. A never-executed
             # initializer expression supplies the same declaration identity.
@@ -460,7 +501,12 @@ def resolve_instances(definitions, requests, unit, root, args):
                 if d.severity >= cindex.Diagnostic.Error]
     if failures:
         return definitions, errors + [f'INSTANCE {unit["source"]}: {d}' for d in failures]
-    callable_kinds = {kinds.CXX_METHOD, kinds.DESTRUCTOR, kinds.FUNCTION_DECL}
+    callable_kinds = {kinds.CXX_METHOD, kinds.CONSTRUCTOR,
+                      kinds.DESTRUCTOR, kinds.FUNCTION_DECL}
+    parameter_types = {
+        cursor.spelling: cursor.underlying_typedef_type.get_canonical()
+        for cursor in tu.cursor.get_children() if cursor.kind == kinds.TYPEDEF_DECL
+    }
     def references(cursor):
         found = {}
         ref = cursor.referenced
@@ -482,6 +528,13 @@ def resolve_instances(definitions, requests, unit, root, args):
             errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: selector {d.instance!r} does not identify one member')
             continue
         (file, target_offset, mangled), ref = next(iter(targets.items()))
+        if cursor.spelling in constructor_parameters:
+            requested = [parameter_types[alias]
+                         for alias in constructor_parameters[cursor.spelling]]
+            actual = [argument.type.get_canonical() for argument in ref.get_arguments()]
+            if len(requested) != len(actual) or any(a != b for a, b in zip(requested, actual)):
+                errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: constructor parameter types do not match selector {d.instance!r}')
+                continue
         if file != str(root / d.file) or target_offset != offset or not mangled:
             errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: selector {d.instance!r} does not name the annotated definition')
             continue

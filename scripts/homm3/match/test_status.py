@@ -219,6 +219,35 @@ class UpdateRowsTest(unittest.TestCase):
                 self.assertEqual((rows[key].max, rows[key].hist), (90, 100))
                 self.assertEqual(stats["reset"], 1)
 
+    def test_source_hashes_read_candidate_tree_and_filter_units(self):
+        import tempfile
+        from pathlib import Path
+        from homm3.match import status
+
+        function = ("unit", "?function@@YAHXZ")
+        helper = ("unit", "?helper@@YAHXZ")
+        identities = {function: 0x1000, helper: 0x2000,
+                      ("unselected", "?absent@@YAHXZ"): 0x3000}
+        units = [{"unit": "unit", "source": "src/unit.cpp"},
+                 {"unit": "unselected", "source": "src/absent.cpp"}]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "src").mkdir()
+            (root / "include").mkdir()
+            source = root / "src/unit.cpp"
+            header = root / "include/helper.h"
+            source.write_text("VA(0x00401000, 4)\nint function() { return 1; }\n")
+            header.write_text("VA(0x00402000, 4)\ninline int helper() { return 2; }\n")
+            with mock.patch.object(status, "function_rvas", return_value=identities), \
+                    mock.patch("homm3.build.configure.load_manifest", return_value=({}, {}, units)):
+                old = status.source_hashes(source_root=root, only_units={"unit"})
+                self.assertEqual(set(old), {function, helper})
+                source.write_text(source.read_text().replace("return 1", "/* note */ return 1"))
+                header.write_text(header.read_text().replace("return 2", "return 3"))
+                new = status.source_hashes(source_root=root, only_units={"unit"})
+                self.assertEqual(old[function], new[function])
+                self.assertNotEqual(old[helper], new[helper])
+
     def test_missing_positive_history_is_retained(self):
         key = ("unit", "lost")
         rows, _stats = update_rows(

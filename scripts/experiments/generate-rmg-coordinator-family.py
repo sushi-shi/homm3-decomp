@@ -40,7 +40,11 @@ def variant(original, human, all_slots, mapping):
             "    char " + name + "[8];\n    std::fill(" + name + ", " + name + " + 8, 0);",
             "    char " + name + "[8];\n    for (int slotByte = 0; slotByte < 8; ++slotByte)\n        " + name + "[slotByte] = 0;",
         )
-        found = [text for text in forms if text in body]
+        counter = "humanSlotByte" if name == "humanSlots" else "allSlotByte"
+        adopted_loop = (f"    char {name}[8];\n"
+                        f"    for (int {counter} = 0; {counter} < 8; ++{counter})\n"
+                        f"        {name}[{counter}] = 0;")
+        found = [text for text in (*forms, adopted_loop) if text in body]
         if len(found) != 1:
             raise ValueError("review coordinator buffer form: " + name)
         body = replace(body, found[0], forms[form])
@@ -57,10 +61,12 @@ def axes(source):
     original = definition(source)
     options = [(f"human_{h}+all_{a}+mapping_{m}", variant(original, h, a, m))
                for h, a, m in itertools.product(range(5), range(4), range(3))]
+    if not any(body == original for _, body in options):
+        options.append(("authored", original))
     options.sort(key=lambda option: option[1] != original)
     axis = generator("generate-rmg-position-family.py").axis("coordinator_buffers", SOURCE, original, options)
-    if len(axis["options"]) != 60:
-        raise ValueError("expected sixty distinct coordinator forms")
+    if len(axis["options"]) not in (60, 61):
+        raise ValueError("expected sixty buffer forms plus optional authored control")
     return [axis]
 
 

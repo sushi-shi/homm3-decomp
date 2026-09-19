@@ -57,9 +57,10 @@ PYTHONPATH=scripts python -m homm3.vc6.source_families \
   `build/source-families/<context>/`. Verify parent snapshot/manifest identity
   when generating a follow-up; after source, header or target changes establish
   a fresh context rather than applying stale anchors or trusting old scores.
-- Review the reproduced winner against retail CFG, instructions and named
-  call/relocation streams; use behavioral tests and negative controls where
-  appropriate. Apply only supported C++ and finish with full `homm3 build`.
+- Review reproduced models against retail CFG, instructions and named
+  call/relocation streams, including supported models below the current score.
+  Use behavioral tests and negative controls where appropriate. Apply supported
+  C++ and finish with full `homm3 build`; an intermediate score drop is not a veto.
   The search itself never adopts source or updates CUR/MAX/HIST.
 
 Manual `homm3 build --fast <TU>` remains useful for bootstrapping, a focused
@@ -74,6 +75,36 @@ helper bodies, dummy calls/self-assignments, or retained diagnostic pragmas as
 search shortcuts. Current AGENTS.md restrictions override historical lever
 examples below. An exhausted batch is not function/TU completion: identify a
 new evidence-backed family or document the precise residual and scope limit.
+
+## Preserve MAX evidence, not current exact scores
+
+Preserve established MAX results and their recoverable source/object controls
+as evidence for recovery. Do not require CUR to preserve MAX, or require an
+intermediate reconstruction to keep already-exact functions at 100%. This applies
+across shared headers, helper bodies, interfaces, callers, and sibling TUs.
+The tooling already holds MAX when a function's own source hash is unchanged,
+even if its emitted bytes or CUR move with compiler context. Use that attribution;
+do not treat such movement as a new function regression. Other functions whose
+MAX holds are not an acceptance concern: omit them from progress and final
+reports. Do not report preserved-exact counts, zero exact losses, unchanged
+sibling scores, or unrelated CUR dips while MAX holds. Run
+required build checks, but report other functions only when MAX actually falls
+or a concrete correctness/build failure needs action. An exact-count change
+alone does not establish that a source model is better or worse.
+
+Judge a combined reconstruction by source evidence and retail behavior, ABI,
+layout, calls, and control flow. A real helper or interface can initially lower
+several scores while its callers, construction, lifetimes, and inlining still
+need reconstruction. Inspect those changes and pursue a concrete combined
+experiment that tests the explanation. Do not revert a supported source fact or
+stop that experiment merely to retain current exact scores. A contradiction of
+proven facts requires revision; a lower similarity score by itself does not.
+
+Keep the ledger honest under the rules below: unchanged-source MAX stays held;
+a source-hash change may reset MAX, with the previous peak retained in HIST and
+its candidate controls. Do not manually freeze or inflate MAX to hide a change.
+Temporary regressions leave recovery work open; final completion still requires
+the full requested scope to match retail and pass the required gates.
 
 ## The governing ledger: per-function CUR / MAX / HIST
 

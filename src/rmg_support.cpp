@@ -144,12 +144,6 @@ void selectRmgLinePattern(
     }
 }
 
-VA(0x005355C0, 0x1A)
-TRmgMapPosition::TRmgMapPosition(int newX, int newY, int newZ)
-    : m_x(newX), m_y(newY), m_z(newZ)
-{
-}
-
 VA(0x0055EDA0, 0x07)
 TRmgRiverPainter::~TRmgRiverPainter()
 {

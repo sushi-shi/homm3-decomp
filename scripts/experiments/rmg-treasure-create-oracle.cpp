@@ -4,6 +4,7 @@
 // this host-STL check. Only virtual methods, selector, placement and RNG mock.
 #include <vector>
 #include <bitset>
+#include <utility>
 #include <cstdio>
 #include <stdint.h>
 // @VALUE_TYPES@
@@ -11,9 +12,22 @@
 struct CObjectType {
     // @BIT_POSITION@
 };
+// VC6 exposes nonstandard bitset::at returning a checked proxy. Host bitset
+// lacks it; this fixture preserves that public operation without changing the
+// generated caller. The valid-domain oracle does not assert exception ABI.
+struct Mask48 : std::bitset<48> {
+    Mask48& operator=(const std::bitset<48>& value) {
+        std::bitset<48>::operator=(value);
+        return *this;
+    }
+    reference at(size_t position) {
+        test(position);
+        return operator[](position);
+    }
+};
 struct TObjectType {
     struct ImageInfo { TPoint m_objectSize; } m_imageInfo;
-    std::bitset<48> m_passableMask, m_triggerMask;
+    Mask48 m_passableMask, m_triggerMask;
     // @ACCESSORS@
 };
 struct TRmgObjectPropertiesRef { TObjectType* m_prototype; int m_id; };
@@ -179,7 +193,10 @@ static unsigned next() { g_seed = g_seed * 1664525u + 1013904223u; return g_seed
 static Scenario scenario(int n) {
     Scenario s;
     s.m_count = n % 9;
-    s.m_primary = n & 1; s.m_terrain = (n >> 1) & 1; s.m_compact = (n >> 2) & 1;
+    const unsigned char trueValues[4] = {1, 2, 128, 255};
+    s.m_primary = (n & 1) ? trueValues[(n >> 3) & 3] : 0;
+    s.m_terrain = (n & 2) ? trueValues[(n >> 5) & 3] : 0;
+    s.m_compact = (n & 4) ? trueValues[(n >> 7) & 3] : 0;
     s.m_minimum = n % 5 ? 0 : 50; s.m_maximum = n % 7 ? 1000 : 100;
     s.m_random = next() % 32768;
     s.m_position.m_x = n % 3 - 1; s.m_position.m_y = n % 5 - 2; s.m_position.m_z = n % 2 - 1;

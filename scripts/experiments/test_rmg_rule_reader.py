@@ -1,5 +1,7 @@
 """Independent parsed-row and last-matching-rule oracle for the reader family."""
 from pathlib import Path
+import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -15,7 +17,7 @@ class RuleReaderTests(unittest.TestCase):
         module = generator("generate-rmg-rule-reader-family.py")
         source = (root / module.SOURCE).read_text()
         header = (root / "include/rmg.h").read_text()
-        objects = (root / "include/advmgr_objects.h").read_text()
+        objects = (root / "include/objecttype.h").read_text()
         object_names = (root / "include/objnames.h").read_text()
         def block(prefix):
             start = header.index(prefix + " {")
@@ -48,15 +50,26 @@ class RuleReaderTests(unittest.TestCase):
         self.assertEqual(len(row_forms), 60)
         forms = list(dict.fromkeys(forms + row_forms))
         self.assertEqual(len(forms), 198)
+        if os.environ.get("HOMM3_RULE_READER_MANIFEST"):
+            manifest = json.loads(Path(os.environ["HOMM3_RULE_READER_MANIFEST"]).read_text())
+            axis, = manifest["axes"]
+            self.assertEqual(axis["source"], module.SOURCE)
+            self.assertEqual(axis["find"], forms[0])
+            forms = list(dict.fromkeys(forms + [option.get("replace", axis["find"])
+                                               for option in axis["options"]]))
         count = len(forms)
         seed = forms[0]
+        subtype_condition = "subtypesByType[mappedType][terrain][match] != subtype"
+        if subtype_condition not in seed:
+            subtype_condition = "subtypesByType[mappedType][terrain].begin() + match + 1) != subtype"
+        self.assertEqual(seed.count(subtype_condition), 1)
         forms += [seed.replace("values[0][0] == ' '", "values[0][0] == '!'"),
                   seed.replace("rule.m_index = row - 3", "rule.m_index = row - 2"),
                   seed.replace("RMG_PLACEMENT_INVALID;", "0;"),
                   seed.replace("values[index + 16]", "values[index + 17]"),
                   seed.replace("values[index + ruleCount + 16]", "values[index + ruleCount + 15]"),
                   seed.replace("g_adventureObjectLandBlocked[objectType][8]", "g_adventureObjectLandBlocked[objectType][4]"),
-                  seed.replace("subtypesByType[mappedType][terrain][match] != subtype", "subtypesByType[mappedType][terrain][match] == subtype"),
+                  seed.replace(subtype_condition, subtype_condition.replace("!=", "==")),
                   seed.replace("properties->m_placementRule = rulesByType[mappedType][terrain][match]", "properties->m_placementRule = rulesByType[mappedType][terrain][0]"),
                   seed.replace("sheet->dispose();", "")]
         self.assertTrue(all(body != seed for body in forms[count:]))

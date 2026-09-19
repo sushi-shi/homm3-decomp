@@ -124,12 +124,28 @@ sibling member, or explicit specialization cannot borrow the annotation.
 Each selector immediately precedes its own VA annotation. Several such pairs
 may share the same generic body: ownership counts it once, while projection,
 identity checking and carrier selection handle every concrete claim. Duplicate
-addresses/selectors and unpaired comments are fatal. Current selectors support unambiguous ordinary
-members, `operator*`, `operator()` and destructors of class templates; unresolved
-or malformed selectors are fatal. The header body owns source hashing and
+addresses/selectors and unpaired comments are fatal. Selectors support unambiguous ordinary
+members, `operator*`, `operator()` and destructors of class templates. Constructors
+use a typed parameter list, such as
+`Point<unsigned int>::Point(const unsigned int&, const unsigned int&)`.
+Free function templates use their concrete template name, for example
+`identity<unsigned int>` or `operator< <unsigned int>`. Put `template<...>`
+before the selector comment and VA attribute on an out-of-class definition.
+Constructor probes create typed argument expressions only in an unsaved AST;
+they are never compiled, executed, or added to game code. Overloads and explicit
+specializations must resolve to the annotated generic body's exact source token.
+Requested constructor parameter types must also equal the resolved declaration's
+canonical types: aliases are accepted, implicit conversions and cv/ref changes are not.
+Malformed, ambiguous, or foreign-body selectors are fatal. The header body owns source hashing and
 CodeView placement, while the selected concrete name identifies the comparison
 instance. This uses the existing header-carrier rules and no generated-function
 enrollment for a handwritten body.
+For a tree keyed by a class template with one primitive argument, generated
+claims name the concrete specialization, such as `Point_unsigned_int`.
+Signed and unsigned instances retain distinct ownership; a public typedef
+does not erase the template argument in the compiler's symbol identity.
+The Clang/VC6 spelling bridge for free `operator<` templates confirms the
+primitive argument and full ABI suffix against an actually emitted VC6 symbol.
 Renamed definitions retain their identity in an attached source comment of the
 form `// Original: Class::Name; Owner.h:123, dc 0x1234.`. The gate reads this
 explicit procedure bridge and still checks its owning file and source order.
