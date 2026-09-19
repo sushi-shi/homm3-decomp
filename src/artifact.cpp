@@ -131,6 +131,9 @@ const TCombinationArtifact g_combinationArtifactTable[12] = {
 // nor explicit/implicit zero-value construction reproduces that boundary:
 // all expand it and produce a 326-byte cinit versus retail's 325 bytes, with
 // later copy-register changes.
+// VC6's bitset copy/destructor are implicit. Retail reuses one four-byte
+// temporary for all fifteen values, with no cleanup or additional owner;
+// the register differences do not establish a missing copy helper.
 // The neighboring combination cinit matches all 664 bytes / 24 relocations.
 // Both cinits remain outside the ordinary function-score inventory.
 DATA(0x00693898)
@@ -171,6 +174,9 @@ static void initializeArtifactTraits(int id,
 // parameters. Complete's pooled string copies belong to the caller; adding
 // a char*& buffer parameter to the helper is a weaker retail hypothesis.
 // The resource guards and static array owners reproduce retail cleanup.
+// Restoring strcpy at the pooled copies makes VC6 scan each source twice:
+// once for the cursor's length and again inside intrinsic strcpy. Retail
+// scans once and reuses that count for copying, supporting memcpy here.
 // DC uses Dispose and per-string TAutoStrPtr arrays. Complete's resources
 // dispose through vtable+4; its two pooled owners have an ownership byte and
 // pointer, proved by the retained 0x44d340/0x44d360 destructors. The canonical
@@ -346,6 +352,10 @@ bool initializeArtifactTraitsTable()
 // equality are also rejected one level down, at budgets 6 and 5.
 // Naming the consumed slot proxy in the earlier owner-query model gave
 // 80.5782% and kept all three unwanted calls, failing its expansion prediction.
+// Explicit successful-match breaks in either mask search leave all 1504
+// initializer bytes unchanged, including both retained equality calls.
+// Moving the four Complete-only defaults after this helper call is also
+// byte-neutral; their original caller/helper ownership remains unproven.
 static void initializeArtifactTraits(int id,
     const TSpreadsheetResource::TStringVector& resource)
 {
