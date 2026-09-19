@@ -1,5 +1,10 @@
 # Union and pragma audit
 
+Historical experiment filenames below refer to the searches recorded here.
+Per-function scripts and fixtures are retired once their targets reach MAX
+100%; their last versions remain in Git history. Use the general JSON runner
+for new searches and keep temporary inputs under ignored `build/`.
+
 Scope: project-owned game C++ in `src/` and `include/`, against baseline
 `231248aa`, English GOG Complete 4.0 and the pinned per-TU VC6 SP3 profiles.
 Counts are definitions/directive regions, not keyword hits in comments or

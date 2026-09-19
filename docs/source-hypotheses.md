@@ -1,5 +1,10 @@
 # Source-hypothesis batches
 
+Historical experiment filenames below refer to the searches recorded here.
+Per-function scripts and fixtures are retired once their targets reach MAX
+100%; their last versions remain in Git history. Use the general JSON runner
+for new searches and keep temporary inputs under ignored `build/`.
+
 `homm3 hypotheses` (also available as `homm3 vc6 hypotheses`) adapts King's Field's `kf hypotheses` manifest and
 Cartesian source renderer to the configured HoMM3 VC6 profiles and normalized
 objdiff scoring. Each option describes a reviewed, exact source substitution.
