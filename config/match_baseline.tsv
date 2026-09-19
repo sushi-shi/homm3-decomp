@@ -3360,7 +3360,7 @@ rmg	?fillZoneArea@type_random_map_generator@@QAEXPAUTRmgZone@@PAUTRmgBoundaryVer
 rmg	?filterZonePositions@type_random_map_generator@@QAEXPAUTRmgZone@@AAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@H@Z	98.8666	98.8666	98.8666	0x13b2f0	tokens1:0bafdebc4338
 rmg	?findZone@TRmgTemplate@@QAEPAUTRmgTownSlot@@H@Z	100.0000	100.0000	100.0000	0x1330a0	tokens1:81f399b75db0
 rmg	?floodConnectionCosts@type_random_map@@QAEXUTRmgMapPosition@@E@Z	83.6813	83.6813	83.6813	0x131460	tokens1:69dccfb73be8
-rmg	?floodConnectionRegion@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	92.0500	92.0500	92.0500	0x141780	tokens1:3c1a22ba498a
+rmg	?floodConnectionRegion@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x141780	tokens1:1e5e1fa3fbae
 rmg	?floodWaterZoneDistances@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	88.7238	88.7238	88.7238	0x13f1a0	tokens1:efa096176337
 rmg	?generate@TRandomMapRequest@@QAEHPBDPAX@Z	100.0000	100.0000	100.0000	0x14c090	tokens1:82d1a84a7ae1
 rmg	?generate@type_artifact_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x1341f0	tokens1:f07f4ffb3bb8

@@ -7,7 +7,6 @@ decoration flag, so preserve the post-call query. Retail 0x546040 retains
 the subtype/category/mask checks and chooses from a real candidate vector.
 """
 import argparse
-import importlib.util
 import itertools
 import json
 from pathlib import Path
@@ -36,6 +35,43 @@ def axis(name, original, alternatives):
     return dict(name=name, find=original, options=options)
 
 
+def border(original, storage, order):
+    names = ("minimumX", "maximumX", "minimumY", "maximumY")
+    values = ("max(position.m_x - 1, 0)", "min(position.m_x + 2, m_map.m_mapWidth)",
+              "max(position.m_y - 1, 0)", "min(position.m_y + 2, m_map.m_mapHeight)")
+    fields = ("m_minimumX", "m_maximumX", "m_minimumY", "m_maximumY")
+    old_shapes = [(["    int " + name + " =" for name in names], names),
+                  (["    TRmgZoneBounds bounds;"], ["bounds." + field for field in fields]),
+                  (["    TPoint lower;"], ["lower.m_x", "upper.m_x", "lower.m_y", "upper.m_y"])]
+    matches = [(min(original.index(anchor) for anchor in anchors), references)
+               for anchors, references in old_shapes if all(anchor in original for anchor in anchors)]
+    if len(matches) != 1:
+        raise ValueError("review the current border bound storage before generating")
+    start, old_references = matches[0]
+    end = original.index("    for (int y =")
+    if any(original[start:end].count(value) != 1 for value in values):
+        raise ValueError("border bound expressions changed; review their retail semantics")
+    tail = original[end:]
+    for reference, name in zip(old_references, names):
+        tail = tail.replace(reference, name)
+    if storage == "rectangle":
+        declarations = ["    TRmgZoneBounds bounds;"]
+        references = ["bounds." + field for field in fields]
+    elif storage == "corners":
+        declarations = ["    TPoint lower;", "    TPoint upper;"]
+        references = ["lower.m_x", "upper.m_x", "lower.m_y", "upper.m_y"]
+    else:
+        declarations = []
+        references = names
+    for name, reference in zip(names, references):
+        tail = tail.replace(name, reference)
+    for index in order:
+        typename = "int " if storage == "scalars" else ""
+        declarations.append(f"    {typename}{references[index]} = {values[index]};")
+    return original[:start] + "\n".join(declarations) + "\n" + tail
+
+
+
 def path_axes(original):
     start = original.index("        if (item->m_connection.m_present) {")
     end = original.index("        TRmgMapPosition previous =", start)
@@ -52,14 +88,10 @@ def path_axes(original):
     bounds_start = original.index("            TRmgZoneBounds bounds;")
     bounds_end = original.index("        }\n        position = previous;", bounds_start)
     bounds = original[bounds_start:bounds_end]
-    path = Path(__file__).with_name("generate-rmg-border-flood-family.py")
-    spec = importlib.util.spec_from_file_location("rmg_border_bounds", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
     unindented = textwrap.indent(textwrap.dedent(bounds), "    ")
     bounds_options = []
     for storage, order in itertools.product(("scalars", "corners", "rectangle"), itertools.permutations(range(4))):
-        replacement = module.border(unindented, storage, order)
+        replacement = border(unindented, storage, order)
         replacement = textwrap.indent(textwrap.dedent(replacement), "            ")
         bounds_options.append((storage + "+" + "".join(map(str, order)), replacement))
     previous = "        TRmgMapPosition previous = item->m_previousTile;"

@@ -6034,15 +6034,15 @@ unsigned char type_random_map_generator::createGroundConnection(
     return 1;
 }
 
-// Retail uses a LIFO vector of three-dword positions and walks cardinal
-// directions 0/2/4/6 with signed induction. Mark each admitted neighbour
-// visited, but enqueue only water; gate-marked water cells are traversable.
-// Byte extractions at +0x11c/+0x125 and the two terrain tests fix the narrow
-// predicate values. Preserve the ordinary map and point helper boundaries.
-// Source-family result: a value insert at the neighbour site restores the
-// retained copy/_Destroy pair in pop_back (71.4786 -> 84.8000). Assigning
-// rather than copy-initializing nearby reaches the same island. Keep the
-// public STL calls; the seed insert still expands one level past retail.
+// Retail uses a LIFO vector of three-dword positions and cardinal directions
+// 0/2/4/6. Mark admitted neighbours visited, but enqueue only water; gate-marked
+// water cells are traversable. RMG has no Dreamcast counterpart.
+// Exact with the canonical returned-position addition and integer land-kind
+// accessor/snapshots. Copy then += changes the coordinate homes (92.05%);
+// narrowing terrain to a byte adds sign-extension shifts (97.7143%). Direct
+// integer field reads over-expand the seed insertion (99.25%), while retaining
+// the ordinary accessor restores both distinct retail insert boundaries.
+// The empty _Destroy body is folded with vector<type_artifact> (ret 8).
 VA(0x00541780, 0x18D) // anchor-callee 0x541f1f; thiscall, ret 0x0c
 void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
 {
@@ -6053,8 +6053,7 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
         position = openPositions.back();
         openPositions.pop_back();
         for (int direction = 0; direction < 8; direction += 2) {
-            TRmgMapPosition nearby = position;
-            nearby += g_rmgDirections[direction];
+            TRmgMapPosition nearby = position + g_rmgDirections[direction];
             if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth
                 || nearby.m_y < 0 || nearby.m_y >= m_map.m_mapHeight)
                 continue;
@@ -6063,12 +6062,12 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
             if (visited)
                 continue;
             if (!item->hasSubterraneanGate()) {
-                unsigned char terrain = item->getLandType();
+                int terrain = item->getLandType();
                 if (terrain == eTerrainWater)
                     continue;
             }
             item->setConnectionVisited();
-            unsigned char terrain = item->getLandType();
+            int terrain = item->getLandType();
             if (terrain == eTerrainWater)
                 openPositions.insert(openPositions.end(), nearby);
         }

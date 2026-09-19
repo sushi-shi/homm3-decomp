@@ -1065,7 +1065,7 @@ struct TRmgMapItem {
     {
         m_tileData.m_connectionVisited = 1;
     }
-    unsigned char getLandType() const
+    int getLandType() const
     {
         return m_tile.m_landType;
     }

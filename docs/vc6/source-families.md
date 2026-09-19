@@ -2568,8 +2568,7 @@ PYTHONPATH=scripts python -m homm3.vc6.source_families \
 ```
 
 Other generators cover the classifier caller/packed-field snapshots, the
-diagonal checks/coordinate class, border marking/connection flooding, and
-shipyard footprint/side selection, and connection-path/prototype selection.
+diagonal checks/coordinate class, shipyard footprint/side selection, and connection-path/prototype selection.
 They read the current authored baseline;
 their output lives under `build/`, while the generator itself is reviewable.
 
@@ -2578,8 +2577,6 @@ PYTHONPATH=scripts python scripts/experiments/generate-rmg-neighbour-clear-famil
   build/rmg-neighbour-clear-family.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-diagonal-family.py \
   build/rmg-diagonal-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-border-flood-family.py \
-  build/rmg-border-flood-family.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-shipyard-family.py \
   build/rmg-shipyard-family.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-path-family.py \
