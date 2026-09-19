@@ -2790,7 +2790,7 @@ def run(only_units: list[str] | None = None,
             banked_inline_names(path, definitions, banked))
     headers.project(header_paths, functions,
                     {p.stem: names for p, names in zip(todo, ir_maps)},
-                    rows_by_unit, problems)
+                    rows_by_unit, problems, ownership=(definitions, errors, _reached))
     for path in todo:
         rows = sorted(rows_by_unit[path.stem], key=lambda r: (r['rva'], r['kind']))
         banner = [f"# GENERATED claim fragment for unit {path.stem} - the "

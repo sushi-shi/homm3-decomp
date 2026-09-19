@@ -87,21 +87,23 @@ class MatchRow:
 
 def require_fresh_comparisons() -> None:
     """Validate every comparison input, including the raw-object stamp chain."""
-    from homm3.build.normalized_freshness import freshness_problems
+    from homm3.build.normalized_freshness import freshness_problems, ValidationContext
     config = OBJDIFF_DIR / "objdiff.json"
     if not config.is_file():
         common.die("comparison configuration missing; run `homm3 build`")
     seen = set()
+    context = ValidationContext()
+    normalized_root = context.resolve(OBJDIFF_DIR / "normalized")
     problems = []
     for unit in json.loads(config.read_text()).get("units", []):
         for side in ("base_path", "target_path"):
-            path = (OBJDIFF_DIR / unit[side]).resolve()
+            path = context.resolve(OBJDIFF_DIR / unit[side])
             if not path.is_file():
                 problems.append(f"{path} is missing")
-            elif (OBJDIFF_DIR / "normalized").resolve() not in path.parents:
+            elif normalized_root not in path.parents:
                 problems.append(f"{path} is not a normalized comparison object")
             else:
-                problems.extend(freshness_problems(path, seen))
+                problems.extend(freshness_problems(path, seen, context=context))
     if problems:
         common.die("stale normalized comparison objects; run `homm3 build`:\n  "
                    + "\n  ".join(problems[:10]))
@@ -331,21 +333,25 @@ def load_baseline(path: Path | None = None) -> dict[tuple[str, str], MatchRow]:
     return rows
 
 
-def historical_maxima_from_git() -> dict[object, float]:
+def baseline_history() -> str:
+    """One read of immutable Git history; callers may share it within a build."""
+    relative = BASELINE.relative_to(common.HOMM3_DIR)
+    result = subprocess.run(
+        ["git", "log", "-p", "--format=", "--", str(relative)],
+        cwd=common.HOMM3_DIR, capture_output=True, text=True)
+    return result.stdout if result.returncode == 0 else ''
+
+
+def historical_maxima_from_git(patch: str | None = None) -> dict[object, float]:
     """Recover peaks from every tracked baseline revision during migration.
 
     `git log -p` exposes each value when it first enters the generated file,
     including maxima that legacy practice later lowered. This is deliberately
     read-only Git history: the status writer remains the sole TSV writer.
     """
-    relative = BASELINE.relative_to(common.HOMM3_DIR)
-    result = subprocess.run(
-        ["git", "log", "-p", "--format=", "--", str(relative)],
-        cwd=common.HOMM3_DIR, capture_output=True, text=True)
-    if result.returncode != 0:
-        return {}
+    patch = baseline_history() if patch is None else patch
     maxima: dict[object, float] = {}
-    for patch_line in result.stdout.splitlines():
+    for patch_line in patch.splitlines():
         if not patch_line.startswith("+") or patch_line.startswith("+++"):
             continue
         cols = patch_line[1:].split("\t")
@@ -543,12 +549,13 @@ def update_rows(current: dict, previous: dict, rvas: dict,
     return rows, stats
 
 
-def cmd_update(report: dict, *, fingerprint_pair: tuple[dict, dict] | None = None) -> int:
+def cmd_update(report: dict, *, fingerprint_pair: tuple[dict, dict] | None = None,
+               history_patch: str | None = None) -> int:
     require_built_sources()
     require_fresh_comparisons()
     previous = load_baseline()
     previous, recovered = seed_historical_maxima(
-        previous, historical_maxima_from_git())
+        previous, historical_maxima_from_git(history_patch))
     hashes, legacy = fingerprint_pair if fingerprint_pair is not None else source_hash_pair()
     previous = migrate_source_hashes(previous, hashes, legacy)
     rows, stats = update_rows(
