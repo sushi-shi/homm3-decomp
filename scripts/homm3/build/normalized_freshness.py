@@ -76,6 +76,12 @@ def _sha256(path: Path) -> str:
 
 
 def implementation_inputs() -> dict[str, Path]:
+    """Explicit transform dependency list, not automatic import discovery.
+
+    Add any new behavior-affecting helper or dependency here. Content changes
+    to listed files invalidate existing stamps automatically; bump STAMP_SCHEMA
+    when the stamp format or validation contract changes.
+    """
     directory = Path(__file__).parent
     return {'tool:' + name: directory / name for name in (
         'normalized_freshness.py', 'normalize_objs.py', 'canonicalize_data_symbols.py')}
@@ -118,7 +124,8 @@ def write_stamp(output: Path, inputs: dict[str, Path], *, context: ValidationCon
     # A killed writer must leave an old (invalid) stamp or a complete new one.
     temporary = None
     try:
-        with tempfile.NamedTemporaryFile(mode='w', dir=path.parent, delete=False) as stream:
+        with tempfile.NamedTemporaryFile(mode='w', dir=path.parent,
+                                         prefix='.stamp-', suffix='.tmp', delete=False) as stream:
             temporary = Path(stream.name)
             stream.write(json.dumps(payload, indent=2, sort_keys=True) + "\n")
         os.replace(temporary, path)

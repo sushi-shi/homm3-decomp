@@ -139,6 +139,11 @@ class AuthoredAstTest(unittest.TestCase):
                 parser = facts.CandidateParser(root, batch=True)
                 with patch.object(facts.subprocess, 'run', wraps=subprocess.run) as launches:
                     self.assertEqual([parser(path, name) for name in names], separate)
+                    alias = root / 'alias'
+                    alias.symlink_to(root, target_is_directory=True)
+                    aliased_path = alias / path.name
+                    candidate = parser(aliased_path, names[0])
+                    self.assertEqual(candidate, {**separate[0], 'path': str(aliased_path)})
                     self.assertEqual(launches.call_count, 1)
                     with self.assertRaisesRegex(ValueError, 'found 0'):
                         parser(path, '?missing@Widget@@QAEHXZ')

@@ -11,6 +11,7 @@ from unittest.mock import patch
 from homm3.build import build, configure, delink, normalize_objs
 from homm3.cleanliness import board
 from homm3.core import inputs
+from homm3.core.nb11 import NB11Error
 from homm3.match import banked_rows, single_view, source_ownership, status, verify_va_claims
 
 
@@ -28,7 +29,7 @@ class BuildModeTest(unittest.TestCase):
         self.enterContext(patch.object(status, "REPORT", self.root / "build/objdiff/report.json"))
         self.enterContext(patch.object(status, "overall_line", return_value="report"))
         self.enterContext(contextlib.redirect_stdout(io.StringIO()))
-        self.enterContext(contextlib.redirect_stderr(io.StringIO()))
+        self.stderr = self.enterContext(contextlib.redirect_stderr(io.StringIO()))
 
         for name, module, function, result in [
             ("configure", configure, "main", None),
@@ -56,11 +57,35 @@ class BuildModeTest(unittest.TestCase):
     def test_full_build_refreshes_existing_targets_before_checkpoint(self):
         self.assertEqual(build.main([]), 0)
         self.assertEqual(self.events, ["configure", "compile", "delink", "report",
-                                      "fingerprints", "history", "check", "checkpoint", "origins", "banked", "claims",
-                                      "single_view", "ownership", "cleanliness", "readme"])
+                                      "fingerprints", "history", "check", "checkpoint", "banked", "claims",
+                                      "single_view", "origins", "ownership", "cleanliness", "readme"])
         self.mocks["compile"].assert_called_once_with("ninja")
         self.mocks["normalize"].assert_not_called()  # delink already normalizes
         self.assertEqual(self.preflight.call_count, 2)
+        self.mocks["origins"].assert_called_once_with(include_declarations=True)
+        self.mocks["ownership"].assert_called_once_with(origins=[])
+        self.mocks["cleanliness"].assert_called_once_with(write=True, dc_origins=[])
+
+    def test_missing_dc_evidence_preserves_independent_diagnostics_and_fails(self):
+        for error in (inputs.InputError, NB11Error, FileNotFoundError):
+            with self.subTest(error=error):
+                self.mocks['origins'].side_effect = error('missing DC evidence')
+                before = len(self.events)
+                self.assertEqual(build.main([]), 1)
+                events = self.events[before:]
+                for gate in ('banked', 'claims', 'single_view', 'readme'):
+                    self.assertIn(gate, events)
+                self.mocks['ownership'].assert_not_called()
+                self.mocks['cleanliness'].assert_not_called()
+                self.assertIn('missing DC evidence', self.stderr.getvalue())
+                self.assertIn('floors unchanged', self.stderr.getvalue())
+
+    def test_unreadable_independent_gate_does_not_skip_later_gates(self):
+        self.mocks['banked'].side_effect = OSError('unreadable banked evidence')
+        self.assertEqual(build.main([]), 1)
+        for gate in ('claims', 'single_view', 'ownership', 'readme'):
+            self.mocks[gate].assert_called_once()
+        self.mocks['cleanliness'].assert_called_once_with(write=False, dc_origins=[])
 
     def test_missing_pinned_input_fails_before_compile_or_ledger_changes(self):
         self.preflight.side_effect = inputs.InputError("Dreamcast executable missing")
@@ -124,6 +149,30 @@ class BuildModeTest(unittest.TestCase):
         self.assertEqual({p.name for p in normalized.iterdir()},
                          {'kept.obj', 'kept.obj.stamp.json', 'kept.symbols.tsv'})
         self.assertTrue((raw / 'removed.obj').exists())
+
+    def test_prune_handles_nested_units_and_interrupted_stamp_writes(self):
+        for side, obj_suffix in (('base', '.obj'), ('target', '.c.obj')):
+            raw = self.root / 'build/objdiff' / side
+            normalized = self.root / 'build/objdiff/normalized' / side
+            expected = set()
+            for unit in ('kept', 'nested/kept', 'removed/kept'):
+                obj = raw / (unit + obj_suffix)
+                obj.parent.mkdir(parents=True, exist_ok=True)
+                obj.write_bytes(b'raw')
+                cached = normalized / (unit + obj_suffix)
+                cached.parent.mkdir(parents=True, exist_ok=True)
+                for file in (cached, cached.with_suffix('.symbols.tsv'),
+                             cached.with_name(cached.name + '.stamp.json')):
+                    file.write_bytes(b'cache')
+                    if not unit.startswith('removed/'):
+                        expected.add(file)
+            # Both legacy unnamed temps and new identifiable temps are debris.
+            for name in ('tmp123abc', 'nested/.stamp-abcd.tmp'):
+                (normalized / name).write_bytes(b'incomplete stamp')
+            with patch.object(delink.common, 'HOMM3_DIR', self.root):
+                delink._prune_normalized([{'unit': 'kept'}, {'unit': 'nested/kept'}])
+            self.assertEqual({p for p in normalized.rglob('*') if p.is_file()}, expected)
+            self.assertTrue((raw / ('removed/kept' + obj_suffix)).exists())
 
 
 if __name__ == "__main__":

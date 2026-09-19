@@ -442,6 +442,7 @@ class CandidateParser:
         self.sources = {}
 
     def __call__(self, path: Path, mangled: str) -> dict:
+        display_path = path
         path = path.resolve()
         if self.commands is None:
             compiler, includes = clang.clang_bin(), clang.mirror()
@@ -483,7 +484,7 @@ class CandidateParser:
             self.sources[path] = (raw, hashlib.sha256(raw.encode()).hexdigest())
         source, digest = self.sources[path]
         indexed, returncode, diagnostics = self.dumps[key]
-        candidate = extract_function(indexed.get(mangled, []), mangled, path, source)
+        candidate = extract_function(indexed.get(mangled, []), mangled, display_path, source)
         if returncode:
             candidate['gaps'].append('Clang reported TU errors; selected definition was recovered, '
                                      'but the audit is incomplete:\n' + diagnostics)

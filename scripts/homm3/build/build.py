@@ -17,7 +17,7 @@ from __future__ import annotations
 import subprocess
 import sys
 
-from homm3.core import common
+from homm3.core import common, inputs
 
 ROOT = common.HOMM3_DIR
 
@@ -40,7 +40,6 @@ def main(argv=None) -> int:
         return 1
 
     if not fast:
-        from homm3.core import inputs
         try:
             for executable in (inputs.RETAIL, inputs.DREAMCAST):
                 inputs.stage_executable(executable)
@@ -85,9 +84,9 @@ def main(argv=None) -> int:
     status.cmd_check(report, fingerprint_pair=fingerprint_pair)
     status.cmd_update(report, fingerprint_pair=fingerprint_pair, history_patch=history_patch)
 
-    # EVERY evidence/source gate runs, even after one fails. Collect, report
-    # everything, fail once; these gates, not a local objdiff maximum, decide
-    # whether the reconstruction is admissible.
+    # Run every independent evidence/source gate, even after one fails.
+    # Report unavailable evidence as fatal; dependent checks cannot certify it.
+    # These gates, not a local objdiff maximum, decide admissibility.
     failed = False
 
     # banked_rows runs alongside cmd_check, not inside it: the ratchet
@@ -95,11 +94,18 @@ def main(argv=None) -> int:
     # row that used to be there still is. Clean ratchet + lost row is
     # exactly how army::can_shoot left the ledger green (2026-08-15).
     from homm3.match import banked_rows, single_view, verify_va_claims, source_ownership
-    origins = source_ownership.read_dc(include_declarations=True)
+    origins = None
     for gate in (banked_rows, verify_va_claims, single_view, source_ownership):
-        extra = ({'history_patch': history_patch} if gate is banked_rows else
-                 {'origins': origins} if gate is source_ownership else {})
-        fatal = gate.run_gate(**extra)
+        try:
+            if gate is source_ownership:
+                origins = source_ownership.read_dc(include_declarations=True)
+                fatal = source_ownership.run_gate(origins=origins)
+            elif gate is banked_rows:
+                fatal = banked_rows.run_gate(history_patch=history_patch)
+            else:
+                fatal = gate.run_gate()
+        except (inputs.InputError, OSError) as exc:
+            fatal = [f'{gate.__name__}: evidence unavailable: {exc}']
         if fatal:
             failed = True
             for line in fatal:
@@ -109,7 +115,11 @@ def main(argv=None) -> int:
     # a down-only bless recorded off a failing tree would bake in state
     # nobody reviewed. Check always, write only when clean.
     from homm3.cleanliness import board
-    violations = board.check_and_roll(write=not failed, dc_origins=origins)
+    if origins is None:
+        # Missing evidence must not look like an empty, clean DC inventory.
+        violations = ['cleanliness: cannot check without Dreamcast origins; floors unchanged']
+    else:
+        violations = board.check_and_roll(write=not failed, dc_origins=origins)
     if violations:
         failed = True
         for line in violations:
