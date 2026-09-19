@@ -15,7 +15,7 @@ import subprocess
 import sys
 from homm3.core.common import HOMM3_DIR
 from homm3.vc6._unit import flags_for_unit
-from homm3.vc6.test_rmg_families import generator
+from experiments._support import generator
 from homm3.build.canonicalize_data_symbols import CoffObject
 
 POINTER = '?addObject@type_random_map@@QAEXPAVtype_object@@UTRmgMapPosition@@@Z'

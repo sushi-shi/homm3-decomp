@@ -1,9 +1,56 @@
 # Generated C++ source families
 
 Historical experiment filenames below refer to the searches recorded here.
-Per-function scripts and fixtures are retired once their targets reach MAX
-100%; their last versions remain in Git history. Use the general JSON runner
-for new searches and keep temporary inputs under ignored `build/`.
+Per-function behavioral fixtures have been retired, as have generators for
+completed matches; their last versions remain in Git history. New matching
+uses VC6/retail comparison and the JSON runner. Keep any targeted behavioral
+diagnostic under ignored `build/`, rather than maintaining a mock game suite.
+
+## Current workflow
+
+The general runner consumes JSON directly. Put a manifest under ignored `build/`
+and name the affected units explicitly, including shared-header consumers:
+
+```json
+{
+  "schema": 1,
+  "units": ["your_unit"],
+  "source": "src/your_unit.cpp",
+  "axes": [{
+    "name": "count_lifetime",
+    "find": "    return items.size();",
+    "options": [
+      {"name": "unchanged"},
+      {"name": "named_result", "replace": "    int count = items.size();\n    return count;"}
+    ]
+  }]
+}
+```
+
+Replace the illustrative unit, source and statements with evidence-backed edits.
+Each anchor must occur once. Axes must not overlap, and their first options must
+preserve the source. An option's `extra_edits` couples edits across files; each
+edit can override `source` and use `find`/`replace` or `insert_before`/`insert_after`
+with `text`. Paths are relative to `HOMM3_DIR` and must stay under `src/` or
+`include/`. `load_manifest` in `scripts/homm3/vc6/source_families.py` defines the
+schema.
+
+```sh
+PYTHONPATH=scripts python -m homm3.vc6.source_families build/choices.json --validate-only
+PYTHONPATH=scripts python -m homm3.vc6.source_families build/choices.json --width 60 --keep 10 --jobs 6
+```
+
+Run in the active worktree with `HOMM3_DIR` set there and a fresh full-build
+checkpoint. The driver verifies the unchanged baseline and opposite-corner
+reproduction before searching. Adopt supported source deliberately and finish
+with full `homm3 build`. Per-function mock behavior suites are not prerequisites;
+use a temporary diagnostic only for a concrete unresolved semantic question.
+
+## Historical findings
+
+The sections below record earlier searches, not a checklist of required tools
+or fixtures. Consult the relevant finding when it helps explain a current
+mismatch; old anchors and scores require fresh evidence and measurement.
 
 ## RMG placement: separate mask and world-coordinate ownership
 
@@ -1072,8 +1119,6 @@ two levels, seven obstacle patterns, and four deliberately wrong controls:
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-ray-reload-family.py build/rmg-ray-reload.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-ray-recurrence-family.py build/rmg-ray-recurrence.json
-PYTHONPATH=scripts python -m unittest homm3.vc6.test_rmg_voronoi_vertices
-PYTHONPATH=scripts python scripts/experiments/test_rmg_ray_reload.py
 ```
 
 The quadrant-ownership followup `generate-rmg-noise-quadrant-family.py`
@@ -1094,7 +1139,6 @@ and rejects four wrong midpoint/sample/degeneracy/variation controls:
 
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-noise-midpoint-family.py build/rmg-noise-midpoint.json
-PYTHONPATH=scripts python scripts/experiments/test_rmg_noise_midpoint.py
 ```
 
 `build/source-families/<context>/` retains the input, snapshot, candidate trees,
@@ -1111,7 +1155,6 @@ ordinary position-overload delegation remain intact:
 
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-map-accessor-family.py build/rmg-map-accessor.json
-PYTHONPATH=scripts python scripts/experiments/test_rmg_map_accessor.py
 ```
 
 The independent pointer-offset oracle checks 882 in-bounds coordinates per
@@ -1229,7 +1272,6 @@ object-identical neutral parent) and adds 50 const-value/copied-temporary forms:
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-connect-owners-family.py build/rmg-connect-owners.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-connect-owners-family.py build/rmg-connect-snapshots.json --parents-from build/source-families/OWNER_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python scripts/experiments/test_rmg_connect_owners.py
 ```
 
 Run the first manifest before generating its follow-up. Source/header snapshots,
@@ -1293,7 +1335,6 @@ height-load schedule are still unresolved:
 
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-painter-area-family.py build/rmg-painter-area.json
-PYTHONPATH=scripts python scripts/experiments/test_rmg_painter_area.py
 ```
 
 The native fixture uses the actual accessor bodies and checks dimension,
@@ -1315,7 +1356,6 @@ coordinate and mutated-base controls. It verifies owner fields remain intact.
 
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-map-base-family.py build/rmg-map-base.json
-PYTHONPATH=scripts python scripts/experiments/test_rmg_map_accessor.py
 ```
 
 The Voronoi construction family preserves the four perimeter factories and
@@ -1560,7 +1600,6 @@ Both tests pass with the receiver family and with the return frontier.
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-prototype-receiver-family.py build/rmg-prototype-receivers.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-prototype-receiver-family.py build/rmg-prototype-returns.json --returns-from build/source-families/RECEIVER_CONTEXT/checkpoint.json
-HOMM3_PROTOTYPE_SELECTOR_MANIFEST=build/rmg-prototype-returns.json PYTHONPATH=scripts python -m unittest homm3.vc6.test_rmg_prototype_polish
 ```
 
 The placement-rule reader (`0x536560`) has one surplus count-one push at its
@@ -1757,7 +1796,6 @@ The expanded oracle passes. The extra retail move remains unresolved.
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-zone-fit-family.py build/rmg-zone-fit.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-zone-fit-family.py build/rmg-zone-fit-displacements.json --displacements
-PYTHONPATH=scripts python scripts/experiments/test_rmg_zone_fit.py
 ```
 
 ### Map-size return ownership
@@ -1839,7 +1877,6 @@ PYTHONPATH=scripts python scripts/experiments/generate-rmg-junction-prepare-fami
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-junction-prepare-family.py build/rmg-junction-bindings.json --bindings-from build/source-families/JUNCTION_CONTEXT/checkpoint.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-junction-prepare-family.py build/rmg-junction-entrances.json --entrances-from build/source-families/BINDING_CONTEXT/checkpoint.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-junction-prepare-family.py build/rmg-junction-predecessors.json --predecessors-from build/source-families/ENTRANCE_CONTEXT/checkpoint.json
-HOMM3_JUNCTION_MANIFEST=build/rmg-junction-predecessors.json PYTHONPATH=scripts python scripts/experiments/test_rmg_junction_prepare.py
 ```
 
 The oracle also accepts colon-separated manifest paths to cover multiple
@@ -1866,7 +1903,6 @@ VC6 build passes with no further ledger changes, preserving 77.5209%.
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-junction-scan-family.py build/rmg-junction-scans.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-junction-scan-family.py build/rmg-junction-receivers.json --receivers-from build/source-families/SCAN_CONTEXT/checkpoint.json
-HOMM3_JUNCTION_MANIFEST=build/rmg-junction-receivers.json PYTHONPATH=scripts python scripts/experiments/test_rmg_junction_prepare.py
 ```
 
 ### Object-distance flood lifetimes (0x5402a0)
@@ -1910,7 +1946,6 @@ regressions pass. This checkpoint does not close the object-distance flood.
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-add-object-family.py build/rmg-add-object.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-add-object-family.py build/rmg-add-object-coordinates.json --coordinates-from build/source-families/QUEUE_CONTEXT/checkpoint.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-add-object-family.py build/rmg-add-object-seeds.json --seeds-from build/source-families/COORDINATE_CONTEXT/checkpoint.json
-HOMM3_ADD_OBJECT_MANIFEST=build/rmg-add-object-coordinates.json:build/rmg-add-object-seeds.json PYTHONPATH=scripts python scripts/experiments/test_rmg_add_object.py
 ```
 
 ### Key-tent guard ownership and cleanup (0x54b8c0)
@@ -1972,7 +2007,6 @@ PYTHONPATH=scripts python scripts/experiments/generate-rmg-key-tent-family.py bu
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-key-tent-family.py build/rmg-key-tent-receivers.json --receivers-from build/source-families/KEY_TENT_CONTEXT/checkpoint.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-key-tent-family.py build/rmg-key-tent-results.json --results-from build/source-families/RECEIVER_CONTEXT/checkpoint.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-key-color-helper-family.py build/source-families/RECEIVER_CONTEXT/checkpoint.json build/rmg-key-color-helper.json
-HOMM3_KEY_TENT_MANIFEST=build/rmg-key-tent-receivers.json:build/rmg-key-tent-results.json:build/rmg-key-color-helper.json PYTHONPATH=scripts python scripts/experiments/test_rmg_key_tent.py
 ```
 
 ### Object-removal coordinate ownership (0x54bc50)
@@ -2101,7 +2135,6 @@ retain their previous scores. The unchanged-source header writer moves
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-connection-queue-family.py build/rmg-connection-queue.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-connection-queue-family.py build/rmg-connection-local.json --local
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-connection-queue-family.py build/rmg-connection-lookups.json --lookups-from build/source-families/LOCAL_CONTEXT/checkpoint.json
-HOMM3_CONNECTION_QUEUE_MANIFEST=build/rmg-connection-local.json PYTHONPATH=scripts python scripts/experiments/test_rmg_connection_queue.py
 ```
 
 The other first-population frontiers use `--parents-from`, `--pointers-from`
@@ -2161,9 +2194,7 @@ are not x86 ABI evidence; successful allocation and bounded costs are assumed.
 
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-queue-family.py build/rmg-water-queue.json
-PYTHONPATH=scripts python scripts/experiments/test_rmg_water_queue.py
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-queue-family.py build/rmg-water-queue-frontier.json --frontier
-HOMM3_WATER_QUEUE_MANIFEST=build/rmg-water-queue-frontier.json PYTHONPATH=scripts python scripts/experiments/test_rmg_water_queue.py
 ```
 
 After adoption the generator recognizes the selected source as its unchanged
@@ -2197,7 +2228,6 @@ cleanup. The canonical queue helper, signatures and vector types stay intact.
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-queue-family.py build/rmg-water-queue-lifetimes.json --lifetimes
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-queue-family.py build/rmg-water-queue-iterator-controls.json --iterator-controls
-HOMM3_WATER_QUEUE_MANIFEST=build/rmg-water-queue-lifetimes.json PYTHONPATH=scripts python scripts/experiments/test_rmg_water_queue.py
 ```
 
 The native oracle passes all sixty lifetime forms plus the initial controls
@@ -2315,7 +2345,6 @@ source hashes and choices, before adoption. No loop or getter rewrite is adopted
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-prepare-family.py build/rmg-water-prepare.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-prepare-family.py build/rmg-water-prepare-loops.json --loops-from build/source-families/PREPARE_CONTEXT/checkpoint.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-prepare-family.py build/rmg-water-prepare-getters.json --getters-from build/source-families/LOOP_CONTEXT/checkpoint.json
-HOMM3_WATER_PREPARE_MANIFEST=build/rmg-water-prepare-getters.json PYTHONPATH=scripts python scripts/experiments/test_rmg_water_prepare.py
 ```
 
 Run each parent search before generating its frontier. Complete source/header
@@ -2363,7 +2392,6 @@ contain 180 scored states, 159 distinct sources and ninety code identities.
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-prepare-family.py build/rmg-water-prepare-selection.json --selection
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-prepare-family.py build/rmg-water-prepare-scan.json --scan-from build/source-families/SELECTION_CONTEXT/checkpoint.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-prepare-family.py build/rmg-water-prepare-upper-bounds.json --bounds-from build/source-families/SCAN_CONTEXT/checkpoint.json
-HOMM3_WATER_PREPARE_MANIFEST=build/rmg-water-prepare-selection.json PYTHONPATH=scripts python scripts/experiments/test_rmg_water_prepare.py
 ```
 
 Each population passes the independent caller oracle with 119 original/new
@@ -2434,8 +2462,6 @@ functions out of 363, so this partial recovery is not whole-TU closure.
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-obstacle-clearance-family.py build/rmg-clearance.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-obstacle-clearance-family.py build/rmg-clearance-upper.json --upper-corners
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-obstacle-clearance-family.py build/rmg-clearance-corners.json --corners-from build/source-families/UPPER_CONTEXT/checkpoint.json
-HOMM3_CLEARANCE_MANIFEST=build/rmg-clearance-corners.json PYTHONPATH=scripts python scripts/experiments/test_rmg_obstacle_clearance.py
-PYTHONPATH=scripts python scripts/experiments/test_rmg_obstacle_clearance.py
 ```
 
 ### Underground decoration lifetimes (0x5439e0)
@@ -2521,7 +2547,6 @@ PYTHONPATH=scripts python scripts/experiments/generate-rmg-underground-family.py
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-underground-family.py build/rmg-underground-origins.json --origins-from build/source-families/UNDERGROUND_CONTEXT/checkpoint.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-underground-family.py build/rmg-underground-constructor.json --constructor-from build/source-families/UNDERGROUND_CONTEXT/checkpoint.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-underground-family.py build/rmg-underground-controls.json --constructor-from build/source-families/UNDERGROUND_CONTEXT/checkpoint.json --constructor-controls
-HOMM3_UNDERGROUND_MANIFEST=build/rmg-underground-origins.json PYTHONPATH=scripts python scripts/experiments/test_rmg_underground.py
 ```
 
 The RMG strength-family generator demonstrates a structural follow-up: it
@@ -2647,7 +2672,6 @@ offset to the upper edge.
 
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-diagonal-limit-family.py build/rmg-diagonal-limit-family.json
-PYTHONPATH=scripts python scripts/experiments/test_rmg_diagonal_limit.py build/rmg-diagonal-limit-family.json
 ```
 
 For `repairTerrainPoint`, sixteen coordinate-accessor forms produce sixteen
@@ -2662,10 +2686,7 @@ phase. The native predicate/workflow oracles include negative controls.
 
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-clamp-structure-family.py build/rmg-clamp-structure.json
-PYTHONPATH=scripts python scripts/experiments/test_rmg_clamp_structure.py
 PYTHONPATH=scripts python scripts/experiments/terrain-gap-accessors.py build/terrain-gap-accessors.json
-PYTHONPATH=scripts python scripts/experiments/terrain-gap-accessors-test.py
-PYTHONPATH=scripts python scripts/experiments/terrain-repair-workflow-test.py
 ```
 
 The border family tests scalar bounds against one rectangle or two corner
@@ -3277,13 +3298,11 @@ open rather than being hidden by a helper rewrite or false inline boundary.
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-commit-family.py \
   build/rmg-group-commit.json
-PYTHONPATH=scripts python -m unittest homm3.vc6.test_rmg_group_commit
 PYTHONPATH=scripts python -m homm3.vc6.source_families \
   build/rmg-group-commit.json --width 60 --keep 10 --jobs 6
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-commit-family.py \
   build/rmg-group-commit-parents.json --parents-from build/source-families/COMMIT_CONTEXT/checkpoint.json
 HOMM3_GROUP_COMMIT_MANIFEST=build/rmg-group-commit-parents.json PYTHONPATH=scripts \
-  python -m unittest homm3.vc6.test_rmg_group_commit
 PYTHONPATH=scripts python -m homm3.vc6.source_families \
   build/rmg-group-commit-parents.json --width 60 --keep 10 --jobs 6
 ```
@@ -3342,7 +3361,6 @@ are not a whole-TU closure claim.
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-place-family.py \
   build/rmg-group-place.json
 HOMM3_GROUP_PLACE_MANIFEST=build/rmg-group-place.json PYTHONPATH=scripts \
-  python -m unittest homm3.vc6.test_rmg_group_place
 PYTHONPATH=scripts python -m homm3.vc6.source_families \
   build/rmg-group-place.json --width 60 --keep 10 --jobs 6
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-place-family.py \
@@ -3410,7 +3428,6 @@ The closing full VC6 build passes all gates with no ledger changes.
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-place-homes-family.py build/rmg-group-place-homes.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-place-homes-family.py build/rmg-group-place-phases.json --phases-from build/source-families/HOMES_CONTEXT/checkpoint.json
-HOMM3_GROUP_PLACE_MANIFEST=build/rmg-group-place-homes.json:build/rmg-group-place-phases.json PYTHONPATH=scripts python -m unittest homm3.vc6.test_rmg_group_place
 ```
 
 `generate-rmg-group-select-family.py` targets `placeTreasureGroup` at
@@ -3451,7 +3468,6 @@ experimental competitors also move `writeMapHeader`.
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-select-family.py \
   build/rmg-group-select.json
 HOMM3_GROUP_SELECT_MANIFEST=build/rmg-group-select.json PYTHONPATH=scripts \
-  python -m unittest homm3.vc6.test_rmg_group_select
 PYTHONPATH=scripts python -m homm3.vc6.source_families \
   build/rmg-group-select.json --width 60 --keep 10 --jobs 6
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-select-family.py \
@@ -3548,7 +3564,6 @@ source model is adopted. The canonical size interface itself is unchanged.
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-reset-family.py \
   build/rmg-group-reset.json
 HOMM3_GROUP_RESET_MANIFEST=build/rmg-group-reset.json PYTHONPATH=scripts \
-  python -m unittest homm3.vc6.test_rmg_group_reset
 PYTHONPATH=scripts python -m homm3.vc6.source_families \
   build/rmg-group-reset.json --width 60 --keep 10 --jobs 6
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-reset-family.py \
@@ -3606,7 +3621,6 @@ an integer sum through signed-overflow arithmetic.
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-fill-family.py \
   build/rmg-group-fill.json
 HOMM3_GROUP_FILL_MANIFEST=build/rmg-group-fill.json PYTHONPATH=scripts \
-  python -m unittest homm3.vc6.test_rmg_group_fill
 PYTHONPATH=scripts python -m homm3.vc6.source_families \
   build/rmg-group-fill.json --width 60 --keep 10 --jobs 3
 ```
@@ -4006,7 +4020,6 @@ both new populations and all eight centroid negative controls.
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-recenter-family.py build/rmg-recenter-entry-bindings.json --entry-bindings
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-recenter-family.py build/rmg-recenter-zeroing.json --zeroing-from build/source-families/ENTRY_CONTEXT/checkpoint.json
-HOMM3_RECENTER_MANIFEST=build/rmg-recenter-zeroing.json PYTHONPATH=scripts python -m unittest homm3.vc6.test_rmg_recenter
 ```
 
 ### Island interior fill
@@ -4129,7 +4142,6 @@ both map-writer tests pass, including the complete 220-body union.
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-map-writer-scans-family.py build/rmg-map-writer-scans.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-map-writer-scans-family.py build/rmg-map-writer-owners-fixed.json --owners-from build/source-families/SCAN_CONTEXT/checkpoint.json
-HOMM3_MAP_WRITER_MANIFEST=build/rmg-map-writer.json:build/rmg-map-writer-buffers.json:build/rmg-map-writer-scans.json:build/rmg-map-writer-owners-fixed.json PYTHONPATH=scripts python scripts/experiments/test_rmg_map_writer.py
 ```
 
 `test_rmg_map_writer.py` imports the actual coordinate declaration and abstract
@@ -4149,7 +4161,6 @@ forms remain explicit semantic controls without importing old compiler scores.
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-map-writer-family.py build/rmg-map-writer.json
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-map-writer-family.py build/rmg-map-writer-buffers.json --buffers-from build/source-families/MAP_WRITER_CONTEXT/checkpoint.json
-HOMM3_MAP_WRITER_MANIFEST=build/rmg-map-writer.json:build/rmg-map-writer-buffers.json PYTHONPATH=scripts python scripts/experiments/test_rmg_map_writer.py
 ```
 
 ### Prototype wire-buffer reconstruction

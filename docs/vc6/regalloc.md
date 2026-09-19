@@ -1,5 +1,11 @@
 # The C2 register allocator - preference ranking, assignment order, why-reg v2
 
+Historical experiment filenames below refer to the searches recorded here.
+Per-function behavioral fixtures have been retired, as have generators for
+completed matches; their last versions remain in Git history. New matching
+uses VC6/retail comparison and the JSON runner. Keep any targeted behavioral
+diagnostic under ignored `build/`, rather than maintaining a mock game suite.
+
 Phase 4 of the vc6 area, deliberately a MINIMUM SLICE: reverse-engineer
 enough of C2's register-assignment ORDERINGS and TIE-BREAKS to predict the
 behavior catalog's **B1** class (the whole-body ESI/EDI/EBX role swap - the
