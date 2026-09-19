@@ -12,6 +12,7 @@ failure) and as plain pytest test functions.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -74,12 +75,53 @@ def test_unknown_schema_is_refused():
         assert problems and "unknown schema" in problems[0]
 
 
+def test_same_size_timestamp_replacement_is_refused():
+    with tempfile.TemporaryDirectory() as tmp:
+        raw, normalized = _tree(Path(tmp))
+        assert not freshness_problems(normalized)
+        stat = raw.stat()
+        raw.write_bytes(b'RAW object bytes')
+        os.utime(raw, ns=(stat.st_atime_ns, stat.st_mtime_ns))
+        assert freshness_problems(normalized)
+
+
+def test_corrupted_output_is_refused():
+    with tempfile.TemporaryDirectory() as tmp:
+        _, normalized = _tree(Path(tmp))
+        normalized.write_bytes(b'corrupted output')
+        assert any('output changed' in p for p in freshness_problems(normalized))
+
+
+def test_missing_implementation_provenance_is_refused():
+    with tempfile.TemporaryDirectory() as tmp:
+        _, normalized = _tree(Path(tmp))
+        stamp = stamp_path(normalized)
+        payload = json.loads(stamp.read_text())
+        del payload['inputs']['tool:normalize_objs.py']
+        stamp.write_text(json.dumps(payload))
+        assert any('required tool:' in p for p in freshness_problems(normalized))
+
+
+def test_malformed_records_are_refused():
+    with tempfile.TemporaryDirectory() as tmp:
+        _, normalized = _tree(Path(tmp))
+        stamp = stamp_path(normalized)
+        payload = json.loads(stamp.read_text())
+        payload['inputs'] = {'raw': None}
+        stamp.write_text(json.dumps(payload))
+        assert freshness_problems(normalized)
+
+
 _CONTROLS = (
     test_fresh_pair_passes,
     test_missing_stamp_is_refused,
     test_changed_raw_input_is_refused,
     test_missing_raw_input_is_refused,
     test_unknown_schema_is_refused,
+    test_same_size_timestamp_replacement_is_refused,
+    test_corrupted_output_is_refused,
+    test_missing_implementation_provenance_is_refused,
+    test_malformed_records_are_refused,
 )
 
 

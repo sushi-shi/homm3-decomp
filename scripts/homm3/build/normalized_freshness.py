@@ -16,6 +16,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import tempfile
 from pathlib import Path
 
 STAMP_SUFFIX = ".stamp.json"
@@ -36,24 +37,46 @@ STAMP_SUFFIX = ".stamp.json"
 # 14 refuses ownerless fallback when an initializer supplies contradictory
 # callback-registration evidence.
 # 15 canonicalizes reviewed anonymous-namespace paths and tracks their table.
-STAMP_SCHEMA = 15
+# 16 verifies output bytes and transform implementations; no stat-based memo.
+STAMP_SCHEMA = 16
 
-_HASH_CACHE: dict[str, tuple[tuple[int, int], str]] = {}
+
+class ValidationContext:
+    """One operation's reads; writers forget changed outputs.
+
+    Never retain this across commands, delinking or external input changes.
+    """
+    def __init__(self):
+        self.hashes = {}
+        self.paths = {}
+
+    def resolve(self, path: Path) -> Path:
+        if path not in self.paths:
+            self.paths[path] = path.resolve()
+        return self.paths[path]
+
+    def digest(self, path: Path) -> str:
+        path = self.resolve(path)
+        if path not in self.hashes:
+            self.hashes[path] = _sha256(path)
+        return self.hashes[path]
+
+    def forget(self, path: Path):
+        self.hashes.pop(self.resolve(path), None)
 
 
 def _sha256(path: Path) -> str:
-    key = str(path)
-    stat = path.stat()
-    identity = (stat.st_mtime_ns, stat.st_size)
-    cached = _HASH_CACHE.get(key)
-    if cached and cached[0] == identity:
-        return cached[1]
     digest = hashlib.sha256()
     with open(path, "rb") as stream:
         for block in iter(lambda: stream.read(1 << 20), b""):
             digest.update(block)
-    _HASH_CACHE[key] = (identity, digest.hexdigest())
-    return _HASH_CACHE[key][1]
+    return digest.hexdigest()
+
+
+def implementation_inputs() -> dict[str, Path]:
+    directory = Path(__file__).parent
+    return {'tool:' + name: directory / name for name in (
+        'normalized_freshness.py', 'normalize_objs.py', 'canonicalize_data_symbols.py')}
 
 
 def stamp_path(output: Path) -> Path:
@@ -69,25 +92,43 @@ def _portable_reference(input_path: Path, stamp_directory: Path) -> str:
         return str(resolved)
 
 
-def write_stamp(output: Path, inputs: dict[str, Path]) -> Path:
+def write_stamp(output: Path, inputs: dict[str, Path], *, context: ValidationContext | None = None) -> Path:
     """Record the content identity of every input consumed for ``output``."""
     path = stamp_path(output)
+    context = context or ValidationContext()
+    context.forget(output)
+    inputs = {**inputs, **implementation_inputs()}
     payload = {
         "schema": STAMP_SCHEMA,
+        "output_sha256": context.digest(output),
         "inputs": {
             role: {
                 "path": _portable_reference(Path(input_path), path.parent),
-                "sha256": _sha256(Path(input_path)),
+                "sha256": context.digest(Path(input_path)),
             }
             for role, input_path in sorted(inputs.items())
         },
     }
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    sidecar = output.with_suffix('.symbols.tsv')
+    if sidecar.is_file():
+        context.forget(sidecar)
+        payload['sidecar_sha256'] = context.digest(sidecar)
+    # A killed writer must leave an old (invalid) stamp or a complete new one.
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', dir=path.parent, delete=False) as stream:
+            temporary = Path(stream.name)
+            stream.write(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
     return path
 
 
 def freshness_problems(output: Path, _seen: set | None = None, *,
-                       required_inputs: dict[str, Path] | None = None) -> list[str]:
+                       required_inputs: dict[str, Path] | None = None,
+                       context: ValidationContext | None = None) -> list[str]:
     """Return every provenance problem for one normalized object.
 
     Each recorded input must exist and hash to its recorded identity. When a
@@ -99,8 +140,9 @@ def freshness_problems(output: Path, _seen: set | None = None, *,
     an earlier raw-only stamp must never stand in for a finished paired pass.
     """
     output = Path(output)
+    context = context or ValidationContext()
     seen = _seen if _seen is not None else set()
-    key = str(output.resolve())
+    key = str(context.resolve(output))
     if key in seen:
         return []
     seen.add(key)
@@ -114,28 +156,37 @@ def freshness_problems(output: Path, _seen: set | None = None, *,
     except (json.JSONDecodeError, OSError) as exc:
         problems.append("%s stamp is unreadable (%s); run `homm3 build`" % (output, exc))
         return problems
-    if payload.get("schema") != STAMP_SCHEMA:
+    if not isinstance(payload, dict) or payload.get("schema") != STAMP_SCHEMA:
         problems.append("%s stamp has unknown schema; run `homm3 build`" % output)
         return problems
     records = payload.get("inputs", {})
-    for role, required in (required_inputs or {}).items():
+    if not isinstance(records, dict) or any(not isinstance(r, dict)
+            or not isinstance(r.get('path'), str) for r in records.values()):
+        return [f'{output} stamp has invalid input records; run `homm3 build`']
+    if not output.is_file() or context.digest(output) != payload.get('output_sha256'):
+        problems.append(f'{output} is stale: normalized output changed; run `homm3 build`')
+    sidecar = output.with_suffix('.symbols.tsv')
+    if 'sidecar_sha256' in payload and (not sidecar.is_file()
+            or context.digest(sidecar) != payload['sidecar_sha256']):
+        problems.append(f'{output} is stale: symbol sidecar changed; run `homm3 build`')
+    for role, required in {**(required_inputs or {}), **implementation_inputs()}.items():
         record = records.get(role)
         if record is None:
             problems.append("%s stamp lacks required %s input" % (output, role))
-        elif (stamp.parent / record.get("path", "")).resolve() != required.resolve():
+        elif context.resolve(stamp.parent / record.get("path", "")) != context.resolve(required):
             problems.append("%s stamp has a different %s input path" % (output, role))
     for role, record in sorted(records.items()):
         input_path = Path(record.get("path", ""))
         if not input_path.is_absolute():
-            input_path = (stamp.parent / input_path).resolve()
+            input_path = context.resolve(stamp.parent / input_path)
         if not input_path.is_file():
             problems.append("%s input %s is missing: %s" % (output, role, input_path))
             continue
-        if _sha256(input_path) != record.get("sha256"):
+        if context.digest(input_path) != record.get("sha256"):
             problems.append(
                 "%s is stale: %s input changed (%s); run `homm3 build`" %
                 (output, role, input_path))
             continue
         if stamp_path(input_path).is_file():
-            problems.extend(freshness_problems(input_path, seen))
+            problems.extend(freshness_problems(input_path, seen, context=context))
     return problems

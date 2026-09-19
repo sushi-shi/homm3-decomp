@@ -30,6 +30,22 @@ TARGET_DIR = common.HOMM3_DIR / "build/objdiff/target"
 PDB = common.HOMM3_DIR / "build/pdb/HEROES3.pdb"
 
 
+def _prune_normalized(units):
+    normalized = common.HOMM3_DIR / 'build/objdiff/normalized'
+    for side in ('base', 'target'):
+        expected = set()
+        for unit in units:
+            name = unit['unit'] + ('.obj' if side == 'base' else '.c.obj')
+            raw = common.HOMM3_DIR / 'build/objdiff' / side / name
+            if raw.is_file():
+                expected.update((name, raw.with_suffix('.symbols.tsv').name,
+                                 name + '.stamp.json'))
+        for cached in (normalized / side).iterdir() if (normalized / side).exists() else ():
+            if (cached.is_file() and cached.name not in expected
+                    and cached.name.endswith(('.obj', '.symbols.tsv', '.stamp.json'))):
+                cached.unlink()
+
+
 def main(argv=None) -> int:
     rc = labels_source.main(["--all"])   # src macros -> claim fragments
     if rc:
@@ -66,14 +82,18 @@ def main(argv=None) -> int:
             copied += 1
         else:
             missing.append(name)
+    expected = {f"{u['unit']}.c.obj" for u in units} - {f'{u}.c.obj' for u in missing}
+    for stale in TARGET_DIR.glob('*.c.obj'):
+        if stale.name not in expected:
+            stale.unlink()
     print(f"[build delink] {copied} unit objects -> {TARGET_DIR}"
           + (f"; missing from delink: {', '.join(missing)}"
              if missing else ""))
 
-    normalized = common.HOMM3_DIR / "build/objdiff/normalized"
-    if normalized.exists():
-        shutil.rmtree(normalized)  # stale copies must not outlive a delink
+    # Preserve only cache entries backed by current raw objects. Normalization
+    # verifies complete input/tool/output hashes before reusing any entry.
     normalize_objs.main([])
+    _prune_normalized(units)
     configure.main()
     return 0
 
