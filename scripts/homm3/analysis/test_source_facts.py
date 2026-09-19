@@ -67,8 +67,11 @@ class TypeFactsTest(unittest.TestCase):
             self.assertFalse(result["findings"])
 
     def test_order_uses_distinct_source_statements_not_argument_or_machine_order(self):
-        dc = lambda name, line: {"name": name, "line": line, "file": "unit.cpp"}
-        cpp = lambda name, offset, statement: {"name": name, "line": offset, "offset": offset, "statement": statement}
+        def dc(name, line):
+            return {"name": name, "line": line, "file": "unit.cpp"}
+
+        def cpp(name, offset, statement):
+            return {"name": name, "line": offset, "offset": offset, "statement": statement}
         expected = {"calls": [dc("b", 20), dc("a", 10)]}  # reversed machine address order
         candidate = {"calls": [cpp("a", 1, 1), cpp("b", 2, 2)]}
         self.assertFalse(facts.compare_facts(expected, candidate)["findings"])
@@ -139,6 +142,11 @@ class AuthoredAstTest(unittest.TestCase):
                 parser = facts.CandidateParser(root, batch=True)
                 with patch.object(facts.subprocess, 'run', wraps=subprocess.run) as launches:
                     self.assertEqual([parser(path, name) for name in names], separate)
+                    alias = root / 'alias'
+                    alias.symlink_to(root, target_is_directory=True)
+                    aliased_path = alias / path.name
+                    candidate = parser(aliased_path, names[0])
+                    self.assertEqual(candidate, {**separate[0], 'path': str(aliased_path)})
                     self.assertEqual(launches.call_count, 1)
                     with self.assertRaisesRegex(ValueError, 'found 0'):
                         parser(path, '?missing@Widget@@QAEHXZ')

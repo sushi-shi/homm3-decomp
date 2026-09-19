@@ -19,6 +19,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 from homm3 import model
 from homm3.build import configure, data_manifest, normalize_objs, synth_pdb
@@ -33,16 +34,18 @@ PDB = common.HOMM3_DIR / "build/pdb/HEROES3.pdb"
 def _prune_normalized(units):
     normalized = common.HOMM3_DIR / 'build/objdiff/normalized'
     for side in ('base', 'target'):
+        directory = normalized / side
         expected = set()
         for unit in units:
-            name = unit['unit'] + ('.obj' if side == 'base' else '.c.obj')
+            name = Path(unit['unit'] + ('.obj' if side == 'base' else '.c.obj'))
             raw = common.HOMM3_DIR / 'build/objdiff' / side / name
             if raw.is_file():
-                expected.update((name, raw.with_suffix('.symbols.tsv').name,
-                                 name + '.stamp.json'))
-        for cached in (normalized / side).iterdir() if (normalized / side).exists() else ():
-            if (cached.is_file() and cached.name not in expected
-                    and cached.name.endswith(('.obj', '.symbols.tsv', '.stamp.json'))):
+                expected.update((name, name.with_suffix('.symbols.tsv'),
+                                 name.with_name(name.name + '.stamp.json')))
+        # This directory owns only disposable comparison files. Sweep all
+        # unreferenced files, including nested entries and interrupted writes.
+        for cached in directory.rglob('*'):
+            if cached.is_file() and cached.relative_to(directory) not in expected:
                 cached.unlink()
 
 
