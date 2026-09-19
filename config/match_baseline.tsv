@@ -62,7 +62,7 @@ adventureoptionswindow	??_GTAdventureOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	
 adventureoptionswindow	?handleMessage@CHeroWindowEx@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x5680	tokens1:b7d01152d099
 adventureoptionswindow	?windowHandler@TAdventureOptionsWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x5730	tokens1:90b4a0588d14
 advmgr	??0CAdvPopup@@QAE@HHHHI@Z	100.0000	100.0000	100.0000	0x1b040	tokens1:151b4beb568a
-advmgr	??0advManager@@QAE@XZ	90.2973	90.2973	90.2973	0x6df0	tokens1:b4968ae1fbeb
+advmgr	??0advManager@@QAE@XZ	100.0000	100.0000	100.0000	0x6df0	tokens1:ddc83899f3bb
 advmgr	??0type_point@@QAE@FFF@Z	100.0000	100.0000	100.0000	0x192b0	tokens1:d9e70aca8ab4
 advmgr	??1CAdvMgrNetMsgHandler@@UAE@XZ	100.0000	100.0000	100.0000	0x17d160	-
 advmgr	??1CAdvPopup@@UAE@XZ	100.0000	100.0000	100.0000	0x1b120	tokens1:1afdc1c654bf
@@ -4389,7 +4389,7 @@ town	?initializeBuildings@@YIXPAVtown@@PBVTownExtra@@@Z	100.0000	100.0000	100.00
 town	?initializeHordes@town@@SIXXZ	100.0000	100.0000	100.0000	0x1bdf60	tokens1:12a6d91f4df1
 town	?initializeSpells@town@@QAEXPBVTownExtra@@@Z	82.4621	82.4621	100.0000	0x1be600	tokens1:3349b095b152
 town	?isLegalBuilding@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c12a0	tokens1:d9bc20285f48
-town	?load@town@@QAEHPAVTAbstractFile@@H@Z	98.0017	98.0017	98.0017	0x1bcd60	tokens1:a165bbb6a0c2
+town	?load@town@@QAEHPAVTAbstractFile@@H@Z	98.1694	98.1694	98.1694	0x1bcd60	tokens1:9c647c175329
 town	?placeInMap@town@@QAEXHJE@Z	100.0000	100.0000	100.0000	0x1c13b0	tokens1:e8cebeabfe11
 town	?removeGarrisonHero@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be390	tokens1:1bd2ee308c11
 town	?save@town@@QAEHPAVTAbstractFile@@@Z	99.8370	99.8370	99.8370	0x1bd2f0	tokens1:631f41317b96
@@ -4499,7 +4499,7 @@ townmgr	?setupExtraStuff@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c33f0
 townmgr	?setupMage@townManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1d6ef0	tokens1:18737be4f1d0
 townmgr	?setupThievesGuild@TThievesGuildWindow@@QAEXH@Z	93.3637	95.5153	95.5153	0x1dda10	tokens1:e78e4d797f99
 townmgr	?setupTown@townManager@@QAEXE@Z	98.1050	98.1050	98.1050	0x1c6870	tokens1:ca6997620221
-townmgr	?setupWell@townManager@@QAEXPAVTCastleWindow@@@Z	98.5801	98.5801	98.5801	0x1dd390	tokens1:00199bf8d574
+townmgr	?setupWell@townManager@@QAEXPAVTCastleWindow@@@Z	100.0000	100.0000	100.0000	0x1dd390	tokens1:7beb14d3ae15
 townmgr	?sortStats@@YIXPAJPAC@Z	100.0000	100.0000	100.0000	0x1df160	tokens1:06396995d1ee
 townmgr	?swapHeroes@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5150	tokens1:73e6f1226e74
 townmgr	?unloadTown@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c70b0	tokens1:1f7f85cf251a

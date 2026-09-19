@@ -8301,8 +8301,8 @@ void townManager::setupWell(TCastleWindow* wellWin)
                                   i + 0x79, textMessage.m_extra);
         if (m_townToView->m_active
             & g_bitNumber[DWELLING_0_ID + m_currentDwellingIdOff[i]]) {
-            sprintf(g_text, "%d",
-                    m_townToView->getGrowthRate(m_currentDwellingIdOff[i]));
+            int growth = m_townToView->getGrowthRate(m_currentDwellingIdOff[i]);
+            sprintf(g_text, "%d", growth);
             textMessage.m_extraText = g_text;
             wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
                                       i + 0x81, textMessage.m_extra);

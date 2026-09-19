@@ -56,15 +56,25 @@ const int g_townNameFixedLength = 13;
 // generatorBonus, mageGuildSpellCounts, the three building masks, the
 // mage-guild spell grid, a 70-BYTE buffer unpacked one BIT at a time into
 // the bitset<70>, and a packed byte that splits three ways.
-// Residual (98.00%): frame exact at 0x54, branches and the whole call
-// multiset agree, and the only byte-level divergence is which stack slot
-// holds the spilled `this` - retail [ebp-8], ours [ebp-4]. Swapping the
-// two locals' declaration order is byte-flat, measured.
+// Residual (98.17%): branches and the whole call multiset agree. Retail
+// reads the five position/dock bytes through a SECOND char local, homed
+// at [ebp-1], while the other twelve byte reads share charBuffer in the
+// dead `infile` parameter home at [ebp+0xb] - recovering that local moves
+// the spilled `this` to retail's [ebp-8]. What is left is one frame slot:
+// retail also homes the name length in the dead `saveVersion` parameter
+// home at [ebp+0xc] (it loads the dword and masks 0xffff), so its frame
+// stays 0x54 where ours takes a fourth slot at [ebp-0x10] and 0x58.
+// Measured and byte-flat or worse: nameLength's declaration position
+// (function top, before/after spellBuf), short vs unsigned short, reading
+// into `saveVersion` itself (97.60), and hoisting `m_name = g_text` out of
+// the two arms (88.68). Swapping the two char locals' declaration order is
+// byte-flat.
 
 VA(0x005bcd60, 0x586)  // carcass promotion, dc 0x165628; anchor-callee armyGroup::load + LoadHeroId; callers game::Load and CCombatInitMsg::read
 int town::load(TAbstractFile* infile, int saveVersion)
 {
     char charBuffer;
+    char posBuffer;
     unsigned char spellBuf[70];
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
@@ -82,21 +92,21 @@ int town::load(TAbstractFile* infile, int saveVersion)
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     m_type = charBuffer;
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
         return -1;
-    m_mapX = charBuffer;
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    m_mapX = posBuffer;
+    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
         return -1;
-    m_mapY = charBuffer;
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    m_mapY = posBuffer;
+    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
         return -1;
-    m_mapZ = charBuffer;
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    m_mapZ = posBuffer;
+    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
         return -1;
-    m_dockSite = charBuffer;
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    m_dockSite = posBuffer;
+    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
         return -1;
-    m_dockSiteY = charBuffer;
+    m_dockSiteY = posBuffer;
 
     if (m_garrison.load(infile) < 0)
         return -1;
@@ -112,10 +122,10 @@ int town::load(TAbstractFile* infile, int saveVersion)
     m_isGrouped = charBuffer;
 
     if (saveVersion >= g_saveVersionTownNameString) {
-        unsigned short nameLength;
-        infile->read(&nameLength, sizeof(nameLength));
-        infile->read(g_text, nameLength);
-        g_text[nameLength] = 0;
+        int nameLength = 0;
+        infile->read(&nameLength, sizeof(unsigned short));
+        infile->read(g_text, nameLength & 0xffff);
+        g_text[nameLength & 0xffff] = 0;
         m_name = g_text;
     } else {
         infile->read(g_text, g_townNameFixedLength);

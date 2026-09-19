@@ -445,12 +445,16 @@ void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
 // grouping: the ground tileset and hero sample rows share one counted
 // loop (the bytes walk both off a single induction pointer at +0x360
 // with a -0x300 displacement, as in Close), the river and road rows are
-// small memsets starting at index 1 (slot 0 is the never-loaded "none"
-// entry, and each memset zeroes its own scratch register - the xor
-// eax/xor ecx pair), the boat and froth rows share a second counted
-// loop, and the four dword-array fills past the 16-byte unroll cutoff
-// (cursorIcons, flagIcons, boatFlagIcons, loopedSample) are rep-stosd
-// memsets. radarIcons is nulled twice - both stores are retail's.
+// counted loops starting at index 1 (slot 0 is the never-loaded "none"
+// entry; each loop unrolls to direct this-relative stores and zeroes its
+// own scratch register - the xor eax/xor ecx pair, which a memset pair
+// cannot produce because memset lea's its destination into ECX), the
+// boat and froth rows share a second counted loop, and the flag,
+// boat-flag and looped-sample fills are counted loops too: VC6
+// recognizes a constant-count zero fill and emits rep stosd for it, but
+// sets EDI up before ECX where a memset sets ECX up first. cursorIcons
+// is the one real memset here - its lea is hoisted ahead of the boat
+// loop. radarIcons is nulled twice - both stores are retail's.
 // radarOrigin is a BODY assignment from a type_point(0,0,0) temporary
 // (the masked ebp-0x14 temp copied as one dword), not an init-list item:
 // as an init-list item VC6 emits it in declaration order between the
@@ -481,8 +485,10 @@ advManager::advManager()
         m_groundTileset[i] = 0;
         m_heroSamples[i] = 0;
     }
-    memset(&m_riverTileset[1], 0, 4 * sizeof(CSprite*));
-    memset(&m_roadTileset[1], 0, 3 * sizeof(CSprite*));
+    for (int river = 1; river < 5; river++)
+        m_riverTileset[river] = 0;
+    for (int road = 1; road < 4; road++)
+        m_roadTileset[road] = 0;
     m_borderTileset = 0;
     m_arrowTileset = 0;
     m_gemIcons[0] = 0;
@@ -496,9 +502,13 @@ advManager::advManager()
         m_boatIcons[boat] = 0;
         m_boatFrothIcons[boat] = 0;
     }
-    memset(m_flagIcons, 0, sizeof(m_flagIcons));
-    memset(m_boatFlagIcons, 0, sizeof(m_boatFlagIcons));
-    memset(m_loopedSample, 0, sizeof(m_loopedSample));
+    for (int flag = 0; flag < 8; flag++)
+        m_flagIcons[flag] = 0;
+    for (int boatType = 0; boatType < 3; boatType++)
+        for (int owner = 0; owner < 8; owner++)
+            m_boatFlagIcons[boatType][owner] = 0;
+    for (int looped = 0; looped < LOOPING_SOUND_COUNT; looped++)
+        m_loopedSample[looped] = 0;
     m_radarIcons = 0;
     m_advWindow = 0;
     m_routeArray = 0;

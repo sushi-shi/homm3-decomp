@@ -1066,6 +1066,33 @@ intrinsics (`sqrt` → CRT call) — see 0.4.
   `call strcmp`. Compiled under the full game profile including /Op,
   corroborating that /Op leaves string intrinsics on)
 
+### D25. Zero-fill LOOP against `memset` — a distinguishable idiom
+VC6 recognises a constant-count zero fill written as a counted loop and lowers
+it to the same code a `memset` of that size lowers to, but **the two set up
+their registers in a different order**, so the bytes tell them apart:
+
+| source form | small count (unrolled) | large count (`rep stosd`) |
+|---|---|---|
+| `memset(dest, 0, n)` | `lea ecx,[esi+off]` base pointer, stores off ECX, one shared zero | `mov ecx,n` / `xor eax,eax` / `lea edi,[esi+off]` |
+| `for (i = a; i < b; i++) dest[i] = 0;` | direct `mov [esi+off],reg` stores, **its own zero register per loop** | `lea edi,[esi+off]` / `mov ecx,n` / `xor eax,eax` |
+
+The memset form computes its destination as a call argument, so the address
+lands in a register (ECX) and the displacements ride off it; two adjacent
+memsets then share one zero. The loop form has no argument to evaluate: the
+destination is folded into each store's displacement, and each loop
+materialises its own zero — an `xor eax,eax` / `xor ecx,ecx` pair for two
+adjacent loops is therefore positive evidence for two loops, not two memsets.
+A nested loop over a 2-D array collapses to the same single fill as a flat one.
+
+Closed `advManager::advManager` (90.30 -> 100.0000, 2026-09-20): five fills
+were written as `memset`; river/road were unrolled loops and flag/boat-flag/
+looped-sample were `rep stosd` loops. `cursorIcons` stayed a real `memset` —
+its `lea edi` is hoisted ahead of the following boat loop, which the loop form
+does not reproduce. So the two forms coexist in one function and each fill has
+to be read on its own bytes.
+- status: explained, byte-proven on advmgr
+- probe: none yet (advmgr ctor is the in-tree case)
+
 ### D17. STL/library shape as codegen
 `get_total()` is VC6's own `_First == 0 ? 0 : _Last - _First` (the null arm
 explains the shared `test ecx,ecx`); `monsters.size()` via begin()/end()
