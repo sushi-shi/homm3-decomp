@@ -1,4 +1,3 @@
-// combatoptionswindow.cpp - E:\gamedcs\combatoptionswindow.cpp (compiland combatoptionswindow.obj)
 #include <va.h>
 #include "combatoptionswindow.h"
 #include "border.h"

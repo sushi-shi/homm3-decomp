@@ -1,4 +1,3 @@
-// quickherowindow.h - prototypes of quickherowindow.cpp (compiland quickherowindow.obj)
 #ifndef HOMM3_QUICKHEROWINDOW_H
 #define HOMM3_QUICKHEROWINDOW_H
 
@@ -48,10 +47,5 @@ public:
     void quickWindowWait();
 };
 SIZE(TQuickHeroWindow, 0x4c);
-
-// --- TQuickHeroWindow ---
-// CODEVIEW(E:\gamedcs\quickherowindow.cpp:37, dc 0x1170bc) void TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TQuickHeroWindow::TViewLevel view_level);
-// CODEVIEW(E:\gamedcs\quickherowindow.cpp:221, dc 0x117818) void TQuickHeroWindow::QuickWindowWait();
-// CODEVIEW(E:\gamedcs\quickherowindow.cpp:209, dc 0x117848) void* TQuickHeroWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_QUICKHEROWINDOW_H */

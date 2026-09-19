@@ -1,4 +1,3 @@
-// genericresource.cpp - E:\gamedcs\genericresource.cpp (compiland genericresource.obj)
 // 3 functions in link order.
 #include <va.h>
 // #include "genericresource.h"

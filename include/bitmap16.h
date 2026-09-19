@@ -1,4 +1,3 @@
-// bitmap16.h - prototypes of bitmap16.cpp (compiland bitmap16.obj)
 #ifndef HOMM3_BITMAP16_H
 #define HOMM3_BITMAP16_H
 
@@ -146,35 +145,5 @@ private:
     int importPCXFile(const char* filename);
 };
 SIZE(Bitmap16Bit, 0x38);
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:59, dc 0x50a9c) long ftol(double d);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:224, dc 0x50f34) unsigned long color1555to8888(unsigned short color);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:234, dc 0x50f60) unsigned long color0565to8888(unsigned short color);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:243, dc 0x50f80) unsigned short color8888to1555(unsigned long color);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:253, dc 0x50fb0) unsigned short color8888to0565(unsigned long color);
-
-// --- Bitmap16Bit ---
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:71, dc 0x50b00) void Bitmap16Bit::Bitmap16Bit(int w, int h);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:117, dc 0x50c04) void Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:152, dc 0x50d08) void Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h, const unsigned short* data, int size);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:187, dc 0x50e04) void Bitmap16Bit::Bitmap16Bit(const char* name, const char* path);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:294, dc 0x51078) void Bitmap16Bit::import(int w, int h, const unsigned short* data, int size);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:358, dc 0x51198) void Bitmap16Bit::clear();
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:472, dc 0x51228) int Bitmap16Bit::importPCXFile(const char* filename);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:541, dc 0x51378) void Bitmap16Bit::Draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char alpha);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:625, dc 0x51468) void Bitmap16Bit::Grab(const unsigned short* src, int sx, int sy, int sw, int sh, int spitch);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:679, dc 0x5150c) void Bitmap16Bit::FillRect(int x, int y, int w, int h, unsigned short color);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:705, dc 0x5157c) void Bitmap16Bit::FrameRect(int x, int y, int w, int h, unsigned short color);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:742, dc 0x51614) void Bitmap16Bit::Darken(int x, int y, int w, int h);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:778, dc 0x516a8) void Bitmap16Bit::Darken(int x, int y, int w, int h, Bitmap816* mask, int sx, int sy);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:873, dc 0x519c4) void Bitmap16Bit::Colorize(int x, int y, int w, int h, float hue, float saturation);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:934, dc 0x51e40) void Bitmap16Bit::Gray(int x, int y, int w, int h);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:979, dc 0x51f88) void Bitmap16Bit::GrabAndBlur(const Bitmap16Bit* src, int sx, int sy);
-// CODEVIEW(E:\gamedcs\bitmap16.cpp:107, dc 0x52580) void* Bitmap16Bit::`scalar deleting destructor'(unsigned __flags);
-
-// --- Bitmap816 ---
-// CODEVIEW(E:\gamedcs\Bitmap816.h:71, dc 0x5256c) int Bitmap816::GetPitch();
-// CODEVIEW(E:\gamedcs\Bitmap816.h:98, dc 0x52570) unsigned char* Bitmap816::GetMap(int x, int y);
 
 #endif  /* HOMM3_BITMAP16_H */

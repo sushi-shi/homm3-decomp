@@ -1,4 +1,3 @@
-// quickinfowindow.cpp - E:\gamedcs\quickinfowindow.cpp (compiland quickinfowindow.obj)
 // 4 functions in link order.
 #include <va.h>
 #include "creaturetype.h"

@@ -1,4 +1,3 @@
-// search.cpp - E:\gamedcs\search.cpp (compiland search.obj)
 #include <va.h>
 #include "herospec.h"
 #include "findpath.h"
@@ -712,14 +711,3 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
 }
 
 VA_COMPGEN(0x0056bd30, 0x33, VECTOR_ERASE, pathCell)
-
-#if 0  // @carcass -- Dreamcast-only rows
-
-// E:\gamedcs\game.h:1405
-DC_ONLY(0x12cabc, 0xC)
-const std::vector<type_point,std::allocator<type_point>* game::get_whirlpools()
-{
-    // @stub
-}
-
-#endif  // @carcass

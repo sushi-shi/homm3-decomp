@@ -1,5 +1,3 @@
-// mousemgr.cpp - E:\gamedcs\mousemgr.cpp (compiland mousemgr.obj)
-// 23 functions in link order.
 #include "terrain.h"
 #include <va.h>
 #include <windows.h>
@@ -541,20 +539,6 @@ void mouseManager::showSystemCursor(bool showIt)
 }
 
 #if 0  // @carcass
-
-// C:\WCEDreamcast\inc\kfuncs.h:266
-DC_ONLY(0xff76c, 0x8)
-unsigned long GetCurrentThreadId()
-{
-    // @stub
-}
-
-// E:\gamedcs\WinGraph.h:55
-DC_ONLY(0xff780, 0x60)
-unsigned rgBto16(int r, int g, int b)
-{
-    // @stub
-}
 
 // E:\gamedcs\mousemgr.cpp:291
 // Canonical constructor and VA are on the source-local class above.

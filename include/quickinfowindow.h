@@ -1,4 +1,3 @@
-// quickinfowindow.h - prototypes of quickinfowindow.cpp (compiland quickinfowindow.obj)
 #ifndef HOMM3_QUICKINFOWINDOW_H
 #define HOMM3_QUICKINFOWINDOW_H
 
@@ -28,9 +27,5 @@ public:
     void quickWindowWait();
 };
 SIZE(TQuickCreatureWindow, 0x54);
-
-// --- TQuickCreatureWindow ---
-// CODEVIEW(E:\gamedcs\quickinfowindow.cpp:88, dc 0x117b8c) void TQuickCreatureWindow::QuickWindowWait();
-// CODEVIEW(E:\gamedcs\quickinfowindow.cpp:77, dc 0x117bb4) void* TQuickCreatureWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_QUICKINFOWINDOW_H */

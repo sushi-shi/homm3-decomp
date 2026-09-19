@@ -1,4 +1,3 @@
-// font.cpp - E:\gamedcs\font.cpp (compiland font.obj)
 // 18 functions in link order.
 #include <va.h>
 #include <string.h>

@@ -1,4 +1,3 @@
-// dimensiondoorwindow.cpp - E:\gamedcs\dimensiondoorwindow.cpp (compiland dimensiondoorwindow.obj)
 #include <va.h>
 #include "dimensiondoorwindow.h"
 #include "advmgr.h"

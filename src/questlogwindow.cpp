@@ -1,4 +1,3 @@
-// questlogwindow.cpp - E:\gamedcs\questlogwindow.cpp (compiland questlogwindow.obj)
 // The quest log is the one reader of the map's two quest pools
 // (NewfullMap's SeerHutList / QuestGuardList vectors).
 #include <va.h>

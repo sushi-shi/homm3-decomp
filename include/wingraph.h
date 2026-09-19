@@ -1,4 +1,3 @@
-// wingraph.h - prototypes of wingraph.cpp (compiland wingraph.obj)
 #ifndef HOMM3_WINGRAPH_H
 #define HOMM3_WINGRAPH_H
 
@@ -100,22 +99,5 @@ void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
 // includers that never touch DirectDraw.
 extern IDirectDrawSurface* g_ddsPrimary;  // .bss 0x6aacbc
 extern IDirectDrawSurface* g_ddsBack;     // .bss 0x6aacc0
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\WinGraph.h:55, dc 0xff780) unsigned RGBto16(int r, int g, int b);
-// CODEVIEW(E:\gamedcs\wingraph.cpp:109, dc 0x198b48) void DDCreatePrimary();
-// CODEVIEW(E:\gamedcs\wingraph.cpp:130, dc 0x198b68) void DDSetupClipper();
-// CODEVIEW(E:\gamedcs\wingraph.cpp:156, dc 0x198bcc) void DDInitGraphics(int Mode, unsigned char reinit);
-// CODEVIEW(E:\gamedcs\wingraph.cpp:370, dc 0x19902c) void DDAppBlit(const tagRECT* mregion);
-// CODEVIEW(E:\gamedcs\wingraph.cpp:529, dc 0x199054) void DDAppBlitX(const tagRECT* region, int dx, int dy);
-// CODEVIEW(E:\gamedcs\wingraph.cpp:719, dc 0x1990e4) void DDRestoreFrontBuffer(tagRECT* dst_rect);
-// CODEVIEW(E:\gamedcs\wingraph.cpp:861, dc 0x19916c) void DDBlitFromFront();
-// CODEVIEW(E:\gamedcs\wingraph.cpp:1110, dc 0x199490) IDirectDrawSurface4* BMCreateSurface(unsigned long width, unsigned long height);
-// CODEVIEW(E:\gamedcs\wingraph.cpp:1238, dc 0x199598) void DDCreateMouseSurfaces();
-// CODEVIEW(E:\gamedcs\wingraph.cpp:1289, dc 0x1996cc) void DDReleaseMouseSurfaces();
-// CODEVIEW(E:\gamedcs\wingraph.cpp:1313, dc 0x199724) void DDSD(int iDDErr, char* cFile, int iLine);
-// CODEVIEW(E:\gamedcs\wingraph.cpp:1476, dc 0x19a09c) void DDCleanUpWinGraphics();
-// CODEVIEW(E:\gamedcs\wingraph.cpp:1691, dc 0x19a20c) void ResizeWindow();
-// CODEVIEW(E:\gamedcs\wingraph.cpp:1712, dc 0x19a234) unsigned char DDSetFullScreenStatus(int iNewStatus);
 
 #endif  /* HOMM3_WINGRAPH_H */

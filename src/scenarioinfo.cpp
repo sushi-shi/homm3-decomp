@@ -1,4 +1,3 @@
-// scenarioinfo.cpp - E:\gamedcs\scenarioinfo.cpp (compiland scenarioinfo.obj)
 #include <va.h>
 #include <stdio.h>
 #include "advmgr.h"

@@ -1,4 +1,3 @@
-// quickherowindow.cpp - E:\gamedcs\quickherowindow.cpp (compiland quickherowindow.obj)
 #include "includes.h"
 #include <va.h>
 #include <windows.h>

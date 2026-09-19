@@ -1,4 +1,3 @@
-// hero.cpp - E:\gamedcs\hero.cpp (compiland hero.obj)
 // town::HasBuilding - hero::GetLuck's Grail gate is a real CALL to the
 // Town.h inline (retail `push 1 / push 0x1a / call 0x4305a0`), so this
 // compiland needs the declarator. It has to be defined before the FIRST
@@ -6650,34 +6649,10 @@ std::bitset<70>& std::bitset<70>::set(size_t _P, bool _X)
 VA(0x004e6750, 0x21)  // anchor-caller + reference ABI/body, dc 0x20d2c
 inline const int& tLimit(const int& minimum, const int& value, const int& maximum);
 
-// E:\gamedcs\Hero.h:162
-DC_ONLY(0xd58cc, 0x2A)
-unsigned char type_obscuring_object::obscuresTown()
-{
-    // @stub
-}
-
-// E:\gamedcs\Hero.h:702
-DC_ONLY(0xd58f8, 0x1C)
-unsigned char hero::hasArmy(TCreatureType type)
-{
-    // @stub
-}
 
 
-// E:\gamedcs\CustomCampaign.h:225
-DC_ONLY(0xd5944, 0x20)
-int SCampaign::GetExpCap()
-{
-    // @stub
-}
 
-// E:\gamedcs\netmsg.h:675
-DC_ONLY(0xd5964, 0x54)
-void CMCDeadHero::CMCDeadHero(signed char heroId, type_point point)
-{
-    // @stub
-}
+
 
 // E:\gamedcs\hero.cpp:1226
 DC_ONLY(0xd59b8, 0x18)
@@ -6689,12 +6664,6 @@ void type_artifact::`default constructor closure'()
 // E:\gamedcs\hero.cpp:4186
 // (moved to retail link order at 0x004e1520, immediately before the
 // destructor it calls; the VA_COMPGEN claim lives there)
-
-DC_ONLY(0xd5a04, 0x3C)
-std::bitset<48,unsigned* std::bitset<48,unsigned long>::reference::operator=(unsigned char __x)
-{
-    // @stub
-}
 
 #endif  // @carcass
 

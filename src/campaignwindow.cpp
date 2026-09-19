@@ -1,4 +1,3 @@
-// campaignwindow.cpp - E:\gamedcs\campaignwindow.cpp (compiland campaignwindow.obj)
 #include <va.h>
 #include <string.h>
 #include "binkmanager.h"

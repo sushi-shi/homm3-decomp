@@ -1,4 +1,3 @@
-// puzzlewindow.cpp - E:\gamedcs\puzzlewindow.cpp (compiland puzzlewindow.obj)
 #include <va.h>
 #include <bitset>
 #include <stdio.h>

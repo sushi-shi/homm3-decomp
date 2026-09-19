@@ -1,5 +1,3 @@
-// csprite.cpp - E:\gamedcs\csprite.cpp (compiland csprite.obj)
-// 62 functions in link order.
 #include <va.h>
 #include <string.h>
 #include "csprite.h"
@@ -638,68 +636,14 @@ void CSprite::SpriteDataReload()
     // @stub
 }
 
-// E:\gamedcs\resrce.h:34
-DC_ONLY(0x74060, 0x6)
-const char* resource::get_Name()
-{
-    // @stub
-}
 
-// E:\gamedcs\CSpriteFrame.h:147
-DC_ONLY(0x74068, 0x68)
-void CSpriteFrame::drawCreature(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned short outcolor)
-{
-    // @stub
-}
 
-// E:\gamedcs\CSpriteFrame.h:157
-DC_ONLY(0x74138, 0x60)
-void CSpriteFrame::drawAdvObj(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
-{
-    // @stub
-}
 
-// E:\gamedcs\CSpriteFrame.h:162
-DC_ONLY(0x74198, 0x64)
-void CSpriteFrame::drawAdvObjWithFlag(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned short flagcolor, unsigned char hflip)
-{
-    // @stub
-}
 
-// E:\gamedcs\CSpriteFrame.h:167
-DC_ONLY(0x741fc, 0x5C)
-void CSpriteFrame::drawAdvObjShadow(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
-{
-    // @stub
-}
 
-// E:\gamedcs\CSpriteFrame.h:172
-DC_ONLY(0x74258, 0x60)
-void CSpriteFrame::drawHero(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
-{
-    // @stub
-}
 
-// E:\gamedcs\CSpriteFrame.h:177
-DC_ONLY(0x742b8, 0x5C)
-void CSpriteFrame::drawHeroShadow(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
-{
-    // @stub
-}
 
-// E:\gamedcs\CSpriteFrame.h:198
-DC_ONLY(0x74484, 0x60)
-void CSpriteFrame::drawHeroAlpha(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
-{
-    // @stub
-}
 
-// E:\gamedcs\CSprite.h:259
-DC_ONLY(0x744e4, 0x64)
-void CSprite::setPalette(TPalette16& pal)
-{
-    // @stub
-}
 
 // E:\gamedcs\csprite.cpp:86
 DC_ONLY(0x74548, 0x34)

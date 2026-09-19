@@ -1,5 +1,11 @@
 # Pointer-boundary backlog implementation
 
+Historical experiment filenames below refer to the searches recorded here.
+Per-function behavioral fixtures have been retired, as have generators for
+completed matches; their last versions remain in Git history. New matching
+uses VC6/retail comparison and the JSON runner. Keep any targeted behavioral
+diagnostic under ignored `build/`, rather than maintaining a mock game suite.
+
 Implemented 2026-09-10 in `codex/address-arithmetic-20260910`. This supersedes
 the retained lookup, DirectDraw and image-row exceptions in the earlier
 [owner-pointer audit](owner-pointer-audit.md). The follow-up request was to

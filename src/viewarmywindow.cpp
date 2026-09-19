@@ -1,4 +1,3 @@
-// viewarmywindow.cpp - E:\gamedcs\viewarmywindow.cpp (compiland viewarmywindow.obj)
 #include <va.h>
 #include <stdio.h>
 #include "viewarmywindow.h"

@@ -1,5 +1,3 @@
-// bitmap16.cpp - E:\gamedcs\bitmap16.cpp (compiland bitmap16.obj)
-// 28 functions in link order.
 #include <va.h>
 #include <limits>
 #include <math.h>
@@ -973,19 +971,7 @@ void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue, float saturati
     // @stub
 }
 
-// E:\gamedcs\Bitmap816.h:71
-DC_ONLY(0x5256c, 0x4)
-int Bitmap816::getPitch()
-{
-    // @stub
-}
 
-// E:\gamedcs\Bitmap816.h:98
-DC_ONLY(0x52570, 0xE)
-unsigned char* Bitmap816::getMap(int x, int y)
-{
-    // @stub
-}
 
 // E:\gamedcs\bitmap16.cpp:107
 DC_ONLY(0x52580, 0x34)

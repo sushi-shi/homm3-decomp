@@ -1,4 +1,3 @@
-// singleselectionpopups.h - prototypes of singleselectionpopups.cpp (compiland singleselectionpopups.obj)
 #ifndef HOMM3_SINGLESELECTIONPOPUPS_H
 #define HOMM3_SINGLESELECTIONPOPUPS_H
 

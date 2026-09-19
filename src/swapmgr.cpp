@@ -1,4 +1,3 @@
-// swapmgr.cpp - E:\gamedcs\swapmgr.cpp (compiland swapmgr.obj)
 #include "includes.h"
 #include "creaturetype.h"
 #include <va.h>

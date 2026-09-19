@@ -1,4 +1,3 @@
-// bitmap816.cpp - E:\gamedcs\bitmap816.cpp (compiland bitmap816.obj)
 // 17 functions in link order.
 #include <va.h>
 #include <string.h>

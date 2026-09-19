@@ -1,4 +1,3 @@
-// strip.cpp - E:\gamedcs\strip.cpp (compiland strip.obj)
 // 5 retail functions in link order (of 8 DC procs).
 
 // Absent from retail (documented, not forced): DrawNumber (DC :124)

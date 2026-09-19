@@ -1,4 +1,3 @@
-// systemoptionswindow.cpp - E:\gamedcs\systemoptionswindow.cpp (compiland systemoptionswindow.obj)
 #include <va.h>
 #include "systemoptionswindow.h"
 #include "cmbtmgr.h"

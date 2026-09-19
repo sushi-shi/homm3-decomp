@@ -15,7 +15,7 @@ import json
 from pathlib import Path
 from homm3.core.common import HOMM3_DIR
 from homm3.vc6 import source_families
-from homm3.vc6.test_rmg_families import generator
+from experiments._support import generator
 
 
 def main():

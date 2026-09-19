@@ -1,4 +1,3 @@
-// questlogwindow.h - prototypes of questlogwindow.cpp (compiland questlogwindow.obj)
 #ifndef HOMM3_QUESTLOGWINDOW_H
 #define HOMM3_QUESTLOGWINDOW_H
 
@@ -39,12 +38,5 @@ SIZE(TQuestLogWindow, 0x74);
 // consumer: THeroScreenWindow::WindowHandler's quest-log button arm calls
 // it with the current hero's owner (/Gr, the id in ecx).
 void doQuestLog(int player);
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\questlogwindow.cpp:142, dc 0x116ccc) void DoQuestLog(int player);
-
-// --- TQuestLogWindow ---
-// CODEVIEW(E:\gamedcs\questlogwindow.cpp:105, dc 0x116c78) void TQuestLogWindow::UpdateQuestLocators();
-// CODEVIEW(E:\gamedcs\questlogwindow.cpp:78, dc 0x116e28) void* TQuestLogWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_QUESTLOGWINDOW_H */

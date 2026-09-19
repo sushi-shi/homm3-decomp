@@ -1,4 +1,3 @@
-// crt0dat.c - d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\crt0dat.c (compiland crt0dat.obj)
 // 7 functions in link order.
 #include <va.h>
 // #include "crt0dat.h"

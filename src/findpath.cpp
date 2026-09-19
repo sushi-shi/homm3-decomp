@@ -1,4 +1,3 @@
-// findpath.cpp - E:\gamedcs\findpath.cpp (compiland findpath.obj)
 #include <va.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1349,58 +1348,9 @@ long searchArray::getTravelTime(const army* currentArmy, long hex) const
 
 #if 0  // @carcass
 
-// E:\gamedcs\hero.h:117
-DC_ONLY(0xa113c, 0x8)
-unsigned char type_obscuring_object::obscuredIsTrigger()
-{
-    // @stub
-}
-
-// E:\gamedcs\CmbtMgr.h:327
-DC_ONLY(0xa1144, 0x16)
-unsigned char combatManager::TObstacle::isVisible(int side)
-{
-    // @stub
-}
-
 // E:\gamedcs\findpath.cpp:79
 DC_ONLY(0xa115c, 0x50)
 void pathCell::pathCell()
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:365
-DC_ONLY(0xa11ac, 0x18)
-pathCell* std::vector<pathCell,std::allocator<pathCell> >::back()
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:393
-DC_ONLY(0xa11c4, 0xE0)
-pathCell* std::vector<pathCell,std::allocator<pathCell> >::insert(pathCell* __position, const pathCell* __x)
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:474
-DC_ONLY(0xa12a4, 0x1C)
-void std::vector<pathCell,std::allocator<pathCell> >::pop_back()
-{
-    // @stub
-}
-
-// ..\stlport\stl_algobase.h:442
-DC_ONLY(0xa12c0, 0x50)
-pathCell* std::copy_backward(pathCell* __first, pathCell* __last, pathCell* __result)
-{
-    // @stub
-}
-
-// ..\stlport\stl_algobase.h:382
-DC_ONLY(0xa1310, 0x4E)
-pathCell* std::__copy_backward(pathCell* __first, pathCell* __last, pathCell* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }

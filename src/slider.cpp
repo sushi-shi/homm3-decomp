@@ -1,4 +1,3 @@
-// slider.cpp - E:\gamedcs\slider.cpp (compiland slider.obj)
 // Dreamcast roster supplies names and source-level signatures.
 #include <va.h>
 #include "bitmap816.h"

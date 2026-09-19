@@ -1,4 +1,3 @@
-// tradpost.h - prototypes of tradpost.cpp (compiland tradpost.obj)
 #ifndef HOMM3_TRADPOST_H
 #define HOMM3_TRADPOST_H
 
@@ -302,56 +301,5 @@ extern float g_tradingPostEfficency[];
 // provisional. tradpost.cpp owns both admitted definitions.
 extern float g_artifactPurchaseEfficency[];
 extern float g_creatureSaleEfficency[];
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\tradpost.cpp:618, dc 0x1883f0) void CountMarkets();
-// CODEVIEW(E:\gamedcs\tradpost.cpp:704, dc 0x188708) void DoMarket();
-// CODEVIEW(E:\gamedcs\tradpost.cpp:2160, dc 0x18ab8c) long get_market_value(EGameResource resource);
-
-// --- TBuyArtifactWindow ---
-// CODEVIEW(E:\gamedcs\tradpost.cpp:941, dc 0x188dd8) void TBuyArtifactWindow::SetWidgetOn(short id);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:947, dc 0x188e10) void TBuyArtifactWindow::SetWidgetOff(short id);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:954, dc 0x188e78) void TBuyArtifactWindow::SetWidgetDisabled(short id);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:1466, dc 0x189aac) void TBuyArtifactWindow::Update(unsigned char bUpdate);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:2209, dc 0x18aef4) void TBuyArtifactWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:2302, dc 0x18b368) void TBuyArtifactWindow::SetupNewTrade();
-// CODEVIEW(E:\gamedcs\tradpost.cpp:380, dc 0x18c94c) void* TBuyArtifactWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- TGiveResourceWindow ---
-// CODEVIEW(E:\gamedcs\tradpost.cpp:923, dc 0x188d50) void TGiveResourceWindow::SetWidgetOn(short id);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:929, dc 0x188d88) void TGiveResourceWindow::SetWidgetOff(short id);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:936, dc 0x188dbc) void TGiveResourceWindow::SetWidgetDisabled(short id);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:2202, dc 0x18ae88) void TGiveResourceWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:2294, dc 0x18b328) void TGiveResourceWindow::SetupNewTrade();
-// CODEVIEW(E:\gamedcs\tradpost.cpp:286, dc 0x18c918) void* TGiveResourceWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- TSellArtifactWindow ---
-// CODEVIEW(E:\gamedcs\tradpost.cpp:959, dc 0x188e94) void TSellArtifactWindow::SetWidgetOn(short id);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:965, dc 0x188ecc) void TSellArtifactWindow::SetWidgetOff(short id);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:972, dc 0x188f00) void TSellArtifactWindow::SetWidgetDisabled(short id);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:2312, dc 0x18b3a8) void TSellArtifactWindow::SetupNewTrade();
-// CODEVIEW(E:\gamedcs\tradpost.cpp:2327, dc 0x18b414) void TSellArtifactWindow::UpdateMarketBackpack();
-// CODEVIEW(E:\gamedcs\tradpost.cpp:2344, dc 0x18b48c) void TSellArtifactWindow::increment_backpack_start();
-// CODEVIEW(E:\gamedcs\tradpost.cpp:2356, dc 0x18b4c8) void TSellArtifactWindow::decrement_backpack_start();
-// CODEVIEW(E:\gamedcs\tradpost.cpp:2932, dc 0x18c00c) int TSellArtifactWindow::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:509, dc 0x18c980) void* TSellArtifactWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- TSellCreatureWindow ---
-// CODEVIEW(E:\gamedcs\tradpost.cpp:977, dc 0x188f1c) void TSellCreatureWindow::SetWidgetOn(short id);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:983, dc 0x188f54) void TSellCreatureWindow::SetWidgetOff(short id);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:990, dc 0x188f88) void TSellCreatureWindow::SetWidgetDisabled(short id);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:1920, dc 0x18a550) void TSellCreatureWindow::Update(unsigned char bUpdate);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:2250, dc 0x18b114) void TSellCreatureWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:2319, dc 0x18b3d4) void TSellCreatureWindow::SetupNewTrade();
-// CODEVIEW(E:\gamedcs\tradpost.cpp:606, dc 0x18c9b4) void* TSellCreatureWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- TTradeResourceWindow ---
-// CODEVIEW(E:\gamedcs\tradpost.cpp:905, dc 0x188cc8) void TTradeResourceWindow::SetWidgetOn(short id);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:911, dc 0x188d00) void TTradeResourceWindow::SetWidgetOff(short id);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:918, dc 0x188d34) void TTradeResourceWindow::SetWidgetDisabled(short id);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:995, dc 0x188fa4) void TTradeResourceWindow::Update(unsigned char bUpdate);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:2181, dc 0x18ad48) void TTradeResourceWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade);
-// CODEVIEW(E:\gamedcs\tradpost.cpp:2286, dc 0x18b2e8) void TTradeResourceWindow::SetupNewTrade();
-// CODEVIEW(E:\gamedcs\tradpost.cpp:183, dc 0x18c8e4) void* TTradeResourceWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_TRADPOST_H */

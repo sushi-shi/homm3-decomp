@@ -1,4 +1,3 @@
-// towngatewindow.cpp - E:\gamedcs\towngatewindow.cpp (compiland towngatewindow.obj)
 #include <va.h>
 #include <string.h>
 #include "towngatewindow.h"
@@ -277,44 +276,11 @@ static void townGateSliderCallback(int state, heroWindow* parentWindow)
 
 #if 0  // @carcass
 
-// E:\gamedcs\game.h:897
-DC_ONLY(0x169c0c, 0x54)
-unsigned char game::getNumAllies(int playerNum)
-{
-    // @stub
-}
 
-// E:\gamedcs\game.h:1027
-DC_ONLY(0x169c7c, 0x1C)
-const char* game::getTownName(int iTownId)
-{
-    // @stub
-}
 
 // E:\gamedcs\towngatewindow.cpp:98
 DC_ONLY(0x169c98, 0x34)
 void* TTownGateWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.c:68
-DC_ONLY(0x169ccc, 0x94)
-void std::vector<int,std::allocator<int> >::reserve(unsigned __n)
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:199
-DC_ONLY(0x169d60, 0xC)
-unsigned std::vector<int,std::allocator<int> >::capacity()
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:514
-DC_ONLY(0x169d6c, 0x38)
-std::vector<int,std::allocator<int> >::_M_allocate_and_copy(unsigned __n, int* __first, int* __last)
 {
     // @stub
 }

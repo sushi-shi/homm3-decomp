@@ -1,4 +1,3 @@
-// hillfortwindow.cpp - E:\gamedcs\hillfortwindow.cpp (compiland hillfortwindow.obj)
 #include <stdio.h>
 #include <string.h>
 

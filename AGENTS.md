@@ -100,6 +100,30 @@ preceding MAX. The invariant is CUR <= MAX <= HIST: MAX is monotone for an
 unchanged function hash, a proven edit resets MAX to CUR, and HIST retains the
 all-time peak. Tooling prioritizes MAX; HIST is a lead for recovering lost peaks.
 
+## Experiment lifetime
+
+The routine matching loop is evidence, C++, VC6 and retail comparison. Do not
+create or run a per-function mock behavior suite as a matching requirement.
+Use a temporary behavioral check only for a concrete unresolved semantic
+question; agreement with a mock is not proof of a retail match.
+
+Keep regression tests for tooling contracts such as cache freshness, symbol and
+relocation pairing, score accounting, source ownership and search rendering.
+Run relevant tests when changing that tooling. Build gates and the search
+driver's baseline/reproduction controls remain part of normal matching.
+
+Keep one-off search manifests, generators, snapshots and diagnostic fixtures in
+ignored `build/`, alongside the JSON source-family results. Prefer JSON axes and
+options; use temporary Python when it helps author them. Commit recovered C++,
+concise evidence and reusable tooling, not a new script for every search batch.
+
+Per-function behavioral fixtures are disposable even while a match is unfinished.
+Retire existing search generators when all their targets reach MAX 100% for the
+current implementation. Git history is the archive. Keep a shared experiment
+only while an unfinished target needs it: an exact helper can still support a
+search for an unfinished caller. HIST 100% alone does not establish completion.
+Remove obsolete imports and command references with retired experiments.
+
 ## Holista for hard cases
 
 For difficult matching plateaus, use the repository's
@@ -141,9 +165,9 @@ A Dreamcast line gap alone does not prove an ASSERT/VERIFY/TRACE. Retain
 `HOMM3_RELEASE_VERIFY(expression)` only for a meaningful recovered invariant
 supported by line-table and codegen evidence. No self-assignments, unreachable
 branches, dummy calls, or repeated expressions solely to change the inline budget.
-Every retained VERIFY or temporary inline-depth experiment needs a source comment
-naming caller, callee, and retail/Dreamcast evidence, plus a negative control
-showing that flattening or de-inlining fails.
+Support retained VERIFYs and temporary inline-depth diagnoses with named caller,
+callee and retail/Dreamcast evidence. Compare the removal or flattening variant
+under VC6 to establish its effect; this does not require a mock behavior suite.
 
 Record function-specific failed probes beside the function and reusable compiler
 findings under [docs/vc6/](docs/vc6/README.md), without a separate chronological log.

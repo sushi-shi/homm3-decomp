@@ -1,4 +1,3 @@
-// castle.cpp - E:\gamedcs\castle.cpp (compiland castle.obj)
 #include "terrain.h"
 #include <va.h>
 #include <stdio.h>

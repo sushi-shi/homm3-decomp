@@ -1,4 +1,3 @@
-// widget.cpp - E:\gamedcs\widget.cpp (compiland widget.obj)
 // 13 functions in link order.
 #include <va.h>
 #include <string.h>

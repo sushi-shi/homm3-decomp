@@ -1,4 +1,3 @@
-// inputmgr.cpp - E:\gamedcs\inputmgr.cpp (compiland inputmgr.obj)
 #include <va.h>
 #include <string.h>
 #include "inputmgr.h"

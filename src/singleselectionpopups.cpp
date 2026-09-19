@@ -1,11 +1,10 @@
-// singleselectionpopups.cpp - E:\gamedcs\singleselectionpopups.cpp (compiland singleselectionpopups.obj)
-
 // Popup-dialog family. Three widget subclasses of widget (CHotspotWidget,
 // CSpriteWidget, CBitmapWidget) and four TDialogBox-derived single-selection
 // dialogs (CBonusDlg, CHeroDlg, CTownDlg, CTeamAlignmentDlg) whose common
-// base CSingleSelPopup is fully inlined into each derived ctor. The whole
-// order-map is vtable-proven: every class ctor stores its own vtable and each
-// vtable's overridden slots name the retail address directly (address-take
+// base CSingleSelPopup's header-defined ctor/Add/ExitDialog expand into the
+// derived ctors. The base is never directly instantiated and has no own vtable.
+// The whole order-map is vtable-proven: every class ctor stores its own vtable.
+// The overridden slots name the retail address directly (address-take
 // proof). Vtables read straight from the hash-verified image:
 //   CHotspotWidget  0x6419a4   (widget subclass, 13 slots)
 //   CSpriteWidget   0x641a00   (widget subclass, 13 slots)
@@ -470,24 +469,6 @@ void CTeamAlignmentDlg::getTeams()
 
 // --- CSingleSelPopup base: ctor/Add/ExitDialog inlined into the four derived
 //     dialog ctors; the base is never directly instantiated (no own vtable). ---
-// E:\gamedcs\singleselectionpopups.h:34
-DC_ONLY(0x12eeac, 0x48)   // inlined (push 0x12 / ??0TDialogBox / set vtbl / [+0x54]=mode) into each dialog ctor
-void CSingleSelPopup::CSingleSelPopup(int type, unsigned char newGameMode)
-{
-    // @stub
-}
-// E:\gamedcs\singleselectionpopups.h:39
-DC_ONLY(0x12eef4, 0x34)   // inlined
-void CSingleSelPopup::add(widget* w)
-{
-    // @stub
-}
-// E:\gamedcs\singleselectionpopups.h:79
-DC_ONLY(0x12efdc, 0x34)   // base never directly instantiated
-void* CSingleSelPopup::scalar_deleting_destructor(unsigned __flags)
-{
-    // @stub
-}
 
 // --- CTeamAlignmentDlg::CountNumPlayers: inlined into GetTeams/CreateWin. ---
 // E:\gamedcs\singleselectionpopups.cpp:411

@@ -1,4 +1,3 @@
-// hiscore.cpp - E:\gamedcs\hiscore.cpp (compiland hiscore.obj)
 #include <va.h>
 #include <windows.h>
 #include <fcntl.h>
@@ -196,7 +195,6 @@ void highScoreManager::viewHiScore()
 // AddScoreToHighScore.  Every widget argument below is byte-visible in that
 // expansion; the three-entry reserve followed by four pushes also explains
 // the one reallocating final insertion.
-
 
 // Dreamcast hiscore.cpp:738 names WriteHighScores and preserves its
 // 351-byte cBuf local even in the VMU port. Retail's two caller expansions
@@ -787,13 +785,6 @@ void UpdateCreatures()
 // E:\gamedcs\hiscore.cpp:1034
 DC_ONLY(0xd8970, 0x3A4)
 int highScoreWindowHandler(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\TextWdgt.h:67
-DC_ONLY(0xd8d14, 0x18)
-const char* textWidget::getText()
 {
     // @stub
 }

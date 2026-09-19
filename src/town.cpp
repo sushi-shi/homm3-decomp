@@ -1,4 +1,3 @@
-// town.cpp - E:\gamedcs\town.cpp (compiland town.obj)
 #include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
 #include "creaturetype.h"
 #include "terrain.h"
@@ -1823,18 +1822,6 @@ unsigned char town::initializeBuildingCostsTables()
     return 1;
 }
 
-#if 0  // @carcass
-
-
-
-// ..\stlport\stl_bitset.h:402
-DC_ONLY(0x168e2c, 0x24)
-unsigned char std::bitset<70,unsigned long>::reference::operator bool()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // COMDAT pairing: bitset<48>::set(pos, bool), agreement 1.000 at an exactly
 // equal 96-byte extent.

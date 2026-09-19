@@ -1,4 +1,3 @@
-// army.h - prototypes of army.cpp (compiland army.obj)
 #ifndef HOMM3_ARMY_H
 #define HOMM3_ARMY_H
 
@@ -566,8 +565,8 @@ public:
     // into `erase(begin(), end())` exactly as seen.
 
     // DC names it (members.csv army@1028 SpellInfluenceQueue, nested
-    // type TSpellQueue) and the DC carcass tail in army.cpp lists its
-    // whole COMDAT set, `deque<enum SpellID, allocator<enum SpellID>,
+    // type TSpellQueue) and the DC procedure inventory for army.obj records
+    // its whole COMDAT set, `deque<enum SpellID, allocator<enum SpellID>,
     // 0>`. THE OFFSET IS THE LAYOUT PROOF: DC 1028 -> retail 0x420 is a
     // 28-byte shift while DC 1072 retaliationCount -> retail +0x454 is
     // 36, and the difference is exactly the 8 bytes Dinkumware's deque
@@ -1819,135 +1818,5 @@ unsigned char spellIsValidOnTarget(int spell, const army* target);
 // E:\gamedcs\army.cpp:5469, dc 0x4c1b8
 // E:\gamedcs\includes.h:117, dc 0x4c9c0
 // E:\gamedcs\DC_precompiledheaders.h:41, dc 0x4d044
-
-// --- Bitmap16Bit ---
-// CODEVIEW(E:\gamedcs\Bitmap16.h:156, dc 0x4ca7c) const unsigned short* Bitmap16Bit::GetMap(int x, int y);
-// CODEVIEW(E:\gamedcs\Bitmap16.h:162, dc 0x4ca8c) void Bitmap16Bit::Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char alpha);
-// CODEVIEW(E:\gamedcs\Bitmap16.h:168, dc 0x4cb1c) void Bitmap16Bit::Grab(const Bitmap16Bit* src, int sx, int sy);
-
-// --- CSprite ---
-// CODEVIEW(E:\gamedcs\CSprite.h:148, dc 0x4cb9c) int CSprite::GetCroppedX(int seq, int frame);
-// CODEVIEW(E:\gamedcs\CSprite.h:149, dc 0x4cbe0) int CSprite::GetCroppedY(int seq, int frame);
-// CODEVIEW(E:\gamedcs\CSprite.h:150, dc 0x4cc24) int CSprite::GetCroppedWidth(int seq, int frame);
-
-// --- CSpriteFrame ---
-// CODEVIEW(E:\gamedcs\CSpriteFrame.h:87, dc 0x4cb90) int CSpriteFrame::GetCroppedWidth();
-// CODEVIEW(E:\gamedcs\CSpriteFrame.h:89, dc 0x4cb94) int CSpriteFrame::GetCroppedX();
-// CODEVIEW(E:\gamedcs\CSpriteFrame.h:90, dc 0x4cb98) int CSpriteFrame::GetCroppedY();
-
-// --- GameTime ---
-// CODEVIEW(E:\gamedcs\struct.h:438, dc 0x4c994) unsigned long GameTime::NextFrameTime(unsigned long this_frame, long interval);
-
-// --- SLimitData ---
-// CODEVIEW(E:\gamedcs\struct.h:315, dc 0x4c968) void SLimitData::Include(const SLimitData* include_limits);
-
-// --- army ---
-// CODEVIEW(E:\gamedcs\army.cpp:52, dc 0x436b8) void army::army();
-// CODEVIEW(E:\gamedcs\army.cpp:77, dc 0x437ac) void army::set_retaliation_count();
-// CODEVIEW(E:\gamedcs\army.cpp:109, dc 0x438a8) void army::WaitSample(army::TSampleID which);
-// CODEVIEW(E:\gamedcs\army.cpp:117, dc 0x438e8) void army::InitClean();
-// CODEVIEW(E:\gamedcs\army.cpp:288, dc 0x43e80) void army::LoadResources();
-// CODEVIEW(E:\gamedcs\army.cpp:477, dc 0x4424c) void army::FreeResources();
-// CODEVIEW(E:\gamedcs\army.cpp:596, dc 0x444a8) void army::DrawToBuffer(int x, int y, int bNumBoxOnly);
-// CODEVIEW(E:\gamedcs\army.cpp:891, dc 0x44d50) double army::ComputeKarma();
-// CODEVIEW(E:\gamedcs\army.cpp:1034, dc 0x45164) unsigned char army::set_inside_area_effect(unsigned char arg);
-// CODEVIEW(E:\gamedcs\army.cpp:1062, dc 0x45204) void army::EndWalk();
-// CODEVIEW(E:\gamedcs\army.cpp:1171, dc 0x453c8) void army::animate_missile(army* armyToAttack);
-// CODEVIEW(E:\gamedcs\army.cpp:1356, dc 0x458a0) void army::range_attack(army* armyToAttack);
-// CODEVIEW(E:\gamedcs\army.cpp:1629, dc 0x45fc0) long army::get_clockwise(long direction);
-// CODEVIEW(E:\gamedcs\army.cpp:1643, dc 0x46008) long army::get_counter_clockwise(long direction);
-// CODEVIEW(E:\gamedcs\army.cpp:1896, dc 0x46658) void army::do_post_attack(army* target, int iDamage, int iKilled, int total_life);
-// CODEVIEW(E:\gamedcs\army.cpp:2044, dc 0x46bec) unsigned char army::do_attack(army* armyToAttack, int direction);
-// CODEVIEW(E:\gamedcs\army.cpp:2386, dc 0x472f4) unsigned char army::WalkTo(int destIndex, unsigned char restore_facing);
-// CODEVIEW(E:\gamedcs\army.cpp:2528, dc 0x475ec) void army::CheckLuck();
-// CODEVIEW(E:\gamedcs\army.cpp:2680, dc 0x478fc) double army::get_defense_damage_modifier(unsigned char ranged_attack);
-// CODEVIEW(E:\gamedcs\army.cpp:2820, dc 0x47cf4) double army::get_unit_combat_value(long lowest_attack, long lowest_defense, unsigned char ranged, const army* excluded);
-// CODEVIEW(E:\gamedcs\army.cpp:2988, dc 0x484d0) float army::get_fire_shield_strength();
-// CODEVIEW(E:\gamedcs\army.cpp:3230, dc 0x48c10) int army::ComputeDefenderDamageBonuses(int base_damage);
-// CODEVIEW(E:\gamedcs\army.cpp:3406, dc 0x49260) long army::DamageEnemy(army* enemy, int* iDamage, int* iKilled, unsigned char bIsShot);
-// CODEVIEW(E:\gamedcs\army.cpp:3481, dc 0x4935c) unsigned long army::Strength();
-// CODEVIEW(E:\gamedcs\army.cpp:3631, dc 0x49694) void army::CancelSpellType(int iSpellType);
-// CODEVIEW(E:\gamedcs\army.cpp:3660, dc 0x496dc) void army::adjust_hitpoints();
-// CODEVIEW(E:\gamedcs\army.cpp:3675, dc 0x49748) void army::CancelIndividualSpell(int spell);
-// CODEVIEW(E:\gamedcs\army.cpp:3802, dc 0x499ac) void army::CancelAllSpells();
-// CODEVIEW(E:\gamedcs\army.cpp:3816, dc 0x499e8) void army::SetSpellInfluence(int spell, int power, TSkillMastery mastery, const hero* casting_hero);
-// CODEVIEW(E:\gamedcs\army.cpp:4129, dc 0x4a2e8) void army::DecrementSpellRounds();
-// CODEVIEW(E:\gamedcs\army.cpp:4158, dc 0x4a348) void army::get_berserk_targets(std::vector<army* armies);
-// CODEVIEW(E:\gamedcs\army.cpp:4427, dc 0x4a8b8) unsigned char army::move_to(int hex, unsigned char restore_facing);
-// CODEVIEW(E:\gamedcs\army.cpp:4577, dc 0x4aacc) void army::attack_wall(TWallTargetId wall, long levelsDestroyed);
-// CODEVIEW(E:\gamedcs\army.cpp:4739, dc 0x4b070) void army::Cure(int level, int iSpellPower, const hero* casting_hero);
-// CODEVIEW(E:\gamedcs\army.cpp:4779, dc 0x4b170) int army::TopY();
-// CODEVIEW(E:\gamedcs\army.cpp:4784, dc 0x4b190) int army::BottomY();
-// CODEVIEW(E:\gamedcs\army.cpp:4800, dc 0x4b20c) int army::RightX();
-// CODEVIEW(E:\gamedcs\army.cpp:4812, dc 0x4b278) int army::LeftX();
-// CODEVIEW(E:\gamedcs\army.cpp:4825, dc 0x4b2e4) int army::FrontX();
-// CODEVIEW(E:\gamedcs\army.cpp:4864, dc 0x4b3e8) unsigned char army::is_adjacent(const army* other_army);
-// CODEVIEW(E:\gamedcs\army.cpp:4881, dc 0x4b428) int army::OtherArmyAdjacent(int OAgroup, int OAindex);
-// CODEVIEW(E:\gamedcs\army.cpp:4891, dc 0x4b454) void army::Turn(unsigned char play_animation);
-// CODEVIEW(E:\gamedcs\army.cpp:5396, dc 0x4c004) void army::cast_resurrect(long hex);
-// CODEVIEW(E:\gamedcs\army.cpp:5419, dc 0x4c084) void army::cast_demonic_resurrect(long hex);
-// CODEVIEW(E:\gamedcs\army.cpp:5546, dc 0x4c374) long army::get_valid_caliph_spells(const army* target);
-// CODEVIEW(E:\gamedcs\army.cpp:5717, dc 0x4c778) void army::consider_attack(const army* enemy, long value, long attack_distance);
-// CODEVIEW(E:\gamedcs\Army.h:760, dc 0x4c9ec) bool army::NeedToTurn(int direction);
-// CODEVIEW(E:\gamedcs\Army.h:810, dc 0x4ca0c) const char* army::GetName();
-// CODEVIEW(E:\gamedcs\Army.h:815, dc 0x4ca2c) const char* army::GetName(int count);
-// CODEVIEW(E:\gamedcs\Army.h:869, dc 0x4ca44) long army::get_attack_direction(const army* enemy);
-// CODEVIEW(E:\gamedcs\Army.h:875, dc 0x4ca60) bool army::LeavesNoBody();
-
-// --- combatManager ---
-// CODEVIEW(E:\gamedcs\CmbtMgr.h:1555, dc 0x4cc74) void combatManager::MarkCreatureEffect(int group, int index);
-
-// --- hexcell ---
-// CODEVIEW(E:\gamedcs\HexCell.h:90, dc 0x4cc68) unsigned char hexcell::HasArmy();
-
-// --- std ---
-// CODEVIEW(..\stlport\stl_deque.h:568, dc 0x4cc9c) std::_Deque_iterator<enum std::deque<enum SpellID,std::allocator<enum SpellID>,0>::begin(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_deque.h:569, dc 0x4ccbc) std::_Deque_iterator<enum std::deque<enum SpellID,std::allocator<enum SpellID>,0>::end(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_deque.h:615, dc 0x4ccdc) void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::deque<enum SpellID,std::allocator<enum SpellID>,0>(const std::allocator<enum* __a);
-// CODEVIEW(..\stlport\stl_deque.h:765, dc 0x4ccf8) void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::push_back(const SpellID* __t);
-// CODEVIEW(..\stlport\stl_deque.h:896, dc 0x4cd34) std::_Deque_iterator<enum std::deque<enum SpellID,std::allocator<enum SpellID>,0>::erase(__$ReturnUdt, std::_Deque_iterator<enum __pos);
-// CODEVIEW(..\stlport\stl_alloc.h:527, dc 0x4ce38) void std::allocator<enum SpellID>::allocator<enum SpellID>();
-// CODEVIEW(..\stlport\stl_vector.h:480, dc 0x4ce3c) army** std::vector<army *,std::allocator<army *> >::erase(army** __position);
-// CODEVIEW(..\stlport\stl_vector.h:506, dc 0x4ce88) void std::vector<army *,std::allocator<army *> >::clear();
-// CODEVIEW(..\stlport\stl_deque.h:806, dc 0x4cec0) void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::pop_back();
-// CODEVIEW(..\stlport\stl_deque.h:816, dc 0x4cef4) void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::pop_front();
-// CODEVIEW(..\stlport\stl_deque.h:301, dc 0x4cf2c) std::_Deque_iterator<enum std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator+(__$ReturnUdt, int __n);
-// CODEVIEW(..\stlport\stl_vector.h:490, dc 0x4cf68) army** std::vector<army *,std::allocator<army *> >::erase(army** __first, army** __last);
-// CODEVIEW(..\stlport\stl_deque.h:299, dc 0x4cfa4) std::_Deque_iterator<enum* std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator+=(int __n);
-// CODEVIEW(..\stlport\stl_deque.h:218, dc 0x4cfc0) void std::_Deque_iterator_base<enum SpellID,std::_Buf_size_traits<enum SpellID,0> >::_M_advance(int __n);
-// CODEVIEW(..\stlport\stl_deque.c:318, dc 0x4d07c) void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::clear();
-// CODEVIEW(..\stlport\stl_deque.c:364, dc 0x4d100) void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::_M_push_back_aux(const SpellID* __t);
-// CODEVIEW(..\stlport\stl_deque.c:430, dc 0x4d154) void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::_M_pop_back_aux();
-// CODEVIEW(..\stlport\stl_deque.c:444, dc 0x4d194) void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::_M_pop_front_aux();
-// CODEVIEW(..\stlport\stl_algo.h:102, dc 0x4d1d4) army** std::find(army** __first, army** __last, army** __val);
-// CODEVIEW(..\stlport\stl_algo.h:102, dc 0x4d1f0) std::_Deque_iterator<enum std::find(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, const SpellID* __val);
-// CODEVIEW(..\stlport\stl_algobase.h:137, dc 0x4d25c) const float* std::max(const float* __a, const float* __b);
-// CODEVIEW(..\stlport\stl_algobase.h:442, dc 0x4d26c) std::_Deque_iterator<enum std::copy_backward(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result);
-// CODEVIEW(..\stlport\stl_algobase.h:322, dc 0x4d304) std::_Deque_iterator<enum std::copy(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result);
-// CODEVIEW(..\stlport\stl_algobase.h:322, dc 0x4d39c) army** std::copy(army** __first, army** __last, army** __result);
-// CODEVIEW(..\stlport\stl_construct.h:128, dc 0x4d3ec) void std::destroy(SpellID* __first, SpellID* __last);
-// CODEVIEW(..\stlport\stl_deque.h:1145, dc 0x4d41c) void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::_M_reserve_map_at_back(unsigned __nodes_to_add);
-// CODEVIEW(..\stlport\stl_deque.c:731, dc 0x4d44c) void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::_M_reallocate_map(unsigned __nodes_to_add, unsigned char __add_at_front);
-// CODEVIEW(..\stlport\stl_algo.h:66, dc 0x4d55c) army** std::find(army** __first, army** __last, army** __val, std::input_iterator_tag __formal);
-// CODEVIEW(..\stlport\stl_algo.h:66, dc 0x4d574) std::_Deque_iterator<enum std::find(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, const SpellID* __val, std::input_iterator_tag __formal);
-// CODEVIEW(..\stlport\stl_deque.h:419, dc 0x4d5d4) std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const std::_Deque_iterator<enum* __formal);
-// CODEVIEW(..\stlport\stl_deque.h:425, dc 0x4d5e0) int* std::distance_type(const std::_Deque_iterator<enum* __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:382, dc 0x4d5e4) std::_Deque_iterator<enum std::__copy_backward(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result, std::random_access_iterator_tag __formal, int* __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:209, dc 0x4d65c) std::_Deque_iterator<enum std::__copy(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result, std::random_access_iterator_tag __formal, int* __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:209, dc 0x4d6d4) army** std::__copy(army** __first, army** __last, army** __result, std::random_access_iterator_tag __formal, int* __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:262, dc 0x4d6f4) SpellID* std::value_type(const SpellID* __formal);
-// CODEVIEW(..\stlport\stl_construct.h:121, dc 0x4d6f8) void std::__destroy(SpellID* __first, SpellID* __last, SpellID* __formal);
-// CODEVIEW(..\stlport\stl_deque.h:292, dc 0x4d714) std::_Deque_iterator<enum* std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator--();
-// CODEVIEW(..\stlport\stl_deque.h:208, dc 0x4d730) void std::_Deque_iterator_base<enum SpellID,std::_Buf_size_traits<enum SpellID,0> >::_M_decrement();
-// CODEVIEW(..\stlport\stl_algobase.h:322, dc 0x4d760) SpellID** std::copy(SpellID** __first, SpellID** __last, SpellID** __result);
-// CODEVIEW(..\stlport\stl_algobase.h:442, dc 0x4d7b0) SpellID** std::copy_backward(SpellID** __first, SpellID** __last, SpellID** __result);
-// CODEVIEW(..\stlport\stl_construct.h:110, dc 0x4d800) void std::__destroy_aux(SpellID* __first, SpellID* __last, __false_type __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:243, dc 0x4d830) std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, SpellID** __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:291, dc 0x4d83c) int* std::distance_type(SpellID** __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:209, dc 0x4d840) SpellID** std::__copy(SpellID** __first, SpellID** __last, SpellID** __result, std::random_access_iterator_tag __formal, int* __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:382, dc 0x4d860) SpellID** std::__copy_backward(SpellID** __first, SpellID** __last, SpellID** __result, std::random_access_iterator_tag __formal, int* __formal);
-
-// --- townManager ---
-// CODEVIEW(E:\gamedcs\TownMgr.h:745, dc 0x4cc8c) TTerrainType townManager::GetNativeTerrain(int type);
 
 #endif  /* HOMM3_ARMY_H */

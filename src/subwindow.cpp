@@ -1,4 +1,3 @@
-// subwindow.cpp - E:\gamedcs\subwindow.cpp (compiland subwindow.obj)
 // 10 functions in link order.
 #include <va.h>
 #include "subwindow.h"

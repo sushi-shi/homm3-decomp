@@ -1,6 +1,3 @@
-// dxplay.cpp - E:\gamedcs\dxplay.cpp (compiland dxplay.obj)
-// 124 functions in link order.
-
 // Retail emits this TU in the drawing->event_record gap (0x96c50..0x9a1e0,
 // bracket from evidence/link-order/gaps.tsv); ds_engine, the other alphabetical
 // candidate for that gap, is NOT resident here - GetErrorDesc's DPERR switch,
@@ -1460,76 +1457,6 @@ int operator==(const _GUID* guidOne, const _GUID* guidOther)
     // @stub
 }
 
-// E:\gamedcs\dxplay.h:57
-DC_ONLY(0x8bca0, 0x8C)
-void CDPlaySession::CDPlaySession(const DPSESSIONDESC2* lpSession)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.h:113
-DC_ONLY(0x8bd2c, 0x64)
-void CDPlayConnection::CDPlayConnection(const _GUID* lpGuid, unsigned long connSize, void* lpConn, char* name)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.h:125
-DC_ONLY(0x8bd90, 0x18)
-void CDPlayConnection::~CDPlayConnection()
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.h:137
-DC_ONLY(0x8bda8, 0xA)
-void CDPlayMsg::CDPlayMsg()
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.h:150
-DC_ONLY(0x8bdcc, 0x40)
-unsigned char CDPlayMsg::allocSize(unsigned long dSize)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.h:164
-DC_ONLY(0x8be0c, 0x2C)
-unsigned char CDPlayMsg::destroy()
-{
-    // @stub
-}
-
-
-// E:\gamedcs\dxplay.h:203
-DC_ONLY(0x8be48, 0x28)
-void CDPlayPlayer::CDPlayPlayer(char* sName, unsigned long dpid)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.h:231
-DC_ONLY(0x8be70, 0x1C)
-void CDPlayGroup::CDPlayGroup(char* sName, unsigned long dpid)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.h:244
-DC_ONLY(0x8be8c, 0x44)
-void CDPlayAddressElement::CDPlayAddressElement(const _GUID* lpGuid, const void* pData, unsigned long dataSize)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.h:257
-DC_ONLY(0x8bed0, 0x18)
-void CDPlayAddressElement::~CDPlayAddressElement()
-{
-    // @stub
-}
 
 
 
@@ -1541,73 +1468,23 @@ void CDPlayAddressElement::~CDPlayAddressElement()
 
 
 
-// E:\gamedcs\array.h:51
-DC_ONLY(0x8bfac, 0x64)
-void CAutoArray<CDPlayConnection>::destroy(unsigned char deleteData)
-{
-    // @stub
-}
 
-// E:\gamedcs\array.h:51
-DC_ONLY(0x8c010, 0x58)
-void CAutoArray<CDPlayGroup>::destroy(unsigned char deleteData)
-{
-    // @stub
-}
 
-// E:\gamedcs\array.h:51
-DC_ONLY(0x8c068, 0x58)
-void CAutoArray<CDPlayPlayer>::destroy(unsigned char deleteData)
-{
-    // @stub
-}
 
-// E:\gamedcs\array.h:51
-DC_ONLY(0x8c0c0, 0x58)
-void CAutoArray<CDPlaySession>::destroy(unsigned char deleteData)
-{
-    // @stub
-}
 
-// E:\gamedcs\array.h:37
-DC_ONLY(0x8c118, 0x30)
-void CAutoArray<CDPlayAddressElement>::CAutoArray<CDPlayAddressElement>()
-{
-    // @stub
-}
 
-// E:\gamedcs\array.h:73
-DC_ONLY(0x8c1e4, 0x68)
-unsigned char CAutoArray<CDPlayAddressElement>::add(CDPlayAddressElement* element)
-{
-    // @stub
-}
 
-// E:\gamedcs\array.h:113
-DC_ONLY(0x8c278, 0x3A)
-unsigned char CAutoArray<CDPlayAddressElement>::Delete(unsigned long elementNbr)
-{
-    // @stub
-}
 
-// E:\gamedcs\array.h:127
-DC_ONLY(0x8c2b4, 0x6E)
-unsigned char CAutoArray<CDPlayAddressElement>::insert(unsigned long nextElementNbr, CDPlayAddressElement* element)
-{
-    // @stub
-}
 
-// ..\stlport\stl_bvector.h:144
-DC_ONLY(0x8c328, 0x34)
-void* CDPlayConnection::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
 
-// ..\stlport\stl_bvector.h:144
-DC_ONLY(0x8c390, 0x34)
-void* CDPlayAddressElement::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
+
+
+
+
+
+
+
+
+
+
 #endif  // @carcass

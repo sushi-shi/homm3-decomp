@@ -1,4 +1,3 @@
-// tradpost.cpp - E:\gamedcs\tradpost.cpp (compiland tradpost.obj)
 #include <stdio.h>
 #include "creaturetype.h"
 #include <string.h>

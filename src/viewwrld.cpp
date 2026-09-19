@@ -1,4 +1,3 @@
-// viewwrld.cpp - E:\gamedcs\viewwrld.cpp (compiland viewwrld.obj)
 // 26 Dreamcast functions in link order; 20 compiler-generated $-thunks
 // omitted. Complete adds the two retail-only level-button callbacks below.
 #include <va.h>

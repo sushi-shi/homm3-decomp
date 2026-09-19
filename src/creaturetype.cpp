@@ -1,4 +1,3 @@
-// creaturetype.cpp - E:\gamedcs\creaturetype.cpp (compiland creaturetype.obj)
 #include <va.h>
 #include <stdlib.h>
 #include <string.h>

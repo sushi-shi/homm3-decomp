@@ -1,4 +1,3 @@
-// townmgr.h - prototypes of townmgr.cpp (compiland townmgr.obj)
 #ifndef HOMM3_TOWNMGR_H
 #define HOMM3_TOWNMGR_H
 
@@ -970,113 +969,7 @@ extern townManager* g_townManager;
 
 void doShipyard(int type);
 
-// --- globals ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:5361, dc 0x173ce0) void DoBlacksmith(int heroID, int type);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:5778, dc 0x174f60) int ExitTownManager(message* msg);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:8055, dc 0x17ad8c) unsigned char DoTavern();
-
-// --- CTownNetMsgHandler ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:1830, dc 0x181418) void CTownNetMsgHandler::CTownNetMsgHandler(TResourceDisplay* pResourceDisplay);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:1836, dc 0x181468) void CTownNetMsgHandler::SetResourceDisplay(TResourceDisplay* pResourceDisplay);
-
-// --- TBlacksmithWindow ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:5284, dc 0x18169c) void* TBlacksmithWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- TBuyBuildWindow ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:7272, dc 0x179090) void TBuyBuildWindow::set_prerequisite_text(const town* current_town, type_building_id buildingId);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:7489, dc 0x179900) void TBuyBuildWindow::SetRolloverText(int codeY);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:7509, dc 0x1799b8) void TBuyBuildWindow::SetRightClickText();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:7513, dc 0x1799bc) int TBuyBuildWindow::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:7259, dc 0x181738) void* TBuyBuildWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- TCastleWindow ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:8642, dc 0x17f160) void TCastleWindow::show_scroller();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:8762, dc 0x17f4f8) void TCastleWindow::ShowText();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:8776, dc 0x17f54c) void TCastleWindow::SetRolloverText(message* msg);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:8833, dc 0x17f6e8) void TCastleWindow::Recruit(int i);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:8628, dc 0x1817a0) void* TCastleWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- TGarrisonWindow ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:5177, dc 0x181650) void* TGarrisonWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- THallWindow ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:4461, dc 0x181568) void* THallWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- TMageGuildWindow ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:4652, dc 0x171118) int TMageGuildWindow::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:4603, dc 0x18159c) void* TMageGuildWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- TShipWindow ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:5394, dc 0x173ee4) void TShipWindow::TShipWindow(int townType);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:5461, dc 0x174654) void TShipWindow::SetRightClickText();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:5465, dc 0x174658) void TShipWindow::SetRolloverText(int codeY);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:5449, dc 0x1816d0) void* TShipWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- TTavernWindow ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:7903, dc 0x17aa28) int TTavernWindow::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:7835, dc 0x18176c) void* TTavernWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- TThievesGuildWindow ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:3951, dc 0x16df0c) void TThievesGuildWindow::show_side();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:4070, dc 0x16e2f4) void TThievesGuildWindow::SetRolloverText(int codeY);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:9206, dc 0x180204) void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:3936, dc 0x181534) void* TThievesGuildWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- TTownMenu ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:6966, dc 0x1770bc) void TTownMenu::TTownMenu();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:7040, dc 0x1785c8) void TTownMenu::~TTownMenu();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:7048, dc 0x178638) int TTownMenu::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:7110, dc 0x178760) void TTownMenu::SetupStrips();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:7133, dc 0x1787e0) void TTownMenu::NewStrips();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:7037, dc 0x181704) void* TTownMenu::`scalar deleting destructor'(unsigned __flags);
-
-// --- TTownScreenWindow ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:2526, dc 0x16b030) void TTownScreenWindow::DoTownKnob(unsigned char up);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:2547, dc 0x16b084) void TTownScreenWindow::bonus_right_click(long id);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:2562, dc 0x16b0e8) void TTownScreenWindow::set_bonus_display(town* currTown);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:2438, dc 0x181498) void* TTownScreenWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- strip ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:3059, dc 0x1814cc) void* strip::`scalar deleting destructor'(unsigned __flags);
-
-// --- town ---
-// CODEVIEW(E:\gamedcs\town.h:305, dc 0x181404) long town::get_generator_bonus(long dwelling);
-
-// --- townManager ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:2833, dc 0x16b9e4) void townManager::ChangeTown(unsigned char fade);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:2897, dc 0x16bba4) void townManager::SetupTown(unsigned char fade);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:3383, dc 0x16c940) void townManager::SetCommandAndText(message* msg);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:3681, dc 0x16ceb4) void townManager::SetCommandAndText2(message* msg);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:3825, dc 0x16d1e0) void townManager::ArmyCommand(strip* whichStrip, int i, int shift, unsigned char join_dialog);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:3841, dc 0x16d23c) void townManager::ShowText();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:4728, dc 0x1712c4) void townManager::create_popup_bank(heroWindow* parent);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:5583, dc 0x174990) void townManager::show_hall_side();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:5854, dc 0x175160) int townManager::Main(message* msg);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:6792, dc 0x176bf0) void townManager::MoveHeroToGarrison();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:6931, dc 0x177044) void townManager::DrawTown(int update, int incFrame, unsigned char drawHotspots);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:7354, dc 0x1793b4) int townManager::BuyBuild(int buildingId, int infoOnly, int bQuickView);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:7564, dc 0x179b28) void townManager::BuildObj(int buildingId);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:8203, dc 0x17b318) void townManager::DoTownGate();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:8243, dc 0x17b428) void townManager::MoveHero(town* fromTown, town* toTown);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:9067, dc 0x17fd08) void townManager::SetupWell(TCastleWindow* wellWin);
-
-// --- townObject ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:1900, dc 0x16a1a4) void townObject::~townObject();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:1913, dc 0x16a224) void townObject::DrawOutline();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:1919, dc 0x16a268) void townObject::DrawHotspot();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:1925, dc 0x16a2b0) void townObject::Draw(int incFrame, unsigned char drawHotspots);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:3171, dc 0x181500) void* townObject::`scalar deleting destructor'(unsigned __flags);
-
-// --- type_garrison_base_window ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:4940, dc 0x172af0) void type_garrison_base_window::SetCommandAndText(message* msg);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:4998, dc 0x172c68) void type_garrison_base_window::ShowText();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:5012, dc 0x172ca0) void type_garrison_base_window::ViewArmy();
-// CODEVIEW(E:\gamedcs\townmgr.cpp:5027, dc 0x172cf4) int type_garrison_base_window::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:4929, dc 0x1815d0) void* type_garrison_base_window::`scalar deleting destructor'(unsigned __flags);
-
 // --- type_monster_join_window ---
-// CODEVIEW(E:\gamedcs\townmgr.cpp:5136, dc 0x172f34) void type_monster_join_window::type_monster_join_window(hero* inHero, armyGroup* monsters);
-// CODEVIEW(E:\gamedcs\townmgr.cpp:5156, dc 0x181604) void* type_monster_join_window::`scalar deleting destructor'(unsigned __flags);
 
 // The shared frame-pacing stamp at .bss 0x698998. cmbtmgr.h owns the
 // DATA claim (advmgr's Open/Main and drawing.cpp share the cell);

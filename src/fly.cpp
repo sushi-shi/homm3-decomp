@@ -1,4 +1,3 @@
-// fly.cpp - E:\gamedcs\fly.cpp (compiland fly.obj)
 // 7 functions in link order.
 #include <va.h>
 #include <math.h>

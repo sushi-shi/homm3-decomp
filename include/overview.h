@@ -1,4 +1,3 @@
-// overview.h - prototypes of overview.cpp (compiland overview.obj)
 #ifndef HOMM3_OVERVIEW_H
 #define HOMM3_OVERVIEW_H
 
@@ -125,28 +124,5 @@ private:
     std::vector<textWidget*> m_flaggableCountWidgets;
 };
 SIZE(TOverviewWindow, 0x80);
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\overview.cpp:1279, dc 0x106d98) void UpdateFlaggableIcons();
-// CODEVIEW(E:\gamedcs\overview.cpp:1562, dc 0x1077e8) void UpdateArtifacts(int iSlot);
-// CODEVIEW(E:\gamedcs\overview.cpp:1612, dc 0x107974) void increment_backpack_start(long slot);
-// CODEVIEW(E:\gamedcs\overview.cpp:1629, dc 0x1079b8) void decrement_backpack_start(long slot);
-// CODEVIEW(E:\gamedcs\overview.cpp:1647, dc 0x1079fc) void show_artifact(hero* currHero, const type_artifact* artifact, unsigned char right_mouse);
-
-// --- TOverviewWindow ---
-// CODEVIEW(E:\gamedcs\overview.cpp:2017, dc 0x1084f0) void TOverviewWindow::TOverviewWindow();
-// CODEVIEW(E:\gamedcs\overview.cpp:2096, dc 0x108fdc) void TOverviewWindow::ClearButtons(int slot);
-// CODEVIEW(E:\gamedcs\overview.cpp:2103, dc 0x10902c) void TOverviewWindow::UpdateRollover(char* cText);
-// CODEVIEW(E:\gamedcs\overview.cpp:2115, dc 0x10906c) void TOverviewWindow::DoRollover(int codeY);
-// CODEVIEW(E:\gamedcs\overview.cpp:2546, dc 0x10997c) int TOverviewWindow::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\overview.cpp:2083, dc 0x10a210) void* TOverviewWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- game ---
-// CODEVIEW(E:\gamedcs\overview.cpp:220, dc 0x104458) void game::SetupDynamicStuff(int bUpdate, int bForceUpdate);
-// CODEVIEW(E:\gamedcs\overview.cpp:1170, dc 0x1069fc) void game::SetupNewOverviewType(int iWhichType, unsigned char bUpdate);
-// CODEVIEW(E:\gamedcs\overview.cpp:1663, dc 0x107a90) int game::ProcessIconSelect(int codeY, unsigned char bRightMouse);
-
-// --- hero ---
-// CODEVIEW(E:\gamedcs\Hero.h:664, dc 0x10a1f8) town* hero::GetOccupiedTown();
 
 #endif  /* HOMM3_OVERVIEW_H */

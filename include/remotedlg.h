@@ -257,11 +257,4 @@ protected:
 };
 SIZE(CGameTransferDlg, 0x70);
 
-// --- CSaveScreen ---
-
-// --- CGameTransferSmack ---
-// CODEVIEW(E:\gamedcs\remote.cpp:2784, dc 0x11ede8) void CGameTransferSmack::DrawCurrentFrame();
-
-// --- CGameTransferDlg ---
-
 #endif  /* HOMM3_REMOTEDLG_H */

@@ -1,4 +1,3 @@
-// ResSw.cpp - E:\gamedcs\ResSw.cpp (compiland ResSw.obj)
 #include <va.h>
 // #include "ResSw.h"
 

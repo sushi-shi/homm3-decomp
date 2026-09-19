@@ -1,5 +1,3 @@
-// border.cpp - E:\gamedcs\border.cpp (compiland border.obj)
-// 43 functions in link order.
 #include "terrain.h"
 #include <va.h>
 #include <string.h>
@@ -432,12 +430,6 @@ int bitmapBorder16::main(message& msg)
 
 #if 0  // @carcass
 
-// E:\gamedcs\Widget.h:187
-DC_ONLY(0x54d20, 0x4)
-void widget::onKillFocus()
-{
-    // @stub
-}
 
 // E:\gamedcs\border.cpp:35
 DC_ONLY(0x54d24, 0x34)

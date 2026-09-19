@@ -1,4 +1,3 @@
-// levelupwindow.cpp - E:\gamedcs\levelupwindow.cpp (compiland levelupwindow.obj)
 #include <va.h>
 #include <stdio.h>
 #include "levelupwindow.h"

@@ -1,5 +1,11 @@
 # VC6 SP3 behavior catalog — the model's spec and test corpus
 
+Historical experiment filenames below refer to the searches recorded here.
+Per-function behavioral fixtures have been retired, as have generators for
+completed matches; their last versions remain in Git history. New matching
+uses VC6/retail comparison and the JSON runner. Keep any targeted behavioral
+diagnostic under ignored `build/`, rather than maintaining a mock game suite.
+
 This document is the specification the `vc6` predictors are built against and
 **the model's test corpus**: every behavior below carries a stable ID, its
 in-tree evidence pointer, a status, and a `probe:` field. A landed probe is an

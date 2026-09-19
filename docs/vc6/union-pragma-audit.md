@@ -1,5 +1,11 @@
 # Union and pragma audit
 
+Historical experiment filenames below refer to the searches recorded here.
+Per-function behavioral fixtures have been retired, as have generators for
+completed matches; their last versions remain in Git history. New matching
+uses VC6/retail comparison and the JSON runner. Keep any targeted behavioral
+diagnostic under ignored `build/`, rather than maintaining a mock game suite.
+
 Scope: project-owned game C++ in `src/` and `include/`, against baseline
 `231248aa`, English GOG Complete 4.0 and the pinned per-TU VC6 SP3 profiles.
 Counts are definitions/directive regions, not keyword hits in comments or

@@ -1,4 +1,3 @@
-// ai_tactical.h - prototypes of ai_tactical.cpp (compiland ai_tactical.obj)
 #ifndef HOMM3_AI_TACTICAL_H
 #define HOMM3_AI_TACTICAL_H
 
@@ -410,83 +409,5 @@ long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex,
 long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex,
                       long troopCount, const army* enemy, long enemyHex,
                       const type_AI_combat_parameters* estimate);
-
-// --- army ---
-// CODEVIEW(E:\gamedcs\Army.h:724, dc 0x429c0) int army::GetMorale(unsigned char apply_limits);
-// CODEVIEW(E:\gamedcs\Army.h:730, dc 0x429f4) int army::GetLuck(unsigned char apply_limits);
-// CODEVIEW(E:\gamedcs\Army.h:825, dc 0x42a28) TSkillMastery army::get_spell_level(SpellID spell);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:2183, dc 0x42aa8) void army::army(const army* __that);
-
-// --- combatManager ---
-// CODEVIEW(E:\gamedcs\cmbtmgr.h:1466, dc 0x42a3c) army* combatManager::find_resurrection_target(SpellID spell, long group, long hex, unsigned char creature_spell);
-
-// --- std ---
-// CODEVIEW(..\stlport\stl_deque.h:128, dc 0x42994) unsigned std::__deque_buf_size(unsigned __n, unsigned size);
-// CODEVIEW(..\stlport\stl_deque.h:622, dc 0x42db0) void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::deque<enum SpellID,std::allocator<enum SpellID>,0>(const std::deque<enum* __x);
-// CODEVIEW(..\stlport\stl_vector.h:236, dc 0x42e68) void std::vector<army *,std::allocator<army *> >::vector<army *,std::allocator<army *> >(const std::vector<army* __x);
-// CODEVIEW(..\stlport\stl_deque.h:570, dc 0x42ec8) std::_Deque_iterator<enum std::deque<enum SpellID,std::allocator<enum SpellID>,0>::begin(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_deque.h:571, dc 0x42edc) std::_Deque_iterator<enum std::deque<enum SpellID,std::allocator<enum SpellID>,0>::end(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_deque.h:610, dc 0x42ef0) unsigned std::deque<enum SpellID,std::allocator<enum SpellID>,0>::size();
-// CODEVIEW(..\stlport\stl_deque.h:452, dc 0x42f08) void std::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>(const std::allocator<enum* __a, unsigned __num_elements);
-// CODEVIEW(..\stlport\stl_deque.h:460, dc 0x42f70) std::allocator<enum std::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>::get_allocator(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_vector.h:153, dc 0x42f7c) std::allocator<army std::vector<army *,std::allocator<army *> >::get_allocator(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_vector.h:94, dc 0x42f84) void std::_Vector_base<army *,std::allocator<army *> >::_Vector_base<army *,std::allocator<army *> >(unsigned __n, const std::allocator<army* __a);
-// CODEVIEW(..\stlport\stl_deque.h:272, dc 0x42fcc) void std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >();
-// CODEVIEW(..\stlport\stl_deque.h:283, dc 0x42fe8) int std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator-(const std::_Deque_iterator<enum* __x);
-// CODEVIEW(..\stlport\stl_alloc.h:1004, dc 0x43000) void std::_STL_alloc_proxy<enum SpellID * *,enum SpellID *,std::allocator<enum SpellID> >::_STL_alloc_proxy<enum SpellID * *,enum SpellID *,std::allocator<enum SpellID> >(const std::allocator<enum* __a, SpellID*** __p);
-// CODEVIEW(..\stlport\stl_alloc.h:1004, dc 0x4300c) void std::_STL_alloc_proxy<unsigned int,enum SpellID,std::allocator<enum SpellID> >::_STL_alloc_proxy<unsigned int,enum SpellID,std::allocator<enum SpellID> >(const std::allocator<enum* __a, const unsigned* __p);
-// CODEVIEW(..\stlport\stl_deque.h:190, dc 0x43018) void std::_Deque_iterator_base<enum SpellID,std::_Buf_size_traits<enum SpellID,0> >::_Deque_iterator_base<enum SpellID,std::_Buf_size_traits<enum SpellID,0> >();
-// CODEVIEW(..\stlport\stl_deque.h:193, dc 0x43028) int std::_Deque_iterator_base<enum SpellID,std::_Buf_size_traits<enum SpellID,0> >::_M_subtract(const std::_Deque_iterator_base<enum* __x);
-// CODEVIEW(..\stlport\stl_deque.c:118, dc 0x43054) void std::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>::_M_initialize_map(unsigned __num_elements);
-// CODEVIEW(..\stlport\stl_uninitialized.h:97, dc 0x43118) std::_Deque_iterator<enum std::uninitialized_copy(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result);
-// CODEVIEW(..\stlport\stl_uninitialized.h:97, dc 0x431a4) army** std::uninitialized_copy(army** __first, army** __last, army** __result);
-// CODEVIEW(..\stlport\stl_alloc.h:1022, dc 0x431dc) SpellID** std::_STL_alloc_proxy<enum SpellID * *,enum SpellID *,std::allocator<enum SpellID> >::allocate(unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:547, dc 0x43204) SpellID** std::allocator<enum SpellID *>::allocate(unsigned __n, const void* __formal);
-// CODEVIEW(..\stlport\stl_deque.c:144, dc 0x43228) void std::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>::_M_create_nodes(SpellID** __nstart, SpellID** __nfinish);
-// CODEVIEW(..\stlport\stl_uninitialized.h:88, dc 0x43264) std::_Deque_iterator<enum std::__uninitialized_copy(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result, SpellID* __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:88, dc 0x432e0) army** std::__uninitialized_copy(army** __first, army** __last, army** __result, army** __formal);
-// CODEVIEW(..\stlport\stl_alloc.h:1022, dc 0x432fc) SpellID* std::_STL_alloc_proxy<unsigned int,enum SpellID,std::allocator<enum SpellID> >::allocate(unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:547, dc 0x43324) SpellID* std::allocator<enum SpellID>::allocate(unsigned __n, const void* __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:70, dc 0x43348) std::_Deque_iterator<enum std::__uninitialized_copy_aux(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result, __false_type __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:70, dc 0x433d4) army** std::__uninitialized_copy_aux(army** __first, army** __last, army** __result, __false_type __formal);
-// CODEVIEW(..\stlport\stl_deque.h:276, dc 0x43410) const SpellID* std::_Deque_iterator<enum SpellID,std::_Const_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator*();
-// CODEVIEW(..\stlport\stl_deque.h:285, dc 0x43414) std::_Deque_iterator<enum* std::_Deque_iterator<enum SpellID,std::_Const_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator++();
-// CODEVIEW(..\stlport\stl_construct.h:85, dc 0x43430) void std::construct(SpellID* __p, const SpellID* __value);
-
-// --- type_AI_attack_hex_chooser ---
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:511, dc 0x3cf50) long type_AI_attack_hex_chooser::get_hex_attack_value(long hex, long& checked);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:575, dc 0x3d154) long type_AI_attack_hex_chooser::get_attack_time(const pathCell* cell);
-
-// --- type_AI_combat_parameters ---
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:215, dc 0x3c854) void type_AI_combat_parameters::simulate_single_attack(const army* current_army, long* our_hits, const army* enemy, long* enemy_hits, unsigned char ranged, long distance);
-
-// --- type_AI_spellcaster ---
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:779, dc 0x3d5dc) void type_AI_spellcaster::initialize(combatManager* combat, long side);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:793, dc 0x3d604) void type_AI_spellcaster::type_AI_spellcaster(combatManager* combat, long side, unsigned char creature_spell);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:817, dc 0x3d6f0) void type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent, combatManager* combat, long side, unsigned char creature_spell);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:837, dc 0x3d7b0) unsigned char type_AI_spellcaster::is_last_action();
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:965, dc 0x3dabc) long type_AI_spellcaster::get_group_damage_value(SpellID spell, long base_damage, long group, hero* target_hero);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:1035, dc 0x3dc50) void type_AI_spellcaster::consider_area_effect(type_spell_choice* choice);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:1126, dc 0x3de90) void type_AI_spellcaster::consider_mass_damage(type_spell_choice* choice);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:1158, dc 0x3df5c) long type_AI_spellcaster::get_attack_boost_value(const army* our_army, const army* enemy, long old_damage, long duration, double increase);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:1186, dc 0x3e120) long type_AI_spellcaster::get_attack_boost_value(const army* our_army, const army* enemy, long duration, double increase);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:1218, dc 0x3e280) long type_AI_spellcaster::get_frenzy_value(const army* our_army, type_enchant_data caster);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:1767, dc 0x3f9d0) long type_AI_spellcaster::get_move_order_change_value(const army* our_army);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:1788, dc 0x3fa24) long type_AI_spellcaster::get_muck_and_mire_value(const army* enemy, type_enchant_data caster);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:2116, dc 0x40130) double type_AI_spellcaster::get_duration(long turns, unsigned char moved_this_turn);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:2553, dc 0x40ec0) void type_AI_spellcaster::consider_teleport(type_spell_choice* choice);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:2608, dc 0x4101c) void type_AI_spellcaster::consider_resurrect(type_spell_choice* choice);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:2685, dc 0x41278) void type_AI_spellcaster::consider_sacrifice(type_spell_choice* choice, const army* healed_army, long target_hex);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:3093, dc 0x41e5c) void type_AI_spellcaster::consider_summon(type_spell_choice* choice);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:3191, dc 0x420ac) void type_AI_spellcaster::set_melee_enemies();
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:3221, dc 0x42170) void type_AI_spellcaster::set_worst_enemies();
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:3237, dc 0x42220) void type_AI_spellcaster::add_enemy(type_AI_enemy_data* sum, const army* our_army, const army* enemy, unsigned char ranged);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:3254, dc 0x4227c) void type_AI_spellcaster::find_enemy_attacks();
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:3377, dc 0x425a8) void type_AI_spellcaster::check_simulation();
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:3398, dc 0x42610) unsigned char type_AI_spellcaster::spells_not_required();
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:807, dc 0x42a74) void* type_AI_spellcaster::`scalar deleting destructor'(unsigned __flags);
-
-// --- type_enchant_data ---
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:744, dc 0x3d524) void type_enchant_data::type_enchant_data(SpellID new_spell, TSkillMastery new_mastery, long new_power, long new_duration);
 
 #endif  /* HOMM3_AI_TACTICAL_H */

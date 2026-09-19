@@ -1,4 +1,3 @@
-// herodefs.cpp - E:\gamedcs\herodefs.cpp (compiland herodefs.obj)
 #include <va.h>
 #include <stdlib.h>
 #include <string.h>

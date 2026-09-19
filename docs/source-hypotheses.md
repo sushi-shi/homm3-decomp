@@ -1,5 +1,11 @@
 # Source-hypothesis batches
 
+Historical experiment filenames below refer to the searches recorded here.
+Per-function behavioral fixtures have been retired, as have generators for
+completed matches; their last versions remain in Git history. New matching
+uses VC6/retail comparison and the JSON runner. Keep any targeted behavioral
+diagnostic under ignored `build/`, rather than maintaining a mock game suite.
+
 `homm3 hypotheses` (also available as `homm3 vc6 hypotheses`) adapts King's Field's `kf hypotheses` manifest and
 Cartesian source renderer to the configured HoMM3 VC6 profiles and normalized
 objdiff scoring. Each option describes a reviewed, exact source substitution.

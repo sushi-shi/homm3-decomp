@@ -1,4 +1,3 @@
-// campaignmap.cpp - E:\gamedcs\campaignmap.cpp (compiland campaignmap.obj)
 // retains the table initializer and its static-dtor wrapper, both exact. Nine
 // Dreamcast AutoArrayPtr / ResourcePtr roster entries are header emissions and
 // have no distinct retail bodies in this compiland.

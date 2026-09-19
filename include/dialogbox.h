@@ -1,4 +1,3 @@
-// dialogbox.h - prototypes of dialogbox.cpp (compiland dialogbox.obj)
 #ifndef HOMM3_DIALOGBOX_H
 #define HOMM3_DIALOGBOX_H
 
@@ -47,13 +46,5 @@ protected:
                                 int& winWidth, int& winHeight);
 };
 SIZE(CTextDialog, 0x58);
-
-// --- CTextDialog ---
-// CODEVIEW(E:\gamedcs\dialogbox.cpp:139, dc 0x81d8c) void CTextDialog::CTextDialog(const char* cText, font* pFont, unsigned winType);
-// CODEVIEW(E:\gamedcs\dialogbox.cpp:143, dc 0x82034) void* CTextDialog::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\dialogbox.cpp:143, dc 0x82068) void CTextDialog::~CTextDialog();
-
-// --- TDialogBox ---
-// CODEVIEW(E:\gamedcs\dialogbox.cpp:38, dc 0x82000) void* TDialogBox::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_DIALOGBOX_H */

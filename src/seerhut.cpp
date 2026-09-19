@@ -1,4 +1,3 @@
-// seerhut.cpp - E:\gamedcs\seerhut.cpp (compiland seerhut.obj)
 #include <va.h>
 #include "creaturetype.h"
 #include <algorithm>
@@ -133,55 +132,6 @@ int TSeerHut::save(void* outfile)
 // E:\gamedcs\seerhut.cpp:535
 DC_ONLY(0x12d8e4, 0x40)
 int TSeerHut::load(void* infile)
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:505
-DC_ONLY(0x12d924, 0x30)
-void std::vector<TSeerHut,std::allocator<TSeerHut> >::resize(unsigned __new_size)
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:499
-DC_ONLY(0x12d954, 0x80)
-void std::vector<TSeerHut,std::allocator<TSeerHut> >::resize(unsigned __new_size, const TSeerHut* __x)
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:472
-DC_ONLY(0x12d9d4, 0x18)
-void std::vector<TSeerHut,std::allocator<TSeerHut> >::insert(TSeerHut* __pos, unsigned __n, const TSeerHut* __x)
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.c:283
-DC_ONLY(0x12d9ec, 0xFC)
-void std::vector<TSeerHut,std::allocator<TSeerHut> >::_M_fill_insert(TSeerHut* __position, unsigned __n, const TSeerHut* __x)
-{
-    // @stub
-}
-
-// ..\stlport\stl_algobase.h:442
-DC_ONLY(0x12dae8, 0x50)
-TSeerHut* std::copy_backward(TSeerHut* __first, TSeerHut* __last, TSeerHut* __result)
-{
-    // @stub
-}
-
-// ..\stlport\stl_algobase.h:495
-DC_ONLY(0x12db38, 0x36)
-void std::fill(TSeerHut* __first, TSeerHut* __last, const TSeerHut* __value)
-{
-    // @stub
-}
-
-// ..\stlport\stl_algobase.h:382
-DC_ONLY(0x12db70, 0x58)
-TSeerHut* std::__copy_backward(TSeerHut* __first, TSeerHut* __last, TSeerHut* __result, std::random_access_iterator_tag __formal, int* __formal)
 {
     // @stub
 }

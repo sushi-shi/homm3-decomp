@@ -1,4 +1,3 @@
-// winmgr.h - prototypes of winmgr.cpp (compiland winmgr.obj)
 #ifndef HOMM3_WINMGR_H
 #define HOMM3_WINMGR_H
 
@@ -170,27 +169,5 @@ extern int g_dialogNestCount;
 // Shared absolute deadline consumed by modal-dialog handlers. The DATA claim
 // currently lives with levelupwindow.cpp, the first admitted owner/consumer.
 extern unsigned long g_dialogDeadline697784;
-
-// --- Bitmap816 ---
-// CODEVIEW(E:\gamedcs\Bitmap816.h:73, dc 0x19c5e8) const TPalette16* Bitmap816::GetPalette();
-// CODEVIEW(E:\gamedcs\Bitmap816.h:104, dc 0x19c5f0) const unsigned char* Bitmap816::GetMap(int x, int y);
-
-// --- heroWindowManager ---
-// CODEVIEW(E:\gamedcs\winmgr.cpp:66, dc 0x19a7ec) void heroWindowManager::heroWindowManager();
-// CODEVIEW(E:\gamedcs\winmgr.cpp:461, dc 0x19ad18) int heroWindowManager::DoDialog(heroWindow* dialogWindow, int (*)()* dialogFunction, int bFadeIn);
-// CODEVIEW(E:\gamedcs\winmgr.cpp:645, dc 0x19aef4) int heroWindowManager::DoDialogDraw(heroWindow* dialogWindow, int (*)()* dialogFunction, int (*)()* dialogDrawFunction, int bFadeIn);
-// CODEVIEW(E:\gamedcs\winmgr.cpp:844, dc 0x19b1f0) void heroWindowManager::UpdateScreen();
-// CODEVIEW(E:\gamedcs\winmgr.cpp:916, dc 0x19b328) void heroWindowManager::UpdateScreen(int x, int y, int width, int height, int dx, int dy);
-// CODEVIEW(E:\gamedcs\winmgr.cpp:964, dc 0x19b3c4) void heroWindowManager::BlitToScreenWithPointer(int x, int y, int w, int h);
-// CODEVIEW(E:\gamedcs\winmgr.cpp:986, dc 0x19b3f0) void heroWindowManager::BlitToScreenWithPointerX(int x, int y, int w, int h, int dx, int dy);
-// CODEVIEW(E:\gamedcs\winmgr.cpp:1051, dc 0x19b490) void heroWindowManager::ScreenShot();
-// CODEVIEW(E:\gamedcs\winmgr.cpp:1085, dc 0x19b4bc) void heroWindowManager::SaveFizzleSource(int startX, int startY, int width, int height);
-// CODEVIEW(E:\gamedcs\winmgr.cpp:1194, dc 0x19b66c) void heroWindowManager::FizzleForward(int startX, int startY, int width, int height, int iFadeTime);
-// CODEVIEW(E:\gamedcs\winmgr.cpp:1314, dc 0x19b8fc) void heroWindowManager::FizzleForwardX(int startX, int startY, int width, int height, int iFadeTime);
-// CODEVIEW(E:\gamedcs\winmgr.cpp:1455, dc 0x19bbd4) void heroWindowManager::NextFlashFrame(int startX, int startY, int width, int height, int iFadeTime);
-// CODEVIEW(E:\gamedcs\winmgr.cpp:1463, dc 0x19bc54) void heroWindowManager::Flash(int startX, int startY, int width, int height, int iFadeTime);
-// CODEVIEW(E:\gamedcs\winmgr.cpp:1545, dc 0x19be28) void heroWindowManager::FadeBlit(int sx, int sy, int sw, int sh, const Bitmap816* src_bmp, int dx, int dy, unsigned char tblit, int nframes, int period);
-// CODEVIEW(E:\gamedcs\winmgr.cpp:1707, dc 0x19c1bc) void heroWindowManager::FadeToBlack(int speed, unsigned char expect_fadein);
-// CODEVIEW(E:\gamedcs\winmgr.cpp:1866, dc 0x19c3b8) void heroWindowManager::FadeFromBlack(int speed);
 
 #endif  /* HOMM3_WINMGR_H */

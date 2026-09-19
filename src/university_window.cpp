@@ -1,4 +1,3 @@
-// university_window.cpp - E:\gamedcs\university_window.cpp (compiland university_window.obj)
 #include <va.h>
 #include <windows.h>
 #include <stdio.h>

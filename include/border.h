@@ -1,4 +1,3 @@
-// border.h - prototypes of border.cpp (compiland border.obj)
 #ifndef HOMM3_BORDER_H
 #define HOMM3_BORDER_H
 
@@ -108,38 +107,5 @@ class TPalette24;
 void setPlayerPaletteColors(unsigned short* pal, int whichPlayer);
 void setPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
 void setPlayerPaletteColors(TPalette24& pal, int whichPlayer);
-
-// --- bitmapBorder ---
-// CODEVIEW(E:\gamedcs\border.cpp:323, dc 0x54988) void bitmapBorder::SetPalette(const char* palette_name);
-// CODEVIEW(E:\gamedcs\border.cpp:290, dc 0x54df0) void* bitmapBorder::`scalar deleting destructor'(unsigned __flags);
-
-// --- bitmapBorder16 ---
-// CODEVIEW(E:\gamedcs\border.cpp:415, dc 0x54ba4) void bitmapBorder16::zBufferDraw();
-// CODEVIEW(E:\gamedcs\border.cpp:431, dc 0x54c2c) int bitmapBorder16::GetRealWidth();
-// CODEVIEW(E:\gamedcs\border.cpp:436, dc 0x54c4c) int bitmapBorder16::GetRealHeight();
-// CODEVIEW(E:\gamedcs\border.cpp:441, dc 0x54c6c) void bitmapBorder16::SetImage(const char* bitmap_name);
-// CODEVIEW(E:\gamedcs\border.cpp:404, dc 0x54e24) void* bitmapBorder16::`scalar deleting destructor'(unsigned __flags);
-
-// --- border ---
-// CODEVIEW(E:\gamedcs\border.cpp:34, dc 0x5433c) void border::border();
-// CODEVIEW(E:\gamedcs\border.cpp:67, dc 0x54408) void border::initialize(int x, int y, int w, int h, int id, int style, unsigned char focusable);
-// CODEVIEW(E:\gamedcs\border.cpp:153, dc 0x54590) unsigned char border::handle_click(unsigned char down_click, unsigned char right_click);
-// CODEVIEW(E:\gamedcs\border.cpp:158, dc 0x54594) void border::zBufferDraw();
-// CODEVIEW(E:\gamedcs\border.cpp:161, dc 0x54598) void border::Draw();
-// CODEVIEW(E:\gamedcs\border.cpp:35, dc 0x54d24) void* border::`scalar deleting destructor'(unsigned __flags);
-
-// --- coloredBorder ---
-// CODEVIEW(E:\gamedcs\border.cpp:174, dc 0x5459c) void coloredBorder::coloredBorder(int x, int y, int w, int h, int id, int color_, int style);
-// CODEVIEW(E:\gamedcs\border.cpp:182, dc 0x54614) void coloredBorder::zBufferDraw();
-// CODEVIEW(E:\gamedcs\border.cpp:185, dc 0x54618) void coloredBorder::Draw();
-// CODEVIEW(E:\gamedcs\border.cpp:178, dc 0x54d58) void* coloredBorder::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\border.cpp:178, dc 0x54d8c) void coloredBorder::~coloredBorder();
-
-// --- coloredBorderFrame ---
-// CODEVIEW(E:\gamedcs\border.cpp:210, dc 0x546d0) void coloredBorderFrame::zBufferDraw();
-// CODEVIEW(E:\gamedcs\border.cpp:206, dc 0x54da4) void* coloredBorderFrame::`scalar deleting destructor'(unsigned __flags);
-
-// --- widget ---
-// CODEVIEW(E:\gamedcs\Widget.h:187, dc 0x54d20) void widget::OnKillFocus();
 
 #endif  /* HOMM3_BORDER_H */

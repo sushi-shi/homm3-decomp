@@ -1,4 +1,3 @@
-// bitmap24.cpp - E:\gamedcs\bitmap24.cpp (compiland bitmap24.obj)
 // 15 functions in link order.
 #include <va.h>
 #include <limits>
