@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 from types import SimpleNamespace
+from homm3.build import refresh as build_refresh
 import unittest
 from unittest.mock import patch
 
@@ -86,7 +87,7 @@ class CandidateTest(unittest.TestCase):
             ninja.touch()
             def run(*a, **kw):
                 return subprocess.CompletedProcess([], 1, "", "wineserver: bind: Operation not permitted")
-            with patch.multiple(_asm, NINJA_FILE=ninja, REFRESH_LOCK=root / "lock"), \
+            with patch.multiple(build_refresh, NINJA_FILE=ninja, REFRESH_LOCK=root / "lock"), \
                     contextlib.redirect_stderr(io.StringIO()) as err:
                 with self.assertRaises(SystemExit):
                     _asm.refresh_unit("admitted", run=run)

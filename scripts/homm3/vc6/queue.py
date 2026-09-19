@@ -11,6 +11,8 @@ Both modes write generated evidence, compile nothing, and never edit source.
 """
 from __future__ import annotations
 
+from homm3.core import common
+
 import collections
 import json
 
@@ -257,7 +259,7 @@ def _admission_rows_from_text(data, baseline_text, link_order_text,
     return rows
 
 
-def _admission_rows():
+def _admission_rows(image=None):
     report = _common.REPO / "build/objdiff/report.json"
     baseline = _common.REPO / "config/match_baseline.tsv"
     links = _common.REPO / "evidence/link-order/functions.tsv"
@@ -266,7 +268,7 @@ def _admission_rows():
     if not baseline.is_file():
         _common.die("no config/match_baseline.tsv - run `homm3 build` first")
     from homm3.match import universe
-    category, sizes = universe.classify()
+    category, sizes = universe.classify(image)
     return _admission_rows_from_text(
         json.loads(report.read_text()), baseline.read_text(),
         links.read_text() if links.is_file() else "", category, sizes)
@@ -274,7 +276,8 @@ def _admission_rows():
 
 def _run_admission(args) -> int:
     only = set(filter(None, (args.unit or "").split(",")))
-    rows = _admission_rows()
+    image, _info = common.load_image()
+    rows = _admission_rows(image)
     if only:
         rows = [r for r in rows if r["owner"] in only or
                 any(c in only for c in r["candidates"].split(",") if c)]
@@ -302,7 +305,7 @@ def _run_admission(args) -> int:
         print("\nnext largest admissions:")
         for r in rows[:getattr(args, "limit", 20) or None]:
             label = r["label"] or "(unnamed)"
-            print(f"  {r['size']:6d} B  0x{r['rva'] + 0x400000:08x}  "
+            print(f"  {r['size']:6d} B  0x{r['rva'] + image.image_base:08x}  "
                   f"{r['state']:<19} {r['owner'] or r['candidates']:<28} "
                   f"{label[:64]}")
     print(f"\nwrote {out.relative_to(_common.REPO)}")
@@ -321,7 +324,8 @@ def _run_smallest(args) -> int:
 
     data = json.loads(report_path.read_text())
     baseline = status.load_baseline(baseline_path)
-    categories, sizes = universe.classify()
+    image, _info = common.load_image()
+    categories, sizes = universe.classify(image)
     admission = _admission_rows_from_text(
         data, baseline_path.read_text(),
         links_path.read_text() if links_path.is_file() else "",
@@ -347,7 +351,7 @@ def _run_smallest(args) -> int:
         for row in rows:
             stream.write("\t".join((
                 row["state"], str(row["size"]),
-                f"0x{row['rva'] + 0x400000:08x}",
+                f"0x{row['rva'] + image.image_base:08x}",
                 f"{row['current']:.4f}" if row["current"] is not None else "-",
                 f"{row['maximum']:.4f}", f"{row['historical']:.4f}",
                 row["owner"], row["candidates"], row["label"],
@@ -361,7 +365,7 @@ def _run_smallest(args) -> int:
                  else "unadmitted  ")
         identity = row["label"] or "(unnamed)"
         owner = row["owner"] or row["candidates"] or "?"
-        print(f"  {row['size']:6d} B  0x{row['rva'] + 0x400000:08x}  "
+        print(f"  {row['size']:6d} B  0x{row['rva'] + image.image_base:08x}  "
               f"{score}  {row['state']:<19} {owner}:{identity[:64]}")
     print(f"\nwrote {out.relative_to(_common.REPO)}")
     return 0

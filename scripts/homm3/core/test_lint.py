@@ -17,6 +17,9 @@ class LintTest(unittest.TestCase):
         scripts = Path(__file__).resolve().parents[2]
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
+            (root / "config").mkdir()
+            shutil.copyfile(scripts.parent / "config/project.toml",
+                            root / "config/project.toml")
             for name in (*lint.MODULES, *lint.TESTS):
                 path = root / 'scripts/homm3' / name
                 path.parent.mkdir(parents=True, exist_ok=True)

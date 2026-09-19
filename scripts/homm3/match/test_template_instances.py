@@ -10,6 +10,10 @@ class TemplateInstanceTest(unittest.TestCase):
     def scan(self, body):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            (root / 'config').mkdir()
+            (root / 'config/units.toml').write_text(
+                '[build]\nincludes=["include"]\nanalysis_profile="test"\n'
+                '[flags]\ntest=["/Gr", "/GX", "/D_WINDOWS"]\n')
             (root / 'src').mkdir()
             (root / 'include').mkdir()
             (root / 'include/point.h').write_text(

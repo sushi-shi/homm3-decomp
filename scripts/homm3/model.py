@@ -40,6 +40,7 @@ import csv
 import re
 import sys
 from pathlib import Path
+from dataclasses import dataclass
 
 from homm3.build.canonicalize_data_symbols import normalize_anon_ns_name
 from homm3.core import common
@@ -66,6 +67,47 @@ VOLATILE_E_RE = re.compile(r"^_?\$E[0-9]+$")
 #: values. This module never sees the values, so it may not DECIDE
 #: agreement - it only acts on a fact extraction has already established.
 POOLED_CHANNELS = ("src-DATA_COMPGEN", "src-DATA_COMPGEN_GUARD")
+
+
+def choose_carrier(rva: int, emitters: set[str], banked: dict[int, str],
+                   anchors: list[tuple[int, str]]) -> str | None:
+    if banked.get(rva) in emitters:
+        return banked[rva]
+    if len(emitters) == 1:
+        return next(iter(emitters))
+    if not emitters:
+        return banked.get(rva)
+    lower = [a for a in anchors if a[0] < rva]
+    upper = [a for a in anchors if a[0] > rva]
+    neighbours = set()
+    if lower:
+        neighbours.add(max(lower)[1])
+    if upper:
+        neighbours.add(min(upper)[1])
+    plausible = neighbours & emitters
+    return next(iter(plausible)) if len(plausible) == 1 else banked.get(rva)
+
+
+@dataclass(frozen=True)
+class CarrierPolicy:
+    """Reviewed comparison bindings; missing bodies retain their banked carrier."""
+    banked: dict[int, str]
+    bindings: tuple[tuple[str, int], ...] = ()
+
+    choose = staticmethod(choose_carrier)
+
+    def for_units(self, units) -> dict[int, str]:
+        # Filter before resolving duplicate RVAs, matching the ledger's order.
+        if self.bindings:
+            return {rva: unit for unit, rva in self.bindings if unit in units}
+        return {rva: unit for rva, unit in self.banked.items() if unit in units}
+
+
+def carrier_policy(baseline) -> CarrierPolicy:
+    return CarrierPolicy({row.rva: unit for (unit, _name), row in baseline.items()
+                          if row.rva is not None},
+                         tuple((unit, row.rva) for (unit, _name), row in baseline.items()
+                                   if row.rva is not None))
 
 
 def header_data_problems(sites: dict, rows: dict) -> list[str]:
@@ -167,14 +209,7 @@ def _upgrade_dense_data_alias(row: dict, claim) -> dict:
     return upgraded
 
 
-def main(argv=None) -> int:
-    import argparse
-    # Parse even though there are no options (the gruntz lesson: `--help`
-    # must never run the join and rewrite the inventory as a side effect).
-    argparse.ArgumentParser(
-        prog="homm3 model", description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter).parse_args(argv)
-
+def generate() -> Path:
     functions = {r["rva"]: r["size"] for r in censuses.functions()}
     # evidence/ is enrichment only (scaffolding, slated for removal)
     labels = providers.evidence_symbols()
@@ -273,7 +308,9 @@ def main(argv=None) -> int:
             "vtable-name" if admitted else
             ("vtable-class" if cls else "vtable"))
 
-    for c in iat.claims(Path(info["path"])):
+    from homm3.core.project import Project
+    project = Project(common.HOMM3_DIR)
+    for c in iat.claims(Path(info["path"]), project.toolchain / "lib"):
         put(c.rva, c.name, "", c.size, "data", c.channel)
 
     # dense naming for every absolute-relocation target, required because
@@ -360,6 +397,18 @@ def main(argv=None) -> int:
     if skipped_targets:
         print(f"  reloc targets outside .rdata/.data: {skipped_targets} "
               "skipped")
+    return OUT
+
+
+def main(argv=None) -> int:
+    import argparse
+    # Parse even though there are no options (the gruntz lesson: `--help`
+    # must never run the join and rewrite the inventory as a side effect).
+    argparse.ArgumentParser(
+        prog="homm3 model", description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter).parse_args(argv)
+
+    generate()
     return 0
 
 

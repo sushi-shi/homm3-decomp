@@ -114,7 +114,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--order", help="file listing obj stems/paths in link order.")
     ap.add_argument("--lib", action="append", default=[],
                     help="extra import/static lib to pass to link (repeatable).")
-    ap.add_argument("--base", default="0x400000", help="image base (/BASE).")
+    ap.add_argument("--base", default=None, help="image base (/BASE).")
     ap.add_argument("--entry", default="_x", help="forced /ENTRY symbol.")
     ap.add_argument("--keep-all", dest="keep_all", action="store_true", default=True,
                     help="/OPT:NOREF /OPT:NOICF - keep every COMDAT (default).")
@@ -123,6 +123,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("flags", nargs=argparse.REMAINDER,
                     help="extra link flags after `--`.")
     args = ap.parse_args(argv)
+    if args.base is None:
+        from homm3.core import common
+        args.base = hex(common.load_image()[0].image_base)
 
     if shutil.which("wine") is None:
         die("wine not found - run inside `nix develop .#build`.")

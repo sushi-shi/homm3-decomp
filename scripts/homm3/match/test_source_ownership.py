@@ -6,6 +6,15 @@ from pathlib import Path
 from homm3.match.source_ownership import Definition, Origin, compare, read_filter
 
 
+def parsing_project(root):
+    config = root / 'config'
+    config.mkdir(exist_ok=True)
+    manifest = config / 'units.toml'
+    if not manifest.exists():
+        manifest.write_text('[build]\nincludes=["include"]\nanalysis_profile="test"\n'
+                            '[flags]\ntest=["/Gr", "/GX", "/D_WINDOWS"]\n')
+
+
 def definition(name='Widget::draw', file='include/widget.h', line=20,
                signature='void ()', inline=True):
     return Definition(file, line, line, line + 1, name, signature, 0, True,
@@ -45,6 +54,7 @@ class OwnershipTest(unittest.TestCase):
             self.assertTrue(declaration_only_hint(bad, len(bad))[1])
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            parsing_project(root)
             (root / 'include').mkdir()
             (root / 'include/widget.h').write_text(
                 'struct Widget {\n' + good + 'void draw() {}\n};\n')
@@ -57,6 +67,7 @@ class OwnershipTest(unittest.TestCase):
         from homm3.match.source_ownership import active_stub_definitions, scan_unit
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            parsing_project(root)
             (root / 'src').mkdir()
             (root / 'include').mkdir()
             (root / 'include/widgets.h').write_text(
@@ -148,6 +159,7 @@ class OwnershipTest(unittest.TestCase):
         from homm3.match.source_ownership import scan_unit
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            parsing_project(root)
             (root / 'include').mkdir()
             (root / 'src').mkdir()
             (root / 'include/widget.h').write_text(
@@ -224,6 +236,7 @@ class OwnershipTest(unittest.TestCase):
         symbols = SimpleNamespace(procedures={0x1000: proc})
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            parsing_project(root)
             (root / 'evidence/dreamcast').mkdir(parents=True)
             csv = root / 'evidence/dreamcast/functions.csv'
             heading = 'offset,file,name,line,params,module\n'
@@ -531,6 +544,7 @@ class DefinitionScannerTest(unittest.TestCase):
         from homm3.match.source_ownership import scan_unit
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            parsing_project(root)
             (root / 'src').mkdir()
             (root / 'include').mkdir()
             (root / 'include/instance.h').write_text(
@@ -657,6 +671,7 @@ class DefinitionScannerTest(unittest.TestCase):
         from homm3.match.source_ownership import scan_unit
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            parsing_project(root)
             (root / 'src').mkdir()
             (root / 'include').mkdir()
             # Use the real annotation boundary: selecting the VC6 source
@@ -693,6 +708,7 @@ class DefinitionScannerTest(unittest.TestCase):
         from homm3.match.source_ownership import scan_unit
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            parsing_project(root)
             (root / 'src').mkdir()
             (root / 'include').mkdir()
             (root / 'src/format.cpp').write_text(
@@ -712,6 +728,7 @@ class DefinitionScannerTest(unittest.TestCase):
         from homm3.match.source_ownership import scan_unit
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            parsing_project(root)
             (root / 'src').mkdir()
             (root / 'include').mkdir()
             (root / 'src/value.cpp').write_text(
@@ -733,6 +750,7 @@ class DefinitionScannerTest(unittest.TestCase):
         from homm3.match.source_ownership import scan_unit
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            parsing_project(root)
             (root / 'src').mkdir()
             (root / 'include').mkdir()
             (root / 'include/va.h').write_text(
@@ -756,6 +774,7 @@ class DefinitionScannerTest(unittest.TestCase):
         from homm3.match.source_ownership import scan_unit
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            parsing_project(root)
             (root / 'src').mkdir()
             (root / 'include').mkdir()
             (root / 'include/widgets.h').write_text(
@@ -1042,6 +1061,7 @@ class CompilerIdentityTest(unittest.TestCase):
         from homm3.match.source_ownership import scan_unit
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            parsing_project(root)
             (root / 'src').mkdir()
             (root / 'include').mkdir()
             raw = ('#define VA(a,b) __attribute__((annotate("va:" #a " size:" #b)))\n'

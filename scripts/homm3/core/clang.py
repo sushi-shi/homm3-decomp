@@ -12,18 +12,10 @@ clang is a NAME ORACLE, never a code oracle. Nothing here compiles the
 matching build - VC6 SP3 under Wine remains the sole verdict on a match
 (`homm3.core.cc_wrap`). The IR is read for symbol names and thrown away.
 
-THE FLAG SET reproduces cl's own view of the TU well enough that the two
-compilers agree on the mangled name, and nothing more:
-
-    --target=i686-pc-windows-msvc   the Microsoft mangler and i386 ABI
-    -fms-compatibility -fms-extensions -fms-compatibility-version=1200
-                                    VC6-era language rules
-    /Gr                             the build's fastcall default; without it
-                                    every free function mangles `@@YA` where
-                                    cl writes `@@YI` (measured: 171 of 1397
-                                    claims, all of them free functions)
-    /EHsc                           the build's /GX; without it every `try`
-                                    in the tree is a hard error (7 TUs)
+Compiler ABI, language, CRT and preprocessor options come from each unit's
+manifest profile through core.compiler_profile. Reference-only sources and
+standalone headers use the manifest's explicit analysis_profile. Consumers
+add their parsing action; none supplies a separate calling-convention default.
 
 THE INCLUDE MIRROR. VC6 ships its headers UPPERCASE (`BITSET`, `VECTOR`,
 `STRING`) and its STL predates the standard it targets, so on a
@@ -61,9 +53,6 @@ PATCH_VERSION = 7
 
 TARGET = "i686-pc-windows-msvc"
 MSC_VER = "1200"
-FLAGS = [f"--target={TARGET}", "-fms-compatibility",
-         f"-fms-compatibility-version={MSC_VER}", "-fms-extensions",
-         "/EHsc", "/Gr", "/D_WINDOWS", "-Wno-everything"]
 
 
 def _drop_redundant_traits_default(text: str) -> str:
@@ -185,19 +174,21 @@ def clang_bin() -> str | None:
     return exe if exe and Path(exe).exists() else None
 
 
-def mirror() -> Path | None:
+def mirror(project_root=None, toolchain=None) -> Path | None:
     """The generated lowercase, conformance-patched VC6 include tree.
 
     Regenerated whenever the toolchain root or PATCH_VERSION changes; the
     symlinks cost nothing and only headers requiring conformance fixes are copied."""
-    root = msvc_dir() / "include"
+    destination = MIRROR if project_root is None else project_root / "build/gen/msvc-include"
+    stamp = destination / ".mirror-stamp"
+    root = (toolchain if toolchain is not None else msvc_dir(project_root or common.HOMM3_DIR)) / "include"
     if not root.is_dir():
         return None
     want = f"{os.path.realpath(root)}\n{PATCH_VERSION}\n"
-    if STAMP.is_file() and STAMP.read_text() == want:
-        return MIRROR
-    MIRROR.parent.mkdir(parents=True, exist_ok=True)
-    tmp = Path(tempfile.mkdtemp(dir=str(MIRROR.parent)))
+    if stamp.is_file() and stamp.read_text() == want:
+        return destination
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    tmp = Path(tempfile.mkdtemp(dir=str(destination.parent)))
     def mirror_directory(source: Path, destination: Path) -> None:
         for entry in sorted(source.iterdir()):
             target = destination / entry.name.lower()
@@ -215,27 +206,29 @@ def mirror() -> Path | None:
         patched = rewrite(text)
         link.unlink()
         link.write_text(patched)
-    (tmp / STAMP.name).write_text(want)
-    if MIRROR.is_dir():
-        shutil.rmtree(MIRROR)
-    tmp.replace(MIRROR)
-    return MIRROR
+    (tmp / stamp.name).write_text(want)
+    if destination.is_dir():
+        shutil.rmtree(destination)
+    tmp.replace(destination)
+    return destination
 
 
-def emit_ir(src: Path, extra_flags: list[str] | None = None) -> str | None:
+def emit_ir(src: Path, extra_flags: list[str] | None = None, *, profiles=None) -> str | None:
     """Textual LLVM IR for one TU, or None when clang cannot read it.
 
     None is never silent at the call site: a TU whose IR is missing keeps
     the lexical channel and is REPORTED, because a probe that quietly
     contributed zero names would shrink the denominator of every later
     count."""
-    exe, inc = clang_bin(), mirror()
+    from homm3.core.compiler_profile import Profiles
+    from homm3.core.project import Project
+    profiles = profiles or Profiles(Project(common.HOMM3_DIR))
+    exe, inc = clang_bin(), profiles.mirror
     if exe is None or inc is None:
         return None
     with tempfile.TemporaryDirectory() as td:
         out = Path(td) / "tu.ll"
-        cmd = [exe, "--driver-mode=cl", *FLAGS, *(extra_flags or []),
-               "-imsvc", str(inc), f"/I{common.HOMM3_DIR / 'include'}",
+        cmd = [exe, *profiles.for_source(src), *(extra_flags or []),
                "-Xclang", "-emit-llvm", "-o", str(out), "-c", str(src)]
         try:
             subprocess.run(cmd, capture_output=True, text=True, timeout=300)

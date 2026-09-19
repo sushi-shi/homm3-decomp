@@ -144,7 +144,7 @@ def insertion_for(text: str, rvas: tuple[int, ...]) -> tuple[int, int]:
     """Insertion before the earliest affected VA/VA_COMPGEN source marker."""
     positions = []
     for rva in rvas:
-        va = rva + 0x00400000
+        va = rva + common.IMAGE_BASE
         pattern = re.compile(
             rf"^[ \t]*VA(?:_COMPGEN)?\(0x{va:08x},", re.I | re.M)
         positions.extend(match.start() for match in pattern.finditer(text))
@@ -243,16 +243,17 @@ def _shared_inputs_digest() -> str:
     """
     from homm3.core.cc_wrap import msvc_dir
 
+    from homm3.core.project import Project
     root = common.HOMM3_DIR
     paths = []
-    for relative in ("include", "vendor/zlib-1.1.3"):
-        paths.extend(path for path in (root / relative).rglob("*")
+    for directory in Project(root).includes:
+        paths.extend(path for path in directory.rglob("*")
                      if path.is_file())
     paths.extend((root / "scripts/homm3").rglob("*.py"))
     paths.extend((root / "src").rglob("*.h"))
     paths.extend((normalize.OBJDIFF / "target").glob("*.c.obj"))
     paths.extend(path for path in (
-        root / "config/units.toml", normalize.COMPGEN_MANIFEST,
+        root / "config/units.toml", root / "config/project.toml", normalize.COMPGEN_MANIFEST,
         normalize.SYMBOL_NAMES) if path.is_file())
     compiler = msvc_dir()
     for relative in ("bin", "include"):
@@ -368,7 +369,7 @@ def _normalized_pair(plan: UnitPlan, candidate: bytes) -> tuple[bytes, bytes]:
     base, _ = normalize._retain_matching_target_padding(base, target)
     base, _ = normalize._canonicalize_except_list_literals(base, target)
     target, _, _ = normalize._canonicalize_equivalent_relocations(
-        base, target, normalize._retail_symbol_rvas())
+        base, target, normalize._retail_symbol_rvas(), image_base=normalize.retail_image_base())
     base, _ = normalize._canonicalize_matching_eh_handler_owners(base, target)
     return base, target
 
@@ -729,7 +730,7 @@ def run(args) -> int:
           f"scored; {score_observations} function-score observation(s)")
     if args.bank:
         status.write_baseline(updated)
-        status.write_readme(status.load_report())
+        status.write_readme(status.refresh_report())
         print(f"[vc6 state-sweep] banked {len(changes)} reproduced improvement(s) "
               f"-> {status.BASELINE}")
     else:

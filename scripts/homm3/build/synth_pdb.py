@@ -159,7 +159,7 @@ def patch_symbol_records_stream(pdb: Path):
     pdb.write_bytes(d)
 
 
-def main(argv=None) -> int:
+def generate(inventory: Path = INVENTORY) -> Path:
     exe = Path(common.resolve_exe())
     sections = read_sections(exe)
 
@@ -167,7 +167,7 @@ def main(argv=None) -> int:
         return next(((seg, rva - base) for _n, seg, base, end in sections
                      if base <= rva < end), (None, None))
 
-    with INVENTORY.open() as fh:
+    with inventory.open() as fh:
         rows = list(csv.DictReader(
             line for line in fh if not line.startswith("#")))
 
@@ -235,6 +235,11 @@ def main(argv=None) -> int:
     print(f"[build synth_pdb] {nfuncs} functions in "
           f"{len(per_unit_funcs)} modules + {len(data_rows)} data symbols "
           f"-> {OUT} ({OUT.stat().st_size:,} B)")
+    return OUT
+
+
+def main(argv=None) -> int:
+    generate()
     return 0
 
 

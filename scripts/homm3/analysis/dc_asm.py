@@ -88,7 +88,7 @@ class Breakpoint:
     scope_depth: int
 
 
-def _decode_capstone(data: bytes) -> Callable[[int], Instruction]:
+def _decode_capstone(data: bytes, layout=None) -> Callable[[int], Instruction]:
     try:
         import capstone
     except ImportError as exc:
@@ -100,8 +100,11 @@ def _decode_capstone(data: bytes) -> Callable[[int], Instruction]:
                      capstone.CS_MODE_SH4 | capstone.CS_MODE_SHFPU
                      | capstone.CS_MODE_LITTLE_ENDIAN)
 
+    layout = layout or dc_lines.Layout.parse(data)
+    text_raw = layout.sections[0].raw_offset
+
     def decode(address: int) -> Instruction:
-        raw = data[dc_lines.TEXT_RAW + address:dc_lines.TEXT_RAW + address + 8]
+        raw = data[text_raw + address:text_raw + address + 8]
         rows = list(md.disasm(raw, address, count=1))
         if not rows or rows[0].address != address:
             if len(raw) < 2:
@@ -348,7 +351,7 @@ def control_events(view: dict[str, Any], data: bytes) -> dict[int, dict[str, Any
                 if disp & 0x800:
                     disp -= 0x1000
                 event["call_target_va"] = \
-                    dc_lines.POOL_BASE + address + 4 + disp * 2
+                    sh4.pool_base + address + 4 + disp * 2
             elif (word & 0xF0FF) == 0x0003:  # bsrf Rn
                 event["call_target_va"] = None
             if event:
@@ -432,7 +435,7 @@ def render(view: dict[str, Any], data: bytes, symbols: dict[int, str],
                     notes.append("call " + symbols.get(target, f"{target:#x}"))
             elif mnemonic == "bsr":
                 target = int(operands, 0)
-                name = symbols.get(dc_lines.POOL_BASE + target)
+                name = symbols.get(sh4.pool_base + target)
                 if name:
                     notes.append("call " + name)
             elif mnemonic in {"bt", "bf", "bt/s", "bf/s", "bra"}:

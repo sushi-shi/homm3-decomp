@@ -19,29 +19,9 @@ def claim_files(root: Path = common.HOMM3_DIR) -> list[Path]:
             and head.search(source.mask_lexical_noise(path.read_text(errors='replace')))]
 
 
-def choose_carrier(rva: int, emitters: set[str], banked: dict[int, str],
-                   anchors: list[tuple[int, str]]) -> str | None:
-    if banked.get(rva) in emitters:
-        return banked[rva]
-    if len(emitters) == 1:
-        return next(iter(emitters))
-    if not emitters:
-        return banked.get(rva)
-    lower = [a for a in anchors if a[0] < rva]
-    upper = [a for a in anchors if a[0] > rva]
-    neighbours = set()
-    if lower:
-        neighbours.add(max(lower)[1])
-    if upper:
-        neighbours.add(min(upper)[1])
-    plausible = neighbours & emitters
-    return next(iter(plausible)) if len(plausible) == 1 else banked.get(rva)
-
-
 def project(paths: list[Path], functions: set[int], ir_maps: dict,
-            rows_by_unit: dict, problems: list[str], *, ownership=None) -> None:
+            rows_by_unit: dict, problems: list[str], *, policy, ownership=None) -> None:
     from homm3.retail_labels import source
-    from homm3.match.status import load_baseline
     from homm3.match.source_ownership import collect, claim_definitions
     if not paths:
         return
@@ -54,8 +34,7 @@ def project(paths: list[Path], functions: set[int], ir_maps: dict,
     # it supplies only the carrier, never the source name.
     header_names = {d.va - common.IMAGE_BASE: d.mangled for d in claim_definitions(definitions)
                     if d.file.startswith('include/') and d.va is not None}
-    banked = {row.rva: unit for (unit, _name), row in load_baseline().items()
-              if row.rva is not None and unit in ir_maps}
+    banked = policy.for_units(ir_maps)
     anchors = [(row['rva'], unit) for unit, rows in rows_by_unit.items()
                for row in rows if row['kind'] == 'func']
     authorities = {unit: {name for group in source._base_authority_names(unit).values()
@@ -73,7 +52,7 @@ def project(paths: list[Path], functions: set[int], ir_maps: dict,
                 continue
             emitters = {unit: mangled for unit in ir_maps
                         if mangled is not None and mangled in authorities[unit]}
-            carrier = choose_carrier(rva, set(emitters), banked, anchors)
+            carrier = policy.choose(rva, set(emitters), banked, anchors)
             if carrier is None:
                 problems.append(
                     f"header VA(0x{rva + common.IMAGE_BASE:08x}) in {path.name}: "

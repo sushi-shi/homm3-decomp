@@ -217,7 +217,7 @@ def dc_tag_anchors(unit, dc, x86):
     out = []
     for va, off in re.findall(
             r"VA\((0x[0-9a-fA-F]+),[^\n]*?\bdc (0x[0-9a-fA-F]+)", src.read_text()):
-        rva = int(va, 16) - 0x400000
+        rva = int(va, 16) - common.IMAGE_BASE
         i, j = by_dc.get(int(off, 16)), by_rva.get(rva)
         if i is not None and j is not None:
             out.append((j, i, rva, dc[i]["name"]))

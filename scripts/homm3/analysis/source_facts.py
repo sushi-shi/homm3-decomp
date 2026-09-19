@@ -17,10 +17,9 @@ import re
 import subprocess
 from typing import Any
 
-from homm3 import manifest
 from homm3.build import compilation_database
 from homm3.core import clang, common
-from homm3.core.cc_wrap import ZLIB_INC
+from homm3.core.project import Project
 from homm3.vc6 import _source
 
 SCHEMA = "homm3.source-facts.v1"
@@ -184,7 +183,7 @@ def type_facts(text: str) -> TypeFacts | None:
     return TypeFacts(" ".join(base), tuple(qualifiers), tuple(pointers), tuple(arrays))
 
 
-def _base_type_key(text: str) -> str:
+def _base_type_key(text: str, aliases=None) -> str:
     """Expand known standard defaults without erasing explicit arguments.
 
     Clang can desugar std::string to basic_string<char>, while CodeView
@@ -194,12 +193,7 @@ def _base_type_key(text: str) -> str:
     key = name_key(text).removeprefix("::")
     if key in {"int64", "longlong"}:
         return "longlong"
-    nested_aliases = {
-        "tspellbookentry": "tspellbookwindow::tspellbookentry",
-        "trumour": "game::trumour",
-        "twalltraits": "combatmanager::twalltraits",
-    }
-    key = nested_aliases.get(key, key)
+    key = (aliases or {}).get(key, key)
     if key == "std::string":
         return "std::basicstring<char,std::chartraits<char>,std::allocator<char>>"
     head, opening, tail = key.partition("<")
@@ -221,7 +215,7 @@ def _base_type_key(text: str) -> str:
     if depth or not body[start:]:
         return key
     arguments.append(body[start:])
-    arguments = [_base_type_key(arg) for arg in arguments]
+    arguments = [_base_type_key(arg, aliases) for arg in arguments]
     if head == "std::basicstring":
         if len(arguments) == 1:
             arguments.append("std::chartraits<" + arguments[0] + ">")
@@ -232,7 +226,8 @@ def _base_type_key(text: str) -> str:
     return head + "<" + ",".join(arguments) + ">"
 
 
-def type_differences(expected: str, actual: str) -> tuple[list[str], list[str]]:
+def type_differences(expected: str, actual: str, *, aliases=None) -> tuple[list[str], list[str]]:
+    aliases = {name_key(k): name_key(v) for k, v in (aliases or {}).items()}
     left, right = type_facts(expected), type_facts(actual)
     if left is None or right is None:
         return [], ["type declarator is outside the supported cv/ref grammar"]
@@ -242,7 +237,7 @@ def type_differences(expected: str, actual: str) -> tuple[list[str], list[str]]:
     if left.indirections != right.indirections:
         differences.append("reference/pointer")
     # Extents and base types are reviewed too, but distinguished from cv/ref.
-    if _base_type_key(left.base) != _base_type_key(right.base):
+    if _base_type_key(left.base, aliases) != _base_type_key(right.base, aliases):
         differences.append("base-type")
     if left.arrays != right.arrays:
         differences.append("array-extent")
@@ -441,8 +436,9 @@ def parse_candidate(path: Path, mangled: str, root: Path = common.HOMM3_DIR) -> 
 
 class CandidateParser:
     """Compiler commands and filtered ASTs for one audit invocation only."""
-    def __init__(self, root: Path = common.HOMM3_DIR, *, batch=False):
-        self.root, self.batch = root, batch
+    def __init__(self, root: Path = common.HOMM3_DIR, *, batch=False, project=None):
+        self.project = project or Project(root)
+        self.root, self.batch = self.project.root, batch
         self.commands = None
         self.dumps = OrderedDict()
         self.sources = {}
@@ -451,12 +447,12 @@ class CandidateParser:
         display_path = path
         path = path.resolve()
         if self.commands is None:
-            compiler, includes = clang.clang_bin(), clang.mirror()
+            compiler, includes = clang.clang_bin(), clang.mirror(self.root, self.project.toolchain)
             if not compiler or not includes:
                 raise ValueError("Clang or the VC6 header mirror is unavailable")
             self.commands = {}
-            for row in compilation_database.commands(manifest.load(self.root / 'config/units.toml'),
-                    self.root, compiler, [includes, self.root / 'include', self.root / ZLIB_INC]):
+            for row in compilation_database.commands(self.project.manifest,
+                    self.root, compiler, [includes, *self.project.includes]):
                 self.commands.setdefault(Path(row['file']).resolve(), []).append(row)
         commands = self.commands.get(path, [])
         if len(commands) != 1:
@@ -498,7 +494,7 @@ class CandidateParser:
         return candidate
 
 
-def compare_facts(expected: dict, candidate: dict) -> dict:
+def compare_facts(expected: dict, candidate: dict, *, aliases=None) -> dict:
     """Facts use source names/types/line anchors, never machine-code counts."""
     findings = []
     gaps = list(expected.get("gaps", [])) + list(candidate.get("gaps", []))
@@ -510,7 +506,7 @@ def compare_facts(expected: dict, candidate: dict) -> dict:
             "kind": kind, "subject": subject, "dreamcast": dc, "candidate": cpp, **where})
 
     def compare_type(dc: dict, cpp: dict, role: str) -> None:
-        differences, unsupported = type_differences(dc["type"], cpp["type"])
+        differences, unsupported = type_differences(dc["type"], cpp["type"], aliases=aliases)
         subject = role + " " + (dc.get("name") or "<unnamed>")
         if unsupported:
             gaps.append(subject + ": " + "; ".join(unsupported))
@@ -664,7 +660,7 @@ def expected_facts(dossier, procedure, types) -> dict:
     return result
 
 
-def audit(corpus, row: dict, *, dump=None, data=None, type_table=None, candidate_parser=None) -> dict:
+def audit(corpus, row: dict, *, dump=None, data=None, type_table=None, candidate_parser=None, aliases=None) -> dict:
     from homm3.analysis import dc_lines, dreamcast
     from homm3.core.nb11_types import Types
     if dump is None:
@@ -689,7 +685,7 @@ def audit(corpus, row: dict, *, dump=None, data=None, type_table=None, candidate
     except (ValueError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
         output["coverage_gaps"] = [str(exc)]
         return output
-    output.update(compare_facts(expected_facts(dossier, dump.procedures[dossier.shape.address], type_table), candidate))
+    output.update(compare_facts(expected_facts(dossier, dump.procedures[dossier.shape.address], type_table), candidate, aliases=aliases))
     output["source_sha256"] = candidate["source_sha256"]
     return output
 
@@ -701,9 +697,11 @@ def run(corpus, rows: list[dict], *, as_json: bool = False,
     from homm3.core.nb11_types import Types
     dump, data = dc_lines.load_symbols(), inputs.read_dreamcast_exe()
     types = Types.from_symbols(dump)
-    parser = CandidateParser(batch=len(rows) > 1)
+    project = Project(common.HOMM3_DIR)
+    aliases = project.aliases("dreamcast")
+    parser = CandidateParser(project.root, batch=len(rows) > 1, project=project)
     results = [audit(corpus, row, dump=dump, data=data, type_table=types,
-                     candidate_parser=parser) for row in rows]
+                     candidate_parser=parser, aliases=aliases) for row in rows]
     stale_suppressions = []
     if suppression_path is not None:
         stale_suppressions = apply_suppressions(results, load_suppressions(suppression_path))

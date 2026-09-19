@@ -58,7 +58,6 @@ TEXT_PAD_TRIM_LIMIT = 15
 ASSOCIATIVE_COMDAT = 5
 UNWIND_OWNER = re.compile(r"(?:^|_)unwind[0-9]+$")
 SYMBOL_NAMES = common.HOMM3_DIR / "build/gen/symbol_names.csv"
-IMAGE_BASE = 0x00400000
 
 
 @dataclass(frozen=True)
@@ -269,7 +268,7 @@ def _canonicalize_except_list_literals(
 
 def _canonicalize_equivalent_relocations(
         base_payload: bytes, target_payload: bytes,
-        symbol_rvas: dict[str, tuple[int, str]],
+        symbol_rvas: dict[str, tuple[int, str]], *, image_base: int,
         ) -> tuple[bytes, int, int]:
     """Normalize two stripped-image relocation representations.
 
@@ -478,7 +477,7 @@ def _canonicalize_equivalent_relocations(
         if base_site + 4 > len(base_bytes) or target_site + 4 > len(target_bytes):
             continue
         target_addend, = struct.unpack_from("<I", target_bytes, target_site)
-        resolved = (IMAGE_BASE + authority[0] + target_addend) & 0xFFFFFFFF
+        resolved = (image_base + authority[0] + target_addend) & 0xFFFFFFFF
         base_operand, = struct.unpack_from("<I", base_bytes, base_site)
         if base_operand != resolved or not _site_context_matches(
                 base_bytes, base_site, target_bytes, target_site):
@@ -992,7 +991,7 @@ def _canonicalize_side(side: str, obj: Path, context=None) -> bool:
     return True
 
 
-def _pair_unit(rel: Path, symbol_rvas, context=None) -> Counter:
+def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None) -> Counter:
     """The paired base/target passes for one unit (padding retention,
     __except_list literals, equivalent relocations, EH handler owners);
     a no-op unless both normalized copies exist."""
@@ -1006,9 +1005,11 @@ def _pair_unit(rel: Path, symbol_rvas, context=None) -> Counter:
             and normalized_target.is_file()):
         return counts
     stamp_inputs = {
+        "project": common.HOMM3_DIR / "config/project.toml",
         "raw": base_obj, "target": target_obj, "symbol_names": SYMBOL_NAMES,
     }
     target_stamp_inputs = {
+        "project": common.HOMM3_DIR / "config/project.toml",
         "raw": target_obj, "base": base_obj, "symbol_names": SYMBOL_NAMES,
     }
     stamp_inputs.update(canon.anon_ns_stamp_inputs())
@@ -1032,7 +1033,8 @@ def _pair_unit(rel: Path, symbol_rvas, context=None) -> Counter:
     counts["literal"] += base_literal_count
     paired_target, literal_count, aggregate_count = \
         _canonicalize_equivalent_relocations(
-            paired_base, normalized_target.read_bytes(), symbol_rvas)
+            paired_base, normalized_target.read_bytes(), symbol_rvas,
+            image_base=retail_image_base() if image_base is None else image_base)
     counts["literal"] += literal_count
     counts["aggregate"] += aggregate_count
     normalized, rewrites = _canonicalize_matching_eh_handler_owners(
@@ -1048,6 +1050,11 @@ def _pair_unit(rel: Path, symbol_rvas, context=None) -> Counter:
     write_stamp(normalized_base, stamp_inputs, context=context)
     write_stamp(normalized_target, target_stamp_inputs, context=context)
     return counts
+
+
+def retail_image_base() -> int:
+    from homm3.core.project import Project
+    return Project(common.HOMM3_DIR).image.image_base
 
 
 def normalize_unit(unit: str, symbol_rvas=None) -> Counter:
@@ -1070,8 +1077,7 @@ def normalize_unit(unit: str, symbol_rvas=None) -> Counter:
     return counts
 
 
-def main(argv=None) -> int:
-    argv = list(argv or [])
+def normalize_all() -> Counter:
     wrote = skipped = 0
     context = ValidationContext()
     for side in ("base", "target"):
@@ -1085,15 +1091,22 @@ def main(argv=None) -> int:
                 skipped += 1
     counts: Counter = Counter()
     symbol_rvas = _retail_symbol_rvas()
+    image_base = retail_image_base()
     base_root = OBJDIFF / "base"
     for base_obj in sorted(base_root.rglob("*.obj")):
-        counts.update(_pair_unit(base_obj.relative_to(base_root), symbol_rvas, context))
+        counts.update(_pair_unit(base_obj.relative_to(base_root), symbol_rvas, context, image_base=image_base))
     print(f"[build normalize_objs] {wrote} normalized, {skipped} fresh, "
           f"{counts['retained']} target-padding span(s) retained "
           f"{counts['eh']} EH handler-owner relocation(s) canonicalized "
           f"{counts['literal']} false-literal relocation(s) removed "
           f"{counts['aggregate']} aggregate/field relocation(s) canonicalized "
           f"-> {OBJDIFF / 'normalized'}")
+    counts.update(wrote=wrote, skipped=skipped)
+    return counts
+
+
+def main(argv=None) -> int:
+    normalize_all()
     return 0
 
 

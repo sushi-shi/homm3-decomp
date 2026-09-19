@@ -13,6 +13,7 @@ import sys
 import tempfile
 
 from homm3.core import common
+from homm3.core.project import Project
 
 
 class InputError(ValueError):
@@ -29,13 +30,9 @@ class Executable:
     option: str
 
 
-RETAIL = Executable(
-    "retail executable", common.BUILD_EXE, common.TARGET_SIZE,
-    common.TARGET_SHA256, "HOMM3_EXE", "--exe")
-DREAMCAST = Executable(
-    "Dreamcast executable", common.HOMM3_DIR / "build/orig/dreamcast/H3.EXE",
-    8425752, "cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736",
-    "HOMM3_DREAMCAST_EXE", "--dreamcast-exe")
+_project = Project(common.HOMM3_DIR)
+RETAIL = _project.executable('retail')
+DREAMCAST = _project.executable('dreamcast')
 
 
 def _verify(data: bytes, path: Path, *, size: int, sha256: str) -> None:
@@ -93,11 +90,12 @@ def stage_executable(executable: Executable, source: str | Path | None = None) -
     return destination
 
 
-def read_dreamcast_exe() -> bytes:
-    return read_verified(DREAMCAST, stage_executable(DREAMCAST))
+def read_dreamcast_exe(project: Project | None = None) -> bytes:
+    executable = project.executable("dreamcast") if project else DREAMCAST
+    return read_verified(executable, stage_executable(executable))
 
 
-def dreamcast_symbols():
+def dreamcast_symbols(project: Project | None = None):
     """Read NB11 records embedded in the verified Dreamcast executable."""
     from homm3.core import nb11
-    return nb11.parse(read_dreamcast_exe())
+    return nb11.parse(read_dreamcast_exe(project))

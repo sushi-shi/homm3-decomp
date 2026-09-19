@@ -20,6 +20,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from dataclasses import dataclass
 
 from homm3 import model
 from homm3.build import configure, data_manifest, normalize_objs, synth_pdb
@@ -28,7 +29,6 @@ from homm3.retail_labels import source as labels_source
 
 DELINK_DIR = common.HOMM3_DIR / "build/delink"
 TARGET_DIR = common.HOMM3_DIR / "build/objdiff/target"
-PDB = common.HOMM3_DIR / "build/pdb/HEROES3.pdb"
 
 
 def _prune_normalized(units):
@@ -49,20 +49,28 @@ def _prune_normalized(units):
                 cached.unlink()
 
 
-def main(argv=None) -> int:
-    rc = labels_source.main(["--all"])   # src macros -> claim fragments
+@dataclass(frozen=True)
+class DelinkResult:
+    inventory: Path
+    pdb: Path
+    data_manifest: Path
+    targets: tuple[Path, ...]
+    missing: tuple[str, ...]
+
+
+def run() -> DelinkResult:
+    rc = labels_source.extract()   # src macros -> claim fragments
     if rc:
-        return rc
-    for stage in (model, synth_pdb, data_manifest):
-        rc = stage.main([])
-        if rc:
-            return rc
+        raise RuntimeError("source label extraction failed; delinking stopped")
+    inventory = model.generate()
+    pdb = synth_pdb.generate(inventory)
+    data = data_manifest.generate()
 
     if DELINK_DIR.exists():
         shutil.rmtree(DELINK_DIR)
     subprocess.run(
         ["vostok-delinker",
-         "--pdb-path", str(PDB),
+         "--pdb-path", str(pdb),
          "--exe-path", str(common.resolve_exe()),
          "--output-path", str(DELINK_DIR),
          "--engine-path", "c:\\proj\\",
@@ -70,8 +78,7 @@ def main(argv=None) -> int:
                                  "config/retail-relocs.tsv"),
          "--reloc-alias-manifest", str(common.HOMM3_DIR /
                                        "config/delink-reloc-aliases.tsv"),
-         "--data-manifest", str(common.HOMM3_DIR /
-                                "build/gen/delink_data_manifest.tsv")],
+         "--data-manifest", str(data)],
         check=True)
 
     _build, _profiles, units = configure.load_manifest()
@@ -95,9 +102,15 @@ def main(argv=None) -> int:
 
     # Preserve only cache entries backed by current raw objects. Normalization
     # verifies complete input/tool/output hashes before reusing any entry.
-    normalize_objs.main([])
+    normalize_objs.normalize_all()
     _prune_normalized(units)
-    configure.main()
+    configure.configure()
+    return DelinkResult(inventory, pdb, data,
+                        tuple(TARGET_DIR / name for name in sorted(expected)), tuple(missing))
+
+
+def main(argv=None) -> int:
+    run()
     return 0
 
 
