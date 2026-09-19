@@ -17,7 +17,10 @@ the consumers use (content identity, not mtimes), so a copy this driver
 skips is by construction one `homm3 sema diff` accepts - a stale stamp
 can never wedge between "build says fresh" and "sema says stale".
 
-Stamps verify data inputs, transform implementation and normalized output bytes.
+Stamps verify data inputs, the explicitly listed transform implementation files
+in implementation_inputs(), and normalized output bytes. Extend that list when
+adding behavior-affecting dependencies; bump STAMP_SCHEMA when changing the
+stamp format or validation contract.
 Unchanged comparisons can survive a full delink without trusting timestamps.
 
 The first canonicalization pass strips trailing COMDAT NOP fill. A linked

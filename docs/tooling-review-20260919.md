@@ -183,3 +183,18 @@ comparison, not a cold-worktree or compile-time claim.
 
 Follow-up measurements and implemented optimizations are recorded in
 [Tooling performance, 2026-09-19](tooling-performance-20260919.md).
+
+## Repeatable Python checks
+
+Inside `nix develop .#build`, run `python -m homm3.core.lint` for Ruff's default
+rules and Pyright diagnostics. Both tools are supplied by the pinned Nix shell.
+The command checks the eight production modules listed in `core/lint.py`,
+including itself; Ruff also checks the three listed regression-test modules.
+This is an explicit initial scope, not a repository-wide clean verdict. Extend
+the lists as other tooling modules are reviewed.
+
+Pyright receives the active interpreter's dependency paths through a temporary
+configuration, so Nix's libclang package is resolved without committing a
+machine-specific store path. Either check failing makes the command fail, and
+Ruff findings do not prevent Pyright from running. No diagnostic suppressions
+are applied.
