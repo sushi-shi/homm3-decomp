@@ -168,14 +168,13 @@ static void incrementHourGlass()
     ++g_curHourGlassPhase;
     if (numHeroes == philAI::ONE_ACTIVE_HERO)
         g_curHourGlassPhase += philAI::TWO_ACTIVE_HEROES;
-    else if (numHeroes == philAI::TWO_ACTIVE_HEROES) {
-        if (g_curHourGlassPhase != philAI::ONE_ACTIVE_HERO)
-            ++g_curHourGlassPhase;
-    } else if (numHeroes == philAI::THREE_ACTIVE_HEROES) {
-        if (g_curHourGlassPhase == philAI::THIRD_HOURGLASS_PHASE
-            || g_curHourGlassPhase == philAI::SIXTH_HOURGLASS_PHASE)
-            ++g_curHourGlassPhase;
-    }
+    if (numHeroes == philAI::TWO_ACTIVE_HEROES
+        && g_curHourGlassPhase != philAI::ONE_ACTIVE_HERO)
+        ++g_curHourGlassPhase;
+    if (numHeroes == philAI::THREE_ACTIVE_HEROES
+        && (g_curHourGlassPhase == philAI::THIRD_HOURGLASS_PHASE
+            || g_curHourGlassPhase == philAI::SIXTH_HOURGLASS_PHASE))
+        ++g_curHourGlassPhase;
     if (g_curHourGlassPhase > philAI::LAST_HOURGLASS_PHASE)
         g_curHourGlassPhase = philAI::LAST_HOURGLASS_PHASE;
 }
@@ -625,21 +624,25 @@ long valueOfEnemyTown(const hero* currentHero, const town* enemyTown,
 // The file-static selector precedes move_all_heroes in the DC TU. Keep its one canonical
 // body visible there: Complete's second DoAI phase expands it, while the first
 // retains the call. Its retail enrollment remains at the link-order position.
+// DC records current_hero and skill_sum at procedure scope; town ID row 1210
+// precedes GetTown and agrees with retail's char-to-short-to-int conversion.
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 {
+    hero* currentHero;
+    short skillSum;
     hero* selectedHero = 0;
     short lowestSum = 0;
     playerData* player = &g_game->m_players[playerId];
     *isLastHero = 1;
 
     for (short heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
-        hero* currentHero =
+        currentHero =
             &g_game->m_heroes[static_cast<short>(player->m_heroes[heroIndex])];
         if (currentHero->m_movePoints > 0 && !currentHero->m_isSleeping) {
             if (selectedHero)
                 *isLastHero = 0;
 
-            short skillSum = 0;
+            skillSum = 0;
             for (short skill = 0; skill < 4; ++skill)
                 skillSum += currentHero->getPrimarySkill(skill);
 
@@ -665,11 +668,12 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
     if (player->m_numHeroes < playerData::HERO_SLOT_COUNT) {
         for (short townIndex = 0; townIndex < player->m_numTowns;
              ++townIndex) {
-            town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
+            short townId = player->m_townIds[townIndex];
+            town* currentTown = g_game->getTown(townId);
             short garrisonHeroId =
                 static_cast<short>(currentTown->m_garrisonHeroId);
             if (garrisonHeroId >= 0 && currentTown->m_visitingHeroId < 0) {
-                hero* currentHero = g_game->getHero(garrisonHeroId);
+                currentHero = g_game->getHero(garrisonHeroId);
                 if (currentHero->m_army.getCreatureTotal()
                     && currentHero->m_movePoints
                     && !currentHero->m_isSleeping) {
@@ -2104,6 +2108,9 @@ void aiFriendlyHeroMeeting(hero* currentHero, hero* secondHero)
 // The two movement phases share moveAllHeroes. Retail's second expansion also
 // expands determineHeroToMove while the first keeps its call. Preserve both
 // source boundaries when diagnosing the nested accessor call decisions.
+// Diagnostic call pins on getTown/getHero recover 100%, but are not source.
+// Bounds/null VERIFYs at the DC gaps, getter return forms and combined selector
+// guard/local variants did not restore those calls; retain no guessed asserts.
 VA(0x00525e80, 0x362)  // anchor-callee, dc 0x10f16c
 void philAI::doAI(int whichPlayer)
 {
@@ -2112,17 +2119,17 @@ void philAI::doAI(int whichPlayer)
 
     if (!g_gameOver
         && (!g_unnamed6994f0 || whichPlayer == g_unnamed6994f0)) {
-        long* dangerZones = new long[
-            g_mapWidth * g_mapHeight * g_game->getNumMapLevels()];
-        type_AI_player* aiPlayer = &g_aiPlayers[whichPlayer];
-        aiPlayer->startTurn();
+        int mapSize = g_mapWidth * g_mapHeight * g_game->getNumMapLevels();
+        long* dangerZones = new long[mapSize];
+
+        g_aiPlayers[whichPlayer].startTurn();
         getTurnAIVars(whichPlayer);
         showStatus();
 
         incrementHourGlass();
 
         moveAllHeroes(whichPlayer, dangerZones);
-        aiPlayer->endTurn();
+        g_aiPlayers[whichPlayer].endTurn();
         moveAllHeroes(whichPlayer, dangerZones);
         delete [] dangerZones;
     }

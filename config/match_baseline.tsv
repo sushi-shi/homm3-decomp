@@ -1872,7 +1872,6 @@ game	??4?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V
 game	??4CObjectType@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xd40c0	-
 game	??4SCampaign@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xbdc70	-
 game	??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf800	-
-game	??4reference@?$bitset@$07@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xd4490	-
 game	??4reference@?$bitset@$0BM@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf8f0	-
 game	??4reference@?$bitset@$0EG@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcefa0	-
 game	??4reference@?$bitset@$0IB@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0x8ead0	-
@@ -1907,10 +1906,12 @@ game	?_Tidy@?$bitset@$07@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xcff30	-
 game	?_Tidy@?$bitset@$0JA@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x8c0b0	-
 game	?_Tidy@?$bitset@$0JB@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x8d480	-
 game	?_Ucopy@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@IAEPAUTBlackMarket@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x14d920	-
+game	?_Ucopy@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@IAEPAUtype_university@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x34c70	-
 game	?_Ucopy@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@IAEPAVboat@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd2210	-
 game	?_Ucopy@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@IAEPAVgenerator@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd4f80	-
 game	?_Ucopy@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEPAVtown@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd21a0	-
 game	?_Ufill@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@IAEXPAUTBlackMarket@@IABU3@@Z	100.0000	100.0000	100.0000	0xd2160	-
+game	?_Ufill@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@IAEXPAUtype_university@@IABU3@@Z	100.0000	100.0000	100.0000	0xd4a60	-
 game	?_Ufill@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@IAEXPAVboat@@IABV3@@Z	100.0000	100.0000	100.0000	0xd2250	-
 game	?_Ufill@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@IAEXPAVgenerator@@IABV3@@Z	100.0000	100.0000	100.0000	0xd4fc0	-
 game	?_Ufill@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEXPAVtown@@IABV3@@Z	100.0000	100.0000	100.0000	0xd21e0	-
@@ -2020,7 +2021,7 @@ game	?isMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90	tokens1:78f
 game	?load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	90.8783	90.8783	92.6763	0xc5630	tokens1:452e7ec61cb7
 game	?load@SGameSetupOptions@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xbe260	tokens1:44422249efa4
 game	?load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	83.6714	83.6714	100.0000	0xbc750	tokens1:3a193d3f11c0
-game	?load@game@@AAEHPAVTAbstractFile@@@Z	84.4056	84.4056	92.4127	0xbcda0	tokens1:86ef01ec2591
+game	?load@game@@AAEHPAVTAbstractFile@@@Z	89.9647	89.9647	92.4127	0xbcda0	tokens1:27912f0301d6
 game	?load@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85a0	tokens1:4e5fc23c4299
 game	?load@playerData@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba260	tokens1:321b9cd1515b
 game	?loadBoatPool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9a00	tokens1:38293cd45fcd
@@ -2068,6 +2069,7 @@ game	?resetAllPlayerVisibility@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7c50	t
 game	?resetGame@game@@QAEXHHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0xcecb0	tokens1:6800aae9d0eb
 game	?resize@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@QAEXIABUTBlackMarket@@@Z	100.0000	100.0000	100.0000	0xcf0f0	-
 game	?resize@?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@QAEXIABUtype_point@@@Z	100.0000	100.0000	100.0000	0xd4aa0	-
+game	?resize@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@QAEXIABUtype_university@@@Z	100.0000	100.0000	100.0000	0xd4800	-
 game	?resize@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QAEXIABVgenerator@@@Z	100.0000	100.0000	100.0000	0xd4500	-
 game	?resize@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAEXIABVtown@@@Z	100.0000	100.0000	100.0000	0xcf410	-
 game	?save@NewSMapHeader@@QAEHPAVTAbstractFile@@@Z	89.9519	89.9519	89.9519	0xc4f10	tokens1:e7082b655e8c
@@ -2125,15 +2127,13 @@ game	?validateVictoryLossConditions@game@@QAEXE@Z	90.0315	90.0315	90.0315	0xbf78
 game	?viewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	100.0000	100.0000	100.0000	0xc6c50	tokens1:ad7644e5de3f
 game	?waitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840	tokens1:21cb2c6385f1
 game	__h3cg$game$bitset_flip$Bitset28	0.0000	100.0000	100.0000	0xd17b0	-
+game	__h3cg$game$bitset_reference_assign$Bitset8	0.0000	100.0000	100.0000	0xd4490	-
 game	__h3cg$game$bitset_test$Bitset28	0.0000	100.0000	100.0000	0xd17d0	-
 game	__h3cg$game$bitset_tidy$Bitset128	0.0000	100.0000	100.0000	0xd4e90	-
 game	__h3cg$game$bitset_tidy$Bitset28	0.0000	100.0000	100.0000	0xd1830	-
 game	__h3cg$game$bitset_tidy$Bitset5	0.0000	100.0000	100.0000	0xd1790	-
 game	__h3cg$game$std_copy$type_map_hero_identity	0.0000	0.0000	100.0000	0xd2e50	-
 game	__h3cg$game$vector_capacity$type_university	0.0000	100.0000	100.0000	0xcfa40	-
-game	__h3cg$game$vector_resize$type_university	0.0000	100.0000	100.0000	0xd4800	-
-game	__h3cg$game$vector_ucopy$type_university	0.0000	100.0000	100.0000	0x34c70	-
-game	__h3cg$game$vector_ufill$type_university	0.0000	100.0000	100.0000	0xd4a60	-
 gamecontext	?set@?$bitset@$03@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xecde0	-
 gametypewindow	??0TGameTypeWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0xd54c0	tokens1:ed5106ea2077
 gametypewindow	??1TGameTypeWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xd5890	tokens1:c326cfa86934
@@ -2906,8 +2906,8 @@ philai	?buyArtifacts@@YIXPAVhero@@PAW4TArtifact@@J@Z	98.1308	98.1308	98.1308	0x1
 philai	?buySiegeEngine@@YIXPAVhero@@PAVtown@@W4type_building_id@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x125ca0	tokens1:66e4c50470a3
 philai	?checkDoMain@@YIXHH@Z	100.0000	100.0000	100.0000	0x1242d0	tokens1:cb08745a0e88
 philai	?considerGarrisoning@@YIXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x125200	tokens1:d8920f8f7f7a
-philai	?determineHeroToMove@@YIPAVhero@@HPAE@Z	100.0000	100.0000	100.0000	0x126a90	tokens1:30035c200cbb
-philai	?doAI@philAI@@QAEXH@Z	90.9228	90.9228	90.9228	0x125e80	tokens1:f1ecd64700cf
+philai	?determineHeroToMove@@YIPAVhero@@HPAE@Z	100.0000	100.0000	100.0000	0x126a90	tokens1:6919fb4d0a00
+philai	?doAI@philAI@@QAEXH@Z	91.9154	91.9154	91.9154	0x125e80	tokens1:13a5f16b6b76
 philai	?getArtifactPurchasePrice@@YIJW4TArtifact@@JPAW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x124550	tokens1:8533a17ec0fe
 philai	?getArtifactPurchaseValue@@YIJW4TArtifact@@JPAJ@Z	100.0000	100.0000	100.0000	0x129750	tokens1:497b686a69b9
 philai	?getBestSpellValue@type_spellvalue@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1275b0	tokens1:c11c63b8cacf
