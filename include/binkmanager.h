@@ -88,7 +88,8 @@ extern BINKSUMMARY g_binkSummary;
 extern "C" {
 __declspec(dllimport) int __stdcall _BinkPause(Bink* bnk, int pause);
 __declspec(dllimport) int __stdcall _BinkDDSurfaceType(IDirectDrawSurface* dds);
-__declspec(dllimport) int __stdcall _BinkGetRects(Bink* bnk, unsigned long flags);
+// DC0x8016c and the RAD SDK both return signed long (s32).
+__declspec(dllimport) long __stdcall _BinkGetRects(Bink* bnk, unsigned long flags);
 __declspec(dllimport) int __stdcall _BinkGoto(Bink* bnk,
                                               unsigned long frame,
                                               int flags);
