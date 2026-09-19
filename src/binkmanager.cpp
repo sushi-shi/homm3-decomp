@@ -40,6 +40,12 @@ BinkManager::BinkManagerStruct BinkManager::s_playingBink;
 
 #if 0  // @carcass
 
+// DC SetPixelFormat(ulong, ulong, ulong), binkmanager.cpp:123, is a
+// four-byte no-op. No retail body is identified. Windows selects Bink's
+// format with BinkDDSurfaceType in openBink and videoRealignBuffers;
+// display-mask dispatch calls only ResourceManager and SmackManager.
+// Keep this legacy interface as DC evidence; a folded/unused Windows
+// definition is not excluded, and no active body is reconstructed.
 // E:\gamedcs\binkmanager.cpp:123
 DC_ONLY(0x50a80, 0x4)
 void BinkManager::setPixelFormat(unsigned long redMask, unsigned long greenMask,
@@ -56,8 +62,8 @@ void BinkManager::setPixelFormat(unsigned long redMask, unsigned long greenMask,
 // the already-open archive HANDLE in place of a file name.
 static const int g_binkOpenFromArchive = 0x8000000;
 
-// Retail retains four serviceSounds calls; the canonical header helper still
-// expands here. Correcting the Miles stream interface preserves this residual.
+// Retail retains four serviceSounds calls. The Windows body is source-local
+// to soundmgr.cpp; its platform evidence comment explains that visibility.
 VA(0x0044d5a0, 0x283)  // dc 0x50a7c
 BINK* BinkManager::getBinkFilePtr(const char* filename, int binkOptions)
 {
@@ -193,10 +199,10 @@ void BinkManager::restartBink()
     }
 }
 
-// With the Windows serviceSounds definition in soundmgr.cpp, the remaining
-// differences are idle-return/completion-arm placement and videoDrawRects
-// becoming a tail jump. Readiness arms and paused work scopes are byte-flat;
-// completion-first guards and a completion flag worsen the retail CFG.
+// Like nextSmackerFrame, publish the complete readiness predicate in the
+// real dirty-state byte before testing it. BinkWait precedes the store and
+// paused frames remain dirty. This recovers the retail shared exit layout;
+// separate true/false stores, readiness scopes and terminal guards did not.
 // E:\gamedcs\binkmanager.cpp:252, dc 0x50a90
 VA(0x0044DAA0, 0x21A)  // dc-order-map + caller (smackmgr VideoNextFrame), dc 0x50a90
 void BinkManager::nextBinkFrame()
@@ -204,51 +210,48 @@ void BinkManager::nextBinkFrame()
     Bink* video = s_playingBink.m_bink;
     if (!video)
         video = s_playingBink.m_bink2;
-    if (video && s_playingBinkActive && !_BinkWait(video)) {
-        s_needsUpdate = 1;
-        if (s_playingBink.m_paused)
-            return;
+    s_needsUpdate = video && s_playingBinkActive && !_BinkWait(video);
+    if (!s_needsUpdate)
+        return;
+    if (s_playingBink.m_paused)
+        return;
 
-        _BinkDoFrame(video);
-        _BinkCopyToBuffer(video, s_playingBink.m_screen, s_playingBink.m_pitch, s_playingBink.m_height, 0, 0,
-                          s_surfaceType);
+    _BinkDoFrame(video);
+    _BinkCopyToBuffer(video, s_playingBink.m_screen, s_playingBink.m_pitch, s_playingBink.m_height, 0, 0,
+                      s_surfaceType);
 
-        if (video->m_frameNum == video->m_frames) {
-            if (s_playingBink.m_loop) {
-                if (s_playingBink.m_bink && s_playingBink.m_bink2) {
-                    if (g_videoDescriptors[s_playingBink.m_id].m_fadeOnAbort)
-                        g_windowManager->fadeScreen(1, 4, 0);
-                    g_soundManager->serviceSounds();
-                    _BinkClose(s_playingBink.m_bink);
-                    s_playingBink.m_bink = 0;
-                    video = s_playingBink.m_bink2;
-                    if (g_videoDescriptors[s_playingBink.m_id].m_fadeInSecondTrack) {
-                        _BinkDoFrame(video);
-                        _BinkCopyToBuffer(video, s_playingBink.m_screen, s_playingBink.m_pitch,
-                                          s_playingBink.m_height, 0, 0, s_surfaceType);
-                        g_windowManager->fadeScreen(0, 4, 0);
-                    }
-                } else {
-                    _BinkNextFrame(video);
-                }
-            } else {
-                _BinkGetSummary(video, &g_binkSummary);
-                BinkManager::closeBink();
+    if (video->m_frameNum == video->m_frames) {
+        if (s_playingBink.m_loop) {
+            if (s_playingBink.m_bink && s_playingBink.m_bink2) {
                 if (g_videoDescriptors[s_playingBink.m_id].m_fadeOnAbort)
                     g_windowManager->fadeScreen(1, 4, 0);
-                else
-                    g_windowManager->updateScreen(0, 0, 800, 600);
-                return;
+                g_soundManager->serviceSounds();
+                _BinkClose(s_playingBink.m_bink);
+                s_playingBink.m_bink = 0;
+                video = s_playingBink.m_bink2;
+                if (g_videoDescriptors[s_playingBink.m_id].m_fadeInSecondTrack) {
+                    _BinkDoFrame(video);
+                    _BinkCopyToBuffer(video, s_playingBink.m_screen, s_playingBink.m_pitch,
+                                      s_playingBink.m_height, 0, 0, s_surfaceType);
+                    g_windowManager->fadeScreen(0, 4, 0);
+                }
+            } else {
+                _BinkNextFrame(video);
             }
         } else {
-            _BinkNextFrame(video);
+            _BinkGetSummary(video, &g_binkSummary);
+            BinkManager::closeBink();
+            if (g_videoDescriptors[s_playingBink.m_id].m_fadeOnAbort)
+                g_windowManager->fadeScreen(1, 4, 0);
+            else
+                g_windowManager->updateScreen(0, 0, 800, 600);
+            return;
         }
-        if (s_updateScreen)
-            videoDrawRects();
-        return;
+    } else {
+        _BinkNextFrame(video);
     }
-
-    s_needsUpdate = 0;
+    if (s_updateScreen)
+        videoDrawRects();
 }
 
 // E:\gamedcs\binkmanager.cpp:345 (dc 0x50a94) - the static-member spelling

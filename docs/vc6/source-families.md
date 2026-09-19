@@ -6030,26 +6030,14 @@ names migrate by retail RVA, preserving their historical peaks. Own-source
 hash changes reset the frame pump's and VideoClose's current-source MAX to
 CUR; their historical 92.9245% and 100% peaks remain available.
 
-`generate-bink-pump-family.py` tests pointer selection, readiness guards,
-paused scopes, frame-end orientation and the playback cleanup call. All 48
-states compile in `68e3947857975ce4f7e9`; two distinct objects reproduce, with
-**no score changes**. Keep the original pump guards. Replace the duplicated
-playback pause/close/reset block with the existing ordinary `closeBink` call
-at the same 88.1802%. Retail's four SDK cleanup calls remain expanded there.
-The retained pump's current zero score is not an absent body: its native
-function is present, but the shared header-owned `serviceSounds` expands
-Miles/locking operations where retail calls it. The old 92.92% block-layout
-comment described the earlier ordinary-cpp sound-helper model.
-
-The native Bink oracle imports the actual pump and close member plus all 24
-pump forms and both cleanup forms. It checks 1,024 track/guard combinations,
-both descriptor-callback modes, ordering and arguments of SDK/sound/fade
-operations, dirty/paused/ready state and track resets. Five incorrect controls
-fail, including a stale descriptor read after servicing sound. The existing
-video oracle now calls the canonical Bink member and keeps its close-order
-negative control. The family generator admits the adopted cleanup form only
-through its two reviewed alternatives; it does not add a wrapper to retain
-an emission or use a pragma.
+All seven admitted Bink functions now match retail. Restoring the canonical
+playback aggregate and operation order closes playBink; the reviewed Windows
+sound-service visibility restores getBinkFilePtr's retained calls. Publishing
+the readiness predicate in the actual `s_needsUpdate` byte closes nextBinkFrame's
+idle-return and shared-epilogue layout (see behavior-catalog D5). The pump
+search generator and disposable behavioral fixtures are retired; Git retains
+the earlier experiments. The unlocated three-argument DC `setPixelFormat`
+interface remains visible in the source carcass, not counted as a retail match.
 
 A separate emission audit found that 0x46aeb0 was incorrectly claimed as
 `objecttype`'s `vector<TImageInfo>::insert(ptr, count, const&)`. Its actual
@@ -6068,7 +6056,8 @@ by RVA, and lowers generated emission debt from 39 to 38. The full adopted
 checkpoint reaches **95.08% executable matching**, 3,941/4,751 exact functions,
 4,788 canonical definitions and zero ownership violations; the existing 200
 pins are unchanged. This fixes a type/owner error rather than forcing the
-image-cache overload to emit. The Bink inline-boundary residual remains open.
+image-cache overload to emit. The Bink inline-boundary residual is resolved by the reviewed Windows
+sound-service definition described below.
 
 Final validation passes all 75 ownership and native-oracle tests. The fresh
 retail comparison for 0x46aeb0 has 55 exact blocks, matching branches, calls
@@ -6082,22 +6071,20 @@ remain available. Every unchanged-source MAX is preserved.
 
 ## Sound definition placement and shared native library bodies
 
-`generate-sound-placement-family.py` isolates a remaining sound inlining
-hypothesis after the guard/binding and Bink-pump families plateau. Dreamcast's
-`SoundMgr.h:140` member (dc 0xe6ef4) is a WinCE stub: it proves the header
-boundary, but not whether the PC body was defined inside its class. Retail
-NextBinkFrame (0x44daa0) calls the retained service member; the current VC6
-header body expands there. Preserve the inline declaration and exact body.
-Compare the current header, moving its real Miles/global dependencies before
-the class, and defining that body inside the class. No duplicate declarations,
-new helper, dummy caller or pragma is introduced.
+The former in-class/out-of-class header placement family was byte-flat for
+tracked functions and is retired. Raw DC records establish an empty CE body
+at SoundMgr.h:140, but no Windows lexical inline or definition location.
+The full retail import census identifies two complete service expansions,
+both in soundmgr, and a retained 81-byte body; all external consumers call it.
+An actual VC6 PCH control leaves every Bink function unchanged.
 
-All **three states** compile and score across all **51 dependent TUs** in
-`acc470ea6c108d3aa715`, producing two reproduced object identities and identical
-score vectors. The dependency-only move is code-identical; the in-class body
-has a different aggregate identity without any tracked score changes. Keep
-the authored placement and guards. The generator keeps those placements as
-reviewable controls, not arbitrary declaration-count perturbations.
+The reviewed Windows model uses one ordinary definition in soundmgr.cpp.
+This is an explicit platform-placement inference, not recovered Windows text.
+The CE stub and Windows body have separate exact catalog entries, preserving
+the known CE origin. Three visibility states across all 51 consumers produced
+three reproduced objects; the ordinary definition matches the retained body
+and both expanded callers without emission tricks or inline pins. See the
+owning source comment for the retail anchors and limits of this inference.
 
 The next emission audit finds retained canonical library bodies in other
 real consumers. A source enrollment in a TU that has ceased emitting a

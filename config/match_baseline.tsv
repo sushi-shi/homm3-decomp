@@ -661,7 +661,7 @@ basemgr	??0baseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x4d530	tokens1:3b9df4
 binkmanager	?closeBink@BinkManager@@SIXXZ	100.0000	100.0000	100.0000	0x4dcc0	tokens1:baa6b5a0f6e4
 binkmanager	?drawCurrentBinkFrame@BinkManager@@SIXXZ	100.0000	100.0000	100.0000	0x4d9e0	tokens1:9eccf9bc4ac2
 binkmanager	?getBinkFilePtr@BinkManager@@SIPAUBINK@@PBDH@Z	100.0000	100.0000	100.0000	0x4d5a0	tokens1:bcef7a583d55
-binkmanager	?nextBinkFrame@BinkManager@@SIXXZ	92.9245	92.9245	92.9245	0x4daa0	tokens1:712223093e2e
+binkmanager	?nextBinkFrame@BinkManager@@SIXXZ	100.0000	100.0000	100.0000	0x4daa0	tokens1:e9ab9a128c4b
 binkmanager	?openBink@BinkManager@@SIXHHHHHHE@Z	100.0000	100.0000	100.0000	0x4d830	tokens1:549ddaac6141
 binkmanager	?playBink@BinkManager@@SIHHHHHH@Z	100.0000	100.0000	100.0000	0x4dd20	tokens1:296dbe63d063
 binkmanager	?restartBink@BinkManager@@SIXXZ	100.0000	100.0000	100.0000	0x4da50	tokens1:9b1c30bd6605

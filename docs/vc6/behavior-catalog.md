@@ -902,6 +902,16 @@ spellings using the actual global result were exact, while local `bool`,
 whether a recovered state output itself owns the decision before rewriting
 returns or treating the epilogue as an allocator ceiling.
 
+
+The Bink sibling `BinkManager::nextBinkFrame` (0x44daa0) has the same state
+ownership: assign `s_needsUpdate` from the complete readiness predicate, then
+return if it is false. With the separately recovered Windows sound-service
+call boundary, this closes 92.9245% to 100%, including idle-clear placement and
+the final draw call/shared epilogue. Three source states produced two distinct
+objects and both reproduced; early-return and positive-work-arm forms of the
+real global result were exact. Separate true/false stores and completion-arm
+reordering did not close the layout. Keep the paused test after publication.
+
 ### D6. The opposite direction: retail duplicates where we merge
 `ai_tactical` 75.5 → 95.9 (three guards goto INTO the third one's body; `||`
 sinks the value/10 block); `armygrp::TSplitWindow::WindowHandler` EXACT
