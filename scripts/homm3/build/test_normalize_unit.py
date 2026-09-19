@@ -18,6 +18,7 @@ from homm3.build.normalized_freshness import stamp_path, write_stamp
 
 class NormalizeUnitTest(unittest.TestCase):
     def setUp(self):
+        self.enterContext(patch.object(normalize_objs, "retail_image_base", return_value=0x400000))
         self.dir = tempfile.TemporaryDirectory()
         root = Path(self.dir.name)
         self.objdiff = root / "objdiff"
@@ -95,6 +96,19 @@ class NormalizeUnitTest(unittest.TestCase):
         normalized.write_bytes(b'corrupt')
         normalize_objs.normalize_unit('probe')
         self.assertEqual(refreshed, self._normalized())
+
+    def test_project_input_change_invalidates_comparison_copies(self):
+        root = self.objdiff.parent
+        (root / 'config').mkdir()
+        specification = root / 'config/project.toml'
+        specification.write_text('[inputs.retail]\nimage_base=4194304\n')
+        with patch.object(normalize_objs.common, 'HOMM3_DIR', root):
+            normalize_objs.normalize_unit('probe')
+            specification.write_text('[inputs.retail]\nimage_base=7340032\n')
+            transform = normalize_objs._retain_matching_target_padding
+            with patch.object(normalize_objs, '_retain_matching_target_padding', wraps=transform) as paired:
+                normalize_objs.normalize_unit('probe')
+                paired.assert_called_once()
 
     def test_each_paired_input_change_still_runs_transforms(self):
         normalize_objs.normalize_unit("probe")

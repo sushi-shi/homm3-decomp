@@ -576,8 +576,8 @@ def build_dossier(corpus: Corpus, row: dict[str, str], *, dump=None, data=None,
             name = symbols.get(target) if target is not None else None
             dc_target = None
             target_row = None
-            if target is not None and dc_lines.POOL_BASE <= target:
-                candidate = target - dc_lines.POOL_BASE
+            if target is not None and dump.layout.base(1) <= target:
+                candidate = target - dump.layout.base(1)
                 hits = corpus.by_offset.get(candidate, ())
                 if len(hits) == 1:
                     dc_target, target_row = candidate, hits[0]

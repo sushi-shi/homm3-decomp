@@ -104,10 +104,12 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
         writer.build(
             "build.ninja",
             "configure",
-            inputs=["config/units.toml"],
+            inputs=["config/units.toml", "config/project.toml"],
             implicit=["scripts/homm3/build/configure.py",
                       "scripts/homm3/build/compilation_database.py",
                       "scripts/homm3/core/clang.py",
+                      "scripts/homm3/core/compiler_profile.py",
+                      "scripts/homm3/core/project.py",
                       "scripts/homm3/build/ninja_syntax.py"],
         )
 
@@ -118,7 +120,8 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
                 obj,
                 "cl",
                 inputs=unit["source"],
-                implicit="scripts/homm3/core/cc_wrap.py",
+                implicit=["scripts/homm3/core/cc_wrap.py", "scripts/homm3/core/project.py",
+                          "config/units.toml", "config/project.toml"],
                 variables={
                     "flags": " ".join(profiles[unit["flags"]]),
                     "unit": unit["unit"],
@@ -176,7 +179,7 @@ def write_objdiff(build: dict, units: list[dict]) -> None:
     }, indent=2) + "\n")
 
 
-def main() -> None:
+def configure() -> list[dict]:
     from homm3.build.compilation_database import refresh
     build, profiles, units = load_manifest()
     refresh()
@@ -184,6 +187,11 @@ def main() -> None:
     write_objdiff(build, units)
     print("configure: %d VC6 units -> build.ninja + build/objdiff/objdiff.json" %
           len(units))
+    return units
+
+
+def main() -> None:
+    configure()
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import unittest
 
-from homm3.retail_labels.headers import choose_carrier
+from homm3.model import choose_carrier, CarrierPolicy
 
 
 class HeaderCarrierTest(unittest.TestCase):
@@ -44,7 +44,7 @@ class InlineSourceAnnotationTest(unittest.TestCase):
                  patch('homm3.retail_labels.source.scan_file', return_value=[{
                      'channel': 'src-VA', 'rva': 0x1000, 'size': 16, 'kind': 'func'}]):
                 rows, problems = {'example': []}, []
-                project([path], {0x1000}, {'example': {}}, rows, problems)
+                project([path], {0x1000}, {'example': {}}, rows, problems, policy=CarrierPolicy({0x1000: "example"}))
                 if definitions:
                     self.assertEqual(rows['example'][0]['joined'], definition.mangled)
                     self.assertEqual(rows['example'][0]['unit'], 'example')
@@ -55,7 +55,6 @@ class InlineSourceAnnotationTest(unittest.TestCase):
                     self.assertTrue(any('(FATAL)' in p for p in problems))
 
     def test_multiple_header_instances_select_their_own_carriers(self):
-        from types import SimpleNamespace
         from unittest.mock import patch
         from homm3.core import common
         from homm3.match.source_ownership import Definition
@@ -73,7 +72,7 @@ class InlineSourceAnnotationTest(unittest.TestCase):
              patch('homm3.retail_labels.source.scan_file', return_value=claims):
             rows, problems = {'a': [], 'b': []}, []
             project([common.HOMM3_DIR / 'include/bits.h'], {0x1000, 0x2000},
-                    {'a': {}, 'b': {}}, rows, problems)
+                    {'a': {}, 'b': {}}, rows, problems, policy=CarrierPolicy({0x1000: "example"}))
         self.assertEqual(problems, [])
         self.assertEqual([(r['rva'], r['joined']) for r in rows['a']], [(0x1000, 'bits144')])
         self.assertEqual([(r['rva'], r['joined']) for r in rows['b']], [(0x2000, 'bits145')])

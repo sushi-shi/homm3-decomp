@@ -17,20 +17,16 @@ from pathlib import Path
 from homm3.core import common
 from homm3.retail_labels import Claim
 
-_IMPLIB_DECORATIONS = None
 
-
-def implib_decorations() -> dict:
+def implib_decorations(libdir: Path) -> dict:
     """Import-lib PROOF for stdcall decoration: import-directory name ->
     full __imp_ symbol, read from the VC6 toolchain import libraries'
     archive symbol tables (the linker generation that built retail).
     A name whose libraries disagree on decoration stays unproven."""
-    global _IMPLIB_DECORATIONS
-    if _IMPLIB_DECORATIONS is not None:
-        return _IMPLIB_DECORATIONS
     out, ambiguous = {}, set()
-    libdir = common.HOMM3_DIR / "build/homm3-toolchain-vc6-sp3/msvc/lib"
-    for lib in sorted(libdir.glob("*.LIB")) if libdir.is_dir() else []:
+    for lib in sorted(libdir.iterdir()) if libdir.is_dir() else []:
+        if lib.suffix.lower() != ".lib" or not lib.is_file():
+            continue
         data = lib.read_bytes()
         if not data.startswith(b"!<arch>\n"):
             continue
@@ -49,12 +45,12 @@ def implib_decorations() -> dict:
                 ambiguous.add(key)
     for key in ambiguous:
         out.pop(key, None)
-    _IMPLIB_DECORATIONS = out
     return out
 
 
-def iat_slots(exe_path: Path) -> dict[int, tuple[str, str]]:
+def iat_slots(exe_path: Path, libdir: Path) -> dict[int, tuple[str, str]]:
     """slot rva -> (__imp_ spelling, channel), from the import directory."""
+    decorations = implib_decorations(libdir)
     data = exe_path.read_bytes()
     pe = struct.unpack_from("<I", data, 0x3C)[0]
     nsec = struct.unpack_from("<H", data, pe + 6)[0]
@@ -96,7 +92,7 @@ def iat_slots(exe_path: Path) -> dict[int, tuple[str, str]]:
                 name = data[raw(thunk) + 2:raw(thunk) + 2 + 256] \
                     .split(b"\0")[0].decode("latin-1")
                 proven = (None if name.startswith("?")
-                          else implib_decorations().get(name))
+                          else decorations.get(name))
                 if proven:
                     slots[slot] = (proven, "iat-implib")
                 else:
@@ -107,8 +103,8 @@ def iat_slots(exe_path: Path) -> dict[int, tuple[str, str]]:
     return slots
 
 
-def claims(exe_path: Path | None = None) -> list[Claim]:
+def claims(exe_path: Path, libdir: Path) -> list[Claim]:
     """One 4-byte data Claim per IAT slot, sorted by slot rva."""
-    exe = exe_path or common.resolve_exe()
+    exe = exe_path
     return [Claim(slot, name, "data", channel, 4, "", {})
-            for slot, (name, channel) in sorted(iat_slots(exe).items())]
+            for slot, (name, channel) in sorted(iat_slots(exe, libdir).items())]

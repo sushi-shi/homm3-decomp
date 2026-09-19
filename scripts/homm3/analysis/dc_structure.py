@@ -12,7 +12,7 @@ from pathlib import Path
 import re
 import tempfile
 
-from homm3.analysis import dc_asm, dc_lines, dc_source_layout, dreamcast
+from homm3.analysis import dc_asm, dc_source_layout, dreamcast
 from homm3.core import common, inputs, nb11
 from homm3.core.nb11_types import Types
 
@@ -74,7 +74,7 @@ def function_payload(corpus, row, symbols, data, types, *, assembly=False) -> di
         target = event.get("call_target_va")
         if target is not None:
             event["target_name"] = symbols.names.get(target)
-            callee = symbols.procedures.get(target - dc_lines.POOL_BASE)
+            callee = symbols.procedures.get(target - symbols.layout.base(1))
             if callee:
                 event["target_name"] = callee.name
                 event["target_signature"] = types.function(callee.type_index, callee.name)

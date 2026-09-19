@@ -21,6 +21,12 @@ MODULES = (
     'build/normalize_objs.py',
     'build/normalized_freshness.py',
     'core/lint.py',
+    'core/project.py',
+    'core/compiler_profile.py',
+    'core/pe_layout.py',
+    'build/compilation_database.py',
+    'build/refresh.py',
+    'build/report.py',
     'match/banked_rows.py',
     'match/source_ownership.py',
 )

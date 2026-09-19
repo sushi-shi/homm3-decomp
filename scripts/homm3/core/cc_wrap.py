@@ -24,8 +24,6 @@ from pathlib import Path
 from homm3.core.common import HOMM3_DIR
 
 _INC_RE = re.compile(r'^[ \t]*#[ \t]*include[ \t]*[<"]([^>"]+)[>"]', re.M)
-# The one vendored SDK on the game INCLUDE path: retail's own zlib 1.1.3.
-ZLIB_INC = "vendor/zlib-1.1.3"
 
 def scan_header_deps(src, *inc_roots):
     """Recover header dependencies independently of compiler diagnostic output: recursively resolve
@@ -55,7 +53,7 @@ def scan_header_deps(src, *inc_roots):
 def die(m): print(f"[cc_wrap] ERROR: {m}", file=sys.stderr); sys.exit(1)
 def find_ci(d, name):
     return next((p for p in d.iterdir() if p.name.lower() == name.lower()), None) if d.is_dir() else None
-def msvc_dir():
+def msvc_dir(root=HOMM3_DIR):
     # A valid explicit override wins. Otherwise use the directory emitted by
     # create-toolchain-release.py, with build/toolchain retained as a supported
     # manually unpacked location.
@@ -66,10 +64,11 @@ def msvc_dir():
     candidates = []
     if toolchain:
         candidates.append(Path(toolchain) / "msvc")
-    candidates.extend([
-        HOMM3_DIR / "build/homm3-toolchain-vc6-sp3/msvc",
-        HOMM3_DIR / "build/toolchain/msvc",
-    ])
+    from homm3.core.project import Project
+    specification = root / "config/project.toml"
+    locations = (Project(root).specification.get("toolchain", {}).get("locations", [])
+                 if specification.is_file() else [])
+    candidates.extend(root / path for path in locations or ["build/toolchain/msvc"])
     return next((path for path in candidates
                  if find_ci(path / "bin", "cl.exe")), candidates[0])
 def winepath_w(p):
@@ -109,15 +108,9 @@ def main():
     if not Path(os.environ.get("WINEPREFIX", "")).is_dir():   # same anti-stale anchor
         os.environ["WINEPREFIX"] = str(HOMM3_DIR / "build/wineprefix")
     ensure_wineserver()
-    # No vendor SDK directory is exposed implicitly EXCEPT zlib: the vendored
-    # zlib-1.1.3 tree is the exact library retail links (it matches 100%), so
-    # its <zlib.h> is the true record of z_stream for the game TUs that embed
-    # one. It goes LAST so it can never shadow a CRT or repo header, and the
-    # zlib TUs themselves are unaffected - they resolve quoted headers from
-    # their own source directory.
-    incs = [msvc / "include"]
-    if (HOMM3_DIR / "include").is_dir(): incs.append(HOMM3_DIR / "include")
-    if (HOMM3_DIR / ZLIB_INC).is_dir(): incs.append(HOMM3_DIR / ZLIB_INC)
+    from homm3.core.project import Project
+    project_includes = Project(HOMM3_DIR).includes
+    incs = [msvc / "include", *(p for p in project_includes if p.is_dir())]
     os.environ["INCLUDE"] = ";".join(winepath_w(p) for p in incs)
     cmd = ["wine", str(cl), *flags, f"/Fo{winepath_w(out)}", winepath_w(src)]
     output, rc = _run_cl(cmd, out)
@@ -128,7 +121,7 @@ def main():
         sys.stderr.write(f"[cc_wrap] FAILED {src.name} -> {out}\n" + "\n".join(output.strip().splitlines()[-15:]) + "\n")
         sys.exit(rc or 1)
     # Emit a conservative depfile so Ninja recompiles on local-header edits.
-    deps = scan_header_deps(src, HOMM3_DIR / "include", HOMM3_DIR / ZLIB_INC)
+    deps = scan_header_deps(src, *project_includes)
     dep_list = " ".join(d.replace(" ", "\\ ") for d in deps)
     Path(str(out) + ".d").write_text(f"{a.out}: {dep_list}\n")
     sys.exit(0)

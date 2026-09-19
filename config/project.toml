@@ -1,0 +1,27 @@
+# Project facts consumed at operation boundaries, never inferred from sibling repos.
+[inputs.retail]
+name = "retail executable"
+path = "build/orig/HEROES3.EXE"
+size = 2732032
+sha256 = "057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274"
+env = "HOMM3_EXE"
+option = "--exe"
+image_base = 0x400000
+
+[inputs.dreamcast]
+name = "Dreamcast executable"
+path = "build/orig/dreamcast/H3.EXE"
+size = 8425752
+sha256 = "cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736"
+env = "HOMM3_DREAMCAST_EXE"
+option = "--dreamcast-exe"
+
+# Positive CodeView/source spelling equivalences reviewed for this project.
+# Used only by the Dreamcast source-fact audit, never by the generic comparator.
+[type_aliases.dreamcast]
+TSpellBookEntry = "TSpellBookWindow::TSpellBookEntry"
+TRumour = "Game::TRumour"
+TWallTraits = "combatManager::TWallTraits"
+
+[toolchain]
+locations = ["build/homm3-toolchain-vc6-sp3/msvc", "build/toolchain/msvc"]

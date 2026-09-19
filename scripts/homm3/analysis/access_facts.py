@@ -41,7 +41,7 @@ from homm3.analysis.source_facts import name_key, _aliases, type_differences, ty
 from homm3.analysis.source_facts import semantic_name_key
 from homm3.build import compilation_database
 from homm3.core import clang, common
-from homm3.core.cc_wrap import ZLIB_INC
+from homm3.core.project import Project
 from homm3.core.nb11_types import Types
 
 
@@ -155,7 +155,7 @@ def is_project_file(path: Path, root: Path, mirror: Path) -> bool:
         return False
     if not path.is_relative_to(root.resolve()):
         return False
-    for skip in (mirror, root / ZLIB_INC, root / "vendor", root / "build"):
+    for skip in (mirror, root / "vendor", root / "build"):
         try:
             if path.is_relative_to(skip.resolve()):
                 return False
@@ -364,7 +364,7 @@ def main() -> int:
 
     commands = compilation_database.commands(
         manifest.load(root / "config/units.toml"), root, clang.clang_bin(),
-        [mirror, root / "include", root / ZLIB_INC])
+        [mirror, *Project(root).includes])
     commands = [r for r in commands if Path(r["file"]).exists()]
     if args.module:
         wanted = {m.removesuffix(".cpp") for m in args.module}

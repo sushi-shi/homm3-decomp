@@ -106,10 +106,16 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
             (normalized.section, normalized.site, normalized.symbol_index,
              normalized.typ))
 
+    def test_literal_resolution_uses_supplied_image_base(self):
+        for image_base, expected in ((0x700000, 1), (0x400000, 0)):
+            _, literals, _ = _canonicalize_equivalent_relocations(
+                _base(literal=0x701020), _target(), AUTHORITY, image_base=image_base)
+            self.assertEqual(literals, expected)
+
     def test_literal_and_field_forms_are_canonicalized(self):
         normalized_payload, literals, aggregates = \
             _canonicalize_equivalent_relocations(
-                _base(), _target(), AUTHORITY)
+                _base(), _target(), AUTHORITY, image_base=0x400000)
         self.assertEqual((literals, aggregates), (1, 1))
         normalized = CoffObject(normalized_payload)
         rows = {row.site: row for row in normalized.relocations}
@@ -127,7 +133,7 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
     def test_wrong_candidate_literal_stays_visible(self):
         before = _target()
         after, literals, _aggregates = _canonicalize_equivalent_relocations(
-            _base(literal=0x00401024), before, AUTHORITY)
+            _base(literal=0x00401024), before, AUTHORITY, image_base=0x400000)
         self.assertEqual(literals, 0)
         original = CoffObject(before)
         normalized = CoffObject(after)
@@ -138,7 +144,7 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
     def test_candidate_relocation_of_another_type_stays_visible(self):
         before = _target()
         after, literals, _aggregates = _canonicalize_equivalent_relocations(
-            _base(literal_relocation_type=0x0014), before, AUTHORITY)
+            _base(literal_relocation_type=0x0014), before, AUTHORITY, image_base=0x400000)
         self.assertEqual(literals, 0)
         original = CoffObject(before)
         normalized = CoffObject(after)
@@ -150,7 +156,7 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
         before = _target(anchor_addend=8)
         after, _literals, aggregates = \
             _canonicalize_equivalent_relocations(
-                _base(), before, AUTHORITY)
+                _base(), before, AUTHORITY, image_base=0x400000)
         self.assertEqual(aggregates, 0)
         original = CoffObject(before)
         normalized = CoffObject(after)
@@ -164,7 +170,7 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
         before = _target(anchor_addend=8)
         after, _literals, aggregates = \
             _canonicalize_equivalent_relocations(
-                _base(), before, authority)
+                _base(), before, authority, image_base=0x400000)
         self.assertEqual(aggregates, 1)
         normalized = CoffObject(after)
         rows = {row.site: row for row in normalized.relocations}
@@ -181,7 +187,7 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
         before = _target()
         after, _literals, aggregates = \
             _canonicalize_equivalent_relocations(
-                _base(), before, authority)
+                _base(), before, authority, image_base=0x400000)
         self.assertEqual(aggregates, 0)
         original = CoffObject(before)
         normalized = CoffObject(after)
@@ -198,7 +204,7 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
         before = _target(anchor_addend=8, owner_name="data_200")
         after, _literals, aggregates = \
             _canonicalize_equivalent_relocations(
-                _base(), before, authority)
+                _base(), before, authority, image_base=0x400000)
         self.assertEqual(aggregates, 1)
         normalized = CoffObject(after)
         row = next(row for row in normalized.relocations if row.site == 6)
@@ -214,7 +220,7 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
             anchor_addend=8, field_name="data_204", owner_name="data_200")
         after, _literals, aggregates = \
             _canonicalize_equivalent_relocations(
-                _base(), before, authority)
+                _base(), before, authority, image_base=0x400000)
         self.assertEqual(aggregates, 1)
         normalized = CoffObject(after)
         rows = {row.site: row for row in normalized.relocations}
@@ -233,7 +239,7 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
             anchor_addend=8, field_name="data_208", owner_name="data_200")
         after, _literals, aggregates = \
             _canonicalize_equivalent_relocations(
-                _base(), before, authority)
+                _base(), before, authority, image_base=0x400000)
         self.assertEqual(aggregates, 0)
         original = CoffObject(before)
         normalized = CoffObject(after)
@@ -252,7 +258,7 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
             extra_owner_name="data_200")
         _after, _literals, aggregates = \
             _canonicalize_equivalent_relocations(
-                _base(), before, authority)
+                _base(), before, authority, image_base=0x400000)
         self.assertEqual(aggregates, 1)
 
     def test_reviewed_owner_rejects_two_names_at_one_rva(self):
@@ -267,7 +273,7 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
             extra_owner_name="other")
         after, _literals, aggregates = \
             _canonicalize_equivalent_relocations(
-                _base(), before, authority)
+                _base(), before, authority, image_base=0x400000)
         self.assertEqual(aggregates, 0)
         original = CoffObject(before)
         normalized = CoffObject(after)
@@ -284,7 +290,7 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
         before = _target(anchor_addend=8, owner_name="data_210")
         after, _literals, aggregates = \
             _canonicalize_equivalent_relocations(
-                _base(), before, authority)
+                _base(), before, authority, image_base=0x400000)
         self.assertEqual(aggregates, 0)
         original = CoffObject(before)
         normalized = CoffObject(after)
@@ -298,7 +304,7 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
         before = _target()
         after, _literals, aggregates = \
             _canonicalize_equivalent_relocations(
-                _base(), before, authority)
+                _base(), before, authority, image_base=0x400000)
         self.assertEqual(aggregates, 0)
         original = CoffObject(before)
         normalized = CoffObject(after)

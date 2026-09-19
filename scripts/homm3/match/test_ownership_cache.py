@@ -17,17 +17,21 @@ class OwnershipCacheTest(unittest.TestCase):
         self.real_scan = ownership.scan_unit
         self.root = Path(self.enterContext(tempfile.TemporaryDirectory()))
         for relative in ("src/a.cpp", "src/b.cpp", "include/header.h", "config/units.toml",
+                         "scripts/homm3/core/compiler_profile.py", "scripts/homm3/core/project.py",
                          "scripts/homm3/core/clang.py", "scripts/homm3/vc6/_source.py",
                          "scripts/homm3/manifest.py", "scripts/homm3/retail_labels/source.py"):
             path = self.root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("// fixture\n")
+        (self.root / 'config/units.toml').write_text(
+            '[build]\nincludes=["include"]\nanalysis_profile="test"\n'
+            '[flags]\ntest=["/Gr", "/GX", "/D_WINDOWS"]\n')
         self.enterContext(patch.object(ownership.manifest, "units", return_value=[
             {"source": "src/a.cpp"}, {"source": "src/b.cpp"}]))
         self.enterContext(patch.object(ownership.clang, "mirror", return_value=None))
         self.includes = {"src/a.cpp": [], "src/b.cpp": []}
         self.failures = []
-        def scan(unit, root):
+        def scan(unit, root, **kwargs):
             source = unit["source"]
             return [], list(self.failures), [source, "include/header.h", *self.includes[source]]
         self.scan = self.enterContext(patch.object(ownership, "scan_unit", side_effect=scan))
@@ -40,7 +44,7 @@ class OwnershipCacheTest(unittest.TestCase):
 
     def edit(self, relative):
         path = self.root / relative
-        path.write_text(path.read_text() + "// edited\n")
+        path.write_text(path.read_text() + ("# edited\n" if path.suffix == ".toml" else "// edited\n"))
 
     def test_warm_cache_source_edit_and_forced_scan(self):
         first, scans = self.collect()
@@ -92,7 +96,8 @@ class OwnershipCacheTest(unittest.TestCase):
 
     def test_header_config_or_header_addition_invalidates_all(self):
         self.collect()
-        for relative in ("include/header.h", "config/units.toml", "scripts/homm3/core/clang.py",
+        for relative in ("include/header.h", "config/units.toml", "scripts/homm3/core/compiler_profile.py", "scripts/homm3/core/project.py",
+                         "scripts/homm3/core/clang.py",
                          "scripts/homm3/retail_labels/source.py"):
             self.edit(relative)
             self.assertEqual(self.collect()[1], ["src/a.cpp", "src/b.cpp"])

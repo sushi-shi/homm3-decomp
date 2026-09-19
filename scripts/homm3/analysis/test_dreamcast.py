@@ -26,6 +26,14 @@ def _bridge(rva: str, offset: str, name: str, module: str = "unit.obj"):
     }
 
 
+def sh4_image(size):
+    from homm3.core.test_nb11 import fixture
+    data = bytearray(fixture()[:0x200] + bytes(size))
+    struct.pack_into('<I', data, 0x98 + 28, 0x30000)
+    struct.pack_into('<I', data, 0x178 + 16, size)
+    return data
+
+
 class CorpusResolutionTest(unittest.TestCase):
     def setUp(self):
         self.functions = [
@@ -307,17 +315,17 @@ class CfgTest(unittest.TestCase):
     def test_dreamcast_fpu_words_are_decoded_as_sh4_instructions(self):
         # 0xfe17 is one of the common SH4 FPU words Capstone rejects unless
         # CS_MODE_SHFPU is explicitly combined with CS_MODE_SH4.
-        data = bytearray(dc_asm.dc_lines.TEXT_RAW + 2)
-        data[dc_asm.dc_lines.TEXT_RAW:] = bytes.fromhex("17fe")
+        data = sh4_image(2)
+        data[0x200:] = bytes.fromhex("17fe")
         ins = dc_asm._decode_capstone(bytes(data))(0)
         self.assertNotEqual(ins.mnemonic, ".word")
 
     def test_control_events_resolve_pool_call_without_scanning_pool_as_code(self):
-        target = dc_asm.dc_lines.POOL_BASE + 0x100
-        data = bytearray(dc_asm.dc_lines.TEXT_RAW + 8)
-        data[dc_asm.dc_lines.TEXT_RAW:dc_asm.dc_lines.TEXT_RAW + 4] = \
+        target = 0x31000 + 0x100
+        data = sh4_image(8)
+        data[0x200:0x200 + 4] = \
             bytes.fromhex("00d00b40")  # mov.l @(0,pc),r0; jsr @r0
-        data[dc_asm.dc_lines.TEXT_RAW + 4:] = struct.pack("<I", target)
+        data[0x200 + 4:] = struct.pack("<I", target)
         view = {"blocks": [{"instructions": [
             {"address": 0, "bytes": "00d0", "mnemonic": "mov.l"},
             {"address": 2, "bytes": "0b40", "mnemonic": "jsr"},
@@ -326,11 +334,11 @@ class CfgTest(unittest.TestCase):
         self.assertEqual(events, {2: {"call_target_va": target}})
 
     def test_control_events_do_not_leak_call_target_between_cfg_roots(self):
-        target = dc_asm.dc_lines.POOL_BASE + 0x100
-        data = bytearray(dc_asm.dc_lines.TEXT_RAW + 8)
-        data[dc_asm.dc_lines.TEXT_RAW:dc_asm.dc_lines.TEXT_RAW + 4] = \
+        target = 0x31000 + 0x100
+        data = sh4_image(8)
+        data[0x200:0x200 + 4] = \
             bytes.fromhex("00d00b40")  # mov.l @(0,pc),r0; jsr @r0
-        data[dc_asm.dc_lines.TEXT_RAW + 4:] = struct.pack("<I", target)
+        data[0x200 + 4:] = struct.pack("<I", target)
         view = {"blocks": [
             {"instructions": [
                 {"address": 0, "bytes": "00d0", "mnemonic": "mov.l"},

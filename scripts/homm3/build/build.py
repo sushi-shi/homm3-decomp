@@ -47,20 +47,18 @@ def main(argv=None) -> int:
             print(f"[build] {exc}", file=sys.stderr)
             return 1
 
-    configure.main()
+    configure.configure()
     if _run("ninja", *ninja_args):
         return 1
     if fast:
-        if normalize_objs.main([]):
-            return 1
-        configure.main()
+        normalize_objs.normalize_all()
+        configure.configure()
     else:
         print("[build] refreshing retail targets")
         from homm3.build import delink
-        if delink.main([]):
-            return 1
+        delink.run()
 
-    report = status.load_report()
+    report = status.refresh_report()
     print(f"[build] {status.overall_line(report)}")
     print(f"[build] report: {status.REPORT.relative_to(ROOT)}")
 

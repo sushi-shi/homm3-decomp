@@ -33,6 +33,8 @@ from __future__ import annotations
 
 import sys
 
+from pathlib import Path
+
 from homm3.core import common
 
 DATA_OUT = common.HOMM3_DIR / "build/gen/delink_data_manifest.tsv"
@@ -53,7 +55,7 @@ BINDINGS_HEADER = ("name\tobject\trva\tsize\tstorage\talignment\t"
                    "section_ordinal\tsection_offset\tscope\tprovenance")
 
 
-def main(argv=None) -> int:
+def generate() -> Path:
     image, _info = common.load_image()
     secmap = {s.name: s for s in image.sections}
     rdata, dat = secmap[".rdata"], secmap[".data"]
@@ -102,6 +104,11 @@ def main(argv=None) -> int:
     print(f"[build data_manifest] {len(rows)} data rows -> {DATA_OUT.name};"
           f" sections/bindings headers emitted; aliases "
           f"{'created' if created else 'kept'}: {ALIASES.name}")
+    return DATA_OUT
+
+
+def main(argv=None) -> int:
+    generate()
     return 0
 
 

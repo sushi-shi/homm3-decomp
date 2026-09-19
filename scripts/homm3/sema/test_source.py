@@ -24,6 +24,8 @@ class SourceMapTest(unittest.TestCase):
     def test_load_uses_recorded_header_not_same_numbered_tu_lines(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
+            (root / "config").mkdir()
+            (root / "config/units.toml").write_text("[build]\nincludes=[]\n")
             header = root / "header.h"
             header.write_text("\n" * 10 + "headerFirst();\nheaderSecond();\nheaderLast();\n")
             src = root / "unit.cpp"
@@ -45,6 +47,8 @@ class SourceMapTest(unittest.TestCase):
     def test_unknown_recorded_file_does_not_fall_back_to_manifest_source(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
+            (root / "config").mkdir()
+            (root / "config/units.toml").write_text("[build]\nincludes=[]\n")
             src = root / "unit.cpp"
             src.write_text("\n" * 10 + "wrongFirst();\nwrongSecond();\nwrongLast();\n")
             unrelated = root / "unrelated.h"
@@ -60,6 +64,8 @@ class SourceMapTest(unittest.TestCase):
     def test_recorded_compiler_header_is_allowed(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
+            (root / "config").mkdir()
+            (root / "config/units.toml").write_text("[build]\nincludes=[]\n")
             compiler = root / "compiler"
             header = compiler / "include" / "vector"
             header.parent.mkdir(parents=True)
@@ -93,6 +99,8 @@ class SourceMapTest(unittest.TestCase):
     def test_recorded_compiler_header_uses_wine_filename_case(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
+            (root / "config").mkdir()
+            (root / "config/units.toml").write_text("[build]\nincludes=[]\n")
             compiler = root / "compiler"
             header = compiler / "include" / "XTREE"
             header.parent.mkdir(parents=True)
@@ -111,6 +119,8 @@ class SourceMapTest(unittest.TestCase):
     def test_header_case_resolution_rejects_ambiguity_and_unowned_files(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
+            (root / "config").mkdir()
+            (root / "config/units.toml").write_text("[build]\nincludes=[]\n")
             compiler = root / "compiler"
             include = compiler / "include"
             include.mkdir(parents=True)
@@ -149,6 +159,8 @@ class SourceMapTest(unittest.TestCase):
     def test_cache_payload_tracks_source_header_and_flags(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
+            (root / "config").mkdir()
+            (root / "config/units.toml").write_text("[build]\nincludes=[]\n")
             header = root / "local.h"
             source_file = root / "unit.cpp"
             header.write_text("#define N 1\n")

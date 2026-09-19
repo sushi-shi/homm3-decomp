@@ -134,7 +134,7 @@ class AuthoredAstTest(unittest.TestCase):
             args = [shutil.which('clang'), '--target=i686-pc-windows-msvc', '/c', str(path)]
             with patch.object(facts.clang, 'clang_bin', return_value=args[0]), \
                     patch.object(facts.clang, 'mirror', return_value=root), \
-                    patch.object(facts.manifest, 'load'), \
+                    patch('homm3.manifest.load'), \
                     patch.object(facts.compilation_database, 'commands',
                                  return_value=[{'file': str(path), 'arguments': args}]):
                 names = ['?f@Widget@@QAEHH@Z', '?f@Widget@@QAEHN@Z', '?g@Widget@@QAEHXZ']
@@ -228,8 +228,12 @@ Window::Window() {
             ("const combatManager::TWallTraits* const",
              "const TWallTraits* const"),
         )
+        from homm3.core import common
+        from homm3.core.project import Project
+        aliases = Project(common.HOMM3_DIR).aliases("dreamcast")
         for qualified, owner_relative in pairs:
-            self.assertEqual(facts.type_differences(qualified, owner_relative),
+            self.assertIn("base-type", facts.type_differences(qualified, owner_relative)[0])
+            self.assertEqual(facts.type_differences(qualified, owner_relative, aliases=aliases),
                              ([], []))
 
     def test_owning_alias_comment_matches_normalized_local(self):

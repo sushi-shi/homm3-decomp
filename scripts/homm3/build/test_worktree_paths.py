@@ -19,7 +19,9 @@ class WorktreePathsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="homm3 root ") as raw:
             root = Path(raw)
             (root / "config").mkdir()
-            (root / "config/units.toml").write_text("[flags]\n")
+            (root / "config/units.toml").write_text("[build]\n[flags]\n")
+            project_config = Path(__file__).resolve().parents[3] / "config/project.toml"
+            (root / "config/project.toml").write_bytes(project_config.read_bytes())
             env = dict(os.environ, HOMM3_DIR=raw, PYTHONPATH=str(scripts))
             result = subprocess.run([sys.executable, "-m", "homm3", "configure"],
                                     env=env, cwd=scripts, capture_output=True, text=True)
