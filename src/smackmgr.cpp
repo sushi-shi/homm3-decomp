@@ -127,13 +127,16 @@ DATA(0x0069e5a8) int g_soundCount;
 DATA(0x0069e5a4) int g_soundCountCd;
 DATA(0x0069e5ac) int g_soundCountCampaign;
 
-// Retail shares one serviceSounds tail across all four handle guards.
-// Combining the equivalent conditions avoids two source copies of the
-// now-visible header inline; its standalone retained-call residual remains.
+// Retail has separate Smacker and Bink service tails at 0x5971e5/0x5971da.
+// Preserve the codec branches and canonical serviceSounds calls: merging
+// all four guards removes one tail here and in videoPause/videoResume.
+// The WinCE counterpart is a four-byte stub and proves no Windows body.
 VA(0x005971b0, 0x3B)  // dc 0x14ac30
 void videoSoundOnOff(int on)
 {
-    if (g_smackVideo || g_smackVideo2 || BinkManager::s_playingBink.m_bink || BinkManager::s_playingBink.m_bink2)
+    if (g_smackVideo || g_smackVideo2)
+        g_soundManager->serviceSounds();
+    else if (BinkManager::s_playingBink.m_bink || BinkManager::s_playingBink.m_bink2)
         g_soundManager->serviceSounds();
 }
 
