@@ -358,7 +358,7 @@ def _claims(unit: str):
 def _first_pass(unit: str, payload: bytes) -> bytes:
     claims, accounted = _claims(unit)
     result = canon.canonicalize_coff(
-        payload, claims, compgen_accounted=accounted)
+        payload, claims, compgen_accounted=accounted, unit=unit)
     return normalize._drop_data_sections(result.data)
 
 

@@ -18,7 +18,9 @@ renaming volatile ``$E`` symbols. Symbol indices do not change. In embedded
 .text jump tables, same-function DIR32 references through volatile local labels
 or another external function owner are rewritten to the containing external
 function plus an equivalent owner-relative addend; all resolved section offsets
-are proved unchanged.
+are proved unchanged. Reviewed anonymous-namespace aliases are scoped to their
+owning compiland and recorded in the rename sidecar. Only symbol-table names
+change: embedded RTTI strings and the original compiler objects remain intact.
 """
 
 from __future__ import annotations
@@ -35,6 +37,7 @@ import tempfile
 import warnings
 from collections import defaultdict
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 from homm3.build.normalized_freshness import write_stamp
@@ -46,6 +49,102 @@ VOLATILE_T = re.compile(r"^\$T[0-9]+$")
 NAMED_STATIC = re.compile(r"^(?P<prefix>.+\$S)[0-9]+$")
 VOLATILE_E_FUNCTION = re.compile(r"^_?\$E[0-9]+$")
 COMPGEN_PREFIX = "__h3cg$"
+
+# VC6 anonymous namespace scope: ?%<path><crc32>@ in mangled names.
+ANON_NS_SCOPE_RE = re.compile(r"\?%([^@]+)@")
+
+
+def anon_ns_stamp_inputs() -> dict[str, Path]:
+    from homm3.core import common
+    path = common.HOMM3_DIR / "config/retail-anon-ns-paths.tsv"
+    return {"anon_ns_paths": path} if path.is_file() else {}
+
+
+def _load_anon_ns_canonical() -> dict[tuple[str, str], str]:
+    path = anon_ns_stamp_inputs().get("anon_ns_paths")
+    if path is None:
+        return {}
+    # Cache parsed contents, not mtime/size: same-size edits must be visible
+    # even when a caller preserves the file's timestamps.
+    return _read_anon_ns_canonical(path.read_text())
+
+
+@lru_cache(maxsize=8)
+def _read_anon_ns_canonical(contents: str) -> dict[tuple[str, str], str]:
+    lines = [line for line in contents.splitlines()
+             if line.strip() and not line.startswith("#")]
+    rows = list(csv.reader(lines, delimiter="\t"))
+    header = ["unit", "source_basename", "canonical_scope"]
+    if not rows or rows[0] != header:
+        raise ValueError("retail-anon-ns-paths.tsv: invalid header")
+    result = {}
+    for row in rows[1:]:
+        if len(row) != len(header) or any(not value or value != value.strip()
+                                          for value in row):
+            raise ValueError("retail-anon-ns-paths.tsv: malformed row")
+        unit, basename, scope = row
+        if (re.fullmatch(r"[A-Za-z0-9_.-]+", unit) is None
+                or re.fullmatch(r"[A-Za-z0-9_.-]+", basename) is None
+                or re.fullmatch(r"[^@?\r\n]+\.[A-Za-z]+[0-9]+", scope) is None):
+            raise ValueError("retail-anon-ns-paths.tsv: invalid unit or scope")
+        key = (unit.lower(), basename.lower())
+        if key in result:
+            raise ValueError("retail-anon-ns-paths.tsv: duplicate unit/basename")
+        result[key] = scope
+    return result
+
+
+def normalize_anon_ns_name(name: str, unit: str | None = None) -> str:
+    """Normalize only reviewed namespace scopes in their owning compiland.
+
+    This changes comparison metadata only. Unknown units/scopes are retained,
+    and calls without an owning unit cannot apply a basename-only alias.
+    """
+    if unit is None or "?%" not in name:
+        return name
+    canonical = _load_anon_ns_canonical()
+
+    def replace(match):
+        scope = match.group(1)
+        basename = re.split(r"[\\/]", scope)[-1]
+        basename = re.sub(r"[0-9]+$", "", basename).lower()
+        replacement = canonical.get((unit.lower(), basename))
+        return match.group(0) if replacement is None else "?%" + replacement + "@"
+
+    return ANON_NS_SCOPE_RE.sub(replace, name)
+
+
+def _anon_ns_renames(
+    symbols: dict[int, "Symbol"],
+    existing_renames: dict[int, str],
+    unit: str | None,
+    definitions: dict[int, "Definition"],
+) -> tuple[dict[int, str], list["CanonicalRow"]]:
+    renames = {}
+    rows = []
+    owners = {}
+    for symbol in symbols.values():
+        new_name = existing_renames.get(symbol.index)
+        if new_name is None:
+            new_name = normalize_anon_ns_name(symbol.name, unit)
+            if new_name != symbol.name:
+                renames[symbol.index] = new_name
+                definition = definitions.get(symbol.index)
+                size = definition.end - definition.start if definition else 0
+                rows.append(CanonicalRow(
+                    symbol.name, new_name, "anonymous-namespace",
+                    definition.storage if definition else "undefined",
+                    symbol.section, symbol.value, size, size, 0,
+                    hashlib.sha256(new_name.encode("latin-1")).hexdigest(),
+                    "retail-rtti-path; unit=" + str(unit),
+                    "config/retail-anon-ns-paths.tsv",
+                ))
+        previous = owners.get(new_name)
+        if previous is not None and previous != symbol.name:
+            raise ValueError("anonymous namespace canonical name collision: " + new_name)
+        owners[new_name] = symbol.name
+    return renames, rows
+
 
 INITIALIZED_DATA = 0x00000040
 UNINITIALIZED_DATA = 0x00000080
@@ -1276,6 +1375,7 @@ def canonicalize_coff(payload: bytes,
                       compgen: tuple[CompgenClaim, ...] = (),
                       compgen_data: tuple[CompgenDataClaim, ...] = (),
                       compgen_accounted: frozenset[str] = frozenset(),
+                      *, unit: str | None = None,
                       ) -> CanonicalizedObject:
     """Return a normalized comparison copy and its readable rename records."""
     coff = CoffObject(payload)
@@ -1487,6 +1587,10 @@ def canonicalize_coff(payload: bytes,
         raise RuntimeError("data and compiler-function canonicalization overlap")
     renames.update(compgen_rename)
     rows.extend(compgen_rows)
+    anon_renames, anon_rows = _anon_ns_renames(
+        coff.symbols, renames, unit, definition_by_symbol)
+    renames.update(anon_renames)
+    rows.extend(anon_rows)
     normalized = _rewrite_names(coff, renames)
     normalized, jump_table_rewrites = _rewrite_jump_table_relocations(
         coff, normalized)
@@ -1530,7 +1634,8 @@ def corpus_summary(roots: list[Path]) -> dict:
     for root in roots:
         counts = defaultdict(int)
         for path in sorted(root.rglob("*.obj")):
-            result = canonicalize_coff(path.read_bytes())
+            unit = path.name[:-6] if path.name.endswith(".c.obj") else path.stem
+            result = canonicalize_coff(path.read_bytes(), unit=unit)
             counts["objects"] += 1
             for row in result.rows:
                 counts["rows"] += 1
@@ -1544,6 +1649,8 @@ def corpus_summary(roots: list[Path]) -> dict:
                     counts["kind:string"] += 1
                 elif row.canonical_name.startswith("$anon_data_"):
                     counts["kind:data"] += 1
+                elif row.family == "anonymous-namespace":
+                    counts["kind:anonymous-namespace"] += 1
                 elif row.canonical_name == row.original_name:
                     counts["kind:skipped"] += 1
                 else:
@@ -1648,10 +1755,12 @@ def main(argv=None):
         parser.error("input, output, and sidecar paths must be distinct")
     claims = load_compgen_claims(args.compgen_manifest, args.unit)
     data_claims = load_compgen_data_claims(args.data_manifest, args.unit)
-    result = canonicalize_coff(args.input.read_bytes(), claims, data_claims)
+    result = canonicalize_coff(args.input.read_bytes(), claims, data_claims,
+                               unit=args.unit)
     _atomic_write(args.output, result.data)
     _atomic_write(args.sidecar, sidecar_bytes(result.rows))
     stamp_inputs = {"input": args.input}
+    stamp_inputs.update(anon_ns_stamp_inputs())
     if args.compgen_manifest:
         stamp_inputs["compgen_manifest"] = args.compgen_manifest
     if args.data_manifest:
