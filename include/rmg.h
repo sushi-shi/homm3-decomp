@@ -1041,6 +1041,8 @@ struct TRmgMapItem {
         return m_tileData.m_subterraneanGate;
     }
 
+    unsigned char isPassableLand() const;
+
     // RepairWaterZoneBorders tests this flag after truncating it to a byte
     // at 0x53fe30, then tests roadPassable directly as a dword bit.
     unsigned char hasBorderObject() const
@@ -1174,6 +1176,10 @@ public:
     // orders were scored across all seven header consumers. Restoring the old
     // width/height/items order loses the island's constructor scheduling
     // (95.8947%); the separate caller-only control does not recover it.
+    // Paired TPoint/grid-point size arguments, by value/reference and in both
+    // orders, leave the underground entry unchanged. Grouping the map's own
+    // three dimensions as a position changes retry bodies but closes no further
+    // function. Neither interface/layout change is adopted.
 
     inline type_random_map(TRmgMapItem* items, int width, int height)
     {

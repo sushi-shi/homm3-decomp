@@ -3296,7 +3296,7 @@ rmg	?_Ucopy@?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std
 rmg	?_Ucopy@?$vector@UTRmgObjectPlacementRule@@V?$allocator@UTRmgObjectPlacementRule@@@std@@@std@@IAEPAUTRmgObjectPlacementRule@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x14d8b0	-
 rmg	?_Ufill@?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@IAEXPAUTRmgNoiseRegion@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d9a0	-
 rmg	?_Ufill@?$vector@UTRmgObjectPlacementRule@@V?$allocator@UTRmgObjectPlacementRule@@@std@@@std@@IAEXPAUTRmgObjectPlacementRule@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d8f0	-
-rmg	?addGuard@TRmgTreasureGroup@@QAEEPAVtype_object@@@Z	88.1175	88.1175	89.9329	0x135110	tokens1:3923d4e36fb6
+rmg	?addGuard@TRmgTreasureGroup@@QAEEPAVtype_object@@@Z	88.1175	88.1175	89.9329	0x135110	tokens1:46fd68589042
 rmg	?addObject@TRmgGeneratorBase@@UAEXPAVtype_object@@UTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x1371c0	tokens1:17aebe9f573f
 rmg	?addObject@type_random_map@@QAEXAAVtype_object@@UTRmgMapPosition@@@Z	89.9551	89.9551	89.9551	0x131ea0	tokens1:e0d36b5f7c2c
 rmg	?addObject@type_random_map_generator@@UAEXPAVtype_object@@UTRmgMapPosition@@@Z	69.5855	69.5855	69.5855	0x1402a0	tokens1:e3476c052dbd
@@ -3341,8 +3341,8 @@ rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRm
 rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	85.8212	85.8212	85.8212	0x142080	tokens1:d6f1ff0e615d
 rmg	?createTreasureObject@type_random_map_generator@@QAEPAVtype_object@@PAUTRmgZone@@HHPAHEEEUTRmgMapPosition@@@Z	81.6894	81.6894	81.6894	0x146190	tokens1:83e422bac393
 rmg	?createWaterZoneIsland@type_random_map_generator@@QAEXABUTRmgZoneBounds@@H@Z	100.0000	100.0000	100.0000	0x13efa0	tokens1:7e9d3c40290f
-rmg	?decorateMap@TRmgGeneratorBase@@QAEXXZ	91.1321	91.1321	91.1321	0x137970	tokens1:e85dd5308104
-rmg	?decorateMapCell@TRmgGeneratorBase@@QAEXUTRmgMapPosition@@H@Z	82.4467	82.4467	82.4467	0x1373a0	tokens1:8b706348d48a
+rmg	?decorateMap@TRmgGeneratorBase@@QAEXXZ	100.0000	100.0000	100.0000	0x137970	tokens1:6a0861317d1d
+rmg	?decorateMapCell@TRmgGeneratorBase@@QAEXUTRmgMapPosition@@H@Z	82.1950	82.1950	82.4467	0x1373a0	tokens1:19fd46986878
 rmg	?decorateUnderground@type_random_map_generator@@QAEXXZ	99.7982	99.7982	99.7982	0x1439e0	tokens1:18e7e1c5004f
 rmg	?drawIrregularZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z	100.0000	100.0000	100.0000	0x13bff0	tokens1:7b488e3680ea
 rmg	?drawIslandBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z	100.0000	100.0000	100.0000	0x13cd30	tokens1:57c511efde95
@@ -3417,7 +3417,7 @@ rmg	?insert@?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std
 rmg	?insert@?$vector@UTRmgObjectPlacementRule@@V?$allocator@UTRmgObjectPlacementRule@@@std@@@std@@QAEPAUTRmgObjectPlacementRule@@PAU3@ABU3@@Z	100.0000	100.0000	100.0000	0x14c730	-
 rmg	?insert@?$vector@UTRmgZoneConnection@@V?$allocator@UTRmgZoneConnection@@@std@@@std@@QAEPAUTRmgZoneConnection@@PAU3@ABU3@@Z	100.0000	100.0000	100.0000	0x14c970	-
 rmg	?insetIslandZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	78.7719	78.7719	78.7719	0x13d1c0	tokens1:99662685d65e
-rmg	?isPlacementBlocked@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@HE@Z	90.2171	90.2171	90.2171	0x1318b0	tokens1:330d7f3992e4
+rmg	?isPlacementBlocked@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@HE@Z	90.2171	90.2171	90.2171	0x1318b0	tokens1:85c1fa13ed29
 rmg	?isWritable@rmgKeyTentObject@@UAEEXZ	100.0000	100.0000	100.0000	0x1338e0	tokens1:f6866f71af9a
 rmg	?isWritable@rmgQuestArtifactObject@@UAEEXZ	100.0000	100.0000	100.0000	0x133a50	tokens1:35b0fe3039ba
 rmg	?joinExtraZones@type_random_map_generator@@QAEXHPAVTRmgVoronoi@@@Z	79.6078	79.6078	79.6078	0x13dad0	tokens1:16480acbd563
@@ -3481,7 +3481,7 @@ rmg	?tryPlaceAdditionalTown@type_random_map_generator@@QAEEPAUTRmgZone@@HHEH@Z	7
 rmg	?tryPlaceMine@type_random_map_generator@@QAEEPAUTRmgZone@@HEH@Z	71.5746	71.5746	71.5746	0x145990	tokens1:ae578211ceaa
 rmg	?tryPlacePrimaryTown@type_random_map_generator@@QAEEPAUTRmgZone@@HHE@Z	76.3310	76.3310	76.3310	0x145250	tokens1:387cdd11f06c
 rmg	?unknownOperation@rmgHeroObject@@UAEXXZ	100.0000	100.0000	100.0000	0x133c70	tokens1:dcca37f6a32f
-rmg	?updateBounds@TRmgTreasureGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x135df0	tokens1:c49ac16a3371
+rmg	?updateBounds@TRmgTreasureGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x135df0	tokens1:2d17722e788a
 rmg	?write@TRmgMapItem@@QAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x132890	tokens1:0c9d60db2681
 rmg	?write@rmgArtifactObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133500	tokens1:01e0b7658cb0
 rmg	?write@rmgBlackBoxObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1336f0	tokens1:4059f653994d

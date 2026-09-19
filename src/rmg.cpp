@@ -32,6 +32,15 @@
 #include "textresource.h"
 #include "town.h"
 
+// Complete-only shared land predicate; original name is unknown. Six
+// placement/decoration sites use this same road-passable, non-rock test.
+// Keeping its ordinary helper boundary restores decorateMap's retail branch
+// layout (409 bytes exact); spelling the two field tests in the caller does not.
+unsigned char TRmgMapItem::isPassableLand() const
+{
+    return m_tileData.m_roadPassable && m_tile.m_landType != eTerrainRock;
+}
+
 typedef std::set<TPoint> TRmgPointSet;
 
 // Retail constructor defaults and overrides; 0x546257 compares map counts,
@@ -636,14 +645,14 @@ unsigned char type_random_map::isPlacementBlocked(
             TRmgGridPoint maskPoint(x, y);
             TRmgMapItem* item = getMapItem(nearby);
             if (prototype.m_triggerMask.test(CObjectType::getBitPos(maskPoint.m_x, maskPoint.m_y))) {
-                if (!item->m_tileData.m_roadPassable || item->m_tile.m_landType == eTerrainRock
+                if (!item->isPassableLand()
                     || item->isRoadEntrance() || item->m_zoneState.m_zone != zoneIndex)
                     return 1;
                 if (rejectBorder && item->hasBorderObject())
                     return 1;
             }
             if (!prototype.m_passableMask.test(CObjectType::getBitPos(maskPoint.m_x, maskPoint.m_y))) {
-                if (!item->m_tileData.m_roadPassable || item->m_tile.m_landType == eTerrainRock
+                if (!item->isPassableLand()
                     || item->isRoadEntrance() || item->m_zoneState.m_zone != zoneIndex)
                     return 1;
                 if (item->m_tile.m_landType == eTerrainWater) {
@@ -1211,6 +1220,8 @@ void TRmgZone::setLevelPosition(TRmgMapPosition position)
 // across five other callers, including three exact functions. Arithmetic
 // local variants do not restore those boundaries. Keep one support-TU body.
 // Earlier size declarations and a two-element size array also leave 96.4286%.
+// Binding either template owner by pointer/reference, with or without named
+// scalar sizes, does not improve the remaining register assignment.
 VA(0x00532BD0, 0xA8) // anchor-callee 0x53b4b7/0x53b5ae; thiscall, ret 4
 unsigned char TRmgZone::canConnect(const TRmgZone* other) const
 {
@@ -2423,7 +2434,7 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
         point.m_x = guardPosition.m_x + g_rmgDirections[direction].m_x;
         point.m_y = guardPosition.m_y + g_rmgDirections[direction].m_y;
         TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, 0);
-        if (!item->m_tileData.m_roadPassable || item->m_tile.m_landType == eTerrainRock)
+        if (!item->isPassableLand())
             continue;
         if (guardType == BORDER_GUARD && item->hasBorderObject())
             continue;
@@ -2633,7 +2644,7 @@ void TRmgTreasureGroup::updateBounds()
     TRmgMapItem* item = m_map.m_mapItems;
     for (int y = 0; y < m_map.m_mapHeight; ++y) {
         for (int x = 0; x < m_map.m_mapWidth; ++x, ++item) {
-            if (!item->m_tileData.m_roadPassable || item->m_tile.m_landType == eTerrainRock
+            if (!item->isPassableLand()
                 || item->isRoadEntrance() || !item->hasSubterraneanGate()) {
                 m_bounds.m_minimumX = std::_cpp_min<long>(m_bounds.m_minimumX, x);
                 m_bounds.m_maximumX = std::_cpp_max<long>(m_bounds.m_maximumX, x + 1);
@@ -3068,7 +3079,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
         if (m_progress)
             m_progress->advance(progressSteps);
         TRmgMapItem* item = m_map.getMapItem(position);
-        if (!item->m_tileData.m_roadPassable || item->m_tile.m_landType == eTerrainRock)
+        if (!item->isPassableLand())
             continue;
         int terrain = item->m_tile.m_landType;
         std::vector<TRmgObjectPropertiesRef*> candidates;
@@ -3161,10 +3172,14 @@ TRmgMapItem* type_random_map::getMapItem(TRmgMapPosition point)
 // Retail 0x549c91 calls this base-prefix pass after coastal marking.
 // Keep the canonical tile-field names: bits 26/27 and 25 are observed here,
 // regardless of their additional roles in zone connection and road routing.
-// Partial 91.13%: one shared position value preserves all three scans and
-// removes the extra position constructor (separate scalar loops: 71.91%).
-// Progress/placement branch order remains reversed; positive/negative first
-// arms and an explicit skip-to-next-cell continue are byte-neutral.
+// One shared position value preserves all three scans and avoids an extra
+// position constructor. The ordinary isPassableLand predicate recovers the
+// progress/placement branch layout and all 409 retail bytes. Member/free and
+// positive/negative predicate controls all reproduce the same exact caller.
+// In-caller field tests stay at 91.1321%; flattened dispatch and a named
+// eligibility value reach only 98.0818%. A shared progress notifier is flat.
+// All seven header consumers were measured. decorateMapCell's expansion
+// shifts from 82.4467% to 82.1950%; all other scores remain unchanged.
 VA(0x00537970, 0x199)
 void TRmgGeneratorBase::decorateMap()
 {
@@ -3184,7 +3199,7 @@ void TRmgGeneratorBase::decorateMap()
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
                 if (item->hasBorderObject()) {
-                    if (!item->m_tileData.m_roadPassable || item->m_tile.m_landType == eTerrainRock) {
+                    if (!item->isPassableLand()) {
                         if (m_progress)
                             m_progress->advance(progressSteps);
                         continue;
@@ -4425,22 +4440,17 @@ void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
 
 // Terrain painting replaces the zone center with the average coordinates
 // of its assigned cells, retaining its level. Provisional Complete-only role.
-// Residual (95.5000%): reading the level position before the zone index
-// restores the copy's EBX loads (95.3043%). A three-coordinate centroid
-// retains that level through the setter and restores retail's 0x34 frame
-// and every scan/output stack home. Entry copy/zero scheduling still differs.
-// Four 60-state families measured coordinate snapshots, accumulator kinds,
-// counter lifetimes, full-coordinate copies and all six field-store orders.
-// Copies and counter movement do not improve the peak; scalar/TPoint sums
-// leave a four-byte frame deficit. All 339 other RMG scores stay unchanged.
-// The canonical accessors and coordinate constructors remain unchanged.
-// Two later 60-state populations test slot/index bindings and returned-value
-// capture, then move the independent centroid X/Y initialization earlier.
-// Both produce 36 code identities and ten reproduced finalists; neither
-// exceeds 95.5000%. Retail still reads the slot index before completing the
-// coordinate copy and uses separate XORs for count and accumulator zeroes.
-// The tested bindings/lifetimes do not recover that entry sequence; some
-// alternatives also lower the unchanged-source header writer to 77.8952%.
+// Residual 95.5000%: the three-coordinate total preserves retail's 0x34 frame
+// and scan/output homes. The entry still needs its index lookup interleaved
+// with the position copy, and separate zero registers for count and totals.
+// Scalar/TPoint totals lose four frame bytes; coordinate arrays including Z
+// preserve the peak. Copy, declaration, zero/store order and counter lifetime
+// families do not close the entry. The bounds accessor is neutral. An ordinary
+// zone-index accessor before the position copy recovers its pointer chain but
+// moves the copy to ECX and saves row Y too early (89.1196%). TPoint/three-axis
+// scans and reuse of the position do not repair that combined model. Keep the
+// existing accessor contracts and the three-coordinate total; no index helper
+// or accumulator/scan rewrite is supported by these measurements.
 VA(0x0053D0D0, 0xE3) // anchor-callee 0x53e6e8; thiscall, ret 4
 void type_random_map_generator::recenterZone(TRmgZone* zone)
 {
@@ -8034,6 +8044,8 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
 // The retail label names vector<widget*>; keep the real source element type.
 // Public single insertion and an earlier named insertion iterator do not
 // recover the centering loads, including a separately bound object vector.
+// Signed/unsigned coordinate arrays and a TPoint center also leave 97.8371%;
+// separating the sums from division instead over-expands vector insertion.
 VA(0x00546520, 0x1B6) // anchor-callee 0x54678a; thiscall, ret 0x10
 int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
     TRmgTreasureGroup* group, unsigned char alternate, int value)
@@ -10004,6 +10016,10 @@ static void insertRmgWorkItem(std::vector<TRmgZone*>& zones, TRmgZone* zone)
 // the seed-insert and erase wrappers that this compile expands.
 // A joint public seed/pop/emptiness family, including the existing sorted
 // insertion helper at the seed, does not improve those retained boundaries.
+// Live C2 tracing gives seed insert budget 907 against cost 64 and erase
+// budget 801 against cost 70. Separate initialization and extraction helpers,
+// including extraction with its empty test, peak at 84.9925% but still expand
+// both retail-retained wrappers. No speculative worklist wrapper is retained.
 VA(0x0054B180, 0x174) // anchor-callee + zone/template layouts; retail-only
 void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
 {
