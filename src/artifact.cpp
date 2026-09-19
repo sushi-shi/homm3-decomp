@@ -89,6 +89,12 @@ static std::bitset<144> makeArtifactComponentMask(unsigned count, ...)
     return mask;
 }
 
+// A single ordinary function-template factory preserves both bodies but
+// does not fix the slot cinit: its variadic calls still fail the non-EH
+// caller-state gate (0x788 versus the ordinary bodies' 0x708). The empty
+// mask's nested _Tidy still receives 742 units and expands. No template
+// source spelling or convenience wrapper is established by that control.
+
 // The twelve Shadow of Death combination artifacts, ids 129..140, each with
 // the component set the assembled artifact consumes. Read straight out of
 // the cinit at 0x44c960: the 24-byte record is built in a stack temporary
@@ -171,9 +177,16 @@ static void initializeArtifactTraits(int id,
 // TResourcePtr/TAutoArrayPtr express those Windows lifetimes. The older set/get
 // names do not imply additional Windows allocations or disposal calls.
 
-// Residual (80.8218%, historical peak 81.9921%): nested bitset<19> _Tidy and
-// equality calls stay out of line where retail expands them. The size loop hoists
-// the sheet's row-vector base, and late range-error construction differs.
+// Raw spreadsheet queries retain the older source's pointer interface;
+// the separate TResourcePtr guards own each Windows phase's real cleanup.
+// Either raw-query phase gives 83.8990%; both keep that result. The 16-state
+// pool-cursor reuse control gives 82.7881..83.4951% and changes no established
+// source fact, so retain the owner queries at the pool check and cursor setup.
+// Residual (83.8990%): nested bitset<19> _Tidy, proxy assignment and equality
+// calls stay out of line where retail expands them. The size loop still
+// hoists the sheet's row-vector base. Late range-error construction now
+// reaches the retail _Grow call, but keeps the literal-string _Tidy at the
+// wrong site and retains the copy constructor that retail expands.
 // The combination loop now has retail's owner/offset end checks, set-bit
 // search, returned-iterator copy and retained bitset<144>::test call.
 
@@ -195,11 +208,11 @@ VA(0x0044cd50, 0x5E8)  // anchor-strings/caller, dc 0x4fec0
 bool initializeArtifactTraitsTable()
 {
     {
-        TResourcePtr<TSpreadsheetResource> traitsSheet(
-            ResourceManager::getSpreadsheet(
-                DATA_COMPGEN(0x00660b80, artifactTraitsSpreadsheetName,
-                             "artraits.txt")));
-        if (!traitsSheet.get() || traitsSheet->getNumberOfRows() < 146) {
+        TSpreadsheetResource* traitsSheet = ResourceManager::getSpreadsheet(
+            DATA_COMPGEN(0x00660b80, artifactTraitsSpreadsheetName,
+                         "artraits.txt"));
+        TResourcePtr<TSpreadsheetResource> traitsSheetGuard(traitsSheet);
+        if (!traitsSheet || traitsSheet->getNumberOfRows() < 146) {
             return 0;
         }
 
@@ -265,11 +278,11 @@ bool initializeArtifactTraitsTable()
     }
 
     {
-        TResourcePtr<TSpreadsheetResource> slotsSheet(
-            ResourceManager::getSpreadsheet(
-                DATA_COMPGEN(0x00660b70, artifactSlotsSpreadsheetName,
-                             "artslots.txt")));
-        if (!slotsSheet.get() || slotsSheet->getNumberOfRows() < 19) {
+        TSpreadsheetResource* slotsSheet = ResourceManager::getSpreadsheet(
+            DATA_COMPGEN(0x00660b70, artifactSlotsSpreadsheetName,
+                         "artslots.txt"));
+        TResourcePtr<TSpreadsheetResource> slotsSheetGuard(slotsSheet);
+        if (!slotsSheet || slotsSheet->getNumberOfRows() < 19) {
             return 0;
         }
 
@@ -321,13 +334,12 @@ bool initializeArtifactTraitsTable()
 // The two-form control reproduces 80.8218% with the recovered calls and
 // preserves all seven exact siblings. A lower score does not contradict
 // the positive source-call evidence; the cached form remains a failed lead.
-// Passive VC6 traces keep the outer caller at cb=1056/budget=2112. Restoring
-// the reads changes this helper from cb=330 to 351 and its child budget from
-// 65 to 64. The proxy assignment still exceeds its remaining budget (43 vs
-// 23), while _Tidy and equality remain rejected at the next nesting level.
-// The residual is not explained by the removed cache alone. Naming the
-// consumed slot proxy gives 80.5782% but still retains proxy assignment,
-// _Tidy and both equality calls; it fails the expected expansion prediction.
+// Restoring those reads changes this helper's C2 cost from 330 to 351.
+// With both raw spreadsheet pointers, the caller costs 1022 (budget 2044),
+// and this helper receives 74. Proxy assignment still exceeds its remaining
+// budget (43 versus 33); _Tidy and equality are also rejected one level down.
+// Naming the consumed slot proxy in the earlier owner-query model gave
+// 80.5782% and kept all three unwanted calls, failing its expansion prediction.
 static void initializeArtifactTraits(int id,
     const TSpreadsheetResource::TStringVector& resource)
 {
