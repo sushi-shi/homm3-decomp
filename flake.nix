@@ -161,6 +161,8 @@
         llvmPackages.clang-unwrapped
         clang-tools
         ripgrep
+        ruff
+        pyright
         file
         xxd
         jq

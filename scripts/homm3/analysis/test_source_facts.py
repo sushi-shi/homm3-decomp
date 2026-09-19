@@ -67,8 +67,11 @@ class TypeFactsTest(unittest.TestCase):
             self.assertFalse(result["findings"])
 
     def test_order_uses_distinct_source_statements_not_argument_or_machine_order(self):
-        dc = lambda name, line: {"name": name, "line": line, "file": "unit.cpp"}
-        cpp = lambda name, offset, statement: {"name": name, "line": offset, "offset": offset, "statement": statement}
+        def dc(name, line):
+            return {"name": name, "line": line, "file": "unit.cpp"}
+
+        def cpp(name, offset, statement):
+            return {"name": name, "line": offset, "offset": offset, "statement": statement}
         expected = {"calls": [dc("b", 20), dc("a", 10)]}  # reversed machine address order
         candidate = {"calls": [cpp("a", 1, 1), cpp("b", 2, 2)]}
         self.assertFalse(facts.compare_facts(expected, candidate)["findings"])

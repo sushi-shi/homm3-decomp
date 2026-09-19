@@ -168,8 +168,10 @@ def type_facts(text: str) -> TypeFacts | None:
         cv = []
         nested = 0
         for token in layer:
-            if token == "<": nested += 1
-            if token == ">": nested -= 1
+            if token == "<":
+                nested += 1
+            if token == ">":
+                nested -= 1
             if nested == 0 and token in ("const", "volatile"):
                 cv.append(token)
             elif index == 0:
@@ -207,8 +209,10 @@ def _base_type_key(text: str) -> str:
     depth = start = 0
     body = tail[:-1]
     for index, token in enumerate(body):
-        if token == "<": depth += 1
-        elif token == ">": depth -= 1
+        if token == "<":
+            depth += 1
+        elif token == ">":
+            depth -= 1
         elif token == "," and depth == 0:
             arguments.append(body[start:index])
             start = index + 1
@@ -251,8 +255,10 @@ def json_documents(text: str) -> list[dict]:
     rows = []
     at = 0
     while at < len(text):
-        while at < len(text) and text[at].isspace(): at += 1
-        if at == len(text): break
+        while at < len(text) and text[at].isspace():
+            at += 1
+        if at == len(text):
+            break
         row, at = decoder.raw_decode(text, at)
         rows.append(row)
     return rows
@@ -721,13 +727,15 @@ def run(corpus, rows: list[dict], *, as_json: bool = False,
         print("SOURCE FACT REVIEW — " + CAUTION)
         for row in results:
             print(f"\n{row['function']} [{row['module']} dc:{row['dc_offset']:#x}]")
-            if row.get("source"): print("  C++: " + row["source"])
+            if row.get("source"):
+                print("  C++: " + row["source"])
             for item in row["findings"]:
                 aspects = " (" + ", ".join(item["aspects"]) + ")" if item.get("aspects") else ""
                 print(f"  REVIEW {item['id']} {item['kind']}{aspects}: {item['subject']}")
                 print(f"    DC:  {item['dreamcast']}")
                 print(f"    C++: {item['candidate']}")
-            for gap in row["coverage_gaps"]: print("  UNCHECKED: " + gap)
+            for gap in row["coverage_gaps"]:
+                print("  UNCHECKED: " + gap)
             print("  checked: " + (", ".join(f"{key}={value}" for key, value in row["checked"].items()) or "none"))
         print(f"\n{len(results)} function(s), {total_findings} review finding(s), "
               f"{total_suppressed} suppressed finding(s), {total_gaps} coverage gap(s)")

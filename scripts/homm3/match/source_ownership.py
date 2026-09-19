@@ -18,11 +18,13 @@ import os
 from pathlib import Path
 import re
 import tempfile
+from typing import TypedDict
 
 from homm3.core import common, clang
 from homm3 import manifest
 
 ROOT = common.HOMM3_DIR
+InlineOrigin = tuple[int, int] | tuple[()]
 
 
 @dataclass(frozen=True)
@@ -49,7 +51,7 @@ class Definition:
     # Extra retained specializations share this one physical source body.
     additional_instances: tuple[tuple[int, str, str], ...] = ()
     return_type: str = ""
-    inline_origin: tuple[int, int] = ()
+    inline_origin: InlineOrigin = ()
     declaration_only_type: int = 0
 
 
@@ -283,7 +285,7 @@ def origin_hint(raw: str | LineIndex, start: int) -> tuple[str, int, str]:
     return origin_file, origin_line, dc_offset
 
 
-def inline_origin_hint(raw: str | LineIndex, start: int) -> tuple[tuple[int, int], bool]:
+def inline_origin_hint(raw: str | LineIndex, start: int) -> tuple[InlineOrigin, bool]:
     """An explicit review binds a field-list type to a positive inline row."""
     rows = [line.strip() for line in attached_prefix(raw, start)
             if '@dc-inline-origin:' in line]
@@ -486,6 +488,9 @@ def resolve_instances(definitions, requests, unit, root, args):
                 if d.severity >= cindex.Diagnostic.Error]
     if failures:
         return definitions, errors + [f'INSTANCE {unit["source"]}: {d}' for d in failures]
+    root_cursor = tu.cursor
+    if root_cursor is None:
+        return definitions, errors + [f'INSTANCE {unit["source"]}: Clang returned no translation-unit cursor']
     callable_kinds = {kinds.CXX_METHOD, kinds.DESTRUCTOR, kinds.FUNCTION_DECL}
     def references(cursor):
         found = {}
@@ -497,7 +502,7 @@ def resolve_instances(definitions, requests, unit, root, args):
             found.update(references(child))
         return found
     seen = set()
-    for cursor in tu.cursor.get_children():
+    for cursor in root_cursor.get_children():
         if cursor.kind != kinds.VAR_DECL or cursor.spelling not in expected:
             continue
         seen.add(cursor.spelling)
@@ -739,11 +744,11 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
                 pass  # Disposable cache; a damaged entry must trigger a scan.
         definitions, errors, reached = scan_unit(unit, root)
         dependencies = {os.path.normpath(p) for p in [*reached, source]}
+        input_hashes = {p: content.get(p) for p in sorted(dependencies)}
         saved = dict(key=key, definitions=[asdict(d) for d in definitions],
-                     errors=errors, reached=reached,
-                     inputs={p: content.get(p) for p in sorted(dependencies)})
+                     errors=errors, reached=reached, inputs=input_hashes)
         # Unknown dependencies cannot be reused without a content identity.
-        if all(value is not None for value in saved['inputs'].values()):
+        if all(value is not None for value in input_hashes.values()):
             temporary = None
             try:
                 with tempfile.NamedTemporaryFile(mode='w', dir=cache, delete=False) as stream:
@@ -787,7 +792,7 @@ def read_filter(path: Path, fields: tuple[str, ...]):
     entries = {}
     errors = []
     with path.open(newline='') as stream:
-        rows = csv.DictReader((l for l in stream if not l.startswith('#')), delimiter='\t')
+        rows = csv.DictReader((line for line in stream if not line.startswith('#')), delimiter='\t')
         if rows.fieldnames != [*fields, 'reason']:
             return {}, [f'FILTER {path.name}: expected columns {(*fields, "reason")}']
         for row in rows:
@@ -851,7 +856,8 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
         if narrowed:
             candidates = narrowed
         else:
-            signature_mismatch = [o for o in candidates if o.argument_types is not None]
+            signature_mismatch = [(o, o.argument_types) for o in candidates
+                                  if o.argument_types is not None]
             candidates = [o for o in candidates if o.argument_types is None]
         definition_arguments = tuple(d.argument_types) + (('...',) if d.variadic else ())
         narrowed = [o for o in candidates if o.argument_types is not None
@@ -920,9 +926,9 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
         if signature_mismatch and not candidates:
             expected = sorted({(f'type {o.type_index:#x} (declaration only)'
                                 if o.declaration_only else f'{o.file}:{o.line}')
-                               + f' ({", ".join(o.argument_types)})'
+                               + f' ({", ".join(arguments)})'
                                + (' const' if o.const else '')
-                               for o in signature_mismatch})
+                               for o, arguments in signature_mismatch})
             errors.append(f'SIGNATURE {where} [{d.signature}]: no matching CodeView '
                           'formal arity/constness/ellipsis; review overload identity or the '
                           'platform signature change against ' + '; '.join(expected))
@@ -1023,7 +1029,15 @@ def active_stub_definitions(definitions: list[Definition], root: Path) -> list[s
     return errors
 
 
-def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False, *, origins=None):
+class AuditResult(TypedDict):
+    definitions: int
+    counts: dict[str, int]
+    violations: list[str]
+    unpaired_generated_claims: list[str]
+    reached: list[str]
+
+
+def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False, *, origins=None) -> AuditResult:
     from homm3.retail_labels.fragments import all_claims
     definitions, errors, reached = collect(root, jobs, fresh)
     errors.extend(active_stub_definitions(definitions, root))
@@ -1040,8 +1054,8 @@ def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False, *, origins=None
     errors.extend(header_claim_ownership(
         definitions, claims, load_baseline(root / 'config/match_baseline.tsv')))
     errors.extend(claim_identity(definitions, claims))
-    return dict(definitions=len(definitions), counts=counts, violations=errors,
-                unpaired_generated_claims=unpaired_generated_claims(claims), reached=reached)
+    return {'definitions': len(definitions), 'counts': counts, 'violations': errors,
+            'unpaired_generated_claims': unpaired_generated_claims(claims), 'reached': reached}
 
 
 def header_claim_ownership(definitions: list[Definition], claims, banked=None) -> list[str]:
