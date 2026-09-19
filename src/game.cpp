@@ -8029,8 +8029,12 @@ void game::replaceRecruit(int playerPos, long recruitSlot)
 // Portal test. The residual is the opening creature-week scan's C1 handle-state
 // ESI/EDI role permutation (`this` versus `i`), which why-reg proves
 // source-unaddressable: the reference binds `i` to ESI and `this` to EDI, so
-// `i` would have to be the earlier-created call-crossing pseudo, and `this` is
-// created first whatever the declaration order. THE 99.8370 HIST WAS REACHED BY
+// `i` would have to be the earlier-created call-crossing pseudo. PROVED
+// IMPOSSIBLE by the front end: `il-locals` shows this body's handles as
+// this 0xc5c6 then obscuringHero/align/alternateBonus/bonusAmount/x/y/i 0xc5ce,
+// i.e. `this` precedes every local, and handle-order.md measures params < `this`
+// < locals as parse-FIXED with assignment strictly top-to-bottom. No declaration
+// order can put `i` ahead of `this`, so the binding is TU state, not source. THE 99.8370 HIST WAS REACHED BY
 // THIS EXACT src_hash (1078057cac97 at f8570b07/a5348767, CUR 98.8948 in the
 // same row), so the permutation is a TU-state effect that some include closure
 // already produced - not a lost source shape. Byte-flat here: `int i = 0` at the
