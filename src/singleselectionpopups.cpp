@@ -3,9 +3,10 @@
 // Popup-dialog family. Three widget subclasses of widget (CHotspotWidget,
 // CSpriteWidget, CBitmapWidget) and four TDialogBox-derived single-selection
 // dialogs (CBonusDlg, CHeroDlg, CTownDlg, CTeamAlignmentDlg) whose common
-// base CSingleSelPopup is fully inlined into each derived ctor. The whole
-// order-map is vtable-proven: every class ctor stores its own vtable and each
-// vtable's overridden slots name the retail address directly (address-take
+// base CSingleSelPopup's header-defined ctor/Add/ExitDialog expand into the
+// derived ctors. The base is never directly instantiated and has no own vtable.
+// The whole order-map is vtable-proven: every class ctor stores its own vtable.
+// The overridden slots name the retail address directly (address-take
 // proof). Vtables read straight from the hash-verified image:
 //   CHotspotWidget  0x6419a4   (widget subclass, 13 slots)
 //   CSpriteWidget   0x641a00   (widget subclass, 13 slots)
@@ -450,33 +451,6 @@ void CTeamAlignmentDlg::getTeams()
 // folded onto a shared empty outside this TU. No standalone retail body.
 // ============================================================================
 
-// --- CSingleSelPopup base: ctor/Add/ExitDialog inlined into the four derived
-//     dialog ctors; the base is never directly instantiated (no own vtable). ---
-// E:\gamedcs\singleselectionpopups.h:34
-DC_ONLY(0x12eeac, 0x48)   // inlined (push 0x12 / ??0TDialogBox / set vtbl / [+0x54]=mode) into each dialog ctor
-void CSingleSelPopup::CSingleSelPopup(int type, unsigned char newGameMode)
-{
-    // @stub
-}
-// E:\gamedcs\singleselectionpopups.h:39
-DC_ONLY(0x12eef4, 0x34)   // inlined
-void CSingleSelPopup::add(widget* w)
-{
-    // @stub
-}
-// E:\gamedcs\singleselectionpopups.h:75
-DC_ONLY(0x12efc0, 0x1C)   // inlined / thunk
-int CSingleSelPopup::exitDialog(message& msg)
-{
-    // @stub
-}
-// E:\gamedcs\singleselectionpopups.h:79
-DC_ONLY(0x12efdc, 0x34)   // base never directly instantiated
-void* CSingleSelPopup::scalar_deleting_destructor(unsigned __flags)
-{
-    // @stub
-}
-
 // --- CTeamAlignmentDlg::CountNumPlayers: inlined into GetTeams/CreateWin. ---
 // E:\gamedcs\singleselectionpopups.cpp:411
 DC_ONLY(0x12ed7c, 0x58)
@@ -510,18 +484,6 @@ int CBitmapWidget::main(message& msg)
 
 // --- Trivial zBufferDraw / Draw stubs: ICF-folded onto shared empties
 //     0x404140 / 0x404df0 outside this TU (excluded class). ---
-// E:\gamedcs\singleselectionpopups.h:120
-DC_ONLY(0x12f010, 0x4)    // folds -> 0x404140
-void CHotspotWidget::zBufferDraw()
-{
-    // @stub
-}
-// E:\gamedcs\singleselectionpopups.h:121
-DC_ONLY(0x12f014, 0x4)    // folds -> 0x404df0
-void CHotspotWidget::draw()
-{
-    // @stub
-}
 // E:\gamedcs\singleselectionpopups.cpp:67
 DC_ONLY(0x12f0c4, 0x4)    // folds -> 0x404140
 void CSpriteWidget::zBufferDraw()

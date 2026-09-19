@@ -844,24 +844,8 @@ extern int g_unnamed697774;
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:9712, dc 0x14727c) void GetDateTime();
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:9726, dc 0x147350) void EnumVMs();
 
-// --- CAutoArray<int> ---
-// CODEVIEW(E:\gamedcs\array.h:37, dc 0x149674) void CAutoArray<int>::CAutoArray<int>();
-// CODEVIEW(E:\gamedcs\array.h:46, dc 0x1496c8) void CAutoArray<int>::~CAutoArray<int>();
-// CODEVIEW(E:\gamedcs\array.h:51, dc 0x149718) void CAutoArray<int>::Destroy(unsigned char deleteData);
-// CODEVIEW(E:\gamedcs\array.h:73, dc 0x1497a0) unsigned char CAutoArray<int>::Add(int* element);
-// CODEVIEW(E:\gamedcs\array.h:95, dc 0x149850) int* CAutoArray<int>::Get(unsigned long elementNbr);
-// CODEVIEW(E:\gamedcs\array.h:103, dc 0x149878) unsigned char CAutoArray<int>::Put(unsigned long elementNbr, int* element);
-// CODEVIEW(E:\gamedcs\array.h:113, dc 0x1498a4) unsigned char CAutoArray<int>::Delete(unsigned long elementNbr);
-// CODEVIEW(E:\gamedcs\array.h:127, dc 0x149908) unsigned char CAutoArray<int>::Insert(unsigned long nextElementNbr, int* element);
-// CODEVIEW(E:\gamedcs\array.h:144, dc 0x1499ac) unsigned long CAutoArray<int>::GetCount();
-// CODEVIEW(..\stlport\stl_string.h:144, dc 0x1499b8) void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags);
-
 // --- CBadVersionMsg ---
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:773, dc 0x148038) void CBadVersionMsg::CBadVersionMsg(const char* version, const char* errText);
-
-// --- CChatManager ---
-// CODEVIEW(E:\gamedcs\remote.h:320, dc 0x1474a0) int CChatManager::GetCount();
-// CODEVIEW(E:\gamedcs\remote.h:321, dc 0x1474ac) int CChatManager::GetPosition();
 
 // --- CChatSlider ---
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:1569, dc 0x148a48) void CChatSlider::CChatSlider(int x, int y, int w, int h, int id, int num, void (*)()* func, slider::EGraphics graf, int page);
@@ -882,9 +866,6 @@ extern int g_unnamed697774;
 
 // --- CClickMsg ---
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:730, dc 0x147f28) void CClickMsg::CClickMsg(int widgetId);
-
-// --- CDPlayPlayer ---
-// CODEVIEW(E:\gamedcs\dxplay.h:210, dc 0x14746c) char* CDPlayPlayer::GetName();
 
 // --- CEnterNameEdit ---
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:1805, dc 0x149124) void CEnterNameEdit::CEnterNameEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY);
@@ -910,9 +891,6 @@ extern int g_unnamed697774;
 // --- CHostWaitDlg ---
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:429, dc 0x14767c) void CHostWaitDlg::CHostWaitDlg();
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:437, dc 0x1476dc) void CHostWaitDlg::Wait(unsigned long forWho);
-
-// --- CHotSeatMan ---
-// CODEVIEW(E:\gamedcs\remote.h:207, dc 0x147478) char* CHotSeatMan::GetName(int player);
 
 // --- CLaunchingGameMsg ---
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:473, dc 0x14787c) void CLaunchingGameMsg::CLaunchingGameMsg();
@@ -940,9 +918,6 @@ extern int g_unnamed697774;
 // CODEVIEW(E:\gamedcs\SingleSelectionWindow.h:122, dc 0x1475dc) unsigned char CNetPlayerHandlerPlayer::IsHuman();
 // CODEVIEW(E:\gamedcs\SingleSelectionWindow.h:130, dc 0x1475f0) void CNetPlayerHandlerPlayer::Clear();
 // CODEVIEW(E:\gamedcs\SingleSelectionWindow.h:138, dc 0x147610) void CNetPlayerHandlerPlayer::ResetAdvancedOptions();
-
-// --- CNetPlayerInfo ---
-// CODEVIEW(E:\gamedcs\struct.h:346, dc 0x1473cc) void CNetPlayerInfo::CNetPlayerInfo(char* _sName, unsigned long _dpid);
 
 // --- CNewHostMsg ---
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:703, dc 0x147e74) void CNewHostMsg::CNewHostMsg(unsigned long dpidNewHost);
@@ -1015,12 +990,6 @@ extern int g_unnamed697774;
 
 // --- GameSelectionHeadersStruct ---
 // CODEVIEW(E:\gamedcs\SingleSelectionWindow.h:73, dc 0x1474b8) void GameSelectionHeadersStruct::GameSelectionHeadersStruct();
-
-// --- NewSMapHeader ---
-// CODEVIEW(E:\gamedcs\game.h:311, dc 0x14741c) void NewSMapHeader::AssignData(CMapHeaderData* pData, char* sName, char* sDesc);
-
-// --- TFileVersionInfo ---
-// CODEVIEW(E:\gamedcs\u2dvers.h:149, dc 0x147650) unsigned char TFileVersionInfo::GetProductVersion(std::basic_string<char,std::char_traits<char>,std::allocator<char>* product_version);
 
 // --- TSingleSelectionWindow ---
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:1953, dc 0x1309f0) void TSingleSelectionWindow::TSingleSelectionWindow(int gameMode);
@@ -1099,8 +1068,5 @@ extern int g_unnamed697774;
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:9103, dc 0x145dec) void TSingleSelectionWindow::SetVMIconStatus();
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:9142, dc 0x146090) unsigned char TSingleSelectionWindow::FindCurrentVM();
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:9268, dc 0x146324) unsigned char TSingleSelectionWindow::GetDeviceDesc(unsigned char save);
-
-// --- textButton ---
-// CODEVIEW(E:\gamedcs\Button.h:136, dc 0x14762c) void textButton::SetText(const char* new_text);
 
 #endif  /* HOMM3_SINGLESELECTIONWINDOW_H */

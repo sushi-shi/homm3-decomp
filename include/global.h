@@ -2,8 +2,4 @@
 #ifndef HOMM3_GLOBAL_H
 #define HOMM3_GLOBAL_H
 
-// --- std ---
-// CODEVIEW(..\stlport\stl_bitset.h:414, dc 0xc9b28) void std::bitset<48,unsigned long>::bitset<48,unsigned long>();
-// CODEVIEW(..\stlport\stl_bitset.h:107, dc 0xc9b44) void std::_Base_bitset<2,unsigned long>::_Base_bitset<2,unsigned long>();
-
 #endif  /* HOMM3_GLOBAL_H */

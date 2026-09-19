@@ -2830,13 +2830,6 @@ int TOverviewWindow::windowHandler(message& msg)
     // @stub
 }
 
-// E:\gamedcs\Hero.h:664
-DC_ONLY(0x10a1f8, 0x18)
-town* hero::getOccupiedTown()
-{
-    // @stub
-}
-
 // E:\gamedcs\overview.cpp:2083
 DC_ONLY(0x10a210, 0x34)
 void* TOverviewWindow::`scalar deleting destructor'(unsigned __flags)

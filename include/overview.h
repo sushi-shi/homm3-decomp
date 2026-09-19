@@ -146,7 +146,4 @@ SIZE(TOverviewWindow, 0x80);
 // CODEVIEW(E:\gamedcs\overview.cpp:1170, dc 0x1069fc) void game::SetupNewOverviewType(int iWhichType, unsigned char bUpdate);
 // CODEVIEW(E:\gamedcs\overview.cpp:1663, dc 0x107a90) int game::ProcessIconSelect(int codeY, unsigned char bRightMouse);
 
-// --- hero ---
-// CODEVIEW(E:\gamedcs\Hero.h:664, dc 0x10a1f8) town* hero::GetOccupiedTown();
-
 #endif  /* HOMM3_OVERVIEW_H */

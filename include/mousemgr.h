@@ -126,9 +126,6 @@ extern IDirectDrawSurface* g_ddsMouseSurface;         // 0x6aacc4
 extern IDirectDrawSurface* g_ddsMouseSaveSurface;     // 0x6aacc8
 extern IDirectDrawSurface* g_ddsMouseScratchSurface;  // 0x6aaccc
 
-// --- globals ---
-// CODEVIEW(C:\WCEDreamcast\inc\kfuncs.h:266, dc 0xff76c) unsigned long GetCurrentThreadId();
-
 // --- mouseManager ---
 // CODEVIEW(E:\gamedcs\mousemgr.cpp:344, dc 0xfea50) void mouseManager::~mouseManager();
 // CODEVIEW(E:\gamedcs\mousemgr.cpp:431, dc 0xfeb18) int mouseManager::Main(message* msg);

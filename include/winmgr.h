@@ -148,10 +148,6 @@ extern int g_dialogNestCount;
 // currently lives with levelupwindow.cpp, the first admitted owner/consumer.
 extern unsigned long g_dialogDeadline697784;
 
-// --- Bitmap816 ---
-// CODEVIEW(E:\gamedcs\Bitmap816.h:73, dc 0x19c5e8) const TPalette16* Bitmap816::GetPalette();
-// CODEVIEW(E:\gamedcs\Bitmap816.h:104, dc 0x19c5f0) const unsigned char* Bitmap816::GetMap(int x, int y);
-
 // --- heroWindowManager ---
 // CODEVIEW(E:\gamedcs\winmgr.cpp:66, dc 0x19a7ec) void heroWindowManager::heroWindowManager();
 // CODEVIEW(E:\gamedcs\winmgr.cpp:461, dc 0x19ad18) int heroWindowManager::DoDialog(heroWindow* dialogWindow, int (*)()* dialogFunction, int bFadeIn);

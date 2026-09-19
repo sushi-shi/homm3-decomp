@@ -1331,12 +1331,6 @@ std::bitset<70> markArtifactSpells(int artifactId);
 int heroView(int heroID, int noDismiss, int alreadyFaded,
              unsigned char quickView);
 
-// --- CMCDeadHero ---
-// CODEVIEW(E:\gamedcs\netmsg.h:675, dc 0xd5964) void CMCDeadHero::CMCDeadHero(signed char heroId, type_point point);
-
-// --- SCampaign ---
-// CODEVIEW(E:\gamedcs\CustomCampaign.h:225, dc 0xd5944) int SCampaign::GetExpCap();
-
 // --- THeroScreenWindow ---
 // Retail hero-screen state. The first datum is an actual type_artifact:
 // its adjacent dword is initialized to -1 by the same static initializer,
@@ -1482,8 +1476,6 @@ DATA(0x00698a44) extern int g_heroScreenArmyStripLive;
 // CODEVIEW(E:\gamedcs\hero.cpp:4231, dc 0xd2d24) void THeroScreenWindow::UpdateHeroLocators();
 // CODEVIEW(E:\gamedcs\hero.cpp:4186, dc 0xd59d0) void* THeroScreenWindow::`scalar deleting destructor'(unsigned __flags);
 
-// --- boat ---
-
 // --- hero ---
 // CODEVIEW(E:\gamedcs\hero.cpp:254, dc 0xca7c0) const char* hero::GetSpecificAbilityText();
 // CODEVIEW(E:\gamedcs\hero.cpp:577, dc 0xcaf98) int hero::load(void* infile);
@@ -1506,9 +1498,6 @@ DATA(0x00698a44) extern int g_heroScreenArmyStripLive;
 // CODEVIEW(E:\gamedcs\hero.cpp:6493, dc 0xd5800) void hero::reset_artifacts();
 // CODEVIEW(E:\gamedcs\Hero.h:702, dc 0xd58f8) unsigned char hero::HasArmy(TCreatureType type);
 // CODEVIEW(E:\gamedcs\Hero.h:712, dc 0xd5914) TSkillMastery hero::GetSpellSchoolLevel(TSpellSchool school_mask);
-
-// --- std ---
-// CODEVIEW(..\stlport\stl_bitset.h:379, dc 0xd5a04) std::bitset<48,unsigned* std::bitset<48,unsigned long>::reference::operator=(unsigned char __x);
 
 // --- type_artifact ---
 // CODEVIEW(E:\gamedcs\hero.cpp:2450, dc 0xcd8b8) std::basic_string<char,std::char_traits<char>,std::allocator<char> type_artifact::get_description(__$ReturnUdt);

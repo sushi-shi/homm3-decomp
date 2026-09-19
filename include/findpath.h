@@ -363,9 +363,6 @@ int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
 int getTerrainCost(hero* currentHero, type_point start, int direction,
                    int moveLeft);
 
-// --- combatManager ---
-// CODEVIEW(E:\gamedcs\CmbtMgr.h:327, dc 0xa1144) unsigned char combatManager::TObstacle::IsVisible(int side);
-
 // --- pathCell ---
 // CODEVIEW(E:\gamedcs\findpath.cpp:79, dc 0xa115c) void pathCell::pathCell();
 
@@ -379,17 +376,5 @@ int getTerrainCost(hero* currentHero, type_point start, int direction,
 // CODEVIEW(E:\gamedcs\findpath.cpp:1172, dc 0xa0a44) void searchArray::mark_enemy(long hex, long cost);
 // CODEVIEW(E:\gamedcs\findpath.cpp:1187, dc 0xa0a8c) unsigned char searchArray::check_enemy_armies(long hex, long cost, long current_group, long destination);
 // CODEVIEW(E:\gamedcs\findpath.cpp:1218, dc 0xa0b18) unsigned char searchArray::FindCombatPath(const army* current_army, long current_group, long destination, unsigned char in_placement_phase, long limit, long base_speed);
-
-// --- std ---
-// CODEVIEW(..\stlport\stl_vector.h:365, dc 0xa11ac) pathCell* std::vector<pathCell,std::allocator<pathCell> >::back();
-// CODEVIEW(..\stlport\stl_vector.h:393, dc 0xa11c4) pathCell* std::vector<pathCell,std::allocator<pathCell> >::insert(pathCell* __position, const pathCell* __x);
-// CODEVIEW(..\stlport\stl_vector.h:474, dc 0xa12a4) void std::vector<pathCell,std::allocator<pathCell> >::pop_back();
-// CODEVIEW(..\stlport\stl_algobase.h:442, dc 0xa12c0) pathCell* std::copy_backward(pathCell* __first, pathCell* __last, pathCell* __result);
-// CODEVIEW(..\stlport\stl_algobase.h:382, dc 0xa1310) pathCell* std::__copy_backward(pathCell* __first, pathCell* __last, pathCell* __result, std::random_access_iterator_tag __formal, int* __formal);
-
-// --- type_obscuring_object ---
-// CODEVIEW(E:\gamedcs\hero.h:117, dc 0xa113c) unsigned char type_obscuring_object::obscured_is_trigger();
-
-// --- type_point ---
 
 #endif  /* HOMM3_FINDPATH_H */

@@ -1,5 +1,4 @@
 // iconwdgt.cpp - E:\gamedcs\iconwdgt.cpp (compiland iconwdgt.obj)
-// 20 functions in link order.
 #include "terrain.h"
 #include <va.h>
 #include "iconwdgt.h"
@@ -464,20 +463,6 @@ void iconWidget::nextRandomSiegeEngineFrame()
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\resrce.h:33
-DC_ONLY(0xd9f94, 0x4)
-EResourceType resource::get_resType()
-{
-    // @stub
-}
-
-// E:\gamedcs\csprite.h:378
-DC_ONLY(0xd9f98, 0x80)
-void CSprite::drawPointer(int framenum, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip)
-{
-    // @stub
-}
 
 // E:\gamedcs\iconwdgt.cpp:41
 DC_ONLY(0xda018, 0x34)

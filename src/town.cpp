@@ -1841,31 +1841,6 @@ unsigned char town::initializeBuildingCostsTables()
     return 1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\Town.h:331
-DC_ONLY(0x168dfc, 0x28)
-void town::set_mask(__int64 new_mask)
-{
-    // @stub
-}
-
-// E:\gamedcs\TownMgr.h:686
-DC_ONLY(0x168e24, 0x6)
-void townManager::setTown(town* m_townToView)
-{
-    // @stub
-}
-
-// ..\stlport\stl_bitset.h:402
-DC_ONLY(0x168e2c, 0x24)
-unsigned char std::bitset<70,unsigned long>::reference::operator bool()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // COMDAT pairing: bitset<48>::set(pos, bool), agreement 1.000 at an exactly
 // equal 96-byte extent.
 VA_COMPGEN(0x00506780, 0x60, BITSET_SET, Bitset48)

@@ -598,20 +598,6 @@ void heroWindowManager::FadeBlit(int sx, int sy, int sw, int sh, const Bitmap816
     // @stub
 }
 
-// E:\gamedcs\Bitmap816.h:73
-DC_ONLY(0x19c5e8, 0x8)
-const TPalette16* Bitmap816::getPalette()
-{
-    // @stub
-}
-
-// E:\gamedcs\Bitmap816.h:104
-DC_ONLY(0x19c5f0, 0xE)
-const unsigned char* Bitmap816::getMap(int x, int y)
-{
-    // @stub
-}
-
 #endif  // @carcass
 
 VA(0x00602cc0, 0xF2)  // dc 0x19b5c0

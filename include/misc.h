@@ -53,28 +53,8 @@ long fileSize(char* filename);
 
 // --- TPickANumber ---
 // CODEVIEW(E:\gamedcs\misc.cpp:884, dc 0xfe208) void TPickANumber::MarkOut(int number);
-// CODEVIEW(E:\gamedcs\includes.h:166, dc 0xfe374) unsigned char TPickANumber::IsAvailable(int number);
 
 // --- std ---
-// CODEVIEW(..\stlport\stl_bvector.h:54, dc 0xfe2b8) unsigned char std::_Bit_reference::operator bool();
-// CODEVIEW(..\stlport\stl_bvector.h:158, dc 0xfe2c8) void std::_Bit_iterator_base::_Bit_iterator_base();
-// CODEVIEW(..\stlport\stl_bvector.h:159, dc 0xfe2d4) void std::_Bit_iterator_base::_Bit_iterator_base(unsigned* __x, unsigned __y);
-// CODEVIEW(..\stlport\stl_bvector.h:469, dc 0xfe2dc) void std::vector<bool,std::allocator<bool> >::_M_initialize(unsigned __n);
-// CODEVIEW(..\stlport\stl_bvector.h:601, dc 0xfe33c) unsigned char std::vector<bool,std::allocator<bool> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_bvector.h:245, dc 0xfe398) void std::_Bit_iter<std::_Bit_reference,std::_Bit_reference *>::_Bit_iter<std::_Bit_reference,std::_Bit_reference *>(unsigned* __x, unsigned __y);
-// CODEVIEW(..\stlport\stl_bvector.h:330, dc 0xfe3b4) void std::_Bvector_base<std::allocator<bool> >::_Bvector_base<std::allocator<bool> >(const std::allocator<bool>* __a);
-// CODEVIEW(..\stlport\stl_bvector.h:342, dc 0xfe3f8) unsigned* std::_Bvector_base<std::allocator<bool> >::_M_bit_alloc(unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:527, dc 0xfe414) void std::allocator<bool>::allocator<bool>();
-// CODEVIEW(..\stlport\stl_bvector.h:250, dc 0xfe418) unsigned char std::_Bit_iter<bool,bool const *>::operator*();
-// CODEVIEW(..\stlport\stl_bvector.h:280, dc 0xfe448) std::_Bit_iter<bool,bool std::_Bit_iter<bool,bool const *>::operator+(__$ReturnUdt, int __i);
-// CODEVIEW(..\stlport\stl_bvector.h:247, dc 0xfe478) void std::_Bit_iter<std::_Bit_reference,std::_Bit_reference *>::_Bit_iter<std::_Bit_reference,std::_Bit_reference *>();
-// CODEVIEW(..\stlport\stl_alloc.h:1004, dc 0xfe494) void std::_STL_alloc_proxy<unsigned int *,unsigned int,std::allocator<bool> >::_STL_alloc_proxy<unsigned int *,unsigned int,std::allocator<bool> >(const std::allocator<bool>* __a, unsigned** __p);
-// CODEVIEW(..\stlport\stl_alloc.h:1022, dc 0xfe4a0) unsigned* std::_STL_alloc_proxy<unsigned int *,unsigned int,std::allocator<bool> >::allocate(unsigned __n);
-// CODEVIEW(..\stlport\stl_bvector.h:272, dc 0xfe4c8) std::_Bit_iter<bool,bool* std::_Bit_iter<bool,bool const *>::operator+=(int __i);
-// CODEVIEW(..\stlport\stl_alloc.h:547, dc 0xfe4e4) unsigned* std::allocator<unsigned int>::allocate(unsigned __n, const void* __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:495, dc 0xfe508) void std::fill(unsigned* __first, unsigned* __last, const int* __value);
-// CODEVIEW(..\stlport\stl_bvector.h:647, dc 0xfe520) std::vector<bool,std::allocator<bool> >::vector<bool,std::allocator<bool> >(int __first, int __last, const std::allocator<bool>* __a);
-// CODEVIEW(..\stlport\stl_bvector.h:653, dc 0xfe55c) std::vector<bool,std::allocator<bool> >::_M_initialize_dispatch(int __n, int __x, __true_type __formal);
 
 // DC misc.cpp SRandom; consumed by adventure spell probability checks.
 int sRandom(int lower, int upper);

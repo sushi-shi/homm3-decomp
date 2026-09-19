@@ -293,12 +293,6 @@ public:
 // --- globals ---
 // CODEVIEW(E:\gamedcs\event_record.cpp:65, dc 0x8c6b8) void set_player(char new_player);
 
-// --- CMCClaimMine ---
-// CODEVIEW(E:\gamedcs\netmsg.h:577, dc 0x8f2c8) void CMCClaimMine::CMCClaimMine(signed char mineId, int playerPos);
-
-// --- CMCClaimTown ---
-// CODEVIEW(E:\gamedcs\netmsg.h:591, dc 0x8f2fc) void CMCClaimTown::CMCClaimTown(signed char townId, int playerPos);
-
 // --- game ---
 // CODEVIEW(E:\gamedcs\event_record.cpp:1061, dc 0x8e0b8) void game::record_erase_object(NewmapCell* cell, type_point point);
 // CODEVIEW(E:\gamedcs\event_record.cpp:1071, dc 0x8e108) void game::record_hide_boat(boat* current_boat);
@@ -306,85 +300,6 @@ public:
 // CODEVIEW(E:\gamedcs\event_record.cpp:1136, dc 0x8e33c) void game::SetVisibility(const int startX, const int startY, const int z, const int whichPlayer, int range, unsigned char remote_move);
 // CODEVIEW(E:\gamedcs\event_record.cpp:1189, dc 0x8e54c) void game::ResetVisibility(int start_x, int start_y, int z, int whichPlayer, int range);
 // CODEVIEW(E:\gamedcs\event_record.cpp:1367, dc 0x8ea88) unsigned char game::replay_available();
-// CODEVIEW(E:\gamedcs\game.h:877, dc 0x8f270) unsigned char game::GetTeamMask(int playerNum);
-
-// --- std ---
-// CODEVIEW(..\stlport\stl_vector.h:195, dc 0x8f3e8) unsigned std::vector<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::size();
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x8f3f4) type_record_shroud::type_shroud_change* std::vector<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:218, dc 0x8f414) void std::vector<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::vector<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >(const std::allocator<type_record_shroud::type_shroud_change>* __a);
-// CODEVIEW(..\stlport\stl_vector.h:288, dc 0x8f430) void std::vector<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::~vector<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >();
-// CODEVIEW(..\stlport\stl_vector.h:368, dc 0x8f458) void std::vector<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::push_back(const type_record_shroud::type_shroud_change* __x);
-// CODEVIEW(..\stlport\stl_vector.h:506, dc 0x8f494) void std::vector<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::clear();
-// CODEVIEW(..\stlport\stl_alloc.h:527, dc 0x8f4cc) void std::allocator<type_record_shroud::type_shroud_change>::allocator<type_record_shroud::type_shroud_change>();
-// CODEVIEW(..\stlport\stl_alloc.h:537, dc 0x8f4d0) void std::allocator<type_record_shroud::type_shroud_change>::~allocator<type_record_shroud::type_shroud_change>();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x8f4d4) type_event_record** std::vector<type_event_record *,std::allocator<type_event_record *> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:195, dc 0x8f4d8) unsigned std::vector<type_event_record *,std::allocator<type_event_record *> >::size();
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x8f4e4) type_event_record** std::vector<type_event_record *,std::allocator<type_event_record *> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:204, dc 0x8f504) type_event_record** std::vector<type_event_record *,std::allocator<type_event_record *> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:368, dc 0x8f524) void std::vector<type_event_record *,std::allocator<type_event_record *> >::push_back(type_event_record** __x);
-// CODEVIEW(..\stlport\stl_vector.h:490, dc 0x8f560) type_event_record** std::vector<type_event_record *,std::allocator<type_event_record *> >::erase(type_event_record** __first, type_event_record** __last);
-// CODEVIEW(..\stlport\stl_vector.h:506, dc 0x8f59c) void std::vector<type_event_record *,std::allocator<type_event_record *> >::clear();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x8f5d4) type_record_shroud::type_shroud_change* std::vector<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:181, dc 0x8f5d8) type_record_shroud::type_shroud_change* std::vector<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::end();
-// CODEVIEW(..\stlport\stl_vector.h:490, dc 0x8f5dc) type_record_shroud::type_shroud_change* std::vector<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::erase(type_record_shroud::type_shroud_change* __first, type_record_shroud::type_shroud_change* __last);
-// CODEVIEW(..\stlport\stl_vector.h:89, dc 0x8f618) void std::_Vector_base<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::_Vector_base<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >(const std::allocator<type_record_shroud::type_shroud_change>* __a);
-// CODEVIEW(..\stlport\stl_vector.h:101, dc 0x8f644) void std::_Vector_base<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::~_Vector_base<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >();
-// CODEVIEW(..\stlport\stl_vector.h:180, dc 0x8f674) type_event_record** std::vector<type_event_record *,std::allocator<type_event_record *> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:181, dc 0x8f678) type_event_record** std::vector<type_event_record *,std::allocator<type_event_record *> >::end();
-// CODEVIEW(..\stlport\stl_string.h:181, dc 0x8f67c) void std::_STL_alloc_proxy<type_record_shroud::type_shroud_chan();
-// CODEVIEW(..\stlport\stl_alloc.h:1004, dc 0x8f694) void std::_STL_alloc_proxy<type_record_shroud::type_shroud_cha(const std::allocator<type_record_shroud::type_shroud_change>* __a, type_record_shroud::type_shroud_change** __p);
-// CODEVIEW(..\stlport\stl_alloc.h:1025, dc 0x8f6a0) void std::_STL_alloc_proxy<type_record_shroud::type_shroud_change *,type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::deallocate(type_record_shroud::type_shroud_change* __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:552, dc 0x8f6cc) void std::allocator<type_record_shroud::type_shroud_change>::deallocate(type_record_shroud::type_shroud_change* __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.c:248, dc 0x8f6e8) void std::vector<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::_M_insert_overflow(type_record_shroud::type_shroud_change* __position, const type_record_shroud::type_shroud_change* __x, unsigned __fill_len);
-// CODEVIEW(..\stlport\stl_vector.c:68, dc 0x8f7b8) void std::vector<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::reserve(unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.c:248, dc 0x8f850) void std::vector<type_event_record *,std::allocator<type_event_record *> >::_M_insert_overflow(type_event_record** __position, type_event_record** __x, unsigned __fill_len);
-// CODEVIEW(..\stlport\stl_vector.c:68, dc 0x8f91c) void std::vector<type_event_record *,std::allocator<type_event_record *> >::reserve(unsigned __n);
-// CODEVIEW(..\stlport\stl_construct.h:128, dc 0x8f9b0) void std::destroy(type_record_shroud::type_shroud_change* __first, type_record_shroud::type_shroud_change* __last);
-// CODEVIEW(..\stlport\stl_construct.h:85, dc 0x8f9e0) void std::construct(type_record_shroud::type_shroud_change* __p, const type_record_shroud::type_shroud_change* __value);
-// CODEVIEW(..\stlport\stl_construct.h:85, dc 0x8fa1c) void std::construct(type_event_record** __p, type_event_record** __value);
-// CODEVIEW(..\stlport\stl_algobase.h:322, dc 0x8fa44) type_event_record** std::copy(type_event_record** __first, type_event_record** __last, type_event_record** __result);
-// CODEVIEW(..\stlport\stl_construct.h:128, dc 0x8fa94) void std::destroy(type_event_record** __first, type_event_record** __last);
-// CODEVIEW(..\stlport\stl_algobase.h:322, dc 0x8fac4) type_record_shroud::type_shroud_change* std::copy(type_record_shroud::type_shroud_change* __first, type_record_shroud::type_shroud_change* __last, type_record_shroud::type_shroud_change* __result);
-// CODEVIEW(..\stlport\stl_alloc.h:968, dc 0x8fb14) std::allocator<type_record_shroud::type_shroud_change>* std::__stl_alloc_rebind(std::allocator<type_record_shroud::type_shroud_change>* __a, const type_record_shroud::type_shroud_change* __formal);
-// CODEVIEW(..\stlport\stl_vector.h:199, dc 0x8fb18) unsigned std::vector<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::capacity();
-// CODEVIEW(..\stlport\stl_alloc.h:1022, dc 0x8fb24) type_record_shroud::type_shroud_change* std::_STL_alloc_proxy<type_record_shroud::type_shroud_change *,type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::allocate(unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:199, dc 0x8fb4c) unsigned std::vector<type_event_record *,std::allocator<type_event_record *> >::capacity();
-// CODEVIEW(..\stlport\stl_alloc.h:1022, dc 0x8fb58) type_event_record** std::_STL_alloc_proxy<type_event_record * *,type_event_record *,std::allocator<type_event_record *> >::allocate(unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:1025, dc 0x8fb80) void std::_STL_alloc_proxy<type_event_record * *,type_event_record *,std::allocator<type_event_record *> >::deallocate(type_event_record** __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:547, dc 0x8fbac) type_record_shroud::type_shroud_change* std::allocator<type_record_shroud::type_shroud_change>::allocate(unsigned __n, const void* __formal);
-// CODEVIEW(..\stlport\stl_alloc.h:547, dc 0x8fbd4) type_event_record** std::allocator<type_event_record *>::allocate(unsigned __n, const void* __formal);
-// CODEVIEW(..\stlport\stl_alloc.h:552, dc 0x8fbf8) void std::allocator<type_event_record *>::deallocate(type_event_record** __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_uninitialized.h:97, dc 0x8fc14) type_record_shroud::type_shroud_change* std::uninitialized_copy(type_record_shroud::type_shroud_change* __first, type_record_shroud::type_shroud_change* __last, type_record_shroud::type_shroud_change* __result);
-// CODEVIEW(..\stlport\stl_uninitialized.h:263, dc 0x8fc4c) type_record_shroud::type_shroud_change* std::uninitialized_fill_n(type_record_shroud::type_shroud_change* __first, unsigned __n, const type_record_shroud::type_shroud_change* __x);
-// CODEVIEW(..\stlport\stl_vector.h:514, dc 0x8fc84) std::vector<type_record_shroud::type_shroud_change,std::allocator<type_record_shroud::type_shroud_change> >::_M_allocate_and_copy(unsigned __n, type_record_shroud::type_shroud_change* __first, type_record_shroud::type_shroud_change* __last);
-// CODEVIEW(..\stlport\stl_uninitialized.h:97, dc 0x8fcbc) type_event_record** std::uninitialized_copy(type_event_record** __first, type_event_record** __last, type_event_record** __result);
-// CODEVIEW(..\stlport\stl_uninitialized.h:263, dc 0x8fcf4) type_event_record** std::uninitialized_fill_n(type_event_record** __first, unsigned __n, type_event_record** __x);
-// CODEVIEW(..\stlport\stl_vector.h:514, dc 0x8fd2c) std::vector<type_event_record *,std::allocator<type_event_record *> >::_M_allocate_and_copy(unsigned __n, type_event_record** __first, type_event_record** __last);
-// CODEVIEW(..\stlport\stl_iterator_base.h:262, dc 0x8fd64) type_record_shroud::type_shroud_change* std::value_type(const type_record_shroud::type_shroud_change* __formal);
-// CODEVIEW(..\stlport\stl_construct.h:121, dc 0x8fd68) void std::__destroy(type_record_shroud::type_shroud_change* __first, type_record_shroud::type_shroud_change* __last, type_record_shroud::type_shroud_change* __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:243, dc 0x8fd84) std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, type_event_record** __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:291, dc 0x8fd90) int* std::distance_type(type_event_record** __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:209, dc 0x8fd94) type_event_record** std::__copy(type_event_record** __first, type_event_record** __last, type_event_record** __result, std::random_access_iterator_tag __formal, int* __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:262, dc 0x8fdb4) type_event_record** std::value_type(type_event_record** __formal);
-// CODEVIEW(..\stlport\stl_construct.h:121, dc 0x8fdb8) void std::__destroy(type_event_record** __first, type_event_record** __last, type_event_record** __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:243, dc 0x8fdd4) std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const type_record_shroud::type_shroud_change* __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:291, dc 0x8fde0) int* std::distance_type(const type_record_shroud::type_shroud_change* __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:209, dc 0x8fde4) type_record_shroud::type_shroud_change* std::__copy(type_record_shroud::type_shroud_change* __first, type_record_shroud::type_shroud_change* __last, type_record_shroud::type_shroud_change* __result, std::random_access_iterator_tag __formal, int* __formal);
-// CODEVIEW(..\stlport\stl_alloc.h:968, dc 0x8fe28) std::allocator<type_event_record* std::__stl_alloc_rebind(std::allocator<type_event_record* __a, type_event_record** __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:88, dc 0x8fe2c) type_record_shroud::type_shroud_change* std::__uninitialized_copy(type_record_shroud::type_shroud_change* __first, type_record_shroud::type_shroud_change* __last, type_record_shroud::type_shroud_change* __result, type_record_shroud::type_shroud_change* __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:255, dc 0x8fe48) type_record_shroud::type_shroud_change* std::__uninitialized_fill_n(type_record_shroud::type_shroud_change* __first, unsigned __n, const type_record_shroud::type_shroud_change* __x, type_record_shroud::type_shroud_change* __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:88, dc 0x8fe64) type_event_record** std::__uninitialized_copy(type_event_record** __first, type_event_record** __last, type_event_record** __result, type_event_record** __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:255, dc 0x8fe80) type_event_record** std::__uninitialized_fill_n(type_event_record** __first, unsigned __n, type_event_record** __x, type_event_record** __formal);
-// CODEVIEW(..\stlport\stl_construct.h:110, dc 0x8fe9c) void std::__destroy_aux(type_record_shroud::type_shroud_change* __first, type_record_shroud::type_shroud_change* __last, __false_type __formal);
-// CODEVIEW(..\stlport\stl_construct.h:110, dc 0x8fecc) void std::__destroy_aux(type_event_record** __first, type_event_record** __last, __false_type __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:70, dc 0x8fefc) type_record_shroud::type_shroud_change* std::__uninitialized_copy_aux(type_record_shroud::type_shroud_change* __first, type_record_shroud::type_shroud_change* __last, type_record_shroud::type_shroud_change* __result, __false_type __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:239, dc 0x8ff38) type_record_shroud::type_shroud_change* std::__uninitialized_fill_n_aux(type_record_shroud::type_shroud_change* __first, unsigned __n, const type_record_shroud::type_shroud_change* __x, __false_type __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:70, dc 0x8ff74) type_event_record** std::__uninitialized_copy_aux(type_event_record** __first, type_event_record** __last, type_event_record** __result, __false_type __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:239, dc 0x8ffb0) type_event_record** std::__uninitialized_fill_n_aux(type_event_record** __first, unsigned __n, type_event_record** __x, __false_type __formal);
-// CODEVIEW(..\stlport\stl_construct.h:59, dc 0x8ffec) void std::destroy(type_record_shroud::type_shroud_change* __pointer);
-// CODEVIEW(..\stlport\stl_construct.h:59, dc 0x90008) void std::destroy(type_event_record** __pointer);
-// CODEVIEW(..\stlport\stl_construct.h:53, dc 0x90024) void std::__destroy_aux();
-// CODEVIEW(..\stlport\stl_construct.h:53, dc 0x90028) void std::__destroy_aux();
 
 // --- type_event_record ---
 // CODEVIEW(E:\gamedcs\event_record.cpp:36, dc 0x8c624) void type_event_record::type_event_record();

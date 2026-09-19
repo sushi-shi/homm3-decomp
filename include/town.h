@@ -673,9 +673,6 @@ extern const type_building_id g_hordeBuildings[4];
 // CODEVIEW(E:\gamedcs\town.cpp:2017, dc 0x168330) void initialize_army(town* current_town, const TownExtra* town_setup);
 // CODEVIEW(E:\gamedcs\town.cpp:2476, dc 0x168d50) void InitializeBuildingCosts(int* costs, const std::vector<char* resource);
 
-// --- std ---
-// CODEVIEW(..\stlport\stl_bitset.h:402, dc 0x168e2c) unsigned char std::bitset<70,unsigned long>::reference::operator bool();
-
 // --- town ---
 // CODEVIEW(E:\gamedcs\town.cpp:458, dc 0x165628) int town::load(void* infile);
 // CODEVIEW(E:\gamedcs\town.cpp:616, dc 0x165988) int town::save(void* outfile);
@@ -690,8 +687,5 @@ extern const type_building_id g_hordeBuildings[4];
 // CODEVIEW(E:\gamedcs\town.cpp:2300, dc 0x168a50) unsigned char town::is_disabled(type_building_id building);
 // CODEVIEW(E:\gamedcs\town.cpp:2375, dc 0x168bd0) armyGroup* town::get_army();
 // CODEVIEW(E:\gamedcs\Town.h:331, dc 0x168dfc) void town::set_mask(__int64 new_mask);
-
-// --- townManager ---
-// CODEVIEW(E:\gamedcs\TownMgr.h:686, dc 0x168e24) void townManager::SetTown(town* townToView);
 
 #endif  /* HOMM3_TOWN_H */

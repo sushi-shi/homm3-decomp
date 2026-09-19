@@ -407,46 +407,7 @@ long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex,
                       const type_AI_combat_parameters* estimate);
 
 // --- army ---
-// CODEVIEW(E:\gamedcs\Army.h:724, dc 0x429c0) int army::GetMorale(unsigned char apply_limits);
-// CODEVIEW(E:\gamedcs\Army.h:730, dc 0x429f4) int army::GetLuck(unsigned char apply_limits);
-// CODEVIEW(E:\gamedcs\Army.h:825, dc 0x42a28) TSkillMastery army::get_spell_level(SpellID spell);
 // CODEVIEW(E:\gamedcs\ai_tactical.cpp:2183, dc 0x42aa8) void army::army(const army* __that);
-
-// --- combatManager ---
-// CODEVIEW(E:\gamedcs\cmbtmgr.h:1466, dc 0x42a3c) army* combatManager::find_resurrection_target(SpellID spell, long group, long hex, unsigned char creature_spell);
-
-// --- std ---
-// CODEVIEW(..\stlport\stl_deque.h:128, dc 0x42994) unsigned std::__deque_buf_size(unsigned __n, unsigned size);
-// CODEVIEW(..\stlport\stl_deque.h:622, dc 0x42db0) void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::deque<enum SpellID,std::allocator<enum SpellID>,0>(const std::deque<enum* __x);
-// CODEVIEW(..\stlport\stl_vector.h:236, dc 0x42e68) void std::vector<army *,std::allocator<army *> >::vector<army *,std::allocator<army *> >(const std::vector<army* __x);
-// CODEVIEW(..\stlport\stl_deque.h:570, dc 0x42ec8) std::_Deque_iterator<enum std::deque<enum SpellID,std::allocator<enum SpellID>,0>::begin(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_deque.h:571, dc 0x42edc) std::_Deque_iterator<enum std::deque<enum SpellID,std::allocator<enum SpellID>,0>::end(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_deque.h:610, dc 0x42ef0) unsigned std::deque<enum SpellID,std::allocator<enum SpellID>,0>::size();
-// CODEVIEW(..\stlport\stl_deque.h:452, dc 0x42f08) void std::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>(const std::allocator<enum* __a, unsigned __num_elements);
-// CODEVIEW(..\stlport\stl_deque.h:460, dc 0x42f70) std::allocator<enum std::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>::get_allocator(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_vector.h:153, dc 0x42f7c) std::allocator<army std::vector<army *,std::allocator<army *> >::get_allocator(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_vector.h:94, dc 0x42f84) void std::_Vector_base<army *,std::allocator<army *> >::_Vector_base<army *,std::allocator<army *> >(unsigned __n, const std::allocator<army* __a);
-// CODEVIEW(..\stlport\stl_deque.h:272, dc 0x42fcc) void std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >();
-// CODEVIEW(..\stlport\stl_deque.h:283, dc 0x42fe8) int std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator-(const std::_Deque_iterator<enum* __x);
-// CODEVIEW(..\stlport\stl_alloc.h:1004, dc 0x43000) void std::_STL_alloc_proxy<enum SpellID * *,enum SpellID *,std::allocator<enum SpellID> >::_STL_alloc_proxy<enum SpellID * *,enum SpellID *,std::allocator<enum SpellID> >(const std::allocator<enum* __a, SpellID*** __p);
-// CODEVIEW(..\stlport\stl_alloc.h:1004, dc 0x4300c) void std::_STL_alloc_proxy<unsigned int,enum SpellID,std::allocator<enum SpellID> >::_STL_alloc_proxy<unsigned int,enum SpellID,std::allocator<enum SpellID> >(const std::allocator<enum* __a, const unsigned* __p);
-// CODEVIEW(..\stlport\stl_deque.h:190, dc 0x43018) void std::_Deque_iterator_base<enum SpellID,std::_Buf_size_traits<enum SpellID,0> >::_Deque_iterator_base<enum SpellID,std::_Buf_size_traits<enum SpellID,0> >();
-// CODEVIEW(..\stlport\stl_deque.h:193, dc 0x43028) int std::_Deque_iterator_base<enum SpellID,std::_Buf_size_traits<enum SpellID,0> >::_M_subtract(const std::_Deque_iterator_base<enum* __x);
-// CODEVIEW(..\stlport\stl_deque.c:118, dc 0x43054) void std::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>::_M_initialize_map(unsigned __num_elements);
-// CODEVIEW(..\stlport\stl_uninitialized.h:97, dc 0x43118) std::_Deque_iterator<enum std::uninitialized_copy(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result);
-// CODEVIEW(..\stlport\stl_uninitialized.h:97, dc 0x431a4) army** std::uninitialized_copy(army** __first, army** __last, army** __result);
-// CODEVIEW(..\stlport\stl_alloc.h:1022, dc 0x431dc) SpellID** std::_STL_alloc_proxy<enum SpellID * *,enum SpellID *,std::allocator<enum SpellID> >::allocate(unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:547, dc 0x43204) SpellID** std::allocator<enum SpellID *>::allocate(unsigned __n, const void* __formal);
-// CODEVIEW(..\stlport\stl_deque.c:144, dc 0x43228) void std::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>::_M_create_nodes(SpellID** __nstart, SpellID** __nfinish);
-// CODEVIEW(..\stlport\stl_uninitialized.h:88, dc 0x43264) std::_Deque_iterator<enum std::__uninitialized_copy(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result, SpellID* __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:88, dc 0x432e0) army** std::__uninitialized_copy(army** __first, army** __last, army** __result, army** __formal);
-// CODEVIEW(..\stlport\stl_alloc.h:1022, dc 0x432fc) SpellID* std::_STL_alloc_proxy<unsigned int,enum SpellID,std::allocator<enum SpellID> >::allocate(unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:547, dc 0x43324) SpellID* std::allocator<enum SpellID>::allocate(unsigned __n, const void* __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:70, dc 0x43348) std::_Deque_iterator<enum std::__uninitialized_copy_aux(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result, __false_type __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:70, dc 0x433d4) army** std::__uninitialized_copy_aux(army** __first, army** __last, army** __result, __false_type __formal);
-// CODEVIEW(..\stlport\stl_deque.h:276, dc 0x43410) const SpellID* std::_Deque_iterator<enum SpellID,std::_Const_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator*();
-// CODEVIEW(..\stlport\stl_deque.h:285, dc 0x43414) std::_Deque_iterator<enum* std::_Deque_iterator<enum SpellID,std::_Const_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator++();
-// CODEVIEW(..\stlport\stl_construct.h:85, dc 0x43430) void std::construct(SpellID* __p, const SpellID* __value);
 
 // --- type_AI_attack_hex_chooser ---
 // CODEVIEW(E:\gamedcs\ai_tactical.cpp:511, dc 0x3cf50) long type_AI_attack_hex_chooser::get_hex_attack_value(long hex, long& checked);

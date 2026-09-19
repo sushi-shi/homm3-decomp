@@ -174,15 +174,9 @@ SIZE(TBottomViewMessage, 0x34);
 // CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:352, dc 0x55df4) void TBottomViewTown::TBottomViewTown(heroWindow* parent);
 // CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:503, dc 0x56fa0) void* TBottomViewTown::`scalar deleting destructor'(unsigned __flags);
 
-// --- std ---
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x57084) widget** std::vector<widget *,std::allocator<widget *> >::operator[](unsigned __n);
-
 // --- type_bottom_view_window ---
 // CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:39, dc 0x550b8) void type_bottom_view_window::type_bottom_view_window(heroWindow* parent_window);
 // CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:64, dc 0x55188) void type_bottom_view_window::animate();
 // CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:41, dc 0x56e3c) void* type_bottom_view_window::`scalar deleting destructor'(unsigned __flags);
-
-// --- widget ---
-// CODEVIEW(E:\gamedcs\Widget.h:271, dc 0x56e20) void widget::force_update();
 
 #endif  /* HOMM3_BOTTOMVIEWSUBWINDOW_H */

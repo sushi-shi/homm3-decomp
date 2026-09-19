@@ -243,13 +243,6 @@ void CSpriteFrame::clip(int* sx, int* sy, int* sw, int* sh, int* dx, int* dy, in
     // @stub
 }
 
-// ..\stlport\stl_limits.h:140
-DC_ONLY(0x79418, 0x8)
-unsigned char std::_Integer_limits<unsigned char,0,255,-1>::max()
-{
-    // @stub
-}
-
 #endif  // @carcass
 
 VA_COMPGEN(0x0047c280, 0x21, SCALAR_DELETING_DTOR, CSpriteFrame)

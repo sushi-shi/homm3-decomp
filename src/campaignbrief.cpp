@@ -1222,62 +1222,6 @@ void ReadRamDisc(int RamDiscNr, void* buffer, long size, unsigned long* bytesRea
     // @stub
 }
 
-// E:\gamedcs\widget.h:236
-DC_ONLY(0x5abe4, 0x10)
-const char* widget::getRclickText()
-{
-    // @stub
-}
-
-// E:\gamedcs\widget.h:251
-DC_ONLY(0x5abf4, 0x24)
-void widget::hide()
-{
-    // @stub
-}
-
-// E:\gamedcs\widget.h:257
-DC_ONLY(0x5ac18, 0x24)
-void widget::show()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.h:234
-DC_ONLY(0x5ac3c, 0x44)
-void CMapHeaderData::TPlayerSlotAttributes::TPlayerSlotAttributes()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.h:287
-DC_ONLY(0x5ac80, 0x70)
-void NewSMapHeader::NewSMapHeader()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.h:308
-DC_ONLY(0x5acf0, 0x28)
-void CMapHeaderData::CMapHeaderData()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.h:546
-DC_ONLY(0x5ad18, 0xB8)
-void SGameSetupOptions::SGameSetupOptions()
-{
-    // @stub
-}
-
-// E:\gamedcs\SingleSelectionPopups.h:70
-DC_ONLY(0x5add0, 0x18)
-void CSingleSelPopup::~CSingleSelPopup()
-{
-    // @stub
-}
-
 // E:\gamedcs\campaignbrief.cpp:192
 DC_ONLY(0x5ade8, 0x28)
 void TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()

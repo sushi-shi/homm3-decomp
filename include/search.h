@@ -6,11 +6,6 @@
 // CODEVIEW(E:\gamedcs\search.cpp:113, dc 0x12b3f0) unsigned char check_adjacent_monster(const hero* current_hero, pathCell* entry_point, type_search_type search_type);
 // CODEVIEW(E:\gamedcs\search.cpp:494, dc 0x12bedc) unsigned char check_summon_boat(const hero* current_hero);
 
-// --- game ---
-// CODEVIEW(E:\gamedcs\game.h:1395, dc 0x12ca94) const std::vector<type_point,std::allocator<type_point>* game::get_liths(long color);
-// CODEVIEW(E:\gamedcs\game.h:1400, dc 0x12caa8) const std::vector<type_point,std::allocator<type_point>* game::get_lith_exits(long color);
-// CODEVIEW(E:\gamedcs\game.h:1405, dc 0x12cabc) const std::vector<type_point,std::allocator<type_point>* game::get_whirlpools();
-
 // --- searchArray ---
 // CODEVIEW(E:\gamedcs\search.cpp:32, dc 0x12b2e0) int searchArray::BuildPath(const hero* current_hero, long limit);
 // CODEVIEW(E:\gamedcs\search.cpp:155, dc 0x12b4a8) void searchArray::enter_lith(const hero* current_hero, const std::vector<type_point,std::allocator<type_point>* list, long cell_type, long excluded, pathCell* entry_point, long limit, type_search_type search_type);

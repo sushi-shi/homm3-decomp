@@ -7214,13 +7214,6 @@ void sortStats(long* value, signed char* index)
     // @stub
 }
 
-// E:\gamedcs\town.h:305
-DC_ONLY(0x181404, 0x12)
-long town::getGeneratorBonus(long dwelling)
-{
-    // @stub
-}
-
 // E:\gamedcs\townmgr.cpp:1830
 DC_ONLY(0x181418, 0x50)
 void CTownNetMsgHandler::CTownNetMsgHandler(TResourceDisplay* m_resourceDisplay)

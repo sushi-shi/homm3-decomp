@@ -242,7 +242,4 @@ SIZE(CSpriteFrame, 0x48);
 // CODEVIEW(E:\gamedcs\cspriteframe.cpp:69, dc 0x79260) void* CSpriteFrame::`scalar deleting destructor'(unsigned __flags);
 // CODEVIEW(E:\gamedcs\cspriteframe.cpp:1265, dc 0x79294) void CSpriteFrame::Clip(int* sx, int* sy, int* sw, int* sh, int* dx, int* dy, int dw, int dh, unsigned char bHFlip, unsigned char bVFlip);
 
-// --- std ---
-// CODEVIEW(..\stlport\stl_limits.h:140, dc 0x79418) unsigned char std::_Integer_limits<unsigned char,0,255,-1>::max();
-
 #endif  /* HOMM3_CSPRITEFRAME_H */

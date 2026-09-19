@@ -1002,9 +1002,6 @@ void doShipyard(int type);
 // --- strip ---
 // CODEVIEW(E:\gamedcs\townmgr.cpp:3059, dc 0x1814cc) void* strip::`scalar deleting destructor'(unsigned __flags);
 
-// --- town ---
-// CODEVIEW(E:\gamedcs\town.h:305, dc 0x181404) long town::get_generator_bonus(long dwelling);
-
 // --- townManager ---
 // CODEVIEW(E:\gamedcs\townmgr.cpp:2833, dc 0x16b9e4) void townManager::ChangeTown(unsigned char fade);
 // CODEVIEW(E:\gamedcs\townmgr.cpp:2897, dc 0x16bba4) void townManager::SetupTown(unsigned char fade);

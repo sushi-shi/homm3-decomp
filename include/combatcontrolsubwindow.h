@@ -171,24 +171,6 @@ SIZE(TCombatCreatureSubWindow, 0x70);
 // CODEVIEW(E:\gamedcs\combatcontrolsubwindow.cpp:282, dc 0x652a8) void TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent);
 // CODEVIEW(E:\gamedcs\combatcontrolsubwindow.cpp:308, dc 0x66aa0) void* TCombatPlacementSubWindow::`scalar deleting destructor'(unsigned __flags);
 
-// --- button ---
-// CODEVIEW(E:\gamedcs\button.h:99, dc 0x669f4) void button::set_disabled_frame(long frame);
-
-// --- hero ---
-// CODEVIEW(E:\gamedcs\Hero.h:634, dc 0x669fc) int hero::GetMaxMana();
-
-// --- std ---
-// CODEVIEW(..\stlport\stl_vector.h:218, dc 0x66b3c) void std::vector<widget *,std::allocator<widget *> >::vector<widget *,std::allocator<widget *> >(const std::allocator<widget* __a);
-// CODEVIEW(..\stlport\stl_vector.h:288, dc 0x66b58) void std::vector<widget *,std::allocator<widget *> >::~vector<widget *,std::allocator<widget *> >();
-// CODEVIEW(..\stlport\stl_alloc.h:527, dc 0x66b80) void std::allocator<widget *>::allocator<widget *>();
-// CODEVIEW(..\stlport\stl_alloc.h:537, dc 0x66b84) void std::allocator<widget *>::~allocator<widget *>();
-// CODEVIEW(..\stlport\stl_deque.h:583, dc 0x66b88) const SpellID* std::deque<enum SpellID,std::allocator<enum SpellID>,0>::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:89, dc 0x66ba0) void std::_Vector_base<widget *,std::allocator<widget *> >::_Vector_base<widget *,std::allocator<widget *> >(const std::allocator<widget* __a);
-// CODEVIEW(..\stlport\stl_vector.h:101, dc 0x66bcc) void std::_Vector_base<widget *,std::allocator<widget *> >::~_Vector_base<widget *,std::allocator<widget *> >();
-// CODEVIEW(..\stlport\stl_deque.h:312, dc 0x66bfc) SpellID* std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator[](int __n);
-// CODEVIEW(..\stlport\stl_string.h:469, dc 0x66c24) void std::_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >::~_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >();
-// CODEVIEW(..\stlport\stl_alloc.h:1004, dc 0x66c3c) void std::_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >::_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >(const std::allocator<widget* __a, widget*** __p);
-
 // --- type_combat_sub_window ---
 // CODEVIEW(E:\gamedcs\combatcontrolsubwindow.cpp:136, dc 0x64f60) void type_combat_sub_window::set_rollover();
 // CODEVIEW(E:\gamedcs\combatcontrolsubwindow.cpp:140, dc 0x64f64) void type_combat_sub_window::set_rollover_buttons();

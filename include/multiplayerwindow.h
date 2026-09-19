@@ -187,21 +187,6 @@ DATA(0x0069ca28) extern TMultiPlayerWindow* g_multiPlayerWindow;
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:872, dc 0xffb40) void DeleteTempSaveGame(const char* filename);
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:1005, dc 0x100408) void SliderGames(int state, heroWindow* parent_window);
 
-// --- CAutoArray<CDPlaySession> ---
-// CODEVIEW(E:\gamedcs\array.h:37, dc 0x103054) void CAutoArray<CDPlaySession>::CAutoArray<CDPlaySession>();
-// CODEVIEW(E:\gamedcs\array.h:46, dc 0x103084) void CAutoArray<CDPlaySession>::~CAutoArray<CDPlaySession>();
-// CODEVIEW(E:\gamedcs\array.h:73, dc 0x1030bc) unsigned char CAutoArray<CDPlaySession>::Add(CDPlaySession* element);
-// CODEVIEW(E:\gamedcs\array.h:95, dc 0x103124) CDPlaySession* CAutoArray<CDPlaySession>::Get(unsigned long elementNbr);
-// CODEVIEW(E:\gamedcs\array.h:103, dc 0x103138) unsigned char CAutoArray<CDPlaySession>::Put(unsigned long elementNbr, CDPlaySession* element);
-// CODEVIEW(E:\gamedcs\array.h:144, dc 0x1031fc) unsigned long CAutoArray<CDPlaySession>::GetCount();
-// CODEVIEW(..\stlport\stl_string.h:144, dc 0x103200) void* CAutoArray<CDPlaySession>::`scalar deleting destructor'(unsigned __flags);
-
-// --- CDPlay ---
-// CODEVIEW(E:\gamedcs\dxplay.h:375, dc 0x101d98) long CDPlay::GetLastError();
-
-// --- CDPlaySession ---
-// CODEVIEW(E:\gamedcs\dxplay.h:96, dc 0x101d84) unsigned char CDPlaySession::IsPasswordProtected();
-
 // --- CHeroSessions ---
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:174, dc 0x101f34) unsigned char CHeroSessions::GetSessionInfo(unsigned long index, char* sessName, char* userName, int* numPlayers, CHeroSessions::eSessionStatus* status);
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:1000, dc 0x102fcc) void CHeroSessions::CHeroSessions();
@@ -214,11 +199,6 @@ DATA(0x0069ca28) extern TMultiPlayerWindow* g_multiPlayerWindow;
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:750, dc 0x102d4c) void CHotSeatDlg::UpdateOK();
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:786, dc 0x102e24) int CHotSeatDlg::WindowHandler(message* msg);
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:844, dc 0x102f64) void* CHotSeatDlg::`scalar deleting destructor'(unsigned __flags);
-
-// --- CHotSeatMan ---
-// CODEVIEW(E:\gamedcs\remote.h:186, dc 0x101da8) void CHotSeatMan::CHotSeatMan();
-// CODEVIEW(E:\gamedcs\remote.h:192, dc 0x101dc4) void CHotSeatMan::Clear();
-// CODEVIEW(E:\gamedcs\remote.h:197, dc 0x101dcc) void CHotSeatMan::AddPlayer(const char* sName);
 
 // --- CMPEdit ---
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:269, dc 0x1020b4) void CMPEdit::SetNextEdit(CMPEdit* pNextEdit);

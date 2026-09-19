@@ -1,5 +1,4 @@
 // border.cpp - E:\gamedcs\border.cpp (compiland border.obj)
-// 43 functions in link order.
 #include "terrain.h"
 #include <va.h>
 #include <string.h>
@@ -455,13 +454,6 @@ int bitmapBorder16::getRealWidth() const
 // E:\gamedcs\border.cpp:436
 DC_ONLY(0x54c4c, 0x20)
 int bitmapBorder16::getRealHeight() const
-{
-    // @stub
-}
-
-// E:\gamedcs\Widget.h:187
-DC_ONLY(0x54d20, 0x4)
-void widget::onKillFocus()
 {
     // @stub
 }

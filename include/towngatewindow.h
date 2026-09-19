@@ -59,14 +59,4 @@ SIZE(TTownGateWindow, 0x7c);
 // CODEVIEW(E:\gamedcs\towngatewindow.cpp:168, dc 0x1699e8) void TTownGateWindow::UpdateTownLocators();
 // CODEVIEW(E:\gamedcs\towngatewindow.cpp:98, dc 0x169c98) void* TTownGateWindow::`scalar deleting destructor'(unsigned __flags);
 
-// --- game ---
-// CODEVIEW(E:\gamedcs\game.h:897, dc 0x169c0c) unsigned char game::GetNumAllies(int playerNum);
-// CODEVIEW(E:\gamedcs\game.h:1022, dc 0x169c60) const town* game::GetTown(int which);
-// CODEVIEW(E:\gamedcs\game.h:1027, dc 0x169c7c) const char* game::GetTownName(int iTownId);
-
-// --- std ---
-// CODEVIEW(..\stlport\stl_vector.c:68, dc 0x169ccc) void std::vector<int,std::allocator<int> >::reserve(unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:199, dc 0x169d60) unsigned std::vector<int,std::allocator<int> >::capacity();
-// CODEVIEW(..\stlport\stl_vector.h:514, dc 0x169d6c) std::vector<int,std::allocator<int> >::_M_allocate_and_copy(unsigned __n, int* __first, int* __last);
-
 #endif  /* HOMM3_TOWNGATEWINDOW_H */

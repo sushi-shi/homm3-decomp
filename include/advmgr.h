@@ -1610,22 +1610,7 @@ extern int g_highMemBuffer;
 // CODEVIEW(E:\gamedcs\advmgr.cpp:2959, dc 0xbc00) void set_water_wheel_help_text(char* buffer, NewmapCell* cell, const char* separator);
 // CODEVIEW(E:\gamedcs\advmgr.cpp:2981, dc 0xbcac) void set_windmill_help_text(char* buffer, NewmapCell* cell, const char* separator);
 // CODEVIEW(E:\gamedcs\advmgr.cpp:9063, dc 0x19420) TSkillMastery get_identify_level(type_point point);
-// CODEVIEW(E:\gamedcs\includes.h:97, dc 0x1ef28) int max(int a, int b);
-// CODEVIEW(E:\gamedcs\includes.h:134, dc 0x1ef5c) int limit(int min, int value, int max);
-// CODEVIEW(E:\gamedcs\CreatureType.h:296, dc 0x1ef94) const char* GetArmyName(int type, int count);
 // CODEVIEW(E:\gamedcs\AdvMgr.h:1254, dc 0x1f084) int GetMapExtra(type_point point);
-// CODEVIEW(E:\gamedcs\DC_precompiledheaders.h:33, dc 0x20d04) const int* _cpp_max(const int* _X, const int* _Y);
-
-// --- Bitmap16Bit ---
-// CODEVIEW(E:\gamedcs\Bitmap16.h:111, dc 0x1f100) int Bitmap16Bit::GetWidth();
-// CODEVIEW(E:\gamedcs\Bitmap16.h:112, dc 0x1f10c) int Bitmap16Bit::GetHeight();
-// CODEVIEW(E:\gamedcs\Bitmap16.h:113, dc 0x1f118) int Bitmap16Bit::GetPitch();
-// CODEVIEW(E:\gamedcs\Bitmap16.h:150, dc 0x1f124) unsigned short* Bitmap16Bit::GetMap(int x, int y);
-
-// --- Bitmap816 ---
-// CODEVIEW(E:\gamedcs\bitmap816.h:69, dc 0x20164) int Bitmap816::GetWidth();
-// CODEVIEW(E:\gamedcs\bitmap816.h:70, dc 0x20170) int Bitmap816::GetHeight();
-// CODEVIEW(E:\gamedcs\bitmap816.h:72, dc 0x2017c) TPalette16* Bitmap816::GetPalette();
 
 // --- CAdvMgrNetMsgHandler ---
 // CODEVIEW(E:\gamedcs\advmgr.cpp:651, dc 0x5fc8) void CAdvMgrNetMsgHandler::HandleGiftRequestMsg(CNetMsg* pNetMsg);
@@ -1634,63 +1619,8 @@ extern int g_highMemBuffer;
 // --- CAdvPopup ---
 // CODEVIEW(E:\gamedcs\advmgr.cpp:11525, dc 0x202e8) void* CAdvPopup::`scalar deleting destructor'(unsigned __flags);
 
-// --- CNetMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:167, dc 0x2018c) void CNetMsg::CNetMsg(eRS_Messages subType, unsigned long size);
-
-// --- CNetMsgHandler ---
-// CODEVIEW(E:\gamedcs\remote.h:628, dc 0x201e8) unsigned char CNetMsgHandler::IsInPopup();
-// CODEVIEW(E:\gamedcs\remote.h:638, dc 0x20204) void CNetMsgHandler::SetInPopup(unsigned char b);
-
-// --- CObjectType ---
-// CODEVIEW(E:\gamedcs\MapCell.h:565, dc 0x1f958) unsigned CObjectType::_getBitPos(unsigned x, unsigned y);
-
-// --- CSprite ---
-// CODEVIEW(E:\gamedcs\CSprite.h:145, dc 0x1f148) int CSprite::GetWidth();
-// CODEVIEW(E:\gamedcs\CSprite.h:146, dc 0x1f174) int CSprite::GetHeight();
-// CODEVIEW(E:\gamedcs\CSprite.h:287, dc 0x1f1a0) unsigned short CSprite::GetPaletteColor(unsigned char index);
-// CODEVIEW(E:\gamedcs\CSprite.h:293, dc 0x1f1dc) int CSprite::GetNumFrames(int seqnum);
-// CODEVIEW(E:\gamedcs\CSprite.h:294, dc 0x1f234) int CSprite::IsValidSeq(int seqnum);
-// CODEVIEW(E:\gamedcs\CSprite.h:324, dc 0x1f268) void CSprite::Draw(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned char tblit);
-// CODEVIEW(E:\gamedcs\CSprite.h:354, dc 0x1f324) void CSprite::DrawAdvObj(int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\CSprite.h:360, dc 0x1f3c8) void CSprite::DrawAdvObjWithFlag(int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned short outcolor, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\CSprite.h:372, dc 0x1f480) void CSprite::DrawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\CSprite.h:385, dc 0x1f524) void CSprite::DrawInterface(int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\CSprite.h:392, dc 0x1f5c8) void CSprite::DrawTile(int tilenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned char vflip);
-// CODEVIEW(E:\gamedcs\CSprite.h:404, dc 0x1f680) void CSprite::DrawTileShadow(int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hFlipped, unsigned char vFlipped);
-// CODEVIEW(E:\gamedcs\CSprite.h:421, dc 0x1f738) void CSprite::DrawShroudTile(int tilenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned char vflip);
-// CODEVIEW(E:\gamedcs\CSprite.h:426, dc 0x1f7f0) void CSprite::DrawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\CSprite.h:432, dc 0x1f8a4) void CSprite::DrawHeroShadow(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip);
-
-// --- CTurnUpdateMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:444, dc 0x201b8) void CTurnUpdateMsg::CTurnUpdateMsg(int gamePos);
-
-// --- ExtraInfoUnion ---
-// CODEVIEW(E:\gamedcs\MapCell.h:979, dc 0x1fa80) short ExtraInfoUnion::GetItemId();
-// CODEVIEW(E:\gamedcs\MapCell.h:1121, dc 0x1fa94) SpellID ExtraInfoUnion::GetShrineSpell();
-// CODEVIEW(E:\gamedcs\MapCell.h:1141, dc 0x1faa8) WiseTreePrices ExtraInfoUnion::GetTreePrice();
-// CODEVIEW(E:\gamedcs\MapCell.h:1220, dc 0x1fabc) short ExtraInfoUnion::get_wheel_gold();
-// CODEVIEW(E:\gamedcs\MapCell.h:1230, dc 0x1fad8) short ExtraInfoUnion::get_windmill_amount();
-// CODEVIEW(E:\gamedcs\MapCell.h:1246, dc 0x1faf0) TSecondarySkill ExtraInfoUnion::get_witch_skill();
-
-// --- GameTime ---
-// CODEVIEW(E:\gamedcs\struct.h:403, dc 0x1eec4) long GameTime::Elapsed(unsigned long stop, unsigned long start);
-// CODEVIEW(E:\gamedcs\struct.h:411, dc 0x1eed4) long GameTime::ElapsedSince(unsigned long time);
-// CODEVIEW(E:\gamedcs\struct.h:419, dc 0x1ef04) unsigned char GameTime::IsPast(unsigned long time);
-
-// --- NewfullMap ---
-// CODEVIEW(E:\gamedcs\MapCell.h:850, dc 0x1f974) NewmapCell* NewfullMap::zCell(int x, int y, int z);
-// CODEVIEW(E:\gamedcs\MapCell.h:906, dc 0x1f9f4) NewmapCell* NewfullMap::cell(type_point point);
-
-// --- SLimitData ---
-// CODEVIEW(E:\gamedcs\struct.h:273, dc 0x1ee9c) void SLimitData::SLimitData(int minx, int miny, int maxx, int maxy);
-
 // --- TDrawParts ---
 // CODEVIEW(E:\gamedcs\AdvMgr.h:187, dc 0x1eff0) void TDrawParts::TDrawParts();
-
-// --- TSeerHut ---
-// CODEVIEW(E:\gamedcs\seerhut.h:117, dc 0x2021c) unsigned char TSeerHut::PlayerHasInfo(const unsigned char playerNum);
-// CODEVIEW(E:\gamedcs\seerhut.h:121, dc 0x20244) const char* TSeerHut::GetName();
-// CODEVIEW(E:\gamedcs\seerhut.h:123, dc 0x20260) const char* TSeerHut::GetQuestArtifactName();
 
 // --- advManager ---
 // CODEVIEW(E:\gamedcs\advmgr.cpp:734, dc 0x66f4) void advManager::advManager();
@@ -1731,159 +1661,8 @@ extern int g_highMemBuffer;
 // CODEVIEW(E:\gamedcs\advmgr.cpp:11352, dc 0x1e598) void advManager::DoAdvMenu();
 // CODEVIEW(E:\gamedcs\advmgr.cpp:11501, dc 0x1eb78) unsigned short advManager::GetRouteArray(int x, int y, int z);
 
-// --- boat ---
-// CODEVIEW(E:\gamedcs\Hero.h:190, dc 0x1fb8c) unsigned char boat::GetHflip();
-// CODEVIEW(E:\gamedcs\Hero.h:196, dc 0x1fba0) void boat::obscure_cell();
-
-// --- game ---
-// CODEVIEW(E:\gamedcs\game.h:933, dc 0x1fefc) unsigned char game::GetInfoFlag(GlobalInfoFlags flag, const int playerNum);
-// CODEVIEW(E:\gamedcs\game.h:1023, dc 0x1ff40) town* game::GetCurrTown();
-// CODEVIEW(E:\gamedcs\game.h:1024, dc 0x1ff98) int game::GetCurrTownId();
-// CODEVIEW(E:\gamedcs\game.h:1056, dc 0x1ffac) garrison* game::GetGarrison(int which);
-// CODEVIEW(E:\gamedcs\game.h:1070, dc 0x1ffdc) boat* game::GetBoat(int which);
-
-// --- generator ---
-// CODEVIEW(E:\gamedcs\game.h:419, dc 0x1feac) long generator::get_owner();
-
-// --- hero ---
-// CODEVIEW(E:\gamedcs\Hero.h:334, dc 0x1fbc8) unsigned char hero::GetHflip();
-// CODEVIEW(E:\gamedcs\Hero.h:641, dc 0x1fbdc) unsigned char hero::IsFlying(unsigned char check_terrain);
-// CODEVIEW(E:\gamedcs\Hero.h:650, dc 0x1fc74) unsigned char hero::CanWalkOnWater(unsigned char check_terrain);
-// CODEVIEW(E:\gamedcs\Hero.h:682, dc 0x1fd0c) void hero::obscure_cell();
-// CODEVIEW(E:\gamedcs\Hero.h:986, dc 0x1fd30) type_point hero::get_target(__$ReturnUdt);
-// CODEVIEW(E:\gamedcs\Hero.h:1046, dc 0x1fd90) unsigned char hero::SpellIsAvailable(int spell);
-
-// --- mouseManager ---
-// CODEVIEW(E:\gamedcs\MouseMgr.h:189, dc 0x1f0d0) int mouseManager::Enable();
-// CODEVIEW(E:\gamedcs\MouseMgr.h:197, dc 0x1f0e0) int mouseManager::Disable();
-// CODEVIEW(E:\gamedcs\MouseMgr.h:210, dc 0x1f0f0) int mouseManager::GetFrame();
-
-// --- searchArray ---
-// CODEVIEW(E:\gamedcs\Findpath.h:211, dc 0x200e8) void searchArray::clear_path();
-// CODEVIEW(E:\gamedcs\Findpath.h:216, dc 0x20108) long searchArray::get_path_steps();
-// CODEVIEW(E:\gamedcs\Findpath.h:221, dc 0x2012c) unsigned char searchArray::get_step(long i);
-
-// --- std ---
-// CODEVIEW(..\stlport\stl_string.h:385, dc 0x20320) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::operator=(const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __s);
-// CODEVIEW(..\stlport\stl_string.h:579, dc 0x20354) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::operator+=(const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __s);
-// CODEVIEW(..\stlport\stl_string.h:580, dc 0x20378) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::operator+=(const char* __s);
-// CODEVIEW(..\stlport\stl_string.h:581, dc 0x2039c) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::operator+=(char __c);
-// CODEVIEW(..\stlport\stl_bitset.h:564, dc 0x203c0) std::bitset<48,unsigned std::bitset<48,unsigned long>::operator[](__$ReturnUdt, unsigned __pos);
-// CODEVIEW(..\stlport\stl_bitset.h:376, dc 0x203e8) void std::bitset<48,unsigned long>::reference::~reference();
-// CODEVIEW(..\stlport\stl_bitset.h:402, dc 0x203f0) unsigned char std::bitset<48,unsigned long>::reference::operator bool();
-// CODEVIEW(..\stlport\stl_vector.h:218, dc 0x20424) void std::vector<resource *,std::allocator<resource *> >::vector<resource *,std::allocator<resource *> >(const std::allocator<resource* __a);
-// CODEVIEW(..\stlport\stl_alloc.h:527, dc 0x20448) void std::allocator<resource *>::allocator<resource *>();
-// CODEVIEW(..\stlport\stl_alloc.h:537, dc 0x20450) void std::allocator<resource *>::~allocator<resource *>();
-// CODEVIEW(..\stlport\stl_vector.h:195, dc 0x20458) unsigned std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::size();
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x20470) NewmapCell::TObjectCell* std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x20498) CObjectType* std::vector<CObjectType,std::allocator<CObjectType> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x204c4) CObject* std::vector<CObject,std::allocator<CObject> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x204f0) CSprite** std::vector<CSprite *,std::allocator<CSprite *> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x20518) mine* std::vector<mine,std::allocator<mine> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x20544) generator* std::vector<generator,std::allocator<generator> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x20570) garrison* std::vector<garrison,std::allocator<garrison> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x2059c) boat* std::vector<boat,std::allocator<boat> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x205c8) type_university* std::vector<type_university,std::allocator<type_university> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x205f4) type_creature_bank* std::vector<type_creature_bank,std::allocator<type_creature_bank> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:195, dc 0x20620) unsigned std::vector<pathCell *,std::allocator<pathCell *> >::size();
-// CODEVIEW(..\stlport\stl_vector.h:204, dc 0x20638) pathCell** std::vector<pathCell *,std::allocator<pathCell *> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:506, dc 0x20660) void std::vector<pathCell *,std::allocator<pathCell *> >::clear();
-// CODEVIEW(..\stlport\stl_vector.h:218, dc 0x2069c) void std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::vector<type_dialog_resource,std::allocator<type_dialog_resource> >(const std::allocator<type_dialog_resource>* __a);
-// CODEVIEW(..\stlport\stl_vector.h:288, dc 0x206c0) void std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::~vector<type_dialog_resource,std::allocator<type_dialog_resource> >();
-// CODEVIEW(..\stlport\stl_vector.h:368, dc 0x206f4) void std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::push_back(const type_dialog_resource* __x);
-// CODEVIEW(..\stlport\stl_vector.h:506, dc 0x20748) void std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::clear();
-// CODEVIEW(..\stlport\stl_alloc.h:527, dc 0x20784) void std::allocator<type_dialog_resource>::allocator<type_dialog_resource>();
-// CODEVIEW(..\stlport\stl_alloc.h:537, dc 0x2078c) void std::allocator<type_dialog_resource>::~allocator<type_dialog_resource>();
-// CODEVIEW(..\stlport\stl_string.h:584, dc 0x20794) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::append(const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __s);
-// CODEVIEW(..\stlport\stl_string.h:598, dc 0x207c4) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::append(const char* __s);
-// CODEVIEW(..\stlport\stl_string.h:617, dc 0x20800) void std::basic_string<char,std::char_traits<char>,std::allocator<char> >::push_back(char __c);
-// CODEVIEW(..\stlport\stl_bitset.h:370, dc 0x208a4) void std::bitset<48,unsigned long>::reference::reference(std::bitset<48,unsigned* __b, unsigned __pos);
-// CODEVIEW(..\stlport\stl_vector.h:89, dc 0x208e4) void std::_Vector_base<resource *,std::allocator<resource *> >::_Vector_base<resource *,std::allocator<resource *> >(const std::allocator<resource* __a);
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x20928) NewmapCell::TObjectCell* std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x20934) CObjectType* std::vector<CObjectType,std::allocator<CObjectType> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x20940) CObject* std::vector<CObject,std::allocator<CObject> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x2094c) CSprite** std::vector<CSprite *,std::allocator<CSprite *> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x20958) mine* std::vector<mine,std::allocator<mine> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x20964) generator* std::vector<generator,std::allocator<generator> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x20970) garrison* std::vector<garrison,std::allocator<garrison> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x2097c) boat* std::vector<boat,std::allocator<boat> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x20988) type_university* std::vector<type_university,std::allocator<type_university> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x20994) type_creature_bank* std::vector<type_creature_bank,std::allocator<type_creature_bank> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x209a0) pathCell** std::vector<pathCell *,std::allocator<pathCell *> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:180, dc 0x209ac) pathCell** std::vector<pathCell *,std::allocator<pathCell *> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:181, dc 0x209b8) pathCell** std::vector<pathCell *,std::allocator<pathCell *> >::end();
-// CODEVIEW(..\stlport\stl_vector.h:490, dc 0x209c4) pathCell** std::vector<pathCell *,std::allocator<pathCell *> >::erase(pathCell** __first, pathCell** __last);
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x20a0c) type_dialog_resource* std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:181, dc 0x20a18) type_dialog_resource* std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::end();
-// CODEVIEW(..\stlport\stl_vector.h:490, dc 0x20a24) type_dialog_resource* std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::erase(type_dialog_resource* __first, type_dialog_resource* __last);
-// CODEVIEW(..\stlport\stl_vector.h:89, dc 0x20a6c) void std::_Vector_base<type_dialog_resource,std::allocator<type_dialog_resource> >::_Vector_base<type_dialog_resource,std::allocator<type_dialog_resource> >(const std::allocator<type_dialog_resource>* __a);
-// CODEVIEW(..\stlport\stl_vector.h:101, dc 0x20ab0) void std::_Vector_base<type_dialog_resource,std::allocator<type_dialog_resource> >::~_Vector_base<type_dialog_resource,std::allocator<type_dialog_resource> >();
-// CODEVIEW(..\stlport\stl_bitset.h:120, dc 0x20af4) unsigned long std::_Base_bitset<48,unsigned long>::_S_maskbit(unsigned __pos);
-// CODEVIEW(..\stlport\stl_string.h:122, dc 0x20b18) void std::_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >::~_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >();
-// CODEVIEW(..\stlport\stl_bitset.h:124, dc 0x20b34) unsigned long* std::_Base_bitset<2,unsigned long>::_M_getword(unsigned __pos);
-// CODEVIEW(..\stlport\stl_alloc.h:1004, dc 0x20b5c) void std::_STL_alloc_proxy<resource * *,resource *,std::allocator<resource *> >::_STL_alloc_proxy<resource * *,resource *,std::allocator<resource *> >(const std::allocator<resource* __a, resource*** __p);
-// CODEVIEW(..\stlport\stl_alloc.h:1004, dc 0x20b7c) void std::_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >::_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >(const std::allocator<type_dialog_resource>* __a, type_dialog_resource** __p);
-// CODEVIEW(..\stlport\stl_alloc.h:1025, dc 0x20b9c) void std::_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >::deallocate(type_dialog_resource* __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_bitset.h:117, dc 0x20bcc) unsigned std::_Base_bitset<48,unsigned long>::_S_whichbit(unsigned __pos);
-// CODEVIEW(..\stlport\stl_bitset.h:111, dc 0x20bdc) unsigned std::_Base_bitset<2,unsigned long>::_S_whichword(unsigned __pos);
-// CODEVIEW(..\stlport\stl_alloc.h:552, dc 0x20bec) void std::allocator<type_dialog_resource>::deallocate(type_dialog_resource* __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_string.c:214, dc 0x20c18) void std::basic_string<char,std::char_traits<char>,std::allocator<char> >::reserve(unsigned __res_arg);
-// CODEVIEW(..\stlport\stl_vector.c:248, dc 0x20d64) void std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::_M_insert_overflow(type_dialog_resource* __position, const type_dialog_resource* __x, unsigned __fill_len);
-// CODEVIEW(..\stlport\stl_string.h:736, dc 0x20e84) std::basic_string<char,std::char_traits<char>,std::allocator<char> >::assign(char* __first, char* __last);
-// CODEVIEW(..\stlport\stl_construct.h:128, dc 0x20eb0) void std::destroy(type_dialog_resource* __first, type_dialog_resource* __last);
-// CODEVIEW(..\stlport\stl_construct.h:85, dc 0x20ee0) void std::construct(type_dialog_resource* __p, const type_dialog_resource* __value);
-// CODEVIEW(..\stlport\stl_string.h:606, dc 0x20f2c) std::basic_string<char,std::char_traits<char>,std::allocator<char> >::append(char* __first, char* __last);
-// CODEVIEW(..\stlport\stl_algobase.h:322, dc 0x20f58) pathCell** std::copy(pathCell** __first, pathCell** __last, pathCell** __result);
-// CODEVIEW(..\stlport\stl_construct.h:128, dc 0x20fb0) void std::destroy(pathCell** __first, pathCell** __last);
-// CODEVIEW(..\stlport\stl_algobase.h:322, dc 0x20fe0) type_dialog_resource* std::copy(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __result);
-// CODEVIEW(..\stlport\stl_alloc.h:968, dc 0x21038) std::allocator<type_dialog_resource>* std::__stl_alloc_rebind(std::allocator<type_dialog_resource>* __a, const type_dialog_resource* __formal);
-// CODEVIEW(..\stlport\stl_vector.h:195, dc 0x21044) unsigned std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::size();
-// CODEVIEW(..\stlport\stl_alloc.h:1022, dc 0x2105c) type_dialog_resource* std::_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >::allocate(unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:547, dc 0x21094) type_dialog_resource* std::allocator<type_dialog_resource>::allocate(unsigned __n, const void* __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:97, dc 0x210d0) type_dialog_resource* std::uninitialized_copy(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __result);
-// CODEVIEW(..\stlport\stl_uninitialized.h:263, dc 0x2110c) type_dialog_resource* std::uninitialized_fill_n(type_dialog_resource* __first, unsigned __n, const type_dialog_resource* __x);
-// CODEVIEW(..\stlport\stl_string.h:755, dc 0x21148) std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_assign_dispatch(char* __f, char* __l, __false_type __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:262, dc 0x211d4) type_dialog_resource* std::value_type(const type_dialog_resource* __formal);
-// CODEVIEW(..\stlport\stl_construct.h:121, dc 0x211dc) void std::__destroy(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __formal);
-// CODEVIEW(..\stlport\stl_string.h:698, dc 0x21200) std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_append_dispatch(char* __f, char* __l, __false_type __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:243, dc 0x21248) std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, pathCell** __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:291, dc 0x2125c) int* std::distance_type(pathCell** __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:209, dc 0x21264) pathCell** std::__copy(pathCell** __first, pathCell** __last, pathCell** __result, std::random_access_iterator_tag __formal, int* __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:262, dc 0x212a4) pathCell** std::value_type(pathCell** __formal);
-// CODEVIEW(..\stlport\stl_construct.h:121, dc 0x212ac) void std::__destroy(pathCell** __first, pathCell** __last, pathCell** __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:243, dc 0x212d0) std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const type_dialog_resource* __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:291, dc 0x212e4) int* std::distance_type(const type_dialog_resource* __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:209, dc 0x212ec) type_dialog_resource* std::__copy(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __result, std::random_access_iterator_tag __formal, int* __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:88, dc 0x21344) type_dialog_resource* std::__uninitialized_copy(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __result, type_dialog_resource* __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:255, dc 0x21374) type_dialog_resource* std::__uninitialized_fill_n(type_dialog_resource* __first, unsigned __n, const type_dialog_resource* __x, type_dialog_resource* __formal);
-// CODEVIEW(..\stlport\stl_construct.h:110, dc 0x213a4) void std::__destroy_aux(type_dialog_resource* __first, type_dialog_resource* __last, __false_type __formal);
-// CODEVIEW(..\stlport\stl_string.h:645, dc 0x213d8) std::basic_string<char,std::char_traits<char>,std::allocator<char> >::append(char* __first, char* __last, std::forward_iterator_tag __formal);
-// CODEVIEW(..\stlport\stl_construct.h:110, dc 0x21588) void std::__destroy_aux(pathCell** __first, pathCell** __last, __false_type __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:70, dc 0x215bc) type_dialog_resource* std::__uninitialized_copy_aux(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __result, __false_type __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:239, dc 0x21600) type_dialog_resource* std::__uninitialized_fill_n_aux(type_dialog_resource* __first, unsigned __n, const type_dialog_resource* __x, __false_type __formal);
-// CODEVIEW(..\stlport\stl_construct.h:59, dc 0x21644) void std::destroy(type_dialog_resource* __pointer);
-// CODEVIEW(..\stlport\stl_iterator_base.h:336, dc 0x21664) void std::distance(char* __first, char* __last, int* __n);
-// CODEVIEW(..\stlport\stl_construct.h:59, dc 0x216a0) void std::destroy(pathCell** __pointer);
-// CODEVIEW(..\stlport\stl_construct.h:53, dc 0x216c0) void std::__destroy_aux(type_dialog_resource* __pointer, __false_type __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:329, dc 0x216c8) void std::__distance(char* __first, char* __last, int* __n, std::random_access_iterator_tag __formal);
-// CODEVIEW(..\stlport\stl_construct.h:53, dc 0x216e4) void std::__destroy_aux(pathCell** __pointer, __false_type __formal);
-
-// --- town ---
-// CODEVIEW(E:\gamedcs\Town.h:311, dc 0x1fdac) type_point town::get_location(__$ReturnUdt);
-
-// --- townManager ---
-// CODEVIEW(E:\gamedcs\townmgr.h:738, dc 0x20280) const char* townManager::GetTownTypeName(int type);
-
 // --- type_cell_adjuster ---
 // CODEVIEW(E:\gamedcs\advmgr.cpp:3054, dc 0xbeac) void type_cell_adjuster::type_cell_adjuster();
 // CODEVIEW(E:\gamedcs\advmgr.cpp:3111, dc 0xc038) void type_cell_adjuster::restore_cell();
-
-// --- type_obscuring_object ---
-// CODEVIEW(E:\gamedcs\Hero.h:116, dc 0x1fb04) TAdventureObjectType type_obscuring_object::get_obscured_type();
-// CODEVIEW(E:\gamedcs\Hero.h:118, dc 0x1fb10) unsigned long type_obscuring_object::get_obscured_extra_info();
-// CODEVIEW(E:\gamedcs\Hero.h:145, dc 0x1fb1c) unsigned char type_obscuring_object::is_on_map();
-
-// --- type_point ---
-// CODEVIEW(E:\gamedcs\struct.h:100, dc 0x1eda8) void type_point::type_point();
 
 #endif  /* HOMM3_ADVMGR_H */

@@ -376,20 +376,4 @@ public:
 // CODEVIEW(E:\gamedcs\CSprite.h:259, dc 0x744e4) void CSprite::SetPalette(TPalette16& pal);
 // CODEVIEW(E:\gamedcs\csprite.cpp:86, dc 0x74548) void* CSprite::`scalar deleting destructor'(unsigned __flags);
 
-// --- CSpriteFrame ---
-// CODEVIEW(E:\gamedcs\CSpriteFrame.h:147, dc 0x74068) void CSpriteFrame::DrawCreature(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned short outcolor);
-// CODEVIEW(E:\gamedcs\CSpriteFrame.h:152, dc 0x740d0) void CSpriteFrame::DrawCreatureAlpha(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned short outcolor);
-// CODEVIEW(E:\gamedcs\CSpriteFrame.h:157, dc 0x74138) void CSpriteFrame::DrawAdvObj(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\CSpriteFrame.h:162, dc 0x74198) void CSpriteFrame::DrawAdvObjWithFlag(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned short flagcolor, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\CSpriteFrame.h:167, dc 0x741fc) void CSpriteFrame::DrawAdvObjShadow(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\CSpriteFrame.h:172, dc 0x74258) void CSpriteFrame::DrawHero(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\CSpriteFrame.h:177, dc 0x742b8) void CSpriteFrame::DrawHeroShadow(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\CSpriteFrame.h:182, dc 0x74314) void CSpriteFrame::DrawPointer(unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\CSpriteFrame.h:187, dc 0x7437c) void CSpriteFrame::DrawInterface(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\CSpriteFrame.h:192, dc 0x743dc) void CSpriteFrame::DrawShroudTile(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped);
-// CODEVIEW(E:\gamedcs\CSpriteFrame.h:198, dc 0x74484) void CSpriteFrame::DrawHeroAlpha(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip);
-
-// --- resource ---
-// CODEVIEW(E:\gamedcs\resrce.h:34, dc 0x74060) const char* resource::get_Name();
-
 #endif  /* HOMM3_CSPRITE_H */

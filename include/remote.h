@@ -572,22 +572,8 @@ int transmitRemoteData(CNetMsg* msg, int toWho, bool compressMsg, bool guarantee
 // CODEVIEW(E:\gamedcs\remote.cpp:2317, dc 0x11e1cc) void OnPlayerDropUpdateMsg(unsigned long dpid);
 // CODEVIEW(E:\gamedcs\remote.cpp:3142, dc 0x11f550) unsigned char GetQueueSize(int toWho, unsigned long* numMsgs, unsigned long* queueSize);
 
-// --- CAllReadyToPlayMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:199, dc 0x11f62c) void CAllReadyToPlayMsg::CAllReadyToPlayMsg();
-
 // --- CAnimatedDlg ---
 // CODEVIEW(E:\gamedcs\remote.cpp:1544, dc 0x11f87c) void* CAnimatedDlg::`scalar deleting destructor'(unsigned __flags);
-
-// --- CAutoArray<CDPlayPlayer> ---
-// CODEVIEW(E:\gamedcs\array.h:37, dc 0x11ff34) void CAutoArray<CDPlayPlayer>::CAutoArray<CDPlayPlayer>();
-// CODEVIEW(E:\gamedcs\array.h:46, dc 0x11ff64) void CAutoArray<CDPlayPlayer>::~CAutoArray<CDPlayPlayer>();
-// CODEVIEW(E:\gamedcs\array.h:73, dc 0x11ff9c) unsigned char CAutoArray<CDPlayPlayer>::Add(CDPlayPlayer* element);
-// CODEVIEW(E:\gamedcs\array.h:95, dc 0x120004) CDPlayPlayer* CAutoArray<CDPlayPlayer>::Get(unsigned long elementNbr);
-// CODEVIEW(E:\gamedcs\array.h:103, dc 0x120018) unsigned char CAutoArray<CDPlayPlayer>::Put(unsigned long elementNbr, CDPlayPlayer* element);
-// CODEVIEW(E:\gamedcs\array.h:113, dc 0x120030) unsigned char CAutoArray<CDPlayPlayer>::Delete(unsigned long elementNbr);
-// CODEVIEW(E:\gamedcs\array.h:127, dc 0x12006c) unsigned char CAutoArray<CDPlayPlayer>::Insert(unsigned long nextElementNbr, CDPlayPlayer* element);
-// CODEVIEW(E:\gamedcs\array.h:144, dc 0x1200dc) unsigned long CAutoArray<CDPlayPlayer>::GetCount();
-// CODEVIEW(..\stlport\stl_string.h:144, dc 0x1200e0) void* CAutoArray<CDPlayPlayer>::`scalar deleting destructor'(unsigned __flags);
 
 // --- CChatEdit ---
 // CODEVIEW(E:\gamedcs\remote.cpp:1294, dc 0x11f848) void* CChatEdit::`scalar deleting destructor'(unsigned __flags);
@@ -601,10 +587,6 @@ int transmitRemoteData(CNetMsg* msg, int toWho, bool compressMsg, bool guarantee
 // CODEVIEW(E:\gamedcs\remote.cpp:1115, dc 0x11c87c) void CChatManager::UpdateNewChat();
 // CODEVIEW(E:\gamedcs\remote.cpp:1213, dc 0x11ca60) unsigned char CChatManager::HasChat();
 // CODEVIEW(E:\gamedcs\remote.h:291, dc 0x11f7d0) void CChatManager::CChatStr::CChatStr();
-
-// --- CChatMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:405, dc 0x11f64c) void CChatMsg::CChatMsg(const char* sMsg);
-// CODEVIEW(E:\gamedcs\netmsg.h:411, dc 0x11f690) unsigned long CChatMsg::GetSize();
 
 // --- CDPlayHeroes ---
 // CODEVIEW(E:\gamedcs\remote.cpp:146, dc 0x11b96c) void CDPlayHeroes::CDPlayHeroes();
@@ -622,9 +604,6 @@ int transmitRemoteData(CNetMsg* msg, int toWho, bool compressMsg, bool guarantee
 // CODEVIEW(E:\gamedcs\remote.cpp:697, dc 0x11c228) void CDPlayHeroes::HandleNewPlayer();
 // CODEVIEW(E:\gamedcs\remote.cpp:702, dc 0x11c22c) void CDPlayHeroes::QueueMsg(CNetMsg* pNetMsg);
 // CODEVIEW(E:\gamedcs\remote.cpp:152, dc 0x11f814) void* CDPlayHeroes::`scalar deleting destructor'(unsigned __flags);
-
-// --- CDPlayPlayer ---
-// CODEVIEW(E:\gamedcs\dxplay.h:211, dc 0x11f7ac) unsigned long CDPlayPlayer::GetId();
 
 // --- CGameTransferDlg ---
 // CODEVIEW(E:\gamedcs\remote.cpp:2818, dc 0x11fdbc) void* CGameTransferDlg::`scalar deleting destructor'(unsigned __flags);
@@ -644,36 +623,9 @@ int transmitRemoteData(CNetMsg* msg, int toWho, bool compressMsg, bool guarantee
 // --- CLogFile ---
 // CODEVIEW(E:\gamedcs\remote.h:224, dc 0x11f7b4) void CLogFile::CLogFile(char* sLogFileName);
 
-// --- CNetMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:179, dc 0x11f5f4) unsigned char CNetMsg::IsCompressed();
-
-// --- CPingMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:804, dc 0x11f73c) void CPingMsg::CPingMsg(unsigned long pingTime, eRS_Messages id);
-
-// --- CPingResponseMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:815, dc 0x11f764) void CPingResponseMsg::CPingResponseMsg(unsigned long pingTime, eRS_Messages id);
-
-// --- CPlayerActiveMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:793, dc 0x11f71c) void CPlayerActiveMsg::CPlayerActiveMsg();
-
-// --- CPlayerDropMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:423, dc 0x11f6a8) void CPlayerDropMsg::CPlayerDropMsg(unsigned long dpid);
-
-// --- CPlayerDropUpdateMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:461, dc 0x11f6f4) void CPlayerDropUpdateMsg::CPlayerDropUpdateMsg(unsigned long dpidDropped);
-
-// --- CReadyToPlayMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:191, dc 0x11f60c) void CReadyToPlayMsg::CReadyToPlayMsg();
-
 // --- CSaveScreen ---
 // CODEVIEW(E:\gamedcs\remote.cpp:2677, dc 0x11fd70) void* CSaveScreen::`scalar deleting destructor'(unsigned __flags);
 // CODEVIEW(E:\gamedcs\remote.cpp:2677, dc 0x11fda4) void CSaveScreen::~CSaveScreen();
-
-// --- CSessionLostMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:852, dc 0x11f78c) void CSessionLostMsg::CSessionLostMsg();
-
-// --- CSetAsHostMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:433, dc 0x11f6d4) void CSetAsHostMsg::CSetAsHostMsg();
 
 // --- CTurnDuration ---
 // CODEVIEW(E:\gamedcs\remote.cpp:2912, dc 0x11f060) void CTurnDuration::CTurnDuration();
@@ -691,60 +643,5 @@ int transmitRemoteData(CNetMsg* msg, int toWho, bool compressMsg, bool guarantee
 // --- CWaitForRemoteBattleDlg ---
 // CODEVIEW(E:\gamedcs\remote.cpp:2660, dc 0x11eaf8) int CWaitForRemoteBattleDlg::OnPlayerDrop(CNetMsg* pNetMsg, message* msg);
 // CODEVIEW(E:\gamedcs\remote.cpp:2595, dc 0x11fd3c) void* CWaitForRemoteBattleDlg::`scalar deleting destructor'(unsigned __flags);
-
-// --- std ---
-// CODEVIEW(..\stlport\stl_deque.h:568, dc 0x11fdf0) std::_Deque_iterator<CNetMsg std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::begin(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_deque.h:612, dc 0x11fe10) unsigned char std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::empty();
-// CODEVIEW(..\stlport\stl_deque.h:615, dc 0x11fe28) void std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::deque<CNetMsg *,std::allocator<CNetMsg *>,0>(const std::allocator<CNetMsg* __a);
-// CODEVIEW(..\stlport\stl_deque.h:680, dc 0x11fe44) void std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::~deque<CNetMsg *,std::allocator<CNetMsg *>,0>();
-// CODEVIEW(..\stlport\stl_deque.h:765, dc 0x11fe98) void std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::push_back(CNetMsg** __t);
-// CODEVIEW(..\stlport\stl_deque.h:816, dc 0x11fed4) void std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::pop_front();
-// CODEVIEW(..\stlport\stl_deque.h:272, dc 0x11ff0c) void std::_Deque_iterator<CNetMsg *,std::_Nonconst_traits<CNetMsg *>,std::_Buf_size_traits<CNetMsg *,0> >::_Deque_iterator<CNetMsg *,std::_Nonconst_traits<CNetMsg *>,std::_Buf_size_traits<CNetMsg *,0> >();
-// CODEVIEW(..\stlport\stl_deque.h:276, dc 0x11ff28) CNetMsg** std::_Deque_iterator<CNetMsg *,std::_Nonconst_traits<CNetMsg *>,std::_Buf_size_traits<CNetMsg *,0> >::operator*();
-// CODEVIEW(..\stlport\stl_alloc.h:527, dc 0x11ff2c) void std::allocator<CNetMsg *>::allocator<CNetMsg *>();
-// CODEVIEW(..\stlport\stl_alloc.h:537, dc 0x11ff30) void std::allocator<CNetMsg *>::~allocator<CNetMsg *>();
-// CODEVIEW(..\stlport\stl_deque.h:452, dc 0x120114) void std::_Deque_base<CNetMsg *,std::allocator<CNetMsg *>,0>::_Deque_base<CNetMsg *,std::allocator<CNetMsg *>,0>(const std::allocator<CNetMsg* __a, unsigned __num_elements);
-// CODEVIEW(..\stlport\stl_deque.h:274, dc 0x12017c) void std::_Deque_iterator<CNetMsg *,std::_Nonconst_traits<CNetMsg *>,std::_Buf_size_traits<CNetMsg *,0> >::_Deque_iterator<CNetMsg *,std::_Nonconst_traits<CNetMsg *>,std::_Buf_size_traits<CNetMsg *,0> >(const std::_Deque_iterator<CNetMsg* __x);
-// CODEVIEW(..\stlport\stl_deque.h:190, dc 0x120190) void std::_Deque_iterator_base<CNetMsg *,std::_Buf_size_traits<CNetMsg *,0> >::_Deque_iterator_base<CNetMsg *,std::_Buf_size_traits<CNetMsg *,0> >();
-// CODEVIEW(..\stlport\stl_string.h:190, dc 0x1201a0) void std::_STL_alloc_proxy<CNetMsg * * *,CNetMsg * *,std::allocator<CNetMsg *> >::~_STL_alloc_proxy<CNetMsg * * *,CNetMsg * *,std::allocator<CNetMsg *> >();
-// CODEVIEW(..\stlport\stl_string.h:190, dc 0x1201b8) void std::_STL_alloc_proxy<unsigned int,CNetMsg *,std::allocator<CNetMsg *> >::~_STL_alloc_proxy<unsigned int,CNetMsg *,std::allocator<CNetMsg *> >();
-// CODEVIEW(..\stlport\stl_alloc.h:1004, dc 0x1201d0) void std::_STL_alloc_proxy<CNetMsg * * *,CNetMsg * *,std::allocator<CNetMsg *> >::_STL_alloc_proxy<CNetMsg * * *,CNetMsg * *,std::allocator<CNetMsg *> >(const std::allocator<CNetMsg* __a, CNetMsg**** __p);
-// CODEVIEW(..\stlport\stl_alloc.h:1004, dc 0x1201dc) void std::_STL_alloc_proxy<unsigned int,CNetMsg *,std::allocator<CNetMsg *> >::_STL_alloc_proxy<unsigned int,CNetMsg *,std::allocator<CNetMsg *> >(const std::allocator<CNetMsg* __a, const unsigned* __p);
-// CODEVIEW(..\stlport\stl_deque.c:104, dc 0x1201e8) void std::_Deque_base<CNetMsg *,std::allocator<CNetMsg *>,0>::~_Deque_base<CNetMsg *,std::allocator<CNetMsg *>,0>();
-// CODEVIEW(..\stlport\stl_deque.c:118, dc 0x120238) void std::_Deque_base<CNetMsg *,std::allocator<CNetMsg *>,0>::_M_initialize_map(unsigned __num_elements);
-// CODEVIEW(..\stlport\stl_deque.c:364, dc 0x1202fc) void std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::_M_push_back_aux(CNetMsg** __t);
-// CODEVIEW(..\stlport\stl_deque.c:444, dc 0x120350) void std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::_M_pop_front_aux();
-// CODEVIEW(..\stlport\stl_deque.h:328, dc 0x120390) unsigned char std::operator==(const std::_Deque_iterator_base<CNetMsg* __x, const std::_Deque_iterator_base<CNetMsg* __y);
-// CODEVIEW(..\stlport\stl_construct.h:128, dc 0x12039c) void std::destroy(std::_Deque_iterator<CNetMsg __first, std::_Deque_iterator<CNetMsg __last);
-// CODEVIEW(..\stlport\stl_construct.h:85, dc 0x1203fc) void std::construct(CNetMsg** __p, CNetMsg** __value);
-// CODEVIEW(..\stlport\stl_construct.h:59, dc 0x120424) void std::destroy(CNetMsg** __pointer);
-// CODEVIEW(..\stlport\stl_deque.h:1145, dc 0x120440) void std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::_M_reserve_map_at_back(unsigned __nodes_to_add);
-// CODEVIEW(..\stlport\stl_deque.h:233, dc 0x120470) void std::_Deque_iterator_base<CNetMsg *,std::_Buf_size_traits<CNetMsg *,0> >::_M_set_node(CNetMsg*** __new_node);
-// CODEVIEW(..\stlport\stl_alloc.h:1022, dc 0x120480) CNetMsg*** std::_STL_alloc_proxy<CNetMsg * * *,CNetMsg * *,std::allocator<CNetMsg *> >::allocate(unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:1025, dc 0x1204a8) void std::_STL_alloc_proxy<CNetMsg * * *,CNetMsg * *,std::allocator<CNetMsg *> >::deallocate(CNetMsg*** __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:1022, dc 0x1204d4) CNetMsg** std::_STL_alloc_proxy<unsigned int,CNetMsg *,std::allocator<CNetMsg *> >::allocate(unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:1025, dc 0x1204fc) void std::_STL_alloc_proxy<unsigned int,CNetMsg *,std::allocator<CNetMsg *> >::deallocate(CNetMsg** __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:547, dc 0x120528) CNetMsg** std::allocator<CNetMsg *>::allocate(unsigned __n, const void* __formal);
-// CODEVIEW(..\stlport\stl_alloc.h:552, dc 0x12054c) void std::allocator<CNetMsg *>::deallocate(CNetMsg** __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:547, dc 0x120568) CNetMsg*** std::allocator<CNetMsg * *>::allocate(unsigned __n, const void* __formal);
-// CODEVIEW(..\stlport\stl_alloc.h:552, dc 0x12058c) void std::allocator<CNetMsg * *>::deallocate(CNetMsg*** __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_deque.c:144, dc 0x1205a8) void std::_Deque_base<CNetMsg *,std::allocator<CNetMsg *>,0>::_M_create_nodes(CNetMsg*** __nstart, CNetMsg*** __nfinish);
-// CODEVIEW(..\stlport\stl_deque.c:157, dc 0x1205e4) void std::_Deque_base<CNetMsg *,std::allocator<CNetMsg *>,0>::_M_destroy_nodes(CNetMsg*** __nstart, CNetMsg*** __nfinish);
-// CODEVIEW(..\stlport\stl_deque.c:731, dc 0x120620) void std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::_M_reallocate_map(unsigned __nodes_to_add, unsigned char __add_at_front);
-// CODEVIEW(..\stlport\stl_deque.h:413, dc 0x120730) CNetMsg** std::value_type(const std::_Deque_iterator<CNetMsg* __formal);
-// CODEVIEW(..\stlport\stl_construct.h:121, dc 0x120734) void std::__destroy(std::_Deque_iterator<CNetMsg __first, std::_Deque_iterator<CNetMsg __last, CNetMsg** __formal);
-// CODEVIEW(..\stlport\stl_construct.h:53, dc 0x120788) void std::__destroy_aux();
-// CODEVIEW(..\stlport\stl_alloc.h:968, dc 0x12078c) std::allocator<CNetMsg* std::__stl_alloc_rebind(std::allocator<CNetMsg* __a, CNetMsg*** __formal);
-// CODEVIEW(..\stlport\stl_alloc.h:968, dc 0x120790) std::allocator<CNetMsg* std::__stl_alloc_rebind(std::allocator<CNetMsg* __a, CNetMsg** __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:322, dc 0x120794) CNetMsg*** std::copy(CNetMsg*** __first, CNetMsg*** __last, CNetMsg*** __result);
-// CODEVIEW(..\stlport\stl_algobase.h:442, dc 0x1207e4) CNetMsg*** std::copy_backward(CNetMsg*** __first, CNetMsg*** __last, CNetMsg*** __result);
-// CODEVIEW(..\stlport\stl_construct.h:110, dc 0x120834) void std::__destroy_aux(std::_Deque_iterator<CNetMsg __first, std::_Deque_iterator<CNetMsg __last, __false_type __formal);
-// CODEVIEW(..\stlport\stl_deque.h:285, dc 0x120888) std::_Deque_iterator<CNetMsg* std::_Deque_iterator<CNetMsg *,std::_Nonconst_traits<CNetMsg *>,std::_Buf_size_traits<CNetMsg *,0> >::operator++();
-// CODEVIEW(..\stlport\stl_deque.h:199, dc 0x1208a4) void std::_Deque_iterator_base<CNetMsg *,std::_Buf_size_traits<CNetMsg *,0> >::_M_increment();
-// CODEVIEW(..\stlport\stl_iterator_base.h:243, dc 0x1208d4) std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, CNetMsg*** __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:291, dc 0x1208e0) int* std::distance_type(CNetMsg*** __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:209, dc 0x1208e4) CNetMsg*** std::__copy(CNetMsg*** __first, CNetMsg*** __last, CNetMsg*** __result, std::random_access_iterator_tag __formal, int* __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:382, dc 0x120904) CNetMsg*** std::__copy_backward(CNetMsg*** __first, CNetMsg*** __last, CNetMsg*** __result, std::random_access_iterator_tag __formal, int* __formal);
-// CODEVIEW(..\stlport\stl_deque.h:345, dc 0x120928) unsigned char std::operator!=(const std::_Deque_iterator_base<CNetMsg* __x, const std::_Deque_iterator_base<CNetMsg* __y);
 
 #endif  /* HOMM3_REMOTE_H */

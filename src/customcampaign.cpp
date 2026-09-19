@@ -3138,19 +3138,6 @@ void SCampaign::give_custom_items()
     // @stub
 }
 
-// E:\gamedcs\hero.h:214
-DC_ONLY(0x7ea04, 0xA)
-void type_artifact::type_artifact(SpellID new_spell)
-{
-    // @stub
-}
-
-// E:\gamedcs\CustomCampaign.h:108
-DC_ONLY(0x7ea10, 0xC)
-void TArtifactRequirement::set(TArtifact _artifact, char _guard_bit)
-{
-    // @stub
-}
 #endif
 
 // COMDAT pairing: std::_Sort<hero, CrossoverHeroStronger>, agreement 0.972.

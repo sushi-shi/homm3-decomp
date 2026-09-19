@@ -569,31 +569,9 @@ enum EFizzleSound {
 // --- globals ---
 // CODEVIEW(E:\gamedcs\events.cpp:838, dc 0x91308) void add_reward(std::basic_string<char,std::char_traits<char>,std::allocator<char>* text, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* alternate, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards, EGameResource resource, long qualifier);
 // CODEVIEW(E:\gamedcs\events.cpp:1898, dc 0x93464) void exchange_spells(hero* first_hero, hero* second_hero);
-// CODEVIEW(..\stlport\stl_alloc.h:1022, dc 0x9d7b4) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std(unsigned __n);
-
-// --- CCombatInitMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:264, dc 0x9caa0) void CCombatInitMsg::CCombatInitMsg();
-
-// --- CHeroLevelUpdateMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:488, dc 0x9cb78) void CHeroLevelUpdateMsg::CHeroLevelUpdateMsg(int hero, int numSSs, signed char* ssLevel, signed char* stats);
 
 // --- CLevelPickWaitDlg ---
 // CODEVIEW(E:\gamedcs\events.cpp:6709, dc 0x9cf4c) void CLevelPickWaitDlg::~CLevelPickWaitDlg();
-
-// --- CMCEraseObject ---
-// CODEVIEW(E:\gamedcs\netmsg.h:662, dc 0x9cbd0) void CMCEraseObject::CMCEraseObject(type_point point);
-
-// --- CMCRecruitHero ---
-// CODEVIEW(E:\gamedcs\netmsg.h:690, dc 0x9cc1c) void CMCRecruitHero::CMCRecruitHero(signed char heroId, type_point point, int playerPos);
-
-// --- CResetVisibilityMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:747, dc 0x9ccd4) void CResetVisibilityMsg::CResetVisibilityMsg(type_point point, int playerPos, int range);
-
-// --- CSetVisibilityMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:731, dc 0x9cc78) void CSetVisibilityMsg::CSetVisibilityMsg(type_point point, int playerPos, int range);
-
-// --- CTradeRequestMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:782, dc 0x9cd30) void CTradeRequestMsg::CTradeRequestMsg(hero* left, hero* right);
 
 // --- CTurnDurationPause ---
 // CODEVIEW(E:\gamedcs\events.cpp:6248, dc 0x9ce40) void CTurnDurationPause::CTurnDurationPause();
@@ -601,54 +579,6 @@ enum EFizzleSound {
 
 // --- CWaitForRemoteBattleDlg ---
 // CODEVIEW(E:\gamedcs\events.cpp:6709, dc 0x9cf24) void CWaitForRemoteBattleDlg::~CWaitForRemoteBattleDlg();
-
-// --- ExtraInfoUnion ---
-// CODEVIEW(E:\gamedcs\MapCell.h:923, dc 0x9c778) unsigned char ExtraInfoUnion::IsCustomized();
-// CODEVIEW(E:\gamedcs\MapCell.h:928, dc 0x9c780) TCreatureType ExtraInfoUnion::GetArtifactDefender();
-// CODEVIEW(E:\gamedcs\MapCell.h:933, dc 0x9c78c) ArtifactPrices ExtraInfoUnion::GetArtifactPrice();
-// CODEVIEW(E:\gamedcs\MapCell.h:938, dc 0x9c798) EGameResource ExtraInfoUnion::GetArtifactResourceCost();
-// CODEVIEW(E:\gamedcs\MapCell.h:944, dc 0x9c7a4) unsigned char ExtraInfoUnion::IsDefendedArtifact();
-// CODEVIEW(E:\gamedcs\MapCell.h:959, dc 0x9c7b4) short ExtraInfoUnion::GetCampfireSize();
-// CODEVIEW(E:\gamedcs\MapCell.h:964, dc 0x9c7c0) EGameResource ExtraInfoUnion::GetCampfireResource();
-// CODEVIEW(E:\gamedcs\MapCell.h:974, dc 0x9c7c8) short ExtraInfoUnion::get_custom_index();
-// CODEVIEW(E:\gamedcs\MapCell.h:985, dc 0x9c7d4) void ExtraInfoUnion::SetLeanTo(short id, short amount, EGameResource resource);
-// CODEVIEW(E:\gamedcs\MapCell.h:992, dc 0x9c808) short ExtraInfoUnion::GetLeanToAmount();
-// CODEVIEW(E:\gamedcs\MapCell.h:997, dc 0x9c814) EGameResource ExtraInfoUnion::GetLeanToResource();
-// CODEVIEW(E:\gamedcs\MapCell.h:1002, dc 0x9c820) unsigned char ExtraInfoUnion::MagicSpringIsFull();
-// CODEVIEW(E:\gamedcs\MapCell.h:1007, dc 0x9c82c) void ExtraInfoUnion::FillMagicSpring(unsigned char full);
-// CODEVIEW(E:\gamedcs\MapCell.h:1018, dc 0x9c840) unsigned char ExtraInfoUnion::GardenIsFull();
-// CODEVIEW(E:\gamedcs\MapCell.h:1023, dc 0x9c84c) EGameResource ExtraInfoUnion::GetGardenResource();
-// CODEVIEW(E:\gamedcs\MapCell.h:1035, dc 0x9c858) void ExtraInfoUnion::SetGardenEmpty();
-// CODEVIEW(E:\gamedcs\MapCell.h:1046, dc 0x9c864) SpellID ExtraInfoUnion::get_pyramid_spell();
-// CODEVIEW(E:\gamedcs\MapCell.h:1051, dc 0x9c870) unsigned char ExtraInfoUnion::pyramid_is_guarded();
-// CODEVIEW(E:\gamedcs\MapCell.h:1056, dc 0x9c878) void ExtraInfoUnion::set_pyramid(unsigned char guards, SpellID new_spell);
-// CODEVIEW(E:\gamedcs\MapCell.h:1063, dc 0x9c898) ScholarAwards ExtraInfoUnion::GetScholarAward();
-// CODEVIEW(E:\gamedcs\MapCell.h:1068, dc 0x9c8a4) TPrimarySkill ExtraInfoUnion::GetScholarPrimarySkill();
-// CODEVIEW(E:\gamedcs\MapCell.h:1073, dc 0x9c8b0) TSecondarySkill ExtraInfoUnion::GetScholarSecondarySkill();
-// CODEVIEW(E:\gamedcs\MapCell.h:1078, dc 0x9c8bc) SpellID ExtraInfoUnion::GetScholarSpell();
-// CODEVIEW(E:\gamedcs\MapCell.h:1092, dc 0x9c8c8) unsigned char ExtraInfoUnion::SkeletonHasTreasure();
-// CODEVIEW(E:\gamedcs\MapCell.h:1097, dc 0x9c8d8) short ExtraInfoUnion::GetSkeletonArtifact();
-// CODEVIEW(E:\gamedcs\MapCell.h:1104, dc 0x9c8e4) void ExtraInfoUnion::SetSkeleton(short id, unsigned char has_treasure, short artifact);
-// CODEVIEW(E:\gamedcs\MapCell.h:1111, dc 0x9c918) SeaChestRewardTypes ExtraInfoUnion::GetSeaChestReward();
-// CODEVIEW(E:\gamedcs\MapCell.h:1116, dc 0x9c924) TArtifact ExtraInfoUnion::GetSeaChestArtifact();
-// CODEVIEW(E:\gamedcs\MapCell.h:1126, dc 0x9c930) TArtifact ExtraInfoUnion::GetTreasureArtifact();
-// CODEVIEW(E:\gamedcs\MapCell.h:1131, dc 0x9c934) short ExtraInfoUnion::GetTreasureSize();
-// CODEVIEW(E:\gamedcs\MapCell.h:1136, dc 0x9c948) unsigned char ExtraInfoUnion::TreasureIsArtifact();
-// CODEVIEW(E:\gamedcs\MapCell.h:1146, dc 0x9c950) void ExtraInfoUnion::EmptyWagon();
-// CODEVIEW(E:\gamedcs\MapCell.h:1151, dc 0x9c95c) short ExtraInfoUnion::GetWagonAmount();
-// CODEVIEW(E:\gamedcs\MapCell.h:1156, dc 0x9c964) TArtifact ExtraInfoUnion::GetWagonArtifact();
-// CODEVIEW(E:\gamedcs\MapCell.h:1161, dc 0x9c970) EGameResource ExtraInfoUnion::GetWagonResource();
-// CODEVIEW(E:\gamedcs\MapCell.h:1166, dc 0x9c97c) unsigned char ExtraInfoUnion::WagonHasArtifact();
-// CODEVIEW(E:\gamedcs\MapCell.h:1171, dc 0x9c988) unsigned char ExtraInfoUnion::WagonIsFull();
-// CODEVIEW(E:\gamedcs\MapCell.h:1193, dc 0x9c998) void ExtraInfoUnion::empty_tomb();
-// CODEVIEW(E:\gamedcs\MapCell.h:1198, dc 0x9c9a4) TArtifact ExtraInfoUnion::get_tomb_artifact();
-// CODEVIEW(E:\gamedcs\MapCell.h:1203, dc 0x9c9b0) unsigned char ExtraInfoUnion::tomb_is_full();
-// CODEVIEW(E:\gamedcs\MapCell.h:1225, dc 0x9c9b8) void ExtraInfoUnion::set_wheel_gold(short amount);
-// CODEVIEW(E:\gamedcs\MapCell.h:1235, dc 0x9c9e4) EGameResource ExtraInfoUnion::get_windmill_resource();
-// CODEVIEW(E:\gamedcs\MapCell.h:1240, dc 0x9c9f0) void ExtraInfoUnion::set_windmill(EGameResource resource, short amount);
-
-// --- NewmapCell ---
-// CODEVIEW(E:\gamedcs\MapCell.h:1260, dc 0x9ca14) TArtifact NewmapCell::GetArtifactIndex();
 
 // --- advManager ---
 // CODEVIEW(E:\gamedcs\events.cpp:317, dc 0x903b4) void advManager::DoEventShipyard(NewmapCell* cell, type_point point, unsigned char human_player);
@@ -678,117 +608,7 @@ enum EFizzleSound {
 // CODEVIEW(E:\gamedcs\events.cpp:5851, dc 0x9af34) int advManager::CombatMonsterEvent(hero* who, TCreatureType monType, int* numMons, NewmapCell* eventCell, type_point point, TCreatureType monType2, int numMons2, int numGroups2, TCreatureType monType3, int numMons3, int numGroups3);
 // CODEVIEW(E:\gamedcs\events.cpp:6283, dc 0x9b970) int advManager::DoCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long iRightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int iSeed, unsigned char bFinishHeroes, unsigned char alternate_layout);
 
-// --- game ---
-// CODEVIEW(E:\gamedcs\Game.h:917, dc 0x9ca1c) void game::SetInfoFlag(GlobalInfoFlags flag, const int playerNum);
-// CODEVIEW(E:\gamedcs\Game.h:1036, dc 0x9ca84) mine* game::GetMine(int which);
-
 // --- spell_level_order ---
 // CODEVIEW(E:\gamedcs\events.cpp:1883, dc 0x9cdc0) unsigned char spell_level_order::operator()(SpellID first, SpellID second);
-
-// --- std ---
-// CODEVIEW(..\stlport\stl_string.h:556, dc 0x9cf74) unsigned char std::basic_string<char,std::char_traits<char>,std::allocator<char> >::empty();
-// CODEVIEW(..\stlport\stl_vector.h:195, dc 0x9cf80) unsigned std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::size();
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x9cf90) SecondarySkillData* std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x9cfb4) TArtifact* std::vector<enum TArtifact,std::allocator<enum TArtifact> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x9cfd8) SpellID* std::vector<enum SpellID,std::allocator<enum SpellID> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:181, dc 0x9cfe0) SpellID* std::vector<enum SpellID,std::allocator<enum SpellID> >::end();
-// CODEVIEW(..\stlport\stl_vector.h:195, dc 0x9cfe8) unsigned std::vector<enum SpellID,std::allocator<enum SpellID> >::size();
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x9cff8) SpellID* std::vector<enum SpellID,std::allocator<enum SpellID> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:218, dc 0x9d01c) void std::vector<enum SpellID,std::allocator<enum SpellID> >::vector<enum SpellID,std::allocator<enum SpellID> >(const std::allocator<enum* __a);
-// CODEVIEW(..\stlport\stl_vector.h:288, dc 0x9d038) void std::vector<enum SpellID,std::allocator<enum SpellID> >::~vector<enum SpellID,std::allocator<enum SpellID> >();
-// CODEVIEW(..\stlport\stl_vector.h:368, dc 0x9d060) void std::vector<enum SpellID,std::allocator<enum SpellID> >::push_back(const SpellID* __x);
-// CODEVIEW(..\stlport\stl_vector.h:181, dc 0x9d09c) NewmapCell::TObjectCell* std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::end();
-// CODEVIEW(..\stlport\stl_vector.h:480, dc 0x9d0a4) NewmapCell::TObjectCell* std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::erase(NewmapCell::TObjectCell* __position);
-// CODEVIEW(..\stlport\stl_vector.h:195, dc 0x9d0f4) unsigned std::vector<CObject,std::allocator<CObject> >::size();
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x9d118) TreasureData* std::vector<TreasureData,std::allocator<TreasureData> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x9d140) MonsterData* std::vector<MonsterData,std::allocator<MonsterData> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x9d168) BlackBoxData* std::vector<BlackBoxData,std::allocator<BlackBoxData> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x9d190) TBlackMarket* std::vector<TBlackMarket,std::allocator<TBlackMarket> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x9d1b8) Sign* std::vector<Sign,std::allocator<Sign> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:195, dc 0x9d1dc) unsigned std::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char> >,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > > >::size();
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x9d200) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char> >,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > > >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:218, dc 0x9d228) void std::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char(const std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char>* __a);
-// CODEVIEW(..\stlport\stl_vector.h:288, dc 0x9d244) void std::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char>();
-// CODEVIEW(..\stlport\stl_vector.h:368, dc 0x9d26c) void std::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char> >,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > > >::push_back(const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __x);
-// CODEVIEW(..\stlport\stl_alloc.h:527, dc 0x9d2a8) void std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > >::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > >();
-// CODEVIEW(..\stlport\stl_alloc.h:537, dc 0x9d2ac) void std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > >::~allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > >();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x9d2b0) SecondarySkillData* std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x9d2b8) TArtifact* std::vector<enum TArtifact,std::allocator<enum TArtifact> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:89, dc 0x9d2c0) void std::_Vector_base<enum SpellID,std::allocator<enum SpellID> >::_Vector_base<enum SpellID,std::allocator<enum SpellID> >(const std::allocator<enum* __a);
-// CODEVIEW(..\stlport\stl_vector.h:101, dc 0x9d2f0) void std::_Vector_base<enum SpellID,std::allocator<enum SpellID> >::~_Vector_base<enum SpellID,std::allocator<enum SpellID> >();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x9d320) TreasureData* std::vector<TreasureData,std::allocator<TreasureData> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x9d328) MonsterData* std::vector<MonsterData,std::allocator<MonsterData> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x9d330) BlackBoxData* std::vector<BlackBoxData,std::allocator<BlackBoxData> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x9d338) TBlackMarket* std::vector<TBlackMarket,std::allocator<TBlackMarket> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x9d340) Sign* std::vector<Sign,std::allocator<Sign> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x9d348) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char> >,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > > >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:89, dc 0x9d350) void std::_Vector_base<std::basic_string<char,std::char_traits<char>,std::allocator<char> >,st(const std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char>* __a);
-// CODEVIEW(..\stlport\stl_vector.h:101, dc 0x9d380) void std::_Vector_base<std::basic_string<char,std::char_traits<char>,std::allocator<char> >,std();
-// CODEVIEW(..\stlport\stl_string.h:101, dc 0x9d3c0) void std::_STL_alloc_proxy<enum SpellID *,enum SpellID,std::allocator<enum SpellID> >::~_STL_alloc_proxy<enum SpellID *,enum SpellID,std::allocator<enum SpellID> >();
-// CODEVIEW(..\stlport\stl_string.h:101, dc 0x9d3d8) void std::_STL_alloc_proxy<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<ch();
-// CODEVIEW(..\stlport\stl_alloc.h:1004, dc 0x9d3f0) void std::_STL_alloc_proxy<enum SpellID *,enum SpellID,std::allocator<enum SpellID> >::_STL_alloc_proxy<enum SpellID *,enum SpellID,std::allocator<enum SpellID> >(const std::allocator<enum* __a, SpellID** __p);
-// CODEVIEW(..\stlport\stl_alloc.h:1025, dc 0x9d3fc) void std::_STL_alloc_proxy<enum SpellID *,enum SpellID,std::allocator<enum SpellID> >::deallocate(SpellID* __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:1004, dc 0x9d428) void std::_STL_alloc_proxy<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<c(const std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char>* __a, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __p);
-// CODEVIEW(..\stlport\stl_alloc.h:1025, dc 0x9d434) void std::(std::basic_string<char,std::char_traits<char>,std::allocator<char>* __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:552, dc 0x9d460) void std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > >::deallocate(std::basic_string<char,std::char_traits<char>,std::allocator<char>* __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.c:248, dc 0x9d480) void std::vector<enum SpellID,std::allocator<enum SpellID> >::_M_insert_overflow(SpellID* __position, const SpellID* __x, unsigned __fill_len);
-// CODEVIEW(..\stlport\stl_algobase.h:137, dc 0x9d550) const signed char* std::max(const signed char* __a, const signed char* __b);
-// CODEVIEW(..\stlport\stl_algobase.h:79, dc 0x9d560) void std::swap(hero** __a, hero** __b);
-// CODEVIEW(..\stlport\stl_algo.h:636, dc 0x9d56c) void std::sort(SpellID* __first, SpellID* __last, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_vector.c:248, dc 0x9d5d4) void std::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char> >,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > > >::_M_insert_overflow(std::basic_string<char,std::char_traits<char>,std::allocator<char>* __position, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __x, unsigned __fill_len);
-// CODEVIEW(..\stlport\stl_algobase.h:322, dc 0x9d6b4) NewmapCell::TObjectCell* std::copy(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, NewmapCell::TObjectCell* __result);
-// CODEVIEW(..\stlport\stl_construct.h:59, dc 0x9d70c) void std::destroy(NewmapCell::TObjectCell* __pointer);
-// CODEVIEW(..\stlport\stl_construct.h:128, dc 0x9d728) void std::destroy(std::basic_string<char,std::char_traits<char>,std::allocator<char>* __first, std::basic_string<char,std::char_traits<char>,std::allocator<char>* __last);
-// CODEVIEW(..\stlport\stl_construct.h:85, dc 0x9d758) void std::construct(std::basic_string<char,std::char_traits<char>,std::allocator<char>* __p, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __value);
-// CODEVIEW(..\stlport\stl_alloc.h:968, dc 0x9d784) std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::__stl_alloc_rebind(std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char>* __a, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __formal);
-// CODEVIEW(..\stlport\stl_alloc.h:1022, dc 0x9d788) SpellID* std::_STL_alloc_proxy<enum SpellID *,enum SpellID,std::allocator<enum SpellID> >::allocate(unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:547, dc 0x9d7e0) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > >::allocate(unsigned __n, const void* __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:97, dc 0x9d808) SpellID* std::uninitialized_copy(SpellID* __first, SpellID* __last, SpellID* __result);
-// CODEVIEW(..\stlport\stl_uninitialized.h:263, dc 0x9d844) SpellID* std::uninitialized_fill_n(SpellID* __first, unsigned __n, const SpellID* __x);
-// CODEVIEW(..\stlport\stl_algo.c:1102, dc 0x9d880) void std::__introsort_loop(SpellID* __first, SpellID* __last, SpellID* __formal, int __depth_limit, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_algo.c:1068, dc 0x9d920) void std::__final_insertion_sort(SpellID* __first, SpellID* __last, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_uninitialized.h:97, dc 0x9d974) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::uninitialized_copy(std::basic_string<char,std::char_traits<char>,std::allocator<char>* __first, std::basic_string<char,std::char_traits<char>,std::allocator<char>* __last, std::basic_string<char,std::char_traits<char>,std::allocator<char>* __result);
-// CODEVIEW(..\stlport\stl_uninitialized.h:263, dc 0x9d9b0) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::uninitialized_fill_n(std::basic_string<char,std::char_traits<char>,std::allocator<char>* __first, unsigned __n, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __x);
-// CODEVIEW(..\stlport\stl_iterator_base.h:243, dc 0x9d9ec) std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const NewmapCell::TObjectCell* __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:291, dc 0x9d9fc) int* std::distance_type(const NewmapCell::TObjectCell* __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:209, dc 0x9da00) NewmapCell::TObjectCell* std::__copy(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, NewmapCell::TObjectCell* __result, std::random_access_iterator_tag __formal, int* __formal);
-// CODEVIEW(..\stlport\stl_construct.h:53, dc 0x9da34) void std::__destroy_aux();
-// CODEVIEW(..\stlport\stl_iterator_base.h:262, dc 0x9da38) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::value_type(const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __formal);
-// CODEVIEW(..\stlport\stl_construct.h:121, dc 0x9da3c) void std::__destroy(std::basic_string<char,std::char_traits<char>,std::allocator<char>* __first, std::basic_string<char,std::char_traits<char>,std::allocator<char>* __last, std::basic_string<char,std::char_traits<char>,std::allocator<char>* __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:88, dc 0x9da58) SpellID* std::__uninitialized_copy(SpellID* __first, SpellID* __last, SpellID* __result, SpellID* __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:255, dc 0x9da78) SpellID* std::__uninitialized_fill_n(SpellID* __first, unsigned __n, const SpellID* __x, SpellID* __formal);
-// CODEVIEW(..\stlport\stl_algo.h:677, dc 0x9da98) void std::partial_sort(SpellID* __first, SpellID* __middle, SpellID* __last, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_algo.c:65, dc 0x9dad8) const SpellID* std::__median(const SpellID* __a, const SpellID* __b, const SpellID* __c, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_algo.c:941, dc 0x9db74) SpellID* std::__unguarded_partition(SpellID* __first, SpellID* __last, SpellID __pivot, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_algo.c:1020, dc 0x9dbe8) void std::__insertion_sort(SpellID* __first, SpellID* __last, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_algo.c:1050, dc 0x9dc28) void std::__unguarded_insertion_sort(SpellID* __first, SpellID* __last, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_uninitialized.h:88, dc 0x9dc5c) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::__uninitialized_copy(std::basic_string<char,std::char_traits<char>,std::allocator<char>* __first, std::basic_string<char,std::char_traits<char>,std::allocator<char>* __last, std::basic_string<char,std::char_traits<char>,std::allocator<char>* __result, std::basic_string<char,std::char_traits<char>,std::allocator<char>* __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:255, dc 0x9dc7c) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::__uninitialized_fill_n(std::basic_string<char,std::char_traits<char>,std::allocator<char>* __first, unsigned __n, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __x, std::basic_string<char,std::char_traits<char>,std::allocator<char>* __formal);
-// CODEVIEW(..\stlport\stl_construct.h:110, dc 0x9dc9c) void std::__destroy_aux(std::basic_string<char,std::char_traits<char>,std::allocator<char>* __first, std::basic_string<char,std::char_traits<char>,std::allocator<char>* __last, __false_type __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:70, dc 0x9dccc) SpellID* std::__uninitialized_copy_aux(SpellID* __first, SpellID* __last, SpellID* __result, __false_type __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:239, dc 0x9dd08) SpellID* std::__uninitialized_fill_n_aux(SpellID* __first, unsigned __n, const SpellID* __x, __false_type __formal);
-// CODEVIEW(..\stlport\stl_algo.c:1443, dc 0x9dd44) void std::__partial_sort(SpellID* __first, SpellID* __middle, SpellID* __last, SpellID* __formal, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_algobase.h:107, dc 0x9ddd0) void std::iter_swap(SpellID* __a, SpellID* __b);
-// CODEVIEW(..\stlport\stl_algo.c:1000, dc 0x9de00) void std::__linear_insert(SpellID* __first, SpellID* __last, SpellID __val, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_algo.c:1042, dc 0x9de58) void std::__unguarded_insertion_sort_aux(SpellID* __first, SpellID* __last, SpellID* __formal, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_uninitialized.h:70, dc 0x9de8c) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::__uninitialized_copy_aux(std::basic_string<char,std::char_traits<char>,std::allocator<char>* __first, std::basic_string<char,std::char_traits<char>,std::allocator<char>* __last, std::basic_string<char,std::char_traits<char>,std::allocator<char>* __result, __false_type __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:239, dc 0x9dec8) std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::__uninitialized_fill_n_aux(std::basic_string<char,std::char_traits<char>,std::allocator<char>* __first, unsigned __n, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __x, __false_type __formal);
-// CODEVIEW(..\stlport\stl_construct.h:59, dc 0x9df04) void std::destroy(std::basic_string<char,std::char_traits<char>,std::allocator<char>* __pointer);
-// CODEVIEW(..\stlport\stl_heap.c:235, dc 0x9df20) void std::make_heap(SpellID* __first, SpellID* __last, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_iterator_base.h:291, dc 0x9df70) int* std::distance_type(const SpellID* __formal);
-// CODEVIEW(..\stlport\stl_heap.h:85, dc 0x9df74) void std::__pop_heap(SpellID* __first, SpellID* __last, SpellID* __result, SpellID __value, spell_level_order __comp, int* __formal);
-// CODEVIEW(..\stlport\stl_heap.h:118, dc 0x9dfac) void std::sort_heap(SpellID* __first, SpellID* __last, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_algobase.h:96, dc 0x9dfe8) void std::__iter_swap(SpellID* __a, SpellID* __b, SpellID* __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:442, dc 0x9e000) SpellID* std::copy_backward(SpellID* __first, SpellID* __last, SpellID* __result);
-// CODEVIEW(..\stlport\stl_algo.c:974, dc 0x9e058) void std::__unguarded_linear_insert(SpellID* __last, SpellID __val, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_construct.h:53, dc 0x9e09c) void std::__destroy_aux(std::basic_string<char,std::char_traits<char>,std::allocator<char>* __pointer, __false_type __formal);
-// CODEVIEW(..\stlport\stl_heap.c:218, dc 0x9e0b4) void std::__make_heap(SpellID* __first, SpellID* __last, spell_level_order __comp, SpellID* __formal, int* __formal);
-// CODEVIEW(..\stlport\stl_heap.c:151, dc 0x9e114) void std::__adjust_heap(SpellID* __first, int __holeIndex, int __len, SpellID __value, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_heap.c:183, dc 0x9e1b4) void std::pop_heap(SpellID* __first, SpellID* __last, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_algobase.h:79, dc 0x9e1e8) void std::swap(SpellID* __a, SpellID* __b);
-// CODEVIEW(..\stlport\stl_iterator_base.h:243, dc 0x9e1f4) std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const SpellID* __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:382, dc 0x9e204) SpellID* std::__copy_backward(SpellID* __first, SpellID* __last, SpellID* __result, std::random_access_iterator_tag __formal, int* __formal);
-// CODEVIEW(..\stlport\stl_heap.c:78, dc 0x9e228) void std::__push_heap(SpellID* __first, int __holeIndex, int __topIndex, SpellID __value, spell_level_order __comp);
-// CODEVIEW(..\stlport\stl_heap.c:173, dc 0x9e29c) void std::__pop_heap_aux(SpellID* __first, SpellID* __last, SpellID* __formal, spell_level_order __comp);
 
 #endif  /* HOMM3_EVENTS_H */

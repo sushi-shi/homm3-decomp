@@ -89,19 +89,6 @@ extern int g_thisNetGotAdventureControl;
 // both the base and its second element.
 DATA(0x0069773c) extern int g_combatControlNetPos[2];
 
-// --- CCombatMainMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:217, dc 0x70a58) void CCombatMainMsg::CCombatMainMsg(int nextAction, int nextActionExtra, int nextActionGridIndex, int nextActionGridIndex2, int seed);
-
-// --- CEndPlacementPhaseMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:758, dc 0x70aa4) void CEndPlacementPhaseMsg::CEndPlacementPhaseMsg();
-
-// --- CLogFile ---
-// CODEVIEW(E:\gamedcs\remote.h:249, dc 0x70ac4) void CLogFile::Log();
-
-// --- CMessageKill ---
-// CODEVIEW(E:\gamedcs\remote.h:537, dc 0x70ac8) void CMessageKill::CMessageKill(CNetMsg* pNetMsg);
-// CODEVIEW(E:\gamedcs\remote.h:554, dc 0x70aec) void CMessageKill::SetMessage(CNetMsg* pNetMsg);
-
 // --- combatManager ---
 // CODEVIEW(E:\gamedcs\command.cpp:63, dc 0x6af98) unsigned char combatManager::automate_catapult();
 // CODEVIEW(E:\gamedcs\command.cpp:193, dc 0x6b12c) unsigned char combatManager::automate_first_aid_tent();
@@ -133,27 +120,5 @@ DATA(0x0069773c) extern int g_combatControlNetPos[2];
 // CODEVIEW(E:\gamedcs\command.cpp:3819, dc 0x70398) void combatManager::SetCombatViewArmy(int iNewCombatViewArmy);
 // CODEVIEW(E:\gamedcs\command.cpp:4001, dc 0x70920) void combatManager::CheckAutoScrolling();
 // CODEVIEW(E:\gamedcs\command.cpp:4023, dc 0x709a8) void combatManager::ShiftXY(message* msg);
-// CODEVIEW(E:\gamedcs\CmbtMgr.h:1488, dc 0x70a2c) unsigned char combatManager::InCombatArea(int x, int y);
-
-// --- hero ---
-// CODEVIEW(E:\gamedcs\hero.h:687, dc 0x70a1c) void hero::SetPrimarySkill(int skill, int amount);
-
-// --- heroWindowManager ---
-// CODEVIEW(E:\gamedcs\WinMgr.h:193, dc 0x70af0) void heroWindowManager::FizzleForwardX(const SLimitData* limits, int fadeTime);
-// CODEVIEW(E:\gamedcs\WinMgr.h:198, dc 0x70b40) void heroWindowManager::SaveFizzleSourceX(const SLimitData* limits);
-
-// --- std ---
-// CODEVIEW(..\stlport\stl_tree.h:171, dc 0x70a10) unsigned char std::operator==(const std::_Rb_tree_base_iterator* __x, const std::_Rb_tree_base_iterator* __y);
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x70b88) type_artifact* std::vector<type_artifact,std::allocator<type_artifact> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:181, dc 0x70b8c) type_artifact* std::vector<type_artifact,std::allocator<type_artifact> >::end();
-// CODEVIEW(..\stlport\stl_vector.h:218, dc 0x70b90) void std::vector<type_artifact,std::allocator<type_artifact> >::vector<type_artifact,std::allocator<type_artifact> >(const std::allocator<type_artifact>* __a);
-// CODEVIEW(..\stlport\stl_vector.h:288, dc 0x70bac) void std::vector<type_artifact,std::allocator<type_artifact> >::~vector<type_artifact,std::allocator<type_artifact> >();
-// CODEVIEW(..\stlport\stl_alloc.h:527, dc 0x70bd4) void std::allocator<type_artifact>::allocator<type_artifact>();
-// CODEVIEW(..\stlport\stl_alloc.h:537, dc 0x70bd8) void std::allocator<type_artifact>::~allocator<type_artifact>();
-// CODEVIEW(..\stlport\stl_vector.h:89, dc 0x70bdc) void std::_Vector_base<type_artifact,std::allocator<type_artifact> >::_Vector_base<type_artifact,std::allocator<type_artifact> >(const std::allocator<type_artifact>* __a);
-// CODEVIEW(..\stlport\stl_vector.h:101, dc 0x70c08) void std::_Vector_base<type_artifact,std::allocator<type_artifact> >::~_Vector_base<type_artifact,std::allocator<type_artifact> >();
-// CODEVIEW(..\stlport\stl_string.h:101, dc 0x70c38) void std::_STL_alloc_proxy<type_artifact *,type_artifact,std::allocator<type_artifact> >::~_STL_alloc_proxy<type_artifact *,type_artifact,std::allocator<type_artifact> >();
-// CODEVIEW(..\stlport\stl_alloc.h:1004, dc 0x70c50) void std::_STL_alloc_proxy<type_artifact *,type_artifact,std::allocator<type_artifact> >::_STL_alloc_proxy<type_artifact *,type_artifact,std::allocator<type_artifact> >(const std::allocator<type_artifact>* __a, type_artifact** __p);
-// CODEVIEW(..\stlport\stl_algobase.h:79, dc 0x70c5c) void std::swap(unsigned char* __a, unsigned char* __b);
 
 #endif  /* HOMM3_COMMAND_H */

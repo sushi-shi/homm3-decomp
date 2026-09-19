@@ -317,9 +317,6 @@ public:
 // CODEVIEW(E:\gamedcs\swapmgr.cpp:210, dc 0x159328) void TSwapWindow::TSwapWindow(hero** heroes);
 // CODEVIEW(E:\gamedcs\swapmgr.cpp:454, dc 0x15f1b0) void* TSwapWindow::`scalar deleting destructor'(unsigned __flags);
 
-// --- baseManager ---
-// CODEVIEW(E:\gamedcs\basemgr.h:41, dc 0x15efd0) void baseManager::SetStatus(short newStatus);
-
 // --- swapManager ---
 // CODEVIEW(E:\gamedcs\swapmgr.cpp:655, dc 0x15c648) int swapManager::DrawSwapWin();
 // CODEVIEW(E:\gamedcs\swapmgr.cpp:665, dc 0x15c66c) int swapManager::Open(int newPriority);

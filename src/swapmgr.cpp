@@ -2242,13 +2242,6 @@ void swapManager::onGiveMeStuffMsg()
     // @stub
 }
 
-// E:\gamedcs\basemgr.h:41
-DC_ONLY(0x15efd0, 0x4)
-void baseManager::SetStatus(short newStatus)
-{
-    // @stub
-}
-
 // E:\gamedcs\swapmgr.cpp:192
 DC_ONLY(0x15f0a4, 0x98)
 void CSwapManagerChatEdit::CSwapManagerChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)

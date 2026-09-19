@@ -880,20 +880,6 @@ void TCombatCreatureSubWindow::unShow()
     // @stub
 }
 
-// E:\gamedcs\button.h:99
-DC_ONLY(0x669f4, 0x6)
-void button::setDisabledFrame(long frame)
-{
-    // @stub
-}
-
-// E:\gamedcs\Hero.h:634
-DC_ONLY(0x669fc, 0x3C)
-int hero::getMaxMana()
-{
-    // @stub
-}
-
 // E:\gamedcs\combatcontrolsubwindow.cpp:116
 DC_ONLY(0x66a38, 0x34)
 void* type_combat_sub_window::`scalar deleting destructor'(unsigned __flags)
@@ -925,76 +911,6 @@ void* TCombatHeroSubWindow::`scalar deleting destructor'(unsigned __flags)
 // E:\gamedcs\combatcontrolsubwindow.cpp:655
 DC_ONLY(0x66b08, 0x34)
 void* TCombatCreatureSubWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:218
-DC_ONLY(0x66b3c, 0x1C)
-void std::vector<widget *,std::allocator<widget *> >::vector<widget *,std::allocator<widget *> >(const std::allocator<widget* __a)
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:288
-DC_ONLY(0x66b58, 0x28)
-void std::vector<widget *,std::allocator<widget *> >::~vector<widget *,std::allocator<widget *> >()
-{
-    // @stub
-}
-
-// ..\stlport\stl_alloc.h:527
-DC_ONLY(0x66b80, 0x4)
-void std::allocator<widget *>::allocator<widget *>()
-{
-    // @stub
-}
-
-// ..\stlport\stl_alloc.h:537
-DC_ONLY(0x66b84, 0x4)
-void std::allocator<widget *>::~allocator<widget *>()
-{
-    // @stub
-}
-
-// ..\stlport\stl_deque.h:583
-DC_ONLY(0x66b88, 0x18)
-const SpellID* std::deque<enum SpellID,std::allocator<enum SpellID>,0>::operator[](unsigned __n)
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:89
-DC_ONLY(0x66ba0, 0x2C)
-void std::_Vector_base<widget *,std::allocator<widget *> >::_Vector_base<widget *,std::allocator<widget *> >(const std::allocator<widget* __a)
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:101
-DC_ONLY(0x66bcc, 0x30)
-void std::_Vector_base<widget *,std::allocator<widget *> >::~_Vector_base<widget *,std::allocator<widget *> >()
-{
-    // @stub
-}
-
-// ..\stlport\stl_deque.h:312
-DC_ONLY(0x66bfc, 0x28)
-SpellID* std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator[](int __n)
-{
-    // @stub
-}
-
-// ..\stlport\stl_string.h:469
-DC_ONLY(0x66c24, 0x18)
-void std::_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >::~_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >()
-{
-    // @stub
-}
-
-// ..\stlport\stl_alloc.h:1004
-DC_ONLY(0x66c3c, 0xC)
-void std::_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >::_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >(const std::allocator<widget* __a, widget*** __p)
 {
     // @stub
 }

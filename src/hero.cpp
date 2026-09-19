@@ -6641,41 +6641,6 @@ void hero::reset_artifacts()
     // @stub
 }
 
-// E:\gamedcs\Hero.h:162
-DC_ONLY(0xd58cc, 0x2A)
-unsigned char type_obscuring_object::obscuresTown()
-{
-    // @stub
-}
-
-// E:\gamedcs\Hero.h:702
-DC_ONLY(0xd58f8, 0x1C)
-unsigned char hero::hasArmy(TCreatureType type)
-{
-    // @stub
-}
-
-// E:\gamedcs\Hero.h:712
-DC_ONLY(0xd5914, 0x30)
-TSkillMastery hero::getSpellSchoolLevel(TSpellSchool school_mask)
-{
-    // @stub
-}
-
-// E:\gamedcs\CustomCampaign.h:225
-DC_ONLY(0xd5944, 0x20)
-int SCampaign::GetExpCap()
-{
-    // @stub
-}
-
-// E:\gamedcs\netmsg.h:675
-DC_ONLY(0xd5964, 0x54)
-void CMCDeadHero::CMCDeadHero(signed char heroId, type_point point)
-{
-    // @stub
-}
-
 // E:\gamedcs\hero.cpp:1226
 DC_ONLY(0xd59b8, 0x18)
 void type_artifact::`default constructor closure'()
@@ -6686,12 +6651,6 @@ void type_artifact::`default constructor closure'()
 // E:\gamedcs\hero.cpp:4186
 // (moved to retail link order at 0x004e1520, immediately before the
 // destructor it calls; the VA_COMPGEN claim lives there)
-
-DC_ONLY(0xd5a04, 0x3C)
-std::bitset<48,unsigned* std::bitset<48,unsigned long>::reference::operator=(unsigned char __x)
-{
-    // @stub
-}
 
 #endif  // @carcass
 

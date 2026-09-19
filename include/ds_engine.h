@@ -8,8 +8,6 @@
 // --- globals ---
 // CODEVIEW(E:\gamedcs\h3\ds_engine.cpp:34, dc 0x87690) unsigned long PlaySample(void* ds_sample);
 // CODEVIEW(E:\gamedcs\h3\ds_engine.cpp:138, dc 0x878a8) unsigned long PlayStream(void* ds_sample);
-// CODEVIEW(C:\WCEDreamcast\inc\kfuncs.h:137, dc 0x89aa0) int ResetEvent(void* h);
-// CODEVIEW(C:\WCEDreamcast\inc\kfuncs.h:149, dc 0x89ab8) int SetEvent(void* h);
 
 // --- ds_engine ---
 // CODEVIEW(E:\gamedcs\h3\ds_engine.cpp:1116, dc 0x88ec4) void ds_engine::ds_engine();
@@ -66,7 +64,6 @@
 // CODEVIEW(E:\gamedcs\h3\ds_engine.cpp:977, dc 0x88b54) unsigned char ds_genericsample::Stop();
 // CODEVIEW(E:\gamedcs\h3\ds_engine.cpp:1003, dc 0x88bd8) unsigned char ds_genericsample::Playing();
 // CODEVIEW(E:\gamedcs\h3\ds_engine.cpp:1008, dc 0x88be4) unsigned char ds_genericsample::Paused();
-// CODEVIEW(..\stlport\stl_alloc.h:1920, dc 0x89fa8) void* ds_genericsample::`scalar deleting destructor'(unsigned __flags);
 
 // --- ds_memsample ---
 // CODEVIEW(E:\gamedcs\h3\ds_engine.cpp:893, dc 0x8896c) unsigned char ds_memsample::Play(int loops);

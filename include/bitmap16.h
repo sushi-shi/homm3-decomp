@@ -164,8 +164,4 @@ DATA(0x00694d68) extern unsigned long g_colorMaskBlue;
 // CODEVIEW(E:\gamedcs\bitmap16.cpp:979, dc 0x51f88) void Bitmap16Bit::GrabAndBlur(const Bitmap16Bit* src, int sx, int sy);
 // CODEVIEW(E:\gamedcs\bitmap16.cpp:107, dc 0x52580) void* Bitmap16Bit::`scalar deleting destructor'(unsigned __flags);
 
-// --- Bitmap816 ---
-// CODEVIEW(E:\gamedcs\Bitmap816.h:71, dc 0x5256c) int Bitmap816::GetPitch();
-// CODEVIEW(E:\gamedcs\Bitmap816.h:98, dc 0x52570) unsigned char* Bitmap816::GetMap(int x, int y);
-
 #endif  /* HOMM3_BITMAP16_H */

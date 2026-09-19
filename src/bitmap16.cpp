@@ -1,5 +1,4 @@
 // bitmap16.cpp - E:\gamedcs\bitmap16.cpp (compiland bitmap16.obj)
-// 28 functions in link order.
 #include <va.h>
 #include <limits>
 #include <math.h>
@@ -662,20 +661,6 @@ void Bitmap16Bit::gray(int x, int y, int w, int h)
 // E:\gamedcs\bitmap16.cpp:979
 DC_ONLY(0x51f88, 0x5E4)
 void Bitmap16Bit::GrabAndBlur(const Bitmap16Bit* src, int sx, int sy)
-{
-    // @stub
-}
-
-// E:\gamedcs\Bitmap816.h:71
-DC_ONLY(0x5256c, 0x4)
-int Bitmap816::getPitch()
-{
-    // @stub
-}
-
-// E:\gamedcs\Bitmap816.h:98
-DC_ONLY(0x52570, 0xE)
-unsigned char* Bitmap816::getMap(int x, int y)
 {
     // @stub
 }

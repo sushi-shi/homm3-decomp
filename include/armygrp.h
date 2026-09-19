@@ -687,7 +687,6 @@ const unsigned int g_ctaAlive = 0x10;
 // level<=4 spells (the decode note's "Orb of Inhibition" inference
 // does not survive the NH3API roster: inhibition is 0x7e).
 
-
 // The traits table is reached through a stored pointer (reference
 // global): retail loads [0x6747b0] before indexing. NH3API names it
 // akCreatureTypeTraits (a const reference to the 150-entry array).
@@ -843,13 +842,5 @@ long modifySpellDamage(long damage, SpellID spell, TCreatureType creature);  // 
 // E:\gamedcs\armygrp.cpp:885, dc 0x4ee08
 // E:\gamedcs\armygrp.cpp:1347, dc 0x4f708
 // E:\gamedcs\armygrp.cpp:1464, dc 0x4fab4
-
-// --- std ---
-// CODEVIEW(..\stlport\stl_string.h:296, dc 0x4fd88) void std::basic_string<char,std::char_traits<char>,std::allocator<char> >::basic_string<char,std::char_traits<char>,std::allocator<char> >(const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __s);
-// CODEVIEW(..\stlport\stl_string.h:272, dc 0x4fdd4) std::allocator<char> std::basic_string<char,std::char_traits<char>,std::allocator<char> >::get_allocator(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_algobase.h:79, dc 0x4fddc) void std::swap(TCreatureType* __a, TCreatureType* __b);
-// CODEVIEW(..\stlport\stl_algobase.h:79, dc 0x4fde8) void std::swap(int* __a, int* __b);
-// CODEVIEW(..\stlport\stl_string.h:464, dc 0x4fdf4) std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_range_initialize(char* __f, char* __l);
-// CODEVIEW(..\stlport\stl_string.h:454, dc 0x4fe30) std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_range_initialize(char* __f, char* __l, std::forward_iterator_tag __formal);
 
 #endif  /* HOMM3_ARMYGRP_H */

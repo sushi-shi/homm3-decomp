@@ -133,7 +133,4 @@ void setPlayerPaletteColors(TPalette24& pal, int whichPlayer);
 // CODEVIEW(E:\gamedcs\border.cpp:210, dc 0x546d0) void coloredBorderFrame::zBufferDraw();
 // CODEVIEW(E:\gamedcs\border.cpp:206, dc 0x54da4) void* coloredBorderFrame::`scalar deleting destructor'(unsigned __flags);
 
-// --- widget ---
-// CODEVIEW(E:\gamedcs\Widget.h:187, dc 0x54d20) void widget::OnKillFocus();
-
 #endif  /* HOMM3_BORDER_H */

@@ -358,30 +358,6 @@ void unloadProgressBar();
 // CODEVIEW(E:\gamedcs\kb.cpp:5954, dc 0xe6e2c) unsigned short GetMapExtra(int x, int y, int z);
 // CODEVIEW(E:\gamedcs\kb.cpp:5960, dc 0xe6e50) unsigned short* GetMapExtraPtr(int x, int y, int z);
 
-// --- CCombatTypeMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:770, dc 0xe704c) void CCombatTypeMsg::CCombatTypeMsg(int quick);
-
-// --- CLogFile ---
-// CODEVIEW(E:\gamedcs\remote.h:235, dc 0xe709c) void CLogFile::InitLogFile();
-
-// --- CMCDeadPlayer ---
-// CODEVIEW(E:\gamedcs\netmsg.h:705, dc 0xe7024) void CMCDeadPlayer::CMCDeadPlayer(int playerPos);
-
-// --- CNormalWinMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:862, dc 0xe7074) void CNormalWinMsg::CNormalWinMsg(int gamePos);
-
-// --- CPlayerDeadMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:472, dc 0xe6f34) void CPlayerDeadMsg::CPlayerDeadMsg(int who);
-
-// --- CPlayerLostMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:519, dc 0xe6fbc) void CPlayerLostMsg::CPlayerLostMsg(int loser, LossConditionStruct& lossConditionStruct);
-
-// --- CPlayerWonMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:505, dc 0xe6f5c) void CPlayerWonMsg::CPlayerWonMsg(int gamePos, VictoryConditionStruct* victoryConditionStruct);
-
-// --- CTimer ---
-// CODEVIEW(E:\gamedcs\timer.h:33, dc 0xe70a0) void CTimer::enable();
-
 // --- TNormalDialogInfo ---
 // CODEVIEW(E:\gamedcs\kb.cpp:5466, dc 0xe742c) void TNormalDialogInfo::TNormalDialogInfo();
 // CODEVIEW(E:\gamedcs\kb.cpp:5466, dc 0xe7460) void TNormalDialogInfo::~TNormalDialogInfo();
@@ -401,9 +377,6 @@ void unloadProgressBar();
 // --- highScoreManager ---
 // CODEVIEW(E:\gamedcs\kb.cpp:542, dc 0xe7148) void* highScoreManager::`scalar deleting destructor'(unsigned __flags);
 
-// --- mouseManager ---
-// CODEVIEW(E:\gamedcs\MouseMgr.h:215, dc 0xe6eb4) mouseManager::EPointerSet mouseManager::GetSet();
-
 // --- playerData ---
 // CODEVIEW(E:\gamedcs\kb.cpp:1837, dc 0xe724c) playerData* playerData::operator=(const playerData* __that);
 
@@ -411,37 +384,10 @@ void unloadProgressBar();
 // CODEVIEW(E:\gamedcs\kb.cpp:542, dc 0xe70ac) void* searchArray::`scalar deleting destructor'(unsigned __flags);
 
 // --- soundManager ---
-// CODEVIEW(E:\gamedcs\SoundMgr.h:124, dc 0xe6ebc) void soundManager::~soundManager();
 // CODEVIEW(E:\gamedcs\kb.cpp:542, dc 0xe717c) void* soundManager::`scalar deleting destructor'(unsigned __flags);
 
 // --- std ---
 // CODEVIEW(E:\gamedcs\kb.cpp:542, dc 0xe7234) void std::set<enum SpellID,std::less<enum SpellID>,std::allocator<enum SpellID> >::~set<enum SpellID,std::less<enum SpellID>,std::allocator<enum SpellID> >();
-// CODEVIEW(..\stlport\stl_vector.h:288, dc 0xe75bc) void std::vector<resource *,std::allocator<resource *> >::~vector<resource *,std::allocator<resource *> >();
-// CODEVIEW(..\stlport\stl_tree.h:440, dc 0xe75e4) void std::_Rb_tree<enum SpellID,enum SpellID,std::_Identity<enum SpellID>,std::less<enum SpellID>,std::allocator<enum SpellID> >::~_Rb_tree<enum SpellID,enum SpellID,std::_Identity<enum SpellID>,std::less<enum SpellID>,std::allocator<enum SpellID> >();
-// CODEVIEW(..\stlport\stl_vector.h:288, dc 0xe7608) void std::vector<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::~vector<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >();
-// CODEVIEW(..\stlport\stl_vector.h:101, dc 0xe7630) void std::_Vector_base<resource *,std::allocator<resource *> >::~_Vector_base<resource *,std::allocator<resource *> >();
-// CODEVIEW(..\stlport\stl_tree.h:263, dc 0xe7660) void std::_Rb_tree_base<enum SpellID,std::allocator<enum SpellID> >::~_Rb_tree_base<enum SpellID,std::allocator<enum SpellID> >();
-// CODEVIEW(..\stlport\stl_vector.h:101, dc 0xe7688) void std::_Vector_base<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::~_Vector_base<combatManager::TObstacle,std::allocator<combatManager::TObstacle> >();
-// CODEVIEW(..\stlport\stl_string.h:179, dc 0xe76c8) void std::_STL_alloc_proxy<resource * *,resource *,std::allocator<resource *> >::~_STL_alloc_proxy<resource * *,resource *,std::allocator<resource *> >();
-// CODEVIEW(..\stlport\stl_string.h:179, dc 0xe76e0) void std::_STL_alloc_proxy<std::_Rb_tree_node<enum SpellID> *,std::_Rb_tree_node<enum SpellID>,std::allocator<enum SpellID> >::~_STL_alloc_proxy<std::_Rb_tree_node<enum SpellID> *,std::_Rb_tree_node<enum SpellID>,std::allocator<enum SpellID> >();
-// CODEVIEW(..\stlport\stl_string.h:179, dc 0xe76f8) void std::_STL_alloc_proxy<combatManager::TObstacle *,combatManager::TObstacle,std::allocator<combatManager::TObstacle> >::~_STL_alloc_proxy<combatManager::TObstacle *,combatManager::TObstacle,std::allocator<combatManager::TObstacle> >();
-// CODEVIEW(..\stlport\stl_alloc.h:1025, dc 0xe7710) void std::_STL_alloc_proxy<resource * *,resource *,std::allocator<resource *> >::deallocate(resource** __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:552, dc 0xe773c) void std::allocator<resource *>::deallocate(resource** __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.c:207, dc 0xe7758) std::vector<type_point,std::allocator<type_point>* std::vector<type_point,std::allocator<type_point> >::operator=(const std::vector<type_point,std::allocator<type_point>* __x);
-// CODEVIEW(..\stlport\stl_construct.h:128, dc 0xe7834) void std::destroy(resource** __first, resource** __last);
-// CODEVIEW(..\stlport\stl_alloc.h:968, dc 0xe7864) std::allocator<resource* std::__stl_alloc_rebind(std::allocator<resource* __a, resource** __formal);
-// CODEVIEW(..\stlport\stl_vector.h:199, dc 0xe7868) unsigned std::vector<type_point,std::allocator<type_point> >::capacity();
-// CODEVIEW(..\stlport\stl_vector.h:514, dc 0xe7874) std::vector<type_point,std::allocator<type_point> >::_M_allocate_and_copy(unsigned __n, const type_point* __first, const type_point* __last);
-// CODEVIEW(..\stlport\stl_algobase.h:322, dc 0xe78ac) type_point* std::copy(const type_point* __first, const type_point* __last, type_point* __result);
-// CODEVIEW(..\stlport\stl_uninitialized.h:97, dc 0xe78fc) type_point* std::uninitialized_copy(const type_point* __first, const type_point* __last, type_point* __result);
-// CODEVIEW(..\stlport\stl_iterator_base.h:262, dc 0xe7934) resource** std::value_type(resource** __formal);
-// CODEVIEW(..\stlport\stl_construct.h:121, dc 0xe7938) void std::__destroy(resource** __first, resource** __last, resource** __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:209, dc 0xe7954) type_point* std::__copy(const type_point* __first, const type_point* __last, type_point* __result, std::random_access_iterator_tag __formal, int* __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:88, dc 0xe7988) type_point* std::__uninitialized_copy(const type_point* __first, const type_point* __last, type_point* __result, type_point* __formal);
-// CODEVIEW(..\stlport\stl_construct.h:110, dc 0xe79a4) void std::__destroy_aux(resource** __first, resource** __last, __false_type __formal);
-// CODEVIEW(..\stlport\stl_uninitialized.h:70, dc 0xe79d4) type_point* std::__uninitialized_copy_aux(const type_point* __first, const type_point* __last, type_point* __result, __false_type __formal);
-// CODEVIEW(..\stlport\stl_construct.h:59, dc 0xe7a10) void std::destroy(resource** __pointer);
-// CODEVIEW(..\stlport\stl_construct.h:53, dc 0xe7a2c) void std::__destroy_aux();
 
 // --- type_dialog_icon ---
 // CODEVIEW(E:\gamedcs\kb.cpp:4897, dc 0xe52b8) void type_dialog_icon::set(EGameResource _resource, long _qualifier);

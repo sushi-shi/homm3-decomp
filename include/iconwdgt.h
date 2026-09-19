@@ -47,7 +47,6 @@ public:
     // for the lane that eventually does add them, once
     // recruitUnit::Update is closed.
 
-
     CSprite* m_sprite;
     int m_frame;
     int m_seqId;
@@ -76,9 +75,6 @@ public:
     void nextRandomSiegeEngineFrame();
 };
 
-// --- CSprite ---
-// CODEVIEW(E:\gamedcs\csprite.h:378, dc 0xd9f98) void CSprite::DrawPointer(int framenum, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip);
-
 // --- iconWidget ---
 // CODEVIEW(E:\gamedcs\iconwdgt.cpp:35, dc 0xd92fc) void iconWidget::iconWidget();
 // CODEVIEW(E:\gamedcs\iconwdgt.cpp:75, dc 0xd93f4) void iconWidget::initialize(int x, int y, int w, int h, int id, const char* image, int frame, int sequence, unsigned char flipped, unsigned back_color, int style, unsigned char focusable);
@@ -88,8 +84,5 @@ public:
 // CODEVIEW(E:\gamedcs\iconwdgt.cpp:452, dc 0xd9cac) void iconWidget::SetPalette(const char* palette_name);
 // CODEVIEW(E:\gamedcs\iconwdgt.cpp:462, dc 0xd9ce0) void iconWidget::SetPlayerPaletteColors(int whichPlayer);
 // CODEVIEW(E:\gamedcs\iconwdgt.cpp:41, dc 0xda018) void* iconWidget::`scalar deleting destructor'(unsigned __flags);
-
-// --- resource ---
-// CODEVIEW(E:\gamedcs\resrce.h:33, dc 0xd9f94) EResourceType resource::get_resType();
 
 #endif  /* HOMM3_ICONWDGT_H */

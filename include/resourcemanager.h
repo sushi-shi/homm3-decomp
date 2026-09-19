@@ -81,18 +81,6 @@ extern "C" void __fastcall game_sprite_1599e0(const char* caller,
                                                int resourceType,
                                                const char* resourceName);
 
-// --- Bitmap16Bit ---
-// CODEVIEW(E:\gamedcs\Bitmap16.h:142, dc 0x122b8c) void Bitmap16Bit::SetPixelFormat(unsigned red, unsigned green, unsigned blue);
-
-// --- Bitmap24Bit ---
-// CODEVIEW(E:\gamedcs\Bitmap24.h:70, dc 0x122b24) int Bitmap24Bit::GetWidth();
-// CODEVIEW(E:\gamedcs\Bitmap24.h:71, dc 0x122b28) int Bitmap24Bit::GetHeight();
-// CODEVIEW(E:\gamedcs\Bitmap24.h:98, dc 0x122b2c) void Bitmap24Bit::AdjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust);
-
-// --- CSprite ---
-// CODEVIEW(E:\gamedcs\CSprite.h:154, dc 0x122ba8) CSpriteFrame* CSprite::GetFrame(int seqnum, int framenum);
-// CODEVIEW(E:\gamedcs\CSprite.h:157, dc 0x122bb8) void CSprite::SetPixelFormat(unsigned rmask, unsigned gmask, unsigned bmask);
-
 // --- ResourceManager ---
 // CODEVIEW(E:\gamedcs\resourcemanager.cpp:158, dc 0x1213a0) void ResourceManager::RemapGraphics();
 // CODEVIEW(E:\gamedcs\resourcemanager.cpp:222, dc 0x121524) void ResourceManager::SaturateGraphics();
@@ -125,81 +113,7 @@ extern "C" void __fastcall game_sprite_1599e0(const char* caller,
 // CODEVIEW(E:\gamedcs\resourcemanager.cpp:121, dc 0x122bd0) void ResourceManager::TCacheMapKey::TCacheMapKey(const char* n);
 // CODEVIEW(E:\gamedcs\resourcemanager.cpp:126, dc 0x122bf8) unsigned char ResourceManager::TCacheMapKey::operator<(const ResourceManager::TCacheMapKey* y);
 
-// --- TPalette16 ---
-// CODEVIEW(E:\gamedcs\Palette.h:137, dc 0x122b08) void TPalette16::SetPixelFormat(unsigned red, unsigned green, unsigned blue);
-
-// --- resource ---
-// CODEVIEW(E:\gamedcs\resrce.h:36, dc 0x122af0) int resource::AddRef();
-// CODEVIEW(E:\gamedcs\resrce.h:37, dc 0x122af8) int resource::Release();
-
 // --- std ---
-// CODEVIEW(..\stlport\stl_tree.h:111, dc 0x122a60) std::_Rb_tree_node_base* std::_Rb_tree_node_base::_S_minimum(std::_Rb_tree_node_base* __x);
-// CODEVIEW(..\stlport\stl_tree.h:117, dc 0x122a70) std::_Rb_tree_node_base* std::_Rb_tree_node_base::_S_maximum(std::_Rb_tree_node_base* __x);
-// CODEVIEW(..\stlport\stl_tree.c:65, dc 0x122a80) void std::_Rb_tree_rotate_left(std::_Rb_tree_node_base* __x, std::_Rb_tree_node_base** __root);
-// CODEVIEW(..\stlport\stl_tree.c:84, dc 0x122ab8) void std::_Rb_tree_rotate_right(std::_Rb_tree_node_base* __x, std::_Rb_tree_node_base** __root);
 // CODEVIEW(E:\gamedcs\resourcemanager.cpp:136, dc 0x122c14) void std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::T();
-// CODEVIEW(..\stlport\stl_map.h:91, dc 0x122c2c) void std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::();
-// CODEVIEW(..\stlport\stl_map.h:140, dc 0x122c68) std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::begin(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_map.h:142, dc 0x122c94) std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::end(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_map.h:163, dc 0x122cc0) std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::insert(__$ReturnUdt, const std::pair<ResourceManager::TCacheMapKey* __x);
-// CODEVIEW(..\stlport\stl_map.h:180, dc 0x122cdc) void std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::erase(std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey __position);
-// CODEVIEW(..\stlport\stl_map.h:184, dc 0x122d20) void std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::clear();
-// CODEVIEW(..\stlport\stl_map.h:188, dc 0x122d38) std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::find(__$ReturnUdt, const ResourceManager::TCacheMapKey* __x);
-// CODEVIEW(..\stlport\stl_tree.h:440, dc 0x122d64) void std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<ResourceManager::TCacheMapKe();
-// CODEVIEW(..\stlport\stl_tree.h:203, dc 0x122d88) void std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,res(const std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey* __it);
-// CODEVIEW(..\stlport\stl_tree.h:211, dc 0x122d90) std::pair<ResourceManager::TCacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::operator->();
-// CODEVIEW(..\stlport\stl_tree.h:214, dc 0x122da8) std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::operator++(__$ReturnUdt, int __formal);
-// CODEVIEW(..\stlport\stl_pair.h:60, dc 0x122de4) void std::pair<ResourceManager::TCacheMapKey const ,resource *>::~pair<ResourceManager::TCacheMapKey const ,resource *>();
-// CODEVIEW(..\stlport\stl_pair.h:49, dc 0x122de8) void std::pair<ResourceManager::TCacheMapKey,resource *>::pair<ResourceManager::TCacheMapKey,resource *>(const ResourceManager::TCacheMapKey* __a, resource** __b);
-// CODEVIEW(..\stlport\stl_pair.h:60, dc 0x122e24) void std::pair<ResourceManager::TCacheMapKey,resource *>::~pair<ResourceManager::TCacheMapKey,resource *>();
-// CODEVIEW(..\stlport\stl_pair.h:60, dc 0x122e28) void std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Nonconst();
-// CODEVIEW(..\stlport\stl_tree.h:424, dc 0x122e2c) void std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<ResourceManager::TCacheMapK(const std::less<ResourceManager::TCacheMapKey>* __comp, const std::allocator<std::pair<ResourceManager::TCacheMapKey* __a);
-// CODEVIEW(..\stlport\stl_tree.h:466, dc 0x122e60) std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree<ResourceManager::TCacheMapKey,std::(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_tree.h:468, dc 0x122e8c) std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree<ResourceManager::TCacheMapKey,std(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_tree.h:529, dc 0x122eb0) void std::_Rb_tree<ResourceManager::TCacheMapKey,std::(std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey __position);
-// CODEVIEW(..\stlport\stl_tree.h:545, dc 0x122eec) void std::_Rb_tree<ResourceManager::TCacheMapKey,std::();
-// CODEVIEW(..\stlport\stl_tree.h:263, dc 0x122f44) void std::_Rb_tree_base<std::pair<ResourceManager::TCache();
-// CODEVIEW(..\stlport\stl_alloc.h:527, dc 0x122f6c) void std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> >::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> >();
-// CODEVIEW(..\stlport\stl_alloc.h:537, dc 0x122f70) void std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> >::~allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> >();
-// CODEVIEW(..\stlport\stl_tree.h:206, dc 0x122f74) std::pair<ResourceManager::TCacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::operator*();
-// CODEVIEW(..\stlport\stl_string.h:208, dc 0x122f7c) void std::_ST();
-// CODEVIEW(..\stlport\stl_tree.h:333, dc 0x122f94) void std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<Re(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __p);
-// CODEVIEW(..\stlport\stl_tree.h:343, dc 0x122fc4) std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pa();
-// CODEVIEW(..\stlport\stl_tree.h:345, dc 0x122fcc) std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<R();
-// CODEVIEW(..\stlport\stl_tree.h:347, dc 0x122fd4) std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<Re();
-// CODEVIEW(..\stlport\stl_tree.h:445, dc 0x122fdc) void std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<ResourceM();
-// CODEVIEW(..\stlport\stl_tree.h:259, dc 0x123024) void std::_Rb_tree_base<std::pair<ResourceManager::TCach(const std::allocator<std::pair<ResourceManager::TCacheMapKey* __a);
-// CODEVIEW(..\stlport\stl_alloc.h:1025, dc 0x123054) void std::_STL_alloc_p(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_tree.h:202, dc 0x123080) void std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,res(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x);
-// CODEVIEW(..\stlport\stl_tree.h:360, dc 0x123088) unsigned char* std::_Rb_tree<ResourceManager::TCacheMapKey,std::pai(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x);
-// CODEVIEW(..\stlport\stl_alloc.h:1004, dc 0x12308c) void std::_S(const std::allocator<std::pair<ResourceManager::TCacheMapKey* __a, std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** __p);
-// CODEVIEW(..\stlport\stl_alloc.h:1022, dc 0x123098) std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* std::_STL_alloc(unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:552, dc 0x1230c0) void std::allocator<std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::deallocate(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __p, unsigned __n);
-// CODEVIEW(..\stlport\stl_alloc.h:547, dc 0x1230e0) std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* std::allocator<std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::allocate(unsigned __n, const void* __formal);
-// CODEVIEW(..\stlport\stl_tree.c:552, dc 0x123108) void std::_Rb_tree<ResourceManager::TCacheMapKey,std::pai(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x);
-// CODEVIEW(..\stlport\stl_tree.c:416, dc 0x12315c) std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<Res(__$ReturnUdt, const std::pair<ResourceManager::TCacheMapKey* __v);
-// CODEVIEW(..\stlport\stl_tree.c:585, dc 0x1232d0) std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree<ResourceManager::TCacheMapKey,std:(__$ReturnUdt, const ResourceManager::TCacheMapKey* __k);
-// CODEVIEW(..\stlport\stl_pair.h:52, dc 0x1233c4) void std::pair<ResourceManager::TCacheMapKey const ,resource *>::pair<ResourceManager::TCacheMapKey const ,resource *>(const std::pair<ResourceManager::TCacheMapKey,resource* __p);
-// CODEVIEW(..\stlport\stl_tree.c:154, dc 0x123400) std::_Rb_tree_node_base* std::_Rb_global<bool>::_Rebalance_for_erase(std::_Rb_tree_node_base* __z, std::_Rb_tree_node_base** __root, std::_Rb_tree_node_base** __leftmost, std::_Rb_tree_node_base** __rightmost);
-// CODEVIEW(..\stlport\stl_construct.h:59, dc 0x12368c) void std::destroy(std::pair<ResourceManager::TCacheMapKey* __pointer);
-// CODEVIEW(..\stlport\stl_alloc.h:968, dc 0x1236a8) std::allocator<std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* std::__stl_alloc_rebind(std::allocator<std::pair<ResourceManager::TCacheMapKey* __a, const std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __formal);
-// CODEVIEW(..\stlport\stl_function.h:110, dc 0x1236ac) unsigned char std::less<ResourceManager::TCacheMapKey>::operator()(const ResourceManager::TCacheMapKey* __x, const ResourceManager::TCacheMapKey* __y);
-// CODEVIEW(..\stlport\stl_tree.h:350, dc 0x1236c4) std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pa(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x);
-// CODEVIEW(..\stlport\stl_tree.h:352, dc 0x1236cc) std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pai(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x);
-// CODEVIEW(..\stlport\stl_tree.h:358, dc 0x1236d4) const ResourceManager::TCacheMapKey* std::_Rb_tree<ResourceManager::TCacheMapKey,std::p(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x);
-// CODEVIEW(..\stlport\stl_tree.h:371, dc 0x1236f8) const ResourceManager::TCacheMapKey* std::_Rb_tree<ResourceManager::TCacheMapKey,std::p(std::_Rb_tree_node_base* __x);
-// CODEVIEW(..\stlport\stl_tree.h:220, dc 0x12371c) std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::operator--();
-// CODEVIEW(..\stlport\stl_pair.h:49, dc 0x123738) void std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Noncons(const std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey* __a, const unsigned char* __b);
-// CODEVIEW(..\stlport\stl_function.h:378, dc 0x123768) const ResourceManager::TCacheMapKey* std::_Select1st<std::pair<ResourceManager::TCacheMapKey const ,resource *> >::operator()(const std::pair<ResourceManager::TCacheMapKey* __x);
-// CODEVIEW(..\stlport\stl_tree.h:356, dc 0x12376c) std::pair<ResourceManager::TCacheMapKey* std::_Rb_tree<ResourceManager::TCacheMapKey,std::pai(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x);
-// CODEVIEW(..\stlport\stl_tree.c:363, dc 0x123774) std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair(__$ReturnUdt, std::_Rb_tree_node_base* __x_, std::_Rb_tree_node_base* __y_, const std::pair<ResourceManager::TCacheMapKey* __v);
-// CODEVIEW(..\stlport\stl_tree.c:284, dc 0x1238ac) void std::_Rb_global<bool>::_M_decrement(std::_Rb_tree_base_iterator* __it);
-// CODEVIEW(..\stlport\stl_construct.h:53, dc 0x1238f0) void std::__destroy_aux(std::pair<ResourceManager::TCacheMapKey* __pointer, __false_type __formal);
-// CODEVIEW(..\stlport\char_traits.h:201, dc 0x123908) void* std::pair<ResourceManager::TCacheMapKey const ,resource *>::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(..\stlport\stl_tree.h:314, dc 0x12393c) std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<Reso(const std::pair<ResourceManager::TCacheMapKey* __x);
-// CODEVIEW(..\stlport\stl_tree.h:354, dc 0x12396c) std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x);
-// CODEVIEW(..\stlport\stl_tree.c:105, dc 0x123974) void std::_Rb_global<bool>::_Rebalance(std::_Rb_tree_node_base* __x, std::_Rb_tree_node_base** __root);
-// CODEVIEW(..\stlport\stl_construct.h:85, dc 0x123a58) void std::construct(std::pair<ResourceManager::TCacheMapKey* __p, const std::pair<ResourceManager::TCacheMapKey* __value);
-// CODEVIEW(..\stlport\stl_pair.h:58, dc 0x123a84) void std::pair<ResourceManager::TCacheMapKey const ,resource *>::pair<ResourceManager::TCacheMapKey const ,resource *>(const std::pair<ResourceManager::TCacheMapKey* __o);
 
 #endif  /* HOMM3_RESOURCEMANAGER_H */

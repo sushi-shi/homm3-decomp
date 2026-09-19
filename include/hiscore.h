@@ -180,7 +180,4 @@ SIZE(THighScoreWindow, 0x110);
 // CODEVIEW(E:\gamedcs\hiscore.cpp:711, dc 0xd7b88) void highScoreManager::Close();
 // CODEVIEW(E:\gamedcs\hiscore.cpp:721, dc 0xd7bcc) int highScoreManager::Main(message* msg);
 
-// --- textWidget ---
-// CODEVIEW(E:\gamedcs\TextWdgt.h:67, dc 0xd8d14) const char* textWidget::GetText();
-
 #endif  /* HOMM3_HISCORE_H */

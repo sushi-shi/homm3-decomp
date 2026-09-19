@@ -56,29 +56,6 @@ extern const float g_combatSpeedFactors[3];
 // CODEVIEW(E:\gamedcs\drawing.cpp:47, dc 0x831b4) void get_creature_spell_message(char* buffer, const army* current_army, long current_hex);
 // CODEVIEW(E:\gamedcs\drawing.cpp:2662, dc 0x87278) void Rescale(int* x, int* y, unsigned char offset);
 
-// --- CChatManager ---
-// CODEVIEW(E:\gamedcs\remote.h:326, dc 0x87620) unsigned char CChatManager::ChatChanged();
-
-// --- CSprite ---
-// CODEVIEW(E:\gamedcs\CSprite.h:151, dc 0x87350) int CSprite::GetCroppedHeight(int seq, int frame);
-// CODEVIEW(E:\gamedcs\CSprite.h:342, dc 0x87394) void CSprite::DrawCreature(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned short outcolor);
-// CODEVIEW(E:\gamedcs\CSprite.h:348, dc 0x87438) void CSprite::DrawCreatureAlpha(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned short outcolor);
-// CODEVIEW(E:\gamedcs\CSprite.h:444, dc 0x874dc) void CSprite::DrawCombatHero(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip);
-// CODEVIEW(E:\gamedcs\CSprite.h:450, dc 0x8757c) void CSprite::DrawSpellEffect(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned char alpha);
-
-// --- CSpriteFrame ---
-// CODEVIEW(E:\gamedcs\CSpriteFrame.h:88, dc 0x8734c) int CSpriteFrame::GetCroppedHeight();
-
-// --- SLimitData ---
-// CODEVIEW(E:\gamedcs\struct.h:284, dc 0x872a8) bool SLimitData::Intersects(const SLimitData& check_limits) const;
-// CODEVIEW(E:\gamedcs\struct.h:300, dc 0x872dc) bool SLimitData::IsEmpty() const;
-
-// --- TCombatHeroSubWindow ---
-// CODEVIEW(E:\gamedcs\CombatControlSubWindow.h:148, dc 0x87344) unsigned char TCombatHeroSubWindow::IsShown();
-
-// --- army ---
-// CODEVIEW(E:\gamedcs\Army.h:881, dc 0x872f4) bool army::is_in_area_highlight();
-
 // --- combatManager ---
 // CODEVIEW(E:\gamedcs\drawing.cpp:326, dc 0x838f0) void combatManager::CombatMessage(int command);
 // CODEVIEW(E:\gamedcs\drawing.cpp:492, dc 0x83e58) void combatManager::UpdateCombatArea();
@@ -94,8 +71,5 @@ extern const float g_combatSpeedFactors[3];
 // CODEVIEW(E:\gamedcs\drawing.cpp:1399, dc 0x853f4) void combatManager::DrawObstacleAt(int hex_index);
 // CODEVIEW(E:\gamedcs\drawing.cpp:1581, dc 0x857d4) void combatManager::DrawDeadOccupants(int index);
 // CODEVIEW(E:\gamedcs\drawing.cpp:1738, dc 0x85b50) int combatManager::DrawCreatureAlpha(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped, int iColor);
-
-// --- hexcell ---
-// CODEVIEW(E:\gamedcs\HexCell.h:85, dc 0x87300) SLimitData hexcell::limits(__$ReturnUdt);
 
 #endif  /* HOMM3_DRAWING_H */

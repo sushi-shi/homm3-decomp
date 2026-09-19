@@ -1,5 +1,4 @@
 // textwdgt.cpp - E:\gamedcs\textwdgt.cpp (compiland textwdgt.obj)
-// 22 functions in link order.
 #include <va.h>
 #include "textwdgt.h"
 #include "bitmap16.h"
@@ -266,13 +265,6 @@ void bitmapBackedTextWidget::bitmapBackedTextWidget(int x, int y, int w, int h, 
 // E:\gamedcs\textwdgt.cpp:348
 DC_ONLY(0x165258, 0x9C)
 void bitmapBackedTextWidget::draw()
-{
-    // @stub
-}
-
-// E:\gamedcs\TextWdgt.h:78
-DC_ONLY(0x1652f4, 0x6)
-void textWidget::SetColor(font::TColor new_color)
 {
     // @stub
 }

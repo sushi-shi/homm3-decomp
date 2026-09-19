@@ -191,40 +191,14 @@ unsigned char wantsSkill(const hero* ourHero, TSecondarySkill skill,
 // CODEVIEW(E:\gamedcs\philai.cpp:3469, dc 0x1135ac) long get_skill_value(const hero* our_hero, TSecondarySkill skill, unsigned char complex_choice);
 // CODEVIEW(E:\gamedcs\philai.cpp:3834, dc 0x113e24) long AI_value_of_event(const hero* current_hero, type_point point, long* move_cost);
 
-// --- hero ---
-// CODEVIEW(E:\gamedcs\hero.h:1006, dc 0x114b88) long hero::get_value_of_spring();
-// CODEVIEW(E:\gamedcs\hero.h:1011, dc 0x114b90) long hero::get_value_of_well();
-// CODEVIEW(E:\gamedcs\hero.h:1021, dc 0x114b98) void hero::set_value_of_duration(long arg);
-// CODEVIEW(E:\gamedcs\hero.h:1026, dc 0x114ba0) void hero::set_value_of_knowledge(long arg);
-// CODEVIEW(E:\gamedcs\hero.h:1031, dc 0x114ba8) void hero::set_value_of_power(long arg);
-// CODEVIEW(E:\gamedcs\hero.h:1036, dc 0x114bb0) void hero::set_value_of_spring(long arg);
-// CODEVIEW(E:\gamedcs\hero.h:1041, dc 0x114bb8) void hero::set_value_of_well(long arg);
-
 // --- philAI ---
 // CODEVIEW(E:\gamedcs\philai.cpp:1261, dc 0x10f16c) void philAI::DoAI(int whichPlayer);
 // CODEVIEW(E:\gamedcs\philai.cpp:1770, dc 0x110018) void philAI::GetTurnAIVars(int whichPlayer);
-
-// --- searchArray ---
-// CODEVIEW(E:\gamedcs\FindPath.h:252, dc 0x114be4) void searchArray::set_danger_zones(long* danger_zone_map);
-
-// --- std ---
-// CODEVIEW(..\stlport\stl_vector.h:204, dc 0x114bec) const type_creature_value* std::vector<type_creature_value,std::allocator<type_creature_value> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:180, dc 0x114c10) const type_creature_value* std::vector<type_creature_value,std::allocator<type_creature_value> >::begin();
-// CODEVIEW(..\stlport\stl_algobase.h:79, dc 0x114c14) void std::swap(TSecondarySkill* __a, TSecondarySkill* __b);
-
-// --- type_AI_creature_swapper ---
-// CODEVIEW(E:\gamedcs\ai_player.h:307, dc 0x114bd8) long type_AI_creature_swapper::get_army_increase();
-
-// --- type_AI_player ---
-// CODEVIEW(E:\gamedcs\ai_player.h:268, dc 0x114bc0) long type_AI_player::get_magus_hut_value();
-// CODEVIEW(E:\gamedcs\ai_player.h:284, dc 0x114bc4) void type_AI_player::set_attack_bonuses(float computer_bonus, float human_bonus);
 
 // --- type_spellvalue ---
 // CODEVIEW(E:\gamedcs\philai.cpp:1339, dc 0x10f37c) void type_spellvalue::type_spellvalue(const hero* new_hero);
 // CODEVIEW(E:\gamedcs\philai.cpp:1529, dc 0x10f94c) long type_spellvalue::get_summoning_value(long damage, long times_castable);
 // CODEVIEW(E:\gamedcs\philai.cpp:1610, dc 0x10fc6c) void type_spellvalue::fill_creature_value_list();
 // CODEVIEW(E:\gamedcs\philai.cpp:1699, dc 0x10fe64) long type_spellvalue::get_value_of_increase(long base_value, long power_change, long duration_change, long mana_change);
-// CODEVIEW(E:\gamedcs\ai_spellvalue.h:99, dc 0x114bdc) long type_spellvalue::get_mana();
-// CODEVIEW(E:\gamedcs\ai_spellvalue.h:119, dc 0x114be0) void type_spellvalue::set_mana(long arg);
 
 #endif  /* HOMM3_PHILAI_H */

@@ -112,41 +112,6 @@ unsigned char TMultiPlayerWindow::IsNT()
 
 // IsJoinDisabled promoted to a retail selected-COMDAT claim below.
 
-// E:\gamedcs\dxplay.h:96
-DC_ONLY(0x101d84, 0x14)
-unsigned char CDPlaySession::isPasswordProtected()
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.h:375
-DC_ONLY(0x101d98, 0x6)
-long CDPlay::getLastError()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.h:186
-DC_ONLY(0x101da8, 0x1C)
-void CHotSeatMan::CHotSeatMan()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.h:192
-DC_ONLY(0x101dc4, 0x6)
-void CHotSeatMan::clear()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.h:197
-DC_ONLY(0x101dcc, 0x34)
-void CHotSeatMan::addPlayer(const char* sName)
-{
-    // @stub
-}
-
 // E:\gamedcs\multiplayerwindow.cpp:141
 DC_ONLY(0x101e00, 0x98)
 void CMultiPlayerWindowEdit::CMultiPlayerWindowEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
@@ -1870,62 +1835,6 @@ void CHeroSessions::CHeroSessions()
 
 // CHeroSessions' scalar deleting destructor and implicit destructor promoted
 // to retail VA_COMPGEN claims above.
-
-// E:\gamedcs\array.h:37
-DC_ONLY(0x103054, 0x30)
-void CAutoArray<CDPlaySession>::CAutoArray<CDPlaySession>()
-{
-    // @stub
-}
-
-// E:\gamedcs\array.h:46
-DC_ONLY(0x103084, 0x38)
-void CAutoArray<CDPlaySession>::~CAutoArray<CDPlaySession>()
-{
-    // @stub
-}
-
-// E:\gamedcs\array.h:73
-DC_ONLY(0x1030bc, 0x68)
-unsigned char CAutoArray<CDPlaySession>::add(CDPlaySession* element)
-{
-    // @stub
-}
-
-// E:\gamedcs\array.h:95
-DC_ONLY(0x103124, 0x14)
-CDPlaySession* CAutoArray<CDPlaySession>::get(unsigned long elementNbr)
-{
-    // @stub
-}
-
-// E:\gamedcs\array.h:103
-DC_ONLY(0x103138, 0x16)
-unsigned char CAutoArray<CDPlaySession>::put(unsigned long elementNbr, CDPlaySession* element)
-{
-    // @stub
-}
-
-// E:\gamedcs\array.h:113
-DC_ONLY(0x103150, 0x3A)
-unsigned char CAutoArray<CDPlaySession>::deleteElement(unsigned long elementNbr)
-{
-    // @stub
-}
-
-// E:\gamedcs\array.h:127
-DC_ONLY(0x10318c, 0x6E)
-unsigned char CAutoArray<CDPlaySession>::insert(unsigned long nextElementNbr, CDPlaySession* element)
-{
-    // @stub
-}
-
-// E:\gamedcs\array.h:144
-DC_ONLY(0x1031fc, 0x4)
-unsigned long CAutoArray<CDPlaySession>::getCount()
-{
-    // @stub
-}
 
 // CAutoArray<CDPlaySession>::`scalar deleting destructor' promoted to VA(0x00512670) above.
 #endif  // @carcass

@@ -575,27 +575,6 @@ protected:
 };
 SIZE(CDPlayLobby, 0x60);
 
-// --- globals ---
-// CODEVIEW(C:\WCEDreamcast\inc\objbase.h:519, dc 0x8bc84) int operator==(const _GUID* guidOne, const _GUID* guidOther);
-
-// --- CAutoArray<CDPlayAddressElement> ---
-// CODEVIEW(E:\gamedcs\array.h:37, dc 0x8c118) void CAutoArray<CDPlayAddressElement>::CAutoArray<CDPlayAddressElement>();
-// CODEVIEW(E:\gamedcs\array.h:73, dc 0x8c1e4) unsigned char CAutoArray<CDPlayAddressElement>::Add(CDPlayAddressElement* element);
-// CODEVIEW(E:\gamedcs\array.h:113, dc 0x8c278) unsigned char CAutoArray<CDPlayAddressElement>::Delete(unsigned long elementNbr);
-// CODEVIEW(E:\gamedcs\array.h:127, dc 0x8c2b4) unsigned char CAutoArray<CDPlayAddressElement>::Insert(unsigned long nextElementNbr, CDPlayAddressElement* element);
-// CODEVIEW(..\stlport\stl_bvector.h:144, dc 0x8c35c) void* CAutoArray<CDPlayAddressElement>::`scalar deleting destructor'(unsigned __flags);
-
-// --- CAutoArray<CDPlayConnection> ---
-// CODEVIEW(E:\gamedcs\array.h:51, dc 0x8bfac) void CAutoArray<CDPlayConnection>::Destroy(unsigned char deleteData);
-
-// --- CAutoArray<CDPlayGroup> ---
-// CODEVIEW(E:\gamedcs\array.h:51, dc 0x8c010) void CAutoArray<CDPlayGroup>::Destroy(unsigned char deleteData);
-
-// --- CAutoArray<CDPlayPlayer> ---
-// CODEVIEW(E:\gamedcs\array.h:51, dc 0x8c068) void CAutoArray<CDPlayPlayer>::Destroy(unsigned char deleteData);
-
-// --- CAutoArray<CDPlaySession> ---
-
 // --- CDPlay ---
 // CODEVIEW(E:\gamedcs\dxplay.cpp:66, dc 0x8a074) void CDPlay::CDPlay();
 // CODEVIEW(E:\gamedcs\dxplay.cpp:890, dc 0x8af4c) unsigned char CDPlay::SysMsgDestroyPlayerOrGroup(DPMSG_DESTROYPLAYERORGROUP* pSysMsg, unsigned long toID);
@@ -614,12 +593,10 @@ SIZE(CDPlayLobby, 0x60);
 // --- CDPlayAddressElement ---
 // CODEVIEW(E:\gamedcs\dxplay.h:244, dc 0x8be8c) void CDPlayAddressElement::CDPlayAddressElement(const _GUID* lpGuid, const void* pData, unsigned long dataSize);
 // CODEVIEW(E:\gamedcs\dxplay.h:257, dc 0x8bed0) void CDPlayAddressElement::~CDPlayAddressElement();
-// CODEVIEW(..\stlport\stl_bvector.h:144, dc 0x8c390) void* CDPlayAddressElement::`scalar deleting destructor'(unsigned __flags);
 
 // --- CDPlayConnection ---
 // CODEVIEW(E:\gamedcs\dxplay.h:113, dc 0x8bd2c) void CDPlayConnection::CDPlayConnection(const _GUID* lpGuid, unsigned long connSize, void* lpConn, char* name);
 // CODEVIEW(E:\gamedcs\dxplay.h:125, dc 0x8bd90) void CDPlayConnection::~CDPlayConnection();
-// CODEVIEW(..\stlport\stl_bvector.h:144, dc 0x8c328) void* CDPlayConnection::`scalar deleting destructor'(unsigned __flags);
 
 // --- CDPlayGroup ---
 // CODEVIEW(E:\gamedcs\dxplay.h:231, dc 0x8be70) void CDPlayGroup::CDPlayGroup(char* sName, unsigned long dpid);

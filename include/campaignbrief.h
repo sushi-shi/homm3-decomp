@@ -405,20 +405,9 @@ SIZE(TCampaignBrief, 0xb4);
 // --- CHeroDlg ---
 // CODEVIEW(E:\gamedcs\campaignbrief.cpp:1391, dc 0x5af4c) void CHeroDlg::~CHeroDlg();
 
-// --- CMapHeaderData ---
-// CODEVIEW(E:\gamedcs\game.h:234, dc 0x5ac3c) void CMapHeaderData::TPlayerSlotAttributes::TPlayerSlotAttributes();
-// CODEVIEW(E:\gamedcs\game.h:308, dc 0x5acf0) void CMapHeaderData::CMapHeaderData();
-
-// --- CSingleSelPopup ---
-// CODEVIEW(E:\gamedcs\SingleSelectionPopups.h:70, dc 0x5add0) void CSingleSelPopup::~CSingleSelPopup();
-
 // --- NewSMapHeader ---
-// CODEVIEW(E:\gamedcs\game.h:287, dc 0x5ac80) void NewSMapHeader::NewSMapHeader();
 // CODEVIEW(E:\gamedcs\campaignbrief.cpp:192, dc 0x5ae54) void NewSMapHeader::~NewSMapHeader();
 // CODEVIEW(E:\gamedcs\campaignbrief.cpp:1007, dc 0x5aeb4) NewSMapHeader* NewSMapHeader::operator=(const NewSMapHeader* __that);
-
-// --- SGameSetupOptions ---
-// CODEVIEW(E:\gamedcs\game.h:546, dc 0x5ad18) void SGameSetupOptions::SGameSetupOptions();
 
 // --- TCampaignBrief ---
 // CODEVIEW(E:\gamedcs\campaignbrief.cpp:392, dc 0x587c4) void TCampaignBrief::Select(int which);
@@ -436,10 +425,5 @@ SIZE(TCampaignBrief, 0xb4);
 
 // --- game ---
 // CODEVIEW(E:\gamedcs\campaignbrief.cpp:1050, dc 0x5af18) void* game::`scalar deleting destructor'(unsigned __flags);
-
-// --- widget ---
-// CODEVIEW(E:\gamedcs\widget.h:236, dc 0x5abe4) const char* widget::get_rclick_text();
-// CODEVIEW(E:\gamedcs\widget.h:251, dc 0x5abf4) void widget::hide();
-// CODEVIEW(E:\gamedcs\widget.h:257, dc 0x5ac18) void widget::show();
 
 #endif  /* HOMM3_CAMPAIGNBRIEF_H */

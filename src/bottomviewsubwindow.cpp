@@ -160,20 +160,6 @@ void TBottomViewEnemyTurn::animate()
     // @stub
 }
 
-// E:\gamedcs\Widget.h:263
-DC_ONLY(0x56df8, 0x28)
-void widget::setVisible(unsigned char arg)
-{
-    // @stub
-}
-
-// E:\gamedcs\Widget.h:271
-DC_ONLY(0x56e20, 0x1C)
-void widget::force_update()
-{
-    // @stub
-}
-
 // E:\gamedcs\bottomviewsubwindow.cpp:41
 DC_ONLY(0x56e3c, 0x34)
 void* type_bottom_view_window::`scalar deleting destructor'(unsigned __flags)
@@ -275,13 +261,6 @@ void* TBottomViewEnemyTurn::`scalar deleting destructor'(unsigned __flags)
 // E:\gamedcs\bottomviewsubwindow.cpp:643
 DC_ONLY(0x5706c, 0x18)
 void TBottomViewEnemyTurn::~TBottomViewEnemyTurn()
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:203
-DC_ONLY(0x57084, 0x20)
-widget** std::vector<widget *,std::allocator<widget *> >::operator[](unsigned __n)
 {
     // @stub
 }

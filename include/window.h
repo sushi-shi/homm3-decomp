@@ -216,23 +216,4 @@ void setWinText(heroWindow* win, int winId);
 // CODEVIEW(E:\gamedcs\window.cpp:934, dc 0x197c74) int heroWindow::HeroWindowHandler(message* msg);
 // CODEVIEW(E:\gamedcs\window.cpp:68, dc 0x1981ac) void* heroWindow::`scalar deleting destructor'(unsigned __flags);
 
-// --- std ---
-// CODEVIEW(..\stlport\stl_vector.h:188, dc 0x198214) std::reverse_iterator<widget std::vector<widget *,std::allocator<widget *> >::rbegin(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_vector.h:192, dc 0x19824c) std::reverse_iterator<widget std::vector<widget *,std::allocator<widget *> >::rend(__$ReturnUdt);
-// CODEVIEW(..\stlport\stl_vector.h:506, dc 0x198284) void std::vector<widget *,std::allocator<widget *> >::clear();
-// CODEVIEW(..\stlport\stl_iterator.h:325, dc 0x1982bc) void std::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>(const std::reverse_iterator<widget* __x);
-// CODEVIEW(..\stlport\stl_iterator.h:330, dc 0x1982dc) widget** std::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>::operator*();
-// CODEVIEW(..\stlport\stl_iterator.h:340, dc 0x1982e4) std::reverse_iterator<widget std::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>::operator++(__$ReturnUdt, int __formal);
-// CODEVIEW(..\stlport\stl_vector.h:180, dc 0x19831c) widget** std::vector<widget *,std::allocator<widget *> >::begin();
-// CODEVIEW(..\stlport\stl_vector.h:182, dc 0x198320) widget** std::vector<widget *,std::allocator<widget *> >::end();
-// CODEVIEW(..\stlport\stl_vector.h:490, dc 0x198324) widget** std::vector<widget *,std::allocator<widget *> >::erase(widget** __first, widget** __last);
-// CODEVIEW(..\stlport\stl_iterator.h:326, dc 0x198360) void std::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>(widget** __x);
-// CODEVIEW(..\stlport\stl_iterator.h:329, dc 0x198368) widget** std::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>::base();
-// CODEVIEW(..\stlport\stl_iterator.h:428, dc 0x19836c) unsigned char std::operator!=(const std::reverse_iterator<widget* __x, const std::reverse_iterator<widget* __y);
-// CODEVIEW(..\stlport\stl_algobase.h:322, dc 0x198388) widget** std::copy(widget** __first, widget** __last, widget** __result);
-// CODEVIEW(..\stlport\stl_iterator.h:405, dc 0x1983d8) unsigned char std::operator==(const std::reverse_iterator<widget* __x, const std::reverse_iterator<widget* __y);
-// CODEVIEW(..\stlport\stl_iterator_base.h:243, dc 0x198404) std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, widget** __formal);
-// CODEVIEW(..\stlport\stl_iterator_base.h:291, dc 0x198410) int* std::distance_type(widget** __formal);
-// CODEVIEW(..\stlport\stl_algobase.h:209, dc 0x198414) widget** std::__copy(widget** __first, widget** __last, widget** __result, std::random_access_iterator_tag __formal, int* __formal);
-
 #endif  /* HOMM3_WINDOW_H */
