@@ -3472,7 +3472,7 @@ rmg	?setTotal@TProgressSink@@UAEXH@Z	100.0000	100.0000	100.0000	0x130e80	tokens1
 rmg	?size@?$vector@FV?$allocator@F@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x14c3d0	-
 rmg	?size@?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x14c670	-
 rmg	?size@?$vector@UTRmgZoneConnection@@V?$allocator@UTRmgZoneConnection@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x14c1b0	-
-rmg	?subdivideRmgNoiseRegion@@YIXAAV?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@HUTRmgNoiseRegion@@UTRmgNoiseMidpoints@@@Z	99.9545	99.9545	99.9545	0x13e9e0	tokens1:795483650fe6
+rmg	?subdivideRmgNoiseRegion@@YIXAAV?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@HUTRmgNoiseRegion@@UTRmgNoiseMidpoints@@@Z	100.0000	100.0000	100.0000	0x13e9e0	tokens1:2cbb53974fe9
 rmg	?traceBranchEnd@type_random_map@@QAE?AUTPoint@@U2@0H@Z	99.8683	99.8683	99.8683	0x143c70	tokens1:4d6610e3511d
 rmg	?traceOutline@TRmgTreasureGroup@@QAEXXZ	95.1849	95.1849	95.1849	0x135ee0	tokens1:e26ea6c2a92a
 rmg	?traceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	86.6846	86.6846	86.6846	0x13c390	tokens1:43e4957d073d

@@ -4942,28 +4942,19 @@ void type_random_map_generator::paintZoneTerrain()
 // value. Each nondegenerate quadrant preserves the original variation.
 // Retail 0x53ed00 consumes these records as a stack and clamps final samples
 // to bytes; the terrain painter at 0x53efa0 consumes the resulting noise.
-// Residual 99.9545%: Y-before-X reproduces the operation schedule; the three
-// center/X/Y stack homes are permuted. The 24 midpoint-order/operand probes
-// improve the initial 99.6818%, but 49 center-snapshot/lifetime probes are
-// flat at that peak. All 32 CFG blocks and insertion decisions agree.
-// A separate 3,136-case coverage/corner invariant check includes negative
-// origins and degenerate bounds; every child preserves the sample meanings.
-// Sixty midpoint-point/scalar, region-copy and center-sample lifetime forms
-// produce 16 distinct objects, with ten reproduced elites and no improvement.
-// Every form passes a 3x3 sample-lattice oracle plus four negative controls;
-// retain the scalar midpoint source until its permuted homes are recovered.
-// Twelve further midpoint/quadrant-ownership forms test separate scoped or
-// function-scope records. Scoped records preserve this same residual; named
-// function-scope records are worse. The same lattice oracle accepts all twelve.
+// Exact 798-byte body: a Y/X midpoint array restores all three scalar stack
+// homes and preserves the Y-before-X evaluation. Separate coordinates leave
+// 99.9545%; TPoint and quadrant-lifetime alternatives do not close that gap.
+// All 32 blocks reproduce. The vector's empty _Destroy is folded with the
+// artifact-vector representative at 0x404140; both retained bodies are ret 8.
 VA(0x0053E9E0, 0x31E) // anchor-callee 0x53ed91; Complete-only, fastcall ret 0x34
 void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
     int centerValue, TRmgNoiseRegion region, TRmgNoiseMidpoints midpoints)
 {
-    int middleY = (region.m_bounds.m_minimumY + region.m_bounds.m_maximumY) / 2;
-    int middleX = (region.m_bounds.m_minimumX + region.m_bounds.m_maximumX) / 2;
+    int middle[2] = { (region.m_bounds.m_minimumY + region.m_bounds.m_maximumY) / 2, (region.m_bounds.m_minimumX + region.m_bounds.m_maximumX) / 2 };
     TRmgNoiseRegion part = region;
-    part.m_bounds.m_minimumX = middleX;
-    part.m_bounds.m_minimumY = middleY;
+    part.m_bounds.m_minimumX = middle[1];
+    part.m_bounds.m_minimumY = middle[0];
     part.m_corners[0] = centerValue;
     part.m_corners[1] = midpoints.m_maxYValue;
     part.m_corners[2] = midpoints.m_maxXValue;
@@ -4972,8 +4963,8 @@ void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
         pending.push_back(part);
 
     part = region;
-    part.m_bounds.m_minimumX = middleX;
-    part.m_bounds.m_maximumY = middleY;
+    part.m_bounds.m_minimumX = middle[1];
+    part.m_bounds.m_maximumY = middle[0];
     part.m_corners[0] = midpoints.m_minYValue;
     part.m_corners[1] = centerValue;
     part.m_corners[3] = midpoints.m_maxXValue;
@@ -4982,8 +4973,8 @@ void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
         pending.push_back(part);
 
     part = region;
-    part.m_bounds.m_maximumX = middleX;
-    part.m_bounds.m_minimumY = middleY;
+    part.m_bounds.m_maximumX = middle[1];
+    part.m_bounds.m_minimumY = middle[0];
     part.m_corners[0] = midpoints.m_minXValue;
     part.m_corners[2] = centerValue;
     part.m_corners[3] = midpoints.m_maxYValue;
@@ -4992,8 +4983,8 @@ void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
         pending.push_back(part);
 
     part = region;
-    part.m_bounds.m_maximumX = middleX;
-    part.m_bounds.m_maximumY = middleY;
+    part.m_bounds.m_maximumX = middle[1];
+    part.m_bounds.m_maximumY = middle[0];
     part.m_corners[1] = midpoints.m_minXValue;
     part.m_corners[2] = midpoints.m_minYValue;
     part.m_corners[3] = centerValue;
@@ -5572,6 +5563,8 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
 // canonical getBounds/getLevelPosition results at both observed snapshot
 // times and a constructed seed; all eight reproduced states give their
 // parent's caller instruction/relocation stream. None explains EDI or the latch.
+// Success-flag types and row-loop exits, crossed with unsigned extraction,
+// also leave the current peak; the correct mask still needs caller recovery.
 // The frame is 0x4c and the three flood/path/flood calls agree throughout;
 // these differences do not come from an extra retained helper. Native checks
 // include opaque zone mutation to enforce pre-flood bounds and post-flood
