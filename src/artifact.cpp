@@ -1,4 +1,3 @@
-// artifact.cpp - E:\gamedcs\artifact.cpp (compiland artifact.obj)
 // helper and ownership wrappers into the table initializer. The adjacent
 // bitset bodies are Dinkumware COMDATs, not source claims.
 #include <va.h>
@@ -351,20 +350,6 @@ static void initializeArtifactTraits(int id,
 
 #if 0  // @carcass: Dreamcast-only/out-of-line header and STL emissions
 
-// E:\gamedcs\TextResource.h:108
-DC_ONLY(0x5088c, 0x18)
-int TSpreadsheetResource::getNumberOfRows()
-{
-    // @stub
-}
-
-// E:\gamedcs\TextResource.h:128
-DC_ONLY(0x508a4, 0x18)
-const std::vector<char* TSpreadsheetResource::getRow(int r)
-{
-    // @stub
-}
-
 // E:\gamedcs\artifact.cpp:33
 DC_ONLY(0x508bc, 0x8)
 void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr()
@@ -396,83 +381,6 @@ char* `anonymous namespace'::TAutoStrPtr::get()
 // E:\gamedcs\artifact.cpp:49
 DC_ONLY(0x508e4, 0x20)
 void TArtifactTraits::TArtifactTraits()
-{
-    // @stub
-}
-
-// ..\stlport\stl_bitset.h:414
-DC_ONLY(0x50904, 0x20)
-void std::bitset<18,unsigned long>::bitset<18,unsigned long>()
-{
-    // @stub
-}
-
-// ..\stlport\stl_bitset.h:564
-DC_ONLY(0x50924, 0x20)
-std::bitset<18,unsigned std::bitset<18,unsigned long>::operator[](__$ReturnUdt, unsigned __pos)
-{
-    // @stub
-}
-
-// ..\stlport\stl_bitset.h:376
-DC_ONLY(0x50944, 0x4)
-void std::bitset<18,unsigned long>::reference::~reference()
-{
-    // @stub
-}
-
-// ..\stlport\stl_bitset.h:379
-DC_ONLY(0x50948, 0x3C)
-std::bitset<18,unsigned* std::bitset<18,unsigned long>::reference::operator=(unsigned char __x)
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:195
-DC_ONLY(0x50984, 0xC)
-unsigned std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::size()
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:204
-DC_ONLY(0x50990, 0x20)
-std::vector<char** std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::operator[](unsigned __n)
-{
-    // @stub
-}
-
-// ..\stlport\stl_bitset.h:107
-DC_ONLY(0x509b0, 0x1C)
-void std::_Base_bitset<1,unsigned long>::_Base_bitset<1,unsigned long>()
-{
-    // @stub
-}
-
-// ..\stlport\stl_bitset.h:370
-DC_ONLY(0x509cc, 0x34)
-void std::bitset<18,unsigned long>::reference::reference(std::bitset<18,unsigned* __b, unsigned __pos)
-{
-    // @stub
-}
-
-// ..\stlport\stl_vector.h:180
-DC_ONLY(0x50a00, 0x4)
-std::vector<char** std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::begin()
-{
-    // @stub
-}
-
-// ..\stlport\stl_bitset.h:120
-DC_ONLY(0x50a04, 0x1C)
-unsigned long std::_Base_bitset<18,unsigned long>::_S_maskbit(unsigned __pos)
-{
-    // @stub
-}
-
-// ..\stlport\stl_bitset.h:117
-DC_ONLY(0x50a20, 0x8)
-unsigned std::_Base_bitset<18,unsigned long>::_S_whichbit(unsigned __pos)
 {
     // @stub
 }

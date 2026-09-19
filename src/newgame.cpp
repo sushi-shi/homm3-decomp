@@ -1,4 +1,3 @@
-// newgame.cpp - E:\gamedcs\newgame.cpp (compiland newgame.obj)
 #include <va.h>
 #include <stdio.h>
 #include <string.h>

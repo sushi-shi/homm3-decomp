@@ -1,5 +1,3 @@
-// adventureoptionswindow.cpp - E:\gamedcs\adventureoptionswindow.cpp
-// (compiland adventureoptionswindow.obj)
 #include <va.h>
 #include "adventureoptionswindow.h"
 #include "border.h"

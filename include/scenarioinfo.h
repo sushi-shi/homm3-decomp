@@ -1,4 +1,3 @@
-// scenarioinfo.h - prototypes of scenarioinfo.cpp (compiland scenarioinfo.obj)
 #ifndef HOMM3_SCENARIOINFO_H
 #define HOMM3_SCENARIOINFO_H
 
@@ -50,16 +49,5 @@ public:
     void setDifficultyHiLite();
 };
 SIZE(CScenarioInfoDlg, 0xb4);
-
-// --- CBonusDlg ---
-// CODEVIEW(E:\gamedcs\scenarioinfo.cpp:657, dc 0x12b068) void CBonusDlg::~CBonusDlg();
-
-// --- CScenarioInfoDlg ---
-// CODEVIEW(E:\gamedcs\scenarioinfo.cpp:258, dc 0x129db4) void CScenarioInfoDlg::CScenarioInfoDlg();
-// CODEVIEW(E:\gamedcs\scenarioinfo.cpp:661, dc 0x12af90) void CScenarioInfoDlg::SetDifficultyHiLite();
-// CODEVIEW(E:\gamedcs\scenarioinfo.cpp:473, dc 0x12b004) void* CScenarioInfoDlg::`scalar deleting destructor'(unsigned __flags);
-
-// --- CTownDlg ---
-// CODEVIEW(E:\gamedcs\scenarioinfo.cpp:657, dc 0x12b050) void CTownDlg::~CTownDlg();
 
 #endif  /* HOMM3_SCENARIOINFO_H */

@@ -1,4 +1,3 @@
-// victorylossconditions.cpp - E:\gamedcs\victorylossconditions.cpp (compiland victorylossconditions.obj)
 // CheckForTotalCreatures totals town garrisons through the NON-const
 // town::get_army() half of the DC pair (the summoning-portal
 // precedent: never defined, /OPT:ICF folded both bodies onto the const

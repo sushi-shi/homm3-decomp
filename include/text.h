@@ -1,4 +1,3 @@
-// text.h - prototypes of text.cpp (compiland text.obj)
 #ifndef HOMM3_TEXT_H
 #define HOMM3_TEXT_H
 
@@ -37,18 +36,5 @@ unsigned char initializeCreditsText();               // 0x5b9840
 unsigned char initializeTentColorText();             // 0x5b9880
 unsigned char initializeHelpText();                  // 0x5b98b0
 unsigned char initializeArrayText();                 // 0x5b9cc0
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\text.cpp:49, dc 0x160ff4) void CheckTextResource();
-// CODEVIEW(E:\gamedcs\text.cpp:86, dc 0x160ff8) void CheckSpreadsheetResource();
-
-// --- TSpreadsheetResource ---
-// CODEVIEW(E:\gamedcs\TextResource.h:113, dc 0x162910) int TSpreadsheetResource::GetNumberOfColumns(int r);
-// CODEVIEW(E:\gamedcs\TextResource.h:120, dc 0x162934) const char* TSpreadsheetResource::GetSpreadsheet(int r, int c);
-
-// --- std ---
-// CODEVIEW(..\stlport\stl_vector.h:195, dc 0x16295c) unsigned std::vector<char *,std::allocator<char *> >::size();
-// CODEVIEW(..\stlport\stl_vector.h:203, dc 0x162968) char** std::vector<char *,std::allocator<char *> >::operator[](unsigned __n);
-// CODEVIEW(..\stlport\stl_vector.h:179, dc 0x162988) char** std::vector<char *,std::allocator<char *> >::begin();
 
 #endif  /* HOMM3_TEXT_H */

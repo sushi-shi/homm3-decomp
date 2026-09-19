@@ -1,4 +1,3 @@
-// swapmgr.cpp - E:\gamedcs\swapmgr.cpp (compiland swapmgr.obj)
 #include "includes.h"
 #include "creaturetype.h"
 #include <va.h>
@@ -2238,13 +2237,6 @@ bool swapManager::canModHero(int hero)
 // E:\gamedcs\swapmgr.cpp:2298
 DC_ONLY(0x15ef60, 0x70)
 void swapManager::onGiveMeStuffMsg()
-{
-    // @stub
-}
-
-// E:\gamedcs\basemgr.h:41
-DC_ONLY(0x15efd0, 0x4)
-void baseManager::SetStatus(short newStatus)
 {
     // @stub
 }

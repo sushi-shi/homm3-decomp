@@ -1,4 +1,3 @@
-// university_window.h - prototypes of university_window.cpp (compiland university_window.obj)
 #ifndef HOMM3_UNIVERSITY_WINDOW_H
 #define HOMM3_UNIVERSITY_WINDOW_H
 
@@ -103,18 +102,5 @@ protected:
     static int purchaseClick(message& msg);
 };
 SIZE(type_university_window, 0xf8);
-
-// --- type_university_skill_button ---
-// CODEVIEW(E:\gamedcs\university_window.cpp:65, dc 0x18e6ac) void type_university_skill_button::type_university_skill_button(long _x, long _y, long _width, long _height, long new_id, const char* _image, TSecondarySkill new_skill);
-// CODEVIEW(E:\gamedcs\university_window.cpp:50, dc 0x18fad8) void type_university_skill_button::set_skill(TSecondarySkill new_skill, unsigned char new_click);
-// CODEVIEW(E:\gamedcs\university_window.cpp:68, dc 0x18fae4) void* type_university_skill_button::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\university_window.cpp:68, dc 0x18fb18) void type_university_skill_button::~type_university_skill_button();
-
-// --- type_university_window ---
-// CODEVIEW(E:\gamedcs\university_window.cpp:102, dc 0x18e790) void type_university_window::type_university_window(hero* new_hero, const type_university* university);
-// CODEVIEW(E:\gamedcs\university_window.cpp:327, dc 0x18f428) void type_university_window::set_selection_mode();
-// CODEVIEW(E:\gamedcs\university_window.cpp:404, dc 0x18f7e4) int type_university_window::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\university_window.cpp:479, dc 0x18f97c) int type_university_window::purchase_click(message* msg);
-// CODEVIEW(E:\gamedcs\university_window.cpp:277, dc 0x18fb30) void* type_university_window::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_UNIVERSITY_WINDOW_H */

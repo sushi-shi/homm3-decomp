@@ -1,4 +1,3 @@
-// armygrp.cpp - E:\gamedcs\armygrp.cpp (compiland armygrp.obj)
 #include "includes.h"
 #include <va.h>
 #include <algorithm>
@@ -1562,48 +1561,6 @@ TTerrainType armyGroup::getNativeTerrain() const
 // E:\gamedcs\armygrp.cpp:131
 DC_ONLY(0x4fd54, 0x34)
 void* TSplitWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// ..\stlport\stl_string.h:296
-DC_ONLY(0x4fd88, 0x4C)
-void std::basic_string<char,std::char_traits<char>,std::allocator<char> >::basic_string<char,std::char_traits<char>,std::allocator<char> >(const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __s)
-{
-    // @stub
-}
-
-// ..\stlport\stl_string.h:272
-DC_ONLY(0x4fdd4, 0x8)
-std::allocator<char> std::basic_string<char,std::char_traits<char>,std::allocator<char> >::get_allocator(__$ReturnUdt)
-{
-    // @stub
-}
-
-// ..\stlport\stl_algobase.h:79
-DC_ONLY(0x4fddc, 0xA)
-void std::swap(TCreatureType* __a, TCreatureType* __b)
-{
-    // @stub
-}
-
-// ..\stlport\stl_algobase.h:79
-DC_ONLY(0x4fde8, 0xA)
-void std::swap(int* __a, int* __b)
-{
-    // @stub
-}
-
-// ..\stlport\stl_string.h:464
-DC_ONLY(0x4fdf4, 0x3C)
-std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_range_initialize(char* __f, char* __l)
-{
-    // @stub
-}
-
-// ..\stlport\stl_string.h:454
-DC_ONLY(0x4fe30, 0x5C)
-std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_range_initialize(char* __f, char* __l, std::forward_iterator_tag __formal)
 {
     // @stub
 }

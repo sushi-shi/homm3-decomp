@@ -1,4 +1,3 @@
-// binkmanager.h - prototypes of binkmanager.cpp (compiland binkmanager.obj)
 #ifndef HOMM3_BINKMANAGER_H
 #define HOMM3_BINKMANAGER_H
 
@@ -161,10 +160,5 @@ extern unsigned char g_binkFrameReady;     // 0x694d5c
 // out of exactly the same three-way gate (gUnnamed699290 == 0 &&
 // gpSoundManager->ds != 0 && gUnnamed698758.soundVolume != 0). Provisional.
 extern int g_binkSoundReady;               // 0x694d58
-
-// --- BinkManager ---
-// CODEVIEW(E:\gamedcs\binkmanager.cpp:123, dc 0x50a80) void BinkManager::SetPixelFormat();
-// CODEVIEW(E:\gamedcs\binkmanager.cpp:252, dc 0x50a90) void BinkManager::NextBinkFrame();
-// CODEVIEW(E:\gamedcs\binkmanager.cpp:376, dc 0x50a98) int BinkManager::PlayBink(int id, int x, int y, int w, int h);
 
 #endif  /* HOMM3_BINKMANAGER_H */

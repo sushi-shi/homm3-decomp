@@ -1,4 +1,3 @@
-// gametypewindow.cpp - E:\gamedcs\gametypewindow.cpp (compiland gametypewindow.obj)
 #include <va.h>
 #include "gametypewindow.h"
 #include "border.h"

@@ -1,4 +1,3 @@
-// hillfortwindow.h - prototypes of hillfortwindow.cpp (compiland hillfortwindow.obj)
 #ifndef HOMM3_HILLFORTWINDOW_H
 #define HOMM3_HILLFORTWINDOW_H
 
@@ -174,17 +173,5 @@ SIZE(THillFortWindow, 0x2a0);
 
 // Retail /Gr passes the message by reference in ECX, matching DoDialog.
 int hillFortWindowHandler(message& msg);
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\hillfortwindow.cpp:192, dc 0xd6bd4) bool CanAfford(const long* cost, const long* playerRes);
-// CODEVIEW(E:\gamedcs\hillfortwindow.cpp:612, dc 0xd7458) int HillFortWindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\hillfortwindow.cpp:763, dc 0xd76ec) void UpdateHillFort(unsigned char bFirstUpdate);
-
-// --- THillFortWindow ---
-// CODEVIEW(E:\gamedcs\hillfortwindow.cpp:178, dc 0xd6b94) int THillFortWindow::convertID2HelpID(int id);
-// CODEVIEW(E:\gamedcs\hillfortwindow.cpp:203, dc 0xd6bf8) void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons);
-// CODEVIEW(E:\gamedcs\hillfortwindow.cpp:500, dc 0xd7258) void THillFortWindow::UpgradeAll();
-// CODEVIEW(E:\gamedcs\HillFortWindow.h:170, dc 0xd7764) TCreatureType THillFortWindow::GetCreatureType(int slotnum);
-// CODEVIEW(E:\gamedcs\hillfortwindow.cpp:165, dc 0xd7774) void* THillFortWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_HILLFORTWINDOW_H */

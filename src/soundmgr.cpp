@@ -1,4 +1,3 @@
-// soundmgr.cpp - E:\gamedcs\soundmgr.cpp (compiland soundmgr.obj)
 #include "terrain.h"
 #include <va.h>
 #include <windows.h>

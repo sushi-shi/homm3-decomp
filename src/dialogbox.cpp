@@ -1,4 +1,3 @@
-// dialogbox.cpp - E:\gamedcs\dialogbox.cpp (compiland dialogbox.obj)
 #include <va.h>
 #include "border.h"
 #include "dialogbox.h"

@@ -1,4 +1,3 @@
-// viewwrld.h - prototypes of viewwrld.cpp (compiland viewwrld.obj)
 #ifndef HOMM3_VIEWWRLD_H
 #define HOMM3_VIEWWRLD_H
 
@@ -90,23 +89,5 @@ extern int g_unnamed6aac3c;
 // fast-cycle guard tests. Declared here rather than by pulling cmbtmgr.h
 // into a TU that has no other use for it.
 extern int g_combatActive698a18;
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\viewwrld.cpp:100, dc 0x192ee8) long ftol(double d);
-// CODEVIEW(E:\gamedcs\viewwrld.cpp:110, dc 0x192f4c) void VWDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int y, int z);
-// CODEVIEW(E:\gamedcs\viewwrld.cpp:226, dc 0x196a18) void VWScaleToScreenBuffer(int destX, int destY);
-
-// --- TViewWorldWindow ---
-// CODEVIEW(E:\gamedcs\viewwrld.cpp:1307, dc 0x1952b8) void TViewWorldWindow::TViewWorldWindow();
-// CODEVIEW(E:\gamedcs\viewwrld.cpp:1496, dc 0x195d30) void TViewWorldWindow::init(type_point new_center, unsigned char updateFlag);
-// CODEVIEW(E:\gamedcs\viewwrld.cpp:1549, dc 0x195ffc) void TViewWorldWindow::draw_window();
-// CODEVIEW(E:\gamedcs\viewwrld.cpp:1392, dc 0x196b18) void* TViewWorldWindow::`scalar deleting destructor'(unsigned __flags);
-
-// --- advManager ---
-// CODEVIEW(E:\gamedcs\viewwrld.cpp:578, dc 0x193c74) void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY);
-// CODEVIEW(E:\gamedcs\viewwrld.cpp:822, dc 0x1943ec) void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY);
-// CODEVIEW(E:\gamedcs\viewwrld.cpp:946, dc 0x194850) void advManager::VWDrawRiver(int srcX, int srcY, int z, int destX, int destY);
-// CODEVIEW(E:\gamedcs\viewwrld.cpp:985, dc 0x1949cc) void advManager::VWDrawRoad(int srcX, int srcY, int z, int destX, int destY);
-// CODEVIEW(E:\gamedcs\viewwrld.cpp:1026, dc 0x194b48) void advManager::VWDrawShroud(int srcX, int srcY, int z, int destX, int destY);
 
 #endif  /* HOMM3_VIEWWRLD_H */

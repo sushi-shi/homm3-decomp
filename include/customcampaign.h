@@ -496,22 +496,4 @@ enum ECampaignBonusHero {
 
 hero* getCampaignBonusHero(int heroSelector, int whichPlayer);
 
-// --- globals ---
-// CODEVIEW(E:\gamedcs\customcampaign.cpp:70, dc 0x7cd4c) void InitCampaignMapTraits([]* map_traits);
-
-// --- SCampaign ---
-// CODEVIEW(E:\gamedcs\customcampaign.cpp:112, dc 0x7d14c) void SCampaign::clear();
-// CODEVIEW(E:\gamedcs\customcampaign.cpp:140, dc 0x7d1ec) void SCampaign::clear_carryover_pool(TCarryOverPoolNumber pool_num);
-// CODEVIEW(E:\gamedcs\customcampaign.cpp:222, dc 0x7d420) void SCampaign::give_custom_items();
-
-// --- TArtifactRequirement ---
-// CODEVIEW(E:\gamedcs\CustomCampaign.h:108, dc 0x7ea10) void TArtifactRequirement::set(TArtifact _artifact, char _guard_bit);
-
-// --- TCustomCampaignTraits ---
-// CODEVIEW(E:\gamedcs\customcampaign.cpp:29, dc 0x7cc8c) void TCustomCampaignTraits::init();
-// CODEVIEW(E:\gamedcs\customcampaign.cpp:55, dc 0x7cccc) void TCustomCampaignTraits::set(int _exp_cap, char _num_incoming_heroes, char _num_outgoing_heroes, TCarryOverPoolNumber _incoming_hero_pool, TCarryOverPoolNumber _outgoing_hero_pool, TArtifact _art_req_1, char _guard_bit_1, TArtifact _art_req_2, char _guard_bit_2, char _pos1, char _pos2, char _difficulty);
-
-// --- type_artifact ---
-// CODEVIEW(E:\gamedcs\hero.h:214, dc 0x7ea04) void type_artifact::type_artifact(SpellID new_spell);
-
 #endif  /* HOMM3_CUSTOMCAMPAIGN_H */

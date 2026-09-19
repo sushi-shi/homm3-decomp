@@ -1,5 +1,3 @@
-// campaignmusic.h - prototypes of campaignmusic.cpp.
-
 // THE COMPILAND IS ABSENT FROM THE DREAMCAST ROSTER and its name is an
 // inference the link order bounds rather than proves (the netmsg.obj
 // precedent): retail's .text is strictly alphabetical by compiland, and this

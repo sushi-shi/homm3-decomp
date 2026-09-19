@@ -1,4 +1,3 @@
-// gametypewindow.h - prototypes of gametypewindow.cpp (compiland gametypewindow.obj)
 #ifndef HOMM3_GAMETYPEWINDOW_H
 #define HOMM3_GAMETYPEWINDOW_H
 
@@ -50,8 +49,5 @@ int gameTypeWindowHandler(message& msg);
 // Cross-TU menu-mode latch; oldmain owns the setup and both front-end menus
 // consume it.
 extern int g_noCdRom;
-
-// --- TGameTypeWindow ---
-// CODEVIEW(E:\gamedcs\gametypewindow.cpp:92, dc 0xc9754) void* TGameTypeWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_GAMETYPEWINDOW_H */

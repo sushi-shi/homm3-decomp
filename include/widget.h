@@ -239,6 +239,4 @@ public:
 };
 SIZE(widget, 48);
 
-// CODEVIEW(E:\gamedcs\widget.cpp:235, dc 0x196ccc) void widget::Close();
-
 #endif  /* HOMM3_WIDGET_H */

@@ -1,4 +1,3 @@
-// townmgr.cpp - E:\gamedcs\townmgr.cpp (compiland townmgr.obj)
 #include <va.h>
 #include "creaturetype.h"
 #include <stdio.h>
@@ -7210,13 +7209,6 @@ void getCategoryStats(int whichCat, long* value, signed char* index)
 // E:\gamedcs\townmgr.cpp:9698
 DC_ONLY(0x181350, 0xB4)
 void sortStats(long* value, signed char* index)
-{
-    // @stub
-}
-
-// E:\gamedcs\town.h:305
-DC_ONLY(0x181404, 0x12)
-long town::getGeneratorBonus(long dwelling)
 {
     // @stub
 }

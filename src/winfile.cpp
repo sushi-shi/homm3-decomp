@@ -1,4 +1,3 @@
-// winfile.cpp - E:\gamedcs\winfile.cpp (compiland winfile.obj)
 // 14 retail functions in link order (of 35 DC procs).
 
 // Retail span: the window->wingraph gap. window.cpp's text ends with

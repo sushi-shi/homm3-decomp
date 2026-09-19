@@ -1,4 +1,3 @@
-// smackmgr.cpp - E:\gamedcs\smackmgr.cpp (compiland smackmgr.obj)
 // 21 functions in link order.
 
 // Retail dropped DC's SmackManager object for a flat global scheme:

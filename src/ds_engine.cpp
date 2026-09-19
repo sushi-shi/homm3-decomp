@@ -1,5 +1,5 @@
 // ds_engine.cpp - E:\gamedcs\h3\ds_engine.cpp (compiland ds_engine.obj)
-// DREAMCAST-ONLY PLATFORM TU: all 108 source functions below implement the
+// DREAMCAST-ONLY PLATFORM TU: all 105 source functions below implement the
 // WinCE/DirectSound backend. Retail PC uses the Miles/AIL backend reconstructed
 // in soundmgr.cpp instead. The full post-drawing retail gap is accounted for by
 // combat/drawing tails, dxplay and event_record; no ds_engine roster entry has
@@ -568,20 +568,6 @@ void ds_streamsample::~ds_streamsample()
     // @stub
 }
 
-// C:\WCEDreamcast\inc\kfuncs.h:137
-DC_ONLY(0x89aa0, 0x18)
-int ResetEvent(void* h)
-{
-    // @stub
-}
-
-// C:\WCEDreamcast\inc\kfuncs.h:149
-DC_ONLY(0x89ab8, 0x18)
-int SetEvent(void* h)
-{
-    // @stub
-}
-
 // E:\gamedcs\h3\ds_engine.cpp:1135
 DC_ONLY(0x89ad0, 0x34)
 void* ds_streamsample::`scalar deleting destructor'(unsigned __flags)
@@ -732,13 +718,6 @@ unsigned char tree<ds_memsample>::Find_Data(ds_memsample* data)
 // E:\gamedcs\h3\ds_engine.cpp:1919
 DC_ONLY(0x89fa4, 0x4)
 int tree<ds_memsample>::Count()
-{
-    // @stub
-}
-
-// ..\stlport\stl_alloc.h:1920
-DC_ONLY(0x89fa8, 0x34)
-void* ds_genericsample::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

@@ -1,4 +1,3 @@
-// creaturetype.h - prototypes of creaturetype.cpp (compiland creaturetype.obj)
 #ifndef HOMM3_CREATURETYPE_H
 #define HOMM3_CREATURETYPE_H
 
@@ -27,14 +26,5 @@ inline const char* getArmyName(int type, int count)
 #define isBaseElemental(type) \
     ((type) == CREATURE_AIR_ELEMENTAL || (type) == CREATURE_EARTH_ELEMENTAL \
         || (type) == CREATURE_FIRE_ELEMENTAL || (type) == CREATURE_WATER_ELEMENTAL)
-
-// --- globals ---
-// CODEVIEW(E:\gamedcs\creaturetype.cpp:202, dc 0x718dc) TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr);
-
-// --- `anonymous namespace' ---
-// CODEVIEW(E:\gamedcs\creaturetype.cpp:399, dc 0x71eec) void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr();
-// CODEVIEW(E:\gamedcs\creaturetype.cpp:402, dc 0x71ef4) void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr();
-// CODEVIEW(E:\gamedcs\creaturetype.cpp:404, dc 0x71f0c) void `anonymous namespace'::TAutoStrPtr::set(char* pStr);
-// CODEVIEW(E:\gamedcs\creaturetype.cpp:406, dc 0x71f10) char* `anonymous namespace'::TAutoStrPtr::get();
 
 #endif  /* HOMM3_CREATURETYPE_H */

@@ -1,4 +1,3 @@
-// u2dvers.h - prototypes of u2dvers.cpp (compiland u2dvers.obj)
 #ifndef HOMM3_U2DVERS_H
 #define HOMM3_U2DVERS_H
 
@@ -24,7 +23,5 @@ private:
     unsigned char getVersionInfo(const char* name, std::string* buffer) const;
 };
 SIZE(TFileVersionInfo, 4);
-
-// --- TFileVersionInfo ---
 
 #endif  /* HOMM3_U2DVERS_H */

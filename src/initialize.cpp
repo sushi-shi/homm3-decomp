@@ -1,5 +1,3 @@
-// initialize.cpp - E:\gamedcs\initialize.cpp (compiland initialize.obj)
-
 #include "terrain.h"
 #include "town.h"
 #include <va.h>

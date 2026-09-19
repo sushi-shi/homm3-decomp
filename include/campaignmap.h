@@ -1,4 +1,3 @@
-// campaignmap.h - prototypes of campaignmap.cpp (compiland campaignmap.obj)
 #ifndef HOMM3_CAMPAIGNMAP_H
 #define HOMM3_CAMPAIGNMAP_H
 
@@ -33,18 +32,5 @@ extern TCampaignMapTraits g_campaignMapTraitsImp[21];
 extern TCampaignMapTraits::TRegionTraits* const g_campaignRegionTraits[21];
 
 unsigned char initializeCampaignMapTraitsTable();
-
-// --- TAutoArrayPtr<char> ---
-// CODEVIEW(E:\gamedcs\AutoArrayPtr.h:37, dc 0x5b1f8) void TAutoArrayPtr<char>::TAutoArrayPtr<char>(char* ptr);
-// CODEVIEW(E:\gamedcs\AutoArrayPtr.h:47, dc 0x5b208) void TAutoArrayPtr<char>::~TAutoArrayPtr<char>();
-// CODEVIEW(E:\gamedcs\AutoArrayPtr.h:54, dc 0x5b228) TAutoArrayPtr<char>* TAutoArrayPtr<char>::operator=(const TAutoArrayPtr<char>* rhs);
-// CODEVIEW(E:\gamedcs\AutoArrayPtr.h:71, dc 0x5b280) char* TAutoArrayPtr<char>::get();
-// CODEVIEW(E:\gamedcs\AutoArrayPtr.h:77, dc 0x5b2d4) char* TAutoArrayPtr<char>::release();
-
-// --- TResourcePtr<TTextResource> ---
-// CODEVIEW(E:\gamedcs\ResourcePtr.h:36, dc 0x5b284) void TResourcePtr<TTextResource>::TResourcePtr<TTextResource>(TTextResource* ptr);
-// CODEVIEW(E:\gamedcs\ResourcePtr.h:44, dc 0x5b294) void TResourcePtr<TTextResource>::~TResourcePtr<TTextResource>();
-// CODEVIEW(E:\gamedcs\ResourcePtr.h:68, dc 0x5b2b8) TTextResource* TResourcePtr<TTextResource>::get();
-// CODEVIEW(E:\gamedcs\ResourcePtr.h:71, dc 0x5b2bc) TTextResource* TResourcePtr<TTextResource>::operator->();
 
 #endif  /* HOMM3_CAMPAIGNMAP_H */

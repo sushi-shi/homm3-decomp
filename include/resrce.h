@@ -101,9 +101,4 @@ public:
 };
 SIZE(resource, 28);
 
-// --- resource ---
-// CODEVIEW(E:\gamedcs\resource.cpp:25, dc 0x120934) void resource::resource(const char* newName, EResourceType newType);
-// CODEVIEW(E:\gamedcs\resource.cpp:47, dc 0x12099c) void resource::~resource();
-// CODEVIEW(E:\gamedcs\resource.cpp:44, dc 0x1209c0) void* resource::`scalar deleting destructor'(unsigned __flags);
-
 #endif  /* HOMM3_RESRCE_H */

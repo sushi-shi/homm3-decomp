@@ -1,4 +1,3 @@
-// systemoptionswindow.h - prototypes of systemoptionswindow.cpp (compiland systemoptionswindow.obj)
 #ifndef HOMM3_SYSTEMOPTIONSWINDOW_H
 #define HOMM3_SYSTEMOPTIONSWINDOW_H
 
@@ -106,12 +105,5 @@ private:
 SIZE(TSystemOptionsWindow, 0x68);
 
 DATA(0x006a7584) extern THelpText g_systemOptionsHelp[48];
-
-// --- TSystemOptionsWindow ---
-// CODEVIEW(E:\gamedcs\systemoptionswindow.cpp:43, dc 0x15f588) void TSystemOptionsWindow::TSystemOptionsWindow();
-// CODEVIEW(E:\gamedcs\systemoptionswindow.cpp:205, dc 0x160698) int TSystemOptionsWindow::convertID2HelpID(int id);
-// CODEVIEW(E:\gamedcs\systemoptionswindow.cpp:260, dc 0x160770) int TSystemOptionsWindow::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\systemoptionswindow.cpp:667, dc 0x160ce8) void TSystemOptionsWindow::UpdateSystemOptions(unsigned char bFirstUpdate);
-// CODEVIEW(E:\gamedcs\systemoptionswindow.cpp:194, dc 0x160d90) void* TSystemOptionsWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_SYSTEMOPTIONSWINDOW_H */
