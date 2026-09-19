@@ -35,6 +35,9 @@ with `text`. Paths are relative to `HOMM3_DIR` and must stay under `src/` or
 `include/`. `load_manifest` in `scripts/homm3/vc6/source_families.py` defines the
 schema.
 
+Unknown edit fields are rejected. Use `extra_edits` for coupled changes;
+`edits` is not an alias and must not silently leave part of a candidate unchanged.
+
 ```sh
 PYTHONPATH=scripts python -m homm3.vc6.source_families build/choices.json --validate-only
 PYTHONPATH=scripts python -m homm3.vc6.source_families build/choices.json --width 60 --keep 10 --jobs 6

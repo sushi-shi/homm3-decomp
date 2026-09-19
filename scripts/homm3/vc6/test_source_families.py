@@ -100,6 +100,27 @@ class SourceFamiliesTests(unittest.TestCase):
                     self.manifest(root, {"schema": 1, "source": source, "axes": [
                         {"name": "a", "find": "x", "options": [{"name": "base"}]}]})
 
+    def test_unknown_edit_fields_cannot_silently_drop_requested_changes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "src").mkdir()
+            (root / "src/a.cpp").write_text("int x; int y;")
+            for location in ("axis", "option", "extra_edit"):
+                with self.subTest(location=location):
+                    option = {"name": "changed", "replace": "long x;"}
+                    axis = {"name": "x", "find": "int x;", "options": [option]}
+                    extra = {"find": "int y;", "replace": "long y;"}
+                    if location == "axis":
+                        axis["edits"] = [extra]
+                    elif location == "option":
+                        option["edits"] = [extra]
+                    else:
+                        extra["replcae"] = extra.pop("replace")
+                        option["extra_edits"] = [extra]
+                    with self.assertRaisesRegex(ValueError, "unknown edit field"):
+                        self.manifest(root, {"schema": 1, "source": "src/a.cpp", "axes": [axis]})
+                    self.assertEqual((root / "src/a.cpp").read_text(), "int x; int y;")
+
     def test_60_member_family_exhausts_without_repeating(self):
         axes = tuple(Axis(str(n), tuple(Option(str(i), ()) for i in range(n))) for n in (2, 2, 3, 5))
         population = next_population(axes, [], set(), 60, random.Random(1))

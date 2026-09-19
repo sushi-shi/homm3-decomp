@@ -106,6 +106,10 @@ def load_manifest(path, root):
     originals = {}
 
     def parse_edit(raw, default_source):
+        unknown = set(raw) - {"source", "find", "insert_before", "insert_after", "replace", "text"}
+        if unknown:
+            hint = "; use extra_edits for additional edits" if "edits" in unknown else ""
+            raise ValueError(f"unknown edit field(s): {', '.join(sorted(unknown))}{hint}")
         relative = raw.get("source", default_source)
         if not isinstance(relative, str):
             raise ValueError("every edit needs a source")
