@@ -120,6 +120,34 @@ class TypeFactsTest(unittest.TestCase):
 
 @unittest.skipUnless(shutil.which("clang"), "Clang is required for authored AST integration")
 class AuthoredAstTest(unittest.TestCase):
+    def test_batch_keeps_exact_overload_identity_and_reports_parse_errors(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / 'unit.cpp'
+            path.write_text('struct Widget { int f(int); int f(double); int g(); };\n'
+                            'int Widget::f(int x) { return x; }\n'
+                            'int Widget::f(double x) { return int(x); }\n'
+                            'int Widget::g() { return f(1); }\n')
+            args = [shutil.which('clang'), '--target=i686-pc-windows-msvc', '/c', str(path)]
+            with patch.object(facts.clang, 'clang_bin', return_value=args[0]), \
+                    patch.object(facts.clang, 'mirror', return_value=root), \
+                    patch.object(facts.manifest, 'load'), \
+                    patch.object(facts.compilation_database, 'commands',
+                                 return_value=[{'file': str(path), 'arguments': args}]):
+                names = ['?f@Widget@@QAEHH@Z', '?f@Widget@@QAEHN@Z', '?g@Widget@@QAEHXZ']
+                separate = [facts.parse_candidate(path, name, root) for name in names]
+                parser = facts.CandidateParser(root, batch=True)
+                with patch.object(facts.subprocess, 'run', wraps=subprocess.run) as launches:
+                    self.assertEqual([parser(path, name) for name in names], separate)
+                    self.assertEqual(launches.call_count, 1)
+                    with self.assertRaisesRegex(ValueError, 'found 0'):
+                        parser(path, '?missing@Widget@@QAEHXZ')
+                path.write_text(path.read_text() + '\nint broken = unknown_name;\n')
+                # New invocation sees changed source and retains TU diagnostics.
+                changed = facts.CandidateParser(root, batch=True)(path, names[0])
+                self.assertTrue(any('Clang reported TU errors' in g for g in changed['gaps']))
+                self.assertNotEqual(changed['source_sha256'], separate[0]['source_sha256'])
+
     def extract(self, source):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "unit.cpp"

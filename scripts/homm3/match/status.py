@@ -27,6 +27,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -84,7 +85,50 @@ class MatchRow:
         return self.max
 
 
+def require_fresh_comparisons() -> None:
+    """Validate every comparison input, including the raw-object stamp chain."""
+    from homm3.build.normalized_freshness import freshness_problems, ValidationContext
+    config = OBJDIFF_DIR / "objdiff.json"
+    if not config.is_file():
+        common.die("comparison configuration missing; run `homm3 build`")
+    seen = set()
+    context = ValidationContext()
+    normalized_root = context.resolve(OBJDIFF_DIR / "normalized")
+    problems = []
+    for unit in json.loads(config.read_text()).get("units", []):
+        for side in ("base_path", "target_path"):
+            path = context.resolve(OBJDIFF_DIR / unit[side])
+            if not path.is_file():
+                problems.append(f"{path} is missing")
+            elif normalized_root not in path.parents:
+                problems.append(f"{path} is not a normalized comparison object")
+            else:
+                problems.extend(freshness_problems(path, seen, context=context))
+    if problems:
+        common.die("stale normalized comparison objects; run `homm3 build`:\n  "
+                   + "\n  ".join(problems[:10]))
+
+
+def require_built_sources() -> None:
+    """Never bank old object scores under the edited source's new hash.
+
+    Ask Ninja about its real command/dependency graph without building anything.
+    Normalized stamps alone cannot detect a source edit before recompilation.
+    """
+    # NINJA_STATUS is emitted for each scheduled edge, including in dry-run
+    # mode. Use our own marker, not Ninja's human/translated no-work message.
+    marker = "[homm3 pending build edge] "
+    result = subprocess.run(["ninja", "-n", "objects"], cwd=common.HOMM3_DIR,
+                            env=dict(os.environ, NINJA_STATUS=marker),
+                            capture_output=True, text=True)
+    if result.returncode or marker in result.stdout:
+        common.die("candidate sources are not built; run `homm3 build` before "
+                   "reading, checking or updating current scores:\n"
+                   + (result.stdout + result.stderr)[-3000:])
+
+
 def load_report() -> dict:
+    require_fresh_comparisons()
     executable = shutil.which("objdiff-cli")
     if not executable:
         common.die("objdiff-cli not found - enter the dev shell")
@@ -175,25 +219,21 @@ def _canonical_definition_text(raw: str, masked: str, after: int,
     return raw[line_start:definition.body_close + 1]
 
 
-def source_hashes(*, legacy: bool = False) -> dict[tuple[str, str], str]:
-    """Hash each VA-owned function's own definition, keyed like objdiff.
+def _source_definitions():
+    """Yield each VA-owned function's own definition, keyed like objdiff.
 
     The source VA supplies stable retail identity, avoiding a lossy
     mangled-name-to-C++-name join. Functions without an attributable
     definition deliberately get no fingerprint: unknown must not be mistaken
     for an edit and turn collateral optimizer movement into a reported drop.
     """
-    import hashlib
-
     from homm3.build import configure
-    from homm3.core.cpp_tokens import fingerprint
     from homm3.retail_labels import source
 
     by_identity: dict[tuple[str, int], list[tuple[str, str]]] = {}
     for key, rva in function_rvas().items():
         by_identity.setdefault((key[0], rva), []).append(key)
 
-    hashes: dict[tuple[str, str], str] = {}
     _build, _profiles, units = configure.load_manifest()
     va_head, _arity, _prototype = source.MACRO_HEADS["VA"]
     for unit in units:
@@ -215,8 +255,7 @@ def source_hashes(*, legacy: bool = False) -> dict[tuple[str, str], str]:
                     raw, masked, end + 1, key[1])
                 if definition is None:
                     continue
-                hashes[key] = (hashlib.sha1(definition.encode("utf-8", "replace")).hexdigest()[:12]
-                               if legacy else fingerprint(definition))
+                yield key, definition
     # Canonical header bodies carry their own VA annotations. Their retail
     # comparison carrier may be any emitted TU; identity is the RVA, while
     # the fingerprint must follow the physical header definition.
@@ -234,9 +273,28 @@ def source_hashes(*, legacy: bool = False) -> dict[tuple[str, str], str]:
             for key in keys_by_rva.get(rva, ()):
                 definition = _canonical_definition_text(raw, masked, end + 1, key[1])
                 if definition is not None:
-                    hashes[key] = (hashlib.sha1(definition.encode("utf-8", "replace")).hexdigest()[:12]
-                                   if legacy else fingerprint(definition))
-    return hashes
+                    yield key, definition
+
+
+def _legacy_hash(definition: str) -> str:
+    import hashlib
+    return hashlib.sha1(definition.encode("utf-8", "replace")).hexdigest()[:12]
+
+
+def source_hashes(*, legacy: bool = False) -> dict[tuple[str, str], str]:
+    from homm3.core.cpp_tokens import fingerprint
+    digest = _legacy_hash if legacy else fingerprint
+    return {key: digest(definition) for key, definition in _source_definitions()}
+
+
+def source_hash_pair() -> tuple[dict, dict]:
+    """Current and migration hashes from one source scan; never persisted."""
+    from homm3.core.cpp_tokens import fingerprint
+    current, legacy = {}, {}
+    for key, definition in _source_definitions():
+        current[key] = fingerprint(definition)
+        legacy[key] = _legacy_hash(definition)
+    return current, legacy
 
 
 def migrate_source_hashes(rows: dict, hashes: dict, legacy: dict) -> dict:
@@ -275,21 +333,25 @@ def load_baseline(path: Path | None = None) -> dict[tuple[str, str], MatchRow]:
     return rows
 
 
-def historical_maxima_from_git() -> dict[object, float]:
+def baseline_history() -> str:
+    """One read of immutable Git history; callers may share it within a build."""
+    relative = BASELINE.relative_to(common.HOMM3_DIR)
+    result = subprocess.run(
+        ["git", "log", "-p", "--format=", "--", str(relative)],
+        cwd=common.HOMM3_DIR, capture_output=True, text=True)
+    return result.stdout if result.returncode == 0 else ''
+
+
+def historical_maxima_from_git(patch: str | None = None) -> dict[object, float]:
     """Recover peaks from every tracked baseline revision during migration.
 
     `git log -p` exposes each value when it first enters the generated file,
     including maxima that legacy practice later lowered. This is deliberately
     read-only Git history: the status writer remains the sole TSV writer.
     """
-    relative = BASELINE.relative_to(common.HOMM3_DIR)
-    result = subprocess.run(
-        ["git", "log", "-p", "--format=", "--", str(relative)],
-        cwd=common.HOMM3_DIR, capture_output=True, text=True)
-    if result.returncode != 0:
-        return {}
+    patch = baseline_history() if patch is None else patch
     maxima: dict[object, float] = {}
-    for patch_line in result.stdout.splitlines():
+    for patch_line in patch.splitlines():
         if not patch_line.startswith("+") or patch_line.startswith("+++"):
             continue
         cols = patch_line[1:].split("\t")
@@ -487,12 +549,15 @@ def update_rows(current: dict, previous: dict, rvas: dict,
     return rows, stats
 
 
-def cmd_update(report: dict) -> int:
+def cmd_update(report: dict, *, fingerprint_pair: tuple[dict, dict] | None = None,
+               history_patch: str | None = None) -> int:
+    require_built_sources()
+    require_fresh_comparisons()
     previous = load_baseline()
     previous, recovered = seed_historical_maxima(
-        previous, historical_maxima_from_git())
-    hashes = source_hashes()
-    previous = migrate_source_hashes(previous, hashes, source_hashes(legacy=True))
+        previous, historical_maxima_from_git(history_patch))
+    hashes, legacy = fingerprint_pair if fingerprint_pair is not None else source_hash_pair()
+    previous = migrate_source_hashes(previous, hashes, legacy)
     rows, stats = update_rows(
         fn_fuzzy(report), previous, function_rvas(), hashes)
     write_baseline(rows)
@@ -535,14 +600,15 @@ def checkpoint_drops(current: dict, hashes: dict,
     return drops
 
 
-def cmd_check(report: dict) -> int:
+def cmd_check(report: dict, *, fingerprint_pair: tuple[dict, dict] | None = None) -> int:
+    require_built_sources()
     rows = load_baseline()
     if not rows:
         print("[status] no baseline yet - run `homm3 status update`")
         return 0
     current = fn_fuzzy(report)
-    hashes = source_hashes()
-    rows = migrate_source_hashes(rows, hashes, source_hashes(legacy=True))
+    hashes, legacy = fingerprint_pair if fingerprint_pair is not None else source_hash_pair()
+    rows = migrate_source_hashes(rows, hashes, legacy)
     drops = checkpoint_drops(current, hashes, rows, function_rvas())
     for (unit, fn), previous_max, historical, value in drops:
         now = f"{value:.2f}%" if value is not None else "MISSING"
@@ -747,6 +813,11 @@ def main(argv=None) -> int:
         print("[status] --gate is obsolete: score checkpoints are "
               "observational")
     command = argv[0] if argv else "summary"
+    if command not in ("summary", "functions", "update", "check"):
+        print(f"usage: homm3 status [functions [FILTER...]|update|check] "
+              f"[--write-readme] (got {command!r})", file=sys.stderr)
+        return 2
+    require_built_sources()
     report = load_report()
     if readme:
         write_readme(report)
@@ -756,12 +827,7 @@ def main(argv=None) -> int:
         return cmd_functions(report, argv[1:])
     if command == "update":
         return cmd_update(report)
-    if command == "check":
-        return cmd_check(report)
-    print(f"usage: homm3 status [functions [FILTER...]|update "
-          f"|check] [--write-readme] "
-          f"(got {command!r})", file=sys.stderr)
-    return 2
+    return cmd_check(report)
 
 
 if __name__ == "__main__":

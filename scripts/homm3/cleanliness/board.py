@@ -217,12 +217,14 @@ def _cpp_local_enum_sites(code: str, ctx) -> list:
     return out
 
 
-def _dc_local_classes(sources):
+def _dc_local_classes(sources, dc_origins=None):
     from collections import Counter, defaultdict
     from homm3.match.source_ownership import read_dc, read_filter, family_name
     origins = defaultdict(set)
     private_origins = defaultdict(set)
-    for row in read_dc(REPO):
+    for row in (read_dc(REPO) if dc_origins is None else dc_origins):
+        if row.declaration_only:
+            continue  # This metric needs proven procedure locations only.
         name = family_name(row.name)
         if name.startswith("`anonymous namespace'::"):
             member = name[len("`anonymous namespace'::"):]
@@ -457,7 +459,7 @@ RATCHET = {label for label, _, _, _ in METRICS}
 _FIX = {label: fix for label, _, _, fix in METRICS}
 
 
-def count(per_file: bool = False):
+def count(per_file: bool = False, *, dc_origins=None):
     sources = []
     for root in ROOTS:
         base = REPO / root
@@ -477,7 +479,7 @@ def count(per_file: bool = False):
     ctx = {"enums": names, "enum_cast_re": _enum_cast_pattern(names),
            "pp_legit": _legit_pp_names(sources)}
 
-    local_classes = _dc_local_classes(sources)
+    local_classes = _dc_local_classes(sources, dc_origins)
     totals = {label: 0 for label, _, _, _ in METRICS}
     offenders = []
     for path, code in sources:
@@ -788,14 +790,14 @@ def selftest() -> list[str]:
 
 # --- entry points -----------------------------------------------------------------
 
-def check_and_roll(write: bool) -> list[str]:
+def check_and_roll(write: bool, *, dc_origins=None) -> list[str]:
     """The build-tail gate: selftest, count, compare ratcheted rows to
     their floors; on `write` roll the baseline down-only. Returns fatal
     violation lines (empty = pass); prints the scoreboard line."""
     broken = selftest()
     if broken:
         return [f"cleanliness SELFTEST BROKEN: {b}" for b in broken]
-    rows, offenders = count(per_file=True)
+    rows, offenders = count(per_file=True, dc_origins=dc_origins)
     base = load_baseline()
     violations = []
     for label, n in rows:

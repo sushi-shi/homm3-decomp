@@ -20,6 +20,11 @@ class NB11Error(InputError):
     pass
 
 
+@lru_cache(maxsize=64)
+def _layout(fmt: str) -> struct.Struct:
+    return struct.Struct(fmt)
+
+
 class _View:
     def __init__(self, data: bytes):
         self.data = data
@@ -30,7 +35,10 @@ class _View:
         return self.data[offset:offset + size]
 
     def unpack(self, fmt: str, offset: int = 0) -> tuple:
-        return struct.unpack(fmt, self.part(offset, struct.calcsize(fmt)))
+        layout = _layout(fmt)
+        if offset < 0 or offset + layout.size > len(self.data):
+            raise NB11Error(f"truncated PE/NB11 record at {offset:#x}, size {layout.size:#x}")
+        return layout.unpack_from(self.data, offset)
 
     def string(self, offset: int) -> str:
         size, = self.unpack("<B", offset)

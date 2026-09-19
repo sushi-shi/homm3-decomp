@@ -41,7 +41,7 @@ import subprocess
 import sys
 
 from homm3.core import common
-from homm3.match.status import BASELINE, MatchRow, load_baseline
+from homm3.match.status import BASELINE, MatchRow, load_baseline, baseline_history
 
 WAIVERS = common.HOMM3_DIR / "config/match-banked-waivers.tsv"
 
@@ -88,14 +88,8 @@ def missing_rows(history: dict[int, tuple[float, str, str]],
                   if best > 0.0 and rva not in present and rva not in waived)
 
 
-def history_from_git() -> dict[int, tuple[float, str, str]]:
-    relative = BASELINE.relative_to(common.HOMM3_DIR)
-    result = subprocess.run(
-        ["git", "log", "-p", "--format=", "--", str(relative)],
-        cwd=common.HOMM3_DIR, capture_output=True, text=True)
-    if result.returncode != 0:
-        return {}
-    return parse_history(result.stdout)
+def history_from_git(patch: str | None = None) -> dict[int, tuple[float, str, str]]:
+    return parse_history(baseline_history() if patch is None else patch)
 
 
 def load_waivers() -> dict[int, str]:
@@ -166,12 +160,12 @@ def selftest() -> list[str]:
     return failures
 
 
-def run_gate() -> list[str]:
+def run_gate(*, history_patch: str | None = None) -> list[str]:
     broken = selftest()
     if broken:
         return [f"banked-rows SELFTEST BROKEN: {b}" for b in broken]
 
-    history = history_from_git()
+    history = history_from_git(history_patch)
     if not history:
         print("[build] banked-rows: no tracked baseline history - skipped")
         return []
