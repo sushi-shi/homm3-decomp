@@ -217,25 +217,21 @@ def _canonical_definition_text(raw: str, masked: str, after: int,
     return raw[line_start:definition.body_close + 1]
 
 
-def source_hashes(*, legacy: bool = False) -> dict[tuple[str, str], str]:
-    """Hash each VA-owned function's own definition, keyed like objdiff.
+def _source_definitions():
+    """Yield each VA-owned function's own definition, keyed like objdiff.
 
     The source VA supplies stable retail identity, avoiding a lossy
     mangled-name-to-C++-name join. Functions without an attributable
     definition deliberately get no fingerprint: unknown must not be mistaken
     for an edit and turn collateral optimizer movement into a reported drop.
     """
-    import hashlib
-
     from homm3.build import configure
-    from homm3.core.cpp_tokens import fingerprint
     from homm3.retail_labels import source
 
     by_identity: dict[tuple[str, int], list[tuple[str, str]]] = {}
     for key, rva in function_rvas().items():
         by_identity.setdefault((key[0], rva), []).append(key)
 
-    hashes: dict[tuple[str, str], str] = {}
     _build, _profiles, units = configure.load_manifest()
     va_head, _arity, _prototype = source.MACRO_HEADS["VA"]
     for unit in units:
@@ -257,8 +253,7 @@ def source_hashes(*, legacy: bool = False) -> dict[tuple[str, str], str]:
                     raw, masked, end + 1, key[1])
                 if definition is None:
                     continue
-                hashes[key] = (hashlib.sha1(definition.encode("utf-8", "replace")).hexdigest()[:12]
-                               if legacy else fingerprint(definition))
+                yield key, definition
     # Canonical header bodies carry their own VA annotations. Their retail
     # comparison carrier may be any emitted TU; identity is the RVA, while
     # the fingerprint must follow the physical header definition.
@@ -276,9 +271,28 @@ def source_hashes(*, legacy: bool = False) -> dict[tuple[str, str], str]:
             for key in keys_by_rva.get(rva, ()):
                 definition = _canonical_definition_text(raw, masked, end + 1, key[1])
                 if definition is not None:
-                    hashes[key] = (hashlib.sha1(definition.encode("utf-8", "replace")).hexdigest()[:12]
-                                   if legacy else fingerprint(definition))
-    return hashes
+                    yield key, definition
+
+
+def _legacy_hash(definition: str) -> str:
+    import hashlib
+    return hashlib.sha1(definition.encode("utf-8", "replace")).hexdigest()[:12]
+
+
+def source_hashes(*, legacy: bool = False) -> dict[tuple[str, str], str]:
+    from homm3.core.cpp_tokens import fingerprint
+    digest = _legacy_hash if legacy else fingerprint
+    return {key: digest(definition) for key, definition in _source_definitions()}
+
+
+def source_hash_pair() -> tuple[dict, dict]:
+    """Current and migration hashes from one source scan; never persisted."""
+    from homm3.core.cpp_tokens import fingerprint
+    current, legacy = {}, {}
+    for key, definition in _source_definitions():
+        current[key] = fingerprint(definition)
+        legacy[key] = _legacy_hash(definition)
+    return current, legacy
 
 
 def migrate_source_hashes(rows: dict, hashes: dict, legacy: dict) -> dict:
@@ -529,14 +543,14 @@ def update_rows(current: dict, previous: dict, rvas: dict,
     return rows, stats
 
 
-def cmd_update(report: dict) -> int:
+def cmd_update(report: dict, *, fingerprint_pair: tuple[dict, dict] | None = None) -> int:
     require_built_sources()
     require_fresh_comparisons()
     previous = load_baseline()
     previous, recovered = seed_historical_maxima(
         previous, historical_maxima_from_git())
-    hashes = source_hashes()
-    previous = migrate_source_hashes(previous, hashes, source_hashes(legacy=True))
+    hashes, legacy = fingerprint_pair if fingerprint_pair is not None else source_hash_pair()
+    previous = migrate_source_hashes(previous, hashes, legacy)
     rows, stats = update_rows(
         fn_fuzzy(report), previous, function_rvas(), hashes)
     write_baseline(rows)
@@ -579,15 +593,15 @@ def checkpoint_drops(current: dict, hashes: dict,
     return drops
 
 
-def cmd_check(report: dict) -> int:
+def cmd_check(report: dict, *, fingerprint_pair: tuple[dict, dict] | None = None) -> int:
     require_built_sources()
     rows = load_baseline()
     if not rows:
         print("[status] no baseline yet - run `homm3 status update`")
         return 0
     current = fn_fuzzy(report)
-    hashes = source_hashes()
-    rows = migrate_source_hashes(rows, hashes, source_hashes(legacy=True))
+    hashes, legacy = fingerprint_pair if fingerprint_pair is not None else source_hash_pair()
+    rows = migrate_source_hashes(rows, hashes, legacy)
     drops = checkpoint_drops(current, hashes, rows, function_rvas())
     for (unit, fn), previous_max, historical, value in drops:
         now = f"{value:.2f}%" if value is not None else "MISSING"

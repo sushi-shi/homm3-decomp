@@ -80,8 +80,9 @@ def main(argv=None) -> int:
     # Check BEFORE updating the ledger so a changed function is compared with
     # its preceding MAX/source hash. The update then resets MAX for a proven
     # source edit while preserving HIST.
-    status.cmd_check(report)
-    status.cmd_update(report)
+    fingerprint_pair = status.source_hash_pair()
+    status.cmd_check(report, fingerprint_pair=fingerprint_pair)
+    status.cmd_update(report, fingerprint_pair=fingerprint_pair)
 
     # EVERY evidence/source gate runs, even after one fails. Collect, report
     # everything, fail once; these gates, not a local objdiff maximum, decide

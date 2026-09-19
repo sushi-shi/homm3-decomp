@@ -53,8 +53,13 @@ class CacheFillTests(unittest.TestCase):
         self.assertEqual(len(variants), 60)
         for variant in variants:
             changed = variant.source.decode()
-            for name in ("initializePackedCell", "getPackedCell", "getTerrain", "getWidth", "getHeight"):
-                self.assertEqual(len(self.module._source.find_definitions(changed, "rmgTerrainPainter::" + name)), 1)
+            for name in ("initializePackedCell", "getPackedCell", "getTerrain", "getFrame", "getWidth", "getHeight"):
+                found = self.module._source.find_definitions(changed, "rmgTerrainPainter::" + name)
+                self.assertEqual(len(found), 1)
+                if name != "initializePackedCell":
+                    original = self.module._source.find_definitions(self.source, "rmgTerrainPainter::" + name)[0]
+                    self.assertEqual(changed[found[0].head:found[0].body_close + 1],
+                                     self.source[original.head:original.body_close + 1])
         with self.assertRaisesRegex(ValueError, "review ten unique"):
             self.module.make_order_manifest(self.source, parents[:-1])
 

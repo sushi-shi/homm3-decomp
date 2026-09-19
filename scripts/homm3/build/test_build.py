@@ -36,6 +36,7 @@ class BuildModeTest(unittest.TestCase):
             ("delink", delink, "main", 0),
             ("normalize", normalize_objs, "main", 0),
             ("report", status, "load_report", {}),
+            ("fingerprints", status, "source_hash_pair", ({}, {})),
             ("check", status, "cmd_check", None),
             ("checkpoint", status, "cmd_update", None),
             ("banked", banked_rows, "run_gate", []),
@@ -53,7 +54,7 @@ class BuildModeTest(unittest.TestCase):
     def test_full_build_refreshes_existing_targets_before_checkpoint(self):
         self.assertEqual(build.main([]), 0)
         self.assertEqual(self.events, ["configure", "compile", "delink", "report",
-                                      "check", "checkpoint", "banked", "claims",
+                                      "fingerprints", "check", "checkpoint", "banked", "claims",
                                       "single_view", "ownership", "cleanliness", "readme"])
         self.mocks["compile"].assert_called_once_with("ninja")
         self.mocks["normalize"].assert_not_called()  # delink already normalizes

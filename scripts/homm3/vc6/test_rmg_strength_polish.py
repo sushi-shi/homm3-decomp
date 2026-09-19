@@ -21,7 +21,7 @@ class StrengthPolishTests(unittest.TestCase):
         for row in axis["options"]:
             body = row["replace"]
             self.assertEqual(body.count("getTerrain(nearby)"), 4)
-            self.assertEqual(body.count("getPackedCell(nearby)->getFrame()"), 4)
+            self.assertEqual(body.count("getFrame(nearby)"), 4)
             self.assertEqual(body.count("strength >>= 1"), 4)
             self.assertNotIn("#pragma", body)
             changed = self.source.replace(axis["find"], body)
@@ -35,7 +35,7 @@ class StrengthPolishTests(unittest.TestCase):
         self.assertEqual([len(axis["options"]) for axis in payload["axes"]], [10, 6])
         axis = payload["axes"][1]
         self.assertEqual(axis["options"][0]["replace"], axis["find"])
-        names = ("getPackedCell", "getTerrain", "getWidth", "getHeight")
+        names = ("getPackedCell", "getTerrain", "getFrame", "getWidth", "getHeight")
         originals = {}
         for name in names:
             item = self.module._source.find_definitions(self.source, "rmgTerrainPainter::" + name)[0]
@@ -58,9 +58,9 @@ class StrengthPolishTests(unittest.TestCase):
         header = (self.root / "include/rmg.h").read_text()
         start = header.index("struct TRmgGridPoint {")
         grid = header[start:header.index("\n};", start) + 3]
-        program = ["#include <vector>\n#include <climits>\n"]
+        program = ["#include <vector>\n#include <climits>\n#define VA(address, size)\n"]
         for index, (_, body) in enumerate(self.module.bodies()):
-            program += [f"namespace Case{index} {{\n", "struct TPoint { int m_x, m_y; };\n", grid, "\n", r"""
+            program += [f"namespace Case{index} {{\n", "struct TPoint { int m_x, m_y; TPoint(int x, int y) : m_x(x), m_y(y) {} };\n", grid, "\n", r"""
 std::vector<int> g_events;
 int g_queries, g_mode, g_terrain;
 struct TRmgPackedTerrainCell {
@@ -88,6 +88,7 @@ struct rmgTerrainPainter {
         return &m_scratch;
     }
     int getTerrain(const TRmgGridPoint& point) { return getPackedCell(point)->getTerrain(); }
+    int getFrame(const TRmgGridPoint& point) { return getPackedCell(point)->getFrame(); }
     int getTransitionStrength(const TRmgGridPoint&, int);
 };
 """, body, "\n", r"""
