@@ -10168,33 +10168,26 @@ VA_COMPGEN(0x0054D0F0, 0x2D, LIST_BUYNODE, TPoint)
 // recovery of the canonical site/point ownership and retained helper surface.
 
 // Each uncomputed interior half-edge identifies an incident triangle. Retail
-// computes its integer circumcenter through the canonical point/vector
-// operations, then shares the result with the other two incident half-edges.
-// The first point subtraction expands; the two later subtractions and the
-// scale, divide and translate operators are calls. Those seven calls can
-// only be refused one level down: the arithmetic is an ordinary three-point
-// helper whose nested budget is (958 - 171) / 8 = 98 with the three
-// setPosition and four navigation sites after it, so the first subtraction
-// (51) expands and everything after it is refused (predict-inline --trace
-// 0x5fdb40). A member helper reading m_next->m_twin->m_sitePosition costs
-// too much for C1XX to save its body (never a candidate), as does inline
-// dot arithmetic beyond ~200; the by-value dot helper keeps it at 171.
-// Retail's 0x78 frame holds the seven hidden-result temporaries.
-// Residual (87.7394%): register roles differ in the argument loads and the
-// dot products; a 56-state family (argument order, origin/third locals,
-// dot operand order, setPosition binding) peaks here from 84.1197%.
-// Dot product of two displacement vectors; y first reproduces retail's
-// product order in buildVertices.
-static int getRmgDotProduct(TRmgVector first, TRmgVector second)
+// computes its integer circumcenter through canonical point/vector operations,
+// then shares it with the other two incident half-edges. These Complete-only
+// helper names/interfaces remain provisional: no DC counterpart was found.
+// The first subtraction expands inside an ordinary three-point helper; two
+// later subtractions and five arithmetic operations remain calls. Flattening
+// that boundary or exposing the edge-navigation body inside the helper does
+// not reproduce the retained call sequence. No inline-depth pin is needed.
+// Dot inputs bind by const reference; by-value inputs peak at 87.7394% with
+// the previous origin-local caller, versus 93.7676% with reference inputs
+// (64 ownership states, 61 distinct objects). Preserve y-before-x products.
+static int getRmgDotProduct(const TRmgVector& first, const TRmgVector& second)
 {
     return first.m_y * second.m_y + first.m_x * second.m_x;
 }
 
 // Circumcenter of the triangle with these three sites: the perpendicular
 // bisector of the origin-to-second side, scaled by the projected sides.
-// Parameter order follows the argument evaluation retail shows (the
-// opposite site is loaded before the site across the next edge).
-static TPoint computeRmgCircumcenter(TPoint origin, TPoint third, TPoint second)
+// Materialize the opposite site at the caller. This by-value parameter order
+// reproduces retail's 0x78 frame and its origin/third-site stack slots.
+static TPoint computeRmgCircumcenter(TPoint third, TPoint origin, TPoint second)
 {
     TRmgVector axis = second - origin;
     TRmgVector perpendicular(-axis.m_y, axis.m_x);
@@ -10204,15 +10197,26 @@ static TPoint computeRmgCircumcenter(TPoint origin, TPoint third, TPoint second)
         / getRmgDotProduct(perpendicular, thirdSide)) / 2;
 }
 
+// Residual 97.5070%: input coordinate-load scheduling and the first setter's
+// y reload differ; all seven calls and the intervening arithmetic agree.
+// The 48 site-materialization/argument-order states emitted 24 distinct
+// objects; three orders with only the opposite site materialized share this
+// peak. All other scored functions stay unchanged. Follow-up controls do not
+// improve it: caller/setter binding (36 states), parent bindings (55), axis
+// and return lifetimes (55), canonical operator construction (36), parameter
+// ownership (25), setter construction (12), side/dot order (37), and direct
+// initialization (25). Native triangle/ring checks preserve integer division,
+// all three position/flag writes, inactive edges and graph links. Earlier
+// 56-state by-value-dot argument/order/binding probes peaked at 87.7394%.
 VA(0x005FDB40, 0x16E) // anchor-caller 0x53e050; Complete-only, thiscall ret 0
 void TRmgVoronoi::buildVertices()
 {
     for (unsigned int index = 0; index < m_edges.size(); ++index) {
         TRmgBoundaryVertex* edge = m_edges[index];
         if (edge->getZone() && !edge->isPositionComputed()) {
-            TPoint origin = edge->getSitePosition();
-            TPoint position = computeRmgCircumcenter(origin,
-                edge->getNext()->getOppositeSitePosition(), edge->getOppositeSitePosition());
+            TPoint second = edge->getOppositeSitePosition();
+            TPoint position = computeRmgCircumcenter(edge->getNext()->getOppositeSitePosition(),
+                edge->getSitePosition(), second);
             edge->setPosition(position);
             edge = edge->getNext()->getTwin();
             edge->setPosition(position);
