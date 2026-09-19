@@ -193,11 +193,10 @@ void BinkManager::restartBink()
     }
 }
 
-// A temporary retained-service-call diagnostic recovers the historical 92.92%:
-// the idle return and completion arm are ordered differently, and the final
-// videoDrawRects call becomes a tail jump. Explicit readiness arms and paused
-// work scopes are byte-flat, both with and without that diagnostic. Preserve
-// the canonical serviceSounds inline; no call-boundary override remains.
+// With the Windows serviceSounds definition in soundmgr.cpp, the remaining
+// differences are idle-return/completion-arm placement and videoDrawRects
+// becoming a tail jump. Readiness arms and paused work scopes are byte-flat;
+// completion-first guards and a completion flag worsen the retail CFG.
 // E:\gamedcs\binkmanager.cpp:252, dc 0x50a90
 VA(0x0044DAA0, 0x21A)  // dc-order-map + caller (smackmgr VideoNextFrame), dc 0x50a90
 void BinkManager::nextBinkFrame()

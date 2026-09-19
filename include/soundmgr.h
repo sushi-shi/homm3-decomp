@@ -180,6 +180,8 @@ public:
     void resumeStream();          // 0x59ac00
     void resumeSamples();         // 0x599b90, name provisional
     void pauseSamples();          // 0x599c40, name provisional
+    // WinCE defines the no-op service_sounds in SoundMgr.h:140. Complete's Miles
+    // implementation is defined in soundmgr.cpp; see its platform evidence comment.
     void serviceSounds();
 
     void setMusicVolume();                              // 0x5994b0
@@ -395,21 +397,5 @@ extern "C" void __cdecl _endthread(void);
 // Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).
 extern soundManager* g_soundManager;
 
-// E:\gamedcs\SoundMgr.h:140, dc 0xe6ef4
-VA(0x0059a7d0, 0x51)  // dc 0xe6ef4
-inline void soundManager::serviceSounds()
-{
-    EnterCriticalSection(&m_sectionSoundCall);
-    AIL_serve();
-    HSTREAM stream = g_mp3Stream;
-    if (stream) {
-        if (g_soundManager->m_mp3Playing) {
-            if (!g_shutDownDone)
-                AIL_service_stream(stream, 1);
-        }
-    }
-    Sleep(1);
-    LeaveCriticalSection(&m_sectionSoundCall);
-}
 
 #endif  /* HOMM3_SOUNDMGR_H */
