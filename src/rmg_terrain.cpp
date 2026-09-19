@@ -717,6 +717,10 @@ int __fastcall selectTerrainTransition(
 // ownership and ordinary cache initialization/resize helpers. Reproduced
 // results remain at or below 35.3347%; keep the proven virtual output ABI.
 // Explicit grid copy constructors and assignment also fail to recover it.
+// Live C2 trace verifies an unchanged object: insert costs 469 against its
+// nested budget of 466. Six return-value ownership variants leave 35.3347%;
+// returning through the existing coordinate constructor lowers it to 34.7992%
+// and still retains insert. No return-helper change is supported.
 VA(0x005B45F0, 0x26D)
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
@@ -1428,6 +1432,8 @@ void rmgTerrainPainter::buildNeighbourKinds(
 // body; the identity of this Complete-only RMG clamp remains unresolved.
 // Nested canonical min/max selectors, including both argument orders and the
 // standard reference selectors, lower both diagonals; no composition is adopted.
+// Explicit int/long selector specializations and signed conversion ownership
+// also preserve the same two residuals; the signed width is not their cause.
 VA(0x005B6BA0, 0x24C)
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)

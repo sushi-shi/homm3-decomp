@@ -3704,6 +3704,9 @@ void type_random_map_generator::initializeObjectGenerators()
 // forms plus the unchanged control give six more (81.91..98.04%). Neither
 // family raises any tracked score. All 104 distinct bodies preserve the
 // bounded integer-distance/ordered-sqrt oracle; the scalar source stays put.
+// Exposing the canonical squared-distance helper and calling it with two
+// point values, direct or named, leaves this body at 98.0374%; its retained
+// support callers keep their calls. This does not explain the extra retail move.
 VA(0x0053AD60, 0x113) // anchor-callee 0x53e2ea/0x53af04; thiscall, ret 4
 unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
 {
@@ -6973,6 +6976,8 @@ void type_random_map_generator::decorateUnderground()
 // Neither improves 99.8683%. At +0x161 the independent error/from.x reloads
 // remain reversed. All 120 forms pass 17,150 closed-form lattice cases each,
 // with four negative controls; no speculative source change is retained.
+// Scalar map queries, two-coordinate owners and XY/YX arrays (16 states,
+// eight objects) also leave the two independent reloads reversed.
 VA(0x00543C70, 0x1A2) // anchor-callee 0x544226; Complete-only, hidden result, ret 0x18
 TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, int level)
 {
@@ -8234,6 +8239,10 @@ VA_COMPGEN(0x0054df40, 0x25, STD_COPY, const_int)
 // live object-vector bounds and mutable virtual queries; wrong policies fail.
 // Preserve the canonical lookups and retained position constructor. The
 // multiply alone does not justify flattening or moving either helper.
+// That peak predates exposing the ordinary position constructor in this TU.
+// Current 93.3047% expands the constructor retained at retail +0x132. Calling
+// the canonical position-plus-point operation reaches 93.3242%, still without
+// that call; the older four-byte residual is not the current stopping point.
 // Canonical-accessor control: 60 row/index lifetime, arithmetic-operand and
 // result-binding forms produce 11 distinct objects, with ten reproduced
 // retained candidates. Every form keeps this same four-byte mismatch.
@@ -8335,6 +8344,10 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 // A separate blocked-entrance result reaches 98.2893%; head-tested scans
 // whose exhaustion arm owns the guard-policy assignment reach 99.2993%
 // with for/while/do headers. Both remain below 99.9850%.
+// These peaks precede the constructor visibility recovery. Current 96.8953%
+// expands the constructor retained at retail +0xbd (live C2 cost 47 versus
+// direct-site budget 2404). Position-plus-guard-point reaches 96.9476% but
+// still expands it; restoring the call must precede the old stack-home work.
 VA(0x00546C70, 0x452) // anchor-callee 0x54721c; thiscall, ret 0x14
 unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition position, TRmgZone* zone)
@@ -9220,7 +9233,9 @@ void type_random_map_generator::createRivers()
 // String assignment/receiver APIs and shared or typed slot-zeroing loops
 // also fail to settle the selected-index register; keep the current source.
 // All 69 blocks, 39 branches and ordered calls agree; only four selected-index
-// instructions differ. The 116-form native oracle preserves player mapping,
+// instructions differ. Named random/count values and a template-name owner
+// (21 states, 12 objects) leave 99.9357% as the peak.
+// The 116-form native oracle preserves player mapping,
 // ordered callbacks and callback mutations, rejecting seven negative controls.
 VA(0x00549930, 0x37B)
 unsigned char type_random_map_generator::generate()
