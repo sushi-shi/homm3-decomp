@@ -8794,30 +8794,23 @@ unsigned char type_random_map_generator::paintRoad(TRmgMapPosition position, int
     }
 }
 
-// CreateRiver and the retail route at 0x548500 share this constructor,
-// GetMapItem(0, 0), and whole-map predecessor/cost reset sequence. Keeping
-// that common pass as an ordinary generator helper recovers all six seed
-// insert calls, both popped-element erase calls, and the range erase in
-// CreateRiver (75.23%, versus 71.47% with the pass flattened there).
-// Dreamcast has no RMG compiland; the role name/linkage remain provisional.
-// Unsigned width/height values passed through the recovered grid constructor
-// restore all 90 raw bytes at CreateRiver +0x42..+0x9c: the height temporary,
-// volume calculation and by-value predecessor copy. Scalar products/getters
-// and signed TPoint size queries lose those homes. Direct grid construction
-// from the signed fields instead spills width; naming height before width
-// also reverses the retail dimension loads. The loop retains its 0xbc frame.
-// CreateRiver reaches 85.96%; early vector _Destroy calls still over-expand.
-// Its final empty-vector cleanup now has separate returns where retail shares
-// the final delete epilogue. Preserve the exact reset sequence through that
-// remaining caller cleanup work.
+// The river and road callers share the invalid-predecessor constructor,
+// GetMapItem(0, 0), and whole-map cost reset. This ordinary helper preserves
+// those source calls; retail expands both in createRoads but retains them at
+// createRiverToObject +0x2f/+0x3d. RMG has no Dreamcast counterpart, so the
+// role name and linkage remain inferred from retail callers.
+// A separate signed row count recovers the levels-before-height products in
+// both road resets. All six unbroken product permutations emit height first
+// (99.9816%); a signed width*levels intermediate also reproduces the exact
+// result. The older unsigned grid-size temporary matched one river prefix,
+// but the scalar model matches the entire road caller and improves both
+// current river callers. Their constructor/cleanup inlining remains open.
 void type_random_map_generator::resetMovementCosts()
 {
     TRmgMapPosition resetPosition(-1, -1, -1);
     TRmgMapItem* mapItem = m_map.getMapItem(0, 0);
-    unsigned width = m_map.m_mapWidth;
-    unsigned height = m_map.m_mapHeight;
-    TRmgGridPoint mapSize(width, height);
-    int mapItemCount = mapSize.m_x * mapSize.m_y * m_map.m_numberLevels;
+    int rowCount = m_map.m_numberLevels * m_map.m_mapHeight;
+    int mapItemCount = rowCount * m_map.m_mapWidth;
     while (mapItemCount--) {
         mapItem->resetMovement(resetPosition);
         ++mapItem;
@@ -8826,9 +8819,8 @@ void type_random_map_generator::resetMovementCosts()
 
 // Retail 0x549c98 connects every ordered target pair using one random road
 // style. A successful draw changes traversal costs for subsequent targets.
-// Partial 71.72%: resetMovementCosts retains its position constructor and
-// two-coordinate map lookup at each call; retail expands both. Keep the
-// canonical shared reset rather than copying its body into this caller.
+// Exact with a copied destination and the shared scalar-volume reset.
+// A destination reference leaves different register homes (99.8341%).
 VA(0x00548290, 0x26E)
 void type_random_map_generator::createRoads()
 {
@@ -8838,8 +8830,9 @@ void type_random_map_generator::createRoads()
         resetMovementCosts();
         buildRoadCostMap(source);
         for (unsigned int second = first + 1; second < m_roadTargets.size(); ++second) {
-            if (m_map.getMapItem(m_roadTargets[second])->m_movement.m_cost <= 30000
-                && paintRoad(m_roadTargets[second], roadType)
+            TRmgMapPosition destination = m_roadTargets[second];
+            if (m_map.getMapItem(destination)->m_movement.m_cost <= 30000
+                && paintRoad(destination, roadType)
                 && second < m_roadTargets.size() - 1) {
                 resetMovementCosts();
                 buildRoadCostMap(source);
