@@ -2320,6 +2320,11 @@ type_object* type_key_tent_def::generate(TRmgObjectPropertiesRef* properties,
 // scheduler together; selecting their separate peaks loses this combination.
 // The canonical two-coordinate lookup expands here but is called by retail
 // reset copies at 0x547625/0x547717. Keep its one ordinary body in this TU.
+// Five dimension-query controls using the recovered getSize(output) interface
+// leave a virtual slot-3 call absent from retail, add an object-copy call, and
+// still expand the outline destructor. Owned-map/reference receivers and
+// direct-output/returned-reference bindings give 198/199-byte bodies with a
+// 0xc frame and nine blocks; the direct dimension reads remain supported.
 VA(0x00535040, 0xC6) // anchor-callee 0x5473d2; thiscall, ret 0; retail-only
 void TRmgTreasureGroup::reset()
 {
@@ -5485,6 +5490,9 @@ void type_random_map_generator::repairWaterZoneBorders()
 // all siblings hold. Trigger scopes and canonical compound translation do
 // not raise the peak. See generate-rmg-add-object-family.py; the independent
 // 159-body distance oracle passes with ten wrong controls rejected.
+// A joint zone-count reference-accessor control changes registration, removal
+// and treasure-limit reads together. Both reproduced states give identical
+// caller bytes and equivalent EH/relocations; that lvalue boundary is neutral.
 VA(0x005402A0, 0x32A) // anchor-vtable + generator/map layouts; retail-only
 void type_random_map_generator::addObject(type_object* object, TRmgMapPosition position)
 {
@@ -7901,6 +7909,8 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
 // but adds size calls and conditional skips absent from retail. Truth-only
 // bool/byte flag models leave this body identical; compact-bool instead
 // changes the caller's conversion. See the complete source-family evidence.
+// The joint ordinary zone objectCount(int)->int& control also leaves this
+// caller's complete instruction/EH/call stream unchanged; no accessor adopted.
 VA(0x00546190, 0x385) // anchor-callee 0x546572/0x546663; thiscall, ret 0x28
 type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
     int minimum, int maximum, int* value, unsigned char primary,
@@ -10191,6 +10201,10 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
 // Snapshotting the object kind and nested trigger point before the map query
 // raises matching to 95.7733%. Keep the existing direct per-zone decrement;
 // the separate inferred decrement helper from the old branch is not needed.
+// A two-state joint test of an ordinary int& zone-count accessor at all three
+// increment/decrement/limit consumers reproduces identical caller bytes.
+// The accessor fully expands; its returned lvalue does not recover memory DEC
+// or alter the entrance/color homes. Fixed-array storage stays unchanged.
 VA(0x0054BC50, 0x2AE) // anchor-callee 0x5338e0/0x54b490; retail-only
 void type_random_map_generator::removeObject(type_object* object)
 {

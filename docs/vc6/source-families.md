@@ -1979,6 +1979,39 @@ Full parent admission also handles exhausted populations below sixty: every
 finite manifest choice must have a distinct scored record, in addition to the
 source/header snapshot and repeated-object checks.
 
+### Zone-count lvalue ownership across registration and removal
+
+Retail registration (0x5402a0+0xfa) and removal (0x54bc50+0xe0) update the
+zone count directly in memory. Removal's global count instead uses a load,
+decrement and store. `generate-rmg-zone-count-reference-family.py` tests this
+as a shared zone interface: one ordinary `int& objectCount(int objectType)`
+returns the existing array entry, consumed by registration++, removal-- and
+the treasure-limit read together. The fixed 232-element storage and global
+count accesses remain intact. All receivers are mutable, so no additional
+const overload is needed. The accessor identity is provisional; neither a
+Dreamcast name nor a retained retail body is claimed.
+
+Context `b5e97720385f6cd24cb4` scores two states over seven header consumers
+and reproduces both distinct aggregate objects. All three selected caller
+instruction payloads are identical to their direct-array controls:
+registration 895 bytes/69.5855%, removal 693 bytes/95.7733%, and treasure
+creation 964 bytes/81.6894%. Their call sites and EH records are equivalent;
+eleven nominal symbol pairs were followed through matching exception tables
+and the unchanged 64-byte direction table. The ordinary accessor emits a
+13-byte address-return body and fully expands at its uses. It does not recover
+the memory decrement or change entrance/color registers. No executable model
+is adopted and no new follow-up family is started.
+
+`test_rmg_zone_count_reference.py` checks the actual complete three-consumer
+bodies with the existing independent registration fixed-point, removal
+destination-cell enumeration and treasure-selection fixtures. It imports
+current coordinate/mask/helper bodies and adapts the host map-registration
+boundary to the recovered reference contract. Both models pass; all 232
+returned-reference identities are checked across separate zone owners.
+Six wrong controls reject reversed increment/decrement, an incorrect limit
+boundary and wrong-entry access at each consumer. Otherwise-unused host
+counter slots are initialized for those wrong-entry tests. UBSan is clean.
+
 ### Connection-cost worklist ownership
 
 `generate-rmg-connection-queue-family.py` audits `floodConnectionCosts`
@@ -3454,6 +3487,18 @@ RMG scores relative to the corrected-accessor baseline. Assembly now
 retains both entry erasures, but its first map clear is under-inlined and
 its later two-coordinate lookups are over-inlined. Scheduling still has
 three extra blocks and different reset/cleanup expansion decisions.
+
+After recovering the output-reference map-size interface, the finite
+`generate-rmg-reset-dimension-query-family.py` tests its use inside reset.
+The field control and four owned-map/reference, output/returned-reference
+combinations form context `acbf8167714d455a6e53`: five source states, three
+distinct objects, all three reproduced. Every query retains virtual slot 3,
+which retail reset never calls. It also retains object-vector `copy`, while
+the missing outline `_Destroy` remains expanded. The query bodies are
+198/199 bytes with a 0xc frame and nine blocks, at 55.1098%; retail has no
+EBP frame and eleven blocks. The direct field control remains at 80.8902%.
+This rejects the tested query composition on its actual call sequence; no
+source model is adopted. The canonical size interface itself is unchanged.
 
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-reset-family.py \
