@@ -3951,6 +3951,8 @@ void type_random_map_generator::filterZonePositions(
 // past the wrapper's cost of 64, so both remain expanded. Two more candidate
 // sites after the first push, or 11 more units spent before it, would refuse
 // them; neither has a source correlate yet.
+// Canonical setLevelPosition at the surface/underground seeds, with real
+// temporary or named coordinates, leaves both calls unresolved and is lower.
 VA(0x0053B970, 0x232) // anchor-callee 0x53bde2/0x53be39; thiscall, ret 8
 void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
 {
@@ -7340,9 +7342,12 @@ void type_random_map_generator::placePrimaryTown(TRmgZone* zone)
 // nonempty fixed-count category therefore skips one placement. Density
 // placement balances four weighted counters until every category fails.
 // Complete-only role names; count/density offsets and call order are retail facts.
-// First reconstruction: 93.0076%. The fixed-count loop layout differs first;
-// candidate CFG has 45 blocks versus retail's 49. Preserve all eight placement
-// call sites and the category-specific failure flags while resolving that layout.
+// Exact 688-byte body: explicit primary-skip initialization restores all
+// four fixed-count loops. Starting the density sum/product before the two
+// input arrays restores the scheduler's stack homes and register allocation.
+// Delaying those accumulators leaves 95.8441%; conditional-expression starts
+// leave 93.0076%. Reusing sum as spacing and shared density helpers are neutral.
+// All 49 blocks and the complete instruction/relocation stream reproduce.
 VA(0x00544AE0, 0x2B0)
 void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
 {
@@ -7351,39 +7356,51 @@ void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
     int player = m_playerIndexMap[slot->m_playerIndex + 1];
     unsigned char skipPrimary = 1;
     if (slot->m_parameters0020[1] > 0) {
-        for (int i = 1; i < slot->m_parameters0020[1]; ++i)
+        int i = 0;
+        if (skipPrimary)
+            i = 1;
+        for (; i < slot->m_parameters0020[1]; ++i)
             tryPlaceAdditionalTown(zone, alignment, player, 1, 0);
         skipPrimary = 0;
     }
     if (slot->m_parameters0020[0] > 0) {
-        for (int i = skipPrimary ? 1 : 0; i < slot->m_parameters0020[0]; ++i)
+        int i = 0;
+        if (skipPrimary)
+            i = 1;
+        for (; i < slot->m_parameters0020[0]; ++i)
             tryPlaceAdditionalTown(zone, alignment, player, 0, 0);
         skipPrimary = 0;
     }
     if (slot->m_parameters0020[5] > 0) {
-        for (int i = skipPrimary ? 1 : 0; i < slot->m_parameters0020[5]; ++i)
+        int i = 0;
+        if (skipPrimary)
+            i = 1;
+        for (; i < slot->m_parameters0020[5]; ++i)
             tryPlaceAdditionalTown(zone, alignment, -1, 1, 0);
         skipPrimary = 0;
     }
     if (slot->m_parameters0020[4] > 0) {
-        for (int i = skipPrimary ? 1 : 0; i < slot->m_parameters0020[4]; ++i)
+        int i = 0;
+        if (skipPrimary)
+            i = 1;
+        for (; i < slot->m_parameters0020[4]; ++i)
             tryPlaceAdditionalTown(zone, alignment, -1, 0, 0);
     }
+    int totalDensity = 0;
+    int product = 1;
     int densities[4] = { slot->m_parameters0020[3], slot->m_parameters0020[2],
         slot->m_parameters0020[7], slot->m_parameters0020[6] };
     int counts[4] = { slot->m_parameters0020[1], slot->m_parameters0020[0],
         slot->m_parameters0020[5], slot->m_parameters0020[4] };
     int steps[4];
     unsigned char finished[4];
-    int totalDensity = 0;
-    int product = 1;
     for (int category = 0; category < 4; ++category) {
         if (densities[category] <= 0) {
             finished[category] = 1;
         } else {
             totalDensity += densities[category];
-            product *= densities[category];
             finished[category] = 0;
+            product *= densities[category];
         }
     }
     if (!totalDensity)
@@ -9198,6 +9215,8 @@ void type_random_map_generator::createRivers()
 // A further 60 states cross paired record/two-row/separate slot arrays with
 // initialization and selection lifetimes. Two ordinary byte-fill loops restore
 // both retail human/computer count-load orders; aggregate ownership is neutral.
+// String assignment/receiver APIs and shared or typed slot-zeroing loops
+// also fail to settle the selected-index register; keep the current source.
 // All 69 blocks, 39 branches and ordered calls agree; only four selected-index
 // instructions differ. The 116-form native oracle preserves player mapping,
 // ordered callbacks and callback mutations, rejecting seven negative controls.
@@ -9779,6 +9798,8 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile*, TObjectType*);
 // 95.5687..99.4123%, with every sibling unchanged. Neither closes the bias.
 // The native oracle also appends prototypes during serialization and rejects
 // cached loop sizes, so those per-iteration size queries must remain live.
+// Explicit bucket cursors with indexed, countdown or end-pointer bounds
+// do not recover the receiver bias; no vector-layout access is introduced.
 VA(0x0054ABF0, 0x235) // anchor-callee 0x54c05b + WriteMapHeader and map loops; retail-only
 unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
 {
@@ -9964,6 +9985,8 @@ static void insertRmgWorkItem(std::vector<TRmgZone*>& zones, TRmgZone* zone)
 // versus insert is flat; pop_back lowers to 69.3008% before that refinement.
 // Single/count insertion in the shared helper is flat. Retail retains
 // the seed-insert and erase wrappers that this compile expands.
+// A joint public seed/pop/emptiness family, including the existing sorted
+// insertion helper at the seed, does not improve those retained boundaries.
 VA(0x0054B180, 0x174) // anchor-callee + zone/template layouts; retail-only
 void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
 {

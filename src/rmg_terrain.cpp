@@ -716,6 +716,7 @@ int __fastcall selectTerrainTransition(
 // Thirteen follow-up states test default/named cache values, returned-value
 // ownership and ordinary cache initialization/resize helpers. Reproduced
 // results remain at or below 35.3347%; keep the proven virtual output ABI.
+// Explicit grid copy constructors and assignment also fail to recover it.
 VA(0x005B45F0, 0x26D)
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)

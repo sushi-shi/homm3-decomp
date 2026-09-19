@@ -819,6 +819,8 @@ SIZE(rmgMonsterObject, 0x2c);
 
 // Complete town vtable 0x640a94; constructor expansion at 0x54543d
 // stores owner/option/id in the 0x28-byte allocation. Names are role-derived.
+// Value/reference argument combinations and an ordinary out-of-class body
+// leave both placement callers unchanged; neither model improves their residual.
 class rmgTownObject : public type_object {
 public:
     int m_objectId;
