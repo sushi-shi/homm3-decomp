@@ -180,3 +180,6 @@ An unprofiled warm full-build run fell from **41.26 seconds to 31.73 seconds**
 sources and passed every gate with all 4,765 scores unchanged. The post-change
 ownership refresh was completed before timing, so this is a warm-build
 comparison, not a cold-worktree or compile-time claim.
+
+Follow-up measurements and implemented optimizations are recorded in
+[Tooling performance, 2026-09-19](tooling-performance-20260919.md).
