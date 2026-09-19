@@ -39,7 +39,10 @@ PYTHONPATH=scripts python -m homm3.vc6.source_families \
 - Encode independent alternatives as named `axes` with exact source anchors
   and named `options`; use atomic `extra_edits` for coupled changes. Keep the
   first option unchanged and edits non-overlapping. Reuse existing generators
-  where relevant. Validate the manifest with `--validate-only` before compiling.
+  where relevant; author one-off manifests and any temporary generator under
+  ignored `build/`, not as another committed per-function script. Retire completed
+  searches under AGENTS.md's experiment-lifetime policy. Validate the manifest
+  with `--validate-only` before compiling.
 - Establish a fresh full-build checkpoint before searching. The runner checks
   the unchanged-source scores and opposite-corner compile/reproduction before
   the population. Stop and repair failed controls rather than trusting scores.
