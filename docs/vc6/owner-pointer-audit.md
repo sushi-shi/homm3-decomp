@@ -1,9 +1,10 @@
 # Member-owner recovery and out-of-object pointer review
 
 Historical experiment filenames below refer to the searches recorded here.
-Per-function scripts and fixtures are retired once their targets reach MAX
-100%; their last versions remain in Git history. Use the general JSON runner
-for new searches and keep temporary inputs under ignored `build/`.
+Per-function behavioral fixtures have been retired, as have generators for
+completed matches; their last versions remain in Git history. New matching
+uses VC6/retail comparison and the JSON runner. Keep any targeted behavioral
+diagnostic under ignored `build/`, rather than maintaining a mock game suite.
 
 The [pointer-boundary implementation](pointer-boundary-repairs.md) supersedes
 this original audit's retained lookup, DirectDraw and image-row exceptions.

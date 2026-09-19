@@ -16,7 +16,7 @@ import subprocess
 from pathlib import Path
 from homm3.core.common import HOMM3_DIR
 from homm3.vc6.source_families import load_manifest
-from homm3.vc6.test_rmg_families import generator
+from experiments._support import generator
 
 SLOT='int TRmgTownSlot::getZoneIndex() const\n{\n    return m_zoneIndex;\n}\n'
 DEST='TRmgTownSlot* TRmgZoneConnection::getDestination() const\n{\n    return m_destination;\n}\n'
