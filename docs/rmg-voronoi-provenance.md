@@ -126,6 +126,36 @@ against retail; it neither recovers the original helper spelling nor identifies
 an external author. The incomplete match of other functions likewise does not
 invalidate the specific retail loads, branches, calls and stores cited above.
 
+### Circumcenter helper and inline evidence
+
+The retained `buildVertices` body at `0x005FDB40` provides a second, narrower
+connection to the pinned geometry source. [geom2d.h][gg-geom], lines 97–100,
+defines its two-multiply vector dot directly in the header as an inline helper.
+The reconstructed integer vector now uses the same source boundary: a small
+in-class `dot(TRmgVector) const`, with a by-value operand like the retained
+vector arithmetic members. This is positive evidence for the inline layout,
+but it does not recover the game's original helper name, member/free choice,
+or parameter spelling.
+
+That model, combined with a named point snapshot in the expanded vertex setter,
+raises `buildVertices` from 97.5070% to 98.2254%. Candidate and retail share the
+`0x78` frame, all eight CFG blocks, all seven named calls and relocations, the
+complete function length, and the entire three-edge output tail. Bytes agree
+through `+0x5a` and from `+0x6e` through the return. The remaining twelve
+instruction rows are one connected scheduling difference: candidate loads the
+second site's Y coordinate before capturing the third site, while retail uses
+EDX for the third site's X/Y pair first and delays that second-site load.
+
+The post-improvement families held the recovered helper and tail fixed while
+testing eight caller snapshot layouts, six canonical point-subtraction bodies,
+five axis bindings, all eight value/`const&` combinations for the three helper
+parameters, four setter ownership/construction forms, and four ordinary versus
+in-class dot placements. All compiled states reproduced; none improved the
+remaining load window. The natural subtraction variants also retained the
+independently exact `0x005FDD40` body. These negative controls bound the current
+claim: the inline member and setter snapshot explain measured retail structure,
+while the last register schedule and the original text remain unresolved.
+
 ## Other historically plausible sources
 
 [Fortune's Netlib package][netlib] is explicitly a sweepline implementation.
