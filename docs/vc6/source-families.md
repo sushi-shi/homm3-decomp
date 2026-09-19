@@ -247,6 +247,9 @@ The edge-side family tests an ordinary shared point/edge predicate in lookup
 and site legalization. The published
 [Graphics Gems IV implementation](https://github.com/erich666/GraphicsGems/blob/master/gemsiv/delaunay/quadedge.C)
 suggested that helper boundary; it does not prove HoMM3 names or declarations.
+The [provenance investigation](../rmg-voronoi-provenance.md) compares retail
+with both that implementation and the earlier algorithm: adaptation is
+supported, but the direct source and any library identity remain unconfirmed.
 Retail `locate` (0x5fd6b0) already agreed on control flow but spilled an
 endpoint in its first orientation, growing its frame from eight to sixteen
 bytes. The family preserves the canonical integer orientation helper and
@@ -4639,3 +4642,23 @@ function locations and named relocations. All 76 ownership/native-oracle tests
 pass. The RVA audit has four CUR gains, no declines or MAX resets, and retains
 all 4,752 ledger rows plus every historical peak. Ownership remains 4,788
 canonical definitions with zero violations; the 200 existing pins are unchanged.
+
+
+## Aggregate argument materialization in Voronoi
+
+A source-equivalent local can change VC6's aggregate stack allocation even
+when the named call sequence is unchanged. In `buildVertices` (0x5fdb40),
+const-reference dot operands move the original 87.7394% caller to 93.7676%.
+Materializing only the opposite site, with circumcenter parameters ordered
+third/origin/second, removes an eight-byte temporary and reaches 97.5070%.
+The frame is now retail's 0x78 bytes. All other scored functions retain their
+scores, including the five exact arithmetic operators.
+
+The 64 ownership states emit 61 distinct objects; the 48 site-evaluation
+states emit 24. Reproduced controls and native integer/ring fixtures support
+the change. This remains a partial match: input coordinate scheduling and
+one output-coordinate reload still differ. Identical helper calls, frame size
+and most arithmetic instructions are insufficient to claim byte exactness.
+Keep operator-body construction and caller materialization as separate axes:
+changing an already-exact retained operator can affect its inline expansion
+and regress siblings without explaining the caller's residual.
