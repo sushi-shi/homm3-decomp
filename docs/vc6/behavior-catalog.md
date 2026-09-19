@@ -1084,6 +1084,14 @@ materialises its own zero — an `xor eax,eax` / `xor ecx,ecx` pair for two
 adjacent loops is therefore positive evidence for two loops, not two memsets.
 A nested loop over a 2-D array collapses to the same single fill as a flat one.
 
+The idiom is NOT limited to dword arrays: a constant-count loop over a `char`
+or `unsigned char` array also becomes `rep stosd` plus the `stosw`/`stosb`
+tail, i.e. byte-identical to what `memset` of that size emits - again only the
+EDI/ECX setup order separates them. A non-zero constant fill works the same way
+(`m_heroAvailability[i] = -1` gives `rep stosd` with EAX = -1). When the fill
+VALUE is not a literal (`m_heroPoolMap[i] = allPlayers`), the order reverts to
+ECX-first, so the order test only decides zero and literal fills.
+
 Closed `advManager::advManager` (90.30 -> 100.0000, 2026-09-20): five fills
 were written as `memset`; river/road were unrolled loops and flag/boat-flag/
 looped-sample were `rep stosd` loops. `cursorIcons` stayed a real `memset` —

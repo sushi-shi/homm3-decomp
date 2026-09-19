@@ -1840,7 +1840,7 @@ game	??0?$bitset@$0BM@@std@@QAE@K@Z	100.0000	100.0000	100.0000	0xcf870	-
 game	??0CMCClaimGarrison@@QAE@HH@Z	100.0000	100.0000	100.0000	0xc23e0	tokens1:8e750f5fad30
 game	??0HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce4b0	443ed6fcdff2
 game	??0VictoryConditionStruct@@QAE@XZ	0.0000	0.0000	100.0000	0xbc340	tokens1:3be340759f17
-game	??0game@@QAE@XZ	78.1593	88.8584	88.8584	0xcdf20	tokens1:76c0c0d1ec8c
+game	??0game@@QAE@XZ	80.5959	80.5959	88.8584	0xcdf20	tokens1:5b393650ca16
 game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550	tokens1:e7daf55622b0
 game	??0logic_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0xc3090	-
 game	??0out_of_range@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0x87bd0	-
@@ -2093,7 +2093,7 @@ game	?set@?$bitset@$0IA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xd4de0	
 game	?set@?$bitset@$0JA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xcf9a0	-
 game	?set@?$bitset@$0JB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xcfa60	-
 game	?set@?$bitset@$0JM@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xd0070	-
-game	?setCannedRumour@game@@AAEXXZ	100.0000	100.0000	100.0000	0xccf20	tokens1:748bc596c135
+game	?setCannedRumour@game@@AAEXXZ	100.0000	100.0000	100.0000	0xccf20	tokens1:8900a8beb091
 game	?setMapRumour@game@@AAEXXZ	100.0000	100.0000	100.0000	0xccfb0	tokens1:35cf9ca12d0b
 game	?setMapSize@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xccef0	tokens1:9e2990c94852
 game	?setPyramid@ExtraInfoUnion@@QAEX_NH@Z	0.0000	0.0000	100.0000	0xc2330	tokens1:b0dd0fb0b8a7
