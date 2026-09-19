@@ -1807,8 +1807,8 @@ forcefeedback	??0TImmMouseEffect@@QAE@PBUtagRECT@@JKKEE@Z	100.0000	100.0000	100.
 forcefeedback	??0const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAE@PAU_Node@12@@Z	100.0000	100.0000	100.0000	0xb7da0	-
 forcefeedback	??0t_create_failure@t_enclosure@force_feedback@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0xb6c60	-
 forcefeedback	??0t_enclosure@force_feedback@@QAE@PBUtagRECT@@JKKEE@Z	100.0000	100.0000	100.0000	0xb6a50	tokens1:5bc9a9ff65ed
-forcefeedback	??0t_initialize_failure@t_initializer@?%Z:\tmp\homm3-rmg-match-20260919\include\forcefeedback.h545928514@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0xb6730	-
-forcefeedback	??0t_initializer@?%Z:\tmp\homm3-rmg-match-20260919\include\forcefeedback.h545928514@@QAE@PAX0@Z	100.0000	100.0000	100.0000	0xb6260	tokens1:ab52bac4bd7b
+forcefeedback	??0t_initialize_failure@t_initializer@?%C:\Dev\Heroes 3 Exp 2\Game\ForceFeedback.cpp210603558@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0xb6730	-
+forcefeedback	??0t_initializer@?%C:\Dev\Heroes 3 Exp 2\Game\ForceFeedback.cpp210603558@@QAE@PAX0@Z	100.0000	100.0000	100.0000	0xb6260	tokens1:ab52bac4bd7b
 forcefeedback	??1?$auto_ptr@D@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7040	-
 forcefeedback	??1?$auto_ptr@VCImmEnclosure@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7020	-
 forcefeedback	??1?$auto_ptr@VCImmProject@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7050	-
@@ -1817,7 +1817,7 @@ forcefeedback	??8iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@Ut
 forcefeedback	??_GCImmEnclosure@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb6c30	-
 forcefeedback	??_GCImmMouse@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb6700	-
 forcefeedback	??_Gt_create_failure@t_enclosure@force_feedback@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bed0	-
-forcefeedback	??_Gt_initialize_failure@t_initializer@?%Z:\tmp\homm3-rmg-match-20260919\include\forcefeedback.h545928514@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb66d0	-
+forcefeedback	??_Gt_initialize_failure@t_initializer@?%C:\Dev\Heroes 3 Exp 2\Game\ForceFeedback.cpp210603558@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb66d0	-
 forcefeedback	?_Construct@std@@YIXPAU?$pair@QAVCImmEnclosure@@UtagRECT@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0xb7fe0	-
 forcefeedback	?_Dec@const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xb7db0	-
 forcefeedback	?_Erase@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0xb79d0	-
@@ -3306,7 +3306,7 @@ rmg	?assignRmgTeams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	tokens1:
 rmg	?buildOutline@TRmgObjectPropertiesRef@@QAEXXZ	100.0000	100.0000	100.0000	0x132c80	tokens1:5fe6bc9d378e
 rmg	?buildOverlapPriorities@TRmgObjectPropertiesRef@@QAEXXZ	100.0000	100.0000	100.0000	0x132e40	tokens1:a2a79f6c6820
 rmg	?buildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	83.7153	83.7153	83.7153	0x147880	tokens1:a36b7e3854c0
-rmg	?buildVertices@TRmgVoronoi@@QAEXXZ	87.7394	87.7394	87.7394	0x1fdb40	tokens1:1135b403408e
+rmg	?buildVertices@TRmgVoronoi@@QAEXXZ	97.5070	97.5070	97.5070	0x1fdb40	tokens1:033ac7148a3e
 rmg	?buildZoneBoundaries@type_random_map_generator@@QAEXPAUTRmgTemplate@@H@Z	100.0000	100.0000	100.0000	0x13e050	tokens1:782d0fe14237
 rmg	?buildZoneConnectionPaths@type_random_map_generator@@QAEXXZ	99.3582	99.3582	99.3582	0x1405d0	tokens1:f5ba89d634de
 rmg	?calculateQuestZoneDistances@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	77.7594	77.7594	77.7594	0x14b180	tokens1:274a5d25b2a4

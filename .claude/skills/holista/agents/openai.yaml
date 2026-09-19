@@ -1,0 +1,4 @@
+interface:
+  display_name: "Holista"
+  short_description: "Two-worker reconstruction for hard byte matches"
+  default_prompt: "Use $holista to pair the primary matcher with Holista, reconstruct this difficult function as its original developers plausibly wrote it, and test coherent helper, lifetime, and control-flow hypotheses against retail."

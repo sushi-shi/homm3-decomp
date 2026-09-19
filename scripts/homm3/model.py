@@ -41,6 +41,7 @@ import re
 import sys
 from pathlib import Path
 
+from homm3.build.canonicalize_data_symbols import normalize_anon_ns_name
 from homm3.core import common
 from homm3.retail_labels import censuses, fragments, iat, providers
 from homm3.retail_labels import source as labels_source
@@ -182,6 +183,7 @@ def main(argv=None) -> int:
     problems = []
 
     def put(rva, name, unit, size, kind, provenance):
+        name = normalize_anon_ns_name(name, unit)
         if VOLATILE_E_RE.match(name):
             common.die(f"0x{rva:x}: claim names volatile compiler ordinal "
                        f"{name!r} - record it as evidence, never a label")
