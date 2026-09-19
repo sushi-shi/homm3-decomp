@@ -37,11 +37,10 @@ it can still detect a deliberately removed row before it judges the tree.
 """
 from __future__ import annotations
 
-import subprocess
 import sys
 
 from homm3.core import common
-from homm3.match.status import BASELINE, MatchRow, load_baseline, baseline_history
+from homm3.match.status import MatchRow, load_baseline, baseline_history
 
 WAIVERS = common.HOMM3_DIR / "config/match-banked-waivers.tsv"
 
