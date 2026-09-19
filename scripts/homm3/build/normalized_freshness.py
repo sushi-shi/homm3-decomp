@@ -35,7 +35,8 @@ STAMP_SUFFIX = ".stamp.json"
 # compilands' globals and so relocates no datum of its own object.
 # 14 refuses ownerless fallback when an initializer supplies contradictory
 # callback-registration evidence.
-STAMP_SCHEMA = 14
+# 15 canonicalizes reviewed anonymous-namespace paths and tracks their table.
+STAMP_SCHEMA = 15
 
 _HASH_CACHE: dict[str, tuple[tuple[int, int], str]] = {}
 

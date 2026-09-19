@@ -1148,19 +1148,19 @@ void buyArtifacts(hero* currentHero, TArtifact* artifactList,
             }
         }
 
-        if (bestArtifact < 0) {
+        if (bestArtifact >= 0) {
+            EGameResource resource;
+            long price = getArtifactPurchasePrice(
+                artifactList[bestArtifact], marketCount, &resource);
+            g_currentPlayer->m_resources[resource] -= price;
+
+            type_artifact artifact(artifactList[bestArtifact]);
+            currentHero->giveArtifact(&artifact, 1, 1);
+            artifactList[bestArtifact] = ARTIFACT_NONE;
+        } else {
             aiEquipArtifacts(currentHero);
             return;
         }
-
-        EGameResource resource;
-        long price = getArtifactPurchasePrice(
-            artifactList[bestArtifact], marketCount, &resource);
-        g_currentPlayer->m_resources[resource] -= price;
-
-        type_artifact artifact(artifactList[bestArtifact]);
-        currentHero->giveArtifact(&artifact, 1, 1);
-        artifactList[bestArtifact] = ARTIFACT_NONE;
     }
 }
 

@@ -130,6 +130,21 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
         case WM_PAINT:
             appPaint(window, 0);
             return 0;
+        case WM_KEYDOWN:
+        case WM_KEYUP:
+            if (keyboardMessageHandler(window, message, messageParam, messageData) == 0)
+                return 0;
+            break;
+        case WM_MOUSEMOVE:
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:
+        case WM_LBUTTONDBLCLK:
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP:
+        case WM_RBUTTONDBLCLK:
+            if (mouseMessageHandler(window, message, messageParam, messageData) == 0)
+                return 0;
+            break;
         case WM_CLOSE:
             if (window == g_hwndApp && gameUnsaved()) {
                 videoPause();
@@ -176,21 +191,6 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
         }
         case WM_ERASEBKGND:
             return 1;
-        case WM_KEYDOWN:
-        case WM_KEYUP:
-            if (keyboardMessageHandler(window, message, messageParam, messageData) == 0)
-                return 0;
-            break;
-        case WM_MOUSEMOVE:
-        case WM_LBUTTONDOWN:
-        case WM_LBUTTONUP:
-        case WM_LBUTTONDBLCLK:
-        case WM_RBUTTONDOWN:
-        case WM_RBUTTONUP:
-        case WM_RBUTTONDBLCLK:
-            if (mouseMessageHandler(window, message, messageParam, messageData) == 0)
-                return 0;
-            break;
         case WM_COMMAND:
             return appCommand(window, message, messageParam, messageData);
         default:

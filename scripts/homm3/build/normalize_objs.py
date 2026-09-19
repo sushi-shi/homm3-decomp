@@ -971,6 +971,7 @@ def _canonicalize_side(side: str, obj: Path) -> bool:
     sidecar = out.with_suffix(".symbols.tsv")
     out.parent.mkdir(parents=True, exist_ok=True)
     stamp_inputs = {"raw": obj}
+    stamp_inputs.update(canon.anon_ns_stamp_inputs())
     if COMPGEN_MANIFEST.is_file():
         stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
     if (out.exists() and sidecar.is_file()
@@ -982,7 +983,7 @@ def _canonicalize_side(side: str, obj: Path) -> bool:
         claims = canon.load_compgen_claims(COMPGEN_MANIFEST, unit)
         accounted = canon.load_compgen_claim_names(COMPGEN_MANIFEST, unit)
     result = canon.canonicalize_coff(obj.read_bytes(), claims,
-                                     compgen_accounted=accounted)
+                                     compgen_accounted=accounted, unit=unit)
     out.write_bytes(_drop_data_sections(result.data))
     sidecar.write_bytes(canon.sidecar_bytes(result.rows))
     write_stamp(out, stamp_inputs)
@@ -1008,6 +1009,8 @@ def _pair_unit(rel: Path, symbol_rvas) -> Counter:
     target_stamp_inputs = {
         "raw": target_obj, "base": base_obj, "symbol_names": SYMBOL_NAMES,
     }
+    stamp_inputs.update(canon.anon_ns_stamp_inputs())
+    target_stamp_inputs.update(canon.anon_ns_stamp_inputs())
     if COMPGEN_MANIFEST.is_file():
         stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
         target_stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST

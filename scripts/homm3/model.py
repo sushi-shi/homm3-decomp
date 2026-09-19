@@ -183,7 +183,7 @@ def main(argv=None) -> int:
     problems = []
 
     def put(rva, name, unit, size, kind, provenance):
-        name = normalize_anon_ns_name(name)
+        name = normalize_anon_ns_name(name, unit)
         if VOLATILE_E_RE.match(name):
             common.die(f"0x{rva:x}: claim names volatile compiler ordinal "
                        f"{name!r} - record it as evidence, never a label")
