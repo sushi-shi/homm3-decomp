@@ -7,14 +7,17 @@ particular, a retained COMDAT's link location does not own its source body.
 from __future__ import annotations
 
 import argparse
+from bisect import bisect_left
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 import csv
 from dataclasses import asdict, dataclass, replace
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
+import tempfile
 
 from homm3.core import common, clang
 from homm3 import manifest
@@ -223,23 +226,45 @@ def reference_stubs_only(raw: str) -> bool:
     return not remaining.strip()
 
 
-def attached_prefix(raw: str, start: int) -> list[str]:
+class LineIndex:
+    """One index per scanned file, shared by all annotation lookups."""
+    def __init__(self, raw: str):
+        self.raw = raw
+        self.lines = raw.splitlines(keepends=True)
+        self.starts = []
+        offset = 0
+        for line in self.lines:
+            self.starts.append(offset)
+            offset += len(line)
+        self.prefixes = {}
+
+    def preceding(self, start):
+        beginning = self.raw.rfind('\n', 0, start) + 1
+        for index in range(bisect_left(self.starts, beginning) - 1, -1, -1):
+            yield self.lines[index]
+
+
+def attached_prefix(raw: str, start: int, index: LineIndex | None = None) -> list[str]:
     # Only the attached comment/declarator prefix is eligible. Never carry an
     # origin across another definition (the old link-order parser did that).
     line_start = raw.rfind('\n', 0, start) + 1
-    lines = raw[:line_start].splitlines()
+    index = index or LineIndex(raw)
+    if line_start in index.prefixes:
+        return index.prefixes[line_start]
     prefix = []
-    for line in reversed(lines):
+    for line in index.preceding(start):
+        line = line.rstrip('\r\n')
         text = line.strip()
         if text and not text.startswith(('//', '#', 'VA(', 'DC_ONLY(')):
             break
         prefix.append(line)
     prefix.reverse()
+    index.prefixes[line_start] = prefix
     return prefix
 
 
-def origin_hint(raw: str, start: int) -> tuple[str, int, str]:
-    prefix = attached_prefix(raw, start)
+def origin_hint(raw: str, start: int, index: LineIndex | None = None) -> tuple[str, int, str]:
+    prefix = attached_prefix(raw, start, index)
     origin_file, origin_line, dc_offset = '', 0, ''
     for line in prefix:
         renamed = re.fullmatch(
@@ -258,9 +283,9 @@ def origin_hint(raw: str, start: int) -> tuple[str, int, str]:
     return origin_file, origin_line, dc_offset
 
 
-def inline_origin_hint(raw: str, start: int) -> tuple[tuple[int, int], bool]:
+def inline_origin_hint(raw: str, start: int, index: LineIndex | None = None) -> tuple[tuple[int, int], bool]:
     """An explicit review binds a field-list type to a positive inline row."""
-    rows = [line.strip() for line in attached_prefix(raw, start)
+    rows = [line.strip() for line in attached_prefix(raw, start, index)
             if '@dc-inline-origin:' in line]
     if not rows:
         return (), False
@@ -271,8 +296,8 @@ def inline_origin_hint(raw: str, start: int) -> tuple[tuple[int, int], bool]:
     return (int(match.group(1), 16), int(match.group(2), 16)), False
 
 
-def declaration_only_hint(raw: str, start: int) -> tuple[int, bool]:
-    rows = [line.strip() for line in attached_prefix(raw, start)
+def declaration_only_hint(raw: str, start: int, index: LineIndex | None = None) -> tuple[int, bool]:
+    rows = [line.strip() for line in attached_prefix(raw, start, index)
             if '@dc-declaration-only:' in line]
     if not rows:
         return 0, False
@@ -372,11 +397,12 @@ def declaration_name(cursor) -> str:
             dispose(names)
 
 
-def instance_annotations(raw: str, start: int, declaration: int):
+def instance_annotations(raw: str, start: int, declaration: int, index: LineIndex | None = None):
     """Pair each selector comment with its following VA on this declaration."""
     from homm3.retail_labels import source
     beginning = raw.rfind('\n', 0, start) + 1
-    for line in reversed(raw[:beginning].splitlines(keepends=True)):
+    index = index or LineIndex(raw)
+    for line in index.preceding(start):
         stripped = line.strip()
         if stripped and not stripped.startswith(('//', 'VA(')):
             break
@@ -576,22 +602,35 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
     texts = {}
     raw_texts = {}
     byte_texts = {}
+    line_indexes = {}
+    relative_paths = {}
+
+    def relative_path(name):
+        if name not in relative_paths:
+            try:
+                relative_paths[name] = Path(name).relative_to(root).as_posix()
+            except ValueError:
+                relative_paths[name] = None
+        return relative_paths[name]
     errors = [f"PARSE {unit['source']}: {d}" for d in tu.diagnostics
               if d.severity >= cindex.Diagnostic.Error]
     definitions = []
     instance_requests = []
     instance_groups = []
     reached = set()
+    # Include files with no declarations too: a macro-only include can change
+    # ownership facts in its consumer. This also covers included .cpp files.
+    for inclusion in tu.get_includes():
+        relative = relative_path(inclusion.include.name)
+        if relative is not None:
+            reached.add(relative)
 
     def visit(cursor):
         loc = cursor.location
         relative = None
         if loc.file:
-            try:
-                relative = Path(loc.file.name).relative_to(root).as_posix()
-            except ValueError:
-                return
-            if not relative.startswith(('src/', 'include/')):
+            relative = relative_path(loc.file.name)
+            if relative is None or not relative.startswith(('src/', 'include/')):
                 return
             reached.add(relative)
         if cursor.kind in function_kinds:
@@ -604,6 +643,7 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
                 raw_texts[relative] = (root / relative).read_text()
                 texts[relative] = _source._mask_lex(raw_texts[relative])
                 byte_texts[relative] = raw_texts[relative].encode('utf-8')
+                line_indexes[relative] = LineIndex(raw_texts[relative])
             def char_offset(offset):
                 encoded = byte_texts[relative]
                 if len(encoded) == len(raw_texts[relative]):
@@ -636,18 +676,18 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
                 parent = parent.lexical_parent
             instances, invalid = instance_annotations(
                 raw_texts[relative], char_offset(cursor.extent.start.offset),
-                char_offset(cursor.location.offset))
+                char_offset(cursor.location.offset), line_indexes[relative])
             if invalid or (instances and Counter(va for va, _ in instances) != Counter(vas)):
                 errors.append(f'INSTANCE {relative}:{loc.line}: each selector must accompany one distinct VA annotation')
                 instances = []
             elif len(vas) > 1 and not instances:
                 errors.append(f'INSTANCE {relative}:{loc.line}: multiple VA annotations require concrete selectors')
             inline_origin, invalid = inline_origin_hint(
-                raw_texts[relative], char_offset(cursor.extent.start.offset))
+                raw_texts[relative], char_offset(cursor.extent.start.offset), line_indexes[relative])
             if invalid:
                 errors.append(f'INLINE_ORIGIN {relative}:{loc.line}: malformed or repeated annotation')
             declaration_type, invalid = declaration_only_hint(
-                raw_texts[relative], char_offset(cursor.extent.start.offset))
+                raw_texts[relative], char_offset(cursor.extent.start.offset), line_indexes[relative])
             if invalid:
                 errors.append(f'DECLARATION_ONLY {relative}:{loc.line}: malformed or repeated annotation')
             first = len(definitions)
@@ -659,7 +699,7 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
                 member, bool(is_inlined(cursor)),
                 instances[0][0] if instances else (vas[0] if len(vas) == 1 else None),
                 declaration_name(cursor),
-                *origin_hint(raw_texts[relative], char_offset(cursor.location.offset)),
+                *origin_hint(raw_texts[relative], char_offset(cursor.location.offset), line_indexes[relative]),
                 tuple(c.type.spelling for c in cursor.get_children() if c.kind == k.PARM_DECL),
                 cursor.is_const_method() if cursor.kind in {k.CXX_METHOD, k.CONVERSION_FUNCTION} else False,
                 class_offset, cursor.type.is_function_variadic(),
@@ -697,36 +737,87 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
 def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
     units = [u for u in manifest.units(root / 'config/units.toml')
              if u['source'].startswith('src/')]
-    # Conservative cache key: changing any owned source/header invalidates all
-    # TUs, including consumers that do not emit an out-of-line inline copy.
+    # Source-only edits reparse their TU and any TU including that source.
+    # Header/config changes still invalidate every TU conservatively, including
+    # inactive includes and header additions that change include resolution.
+    admitted = {u['source'] for u in units}
     digest = hashlib.sha256(Path(__file__).read_bytes())
+    digest.update(str(root.resolve()).encode())
     for dependency in ('scripts/homm3/core/clang.py', 'scripts/homm3/vc6/_source.py',
-                       'scripts/homm3/manifest.py'):
+                       'scripts/homm3/manifest.py', 'scripts/homm3/retail_labels/source.py'):
         digest.update((root / dependency).read_bytes())
-    for base in ('src', 'include', 'config'):
+    mirror = clang.mirror()  # construct shared mirror before starting workers
+    from clang import cindex
+    library = Path(cindex.conf.get_filename())
+    digest.update(str(library).encode())
+    if library.is_file():
+        stat = library.stat()
+        digest.update(f'{stat.st_size}:{stat.st_mtime_ns}'.encode())
+    content = {}
+    for base in ('src', 'include', 'config', 'vendor'):
         for path in sorted((root / base).rglob('*')):
             if path.is_file() and path.suffix.lower() in {'.h', '.hpp', '.inl', '.c', '.cpp', '.cxx', '.toml'}:
-                digest.update(str(path.relative_to(root)).encode())
-                digest.update(path.read_bytes())
-    cache = root / 'build/source-ownership/definitions.json'
+                relative = path.relative_to(root).as_posix()
+                content[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+                digest.update(relative.encode())
+                if relative not in admitted:
+                    digest.update(content[relative].encode())
+    if mirror:
+        for path in sorted(mirror.rglob('*')):
+            if path.is_file():
+                checksum = hashlib.sha256(path.read_bytes()).hexdigest()
+                digest.update(path.relative_to(mirror).as_posix().encode())
+                digest.update(checksum.encode())
+                try:
+                    content[path.relative_to(root).as_posix()] = checksum
+                except ValueError:
+                    pass  # External mirrors are covered by the shared key.
+    cache = root / 'build/source-ownership/units'
+    cache.mkdir(parents=True, exist_ok=True)
     key = digest.hexdigest()
-    if not fresh and cache.is_file():
-        saved = json.loads(cache.read_text())
-        if saved['key'] == key:
-            return ([Definition(**r) for r in saved['definitions']],
-                    saved['errors'], saved['reached'])
-    clang.mirror()  # construct shared mirror before starting workers
+
+    def cached_scan(unit):
+        source = unit['source']
+        path = cache / (hashlib.sha256(source.encode()).hexdigest() + '.json')
+        if not fresh:
+            try:
+                saved = json.loads(path.read_text())
+                if (saved['key'] == key and not saved['errors']
+                        and source in saved['inputs']
+                        and all(h is not None and content.get(p) == h
+                                for p, h in saved['inputs'].items())):
+                    return ([Definition(**r) for r in saved['definitions']],
+                            saved['errors'], saved['reached'])
+            except (OSError, ValueError, KeyError, TypeError, AttributeError):
+                pass  # Disposable cache; a damaged entry must trigger a scan.
+        definitions, errors, reached = scan_unit(unit, root)
+        dependencies = {os.path.normpath(p) for p in [*reached, source]}
+        saved = dict(key=key, definitions=[asdict(d) for d in definitions],
+                     errors=errors, reached=reached,
+                     inputs={p: content.get(p) for p in sorted(dependencies)})
+        # Unknown dependencies cannot be reused without a content identity.
+        if all(value is not None for value in saved['inputs'].values()):
+            temporary = None
+            try:
+                with tempfile.NamedTemporaryFile(mode='w', dir=cache, delete=False) as stream:
+                    temporary = Path(stream.name)
+                    json.dump(saved, stream)
+                os.replace(temporary, path)
+            finally:
+                if temporary is not None:
+                    temporary.unlink(missing_ok=True)
+        return definitions, errors, reached
+
     with ThreadPoolExecutor(max_workers=jobs) as pool:
-        results = list(pool.map(lambda u: scan_unit(u, root), units))
+        results = list(pool.map(cached_scan, units))
         reached = {p for _, _, paths in results for p in paths}
         orphan_headers = [dict(source=p.relative_to(root).as_posix())
                           for p in sorted((root / 'include').rglob('*'))
                           if p.suffix.lower() in {'.h', '.hpp', '.inl'}
                           and p.relative_to(root).as_posix() not in reached]
-        results.extend(pool.map(lambda u: scan_unit(u, root), orphan_headers))
+        results.extend(pool.map(cached_scan, orphan_headers))
     unique = {}
     errors = []
-    admitted = {u['source'] for u in units}
     for path in sorted((root / 'src').rglob('*')):
         if path.suffix.lower() not in {'.c', '.cpp', '.cxx'}:
             continue
@@ -740,9 +831,6 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
         for d in definitions:
             unique[(d.file, d.offset, d.name, d.signature)] = d
     definitions = sorted(unique.values(), key=lambda d: (d.file, d.offset, d.signature))
-    cache.parent.mkdir(parents=True, exist_ok=True)
-    cache.write_text(json.dumps(dict(key=key, definitions=[asdict(d) for d in definitions],
-                                    errors=errors, reached=sorted(reached)), indent=2) + '\n')
     return definitions, errors, sorted(reached)
 
 
@@ -988,7 +1076,7 @@ def active_stub_definitions(definitions: list[Definition], root: Path) -> list[s
     return errors
 
 
-def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
+def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False, *, origins=None):
     from homm3.retail_labels.fragments import all_claims
     definitions, errors, reached = collect(root, jobs, fresh)
     errors.extend(active_stub_definitions(definitions, root))
@@ -996,7 +1084,8 @@ def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
     errors.extend(failures)
     win_only, failures = read_filter(root / 'config/win_only.tsv', ('file', 'function', 'signature'))
     errors.extend(failures)
-    violations, counts = compare(definitions, read_dc(root, include_declarations=True),
+    violations, counts = compare(definitions,
+                                 read_dc(root, include_declarations=True) if origins is None else origins,
                                  dc_only, win_only)
     errors.extend(violations)
     claims = all_claims()
@@ -1065,8 +1154,8 @@ def unpaired_generated_claims(claims) -> list[str]:
             and c.name.startswith('__h3cg$')]
 
 
-def run_gate() -> list[str]:
-    result = audit()
+def run_gate(*, origins=None) -> list[str]:
+    result = audit(origins=origins)
     if result['counts'].get('reviewed_unlocated'):
         print(f"[build] source-ownership: {result['counts']['reviewed_unlocated']} "
               "reviewed declaration-only bodies; source location/order remain unknown")

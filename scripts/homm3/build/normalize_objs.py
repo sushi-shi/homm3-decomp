@@ -17,9 +17,8 @@ the consumers use (content identity, not mtimes), so a copy this driver
 skips is by construction one `homm3 sema diff` accepts - a stale stamp
 can never wedge between "build says fresh" and "sema says stale".
 
-Known trade-off: the stamp records data inputs only; a change to the
-canonicalizer's own code is not detected. Bump STAMP_SCHEMA (which
-invalidates every stamp) when the transform changes behavior.
+Stamps verify data inputs, transform implementation and normalized output bytes.
+Unchanged comparisons can survive a full delink without trusting timestamps.
 
 The first canonicalization pass strips trailing COMDAT NOP fill. A linked
 target sometimes has the same logical function length but necessarily keeps
@@ -39,7 +38,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 from homm3.build import canonicalize_data_symbols as canon
-from homm3.build.normalized_freshness import freshness_problems, write_stamp
+from homm3.build.normalized_freshness import freshness_problems, write_stamp, ValidationContext
 from homm3.core import common
 
 OBJDIFF = common.HOMM3_DIR / "build/objdiff"
@@ -961,7 +960,7 @@ def _retain_matching_target_padding(base_payload: bytes,
     return bytes(data), retained
 
 
-def _canonicalize_side(side: str, obj: Path) -> bool:
+def _canonicalize_side(side: str, obj: Path, context=None) -> bool:
     """Write the normalized copy + sidecar + stamp of one raw object unless
     the existing copy is fresh; True when written."""
     root = OBJDIFF / side
@@ -975,7 +974,7 @@ def _canonicalize_side(side: str, obj: Path) -> bool:
     if COMPGEN_MANIFEST.is_file():
         stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
     if (out.exists() and sidecar.is_file()
-            and not freshness_problems(out, required_inputs=stamp_inputs)):
+            and not freshness_problems(out, required_inputs=stamp_inputs, context=context)):
         return False
     claims = ()
     accounted = frozenset()
@@ -986,11 +985,11 @@ def _canonicalize_side(side: str, obj: Path) -> bool:
                                      compgen_accounted=accounted, unit=unit)
     out.write_bytes(_drop_data_sections(result.data))
     sidecar.write_bytes(canon.sidecar_bytes(result.rows))
-    write_stamp(out, stamp_inputs)
+    write_stamp(out, stamp_inputs, context=context)
     return True
 
 
-def _pair_unit(rel: Path, symbol_rvas) -> Counter:
+def _pair_unit(rel: Path, symbol_rvas, context=None) -> Counter:
     """The paired base/target passes for one unit (padding retention,
     __except_list literals, equivalent relocations, EH handler owners);
     a no-op unless both normalized copies exist."""
@@ -1017,9 +1016,9 @@ def _pair_unit(rel: Path, symbol_rvas) -> Counter:
     # Verify both complete paired stamps, including content hashes. A fresh
     # raw-only stamp from _canonicalize_side is not proof of a paired result.
     # This avoids reparsing every COFF object on unchanged fast builds/diffs.
-    if (not freshness_problems(normalized_base, required_inputs=stamp_inputs)
+    if (not freshness_problems(normalized_base, required_inputs=stamp_inputs, context=context)
             and not freshness_problems(normalized_target,
-                                       required_inputs=target_stamp_inputs)):
+                                       required_inputs=target_stamp_inputs, context=context)):
         return counts
     padded, count = _retain_matching_target_padding(
         normalized_base.read_bytes(), normalized_target.read_bytes())
@@ -1043,8 +1042,8 @@ def _pair_unit(rel: Path, symbol_rvas) -> Counter:
     # Padding is a paired normalization decision, so the base copy is
     # stale whenever either raw input changes, even when this run found no
     # suffix to retain.
-    write_stamp(normalized_base, stamp_inputs)
-    write_stamp(normalized_target, target_stamp_inputs)
+    write_stamp(normalized_base, stamp_inputs, context=context)
+    write_stamp(normalized_target, target_stamp_inputs, context=context)
     return counts
 
 
@@ -1057,25 +1056,27 @@ def normalize_unit(unit: str, symbol_rvas=None) -> Counter:
     counts: Counter = Counter()
     base_obj = OBJDIFF / "base" / f"{unit}.obj"
     target_obj = OBJDIFF / "target" / f"{unit}.c.obj"
+    context = ValidationContext()
     for side, obj in (("base", base_obj), ("target", target_obj)):
-        if obj.is_file() and _canonicalize_side(side, obj):
+        if obj.is_file() and _canonicalize_side(side, obj, context):
             counts["wrote"] += 1
     if base_obj.is_file():
         if symbol_rvas is None:
             symbol_rvas = _retail_symbol_rvas()
-        counts.update(_pair_unit(Path(f"{unit}.obj"), symbol_rvas))
+        counts.update(_pair_unit(Path(f"{unit}.obj"), symbol_rvas, context))
     return counts
 
 
 def main(argv=None) -> int:
     argv = list(argv or [])
     wrote = skipped = 0
+    context = ValidationContext()
     for side in ("base", "target"):
         root = OBJDIFF / side
         if not root.is_dir():
             continue
         for obj in sorted(root.rglob("*.obj")):
-            if _canonicalize_side(side, obj):
+            if _canonicalize_side(side, obj, context):
                 wrote += 1
             else:
                 skipped += 1
@@ -1083,7 +1084,7 @@ def main(argv=None) -> int:
     symbol_rvas = _retail_symbol_rvas()
     base_root = OBJDIFF / "base"
     for base_obj in sorted(base_root.rglob("*.obj")):
-        counts.update(_pair_unit(base_obj.relative_to(base_root), symbol_rvas))
+        counts.update(_pair_unit(base_obj.relative_to(base_root), symbol_rvas, context))
     print(f"[build normalize_objs] {wrote} normalized, {skipped} fresh, "
           f"{counts['retained']} target-padding span(s) retained "
           f"{counts['eh']} EH handler-owner relocation(s) canonicalized "

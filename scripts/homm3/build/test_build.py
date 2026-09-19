@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from homm3.build import build, configure, delink, normalize_objs
 from homm3.cleanliness import board
+from homm3.core import inputs
 from homm3.match import banked_rows, single_view, source_ownership, status, verify_va_claims
 
 
@@ -22,6 +23,7 @@ class BuildModeTest(unittest.TestCase):
         self.target.write_bytes(b"existing retail target")
         self.events = []
         self.mocks = {}
+        self.preflight = self.enterContext(patch.object(inputs, "stage_executable"))
         self.enterContext(patch.object(build, "ROOT", self.root))
         self.enterContext(patch.object(status, "REPORT", self.root / "build/objdiff/report.json"))
         self.enterContext(patch.object(status, "overall_line", return_value="report"))
@@ -34,8 +36,11 @@ class BuildModeTest(unittest.TestCase):
             ("delink", delink, "main", 0),
             ("normalize", normalize_objs, "main", 0),
             ("report", status, "load_report", {}),
+            ("fingerprints", status, "source_hash_pair", ({}, {})),
+            ("history", status, "baseline_history", ''),
             ("check", status, "cmd_check", None),
             ("checkpoint", status, "cmd_update", None),
+            ("origins", source_ownership, "read_dc", []),
             ("banked", banked_rows, "run_gate", []),
             ("claims", verify_va_claims, "run_gate", []),
             ("single_view", single_view, "run_gate", []),
@@ -51,10 +56,16 @@ class BuildModeTest(unittest.TestCase):
     def test_full_build_refreshes_existing_targets_before_checkpoint(self):
         self.assertEqual(build.main([]), 0)
         self.assertEqual(self.events, ["configure", "compile", "delink", "report",
-                                      "check", "checkpoint", "banked", "claims",
+                                      "fingerprints", "history", "check", "checkpoint", "origins", "banked", "claims",
                                       "single_view", "ownership", "cleanliness", "readme"])
         self.mocks["compile"].assert_called_once_with("ninja")
         self.mocks["normalize"].assert_not_called()  # delink already normalizes
+        self.assertEqual(self.preflight.call_count, 2)
+
+    def test_missing_pinned_input_fails_before_compile_or_ledger_changes(self):
+        self.preflight.side_effect = inputs.InputError("Dreamcast executable missing")
+        self.assertEqual(build.main([]), 1)
+        self.assertEqual(self.events, [])
 
     def test_full_build_also_initializes_missing_targets(self):
         self.target.unlink()
@@ -64,7 +75,7 @@ class BuildModeTest(unittest.TestCase):
     def test_failed_source_gate_still_refreshes_readme_and_remains_fatal(self):
         self.mocks["claims"].side_effect = lambda: ["invalid source claim"]
         self.assertEqual(build.main([]), 1)
-        self.mocks["cleanliness"].assert_called_once_with(write=False)
+        self.mocks["cleanliness"].assert_called_once_with(write=False, dc_origins=[])
         self.mocks["checkpoint"].assert_called_once()
         self.mocks["readme"].assert_called_once()
 
@@ -75,6 +86,7 @@ class BuildModeTest(unittest.TestCase):
         self.assertEqual(self.target.read_bytes(), b"existing retail target")
         self.mocks["delink"].assert_not_called()
         self.mocks["checkpoint"].assert_not_called()
+        self.preflight.assert_not_called()
 
     def test_fast_build_cannot_silently_bootstrap_a_delink(self):
         self.target.unlink()
@@ -97,6 +109,21 @@ class BuildModeTest(unittest.TestCase):
         self.mocks["normalize"].side_effect = lambda *args: 1
         self.assertEqual(build.main(["--fast", "cursor"]), 1)
         self.mocks["report"].assert_not_called()
+
+    def test_removed_units_prune_cache_even_when_old_raw_objects_remain(self):
+        raw = self.root / 'build/objdiff/base'
+        raw.mkdir(parents=True)
+        normalized = self.root / 'build/objdiff/normalized/base'
+        normalized.mkdir(parents=True)
+        for name in ('kept', 'removed'):
+            (raw / (name + '.obj')).write_bytes(b'raw')
+            for suffix in ('.obj', '.obj.stamp.json', '.symbols.tsv'):
+                (normalized / (name + suffix)).write_bytes(b'cache')
+        with patch.object(delink.common, 'HOMM3_DIR', self.root):
+            delink._prune_normalized([{'unit': 'kept'}])
+        self.assertEqual({p.name for p in normalized.iterdir()},
+                         {'kept.obj', 'kept.obj.stamp.json', 'kept.symbols.tsv'})
+        self.assertTrue((raw / 'removed.obj').exists())
 
 
 if __name__ == "__main__":
