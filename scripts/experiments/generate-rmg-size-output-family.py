@@ -25,6 +25,17 @@ def main():
     files = ('include/rmg.h', 'src/rmg.cpp', 'src/rmg_terrain.cpp')
     originals = {name: (HOMM3_DIR / name).read_text() for name in files}
     live = dict(originals)
+    helper = generator('generate-rmg-size-helper-family.py').HELPER
+    canonical = helper in originals[files[0]]
+    if canonical:
+        originals[files[0]] = originals[files[0]].replace(helper, '').replace(
+            '    using TRmgMapInterface::getSize;\n', '')
+        originals[files[1]] = originals[files[1]].replace(
+            '    return m_map->getSize();',
+            '    TRmgGridPoint size;\n    return m_map->getSize(size);')
+        originals[files[2]] = originals[files[2]].replace(
+            '    m_size = m_adapter->getSize();',
+            '    {\n        TRmgGridPoint size;\n        m_size = m_adapter->getSize(size);\n    }')
     adopted = 'virtual TRmgGridPoint& getSize(TRmgGridPoint& output)' in originals[files[0]]
     if adopted:
         assert originals[files[0]].count('virtual TRmgGridPoint& getSize(TRmgGridPoint& output)') == 2
@@ -86,16 +97,19 @@ def main():
         scoped['src/rmg_terrain.cpp'] = scoped['src/rmg_terrain.cpp'].replace(
             '    TRmgGridPoint size;\n    m_size = m_adapter->getSize(size);',
             '    {\n        TRmgGridPoint size;\n        m_size = m_adapter->getSize(size);\n    }')
-        payload['axes'][0]['options'].append(dict(name='scoped_output_reference',
+        payload['axes'][0]['options'].append(dict(name='scoped_output_diagnostic',
             replace=scoped[files[0]], extra_edits=[dict(source=name,
                 find=originals[name], replace=scoped[name]) for name in files[1:]]))
     if adopted:
         # Current authored source is always the unchanged first control.
         # The value-return interpretation and long output lifetime remain
         # meaningful opposite controls after the supported model is adopted.
-        states = [('authored_scoped_output_reference', live), ('value_control', originals)]
-        if args.scoped:
+        states = [('authored_canonical_value_helper' if canonical else 'authored_scoped_output_diagnostic', live),
+                  ('value_control', originals)]
+        if canonical or args.scoped:
             states.append(('unscoped_output_reference', edited))
+        if canonical and args.scoped:
+            states.append(('scoped_output_diagnostic', scoped))
         payload['axes'][0] = dict(name='size_output_ownership', source=files[0], find=live[files[0]],
             options=[dict(name=name, replace=state[files[0]],
                 extra_edits=[dict(source=path, find=live[path], replace=state[path])

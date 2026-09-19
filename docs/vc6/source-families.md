@@ -484,6 +484,11 @@ alone neither restores the required calls nor supplies the retained bodies.
 
 ## RMG size forwarding: output-reference contract and temporary lifetime
 
+Short output lifetimes are also evidence for expanded value-returning helpers.
+The exact scoped painter control below was initially misinterpreted as an
+original source block. Stack reuse proves the lifetime constraint, not braces;
+Holista must reconstruct the helper boundary that can produce it naturally.
+
 The shared adapter `getSize` body at 0x532790 reaches 100% from 85.1765% when
 the underlying map query accepts and returns an explicit output reference:
 `TRmgGridPoint& getSize(TRmgGridPoint& output)`. Both adapters keep their
@@ -493,8 +498,9 @@ then interleaves the two loads and stores. A hidden value result instead
 kept the named temporary as the copy source and emitted 37 bytes, not 39.
 The retained map body alone cannot distinguish these contracts: both write
 width/height to the supplied pointer, return that pointer and use `ret 4`.
-The caller establishes the distinction. No new helper or copy constructor,
-inline annotation, signed conversion or compiler profile is introduced.
+The caller establishes the distinction between the virtual contracts. It does
+not establish the caller source: a value-returning helper can own the output
+reference call and expand into that caller.
 
 `probe-rmg-size-output-reference.py` calibrates the original tiny model to
 the actual translation unit, then reproduces the explicit-reference model:
@@ -505,8 +511,9 @@ objects and makes the adapter exact, but moves the terrain painter constructor
 from 100% to 99.9874%. Its named query output remains live through the later
 resize: three stack-displacement bytes change while all 29 CFG blocks agree.
 
-The `--scoped` family retains those controls and limits the painter output to
-its real query/copy phase, before resizing the packed-cell vector. All three
+The historical `--scoped` family limits the painter output lifetime before
+resizing the packed-cell vector. This is a diagnostic for stack reuse, not
+evidence of an explicit block in the original constructor. All three
 states and complete score vectors reproduce. Scoped candidate
 `55cb64a3855055f4ff2bbcfe` in context `9ba163a689fca8c3af4a` changes only the
 adapter score, from 85.1765% to 100%. Both raw adapter bodies and the base
@@ -529,16 +536,48 @@ Nine wrong controls are rejected across the three models; the adopted live
 source independently passes its four controls. These are native semantic
 checks of the query contract, not host validation of VC6 vtable layout or EH.
 
-The adopted full build passes every gate: 4,096/4,765 engine functions and
-287/368 RMG functions are exact, with 81 RMG functions remaining. The only
-score change is the adapter gain; the base query's row migrates to its new
-canonical signature at the same RVA while staying 100%. No row disappears,
-no source edit lowers MAX and all prior exact functions hold. Source ownership
-reports 4,936 canonical definitions and zero violations; the existing 21
-emission-debt rows are unchanged. The generator keeps the adopted source as
-its first unchanged control on future runs, and the diagnostic runner selects
-the comparison spelling from the current baseline rather than forcing the
-historical value-result name.
+The full build passed. The virtual query's row migrates to its canonical
+output-reference signature at the same RVA. The historical generator keeps
+the scoped diagnostic as its first control; the comparison runner selects the
+query spelling from the baseline rather than forcing the value-result name.
+
+The corrected source uses one nonvirtual `TRmgMapInterface::getSize()` value
+convenience overload, with `using TRmgMapInterface::getSize` on the concrete map
+to expose it alongside the virtual output-reference overload. Both adapters
+return that value; the painter assigns `m_adapter->getSize()` before storage
+resize. This gives the query output a helper lifetime without caller braces.
+In-class placement is an inferred source model, not a Dreamcast declaration.
+
+`generate-rmg-size-helper-family.py` exhausts three states in context
+`f26499b578daef1b5794`, with three distinct objects and reproduced candidates.
+The adopted assignment model `8b04a05337c95da7271e9430` reproduces the size
+forwarders, but changes the painter from 621 to 281 bytes (35.3347%). Repository
+`sema compare --object` confirms that both tree `_Init` calls and virtual slot 3
+remain in order; the query helper itself expands. The missing nested boundary
+is packed-vector count insertion: candidate calls `vector::insert`, while
+retail expands it and retains its nested size/copy/fill/destroy/delete calls.
+Initializing the member in the constructor initializer list also moves the query
+before tree construction and scores 26.8912%; this is the wrong phase order.
+
+Two bounded combined families complete that investigation for this checkpoint.
+`generate-rmg-size-storage-family.py`, context `5eb43a0b4c061c34031e`, exhausts
+five states/four distinct objects/four reproduced candidates. Reading dimensions
+through coordinate accessors or fields leaves the insertion boundary unresolved;
+an ordinary painter size/storage method scores 23.1297% without recovering it.
+`generate-rmg-size-snapshot-family.py`, context `d5ee197e39debad90512`, exhausts
+five states/four distinct objects/four reproduced candidates. Named copy-initialized,
+const and default-constructed/assigned value snapshots each score 34.3431% and
+still retain insertion. None of those alternatives is adopted.
+
+The native oracle imports the actual helper, both adapters, painter query,
+dimension accessors and storage operation. Each five-state family passes 64
+signed dimension pairs and rejects 30 controls, including returned-reference
+aliasing, duplicate queries, incorrect count and default validity. Large storage
+counts are recorded without allocation; bounded storage fixtures exercise value
+copying and growth/shrink. These semantic checks do not settle the VC6 boundary.
+The adopted painter's own-source MAX drops to 35.3347%, with the prior peak and
+scoped diagnostic preserved as recovery evidence. The inline-boundary residual
+remains open when matching pauses; an exact diagnostic block is not reinstated.
 
 Earlier negative controls explain why local return spellings were insufficient.
 

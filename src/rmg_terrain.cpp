@@ -706,17 +706,19 @@ int __fastcall selectTerrainTransition(
     return 0;
 }
 
+// The short output lifetime can arise from the expanded value-size helper;
+// exact stack reuse did not prove the artificial block in the earlier model.
+// Residual (35.3347%): the value helper expands, but vector::insert(count,value)
+// remains a call where retail expands it. Both _Tree::_Init calls and virtual
+// slot 3 remain in order. Coordinate getters/fields, named value snapshots,
+// member initialization and an ordinary size/storage helper did not recover
+// that nested boundary. Scoped output is retained only as an experiment control.
 VA(0x005B45F0, 0x26D)
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
     : m_adapter(newAdapter), m_paintTerrain(terrain), m_transitionStrength(strength)
 {
-    // Retail consumes the returned reference through a stack output whose
-    // lifetime ends before resize; widening this scope adds a stack slot.
-    {
-        TRmgGridPoint size;
-        m_size = m_adapter->getSize(size);
-    }
+    m_size = m_adapter->getSize();
     m_packedCells.resize(getWidth() * getHeight(), TRmgPackedTerrainCell());
 }
 

@@ -1,6 +1,6 @@
 ---
 name: holista
-description: Use a two-worker approach for difficult C++ retail byte matches. Pair the primary matcher with Holista to reconstruct code as the original developers would plausibly have written it, recognizing inline helper patterns and combining source evidence, declaration and statement order, loops, and lifetimes. Use for hard cases and matching plateaus alongside the repository's matching workflow.
+description: Use a two-worker approach for difficult C++ retail byte matches. Pair the primary matcher with Holista to reconstruct code as the original developers would plausibly have written it, recovering inlined helpers and their composition from temporary lifetimes, construction, initialization, and shared caller patterns, while challenging artificial source scopes. Use for hard cases and matching plateaus alongside the repository's matching workflow.
 ---
 
 # Holista
@@ -73,6 +73,39 @@ alternatives. Distinguish a source-declared `inline` from an ordinary helper
 auto-inlined by the compiler. Keep one canonical definition and real source
 calls; do not paste helper bodies, add false `inline`, or invent alternate
 declarations merely to influence code generation.
+
+## Temporary lifetimes reveal helper boundaries
+
+Treat a short-lived output object, aggregate copy, or reused stack slot as a
+lead for an **inlined function and its return temporary**. Do not translate the
+observed machine lifetime directly into an extra `{ ... }` block in the caller.
+A block introduced only to recover stack reuse is a diagnostic, not recovered
+source, even when it produces exact bytes. Keep explicit scopes when they have
+an independently supported source purpose, such as RAII cleanup or a loop body.
+
+Holista must challenge these artificial scopes in the current reconstruction,
+including already-exact functions. Inspect existing value-return accessors,
+constructors, conversions, assignment operators, and their callers first. A
+retained helper body can also be expanded elsewhere; a virtual output-reference
+call can sit inside an inlined value-return wrapper. Follow nested helpers and
+construction/initialization together instead of treating each temporary as an
+isolated local-variable problem.
+
+For example, a caller containing `{ Point size; member = map->getSize(size); }`
+may be an expansion of `member = map->getSize()`, where a canonical value-return
+overload owns `Point size; return getSize(size);`. Test that boundary across the
+adapters and consumers that exhibit the same pattern. Preserve the returned
+reference semantics: an output-reference call may return a different object
+from the output argument. The example is a hypothesis to verify, not a license
+to invent an overload or change a proven virtual ABI.
+
+Propose the actual helper definition and natural caller expressions, explain
+which lifetimes arise from expansion, and test the combined source model against
+retail. Check declaration ownership, visibility, overload hiding, and retained
+helper bodies as well as caller bytes. Distinguish supported explicit `inline`
+from implicit in-class inline and ordinary auto-inlining; never add the keyword
+solely to force a result. Exact bytes establish codegen, not the original braces
+or exact source spelling.
 
 ## Use Dreamcast as source evidence
 

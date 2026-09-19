@@ -1104,6 +1104,14 @@ public:
     // that returned reference, which distinguishes this from a hidden value
     // result: together the map and both adapter bodies reproduce retail.
     virtual TRmgGridPoint& getSize(TRmgGridPoint& output) = 0;
+    // Provisional Complete-only convenience overload. Its output temporary
+    // belongs to this value query, shared by the adapters and terrain painter.
+    // Source placement is inferred; the virtual slot retains its proven ABI.
+    TRmgGridPoint getSize()
+    {
+        TRmgGridPoint size;
+        return getSize(size);
+    }
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
     virtual int getLand(const TRmgGridPoint& point) = 0;
     virtual int getOverlay(const TRmgGridPoint& point) = 0;
@@ -1179,6 +1187,7 @@ public:
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setOverlay(const TRmgGridPoint& point, int value);
+    using TRmgMapInterface::getSize;
     virtual TRmgGridPoint& getSize(TRmgGridPoint& output);
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
     virtual int getLand(const TRmgGridPoint& point);

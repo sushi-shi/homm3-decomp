@@ -3393,7 +3393,7 @@ rmg	?getOverlay@TRmgMapAdapter@@UAEHABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.
 rmg	?getOverlay@TRmgRoadMapAdapter@@UAEHABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x1324b0	tokens1:4c533d460cae
 rmg	?getOverlay@type_random_map@@UAEHABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x1322f0	tokens1:2f5d6c8f2e6f
 rmg	?getRmgGuardValue@@YIHHH@Z	100.0000	100.0000	100.0000	0x145e00	tokens1:91837ae23eb8
-rmg	?getSize@TRmgMapAdapter@@UAE?AU?$TRmgCoordinatePoint@I@@XZ	100.0000	100.0000	100.0000	0x132790	tokens1:dff8c3ac5ac5
+rmg	?getSize@TRmgMapAdapter@@UAE?AU?$TRmgCoordinatePoint@I@@XZ	100.0000	100.0000	100.0000	0x132790	tokens1:fac6882016cf
 rmg	?getSize@type_random_map@@UAEAAU?$TRmgCoordinatePoint@I@@AAU2@@Z	100.0000	100.0000	100.0000	0x132240	tokens1:de5ffd9c8ef0
 rmg	?getTile@TRmgMapAdapter@@UAE?AUrmgTerrainTile@@ABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x1327c0	tokens1:9fd3fe363399
 rmg	?getTile@TRmgRoadMapAdapter@@UAE?AUrmgTerrainTile@@ABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x132410	tokens1:1c1e4a2a1bb3
@@ -3497,7 +3497,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	tokens1:9ffb396c8413
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	tokens1:f84e27622dc7
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	99.4123	99.4123	99.4123	0x14abf0	tokens1:d414eb83c2cc
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	77.8952	93.2864	95.7066	0x149cb0	tokens1:691cb3e2e1f0
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	77.9030	93.2864	95.7066	0x149cb0	tokens1:691cb3e2e1f0
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	100.0000	100.0000	100.0000	0x14ae30	tokens1:c9c09a93db3c
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-
@@ -3540,7 +3540,7 @@ rmg_terrain	??0TRmgPatternTerrainRule@@QAE@EEHIPBUTRmgTerrainPatternEntry@@@Z	10
 rmg_terrain	??0TRmgTableTerrainRule@@QAE@XZ	100.0000	100.0000	100.0000	0x1b3a20	tokens1:66876f605246
 rmg_terrain	??0TRmgTerrainBrush@@QAE@PAVTRmgMapInterface@@HH@Z	100.0000	100.0000	100.0000	0x1b7250	tokens1:e9a9e329da54
 rmg_terrain	??0TRmgTerrainPatternTable@@QAE@XZ	100.0000	100.0000	100.0000	0x1b3940	tokens1:189440e2b9de
-rmg_terrain	??0rmgTerrainPainter@@QAE@PAVTRmgMapInterface@@HH@Z	100.0000	100.0000	100.0000	0x1b45f0	tokens1:a1f0f70686e2
+rmg_terrain	??0rmgTerrainPainter@@QAE@PAVTRmgMapInterface@@HH@Z	35.3347	35.3347	100.0000	0x1b45f0	tokens1:d87fe16765e9
 rmg_terrain	??1?$auto_ptr@VrmgTerrainPainter@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x1b76d0	-
 rmg_terrain	??1?$set@U?$TRmgCoordinatePoint@I@@U?$less@U?$TRmgCoordinatePoint@I@@@std@@V?$allocator@U?$TRmgCoordinatePoint@I@@@3@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x1b4860	-
 rmg_terrain	??1TRmgTerrainBrush@@QAE@XZ	100.0000	100.0000	100.0000	0x1b72f0	tokens1:a329d58e8f80
@@ -3571,7 +3571,6 @@ rmg_terrain	?equal_range@?$_Tree@U?$TRmgCoordinatePoint@I@@U1@U_Kfn@?$set@U?$TRm
 rmg_terrain	?erase@?$_Tree@U?$TRmgCoordinatePoint@I@@U1@U_Kfn@?$set@U?$TRmgCoordinatePoint@I@@U?$less@U?$TRmgCoordinatePoint@I@@@std@@V?$allocator@U?$TRmgCoordinatePoint@I@@@3@@std@@U?$less@U?$TRmgCoordinatePoint@I@@@4@V?$allocator@U?$TRmgCoordinatePoint@I@@@4@@std@@QAE?AViterator@12@V312@0@Z	100.0000	100.0000	100.0000	0x1b7e30	-
 rmg_terrain	?erase@?$_Tree@U?$TRmgCoordinatePoint@I@@U1@U_Kfn@?$set@U?$TRmgCoordinatePoint@I@@U?$less@U?$TRmgCoordinatePoint@I@@@std@@V?$allocator@U?$TRmgCoordinatePoint@I@@@3@@std@@U?$less@U?$TRmgCoordinatePoint@I@@@4@V?$allocator@U?$TRmgCoordinatePoint@I@@@4@@std@@QAE?AViterator@12@V312@@Z	100.0000	100.0000	100.0000	0x1b8090	-
 rmg_terrain	?erase@?$_Tree@U?$TRmgCoordinatePoint@I@@U1@U_Kfn@?$set@U?$TRmgCoordinatePoint@I@@U?$less@U?$TRmgCoordinatePoint@I@@@std@@V?$allocator@U?$TRmgCoordinatePoint@I@@@3@@std@@U?$less@U?$TRmgCoordinatePoint@I@@@4@V?$allocator@U?$TRmgCoordinatePoint@I@@@4@@std@@QAEIABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x1b7f60	-
-rmg_terrain	?erase@?$vector@UTRmgPackedTerrainCell@@V?$allocator@UTRmgPackedTerrainCell@@@std@@@std@@QAEPAUTRmgPackedTerrainCell@@PAU3@0@Z	100.0000	100.0000	100.0000	0x1b8020	-
 rmg_terrain	?find@?$_Tree@U?$TRmgCoordinatePoint@I@@U1@U_Kfn@?$set@U?$TRmgCoordinatePoint@I@@U?$less@U?$TRmgCoordinatePoint@I@@@std@@V?$allocator@U?$TRmgCoordinatePoint@I@@@3@@std@@U?$less@U?$TRmgCoordinatePoint@I@@@4@V?$allocator@U?$TRmgCoordinatePoint@I@@@4@@std@@QAE?AViterator@12@ABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x1b7fc0	-
 rmg_terrain	?getEntry@TRmgPatternTerrainRule@@UAEHH@Z	100.0000	100.0000	100.0000	0x1b3880	tokens1:0a72ae6e3dbf
 rmg_terrain	?getEntry@TRmgTableTerrainRule@@UAEHH@Z	100.0000	100.0000	100.0000	0x1b3a80	tokens1:39a5f5ab12cd
@@ -3601,6 +3600,7 @@ rmg_terrain	?selectTerrainTransition@@YIHPBHPAUTRmgTerrainFlip@@@Z	100.0000	100.
 rmg_terrain	?selectTransitionFrame@TRmgPatternTerrainRule@@UAEHHUTRmgTerrainFlip@@AAU2@H@Z	100.0000	100.0000	100.0000	0x1b38f0	tokens1:252afa5667af
 rmg_terrain	?selectTransitionFrame@TRmgTableTerrainRule@@UAEHHUTRmgTerrainFlip@@AAU2@H@Z	100.0000	100.0000	100.0000	0x1b3ae0	tokens1:9730e5a8a32b
 rmg_terrain	?upper_bound@?$_Tree@U?$TRmgCoordinatePoint@I@@U1@U_Kfn@?$set@U?$TRmgCoordinatePoint@I@@U?$less@U?$TRmgCoordinatePoint@I@@@std@@V?$allocator@U?$TRmgCoordinatePoint@I@@@3@@std@@U?$less@U?$TRmgCoordinatePoint@I@@@4@V?$allocator@U?$TRmgCoordinatePoint@I@@@4@@std@@QAE?AViterator@12@ABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x1b8a20	-
+rmg_terrain	__h3cg$rmg_terrain$vector_erase$TRmgPackedTerrainCell	0.0000	100.0000	100.0000	0x1b8020	-
 sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	100.0000	100.0000	100.0000	0x15fdd0	tokens1:c4dfce6ce0e5
 sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x1654f0	tokens1:4d099e7e8e42
 sacrifice_window	??1type_sacrifice_window@@UAE@XZ	100.0000	100.0000	100.0000	0x1623a0	tokens1:2485fecfa941
@@ -4012,7 +4012,7 @@ singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMs
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	tokens1:2d739ed70aef
 singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	tokens1:5b3700830a2b
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	tokens1:1fcb3b32a46f
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	tokens1:6cb45bcd5302
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	tokens1:f68b58bfb66a
