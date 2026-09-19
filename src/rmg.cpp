@@ -5878,6 +5878,8 @@ TRmgMapPosition TRmgMapPosition::operator+(TPoint offset) const
     return TRmgMapPosition(m_x + offset.m_x, m_y + offset.m_y, m_z);
 }
 
+// Y-before-X alters the exact fillIslandInterior expansion while leaving the
+// shipyard residual. Explicit sum operands are neutral; keep X-before-Y.
 TRmgMapPosition& TRmgMapPosition::operator+=(const TPoint& offset)
 {
     m_x += offset.m_x;
@@ -6077,6 +6079,11 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
 // enum snapshots instead fold to and/cmp byte. A conditional opposite-x is
 // byte-neutral. Returned-point translation and keeping only the old z do
 // not recover the remaining coordinate homes/registers or side-branch shape.
+// Named row bounds and origin snapshots do not improve this. A TPoint cursor
+// with positive-default opposite-side selection recovers all 25 branch blocks,
+// but loses stack stores and leaves four block sizes different (89.7970%).
+// Mutating the by-value parameter behind a saved origin is lower still.
+// Existing terrain/entrance accessors and scalar lookup forms do not improve it.
 VA(0x00541960, 0x16C) // anchor-callee 0x541c94; thiscall, ret 0x0c
 unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition position)
 {
@@ -6898,6 +6905,8 @@ void type_random_map_generator::connectZones()
 // 96.1514% with that same constructor; all four causal controls reproduce.
 // Sixty caller and sixty origin forms plus 61 shared-constructor combinations
 // preserve the real brush/map scopes and predicates. No inline pin is used.
+// Borrowed-constructor value/reference arguments and plain dimension arrays
+// do not close the entry schedule; retain the existing value contract.
 VA(0x005439E0, 0x283)
 void type_random_map_generator::decorateUnderground()
 {
@@ -8018,6 +8027,8 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
 // vector<type_object*>::insert matches retail 0x54d120's 521 bytes after
 // masking its two call operands, and both operator new/delete targets agree.
 // The retail label names vector<widget*>; keep the real source element type.
+// Public single insertion and an earlier named insertion iterator do not
+// recover the centering loads, including a separately bound object vector.
 VA(0x00546520, 0x1B6) // anchor-callee 0x54678a; thiscall, ret 0x10
 int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
     TRmgTreasureGroup* group, unsigned char alternate, int value)
@@ -10386,6 +10397,8 @@ static TPoint computeRmgCircumcenter(TPoint third, TPoint origin, TPoint second)
 // parent/result lifetimes and canonical arithmetic bodies. Native triangle/
 // ring checks preserve integer division, all three position/flag writes,
 // inactive edges and graph links.
+// All six parameter orders under the current member-dot model also retain
+// this peak; the helper's argument order does not explain the remaining loads.
 VA(0x005FDB40, 0x16E) // anchor-caller 0x53e050; Complete-only, thiscall ret 0
 void TRmgVoronoi::buildVertices()
 {
