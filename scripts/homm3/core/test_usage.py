@@ -144,6 +144,8 @@ class CliUsageTest(LoggedTest):
         self.assertEqual(classify_error(prefix + "winepath failed"), "environment.wine")
         self.assertEqual(classify_error(prefix + "RuntimeError: bug"), "tool.exception")
         self.assertEqual(classify_error("ninja: build stopped: subcommand failed."), "command.failed")
+        self.assertEqual(classify_error("candidate sources are not built; run homm3 build"),
+                         "candidate.stale")
 
 
 if __name__ == "__main__":

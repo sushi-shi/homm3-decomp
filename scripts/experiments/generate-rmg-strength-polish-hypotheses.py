@@ -21,12 +21,12 @@ SIGNATURE = "int rmgTerrainPainter::getTransitionStrength(\n    const TRmgGridPo
 
 
 def bodies():
-    directions = (("point.m_x > 0", "x", "-", "point.m_x - 1", "point.m_y"),
-                  ("point.m_y > 0", "y", "-", "point.m_x", "point.m_y - 1"),
-                  ("point.m_x < getWidth() - 1", "x", "+", "point.m_x + 1", "point.m_y"),
-                  ("point.m_y < getHeight() - 1", "y", "+", "point.m_x", "point.m_y + 1"))
+    directions = (("point.getX() > 0", "X", "point.getX() - 1", "point.getY()"),
+                  ("point.getY() > 0", "Y", "point.getX()", "point.getY() - 1"),
+                  ("point.getX() < getWidth() - 1", "X", "point.getX() + 1", "point.getY()"),
+                  ("point.getY() < getHeight() - 1", "Y", "point.getX()", "point.getY() + 1"))
     for storage, binding, query in itertools.product(
-            ("direct", "assigned", "copy_offset", "shared_fields", "shared_copy"),
+            ("direct", "assigned", "coordinates_offset", "shared_fields", "shared_copy"),
             ("pointer", "reference", "per_arm"),
             ("conjunction", "nested", "named_terrain", "named_frame")):
         lines = ["    unsigned int strength = m_transitionStrength;"]
@@ -37,20 +37,21 @@ def bodies():
         if storage.startswith("shared"):
             lines.append("    TRmgGridPoint nearby;")
         invoke = "rule." if binding == "reference" else "rule->"
-        for condition, axis, operation, x, y in directions:
+        for condition, axis, x, y in directions:
             lines.append("    if (" + condition + ") {")
             if storage == "direct":
                 lines.append(f"        TRmgGridPoint nearby({x}, {y});")
             elif storage in ("assigned", "shared_fields"):
                 if storage == "assigned":
                     lines.append("        TRmgGridPoint nearby;")
-                lines += [f"        nearby.m_x = {x};", f"        nearby.m_y = {y};"]
+                lines += [f"        nearby.setX({x});", f"        nearby.setY({y});"]
             else:
-                lines.append("        " + ("TRmgGridPoint nearby(point);" if storage == "copy_offset" else "nearby = point;"))
-                lines.append(f"        nearby.m_{axis} {operation}= 1;")
+                lines.append("        " + ("TRmgGridPoint nearby(point.getX(), point.getY());"
+                                          if storage == "coordinates_offset" else "nearby = point;"))
+                lines.append(f"        nearby.set{axis}({x if axis == 'X' else y});")
             if binding == "per_arm":
                 lines.append("        TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];")
-            frame = "getPackedCell(nearby)->getFrame()"
+            frame = "getFrame(nearby)"
             if query == "conjunction":
                 lines += ["        if (getTerrain(nearby) == terrain",
                           f"            && {invoke}isSpecialFrame({frame}))", "            strength >>= 1;"]
@@ -98,11 +99,17 @@ def helper_order_axis(source):
     packed_start = source.rfind("VA(0x005B48D0,", 0, packed_start)
     terrain_start, terrain_end = definition("getTerrain")
     terrain_start = source.rfind("// Retail proves the shared accessor and its expanded uses,", 0, terrain_start)
+    frame_start, frame_end = definition("getFrame")
     width_start, width_end = definition("getWidth")
     height_start, height_end = definition("getHeight")
-    if min(packed_start, terrain_start) < 0 or source[width_end:height_start] != "\n\n":
+    if (min(packed_start, terrain_start) < 0
+            or source[terrain_end:frame_start] != "\n\n"
+            or source[width_end:height_start] != "\n\n"):
         raise ValueError("review the helper evidence comments and paired dimension definitions")
-    spans = dict(packed=(packed_start, packed_end), terrain=(terrain_start, terrain_end),
+    # The terrain and frame wrappers now share the packed-cell accessor.
+    # Keep that pair intact while changing visibility relative to the query
+    # and dimensions; never swallow arbitrary intervening statements.
+    spans = dict(packed=(packed_start, packed_end), terrain=(terrain_start, frame_end),
                  dimensions=(width_start, height_end))
     ordered = sorted(spans, key=lambda name: spans[name][0])
     for left, right in zip(ordered, ordered[1:]):
@@ -129,7 +136,7 @@ def make_order_manifest(source, parent_labels):
     shape["options"] = selected
     payload["axes"].append(helper_order_axis(source))
     payload["evidence"] += ("\nFollow-up: cross ten retained source parents with all six orders of the existing "
-                            "packed-cell helper, terrain wrapper and paired dimension accessors. Move their "
+                            "packed-cell helper, terrain/frame wrappers and paired dimension accessors. Move their "
                             "single canonical definitions and evidence annotations together, with no body changes. "
                             "This tests nested helper visibility; all parents are recompiled in the current context.")
     return payload

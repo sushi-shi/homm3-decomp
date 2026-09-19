@@ -84,6 +84,7 @@ import os
 import re
 import struct
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 from homm3.core import clang, common
@@ -1094,6 +1095,7 @@ def _vector_owner(mangled: str):
         vector_element.group(1).lower() if vector_element else None)
 
 
+@lru_cache(maxsize=8192)
 def _demangle_key(mangled: str):
     """Normalized join key for one MSVC public name: ?Method@Class@@... ->
     class_method, matching scan_file's declarator spelling (:: -> _).
@@ -1688,7 +1690,16 @@ def _base_authority_scan(unit: str) -> tuple:
     obj = common.HOMM3_DIR / f"build/objdiff/base/{unit}.obj"
     if not obj.is_file():
         return {}, {}
-    data = obj.read_bytes()
+    # Read on every lookup: rebuilds/merges may preserve size and timestamps.
+    # Only parsing is reused, keyed by the complete object bytes. Return private
+    # containers so callers cannot mutate the cached authority for later joins.
+    groups, digests = _parse_base_authority(obj.read_bytes())
+    return {key: list(group) for key, group in groups.items()}, dict(digests)
+
+
+@lru_cache(maxsize=256)
+def _parse_base_authority(data: bytes) -> tuple:
+    """Parse symbol authority once per distinct COFF object in this process."""
     nsec, = struct.unpack_from("<H", data, 2)
     section_sizes = {}
     section_bytes = {}
@@ -2779,7 +2790,7 @@ def run(only_units: list[str] | None = None,
             banked_inline_names(path, definitions, banked))
     headers.project(header_paths, functions,
                     {p.stem: names for p, names in zip(todo, ir_maps)},
-                    rows_by_unit, problems)
+                    rows_by_unit, problems, ownership=(definitions, errors, _reached))
     for path in todo:
         rows = sorted(rows_by_unit[path.stem], key=lambda r: (r['rva'], r['kind']))
         banner = [f"# GENERATED claim fragment for unit {path.stem} - the "

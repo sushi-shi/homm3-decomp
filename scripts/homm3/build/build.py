@@ -39,6 +39,15 @@ def main(argv=None) -> int:
               file=sys.stderr)
         return 1
 
+    if not fast:
+        from homm3.core import inputs
+        try:
+            for executable in (inputs.RETAIL, inputs.DREAMCAST):
+                inputs.stage_executable(executable)
+        except inputs.InputError as exc:
+            print(f"[build] {exc}", file=sys.stderr)
+            return 1
+
     configure.main()
     if _run("ninja", *ninja_args):
         return 1
@@ -71,8 +80,10 @@ def main(argv=None) -> int:
     # Check BEFORE updating the ledger so a changed function is compared with
     # its preceding MAX/source hash. The update then resets MAX for a proven
     # source edit while preserving HIST.
-    status.cmd_check(report)
-    status.cmd_update(report)
+    fingerprint_pair = status.source_hash_pair()
+    history_patch = status.baseline_history()
+    status.cmd_check(report, fingerprint_pair=fingerprint_pair)
+    status.cmd_update(report, fingerprint_pair=fingerprint_pair, history_patch=history_patch)
 
     # EVERY evidence/source gate runs, even after one fails. Collect, report
     # everything, fail once; these gates, not a local objdiff maximum, decide
@@ -84,8 +95,11 @@ def main(argv=None) -> int:
     # row that used to be there still is. Clean ratchet + lost row is
     # exactly how army::can_shoot left the ledger green (2026-08-15).
     from homm3.match import banked_rows, single_view, verify_va_claims, source_ownership
+    origins = source_ownership.read_dc(include_declarations=True)
     for gate in (banked_rows, verify_va_claims, single_view, source_ownership):
-        fatal = gate.run_gate()
+        extra = ({'history_patch': history_patch} if gate is banked_rows else
+                 {'origins': origins} if gate is source_ownership else {})
+        fatal = gate.run_gate(**extra)
         if fatal:
             failed = True
             for line in fatal:
@@ -95,7 +109,7 @@ def main(argv=None) -> int:
     # a down-only bless recorded off a failing tree would bake in state
     # nobody reviewed. Check always, write only when clean.
     from homm3.cleanliness import board
-    violations = board.check_and_roll(write=not failed)
+    violations = board.check_and_roll(write=not failed, dc_origins=origins)
     if violations:
         failed = True
         for line in violations:

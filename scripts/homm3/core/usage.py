@@ -20,14 +20,39 @@ from homm3.core import common
 _ACTIVE_EVENT = contextvars.ContextVar("homm3_usage_event", default=None)
 
 
+def _silence_closed_pipe(stream):
+    """Prevent Python's final flush from turning an early reader exit into 120."""
+    try:
+        descriptor = stream.fileno()
+        with open(os.devnull, "w") as sink:
+            os.dup2(sink.fileno(), descriptor)
+    except (AttributeError, OSError, ValueError):
+        pass  # In-memory streams have no interpreter-owned descriptor.
+
+
 class _Output:
     def __init__(self, stream):
         self.stream = stream
         self.tail = ""
+        self.closed_pipe = False
 
     def write(self, text):
         self.tail = (self.tail + text)[-16384:]
-        return self.stream.write(text)
+        if not self.closed_pipe:
+            try:
+                return self.stream.write(text)
+            except BrokenPipeError:
+                self.closed_pipe = True
+                _silence_closed_pipe(self.stream)
+        return len(text)
+
+    def flush(self):
+        if not self.closed_pipe:
+            try:
+                self.stream.flush()
+            except BrokenPipeError:
+                self.closed_pipe = True
+                _silence_closed_pipe(self.stream)
 
     def __getattr__(self, name):
         return getattr(self.stream, name)
@@ -47,7 +72,8 @@ def classify_error(text):
         return "compile.cpp"
     if "no candidate tu" in lower:
         return "candidate.unavailable"
-    if "stale normalized comparison object" in lower:
+    if ("stale normalized comparison object" in lower
+            or "candidate sources are not built" in lower):
         return "candidate.stale"
     if "symbol " in lower and "not found in" in lower:
         return "candidate.symbol_missing"
@@ -115,10 +141,18 @@ def run_process(command, *, cwd):
     with subprocess.Popen(command, cwd=cwd, env=env, stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE, text=True, errors="replace") as process:
         def forward(pipe, stream):
+            closed = False
             try:
                 for line in pipe:
-                    stream.write(line)
-                    stream.flush()
+                    if not closed:
+                        try:
+                            stream.write(line)
+                            stream.flush()
+                        except BrokenPipeError:
+                            closed = True
+                            _silence_closed_pipe(stream)
+                    # Continue draining: `build | head` must finish its gates
+                    # and preserve the child's real status, not kill it midway.
             finally:
                 pipe.close()
         threads = [threading.Thread(target=forward, args=(pipe, stream), daemon=True)

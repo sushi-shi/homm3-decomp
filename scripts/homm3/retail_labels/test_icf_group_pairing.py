@@ -47,6 +47,10 @@ holding two DIFFERENT digests declines however tempting its shape.
 """
 
 import unittest
+import os
+from pathlib import Path
+import tempfile
+from unittest.mock import patch
 
 from homm3.retail_labels import source
 
@@ -132,6 +136,32 @@ SAMPLE = "??1?$TResourceHandle@Vsample@@@@QAE@XZ"
 
 class BaseAuthorityDigestTest(unittest.TestCase):
     """The side channel the oracle reads, against the real base object."""
+
+    def test_cached_authority_tracks_bytes_with_unchanged_size_and_timestamp(self):
+        obj = source.common.HOMM3_DIR / "build/objdiff/base/remote.obj"
+        if not obj.is_file():
+            self.skipTest("remote.obj is not built")
+        data = obj.read_bytes()
+        replacement = SESSION.replace("CDPlaySession", "DDPlaySession")
+        self.assertIn(SESSION.encode(), data)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            copied = root / "build/objdiff/base/remote.obj"
+            copied.parent.mkdir(parents=True)
+            copied.write_bytes(data)
+            timestamp = copied.stat()
+            with patch.object(source.common, "HOMM3_DIR", root):
+                groups, digests = source._base_authority_scan("remote")
+                # Caller mutations must not poison later cached joins.
+                next(iter(groups.values())).clear()
+                digests.clear()
+                self.assertEqual(source._base_authority_scan("remote"),
+                                 source._parse_base_authority(data))
+                copied.write_bytes(data.replace(SESSION.encode(), replacement.encode()))
+                os.utime(copied, ns=(timestamp.st_atime_ns, timestamp.st_mtime_ns))
+                changed = source._base_authority_digests("remote")
+                self.assertNotIn(SESSION, changed)
+                self.assertIn(replacement, changed)
 
     def test_the_reloc_free_twins_hash_equal(self):
         digests = source._base_authority_digests("ai_tactical")

@@ -7,7 +7,7 @@ counts equalized, source edited, or matching scores changed by this module.
 """
 from __future__ import annotations
 
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, OrderedDict
 import csv
 from dataclasses import dataclass
 import hashlib
@@ -430,28 +430,65 @@ def extract_function(documents: list[dict], mangled: str, path: Path,
 
 
 def parse_candidate(path: Path, mangled: str, root: Path = common.HOMM3_DIR) -> dict:
-    compiler, includes = clang.clang_bin(), clang.mirror()
-    if not compiler or not includes:
-        raise ValueError("Clang or the VC6 header mirror is unavailable")
-    commands = compilation_database.commands(manifest.load(root / "config/units.toml"),
-        root, compiler, [includes, root / "include", root / ZLIB_INC])
-    commands = [row for row in commands if Path(row["file"]).resolve() == path.resolve()]
-    if len(commands) != 1:
-        raise ValueError(f"expected one compiler profile for {path}, found {len(commands)}")
-    names = _source.source_names(mangled)
-    if not names:
-        raise ValueError("compiler-generated or unsupported source identity")
-    args = [arg for arg in commands[0]["arguments"] if arg != "/c"]
-    args[-1:-1] = ["-fsyntax-only", "-ferror-limit=0", "-Xclang", "-ast-dump=json", "-Xclang",
-                   "-ast-dump-filter=" + names[0]]
-    completed = subprocess.run(args, cwd=root, text=True, capture_output=True, timeout=120)
-    source = path.read_text()
-    candidate = extract_function(json_documents(completed.stdout), mangled, path, source)
-    if completed.returncode:
-        candidate["gaps"].append("Clang reported TU errors; selected definition was recovered, "
-                                 "but the audit is incomplete:\n" + completed.stderr[-3000:])
-    candidate["source_sha256"] = hashlib.sha256(source.encode()).hexdigest()
-    return candidate
+    return CandidateParser(root)(path, mangled)
+
+
+class CandidateParser:
+    """Compiler commands and filtered ASTs for one audit invocation only."""
+    def __init__(self, root: Path = common.HOMM3_DIR, *, batch=False):
+        self.root, self.batch = root, batch
+        self.commands = None
+        self.dumps = OrderedDict()
+        self.sources = {}
+
+    def __call__(self, path: Path, mangled: str) -> dict:
+        path = path.resolve()
+        if self.commands is None:
+            compiler, includes = clang.clang_bin(), clang.mirror()
+            if not compiler or not includes:
+                raise ValueError("Clang or the VC6 header mirror is unavailable")
+            self.commands = {}
+            for row in compilation_database.commands(manifest.load(self.root / 'config/units.toml'),
+                    self.root, compiler, [includes, self.root / 'include', self.root / ZLIB_INC]):
+                self.commands.setdefault(Path(row['file']).resolve(), []).append(row)
+        commands = self.commands.get(path, [])
+        if len(commands) != 1:
+            raise ValueError(f"expected one compiler profile for {path}, found {len(commands)}")
+        names = _source.source_names(mangled)
+        if not names:
+            raise ValueError("compiler-generated or unsupported source identity")
+        selector = names[0]
+        decoded = _source.demangle(mangled)
+        if (self.batch and decoded.scope and not decoded.note
+                and all(re.fullmatch(r'[A-Za-z_]\w*', part) for part in decoded.scope)):
+            # The trailing :: selects members, not an unrestricted class/TU
+            # dump. Clang emits independently located declaration documents.
+            selector = '::'.join(reversed(decoded.scope)) + '::'
+        key = (path, selector)
+        if key not in self.dumps:
+            args = [arg for arg in commands[0]['arguments'] if arg != '/c']
+            args[-1:-1] = ['-fsyntax-only', '-ferror-limit=0', '-Xclang', '-ast-dump=json',
+                           '-Xclang', '-ast-dump-filter=' + selector]
+            completed = subprocess.run(args, cwd=self.root, text=True, capture_output=True, timeout=120)
+            documents = json_documents(completed.stdout)
+            indexed = {}
+            for document in documents:
+                indexed.setdefault(document.get('mangledName'), []).append(document)
+            self.dumps[key] = (indexed, completed.returncode, completed.stderr[-3000:])
+            if len(self.dumps) > 8:
+                self.dumps.popitem(last=False)
+        self.dumps.move_to_end(key)
+        if path not in self.sources:
+            raw = path.read_text()
+            self.sources[path] = (raw, hashlib.sha256(raw.encode()).hexdigest())
+        source, digest = self.sources[path]
+        indexed, returncode, diagnostics = self.dumps[key]
+        candidate = extract_function(indexed.get(mangled, []), mangled, path, source)
+        if returncode:
+            candidate['gaps'].append('Clang reported TU errors; selected definition was recovered, '
+                                     'but the audit is incomplete:\n' + diagnostics)
+        candidate['source_sha256'] = digest
+        return candidate
 
 
 def compare_facts(expected: dict, candidate: dict) -> dict:
@@ -620,7 +657,7 @@ def expected_facts(dossier, procedure, types) -> dict:
     return result
 
 
-def audit(corpus, row: dict, *, dump=None, data=None, type_table=None) -> dict:
+def audit(corpus, row: dict, *, dump=None, data=None, type_table=None, candidate_parser=None) -> dict:
     from homm3.analysis import dc_lines, dreamcast
     from homm3.core.nb11_types import Types
     if dump is None:
@@ -641,7 +678,7 @@ def audit(corpus, row: dict, *, dump=None, data=None, type_table=None) -> dict:
         output["coverage_gaps"] = ["retail/source symbol binding unavailable; run homm3 build"]
         return output
     try:
-        candidate = parse_candidate(common.HOMM3_DIR / relative, mangled)
+        candidate = (candidate_parser or parse_candidate)(common.HOMM3_DIR / relative, mangled)
     except (ValueError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
         output["coverage_gaps"] = [str(exc)]
         return output
@@ -657,7 +694,9 @@ def run(corpus, rows: list[dict], *, as_json: bool = False,
     from homm3.core.nb11_types import Types
     dump, data = dc_lines.load_symbols(), inputs.read_dreamcast_exe()
     types = Types.from_symbols(dump)
-    results = [audit(corpus, row, dump=dump, data=data, type_table=types) for row in rows]
+    parser = CandidateParser(batch=len(rows) > 1)
+    results = [audit(corpus, row, dump=dump, data=data, type_table=types,
+                     candidate_parser=parser) for row in rows]
     stale_suppressions = []
     if suppression_path is not None:
         stale_suppressions = apply_suppressions(results, load_suppressions(suppression_path))

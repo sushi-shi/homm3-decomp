@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import os
 import shutil
 import tempfile
 import unittest
@@ -78,6 +79,22 @@ class NormalizeUnitTest(unittest.TestCase):
                 patch.object(normalize_objs.canon, "load_compgen_claims", side_effect=AssertionError("claims parsed")):
             self.assertEqual(dict(normalize_objs.normalize_unit("probe")), {})
         self.assertEqual(mtimes, {p: p.stat().st_mtime_ns for p in mtimes})
+
+    def test_same_timestamp_rebuild_and_corruption_match_forced_normalization(self):
+        normalize_objs.normalize_unit('probe')
+        raw = self.objdiff / 'base/probe.obj'
+        stat = raw.stat()
+        raw.write_bytes(_base(literal=0x00401024))
+        os.utime(raw, ns=(stat.st_atime_ns, stat.st_mtime_ns))
+        normalize_objs.normalize_unit('probe')
+        refreshed = self._normalized()
+        shutil.rmtree(self.objdiff / 'normalized')
+        normalize_objs.normalize_unit('probe')
+        self.assertEqual(refreshed, self._normalized())
+        normalized = self.objdiff / 'normalized/base/probe.obj'
+        normalized.write_bytes(b'corrupt')
+        normalize_objs.normalize_unit('probe')
+        self.assertEqual(refreshed, self._normalized())
 
     def test_each_paired_input_change_still_runs_transforms(self):
         normalize_objs.normalize_unit("probe")

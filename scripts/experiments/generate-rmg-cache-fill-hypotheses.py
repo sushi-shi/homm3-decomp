@@ -86,14 +86,14 @@ def make_order_manifest(source, parent_labels):
         raise ValueError("review ten unique cache-fill parents")
     axis["options"] = [choices[name] for name in parent_labels]
     # Reuse the reviewed order axis: move the existing packed-cell query,
-    # terrain wrapper and dimension definitions with their evidence comments.
+    # terrain/frame wrappers and dimension definitions with their evidence comments.
     path = Path(__file__).with_name("generate-rmg-strength-polish-hypotheses.py")
     spec = importlib.util.spec_from_file_location("rmg_strength_order", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     payload["axes"].append(module.helper_order_axis(source))
     payload["evidence"] += ("\nFollow-up: cross ten retained canonical cache-fill parents with all six orders "
-                            "of the existing packed-cell query, terrain wrapper and dimension definitions. "
+                            "of the existing packed-cell query, terrain/frame wrappers and dimension definitions. "
                             "Keep each helper exactly once and recompile all parents plus a separate baseline.")
     return payload
 

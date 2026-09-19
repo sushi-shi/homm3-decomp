@@ -14,6 +14,9 @@ from homm3.match.status import (_canonical_definition_text, _definition_text,
 
 
 class UpdateRowsTest(unittest.TestCase):
+    def setUp(self):
+        self.enterContext(mock.patch("homm3.match.status.require_built_sources"))
+
     def test_rva_migrates_history_across_label_promotion(self):
         old = {("unit", "flat_name"): MatchRow(75.0, 90.0, 95.0, 0x1234)}
         rows, stats = update_rows(
@@ -123,11 +126,11 @@ class UpdateRowsTest(unittest.TestCase):
         output = io.StringIO()
         with mock.patch("homm3.match.status.load_baseline",
                         return_value=previous), mock.patch(
-                            "homm3.match.status.source_hashes",
-                            return_value={
+                            "homm3.match.status.source_hash_pair",
+                            return_value=({
                                 touched: "touched-new",
                                 unrelated: "unrelated-same",
-                            }), contextlib.redirect_stdout(output):
+                            }, {})), contextlib.redirect_stdout(output):
             self.assertEqual(cmd_check(report), 0)
 
         self.assertEqual(previous[unrelated].max, 98.0)
@@ -144,8 +147,8 @@ class UpdateRowsTest(unittest.TestCase):
         output = io.StringIO()
         with mock.patch("homm3.match.status.load_baseline",
                         return_value=rows), mock.patch(
-                            "homm3.match.status.source_hashes",
-                            return_value={key: "new"}), \
+                            "homm3.match.status.source_hash_pair",
+                            return_value=({key: "new"}, {})), \
                 contextlib.redirect_stdout(output):
             self.assertEqual(cmd_check(report), 0)
         self.assertIn("MAX DROP unit function: 98.00% -> 75.00% "
