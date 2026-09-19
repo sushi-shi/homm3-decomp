@@ -247,6 +247,9 @@ The edge-side family tests an ordinary shared point/edge predicate in lookup
 and site legalization. The published
 [Graphics Gems IV implementation](https://github.com/erich666/GraphicsGems/blob/master/gemsiv/delaunay/quadedge.C)
 suggested that helper boundary; it does not prove HoMM3 names or declarations.
+The [provenance investigation](../rmg-voronoi-provenance.md) compares retail
+with both that implementation and the earlier algorithm: adaptation is
+supported, but the direct source and any library identity remain unconfirmed.
 Retail `locate` (0x5fd6b0) already agreed on control flow but spilled an
 endpoint in its first orientation, growing its frame from eight to sixteen
 bytes. The family preserves the canonical integer orientation helper and
