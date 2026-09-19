@@ -1243,7 +1243,21 @@ public:
     // independently names the same +0x30 member m_small_portrait_name.
     const char* m_smallPortraitName;  // +0x30 image name for locator portraits
     const char* m_largePortraitName;  // +0x34 image name for WIDGET_SET_IMAGE
-    unsigned int m_attributes;  // +0x38 (DC name)
+    // DC names/types the +0x38 word attributes (authored m_attributes).
+    // Complete's RMG constructor
+    // 0x537b10 independently reads +0x38/+0x39/+0x3a as original-map
+    // availability, expansion-map availability and special-hero exclusion.
+    // Preserve the proven word and expose the retail byte layout alongside
+    // it; the fourth byte's role remains unknown. These role-derived byte
+    // names and the union model are retail-supported, not recovered DC text.
+    union {
+        unsigned int m_attributes;
+        struct {
+            unsigned char m_availableInOriginal;
+            unsigned char m_availableInExpansion;
+            unsigned char m_special;
+        } m_availability;
+    };                                              // +0x38
     char m_pad3c[4];  // +0x3c retail-only field
     // HeroFn_004D8FB0 strcmp's the live hero name against this pointer.
     // InitializeHeroTraitsTable independently fills it from hotraits.txt.

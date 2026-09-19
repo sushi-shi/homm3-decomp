@@ -2260,10 +2260,22 @@ the structures the replay admits. What it found:
   every `paintPoint` edit that defers it (dropping the secondary find
   guard, an arm, the loop or the tail) also changes `paintPoint`'s
   retained calls, and the trigger is not monotone in the number of set
-  calls. Open.
+  calls. Those concrete-owner probes did not resolve the boundary.
 
-  shape of gap as `refreshRmgLinePoint`.
-
+  The Complete-only point owner was subsequently reconstructed as a genuine
+  coordinate class template, with `TRmgGridPoint` naming its unsigned
+  specialization and the ordinary free comparator a function template.
+  Its two-reference constructor ABI and comparator's placement among STL
+  instantiations support this provisional source model; no Dreamcast RMG
+  counterpart establishes the original name or template declaration.
+  In the actual TU the comparator now emits after `insert`, preserving the
+  retail lock unwind frame while both bounds still expand its canonical body.
+  Finite two-state context `f90c26c9b4d2c18fef9d` reproduces all 342 insertion
+  bytes, both 89-byte bounds, the 32-byte comparator and both retained
+  constructors. Across all seven header consumers, insertion alone improves
+  from 79.8254% to 100%; `find` remains 99.4634%. No inline keyword, exception
+  specification, explicit instantiation or production normalization change
+  is involved. See the generic ownership decision in `source-families.md`.
 
 ### University constructor: source ownership recovers the missing expansion
 

@@ -333,8 +333,6 @@ void Bitmap16Bit::frameRect(int x, int y, int w, int h,
         Bitmap16MapPointer dst;
         dst.m_pixels = getMap(x, y);
         for (int row = 0; row < h; ++row) {
-            if (row)
-                dst.m_bytes += m_pitch;
             if (row == 0 || row == h - 1) {
                 for (int col = 0; col < w; ++col)
                     dst.m_pixels[col] = color;
@@ -342,6 +340,7 @@ void Bitmap16Bit::frameRect(int x, int y, int w, int h,
                 dst.m_pixels[0] = color;
                 dst.m_pixels[w - 1] = color;
             }
+            dst.m_bytes += m_pitch;
         }
     }
 }

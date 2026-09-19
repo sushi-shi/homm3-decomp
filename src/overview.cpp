@@ -1866,8 +1866,6 @@ TOverviewWindow::~TOverviewWindow()
         if (*it)
             delete *it;
     }
-
-    ResourceManager::delSprFromCache();
 }
 
 // Dreamcast proves three independent source statements and the exact

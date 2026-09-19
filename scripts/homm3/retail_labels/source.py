@@ -1148,6 +1148,10 @@ def _demangle_key(mangled: str):
     # cache (`_Tree@UTCacheMapKey@ResourceManager@@...`).
     tree_named_owner = re.search(
         r"\?\$_Tree@(?:V|U)([A-Za-z_]\w*)@", mangled)
+    # A concrete specialization is its own owner; never erase the primitive
+    # argument or reuse a typedef spelling that the object cannot establish.
+    tree_template_owner = re.search(
+        r"\?\$_Tree@(?:V|U)\?\$([A-Za-z_]\w*)@([CDEFGHIJK])@@", mangled)
     tree_pointer_owner = re.search(
         r"\?\$_Tree@P(?:A|B)?(?:V|U)([A-Za-z_]\w*)@", mangled)
     tree_string_owner = re.search(
@@ -1164,6 +1168,9 @@ def _demangle_key(mangled: str):
                    + "_set") if tree_set_primitive else
                   tree_value.group(1) if tree_value else
                   tree_named_owner.group(1) if tree_named_owner else
+                  (tree_template_owner.group(1) + '_' +
+                   DEQUE_PRIMITIVE_ELEMENT[tree_template_owner.group(2)])
+                  if tree_template_owner else
                   tree_pointer_owner.group(1) if tree_pointer_owner else
                   "string" if tree_string_owner else None)
     if mangled.startswith("?_Min@?$_Tree@") and tree_value:
@@ -1771,15 +1778,26 @@ def _parse_base_authority(data: bytes) -> tuple:
 
 
 def vc6_function_name(mangled: str, candidates, unit: str) -> str | None:
-    """Resolve only the compiler-specific spelling of an anonymous namespace.
+    """Resolve validated compiler-specific spellings without changing the ABI.
 
     Clang hashes the namespace; VC6 embeds its first declaration's filename
     and a number. That declaration can be in the owning module's header.
     Keep the entire class/member/signature suffix and require one symbol in
-    the owning object's source module. Ordinary names remain exact matches.
+    the owning object's source module. A free less-than function template
+    over one primitive type has its own narrow VC6 spelling bridge below.
+    Other names remain exact matches.
     """
     if mangled in candidates:
         return mangled
+    # VC6 omits the function-template argument prefix on this free operator,
+    # while Clang keeps it. Confirm its primitive argument in the concrete
+    # class specialization and retain the complete calling/signature suffix.
+    comparison = re.fullmatch(r'\?\?\$\?M([CDEFGHIJK])@@(Y.+)', mangled)
+    if comparison and re.search(
+            r'\?\$[A-Za-z_]\w*@' + comparison.group(1) + r'@@', comparison.group(2)):
+        spelling = '??M@' + comparison.group(2)
+        if spelling in candidates:
+            return spelling
     clang_anon = re.compile(r"@\?A0x[0-9A-Fa-f]+@")
     if not clang_anon.search(mangled):
         return None
