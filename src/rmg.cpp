@@ -32,7 +32,7 @@
 #include "textresource.h"
 #include "town.h"
 
-// Complete-only shared land predicate; original name is unknown. Eight
+// Complete-only shared land predicate; original name is unknown. Nine
 // placement/decoration sites use this same road-passable, non-rock test.
 // Keeping its ordinary helper boundary restores decorateMap's retail branch
 // layout (409 bytes exact); spelling the two field tests in the caller does not.
@@ -721,14 +721,14 @@ void type_random_map::markBorderPatch(TRmgMapPosition position)
 // The footprint/outline helper calls are retained, followed by an expanded
 // entrance lookup one row below the trigger. Retail checks a negative zone
 // separately from a different zone, then compares water membership as ints.
-// Scalar trigger coordinates and a named byte result reach 61.5761%; a
-// prototype reference and separate passability/rock guards reach 86.6848%.
-// Moving coordinate snapshots to function entry does not recover retail's
-// EDI/EBX homes across the helper calls; terrain snapshots also remain lower.
-// Translating a copied entrance with the existing position operator-= and
-// a canonical TPoint preserves all three retained calls, but enlarges the
-// frame from 0xc to 0x14 and scores 79.2065%. The distinct prototype point
-// was explicitly converted; no new helper or interface was inferred.
+// Residual 98.8207%: the ordinary land predicate removes a duplicated
+// failure epilogue (91.1848 -> 95.3152%). Assigned entrance coordinates,
+// Y before X, recover retail's EDI/EBX homes across all three helper calls;
+// comparing the cell's water membership first restores the final compare.
+// Only the trigger-coordinate load/subtract schedule remains. Value/reference
+// trigger snapshots, named scalars, and two-coordinate point/array models
+// reproduce this peak but do not close it. Parameter mutation or a whole
+// position copy changes the frame/register homes and loses the retail shape.
 VA(0x00531CF0, 0x1A5) // anchor-callee 0x541c73; thiscall, ret 0x14; retail-only
 unsigned char type_random_map::canPlaceObject(
     TRmgObjectPropertiesRef* properties, TRmgMapPosition position, TRmgZone* zone)
@@ -745,16 +745,15 @@ unsigned char type_random_map::canPlaceObject(
         return 0;
     if (!prototype.m_hasTrigger)
         return 1;
-    int x = position.m_x - prototype.m_triggerCell.m_x;
-    int y = position.m_y - prototype.m_triggerCell.m_y;
-    ++y;
-    TRmgMapPosition entrance(x, y, position.m_z);
-    if (y >= m_mapHeight)
+    TRmgMapPosition entrance;
+    entrance.m_y = position.m_y - prototype.m_triggerCell.m_y;
+    entrance.m_x = position.m_x - prototype.m_triggerCell.m_x;
+    ++entrance.m_y;
+    entrance.m_z = position.m_z;
+    if (entrance.m_y >= m_mapHeight)
         return 0;
     TRmgMapItem* item = getMapItem(entrance);
-    if (!item->m_tileData.m_roadPassable)
-        return 0;
-    if (item->m_tile.m_landType == eTerrainRock)
+    if (!item->isPassableLand())
         return 0;
     if (item->m_zoneState.m_zone < 0)
         return 0;
@@ -765,7 +764,7 @@ unsigned char type_random_map::canPlaceObject(
         if (!g_adventureObjectLandBlocked[entranceType][2])
             return 0;
     }
-    unsigned char result = (zone->m_terrain == eTerrainWater) == (item->m_tile.m_landType == eTerrainWater);
+    unsigned char result = (item->m_tile.m_landType == eTerrainWater) == (zone->m_terrain == eTerrainWater);
     return result;
 }
 
