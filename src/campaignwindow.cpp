@@ -293,7 +293,7 @@ int campaignWindowHandler(message& msg)
 {
     int exitFlag = 0;
 
-    if (g_binkDirty) {
+    if (BinkManager::s_needsUpdate) {
         g_campaignWindow->drawWindow(0, 0x80, 0x86);
         g_windowManager->updateScreen(BinkManager::s_playingBink.m_x, BinkManager::s_playingBink.m_y,
             BinkManager::s_playingBink.m_w, BinkManager::s_playingBink.m_h);

@@ -28,14 +28,14 @@ def pump_variants(body):
     if (!video)
         video = s_playingBink.m_bink2;
 '''
-    begin = '    if (video && g_binkFrameReady && !_BinkWait(video)) {\n'
-    tail = '    }\n\n    g_binkDirty = 0;\n}'
+    begin = '    if (video && s_playingBinkActive && !_BinkWait(video)) {\n'
+    tail = '    }\n\n    s_needsUpdate = 0;\n}'
     if body.count(select) != 1 or body.count(begin) != 1 or not body.endswith(tail):
         raise ValueError('Review the pump guard baseline')
     payload = body.split(begin, 1)[1][:-len(tail)]
     frame = '        if (video->m_frameNum == video->m_frames) {\n'
     start = payload.index(frame)
-    stop = payload.index('        if (g_binkUseDirtyRects)', start)
+    stop = payload.index('        if (s_updateScreen)', start)
     old_frame = payload[start:stop]
     closing = '''        } else {
             _BinkNextFrame(video);
@@ -51,7 +51,7 @@ def pump_variants(body):
     for selection, readiness, paused, orientation in itertools.product(range(2), range(3), range(2), range(2)):
         core = payload.replace(old_frame, flipped) if orientation else payload
         if paused:
-            prefix = '''        g_binkDirty = 1;
+            prefix = '''        s_needsUpdate = 1;
         if (s_playingBink.m_paused)
             return;
 
@@ -59,20 +59,20 @@ def pump_variants(body):
             if not core.startswith(prefix) or not core.endswith('        return;\n'):
                 raise ValueError('Review paused-frame effects')
             work = core[len(prefix):-len('        return;\n')]
-            core = ('        g_binkDirty = 1;\n        if (!s_playingBink.m_paused) {\n'
+            core = ('        s_needsUpdate = 1;\n        if (!s_playingBink.m_paused) {\n'
                     + ''.join('    ' + line if line.strip() else line for line in work.splitlines(True))
                     + '        }\n        return;\n')
         selected = select if not selection else '    Bink* video = s_playingBink.m_bink ? s_playingBink.m_bink : s_playingBink.m_bink2;\n'
         if readiness == 0:
             guards = begin + core + tail
         elif readiness == 1:
-            guards = ('    if (video) {\n        if (g_binkFrameReady) {\n'
+            guards = ('    if (video) {\n        if (s_playingBinkActive) {\n'
                 + '            if (!_BinkWait(video)) {\n'
                 + ''.join('        ' + line if line.strip() else line for line in core.splitlines(True))
                 + '            }\n        }\n' + tail)
         else:
-            guards = ('''    if (!video || !g_binkFrameReady || _BinkWait(video)) {
-        g_binkDirty = 0;
+            guards = ('''    if (!video || !s_playingBinkActive || _BinkWait(video)) {
+        s_needsUpdate = 0;
         return;
     }
 ''' + ''.join(line[4:] if line.startswith('    ') else line for line in core.splitlines(True)) + '}')

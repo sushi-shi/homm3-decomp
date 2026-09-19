@@ -21,6 +21,10 @@ struct AILPrimaryBuffer {
 struct _DIG_DRIVER;
 typedef _DIG_DRIVER AILDigitalDriver;
 
+// Miles 5.0e HSTREAM is an opaque _STREAM pointer.
+struct _STREAM;
+typedef _STREAM* HSTREAM;
+
 struct AILWaveFormat {
     unsigned short m_formatTag;
     unsigned short m_channels;
@@ -220,7 +224,7 @@ extern AILWaveFormat g_soundWaveFormat;
 // Retail .bss 0x69fe78: the Miles stream handle. Named from the import
 // contract - it is the sole argument to AIL_stream_status and
 // AIL_service_stream everywhere it appears.
-extern void* g_mp3Stream;
+extern HSTREAM g_mp3Stream;
 
 // Retail .bss 0x6a3258: a 14-entry side table parallel to
 // soundManager::sampleHandles. PauseSamples writes
@@ -304,21 +308,24 @@ __declspec(dllimport) void __stdcall _AIL_set_sample_loop_count(ds_memsample* sa
                                                                 int loops);
 __declspec(dllimport) void __stdcall _AIL_set_sample_volume(ds_memsample* sample,
                                                             int volume);
-__declspec(dllimport) int __stdcall _AIL_stream_status(void* stream);
-__declspec(dllimport) int __stdcall _AIL_stream_position(void* stream);
-__declspec(dllimport) int __stdcall _AIL_stream_volume(void* stream);
-__declspec(dllimport) void* __stdcall _AIL_open_stream(void* driver,
-                                                       const char* filename,
-                                                       int streamMem);
-__declspec(dllimport) void __stdcall _AIL_set_stream_loop_count(void* stream,
-                                                                int loops);
-__declspec(dllimport) void __stdcall _AIL_start_stream(void* stream);
-__declspec(dllimport) void __stdcall _AIL_set_stream_position(void* stream,
-                                                              int position);
-__declspec(dllimport) void __stdcall _AIL_set_stream_volume(void* stream, int volume);
-__declspec(dllimport) void __stdcall _AIL_service_stream(void* stream, int fillup);
-__declspec(dllimport) void __stdcall _AIL_pause_stream(void* stream, int pause);
-__declspec(dllimport) void __stdcall _AIL_close_stream(void* stream);
+// Stream signatures follow Miles 5.0e Mss.h:3074..3104; S32 is long.
+__declspec(dllimport) long __stdcall _AIL_stream_status(HSTREAM stream);
+__declspec(dllimport) long __stdcall _AIL_stream_position(HSTREAM stream);
+__declspec(dllimport) long __stdcall _AIL_stream_volume(HSTREAM stream);
+__declspec(dllimport) HSTREAM __stdcall _AIL_open_stream(AILDigitalDriver* driver,
+                                                       char* filename,
+                                                       long streamMem);
+__declspec(dllimport) void __stdcall _AIL_set_stream_loop_count(HSTREAM stream,
+                                                              long loops);
+__declspec(dllimport) void __stdcall _AIL_start_stream(HSTREAM stream);
+__declspec(dllimport) void __stdcall _AIL_set_stream_position(HSTREAM stream,
+                                                            long position);
+__declspec(dllimport) void __stdcall _AIL_set_stream_volume(HSTREAM stream,
+                                                          long volume);
+__declspec(dllimport) long __stdcall _AIL_service_stream(HSTREAM stream,
+                                                       long fillup);
+__declspec(dllimport) void __stdcall _AIL_pause_stream(HSTREAM stream, long pause);
+__declspec(dllimport) void __stdcall _AIL_close_stream(HSTREAM stream);
 __declspec(dllimport) void __stdcall _AIL_shutdown();
 __declspec(dllimport) void __stdcall _AIL_serve();
 __declspec(dllimport) void __stdcall _AIL_startup();
@@ -394,7 +401,7 @@ inline void soundManager::serviceSounds()
 {
     EnterCriticalSection(&m_sectionSoundCall);
     AIL_serve();
-    void* stream = g_mp3Stream;
+    HSTREAM stream = g_mp3Stream;
     if (stream) {
         if (g_soundManager->m_mp3Playing) {
             if (!g_shutDownDone)

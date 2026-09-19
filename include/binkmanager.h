@@ -127,6 +127,11 @@ public:
         int m_paused;             // +0x2c
     };
     static BinkManagerStruct s_playingBink;
+    // DC SurfaceType, updateScreen, needsUpdate and PlayingBink.
+    static int s_surfaceType;
+    static unsigned char s_updateScreen;
+    static unsigned char s_needsUpdate;
+    static unsigned char s_playingBinkActive;
 
     static BINK* getBinkFilePtr(const char* filename, int binkOptions);
     static void setPixelFormat(unsigned long redMask,
@@ -143,20 +148,5 @@ public:
     static int playBink(int id, int x, int y, int w, int h);
 };
 SIZE(BinkManager::BinkManagerStruct, 48);
-
-// Remaining Bink TU state outside playingBINK; ownership/names under review.
-extern int g_binkSurfaceType;         // 0x694ca0 (BinkDDSurfaceType result)
-extern unsigned char g_binkDirty;     // 0x694ce0
-// The dirty-rect gate the per-frame pump tests before calling
-// VideoDrawRects; the mirror of smackmgr's own rect switch. Provisional.
-extern unsigned char g_binkUseDirtyRects;  // 0x694ca8
-// Raised while a bink is actually running: DrawCurrentBinkFrame and
-// NextBinkFrame both refuse to touch the handles without it, and CloseBink
-// drops it. The mirror of smackmgr's gSmackFrameReady. Provisional.
-extern unsigned char g_binkFrameReady;     // 0x694d5c
-// The bink twin of smackmgr's gVideoSoundReady, raised by OpenBinkVideo
-// out of exactly the same three-way gate (gUnnamed699290 == 0 &&
-// gpSoundManager->ds != 0 && gUnnamed698758.soundVolume != 0). Provisional.
-extern int g_binkSoundReady;               // 0x694d58
 
 #endif  /* HOMM3_BINKMANAGER_H */

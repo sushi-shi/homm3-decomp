@@ -17,6 +17,23 @@
 DATA(0x00694ce8)
 BINKSUMMARY g_binkSummary;
 
+// DC BinkManager::SurfaceType, updateScreen, needsUpdate and PlayingBink.
+// Retail stores the surface format at 0x694ca0, gates dirty-rectangle updates
+// with 0x694ca8, publishes frame changes through 0x694ce0, and gates active
+// playback with 0x694d5c. The latter is distinct from the playingBINK object.
+DATA(0x00694ca0)
+int BinkManager::s_surfaceType;
+DATA(0x00694ca8)
+unsigned char BinkManager::s_updateScreen;
+DATA(0x00694ce0)
+unsigned char BinkManager::s_needsUpdate;
+DATA(0x00694d5c)
+unsigned char BinkManager::s_playingBinkActive;
+
+// DC file-static bBinkSound; retail openBink writes this sound-enable gate.
+DATA(0x00694d58)
+static int g_binkSound;
+
 // Dreamcast BinkManager::playingBINK, type BinkManagerStruct (48 bytes).
 DATA(0x00694cb0)
 BinkManager::BinkManagerStruct BinkManager::s_playingBink;
@@ -39,6 +56,8 @@ void BinkManager::setPixelFormat(unsigned long redMask, unsigned long greenMask,
 // the already-open archive HANDLE in place of a file name.
 static const int g_binkOpenFromArchive = 0x8000000;
 
+// Retail retains four serviceSounds calls; the canonical header helper still
+// expands here. Correcting the Miles stream interface preserves this residual.
 VA(0x0044d5a0, 0x283)  // dc 0x50a7c
 BINK* BinkManager::getBinkFilePtr(const char* filename, int binkOptions)
 {
@@ -101,12 +120,12 @@ void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
 {
     if (g_unnamed699290 == 0 && g_soundManager->m_ds != 0
         && g_unnamed698758.m_soundVolume != 0)
-        g_binkSoundReady = 1;
+        g_binkSound = 1;
     else
-        g_binkSoundReady = 0;
+        g_binkSound = 0;
 
     videoClose();
-    g_binkSurfaceType = _BinkDDSurfaceType(g_ddsBack);
+    s_surfaceType = _BinkDDSurfaceType(g_ddsBack);
     s_playingBink.m_id = id;
     s_playingBink.m_paused = 0;
 
@@ -127,7 +146,7 @@ void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
         return;
     }
 
-    g_binkUseDirtyRects = useDirtyRects;
+    s_updateScreen = useDirtyRects;
     if (w <= 0)
         w = s_playingBink.m_bink->m_width;
     if (h <= 0)
@@ -140,7 +159,7 @@ void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
     s_playingBink.m_screen = g_windowManager->m_screenBitmap->getMap(x, y);
     s_playingBink.m_pitch = g_windowManager->m_screenBitmap->getPitch();
     s_playingBink.m_height = g_windowManager->m_screenBitmap->getHeight();
-    g_binkFrameReady = 1;
+    s_playingBinkActive = 1;
 }
 
 // smackmgr.cpp's VideoDrawCurrentFrame calls this one by the static-member
@@ -148,11 +167,11 @@ VA(0x0044d9e0, 0x6E)  // dc 0x50a88
 void BinkManager::drawCurrentBinkFrame()
 {
     Bink* video;
-    if (s_playingBink.m_bink && g_binkFrameReady) {
+    if (s_playingBink.m_bink && s_playingBinkActive) {
         if (s_playingBink.m_bink->m_frameNum == 1)
             _BinkDoFrame(s_playingBink.m_bink);
         video = s_playingBink.m_bink;
-    } else if (s_playingBink.m_bink2 && g_binkFrameReady) {
+    } else if (s_playingBink.m_bink2 && s_playingBinkActive) {
         if (s_playingBink.m_bink2->m_frameNum == 1)
             _BinkDoFrame(s_playingBink.m_bink2);
         video = s_playingBink.m_bink2;
@@ -160,7 +179,7 @@ void BinkManager::drawCurrentBinkFrame()
         return;
     }
     _BinkCopyToBuffer(video, s_playingBink.m_screen, s_playingBink.m_pitch, s_playingBink.m_height, 0, 0,
-                      g_binkSurfaceType);
+                      s_surfaceType);
 }
 
 VA(0x0044da50, 0x4D)  // dc 0x50a8c
@@ -170,10 +189,15 @@ void BinkManager::restartBink()
         _BinkGoto(s_playingBink.m_bink, 1, 1);
         _BinkDoFrame(s_playingBink.m_bink);
         _BinkCopyToBuffer(s_playingBink.m_bink, s_playingBink.m_screen, s_playingBink.m_pitch, s_playingBink.m_height,
-                          0, 0, g_binkSurfaceType);
+                          0, 0, s_surfaceType);
     }
 }
 
+// A temporary retained-service-call diagnostic recovers the historical 92.92%:
+// the idle return and completion arm are ordered differently, and the final
+// videoDrawRects call becomes a tail jump. Explicit readiness arms and paused
+// work scopes are byte-flat, both with and without that diagnostic. Preserve
+// the canonical serviceSounds inline; no call-boundary override remains.
 // E:\gamedcs\binkmanager.cpp:252, dc 0x50a90
 VA(0x0044DAA0, 0x21A)  // dc-order-map + caller (smackmgr VideoNextFrame), dc 0x50a90
 void BinkManager::nextBinkFrame()
@@ -181,14 +205,14 @@ void BinkManager::nextBinkFrame()
     Bink* video = s_playingBink.m_bink;
     if (!video)
         video = s_playingBink.m_bink2;
-    if (video && g_binkFrameReady && !_BinkWait(video)) {
-        g_binkDirty = 1;
+    if (video && s_playingBinkActive && !_BinkWait(video)) {
+        s_needsUpdate = 1;
         if (s_playingBink.m_paused)
             return;
 
         _BinkDoFrame(video);
         _BinkCopyToBuffer(video, s_playingBink.m_screen, s_playingBink.m_pitch, s_playingBink.m_height, 0, 0,
-                          g_binkSurfaceType);
+                          s_surfaceType);
 
         if (video->m_frameNum == video->m_frames) {
             if (s_playingBink.m_loop) {
@@ -202,7 +226,7 @@ void BinkManager::nextBinkFrame()
                     if (g_videoDescriptors[s_playingBink.m_id].m_fadeInSecondTrack) {
                         _BinkDoFrame(video);
                         _BinkCopyToBuffer(video, s_playingBink.m_screen, s_playingBink.m_pitch,
-                                          s_playingBink.m_height, 0, 0, g_binkSurfaceType);
+                                          s_playingBink.m_height, 0, 0, s_surfaceType);
                         g_windowManager->fadeScreen(0, 4, 0);
                     }
                 } else {
@@ -220,12 +244,12 @@ void BinkManager::nextBinkFrame()
         } else {
             _BinkNextFrame(video);
         }
-        if (g_binkUseDirtyRects)
+        if (s_updateScreen)
             videoDrawRects();
         return;
     }
 
-    g_binkDirty = 0;
+    s_needsUpdate = 0;
 }
 
 // E:\gamedcs\binkmanager.cpp:345 (dc 0x50a94) - the static-member spelling
@@ -243,8 +267,8 @@ void BinkManager::closeBink()
     s_playingBink.m_bink2 = 0;
     s_playingBink.m_bink = 0;
     s_playingBink.m_paused = 0;
-    g_binkFrameReady = 0;
-    g_binkDirty = 0;
+    s_playingBinkActive = 0;
+    s_needsUpdate = 0;
 }
 
 // E:\gamedcs\binkmanager.cpp:376, dc 0x50a98 is a platform stub.
@@ -322,6 +346,6 @@ int BinkManager::playBink(int id, int x, int y, int w, int h)
         result = !aborted;
     }
     s_playingBink.m_paused = 0;
-    g_binkFrameReady = 0;
+    s_playingBinkActive = 0;
     return result;
 }

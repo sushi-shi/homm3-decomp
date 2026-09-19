@@ -152,7 +152,7 @@ void videoRealignBuffers()
             g_windowManager->m_screenBitmap->getPitch(),
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
-    g_binkSurfaceType = _BinkDDSurfaceType(g_ddsBack);
+    BinkManager::s_surfaceType = _BinkDDSurfaceType(g_ddsBack);
     BinkManager::s_playingBink.m_screen = g_windowManager->m_screenBitmap->getMap(
         BinkManager::s_playingBink.m_x, BinkManager::s_playingBink.m_y);
     BinkManager::s_playingBink.m_pitch = g_windowManager->m_screenBitmap->getPitch();
@@ -342,7 +342,7 @@ unsigned char videoNeedsUpdate()
     if (g_smackVideo || g_smackVideo2)
         return g_smackDirty && !g_smackPaused;
     else if (BinkManager::s_playingBink.m_bink || BinkManager::s_playingBink.m_bink2)
-        return g_binkDirty && !BinkManager::s_playingBink.m_paused;
+        return BinkManager::s_needsUpdate && !BinkManager::s_playingBink.m_paused;
     return 0;
 }
 
@@ -426,7 +426,7 @@ void videoDrawRects()
         if (BinkManager::s_playingBink.m_id != VIDEO_ID_OVERLAY_BLIT) {
             int i;
 
-            _BinkGetRects(bnk, g_binkSurfaceType);
+            _BinkGetRects(bnk, BinkManager::s_surfaceType);
             w = bnk->m_frameRects[0].m_width;
             h = bnk->m_frameRects[0].m_height;
             x = bnk->m_frameRects[0].m_left;
@@ -465,7 +465,7 @@ void videoDrawRects()
             g_ddsBack->Lock(NULL, &ddsd, DDLOCK_WAIT, NULL);
         }
     }
-    g_binkDirty = 0;
+    BinkManager::s_needsUpdate = 0;
     g_smackDirty = 0;
 }
 
