@@ -36,7 +36,7 @@ from homm3.match import status
 from homm3.vc6 import tu_state_sweep as scoring
 from homm3.vc6._unit import flags_for_unit, source_for_unit
 
-VERSION = 7
+VERSION = 8
 
 
 @dataclass(frozen=True)
@@ -246,6 +246,28 @@ def next_population(axes, parents, seen, width, rng):
     return picked
 
 
+def create_snapshot(root, snapshot):
+    snapshot.mkdir()
+    shutil.copytree(root / "include", snapshot / "include")
+    shutil.copytree(root / "src", snapshot / "src", ignore=shutil.ignore_patterns("build"))
+    # cc_wrap reads the project specification and include/profile manifest
+    # from HOMM3_DIR, which points at the isolated candidate tree.
+    shutil.copytree(root / "config", snapshot / "config")
+    (snapshot / "vendor").symlink_to(root / "vendor", target_is_directory=True)
+
+
+def candidate_environment(candidate_root):
+    from homm3.core.cc_wrap import msvc_dir
+
+    env = dict(os.environ, HOMM3_DIR=str(candidate_root),
+               PYTHONPATH=str(common.HOMM3_DIR / "scripts"),
+               MSVC_DIR=str(msvc_dir()))
+    prefix = env.get("WINEPREFIX")
+    if not prefix or not Path(prefix).is_dir():
+        env["WINEPREFIX"] = str(common.HOMM3_DIR / "build/wineprefix")
+    return env
+
+
 def compile_candidate(candidate_root, unit, output):
     source = source_for_unit(unit)
     flags = flags_for_unit(unit)
@@ -253,8 +275,7 @@ def compile_candidate(candidate_root, unit, output):
         raise ValueError(f"unknown unit or missing profile: {unit}")
     output.mkdir(parents=True, exist_ok=True)
     obj = output / "candidate.obj"
-    env = dict(os.environ, HOMM3_DIR=str(candidate_root),
-               PYTHONPATH=str(common.HOMM3_DIR / "scripts"))
+    env = candidate_environment(candidate_root)
     proc = subprocess.run([
         sys.executable, "-m", "homm3.core.cc_wrap", "--out", str(obj),
         "--src", str(candidate_root / source.relative_to(common.HOMM3_DIR)),
@@ -343,10 +364,7 @@ def main(argv=None):
     scoring._write_json(output / "input.json", payload)
     snapshot = output / "snapshot"
     if not snapshot.exists():
-        snapshot.mkdir()
-        shutil.copytree(root / "include", snapshot / "include")
-        shutil.copytree(root / "src", snapshot / "src", ignore=shutil.ignore_patterns("build"))
-        (snapshot / "vendor").symlink_to(root / "vendor", target_is_directory=True)
+        create_snapshot(root, snapshot)
     rows = status.load_baseline()
     plans = []
     for unit, source in zip(units, sources):

@@ -5,14 +5,46 @@ from pathlib import Path
 import random
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from homm3.vc6.source_families import (
     Axis, Option, identity_symbol, load_manifest, next_population, render,
-    projected_max_scores, select_elites,
+    projected_max_scores, select_elites, create_snapshot, candidate_environment,
 )
 
 
 class SourceFamiliesTests(unittest.TestCase):
+    def test_snapshot_carries_independent_project_configuration(self):
+        from homm3.core.project import Project
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "root"
+            for directory in ("include", "src", "config", "vendor"):
+                (root / directory).mkdir(parents=True)
+            project = root / "config/project.toml"
+            project.write_text('[inputs.retail]\nimage_base = 4194304\n')
+            (root / "config/units.toml").write_text('[build]\nincludes = ["include"]\n')
+            snapshot = Path(tmp) / "snapshot"
+            create_snapshot(root, snapshot)
+            project.write_text('[inputs.retail]\nimage_base = 0\n')
+            candidate = Project(snapshot)
+            self.assertEqual(candidate.specification['inputs']['retail']['image_base'], 4194304)
+            self.assertEqual(candidate.includes, [snapshot / "include"])
+
+    def test_candidate_uses_active_toolchain_and_prefix_with_isolated_sources(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            candidate = root / "candidate"
+            with patch('homm3.vc6.source_families.common.HOMM3_DIR', root), \
+                 patch('homm3.core.cc_wrap.msvc_dir', return_value=root / "msvc"), \
+                 patch.dict('os.environ', {}, clear=True):
+                env = candidate_environment(candidate)
+                self.assertEqual(env['HOMM3_DIR'], str(candidate))
+                self.assertEqual(env['MSVC_DIR'], str(root / "msvc"))
+                self.assertEqual(env['WINEPREFIX'], str(root / "build/wineprefix"))
+                with patch.dict('os.environ', {'WINEPREFIX': tmp}):
+                    self.assertEqual(candidate_environment(candidate)['WINEPREFIX'], tmp)
+
     def test_anonymous_scope_identity_preserves_semantics_not_path_nonce(self):
         first = r'?g_directions@?%Z:\tmp\first\rmg.cpp123@@3PAUTPoint@@A'
         repeat = r'?g_directions@?%Z:\tmp\repeat\rmg.cpp456@@3PAUTPoint@@A'
