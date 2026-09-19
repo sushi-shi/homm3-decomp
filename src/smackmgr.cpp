@@ -133,7 +133,7 @@ DATA(0x0069e5ac) int g_soundCountCampaign;
 VA(0x005971b0, 0x3B)  // dc 0x14ac30
 void videoSoundOnOff(int on)
 {
-    if (g_smackVideo || g_smackVideo2 || g_binkVideo || g_binkVideo2)
+    if (g_smackVideo || g_smackVideo2 || BinkManager::s_playingBink.m_bink || BinkManager::s_playingBink.m_bink2)
         g_soundManager->serviceSounds();
 }
 
@@ -153,9 +153,10 @@ void videoRealignBuffers()
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
     g_binkSurfaceType = _BinkDDSurfaceType(g_ddsBack);
-    g_binkBuffer = static_cast<unsigned char*>(static_cast<void*>(g_windowManager->m_screenBitmap->getMap(g_binkX, g_binkY)));
-    g_binkPitch = g_windowManager->m_screenBitmap->getPitch();
-    g_binkHeight = g_windowManager->m_screenBitmap->getHeight();
+    BinkManager::s_playingBink.m_screen = g_windowManager->m_screenBitmap->getMap(
+        BinkManager::s_playingBink.m_x, BinkManager::s_playingBink.m_y);
+    BinkManager::s_playingBink.m_pitch = g_windowManager->m_screenBitmap->getPitch();
+    BinkManager::s_playingBink.m_height = g_windowManager->m_screenBitmap->getHeight();
 }
 
 VA(0x005972d0, 0x29D)  // dc 0x14ac38
@@ -269,8 +270,8 @@ void videoNextFrame()
         if (!g_smackPaused)
             SmackManager::nextSmackerFrame();
     }
-    if (g_binkVideo || g_binkVideo2) {
-        if (!g_binkPaused)
+    if (BinkManager::s_playingBink.m_bink || BinkManager::s_playingBink.m_bink2) {
+        if (!BinkManager::s_playingBink.m_paused)
             BinkManager::nextBinkFrame();
     }
     g_inVideoNextFrame = 0;
@@ -283,8 +284,8 @@ void videoDrawCurrentFrame()
         if (!g_smackPaused && g_smackVideo && g_smackFrameReady)
             _SmackDoFrame(g_smackVideo);
     }
-    if (g_binkVideo || g_binkVideo2) {
-        if (!g_binkPaused)
+    if (BinkManager::s_playingBink.m_bink || BinkManager::s_playingBink.m_bink2) {
+        if (!BinkManager::s_playingBink.m_paused)
             BinkManager::drawCurrentBinkFrame();
     }
 }
@@ -296,13 +297,13 @@ void videoPause()
         return;
     if (g_smackVideo || g_smackVideo2)
         g_smackPaused = 1;
-    if (g_binkVideo) {
-        g_binkPaused = 1;
-        _BinkPause(g_binkVideo, 1);
+    if (BinkManager::s_playingBink.m_bink) {
+        BinkManager::s_playingBink.m_paused = 1;
+        _BinkPause(BinkManager::s_playingBink.m_bink, 1);
     }
-    if (g_binkVideo2) {
-        g_binkPaused = 1;
-        _BinkPause(g_binkVideo2, 1);
+    if (BinkManager::s_playingBink.m_bink2) {
+        BinkManager::s_playingBink.m_paused = 1;
+        _BinkPause(BinkManager::s_playingBink.m_bink2, 1);
     }
     videoSoundOnOff(0);
 }
@@ -314,13 +315,13 @@ void videoResume()
         return;
     if (g_smackVideo || g_smackVideo2)
         g_smackPaused = 0;
-    if (g_binkVideo) {
-        g_binkPaused = 0;
-        _BinkPause(g_binkVideo, 0);
+    if (BinkManager::s_playingBink.m_bink) {
+        BinkManager::s_playingBink.m_paused = 0;
+        _BinkPause(BinkManager::s_playingBink.m_bink, 0);
     }
-    if (g_binkVideo2) {
-        g_binkPaused = 0;
-        _BinkPause(g_binkVideo2, 0);
+    if (BinkManager::s_playingBink.m_bink2) {
+        BinkManager::s_playingBink.m_paused = 0;
+        _BinkPause(BinkManager::s_playingBink.m_bink2, 0);
     }
     videoSoundOnOff(1);
 }
@@ -340,8 +341,8 @@ unsigned char videoNeedsUpdate()
 {
     if (g_smackVideo || g_smackVideo2)
         return g_smackDirty && !g_smackPaused;
-    else if (g_binkVideo || g_binkVideo2)
-        return g_binkDirty && !g_binkPaused;
+    else if (BinkManager::s_playingBink.m_bink || BinkManager::s_playingBink.m_bink2)
+        return g_binkDirty && !BinkManager::s_playingBink.m_paused;
     return 0;
 }
 
@@ -350,7 +351,7 @@ unsigned char videoPlaying()
 {
     if ((g_smackVideo || g_smackVideo2) && !g_smackPaused)
         return 1;
-    if ((g_binkVideo || g_binkVideo2) && !g_binkPaused)
+    if ((BinkManager::s_playingBink.m_bink || BinkManager::s_playingBink.m_bink2) && !BinkManager::s_playingBink.m_paused)
         return 1;
     return 0;
 }
@@ -416,13 +417,13 @@ void videoDrawRects()
                 h = smk->m_lastRecth + smk->m_lastRecty - y;
         }
         g_windowManager->updateScreen(x, y, w, h);
-    } else if ((g_binkVideo || g_binkVideo2) && !g_binkPaused) {
+    } else if ((BinkManager::s_playingBink.m_bink || BinkManager::s_playingBink.m_bink2) && !BinkManager::s_playingBink.m_paused) {
         Bink* bnk;
 
-        bnk = g_binkVideo2;
-        if (g_binkVideo)
-            bnk = g_binkVideo;
-        if (g_binkVideoId != VIDEO_ID_OVERLAY_BLIT) {
+        bnk = BinkManager::s_playingBink.m_bink2;
+        if (BinkManager::s_playingBink.m_bink)
+            bnk = BinkManager::s_playingBink.m_bink;
+        if (BinkManager::s_playingBink.m_id != VIDEO_ID_OVERLAY_BLIT) {
             int i;
 
             _BinkGetRects(bnk, g_binkSurfaceType);
@@ -440,7 +441,7 @@ void videoDrawRects()
                 if (bnk->m_frameRects[i].m_height + bnk->m_frameRects[i].m_top > h + y)
                     h = bnk->m_frameRects[i].m_height + bnk->m_frameRects[i].m_top - y;
             }
-            g_windowManager->updateScreen(g_binkX + x, g_binkY + y, w, h);
+            g_windowManager->updateScreen(BinkManager::s_playingBink.m_x + x, BinkManager::s_playingBink.m_y + y, w, h);
         } else {
             RECT dst;
 

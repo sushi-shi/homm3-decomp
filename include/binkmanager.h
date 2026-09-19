@@ -109,6 +109,25 @@ __declspec(dllimport) void __stdcall _BinkGetSummary(Bink* bnk,
 // static data roster); retail supplies the full PC implementations.
 class BinkManager {
 public:
+    // DC BinkManagerStruct / playingBINK: members bink, bink2, screen,
+    // pitch, height, x, y, w, h, id, loop, paused. Retail's 48-byte state
+    // at 0x694cb0 has the same offsets; campaign previews copy all 12 words.
+    struct BinkManagerStruct {
+        BINK* m_bink;             // +0x00
+        BINK* m_bink2;            // +0x04
+        unsigned short* m_screen; // +0x08, DC T_32PUSHORT
+        int m_pitch;              // +0x0c, byte stride
+        int m_height;             // +0x10
+        int m_x;                  // +0x14
+        int m_y;                  // +0x18
+        int m_w;                  // +0x1c
+        int m_h;                  // +0x20
+        int m_id;                 // +0x24
+        int m_loop;               // +0x28
+        int m_paused;             // +0x2c
+    };
+    static BinkManagerStruct s_playingBink;
+
     static BINK* getBinkFilePtr(const char* filename, int binkOptions);
     static void setPixelFormat(unsigned long redMask,
                                unsigned long greenMask,
@@ -123,31 +142,10 @@ public:
     static void closeBink();
     static int playBink(int id, int x, int y, int w, int h);
 };
+SIZE(BinkManager::BinkManagerStruct, 48);
 
-// Bink TU globals (.bss 0x694ca0..0x694ce0, owned by the 0x44dxxx TU;
-// names provisional, mirrored from smackmgr.cpp's smack set).
+// Remaining Bink TU state outside playingBINK; ownership/names under review.
 extern int g_binkSurfaceType;         // 0x694ca0 (BinkDDSurfaceType result)
-extern Bink* g_binkVideo;             // 0x694cb0
-extern Bink* g_binkVideo2;            // 0x694cb4
-extern unsigned char* g_binkBuffer;   // 0x694cb8 (screen pixels at the bink origin)
-extern int g_binkPitch;               // 0x694cbc
-extern int g_binkHeight;              // 0x694cc0
-extern int g_binkX;                   // 0x694cc4
-extern int g_binkY;                   // 0x694cc8
-// The two dwords between gBinkY and gBinkVideoId: CampaignWindowHandler
-// hands 0x694cc4/0x694cc8/0x694ccc/0x694cd0 straight to
-// heroWindowManager::UpdateScreen(x, y, w, h), which pairs them with the
-// already-named gBinkX/gBinkY as that call's width and height. Ordinal
-// names until a producer in the bink TU proves stronger ones.
-extern int g_binkUpdateWidth;         // 0x694ccc
-extern int g_binkUpdateHeight;        // 0x694cd0
-extern int g_binkVideoId;             // 0x694cd4 (VIDEO_ID_OVERLAY_BLIT plays via the overlay Blt)
-// 0x694cd8 closes the 12-dword snapshot campaignwindow.cpp copies out of
-// gBinkVideo. NextBinkFrame consults it when the first track reaches its last
-// frame: with it set AND both handles live it closes track one and carries on
-// with track two, otherwise it ends the playback outright. Provisional name.
-extern int g_binkChainTrack;          // 0x694cd8
-extern int g_binkPaused;              // 0x694cdc
 extern unsigned char g_binkDirty;     // 0x694ce0
 // The dirty-rect gate the per-frame pump tests before calling
 // VideoDrawRects; the mirror of smackmgr's own rect switch. Provisional.
