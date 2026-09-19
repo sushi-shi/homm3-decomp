@@ -1,175 +1,88 @@
 ---
 name: holista
-description: Use a two-worker approach for difficult C++ retail byte matches. Pair the primary matcher with Holista to reconstruct code as the original developers would plausibly have written it, recovering inlined helpers and their composition from temporary lifetimes, construction, initialization, and shared caller patterns, while challenging artificial source scopes. Use for hard cases and matching plateaus alongside the repository's matching workflow.
+description: Pair a primary matcher with Holista to reconstruct plausible original C++ from debug evidence, retail assembly, temporary lifetimes and shared helpers. Use for difficult matches or explicitly authorized sustained module-wide or whole-tree reconstruction.
 ---
 
 # Holista
 
-Recover a coherent original-source model, then test it against retail. The
-central question is: **What C++ would the original developers naturally have
-written to implement this operation?** Treat the current reconstruction as a
-hypothesis, including its class interfaces and helper boundaries.
+Recover a coherent source model: what C++ would the original developers
+plausibly have written? Treat the current reconstruction, including its helper
+boundaries and interfaces, as a hypothesis. Follow the active repository's
+`AGENTS.md` and [matching workflow](../match/SKILL.md) for evidence and measurement.
 
-This skill explicitly calls for two workers: the primary matcher and a second
-worker named **Holista**. Use the repository's matching instructions and the
-`match` skill when available for compiler setup, evidence tools, and verification.
-This skill adds a way to reason about hard functions; it does not replace those
-requirements or change the byte target.
+## Two-worker collaboration
 
-## Two complementary workers
+The primary owns integration, builds, retail comparisons, the ledger and
+adoption. Start or reuse one worker named `holista` to interpret the source and
+write candidate C++. Give it the target identity, worktree, relevant classes and
+callers, raw retail/debug evidence and remaining differences. Separate facts
+from earlier interpretations; failed probes need not rule out a combined model.
+When the user asks for a clean review, supply raw artifacts and scope without
+seeding the worker with the previous review's conclusions.
 
-The primary matcher owns the active source, compiler experiments, retail
-comparisons, score ledger, and adoption. It continues useful measurement while
-Holista works independently on the source model.
+Initially Holista writes proposals in scratch space. Delegate edits only with
+explicit file ownership or a separate preparation worktree; do not race source,
+headers, builds or generated ledgers. Keep this a two-worker pattern unless the
+user asks for more. Holista sends a useful lead early; the primary returns
+measured instruction, call, lifetime and CFG differences so both can refine it.
 
-Start one worker with task name `holista`, or reuse the existing Holista worker.
-Give it the target identity, active worktree, relevant source/classes/callers,
-raw retail and Dreamcast evidence, and the concrete remaining differences.
-Distinguish observed facts from previous interpretations. Previous failed probes
-help avoid duplicate work but do not establish that a model is impossible.
+For an explicitly authorized module-wide or whole-tree campaign, Holista writes
+source batches rather than stopping at advice. Track owned files/functions, base
+commit, evidence, prepared changes and next steps in an ignored work area. Label
+unbuilt work as prepared, not measured. Hand batches to the primary for integration
+and continue independent work. Preserve coverage of unvisited and evidence-limited
+units; a finished batch is not completion of the authorized campaign. Checkpoint
+at context boundaries and coordinate shared-header ownership.
 
-Holista owns the whole-function interpretation and writes plausible candidate
-C++, including relevant helper bodies and interfaces. Initially it reads shared
-source and writes proposals in its own scratch area. The primary can delegate a
-specific edit or experiment later, with explicit file ownership or an isolated
-snapshot. Do not race builds, source edits, or generated ledgers in a shared
-worktree. Keep this a two-worker pattern unless the user asks for more workers.
+## Reconstruct whole operations
 
-Holista should send a useful lead promptly, then refine it. The primary should
-return actual instruction, call, lifetime, and CFG changes from experiments,
-including negative results. Reuse that exchange to revise the model.
+Read entry-to-exit behavior and relevant callers/callees before chasing a local
+instruction difference. Establish objects, ownership, phases and invariants
+using the project's contemporary idioms, recovered declarations and sibling
+implementations. Consider natural construction, statement order, traversal,
+early exits, cleanup and definition visibility together.
 
-## Think like the original developers
+Repeated field operations, predicates, navigation, aggregate copies and cleanup
+can reveal expanded accessors, constructors, operators or nested helpers.
+For each proposed helper, explain its purpose, receiver, parameters, return type,
+ownership and call sites. Repetition alone is not proof. Keep one canonical body
+and real calls; distinguish proven source `inline`, in-class definitions and
+ordinary auto-inlining.
 
-Read the operation from entry to exit and through the relevant callers and
-callees. Establish the algorithm, objects, ownership, invariants, and phases
-before optimizing a local mismatch. Use contemporary compiler capabilities,
-project idioms, sibling implementations, and recovered declarations; avoid
-projecting modern C++ style onto older code.
+Short lifetimes and reused stack slots may arise from an inlined helper's return
+temporary. Do not translate them directly into artificial caller blocks, even
+if those blocks currently score 100%. Inspect value-return wrappers, output-
+reference interfaces, constructors and operators across their consumers. Preserve
+aliasing and returned-reference behavior; a plausible wrapper does not authorize
+changing a proven virtual ABI. Explicit scopes need a source purpose such as
+RAII cleanup or a loop body.
 
-Write source that expresses those phases naturally. Consider why a developer
-would declare a local at function entry, at a phase boundary, or inside a loop;
-which declarations would be grouped; and where a value must remain alive.
-Consider plausible statement order, loop form, traversal state, early exits,
-constructor/destructor boundaries, and placement of helper definitions.
-These choices interact with aliasing, temporary reuse, inlining, and lowering.
-Do not choose them solely because an isolated spelling scores better.
+Use debug signatures, locals, scopes, line layout, declaration order and source-
+file switches with their assembly. Optimized debug information is incomplete:
+blank gaps do not prove assertions, and missing emitted calls do not prove absent
+source helpers. For HoMM3 use the DC evidence pass in AGENTS.md alongside retail
+`sema diff --summary`, `--structure` and `--source`. Candidate `/Z7` labels describe
+the candidate; do not demand matching SH4/x86 counts or manufacture source layout.
+State where counterparts or evidence are missing.
 
-Actively recognize patterns that could be **expanded functions**:
+## Propose, measure, refine
 
-- Repeated field reads, navigation chains, predicates, and paired field/flag
-  writes can indicate accessors or small class methods.
-- Coordinate copies, arithmetic sequences, returned aggregates, and cleanup
-  paths can indicate constructors, assignment, operators, or lifetime helpers.
-- A larger inlined region can be a composition of several small helpers,
-  including helpers nested inside other expansions.
-- Similar patterns in separate parts of a function or in sibling functions may
-  have one shared source abstraction. Test that explanation across its uses.
+Return a small set of coherent C++ candidates, the evidence each explains,
+uncertainties and a concrete prediction that distinguishes each from the current
+model. Combine interface, helper and caller changes when they express one
+explanation. Revisit earlier probes when their surrounding model changes.
+Temporary score or CFG drops are acceptable investigation results; contradictions
+of proven behavior, ABI, layout or source facts require revision. Avoid dummy
+operations, unsupported release checks and optimizer-only declarations or scopes.
 
-Describe each suspected helper's semantic purpose, receiver, arguments, return
-type, ownership, and place in the source call sequence. Repetition alone does
-not prove a helper: compiler lowering and explicitly repeated statements are
-alternatives. Distinguish a source-declared `inline` from an ordinary helper
-auto-inlined by the compiler. Keep one canonical definition and real source
-calls; do not paste helper bodies, add false `inline`, or invent alternate
-declarations merely to influence code generation.
+The primary measures candidates with the existing JSON search and VC6/retail
+comparison, retaining reproduction checks and inspecting affected consumers.
+Do not generate a per-function mock test suite as part of the handoff. A temporary
+behavioral check is useful only for a specific unresolved semantic question.
+Keep candidate files and diagnostics under ignored `build/`; commit supported
+source and concise findings. Run relevant tooling tests when changing tools.
 
-## Temporary lifetimes reveal helper boundaries
-
-Treat a short-lived output object, aggregate copy, or reused stack slot as a
-lead for an **inlined function and its return temporary**. Do not translate the
-observed machine lifetime directly into an extra `{ ... }` block in the caller.
-A block introduced only to recover stack reuse is a diagnostic, not recovered
-source, even when it produces exact bytes. Keep explicit scopes when they have
-an independently supported source purpose, such as RAII cleanup or a loop body.
-
-Holista must challenge these artificial scopes in the current reconstruction,
-including already-exact functions. Inspect existing value-return accessors,
-constructors, conversions, assignment operators, and their callers first. A
-retained helper body can also be expanded elsewhere; a virtual output-reference
-call can sit inside an inlined value-return wrapper. Follow nested helpers and
-construction/initialization together instead of treating each temporary as an
-isolated local-variable problem.
-
-For example, a caller containing `{ Point size; member = map->getSize(size); }`
-may be an expansion of `member = map->getSize()`, where a canonical value-return
-overload owns `Point size; return getSize(size);`. Test that boundary across the
-adapters and consumers that exhibit the same pattern. Preserve the returned
-reference semantics: an output-reference call may return a different object
-from the output argument. The example is a hypothesis to verify, not a license
-to invent an overload or change a proven virtual ABI.
-
-Propose the actual helper definition and natural caller expressions, explain
-which lifetimes arise from expansion, and test the combined source model against
-retail. Check declaration ownership, visibility, overload hiding, and retained
-helper bodies as well as caller bytes. Distinguish supported explicit `inline`
-from implicit in-class inline and ordinary auto-inlining; never add the keyword
-solely to force a result. Exact bytes establish codegen, not the original braces
-or exact source spelling.
-
-## Use Dreamcast as source evidence
-
-Where a counterpart exists, start from its signatures, locals and lifetimes,
-scopes, source calls, line layout, and source-file switches. Dreamcast often
-exposes boundaries that retail x86 expanded, but Dreamcast itself is optimized
-and also inlines. Neither its emitted calls nor their absence provide a complete
-source call graph. A retained standalone helper may also have inline copies.
-
-For HoMM3, inspect `dreamcast show`, `lines`, `asm --blocks`, `inline-clues`,
-and `audit`, alongside retail `sema diff --summary`, `--structure`, and
-`--source`. Use `dreamcast find` and source-order context when locating a
-counterpart. Read line positions, spans, gaps, repeated attributions, and file
-switches as clues to source composition, not missing text to manufacture.
-
-Do not assume a one-to-one mapping between DC instructions, scopes, line groups,
-and original statements. Do not compare SH4 and x86 instruction/block counts or
-force candidate line counts to match DC. Candidate `/Z7` labels describe the
-candidate, not recovered retail source. Missing counterparts and coverage gaps
-remain explicit; when no DC bridge exists, use retail and sibling evidence
-without attributing speculative declarations to Dreamcast.
-
-## Test whole models, including temporary regressions
-
-Holista should present a small set of coherent candidate implementations. For
-each, explain the observations it accounts for, inferred source structure,
-uncertainties or contradictions, and an experiment that distinguishes it from
-the current model. Include actual C++ where possible, not just a list of
-optimizer knobs. State a concrete prediction across the affected residual
-regions or sibling uses, so that a shared abstraction explains more than one
-convenient instruction change.
-
-Combine changes when they belong to one source explanation. A recovered helper
-interface may require changing several inline expansions, declaration order,
-local lifetimes, and a loop together. Evaluate the complete combination as well
-as useful constituent controls; an edit failing alone does not refute the
-combination. Revisit earlier rejected probes when their surrounding model has
-changed.
-
-**Do not be afraid of a temporary score or CFG match drop.** A partial model
-can change inlining, scope cleanup, or loop lowering before the remaining
-pieces restore retail's structure. Preserve the prior candidate and peaks, inspect
-what changed, and follow the supported hypothesis through the relevant combined
-experiments. Do not require every intermediate candidate to preserve the current
-CFG, call count, frame size, or similarity score.
-
-That freedom is not permission to ignore contradictory evidence. Separate a
-temporary compiler-shape mismatch from a conflict with proven behavior, ABI,
-layout, or source facts. If a model violates those facts, revise it. A proposed
-recovery needs a concrete remaining experiment, not an indefinite promise that
-unrelated edits will fix it. Never manufacture dummy calls, self-assignments,
-unreachable code, arbitrary declarations, or unsupported release-elided checks
-to steer the optimizer.
-
-The primary turns supported models into reviewable source-family experiments
-using the repository's workflow. Keep unchanged controls, reproduce promising
-candidates, inspect named call/relocation sequences, and measure affected
-siblings and shared-header consumers. Use behavioral checks when source
-ownership, arithmetic, or traversal changes warrant them.
-
-Finalize only after the complete implementation satisfies the actual retail
-target and required build gates. Preserve proven source facts even through score
-dips. Document specific failed hypotheses and remaining differences in the
-owning source, and reusable compiler findings in the repository's normal place.
-Source plausibility guides the search; verified retail bytes decide exactness.
-An exact candidate still does not prove that its precise source text or helper
-spelling was the original. Keep that distinction explicit.
+Finalize through the required full build and evidence gates. Keep unresolved
+work explicit rather than promising that unrelated edits will repair it.
+Plausibility guides reconstruction; retail bytes decide exactness, and exactness
+does not prove the original source spelling.

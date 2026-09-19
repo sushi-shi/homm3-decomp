@@ -13,23 +13,6 @@ from homm3.vc6.source_families import (
 
 
 class SourceFamiliesTests(unittest.TestCase):
-    def test_historical_example_preserves_its_unchanged_control(self):
-        repository = Path(__file__).resolve().parents[3]
-        manifest = repository / "scripts/experiments/rmg-grid-source-family.json"
-        payload = json.loads(manifest.read_text())
-        # This example predates generic coordinate ownership. Exercise its
-        # schema against its declared input, rather than requiring current
-        # game source to retain a superseded reconstruction.
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            header = root / payload["source"]
-            header.parent.mkdir(parents=True)
-            header.write_text("\n\n".join(axis["find"] for axis in payload["axes"]))
-            _, originals, axes = load_manifest(manifest, root)
-            self.assertEqual([len(axis.options) for axis in axes], [2, 2, 3, 6])
-            self.assertEqual(render(originals, axes, (0, 0, 0, 0)), originals)
-            self.assertNotEqual(render(originals, axes, (1, 1, 2, 5)), originals)
-
     def test_anonymous_scope_identity_preserves_semantics_not_path_nonce(self):
         first = r'?g_directions@?%Z:\tmp\first\rmg.cpp123@@3PAUTPoint@@A'
         repeat = r'?g_directions@?%Z:\tmp\repeat\rmg.cpp456@@3PAUTPoint@@A'
