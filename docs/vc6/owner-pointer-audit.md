@@ -1,5 +1,10 @@
 # Member-owner recovery and out-of-object pointer review
 
+Historical experiment filenames below refer to the searches recorded here.
+Per-function scripts and fixtures are retired once their targets reach MAX
+100%; their last versions remain in Git history. Use the general JSON runner
+for new searches and keep temporary inputs under ignored `build/`.
+
 The [pointer-boundary implementation](pointer-boundary-repairs.md) supersedes
 this original audit's retained lookup, DirectDraw and image-row exceptions.
 The historical no-score-loss review below is kept as evidence of the original

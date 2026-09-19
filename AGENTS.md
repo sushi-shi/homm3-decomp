@@ -100,6 +100,20 @@ preceding MAX. The invariant is CUR <= MAX <= HIST: MAX is monotone for an
 unchanged function hash, a proven edit resets MAX to CUR, and HIST retains the
 all-time peak. Tooling prioritizes MAX; HIST is a lead for recovering lost peaks.
 
+## Experiment lifetime
+
+Keep one-off search manifests, generators, snapshots and diagnostic fixtures in
+ignored `build/`, alongside the JSON source-family results. Prefer JSON axes and
+options; use temporary Python when it helps author them. Commit recovered C++,
+concise evidence and reusable tooling, not a new script for every search batch.
+
+Retire existing per-function experiments and their dedicated fixtures when all
+their search targets reach MAX 100% for the current implementation. Git history
+is the archive. Keep a shared experiment only while an unfinished target needs
+it: an exact helper can still be part of a search for an unfinished caller.
+HIST 100% alone does not establish completion. Remove obsolete test and command
+references with the retired experiments; retain general tooling checks.
+
 ## Holista for hard cases
 
 For difficult matching plateaus, use the repository's

@@ -1,5 +1,10 @@
 # Generated C++ source families
 
+Historical experiment filenames below refer to the searches recorded here.
+Per-function scripts and fixtures are retired once their targets reach MAX
+100%; their last versions remain in Git history. Use the general JSON runner
+for new searches and keep temporary inputs under ignored `build/`.
+
 ## RMG placement: separate mask and world-coordinate ownership
 
 `generate-rmg-placement-domains-family.py` tests four coherent models of the

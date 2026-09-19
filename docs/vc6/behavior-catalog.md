@@ -1,5 +1,10 @@
 # VC6 SP3 behavior catalog — the model's spec and test corpus
 
+Historical experiment filenames below refer to the searches recorded here.
+Per-function scripts and fixtures are retired once their targets reach MAX
+100%; their last versions remain in Git history. Use the general JSON runner
+for new searches and keep temporary inputs under ignored `build/`.
+
 This document is the specification the `vc6` predictors are built against and
 **the model's test corpus**: every behavior below carries a stable ID, its
 in-tree evidence pointer, a status, and a `probe:` field. A landed probe is an

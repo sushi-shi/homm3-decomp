@@ -82,28 +82,6 @@ class LinePaintingTests(unittest.TestCase):
         module = generator("generate-rmg-line-neighbour-family.py")
         self.check_source_cases(self.source_cases(module.make_axes(self.header, self.source)))
 
-    def test_query_family_rebases_only_the_canonical_helpers_and_border_queries(self):
-        module = generator("generate-rmg-line-query-family.py")
-        axes = module.make_axes(self.header, self.source)
-        self.assertEqual([len(axis["options"]) for axis in axes], [7, 6, 4])
-        helper = self.module.parent().helpers()
-        original_point = helper.definition(self.source, "TRmgLineWalker::paintPoint")
-        for axis in axes:
-            self.assertEqual(self.source.count(axis["find"]), 1)
-            self.assertEqual(axis["find"], axis["options"][0]["replace"])
-            for option in axis["options"]:
-                self.assertNotIn("#pragma", option["replace"])
-                self.assertNotIn("inline ", option["replace"])
-                changed = self.source.replace(axis["find"], option["replace"])
-                rebased = module.make_axes(self.header, changed)
-                self.assertEqual([len(item["options"]) for item in rebased], [7, 6, 4])
-                self.assertEqual(helper.definition(changed, "TRmgLineWalker::paintPoint"), original_point)
-
-    @unittest.skipUnless(shutil.which("g++"), "portable painting oracle needs g++")
-    def test_generated_queries_preserve_all_calls_border_visits_and_tile_writes(self):
-        module = generator("generate-rmg-line-query-family.py")
-        self.check_source_cases(self.source_cases(module.make_axes(self.header, self.source)))
-
     def boundary_family(self):
         module = generator("generate-rmg-grid-add-boundary-family.py")
         raw = module.make_axes(self.header, self.source)
