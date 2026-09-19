@@ -18,12 +18,13 @@ class GeneratorConstruction(unittest.TestCase):
     def test_retained_hero_record_layout_and_canonical_word(self):
         from clang import cindex
         from homm3.core import clang, common
+        from homm3.core.compiler_profile import Profiles
+        from homm3.core.project import Project
         root = common.HOMM3_DIR
-        args = ['--driver-mode=cl', '/TP', *clang.FLAGS, '-U__clang__',
-                '-D_MSC_VER=' + clang.MSC_VER, '-DHOMM3_SOURCE_OWNERSHIP',
-                '-imsvc', str(clang.mirror()), '/I' + str(root / 'include'),
-                '/I' + str(root / 'vendor/zlib-1.1.3')]
-        tu = cindex.Index.create().parse(str(root / 'src/rmg.cpp'), args=args,
+        source = root / 'src/rmg.cpp'
+        args = [*Profiles(Project(root)).for_source(source), '-U__clang__',
+                '-D_MSC_VER=' + clang.MSC_VER, '-DHOMM3_SOURCE_OWNERSHIP']
+        tu = cindex.Index.create().parse(str(source), args=args,
             options=cindex.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
         self.assertEqual([str(d) for d in tu.diagnostics
                           if d.severity >= cindex.Diagnostic.Error], [])
