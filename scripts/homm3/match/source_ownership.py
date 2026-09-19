@@ -7,6 +7,7 @@ particular, a retained COMDAT's link location does not own its source body.
 from __future__ import annotations
 
 import argparse
+from bisect import bisect_left
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 import csv
@@ -225,23 +226,45 @@ def reference_stubs_only(raw: str) -> bool:
     return not remaining.strip()
 
 
-def attached_prefix(raw: str, start: int) -> list[str]:
+class LineIndex:
+    """One index per scanned file, shared by all annotation lookups."""
+    def __init__(self, raw: str):
+        self.raw = raw
+        self.lines = raw.splitlines(keepends=True)
+        self.starts = []
+        offset = 0
+        for line in self.lines:
+            self.starts.append(offset)
+            offset += len(line)
+        self.prefixes = {}
+
+    def preceding(self, start):
+        beginning = self.raw.rfind('\n', 0, start) + 1
+        for index in range(bisect_left(self.starts, beginning) - 1, -1, -1):
+            yield self.lines[index]
+
+
+def attached_prefix(raw: str, start: int, index: LineIndex | None = None) -> list[str]:
     # Only the attached comment/declarator prefix is eligible. Never carry an
     # origin across another definition (the old link-order parser did that).
     line_start = raw.rfind('\n', 0, start) + 1
-    lines = raw[:line_start].splitlines()
+    index = index or LineIndex(raw)
+    if line_start in index.prefixes:
+        return index.prefixes[line_start]
     prefix = []
-    for line in reversed(lines):
+    for line in index.preceding(start):
+        line = line.rstrip('\r\n')
         text = line.strip()
         if text and not text.startswith(('//', '#', 'VA(', 'DC_ONLY(')):
             break
         prefix.append(line)
     prefix.reverse()
+    index.prefixes[line_start] = prefix
     return prefix
 
 
-def origin_hint(raw: str, start: int) -> tuple[str, int, str]:
-    prefix = attached_prefix(raw, start)
+def origin_hint(raw: str, start: int, index: LineIndex | None = None) -> tuple[str, int, str]:
+    prefix = attached_prefix(raw, start, index)
     origin_file, origin_line, dc_offset = '', 0, ''
     for line in prefix:
         renamed = re.fullmatch(
@@ -260,9 +283,9 @@ def origin_hint(raw: str, start: int) -> tuple[str, int, str]:
     return origin_file, origin_line, dc_offset
 
 
-def inline_origin_hint(raw: str, start: int) -> tuple[tuple[int, int], bool]:
+def inline_origin_hint(raw: str, start: int, index: LineIndex | None = None) -> tuple[tuple[int, int], bool]:
     """An explicit review binds a field-list type to a positive inline row."""
-    rows = [line.strip() for line in attached_prefix(raw, start)
+    rows = [line.strip() for line in attached_prefix(raw, start, index)
             if '@dc-inline-origin:' in line]
     if not rows:
         return (), False
@@ -273,8 +296,8 @@ def inline_origin_hint(raw: str, start: int) -> tuple[tuple[int, int], bool]:
     return (int(match.group(1), 16), int(match.group(2), 16)), False
 
 
-def declaration_only_hint(raw: str, start: int) -> tuple[int, bool]:
-    rows = [line.strip() for line in attached_prefix(raw, start)
+def declaration_only_hint(raw: str, start: int, index: LineIndex | None = None) -> tuple[int, bool]:
+    rows = [line.strip() for line in attached_prefix(raw, start, index)
             if '@dc-declaration-only:' in line]
     if not rows:
         return 0, False
@@ -374,11 +397,12 @@ def declaration_name(cursor) -> str:
             dispose(names)
 
 
-def instance_annotations(raw: str, start: int, declaration: int):
+def instance_annotations(raw: str, start: int, declaration: int, index: LineIndex | None = None):
     """Pair each selector comment with its following VA on this declaration."""
     from homm3.retail_labels import source
     beginning = raw.rfind('\n', 0, start) + 1
-    for line in reversed(raw[:beginning].splitlines(keepends=True)):
+    index = index or LineIndex(raw)
+    for line in index.preceding(start):
         stripped = line.strip()
         if stripped and not stripped.startswith(('//', 'VA(')):
             break
@@ -525,6 +549,16 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
     texts = {}
     raw_texts = {}
     byte_texts = {}
+    line_indexes = {}
+    relative_paths = {}
+
+    def relative_path(name):
+        if name not in relative_paths:
+            try:
+                relative_paths[name] = Path(name).relative_to(root).as_posix()
+            except ValueError:
+                relative_paths[name] = None
+        return relative_paths[name]
     errors = [f"PARSE {unit['source']}: {d}" for d in tu.diagnostics
               if d.severity >= cindex.Diagnostic.Error]
     definitions = []
@@ -534,20 +568,16 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
     # Include files with no declarations too: a macro-only include can change
     # ownership facts in its consumer. This also covers included .cpp files.
     for inclusion in tu.get_includes():
-        try:
-            reached.add(Path(inclusion.include.name).relative_to(root).as_posix())
-        except ValueError:
-            pass
+        relative = relative_path(inclusion.include.name)
+        if relative is not None:
+            reached.add(relative)
 
     def visit(cursor):
         loc = cursor.location
         relative = None
         if loc.file:
-            try:
-                relative = Path(loc.file.name).relative_to(root).as_posix()
-            except ValueError:
-                return
-            if not relative.startswith(('src/', 'include/')):
+            relative = relative_path(loc.file.name)
+            if relative is None or not relative.startswith(('src/', 'include/')):
                 return
             reached.add(relative)
         if cursor.kind in function_kinds:
@@ -560,6 +590,7 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
                 raw_texts[relative] = (root / relative).read_text()
                 texts[relative] = _source._mask_lex(raw_texts[relative])
                 byte_texts[relative] = raw_texts[relative].encode('utf-8')
+                line_indexes[relative] = LineIndex(raw_texts[relative])
             def char_offset(offset):
                 encoded = byte_texts[relative]
                 if len(encoded) == len(raw_texts[relative]):
@@ -592,18 +623,18 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
                 parent = parent.lexical_parent
             instances, invalid = instance_annotations(
                 raw_texts[relative], char_offset(cursor.extent.start.offset),
-                char_offset(cursor.location.offset))
+                char_offset(cursor.location.offset), line_indexes[relative])
             if invalid or (instances and Counter(va for va, _ in instances) != Counter(vas)):
                 errors.append(f'INSTANCE {relative}:{loc.line}: each selector must accompany one distinct VA annotation')
                 instances = []
             elif len(vas) > 1 and not instances:
                 errors.append(f'INSTANCE {relative}:{loc.line}: multiple VA annotations require concrete selectors')
             inline_origin, invalid = inline_origin_hint(
-                raw_texts[relative], char_offset(cursor.extent.start.offset))
+                raw_texts[relative], char_offset(cursor.extent.start.offset), line_indexes[relative])
             if invalid:
                 errors.append(f'INLINE_ORIGIN {relative}:{loc.line}: malformed or repeated annotation')
             declaration_type, invalid = declaration_only_hint(
-                raw_texts[relative], char_offset(cursor.extent.start.offset))
+                raw_texts[relative], char_offset(cursor.extent.start.offset), line_indexes[relative])
             if invalid:
                 errors.append(f'DECLARATION_ONLY {relative}:{loc.line}: malformed or repeated annotation')
             first = len(definitions)
@@ -615,7 +646,7 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
                 member, bool(is_inlined(cursor)),
                 instances[0][0] if instances else (vas[0] if len(vas) == 1 else None),
                 declaration_name(cursor),
-                *origin_hint(raw_texts[relative], char_offset(cursor.location.offset)),
+                *origin_hint(raw_texts[relative], char_offset(cursor.location.offset), line_indexes[relative]),
                 tuple(c.type.spelling for c in cursor.get_children() if c.kind == k.PARM_DECL),
                 cursor.is_const_method() if cursor.kind in {k.CXX_METHOD, k.CONVERSION_FUNCTION} else False,
                 class_offset, cursor.type.is_function_variadic(),
@@ -992,7 +1023,7 @@ def active_stub_definitions(definitions: list[Definition], root: Path) -> list[s
     return errors
 
 
-def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
+def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False, *, origins=None):
     from homm3.retail_labels.fragments import all_claims
     definitions, errors, reached = collect(root, jobs, fresh)
     errors.extend(active_stub_definitions(definitions, root))
@@ -1000,7 +1031,8 @@ def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
     errors.extend(failures)
     win_only, failures = read_filter(root / 'config/win_only.tsv', ('file', 'function', 'signature'))
     errors.extend(failures)
-    violations, counts = compare(definitions, read_dc(root, include_declarations=True),
+    violations, counts = compare(definitions,
+                                 read_dc(root, include_declarations=True) if origins is None else origins,
                                  dc_only, win_only)
     errors.extend(violations)
     claims = all_claims()
@@ -1069,8 +1101,8 @@ def unpaired_generated_claims(claims) -> list[str]:
             and c.name.startswith('__h3cg$')]
 
 
-def run_gate() -> list[str]:
-    result = audit()
+def run_gate(*, origins=None) -> list[str]:
+    result = audit(origins=origins)
     if result['counts'].get('reviewed_unlocated'):
         print(f"[build] source-ownership: {result['counts']['reviewed_unlocated']} "
               "reviewed declaration-only bodies; source location/order remain unknown")

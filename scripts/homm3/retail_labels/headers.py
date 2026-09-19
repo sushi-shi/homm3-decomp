@@ -39,13 +39,13 @@ def choose_carrier(rva: int, emitters: set[str], banked: dict[int, str],
 
 
 def project(paths: list[Path], functions: set[int], ir_maps: dict,
-            rows_by_unit: dict, problems: list[str]) -> None:
+            rows_by_unit: dict, problems: list[str], *, ownership=None) -> None:
     from homm3.retail_labels import source
     from homm3.match.status import load_baseline
     from homm3.match.source_ownership import collect, claim_definitions
     if not paths:
         return
-    definitions, errors, _reached = collect()
+    definitions, errors, _reached = ownership if ownership is not None else collect()
     problems.extend(f"{error} (FATAL)" for error in errors)
     # Clang omits annotate metadata for some linkonce_odr inline definitions
     # in LLVM IR. Its AST still attaches the annotation to the real body.
