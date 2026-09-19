@@ -2906,8 +2906,8 @@ philai	?buyArtifacts@@YIXPAVhero@@PAW4TArtifact@@J@Z	98.1308	98.1308	98.1308	0x1
 philai	?buySiegeEngine@@YIXPAVhero@@PAVtown@@W4type_building_id@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x125ca0	tokens1:66e4c50470a3
 philai	?checkDoMain@@YIXHH@Z	100.0000	100.0000	100.0000	0x1242d0	tokens1:cb08745a0e88
 philai	?considerGarrisoning@@YIXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x125200	tokens1:d8920f8f7f7a
-philai	?determineHeroToMove@@YIPAVhero@@HPAE@Z	100.0000	100.0000	100.0000	0x126a90	tokens1:6919fb4d0a00
-philai	?doAI@philAI@@QAEXH@Z	91.9154	91.9154	91.9154	0x125e80	tokens1:13a5f16b6b76
+philai	?determineHeroToMove@@YIPAVhero@@HPAE@Z	100.0000	100.0000	100.0000	0x126a90	tokens1:ec992c58b260
+philai	?doAI@philAI@@QAEXH@Z	100.0000	100.0000	100.0000	0x125e80	tokens1:b0d6338d8f30
 philai	?getArtifactPurchasePrice@@YIJW4TArtifact@@JPAW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x124550	tokens1:8533a17ec0fe
 philai	?getArtifactPurchaseValue@@YIJW4TArtifact@@JPAJ@Z	100.0000	100.0000	100.0000	0x129750	tokens1:497b686a69b9
 philai	?getBestSpellValue@type_spellvalue@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1275b0	tokens1:c11c63b8cacf
@@ -2923,7 +2923,7 @@ philai	?getValueOfWell@@YIJPBVhero@@G@Z	100.0000	100.0000	100.0000	0x12a510	toke
 philai	?luckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80	tokens1:ef10e07752b8
 philai	?moraleIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127cf0	tokens1:c2e4b27b2528
 philai	?moveHero@@YIXPAVhero@@EAAE@Z	100.0000	100.0000	100.0000	0x1267b0	tokens1:83347cbe9269
-philai	?moveHero@@YIXPAVhero@@PAJEPAE@Z	74.4018	80.1607	86.6362	0x1261f0	tokens1:3183d3bad18c
+philai	?moveHero@@YIXPAVhero@@PAJEAAE@Z	74.4018	80.1607	86.6362	0x1261f0	tokens1:3183d3bad18c
 philai	?netValueOfArtifact@@YIHPBVhero@@HHHW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x129810	tokens1:f91a2fa2febd
 philai	?onSameTeam@game@@QBE_NHH@Z	100.0000	100.0000	100.0000	0x1296d0	tokens1:664c00af8f44
 philai	?playerKnowsCell@ExtraInfoUnion@@QBE_NF@Z	100.0000	100.0000	100.0000	0x129690	tokens1:64d02b955fd1

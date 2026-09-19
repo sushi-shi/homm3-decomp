@@ -2423,3 +2423,33 @@ parameter and canonical helper require neither pasted search code nor an
 inlining directive. Complete's body has no counterpart to Dreamcast's
 combat-over branch at line 413; that platform difference stays documented
 beside the owning function.
+
+
+### A retained sibling changes the AI selector expansion (2026-09-20)
+
+`philAI::doAI` (`0x525e80`) reaches 100% when the ordinary movement
+helpers recover their Dreamcast file-static linkage, reference parameter and
+definition order together with the selector's separate priority rejections,
+staged values and the caller's nested guards. The first movement phase keeps
+its selector call; the second expands it while retaining `getTown` and
+`getHero`. The standalone selector (`0x526a90`) and inner movement helper
+(`0x5267b0`) remain exact. No inline-control pragma or release assertion is
+needed.
+
+The byte-verified C2 trace explains the interaction. The outer movement
+helper previously had no saved body (callee flags `0x28`). With the recovered
+interface and visibility it has flags `0x48`, cost 596, and counts as an
+eligible sibling even though neither call expands. The first selector costs
+473 against a child budget of 396 and stays out of line. The second gets
+689, expands, and divides its remaining budget by two eligible siblings:
+`getPrimarySkill` receives 108 and costs 81; the remaining 27 refuses both
+`getTown` (45) and `getHero` (41). Merely relocating the earlier external
+pointer-parameter bodies did not restore that sibling.
+
+The two remaining stores independently distinguish source order: Dreamcast
+assigns the minimum skill sum before the selected hero, but both Complete's
+retained selector and its caller expansion store the selected hero first.
+Restoring that order closes the final 99.9236% selector / 99.9559% caller
+differences. The earlier pointer/reference audit suppression cited a generated
+candidate symbol as if it were a retail symbol; restoring the proven
+reference removes that unsupported exception.
