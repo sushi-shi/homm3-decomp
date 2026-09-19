@@ -32,7 +32,7 @@
 #include "textresource.h"
 #include "town.h"
 
-// Complete-only shared land predicate; original name is unknown. Six
+// Complete-only shared land predicate; original name is unknown. Eight
 // placement/decoration sites use this same road-passable, non-rock test.
 // Keeping its ordinary helper boundary restores decorateMap's retail branch
 // layout (409 bytes exact); spelling the two field tests in the caller does not.
@@ -2661,16 +2661,15 @@ void TRmgTreasureGroup::updateBounds()
 // 0x536000, including the byte-return entrance/gate queries. Like the
 // prototype's buildOutline, reverse direction after each accepted step and
 // stop before duplicating the first point.
-// Residual (95.1849%): all 32 blocks align; the perimeter walk agrees,
-// while the initial map scan differs in register homes and inner back-edge
-// polarity. Separate coordinate initialization is flat at 95.1644%; explicit
-// cached height/per-row width restores one addressing detail to 95.1849%.
-// Two generated 60-state populations preserve that peak (38/40 distinct
-// code+relocation results). Five scan loops x six point initializations x
-// two dimension lifetimes reach 89.2123..95.1849%; the ten reproduced
-// parents x six perimeter-start lifetimes reach 95.0137..95.1849%.
-// No variant is adopted. Native rectangle/flag/query/cache controls cover
-// all 360 scan/start combinations, including retail's zero-height quirk.
+// The shared land predicate restores the scan's branch polarity; direct
+// map dimensions then restore initialization/reload scheduling. All 399 bytes
+// and 32 blocks reproduce. A 41-state family tested initialized/assigned
+// points, cached/direct bounds, and the predicate at the perimeter query;
+// no other RMG score changed. Keep x == width after the scan, including the
+// retail zero-height behavior; it is not a y == height exhaustion test.
+// The retained vector<TPoint>::insert matches all 582 bytes of the folded
+// vector<type_artifact> body at 0x54d330, with identical new/delete calls.
+// Direction-table references resolve to g_rmgDirections (0x69cdc0) and +4.
 VA(0x00535EE0, 0x18F) // anchor-callee 0x5468ea/0x53511b; thiscall, ret 0
 void TRmgTreasureGroup::traceOutline()
 {
@@ -2678,16 +2677,13 @@ void TRmgTreasureGroup::traceOutline()
         return;
     TPoint position;
     position.m_x = 0;
-    int height = m_map.m_mapHeight;
-    for (position.m_y = 0; position.m_y < height; ++position.m_y) {
-        int width = m_map.m_mapWidth;
-        for (position.m_x = 0; position.m_x < width; ++position.m_x) {
+    for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
+        for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x) {
             TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, 0);
-            if (item->isRoadEntrance() || !item->m_tileData.m_roadPassable
-                || item->m_tile.m_landType == eTerrainRock || !item->hasSubterraneanGate())
+            if (item->isRoadEntrance() || !item->isPassableLand() || !item->hasSubterraneanGate())
                 break;
         }
-        if (position.m_x < width)
+        if (position.m_x < m_map.m_mapWidth)
             break;
     }
     if (position.m_x == m_map.m_mapWidth)
@@ -2706,8 +2702,7 @@ void TRmgTreasureGroup::traceOutline()
                 || nearby.m_y < 0 || nearby.m_y >= m_map.m_mapHeight)
                 break;
             TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
-            if (!item->isRoadEntrance() && item->m_tileData.m_roadPassable
-                && item->m_tile.m_landType != eTerrainRock && item->hasSubterraneanGate())
+            if (!item->isRoadEntrance() && item->isPassableLand() && item->hasSubterraneanGate())
                 break;
         } while (++attempts < 4);
         position = position + TRmgVector(g_rmgDirections[direction].m_x, g_rmgDirections[direction].m_y);

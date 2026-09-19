@@ -3137,36 +3137,16 @@ add no peak: island drawing stays at 99.4615% and the junction at 99.5699%.
 Only the bounds assignment is adopted. This separates a proven local
 improvement from neutral or regressive alternatives in the same population.
 
-`generate-rmg-treasure-outline-family.py` addresses the cached group perimeter
-at `0x535ee0`, separately from the exact prototype-outline builder. Retail's
-initial row-major scan has a forward inner-loop exit and a backward jump;
-the current C++ emits the opposite branch polarity. Five scan structures,
-six point initialization forms and two dimension-read lifetimes make 60
-states. A follow-up carries the ten reproduced scan parents into six actual
-perimeter-start construction/assignment lifetimes:
-
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-treasure-outline-family.py \
-  build/rmg-treasure-outline.json
-PYTHONPATH=scripts python -m homm3.vc6.source_families \
-  build/rmg-treasure-outline.json --width 60 --keep 10 --jobs 6
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-treasure-outline-family.py \
-  build/rmg-treasure-outline-parents.json --parents-from build/source-families/SCAN_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python -m homm3.vc6.source_families \
-  build/rmg-treasure-outline-parents.json --width 60 --keep 10 --jobs 6
-```
-
-The parent loader requires the completed input, matching source/header
-snapshot, source hashes and reproduced scores/code identities; old scores
-are never imported as observations for the new population. The two batches
-produced 38 and 40 distinct object-code results without exceeding 95.1849%,
-so neither changes the game body. Native controls compile all 360 scan/start
-combinations against independently constructed rectangular perimeters and
-ordered map queries. They cover all four blocking reasons, zero dimensions,
-and cached outlines. In particular, retail tests `x == width` after the scan:
-a positive-width, zero-height map traces four outside points. A seemingly
-safer `y == height` return fails the control, as do changed start coordinates,
-entrance predicates and levels. Fixture instrumentation never enters VC6.
+The treasure-group perimeter at `0x535ee0` is now exact; its dedicated
+search generator has been retired. The earlier scan/start populations stopped
+at 95.1849% because they spelled the passable-land predicate in the caller.
+Restoring the ordinary shared predicate corrects the inner branch polarity;
+reading map bounds directly then recovers initialization and reload ordering.
+The new 41-state family produces 29 distinct objects and ten reproduced
+finalists, including the exact 399-byte implementation, with no sibling score
+change. Preserve the post-scan `x == width` test and its zero-height behavior.
+The vector-insert call is the established eight-byte-element template fold:
+all 582 bytes at `0x54d330` and both new/delete relocations agree.
 
 `generate-rmg-zone-terrain-family.py` supplies another 60-state population for
 the newly recovered `TRmgZone::chooseTerrain` at `0x532ab0`. Three template

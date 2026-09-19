@@ -3474,7 +3474,7 @@ rmg	?size@?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@
 rmg	?size@?$vector@UTRmgZoneConnection@@V?$allocator@UTRmgZoneConnection@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x14c1b0	-
 rmg	?subdivideRmgNoiseRegion@@YIXAAV?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@HUTRmgNoiseRegion@@UTRmgNoiseMidpoints@@@Z	100.0000	100.0000	100.0000	0x13e9e0	tokens1:2cbb53974fe9
 rmg	?traceBranchEnd@type_random_map@@QAE?AUTPoint@@U2@0H@Z	99.8683	99.8683	99.8683	0x143c70	tokens1:4d6610e3511d
-rmg	?traceOutline@TRmgTreasureGroup@@QAEXXZ	95.1849	95.1849	95.1849	0x135ee0	tokens1:e26ea6c2a92a
+rmg	?traceOutline@TRmgTreasureGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x135ee0	tokens1:140c44624ef7
 rmg	?traceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	86.6846	86.6846	86.6846	0x13c390	tokens1:43e4957d073d
 rmg	?tryAddObject@TRmgTreasureGroup@@QAEEPAVtype_object@@@Z	79.3429	79.3429	79.3429	0x135970	tokens1:4efff0c8c393
 rmg	?tryPlaceAdditionalTown@type_random_map_generator@@QAEEPAUTRmgZone@@HHEH@Z	76.6787	76.6787	76.6787	0x144d90	tokens1:966e84e62bcf
