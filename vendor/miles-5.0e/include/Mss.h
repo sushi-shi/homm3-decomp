@@ -34,6 +34,40 @@
 #ifndef MSS_H
 #define MSS_H
 
+// MSS32.DLL 5.0e exports the public SDK entry points with a leading
+// underscore in the identifier itself, in addition to stdcall decoration.
+#define AIL_set_sample_volume _AIL_set_sample_volume
+#define AIL_start_sample _AIL_start_sample
+#define AIL_init_sample _AIL_init_sample
+#define AIL_stream_status _AIL_stream_status
+#define AIL_serve _AIL_serve
+#define AIL_set_stream_volume _AIL_set_stream_volume
+#define AIL_allocate_sample_handle _AIL_allocate_sample_handle
+#define AIL_waveOutClose _AIL_waveOutClose
+#define AIL_get_preference _AIL_get_preference
+#define AIL_digital_configuration _AIL_digital_configuration
+#define AIL_stream_volume _AIL_stream_volume
+#define AIL_stream_position _AIL_stream_position
+#define AIL_set_stream_loop_count _AIL_set_stream_loop_count
+#define AIL_open_stream _AIL_open_stream
+#define AIL_start_stream _AIL_start_stream
+#define AIL_set_stream_position _AIL_set_stream_position
+#define AIL_HWND _AIL_HWND
+#define AIL_set_sample_file _AIL_set_sample_file
+#define AIL_set_sample_loop_count _AIL_set_sample_loop_count
+#define AIL_service_stream _AIL_service_stream
+#define AIL_sample_volume _AIL_sample_volume
+#define AIL_pause_stream _AIL_pause_stream
+#define AIL_waveOutOpen _AIL_waveOutOpen
+#define AIL_stop_sample _AIL_stop_sample
+#define AIL_sample_status _AIL_sample_status
+#define AIL_resume_sample _AIL_resume_sample
+#define AIL_close_stream _AIL_close_stream
+#define AIL_end_sample _AIL_end_sample
+#define AIL_shutdown _AIL_shutdown
+#define AIL_startup _AIL_startup
+#define AIL_set_preference _AIL_set_preference
+
 // IS_DOS for DOS
 // IS_WINDOWS for Windows or Win32s
 // IS_WIN32 for Win32s
@@ -1466,7 +1500,17 @@ typedef struct _DIG_DRIVER FAR * HDIGDRIVER;    // Handle to digital driver
 
 typedef struct _MDI_DRIVER FAR * HMDIDRIVER;    // Handle to XMIDI driver
 
-typedef struct _SAMPLE FAR * HSAMPLE;           // Handle to sample
+// The shipped game exposes Miles samples through the C++ class tag
+// ds_memsample.  Callers may override the tag and tag kind while the SDK
+// defaults remain the public 5.0e struct _SAMPLE interface.
+#ifndef MSS_SAMPLE_TAG
+#define MSS_SAMPLE_TAG _SAMPLE
+#endif
+#ifndef MSS_SAMPLE_TAG_KIND
+#define MSS_SAMPLE_TAG_KIND struct
+#endif
+
+typedef MSS_SAMPLE_TAG_KIND MSS_SAMPLE_TAG FAR * HSAMPLE; // Handle to sample
 
 typedef struct _SEQUENCE FAR * HSEQUENCE;       // Handle to sequence
 
@@ -1750,7 +1794,7 @@ typedef struct _ADPCMDATATAG
   U16 moresamples[16];
 } ADPCMDATA;
 
-typedef struct _SAMPLE           // Sample instance
+typedef MSS_SAMPLE_TAG_KIND MSS_SAMPLE_TAG // Sample instance
 {
    char       tag[4];            // HSAM
 

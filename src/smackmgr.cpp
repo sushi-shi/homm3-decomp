@@ -159,7 +159,7 @@ void videoRealignBuffers()
             g_windowManager->m_screenBitmap->getPitch(),
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
-    BinkManager::g_surfaceType = _BinkDDSurfaceType(g_ddsBack);
+    BinkManager::g_surfaceType = BinkDDSurfaceType(g_ddsBack);
     BinkManager::g_playingBink.m_screen = g_windowManager->m_screenBitmap->getMap(
         BinkManager::g_playingBink.m_x, BinkManager::g_playingBink.m_y);
     BinkManager::g_playingBink.m_pitch = g_windowManager->m_screenBitmap->getPitch();
@@ -306,11 +306,11 @@ void videoPause()
         g_smackPaused = 1;
     if (BinkManager::g_playingBink.m_bink) {
         BinkManager::g_playingBink.m_paused = 1;
-        _BinkPause(BinkManager::g_playingBink.m_bink, 1);
+        BinkPause(BinkManager::g_playingBink.m_bink, 1);
     }
     if (BinkManager::g_playingBink.m_bink2) {
         BinkManager::g_playingBink.m_paused = 1;
-        _BinkPause(BinkManager::g_playingBink.m_bink2, 1);
+        BinkPause(BinkManager::g_playingBink.m_bink2, 1);
     }
     videoSoundOnOff(0);
 }
@@ -324,11 +324,11 @@ void videoResume()
         g_smackPaused = 0;
     if (BinkManager::g_playingBink.m_bink) {
         BinkManager::g_playingBink.m_paused = 0;
-        _BinkPause(BinkManager::g_playingBink.m_bink, 0);
+        BinkPause(BinkManager::g_playingBink.m_bink, 0);
     }
     if (BinkManager::g_playingBink.m_bink2) {
         BinkManager::g_playingBink.m_paused = 0;
-        _BinkPause(BinkManager::g_playingBink.m_bink2, 0);
+        BinkPause(BinkManager::g_playingBink.m_bink2, 0);
     }
     videoSoundOnOff(1);
 }
@@ -400,11 +400,11 @@ void videoDrawRects()
     RECT src;
     DDSURFACEDESC ddsd;
 
-    BinkRect bounds;
-    long& x = bounds.m_left;
-    long& y = bounds.m_top;
-    long& w = bounds.m_width;
-    long& h = bounds.m_height;
+    BINKRECT bounds;
+    long& x = bounds.Left;
+    long& y = bounds.Top;
+    long& w = bounds.Width;
+    long& h = bounds.Height;
 
     if ((g_smackVideo || g_smackVideo2) && !g_smackPaused) {
         Smack* smk;
@@ -431,7 +431,7 @@ void videoDrawRects()
         }
         g_windowManager->updateScreen(x, y, w, h);
     } else if ((BinkManager::g_playingBink.m_bink || BinkManager::g_playingBink.m_bink2) && !BinkManager::g_playingBink.m_paused) {
-        Bink* bnk;
+        HBINK bnk;
 
         bnk = BinkManager::g_playingBink.m_bink2;
         if (BinkManager::g_playingBink.m_bink)
@@ -439,20 +439,20 @@ void videoDrawRects()
         if (BinkManager::g_playingBink.m_id != VIDEO_ID_OVERLAY_BLIT) {
             int i;
 
-            _BinkGetRects(bnk, BinkManager::g_surfaceType);
-            w = bnk->m_frameRects[0].m_width;
-            h = bnk->m_frameRects[0].m_height;
-            x = bnk->m_frameRects[0].m_left;
-            y = bnk->m_frameRects[0].m_top;
-            for (i = 1; i < bnk->m_numRects; i++) {
-                if (bnk->m_frameRects[i].m_left < x)
-                    x = bnk->m_frameRects[i].m_left;
-                if (bnk->m_frameRects[i].m_top < y)
-                    y = bnk->m_frameRects[i].m_top;
-                if (bnk->m_frameRects[i].m_width + bnk->m_frameRects[i].m_left > w + x)
-                    w = bnk->m_frameRects[i].m_width + bnk->m_frameRects[i].m_left - x;
-                if (bnk->m_frameRects[i].m_height + bnk->m_frameRects[i].m_top > h + y)
-                    h = bnk->m_frameRects[i].m_height + bnk->m_frameRects[i].m_top - y;
+            BinkGetRects(bnk, BinkManager::g_surfaceType);
+            w = bnk->FrameRects[0].Width;
+            h = bnk->FrameRects[0].Height;
+            x = bnk->FrameRects[0].Left;
+            y = bnk->FrameRects[0].Top;
+            for (i = 1; i < bnk->NumRects; i++) {
+                if (bnk->FrameRects[i].Left < x)
+                    x = bnk->FrameRects[i].Left;
+                if (bnk->FrameRects[i].Top < y)
+                    y = bnk->FrameRects[i].Top;
+                if (bnk->FrameRects[i].Width + bnk->FrameRects[i].Left > w + x)
+                    w = bnk->FrameRects[i].Width + bnk->FrameRects[i].Left - x;
+                if (bnk->FrameRects[i].Height + bnk->FrameRects[i].Top > h + y)
+                    h = bnk->FrameRects[i].Height + bnk->FrameRects[i].Top - y;
             }
             g_windowManager->updateScreen(BinkManager::g_playingBink.m_x + x, BinkManager::g_playingBink.m_y + y, w, h);
         } else {
@@ -468,8 +468,8 @@ void videoDrawRects()
             OffsetRect(&dst, pt.x, pt.y);
             src.left = 0;
             src.top = 0;
-            src.right = bnk->m_width;
-            src.bottom = bnk->m_height;
+            src.right = bnk->Width;
+            src.bottom = bnk->Height;
             if (g_ddsBack->Unlock(NULL) != 0)
                 return;
             g_ddsPrimary->Blt(&dst, g_ddsBack, &src, DDBLT_WAIT, NULL);

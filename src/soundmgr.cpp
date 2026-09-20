@@ -3,7 +3,6 @@
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
-#include "../vendor/miles-5.0e/include/Mss.h"
 #include "soundmgr.h"
 #include "sample.h"
 #include "smackmgr.h"
@@ -26,7 +25,7 @@ DATA(0x00684aa8) int g_soundSampleRate = 44100;
 DATA(0x00684aac) int g_soundBitsPerSample = SOUND_BITS_PER_SAMPLE_16;
 DATA(0x00684ab0) int g_soundOutputChannels = 2;
 DATA(0x00684ae0) int g_soundMaxSamples = 14;
-DATA(0x0069fe80) AILWaveFormat g_soundWaveFormat;
+DATA(0x0069fe80) PCMWAVEFORMAT g_soundWaveFormat;
 DATA(0x00698a28) int g_unk698a28;
 
 VA(0x005994b0, 0x210)  // dc 0x14b07c
@@ -138,29 +137,29 @@ int soundManager::open(int newPriority)
             AIL_set_preference(33, 1);
             AIL_set_preference(34, 100);
 
-            AILDigitalDriver* driver;
-            AILDigitalDriver* result;
+            HDIGDRIVER driver;
+            HDIGDRIVER result;
             for (;;) {
                 if (g_soundSampleRate < 11025) {
                     result = 0;
                     break;
                 }
 
-                g_soundWaveFormat.m_formatTag = 1;
-                g_soundWaveFormat.m_channels =
+                g_soundWaveFormat.wf.wFormatTag = 1;
+                g_soundWaveFormat.wf.nChannels =
                     static_cast<unsigned short>(g_soundOutputChannels);
-                g_soundWaveFormat.m_samplesPerSec = g_soundSampleRate;
-                g_soundWaveFormat.m_avgBytesPerSec =
+                g_soundWaveFormat.wf.nSamplesPerSec = g_soundSampleRate;
+                g_soundWaveFormat.wf.nAvgBytesPerSec =
                     (g_soundBitsPerSample / 8) * g_soundOutputChannels
                     * g_soundSampleRate;
-                g_soundWaveFormat.m_blockAlign = static_cast<unsigned short>(
+                g_soundWaveFormat.wf.nBlockAlign = static_cast<unsigned short>(
                     (g_soundBitsPerSample / 8) * g_soundOutputChannels);
-                g_soundWaveFormat.m_bitsPerSample =
+                g_soundWaveFormat.wBitsPerSample =
                     static_cast<unsigned short>(g_soundBitsPerSample);
 
                 AIL_HWND();
                 int openResult = AIL_waveOutOpen(
-                    &driver, 0, -1, &g_soundWaveFormat);
+                    &driver, 0, -1, &g_soundWaveFormat.wf);
                 if (!openResult) {
                     char description[128];
                     strcpy(description, DATA_COMPGEN(
@@ -205,7 +204,7 @@ int soundManager::open(int newPriority)
                 buffer->m_vtable->m_setVolume(buffer, 0);
             }
             SmackSoundUseMSS(g_soundManager->m_ds);
-            BinkSetSoundSystem(BinkOpenMiles, g_soundManager->m_ds);
+            BinkSoundUseMiles(g_soundManager->m_ds);
         }
         m_playSounds = 1;
 

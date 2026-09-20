@@ -55,7 +55,7 @@ void TCampaignWindow::openPreview(int campaignIndex)
     videoOpen(preview->m_video, preview->m_x, preview->m_y, PREVIEW_WIDTH,
               PREVIEW_HEIGHT, 1, 0, 1);
     BinkManager::g_playingBink.m_paused = 0;
-    _BinkPause(BinkManager::g_playingBink.m_bink, 0);
+    BinkPause(BinkManager::g_playingBink.m_bink, 0);
     memcpy(&preview->m_binkState, &BinkManager::g_playingBink,
         sizeof(BinkManager::g_playingBink));
     BinkManager::g_playingBink.m_bink = 0;
@@ -327,7 +327,7 @@ int campaignWindowHandler(message& msg)
                     g_campaignFileNames[
                         id - TCampaignWindow::CAMPAIGN_FIRST_ID]);
                 BinkManager::g_playingBink.m_paused = 1;
-                _BinkPause(BinkManager::g_playingBink.m_bink, 1);
+                BinkPause(BinkManager::g_playingBink.m_bink, 1);
                 // Fall through: selection and cancel both close the dialog.
             case DIALOG_RETURN_CANCEL:
                 exitFlag = 1;
@@ -363,11 +363,11 @@ int campaignWindowHandler(message& msg)
                 memcpy(&BinkManager::g_playingBink, &preview->m_binkState,
                     sizeof(BinkManager::g_playingBink));
                 BinkManager::g_playingBink.m_paused = 0;
-                _BinkPause(BinkManager::g_playingBink.m_bink, 0);
+                BinkPause(BinkManager::g_playingBink.m_bink, 0);
                 BinkManager::restartBink();
             } else {
                 BinkManager::g_playingBink.m_paused = 1;
-                _BinkPause(BinkManager::g_playingBink.m_bink, 1);
+                BinkPause(BinkManager::g_playingBink.m_bink, 1);
                 g_campaignWindow->hideText();
             }
 

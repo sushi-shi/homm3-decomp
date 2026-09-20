@@ -4,9 +4,26 @@
 #define BINKVERSION "0.5a"
 #define BINKDATE    "1999-01-20"
 
+
+// BINKW32.DLL 0.5a exports the public SDK entry points with a leading
+// underscore in the identifier itself, in addition to stdcall decoration.
+#define BinkPause _BinkPause
+#define BinkOpen _BinkOpen
+#define BinkClose _BinkClose
+#define BinkDDSurfaceType _BinkDDSurfaceType
+#define BinkCopyToBuffer _BinkCopyToBuffer
+#define BinkDoFrame _BinkDoFrame
+#define BinkGoto _BinkGoto
+#define BinkNextFrame _BinkNextFrame
+#define BinkGetSummary _BinkGetSummary
+#define BinkWait _BinkWait
+#define BinkGetRects _BinkGetRects
+#define BinkSetSoundSystem _BinkSetSoundSystem
+#define BinkOpenMiles _BinkOpenMiles
+
 #ifndef __RADRES__
 
-#include "rad.h"
+#include "Rad.h"
 
 RADDEFSTART
 
@@ -27,8 +44,6 @@ typedef struct BINKIO {
   BINKIOSETINFO SetInfo;
   BINKIOIDLE Idle;
   BINKIOCLOSE Close;
-  HBINK bink;
-  volatile u32 DoingARead;
   volatile u32 BytesRead;
   volatile u32 TotalTime;
   volatile u32 ForegroundTime;
@@ -52,20 +67,20 @@ typedef void (RADLINK PTR4* BINKSNDCLOSE)    (struct BINKSND PTR4* BnkSnd);
 typedef BINKSNDOPEN  (RADLINK PTR4* BINKSNDSYSOPEN) (u32 param);
 
 typedef struct BINKSND {
+  BINKSNDCLOSE SetParam;
+  BINKSNDCLOSE Reset;
   BINKSNDREADY Ready;
   BINKSNDLOCK Lock;
   BINKSNDUNLOCK Unlock;
   BINKSNDVOLUME Volume;
-  BINKSNDPAN Pan;
   BINKSNDPAUSE Pause;
-  BINKSNDONOFF SetOnOff;
+  BINKSNDPAUSE Off;
   BINKSNDCLOSE Close;
   u32 BestSizeIn16;
-  u32 SoundDroppedOut;
-  s32 OnOff;
-  u32 Latency;
+  u32 SoundDropOuts;
   u32 freq;
-  s32 bits,chans;
+  s32 bits;
+  s32 chans;
   u8 snddata[128];
 } BINKSND;
 
@@ -89,160 +104,115 @@ typedef struct BUNDLEPOINTERS {
 
 
 typedef struct BINK {
-  u32 Width;             // Width (1 based, 640 for example)
-  u32 Height;            // Height (1 based, 480 for example)
-  u32 StretchWidth;      // Default stretch width
-  u32 StretchHeight;     // Default stretch height (used for Y double)
-  u32 Frames;            // Number of frames (1 based, 100 = 100 frames)
-  u32 FrameNum;          // Frame to *be* displayed (1 based)
-  u32 LastFrameNum;      // Last frame decompressed or skipped (1 based)
-
-  u32 FrameRate;         // Frame Rate Numerator
-  u32 FrameRateDiv;      // Frame Rate Divisor (frame rate=numerator/divisor)
-
-  u32 ReadError;         // Non-zero if a read error has ocurred
-  u32 OpenFlags;         // flags used on open
-  u32 BinkType;          // Bink flags
-
-  u32 Size;              // size of file
-  u32 FrameSize;         // The current frame's size in bytes
-  u32 SndSize;           // The current frame sound tracks' size in bytes
-
-  BINKRECT FrameRects[BINKMAXDIRTYRECTS];// Dirty rects from BinkGetRects
+  u32 Width;
+  u32 Height;
+  u32 Frames;
+  u32 FrameNum;
+  u32 FrameRate;
+  u32 FrameRateDiv;
+  u32 ReadError;
+  u32 OpenFlags;
+  u32 BinkType;
+  u32 Size;
+  u32 FrameSize;
+  u32 SndSize;
+  BINKRECT FrameRects[BINKMAXDIRTYRECTS];
   s32 NumRects;
-
-  u32 PlaneNum;          // which set of planes is current
-  void PTR4* YPlane[2];  // pointer to the uncompressed Y (Cr and Cr follow)
-  void PTR4* APlane[2];  // decompressed alpha plane (if present)
-  u32 YWidth;            // widths and heights of the video planes
+  void PTR4* YPlane;
+  u32 YWidth;
   u32 YHeight;
   u32 UVWidth;
   u32 UVHeight;
-
-  void PTR4* MaskPlane;  // pointer to the mask plane (Ywidth/16*Yheight/16)
-  u32 MaskPitch;         // Mask Pitch
-  u32 MaskLength;        // total length of the mask plane
-
-  u32 LargestFrameSize;  // Largest frame size
-  u32 InternalFrames;    // how many frames were potentially compressed
-
-  s32 NumTracks;         // how many tracks
-
-  u32 Highest1SecRate;   // Highest 1 sec data rate
-  u32 Highest1SecFrame;  // Highest 1 sec data rate starting frame
-
-  s32 Paused;            // is the bink movie paused?
-
-  u32 BackgroundThread;  // handle to background thread
-
-  // everything below is for internal Bink use
-
-  void PTR4* compframe;       // compressed frame data
-  void PTR4* preloadptr;      // preloaded compressed frame data
-  u32* frameoffsets;          // offsets of each of the frames
-
-  BINKIO bio;                 // IO structure
-  u8 PTR4* ioptr;             // io buffer ptr
-  u32 iosize;                 // io buffer size
-  u32 decompheight;           // height not include interlacing
-
-  s32 trackindex;             // track index
-  u32 PTR4* tracksizes;       // largest single frame of track
-  u32 PTR4* tracktypes;       // type of each sound track
-  s32 PTR4* trackIDs;         // external track numbers
-
-  u32 numrects;               // number of rects from BinkGetRects
-
-  u32 playedframes;           // how many frames have we played
-  u32 firstframetime;         // very first frame start
-  u32 startframetime;         // start frame start
-  u32 startblittime;          // start of blit period
-  u32 startsynctime;          // start of synched time
-  u32 startsyncframe;         // frame of startsynctime
-  u32 twoframestime;          // two frames worth of time
-  u32 entireframetime;        // entire frame time
-
-  u32 slowestframetime;       // slowest frame in ms
-  u32 slowestframe;           // slowest frame number
-  u32 slowest2frametime;      // second slowest frame in ms
-  u32 slowest2frame;          // second slowest frame
-
-  u32 soundon;                // sound turned on?
-  u32 videoon;                // video turned on?
-
-  u32 totalmem;               // total memory used
-  u32 timevdecomp;            // total time decompressing video
-  u32 timeadecomp;            // total time decompressing audio
-  u32 timeblit;               // total time blitting
-  u32 timeopen;               // total open time
-
-  u32 fileframerate;          // frame rate originally in the file
+  void PTR4* MaskPlane;
+  u32 MaskPitch;
+  u32 MaskLength;
+  u32 LargestFrameSize;
+  u32 InternalFrames;
+  s32 NumTracks;
+  u32 PTR4* TrackSizes;
+  s32 Paused;
+  void PTR4* compframe;
+  void PTR4* preloadptr;
+  u32 PTR4* frameoffsets;
+  BINKIO bio;
+  u8 PTR4* ioptr;
+  u32 iosize;
+  s32 trackindex;
+  u32 PTR4* tracktypes;
+  s32 PTR4* trackids;
+  u32 numrects;
+  u32 playedframes;
+  u32 firstframetime;
+  u32 startframetime;
+  u32 startblittime;
+  u32 startsynctime;
+  u32 startsyncframe;
+  u32 twoframestime;
+  u32 entireframetime;
+  u32 slowestframetime;
+  u32 slowestframe;
+  u32 slowest2frametime;
+  u32 slowest2frame;
+  u32 soundon;
+  u32 videoon;
+  u32 totalmem;
+  u32 timedecomp;
+  u32 timeblit;
+  u32 timeopen;
+  u32 fileframerate;
   u32 fileframeratediv;
-
-  u32 threadcontrol;          // controls the background reading thread
-
-  u32 runtimeframes;          // max frames for runtime analysis
-  u32 runtimemoveamt;         // bytes to move each frame
-  u32 PTR4* rtframetimes;     // start times for runtime frames
-  u32 PTR4* rtadecomptimes;   // decompress times for runtime frames
-  u32 PTR4* rtvdecomptimes;   // decompress times for runtime frames
-  u32 PTR4* rtblittimes;      // blit times for runtime frames
-  u32 PTR4* rtreadtimes;      // read times for runtime frames
-
-  u32 lastdecompframe;        // last frame number decompressed
-
-  u32 sndbufsize;             // sound buffer size
-  u8 PTR4* sndbuf;            // sound buffer
-  u8 PTR4* sndend;            // end of the sound buffer
-  u8 PTR4* sndwritepos;       // current write position
-  u8 PTR4* sndreadpos;        // current read position
-  u32 sndcomp;                // sound compression handle
-  u32 sndamt;                 // amount of sound currently in the buffer
-  volatile u32 sndreenter;    // re-entrancy check on the sound
-  u32 sndconvert8;            // convert back to 8-bit sound at runtime
-  BINKSND bsnd;               // SND structure
-  u32 skippedlastblit;        // skipped last frame?
-  u32 skippedblits;           // how many blits were skipped
-  u32 soundskips;             // number of sound stops
-  u32 sndendframe;            // frame number that the sound ends on
-  u32 sndprime;               // amount of data to prime the playahead
-  u32 sndpad;                 // padded this much audio
-
-  BUNDLEPOINTERS bunp;        // pointers to internal temporary memory
+  u32 threadcontrol;
+  u32 runtimeframes;
+  u32 runtimemoveamt;
+  u32 PTR4* rtframetimes;
+  u32 PTR4* rtdecomptimes;
+  u32 PTR4* rtblittimes;
+  u32 PTR4* rtreadtimes;
+  u32 highest1secrate;
+  u32 highest1secframe;
+  u32 lastdecompframe;
+  u32 sndbufsize;
+  u8 PTR4* sndbuf;
+  u8 PTR4* sndend;
+  u8 PTR4* sndwritepos;
+  u8 PTR4* sndreadpos;
+  u32 sndcomp;
+  u32 sndamt;
+  volatile u32 sndreenter;
+  u32 sndconvert8;
+  BINKSND bsnd;
 } BINK;
 
 
 typedef struct BINKSUMMARY {
-  u32 Width;                  // Width of frames
-  u32 Height;                 // Height of frames
-  u32 TotalTime;              // total time (ms)
-  u32 FileFrameRate;          // frame rate
-  u32 FileFrameRateDiv;       // frame rate divisor
-  u32 FrameRate;              // frame rate
-  u32 FrameRateDiv;           // frame rate divisor
-  u32 TotalOpenTime;          // Time to open and prepare for decompression
-  u32 TotalFrames;            // Total Frames
-  u32 TotalPlayedFrames;      // Total Frames played
-  u32 SkippedFrames;          // Total number of skipped frames
-  u32 SkippedBlits;           // Total number of skipped blits
-  u32 SoundSkips;             // Total number of sound skips
-  u32 TotalBlitTime;          // Total time spent blitting
-  u32 TotalReadTime;          // Total time spent reading
-  u32 TotalVideoDecompTime;   // Total time spent decompressing video
-  u32 TotalAudioDecompTime;   // Total time spent decompressing audio
-  u32 TotalBackReadTime;      // Total time spent reading in background
-  u32 TotalReadSpeed;         // Total io speed (bytes/second)
-  u32 SlowestFrameTime;       // Slowest single frame time (ms)
-  u32 Slowest2FrameTime;      // Second slowest single frame time (ms)
-  u32 SlowestFrameNum;        // Slowest single frame number
-  u32 Slowest2FrameNum;       // Second slowest single frame number
-  u32 AverageDataRate;        // Average data rate of the movie
-  u32 AverageFrameSize;       // Average size of the frame
-  u32 HighestMemAmount;       // Highest amount of memory allocated
-  u32 TotalIOMemory;          // Total extra memory allocated
-  u32 HighestIOUsed;          // Highest extra memory actually used
-  u32 Highest1SecRate;        // Highest 1 second rate
-  u32 Highest1SecFrame;       // Highest 1 second start frame
+  u32 Width;
+  u32 Height;
+  u32 TotalTime;
+  u32 FileFrameRate;
+  u32 FileFrameRateDiv;
+  u32 FrameRate;
+  u32 FrameRateDiv;
+  u32 TotalOpenTime;
+  u32 TotalFrames;
+  u32 TotalPlayedFrames;
+  u32 SkippedFrames;
+  u32 SoundSkips;
+  u32 TotalBlitTime;
+  u32 TotalReadTime;
+  u32 TotalDecompTime;
+  u32 TotalBackReadTime;
+  u32 TotalReadSpeed;
+  u32 SlowestFrameTime;
+  u32 Slowest2FrameTime;
+  u32 SlowestFrameNum;
+  u32 Slowest2FrameNum;
+  u32 AverageDataRate;
+  u32 AverageFrameSize;
+  u32 HighestMemAmount;
+  u32 TotalIOMemory;
+  u32 HighestIOUsed;
+  u32 Highest1SecRate;
+  u32 Highest1SecFrame;
 } BINKSUMMARY;
 
 
@@ -290,7 +260,7 @@ typedef struct BINKHDR {
 #define BINKNOSKIP            0x00400000L // Don't skip frames if falling behind
 #define BINKNOFILLIOBUF       0x00800000L // Fill the IO buffer in SmackOpen
 #define BINKSIMULATE          0x01000000L // Simulate the speed (call BinkSim first)
-#define BINKFILEHANDLE        0x02000000L // Use when passing in a file handle
+#define BINKFILEHANDLE        0x08000000L // Use when passing in a file handle
 #define BINKIOSIZE            0x04000000L // Set an io size (call BinkIOSize first)
 #define BINKIOPROCESSOR       0x08000000L // Set an io processor (call BinkIO first)
 #define BINKFROMMEMORY        0x40000000L // Use when passing in a pointer to the file
