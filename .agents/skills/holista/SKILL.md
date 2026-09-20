@@ -77,6 +77,11 @@ operations, unsupported release checks and optimizer-only declarations or scopes
 
 The primary measures candidates with the existing JSON search and VC6/retail
 comparison, retaining reproduction checks and inspecting affected consumers.
+Judge progress and candidate adoption by MAX, using projected MAX for searches.
+Compiler-context changes can lower CUR while MAX holds; these are not lost
+matches or grounds for rejection. Keep CUR for codegen diagnosis and reproduction,
+and omit held-MAX CUR dips from progress reports. Report collateral only when
+MAX falls or a concrete correctness/build failure requires action.
 Do not generate a per-function mock test suite as part of the handoff. A temporary
 behavioral check is useful only for a specific unresolved semantic question.
 Keep candidate files and diagnostics under ignored `build/`; commit supported

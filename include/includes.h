@@ -41,7 +41,7 @@ inline const T& tLimit(const T& minimum, const T& value,
 {
     if (value < minimum) {
         return minimum;
-    } else if (maximum < value) {
+    } else if (value > maximum) {
         return maximum;
     } else {
         return value;

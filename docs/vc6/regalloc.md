@@ -1873,6 +1873,72 @@ retail bodies. This explains the temporary lifetime without a caller block
 or a separate convenience helper. It does not prove whether the original
 source supplied the temporary explicitly or through a default argument.
 
+### Stack-slot sharing has a separate interference graph
+
+<!-- c2-role: function 0x31ef3 ColorStackLocals -->
+<!-- c2-role: function 0x322b9 IndexStackLocals -->
+<!-- c2-role: function 0x49846 AssignStackBins -->
+<!-- c2-role: function 0x49d15 FindOrCreateStackBin -->
+
+These are inferred roles in the pinned SP3 binary, not recovered compiler
+symbol names. `ColorStackLocals` collects stack-resident values, builds their
+interference sets, and calls `AssignStackBins`. The general bin search checks
+size and interference before combining values into shared storage. This is a
+separate operation from choosing EAX/ECX/EDX/ESI/EDI for register live ranges;
+register-assignment traces alone cannot explain a frame-size difference.
+
+A passive trace of `refreshRmgLinePoint` (0x4f9f00) observes 13 stack values
+placed in 12 bins. Caller `oldType` and the inlined selector's `pattern` are
+both four-byte values; the compiler puts them in one bin and assigns each
+owner offset -0xc. Every other bin has one member. Retail keeps the terrain
+at -0xc and the selector output at -0x10, accounting for the 0x58 versus
+0x5c frame. The scalar-return reconstruction therefore has an actual sharing
+difference, rather than an unexplained padding requirement. Caller const/ref
+bindings and an ordinary output-reference terrain getter do not resolve it.
+
+Three passive sites expose the stages: 0x31f24 after indexing, 0x49a44 before
+assigning homes, and 0x32014 before freeing the temporary sets. Their pinned
+bytes are `8bd8a16cc07a10`, `8b44241c85c0`, and `a10cf27910`. Variable records
+are indexed through 0x9f218, with count at 0x9f20c; bin records are five dwords
+under 0x9f228, with count at 0x9f224. The final assignment walk consumes bin
+membership, so empty sets observed afterward do not mean no sharing occurred.
+The private capture/replay preserved all 77,868 object bytes outside the COFF
+timestamp, replayed overwritten instructions and flags, and restored its clean
+shim. This validates this observation, not a complete stack-allocator model.
+
+### Attribute register priorities to actual live ranges
+
+A passive trace of `rmgTerrainPainter::repairTerrainPoint` (0x5b5440)
+identifies the painter receiver as the priority-265 group assigned ESI.
+The priority-248 group assigned EDI is the final gap-painting direction
+(candidate +0x593..+0x5e3), not an early coordinate temporary. Earlier
+coordinate captures are separate priority-56 groups. Several distinct values
+therefore occupy the register opposite the painter; this is not one
+whole-function point variable whose declaration merely needs moving.
+
+At global assignment the painter is processed first, with zero costs for
+eligible callee-save registers, and takes ESI. The final direction then has
+ESI excluded and takes EDI. Accumulation tracing accounts for the painter's
+priority as 464 positive contributions minus 199 live-through penalties;
+the direction has 248 positive contributions and no such penalties. Loop
+weighting contributes to these costs. This supports investigating actual
+use/interference and helper boundaries, not renaming or padding locals.
+It does not establish the original retail compiler's intermediate state.
+
+The decision/rewrite sites are C2 RVAs 0x24754 and 0x32526; priority sites
+are 0x22d4c, 0x22d6b and 0x22d99. Capture/replay preserves all 77,868 object
+bytes outside the COFF timestamp and restores the private clean shim.
+The trace records 57 decisions, 302 rewrites and 1,237 priority events.
+It accounts for these two priorities and 48 of 57 groups overall; nine
+have intervening changes outside these sites, so this is not a complete
+allocator replay.
+
+A separate final painting iterator is neutral at MAX 99.1821%. Minimum-gap
+and paint-neighbour helpers, and borrowing the coordinate offset, all produce
+the same alternative function bytes at 98.2293%; they rotate final-block
+scratch registers without correcting the global ESI/EDI roles. Treat these
+as one backend outcome, not independent evidence for each source model.
+
 ## Recover shared state before treating register swaps as allocator noise
 
 `BinkManager::playBink` (`0x44dd20`) reaches 100% after restoring the

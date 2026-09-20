@@ -452,31 +452,52 @@ def write_baseline(rows: dict[tuple[str, str], MatchRow]) -> None:
     BASELINE.write_text(BASELINE_HEADER + "\n".join(out) + "\n")
 
 
-def overall_line(report: dict) -> str:
-    m = report.get("measures", {})
-    total = int(m.get("total_functions") or 0)
-    matched = int(m.get("matched_functions") or 0)
-    fuzzy = float(m.get("fuzzy_match_percent") or 0.0)
+def projected_rows(report: dict, *, fingerprint_pair: tuple[dict, dict] | None = None) -> dict:
+    """Read-only checkpoint projection for summaries, including fast builds."""
+    hashes, legacy = fingerprint_pair if fingerprint_pair is not None else source_hash_pair()
+    previous = migrate_source_hashes(load_baseline(), hashes, legacy)
+    rows, _stats = update_rows(fn_fuzzy(report), previous, function_rvas(), hashes)
+    return rows
+
+
+def max_measures(report: dict, rows: dict) -> tuple[int, int, float]:
+    total = matched = size_total = 0
+    weighted = 0.0
+    for unit in report.get("units", []):
+        for fn in unit.get("functions", []) or []:
+            maximum = rows[(unit.get("name", "?"), fn.get("name", "?"))].max
+            size = int(fn.get("size") or 0)
+            total += 1
+            matched += maximum == 100
+            weighted += maximum * size
+            size_total += size
+    return total, matched, weighted / size_total if size_total else 0.0
+
+
+def overall_line(report: dict, *, rows: dict | None = None,
+                 fingerprint_pair: tuple[dict, dict] | None = None) -> str:
+    if rows is None:
+        rows = projected_rows(report, fingerprint_pair=fingerprint_pair)
+    total, matched, fuzzy = max_measures(report, rows)
     units = len(report.get("units", []))
     pct = 100.0 * matched / total if total else 0.0
-    return (f"{matched}/{total} functions exact ({pct:.1f}%), "
-            f"{fuzzy:.2f}% fuzzy across {units} unit(s)")
+    return (f"MAX {matched}/{total} functions exact ({pct:.1f}%), "
+            f"{fuzzy:.2f}% weighted MAX across {units} unit(s)")
 
 
 def cmd_summary(report: dict) -> int:
-    print("  Unit        Funcs (exact)   Fuzzy")
+    rows = projected_rows(report)
+    print("  Objective: MAX (projected; ledger unchanged)")
+    print("  Unit        Funcs (MAX 100%)   Weighted MAX")
     print("  " + "-" * 40)
     for unit in sorted(report.get("units", []),
                        key=lambda u: u.get("name", "")):
-        m = unit.get("measures", {})
-        total = int(m.get("total_functions") or 0)
-        matched = int(m.get("matched_functions") or 0)
-        fuzzy = float(m.get("fuzzy_match_percent") or 0.0)
+        total, matched, fuzzy = max_measures({"units": [unit]}, rows)
         print(f"  {unit.get('name', '?'):<12} {matched:>3}/{total:<3}"
               f"      {fuzzy:>7.2f}%")
     print("  " + "-" * 40)
-    print(f"  Overall: {overall_line(report)}")
-    print(f"  Report: {REPORT}")
+    print(f"  Overall: {overall_line(report, rows=rows)}")
+    print(f"  CUR diagnostics: {REPORT}")
     return 0
 
 
@@ -634,7 +655,7 @@ def cmd_functions(report: dict, filters: list[str]) -> int:
     rows = load_baseline()
     current = fn_fuzzy(report)
     needles = [value.lower() for value in filters]
-    print("  Cur       Max      Hist      RVA       Unit / function")
+    print("  MAX       CUR      HIST      RVA       Unit / function")
     print("  " + "-" * 78)
     for key in sorted(set(rows) | set(current)):
         haystack = f"{key[0]} {key[1]}".lower()
@@ -645,9 +666,10 @@ def cmd_functions(report: dict, filters: list[str]) -> int:
         maximum = row.max if row else cur
         historical = row.hist if row else cur
         rva = row.rva if row else function_rvas().get(key)
-        pct = lambda value: "    -   " if value is None else f"{value:7.2f}%"
+        def pct(value):
+            return "    -   " if value is None else f"{value:7.2f}%"
         addr = "-" if rva is None else f"0x{rva:06x}"
-        print(f"  {pct(cur)}  {pct(maximum)}  {pct(historical)}  "
+        print(f"  {pct(maximum)}  {pct(cur)}  {pct(historical)}  "
               f"{addr:<8}  {key[0]} / {key[1]}")
     return 0
 
@@ -730,8 +752,8 @@ def write_readme(report: dict) -> None:
     denominator = target_fns + zlib_fns
     unmatched = denominator - covered
 
-    rows = [["Module", "Units", "Functions exact", "Function exact MAX",
-             "Fuzzy", "Fuzzy Max"]]
+    rows = [["Module", "Units", "Function exact MAX", "Functions exact CUR",
+             "Fuzzy MAX", "Fuzzy CUR"]]
     for module in sorted(per_module, key=lambda m: -per_module[m]["fns"]):
         a = per_module[module]
         pct = 100.0 * a["exact"] / a["fns"] if a["fns"] else 0.0
@@ -739,9 +761,9 @@ def write_readme(report: dict) -> None:
         fuzzy = a["wsum"] / a["code"] if a["code"] else 0.0
         fmax = a["wmax"] / a["code"] if a["code"] else 0.0
         rows.append([f"`{module}`", str(a["units"]),
-                     f"{a['exact']} / {a['fns']} ({pct:.1f}%)",
                      f"{a['exact_max']} / {a['fns']} ({pct_max:.1f}%)",
-                     f"{fuzzy:.2f}%", f"{fmax:.2f}%"])
+                     f"{a['exact']} / {a['fns']} ({pct:.1f}%)",
+                     f"{fmax:.2f}%", f"{fuzzy:.2f}%"])
     if unmatched:
         rows.append(["`(unmatched)`", "—",
                      f"0 / {unmatched:,} (0.0%)",
@@ -752,21 +774,21 @@ def write_readme(report: dict) -> None:
     # are not in either side of the fraction)
     unfiltered_bytes = (tally.get("target", (0, 0))[1]
                         + tally.get("zlib", (0, 0))[1])
-    matched_bytes = sum(a["wsum"] for a in per_module.values()) / 100.0
+    matched_bytes = sum(a["wmax"] for a in per_module.values()) / 100.0
     exe_pct = (100.0 * matched_bytes / unfiltered_bytes
                if unfiltered_bytes else 0.0)
 
     pct = 100.0 * matched / denominator if denominator else 0.0
     pct_max = 100.0 * matched_max / denominator if denominator else 0.0
     block = [RM_START, "",
-             f"**Executable matched: {exe_pct:.2f}%** — fuzzy-weighted "
+             f"**Executable MAX: {exe_pct:.2f}%** — MAX-weighted "
              f"bytes over all {unfiltered_bytes:,} unfiltered bytes.",
              "",
-             f"**Match score** — {matched:,} / {denominator:,} functions "
-             f"exact ({pct:.1f}%) across the full engine "
-             f"({covered} in linked units).", "",
              f"**Function exact MAX** — {matched_max:,} / {denominator:,} "
-             f"current implementations ({pct_max:.1f}%) have reached 100%.", ""]
+             f"current implementations ({pct_max:.1f}%) have reached 100%.", "",
+             f"**CUR diagnostics** — {matched:,} / {denominator:,} functions "
+             f"exact ({pct:.1f}%) in this build ({covered} in linked units). "
+             "Compiler-context dips with held MAX do not reduce matching progress.", ""]
     block += _md_table(rows, "lrrrrr")
 
     excluded = [["Category", "Functions", "Code (B)", "Why excluded"]]
@@ -791,15 +813,15 @@ def write_readme(report: dict) -> None:
         new = head + "\n".join(block) + tail
     else:
         lines = text.splitlines(keepends=True)
-        at = next((i for i, l in enumerate(lines)
-                   if l.startswith("## ")), len(lines))
+        at = next((i for i, line in enumerate(lines)
+                   if line.startswith("## ")), len(lines))
         new = "".join(lines[:at]) + "\n".join(block) + "\n\n" \
             + "".join(lines[at:])
     if new != text:
         README_PATH.write_text(new)
         print("[status] README match-score block refreshed")
-    print(f"[status] executable matched: {exe_pct:.2f}% "
-          f"(fuzzy bytes / {unfiltered_bytes:,} unfiltered B)")
+    print(f"[status] executable MAX: {exe_pct:.2f}% "
+          f"(MAX-weighted bytes / {unfiltered_bytes:,} unfiltered B)")
 
 
 def main(argv=None) -> int:

@@ -59,43 +59,27 @@ TRmgGridRectangle::TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGrid
 {
 }
 
-// Retail 0x4f9f00: preserve the original tile proxy across neighbour queries,
-// select an id/flip pair, and draw a random frame only if its pattern or flips
-// differ. The eight-direction table starts at north, unlike g_rmgDirections.
-// The current tile's terrain field survives; the adapter owns layer updates.
-// Initial source retains extra grid-copy calls while expanding the neighbour's
-// compound add and proxy call. Its value-return tile getter also makes a
-// three-dword copy after the virtual output-reference call; retail has none.
-// Explicit tile output, assigned proxy coordinates and assignment-built grid
-// translation raise 51.0615% to 63.9923%, preserving every existing exact RMG
-// row and improving terrain paintPoint too. All 384 construction/return/query
-// combinations were tested; the remaining proxy and arithmetic calls still
-// need recovery. Keep their canonical boundaries rather than flattening them.
-// Shared grid/proxy controls can restore the += call (70.2846%) but introduce
-// unwanted arithmetic calls in terrain painting. Five ordinary operator+
-// placements add no gain; parameter-by-value proxy construction also loses.
-// The retained calls at 0x4f9f60/0x4f9f77/0x4f9f86 (TPoint add, grid
-// conversion, proxy factory) sit where this body's own budget is above
-// 700, so retail expands the neighbour query from a nested context: an
-// ordinary neighbour-land helper on the painter interface holds the sum,
-// the conversion and the factory, and its budget divides by the sites
-// after it, which the current tile's frame and flip accessors in the
-// pattern test supply (71.92 -> 91.48%; a tile-returning neighbour
-// factory 83.55%, no accessors 79.75%, getters and setters together
-// 86.74%). Retail then keeps the selected pattern in EDI across the
-// rand() call, which the output variable itself cannot do once its
-// address has been passed: a plain copy taken after the tile read holds
-// it (97.35%; the copy before the read 96.75%, a range reference 94.74%,
-// the flip locals declared first 91.5%, register 91.5%). Residual: the
-// point and painter parameters take ESI/EDI in the opposite roles from
-// retail; a direct proxy construction, reading the land through the
-// painter first, building the mask first, and accessor coordinates do
-// not swap them (84-97%).
-// Follow-up selection ownership/lifetime/decision forms (60 states) and
-// table-interface/receiver/snapshot forms (60 states) preserve 97.3461%.
-// All six direct calls remain correct; the selected-output copy is still
-// required. A two-state painter pointer/reference contract produces identical
-// function bytes across all seven consumers. No speculative API is retained.
+// Retail 0x4f9f00 keeps one tile proxy across neighbour queries and selects
+// a pattern/flip pair before reading the current tile. A new random frame is
+// drawn only when the pattern or flips differ. Its ordinary neighbour helper
+// supplies nested TPoint-add, grid-conversion and proxy-factory call sites.
+// Returning the selected integer through this ordinary overload preserves the
+// canonical output-reference selector and the two independent byte outputs.
+// It recovers retail's register roles and selected-pattern comparison; a
+// returned aggregate packs the flips together and changes their lifetimes.
+// No DC counterpart: these helper boundaries are retail-derived hypotheses.
+// Residual 99.7462%: all instructions/calls align, but the selector output
+// shares the old-terrain slot; retail keeps both and has a 0x5c vs 0x58 frame.
+// Value/const-value/const-reference caller bindings do not separate the slots.
+int selectRmgLinePattern(
+    const unsigned char* neighbours, const TRmgLinePatternTable* table,
+    unsigned char& flipX, unsigned char& flipY)
+{
+    int pattern;
+    selectRmgLinePattern(neighbours, table, pattern, flipX, flipY);
+    return pattern;
+}
+
 VA(0x004F9F00, 0x146) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
@@ -113,15 +97,13 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
     }
     TRmgLinePatternTable* table = painter->getPattern(oldType);
     unsigned char flipX, flipY;
-    int selected;
-    selectRmgLinePattern(matches, table, selected, flipX, flipY);
+    int selected = selectRmgLinePattern(matches, table, flipX, flipY);
     rmgTerrainTile current;
     tile.getTile(current);
-    int pattern = selected;
-    if (table->m_patterns[current.getFrame()] != pattern
+    if (table->m_patterns[current.getFrame()] != selected
         || current.getFlipX() != flipX || current.getFlipY() != flipY) {
-        unsigned int frame = table->m_ranges[pattern].m_firstIndex
-            + rand() % table->m_ranges[pattern].m_valueCount;
+        unsigned int frame = table->m_ranges[selected].m_firstIndex
+            + rand() % table->m_ranges[selected].m_valueCount;
         current.m_frame = frame;
         current.m_flipX = flipX;
         current.m_flipY = flipY;
@@ -805,7 +787,7 @@ void rmgTerrainPainter::paintBaseTile(const TRmgGridPoint& point)
 // form refuses it while the final insert's pair constructor still expands,
 // closing paintPoint (2026-09-12). Reading the configured terrain as the
 // field, or swapping the operands, drops the caller below 90%.
-int rmgTerrainPainter::getPaintTerrain() const
+const int& rmgTerrainPainter::getPaintTerrain() const
 {
     return m_paintTerrain;
 }
@@ -1034,6 +1016,14 @@ unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 // Value accessors for the unchanged coordinate restore retail's fresh scalar
 // copy and terrain reload, but retain the reversed ESI/EDI roles and change
 // scheduling (85.9764..93.6307%). The lifetime mechanism is insufficient alone.
+// Query-result widths, owned scalar results, shared gap counters, workspace
+// lifetimes and gap-record construction/compaction leave 93.6307% unchanged.
+// Passive C2 tracing reproduces the whole object and observes 227 temporary
+// bindings; it does not identify the cause of the painter/point allocation.
+// Returning configured terrain by const reference, together with value
+// coordinate accessors in both gap predicates, reaches 99.1821%. All 1576
+// bytes align except an ESI/EDI permutation; frame, scalar copies and all
+// 46 calls agree. The accessor refers to the painter member, not a temporary.
 VA(0x005B5440, 0x628) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 {
@@ -1252,8 +1242,8 @@ unsigned char rmgTerrainPainter::isHorizontalGap(
     const TRmgGridPoint& point, int terrain)
 {
     return point.m_x > 0 && point.m_x < getWidth() - 1
-        && getTerrain(TRmgGridPoint(point.m_x - 1, point.m_y)) != terrain
-        && getTerrain(TRmgGridPoint(point.m_x + 1, point.m_y)) != terrain;
+        && getTerrain(TRmgGridPoint(point.getX() - 1, point.getY())) != terrain
+        && getTerrain(TRmgGridPoint(point.getX() + 1, point.getY())) != terrain;
 }
 
 VA(0x005B6430, 0x106)
@@ -1261,8 +1251,8 @@ unsigned char rmgTerrainPainter::isVerticalGap(
     const TRmgGridPoint& point, int terrain)
 {
     return point.m_y > 0 && point.m_y < getHeight() - 1
-        && getTerrain(TRmgGridPoint(point.m_x, point.m_y - 1)) != terrain
-        && getTerrain(TRmgGridPoint(point.m_x, point.m_y + 1)) != terrain;
+        && getTerrain(TRmgGridPoint(point.getX(), point.getY() - 1)) != terrain
+        && getTerrain(TRmgGridPoint(point.getX(), point.getY() + 1)) != terrain;
 }
 
 // Cardinal neighbours use coordinates clamped to the map edge. A diagonal
@@ -1418,16 +1408,10 @@ void rmgTerrainPainter::buildNeighbourKinds(
     }
 }
 
-// Both diagonal residuals are the upper clamp comparison: retail uses
-// CMP value,maximum / JG, while canonical tLimit uses the reverse / JL.
-// Changing shared tLimit to value > maximum restores both callers, but loses
-// six exact rows: retained tLimit, heroQuickView, monsterQuickView, armyGroup
-// split, splitwindow and quicktowncenter. Keep its proven maximum < value
-// body; the identity of this Complete-only RMG clamp remains unresolved.
-// Both nesting orders of canonical min/max, with both argument orders and
-// standard reference selectors, lower both diagonals; no composition is adopted.
-// Explicit int/long selector specializations and signed conversion ownership
-// also preserve the same two residuals and comparison orientation.
+// Retail's upper clamp uses CMP value,maximum / JG. Canonical tLimit's
+// value > maximum spelling restores both diagonals without changing its
+// const-reference selection contract. Reversing that comparison leaves
+// 98.6070% / 99.1026%; min/max compositions do not recover these bodies.
 VA(0x005B6BA0, 0x24C)
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)

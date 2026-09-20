@@ -192,7 +192,26 @@ def projected_max_scores(row, previous, hashes):
 
 
 def ranking_scores(row):
-    return row.get("max_scores", row["scores"])
+    return row["max_scores"]
+
+
+def max_summary(row, previous):
+    """Describe candidate progress against banked MAX, never raw CUR dips."""
+    changes = []
+    for name, maximum in ranking_scores(row).items():
+        old = previous.get(tuple(name.split("|", 1)))
+        if old is not None and maximum != old.max:
+            changes.append(dict(function=name, before=old.max, after=maximum))
+    return dict(
+        gains=[change for change in changes if change["after"] > change["before"]],
+        losses=[change for change in changes if change["after"] < change["before"]],
+    )
+
+
+def format_max_summary(row):
+    summary = row["max_summary"]
+    return (f"projected MAX: {len(summary['gains'])} gain(s), "
+            f"{len(summary['losses'])} loss(es)")
 
 
 def expected_control_scores(report, scored):
@@ -324,7 +343,8 @@ def evaluate(snapshot, output, plans, originals, axes, choices, *, previous, rep
         staged.write_text(text)
         staged.replace(path)
     started = time.monotonic()
-    row = {"id": key, "choices": choices, "labels": {
+    row = {"objective": "MAX", "diagnostic_score_field": "scores",
+        "id": key, "choices": choices, "labels": {
         axis.name: axis.options[choice].name for axis, choice in zip(axes, choices)},
         "scores": {}, "source_hashes": {name: digest(text.encode()) for name, text in sources.items()}}
     identities = []
@@ -341,6 +361,7 @@ def evaluate(snapshot, output, plans, originals, axes, choices, *, previous, rep
                                       only_units={plan.unit for plan in plans})
         row["function_source_hashes"] = {"|".join(key): value for key, value in hashes.items()}
         row["max_scores"] = projected_max_scores(row, previous, hashes)
+        row["max_summary"] = max_summary(row, previous)
     except Exception as exc:
         row.update(error=str(exc), scores={})
     row["seconds"] = time.monotonic() - started
@@ -369,7 +390,7 @@ def main(argv=None):
     if not units or len(set(units)) != len(units) or any(path is None for path in sources):
         parser.error("units must be distinct manifest unit names")
     total = math.prod(len(axis.options) for axis in axes)
-    print(f"[source-families] {total} combinations; {args.width}/generation; keep {args.keep}; {units}", flush=True)
+    print(f"[source-families] objective MAX; CUR is diagnostic only; {total} combinations; {args.width}/generation; keep {args.keep}; {units}", flush=True)
     if args.validate_only:
         return 0
     inputs = scoring._shared_inputs_digest()
@@ -431,7 +452,7 @@ def main(argv=None):
                 for future in as_completed(futures):
                     row = future.result()
                     records.append(row)
-                    state = "" if row["scores"] else " FAILED"
+                    state = "; " + format_max_summary(row) if row["scores"] else " FAILED"
                     valid = sum(bool(record["scores"]) for record in records)
                     print(f"[source-families] g{generation + 1} {valid}/{args.width} scored; {len(records)} attempted; {row['id']}{state}", flush=True)
                 valid = sum(bool(row["scores"]) for row in records)
@@ -455,7 +476,7 @@ def main(argv=None):
             raise RuntimeError("source/toolchain/targets/ledger changed during search; refusing stale checkpoint")
         checkpoint.update(generation=generation + 1, seen=[list(choice) for choice in sorted(seen | set(attempted))], elites=elites, records=all_records)
         scoring._write_json(checkpoint_path, checkpoint)
-        frontier = {"context": context, "generation": generation + 1, "source_modified": False,
+        frontier = {"objective": "MAX", "context": context, "generation": generation + 1, "source_modified": False,
                     "attempted": len(records), "successful": sum(bool(row["scores"]) for row in records),
                     "distinct_objects": len({row["object_hash"] for row in records if row["scores"]}), "elites": elites,
                     "changes": []}

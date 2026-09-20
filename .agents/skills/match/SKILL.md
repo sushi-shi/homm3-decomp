@@ -95,8 +95,14 @@ available evidence leaves open; it cannot prove a retail match. Run relevant
 tooling regression tests when changing tooling. Preserve build gates and search
 reproduction checks; those protect the measurement itself.
 
-Use the generated ledger's `CUR <= MAX <= HIST` semantics. MAX describes the
-current implementation's best score; HIST is a recovery lead for older source.
+Optimize and report MAX, not CUR. Use the generated ledger's
+`CUR <= MAX <= HIST` semantics: MAX describes the current implementation's best
+score; HIST is a recovery lead for older source. Compiler output can shift when
+headers or TU context change without changing a function's own source. A CUR
+dip with held MAX is not a lost match, a regression, or a reason to reject a
+candidate. Rank searches by projected MAX from the ledger's source-hash rules;
+use CUR only to diagnose emitted code and verify reproduction. Check actual
+MAX changes before claiming collateral losses, including for shared helpers.
 Do not edit or inflate scores manually. Preserve recoverable candidate evidence
 under ignored build output or Git history. A source-supported combined model
 may temporarily lower scores: investigate its concrete predictions rather than
