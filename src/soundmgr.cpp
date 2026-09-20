@@ -603,6 +603,31 @@ void __cdecl waitEndSampleThread(void* arglist)
     _endthread();
 }
 
+// Windows Miles service operation. The WinCE counterpart service_sounds is
+// a four-byte no-op attributed to SoundMgr.h:140 (dc 0xe6ef4); its records do
+// not establish the nonempty Windows definition's inline spelling or owner.
+// Retail expands the complete operation only in memorySample and launchSample,
+// both in this TU; external consumers call the retained 0x59a7d0 body. All 13
+// retail AIL_serve references are in this TU, including ten different sound
+// operations. A source-local ordinary body recovers that visibility boundary
+// and retained emission. Its Windows ownership is a platform inference; the
+// CE header attribution remains recorded separately in dc_only.tsv.
+VA(0x0059a7d0, 0x51)
+void soundManager::serviceSounds()
+{
+    EnterCriticalSection(&m_sectionSoundCall);
+    AIL_serve();
+    HSTREAM stream = g_mp3Stream;
+    if (stream) {
+        if (g_soundManager->m_mp3Playing) {
+            if (!g_shutDownDone)
+                AIL_service_stream(stream, 1);
+        }
+    }
+    Sleep(1);
+    LeaveCriticalSection(&m_sectionSoundCall);
+}
+
 VA(0x0059a830, 0x10)  // dc 0x14b7e0
 void __cdecl processMP3Stop(void* nothing)
 {

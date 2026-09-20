@@ -32,9 +32,9 @@ if args.function == 'rects':
             smk = g_smackVideo;
         else if (g_smackVideo2)
             smk = g_smackVideo2;'''
-    bink_choice = '''        bnk = g_binkVideo2;
-        if (g_binkVideo)
-            bnk = g_binkVideo;'''
+    bink_choice = '''        bnk = BinkManager::s_playingBink.m_bink2;
+        if (BinkManager::s_playingBink.m_bink)
+            bnk = BinkManager::s_playingBink.m_bink;'''
     options = [{'name': 'control'}]
     for storage in ('scalars', 'shared-rectangle', 'arm-rectangles', 'rectangle-references'):
         for order in ('control', 'xywh', 'whxy', 'hwyx'):
@@ -47,10 +47,10 @@ if args.function == 'rects':
                     changed = changed.replace(first_bink, '\n'.join('            ' + name + ' = bnk->m_frameRects[0].' + field[name] + ';' for name in order))
                 if selection == 'ternary':
                     changed = changed.replace(smack_choice, '        smk = g_smackVideo ? g_smackVideo : g_smackVideo2;')
-                    changed = changed.replace(bink_choice, '        bnk = g_binkVideo ? g_binkVideo : g_binkVideo2;')
+                    changed = changed.replace(bink_choice, '        bnk = BinkManager::s_playingBink.m_bink ? BinkManager::s_playingBink.m_bink : BinkManager::s_playingBink.m_bink2;')
                 elif selection == 'if-else':
                     changed = changed.replace(smack_choice, '        if (g_smackVideo)\n            smk = g_smackVideo;\n        else\n            smk = g_smackVideo2;')
-                    changed = changed.replace(bink_choice, '        if (g_binkVideo)\n            bnk = g_binkVideo;\n        else\n            bnk = g_binkVideo2;')
+                    changed = changed.replace(bink_choice, '        if (BinkManager::s_playingBink.m_bink)\n            bnk = BinkManager::s_playingBink.m_bink;\n        else\n            bnk = BinkManager::s_playingBink.m_bink2;')
                 if storage != 'scalars':
                     changed = changed.replace('    int x, y, w, h;\n', '')
                     if storage == 'rectangle-references':

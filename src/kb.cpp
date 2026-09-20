@@ -256,7 +256,7 @@ unsigned char initializeHeroTraitsTable();
 unsigned char initializeHeroClassTraitsTable();
 unsigned char initializeBallisticsTable();
 unsigned char initializeSSkillTraitsTable();
-unsigned char initializeArtifactTraitsTable();
+bool initializeArtifactTraitsTable();
 unsigned char initializeVCDescriptions();
 unsigned char initializeLCDescriptions();
 unsigned char initializeTurnDurationText();

@@ -84,11 +84,13 @@ SIZE(BINKSUMMARY, 112);
 extern BINKSUMMARY g_binkSummary;
 
 // The binkw32 import surface (leading underscore, the RAD convention -
-// see smackmgr.h; smackmgr.cpp aliases the names back).
+// see smackmgr.h; calls preserve these import names).
 extern "C" {
-__declspec(dllimport) int __stdcall _BinkPause(Bink* bnk, int pause);
-__declspec(dllimport) int __stdcall _BinkDDSurfaceType(IDirectDrawSurface* dds);
-__declspec(dllimport) int __stdcall _BinkGetRects(Bink* bnk, unsigned long flags);
+// DC0x80190/0x80160 preserve the SDK signed-long and opaque-surface types.
+__declspec(dllimport) long __stdcall _BinkPause(Bink* bnk, long pause);
+__declspec(dllimport) long __stdcall _BinkDDSurfaceType(void* dds);
+// DC0x8016c and the RAD SDK both return signed long (s32).
+__declspec(dllimport) long __stdcall _BinkGetRects(Bink* bnk, unsigned long flags);
 __declspec(dllimport) int __stdcall _BinkGoto(Bink* bnk,
                                               unsigned long frame,
                                               int flags);
@@ -105,60 +107,49 @@ __declspec(dllimport) void __stdcall _BinkGetSummary(Bink* bnk,
                                                      BINKSUMMARY* sum);
 }
 
-// Dreamcast proves these are static members (the `YA` decorated forms and
-// static data roster); retail supplies the full PC implementations.
-class BinkManager {
-public:
-    static BINK* getBinkFilePtr(const char* filename, int binkOptions);
-    static void setPixelFormat(unsigned long redMask,
-                               unsigned long greenMask,
-                               unsigned long blueMask);
-    // DC dc:0x50a84 gives six ints followed by unsigned char, not bool.
-    // Retail stores the final low byte in the dirty-rectangle flag.
-    static void openBink(int id, int x, int y, int w, int h, int loop,
-                         unsigned char useDirtyRects);
-    static void drawCurrentBinkFrame();
-    static void restartBink();
-    static void nextBinkFrame();
-    static void closeBink();
-    static int playBink(int id, int x, int y, int w, int h);
-};
+// Raw DC publics encode namespace functions (`YA`) and globals (`3`),
+// unlike class-static `SA` functions and `2` data. The sole named type
+// is BinkManagerStruct, the namespace-owned 48-byte state type.
+namespace BinkManager {
+    // DC BinkManagerStruct / playingBINK: members bink, bink2, screen,
+    // pitch, height, x, y, w, h, id, loop, paused. Retail's 48-byte state
+    // at 0x694cb0 has the same offsets; campaign previews copy all 12 words.
+    struct BinkManagerStruct {
+        BINK* m_bink;             // +0x00
+        BINK* m_bink2;            // +0x04
+        unsigned short* m_screen; // +0x08, DC T_32PUSHORT
+        int m_pitch;              // +0x0c, byte stride
+        int m_height;             // +0x10
+        int m_x;                  // +0x14
+        int m_y;                  // +0x18
+        int m_w;                  // +0x1c
+        int m_h;                  // +0x20
+        int m_id;                 // +0x24
+        int m_loop;               // +0x28
+        int m_paused;             // +0x2c
+    };
+    extern BinkManagerStruct g_playingBink;
+    // DC SurfaceType, updateScreen, needsUpdate and PlayingBink.
+    extern int g_surfaceType;
+    extern bool g_updateScreen;
+    extern bool g_needsUpdate;
+    extern bool g_playingBinkActive;
 
-// Bink TU globals (.bss 0x694ca0..0x694ce0, owned by the 0x44dxxx TU;
-// names provisional, mirrored from smackmgr.cpp's smack set).
-extern int g_binkSurfaceType;         // 0x694ca0 (BinkDDSurfaceType result)
-extern Bink* g_binkVideo;             // 0x694cb0
-extern Bink* g_binkVideo2;            // 0x694cb4
-extern unsigned char* g_binkBuffer;   // 0x694cb8 (screen pixels at the bink origin)
-extern int g_binkPitch;               // 0x694cbc
-extern int g_binkHeight;              // 0x694cc0
-extern int g_binkX;                   // 0x694cc4
-extern int g_binkY;                   // 0x694cc8
-// The two dwords between gBinkY and gBinkVideoId: CampaignWindowHandler
-// hands 0x694cc4/0x694cc8/0x694ccc/0x694cd0 straight to
-// heroWindowManager::UpdateScreen(x, y, w, h), which pairs them with the
-// already-named gBinkX/gBinkY as that call's width and height. Ordinal
-// names until a producer in the bink TU proves stronger ones.
-extern int g_binkUpdateWidth;         // 0x694ccc
-extern int g_binkUpdateHeight;        // 0x694cd0
-extern int g_binkVideoId;             // 0x694cd4 (VIDEO_ID_OVERLAY_BLIT plays via the overlay Blt)
-// 0x694cd8 closes the 12-dword snapshot campaignwindow.cpp copies out of
-// gBinkVideo. NextBinkFrame consults it when the first track reaches its last
-// frame: with it set AND both handles live it closes track one and carries on
-// with track two, otherwise it ends the playback outright. Provisional name.
-extern int g_binkChainTrack;          // 0x694cd8
-extern int g_binkPaused;              // 0x694cdc
-extern unsigned char g_binkDirty;     // 0x694ce0
-// The dirty-rect gate the per-frame pump tests before calling
-// VideoDrawRects; the mirror of smackmgr's own rect switch. Provisional.
-extern unsigned char g_binkUseDirtyRects;  // 0x694ca8
-// Raised while a bink is actually running: DrawCurrentBinkFrame and
-// NextBinkFrame both refuse to touch the handles without it, and CloseBink
-// drops it. The mirror of smackmgr's gSmackFrameReady. Provisional.
-extern unsigned char g_binkFrameReady;     // 0x694d5c
-// The bink twin of smackmgr's gVideoSoundReady, raised by OpenBinkVideo
-// out of exactly the same three-way gate (gUnnamed699290 == 0 &&
-// gpSoundManager->ds != 0 && gUnnamed698758.soundVolume != 0). Provisional.
-extern int g_binkSoundReady;               // 0x694d58
+    // Raw DC GetBinkFilePtr public uses PAD (char*), matching its typed argument.
+    BINK* getBinkFilePtr(char* filename, int binkOptions);
+    void setPixelFormat(unsigned long redMask,
+                        unsigned long greenMask,
+                        unsigned long blueMask);
+    // Raw DC OpenBink public proves bool; VideoOpen forwards the same
+    // Boolean flag, and retail stores its low byte without normalization.
+    void openBink(int id, int x, int y, int w, int h, int loop,
+                  bool useDirtyRects);
+    void drawCurrentBinkFrame();
+    void restartBink();
+    void nextBinkFrame();
+    void closeBink();
+    int playBink(int id, int x, int y, int w, int h);
+} // namespace BinkManager
+SIZE(BinkManager::BinkManagerStruct, 48);
 
 #endif  /* HOMM3_BINKMANAGER_H */
