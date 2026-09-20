@@ -1434,13 +1434,15 @@ void townManager::changeTown(unsigned char fade)
 // agreed, so the order is a fact of this one block.  Worth only +0.0082 in
 // score (the two stores are the same bytes transposed) but it moves the
 // first byte-level divergence from fn+0x134 to fn+0x499.
-// Residual (98.1038%): pure schedule in the strip-setup tail - retail hoists
-// `mov eax,-2` and `lea edi,[ebx+0x40]` above the three `esi` stores where
-// this compile issues them after; the instruction multiset is identical.
+// DC records one function-local `objToLoad`, reused by both building loops.
+// Complete reverses DC's StartMP3/UpdateTownLocators order. Retail becomes
+// exact when loadedTownType is recorded before the three strip pointers;
+// that source order lets VC6 schedule the shared -2 and dwelling cursor early.
 VA(0x005c6870, 0x59F)  // anchor-caller(Open 0x5c63c0 + Main) + anchor-callee(UnloadTown/NewStrips/RedrawTownScreen) + anchor-string %sBack.pcx, dc 0x16bba4
 void townManager::setupTown(unsigned char fade)
 {
     message msg;
+    int objToLoad;
     msg.m_codeX = 0;
     msg.m_codeY = 0;
     msg.m_qualifier = 0;
@@ -1492,15 +1494,15 @@ void townManager::setupTown(unsigned char fade)
         m_panorama = new bitmapBorder16(0, 0, 800, 374, 147, g_text, 0x800);
         m_townObjectCount = 0;
         for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
-            int objId = g_townBuildOrder[m_townToView->m_type][i];
-            if (objId != -1) {
+            objToLoad = g_townBuildOrder[m_townToView->m_type][i];
+            if (objToLoad != -1) {
                 m_townObjects[m_townObjectCount] = new townObject(
-                    m_townToView->m_type, objId,
-                    g_townBuildingSprites[m_townToView->m_type][objId]);
+                    m_townToView->m_type, objToLoad,
+                    g_townBuildingSprites[m_townToView->m_type][objToLoad]);
                 if (!m_townObjects[m_townObjectCount])
                     memError();
                 if (m_townObjects[m_townObjectCount]->m_objBorder) {
-                    if (!(m_townToView->m_built & g_bitNumber[objId])) {
+                    if (!(m_townToView->m_built & g_bitNumber[objToLoad])) {
                         m_townObjects[m_townObjectCount]->m_objBorder->m_status
                             &= ~widget::WIDGET_ACTIVE;
                         m_townObjects[m_townObjectCount]->m_visible = 0;
@@ -1517,10 +1519,10 @@ void townManager::setupTown(unsigned char fade)
     } else {
         m_townObjectCount = 0;
         for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
-            int objId = g_townBuildOrder[m_townToView->m_type][i];
-            if (objId != -1) {
+            objToLoad = g_townBuildOrder[m_townToView->m_type][i];
+            if (objToLoad != -1) {
                 if (m_townObjects[m_townObjectCount]->m_objBorder) {
-                    if (!(m_townToView->m_built & g_bitNumber[objId])) {
+                    if (!(m_townToView->m_built & g_bitNumber[objToLoad])) {
                         m_townObjects[m_townObjectCount]->m_objBorder->m_status
                             &= ~widget::WIDGET_ACTIVE;
                         m_townObjects[m_townObjectCount]->m_visible = 0;
@@ -1546,10 +1548,10 @@ void townManager::setupTown(unsigned char fade)
     g_soundManager->startMP3(g_townMusic[m_townToView->m_type], 0, 1);
     newStrips();
 
+    m_loadedTownType = m_townToView->m_type;
     m_destStrip = 0;
     m_srcStrip = 0;
     m_currStrip = 0;
-    m_loadedTownType = m_townToView->m_type;
     m_destIndex = -2;
     m_srcIndex = -2;
     m_currIndex = -2;
