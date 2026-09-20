@@ -111,9 +111,9 @@ DATA(0x00698770) int g_unnamed698770;
 // calls used by the native tree scopes (0x60b598/0x60b634).
 
 template <class T>
-unsigned char saveObjectVector(TAbstractFile* outfile, std::vector<T>& srcVector);
+bool saveObjectVector(TAbstractFile* outfile, std::vector<T>& srcVector);
 template <class T>
-unsigned char loadObjectVector(TAbstractFile* infile, std::vector<T>& destVector);
+bool loadObjectVector(TAbstractFile* infile, std::vector<T>& destVector);
 
 const int g_savedCreatureNone = 0xff;
 const int g_savedMapCoordinateNone = 0xff;
@@ -404,7 +404,7 @@ generator::generator()
 }
 
 VA(0x004b85a0, 0x13B)  // dc 0xa2e48
-unsigned char generator::load(TAbstractFile* infile)
+bool generator::load(TAbstractFile* infile)
 {
     if (infile->read(&m_playerOwner, sizeof(m_playerOwner)) !=
         sizeof(m_playerOwner))
@@ -436,13 +436,13 @@ unsigned char generator::load(TAbstractFile* infile)
     if (m_guards.load(infile) == -1)
         return 0;
 
-    unsigned char success =
+    bool success =
         infile->read(&m_townId, sizeof(m_townId)) == sizeof(m_townId);
     return success;
 }
 
 VA(0x004b86e0, 0xB1)  // dc 0xa2fdc
-unsigned char generator::save(TAbstractFile* outfile)
+bool generator::save(TAbstractFile* outfile)
 {
     outfile->write(&m_playerOwner, sizeof(m_playerOwner));
     outfile->write(&m_genClass, sizeof(m_genClass));
@@ -458,7 +458,7 @@ unsigned char generator::save(TAbstractFile* outfile)
     outfile->write(&m_mapY, sizeof(m_mapY));
     outfile->write(&m_mapZ, sizeof(m_mapZ));
     m_guards.save(outfile);
-    unsigned char saved =
+    bool saved =
         outfile->write(&m_townId, sizeof(m_townId)) == sizeof(m_townId);
     return saved;
 }
@@ -2448,18 +2448,17 @@ int game::loadBlackMarkets(TAbstractFile* infile)
 // prove a bool result and vector reference; Complete uses TAbstractFile.
 // Retail Load's gate-pair arm zeroes its fill before resize:
 // that is the native long default, not the old point-vector pointer union.
-// All six source calls expand naturally, removing six resize fences and
-// raising Load 78.2645 -> 80.1570. The 33-state helper family and 97-state
-// return/fence follow-up also test explicit T() locals and direct boolean
-// returns (up to 82.2663); retain the DC default-argument and guard scopes.
-// Restoring the generic university aggregate removes an extra constructor
-// call from its default fill and raises Load to 81.2284. The elemental-school
+// Complete's native count reader preserves the short output and byte count.
+// The point and long calls expand in game::load; the university call remains
+// the caller's 98.1693% residual. Direct payload-result returns alter the
+// retained creature-bank reader's comparison, so keep the two DC guards.
+// The generic university fill stays an aggregate; its elemental-school
 // initializer belongs only to the Conflux consumers (see type_university).
 template <class T>
 bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
 {
     short count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    if (readValue(infile, count) < sizeof(count))
         return false;
     destVector.resize(count);
     if (infile->read(&destVector[0], count * sizeof(T)) < count * sizeof(T))
@@ -2488,13 +2487,14 @@ bool saveVector(TAbstractFile* outfile, std::vector<T>& srcVector)
 
 // Original: load_object_vector; game.cpp:2733, dc 0xc1950 / 0xc1b6c.
 // Both DC instantiations have the same source rows and reference interface.
+// Raw public YA_N proves bool; the primitive type display uses a byte alias.
 // Complete uses TAbstractFile in place of the DC gz handle; generator calls
 // expand, while the creature-bank instantiation is retained at 0x4d2870.
 template <class T>
-unsigned char loadObjectVector(TAbstractFile* infile, std::vector<T>& destVector)
+bool loadObjectVector(TAbstractFile* infile, std::vector<T>& destVector)
 {
     short count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    if (readValue(infile, count) < sizeof(count))
         return 0;
     destVector.resize(count);
     for (long i = 0; i < count; ++i) {
@@ -2506,8 +2506,9 @@ unsigned char loadObjectVector(TAbstractFile* infile, std::vector<T>& destVector
 
 // Original: save_object_vector; game.cpp:2754, dc 0xc1d38 / 0xc1f64.
 // The matching reference writer preserves each record's own save boundary.
+// Both raw public symbols return bool (YA_N), like the record members (QAA_N).
 template <class T>
-unsigned char saveObjectVector(TAbstractFile* outfile, std::vector<T>& srcVector)
+bool saveObjectVector(TAbstractFile* outfile, std::vector<T>& srcVector)
 {
     short count = srcVector.size();
     if (outfile->write(&count, sizeof(count)) < sizeof(count))
@@ -2525,7 +2526,7 @@ unsigned char saveObjectVector(TAbstractFile* outfile, std::vector<T>& srcVector
 // reward count; DC2783 then delegates the short-count artifact tail to
 // load_vector. Keeping that nested boundary also bounds the ordinary member
 // before VC6 chooses its expansion into loadObjectVector.
-unsigned char type_creature_bank::load(void* input)
+bool type_creature_bank::load(void* input)
 {
     TAbstractFile* infile = static_cast<TAbstractFile*>(input);
 
@@ -2546,7 +2547,7 @@ unsigned char type_creature_bank::load(void* input)
 // DC2791..2794 write the four fixed bands without checking each result;
 // DC2795 returns save_vector for the artifact tail. Complete expands this
 // ordinary member in its retained saveObjectVector<type_creature_bank>.
-unsigned char type_creature_bank::save(void* output)
+bool type_creature_bank::save(void* output)
 {
     TAbstractFile* outfile = static_cast<TAbstractFile*>(output);
     outfile->write(&m_guards, sizeof(m_guards));
@@ -2576,24 +2577,13 @@ int game::GetSaveGameHeaders(void* infile)
 
 #endif  // @carcass
 
-// Original: game::Load; game.cpp:3026, dc 0xa83d0. Complete loads a
-// SavedGameHeader value and restores the acting-player and human-player state
-// before the map pools. DC's gzread interface became TAbstractFile::read.
-// Its scalar reads and final map-extra read stage their results through count.
-// Keep the pool loaders canonical and the packed-byte scratch buffer inside
-// its hero loop. Default bitset construction reproduces more of the retained
-// calls than the unsigned-long constructor; neither requires inline controls.
-// Residual: nested copy/cleanup and container expansion decisions still differ.
-// A shared packed-value reader restores the bitset proxy call but incorrectly
-// retains loadVector<long> and loadVector<type_university>; that combined model
-// remains unresolved. The root copy assignments also expand too early.
-VA(0x004bcda0, 0xEC2)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
-int game::load(TAbstractFile* infile)
+// Complete reading belongs to SavedGameHeader::load. The caller tests
+// its result before restoring any game state and retains the snapshot for
+// later version tests. This ordinary application phase owns the demonstrated
+// g_game/global field transfers. Its name and free-function binding are
+// inferred; no Dreamcast identity or retained address is asserted.
+void applySavedGameHeader(const SavedGameHeader& saved)
 {
-    SavedGameHeader saved;
-    if (saved.load(infile))
-        return -1;
-
     // Every store in this block goes through gpGame, RELOADED from the
     // global for each one, not through the implicit `this` retail
     // already has in a register: `mov ecx,[gpGame] / mov [ecx+0x1f698],
@@ -2612,6 +2602,40 @@ int game::load(TAbstractFile* infile)
            sizeof(g_game->m_playerDisabled));
     g_netLocalGamePos = saved.m_currentPlayer;
     memcpy(g_wasHuman, saved.m_humanPlayer, sizeof(saved.m_humanPlayer));
+}
+
+// Complete's hero-pool operation uses unsigned byte indexing. This inferred
+// decoder owns assignments into an existing destination; game::load owns its
+// default construction, stream read and member copy. Campaign's returned-value
+// reader and mapcell's signed division loops retain their distinct operations.
+template <size_t N>
+void decodePackedBits(const unsigned char* packed, std::bitset<N>& result)
+{
+    for (unsigned int index = 0; index < N; ++index) {
+        result[index] = (packed[index >> 3] & (1 << (index & 7))) != 0;
+    }
+}
+
+// Original: game::Load; game.cpp:3026, dc 0xa83d0. Complete loads a
+// SavedGameHeader value and restores the acting-player and human-player state
+// before the map pools. DC's gzread interface became TAbstractFile::read.
+// Its scalar reads and final map-extra read stage their results through count.
+// Keep the pool loaders canonical and the packed-byte scratch buffer inside
+// its hero loop. Default bitset construction reproduces more of the retained
+// calls than the unsigned-long constructor; neither requires inline controls.
+// At 98.1693%, the prefix, packed proxy, scalar slots and cleanup match.
+// The remaining difference is loadVector<type_university> staying out of line;
+// retail expands it. Broader scalar/range readers can expand that call but
+// then retain the final failure destructor or expand isLocalHuman incorrectly.
+// Named vector fill temporaries also change the otherwise matching lifetimes.
+// No inline-control pragma or release assertion is needed by this model.
+VA(0x004bcda0, 0xEC2)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
+int game::load(TAbstractFile* infile)
+{
+    SavedGameHeader saved;
+    if (saved.load(infile))
+        return -1;
+    applySavedGameHeader(saved);
 
     char byteValue;
     unsigned char extraByteValue;
@@ -2626,9 +2650,7 @@ int game::load(TAbstractFile* infile)
     setMapSize(m_mapHeader.m_size, m_mapHeader.m_size);
 
     if (saved.m_version >= 41) {
-        char charBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        g_unnamed69950c = charBuffer;
+        g_unnamed69950c = readValue<char>(infile);
     } else {
         g_unnamed69950c = -1;
     }
@@ -2643,8 +2665,10 @@ int game::load(TAbstractFile* infile)
 
     if (saved.m_version >= 29)
         infile->read(m_ssDisabled, sizeof(m_ssDisabled));
-    else
-        memset(m_ssDisabled, 0, sizeof(m_ssDisabled));
+    else {
+        char* disabledSkills = m_ssDisabled;
+        memset(disabledSkills, 0, sizeof(m_ssDisabled));
+    }
 
     if (loadRumours(infile) < 0)
         return -1;
@@ -2714,11 +2738,7 @@ int game::load(TAbstractFile* infile)
             std::bitset<8> poolMap;
             unsigned char poolBits[1];
             infile->read(poolBits, sizeof(poolBits));
-            unsigned int player;
-            for (player = 0; player < 8; ++player) {
-                poolMap[player] =
-                    (poolBits[player >> 3] & (1 << (player & 7))) != 0;
-            }
+            decodePackedBits(poolBits, poolMap);
             m_heroPoolMap[i] = poolMap;
         }
     }
@@ -2822,7 +2842,7 @@ int game::load(TAbstractFile* infile)
     if (count < mapExtraSize * sizeof(unsigned short))
         return -1;
 
-    int poolCount = (((saved.m_version < 32) - 1) & 5) + 3;
+    int poolCount = saved.m_version >= 32 ? 8 : 3;
     for (i = 0; i < poolCount; ++i)
         loadVector(infile, m_lithPools[i]);
     for (i = 0; i < poolCount; ++i)
@@ -10921,8 +10941,8 @@ VA_COMPGEN(0x004d5000, 0xCB, BITSET_XRAN, Bitset128)
 // Retained instantiation of the canonical template at game.cpp2733.
 #if 0  // @carcass -- claim-only template instance
 VA(0x004d2870, 0x24D)  // dc 0xc1b6c
-unsigned char loadObjectVector(TAbstractFile* infile,
-                              std::vector<type_creature_bank>& destVector)
+bool loadObjectVector(TAbstractFile* infile,
+                      std::vector<type_creature_bank>& destVector)
 {
     // @stub
 }
@@ -10946,8 +10966,8 @@ bool saveVector(TAbstractFile* outfile, std::vector<type_university>& srcVector)
 
 #if 0  // @carcass -- claim-only template instance
 VA(0x004d2b80, 0x102)  // dc 0xc1f64
-unsigned char saveObjectVector(TAbstractFile* outfile,
-                              std::vector<type_creature_bank>& srcVector)
+bool saveObjectVector(TAbstractFile* outfile,
+                      std::vector<type_creature_bank>& srcVector)
 {
     // @stub
 }
@@ -11076,7 +11096,7 @@ unsigned char load_vector(void* infile, std::vector<type_university,std::allocat
 
 // E:\gamedcs\game.cpp:2733
 DC_ONLY(0xc1b6c, 0x98)
-unsigned char loadObjectVector(void* infile, std::vector<type_creature_bank,std::allocator<type_creature_bank>* dest_vector)
+bool loadObjectVector(void* infile, std::vector<type_creature_bank,std::allocator<type_creature_bank>* dest_vector)
 {
     // @stub
 }
@@ -11109,7 +11129,7 @@ unsigned char saveVector(void* outfile, std::vector<type_university,std::allocat
 
 // E:\gamedcs\game.cpp:2754
 DC_ONLY(0xc1f64, 0x9C)
-unsigned char saveObjectVector(void* outfile, std::vector<type_creature_bank,std::allocator<type_creature_bank>* src_vector)
+bool saveObjectVector(void* outfile, std::vector<type_creature_bank,std::allocator<type_creature_bank>* src_vector)
 {
     // @stub
 }

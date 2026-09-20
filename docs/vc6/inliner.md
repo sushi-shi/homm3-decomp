@@ -2472,3 +2472,30 @@ values reproduce the exact result both with and without that named count.
 The historical exact implementation used four empty helper calls before the
 final return. Those calls diagnosed an inline-decision sensitivity but were
 not recovered operations; the real scalar-reader boundaries replace them.
+
+
+### Separate read, decode and application responsibilities (2026-09-20)
+
+`game::load` (`0x4bcda0`) reaches 98.1693% with ordinary snapshot
+application and packed-bit decoding helpers. The caller keeps the saved
+header alive, tests its read before applying state, and owns the bitset's
+construction, packed byte read and final member copy. The decoder owns only
+unsigned bit assignments. Its interface and the application helper's name
+and external binding are inferred, without standalone retail claims.
+The native output-reference scalar reader preserves the actual byte count;
+its returned-value overload keeps `SavedGameHeader::load` exact.
+
+The remaining retail expansion is `loadVector<type_university>`. The prefix,
+stack slots, packed proxy call and cleanup already match. Sharing a complete
+packed reader with campaign changes the call boundary; sharing unsigned
+indexing with mapcell contradicts its signed division instructions. Broader
+native range/scalar readers expand the university call but alter the final
+failure cleanup or `isLocalHuman` decision. Named fill objects likewise
+change the otherwise matching vector lifetimes. None of those diagnostic
+variants is adopted. No inline-control pragma or release assertion is added.
+
+The serializer result contracts also follow the raw Dreamcast public names:
+`generator::load/save`, `type_creature_bank::load/save` and both object-vector
+templates return `bool` (`_N`), despite the primitive display's byte alias.
+Their retained object bodies are byte-identical after this signature repair;
+score history follows the retail RVA across the regenerated labels.
