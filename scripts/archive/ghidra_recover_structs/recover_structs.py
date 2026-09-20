@@ -292,7 +292,7 @@ def build_attribution():
     # corpora carry NH3API-derived addresses from a different address space - 790 of
     # retail-function-names.csv's rows land INSIDE a function body (carve_state
     # "interior"), several mid-instruction. Those are not evidence for a boundary on
-    # this image (CLAUDE.md) and must never be probed.
+    # this image (AGENTS.md) and must never be probed.
     carved = set()
     for row in read_table(REPO / "config/retail-functions.tsv"):
         rva = hexint(row.get("rva"))
@@ -355,8 +355,8 @@ def build_vtable_entries(vtable_size_ents):
 
 
 def _find_dc_dump():
-    """The Dreamcast cvdump text. CLAUDE.md places it at ../homm3-symbols/ relative to
-    the MAIN checkout, so a worktree has to walk up past .claude/worktrees/<name>/ to
+    """The Dreamcast cvdump text. AGENTS.md places it at ../homm3-symbols/ relative to
+    the main checkout, so a linked worktree may need to walk through its parents to
     find it. Returns None if absent - the type resolution simply degrades."""
     rel = Path("homm3-symbols/HoMM3-Dreamcast-Dump/dump.txt")
     for base in [REPO] + list(REPO.parents):

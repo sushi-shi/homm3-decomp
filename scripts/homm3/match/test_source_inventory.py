@@ -156,19 +156,66 @@ class SourceInventoryTest(unittest.TestCase):
         _, errors = reconcile([], [], {}, {key: 'Stale'})
         self.assertTrue(any('stale win_only.tsv' in e for e in errors))
 
-    def test_reviewed_inlined_helper_is_visible_and_requires_exact_live_key(self):
-        d = definition('writeField')
+    def test_reviewed_dc_inline_body_stays_visible_without_a_procedure(self):
+        d = replace(definition('writeField'), member=False, va=None)
         key = d.file, d.name, d.signature
-        evidence = {key: 'Caller evidence accounts for the inlined helper.'}
-        rows, errors = reconcile([d], [], {}, {}, evidence)
+        reason = 'Reviewed caller-side inline residue; no standalone procedure.'
+        rows, errors = reconcile([d], [], {}, {}, {key: reason})
         self.assertEqual(errors, [])
+        self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]['status'], 'documented_dc_inlined')
-        self.assertEqual(rows[0]['reason'], evidence[key])
-        rows, errors = reconcile([replace(d, signature='void (int)')], [], {}, {}, evidence)
+        self.assertEqual(rows[0]['source_name'], 'writeField')
+        self.assertEqual(rows[0]['dc_offset'], '')
+        self.assertEqual(rows[0]['reason'], reason)
+        rows, errors = reconcile([d], [], {}, {}, {})
         self.assertEqual(rows[0]['status'], 'missing_dc')
+        self.assertTrue(errors)
+
+    def test_dc_inline_disposition_requires_the_exact_owner_and_signature(self):
+        d = replace(definition('writeField'), member=False, va=None)
+        for file, signature in [('src/other.cpp', d.signature),
+                                (d.file, 'void (char)')]:
+            with self.subTest(file=file, signature=signature):
+                rows, errors = reconcile([d], [], {}, {},
+                    {(file, d.name, signature): 'Reviewed other definition.'})
+                self.assertEqual(rows[0]['status'], 'missing_dc')
+                self.assertTrue(any('stale dc-inlined-helpers.tsv' in e for e in errors))
+
+    def test_dc_inline_disposition_cannot_hide_a_real_procedure_or_deleted_body(self):
+        d = definition()
+        disposition = {(d.file, d.name, d.signature): 'Former inline-only body.'}
+        rows, errors = reconcile([d], [origin()], {}, {}, disposition)
+        self.assertEqual([r['status'] for r in rows], ['matched'])
         self.assertTrue(any('stale dc-inlined-helpers.tsv' in e for e in errors))
-        _, errors = reconcile([], [], {}, {}, evidence)
+        rows, errors = reconcile([], [], {}, {}, disposition)
+        self.assertEqual(rows, [])
         self.assertTrue(any('stale dc-inlined-helpers.tsv' in e for e in errors))
+
+    def test_audit_loads_the_reviewed_dc_inline_table(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        from homm3.match import source_inventory as inventory
+        d = replace(definition('writeField'), member=False, va=None)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / 'config').mkdir()
+            (root / 'config/dc_only.tsv').write_text('file\tfunction\tline\treason\n')
+            (root / 'config/win_only.tsv').write_text('file\tfunction\tsignature\treason\n')
+            table = root / 'config/dc-inlined-helpers.tsv'
+            table.write_text('file\tfunction\tsignature\treason\n'
+                             f'{d.file}\t{d.name}\t{d.signature}\tReviewed inline residue.\n')
+            with patch.object(inventory, 'Project'), \
+                    patch.object(inventory.ownership, 'collect', return_value=([d], [], {})), \
+                    patch.object(inventory.ownership, 'active_stub_definitions', return_value=[]), \
+                    patch.object(inventory.inputs, 'dreamcast_symbols',
+                                 return_value=SimpleNamespace(procedures={})):
+                result = inventory.audit(root, origins=[])
+                self.assertTrue(result['complete'], result['violations'])
+                self.assertEqual(result['counts'], {'documented_dc_inlined': 1})
+                table.unlink()
+                result = inventory.audit(root, origins=[])
+                self.assertFalse(result['complete'])
+                self.assertIn('FILTER missing dc-inlined-helpers.tsv', result['violations'])
 
     def test_repeated_header_emissions_are_all_accounted_for(self):
         d = replace(definition(), file='include/widget.h', inline=True, dc_offset='0x1000')

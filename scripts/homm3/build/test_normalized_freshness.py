@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Negative controls for the normalized-freshness gate.
 
-CLAUDE.md contract: every fatal gate ships with a control proving it
+AGENTS.md contract: every fatal gate ships with a control proving it
 still detects its defect. The gate here is the stale-comparison-object
 refusal (`homm3 sema diff` dies rc=2 through
 homm3.build.normalized_freshness.freshness_problems); these controls

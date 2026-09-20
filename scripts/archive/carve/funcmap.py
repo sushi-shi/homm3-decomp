@@ -122,7 +122,7 @@ def main(argv=None) -> int:
     write(ZLIB_OUT, ["rva", "size", "name", "unit"], zlib,
           "# zlib 1.1.3, statically linked, never reconstructed from src/\n"
           "# (vendored sources stay pristine): the reviewed rva->symbol map\n"
-          "# promised by CLAUDE.md/P0.2. Raw symbol where the recompiled-\n"
+          "# promised by AGENTS.md/P0.2. Raw symbol where the recompiled-\n"
           "# object channel proved it; working label for zlib's static\n"
           "# internals until matching completes them. `unit` = owning TU\n"
           "# (archive member stem), the file location the delinker mirrors.\n")

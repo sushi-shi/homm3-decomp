@@ -7,7 +7,7 @@ rva -> name/signature/file/line, drawn from the two external symbol sources:
               (`THISCALL_2(void, 0x58FA40, this, other)`); the enclosing
               declarator gives name+args, the enclosing class the scope.
               EXTERNAL AND UNVERIFIED - may describe HD Mod; rows are
-              candidates, not the official map (CLAUDE.md evidence tiers).
+              candidates, not the official map (AGENTS.md evidence tiers).
   Dreamcast   the CodeView dump of the Dreamcast build: original qualified
               names, parameter names/types (S_REGREL32), return types
               (LF_MFUNCTION/LF_PROCEDURE), source FILE and LINE (SRCLINES),
