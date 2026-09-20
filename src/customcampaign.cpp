@@ -1045,11 +1045,10 @@ int TCampaignStartHeroOption::getPlayer(int which) const
 // test X,X / je` tests the PRE-decrement value, and the index is never used
 // in the body, which is the source-side tell for the whole family. That took
 // the two sibling readers below to EXACT and this one 92.6089 -> 93.9951.
-// Residual (93.9951%): retail loads `file` into EBX in the prologue
-// (`mov ebx,[ebp+8]` at fn+0x7) where we keep the receiver elsewhere; 16/16
-// branches and the call multiset agree, and the 20 flow-kind blocks are that
-// one binding. This body differs from its two siblings only by the
-// `m_choices.erase(begin, end)` ahead of the loop.
+// Spelling the reset as the canonical vector::clear operation then restores
+// retail's EBX file and ESI receiver bindings and matches all 26 blocks
+// exactly. The erase(begin, end) spelling had the same behavior, branches and
+// call multiset but assigned the callee-saved roles differently (93.9951%).
 VA(0x00485b60, 0x1FB)  // anchor-vtable (0x63db0c+0x24), retail-only
 void TCampaignStartHeroOption::read(TAbstractFile* file)
 {
@@ -1059,7 +1058,7 @@ void TCampaignStartHeroOption::read(TAbstractFile* file)
         file->read(&value, sizeof(signed char));
         count = value;
     }
-    m_choices.erase(m_choices.begin(), m_choices.end());
+    m_choices.clear();
     while (count--) {
         TCampaignHeroChoice choice;
         {
