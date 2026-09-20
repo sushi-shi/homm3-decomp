@@ -899,7 +899,7 @@ campaignbrief	?getRegionDescription@ScenarioStruct@TCampaignBrief@@QBE?AV?$basic
 campaignbrief	?insert@?$vector@UCampaignScenarioPreview@@V?$allocator@UCampaignScenarioPreview@@@std@@@std@@QAEXPAUCampaignScenarioPreview@@IABU3@@Z	100.0000	100.0000	100.0000	0x5c960	-
 campaignbrief	?select@TCampaignBrief@@QAEXH@Z	92.1064	92.1064	92.1064	0x57990	tokens1:f394d41fb118
 campaignbrief	?updateAllyEnemyFlags@TCampaignBrief@@QAEXXZ	99.8958	99.8958	99.8958	0x58010	tokens1:0113105301b1
-campaignbrief	?updateBonusIcons@TCampaignBrief@@QAEXXZ	95.4405	95.4405	95.4405	0x58d40	tokens1:7b7e83a100db
+campaignbrief	?updateBonusIcons@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x58d40	tokens1:da2ab07c0d4c
 campaignbrief	?updateDifficultyButtons@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x59010	tokens1:615764a931c5
 campaignmap	?initializeCampaignMapTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x5dee0	tokens1:e4d592011cf8
 campaignmap	__h3cg$campaignmap$static_dtor$campaignNames	100.0000	100.0000	100.0000	0x5e1f0	-
@@ -1307,7 +1307,7 @@ customcampaign	?getText@TCampaignStartCrossoverOption@@UBE?AV?$basic_string@DU?$
 customcampaign	?getText@TCampaignStartHeroOption@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAXH@Z	100.0000	100.0000	100.0000	0x85a90	tokens1:f6a997fa1af6
 customcampaign	?getTotalTime@SCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x8b280	tokens1:8630de09c95d
 customcampaign	?getloc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAE?AVlocale@2@XZ	100.0000	100.0000	100.0000	0x8d820	-
-customcampaign	?giveCrossoverArtifacts@ScenarioStruct@TCampaignBrief@@QAEXXZ	99.4060	99.4060	99.4060	0x87900	tokens1:ab95c4067146
+customcampaign	?giveCrossoverArtifacts@ScenarioStruct@TCampaignBrief@@QAEXXZ	99.9872	99.9872	99.9872	0x87900	tokens1:a36466e831bc
 customcampaign	?heroPower@@YIHPAVhero@@@Z	100.0000	100.0000	100.0000	0x83f50	tokens1:58bb2e6f262b
 customcampaign	?initializeCrossoverHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlaceholderData@@PAVhero@@@Z	90.9201	90.9201	90.9201	0x86590	tokens1:2f22efdf46d7
 customcampaign	?insert@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QAEXPAUCampaignScenarioInfo@@IABU3@@Z	100.0000	100.0000	100.0000	0x8cae0	-
