@@ -4903,7 +4903,7 @@ void advManager::drawBoatPart(int part, TDrawParts& boatParts, int baseX,
             tilex + (2 - boatCellY) * 32,
             tiley - boatCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
-            currBoat->getHflip());
+            currBoat->m_facing > hero::kFacingS);
     }
 
     m_boatIcons[currBoat->m_type]->drawHero(
@@ -4912,7 +4912,7 @@ void advManager::drawBoatPart(int part, TDrawParts& boatParts, int baseX,
         tilex + (2 - boatCellY) * 32,
         tiley - boatCellX * 32 + 32, tilew, tileh,
         g_windowManager->m_screenBitmap, baseX, baseY + 8,
-        currBoat->getHflip());
+        currBoat->m_facing > hero::kFacingS);
 }
 
 VA(0x004109b0, 0x24F)  // dc 0x120ec
@@ -4934,7 +4934,7 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
             tilex + (2 - boatCellY) * 32,
             tiley - boatCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
-            currBoat->getHflip());
+            currBoat->m_facing > hero::kFacingS);
     }
 
     m_boatIcons[currBoat->m_type]->drawHeroShadow(
@@ -4943,7 +4943,7 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
         tilex + (2 - boatCellY) * 32,
         tiley - boatCellX * 32 + 32, tilew, tileh,
         g_windowManager->m_screenBitmap, baseX, baseY + 8,
-        currBoat->getHflip());
+        currBoat->m_facing > hero::kFacingS);
 }
 
 // E:\gamedcs\advmgr.cpp:5941

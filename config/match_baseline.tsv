@@ -97,8 +97,8 @@ advmgr	?drawAdvObjShadow@advManager@@QAEXHHHHH@Z	82.3048	82.3048	85.2335	0x11590
 advmgr	?drawAdventureMapGems@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0xf2f0	tokens1:35617ae5edc3
 advmgr	?drawArrow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x120b0	tokens1:ef6dac784460
 advmgr	?drawArrowShadow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11f50	tokens1:c4a9733725d9
-advmgr	?drawBoatPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	92.1619	92.1619	100.0000	0x10760	tokens1:9f3010db46dc
-advmgr	?drawBoatPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	92.1619	92.1619	100.0000	0x109b0	tokens1:fd914e074fdb
+advmgr	?drawBoatPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x10760	tokens1:f31a25dc6c7a
+advmgr	?drawBoatPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x109b0	tokens1:2ed5b81d350a
 advmgr	?drawGround@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x12900	tokens1:9cd3dfbb2388
 advmgr	?drawHeroPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	92.7452	96.6095	100.0000	0xfe30	tokens1:31399ec6912c
 advmgr	?drawHeroPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	96.6415	96.6415	100.0000	0x102c0	tokens1:dc4d95a0d5f5
