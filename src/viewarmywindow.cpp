@@ -108,9 +108,18 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
     // The stack's OWN traits row is the copy embedded in army at +0x74
     // (army.h's sMonInfo slice); the table row is the unmodified one.
     const TCreatureTypeTraits* stackTraits = &thisArmy->m_monInfo;
-    const TCreatureTypeTraits* typeTraits =
-        &g_creatureTypeTraits[thisArmy->m_creatureType];
+    const TCreatureTypeTraits& typeTraits =
+        g_creatureTypeTraits[thisArmy->m_creatureType];
 
+    // 97.20%: 67/67 blocks exact, every reloc and call agrees, and the
+    // sole residual is one stack slot - retail spills the shooting-attack
+    // max to [ebp-0x1c] where we use [ebp-0x18]. Everything stored before
+    // it matches, so retail owns one extra 4-byte slot whose lifetime
+    // starts here. Falsified: hoisting `side`'s declaration (no change -
+    // VC6 slots by first use, not declaration), `int shooting` (96.73,
+    // and the divergence moves earlier), and an added early int (folded
+    // away). DC types the traits local as a reference, which is adopted
+    // above and is byte-neutral.
     unsigned char shooting = thisArmy->canShoot(0);
     int attack = thisArmy->getAdjustedAttack(0, shooting);
     int defense = thisArmy->getAdjustedDefense(0, 1);
@@ -128,15 +137,15 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
 
     createPortraitWidget(stackTraits->m_spriteName,
                            stackTraits->m_townType, thisArmy->m_numTroops);
-    createAttackWidget(typeTraits->m_attackSkill, attack);
-    createDefenseWidget(typeTraits->m_defenseSkill, defense);
-    createShotsWidget(*stackTraits, typeTraits->m_numShots,
+    createAttackWidget(typeTraits.m_attackSkill, attack);
+    createDefenseWidget(typeTraits.m_defenseSkill, defense);
+    createShotsWidget(*stackTraits, typeTraits.m_numShots,
                         stackTraits->m_numShots);
     createDamageWidget(*stackTraits, thisArmy->getController());
-    createHitpointsWidget(typeTraits->m_hitPoints, stackTraits->m_hitPoints);
+    createHitpointsWidget(typeTraits.m_hitPoints, stackTraits->m_hitPoints);
     createHitpointsLeftWidget(stackTraits->m_hitPoints
                                  - thisArmy->m_topCreatureDamage);
-    createSpeedWidget(typeTraits->m_speed, thisArmy->getSpeed());
+    createSpeedWidget(typeTraits.m_speed, thisArmy->getSpeed());
 
     createMoraleWidget(thisArmy->getMorale(0));
 
