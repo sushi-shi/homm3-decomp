@@ -285,9 +285,9 @@ static void __fastcall assignRmgTeams(
     const unsigned char* players,
     char* teams);
 
-// Invert the disabled-byte range through the shared bitset iterator. Retail
-// retains both bitset::set calls through this ordinary transform expansion;
-// no inline-depth pin is needed. The Complete-only wrapper name is inferred.
+// Invert the disabled-byte range through the shared bitset iterator without
+// an inline-depth pin. The Complete-only wrapper name is inferred; the proxy
+// expansion still differs from retail's retained bitset::set call boundary.
 template <unsigned int N>
 static void setAvailableRmgHeroes(
     std::bitset<N>* availableHeroes,
@@ -9448,9 +9448,12 @@ int writeString(TAbstractFile* outfile, const char* text)
 // has no RMG compiland, so the method spelling remains provisional while its
 // class offsets and serialization order are retail-byte facts.
 // Typed scalar/string writes, shared bit encoding and hero-flag transform
-// recover 94.5767% without the old hero-set inline-depth pin. All 164 branch
-// destinations align; 153 blocks also have matching instruction counts.
-// Stack homes, independent dimension loads and exception expansions remain.
+// plus dimension queries and natural player/byte lifetimes recover 95.6721%
+// without the old hero-set inline-depth pin. All 164 branch destinations
+// align; 157 blocks also have matching instruction counts. Dimension queries
+// restore the pre-c_str width/level loads, and the final hero loop owns a
+// fresh zero byte for each write. Stack homes, bit-proxy call boundaries and
+// exception expansions remain.
 
 VA(0x00549CB0, 0xE90)  // GenerateRandomMap caller chain; retail-only RMG
 void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
@@ -9459,7 +9462,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
     writeValue<char>(outfile, 1);
 
-    writeValue<int>(outfile, m_map.m_mapWidth);
+    writeValue<int>(outfile, m_map.getWidth());
 
     writeValue<char>(outfile, m_map.m_numberLevels > 1);
 
@@ -9480,8 +9483,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
             "computers %i, water %s, monsters %i"),
         m_templateName.c_str(),
         m_randomSeed,
-        m_map.m_mapWidth,
-        m_map.m_numberLevels,
+        m_map.getWidth(),
+        m_map.getNumberLevels(),
         m_humanPlayerCount,
         m_computerPlayerCount,
         g_rmgWaterNames[m_waterContent],
@@ -9546,162 +9549,157 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         writeValue<char>(outfile, 0);
     }
 
-    {
-        unsigned char canBeHuman[8];
-        int legalAlignments[8];
-        TRmgMapPosition mainTowns[8];
-        unsigned char canBeComputer[8];
-        memset(canBeHuman, 0, sizeof(canBeHuman));
-        memset(legalAlignments, 0, sizeof(legalAlignments));
-        memset(mainTowns, 0, sizeof(mainTowns));
-        memset(canBeComputer, 0, sizeof(canBeComputer));
-        int generatedHumanTowns = 0;
-        {
-            unsigned int townIndex = 0;
-            for (; townIndex < m_zones.size(); ++townIndex) {
-                TRmgZone* town = m_zones[townIndex];
-                TRmgTownSlot* slot = town->m_slot;
-                int player = slot->m_playerIndex;
-                if (player < 0)
-                    continue;
+    unsigned char canBeHuman[8];
+    int legalAlignments[8];
+    TRmgMapPosition mainTowns[8];
+    unsigned char canBeComputer[8];
+    memset(canBeHuman, 0, sizeof(canBeHuman));
+    memset(legalAlignments, 0, sizeof(legalAlignments));
+    memset(mainTowns, 0, sizeof(mainTowns));
+    memset(canBeComputer, 0, sizeof(canBeComputer));
+    int generatedHumanTowns = 0;
+    for (unsigned int townIndex = 0; townIndex < m_zones.size(); ++townIndex) {
+        TRmgZone* town = m_zones[townIndex];
+        TRmgTownSlot* slot = town->m_slot;
+        int player = slot->m_playerIndex;
+        if (player < 0)
+            continue;
 
-                player = m_playerIndexMap[player + 1];
-                if (player < 0 || !town->m_active)
-                    continue;
+        player = m_playerIndexMap[player + 1];
+        if (player < 0 || !town->m_active)
+            continue;
 
-                if (slot->m_kind == 0 && !canBeHuman[player]) {
-                    ++generatedHumanTowns;
-                    canBeHuman[player] = 1;
-                    mainTowns[player] = town->m_position;
-                }
-
-                if (slot->m_kind == 1 && !canBeComputer[player]) {
-                    canBeComputer[player] = 1;
-                    mainTowns[player] = town->m_position;
-                }
-
-                legalAlignments[player] |= 1 << town->m_alignment;
-            }
+        if (slot->m_kind == 0 && !canBeHuman[player]) {
+            ++generatedHumanTowns;
+            canBeHuman[player] = 1;
+            mainTowns[player] = town->m_position;
         }
 
-        generatedHumanTowns -= m_humanPlayerCount;
-        int reversePlayer = 7;
-        do {
-            if (canBeHuman[reversePlayer]
-                && !m_fixedHumanPlayers[reversePlayer]
-                && generatedHumanTowns > 0) {
-                canBeComputer[reversePlayer] = 1;
-                canBeHuman[reversePlayer] = 0;
-                --generatedHumanTowns;
-            }
-        } while (reversePlayer-- != 0);
-
-        m_computerPlayerCount = m_humanPlayerCount = 0;
-
-        for (int serializedPlayer = 0; serializedPlayer < 8;
-             ++serializedPlayer) {
-            writeValue<char>(outfile, canBeHuman[serializedPlayer]);
-
-            writeValue<char>(outfile, canBeHuman[serializedPlayer] || canBeComputer[serializedPlayer]);
-
-            writeValue<char>(outfile, 0);
-
-            if (m_mapVersion >= 2) {
-                writeValue<char>(outfile, 0);
-            }
-
-            if (m_mapVersion >= 1) {
-                writeValue<unsigned short>(outfile, legalAlignments[serializedPlayer]);
-            } else {
-                writeValue<char>(outfile, legalAlignments[serializedPlayer]);
-            }
-
-            writeValue<char>(outfile, 0);
-
-            if (!canBeHuman[serializedPlayer]
-                && !canBeComputer[serializedPlayer]) {
-                writeValue<char>(outfile, 0);
-            } else {
-                if (canBeHuman[serializedPlayer])
-                    ++m_humanPlayerCount;
-                else
-                    ++m_computerPlayerCount;
-
-                writeValue<char>(outfile, 1);
-
-                if (m_mapVersion >= 1) {
-                    writeValue<char>(outfile, 1);
-                    writeValue<char>(outfile, -1);
-                }
-
-                writeValue<char>(outfile, mainTowns[serializedPlayer].m_x);
-                writeValue<char>(outfile, mainTowns[serializedPlayer].m_y);
-                writeValue<char>(outfile, mainTowns[serializedPlayer].m_z);
-            }
-
-            writeValue<char>(outfile, 0);
-            writeValue<char>(outfile, -1);
-
-            if (m_mapVersion >= 1) {
-                writeValue<char>(outfile, 0);
-                writeValue<int>(outfile, 0);
-            }
+        if (slot->m_kind == 1 && !canBeComputer[player]) {
+            canBeComputer[player] = 1;
+            mainTowns[player] = town->m_position;
         }
 
-        writeValue<char>(outfile, -1);
-        writeValue<char>(outfile, -1);
+        legalAlignments[player] |= 1 << town->m_alignment;
+    }
 
-        if (!m_computerTeamCount)
-            m_computerTeamCount = m_computerPlayerCount;
-        if (!m_humanTeamCount)
-            m_humanTeamCount = m_humanPlayerCount;
-        if (!m_computerPlayerCount) {
-            int teamCount = m_humanTeamCount;
-            m_humanTeamCount = std::_cpp_max(teamCount, 2);
+    generatedHumanTowns -= m_humanPlayerCount;
+    int reversePlayer = 7;
+    do {
+        if (canBeHuman[reversePlayer]
+            && !m_fixedHumanPlayers[reversePlayer]
+            && generatedHumanTowns > 0) {
+            canBeComputer[reversePlayer] = 1;
+            canBeHuman[reversePlayer] = 0;
+            --generatedHumanTowns;
+        }
+    } while (reversePlayer-- != 0);
+
+    m_computerPlayerCount = m_humanPlayerCount = 0;
+
+    for (int serializedPlayer = 0; serializedPlayer < 8;
+         ++serializedPlayer) {
+        writeValue<char>(outfile, canBeHuman[serializedPlayer]);
+
+        writeValue<char>(outfile, canBeHuman[serializedPlayer] || canBeComputer[serializedPlayer]);
+
+        writeValue<char>(outfile, 0);
+
+        if (m_mapVersion >= 2) {
+            writeValue<char>(outfile, 0);
         }
 
-        if (m_humanTeamCount >= m_humanPlayerCount
-            && m_computerTeamCount >= m_computerPlayerCount) {
+        if (m_mapVersion >= 1) {
+            writeValue<unsigned short>(outfile, legalAlignments[serializedPlayer]);
+        } else {
+            writeValue<char>(outfile, legalAlignments[serializedPlayer]);
+        }
+
+        writeValue<char>(outfile, 0);
+
+        if (!canBeHuman[serializedPlayer]
+            && !canBeComputer[serializedPlayer]) {
             writeValue<char>(outfile, 0);
         } else {
-            char teams[8];
-            memset(teams, 0, sizeof(teams));
+            if (canBeHuman[serializedPlayer])
+                ++m_humanPlayerCount;
+            else
+                ++m_computerPlayerCount;
 
-            {
-                int teamCount = m_humanTeamCount;
-                m_humanTeamCount = std::_cpp_max(teamCount, 1);
-            }
-            {
-                int teamCount = m_computerTeamCount;
-                m_computerTeamCount = std::_cpp_max(teamCount, 1);
-            }
-            {
-                int playerCount = m_humanPlayerCount;
-                int teamCount = m_humanTeamCount;
-                m_humanTeamCount = std::_cpp_min(playerCount, teamCount);
-            }
-            {
-                int playerCount = m_computerPlayerCount;
-                int teamCount = m_computerTeamCount;
-                m_computerTeamCount = std::_cpp_min(playerCount, teamCount);
+            writeValue<char>(outfile, 1);
+
+            if (m_mapVersion >= 1) {
+                writeValue<char>(outfile, 1);
+                writeValue<char>(outfile, -1);
             }
 
-            assignRmgTeams(
-                m_humanTeamCount,
-                m_humanPlayerCount,
-                0,
-                canBeHuman,
-                teams);
-            assignRmgTeams(
-                m_computerTeamCount,
-                m_computerPlayerCount,
-                m_humanTeamCount,
-                canBeComputer,
-                teams);
-
-            writeValue<char>(outfile, m_humanTeamCount + m_computerTeamCount);
-            outfile->write(teams, sizeof(teams));
+            writeValue<char>(outfile, mainTowns[serializedPlayer].m_x);
+            writeValue<char>(outfile, mainTowns[serializedPlayer].m_y);
+            writeValue<char>(outfile, mainTowns[serializedPlayer].m_z);
         }
+
+        writeValue<char>(outfile, 0);
+        writeValue<char>(outfile, -1);
+
+        if (m_mapVersion >= 1) {
+            writeValue<char>(outfile, 0);
+            writeValue<int>(outfile, 0);
+        }
+    }
+
+    writeValue<char>(outfile, -1);
+    writeValue<char>(outfile, -1);
+
+    if (!m_computerTeamCount)
+        m_computerTeamCount = m_computerPlayerCount;
+    if (!m_humanTeamCount)
+        m_humanTeamCount = m_humanPlayerCount;
+    if (!m_computerPlayerCount) {
+        int teamCount = m_humanTeamCount;
+        m_humanTeamCount = std::_cpp_max(teamCount, 2);
+    }
+
+    if (m_humanTeamCount >= m_humanPlayerCount
+        && m_computerTeamCount >= m_computerPlayerCount) {
+        writeValue<char>(outfile, 0);
+    } else {
+        char teams[8];
+        memset(teams, 0, sizeof(teams));
+
+        {
+            int teamCount = m_humanTeamCount;
+            m_humanTeamCount = std::_cpp_max(teamCount, 1);
+        }
+        {
+            int teamCount = m_computerTeamCount;
+            m_computerTeamCount = std::_cpp_max(teamCount, 1);
+        }
+        {
+            int playerCount = m_humanPlayerCount;
+            int teamCount = m_humanTeamCount;
+            m_humanTeamCount = std::_cpp_min(playerCount, teamCount);
+        }
+        {
+            int playerCount = m_computerPlayerCount;
+            int teamCount = m_computerTeamCount;
+            m_computerTeamCount = std::_cpp_min(playerCount, teamCount);
+        }
+
+        assignRmgTeams(
+            m_humanTeamCount,
+            m_humanPlayerCount,
+            0,
+            canBeHuman,
+            teams);
+        assignRmgTeams(
+            m_computerTeamCount,
+            m_computerPlayerCount,
+            m_humanTeamCount,
+            canBeComputer,
+            teams);
+
+        writeValue<char>(outfile, m_humanTeamCount + m_computerTeamCount);
+        outfile->write(teams, sizeof(teams));
     }
 
     if (m_mapVersion >= 1) {
@@ -9758,9 +9756,10 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         std::bitset<28> disabledSkills;
         writePackedBits(outfile, disabledSkills);
 
-        char byteBuffer = 0;
-        for (int hero = 0; hero < 156; ++hero)
+        for (int hero = 0; hero < 156; ++hero) {
+            char byteBuffer = 0;
             outfile->write(&byteBuffer, sizeof(byteBuffer));
+        }
     }
 }
 
