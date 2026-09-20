@@ -261,7 +261,7 @@ external-candidate rather than claimed as a LIBCPMT contribution.
 ## Which executable NH3API describes (and how we used it anyway)
 
 NH3API's embedded addresses **do not fit our pinned image**, and the record in
-`CLAUDE.md` ("873 of 874 land on x86 entry patterns") overstates it. Measured
+`AGENTS.md` ("873 of 874 land on x86 entry patterns") overstates it. Measured
 here against the carve:
 
 | test | our exe | HD Mod's `Heroes3.exe` |

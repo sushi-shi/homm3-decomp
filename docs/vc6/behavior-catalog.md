@@ -20,7 +20,7 @@ Profile under test: **VC6 SP3 `CL.EXE`, `/O2 /Ob2 /Oy- /Op /ML /Gr /GX /GR-
 STL. Sibling corpus: **MSVC 4.2 `/Od /MT /Gr /G5 /Ob1 /QIfdiv`** with 39 `/O2`
 TUs. Compiled sources: the `Residual (`/`EXACT` blocks across `src/*.cpp`,
 `config/units.toml`, the dated block in `config/match_baseline.tsv`,
-`.claude/skills/match/SKILL.md`, homm2's `docs/patterns/*` + `docs/msvc42-*`,
+`.agents/skills/match/SKILL.md`, homm2's `docs/patterns/*` + `docs/msvc42-*`,
 and attempt-1's `docs/compiler-toolchain.md`.
 
 ## Running the oracle

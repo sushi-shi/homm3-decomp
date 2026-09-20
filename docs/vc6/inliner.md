@@ -861,7 +861,7 @@ before and after -- and `sema diff --calls` still shows the two
 VC6 reached down the file, took the body, and emitted retail's expansion.
 The only prerequisite was the declaration already in `binkmanager.h:124`.
 
-So the helper-boundary rule in CLAUDE.md is enforceable everywhere, and
+So the helper-boundary rule in AGENTS.md is enforceable everywhere, and
 "the definition comes later" is not a reason to keep a longhand copy.
 
 ### The census, and where the caller_cb lever actually bites

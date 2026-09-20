@@ -252,8 +252,7 @@ the shared vocabulary) · `eh-cleanup.md` (the cleanup-count rule + the
 tree-wide transcript table) · `inliner.md` (the `/Ob2` rule + address ledger) ·
 `regalloc.md` (the preference table + first-fit order) · `il-format.md` (IL
 capture + the include-set verdict) · `driver-passes.md` (the CL spec table) ·
-`c2-atlas.md` (C2 module RVAs) · `rtm-generation.md` (Track R). The full picture:
-`~/.claude/plans/good-now-onto-the-lexical-allen.md`.
+`c2-atlas.md` (C2 module RVAs) · `rtm-generation.md` (Track R).
 
 ## CLAIMING BEATS MATCHING BY AN ORDER OF MAGNITUDE — AND FUZZY % WILL FALL WHILE YOU DO IT
 
@@ -286,4 +285,3 @@ outranks `ordermap`**: on seerhut the order-map scored 28% arity agreement over
 **A UNIT WHOSE GAP ROWS CARRY ONLY FLAT CARVE NAMES NEEDS A LOCATE PASS, NOT A
 MATCHER.** sacrifice_window's 37 rows (25.4 KB) have no vtable slot and no DC
 pairing — a different job, and briefing it as claiming work wasted the slot.
-
