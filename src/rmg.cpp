@@ -3164,19 +3164,15 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
     }
 }
 
-// Flatten the level into a row, then the row into a cell index. The scalar
-// overload delegates here; each intermediate denotes a real coordinate step.
-// All 39 retained bytes still match. This staged body also restores mine
-// placement's retained aggregate lookup and expanded occupancy-size query.
-// Collapsing the stages or delegating to the planar accessor reproduces the
-// standalone body but changes those caller expansions; no inline pin is used.
+// Flatten the level, row and column into one cell index. The scalar overload
+// delegates here. All 39 retained bytes still match. One index local lets the
+// shared shipyard-water probe expand this lookup while retaining its coordinate
+// constructor; four staged locals keep an extra lookup call in connectZones.
+// Existing caller MAX peaks remain banked; no inline pin is used.
 VA(0x005378E0, 0x27)
 TRmgMapItem* type_random_map::getMapItem(TRmgMapPosition point)
 {
-    int planeOffset = point.m_z * m_mapHeight;
-    int row = planeOffset + point.m_y;
-    int rowOffset = row * m_mapWidth;
-    int index = rowOffset + point.m_x;
+    int index = (point.m_z * m_mapHeight + point.m_y) * m_mapWidth + point.m_x;
     return m_mapItems + index;
 }
 
@@ -6161,6 +6157,25 @@ unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition positi
     return terrain != eTerrainWater;
 }
 
+// Both shipyard paths probe the same four water offsets. Owning the
+// coordinate snapshot and output in this ordinary helper restores the
+// retained translation constructor and connectZones' 0x98-byte frame.
+// Complete-only source boundary/name inferred from the repeated retail
+// operation; no independent retained address or Dreamcast name is claimed.
+static bool findRmgShipyardWater(type_random_map* map,
+    TRmgMapPosition shipyardPosition, TRmgMapPosition& waterPosition)
+{
+    int waterOffset = 0;
+    for (; waterOffset < RMG_SHIPYARD_WATER_OFFSET_COUNT; ++waterOffset) {
+        waterPosition = shipyardPosition + g_rmgShipyardWaterOffsets[waterOffset];
+        if (waterPosition.m_x >= 0 && waterPosition.m_x < map->getWidth()
+            && map->getMapItem(waterPosition)->getLandType() == eTerrainWater)
+            break;
+    }
+    return waterOffset != RMG_SHIPYARD_WATER_OFFSET_COUNT;
+}
+
+
 // Complete-only shipyard connection pass. connectZones calls this at
 // 0x54356a and 0x5437f8 after a failed ground connection. Retail selects
 // prototype 87 (SHIPYARD), scans the source zone's eligible coastal cells,
@@ -6292,20 +6307,8 @@ unsigned char type_random_map_generator::createShipyardConnection(
         source->m_entrances.push_back(TPoint(nearby.m_x, nearby.m_y));
     }
 
-    TRmgMapPosition shipyardPosition = shipyard->getPosition();
     TRmgMapPosition waterPosition;
-    int waterOffset = 0;
-    for (; waterOffset < RMG_SHIPYARD_WATER_OFFSET_COUNT; ++waterOffset) {
-        TPoint offset = g_rmgShipyardWaterOffsets[waterOffset];
-        waterPosition = TRmgMapPosition(
-            offset.m_x + shipyardPosition.m_x,
-            offset.m_y + shipyardPosition.m_y,
-            shipyardPosition.m_z);
-        if (waterPosition.m_x >= 0 && waterPosition.m_x < m_map.m_mapWidth
-            && m_map.getMapItem(waterPosition)->m_tile.m_landType == eTerrainWater)
-            break;
-    }
-    if (waterOffset != RMG_SHIPYARD_WATER_OFFSET_COUNT)
+    if (findRmgShipyardWater(&m_map, shipyard->getPosition(), waterPosition))
         floodConnectionRegion(waterPosition);
 
     int guardValue;
@@ -6722,10 +6725,11 @@ void type_random_map_generator::createMonolithConnection(
 // helpers, then repair every remaining non-water connection with shipyard
 // reachability and monolith placement.  Helper spellings are role-based until
 // their own bodies are admitted, but the calls and signatures are fixed by
-// this function's ABI and retail CFG.  The current candidate has retail's
-// 96-block / 57-branch shape and 14-call order.  Its remaining source-level
-// residuals are VC6's excess expansion of the two initial vector inserts and
-// register/layout choices around the paired-connection searches.
+// this function's ABI and retail CFG. The shared water probe and canonical
+// map index raise MAX to 91.5536% while preserving the water-position fix.
+// Remaining differences include the first coordinate constructor and two
+// single-element inserts expanding away, plus register and stack homes.
+// Existing findConnection calls own both reverse-connection searches.
 VA(0x00543240, 0x797)
 void type_random_map_generator::connectZones()
 {
@@ -6741,18 +6745,14 @@ void type_random_map_generator::connectZones()
                 if (mapItem->m_zoneState.m_connectionEligibility < 0)
                     continue;
 
-                if (mapItem->m_tile.m_landType == eTerrainWater
-                    || !mapItem->m_tileData.m_roadPassable
-                    || mapItem->m_tile.m_landType == eTerrainRock)
+                if (mapItem->getLandType() == eTerrainWater
+                    || !mapItem->isPassableLand())
                     continue;
 
                 int direction = mapItem->m_tileData.m_connectionDirection;
                 TRmgMapItem* otherMapItem = m_map.getMapItem(
-                    TRmgMapPosition(
-                        position.m_x + g_rmgDirections[direction].m_x,
-                        position.m_y + g_rmgDirections[direction].m_y,
-                        position.m_z));
-                if (otherMapItem->m_tile.m_landType != eTerrainWater
+                    position + g_rmgDirections[direction]);
+                if (otherMapItem->getLandType() != eTerrainWater
                     && otherMapItem->m_zoneState.m_zone
                            != mapItem->m_zoneState.m_zone) {
                     borderItems.insert(borderItems.end(), mapItem);
@@ -6772,11 +6772,11 @@ void type_random_map_generator::connectZones()
     for (zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         TRmgZone* zone = m_zones[zoneIndex];
         TRmgTownSlot* zoneTemplate = zone->m_slot;
-        if (zone->m_terrain == eTerrainWater)
+        if (zone->getTerrain() == eTerrainWater)
             continue;
 
         TRmgMapPosition levelPosition = zone->m_levelPosition;
-        mapItem = m_map.getMapItem(0, 0, levelPosition.m_z);
+        mapItem = m_map.getMapItem(TRmgMapPosition(0, 0, levelPosition.m_z));
         for (int remaining = m_map.m_mapWidth * m_map.m_mapHeight;
              remaining--; ++mapItem)
             mapItem->m_tileData.m_connectionVisited = 0;
@@ -6791,22 +6791,8 @@ void type_random_map_generator::connectZones()
 
             TRmgZone* destination =
                 m_zones[connection->m_destination->m_zoneIndex];
-            TRmgTownSlot* destinationTemplate = destination->m_slot;
-            TRmgZoneConnection* oppositeConnection;
-            int oppositeIndex = 0;
-            for (;; ++oppositeIndex) {
-                if (oppositeIndex
-                    >= destinationTemplate->m_connections.size()) {
-                    oppositeConnection = 0;
-                    break;
-                }
-                if (destinationTemplate->m_connections[oppositeIndex]
-                        .m_destination->m_zoneIndex == zoneIndex) {
-                    oppositeConnection =
-                        &destinationTemplate->m_connections[oppositeIndex];
-                    break;
-                }
-            }
+            TRmgZoneConnection* oppositeConnection =
+                destination->m_slot->findConnection(zoneIndex);
 
             if (createGroundConnection(
                     zone,
@@ -6823,7 +6809,7 @@ void type_random_map_generator::connectZones()
                 continue;
             }
 
-            if (destination->m_terrain == eTerrainWater)
+            if (destination->getTerrain() == eTerrainWater)
                 continue;
 
             if (createSubterraneanGate(zone, connection)) {
@@ -6836,7 +6822,7 @@ void type_random_map_generator::connectZones()
     for (zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         TRmgZone* zone = m_zones[zoneIndex];
         TRmgTownSlot* zoneTemplate = zone->m_slot;
-        if (zone->m_terrain == eTerrainWater)
+        if (zone->getTerrain() == eTerrainWater)
             continue;
 
         int firstConnection = 0;
@@ -6847,7 +6833,7 @@ void type_random_map_generator::connectZones()
             continue;
 
         TRmgMapPosition levelPosition = zone->m_levelPosition;
-        mapItem = m_map.getMapItem(0, 0, levelPosition.m_z);
+        mapItem = m_map.getMapItem(TRmgMapPosition(0, 0, levelPosition.m_z));
         for (int remaining = m_map.m_mapWidth * m_map.m_mapHeight;
              remaining--; ++mapItem)
             mapItem->m_tileData.m_connectionVisited = 0;
@@ -6856,27 +6842,10 @@ void type_random_map_generator::connectZones()
         while (objectIndex < m_positions.size()) {
             type_object* object = m_positions[objectIndex];
             if (object->m_properties->m_prototype->m_objectType == SHIPYARD) {
-                position = object->m_position;
+                position = object->getPosition();
                 if (m_map.getMapItem(position)->m_zoneState.m_zone == zoneIndex) {
-                    TRmgMapPosition shipyardPosition = position;
                     TRmgMapPosition waterPosition;
-                    int waterOffset = 0;
-                    for (;
-                         waterOffset < RMG_SHIPYARD_WATER_OFFSET_COUNT;
-                         ++waterOffset) {
-                        waterPosition =
-                            shipyardPosition
-                            + g_rmgShipyardWaterOffsets[waterOffset];
-                        if (waterPosition.m_x >= 0
-                            && waterPosition.m_x < m_map.m_mapWidth
-                            && m_map.getMapItem(waterPosition)->m_tile.m_landType
-                                   == eTerrainWater)
-                            break;
-                    }
-
-                    // Retail 0x5437f8 forwards the water-offset temporary
-                    // returned in EAX to seed the flood from the water tile.
-                    if (waterOffset != RMG_SHIPYARD_WATER_OFFSET_COUNT)
+                    if (findRmgShipyardWater(&m_map, position, waterPosition))
                         floodConnectionRegion(waterPosition);
                 }
             }
@@ -6893,29 +6862,15 @@ void type_random_map_generator::connectZones()
 
             TRmgZone* destination =
                 m_zones[connection->m_destination->m_zoneIndex];
-            TRmgTownSlot* destinationTemplate = destination->m_slot;
-            TRmgZoneConnection* oppositeConnection;
-            int oppositeIndex = 0;
-            for (;; ++oppositeIndex) {
-                if (oppositeIndex
-                    >= destinationTemplate->m_connections.size()) {
-                    oppositeConnection = 0;
-                    break;
-                }
-                if (destinationTemplate->m_connections[oppositeIndex]
-                        .m_destination->m_zoneIndex == zoneIndex) {
-                    oppositeConnection =
-                        &destinationTemplate->m_connections[oppositeIndex];
-                    break;
-                }
-            }
+            TRmgZoneConnection* oppositeConnection =
+                destination->m_slot->findConnection(zoneIndex);
 
             if (createShipyardConnection(zone, connection)) {
                 connection->m_connected = 1;
                 continue;
             }
 
-            if (destination->m_terrain == eTerrainWater)
+            if (destination->getTerrain() == eTerrainWater)
                 continue;
 
             createMonolithConnection(
