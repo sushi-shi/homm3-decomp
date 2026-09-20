@@ -20,4 +20,16 @@ public:
     virtual int write(const void* data, int size) = 0;
 };
 
+// Unchecked native scalar reads. SavedGameHeader::load (0x4bc750) expands
+// this operation six times: value lifetimes and cleanup edges match retail
+// through one ordinary value reader. Its name and free-function binding are
+// inferred; no standalone retail address or Dreamcast declaration is claimed.
+template <class T>
+T readValue(TAbstractFile* infile)
+{
+    T value;
+    infile->read(&value, sizeof(value));
+    return value;
+}
+
 #endif  /* HOMM3_ABSTRACTFILE_H */

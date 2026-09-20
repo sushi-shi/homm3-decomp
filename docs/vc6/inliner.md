@@ -2453,3 +2453,22 @@ Restoring that order closes the final 99.9236% selector / 99.9559% caller
 differences. The earlier pointer/reference audit suppression cited a generated
 candidate symbol as if it were a retail symbol; restoring the proven
 reference removes that unsupported exception.
+
+
+### Returned scalar values recover save-header cleanup (2026-09-20)
+
+`SavedGameHeader::load` (`0x4bc750`) reaches 100% through one ordinary
+`readValue<T>(TAbstractFile*)` template for its six unchecked native scalar
+reads. Each call reads into a local and returns that value; short/char
+conversions and discarded read counts remain unchanged. The checked ID read
+also restores Dreamcast's named count. All 62 blocks and 26 named calls match,
+including the shared failure cleanup. No reader specialization is retained in
+the candidate game object. The helper's spelling and free-function binding
+remain inferred from the scalar operations and lifetimes.
+
+Flattening those operations into primitive caller scopes scores 83.6714%;
+sharing procedure buffers with a named ID count scores 81.9600%. Returned
+values reproduce the exact result both with and without that named count.
+The historical exact implementation used four empty helper calls before the
+final return. Those calls diagnosed an inline-decision sensitivity but were
+not recovered operations; the real scalar-reader boundaries replace them.
