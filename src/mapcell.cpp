@@ -641,17 +641,49 @@ void NewfullMap::newfullMapFn004FD950(
     }
 }
 
+// DC TSeerHut::LoadSeerList (0x12d854, seerhut.cpp:503..522) owns the
+// count/read/resize/row-load operation. Complete moves the pool into this map,
+// makes row load void, and registers quests in m_mapObjectData. A map-owned
+// member is the inferred replacement interface; its original placement is
+// unknown. Retail expands this operation in load, but VC6 still retains it.
+// Keep that caller residual separate from the exact garrison-copy body.
+int NewfullMap::loadSeerList(TAbstractFile* infile, int saveVersion)
+{
+    short seerCount;
+    if (infile->read(&seerCount, sizeof(seerCount)) < sizeof(seerCount))
+        return -1;
+
+    m_seerHutList.resize(seerCount);
+    int spriteNum;
+    for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum)
+    {
+        m_seerHutList[spriteNum].load(infile, saveVersion);
+        if (m_seerHutList[spriteNum].m_quest)
+            m_mapObjectData.push_back(static_cast<CMapObjectData*>(
+                static_cast<void*>(m_seerHutList[spriteNum].m_quest)));
+    }
+    return 0;
+}
+
 // E:\gamedcs\mapcell.cpp:679, dc 0xecb94
+// Dreamcast's int count is the reusable result of the layer/list loaders:
+// dc 0xecbbc..0xecbbe and 0xecd3e..0xecd42 store their returns before
+// the negative-result tests. It is distinct from Complete's signed-short
+// seerCount read from the save stream; preserving both does not widen I/O.
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
 int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
                      int saveVersion)
 {
+    int count;
+
     init(size, twoLayers);
 
-    if (loadMapLayer(infile, size, 0, saveVersion) < 0)
+    count = loadMapLayer(infile, size, 0, saveVersion);
+    if (count < 0)
         return -1;
     if (twoLayers) {
-        if (loadMapLayer(infile, size, 1, saveVersion) < 0)
+        count = loadMapLayer(infile, size, 1, saveVersion);
+        if (count < 0)
             return -1;
     }
 
@@ -676,45 +708,35 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
     g_game->m_universities.clear();
     g_game->m_creatureBanks.clear();
 
-    if (loadMapObjects(infile) < 0)
+    count = loadMapObjects(infile);
+    if (count < 0)
         return -1;
-    if (loadBlackBoxList(infile, saveVersion) < 0)
+    count = loadBlackBoxList(infile, saveVersion);
+    if (count < 0)
         return -1;
-    if (loadTreasureList(infile) < 0)
+    count = loadTreasureList(infile);
+    if (count < 0)
         return -1;
-    if (loadMonsterList(infile) < 0)
+    count = loadMonsterList(infile);
+    if (count < 0)
         return -1;
 
-    do {
-        {
-            short count;
-            if (infile->read(&count, sizeof(count)) < sizeof(count))
-                break;
+    count = loadSeerList(infile, saveVersion);
+    if (count < 0)
+        return -1;
 
-            m_seerHutList.resize(count);
-            int spriteNum;
-            for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum)
-            {
-                m_seerHutList[spriteNum].load(infile, saveVersion);
-                if (m_seerHutList[spriteNum].m_quest)
-                    m_mapObjectData.push_back(static_cast<CMapObjectData*>(
-                        static_cast<void*>(m_seerHutList[spriteNum].m_quest)));
-            }
-        }
+    if (saveVersion >= 25)
+        newfullMapFn004FD950(infile, saveVersion);
 
-        if (saveVersion >= 25)
-            newfullMapFn004FD950(infile, saveVersion);
+    count = loadTimedEventList(infile, saveVersion);
+    if (count < 0)
+        return -1;
+    count = loadTownEventList(infile, saveVersion);
+    if (count < 0)
+        return -1;
 
-        if (loadTimedEventList(infile, saveVersion) < 0)
-            return -1;
-        if (loadTownEventList(infile, saveVersion) < 0)
-            break;
-
-        incProgressBar(1);
-        return 0;
-    } while (0);
-
-    return -1;
+    incProgressBar(1);
+    return 0;
 }
 
 // E:\gamedcs\mapcell.cpp:759
@@ -4557,6 +4579,7 @@ VA_COMPGEN(0x005090b0, 0x30C, VECTOR_INSERT, generator)
 // where their enrollments live. The mutable form is also called for folded pointer
 // arrays; BlackBoxData's implicit assignment calls the separate const form.
 VA_COMPGEN(0x005093f0, 0x1A4, STD_COPY, TTimedEvent)
+VA_COMPGEN(0x005095a0, 0x33, STD_COPY, garrison)
 VA_COMPGEN(0x005095e0, 0x3F, STD_COPY, type_university)
 VA_COMPGEN(0x00509620, 0x207, STD_COPY, type_creature_bank)
 VA_COMPGEN(0x00509830, 0x168, STD_CONSTRUCT, TreasureData)

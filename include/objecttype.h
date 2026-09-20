@@ -121,6 +121,9 @@ extern const TObjectType::TPoint g_noTriggerCell;
 inline TObjectType::TObjectType()
     : m_imageNumber(0),
       m_passableMask(~std::bitset<48>(0)),
+      m_triggerMask(0),
+      m_terrainMask(0),
+      m_recommendedTerrainMask(0),
       m_objectType(NOTHING),
       m_subtype(0),
       m_slotCategory(0),

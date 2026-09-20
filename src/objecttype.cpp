@@ -644,6 +644,11 @@ void istrstream::`vbase destructor'();
 
 #endif  // @carcass
 
+// Explicit zero mask initializers emit the exact unsigned-long constructor.
+// load still expands the passable-mask construction and retains this body
+// for the trigger mask; that caller's nested expansion remains unresolved.
+VA_COMPGEN(0x005154a0, 0x61, BITSET_CTOR, bitset48)
+
 // COMDAT pairing: bitset<48>::flip(), agreement 1.000 - the trigger-mask
 // member TObjectType::setTriggerMask flips, and 48 is the only bitset width
 // whose flip this object emits.

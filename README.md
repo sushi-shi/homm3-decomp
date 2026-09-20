@@ -12,20 +12,19 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable MAX: 96.90%** — MAX-weighted bytes over all 1,998,996 unfiltered bytes.
+**Executable MAX: 96.91%** — MAX-weighted bytes over all 1,998,996 unfiltered bytes.
 
-**Function exact MAX** — 4,235 / 4,766 current implementations (88.9%) have reached 100%.
+**Function exact MAX** — 4,237 / 4,766 current implementations (88.9%) have reached 100%.
 
-**CUR diagnostics** — 4,167 / 4,766 functions exact (87.4%) in this build (4764 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
+**CUR diagnostics** — 4,170 / 4,766 functions exact (87.5%) in this build (4766 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
 
-| Module        | Units |  Function exact MAX | Functions exact CUR | Fuzzy MAX | Fuzzy CUR |
-| :------------ | ----: | ------------------: | ------------------: | --------: | --------: |
-| `game`        |   127 | 3824 / 4267 (89.6%) | 3766 / 4267 (88.3%) |    97.07% |    96.72% |
-| `rmg`         |     3 |   303 / 368 (82.3%) |   293 / 368 (79.6%) |    95.03% |    93.54% |
-| `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
-| `codec`       |     4 |     34 / 43 (79.1%) |     34 / 43 (79.1%) |    93.75% |    93.75% |
-| `victor`      |     4 |      5 / 17 (29.4%) |      5 / 17 (29.4%) |    85.40% |    85.40% |
-| `(unmatched)` |     — |        0 / 2 (0.0%) |        0 / 2 (0.0%) |      0.0% |      0.0% |
+| Module       | Units |  Function exact MAX | Functions exact CUR | Fuzzy MAX | Fuzzy CUR |
+| :----------- | ----: | ------------------: | ------------------: | --------: | --------: |
+| `game`       |   127 | 3826 / 4269 (89.6%) | 3769 / 4269 (88.3%) |    97.08% |    96.74% |
+| `rmg`        |     3 |   303 / 368 (82.3%) |   293 / 368 (79.6%) |    95.03% |    93.54% |
+| `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
+| `codec`      |     4 |     34 / 43 (79.1%) |     34 / 43 (79.1%) |    93.75% |    93.75% |
+| `victor`     |     4 |      5 / 17 (29.4%) |      5 / 17 (29.4%) |    85.40% |    85.40% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
 
