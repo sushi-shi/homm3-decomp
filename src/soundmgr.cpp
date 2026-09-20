@@ -603,6 +603,31 @@ void __cdecl waitEndSampleThread(void* arglist)
     _endthread();
 }
 
+// Windows Miles service operation. DC's service_sounds is a four-byte
+// no-op at SoundMgr.h:140 (dc 0xe6ef4), not evidence for the nonempty PC
+// body's inline spelling or location. Retail expands this operation in
+// memorySample and launchSample, both in this TU, but retains calls in every
+// observed external consumer. All 13 retail AIL_serve references are in this
+// TU (the two expansions, this retained body and ten other references).
+// An ordinary TU-local definition explains that boundary without pins and
+// restores the exact 81-byte helper. Windows placement remains an inference;
+// the CE header stub is recorded separately in dc_only.tsv.
+VA(0x0059a7d0, 0x51)
+void soundManager::serviceSounds()
+{
+    EnterCriticalSection(&m_sectionSoundCall);
+    AIL_serve();
+    void* stream = g_mp3Stream;
+    if (stream) {
+        if (g_soundManager->m_mp3Playing) {
+            if (!g_shutDownDone)
+                AIL_service_stream(stream, 1);
+        }
+    }
+    Sleep(1);
+    LeaveCriticalSection(&m_sectionSoundCall);
+}
+
 VA(0x0059a830, 0x10)  // dc 0x14b7e0
 void __cdecl processMP3Stop(void* nothing)
 {

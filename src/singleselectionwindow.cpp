@@ -1886,8 +1886,9 @@ CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
 // reproduces these bindings and shows the thread helper's early-return forms
 // are byte-flat. The later four ownership models do not improve this body.
 // Restoring DC's headerFont local is byte-flat, including the combined widget
-// ownership models. In-class/out-of-class sound-service definitions likewise
-// retain this boundary across all 51 consumers; no declaration move is kept.
+// ownership models. In-class/out-of-class header sound-service definitions
+// were byte-flat across all 51 consumers; the PC TU-owner model below is
+// distinct from that header-only test.
 // Retail and DC2055 require a boolean backdrop choice, not Random(0,50).
 // DC2187/2383/2404/2405 and retail pass null initial text to the scenario
 // rows, chat and name lists; DC2201/retail use vertical save-name centering.
@@ -1899,10 +1900,16 @@ CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
 // loop index recover NB11's two named owners. The root handicap widget owner
 // (DC w at sp+0xbc, stores 0x1333ac/0x13346c) reproduces 95.0633%; null
 // text still changes register homes compared with the former 95.5273% body.
-// Remaining: StartMouseThread expands ServiceSounds where retail calls it
-// (verified C2 cost 90 / nested budget 128), plus stack/register allocation.
-// A scratch retained-call control confirms the 437-block/372-call operation
-// sequence. No diagnostic inline pin is retained.
+// The Windows sound-service TU-owner model now restores the retained call
+// in StartMouseThread without a pin, reaching 95.6574% with retail's 437
+// blocks, 372 calls and 0x314 frame. Stack/register homes remain different.
+// Direct indexed option-row coordinates further reach 96.2895%, restoring
+// retail's induction base 133 and explicit subtract 3 instead of folding the
+// inferred rowY snapshot to base 130. The PC expression model is inferred;
+// DC uses different coordinates and its missing rowY record is not proof.
+// This TU-state change also swaps stack homes in the two CEnterNameEdit
+// callbacks (99.8868% / 99.8710%, MAX 100); their canonical helper operations
+// and calls remain unchanged. Do not reshape them solely to steer allocation.
 VA(0x00579960, 0x2d63)  // anchor-callee CAdvPopup base ctor + embedded header/player/net-handler construction; tail proven by the retail preload/setup call run at +0x2a56..+0x2d45; dc 0x1309f0
 TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     : CAdvPopup(0, 0, 800, 600, 0)
@@ -2168,14 +2175,13 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         m_widgets.push_back(m_durationSlider);
 
         for (i = 0; i < 8; ++i) {
-            int rowY = 133 + i * 50;
             sprintf(flagName, "AOFLGB%c.DEF", flagColors[i]);
             m_widgets.push_back(new button(
-                14 - m_x, rowY - m_y - 3, 42, 50, 263 + i,
+                14 - m_x, (133 + i * 50) - m_y - 3, 42, 50, 263 + i,
                 flagName, 0, 1, 0, 0, 2));
 
             m_widgets.push_back(new textWidget(
-                62, rowY + 18, 46, 24, g_generalText->getText(500),
+                62, (133 + i * 50) + 18, 46, 24, g_generalText->getText(500),
                 "tiny.fnt", font::WHITE, 199 + i,
                 font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED,
                 0, 8));
@@ -2183,49 +2189,49 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
             sprintf(tempName, "adopb2%c.def", "rbygopts"[i]);
             if (isMultiPlayer()) {
                 handicapButton = new textButton(
-                    110, rowY + 18, 50, 24, 207 + i,
+                    110, (133 + i * 50) + 18, 50, 24, 207 + i,
                     tempName, g_unnamed6a7800[0], "tiny.fnt",
                     0, 1, 0, 0, 2, font::WHITE);
             } else {
                 handicapButton = new button(
-                    110, rowY + 18, 50, 24, 207 + i,
+                    110, (133 + i * 50) + 18, 50, 24, 207 + i,
                     tempName, 0, 1, 0, 0, 2);
             }
             m_widgets.push_back(handicapButton);
 
             m_widgets.push_back(new button(
-                164, rowY, 11, 24, 215 + i,
+                164, (133 + i * 50), 11, 24, 215 + i,
                 "adoplfa.def", 0, 1, 0, 0, 2));
             m_widgets.push_back(new button(
-                225, rowY, 11, 24, 223 + i,
+                225, (133 + i * 50), 11, 24, 223 + i,
                 "adoprta.def", 1, 0, 0, 0, 2));
             m_widgets.push_back(new button(
-                240, rowY, 11, 24, 231 + i,
+                240, (133 + i * 50), 11, 24, 231 + i,
                 "adoplfa.def", 0, 1, 0, 0, 2));
             m_widgets.push_back(new button(
-                301, rowY, 11, 24, 239 + i,
+                301, (133 + i * 50), 11, 24, 239 + i,
                 "adoprta.def", 1, 0, 0, 0, 2));
             m_widgets.push_back(new button(
-                316, rowY, 11, 24, 247 + i,
+                316, (133 + i * 50), 11, 24, 247 + i,
                 "adoplfa.def", 0, 1, 0, 0, 2));
             m_widgets.push_back(new button(
-                377, rowY, 11, 24, 255 + i,
+                377, (133 + i * 50), 11, 24, 255 + i,
                 "adoprta.def", 1, 0, 0, 0, 2));
 
             m_widgets.push_back(new textWidget(
-                62, rowY - 3, 97, 17, g_generalText->getText(469),
+                62, (133 + i * 50) - 3, 97, 17, g_generalText->getText(469),
                 "smalfont.fnt", font::PRIMARY, 345 + i,
                 font::CENTER_JUSTIFIED, 0, 8));
             m_widgets.push_back(new CHotspotWidget(
-                252, rowY - 3, 48, 32, 362 + i));
+                252, (133 + i * 50) - 3, 48, 32, 362 + i));
             m_widgets.push_back(new CHotspotWidget(
-                176, rowY - 3, 48, 32, 370 + i));
+                176, (133 + i * 50) - 3, 48, 32, 370 + i));
             m_widgets.push_back(new CHotspotWidget(
-                328, rowY - 3, 48, 32, 378 + i));
+                328, (133 + i * 50) - 3, 48, 32, 378 + i));
 
             if (!isMultiPlayer()) {
                 CEnterNameEdit* edit = new CEnterNameEdit(
-                    62, rowY - 3, 97, 17, 21, g_emptyRolloverText,
+                    62, (133 + i * 50) - 3, 97, 17, 21, g_emptyRolloverText,
                     "smalfont.fnt", font::PRIMARY, font::LEFT_JUSTIFIED,
                     0, 0, 353 + i, 0x100, 0, 7, 5);
                 edit->hide();

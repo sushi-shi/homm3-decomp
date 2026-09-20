@@ -176,6 +176,8 @@ public:
     void resumeStream();          // 0x59ac00
     void resumeSamples();         // 0x599b90, name provisional
     void pauseSamples();          // 0x599c40, name provisional
+    // DC's SoundMgr.h:140 defines only the WinCE no-op. The nonempty PC
+    // operation has inferred TU-local visibility; see soundmgr.cpp.
     void serviceSounds();
 
     void setMusicVolume();                              // 0x5994b0
@@ -316,8 +318,8 @@ __declspec(dllimport) void __stdcall _AIL_start_stream(void* stream);
 __declspec(dllimport) void __stdcall _AIL_set_stream_position(void* stream,
                                                               int position);
 __declspec(dllimport) void __stdcall _AIL_set_stream_volume(void* stream, int volume);
-// Miles 5.0e Mss.h:3078 returns S32 (signed long), even when discarded.
-__declspec(dllimport) long __stdcall _AIL_service_stream(void* stream, int fillup);
+// Miles 5.0e Mss.h:3078 uses S32 (signed long) for result and fillup.
+__declspec(dllimport) long __stdcall _AIL_service_stream(void* stream, long fillup);
 __declspec(dllimport) void __stdcall _AIL_pause_stream(void* stream, int pause);
 __declspec(dllimport) void __stdcall _AIL_close_stream(void* stream);
 __declspec(dllimport) void __stdcall _AIL_shutdown();
@@ -388,22 +390,5 @@ extern "C" void __cdecl _endthread(void);
 
 // Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).
 extern soundManager* g_soundManager;
-
-// E:\gamedcs\SoundMgr.h:140, dc 0xe6ef4
-VA(0x0059a7d0, 0x51)  // dc 0xe6ef4
-inline void soundManager::serviceSounds()
-{
-    EnterCriticalSection(&m_sectionSoundCall);
-    AIL_serve();
-    void* stream = g_mp3Stream;
-    if (stream) {
-        if (g_soundManager->m_mp3Playing) {
-            if (!g_shutDownDone)
-                AIL_service_stream(stream, 1);
-        }
-    }
-    Sleep(1);
-    LeaveCriticalSection(&m_sectionSoundCall);
-}
 
 #endif  /* HOMM3_SOUNDMGR_H */

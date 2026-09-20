@@ -951,6 +951,9 @@ void showCredits()
 // DC1462..1538 orders restart before high scores/credits. Moving those whole
 // arms in Complete scores 75.4381% and retains the campaign/progress inline
 // differences; retail's machine order supports the current arm order.
+// A signed CampaignComplete index, suggested by DC's older scalar bound,
+// is byte-flat across all 64 header consumers and does not restore its
+// missing retained body. Complete's vector-bound counter type stays unresolved.
 
 VA(0x004ee3e0, 0x1C04)  // dc 0xe0158
 int oldmain()

@@ -1,6 +1,7 @@
 # Reviewed exclusions from the authored-function comparison, keyed by exact DC source identity.
 # Reasons distinguish platform bodies, external library emissions and compiler-generated functions.
 file	function	line	reason
+soundmgr.h	soundManager::service_sounds	140	WinCE no-op: dc 0xe6ef4 is a four-byte rts/nop attributed to SoundMgr.h:140. This positively locates the CE stub, not the nonempty Windows Miles implementation. Complete's retained helper and source-visibility inference are documented beside soundManager::serviceSounds in src/soundmgr.cpp.
 ../stlport/char_traits.h	std::__char_traits_base<char,int>::eq	74	Library emission: Dreamcast STLport specialization; Complete uses the VC6 Dinkumware library from its toolchain. No project-authored C++ body is expected for this procedure; source helpers calling containers remain audited separately.
 ../stlport/char_traits.h	std::__char_traits_base<char,int>::move	105	Library emission: Dreamcast STLport specialization; Complete uses the VC6 Dinkumware library from its toolchain. No project-authored C++ body is expected for this procedure; source helpers calling containers remain audited separately.
 ../stlport/char_traits.h	std::__char_traits_base<char,int>::copy	110	Library emission: Dreamcast STLport specialization; Complete uses the VC6 Dinkumware library from its toolchain. No project-authored C++ body is expected for this procedure; source helpers calling containers remain audited separately.
