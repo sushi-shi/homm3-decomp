@@ -1074,8 +1074,9 @@ public:
     }
 };
 
+// All three DC publics end in `_N`, the MSVC mangling for bool.
 VA(0x00577a50, 0x30)  // dc 0x12ff40
-unsigned char initializeVCDescriptions()
+bool initializeVCDescriptions()
 {
     g_victoryConditionText = ResourceManager::getText(
         DATA_COMPGEN(0x006834ac, victoryConditionTextName, "vcdesc.txt"));
@@ -1087,7 +1088,7 @@ unsigned char initializeVCDescriptions()
 }
 
 VA(0x00577a80, 0x30)  // dc 0x12ffa4
-unsigned char initializeLCDescriptions()
+bool initializeLCDescriptions()
 {
     g_lossConditionText = ResourceManager::getText(
         DATA_COMPGEN(0x006834b8, lossConditionTextName, "lcdesc.txt"));
@@ -1099,7 +1100,7 @@ unsigned char initializeLCDescriptions()
 }
 
 VA(0x00577ab0, 0x30)  // dc 0x130008
-unsigned char initializeTurnDurationText()
+bool initializeTurnDurationText()
 {
     g_turnDurationTextResource = ResourceManager::getText(
         DATA_COMPGEN(0x006834c4, turnDurationTextName, "turndur.txt"));

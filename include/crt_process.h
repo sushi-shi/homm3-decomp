@@ -1,4 +1,4 @@
-// crt_process.h - the two CRT thread entry points used by the selection UI.
+// crt_process.h - the CRT thread entry points used by the game.
 
 // VC6's <process.h> hides these declarations under _MT, while the retail
 // singleselectionwindow.obj is a /ML compiland that still calls both symbols.
@@ -8,8 +8,12 @@
 #define HOMM3_CRT_PROCESS_H
 
 typedef unsigned (__stdcall* H3ThreadStart)(void*);
+typedef void (__cdecl* H3ThreadStartCdecl)(void*);
 
 extern "C" {
+unsigned long __cdecl _beginthread(
+    H3ThreadStartCdecl startAddress, unsigned stackSize, void* arguments);
+void __cdecl _endthread();
 unsigned long __cdecl _beginthreadex(
     void* security, unsigned stackSize, H3ThreadStart startAddress,
     void* arguments, unsigned initFlag, unsigned* threadAddress);

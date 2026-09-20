@@ -2,6 +2,7 @@
 #define HOMM3_CAMPAIGNWINDOW_H
 
 #include "window.h"
+#include "binkmanager.h"
 
 class message;
 class Bitmap816;
@@ -128,7 +129,7 @@ int campaignWindowHandler(message& msg);
 // fixes the image name and the widget id; the constructor reads
 // +0x04/+0x08 again for the check-mark plate and +0x0c/+0x10/+0x14 for
 // the caption box. The 12-dword tail is the row's private snapshot of
-// the consecutive Bink state beginning at gBinkVideo, written by
+// BinkManager::playingBINK aggregate, written by
 // OpenPreview and restored by the destructor and the hover handler.
 struct SCampaignPreview {
     int m_video;
@@ -139,7 +140,7 @@ struct SCampaignPreview {
     int m_textWidth;
     const char* m_image;
     int m_widgetId;
-    int m_binkState[12];
+    BinkManager::BinkManagerStruct m_binkState;
 };
 SIZE(SCampaignPreview, 0x50);
 extern SCampaignPreview g_campaignPreviews[20];

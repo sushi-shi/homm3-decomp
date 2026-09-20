@@ -1466,7 +1466,8 @@ typedef struct _DIG_DRIVER FAR * HDIGDRIVER;    // Handle to digital driver
 
 typedef struct _MDI_DRIVER FAR * HMDIDRIVER;    // Handle to XMIDI driver
 
-typedef struct _SAMPLE FAR * HSAMPLE;           // Handle to sample
+// The shipped game exposes Miles samples through this C++ class tag.
+typedef class ds_memsample FAR * HSAMPLE;         // Handle to sample
 
 typedef struct _SEQUENCE FAR * HSEQUENCE;       // Handle to sequence
 
@@ -1750,7 +1751,7 @@ typedef struct _ADPCMDATATAG
   U16 moresamples[16];
 } ADPCMDATA;
 
-typedef struct _SAMPLE           // Sample instance
+typedef class ds_memsample              // Sample instance
 {
    char       tag[4];            // HSAM
 

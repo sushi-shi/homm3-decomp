@@ -1045,11 +1045,10 @@ int TCampaignStartHeroOption::getPlayer(int which) const
 // test X,X / je` tests the PRE-decrement value, and the index is never used
 // in the body, which is the source-side tell for the whole family. That took
 // the two sibling readers below to EXACT and this one 92.6089 -> 93.9951.
-// Residual (93.9951%): retail loads `file` into EBX in the prologue
-// (`mov ebx,[ebp+8]` at fn+0x7) where we keep the receiver elsewhere; 16/16
-// branches and the call multiset agree, and the 20 flow-kind blocks are that
-// one binding. This body differs from its two siblings only by the
-// `m_choices.erase(begin, end)` ahead of the loop.
+// Spelling the reset as the canonical vector::clear operation then restores
+// retail's EBX file and ESI receiver bindings and matches all 26 blocks
+// exactly. The erase(begin, end) spelling had the same behavior, branches and
+// call multiset but assigned the callee-saved roles differently (93.9951%).
 VA(0x00485b60, 0x1FB)  // anchor-vtable (0x63db0c+0x24), retail-only
 void TCampaignStartHeroOption::read(TAbstractFile* file)
 {
@@ -1059,7 +1058,7 @@ void TCampaignStartHeroOption::read(TAbstractFile* file)
         file->read(&value, sizeof(signed char));
         count = value;
     }
-    m_choices.erase(m_choices.begin(), m_choices.end());
+    m_choices.clear();
     while (count--) {
         TCampaignHeroChoice choice;
         {
@@ -1138,9 +1137,11 @@ std::string readLengthPrefixedString(TAbstractFile* infile)
 // After the caller's pointer/lifetime corrections, default zero construction
 // reaches 83.29%; the unsigned-long(0) constructor is the 80.95% control.
 // Direct proxy assignment plus an explicit prerequisite-loop body scope
-// raises the caller to 84.92324%. Either change alone is byte-flat at 83.29%.
-// A named reference keeps the same public bitset operation but changes VC6's
-// nested decisions; neither form retains all four retail proxy assignments.
+// originally raised the caller to 84.92324%. After restoring its text-reader
+// and scalar lifetimes, naming the proxy changes VC6's nested scheduling and
+// raises 87.4222 -> 89.4456 without changing any other customcampaign score.
+// The three loops still call bitset::set rather than retail's proxy assignment;
+// naming only the Boolean value is byte-flat.
 template <size_t N>
 std::bitset<N> readPackedCampaignBits(TAbstractFile* infile)
 {
@@ -1148,7 +1149,8 @@ std::bitset<N> readPackedCampaignBits(TAbstractFile* infile)
     unsigned char packed[(N + 7) / 8];
     infile->read(packed, sizeof(packed));
     for (unsigned int index = 0; index < N; ++index) {
-        result[index] = (packed[index >> 3] & (1 << (index & 7))) != 0;
+        typename std::bitset<N>::reference bit = result[index];
+        bit = (packed[index >> 3] & (1 << (index & 7))) != 0;
     }
     return result;
 }
@@ -1766,12 +1768,32 @@ void TCampaignBrief::ScenarioStruct::markCrossoverHeroes(unsigned char* wanted)
 // The retained destination dereference at 0x48eb40 is annotated on the
 // canonical generic body in bitset_iterator.h, with its 144-bit instance.
 
-// The serialization and prerequisite-insert inline boundaries remain unfinished.
+// The prerequisite-insert and packed-bit inline boundaries remain unfinished.
 // Retail puts each absent-text arm first and retains the allocated MapTextStruct
 // in EDI across all three reads. Null-first branches raise 70.55 -> 73.36%; the
 // local text pointers then reach 80.95%. Member reloads after each virtual Read
 // are the negative control. Explicitly widening the one-byte read buffers to
 // masked ints was byte-flat and is not retained.
+// Both present arms publish the new record before reading its fields. One
+// ordinary MapTextStruct reader preserves that ordering and the EDI receiver;
+// VC6 expands both calls and raises this reader from 84.9232% to 86.4073%.
+// A pointer-returning factory reaches 87.7846% but publishes only after the
+// virtual reads, contradicting retail, and is not retained.
+// Keeping inflated-size's temporary in the function scope gives it retail's
+// local home instead of reusing the infile parameter slot (86.4073 -> 87.4222).
+// A named proxy in readPackedCampaignBits changes the nested code generation
+// in all three expansions (87.4222 -> 89.4456); the proxy-call boundary itself
+// remains unfinished.
+void TCampaignBrief::MapTextStruct::read(TAbstractFile* infile)
+{
+    unsigned char value;
+    infile->read(&value, sizeof(unsigned char));
+    m_video = value;
+    infile->read(&value, sizeof(unsigned char));
+    m_audio = value;
+    m_subtitles = readLengthPrefixedString(infile);
+}
+
 VA(0x00487e40, 0x586)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
 void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
                                           int numScenarios,
@@ -1779,11 +1801,9 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
 {
     m_name = readLengthPrefixedString(infile);
 
-    {
-        int size;
-        infile->read(&size, sizeof(int));
-        m_inflatedSize = size;
-    }
+    int size;
+    infile->read(&size, sizeof(int));
+    m_inflatedSize = size;
 
     int prerequisiteBits = 0;
     infile->read(&prerequisiteBits, (numScenarios + 7) / 8);
@@ -1809,12 +1829,7 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
         } else {
             MapTextStruct* text = new MapTextStruct;
             m_prologue = text;
-            unsigned char value;
-            infile->read(&value, sizeof(unsigned char));
-            text->m_video = value;
-            infile->read(&value, sizeof(unsigned char));
-            text->m_audio = value;
-            text->m_subtitles = readLengthPrefixedString(infile);
+            text->read(infile);
         }
     }
 
@@ -1826,12 +1841,7 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
         } else {
             MapTextStruct* text = new MapTextStruct;
             m_epilogue = text;
-            unsigned char value;
-            infile->read(&value, sizeof(unsigned char));
-            text->m_video = value;
-            infile->read(&value, sizeof(unsigned char));
-            text->m_audio = value;
-            text->m_subtitles = readLengthPrefixedString(infile);
+            text->read(infile);
         }
     }
 
@@ -2033,29 +2043,46 @@ int TCampaignBrief::CampaignHeaderStruct::getNumMaps() const
 // 571 and two sites remaining, and also expands. These are candidate
 // measurements; retail's original caller budget has not been recovered.
 
-// Restoring the existing loadMapHeader call improved 49.5351% to 53.9715%.
-// Retail expands that helper here, retaining both TGzInflateBuf ctor/dtor
-// pairs. Prior artificial helper splits reached about 80.95%, but identify
-// no recoverable source boundary and are not retained. They also made some
-// NewSMapHeader subobject constructors and its destructor stay out of line
-// where retail expands them; a uniform reduction is not a complete repair.
+// Complete shares clearScenarios with the exact destructor. Keeping the
+// scenario-count loop here and moving one allocate/read/append operation to
+// addCampaignScenario preserves the natural record boundary. The post-map
+// helper leaves the exact loadMapHeader call and NewSMapHeader lifetime in
+// this caller. Together these boundaries raise MAX to 82.4518%; moving the
+// whole map loop behind a helper falls to 68.8816%. Static and class-member
+// ownership forms produce identical loader bytes.
 
 // Negative controls: direct insert(end(), 1, scenario) scores 44.4627%; a
 // countdown scenario-record loop produces identical function bytes; limiting
 // currentDirectory to the file-open scope leaves the score at 53.9715%.
 // Keep reads through TAbstractFile*: retail uses the virtual slot at +4.
 // Calling streamFile.read directly instead devirtualizes and expands them.
+static void addCampaignScenario(
+    TCampaignBrief::CampaignHeaderStruct& campaign, TAbstractFile* file,
+    int numScenarios)
+{
+    TCampaignBrief::ScenarioStruct* scenario =
+        new TCampaignBrief::ScenarioStruct;
+    scenario->read(file, numScenarios, campaign.m_campaignVersion);
+    campaign.m_scenarios.push_back(scenario);
+}
+
+static void applyCampaignMapHeader(
+    TCampaignBrief::ScenarioStruct& scenario, NewSMapHeader& mapHeader)
+{
+    scenario.m_options->setTown(&mapHeader);
+    scenario.m_heroPlaceholders = mapHeader.m_placeholders;
+    for (int slotIndex = 0; slotIndex < 8; ++slotIndex)
+        scenario.m_heroesStatus[slotIndex] =
+            mapHeader.m_playerSlotAttributes[slotIndex].m_defaultPlaceholders;
+}
+
 VA(0x00488880, 0x5D6)  // anchor-caller(TCampaignBrief ctor), retail-only
 bool TCampaignBrief::CampaignHeaderStruct::load()
 {
     if (m_stream)
         return true;
 
-    for (unsigned int scenarioIndex = 0; scenarioIndex < m_scenarios.size();
-         ++scenarioIndex)
-        delete m_scenarios[scenarioIndex];
-    m_scenarios.clear();
-    freeData();
+    clearScenarios();
 
     std::filebuf* fileBuf = new std::filebuf;
     char currentDirectory[200];
@@ -2113,11 +2140,8 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
             m_campaignMusic = charBuffer;
         }
         numScenarios = g_campaignMapTraits[m_regionMap].m_numRegions;
-        for (int newValue = 0; newValue < numScenarios; ++newValue) {
-            ScenarioStruct* scenario = new ScenarioStruct;
-            scenario->read(file, numScenarios, m_campaignVersion);
-            m_scenarios.push_back(scenario);
-        }
+        for (int newValue = 0; newValue < numScenarios; ++newValue)
+            addCampaignScenario(*this, file, numScenarios);
     }
 
     int mapOffset = m_stream->pubseekoff(0, std::ios::cur, std::ios::in);
@@ -2128,11 +2152,7 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
         if (scenario->m_inflatedSize > 0) {
             mapOffset += scenario->m_inflatedSize;
             scenario->loadMapHeader(m_stream, &mapHeader, scenario2);
-            scenario->m_options->setTown(&mapHeader);
-            scenario->m_heroPlaceholders = mapHeader.m_placeholders;
-            for (int slotIndex = 0; slotIndex < 8; ++slotIndex)
-                scenario->m_heroesStatus[slotIndex] =
-                    mapHeader.m_playerSlotAttributes[slotIndex].m_defaultPlaceholders;
+            applyCampaignMapHeader(*scenario, mapHeader);
         }
     }
     return true;
@@ -2175,6 +2195,8 @@ void TCampaignBrief::MapTextStruct::play()
     // The subtitle completion flag can also end playback after input.
     // Retaining the event switch and testing finished removes three jumps
     // at unchanged 83.8848%; an if-chain for the same events gives 80.7396%.
+    // Retail assigns each playback endpoint only on the path that consumes it;
+    // dropping three eager zero stores raises MAX 85.4677 -> 86.1889.
     if (m_video < 0)
         return;
 
@@ -2239,7 +2261,7 @@ void TCampaignBrief::MapTextStruct::play()
     g_windowManager->updateScreen(0, 0, 800, 600);
 
     unsigned char textDone;
-    long textEnd = 0;
+    long textEnd;
     if (strip) {
         textDone = 0;
     } else {
@@ -2248,7 +2270,7 @@ void TCampaignBrief::MapTextStruct::play()
     }
 
     unsigned char speechDone;
-    long speechEnd = 0;
+    long speechEnd;
     if (!speech) {
         speechDone = 1;
     } else {
@@ -2256,7 +2278,7 @@ void TCampaignBrief::MapTextStruct::play()
         speechEnd = GameTime::get();
     }
 
-    long videoEnd = 0;
+    long videoEnd;
     if (!g_smackVideo2) {
         videoDone = 1;
         videoEnd = GameTime::get();
@@ -2419,19 +2441,16 @@ const int g_campaignMapOrdinal07 = 7;
 // budget spread here is under 0.6 points and the residual below is the
 // entire remaining story.
 
-// Residual (78.68%): retail holds the literal zero in EDI across the whole
-// body (`xor edi,edi` at fn+0x27, before the completed test) and spends it
-// on complete_order's store, the index compare and the size() null tests;
-// we materialise it in EAX after get_map_score, which costs the inverted
-// `je`/`jne` polarity at every size() null arm and one dword of frame
-// (0x34 against retail's 0x30). Retail also CALLS the POD
-// `_Destroy<type_artifact>` on the second temp where our compile elides it
-// entirely, and calls the 2-argument insert wrapper at the hero loop where
-// we reach the 3-argument one.
 // 2026-09-06, polish lane 38 (78.6801 -> 85.5843): the excluded-hero scan is
 // a post-decrement `while (pool--)` / `while (which--)` pair over a named
 // `pooled` reference, the same shape DoPreLoadCustomization proves; retail's
 // tell sits at fn+0xaad (`mov eax,edx / dec edx / test eax,eax`).
+// Retail computes days before publishing completion and delays the zero
+// complete-order store until after getMapScore (85.5843 -> 86.2644). A
+// function-scope map-score counter then reproduces the zero held in EDI from
+// the prologue and raises MAX to 87.6437. The remaining call mismatch is the
+// vector temporary/insert inline family: retail retains both `_Destroy`
+// helpers and the two-argument hero insert wrapper.
 // LADDER, measured 2026-09-06 and NOT shipped: all nine appends spelled
 // `insert(end(), x)` instead of `push_back(x)` is worth 78.6801 -> 78.8448,
 // 0.16 of a point (about 2.5 B of a 1536 B body) for nine rewritten call
@@ -2442,14 +2461,15 @@ VA(0x00489820, 0x600)  // anchor-caller(oldmain end-of-campaign arm), retail-onl
 void SCampaign::completeCurrentMap(void* campaignHeader)
 {
     CampaignScenarioInfo& scenario = m_mapScores[m_currentMap];
+    unsigned int i = 0;
 
     if (scenario.m_completed)
         return;
 
-    scenario.m_completed = true;
     scenario.m_days = g_game->getCurrentTurn();
-    scenario.m_score = g_game->getMapScore();
+    scenario.m_completed = true;
     scenario.m_completeOrder = 0;
+    scenario.m_score = g_game->getMapScore();
 
     if (scenario.m_index < 0) {
         scenario.m_index = m_carryOverHeroes.size();
@@ -2468,7 +2488,7 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
 
     m_crossoverArrayIndex = scenario.m_index;
 
-    for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
+    for (; i < m_mapScores.size(); ++i) {
         if (m_mapScores[i].m_completed
             && m_mapScores[i].m_completeOrder > scenario.m_completeOrder)
             scenario.m_completeOrder = m_mapScores[i].m_completeOrder;
@@ -2535,7 +2555,7 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
             && m_currentCampaign < g_campaignOrdinal13 && !m_isCheater) {
             int total = 0;
             int scored = 0;
-            for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
+            for (i = 0; i < m_mapScores.size(); ++i) {
                 if (m_mapScores[i].m_completed && m_mapScores[i].m_score >= 0) {
                     total += m_mapScores[i].m_score;
                     ++scored;
@@ -2548,6 +2568,60 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
     }
 
     pruneCrossoverHeroes(campaignHeader);
+}
+
+// These five ordinary Complete-only helpers recover the source boundaries
+// visible in pruneCrossoverHeroes. VC6 expands them into that caller: the
+// header pass retains its vector size calls, the scenario queries preserve
+// their temporary homes, and the collector owns one hero receiver across the
+// two artifact loops. The flattened spelling has 91 CFG blocks against
+// retail's 62; these calls restore the retail source shape.
+static void collectCrossoverArtifacts(const hero& sourceHero, std::vector<type_artifact>& artifacts)
+{
+    type_artifact artifact;
+    int slot;
+    for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
+        artifact = sourceHero.getArtifact(TArtifactSlot(slot));
+        if (artifact.m_artifactId != ARTIFACT_NONE)
+            artifacts.push_back(artifact);
+    }
+    for (slot = 0; slot < g_crossoverBackpackSlots; ++slot) {
+        artifact = sourceHero.getBackpack(slot);
+        if (artifact.m_artifactId != ARTIFACT_NONE)
+            artifacts.push_back(artifact);
+    }
+}
+
+static int getCampaignScenarioCount(TCampaignBrief::CampaignHeaderStruct& header)
+{
+    return header.m_scenarios.size();
+}
+
+static void markRequiredCampaignHeroes(TCampaignBrief::CampaignHeaderStruct& header, unsigned char* wanted)
+{
+    for (unsigned int mapIndex = 0; mapIndex < header.m_scenarios.size(); ++mapIndex) {
+        if (!g_game->m_campaign.m_mapScores[mapIndex].m_completed)
+            header.m_scenarios[mapIndex]->markCrossoverHeroes(wanted);
+    }
+}
+
+static bool usesCrossoverPool(TCampaignBrief::ScenarioStruct& scenario, int pool)
+{
+    return scenario.m_inflatedSize > 0
+        && scenario.m_options->slot12(&scenario, pool);
+}
+
+static int getMaxCrossoverHeroes(TCampaignBrief::ScenarioStruct& scenario)
+{
+    int best = 0;
+    if (scenario.m_inflatedSize > 0) {
+        if (scenario.m_options->getCount() == 0)
+            best = scenario.m_heroesStatus[scenario.m_options->getPlayer(-1)];
+        else
+            for (int option = scenario.m_options->getCount(); option--;)
+                best = max(best, scenario.m_heroesStatus[scenario.m_options->getPlayer(option)]);
+    }
+    return best;
 }
 
 // CompleteCurrentMap's tail call flags heroes requested by unfinished
@@ -2571,10 +2645,7 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
     unsigned char wanted[game::HERO_COUNT];
     memset(wanted, 0, sizeof wanted);
 
-    for (unsigned int mapIndex = 0; mapIndex < header->m_scenarios.size(); ++mapIndex) {
-        if (!g_game->m_campaign.m_mapScores[mapIndex].m_completed)
-            header->m_scenarios[mapIndex]->markCrossoverHeroes(wanted);
-    }
+    markRequiredCampaignHeroes(*header, wanted);
 
     for (int pool = m_carryOverHeroes.size(); pool--;) {
         std::vector<hero>& pooled = m_carryOverHeroes[pool];
@@ -2589,23 +2660,12 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
 
         int keepCount = 0;
         for (int scenarioIndex = 0;
-             scenarioIndex < static_cast<int>(header->m_scenarios.size());
+             scenarioIndex < getCampaignScenarioCount(*header);
              ++scenarioIndex) {
             TCampaignBrief::ScenarioStruct* scenario =
                 header->m_scenarios[scenarioIndex];
-            if (!m_mapScores[scenarioIndex].m_completed
-                && scenario->m_inflatedSize > 0
-                && scenario->m_options->slot12(scenario, pool)) {
-                int best = 0;
-                if (scenario->m_inflatedSize > 0) {
-                    if (scenario->m_options->getCount() == 0)
-                        best = scenario->m_heroesStatus[scenario->m_options->getPlayer(-1)];
-                    else
-                        for (int option = scenario->m_options->getCount(); option--;)
-                            best = max(best, scenario->m_heroesStatus[scenario->m_options->getPlayer(option)]);
-                }
-                keepCount = max(keepCount, best);
-            }
+            if (!m_mapScores[scenarioIndex].m_completed && usesCrossoverPool(*scenario, pool))
+                keepCount = max(keepCount, getMaxCrossoverHeroes(*scenario));
         }
 
         std::sort(pooled.begin(), pooled.end(), CrossoverHeroStronger());
@@ -2619,19 +2679,7 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
 
         for (unsigned int rest = pooled.size(); rest--;) {
             std::vector<type_artifact>& pooledArtifacts = m_carryoverArtifact[pool];
-            const hero& sourceHero = pooled[rest];
-            type_artifact artifact;
-            int slot;
-            for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
-                artifact = sourceHero.getArtifact(TArtifactSlot(slot));
-                if (artifact.m_artifactId != ARTIFACT_NONE)
-                    pooledArtifacts.push_back(artifact);
-            }
-            for (slot = 0; slot < g_crossoverBackpackSlots; ++slot) {
-                artifact = sourceHero.getBackpack(slot);
-                if (artifact.m_artifactId != ARTIFACT_NONE)
-                    pooledArtifacts.push_back(artifact);
-            }
+            collectCrossoverArtifacts(pooled[rest], pooledArtifacts);
         }
 
         std::sort(kept.begin(), kept.end(), CrossoverHeroStronger());

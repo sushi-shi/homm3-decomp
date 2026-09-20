@@ -25,30 +25,30 @@ def variants():
 {
     if (g_smackVideo || g_smackVideo2)
         g_soundManager->serviceSounds();
-    else if (g_binkVideo || g_binkVideo2)
+    else if (BinkManager::s_playingBink.m_bink || BinkManager::s_playingBink.m_bink2)
         g_soundManager->serviceSounds();
 }""",
         """void videoSoundOnOff(int on)
 {
-    if (g_smackVideo || g_smackVideo2 || g_binkVideo || g_binkVideo2)
+    if (g_smackVideo || g_smackVideo2 || BinkManager::s_playingBink.m_bink || BinkManager::s_playingBink.m_bink2)
         g_soundManager->serviceSounds();
 }""",
         """void videoSoundOnOff(int on)
 {
-    if (!g_smackVideo && !g_smackVideo2 && !g_binkVideo && !g_binkVideo2)
+    if (!g_smackVideo && !g_smackVideo2 && !BinkManager::s_playingBink.m_bink && !BinkManager::s_playingBink.m_bink2)
         return;
     g_soundManager->serviceSounds();
 }""",
     ]
     tail = """    if (g_smackVideo || g_smackVideo2)
         g_smackPaused = 0;
-    if (g_binkVideo) {
-        g_binkPaused = 0;
-        _BinkPause(g_binkVideo, 0);
+    if (BinkManager::s_playingBink.m_bink) {
+        BinkManager::s_playingBink.m_paused = 0;
+        _BinkPause(BinkManager::s_playingBink.m_bink, 0);
     }
-    if (g_binkVideo2) {
-        g_binkPaused = 0;
-        _BinkPause(g_binkVideo2, 0);
+    if (BinkManager::s_playingBink.m_bink2) {
+        BinkManager::s_playingBink.m_paused = 0;
+        _BinkPause(BinkManager::s_playingBink.m_bink2, 0);
     }
     videoSoundOnOff(1);
 """

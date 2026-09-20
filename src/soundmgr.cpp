@@ -3,7 +3,6 @@
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
-#include "../vendor/miles-5.0e/include/Mss.h"
 #include "soundmgr.h"
 #include "sample.h"
 #include "smackmgr.h"
@@ -26,7 +25,7 @@ DATA(0x00684aa8) int g_soundSampleRate = 44100;
 DATA(0x00684aac) int g_soundBitsPerSample = SOUND_BITS_PER_SAMPLE_16;
 DATA(0x00684ab0) int g_soundOutputChannels = 2;
 DATA(0x00684ae0) int g_soundMaxSamples = 14;
-DATA(0x0069fe80) AILWaveFormat g_soundWaveFormat;
+DATA(0x0069fe80) PCMWAVEFORMAT g_soundWaveFormat;
 DATA(0x00698a28) int g_unk698a28;
 
 VA(0x005994b0, 0x210)  // dc 0x14b07c
@@ -138,29 +137,29 @@ int soundManager::open(int newPriority)
             AIL_set_preference(33, 1);
             AIL_set_preference(34, 100);
 
-            AILDigitalDriver* driver;
-            AILDigitalDriver* result;
+            HDIGDRIVER driver;
+            HDIGDRIVER result;
             for (;;) {
                 if (g_soundSampleRate < 11025) {
                     result = 0;
                     break;
                 }
 
-                g_soundWaveFormat.m_formatTag = 1;
-                g_soundWaveFormat.m_channels =
+                g_soundWaveFormat.wf.wFormatTag = 1;
+                g_soundWaveFormat.wf.nChannels =
                     static_cast<unsigned short>(g_soundOutputChannels);
-                g_soundWaveFormat.m_samplesPerSec = g_soundSampleRate;
-                g_soundWaveFormat.m_avgBytesPerSec =
+                g_soundWaveFormat.wf.nSamplesPerSec = g_soundSampleRate;
+                g_soundWaveFormat.wf.nAvgBytesPerSec =
                     (g_soundBitsPerSample / 8) * g_soundOutputChannels
                     * g_soundSampleRate;
-                g_soundWaveFormat.m_blockAlign = static_cast<unsigned short>(
+                g_soundWaveFormat.wf.nBlockAlign = static_cast<unsigned short>(
                     (g_soundBitsPerSample / 8) * g_soundOutputChannels);
-                g_soundWaveFormat.m_bitsPerSample =
+                g_soundWaveFormat.wBitsPerSample =
                     static_cast<unsigned short>(g_soundBitsPerSample);
 
                 AIL_HWND();
                 int openResult = AIL_waveOutOpen(
-                    &driver, 0, -1, &g_soundWaveFormat);
+                    &driver, 0, -1, &g_soundWaveFormat.wf);
                 if (!openResult) {
                     char description[128];
                     strcpy(description, DATA_COMPGEN(
@@ -200,12 +199,12 @@ int soundManager::open(int newPriority)
             g_unk698764 = 0;
         } else {
             if (g_soundManager->m_ds->lppdsb) {
-                AILPrimaryBuffer* buffer =
-                    static_cast<AILPrimaryBuffer*>(g_soundManager->m_ds->lppdsb);
-                buffer->m_vtable->m_setVolume(buffer, 0);
+                LPDIRECTSOUNDBUFFER buffer = static_cast<LPDIRECTSOUNDBUFFER>(
+                    g_soundManager->m_ds->lppdsb);
+                buffer->SetVolume(0);
             }
             SmackSoundUseMSS(g_soundManager->m_ds);
-            BinkSetSoundSystem(BinkOpenMiles, g_soundManager->m_ds);
+            BinkSoundUseMiles(g_soundManager->m_ds);
         }
         m_playSounds = 1;
 
@@ -603,21 +602,21 @@ void __cdecl waitEndSampleThread(void* arglist)
     _endthread();
 }
 
-// Windows Miles service operation. DC's service_sounds is a four-byte
-// no-op at SoundMgr.h:140 (dc 0xe6ef4), not evidence for the nonempty PC
-// body's inline spelling or location. Retail expands this operation in
-// memorySample and launchSample, both in this TU, but retains calls in every
-// observed external consumer. All 13 retail AIL_serve references are in this
-// TU (the two expansions, this retained body and ten other references).
-// An ordinary TU-local definition explains that boundary without pins and
-// restores the exact 81-byte helper. Windows placement remains an inference;
-// the CE header stub is recorded separately in dc_only.tsv.
+// Windows Miles service operation. The WinCE counterpart service_sounds is
+// a four-byte no-op attributed to SoundMgr.h:140 (dc 0xe6ef4); its records do
+// not establish the nonempty Windows definition's inline spelling or owner.
+// Retail expands the complete operation only in memorySample and launchSample,
+// both in this TU; external consumers call the retained 0x59a7d0 body. All 13
+// retail AIL_serve references are in this TU, including ten different sound
+// operations. A source-local ordinary body recovers that visibility boundary
+// and retained emission. Its Windows ownership is a platform inference; the
+// CE header attribution remains recorded separately in dc_only.tsv.
 VA(0x0059a7d0, 0x51)
 void soundManager::serviceSounds()
 {
     EnterCriticalSection(&m_sectionSoundCall);
     AIL_serve();
-    void* stream = g_mp3Stream;
+    HSTREAM stream = g_mp3Stream;
     if (stream) {
         if (g_soundManager->m_mp3Playing) {
             if (!g_shutDownDone)

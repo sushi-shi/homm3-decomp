@@ -130,21 +130,15 @@ extern const std::bitset<19> g_artifactSlotMasks[15];
 DATA(0x006938d8)
 extern const TCombinationArtifact g_combinationArtifactTable[12];
 
-// Retail .data 0x660b68 and 0x660b6c, two adjacent storage cells retail
-// LOADS and then indexes (`mov eax,[0x660b68]` / `[esi + eax + 0x18]`)
-// - the akHeroTraits reference-cell pattern.
-// akArtifactTraits' name is DC-attested
-// (?akArtifactTraits@@3AAY0HP@$$CBUTArtifactTraits@@A); its DC bound of
-// 127 is AB-era and is NOT carried over, which is why this is spelled
-// as a pointer rather than akHeroTraits' reference-to-array - the
-// Complete-era artifact count is 144, now proved by artifact.obj's retail
-// parser and table extent. The combination table has NO DC row (a Shadow of
-// Death addition); its name is INVENTED. artifact.obj owns both reference
-// cells and their underlying storage; the two excluded cinit tables remain a
-// separate source-initializer admission.
-extern const TArtifactTraits* g_artifactTraits;
+// DC akArtifactTraits and akArtifactSlotTraits are references to const arrays
+// of 127/18 records. Complete extends those domains to 144/19; its reference
+// cells at 0x660b68/0x660b64 point to storage at 0x6939f8/0x694bf8.
+// Preserve that reference-to-array interface with the Complete-era bounds.
+// The combination table is Complete-only; its inferred pointer interface is
+// independent of the two DC declarations. artifact.cpp owns all three tables.
+extern const TArtifactTraits (&g_artifactTraits)[144];
 extern const TCombinationArtifact* g_combinationArtifacts;
-extern const TArtifactSlotTraits* g_artifactSlotTraits;
+extern const TArtifactSlotTraits (&g_artifactSlotTraits)[19];
 
 // Original: artifactAllowedInSlot; artifact.h:229, dc 0x37d88.
 // DC233 indexes the artifact's bitset18 with operator[]. Complete replaces
