@@ -1191,14 +1191,14 @@ int oldmain()
             TTownType alignment[8];
             memcpy(alignment, g_game->m_setup.m_alignment, sizeof(alignment));
 
-            if (g_unk69774c)
+            if (g_inCampaign)
                 g_game->resetGame(g_game->m_setup.m_difficulty,
                                   g_game->m_campaign.m_currentMap,
                                   &g_game->m_mapHeader);
             else
                 g_game->resetGame(g_game->m_setup.m_difficulty, 0, 0);
 
-            if (g_unk69774c) {
+            if (g_inCampaign) {
                 TCampaignBrief::CampaignHeaderStruct campaignBrief(
                     g_game->m_campaign.getCampaignFileName().c_str());
                 int briefingChoice = g_game->m_campaign.m_briefingChoice;
@@ -1262,7 +1262,7 @@ int oldmain()
             g_unnamed699558 = 1;
             g_soundManager->stopAllSamples(1);
 
-            if (g_unk69774c
+            if (g_inCampaign
                 && g_game->m_campaign.m_mapScores[g_game->m_campaign.m_currentMap]
                        .m_completed) {
                 g_progressBarCount = 20;
@@ -1319,7 +1319,7 @@ int oldmain()
 
             if (!g_defeatedAllPlayers) {
                 lostGame();
-            } else if (g_unk69774c) {
+            } else if (g_inCampaign) {
                 SCampaign& campaign = g_game->m_campaign;
 
                 if (g_defeatedAllPlayers != g_gameResultCampaignMapScored) {
@@ -1345,7 +1345,7 @@ int oldmain()
                             g_highScoreManager->viewHiScore();
                         }
                         g_gameOver = 0;
-                        g_unk69774c = 0;
+                        g_inCampaign = 0;
                         continue;
                     }
                 }
@@ -1365,7 +1365,7 @@ int oldmain()
                         g_highScoreManager->viewHiScore();
                     }
                     if (campaign.m_currentCampaign != g_campaignOrdinalLast) {
-                        g_unk69774c = 1;
+                        g_inCampaign = 1;
                         while (1) {
                             {
                                 TCampaignWindow campaignWindow(
@@ -1396,7 +1396,7 @@ int oldmain()
                                == g_gameResultCampaignMapScored
                            && campaign.campaignComplete()) {
                     if (campaign.m_currentCampaign != g_campaignOrdinalLast) {
-                        g_unk69774c = 1;
+                        g_inCampaign = 1;
                         while (1) {
                             {
                                 TCampaignWindow campaignWindow(
@@ -1460,7 +1460,7 @@ int oldmain()
 static int doNewGame()
 {
     g_inSetupDialog = 1;
-    g_unk69774c = 0;
+    g_inCampaign = 0;
     g_unnamed69927c = 10;
     g_unnamed6994e4 = 10;
     g_unnamed699274 = 1;
@@ -1498,7 +1498,7 @@ static int doNewGame()
             if (doCampaignWindow())
                 exitNewGame = 1;
             else
-                g_unk69774c = 0;
+                g_inCampaign = 0;
             break;
 
         case TGameTypeWindow::MULTIPLAYER_ID:
@@ -1608,7 +1608,7 @@ static unsigned char doCampaignWindow()
         switch (g_windowManager->m_dialogReturn) {
         case TCampaignSetWindow::CAMPAIGN_SET_SOD_ID: {
             videoPause();
-            g_unk69774c = 1;
+            g_inCampaign = 1;
 
             while (1) {
                 {
@@ -1637,7 +1637,7 @@ static unsigned char doCampaignWindow()
 
         case TCampaignSetWindow::CAMPAIGN_SET_AB_ID: {
             videoPause();
-            g_unk69774c = 1;
+            g_inCampaign = 1;
 
             while (1) {
                 {
@@ -1666,7 +1666,7 @@ static unsigned char doCampaignWindow()
 
         case TCampaignSetWindow::CAMPAIGN_SET_ROE_ID: {
             videoPause();
-            g_unk69774c = 1;
+            g_inCampaign = 1;
 
             while (1) {
                 {
@@ -1698,14 +1698,14 @@ static unsigned char doCampaignWindow()
             TCustomCampaignWindow customCampaignWindow;
             customCampaignWindow.doModal(0);
             if (g_windowManager->m_dialogReturn) {
-                g_unk69774c = 1;
+                g_inCampaign = 1;
                 {
                     TCampaignBrief campaignBrief(1, 0);
                     campaignBrief.doModal();
                     if (g_windowManager->m_dialogReturn
                         != DIALOG_RETURN_CANCEL)
                         return 1;
-                    g_unk69774c = 0;
+                    g_inCampaign = 0;
                 }
             }
             break;
@@ -1777,7 +1777,7 @@ static int doMultiPlayerWindow()
 static int doLoadGame()
 {
     g_inSetupDialog = 1;
-    g_unk69774c = 0;
+    g_inCampaign = 0;
     g_unnamed69927c = 10;
     g_unnamed6994e4 = 10;
     g_unnamed699274 = 1;
@@ -1819,7 +1819,7 @@ static int doLoadGame()
             // pinned - every subset that also drops one of those is worse
             // (2026-09-06, polish lane 50).
             if (pickLoadGame()) {
-                g_unk69774c = 1;
+                g_inCampaign = 1;
                 exitLoadGame = 1;
             }
             break;
@@ -2489,15 +2489,15 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
                 gameLost = 1;
             }
 
-            if (g_unk69774c
+            if (g_inCampaign
                 && g_game->m_campaign.m_currentCampaign == GAME_CAMPAIGN_7
                 && g_game->m_campaign.m_currentMap == GAME_SCENARIO_1) {
                 strcpy(g_text, (*g_generalText)[714]);
-            } else if (g_unk69774c
+            } else if (g_inCampaign
                 && g_game->m_campaign.m_currentCampaign == GAME_CAMPAIGN_18
                 && g_game->m_campaign.m_currentMap == GAME_SCENARIO_8) {
                 strcpy(g_text, (*g_generalText)[764]);
-            } else if (g_unk69774c
+            } else if (g_inCampaign
                 && g_game->m_campaign.m_currentCampaign == GAME_CAMPAIGN_18
                 && g_game->m_campaign.m_currentMap == GAME_SCENARIO_9) {
                 strcpy(g_text, (*g_generalText)[738]);
@@ -3838,7 +3838,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_FORCE_VICTORY:
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         checkEndGame(END_GAME_FORCE_VICTORY);
         break;
@@ -3849,7 +3849,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_TOGGLE_VIEW_ALL:
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         g_advManager->m_debugViewAll = !g_advManager->m_debugViewAll;
         if (g_advManager->m_debugViewAll)
@@ -3860,7 +3860,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_CHEAT_REVEAL: {
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         for (int level = 0; level < g_game->getNumMapLevels(); level++) {
             g_game->setVisibility(APP_MENU_REVEAL_COORDINATE,
@@ -3877,7 +3877,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_CHEAT_MOVEMENT:
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         if (currentHero)
             currentHero->m_movePoints = APP_MENU_MOVEMENT_BONUS;
@@ -3885,7 +3885,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_CHEAT_RESOURCES: {
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         for (int resource = 0; resource < APP_MENU_RESOURCE_COUNT; resource++) {
             g_currentPlayer->m_resources[resource] +=
@@ -3899,7 +3899,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_COMBAT_ORDINAL_B798:
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         g_combatManager->m_debugNoSpellLimit = !g_combatManager->m_debugNoSpellLimit;
         if (g_combatManager->m_debugNoSpellLimit)
@@ -3920,7 +3920,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_COMBAT_ORDINAL_B79B:
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         g_combatManager->m_debugShowHiddenObjects = !g_combatManager->m_debugShowHiddenObjects;
         if (g_combatManager->m_debugShowHiddenObjects)
@@ -3932,7 +3932,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_COMBAT_ORDINAL_B79C:
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         g_combatManager->m_debugShowBlockedHexes = !g_combatManager->m_debugShowBlockedHexes;
         if (g_combatManager->m_debugShowBlockedHexes)
@@ -3945,7 +3945,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_COMBAT_REBUILD_OBSTACLES:
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         g_combatManager->placeAllObstacles();
         g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
@@ -3957,7 +3957,7 @@ int handleAppSpecificMenuCommands(int idItem)
     default:
         if (idItem >= APP_MENU_ARMY_FIRST && idItem < APP_MENU_ARMY_LAST) {
             g_game->m_isCheater = 1;
-            if (g_unk69774c)
+            if (g_inCampaign)
                 g_game->m_campaign.m_isCheater = 1;
             if (g_game->getCurrHeroId() != -1) {
                 g_game->giveArmy(
@@ -3972,7 +3972,7 @@ int handleAppSpecificMenuCommands(int idItem)
         if (idItem >= APP_MENU_SECONDARY_FIRST
                 && idItem < APP_MENU_SECONDARY_LAST) {
             g_game->m_isCheater = 1;
-            if (g_unk69774c)
+            if (g_inCampaign)
                 g_game->m_campaign.m_isCheater = 1;
             if (g_combatManager->m_status == baseManager::STATUS_ACTIVE)
                 currentHero = g_combatManager->m_heroes[g_combatManager->m_currentSide];
@@ -3988,7 +3988,7 @@ int handleAppSpecificMenuCommands(int idItem)
         else if (idItem >= APP_MENU_ARTIFACT_FIRST
                 && idItem < APP_MENU_ARTIFACT_LAST) {
             g_game->m_isCheater = 1;
-            if (g_unk69774c)
+            if (g_inCampaign)
                 g_game->m_campaign.m_isCheater = 1;
             TArtifact artifactId;
             {
@@ -4006,7 +4006,7 @@ int handleAppSpecificMenuCommands(int idItem)
             if (currentHero) {
                 type_artifact artifact(ARTIFACT_NONE);
                 g_game->m_isCheater = 1;
-                if (g_unk69774c)
+                if (g_inCampaign)
                     g_game->m_campaign.m_isCheater = 1;
                 if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
                     {

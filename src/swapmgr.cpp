@@ -1347,7 +1347,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
             g_heroScreenDraggedArtifact.m_artifactId, slot))
         return;
 
-    if (g_campaignMode
+    if (g_inCampaign
         && oldArtifact.m_artifactId == ARTIFACT_ARMAGEDDONS_BLADE
         && g_game->m_campaign.m_currentCampaign == ARMAGEDDONS_BLADE_CAMPAIGN
         && g_game->m_campaign.m_currentMap == ARMAGEDDONS_BLADE_MAP

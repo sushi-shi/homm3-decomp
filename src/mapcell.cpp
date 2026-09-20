@@ -2766,13 +2766,13 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     // Restoration of Erathia and Armageddon's Blade always carry the
     // experience dword; Shadow of Death gates it behind a flag byte.  In a
     // campaign game a value below forty is treated as no custom experience at
-    // all, which is what the gbUnk69774c consult is doing on both arms.
+    // all, which is what the g_inCampaign consult is doing on both arms.
     unsigned char customExperience;
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA
         || mapVersion == MAP_FORMAT_ARMAGEDDONS_BLADE) {
         infile->read(&intBuffer, sizeof(intBuffer));
         experience = intBuffer;
-        if (experience != 0 && (!g_unk69774c || experience >= 40))
+        if (experience != 0 && (!g_inCampaign || experience >= 40))
             customExperience = 1;
         else
             customExperience = 0;
@@ -2782,7 +2782,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         customExperience = experienceFlag != 0;
         if (customExperience) {
             infile->read(&experience, sizeof(experience));
-            if (g_unk69774c && experience < 40)
+            if (g_inCampaign && experience < 40)
                 customExperience = 0;
         } else {
             experience = 0;
@@ -2831,7 +2831,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     infile->read(&charBuffer, sizeof(charBuffer));
     if (charBuffer) {
         infile->read(&charBuffer, sizeof(charBuffer));
-        if (!isRandomHero || g_unk69774c) {
+        if (!isRandomHero || g_inCampaign) {
             heroData->m_customPortraitNumber = 1;
             heroData->m_portraitNumber = charBuffer;
         }

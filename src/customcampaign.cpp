@@ -1329,7 +1329,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     strcpy(currentHero->m_name, sourceHero->m_name);
     currentHero->m_portrait = sourceHero->m_portrait;
 
-    if (g_unk69774c) {
+    if (g_inCampaign) {
         if (currentCampaign->m_currentCampaign == g_crossoverBonusCampaign
             && currentCampaign->m_currentMap == g_crossoverBonusScenario
             && sourceHero->m_id == g_crossoverBonusHero) {

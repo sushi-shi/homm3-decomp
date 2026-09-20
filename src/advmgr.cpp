@@ -8252,7 +8252,7 @@ unsigned char saveGame(unsigned char campaignWinMode)
     }
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 
-    if (g_unnamed69774c)
+    if (g_inCampaign)
         sprintf(g_unnamed691268,
                 DATA_COMPGEN(0x006603f8, campaignSaveExtension, ".CGM"));
     else

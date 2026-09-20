@@ -3129,7 +3129,7 @@ VA(0x004693a0, 0x9F)
 void combatManager::unnamed4693a0(int side)
 {
     g_game->m_isCheater = 1;
-    if (g_unk69774c)
+    if (g_inCampaign)
         g_game->m_campaign.m_isCheater = 1;
     turnOffHighlighter(1);
 

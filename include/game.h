@@ -211,9 +211,12 @@ enum EMapFormatVersion {
 // Only the fields reached by reconstructed consumers are exposed. The
 // defeat-hero ids are fixed independently by AI_value_of_combat's two
 // objective-bonus branches.
-// hero.cpp owns the DATA claim (0x69774c); CheckForDefeatedHeroLoss's
-// campaign-mode gate reads it.
-extern unsigned char g_campaignMode;
+// Original: gbInCampaign (DC public ?gbInCampaign@@3_NA, data 0x2c9cc).
+// Retail byte at 0x69774c: SavedGameHeader::reset selects H3SVC versus
+// H3SVG and saves this flag; game::Load restores it from campaignGame.
+// This is not DC's separate campaignMode selection-window flag (0x327d8).
+// Keep the existing retail byte view in this naming-only recovery.
+DATA(0x0069774c) extern unsigned char g_inCampaign;
 
 // The upgrade-town victory's two level domains (map-format ordinals).
 // CheckForUpgradedTown (0x5f1d40) maps each to the matching
@@ -1763,10 +1766,6 @@ extern unsigned char g_unnamed69d80d;
 // latch after rebuilding the session.
 extern int g_thisNetGotAdventureControl;
 DATA(0x0067814c) extern int g_heroGoldCost;
-// Save version 41 added this signed-byte session value. game::Load owns the
-// restore path; advManager also updates it when the local player finds the
-// Holy Grail. Its wider role is not yet byte-proven.
-DATA(0x0069774c) extern unsigned char g_unk69774c;
 // One-byte session latch reset by game::SetupOrigData. No surviving symbol
 // names its wider role, so retain the address-ordinal spelling.
 DATA(0x0069950c) extern int g_unnamed69950c;
@@ -1863,7 +1862,7 @@ inline SavedGameHeader::SavedGameHeader()
 VA(0x004bc350, 0x271)  // anchor-caller (game::Save) + layout, dc 0xbcf00
 inline void SavedGameHeader::reset()
 {
-    if (g_unk69774c)
+    if (g_inCampaign)
         strcpy(m_id, "H3SVC");
     else
         strcpy(m_id, "H3SVG");
@@ -1877,7 +1876,7 @@ inline void SavedGameHeader::reset()
 
     m_currentPlayer = g_netLocalGamePos;
     m_mapSetup = g_game->m_setup;
-    m_campaignGame = g_unk69774c;
+    m_campaignGame = g_inCampaign;
     m_fileName = g_game->m_saveFileName;
     m_difficultyRating = g_game->m_difficultyRating;
     m_numDeadPlayers = g_game->m_numDeadPlayers;

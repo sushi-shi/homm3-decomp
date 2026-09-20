@@ -3085,7 +3085,7 @@ void townManager::handleMageGuildClick()
         currentHero = g_game->getHero(m_townToView->m_garrisonHeroId);
 
     if (currentHero && !currentHero->hasArtifact(0) && g_currentPlayer->isLocalHuman()) {
-        if (g_unk69774c
+        if (g_inCampaign
             && currentHero->m_id == hero::LEVEL_UP_OVERRIDE_HERO_ID
             && g_game->m_campaign.m_currentCampaign
                    == hero::LEVEL_UP_CAMPAIGN_OVERRIDE) {

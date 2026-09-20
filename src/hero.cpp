@@ -98,7 +98,6 @@
 #include "textwdgt.h"
 #include "includes.h"
 
-DATA(0x0069774c) extern unsigned char g_campaignMode;
 DATA(0x0067dcec) extern const THeroClassTraits (&g_heroClasses)[18];
 // Runtime hero-view state used by the retail-only name getter below. The
 // storage addresses and access widths are byte-proven; no public symbol
@@ -1207,7 +1206,7 @@ void hero::initialize(const HeroExtra* setup)
         // is expanded in place at 0x4d999b, induction rewrite and all.
         // The only consistent reading is that retail's source repeats the
         // statements rather than calling it.
-        if (g_campaignMode
+        if (g_inCampaign
             && g_game->m_campaign.m_currentCampaign == g_startLevelCampaign
             && g_game->m_campaign.m_currentMap == g_startLevelScenario) {
             int level = g_game->m_heroes[g_startLevelHeroId].m_level
@@ -1239,7 +1238,7 @@ void hero::initialize(const HeroExtra* setup)
 VA(0x004d8f70, 0x3E)
 const char* hero::heroFn004D8F70()
 {
-    if (m_id == CLASS_NAME_OVERRIDE_HERO_ID && g_campaignMode &&
+    if (m_id == CLASS_NAME_OVERRIDE_HERO_ID && g_inCampaign &&
         g_game->m_campaign.m_currentCampaign == CLASS_NAME_OVERRIDE_SCENARIO)
         return g_generalText->getText(GENERAL_TEXT_CAMPAIGN_HERO_CLASS);
     return g_heroClasses[m_heroClass].m_className;
@@ -1259,7 +1258,7 @@ const char* hero::heroFn004D8FB0()
     if (m_hasCustomName)
         return m_customName.c_str();
 
-    if (g_campaignMode &&
+    if (g_inCampaign &&
         g_game->m_campaign.m_currentCampaign != CUSTOM_NAME_CAMPAIGN_EXCLUDED_SCENARIO &&
         g_currentHero->m_portrait == CUSTOM_NAME_CAMPAIGN_PORTRAIT)
         return g_campaignHeroName;
@@ -1841,7 +1840,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
         m_flags |= 0x20000;
     }
 
-    if (g_campaignMode) {
+    if (g_inCampaign) {
         switch (g_game->m_campaign.m_currentCampaign) {
         case DEALLOCATE_CAMPAIGN_BY_PORTRAIT:
             if (m_portrait == DEALLOCATE_KEPT_PORTRAIT)
@@ -2103,7 +2102,7 @@ void hero::checkLevel()
                 chances = g_heroClasses[m_heroClass].m_gainPrimarySkillChance;
             else
                 chances = g_heroClasses[m_heroClass].m_gainPrimarySkillChance10P;
-            if (g_campaignMode &&
+            if (g_inCampaign &&
                 g_game->m_campaign.m_currentCampaign == LEVEL_UP_CAMPAIGN_OVERRIDE &&
                 m_id == LEVEL_UP_OVERRIDE_HERO_ID) {
                 if (m_level <= LEVEL_UP_LOW_LEVEL_LAST)
@@ -2284,7 +2283,7 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
     int heroClass = currentHero->m_heroClass;
     const THeroClassTraits& classTraits = g_heroClasses[heroClass];
     const char* skillDisabled = g_game->m_ssDisabled;
-    if (g_campaignMode &&
+    if (g_inCampaign &&
         g_game->m_campaign.m_currentCampaign == hero::LEVEL_UP_CAMPAIGN_OVERRIDE &&
         currentHero->m_id == hero::LEVEL_UP_OVERRIDE_HERO_ID)
         skillDisabled = g_campaignDisabledSkills;

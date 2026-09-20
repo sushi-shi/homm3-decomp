@@ -3258,7 +3258,7 @@ unsigned char CTurnDuration::isOn()
     // expansion in isClose; a compound boolean return changes VC6 lowering.
     if (m_currDuration == 0)
         return 0;
-    if (g_unk69774c)
+    if (g_inCampaign)
         return 0;
     return 1;
 }
@@ -3268,7 +3268,7 @@ unsigned char CTurnDuration::isExpired()
 {
     if ((!g_currentPlayer || g_currentPlayer->isLocalHuman())
             && m_currDuration != 0
-            && !g_unk69774c
+            && !g_inCampaign
             && m_pauseTime <= 0) {
         unsigned long startTime = m_turnStartTime;
         if (startTime > 0
@@ -3312,7 +3312,7 @@ void CTurnDuration::checkForWarning()
 {
     if (m_currDuration == 0)
         return;
-    if (g_unk69774c)
+    if (g_inCampaign)
         return;
     if (m_nextWarning == 0)
         return;
@@ -3403,7 +3403,7 @@ void CTurnDuration::setDuration(unsigned long ms)
 VA(0x00557d90, 0x3D)  // dc 0x11f3b0
 void CTurnDuration::start()
 {
-    if (m_currDuration != 0 && !g_unk69774c) {
+    if (m_currDuration != 0 && !g_inCampaign) {
         m_lastWarned = m_turnStartTime = GameTime::get();
         m_nextWarning = 0;
         if (m_currDuration > 60000)

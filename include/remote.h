@@ -140,7 +140,7 @@ extern char g_tcpAddress[21];
 
 extern "C" const GUID guidHeroes3;
 
-extern unsigned char g_unk69774c;
+extern unsigned char g_inCampaign;
 
 // Retail's chat methods independently prove every offset used here; the
 // Dreamcast CodeView field list supplies the source names and the 0x88-byte

@@ -159,7 +159,7 @@ TTownType pickNextAlignment(int legalAlignments, TTownType type)
 VA(0x00513740, 0xBC)  // dc 0x103824
 void game::showScenInfo()
 {
-    if (g_unk69774c) {
+    if (g_inCampaign) {
         TCampaignBrief campaignBrief(0, 1);
         campaignBrief.doModal();
         if (g_windowManager->m_dialogReturn == NEWGAME_CAMPAIGN_BRIEF_EXIT)

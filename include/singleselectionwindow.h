@@ -807,16 +807,16 @@ private:
 };
 SIZE(TSingleSelectionWindow, 0x1970);
 
-// Four cross-TU cells advmgr's SaveGame drives; the selection window's
-// own TU is their natural owner, so they are declared here (the
-// gUnnamed69d808 precedent) until it lands.
+// Cross-TU cells used by advmgr's SaveGame and the selection window.
+// game.h owns the inCampaign DATA claim; the other cells retain their
+// provisional address-based names.
 //   0x69fc2c  the chosen save filename (empty = the dialog was cancelled)
 //   0x691268  the extension scratch SaveGame sprintf's (.GM%d / .CGM)
 //   0x69774c  campaign-game byte: picks the .CGM extension
 //   0x697774  set to 1 the moment a save filename is committed
 extern char g_unnamed69fc2c[];
 extern char g_unnamed691268[];
-extern unsigned char g_unnamed69774c;
+extern unsigned char g_inCampaign;
 extern int g_unnamed697774;
 
 #endif  /* HOMM3_SINGLESELECTIONWINDOW_H */

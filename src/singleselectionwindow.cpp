@@ -1884,7 +1884,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     g_selectionCampaignMode = (g_windowManager->m_dialogReturn
                         == SINGLE_SELECTION_LAUNCHED_FROM_CAMPAIGN
-                    || g_unnamed69774c != 0);
+                    || g_inCampaign != 0);
     g_unnamed69fbe8 = this;
     m_flag65 = 0;
     m_flag64 = 0;
@@ -2321,7 +2321,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     // Retail proves both the GetCurrentScenario boundary and this duplicated
     // button-construction source family. Keep the header accessor inline:
     // this large caller naturally retains the call and emits its exact COMDAT.
-    if (g_unnamed69774c) {
+    if (g_inCampaign) {
         if (!g_game->m_campaign.getCurrentScenario()->m_completed) {
             m_widgets.push_back(new button(
                 584, 535, 166, 40, 188, "scnrback.def",

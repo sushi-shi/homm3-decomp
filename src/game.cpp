@@ -933,7 +933,7 @@ int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
         m_garrisons[i].m_mapZ = static_cast<unsigned char>(count);
 
         if (saveVersion < 28) {
-            m_garrisons[i].m_removableTroops = !g_unk69774c;
+            m_garrisons[i].m_removableTroops = !g_inCampaign;
         } else {
             unsigned char value;
             infile->read(&value, sizeof(value));
@@ -2592,7 +2592,7 @@ void applySavedGameHeader(const SavedGameHeader& saved)
     g_game->m_f1f698 = saved.m_gameVersion;
     g_game->m_mapHeader = saved.m_mapHeader;
     g_game->m_setup = saved.m_mapSetup;
-    g_unk69774c = saved.m_campaignGame;
+    g_inCampaign = saved.m_campaignGame;
     g_game->m_campaign = saved.m_campaign;
     strcpy(g_game->m_saveFileName, saved.m_fileName.c_str());
     g_game->m_difficultyRating = saved.m_difficultyRating;
@@ -3366,7 +3366,7 @@ unsigned char game::saveGame(const char* filename, unsigned char determineSuffix
         strcpy(nameNoExtension, filename);
         strtok(nameNoExtension,
                DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
-        if (g_unk69774c)
+        if (g_inCampaign)
             sprintf(saveName,
                     DATA_COMPGEN(0x00677d98, nameWithExtensionFormat, "%s.%s"),
                     nameNoExtension,
@@ -3648,7 +3648,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
         int campaignNumber = m_campaign.m_currentCampaign;
         if (numLivingPlayers == 1) {
             m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
-        } else if (g_unk69774c) {
+        } else if (g_inCampaign) {
             if (campaignNumber == GAME_CAMPAIGN_5
                 || campaignNumber == GAME_CAMPAIGN_3) {
                 if (map != GAME_SCENARIO_0)
@@ -3831,11 +3831,11 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
 
     m_numPlayers = 8;
     m_numDeadPlayers = 0;
-    if (gameVersion != -1 && !g_unk69774c) {
+    if (gameVersion != -1 && !g_inCampaign) {
         m_f1f698 = gameVersion;
     } else {
         m_f1f698 = 2;
-        if (g_unk69774c) {
+        if (g_inCampaign) {
             if (m_campaign.m_currentCampaign < g_firstArmageddonsBladeCampaign)
                 m_f1f698 = 0;
             else if (m_campaign.m_currentCampaign < 13)
@@ -3898,7 +3898,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
 
     validateVictoryLossConditions(1);
 
-    if (g_unk69774c && m_campaign.m_currentCampaign == GAME_CAMPAIGN_14) {
+    if (g_inCampaign && m_campaign.m_currentCampaign == GAME_CAMPAIGN_14) {
         hero* campaignHero = &m_heroes[45];
         if (campaignHero->getArtifact(TArtifactSlot(hero::EQUIPPED_SLOT_SPELLBOOK)).m_artifactId
             != -1)
@@ -3929,7 +3929,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                    sizeof(m_players[setupPlayer].m_resources));
         }
 
-        if (!g_unk69774c) {
+        if (!g_inCampaign) {
             int bonus = g_newMapStartingBonus[setupPlayer];
             bool hasHero = true;
             if (getHero(m_players[setupPlayer].m_heroes[0]) == NULL)
@@ -6170,7 +6170,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
     if (static_cast<unsigned char>(x) != g_savedHeroNone)
         readVictoryCondition(x, infile);
 
-    if (g_unk69774c) {
+    if (g_inCampaign) {
         switch (g_game->m_campaign.m_currentCampaign) {
         case g_campaignVictoryOverrideFirst:
             if (campaignMap == GAME_SCENARIO_2) {
@@ -6233,7 +6233,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
                 availableHeroesMask, g_mapHeaderLegacyHeroCount),
             bitset_iterator<g_mapHeaderHeroCount>(m_availableHeroes, 0));
 
-        if (!g_unk69774c) {
+        if (!g_inCampaign) {
             for (int i = g_mapHeaderCompleteLegacyHeroFirst;
                  i <= g_mapHeaderCompleteLegacyHeroLast; ++i)
                 m_availableHeroes[i] = true;
@@ -8284,7 +8284,7 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
         monsterOk[CREATURE_RUST_DRAGON] = false;
         monsterOk[CREATURE_ENCHANTER] = false;
         monsterOk[CREATURE_SHARPSHOOTER] = false;
-        if (g_unk69774c
+        if (g_inCampaign
             && m_campaign.m_currentCampaign >= g_firstShadowOfDeathCampaign) {
             monsterOk[CREATURE_PIXIE] = false;
             monsterOk[CREATURE_SPRITE] = false;
@@ -8444,7 +8444,7 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
     armyGroup* currentArmy = &m_heroes[hero].m_army;
     const THeroTraits* traits = &g_heroTraits[hero];
 
-    if (g_unk69774c
+    if (g_inCampaign
         && hero == g_campaignArmyOverrideHero
         && m_campaign.m_currentCampaign == g_campaignArmyOverrideCampaign
         && m_campaign.m_currentMap) {
@@ -8767,7 +8767,7 @@ void game::createTownHeroes(int* startingHeroIds)
         if (startingHeroIds != NULL && m_players[i].m_isHuman
             && startingHeroIds[i] != -1)
             heroId = startingHeroIds[i];
-        else if (g_unk69774c)
+        else if (g_inCampaign)
             heroId = getStartingHeroId(m_setup.m_alignment[i], i, 0);
         else
             heroId = getStartingHeroId(m_setup.m_alignment[i], i, 0);
@@ -8778,7 +8778,7 @@ void game::createTownHeroes(int* startingHeroIds)
         thisTown->placeInMap(heroId, i, 1);
         thisTown->giveSpells(NULL);
 
-        if (g_unk69774c
+        if (g_inCampaign
             && g_game->m_campaign.m_currentCampaign == g_startLevelCampaign
             && g_game->m_campaign.m_currentMap == g_startLevelScenario)
             m_heroes[heroId].giveExperience(
@@ -10422,7 +10422,7 @@ void game::giveTimeEventReward(const TTimedEvent* thisEvent)
         g_advManager->m_advWindow->updateResourceDisplay(1, 1);
         extendedDialog(thisEvent->m_message.c_str(), rewards, -1, -1, 0);
 
-        if (g_unk69774c) {
+        if (g_inCampaign) {
             short currentTurn = getCurrentTurn();
             if (currentTurn == g_campaignPopulationEventDay
                 && m_campaign.m_currentCampaign
