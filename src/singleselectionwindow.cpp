@@ -6580,6 +6580,7 @@ unsigned char TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost
 VA(0x00589710, 0x40F)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg, dc 0x140664
 unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
 {
+#ifdef _WINDOWS
     if (m_headersA.size() == 0)
         return 1;
     if (!m_receivingMaps)
@@ -6607,17 +6608,18 @@ unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
                 m_headersA[mapFileNameMsg->m_number] = temp;
             GameSelectionHeadersStruct& sel =
                 m_selectionHeaders[mapFileNameMsg->m_number];
-            // This pin is LOAD-BEARING, unlike loadPalette's. Retail calls
-            // GameSelectionHeadersStruct's generated assignment out of line
-            // here; letting VC6 expand it costs 90.22 -> 71.42 and replaces
-            // the single ~SavedGameHeader call with an inline _Tidy plus
-            // ~SCampaign and ~NewSMapHeader, which is also where our frame
-            // grows 0x1c over retail's 0xcc4. Removing it needs the real
-            // reason retail's operator= stayed out of line, not just the
-            // pin's removal.
-#pragma inline_depth(0)
+            // Both init handlers size the active source list and its display
+            // mirror together; a received row must address that shared range.
+            HOMM3_RELEASE_VERIFY(mapFileNameMsg->m_number >= 0
+                && static_cast<unsigned int>(mapFileNameMsg->m_number)
+                    < (mapFileNameMsg->m_flag
+                           ? m_transferHeaders.size()
+                           : m_headersA.size()));
+            HOMM3_RELEASE_VERIFY(
+                (mapFileNameMsg->m_flag
+                     ? m_transferHeaders.size()
+                     : m_headersA.size()) == m_selectionHeaders.size());
             sel = temp;
-#pragma inline_depth()
         } else {
             CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
             transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
@@ -6627,6 +6629,7 @@ unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
     _chdir("..");
     CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
     transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
+#endif
     return 1;
 }
 
