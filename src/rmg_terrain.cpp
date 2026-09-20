@@ -706,27 +706,22 @@ int __fastcall selectTerrainTransition(
     return 0;
 }
 
-// The short output lifetime can arise from the expanded value-size helper;
-// exact stack reuse did not prove the artificial block in the earlier model.
-// Residual (35.3347%): the value helper expands, but vector::insert(count,value)
-// remains a call where retail expands it. Both _Tree::_Init calls and virtual
-// slot 3 remain in order. Coordinate getters/fields, named value snapshots,
-// member initialization and an ordinary size/storage helper did not recover
-// that nested boundary. Scoped output is retained only as an experiment control.
-// Thirteen follow-up states test default/named cache values, returned-value
-// ownership and ordinary cache initialization/resize helpers. Reproduced
-// results remain at or below 35.3347%; keep the proven virtual output ABI.
-// Explicit grid copy constructors and assignment also fail to recover it.
-// Live C2 trace verifies an unchanged object: insert costs 469 against its
-// nested budget of 466. Six return-value ownership variants leave 35.3347%;
-// returning through the existing coordinate constructor lowers it to 34.7992%
-// and still retains insert. No return-helper change is supported.
+// The shared free size query consumes the virtual output reference and
+// ends that output's lifetime before allocating the cache. It recovers the
+// expanded count-insert body (93.0418%); member query ownership remains at
+// 35.3347%. Both adapter bodies and all seven header consumers keep MAX.
+// The remaining differences are the cell-count register/size checks and the
+// shrinking path's extra retained size() call: the verified C2 trace leaves
+// budget 1 for size() at cost 42. Named return values/references lose the
+// insertion expansion; size snapshots, cache-value lifetimes and area/count
+// variants do not improve it. Preserve the virtual output ABI;
+// artificial caller scopes and a hidden-value virtual slot are not solutions.
 VA(0x005B45F0, 0x26D)
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
     : m_adapter(newAdapter), m_paintTerrain(terrain), m_transitionStrength(strength)
 {
-    m_size = m_adapter->getSize();
+    m_size = getRmgMapSize(m_adapter);
     m_packedCells.resize(getWidth() * getHeight(), TRmgPackedTerrainCell());
 }
 

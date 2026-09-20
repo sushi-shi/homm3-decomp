@@ -945,7 +945,7 @@ int TRmgRoadMapAdapter::getOverlay(const TRmgGridPoint& point)
 // methods; the river method below owns their joint ICF representative.
 TRmgGridPoint TRmgRoadMapAdapter::getSize()
 {
-    return m_map->getSize();
+    return getRmgMapSize(m_map);
 }
 
 // The real road-painting stack construction at 0x548120 retains the
@@ -1031,7 +1031,7 @@ void TRmgMapAdapter::setOverlay(const TRmgGridPoint& point, int value)
 VA(0x00532790, 0x27) // vtable 0x640a3c slot 3, ICF with road slot 3
 TRmgGridPoint TRmgMapAdapter::getSize()
 {
-    return m_map->getSize();
+    return getRmgMapSize(m_map);
 }
 
 VA(0x005327C0, 0x63) // anchor-vtable + packed-field evidence; Complete-only
@@ -6513,7 +6513,8 @@ unsigned char type_random_map_generator::createSubterraneanGate(
 // homes and the final success block (99.9286%). All six calls agree. Only
 // the independent minimum-X/maximum-Y loads at +0x10c/+0x10f are reversed.
 // Loop forms, snapshot/declaration lifetimes, public vector insertion and
-// allocator ownership do not resolve that scheduling difference.
+// allocator ownership do not resolve that scheduling difference. Named cell
+// and predicate values, nested conditions and continue guards also stay flat.
 VA(0x00542930, 0x1C6) // anchor-callee 0x540e81; thiscall, ret 8; retail-only
 unsigned char type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* zone)
 {
@@ -9255,7 +9256,8 @@ void type_random_map_generator::createRivers()
 // also fail to settle the selected-index register; keep the current source.
 // All 69 blocks, 39 branches and ordered calls agree; only four selected-index
 // instructions differ. Named random/count values and a template-name owner
-// (21 states, 12 objects) leave 99.9357% as the peak.
+// (21 states, 12 objects) leave 99.9357% as the peak. Reusing the selected
+// index for later zone loops also emits the same object.
 // The 116-form native oracle preserves player mapping,
 // ordered callbacks and callback mutations, rejecting seven negative controls.
 VA(0x00549930, 0x37B)
