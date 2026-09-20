@@ -2944,20 +2944,20 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
             for (slot = 0; slot < m_numArmies[side]; slot++) {
                 army& stack = m_armies[side][slot];
                 if (stack.m_showAttackFrames)
-                    attackFrames = cppMax<long>(attackFrames,
+                    attackFrames = max(attackFrames,
                         stack.m_stdIcon->getNumFrames(
                             stack.m_showAttackFrameType));
                 else if (stack.m_allUnitsKilled)
-                    winceFrames = cppMax<long>(winceFrames,
+                    winceFrames = max(winceFrames,
                         stack.m_stdIcon->getNumFrames(cs_death));
                 else if (stack.m_someUnitsDamaged)
-                    winceFrames = cppMax<long>(winceFrames,
+                    winceFrames = max(winceFrames,
                         stack.m_stdIcon->getNumFrames(cs_wince));
             }
         }
-        numFrames = cppMax<long>(numFrames, winceFrames);
-        numFrames = cppMax<long>(numFrames, attackFrames);
-        numFrames = cppMax<long>(numFrames, winceFrames + attackFrames - 1);
+        numFrames = max(numFrames, winceFrames);
+        numFrames = max(numFrames, attackFrames);
+        numFrames = max(numFrames, winceFrames + attackFrames - 1);
 
         if (resetLimitCreature)
             this->resetLimitCreature();

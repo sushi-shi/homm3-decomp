@@ -12,15 +12,15 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable matched: 95.98%** — fuzzy-weighted bytes over all 1,998,996 unfiltered bytes.
+**Executable matched: 96.16%** — fuzzy-weighted bytes over all 1,998,996 unfiltered bytes.
 
-**Match score** — 4,125 / 4,766 functions exact (86.6%) across the full engine (4766 in linked units).
+**Match score** — 4,150 / 4,766 functions exact (87.1%) across the full engine (4766 in linked units).
 
-**Function exact MAX** — 4,190 / 4,766 current implementations (87.9%) have reached 100%.
+**Function exact MAX** — 4,211 / 4,766 current implementations (88.4%) have reached 100%.
 
 | Module       | Units |     Functions exact |  Function exact MAX |   Fuzzy | Fuzzy Max |
 | :----------- | ----: | ------------------: | ------------------: | ------: | --------: |
-| `game`       |   138 | 4056 / 4697 (86.4%) | 4121 / 4697 (87.7%) |  95.94% |    96.47% |
+| `game`       |   138 | 4081 / 4697 (86.9%) | 4142 / 4697 (88.2%) |  96.12% |    96.61% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) | 100.00% |   100.00% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_

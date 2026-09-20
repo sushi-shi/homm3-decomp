@@ -1,8 +1,8 @@
 """Reconcile every DC procedure with active authored C++ in both directions.
 
 This is source identity coverage, independent of byte-match scores. The only
-exemptions are exact, reviewed dc_only.tsv / win_only.tsv and
-dc-inlined-helpers.tsv rows. Library and compiler-generated procedures remain
+exemptions are exact, reviewed dc_only.tsv / win_only.tsv rows.
+Library and compiler-generated procedures remain
 visible until explicitly accounted for.
 """
 from __future__ import annotations
@@ -37,11 +37,10 @@ def module_name(value):
     return value.removesuffix('.obj')
 
 
-def reconcile(definitions, origins, dc_only, win_only, dc_inlined=None, *, symbols=None):
+def reconcile(definitions, origins, dc_only, win_only, *, symbols=None):
     """Return evidence rows and hard errors; never infer an exemption from absence."""
-    dc_inlined = dc_inlined or {}
     matches = []
-    errors, _ = ownership.compare(definitions, origins, dc_only, win_only, dc_inlined,
+    errors, _ = ownership.compare(definitions, origins, dc_only, win_only,
                                   symbols=symbols, matched_out=matches, strict_names=True)
     paired = defaultdict(list)
     matched_definitions = set()
@@ -132,8 +131,6 @@ def reconcile(definitions, origins, dc_only, win_only, dc_inlined=None, *, symbo
                    signature=definition.signature)
         if key in win_only:
             row.update(status='documented_win_only', reason=win_only[key])
-        elif key in dc_inlined:
-            row.update(status='documented_dc_inlined', reason=dc_inlined[key])
         else:
             has_identity = (ownership.procedure_name(definition.original_name or definition.name)
                             in origin_names or definition.dc_offset in origin_offsets)
@@ -177,10 +174,7 @@ def audit(root=common.HOMM3_DIR, *, modules=(), jobs=4, fresh=False, origins=Non
     errors.extend(failures)
     win_only, failures = ownership.read_filter(root / 'config/win_only.tsv', ('file', 'function', 'signature'))
     errors.extend(failures)
-    dc_inlined, failures = ownership.read_filter(
-        root / 'config/dc-inlined-helpers.tsv', ('file', 'function', 'signature'))
-    errors.extend(failures)
-    rows, failures = reconcile(definitions, origins, dc_only, win_only, dc_inlined,
+    rows, failures = reconcile(definitions, origins, dc_only, win_only,
                               symbols=symbols if any(d.inline_origin for d in definitions) else None)
     errors.extend(failures)
     if modules:
@@ -248,7 +242,7 @@ def main(argv=None):
             print(f'{module}: {counts["matched"]} matched, '
                   f'{counts["documented_dc_only"]} documented DC-only, '
                   f'{counts["documented_win_only"]} documented Windows-only, '
-                  f'{counts["documented_dc_inlined"]} documented DC-inlined, {missing} unresolved')
+                  f'{missing} unresolved')
         for error in result['violations']:
             print(error)
         print(f'Source inventory: {"COMPLETE" if result["complete"] else "INCOMPLETE"}; '

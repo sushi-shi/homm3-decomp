@@ -2671,42 +2671,97 @@ void SCampaign::playScenarioEpilogue(void* campaignHeader)
 // Retail proves the 0x66a9-byte legacy record, sixteen 0x462-byte heroes,
 // and field-by-field promotion (not a whole-record copy). The modern arm
 // mirrors save(): one pool count resizes both carry-over vectors.
-// Named score/pool references preserve addresses evaluated before reads
-// and constructor calls; the legacy hero-count bound is re-read each turn.
+// Pool references preserve addresses evaluated before reads and constructor
+// calls; the legacy hero-count bound is re-read each turn. The score vector
+// is accessed through its campaign owner, without a cached outer reference.
 // Both leading clear() wrappers must remain: their nested erase calls agree
 // with retail, while spelling erase(begin(), end()) expands those workers.
 
 // Retail's count loads mask to 8/16 bits and keep signed int loop bounds.
-// The artifact fields sign-extend two-byte reads through artifact.h's shared
-// representation bridge into TArtifact. The legacy
-// secret flag is reset after the filename assignment (retail +0xd0).
-// Widened counts plus the cast score 67.8382%; correcting the flag order
-// gives 68.1930%; sharing the two outer counters gives 69.5768% (2026-09-07).
-// Separate scopes for days/score reads are byte-flat. Keep the 79.2531% MAX.
-// The signed word is widened locally into the recovered TArtifact field;
-// the reconstruction-only artifactFromInt wrapper has been removed.
-// The earlier typed-header checkpoint was 70.3423%, with 79.2531%
-// retained in HIST (2026-09-08); no new byte-score claim follows this move.
+// Artifact fields sign-extend two-byte reads into the shared TArtifact type.
+// The legacy secret flag is reset after assigning the campaign filename.
 
-// Controlled recovery (2026-09-09): the 64 combinations of six widened,
-// masked read buffers produce two emitted identities but no score change.
-// Thus retail's dword-and-mask instructions do not prove an int source
-// buffer. Keep narrow buffers. A 32-state lexical-lifetime family gives
-// nine objects; named leading/scenario/artifact buffers in their enclosing
-// scopes raise 50.8734% to 52.7064%, with every sibling score unchanged.
-// Separately scoping days/score and flattening the count-buffer scopes do
-// not improve that retained state. Native wire-format checks exercise all
-// 32 states, versions 28/35/36, byte conversions, signed artifact/assigned
-// words, remapping, vector contents and the exact read-size sequence.
-// Residual: both leading erase workers and the legacy array iterator still
-// expand; most nested vector size calls and legacy string boundaries remain.
+// Inferred pre-v28 per-hero conversion boundary. VC6 expands this helper at
+// its sole call and changes the surrounding vector inlining in SCampaign::load.
+// No standalone DC or retail procedure proves the original boundary; the
+// coherent conversion operation and measured caller output support the model.
+static void convertLegacyCampaignHero(hero& newHero,
+                                      const LegacyCampaignHero& oldHero)
+{
+    newHero.m_id = oldHero.m_id;
+    newHero.m_owner = oldHero.m_owner;
+    strcpy(newHero.m_name, oldHero.m_name);
+    newHero.m_heroClass = oldHero.m_heroClass;
+    newHero.m_portrait = oldHero.m_portrait;
+    newHero.m_lastMagicSchoolLevel = oldHero.m_lastMagicSchoolLevel;
+    newHero.m_experience = oldHero.m_experience;
+    newHero.m_level = oldHero.m_level;
+    newHero.m_levelSeed = oldHero.m_levelSeed;
+    newHero.m_lastWisdom = oldHero.m_lastWisdom;
+    newHero.m_army = oldHero.m_army;
+    memcpy(newHero.m_skillLevel, oldHero.m_skillLevel,
+           sizeof(newHero.m_skillLevel));
+    memcpy(newHero.m_skillOrder, oldHero.m_skillOrder,
+           sizeof(newHero.m_skillOrder));
+    newHero.m_skillCount = oldHero.m_skillCount;
+
+    for (int equippedSlot = 0; equippedSlot < 19; ++equippedSlot) {
+        type_artifact artifact = oldHero.m_equipped[equippedSlot];
+        if (artifact.m_artifactId != ARTIFACT_NONE)
+            newHero.equipArtifact(&artifact, equippedSlot);
+    }
+    for (int backpackSlot = 0; backpackSlot < 64; ++backpackSlot) {
+        type_artifact artifact = oldHero.m_backpack[backpackSlot];
+        if (artifact.m_artifactId != ARTIFACT_NONE)
+            newHero.addToBackpack(&artifact, backpackSlot);
+    }
+    for (int spell = 0; spell < 70; ++spell) {
+        if (oldHero.m_inSpellbook[spell])
+            newHero.addSpell(spell);
+    }
+    for (int stat = 0; stat < 4; ++stat)
+        newHero.setPrimarySkill(stat, oldHero.m_stats[stat]);
+}
+
+// Inferred serialized-record operations: the assigned-hero count and signed
+// ID stream belong to the campaign, while a scenario score reader fills one
+// already selected record. Both ordinary helpers auto-inline into load.
+// They preserve the scalar read order and widths; no DC declaration or
+// retained retail procedure proves these names or interfaces.
+static void readAssignedCampaignHeroes(TAbstractFile* infile,
+                                      SCampaign& campaign)
+{
+    int count = readValue<unsigned char>(infile);
+    campaign.m_assignedCarryover.resize(count);
+    for (int assignedIndex = 0; assignedIndex < count; ++assignedIndex) {
+        campaign.m_assignedCarryover[assignedIndex] = readValue<short>(infile);
+    }
+}
+
+static void readCampaignScore(TAbstractFile* infile, CampaignScenarioInfo& scenario)
+{
+    scenario.m_completed = readValue<unsigned char>(infile) != 0;
+    scenario.m_days = readValue<int>(infile);
+    scenario.m_score = readValue<int>(infile);
+
+    scenario.m_completeOrder =
+        static_cast<signed char>(readValue<unsigned char>(infile));
+    scenario.m_index =
+        static_cast<signed char>(readValue<unsigned char>(infile));
+}
+
+// 99.0228%: the record readers, direct score-vector ownership and shared
+// inner counter recover every retail call decision, stack home and the
+// legacy arm. Of 89 blocks, 88 have exact sizes; the modern hero-load loop
+// still forms its receiver differently, followed by artifact-read register
+// differences. Named hero pointer/reference receiver probes are byte-flat.
 VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::load(TAbstractFile* infile, int saveVersion)
 {
     int i;
     int pool;
-    std::vector<MapScore>& rMapScores = m_mapScores;
-    rMapScores.clear();
+    int inner;
+    m_mapScores.clear();
     m_carryOverHeroes.clear();
 
     if (saveVersion < 28) {
@@ -2727,13 +2782,10 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
         // built-in campaigns are promoted from the legacy eight-slot array.
         memcpy(m_campaignCompleted, saved.m_campaignCompleted, 7);
 
-        rMapScores.resize(saved.m_numScenarios);
+        m_mapScores.resize(saved.m_numScenarios);
         for (i = 0; i < saved.m_numScenarios; ++i) {
-            CampaignScenarioInfo& scenario = rMapScores[i];
-            // Retail +0x191 preserves this source order. Together with the
-            // bool legacy field, the loop now has the exact instruction and
-            // memory-access structure; only earlier live-register choices
-            // rename its ecx/edx and esi/edi pairs.
+            CampaignScenarioInfo& scenario = m_mapScores[i];
+            // Retail +0x191 preserves this field assignment order.
             scenario.m_days = saved.m_scenarioDays[m_currentCampaign][i];
             scenario.m_index = g_legacyCampaignScenarioIndices[m_currentCampaign][i];
             scenario.m_score = saved.m_scenarioScores[m_currentCampaign][i];
@@ -2748,81 +2800,32 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
             std::vector<hero>& heroPool = m_carryOverHeroes[pool];
             heroPool.resize(saved.m_carryOverHeroCounts[pool]);
 
-            for (int whichHero = 0;
-                 whichHero < saved.m_carryOverHeroCounts[pool]; ++whichHero) {
+            for (inner = 0;
+                 inner < saved.m_carryOverHeroCounts[pool]; ++inner) {
                 const LegacyCampaignHero& oldHero =
-                    saved.m_carryOverHeroes[pool][whichHero];
-                hero& newHero = heroPool[whichHero];
+                    saved.m_carryOverHeroes[pool][inner];
+                hero& newHero = heroPool[inner];
 
-                newHero.m_id = oldHero.m_id;
-                newHero.m_owner = oldHero.m_owner;
-                strcpy(newHero.m_name, oldHero.m_name);
-                newHero.m_heroClass = oldHero.m_heroClass;
-                newHero.m_portrait = oldHero.m_portrait;
-                newHero.m_lastMagicSchoolLevel =
-                    oldHero.m_lastMagicSchoolLevel;
-                newHero.m_experience = oldHero.m_experience;
-                newHero.m_level = oldHero.m_level;
-                newHero.m_levelSeed = oldHero.m_levelSeed;
-                newHero.m_lastWisdom = oldHero.m_lastWisdom;
-                newHero.m_army = oldHero.m_army;
-                memcpy(newHero.m_skillLevel, oldHero.m_skillLevel,
-                       sizeof(newHero.m_skillLevel));
-                memcpy(newHero.m_skillOrder, oldHero.m_skillOrder,
-                       sizeof(newHero.m_skillOrder));
-                newHero.m_skillCount = oldHero.m_skillCount;
-
-                for (int equippedSlot = 0; equippedSlot < 19;
-                     ++equippedSlot) {
-                    type_artifact artifact = oldHero.m_equipped[equippedSlot];
-                    if (artifact.m_artifactId != ARTIFACT_NONE)
-                        newHero.equipArtifact(&artifact, equippedSlot);
-                }
-                for (int backpackSlot = 0; backpackSlot < 64;
-                     ++backpackSlot) {
-                    type_artifact artifact = oldHero.m_backpack[backpackSlot];
-                    if (artifact.m_artifactId != ARTIFACT_NONE)
-                        newHero.addToBackpack(&artifact, backpackSlot);
-                }
-                for (int spell = 0; spell < 70; ++spell) {
-                    if (oldHero.m_inSpellbook[spell])
-                        newHero.addSpell(spell);
-                }
-                for (int stat = 0; stat < 4; ++stat)
-                    newHero.setPrimarySkill(stat, oldHero.m_stats[stat]);
+                convertLegacyCampaignHero(newHero, oldHero);
             }
         }
         return;
     }
 
-    unsigned char cheaterByte;
-    infile->read(&cheaterByte, sizeof(cheaterByte));
-    m_isCheater = cheaterByte != 0;
+    m_isCheater = readValue<unsigned char>(infile) != 0;
     if (saveVersion >= 26) {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        m_secretActive = value != 0;
+        m_secretActive = readValue<unsigned char>(infile) != 0;
     } else {
         m_secretActive = false;
     }
-    unsigned char currentMapByte;
-    infile->read(&currentMapByte, sizeof(currentMapByte));
-    m_currentMap = currentMapByte;
-    unsigned char campaignByte;
-    infile->read(&campaignByte, sizeof(campaignByte));
-    m_currentCampaign = campaignByte;
+    m_currentMap = readValue<unsigned char>(infile);
+    m_currentCampaign = readValue<unsigned char>(infile);
     if (saveVersion < 36
             && m_currentCampaign == PRE36_CAMPAIGN_REMAP_SOURCE)
         m_currentCampaign = PRE36_CAMPAIGN_REMAP_TARGET;
-    unsigned char regionByte;
-    infile->read(&regionByte, sizeof(regionByte));
-    m_numMapRegions = static_cast<signed char>(regionByte);
-    unsigned char crossoverByte;
-    infile->read(&crossoverByte, sizeof(crossoverByte));
-    m_crossoverArrayIndex = crossoverByte;
-    unsigned char briefingByte;
-    infile->read(&briefingByte, sizeof(briefingByte));
-    m_briefingChoice = static_cast<signed char>(briefingByte);
+    m_numMapRegions = static_cast<signed char>(readValue<unsigned char>(infile));
+    m_crossoverArrayIndex = readValue<unsigned char>(infile);
+    m_briefingChoice = static_cast<signed char>(readValue<unsigned char>(infile));
 
     m_campaignFilename = readLengthPrefixedString(infile);
     if (saveVersion >= 36) {
@@ -2833,85 +2836,37 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
                   m_campaignCompleted + sizeof(m_campaignCompleted), 0);
     }
 
-    int count;
-    {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        count = value;
-    }
-    rMapScores.resize(count);
+    int count = readValue<unsigned char>(infile);
+    m_mapScores.resize(count);
     for (i = 0; i < count; ++i) {
         CampaignScenarioInfo& scenario = m_mapScores[i];
-        unsigned char completedByte;
-        infile->read(&completedByte, sizeof(completedByte));
-        scenario.m_completed = completedByte != 0;
-        int days;
-        infile->read(&days, sizeof(days));
-        scenario.m_days = days;
-        int score;
-        infile->read(&score, sizeof(score));
-        scenario.m_score = score;
-
-        unsigned char completeOrderByte;
-        infile->read(&completeOrderByte, sizeof(completeOrderByte));
-        scenario.m_completeOrder = static_cast<signed char>(completeOrderByte);
-        unsigned char scenarioIndexByte;
-        infile->read(&scenarioIndexByte, sizeof(scenarioIndexByte));
-        scenario.m_index = static_cast<signed char>(scenarioIndexByte);
+        readCampaignScore(infile, scenario);
     }
 
-    {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        count = value;
-    }
+    count = readValue<unsigned char>(infile);
     m_carryOverHeroes.resize(count);
     m_carryoverArtifact.resize(count);
 
     for (pool = 0; pool < count; ++pool) {
         std::vector<hero>& heroPool = m_carryOverHeroes[pool];
-        int heroCount;
-        {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            heroCount = value;
-        }
+        int heroCount = readValue<unsigned char>(infile);
         heroPool.resize(heroCount);
-        for (int whichHero = 0; whichHero < heroCount; ++whichHero)
-            heroPool[whichHero].load(infile, saveVersion);
+        for (inner = 0; inner < heroCount; ++inner)
+            heroPool[inner].load(infile, saveVersion);
 
         std::vector<type_artifact>& artifactPool = m_carryoverArtifact[pool];
-        int artifactCount;
-        {
-            short value;
-            infile->read(&value, sizeof(value));
-            artifactCount = static_cast<unsigned short>(value);
-        }
+        int artifactCount =
+            static_cast<unsigned short>(readValue<short>(infile));
         artifactPool.resize(artifactCount);
-        for (int whichArtifact = 0; whichArtifact < artifactCount;
-             ++whichArtifact) {
-            int artifactValue;
-            short artifactIdWord;
-            infile->read(&artifactIdWord, sizeof(artifactIdWord));
-            artifactValue = artifactIdWord;
-            artifactPool[whichArtifact].m_artifactId = TArtifact(artifactValue);
-            short artifactExtraWord;
-            infile->read(&artifactExtraWord, sizeof(artifactExtraWord));
-            artifactPool[whichArtifact].m_extra = artifactExtraWord;
+        for (inner = 0; inner < artifactCount;
+             ++inner) {
+            artifactPool[inner].m_artifactId =
+                TArtifact(readValue<short>(infile));
+            artifactPool[inner].m_extra = readValue<short>(infile);
         }
     }
 
-    {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        count = value;
-    }
-    m_assignedCarryover.resize(count);
-    for (int assignedIndex = 0; assignedIndex < count; ++assignedIndex) {
-        short value;
-        infile->read(&value, sizeof(value));
-        m_assignedCarryover[assignedIndex] = value;
-    }
+    readAssignedCampaignHeroes(infile, *this);
 }
 
 // The fixed pre-v28 record uses the old 0x462 hero layout. Retained 0x48ae30

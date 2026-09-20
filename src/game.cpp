@@ -8525,7 +8525,7 @@ void game::insertObject(int x, int y, int z, int objType, int objectIndex, int m
 // RANDOM_TOWN shares TOWN's; every other value falls to the default.
 // Arm order below is retail's physical order, i.e. the source order.
 
-// The !is_trigger path reaches the tail with defName UNINITIALIZED. That
+// The !is_trigger path reaches the tail with tempText UNINITIALIZED. That
 // is retail: ProcessRandomObjects only ever calls this for trigger cells,
 // so the arm is unreachable in practice. Transcribed, not repaired.
 
@@ -8536,86 +8536,86 @@ void game::insertObject(int x, int y, int z, int objType, int objectIndex, int m
 // The sprite push_back goes through this->worldMap while
 // CalculateCellExtra RELOADS gpGame; do not unify them.
 
-// Residual (97.5098%): 395 generated ordinary-source variants lift the town
-// arm by copying built to __int64 and materializing its decision in a byte.
-// DC names only thisTown, so the two extra locals remain PC codegen hypotheses;
-// all tested types and scopes plateau at the same register/stack schedule.
+// DC's twelve locals include short objectToConvert (sp+0x12), not int;
+// the entry load and later comparison preserve that signed interpretation.
+// Keep its recorded local identities, named tempSprite, and the canonical
+// isCapitol/isCastle calls. The frame and all 44 block sizes match retail.
+// Residual 99.9756%: the string assignment's inlined _Eos terminator encodes
+// [eax+ecx] instead of [ecx+eax], NOT a NewfullMap::cell difference. Eight
+// type/declaration/call models and five recorded-name models reproduce the
+// same score; do not replace a proven helper or invent a local for that byte.
 VA(0x004c9990, 0x43A)  // anchor-global, dc 0xb54f8
 void game::convertObject(NewmapCell* tempCell)
 {
-    char defName[100];
+    char tempText[100];
 
-    int objectId = tempCell->m_objectTypeIndex;
-    CObject* object = &m_worldMap.m_objects[objectId];
+    short objectToConvert = tempCell->m_objectTypeIndex;
+    CObject* object = &m_worldMap.m_objects[objectToConvert];
 
     m_worldMap.m_objectTypes.push_back(m_worldMap.m_objectTypes[object->m_typeIndex]);
-    CObjectType* newType = &m_worldMap.m_objectTypes.back();
+    CObjectType* objectType = &m_worldMap.m_objectTypes.back();
 
-    TAdventureObjectType newObject = NOTHING;
+    TAdventureObjectType type = NOTHING;
     if (tempCell->m_isTrigger) {
-        newObject = tempCell->getMapObject();
-        switch (newObject) {
+        type = tempCell->getMapObject();
+        switch (type) {
         case RESOURCE:
-            strcpy(defName, g_resourceObjectDefs[tempCell->m_objectIndex]);
+            strcpy(tempText, g_resourceObjectDefs[tempCell->m_objectIndex]);
             break;
         case ARTIFACT:
-            sprintf(defName, g_artifactObjectDefFormat, tempCell->m_objectIndex);
+            sprintf(tempText, g_artifactObjectDefFormat, tempCell->m_objectIndex);
             break;
         case MONSTER:
         case RANDOM_MONSTER:
-            strcpy(defName,
+            strcpy(tempText,
                    m_worldMap.newfullMapFn00505EA0(MONSTER,
                                                   tempCell->m_objectIndex)
                        ->m_imageName.c_str());
-            newObject = MONSTER;
+            type = MONSTER;
             tempCell->m_type = MONSTER;
             break;
         case RANDOM_TOWN:
         case TOWN: {
             town* thisTown = g_game->getTown(tempCell->getMapExtraInfo());
-            __int64 buildings = thisTown->m_built;
-            if (buildings & g_bitNumber[HALL_CAPITOL_ID]) {
-                strcpy(defName, g_townCapitolObjectDefs[tempCell->m_objectIndex]);
+            if (thisTown->isCapitol()) {
+                strcpy(tempText, g_townCapitolObjectDefs[tempCell->m_objectIndex]);
             } else {
-                unsigned char hasFort =
-                    (buildings & g_bitNumber[CASTLE_FORT_ID])
-                    || (buildings & g_bitNumber[CASTLE_CITADEL_ID])
-                    || thisTown->hasBuilding(CASTLE_CASTLE_ID, 0);
-                if (hasFort)
-                    strcpy(defName, g_townFortObjectDefs[tempCell->m_objectIndex]);
+                if (thisTown->isCastle())
+                    strcpy(tempText, g_townFortObjectDefs[tempCell->m_objectIndex]);
                 else
-                    strcpy(defName, g_townVillageObjectDefs[tempCell->m_objectIndex]);
+                    strcpy(tempText, g_townVillageObjectDefs[tempCell->m_objectIndex]);
             }
             break;
         }
         }
     }
 
-    int oldType = newType->m_objectType;
-    newType->m_imageName = defName;
-    newType->m_objectType = newObject;
-    newType->m_extra = tempCell->m_objectIndex;
-    m_worldMap.m_sprites.push_back(
-        ResourceManager::getSprite(newType->m_imageName.c_str()));
+    int oldType = objectType->m_objectType;
+    objectType->m_imageName = tempText;
+    objectType->m_objectType = type;
+    objectType->m_extra = tempCell->m_objectIndex;
+    CSprite* tempSprite =
+        ResourceManager::getSprite(objectType->m_imageName.c_str());
+    m_worldMap.m_sprites.push_back(tempSprite);
 
-    for (int iy = 0; iy < newType->m_height; iy++) {
-        if (object->m_y - iy < 0 || object->m_y - iy >= g_mapHeight)
+    for (int vert = 0; vert < objectType->m_height; vert++) {
+        if (object->m_y - vert < 0 || object->m_y - vert >= g_mapHeight)
             continue;
-        for (int ix = 0; ix < newType->m_width; ix++) {
-            if (object->m_x - ix < 0 || object->m_x - ix >= g_mapWidth)
+        for (int horiz = 0; horiz < objectType->m_width; horiz++) {
+            if (object->m_x - horiz < 0 || object->m_x - horiz >= g_mapWidth)
                 continue;
-            NewmapCell* cell = m_worldMap.cell(object->m_x - ix,
-                                             object->m_y - iy, object->m_z);
-            for (NewmapCell::TObjectCell* entry = cell->m_objects.begin();
-                 entry != cell->m_objects.end(); entry++) {
-                if (entry->m_objectIndex == objectId) {
+            NewmapCell* newCell = m_worldMap.cell(object->m_x - horiz,
+                                                object->m_y - vert, object->m_z);
+            for (NewmapCell::TObjectCell* thisObj = newCell->m_objects.begin();
+                 thisObj != newCell->m_objects.end(); thisObj++) {
+                if (thisObj->m_objectIndex == objectToConvert) {
                     object->m_typeIndex = static_cast<unsigned short>(
                         m_worldMap.m_objectTypes.size() - 1);
-                    if (cell->m_type == oldType && !cell->m_isTrigger)
-                        cell->m_type = newObject;
+                    if (newCell->m_type == oldType && !newCell->m_isTrigger)
+                        newCell->m_type = type;
                 }
             }
-            g_game->m_worldMap.calculateCellExtra(cell, 0);
+            g_game->m_worldMap.calculateCellExtra(newCell, 0);
         }
     }
 }

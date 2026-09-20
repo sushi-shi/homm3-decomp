@@ -1187,10 +1187,12 @@ void game::setVisibility(int startX, int startY, int z, int whichPlayer,
     double limit = range + 0.5;
     type_record_shroud* record = new type_record_shroud();
 
+    // dc rows 1152-1155 (and 1206-1209 in resetVisibility) call `max`
+    // [dc 0x1ef28] and `min` [dc 0x2da4] - the includes.h wrappers.
     int x0 = max(startX - range, 0);
-    int x1 = cppMin(startX + range + 1, g_mapWidth);
+    int x1 = min(startX + range + 1, g_mapWidth);
     int y0 = max(startY - range, 0);
-    int y1 = cppMin(startY + range + 1, g_mapHeight);
+    int y1 = min(startY + range + 1, g_mapHeight);
 
     for (int y = y0; y < y1; ++y) {
         int dy = startY - y;
@@ -1232,32 +1234,40 @@ void game::setVisibility(int startX, int startY, int z, int whichPlayer,
 // named player keeps its own team's bit and everyone else loses theirs -
 // Cover of Darkness's semantics exactly - while -1 clears all eight. It
 // also has no replay guard on the queue, only the empty-record one.
+// DC line 1199's double distance is range+0.5, not the sqrt result; lines
+// 1206..1209 fill tagRECT rect. Both dc 0x8e624 and retail +0x18e skip the
+// write when unchanged, so line 1224's store belongs inside the inequality.
+// Recovering that store reaches 97.8326%; canonical push_back (line 1232)
+// removes the inline-depth pin and reaches 99.9070%; RECT ownership closes
+// the frame and reaches 100%. Direct and named per-cell deltas reproduce it.
 VA(0x0049d3d0, 0x260)  // anchor-global (0x63df7c + GetMapExtraPtr), dc 0x8e54c
 void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
                            int range)
 {
-    unsigned short keepMask = 0x100;
+    unsigned short enemyMask = 0x100;
     if (whichPlayer != -1)
-        keepMask = getTeamMask(whichPlayer) | 0x100;
+        enemyMask = getTeamMask(whichPlayer) | 0x100;
 
-    double limit = range + 0.5;
+    double distance = range + 0.5;
     type_record_shroud* record = new type_record_shroud();
 
-    int x0 = max(startX - range, 0);
-    int x1 = cppMin(startX + range + 1, g_mapWidth);
-    int y0 = max(startY - range, 0);
-    int y1 = cppMin(startY + range + 1, g_mapHeight);
+    RECT rect;
+    rect.left = max(startX - range, 0);
+    rect.right = min(startX + range + 1, g_mapWidth);
+    rect.top = max(startY - range, 0);
+    rect.bottom = min(startY + range + 1, g_mapHeight);
 
-    for (int y = y0; y < y1; ++y) {
-        int dy = startY - y;
-        for (int x = x0; x < x1; ++x) {
-            int dx = startX - x;
-            if (sqrt(static_cast<double>(dx * dx + dy * dy)) <= limit) {
+    for (int y = rect.top; y < rect.bottom; ++y) {
+        for (int x = rect.left; x < rect.right; ++x) {
+            if (sqrt(static_cast<double>(
+                    (startX - x) * (startX - x)
+                    + (startY - y) * (startY - y))) <= distance) {
                 unsigned short* oldValue = getMapExtraPtr(x, y, z);
-                unsigned short newValue = *oldValue & keepMask;
-                if (*oldValue != newValue)
+                unsigned short newValue = *oldValue & enemyMask;
+                if (*oldValue != newValue) {
                     record->addChange(x, y, z, *oldValue, newValue);
-                *oldValue = newValue;
+                    *oldValue = newValue;
+                }
             }
         }
     }
@@ -1267,16 +1277,10 @@ void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
     if (record->getChangeCount() == 0) {
         delete record;
     } else {
-        // Retail CALLS insert(iterator, n, const T&) here where the smaller
-        // game::record_* bodies expand it, so the site is pinned - with
-        // end() hoisted OUT of the pinned statement, because retail keeps
-        // that one inline (`mov eax,[ecx+8]`).
-        type_event_record** at = m_eventRecords.end();
-#pragma inline_depth(0)
-        m_eventRecords.insert(at, 1, record);
-#pragma inline_depth()
+        m_eventRecords.push_back(record);
     }
 }
+
 VA(0x0049d630, 0x8C)  // dc 0x8e730
 void game::clearEventRecords()
 {

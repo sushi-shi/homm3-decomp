@@ -193,52 +193,6 @@ class OwnershipTest(unittest.TestCase):
         self.assertTrue(any('hides a CodeView counterpart' in e for e in
                             compare([replace(d, return_type='')], [decl], {}, {key: 'wrong'})[0]))
 
-    def test_dc_inlined_helper_is_admitted_only_by_its_own_reviewed_row(self):
-        """A helper the DC build inlined everywhere emits no procedure.
-
-        Its absence from the CodeView roster is the expected shape, not a
-        missing counterpart, so it needs a reviewed row of its own -
-        config/dc-inlined-helpers.tsv - rather than win_only.tsv, which means
-        "Complete-only definition". hero.cpp's writeField overloads are the
-        first case: hero::save's DC record carries 57 nested lexical-scope
-        pairs and one local per width, which is the residue those inlined
-        bodies leave in their caller.
-        """
-        from dataclasses import replace
-        d = replace(definition(name='writeField', file='src/hero.cpp', inline=True),
-                    member=False, parameters=2,
-                    argument_types=('TAbstractFile *', 'char'),
-                    signature='void (TAbstractFile *, char)')
-        key = (d.file, d.name, d.signature)
-
-        # With no reviewed row at all it is an ordinary unknown definition.
-        errors, counts = compare([d], [], {}, {})
-        self.assertTrue(any(e.startswith('WIN_ONLY ') for e in errors))
-        self.assertFalse(counts.get('dc_inlined'))
-
-        # Its own list admits it and is counted separately from win_only.
-        errors, counts = compare([d], [], {}, {}, {key: 'inlined at every call'})
-        self.assertEqual(errors, [])
-        self.assertEqual(counts['dc_inlined'], 1)
-        self.assertFalse(counts.get('win_only'))
-
-        # A row nothing uses is stale and fails, exactly as win_only rows do.
-        stale = ('src/hero.cpp', 'writeField', 'void (TAbstractFile *, long)')
-        errors, _ = compare([d], [], {}, {},
-                            {key: 'ok', stale: 'nothing calls this'})
-        self.assertTrue(any('stale dc-inlined-helpers.tsv entry' in e
-                            for e in errors))
-
-        # The exemption must not hide a real CodeView counterpart: when one
-        # exists the definition takes the ordinary matched path, and the
-        # reviewed row then reports itself stale rather than being consumed.
-        o = replace(origin(name='writeField', file='hero.cpp'),
-                    argument_types=('TAbstractFile *', 'char'))
-        errors, counts = compare([d], [o], {}, {}, {key: 'ok'})
-        self.assertFalse(counts.get('dc_inlined'))
-        self.assertTrue(any('stale dc-inlined-helpers.tsv entry' in e
-                            for e in errors))
-
     def test_variadic_formals_preserve_ellipsis_owner_and_duplicate_checks(self):
         from dataclasses import replace
         d = replace(definition(name='formatString', file='src/misc.cpp', inline=False),

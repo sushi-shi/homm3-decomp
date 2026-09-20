@@ -701,10 +701,9 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
             } else {
                 bestDanger = enemyAttacks[hex];
                 if (currentArmy->m_monInfo.m_attributes & 1)
-                    bestDanger = min(
+                    bestDanger = min(bestDanger,
                             enemyAttacks[hex
-                                    + (currentArmy->m_facing != 0 ? 1 : -1)],
-                            bestDanger);
+                                    + (currentArmy->m_facing != 0 ? 1 : -1)]);
                 startDanger = bestDanger;
             }
 
@@ -735,9 +734,8 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
                                 if (enemyAttacks != 0) {
                                     bestDanger = enemyAttacks[hex];
                                     if (currentArmy->m_monInfo.m_attributes & 1)
-                                        bestDanger = min(
-                                                enemyAttacks[secondHex],
-                                                bestDanger);
+                                        bestDanger = min(bestDanger,
+                                                enemyAttacks[secondHex]);
                                 }
                             }
                         }
@@ -1254,8 +1252,7 @@ unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyA
     long worstDanger = enemyAttacks[ourArmy->m_gridIndex];
     if (ourArmy->m_monInfo.m_attributes & 1) {
         long secondHex = ourArmy->getSecondGridIndex();
-        worstDanger = min(
-            enemyAttacks[secondHex], worstDanger);
+        worstDanger = min(worstDanger, enemyAttacks[secondHex]);
     }
 
     if (worstDanger >= 0
@@ -1279,7 +1276,7 @@ unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyA
         long danger = enemyAttacks[hex];
         if (ourArmy->m_monInfo.m_attributes & 1) {
             long secondHex = hex + (ourArmy->m_facing ? 1 : -1);
-            danger = min(enemyAttacks[secondHex], danger);
+            danger = min(danger, enemyAttacks[secondHex]);
         }
         if (danger < worstDanger)
             continue;
@@ -2204,10 +2201,10 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
         m_playDoh[target->m_combatSide] = 1;
 }
 
-// An earlier operand-order probe using the canonical selector measured
-// 99.77% because of a reversed cmp. That does not establish a separate
-// helper returning references to its own by-value arguments; the
-// includes.h min wrapper owns the copies and returns the selected value.
+// DC ai.cpp:2378 calls includes.h's value-returning min wrapper before
+// GetFireShieldStrength at 2382. Keep the capped damage as its own statement:
+// retail reproduces the comparison and temporary slots without a second
+// selector or a reference escaping a by-value helper's parameters.
 VA(0x00422440, 0x99)  // dc 0x27318
 long combatManager::computeFireShieldDamage(long damage, const army* attacker, const army* target, long targetHits) const
 {
@@ -2217,8 +2214,8 @@ long combatManager::computeFireShieldDamage(long damage, const army* attacker, c
         static_cast<unsigned>(attacker->m_monInfo.m_attributes) >> 14);
     if (fireImmune & 1)
         return 0;
-    damage = static_cast<long>(target->getFireShieldStrength()
-                               * min(targetHits, damage));
+    damage = min(damage, targetHits);
+    damage = static_cast<long>(target->getFireShieldStrength() * damage);
     hero* targetHero = attacker->getController();
     hero* castingHero = target->getController();
     return modifySpellDamage(damage, SPELL_FIRE_SHIELD, castingHero,

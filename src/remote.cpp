@@ -3253,10 +3253,14 @@ CTurnDuration::CTurnDuration()
 VA(0x00557a80, 0x15)  // dc 0x11f070
 unsigned char CTurnDuration::isOn()
 {
+    // DC remote.cpp:2921/2922 and 2925 retain two separate early-outs.
+    // This canonical body matches both the retained function and its
+    // expansion in isClose; a compound boolean return changes VC6 lowering.
     if (m_currDuration == 0)
         return 0;
-    unsigned char on = !g_unk69774c;
-    return on;
+    if (g_unk69774c)
+        return 0;
+    return 1;
 }
 
 VA(0x00557aa0, 0x4D)  // dc 0x11f090

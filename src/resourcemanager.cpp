@@ -1010,54 +1010,32 @@ Bitmap16Bit* ResourceManager::getBitmap16(const char* name)
     return loaded;
 }
 
-// WALL (95.6920%): both resource paths read the exact 24-byte header (DC type
-// 0x289e proves plain char[24]) and
-// 256-TRGBA payload, construct the shared-slot TPalette24, apply the optional
-// saturation transform, and feed the six retail pixel-mask globals to the
-// named TPalette16 constructor.  The ordinary path destroys the temporary
-// palette before fclose; making the file/archive arms an explicit if/else
-// lets C1 color both branch-local palettes at [ebp-0x364] and recovers
-// retail's exact 0x758-byte frame (the non-exclusive source used two slots and
-// a 0xa7c frame).
+// Both retail paths read char[24] and TRGBA[256], construct TPalette24,
+// optionally adjust saturation, and convert using the six pixel-mask globals.
+// DC GetPalette independently records those arrays and the palette temporary.
+// This shared conversion operation is an inferred Complete-side helper; no
+// standalone procedure proves its original name, interface or linkage.
+// Factoring it restores the leading pathname's retained _Tidy call and all
+// 24 retail blocks (99.9810%). Keeping the archive path after the file arm's
+// early return restores both adapter stack slots and reaches 100%; an explicit
+// else instead swaps their slots. No compiler pin or library-internal call.
+static TPalette16* makeResourcePalette(const char* name, const TRGBA* paletteData)
+{
+    TPalette24 palette24(paletteData);
+    if (g_graphicsSaturated)
+        palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+    return new TPalette16(name, palette24,
+        g_firstMaskBits, g_firstMaskShift,
+        g_greenMaskBits, g_greenMaskShift,
+        g_lastMaskBits, g_lastMaskShift);
+}
 
-// The unwind map settles the LIFETIME question exactly (EH census
-// 2026-09-06). Retail's FuncInfo at 0x6528d0 has maxState 8, one try
-// block [0..3] with catchHigh 4, and its eight entries mirror the two
-// arms three for three: state 1 / 5 destroy the stream adapter
-// ([ebp-0x28] file arm, [ebp-0x1c] archive arm), 2 / 6 the TPalette24 at
-// [ebp-0x364], 3 / 7 `operator delete([ebp-0x20])` for the half-built
-// TPalette16, and states 0 and 4 carry NO action (the try entry and the
-// catch itself). Our transcript is [reg,-1,1,2,3,4,2,6,7,8,6] against
-// retail's [reg,1,2,3,1,5,6,7,5] - two surplus regions, and both are the
-// SAME one: the leading pathname temporary. Retail brackets it with NO
-// state store at all (`call operator+`, c_str INLINED to
-// `mov eax,[eax+4]` plus its empty-string branch, `call fopen`, then the
-// destructor inlined down to a CALLED `_Tidy(1)`), and writes its first
-// state only at fn+0x6b, after the `if (file)` test. We write state=esi
-// at +0x41 and state=-1 at +0x5a because the retained inline_depth(0)
-// leaves a real `call c_str` inside the temporary's lifetime. So the
-// missing shape is "expand c_str AND the temporary's destructor, but
-// call _Tidy" - which no placement of the existing pin reaches, and
-// which is why the whole tail of both arms is numbered one state high.
-
-// The leading string temporary is the bounded residual shared with LoadFont
-// and GetPalette24. Retail inlines c_str and the parent destructor but calls
-// _Tidy(true); inline_depth(0), retained below, calls both parents, while no
-// pin and function-wide auto_inline(off) expand the full teardown. A named
-// scoped string and a const-reference lifetime are worse as well. why-reg v2
-// finds the same three first definitions/pseudos but a C1-state ESI/EDI
-// processing-order permutation; its only legal declaration-order probe
-// worsens the register-visible distance 67 -> 75. The surviving 22-vs-24
-// block split and 22-vs-21 call count are therefore inliner/front-end walls,
-// not missing resource behavior.
 VA(0x0055b060, 0x377)  // public GetPalette callee + retail conversion tuple
 TPalette16* ResourceManager::loadPalette(const char* name)
 {
     char header[24];
     TRGBA paletteData[256];
-#pragma inline_depth(0)
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
-#pragma inline_depth()
 
     if (file) {
         try {
@@ -1066,18 +1044,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
             streamInterface->read(header, sizeof(header));
             streamInterface->read(paletteData, sizeof(paletteData));
 
-            TPalette16* result;
-            {
-                TPalette24 palette24(paletteData);
-                if (g_graphicsSaturated)
-                    palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
-
-                result = new TPalette16(
-                    name, palette24,
-                    g_firstMaskBits, g_firstMaskShift,
-                    g_greenMaskBits, g_greenMaskShift,
-                    g_lastMaskBits, g_lastMaskShift);
-            }
+            TPalette16* result = makeResourcePalette(name, paletteData);
 
             fclose(file);
             return result;
@@ -1086,69 +1053,61 @@ TPalette16* ResourceManager::loadPalette(const char* name)
             fclose(file);
             throw;
         }
-    } else {
-        TResourceArchiveList& archives =
-            g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
-        int remaining = archives.m_count;
-        int* archive = archives.m_indices;
-        LODFile* lodFile = &g_resourceLodSlots[*archive].m_file;
+    }
 
-        while (!lodFile->pointAt(name)) {
-            ++archive;
-            if (!--remaining) {
+    TResourceArchiveList& archives =
+        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+    int remaining = archives.m_count;
+    int* archive = archives.m_indices;
+    LODFile* lodFile = &g_resourceLodSlots[*archive].m_file;
+
+    while (!lodFile->pointAt(name)) {
+        ++archive;
+        if (!--remaining) {
+            lodFile = 0;
+            break;
+        }
+        lodFile = &g_resourceLodSlots[*archive].m_file;
+    }
+
+    if (!lodFile) {
+        game_null_159510(
+            DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
+                         "GetPalette"),
+            RESOURCE_TYPE_PALETTE, name);
+
+        const char* fallbackName = DATA_COMPGEN(
+            0x006410b8, defaultPalette16Name, "default.pal");
+        TResourceArchiveList& fallbackArchives =
+            g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+        int fallbackRemaining = fallbackArchives.m_count;
+        int* fallbackArchive = fallbackArchives.m_indices;
+        lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
+
+        while (!lodFile->pointAt(fallbackName)) {
+            ++fallbackArchive;
+            if (!--fallbackRemaining) {
                 lodFile = 0;
                 break;
             }
-            lodFile = &g_resourceLodSlots[*archive].m_file;
+            lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
         }
 
         if (!lodFile) {
             game_null_159510(
                 DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
                              "GetPalette"),
-                RESOURCE_TYPE_PALETTE, name);
-
-            const char* fallbackName = DATA_COMPGEN(
-                0x006410b8, defaultPalette16Name, "default.pal");
-            TResourceArchiveList& fallbackArchives =
-                g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
-            int fallbackRemaining = fallbackArchives.m_count;
-            int* fallbackArchive = fallbackArchives.m_indices;
-            lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
-
-            while (!lodFile->pointAt(fallbackName)) {
-                ++fallbackArchive;
-                if (!--fallbackRemaining) {
-                    lodFile = 0;
-                    break;
-                }
-                lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
-            }
-
-            if (!lodFile) {
-                game_null_159510(
-                    DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
-                                 "GetPalette"),
-                    RESOURCE_TYPE_PALETTE, fallbackName);
-                return 0;
-            }
+                RESOURCE_TYPE_PALETTE, fallbackName);
+            return 0;
         }
-
-        t_lod_file_adapter stream(lodFile);
-        TAbstractFile* streamInterface = &stream;
-        streamInterface->read(header, sizeof(header));
-        streamInterface->read(paletteData, sizeof(paletteData));
-
-        TPalette24 palette24(paletteData);
-        if (g_graphicsSaturated)
-            palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
-
-        return new TPalette16(
-            name, palette24,
-            g_firstMaskBits, g_firstMaskShift,
-            g_greenMaskBits, g_greenMaskShift,
-            g_lastMaskBits, g_lastMaskShift);
     }
+
+    t_lod_file_adapter stream(lodFile);
+    TAbstractFile* streamInterface = &stream;
+    streamInterface->read(header, sizeof(header));
+    streamInterface->read(paletteData, sizeof(paletteData));
+
+    return makeResourcePalette(name, paletteData);
 }
 
 // Like GetBitmap16, Complete always consults the cache and removes the
@@ -1768,6 +1727,40 @@ namespace ResourceManager {
 sample* loadSample(const char* name);
 }
 
+// Inferred diagnostic operation plus the sample-specific context below.
+// Both helpers auto-inline: retail loadSample contains two stream/message-box
+// expansions, each ending in the ostringstream vbase-destructor closure.
+// A single sample-only helper instead expands that closure into two calls
+// and scores 98.5810%; these two ordinary boundaries reproduce 100% without
+// a pragma. Names, interfaces and linkage remain inferred, not DC-proven.
+static void reportMissingResource(const char* caller, const char* kind,
+                                  const char* name)
+{
+    std::ostringstream message;
+    message
+        << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
+                        "ResourceManager::")
+        << caller
+        << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
+                        " could not find the \"")
+        << kind
+        << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
+        << name
+        << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
+    MessageBoxA(
+        GetForegroundWindow(), message.str().c_str(),
+        DATA_COMPGEN(0x00682f08, resourceManagerCaption,
+                     "ResourceManager"),
+        0);
+}
+
+static void reportMissingSample(const char* name)
+{
+    reportMissingResource(
+        DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample"),
+        DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx"), name);
+}
+
 VA(0x0055c3c0, 0x356)  // GetSample callee + GetSoundFile/default.wav graph
 sample* ResourceManager::loadSample(const char* name)
 {
@@ -1797,45 +1790,11 @@ sample* ResourceManager::loadSample(const char* name)
     std::auto_ptr<char> data;
     int size;
     if (!getSoundFile(name, data, &size)) {
-        {
-            std::ostringstream message;
-            message
-                << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
-                                "ResourceManager::")
-                << DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample")
-                << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
-                                " could not find the \"")
-                << DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx")
-                << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
-                << name
-                << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
-            MessageBoxA(
-                GetForegroundWindow(), message.str().c_str(),
-                DATA_COMPGEN(0x00682f08, resourceManagerCaption,
-                             "ResourceManager"),
-                0);
-        }
+        reportMissingSample(name);
         const char* fallbackName = DATA_COMPGEN(
             0x006410dc, defaultSampleName, "default.wav");
         if (!getSoundFile(fallbackName, data, &size)) {
-            {
-                std::ostringstream message;
-                message
-                    << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
-                                    "ResourceManager::")
-                    << DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample")
-                    << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
-                                    " could not find the \"")
-                    << DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx")
-                    << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
-                    << fallbackName
-                    << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
-                MessageBoxA(
-                    GetForegroundWindow(), message.str().c_str(),
-                    DATA_COMPGEN(0x00682f08, resourceManagerCaption,
-                                 "ResourceManager"),
-                    0);
-            }
+            reportMissingSample(fallbackName);
             return 0;
         }
     }

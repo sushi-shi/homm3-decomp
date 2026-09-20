@@ -3803,7 +3803,7 @@ int TBlacksmithWindow::windowHandler(message& msg)
                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
     if (elapsed >= 0) {
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-            cppMax(100L, elapsed);
+            max(100, elapsed);
         m_machineIcon->setIconFrame(m_machineIcon->m_frame + 1);
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     }
@@ -4010,7 +4010,7 @@ int TShipWindow::windowHandler(message& msg)
                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
     if (elapsed >= 0) {
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-            cppMax(100L, elapsed);
+            max(100, elapsed);
         m_boatFrame++;
         if (m_boatFrame >= m_boatIcon->m_sprite->getNumFrames(7))
             m_boatFrame = 0;
@@ -5808,10 +5808,10 @@ void townManager::buildObj(int buildingId)
 
         townObject* hall = m_townObjects[builtIndex];
         townObject* extra = m_townObjects[extraIndex];
-        int boxX = cppMin(hall->m_x, extra->m_x);
-        int boxY = cppMin(hall->m_y, extra->m_y);
-        int boxW = cppMax(hall->m_x + hall->m_w, extra->m_x + extra->m_w) - boxX;
-        int boxH = cppMax(hall->m_y + hall->m_h, extra->m_y + extra->m_h) - boxY;
+        int boxX = min(hall->m_x, extra->m_x);
+        int boxY = min(hall->m_y, extra->m_y);
+        int boxW = max(hall->m_x + hall->m_w, extra->m_x + extra->m_w) - boxX;
+        int boxH = max(hall->m_y + hall->m_h, extra->m_y + extra->m_h) - boxY;
         g_windowManager->saveFizzleSourceX(boxX, boxY, boxW, boxH);
 
         memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
@@ -7922,6 +7922,15 @@ void TCastleWindow::setRolloverText(message* msg)
 VA(0x005dce50, 0x126)  // anchor-callee(recruitUnit ctor 0x551560) + arity, dc 0x17f6e8
 void TCastleWindow::recruit(int i)
 {
+    // 96.43%: 8/8 blocks exact, calls agree, and every reloc resolves to
+    // the same global (retail's `data_2994fc` IS g_townManager, 0x006994fc).
+    // The whole residual is register naming plus one scheduling choice in
+    // the `new recruitUnit(...)` argument setup: retail emits
+    // `push ecx; mov ecx, eax; call`, we emit `mov ecx, eax; push edx;
+    // call`. Caching g_townManager->m_townToView in a local is ruled out
+    // by the byte-exact prefix - retail reloads the global at each use
+    // exactly as this body does. DC records no locals for this function,
+    // so it offers no lead on the remaining allocator state.
     int dwelling = g_townManager->m_currentDwellingIdOff[i];
     if (g_townManager->m_townToView->m_active & g_bitNumber[DWELLING_0_ID + dwelling]) {
         g_recruitUnit = new recruitUnit(g_townManager->m_townToView, dwelling, 1);

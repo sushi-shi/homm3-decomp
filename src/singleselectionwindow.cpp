@@ -6560,6 +6560,14 @@ unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
                 m_headersA[mapFileNameMsg->m_number] = temp;
             GameSelectionHeadersStruct& sel =
                 m_selectionHeaders[mapFileNameMsg->m_number];
+            // This pin is LOAD-BEARING, unlike loadPalette's. Retail calls
+            // GameSelectionHeadersStruct's generated assignment out of line
+            // here; letting VC6 expand it costs 90.22 -> 71.42 and replaces
+            // the single ~SavedGameHeader call with an inline _Tidy plus
+            // ~SCampaign and ~NewSMapHeader, which is also where our frame
+            // grows 0x1c over retail's 0xcc4. Removing it needs the real
+            // reason retail's operator= stayed out of line, not just the
+            // pin's removal.
 #pragma inline_depth(0)
             sel = temp;
 #pragma inline_depth()
