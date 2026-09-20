@@ -240,6 +240,8 @@ def _dispatch(argv: list[str]) -> int:
         return run_module("homm3.analysis.dreamcast", *argv[1:])
     if argv and argv[0] == "warnings":
         return run_module("homm3.analysis.compiler_warnings", *argv[1:])
+    if argv and argv[0] == "victor":
+        return run_module("homm3.victor", *argv[1:])
     if argv and argv[0] == "rmg":
         return run_module("homm3.rmg", *argv[1:])
 
@@ -248,6 +250,8 @@ def _dispatch(argv: list[str]) -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="command")
 
+    sub.add_parser("victor", add_help=False,
+                   help="execute Victor resource comparisons (homm3 victor --help)")
     sub.add_parser("rmg", add_help=False,
                    help="execute retail/candidate whole-map comparisons (homm3 rmg --help)")
 
@@ -347,7 +351,7 @@ def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     # Analysis rc=1 means an answered difference. Build/init and the other
     # pipeline commands use rc=1 for failure.
-    failure_rc = 2 if argv and argv[0] in {"sema", "vc6", "dreamcast", "rmg"} else 1
+    failure_rc = 2 if argv and argv[0] in {"sema", "vc6", "dreamcast", "rmg", "victor"} else 1
     return usage.run_logged(
         _dispatch, argv,
         lambda rc, **meta: usage.append(ROOT / "build/homm3_usage.log",

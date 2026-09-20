@@ -28,7 +28,7 @@ def load(path: Path | None = None) -> dict:
 
 
 def units(path: Path | None = None) -> list[dict]:
-    """[{unit, source, flags}] in manifest order."""
+    """[{unit, source, flags, module?}] in manifest order."""
     return list(load(path).get("unit", []))
 
 

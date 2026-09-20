@@ -513,6 +513,7 @@ flags = "game_o2_ml_gr_windows"
 
 [[unit]]
 unit = "lodfile"
+module = "codec"
 source = "src/lodfile.cpp"
 flags = "game_o2_ml_gr_windows"
 
@@ -568,6 +569,7 @@ flags = "game_o2_ml_gr_windows"
 
 [[unit]]
 unit = "cspriteframe"
+module = "codec"
 source = "src/cspriteframe.cpp"
 flags = "game_o2_ml_gr_windows"
 
@@ -853,16 +855,19 @@ flags = "game_o2_ml_gr_windows"
 
 [[unit]]
 unit = "rmg"
+module = "rmg"
 source = "src/rmg.cpp"
 flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "rmg_support"
+module = "rmg"
 source = "src/rmg_support.cpp"
 flags = "game_o2_ml_gr_windows"
 
 [[unit]]
 unit = "rmg_terrain"
+module = "rmg"
 source = "src/rmg_terrain.cpp"
 flags = "game_o2_mt_gr_windows"
 
@@ -888,11 +893,13 @@ flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "gzfile"
+module = "codec"
 source = "src/gzfile.cpp"
 flags = "game_o2_ml_gr_windows"
 
 [[unit]]
 unit = "gzinflatebuf"
+module = "codec"
 source = "src/gzinflatebuf.cpp"
 flags = "game_o2_mt_gr_windows"
 
@@ -919,6 +926,7 @@ flags = "game_o2_ml_gr_windows"
 # Reconstructed external Victor library; grouping filename is provisional.
 [[unit]]
 unit = "victor"
+module = "victor"
 source = "src/victor.cpp"
 flags = "victor_o2_ml_gd_windows"
 
@@ -926,17 +934,20 @@ flags = "victor_o2_ml_gd_windows"
 # Original library object name unknown; keep ordinary declarations/calls.
 [[unit]]
 unit = "victor_flip"
+module = "victor"
 source = "src/victor_flip.cpp"
 flags = "victor_o2_ml_gd_windows"
 
 # PCX loader retains its ordinary library helper calls in retail.
 [[unit]]
 unit = "victor_loadpcx"
+module = "victor"
 source = "src/victor_loadpcx.cpp"
 flags = "victor_o2_ml_gd_windows"
 
 # Semantic grouping of external assembly kernels; original filename unknown.
 [[unit]]
 unit = "victor_pcx_kernels"
+module = "victor"
 source = "src/victor_pcx_kernels.cpp"
 flags = "victor_kernels_o2_ogoff_ml_gd_windows"

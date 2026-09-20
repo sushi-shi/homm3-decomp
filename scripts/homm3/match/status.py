@@ -707,7 +707,7 @@ def write_readme(report: dict) -> None:
     with current and current-implementation MAX scores from the baseline."""
     from homm3.build.configure import load_manifest
     _build, _profiles, units = load_manifest()
-    unit_module = {u["unit"]: module_of(u["source"]) for u in units}
+    unit_module = {u["unit"]: u.get("module", module_of(u["source"])) for u in units}
     # Numerators and denominator must use the same retail universe.
     from homm3.match import universe
     category, _sizes, tally = universe.summary()
