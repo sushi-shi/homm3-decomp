@@ -1182,9 +1182,16 @@ void TRmgZone::decrementObjectCount(TAdventureObjectType objectType)
 // Both the level-occupancy pass and the bounds pass in FilterZonePositions
 // copy the whole coordinate before selecting a component. That retained
 // value-copy shape motivates this ordinary accessor; no DC name is known.
+// Keep an owned result before returning it. Together with assigned caller
+// snapshots this retains both single-position insert calls in positionZone
+// (0x53b970) and both vector destructor expansions in buildZoneBoundaries
+// (0x53e050). Direct member return loses the former; changing only this
+// getter loses the latter. The source boundary remains a retail inference.
 TRmgMapPosition TRmgZone::getLevelPosition() const
 {
-    return m_levelPosition;
+    TRmgMapPosition result;
+    result = m_levelPosition;
+    return result;
 }
 
 // Candidate placement loads all three coordinates before writing the zone,
@@ -3954,20 +3961,15 @@ void type_random_map_generator::filterZonePositions(
 // falling back to all placed zones before applying the shared filter.
 // Retail retains the candidate append/filter calls and chooses an unsigned
 // vector index with rand() % size(). Role-derived name, no DC counterpart.
-// Residual (96.8731%): preserving the destination slot pointer restores
-// the connection-loop CFG (89.72 -> 92.86%); separate count/index locals
-// restore the entire final random-selection sequence. The remaining real
-// delta is the two single-element vector insert calls: VC6 expands their
-// wrapper and calls count-insert, whereas retail retains the 540-byte
-// single-insert body at 0x54c3f0. A depth-1 `insert(end(), x)` wrapper is
-// always expanded by the /Ob2 size test, so retail's call needs the wrapper
-// nested inside push_back; spelled that way (2026-09-11) the two sites get
-// nested budgets of 64 and 70 (907/14 and 843/12), still one and seven units
-// past the wrapper's cost of 64, so both remain expanded. Two more candidate
-// sites after the first push, or 11 more units spent before it, would refuse
-// them; neither has a source correlate yet.
-// Canonical setLevelPosition at the surface/underground seeds, with real
-// temporary or named coordinates, leaves both calls unresolved and is lower.
+// Exact 562-byte body: preserve the destination slot, separate unsigned
+// count/index locals, and an owned snapshot of the selected coordinate.
+// The shared getter's owned return result restores the two retained
+// single-position vector insert calls at 0x54c3f0. The direct-member-return
+// control is 97.4061% with the same selection snapshot; naming only the
+// getter result without that snapshot is also incomplete. All eight call
+// relocations, the unwind reference and every non-relocation byte agree.
+// Related assigned snapshots keep the boundary builder exact and preserve
+// the fill caller's established insertion/erasure boundaries.
 VA(0x0053B970, 0x232) // anchor-callee 0x53bde2/0x53be39; thiscall, ret 8
 void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
 {
@@ -3999,7 +4001,9 @@ void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
     }
     unsigned int count = candidates.size();
     unsigned int selected = rand() % count;
-    zone->setLevelPosition(candidates[selected]);
+    TRmgMapPosition selectedPosition;
+    selectedPosition = candidates[selected];
+    zone->setLevelPosition(selectedPosition);
 }
 
 VA(0x0053BBB0, 0xFD)
@@ -4522,6 +4526,8 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
 // one-element range (89.9385% versus pop_back's 53.5287%). Keeping the upper
 // and lower span seeds at function scope reaches 90.0984%; nine bounds/span
 // lifetime forms find no further gain, with no other RMG score changes.
+// Assign the initial position from the shared owned-result getter; direct
+// copy-initialization changes the insertion/erasure expansion (52.8361%).
 // Retail retains copy and _Destroy inside seed erasure; VC6 expands them
 // and retains an extra size call in the final lower-span insertion.
 // Isolated erase inline_depth(1) is flat; depth zero retains the wrong outer
@@ -4534,7 +4540,8 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgBoundaryVertex*
 {
     int zoneIndex = zone->m_slot->m_zoneIndex;
     std::vector<TRmgMapPosition> pending;
-    TRmgMapPosition position = zone->getLevelPosition();
+    TRmgMapPosition position;
+    position = zone->getLevelPosition();
     TRmgMapPosition upper;
     TRmgMapPosition lower;
     if (position.m_x < 0 || position.m_x >= m_map.m_mapWidth
@@ -4790,8 +4797,10 @@ VA_COMPGEN(0x0054DE90, 0x14, STD_CONSTRUCT, TRmgZoneConnection)
 // Bound temporaries live inside their guards, matching retail's x87 stores.
 // Retail reuses one counter home across the initial, radial and final loops;
 // shadowing it in the radial loop adds a stack home (99.8364%). Reusing it
-// completes the exact body. Combined ownership/construction families and an
-// independent radial-site/event oracle cover these boundaries and lifetimes.
+// completes the exact body. With the getter owning its returned coordinate,
+// assign each radial center to its own value before scaling. Copy-initialized
+// centers leave two vector destructors out of line (97.3085%); assignment
+// preserves all 1613 retail bytes, including the original cleanup sequence.
 VA(0x0053E050, 0x64D) // anchor-callee 0x549af9; thiscall, ret 8
 void type_random_map_generator::buildZoneBoundaries(
     TRmgTemplate* mapTemplate, int level)
@@ -4820,10 +4829,12 @@ void type_random_map_generator::buildZoneBoundaries(
             testSlot.m_size = radius;
             TRmgMapPosition position = current->getLevelPosition();
             for (int direction = 0; direction < 32; direction += 4) {
-                TRmgMapPosition horizontalCenter = current->getLevelPosition();
+                TRmgMapPosition horizontalCenter;
+                horizontalCenter = current->getLevelPosition();
                 double dx = radius * g_rmgDirectionCosines[direction];
                 position.m_x = static_cast<int>(horizontalCenter.m_x + dx * 2);
-                TRmgMapPosition verticalCenter = current->getLevelPosition();
+                TRmgMapPosition verticalCenter;
+                verticalCenter = current->getLevelPosition();
                 double dy = radius * g_rmgDirectionSines[direction];
                 position.m_y = static_cast<int>(verticalCenter.m_y + dy * 2);
                 if (position.m_x < 0 && position.m_x < dx)
