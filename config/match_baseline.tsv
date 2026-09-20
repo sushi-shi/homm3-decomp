@@ -1156,7 +1156,7 @@ cspriteframe	?drawAdvObjWithFlagAlpha@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette1
 cspriteframe	?drawCreatureImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@EGE@Z	94.7302	94.7302	95.9000	0x7c9e0	tokens1:eb89ea415b66
 cspriteframe	?drawSpellEffect@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	98.0214	98.0214	100.0000	0x7ef60	tokens1:0ded8e652c12
 cspriteframe	?drawTile@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	79.3933	79.3933	83.2115	0x7dd40	tokens1:35800cee1957
-cspriteframe	?drawTileShadow@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	92.0317	92.0317	99.9308	0x7e820	tokens1:28abf00ca646
+cspriteframe	?drawTileShadow@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	99.9308	99.9308	99.9308	0x7e820	tokens1:e941b4b626ad
 cspriteframe	?getSize@CSpriteFrame@@UBEIXZ	100.0000	100.0000	100.0000	0x7c560	tokens1:a9669813afd9
 cspriteframe	?setPixelFormat@CSpriteFrame@@SIXIII@Z	100.0000	100.0000	100.0000	0x7c460	tokens1:a128a088ecf7
 cursor	??9type_point@@QBE_NABU0@@Z	100.0000	100.0000	100.0000	0x82340	tokens1:964dd1e46326
