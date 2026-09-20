@@ -11,7 +11,6 @@
 #include <math.h>
 #include <list>
 #include <queue>
-#include <stack>
 #include <set>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7070,35 +7069,38 @@ TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, int level)
     }
 }
 
+// Complete-only live map-domain query shared by both branch checks. The
+// signed X/Y checks and half-open bounds are retail facts; this ordinary
+// member's name and source boundary remain provisional.
+bool type_random_map::contains(const TPoint& point) const
+{
+    return point.m_x >= 0 && point.m_x < m_mapWidth
+        && point.m_y >= 0 && point.m_y < m_mapHeight;
+}
+
 // The eight-byte values are coordinate pairs: midpoint and perpendicular
 // arithmetic prove TPoint, independently of the ICF-shared vector labels.
-// Pending segments are LIFO point pairs; deferred branches are FIFO pairs.
-// The stack/vector and queue/list adapters retain their per-level lifetimes.
-// The canonical point difference supplies retail's separate SUB/SUB/NEG;
-// final terrain/border queries and the shared squared-distance helper restore
-// range cleanup. Its 69-byte retained body and delete call are exact.
-// Retail +0x10a..+0x127 constructs the containers after the seed switch;
-// range erase, head deletion and vector deletion precede the level back edge.
-// Hoisting either container outside that loop contradicts the retail lifetime.
-// Remaining boundaries: retail retains both seed single-inserts and both
-// vector erases; this model still expands the second of each too far.
-// Point-bound getters recover those calls but over-expand list cleanup.
-// Pair-operation helpers do not recover the two container calls. Shared
-// midpoint/perpendicular helpers also disturb the three exact path callers;
-// keep their existing operations rather than adopt that unsupported boundary.
-// The shared guarded cell-setter model reaches 92.475%, but its joint runtime
-// transfer caller still loses MAX (commitTreasureGroup 99.9141% -> 82.6016%).
-// Keep that as a source-model lead requiring caller recovery, not an inline pin.
-// Direct point inequality and named/constructed results in the four canonical
-// point/vector operators do not resolve these boundaries. Class-body versus
-// ordinary cell setters is byte-neutral here; their runtime transfer caller
-// still needs the retained three-coordinate constructor and its live snapshots.
+// Pending segments use a vector as a LIFO; deferred branches use queue/list.
+// Both containers live within one level, after the seed switch and before
+// the level back edge. Hoisting them contradicts retail's cleanup lifetime.
+// The point difference supplies SUB/SUB/NEG, and canonical terrain/border
+// queries plus squared distance preserve the exact 69-byte range erase.
+// The shared bounds query and direct vector operations recover both seed
+// single-inserts, both vector erases, the queue cleanup and the 0x6c frame.
+// At 92.6607%, entry dimension loads, seed-switch joins and register choices
+// around the bounds checks still differ. Product order and constructor-built
+// seed values do not improve that remainder. Value/reference bounds arguments
+// and early-return/conjunction forms reproduce the same selected code.
+// Pair-operation helpers lose the container boundaries; shared midpoint and
+// perpendicular helpers disturb the three exact path callers. Point getters
+// alone over-expand cleanup. The cell-setter model remains a lead requiring
+// recovery of commitTreasureGroup's retained constructor and live snapshots.
 VA(0x00543E20, 0x574) // anchor-callee 0x544920; Complete-only, thiscall, no arguments
 void type_random_map_generator::carveBranchingPaths()
 {
+    int remaining = m_map.m_mapWidth * m_map.m_mapHeight * m_map.m_numberLevels;
     TRmgMapItem* item = m_map.m_mapItems;
-    for (int remaining = m_map.m_mapWidth * m_map.m_mapHeight * m_map.m_numberLevels;
-         remaining--; ++item) {
+    for (; remaining--; ++item) {
         if (!item->m_objects.size()) {
             if (!item->m_connection.m_present) {
                 item->m_tileData.m_subterraneanGate = 0;
@@ -7138,16 +7140,16 @@ void type_random_map_generator::carveBranchingPaths()
             last.m_y = first.m_y;
             break;
         }
-        std::stack<TPoint, std::vector<TPoint> > pending;
+        std::vector<TPoint> pending;
         std::queue<TPoint, std::list<TPoint> > branches;
-        pending.push(first);
-        pending.push(last);
+        pending.push_back(first);
+        pending.push_back(last);
         while (pending.size()) {
             while (pending.size()) {
-                last = pending.top();
-                pending.pop();
-                first = pending.top();
-                pending.pop();
+                last = pending.back();
+                pending.pop_back();
+                first = pending.back();
+                pending.pop_back();
                 TPoint middle((first.m_x + last.m_x + 1) / 2,
                     (first.m_y + last.m_y + 1) / 2);
                 if (middle != first && middle != last) {
@@ -7158,12 +7160,11 @@ void type_random_map_generator::carveBranchingPaths()
                         int displacement = rand() % length - length / 2;
                         middle += perpendicular * displacement / length;
                     }
-                    pending.push(last);
-                    pending.push(middle);
-                    pending.push(middle);
-                    pending.push(first);
-                    if (length >= 8 && middle.m_x >= 0 && middle.m_x < m_map.m_mapWidth
-                        && middle.m_y >= 0 && middle.m_y < m_map.m_mapHeight) {
+                    pending.push_back(last);
+                    pending.push_back(middle);
+                    pending.push_back(middle);
+                    pending.push_back(first);
+                    if (length >= 8 && m_map.contains(middle)) {
                         first = middle + perpendicular;
                         branches.push(middle);
                         branches.push(first);
@@ -7171,8 +7172,7 @@ void type_random_map_generator::carveBranchingPaths()
                         branches.push(middle);
                         branches.push(first);
                     }
-                } else if (first.m_x >= 0 && first.m_x < m_map.m_mapWidth
-                           && first.m_y >= 0 && first.m_y < m_map.m_mapHeight) {
+                } else if (m_map.contains(first)) {
                     m_map.openPathPatch(first.m_x, first.m_y, level);
                 }
             }
@@ -7183,8 +7183,8 @@ void type_random_map_generator::carveBranchingPaths()
                 branches.pop();
                 last = m_map.traceBranchEnd(first, last, level);
                 if (getRmgSquaredDistance(last, first) >= 25) {
-                    pending.push(last);
-                    pending.push(first);
+                    pending.push_back(last);
+                    pending.push_back(first);
                 }
             }
         }
@@ -7776,17 +7776,17 @@ int type_random_map_generator::getMineGuardValue(int resource, const TRmgZone* z
 // upper-bound-first clamp. A named selection index restores the post-rand
 // array reload. A separate resourceProperties local recovers the resource
 // strip's register lifetime: its address never reaches vector insertion.
-// Current 97.9776% preserves all 71 retail control-flow blocks. The shared
-// map-index operation restores the retained aggregate lookup and expanded
-// occupancy-size query. Remaining differences include first-scan insertion,
-// the 0x38 frame versus retail's 0x44, and decrement/subtract trigger-Y
-// arithmetic versus retail's 1-minus-trigger/add sequence.
-// Whole-trigger subtraction restores the retail X/Y register assignment;
-// component assignments still disturb the helper expansion decisions.
-// A shared zone-value wrapper reaches 96.6393% here but lowers treasure assembly
-// MAX to 63.2533%; keep the mine-specific operation. Separating scan pointers
-// loses the retail shared lifetime. Cell queries and a reference-returning
-// position accessor are neutral; direct bitset indexing loses the outer query.
+// At 99.4005%, all 71 retail blocks have the same instruction counts and
+// control flow. Dimension queries restore the first single-insert; a value
+// snapshot of the trigger restores retail's 1-minus-trigger/add sequence.
+// The frame is still 0x38 versus retail's 0x44: 30 stack operands differ by
+// twelve bytes. The terrain-test PUSH/LEA order and strength LEA operands
+// remain reversed. Initialization/assignment and named position-return copies
+// are neutral; constructing a fresh return value or using the primary scalar
+// map overload changes calls that retail does not make.
+// A shared zone-value wrapper lowers treasure assembly MAX; keep the complete
+// mine valuation operation. Separating the scan pointers loses the retail
+// shared lifetime; only the later resource prototype owns a fresh local.
 VA(0x00545990, 0x466)
 unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     int resource, unsigned char startingMine, int spacing)
@@ -7820,7 +7820,9 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     }
     int guardValue = getMineGuardValue(resource, zone);
     TRmgMapPosition entrance = mine->getPosition();
-    entrance -= TPoint(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y - 1);
+    TObjectType::TPoint trigger = prototype->m_triggerCell;
+    entrance.m_x -= trigger.m_x;
+    entrance.m_y += 1 - trigger.m_y;
     TRmgMapItem* item = m_map.getMapItem(entrance);
     if (!item->m_connection.m_present) {
         item->m_tileData.m_borderObject = 0;
@@ -7832,12 +7834,12 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     TRmgObjectPropertiesRef* resourceProperties = selectObjectPrototype(terrain, RESOURCE, resource);
     if (!resourceProperties)
         return 1;
-    TRmgMapPosition position = mine->m_position;
+    TRmgMapPosition position = mine->getPosition();
     TRmgZoneBounds bounds;
     bounds.m_minimumY = max(position.m_y + 1, 0);
-    bounds.m_maximumY = min(position.m_y + 2, m_map.m_mapHeight);
+    bounds.m_maximumY = min(position.m_y + 2, m_map.getHeight());
     bounds.m_minimumX = max(position.m_x - prototype->getWidth(), 0);
-    bounds.m_maximumX = min(position.m_x + 2, m_map.m_mapWidth);
+    bounds.m_maximumX = min(position.m_x + 2, m_map.getWidth());
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX && placed <= 2; ++position.m_x) {
             if (rand() % 2 == 0 && m_map.canPlaceObject(resourceProperties, position, zone)) {

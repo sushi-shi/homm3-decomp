@@ -1201,6 +1201,10 @@ public:
     void markCoastalTiles();
     void floodConnectionCosts(TRmgMapPosition position, unsigned char waterZone);
 
+    int getWidth() const { return m_mapWidth; }
+    int getHeight() const { return m_mapHeight; }
+
+    bool contains(const TPoint& point) const;
     TRmgMapItem* getMapItem(int x, int y);
     inline TRmgMapItem* getMapItem(int x, int y, int z)
     {
