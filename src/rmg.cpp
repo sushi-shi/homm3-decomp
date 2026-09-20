@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <bitset>
 #include <ctype.h>
+#include <functional>
 #include <math.h>
 #include <list>
 #include <queue>
@@ -284,22 +285,18 @@ static void __fastcall assignRmgTeams(
     const unsigned char* players,
     char* teams);
 
+// Invert the disabled-byte range through the shared bitset iterator. Retail
+// retains both bitset::set calls through this ordinary transform expansion;
+// no inline-depth pin is needed. The Complete-only wrapper name is inferred.
 template <unsigned int N>
 static void setAvailableRmgHeroes(
     std::bitset<N>* availableHeroes,
     unsigned char* heroFlag,
     unsigned char* end)
 {
-    int heroIndex = 0;
-    while (heroFlag != end) {
-        bool available = !*heroFlag;
-        // WriteMapHeader -> bitset<N>::set: retail retains both call sites.
-#pragma inline_depth(0)
-        availableHeroes->set(heroIndex, available);
-#pragma inline_depth()
-        ++heroFlag;
-        ++heroIndex;
-    }
+    std::transform(heroFlag, end,
+        bitset_iterator<N>(*availableHeroes, 0),
+        std::logical_not<unsigned char>());
 }
 
 // Vtable 0x6409cc slot 0 and the 0x14-byte concrete map layout identify this
@@ -7091,10 +7088,13 @@ bool type_random_map_generator::contains(const TPoint& point) const
 // single-inserts, both vector erases, the queue cleanup and the 0x6c frame.
 // Dimension accessors in the entry product and seed switch restore retail
 // load order and shared joins. The item pointer precedes the height/width/level
-// product. With the generator-owned bounds query, MAX is 96.1018%: all 67
-// branch destinations agree and 66 block instruction counts match. Coordinate
-// register roles and one extra move after traceBranchEnd remain. Naming an
-// extra endpoint copy adds a reload absent from retail; keep the direct call.
+// product. With the generator-owned bounds query and field-built canonical
+// point difference, MAX is 96.5709%: all 67 branch destinations agree and 66
+// block instruction counts match. Coordinate register roles and return-copy/
+// distance allocation remain. Naming an extra endpoint copy adds a reload
+// absent from retail; keep the direct call. A byte-identical passive C2 trace
+// gives last.x, first.x and last.y equal priority 544, assigned ESI/EDI/EBX;
+// retail uses ESI/EBX/EDI. Declaration-order probes leave this tie unchanged.
 // Pair-operation helpers lose the container boundaries; shared midpoint and
 // perpendicular helpers disturb the three exact path callers. Point getters
 // alone over-expand cleanup. The cell-setter model remains a lead requiring
@@ -9399,43 +9399,73 @@ unsigned char type_random_map_generator::generate()
     return 1;
 }
 
+// Native scalar output owns its argument copy. The packed-bit encoder and
+// writer separate conversion from stream I/O, mirroring the existing packed
+// readers. These ordinary Complete-only boundaries/names are inferred from
+// repeated header expansions; no retained standalone bodies are claimed.
+template <class T>
+int writeValue(TAbstractFile* outfile, T value)
+{
+    return outfile->write(&value, sizeof(value));
+}
+
+template <size_t N>
+void encodePackedBits(const std::bitset<N>& bits, unsigned char* packed)
+{
+    memset(packed, 0, (N + 7) / 8);
+    for (unsigned int index = 0; index < N; ++index) {
+        if (bits.test(index))
+            packed[index >> 3] |= 1 << (index & 7);
+    }
+}
+
+template <size_t N>
+int writePackedBits(TAbstractFile* outfile, const std::bitset<N>& bits)
+{
+    unsigned char packed[(N + 7) / 8];
+    encodePackedBits(bits, packed);
+    return outfile->write(packed, sizeof(packed));
+}
+
+// Length-prefixed text retains the caller-owned string/buffer lifetime and
+// reads the payload length again after writing its native int prefix.
+int writeString(TAbstractFile* outfile, const std::string& text)
+{
+    writeValue<int>(outfile, text.length());
+    return outfile->write(text.c_str(), text.length());
+}
+
+int writeString(TAbstractFile* outfile, const char* text)
+{
+    writeValue<int>(outfile, strlen(text));
+    return outfile->write(text, strlen(text));
+}
+
 // Complete's random-map pipeline calls this routine immediately before the
 // generated terrain/object stream is emitted.  The format switch, description
 // fragments, player records, team assignment, and packed availability masks
 // are all read directly from retail's stream-write CFG.  The Dreamcast port
 // has no RMG compiland, so the method spelling remains provisional while its
 // class offsets and serialization order are retail-byte facts.
+// Typed scalar/string writes, shared bit encoding and hero-flag transform
+// recover 94.5767% without the old hero-set inline-depth pin. All 164 branch
+// destinations align; 153 blocks also have matching instruction counts.
+// Stack homes, independent dimension loads and exception expansions remain.
 
 VA(0x00549CB0, 0xE90)  // GenerateRandomMap caller chain; retail-only RMG
 void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 {
-    {
-        int intBuffer = getSerializedMapVersion();
-        outfile->write(&intBuffer, sizeof(intBuffer));
-    }
+    writeValue<int>(outfile, getSerializedMapVersion());
 
-    {
-        char byteBuffer = 1;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
-    }
+    writeValue<char>(outfile, 1);
 
-    {
-        int intBuffer = m_map.m_mapWidth;
-        outfile->write(&intBuffer, sizeof(intBuffer));
-    }
+    writeValue<int>(outfile, m_map.m_mapWidth);
 
-    {
-        char byteBuffer = m_map.m_numberLevels > 1;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
-    }
+    writeValue<char>(outfile, m_map.m_numberLevels > 1);
 
     std::string mapName(
         DATA_COMPGEN(0x00682900, rmgMapName, "Random Map"));
-    {
-        int intBuffer = mapName.length();
-        outfile->write(&intBuffer, sizeof(intBuffer));
-    }
-    outfile->write(mapName.c_str(), mapName.length());
+    writeString(outfile, mapName);
 
     // Retail places description at [ebp-0x324] and mainTowns at
     // [ebp-0x130]; their 0x1f4-byte separation proves the 500-byte extent.
@@ -9509,19 +9539,11 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         }
     }
 
-    {
-        int intBuffer = strlen(description);
-        outfile->write(&intBuffer, sizeof(intBuffer));
-    }
-    outfile->write(description, strlen(description));
+    writeString(outfile, description);
 
-    {
-        char byteBuffer = 1;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
-    }
+    writeValue<char>(outfile, 1);
     if (m_mapVersion >= 1) {
-        char byteBuffer = 0;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
+        writeValue<char>(outfile, 0);
     }
 
     {
@@ -9578,107 +9600,56 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
         for (int serializedPlayer = 0; serializedPlayer < 8;
              ++serializedPlayer) {
-            {
-                char byteBuffer = canBeHuman[serializedPlayer];
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            }
+            writeValue<char>(outfile, canBeHuman[serializedPlayer]);
 
-            {
-                char byteBuffer =
-                    canBeHuman[serializedPlayer] || canBeComputer[serializedPlayer];
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            }
+            writeValue<char>(outfile, canBeHuman[serializedPlayer] || canBeComputer[serializedPlayer]);
 
-            {
-                char byteBuffer = 0;
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            }
+            writeValue<char>(outfile, 0);
 
             if (m_mapVersion >= 2) {
-                char byteBuffer = 0;
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
+                writeValue<char>(outfile, 0);
             }
 
             if (m_mapVersion >= 1) {
-                unsigned short alignment = legalAlignments[serializedPlayer];
-                outfile->write(&alignment, sizeof(alignment));
+                writeValue<unsigned short>(outfile, legalAlignments[serializedPlayer]);
             } else {
-                char byteBuffer = legalAlignments[serializedPlayer];
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
+                writeValue<char>(outfile, legalAlignments[serializedPlayer]);
             }
 
-            {
-                char byteBuffer = 0;
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            }
+            writeValue<char>(outfile, 0);
 
             if (!canBeHuman[serializedPlayer]
                 && !canBeComputer[serializedPlayer]) {
-                char byteBuffer = 0;
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
+                writeValue<char>(outfile, 0);
             } else {
                 if (canBeHuman[serializedPlayer])
                     ++m_humanPlayerCount;
                 else
                     ++m_computerPlayerCount;
 
-                {
-                    char byteBuffer = 1;
-                    outfile->write(&byteBuffer, sizeof(byteBuffer));
-                }
+                writeValue<char>(outfile, 1);
 
                 if (m_mapVersion >= 1) {
-                    {
-                        char byteBuffer = 1;
-                        outfile->write(&byteBuffer, sizeof(byteBuffer));
-                    }
-                    {
-                        char byteBuffer = -1;
-                        outfile->write(&byteBuffer, sizeof(byteBuffer));
-                    }
+                    writeValue<char>(outfile, 1);
+                    writeValue<char>(outfile, -1);
                 }
 
-                {
-                    char byteBuffer = mainTowns[serializedPlayer].m_x;
-                    outfile->write(&byteBuffer, sizeof(byteBuffer));
-                }
-                {
-                    char byteBuffer = mainTowns[serializedPlayer].m_y;
-                    outfile->write(&byteBuffer, sizeof(byteBuffer));
-                }
-                {
-                    char byteBuffer = mainTowns[serializedPlayer].m_z;
-                    outfile->write(&byteBuffer, sizeof(byteBuffer));
-                }
+                writeValue<char>(outfile, mainTowns[serializedPlayer].m_x);
+                writeValue<char>(outfile, mainTowns[serializedPlayer].m_y);
+                writeValue<char>(outfile, mainTowns[serializedPlayer].m_z);
             }
 
-            {
-                char byteBuffer = 0;
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            }
-            {
-                char byteBuffer = -1;
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            }
+            writeValue<char>(outfile, 0);
+            writeValue<char>(outfile, -1);
 
             if (m_mapVersion >= 1) {
-                {
-                    char byteBuffer = 0;
-                    outfile->write(&byteBuffer, sizeof(byteBuffer));
-                }
-                int intBuffer = 0;
-                outfile->write(&intBuffer, sizeof(intBuffer));
+                writeValue<char>(outfile, 0);
+                writeValue<int>(outfile, 0);
             }
         }
 
-        {
-            char byteBuffer = -1;
-            outfile->write(&byteBuffer, sizeof(byteBuffer));
-        }
-        {
-            char byteBuffer = -1;
-            outfile->write(&byteBuffer, sizeof(byteBuffer));
-        }
+        writeValue<char>(outfile, -1);
+        writeValue<char>(outfile, -1);
 
         if (!m_computerTeamCount)
             m_computerTeamCount = m_computerPlayerCount;
@@ -9691,8 +9662,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
         if (m_humanTeamCount >= m_humanPlayerCount
             && m_computerTeamCount >= m_computerPlayerCount) {
-            char byteBuffer = 0;
-            outfile->write(&byteBuffer, sizeof(byteBuffer));
+            writeValue<char>(outfile, 0);
         } else {
             char teams[8];
             memset(teams, 0, sizeof(teams));
@@ -9729,10 +9699,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
                 canBeComputer,
                 teams);
 
-            {
-                char byteBuffer = m_humanTeamCount + m_computerTeamCount;
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            }
+            writeValue<char>(outfile, m_humanTeamCount + m_computerTeamCount);
             outfile->write(teams, sizeof(teams));
         }
     }
@@ -9742,34 +9709,20 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         setAvailableRmgHeroes(
             &availableHeroes, m_disabledHeroes, m_disabledHeroes + 156);
 
-        unsigned char packedHeroes[20];
-        memset(packedHeroes, 0, sizeof(packedHeroes));
-        for (unsigned int heroBit = 0; heroBit < 156; ++heroBit) {
-            if (availableHeroes.test(heroBit))
-                packedHeroes[heroBit >> 3] |= 1 << (heroBit & 7);
-        }
-        outfile->write(packedHeroes, sizeof(packedHeroes));
+        writePackedBits(outfile, availableHeroes);
     } else {
         std::bitset<128> availableHeroes;
         setAvailableRmgHeroes(
             &availableHeroes, m_disabledHeroes, m_disabledHeroes + 128);
 
-        unsigned char packedHeroes[16];
-        memset(packedHeroes, 0, sizeof(packedHeroes));
-        for (unsigned int roeHeroBit = 0; roeHeroBit < 128; ++roeHeroBit) {
-            if (availableHeroes.test(roeHeroBit))
-                packedHeroes[roeHeroBit >> 3] |= 1 << (roeHeroBit & 7);
-        }
-        outfile->write(packedHeroes, sizeof(packedHeroes));
+        writePackedBits(outfile, availableHeroes);
     }
 
     if (m_mapVersion >= 1) {
-        int intBuffer = 0;
-        outfile->write(&intBuffer, sizeof(intBuffer));
+        writeValue<int>(outfile, 0);
     }
     if (m_mapVersion >= 2) {
-        char byteBuffer = 0;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
+        writeValue<char>(outfile, 0);
     }
 
     char reserved[31];
@@ -9787,15 +9740,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     disabledArtifacts.set(127);
 
     if (m_mapVersion >= 2) {
-        unsigned char packedArtifacts[18];
-        memset(packedArtifacts, 0, sizeof(packedArtifacts));
-        for (unsigned int artifactBit = 0; artifactBit < 144;
-             ++artifactBit) {
-            if (disabledArtifacts.test(artifactBit))
-                packedArtifacts[artifactBit >> 3] |=
-                    1 << (artifactBit & 7);
-        }
-        outfile->write(packedArtifacts, sizeof(packedArtifacts));
+        writePackedBits(outfile, disabledArtifacts);
     } else if (m_mapVersion >= 1) {
         std::bitset<129> legacyDisabledArtifacts;
         std::copy(
@@ -9803,35 +9748,15 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
             bitset_iterator<144>(disabledArtifacts, 129),
             bitset_iterator<129>(legacyDisabledArtifacts, 0));
 
-        unsigned char packedArtifacts[17];
-        memset(packedArtifacts, 0, sizeof(packedArtifacts));
-        for (unsigned int legacyArtifactBit = 0; legacyArtifactBit < 129;
-             ++legacyArtifactBit) {
-            if (legacyDisabledArtifacts.test(legacyArtifactBit))
-                packedArtifacts[legacyArtifactBit >> 3] |=
-                    1 << (legacyArtifactBit & 7);
-        }
-        outfile->write(packedArtifacts, sizeof(packedArtifacts));
+        writePackedBits(outfile, legacyDisabledArtifacts);
     }
 
     if (m_mapVersion >= 2) {
         std::bitset<70> disabledSpells;
-        unsigned char packedSpells[9];
-        memset(packedSpells, 0, sizeof(packedSpells));
-        for (unsigned int spell = 0; spell < 70; ++spell) {
-            if (disabledSpells.test(spell))
-                packedSpells[spell >> 3] |= 1 << (spell & 7);
-        }
-        outfile->write(packedSpells, sizeof(packedSpells));
+        writePackedBits(outfile, disabledSpells);
 
         std::bitset<28> disabledSkills;
-        unsigned char packedSkills[4];
-        memset(packedSkills, 0, sizeof(packedSkills));
-        for (unsigned int skill = 0; skill < 28; ++skill) {
-            if (disabledSkills.test(skill))
-                packedSkills[skill >> 3] |= 1 << (skill & 7);
-        }
-        outfile->write(packedSkills, sizeof(packedSkills));
+        writePackedBits(outfile, disabledSkills);
 
         char byteBuffer = 0;
         for (int hero = 0; hero < 156; ++hero)
@@ -10561,8 +10486,13 @@ TPoint operator+(TPoint point, TRmgVector offset)
     return TPoint(point.m_x + offset.m_x, point.m_y + offset.m_y);
 }
 
+// The field-built result preserves all 32 retained bytes and improves the
+// carveBranchingPaths expansion without adding a second arithmetic helper.
 VA(0x005FDD40, 0x20)
 TRmgVector operator-(TPoint left, TPoint right)
 {
-    return TRmgVector(left.m_x - right.m_x, left.m_y - right.m_y);
+    TRmgVector result;
+    result.m_x = left.m_x - right.m_x;
+    result.m_y = left.m_y - right.m_y;
+    return result;
 }

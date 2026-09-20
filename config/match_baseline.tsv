@@ -3266,7 +3266,7 @@ rmg	??1type_object@@UAE@XZ	100.0000	100.0000	100.0000	0x1338d0	tokens1:12341612f
 rmg	??1type_random_map@@UAE@XZ	100.0000	100.0000	100.0000	0x1310b0	tokens1:409c8a49d4c4
 rmg	??1type_random_map_generator@@UAE@XZ	100.0000	100.0000	100.0000	0x137df0	tokens1:7b4f74b499ac
 rmg	??DTRmgVector@@QBE?AU0@H@Z	100.0000	100.0000	100.0000	0x1fdcd0	tokens1:cfcc95e17f4e
-rmg	??G@YI?AUTRmgVector@@UTPoint@@0@Z	100.0000	100.0000	100.0000	0x1fdd40	tokens1:e61a7fccf178
+rmg	??G@YI?AUTRmgVector@@UTPoint@@0@Z	100.0000	100.0000	100.0000	0x1fdd40	tokens1:c9ca87b9f73a
 rmg	??H@YI?AUTPoint@@U0@UTRmgVector@@@Z	100.0000	100.0000	100.0000	0x1fdd20	tokens1:e2632fa573ff
 rmg	??HTRmgVector@@QBE?AU0@U0@@Z	100.0000	100.0000	100.0000	0x1fdcb0	tokens1:0c17565effa6
 rmg	??KTRmgVector@@QBE?AU0@H@Z	100.0000	100.0000	100.0000	0x1fdcf0	tokens1:967ee6cbc37e
@@ -3316,14 +3316,14 @@ rmg	?canPlaceObject@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPos
 rmg	?canPlaceShipyard@type_random_map_generator@@QAEEUTRmgMapPosition@@@Z	90.7594	90.7594	90.7594	0x141960	tokens1:46b9374ba90d
 rmg	?canPlaceTreasureGroup@type_random_map_generator@@QAEEPAUTRmgTreasureGroup@@UTRmgMapPosition@@PAUTRmgZone@@@Z	81.0773	99.9850	99.9850	0x146c70	tokens1:5d7b71437bc7
 rmg	?canPlaceZone@type_random_map_generator@@QAEEPAUTRmgZone@@@Z	98.0374	98.0374	98.0374	0x13ad60	tokens1:b16ed3269374
-rmg	?carveBranchingPaths@type_random_map_generator@@QAEXXZ	96.1018	96.1018	96.1018	0x143e20	tokens1:b9e33d6186c4
+rmg	?carveBranchingPaths@type_random_map_generator@@QAEXXZ	96.5709	96.5709	96.5709	0x143e20	tokens1:b9e33d6186c4
 rmg	?chooseTerrain@TRmgZone@@QAEXXZ	100.0000	100.0000	100.0000	0x132ab0	tokens1:4a47a6c6ed2b
 rmg	?clear@TRmgMapItem@@QAEXXZ	100.0000	100.0000	100.0000	0x130f10	tokens1:3e743a45ea09
 rmg	?clear@type_random_map@@QAEXXZ	100.0000	100.0000	100.0000	0x131140	tokens1:53dcf950987c
 rmg	?clearPlacementMarks@type_object@@QAEXXZ	100.0000	100.0000	100.0000	0x133150	tokens1:9dd0294afdff
-rmg	?clipRmgBoundaryPoint@@YI?AUTPoint@@ABUTRmgZoneBounds@@U1@1@Z	100.0000	100.0000	100.0000	0x13cac0	tokens1:20ed87e54142
+rmg	?clipRmgBoundaryPoint@@YI?AUTPoint@@ABUTRmgZoneBounds@@U1@1@Z	95.5399	100.0000	100.0000	0x13cac0	tokens1:20ed87e54142
 rmg	?commitTreasureGroup@type_random_map_generator@@QAEXPAUTRmgTreasureGroup@@UTRmgMapPosition@@@Z	93.3047	99.9141	99.9141	0x1469b0	tokens1:cda3f07dc179
-rmg	?connectJunctionEntrance@type_random_map_generator@@QAEXUTPoint@@0PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x1443a0	tokens1:2c2431b6c239
+rmg	?connectJunctionEntrance@type_random_map_generator@@QAEXUTPoint@@0PAUTRmgZone@@@Z	99.5699	100.0000	100.0000	0x1443a0	tokens1:2c2431b6c239
 rmg	?connectZones@type_random_map_generator@@QAEXXZ	80.2082	82.8312	93.6151	0x143240	tokens1:95bc5ebc1cf3
 rmg	?copy@std@@YIPAHPAH00@Z	100.0000	100.0000	100.0000	0x1093c0	-
 rmg	?copy@std@@YIPAHPBH0PAH@Z	100.0000	100.0000	100.0000	0x14df40	-
@@ -3499,7 +3499,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	tokens1:9ffb396c8413
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	tokens1:f84e27622dc7
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	99.4123	99.4123	99.4123	0x14abf0	tokens1:d414eb83c2cc
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	77.2441	77.2441	95.7066	0x149cb0	tokens1:2e8f526f3bb4
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	94.5767	94.5767	95.7066	0x149cb0	tokens1:da23490c0f2c
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	100.0000	100.0000	100.0000	0x14ae30	tokens1:c9c09a93db3c
 rmg	__h3cg$rmg$list_dtor$TPoint	0.0000	100.0000	100.0000	0x14c6a0	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
