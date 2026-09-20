@@ -14,6 +14,38 @@ from homm3.build import link
 
 
 class WorktreePathsTest(unittest.TestCase):
+    def test_shell_root_resolves_subdirectories_without_creating_build_artifacts(self):
+        resolver = Path(__file__).resolve().parents[2] / 'project-root.sh'
+        with tempfile.TemporaryDirectory(prefix='homm3 shell root ') as raw:
+            root = Path(raw)
+            (root / 'src/nested').mkdir(parents=True)
+            (root / 'scripts/homm3').mkdir(parents=True)
+            (root / 'config').mkdir()
+            for name in ('flake.nix', 'config/project.toml', 'config/units.toml'):
+                (root / name).touch()
+            # A linked worktree has a .git file, not a .git directory.
+            (root / '.git').write_text('gitdir: /unused/test/worktree\n')
+            for start in (root, root / 'src', root / 'src/nested'):
+                result = subprocess.run(['sh', str(resolver), str(start)],
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stdout.strip(), str(root))
+                self.assertFalse((start / 'build').exists())
+            # A stale environment variable cannot override the supplied path.
+            result = subprocess.run(['sh', str(resolver), str(root / 'src')],
+                                    env=dict(os.environ, HOMM3_DIR='/wrong/checkout'),
+                                    capture_output=True, text=True)
+            self.assertEqual(result.stdout.strip(), str(root))
+
+    def test_shell_root_fails_without_project_markers(self):
+        resolver = Path(__file__).resolve().parents[2] / 'project-root.sh'
+        with tempfile.TemporaryDirectory() as raw:
+            result = subprocess.run(['sh', str(resolver), raw], capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, '')
+            self.assertIn('no project root', result.stderr)
+            self.assertEqual(list(Path(raw).iterdir()), [])
+
     def test_configure_and_compiler_honor_requested_worktree(self):
         scripts = Path(__file__).resolve().parents[2]
         with tempfile.TemporaryDirectory(prefix="homm3 root ") as raw:

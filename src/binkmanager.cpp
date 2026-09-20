@@ -17,17 +17,7 @@
 DATA(0x00694ce8)
 BINKSUMMARY g_binkSummary;
 
-#if 0  // @carcass
 
-// E:\gamedcs\binkmanager.cpp:123
-DC_ONLY(0x50a80, 0x4)
-void BinkManager::setPixelFormat()
-{
-    // @stub
-}
-
-// E:\gamedcs\binkmanager.cpp:232
-#endif  // @carcass
 
 // The constant OR'd into every _BinkOpen flag word here; it is Bink's
 // counterpart of smackmgr's SMACKOPEN_FROM_ARCHIVE and makes _BinkOpen take
@@ -88,6 +78,14 @@ BINK* BinkManager::getBinkFilePtr(const char* filename, int binkOptions)
         }
     }
     return 0;
+}
+
+// Original: BinkManager::SetPixelFormat; binkmanager.cpp:123, dc 0x50a80
+// The formal CodeView type retains the three masks; the release body is empty.
+void BinkManager::setPixelFormat(unsigned long redMask,
+                                 unsigned long greenMask,
+                                 unsigned long blueMask)
+{
 }
 
 VA(0x0044D830, 0x1A3)  // dc 0x50a84
@@ -256,6 +254,12 @@ void BinkManager::closeBink()
 // EBX with `vw` recycled into the `h` parameter home at [ebp+0x10], where our
 // CL keeps `vw` in EBX with `vh` in the `w` home at [ebp+0xc], and the zero it
 // compares against materialises in EAX on one side and not the other.
+// Re-measured 2026-09-20, all byte-flat or worse: declaring vw before vh
+// (87.96), declaring both without initialisers, moving updateX/updateY or
+// aborted/result first in the declaration block, zeroing aborted or the two
+// update values before the clamps, writing the tests as `0 > vw`, and a '\0'
+// memset fill. Testing vh before vw loses (87.65). The zero retail compares
+// against still materialises in EAX on its side only.
 // Tried: swapping the vw/vh declaration order (+0.22 and no slot change),
 // handing OpenBinkVideo `vw, vh` instead of `w, h` and testing `vw < 0`
 // instead of `w < 0` - the twin's own spelling, kept - both byte-flat.

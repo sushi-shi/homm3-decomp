@@ -23,8 +23,12 @@ public:
     TCreatureType m_rewardCreature;
     signed char m_rewardCreatures;
     std::vector<TArtifact> m_artifacts;
-    unsigned char load(void* infile);
-    ~type_creature_bank();
+    // Raw DC publics encode bool (QAA_N) for both record operations.
+    bool load(void* infile);
+    bool save(void* outfile);
+    // Implicit vector cleanup: DC0xbd58c has only the borrowed game.cpp5595
+    // line and vector<TArtifact> destruction. Retail0x4c2420 owns the emitted
+    // destructor; loadObjectVector expands the temporary cleanup.
 };
 SIZE(type_creature_bank, 0x6c);
 

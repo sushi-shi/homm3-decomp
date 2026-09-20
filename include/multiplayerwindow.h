@@ -71,6 +71,7 @@ class CSprite;
 
 class CHeroSessions : public CAutoArray<CDPlaySession> {
 public:
+    CHeroSessions();
     enum eSessionStatus {
         closed,
         open,
@@ -150,6 +151,9 @@ public:
     void update();
     void goSessionList();
     void goMainMenu();
+    void refreshSessions();
+    void checkSessions();
+    unsigned char isNT();
     virtual int windowHandler(message& msg);
     virtual int onWidgetDeselect(int id, bool& exitFlag);
     // E:\gamedcs\MultiPlayerWindow.h:91, dc 0x101da0

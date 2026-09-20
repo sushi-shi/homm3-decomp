@@ -360,7 +360,7 @@ void TCombatControlSubWindow::disableAllButtons()
 // with (parent, "CoPlacbr.pcx") on the stack - so this constructor needs
 // nothing from the base's 1392 bytes and lands without them.
 
-VA(0x0046c050, 0x18C)  // dc 0x65310
+VA(0x0046c050, 0x18C)  // dc 0x652a8
 TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
     : type_combat_sub_window(parent, "CoPlacbr.pcx")
 {

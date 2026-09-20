@@ -2752,7 +2752,7 @@ void combatManager::markWallAreaEffect(long targetHex,
 // standing on it and hand the distinct ones to the caller.
 
 VA(0x005a46f0, 0x113)  // dc 0x153904
-void combatManager::markHexAreaEffect(long hex, long radius,
+void combatManager::markAreaEffect(long hex, long radius,
                                          unsigned char includeCenter,
                                          std::vector<army*>& targets)
 {
@@ -2808,7 +2808,7 @@ void combatManager::markAreaEffect(SpellID spell, long hex, long mastery,
     }
     long radius = (spell == SPELL_INFERNO) + 1;
     unsigned char includeCenter = spell != SPELL_FROST_RING;
-    markHexAreaEffect(hex, radius, includeCenter, targets);
+    markAreaEffect(hex, radius, includeCenter, targets);
 }
 
 // EVERY AREA DAMAGE SPELL'S BODY. The sprite effect goes over the centre
@@ -4235,6 +4235,8 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
 
 #if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
+// DC-only DoBolt luck arc. Complete army::checkLuck uses goodluck.82m
+// and the Fortune spell effect, including doRangedAttack0x43f900; see dc_only.tsv.
 // E:\gamedcs\spells.cpp:4765
 DC_ONLY(0x1564c4, 0x11E)
 void combatManager::DoLuck(int iTargetGroup, int iTargetIndex)
@@ -4262,16 +4264,17 @@ void combatManager::removeCorpse(hexcell* hex, long side, long slot)
     hex->m_bodiesInHex--;
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-// E:\gamedcs\spells.cpp:4838
-DC_ONLY(0x15668c, 0x6A)
+// Original: combatManager::remove_corpse; spells.cpp:4838, dc 0x15668c.
+// Complete expands this ordinary overload in both resurrection paths.
 void combatManager::removeCorpse(army* corpse)
 {
-    // @stub
+    removeCorpse(&m_cells[corpse->m_gridIndex], corpse->m_combatSide,
+                corpse->m_bitIndex);
+    if (corpse->is(1))
+        removeCorpse(&m_cells[corpse->getSecondGridIndex()],
+                    corpse->m_combatSide, corpse->m_bitIndex);
 }
 
-#endif  // @carcass
 
 // The Pit Lord's raise: the corpse leaves the grid and a fresh Demon
 // stack takes its cell.
@@ -4283,11 +4286,7 @@ void combatManager::demonicResurrection(const army* caster, army* target)
         sample = loadPlaySample(
             DATA_COMPGEN(0x00660af4, resurrectSampleName, "Resurect.wav"));
 
-    removeCorpse(&m_cells[target->m_gridIndex], target->m_combatSide,
-                  target->m_bitIndex);
-    if (target->is(1u << 0))
-        removeCorpse(&m_cells[target->getSecondGridIndex()],
-                      target->m_combatSide, target->m_bitIndex);
+    removeCorpse(target);
 
     long raised = caster->getResurrectionSize(target);
     long origPosition = target->m_originalIndex;
@@ -4373,11 +4372,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
     if (oldCount <= 0) {
         targetArmy->addAura();
         placeArmyInGrid(*targetArmy, hex);
-        removeCorpse(&m_cells[targetArmy->m_gridIndex],
-                      targetArmy->m_combatSide, targetArmy->m_bitIndex);
-        if (targetArmy->is(1u << 0))
-            removeCorpse(&m_cells[targetArmy->getSecondGridIndex()],
-                          targetArmy->m_combatSide, targetArmy->m_bitIndex);
+        removeCorpse(targetArmy);
     }
     if (targetArmy->m_facing != 1 - targetArmy->m_combatSide)
         targetArmy->turn(0);
@@ -5232,6 +5227,7 @@ int combatManager::getSpellWallHex(int baseIndex, int rowOffset, int side)
     }
     return hex;
 }
+
 
 // COMDAT pairing: _Tree<int, int, set>::insert, agreement 0.936. Its key and
 // value are the same primitive, so the map regexes cannot name it.

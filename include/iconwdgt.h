@@ -53,6 +53,10 @@ public:
     int m_postPostWalkSequence;
     unsigned short m_backColor;
 
+    iconWidget();
+    void initialize(int x, int y, int w, int h, int id, const char* image,
+                    int frame, int sequence, unsigned char flipped,
+                    unsigned int backColor, int style, unsigned char focusable);
     iconWidget(int x, int y, int w, int h, int id, const char* image,
                int frame, int sequence, bool flipped,
                unsigned backColor, int style);

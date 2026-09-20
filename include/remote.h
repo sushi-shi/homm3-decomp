@@ -56,8 +56,12 @@ public:
     {
         strcpy(m_logFileName, logFileName);
     }
-    void initLogFile();
-    void log(char* format, ...);
+    // Original: CLogFile::InitLogFile; remote.h:235, dc 0xe709c.
+    // Both release builds keep the logging hooks empty. Complete's calls
+    // share the no-argument ret representative at 0x5bc690.
+    void initLogFile() {}
+    // Original: CLogFile::Log; remote.h:249, dc 0x70ac4.
+    void log(char* format, ...) {}
 
 protected:
     char m_logFileName[351];
@@ -103,10 +107,13 @@ public:
     void setNetMsgHandler(CNetMsgHandler* netMsgHandler);
     CNetMsgHandler* getNetMsgHandler();
     void handlePlayerDrop(unsigned long dpid);
+    void handleHostXFer();
+    void handleNewPlayer(unsigned long dpid, char* name, void* data, unsigned long size);
 
 protected:
     void queueMsg(CNetMsg* netMsg);
     CNetMsg* compressMsg(CNetMsg* netMsg);
+    CNetMsg* uncompressMsg(CNetMsg* netMsg);
     unsigned char handleLowLevelMsg(CNetMsg* netMsg);
 
 public:
@@ -140,6 +147,8 @@ extern unsigned char g_unk69774c;
 // nested record extent.
 class CChatManager {
 public:
+    CChatManager(int maxChatLines);
+    ~CChatManager();
     class CChatStr {
     public:
         char m_text[128];
@@ -215,6 +224,7 @@ public:
     void setMaxLines(int maxChatLines);
     bool chatChanged() { return m_changed || m_chatKilled; }
     unsigned char hasOldChat();
+    unsigned char hasChat();
 
 protected:
     sample* m_chatSample;  // +0x30
@@ -228,12 +238,13 @@ protected:
     int getNextFreeMsgNbr();
     int getNextMsgNbr(int msgNbr);
     void killOldChat();
+    void updateNewChat();
     void updateWidgetText(int numLines, textWidget* widget);
 };
 SIZE(CChatManager::CChatStr, 0x88);
 SIZE(CChatManager, 0x44);
 
-DATA(0x0069d7b0) extern CChatManager g_chatMan;
+extern CChatManager g_chatMan;
 
 enum ENetMessageRecipient {
     NET_MESSAGE_RECIPIENT_ALL = 0x7f
@@ -343,6 +354,8 @@ inline void CGameChatEdit::activate()
 // +0/+4/+8/+c/+10; Dreamcast CodeView supplies their source names.
 class CTurnDuration {
 public:
+    CTurnDuration();
+    void addTime(unsigned long howMuch);
     unsigned char isOn();
     unsigned char isExpired();
     unsigned char isClose(unsigned long howClose);
@@ -491,15 +504,15 @@ public:
 };
 SIZE(CNetMsgHandlerPause, 0x10);
 
-// Adventure-map network dispatch. Retail's trade handler reads the inherited
+// Adventure-map network dispatch. Retail's gift handler reads the inherited
 // m_inPopup byte through IsInPopup; the DC roster supplies the class and
 // method names but no additional data members.
 class CAdvMgrNetMsgHandler : public CNetMsgHandler {
 protected:
     virtual CNetMsg* handleNetMsg(CNetMsg* netMsg);
     void handleGiftRequestMsg(CNetMsg* netMsg);
-    void handleGiftMsg(CNetMsg* netMsg);
-    virtual void handleTradeRequestMsg(CNetMsg* netMsg);
+    virtual void handleGiftMsg(CNetMsg* netMsg);
+    void handleTradeRequestMsg(CNetMsg* netMsg);
 };
 SIZE(CAdvMgrNetMsgHandler, 0x0c);
 
@@ -510,6 +523,7 @@ void handlePlayerWon(CNetMsg* netMsg);
 void handlePlayerLost(CNetMsg* netMsg);
 void handleNormalWinMsg(CNetMsg* netMsg);
 
+unsigned char getQueueSize(int toWho, unsigned long& numMsgs, unsigned long& queueSize);
 void receiveChat(char* chat, int fromWho);
 void handlePlayerDrop(unsigned long dpid);
 

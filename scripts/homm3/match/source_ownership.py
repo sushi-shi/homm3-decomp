@@ -53,6 +53,8 @@ class Definition:
     return_type: str = ""
     inline_origin: InlineOrigin = ()
     declaration_only_type: int = 0
+    original_name: str = ""
+    template: bool = False
 
 
 @dataclass(frozen=True)
@@ -286,6 +288,15 @@ def origin_hint(raw: str | LineIndex, start: int) -> tuple[str, int, str]:
         if offsets and (m or line.lstrip().startswith('VA(')):
             dc_offset = hex(int(offsets[-1], 16))
     return origin_file, origin_line, dc_offset
+
+
+def original_name_hint(raw: str | LineIndex, start: int) -> str:
+    """Only an explicit Original: comment authorizes a semantic rename."""
+    names = [match.group(1).strip() for line in attached_prefix(raw, start)
+             if (match := re.fullmatch(
+                 r"//\s+Original:\s+([^;]+);\s+[^;,]+\.(?:cpp|h):\d+,\s+dc\s+0x[0-9a-fA-F]+\.?(?:\s.*)?",
+                 line.strip()))]
+    return names[-1] if names else ''
 
 
 def inline_origin_hint(raw: str | LineIndex, start: int) -> tuple[InlineOrigin, bool]:
@@ -680,7 +691,9 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None) -> tuple[list[Def
                 member = False
             parent = cursor.lexical_parent
             class_offset = None
+            template = cursor.kind == k.FUNCTION_TEMPLATE
             while parent.kind in {k.CLASS_DECL, k.STRUCT_DECL, k.UNION_DECL, k.CLASS_TEMPLATE}:
+                template = template or parent.kind == k.CLASS_TEMPLATE
                 class_offset = char_offset(parent.extent.start.offset)
                 parent = parent.lexical_parent
             instances, invalid = instance_annotations(
@@ -715,7 +728,10 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None) -> tuple[list[Def
                 instances[0][1] if instances else "",
                 return_type=('void' if cursor.kind in {k.CONSTRUCTOR, k.DESTRUCTOR}
                              else cursor.result_type.spelling),
-                inline_origin=inline_origin, declaration_only_type=declaration_type))
+                inline_origin=inline_origin, declaration_only_type=declaration_type,
+                original_name=original_name_hint(
+                    line_indexes[relative], char_offset(cursor.location.offset)),
+                template=template))
             if instances:
                 instance_requests.append((first, cursor.location.offset))
                 extras = []
@@ -865,7 +881,9 @@ def read_filter(path: Path, fields: tuple[str, ...]):
 
 
 def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
-            win_only: dict, *, symbols=None) -> tuple[list[str], dict]:
+            win_only: dict, dc_inlined: dict | None = None, *,
+            symbols=None, matched_out=None,
+            strict_names: bool = False) -> tuple[list[str], dict]:
     inline_errors = []
     if any(d.inline_origin for d in definitions):
         if symbols is None:
@@ -883,18 +901,54 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
     errors = inline_errors + [f'FILTER stale dc_only.tsv entry {key}'
                               for key in dc_only if key not in dc_keys]
     used_win = set()
+    dc_inlined = dc_inlined or {}
+    used_inlined = set()
     matches = []
     bindings = {}
     counts = Counter()
     for d in definitions:
+        errors_before = len(errors)
         where = f'{d.file}:{d.line} {d.name}'
         key = (d.file, d.name, d.signature)
-        candidates = by_name.get(procedure_name(d.name), [])
+        expected_name = procedure_name(d.original_name or d.name)
+        candidates = by_name.get(expected_name, [])
         if d.dc_offset:
             bridged = [o for o in origins if o.offset == d.dc_offset
                        and (o.file, o.name, str(o.line)) not in dc_only]
             if bridged:
+                # Clang's physical source inventory omits the spelling of an
+                # unnamed namespace; its mangling still proves that scope.
+                # Preserve named containing types and all ordinary operations.
+                def same_name(o):
+                    name = o.name
+                    if (name.startswith("`anonymous namespace'::")
+                            and re.search(r'\?A0x[0-9a-fA-F]+@', d.mangled)):
+                        name = name.removeprefix("`anonymous namespace'::")
+                    return procedure_name(name) == expected_name
+                if strict_names and key not in win_only and not any(same_name(o) for o in bridged):
+                    errors.append(f'IDENTITY {where}: dc {d.dc_offset} names '
+                                  + ', '.join(sorted({o.name for o in bridged}))
+                                  + '; correct the mapping or document a proven rename with Original:')
+                    counts['identity'] += 1
+                    continue
+                if strict_names and key not in win_only and not d.template:
+                    arguments = tuple(map(type_identity, d.argument_types))
+                    exact_siblings = [o for o in candidates if o.argument_types is not None
+                        and tuple(map(type_identity, o.argument_types)) == arguments
+                        and o.const == d.const]
+                    if exact_siblings and not any(o in exact_siblings for o in bridged):
+                        errors.append(f'IDENTITY {where}: dc {d.dc_offset} selects a different '
+                                      'formal overload from the authored definition')
+                        counts['identity'] += 1
+                        continue
                 candidates = bridged
+            elif key in win_only and any(o.offset == d.dc_offset
+                    and (o.file, o.name, str(o.line)) in dc_only for o in origins):
+                candidates = []  # The reviewed old interface cannot borrow a sibling overload.
+            elif strict_names and key not in win_only:
+                errors.append(f'IDENTITY {where}: dc {d.dc_offset} has no eligible procedure')
+                counts['identity'] += 1
+                continue
         if d.origin_file and d.origin_line:
             narrowed = [o for o in candidates if o.file == d.origin_file
                         and o.line == d.origin_line]
@@ -965,6 +1019,10 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
             else:
                 bindings[identity] = d
                 counts['reviewed_unlocated'] += 1
+                if key in win_only:
+                    used_win.add(key)
+                if matched_out is not None:
+                    matched_out.append((d, tuple(exact)))
             continue
         if key in win_only:
             used_win.add(key)
@@ -1000,6 +1058,15 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
                               'is compiler-generated; restore the implicit member or '
                               'review the Windows-specific definition')
                 counts['generated'] += 1
+            elif key in dc_inlined:
+                # The Dreamcast build inlined EVERY call to this helper, so its
+                # own procedure never reaches the CodeView roster - absence here
+                # is the expected shape, not a missing counterpart. The reviewed
+                # row must cite the caller-side residue that witnesses it
+                # (inlined bodies leave lexical scopes and per-width locals in
+                # their callers). See config/dc-inlined-helpers.tsv.
+                used_inlined.add(key)
+                counts['dc_inlined'] += 1
             else:
                 errors.append(f'WIN_ONLY {where} [{d.signature}]: no CodeView counterpart or reviewed exemption')
                 counts['unknown'] += 1
@@ -1015,6 +1082,15 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
             counts['unlocated'] += 1
             continue
         candidates = [o for o in candidates if not o.declaration_only]
+        # Equal names and signatures in different source files are distinct
+        # written functions (e.g. bitmap24.cpp and palette.cpp's RGB helpers).
+        # Bind only the owning file before duplicate detection and before
+        # exposing matches to the bidirectional inventory. Otherwise one local
+        # helper can consume another TU's row or manufacture an ambiguity.
+        actual = d.file.split('/', 1)[1].lower()
+        owned = [o for o in candidates if o.file == actual]
+        if owned:
+            candidates = owned
         # One written DC function cannot authorize multiple physical Windows
         # definitions. In particular, a same-arity adapter overload must not
         # borrow the canonical helper's owner merely because type narrowing
@@ -1036,7 +1112,6 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
                 bindings[identity] = d
         locations = {(o.file, o.line) for o in candidates}
         files = {f for f, _ in locations}
-        actual = d.file.split('/', 1)[1].lower()
         if actual not in files:
             errors.append(f'OWNER {where}: CodeView defines in {", ".join(sorted(files))}')
             counts['owner'] += 1
@@ -1047,8 +1122,12 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
             elif len(lines) > 1:
                 errors.append(f'AMBIGUOUS {where}: CodeView source lines {sorted(lines)} need overload identity')
             counts['same_file'] += 1
+        if matched_out is not None and len(errors) == errors_before:
+            matched_out.append((d, tuple(candidates)))
     for key in win_only.keys() - used_win:
         errors.append(f'FILTER stale win_only.tsv entry {key}')
+    for key in dc_inlined.keys() - used_inlined:
+        errors.append(f'FILTER stale dc-inlined-helpers.tsv entry {key}')
     previous = {}
     for d, file, dc_line in matches:
         # Ordinary retained .cpp bodies follow retail RVA order, checked by
@@ -1110,9 +1189,12 @@ def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False, *, origins=None
     errors.extend(failures)
     win_only, failures = read_filter(root / 'config/win_only.tsv', ('file', 'function', 'signature'))
     errors.extend(failures)
+    dc_inlined, failures = read_filter(root / 'config/dc-inlined-helpers.tsv',
+                                       ('file', 'function', 'signature'))
+    errors.extend(failures)
     violations, counts = compare(definitions,
                                  read_dc(root, include_declarations=True, project=project) if origins is None else origins,
-                                 dc_only, win_only,
+                                 dc_only, win_only, dc_inlined,
                                  symbols=inputs.dreamcast_symbols(project)
                                  if any(d.inline_origin for d in definitions) else None)
     errors.extend(violations)
@@ -1187,6 +1269,10 @@ def run_gate(*, origins=None) -> list[str]:
     if result['counts'].get('reviewed_unlocated'):
         print(f"[build] source-ownership: {result['counts']['reviewed_unlocated']} "
               "reviewed declaration-only bodies; source location/order remain unknown")
+    if result['counts'].get('dc_inlined'):
+        print(f"[build] source-ownership: {result['counts']['dc_inlined']} reviewed "
+              "DC-inlined helpers; the Dreamcast build inlined every call, so no "
+              "procedure reaches its roster")
     print(f"[build] source-ownership: {result['definitions']} canonical definitions; "
           f"{len(result['violations'])} violations")
     if result['unpaired_generated_claims']:

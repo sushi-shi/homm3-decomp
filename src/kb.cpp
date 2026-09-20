@@ -577,15 +577,6 @@ int pickLoadGame()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:2174 - promoted to a live claim (see below).
-
-// E:\gamedcs\kb.cpp:2270
-DC_ONLY(0xe1b90, 0x4)
-int NullHandler(message* msg)
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:2279
 DC_ONLY(0xe1b94, 0x62)
 int waitHandler(message* msg)
@@ -1978,6 +1969,13 @@ DATA(0x00699588)
 int g_normalDialogStart;
 DATA(0x00699590)
 static TDialogBox* g_normalDialogWindow;
+
+// Original: NullHandler; kb.cpp:2270, dc 0xe1b90.
+// The complete SH4 body returns one. No distinct retail address is claimed.
+int nullHandler(message& msg)
+{
+    return 1;
+}
 
 // E:\gamedcs\kb.cpp:2332
 // The dialog's forced answer: the default button for the message-box
@@ -3484,6 +3482,17 @@ unsigned short* getMapExtraPtr(int x, int y, int z)
 {
     // @stub
 }
+
+
+
+
+
+
+
+
+
+
+
 
 // E:\gamedcs\kb.cpp:542
 DC_ONLY(0xe70ac, 0x34)

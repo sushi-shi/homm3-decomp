@@ -126,19 +126,12 @@ void mouseManager::reset()
     m_currentY = 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\mousemgr.cpp:431 - slot 2. No claim and no definition:
-// the retail body is the program-wide `xor eax,eax; ret 4` at
-// 0x4ec560, an /OPT:ICF fold that inputmgr.cpp already claims as
-// inputManager::Main. Declared in mousemgr.h so the slot is modelled.
-DC_ONLY(0xfeb18, 0x4)
+// Original: mouseManager::Main; mousemgr.cpp:431, dc 0xfeb18.
+// Vtable slot 2 folds onto inputManager::Main's return-zero body at 0x4ec560.
 int mouseManager::main(message& msg)
 {
-    // @stub
+    return 0;
 }
-
-#endif  // @carcass
 
 VA(0x0050cca0, 0xE0)  // dc 0xfeb1c
 void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)

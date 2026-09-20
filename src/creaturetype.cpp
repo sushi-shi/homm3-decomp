@@ -21,16 +21,18 @@ TCreatureTypeTraits g_creatureTypeTraitsStorage[150];
 void initializeCreatureTypeTraits(int id,
     const std::vector<char*, std::allocator<char*> >& values);
 
-#if 0  // @carcass
-
-// E:\gamedcs\creaturetype.cpp:202
-DC_ONLY(0x718dc, 0x20)
-TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr)
+// Original: GetBaseCreature; creaturetype.cpp:202, dc 0x718dc
+TCreatureType getBaseCreature(TTownType townType, int baseCreatureNbr)
 {
-    // @stub
+    // DC returns ordinal zero for an invalid dwelling, not CREATURE_NONE.
+    if (baseCreatureNbr < 0 || baseCreatureNbr >= TOWN_DWELLING_COUNT)
+        return CREATURE_PIKEMAN;
+    // Complete stores normal and upgraded rows together; isBaseCreature
+    // at 0x47b120 proves the fourteen-entry town stride.
+    return g_townDwellingCreatures[
+        townType * 2 * TOWN_DWELLING_COUNT + baseCreatureNbr];
 }
 
-#endif
 
 VA(0x0047b120, 0x5D)  // dc 0x718fc
 int isBaseCreature(TCreatureType monType)

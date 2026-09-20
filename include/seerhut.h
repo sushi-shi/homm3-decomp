@@ -147,11 +147,11 @@ private:
     // Dreamcast's next private helper owns the completion dialog and reward
     // application. Complete revises both models, while retaining the source
     // boundary inside DoSeerEvent's human arm.
-    inline void doCompletionDialog(hero* currentHero, bool humanPlayer);
+    void doCompletionDialog(hero* currentHero, bool humanPlayer);
     // Dreamcast proves this nested no-local switch helper as the first call
     // made by DoCompletionDialog. Complete retains the boundary while
     // shifting the primary-skill icon domain by one.
-    inline int getRewardType();
+    int getRewardType();
     signed char m_nameIndex;
 
 public:
@@ -173,6 +173,7 @@ public:
     }
     // Dreamcast supplies the surviving public name/signature; retail's
     // Complete-era body replaces the monolith with the virtual quest family.
+    static void setRandomName(TSeerHut& thisHut);
     void doSeerEvent(hero* currentHero, bool humanPlayer);
     int getValue(hero* currentHero);
     void read(TAbstractFile* infile);
@@ -205,12 +206,23 @@ public:
             && (m_visitedPlayers & (1 << playerNum))
             && m_quest;
     }
+    // Original: TSeerHut::PlayerHasInfo; SeerHut.h:117, dc 0x2021c
+    unsigned char playerHasInfo(const unsigned char playerNum) const
+    {
+        return (m_visitedPlayers & (1 << playerNum)) != 0;
+    }
     // E:\gamedcs\seerhut.h:121, dc 0x20244. Retail corroborates the signed
     // NameIndex load, 16-byte vector stride and inlined c_str() fallback.
     const char* getName() const
     {
         return (*g_seerHutNamesPointer)[m_nameIndex].c_str();
     }
+
+    // DC GetQuestArtifactName (SeerHut.h:123, 0x20260) looked up the one
+    // artifact ID at this+0. Complete stores type_quest* there instead:
+    // artifact quests own a vector and getRequirementText (0x56f5f0)
+    // joins all required artifact names. This old single-artifact API was
+    // replaced by the virtual quest description used by 0x5741b0/0x5743e0.
 
 private:
     // 0x573fd0, the SeerHutList twin of TQuestGuard::save and reached the

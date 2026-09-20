@@ -12,9 +12,8 @@ class paletteHiColor;
 class TPalette24;
 
 // Creature sprite sequence ids (DC CodeView enum creature_seqid,
-// NH3API creatures.hpp identical): only the transition pair
-// iconWidget's idle machine dispatches on is listed - grow the roster
-// as consumers prove values.
+// NH3API creatures.hpp identical); GetSequenceID/GetSequenceName retain
+// the complete file-format vocabulary.
 enum creature_seqid {
     cs_walk = 0,
     cs_fidget = 1,
@@ -28,6 +27,11 @@ enum creature_seqid {
     // cs_wait from the frames that fall back to idle - a dead stack
     // holds its last frame.
     cs_death = 5,
+    cs_specdeath = 6,
+    cs_turn_rf = 7,
+    cs_turn_fr = 8,
+    cs_turn_lf = 9,
+    cs_turn_fl = 10,
     cs_attack_ur = 11,
     cs_attack_r = 12,
     cs_attack_dr = 13,
@@ -46,6 +50,16 @@ enum creature_seqid {
     cs_postwalk = 0x15
 };
 
+// CSprite::GetSequenceID (DC csprite.cpp:605, 0x73468) and GetSequenceName
+// (774, 0x73880) map these five named combat-hero animation sequences to 0..4.
+enum CombatHeroSequence {
+    combatHeroStand = 0,
+    combatHeroFidget = 1,
+    combatHeroDefeat = 2,
+    combatHeroVictory = 3,
+    combatHeroCast = 4
+};
+
 // Live VIEW (grown from the button.h bootstrap). Retail layout proven
 // by consumers: GetPalette (0x47bcc0) returns p ? p + 0x1c : 0;
 // button::Draw reads s@0x1c (CSequence**), numSequences@0x28,
@@ -56,6 +70,7 @@ enum creature_seqid {
 // slot 1 = Dispose (0x55d1a0), slot 2 = resource size (0x47bd50).
 class CSprite : public resource {
 public:
+    CSprite();
     CSprite(const char* name, int sprtype, int w, int h);
     virtual ~CSprite();  // slot 0
     // CSprite.h:145. DrawWallAt expands this DC header accessor at its
@@ -65,8 +80,15 @@ public:
     // targeted spell animation; Dreamcast retains out-of-line copies of
     // both accessors while retail VC6 folds them to the two dword loads.
     int getHeight() const { return m_height; }
+    void clear();
     void allocateSeq(int seqnum, int numFrames);
     int addFrame(int seqnum, CSpriteFrame* frame);
+    void addFrame(int seqnum, const char* name);
+    int addFrame(int seqnum, const char* name, int w, int h,
+                 unsigned char* data, int csize, TEncodingMethod encoding,
+                 int croppedWidth, int croppedHeight, int croppedX, int croppedY);
+    int addFrame(int seqnum, const char* name, int w, int h,
+                 unsigned char* data, int csize, TEncodingMethod encoding);
 
 private:
     CSequence** m_s;
@@ -110,6 +132,11 @@ public:
     {
         return m_s[sequence]->m_f[frame];
     }
+    // Original: CSprite::SetPixelFormat; CSprite.h:157, dc 0x122bb8
+    static void setPixelFormat(unsigned int rmask, unsigned int gmask, unsigned int bmask)
+    {
+        CSpriteFrame::setPixelFormat(rmask, gmask, bmask);
+    }
     // CodeView LF_MFUNCTION marks every Draw-family receiver const.
     // Drawing writes through the destination/frame pointers, not this object.
     void draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
@@ -119,6 +146,10 @@ public:
                       int sh, unsigned short* dst, int dx, int dy, int dw,
                       int dh, int dpitch, bool hflip,
                       unsigned short outcolor) const;
+    void drawCreatureAlpha(int seqnum, int framenum, int sx, int sy,
+                           int sw, int sh, unsigned short* dst, int dx, int dy,
+                           int dw, int dh, int dpitch, unsigned char hflip,
+                           unsigned short outcolor) const;
     void drawAdvObj(int framenum, int sx, int sy, int sw, int sh,
                     unsigned short* dst, int dx, int dy, int dw, int dh,
                     int dpitch, bool hflip) const;
@@ -126,6 +157,10 @@ public:
                             unsigned short* dst, int dx, int dy, int dw,
                             int dh, int dpitch, unsigned short outcolor,
                             unsigned char hflip) const;
+    void drawAdvObjWithFlagAlpha(int framenum, int sx, int sy, int sw, int sh,
+                                 unsigned short* dst, int dx, int dy, int dw,
+                                 int dh, int dpitch, unsigned short outcolor,
+                                 unsigned char hflip) const;
     void drawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
                           unsigned short* dst, int dx, int dy, int dw,
                           int dh, int dpitch, unsigned char hflip) const;
@@ -152,6 +187,9 @@ public:
     void drawHeroAlpha(int seqnum, int framenum, int sx, int sy, int sw,
                        int sh, unsigned short* dst, int dx, int dy, int dw,
                        int dh, int dpitch, unsigned char hflip) const;
+    void drawCombatHero(int seqnum, int framenum, int sx, int sy, int sw,
+                        int sh, unsigned short* dst, int dx, int dy, int dw,
+                        int dh, int dpitch, unsigned char hflip) const;
     void drawSpellEffect(int seqnum, int framenum, int sx, int sy, int sw,
                          int sh, unsigned short* dst, int dx, int dy, int dw,
                          int dh, int dpitch, bool hflip,
@@ -167,10 +205,38 @@ public:
     }
     void resetPalette();
     unsigned short* getPalette();
+    const unsigned short* getPalette() const;
     void colorCycle(int begin, int end, int step);
+    void drawAdvObjWithFlagScaled50(int framenum, int sx, int sy, int sw,
+        int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
+        unsigned short outcolor) const;
+    void drawAdvObjWithFlagScaled25(int framenum, int sx, int sy, int sw,
+        int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
+        unsigned short outcolor) const;
+    void drawAdvObjShadowScaled50(int framenum, int sx, int sy, int sw,
+        int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch) const;
+    void drawAdvObjShadowScaled25(int framenum, int sx, int sy, int sw,
+        int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch) const;
+    void drawTileScaled50(int framenum, int sx, int sy, int sw, int sh,
+        unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
+        unsigned char hflip, unsigned char vflip) const;
+    void drawTileScaled25(int framenum, int sx, int sy, int sw, int sh,
+        unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
+        unsigned char hflip, unsigned char vflip) const;
+    static int getSpriteType(const char* name);
+    static const char* getSpriteTypeName(const int type);
     static int getNumSeqs(int type);
+    static int getSequenceId(int type, const char* name);
+    static const char* getSequenceName(int type, int num);
     // Original GetPalette24, CSprite.h:284, dc 0x57dbc.
     TPalette24& getPalette24() { return *m_p24; }
+    // Original: CSprite::GetPaletteColor; CSprite.h:287, dc 0x1f1a0
+    // Complete keeps the sprite resident. UpdateRadar's two expansions
+    // read the palette directly; DC's removed reload/cache guard is absent.
+    unsigned short getPaletteColor(unsigned char index) const
+    {
+        return m_p->m_data[index];
+    }
     // Header inline, DC CSprite.h:293 (dc 0x1f1dc, emitted into
     // advmgr.obj there). Byte-proven by iconwdgt's frame walkers: each
     // USE re-expands the guard (the else arm constant-folds to a
@@ -212,6 +278,16 @@ public:
         drawCreature(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                      dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip, outcolor);
     }
+    // Original: CSprite::DrawCreatureAlpha; CSprite.h:348, dc 0x87438.
+    void drawCreatureAlpha(int seqnum, int framenum, int sx, int sy, int sw,
+        int sh, Bitmap16Bit* dst, int dx, int dy, bool hflip,
+        unsigned short outcolor) const
+    {
+        drawCreatureAlpha(seqnum, framenum, sx, sy, sw, sh,
+            dst->getMap(0, 0), dx, dy, dst->getWidth(), dst->getHeight(),
+            dst->getPitch(), hflip, outcolor);
+    }
+
     // DC CSprite.h:355 calls all four Bitmap16Bit accessors before the
     // raw-map overload. Preserve those nested boundaries in retail callers.
     void drawAdvObj(int framenum, int sx, int sy, int sw, int sh,
@@ -304,6 +380,9 @@ public:
                       dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
     }
     // DC CSprite.h:444/445, dc 0x874dc: const bitmap facade.
+    // Complete's combatManager::drawCombatHero (0x4952b0) calls the general
+    // CSprite::drawCreature (0x47bd60) with color zero. This version bypasses
+    // the older raw-map drawCombatHero overload.
     void drawCombatHero(int seqnum, int framenum, int sx, int sy, int sw,
                         int sh, Bitmap16Bit* dst, int dx, int dy,
                         bool hflip) const
