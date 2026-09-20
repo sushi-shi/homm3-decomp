@@ -1512,7 +1512,9 @@ long type_AI_spellcaster::getMoveOrderChangeValue(const army* ourArmy) const
 // `&armies[side][j]` inside the body (+8.6 - the subscript form folds
 // j into the pre-header base address, where retail computes
 // `&armies[side][0]` with no j at all; set_melee_enemies below already
-// carries the hoisted form).
+// carries the hoisted form). Restoring the Dreamcast-authored Is and
+// cannot_attack calls preserves those inlined retail tests and restores VC6's
+// retail stack allocation and final combat-value expression order.
 VA(0x00439270, 0x28B)  // anchor-vtable, dc 0x3fa24
 long type_AI_spellcaster::getMuckAndMireValue(const army* enemy, type_enchant_data caster) const
 {
@@ -1523,9 +1525,8 @@ long type_AI_spellcaster::getMuckAndMireValue(const army* enemy, type_enchant_da
     long time = enemy->getAITargetTime(enemy->getSpeed());
     if (time > m_estimate.m_roundsLeft)
         return 0;
-    unsigned char slowFlag = static_cast<unsigned char>(static_cast<unsigned>(enemy->m_monInfo.m_attributes) >> 26);
     long turns = caster.m_duration;
-    if (slowFlag & 1)
+    if (enemy->is(1u << 26))
         turns--;
     if (turns == 0)
         return 0;
@@ -1537,20 +1538,7 @@ long type_AI_spellcaster::getMuckAndMireValue(const army* enemy, type_enchant_da
     if (time == 1) {
         const army* ourArmy = &g_combatManager->m_armies[m_side][0];
         for (long j = 0; j < g_combatManager->m_numArmies[m_side]; j++, ourArmy++) {
-            if (ourArmy->getAITarget() != enemy)
-                continue;
-            if (ourArmy->m_spellInfluence[62])
-                continue;
-            if (ourArmy->m_spellInfluence[70])
-                continue;
-            if (ourArmy->m_spellInfluence[74])
-                continue;
-            unsigned char immune = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 21);
-            if (immune & 1)
-                continue;
-            if (ourArmy->m_creatureType == CREATURE_FIRST_AID_TENT)
-                continue;
-            if (ourArmy->m_creatureType == CREATURE_AMMO_CART)
+            if (ourArmy->getAITarget() != enemy || ourArmy->cannotAttack())
                 continue;
             if (ourArmy->getSpeed() > speed)
                 continue;

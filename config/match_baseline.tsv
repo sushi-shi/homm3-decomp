@@ -484,7 +484,7 @@ ai_tactical	?getMassDamageEffect@type_AI_spellcaster@@IBEJJJ@Z	100.0000	100.0000
 ai_tactical	?getMasteryValue@type_enchant_data@@QBEJXZ	100.0000	100.0000	100.0000	0x36930	tokens1:1f75e1712aef
 ai_tactical	?getMirthValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38170	tokens1:2b96d09357b0
 ai_tactical	?getMisfortuneValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38f60	tokens1:2784961832aa
-ai_tactical	?getMuckAndMireValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	96.8602	96.8602	96.8602	0x39270	tokens1:972bb3a509f0
+ai_tactical	?getMuckAndMireValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39270	tokens1:ba6bc2c5eb85
 ai_tactical	?getMultiHeadBonus@@YIJJPBVarmy@@JJ0JPBUtype_AI_combat_parameters@@@Z	98.0364	100.0000	100.0000	0x36620	tokens1:77469fee1f89
 ai_tactical	?getOgreMageValue@type_AI_spellcaster@@QBEJPBVarmy@@@Z	100.0000	100.0000	100.0000	0x3c330	tokens1:64442029b9ed
 ai_tactical	?getPoisonValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39500	tokens1:6a122a1640cb
