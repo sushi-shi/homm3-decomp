@@ -28,10 +28,14 @@ class ReadmeScoreTest(unittest.TestCase):
             readme.write_text(f"before\n{status.RM_START}\nold\n{status.RM_END}\nafter\n")
             with patch.object(status, "README_PATH", readme), \
                     patch.object(status, "load_baseline", return_value=baseline), \
+                    patch.object(status, "function_rvas", return_value={
+                        ("unit", fn["name"]): i for i, fn in enumerate(functions)
+                    }), \
                     patch("homm3.build.configure.load_manifest", return_value=(
                         {}, {}, [{"unit": "unit", "source": "src/unit.cpp"}])), \
                     patch("homm3.match.universe.summary", return_value=(
-                        {}, {}, {"target": (6, 60)})), \
+                        dict.fromkeys(range(6), "target"), {},
+                        {"target": (6, 60)})), \
                     contextlib.redirect_stdout(io.StringIO()):
                 status.write_readme(report)
                 first = readme.read_text()
@@ -72,7 +76,7 @@ class ReadmeScoreTest(unittest.TestCase):
                     patch("homm3.build.configure.load_manifest", return_value=(
                         {}, {}, [{"unit": "unit", "source": "src/unit.cpp"}])), \
                     patch("homm3.match.universe.summary", return_value=(
-                        {}, {}, {"target": (1, 10)})), \
+                        {0x1234: "target"}, {}, {"target": (1, 10)})), \
                     contextlib.redirect_stdout(io.StringIO()):
                 status.write_readme(report)
                 text = readme.read_text()
@@ -83,6 +87,39 @@ class ReadmeScoreTest(unittest.TestCase):
                       text)
         self.assertRegex(text, r"\|\s*100\.00% \|\s*25\.00% \|")
 
+
+    def test_excluded_linked_bodies_do_not_inflate_progress(self):
+        categories = {1: "target", 2: "zlib", 3: "init-thunk",
+                      4: "import-thunk", 5: "runtime", 6: "eh-funclet"}
+        functions = [{"name": str(rva), "size": 10,
+                      "fuzzy_match_percent": 50 if rva == 1 else 100}
+                     for rva in categories]
+        report = {"units": [{"name": "unit", "functions": functions}]}
+        # Fall back to the baseline RVA when the current symbol map lacks it.
+        baseline = {("unit", str(rva)): status.MatchRow(100, 100, 100, rva)
+                    for rva in categories if rva != 1}
+        with tempfile.TemporaryDirectory() as tmp:
+            readme = Path(tmp) / "README.md"
+            readme.write_text("")
+            with patch.object(status, "README_PATH", readme), \
+                    patch.object(status, "load_baseline", return_value=baseline), \
+                    patch.object(status, "function_rvas",
+                                 return_value={("unit", "1"): 1}), \
+                    patch("homm3.build.configure.load_manifest", return_value=(
+                        {}, {}, [{"unit": "unit", "source": "src/unit.cpp"}])), \
+                    patch("homm3.match.universe.summary", return_value=(
+                        categories, {}, {cat: (1, 10)
+                                         for cat in categories.values()})), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                status.write_readme(report)
+                text = readme.read_text()
+
+        self.assertIn("**Executable MAX: 75.00%**", text)
+        self.assertIn("**Function exact MAX** — 1 / 2", text)
+        self.assertIn("**CUR diagnostics** — 1 / 2", text)
+        self.assertIn("(2 in linked units)", text)
+        self.assertNotIn("`(unmatched)`", text)
+        self.assertRegex(text, r"\|\s*75\.00% \|\s*75\.00% \|")
 
 if __name__ == "__main__":
     unittest.main()

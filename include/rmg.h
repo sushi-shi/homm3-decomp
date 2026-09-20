@@ -1201,10 +1201,14 @@ public:
     void markCoastalTiles();
     void floodConnectionCosts(TRmgMapPosition position, unsigned char waterZone);
 
+    int getWidth() const { return m_mapWidth; }
+    int getHeight() const { return m_mapHeight; }
+    int getNumberLevels() const { return m_numberLevels; }
+
     TRmgMapItem* getMapItem(int x, int y);
     inline TRmgMapItem* getMapItem(int x, int y, int z)
     {
-        return m_mapItems + (z * m_mapHeight + y) * m_mapWidth + x;
+        return getMapItem(TRmgMapPosition(x, y, z));
     }
     TRmgMapItem* getMapItem(TRmgMapPosition point);
 
@@ -1911,6 +1915,7 @@ public:
     void connectZones();
     // Retail 0x543e20: random midpoint displacement, queued side branches,
     // then terrain and border cleanup. No Dreamcast RMG names survive.
+    bool contains(const TPoint& point) const;
     void carveBranchingPaths();
     void repairWaterZoneBorders();
     // Complete-only roles proved by the predecessor walk at 0x5408e0 and
@@ -1922,6 +1927,7 @@ public:
     type_object* createGuard(int value, TRmgZone* zone);
     unsigned char placeObjectInZone(type_object* object, TRmgZone* zone);
     void placeGuard(TRmgMapPosition position, int value);
+    int getMineGuardValue(int resource, const TRmgZone* zone) const;
     // Complete-only prototype/subtype/terrain filter at retail 0x546040.
     TRmgObjectPropertiesRef* selectObjectPrototype(
         int terrain, int objectType, int subtype);

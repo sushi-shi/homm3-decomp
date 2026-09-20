@@ -8,8 +8,10 @@
 #include <algorithm>
 #include <bitset>
 #include <ctype.h>
+#include <functional>
 #include <math.h>
 #include <list>
+#include <queue>
 #include <set>
 #include <stdio.h>
 #include <stdlib.h>
@@ -283,22 +285,18 @@ static void __fastcall assignRmgTeams(
     const unsigned char* players,
     char* teams);
 
+// Invert the disabled-byte range through the shared bitset iterator without
+// an inline-depth pin. The Complete-only wrapper name is inferred; the proxy
+// expansion still differs from retail's retained bitset::set call boundary.
 template <unsigned int N>
 static void setAvailableRmgHeroes(
     std::bitset<N>* availableHeroes,
     unsigned char* heroFlag,
     unsigned char* end)
 {
-    int heroIndex = 0;
-    while (heroFlag != end) {
-        bool available = !*heroFlag;
-        // WriteMapHeader -> bitset<N>::set: retail retains both call sites.
-#pragma inline_depth(0)
-        availableHeroes->set(heroIndex, available);
-#pragma inline_depth()
-        ++heroFlag;
-        ++heroIndex;
-    }
+    std::transform(heroFlag, end,
+        bitset_iterator<N>(*availableHeroes, 0),
+        std::logical_not<unsigned char>());
 }
 
 // Vtable 0x6409cc slot 0 and the 0x14-byte concrete map layout identify this
@@ -3166,10 +3164,20 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
     }
 }
 
+// Flatten the level into a row, then the row into a cell index. The scalar
+// overload delegates here; each intermediate denotes a real coordinate step.
+// All 39 retained bytes still match. This staged body also restores mine
+// placement's retained aggregate lookup and expanded occupancy-size query.
+// Collapsing the stages or delegating to the planar accessor reproduces the
+// standalone body but changes those caller expansions; no inline pin is used.
 VA(0x005378E0, 0x27)
 TRmgMapItem* type_random_map::getMapItem(TRmgMapPosition point)
 {
-    return getMapItem(point.m_x, point.m_y, point.m_z);
+    int planeOffset = point.m_z * m_mapHeight;
+    int row = planeOffset + point.m_y;
+    int rowOffset = row * m_mapWidth;
+    int index = rowOffset + point.m_x;
+    return m_mapItems + index;
 }
 
 // Retail 0x549c91 calls this base-prefix pass after coastal marking.
@@ -6851,11 +6859,12 @@ void type_random_map_generator::connectZones()
                 position = object->m_position;
                 if (m_map.getMapItem(position)->m_zoneState.m_zone == zoneIndex) {
                     TRmgMapPosition shipyardPosition = position;
+                    TRmgMapPosition waterPosition;
                     int waterOffset = 0;
                     for (;
                          waterOffset < RMG_SHIPYARD_WATER_OFFSET_COUNT;
                          ++waterOffset) {
-                        TRmgMapPosition waterPosition =
+                        waterPosition =
                             shipyardPosition
                             + g_rmgShipyardWaterOffsets[waterOffset];
                         if (waterPosition.m_x >= 0
@@ -6865,8 +6874,10 @@ void type_random_map_generator::connectZones()
                             break;
                     }
 
+                    // Retail 0x5437f8 forwards the water-offset temporary
+                    // returned in EAX to seed the flood from the water tile.
                     if (waterOffset != RMG_SHIPYARD_WATER_OFFSET_COUNT)
-                        floodConnectionRegion(object->m_position);
+                        floodConnectionRegion(waterPosition);
                 }
             }
             ++objectIndex;
@@ -7055,28 +7066,45 @@ TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, int level)
     }
 }
 
+// Complete-only live map-domain query shared by both branch checks. Retail
+// tests X before loading the generator receiver, then reads its map dimensions
+// and forms the map address only for openPathPatch. Owning this ordinary query
+// on the generator reproduces that sequence; a map-owned query forms its
+// receiver too early. The name and source boundary remain provisional.
+bool type_random_map_generator::contains(const TPoint& point) const
+{
+    return point.m_x >= 0 && point.m_x < m_map.getWidth()
+        && point.m_y >= 0 && point.m_y < m_map.getHeight();
+}
+
 // The eight-byte values are coordinate pairs: midpoint and perpendicular
 // arithmetic prove TPoint, independently of the ICF-shared vector labels.
-// Pending segments use a vector stack; long segments enqueue two outward
-// side branches as consecutive point pairs in an ordinary std::list.
-// Residual 73.0200%: a 64-case point-lifetime/endpoint/container-API matrix
-// lifts the initial 67.2335%; the 13-case public-list follow-up is lower or
-// flat. Component endpoint stores and explicit public iterator erasure retain
-// the best schedule. Retail calls vector erase at both stack pops and list
-// range erase during cleanup; VC6 still expands those boundaries, with the
-// latter COMDAT absent. No emission anchor or inline-depth pin is used.
-// Retail +0x10a..+0x127 constructs the vector then list after the seed
-// switch. Cleanup calls range erase at +0x478, frees the list head at
-// +0x481 and the vector at +0x497, before the level back edge at +0x4b1.
-// Hoisting either container outside the level loop contradicts that CFG.
-// The current emitted-object scan also finds no byte-identical range-erase
-// body under another template type, even before checking callee identities.
+// Pending segments use a vector as a LIFO; deferred branches use queue/list.
+// Both containers live within one level, after the seed switch and before
+// the level back edge. Hoisting them contradicts retail's cleanup lifetime.
+// The point difference supplies SUB/SUB/NEG, and canonical terrain/border
+// queries plus squared distance preserve the exact 69-byte range erase.
+// The shared bounds query and direct vector operations recover both seed
+// single-inserts, both vector erases, the queue cleanup and the 0x6c frame.
+// Dimension accessors in the entry product and seed switch restore retail
+// load order and shared joins. The item pointer precedes the height/width/level
+// product. With the generator-owned bounds query and field-built canonical
+// point difference, MAX is 96.5709%: all 67 branch destinations agree and 66
+// block instruction counts match. Coordinate register roles and return-copy/
+// distance allocation remain. Naming an extra endpoint copy adds a reload
+// absent from retail; keep the direct call. A byte-identical passive C2 trace
+// gives last.x, first.x and last.y equal priority 544, assigned ESI/EDI/EBX;
+// retail uses ESI/EBX/EDI. Declaration-order probes leave this tie unchanged.
+// Pair-operation helpers lose the container boundaries; shared midpoint and
+// perpendicular helpers disturb the three exact path callers. Point getters
+// alone over-expand cleanup. The cell-setter model remains a lead requiring
+// recovery of commitTreasureGroup's retained constructor and live snapshots.
 VA(0x00543E20, 0x574) // anchor-callee 0x544920; Complete-only, thiscall, no arguments
 void type_random_map_generator::carveBranchingPaths()
 {
     TRmgMapItem* item = m_map.m_mapItems;
-    for (int remaining = m_map.m_mapWidth * m_map.m_mapHeight * m_map.m_numberLevels;
-         remaining--; ++item) {
+    int remaining = m_map.getHeight() * m_map.getWidth() * m_map.m_numberLevels;
+    for (; remaining--; ++item) {
         if (!item->m_objects.size()) {
             if (!item->m_connection.m_present) {
                 item->m_tileData.m_subterraneanGate = 0;
@@ -7094,30 +7122,30 @@ void type_random_map_generator::carveBranchingPaths()
         case RMG_BRANCH_SEED_MAIN_DIAGONAL:
             first.m_x = 0;
             first.m_y = 0;
-            last.m_x = m_map.m_mapWidth - 1;
-            last.m_y = m_map.m_mapHeight - 1;
+            last.m_x = m_map.getWidth() - 1;
+            last.m_y = m_map.getHeight() - 1;
             break;
         case RMG_BRANCH_SEED_VERTICAL:
-            first.m_x = m_map.m_mapWidth / 2;
+            first.m_x = m_map.getWidth() / 2;
             first.m_y = 0;
             last.m_x = first.m_x;
-            last.m_y = m_map.m_mapHeight - 1;
+            last.m_y = m_map.getHeight() - 1;
             break;
         case RMG_BRANCH_SEED_ANTI_DIAGONAL:
-            first.m_x = m_map.m_mapWidth - 1;
+            first.m_x = m_map.getWidth() - 1;
             first.m_y = 0;
             last.m_x = 0;
-            last.m_y = m_map.m_mapHeight - 1;
+            last.m_y = m_map.getHeight() - 1;
             break;
         case RMG_BRANCH_SEED_HORIZONTAL:
             first.m_x = 0;
-            first.m_y = m_map.m_mapHeight / 2;
-            last.m_x = m_map.m_mapWidth - 1;
+            first.m_y = m_map.getHeight() / 2;
+            last.m_x = m_map.getWidth() - 1;
             last.m_y = first.m_y;
             break;
         }
         std::vector<TPoint> pending;
-        std::list<TPoint> branches;
+        std::queue<TPoint, std::list<TPoint> > branches;
         pending.push_back(first);
         pending.push_back(last);
         while (pending.size()) {
@@ -7129,7 +7157,8 @@ void type_random_map_generator::carveBranchingPaths()
                 TPoint middle((first.m_x + last.m_x + 1) / 2,
                     (first.m_y + last.m_y + 1) / 2);
                 if (middle != first && middle != last) {
-                    TRmgVector perpendicular(-(last.m_y - first.m_y), last.m_x - first.m_x);
+                    TRmgVector delta = last - first;
+                    TRmgVector perpendicular(-delta.m_y, delta.m_x);
                     int length = perpendicular.length();
                     if (length > 1) {
                         int displacement = rand() % length - length / 2;
@@ -7139,29 +7168,25 @@ void type_random_map_generator::carveBranchingPaths()
                     pending.push_back(middle);
                     pending.push_back(middle);
                     pending.push_back(first);
-                    if (length >= 8 && middle.m_x >= 0 && middle.m_x < m_map.m_mapWidth
-                        && middle.m_y >= 0 && middle.m_y < m_map.m_mapHeight) {
+                    if (length >= 8 && contains(middle)) {
                         first = middle + perpendicular;
-                        branches.push_back(middle);
-                        branches.push_back(first);
+                        branches.push(middle);
+                        branches.push(first);
                         first = TPoint(middle.m_x - perpendicular.m_x, middle.m_y - perpendicular.m_y);
-                        branches.push_back(middle);
-                        branches.push_back(first);
+                        branches.push(middle);
+                        branches.push(first);
                     }
-                } else if (first.m_x >= 0 && first.m_x < m_map.m_mapWidth
-                           && first.m_y >= 0 && first.m_y < m_map.m_mapHeight) {
+                } else if (contains(first)) {
                     m_map.openPathPatch(first.m_x, first.m_y, level);
                 }
             }
             while (branches.size() > 0 && pending.empty()) {
                 first = branches.front();
-                branches.erase(branches.begin());
+                branches.pop();
                 last = branches.front();
-                branches.erase(branches.begin());
+                branches.pop();
                 last = m_map.traceBranchEnd(first, last, level);
-                int dx = last.m_x - first.m_x;
-                int dy = last.m_y - first.m_y;
-                if (dx * dx + dy * dy >= 25) {
+                if (getRmgSquaredDistance(last, first) >= 25) {
                     pending.push_back(last);
                     pending.push_back(first);
                 }
@@ -7173,13 +7198,13 @@ void type_random_map_generator::carveBranchingPaths()
     for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
-                if (item->m_tile.m_landType == eTerrainWater || item->m_tile.m_landType == eTerrainRock) {
+                if (item->getLandType() == eTerrainWater || item->getLandType() == eTerrainRock) {
                     if (!item->m_connection.m_present) {
                         item->m_tileData.m_borderObject = 0;
                         item->m_tileData.m_subterraneanGate = 1;
                     }
                 }
-                if (item->m_tileData.m_borderObject)
+                if (item->hasBorderObject())
                     m_map.markBorderPatch(position);
             }
         }
@@ -7719,21 +7744,56 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
     return 1;
 }
 
+// Complete-only mine valuation: resource price, local enablement and combined
+// difficulty precede the retained scalar curve at retail 0x545b76. This ordinary
+// member is a provisional source boundary/name, not a recovered DC declaration.
+// Keeping the whole mine calculation together reproduces that retained call
+// without changing treasure valuation's different source path.
+int type_random_map_generator::getMineGuardValue(int resource, const TRmgZone* zone) const
+{
+    int value;
+    switch (resource) {
+    case WOOD: case ORE: value = 1500; break;
+    case GOLD: value = 7000; break;
+    default: value = 3500; break;
+    }
+    int localStrength = zone->m_slot->m_monsterStrength;
+    if (!localStrength)
+        return 0;
+    int strength = localStrength + m_monsterStrength - 3;
+    if (strength > 5) strength = 5;
+    else if (strength < 0) strength = 0;
+    return getRmgGuardValue(value, strength);
+}
+
 // Retail +0x388 selects the MINE prototype vector. The caller supplies
 // zone/resource/starting flag/spacing; names are role-derived.
-// Current match: 71.5746%. Keep prototype as the last scanned
-// prototype: retail stores it at 0x5459f5/0x545a5d and reloads that same
-// local at 0x545b7e/0x545ca9 without replacing it after random selection.
-// This includes the retained trigger/width quirk in the resource strip.
-// push_back in the first scan restores the later type_object constructor
-// call at retail +0x140; explicit insert(end(), properties) expands that
-// constructor and scores 69.3906%. Both forms still expand the first single
-// insert and bitset<10>::test. Subscript access moves only _Xran out of line
-// (70.9776%); combining it with const prototype access and push_back is flat.
-// A named reference to the mine-prototype vector gives 69.9453% and still
-// emits no test specialization. Keep the append API and direct test while
-// recovering the remaining per-site boundaries, including getRmgGuardValue
-// and the second getMapItem call.
+// Keep prototype as the last scanned prototype: retail stores it at
+// 0x5459f5/0x545a5d and reloads the same local at 0x545b7e/0x545ca9,
+// without replacing it after random selection. Its trigger/width quirk is real.
+// The prototype's non-const terrain query uses VC6's bitset reference proxy
+// and retains the checked test at 0x545a01. All 52 retained helper bytes match.
+// A const query retains only _Xran; an explicit first insert is byte-neutral.
+// Keep the canonical object-position and guard-placement calls; expanding
+// placeGuard duplicates the same zone/occupancy/create/add sequence.
+// The mine valuation operation retains the scalar getRmgGuardValue call and
+// upper-bound-first clamp. A named selection index restores the post-rand
+// array reload. A separate resourceProperties local recovers the resource
+// strip's register lifetime: its address never reaches vector insertion.
+// At 99.4005%, all 71 retail blocks have the same instruction counts and
+// control flow. Dimension queries restore the first single-insert; a value
+// snapshot of the trigger restores retail's 1-minus-trigger/add sequence.
+// The frame is still 0x38 versus retail's 0x44: 30 stack operands differ by
+// twelve bytes. The terrain-test PUSH/LEA order and strength LEA operands
+// remain reversed. Initialization/assignment and named position-return copies
+// are neutral; constructing a fresh return value or using the primary scalar
+// map overload changes calls that retail does not make.
+// A byte-identical passive C2 trace shows entrance and position sharing one
+// twelve-byte stack home. Scalar strip loops keep the smaller frame; copying
+// the origin per cell reaches 0x44 but adds spills/copies absent from retail.
+// A shared zone-value wrapper lowers treasure assembly MAX; keep the complete
+// mine valuation operation. Separating the scan pointers loses the retail
+// shared lifetime; only the later resource prototype owns a fresh local.
 VA(0x00545990, 0x466)
 unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     int resource, unsigned char startingMine, int spacing)
@@ -7745,7 +7805,7 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     for (unsigned i = 0; i < m_objectPrototypes[MINE].size(); ++i) {
         properties = m_objectPrototypes[MINE][i];
         prototype = properties->m_prototype;
-        if (prototype->m_subtype == resource && prototype->m_recommendedTerrainMask.test(terrain))
+        if (prototype->m_subtype == resource && prototype->isRecommendedTerrain(terrain))
             candidates.push_back(properties);
     }
     if (!candidates.size()) {
@@ -7758,57 +7818,40 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     }
     if (!candidates.size())
         return 0;
-    properties = candidates[rand() % candidates.size()];
+    unsigned int selected = rand() % candidates.size();
+    properties = candidates[selected];
     rmgOwnableObject* mine = new rmgOwnableObject(properties);
     if (!placeMineSite(mine, zone, startingMine, spacing)) {
         delete mine;
         return 0;
     }
-    int value;
-    switch (resource) {
-    case WOOD: case ORE: value = 1500; break;
-    case GOLD: value = 7000; break;
-    default: value = 3500; break;
-    }
-    int guardValue = 0;
-    if (zone->m_slot->m_monsterStrength) {
-        int strength = zone->m_slot->m_monsterStrength + m_monsterStrength - 3;
-        if (strength > 5) strength = 5;
-        else if (strength < 0) strength = 0;
-        guardValue = getRmgGuardValue(value, strength);
-    }
-    TRmgMapPosition entrance = mine->m_position;
-    entrance.m_x -= prototype->m_triggerCell.m_x;
-    entrance.m_y += 1 - prototype->m_triggerCell.m_y;
+    int guardValue = getMineGuardValue(resource, zone);
+    TRmgMapPosition entrance = mine->getPosition();
+    TObjectType::TPoint trigger = prototype->m_triggerCell;
+    entrance.m_x -= trigger.m_x;
+    entrance.m_y += 1 - trigger.m_y;
     TRmgMapItem* item = m_map.getMapItem(entrance);
     if (!item->m_connection.m_present) {
         item->m_tileData.m_borderObject = 0;
         item->m_tileData.m_subterraneanGate = 1;
     }
-    if (guardValue > 0) {
-        item = m_map.getMapItem(entrance);
-        TRmgZone* guardZone = m_zones[item->m_zoneState.m_zone];
-        if (static_cast<int>(item->m_objects.size()) <= 0) {
-            type_object* guard = createGuard(guardValue, guardZone);
-            if (guard)
-                addObject(guard, entrance);
-        }
-    }
+    if (guardValue > 0)
+        placeGuard(entrance, guardValue);
     int placed = 0;
-    properties = selectObjectPrototype(terrain, RESOURCE, resource);
-    if (!properties)
+    TRmgObjectPropertiesRef* resourceProperties = selectObjectPrototype(terrain, RESOURCE, resource);
+    if (!resourceProperties)
         return 1;
-    TRmgMapPosition position = mine->m_position;
+    TRmgMapPosition position = mine->getPosition();
     TRmgZoneBounds bounds;
     bounds.m_minimumY = max(position.m_y + 1, 0);
-    bounds.m_maximumY = min(position.m_y + 2, m_map.m_mapHeight);
+    bounds.m_maximumY = min(position.m_y + 2, m_map.getHeight());
     bounds.m_minimumX = max(position.m_x - prototype->getWidth(), 0);
-    bounds.m_maximumX = min(position.m_x + 2, m_map.m_mapWidth);
+    bounds.m_maximumX = min(position.m_x + 2, m_map.getWidth());
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX && placed <= 2; ++position.m_x) {
-            if (rand() % 2 == 0 && m_map.canPlaceObject(properties, position, zone)) {
+            if (rand() % 2 == 0 && m_map.canPlaceObject(resourceProperties, position, zone)) {
                 ++placed;
-                addObject(new rmgResourceObject(properties), position);
+                addObject(new rmgResourceObject(resourceProperties), position);
             }
         }
     }
@@ -9356,43 +9399,70 @@ unsigned char type_random_map_generator::generate()
     return 1;
 }
 
+// Scalar output uses the canonical writeValue in abstractfile.h. The packed-
+// bit encoder and writer separate conversion from stream I/O, mirroring the
+// existing readers. These Complete-only boundaries/names are inferred from
+// repeated header expansions; no retained standalone bodies are claimed.
+template <size_t N>
+void encodePackedBits(const std::bitset<N>& bits, unsigned char* packed)
+{
+    memset(packed, 0, (N + 7) / 8);
+    for (unsigned int index = 0; index < N; ++index) {
+        if (bits.test(index))
+            packed[index >> 3] |= 1 << (index & 7);
+    }
+}
+
+template <size_t N>
+int writePackedBits(TAbstractFile* outfile, const std::bitset<N>& bits)
+{
+    unsigned char packed[(N + 7) / 8];
+    encodePackedBits(bits, packed);
+    return outfile->write(packed, sizeof(packed));
+}
+
+// Length-prefixed text retains the caller-owned string/buffer lifetime and
+// reads the payload length again after writing its native int prefix.
+int writeString(TAbstractFile* outfile, const std::string& text)
+{
+    writeValue<int>(outfile, text.length());
+    return outfile->write(text.c_str(), text.length());
+}
+
+int writeString(TAbstractFile* outfile, const char* text)
+{
+    writeValue<int>(outfile, strlen(text));
+    return outfile->write(text, strlen(text));
+}
+
 // Complete's random-map pipeline calls this routine immediately before the
 // generated terrain/object stream is emitted.  The format switch, description
 // fragments, player records, team assignment, and packed availability masks
 // are all read directly from retail's stream-write CFG.  The Dreamcast port
 // has no RMG compiland, so the method spelling remains provisional while its
 // class offsets and serialization order are retail-byte facts.
+// Typed scalar/string writes, shared bit encoding and hero-flag transform
+// plus dimension queries and natural player/byte lifetimes recover 95.6721%
+// without the old hero-set inline-depth pin. All 164 branch destinations
+// align; 157 blocks also have matching instruction counts. Dimension queries
+// restore the pre-c_str width/level loads, and the final hero loop owns a
+// fresh zero byte for each write. Stack homes, bit-proxy call boundaries and
+// exception expansions remain.
 
 VA(0x00549CB0, 0xE90)  // GenerateRandomMap caller chain; retail-only RMG
 void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 {
-    {
-        int intBuffer = getSerializedMapVersion();
-        outfile->write(&intBuffer, sizeof(intBuffer));
-    }
+    writeValue<int>(outfile, getSerializedMapVersion());
 
-    {
-        char byteBuffer = 1;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
-    }
+    writeValue<char>(outfile, 1);
 
-    {
-        int intBuffer = m_map.m_mapWidth;
-        outfile->write(&intBuffer, sizeof(intBuffer));
-    }
+    writeValue<int>(outfile, m_map.getWidth());
 
-    {
-        char byteBuffer = m_map.m_numberLevels > 1;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
-    }
+    writeValue<char>(outfile, m_map.m_numberLevels > 1);
 
     std::string mapName(
         DATA_COMPGEN(0x00682900, rmgMapName, "Random Map"));
-    {
-        int intBuffer = mapName.length();
-        outfile->write(&intBuffer, sizeof(intBuffer));
-    }
-    outfile->write(mapName.c_str(), mapName.length());
+    writeString(outfile, mapName);
 
     // Retail places description at [ebp-0x324] and mainTowns at
     // [ebp-0x130]; their 0x1f4-byte separation proves the 500-byte extent.
@@ -9407,8 +9477,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
             "computers %i, water %s, monsters %i"),
         m_templateName.c_str(),
         m_randomSeed,
-        m_map.m_mapWidth,
-        m_map.m_numberLevels,
+        m_map.getWidth(),
+        m_map.getNumberLevels(),
         m_humanPlayerCount,
         m_computerPlayerCount,
         g_rmgWaterNames[m_waterContent],
@@ -9459,236 +9529,171 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
                     0x0068280C, rmgTownChoiceIs, " town choice is "));
             strcat(
                 description,
-                g_rmgTownNames[m_townChoices[descriptionPlayer]]);
+                // Retail 0x549fba reuses the player-index byte offset for
+                // this lookup, as it does for the preceding color name.
+                // Preserve that description bug when another town was chosen.
+                g_rmgTownNames[descriptionPlayer]);
         }
     }
 
-    {
-        int intBuffer = strlen(description);
-        outfile->write(&intBuffer, sizeof(intBuffer));
-    }
-    outfile->write(description, strlen(description));
+    writeString(outfile, description);
 
-    {
-        char byteBuffer = 1;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
-    }
+    writeValue<char>(outfile, 1);
     if (m_mapVersion >= 1) {
-        char byteBuffer = 0;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
+        writeValue<char>(outfile, 0);
     }
 
-    {
-        unsigned char canBeHuman[8];
-        int legalAlignments[8];
-        TRmgMapPosition mainTowns[8];
-        unsigned char canBeComputer[8];
-        memset(canBeHuman, 0, sizeof(canBeHuman));
-        memset(legalAlignments, 0, sizeof(legalAlignments));
-        memset(mainTowns, 0, sizeof(mainTowns));
-        memset(canBeComputer, 0, sizeof(canBeComputer));
-        int generatedHumanTowns = 0;
-        {
-            unsigned int townIndex = 0;
-            for (; townIndex < m_zones.size(); ++townIndex) {
-                TRmgZone* town = m_zones[townIndex];
-                TRmgTownSlot* slot = town->m_slot;
-                int player = slot->m_playerIndex;
-                if (player < 0)
-                    continue;
+    unsigned char canBeHuman[8];
+    int legalAlignments[8];
+    TRmgMapPosition mainTowns[8];
+    unsigned char canBeComputer[8];
+    memset(canBeHuman, 0, sizeof(canBeHuman));
+    memset(legalAlignments, 0, sizeof(legalAlignments));
+    memset(mainTowns, 0, sizeof(mainTowns));
+    memset(canBeComputer, 0, sizeof(canBeComputer));
+    int generatedHumanTowns = 0;
+    for (unsigned int townIndex = 0; townIndex < m_zones.size(); ++townIndex) {
+        TRmgZone* town = m_zones[townIndex];
+        TRmgTownSlot* slot = town->m_slot;
+        int player = slot->m_playerIndex;
+        if (player < 0)
+            continue;
 
-                player = m_playerIndexMap[player + 1];
-                if (player < 0 || !town->m_active)
-                    continue;
+        player = m_playerIndexMap[player + 1];
+        if (player < 0 || !town->m_active)
+            continue;
 
-                if (slot->m_kind == 0 && !canBeHuman[player]) {
-                    ++generatedHumanTowns;
-                    canBeHuman[player] = 1;
-                    mainTowns[player] = town->m_position;
-                }
-
-                if (slot->m_kind == 1 && !canBeComputer[player]) {
-                    canBeComputer[player] = 1;
-                    mainTowns[player] = town->m_position;
-                }
-
-                legalAlignments[player] |= 1 << town->m_alignment;
-            }
+        if (slot->m_kind == 0 && !canBeHuman[player]) {
+            ++generatedHumanTowns;
+            canBeHuman[player] = 1;
+            mainTowns[player] = town->m_position;
         }
 
-        generatedHumanTowns -= m_humanPlayerCount;
-        int reversePlayer = 7;
-        do {
-            if (canBeHuman[reversePlayer]
-                && !m_fixedHumanPlayers[reversePlayer]
-                && generatedHumanTowns > 0) {
-                canBeComputer[reversePlayer] = 1;
-                canBeHuman[reversePlayer] = 0;
-                --generatedHumanTowns;
-            }
-        } while (reversePlayer-- != 0);
-
-        m_computerPlayerCount = m_humanPlayerCount = 0;
-
-        for (int serializedPlayer = 0; serializedPlayer < 8;
-             ++serializedPlayer) {
-            {
-                char byteBuffer = canBeHuman[serializedPlayer];
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            }
-
-            {
-                char byteBuffer =
-                    canBeHuman[serializedPlayer] || canBeComputer[serializedPlayer];
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            }
-
-            {
-                char byteBuffer = 0;
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            }
-
-            if (m_mapVersion >= 2) {
-                char byteBuffer = 0;
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            }
-
-            if (m_mapVersion >= 1) {
-                unsigned short alignment = legalAlignments[serializedPlayer];
-                outfile->write(&alignment, sizeof(alignment));
-            } else {
-                char byteBuffer = legalAlignments[serializedPlayer];
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            }
-
-            {
-                char byteBuffer = 0;
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            }
-
-            if (!canBeHuman[serializedPlayer]
-                && !canBeComputer[serializedPlayer]) {
-                char byteBuffer = 0;
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            } else {
-                if (canBeHuman[serializedPlayer])
-                    ++m_humanPlayerCount;
-                else
-                    ++m_computerPlayerCount;
-
-                {
-                    char byteBuffer = 1;
-                    outfile->write(&byteBuffer, sizeof(byteBuffer));
-                }
-
-                if (m_mapVersion >= 1) {
-                    {
-                        char byteBuffer = 1;
-                        outfile->write(&byteBuffer, sizeof(byteBuffer));
-                    }
-                    {
-                        char byteBuffer = -1;
-                        outfile->write(&byteBuffer, sizeof(byteBuffer));
-                    }
-                }
-
-                {
-                    char byteBuffer = mainTowns[serializedPlayer].m_x;
-                    outfile->write(&byteBuffer, sizeof(byteBuffer));
-                }
-                {
-                    char byteBuffer = mainTowns[serializedPlayer].m_y;
-                    outfile->write(&byteBuffer, sizeof(byteBuffer));
-                }
-                {
-                    char byteBuffer = mainTowns[serializedPlayer].m_z;
-                    outfile->write(&byteBuffer, sizeof(byteBuffer));
-                }
-            }
-
-            {
-                char byteBuffer = 0;
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            }
-            {
-                char byteBuffer = -1;
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            }
-
-            if (m_mapVersion >= 1) {
-                {
-                    char byteBuffer = 0;
-                    outfile->write(&byteBuffer, sizeof(byteBuffer));
-                }
-                int intBuffer = 0;
-                outfile->write(&intBuffer, sizeof(intBuffer));
-            }
+        if (slot->m_kind == 1 && !canBeComputer[player]) {
+            canBeComputer[player] = 1;
+            mainTowns[player] = town->m_position;
         }
 
-        {
-            char byteBuffer = -1;
-            outfile->write(&byteBuffer, sizeof(byteBuffer));
+        legalAlignments[player] |= 1 << town->m_alignment;
+    }
+
+    generatedHumanTowns -= m_humanPlayerCount;
+    int reversePlayer = 7;
+    do {
+        if (canBeHuman[reversePlayer]
+            && !m_fixedHumanPlayers[reversePlayer]
+            && generatedHumanTowns > 0) {
+            canBeComputer[reversePlayer] = 1;
+            canBeHuman[reversePlayer] = 0;
+            --generatedHumanTowns;
         }
-        {
-            char byteBuffer = -1;
-            outfile->write(&byteBuffer, sizeof(byteBuffer));
+    } while (reversePlayer-- != 0);
+
+    m_computerPlayerCount = m_humanPlayerCount = 0;
+
+    for (int serializedPlayer = 0; serializedPlayer < 8;
+         ++serializedPlayer) {
+        writeValue<char>(outfile, canBeHuman[serializedPlayer]);
+
+        writeValue<char>(outfile, canBeHuman[serializedPlayer] || canBeComputer[serializedPlayer]);
+
+        writeValue<char>(outfile, 0);
+
+        if (m_mapVersion >= 2) {
+            writeValue<char>(outfile, 0);
         }
 
-        if (!m_computerTeamCount)
-            m_computerTeamCount = m_computerPlayerCount;
-        if (!m_humanTeamCount)
-            m_humanTeamCount = m_humanPlayerCount;
-        if (!m_computerPlayerCount) {
-            int teamCount = m_humanTeamCount;
-            m_humanTeamCount = std::_cpp_max(teamCount, 2);
-        }
-
-        if (m_humanTeamCount >= m_humanPlayerCount
-            && m_computerTeamCount >= m_computerPlayerCount) {
-            char byteBuffer = 0;
-            outfile->write(&byteBuffer, sizeof(byteBuffer));
+        if (m_mapVersion >= 1) {
+            writeValue<unsigned short>(outfile, legalAlignments[serializedPlayer]);
         } else {
-            char teams[8];
-            memset(teams, 0, sizeof(teams));
-
-            {
-                int teamCount = m_humanTeamCount;
-                m_humanTeamCount = std::_cpp_max(teamCount, 1);
-            }
-            {
-                int teamCount = m_computerTeamCount;
-                m_computerTeamCount = std::_cpp_max(teamCount, 1);
-            }
-            {
-                int playerCount = m_humanPlayerCount;
-                int teamCount = m_humanTeamCount;
-                m_humanTeamCount = std::_cpp_min(playerCount, teamCount);
-            }
-            {
-                int playerCount = m_computerPlayerCount;
-                int teamCount = m_computerTeamCount;
-                m_computerTeamCount = std::_cpp_min(playerCount, teamCount);
-            }
-
-            assignRmgTeams(
-                m_humanTeamCount,
-                m_humanPlayerCount,
-                0,
-                canBeHuman,
-                teams);
-            assignRmgTeams(
-                m_computerTeamCount,
-                m_computerPlayerCount,
-                m_humanTeamCount,
-                canBeComputer,
-                teams);
-
-            {
-                char byteBuffer = m_humanTeamCount + m_computerTeamCount;
-                outfile->write(&byteBuffer, sizeof(byteBuffer));
-            }
-            outfile->write(teams, sizeof(teams));
+            writeValue<char>(outfile, legalAlignments[serializedPlayer]);
         }
+
+        writeValue<char>(outfile, 0);
+
+        if (!canBeHuman[serializedPlayer]
+            && !canBeComputer[serializedPlayer]) {
+            writeValue<char>(outfile, 0);
+        } else {
+            if (canBeHuman[serializedPlayer])
+                ++m_humanPlayerCount;
+            else
+                ++m_computerPlayerCount;
+
+            writeValue<char>(outfile, 1);
+
+            if (m_mapVersion >= 1) {
+                writeValue<char>(outfile, 1);
+                writeValue<char>(outfile, -1);
+            }
+
+            writeValue<char>(outfile, mainTowns[serializedPlayer].m_x);
+            writeValue<char>(outfile, mainTowns[serializedPlayer].m_y);
+            writeValue<char>(outfile, mainTowns[serializedPlayer].m_z);
+        }
+
+        writeValue<char>(outfile, 0);
+        writeValue<char>(outfile, -1);
+
+        if (m_mapVersion >= 1) {
+            writeValue<char>(outfile, 0);
+            writeValue<int>(outfile, 0);
+        }
+    }
+
+    writeValue<char>(outfile, -1);
+    writeValue<char>(outfile, -1);
+
+    if (!m_computerTeamCount)
+        m_computerTeamCount = m_computerPlayerCount;
+    if (!m_humanTeamCount)
+        m_humanTeamCount = m_humanPlayerCount;
+    if (!m_computerPlayerCount) {
+        int teamCount = m_humanTeamCount;
+        m_humanTeamCount = std::_cpp_max(teamCount, 2);
+    }
+
+    if (m_humanTeamCount >= m_humanPlayerCount
+        && m_computerTeamCount >= m_computerPlayerCount) {
+        writeValue<char>(outfile, 0);
+    } else {
+        char teams[8];
+        memset(teams, 0, sizeof(teams));
+
+        {
+            int teamCount = m_humanTeamCount;
+            m_humanTeamCount = std::_cpp_max(teamCount, 1);
+        }
+        {
+            int teamCount = m_computerTeamCount;
+            m_computerTeamCount = std::_cpp_max(teamCount, 1);
+        }
+        {
+            int playerCount = m_humanPlayerCount;
+            int teamCount = m_humanTeamCount;
+            m_humanTeamCount = std::_cpp_min(playerCount, teamCount);
+        }
+        {
+            int playerCount = m_computerPlayerCount;
+            int teamCount = m_computerTeamCount;
+            m_computerTeamCount = std::_cpp_min(playerCount, teamCount);
+        }
+
+        assignRmgTeams(
+            m_humanTeamCount,
+            m_humanPlayerCount,
+            0,
+            canBeHuman,
+            teams);
+        assignRmgTeams(
+            m_computerTeamCount,
+            m_computerPlayerCount,
+            m_humanTeamCount,
+            canBeComputer,
+            teams);
+
+        writeValue<char>(outfile, m_humanTeamCount + m_computerTeamCount);
+        outfile->write(teams, sizeof(teams));
     }
 
     if (m_mapVersion >= 1) {
@@ -9696,34 +9701,20 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         setAvailableRmgHeroes(
             &availableHeroes, m_disabledHeroes, m_disabledHeroes + 156);
 
-        unsigned char packedHeroes[20];
-        memset(packedHeroes, 0, sizeof(packedHeroes));
-        for (unsigned int heroBit = 0; heroBit < 156; ++heroBit) {
-            if (availableHeroes.test(heroBit))
-                packedHeroes[heroBit >> 3] |= 1 << (heroBit & 7);
-        }
-        outfile->write(packedHeroes, sizeof(packedHeroes));
+        writePackedBits(outfile, availableHeroes);
     } else {
         std::bitset<128> availableHeroes;
         setAvailableRmgHeroes(
             &availableHeroes, m_disabledHeroes, m_disabledHeroes + 128);
 
-        unsigned char packedHeroes[16];
-        memset(packedHeroes, 0, sizeof(packedHeroes));
-        for (unsigned int roeHeroBit = 0; roeHeroBit < 128; ++roeHeroBit) {
-            if (availableHeroes.test(roeHeroBit))
-                packedHeroes[roeHeroBit >> 3] |= 1 << (roeHeroBit & 7);
-        }
-        outfile->write(packedHeroes, sizeof(packedHeroes));
+        writePackedBits(outfile, availableHeroes);
     }
 
     if (m_mapVersion >= 1) {
-        int intBuffer = 0;
-        outfile->write(&intBuffer, sizeof(intBuffer));
+        writeValue<int>(outfile, 0);
     }
     if (m_mapVersion >= 2) {
-        char byteBuffer = 0;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
+        writeValue<char>(outfile, 0);
     }
 
     char reserved[31];
@@ -9735,19 +9726,13 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         disabledArtifacts[artifactIndex] =
             g_artifactTraits[artifactIndex].m_comboType != -1;
     }
-    disabledArtifacts.set(0);
-    disabledArtifacts.set(63);
+    // Retail 0x54a78d/0x54a790 sets bit 0 of word 4 and bit 31 of
+    // word 3, relative to the bitset base at [ebp-0x64]: IDs 128 and 127.
+    disabledArtifacts.set(128);
+    disabledArtifacts.set(127);
 
     if (m_mapVersion >= 2) {
-        unsigned char packedArtifacts[18];
-        memset(packedArtifacts, 0, sizeof(packedArtifacts));
-        for (unsigned int artifactBit = 0; artifactBit < 144;
-             ++artifactBit) {
-            if (disabledArtifacts.test(artifactBit))
-                packedArtifacts[artifactBit >> 3] |=
-                    1 << (artifactBit & 7);
-        }
-        outfile->write(packedArtifacts, sizeof(packedArtifacts));
+        writePackedBits(outfile, disabledArtifacts);
     } else if (m_mapVersion >= 1) {
         std::bitset<129> legacyDisabledArtifacts;
         std::copy(
@@ -9755,39 +9740,20 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
             bitset_iterator<144>(disabledArtifacts, 129),
             bitset_iterator<129>(legacyDisabledArtifacts, 0));
 
-        unsigned char packedArtifacts[17];
-        memset(packedArtifacts, 0, sizeof(packedArtifacts));
-        for (unsigned int legacyArtifactBit = 0; legacyArtifactBit < 129;
-             ++legacyArtifactBit) {
-            if (legacyDisabledArtifacts.test(legacyArtifactBit))
-                packedArtifacts[legacyArtifactBit >> 3] |=
-                    1 << (legacyArtifactBit & 7);
-        }
-        outfile->write(packedArtifacts, sizeof(packedArtifacts));
+        writePackedBits(outfile, legacyDisabledArtifacts);
     }
 
     if (m_mapVersion >= 2) {
         std::bitset<70> disabledSpells;
-        unsigned char packedSpells[9];
-        memset(packedSpells, 0, sizeof(packedSpells));
-        for (unsigned int spell = 0; spell < 70; ++spell) {
-            if (disabledSpells.test(spell))
-                packedSpells[spell >> 3] |= 1 << (spell & 7);
-        }
-        outfile->write(packedSpells, sizeof(packedSpells));
+        writePackedBits(outfile, disabledSpells);
 
         std::bitset<28> disabledSkills;
-        unsigned char packedSkills[4];
-        memset(packedSkills, 0, sizeof(packedSkills));
-        for (unsigned int skill = 0; skill < 28; ++skill) {
-            if (disabledSkills.test(skill))
-                packedSkills[skill >> 3] |= 1 << (skill & 7);
-        }
-        outfile->write(packedSkills, sizeof(packedSkills));
+        writePackedBits(outfile, disabledSkills);
 
-        char byteBuffer = 0;
-        for (int hero = 0; hero < 156; ++hero)
+        for (int hero = 0; hero < 156; ++hero) {
+            char byteBuffer = 0;
             outfile->write(&byteBuffer, sizeof(byteBuffer));
+        }
     }
 }
 
@@ -10398,7 +10364,13 @@ int TRandomMapRequest::generate(const char* fileName, void* progress)
 VA_COMPGEN(0x0054C6A0, 0x4D, LIST_DTOR, TPoint)
 VA_COMPGEN(0x0054D000, 0x5E, LIST_INSERT_SINGLE, TPoint)
 VA_COMPGEN(0x0054D060, 0x36, LIST_ERASE_ITERATOR, TPoint)
+// Natural per-level queue cleanup emits all 69 retail bytes, including delete.
+VA_COMPGEN(0x0054D0A0, 0x45, LIST_ERASE_RANGE, TPoint)
 VA_COMPGEN(0x0054D0F0, 0x2D, LIST_BUYNODE, TPoint)
+
+// Mine's non-const terrain query retains the checked ten-bit test.
+// All 52 bytes and the _Xran call agree with retail 0x5166e0.
+VA_COMPGEN(0x005166E0, 0x34, BITSET_TEST, Bitset10)
 
 // Retail's 129-bit setter is claimed from its identical canonical COMDAT in
 // customcampaign.cpp; this TU expands it after removing the reference pin.
@@ -10406,6 +10378,14 @@ VA_COMPGEN(0x0054D0F0, 0x2D, LIST_BUYNODE, TPoint)
 // The three-point orientation helper at 0x5fdae0 belongs with the retained
 // Voronoi operations in rmg_support.cpp. The earlier emission probe preceded
 // recovery of the canonical site/point ownership and retained helper surface.
+
+VA(0x005FDB10, 0x21) // anchor-callee addSite; Complete-only, ret 0x10
+int getRmgSquaredDistance(TPoint first, TPoint second)
+{
+    int dy = first.m_y - second.m_y;
+    int dx = first.m_x - second.m_x;
+    return dx * dx + dy * dy;
+}
 
 // Each uncomputed interior half-edge identifies an incident triangle. Retail
 // computes its integer circumcenter through canonical point/vector operations,
@@ -10499,8 +10479,13 @@ TPoint operator+(TPoint point, TRmgVector offset)
     return TPoint(point.m_x + offset.m_x, point.m_y + offset.m_y);
 }
 
+// The field-built result preserves all 32 retained bytes and improves the
+// carveBranchingPaths expansion without adding a second arithmetic helper.
 VA(0x005FDD40, 0x20)
 TRmgVector operator-(TPoint left, TPoint right)
 {
-    return TRmgVector(left.m_x - right.m_x, left.m_y - right.m_y);
+    TRmgVector result;
+    result.m_x = left.m_x - right.m_x;
+    result.m_y = left.m_y - right.m_y;
+    return result;
 }
