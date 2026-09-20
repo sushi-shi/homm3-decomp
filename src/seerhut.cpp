@@ -569,62 +569,45 @@ void type_skill_quest::doProposalDialog(hero* currentHero)
     if (m_progressText.length() > 0) {
         std::string text = getProposalDialogText();
         const char* textPointer = text.c_str();
-#pragma inline_depth(0)
         {
-        std::vector<type_dialog_resource> dialogResources;
-#pragma inline_depth()
-        type_dialog_resource resource;
-        for (int i = 0; i < 4; ++i) {
-            if (missing[i] > 0) {
-                resource.m_resource = 0x1f + i;
-                resource.m_qualifier = 0x10000
-                    | static_cast<unsigned short>(missing[i]);
-                type_dialog_resource* position = dialogResources.end();
-#pragma inline_depth(0)
-                dialogResources.insert(position, resource);
-#pragma inline_depth()
+            std::vector<type_dialog_resource> dialogResources;
+            type_dialog_resource resource;
+            for (int i = 0; i < 4; ++i) {
+                if (missing[i] > 0) {
+                    resource.m_resource = 0x1f + i;
+                    resource.m_qualifier = 0x10000
+                        | static_cast<unsigned short>(missing[i]);
+                    type_dialog_resource* position = dialogResources.end();
+                    dialogResources.insert(position, resource);
+                }
             }
+            extendedDialog(
+                textPointer, dialogResources, -1, -1, 0);
         }
-#pragma inline_depth(0)
-        extendedDialog(
-            textPointer, dialogResources, -1, -1, 0);
-        }
-    }
-#pragma inline_depth()
-    else {
+    } else {
         std::string requirement = skillRequirementText(missing);
         const char* requirementPointer = requirement.c_str();
         const std::string* texts = questTexts();
         std::string text = formatString(
             texts[QUEST_TEXT_PROGRESS].c_str(), requirementPointer);
-        // Unpinned 2026-09-06 (polish lane 50): the `inline_depth(0)` pin
-        // that stood on this append is worth -1.39640 -
-        // DoProposalDialog 75.43243 -> 76.82883, a new MAX - and nothing
-        // else in the TU moves. Its four siblings in this body stay.
         text += getTimeLimitText();
         const char* textPointer = text.c_str();
-#pragma inline_depth(0)
         {
-        std::vector<type_dialog_resource> dialogResources;
-#pragma inline_depth()
-        type_dialog_resource resource;
-        for (int i = 0; i < 4; ++i) {
-            if (missing[i] > 0) {
-                resource.m_resource = 0x1f + i;
-                resource.m_qualifier = 0x10000
-                    | static_cast<unsigned short>(missing[i]);
-                type_dialog_resource* position = dialogResources.end();
-#pragma inline_depth(0)
-                dialogResources.insert(position, resource);
-#pragma inline_depth()
+            std::vector<type_dialog_resource> dialogResources;
+            type_dialog_resource resource;
+            for (int i = 0; i < 4; ++i) {
+                if (missing[i] > 0) {
+                    resource.m_resource = 0x1f + i;
+                    resource.m_qualifier = 0x10000
+                        | static_cast<unsigned short>(missing[i]);
+                    type_dialog_resource* position = dialogResources.end();
+                    dialogResources.insert(position, resource);
+                }
             }
-        }
-#pragma inline_depth(0)
-        extendedDialog(
-            textPointer, dialogResources, -1, -1, 0);
+            extendedDialog(
+                textPointer, dialogResources, -1, -1, 0);
         }
     }
-#pragma inline_depth()
 }
 
 // Slot 5 presents one primary-skill picture for every positive requirement.
@@ -745,9 +728,7 @@ void type_skill_quest::setDefaultText()
         std::string formatted =
             formatString(texts[QUEST_TEXT_COMPLETION].c_str(),
                           requirement.c_str());
-#pragma inline_depth(0)
-        m_completionText.assign(formatted, 0, std::string::npos);
-#pragma inline_depth()
+        m_completionText = formatted;
     }
 }
 
@@ -1019,19 +1000,10 @@ void type_monster_quest::save(TAbstractFile* file)
 // and describes the point by map third (plus an underground suffix). Those
 // two strings are the varargs for each of the three localized text columns.
 
-// Residual (98.3426%): all 77 blocks and all 41 branch targets agree. The
-// three differing blocks are the EH-handler relocation addend, the initial
-// packed-point/cell-call register schedule, and one final inlined `_Eos`
-// where retail calls it. A named map pointer regresses the opening schedule;
-// bypassing the packed-point wrapper with the direct three-coordinate overload
-// likewise falls to 90.37%. Direct one-argument string spellings either
-// outline the wrapper or expand `_Grow`. Restricting the final completion
-// assignment to inline_depth(1) or 2 is byte-flat at 98.3426%; predict-inline
-// confirms the remaining call census is 28 here versus 29 retail, specifically
-// one missing `_Eos`. The traits-length/two-argument spelling below is the
-// measured form that reproduces retail's otherwise-unique middle-north
-// assignment block.
-// Residual (93.0020%, peak 98.3426%): `worldMap.cell(position)` below.
+// The former inline-depth diagnostic around the middle-north assignment was
+// removed. The ordinary const-char assignment improves the unpinned build and
+// keeps the same source form as the other eight direction arms.
+// Residual: `worldMap.cell(position)` below.
 // Retail expands the packed-point wrapper and CALLS the three-scalar
 // accessor (0x408770); this compile expands both. The peak came from a
 // per-TU declaration-only view of cell(int,int,int) - an imposed inline
@@ -1068,16 +1040,9 @@ void type_monster_quest::setDefaultText()
         else
             direction = g_questMonsterDirections[2];
     } else {
-        if (m_position.m_y < g_mapHeight / 3) {
-            // This one site exhausted a different VC6 inline budget in
-            // retail: traits::length is open, assign(pointer, length) is not.
-            const char* directionText = g_questMonsterDirections[0];
-            const size_t directionLength =
-                std::char_traits<char>::length(directionText);
-#pragma inline_depth(0)
-            direction.assign(directionText, directionLength);
-#pragma inline_depth()
-        } else if (m_position.m_y > (2 * g_mapHeight) / 3)
+        if (m_position.m_y < g_mapHeight / 3)
+            direction = g_questMonsterDirections[0];
+        else if (m_position.m_y > (2 * g_mapHeight) / 3)
             direction = g_questMonsterDirections[4];
         else
             direction = g_questMonsterDirections[8];
@@ -1155,20 +1120,13 @@ void type_artifact_quest::takePayment(hero* currentHero)
 // arm formats the missing-name list into the progress template, while a
 // custom progress string is passed through directly.
 
-// Residual (88.7407%): all 31 CFG blocks and every branch target agree, as do
-// retail's 0x68 frame and every persistent vector/string/record slot. Keeping
-// each dialog record outside its loop is what recovers that layout. Retail
-// outlines only the generated arm's repeated vector::size test; restricting
-// inline_depth(0) to that statement restores the complete CFG without also
-// outlining operator[] and push_back.
-
-// Residual (89.1000%): computing the five-column group once fixes the retail
+// Computing the five-column group once fixes the retail
 // quest-text copy schedule. The remaining Dinkumware inline-budget class
 // inlines both dialog-vector destructors and the final trivial artifact-vector
 // destroy where retail calls them, and selects the count-taking insert in the
-// custom arm where retail selects the position/value overload. Extending the
-// depth limit through either dialog scope regresses; retain the source-shaped
-// lifetime instead of manufacturing storage or cleanup flow.
+// custom arm where retail selects the position/value overload. The former
+// inline-depth diagnostic on the generated loop is removed; retain the natural
+// loop and source-shaped lifetimes instead of manufacturing cleanup flow.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056f8a0, 0x313)  // anchor-vtable 0x641878 slot 4 + artifact picture class, retail-only
 void type_artifact_quest::doProposalDialog(hero* currentHero)
@@ -1192,16 +1150,10 @@ void type_artifact_quest::doProposalDialog(hero* currentHero)
         textPointer = text.c_str();
         std::vector<type_dialog_resource> dialogResources;
         type_dialog_resource resource;
-        unsigned i = 0;
-        for (;;) {
-#pragma inline_depth(0)
-            if (i >= missingArtifacts.size())
-                break;
-#pragma inline_depth()
+        for (unsigned i = 0; i < missingArtifacts.size(); ++i) {
             resource.m_resource = 8;
             resource.m_qualifier = missingArtifacts[i];
             dialogResources.push_back(resource);
-            ++i;
         }
         extendedDialog(textPointer, dialogResources, -1, -1, 0);
     } else {
@@ -1457,14 +1409,11 @@ void type_creature_quest::doProposalDialog(hero* currentHero)
 // in the joined stack list; otherwise it uses the base's dated proposal-text
 // getter. Picture qualifiers use the same unsigned 16|16 packing as slot 4.
 
-// Residual (99.5679%): all 25 CFG blocks and every branch target agree. The
-// vectors need their own inner scope so the final text cleanup can use the
-// retail inline boundary. inline_depth(0) leaves one instruction: this compile
-// calls basic_string::~basic_string, while retail inlines that wrapper and
-// calls `_Tidy(1)`. Default depth expands the complete refcount path and falls
-// to 90.8971%; depth 1 is likewise rejected at 86.0535%. Moving either pin to
-// the inner vector-scope exit cannot isolate its element cleanup: depth 0 falls
-// to 83.51% and depth 1 reproduces the same 86.05% class.
+// The vectors need their own inner scope so their cleanup precedes the final
+// text cleanup. Retail retains the element destructor and expands the final
+// string destructor; the unpinned compiler currently makes the opposite pair
+// of inline decisions. The former end-of-scope inline-depth diagnostic is not
+// source evidence and has been removed.
 // E:\gamedcs\seerhut.cpp
 VA(0x00570b80, 0x2D5)  // anchor-vtable 0x6418b4 slot 5 + creature picture class, retail-only
 void type_creature_quest::doProgressDialog()
@@ -1503,9 +1452,7 @@ void type_creature_quest::doProgressDialog()
         }
         extendedDialog(text.c_str(), dialogResources, -1, -1, 0);
     }
-#pragma inline_depth(0)
 }
-#pragma inline_depth()
 
 VA(0x00570e60, 0x208)
 void type_creature_quest::load(TAbstractFile* file, int version)
@@ -2221,7 +2168,7 @@ int TQuestGuard::save(TAbstractFile* outfile)
 // DC uses one static TPickANumber(0,47). Complete read0x574610 expands
 // the same static reference interface with the revised dynamic name table:
 // construct availability, remove names used by this map, then select one.
-void TSeerHut::setRandomName(TSeerHut& thisHut)
+inline void TSeerHut::setRandomName(TSeerHut& thisHut)
 {
     std::vector<unsigned char> nameAvailable(g_seerHutNamesPointer->size());
     unsigned int name;
@@ -2740,11 +2687,11 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
 // 82.72%, and is not retained. Naming the artifact falls to 93.70%; an explicit
 // signed comparison is byte-flat. Keep the canonical shared constructor and
 // caller-specific natural inliner state rather than pinning either caller.
-// Current residual (0% reported similarity): the canonical SetRandomName
-// remains out of line where retail expands its allocation/random-selection
-// tail, and the legacy artifact-quest arm retains extra nested construction.
-// The earlier 94.24% body above predates restoration of this helper boundary;
-// it remains a historical lead, not the score of the current implementation.
+// Keeping the canonical SetRandomName definition inline lets the Complete
+// caller expand its revised allocation/random-selection body while preserving
+// the Dreamcast-proven helper. The remaining legacy artifact-quest arm expands
+// its nested type_quest construction where retail retains that call; the extra
+// inline budget also leaves the name vector's element construction as a call.
 VA(0x00574610, 0x480)  // anchor-caller readObject SEER arm; bracket seerhut..singleselectionpopups
 void TSeerHut::read(TAbstractFile* infile)
 {
