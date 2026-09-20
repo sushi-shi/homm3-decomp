@@ -127,7 +127,6 @@ void heroWindow::handleWidgetHover(widget* current)
 {
 }
 
-
 VA(0x005fecb0, 0xA5)  // dc 0x197324
 void heroWindow::addWidget(widget* newWidget, int newPriority)
 {
@@ -325,23 +324,6 @@ void heroWindow::drawWindow(unsigned char update, int lowID, int highID)
             g_windowManager->updateScreen(m_x, m_y, m_width, m_height);
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\window.cpp:571
-// DC DrawWindowX redraws widgets, rescales the window origin through
-// Rescale and unconditionally sends a six-coordinate UpdateScreen for
-// the translated combat viewport. Complete's drawWindow at 0x5ff020
-// instead draws video and updates the client rectangle, optionally with
-// its shadow; the rescale/translated-viewport surface was removed.
-// The ordinary drawWindow source identity is retained separately.
-DC_ONLY(0x197690, 0xDC)
-void heroWindow::DrawWindowX(unsigned char update, int iLowID, int iHighID)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x005ff100, 0xBD)  // dc 0x19776c
 int heroWindow::saveBackground()
@@ -674,7 +656,7 @@ int CHeroWindowEx::windowHandler(message& msg)
 // body, not a header inline. Retail vtable slot 12 and CScenarioInfoDlg's
 // qualified call resolve to 0x559140 (xor eax,eax; ret 8), ICF-folded with
 // t_stdio_file_adapter::write; that existing claim remains the sole owner.
-DC_ONLY(0x197f48, 0x4)
+
 int CHeroWindowEx::onWidgetDeselect(int id, bool& exitFlag)
 {
     return 0;
@@ -770,21 +752,3 @@ void setWinText(heroWindow* win, int winId)
         }
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\window.cpp:68
-DC_ONLY(0x1981ac, 0x34)
-void* heroWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\window.cpp:969
-DC_ONLY(0x1981e0, 0x34)
-void* CHeroWindowEx::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

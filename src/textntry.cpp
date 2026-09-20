@@ -196,36 +196,6 @@ char textEntryWidget::getCharPressed(message* msg)
 // subclass that overrides OnKeyPress and IgnoreKey. That is also the
 // uniqueness proof for the two bodies below that it does NOT override:
 // slot 15's 0x5bac50 is referenced exactly once image-wide.
-#if 0  // @carcass
-
-// E:\gamedcs\textntry.cpp:38 / :44 / :50 - CTextEntrySave's ctor, Save
-// and IsSaved. All three are inlined into their single call sites
-// (SetAutoDraw / SaveBackground / Draw); the definitions live at the
-// top of this file. No retail row.
-DC_ONLY(0x16370c, 0x44)
-DC_ONLY(0x163750, 0x2C)
-DC_ONLY(0x16377c, 0xA)
-
-// E:\gamedcs\textntry.cpp:51
-DC_ONLY(0x163788, 0x34)
-void* CTextEntrySave::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\textntry.cpp:51
-DC_ONLY(0x1637bc, 0x18)
-void CTextEntrySave::~CTextEntrySave()
-{
-    // @stub
-}
-
-// The DC default constructor (line 60, dc 0x16298c, carcass at the top
-// of this file) has no retail row either: nothing in the image stores
-// 0x642d40 except the sixteen-argument constructor 0x5ba920.
-
-#endif  // @carcass
-
 // Retail .bss cell written here and referenced NOWHERE else in the
 // image - 0x1bb0fe is the only reloc against it in the whole reloc
 // table, and its two neighbours 0x697784/0x697788 are already other

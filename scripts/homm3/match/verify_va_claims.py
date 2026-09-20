@@ -24,9 +24,7 @@ matcher's inner loop):
                headers and inline bodies follow CodeView source order:
                the carcass preserves retail link order, and a function
                pasted into the wrong place breaks the order before it
-               breaks anything else. VA() only - DC_ONLY() carries
-               Dreamcast addresses and is being removed as functions get
-               retail claims, so it is deliberately not order-checked.
+               breaks anything else. Only retail VA() claims are order-checked.
 
 Known-backlog ratchet (the gruntz single_view shape): the violations
 that existed when the gate landed are frozen in

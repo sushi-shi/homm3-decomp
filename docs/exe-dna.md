@@ -397,6 +397,10 @@ callers, 16 flagged disjoint — review candidates, not yet demotions.
 
 ## The game tree (`carve gametree`)
 
+This historical export is no longer committed. The generator remains in
+`scripts/archive/carve/gametree.py`; its exports go to `build/game-tree/` and `build/retail-game-tree.csv`.
+The figures below describe the original analysis snapshot.
+
 With the Dreamcast side fully named and the dcmap ties in place, the source
 tree materializes: **141 compilands, one carcass file each**
 (`evidence/game-tree/`), functions in link order with original signatures

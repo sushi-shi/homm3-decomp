@@ -40,9 +40,6 @@
  *                                  never a compiler counter
  *   DATA_COMPGEN_GUARD(addr, name, owner)
  *                                  compiler-emitted static-init guard word
- *   DC_ONLY(off, cb)               evidenced only in the Dreamcast build
- *                                  (CodeView proc at .text offset/cb);
- *                                  makes NO claim about the retail image
  *   HOMM3_RELEASE_VERIFY(expr)      release-form invariant carrier; the
  *                                  expression is evaluated, like VERIFY, and
  *                                  must be supported by source-shape evidence
@@ -68,7 +65,6 @@
 #define DATA(addr) __attribute__((annotate("data:" #addr)))
 #define DATA_COMPGEN(addr, name, value) value
 #define DATA_COMPGEN_GUARD(addr, name, owner)
-#define DC_ONLY(off, cb)
 #define HOMM3_RELEASE_VERIFY(expression) static_cast<void>(expression)
 #define OVERRIDE override
 #define SIZE(type, bytes) \
@@ -81,7 +77,6 @@
 #define DATA(addr)
 #define DATA_COMPGEN(addr, name, value) value
 #define DATA_COMPGEN_GUARD(addr, name, owner)
-#define DC_ONLY(off, cb)
 #define HOMM3_RELEASE_VERIFY(expression) static_cast<void>(expression)
 #define OVERRIDE
 

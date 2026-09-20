@@ -131,20 +131,6 @@ void CSprite::resetPalette()
 #endif
 }
 
-#if 0  // @carcass
-
-// The DC-only mmdbf debug sink formats wchar_t text with wsprintfW and
-// wvsprintfW, then calls OutputDebugStringW (dc 0x72100, lines 43-50).
-// Complete imports wsprintfA, but none of these wide debug APIs.
-// E:\gamedcs\csprite.cpp:38
-DC_ONLY(0x72100, 0x5A)
-void mmdbf(const unsigned short* ptstrFormat)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // E:\gamedcs\csprite.cpp:226
 // DC 228 returns the unsigned-short table, not the bootstrap palette view.
 // Complete's 14-byte body retains the null/array-address conditional; the
@@ -611,52 +597,3 @@ const char* CSprite::getSequenceName(int type, int num)
     }
     return "?";
 }
-
-
-#if 0  // @carcass
-
-// DC SpriteDataDelete/Reload implement the removed Sp_loaded cache: delete
-// frees just the sequence tree and clears the external flag, while reload
-// reparses the DEF and recreates cached frames. Complete has no Sp_loaded
-// member: ResourceManager::getSprite (0x55c7b0) owns DEF loading, and sprite
-// disposal (0x55d1a0) releases frames through resource ownership. Its destructor
-// (0x47ba40) destroys the complete sprite. The ordinary clear() above remains
-// a different operation: it also deletes both palettes and the object mask.
-// E:\gamedcs\csprite.cpp:947
-DC_ONLY(0x73b10, 0x52)
-void CSprite::SpriteDataDelete()
-{
-    // @stub
-}
-
-// E:\gamedcs\csprite.cpp:998
-DC_ONLY(0x73bf4, 0x46C)
-void CSprite::SpriteDataReload()
-{
-    // @stub
-}
-
-
-
-
-
-
-
-
-
-
-// E:\gamedcs\csprite.cpp:86
-DC_ONLY(0x74548, 0x34)
-void* CSprite::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\csprite.cpp:142
-DC_ONLY(0x7457c, 0x34)
-void* CSequence::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

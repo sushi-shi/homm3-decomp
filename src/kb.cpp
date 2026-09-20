@@ -506,29 +506,7 @@ void creditsWait()
 
 #if 0  // @carcass
 
-// E:\gamedcs\kb.cpp:553
-DC_ONLY(0xdf840, 0x12)
-void earlyShutdown(const char* cTitle, const char* cBody)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:580
-DC_ONLY(0xdf854, 0xC6)
-void setupCDRom()
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:645 - promoted to a live claim (see below).
-
-// E:\gamedcs\kb.cpp:814
-DC_ONLY(0xdff5c, 0x86)
-void showCredits()
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:962
 // Located by the same PollSound..oldmain order-mapping (4532->7172 B);
 // WinMain's final call - the game main loop.
@@ -538,116 +516,25 @@ int oldmain()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:1841
-DC_ONLY(0xe130c, 0x2A4)
-int doNewGame()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:1962
-DC_ONLY(0xe15b0, 0x7E)
-int doCampaignWindow(unsigned char newGame)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:1988
-DC_ONLY(0xe1630, 0x110)
-int doSinglePlayerWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:2036
-DC_ONLY(0xe1740, 0x36)
-int doMultiPlayerWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:2059
-DC_ONLY(0xe1778, 0x1D8)
-int doLoadGame()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:2145
-DC_ONLY(0xe1950, 0x3E)
-int pickLoadGame()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:2279
-DC_ONLY(0xe1b94, 0x62)
-int waitHandler(message* msg)
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:2367
 // RETAIL_LOCATED(0x004f08d0, 0x20C): anchor-callee + dialog-global shape.
 // Its order-checked retail claim lives below; this row preserves DC source order.
-DC_ONLY(0xe1ccc, 0x118)
-int normalDialogHandler(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:2442
-DC_ONLY(0xe1de4, 0x74)
-void type_normal_dialog_frame::type_normal_dialog_frame(long _x, long _y, long _w, long _h, long _id, EGameResource _resource, long _qualifier)
-{
-    // @stub
-}
 
 // E:\gamedcs\kb.cpp:2452 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:2549 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:2630 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:2636 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:2720 - ordinary static helper reconstructed below.
-
-// E:\gamedcs\kb.cpp:2811
-DC_ONLY(0xe2808, 0x128)
-unsigned char getTeamNames(int player, char* sNames)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:2867
-DC_ONLY(0xe2930, 0x3A)
-void sendPlayerWon()
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:2878 - reconstructed above as the inline helper
 // retail expands at every DisplayLCWinLoss arm.
 
-// E:\gamedcs\kb.cpp:2888
-DC_ONLY(0xe29a8, 0xB1A)
-unsigned char displayVCWinLoss(VictoryConditionStruct* VictoryCondition, int* bGameWon, int* bGameLost, unsigned char remoteCheck)
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:3419 - ordinary helper reconstructed below.
-
 // E:\gamedcs\kb.cpp:3440 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:3566 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:3763 - reconstructed above as the source-static
 // retail expands into EarlySetup.
 
 // E:\gamedcs\kb.cpp:3798 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:3830
 #endif  // @carcass
 
@@ -659,7 +546,7 @@ unsigned char displayVCWinLoss(VictoryConditionStruct* VictoryCondition, int* bG
 // ShutDown), soundManager's is the header inline, and the window, input,
 // town and executive managers plus the AI turn driver are trivially
 // destructible.
-DC_ONLY(0xdf6d0, 0x170)
+
 static void deleteMainClasses()
 {
     if (g_unnamed69928c)
@@ -2032,7 +1919,7 @@ VA_COMPGEN(0x004f0b10, 0x5, IMPLICIT_DTOR, type_normal_dialog_frame)
 // An armed deadline that has run out answers DIALOG_RETURN_TIMEOUT for the
 // window; otherwise a deselect on one of the dialog's reply buttons is
 // turned into the window's answer.  The two picture choices of the
-// E:\gamedcs\kb.cpp:2452. Promoted from DC_ONLY on body evidence: a
+// E:\gamedcs\kb.cpp:2452. Located in retail on body evidence: a
 // two-byte-argument `ret 8` virtual whose `this` carries an
 // EGameResource at +0x38 and a long qualifier at +0x3c, dispatched
 // through a 37-entry byte index over exactly the EGameResource domain
@@ -2288,7 +2175,7 @@ void playerDead(int whichPlayer)
 // 93.4214% while preserving all 44 exact kb siblings. Direct repeated
 // g_game indexing was 88.5571%; pointer/reference forms agree. The joined
 // predicate follows the DC scopes even where its score is byte-flat.
-DC_ONLY(0xe24a0, 0x366)
+
 static void checkPlayerLoss()
 {
     if (!g_thisNetGotAdventureControl)
@@ -2871,7 +2758,7 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
 // full-width mask. Keep the canonical GetTeamMask byte return and consume
 // it as int here; caching the receiver or keeping a byte local loses those
 // homes. No local type was recorded for this older DC helper.
-DC_ONLY(0xe34c4, 0x92)
+
 int getEnemyCount()
 {
     int enemyCount = 0;
@@ -3221,7 +3108,6 @@ VA_COMPGEN(0x004f3940, 0xA9, IMPLICIT_DTOR, combatManager)
 VA_COMPGEN(0x004f39f0, 0x6D, IMPLICIT_DTOR, advManager)
 
 // E:\gamedcs\kb.cpp:4187; Complete's body is empty (see kb.h).
-DC_ONLY(0xe4530, 0x78)
 void earlyShutDownSystem()
 {
 }
@@ -3359,16 +3245,7 @@ static int checkMem()
 #if 0  // @carcass
 
 // E:\gamedcs\kb.cpp:3970 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:4102 - promoted to a live claim (see below).
-
-// E:\gamedcs\kb.cpp:4168
-DC_ONLY(0xe44f0, 0x40)
-void memError()
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:4197
 // Located as AppWndProc's WM_CLOSE gate (homm2 kbwin.cpp calls
 // GameUnsaved there); 52 B on DC vs 53 here, directly before
@@ -3402,38 +3279,13 @@ void cleanUpMenus()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:4781
-DC_ONLY(0xe519c, 0x76)
-int getNextHumanPlayer(int start)
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:4806 - promoted to a live claim (see below).
-
-// E:\gamedcs\kb.cpp:4855
-DC_ONLY(0xe52a8, 0x10)
-int checkMem()
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:4897
 // Promoted to the live retail claim below.
 
 // E:\gamedcs\kb.cpp:5206 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:5478 - canonical definition follows getQuickviewSize below.
-
 // E:\gamedcs\kb.cpp:5488 - promoted to a live claim (see below).
-
-// E:\gamedcs\kb.cpp:5531
-DC_ONLY(0xe60dc, 0xC14)
-void doNormalDialog(TNormalDialogInfo dialog_info)
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:5909
 // RETAIL_LOCATED(0x004f7690, 0x312)  // anchor-global, dc 0xe6cf0
 void extendedDialog(const char* text, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* resources, long x, long y, long timeout)
@@ -3455,124 +3307,7 @@ unsigned short* getMapExtraPtr(int x, int y, int z)
     // @stub
 }
 
-
-
-
-
-
-
-
-
-
-
-
-// E:\gamedcs\kb.cpp:542
-DC_ONLY(0xe70ac, 0x34)
-void* searchArray::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:542
-DC_ONLY(0xe70e0, 0x34)
-void* combatManager::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:542
-DC_ONLY(0xe7114, 0x34)
-void* advManager::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:542
-DC_ONLY(0xe7148, 0x34)
-void* highScoreManager::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:542
-DC_ONLY(0xe717c, 0x34)
-void* soundManager::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:542
-DC_ONLY(0xe71b0, 0x54)
-void combatManager::~combatManager()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:542
-DC_ONLY(0xe7204, 0x30)
-void advManager::~advManager()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:542
-DC_ONLY(0xe7234, 0x18)
-void std::set<enum SpellID,std::less<enum SpellID>,std::allocator<enum SpellID> >::~set<enum SpellID,std::less<enum SpellID>,std::allocator<enum SpellID> >()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:1837
-DC_ONLY(0xe724c, 0x194)
-playerData* playerData::operator=(const playerData* __that)
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:2445 - both promoted to live claims (see below).
-
-// E:\gamedcs\kb.cpp:5466
-DC_ONLY(0xe742c, 0x34)
-void TNormalDialogInfo::TNormalDialogInfo()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:5466
-DC_ONLY(0xe7460, 0x30)
-void TNormalDialogInfo::~TNormalDialogInfo()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:5466
-DC_ONLY(0xe7490, 0x24)
-void type_dialog_icon::type_dialog_icon()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:5466
-DC_ONLY(0xe74b4, 0x24)
-void type_dialog_icon::~type_dialog_icon()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:5528
-DC_ONLY(0xe74d8, 0x84)
-void TNormalDialogInfo::TNormalDialogInfo(const TNormalDialogInfo* __that)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:5528
-DC_ONLY(0xe755c, 0x60)
-void type_dialog_icon::type_dialog_icon(const type_dialog_icon* __that)
-{
-    // @stub
-}
-
 #endif  // @carcass
 
 VA(0x004f3a60, 0x4D)  // dc 0xe3dfc
@@ -4645,7 +4380,7 @@ void getQuickviewSize(const char* text, int* width, int* height)
 // DC kb.cpp:5478..5479 returns gpNormalDialogWindow. EventWindowHandler's
 // retail loads at 0x4f0fc0 corroborate the same getter expansion. Keep the
 // ordinary helper in its owning TU and the DC source order after sizing.
-DC_ONLY(0xe5f60, 0x6)
+
 TDialogBox* getCurrentNormalDialog()
 {
     return g_normalDialogWindow;

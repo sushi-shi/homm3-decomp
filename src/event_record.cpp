@@ -68,13 +68,11 @@ void type_event_record::replay(unsigned char draw)
 {
 }
 
-
 // E:\gamedcs\event_record.cpp:88
 // Retail base vtable slot5 folds to the empty ret body at0x5bc690.
 void type_event_record::undo()
 {
 }
-
 
 // E:\gamedcs\event_record.cpp:96
 // NO RETAIL BODY: VC6 expands this constructor at record_move and
@@ -91,17 +89,6 @@ inline type_record_move_hero::type_record_move_hero(hero* currentHero,
     m_source = currentHero->getLocation();
     m_destination = destination;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:108
-DC_ONLY(0x8c7c0, 0x26)
-type_event_record* type_record_move_hero::create()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // Slot 0 of TEN derived vtables at once: 0x63de8c 0x63dea4 0x63debc 0x63ded4
 // 0x63deec 0x63df04 0x63df1c 0x63df34 0x63df4c and 0x63df64 all name this
@@ -175,7 +162,6 @@ void type_record_move_hero::replay(unsigned char draw)
 }
 
 // E:\gamedcs\event_record.cpp:186
-
 // Slot 5 of type_record_move_hero's retail vtable (0x63de8c), shared with
 // type_record_teleport. The hero's `valid` byte is sampled BEFORE
 // restore_cell clears it, which is what the leading `mov bl,[hero+6]` proves.
@@ -201,17 +187,6 @@ inline type_record_teleport::type_record_teleport(hero* currentHero,
     : type_record_move_hero(currentHero, currentHero->m_facing, destination)
 {
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:211
-DC_ONLY(0x8cac4, 0x26)
-type_event_record* type_record_teleport::create()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x0049a980, 0x27)  // dc 0x8cac4
 type_event_record* type_record_teleport::create()
@@ -244,24 +219,12 @@ inline type_record_claim_mine::type_record_claim_mine(long id,
     m_oldOwner = g_game->m_mines[id].m_playerOwner;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:247
-DC_ONLY(0x8cb88, 0x26)
-type_event_record* type_record_claim_mine::create()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // E:\gamedcs\event_record.cpp:255
 // Retail derived vtable slot1 folds to 0x56e3d0: mov eax,3; ret.
 type_event_record_type type_record_claim_mine::getType() const
 {
     return RECORD_CLAIM_MINE;
 }
-
 
 VA(0x0049aa40, 0x27)  // dc 0x8cb88
 type_event_record* type_record_claim_mine::create()
@@ -331,17 +294,6 @@ inline type_record_claim_town::type_record_claim_town(long id,
     m_oldOwner = g_game->m_towns[id].m_owner;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:331
-DC_ONLY(0x8cd5c, 0x26)
-type_event_record* type_record_claim_town::create()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // E:\gamedcs\event_record.cpp:339
 // type_record_claim_town::get_type has no retail body of its own: slot 1 of
 // its vtable (0x63ded4) is 0x16ebc0, outside this compiland's span, where
@@ -351,7 +303,6 @@ type_event_record_type type_record_claim_town::getType() const
 {
     return RECORD_CLAIM_TOWN;
 }
-
 
 VA(0x0049abf0, 0x27)  // dc 0x8cd5c
 type_event_record* type_record_claim_town::create()
@@ -392,17 +343,6 @@ inline type_record_hide_boat::type_record_hide_boat(boat* currentBoat,
     m_occupyingHero = occupyingHero;
     m_previousOccupyingHero = currentBoat->m_occupyingHero;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:384
-DC_ONLY(0x8ceb0, 0x26)
-type_event_record* type_record_hide_boat::create()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x0049acc0, 0x27)  // dc 0x8ceb0
 type_event_record* type_record_hide_boat::create()
@@ -508,17 +448,6 @@ inline type_record_show_boat::type_record_show_boat(boat* currentBoat,
     m_location = location;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:458
-DC_ONLY(0x8d044, 0x26)
-type_event_record* type_record_show_boat::create()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x0049af00, 0x27)  // dc 0x8d044
 type_event_record* type_record_show_boat::create()
 {
@@ -577,23 +506,6 @@ void type_record_show_boat::undo()
     m_currentBoat->m_y = m_previousLocation.m_y;
     m_currentBoat->m_z = m_previousLocation.m_z;
 }
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:533
-DC_ONLY(0x8d220, 0x70)
-void type_record_erase::type_record_erase(type_point _location, long _object_id, unsigned long _extra_info, long _object_index)
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:544
-DC_ONLY(0x8d290, 0x26)
-type_event_record* type_record_erase::create()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 inline type_record_erase::type_record_erase(type_point location,
                                             long objectId,
@@ -667,23 +579,6 @@ void type_record_erase::undo()
     cell->m_extraInfo = m_extraInfo;
     cell->m_objectIndex = m_objectIndex;
 }
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:628
-DC_ONLY(0x8d4b0, 0x50)
-void type_record_hide_hero::type_record_hide_hero(hero* _hero, char _owner)
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:638
-DC_ONLY(0x8d500, 0x26)
-type_event_record* type_record_hide_hero::create()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // E:\gamedcs\event_record.cpp:646
 // Retail derived vtable slot1 folds to 0x5721f0: mov eax,8; ret.
@@ -691,7 +586,6 @@ type_event_record_type type_record_hide_hero::getType() const
 {
     return RECORD_HIDE_HERO;
 }
-
 
 inline type_record_hide_hero::type_record_hide_hero(hero* who, char newOwner,
                                                     unsigned char townGarrison)
@@ -780,23 +674,6 @@ void type_record_hide_hero::undo()
     if (!m_townGarrison)
         m_currentHero->obscureCell();
 }
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:725
-DC_ONLY(0x8d708, 0xB6)
-void type_record_show_hero::type_record_show_hero(hero* _hero, char _owner, type_point _location, unsigned char _is_boat)
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:736
-DC_ONLY(0x8d7c0, 0x26)
-type_event_record* type_record_show_hero::create()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 inline type_record_show_hero::type_record_show_hero(hero* who, char newOwner,
                                                     type_point location,
@@ -899,17 +776,6 @@ type_record_player_death::type_record_player_death(char playerId)
     m_extra = playerId;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:850
-DC_ONLY(0x8dac0, 0x26)
-type_event_record* type_record_player_death::create()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x0049ba00, 0x27)  // dc 0x8dac0
 type_event_record* type_record_player_death::create()
 {
@@ -956,17 +822,6 @@ void type_record_player_death::replay(unsigned char draw)
 void type_record_player_death::undo()
 {
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:912. NO RETAIL BODY: create expands it.
-DC_ONLY(0x8dc24, 0x8C)
-void type_record_shroud::type_record_shroud()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA_COMPGEN(0x0049bbd0, 0x21, SCALAR_DELETING_DTOR, type_record_shroud)
 
@@ -1150,7 +1005,6 @@ void game::recordPlayerDeath(char playerId)
 {
     m_eventRecords.push_back(new type_record_player_death(playerId));
 }
-
 
 VA(0x0049cf50, 0x20B)  // dc 0x8e2f8
 void game::recordTeleport(hero* who, type_point destination)
@@ -1376,84 +1230,6 @@ void game::playRecordedEvents()
     g_advManager->completeDraw(0);
     g_advManager->updateScreen(0, 0);
 }
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:1367
-DC_ONLY(0x8ea88, 0x46)
-unsigned char game::replayAvailable()
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:1380
-DC_ONLY(0x8ead0, 0xF4)
-unsigned char game::loadRecordedEvents(void* infile)
-{
-    // @stub
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// E:\gamedcs\event_record.cpp:38
-DC_ONLY(0x8f330, 0x34)
-void* type_event_record::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:913
-DC_ONLY(0x8f364, 0x34)
-void* type_record_shroud::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:913
-DC_ONLY(0x8f398, 0x28)
-void type_record_shroud::~type_record_shroud()
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:953
-DC_ONLY(0x8f3c0, 0x28)
-void type_record_shroud::type_shroud_change::type_shroud_change()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x0049da70, 0x41)
 unsigned char game::replayAvailable() const

@@ -181,7 +181,7 @@ void iconWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 }
 
 // E:\gamedcs\iconwdgt.cpp:257
-// Promoted from DC_ONLY 2026-08-08 on four independent corroborations:
+// Located in retail 2026-08-08 on four independent corroborations:
 // the row is inside iconwdgt.obj's own carve span, it holds the DC
 // roster's handle_click slot in order (immediately before GetRealWidth
 // and GetRealHeight, exactly as at 0x4eab20 / 0x4eab30), the iconWidget
@@ -352,7 +352,7 @@ void iconWidget::setIconFrame(int newFrame)
 // Dreamcast line 447 stores new_sequence to seqId and line 448 clears Frame;
 // Main's retail-inlined WIDGET_SET_ICON_SEQUENCE arm corroborates the order:
 // its six-instruction block is exact only with this source shape.
-DC_ONLY(0xd9ca4, 0x8)
+
 void iconWidget::setIconSequence(int newSequence)
 {
     m_seqId = newSequence;
@@ -360,7 +360,6 @@ void iconWidget::setIconSequence(int newSequence)
 }
 
 // E:\gamedcs\iconwdgt.cpp:452
-DC_ONLY(0xd9cac, 0x32)
 void iconWidget::setPalette(const char* paletteName)
 {
     TPalette16* newPalette = ResourceManager::getPalette(paletteName);
@@ -371,7 +370,6 @@ void iconWidget::setPalette(const char* paletteName)
 }
 
 // E:\gamedcs\iconwdgt.cpp:462
-DC_ONLY(0xd9ce0, 0x84)
 void iconWidget::setPlayerPaletteColors(int whichPlayer)
 {
     ::setPlayerPaletteColors(m_sprite->getPalette(), whichPlayer);
@@ -469,14 +467,3 @@ void iconWidget::nextRandomSiegeEngineFrame()
     } while (m_sprite->getNumFrames(chosen) <= 0);
     setIconSequence(chosen);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\iconwdgt.cpp:41
-DC_ONLY(0xda018, 0x34)
-void* iconWidget::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

@@ -186,37 +186,3 @@ static void initializeSSkillTraits(int id, const TSpreadsheetResource::TStringVe
             secondarySkillLevelNames[id][level].get();
     }
 }
-
-#if 0  // @carcass -- withdrawn inlined helpers and cinit rows
-
-// E:\gamedcs\terrain.h:70
-
-// E:\gamedcs\herodefs.cpp:391
-DC_ONLY(0xd60d4, 0x8)
-void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr()
-{
-    // @stub
-}
-
-// E:\gamedcs\herodefs.cpp:394
-DC_ONLY(0xd60dc, 0x18)
-void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr()
-{
-    // @stub
-}
-
-// E:\gamedcs\herodefs.cpp:396
-DC_ONLY(0xd60f4, 0x4)
-void `anonymous namespace'::TAutoStrPtr::set(char* pStr)
-{
-    // @stub
-}
-
-// E:\gamedcs\herodefs.cpp:398
-DC_ONLY(0xd60f8, 0x4)
-char* `anonymous namespace'::TAutoStrPtr::get()
-{
-    // @stub
-}
-
-#endif  // @carcass

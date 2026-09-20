@@ -53,49 +53,6 @@ int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long
     return e->m_id == 0;
 }
 
-#if 0  // @carcass
-
-// Console spatial-focus family: FocusTheWidget invokes the four rectangle
-// scans below and moves the controller pointer. Complete's mouse bridge
-// 0x4ec290 receives native WM_MOUSE coordinates; Main0x4ec560 is empty.
-// The retired controller dispatch is documented alongside DC_input.cxx.
-// E:\gamedcs\inputmgr.cpp:274
-DC_ONLY(0xdcc4c, 0x7EC)
-void inputManager::FocusTheWidget(int direction)
-{
-    // @stub
-}
-
-// E:\gamedcs\inputmgr.cpp:523
-DC_ONLY(0xdd438, 0x164)
-int inputManager::CheckLeft(int x, int y, int width, int height, int id, unsigned char nd)
-{
-    // @stub
-}
-
-// E:\gamedcs\inputmgr.cpp:586
-DC_ONLY(0xdd59c, 0x166)
-int inputManager::CheckRight(int x, int y, int width, int height, int id, unsigned char nd)
-{
-    // @stub
-}
-
-// E:\gamedcs\inputmgr.cpp:650
-DC_ONLY(0xdd704, 0x13C)
-int inputManager::CheckUp(int x, int y, int width, int height, int id, unsigned char nd)
-{
-    // @stub
-}
-
-// E:\gamedcs\inputmgr.cpp:714
-DC_ONLY(0xdd840, 0x13C)
-int inputManager::CheckDown(int x, int y, int width, int height, int id, unsigned char nd)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x004ec290, 0x1CC)  // dc 0xdcaa0
 int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long longParam)
 {
@@ -443,39 +400,3 @@ void inputManager::forceMouseMove()
         m_head = (m_head + 1) % 64;
     m_bufferBusy = 0;
 }
-
-#if 0  // @carcass
-
-// VRKeyboard is DC's CAdvPopup-derived on-screen character-button keyboard.
-// Complete's editor handles physical keys in textEntryWidget::onKeyPress
-// 0x5bac50 and inputManager::asciiConvert0x4ec6f0; it has no second popup
-// keyboard family after the inputmgr band ending at ForceMouseMove0x4ecc00.
-// E:\gamedcs\inputmgr.cpp:1169
-DC_ONLY(0xde0e8, 0xC48)
-void VRKeyboard::VRKeyboard(textWidget* w, int _min, int _max)
-{
-    // @stub
-}
-
-// E:\gamedcs\inputmgr.cpp:1225
-DC_ONLY(0xded30, 0x62)
-void VRKeyboard::~VRKeyboard()
-{
-    // @stub
-}
-
-// E:\gamedcs\inputmgr.cpp:1231
-DC_ONLY(0xded94, 0x138)
-int VRKeyboard::windowHandler(message& msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\inputmgr.cpp:1219
-DC_ONLY(0xdeecc, 0x34)
-void* VRKeyboard::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

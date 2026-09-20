@@ -1900,61 +1900,6 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
         m_options->read(infile);
 }
 
-#if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
-// E:\gamedcs\customcampaign.cpp:29
-DC_ONLY(0x7cc8c, 0x3E)
-void TCustomCampaignTraits::init()
-{
-    // @stub
-}
-
-// E:\gamedcs\customcampaign.cpp:55
-DC_ONLY(0x7cccc, 0x80)
-void TCustomCampaignTraits::set(int _exp_cap, char _num_incoming_heroes, char _num_outgoing_heroes, TCarryOverPoolNumber _incoming_hero_pool, TCarryOverPoolNumber _outgoing_hero_pool, TArtifact _art_req_1, char _guard_bit_1, TArtifact _art_req_2, char _guard_bit_2, char _pos1, char _pos2, char _difficulty)
-{
-    // @stub
-}
-
-// E:\gamedcs\customcampaign.cpp:70
-DC_ONLY(0x7cd4c, 0x400)
-void InitCampaignMapTraits([]* map_traits)
-{
-    // @stub
-}
-
-// DC clear, dc 0x7d14c, resets the 0x70d4-byte SCampaign's fixed filename,
-// availability/progress arrays, map_traits[8][32] and both carry-over pools.
-// Complete's 0x7c-byte SCampaign constructor (0x489500) initializes scalar
-// defaults and its STL members; selectCampaign (0x489590) initializes dynamic
-// per-scenario progress from a loaded header. The removed fixed tables cannot
-// be recreated by a current clear() wrapper. Legacy saves are promoted by load.
-// E:\gamedcs\customcampaign.cpp:112
-DC_ONLY(0x7d14c, 0x9E)
-void SCampaign::clear()
-{
-    // @stub
-}
-
-// DC clear_carryover_pool, dc 0x7d1ec, memsets one 0x23a0-byte hero[8]
-// pool at +0x2988 to -1, resets assigned_carryover[8] and zeros its count.
-// Complete owns vector<vector<hero> > and artifact vectors, whose constructors,
-// clear/erase and destructors manage live objects. The fixed two-pool sentinel
-// reset is retired; SCampaign::load (0x48a310) converts old packed pool records.
-// E:\gamedcs\customcampaign.cpp:140
-DC_ONLY(0x7d1ec, 0x40)
-void SCampaign::clear_carryover_pool(TCarryOverPoolNumber pool_num)
-{
-    // @stub
-}
-
-// E:\gamedcs\customcampaign.cpp:147
-DC_ONLY(0x7d22c, 0x148)
-void SCampaign::doPreLoadCustomization()
-{
-    // @stub
-}
-#endif
-
 VA(0x004883d0, 0x21)  // anchor-caller(ScenarioStruct::Read's type-3 arm)
 TCampaignStartHeroOption::TCampaignStartHeroOption()
 {
@@ -3144,22 +3089,6 @@ void SCampaign::applyBriefingChoice(int option)
 }
 
 VA_COMPGEN(0x0048C500, 0xA3, VECTOR_ERASE, hero_vector)
-
-#if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
-// DC give_custom_items, dc 0x7d420, dispatches on fixed campaign/map/briefing
-// choices and the old carryover_artifact requirement. Complete reads starting
-// options from each ScenarioStruct (0x487e40); the bonus factory (0x485190)
-// constructs types 0..7, and TCampaignStartBonusOption::apply (0x485380) invokes
-// the selected bonus's virtual apply(player). Those file-owned polymorphic
-// records replace this hard-coded nullary campaign interface.
-// E:\gamedcs\customcampaign.cpp:222
-DC_ONLY(0x7d420, 0x15E4)
-void SCampaign::give_custom_items()
-{
-    // @stub
-}
-
-#endif
 
 // COMDAT pairing: std::_Sort<hero, CrossoverHeroStronger>, agreement 0.972.
 // The map hero placeholders' own sort, instantiated by

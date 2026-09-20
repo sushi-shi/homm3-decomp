@@ -414,8 +414,6 @@ void button::vslot12(int on)
     widget::vslot12(on);
 }
 
-
-
 // E:\gamedcs\button.cpp:488 - textButton::`scalar deleting destructor'
 // (dc 0x57e14). Slot 0 of textButton's vtable 0x63bb88; the 33-byte
 // row calls ??1textButton (0x456bf0) and carries the flags&1 tail.
@@ -488,7 +486,6 @@ type_func_button::type_func_button(const type_icon_definition& def, int id,
     m_handler = handler;
 }
 
-
 // E:\gamedcs\button.cpp:559 - type_func_button::`scalar deleting
 // destructor' (dc 0x57e48). Slot 0 of type_func_button's vtable
 // 0x63bbbc; the 33-byte row calls ??1type_func_button (0x456db0) and
@@ -517,31 +514,6 @@ int type_func_button::main(message& msg)
     }
     return result;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\button.cpp:51
-DC_ONLY(0x57de0, 0x34)
-void* button::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\button.cpp:488
-DC_ONLY(0x57e14, 0x34)
-void* textButton::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\button.cpp:559
-DC_ONLY(0x57e48, 0x34)
-void* type_func_button::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 DATA(0x00694da4)
 sample* button::s_clickSample;

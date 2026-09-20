@@ -1210,38 +1210,6 @@ TSellCreatureWindow::~TSellCreatureWindow()
     }
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\tradpost.cpp:618
-DC_ONLY(0x1883f0, 0x62)
-void countMarkets()
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:629
-DC_ONLY(0x188454, 0xC4)
-void doArtifactMerchants()
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:648
-DC_ONLY(0x188518, 0x126)
-void doFreelancersGuild()
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:667
-DC_ONLY(0x188640, 0x5C)
-void doMarketplace()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // --- the market entry points ------------------------------------------
 // Six thin setters seed one block of file-static market state and tail into
 // DoMarket 0x5ea130. Reading them side by side is what identifies them:
@@ -2750,7 +2718,7 @@ double getTradeRatio(EGameResource source, EGameResource dest, double efficiency
 // bInLeftDenominated, iInMaxUnitsToTrade. DC 2184..2197 proves both
 // rounded ratios and the resource-limited maximum. Complete expands this
 // ordinary helper in Update; the discarded maximum then disappears.
-DC_ONLY(0x18ad48, 0x140)
+
 void TTradeResourceWindow::computeTradeRatios(int inLeftResource,
     int inRightResource, int* inTradeRatio, int* inLeftDenominated,
     int* inMaxUnitsToTrade)

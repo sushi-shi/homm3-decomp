@@ -537,20 +537,3 @@ void mouseManager::showSystemCursor(bool showIt)
         ShowCursor(0);
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\mousemgr.cpp:291
-// Canonical constructor and VA are on the source-local class above.
-
-// E:\gamedcs\mousemgr.cpp:298
-// Canonical destructor and VA are on the source-local class above.
-
-// E:\gamedcs\mousemgr.cpp:332
-DC_ONLY(0xff818, 0x34)
-void* mouseManager::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

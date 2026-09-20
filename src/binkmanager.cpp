@@ -46,7 +46,6 @@ BinkManager::BinkManagerStruct BinkManager::g_playingBink;
 // Keep the active empty definition as the canonical positive DC source body;
 // Complete can fold or discard it because no Windows caller survives.
 // E:\gamedcs\binkmanager.cpp:123
-DC_ONLY(0x50a80, 0x4)
 void BinkManager::setPixelFormat(unsigned long redMask, unsigned long greenMask,
                                  unsigned long blueMask)
 {

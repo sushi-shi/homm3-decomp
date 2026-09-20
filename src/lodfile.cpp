@@ -14,21 +14,10 @@ void LODFile::clear()
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\lodfile.cpp:53
-DC_ONLY(0xe90c0, 0x3E)
-int LODFile::GetFileSize()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // E:\gamedcs\lodfile.cpp:72
 // DC's getDataPtr is an ordinary helper called at pointAt line 431.
 // The PC expansion seeks the archive stream before returning its handle.
-DC_ONLY(0xe9100, 0x54)
+
 void* LODFile::getDataPtr(const char* itemName)
 {
     if (!m_opened)
@@ -120,35 +109,6 @@ char* LODFile::getErrorString(int lodError)
     default: return "LOD File: Not a valid error code.";
     }
 }
-
-#if 0  // @carcass
-
-
-// E:\gamedcs\lodfile.cpp:125 - promoted to a live claim above.
-
-
-// E:\gamedcs\lodfile.cpp:226
-// Promoted to a live definition below; retail inlines it into open's resize.
-
-// E:\gamedcs\lodfile.cpp:240 / 252 / 266 - promoted to live claims below.
-
-// E:\gamedcs\lodfile.cpp:277
-// Promoted to a live claim below.
-
-// E:\gamedcs\lodfile.cpp:341
-DC_ONLY(0xe955c, 0xF6)
-void LODFile::set_filemap(unsigned char on)
-{
-    // @stub
-}
-
-
-
-// E:\gamedcs\lodfile.cpp:430 - promoted to a live claim below.
-
-// E:\gamedcs\lodfile.cpp:452 - promoted to a live claim below.
-
-#endif  // @carcass
 
 // E:\gamedcs\lodfile.cpp:226.  DC's seven source rows prove these five
 // stores; retail repeats them exactly in open's vector-resize temporary.

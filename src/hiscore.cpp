@@ -42,7 +42,6 @@ int highScoreWindowHandler(message& msg);
 // The dialog methods originate in hiscore.cpp; their declarations retain
 // the default branch's hiscore.h location.
 
-
 // Original: CHighScoreEdit::OnNextEdit; hiscore.cpp:225, dc 0xd8e08.
 // Retail CHighScoreEdit vtable 0x63ebf4 shares slots 19/20 with CMPEdit
 // (0x510850/0x510870), whose two edit links have the same offsets.
@@ -70,7 +69,7 @@ void CHighScoreEdit::setFocus(bool state)
 // Retail's proven CHeroWindowEx is four bytes wider, putting them at
 // +0x50/+0x54/+0x58; GetRolloverWidget 0x4e97f0 directly confirms the
 // last shifted offset.
-DC_ONLY(0xd8ebc, 0x290)
+
 inline CHSInputDlg::CHSInputDlg(int maxChars)
     : CHeroWindowEx(284, 194, 232, 212, 0x12)
 {
@@ -113,7 +112,7 @@ inline CHSInputDlg::CHSInputDlg(int maxChars)
 // OnWidgetDeselect names this ordinary helper at DC338; retail expands it.
 // Its retained DC public is QAA_NXZ (bool); SH4 debug types expose the
 // underlying byte as unsigned char. Preserve the public return type.
-DC_ONLY(0xd91cc, 0x38)
+
 bool CHSInputDlg::onOK()
 {
     if (m_field1->m_status & widget::WIDGET_ACTIVE) {
@@ -444,7 +443,7 @@ THighScoreWindow::THighScoreWindow()
 
 // DC941/943 owns this update/dialog pair. ViewHiScore calls the ordinary
 // helper at DC734; its retail body contains the corresponding expansion.
-DC_ONLY(0xd8400, 0x22)
+
 void THighScoreWindow::doModal()
 {
     update();
@@ -693,176 +692,6 @@ int highScoreWindowHandler(message& msg)
     }
     return MESSAGE_DISPATCH_CONSUME;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\hiscore.cpp:615
-DC_ONLY(0xd7a08, 0xC4)
-void highScoreManager::resetHighScores()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:637
-DC_ONLY(0xd7acc, 0x3A)
-void highScoreManager::highScoreManager()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:648
-DC_ONLY(0xd7b08, 0x20)
-void highScoreManager::~highScoreManager()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:658
-DC_ONLY(0xd7b28, 0x5E)
-int highScoreManager::Open(int newPriority)
-{
-    // @stub
-}
-
-
-
-// E:\gamedcs\hiscore.cpp:732
-DC_ONLY(0xd7bd0, 0x22)
-void highScoreManager::viewHiScore()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:738
-DC_ONLY(0xd7bf4, 0x46)
-void WriteHighScores()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:772
-DC_ONLY(0xd7c3c, 0x1D0)
-int highScoreManager::addScoreToHighScore(int iScore, int iDays, int iDiffRating, int iHighScoreType, const char* cLand)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:837
-DC_ONLY(0xd7e0c, 0x2E)
-int highScoreManager::getMonType(int iScore, int iScoreType)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:858
-DC_ONLY(0xd7e3c, 0x5C4)
-void THighScoreWindow::THighScoreWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:953
-DC_ONLY(0xd8424, 0x76)
-void THighScoreWindow::~THighScoreWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:969
-DC_ONLY(0xd849c, 0x3AC)
-void THighScoreWindow::update()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:1014
-DC_ONLY(0xd8848, 0x126)
-void UpdateCreatures()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:1034
-DC_ONLY(0xd8970, 0x3A4)
-int highScoreWindowHandler(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:179
-DC_ONLY(0xd8d2c, 0xA0)
-void CHighScoreEdit::CHighScoreEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:195
-DC_ONLY(0xd8dcc, 0x3C)
-int CHighScoreEdit::onKeyPress(message* msg)
-{
-    // @stub
-}
-
-
-
-
-// E:\gamedcs\hiscore.cpp:256
-DC_ONLY(0xd8e70, 0x34)
-void* CHighScoreEdit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:256
-DC_ONLY(0xd8ea4, 0x18)
-void CHighScoreEdit::~CHighScoreEdit()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:329
-DC_ONLY(0xd914c, 0x44)
-void CHSInputDlg::~CHSInputDlg()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:334
-DC_ONLY(0xd9190, 0x3C)
-int CHSInputDlg::onWidgetDeselect(int id, bool& bExitFlag)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:369
-DC_ONLY(0xd9204, 0x6)
-textWidget* CHSInputDlg::getRolloverWidget()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:371
-DC_ONLY(0xd920c, 0x88)
-int CHSInputDlg::windowHandler(message& msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:382
-DC_ONLY(0xd9294, 0x34)
-void* CHSInputDlg::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:929
-DC_ONLY(0xd92c8, 0x34)
-void* THighScoreWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // COMDAT pairing: vector<widget*>::reserve, agreement 0.993.
 VA_COMPGEN(0x004ea630, 0x9F, VECTOR_RESERVE, widget)

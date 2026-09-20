@@ -1207,7 +1207,6 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
 }
 
 // E:\gamedcs\cmbtmgr.cpp:2364
-
 // The body is a start-of-turn hook in two halves. The first is the
 // combination-artifact auto-cast: while the acting side's field_54b0
 // latch is up and that side HAS a hero, five spells are offered, each
@@ -1645,7 +1644,7 @@ float combatManager::computeDamageModifier(int attack, int defense)
 // Dreamcast cmbtmgr.cpp:2738..2752. Complete expands this ordinary helper
 // into CalculateGainedExperience. The helper owns the stack loop, both
 // army::Is calls (line 2745), and the defeated-hero bonus (2749/2750).
-DC_ONLY(0x60220, 0xF8)
+
 int combatManager::experienceValueOfStack(int whichGroup)
 {
     int total = 0;
@@ -2832,7 +2831,6 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
 }
 
 // E:\gamedcs\cmbtmgr.cpp:4158
-
 // The body is NOT a switch - `spellEffect` is only ever compared with
 // -1 and used as a twelve-byte index into akSpellEffectTraits. What it
 // is instead is eleven `for(side) for(slot)` walks over armies[2][21],
@@ -3289,7 +3287,7 @@ void combatManager::getMissileStartingPosition(int armyType, int x, int y, int f
 // DC's const-this record and lines 4675/4680/4686 prove the side check and
 // both canonical HasArmy calls. Complete expands this ordinary helper in
 // HexIsBlocked; its two cell/body tests are the same retail operands.
-DC_ONLY(0x63268, 0x5A)
+
 unsigned char combatManager::doorCanBeLowered() const
 {
     if (m_currentSide != 1)
@@ -3605,26 +3603,6 @@ unsigned char combatManager::checkObstacleAttacks(army* thisArmy,
     }
     return attacked;
 }
-
-#if 0  // @carcass
-
-
-
-
-
-
-
-
-
-
-// E:\gamedcs\cmbtmgr.cpp:893
-DC_ONLY(0x63a88, 0x34)
-void* CNetMsgHandlerPause::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA_COMPGEN(0x0046aeb0, 0x2E4, VECTOR_INSERT_COUNT, TObstacle)
 VA_COMPGEN(0x0046b1a0, 0x3B, VECTOR_UCOPY, TObstacle)

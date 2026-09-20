@@ -353,24 +353,6 @@ void town::setSummoningGenerator()
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\town.cpp:779
-DC_ONLY(0x165da4, 0xFC)
-void town::setSummoningGenerator()
-{
-    // @stub
-}
-
-// E:\gamedcs\town.cpp:798
-DC_ONLY(0x165ea0, 0x568)
-void town::applySpecialBuildingEffect(hero* townHero)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x005bd8e0, 0x551)  // dc 0x165ea0
 void town::applySpecialBuildingEffect(hero* townHero)
 {
@@ -1231,7 +1213,6 @@ void showCreatureRewards(const town* thisTown,
 static const int g_rewardDialogBatch = 8;
 
 // E:\gamedcs\town.cpp:1793
-
 // Still open: branch topology #12 lands one block off (the D3
 // jump-threading class - why-branch's catalog found no applicable
 // lever). Restoring the two source-proven HasBuilding calls is byte-flat
@@ -1834,7 +1815,6 @@ unsigned char town::initializeBuildingCostsTables()
     sheet->dispose();
     return 1;
 }
-
 
 // COMDAT pairing: bitset<48>::set(pos, bool), agreement 1.000 at an exactly
 // equal 96-byte extent.

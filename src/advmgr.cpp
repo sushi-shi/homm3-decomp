@@ -471,7 +471,6 @@ DATA(0x0065f670) extern const char* const g_boatIconNames[3];
 DATA(0x0065f67c) extern const char* const g_boatFrothIconNames[3];
 
 // E:\gamedcs\advmgr.cpp:837
-
 // Retail calls vector<resource*>::insert at both push_back sites. Keep the
 // site-level inline pins on those calls.
 
@@ -807,7 +806,6 @@ int advManager::inMapArea(int x, int y)
         && y >= mapWidget->m_y && y < mapWidget->m_y + mapWidget->m_height;
 }
 
-
 // Original: advManager::GetCursorSampleSet; advmgr.cpp:1229, dc 0x79b0
 // DC and Complete both use horse00..horse10; walkSpeed is unused in release.
 void advManager::getCursorSampleSet(int walkSpeed)
@@ -817,7 +815,6 @@ void advManager::getCursorSampleSet(int walkSpeed)
         m_heroSamples[i] = ResourceManager::getSample(g_text);
     }
 }
-
 
 // E:\gamedcs\advmgr.cpp:1245. This is the mouse-relative point, not
 // get_map_center: DC 0x7a04 adds the mouse offsets, while header dc 0x1f000
@@ -833,7 +830,6 @@ type_point advManager::get_mouse_map_point() const
 }
 
 // E:\gamedcs\advmgr.cpp:1253
-
 // Seven declarators were added for this body, all gated to advmgr.obj's own
 // view: advManager::MoveHero, advManager::DoEventShipyard,
 // TAdventureMapWindow::SetSleepImage(int) (retail 0x403cc0 is `ret 4`, so
@@ -1882,17 +1878,6 @@ int advManager::processSelect(const message* msg, type_point* triggerPoint, Newm
     return 1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\advmgr.cpp:2031
-DC_ONLY(0x9614, 0x47E)
-void advManager::ProcessAdvMenu(message* msg)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x00409a70, 0x641)  // dc 0x9a94
 int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, type_point* triggerPoint, NewmapCell** peventCell)
 {
@@ -2393,7 +2378,6 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
         *peventCell = doAdvCommand(triggerPoint);
 }
 
-
 // Original: advManager::ProcessMapSelect2; advmgr.cpp:2624, dc 0xaf3c
 // The separate fallback selection interface is retained without a retail VA
 // or invented caller. DC records its own point validation and cell lookup;
@@ -2437,59 +2421,6 @@ void advManager::processMapSelect2(const message& msg, type_point& triggerPoint,
     if (type == SHIPYARD)
         eventCell = doAdvCommand(&triggerPoint);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\advmgr.cpp:2708
-DC_ONLY(0xb208, 0x50)
-void setTownHelp(char* buffer, const NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\advmgr.cpp:2721
-DC_ONLY(0xb258, 0x60)
-void setHeroHelp(char* buffer, const NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\advmgr.cpp:2736
-DC_ONLY(0xb2b8, 0x104)
-void setPyramidHelp(char* buffer, const NewmapCell* cell, const hero* current_hero, const char* separator)
-{
-    // @stub
-}
-
-// E:\gamedcs\advmgr.cpp:2919
-DC_ONLY(0xbaac, 0x96)
-void setWagonHelpText(char* buffer, NewmapCell* cell, const char* separator)
-{
-    // @stub
-}
-
-// E:\gamedcs\advmgr.cpp:2941
-DC_ONLY(0xbb44, 0xBC)
-void setTombHelpText(char* buffer, NewmapCell* cell, const char* separator)
-{
-    // @stub
-}
-
-// E:\gamedcs\advmgr.cpp:2959
-DC_ONLY(0xbc00, 0xAC)
-void setWaterWheelHelpText(char* buffer, NewmapCell* cell, const char* separator)
-{
-    // @stub
-}
-
-// E:\gamedcs\advmgr.cpp:2981
-DC_ONLY(0xbcac, 0xD8)
-void setWindmillHelpText(char* buffer, NewmapCell* cell, const char* separator)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 static void setTownHelp(char* buffer, const NewmapCell* cell)
 {
@@ -2599,7 +2530,7 @@ static void setWindmillHelpText(
 // zero stores in member order. Retail's SetRolloverText/QuickInfo expand
 // those stores before getTriggerCell; retain the constructor boundary
 // instead of aggregate-initializing its implementation in both callers.
-DC_ONLY(0xbeac, 0x1A)
+
 type_cell_adjuster::type_cell_adjuster()
 {
     m_obscuringHero = 0;
@@ -2712,7 +2643,7 @@ NewmapCell* type_cell_adjuster::getTriggerCell(NewmapCell* mapCell, int x, int y
 // DC advmgr.cpp:3111..3127 proves the ordinary helper and its three
 // conditional restores. Retail expands it in the destructor, getTriggerCell,
 // and setRolloverText; keep its body at the original source position.
-DC_ONLY(0xc038, 0x5C)
+
 void type_cell_adjuster::restoreCell()
 {
     if (m_obscuringHero) {
@@ -5963,7 +5894,6 @@ void advManager::drawGround(int srcX, int srcY, int z, int destX, int destY)
         g_windowManager->m_screenBitmap, baseX, baseY + 8, false, false);
 }
 
-
 // Original: advManager::GetCell; advmgr.cpp:7019, dc 0x14b08
 NewmapCell* advManager::getCell(int x, int y, int z)
 {
@@ -5971,7 +5901,6 @@ NewmapCell* advManager::getCell(int x, int y, int z)
         return m_fullMap->cell(0, 0, 0);
     return m_fullMap->cell(x, y, z);
 }
-
 
 // Read by both mobilization draw gates and by UpdateRadar's radar-icon
 // frame select before repainting the adventure screen; role (an "adventure
@@ -5993,7 +5922,6 @@ NewmapCell* advManager::getCell(type_point point)
 }
 
 // E:\gamedcs\advmgr.cpp:7037
-
 // All three of the decode's blockers are now declared: gUnnamed6aac3c's
 // DATA claim is hoisted above this function, the view-world tile scale at
 // .data 0x68c6b8 is declared (no claim - viewwrld.obj owns it), and
@@ -7351,14 +7279,12 @@ void advManager::quickInfo(int cellX, int cellY, int z)
     normalDialog(g_text, 4, x, y, -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
-
 // Original: advManager::ClearBottomView; advmgr.cpp:8816, dc 0x18c2c
 void advManager::clearBottomView()
 {
     m_advWindow->clearBottomView();
     m_bottomViewType = BOTTOM_VIEW_DEFAULT;
 }
-
 
 VA(0x00415d60, 0x78)  // dc 0x18c84
 void advManager::overrideBottomView(advManager::EBottomViewType view, int time)
@@ -7574,7 +7500,7 @@ unsigned char advManager::updBottomViewTown(unsigned char forceUpdate)
 // E:\gamedcs\advmgr.cpp:9063
 // DC carries this free helper out of line (dc 0x19420, 0x9C); retail's
 // /Ob2 inlines the static into every quick-view caller and drops the body.
-DC_ONLY(0x19420, 0x9C)
+
 static TSkillMastery getIdentifyLevel(type_point point)
 {
     int identifyLevel = eMasteryInvalid;
@@ -7622,7 +7548,6 @@ void advManager::heroQuickView(int heroId, int x, int y,
 const char* getBuildingName(int townType, int buildingId);
 
 // E:\gamedcs\advmgr.cpp:9115
-
 VA(0x004167a0, 0x7DB)  // anchor-callee, dc 0x19674
 void advManager::townQuickView(int townId, int x, int y,
                                unsigned char displayDropShadow)
@@ -8372,7 +8297,6 @@ void advManager::setEnvironmentOrigin(type_point point, int reset)
     }
 }
 
-
 // The looping-sound resource names, one per e_looping_sound_id row.
 // Consumed by InsertSound's lazy loader; owner TU unlocated, so the
 // nearest consumer declares (name provisional, role byte-proven).
@@ -8388,7 +8312,6 @@ void advManager::checkLoadSample(e_looping_sound_id idNum)
         m_loopedSample[idNum] = ResourceManager::getSample(g_loopingSoundNames[idNum]);
     }
 }
-
 
 // E:\gamedcs\advmgr.cpp:9945
 // 89.50 -> 93.76 (2026-08-21): the DC line table proves two source shapes
@@ -8776,7 +8699,6 @@ void advManager::hideRoute(int updateScreen, int removeTarget,
     this->updateScreen(0, 0);
 }
 
-
 // Original: advManager::CheckDimHero; advmgr.cpp:10558, dc 0x1c580
 // Complete expands this guard in DoAdvCommand, ProcessKeyPress and
 // ProcessSearch, adding hero-locator and next-hero-button refreshes after
@@ -8791,7 +8713,6 @@ void advManager::checkDimHero()
         g_advManager->checkDimNextHeroBut();
     }
 }
-
 
 VA(0x00419450, 0x43)  // dc 0x1c5ec
 void advManager::checkDimNextHeroBut()
@@ -9454,7 +9375,6 @@ void advManager::viewPuzzle()
     }
 }
 
-
 // Original: advManager::PuzzleDraw; advmgr.cpp:11287, dc 0x1e360
 // Complete ViewPuzzle expands this operation with desktop viewport offsets.
 void advManager::puzzleDraw(int startX, int startY, int z, int ultX, int ultY)
@@ -9470,7 +9390,6 @@ void advManager::puzzleDraw(int startX, int startY, int z, int ultX, int ultY)
         g_windowManager->m_screenBitmap->getHeight(),
         g_windowManager->m_screenBitmap->getPitch(), 0, 0);
 }
-
 
 VA(0x0041ab00, 0xF8)  // dc 0x1e448
 void advManager::doAdventureOptions()
@@ -9507,17 +9426,6 @@ void advManager::doAdventureOptions()
     if (saveMobile)
         mobilizeCurrHero(0, 0, 1);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\advmgr.cpp:11352
-DC_ONLY(0x1e598, 0x4E)
-void advManager::DoAdvMenu()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 unsigned char saveGame(unsigned char campaignWinMode);
 
@@ -9631,13 +9539,11 @@ int advManager::moreTreesNear(type_point point)
     return 2;
 }
 
-
 // Original: advManager::GetRouteArray; advmgr.cpp:11501, dc 0x1eb78
 unsigned short advManager::getRouteArray(int x, int y, int z)
 {
     return m_routeArray[(z * g_mapHeight + y) * g_mapWidth + x];
 }
-
 
 VA(0x0041b010, 0x27)  // dc 0x1ebb8
 unsigned short* advManager::getRouteArrayPtr(int x, int y, int z)
@@ -9720,105 +9626,6 @@ int CAdvPopup::windowHandler(message& msg)
     }
     return 0;
 }
-
-#if 0  // @carcass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// E:\gamedcs\advmgr.cpp:1084
-DC_ONLY(0x20298, 0x50)
-void CAdvMgrNetMsgHandler::CAdvMgrNetMsgHandler()
-{
-    // @stub
-}
-
-// E:\gamedcs\advmgr.cpp:11525
-DC_ONLY(0x202e8, 0x38)
-void* CAdvPopup::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA_COMPGEN(0x0041b410, 0xCB, BITSET_XRAN, bitset48)
 
