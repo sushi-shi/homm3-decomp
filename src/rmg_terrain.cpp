@@ -96,6 +96,9 @@ TRmgGridRectangle::TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGrid
 // All six direct calls remain correct; the selected-output copy is still
 // required. A two-state painter pointer/reference contract produces identical
 // function bytes across all seven consumers. No speculative API is retained.
+// Pattern/frame integer domains, named query results, and proxy constructor
+// argument-order/ownership controls also leave 97.3461%. The proxy's factory
+// ABI stays fixed; no tested constructor contract explains the register swap.
 VA(0x004F9F00, 0x146) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
@@ -1034,6 +1037,10 @@ unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 // Value accessors for the unchanged coordinate restore retail's fresh scalar
 // copy and terrain reload, but retain the reversed ESI/EDI roles and change
 // scheduling (85.9764..93.6307%). The lifetime mechanism is insufficient alone.
+// Query-result widths, owned scalar results, shared gap counters, workspace
+// lifetimes and gap-record construction/compaction leave 93.6307% unchanged.
+// Passive C2 tracing reproduces the whole object and observes 227 temporary
+// bindings; it does not identify the cause of the painter/point allocation.
 VA(0x005B5440, 0x628) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 {
@@ -1428,6 +1435,10 @@ void rmgTerrainPainter::buildNeighbourKinds(
 // standard reference selectors, lower both diagonals; no composition is adopted.
 // Explicit int/long selector specializations and signed conversion ownership
 // also preserve the same two residuals and comparison orientation.
+// Initialized result pointers and value/upper-bound snapshots, checked in all
+// 60 header consumers, do not unify the orientations. Standard comparator
+// controls also leave the split: both diagonals at 100% cost six other exact
+// bodies, including the retained clamp (96.1111%). No shared change is adopted.
 VA(0x005B6BA0, 0x24C)
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
