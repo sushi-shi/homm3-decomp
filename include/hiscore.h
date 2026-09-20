@@ -85,7 +85,7 @@ public:
                    int style, int readType, int insetX, int insetY);
     // DC195 takes message&; the shared text-entry interface still uses message*.
     virtual int onKeyPress(message* msg);  // slot 15, retail 0x4e9710
-    virtual void setFocus(unsigned char state);  // inherited slot 14
+    virtual void setFocus(bool state);  // inherited slot 14
     virtual void onNextEdit();  // appended slot 19
     virtual void onPrevEdit();  // appended slot 20
 };

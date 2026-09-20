@@ -4365,7 +4365,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
         targetArmy->m_numTroopsBattleResurrected +=
             targetArmy->m_numTroops - oldCount;
         targetArmy->m_numTroopsBattleResurrected =
-            cppMin(targetArmy->m_numTroopsBattleResurrected,
+            min(targetArmy->m_numTroopsBattleResurrected,
                      targetArmy->m_origNumTroops);
     }
 
@@ -4392,7 +4392,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
         long powFrames = m_powSprite ? m_powSprite->getNumFrames(0) : 0;
         long deathFrames =
             targetArmy->m_stdIcon->getNumFrames(cs_death);
-        long frames = cppMax(powFrames, deathFrames);
+        long frames = max(powFrames, deathFrames);
         targetArmy->m_showPowEffect = 1;
         playImmEffect(g_spellEffectTraits[effect].m_immName, 1);
         long back = deathFrames - 1;

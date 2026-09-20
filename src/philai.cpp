@@ -139,7 +139,7 @@ void aiEnterGarrison(hero* currentHero, garrison* ourGarrison)
         return;
     if (!ourGarrison->m_removableTroops)
         return;
-    if (g_unk69774c && g_game->m_campaign.m_currentCampaign < 7)
+    if (g_inCampaign && g_game->m_campaign.m_currentCampaign < 7)
         return;
 
     unsigned char hasAngelicAlliance =
@@ -1216,7 +1216,7 @@ inline long valueOfGarrison(const hero* currentHero, NewmapCell* cell)
     garrison* currentGarrison = g_game->getGarrison(cell->m_extraInfo);
     if (currentGarrison->m_playerOwner == currentHero->m_owner
         && currentGarrison->m_removableTroops) {
-        if (g_unk69774c && g_game->m_campaign.m_currentCampaign < 7)
+        if (g_inCampaign && g_game->m_campaign.m_currentCampaign < 7)
             return 0;
 
         unsigned char hasAngelicAlliance =

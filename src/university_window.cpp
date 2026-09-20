@@ -367,10 +367,10 @@ void type_university_window::updateSkillButton(type_university_skill& skill)
 
 VA(0x005f0a20, 0x92)  // dc 0x18f508
 
-int type_university_window::doModal(unsigned char fade)
+void type_university_window::doModal(bool fade)
 {
     setSelectionMode();
-    return heroWindow::doModal(fade);
+    heroWindow::doModal(fade);
 }
 
 VA(0x005f0ac0, 0x2F2)  // dc 0x18f52c

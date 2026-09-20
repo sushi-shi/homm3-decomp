@@ -103,8 +103,10 @@ public:
     // campaign the current page shows; the constructor seeds 0, 7 or 13.
     int m_firstCampaign;
 
-    // Complete added the leading new-game selector to Dreamcast's
-    // one-argument constructor; oldmain and the retail body prove both slots.
+    // DC's sole int newCampaign is the reset flag (test at dc 0x5b5c0).
+    // Complete narrows that flag to a byte and adds the campaign-set slot.
+    // Native bool versus unsigned char remains unresolved; the second
+    // parameter's current spelling is not a recovered DC name.
     TCampaignWindow(unsigned char newGame, int newCampaign);
     virtual ~TCampaignWindow();
     void doModal();

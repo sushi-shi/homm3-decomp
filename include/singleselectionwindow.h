@@ -192,6 +192,7 @@ class textEntryWidget;
 class CNewPlayerUpdateMan;
 class CChatWidget;
 class textWidget;
+class type_text_scroller;
 class textButton;
 class button;
 struct GameSelectionHeadersStruct;
@@ -401,7 +402,10 @@ SIZE(CNetPlayerHandler, 0x7d0);
 // CNetMsgHandler's ctor is followed by the derived vtable store and a clear
 // of m_wasCompressed at +0x0c. The class is embedded by value below;
 // its constructor body belongs to singleselectionwindow.cpp:8758.
-class CSingleSelectionNetMsgHandler : public CAdvMgrNetMsgHandler {
+// The retail vtable at 0x641ce8 has only CNetMsgHandler's four slots;
+// CAdvMgrNetMsgHandler adds a fifth (HandleGiftMsg), so it cannot be the
+// base. DC0x14515a likewise calls CNetMsgHandler's constructor directly.
+class CSingleSelectionNetMsgHandler : public CNetMsgHandler {
 public:
     CSingleSelectionNetMsgHandler();
     virtual CNetMsg* checkHandleNet(unsigned char inPopup,
@@ -558,7 +562,7 @@ private:
     slider* m_fileSlider;  // 0x183c
     slider* m_durationSlider;  // 0x1840
     slider* m_nameSlider;  // 0x1844
-    CChatWidget* m_chatWidget;  // 0x1848 (DC chatWidget)
+    textWidget* m_chatWidget;  // 0x1848 (DC chatWidget: textWidget*)
     // The DC chatWidget..flagBack member run (dc 2848..2888) maps onto
     // retail 0x1848..0x1870 LINEARLY (constant delta 3368, every
     // already-proven anchor agrees: chatShowing 2877->0x1865, chatToggle
@@ -579,9 +583,9 @@ public:
     char m_paddingBeforeChatEdit[0x1858 - 0x1856];
 
 private:
-    // DC chatEdit (a CCombatChatEdit there): TurnChatOn (0x58ca80)
-    // focuses its id on chat-open. Base-typed until its widget lands.
-    textEntryWidget* m_chatEdit;  // 0x1858
+    // DC chatEdit is CChatEdit*: TurnChatOn (0x58ca80) focuses its id.
+    // Complete constructs CSingleSelectionChatEdit through the same base.
+    CChatEdit* m_chatEdit;  // 0x1858
     int m_sortWhich;  // 0x185c
 
 public:
@@ -657,18 +661,23 @@ public:
     // directly, never through GetWidget.
     // Role-derived: construction creates a CScrollTextWidget here;
     // updateGameVars (0x583580) fills it from the selected map description.
-    widget* m_descriptionWidget;  // 0x196c
+    // Retain the concrete type: ctor retail +0xb3c/+0xb3f binds the widget
+    // vector insert to a converted pointer temporary at EBP+8, not this
+    // member's address. All text accesses use this same scroller class.
+    // Complete-only type inference; the older DC class has no such member.
+    type_text_scroller* m_descriptionWidget;  // 0x196c
 
     TSingleSelectionWindow(int gameMode);
     virtual ~TSingleSelectionWindow();
-    virtual int doModal(unsigned char fadeIn);
+    virtual void doModal(bool fadeIn);
     void updatePlayerPositions(unsigned char updateCurPlayer);
     virtual int windowHandler(message& msg);  // slot 9
     void onNameSlider(int newIndex);
     void onChatWindowSlider(int newIndex);
     void onDurationSlider(int newIndex);
     void onFileMenuSlider(int newIndex);
-    void updateAllyEnemyFlags(unsigned char update);
+    // DC publics retain native bool (_N), although lowered CV says UCHAR.
+    void updateAllyEnemyFlags(bool update);
 
 private:
     virtual unsigned char processRightSelect(int id);  // slot 11
@@ -711,7 +720,7 @@ public:
     // Complete-only random-map helpers at 0x5879a0 and 0x5860e0. Their
     // provisional role names describe the byte-decoded caller contract.
     unsigned char generateRandomMap(const char* name);
-    void setCurrentMap(int map, unsigned char update);
+    void setCurrentMap(int map, bool update);
     void drawHeroAdvancedOption(int playerPos, unsigned char update,
                                 int position);
     void onDeleteFile();
@@ -756,7 +765,7 @@ public:
     void turnOffScenarioOptions();
     void turnOffAdvancedOptions();
     bool onClickMsg(CNetMsg* netMsg);
-    void turnChatOn(unsigned char update);
+    void turnChatOn(bool update);
     void turnChatOff(unsigned char update);
     void onTownUpdateMsg(CNetMsg* netMsg, bool inPopup);
     void updateNameLists();
@@ -797,7 +806,7 @@ public:
     unsigned char sendSetupInfo(unsigned long dpid);
     bool isHost();
     void sendPlayerFaces();
-    unsigned char isMultiPlayer();
+    bool isMultiPlayer();
     void showWidget(int id);
     void turnOffFilterOptions();
     int calcPosition(int playerPos);
@@ -807,16 +816,16 @@ private:
 };
 SIZE(TSingleSelectionWindow, 0x1970);
 
-// Four cross-TU cells advmgr's SaveGame drives; the selection window's
-// own TU is their natural owner, so they are declared here (the
-// gUnnamed69d808 precedent) until it lands.
+// Cross-TU cells used by advmgr's SaveGame and the selection window.
+// game.h owns the inCampaign DATA claim; the other cells retain their
+// provisional address-based names.
 //   0x69fc2c  the chosen save filename (empty = the dialog was cancelled)
 //   0x691268  the extension scratch SaveGame sprintf's (.GM%d / .CGM)
 //   0x69774c  campaign-game byte: picks the .CGM extension
 //   0x697774  set to 1 the moment a save filename is committed
 extern char g_unnamed69fc2c[];
 extern char g_unnamed691268[];
-extern unsigned char g_unnamed69774c;
+extern bool g_inCampaign;
 extern int g_unnamed697774;
 
 #endif  /* HOMM3_SINGLESELECTIONWINDOW_H */

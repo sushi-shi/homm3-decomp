@@ -384,15 +384,17 @@ public:
         m_built = newMask;
         updateFullBuildingMask();
     }
-    // E:\gamedcs\Town.h:337. One canonical header body for all consumers.
-    unsigned char isCastle() const
+    // E:\gamedcs\Town.h:337. Public ?IsCastle@town@@QBA_NXZ proves bool;
+    // the DC T_UCHAR return record is lowered, as for hasBuilding.
+    bool isCastle() const
     {
         return hasBuilding(CASTLE_FORT_ID, 0)
             || hasBuilding(CASTLE_CITADEL_ID, 0)
             || hasBuilding(CASTLE_CASTLE_ID, 0);
     }
-    // E:\gamedcs\Town.h:342.
-    unsigned char isCapitol() const
+    // E:\gamedcs\Town.h:342. Public ?IsCapitol@town@@QBA_NXZ likewise
+    // proves native bool. Both declarations are byte-flat in all consumers.
+    bool isCapitol() const
     {
         return hasBuilding(HALL_CAPITOL_ID, 0);
     }

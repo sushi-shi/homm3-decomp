@@ -145,7 +145,10 @@ public:
     virtual int handleMessage(message& msg);         // slot 3, folded onto 0x4ec560
     virtual void handleWidgetHover(widget* w);      // slot 4, folded onto 0x485d80
     virtual void drawWindow(unsigned char update, int lowID, int highID);
-    virtual int doModal(unsigned char fadeIn);
+    // DC DoModal's UAAX_N public and all three overrides prove void(bool).
+    // Retail callers discard EAX; the dispatcher's residual value is not
+    // a returned dialog result. The virtual slot remains unchanged.
+    virtual void doModal(bool fadeIn);
 
 protected:
     void deleteWidgets();

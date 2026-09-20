@@ -13,7 +13,14 @@ fix the listed backlog and try to reach 100% in each touched function, using
 Dreamcast as positive source evidence. It did not require retaining the earlier
 audit's no-score-loss restriction.
 
-All listed actionable cases are repaired. Radar and the full-screen fades
+The historical repairs below were subsequently superseded for `fillRect` and
+`markPuzzle` by PR #38's exact source reconstruction. Both raw Dreamcast and
+retail retain unconditional final pointer advances. Those two routines now
+explicitly preserve and document the original out-of-range pointer formation;
+their exact scores do not certify portable C++ safety. Other entries in this
+historical table are not a statement about later branches' current source.
+
+At this checkpoint, all listed actionable cases were repaired. Radar and the full-screen fades
 are closed by allocation proofs, without changing their production bodies.
 This is not a proof that every pointer in the engine is valid. Union aliasing,
 downcast checks, serialized-buffer lifetime/alignment, malformed-stream bounds,

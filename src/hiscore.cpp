@@ -61,7 +61,7 @@ void CHighScoreEdit::onPrevEdit()
 
 // Original: CHighScoreEdit::SetFocus; hiscore.cpp:252, dc 0xd8e58.
 // Slot 14 shares CMPEdit's forwarding body at 0x510890.
-void CHighScoreEdit::setFocus(unsigned char state)
+void CHighScoreEdit::setFocus(bool state)
 {
     textEntryWidget::setFocus(state);
 }

@@ -1450,6 +1450,13 @@ inline const NewmapCell* NewfullMap::zCell(int x, int y, int z) const
     return m_cellData + x + y * m_size + z * m_size * m_size;
 }
 
+// MapCell.h:850, dc 0x1f974. This worker reproduces all 49 retail bytes
+// at 0x408770, including the boat callers' retained zero-coordinate lookup.
+// The former scalar-cell claim incorrectly distinguished 49 x86 bytes from
+// 82 SH4 bytes and alleged a zCell bounds test absent on both platforms.
+// Identical folded bodies cannot prove a unique original retail symbol;
+// this annotation owns the emitted canonical worker, not a renamed wrapper.
+VA(0x00408770, 0x31)  // exact body + anchor-callees, dc 0x1f974
 inline NewmapCell* NewfullMap::zCell(int x, int y, int z)
 {
     return m_cellData + x + y * m_size + z * m_size * m_size;
@@ -1467,19 +1474,12 @@ inline const NewmapCell* NewfullMap::cell(int x, int y, int z) const
 // WinCE build's out-of-line copy of a header inline - so it is a header
 // inline for EVERY compiland. DC line 907 calls zCell directly.
 
-// cell(int,int,int) is a header inline too, and MEASURED so: modelling
-// it as a declaration-only member with one out-of-line definition -
-// which its real 49-byte retail body at 0x408770 invites - costs the
-// tree 3091 -> 3058 exact functions and 95.12% -> 94.77% fuzzy, because
-// sixteen compilands expand the `(z*Size + y)*Size + x` lookup on a
-// 38-byte stride in place. The retail COMDAT is what an inline's
-// out-of-line copy looks like when one TU's call sites decline it.
-
-// The retained retail copy of this header inline is carried by advmgr.obj.
-VA(0x00408770, 0x31)  // anchor-callee, dc 0x1f9c8
+// DC MapCell.h:897 calls zCell. The unrecorded line 896 does not prove
+// a release VERIFY. Removing the inferred storage check preserves this
+// helper chain and restores the boat callers' retail expansion decisions;
+// the retained 49-byte arithmetic body is owned by zCell above.
 inline NewmapCell* NewfullMap::cell(int x, int y, int z)
 {
-    HOMM3_RELEASE_VERIFY(m_cellData != 0);
     return zCell(x, y, z);
 }
 

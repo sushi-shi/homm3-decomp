@@ -63,12 +63,12 @@ public:
         BUTTON_REPEAT_DELAY_TICKS = 60
     };
     button();
-    void initialize(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
+    void initialize(int x, int y, int w, int h, int id, const char* image, int normal, int selected, bool end, int hotkey, int style);
     // Dreamcast ?click_sample@button@@2PAVsample@@A; retail .bss
     // 0x694da4 (defined in button.cpp).
     static sample* s_clickSample;
     void setPalette(const char* paletteName);
-    button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
+    button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, bool end, int hotkey, int style);
     int select(message& msg);
     // E:\gamedcs\button.cpp:401, dc 0x57854
     int deselect(message& msg);
@@ -111,7 +111,7 @@ public:
 class textButton : public button {
 public:
     textButton();
-    textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor newColor);
+    textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, bool end, int hotkey, int style, font::TColor newColor);
 
     // Original: textButton::SetText; button.h:136, dc 0x14762c.
     // DC assigns the inherited Text string directly, distinct from

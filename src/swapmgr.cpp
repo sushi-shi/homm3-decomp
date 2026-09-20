@@ -1347,7 +1347,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
             g_heroScreenDraggedArtifact.m_artifactId, slot))
         return;
 
-    if (g_campaignMode
+    if (g_inCampaign
         && oldArtifact.m_artifactId == ARTIFACT_ARMAGEDDONS_BLADE
         && g_game->m_campaign.m_currentCampaign == ARMAGEDDONS_BLADE_CAMPAIGN
         && g_game->m_campaign.m_currentMap == ARMAGEDDONS_BLADE_MAP
@@ -2093,6 +2093,15 @@ void swapManager::setRolloverText(int codeY)
     case kSwapRolloverLeftSkill2: case kSwapRolloverLeftSkill3:
     case kSwapRolloverLeftSkill4: case kSwapRolloverLeftSkill5:
     case kSwapRolloverLeftSkill6: case kSwapRolloverLeftSkill7:
+        // The last residual here is one SIB byte in each skill arm:
+        // retail encodes `movsx eax, [eax + edx + 0xc9]` (hero as base,
+        // skill as index) where we emit `[edx + eax + 0xc9]`. Caching
+        // `m_heroes[n]` in a local to bias the allocator makes it much
+        // worse (99.98 -> 96.52): the pointer then lives in a callee-saved
+        // register across getNthSS and the whole arm re-schedules. DC
+        // records no stack locals here and calls already agree, so `skill`
+        // is a register temp and the base/index choice is allocator state,
+        // not a spelling we have evidence for.
         if (codeY - kSwapRolloverLeftSkill0 < m_heroes[0]->m_skillCount) {
             int skill = m_heroes[0]->getNthSS(
                 codeY - kSwapRolloverLeftSkill0);

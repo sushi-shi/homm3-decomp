@@ -104,8 +104,11 @@ textEntryWidget::~textEntryWidget()
         delete m_saveBack;
 }
 
+// DC SetFocus publics independently encode bool for this base and both
+// CMPEdit/CHighScoreEdit overrides. Keep m_hasFocus's separate byte storage;
+// retail copies the argument byte directly and preserves virtual slot 14.
 VA(0x005bab50, 0x49)  // dc 0x162b50
-void textEntryWidget::setFocus(unsigned char state)
+void textEntryWidget::setFocus(bool state)
 {
     m_hasFocus = state;
     if (m_autoDraw) {

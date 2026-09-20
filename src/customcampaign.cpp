@@ -1331,7 +1331,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     strcpy(currentHero->m_name, sourceHero->m_name);
     currentHero->m_portrait = sourceHero->m_portrait;
 
-    if (g_unk69774c) {
+    if (g_inCampaign) {
         if (currentCampaign->m_currentCampaign == g_crossoverBonusCampaign
             && currentCampaign->m_currentMap == g_crossoverBonusScenario
             && sourceHero->m_id == g_crossoverBonusHero) {
@@ -2719,28 +2719,20 @@ void SCampaign::playScenarioEpilogue(void* campaignHeader)
 // Retail proves the 0x66a9-byte legacy record, sixteen 0x462-byte heroes,
 // and field-by-field promotion (not a whole-record copy). The modern arm
 // mirrors save(): one pool count resizes both carry-over vectors.
-// Named score/pool references preserve addresses evaluated before reads
-// and constructor calls; the legacy hero-count bound is re-read each turn.
+// Pool references preserve addresses evaluated before reads and constructor
+// calls; the legacy hero-count bound is re-read each turn. The score vector
+// is accessed through its campaign owner, without a cached outer reference.
 // Both leading clear() wrappers must remain: their nested erase calls agree
 // with retail, while spelling erase(begin(), end()) expands those workers.
 
 // Retail's count loads mask to 8/16 bits and keep signed int loop bounds.
-// The artifact fields sign-extend two-byte reads through artifact.h's shared
-// representation bridge into TArtifact. The legacy
-// secret flag is reset after the filename assignment (retail +0xd0).
-// Widened counts plus the cast score 67.8382%; correcting the flag order
-// gives 68.1930%; sharing the two outer counters gives 69.5768% (2026-09-07).
-// Separate scopes for days/score reads are byte-flat. Keep the 79.2531% MAX.
-// The signed word is widened locally into the recovered TArtifact field;
-// the reconstruction-only artifactFromInt wrapper has been removed.
-// The earlier typed-header checkpoint was 70.3423%, with 79.2531%
-// retained in HIST (2026-09-08); no new byte-score claim follows this move.
+// Artifact fields sign-extend two-byte reads into the shared TArtifact type.
+// The legacy secret flag is reset after assigning the campaign filename.
 
-// The pre-v28 record's per-hero conversion. A `static` with a single call
-// site leaves no out-of-line copy, so its absence from the image argues for
-// the boundary rather than against it - the findAttackHexes precedent above.
-// Holding it here keeps SCampaign::load's own caller_cb down, which is what
-// leaves the vector size()/_Destroy expansions starved as retail's bytes show.
+// Inferred pre-v28 per-hero conversion boundary. VC6 expands this helper at
+// its sole call and changes the surrounding vector inlining in SCampaign::load.
+// No standalone DC or retail procedure proves the original boundary; the
+// coherent conversion operation and measured caller output support the model.
 static void convertLegacyCampaignHero(hero& newHero,
                                       const LegacyCampaignHero& oldHero)
 {
@@ -2779,25 +2771,48 @@ static void convertLegacyCampaignHero(hero& newHero,
         newHero.setPrimarySkill(stat, oldHero.m_stats[stat]);
 }
 
-// Controlled recovery (2026-09-09): the 64 combinations of six widened,
-// masked read buffers produce two emitted identities but no score change.
-// Thus retail's dword-and-mask instructions do not prove an int source
-// buffer. Keep narrow buffers. A 32-state lexical-lifetime family gives
-// nine objects; named leading/scenario/artifact buffers in their enclosing
-// scopes raise 50.8734% to 52.7064%, with every sibling score unchanged.
-// Separately scoping days/score and flattening the count-buffer scopes do
-// not improve that retained state. Native wire-format checks exercise all
-// 32 states, versions 28/35/36, byte conversions, signed artifact/assigned
-// words, remapping, vector contents and the exact read-size sequence.
-// Residual: both leading erase workers and the legacy array iterator still
-// expand; most nested vector size calls and legacy string boundaries remain.
+// Inferred serialized-record operations: the assigned-hero count and signed
+// ID stream belong to the campaign, while a scenario score reader fills one
+// already selected record. Both ordinary helpers auto-inline into load.
+// They preserve the scalar read order and widths; no DC declaration or
+// retained retail procedure proves these names or interfaces.
+static void readAssignedCampaignHeroes(TAbstractFile* infile,
+                                      SCampaign& campaign)
+{
+    int count = readValue<unsigned char>(infile);
+    campaign.m_assignedCarryover.resize(count);
+    for (int assignedIndex = 0; assignedIndex < count; ++assignedIndex) {
+        campaign.m_assignedCarryover[assignedIndex] = readValue<short>(infile);
+    }
+}
+
+static void readCampaignScore(TAbstractFile* infile, CampaignScenarioInfo& scenario)
+{
+    scenario.m_completed = readValue<unsigned char>(infile) != 0;
+    scenario.m_days = readValue<int>(infile);
+    scenario.m_score = readValue<int>(infile);
+
+    scenario.m_completeOrder =
+        static_cast<signed char>(readValue<unsigned char>(infile));
+    scenario.m_index =
+        static_cast<signed char>(readValue<unsigned char>(infile));
+}
+
+// 99.0228%: the record readers, direct score-vector ownership and shared
+// inner counter recover every retail call decision, stack home and the
+// legacy arm. Of 89 blocks, 88 have exact sizes; the modern hero-load loop
+// still forms its receiver differently, followed by artifact-read register
+// differences. Named hero pointer/reference receiver probes are byte-flat.
+// Further indexed-iterator, shared-count and free/member reader models do
+// not improve this. DC has no corresponding load: its campaign pools are
+// fixed arrays and its hero loader predates the versioned stream interface.
 VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::load(TAbstractFile* infile, int saveVersion)
 {
     int i;
     int pool;
-    std::vector<MapScore>& rMapScores = m_mapScores;
-    rMapScores.clear();
+    int inner;
+    m_mapScores.clear();
     m_carryOverHeroes.clear();
 
     if (saveVersion < 28) {
@@ -2818,13 +2833,10 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
         // built-in campaigns are promoted from the legacy eight-slot array.
         memcpy(m_campaignCompleted, saved.m_campaignCompleted, 7);
 
-        rMapScores.resize(saved.m_numScenarios);
+        m_mapScores.resize(saved.m_numScenarios);
         for (i = 0; i < saved.m_numScenarios; ++i) {
-            CampaignScenarioInfo& scenario = rMapScores[i];
-            // Retail +0x191 preserves this source order. Together with the
-            // bool legacy field, the loop now has the exact instruction and
-            // memory-access structure; only earlier live-register choices
-            // rename its ecx/edx and esi/edi pairs.
+            CampaignScenarioInfo& scenario = m_mapScores[i];
+            // Retail +0x191 preserves this field assignment order.
             scenario.m_days = saved.m_scenarioDays[m_currentCampaign][i];
             scenario.m_index = g_legacyCampaignScenarioIndices[m_currentCampaign][i];
             scenario.m_score = saved.m_scenarioScores[m_currentCampaign][i];
@@ -2839,11 +2851,11 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
             std::vector<hero>& heroPool = m_carryOverHeroes[pool];
             heroPool.resize(saved.m_carryOverHeroCounts[pool]);
 
-            for (int whichHero = 0;
-                 whichHero < saved.m_carryOverHeroCounts[pool]; ++whichHero) {
+            for (inner = 0;
+                 inner < saved.m_carryOverHeroCounts[pool]; ++inner) {
                 const LegacyCampaignHero& oldHero =
-                    saved.m_carryOverHeroes[pool][whichHero];
-                hero& newHero = heroPool[whichHero];
+                    saved.m_carryOverHeroes[pool][inner];
+                hero& newHero = heroPool[inner];
 
                 convertLegacyCampaignHero(newHero, oldHero);
             }
@@ -2876,17 +2888,10 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
     }
 
     int count = readValue<unsigned char>(infile);
-    rMapScores.resize(count);
+    m_mapScores.resize(count);
     for (i = 0; i < count; ++i) {
-        CampaignScenarioInfo& scenario = rMapScores[i];
-        scenario.m_completed = readValue<unsigned char>(infile) != 0;
-        scenario.m_days = readValue<int>(infile);
-        scenario.m_score = readValue<int>(infile);
-
-        scenario.m_completeOrder =
-            static_cast<signed char>(readValue<unsigned char>(infile));
-        scenario.m_index =
-            static_cast<signed char>(readValue<unsigned char>(infile));
+        CampaignScenarioInfo& scenario = m_mapScores[i];
+        readCampaignScore(infile, scenario);
     }
 
     count = readValue<unsigned char>(infile);
@@ -2897,26 +2902,22 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
         std::vector<hero>& heroPool = m_carryOverHeroes[pool];
         int heroCount = readValue<unsigned char>(infile);
         heroPool.resize(heroCount);
-        for (int whichHero = 0; whichHero < heroCount; ++whichHero)
-            heroPool[whichHero].load(infile, saveVersion);
+        for (inner = 0; inner < heroCount; ++inner)
+            heroPool[inner].load(infile, saveVersion);
 
         std::vector<type_artifact>& artifactPool = m_carryoverArtifact[pool];
         int artifactCount =
             static_cast<unsigned short>(readValue<short>(infile));
         artifactPool.resize(artifactCount);
-        for (int whichArtifact = 0; whichArtifact < artifactCount;
-             ++whichArtifact) {
-            artifactPool[whichArtifact].m_artifactId =
+        for (inner = 0; inner < artifactCount;
+             ++inner) {
+            artifactPool[inner].m_artifactId =
                 TArtifact(readValue<short>(infile));
-            artifactPool[whichArtifact].m_extra = readValue<short>(infile);
+            artifactPool[inner].m_extra = readValue<short>(infile);
         }
     }
 
-    count = readValue<unsigned char>(infile);
-    m_assignedCarryover.resize(count);
-    for (int assignedIndex = 0; assignedIndex < count; ++assignedIndex) {
-        m_assignedCarryover[assignedIndex] = readValue<short>(infile);
-    }
+    readAssignedCampaignHeroes(infile, *this);
 }
 
 // The fixed pre-v28 record uses the old 0x462 hero layout. Retained 0x48ae30

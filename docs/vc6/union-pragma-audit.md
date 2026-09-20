@@ -330,43 +330,47 @@ source. Current controls do not reintroduce old pragmas.
 
 DC MapCell.h:847/850 proves const/mutable private `zCell`; scalar
 wrappers follow at 889/895, and the packed-point wrapper at 906 calls `zCell`
-directly. The original three families (6, 10 and 6 states across eight TUs)
-tested that boundary, coordinate checks and method order. A final six-state
-storage-precondition family (`2ecfcdb04594fd1e2ec7`) resolves the earlier
-retained-body problem without renaming a claim: `m_cellData != 0` in the
-mutable scalar wrapper makes both `cell` and `zCell` emit the identical
-49-byte body. With no check, only `zCell` retains that body. The wrapper's
-line 896 gap permits this real precondition, not historical ASSERT text.
-Neither the single-line private helper nor the const wrapper receives an
-unsupported check. All six states and their distinct retained elites were
-reproduced.
+directly. `advManager::GetCell` calls scalar `cell` at 7028 and packed-point
+`cell` at 7029. Keep all these boundaries and the original pointer arithmetic;
+the removed TU fork, inline fence and caller-local copies are not needed.
 
-The canonical helper pair, wrapper calls and original method order are now
-adopted. The `HOMM3_NEWFULLMAP_CELL_OUTOFLINE` fork and its auto-inline fence
-are removed; both per-TU scaffold sites disappear. The proof does **not** claim
-whole-TU byte identity here. `processOnMapTowns` rises 94.3642% → 98.6258%,
-monster quest text 93.002% → 98.3426%, and `searchArray::pushPoint` rises
-98.2622% → 99.5758%. Header collateral lowers four exact drawing functions:
-boat part/shadow to 98.2619%, hero part to 99.75%, and hero shadow to 99.7524%.
-`CEnterNameEdit::onKillFocus` also moves 100% → 99.8710%. Other changed
-non-exact callers are recorded in the generated ledger; MAX/HIST preserve
-their banked peaks. Score dips do not refute this positive helper evidence.
+The earlier storage-precondition experiment (`2ecfcdb04594fd1e2ec7`) was
+misinterpreted. It made scalar `cell` emit the same 49-byte body as `zCell`,
+but that did not validate the scalar owner's address claim or recover a
+VERIFY. The original claim in `f1351143:src/advmgr.cpp` distinguished 49
+retail x86 bytes from 82 Dreamcast SH4 bytes and alleged a `zCell` bounds
+test. Raw DC `0x1f974` has no such test. Line 896's gap cannot establish the
+inferred storage check. The retained retail body at `0x408770` is now owned
+by the canonical emitted mutable `zCell`: all 49 bytes agree, with no
+relocations. Identical folded bodies do not prove a unique original retail
+symbol spelling; both source helpers remain present.
 
-The four drawing dossiers and retail source/CFG diffs localize follow-up:
-the boat invalid-point arm wrongly expands scalar `cell(0,0,0)`; the hero
-arms retain separate scalar/private calls instead of the retail merged call.
-Their existing `drawHeroCell`/`drawBoatCell`/`drawGroundCell` copies are
-canonical-helper debt. DC `advManager::GetCell` actually calls scalar `cell`
-at 7028 and packed-point `cell` at 7029; the old comment claiming a direct
-DC `cellData` return was incorrect. Do not restore the TU fork or paste more
-arithmetic into callers to recover their scores.
+The coupled boat recovery keeps native `bool boat::getHflip()` (public
+`?GetHflip@boat@@QAA_NXZ`) and all four calls recorded by DC. Removing the
+inferred scalar-wrapper VERIFY restores both 591-byte boat routines and the
+108-byte retained `advManager::getCell` to 100%. Each boat's map-call relocation
+at `+0x9b` reaches the verified 49-byte worker. Replacing the getter with a raw
+facing comparison had hidden this helper-boundary problem, not recovered
+the original caller source. Both CSprite shadow overloads also use the
+public-symbol-proven native boolean; that separate correction is byte-flat.
 
-```sh
-python scripts/experiments/generate-cell-boundary-family.py build/cell-family.json --current
-```
+Identity-gated C2 traces explain the interaction: the boat caller's initial
+budget is 1000. With the storage check, scalar `cell` costs 47 and leaves
+only 14 for the point path's 59-unit `zCell`. Without it, scalar `cell`
+costs 37, below VC6's 40-unit free-expansion threshold. The zero-coordinate
+worker gets 58 and remains a call; the point worker gets 61 and expands,
+exactly as retail. No new invariant or compiler control is introduced.
 
-The other cell-generator modes explicitly replay the historical forked source
-and refuse the adopted boundary. `--current` preserves the canonical helpers.
+Four storage-contract models across all 78 header consumers reproduce in
+context `97a44b2604db9f8bccb6` (four distinct objects, four repeated elites).
+The unchecked model gives both boats 100%; storage-only and initialized
+storage give 92.1619%, and a complete coordinate-domain check gives 90.8048%.
+The last two also lower retained `getCell` to 94.4595%. The unchecked model
+additionally recovers `drawHeroPartShadow` to 100%. Two non-exact callers'
+CUR scores dip, with their unchanged-source MAX/HIST retained; no exact
+caller is lost. Six addressing/getter-expression states and three GetCell
+guard/return models had not improved either boat. These are compiler/source
+controls, not evidence of an original assertion's text.
 
 Map-access checkpoint census: 253 overrides (246 depth-zero, seven auto-inline-off).
 This does not reclassify them as necessary. The assertion controls directly

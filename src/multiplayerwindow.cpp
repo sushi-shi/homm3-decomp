@@ -328,7 +328,7 @@ public:
     // DC 0x1020c0 stores the argument at this+0x74.
     // E:\gamedcs\multiplayerwindow.cpp:274, dc 0x1020bc
     void setPrevEdit(CMPEdit* prevEdit) { m_prevEdit = prevEdit; }
-    virtual void setFocus(unsigned char state);
+    virtual void setFocus(bool state);
     virtual int onKeyPress(message* msg);
     virtual void onNextEdit();
     virtual void onPrevEdit();                   // slot 20, retail 0x510870
@@ -1310,7 +1310,7 @@ void CMPEdit::onPrevEdit()
 }
 
 VA(0x00510890, 0x10)  // dc 0x1021ac
-void CMPEdit::setFocus(unsigned char state)
+void CMPEdit::setFocus(bool state)
 {
     textEntryWidget::setFocus(state);
 }

@@ -539,7 +539,7 @@ static const int g_lossPortrait146 = 0x92;
 VA(0x005f2a40, 0x3C8)  // anchor-global, dc 0x1906d4
 unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
 {
-    if (g_campaignMode) {
+    if (g_inCampaign) {
         int map;
         int i;
         switch (g_game->m_campaign.m_currentCampaign) {

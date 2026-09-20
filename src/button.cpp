@@ -77,8 +77,12 @@ VA_COMPGEN(0x00455ec0, 0x21, SCALAR_DELETING_DTOR, button)
 // E:\gamedcs\button.cpp:69
 // Retail dropped DC's trailing focus parameter outright (ret 0x2c,
 // eleven args).
+// The independent DC publics at 57130, 57268 and 57ab4 encode native bool
+// (_N) for end throughout the constructor/initialize forwarding chain.
+// This differs from lowered CodeView's byte description. Keep m_endDialog
+// and its ==1 predicate unchanged: the public ABI does not prove its type.
 VA(0x00455ef0, 0x1F7)  // linkorder bracket; GetSprite/widget-ctor callees byte-proven, dc 0x57130
-button::button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style)
+button::button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, bool end, int hotkey, int style)
     : widget(x, y, w, h, id, style)
 {
     m_disabledFrame = 2;
@@ -118,7 +122,7 @@ void button::setPalette(const char* paletteName)
 // Keep the ordinary helper boundary.
 void button::initialize(int x, int y, int w, int h, int id,
                         const char* image, int normal, int selected,
-                        unsigned char end, int hotkey, int style)
+                        bool end, int hotkey, int style)
 {
     widget::initialize(x, y, w, h, id, style);
     m_disabledFrame = 2;
@@ -424,7 +428,7 @@ textButton::textButton() : button()
 }
 
 VA(0x00456a50, 0x193)  // linkorder bracket; initialize/GetSprite/GetFont callees byte-proven, dc 0x57ab4
-textButton::textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor newColor)
+textButton::textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, bool end, int hotkey, int style, font::TColor newColor)
     : button()
 {
     initialize(x, y, w, h, id, image, normal, selected, end, hotkey, style);
