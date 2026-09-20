@@ -4464,7 +4464,7 @@ townmgr	?buyBuild@townManager@@QAEHHHH@Z	75.4103	75.4103	95.1207	0x1d5f30	tokens
 townmgr	?close@TTavernWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x1d7e70	tokens1:c95abb3e8542
 townmgr	?close@townManager@@UAEXXZ	100.0000	100.0000	100.0000	0x1c71b0	tokens1:5791a09b3038
 townmgr	?cycleOutline@townManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x1d6910	tokens1:5252c0452a67
-townmgr	?doBlacksmith@@YIXHH@Z	90.7482	90.7482	90.7482	0x1d1d30	tokens1:479addd37ab5
+townmgr	?doBlacksmith@@YIXHH@Z	100.0000	100.0000	100.0000	0x1d1d30	tokens1:b0728e7322fb
 townmgr	?doCommand@townManager@@QAEXHEPAVtype_garrison_base_window@@@Z	100.0000	100.0000	100.0000	0x1d4c10	tokens1:2c9d1ac97e98
 townmgr	?doEventGarrison@@YIXPAVhero@@PAVgarrison@@@Z	100.0000	100.0000	100.0000	0x1d1130	tokens1:a691ef3c5d62
 townmgr	?doHall@townManager@@AAEXXZ	100.0000	100.0000	100.0000	0x1d27b0	tokens1:7216ac85eca6

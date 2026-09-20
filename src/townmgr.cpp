@@ -3828,13 +3828,16 @@ int TBlacksmithWindow::windowHandler(message& msg)
 // harmless because a war machine costs gold and nothing else, so the
 // other six terms are zero - but it is what the bytes say, and the
 // fixed +0xb4 displacement inside the loop is the proof.
+// Dreamcast lines 5364 and 5378 prove the authored TTextResource::operator[]
+// and game::GetHero calls. Their canonical inline boundaries restore retail's
+// purchase-arm argument and creature-table register schedule.
 
 // E:\gamedcs\townmgr.cpp:5361
 VA(0x005d1d30, 0x1BE)  // anchor-callee(TBlacksmithWindow ctor 0x5d1360) + arity, dc 0x173ce0
 void doBlacksmith(int heroId, int townType)
 {
     if (heroId == -1) {
-        sprintf(g_text, g_generalText->getText(274), g_unnamed6a6524);
+        sprintf(g_text, (*g_generalText)[274], g_unnamed6a6524);
         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
@@ -3848,8 +3851,8 @@ void doBlacksmith(int heroId, int townType)
     if (g_currentPlayer->isLocalHuman()
         && g_windowManager->m_dialogReturn
                == TBlacksmithWindow::BUY_BUTTON_ID) {
-        g_game->m_heroes[heroId].giveArtifact(&g_blacksmithArtifacts[townType],
-                                            1, 1);
+        g_game->getHero(heroId)->giveArtifact(
+            &g_blacksmithArtifacts[townType], 1, 1);
         const int* cost =
             g_creatureTypeTraits[g_blacksmithMachines[townType]].m_cost;
         for (int i = 0; i < 7; i++)
