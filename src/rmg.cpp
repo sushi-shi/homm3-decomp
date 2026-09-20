@@ -7738,11 +7738,17 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
 // Keep the canonical object-position and guard-placement calls; expanding
 // placeGuard duplicates the same zone/occupancy/create/add sequence.
 // Assign zero only in the disabled-strength arm and retain the observed
-// upper-bound-first clamp. The scalar getRmgGuardValue call still expands;
-// the guard map lookup retains its scalar overload instead of the value one.
-// A shared zone-adjusted value helper plus the proxy query reaches 90.3657%,
-// but the joint treasure caller then loses MAX (77.0873% -> 63.2664%).
-// Its disabled/explicit-result variants do not yet recover that caller.
+// upper-bound-first clamp. The scalar getRmgGuardValue call still expands.
+// Both map-lookup overloads emit the same 39 retail bytes without relocations;
+// their labels do not distinguish the folded body. The guard argument still
+// lowers as three pushes, while retail copies a twelve-byte aggregate.
+// A separate resourceProperties local recovers the retail register lifetime:
+// unlike the earlier scan pointer, its address never reaches vector insertion.
+// In the zone-value-helper model, a named selection index also restores the
+// post-rand array reload (95.7935% together). Compound trigger subtraction
+// reaches 96.6393%, but changes retail's 1-minus-trigger arithmetic sequence.
+// The shared helper still lowers treasure assembly MAX (77.0873% -> 63.2533%);
+// its disabled/explicit-result variants do not yet recover that caller.
 // Free overloads taking zone or scalar strengths reproduce that same tradeoff.
 // Cell zone/count queries and a reference-returning position accessor leave
 // this caller unchanged. Direct mutable bitset indexing loses the outer query
@@ -7803,8 +7809,8 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     if (guardValue > 0)
         placeGuard(entrance, guardValue);
     int placed = 0;
-    properties = selectObjectPrototype(terrain, RESOURCE, resource);
-    if (!properties)
+    TRmgObjectPropertiesRef* resourceProperties = selectObjectPrototype(terrain, RESOURCE, resource);
+    if (!resourceProperties)
         return 1;
     TRmgMapPosition position = mine->m_position;
     TRmgZoneBounds bounds;
@@ -7814,9 +7820,9 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     bounds.m_maximumX = min(position.m_x + 2, m_map.m_mapWidth);
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX && placed <= 2; ++position.m_x) {
-            if (rand() % 2 == 0 && m_map.canPlaceObject(properties, position, zone)) {
+            if (rand() % 2 == 0 && m_map.canPlaceObject(resourceProperties, position, zone)) {
                 ++placed;
-                addObject(new rmgResourceObject(properties), position);
+                addObject(new rmgResourceObject(resourceProperties), position);
             }
         }
     }
