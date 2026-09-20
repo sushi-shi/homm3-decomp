@@ -66,8 +66,8 @@ needs its canonical source body and callers. An inactive `DC_ONLY` carcass
 does not account for that body.
 
 The statuses distinguish `matched`, `documented_dc_only`,
-`documented_win_only`, `documented_dc_inlined`, `missing_source`, `missing_dc`,
-and `invalid_source`. Only the first four account for an entry. A match establishes source identity;
+`documented_win_only`, `missing_source`, `missing_dc`, and `invalid_source`.
+Only the first three account for an entry. A match establishes source identity;
 the VC6 byte comparison measures reconstruction accuracy separately. Complete
 retail address admission and a high byte score do not establish complete source
 coverage or prove that an assigned name is correct.
@@ -84,12 +84,11 @@ source line) with a documented platform/pressing reason. An unreconstructed
 function is not automatically DC-only. `config/win_only.tsv` admits exact
 Windows definition identities (physical file, qualified function, signature)
 without a Dreamcast counterpart. It cannot waive a misplaced DC function.
-`config/dc-inlined-helpers.tsv` records reviewed source bodies whose DC calls
-were all inlined, with caller-side evidence rather than a standalone procedure.
-Both gates check the same exact file/function/signature keys. The census keeps
-these definitions visible as `documented_dc_inlined`, carrying the reviewed
-reason and leaving the nonexistent DC procedure address empty. A row becomes
-stale if its source body disappears or a real procedure accounts for it.
+Inferred helper boundaries without a proven DC declaration use that same
+`win_only.tsv` mechanism, with the caller evidence and uncertainty recorded in
+the reason. They remain visible as `documented_win_only`, not as proven DC
+inline bodies. Both gates check the exact file/function/signature key; a
+disposition cannot make an unaccounted DC procedure disappear from the census.
 Unused entries and duplicate or incomplete entries are errors.
 The bidirectional census also rejects a DC exclusion that hides a live,
 same-owner counterpart with the same interface, even if both tables contain

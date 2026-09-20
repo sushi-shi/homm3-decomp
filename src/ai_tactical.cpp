@@ -1927,7 +1927,7 @@ long type_AI_spellcaster::getFireShieldValue(const army* ourArmy, type_enchant_d
     long reflected = target->getAverageDamage(ourArmy, 0, target->m_numTroops, 1, 0)
                      * amount / 100;
     long ourHits = ourArmy->getTotalHitPoints(0);
-    const long& capped = cppMin(reflected, ourHits);
+    long capped = min(reflected, ourHits);
     long oldDamage = ourArmy->getAverageDamage(target, 0, ourArmy->m_numTroops, 1, 0);
     long combined = capped * count + oldDamage;
     double increase = static_cast<double>(combined) / static_cast<double>(oldDamage);
@@ -2270,7 +2270,7 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice* choice) const
                     continue;
             }
         }
-        long healed = cppMin(healable, dead);
+        long healed = min(healable, dead);
         if (healed < 1)
             continue;
         if (choice->m_spell == SPELL_RESURRECTION
@@ -2628,7 +2628,7 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
         long strength = g_combatManager->m_wallStrength[
             combatManager::s_wallTargets[i].m_wall];
         total += strength;
-        lowest = cppMin(lowest, strength);
+        lowest = min(lowest, strength);
     }
     if (total == 0)
         return;
@@ -2648,7 +2648,7 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
         return;
     long value = 0;
     const army* ourArmy = g_combatManager->m_armies[m_side];
-    long damage = cppMin<long>(
+    long damage = min(
         g_spellTraits[choice->m_spell].m_masteryBonus[choice->m_mastery], total);
     long remaining = g_combatManager->m_numArmies[m_side];
     for (; remaining-- > 0; ++ourArmy) {

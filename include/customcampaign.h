@@ -151,7 +151,10 @@ public:
     void doPreLoadCustomization();
     // E:\gamedcs\CustomCampaign.h:212, dc 0xe6ef8
     VA(0x004897d0, 0x43)  // dc 0xe6ef8
-    unsigned char campaignComplete()
+    // Original CampaignComplete@SCampaign@@QAA_NXZ (native bool, mutable).
+    // DC's older fixed-array body also marks campaignCompleted. Retail's
+    // 67-byte vector scan has no such store; preserve the Complete behavior.
+    bool campaignComplete()
     {
         for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
             if (!m_mapScores[i].m_completed)

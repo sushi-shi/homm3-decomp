@@ -183,7 +183,7 @@ public:
                   int dpitch, bool hflip) const;
     void drawHeroShadow(int seqnum, int framenum, int sx, int sy, int sw,
                         int sh, unsigned short* dst, int dx, int dy, int dw,
-                        int dh, int dpitch, unsigned char hflip) const;
+                        int dh, int dpitch, bool hflip) const;
     void drawHeroAlpha(int seqnum, int framenum, int sx, int sy, int sw,
                        int sh, unsigned short* dst, int dx, int dy, int dw,
                        int dh, int dpitch, unsigned char hflip) const;
@@ -358,9 +358,11 @@ public:
         drawHero(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                  dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
     }
+    // DC publics at 0x1f8a4 and 0x72d98 encode _N for hflip in both
+    // DrawHeroShadow overloads; T_UCHAR debug lowering is not source uchar.
     void drawHeroShadow(int seqnum, int framenum, int sx, int sy, int sw,
                         int sh, Bitmap16Bit* dst, int dx, int dy,
-                        unsigned char hflip) const
+                        bool hflip) const
     {
         drawHeroShadow(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                        dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);

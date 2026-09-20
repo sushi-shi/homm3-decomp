@@ -397,7 +397,11 @@ void type_quest::save(TAbstractFile* file)
 // _Ptr member, and - unlike every other row read in this file - WITHOUT a
 // quest_type() call, so the ternary on field_04/field_38 is spelled inline
 // with the 832-byte product duplicated into both arms, exactly as
-// quest_text()'s own note describes.
+// quest_text()'s own note describes. Naming the remaining-day subtraction at
+// this lifetime raises retail similarity from 85.1124% to 93.4944%. Moving it
+// earlier, naming the text variant too, or constructing text directly from the
+// separator loses agreement; the combined direct/copy-initialization controls
+// score 75.2472%.
 
 VA(0x0056d040, 0x1F7)  // anchor-caller(both base dialog getters) + the row-column-51 read, retail-only
 std::string type_quest::getTimeLimitText()
@@ -407,10 +411,10 @@ std::string type_quest::getTimeLimitText()
         + g_game->m_day);
     std::string text;
     text = DATA_COMPGEN(0x00660330, questTimeLimitSeparator, " ");
+    int remainingDays = m_limit - days;
     const std::string* row =
         m_seerHut ? g_questTextA[m_textVariant] : g_questTextB[m_textVariant];
-    text += formatString(row[QUEST_TEXT_TIME_LIMIT].c_str(),
-                          m_limit - days);
+    text += formatString(row[QUEST_TEXT_TIME_LIMIT].c_str(), remainingDays);
     return text;
 }
 
@@ -2446,12 +2450,9 @@ int TSeerReward::getValue(const hero* currentHero)
     case eRewardArtifact: {
         if (const_cast<hero*>(currentHero)->getNumberInBackpack(1) >= 64)
             return 0;
-        // Complete stores the reward ordinal in the serialized union word.
-        // Decode that word before constructing the canonical typed artifact.
-        TArtifact artifact;
-        memcpy(&artifact, &m_value.m_dwords[0], sizeof artifact);
         return aiGetValueOfArtifact(
-            type_artifact(artifact), currentHero->m_owner);
+            type_artifact(static_cast<TArtifact>(m_value.m_dwords[0]) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */),
+            currentHero->m_owner);
     }
 
     case eRewardSpell:

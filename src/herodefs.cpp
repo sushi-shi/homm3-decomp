@@ -55,7 +55,7 @@ unsigned char initializeHeroTraitsTable()
 }
 
 VA(0x004e6920, 0x1E2)  // dc 0xd5ab4
-unsigned char initializeHeroClassTraitsTable()
+bool initializeHeroClassTraitsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0067f164, heroClassTraitsSpreadsheetName,
@@ -79,7 +79,7 @@ unsigned char initializeHeroClassTraitsTable()
 }
 
 VA(0x004e6b10, 0x1C8)  // dc 0xd5b28
-unsigned char initializeSSkillTraitsTable()
+bool initializeSSkillTraitsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0067f174, secondarySkillTraitsSpreadsheetName,

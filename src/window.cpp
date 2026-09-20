@@ -501,9 +501,9 @@ void heroWindow::enableAllWidgets(unsigned char enable)
 }
 
 VA(0x005ff460, 0x21)  // dc 0x197c08
-int heroWindow::doModal(unsigned char fadeIn)
+void heroWindow::doModal(bool fadeIn)
 {
-    return g_windowManager->doDialog(this, heroWindowHandler, fadeIn);
+    g_windowManager->doDialog(this, heroWindowHandler, fadeIn);
 }
 
 VA(0x005ff490, 0x6C)  // dc 0x197c24

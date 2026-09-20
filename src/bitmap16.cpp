@@ -335,16 +335,13 @@ void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
 // rectangle walk with the interior filled instead of outlined: VC6 turns
 // the inner store loop into its word-fill idiom (duplicate the colour into
 // a dword, `shr ecx,1 / rep stosd / adc ecx,ecx / rep stosw`).
-// Bound the row cursor: advance only when another row is actually visited,
-// avoiding retail's unused end+x pointer after a bottom-edge rectangle.
-// DC bitmap16.cpp:679..703 supplies the one GetMap and nested pixel loops.
-// Residual (82.1964%): deliberate row-boundary check absent in retail.
-// Ten source forms / nine distinct objects: GetMap per row 53.8929%, byte
-// offset 73.7857%, product 64.2143%, final-row guard 69.625%, allocation-row
-// base 63.625%, break-before-step 68.7857%; unchecked control remains 100%.
-// Actual-body native tests check output and every pointer step before it is
-// formed, including padding/nonzero origins/bottom edges and the old defect
-// as a failing control. No integer address or oversized allocation is used.
+// DC bitmap16.cpp:699 (0x51566..0x51568) and retail both advance the row
+// cursor unconditionally. Retain that original source behavior for the exact
+// reconstruction, including its unused out-of-range pointer after a bottom-edge
+// rectangle with x > 0. For an owned 4x4 bitmap, fillRect(1,3,1,1) ends at
+// pixel offset 17, beyond one-past 16. The allocation does not include padding
+// that would make this valid portable C++. The earlier guarded repair scored
+// 82.1964%; tested integral offsets and zero-column origins do not match.
 VA(0x0044e4c0, 0x7D)  // anchor-caller(textWidget::Draw, FadeToBlack) + order-map(DC bitmap16.obj), dc 0x5150c
 void Bitmap16Bit::fillRect(int x, int y, int w, int h, unsigned short color)
 {
@@ -357,10 +354,9 @@ void Bitmap16Bit::fillRect(int x, int y, int w, int h, unsigned short color)
         Bitmap16MapPointer dst;
         dst.m_pixels = getMap(x, y);
         for (int row = 0; row < h; ++row) {
-            if (row)
-                dst.m_bytes += m_pitch;
             for (int col = 0; col < w; ++col)
                 dst.m_pixels[col] = color;
+            dst.m_bytes += m_pitch;
         }
     }
 }

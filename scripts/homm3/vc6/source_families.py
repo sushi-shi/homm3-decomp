@@ -107,6 +107,10 @@ def load_manifest(path, root):
     originals = {}
 
     def parse_edit(raw, default_source):
+        unknown = set(raw) - {"source", "find", "insert_before", "insert_after", "replace", "text"}
+        if unknown:
+            hint = "; use extra_edits for additional edits" if "edits" in unknown else ""
+            raise ValueError(f"unknown edit field(s): {', '.join(sorted(unknown))}{hint}")
         relative = raw.get("source", default_source)
         if not isinstance(relative, str):
             raise ValueError("every edit needs a source")
@@ -210,6 +214,18 @@ def format_max_summary(row):
             f"{len(summary['losses'])} loss(es)")
 
 
+def expected_control_scores(report, scored):
+    """Read current scores from the live report, independent of the MAX ledger.
+
+    Fast builds refresh the comparison report without checkpointing CUR/MAX.
+    The unchanged-source control verifies the current object, so comparing it
+    with ledger CUR would reject a valid post-adoption fast-build state.
+    """
+    current = status.fn_fuzzy(report)
+    return {"|".join(key): round(current.get(key, 0.0), 4)
+            for key in scored}
+
+
 def rank(row):
     scores = ranking_scores(row).values()
     return (sum(value == 100 for value in scores), sum(scores), row["id"])
@@ -270,10 +286,22 @@ def create_snapshot(root, snapshot):
     snapshot.mkdir()
     shutil.copytree(root / "include", snapshot / "include")
     shutil.copytree(root / "src", snapshot / "src", ignore=shutil.ignore_patterns("build"))
+    # cc_wrap reads the project specification and include/profile manifest
+    # from HOMM3_DIR, which points at the isolated candidate tree.
     (snapshot / "config").mkdir()
     for name in ("project.toml", "units.toml"):
         shutil.copy2(root / "config" / name, snapshot / "config" / name)
     (snapshot / "vendor").symlink_to(root / "vendor", target_is_directory=True)
+
+
+def candidate_environment(candidate_root):
+    env = dict(os.environ, HOMM3_DIR=str(candidate_root),
+               PYTHONPATH=str(common.HOMM3_DIR / "scripts"),
+               MSVC_DIR=str(Project(common.HOMM3_DIR).toolchain))
+    prefix = env.get("WINEPREFIX")
+    if not prefix or not Path(prefix).is_dir():
+        env["WINEPREFIX"] = str(common.HOMM3_DIR / "build/wineprefix")
+    return env
 
 
 def compile_candidate(candidate_root, unit, output):
@@ -283,9 +311,7 @@ def compile_candidate(candidate_root, unit, output):
         raise ValueError(f"unknown unit or missing profile: {unit}")
     output.mkdir(parents=True, exist_ok=True)
     obj = output / "candidate.obj"
-    env = dict(os.environ, HOMM3_DIR=str(candidate_root),
-               PYTHONPATH=str(common.HOMM3_DIR / "scripts"),
-               MSVC_DIR=str(Project(common.HOMM3_DIR).toolchain))
+    env = candidate_environment(candidate_root)
     proc = subprocess.run([
         sys.executable, "-m", "homm3.core.cc_wrap", "--out", str(obj),
         "--src", str(candidate_root / source.relative_to(common.HOMM3_DIR)),
@@ -393,7 +419,8 @@ def main(argv=None):
     if render(originals, axes, zero) != originals:
         raise ValueError("the first option on every axis must preserve the original source")
     control = evaluate(snapshot, output, plans, originals, axes, zero, previous=rows)
-    expected = {"|".join(key): row.cur or 0 for key, row in rows.items() if key[0] in units}
+    scored = tuple(key for key in rows if key[0] in units)
+    expected = expected_control_scores(status.load_report(), scored)
     if control["scores"] != expected:
         raise RuntimeError(f"unchanged-source control failed: {control.get('error', 'scores differ from current build')}")
     corner = tuple(len(axis.options) - 1 for axis in axes)

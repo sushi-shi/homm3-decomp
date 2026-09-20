@@ -503,21 +503,9 @@ void combatManager::updateCombatArea()
     }
 }
 
-// E:\gamedcs\drawing.cpp:513, dc 0x83ec0.
-// Complete passes the rectangle by const reference; UpdateMouseGrid
-// and FlyTo share this drawing-module definition.
-void combatManager::updateCombatArea(const SLimitData& area)
-{
-    g_windowManager->updateScreen(
-        area.m_minX, area.m_minY, area.width(), area.height());
-}
-
-// E:\gamedcs\drawing.cpp:598, dc 0x8405c.
-// The fixed PC combat viewport needs no scrolling.
-bool combatManager::scrollTo(SLimitData, bool, bool, bool)
-{
-    return false;
-}
+// Windows fixed-viewport extent helpers are defined once in cmbtmgr.h;
+// see their platform evidence comment.
+// The coordinate ScrollTo facade below retains its drawing.cpp ownership.
 
 // Original: combatManager::ScrollTo; drawing.cpp:666, dc 0x841d4.
 unsigned char combatManager::scrollTo(int x, int y, unsigned char draw,
@@ -528,7 +516,7 @@ unsigned char combatManager::scrollTo(int x, int y, unsigned char draw,
 
 // E:\gamedcs\drawing.cpp:679, dc 0x84248. ScrollTo's rectangle overload
 // constructs SLimitData(x, y, x + width, y + height) at line 680 and delegates
-// to the ordinary extent overload. SpellEffect calls it at line 2653; the
+// to the extent overload. SpellEffect calls it at line 2653; the
 // fixed PC viewport folds the false result into UpdateCombatArea's path.
 bool combatManager::scrollTo(int x, int y, int width, int height, bool draw,
                              bool doscrollX, bool doscrollY)

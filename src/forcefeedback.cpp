@@ -116,7 +116,7 @@ t_initializer::t_initializer(void* instance, void* hwnd)
     g_immWindowOrigin.x = 0;
     g_immWindowOrigin.y = 0;
     ClientToScreen(static_cast<HWND>(hwnd), &g_immWindowOrigin);
-    CIFCErrors::m_dwErrHandlingFlags = 1;
+    CIFCErrors::SetErrorHandling(1);
 
     std::auto_ptr<CImmMouse> mouse(new CImmMouse);
     if (!mouse->Initialize(instance, hwnd, 4))
