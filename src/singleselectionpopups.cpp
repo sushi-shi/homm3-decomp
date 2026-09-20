@@ -16,7 +16,7 @@
 // ICF folds several bodies: CBitmapWidget::Main and its scalar deleting
 // destructor onto CSpriteWidget's (0x575a10 / 0x5757b0), and the CTownDlg /
 // CTeamAlignmentDlg scalar deleting destructors onto CHeroDlg's (0x575e30);
-// the folded twins keep DC_ONLY rows below (one retail address = one claim).
+// only one source body claims each shared retail address.
 // Widget/CSingleSelPopup ctors and the trivial zBufferDraw/Draw stubs are
 // inlined or ICF-folded out of this TU (0x404140 / 0x404df0 shared empties).
 // All three widget non-deleting dtors fold to 0x575a60 (jmp ~widget), whose
@@ -459,46 +459,6 @@ void CTeamAlignmentDlg::getTeams()
         ++m_numTeams;
     }
 }
-
-#if 0  // @carcass -- located, not reconstructed
-
-// ============================================================================
-// Unclaimed DC roster rows: inlined away, ICF-folded onto a claimed twin, or
-// folded onto a shared empty outside this TU. No standalone retail body.
-// ============================================================================
-
-// --- CSingleSelPopup base: ctor/Add/ExitDialog inlined into the four derived
-//     dialog ctors; the base is never directly instantiated (no own vtable). ---
-
-// --- CTeamAlignmentDlg::CountNumPlayers: inlined into GetTeams/CreateWin. ---
-// E:\gamedcs\singleselectionpopups.cpp:411
-DC_ONLY(0x12ed7c, 0x58)
-int CTeamAlignmentDlg::countNumPlayers(int teamNbr)
-{
-    // @stub
-}
-
-// --- Widget-subclass ctors: inlined into the CreateWin callers that build
-//     them (each stores the class vtable inline; see the CreateWin claims). ---
-// E:\gamedcs\singleselectionpopups.cpp:47
-DC_ONLY(0x12f018, 0x94)   // inlined into CBonusDlg/CHeroDlg/CTownDlg CreateWin
-void CSpriteWidget::CSpriteWidget(int xPos, int yPos, CSprite* pSprite, int frame)
-{
-    // @stub
-}
-// E:\gamedcs\singleselectionpopups.cpp:82
-DC_ONLY(0x12f168, 0x78)   // inlined into CBonusDlg/CHeroDlg CreateWin
-void CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* pImage)
-{
-    // @stub
-}
-
-// --- CBitmapWidget::Main: ICF-folded onto CSpriteWidget::Main (0x575a10). ---
-
-// --- Trivial zBufferDraw / Draw stubs: ICF-folded onto shared empties
-//     0x404140 / 0x404df0 outside this TU (excluded class). ---
-
-#endif  // @carcass
 
 // ============================================================================
 // The scenario-setup "Resource" starting bonus, in two halves.

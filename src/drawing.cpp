@@ -527,13 +527,6 @@ bool combatManager::scrollTo(int x, int y, int width, int height, bool draw,
 
 #if 0  // @carcass
 
-// E:\gamedcs\drawing.cpp:492
-DC_ONLY(0x83e58, 0x34)
-void combatManager::updateCombatArea()
-{
-    // @stub
-}
-
 // DC FullUpdate/UpdateCombatArea(x,y,w,h), ScrollCombatArea, ScrollToPixel
 // and Rescale operate on the removed ca_scroll_x/y origin and translated
 // destination (8,32). Complete's retained UpdateCombatArea0x493780 and
@@ -541,34 +534,6 @@ void combatManager::updateCombatArea()
 // the two scroll-origin members are absent before the retained archer records.
 // Preserve the ordinary ScrollTo facades used by source calls, while these
 // exact translated-viewport interfaces are reviewed in dc_only.tsv.
-
-// E:\gamedcs\drawing.cpp:506
-DC_ONLY(0x83e8c, 0x34)
-void combatManager::FullUpdate()
-{
-    // @stub
-}
-
-// E:\gamedcs\drawing.cpp:520
-DC_ONLY(0x83ee8, 0x9C)
-void combatManager::updateCombatArea(int x, int y, int width, int height)
-{
-    // @stub
-}
-
-// E:\gamedcs\drawing.cpp:554
-DC_ONLY(0x83f84, 0xD6)
-unsigned char combatManager::ScrollCombatArea(int dx, int dy, unsigned char abs, unsigned char draw)
-{
-    // @stub
-}
-
-// E:\gamedcs\drawing.cpp:672
-DC_ONLY(0x84228, 0x1E)
-unsigned char combatManager::ScrollToPixel(int x, int y, unsigned char draw)
-{
-    // @stub
-}
 
 // E:\gamedcs\drawing.cpp:689
 // RETAIL_LOCATED(0x004937d0, 0x155): not reconstructed; dc-callgraph unique, dc 0x842a8
@@ -601,13 +566,6 @@ void combatManager::updateMouseGrid(int iNewMouseGridIndex,
     // @stub
 }
 
-// E:\gamedcs\drawing.cpp:1113
-DC_ONLY(0x84dac, 0x80)
-void combatManager::updateMouseGrid(int iNewMouseGridIndex, int bAllowDuringAction)
-{
-    // @stub
-}
-
 // E:\gamedcs\drawing.cpp:1141
 // RETAIL_LOCATED(0x00494440, 0x7d5): not reconstructed; anchor-global, dc 0x84e2c
 void combatManager::drawFrame(unsigned char update, unsigned char bLimitCreatureEffect, unsigned char bLimitDraw, int iDelay, unsigned char bRefreshBackground, unsigned char bDoDelayTil)
@@ -615,23 +573,9 @@ void combatManager::drawFrame(unsigned char update, unsigned char bLimitCreature
     // @stub
 }
 
-// E:\gamedcs\drawing.cpp:1399
-DC_ONLY(0x853f4, 0x84)
-void combatManager::drawObstacleAt(int hex_index)
-{
-    // @stub
-}
-
 // E:\gamedcs\drawing.cpp:1426
 // RETAIL_LIVE(0x00494c20, 0x31c): reconstructed below; callee-set, dc 0x85478
 void combatManager::drawWallAt(int hex_index, int dx)
-{
-    // @stub
-}
-
-// E:\gamedcs\drawing.cpp:1581
-DC_ONLY(0x857d4, 0x70)
-void combatManager::drawDeadOccupants(int index)
 {
     // @stub
 }
@@ -1227,7 +1171,7 @@ void combatManager::drawFrame(bool update,
 // Dreamcast drawing.cpp:1399. Complete's /Ob2 build folds this helper into
 // DrawFrame, but the source boundary and statement grouping remain positive
 // CodeView evidence.
-DC_ONLY(0x853f4, 0x84)
+
 void combatManager::drawObstacleAt(int hexIndex)
 {
     hexcell& cell = m_cells[hexIndex];
@@ -1358,7 +1302,7 @@ void combatManager::drawWallAt(int hexIndex, int dx)
 // into DrawFrame; retaining the helper keeps the original local lifetime and
 // statement boundary visible to the compiler. Ordinary auto-inlining retains
 // all exact callers; no explicit inline keyword is needed or evidenced.
-DC_ONLY(0x857d4, 0x70)
+
 void combatManager::drawDeadOccupants(int index)
 {
     hexcell& cell = m_cells[index];
@@ -2115,34 +2059,6 @@ void combatManager::spellEffect(int effect, int hex, int delay,
 
 #if 0  // @carcass
 
-// E:\gamedcs\drawing.cpp:1948
-DC_ONLY(0x85f70, 0x64)
-int combatManager::drawObstacle(const hexcell& c)
-{
-    // @stub
-}
-
-// E:\gamedcs\drawing.cpp:1963
-DC_ONLY(0x85fd4, 0xC2)
-int combatManager::drawWall(const Bitmap816* image, int x, int y, int w, int h, int dx, int dy)
-{
-    // @stub
-}
-
-// E:\gamedcs\drawing.cpp:1991
-DC_ONLY(0x86098, 0x134)
-int combatManager::drawObject(const Bitmap816* image, int x, int y)
-{
-    // @stub
-}
-
-// E:\gamedcs\drawing.cpp:2019
-DC_ONLY(0x861cc, 0x1B2)
-int combatManager::drawMoatOverlay(int index)
-{
-    // @stub
-}
-
 // E:\gamedcs\drawing.cpp:2093
 // RETAIL_LOCATED(0x00495bf0, 0x35e): not reconstructed; anchor-global, dc 0x86380
 void combatManager::computeMaxExtent()
@@ -2163,37 +2079,5 @@ void combatManager::cycleCombatScreen()
 {
     // @stub
 }
-
-// E:\gamedcs\drawing.cpp:2524
-DC_ONLY(0x86ea0, 0x19C)
-void combatManager::spellEffect(int effect, army* target_army, int iDelay, unsigned char bDoWince)
-{
-    // @stub
-}
-
-// E:\gamedcs\drawing.cpp:2593
-DC_ONLY(0x8703c, 0x23A)
-void combatManager::spellEffect(int effect, int hex, int iDelay, unsigned char leave_last_frame)
-{
-    // @stub
-}
-
-// E:\gamedcs\drawing.cpp:2662
-DC_ONLY(0x87278, 0x30)
-void Rescale(int* x, int* y, unsigned char offset)
-{
-    // @stub
-}
-
-
-
-
-
-
-
-
-
-
-
 
 #endif  // @carcass

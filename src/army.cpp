@@ -555,25 +555,6 @@ void army::loadResources()
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:477
-// Retired raw-resource owner API. DC0x4424c guards quick combat, disposes
-// stdIcon/missileIcon and eight sample pointers, then zeroes those pointers.
-// Complete replaces those raw fields with TResourceHandle members: its copy
-// ctor0x437a00 increments references, and destructor0x43d400 invokes an
-// eight-element destructor iterator at +0x170 then disposes +0x168/+0x164.
-// FreeArmies0x4639e0 therefore retains only StopAllSamples; neither Close nor
-// DoVictory contains the DC release loop. See config/dc_only.tsv.
-DC_ONLY(0x4424c, 0xCC)
-void army::freeResources()
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:507
-#endif  // @carcass
-
 VA(0x0043df20, 0xDD)  // dc 0x44318
 void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
                    const town* ownerTown, const hero* otherHero,
@@ -965,7 +946,6 @@ double army::computeKarma() const
 // value compare, the increment, then ONE compare of the answer against
 // end().
 // E:\gamedcs\army.cpp:917
-DC_ONLY(0x44e14, 0xAC)
 static unsigned char addItem(std::vector<army*>& array, army* arg)
 {
     if (std::find(array.begin(), array.end(), arg) != array.end())
@@ -3217,7 +3197,7 @@ unsigned long army::strength()
 //         `sub ecx,side / [ecx+0x53df]` is the 1-side index.)
 //   3512  CancelAllSpells();  INLINED - the 0x51-iteration walk of
 //         spellInfluence with CancelIndividualSpell(i) on each positive
-//         row. DC_ONLY 0x499ac has NO retail slot (the carve leaves no
+//         row. Dreamcast 0x499ac has NO retail slot (the carve leaves no
 //         gap between CancelIndividualSpell 0x444510 and
 //         SetSpellInfluence 0x4448f0), the EndWalk situation again.
 //   3516  creatureId |= 0x200000;   3517  bAllUnitsKilled = 0;
@@ -4008,7 +3988,7 @@ static const TWallTargetId g_walls[4] = {
 // /Ob2 expands it with both the array and the count constant-folded -
 // which is what turns the `targets + count` limit into the bare
 // 0x63b850 the retail instruction carries.
-DC_ONLY(0x4a8c8, 0xB2)
+
 static TWallTargetId chooseWallTarget(TWallTargetId wall,
                                         const TWallTargetId* targets,
                                         long count)
@@ -5012,8 +4992,6 @@ unsigned char spellIsValidOnTarget(int spell, const army* target)
     return 1;
 }
 
-
-
 VA(0x00447eb0, 0x21)  // dc 0x4c210
 unsigned char isValidCaliphSpell(SpellID spell, const army* target)
 {
@@ -5342,7 +5320,6 @@ int army::getSpeed() const
     }
     return speed;
 }
-
 
 VA_COMPGEN(0x004490b0, 0x73, DEQUE_FREEFRONT, int)
 VA_COMPGEN(0x00449130, 0x8E, DEQUE_FREEBACK, int)

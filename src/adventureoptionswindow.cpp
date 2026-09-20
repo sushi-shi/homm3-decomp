@@ -117,7 +117,7 @@ TAdventureOptionsWindow::~TAdventureOptionsWindow()
 // DC 0x51b0 proves the early negative return followed by a switch assigning
 // one result for the final return. Complete adds the upper-bound fast reject;
 // with both bounds owned here, retail corroborates both inlined lowerings.
-DC_ONLY(0x51b0, 0x54)
+
 int TAdventureOptionsWindow::convertID2HelpID(int id) const
 {
     if (id < 0)

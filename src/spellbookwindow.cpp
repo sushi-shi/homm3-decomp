@@ -62,7 +62,6 @@ DATA(0x00641d94) static const char* const g_levelSprites[] = {
 DATA(0x006a5d48) const char* g_secondarySkillLevels[4];
 
 // E:\gamedcs\spellbookwindow.cpp:82
-DC_ONLY(0x14d3a4, 0x28)
 int TSpellbookWindow::getPositionFromSchool(unsigned schoolMask)
 {
     if (schoolMask == eSchoolAll)
@@ -103,15 +102,6 @@ static const char* getLevelString(SpellID spell)
     int index = g_spellTraits[spell].m_level - 1;
     return levelStrings[index];
 }
-
-#if 0  // @carcass: untouched Dreamcast-only bodies
-// E:\gamedcs\spellbookwindow.cpp:69
-DC_ONLY(0x14bc58, 0x28)
-void TSpellbookWindow::reset()
-{
-    // @stub
-}
-#endif
 
 VA(0x0059ba80, 0x1D)  // dc 0x14bc58
 void TSpellbookWindow::reset()
@@ -525,16 +515,6 @@ void TSpellbookWindow::gotoPage(int page)
             ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
 }
 
-#if 0  // @carcass: untouched Dreamcast-only bodies
-// E:\gamedcs\spellbookwindow.cpp:680
-DC_ONLY(0x14ce10, 0x58)
-void TSpellbookWindow::displayNewSchool(int position)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 void TSpellbookWindow::displayNewSchool(int position)
 {
     if (getSchool() == getSchoolFromPosition(position))
@@ -816,24 +796,6 @@ bool TSpellbookWindow::TSpellbookEntry::operator<(const TSpellbookEntry& y) cons
         return false;
     return _strcmpi(traits->m_name, yTraits->m_name) < 0;
 }
-
-#if 0  // @carcass: untouched Dreamcast-only bodies
-
-// E:\gamedcs\spellbookwindow.cpp:103
-DC_ONLY(0x14d3cc, 0x12)
-TSpellSchool TSpellbookWindow::getSchoolFromPosition(int j)
-{
-    // @stub
-}
-
-// E:\gamedcs\spellbookwindow.cpp:465
-DC_ONLY(0x14d3e0, 0x34)
-void* TSpellbookWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif
 
 // COMDAT pairing: std::_Sort<TSpellbookEntry>, agreement 1.000 over all 235
 // instructions. Sits beside the unit's _Insertion_sort_1 over the same element.

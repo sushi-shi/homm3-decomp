@@ -34,7 +34,7 @@ type_creature_bank_traits::type_creature_bank_traits()
 // E:\gamedcs\creature_bank.cpp:32; original initialize_creature_bank_level.
 // DC proves static linkage and both reference parameters. Retail expands
 // the one source call in initializeCreatureBankTraits; keep the real body.
-DC_ONLY(0x70fe0, 0x14A)
+
 static void initializeCreatureBankLevel(type_creature_bank_level& traits,
                                        const std::vector<char*>& resource)
 {
@@ -134,7 +134,7 @@ unsigned char initializeCreatureBankTraits()
 // out-of-line row survives. The free-slot cursor starts AT the slot being
 // split and is carried across the whole run - every site's scan begins at
 // its own `slot` argument, which is what fixes the parameter's second role.
-DC_ONLY(0x71218, 0xB8)
+
 static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
 {
     long freeSlot = slot;
@@ -219,28 +219,3 @@ void initializeCreatureBank(type_creature_bank* bank,
         }
     }
 }
-
-#if 0  // @carcass -- remaining Dreamcast hypotheses
-
-// E:\gamedcs\creature_bank.cpp:25
-DC_ONLY(0x714e0, 0x34)
-void type_creature_bank_traits::type_creature_bank_traits()
-{
-    // @stub
-}
-
-// E:\gamedcs\creature_bank.cpp:25
-DC_ONLY(0x71514, 0x18)
-void type_creature_bank_traits::~type_creature_bank_traits()
-{
-    // @stub
-}
-
-// E:\gamedcs\creature_bank.cpp:25
-DC_ONLY(0x7152c, 0x1C)
-void type_creature_bank_level::type_creature_bank_level()
-{
-    // @stub
-}
-
-#endif  // @carcass

@@ -492,7 +492,6 @@ NewfullMap::~NewfullMap()
 // Retail 0x4fd460 takes destructor flags and reads an array cookie: it is
 // NewmapCell's generated vector deleting destructor, not NewfullMap::Close.
 
-
 VA_COMPGEN(0x004fd460, 0x58, VECTOR_DELETING_DTOR, NewmapCell)
 
 // CodeView dc 0xf4bdc: CV_fldattr_t.compgenx marks this destructor
@@ -4610,51 +4609,6 @@ int NewfullMap::placeObjects()
         placeObject(x, 1);
     return 0;
 }
-
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-
-
-
-
-
-
-// NewmapCell::NewmapCell (dc 0xf49a4) moved up: claimed at VA 0x004fd650.
-
-// CObject::get_type (dc 0xf4a78) moved to its original inline definition in
-// include/advmgr_objects.h; retail emits no out-of-line copy.
-
-// type_obscuring_object::get_obscured_object (dc 0xf4a9c) moved to its
-// original inline definition in include/hero.h; retail emits no out-of-line
-// copy.
-
-
-
-// E:\gamedcs\mapcell.cpp:544
-DC_ONLY(0xf4b64, 0x78)
-void* NewmapCell::`vector deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// NewmapCell::~NewmapCell (dc 0xf4bdc) moved up: claimed at VA 0x004fd4c0.
-// BlackBoxData::~BlackBoxData (dc 0xf4bfc) moved up: claimed at VA 0x004ffdf0.
-
-// E:\gamedcs\mapcell.cpp:2692
-DC_ONLY(0xf4c50, 0x1C)
-void MonsterData::~MonsterData()
-{
-    // @stub
-}
-
-// E:\gamedcs\mapcell.cpp:2947
-DC_ONLY(0xf4c6c, 0x1C)
-void TTownEvent::~TTownEvent()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA_COMPGEN(0x00508cf0, 0x3B9, VECTOR_INSERT, TownExtra)
 

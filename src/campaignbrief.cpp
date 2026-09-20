@@ -57,38 +57,10 @@ DATA(0x006a6cb8) static THelpText g_campaignDifficultyHelp[5];
 // keep the role name provisional until that function is admitted.
 int campaignDifficultyHandler(message& msg);
 
-#if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
-// DC CampaignWait(int), dc 0x58244, indexes cCampaignDialog/voice-over
-// tables and draws a numbered bitmap. Complete uses the scenario-owned
-// MapTextStruct::play (0x488fb0): its receiver supplies video/audio/subtitles
-// read by ScenarioStruct::read (0x487e40), and videoOpen drives the PC movie.
-// The free index-based interface is retired; the scrolling/speech operation
-// survives in that record member in customcampaign.cpp.
-// E:\gamedcs\campaignbrief.cpp:202
-DC_ONLY(0x58244, 0x530)
-void CampaignWait(int which)
-{
-    // @stub
-}
-
-// DC ShowTerritorySmacker, dc 0x58774, chooses CampaignWait(23) or
-// MusicFileIndex[currentCampaign] + currentMap. Complete selects the loaded
-// scenario's prologue/epilogue through SCampaign::playScenarioPrologue and
-// playScenarioEpilogue (0x48a270/0x48a2a0), both taking the campaign header.
-// Its boolean special-case/global-table interface has no Complete owner.
-// E:\gamedcs\campaignbrief.cpp:365
-DC_ONLY(0x58774, 0x50)
-void showTerritorySmacker(unsigned char bEvil2Post)
-{
-    // @stub
-}
-
-#endif
-
 // E:\gamedcs\campaignbrief.cpp:437. The Dreamcast broadcasts the map
 // description as a second widget message; Complete hands it to the
 // scroller (type_text_scroller::SetText, 0x5ba6e0) instead.
-DC_ONLY(0x58938, 0x6A)
+
 void TCampaignBrief::resetMapAndDescription(int which)
 {
     message msg;
@@ -103,7 +75,7 @@ void TCampaignBrief::resetMapAndDescription(int which)
 // E:\gamedcs\campaignbrief.cpp:452. Select expands this ordinary TU
 // helper and ResetMapAndDescription. Retail retains vector::size at the loop
 // tests (0x423110); expansion does not establish an inline source specifier.
-DC_ONLY(0x589a4, 0x84)
+
 void TCampaignBrief::clearSelected()
 {
     for (int i = 0; i < static_cast<int>(m_campaign->m_scenarios.size()); i++) {
@@ -240,23 +212,6 @@ void TCampaignBrief::updateAllyEnemyFlags()
         }
     }
 }
-
-#if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
-
-// DC ExtractCampaignMap, dc 0x59300, copies a bitmap resource into one
-// 0x20808-byte RamDisc then parses the global CampaignHeader with ReadRamDisc.
-// Complete CampaignHeaderStruct::load (0x488880) owns a file/resource stream,
-// inflates its header and reads dynamic ScenarioStruct records. Embedded maps
-// are read by loadScenario/loadMapHeader (0x488810/0x487d30); no fixed RAM-disc
-// buffer or free numPreReqs/singleMapOnly/writeFile interface remains.
-// E:\gamedcs\campaignbrief.cpp:649
-DC_ONLY(0x59300, 0x1B8)
-void ExtractCampaignMap(int& numPreReqs, unsigned char single_map_only, unsigned char write_file)
-{
-    // @stub
-}
-
-#endif
 
 // E:\gamedcs\campaignbrief.cpp:584. Dreamcast proves the initial label,
 // three-choice widget groups, visibility changes, help-text calls and the
@@ -912,22 +867,6 @@ TCampaignBrief::~TCampaignBrief()
     }
 }
 
-#if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
-// E:\gamedcs\campaignbrief.cpp:1054
-DC_ONLY(0x5a2b4, 0x54)
-int TCampaignBrief::convertID2HelpID(int id) const
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:1071
-DC_ONLY(0x5a308, 0x1A)
-void TCampaignBrief::doModal()
-{
-    // @stub
-}
-#endif
-
 // Dreamcast proves this ordinary private helper and its four source-level
 // id groups. Complete expands it into CampaignBriefHandler, so no standalone
 // x86 row remains; retaining the call here lets VC6 make that natural /Ob2
@@ -1223,69 +1162,6 @@ std::string getCampaignName()
     header->load();
     return header->getCampaignName();
 }
-
-#if 0  // Remaining Dreamcast-only carcass.
-
-// DC ReadRamDisc, dc 0x5ab84, copies from pRamDisc[which] + *bytesRead,
-// advances the caller's cursor and mirrors it at RamDisc+0x20800 (stride
-// 0x20808). Complete campaign readers seek std::streambuf and use TAbstractFile
-// over TGzInflateBuf (0x487d30/0x488880), so this RAM-disc cursor API is retired.
-// E:\gamedcs\campaignbrief.cpp:1409
-DC_ONLY(0x5ab84, 0x60)
-void ReadRamDisc(int RamDiscNr, void* buffer, long size, unsigned long* bytesRead)
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:192
-DC_ONLY(0x5ade8, 0x28)
-void TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:192
-DC_ONLY(0x5ae10, 0x44)
-void TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct()
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:192
-DC_ONLY(0x5ae54, 0x2C)
-void NewSMapHeader::~NewSMapHeader()
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:1007
-DC_ONLY(0x5ae80, 0x34)
-void* TCampaignBrief::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:1007
-DC_ONLY(0x5aeb4, 0x64)
-NewSMapHeader* NewSMapHeader::operator=(const NewSMapHeader* __that)
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:1050
-DC_ONLY(0x5af18, 0x34)
-void* game::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:1391
-DC_ONLY(0x5af4c, 0x18)
-void CHeroDlg::~CHeroDlg()
-{
-    // @stub
-}
-#endif
 
 // COMDAT pairing: the unit's own std::_Construct<type_map_hero_identity> COMDAT,
 // mnemonic agreement 1.000 over all 142 instructions.

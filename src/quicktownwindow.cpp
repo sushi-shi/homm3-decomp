@@ -261,10 +261,3 @@ void TQuickTownWindow::quickWindowWait()
 }
 
 // E:\gamedcs\quicktownwindow.cpp:139
-#if 0  // @carcass -- represented by VA_COMPGEN above
-DC_ONLY(0x118848, 0x34)
-void* TQuickTownWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-#endif

@@ -5324,7 +5324,7 @@ natural call preserves all 30 retail instruction bytes and the sole call at
 +0x15 (relocation +0x16). Its callee emits `33 c0 c2 08 00`, independently
 identical to the five bytes at retail 0x559140. That address already belongs
 to `ResourceManager::t_stdio_file_adapter::write`; retain the existing single
-claim, with a documented `DC_ONLY` definition for the folded base handler.
+claim, with an unannotated definition for the folded base handler.
 The same body need not remain implicitly inline merely because ICF selected
 another owner. Its source position is after WindowHandler and before
 GetRolloverWidget.

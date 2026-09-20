@@ -2436,41 +2436,6 @@ void TOverviewWindow::doRollover(int codeY)
     updateRollover(g_text);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\overview.cpp:1254
-DC_ONLY(0x106d18, 0x7E)
-void updateFlaggableIcon(int i)
-{
-    // @stub
-}
-
-// Original: UpdateFlaggableIcons; overview.cpp:1279, dc 0x106d98.
-// Complete uses the incoming window receiver and its owned flaggable-item
-// array; the Dreamcast free function operates on the global overview window.
-// E:\gamedcs\overview.cpp:1279
-DC_ONLY(0x106d98, 0x32)
-void updateFlaggableIcons()
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:1287
-DC_ONLY(0x106dcc, 0xC2)
-void doFlaggableButtons(int which)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:1314
-DC_ONLY(0x106e90, 0x7D6)
-void game::overview()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // Dreamcast fixes the base-handler protocol, ProcessIconSelect boundary,
 // rollover path, static-helper calls and high-level switch nesting. Complete
 // independently fixes the four 200-id hero rows, three artifact-page buttons
@@ -2784,7 +2749,6 @@ void updateBackpack(int slot)
     g_windowManager->updateScreen(293, slot * 116 + 91, 428, 46);
 }
 
-
 VA(0x005225d0, 0x55)  // dc 0x1078e8
 static long getLastBackpackIndex(long heroNumber)
 {
@@ -2794,77 +2758,3 @@ static long getLastBackpackIndex(long heroNumber)
         g_game->getLocalPlayer()->m_heroes[heroNumber]);
     return currHero->getLastBackpackIndex();
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\overview.cpp:1612
-DC_ONLY(0x107974, 0x42)
-void incrementBackpackStart(long slot)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:1629
-DC_ONLY(0x1079b8, 0x42)
-void decrementBackpackStart(long slot)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:1647
-DC_ONLY(0x1079fc, 0x94)
-void showArtifact(hero* currHero, const type_artifact& artifact, unsigned char right_mouse)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:1663
-DC_ONLY(0x107a90, 0xA10)
-int game::processIconSelect(int codeY, unsigned char bRightMouse)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:2086
-DC_ONLY(0x108f74, 0x68)
-void TOverviewWindow::~TOverviewWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:2096
-DC_ONLY(0x108fdc, 0x50)
-void TOverviewWindow::clearButtons(int slot)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:2103
-DC_ONLY(0x10902c, 0x40)
-void TOverviewWindow::updateRollover(char* cText)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:2115
-DC_ONLY(0x10906c, 0x90E)
-void TOverviewWindow::doRollover(int codeY)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:2546
-DC_ONLY(0x10997c, 0x87C)
-int TOverviewWindow::windowHandler(message& msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:2083
-DC_ONLY(0x10a210, 0x34)
-void* TOverviewWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

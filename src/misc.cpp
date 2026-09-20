@@ -56,7 +56,6 @@ int random(int min, int max)
 }
 
 // E:\gamedcs\misc.cpp:151
-DC_ONLY(0xfd8a4, 0xB4)
 void generateUniqueSystemID()
 {
     long value;
@@ -148,7 +147,6 @@ void checkConfigFile()
 }
 
 // E:\gamedcs\misc.cpp:352
-
 // NOT promotable, checked 2026-08-13 against the same evidence that promoted
 // its sibling: there is no retail body to promote. Source order would emit it
 // between SetGameDefaults (0x50b4d0, ends 0x50b6f2) and
@@ -158,10 +156,10 @@ void checkConfigFile()
 // 221/32/489 B at its end). An EXTERN function is emitted out of line
 // unconditionally under /Ob2, so the absence of a body is itself the
 // evidence: retail's SetDefaultSystemOptions has internal linkage and its one
-// call site inlined it away. Left non-static and DC_ONLY because the linkage
+// call site inlined it away. Left non-static and without a retail claim because the linkage
 // change would buy no compared bytes - objdiff never scores this symbol - and
 // would touch misc.h for nothing.
-DC_ONLY(0xfdb78, 0x20)
+
 void setDefaultSystemOptions()
 {
     g_unnamed698758.m_showRoute = 1;
@@ -741,17 +739,6 @@ int setupCDDrive()
 {
     return 7;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\misc.cpp:603
-DC_ONLY(0xfe060, 0x4)
-int IsCDDrive(int drive)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x0050c5a0, 0x49)  // dc 0xfe068
 long fileSize(char* filename)

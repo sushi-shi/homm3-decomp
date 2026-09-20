@@ -114,7 +114,6 @@ DATA_COMPGEN_GUARD_HEAD_RE = re.compile(r"\bDATA_COMPGEN_GUARD\s*\(")
 #: Claims nothing about the retail image, so it emits no row - indexed
 #: only so its own wrapped continuation lines are never mistaken for the
 #: declarator a VA() above it is looking for.
-DC_ONLY_HEAD_RE = re.compile(r"(?m)^[ \t]*DC_ONLY\s*\(")
 
 #: macro -> (head, arity, prototype). Iteration order is irrelevant; rows
 #: come out in TEXT order (see scan_file).
@@ -127,13 +126,12 @@ MACRO_HEADS = {
     "DATA_COMPGEN": (DATA_COMPGEN_HEAD_RE, 3,
                      "DATA_COMPGEN(addr, name, value)"),
     "DATA": (DATA_HEAD_RE, 1, "DATA(addr)"),
-    "DC_ONLY": (DC_ONLY_HEAD_RE, 2, "DC_ONLY(off, cb)"),
 }
 
 ADDR_ARG_RE = re.compile(r"0x[0-9a-fA-F]+$")
 SIZE_ARG_RE = re.compile(r"0x[0-9a-fA-F]+$|\d+$")
 IDENT_ARG_RE = re.compile(r"[A-Za-z_]\w*$")
-ANNOTATION_RE = re.compile(r"^\s*(?:VA|VA_COMPGEN|DATA|DC_ONLY)\s*\(")
+ANNOTATION_RE = re.compile(r"^\s*(?:VA|VA_COMPGEN|DATA)\s*\(")
 DECLARATOR_RE = re.compile(r"([~\w:]+(?:<[^<>()]*>)?)\s*\(")
 # Deliberately bounded comparison-operator spellings. Generic C++ declarator
 # parsing is still outside this scanner's contract, but operator==/operator!=
@@ -744,8 +742,6 @@ def scan_file(path, functions: set[int],
     for start, macro, end, arity, prototype, args, raw_args in found:
         where = f"{path.name}:{line_of(start)}"
         args = _macro_args(args, arity, prototype, where)
-        if macro == "DC_ONLY":
-            continue          # indexed for its line span only; claims nothing
         rva = rva_of(_arg(args[0], ADDR_ARG_RE, "address", where), where)
 
         if macro in ("DATA_COMPGEN", "DATA_COMPGEN_GUARD"):

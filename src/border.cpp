@@ -108,7 +108,7 @@ int border::main(message& msg)
 // UAA_N_N0 signature proves native bool for the return and both parameters.
 // Retail border vslot 13 folds onto iconWidget's 0x4eab10 representative.
 // Keep border's canonical source body without a duplicate retail claim.
-DC_ONLY(0x54590, 0x4)
+
 bool border::handleClick(bool downClick, bool rightClick)
 {
     return false;
@@ -140,7 +140,7 @@ void coloredBorder::draw() const
         m_y + m_parentWindow->m_y, m_width, m_height, m_color);
 }
 
-// E:\gamedcs\border.cpp:201 - promoted from DC_ONLY 2026-08-14, the
+// E:\gamedcs\border.cpp:201 - located in retail 2026-08-14, the
 // constructor the earlier sdd note asked for. `ret 0x1c` is seven stack
 // dwords; six of them go to widget::initialize in x,y,w,h,id,style order
 // and the ODD one out - [ebp+0x1c], the sixth argument - is the dword
@@ -379,7 +379,7 @@ int bitmapBorder16::getRealHeight() const
     return m_image ? m_image->getHeight() : 0;
 }
 
-// E:\gamedcs\border.cpp:449 - promoted from DC_ONLY, slot 2 of vtable
+// E:\gamedcs\border.cpp:449 - located in retail, slot 2 of vtable
 // 0x63bacc (the only reference to this row in the whole image, stored by
 // the constructor 0x450690 and re-stored by the destructor 0x450750).
 // bitmapBorder::Main one class up, arm for arm: the same hoisted id test
@@ -427,46 +427,6 @@ int bitmapBorder16::main(message& msg)
     }
     return border::main(msg);
 }
-
-#if 0  // @carcass
-
-
-// E:\gamedcs\border.cpp:35
-DC_ONLY(0x54d24, 0x34)
-void* border::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:178
-DC_ONLY(0x54d58, 0x34)
-void* coloredBorder::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:178
-DC_ONLY(0x54d8c, 0x18)
-void coloredBorder::~coloredBorder()
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:290
-DC_ONLY(0x54df0, 0x34)
-void* bitmapBorder::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:404
-DC_ONLY(0x54e24, 0x34)
-void* bitmapBorder16::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // COMDAT pairing: bitset<10>::_Xran, agreement 0.901 at an exactly equal
 // 203-byte extent, and the only bitset width this object instantiates.

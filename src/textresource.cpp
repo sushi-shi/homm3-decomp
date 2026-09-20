@@ -174,29 +174,8 @@ TSpreadsheetResource::~TSpreadsheetResource()
         delete m_data;
 }
 
-#if 0  // @carcass
-// E:\gamedcs\textresource.cpp:34
-DC_ONLY(0x163cf8, 0x34)
-void* TTextResource::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\textresource.cpp:178
-DC_ONLY(0x163d2c, 0x34)
-void* TSpreadsheetResource::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-#endif
-
 // E:\gamedcs\textresource.cpp:298
 #if 0  // @carcass -- Dreamcast STLport template tail; retail uses VC6 Dinkumware
-DC_ONLY(0x163d60, 0x34)
-void* std::vector<char *,std::allocator<char *> >::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
 
 // ..\stlport\stl_vector.h:490
 VA(0x005bc1f0, 0x33)  // ctor shrink-path call + Dinkumware erase(first,last), dc STLport analog 0x164254

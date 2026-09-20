@@ -25,25 +25,9 @@
 // ValidFlight in the Dreamcast graph. Retail's 761-byte ValidFlight contains
 // their work inline and has no separate carved predecessors after the ten
 // terrain.h bitset initializers.
-#if 0  // @carcass -- inlined away in retail
-DC_ONLY(0xa1360, 0x88)
-unsigned char army::findFlyerAttackCell(int start, int target)
-{
-    // @stub
-}
-#endif
 
 // E:\gamedcs\fly.cpp:58
-#if 0  // @carcass -- inlined away in retail
-DC_ONLY(0xa13e8, 0x46)
-unsigned char army::findFlyerAttackCell(int target)
-{
-    // @stub
-}
-#endif
-
 // E:\gamedcs\fly.cpp:76
-
 // RECONSTRUCTED 2026-08-13. The 761 retail bytes are FOUR copies of the
 // same six-step adjacency scan, which is exactly the two private DC
 // find_flyer_attack_cell member overloads expanded by /Ob2. Their source

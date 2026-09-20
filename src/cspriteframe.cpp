@@ -75,63 +75,6 @@ void CSpriteFrame::~CSpriteFrame()
 }
 
 // E:\gamedcs\cspriteframe.cpp:245 - promoted to a live claim below.
-
-// E:\gamedcs\cspriteframe.cpp:2234
-DC_ONLY(0x76060, 0x324)
-void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned short flagcolor)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:2444
-DC_ONLY(0x76384, 0x302)
-void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned short flagcolor, unsigned char hflip)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:2645
-DC_ONLY(0x76688, 0x2FE)
-void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:2856
-DC_ONLY(0x76988, 0x762)
-void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:3365
-DC_ONLY(0x770ec, 0x576)
-void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:3776
-DC_ONLY(0x77664, 0x338)
-void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned char alpha)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:69
-DC_ONLY(0x79260, 0x34)
-void* CSpriteFrame::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:1265
-DC_ONLY(0x79294, 0x184)
-void CSpriteFrame::clip(int* sx, int* sy, int* sw, int* sh, int* dx, int* dy, int dw, int dh, unsigned char bHFlip, unsigned char bVFlip)
-{
-    // @stub
-}
-
 #endif  // @carcass
 
 VA_COMPGEN(0x0047c280, 0x21, SCALAR_DELETING_DTOR, CSpriteFrame)

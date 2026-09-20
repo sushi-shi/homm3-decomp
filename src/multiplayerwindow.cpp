@@ -32,177 +32,6 @@ void addHelp(THelpText* helpText, const char* rollover, const char* rightClick)
     helpText->m_rclick = rightClick ? rightClick : rollover;
 }
 
-#if 0  // @carcass: untouched bodies before the admitted CHotSeatDlg tail
-
-
-
-// E:\gamedcs\multiplayerwindow.cpp:1005
-DC_ONLY(0x100408, 0x28)
-void sliderGames(int state, heroWindow* parent_window)
-{
-    // @stub
-}
-
-// GoSessionList / GoMainMenu / Update promoted to VA claims (retail-located block).
-
-
-// JoinSession / HostSession / InitRemote promoted to VA claims (retail-located block).
-
-
-// E:\gamedcs\multiplayerwindow.cpp:1461
-DC_ONLY(0x100ed0, 0xC2)
-unsigned char TMultiPlayerWindow::onModemHost()
-{
-    // @stub
-}
-
-// OnDirectHost promoted to a VA claim (retail-located block).
-
-// OnHost promoted to a VA claim (retail-located block).
-
-// OnModemJoin promoted to a VA claim (retail-located block).
-
-// OnDirectJoin promoted to a VA claim (retail-located block).
-
-// OnJoin promoted to a retail claim below.
-
-// GetIPAddress promoted to a VA claim (retail-located block).
-
-// OnTCP promoted to a VA claim (retail-located block).
-
-// OnIPX is modelled inline beside its retail caller below.
-
-// E:\gamedcs\multiplayerwindow.cpp:1944
-DC_ONLY(0x10196c, 0x294)
-unsigned char TMultiPlayerWindow::onSearch()
-{
-    // @stub
-}
-
-// OnHotSeat promoted to a VA claim (retail-located block).
-
-// OnModem is modelled inline beside its retail caller below.
-
-// OnDirect is modelled inline beside its retail caller below.
-
-
-// IsJoinDisabled promoted to a retail selected-COMDAT claim below.
-
-// E:\gamedcs\multiplayerwindow.cpp:141
-DC_ONLY(0x101e00, 0x98)
-void CMultiPlayerWindowEdit::CMultiPlayerWindowEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
-// CMultiPlayerWindowEdit::OnKeyPress promoted to a VA claim below.
-
-// E:\gamedcs\multiplayerwindow.cpp:156
-DC_ONLY(0x101ee8, 0x34)
-void* CMultiPlayerWindowEdit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:156
-DC_ONLY(0x101f1c, 0x18)
-void CMultiPlayerWindowEdit::~CMultiPlayerWindowEdit()
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:174
-DC_ONLY(0x101f34, 0xE0)
-unsigned char CHeroSessions::getSessionInfo(unsigned long index, char* sessName, char* userName, int* numPlayers, CHeroSessions::eSessionStatus* status)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:263
-DC_ONLY(0x102014, 0xA0)
-void CMPEdit::CMPEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:269
-DC_ONLY(0x1020b4, 0x6)
-void CMPEdit::setNextEdit(CMPEdit* pNextEdit)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:274
-DC_ONLY(0x1020bc, 0x6)
-void CMPEdit::setPrevEdit(CMPEdit* pPrevEdit)
-{
-    // @stub
-}
-
-// OnKeyPress promoted to a VA claim (retail-located block).
-
-// OnNextEdit promoted to a VA claim (retail-located block).
-
-// OnPrevEdit promoted to a VA claim (retail-located block).
-
-// SetFocus promoted to a VA claim (retail-located block).
-
-// E:\gamedcs\multiplayerwindow.cpp:339
-DC_ONLY(0x1021c4, 0x34)
-void* CMPEdit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:339
-DC_ONLY(0x1021f8, 0x18)
-void CMPEdit::~CMPEdit()
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:383
-DC_ONLY(0x102210, 0x98)
-void CMPInputEdit::CMPInputEdit(int x, int y, int w, int h, int textSize,
-                                const char* text, const char* fontName,
-                                font::TColor color, unsigned justification,
-                                const char* backgroundIcon,
-                                int backgroundFrame, int id, int style,
-                                int readType, int insetX, int insetY)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:384
-DC_ONLY(0x1022a8, 0x34)
-void* CMPInputEdit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:384
-DC_ONLY(0x1022dc, 0x18)
-void CMPInputEdit::~CMPInputEdit()
-{
-    // @stub
-}
-
-// CMPInputDlg::OnOK is modelled inline beside its retail caller below.
-
-// UpdateOK promoted to a VA claim (retail-located block).
-
-// E:\gamedcs\multiplayerwindow.cpp:521
-DC_ONLY(0x10286c, 0x24)
-void CMPInputDlg::disableOK()
-{
-    // @stub
-}
-
-// CMPInputDlg::`scalar deleting destructor' promoted to VA(0x005109e0) below.
-
-// E:\gamedcs\multiplayerwindow.cpp:700
-#endif
-
 // CMultiPlayerWindowEdit - the text-entry widget the session-host name field
 // uses. Derives textEntryWidget, forwarding all sixteen constructor arguments;
 // its only addition is the slot-15 key-handler override that gives it a
@@ -1765,16 +1594,6 @@ int CHotSeatDlg::onWidgetDeselect(int id, bool& exitFlag)
     return 0;
 }
 
-#if 0  // @carcass
-// E:\gamedcs\multiplayerwindow.cpp:729
-DC_ONLY(0x102cc8, 0x30)
-void CHotSeatDlg::onKillFocus(int id)
-{
-    // @stub
-}
-
-#endif
-
 VA(0x00512470, 0xB2)  // dc 0x102d88
 unsigned char CHotSeatDlg::onOK()
 {
@@ -1793,17 +1612,6 @@ textWidget* CHotSeatDlg::getRolloverWidget()
 {
     return m_rollover;
 }
-
-#if 0  // @carcass
-// E:\gamedcs\multiplayerwindow.cpp:786
-DC_ONLY(0x102e24, 0x140)
-int CHotSeatDlg::windowHandler(message& msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:844
-#endif
 
 VA_COMPGEN(0x00512540, 0x21, SCALAR_DELETING_DTOR, CHotSeatDlg)
 
@@ -1840,14 +1648,3 @@ unsigned char CAutoArray<CDPlaySession>::insert(
 #endif  // @carcass
 
 VA_COMPGEN(0x00512670, 0x6C, SCALAR_DELETING_DTOR, CAutoArray)
-
-#if 0  // @carcass: remaining untouched bodies
-
-// TMultiPlayerWindow::`scalar deleting destructor' promoted to VA(0x0050edb0) above.
-
-
-// CHeroSessions' scalar deleting destructor and implicit destructor promoted
-// to retail VA_COMPGEN claims above.
-
-// CAutoArray<CDPlaySession>::`scalar deleting destructor' promoted to VA(0x00512670) above.
-#endif  // @carcass

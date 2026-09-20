@@ -621,7 +621,7 @@ void combatManager::findMoveOrder(std::vector<army*>* result)
 // named double combat_value, and separate integer-return branches. Retail's
 // expansion belongs to getAttackChange below; this helper has no retained
 // standalone retail row. The neighboring 0x41f380 is IsIncapacitated.
-DC_ONLY(0x248b4, 0x180)
+
 static long getAttackValue(const army* currentArmy, const army* enemy,
                            long enemyHitPoints, type_AI_combat_parameters& data)
 {
@@ -841,7 +841,6 @@ static long getEnemyAttackLimit(const army* ourArmy,
         ourArmy->canShoot(0), hitPoints, 0);
 }
 
-
 VA(0x0041fb60, 0x1F6)  // dc 0x25124
 void combatManager::markFriendlyArmies(const army* ourArmy, long* enemyAttacks, long markedEnemies, const type_AI_combat_parameters* estimate) const
 {
@@ -924,7 +923,7 @@ void findAttackHexes(const army* ourArmy, long targetHex, long start,
 // side count comes from OUR stack's two-hex bit, the extra sweep from
 // the ENEMY's, and the enemy's facing picks both the tail hex and which
 // half of the direction ring is searched.
-DC_ONLY(0x253a8, 0xA4)
+
 static void findAttackHexes(const army* ourArmy, const army* enemy, const searchArray* currentSearchArray, std::vector<long>* result)
 {
     long sides = (ourArmy->is(1u << 0)) ? 8 : 6;
@@ -2514,31 +2513,6 @@ unsigned char combatManager::doSpellAI()
     m_nextAction = 0;
     return 0;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\ai.cpp:597
-DC_ONLY(0x28024, 0x2A)
-unsigned char func_moves_before::operator()(const army* first, const army* second)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai.cpp:1626
-DC_ONLY(0x28050, 0x18)
-void type_spellvalue::~type_spellvalue()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai.cpp:1786
-DC_ONLY(0x28068, 0x54)
-void army::~army()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // COMDAT pairing: vector<army*>::size - ai.obj's own copy, 19 B against
 // the 19-byte emitted COMDAT and the only candidate of that size here.

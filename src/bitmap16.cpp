@@ -20,18 +20,6 @@ static long ftol(double d)
     return *static_cast<long*>(static_cast<void*>(&d));
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\bitmap16.cpp:117
-DC_ONLY(0x50c04, 0x104)
-void Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap16.cpp:208
-#endif  // @carcass
-
 VA_COMPGEN(0x0044e020, 0x21, SCALAR_DELETING_DTOR, Bitmap16Bit)
 
 VA(0x0044df70, 0xA3)
@@ -185,7 +173,7 @@ void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
 // DC bitmap16.cpp:358 supplies the ordinary clear helper called by reference.
 // Complete inlines its scalar resets and borrowed-buffer release; the DC-only
 // surface-release arm has no corresponding field or operation in retail.
-DC_ONLY(0x51198, 0x90)
+
 void Bitmap16Bit::clear()
 {
     m_width = 0;
@@ -899,69 +887,24 @@ void Bitmap16Bit::grabAndBlur(const Bitmap16Bit* src, int sx, int sy)
 #if 0  // @carcass
 
 // E:\gamedcs\bitmap16.cpp:224
-
 // E:\gamedcs\bitmap16.cpp:234
-
 // E:\gamedcs\bitmap16.cpp:243
-
 // E:\gamedcs\bitmap16.cpp:253
-
 // E:\gamedcs\bitmap16.cpp:262
-
 // E:\gamedcs\bitmap16.cpp:335
-
 // E:\gamedcs\bitmap16.cpp:358
-
 // E:\gamedcs\bitmap16.cpp:541
 // RETAIL_LOCATED(0x0044e2b0, 0x139): anchor-bracket, not reconstructed.
-DC_ONLY(0x51378, 0x139)
-void Bitmap16Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char alpha)
-{
-    // @stub
-}
 
 // E:\gamedcs\bitmap16.cpp:625
 // RETAIL_LOCATED(0x0044e3f0, 0xC9): anchor-bracket, not reconstructed.
-DC_ONLY(0x51468, 0xC9)
-void Bitmap16Bit::grab(const unsigned short* src, int sx, int sy, int sw, int sh, int spitch)
-{
-    // @stub
-}
 
 // E:\gamedcs\bitmap16.cpp:679
 // RETAIL_LOCATED(0x0044e4c0, 0x7D): anchor-global, not reconstructed.
-DC_ONLY(0x5150c, 0x7D)
-void Bitmap16Bit::fillRect(int x, int y, int w, int h, unsigned short color)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap16.cpp:778
-DC_ONLY(0x516a8, 0xD4)
-void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask, int sx, int sy)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap16.cpp:815
-DC_ONLY(0x5177c, 0x246)
-void Bitmap16Bit::colorize(int x, int y, int width, int height, unsigned short color)
-{
-    // @stub
-}
 
 // E:\gamedcs\bitmap16.cpp:873
 // Retail body reconstructed above at 0x0044e940; dc 0x519c4.
 void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue, float saturation)
-{
-    // @stub
-}
-
-
-
-// E:\gamedcs\bitmap16.cpp:107
-DC_ONLY(0x52580, 0x34)
-void* Bitmap16Bit::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
