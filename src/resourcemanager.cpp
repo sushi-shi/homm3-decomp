@@ -1776,6 +1776,29 @@ namespace ResourceManager {
 sample* loadSample(const char* name);
 }
 
+// One canonical missing-sample report. Retail calls it from both the primary
+// and the fallback lookup rather than carrying two copies of the stream and
+// message box; hand-inlining it at the two sites costs 83.0246.
+static void reportMissingSample(const char* name)
+{
+    std::ostringstream message;
+    message
+        << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
+                        "ResourceManager::")
+        << DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample")
+        << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
+                        " could not find the \"")
+        << DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx")
+        << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
+        << name
+        << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
+    MessageBoxA(
+        GetForegroundWindow(), message.str().c_str(),
+        DATA_COMPGEN(0x00682f08, resourceManagerCaption,
+                     "ResourceManager"),
+        0);
+}
+
 VA(0x0055c3c0, 0x356)  // GetSample callee + GetSoundFile/default.wav graph
 sample* ResourceManager::loadSample(const char* name)
 {
@@ -1805,45 +1828,11 @@ sample* ResourceManager::loadSample(const char* name)
     std::auto_ptr<char> data;
     int size;
     if (!getSoundFile(name, data, &size)) {
-        {
-            std::ostringstream message;
-            message
-                << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
-                                "ResourceManager::")
-                << DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample")
-                << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
-                                " could not find the \"")
-                << DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx")
-                << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
-                << name
-                << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
-            MessageBoxA(
-                GetForegroundWindow(), message.str().c_str(),
-                DATA_COMPGEN(0x00682f08, resourceManagerCaption,
-                             "ResourceManager"),
-                0);
-        }
+        reportMissingSample(name);
         const char* fallbackName = DATA_COMPGEN(
             0x006410dc, defaultSampleName, "default.wav");
         if (!getSoundFile(fallbackName, data, &size)) {
-            {
-                std::ostringstream message;
-                message
-                    << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
-                                    "ResourceManager::")
-                    << DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample")
-                    << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
-                                    " could not find the \"")
-                    << DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx")
-                    << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
-                    << fallbackName
-                    << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
-                MessageBoxA(
-                    GetForegroundWindow(), message.str().c_str(),
-                    DATA_COMPGEN(0x00682f08, resourceManagerCaption,
-                                 "ResourceManager"),
-                    0);
-            }
+            reportMissingSample(fallbackName);
             return 0;
         }
     }
