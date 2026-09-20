@@ -7,6 +7,7 @@ includes = [
   "include",
   "vendor/bink-0.5a/include",
   "vendor/miles-5.0e/include",
+  "vendor/smacker-3.2h/include",
   "vendor/zlib-1.1.3",
 ]
 analysis_profile = "game_o2_ml_gr_windows"

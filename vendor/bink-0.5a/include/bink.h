@@ -5,22 +5,6 @@
 #define BINKDATE    "1999-01-20"
 
 
-// BINKW32.DLL 0.5a exports the public SDK entry points with a leading
-// underscore in the identifier itself, in addition to stdcall decoration.
-#define BinkPause _BinkPause
-#define BinkOpen _BinkOpen
-#define BinkClose _BinkClose
-#define BinkDDSurfaceType _BinkDDSurfaceType
-#define BinkCopyToBuffer _BinkCopyToBuffer
-#define BinkDoFrame _BinkDoFrame
-#define BinkGoto _BinkGoto
-#define BinkNextFrame _BinkNextFrame
-#define BinkGetSummary _BinkGetSummary
-#define BinkWait _BinkWait
-#define BinkGetRects _BinkGetRects
-#define BinkSetSoundSystem _BinkSetSoundSystem
-#define BinkOpenMiles _BinkOpenMiles
-
 #ifndef __RADRES__
 
 #include "Rad.h"

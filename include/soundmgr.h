@@ -1,18 +1,11 @@
 #ifndef HOMM3_SOUNDMGR_H
 #define HOMM3_SOUNDMGR_H
 
-// The game-facing C++ ABI names Miles' opaque sample tag ds_memsample.
-// Map the SDK tag while parsing the exact 5.0e header so its declarations
-// remain authoritative without changing the game's decorated member names.
-class ds_memsample;
-#define MSS_SAMPLE_TAG ds_memsample
-#define MSS_SAMPLE_TAG_KIND class
 #include <Mss.h>
-#undef MSS_SAMPLE_TAG_KIND
-#undef MSS_SAMPLE_TAG
 #include <bink.h>
 #include <windows.h>
 #include "basemgr.h"
+#include "crt_process.h"
 #include "kbwin.h"
 
 void pollSound();
@@ -283,22 +276,6 @@ extern const char* const g_terrainMusic[9];
 // [id - 2] terrain-name lookup SwitchAmbientMusic uses, which is what
 // bounds the id domain to 2..10. Name provisional.
 extern unsigned char g_terrainMusicIds[9];
-
-// Smacker's Miles bridge remains in the Smacker SDK boundary. Miles stream,
-// sample and driver types and imports come directly from the exact 5.0e Mss.h.
-extern "C" {
-__declspec(dllimport) unsigned char __stdcall _SmackSoundUseMSS(
-    HDIGDRIVER driver);
-}
-#define SmackSoundUseMSS _SmackSoundUseMSS
-
-// The CRT thread spawner retail reaches with a plain `call __beginthread`
-// (msvcrt, __cdecl). Declared here rather than via <process.h> so the
-// TU's import-call forms stay under this header's control.
-extern "C" unsigned long __cdecl _beginthread(void(__cdecl* startAddress)(void*),
-                                              unsigned stackSize,
-                                              void* arglist);
-extern "C" void __cdecl _endthread(void);
 
 // Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).
 extern soundManager* g_soundManager;

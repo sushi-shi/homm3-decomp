@@ -1,6 +1,12 @@
 #ifndef HOMM3_SMACKMGR_H
 #define HOMM3_SMACKMGR_H
 
+#include <SMACK.H>
+
+// DC CodeView independently proves the complete SDK record extent; retail
+// consumes Width, Height, Frames, FrameNum and the LastRect quartet.
+SIZE(Smack, 944);
+
 namespace SmackManager {
 // DC namespace globals; Windows VA mappings are documented at definitions.
 extern bool g_updateScreen;
@@ -31,73 +37,6 @@ struct VideoHeaderStruct {
     unsigned long m_offset;
 };
 
-// DC's 944-byte SmackTag agrees with the nearby Smacker 3.2 SDK layout.
-// Retail confirms the consumed prefix, including unsigned dimensions and
-// signed LastRect fields; the unconsumed tail remains DC/SDK type evidence.
-struct SmackTag {
-    unsigned long m_version;   // +0x000
-    unsigned long m_width;     // +0x004
-    unsigned long m_height;    // +0x008
-    unsigned long m_frames;    // +0x00c
-    // Dreamcast SmackTag, type 0x474e, supplies this contiguous prefix.
-    // Retail VideoPlay/VideoDrawRects confirm Frames +0x0c, FrameNum
-    // +0x374 and the signed LastRect quartet +0x380..+0x38c.
-    unsigned long m_msPerFrame;       // +0x010
-    unsigned long m_smackerType;      // +0x014
-    unsigned long m_largestInTrack[7];// +0x018
-    unsigned long m_tableSize;        // +0x034
-    unsigned long m_codeSize;         // +0x038
-    unsigned long m_abSize;           // +0x03c
-    unsigned long m_detailSize;       // +0x040
-    unsigned long m_typeSize;         // +0x044
-    unsigned long m_trackType[7];     // +0x048
-    unsigned long m_extra;            // +0x064
-    unsigned long m_newPalette;       // +0x068
-    unsigned char m_palette[772];     // +0x06c (original array extent)
-    unsigned long m_palType;          // +0x370
-    unsigned long m_frameNum;  // +0x374
-    unsigned long m_frameSize; // +0x378
-    unsigned long m_sndSize;   // +0x37c
-    long m_lastRectx;          // +0x380
-    long m_lastRecty;          // +0x384
-    long m_lastRectw;          // +0x388
-    long m_lastRecth;          // +0x38c
-    // DC/SDK names: OpenFlags, LeftOfs, TopOfs, LargestFrameSize,
-    // Highest1SecRate, Highest1SecFrame, ReadError, addr32.
-    unsigned long m_openFlags;        // +0x390
-    unsigned long m_leftOfs;          // +0x394
-    unsigned long m_topOfs;           // +0x398
-    unsigned long m_largestFrameSize; // +0x39c
-    unsigned long m_highest1SecRate;  // +0x3a0
-    unsigned long m_highest1SecFrame; // +0x3a4
-    unsigned long m_readError;        // +0x3a8
-    unsigned long m_addr32;           // +0x3ac
-};
-typedef SmackTag Smack;
-SIZE(SmackTag, 944);
-
-// The smackw32 import surface (retail IAT: __imp___SmackToBuffer@28 -
-// RAD's own leading underscore, the same convention soundmgr.h
-// documents for Miles). Calls preserve these import names.
-extern "C" {
-// DC0x80164 and the Smacker SDK declare the destination const void*.
-__declspec(dllimport) void __stdcall _SmackToBuffer(Smack* smk, unsigned long left, unsigned long top, unsigned long pitch, unsigned long destheight, const void* buf, unsigned long flags);
-__declspec(dllimport) unsigned long __stdcall _SmackToBufferRect(Smack* smk, unsigned long flags);
-__declspec(dllimport) unsigned long __stdcall _SmackDoFrame(Smack* smk);
-__declspec(dllimport) void __stdcall _SmackGoto(Smack* smk, unsigned long frame);
-__declspec(dllimport) void __stdcall _SmackClose(Smack* smk);
-// The rest of the surface, consumed only by smackmgr.cpp itself: the
-// per-frame pump's wait/advance pair and ShowVideo's open path.
-__declspec(dllimport) unsigned long __stdcall _SmackWait(Smack* smk);
-__declspec(dllimport) void __stdcall _SmackNextFrame(Smack* smk);
-// DC0x80170 and the SDK: name also carries a HANDLE under SMACKFILEHANDLE;
-// extrabuf is unsigned long (SMACKAUTOEXTRA is 0xffffffff).
-__declspec(dllimport) Smack* __stdcall _SmackOpen(const char* name, unsigned long flags, unsigned long extra);
-// DC0x80174 and the SDK return unsigned long even when the caller ignores it.
-__declspec(dllimport) unsigned long __stdcall _SmackUseMMX(unsigned long on);
-__declspec(dllimport) void __stdcall _SmackVolumePan(Smack* smk, unsigned long trackFlags, unsigned long volume, unsigned long pan);
-}
-
 // Per-id video descriptor table in a foreign TU's .data (0x6839c0,
 // stride 20; ids below VIDEO_ID_FIRST_TABLED never consult it). The
 // record starts EIGHT bytes below the flag byte the earlier wrappers
@@ -119,7 +58,7 @@ struct SVideoDescriptor {
     unsigned char m_fadeOnAbort;  // +0x0a
     // Role-derived: the Bink opener maps this byte to BINKNOSKIP
     // (0x00400000), proven by vendor/bink-0.5a/orig/bink.h.
-    // The parallel Smacker opener maps the same policy to bit 0x200.
+    // The parallel Smacker opener maps the same policy to SMACKPRELOADALL.
     unsigned char m_noFrameSkip;      // +0x0b
     char m_padC[8];              // 20-byte stride
 };

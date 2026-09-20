@@ -1,8 +1,6 @@
-diff --git a/bink.h b/bink.h
-index c09d1319..5d7293a1 100644
 --- a/bink.h
 +++ b/bink.h
-@@ -1,12 +1,29 @@
+@@ -1,12 +1,13 @@
  #ifndef BINKH
  #define BINKH
  
@@ -11,22 +9,6 @@ index c09d1319..5d7293a1 100644
 +#define BINKVERSION "0.5a"
 +#define BINKDATE    "1999-01-20"
 +
-+
-+// BINKW32.DLL 0.5a exports the public SDK entry points with a leading
-+// underscore in the identifier itself, in addition to stdcall decoration.
-+#define BinkPause _BinkPause
-+#define BinkOpen _BinkOpen
-+#define BinkClose _BinkClose
-+#define BinkDDSurfaceType _BinkDDSurfaceType
-+#define BinkCopyToBuffer _BinkCopyToBuffer
-+#define BinkDoFrame _BinkDoFrame
-+#define BinkGoto _BinkGoto
-+#define BinkNextFrame _BinkNextFrame
-+#define BinkGetSummary _BinkGetSummary
-+#define BinkWait _BinkWait
-+#define BinkGetRects _BinkGetRects
-+#define BinkSetSoundSystem _BinkSetSoundSystem
-+#define BinkOpenMiles _BinkOpenMiles
  
  #ifndef __RADRES__
  
@@ -35,7 +17,7 @@ index c09d1319..5d7293a1 100644
  
  RADDEFSTART
  
-@@ -27,8 +44,6 @@ typedef struct BINKIO {
+@@ -27,8 +28,6 @@
    BINKIOSETINFO SetInfo;
    BINKIOIDLE Idle;
    BINKIOCLOSE Close;
@@ -44,7 +26,7 @@ index c09d1319..5d7293a1 100644
    volatile u32 BytesRead;
    volatile u32 TotalTime;
    volatile u32 ForegroundTime;
-@@ -52,20 +67,20 @@ typedef void (RADLINK PTR4* BINKSNDCLOSE)    (struct BINKSND PTR4* BnkSnd);
+@@ -52,20 +51,20 @@
  typedef BINKSNDOPEN  (RADLINK PTR4* BINKSNDSYSOPEN) (u32 param);
  
  typedef struct BINKSND {
@@ -71,7 +53,7 @@ index c09d1319..5d7293a1 100644
    u8 snddata[128];
  } BINKSND;
  
-@@ -89,160 +104,115 @@ typedef struct BUNDLEPOINTERS {
+@@ -89,160 +88,115 @@
  
  
  typedef struct BINK {
@@ -332,7 +314,7 @@ index c09d1319..5d7293a1 100644
  } BINKSUMMARY;
  
  
-@@ -290,7 +260,7 @@ typedef struct BINKHDR {
+@@ -290,7 +244,7 @@
  #define BINKNOSKIP            0x00400000L // Don't skip frames if falling behind
  #define BINKNOFILLIOBUF       0x00800000L // Fill the IO buffer in SmackOpen
  #define BINKSIMULATE          0x01000000L // Simulate the speed (call BinkSim first)
