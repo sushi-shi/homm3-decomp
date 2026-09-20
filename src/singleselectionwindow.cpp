@@ -1182,18 +1182,21 @@ void CNetPlayerHandler::CNetPlayerHandler()
 
 // E:\gamedcs\singleselectionwindow.cpp:1005
 // Dreamcast dc 0x1303fc (the DC_ONLY row above): the two seat-array
-// constructions, the four seat counters and the computer-seat colour/name
-// loop. Retail keeps no out-of-line copy - the 11.6 KB window constructor
+// constructions, the four seat counters and the human-seat colour /
+// computer-seat name loop. DC1014 stores at this+i*120+112; DC1015
+// copies into the second array. Retail likewise stores the colour at
+// [computerName-0x370], i.e. humanPlayers[i].m_color, not computer colour.
+// Retail keeps no out-of-line copy - the 11.6 KB window constructor
 // expands it between its m_players and netMsgHandler member constructions
 // (0x579a2e..0x579a9a), which is where its statements sit in retail.
 CNetPlayerHandler::CNetPlayerHandler()
 {
-    m_playerPos = -1;
     m_playersCount = 0;
+    m_playerPos = -1;
     m_unused = -1;
     m_assignedPos = -1;
     for (int i = 0; i < MAX_PLAYERS; ++i) {
-        m_computerPlayers[i].m_color = i;
+        m_humanPlayers[i].m_color = i;
         strcpy(m_computerPlayers[i].m_name, g_generalText->getText(469));
     }
 }
@@ -1873,9 +1876,13 @@ CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
 
 // E:\gamedcs\singleselectionwindow.cpp:1953
 
-// Measured byte-flat: `int i` function- vs block-scoped for every loop;
-// a ternary-of-two-news for the 128 textButton (85.98, rejected); the
-// adopb2 arm order (either order 87.27 at that stage; DC order kept).
+// DC's allies/enemies and generic flag widget are widget*, not pointers to
+// their allocated subclasses. Together with the corrected handler base and
+// seat-array stores, those source facts recover 95.5273%. A 48-state family
+// reproduces these bindings and shows the thread helper's early-return forms
+// are byte-flat. The later four ownership models do not improve this body.
+// Remaining: StartMouseThread expands ServiceSounds where retail calls it
+// (verified C2 cost 90 / nested budget 128), plus stack/register allocation.
 VA(0x00579960, 0x2d63)  // anchor-callee CAdvPopup base ctor + embedded header/player/net-handler construction; tail proven by the retail preload/setup call run at +0x2a56..+0x2d45; dc 0x1309f0
 TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     : CAdvPopup(0, 0, 800, 600, 0)
@@ -1960,10 +1967,9 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     bitmapBorder* w = new bitmapBorder(
         396, 6, 370, 585, 100, "GSelPop1.pcx", 0x800);
-    // DEPTH LADDER: this ONE append is `insert(end(), w)`; all 24 others in
-    // this constructor stay `push_back`.  95.7079 -> 95.8142; every other site
-    // measured singly is flat or a loss, and the next best (#18) is 95.7325.
-    m_widgets.insert(m_widgets.end(), w);
+    // DC2073 names push_back; retain the canonical append rather than the
+    // earlier insert(end(), ...) spelling chosen only for its inline depth.
+    m_widgets.push_back(w);
     w->m_image->draw(0, 0, w->m_image->getWidth(), w->m_image->getHeight(),
         g_windowManager->m_screenBitmap, w->m_x + m_x, w->m_y + m_y, 0);
 
@@ -2030,24 +2036,24 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         714, 28, 29, 23, 189, "scnrmpsz.def", 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN));
     sprintf(g_text, "%s:", g_generalText->getText(391));
-    textWidget* t = new textWidget(
+    widget* allies = new textWidget(
         414, 403, 44, 23, g_text, "smalfont.fnt", font::WHITE, 100,
         font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8);
-    m_widgets.push_back(t);
+    m_widgets.push_back(allies);
     sprintf(g_text, "%s:", g_generalText->getText(392));
-    textWidget* t2 = new textWidget(
+    widget* enemies = new textWidget(
         579, 403, 58, 23, g_text, "smalfont.fnt", font::WHITE, 386,
         font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8);
-    m_widgets.push_back(t2);
+    m_widgets.push_back(enemies);
 
     if (m_flag65 || (m_flag64 && !isMultiPlayer())) {
-        t->hide();
-        t2->hide();
+        allies->hide();
+        enemies->hide();
     }
 
     {
         for (int i = 0; i < 8; ++i) {
-            iconWidget* flag = new iconWidget(
+            widget* flag = new iconWidget(
                 460 + i * 15, 405, 15, 20, 112 + i, "itgflags.def",
                 0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
             flag->hide();
@@ -8578,9 +8584,11 @@ inline CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler()
 }
 
 // The Complete-only implicit destructor wrapper occupies slot zero of the
-// unique CSingleSelectionNetMsgHandler vtable at 0x641ce8. Its call target is
-// the exact CAdvMgrNetMsgHandler destructor, followed by VC6's standard
-// flags&1 delete tail. Dreamcast proves the derived class/vtable and base
+// unique CSingleSelectionNetMsgHandler vtable at 0x641ce8. Its call target
+// tail-jumps to CNetMsgHandler's destructor, followed by VC6's standard
+// flags&1 delete tail. That trivial derived destructor is ICF-shared with
+// CAdvMgrNetMsgHandler, not evidence that this class inherits from it.
+// Dreamcast proves the derived class/vtable and base
 // construction (dc 0x14514c), but emits no separate deleting wrapper here.
 VA_COMPGEN(0x0058e2e0, 0x21, SCALAR_DELETING_DTOR,
            CSingleSelectionNetMsgHandler)

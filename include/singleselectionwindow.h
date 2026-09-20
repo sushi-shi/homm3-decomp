@@ -401,7 +401,10 @@ SIZE(CNetPlayerHandler, 0x7d0);
 // CNetMsgHandler's ctor is followed by the derived vtable store and a clear
 // of m_wasCompressed at +0x0c. The class is embedded by value below;
 // its constructor body belongs to singleselectionwindow.cpp:8758.
-class CSingleSelectionNetMsgHandler : public CAdvMgrNetMsgHandler {
+// The retail vtable at 0x641ce8 has only CNetMsgHandler's four slots;
+// CAdvMgrNetMsgHandler adds a fifth (HandleGiftMsg), so it cannot be the
+// base. DC0x14515a likewise calls CNetMsgHandler's constructor directly.
+class CSingleSelectionNetMsgHandler : public CNetMsgHandler {
 public:
     CSingleSelectionNetMsgHandler();
     virtual CNetMsg* checkHandleNet(unsigned char inPopup,
