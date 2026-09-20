@@ -2715,6 +2715,49 @@ void SCampaign::playScenarioEpilogue(void* campaignHeader)
 // The earlier typed-header checkpoint was 70.3423%, with 79.2531%
 // retained in HIST (2026-09-08); no new byte-score claim follows this move.
 
+// The pre-v28 record's per-hero conversion. A `static` with a single call
+// site leaves no out-of-line copy, so its absence from the image argues for
+// the boundary rather than against it - the findAttackHexes precedent above.
+// Holding it here keeps SCampaign::load's own caller_cb down, which is what
+// leaves the vector size()/_Destroy expansions starved as retail's bytes show.
+static void convertLegacyCampaignHero(hero& newHero,
+                                      const LegacyCampaignHero& oldHero)
+{
+    newHero.m_id = oldHero.m_id;
+    newHero.m_owner = oldHero.m_owner;
+    strcpy(newHero.m_name, oldHero.m_name);
+    newHero.m_heroClass = oldHero.m_heroClass;
+    newHero.m_portrait = oldHero.m_portrait;
+    newHero.m_lastMagicSchoolLevel = oldHero.m_lastMagicSchoolLevel;
+    newHero.m_experience = oldHero.m_experience;
+    newHero.m_level = oldHero.m_level;
+    newHero.m_levelSeed = oldHero.m_levelSeed;
+    newHero.m_lastWisdom = oldHero.m_lastWisdom;
+    newHero.m_army = oldHero.m_army;
+    memcpy(newHero.m_skillLevel, oldHero.m_skillLevel,
+           sizeof(newHero.m_skillLevel));
+    memcpy(newHero.m_skillOrder, oldHero.m_skillOrder,
+           sizeof(newHero.m_skillOrder));
+    newHero.m_skillCount = oldHero.m_skillCount;
+
+    for (int equippedSlot = 0; equippedSlot < 19; ++equippedSlot) {
+        type_artifact artifact = oldHero.m_equipped[equippedSlot];
+        if (artifact.m_artifactId != ARTIFACT_NONE)
+            newHero.equipArtifact(&artifact, equippedSlot);
+    }
+    for (int backpackSlot = 0; backpackSlot < 64; ++backpackSlot) {
+        type_artifact artifact = oldHero.m_backpack[backpackSlot];
+        if (artifact.m_artifactId != ARTIFACT_NONE)
+            newHero.addToBackpack(&artifact, backpackSlot);
+    }
+    for (int spell = 0; spell < 70; ++spell) {
+        if (oldHero.m_inSpellbook[spell])
+            newHero.addSpell(spell);
+    }
+    for (int stat = 0; stat < 4; ++stat)
+        newHero.setPrimarySkill(stat, oldHero.m_stats[stat]);
+}
+
 // Controlled recovery (2026-09-09): the 64 combinations of six widened,
 // masked read buffers produce two emitted identities but no score change.
 // Thus retail's dword-and-mask instructions do not prove an int source
@@ -2781,75 +2824,26 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
                     saved.m_carryOverHeroes[pool][whichHero];
                 hero& newHero = heroPool[whichHero];
 
-                newHero.m_id = oldHero.m_id;
-                newHero.m_owner = oldHero.m_owner;
-                strcpy(newHero.m_name, oldHero.m_name);
-                newHero.m_heroClass = oldHero.m_heroClass;
-                newHero.m_portrait = oldHero.m_portrait;
-                newHero.m_lastMagicSchoolLevel =
-                    oldHero.m_lastMagicSchoolLevel;
-                newHero.m_experience = oldHero.m_experience;
-                newHero.m_level = oldHero.m_level;
-                newHero.m_levelSeed = oldHero.m_levelSeed;
-                newHero.m_lastWisdom = oldHero.m_lastWisdom;
-                newHero.m_army = oldHero.m_army;
-                memcpy(newHero.m_skillLevel, oldHero.m_skillLevel,
-                       sizeof(newHero.m_skillLevel));
-                memcpy(newHero.m_skillOrder, oldHero.m_skillOrder,
-                       sizeof(newHero.m_skillOrder));
-                newHero.m_skillCount = oldHero.m_skillCount;
-
-                for (int equippedSlot = 0; equippedSlot < 19;
-                     ++equippedSlot) {
-                    type_artifact artifact = oldHero.m_equipped[equippedSlot];
-                    if (artifact.m_artifactId != ARTIFACT_NONE)
-                        newHero.equipArtifact(&artifact, equippedSlot);
-                }
-                for (int backpackSlot = 0; backpackSlot < 64;
-                     ++backpackSlot) {
-                    type_artifact artifact = oldHero.m_backpack[backpackSlot];
-                    if (artifact.m_artifactId != ARTIFACT_NONE)
-                        newHero.addToBackpack(&artifact, backpackSlot);
-                }
-                for (int spell = 0; spell < 70; ++spell) {
-                    if (oldHero.m_inSpellbook[spell])
-                        newHero.addSpell(spell);
-                }
-                for (int stat = 0; stat < 4; ++stat)
-                    newHero.setPrimarySkill(stat, oldHero.m_stats[stat]);
+                convertLegacyCampaignHero(newHero, oldHero);
             }
         }
         return;
     }
 
-    unsigned char cheaterByte;
-    infile->read(&cheaterByte, sizeof(cheaterByte));
-    m_isCheater = cheaterByte != 0;
+    m_isCheater = readValue<unsigned char>(infile) != 0;
     if (saveVersion >= 26) {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        m_secretActive = value != 0;
+        m_secretActive = readValue<unsigned char>(infile) != 0;
     } else {
         m_secretActive = false;
     }
-    unsigned char currentMapByte;
-    infile->read(&currentMapByte, sizeof(currentMapByte));
-    m_currentMap = currentMapByte;
-    unsigned char campaignByte;
-    infile->read(&campaignByte, sizeof(campaignByte));
-    m_currentCampaign = campaignByte;
+    m_currentMap = readValue<unsigned char>(infile);
+    m_currentCampaign = readValue<unsigned char>(infile);
     if (saveVersion < 36
             && m_currentCampaign == PRE36_CAMPAIGN_REMAP_SOURCE)
         m_currentCampaign = PRE36_CAMPAIGN_REMAP_TARGET;
-    unsigned char regionByte;
-    infile->read(&regionByte, sizeof(regionByte));
-    m_numMapRegions = static_cast<signed char>(regionByte);
-    unsigned char crossoverByte;
-    infile->read(&crossoverByte, sizeof(crossoverByte));
-    m_crossoverArrayIndex = crossoverByte;
-    unsigned char briefingByte;
-    infile->read(&briefingByte, sizeof(briefingByte));
-    m_briefingChoice = static_cast<signed char>(briefingByte);
+    m_numMapRegions = static_cast<signed char>(readValue<unsigned char>(infile));
+    m_crossoverArrayIndex = readValue<unsigned char>(infile);
+    m_briefingChoice = static_cast<signed char>(readValue<unsigned char>(infile));
 
     m_campaignFilename = readLengthPrefixedString(infile);
     if (saveVersion >= 36) {
@@ -2860,84 +2854,47 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
                   m_campaignCompleted + sizeof(m_campaignCompleted), 0);
     }
 
-    int count;
-    {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        count = value;
-    }
+    int count = readValue<unsigned char>(infile);
     rMapScores.resize(count);
     for (i = 0; i < count; ++i) {
-        CampaignScenarioInfo& scenario = m_mapScores[i];
-        unsigned char completedByte;
-        infile->read(&completedByte, sizeof(completedByte));
-        scenario.m_completed = completedByte != 0;
-        int days;
-        infile->read(&days, sizeof(days));
-        scenario.m_days = days;
-        int score;
-        infile->read(&score, sizeof(score));
-        scenario.m_score = score;
+        CampaignScenarioInfo& scenario = rMapScores[i];
+        scenario.m_completed = readValue<unsigned char>(infile) != 0;
+        scenario.m_days = readValue<int>(infile);
+        scenario.m_score = readValue<int>(infile);
 
-        unsigned char completeOrderByte;
-        infile->read(&completeOrderByte, sizeof(completeOrderByte));
-        scenario.m_completeOrder = static_cast<signed char>(completeOrderByte);
-        unsigned char scenarioIndexByte;
-        infile->read(&scenarioIndexByte, sizeof(scenarioIndexByte));
-        scenario.m_index = static_cast<signed char>(scenarioIndexByte);
+        scenario.m_completeOrder =
+            static_cast<signed char>(readValue<unsigned char>(infile));
+        scenario.m_index =
+            static_cast<signed char>(readValue<unsigned char>(infile));
     }
 
-    {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        count = value;
-    }
+    count = readValue<unsigned char>(infile);
     m_carryOverHeroes.resize(count);
     m_carryoverArtifact.resize(count);
 
     for (pool = 0; pool < count; ++pool) {
         std::vector<hero>& heroPool = m_carryOverHeroes[pool];
-        int heroCount;
-        {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            heroCount = value;
-        }
+        int heroCount = readValue<unsigned char>(infile);
         heroPool.resize(heroCount);
         for (int whichHero = 0; whichHero < heroCount; ++whichHero)
             heroPool[whichHero].load(infile, saveVersion);
 
         std::vector<type_artifact>& artifactPool = m_carryoverArtifact[pool];
-        int artifactCount;
-        {
-            short value;
-            infile->read(&value, sizeof(value));
-            artifactCount = static_cast<unsigned short>(value);
-        }
+        int artifactCount =
+            static_cast<unsigned short>(readValue<short>(infile));
         artifactPool.resize(artifactCount);
         for (int whichArtifact = 0; whichArtifact < artifactCount;
              ++whichArtifact) {
-            int artifactValue;
-            short artifactIdWord;
-            infile->read(&artifactIdWord, sizeof(artifactIdWord));
-            artifactValue = artifactIdWord;
-            artifactPool[whichArtifact].m_artifactId = TArtifact(artifactValue);
-            short artifactExtraWord;
-            infile->read(&artifactExtraWord, sizeof(artifactExtraWord));
-            artifactPool[whichArtifact].m_extra = artifactExtraWord;
+            artifactPool[whichArtifact].m_artifactId =
+                TArtifact(readValue<short>(infile));
+            artifactPool[whichArtifact].m_extra = readValue<short>(infile);
         }
     }
 
-    {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        count = value;
-    }
+    count = readValue<unsigned char>(infile);
     m_assignedCarryover.resize(count);
     for (int assignedIndex = 0; assignedIndex < count; ++assignedIndex) {
-        short value;
-        infile->read(&value, sizeof(value));
-        m_assignedCarryover[assignedIndex] = value;
+        m_assignedCarryover[assignedIndex] = readValue<short>(infile);
     }
 }
 
