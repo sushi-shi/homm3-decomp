@@ -45,6 +45,24 @@ unsigned char TRmgMapItem::isPassableLand() const
 
 typedef std::set<TPoint> TRmgPointSet;
 
+// Complete-only creature reward values: seven signed dwords at 0x6824e0.
+DATA(0x006824E0)
+int g_rmgCreatureValueByLevel[7] = {5000, 7000, 9000, 12000, 16000, 21000, 27000};
+
+// Vtable 0x640a74 slots 1/2 retain the shared empty/true bodies at
+// 0x5bc690/0x484620. These are real base-class defaults, not missing hooks.
+void type_object::unknownOperation() {}
+unsigned char type_object::isWritable() { return 1; }
+
+// Vtable 0x640b64 slot 2 is the shared false body at 0x484d50.
+// Quest vtables 0x640c00/0x640c0c/0x640c18 and key tent 0x640c30
+// replace it with the shared true body at 0x484620. No DC RMG counterpart.
+unsigned char type_treasure_def::isTerrainDependent() { return 0; }
+unsigned char type_quest_creature_def::isTerrainDependent() { return 1; }
+unsigned char type_quest_experience_def::isTerrainDependent() { return 1; }
+unsigned char type_quest_gold_def::isTerrainDependent() { return 1; }
+unsigned char type_key_tent_def::isTerrainDependent() { return 1; }
+
 // Retail constructor defaults and overrides; 0x546257 compares map counts,
 // while 0x546270 compares per-zone counts. Names are role-derived.
 DATA(0x0069CE4C)
@@ -229,12 +247,11 @@ double g_rmgDirectionSines[32] = {
 };
 
 // Four six-entry tables drive Complete's guarded-zone connection strength.
-// Their contents are retail data owned elsewhere; these address claims give
-// the candidate relocations semantic identities without copying game data.
-DATA(0x006823F0) extern int g_rmgGuardThresholdLow[];
-DATA(0x00682408) extern int g_rmgGuardThresholdHigh[];
-DATA(0x00682420) extern int g_rmgGuardScaleLow[];
-DATA(0x00682438) extern int g_rmgGuardScaleHigh[];
+// Six dwords per row in the pinned Complete image; original names unknown.
+DATA(0x006823F0) int g_rmgGuardThresholdLow[6] = {50000, 2500, 1500, 1000, 500, 0};
+DATA(0x00682408) int g_rmgGuardThresholdHigh[6] = {50000, 7500, 7500, 7500, 5000, 5000};
+DATA(0x00682420) int g_rmgGuardScaleLow[6] = {0, 2, 3, 4, 6, 6};
+DATA(0x00682438) int g_rmgGuardScaleHigh[6] = {0, 2, 3, 4, 4, 6};
 
 DATA(0x00682700)
 static const char* g_rmgWaterNames[3] = {
@@ -1708,7 +1725,7 @@ unsigned char rmgKeyTentObject::isWritable()
     TRmgZone* zone = generator->m_zones[
         generator->m_map.getMapItem(position)->m_zoneState.m_zone];
     int actualValue;
-    type_object* object = generator->generateTreasure(
+    type_object* object = generator->createTreasureObject(
         zone, value, value * 3 / 2, &actualValue, 0, 0, 0, position);
     if (object)
         generator->addObject(object, position);
@@ -4863,6 +4880,10 @@ void type_random_map_generator::buildZoneBoundaries(
                 if (!canPlaceZone(&testZone))
                     continue;
                 if (position.m_z == 0) {
+                    // Retail leaves m_allowedTowns untouched before the
+                    // zone-constructor call at 0x53e45c reads them.
+                    // Recycled heap contents therefore affect RNG consumption;
+                    // the execution oracle supplies allocation contents explicitly.
                     TRmgTownSlot* slot = new TRmgTownSlot;
                     slot->m_zoneIndex = mapTemplate->m_zones.size();
                     slot->m_size = radius;

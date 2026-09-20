@@ -9,8 +9,8 @@
 #include "exceptions.h"
 #include "tiles.h"
 #include "includes.h"
-
-DATA(0x00642BD8) extern TRmgTerrainRule* const g_rmgTerrainRules[];
+// Vtable 0x642cb0 slot 2 shares the false/ret-4 body at 0x5543f0.
+unsigned char TRmgTableTerrainRule::isSpecialFrame(int) { return 0; }
 
 // Initializer-list copy of the point: the body assignment costs the
 // walker's first neighbour pass its retained compound add (78.03 against
@@ -1655,3 +1655,103 @@ bool operator<(const TRmgCoordinatePoint<Coordinate>& left,
 {
     return left.getY() < right.getY() || (left.getY() == right.getY() && left.getX() < right.getX());
 }
+
+// Complete terrain data, read from the pinned retail image. The initializer
+// calls at 0x5b3b60..0x5b3da0 prove entry counts, arguments and object order;
+// the table at 0x642bd8 proves terrain-index order. Names are role-derived.
+DATA(0x006424A8)
+const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[48] = {
+    {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0},
+    {0, 0, 0}, {0, 0, 0}, {8, 0, 0}, {8, 0, 0}, {8, 1, 0}, {8, 1, 0},
+    {8, 0, 1}, {8, 0, 1}, {8, 1, 1}, {8, 1, 1}, {9, 0, 0}, {9, 0, 0},
+    {9, 1, 0}, {9, 1, 0}, {10, 0, 0}, {10, 0, 0}, {10, 0, 1}, {10, 0, 1},
+    {11, 0, 0}, {11, 0, 0}, {11, 1, 0}, {11, 1, 0}, {11, 0, 1}, {11, 0, 1},
+    {11, 1, 1}, {11, 1, 1}, {12, 0, 0}, {12, 0, 0}, {12, 1, 0}, {12, 1, 0},
+    {12, 0, 1}, {12, 0, 1}, {12, 1, 1}, {12, 1, 1}, {13, 0, 0}, {13, 0, 0},
+    {13, 1, 0}, {13, 1, 0}, {13, 0, 1}, {13, 0, 1}, {13, 1, 1}, {13, 1, 1},
+};
+
+DATA(0x00642628)
+static const TRmgTerrainPatternEntry g_rmgLandPatternEntries[79] = {
+    {2, 0}, {2, 0}, {2, 0}, {2, 0}, {3, 0}, {3, 0},
+    {3, 0}, {3, 0}, {4, 0}, {4, 0}, {4, 0}, {4, 0},
+    {5, 0}, {5, 0}, {5, 0}, {5, 0}, {6, 0}, {6, 0},
+    {7, 0}, {7, 0}, {8, 0}, {8, 0}, {8, 0}, {8, 0},
+    {9, 0}, {9, 0}, {9, 0}, {9, 0}, {10, 0}, {10, 0},
+    {10, 0}, {10, 0}, {11, 0}, {11, 0}, {11, 0}, {11, 0},
+    {12, 0}, {12, 0}, {13, 0}, {13, 0}, {14, 0}, {15, 0},
+    {16, 0}, {17, 0}, {18, 0}, {19, 0}, {20, 0}, {21, 0},
+    {22, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
+    {0, 0}, {0, 0}, {0, 0}, {0, 1}, {0, 1}, {0, 1},
+    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
+    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
+    {0, 1}, {23, 0}, {24, 0}, {25, 0}, {26, 0}, {28, 0},
+    {27, 0},
+};
+
+DATA(0x006428A0)
+static const TRmgTerrainPatternEntry g_rmgDirtPatternEntries[46] = {
+    {8, 0}, {8, 0}, {8, 0}, {8, 0}, {9, 0}, {9, 0},
+    {9, 0}, {9, 0}, {10, 0}, {10, 0}, {10, 0}, {10, 0},
+    {11, 0}, {11, 0}, {11, 0}, {11, 0}, {12, 0}, {12, 0},
+    {13, 0}, {13, 0}, {16, 0}, {0, 0}, {0, 0}, {0, 0},
+    {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 1},
+    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
+    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
+    {0, 1}, {0, 1}, {0, 1}, {24, 0},
+};
+
+DATA(0x00642A10)
+static const TRmgTerrainPatternEntry g_rmgSandPatternEntries[24] = {
+    {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
+    {0, 0}, {0, 0}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
+    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
+    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
+};
+
+DATA(0x00642AD0)
+static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[33] = {
+    {8, 0}, {8, 0}, {8, 0}, {8, 0}, {9, 0}, {9, 0},
+    {9, 0}, {9, 0}, {10, 0}, {10, 0}, {10, 0}, {10, 0},
+    {11, 0}, {11, 0}, {11, 0}, {11, 0}, {12, 0}, {12, 0},
+    {13, 0}, {13, 0}, {16, 0}, {0, 0}, {0, 0}, {0, 0},
+    {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
+    {0, 0}, {0, 0}, {0, 0},
+};
+
+DATA(0x006A48D0)
+static TRmgPatternTerrainRule g_rmgDirtRule(1, 1, 50, 46, g_rmgDirtPatternEntries);
+VA_COMPGEN(0x005B3B60, 0x23, STATIC_CTOR, g_rmgDirtRule)
+DATA(0x006A44F8)
+static TRmgPatternTerrainRule g_rmgSandRule(0, 1, 70, 24, g_rmgSandPatternEntries);
+VA_COMPGEN(0x005B3BA0, 0x23, STATIC_CTOR, g_rmgSandRule)
+DATA(0x006A3D88)
+static TRmgPatternTerrainRule g_rmgGrassRule(1, 1, 50, 79, g_rmgLandPatternEntries);
+VA_COMPGEN(0x005B3BE0, 0x23, STATIC_CTOR, g_rmgGrassRule)
+DATA(0x006A3F70)
+static TRmgPatternTerrainRule g_rmgSnowRule(1, 1, 80, 79, g_rmgLandPatternEntries);
+VA_COMPGEN(0x005B3C20, 0x23, STATIC_CTOR, g_rmgSnowRule)
+DATA(0x006A46E0)
+static TRmgPatternTerrainRule g_rmgSwampRule(1, 1, 80, 79, g_rmgLandPatternEntries);
+VA_COMPGEN(0x005B3C60, 0x23, STATIC_CTOR, g_rmgSwampRule)
+DATA(0x006A4AB8)
+static TRmgPatternTerrainRule g_rmgRoughRule(1, 1, 80, 79, g_rmgLandPatternEntries);
+VA_COMPGEN(0x005B3CA0, 0x23, STATIC_CTOR, g_rmgRoughRule)
+DATA(0x006A5070)
+static TRmgPatternTerrainRule g_rmgSubterraneanRule(1, 1, 60, 79, g_rmgLandPatternEntries);
+VA_COMPGEN(0x005B3CE0, 0x23, STATIC_CTOR, g_rmgSubterraneanRule)
+DATA(0x006A4E88)
+static TRmgPatternTerrainRule g_rmgLavaRule(1, 1, 80, 79, g_rmgLandPatternEntries);
+VA_COMPGEN(0x005B3D20, 0x23, STATIC_CTOR, g_rmgLavaRule)
+DATA(0x006A4CA0)
+static TRmgPatternTerrainRule g_rmgWaterRule(0, 0, 0, 33, g_rmgWaterPatternEntries);
+VA_COMPGEN(0x005B3D60, 0x23, STATIC_CTOR, g_rmgWaterRule)
+DATA(0x006A48C8)
+static TRmgTableTerrainRule g_rmgRockRule;
+
+DATA(0x00642BD8)
+TRmgTerrainRule* const g_rmgTerrainRules[10] = {
+    &g_rmgDirtRule, &g_rmgSandRule, &g_rmgGrassRule, &g_rmgSnowRule,
+    &g_rmgSwampRule, &g_rmgRoughRule, &g_rmgSubterraneanRule,
+    &g_rmgLavaRule, &g_rmgWaterRule, &g_rmgRockRule
+};

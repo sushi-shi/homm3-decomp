@@ -1727,7 +1727,7 @@ public:
     virtual ~TRmgGeneratorBase();
     virtual void addObject(type_object* object, TRmgMapPosition position);
     // Retained 0x536200 loads object records, builds the per-type vectors,
-    // then calls the placement-rule loader. Larger body not yet recovered.
+    // then calls the placement-rule loader. Both bodies are in rmg.cpp.
     void loadObjectPrototypes();
     void readObjectPlacementRules();
     int scoreObjectPlacement(
@@ -1769,6 +1769,9 @@ public:
     int m_nextSeerHutPrototypeIndex;                   // +0x0f58
     // 0x540d6d selects the key-tent subtype using +0xf5c. After placing
     // it, 0x540f68 marks its color disabled and scans for the next free one.
+    // The retail constructor/roster does not initialize this field: its
+    // first value comes from the caller's stack. Preserve that behavior;
+    // execution comparisons must supply identical initial stack contents.
     int m_nextKeyTentColor;                            // +0x0f5c
     // 0x549bae clears nine alignment counts; 0x549be0..0x549c05 counts
     // active zones both by their alignment (+4) and in the total.
@@ -1954,13 +1957,6 @@ public:
     void setHumanPlayer(int seat);
     void setTownChoice(int seat, int town);
     void removeObject(type_object* object);
-    // Retail 0x546190: zone, value range, output value, three byte flags,
-    // then a by-value position (ret 0x28). Flags bypass the object-trait
-    // filter, allow terrain-dependent definitions, and rank value per area.
-    type_object* generateTreasure(TRmgZone* zone, int minValue, int maxValue,
-        int* value, unsigned char ignoreObjectTraits,
-        unsigned char allowTerrainDependent, unsigned char preferValueDensity,
-        TRmgMapPosition position);
     // Retail 0x548040 walks predecessor runs for the caller at 0x548408.
     // The Complete-only name is provisional; the by-value ABI is proven.
     unsigned char paintRoad(TRmgMapPosition position, int roadType);
