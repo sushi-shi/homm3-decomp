@@ -3925,10 +3925,20 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 
     incProgressBar(1);
 
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    // DC names six locals here - int_buffer, numObjects, count, x, i, v -
+    // where this body had three, and numObjects is the second read's own
+    // staging int rather than a reuse of count. Adopting it is byte-neutral
+    // (VC6 coalesces the slots) but it is the recovered shape. DC types the
+    // loop counter `long i`; retail does not agree - `long` costs
+    // 89.47 -> 83.43, so the int counter stays. The remaining residual is a
+    // teardown-site count: retail emits THREE ~vector<CSprite*> sites, one
+    // per exit while oldSprites is live (the two `return -1` and the
+    // `return 1`), and our build cross-jumps two of them into one.
+    int numObjects;
+    if (infile->read(&numObjects, sizeof(numObjects)) < sizeof(numObjects))
         return -1;
 
-    m_objects.resize(count);
+    m_objects.resize(numObjects);
     for (i = 0; i < m_objects.size(); ++i) {
         if (readObject(infile, &m_objects[i], mapVersion) < 0)
             return -1;
