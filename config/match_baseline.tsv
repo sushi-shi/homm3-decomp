@@ -3419,7 +3419,7 @@ rmg	?insert@?$vector@UTRmgObjectPlacementRule@@V?$allocator@UTRmgObjectPlacement
 rmg	?insert@?$vector@UTRmgZoneConnection@@V?$allocator@UTRmgZoneConnection@@@std@@@std@@QAEPAUTRmgZoneConnection@@PAU3@ABU3@@Z	100.0000	100.0000	100.0000	0x14c970	-
 rmg	?insetIslandZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	78.7719	78.7719	78.7719	0x13d1c0	tokens1:99662685d65e
 rmg	?isPlacementBlocked@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@HE@Z	90.2171	90.2171	90.2171	0x1318b0	tokens1:85c1fa13ed29
-rmg	?isWritable@rmgKeyTentObject@@UAEEXZ	100.0000	100.0000	100.0000	0x1338e0	tokens1:f6866f71af9a
+rmg	?isWritable@rmgKeyTentObject@@UAEEXZ	100.0000	100.0000	100.0000	0x1338e0	tokens1:dd8d4abe24c5
 rmg	?isWritable@rmgQuestArtifactObject@@UAEEXZ	100.0000	100.0000	100.0000	0x133a50	tokens1:35b0fe3039ba
 rmg	?joinExtraZones@type_random_map_generator@@QAEXHPAVTRmgVoronoi@@@Z	74.2977	79.6078	79.6078	0x13dad0	tokens1:16480acbd563
 rmg	?loadObjectPrototypes@TRmgGeneratorBase@@QAEXXZ	100.0000	100.0000	100.0000	0x136200	tokens1:59bbb3560100
@@ -3603,6 +3603,15 @@ rmg_terrain	?selectTerrainTransition@@YIHPBHPAUTRmgTerrainFlip@@@Z	100.0000	100.
 rmg_terrain	?selectTransitionFrame@TRmgPatternTerrainRule@@UAEHHUTRmgTerrainFlip@@AAU2@H@Z	100.0000	100.0000	100.0000	0x1b38f0	tokens1:252afa5667af
 rmg_terrain	?selectTransitionFrame@TRmgTableTerrainRule@@UAEHHUTRmgTerrainFlip@@AAU2@H@Z	100.0000	100.0000	100.0000	0x1b3ae0	tokens1:9730e5a8a32b
 rmg_terrain	?upper_bound@?$_Tree@U?$TRmgCoordinatePoint@I@@U1@U_Kfn@?$set@U?$TRmgCoordinatePoint@I@@U?$less@U?$TRmgCoordinatePoint@I@@@std@@V?$allocator@U?$TRmgCoordinatePoint@I@@@3@@std@@U?$less@U?$TRmgCoordinatePoint@I@@@4@V?$allocator@U?$TRmgCoordinatePoint@I@@@4@@std@@QAE?AViterator@12@ABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x1b8a20	-
+rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgDirtRule	100.0000	100.0000	100.0000	0x1b3b60	-
+rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgGrassRule	100.0000	100.0000	100.0000	0x1b3be0	-
+rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgLavaRule	100.0000	100.0000	100.0000	0x1b3d20	-
+rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgRoughRule	100.0000	100.0000	100.0000	0x1b3ca0	-
+rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgSandRule	100.0000	100.0000	100.0000	0x1b3ba0	-
+rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgSnowRule	100.0000	100.0000	100.0000	0x1b3c20	-
+rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgSubterraneanRule	100.0000	100.0000	100.0000	0x1b3ce0	-
+rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgSwampRule	100.0000	100.0000	100.0000	0x1b3c60	-
+rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgWaterRule	100.0000	100.0000	100.0000	0x1b3d60	-
 sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	100.0000	100.0000	100.0000	0x15fdd0	tokens1:c4dfce6ce0e5
 sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x1654f0	tokens1:4d099e7e8e42
 sacrifice_window	??1type_sacrifice_window@@UAE@XZ	100.0000	100.0000	100.0000	0x1623a0	tokens1:2485fecfa941
