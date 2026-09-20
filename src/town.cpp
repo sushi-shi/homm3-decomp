@@ -191,6 +191,7 @@ VA(0x005bd2f0, 0x402)  // carcass promotion, dc 0x165988; anchor-callee armyGrou
 int town::save(TAbstractFile* outfile)
 {
     char charBuffer;
+    char posBuffer;
     unsigned char spellBuf[70];
 
     charBuffer = m_id;
@@ -213,25 +214,25 @@ int town::save(TAbstractFile* outfile)
     if (outfile->write(&charBuffer, sizeof(charBuffer))
         < sizeof(charBuffer))
         return -1;
-    charBuffer = m_mapX;
-    if (outfile->write(&charBuffer, sizeof(charBuffer))
-        < sizeof(charBuffer))
+    posBuffer = m_mapX;
+    if (outfile->write(&posBuffer, sizeof(posBuffer))
+        < sizeof(posBuffer))
         return -1;
-    charBuffer = m_mapY;
-    if (outfile->write(&charBuffer, sizeof(charBuffer))
-        < sizeof(charBuffer))
+    posBuffer = m_mapY;
+    if (outfile->write(&posBuffer, sizeof(posBuffer))
+        < sizeof(posBuffer))
         return -1;
-    charBuffer = m_mapZ;
-    if (outfile->write(&charBuffer, sizeof(charBuffer))
-        < sizeof(charBuffer))
+    posBuffer = m_mapZ;
+    if (outfile->write(&posBuffer, sizeof(posBuffer))
+        < sizeof(posBuffer))
         return -1;
-    charBuffer = m_dockSite;
-    if (outfile->write(&charBuffer, sizeof(charBuffer))
-        < sizeof(charBuffer))
+    posBuffer = m_dockSite;
+    if (outfile->write(&posBuffer, sizeof(posBuffer))
+        < sizeof(posBuffer))
         return -1;
-    charBuffer = m_dockSiteY;
-    if (outfile->write(&charBuffer, sizeof(charBuffer))
-        < sizeof(charBuffer))
+    posBuffer = m_dockSiteY;
+    if (outfile->write(&posBuffer, sizeof(posBuffer))
+        < sizeof(posBuffer))
         return -1;
 
     if (m_garrison.save(outfile) < 0)

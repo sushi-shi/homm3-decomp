@@ -764,120 +764,215 @@ int hero::load(TAbstractFile* infile, int saveVersion)
 // Dinkumware's c_str() null fallback inlined, the same expansion
 // HeroFn_004D8FB0 carries.
 
+// Each scratch lives in its OWN scope, the same disjoint-staging idiom
+// SCampaign::save and SavedGameHeader::save use. Retail's frame is 0x8 -
+// two dwords for sixty writes - because those scopes let VC6 coalesce every
+// temp; six function-scope buffers cannot coalesce and cost 0x1c with seven
+// slots, which was the whole 99.2181 residual (all ten blocks and all 63
+// calls already agreed).
 VA(0x004d80c0, 0x526)  // dc 0xcb698
 int hero::save(TAbstractFile* outfile)
 {
-    unsigned int uintBuffer;
-    unsigned short ushortBuffer;
-    int intBuffer;
-    short shortBuffer;
-    unsigned char ucharBuffer;
-    char charBuffer;
-
     if (!type_obscuring_object::save(outfile))
         return -1;
 
-    charBuffer = static_cast<char>(m_sex);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_hasCustomName);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    {
+        char charBuffer = static_cast<char>(m_sex);
+        outfile->write(&charBuffer, sizeof(charBuffer));
+    }
+    {
+        unsigned char ucharBuffer = static_cast<unsigned char>(m_hasCustomName);
+        outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    }
 
-    uintBuffer = static_cast<unsigned int>(m_customName.length());
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    {
+        unsigned int uintBuffer = static_cast<unsigned int>(m_customName.length());
+        outfile->write(&uintBuffer, sizeof(uintBuffer));
+    }
     outfile->write(m_customName.c_str(), m_customName.length());
 
-    charBuffer = static_cast<char>(m_owner);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_patrolRadius);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_moraleBonus);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_luckBonus);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_backpackCount);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_disguiseLevel);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_flightLevel);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_waterWalkLevel);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_dWalkSpellsCast);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_visionsPower);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_id);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_heroClass);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_portrait);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_patrolX);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_patrolY);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_facing);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_formation);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_levelSeed);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_lastWisdom);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    {
+        char charBuffer = static_cast<char>(m_owner);
+        outfile->write(&charBuffer, sizeof(charBuffer));
+    }
+    {
+        char charBuffer = static_cast<char>(m_patrolRadius);
+        outfile->write(&charBuffer, sizeof(charBuffer));
+    }
+    {
+        char charBuffer = static_cast<char>(m_moraleBonus);
+        outfile->write(&charBuffer, sizeof(charBuffer));
+    }
+    {
+        char charBuffer = static_cast<char>(m_luckBonus);
+        outfile->write(&charBuffer, sizeof(charBuffer));
+    }
+    {
+        char charBuffer = static_cast<char>(m_backpackCount);
+        outfile->write(&charBuffer, sizeof(charBuffer));
+    }
+    {
+        char charBuffer = static_cast<char>(m_disguiseLevel);
+        outfile->write(&charBuffer, sizeof(charBuffer));
+    }
+    {
+        char charBuffer = static_cast<char>(m_flightLevel);
+        outfile->write(&charBuffer, sizeof(charBuffer));
+    }
+    {
+        char charBuffer = static_cast<char>(m_waterWalkLevel);
+        outfile->write(&charBuffer, sizeof(charBuffer));
+    }
+    {
+        char charBuffer = static_cast<char>(m_dWalkSpellsCast);
+        outfile->write(&charBuffer, sizeof(charBuffer));
+    }
+    {
+        char charBuffer = static_cast<char>(m_visionsPower);
+        outfile->write(&charBuffer, sizeof(charBuffer));
+    }
+    {
+        char charBuffer = static_cast<char>(m_id);
+        outfile->write(&charBuffer, sizeof(charBuffer));
+    }
+    {
+        char charBuffer = static_cast<char>(m_heroClass);
+        outfile->write(&charBuffer, sizeof(charBuffer));
+    }
+    {
+        unsigned char ucharBuffer = static_cast<unsigned char>(m_portrait);
+        outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    }
+    {
+        unsigned char ucharBuffer = static_cast<unsigned char>(m_patrolX);
+        outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    }
+    {
+        unsigned char ucharBuffer = static_cast<unsigned char>(m_patrolY);
+        outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    }
+    {
+        unsigned char ucharBuffer = static_cast<unsigned char>(m_facing);
+        outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    }
+    {
+        unsigned char ucharBuffer = static_cast<unsigned char>(m_formation);
+        outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    }
+    {
+        unsigned char ucharBuffer = static_cast<unsigned char>(m_levelSeed);
+        outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    }
+    {
+        unsigned char ucharBuffer = static_cast<unsigned char>(m_lastWisdom);
+        outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    }
 
-    intBuffer = static_cast<int>(m_pathTargetX);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    intBuffer = static_cast<int>(m_pathTargetY);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    shortBuffer = static_cast<short>(m_pathTargetZ);
-    outfile->write(&shortBuffer, sizeof(shortBuffer));
-    shortBuffer = static_cast<short>(m_lastMagicSchoolLevel);
-    outfile->write(&shortBuffer, sizeof(shortBuffer));
-    intBuffer = static_cast<int>(m_maxMovePoints);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    intBuffer = static_cast<int>(m_movePoints);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    intBuffer = static_cast<int>(m_experience);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    intBuffer = static_cast<int>(m_skillCount);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    shortBuffer = static_cast<short>(m_mana);
-    outfile->write(&shortBuffer, sizeof(shortBuffer));
-    shortBuffer = static_cast<short>(m_level);
-    outfile->write(&shortBuffer, sizeof(shortBuffer));
-    ushortBuffer = static_cast<unsigned short>(m_targetDistance);
-    outfile->write(&ushortBuffer, sizeof(ushortBuffer));
+    {
+        int intBuffer = static_cast<int>(m_pathTargetX);
+        outfile->write(&intBuffer, sizeof(intBuffer));
+    }
+    {
+        int intBuffer = static_cast<int>(m_pathTargetY);
+        outfile->write(&intBuffer, sizeof(intBuffer));
+    }
+    {
+        short shortBuffer = static_cast<short>(m_pathTargetZ);
+        outfile->write(&shortBuffer, sizeof(shortBuffer));
+    }
+    {
+        short shortBuffer = static_cast<short>(m_lastMagicSchoolLevel);
+        outfile->write(&shortBuffer, sizeof(shortBuffer));
+    }
+    {
+        int intBuffer = static_cast<int>(m_maxMovePoints);
+        outfile->write(&intBuffer, sizeof(intBuffer));
+    }
+    {
+        int intBuffer = static_cast<int>(m_movePoints);
+        outfile->write(&intBuffer, sizeof(intBuffer));
+    }
+    {
+        int intBuffer = static_cast<int>(m_experience);
+        outfile->write(&intBuffer, sizeof(intBuffer));
+    }
+    {
+        int intBuffer = static_cast<int>(m_skillCount);
+        outfile->write(&intBuffer, sizeof(intBuffer));
+    }
+    {
+        short shortBuffer = static_cast<short>(m_mana);
+        outfile->write(&shortBuffer, sizeof(shortBuffer));
+    }
+    {
+        short shortBuffer = static_cast<short>(m_level);
+        outfile->write(&shortBuffer, sizeof(shortBuffer));
+    }
+    {
+        unsigned short ushortBuffer = static_cast<unsigned short>(m_targetDistance);
+        outfile->write(&ushortBuffer, sizeof(ushortBuffer));
+    }
 
-    uintBuffer = static_cast<unsigned int>(m_trainingGroundsFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_defenseTowerFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_gardenOfRevelationFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_mercCampFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_powerSchoolFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_treeOfKnowledgeFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_libraryFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_arenaFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_magicSchoolFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_warSchoolFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_universityFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_shrine1Flags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_shrine2Flags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_shrine3Flags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_flags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    {
+        unsigned int uintBuffer = static_cast<unsigned int>(m_trainingGroundsFlags);
+        outfile->write(&uintBuffer, sizeof(uintBuffer));
+    }
+    {
+        unsigned int uintBuffer = static_cast<unsigned int>(m_defenseTowerFlags);
+        outfile->write(&uintBuffer, sizeof(uintBuffer));
+    }
+    {
+        unsigned int uintBuffer = static_cast<unsigned int>(m_gardenOfRevelationFlags);
+        outfile->write(&uintBuffer, sizeof(uintBuffer));
+    }
+    {
+        unsigned int uintBuffer = static_cast<unsigned int>(m_mercCampFlags);
+        outfile->write(&uintBuffer, sizeof(uintBuffer));
+    }
+    {
+        unsigned int uintBuffer = static_cast<unsigned int>(m_powerSchoolFlags);
+        outfile->write(&uintBuffer, sizeof(uintBuffer));
+    }
+    {
+        unsigned int uintBuffer = static_cast<unsigned int>(m_treeOfKnowledgeFlags);
+        outfile->write(&uintBuffer, sizeof(uintBuffer));
+    }
+    {
+        unsigned int uintBuffer = static_cast<unsigned int>(m_libraryFlags);
+        outfile->write(&uintBuffer, sizeof(uintBuffer));
+    }
+    {
+        unsigned int uintBuffer = static_cast<unsigned int>(m_arenaFlags);
+        outfile->write(&uintBuffer, sizeof(uintBuffer));
+    }
+    {
+        unsigned int uintBuffer = static_cast<unsigned int>(m_magicSchoolFlags);
+        outfile->write(&uintBuffer, sizeof(uintBuffer));
+    }
+    {
+        unsigned int uintBuffer = static_cast<unsigned int>(m_warSchoolFlags);
+        outfile->write(&uintBuffer, sizeof(uintBuffer));
+    }
+    {
+        unsigned int uintBuffer = static_cast<unsigned int>(m_universityFlags);
+        outfile->write(&uintBuffer, sizeof(uintBuffer));
+    }
+    {
+        unsigned int uintBuffer = static_cast<unsigned int>(m_shrine1Flags);
+        outfile->write(&uintBuffer, sizeof(uintBuffer));
+    }
+    {
+        unsigned int uintBuffer = static_cast<unsigned int>(m_shrine2Flags);
+        outfile->write(&uintBuffer, sizeof(uintBuffer));
+    }
+    {
+        unsigned int uintBuffer = static_cast<unsigned int>(m_shrine3Flags);
+        outfile->write(&uintBuffer, sizeof(uintBuffer));
+    }
+    {
+        unsigned int uintBuffer = static_cast<unsigned int>(m_flags);
+        outfile->write(&uintBuffer, sizeof(uintBuffer));
+    }
 
     m_army.save(outfile);
 
@@ -891,8 +986,10 @@ int hero::save(TAbstractFile* outfile)
     outfile->write(m_backpack, sizeof(m_backpack));
     outfile->write(m_artifactSlotCounts, sizeof(m_artifactSlotCounts));
 
-    ucharBuffer = static_cast<unsigned char>(m_isSleeping);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    {
+        unsigned char ucharBuffer = static_cast<unsigned char>(m_isSleeping);
+        outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    }
 
     const std::bitset<48>& granted = m_townSpecialGrantedMask;
     unsigned char outBuf[6];

@@ -2283,7 +2283,7 @@ hero	?removeBackpackArtifact@hero@@QAEXF@Z	100.0000	100.0000	100.0000	0xe2d50	to
 hero	?restoreCell@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd76e0	tokens1:d841a0d1501f
 hero	?rotateBackpackLeft@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbdb0	tokens1:fbd5e3d6d1de
 hero	?rotateBackpackRight@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbe10	tokens1:cbf7e6f9703d
-hero	?save@hero@@QAEHPAVTAbstractFile@@@Z	99.2181	99.2181	100.0000	0xd80c0	tokens1:34ca02587780
+hero	?save@hero@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xd80c0	tokens1:0aa61be91e59
 hero	?save@type_obscuring_object@@QAE_NPAX@Z	100.0000	100.0000	100.0000	0xd77b0	tokens1:4fb6fe728a0b
 hero	?set@?$bitset@$0EG@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xe66f0	-
 hero	?setHotkey@button@@QAEXH@Z	100.0000	100.0000	100.0000	0xe1370	tokens1:641ea6ccd2e3
@@ -4392,7 +4392,7 @@ town	?isLegalBuilding@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.000
 town	?load@town@@QAEHPAVTAbstractFile@@H@Z	98.1694	98.1694	98.1694	0x1bcd60	tokens1:9c647c175329
 town	?placeInMap@town@@QAEXHJE@Z	100.0000	100.0000	100.0000	0x1c13b0	tokens1:e8cebeabfe11
 town	?removeGarrisonHero@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be390	tokens1:1bd2ee308c11
-town	?save@town@@QAEHPAVTAbstractFile@@@Z	99.8370	99.8370	99.8370	0x1bd2f0	tokens1:631f41317b96
+town	?save@town@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x1bd2f0	tokens1:21c56deae668
 town	?set@?$bitset@$0DA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x106780	-
 town	?setSummoningGenerator@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bd750	tokens1:625d545b2fa5
 town	?showBuildingRewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1c0220	tokens1:e0999ab99842
