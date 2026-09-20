@@ -584,13 +584,7 @@ int getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
         - (second.m_y - first.m_y) * (third.m_x - first.m_x);
 }
 
-VA(0x005FDB10, 0x21) // anchor-callee addSite; Complete-only, ret 0x10
-int getRmgSquaredDistance(TPoint first, TPoint second)
-{
-    int dy = first.m_y - second.m_y;
-    int dx = first.m_x - second.m_x;
-    return dx * dx + dy * dy;
-}
+
 
 // The subdivision constructor retains seven single-edge insertions at
 // 0x5fd091/0x5fd0f6/0x5fd10e/0x5fd15a/0x5fd172/0x5fd1bb/0x5fd1d3.

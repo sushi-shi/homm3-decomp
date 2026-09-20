@@ -11,6 +11,7 @@
 #include <math.h>
 #include <list>
 #include <queue>
+#include <stack>
 #include <set>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7061,23 +7062,20 @@ TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, int level)
 
 // The eight-byte values are coordinate pairs: midpoint and perpendicular
 // arithmetic prove TPoint, independently of the ICF-shared vector labels.
-// Pending segments use a vector stack; long segments enqueue two outward
-// side branches as consecutive point pairs in a queue backed by std::list.
-// FIFO ownership preserves the node layout and per-level lifetime. The
-// queue::pop -> list::pop_front -> erase boundary restores retail's first
-// retained list erase, raising MAX 73.0200% to 74.5988%. The adapter identity
-// remains a retail-derived source hypothesis without a DC counterpart.
-// The second removal still expands erase after a retained iterator increment;
-// retail retains erase there too. Both vector pops and list range cleanup
-// also expand too far. A stack adapter is neutral; queue.empty() lowers the
-// result to 73.8523%, while vector.empty() guards are neutral. No emission
-// anchor or inline-depth pin is used.
-// Retail +0x10a..+0x127 constructs the vector then list after the seed
-// switch. Cleanup calls range erase at +0x478, frees the list head at
-// +0x481 and the vector at +0x497, before the level back edge at +0x4b1.
-// Hoisting either container outside the level loop contradicts that CFG.
-// The current emitted-object scan also finds no byte-identical range-erase
-// body under another template type, even before checking callee identities.
+// Pending segments are LIFO point pairs; deferred branches are FIFO pairs.
+// The stack/vector and queue/list adapters retain their per-level lifetimes.
+// The canonical point difference supplies retail's separate SUB/SUB/NEG;
+// final terrain/border queries and the shared squared-distance helper restore
+// range cleanup. Its 69-byte retained body and delete call are exact.
+// Retail +0x10a..+0x127 constructs the containers after the seed switch;
+// range erase, head deletion and vector deletion precede the level back edge.
+// Hoisting either container outside that loop contradicts the retail lifetime.
+// Remaining boundaries: retail retains both seed single-inserts and both
+// vector erases; this model still expands the second of each too far.
+// Point-bound getters recover those calls but over-expand list cleanup.
+// The shared guarded cell-setter model reaches 92.475%, but its joint runtime
+// transfer caller still loses MAX (commitTreasureGroup 99.9141% -> 82.6016%).
+// Keep that as a source-model lead requiring caller recovery, not an inline pin.
 VA(0x00543E20, 0x574) // anchor-callee 0x544920; Complete-only, thiscall, no arguments
 void type_random_map_generator::carveBranchingPaths()
 {
@@ -7123,29 +7121,30 @@ void type_random_map_generator::carveBranchingPaths()
             last.m_y = first.m_y;
             break;
         }
-        std::vector<TPoint> pending;
+        std::stack<TPoint, std::vector<TPoint> > pending;
         std::queue<TPoint, std::list<TPoint> > branches;
-        pending.push_back(first);
-        pending.push_back(last);
+        pending.push(first);
+        pending.push(last);
         while (pending.size()) {
             while (pending.size()) {
-                last = pending.back();
-                pending.pop_back();
-                first = pending.back();
-                pending.pop_back();
+                last = pending.top();
+                pending.pop();
+                first = pending.top();
+                pending.pop();
                 TPoint middle((first.m_x + last.m_x + 1) / 2,
                     (first.m_y + last.m_y + 1) / 2);
                 if (middle != first && middle != last) {
-                    TRmgVector perpendicular(-(last.m_y - first.m_y), last.m_x - first.m_x);
+                    TRmgVector delta = last - first;
+                    TRmgVector perpendicular(-delta.m_y, delta.m_x);
                     int length = perpendicular.length();
                     if (length > 1) {
                         int displacement = rand() % length - length / 2;
                         middle += perpendicular * displacement / length;
                     }
-                    pending.push_back(last);
-                    pending.push_back(middle);
-                    pending.push_back(middle);
-                    pending.push_back(first);
+                    pending.push(last);
+                    pending.push(middle);
+                    pending.push(middle);
+                    pending.push(first);
                     if (length >= 8 && middle.m_x >= 0 && middle.m_x < m_map.m_mapWidth
                         && middle.m_y >= 0 && middle.m_y < m_map.m_mapHeight) {
                         first = middle + perpendicular;
@@ -7166,11 +7165,9 @@ void type_random_map_generator::carveBranchingPaths()
                 last = branches.front();
                 branches.pop();
                 last = m_map.traceBranchEnd(first, last, level);
-                int dx = last.m_x - first.m_x;
-                int dy = last.m_y - first.m_y;
-                if (dx * dx + dy * dy >= 25) {
-                    pending.push_back(last);
-                    pending.push_back(first);
+                if (getRmgSquaredDistance(last, first) >= 25) {
+                    pending.push(last);
+                    pending.push(first);
                 }
             }
         }
@@ -7180,13 +7177,13 @@ void type_random_map_generator::carveBranchingPaths()
     for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
-                if (item->m_tile.m_landType == eTerrainWater || item->m_tile.m_landType == eTerrainRock) {
+                if (item->getLandType() == eTerrainWater || item->getLandType() == eTerrainRock) {
                     if (!item->m_connection.m_present) {
                         item->m_tileData.m_borderObject = 0;
                         item->m_tileData.m_subterraneanGate = 1;
                     }
                 }
-                if (item->m_tileData.m_borderObject)
+                if (item->hasBorderObject())
                     m_map.markBorderPatch(position);
             }
         }
@@ -7728,23 +7725,20 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
 
 // Retail +0x388 selects the MINE prototype vector. The caller supplies
 // zone/resource/starting flag/spacing; names are role-derived.
-// Current MAX: 71.6766%. Keep prototype as the last scanned
-// prototype: retail stores it at 0x5459f5/0x545a5d and reloads that same
-// local at 0x545b7e/0x545ca9 without replacing it after random selection.
-// This includes the retained trigger/width quirk in the resource strip.
-// push_back in the first scan restores the later type_object constructor
-// call at retail +0x140; explicit insert(end(), properties) expands that
-// constructor and scores 69.3906%. Both forms still expand the first single
-// insert and bitset<10>::test. Subscript access moves only _Xran out of line
-// (70.9776%); combining it with const prototype access and push_back is flat.
-// A named reference to the mine-prototype vector gives 69.9453% and still
-// emits no test specialization. Keep the append API and direct test while
-// recovering the remaining per-site boundaries, including getRmgGuardValue
-// and the second getMapItem call.
-// Assigning zero only in the disabled-guard arm, as retail does, raises
-// 71.5746% to 71.6766%. The guard-value helper still expands. Shared clamp
-// alternatives (limit/tLimit/min-max) do not restore that retained call;
-// keep the observed upper-bound-first clamp and last-scanned prototype.
+// Keep prototype as the last scanned prototype: retail stores it at
+// 0x5459f5/0x545a5d and reloads the same local at 0x545b7e/0x545ca9,
+// without replacing it after random selection. Its trigger/width quirk is real.
+// The prototype's non-const terrain query uses VC6's bitset reference proxy
+// and retains the checked test at 0x545a01. All 52 retained helper bytes match.
+// A const query retains only _Xran; an explicit first insert is byte-neutral.
+// Keep the canonical object-position and guard-placement calls; expanding
+// placeGuard duplicates the same zone/occupancy/create/add sequence.
+// Assign zero only in the disabled-strength arm and retain the observed
+// upper-bound-first clamp. The scalar getRmgGuardValue call still expands;
+// the guard map lookup retains its scalar overload instead of the value one.
+// A shared zone-adjusted value helper plus the proxy query reaches 90.3657%,
+// but the joint treasure caller then loses MAX (77.0873% -> 63.2664%).
+// Its disabled/explicit-result variants do not yet recover that caller.
 VA(0x00545990, 0x466)
 unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     int resource, unsigned char startingMine, int spacing)
@@ -7756,7 +7750,7 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     for (unsigned i = 0; i < m_objectPrototypes[MINE].size(); ++i) {
         properties = m_objectPrototypes[MINE][i];
         prototype = properties->m_prototype;
-        if (prototype->m_subtype == resource && prototype->m_recommendedTerrainMask.test(terrain))
+        if (prototype->m_subtype == resource && prototype->isRecommendedTerrain(terrain))
             candidates.push_back(properties);
     }
     if (!candidates.size()) {
@@ -7790,7 +7784,7 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     } else {
         guardValue = 0;
     }
-    TRmgMapPosition entrance = mine->m_position;
+    TRmgMapPosition entrance = mine->getPosition();
     entrance.m_x -= prototype->m_triggerCell.m_x;
     entrance.m_y += 1 - prototype->m_triggerCell.m_y;
     TRmgMapItem* item = m_map.getMapItem(entrance);
@@ -7798,15 +7792,8 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
         item->m_tileData.m_borderObject = 0;
         item->m_tileData.m_subterraneanGate = 1;
     }
-    if (guardValue > 0) {
-        item = m_map.getMapItem(entrance);
-        TRmgZone* guardZone = m_zones[item->m_zoneState.m_zone];
-        if (static_cast<int>(item->m_objects.size()) <= 0) {
-            type_object* guard = createGuard(guardValue, guardZone);
-            if (guard)
-                addObject(guard, entrance);
-        }
-    }
+    if (guardValue > 0)
+        placeGuard(entrance, guardValue);
     int placed = 0;
     properties = selectObjectPrototype(terrain, RESOURCE, resource);
     if (!properties)
@@ -10416,7 +10403,13 @@ int TRandomMapRequest::generate(const char* fileName, void* progress)
 VA_COMPGEN(0x0054C6A0, 0x4D, LIST_DTOR, TPoint)
 VA_COMPGEN(0x0054D000, 0x5E, LIST_INSERT_SINGLE, TPoint)
 VA_COMPGEN(0x0054D060, 0x36, LIST_ERASE_ITERATOR, TPoint)
+// Natural per-level queue cleanup emits all 69 retail bytes, including delete.
+VA_COMPGEN(0x0054D0A0, 0x45, LIST_ERASE_RANGE, TPoint)
 VA_COMPGEN(0x0054D0F0, 0x2D, LIST_BUYNODE, TPoint)
+
+// Mine's non-const terrain query retains the checked ten-bit test.
+// All 52 bytes and the _Xran call agree with retail 0x5166e0.
+VA_COMPGEN(0x005166E0, 0x34, BITSET_TEST, Bitset10)
 
 // Retail's 129-bit setter is claimed from its identical canonical COMDAT in
 // customcampaign.cpp; this TU expands it after removing the reference pin.
@@ -10424,6 +10417,14 @@ VA_COMPGEN(0x0054D0F0, 0x2D, LIST_BUYNODE, TPoint)
 // The three-point orientation helper at 0x5fdae0 belongs with the retained
 // Voronoi operations in rmg_support.cpp. The earlier emission probe preceded
 // recovery of the canonical site/point ownership and retained helper surface.
+
+VA(0x005FDB10, 0x21) // anchor-callee addSite; Complete-only, ret 0x10
+int getRmgSquaredDistance(TPoint first, TPoint second)
+{
+    int dy = first.m_y - second.m_y;
+    int dx = first.m_x - second.m_x;
+    return dx * dx + dy * dy;
+}
 
 // Each uncomputed interior half-edge identifies an incident triangle. Retail
 // computes its integer circumcenter through canonical point/vector operations,
