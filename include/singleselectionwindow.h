@@ -671,7 +671,8 @@ public:
     void onChatWindowSlider(int newIndex);
     void onDurationSlider(int newIndex);
     void onFileMenuSlider(int newIndex);
-    void updateAllyEnemyFlags(unsigned char update);
+    // DC publics retain native bool (_N), although lowered CV says UCHAR.
+    void updateAllyEnemyFlags(bool update);
 
 private:
     virtual unsigned char processRightSelect(int id);  // slot 11
@@ -714,7 +715,7 @@ public:
     // Complete-only random-map helpers at 0x5879a0 and 0x5860e0. Their
     // provisional role names describe the byte-decoded caller contract.
     unsigned char generateRandomMap(const char* name);
-    void setCurrentMap(int map, unsigned char update);
+    void setCurrentMap(int map, bool update);
     void drawHeroAdvancedOption(int playerPos, unsigned char update,
                                 int position);
     void onDeleteFile();
@@ -759,7 +760,7 @@ public:
     void turnOffScenarioOptions();
     void turnOffAdvancedOptions();
     bool onClickMsg(CNetMsg* netMsg);
-    void turnChatOn(unsigned char update);
+    void turnChatOn(bool update);
     void turnChatOff(unsigned char update);
     void onTownUpdateMsg(CNetMsg* netMsg, bool inPopup);
     void updateNameLists();
@@ -819,7 +820,7 @@ SIZE(TSingleSelectionWindow, 0x1970);
 //   0x697774  set to 1 the moment a save filename is committed
 extern char g_unnamed69fc2c[];
 extern char g_unnamed691268[];
-extern unsigned char g_inCampaign;
+extern bool g_inCampaign;
 extern int g_unnamed697774;
 
 #endif  /* HOMM3_SINGLESELECTIONWINDOW_H */

@@ -211,12 +211,11 @@ enum EMapFormatVersion {
 // Only the fields reached by reconstructed consumers are exposed. The
 // defeat-hero ids are fixed independently by AI_value_of_combat's two
 // objective-bonus branches.
-// Original: gbInCampaign (DC public ?gbInCampaign@@3_NA, data 0x2c9cc).
-// Retail byte at 0x69774c: SavedGameHeader::reset selects H3SVC versus
-// H3SVG and saves this flag; game::Load restores it from campaignGame.
+// Original bool gbInCampaign (DC public ?gbInCampaign@@3_NA, data 0x2c9cc).
+// Retail 0x69774c selects H3SVC versus H3SVG. SavedGameHeader::reset and
+// game::load copy it directly to/from the canonical saved-header bool.
 // This is not DC's separate campaignMode selection-window flag (0x327d8).
-// Keep the existing retail byte view in this naming-only recovery.
-DATA(0x0069774c) extern unsigned char g_inCampaign;
+DATA(0x0069774c) extern bool g_inCampaign;
 
 // The upgrade-town victory's two level domains (map-format ordinals).
 // CheckForUpgradedTown (0x5f1d40) maps each to the matching
@@ -723,7 +722,10 @@ public:
     int m_gameVersion;
     NewSMapHeader m_mapHeader;
     SGameSetupOptions m_mapSetup;
-    unsigned char m_campaignGame;
+    // Complete-only field: bool inferred from direct copies to/from the
+    // DC-proven bool g_inCampaign. Load normalizes the on-disk short with
+    // != 0 before storing this byte; Save retains the two-byte file format.
+    bool m_campaignGame;
     // +0x4e1..+0x4e3 is natural alignment, not a source member. Naming it
     // makes VC6's implicit operator= copy three bytes retail deliberately
     // skips before the aligned SCampaign member.

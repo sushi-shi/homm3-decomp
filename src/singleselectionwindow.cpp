@@ -1884,8 +1884,20 @@ CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
 // Restoring DC's headerFont local is byte-flat, including the combined widget
 // ownership models. In-class/out-of-class sound-service definitions likewise
 // retain this boundary across all 51 consumers; no declaration move is kept.
+// Retail and DC2055 require a boolean backdrop choice, not Random(0,50).
+// DC2187/2383/2404/2405 and retail pass null initial text to the scenario
+// rows, chat and name lists; DC2201/retail use vertical save-name centering.
+// DC2600/2601 supplies the bonus-before-face loop order. Raw NB11 additionally
+// places allies/enemies and begin/back-button locals in their own phases.
+// DC and retail reuse tempName[100] for handicap, panel and flag filenames;
+// the earlier separate tempStr[256] was not DC's wide temp_str. Those source
+// facts restore retail's 0x314 frame. The shared index and distinct final
+// loop index recover NB11's two named owners and reproduce 95.0576%; null
+// text still changes register homes compared with the former 95.5273% body.
 // Remaining: StartMouseThread expands ServiceSounds where retail calls it
 // (verified C2 cost 90 / nested budget 128), plus stack/register allocation.
+// A scratch retained-call control confirms the 437-block/372-call operation
+// sequence. No diagnostic inline pin is retained.
 VA(0x00579960, 0x2d63)  // anchor-callee CAdvPopup base ctor + embedded header/player/net-handler construction; tail proven by the retail preload/setup call run at +0x2a56..+0x2d45; dc 0x1309f0
 TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     : CAdvPopup(0, 0, 800, 600, 0)
@@ -1955,14 +1967,15 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     m_randomMapSelected = 0;
     m_clickTime = GameTime::get();
 
+    int i;
     if (!m_flag65) {
-        for (int i = 0; i < 8; ++i)
+        for (i = 0; i < 8; ++i)
             g_game->m_players[i].init();
     }
 
     m_widgets.reserve(111);
 
-    sprintf(g_text, "gamselb%d.pcx", random(0, 50));
+    sprintf(g_text, "gamselb%d.pcx", random(1, 100) < 51);
     bitmapBorder16* tempBack = new bitmapBorder16(
         0, 0, 800, 600, 100, g_text, 0x800);
     m_widgets.push_back(tempBack);
@@ -2040,24 +2053,27 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     m_widgets.push_back(new iconWidget(
         714, 28, 29, 23, 189, "scnrmpsz.def", 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN));
-    sprintf(g_text, "%s:", g_generalText->getText(391));
-    widget* allies = new textWidget(
-        414, 403, 44, 23, g_text, "smalfont.fnt", font::WHITE, 100,
-        font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8);
-    m_widgets.push_back(allies);
-    sprintf(g_text, "%s:", g_generalText->getText(392));
-    widget* enemies = new textWidget(
-        579, 403, 58, 23, g_text, "smalfont.fnt", font::WHITE, 386,
-        font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8);
-    m_widgets.push_back(enemies);
+    // DC2126..2143: the two team headings share this lexical phase.
+    {
+        sprintf(g_text, "%s:", g_generalText->getText(391));
+        widget* allies = new textWidget(
+            414, 403, 44, 23, g_text, "smalfont.fnt", font::WHITE, 100,
+            font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8);
+        m_widgets.push_back(allies);
+        sprintf(g_text, "%s:", g_generalText->getText(392));
+        widget* enemies = new textWidget(
+            579, 403, 58, 23, g_text, "smalfont.fnt", font::WHITE, 386,
+            font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8);
+        m_widgets.push_back(enemies);
 
-    if (m_flag65 || (m_flag64 && !isMultiPlayer())) {
-        allies->hide();
-        enemies->hide();
+        if (m_flag65 || (m_flag64 && !isMultiPlayer())) {
+            allies->hide();
+            enemies->hide();
+        }
     }
 
     {
-        for (int i = 0; i < 8; ++i) {
+        for (i = 0; i < 8; ++i) {
             widget* flag = new iconWidget(
                 460 + i * 15, 405, 15, 20, 112 + i, "itgflags.def",
                 0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
@@ -2075,9 +2091,9 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     if (!m_flag65 && (!m_flag64 || isMultiPlayer()))
         m_widgets.push_back(new CHotspotWidget(456, 402, 310, 25, 387));
 
-    for (int i = 0; i < g_unnamed69fdc8; ++i) {
+    for (i = 0; i < g_unnamed69fdc8; ++i) {
         textWidget* row = new textWidget(
-            57, 122 + i * 25, 314, 25, g_emptyRolloverText,
+            57, 122 + i * 25, 314, 25, 0,
             "smalfont.fnt", font::WHITE, 142 + i,
             font::CENTER_JUSTIFIED, 0, 8);
         row->hide();
@@ -2094,7 +2110,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
             35, 542, 342, 21, 61,
             DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                          "NEWGAME.gm1"),
-            "smalfont.fnt", font::WHITE, font::CENTER_JUSTIFIED,
+            "smalfont.fnt", font::WHITE, font::VERT_CENTER_JUSTIFIED,
             0, 0, 160, 0x100, 0, 7, 5);
         m_widgets.push_back(m_saveGameEdit);
     }
@@ -2135,6 +2151,8 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     m_fileSlider->hide();
     m_widgets.push_back(m_fileSlider);
 
+    char flagName[256];
+    char tempName[100];
     char flagColors[] = "RBYGOPTS";
     if ((!m_flag64 && !m_flag65) || (m_flag64 && isMultiPlayer())) {
         m_durationSlider = new slider(
@@ -2143,9 +2161,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         m_durationSlider->hide();
         m_widgets.push_back(m_durationSlider);
 
-        char flagName[256];
-        char tempStr[256];
-        for (int i = 0; i < 8; ++i) {
+        for (i = 0; i < 8; ++i) {
             int rowY = 133 + i * 50;
             sprintf(flagName, "AOFLGB%c.DEF", flagColors[i]);
             m_widgets.push_back(new button(
@@ -2158,17 +2174,17 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
                 font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED,
                 0, 8));
 
-            sprintf(tempStr, "adopb2%c.def", "rbygopts"[i]);
+            sprintf(tempName, "adopb2%c.def", "rbygopts"[i]);
             widget* handicapButton;
             if (isMultiPlayer()) {
                 handicapButton = new textButton(
                     110, rowY + 18, 50, 24, 207 + i,
-                    tempStr, g_unnamed6a7800[0], "tiny.fnt",
+                    tempName, g_unnamed6a7800[0], "tiny.fnt",
                     0, 1, 0, 0, 2, font::WHITE);
             } else {
                 handicapButton = new button(
                     110, rowY + 18, 50, 24, 207 + i,
-                    tempStr, 0, 1, 0, 0, 2);
+                    tempName, 0, 1, 0, 0, 2);
             }
             m_widgets.push_back(handicapButton);
 
@@ -2236,7 +2252,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
         if (g_videoPaused && !m_flag65) {
             m_chatWidget = new CChatWidget(
-                416, 131, 315, 128, g_emptyRolloverText,
+                416, 131, 315, 128, 0,
                 "smalfont.fnt", font::CHAT, 179,
                 font::BOTTOM_JUSTIFIED, 0, 8);
             m_chatSlider = new CChatSlider(
@@ -2256,11 +2272,11 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
             bitmapBorder* chatBack = new bitmapBorder(
                 412, 282, 340, 114, 181, "CHATPLUG.pcx", 0x800);
             m_nameList1 = new textWidget(
-                419, 287, 156, 103, g_emptyRolloverText,
+                419, 287, 156, 103, 0,
                 "smalfont.fnt", font::PRIMARY, 182,
                 font::LEFT_JUSTIFIED, 0, 8);
             m_nameList2 = new textWidget(
-                584, 287, 156, 103, g_emptyRolloverText,
+                584, 287, 156, 103, 0,
                 "smalfont.fnt", font::PRIMARY, 182,
                 font::LEFT_JUSTIFIED, 0, 8);
 
@@ -2312,36 +2328,39 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     m_widgets.push_back(new button(
         634, 456, 30, 46, 111, "gspbut7.def", 0, 1, 0, 0, 2));
 
-    const char* beginButtonName = "scnrbeg.def";
-    int key = 48;
-    if (m_flag64) {
-        beginButtonName = "scnrlod.def";
-        key = 38;
-    } else if (m_flag65) {
-        beginButtonName = "scnrsav.def";
-        key = 31;
-    }
-    button* b = new button(
-        414, 535, 166, 40, 186, beginButtonName,
-        0, 1, 0, key, 2);
-    if (m_flag64)
-        b->setHotkey(28);
-    m_widgets.push_back(b);
+    // DC2445..2490: resource/key selection and both navigation buttons.
+    {
+        const char* beginButtonName = "scnrbeg.def";
+        int key = 48;
+        if (m_flag64) {
+            beginButtonName = "scnrlod.def";
+            key = 38;
+        } else if (m_flag65) {
+            beginButtonName = "scnrsav.def";
+            key = 31;
+        }
+        button* b = new button(
+            414, 535, 166, 40, 186, beginButtonName,
+            0, 1, 0, key, 2);
+        if (m_flag64)
+            b->setHotkey(28);
+        m_widgets.push_back(b);
 
-    // Complete campaign saves may only return from an unfinished scenario.
-    // Retail proves both the GetCurrentScenario boundary and this duplicated
-    // button-construction source family. Keep the header accessor inline:
-    // this large caller naturally retains the call and emits its exact COMDAT.
-    if (g_inCampaign) {
-        if (!g_game->m_campaign.getCurrentScenario()->m_completed) {
+        // Complete campaign saves may only return from an unfinished scenario.
+        // Retail proves both the GetCurrentScenario boundary and this duplicated
+        // button-construction source family. Keep the header accessor inline:
+        // this large caller naturally retains the call and emits its exact COMDAT.
+        if (g_inCampaign) {
+            if (!g_game->m_campaign.getCurrentScenario()->m_completed) {
+                m_widgets.push_back(new button(
+                    584, 535, 166, 40, 188, "scnrback.def",
+                    0, 1, 0, 1, 2));
+            }
+        } else {
             m_widgets.push_back(new button(
                 584, 535, 166, 40, 188, "scnrback.def",
                 0, 1, 0, 1, 2));
         }
-    } else {
-        m_widgets.push_back(new button(
-            584, 535, 166, 40, 188, "scnrback.def",
-            0, 1, 0, 1, 2));
     }
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -2363,7 +2382,6 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     m_resource = ResourceManager::getSprite("ScnrStar.def");
 
     const char* colorChars = "rbygopts";
-    char tempName[100];
     for (i = 0; i < 8; ++i) {
         sprintf(tempName, "adop%cpnl.pcx", colorChars[i]);
         m_panels[i] = ResourceManager::getBitmap816(tempName);
@@ -2406,8 +2424,8 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     setHelpText(g_singleSelectionHelp, 104, 345, 0);
     for (i = 0; i < 8; ++i) {
-        g_unnamed69fb24[i] = -1;
         g_newMapStartingBonus[i] = 3;
+        g_unnamed69fb24[i] = -1;
     }
 
     if (m_flag65) {
@@ -2418,7 +2436,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         updateAllyEnemyFlags(0);
     }
     if (m_flag65 || m_flag64) {
-        for (i = 107; i <= 111; ++i)
+        for (int i = 107; i <= 111; ++i)
             getWidget(i)->enable(0);
     }
 }
@@ -4789,7 +4807,7 @@ void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
 }
 
 VA(0x00585300, 0x1FA)  // dc 0x13b9fc
-void TSingleSelectionWindow::updateAllyEnemyFlags(unsigned char update)
+void TSingleSelectionWindow::updateAllyEnemyFlags(bool update)
 {
     long allyCount = 0;
     long enemyCount = 0;
@@ -4852,7 +4870,7 @@ void TSingleSelectionWindow::updateAllyEnemyFlags(unsigned char update)
 }
 
 VA(0x00585500, 0x889)  // dc 0x13bc60
-void TSingleSelectionWindow::setCurrentMap(int map, unsigned char update)
+void TSingleSelectionWindow::setCurrentMap(int map, bool update)
 {
     int i;
     if (map >= static_cast<int>(m_selectionHeaders.size()))
@@ -7949,7 +7967,7 @@ void TSingleSelectionWindow::updateNameLists()
 }
 
 VA(0x0058ca80, 0x162)  // dc 0x142e3c
-void TSingleSelectionWindow::turnChatOn(unsigned char update)
+void TSingleSelectionWindow::turnChatOn(bool update)
 {
     m_chatToggle->setText(g_generalText->getText(532));
     getWidget(105)->hide();

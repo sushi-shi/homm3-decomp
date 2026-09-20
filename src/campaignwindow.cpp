@@ -66,9 +66,10 @@ void TCampaignWindow::openPreview(int campaignIndex)
 
 // E:\gamedcs\campaignwindow.cpp:86
 
-// `ret 8` against two parameters: +8 `unsigned char newGame`, +0xc `int
-// newCampaign`, both slots reused as temps once dead. EH frame with twelve
-// unwind states and `sub esp, 0x8c`.
+// `ret 8` against two parameters: +8 byte-domain reset flag, +0xc int
+// campaign-set selector, both slots reused as temps once dead. DC's single
+// int newCampaign is the reset flag, not the added campaign-set selector.
+// EH frame with twelve unwind states and `sub esp, 0x8c`.
 
 // FIXED 82.5365% -> 98.4726% (2026-08-21): the newGame arm, in two steps.
 // Retail's SCampaign copy assignment and destructor are compiler-generated;
@@ -102,7 +103,7 @@ void TCampaignWindow::openPreview(int campaignIndex)
 // reach, and the pin lever is out of bounds for this lane; max/hist keep the
 // 98.4726 peak the shadow bought.
 
-VA(0x0045ea40, 0x692)  // campbkx2.pcx + vtable/global stores; Complete adds newGame, dc 0x5b570
+VA(0x0045ea40, 0x692)  // campbkx2.pcx + vtable/global stores; Complete narrows the reset flag and adds the campaign-set slot; dc 0x5b570
 TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
     : heroWindow(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0)
 {

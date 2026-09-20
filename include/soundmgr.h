@@ -316,7 +316,8 @@ __declspec(dllimport) void __stdcall _AIL_start_stream(void* stream);
 __declspec(dllimport) void __stdcall _AIL_set_stream_position(void* stream,
                                                               int position);
 __declspec(dllimport) void __stdcall _AIL_set_stream_volume(void* stream, int volume);
-__declspec(dllimport) void __stdcall _AIL_service_stream(void* stream, int fillup);
+// Miles 5.0e Mss.h:3078 returns S32 (signed long), even when discarded.
+__declspec(dllimport) long __stdcall _AIL_service_stream(void* stream, int fillup);
 __declspec(dllimport) void __stdcall _AIL_pause_stream(void* stream, int pause);
 __declspec(dllimport) void __stdcall _AIL_close_stream(void* stream);
 __declspec(dllimport) void __stdcall _AIL_shutdown();
