@@ -592,7 +592,9 @@ struct TRmgNoiseMidpoints {
 SIZE(TRmgNoiseMidpoints, 0x10);
 
 void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
-    int centerValue, TRmgNoiseRegion region, TRmgNoiseMidpoints midpoints);
+    TRmgNoiseRegion region,
+    TRmgNoiseMidpoints midpoints,
+    int centerValue);
 
 enum ERmgConnectionConstants {
     RMG_SHIPYARD_WATER_OFFSET_COUNT = 4,
@@ -819,6 +821,8 @@ SIZE(rmgMonsterObject, 0x2c);
 
 // Complete town vtable 0x640a94; constructor expansion at 0x54543d
 // stores owner/option/id in the 0x28-byte allocation. Names are role-derived.
+// Value/reference argument combinations and an ordinary out-of-class body
+// leave both placement callers unchanged; neither model improves their residual.
 class rmgTownObject : public type_object {
 public:
     int m_objectId;
@@ -983,7 +987,7 @@ public:
     int m_experience;                       // +0x28, prison definition experience
 
     rmgHeroObject(TRmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, int objectId, int heroIndex,
+        type_random_map_generator* generator, const int& objectId, int heroIndex,
         int experience);
 
     virtual void unknownOperation();
@@ -1039,6 +1043,8 @@ struct TRmgMapItem {
         return m_tileData.m_subterraneanGate;
     }
 
+    unsigned char isPassableLand() const;
+
     // RepairWaterZoneBorders tests this flag after truncating it to a byte
     // at 0x53fe30, then tests roadPassable directly as a dword bit.
     unsigned char hasBorderObject() const
@@ -1061,7 +1067,7 @@ struct TRmgMapItem {
     {
         m_tileData.m_connectionVisited = 1;
     }
-    unsigned char getLandType() const
+    int getLandType() const
     {
         return m_tile.m_landType;
     }
@@ -1104,14 +1110,6 @@ public:
     // that returned reference, which distinguishes this from a hidden value
     // result: together the map and both adapter bodies reproduce retail.
     virtual TRmgGridPoint& getSize(TRmgGridPoint& output) = 0;
-    // Provisional Complete-only convenience overload. Its output temporary
-    // belongs to this value query, shared by the adapters and terrain painter.
-    // Source placement is inferred; the virtual slot retains its proven ABI.
-    TRmgGridPoint getSize()
-    {
-        TRmgGridPoint size;
-        return getSize(size);
-    }
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
     virtual int getLand(const TRmgGridPoint& point) = 0;
     virtual int getOverlay(const TRmgGridPoint& point) = 0;
@@ -1172,6 +1170,10 @@ public:
     // orders were scored across all seven header consumers. Restoring the old
     // width/height/items order loses the island's constructor scheduling
     // (95.8947%); the separate caller-only control does not recover it.
+    // Paired TPoint/grid-point size arguments, by value/reference and in both
+    // orders, leave the underground entry unchanged. Grouping the map's own
+    // three dimensions as a position changes retry bodies but closes no further
+    // function. Neither interface/layout change is adopted.
 
     inline type_random_map(TRmgMapItem* items, int width, int height)
     {
@@ -1187,7 +1189,6 @@ public:
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setOverlay(const TRmgGridPoint& point, int value);
-    using TRmgMapInterface::getSize;
     virtual TRmgGridPoint& getSize(TRmgGridPoint& output);
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
     virtual int getLand(const TRmgGridPoint& point);
@@ -1531,6 +1532,7 @@ struct TRmgZone {
     std::vector<TPoint> m_entrances;   // +0x404
 
     TRmgZone(TRmgTownSlot* slot);
+    void decrementObjectCount(TAdventureObjectType objectType);
     void chooseTerrain();
     ~TRmgZone();
     int getTerrain() const

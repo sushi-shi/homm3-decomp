@@ -272,6 +272,18 @@ This address-of-temporary form uses the original compiler's C++ extension.
 Check expression lifetime before attributing equal-CFG store ordering to
 unrecoverable register allocation.
 
+Fastcall register/stack locations do not uniquely establish C++ parameter
+order. In RMG's subdivision helper (`0x53e9e0`), both `(vector&, center,
+region, edges)` and `(vector&, region, edges, center)` pass the vector in ECX,
+center in EDX, and the two records on the stack. Both reproduce the retained
+798-byte body. Only center-last lets VC6 prepare EDX early and merge the
+island generator's record-copy/call tails. With the recovered sample
+expressions and Y-pair-before-X initialization, its caller (`0x53ed00`)
+reproduces all 667 bytes. Before treating argument-pack differences as a
+register-allocation plateau, test source orders consistent with the proven ABI.
+These Complete-only names and the source order are inferred from retail and
+VC6; no Dreamcast counterpart is available.
+
 ## Status
 
 Phase 0 (driver ground truth + probe rig) is in progress. Reusable compiler

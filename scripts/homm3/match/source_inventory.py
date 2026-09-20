@@ -1,8 +1,9 @@
 """Reconcile every DC procedure with active authored C++ in both directions.
 
 This is source identity coverage, independent of byte-match scores. The only
-exemptions are exact, reviewed dc_only.tsv / win_only.tsv rows. Library and
-compiler-generated procedures remain visible until explicitly accounted for.
+exemptions are exact, reviewed dc_only.tsv / win_only.tsv rows.
+Library and compiler-generated procedures remain
+visible until explicitly accounted for.
 """
 from __future__ import annotations
 
@@ -134,7 +135,7 @@ def reconcile(definitions, origins, dc_only, win_only, *, symbols=None):
             has_identity = (ownership.procedure_name(definition.original_name or definition.name)
                             in origin_names or definition.dc_offset in origin_offsets)
             row.update(status='invalid_source' if has_identity else 'missing_dc',
-                       reason='No verified DC counterpart or reviewed win_only.tsv disposition')
+                       reason='No verified DC counterpart or reviewed helper/platform disposition')
         rows.append(row)
     return sorted(rows, key=lambda r: (r['module'], r['dc_file'], r['dc_line'] or 0,
                                       r['source_file'], r['source_line'] or 0)), errors
@@ -240,7 +241,8 @@ def main(argv=None):
             missing = sum(counts[status] for status in UNRESOLVED)
             print(f'{module}: {counts["matched"]} matched, '
                   f'{counts["documented_dc_only"]} documented DC-only, '
-                  f'{counts["documented_win_only"]} documented Windows-only, {missing} unresolved')
+                  f'{counts["documented_win_only"]} documented Windows-only, '
+                  f'{missing} unresolved')
         for error in result['violations']:
             print(error)
         print(f'Source inventory: {"COMPLETE" if result["complete"] else "INCOMPLETE"}; '

@@ -156,6 +156,20 @@ class SourceInventoryTest(unittest.TestCase):
         _, errors = reconcile([], [], {}, {key: 'Stale'})
         self.assertTrue(any('stale win_only.tsv' in e for e in errors))
 
+    def test_inferred_scalar_writer_uses_windows_disposition_and_exact_live_key(self):
+        d = definition('writeValue')
+        key = d.file, d.name, d.signature
+        evidence = {key: 'Retail caller evidence supports this inferred scalar writer.'}
+        rows, errors = reconcile([d], [], {}, evidence)
+        self.assertEqual(errors, [])
+        self.assertEqual(rows[0]['status'], 'documented_win_only')
+        self.assertEqual(rows[0]['reason'], evidence[key])
+        rows, errors = reconcile([replace(d, signature='void (int)')], [], {}, evidence)
+        self.assertEqual(rows[0]['status'], 'missing_dc')
+        self.assertTrue(any('stale win_only.tsv' in e for e in errors))
+        _, errors = reconcile([], [], {}, evidence)
+        self.assertTrue(any('stale win_only.tsv' in e for e in errors))
+
     def test_repeated_header_emissions_are_all_accounted_for(self):
         d = replace(definition(), file='include/widget.h', inline=True, dc_offset='0x1000')
         o = replace(origin(), file='widget.h')
