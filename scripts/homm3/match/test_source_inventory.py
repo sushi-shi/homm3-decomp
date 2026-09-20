@@ -33,7 +33,7 @@ class SourceInventoryTest(unittest.TestCase):
                              return_value=([], ['CLANG unrelated TU scan failed'], {})), \
                 patch.object(inventory.inputs, 'dreamcast_symbols', return_value=symbols), \
                 patch.object(inventory.ownership, 'read_filter',
-                             side_effect=[(disposition, []), ({}, [])]):
+                             side_effect=[(disposition, []), ({}, []), ({}, [])]):
             result = inventory.audit(Path(temp), modules=['widget'], origins=[dc])
         self.assertEqual(result['unresolved'], 0)
         self.assertEqual(result['violations'], ['CLANG unrelated TU scan failed'])
@@ -216,6 +216,7 @@ class SourceInventoryTest(unittest.TestCase):
             root = Path(temp)
             (root / 'config').mkdir()
             (root / 'config/dc_only.tsv').write_text('file\tfunction\tline\treason\n')
+            (root / 'config/dc_only_generated.tsv').write_text('file\tfunction\tline\treason\n')
             table = root / 'config/win_only.tsv'
             table.write_text('file\tfunction\tsignature\treason\n'
                              f'{d.file}\t{d.name}\t{d.signature}\tReviewed inline residue.\n')

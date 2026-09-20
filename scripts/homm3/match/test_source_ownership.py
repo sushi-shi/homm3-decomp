@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from homm3.match.source_ownership import Definition, Origin, compare, read_filter
+from homm3.match.source_ownership import Definition, Origin, compare, read_filter, read_dc_filters
 
 
 def parsing_project(root):
@@ -537,6 +537,39 @@ class OwnershipTest(unittest.TestCase):
                             'port.cpp\tport_init\t10\t\n')
             _, errors = read_filter(path, ('file', 'function', 'line'))
             self.assertTrue(errors)
+
+
+class SplitDcFiltersTest(unittest.TestCase):
+    def test_union_preserves_reasons_and_checks_generated_entries(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'config').mkdir()
+            header = 'file\tfunction\tline\treason\n'
+            (root / 'config/dc_only.tsv').write_text(
+                header + 'port.cpp\tport_init\t10\tPlatform operation\n')
+            generated = root / 'config/dc_only_generated.tsv'
+            generated.write_text(header + 'library.h\tallocate\t20\tLibrary emission\n')
+            rows, errors = read_dc_filters(root)
+            self.assertEqual(errors, [])
+            self.assertEqual(rows, {('port.cpp', 'port_init', '10'): 'Platform operation',
+                                    ('library.h', 'allocate', '20'): 'Library emission'})
+            errors, _ = compare([], [], rows, {})
+            self.assertTrue(any('allocate' in error and 'stale' in error for error in errors))
+            generated.write_text(header + 'library.h\tallocate\t20\t\n')
+            self.assertTrue(read_dc_filters(root)[1])
+
+    def test_cross_file_duplicates_and_missing_list_fail(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'config').mkdir()
+            content = 'file\tfunction\tline\treason\nport.cpp\tport_init\t10\tReason\n'
+            (root / 'config/dc_only.tsv').write_text(content)
+            self.assertTrue(any('missing dc_only_generated.tsv' in e
+                                for e in read_dc_filters(root)[1]))
+            (root / 'config/dc_only_generated.tsv').write_text(content)
+            errors = read_dc_filters(root)[1]
+            self.assertTrue(any('duplicate DC exclusion' in e and 'dc_only_generated.tsv' in e
+                                for e in errors))
 
 
 class DefinitionScannerTest(unittest.TestCase):

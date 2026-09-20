@@ -880,6 +880,24 @@ def read_filter(path: Path, fields: tuple[str, ...]):
     return entries, errors
 
 
+
+def read_dc_filters(root: Path):
+    """Read both DC exclusion lists without allowing identities to overlap."""
+    entries = {}
+    errors = []
+    owners = {}
+    for name in ('dc_only.tsv', 'dc_only_generated.tsv'):
+        rows, failures = read_filter(root / 'config' / name, ('file', 'function', 'line'))
+        errors.extend(failures)
+        for key, reason in rows.items():
+            if key in entries:
+                errors.append(f'FILTER duplicate DC exclusion {key} in {owners[key]} and {name}')
+            else:
+                entries[key] = reason
+                owners[key] = name
+    return entries, errors
+
+
 def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
             win_only: dict, *, symbols=None, matched_out=None,
             strict_names: bool = False) -> tuple[list[str], dict]:
@@ -897,7 +915,7 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
             dc_keys.add(key)
         if key not in dc_only:
             by_name[procedure_name(o.name)].append(o)
-    errors = inline_errors + [f'FILTER stale dc_only.tsv entry {key}'
+    errors = inline_errors + [f'FILTER stale dc_only.tsv/dc_only_generated.tsv entry {key}'
                               for key in dc_only if key not in dc_keys]
     used_win = set()
     matches = []
@@ -1171,7 +1189,7 @@ def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False, *, origins=None
     image_base = project.specification["inputs"]["retail"]["image_base"]
     definitions, errors, reached = collect(root, jobs, fresh)
     errors.extend(active_stub_definitions(definitions, root))
-    dc_only, failures = read_filter(root / 'config/dc_only.tsv', ('file', 'function', 'line'))
+    dc_only, failures = read_dc_filters(root)
     errors.extend(failures)
     win_only, failures = read_filter(root / 'config/win_only.tsv', ('file', 'function', 'signature'))
     errors.extend(failures)
