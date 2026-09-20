@@ -82,6 +82,7 @@ class Procedure:
     variables: list[Variable] = field(default_factory=list)
     lexical_scopes: list[Scope] = field(default_factory=list)
     endarg: bool = False
+    linkage: str = "global"
 
 
 @dataclass
@@ -180,6 +181,7 @@ def _symbols(view: _View, start: int, result: Symbols, bases: dict[int, int],
             name = record.string(39).strip()
             current = Procedure(name, size)
             current.module = module
+            current.linkage = "global" if kind == 0x100b else "static"
             current.record_offset = offset
             current.debug_start, current.debug_end, current.type_index = record.unpack("<III", 20)
             current.flags, = record.unpack("<B", 38)

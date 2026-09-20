@@ -323,5 +323,7 @@ void incProgressBar(unsigned char update);
 void showProgressBar();
 void drawProgressCount();
 void unloadProgressBar();
+// Original: NullHandler, kb.cpp:2270.
+int nullHandler(message& msg);
 
 #endif  /* HOMM3_KB_H */

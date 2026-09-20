@@ -12,15 +12,15 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable matched: 96.06%** — fuzzy-weighted bytes over all 1,998,985 unfiltered bytes.
+**Executable matched: 96.03%** — fuzzy-weighted bytes over all 1,998,996 unfiltered bytes.
 
-**Match score** — 4,105 / 4,765 functions exact (86.1%) across the full engine (4765 in linked units).
+**Match score** — 4,121 / 4,766 functions exact (86.5%) across the full engine (4766 in linked units).
 
-**Function exact MAX** — 4,167 / 4,765 current implementations (87.5%) have reached 100%.
+**Function exact MAX** — 4,182 / 4,766 current implementations (87.7%) have reached 100%.
 
 | Module       | Units |     Functions exact |  Function exact MAX |   Fuzzy | Fuzzy Max |
 | :----------- | ----: | ------------------: | ------------------: | ------: | --------: |
-| `game`       |   138 | 4036 / 4696 (85.9%) | 4098 / 4696 (87.3%) |  96.01% |    96.55% |
+| `game`       |   138 | 4052 / 4697 (86.3%) | 4113 / 4697 (87.6%) |  95.98% |    96.47% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) | 100.00% |   100.00% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
@@ -40,6 +40,13 @@ HIST is its all-time peak across source revisions. Tooling prioritizes MAX.
 Unrelated CUR dips keep MAX and are silent. A function's own hash change resets
 MAX to its new CUR; a lower MAX is reported, but is not a build failure.
 `HIST > MAX` identifies historical peaks worth investigating.
+
+Retail address coverage and source coverage are separate.
+`homm3 source-inventory` compares every Dreamcast procedure with active authored
+definitions in both directions, including shared-header helpers. Unexplained
+entries fail the full build; exact reviewed differences live in
+`config/dc_only.tsv` and `config/win_only.tsv`. See
+[function source ownership](docs/source-ownership.md) for the report and rules.
 
 ## Reconstruction debt
 
@@ -112,6 +119,11 @@ homm3 link            # optional layout study; the EXE is not runnable
 
 You can also pass `--exe PATH` and `--dreamcast-exe PATH` to `homm3 init`;
 these override the environment variables.
+
+The development shell and CLI resolve the enclosing project root before creating
+build output, including when entered from `src/` or a nested worktree directory.
+The CLI also accepts an explicit `HOMM3_DIR`. Worktrees keep separate `build/`
+directories and objdiff wrappers.
 
 Initialization verifies both files' size and SHA-256, copies them into ignored
 `build/orig/HEROES3.EXE` and `build/orig/dreamcast/H3.EXE`, and reads the Dreamcast

@@ -802,28 +802,41 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\findpath.cpp:877
-// NO RETAIL SLOT. TestPossibleDirections ends at 0x4b2d94 and
-// SeedCombatPosition begins at 0x4b2da0 - the eleven bytes between are
-// alignment padding, not a body. Both overloads are the /Ob2
-// inline-away case (single-caller predicates on the combat grid).
-DC_ONLY(0xa02c8, 0xC6)
-unsigned char searchArray::valid_move_adjacent(const army* current_army, int hex)
+// Original: searchArray::valid_move_adjacent; findpath.cpp:877, dc 0xa02c8.
+// The two ordinary predicates test reachable, non-moat hexes next to either
+// half of an enemy. Preserve the source definitions without inventing a
+// standalone retail address or replacing Complete's different teleport scan.
+unsigned char searchArray::validMoveAdjacent(const army* currentArmy, int hex)
 {
-    // @stub
+    for (long i = 0; i < 6; i++) {
+        int adjacent = g_combatManager->m_adjacentCells[hex][i];
+        if (combatManager::validHex(adjacent)
+            && g_combatManager->m_cells[adjacent].m_validMove
+            && !m_isMoatSlowed[adjacent])
+            return 1;
+        if (currentArmy->is(1)) {
+            adjacent -= currentArmy->offsetToFront(-1);
+            if (combatManager::validHex(adjacent)
+                && g_combatManager->m_cells[adjacent].m_validMove
+                && !m_isMoatSlowed[adjacent])
+                return 1;
+        }
+    }
+    return 0;
 }
 
-// E:\gamedcs\findpath.cpp:905
-DC_ONLY(0xa0390, 0x6C)
-unsigned char searchArray::valid_move_adjacent(const army* current_army, const army* enemy)
+// Original: searchArray::valid_move_adjacent; findpath.cpp:905, dc 0xa0390.
+unsigned char searchArray::validMoveAdjacent(const army* currentArmy,
+                                            const army& enemy)
 {
-    // @stub
+    if (validMoveAdjacent(currentArmy, enemy.m_gridIndex))
+        return 1;
+    if (enemy.is(1)
+        && validMoveAdjacent(currentArmy, enemy.getSecondGridIndex()))
+        return 1;
+    return 0;
 }
 
-// E:\gamedcs\findpath.cpp:921
-#endif  // @carcass
 
 // Retail hands FindCombatPath 1000 for BOTH limit and base_speed in
 // the placement phase, materialising the constant once; outside it,

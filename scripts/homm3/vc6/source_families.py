@@ -32,6 +32,7 @@ import sys
 import time
 
 from homm3.core import common
+from homm3.core.project import Project
 from homm3.match import status
 from homm3.vc6 import tu_state_sweep as scoring
 from homm3.vc6._unit import flags_for_unit, source_for_unit
@@ -256,16 +257,16 @@ def create_snapshot(root, snapshot):
     shutil.copytree(root / "src", snapshot / "src", ignore=shutil.ignore_patterns("build"))
     # cc_wrap reads the project specification and include/profile manifest
     # from HOMM3_DIR, which points at the isolated candidate tree.
-    shutil.copytree(root / "config", snapshot / "config")
+    (snapshot / "config").mkdir()
+    for name in ("project.toml", "units.toml"):
+        shutil.copy2(root / "config" / name, snapshot / "config" / name)
     (snapshot / "vendor").symlink_to(root / "vendor", target_is_directory=True)
 
 
 def candidate_environment(candidate_root):
-    from homm3.core.cc_wrap import msvc_dir
-
     env = dict(os.environ, HOMM3_DIR=str(candidate_root),
                PYTHONPATH=str(common.HOMM3_DIR / "scripts"),
-               MSVC_DIR=str(msvc_dir()))
+               MSVC_DIR=str(Project(common.HOMM3_DIR).toolchain))
     prefix = env.get("WINEPREFIX")
     if not prefix or not Path(prefix).is_dir():
         env["WINEPREFIX"] = str(common.HOMM3_DIR / "build/wineprefix")

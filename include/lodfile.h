@@ -65,8 +65,19 @@ private:
     void* getDataPtr(const char* itemName);
 
 public:
+    enum EError {
+        LOD_NO_ERROR = 0,
+        LOD_NOT_OPEN = 1,
+        LOD_ALREADY_EXISTS = 2,
+        LOD_CHAPTER_NOT_FOUND = 3,
+        LOD_ITEM_NOT_FOUND = 4,
+        LOD_NO_IO_BUFFER = 5
+    };
     int m_numEntries;
     std::vector<LODEntry> m_subindex;
+    unsigned char exist(const char* itemName);
+    char* getErrorString(int lodError);
+    void sort();
     void clear();
     unsigned char pointAt(const char* itemName);
     int read(void* dest, int numBytes);

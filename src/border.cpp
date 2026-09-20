@@ -30,6 +30,15 @@ border::~border()
 {
 }
 
+// Original: border::initialize; border.cpp:67, dc 0x54408.
+// Complete removes widget's focusable storage (see widget.h). The retained
+// derived constructors expand this forwarding call to widget::initialize.
+void border::initialize(int x, int y, int w, int h, int id, int style,
+                        unsigned char focusable)
+{
+    widget::initialize(x, y, w, h, id, style);
+}
+
 VA(0x0044ff60, 0x1CD)  // dc 0x54440
 int border::main(message& msg)
 {
@@ -105,6 +114,32 @@ bool border::handleClick(bool downClick, bool rightClick)
     return false;
 }
 
+// Original: border::zBufferDraw; border.cpp:158, dc 0x54594.
+// Retail vtable 0x63ba24 slot 3 shares the empty ret-8 representative 0x5bc7e0.
+void border::zBufferDraw(unsigned short* zBuffer, int id) const {}
+
+// Original: border::Draw; border.cpp:161, dc 0x54598.
+// Its slot 4 shares the empty no-argument body at 0x5bc690.
+void border::draw() const {}
+
+// Original: coloredBorder::coloredBorder; border.cpp:174, dc 0x5459c.
+coloredBorder::coloredBorder(int x, int y, int w, int h, int id,
+                             int color, int style)
+{
+    initialize(x, y, w, h, id, style);
+    m_color = color;
+}
+
+// Original: coloredBorder::zBufferDraw; border.cpp:182, dc 0x54614.
+void coloredBorder::zBufferDraw(unsigned short* zBuffer, int id) const {}
+
+// Original: coloredBorder::Draw; border.cpp:185, dc 0x54618.
+void coloredBorder::draw() const
+{
+    g_windowManager->m_screenBitmap->fillRect(m_x + m_parentWindow->m_x,
+        m_y + m_parentWindow->m_y, m_width, m_height, m_color);
+}
+
 // E:\gamedcs\border.cpp:201 - promoted from DC_ONLY 2026-08-14, the
 // constructor the earlier sdd note asked for. `ret 0x1c` is seven stack
 // dwords; six of them go to widget::initialize in x,y,w,h,id,style order
@@ -134,6 +169,10 @@ VA_COMPGEN(0x004501a0, 0x21, SCALAR_DELETING_DTOR, coloredBorderFrame)
 // CodeView dc 0x54dd8: CV_fldattr_t.compgenx marks this destructor
 // as implicit. Its retained retail body performs only base/member teardown.
 VA_COMPGEN(0x004501d0, 0xB, IMPLICIT_DTOR, coloredBorderFrame)
+
+// Original: coloredBorderFrame::zBufferDraw; border.cpp:210, dc 0x546d0.
+// Retail slot 3 at 0x63ba68 shares 0x5bc7e0 with border and textWidget.
+void coloredBorderFrame::zBufferDraw(unsigned short* zBuffer, int id) const {}
 
 VA(0x004501e0, 0x5B)  // dc 0x546d4
 void coloredBorderFrame::draw() const
@@ -184,59 +223,6 @@ bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id,
         m_image = 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\border.cpp:67
-DC_ONLY(0x54408, 0x36)
-void border::initialize(int x, int y, int w, int h, int id, int style, unsigned char focusable)
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:158
-DC_ONLY(0x54594, 0x4)
-void border::zBufferDraw()
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:161
-DC_ONLY(0x54598, 0x4)
-void border::draw()
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:174
-DC_ONLY(0x5459c, 0x78)
-void coloredBorder::coloredBorder(int x, int y, int w, int h, int id, int color_, int style)
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:182
-DC_ONLY(0x54614, 0x4)
-void coloredBorder::zBufferDraw()
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:185
-DC_ONLY(0x54618, 0x38)
-void coloredBorder::draw()
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:210
-DC_ONLY(0x546d0, 0x4)
-void coloredBorderFrame::zBufferDraw()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA_COMPGEN(0x00450360, 0x21, SCALAR_DELETING_DTOR, bitmapBorder)
 
 VA(0x00450390, 0x5B)  // dc 0x54860
@@ -245,17 +231,6 @@ bitmapBorder::~bitmapBorder()
     if (m_image)
         m_image->dispose();
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\border.cpp:323
-DC_ONLY(0x54988, 0x38)
-void bitmapBorder::setPalette(const char* palette_name)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x004503f0, 0x55)  // dc 0x5489c
 void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id) const
@@ -271,6 +246,19 @@ void bitmapBorder::draw() const
     if (m_image)
         m_image->draw(0, 0, m_width, m_height, g_windowManager->m_screenBitmap,
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 1);
+}
+
+// Original: bitmapBorder::SetPalette; border.cpp:323, dc 0x54988.
+// Retail Main's SET_PALETTE arm expands the same load/copy/dispose sequence.
+void bitmapBorder::setPalette(const char* paletteName)
+{
+    if (m_image) {
+        TPalette16* newPalette = ResourceManager::getPalette(paletteName);
+        if (newPalette) {
+            m_image->setPalette(newPalette->m_data);
+            newPalette->dispose();
+        }
+    }
 }
 
 VA(0x004504a0, 0xE)  // dc 0x54948
@@ -317,18 +305,9 @@ int bitmapBorder::main(message& msg)
             return 0;
     } else if (msg.m_id == MESSAGE_WIDGET && msg.m_codeY == m_id) {
         switch (msg.m_codeX) {
-        case WIDGET_SET_PALETTE: {
-            const char* paletteName = msg.m_extraText;
-            if (m_image) {
-                TPalette16* newPalette =
-                    ResourceManager::getPalette(paletteName);
-                if (newPalette) {
-                    m_image->setPalette(newPalette->m_data);
-                    newPalette->dispose();
-                }
-            }
+        case WIDGET_SET_PALETTE:
+            setPalette(msg.m_extraText);
             return 1;
-        }
         case WIDGET_SET_IMAGE:
             setImage(msg.m_extraText);
             return 1;
@@ -360,16 +339,9 @@ bitmapBorder16::~bitmapBorder16()
         m_image->dispose();
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\border.cpp:415
-DC_ONLY(0x54ba4, 0x4)
-void bitmapBorder16::zBufferDraw()
-{
-    // @stub
-}
-
-#endif  // @carcass
+// Original: bitmapBorder16::zBufferDraw; border.cpp:415, dc 0x54ba4.
+// The 0x63bacc vtable's slot 3 folds to the shared empty ret-8 body.
+void bitmapBorder16::zBufferDraw(unsigned short* zBuffer, int id) const {}
 
 VA(0x004507b0, 0x55)  // dc 0x54ba8
 void bitmapBorder16::draw() const
@@ -390,6 +362,21 @@ void bitmapBorder16::draw2() const
         m_image->draw(0, 0, m_width, m_height, screen->getMap(0, 0), m_x, m_y, screen->getWidth(),
             screen->getHeight(), screen->getPitch(), 0);
     }
+}
+
+// Original: bitmapBorder16::GetRealWidth; border.cpp:431, dc 0x54c2c.
+// Complete vslot 6 at 0x63bae4 shares bitmapBorder::getRealWidth, 0x4504a0:
+// both bitmap types put Width at +0x24 after their resource base.
+int bitmapBorder16::getRealWidth() const
+{
+    return m_image ? m_image->getWidth() : 0;
+}
+
+// Original: bitmapBorder16::GetRealHeight; border.cpp:436, dc 0x54c4c.
+// Vslot 5 at 0x63bae0 similarly shares bitmapBorder::getRealHeight, 0x4504b0.
+int bitmapBorder16::getRealHeight() const
+{
+    return m_image ? m_image->getHeight() : 0;
 }
 
 // E:\gamedcs\border.cpp:449 - promoted from DC_ONLY, slot 2 of vtable
@@ -443,19 +430,6 @@ int bitmapBorder16::main(message& msg)
 
 #if 0  // @carcass
 
-// E:\gamedcs\border.cpp:431
-DC_ONLY(0x54c2c, 0x20)
-int bitmapBorder16::getRealWidth() const
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:436
-DC_ONLY(0x54c4c, 0x20)
-int bitmapBorder16::getRealHeight() const
-{
-    // @stub
-}
 
 // E:\gamedcs\border.cpp:35
 DC_ONLY(0x54d24, 0x34)

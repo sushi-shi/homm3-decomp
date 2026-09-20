@@ -234,6 +234,8 @@ def _dispatch(argv: list[str]) -> int:
     # gets a chance to consume or reject any of those options.
     if argv and argv[0] == "source-ownership":
         return run_module("homm3.match.source_ownership", *argv[1:])
+    if argv and argv[0] == "source-inventory":
+        return run_module("homm3.match.source_inventory", *argv[1:])
     if argv and argv[0] == "dreamcast":
         return run_module("homm3.analysis.dreamcast", *argv[1:])
     if argv and argv[0] == "warnings":
@@ -290,6 +292,11 @@ def _dispatch(argv: list[str]) -> int:
                        help="validate CodeView definition ownership and order")
     p.add_argument("ownership_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=lambda args: run_module("homm3.match.source_ownership", *args.ownership_args))
+
+    p = sub.add_parser("source-inventory", add_help=False,
+                       help="reconcile DC and authored functions in both directions")
+    p.add_argument("inventory_args", nargs=argparse.REMAINDER)
+    p.set_defaults(fn=lambda args: run_module("homm3.match.source_inventory", *args.inventory_args))
 
     p = sub.add_parser("status", help="objdiff scoreboard + checkpoint ledger")
     p.add_argument("status_args", nargs=argparse.REMAINDER)

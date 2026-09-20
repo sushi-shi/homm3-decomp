@@ -39,24 +39,18 @@ static int g_binkSound;
 DATA(0x00694cb0)
 BinkManager::BinkManagerStruct BinkManager::g_playingBink;
 
-#if 0  // @carcass
-
 // DC SetPixelFormat(ulong, ulong, ulong), binkmanager.cpp:123, is a
 // four-byte no-op. No retail body is identified. Windows selects Bink's
 // format with BinkDDSurfaceType in openBink and videoRealignBuffers;
 // display-mask dispatch calls only ResourceManager and SmackManager.
-// Keep this legacy interface as DC evidence; a folded/unused Windows
-// definition is not excluded, and no active body is reconstructed.
+// Keep the active empty definition as the canonical positive DC source body;
+// Complete can fold or discard it because no Windows caller survives.
 // E:\gamedcs\binkmanager.cpp:123
 DC_ONLY(0x50a80, 0x4)
 void BinkManager::setPixelFormat(unsigned long redMask, unsigned long greenMask,
                                  unsigned long blueMask)
 {
-    // @stub
 }
-
-// E:\gamedcs\binkmanager.cpp:232
-#endif  // @carcass
 
 // The constant OR'd into every _BinkOpen flag word here; it is Bink's
 // counterpart of smackmgr's SMACKOPEN_FROM_ARCHIVE and makes _BinkOpen take

@@ -88,6 +88,9 @@ extern int g_mapHeight;
 // uninitialized by the ctor - Init fills it.
 class searchArray {
 private:
+    void boardBoat(const hero* currentHero, pathCell& cell);
+    unsigned char validMoveAdjacent(const army* currentArmy, int hex);
+    unsigned char validMoveAdjacent(const army* currentArmy, const army& enemy);
     int m_maxQueueCount;
     unsigned char m_payTransitionCosts;
     int m_thisTurnsMovement;
@@ -346,7 +349,6 @@ DATA(0x00678150) extern tilePoint g_normalDirTable[8];
 extern const signed char g_stepDeltaX[];   // 0x678150, stride 4
 extern const signed char g_stepDeltaY[];   // 0x678151, stride 4
 
-// --- globals ---
 // 0x56a360, search.obj's, still @stub there. Declared here because
 // TestPossibleDirections calls it as a free fastcall (hero* in ECX,
 // pathCell* in EDX, the search type on the stack); the pairing is the DC

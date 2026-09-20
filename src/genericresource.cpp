@@ -6,7 +6,10 @@
 // ResourceManager::GetResource. In retail that getter and this class's vtable
 // are absent; after gametypewindow the complete carve runs through cinit0415..
 // cinit0429 directly into global.obj's TGzInflateBuf family. The authoritative
-// resource::resource caller graph likewise has no generic-resource wrapper.
+// resource::resource0x558720 has 23 direct callers, all assigned to the typed
+// bitmap, sprite, font, palette, sample and text/spreadsheet classes. This
+// accounts for the reachable binary family, not unused original PC source.
+// Exact constructor/destructor/getter exclusions are recorded in dc_only.tsv.
 
 // E:\gamedcs\genericresource.cpp:26
 DC_ONLY(0xc9788, 0x68)

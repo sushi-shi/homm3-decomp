@@ -13,20 +13,11 @@
 // time the palette is already being destroyed.
 __declspec(nothrow) void __cdecl operator delete(void* p);
 
-#if 0  // @carcass
-
-// E:\gamedcs\font.cpp:33
-// The default constructor has NO retail row: font.obj's carved span runs
-// 0x4b5020..0x4b5b90 and every row in it is accounted for below, with the
-// 32-byte 0x4b5020 an atexit/guard-byte cinit thunk (excluded class).
-// Either the retail source dropped it or its single use inlined it away.
-DC_ONLY(0xa1ba8, 0x5C)
-void font::font()
+// Original: font::font; font.cpp:33, dc 0xa1ba8
+font::font() : resource("", RESOURCE_TYPE_FONT), m_data(0)
 {
-    // @stub
 }
 
-#endif  // @carcass
 
 VA_COMPGEN(0x004b5040, 0x21, SCALAR_DELETING_DTOR, font)
 
@@ -201,17 +192,14 @@ void font::drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
                    clipWidth, clipHeight, highlighted);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\font.cpp:246
-DC_ONLY(0xa209c, 0x6A)
-void font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, font::TColor color)
+// Original: font::DrawString; font.cpp:246, dc 0xa209c
+void font::drawString(const char* text, Bitmap16Bit* bitmap,
+                      int x, int y, TColor color)
 {
-    // @stub
+    drawStringExecute(text, strlen(text), bitmap, x, y, color,
+                      0, 0, bitmap->getWidth(), bitmap->getHeight(), -1);
 }
 
-// E:\gamedcs\font.cpp:254
-#endif  // @carcass
 
 // The layout pass: split `str` into lines that fit boxWidth, place the
 // block vertically per the justification bits, and hand each line to

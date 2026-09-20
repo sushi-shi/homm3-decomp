@@ -56,15 +56,27 @@ const int g_townNameFixedLength = 13;
 // generatorBonus, mageGuildSpellCounts, the three building masks, the
 // mage-guild spell grid, a 70-BYTE buffer unpacked one BIT at a time into
 // the bitset<70>, and a packed byte that splits three ways.
-// Residual (98.00%): frame exact at 0x54, branches and the whole call
-// multiset agree, and the only byte-level divergence is which stack slot
-// holds the spilled `this` - retail [ebp-8], ours [ebp-4]. Swapping the
-// two locals' declaration order is byte-flat, measured.
+// Residual (98.17%): branches and the whole call multiset agree. Retail
+// reads the five position/dock bytes through a SECOND char local, homed
+// at [ebp-1], while the other twelve byte reads share charBuffer in the
+// dead `infile` parameter home at [ebp+0xb] - recovering that local moves
+// the spilled `this` to retail's [ebp-8]. What is left is one frame slot:
+// retail also homes the name length in the dead `saveVersion` parameter
+// home at [ebp+0xc] (it loads the dword and masks 0xffff), so its frame
+// stays 0x54 where ours takes a fourth slot at [ebp-0x10] and 0x58.
+// A 40-member source family over the local block, the length read and the
+// name assignment ceilings at this same 98.1694 with 14 distinct objects, so
+// the slot is not reachable from declaration order, scope or width: byte-flat
+// are nameLength at function top (int or unsigned short), spellBuf first,
+// posBuffer first, and an undeclared assignment; worse are an unsigned short
+// nameLength read (98.10), reading into `saveVersion` itself (97.60) and
+// hoisting `m_name = g_text` out of the two arms (88.68).
 
 VA(0x005bcd60, 0x586)  // carcass promotion, dc 0x165628; anchor-callee armyGroup::load + LoadHeroId; callers game::Load and CCombatInitMsg::read
 int town::load(TAbstractFile* infile, int saveVersion)
 {
     char charBuffer;
+    char posBuffer;
     unsigned char spellBuf[70];
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
@@ -82,21 +94,21 @@ int town::load(TAbstractFile* infile, int saveVersion)
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     m_type = charBuffer;
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
         return -1;
-    m_mapX = charBuffer;
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    m_mapX = posBuffer;
+    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
         return -1;
-    m_mapY = charBuffer;
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    m_mapY = posBuffer;
+    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
         return -1;
-    m_mapZ = charBuffer;
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    m_mapZ = posBuffer;
+    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
         return -1;
-    m_dockSite = charBuffer;
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    m_dockSite = posBuffer;
+    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
         return -1;
-    m_dockSiteY = charBuffer;
+    m_dockSiteY = posBuffer;
 
     if (m_garrison.load(infile) < 0)
         return -1;
@@ -112,10 +124,10 @@ int town::load(TAbstractFile* infile, int saveVersion)
     m_isGrouped = charBuffer;
 
     if (saveVersion >= g_saveVersionTownNameString) {
-        unsigned short nameLength;
-        infile->read(&nameLength, sizeof(nameLength));
-        infile->read(g_text, nameLength);
-        g_text[nameLength] = 0;
+        int nameLength = 0;
+        infile->read(&nameLength, sizeof(unsigned short));
+        infile->read(g_text, nameLength & 0xffff);
+        g_text[nameLength & 0xffff] = 0;
         m_name = g_text;
     } else {
         infile->read(g_text, g_townNameFixedLength);
@@ -179,6 +191,7 @@ VA(0x005bd2f0, 0x402)  // carcass promotion, dc 0x165988; anchor-callee armyGrou
 int town::save(TAbstractFile* outfile)
 {
     char charBuffer;
+    char posBuffer;
     unsigned char spellBuf[70];
 
     charBuffer = m_id;
@@ -201,25 +214,25 @@ int town::save(TAbstractFile* outfile)
     if (outfile->write(&charBuffer, sizeof(charBuffer))
         < sizeof(charBuffer))
         return -1;
-    charBuffer = m_mapX;
-    if (outfile->write(&charBuffer, sizeof(charBuffer))
-        < sizeof(charBuffer))
+    posBuffer = m_mapX;
+    if (outfile->write(&posBuffer, sizeof(posBuffer))
+        < sizeof(posBuffer))
         return -1;
-    charBuffer = m_mapY;
-    if (outfile->write(&charBuffer, sizeof(charBuffer))
-        < sizeof(charBuffer))
+    posBuffer = m_mapY;
+    if (outfile->write(&posBuffer, sizeof(posBuffer))
+        < sizeof(posBuffer))
         return -1;
-    charBuffer = m_mapZ;
-    if (outfile->write(&charBuffer, sizeof(charBuffer))
-        < sizeof(charBuffer))
+    posBuffer = m_mapZ;
+    if (outfile->write(&posBuffer, sizeof(posBuffer))
+        < sizeof(posBuffer))
         return -1;
-    charBuffer = m_dockSite;
-    if (outfile->write(&charBuffer, sizeof(charBuffer))
-        < sizeof(charBuffer))
+    posBuffer = m_dockSite;
+    if (outfile->write(&posBuffer, sizeof(posBuffer))
+        < sizeof(posBuffer))
         return -1;
-    charBuffer = m_dockSiteY;
-    if (outfile->write(&charBuffer, sizeof(charBuffer))
-        < sizeof(charBuffer))
+    posBuffer = m_dockSiteY;
+    if (outfile->write(&posBuffer, sizeof(posBuffer))
+        < sizeof(posBuffer))
         return -1;
 
     if (m_garrison.save(outfile) < 0)
@@ -562,7 +575,7 @@ void town::view(int alreadyFaded)
     else if (threshold > 0x320)
         g_unnamed699548 = 1;
 
-    g_townManager->m_townToView = this;
+    g_townManager->setTown(this);
     g_executive->callManager(g_townManager);
 
     town* viewedTown = g_townManager->m_townToView;
@@ -1372,6 +1385,50 @@ void showCreatureRewards(const town* thisTown,
 void initializeBuildings(town* currentTown, const TownExtra* townSetup);
 unsigned char checkShipyardSquare(town* currentTown, long x, long y);
 
+// Original: initialize_army; town.cpp:2017, dc 0x168330.
+// Complete expands the ordinary initializer into town::initialize. Its custom
+// army path additionally resolves the map format's negative random-tier IDs;
+// DC's older body copied those creature IDs directly. Both use getArmy's
+// canonical garrison/hero selection at every read and write.
+static void initializeArmy(town* currentTown, const TownExtra* townSetup)
+{
+    if (townSetup->m_customArmies) {
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
+            currentTown->getArmy().m_numTroops[slot] =
+                townSetup->m_townArmy.m_numTroops[slot];
+            if (currentTown->getArmy().m_numTroops[slot] > 0) {
+                int troop = townSetup->m_townArmy.m_armies[slot];
+                if (troop <= -2) {
+                    int tier = (-2 - troop) / 2;
+                    if (troop & 1)
+                        tier += TOWN_DWELLING_COUNT;
+                    troop = g_townDwellingCreatures[
+                        currentTown->m_type * (2 * TOWN_DWELLING_COUNT) + tier];
+                }
+                currentTown->getArmy().m_armies[slot] = troop;
+            } else {
+                currentTown->getArmy().m_armies[slot] = -1;
+            }
+        }
+    } else {
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
+            currentTown->getArmy().m_armies[slot] = -1;
+            currentTown->getArmy().m_numTroops[slot] = 0;
+        }
+        if (currentTown->m_owner < 0) {
+            for (int tier = 0; tier < 4; tier++) {
+                if (random(1, 100) <= g_townInitArmyChance[tier]) {
+                    int creature = g_townDwellingCreatures[
+                        currentTown->m_type * (2 * TOWN_DWELLING_COUNT) + tier];
+                    currentTown->getArmy().add(creature,
+                        random(g_townInitArmyLow[tier], g_townInitArmyHigh[tier]),
+                        -1);
+                }
+            }
+        }
+    }
+}
+
 VA(0x005c0670, 0x24E)  // dc 0x16842c
 void town::initialize(const TownExtra* townSetup)
 {
@@ -1379,59 +1436,9 @@ void town::initialize(const TownExtra* townSetup)
     m_owner = -1;
     memset(m_generatorBonus, 0, sizeof(m_generatorBonus));
     g_game->claimTown(m_id, townSetup->m_playerOwner, 0, 0);
-    if (townSetup->m_customArmies) {
-#pragma inline_depth(0)
-        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
-             slot++) {
-            (m_garrisonHeroId < 0 ? m_garrison
-                                : g_game->getHero(m_garrisonHeroId)->m_army)
-                .m_numTroops[slot] = townSetup->m_townArmy.m_numTroops[slot];
-            if ((m_garrisonHeroId < 0
-                     ? m_garrison
-                     : g_game->getHero(m_garrisonHeroId)->m_army)
-                    .m_numTroops[slot] > 0) {
-                int troop = townSetup->m_townArmy.m_armies[slot];
-                if (troop <= -2) {
-                    int tier = (-2 - troop) / 2;
-                    if (troop & 1)
-                        tier += TOWN_DWELLING_COUNT;
-                    troop = g_townDwellingCreatures[
-                        m_type * (2 * TOWN_DWELLING_COUNT) + tier];
-                }
-                (m_garrisonHeroId < 0
-                     ? m_garrison
-                     : g_game->getHero(m_garrisonHeroId)->m_army)
-                    .m_armies[slot] = troop;
-            } else {
-                getArmy().m_armies[slot] = -1;
-            }
-        }
-#pragma inline_depth()
-    } else {
-        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
-             slot++) {
-            getArmy().m_armies[slot] = -1;
-            getArmy().m_numTroops[slot] = 0;
-        }
-        if (m_owner < 0) {
-            for (int tier = 0; tier < 4; tier++) {
-                if (random(1, 100) <= g_townInitArmyChance[tier]) {
-                    int creature = g_townDwellingCreatures[
-                        m_type * (2 * TOWN_DWELLING_COUNT) + tier];
-                    getArmy().add(creature,
-                                    random(g_townInitArmyLow[tier],
-                                           g_townInitArmyHigh[tier]),
-                                    -1);
-                }
-            }
-        }
-    }
+    initializeArmy(this, townSetup);
     initializeBuildings(this, townSetup);
-    m_active = m_built;
-    for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
-        if (m_built & g_bitNumber[i])
-            m_active |= s_includedBuildings[m_type][i];
-    }
+    updateFullBuildingMask();
     m_spells = townSetup->m_spells;
     initializeSpells(townSetup);
 }
@@ -1442,12 +1449,7 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
     int i;
     memset(currentTown->m_population, 0, sizeof(currentTown->m_population));
     currentTown->m_built = 0;
-    currentTown->m_active = 0;
-    for (i = 0; i < MAX_BUILDING_TYPE; i++) {
-        if (currentTown->m_built & g_bitNumber[i])
-            currentTown->m_active |=
-                town::s_includedBuildings[currentTown->m_type][i];
-    }
+    currentTown->updateFullBuildingMask();
     currentTown->createBuilding(HALL_VILLAGE_ID);
 
     __int64 unavailable = 0;
@@ -1475,8 +1477,7 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
             unavailable |= g_bitNumber[HORDE_UPG_ID];
         if (unavailable & g_bitNumber[HORDE_2_ID])
             unavailable |= g_bitNumber[HORDE_2_UPG_ID];
-        currentTown->m_available =
-            g_townEligibleBuildMask[currentTown->m_type] & ~unavailable;
+        currentTown->setLegalBuildings(unavailable);
 
         __int64 toBuild = 0;
         for (i = 0; i < MAX_BUILDING_TYPE; i++) {
@@ -1497,8 +1498,7 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
         return;
     }
 
-    currentTown->m_available =
-        g_townEligibleBuildMask[currentTown->m_type] & ~unavailable;
+    currentTown->setLegalBuildings(unavailable);
     if (townSetup->m_hasFort)
         currentTown->createBuilding(CASTLE_FORT_ID);
     if (currentTown->m_owner >= 0) {
@@ -1546,17 +1546,6 @@ unsigned char checkShipyardSquare(town* currentTown, long x, long y)
     }
     return 0;
 }
-
-// No retail row for either of these two - inlined into town::initialize
-// (initialize_army) and into its callers (update_full_building_mask).
-// E:\gamedcs\town.cpp:2017
-#if 0  // @carcass
-DC_ONLY(0x168330, 0xFC)
-void initialize_army(town* current_town, const TownExtra* town_setup)
-{
-    // @stub
-}
-#endif  // @carcass
 
 // E:\gamedcs\town.cpp:2084
 void town::updateFullBuildingMask()
@@ -1692,23 +1681,19 @@ unsigned char town::isLegalBuilding(type_building_id building) const
     return (g_bitNumber[building] & m_available) != 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\town.cpp:2291
-DC_ONLY(0x168a10, 0x3E)
-void town::set_legal_buildings(__int64 disabled_buildings)
+// Original: town::set_legal_buildings; town.cpp:2291, dc 0x168a10.
+void town::setLegalBuildings(__int64 disabledBuildings)
 {
-    // @stub
+    m_available = g_townEligibleBuildMask[m_type] & ~disabledBuildings;
 }
 
-// E:\gamedcs\town.cpp:2300
-DC_ONLY(0x168a50, 0x48)
-unsigned char town::is_disabled(type_building_id building)
+// Original: town::is_disabled; town.cpp:2300, dc 0x168a50.
+unsigned char town::isDisabled(type_building_id building) const
 {
-    // @stub
+    if (isLegalBuilding(building))
+        return 0;
+    return (g_townEligibleBuildMask[m_type] & g_bitNumber[building]) != 0;
 }
-
-#endif  // @carcass
 
 VA(0x005c12e0, 0xC9)  // dc 0x168a98
 void town::hire(hero* newHero, long playerId)
@@ -1746,13 +1731,23 @@ void town::placeInMap(int heroId, long playerId, unsigned char resetFlags)
 VA(0x005c1440, 0xC)  // dc 0x168ba0
 TTerrainType town::getNativeTerrain() const
 {
-    return g_nativeTerrains[m_type];
+    return townManager::getNativeTerrain(m_type);
 }
 
 VA(0x005c1450, 0xC)  // dc 0x168bb8
 const char* town::getTypeName() const
 {
-    return g_unnamed6a74f4[m_type];
+    return townManager::getTownTypeName(m_type);
+}
+
+// Original: town::get_army; town.cpp:2375, dc 0x168bd0.
+// This ordinary non-const twin returns the same selected army address as the
+// const overload. Complete callers of both interfaces share 0x5c1460.
+armyGroup& town::getArmy()
+{
+    if (m_garrisonHeroId < 0)
+        return m_garrison;
+    return g_game->getHero(m_garrisonHeroId)->m_army;
 }
 
 VA(0x005c1460, 0x38)  // dc 0x168bf8
@@ -1839,6 +1834,7 @@ unsigned char town::initializeBuildingCostsTables()
     sheet->dispose();
     return 1;
 }
+
 
 // COMDAT pairing: bitset<48>::set(pos, bool), agreement 1.000 at an exactly
 // equal 96-byte extent.

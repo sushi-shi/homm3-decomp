@@ -102,7 +102,8 @@ public:
         return 1;
     }
 
-    // E:\gamedcs\array.h:113, dc 0x103150
+    // Original: CAutoArray::Delete; array.h:113, dc 0x103150.
+    // The semantic suffix avoids the C++ keyword delete after case normalization.
     virtual unsigned char deleteElement(unsigned long elementNbr)
     {
         if (elementNbr >= m_size)

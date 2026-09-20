@@ -110,7 +110,13 @@ public:
 // [this+0x68]). Total 112.
 class textButton : public button {
 public:
+    textButton();
     textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor newColor);
+
+    // Original: textButton::SetText; button.h:136, dc 0x14762c.
+    // DC assigns the inherited Text string directly, distinct from
+    // button::SetText; TurnChatOn/Off expand it at retail 0x58ca80/0x58cbf0.
+    void setText(const char* newText) { m_text = newText; }
 
     virtual void draw() const;    // slot 4, retail 0x456ca0
 
@@ -124,6 +130,8 @@ private:
 // DC gives only a forward ref. The dtor (retail 0x456db0) tears down
 // exactly button's members, so the tail is POD; Main proves handler is
 // a fastcall message handler at 0x68 (call [this+0x68] with ecx=msg).
+struct type_icon_definition;
+
 class type_func_button : public button {
 public:
     typedef int (*handler_type)(message& msg);
@@ -131,6 +139,7 @@ public:
     type_func_button(long x, long y, long w, long h, long id,
                      const char* image, handler_type newHandler,
                      int normal, int selected);
+    type_func_button(const type_icon_definition& def, int id, handler_type handler);
     virtual int main(message& msg);  // slot 2, retail 0x456e50
 
     virtual ~type_func_button();  // retail 0x456db0

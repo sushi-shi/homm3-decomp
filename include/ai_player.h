@@ -73,6 +73,7 @@ public:
     // DC ai_player.h:278 (dc 0x37df8, ?...@@QBANW4EGameResource@@@Z);
     // inlined into type_income_artifact::get_value, whose by-value double
     // return temp at [ebp-8] is what the retail bytes home under /Op.
+    long getResourceValue(int* resources) const;
     double getResourceValue(enum EGameResource resource) const
     {
         return m_resourceValue[resource];

@@ -30,6 +30,32 @@
 // is a separate, measured decision.
 #include "artifact_type.h"
 
+// Dreamcast's public wearable-position type. Complete adds a nineteenth
+// equipped position, but retains the same dword parameter ABI and may pass
+// that retail-only ordinal through functions which use this shared type.
+enum TArtifactSlot {
+    eArtifactSlotHead = 0,
+    eArtifactSlotShoulders,
+    eArtifactSlotNeck,
+    eArtifactSlotRightHand,
+    eArtifactSlotLeftHand,
+    eArtifactSlotTorso,
+    eArtifactSlotRightRing,
+    eArtifactSlotLeftRing,
+    eArtifactSlotFeet,
+    eArtifactSlotMisc1,
+    eArtifactSlotMisc2,
+    eArtifactSlotMisc3,
+    eArtifactSlotMisc4,
+    eArtifactSlotWarMachine1,
+    eArtifactSlotWarMachine2,
+    eArtifactSlotWarMachine3,
+    eArtifactSlotWarMachine4,
+    eArtifactSlotSpellbook,
+    kNumArtifactSlots,
+    const_first_artifact_slot = eArtifactSlotHead
+};
+
 // The per-artifact traits record. The 32-byte STRIDE is byte-proven by
 // hero::IsWieldingArtifact's `shl esi,5` index, and +0x18 by the same
 // body: it holds the id of the COMBINATION artifact this piece belongs
@@ -113,6 +139,21 @@ extern const TCombinationArtifact g_combinationArtifactTable[12];
 extern const TArtifactTraits (&g_artifactTraits)[144];
 extern const TCombinationArtifact* g_combinationArtifacts;
 extern const TArtifactSlotTraits (&g_artifactSlotTraits)[19];
+
+// Original: artifactAllowedInSlot; artifact.h:229, dc 0x37d88.
+// DC233 indexes the artifact's bitset18 with operator[]. Complete replaces
+// that inline mask with a slot-class index into bitset19; the primitive
+// survives as the initial mask test in hero::heroFn004E2840 (0x4e2840).
+// The richer hero member also checks displaced/combination artifacts.
+// Retain the const mask reference: it preserves the retail exception-path
+// value lifetime. Direct nested indexing expands _Eos instead of retaining
+// its call (92.66% caller); this canonical reference form matches100%.
+inline unsigned char artifactAllowedInSlot(TArtifact artifact, TArtifactSlot slot)
+{
+    const std::bitset<19>& allowable =
+        g_artifactSlotMasks[g_artifactTraits[artifact].m_allowableSlotMask];
+    return allowable[slot];
+}
 
 // Retail .data 0x6aa9f8, defined by townmgr.cpp and consumed by the AI
 // town-entry path. The record itself is completed by hero.h; an extern

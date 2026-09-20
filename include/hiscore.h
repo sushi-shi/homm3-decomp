@@ -85,6 +85,9 @@ public:
                    int style, int readType, int insetX, int insetY);
     // DC195 takes message&; the shared text-entry interface still uses message*.
     virtual int onKeyPress(message* msg);  // slot 15, retail 0x4e9710
+    virtual void setFocus(unsigned char state);  // inherited slot 14
+    virtual void onNextEdit();  // appended slot 19
+    virtual void onPrevEdit();  // appended slot 20
 };
 SIZE(CHighScoreEdit, 0x78);
 
@@ -106,7 +109,6 @@ public:
     // DC301 forwards maxChars1 to CHighScoreEdit; retail passes 40.
     CHSInputDlg(int maxChars);
     virtual ~CHSInputDlg();
-    virtual int windowHandler(message& msg);
     virtual int onWidgetDeselect(int id, bool& exitFlag);
     virtual textWidget* getRolloverWidget();
     bool onOK();

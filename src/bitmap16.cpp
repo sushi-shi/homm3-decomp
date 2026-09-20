@@ -5,13 +5,14 @@
 #include "bitmap16.h"
 #include "bitmap816.h"
 #include "hsv.h"
+#include "pcx.h"
 
 // Retail's destructor is frameless under /GX, proving that this TU saw the
 // deallocator as nothrow (the same header contract established by sample.obj).
 __declspec(nothrow) void __cdecl operator delete(void* p);
 
 // Convert using the low word of the biased double representation.
-// E:\gamedcs\bitmap16.cpp:59, dc 0x50a9c
+// Original: ftol; bitmap16.cpp:59, dc 0x50a9c
 static long ftol(double d)
 {
     const unsigned long magic = 0x59c00000;
@@ -21,30 +22,9 @@ static long ftol(double d)
 
 #if 0  // @carcass
 
-// E:\gamedcs\bitmap16.cpp:59
-DC_ONLY(0x50a9c, 0x62)
-long ftol(double d)
-{
-    // @stub
-}
-
 // E:\gamedcs\bitmap16.cpp:117
 DC_ONLY(0x50c04, 0x104)
 void Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap16.cpp:152
-DC_ONLY(0x50d08, 0xFA)
-void Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h, const unsigned short* data, int size)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap16.cpp:187
-DC_ONLY(0x50e04, 0xB8)
-void Bitmap16Bit::Bitmap16Bit(const char* name, const char* path)
 {
     // @stub
 }
@@ -81,6 +61,33 @@ Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h)
         m_map = new unsigned short[m_dataSize / 2];
     else
         m_map = 0;
+}
+
+// Original: Bitmap16Bit::Bitmap16Bit; bitmap16.cpp:152, dc 0x50d08
+// Complete's 0x38-byte bitmap keeps the heap-buffer arm of DC's allocation
+// path; DDSURFACEDESC, BMCreateSurface and the locked-surface owner are absent.
+Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h,
+                         const unsigned short* data, int size)
+    : resource(name, RESOURCE_TYPE_BITMAP16),
+      m_imageSize(w * h * 2), m_width(w), m_height(h), m_pitch(w * 2)
+{
+    m_dataSize = size ? size : m_imageSize;
+    m_map = new unsigned short[m_dataSize / 2];
+    m_referenced = 0;
+    if (m_map)
+        memcpy(m_map, data, m_dataSize);
+}
+
+// Original: Bitmap16Bit::Bitmap16Bit; bitmap16.cpp:187, dc 0x50e04
+Bitmap16Bit::Bitmap16Bit(const char* name, const char* path)
+    : resource(name, RESOURCE_TYPE_BITMAP16),
+      m_dataSize(0), m_imageSize(0), m_width(0), m_height(0), m_pitch(0), m_map(0)
+{
+    char fileName[261];
+    strcpy(fileName, path);
+    strcat(fileName, name);
+    importPCXFile(fileName);
+    m_referenced = 0;
 }
 
 VA(0x0044e100, 0x29)  // dc 0x50ebc
@@ -147,6 +154,21 @@ unsigned int Bitmap16Bit::getSize() const
     return sizeof(*this) + m_dataSize;
 }
 
+// Original: Bitmap16Bit::import; bitmap16.cpp:294, dc 0x51078
+void Bitmap16Bit::import(int w, int h, const unsigned short* data, int size)
+{
+    clear();
+    m_width = w;
+    m_height = h;
+    m_pitch = w * 2;
+    m_imageSize = w * h * 2;
+    m_dataSize = size ? size : m_imageSize;
+    m_map = new unsigned short[m_dataSize / 2];
+    m_referenced = 0;
+    if (m_map)
+        memcpy(m_map, data, m_dataSize);
+}
+
 VA(0x0044e250, 0x5D)  // dc 0x51154
 void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
 {
@@ -176,6 +198,42 @@ void Bitmap16Bit::clear()
         m_map = 0;
         m_referenced = 0;
     }
+}
+
+// Original: Bitmap16Bit::importPCXFile; bitmap16.cpp:472, dc 0x51228
+int Bitmap16Bit::importPCXFile(const char* filename)
+{
+    PcxData pdat;
+    imgdes pcxfile;
+    if (pcxinfo(filename, &pdat))
+        return 1;
+
+    m_width = pdat.m_width;
+    m_height = pdat.m_length;
+    m_pitch = pdat.m_width * 2;
+    m_imageSize = m_width * m_height * 2;
+    m_dataSize = m_imageSize;
+    m_map = new unsigned short[m_dataSize / 2];
+    m_referenced = 0;
+    if (!m_map)
+        return 2;
+
+    allocimage(&pcxfile, pdat.m_width, pdat.m_length,
+               pdat.m_bpPixel * pdat.m_nplanes);
+    loadpcx(filename, &pcxfile);
+    flipimage(&pcxfile, &pcxfile);
+    for (int y = 0; y < m_height; ++y) {
+        // DC 0x51310..0x5132a advances this destination by Width bytes,
+        // although the copied row contains Width words. Preserve that old
+        // importer's addressing; neither retained PCX importer calls it.
+        Bitmap16MapPointer row;
+        row.m_pixels = m_map;
+        memcpy(row.m_bytes + y * m_width,
+               pcxfile.m_ibuff + y * pcxfile.m_buffwidth,
+               m_width * sizeof(unsigned short));
+    }
+    freeimage(&pcxfile);
+    return 0;
 }
 
 // E:\gamedcs\bitmap16.cpp:541
@@ -258,22 +316,18 @@ void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
     if (h > srcHeight - srcY)
         h = srcHeight - srcY;
 
-    if (w > 0 && h > 0) {
-        Bitmap16MapPointer dst;
-        dst.m_pixels = getMap(dstX, dstY);
-        Bitmap16ConstMapPointer source;
-        source.m_pixels = src;
-        source.m_bytes += srcY * srcPitch + srcX * sizeof(unsigned short);
-        unsigned char* dstRowBase = dst.m_bytes;
-        int dstRowOffset = 0;
-        const unsigned char* sourceRowBase = source.m_bytes;
-        int sourceRowOffset = 0;
-        for (int row = 0; row < h;
-             dstRowOffset += m_pitch, sourceRowOffset += srcPitch, ++row) {
-            dst.m_bytes = dstRowBase + dstRowOffset;
-            source.m_bytes = sourceRowBase + sourceRowOffset;
-            memcpy(dst.m_pixels, source.m_pixels, w * sizeof(unsigned short));
-        }
+    if (w <= 0 || h <= 0)
+        return;
+
+    Bitmap16MapPointer dst;
+    dst.m_pixels = getMap(dstX, dstY);
+    Bitmap16ConstMapPointer source;
+    source.m_pixels = src;
+    source.m_bytes += srcY * srcPitch + srcX * sizeof(unsigned short);
+    for (int row = 0; row < h; ++row) {
+        memcpy(dst.m_pixels, source.m_pixels, w * sizeof(unsigned short));
+        dst.m_bytes += m_pitch;
+        source.m_bytes += srcPitch;
     }
 }
 
@@ -360,16 +414,13 @@ void Bitmap16Bit::darken(int x, int y, int w, int h)
 
     if (w && h) {
         unsigned long shiftMask =
-            ((g_colorMaskRed >> 1) & g_colorMaskRed)
-            | ((g_colorMaskGreen >> 1) & g_colorMaskGreen)
-            | ((g_colorMaskBlue >> 1) & g_colorMaskBlue);
+            ((Bitmap16Bit::s_blueMask >> 1) & Bitmap16Bit::s_blueMask)
+            | ((Bitmap16Bit::s_greenMask >> 1) & Bitmap16Bit::s_greenMask)
+            | ((Bitmap16Bit::s_redMask >> 1) & Bitmap16Bit::s_redMask);
         Bitmap16MapPointer row;
         row.m_pixels = getMap(x, y);
 
-        unsigned char* rowRowBase = row.m_bytes;
-        int rowRowOffset = 0;
         for (int iy = 0; iy < h; ++iy) {
-            row.m_bytes = rowRowBase + rowRowOffset;
             Bitmap16MapPointer pixel = row;
             for (int ix = 0; ix < w; ++ix) {
                 *pixel.m_pixels = static_cast<unsigned short>(
@@ -377,7 +428,7 @@ void Bitmap16Bit::darken(int x, int y, int w, int h)
                 ++pixel.m_pixels;
             }
 
-            rowRowOffset += m_pitch;
+            row.m_bytes += m_pitch;
         }
     }
 }
@@ -403,9 +454,9 @@ void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
 
     if (w && h) {
         unsigned int shiftMask =
-            ((g_colorMaskRed >> 1) & g_colorMaskRed)
-            | ((g_colorMaskGreen >> 1) & g_colorMaskGreen)
-            | ((g_colorMaskBlue >> 1) & g_colorMaskBlue);
+            ((Bitmap16Bit::s_blueMask >> 1) & Bitmap16Bit::s_blueMask)
+            | ((Bitmap16Bit::s_greenMask >> 1) & Bitmap16Bit::s_greenMask)
+            | ((Bitmap16Bit::s_redMask >> 1) & Bitmap16Bit::s_redMask);
         unsigned char* maskRow = mask->getMap(sx, sy);
         Bitmap16MapPointer row;
         row.m_pixels = getMap(x, y);
@@ -433,20 +484,20 @@ VA(0x0044e780, 0x1BF)  // dc 0x5177c
 void Bitmap16Bit::colorize(int x, int y, int width, int height,
                            unsigned short color)
 {
-    float blueLevel = static_cast<float>(color & g_colorMaskBlue)
-                       / static_cast<float>(g_colorMaskBlue);
-    float greenLevel = static_cast<float>(color & g_colorMaskGreen)
-                        / static_cast<float>(g_colorMaskGreen);
-    float redLevel = static_cast<float>(color & g_colorMaskRed)
-                      / static_cast<float>(g_colorMaskRed);
+    float redLevel = static_cast<float>(color & Bitmap16Bit::s_redMask)
+                       / static_cast<float>(Bitmap16Bit::s_redMask);
+    float greenLevel = static_cast<float>(color & Bitmap16Bit::s_greenMask)
+                        / static_cast<float>(Bitmap16Bit::s_greenMask);
+    float blueLevel = static_cast<float>(color & Bitmap16Bit::s_blueMask)
+                      / static_cast<float>(Bitmap16Bit::s_blueMask);
 
-    float top = blueLevel > greenLevel ? blueLevel : greenLevel;
-    if (top < redLevel)
-        top = redLevel;
+    float top = redLevel > greenLevel ? redLevel : greenLevel;
+    if (top < blueLevel)
+        top = blueLevel;
 
-    float bottom = blueLevel > greenLevel ? greenLevel : blueLevel;
-    if (bottom > redLevel)
-        bottom = redLevel;
+    float bottom = redLevel > greenLevel ? greenLevel : redLevel;
+    if (bottom > blueLevel)
+        bottom = blueLevel;
 
     float saturation = top != 0.0 ? (top - bottom) / top : 0.0f;
 
@@ -455,12 +506,12 @@ void Bitmap16Bit::colorize(int x, int y, int width, int height,
         hue = 0.0f;
     } else {
         float span = top - bottom;
-        if (blueLevel == top)
-            hue = (greenLevel - redLevel) / span;
+        if (redLevel == top)
+            hue = (greenLevel - blueLevel) / span;
         else if (greenLevel == top)
-            hue = (redLevel - blueLevel) / span + 2.0f;
+            hue = (blueLevel - redLevel) / span + 2.0f;
         else
-            hue = (blueLevel - greenLevel) / span + 4.0f;
+            hue = (redLevel - greenLevel) / span + 4.0f;
         hue *= 60.0f;
         if (hue < 0.0)
             hue += 360.0f;
@@ -473,10 +524,8 @@ void Bitmap16Bit::colorize(int x, int y, int width, int height,
 // 16-bit-colour overload above. Each pixel's three channels are prescaled to
 // a full 31-bit range by INT_MAX/mask, their maximum becomes the HSV value,
 // and the hue's sextant selects which of v/p/q/t each channel takes back.
-// The channel ROTATION is retail's own and matches the integer overload: the
-// BLUE-masked slot plays the formula's red, green plays green and the
-// RED-masked slot plays blue, which is why case HSV_RED_SECTOR writes v into
-// `b`. The sextant, `hue * 6`, `1.0f - saturation` and the fmod argument's
+// The integer and float overloads use the same class-owned RGB masks.
+// The sextant, `hue * 6`, `1.0f - saturation` and the fmod argument's
 // double conversion are all loop-invariant and land in the inner loop's
 // preheader; only the fmod call itself stays per-pixel, because VC6 will not
 // hoist an opaque call.
@@ -500,31 +549,28 @@ void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue,
     if (!w || !h)
         return;
 
-    const unsigned int blueNorm =
-        std::numeric_limits<int>::max() / g_colorMaskBlue;
-    const unsigned int greenNorm =
-        std::numeric_limits<int>::max() / g_colorMaskGreen;
     const unsigned int redNorm =
-        std::numeric_limits<int>::max() / g_colorMaskRed;
+        std::numeric_limits<int>::max() / Bitmap16Bit::s_redMask;
+    const unsigned int greenNorm =
+        std::numeric_limits<int>::max() / Bitmap16Bit::s_greenMask;
+    const unsigned int blueNorm =
+        std::numeric_limits<int>::max() / Bitmap16Bit::s_blueMask;
 
     Bitmap16MapPointer row;
     row.m_pixels = getMap(x, y);
-    unsigned char* rowRowBase = row.m_bytes;
-    int rowRowOffset = 0;
 
     for (int iy = 0; iy < h; ++iy) {
-        row.m_bytes = rowRowBase + rowRowOffset;
         Bitmap16MapPointer pixel = row;
         for (int ix = 0; ix < w; ++ix) {
-            unsigned int b =
-                (*pixel.m_pixels & g_colorMaskBlue) * blueNorm;
-            unsigned int g =
-                (*pixel.m_pixels & g_colorMaskGreen) * greenNorm;
             unsigned int r =
-                (*pixel.m_pixels & g_colorMaskRed) * redNorm;
+                (*pixel.m_pixels & Bitmap16Bit::s_redMask) * redNorm;
+            unsigned int g =
+                (*pixel.m_pixels & Bitmap16Bit::s_greenMask) * greenNorm;
+            unsigned int b =
+                (*pixel.m_pixels & Bitmap16Bit::s_blueMask) * blueNorm;
 
             const unsigned int max =
-                (b > g ? b : g) > r ? (b > g ? b : g) : r;
+                (r > g ? r : g) > b ? (r > g ? r : g) : b;
             const float v = static_cast<float>(max);
             const float f =
                 static_cast<float>(fmod(hue * 6.0f, 1.0));
@@ -534,44 +580,323 @@ void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue,
 
             switch (static_cast<int>(hue * 6.0f)) {
             case HSV_RED_SECTOR:
-                b = ftol(v);
+                r = ftol(v);
                 g = ftol(t);
-                r = ftol(p);
+                b = ftol(p);
                 break;
             case HSV_YELLOW_SECTOR:
-                b = ftol(q);
+                r = ftol(q);
                 g = ftol(v);
-                r = ftol(p);
+                b = ftol(p);
                 break;
             case HSV_GREEN_SECTOR:
-                b = ftol(p);
+                r = ftol(p);
                 g = ftol(v);
-                r = ftol(t);
+                b = ftol(t);
                 break;
             case HSV_CYAN_SECTOR:
-                b = ftol(p);
+                r = ftol(p);
                 g = ftol(q);
-                r = ftol(v);
+                b = ftol(v);
                 break;
             case HSV_BLUE_SECTOR:
-                b = ftol(t);
+                r = ftol(t);
                 g = ftol(p);
-                r = ftol(v);
+                b = ftol(v);
                 break;
             case HSV_MAGENTA_SECTOR:
-                b = ftol(v);
+                r = ftol(v);
                 g = ftol(p);
-                r = ftol(q);
+                b = ftol(q);
                 break;
             }
 
             *pixel.m_pixels = static_cast<unsigned short>(
-                ((r / redNorm) & g_colorMaskRed)
-                | ((g / greenNorm) & g_colorMaskGreen)
-                | ((b / blueNorm) & g_colorMaskBlue));
+                ((b / blueNorm) & Bitmap16Bit::s_blueMask)
+                | ((g / greenNorm) & Bitmap16Bit::s_greenMask)
+                | ((r / redNorm) & Bitmap16Bit::s_redMask));
             ++pixel.m_pixels;
         }
-        rowRowOffset += m_pitch;
+        row.m_bytes += m_pitch;
+    }
+}
+
+// Original: Bitmap16Bit::Gray; bitmap16.cpp:934, dc 0x51e40
+void Bitmap16Bit::gray(int x, int y, int w, int h)
+{
+    if (w > m_width - x)
+        w = m_width - x;
+    if (h > m_height - y)
+        h = m_height - y;
+    if (!w || !h)
+        return;
+
+    const unsigned int redNorm = std::numeric_limits<int>::max() / Bitmap16Bit::s_redMask;
+    const unsigned int greenNorm = std::numeric_limits<int>::max() / Bitmap16Bit::s_greenMask;
+    const unsigned int blueNorm = std::numeric_limits<int>::max() / Bitmap16Bit::s_blueMask;
+    unsigned short* row = getMap(x, y);
+    for (int rowIndex = 0; rowIndex < h; ++rowIndex) {
+        unsigned short* pixel = row;
+        for (int column = 0; column < w; ++column) {
+            unsigned int r = (*pixel & Bitmap16Bit::s_redMask) * redNorm;
+            unsigned int g = (*pixel & Bitmap16Bit::s_greenMask) * greenNorm;
+            unsigned int b = (*pixel & Bitmap16Bit::s_blueMask) * blueNorm;
+            unsigned int gray = (r > g ? r : g) > b ? (r > g ? r : g) : b;
+            *pixel = static_cast<unsigned short>(
+                ((gray / redNorm) & Bitmap16Bit::s_redMask) |
+                ((gray / greenNorm) & Bitmap16Bit::s_greenMask) |
+                ((gray / blueNorm) & Bitmap16Bit::s_blueMask));
+            ++pixel;
+        }
+        Bitmap16MapPointer nextRow;
+        nextRow.m_pixels = row;
+        nextRow.m_bytes += m_pitch;
+        row = nextRow.m_pixels;
+    }
+}
+
+// Original: Bitmap16Bit::GrabAndBlur; bitmap16.cpp:979, dc 0x51f88
+// The recorded 1017..1103 interior path explicitly sums the four neighboring
+// pixels on each axis, excluding the center; 1109..1241 checks those same
+// sixteen samples individually at the image edges and divides by their count.
+void Bitmap16Bit::grabAndBlur(const Bitmap16Bit* src, int sx, int sy)
+{
+    int w = m_width;
+    int h = m_height;
+    int sw = src->getWidth();
+    int sh = src->getHeight();
+    int sp = src->getPitch();
+    if (w > sw - sx)
+        w = sw - sx;
+    if (h > sh - sy)
+        h = sh - sy;
+
+    unsigned short* dstRow = m_map;
+    const unsigned short* srcRow = src->getMap(sx, sy);
+    for (int y = 0; y < h; ++y) {
+        unsigned short* d = dstRow;
+        const unsigned short* s = srcRow;
+        for (int x = 0; x < w; ++x) {
+            int spp = sp / 2;
+            unsigned int r = 0;
+            unsigned int g = 0;
+            unsigned int b = 0;
+            unsigned int color;
+            const int blurRadius = 4;
+            if (sx + x >= blurRadius && sx + x < sw - blurRadius &&
+                sy + y >= blurRadius && sy + y < sh - blurRadius) {
+                color = s[-4];
+                r += color & Bitmap16Bit::s_redMask;
+                g += color & Bitmap16Bit::s_greenMask;
+                b += color & Bitmap16Bit::s_blueMask;
+
+                color = s[-3];
+                r += color & Bitmap16Bit::s_redMask;
+                g += color & Bitmap16Bit::s_greenMask;
+                b += color & Bitmap16Bit::s_blueMask;
+
+                color = s[-2];
+                r += color & Bitmap16Bit::s_redMask;
+                g += color & Bitmap16Bit::s_greenMask;
+                b += color & Bitmap16Bit::s_blueMask;
+
+                color = s[-1];
+                r += color & Bitmap16Bit::s_redMask;
+                g += color & Bitmap16Bit::s_greenMask;
+                b += color & Bitmap16Bit::s_blueMask;
+
+                color = s[1];
+                r += color & Bitmap16Bit::s_redMask;
+                g += color & Bitmap16Bit::s_greenMask;
+                b += color & Bitmap16Bit::s_blueMask;
+
+                color = s[2];
+                r += color & Bitmap16Bit::s_redMask;
+                g += color & Bitmap16Bit::s_greenMask;
+                b += color & Bitmap16Bit::s_blueMask;
+
+                color = s[3];
+                r += color & Bitmap16Bit::s_redMask;
+                g += color & Bitmap16Bit::s_greenMask;
+                b += color & Bitmap16Bit::s_blueMask;
+
+                color = s[4];
+                r += color & Bitmap16Bit::s_redMask;
+                g += color & Bitmap16Bit::s_greenMask;
+                b += color & Bitmap16Bit::s_blueMask;
+
+                color = s[-4 * spp];
+                r += color & Bitmap16Bit::s_redMask;
+                g += color & Bitmap16Bit::s_greenMask;
+                b += color & Bitmap16Bit::s_blueMask;
+
+                color = s[-3 * spp];
+                r += color & Bitmap16Bit::s_redMask;
+                g += color & Bitmap16Bit::s_greenMask;
+                b += color & Bitmap16Bit::s_blueMask;
+
+                color = s[-2 * spp];
+                r += color & Bitmap16Bit::s_redMask;
+                g += color & Bitmap16Bit::s_greenMask;
+                b += color & Bitmap16Bit::s_blueMask;
+
+                color = s[-1 * spp];
+                r += color & Bitmap16Bit::s_redMask;
+                g += color & Bitmap16Bit::s_greenMask;
+                b += color & Bitmap16Bit::s_blueMask;
+
+                color = s[1 * spp];
+                r += color & Bitmap16Bit::s_redMask;
+                g += color & Bitmap16Bit::s_greenMask;
+                b += color & Bitmap16Bit::s_blueMask;
+
+                color = s[2 * spp];
+                r += color & Bitmap16Bit::s_redMask;
+                g += color & Bitmap16Bit::s_greenMask;
+                b += color & Bitmap16Bit::s_blueMask;
+
+                color = s[3 * spp];
+                r += color & Bitmap16Bit::s_redMask;
+                g += color & Bitmap16Bit::s_greenMask;
+                b += color & Bitmap16Bit::s_blueMask;
+
+                color = s[4 * spp];
+                r += color & Bitmap16Bit::s_redMask;
+                g += color & Bitmap16Bit::s_greenMask;
+                b += color & Bitmap16Bit::s_blueMask;
+
+                r = (r / (blurRadius * 4)) & Bitmap16Bit::s_redMask;
+                g = (g / (blurRadius * 4)) & Bitmap16Bit::s_greenMask;
+                b = (b / (blurRadius * 4)) & Bitmap16Bit::s_blueMask;
+            } else {
+                int count = 0;
+                if (sx + x - 4 >= 0) {
+                    color = s[-4];
+                    r += color & Bitmap16Bit::s_redMask;
+                    g += color & Bitmap16Bit::s_greenMask;
+                    b += color & Bitmap16Bit::s_blueMask;
+                    ++count;
+                }
+                if (sx + x - 3 >= 0) {
+                    color = s[-3];
+                    r += color & Bitmap16Bit::s_redMask;
+                    g += color & Bitmap16Bit::s_greenMask;
+                    b += color & Bitmap16Bit::s_blueMask;
+                    ++count;
+                }
+                if (sx + x - 2 >= 0) {
+                    color = s[-2];
+                    r += color & Bitmap16Bit::s_redMask;
+                    g += color & Bitmap16Bit::s_greenMask;
+                    b += color & Bitmap16Bit::s_blueMask;
+                    ++count;
+                }
+                if (sx + x - 1 >= 0) {
+                    color = s[-1];
+                    r += color & Bitmap16Bit::s_redMask;
+                    g += color & Bitmap16Bit::s_greenMask;
+                    b += color & Bitmap16Bit::s_blueMask;
+                    ++count;
+                }
+                if (sx + x + 1 < sw) {
+                    color = s[1];
+                    r += color & Bitmap16Bit::s_redMask;
+                    g += color & Bitmap16Bit::s_greenMask;
+                    b += color & Bitmap16Bit::s_blueMask;
+                    ++count;
+                }
+                if (sx + x + 2 < sw) {
+                    color = s[2];
+                    r += color & Bitmap16Bit::s_redMask;
+                    g += color & Bitmap16Bit::s_greenMask;
+                    b += color & Bitmap16Bit::s_blueMask;
+                    ++count;
+                }
+                if (sx + x + 3 < sw) {
+                    color = s[3];
+                    r += color & Bitmap16Bit::s_redMask;
+                    g += color & Bitmap16Bit::s_greenMask;
+                    b += color & Bitmap16Bit::s_blueMask;
+                    ++count;
+                }
+                if (sx + x + 4 < sw) {
+                    color = s[4];
+                    r += color & Bitmap16Bit::s_redMask;
+                    g += color & Bitmap16Bit::s_greenMask;
+                    b += color & Bitmap16Bit::s_blueMask;
+                    ++count;
+                }
+                if (sy + y - 4 >= 0) {
+                    color = s[-4 * spp];
+                    r += color & Bitmap16Bit::s_redMask;
+                    g += color & Bitmap16Bit::s_greenMask;
+                    b += color & Bitmap16Bit::s_blueMask;
+                    ++count;
+                }
+                if (sy + y - 3 >= 0) {
+                    color = s[-3 * spp];
+                    r += color & Bitmap16Bit::s_redMask;
+                    g += color & Bitmap16Bit::s_greenMask;
+                    b += color & Bitmap16Bit::s_blueMask;
+                    ++count;
+                }
+                if (sy + y - 2 >= 0) {
+                    color = s[-2 * spp];
+                    r += color & Bitmap16Bit::s_redMask;
+                    g += color & Bitmap16Bit::s_greenMask;
+                    b += color & Bitmap16Bit::s_blueMask;
+                    ++count;
+                }
+                if (sy + y - 1 >= 0) {
+                    color = s[-1 * spp];
+                    r += color & Bitmap16Bit::s_redMask;
+                    g += color & Bitmap16Bit::s_greenMask;
+                    b += color & Bitmap16Bit::s_blueMask;
+                    ++count;
+                }
+                if (sy + y + 1 < sh) {
+                    color = s[1 * spp];
+                    r += color & Bitmap16Bit::s_redMask;
+                    g += color & Bitmap16Bit::s_greenMask;
+                    b += color & Bitmap16Bit::s_blueMask;
+                    ++count;
+                }
+                if (sy + y + 2 < sh) {
+                    color = s[2 * spp];
+                    r += color & Bitmap16Bit::s_redMask;
+                    g += color & Bitmap16Bit::s_greenMask;
+                    b += color & Bitmap16Bit::s_blueMask;
+                    ++count;
+                }
+                if (sy + y + 3 < sh) {
+                    color = s[3 * spp];
+                    r += color & Bitmap16Bit::s_redMask;
+                    g += color & Bitmap16Bit::s_greenMask;
+                    b += color & Bitmap16Bit::s_blueMask;
+                    ++count;
+                }
+                if (sy + y + 4 < sh) {
+                    color = s[4 * spp];
+                    r += color & Bitmap16Bit::s_redMask;
+                    g += color & Bitmap16Bit::s_greenMask;
+                    b += color & Bitmap16Bit::s_blueMask;
+                    ++count;
+                }
+                r = (r / count) & Bitmap16Bit::s_redMask;
+                g = (g / count) & Bitmap16Bit::s_greenMask;
+                b = (b / count) & Bitmap16Bit::s_blueMask;
+            }
+            *d++ = static_cast<unsigned short>(r | g | b);
+            ++s;
+        }
+        Bitmap16ConstMapPointer nextSource;
+        nextSource.m_pixels = srcRow;
+        nextSource.m_bytes += sp;
+        srcRow = nextSource.m_pixels;
+        Bitmap16MapPointer nextTarget;
+        nextTarget.m_pixels = dstRow;
+        nextTarget.m_bytes += m_pitch;
+        dstRow = nextTarget.m_pixels;
     }
 }
 
@@ -587,23 +912,9 @@ void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue,
 
 // E:\gamedcs\bitmap16.cpp:262
 
-// E:\gamedcs\bitmap16.cpp:294
-DC_ONLY(0x51078, 0xDA)
-void Bitmap16Bit::import(int w, int h, const unsigned short* data, int size)
-{
-    // @stub
-}
-
 // E:\gamedcs\bitmap16.cpp:335
 
 // E:\gamedcs\bitmap16.cpp:358
-
-// E:\gamedcs\bitmap16.cpp:472
-DC_ONLY(0x51228, 0x150)
-int Bitmap16Bit::importPCXFile(const char* filename)
-{
-    // @stub
-}
 
 // E:\gamedcs\bitmap16.cpp:541
 // RETAIL_LOCATED(0x0044e2b0, 0x139): anchor-bracket, not reconstructed.
@@ -650,19 +961,7 @@ void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue, float saturati
     // @stub
 }
 
-// E:\gamedcs\bitmap16.cpp:934
-DC_ONLY(0x51e40, 0x148)
-void Bitmap16Bit::gray(int x, int y, int w, int h)
-{
-    // @stub
-}
 
-// E:\gamedcs\bitmap16.cpp:979
-DC_ONLY(0x51f88, 0x5E4)
-void Bitmap16Bit::GrabAndBlur(const Bitmap16Bit* src, int sx, int sy)
-{
-    // @stub
-}
 
 // E:\gamedcs\bitmap16.cpp:107
 DC_ONLY(0x52580, 0x34)
