@@ -20,8 +20,10 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 | Module        | Units |  Function exact MAX | Functions exact CUR | Fuzzy MAX | Fuzzy CUR |
 | :------------ | ----: | ------------------: | ------------------: | --------: | --------: |
-| `game`        |   138 | 4166 / 4695 (88.7%) | 4098 / 4695 (87.3%) |    96.87% |    96.44% |
+| `game`        |   131 | 3858 / 4310 (89.5%) | 3800 / 4310 (88.2%) |    97.04% |    96.69% |
+| `rmg`         |     3 |   303 / 368 (82.3%) |   293 / 368 (79.6%) |    95.03% |    93.54% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
+| `victor`      |     4 |      5 / 17 (29.4%) |      5 / 17 (29.4%) |    85.40% |    85.40% |
 | `(unmatched)` |     — |        0 / 2 (0.0%) |        0 / 2 (0.0%) |      0.0% |      0.0% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
@@ -34,6 +36,10 @@ _Excluded from the % above — generated/library code, not independent reconstru
 | `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
 
 <!-- match-score:end -->
+
+Module membership is declared in `config/units.toml`: `rmg` groups the three
+random-map generator units, and `victor` groups the four reconstructed image-library
+units. Remaining project units are reported under `game`.
 
 The score ledger always keeps `CUR <= MAX <= HIST`. CUR is the latest full
 build; MAX is the best score observed for the function's current source hash;
@@ -184,3 +190,7 @@ Files carrying separate copyright or license notices — notably everything unde
 `vendor/` — retain those terms. No binary game assets are stored in this
 repository. Thanks to [NH3API](https://github.com/void2012/NH3API)
 for labelling the executable.
+
+The [Victor resource oracle](docs/victor-oracle.md) compares recovered image
+imports against retail across the installed bitmap corpus, including decoded
+pixels, palettes, metadata, return codes, flips and cleanup.

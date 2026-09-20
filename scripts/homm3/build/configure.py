@@ -44,6 +44,9 @@ def load_manifest() -> tuple[dict, dict[str, list[str]], list[dict]]:
         if missing:
             raise SystemExit("[configure] unit is missing %s: %r" %
                              (", ".join(missing), unit))
+        if "module" in unit and (not isinstance(unit["module"], str)
+                                 or not unit["module"].strip()):
+            raise SystemExit("[configure] module must be a nonempty string")
         name = unit["unit"]
         if name in seen:
             raise SystemExit("[configure] duplicate unit: " + name)
