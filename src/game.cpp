@@ -8547,8 +8547,17 @@ void game::insertObject(int x, int y, int z, int objType, int objectIndex, int m
 
 // Residual (97.5098%): 395 generated ordinary-source variants lift the town
 // arm by copying built to __int64 and materializing its decision in a byte.
-// DC names only thisTown, so the two extra locals remain PC codegen hypotheses;
-// all tested types and scopes plateau at the same register/stack schedule.
+// 97.51 -> 99.98 (2026-09-20). DC names twelve locals here, and two of them
+// settled this: `CSprite* tempSprite` - the getSprite result is named, not
+// pushed inline - and the absence of any `buildings`/`hasFort` pair. The
+// capitol and fort tests are town.h's own canonical isCapitol()/isCastle()
+// helpers, which this body had hand-expanded into raw g_bitNumber tests
+// against a cached __int64; retail's retained town::hasBuilding call is what
+// exposed it. Restoring both takes the skeleton to 44/44 exact with calls
+// agreeing and the frame to retail's 0x84. What remains is one SIB encoding
+// tie-break inside the inlined NewfullMap::cell address - retail encodes
+// `mov byte ptr [ecx + eax]`, we emit `[eax + ecx]` for the same address and
+// the same registers - plus trailing-padding decode noise.
 VA(0x004c9990, 0x43A)  // anchor-global, dc 0xb54f8
 void game::convertObject(NewmapCell* tempCell)
 {
@@ -8582,14 +8591,10 @@ void game::convertObject(NewmapCell* tempCell)
         case RANDOM_TOWN:
         case TOWN: {
             town* thisTown = g_game->getTown(tempCell->getMapExtraInfo());
-            __int64 buildings = thisTown->m_built;
-            if (buildings & g_bitNumber[HALL_CAPITOL_ID]) {
+            if (thisTown->isCapitol()) {
                 strcpy(defName, g_townCapitolObjectDefs[tempCell->m_objectIndex]);
             } else {
-                unsigned char hasFort =
-                    (buildings & g_bitNumber[CASTLE_FORT_ID])
-                    || (buildings & g_bitNumber[CASTLE_CITADEL_ID])
-                    || thisTown->hasBuilding(CASTLE_CASTLE_ID, 0);
+                unsigned char hasFort = thisTown->isCastle();
                 if (hasFort)
                     strcpy(defName, g_townFortObjectDefs[tempCell->m_objectIndex]);
                 else
@@ -8604,8 +8609,9 @@ void game::convertObject(NewmapCell* tempCell)
     newType->m_imageName = defName;
     newType->m_objectType = newObject;
     newType->m_extra = tempCell->m_objectIndex;
-    m_worldMap.m_sprites.push_back(
-        ResourceManager::getSprite(newType->m_imageName.c_str()));
+    CSprite* tempSprite =
+        ResourceManager::getSprite(newType->m_imageName.c_str());
+    m_worldMap.m_sprites.push_back(tempSprite);
 
     for (int iy = 0; iy < newType->m_height; iy++) {
         if (object->m_y - iy < 0 || object->m_y - iy >= g_mapHeight)
