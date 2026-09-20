@@ -1015,15 +1015,18 @@ static void sliderFileMenu(int state, heroWindow* parentWindow);
 // No name is attested anywhere readable - house unnamed-cell spelling.
 DATA(0x0069fbe8) static TSingleSelectionWindow* g_unnamed69fbe8;
 
-// Two more file-static lobby cells (all retail references in-span).
+// The notice flag and campaign mode are file-static lobby cells.
 // DC names the one-shot empty-save-list notice flag `notifyNoSaved`.
 // WindowHandler tests and clears it before showing general-text row 686.
 // 0x69fda4: the eight-seat join-order table SetHumanSlot consults in
 // net-new-game mode before the plain unassigned fill.
 DATA(0x0069fda0) static unsigned char g_notifyNoSaved;
+// DC publishes g_wasHuman as an int array (segment 3, offset 0x1704c).
+// game::load also restores this table from SavedGameHeader::m_humanPlayer;
+// its 0x4bcda0+0x1bf copy rules out the former file-static declaration.
+DATA(0x0069fda4) int g_wasHuman[8];
 // DC's `campaignMode` byte survives as a TU-local Complete cell.  The
 // selected campaign row forces the unlimited (10) duration after transfer.
-DATA(0x0069fda4) static int g_wasHuman[8];
 DATA(0x0069fd90) static bool g_selectionCampaignMode;
 // DC-attested static name (globals.csv lastIMHoverID, this TU); the
 // WindowHandler mouse arm highlights the hero-face row under the cursor

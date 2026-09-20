@@ -37,10 +37,10 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
                           unsigned char exploreMode);
 void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
                     long& bestRawValue, unsigned char exploreMode);
-void moveHero(hero* currentHero, unsigned char isLastHero,
-               unsigned char& exploreMode);
-void moveHero(hero* currentHero, long* dangerZones,
-              unsigned char isLastHero, unsigned char* exploreMode);
+static void moveHero(hero* currentHero, unsigned char isLastHero,
+                     unsigned char& exploreMode);
+static void moveHero(hero* currentHero, long* dangerZones,
+                     unsigned char isLastHero, unsigned char& exploreMode);
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero);
 long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
                                  EGameResource* bestResource);
@@ -166,16 +166,17 @@ static void incrementHourGlass()
 {
     int numHeroes = g_currentPlayer->m_numHeroes;
     ++g_curHourGlassPhase;
-    if (numHeroes == philAI::ONE_ACTIVE_HERO)
-        g_curHourGlassPhase += philAI::TWO_ACTIVE_HEROES;
-    else if (numHeroes == philAI::TWO_ACTIVE_HEROES) {
-        if (g_curHourGlassPhase != philAI::ONE_ACTIVE_HERO)
-            ++g_curHourGlassPhase;
-    } else if (numHeroes == philAI::THREE_ACTIVE_HEROES) {
-        if (g_curHourGlassPhase == philAI::THIRD_HOURGLASS_PHASE
-            || g_curHourGlassPhase == philAI::SIXTH_HOURGLASS_PHASE)
-            ++g_curHourGlassPhase;
+    if (numHeroes == philAI::ONE_ACTIVE_HERO) {
+        ++g_curHourGlassPhase;
+        ++g_curHourGlassPhase;
     }
+    if (numHeroes == philAI::TWO_ACTIVE_HEROES
+        && g_curHourGlassPhase != philAI::ONE_ACTIVE_HERO)
+        ++g_curHourGlassPhase;
+    if (numHeroes == philAI::THREE_ACTIVE_HEROES
+        && (g_curHourGlassPhase == philAI::THIRD_HOURGLASS_PHASE
+            || g_curHourGlassPhase == philAI::SIXTH_HOURGLASS_PHASE))
+        ++g_curHourGlassPhase;
     if (g_curHourGlassPhase > philAI::LAST_HOURGLASS_PHASE)
         g_curHourGlassPhase = philAI::LAST_HOURGLASS_PHASE;
 }
@@ -621,63 +622,239 @@ static long getArtifactPurchaseValue(
 long valueOfEnemyTown(const hero* currentHero, const town* enemyTown,
                          short moveCost, NewmapCell* cell);
 
+// Original: move_hero; philai.cpp:934, dc 0x10e9a8.
+// DC records both helpers as file-static with explore_mode by reference.
+static void moveHero(hero* currentHero, unsigned char isLastHero,
+                     unsigned char& exploreMode)
+{
+    HeroDestination destination;
+    type_point oldTarget = currentHero->getTarget();
+    long rawValue;
+    type_point originalDestination;
+    int rv;
+
+    long maximumDistance = 32000;
+    if (currentHero->m_pathTargetX < 0)
+        currentHero->m_targetIsCritical = 0;
+    destination.m_point.m_x = -1;
+    destination.m_isNearby = 0;
+    rawValue = 0;
+
+    long maxDistance = 1000;
+    if (currentHero->m_pathTargetX >= 0) {
+        maxDistance = max(
+            currentHero->m_movePoints
+                + static_cast<unsigned short>(currentHero->m_targetDistance)
+                + 200,
+            1000);
+    }
+    if (isLastHero)
+        maxDistance = 32000;
+
+    if (currentHero->m_patrolX != hero::kPatrolNone) {
+        maximumDistance = 200
+            * (abs(currentHero->m_x - currentHero->m_patrolX)
+               + abs(currentHero->m_y - currentHero->m_patrolY)
+               + currentHero->m_patrolRadius);
+        maxDistance = min(maxDistance, maximumDistance);
+    }
+
+    for (int attempt = 0; attempt < 5; ++attempt) {
+        rv = aiChooseDestination(currentHero, maxDistance, destination,
+                                   rawValue, 1, exploreMode);
+        if (!((destination.m_point.m_x < 0
+               || (rv < 0 && !destination.m_isCritical))
+              && g_searchArray->limitWasReached()
+              && maxDistance < maximumDistance))
+            break;
+        maxDistance = min(maxDistance * 2, maximumDistance);
+    }
+
+    if (currentHero->m_maxMovePoints == currentHero->m_movePoints)
+        incrementHourGlass();
+
+    if (destination.m_point.m_x < 0) {
+        currentHero->m_pathTargetX = -1;
+        currentHero->m_pathTargetY = -1;
+        currentHero->m_isSleeping = 1;
+        return;
+    }
+
+    originalDestination = destination.m_point;
+    unsigned char destinationWasUnvisited =
+        !(getMapExtra(originalDestination.m_x, originalDestination.m_y,
+                      originalDestination.m_z)
+          & g_unnamed69ccc4);
+    int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
+                                    currentHero->m_z);
+    if (townId != -1) {
+        g_game->getTown(townId);
+        if (rv < 75
+            && g_game->m_day == philAI::AI_HERO_MOVE_SLEEP_DAY) {
+            currentHero->m_isSleeping = 1;
+            return;
+        }
+    }
+
+    g_unnamed69ccd4 = 1;
+    aiAttemptMove(currentHero, destination, rawValue, exploreMode);
+
+    if (destinationWasUnvisited && exploreMode
+        && (getMapExtra(originalDestination.m_x, originalDestination.m_y,
+                        originalDestination.m_z)
+            & g_unnamed69ccc4)) {
+        g_aiPlayers[g_netLocalGamePos].resetMagusHutValue();
+        exploreMode = 0;
+        for (int i = 0; i < g_currentPlayer->m_numHeroes; ++i)
+            g_game->getHero(g_currentPlayer->m_heroes[i])->m_isSleeping = 0;
+    }
+}
+
+// Original: MoveHero; philai.cpp:1056, dc 0x10ec58.
+// DC records this helper as file-static with explore_mode by reference.
+// Keep the canonical definitions in DC source order; the VA declarations
+// below preserve the independently proven retail order.
+static void moveHero(hero* currentHero, long* dangerZones,
+                     unsigned char isLastHero, unsigned char& exploreMode)
+{
+    unsigned char mouseWasVisible = g_mouseManager->isVis();
+    playerData* player = &g_game->m_players[currentHero->m_owner];
+
+    checkForTown(currentHero);
+    if (currentHero->m_patrolX != hero::kPatrolNone
+        && currentHero->m_patrolRadius == 0) {
+        currentHero->m_movePoints = 0;
+        return;
+    }
+    if (g_gameOver)
+        return;
+
+    g_unnamed69ccd4 = 0;
+    g_advManager->m_advWindow->animateBottomView(0);
+    if (currentHero->m_movePoints > 0) {
+        if (!g_unnamed698790 && !g_videoPaused
+            && mapExtraPosAndAdjacentsSet(
+                currentHero->m_x, currentHero->m_y, currentHero->m_z,
+                g_mapVisibilityBit))
+            g_completeDrawEnabled = 1;
+        else
+            g_completeDrawEnabled = 0;
+
+        if (g_game->getCurrHero() == currentHero) {
+            isLastHero = 0;
+        } else {
+            g_advManager->demobilizeCurrHero(0, 1);
+            g_advManager->setHeroContext(currentHero->m_id, 1, 0, 1);
+            memset(dangerZones, 0,
+                   g_game->getNumMapLevels() * g_mapWidth * g_mapHeight
+                       * sizeof(long));
+            if (g_game->m_setup.m_difficulty > 0
+                || g_game->isHumanAlly(
+                    g_game->getTeam(g_netLocalGamePos)))
+                aiMarkDangerZones(currentHero, dangerZones);
+        }
+
+        markShipyards(player);
+        g_searchArray->setDangerZones(dangerZones);
+        moveHero(currentHero, isLastHero, exploreMode);
+        g_searchArray->setDangerZones(0);
+        clearShipyards(player);
+    }
+
+    if (currentHero->m_owner >= 0
+        && (currentHero->m_movePoints <= 0 || currentHero->m_isSleeping)) {
+        int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
+                                        currentHero->m_z);
+        if (townId >= 0) {
+            town* currentTown = g_game->getTown(townId);
+            g_advManager->demobilizeCurrHero(0, 1);
+            if (currentTown->m_owner == currentHero->m_owner) {
+                if (currentTown->m_garrisonHeroId < 0) {
+                    player->addGarrisonHero(currentTown);
+                } else {
+                    hero* garrisonHero = g_game->getHero(
+                        currentTown->m_garrisonHeroId);
+                    if ((garrisonHero->m_movePoints > 0
+                         && !garrisonHero->m_isSleeping)
+                        || (static_cast<const town*>(currentTown)
+                                    ->getArmy().getCreatureTotal() > 0
+                            && static_cast<const town*>(currentTown)
+                                       ->getArmy().getAIValue()
+                                   < currentHero->m_army.getAIValue()))
+                        currentTown->swapHeroes();
+                }
+            }
+        }
+    }
+
+    restoreMouse(mouseWasVisible);
+}
+
 // Original: DetermineHeroToMove; philai.cpp:1156, dc 0x10eeb0.
 // The file-static selector precedes move_all_heroes in the DC TU. Keep its one canonical
 // body visible there: Complete's second DoAI phase expands it, while the first
 // retains the call. Its retail enrollment remains at the link-order position.
+// DC records current_hero and skill_sum at procedure scope; town ID row 1210
+// precedes GetTown and agrees with retail's char-to-short-to-int conversion.
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 {
+    hero* currentHero;
+    short skillSum;
     hero* selectedHero = 0;
     short lowestSum = 0;
     playerData* player = &g_game->m_players[playerId];
     *isLastHero = 1;
 
     for (short heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
-        hero* currentHero =
-            &g_game->m_heroes[static_cast<short>(player->m_heroes[heroIndex])];
+        short heroId = player->m_heroes[heroIndex];
+        currentHero = &g_game->m_heroes[heroId];
         if (currentHero->m_movePoints > 0 && !currentHero->m_isSleeping) {
             if (selectedHero)
                 *isLastHero = 0;
-
-            short skillSum = 0;
-            for (short skill = 0; skill < 4; ++skill)
-                skillSum += currentHero->getPrimarySkill(skill);
-
-            if (!selectedHero
-                || (!(currentHero->m_patrolX != hero::kPatrolNone
-                         && selectedHero->m_patrolX == hero::kPatrolNone)
-                    && ((currentHero->m_patrolX == hero::kPatrolNone
-                             && selectedHero->m_patrolX
-                                    != hero::kPatrolNone)
-                        || skillSum < lowestSum))) {
-                selectedHero = currentHero;
-                lowestSum = skillSum;
+            skillSum = 0;
+            for (short skill = 0; skill < 4; ++skill) {
+                short skillValue = currentHero->getPrimarySkill(skill);
+                skillSum += skillValue;
             }
+            if (selectedHero) {
+                if (currentHero->m_patrolX != hero::kPatrolNone
+                    && selectedHero->m_patrolX == hero::kPatrolNone)
+                    continue;
+                if (!(currentHero->m_patrolX == hero::kPatrolNone
+                      && selectedHero->m_patrolX != hero::kPatrolNone)
+                    && skillSum >= lowestSum)
+                    continue;
+            }
+            // DC assigns lowest_sum at1190 before selected_hero at1193.
+            // Complete's retained selector and its DoAI expansion both
+            // store selectedHero first; reversing these two stores is the
+            // sole remaining difference in the otherwise exact candidate.
+            selectedHero = currentHero;
+            lowestSum = skillSum;
         }
     }
 
     if (selectedHero)
         return selectedHero;
-
     *isLastHero = 0;
     g_advManager->demobilizeCurrHero(0, 1);
     player->m_currHeroId = -1;
     if (player->m_numHeroes < playerData::HERO_SLOT_COUNT) {
-        for (short townIndex = 0; townIndex < player->m_numTowns;
-             ++townIndex) {
-            town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
-            short garrisonHeroId =
-                static_cast<short>(currentTown->m_garrisonHeroId);
-            if (garrisonHeroId >= 0 && currentTown->m_visitingHeroId < 0) {
-                hero* currentHero = g_game->getHero(garrisonHeroId);
-                if (currentHero->m_army.getCreatureTotal()
-                    && currentHero->m_movePoints
-                    && !currentHero->m_isSleeping) {
-                    currentTown->removeGarrisonHero();
-                    selectedHero = currentHero;
-                    break;
-                }
-            }
+        for (short townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
+            short townId = player->m_townIds[townIndex];
+            town* currentTown = g_game->getTown(townId);
+            short garrisonHeroId = currentTown->m_garrisonHeroId;
+            if (garrisonHeroId < 0 || currentTown->m_visitingHeroId >= 0)
+                continue;
+            currentHero = g_game->getHero(garrisonHeroId);
+            int creatureCount = currentHero->m_army.getCreatureTotal();
+            if (!creatureCount)
+                continue;
+            if (!currentHero->m_movePoints || currentHero->m_isSleeping)
+                continue;
+            currentTown->removeGarrisonHero();
+            selectedHero = currentHero;
+            break;
         }
     }
     return selectedHero;
@@ -693,9 +870,8 @@ static void moveAllHeroes(long playerId, long* dangerZones)
     unsigned char exploreMode = 1;
     if (!g_game->m_setup.m_difficulty || !g_currentPlayer->m_numTowns)
         exploreMode = 0;
-    hero* currentHero;
-    while ((currentHero = determineHeroToMove(playerId, &isLastHero)) != 0) {
-        moveHero(currentHero, dangerZones, isLastHero, &exploreMode);
+    while (hero* currentHero = determineHeroToMove(playerId, &isLastHero)) {
+        moveHero(currentHero, dangerZones, isLastHero, exploreMode);
         if (g_gameOver)
             break;
     }
@@ -2101,199 +2277,43 @@ void aiFriendlyHeroMeeting(hero* currentHero, hero* secondHero)
 }
 
 // E:\gamedcs\philai.cpp:1261, dc 0x10f16c.
-// The two movement phases share moveAllHeroes. Retail's second expansion also
-// expands determineHeroToMove while the first keeps its call. Preserve both
-// source boundaries when diagnosing the nested accessor call decisions.
+// Keep the two movement phases, nested player guards, and canonical helper
+// chain. DC proves both moveHero helpers are file-static, take exploreMode
+// by reference, and precede the selector. Together with the selector's
+// separate priority rejections and staged values, this restores retail's
+// first selector call and second selector expansion, including retained
+// getTown/getHero calls, without inline controls.
 VA(0x00525e80, 0x362)  // anchor-callee, dc 0x10f16c
 void philAI::doAI(int whichPlayer)
 {
     pollSound();
     g_advManager->updBottomView(0, 1, 1);
-
-    if (!g_gameOver
-        && (!g_unnamed6994f0 || whichPlayer == g_unnamed6994f0)) {
-        long* dangerZones = new long[
-            g_mapWidth * g_mapHeight * g_game->getNumMapLevels()];
-        type_AI_player* aiPlayer = &g_aiPlayers[whichPlayer];
-        aiPlayer->startTurn();
-        getTurnAIVars(whichPlayer);
-        showStatus();
-
-        incrementHourGlass();
-
-        moveAllHeroes(whichPlayer, dangerZones);
-        aiPlayer->endTurn();
-        moveAllHeroes(whichPlayer, dangerZones);
-        delete [] dangerZones;
+    if (!g_gameOver) {
+        if (!g_unnamed6994f0 || whichPlayer == g_unnamed6994f0) {
+            int mapSize = (g_mapWidth * g_mapHeight) * g_game->getNumMapLevels();
+            long* dangerZones = new long[mapSize];
+            g_aiPlayers[whichPlayer].startTurn();
+            getTurnAIVars(whichPlayer);
+            showStatus();
+            incrementHourGlass();
+            moveAllHeroes(whichPlayer, dangerZones);
+            g_aiPlayers[whichPlayer].endTurn();
+            moveAllHeroes(whichPlayer, dangerZones);
+            delete [] dangerZones;
+        }
     }
-
     g_game->checkHeroConsistency();
     g_mouseManager->showPointer(1);
 }
 
 // E:\gamedcs\philai.cpp:1056
 VA(0x005261f0, 0x5ba)  // anchor-callee, dc 0x10ec58
-void moveHero(hero* currentHero, long* dangerZones, unsigned char isLastHero, unsigned char* exploreMode)
-{
-    unsigned char mouseWasVisible = g_mouseManager->isVis();
-    playerData* player = &g_game->m_players[currentHero->m_owner];
-
-    checkForTown(currentHero);
-    if (currentHero->m_patrolX != hero::kPatrolNone
-        && currentHero->m_patrolRadius == 0) {
-        currentHero->m_movePoints = 0;
-        return;
-    }
-    if (g_gameOver)
-        return;
-
-    g_unnamed69ccd4 = 0;
-    g_advManager->m_advWindow->animateBottomView(0);
-    if (currentHero->m_movePoints > 0) {
-        if (!g_unnamed698790 && !g_videoPaused
-            && mapExtraPosAndAdjacentsSet(
-                currentHero->m_x, currentHero->m_y, currentHero->m_z,
-                g_mapVisibilityBit))
-            g_completeDrawEnabled = 1;
-        else
-            g_completeDrawEnabled = 0;
-
-        if (g_game->getCurrHero() == currentHero) {
-            isLastHero = 0;
-        } else {
-            g_advManager->demobilizeCurrHero(0, 1);
-            g_advManager->setHeroContext(currentHero->m_id, 1, 0, 1);
-            memset(dangerZones, 0,
-                   g_game->getNumMapLevels() * g_mapWidth * g_mapHeight
-                       * sizeof(long));
-            if (g_game->m_setup.m_difficulty > 0
-                || g_game->isHumanAlly(
-                    g_game->getTeam(g_netLocalGamePos)))
-                aiMarkDangerZones(currentHero, dangerZones);
-        }
-
-        markShipyards(player);
-        g_searchArray->setDangerZones(dangerZones);
-        moveHero(currentHero, isLastHero, *exploreMode);
-        g_searchArray->setDangerZones(0);
-        clearShipyards(player);
-    }
-
-    if (currentHero->m_owner >= 0
-        && (currentHero->m_movePoints <= 0 || currentHero->m_isSleeping)) {
-        int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
-                                        currentHero->m_z);
-        if (townId >= 0) {
-            town* currentTown = g_game->getTown(townId);
-            g_advManager->demobilizeCurrHero(0, 1);
-            if (currentTown->m_owner == currentHero->m_owner) {
-                if (currentTown->m_garrisonHeroId < 0) {
-                    player->addGarrisonHero(currentTown);
-                } else {
-                    hero* garrisonHero = g_game->getHero(
-                        currentTown->m_garrisonHeroId);
-                    if ((garrisonHero->m_movePoints > 0
-                         && !garrisonHero->m_isSleeping)
-                        || (static_cast<const town*>(currentTown)
-                                    ->getArmy().getCreatureTotal() > 0
-                            && static_cast<const town*>(currentTown)
-                                       ->getArmy().getAIValue()
-                                   < currentHero->m_army.getAIValue()))
-                        currentTown->swapHeroes();
-                }
-            }
-        }
-    }
-
-    restoreMouse(mouseWasVisible);
-}
+static void moveHero(hero* currentHero, long* dangerZones,
+                     unsigned char isLastHero, unsigned char& exploreMode);
 
 VA(0x005267b0, 0x2da)  // dc 0x10e9a8
-void moveHero(hero* currentHero, unsigned char isLastHero,
-               unsigned char& exploreMode)
-{
-    HeroDestination destination;
-    type_point oldTarget = currentHero->getTarget();
-    long rawValue;
-    type_point originalDestination;
-    int rv;
-
-    long maximumDistance = 32000;
-    if (currentHero->m_pathTargetX < 0)
-        currentHero->m_targetIsCritical = 0;
-    destination.m_point.m_x = -1;
-    destination.m_isNearby = 0;
-    rawValue = 0;
-
-    long maxDistance = 1000;
-    if (currentHero->m_pathTargetX >= 0) {
-        maxDistance = max(
-            currentHero->m_movePoints
-                + static_cast<unsigned short>(currentHero->m_targetDistance)
-                + 200,
-            1000);
-    }
-    if (isLastHero)
-        maxDistance = 32000;
-
-    if (currentHero->m_patrolX != hero::kPatrolNone) {
-        maximumDistance = 200
-            * (abs(currentHero->m_x - currentHero->m_patrolX)
-               + abs(currentHero->m_y - currentHero->m_patrolY)
-               + currentHero->m_patrolRadius);
-        maxDistance = min(maxDistance, maximumDistance);
-    }
-
-    for (int attempt = 0; attempt < 5; ++attempt) {
-        rv = aiChooseDestination(currentHero, maxDistance, destination,
-                                   rawValue, 1, exploreMode);
-        if (!((destination.m_point.m_x < 0
-               || (rv < 0 && !destination.m_isCritical))
-              && g_searchArray->limitWasReached()
-              && maxDistance < maximumDistance))
-            break;
-        maxDistance = min(maxDistance * 2, maximumDistance);
-    }
-
-    if (currentHero->m_maxMovePoints == currentHero->m_movePoints)
-        incrementHourGlass();
-
-    if (destination.m_point.m_x < 0) {
-        currentHero->m_pathTargetX = -1;
-        currentHero->m_pathTargetY = -1;
-        currentHero->m_isSleeping = 1;
-        return;
-    }
-
-    originalDestination = destination.m_point;
-    unsigned char destinationWasUnvisited =
-        !(getMapExtra(originalDestination.m_x, originalDestination.m_y,
-                      originalDestination.m_z)
-          & g_unnamed69ccc4);
-    int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
-                                    currentHero->m_z);
-    if (townId != -1) {
-        g_game->getTown(townId);
-        if (rv < 75
-            && g_game->m_day == philAI::AI_HERO_MOVE_SLEEP_DAY) {
-            currentHero->m_isSleeping = 1;
-            return;
-        }
-    }
-
-    g_unnamed69ccd4 = 1;
-    aiAttemptMove(currentHero, destination, rawValue, exploreMode);
-
-    if (destinationWasUnvisited && exploreMode
-        && (getMapExtra(originalDestination.m_x, originalDestination.m_y,
-                        originalDestination.m_z)
-            & g_unnamed69ccc4)) {
-        g_aiPlayers[g_netLocalGamePos].resetMagusHutValue();
-        exploreMode = 0;
-        for (int i = 0; i < g_currentPlayer->m_numHeroes; ++i)
-            g_game->getHero(g_currentPlayer->m_heroes[i])->m_isSleeping = 0;
-    }
-}
+static void moveHero(hero* currentHero, unsigned char isLastHero,
+                     unsigned char& exploreMode);
 
 VA(0x00526a90, 0x1d4)  // dc 0x10eeb0
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero);

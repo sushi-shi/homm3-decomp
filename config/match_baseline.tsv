@@ -2019,9 +2019,9 @@ game	?isLocalHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbad80	tokens
 game	?isMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90	tokens1:78f95abb8e64
 game	?load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	90.8783	90.8783	92.6763	0xc5630	tokens1:452e7ec61cb7
 game	?load@SGameSetupOptions@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xbe260	tokens1:44422249efa4
-game	?load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	83.6714	83.6714	100.0000	0xbc750	tokens1:3a193d3f11c0
-game	?load@game@@AAEHPAVTAbstractFile@@@Z	84.4056	84.4056	92.4127	0xbcda0	tokens1:86ef01ec2591
-game	?load@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85a0	tokens1:4e5fc23c4299
+game	?load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc750	tokens1:16dd299862ff
+game	?load@game@@AAEHPAVTAbstractFile@@@Z	98.1693	98.1693	98.1693	0xbcda0	tokens1:3325bebf5762
+game	?load@generator@@QAE_NPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85a0	tokens1:33dad54534a7
 game	?load@playerData@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba260	tokens1:321b9cd1515b
 game	?loadBoatPool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9a00	tokens1:38293cd45fcd
 game	?loadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	tokens1:8314f9ed1234
@@ -2030,7 +2030,7 @@ game	?loadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210	to
 game	?loadLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xc3d90	tokens1:f1de65a51af1
 game	?loadMap@game@@QAE_NPAVTAbstractFile@@@Z	61.4712	61.4712	78.2855	0xc2450	tokens1:5be9b20c1ca5
 game	?loadMinePool@game@@AAEHPAVTAbstractFile@@H@Z	98.8718	98.8718	100.0000	0xb9340	tokens1:005160e9587e
-game	?loadObjectVector@@YIEPAVTAbstractFile@@AAV?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2870	tokens1:8aadaf6c1831
+game	?loadObjectVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2870	tokens1:0c896143b823
 game	?loadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40	tokens1:16710ddf8b29
 game	?loadSignPool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9070	tokens1:cf53f28ac71f
 game	?loadString@game@@SIHPAVTAbstractFile@@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xbb990	tokens1:655699e23819
@@ -2074,13 +2074,13 @@ game	?save@NewSMapHeader@@QAEHPAVTAbstractFile@@@Z	89.9519	89.9519	89.9519	0xc4f
 game	?save@SGameSetupOptions@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbe140	tokens1:47147d7e9df0
 game	?save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	0.0000	0.0000	100.0000	0xbc5d0	tokens1:127973c2c65a
 game	?save@game@@AAEHPAVTAbstractFile@@@Z	55.7722	55.7722	96.7588	0xbe3f0	tokens1:a7bfe9751603
-game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0	tokens1:4ad1920baa98
+game	?save@generator@@QAE_NPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0	tokens1:31d75ab3bd22
 game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	99.9557	99.9557	99.9557	0xba670	tokens1:3a7dc570a6a2
 game	?saveBoatPool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9c40	tokens1:a29d215680dc
 game	?saveGame@game@@QAEEPBDEEEE@Z	100.0000	100.0000	100.0000	0xbeea0	tokens1:556ba4e4d0cd
 game	?saveGarrisonPool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb98c0	tokens1:d37ddc5152a3
 game	?saveMinePool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9580	tokens1:4b779fe41bfb
-game	?saveObjectVector@@YIEPAVTAbstractFile@@AAV?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2b80	tokens1:22628c30313a
+game	?saveObjectVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2b80	tokens1:e0471117be93
 game	?saveRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbc20	tokens1:20063bfec146
 game	?saveSignPool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9270	tokens1:1f8a00ff6619
 game	?saveString@game@@SIHPAVTAbstractFile@@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xbbb60	tokens1:7d8857a39227
@@ -2378,7 +2378,7 @@ infutil	@inflate_flush@12	100.0000	100.0000	100.0000	0x20a620	-
 initialize	?addToIncludedMask@@YIXPBHPA_J@Z	100.0000	100.0000	100.0000	0xebb10	tokens1:e240af918e6a
 initialize	?createIncludedMask@@YIXPBHPA_J@Z	100.0000	100.0000	100.0000	0xebb70	tokens1:c55d802ed6b6
 initialize	?createRequirementMasks@@YIXPBHPA_JAA_J@Z	100.0000	100.0000	100.0000	0xebc50	tokens1:4fa0b85cb996
-initialize	?initializeGameData@@YIXXZ	94.0741	100.0000	100.0000	0xeb730	tokens1:baacd75a10dc
+initialize	?initializeGameData@@YIXXZ	96.0880	100.0000	100.0000	0xeb730	tokens1:baacd75a10dc
 inputmgr	??0inputManager@@QAE@XZ	100.0000	100.0000	100.0000	0xec460	tokens1:ea74871981e6
 inputmgr	?asciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0	tokens1:0d18e2d3c1d6
 inputmgr	?close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540	tokens1:3b1bc89dd9af
@@ -2884,7 +2884,7 @@ philai	?aiChooseMagicSkill@@YI?AW4TPrimarySkill@@PAVhero@@@Z	100.0000	100.0000	1
 philai	?aiChooseResourceOrExperience@@YIEPBVhero@@W4EGameResource@@HH@Z	100.0000	100.0000	100.0000	0x127fe0	tokens1:29066812688b
 philai	?aiChooseSecondarySkill@@YI?AW4TSecondarySkill@@PBVhero@@W41@1E@Z	100.0000	100.0000	100.0000	0x12bbd0	tokens1:0141472f1291
 philai	?aiEnterGarrison@@YIXPAVhero@@PAVgarrison@@@Z	100.0000	100.0000	100.0000	0x124370	tokens1:aeddc46e82d4
-philai	?aiEnterTown@@YIXPAVhero@@PAVtown@@@Z	96.4630	96.4630	100.0000	0x1253d0	tokens1:7994ca583545
+philai	?aiEnterTown@@YIXPAVhero@@PAVtown@@@Z	96.4370	96.4630	100.0000	0x1253d0	tokens1:7994ca583545
 philai	?aiExamineMap@@YAXXZ	100.0000	100.0000	100.0000	0x12b9c0	tokens1:54d56ee09a1d
 philai	?aiFriendlyHeroMeeting@@YIXPAVhero@@0@Z	100.0000	100.0000	100.0000	0x125dc0	tokens1:83b2cb2d7aeb
 philai	?aiGetSpellValue@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x127640	tokens1:046c4b86d05d
@@ -2906,8 +2906,8 @@ philai	?buyArtifacts@@YIXPAVhero@@PAW4TArtifact@@J@Z	98.1308	98.1308	98.1308	0x1
 philai	?buySiegeEngine@@YIXPAVhero@@PAVtown@@W4type_building_id@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x125ca0	tokens1:66e4c50470a3
 philai	?checkDoMain@@YIXHH@Z	100.0000	100.0000	100.0000	0x1242d0	tokens1:cb08745a0e88
 philai	?considerGarrisoning@@YIXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x125200	tokens1:d8920f8f7f7a
-philai	?determineHeroToMove@@YIPAVhero@@HPAE@Z	100.0000	100.0000	100.0000	0x126a90	tokens1:30035c200cbb
-philai	?doAI@philAI@@QAEXH@Z	90.9228	90.9228	90.9228	0x125e80	tokens1:f1ecd64700cf
+philai	?determineHeroToMove@@YIPAVhero@@HPAE@Z	100.0000	100.0000	100.0000	0x126a90	tokens1:ec992c58b260
+philai	?doAI@philAI@@QAEXH@Z	100.0000	100.0000	100.0000	0x125e80	tokens1:b0d6338d8f30
 philai	?getArtifactPurchasePrice@@YIJW4TArtifact@@JPAW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x124550	tokens1:8533a17ec0fe
 philai	?getArtifactPurchaseValue@@YIJW4TArtifact@@JPAJ@Z	100.0000	100.0000	100.0000	0x129750	tokens1:497b686a69b9
 philai	?getBestSpellValue@type_spellvalue@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1275b0	tokens1:c11c63b8cacf
@@ -2923,7 +2923,7 @@ philai	?getValueOfWell@@YIJPBVhero@@G@Z	100.0000	100.0000	100.0000	0x12a510	toke
 philai	?luckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80	tokens1:ef10e07752b8
 philai	?moraleIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127cf0	tokens1:c2e4b27b2528
 philai	?moveHero@@YIXPAVhero@@EAAE@Z	100.0000	100.0000	100.0000	0x1267b0	tokens1:83347cbe9269
-philai	?moveHero@@YIXPAVhero@@PAJEPAE@Z	74.4018	80.1607	86.6362	0x1261f0	tokens1:3183d3bad18c
+philai	?moveHero@@YIXPAVhero@@PAJEAAE@Z	74.4018	80.1607	86.6362	0x1261f0	tokens1:3183d3bad18c
 philai	?netValueOfArtifact@@YIHPBVhero@@HHHW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x129810	tokens1:f91a2fa2febd
 philai	?onSameTeam@game@@QBE_NHH@Z	100.0000	100.0000	100.0000	0x1296d0	tokens1:664c00af8f44
 philai	?playerKnowsCell@ExtraInfoUnion@@QBE_NF@Z	100.0000	100.0000	100.0000	0x129690	tokens1:64d02b955fd1
@@ -4010,9 +4010,9 @@ singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCN
 singleselectionwindow	?onGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	tokens1:b9f9c72a63cb
 singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18aa40	tokens1:e24d4233f25b
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	tokens1:2d739ed70aef
-singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
+singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	tokens1:5b3700830a2b
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	tokens1:1fcb3b32a46f
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	tokens1:6cb45bcd5302
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	tokens1:f68b58bfb66a

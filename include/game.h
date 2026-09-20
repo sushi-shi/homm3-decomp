@@ -594,13 +594,14 @@ public:
     // Dreamcast's generator-event xref records three calls to get_owner;
     // retail expands the signed owner-byte load and has no out-of-line row.
     inline long getOwner() const { return m_playerOwner; }
-    unsigned char load(TAbstractFile* infile);
+    // Raw DC publics for load/save return bool (QAA_N); Complete ports the file argument.
+    bool load(TAbstractFile* infile);
     // update_bonus's negative twin. Retail has no out-of-line row for it
     // (nothing fits between generator::save's end at 0x4b8791 and
     // update_bonus at 0x4b87a0), so it is inline-only - the same shape
     // set_owner below carries.
     inline void removeBonus();
-    unsigned char save(TAbstractFile* outfile);
+    bool save(TAbstractFile* outfile);
     inline void setOwner(long owner);
     void updateBonus();
     void grow(int unusedArg);
@@ -1945,7 +1946,10 @@ inline int SavedGameHeader::save(TAbstractFile* outfile)
 }
 
 // Complete reads versioned nested records through the abstract stream;
-// Dreamcast uses gzread directly.
+// Dreamcast uses gzread directly and records the checked ID-read count.
+// The six unchecked scalar reads use returned values rather than artificial
+// caller scopes. VC6 then matches all 62 retail blocks and 26 named calls,
+// including the shared failure cleanup; flattening those reads loses it.
 // E:\gamedcs\Game.h:1344, dc 0xbcfe4
 VA(0x004bc750, 0x3D5)  // dc 0xbcfe4
 inline int SavedGameHeader::load(TAbstractFile* infile)
@@ -1953,6 +1957,7 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
     std::string openedName;
     unsigned char inputWasProvided = infile != 0;
     std::auto_ptr<TAbstractFile> ownedInput;
+    int count;
 
     if (!inputWasProvided) {
         openedName = g_game->m_setup.m_filename;
@@ -1969,21 +1974,16 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
             return -1;
     }
 
-    if (infile->read(m_id, sizeof(m_id)) < sizeof(m_id))
+    count = infile->read(m_id, sizeof(m_id));
+    if (count < sizeof(m_id))
         return -1;
 
-    {
-        int buffer;
-        infile->read(&buffer, sizeof(buffer));
-        m_version = buffer;
-    }
+    m_version = readValue<int>(infile);
     if (m_version > 42)
         return -1;
 
     if (m_version >= 40) {
-        int buffer;
-        infile->read(&buffer, sizeof(buffer));
-        m_gameVersion = buffer;
+        m_gameVersion = readValue<int>(infile);
     } else {
         if (m_version < 25 && (m_version < 16 || m_version > 18))
             return -1;
@@ -2006,11 +2006,7 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
     if (m_mapSetup.load(infile, m_version) < 0)
         return -1;
 
-    {
-        short buffer;
-        infile->read(&buffer, sizeof(buffer));
-        m_campaignGame = buffer != 0;
-    }
+    m_campaignGame = readValue<short>(infile) != 0;
     if (m_campaignGame)
         m_campaign.load(infile, m_version);
 
@@ -2018,23 +2014,11 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
     infile->read(fileNameBuffer, sizeof(fileNameBuffer));
     m_fileName = fileNameBuffer;
 
-    {
-        short buffer;
-        infile->read(&buffer, sizeof(buffer));
-        m_difficultyRating = buffer;
-    }
-    {
-        char buffer;
-        infile->read(&buffer, sizeof(buffer));
-        m_numDeadPlayers = buffer;
-    }
+    m_difficultyRating = readValue<short>(infile);
+    m_numDeadPlayers = readValue<char>(infile);
     infile->read(m_deadPlayer, sizeof(m_deadPlayer));
     infile->read(m_humanPlayer, sizeof(m_humanPlayer));
-    {
-        int buffer;
-        infile->read(&buffer, sizeof(buffer));
-        m_currentPlayer = buffer;
-    }
+    m_currentPlayer = readValue<int>(infile);
 
     if (!inputWasProvided)
         strcpy(m_mapSetup.m_filename, openedName.c_str());
