@@ -8529,9 +8529,9 @@ void game::insertObject(int x, int y, int z, int objType, int objectIndex, int m
 // is retail: ProcessRandomObjects only ever calls this for trigger cells,
 // so the arm is unreachable in practice. Transcribed, not repaired.
 
-// All three tail loops RE-READ their bounds - newType->height and
-// newType->width are reloaded with movsx at each increment, and
-// cell->objects.end() at the bottom of every iteration - and
+// All three tail loops RE-READ their bounds - objectType's height and
+// width are reloaded with movsx at each increment, and
+// newCell->m_objects.end() at the bottom of every iteration - and
 // objectTypes.size() is recomputed at every match rather than hoisted.
 // The sprite push_back goes through this->worldMap while
 // CalculateCellExtra RELOADS gpGame; do not unify them.
@@ -8544,6 +8544,10 @@ void game::insertObject(int x, int y, int z, int objType, int objectIndex, int m
 // [eax+ecx] instead of [ecx+eax], NOT a NewfullMap::cell difference. Eight
 // type/declaration/call models and five recorded-name models reproduce the
 // same score; do not replace a proven helper or invent a local for that byte.
+// DC lines 9245/9246 store the monster cell type before the local type.
+// Restoring that order, explicit iterator sequencing and the town predicates'
+// public-symbol-proven bool returns are all byte-flat; the latter also preserve
+// every measured consumer. SH4 cannot settle an x86 SIB operand-order choice.
 VA(0x004c9990, 0x43A)  // anchor-global, dc 0xb54f8
 void game::convertObject(NewmapCell* tempCell)
 {
@@ -8571,8 +8575,8 @@ void game::convertObject(NewmapCell* tempCell)
                    m_worldMap.newfullMapFn00505EA0(MONSTER,
                                                   tempCell->m_objectIndex)
                        ->m_imageName.c_str());
-            type = MONSTER;
             tempCell->m_type = MONSTER;
+            type = MONSTER;
             break;
         case RANDOM_TOWN:
         case TOWN: {

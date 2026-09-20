@@ -2755,6 +2755,9 @@ static void readCampaignScore(TAbstractFile* infile, CampaignScenarioInfo& scena
 // legacy arm. Of 89 blocks, 88 have exact sizes; the modern hero-load loop
 // still forms its receiver differently, followed by artifact-read register
 // differences. Named hero pointer/reference receiver probes are byte-flat.
+// Further indexed-iterator, shared-count and free/member reader models do
+// not improve this. DC has no corresponding load: its campaign pools are
+// fixed arrays and its hero loader predates the versioned stream interface.
 VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::load(TAbstractFile* infile, int saveVersion)
 {

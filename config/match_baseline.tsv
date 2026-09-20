@@ -1939,7 +1939,7 @@ game	?claimTown@game@@QAEXHHEE@Z	100.0000	100.0000	100.0000	0xc61e0	tokens1:805a
 game	?clearNetInfo@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xba170	tokens1:4fa25910cb8b
 game	?computeDailyGold@game@@QAEHHE@Z	100.0000	100.0000	100.0000	0xc7930	tokens1:714202ad809c
 game	?computeUALoc@@YIXH@Z	100.0000	100.0000	100.0000	0xbaed0	tokens1:9820a687c294
-game	?convertObject@game@@QAEXPAVNewmapCell@@@Z	99.9756	99.9756	99.9756	0xc9990	tokens1:8bcc45c26391
+game	?convertObject@game@@QAEXPAVNewmapCell@@@Z	99.9756	99.9756	99.9756	0xc9990	tokens1:f4f72107605c
 game	?copy_backward@std@@YIPAVtown@@PAV2@00@Z	100.0000	100.0000	100.0000	0xd32e0	-
 game	?count@?$bitset@$0BM@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf8d0	-
 game	?count@?$bitset@$0JB@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf010	-

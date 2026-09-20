@@ -215,6 +215,12 @@ and explain the record conflict beside the function; an unsigned-byte finding
 alone does not justify changing that source interface. Check the public
 symbol before acting on this kind of primitive-type disagreement.
 
+The same correction applies to `town::IsCastle` and `town::IsCapitol`:
+their public symbols end in `QBA_NXZ`, while the lowered return records say
+`T_UCHAR`. Restoring both canonical header declarations to `bool` is byte-flat
+across all 92 recorded header consumers. Exact code alone could not expose
+these incorrect source types; the public ABI supplies the deciding evidence.
+
 The same distinction matters across callers. CSprite Draw/DrawCreature/
 DrawSpellEffect use public `_N` flags; preserving unsigned-char flip locals
 in three missile callers adds a `test`/`setne` conversion which retail lacks.
