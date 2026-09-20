@@ -316,22 +316,18 @@ void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
     if (h > srcHeight - srcY)
         h = srcHeight - srcY;
 
-    if (w > 0 && h > 0) {
-        Bitmap16MapPointer dst;
-        dst.m_pixels = getMap(dstX, dstY);
-        Bitmap16ConstMapPointer source;
-        source.m_pixels = src;
-        source.m_bytes += srcY * srcPitch + srcX * sizeof(unsigned short);
-        unsigned char* dstRowBase = dst.m_bytes;
-        int dstRowOffset = 0;
-        const unsigned char* sourceRowBase = source.m_bytes;
-        int sourceRowOffset = 0;
-        for (int row = 0; row < h;
-             dstRowOffset += m_pitch, sourceRowOffset += srcPitch, ++row) {
-            dst.m_bytes = dstRowBase + dstRowOffset;
-            source.m_bytes = sourceRowBase + sourceRowOffset;
-            memcpy(dst.m_pixels, source.m_pixels, w * sizeof(unsigned short));
-        }
+    if (w <= 0 || h <= 0)
+        return;
+
+    Bitmap16MapPointer dst;
+    dst.m_pixels = getMap(dstX, dstY);
+    Bitmap16ConstMapPointer source;
+    source.m_pixels = src;
+    source.m_bytes += srcY * srcPitch + srcX * sizeof(unsigned short);
+    for (int row = 0; row < h; ++row) {
+        memcpy(dst.m_pixels, source.m_pixels, w * sizeof(unsigned short));
+        dst.m_bytes += m_pitch;
+        source.m_bytes += srcPitch;
     }
 }
 
@@ -424,10 +420,7 @@ void Bitmap16Bit::darken(int x, int y, int w, int h)
         Bitmap16MapPointer row;
         row.m_pixels = getMap(x, y);
 
-        unsigned char* rowRowBase = row.m_bytes;
-        int rowRowOffset = 0;
         for (int iy = 0; iy < h; ++iy) {
-            row.m_bytes = rowRowBase + rowRowOffset;
             Bitmap16MapPointer pixel = row;
             for (int ix = 0; ix < w; ++ix) {
                 *pixel.m_pixels = static_cast<unsigned short>(
@@ -435,7 +428,7 @@ void Bitmap16Bit::darken(int x, int y, int w, int h)
                 ++pixel.m_pixels;
             }
 
-            rowRowOffset += m_pitch;
+            row.m_bytes += m_pitch;
         }
     }
 }
@@ -565,11 +558,8 @@ void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue,
 
     Bitmap16MapPointer row;
     row.m_pixels = getMap(x, y);
-    unsigned char* rowRowBase = row.m_bytes;
-    int rowRowOffset = 0;
 
     for (int iy = 0; iy < h; ++iy) {
-        row.m_bytes = rowRowBase + rowRowOffset;
         Bitmap16MapPointer pixel = row;
         for (int ix = 0; ix < w; ++ix) {
             unsigned int r =
@@ -627,7 +617,7 @@ void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue,
                 | ((r / redNorm) & Bitmap16Bit::s_redMask));
             ++pixel.m_pixels;
         }
-        rowRowOffset += m_pitch;
+        row.m_bytes += m_pitch;
     }
 }
 

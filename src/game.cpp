@@ -7926,12 +7926,26 @@ void game::setRecruits()
 // relationship from PerDay and predecessor relationship to PerMonth close the
 // otherwise ambiguous Dreamcast bracket.
 
-// Residual (99.8370%): all 128 retail blocks, branch targets, operations and
-// relocations agree. Restoring the Dreamcast-proven IsCastle source boundary
-// made the entire neutral-town arm exact; Complete's retail bytes separately
-// select HasBuilding's built-mask lane for the Summoning Portal test. The sole
-// residual is the opening creature-week scan's C1 handle-state ESI/EDI role
-// permutation (`this` versus `i`), which why-reg proves source-unaddressable.
+// Residual (98.8948%, HIST 99.8370%): restoring the Dreamcast-proven IsCastle
+// source boundary made the entire neutral-town arm exact; Complete's retail
+// bytes separately select HasBuilding's built-mask lane for the Summoning
+// Portal test. The residual is the opening creature-week scan's C1 handle-state
+// ESI/EDI role permutation (`this` versus `i`), which why-reg proves
+// source-unaddressable: the reference binds `i` to ESI and `this` to EDI, so
+// `i` would have to be the earlier-created call-crossing pseudo. PROVED
+// IMPOSSIBLE by the front end: `il-locals` shows this body's handles as
+// this 0xc5c6 then obscuringHero/align/alternateBonus/bonusAmount/x/y/i 0xc5ce,
+// i.e. `this` precedes every local, and handle-order.md measures params < `this`
+// < locals as parse-FIXED with assignment strictly top-to-bottom. No declaration
+// order can put `i` ahead of `this`, so the binding is TU state, not source. THE 99.8370 HIST WAS REACHED BY
+// THIS EXACT src_hash (1078057cac97 at f8570b07/a5348767, CUR 98.8948 in the
+// same row), so the permutation is a TU-state effect that some include closure
+// already produced - not a lost source shape. Byte-flat here: `int i = 0` at the
+// declaration, moving `i` first in the declaration block, assigning `i` before
+// the two CREATURE_NONE stores, and binding the MONSTER arm's packed dword to a
+// local. The MONSTER arm's own four-byte split (retail consumes the loaded
+// m_extraInfo in place and reloads it for the preserved lanes, ours copies it)
+// rides on the same allocator phase.
 VA(0x004c8780, 0x7B7)  // PerDay/PerMonth bracket + dc lines/callees, dc 0xb41e0
 void game::perWeek()
 {
@@ -10215,7 +10229,8 @@ void game::setCannedRumour()
     }
 
     if (!available) {
-        memset(m_rumourState, 0, sizeof(m_rumourState));
+        for (int rumourSlot = 0; rumourSlot < 0x100; rumourSlot++)
+        m_rumourState[rumourSlot] = 0;
         available = 256;
     }
 
@@ -10620,26 +10635,45 @@ type_point game::getUndergroundGateExit(const NewmapCell* cell) const
 // heroPoolMap element is also byte-flat here and regresses game::Load from
 // 92.3721 to 92.2795. The implicit-member boundary is therefore bounded
 // without sacrificing an exact function.
+// The scalar array initialisations are counted loops, not memsets. Retail
+// sets EDI up before ECX at m_saveFileName, m_heroAvailability,
+// m_artifactUsed, m_artifactDisabled, m_obeliskFlags, m_currentRumour,
+// m_globalInfoFlags and m_rumourState, and ECX before EDI at m_setup: the
+// loop form and the memset form emit the same rep stosd (plus the stosw /
+// stosb tail for the odd bytes, and EAX = -1 for the -1 fill), and only that
+// setup order separates them (behavior-catalog D25). m_heroPoolMap keeps
+// ECX-first because its fill value is a variable, not a literal.
+// Adopting the eight loops moved this body 78.16 -> 80.60 and reset MAX from
+// the 88.86 banked before the canonical SCampaign header bodies were
+// restored; HIST holds that peak. The rest of the residual is that header
+// decision, not these fills: retail CALLS SCampaign::SCampaign (which itself
+// expands its string and four vector members) where our TU inlines its body
+// and keeps the member ctor calls, and retail opens one more EH state (11).
 VA(0x004cdf20, 0x585)  // anchor-global, dc 0xbb62c
 game::game()
 {
     m_difficultyRating = 0;
     m_newCampaignStarted = 0;
-    memset(m_saveFileName, 0, sizeof(m_saveFileName));
+    for (int nameByte = 0; nameByte < 0x15f; nameByte++)
+        m_saveFileName[nameByte] = 0;
     memset(&m_setup, 0, sizeof(m_setup));
     memset(m_playerDisabled, 0, sizeof(m_playerDisabled));
     m_day = 0;
     m_week = 0;
     m_month = 0;
-    memset(m_heroAvailability, -1, sizeof(m_heroAvailability));
+    for (int heroSlot = 0; heroSlot < HERO_COUNT; heroSlot++)
+        m_heroAvailability[heroSlot] = -1;
 
     std::bitset<8> allPlayers;
     allPlayers.set();
     for (int i = 0; i < HERO_COUNT; i++)
         m_heroPoolMap[i] = allPlayers;
-    memset(m_artifactUsed, 0, sizeof(m_artifactUsed));
-    memset(m_artifactDisabled, 0, sizeof(m_artifactDisabled));
-    memset(m_obeliskFlags, 0, sizeof(m_obeliskFlags));
+    for (int usedArt = 0; usedArt < 0x90; usedArt++)
+        m_artifactUsed[usedArt] = 0;
+    for (int disabledArt = 0; disabledArt < 0x90; disabledArt++)
+        m_artifactDisabled[disabledArt] = 0;
+    for (int obelisk = 0; obelisk < 0x30; obelisk++)
+        m_obeliskFlags[obelisk] = 0;
     m_ultimateArtifactX = -1;
     m_ultimateArtifactY = -1;
     m_ultimateArtifactZ = -1;
@@ -10647,9 +10681,11 @@ game::game()
     m_ultimateArtifactPresent = 0;
     m_f1f698 = 0;
     m_isCheater = 0;
-    memset(m_currentRumour, 0, sizeof(m_currentRumour));
+    for (int rumourByte = 0; rumourByte < 0x12d; rumourByte++)
+        m_currentRumour[rumourByte] = 0;
     m_numObelisks = 0;
-    memset(m_globalInfoFlags, 0, sizeof(m_globalInfoFlags));
+    for (int infoFlag = 0; infoFlag < 32; infoFlag++)
+        m_globalInfoFlags[infoFlag] = 0;
     memset(m_borderTentVisitFlags, 0, sizeof(m_borderTentVisitFlags));
     m_cartographerMask[0] = 0x100;
     m_cartographerMask[1] = 0xbf;

@@ -1758,6 +1758,21 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 // conventional VERIFY is possible history but cannot select the retail
 // allocator phase here; no fabricated macro is retained.
 
+// Residual (91.8244%): the frame is the measurement. Retail allocates 0x350,
+// ours 0x344; enemyAttacks is 0x2EC on both sides, so the whole 12-byte
+// difference is scalar locals - retail's deepest scalar slot is [ebp-0x64],
+// ours [ebp-0x58], i.e. retail holds three more dwords of named locals or
+// temporaries than this body declares. Everything downstream follows from
+// that: the array's own address shifts ([ebp-0x350] against [ebp-0x344]) at
+// all 118 branches' worth of code, and with one register fewer in play VC6
+// gives our two identical `moveToward(currentArmy, bestHex, enemyAttacks,
+// !simulated && bestTroops > 1)` tails the same registers and CROSS-JUMPS
+// them, so our object emits two moveToward calls where retail emits three
+// (catalog D7). Retail's two tails differ only in which register carries the
+// enemyAttacks address (EDX at +0x6b5, EAX at +0x8ee), which is exactly what
+// blocks the merge there. Recovering the three missing locals is the lead;
+// adding our_group/enemy_group was already measured and reaches 0x34c, not
+// 0x350, while costing 9 points.
 // E:\gamedcs\ai.cpp:1896
 VA(0x00421680, 0x8F9)  // linkorder, dc 0x266d4
 unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned char teleport, long* actionValue, type_AI_combat_parameters* estimate)

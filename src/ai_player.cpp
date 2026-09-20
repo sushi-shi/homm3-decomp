@@ -2560,6 +2560,20 @@ void type_AI_creature_swapper::dumpExtraCreature()
 // `why-reg` measures distance 119. Making the grouped alignment volatile
 // improves that internal distance but worsens the real objdiff score to
 // 86.33%, and declaration/reference/condition spellings are flat or worse.
+// Re-measured 2026-09-20: the permutation is rooted at `this`. Retail copies it
+// into EDI at entry and reads m_army through it; ours leaves it in ECX, spills
+// it, and reloads, which frees EDI for shooterCount and cascades into every
+// later binding - the traits address spilling instead of staying live, the
+// checkAlignments byte loaded to BL on retail's side and compared in memory on
+// ours, and the reverse for g_game->m_f1f698. why-reg's model says the value
+// that must move first is `this`, and the front end proves that unreachable:
+// `il-locals` gives isShooter 0xca55, checkAlignments 0xca56, this 0xca58, then
+// shooterCount 0xca5a and the rest, and handle-order.md measures
+// params < `this` < locals as parse-FIXED. Retail binds shooterCount to ESI and
+// `this` to EDI, which needs shooterCount created first - no declaration order
+// reaches it. Same verdict and same root as get_simple_attack_effect.
+// Byte-flat: `traits.m_townType` for the repeated subscript, and
+// `!g_game->m_f1f698` for the `== 0` test.
 VA(0x0042c690, 0x192)  // DC method + retail body/caller; dc 0x31a00
 long type_AI_creature_swapper::chooseWeakestArmy(
     unsigned char isShooter, unsigned char checkAlignments)

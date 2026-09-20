@@ -254,6 +254,12 @@ void BinkManager::closeBink()
 // EBX with `vw` recycled into the `h` parameter home at [ebp+0x10], where our
 // CL keeps `vw` in EBX with `vh` in the `w` home at [ebp+0xc], and the zero it
 // compares against materialises in EAX on one side and not the other.
+// Re-measured 2026-09-20, all byte-flat or worse: declaring vw before vh
+// (87.96), declaring both without initialisers, moving updateX/updateY or
+// aborted/result first in the declaration block, zeroing aborted or the two
+// update values before the clamps, writing the tests as `0 > vw`, and a '\0'
+// memset fill. Testing vh before vw loses (87.65). The zero retail compares
+// against still materialises in EAX on its side only.
 // Tried: swapping the vw/vh declaration order (+0.22 and no slot change),
 // handing OpenBinkVideo `vw, vh` instead of `w, h` and testing `vw < 0`
 // instead of `w < 0` - the twin's own spelling, kept - both byte-flat.
