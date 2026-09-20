@@ -1080,7 +1080,7 @@ command	?checkWin@combatManager@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0
 command	?doAnimations@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x74040	tokens1:e096f4ed8746
 command	?doCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0	tokens1:1a1a5c3c607e
 command	?doVictory@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77470	tokens1:bc98aced8b4f
-command	?getCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490	tokens1:d96acd356ff2
+command	?getCommand@combatManager@@QAEHH@Z	92.5357	92.5714	92.5714	0x76490	tokens1:d96acd356ff2
 command	?getControl@combatManager@@QAEXXZ	98.2830	98.2830	98.2830	0x782d0	tokens1:fdc6faca72ee
 command	?getSurrenderCost@combatManager@@AAEJXZ	100.0000	100.0000	100.0000	0x77a00	tokens1:5287ef531a98
 command	?getTowerString@combatManager@@ABE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TWallSection@1@JJ@Z	100.0000	100.0000	100.0000	0x7a2d0	tokens1:a462065bc26d
@@ -2283,7 +2283,7 @@ hero	?removeBackpackArtifact@hero@@QAEXF@Z	100.0000	100.0000	100.0000	0xe2d50	to
 hero	?restoreCell@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd76e0	tokens1:d841a0d1501f
 hero	?rotateBackpackLeft@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbdb0	tokens1:fbd5e3d6d1de
 hero	?rotateBackpackRight@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbe10	tokens1:cbf7e6f9703d
-hero	?save@hero@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xd80c0	tokens1:04f6ad0a1e72
+hero	?save@hero@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xd80c0	tokens1:7d96db2f7c18
 hero	?save@type_obscuring_object@@QAE_NPAX@Z	100.0000	100.0000	100.0000	0xd77b0	tokens1:4fb6fe728a0b
 hero	?set@?$bitset@$0EG@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xe66f0	-
 hero	?setHotkey@button@@QAEXH@Z	100.0000	100.0000	100.0000	0xe1370	tokens1:641ea6ccd2e3
@@ -2378,7 +2378,7 @@ infutil	@inflate_flush@12	100.0000	100.0000	100.0000	0x20a620	-
 initialize	?addToIncludedMask@@YIXPBHPA_J@Z	100.0000	100.0000	100.0000	0xebb10	tokens1:e240af918e6a
 initialize	?createIncludedMask@@YIXPBHPA_J@Z	100.0000	100.0000	100.0000	0xebb70	tokens1:c55d802ed6b6
 initialize	?createRequirementMasks@@YIXPBHPA_JAA_J@Z	100.0000	100.0000	100.0000	0xebc50	tokens1:4fa0b85cb996
-initialize	?initializeGameData@@YIXXZ	96.0880	100.0000	100.0000	0xeb730	tokens1:baacd75a10dc
+initialize	?initializeGameData@@YIXXZ	90.1620	100.0000	100.0000	0xeb730	tokens1:baacd75a10dc
 inputmgr	??0inputManager@@QAE@XZ	100.0000	100.0000	100.0000	0xec460	tokens1:ea74871981e6
 inputmgr	?asciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0	tokens1:0d18e2d3c1d6
 inputmgr	?close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540	tokens1:3b1bc89dd9af
@@ -3497,7 +3497,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	tokens1:9ffb396c8413
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	tokens1:f84e27622dc7
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	99.4123	99.4123	99.4123	0x14abf0	tokens1:d414eb83c2cc
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	77.9030	93.2864	95.7066	0x149cb0	tokens1:691cb3e2e1f0
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	77.8952	93.2864	95.7066	0x149cb0	tokens1:691cb3e2e1f0
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	100.0000	100.0000	100.0000	0x14ae30	tokens1:c9c09a93db3c
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-

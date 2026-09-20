@@ -20,11 +20,39 @@ public:
     virtual int write(const void* data, int size) = 0;
 };
 
+// TODO: sweep the codebase for hand-rolled scalar read/write patterns and
+// route them through these helpers. The shape to look for is a local staging
+// scalar whose address is handed straight to read()/write() - e.g.
+// `charBuffer = m_owner; outfile->write(&charBuffer, sizeof(charBuffer));` or
+// the same with a braced scope per field. hero::save carried sixty of them and
+// only matched once they went through writeValue: function-scope staging
+// buffers cannot coalesce, so the frame comes out 0x1c with seven slots
+// against retail's 0x8 with two. town::save, SCampaign::save,
+// SavedGameHeader::save, type_creature_quest::save and the NewSMapHeader and
+// mapcell readers all still stage by hand, and several of them sit below 100%
+// on frame-size residuals. Check each against its own retail bytes before
+// converting - a staging local that is genuinely two distinct variables
+// (town::load and town::save each need a SECOND char local for the position
+// and dock fields) must stay two.
+
 // Complete native serialization: the output-reference overload
 // reads one native scalar into caller-owned storage and preserves the actual
 // int byte count, including short reads and errors. The existing value reader
 // owns its local and intentionally discards that count. This inferred API
 // adds no virtual slot or conversion and claims no Dreamcast declaration.
+// Its writing pair, absent until now. The value is taken BY VALUE on purpose:
+// the parameter is the stack temp whose address Write() receives, so the
+// PARAMETER's type - not the member's - fixes the width, which is what makes a
+// record's write widths independent of its member widths. Inlined at every
+// call, the instantiations coalesce into one another's frame slots; hero::save
+// needs that to reach retail's 0x8 frame for sixty writes, where six
+// function-scope buffers cost 0x1c and seven slots.
+template <class T>
+int writeValue(TAbstractFile* outfile, T value)
+{
+    return outfile->write(&value, sizeof(value));
+}
+
 template <class T>
 int readValue(TAbstractFile* infile, T& value)
 {

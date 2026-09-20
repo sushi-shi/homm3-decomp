@@ -744,47 +744,6 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     return 0;
 }
 
-// The record serialiser's field writers. Each takes its value BY VALUE, so
-// the parameter itself is the stack temp whose address Write() receives, and
-// the PARAMETER's type - not the member's - fixes the width, which is what
-// makes the write widths independent of the member widths. Inlined at every
-// call, they coalesce into retail's 0x8 frame; six hand-written function-scope
-// buffers cannot coalesce and cost 0x1c with seven slots (99.2181).
-// Dreamcast records exactly one local per width in hero::save - char, uchar,
-// short, ushort, int and uint buffers - and 57 nested lexical-scope pairs, one
-// per write site. That is the residue of these bodies inlined at every call,
-// which is also why no standalone procedure for them survives in the DC
-// roster: a helper inlined everywhere emits none.
-inline void writeField(TAbstractFile* outfile, char value)
-{
-    outfile->write(&value, sizeof(value));
-}
-
-inline void writeField(TAbstractFile* outfile, unsigned char value)
-{
-    outfile->write(&value, sizeof(value));
-}
-
-inline void writeField(TAbstractFile* outfile, short value)
-{
-    outfile->write(&value, sizeof(value));
-}
-
-inline void writeField(TAbstractFile* outfile, unsigned short value)
-{
-    outfile->write(&value, sizeof(value));
-}
-
-inline void writeField(TAbstractFile* outfile, int value)
-{
-    outfile->write(&value, sizeof(value));
-}
-
-inline void writeField(TAbstractFile* outfile, unsigned int value)
-{
-    outfile->write(&value, sizeof(value));
-}
-
 // E:\gamedcs\hero.cpp:914
 // The record serialiser. Typed scratch locals carry every scalar into
 // the stream - retail copies each field into a stack temp and hands
@@ -807,59 +766,59 @@ int hero::save(TAbstractFile* outfile)
     if (!type_obscuring_object::save(outfile))
         return -1;
 
-    writeField(outfile, static_cast<char>(m_sex));
-    writeField(outfile, static_cast<unsigned char>(m_hasCustomName));
+    writeValue(outfile, static_cast<char>(m_sex));
+    writeValue(outfile, static_cast<unsigned char>(m_hasCustomName));
 
-    writeField(outfile, static_cast<unsigned int>(m_customName.length()));
+    writeValue(outfile, static_cast<unsigned int>(m_customName.length()));
     outfile->write(m_customName.c_str(), m_customName.length());
 
-    writeField(outfile, static_cast<char>(m_owner));
-    writeField(outfile, static_cast<char>(m_patrolRadius));
-    writeField(outfile, static_cast<char>(m_moraleBonus));
-    writeField(outfile, static_cast<char>(m_luckBonus));
-    writeField(outfile, static_cast<char>(m_backpackCount));
-    writeField(outfile, static_cast<char>(m_disguiseLevel));
-    writeField(outfile, static_cast<char>(m_flightLevel));
-    writeField(outfile, static_cast<char>(m_waterWalkLevel));
-    writeField(outfile, static_cast<char>(m_dWalkSpellsCast));
-    writeField(outfile, static_cast<char>(m_visionsPower));
-    writeField(outfile, static_cast<char>(m_id));
-    writeField(outfile, static_cast<char>(m_heroClass));
-    writeField(outfile, static_cast<unsigned char>(m_portrait));
-    writeField(outfile, static_cast<unsigned char>(m_patrolX));
-    writeField(outfile, static_cast<unsigned char>(m_patrolY));
-    writeField(outfile, static_cast<unsigned char>(m_facing));
-    writeField(outfile, static_cast<unsigned char>(m_formation));
-    writeField(outfile, static_cast<unsigned char>(m_levelSeed));
-    writeField(outfile, static_cast<unsigned char>(m_lastWisdom));
+    writeValue(outfile, static_cast<char>(m_owner));
+    writeValue(outfile, static_cast<char>(m_patrolRadius));
+    writeValue(outfile, static_cast<char>(m_moraleBonus));
+    writeValue(outfile, static_cast<char>(m_luckBonus));
+    writeValue(outfile, static_cast<char>(m_backpackCount));
+    writeValue(outfile, static_cast<char>(m_disguiseLevel));
+    writeValue(outfile, static_cast<char>(m_flightLevel));
+    writeValue(outfile, static_cast<char>(m_waterWalkLevel));
+    writeValue(outfile, static_cast<char>(m_dWalkSpellsCast));
+    writeValue(outfile, static_cast<char>(m_visionsPower));
+    writeValue(outfile, static_cast<char>(m_id));
+    writeValue(outfile, static_cast<char>(m_heroClass));
+    writeValue(outfile, static_cast<unsigned char>(m_portrait));
+    writeValue(outfile, static_cast<unsigned char>(m_patrolX));
+    writeValue(outfile, static_cast<unsigned char>(m_patrolY));
+    writeValue(outfile, static_cast<unsigned char>(m_facing));
+    writeValue(outfile, static_cast<unsigned char>(m_formation));
+    writeValue(outfile, static_cast<unsigned char>(m_levelSeed));
+    writeValue(outfile, static_cast<unsigned char>(m_lastWisdom));
 
-    writeField(outfile, static_cast<int>(m_pathTargetX));
-    writeField(outfile, static_cast<int>(m_pathTargetY));
-    writeField(outfile, static_cast<short>(m_pathTargetZ));
-    writeField(outfile, static_cast<short>(m_lastMagicSchoolLevel));
-    writeField(outfile, static_cast<int>(m_maxMovePoints));
-    writeField(outfile, static_cast<int>(m_movePoints));
-    writeField(outfile, static_cast<int>(m_experience));
-    writeField(outfile, static_cast<int>(m_skillCount));
-    writeField(outfile, static_cast<short>(m_mana));
-    writeField(outfile, static_cast<short>(m_level));
-    writeField(outfile, static_cast<unsigned short>(m_targetDistance));
+    writeValue(outfile, static_cast<int>(m_pathTargetX));
+    writeValue(outfile, static_cast<int>(m_pathTargetY));
+    writeValue(outfile, static_cast<short>(m_pathTargetZ));
+    writeValue(outfile, static_cast<short>(m_lastMagicSchoolLevel));
+    writeValue(outfile, static_cast<int>(m_maxMovePoints));
+    writeValue(outfile, static_cast<int>(m_movePoints));
+    writeValue(outfile, static_cast<int>(m_experience));
+    writeValue(outfile, static_cast<int>(m_skillCount));
+    writeValue(outfile, static_cast<short>(m_mana));
+    writeValue(outfile, static_cast<short>(m_level));
+    writeValue(outfile, static_cast<unsigned short>(m_targetDistance));
 
-    writeField(outfile, static_cast<unsigned int>(m_trainingGroundsFlags));
-    writeField(outfile, static_cast<unsigned int>(m_defenseTowerFlags));
-    writeField(outfile, static_cast<unsigned int>(m_gardenOfRevelationFlags));
-    writeField(outfile, static_cast<unsigned int>(m_mercCampFlags));
-    writeField(outfile, static_cast<unsigned int>(m_powerSchoolFlags));
-    writeField(outfile, static_cast<unsigned int>(m_treeOfKnowledgeFlags));
-    writeField(outfile, static_cast<unsigned int>(m_libraryFlags));
-    writeField(outfile, static_cast<unsigned int>(m_arenaFlags));
-    writeField(outfile, static_cast<unsigned int>(m_magicSchoolFlags));
-    writeField(outfile, static_cast<unsigned int>(m_warSchoolFlags));
-    writeField(outfile, static_cast<unsigned int>(m_universityFlags));
-    writeField(outfile, static_cast<unsigned int>(m_shrine1Flags));
-    writeField(outfile, static_cast<unsigned int>(m_shrine2Flags));
-    writeField(outfile, static_cast<unsigned int>(m_shrine3Flags));
-    writeField(outfile, static_cast<unsigned int>(m_flags));
+    writeValue(outfile, static_cast<unsigned int>(m_trainingGroundsFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_defenseTowerFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_gardenOfRevelationFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_mercCampFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_powerSchoolFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_treeOfKnowledgeFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_libraryFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_arenaFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_magicSchoolFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_warSchoolFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_universityFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_shrine1Flags));
+    writeValue(outfile, static_cast<unsigned int>(m_shrine2Flags));
+    writeValue(outfile, static_cast<unsigned int>(m_shrine3Flags));
+    writeValue(outfile, static_cast<unsigned int>(m_flags));
 
     m_army.save(outfile);
 
@@ -873,7 +832,7 @@ int hero::save(TAbstractFile* outfile)
     outfile->write(m_backpack, sizeof(m_backpack));
     outfile->write(m_artifactSlotCounts, sizeof(m_artifactSlotCounts));
 
-    writeField(outfile, static_cast<unsigned char>(m_isSleeping));
+    writeValue(outfile, static_cast<unsigned char>(m_isSleeping));
 
     const std::bitset<48>& granted = m_townSpecialGrantedMask;
     unsigned char outBuf[6];
