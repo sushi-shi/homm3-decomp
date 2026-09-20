@@ -45,7 +45,8 @@ Retail address coverage and source coverage are separate.
 `homm3 source-inventory` compares every Dreamcast procedure with active authored
 definitions in both directions, including shared-header helpers. Unexplained
 entries fail the full build; exact reviewed differences live in
-`config/dc_only.tsv` and `config/win_only.tsv`. See
+`config/dc_only.tsv`, `config/win_only.tsv`, and
+`config/dc-inlined-helpers.tsv`. See
 [function source ownership](docs/source-ownership.md) for the report and rules.
 
 ## Reconstruction debt
