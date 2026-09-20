@@ -39,21 +39,6 @@ are unknown. Do not pad C++ with blank lines or invent assertions to satisfy a
 count. Do not compare this DC shape with MSVC `/Z7` source structure or require
 equal line counts. Test each meaningful hypothesis against retail VC6 output.
 
-## Game-owned codec module
-
-Units with `module = "codec"` in `config/units.toml` target semantic input/output
-agreement, not mandatory 100% VC6 byte matching. Prefer complete resource-corpus
-differentials against retail and validated independent implementations, including
-the Rust format libraries. State the tested boundary and uncovered input classes;
-parser acceptance and round trips alone do not prove retail equivalence. Keep
-ABI, source-ownership, build and score-accounting gates. Do not spend matching
-searches solely on instruction selection after the required semantic boundary
-is validated. See [docs/codec-module.md](docs/codec-module.md).
-
-Victor and zlib retain their separate vendor-library module identities. This
-classification covers game-owned codecs/readers, not general rendering, playback
-management or unrelated game logic.
-
 ## Matching loop
 
 For every non-exact game function with a Dreamcast counterpart, run this evidence

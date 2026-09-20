@@ -38,17 +38,6 @@ _Excluded from the % above — generated/library code, not independent reconstru
 
 <!-- match-score:end -->
 
-Module membership is declared in `config/units.toml`: `rmg` groups the three
-random-map generator units, `codec` groups the game-owned DEF decoder and
-archive/compression readers, and `victor` groups the four reconstructed
-image-library units. Victor and zlib retain separate vendor-library rows.
-Remaining project units are reported under `game`.
-
-The [`codec` module](docs/codec-module.md) targets semantic input/output agreement,
-including complete installed-corpus comparisons and the existing independent
-Rust implementations. Its byte-match percentages remain diagnostics, not a
-requirement to reach 100%.
-
 The score ledger always keeps `CUR <= MAX <= HIST`. CUR is the latest full
 build; MAX is the best score observed for the function's current source hash;
 HIST is its all-time peak across source revisions. Tooling prioritizes MAX.
@@ -198,7 +187,3 @@ Files carrying separate copyright or license notices — notably everything unde
 `vendor/` — retain those terms. No binary game assets are stored in this
 repository. Thanks to [NH3API](https://github.com/void2012/NH3API)
 for labelling the executable.
-
-The [Victor resource oracle](docs/victor-oracle.md) compares recovered image
-imports against retail across the installed bitmap corpus, including decoded
-pixels, palettes, metadata, return codes, flips and cleanup.
