@@ -10,6 +10,7 @@
 #include <ctype.h>
 #include <math.h>
 #include <list>
+#include <queue>
 #include <set>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6851,11 +6852,12 @@ void type_random_map_generator::connectZones()
                 position = object->m_position;
                 if (m_map.getMapItem(position)->m_zoneState.m_zone == zoneIndex) {
                     TRmgMapPosition shipyardPosition = position;
+                    TRmgMapPosition waterPosition;
                     int waterOffset = 0;
                     for (;
                          waterOffset < RMG_SHIPYARD_WATER_OFFSET_COUNT;
                          ++waterOffset) {
-                        TRmgMapPosition waterPosition =
+                        waterPosition =
                             shipyardPosition
                             + g_rmgShipyardWaterOffsets[waterOffset];
                         if (waterPosition.m_x >= 0
@@ -6865,8 +6867,10 @@ void type_random_map_generator::connectZones()
                             break;
                     }
 
+                    // Retail 0x5437f8 forwards the water-offset temporary
+                    // returned in EAX to seed the flood from the water tile.
                     if (waterOffset != RMG_SHIPYARD_WATER_OFFSET_COUNT)
-                        floodConnectionRegion(object->m_position);
+                        floodConnectionRegion(waterPosition);
                 }
             }
             ++objectIndex;
@@ -7058,13 +7062,16 @@ TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, int level)
 // The eight-byte values are coordinate pairs: midpoint and perpendicular
 // arithmetic prove TPoint, independently of the ICF-shared vector labels.
 // Pending segments use a vector stack; long segments enqueue two outward
-// side branches as consecutive point pairs in an ordinary std::list.
-// Residual 73.0200%: a 64-case point-lifetime/endpoint/container-API matrix
-// lifts the initial 67.2335%; the 13-case public-list follow-up is lower or
-// flat. Component endpoint stores and explicit public iterator erasure retain
-// the best schedule. Retail calls vector erase at both stack pops and list
-// range erase during cleanup; VC6 still expands those boundaries, with the
-// latter COMDAT absent. No emission anchor or inline-depth pin is used.
+// side branches as consecutive point pairs in a queue backed by std::list.
+// FIFO ownership preserves the node layout and per-level lifetime. The
+// queue::pop -> list::pop_front -> erase boundary restores retail's first
+// retained list erase, raising MAX 73.0200% to 74.5988%. The adapter identity
+// remains a retail-derived source hypothesis without a DC counterpart.
+// The second removal still expands erase after a retained iterator increment;
+// retail retains erase there too. Both vector pops and list range cleanup
+// also expand too far. A stack adapter is neutral; queue.empty() lowers the
+// result to 73.8523%, while vector.empty() guards are neutral. No emission
+// anchor or inline-depth pin is used.
 // Retail +0x10a..+0x127 constructs the vector then list after the seed
 // switch. Cleanup calls range erase at +0x478, frees the list head at
 // +0x481 and the vector at +0x497, before the level back edge at +0x4b1.
@@ -7117,7 +7124,7 @@ void type_random_map_generator::carveBranchingPaths()
             break;
         }
         std::vector<TPoint> pending;
-        std::list<TPoint> branches;
+        std::queue<TPoint, std::list<TPoint> > branches;
         pending.push_back(first);
         pending.push_back(last);
         while (pending.size()) {
@@ -7142,11 +7149,11 @@ void type_random_map_generator::carveBranchingPaths()
                     if (length >= 8 && middle.m_x >= 0 && middle.m_x < m_map.m_mapWidth
                         && middle.m_y >= 0 && middle.m_y < m_map.m_mapHeight) {
                         first = middle + perpendicular;
-                        branches.push_back(middle);
-                        branches.push_back(first);
+                        branches.push(middle);
+                        branches.push(first);
                         first = TPoint(middle.m_x - perpendicular.m_x, middle.m_y - perpendicular.m_y);
-                        branches.push_back(middle);
-                        branches.push_back(first);
+                        branches.push(middle);
+                        branches.push(first);
                     }
                 } else if (first.m_x >= 0 && first.m_x < m_map.m_mapWidth
                            && first.m_y >= 0 && first.m_y < m_map.m_mapHeight) {
@@ -7155,9 +7162,9 @@ void type_random_map_generator::carveBranchingPaths()
             }
             while (branches.size() > 0 && pending.empty()) {
                 first = branches.front();
-                branches.erase(branches.begin());
+                branches.pop();
                 last = branches.front();
-                branches.erase(branches.begin());
+                branches.pop();
                 last = m_map.traceBranchEnd(first, last, level);
                 int dx = last.m_x - first.m_x;
                 int dy = last.m_y - first.m_y;
@@ -7721,7 +7728,7 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
 
 // Retail +0x388 selects the MINE prototype vector. The caller supplies
 // zone/resource/starting flag/spacing; names are role-derived.
-// Current match: 71.5746%. Keep prototype as the last scanned
+// Current MAX: 71.6766%. Keep prototype as the last scanned
 // prototype: retail stores it at 0x5459f5/0x545a5d and reloads that same
 // local at 0x545b7e/0x545ca9 without replacing it after random selection.
 // This includes the retained trigger/width quirk in the resource strip.
@@ -7734,6 +7741,10 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
 // emits no test specialization. Keep the append API and direct test while
 // recovering the remaining per-site boundaries, including getRmgGuardValue
 // and the second getMapItem call.
+// Assigning zero only in the disabled-guard arm, as retail does, raises
+// 71.5746% to 71.6766%. The guard-value helper still expands. Shared clamp
+// alternatives (limit/tLimit/min-max) do not restore that retained call;
+// keep the observed upper-bound-first clamp and last-scanned prototype.
 VA(0x00545990, 0x466)
 unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     int resource, unsigned char startingMine, int spacing)
@@ -7770,12 +7781,14 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     case GOLD: value = 7000; break;
     default: value = 3500; break;
     }
-    int guardValue = 0;
+    int guardValue;
     if (zone->m_slot->m_monsterStrength) {
         int strength = zone->m_slot->m_monsterStrength + m_monsterStrength - 3;
         if (strength > 5) strength = 5;
         else if (strength < 0) strength = 0;
         guardValue = getRmgGuardValue(value, strength);
+    } else {
+        guardValue = 0;
     }
     TRmgMapPosition entrance = mine->m_position;
     entrance.m_x -= prototype->m_triggerCell.m_x;
@@ -9459,7 +9472,10 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
                     0x0068280C, rmgTownChoiceIs, " town choice is "));
             strcat(
                 description,
-                g_rmgTownNames[m_townChoices[descriptionPlayer]]);
+                // Retail 0x549fba reuses the player-index byte offset for
+                // this lookup, as it does for the preceding color name.
+                // Preserve that description bug when another town was chosen.
+                g_rmgTownNames[descriptionPlayer]);
         }
     }
 
@@ -9735,8 +9751,10 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         disabledArtifacts[artifactIndex] =
             g_artifactTraits[artifactIndex].m_comboType != -1;
     }
-    disabledArtifacts.set(0);
-    disabledArtifacts.set(63);
+    // Retail 0x54a78d/0x54a790 sets bit 0 of word 4 and bit 31 of
+    // word 3, relative to the bitset base at [ebp-0x64]: IDs 128 and 127.
+    disabledArtifacts.set(128);
+    disabledArtifacts.set(127);
 
     if (m_mapVersion >= 2) {
         unsigned char packedArtifacts[18];
