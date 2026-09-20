@@ -3480,7 +3480,7 @@ rmg	?traceOutline@TRmgTreasureGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x135ee0	
 rmg	?traceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	86.6846	86.6846	86.6846	0x13c390	tokens1:43e4957d073d
 rmg	?tryAddObject@TRmgTreasureGroup@@QAEEPAVtype_object@@@Z	79.3429	79.3429	79.3429	0x135970	tokens1:4efff0c8c393
 rmg	?tryPlaceAdditionalTown@type_random_map_generator@@QAEEPAUTRmgZone@@HHEH@Z	76.6787	76.6787	76.6787	0x144d90	tokens1:966e84e62bcf
-rmg	?tryPlaceMine@type_random_map_generator@@QAEEPAUTRmgZone@@HEH@Z	80.5746	80.5746	80.5746	0x145990	tokens1:af664c18a9eb
+rmg	?tryPlaceMine@type_random_map_generator@@QAEEPAUTRmgZone@@HEH@Z	95.4627	95.4627	95.4627	0x145990	tokens1:423700a816d3
 rmg	?tryPlacePrimaryTown@type_random_map_generator@@QAEEPAUTRmgZone@@HHE@Z	92.0724	92.0724	92.0724	0x145250	tokens1:20315f13abe5
 rmg	?unknownOperation@rmgHeroObject@@UAEXXZ	100.0000	100.0000	100.0000	0x133c70	tokens1:dcca37f6a32f
 rmg	?updateBounds@TRmgTreasureGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x135df0	tokens1:2d17722e788a
@@ -3499,7 +3499,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	tokens1:9ffb396c8413
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	tokens1:f84e27622dc7
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	99.4123	99.4123	99.4123	0x14abf0	tokens1:d414eb83c2cc
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	77.2363	77.2441	95.7066	0x149cb0	tokens1:2e8f526f3bb4
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	77.2441	77.2441	95.7066	0x149cb0	tokens1:2e8f526f3bb4
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	100.0000	100.0000	100.0000	0x14ae30	tokens1:c9c09a93db3c
 rmg	__h3cg$rmg$list_dtor$TPoint	0.0000	100.0000	100.0000	0x14c6a0	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-

@@ -7727,6 +7727,28 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
     return 1;
 }
 
+// Complete-only mine valuation: resource price, local enablement and combined
+// difficulty precede the retained scalar curve at retail 0x545b76. This ordinary
+// member is a provisional source boundary/name, not a recovered DC declaration.
+// Keeping the whole mine calculation together reproduces that retained call
+// without changing treasure valuation's different source path.
+int type_random_map_generator::getMineGuardValue(int resource, const TRmgZone* zone) const
+{
+    int value;
+    switch (resource) {
+    case WOOD: case ORE: value = 1500; break;
+    case GOLD: value = 7000; break;
+    default: value = 3500; break;
+    }
+    int localStrength = zone->m_slot->m_monsterStrength;
+    if (!localStrength)
+        return 0;
+    int strength = localStrength + m_monsterStrength - 3;
+    if (strength > 5) strength = 5;
+    else if (strength < 0) strength = 0;
+    return getRmgGuardValue(value, strength);
+}
+
 // Retail +0x388 selects the MINE prototype vector. The caller supplies
 // zone/resource/starting flag/spacing; names are role-derived.
 // Keep prototype as the last scanned prototype: retail stores it at
@@ -7737,22 +7759,20 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
 // A const query retains only _Xran; an explicit first insert is byte-neutral.
 // Keep the canonical object-position and guard-placement calls; expanding
 // placeGuard duplicates the same zone/occupancy/create/add sequence.
-// Assign zero only in the disabled-strength arm and retain the observed
-// upper-bound-first clamp. The scalar getRmgGuardValue call still expands.
+// The mine valuation operation retains the scalar getRmgGuardValue call and
+// upper-bound-first clamp. A named selection index restores the post-rand
+// array reload. A separate resourceProperties local recovers the resource
+// strip's register lifetime: its address never reaches vector insertion.
+// Current 95.4627% retains all other MAX scores. Remaining differences include
+// first-scan insertion expansion, a 0x3c frame versus retail's 0x44, trigger-Y
+// subtraction/increment versus 1-minus-trigger, and guard-position arguments.
 // Both map-lookup overloads emit the same 39 retail bytes without relocations;
-// their labels do not distinguish the folded body. The guard argument still
-// lowers as three pushes, while retail copies a twelve-byte aggregate.
-// A separate resourceProperties local recovers the retail register lifetime:
-// unlike the earlier scan pointer, its address never reaches vector insertion.
-// In the zone-value-helper model, a named selection index also restores the
-// post-rand array reload (95.7935% together). Compound trigger subtraction
-// reaches 96.6393%, but changes retail's 1-minus-trigger arithmetic sequence.
-// The shared helper still lowers treasure assembly MAX (77.0873% -> 63.2533%);
-// its disabled/explicit-result variants do not yet recover that caller.
-// Free overloads taking zone or scalar strengths reproduce that same tradeoff.
-// Cell zone/count queries and a reference-returning position accessor leave
-// this caller unchanged. Direct mutable bitset indexing loses the outer query
-// boundary; keep the prototype query while recovering the remaining helpers.
+// labels do not distinguish the folded body, but three scalar pushes still
+// differ from retail's twelve-byte aggregate copy.
+// A shared zone-value wrapper reaches 96.6393% here but lowers treasure assembly
+// MAX to 63.2533%; keep the mine-specific operation. Separating scan pointers
+// loses the retail shared lifetime. Cell queries and a reference-returning
+// position accessor are neutral; direct bitset indexing loses the outer query.
 VA(0x00545990, 0x466)
 unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     int resource, unsigned char startingMine, int spacing)
@@ -7777,30 +7797,17 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     }
     if (!candidates.size())
         return 0;
-    properties = candidates[rand() % candidates.size()];
+    unsigned int selected = rand() % candidates.size();
+    properties = candidates[selected];
     rmgOwnableObject* mine = new rmgOwnableObject(properties);
     if (!placeMineSite(mine, zone, startingMine, spacing)) {
         delete mine;
         return 0;
     }
-    int value;
-    switch (resource) {
-    case WOOD: case ORE: value = 1500; break;
-    case GOLD: value = 7000; break;
-    default: value = 3500; break;
-    }
-    int guardValue;
-    if (zone->m_slot->m_monsterStrength) {
-        int strength = zone->m_slot->m_monsterStrength + m_monsterStrength - 3;
-        if (strength > 5) strength = 5;
-        else if (strength < 0) strength = 0;
-        guardValue = getRmgGuardValue(value, strength);
-    } else {
-        guardValue = 0;
-    }
+    int guardValue = getMineGuardValue(resource, zone);
     TRmgMapPosition entrance = mine->getPosition();
-    entrance.m_x -= prototype->m_triggerCell.m_x;
-    entrance.m_y += 1 - prototype->m_triggerCell.m_y;
+    entrance -= TPoint(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
+    ++entrance.m_y;
     TRmgMapItem* item = m_map.getMapItem(entrance);
     if (!item->m_connection.m_present) {
         item->m_tileData.m_borderObject = 0;

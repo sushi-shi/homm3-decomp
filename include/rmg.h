@@ -1922,6 +1922,7 @@ public:
     type_object* createGuard(int value, TRmgZone* zone);
     unsigned char placeObjectInZone(type_object* object, TRmgZone* zone);
     void placeGuard(TRmgMapPosition position, int value);
+    int getMineGuardValue(int resource, const TRmgZone* zone) const;
     // Complete-only prototype/subtype/terrain filter at retail 0x546040.
     TRmgObjectPropertiesRef* selectObjectPrototype(
         int terrain, int objectType, int subtype);
