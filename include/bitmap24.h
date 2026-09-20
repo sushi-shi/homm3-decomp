@@ -22,9 +22,13 @@ public:
     virtual ~Bitmap24Bit();
     virtual unsigned int getSize() const;
 
+    Bitmap24Bit();
     Bitmap24Bit(const char* name, int w, int h,
                 const unsigned char* source, int size);
     Bitmap24Bit(const char* name, const char* path);
+
+    void import(int w, int h, const unsigned char* data, int size);
+    void clear();
 
     int getWidth() const { return m_width; }
     int getHeight() const { return m_height; }

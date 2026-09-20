@@ -2423,3 +2423,79 @@ parameter and canonical helper require neither pasted search code nor an
 inlining directive. Complete's body has no counterpart to Dreamcast's
 combat-over branch at line 413; that platform difference stays documented
 beside the owning function.
+
+
+### A retained sibling changes the AI selector expansion (2026-09-20)
+
+`philAI::doAI` (`0x525e80`) reaches 100% when the ordinary movement
+helpers recover their Dreamcast file-static linkage, reference parameter and
+definition order together with the selector's separate priority rejections,
+staged values and the caller's nested guards. The first movement phase keeps
+its selector call; the second expands it while retaining `getTown` and
+`getHero`. The standalone selector (`0x526a90`) and inner movement helper
+(`0x5267b0`) remain exact. No inline-control pragma or release assertion is
+needed.
+
+The byte-verified C2 trace explains the interaction. The outer movement
+helper previously had no saved body (callee flags `0x28`). With the recovered
+interface and visibility it has flags `0x48`, cost 596, and counts as an
+eligible sibling even though neither call expands. The first selector costs
+473 against a child budget of 396 and stays out of line. The second gets
+689, expands, and divides its remaining budget by two eligible siblings:
+`getPrimarySkill` receives 108 and costs 81; the remaining 27 refuses both
+`getTown` (45) and `getHero` (41). Merely relocating the earlier external
+pointer-parameter bodies did not restore that sibling.
+
+The two remaining stores independently distinguish source order: Dreamcast
+assigns the minimum skill sum before the selected hero, but both Complete's
+retained selector and its caller expansion store the selected hero first.
+Restoring that order closes the final 99.9236% selector / 99.9559% caller
+differences. The earlier pointer/reference audit suppression cited a generated
+candidate symbol as if it were a retail symbol; restoring the proven
+reference removes that unsupported exception.
+
+
+### Returned scalar values recover save-header cleanup (2026-09-20)
+
+`SavedGameHeader::load` (`0x4bc750`) reaches 100% through one ordinary
+`readValue<T>(TAbstractFile*)` template for its six unchecked native scalar
+reads. Each call reads into a local and returns that value; short/char
+conversions and discarded read counts remain unchanged. The checked ID read
+also restores Dreamcast's named count. All 62 blocks and 26 named calls match,
+including the shared failure cleanup. No reader specialization is retained in
+the candidate game object. The helper's spelling and free-function binding
+remain inferred from the scalar operations and lifetimes.
+
+Flattening those operations into primitive caller scopes scores 83.6714%;
+sharing procedure buffers with a named ID count scores 81.9600%. Returned
+values reproduce the exact result both with and without that named count.
+The historical exact implementation used four empty helper calls before the
+final return. Those calls diagnosed an inline-decision sensitivity but were
+not recovered operations; the real scalar-reader boundaries replace them.
+
+
+### Separate read, decode and application responsibilities (2026-09-20)
+
+`game::load` (`0x4bcda0`) reaches 98.1693% with ordinary snapshot
+application and packed-bit decoding helpers. The caller keeps the saved
+header alive, tests its read before applying state, and owns the bitset's
+construction, packed byte read and final member copy. The decoder owns only
+unsigned bit assignments. Its interface and the application helper's name
+and external binding are inferred, without standalone retail claims.
+The native output-reference scalar reader preserves the actual byte count;
+its returned-value overload keeps `SavedGameHeader::load` exact.
+
+The remaining retail expansion is `loadVector<type_university>`. The prefix,
+stack slots, packed proxy call and cleanup already match. Sharing a complete
+packed reader with campaign changes the call boundary; sharing unsigned
+indexing with mapcell contradicts its signed division instructions. Broader
+native range/scalar readers expand the university call but alter the final
+failure cleanup or `isLocalHuman` decision. Named fill objects likewise
+change the otherwise matching vector lifetimes. None of those diagnostic
+variants is adopted. No inline-control pragma or release assertion is added.
+
+The serializer result contracts also follow the raw Dreamcast public names:
+`generator::load/save`, `type_creature_bank::load/save` and both object-vector
+templates return `bool` (`_N`), despite the primitive display's byte alias.
+Their retained object bodies are byte-identical after this signature repair;
+score history follows the retail RVA across the regenerated labels.

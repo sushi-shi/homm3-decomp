@@ -430,18 +430,12 @@ int TViewArmyWindow::convertID2HelpID(int id) const
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\viewarmywindow.cpp:366 - no retail row: the carve has nothing
-// between DoModal (0x5f47f0 + 92 = 0x5f484c) and WindowHandler (0x5f4850),
-// so retail either inlined this at its one call site or /OPT:REF dropped it.
-DC_ONLY(0x191764, 0x40)
+// Original: TViewArmyWindow::QuickView; viewarmywindow.cpp:366, dc 0x191764.
+// HillFortWindow's right-click path invokes the common quick-view wrapper.
 void TViewArmyWindow::quickView()
 {
-    // @stub
+    g_windowManager->doQuickView(this);
 }
-
-#endif  // @carcass
 
 VA(0x005f47f0, 0x5C)  // dc 0x1917a4
 void TViewArmyWindow::doModal()

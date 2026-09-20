@@ -116,9 +116,10 @@
       };
 
       homm3-cli = pkgs.writeShellScriptBin "homm3" ''
-        project_dir="''${HOMM3_DIR:-$PWD}"
+        HOMM3_DIR="$(${pkgs.runtimeShell} ${./scripts/project-root.sh} "''${HOMM3_DIR:-$PWD}")" || exit 1
+        export HOMM3_DIR
         export PYTHONDONTWRITEBYTECODE=1
-        export PYTHONPATH="$project_dir/scripts''${PYTHONPATH:+:$PYTHONPATH}"
+        export PYTHONPATH="$HOMM3_DIR/scripts''${PYTHONPATH:+:$PYTHONPATH}"
         exec python3 -m homm3 "$@"
       '';
 
@@ -129,15 +130,15 @@
       ]);
 
       objdiffShimHook = ''
-        if [ -z "''${HOMM3_OBJDIFF_WRAPPED:-}" ] && command -v objdiff >/dev/null 2>&1; then
-          _real_objdiff="$(command -v objdiff)"
+        if [ "''${HOMM3_OBJDIFF_WRAPPED:-}" != "$HOMM3_DIR" ]; then
+          _real_objdiff="${objdiff}/bin/objdiff"
           _objdiff_bin="$HOMM3_DIR/build/objdiff-shim"
           mkdir -p "$_objdiff_bin"
           printf '#!/bin/sh\nfor arg in "$@"; do\n  case "$arg" in -p|--project-dir) exec "%s" "$@" ;; esac\ndone\nexec "%s" -p "%s/build/objdiff" "$@"\n' \
             "$_real_objdiff" "$_real_objdiff" "$HOMM3_DIR" > "$_objdiff_bin/objdiff"
           chmod +x "$_objdiff_bin/objdiff"
           export PATH="$_objdiff_bin:$PATH"
-          export HOMM3_OBJDIFF_WRAPPED=1
+          export HOMM3_OBJDIFF_WRAPPED="$HOMM3_DIR"
         fi
       '';
 
@@ -171,7 +172,8 @@
       ]);
 
       commonShellHook = ''
-        export HOMM3_DIR="$PWD"
+        HOMM3_DIR="$(${pkgs.runtimeShell} ${./scripts/project-root.sh} "$PWD")" || exit 1
+        export HOMM3_DIR
         export HOMM3_CLANG="${pkgs.llvmPackages.clang-unwrapped}/bin/clang"
         export PYTHONDONTWRITEBYTECODE=1
         export PYTHONPATH="$HOMM3_DIR/scripts''${PYTHONPATH:+:$PYTHONPATH}"

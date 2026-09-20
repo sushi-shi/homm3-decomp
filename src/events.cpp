@@ -88,12 +88,6 @@ void advManager::doEventAnchor(hero* current_hero, unsigned char human_player)
     // @stub
 }
 
-// E:\gamedcs\events.cpp:412
-DC_ONLY(0x906c0, 0x16)
-void advManager::eventSound(NewmapCell* cell)
-{
-    // @stub
-}
 
 // E:\gamedcs\events.cpp:421
 DC_ONLY(0x906d8, 0x13C)
@@ -817,12 +811,6 @@ void advManager::eventSound(int eventID, int extraInfo)
     // @stub
 }
 
-// E:\gamedcs\events.cpp:5568
-DC_ONLY(0x9a528, 0x86)
-short advManager::RecruitEvent(hero* who, TCreatureType creature, short available)
-{
-    // @stub
-}
 
 // E:\gamedcs\events.cpp:5590
 // RETAIL_LOCATED(0x004aba50, 0x361)  // located @stub (promoted to active VA), dc 0x9a5b0
@@ -914,6 +902,57 @@ void advManager::receiveHeroTownData(CCombatInitMsg* pCombatInitMsg, int* iFromW
 {
     // @stub
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // E:\gamedcs\events.cpp:1883
 DC_ONLY(0x9cdc0, 0x48)
@@ -1131,6 +1170,12 @@ void advManager::doEventAnchor(hero* currentHero, bool humanPlayer)
 // the first two rows in the file, because "arena" is the first adventure
 // object alphabetically. That is the strongest single check on the
 // ordering this enum rests on.
+// Original: advManager::EventSound; events.cpp:412, dc 0x906c0.
+void advManager::eventSound(NewmapCell* cell)
+{
+    eventSound(cell->m_type, cell->m_extraInfo);
+}
+
 VA(0x0049e7d0, 0x118)  // dc 0x906d8
 void advManager::doEventArena(hero* currentHero, NewmapCell* cell,
                               bool humanPlayer)
@@ -3168,21 +3213,8 @@ void advManager::doEventRefugeeCamp(hero* currentHero, NewmapCell* cell,
             return;
     }
 
-    short available = cell->m_extraInfo;
-    TCreatureType creature;
-    {
-        creature = TCreatureType(cell->m_objectIndex);
-    }
-    if (currentHero->belongsToHuman()) {
-        recruitUnit dialog(&currentHero->m_army, 0, creature, &available,
-                           CREATURE_NONE, 0,
-                           CREATURE_NONE, 0,
-                           CREATURE_NONE, 0);
-        g_executive->doDialog(&dialog);
-    } else {
-        aiRecruitRefugees(currentHero, creature, &available);
-    }
-    cell->m_extraInfo = available;
+    cell->m_extraInfo = recruitEvent(currentHero,
+        TCreatureType(cell->m_objectIndex), cell->m_extraInfo);
 }
 
 VA(0x004a4780, 0x45D)  // dc 0x94ea4
@@ -5326,7 +5358,7 @@ void advManager::doEvent(NewmapCell* eventCell, type_point point)
     hero* currentHero = g_game->getCurrHero();
 
     reseed(0, 0);
-    eventSound(eventCell->m_type, eventCell->m_extraInfo);
+    eventSound(eventCell);
     dispatchEvent(currentHero, eventCell, point, 1);
 
     updateRadar(1, 1, 0, 0, 0);
@@ -5671,6 +5703,21 @@ void advManager::eventSound(int eventID, int extraInfo)
 
     if (sampleName.size())
         launchSample(sampleName.c_str(), -1, 3);
+}
+
+// Original: advManager::RecruitEvent; events.cpp:5568, dc 0x9a528.
+// The ordinary helper is expanded into Complete's refugee-camp handler.
+short advManager::recruitEvent(hero* who, TCreatureType creature, short available)
+{
+    if (who->belongsToHuman()) {
+        recruitUnit dialog(&who->m_army, 0, creature, &available,
+                           CREATURE_NONE, 0, CREATURE_NONE, 0,
+                           CREATURE_NONE, 0);
+        g_executive->doDialog(&dialog);
+    } else {
+        aiRecruitRefugees(who, creature, &available);
+    }
+    return available;
 }
 
 VA(0x004aba50, 0x361)  // dc 0x9a5b0
@@ -6561,11 +6608,11 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
                                      rightTown, rightHero, rightArmyGroup,
                                      point.m_x, point.m_y, seed, alternateLayout);
         if (!leftHuman)
-            splitArmies(leftHero, rightHero, *rightArmyGroup);
+            aiArrangeArmyForCombat(leftHero, rightHero, *rightArmyGroup);
         if (!rightHuman && rightHero
             && rightHero->m_skillLevel[eSecSkillBattleTactics]
                    > leftHero->m_skillLevel[eSecSkillBattleTactics])
-            splitArmies(rightHero, leftHero, *leftArmyGroup);
+            aiArrangeArmyForCombat(rightHero, leftHero, *leftArmyGroup);
         if (g_highMemBuffer > 2900)
             g_unnamed699548 = 2;
         else if (g_highMemBuffer > 900)

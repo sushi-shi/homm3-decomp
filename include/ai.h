@@ -73,7 +73,7 @@ enum EAreaAttackCreature {
     // Castle root pair, Pikeman and Halberdier - and the hate ladder
     // pairs the plain Genie 0x24 and plain Efreeti 0x34 with the
     // MASTER_GENIE 0x25 / EFREET_SULTAN 0x35 armygrp.h already proves.
-    CREATURE_PIKEMAN = 0x0,
+    // CREATURE_PIKEMAN belongs to TCreatureType in armygrp.h.
     CREATURE_HALBERDIER = 0x1,
     CREATURE_GENIE = 0x24,
     CREATURE_EFREETI = 0x34,

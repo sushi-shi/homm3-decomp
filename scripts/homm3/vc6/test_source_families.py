@@ -7,12 +7,32 @@ import tempfile
 import unittest
 
 from homm3.vc6.source_families import (
-    Axis, Option, identity_symbol, load_manifest, next_population, render,
+    Axis, Option, create_snapshot, identity_symbol, load_manifest, next_population, render,
     projected_max_scores, select_elites,
 )
 
 
 class SourceFamiliesTests(unittest.TestCase):
+    def test_snapshot_carries_frozen_project_configuration(self):
+        from homm3.core.project import Project
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "project"
+            for name in ("include", "src", "config", "vendor"):
+                (root / name).mkdir(parents=True)
+            project = '[inputs.retail]\nimage_base = 4194304\n'
+            units = '[build]\nincludes = ["include", "vendor/headers"]\n'
+            (root / "config/project.toml").write_text(project)
+            (root / "config/units.toml").write_text(units)
+            snapshot = Path(tmp) / "snapshot"
+            create_snapshot(root, snapshot)
+            (root / "config/project.toml").write_text('changed')
+            (root / "config/units.toml").write_text('changed')
+            self.assertEqual(Project(snapshot).specification['inputs']['retail']['image_base'],
+                             4194304)
+            self.assertEqual(Project(snapshot).includes,
+                             [snapshot / "include", snapshot / "vendor/headers"])
+
     def test_anonymous_scope_identity_preserves_semantics_not_path_nonce(self):
         first = r'?g_directions@?%Z:\tmp\first\rmg.cpp123@@3PAUTPoint@@A'
         repeat = r'?g_directions@?%Z:\tmp\repeat\rmg.cpp456@@3PAUTPoint@@A'

@@ -30,6 +30,8 @@ void saturateGraphics();
 // sole retail caller passes an int*, and the catch handler stores through it.
 bool open(bool openSprites, bool openBitmaps, int* errorCode);
 void close();
+void expunge();
+unsigned char report(const char* filename);
 void setPath(const char* path);
 void setPixelFormat(unsigned long redMask, unsigned long greenMask,
                     unsigned long blueMask);             // 0x55a6b0
@@ -50,6 +52,7 @@ void addToCache(resource* value);
 resource* getFromCache(const char* name);
 
 void dispose(resource* value);
+void dispose(sample* value);
 void dispose(CSprite* value);
 void delSprFromCache();
 

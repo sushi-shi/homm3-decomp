@@ -113,6 +113,9 @@ public:
 
     heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType);
     void centerWindow(int centerX, int centerY);
+    void moveWindow(int deltaX, int deltaY);
+    void enableAllWidgets(unsigned char enable);
+    void removeAndDeleteWidget(int id);
     int broadcastMessage(message& msg);
     int broadcastMessage(int id, int codeX, int codeY, int extra);
     int widgetSetStatus(int id, int status);

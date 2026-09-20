@@ -97,14 +97,18 @@ TPuzzleWindow::~TPuzzleWindow()
     }
 }
 
-#if 0  // @carcass: retail inlines this helper into WindowHandler
-// E:\gamedcs\puzzlewindow.cpp:179
-DC_ONLY(0x11530c, 0x1A)
-int TPuzzleWindow::convertID2HelpID(int id)
+// Original: TPuzzleWindow::convertID2HelpID; puzzlewindow.cpp:179, dc 0x11530c.
+// The old help-index query remains separate from Complete's window handler,
+// whose hover handling now delegates to CAdvPopup.
+int TPuzzleWindow::convertID2HelpID(int id) const
 {
-    // @stub
+    if (id < 0)
+        return -1;
+    switch (id) {
+    case ACCEPT_ID: return ACCEPT_HELP_ID;
+    default: return -1;
+    }
 }
-#endif
 
 // E:\gamedcs\puzzlewindow.cpp:203
 VA(0x0052c640, 0x78)  // vtable slot 9 + CAdvPopup delegation, dc 0x115328

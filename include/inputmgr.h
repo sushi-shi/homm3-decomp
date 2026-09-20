@@ -130,6 +130,8 @@ public:
     void flush();
     message getEvent();
     message peekEvent();
+    int getCurrQuals();
+    void setKeyCodeType(int newType);
     void forceMouseMove();
 };
 

@@ -76,16 +76,12 @@ int widget::open(int newPriority, heroWindow* parent)
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\widget.cpp:235
-DC_ONLY(0x196ccc, 0x4)
-void widget::Close()
+// Original: widget::Close; widget.cpp:235, dc 0x196ccc.
+// heroWindow::RemoveWidget calls the shared empty retail representative
+// at 0x5bc690. ICF removes a separate address, not this source definition.
+void widget::close()
 {
-    // @stub
 }
-
-#endif  // @carcass
 
 VA(0x005fe4f0, 0x2C8)  // dc 0x196cd0
 int widget::main(message& msg)

@@ -111,6 +111,8 @@ public:
     long getExchangeEffect(const army& currentArmy, const army& enemy,
                              long distance) const;
 
+    // Original: type_AI_combat_parameters::get_enemy_group; ai_tactical.h:82, dc 0x27fd4.
+    long getEnemyGroup() const { return m_enemyGroup; }
     long getGroup() const { return m_ourGroup; }
     long getRangedAttackValue(const army& currentArmy, const army& enemy) const;
     long getSimpleAttackEffect(const army& currentArmy, long ourTotal,
@@ -228,9 +230,8 @@ public:
     // dc 0x3d6f0. The DEPUTY's constructor - the one the public ctor
     // reaches through `new` for the other side's caster, with `parent`
     // landing in the deputy's own +0x48 and its owns_deputy byte left
-    // clear. Retail carries NO out-of-line body for it (the carve cuts
-    // no row between type_spell_choice's ctor at 0x436980 and the
-    // public ctor at 0x4369c0), so it is `inline` at its definition.
+    // clear. Complete expands this ordinary constructor into the public
+    // constructor; its definition is visible before that caller in the TU.
     type_AI_spellcaster(type_AI_spellcaster* parent, combatManager* combat,
                         long side, unsigned char creatureSpell);
     virtual ~type_AI_spellcaster();
@@ -242,6 +243,7 @@ public:
     long getOgreMageValue(const army* target) const;
 
 protected:
+    void initialize(combatManager* combat, long side);
     // dc 0x425a8. "Is anything left on the other side that can still
     // fight?" - the answer lands in field_1c and it is what the two
     // constructors both end on. Inlined into both in retail.
@@ -253,9 +255,8 @@ protected:
     // A THIRD census on the same 16-byte stride, byte-proven by
     // get_defense_skill_value (0x438910): it reads the record's `enemy`
     // pointer as `(bitIndex + 0x2d) * 16 + this`, i.e. this + 0x2d0 +
-    // bitIndex*16, and bails when it is null. The DC roster's
-    // set_worst_enemies (dc 0x42170) is the only unlocated writer left
-    // that fits, so the name is provisional.
+    // bitIndex*16, and bails when it is null. setWorstEnemies fills this
+    // array with the larger of the melee and ranged damage records.
     type_AI_enemy_data m_worstEnemies[20];  // +0x2d0
 
 public:
@@ -317,6 +318,7 @@ protected:
     long getMassDamageEffect(long enemyDamage, long friendlyDamage) const;
     long getMirthValue(const army* ourArmy, type_enchant_data caster) const;
     long getMisfortuneValue(const army* enemy, type_enchant_data caster) const;
+    long getMoveOrderChangeValue(const army* ourArmy) const;
     long getMuckAndMireValue(const army* enemy, type_enchant_data caster) const;
     long getPoisonValue(const army* enemy, type_enchant_data caster) const;
     long getPrayerValue(const army* ourArmy, type_enchant_data caster) const;
@@ -348,7 +350,7 @@ public:
     unsigned char castSpell(unsigned char retreating);
 
 protected:
-    void considerAreaEffect(type_spell_choice* choice) const;
+    void considerAreaEffect(type_spell_choice& choice) const;
     void considerEarthquake(type_spell_choice* choice) const;
     void considerEnchantment(type_spell_choice* choice, long group) const;
     void considerResurrect(type_spell_choice* choice) const;
@@ -369,6 +371,9 @@ protected:
     long getGroupDamageValue(SpellID spell, long baseDamage, long group,
                                 hero* targetHero) const;
     void setMeleeEnemies();
+    void setWorstEnemies();
+    void addEnemy(type_AI_enemy_data& sum, const army* ourArmy,
+                  const army* enemy, unsigned char ranged);
     unsigned char spellsNotRequired() const;
 };
 SIZE(type_AI_spellcaster, 0x410);
