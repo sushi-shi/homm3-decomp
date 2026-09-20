@@ -1149,7 +1149,7 @@ cspriteframe	??0CSpriteFrame@@QAE@PBDHHPAEHW4TEncodingMethod@@@Z	100.0000	100.00
 cspriteframe	??0CSpriteFrame@@QAE@PBDHHPAEHW4TEncodingMethod@@HHHH@Z	100.0000	100.0000	100.0000	0x7c360	tokens1:a652e641b93f
 cspriteframe	??1CSpriteFrame@@UAE@XZ	100.0000	100.0000	100.0000	0x7c430	tokens1:c5a7877fa675
 cspriteframe	??_GCSpriteFrame@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x7c280	-
-cspriteframe	?draw@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	98.6225	98.6225	100.0000	0x7c570	tokens1:46f6b732818c
+cspriteframe	?draw@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	100.0000	100.0000	100.0000	0x7c570	tokens1:b6681d5e0d80
 cspriteframe	?drawAdvObjImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@EG@Z	96.6247	96.6247	100.0000	0x7d0a0	tokens1:52ae3ef9629c
 cspriteframe	?drawAdvObjShadowImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@E@Z	94.3325	94.3325	99.9404	0x7d930	tokens1:303f48623c97
 cspriteframe	?drawAdvObjWithFlagAlpha@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@GE@Z	94.5249	94.5249	98.0000	0x7d4f0	tokens1:74769d598f84
@@ -3891,7 +3891,7 @@ singleselectionwindow	??1CChatWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x17cba0
 singleselectionwindow	??1CGameHeaderInfoMsg@@QAE@XZ	100.0000	100.0000	100.0000	0x178760	-
 singleselectionwindow	??1CHostWaitDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x189230	d92e236478cf
 singleselectionwindow	??1CNewMapHeaderInfoMsg@@QAE@XZ	100.0000	100.0000	100.0000	0x18a300	b61fdfca3e91
-singleselectionwindow	??1CNewPlayerUpdateProc@@QAE@XZ	93.6111	93.6111	100.0000	0x183ef0	tokens1:3aecd9205074
+singleselectionwindow	??1CNewPlayerUpdateProc@@QAE@XZ	100.0000	100.0000	100.0000	0x183ef0	tokens1:3aecd9205074
 singleselectionwindow	??1GameSelectionHeadersStruct@@QAE@XZ	100.0000	100.0000	100.0000	0x178290	-
 singleselectionwindow	??1TSingleSelectionWindow@@UAE@XZ	86.6265	100.0000	100.0000	0x183b40	tokens1:bd5993945267
 singleselectionwindow	??4?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x18eb10	-
@@ -4226,7 +4226,7 @@ spells	?markAreaHighlights@@YIXHW4TSkillMastery@@J@Z	98.5000	98.5000	98.5000	0x1
 spells	?markBerserkAreaEffect@combatManager@@QAEXJJAAV?$vector@JV?$allocator@J@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4430	tokens1:cd7d4cc1f70a
 spells	?markBerserkAreaEffect@combatManager@@QAEXJJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4810	tokens1:7e825826f799
 spells	?mirrorImage@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1a6c70	tokens1:2aec30c1ac8c
-spells	?modifySpellDamage@combatManager@@QBEJJHPBVhero@@0PBVarmy@@E@Z	88.4854	88.4854	88.4854	0x1a78e0	tokens1:248d8485d78f
+spells	?modifySpellDamage@combatManager@@QBEJJHPBVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a78e0	tokens1:dfe842e01d74
 spells	?modifySpellDamageForSpells@combatManager@@QBEJJHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x1a7bb0	tokens1:0173b89184dc
 spells	?removeCorpse@combatManager@@QAEXPAVhexcell@@JJ@Z	100.0000	100.0000	100.0000	0x1a7320	tokens1:6d2a8c252865
 spells	?resetBoltAngle@combatManager@@QAEXPAUSBolt@@@Z	97.3158	97.3158	97.3158	0x1a5260	tokens1:c54404bc134b

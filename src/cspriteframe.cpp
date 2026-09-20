@@ -887,6 +887,11 @@ inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
 // (code,count-minus-one) runs; code 255 denotes a literal byte string, while
 // other codes denote a repeated palette index.  Raw/tile and adventure-object
 // encodings dispatch to their specialized renderers before this path.
+// Dreamcast names the table pointer `aLineOffset` and records each row loop as
+// one enclosing lifetime. Advancing lineDst directly by dpitch preserves that
+// source model and makes VC6 place its initialization before the loop guard,
+// matching both retail halves exactly; rebuilding it from a base plus an
+// integer row offset deferred that store and measured 98.62%.
 
 VA(0x0047c570, 0x465)  // unique PC/DC renderer identity; retail byte verdict
 void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
@@ -917,11 +922,7 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
                 static_cast<unsigned short*>(static_cast<void*>(
                 static_cast<unsigned char*>(static_cast<void*>(dst))
                 + dy * dpitch + dx * 2));
-
-            unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-            int rowOffset = 0;
             for (int y = sy; y < sy + sh; ++y) {
-                lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase + rowOffset));
                 unsigned short* out = lineDst;
                 unsigned int skipped = 0;
                 const unsigned char* src = m_map + lineOffset[y];
@@ -965,18 +966,16 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
                     run = *src++ + 1;
                 } while (remaining);
 
-                rowOffset += dpitch;
+                lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(lineDst))
+                    + dpitch));
             }
         } else {
             unsigned short* lineDst =
                 static_cast<unsigned short*>(static_cast<void*>(
                 static_cast<unsigned char*>(static_cast<void*>(dst))
                 + dy * dpitch + (dx + sw) * 2));
-
-            unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-            int rowOffset = 0;
             for (int y = sy; y < sy + sh; ++y) {
-                lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase + rowOffset));
                 unsigned short* out = lineDst;
                 unsigned int skipped = 0;
                 const unsigned char* src = m_map + lineOffset[y];
@@ -1020,7 +1019,9 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
                     run = *src++ + 1;
                 } while (remaining);
 
-                rowOffset += dpitch;
+                lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(lineDst))
+                    + dpitch));
             }
         }
     }

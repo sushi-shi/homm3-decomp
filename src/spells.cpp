@@ -4496,31 +4496,11 @@ long combatManager::computeSpellDamage(SpellID spell, long spellPower, long mast
 // into a NON-destructive `mov eax,damage / sub eax,base`, where retail
 // has the destructive `sub esi,ebx` a single named difference produces.
 
-// Residual (78.90%): TWO open classes, and no source spelling reaches
-// either.
-//   * A B1 role swap between iSpellType and targetArmy - retail binds
-//     ESI/EDI/EBX to (spell, target, base_damage) and our CL to
-//     (target, spell, base_damage), i.e. the first two call-crossing
-//     pseudos are created in the opposite order. base_damage lands on
-//     EBX on BOTH sides, so this is the C1 handle-state class
-//     docs/vc6/regalloc.md records as not source-nameable: the model
-//     path (`homm3 vc6 why-reg --model`) declines it, and the two
-//     prescribed edits - a `SpellID spell = iSpellType` parameter alias
-//     and the same for the army pointer - are both COALESCED by VC6 and
-//     measure exactly neutral.
-//   * The merged-return class. Retail has THREE epilogues where we have
-//     one: the message block's string destructor duplicates the whole
-//     `pop/fs restore/ret 0x18` tail into both of its exits and the
-//     early-out carries a third, ~15 instructions we tail-merge away.
-//     Writing an explicit `return damage;` inside the message scope is
-//     also exactly neutral - our CL re-merges it.
-//   * NOT the GetArmyName depth lever (2026-09-06). Writing the four name
-//     sites as `GetArmyName(targetArmy->creatureType, targetArmy->numTroops)`
-//     instead of `targetArmy->GetName()` - which is worth +10 and +2.5 on
-//     drawing's two message bodies - costs 16.2 here (88.49 -> 72.25).
-//     Retail CALLS the lookup in this body; a tree-wide census of
-//     `?GetArmyName@@YIPBDHH@Z` call counts (base against delinked target)
-//     names the bodies where the decision differs, and this is not one.
+// DC's line table closes the caster scope at 5092 and opens the whole
+// target-dependent region at 5094. Keeping that region under
+// `if (targetArmy)` makes VC6 duplicate the string cleanup epilogue exactly
+// as retail does. The equivalent early-return spelling merged those exits
+// and measured 88.49%; the recovered positive branch is exact.
 VA(0x005a78e0, 0x2CD)  // anchor-callee+arity, dc 0x156c30
 long combatManager::modifySpellDamage(long baseDamage, SpellID spellType,
                                       const hero* castingHero,
@@ -4532,43 +4512,43 @@ long combatManager::modifySpellDamage(long baseDamage, SpellID spellType,
     if (castingHero)
         damage = const_cast<hero*>(castingHero)->modifySpellDamage(
             spellType, baseDamage, targetArmy);
-    if (!targetArmy)
-        return damage;
-    damage = ::modifySpellDamage(damage, spellType,
-                                 targetArmy->m_creatureType);
-    damage = modifySpellDamageForSpells(damage, spellType, targetArmy);
-    if (printResult && damage != baseDamage
-        && !static_cast<const combatManager*>(this)->isQuickCombat()) {
-        std::string message;
-        long delta = damage - baseDamage;
-        if (delta < 0) {
-            if (targetArmy->m_numTroops == 1)
-                message = formatString(
-                    g_generalText->getText(
-                        GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_ONE),
-                    targetArmy->getName(),
-                    -delta);
-            else
-                message = formatString(
-                    g_generalText->getText(
-                        GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY),
-                    targetArmy->getName(),
-                    -delta);
-        } else {
-            if (targetArmy->m_numTroops == 1)
-                message = formatString(
-                    g_generalText->getText(
-                        GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_ONE),
-                    targetArmy->getName(),
-                    delta);
-            else
-                message = formatString(
-                    g_generalText->getText(
-                        GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_MANY),
-                    targetArmy->getName(),
-                    delta);
+    if (targetArmy) {
+        damage = ::modifySpellDamage(damage, spellType,
+                                     targetArmy->m_creatureType);
+        damage = modifySpellDamageForSpells(damage, spellType, targetArmy);
+        if (printResult && damage != baseDamage
+            && !static_cast<const combatManager*>(this)->isQuickCombat()) {
+            std::string message;
+            long delta = damage - baseDamage;
+            if (delta < 0) {
+                if (targetArmy->m_numTroops == 1)
+                    message = formatString(
+                        g_generalText->getText(
+                            GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_ONE),
+                        targetArmy->getName(),
+                        -delta);
+                else
+                    message = formatString(
+                        g_generalText->getText(
+                            GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY),
+                        targetArmy->getName(),
+                        -delta);
+            } else {
+                if (targetArmy->m_numTroops == 1)
+                    message = formatString(
+                        g_generalText->getText(
+                            GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_ONE),
+                        targetArmy->getName(),
+                        delta);
+                else
+                    message = formatString(
+                        g_generalText->getText(
+                            GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_MANY),
+                        targetArmy->getName(),
+                        delta);
+            }
+            m_combatWindow->combatMessage(message.c_str(), 1, 0);
         }
-        m_combatWindow->combatMessage(message.c_str(), 1, 0);
     }
     return damage;
 }
