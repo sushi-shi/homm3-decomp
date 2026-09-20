@@ -114,8 +114,8 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
     // 97.20%: 67/67 blocks exact, every reloc and call agrees, and the
     // sole residual is one stack slot - retail spills the shooting-attack
     // max to [ebp-0x1c] where we use [ebp-0x18]. Everything stored before
-    // it matches, so retail owns one extra 4-byte slot whose lifetime
-    // starts here. Falsified: hoisting `side`'s declaration (no change -
+    // it matches; that offset alone does not prove another source local.
+    // Unsuccessful isolated probes: hoisting `side`'s declaration (no change -
     // VC6 slots by first use, not declaration), `int shooting` (96.73,
     // and the divergence moves earlier), and an added early int (folded
     // away). DC types the traits local as a reference, which is adopted

@@ -2688,11 +2688,10 @@ void SCampaign::playScenarioEpilogue(void* campaignHeader)
 // The earlier typed-header checkpoint was 70.3423%, with 79.2531%
 // retained in HIST (2026-09-08); no new byte-score claim follows this move.
 
-// The pre-v28 record's per-hero conversion. A `static` with a single call
-// site leaves no out-of-line copy, so its absence from the image argues for
-// the boundary rather than against it - the findAttackHexes precedent above.
-// Holding it here keeps SCampaign::load's own caller_cb down, which is what
-// leaves the vector size()/_Destroy expansions starved as retail's bytes show.
+// Inferred pre-v28 per-hero conversion boundary. VC6 expands this helper at
+// its sole call and changes the surrounding vector inlining in SCampaign::load.
+// No standalone DC or retail procedure proves the original boundary; the
+// coherent conversion operation and measured caller output support the model.
 static void convertLegacyCampaignHero(hero& newHero,
                                       const LegacyCampaignHero& oldHero)
 {

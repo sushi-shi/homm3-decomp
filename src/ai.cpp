@@ -18,27 +18,6 @@
 #include "sample.h"    // TResourceHandle<sample>::~TResourceHandle calls resource::Dispose
 #include "soundmgr.h"
 
-// The by-VALUE min selector, in the orientation that returns the LEFT operand
-// on a tie. cppMin binds const references to the caller's own operands and
-// tests the right against the left; these are two different functions and the
-// difference is byte-load-bearing - chooseToRun and computeFireShieldDamage
-// both sit at 99.74/99.82 through min() and reach 100.0000 through this one.
-template <class T>
-inline const T& minRef(T x, T y)
-{
-    return (x < y ? x : y);
-}
-// The later moveToward expansion keeps X in a fresh home while the explicit
-// copy reuses bestDanger's dead argument slot for Y - 99.4077 through min(),
-// 100.0000 through this one.
-template <class T>
-inline const T& minRefXvalue(T x, const T& y)
-{
-    T yCopy = y;
-    return (x < yCopy ? x : yCopy);
-}
-
-
 // THE HEAD OF ai.obj, 0x41e190..0x41eac0 (2026-09-05). The three rows
 // between the compiland's ten terrain.h bitset initializers
 // (0x41ddc0..0x41e18f, the excluded cinit class, with their atexit
@@ -722,10 +701,9 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
             } else {
                 bestDanger = enemyAttacks[hex];
                 if (currentArmy->m_monInfo.m_attributes & 1)
-                    bestDanger = minRef(
+                    bestDanger = min(bestDanger,
                             enemyAttacks[hex
-                                    + (currentArmy->m_facing != 0 ? 1 : -1)],
-                            bestDanger);
+                                    + (currentArmy->m_facing != 0 ? 1 : -1)]);
                 startDanger = bestDanger;
             }
 
@@ -756,9 +734,8 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
                                 if (enemyAttacks != 0) {
                                     bestDanger = enemyAttacks[hex];
                                     if (currentArmy->m_monInfo.m_attributes & 1)
-                                        bestDanger = minRefXvalue(
-                                                enemyAttacks[secondHex],
-                                                bestDanger);
+                                        bestDanger = min(bestDanger,
+                                                enemyAttacks[secondHex]);
                                 }
                             }
                         }
@@ -1265,7 +1242,6 @@ unsigned char combatManager::attemptShooterDefense(const army* currentArmy, sear
     return 1;
 }
 
-
 VA(0x004208f0, 0x184)  // dc 0x25c80
 unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyAttacks, const searchArray* currentSearchArray)
 {
@@ -1276,8 +1252,7 @@ unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyA
     long worstDanger = enemyAttacks[ourArmy->m_gridIndex];
     if (ourArmy->m_monInfo.m_attributes & 1) {
         long secondHex = ourArmy->getSecondGridIndex();
-        worstDanger = minRef(
-            enemyAttacks[secondHex], worstDanger);
+        worstDanger = min(worstDanger, enemyAttacks[secondHex]);
     }
 
     if (worstDanger >= 0
@@ -1301,7 +1276,7 @@ unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyA
         long danger = enemyAttacks[hex];
         if (ourArmy->m_monInfo.m_attributes & 1) {
             long secondHex = hex + (ourArmy->m_facing ? 1 : -1);
-            danger = minRef(enemyAttacks[secondHex], danger);
+            danger = min(danger, enemyAttacks[secondHex]);
         }
         if (danger < worstDanger)
             continue;
@@ -2226,10 +2201,10 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
         m_playDoh[target->m_combatSide] = 1;
 }
 
-// An earlier operand-order probe using the canonical selector measured
-// 99.77% because of a reversed cmp. That does not establish a separate
-// helper returning references to its own by-value arguments; the
-// includes.h min wrapper owns the copies and returns the selected value.
+// DC ai.cpp:2378 calls includes.h's value-returning min wrapper before
+// GetFireShieldStrength at 2382. Keep the capped damage as its own statement:
+// retail reproduces the comparison and temporary slots without a second
+// selector or a reference escaping a by-value helper's parameters.
 VA(0x00422440, 0x99)  // dc 0x27318
 long combatManager::computeFireShieldDamage(long damage, const army* attacker, const army* target, long targetHits) const
 {
@@ -2239,8 +2214,8 @@ long combatManager::computeFireShieldDamage(long damage, const army* attacker, c
         static_cast<unsigned>(attacker->m_monInfo.m_attributes) >> 14);
     if (fireImmune & 1)
         return 0;
-    damage = static_cast<long>(target->getFireShieldStrength()
-                               * minRef(targetHits, damage));
+    damage = min(damage, targetHits);
+    damage = static_cast<long>(target->getFireShieldStrength() * damage);
     hero* targetHero = attacker->getController();
     hero* castingHero = target->getController();
     return modifySpellDamage(damage, SPELL_FIRE_SHIELD, castingHero,

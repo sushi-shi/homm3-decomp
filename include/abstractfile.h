@@ -24,10 +24,11 @@ public:
 // route them through these helpers. The shape to look for is a local staging
 // scalar whose address is handed straight to read()/write() - e.g.
 // `charBuffer = m_owner; outfile->write(&charBuffer, sizeof(charBuffer));` or
-// the same with a braced scope per field. hero::save carried sixty of them and
-// only matched once they went through writeValue: function-scope staging
-// buffers cannot coalesce, so the frame comes out 0x1c with seven slots
-// against retail's 0x8 with two. town::save, SCampaign::save,
+// the same with a braced scope per field. hero::save has 49 scalar helper
+// calls and eleven direct buffer writes. The helper lifetimes reproduce
+// retail's 0x8 frame; the earlier function-scope staging buffers used 0x1c.
+// This is an inferred interface, not a recovered template declaration.
+// town::save, SCampaign::save,
 // SavedGameHeader::save, type_creature_quest::save and the NewSMapHeader and
 // mapcell readers all still stage by hand, and several of them sit below 100%
 // on frame-size residuals. Check each against its own retail bytes before
@@ -44,9 +45,9 @@ public:
 // the parameter is the stack temp whose address Write() receives, so the
 // PARAMETER's type - not the member's - fixes the width, which is what makes a
 // record's write widths independent of its member widths. Inlined at every
-// call, the instantiations coalesce into one another's frame slots; hero::save
-// needs that to reach retail's 0x8 frame for sixty writes, where six
-// function-scope buffers cost 0x1c and seven slots.
+// call, the instantiations reuse frame slots in hero::save. Dreamcast's
+// per-width locals and nested scopes support short staging lifetimes, but
+// do not distinguish a template from other original source spellings.
 template <class T>
 int writeValue(TAbstractFile* outfile, T value)
 {

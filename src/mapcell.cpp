@@ -3879,26 +3879,39 @@ void NewfullMap::newfullMapFn005042C0()
 }
 
 // E:\gamedcs\mapcell.cpp:3838
+// DC's long i (sp+0x18) belongs to the preceding hero-reset loop, absent in
+// Complete. These three loading loops use int x (sp+0x1c); push_back at
+// dc 0xf2d48 passes that slot directly to vector<int>::push_back(const int&).
+// A long counter instead creates a conversion temporary and changes VC6's
+// aliasing/induction decisions despite having the same x86 width.
+// Both count reads use int_buffer (sp+0x34), then copy to numObjects (sp+0x3c).
+// count (sp+0x30) owns read lengths and object-reader status; int v (sp+0x2c)
+// scans invalid placements. This ownership and the two braced read guards
+// reproduce retail, including its distinct empty/nonempty vector cleanups.
 VA(0x00504470, 0x5C9)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing, dc 0xf2c20
 int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 {
     g_invalidPlacementList.clear();
 
+    int intBuffer;
+    int numObjects;
     int count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    int x;
+    count = infile->read(&intBuffer, sizeof(intBuffer));
+    if (count < sizeof(intBuffer)) {
         return -1;
+    }
 
-    m_objectTypes.resize(count);
-
-    int i;
-    for (i = 0; i < m_objectTypes.size(); ++i) {
-        int status = readObjectType(infile, m_objectTypes[i]);
-        if (status < 0)
+    numObjects = intBuffer;
+    m_objectTypes.resize(numObjects);
+    for (x = 0; x < m_objectTypes.size(); ++x) {
+        count = readObjectType(infile, m_objectTypes[x]);
+        if (count < 0)
             return -1;
-        if (i == m_objectTypes.size() / 2)
+        if (x == m_objectTypes.size() / 2)
             incProgressBar(1);
-        if (status == READ_OBJECT_TYPE_DEFAULT_MASK)
-            g_invalidPlacementList.push_back(i);
+        if (count == READ_OBJECT_TYPE_DEFAULT_MASK)
+            g_invalidPlacementList.push_back(x);
     }
 
     newfullMapFn005042C0();
@@ -3906,53 +3919,47 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 
     std::vector<CSprite*> oldSprites;
     oldSprites.resize(m_sprites.size());
-    for (i = 0; i < m_sprites.size(); ++i)
-        oldSprites[i] = m_sprites[i];
+    for (x = 0; x < m_sprites.size(); ++x)
+        oldSprites[x] = m_sprites[x];
 
-    m_sprites.resize(count);
-    for (i = 0; i < m_objectTypes.size(); ++i) {
-        m_sprites[i] =
-            ResourceManager::getSprite(m_objectTypes[i].m_imageName.c_str());
-        if (i == m_objectTypes.size() / 3)
+    m_sprites.resize(numObjects);
+    for (x = 0; x < m_objectTypes.size(); ++x) {
+        m_sprites[x] =
+            ResourceManager::getSprite(m_objectTypes[x].m_imageName.c_str());
+        if (x == m_objectTypes.size() / 3)
             incProgressBar(1);
-        if (i == m_objectTypes.size() / 3 * 2)
+        if (x == m_objectTypes.size() / 3 * 2)
             incProgressBar(1);
     }
 
-    for (i = 0; i < oldSprites.size(); ++i)
-        oldSprites[i]->dispose();
+    for (x = 0; x < oldSprites.size(); ++x)
+        oldSprites[x]->dispose();
     oldSprites.clear();
 
     incProgressBar(1);
 
-    // DC names six locals here - int_buffer, numObjects, count, x, i, v -
-    // where this body had three, and numObjects is the second read's own
-    // staging int rather than a reuse of count. Adopting it is byte-neutral
-    // (VC6 coalesces the slots) but it is the recovered shape. DC types the
-    // loop counter `long i`; retail does not agree - `long` costs
-    // 89.47 -> 83.43, so the int counter stays. The remaining residual is a
-    // teardown-site count: retail emits THREE ~vector<CSprite*> sites, one
-    // per exit while oldSprites is live (the two `return -1` and the
-    // `return 1`), and our build cross-jumps two of them into one.
-    int numObjects;
-    if (infile->read(&numObjects, sizeof(numObjects)) < sizeof(numObjects))
+    count = infile->read(&intBuffer, sizeof(intBuffer));
+    if (count < sizeof(intBuffer)) {
         return -1;
+    }
 
+    numObjects = intBuffer;
     m_objects.resize(numObjects);
-    for (i = 0; i < m_objects.size(); ++i) {
-        if (readObject(infile, &m_objects[i], mapVersion) < 0)
+    for (x = 0; x < m_objects.size(); ++x) {
+        count = readObject(infile, &m_objects[x], mapVersion);
+        if (count < 0)
             return -1;
 
-        for (unsigned int missing = 0; missing < g_invalidPlacementList.size();
-             ++missing) {
-            if (m_objects[i].m_typeIndex == g_invalidPlacementList[missing]) {
+        for (int v = 0; v < g_invalidPlacementList.size();
+             ++v) {
+            if (m_objects[x].m_typeIndex == g_invalidPlacementList[v]) {
                 sprintf(g_text,
                         DATA_COMPGEN(0x0067fb48, readMapObjectsInvalidObject,
                                      "Invalid Object Referenced!\n\n"
                                      "x: %d y: %d z: %d - Type: %s"),
-                        m_objects[i].m_x, m_objects[i].m_y, m_objects[i].m_z,
+                        m_objects[x].m_x, m_objects[x].m_y, m_objects[x].m_z,
                         g_adventureObjectNames[
-                            m_objectTypes[m_objects[i].m_typeIndex].m_objectType]);
+                            m_objectTypes[m_objects[x].m_typeIndex].m_objectType]);
                 MessageBoxA(g_hwndApp, g_text,
                             DATA_COMPGEN(0x0067fb08,
                                          readMapObjectsErrorCaption, "Error!"),
@@ -3960,7 +3967,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
             }
         }
 
-        m_objects[i].m_animationOffset = static_cast<unsigned char>(random(0, 255));
+        m_objects[x].m_animationOffset = static_cast<unsigned char>(random(0, 255));
     }
 
     incProgressBar(1);

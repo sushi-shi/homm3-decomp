@@ -794,16 +794,6 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
     if (cached)
         return cached;
 
-    // The concatenation is a temporary, destroyed right after fopen: retail's
-    // `lea ecx,[ebp-0x30] / push 1 / call _Tidy` is that teardown one level
-    // deep. Ours expands _Tidy as well and gains the guard branch, which is
-    // the whole remaining residual (29 blocks against retail's 24, 17 branches
-    // against 14) now that the head matches. This line used to carry
-    // `#pragma inline_depth(0)`, which bought 0.80 by suppressing BOTH that
-    // over-inline and the c_str() null fallback retail does inline - the
-    // `mov eax,[eax+4] / cmp eax,<zero> / mov eax,_Nullstr` run before the
-    // push. Removing the pin recovers the fallback exactly and makes the call
-    // multiset agree; the destructor depth is the real boundary left.
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
 
     Bitmap816* result;
@@ -1043,23 +1033,22 @@ Bitmap16Bit* ResourceManager::getBitmap16(const char* name)
 // state store at all (`call operator+`, c_str INLINED to
 // `mov eax,[eax+4]` plus its empty-string branch, `call fopen`, then the
 // destructor inlined down to a CALLED `_Tidy(1)`), and writes its first
-// state only at fn+0x6b, after the `if (file)` test. We write state=esi
-// at +0x41 and state=-1 at +0x5a because the retained inline_depth(0)
-// leaves a real `call c_str` inside the temporary's lifetime. So the
-// missing shape is "expand c_str AND the temporary's destructor, but
-// call _Tidy" - which no placement of the existing pin reaches, and
-// which is why the whole tail of both arms is numbered one state high.
+// state only at fn+0x6b, after the `if (file)` test. The previous
+// inline_depth(0) experiment retained a real c_str call and introduced
+// surplus state stores inside that temporary's lifetime. Removing the pin
+// restores the c_str expansion, but the destructor still expands _Tidy
+// rather than retaining retail's call.
 
 // The leading string temporary is the bounded residual shared with LoadFont
 // and GetPalette24. Retail inlines c_str and the parent destructor but calls
-// _Tidy(true); inline_depth(0), retained below, calls both parents, while no
+// _Tidy(true); the removed inline_depth(0) pin called both parents, while no
 // pin and function-wide auto_inline(off) expand the full teardown. A named
 // scoped string and a const-reference lifetime are worse as well. why-reg v2
 // finds the same three first definitions/pseudos but a C1-state ESI/EDI
 // processing-order permutation; its only legal declaration-order probe
-// worsens the register-visible distance 67 -> 75. The surviving 22-vs-24
-// block split and 22-vs-21 call count are therefore inliner/front-end walls,
-// not missing resource behavior.
+// worsens the register-visible distance 67 -> 75. The current unpinned
+// function scores 94.89%, with 29 blocks versus retail's 24; the pathname
+// temporary remains an inlining/lifetime recovery lead.
 VA(0x0055b060, 0x377)  // public GetPalette callee + retail conversion tuple
 TPalette16* ResourceManager::loadPalette(const char* name)
 {
@@ -1776,9 +1765,11 @@ namespace ResourceManager {
 sample* loadSample(const char* name);
 }
 
-// One canonical missing-sample report. Retail calls it from both the primary
-// and the fallback lookup rather than carrying two copies of the stream and
-// message box; hand-inlining it at the two sites costs 83.0246.
+// Inferred missing-sample reporting helper, expanded at both lookups. Retail
+// contains two stream/message-box sequences, not a call to a shared reporter.
+// This boundary reproduces more of the caller's inlining (98.58% versus
+// 83.02% with both bodies written in the caller); its original name and
+// file-local binding remain hypotheses.
 static void reportMissingSample(const char* name)
 {
     std::ostringstream message;

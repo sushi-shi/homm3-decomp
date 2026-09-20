@@ -249,13 +249,14 @@ unsigned char type_AI_puzzle_tile::operator==(
 }
 
 // E:\gamedcs\puzzlewindow.cpp:334
-// Boundary repair: DC's 32-pixel sample walks are retained, but no cursor
-// advances after its final sample/row. Partial blocks need not have another
-// 32 bytes/rows allocated. The four-form family favors final guards (60.63%)
-// over next-sample guards (50.28%) and visited offsets (53.69%); retail's
-// unchecked 100% remains HIST, not a safe traversal alternative.
-// A fresh three-state relative-row family reproduces three objects: integral
-// byte offsets score 48.96%, multiplied row indices 33.43%; retain the guards.
+// DC puzzlewindow.cpp:390/391/393 and retail advance sample/row cursors
+// unconditionally. This exact reconstruction retains that original defect:
+// a 33x33 bitmap at dest(16,16) has valid samples but forms a final source
+// row at byte offset 2112 beyond its 1089-byte allocation. A clipped bottom
+// puzzle row can similarly form visible+324 beyond visible[17*19]. These
+// final cursors are not dereferenced, but their formation is not valid portable
+// C++. The earlier guarded repair scored 60.63%; bounded offset alternatives
+// remain non-exact. No extra allocation or padding guarantee is claimed.
 VA(0x0052c8b0, 0xFC)  // bracketed between tile ctor and AI attempt, dc 0x11577c
 void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
 {

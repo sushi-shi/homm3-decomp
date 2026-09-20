@@ -1235,14 +1235,15 @@ void game::setVisibility(int startX, int startY, int z, int whichPlayer,
 // Cover of Darkness's semantics exactly - while -1 clears all eight. It
 // also has no replay guard on the queue, only the empty-record one.
 // 87.93%: 38/38 blocks, no flow or target shift, and the residual is a
-// frame 8 bytes SHORT of retail's 0x38 - two locals this body does not
-// have. DC names four (tagRECT rect, double distance, unsigned short
-// enemyMask, unsigned short* old_value), but neither DC local supplies
-// them: spelling the bounds as a tagRECT costs 87.93 -> 87.20 (and
+// frame 8 bytes SHORT of retail's 0x38. Frame size alone does not identify
+// missing source locals. DC names four (tagRECT rect, double distance,
+// unsigned short enemyMask, unsigned short* old_value). Earlier isolated
+// probes spelling the bounds as a tagRECT measured 87.93 -> 87.20 (and
 // setVisibility 90.18 -> 89.45), and naming the sqrt result `distance`
 // costs 87.93 -> 87.24 while leaving the frame divergence in place,
 // because VC6 keeps the quotient in an x87 register rather than giving
-// it a slot. The missing eight bytes are still unaccounted for.
+// it a slot. Those score changes do not disprove the recorded locals;
+// their complete lifetime model and the frame difference remain unresolved.
 VA(0x0049d3d0, 0x260)  // anchor-global (0x63df7c + GetMapExtraPtr), dc 0x8e54c
 void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
                            int range)
