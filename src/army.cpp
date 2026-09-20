@@ -3761,43 +3761,47 @@ void army::decrementSpellRounds()
 // The legal victims of a berserked stack: every living stack on either
 // side except this one and the arrow towers, kept only while it ties or
 // beats the closest distance seen so far.
+// Original: army::get_berserk_targets; army.cpp:4158, dc 0x4a348. Dreamcast
+// names the two retained locals `closest` and `target`. Retail initializes
+// closest in the leading declaration region, before the inlined can_shoot;
+// that lifetime keeps `this` in EBX and reproduces the vector update loop.
 
 VA(0x00445490, 0x23B)  // anchor-global, dc 0x4a348
 void army::getBerserkTargets(std::vector<army*>& armies) const
 {
+    long closest = 0;
     unsigned char canShootTarget;
-    army* other;
+    army* target;
     if (canShoot(0)) {
         canShootTarget = 1;
     } else {
         canShootTarget = 0;
         g_searchArray->seedCombatPosition(this, -1, 127, 0, -1);
     }
-    long best = 0;
     for (int side = 0; side < 2; side++) {
-        other = g_combatManager->m_armies[side];
+        target = g_combatManager->m_armies[side];
         long count = g_combatManager->m_numArmies[side];
-        for (; count-- > 0; other++) {
-            if (other->is(1u << 21))
+        for (; count-- > 0; target++) {
+            if (target->is(1u << 21))
                 continue;
-            if (other == this)
+            if (target == this)
                 continue;
-            if (other->m_creatureType == ARMY_CREATURE_ARROW_TOWER)
+            if (target->m_creatureType == ARMY_CREATURE_ARROW_TOWER)
                 continue;
             long value;
             if (canShootTarget) {
-                value = combatManager::getDistance(m_gridIndex, other->m_gridIndex);
+                value = combatManager::getDistance(m_gridIndex, target->m_gridIndex);
             } else {
-                if (!g_combatManager->m_cells[other->m_gridIndex].m_validMove)
+                if (!g_combatManager->m_cells[target->m_gridIndex].m_validMove)
                     continue;
-                value = g_searchArray->getHex(other->m_gridIndex)->m_cost;
+                value = g_searchArray->getHex(target->m_gridIndex)->m_cost;
             }
-            if (armies.size() > 0 && value > best)
+            if (armies.size() > 0 && value > closest)
                 continue;
-            if (value < best)
+            if (value < closest)
                 armies.clear();
-            armies.push_back(other);
-            best = value;
+            armies.push_back(target);
+            closest = value;
         }
     }
 }
