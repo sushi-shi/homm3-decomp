@@ -33,7 +33,7 @@ class SourceInventoryTest(unittest.TestCase):
                              return_value=([], ['CLANG unrelated TU scan failed'], {})), \
                 patch.object(inventory.inputs, 'dreamcast_symbols', return_value=symbols), \
                 patch.object(inventory.ownership, 'read_filter',
-                             side_effect=[(disposition, []), ({}, [])]):
+                             side_effect=[(disposition, []), ({}, []), ({}, [])]):
             result = inventory.audit(Path(temp), modules=['widget'], origins=[dc])
         self.assertEqual(result['unresolved'], 0)
         self.assertEqual(result['violations'], ['CLANG unrelated TU scan failed'])
@@ -155,6 +155,20 @@ class SourceInventoryTest(unittest.TestCase):
         self.assertEqual(rows[0]['status'], 'documented_win_only')
         _, errors = reconcile([], [], {}, {key: 'Stale'})
         self.assertTrue(any('stale win_only.tsv' in e for e in errors))
+
+    def test_reviewed_inlined_helper_is_visible_and_requires_exact_live_key(self):
+        d = definition('writeField')
+        key = d.file, d.name, d.signature
+        evidence = {key: 'Caller evidence accounts for the inlined helper.'}
+        rows, errors = reconcile([d], [], {}, {}, evidence)
+        self.assertEqual(errors, [])
+        self.assertEqual(rows[0]['status'], 'documented_dc_inlined')
+        self.assertEqual(rows[0]['reason'], evidence[key])
+        rows, errors = reconcile([replace(d, signature='void (int)')], [], {}, {}, evidence)
+        self.assertEqual(rows[0]['status'], 'missing_dc')
+        self.assertTrue(any('stale dc-inlined-helpers.tsv' in e for e in errors))
+        _, errors = reconcile([], [], {}, {}, evidence)
+        self.assertTrue(any('stale dc-inlined-helpers.tsv' in e for e in errors))
 
     def test_repeated_header_emissions_are_all_accounted_for(self):
         d = replace(definition(), file='include/widget.h', inline=True, dc_offset='0x1000')

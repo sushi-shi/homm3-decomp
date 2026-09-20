@@ -1853,3 +1853,22 @@ lifetimes are neutral. The extra index is an evidence-supported source
 hypothesis; it is not a recovered named Dreamcast local. All other cursor
 scores hold. The two `startVals+4` operands resolve to retail's separately
 labelled `const_23d6f4`; they do not represent different table elements.
+
+### Output temporaries bound through VC6's reference extension
+
+A short output lifetime can come from a temporary argument to a mutable
+reference parameter. VC6 accepts `map->getSize(TRmgGridPoint())`; the returned
+reference can then be copied before the full expression ends. This is a
+Microsoft extension, not standard C++ reference binding. Keep the actual
+output-reference ABI instead of replacing it with a hidden value result.
+
+The terrain painter constructor at `0x5b45f0` proves the distinction together
+with both map adapters. An ordinary value-query helper preserves the ABI but
+scores 93.0418%: it consumes 45 inline-budget units, leaving only 1 for the
+shrinking path's `vector::size()` (cost 42). Passing the temporary directly
+restores all 621 bytes, 16 direct calls and the virtual call. A default output
+argument reproduces the same constructor; all seven header consumers retain
+their scores. The four differently named folded STL callees also match their
+retail bodies. This explains the temporary lifetime without a caller block
+or a separate convenience helper. It does not prove whether the original
+source supplied the temporary explicitly or through a default argument.

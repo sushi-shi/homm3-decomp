@@ -706,19 +706,21 @@ int __fastcall selectTerrainTransition(
     return 0;
 }
 
-// The short output lifetime can arise from the expanded value-size helper;
-// exact stack reuse did not prove the artificial block in the earlier model.
-// Residual (35.3347%): the value helper expands, but vector::insert(count,value)
-// remains a call where retail expands it. Both _Tree::_Init calls and virtual
-// slot 3 remain in order. Coordinate getters/fields, named value snapshots,
-// member initialization and an ordinary size/storage helper did not recover
-// that nested boundary. Scoped output is retained only as an experiment control.
+// The explicit output temporary uses VC6's non-const-reference binding
+// extension. The returned reference is copied before that temporary dies at
+// the full-expression boundary, matching retail's short output lifetime.
+// This preserves virtual slot 3's proven ABI and both exact adapter bodies.
+// All 621 bytes, 16 direct calls and virtual slot 3 reproduce; a default
+// output argument gives the same result. A separate value-query helper uses
+// inline budget and leaves the shrinking size() call retained (93.0418%).
+// No separate
+// convenience helper or artificial caller scope is needed.
 VA(0x005B45F0, 0x26D)
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
     : m_adapter(newAdapter), m_paintTerrain(terrain), m_transitionStrength(strength)
 {
-    m_size = m_adapter->getSize();
+    m_size = m_adapter->getSize(TRmgGridPoint());
     m_packedCells.resize(getWidth() * getHeight(), TRmgPackedTerrainCell());
 }
 
@@ -1422,6 +1424,10 @@ void rmgTerrainPainter::buildNeighbourKinds(
 // six exact rows: retained tLimit, heroQuickView, monsterQuickView, armyGroup
 // split, splitwindow and quicktowncenter. Keep its proven maximum < value
 // body; the identity of this Complete-only RMG clamp remains unresolved.
+// Both nesting orders of canonical min/max, with both argument orders and
+// standard reference selectors, lower both diagonals; no composition is adopted.
+// Explicit int/long selector specializations and signed conversion ownership
+// also preserve the same two residuals and comparison orientation.
 VA(0x005B6BA0, 0x24C)
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
