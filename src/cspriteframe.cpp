@@ -1327,6 +1327,10 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
 // (three-bit control, five-bit count-minus-one) runs.  Control seven carries
 // literal palette indexes; control five optionally draws the caller's flag
 // colour, and the remaining controls are transparent in this renderer.
+// Dreamcast records only palette, cellsPerLine and aCellOffset and gives each
+// row loop one enclosing lifetime. Advancing lineDst directly by dpitch keeps
+// that source model and matches both retail direction arms exactly; rebuilding
+// it from rowBase plus an integer rowOffset measured 96.6247%.
 
 VA(0x0047d0a0, 0x44B) // retail packed-cell decoder + DC source identity
 void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
@@ -1364,10 +1368,7 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                     static_cast<unsigned char*>(static_cast<void*>(dst)) +
                     dy * dpitch + dx * 2));
 
-                unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-                int rowOffset = 0;
                 for (int y = sy; y < sy + sh; ++y) {
-                    lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase + rowOffset));
                     unsigned short* out = lineDst;
                     unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
                     const unsigned char* src =
@@ -1418,7 +1419,11 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                         ++src;
                     } while (remaining);
 
-                    rowOffset += dpitch;
+                    lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                            static_cast<unsigned char*>(
+                                static_cast<void*>(lineDst)) +
+                            dpitch));
                 }
             } else {
                 unsigned short* lineDst =
@@ -1426,10 +1431,7 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                     static_cast<unsigned char*>(static_cast<void*>(dst)) +
                     dy * dpitch + (dx + sw) * 2));
 
-                unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-                int rowOffset = 0;
                 for (int y = sy; y < sy + sh; ++y) {
-                    lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase + rowOffset));
                     unsigned short* out = lineDst;
                     unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
                     const unsigned char* src =
@@ -1480,7 +1482,11 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                         ++src;
                     } while (remaining);
 
-                    rowOffset += dpitch;
+                    lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                            static_cast<unsigned char*>(
+                                static_cast<void*>(lineDst)) +
+                            dpitch));
                 }
             }
         }
