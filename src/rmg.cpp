@@ -3168,10 +3168,20 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
     }
 }
 
+// Flatten the level into a row, then the row into a cell index. The scalar
+// overload delegates here; each intermediate denotes a real coordinate step.
+// All 39 retained bytes still match. This staged body also restores mine
+// placement's retained aggregate lookup and expanded occupancy-size query.
+// Collapsing the stages or delegating to the planar accessor reproduces the
+// standalone body but changes those caller expansions; no inline pin is used.
 VA(0x005378E0, 0x27)
 TRmgMapItem* type_random_map::getMapItem(TRmgMapPosition point)
 {
-    return getMapItem(point.m_x, point.m_y, point.m_z);
+    int planeOffset = point.m_z * m_mapHeight;
+    int row = planeOffset + point.m_y;
+    int rowOffset = row * m_mapWidth;
+    int index = rowOffset + point.m_x;
+    return m_mapItems + index;
 }
 
 // Retail 0x549c91 calls this base-prefix pass after coastal marking.
@@ -7073,6 +7083,9 @@ TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, int level)
 // Remaining boundaries: retail retains both seed single-inserts and both
 // vector erases; this model still expands the second of each too far.
 // Point-bound getters recover those calls but over-expand list cleanup.
+// Pair-operation helpers do not recover the two container calls. Shared
+// midpoint/perpendicular helpers also disturb the three exact path callers;
+// keep their existing operations rather than adopt that unsupported boundary.
 // The shared guarded cell-setter model reaches 92.475%, but its joint runtime
 // transfer caller still loses MAX (commitTreasureGroup 99.9141% -> 82.6016%).
 // Keep that as a source-model lead requiring caller recovery, not an inline pin.
@@ -7763,12 +7776,13 @@ int type_random_map_generator::getMineGuardValue(int resource, const TRmgZone* z
 // upper-bound-first clamp. A named selection index restores the post-rand
 // array reload. A separate resourceProperties local recovers the resource
 // strip's register lifetime: its address never reaches vector insertion.
-// Current 95.4627% retains all other MAX scores. Remaining differences include
-// first-scan insertion expansion, a 0x3c frame versus retail's 0x44, trigger-Y
-// subtraction/increment versus 1-minus-trigger, and guard-position arguments.
-// Both map-lookup overloads emit the same 39 retail bytes without relocations;
-// labels do not distinguish the folded body, but three scalar pushes still
-// differ from retail's twelve-byte aggregate copy.
+// Current 97.9776% preserves all 71 retail control-flow blocks. The shared
+// map-index operation restores the retained aggregate lookup and expanded
+// occupancy-size query. Remaining differences include first-scan insertion,
+// the 0x38 frame versus retail's 0x44, and decrement/subtract trigger-Y
+// arithmetic versus retail's 1-minus-trigger/add sequence.
+// Whole-trigger subtraction restores the retail X/Y register assignment;
+// component assignments still disturb the helper expansion decisions.
 // A shared zone-value wrapper reaches 96.6393% here but lowers treasure assembly
 // MAX to 63.2533%; keep the mine-specific operation. Separating scan pointers
 // loses the retail shared lifetime. Cell queries and a reference-returning
@@ -7806,8 +7820,7 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     }
     int guardValue = getMineGuardValue(resource, zone);
     TRmgMapPosition entrance = mine->getPosition();
-    entrance -= TPoint(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
-    ++entrance.m_y;
+    entrance -= TPoint(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y - 1);
     TRmgMapItem* item = m_map.getMapItem(entrance);
     if (!item->m_connection.m_present) {
         item->m_tileData.m_borderObject = 0;
