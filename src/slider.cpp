@@ -54,10 +54,12 @@ void slider::initialize(const char* resourceName)
     m_currentState = 0;
 }
 
+// DC's constructor public ends H_N@Z: hotKey is native bool. Complete
+// keeps all ten arguments and copies its byte into m_hotKeys unchanged.
 VA(0x005960D0, 0xA8)  // dc 0x149ae8
 slider::slider(int x, int y, int w, int h, int id, int num,
                TSliderFunction func, EGraphics graphics, int page,
-               unsigned char hotKey)
+               bool hotKey)
     : widget(x, y, w, h, id, 1)
 {
     m_pageSize = page;

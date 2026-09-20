@@ -933,7 +933,7 @@ int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
         m_garrisons[i].m_mapZ = static_cast<unsigned char>(count);
 
         if (saveVersion < 28) {
-            m_garrisons[i].m_removableTroops = !g_unk69774c;
+            m_garrisons[i].m_removableTroops = !g_inCampaign;
         } else {
             unsigned char value;
             infile->read(&value, sizeof(value));
@@ -2592,7 +2592,7 @@ void applySavedGameHeader(const SavedGameHeader& saved)
     g_game->m_f1f698 = saved.m_gameVersion;
     g_game->m_mapHeader = saved.m_mapHeader;
     g_game->m_setup = saved.m_mapSetup;
-    g_unk69774c = saved.m_campaignGame;
+    g_inCampaign = saved.m_campaignGame;
     g_game->m_campaign = saved.m_campaign;
     strcpy(g_game->m_saveFileName, saved.m_fileName.c_str());
     g_game->m_difficultyRating = saved.m_difficultyRating;
@@ -3366,7 +3366,7 @@ unsigned char game::saveGame(const char* filename, unsigned char determineSuffix
         strcpy(nameNoExtension, filename);
         strtok(nameNoExtension,
                DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
-        if (g_unk69774c)
+        if (g_inCampaign)
             sprintf(saveName,
                     DATA_COMPGEN(0x00677d98, nameWithExtensionFormat, "%s.%s"),
                     nameNoExtension,
@@ -3648,7 +3648,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
         int campaignNumber = m_campaign.m_currentCampaign;
         if (numLivingPlayers == 1) {
             m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
-        } else if (g_unk69774c) {
+        } else if (g_inCampaign) {
             if (campaignNumber == GAME_CAMPAIGN_5
                 || campaignNumber == GAME_CAMPAIGN_3) {
                 if (map != GAME_SCENARIO_0)
@@ -3831,11 +3831,11 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
 
     m_numPlayers = 8;
     m_numDeadPlayers = 0;
-    if (gameVersion != -1 && !g_unk69774c) {
+    if (gameVersion != -1 && !g_inCampaign) {
         m_f1f698 = gameVersion;
     } else {
         m_f1f698 = 2;
-        if (g_unk69774c) {
+        if (g_inCampaign) {
             if (m_campaign.m_currentCampaign < g_firstArmageddonsBladeCampaign)
                 m_f1f698 = 0;
             else if (m_campaign.m_currentCampaign < 13)
@@ -3898,7 +3898,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
 
     validateVictoryLossConditions(1);
 
-    if (g_unk69774c && m_campaign.m_currentCampaign == GAME_CAMPAIGN_14) {
+    if (g_inCampaign && m_campaign.m_currentCampaign == GAME_CAMPAIGN_14) {
         hero* campaignHero = &m_heroes[45];
         if (campaignHero->getArtifact(TArtifactSlot(hero::EQUIPPED_SLOT_SPELLBOOK)).m_artifactId
             != -1)
@@ -3929,7 +3929,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                    sizeof(m_players[setupPlayer].m_resources));
         }
 
-        if (!g_unk69774c) {
+        if (!g_inCampaign) {
             int bonus = g_newMapStartingBonus[setupPlayer];
             bool hasHero = true;
             if (getHero(m_players[setupPlayer].m_heroes[0]) == NULL)
@@ -6170,7 +6170,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
     if (static_cast<unsigned char>(x) != g_savedHeroNone)
         readVictoryCondition(x, infile);
 
-    if (g_unk69774c) {
+    if (g_inCampaign) {
         switch (g_game->m_campaign.m_currentCampaign) {
         case g_campaignVictoryOverrideFirst:
             if (campaignMap == GAME_SCENARIO_2) {
@@ -6233,7 +6233,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
                 availableHeroesMask, g_mapHeaderLegacyHeroCount),
             bitset_iterator<g_mapHeaderHeroCount>(m_availableHeroes, 0));
 
-        if (!g_unk69774c) {
+        if (!g_inCampaign) {
             for (int i = g_mapHeaderCompleteLegacyHeroFirst;
                  i <= g_mapHeaderCompleteLegacyHeroLast; ++i)
                 m_availableHeroes[i] = true;
@@ -8284,7 +8284,7 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
         monsterOk[CREATURE_RUST_DRAGON] = false;
         monsterOk[CREATURE_ENCHANTER] = false;
         monsterOk[CREATURE_SHARPSHOOTER] = false;
-        if (g_unk69774c
+        if (g_inCampaign
             && m_campaign.m_currentCampaign >= g_firstShadowOfDeathCampaign) {
             monsterOk[CREATURE_PIXIE] = false;
             monsterOk[CREATURE_SPRITE] = false;
@@ -8444,7 +8444,7 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
     armyGroup* currentArmy = &m_heroes[hero].m_army;
     const THeroTraits* traits = &g_heroTraits[hero];
 
-    if (g_unk69774c
+    if (g_inCampaign
         && hero == g_campaignArmyOverrideHero
         && m_campaign.m_currentCampaign == g_campaignArmyOverrideCampaign
         && m_campaign.m_currentMap) {
@@ -8525,97 +8525,101 @@ void game::insertObject(int x, int y, int z, int objType, int objectIndex, int m
 // RANDOM_TOWN shares TOWN's; every other value falls to the default.
 // Arm order below is retail's physical order, i.e. the source order.
 
-// The !is_trigger path reaches the tail with defName UNINITIALIZED. That
+// The !is_trigger path reaches the tail with tempText UNINITIALIZED. That
 // is retail: ProcessRandomObjects only ever calls this for trigger cells,
 // so the arm is unreachable in practice. Transcribed, not repaired.
 
-// All three tail loops RE-READ their bounds - newType->height and
-// newType->width are reloaded with movsx at each increment, and
-// cell->objects.end() at the bottom of every iteration - and
+// All three tail loops RE-READ their bounds - objectType's height and
+// width are reloaded with movsx at each increment, and
+// newCell->m_objects.end() at the bottom of every iteration - and
 // objectTypes.size() is recomputed at every match rather than hoisted.
 // The sprite push_back goes through this->worldMap while
 // CalculateCellExtra RELOADS gpGame; do not unify them.
 
-// Residual (97.5098%): 395 generated ordinary-source variants lift the town
-// arm by copying built to __int64 and materializing its decision in a byte.
-// DC names only thisTown, so the two extra locals remain PC codegen hypotheses;
-// all tested types and scopes plateau at the same register/stack schedule.
+// DC's twelve locals include short objectToConvert (sp+0x12), not int;
+// the entry load and later comparison preserve that signed interpretation.
+// Keep its recorded local identities, named tempSprite, and the canonical
+// isCapitol/isCastle calls. The frame and all 44 block sizes match retail.
+// Residual 99.9756%: the string assignment's inlined _Eos terminator encodes
+// [eax+ecx] instead of [ecx+eax], NOT a NewfullMap::cell difference. Eight
+// type/declaration/call models and five recorded-name models reproduce the
+// same score; do not replace a proven helper or invent a local for that byte.
+// DC lines 9245/9246 store the monster cell type before the local type.
+// Restoring that order, explicit iterator sequencing and the town predicates'
+// public-symbol-proven bool returns are all byte-flat; the latter also preserve
+// every measured consumer. SH4 cannot settle an x86 SIB operand-order choice.
 VA(0x004c9990, 0x43A)  // anchor-global, dc 0xb54f8
 void game::convertObject(NewmapCell* tempCell)
 {
-    char defName[100];
+    char tempText[100];
 
-    int objectId = tempCell->m_objectTypeIndex;
-    CObject* object = &m_worldMap.m_objects[objectId];
+    short objectToConvert = tempCell->m_objectTypeIndex;
+    CObject* object = &m_worldMap.m_objects[objectToConvert];
 
     m_worldMap.m_objectTypes.push_back(m_worldMap.m_objectTypes[object->m_typeIndex]);
-    CObjectType* newType = &m_worldMap.m_objectTypes.back();
+    CObjectType* objectType = &m_worldMap.m_objectTypes.back();
 
-    TAdventureObjectType newObject = NOTHING;
+    TAdventureObjectType type = NOTHING;
     if (tempCell->m_isTrigger) {
-        newObject = tempCell->getMapObject();
-        switch (newObject) {
+        type = tempCell->getMapObject();
+        switch (type) {
         case RESOURCE:
-            strcpy(defName, g_resourceObjectDefs[tempCell->m_objectIndex]);
+            strcpy(tempText, g_resourceObjectDefs[tempCell->m_objectIndex]);
             break;
         case ARTIFACT:
-            sprintf(defName, g_artifactObjectDefFormat, tempCell->m_objectIndex);
+            sprintf(tempText, g_artifactObjectDefFormat, tempCell->m_objectIndex);
             break;
         case MONSTER:
         case RANDOM_MONSTER:
-            strcpy(defName,
+            strcpy(tempText,
                    m_worldMap.newfullMapFn00505EA0(MONSTER,
                                                   tempCell->m_objectIndex)
                        ->m_imageName.c_str());
-            newObject = MONSTER;
             tempCell->m_type = MONSTER;
+            type = MONSTER;
             break;
         case RANDOM_TOWN:
         case TOWN: {
             town* thisTown = g_game->getTown(tempCell->getMapExtraInfo());
-            __int64 buildings = thisTown->m_built;
-            if (buildings & g_bitNumber[HALL_CAPITOL_ID]) {
-                strcpy(defName, g_townCapitolObjectDefs[tempCell->m_objectIndex]);
+            if (thisTown->isCapitol()) {
+                strcpy(tempText, g_townCapitolObjectDefs[tempCell->m_objectIndex]);
             } else {
-                unsigned char hasFort =
-                    (buildings & g_bitNumber[CASTLE_FORT_ID])
-                    || (buildings & g_bitNumber[CASTLE_CITADEL_ID])
-                    || thisTown->hasBuilding(CASTLE_CASTLE_ID, 0);
-                if (hasFort)
-                    strcpy(defName, g_townFortObjectDefs[tempCell->m_objectIndex]);
+                if (thisTown->isCastle())
+                    strcpy(tempText, g_townFortObjectDefs[tempCell->m_objectIndex]);
                 else
-                    strcpy(defName, g_townVillageObjectDefs[tempCell->m_objectIndex]);
+                    strcpy(tempText, g_townVillageObjectDefs[tempCell->m_objectIndex]);
             }
             break;
         }
         }
     }
 
-    int oldType = newType->m_objectType;
-    newType->m_imageName = defName;
-    newType->m_objectType = newObject;
-    newType->m_extra = tempCell->m_objectIndex;
-    m_worldMap.m_sprites.push_back(
-        ResourceManager::getSprite(newType->m_imageName.c_str()));
+    int oldType = objectType->m_objectType;
+    objectType->m_imageName = tempText;
+    objectType->m_objectType = type;
+    objectType->m_extra = tempCell->m_objectIndex;
+    CSprite* tempSprite =
+        ResourceManager::getSprite(objectType->m_imageName.c_str());
+    m_worldMap.m_sprites.push_back(tempSprite);
 
-    for (int iy = 0; iy < newType->m_height; iy++) {
-        if (object->m_y - iy < 0 || object->m_y - iy >= g_mapHeight)
+    for (int vert = 0; vert < objectType->m_height; vert++) {
+        if (object->m_y - vert < 0 || object->m_y - vert >= g_mapHeight)
             continue;
-        for (int ix = 0; ix < newType->m_width; ix++) {
-            if (object->m_x - ix < 0 || object->m_x - ix >= g_mapWidth)
+        for (int horiz = 0; horiz < objectType->m_width; horiz++) {
+            if (object->m_x - horiz < 0 || object->m_x - horiz >= g_mapWidth)
                 continue;
-            NewmapCell* cell = m_worldMap.cell(object->m_x - ix,
-                                             object->m_y - iy, object->m_z);
-            for (NewmapCell::TObjectCell* entry = cell->m_objects.begin();
-                 entry != cell->m_objects.end(); entry++) {
-                if (entry->m_objectIndex == objectId) {
+            NewmapCell* newCell = m_worldMap.cell(object->m_x - horiz,
+                                                object->m_y - vert, object->m_z);
+            for (NewmapCell::TObjectCell* thisObj = newCell->m_objects.begin();
+                 thisObj != newCell->m_objects.end(); thisObj++) {
+                if (thisObj->m_objectIndex == objectToConvert) {
                     object->m_typeIndex = static_cast<unsigned short>(
                         m_worldMap.m_objectTypes.size() - 1);
-                    if (cell->m_type == oldType && !cell->m_isTrigger)
-                        cell->m_type = newObject;
+                    if (newCell->m_type == oldType && !newCell->m_isTrigger)
+                        newCell->m_type = type;
                 }
             }
-            g_game->m_worldMap.calculateCellExtra(cell, 0);
+            g_game->m_worldMap.calculateCellExtra(newCell, 0);
         }
     }
 }
@@ -8763,7 +8767,7 @@ void game::createTownHeroes(int* startingHeroIds)
         if (startingHeroIds != NULL && m_players[i].m_isHuman
             && startingHeroIds[i] != -1)
             heroId = startingHeroIds[i];
-        else if (g_unk69774c)
+        else if (g_inCampaign)
             heroId = getStartingHeroId(m_setup.m_alignment[i], i, 0);
         else
             heroId = getStartingHeroId(m_setup.m_alignment[i], i, 0);
@@ -8774,7 +8778,7 @@ void game::createTownHeroes(int* startingHeroIds)
         thisTown->placeInMap(heroId, i, 1);
         thisTown->giveSpells(NULL);
 
-        if (g_unk69774c
+        if (g_inCampaign
             && g_game->m_campaign.m_currentCampaign == g_startLevelCampaign
             && g_game->m_campaign.m_currentMap == g_startLevelScenario)
             m_heroes[heroId].giveExperience(
@@ -9438,7 +9442,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     }
 
     bool useGuaranteed = false;
-    if (g_dPlayReady || g_mpNetProtocol == MP_TCP)
+    if (g_lobbyLaunched || g_mpNetProtocol == MP_TCP)
     {
         g_logFile.log(DATA_COMPGEN(0x00677f88, xferGuaranteedLog,
                                 "Using guaranteed!!"));
@@ -10418,7 +10422,7 @@ void game::giveTimeEventReward(const TTimedEvent* thisEvent)
         g_advManager->m_advWindow->updateResourceDisplay(1, 1);
         extendedDialog(thisEvent->m_message.c_str(), rewards, -1, -1, 0);
 
-        if (g_unk69774c) {
+        if (g_inCampaign) {
             short currentTurn = getCurrentTurn();
             if (currentTurn == g_campaignPopulationEventDay
                 && m_campaign.m_currentCampaign

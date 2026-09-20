@@ -305,7 +305,7 @@ VA(0x0047c0d0, 0x4e)  // selected sequence + shadow implementation
 void CSprite::drawHeroShadow(int seqnum, int framenum, int sx, int sy,
                              int sw, int sh, unsigned short* dst,
                              int dx, int dy, int dw, int dh, int dpitch,
-                             unsigned char hflip) const
+                             bool hflip) const
 {
     m_s[seqnum]->m_f[framenum]->drawHeroShadow(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);

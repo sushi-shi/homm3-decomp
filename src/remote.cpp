@@ -24,7 +24,6 @@
 #include "message.h"
 #include "inputmgr.h"
 #include "mousemgr.h"
-#include "../vendor/zlib-1.1.3/zlib.h"
 // gpWindowManager: CSaveScreen grabs and restores through the screen
 // bitmap, and hands the dirty rect back to the window manager.
 #include "winmgr.h"
@@ -203,19 +202,20 @@ bool CDPlayHeroes::pollRemote()
     return true;
 }
 
-// DC names the network singleton pDPlay; retail references at 0x69d808 and
-// the adjacent readiness byte are rooted throughout the remote/front-end
-// call graph.
+// DC names the network singleton pDPlay; retail's remote/front-end call
+// graph locates the pointer at 0x69d808.
 DATA(0x0069d808) CDPlayHeroes* g_dPlay;
-// The adjacent PC bytes are the packed counterparts of Dreamcast's bool
+// Original public ?g_lobbyLaunched@@3_NA. Retail oldmain stores the native
+// TestIfLobbyLaunched result directly here; main-menu host handling agrees.
+DATA(0x0069d80c) bool g_lobbyLaunched;
+// These adjacent PC bytes are the packed counterparts of Dreamcast's bool
 // gbMPlayer/gbMPlayerHost pair. TestIfLobbyLaunched and HandleMPlayerLaunch
 // independently distinguish their roles.
-DATA(0x0069d80c) unsigned char g_dPlayReady;
 DATA(0x00699550) bool g_mPlayer;
+DATA(0x00699551) bool g_mPlayerHost;
 // Dreamcast publishes `bDefeatedAllPlayers` as a bool in remote.obj. Retail's
 // win/loss handlers independently locate the PC cell and store full dwords,
 // so the PC representation is int even though the role and owner transfer.
-DATA(0x00699551) bool g_mPlayerHost;
 DATA(0x00699510) int g_defeatedAllPlayers;
 // Dreamcast publishes gcTCPAddress as char[21]; retail's client launch arm
 // passes this exact cell both to the log formatter and InitConnection.
@@ -1012,8 +1012,10 @@ void __cdecl CChatManager::playerEnterMsg(const char* format, ...)
     m_isSysMsg = 0;
 }
 
+// DC's UpdateWidget public encodes native bool for killOld; the retained
+// PC body tests that byte, and all authored callers supply 0 or 1.
 VA(0x00553d00, 0xA1)  // dc 0x11c6bc
-void CChatManager::updateWidget(textWidget* widget, unsigned char killOld, int numLines)
+void CChatManager::updateWidget(textWidget* widget, bool killOld, int numLines)
 {
     if (m_pauseTime == 0) {
         updateNewChat();
@@ -1848,8 +1850,10 @@ void destroyMsg(CNetMsg* netMsg)
     delete netMsg;
 }
 
+// DC ?TestIfLobbyLaunched@@YA_NXZ proves the native bool return; retail
+// forwards the already-boolean TestLobbied result or returns 0/1.
 VA(0x00555920, 0x171)  // dc 0x11d900
-unsigned char testIfLobbyLaunched()
+bool testIfLobbyLaunched()
 {
     HKEY key;
     char appName[256];
@@ -2542,7 +2546,7 @@ unsigned char CSaveScreen::isSaved()
     return m_screenSaved;
 }
 
-void showVideo(int id, int x, int y, int w, int h, int a6, int a7, int a8);
+void showVideo(int id, int x, int y, int w, int h, int a6, bool a7, bool a8);
 void closeVideo();  // 0x599050
 
 VA(0x00557410, 0x1E)  // dc 0x11ec64
@@ -2869,7 +2873,7 @@ void destroyMsg(CNetMsg* pNetMsg)
 
 // E:\gamedcs\remote.cpp:1916
 DC_ONLY(0x11d900, 0xAC)
-unsigned char testIfLobbyLaunched()
+bool testIfLobbyLaunched()
 {
     // @stub
 }
@@ -3253,10 +3257,14 @@ CTurnDuration::CTurnDuration()
 VA(0x00557a80, 0x15)  // dc 0x11f070
 unsigned char CTurnDuration::isOn()
 {
+    // DC remote.cpp:2921/2922 and 2925 retain two separate early-outs.
+    // This canonical body matches both the retained function and its
+    // expansion in isClose; a compound boolean return changes VC6 lowering.
     if (m_currDuration == 0)
         return 0;
-    unsigned char on = !g_unk69774c;
-    return on;
+    if (g_inCampaign)
+        return 0;
+    return 1;
 }
 
 VA(0x00557aa0, 0x4D)  // dc 0x11f090
@@ -3264,7 +3272,7 @@ unsigned char CTurnDuration::isExpired()
 {
     if ((!g_currentPlayer || g_currentPlayer->isLocalHuman())
             && m_currDuration != 0
-            && !g_unk69774c
+            && !g_inCampaign
             && m_pauseTime <= 0) {
         unsigned long startTime = m_turnStartTime;
         if (startTime > 0
@@ -3308,7 +3316,7 @@ void CTurnDuration::checkForWarning()
 {
     if (m_currDuration == 0)
         return;
-    if (g_unk69774c)
+    if (g_inCampaign)
         return;
     if (m_nextWarning == 0)
         return;
@@ -3399,7 +3407,7 @@ void CTurnDuration::setDuration(unsigned long ms)
 VA(0x00557d90, 0x3D)  // dc 0x11f3b0
 void CTurnDuration::start()
 {
-    if (m_currDuration != 0 && !g_unk69774c) {
+    if (m_currDuration != 0 && !g_inCampaign) {
         m_lastWarned = m_turnStartTime = GameTime::get();
         m_nextWarning = 0;
         if (m_currDuration > 60000)

@@ -2499,3 +2499,23 @@ The serializer result contracts also follow the raw Dreamcast public names:
 templates return `bool` (`_N`), despite the primitive display's byte alias.
 Their retained object bodies are byte-identical after this signature repair;
 score history follows the retail RVA across the regenerated labels.
+
+
+### Windows viewport helpers and cross-TU visibility
+
+`army::fly` (0x4b4a40) reaches 100% with one canonical Windows renderer
+implementation visible through cmbtmgr.h. The CE renderer scrolls, clips and
+translates a viewport; Complete presents the accumulated screen rectangle
+without those operations. Preserve the by-value extent-to-four-int
+`updateCombatArea` call and give the Windows leaf its four-int Window call.
+Keep the coordinate `scrollTo` facade ordinary in drawing.cpp: it needs no
+cross-TU visibility. Header placement is an explicit platform inference,
+recorded with exact CE/Windows catalog entries, not recovered lexical text.
+
+Both const-reference and by-value extent controls reproduce Fly, so its
+inlined copy cannot establish a changed parameter type. The by-value chain
+preserves the positive DC interface and named source call. The narrow family
+reproduces three distinct objects across all 22 affected TUs; all 1102 Fly
+bytes and 54 relocation operands agree with retail. Ordinary definitions of
+its two local search helpers and removal of the redundant outer loop block
+also preserve all five exact Fly targets (four states, two reproduced objects).

@@ -184,7 +184,9 @@ int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
         cost = g_masteryTerrainCost[waterWalking];
     if (flying >= 0) {
         if ((cell->m_flags0011 & 0x40) && terrain != eTerrainWater)
-            cost = cppMin(cost, g_masteryTerrainCost[flying]);
+            // dc 0x9f034 row 196 calls `min` [dc 0x2da4], the includes.h
+            // by-value wrapper, not the const-ref cppMin.
+            cost = min(cost, g_masteryTerrainCost[flying]);
         else
             cost = g_masteryTerrainCost[flying];
     }
@@ -302,7 +304,7 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
     if (m_dangerZones != 0) {
         danger = *getDangerCell(m_dangerZones, point.m_point);
         if (cost > m_thisTurnsMovement) {
-            danger = cppMin(oldCell.m_dangerValue, danger);
+            danger = min(oldCell.m_dangerValue, danger);
             // The "unreachable" sentinel the danger map carries; every
             // producer that vetoes a square outright writes a value at or
             // below it. Spelled as the literal retail compares against.

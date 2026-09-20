@@ -2171,13 +2171,13 @@ void type_sacrifice_window::creatureSliderChange(
 }
 
 VA(0x005653b0, 0x37)  // dc 0x127404
-int type_sacrifice_window::doModal(unsigned char fadeIn)
+void type_sacrifice_window::doModal(bool fadeIn)
 {
     if (m_canSacrificeArtifacts)
         setArtifactMode();
     else
         setCreatureMode();
-    return heroWindow::doModal(fadeIn);
+    heroWindow::doModal(fadeIn);
 }
 
 VA(0x005653f0, 0x3b)  // dc 0x12743c

@@ -211,9 +211,11 @@ enum EMapFormatVersion {
 // Only the fields reached by reconstructed consumers are exposed. The
 // defeat-hero ids are fixed independently by AI_value_of_combat's two
 // objective-bonus branches.
-// hero.cpp owns the DATA claim (0x69774c); CheckForDefeatedHeroLoss's
-// campaign-mode gate reads it.
-extern unsigned char g_campaignMode;
+// Original bool gbInCampaign (DC public ?gbInCampaign@@3_NA, data 0x2c9cc).
+// Retail 0x69774c selects H3SVC versus H3SVG. SavedGameHeader::reset and
+// game::load copy it directly to/from the canonical saved-header bool.
+// This is not DC's separate campaignMode selection-window flag (0x327d8).
+DATA(0x0069774c) extern bool g_inCampaign;
 
 // The upgrade-town victory's two level domains (map-format ordinals).
 // CheckForUpgradedTown (0x5f1d40) maps each to the matching
@@ -720,7 +722,10 @@ public:
     int m_gameVersion;
     NewSMapHeader m_mapHeader;
     SGameSetupOptions m_mapSetup;
-    unsigned char m_campaignGame;
+    // Complete-only field: bool inferred from direct copies to/from the
+    // DC-proven bool g_inCampaign. Load normalizes the on-disk short with
+    // != 0 before storing this byte; Save retains the two-byte file format.
+    bool m_campaignGame;
     // +0x4e1..+0x4e3 is natural alignment, not a source member. Naming it
     // makes VC6's implicit operator= copy three bytes retail deliberately
     // skips before the aligned SCampaign member.
@@ -1763,10 +1768,6 @@ extern unsigned char g_unnamed69d80d;
 // latch after rebuilding the session.
 extern int g_thisNetGotAdventureControl;
 DATA(0x0067814c) extern int g_heroGoldCost;
-// Save version 41 added this signed-byte session value. game::Load owns the
-// restore path; advManager also updates it when the local player finds the
-// Holy Grail. Its wider role is not yet byte-proven.
-DATA(0x0069774c) extern unsigned char g_unk69774c;
 // One-byte session latch reset by game::SetupOrigData. No surviving symbol
 // names its wider role, so retain the address-ordinal spelling.
 DATA(0x0069950c) extern int g_unnamed69950c;
@@ -1863,7 +1864,7 @@ inline SavedGameHeader::SavedGameHeader()
 VA(0x004bc350, 0x271)  // anchor-caller (game::Save) + layout, dc 0xbcf00
 inline void SavedGameHeader::reset()
 {
-    if (g_unk69774c)
+    if (g_inCampaign)
         strcpy(m_id, "H3SVC");
     else
         strcpy(m_id, "H3SVG");
@@ -1877,7 +1878,7 @@ inline void SavedGameHeader::reset()
 
     m_currentPlayer = g_netLocalGamePos;
     m_mapSetup = g_game->m_setup;
-    m_campaignGame = g_unk69774c;
+    m_campaignGame = g_inCampaign;
     m_fileName = g_game->m_saveFileName;
     m_difficultyRating = g_game->m_difficultyRating;
     m_numDeadPlayers = g_game->m_numDeadPlayers;

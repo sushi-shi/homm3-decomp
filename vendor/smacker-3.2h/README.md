@@ -5,10 +5,11 @@ set unmodified. They come from the Vengeance Reloaded source repository at
 commit
 `368f7260440eb02efe083ad6dff6dcd350b30189`.
 
-`include/` starts as an exact copy. `SMACK.H.patch` changes only the version
-string from 3.2f to the shipped 3.2h; the DLL's embedded version string confirms
-3.2h. The 11 calls imported by the game retain the public header declarations
-and exact decorated argument sizes.
+`include/` starts as an exact copy. Its companion header is named `rad.h` to
+match `SMACK.H` on case-sensitive hosts. `SMACK.H.patch` changes only the
+version string from 3.2f to the shipped 3.2h; the DLL's embedded version string
+confirms 3.2h. The 11 calls imported by the game retain the public header
+declarations and exact decorated argument sizes.
 
 Source: <https://github.com/VengeanceReloaded/vr_source/blob/368f7260440eb02efe083ad6dff6dcd350b30189/Standard%20Gaming%20Platform/SMACK.H>
 

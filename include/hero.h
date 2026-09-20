@@ -204,8 +204,10 @@ public:
     unsigned char m_occupied;  // +0x24
     char m_paddingAfterOccupied[3];
     boat() : m_allocated(0) {}
-    // Original: boat::GetHflip; Hero.h:190, dc 0x1fb8c
-    unsigned char getHflip() { return m_facing > 4; }
+    // Original: boat::GetHflip; Hero.h:190, dc 0x1fb8c.
+    // Public ?GetHflip@boat@@QAA_NXZ proves bool despite the lowered
+    // T_UCHAR debug record; callers must keep this canonical predicate.
+    bool getHflip() { return m_facing > 4; }
     hero_seqid getStandSequence();
     // Hero.h:196 in Dreamcast. Complete expands this ordinary header helper
     // in MoveHero, CreateBoat and the event-record undo path; retaining the

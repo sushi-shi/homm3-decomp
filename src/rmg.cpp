@@ -9399,16 +9399,10 @@ unsigned char type_random_map_generator::generate()
     return 1;
 }
 
-// Native scalar output owns its argument copy. The packed-bit encoder and
-// writer separate conversion from stream I/O, mirroring the existing packed
-// readers. These ordinary Complete-only boundaries/names are inferred from
+// Scalar output uses the canonical writeValue in abstractfile.h. The packed-
+// bit encoder and writer separate conversion from stream I/O, mirroring the
+// existing readers. These Complete-only boundaries/names are inferred from
 // repeated header expansions; no retained standalone bodies are claimed.
-template <class T>
-int writeValue(TAbstractFile* outfile, T value)
-{
-    return outfile->write(&value, sizeof(value));
-}
-
 template <size_t N>
 void encodePackedBits(const std::bitset<N>& bits, unsigned char* packed)
 {

@@ -45,6 +45,9 @@ VA(0x0048eb40, 0x14)  // retained caller in ScenarioStruct::read
 VA(0x004d4ca0, 0x14)  // retained caller in game::getRandomMonster
 typename std::bitset<N>::reference bitset_iterator<N>::operator*() const
 {
+    // Named pointer/position aliases perturb this call's inlining, but lower
+    // NewSMapHeader::read and the RMG writer and suppress an exact game
+    // COMDAT. Keep the canonical direct dereference.
     return (*m_bits)[m_position];
 }
 

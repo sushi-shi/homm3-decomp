@@ -92,7 +92,7 @@ public:
     virtual void onSetFocus();
     virtual void onKillFocus();
     virtual void setText(const char* newText);
-    virtual void setFocus(unsigned char state);
+    virtual void setFocus(bool state);
     virtual int onKeyPress(message* msg);
     virtual unsigned char ignoreKey(message* msg);
     virtual void setAutoDraw(unsigned char b);

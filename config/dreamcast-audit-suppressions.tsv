@@ -401,13 +401,11 @@ victorylossconditions.obj	0x19040c	c1649254e2e4	8	Dreamcast CodeView records the
 victorylossconditions.obj	0x18fdc4	497d6befbe75	9	Complete retained symbol encodes int return; Dreamcast unsigned char is an older ABI.
 viewarmywindow.obj	0x190e78	cb5c1ae1e0c7	9	Dreamcast aliases the global traits as const&, while Complete needs a mutable value copy that is passed to the retail-proven hero adjustment helper.
 window.obj	0x197aec	c0cd1dc29cb9	10	Complete exact x86 body is the raw backward pointer loop; Dreamcast uses its platform STL reverse_iterator carrier.
-window.obj	0x197c08	241667ef5918	10	Complete exact body returns DoDialog's consumed int result; Dreamcast declares void.
 window.obj	0x197eb4	1c0f40a909d8	10	Complete exact handler passes the local to the bool& onWidgetDeselect interface; Dreamcast records unsigned char.
 advmgr.obj	0xbd84	5536ec22f447	9	Dreamcast names the decoded witch-hut field TSecondarySkill, but Complete's packed bitfield expression naturally yields int; forcing the enum requires prohibited cast debt.
 events.obj	0x908dc	3995c5c79fa7	8	Dreamcast names the decoded artifact defender TCreatureType, but Complete extracts it from a packed bitfield as int; forcing the enum requires prohibited cast debt.
 events.obj	0x90ad8	1092832d2a2e	8	Dreamcast names the decoded artifact cost EGameResource, but Complete extracts it from a packed bitfield as int; forcing the enum requires prohibited cast debt.
 viewarmywindow.obj	0x191f2c	657717f3c706	10	Complete exact decorated symbol ?createPortraitWidget@TViewArmyWindow@@AAEXPBDHH@Z encodes int; Dreamcast records TTownType, so this is a versioned ABI difference.
-university_window.obj	0x18f508	241667ef5918	10	Complete exact decorated symbol ?doModal@type_university_window@@UAEHE@Z encodes int; Dreamcast records void, so this is a versioned ABI difference.
 town.obj	0x1674d4	2e82164649a0	10	Complete exact decorated symbol ?getHorde@town@@QBEHJ@Z encodes int; Dreamcast records type_building_id, so this is a versioned ABI difference.
 town.obj	0x167958	f43d5d9bff63	10	Complete exact decorated symbol ?showBuildingRewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z encodes std::vector<type_dialog_resource> *; Dreamcast records std::vector<type_dialog_resource,std::allocator<type_dialog_resource> > &, so this is a versioned ABI difference.
 town.obj	0x168c20	2e82164649a0	10	Complete exact decorated symbol ?upgradedDwellingID@town@@SIHH@Z encodes int; Dreamcast records type_building_id, so this is a versioned ABI difference.
@@ -439,7 +437,6 @@ spells.obj	0x157354	da86a263cd45	10	Complete exact decorated symbol ?spellCastWo
 spells.obj	0x157828	a21bceb46b39	10	Complete exact decorated symbol ?spellCastWorks@combatManager@@QBEEHJPBVarmy@@EJ@Z encodes long; Dreamcast records int, so this is a versioned ABI difference.
 spells.obj	0x157828	da86a263cd45	10	Complete exact decorated symbol ?spellCastWorks@combatManager@@QBEEHJPBVarmy@@EJ@Z encodes long; Dreamcast records unsigned char, so this is a versioned ABI difference.
 singleselectionwindow.obj	0x12fd68	acc22ce32950	10	Complete exact decorated symbol ?processMouse@@YGIPAX@Z encodes unsigned int; Dreamcast records unsigned long, so this is a versioned ABI difference.
-singleselectionwindow.obj	0x13b104	241667ef5918	10	Complete exact decorated symbol ?doModal@TSingleSelectionWindow@@UAEHE@Z encodes int; Dreamcast records void, so this is a versioned ABI difference.
 singleselectionwindow.obj	0x13fd74	7301318ff0d9	10	Complete exact decorated symbol ?handleNetMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@AA_N@Z encodes bool &; Dreamcast records unsigned char &, so this is a versioned ABI difference.
 search.obj	0x12b7f4	25209eeac4fc	10	Complete exact decorated symbol ?enterGate@searchArray@@AAEXPBUpathCell@@PBVNewmapCell@@J@Z encodes const pathCell *; Dreamcast records const pathCell &, so this is a versioned ABI difference.
 search.obj	0x12bfe0	a20c6c65f2b8	10	Complete exact decorated symbol ?checkTownPortal@searchArray@@AAEXPBVhero@@PBUpathCell@@J@Z encodes const pathCell *; Dreamcast records const pathCell &, so this is a versioned ABI difference.
@@ -449,7 +446,6 @@ sacrifice_window.obj	0x123e8c	48a2035b25bc	10	Complete exact decorated symbol ?s
 sacrifice_window.obj	0x125aac	6edc9d1c1b1e	10	Complete exact decorated symbol ?updateOffering@@YIXPAViconWidget@@PAVtextWidget@@PBUtype_artifact_offering@@@Z encodes const type_artifact_offering *; Dreamcast records const type_artifact_offering &, so this is a versioned ABI difference.
 sacrifice_window.obj	0x125b3c	48a2035b25bc	10	Complete exact decorated symbol ?updateSlot@type_sacrifice_window@@AAEXJ@Z encodes long; Dreamcast records TArtifactSlot, so this is a versioned ABI difference.
 sacrifice_window.obj	0x1262e4	48a2035b25bc	10	Complete exact decorated symbol ?artifactClick@type_sacrifice_window@@QAEXJE@Z encodes long; Dreamcast records TArtifactSlot, so this is a versioned ABI difference.
-sacrifice_window.obj	0x127404	241667ef5918	10	Complete exact decorated symbol ?doModal@type_sacrifice_window@@UAEHE@Z encodes int; Dreamcast records void, so this is a versioned ABI difference.
 remote.obj	0x11b940	facaa7fe5777	10	Complete exact decorated symbol ?calcCrcLong@@YIKPBEI@Z encodes unsigned long; Dreamcast records int, so this is a versioned ABI difference.
 remote.obj	0x11b940	e03ace263ea8	10	Complete exact decorated symbol ?calcCrcLong@@YIKPBEI@Z encodes const unsigned char *; Dreamcast records unsigned char *, so this is a versioned ABI difference.
 remote.obj	0x11b940	13f075f0d481	10	Complete exact decorated symbol ?calcCrcLong@@YIKPBEI@Z encodes unsigned int; Dreamcast records int, so this is a versioned ABI difference.

@@ -319,7 +319,8 @@ extern char g_text[];
 // the owning TU lands (kbwin is the only known writer).
 extern unsigned char g_foregroundApp;
 
-void incProgressBar(unsigned char update);
+// Original IncProgressBar@@YAX_N@Z: the public symbol preserves native bool.
+void incProgressBar(bool update);
 void showProgressBar();
 void drawProgressCount();
 void unloadProgressBar();
