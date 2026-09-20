@@ -79,6 +79,7 @@ public:
         // Retail 0x488fb0, the thiscall SCampaign::PlayScenarioPrologue
         // makes on a scenario's prologue record (name provisional).
         void play();
+        void read(TAbstractFile* infile);
     };
 
     // The empty NewMapCampaignContext base is how game::NewMap receives the

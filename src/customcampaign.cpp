@@ -1765,12 +1765,29 @@ void TCampaignBrief::ScenarioStruct::markCrossoverHeroes(unsigned char* wanted)
 // The retained destination dereference at 0x48eb40 is annotated on the
 // canonical generic body in bitset_iterator.h, with its 144-bit instance.
 
-// The serialization and prerequisite-insert inline boundaries remain unfinished.
+// The prerequisite-insert and packed-bit inline boundaries remain unfinished.
 // Retail puts each absent-text arm first and retains the allocated MapTextStruct
 // in EDI across all three reads. Null-first branches raise 70.55 -> 73.36%; the
 // local text pointers then reach 80.95%. Member reloads after each virtual Read
 // are the negative control. Explicitly widening the one-byte read buffers to
 // masked ints was byte-flat and is not retained.
+// Both present arms publish the new record before reading its fields. One
+// ordinary MapTextStruct reader preserves that ordering and the EDI receiver;
+// VC6 expands both calls and raises this reader from 84.9232% to 86.4073%.
+// A pointer-returning factory reaches 87.7846% but publishes only after the
+// virtual reads, contradicting retail, and is not retained.
+// Keeping inflated-size's temporary in the function scope gives it retail's
+// local home instead of reusing the infile parameter slot (86.4073 -> 87.4222).
+void TCampaignBrief::MapTextStruct::read(TAbstractFile* infile)
+{
+    unsigned char value;
+    infile->read(&value, sizeof(unsigned char));
+    m_video = value;
+    infile->read(&value, sizeof(unsigned char));
+    m_audio = value;
+    m_subtitles = readLengthPrefixedString(infile);
+}
+
 VA(0x00487e40, 0x586)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
 void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
                                           int numScenarios,
@@ -1778,11 +1795,9 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
 {
     m_name = readLengthPrefixedString(infile);
 
-    {
-        int size;
-        infile->read(&size, sizeof(int));
-        m_inflatedSize = size;
-    }
+    int size;
+    infile->read(&size, sizeof(int));
+    m_inflatedSize = size;
 
     int prerequisiteBits = 0;
     infile->read(&prerequisiteBits, (numScenarios + 7) / 8);
@@ -1808,12 +1823,7 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
         } else {
             MapTextStruct* text = new MapTextStruct;
             m_prologue = text;
-            unsigned char value;
-            infile->read(&value, sizeof(unsigned char));
-            text->m_video = value;
-            infile->read(&value, sizeof(unsigned char));
-            text->m_audio = value;
-            text->m_subtitles = readLengthPrefixedString(infile);
+            text->read(infile);
         }
     }
 
@@ -1825,12 +1835,7 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
         } else {
             MapTextStruct* text = new MapTextStruct;
             m_epilogue = text;
-            unsigned char value;
-            infile->read(&value, sizeof(unsigned char));
-            text->m_video = value;
-            infile->read(&value, sizeof(unsigned char));
-            text->m_audio = value;
-            text->m_subtitles = readLengthPrefixedString(infile);
+            text->read(infile);
         }
     }
 
@@ -2184,6 +2189,8 @@ void TCampaignBrief::MapTextStruct::play()
     // The subtitle completion flag can also end playback after input.
     // Retaining the event switch and testing finished removes three jumps
     // at unchanged 83.8848%; an if-chain for the same events gives 80.7396%.
+    // Retail assigns each playback endpoint only on the path that consumes it;
+    // dropping three eager zero stores raises MAX 85.4677 -> 86.1889.
     if (m_video < 0)
         return;
 
@@ -2248,7 +2255,7 @@ void TCampaignBrief::MapTextStruct::play()
     g_windowManager->updateScreen(0, 0, 800, 600);
 
     unsigned char textDone;
-    long textEnd = 0;
+    long textEnd;
     if (strip) {
         textDone = 0;
     } else {
@@ -2257,7 +2264,7 @@ void TCampaignBrief::MapTextStruct::play()
     }
 
     unsigned char speechDone;
-    long speechEnd = 0;
+    long speechEnd;
     if (!speech) {
         speechDone = 1;
     } else {
@@ -2265,7 +2272,7 @@ void TCampaignBrief::MapTextStruct::play()
         speechEnd = GameTime::get();
     }
 
-    long videoEnd = 0;
+    long videoEnd;
     if (!g_smackVideo2) {
         videoDone = 1;
         videoEnd = GameTime::get();
@@ -2428,19 +2435,16 @@ const int g_campaignMapOrdinal07 = 7;
 // budget spread here is under 0.6 points and the residual below is the
 // entire remaining story.
 
-// Residual (78.68%): retail holds the literal zero in EDI across the whole
-// body (`xor edi,edi` at fn+0x27, before the completed test) and spends it
-// on complete_order's store, the index compare and the size() null tests;
-// we materialise it in EAX after get_map_score, which costs the inverted
-// `je`/`jne` polarity at every size() null arm and one dword of frame
-// (0x34 against retail's 0x30). Retail also CALLS the POD
-// `_Destroy<type_artifact>` on the second temp where our compile elides it
-// entirely, and calls the 2-argument insert wrapper at the hero loop where
-// we reach the 3-argument one.
 // 2026-09-06, polish lane 38 (78.6801 -> 85.5843): the excluded-hero scan is
 // a post-decrement `while (pool--)` / `while (which--)` pair over a named
 // `pooled` reference, the same shape DoPreLoadCustomization proves; retail's
 // tell sits at fn+0xaad (`mov eax,edx / dec edx / test eax,eax`).
+// Retail computes days before publishing completion and delays the zero
+// complete-order store until after getMapScore (85.5843 -> 86.2644). A
+// function-scope map-score counter then reproduces the zero held in EDI from
+// the prologue and raises MAX to 87.6437. The remaining call mismatch is the
+// vector temporary/insert inline family: retail retains both `_Destroy`
+// helpers and the two-argument hero insert wrapper.
 // LADDER, measured 2026-09-06 and NOT shipped: all nine appends spelled
 // `insert(end(), x)` instead of `push_back(x)` is worth 78.6801 -> 78.8448,
 // 0.16 of a point (about 2.5 B of a 1536 B body) for nine rewritten call
@@ -2451,14 +2455,15 @@ VA(0x00489820, 0x600)  // anchor-caller(oldmain end-of-campaign arm), retail-onl
 void SCampaign::completeCurrentMap(void* campaignHeader)
 {
     CampaignScenarioInfo& scenario = m_mapScores[m_currentMap];
+    unsigned int i = 0;
 
     if (scenario.m_completed)
         return;
 
-    scenario.m_completed = true;
     scenario.m_days = g_game->getCurrentTurn();
-    scenario.m_score = g_game->getMapScore();
+    scenario.m_completed = true;
     scenario.m_completeOrder = 0;
+    scenario.m_score = g_game->getMapScore();
 
     if (scenario.m_index < 0) {
         scenario.m_index = m_carryOverHeroes.size();
@@ -2477,7 +2482,7 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
 
     m_crossoverArrayIndex = scenario.m_index;
 
-    for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
+    for (; i < m_mapScores.size(); ++i) {
         if (m_mapScores[i].m_completed
             && m_mapScores[i].m_completeOrder > scenario.m_completeOrder)
             scenario.m_completeOrder = m_mapScores[i].m_completeOrder;
@@ -2544,7 +2549,7 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
             && m_currentCampaign < g_campaignOrdinal13 && !m_isCheater) {
             int total = 0;
             int scored = 0;
-            for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
+            for (i = 0; i < m_mapScores.size(); ++i) {
                 if (m_mapScores[i].m_completed && m_mapScores[i].m_score >= 0) {
                     total += m_mapScores[i].m_score;
                     ++scored;
