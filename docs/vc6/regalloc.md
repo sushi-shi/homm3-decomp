@@ -1906,6 +1906,40 @@ The private capture/replay preserved all 77,868 object bytes outside the COFF
 timestamp, replayed overwritten instructions and flags, and restored its clean
 shim. This validates this observation, not a complete stack-allocator model.
 
+### Stack-bin priorities have unstable ties
+
+For frames exceeding 128 bytes, the pinned backend sorts the movable stack
+bins at `0x5ac90`. Each key is `floor(1000 * countedReferences / size)`;
+`0x5acdd..0x5ad09` computes and compares those keys. Its middle-pivot
+partition moves only strictly higher keys before the pivot, so equal-priority
+bins are not stable. Declaration order alone does not control final homes.
+
+A passive `connectZones` (`0x543240`) capture preserves all 304,652 object
+bytes outside the COFF timestamp and reproduces the matching function body.
+Its 31 stack values form 19 bins. The map-item pointer has twelve counted
+references and size four; three default-allocator temporaries share a one-byte
+bin with three references. Both keys are 3000. The allocator bin sorts first,
+placing its byte at `-0x19` and the pointer at `-0x20`; retail reverses those
+homes (`-0x1d` and `-0x1c`). All other stack homes and the 96-block instruction
+and branch structure agree; the measured match is 99.9779%. Strict relocation
+comparison still flags the pointer-vector insert versus retail's int-vector
+label, alongside data-label differences ignored by the score.
+
+This explained the residual, not the missing original source. Earlier pointer
+declarations, existing origin accessors, equivalent clearing loops, index
+signedness and returned-coordinate ownership do not remove it. Do not add
+padding, artificial scopes or otherwise unnecessary references to change a
+bin's priority. Recover actual lifetimes and data flow; the sort is a diagnostic
+model, not a substitute for source evidence.
+
+Sharing `connectionIndex` across both zone passes resolves the tie and reaches
+100%. The second pass resets that same index, scans past connected records and
+resumes from the first unconnected record. The 24-state cursor/record-lifetime
+family reproduces the exact candidate independently; borrowed cell-record
+references do not help. A separate 30-state pass-cursor family confirms that
+splitting the map cursor or the object position does not fix this residual.
+No extra operation, artificial scope or compiler pin is needed.
+
 ### Attribute register priorities to actual live ranges
 
 A passive trace of `rmgTerrainPainter::repairTerrainPoint` (0x5b5440)
