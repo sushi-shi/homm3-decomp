@@ -799,7 +799,9 @@ VA(0x00598af0, 0x385)
 // opener. Retail reads autoDraw as a byte and widens advance's low byte.
 // Retail also computes the id-selected descriptor row once and carries it
 // across both track opens; the const reference recovers that lifetime and
-// raises this body from 60.4981% to 76.2394%. Rechecking if/logical sound
+// raises this body from 60.4981% to 76.2394%. Declaring it earlier as either
+// a pointer or reference raises the score only to 76.3089% while incorrectly
+// growing retail's 8-byte frame to 12 bytes. Rechecking if/logical sound
 // publication and conditional/zero-then-if SDK masks adds no further gain.
 void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
                bool advance)
