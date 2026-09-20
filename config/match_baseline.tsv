@@ -4226,7 +4226,7 @@ spells	?markAreaHighlights@@YIXHW4TSkillMastery@@J@Z	98.5000	98.5000	98.5000	0x1
 spells	?markBerserkAreaEffect@combatManager@@QAEXJJAAV?$vector@JV?$allocator@J@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4430	tokens1:cd7d4cc1f70a
 spells	?markBerserkAreaEffect@combatManager@@QAEXJJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4810	tokens1:7e825826f799
 spells	?mirrorImage@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1a6c70	tokens1:2aec30c1ac8c
-spells	?modifySpellDamage@combatManager@@QBEJJHPBVhero@@0PBVarmy@@E@Z	88.4854	88.4854	88.4854	0x1a78e0	tokens1:248d8485d78f
+spells	?modifySpellDamage@combatManager@@QBEJJHPBVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a78e0	tokens1:dfe842e01d74
 spells	?modifySpellDamageForSpells@combatManager@@QBEJJHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x1a7bb0	tokens1:0173b89184dc
 spells	?removeCorpse@combatManager@@QAEXPAVhexcell@@JJ@Z	100.0000	100.0000	100.0000	0x1a7320	tokens1:6d2a8c252865
 spells	?resetBoltAngle@combatManager@@QAEXPAUSBolt@@@Z	97.3158	97.3158	97.3158	0x1a5260	tokens1:c54404bc134b
