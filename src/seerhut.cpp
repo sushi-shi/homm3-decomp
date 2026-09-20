@@ -2450,12 +2450,9 @@ int TSeerReward::getValue(const hero* currentHero)
     case eRewardArtifact: {
         if (const_cast<hero*>(currentHero)->getNumberInBackpack(1) >= 64)
             return 0;
-        // Complete stores the reward ordinal in the serialized union word.
-        // Decode that word before constructing the canonical typed artifact.
-        TArtifact artifact;
-        memcpy(&artifact, &m_value.m_dwords[0], sizeof artifact);
         return aiGetValueOfArtifact(
-            type_artifact(artifact), currentHero->m_owner);
+            type_artifact(static_cast<TArtifact>(m_value.m_dwords[0]) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */),
+            currentHero->m_owner);
     }
 
     case eRewardSpell:

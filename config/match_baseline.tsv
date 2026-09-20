@@ -3745,7 +3745,7 @@ seerhut	?getRewardExtra@TSeerReward@@QAEHPBVhero@@@Z	100.0000	100.0000	100.0000	
 seerhut	?getSeerLogText@TSeerHut@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x174070	tokens1:3028811a1546
 seerhut	?getTimeLimitText@type_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	93.4944	93.4944	93.4944	0x16d040	tokens1:0d3549e6bf79
 seerhut	?getValue@TSeerHut@@QAEHPAVhero@@@Z	92.1154	100.0000	100.0000	0x1735a0	tokens1:7a6a7877a820
-seerhut	?getValue@TSeerReward@@QAEHPBVhero@@@Z	98.8172	98.8172	100.0000	0x173a70	tokens1:c356b72b5f96
+seerhut	?getValue@TSeerReward@@QAEHPBVhero@@@Z	100.0000	100.0000	100.0000	0x173a70	tokens1:35368d302207
 seerhut	?giveReward@TSeerReward@@QAEXPAVhero@@_N@Z	100.0000	100.0000	100.0000	0x173c80	tokens1:00fc41cebb9b
 seerhut	?hasExpired@type_quest@@QBEEXZ	100.0000	100.0000	100.0000	0x16ccb0	tokens1:cfc9b917b8ea
 seerhut	?initializeSeerHutText@@YIEXZ	100.0000	100.0000	100.0000	0x16c3e0	tokens1:7307e924e79e
