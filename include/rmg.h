@@ -1204,7 +1204,6 @@ public:
     int getWidth() const { return m_mapWidth; }
     int getHeight() const { return m_mapHeight; }
 
-    bool contains(const TPoint& point) const;
     TRmgMapItem* getMapItem(int x, int y);
     inline TRmgMapItem* getMapItem(int x, int y, int z)
     {
@@ -1915,6 +1914,7 @@ public:
     void connectZones();
     // Retail 0x543e20: random midpoint displacement, queued side branches,
     // then terrain and border cleanup. No Dreamcast RMG names survive.
+    bool contains(const TPoint& point) const;
     void carveBranchingPaths();
     void repairWaterZoneBorders();
     // Complete-only roles proved by the predecessor walk at 0x5408e0 and

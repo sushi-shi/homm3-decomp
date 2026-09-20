@@ -3316,7 +3316,7 @@ rmg	?canPlaceObject@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPos
 rmg	?canPlaceShipyard@type_random_map_generator@@QAEEUTRmgMapPosition@@@Z	90.7594	90.7594	90.7594	0x141960	tokens1:46b9374ba90d
 rmg	?canPlaceTreasureGroup@type_random_map_generator@@QAEEPAUTRmgTreasureGroup@@UTRmgMapPosition@@PAUTRmgZone@@@Z	81.0773	99.9850	99.9850	0x146c70	tokens1:5d7b71437bc7
 rmg	?canPlaceZone@type_random_map_generator@@QAEEPAUTRmgZone@@@Z	98.0374	98.0374	98.0374	0x13ad60	tokens1:b16ed3269374
-rmg	?carveBranchingPaths@type_random_map_generator@@QAEXXZ	92.6607	92.6607	92.6607	0x143e20	tokens1:d5e8d6d01bbb
+rmg	?carveBranchingPaths@type_random_map_generator@@QAEXXZ	96.1018	96.1018	96.1018	0x143e20	tokens1:b9e33d6186c4
 rmg	?chooseTerrain@TRmgZone@@QAEXXZ	100.0000	100.0000	100.0000	0x132ab0	tokens1:4a47a6c6ed2b
 rmg	?clear@TRmgMapItem@@QAEXXZ	100.0000	100.0000	100.0000	0x130f10	tokens1:3e743a45ea09
 rmg	?clear@type_random_map@@QAEXXZ	100.0000	100.0000	100.0000	0x131140	tokens1:53dcf950987c

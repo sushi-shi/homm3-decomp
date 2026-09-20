@@ -7069,13 +7069,15 @@ TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, int level)
     }
 }
 
-// Complete-only live map-domain query shared by both branch checks. The
-// signed X/Y checks and half-open bounds are retail facts; this ordinary
-// member's name and source boundary remain provisional.
-bool type_random_map::contains(const TPoint& point) const
+// Complete-only live map-domain query shared by both branch checks. Retail
+// tests X before loading the generator receiver, then reads its map dimensions
+// and forms the map address only for openPathPatch. Owning this ordinary query
+// on the generator reproduces that sequence; a map-owned query forms its
+// receiver too early. The name and source boundary remain provisional.
+bool type_random_map_generator::contains(const TPoint& point) const
 {
-    return point.m_x >= 0 && point.m_x < m_mapWidth
-        && point.m_y >= 0 && point.m_y < m_mapHeight;
+    return point.m_x >= 0 && point.m_x < m_map.getWidth()
+        && point.m_y >= 0 && point.m_y < m_map.getHeight();
 }
 
 // The eight-byte values are coordinate pairs: midpoint and perpendicular
@@ -7087,10 +7089,12 @@ bool type_random_map::contains(const TPoint& point) const
 // queries plus squared distance preserve the exact 69-byte range erase.
 // The shared bounds query and direct vector operations recover both seed
 // single-inserts, both vector erases, the queue cleanup and the 0x6c frame.
-// At 92.6607%, entry dimension loads, seed-switch joins and register choices
-// around the bounds checks still differ. Product order and constructor-built
-// seed values do not improve that remainder. Value/reference bounds arguments
-// and early-return/conjunction forms reproduce the same selected code.
+// Dimension accessors in the entry product and seed switch restore retail
+// load order and shared joins. The item pointer precedes the height/width/level
+// product. With the generator-owned bounds query, MAX is 96.1018%: all 67
+// branch destinations agree and 66 block instruction counts match. Coordinate
+// register roles and one extra move after traceBranchEnd remain. Naming an
+// extra endpoint copy adds a reload absent from retail; keep the direct call.
 // Pair-operation helpers lose the container boundaries; shared midpoint and
 // perpendicular helpers disturb the three exact path callers. Point getters
 // alone over-expand cleanup. The cell-setter model remains a lead requiring
@@ -7098,8 +7102,8 @@ bool type_random_map::contains(const TPoint& point) const
 VA(0x00543E20, 0x574) // anchor-callee 0x544920; Complete-only, thiscall, no arguments
 void type_random_map_generator::carveBranchingPaths()
 {
-    int remaining = m_map.m_mapWidth * m_map.m_mapHeight * m_map.m_numberLevels;
     TRmgMapItem* item = m_map.m_mapItems;
+    int remaining = m_map.getHeight() * m_map.getWidth() * m_map.m_numberLevels;
     for (; remaining--; ++item) {
         if (!item->m_objects.size()) {
             if (!item->m_connection.m_present) {
@@ -7118,25 +7122,25 @@ void type_random_map_generator::carveBranchingPaths()
         case RMG_BRANCH_SEED_MAIN_DIAGONAL:
             first.m_x = 0;
             first.m_y = 0;
-            last.m_x = m_map.m_mapWidth - 1;
-            last.m_y = m_map.m_mapHeight - 1;
+            last.m_x = m_map.getWidth() - 1;
+            last.m_y = m_map.getHeight() - 1;
             break;
         case RMG_BRANCH_SEED_VERTICAL:
-            first.m_x = m_map.m_mapWidth / 2;
+            first.m_x = m_map.getWidth() / 2;
             first.m_y = 0;
             last.m_x = first.m_x;
-            last.m_y = m_map.m_mapHeight - 1;
+            last.m_y = m_map.getHeight() - 1;
             break;
         case RMG_BRANCH_SEED_ANTI_DIAGONAL:
-            first.m_x = m_map.m_mapWidth - 1;
+            first.m_x = m_map.getWidth() - 1;
             first.m_y = 0;
             last.m_x = 0;
-            last.m_y = m_map.m_mapHeight - 1;
+            last.m_y = m_map.getHeight() - 1;
             break;
         case RMG_BRANCH_SEED_HORIZONTAL:
             first.m_x = 0;
-            first.m_y = m_map.m_mapHeight / 2;
-            last.m_x = m_map.m_mapWidth - 1;
+            first.m_y = m_map.getHeight() / 2;
+            last.m_x = m_map.getWidth() - 1;
             last.m_y = first.m_y;
             break;
         }
@@ -7164,7 +7168,7 @@ void type_random_map_generator::carveBranchingPaths()
                     pending.push_back(middle);
                     pending.push_back(middle);
                     pending.push_back(first);
-                    if (length >= 8 && m_map.contains(middle)) {
+                    if (length >= 8 && contains(middle)) {
                         first = middle + perpendicular;
                         branches.push(middle);
                         branches.push(first);
@@ -7172,7 +7176,7 @@ void type_random_map_generator::carveBranchingPaths()
                         branches.push(middle);
                         branches.push(first);
                     }
-                } else if (m_map.contains(first)) {
+                } else if (contains(first)) {
                     m_map.openPathPatch(first.m_x, first.m_y, level);
                 }
             }
@@ -7784,6 +7788,9 @@ int type_random_map_generator::getMineGuardValue(int resource, const TRmgZone* z
 // remain reversed. Initialization/assignment and named position-return copies
 // are neutral; constructing a fresh return value or using the primary scalar
 // map overload changes calls that retail does not make.
+// A byte-identical passive C2 trace shows entrance and position sharing one
+// twelve-byte stack home. Scalar strip loops keep the smaller frame; copying
+// the origin per cell reaches 0x44 but adds spills/copies absent from retail.
 // A shared zone-value wrapper lowers treasure assembly MAX; keep the complete
 // mine valuation operation. Separating the scan pointers loses the retail
 // shared lifetime; only the later resource prototype owns a fresh local.
