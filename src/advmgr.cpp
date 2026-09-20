@@ -4886,6 +4886,10 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
     }
 }
 
+// DC advmgr.cpp:5881/5894 and 5918/5931 call boat::GetHflip. Keep
+// that native-bool helper in both routines. Direct facing comparisons had
+// hidden a map-cell inline-budget mismatch caused by an inferred VERIFY;
+// the canonical unchecked cell -> zCell chain makes both callers exact.
 VA(0x00410760, 0x24F)  // dc 0x11ea4
 void advManager::drawBoatPart(int part, TDrawParts& boatParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
@@ -4894,10 +4898,7 @@ void advManager::drawBoatPart(int part, TDrawParts& boatParts, int baseX,
     boat* currBoat = g_game->getBoat(boatParts.m_id);
     int boatCellY = part % 3;
     int boatCellX = part / 3;
-    NewmapCell* boatCell = getCell(
-        currBoat->getLocation());
-
-    if (!(boatCell->m_flags0011 & 0x200)) {
+    if (!getCell(currBoat->getLocation())->m_isBeachBorder) {
         m_boatFrothIcons[currBoat->m_type]->drawHero(
             currBoat->getStandSequence(),
             m_animCtr
@@ -4905,7 +4906,7 @@ void advManager::drawBoatPart(int part, TDrawParts& boatParts, int baseX,
             tilex + (2 - boatCellY) * 32,
             tiley - boatCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
-            currBoat->m_facing > hero::kFacingS);
+            currBoat->getHflip());
     }
 
     m_boatIcons[currBoat->m_type]->drawHero(
@@ -4914,7 +4915,7 @@ void advManager::drawBoatPart(int part, TDrawParts& boatParts, int baseX,
         tilex + (2 - boatCellY) * 32,
         tiley - boatCellX * 32 + 32, tilew, tileh,
         g_windowManager->m_screenBitmap, baseX, baseY + 8,
-        currBoat->m_facing > hero::kFacingS);
+        currBoat->getHflip());
 }
 
 VA(0x004109b0, 0x24F)  // dc 0x120ec
@@ -4925,10 +4926,7 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
     boat* currBoat = g_game->getBoat(boatParts.m_id);
     int boatCellY = part % 3;
     int boatCellX = part / 3;
-    NewmapCell* boatCell = getCell(
-        currBoat->getLocation());
-
-    if (!(boatCell->m_flags0011 & 0x200)) {
+    if (!getCell(currBoat->getLocation())->m_isBeachBorder) {
         m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
             currBoat->getStandSequence(),
             m_animCtr
@@ -4936,7 +4934,7 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
             tilex + (2 - boatCellY) * 32,
             tiley - boatCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
-            currBoat->m_facing > hero::kFacingS);
+            currBoat->getHflip());
     }
 
     m_boatIcons[currBoat->m_type]->drawHeroShadow(
@@ -4945,7 +4943,7 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
         tilex + (2 - boatCellY) * 32,
         tiley - boatCellX * 32 + 32, tilew, tileh,
         g_windowManager->m_screenBitmap, baseX, baseY + 8,
-        currBoat->m_facing > hero::kFacingS);
+        currBoat->getHflip());
 }
 
 // E:\gamedcs\advmgr.cpp:5941
