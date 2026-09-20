@@ -312,7 +312,7 @@ ai_player	?_Xran@?$bitset@$0JA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x346d0	-
 ai_player	?addArtifact@@YIEPAVhero@@Utype_artifact@@PAJ0J2J@Z	100.0000	100.0000	100.0000	0x33e20	tokens1:c16882075d6f
 ai_player	?addCreatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z	100.0000	100.0000	100.0000	0x2c130	tokens1:0906fe7d5645
 ai_player	?aiArrangeArmy@@YIXAAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d8e0	tokens1:75992a8dfd53
-ai_player	?aiArrangeArmyForCombat@@YIXPAVhero@@PBV1@ABVarmyGroup@@@Z	99.9857	99.9857	99.9857	0x2db20	tokens1:6e5b88463b94
+ai_player	?aiArrangeArmyForCombat@@YIXPAVhero@@PBV1@ABVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2db20	tokens1:6e5b88463b94
 ai_player	?aiAttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	84.7895	86.5842	86.5842	0x2fee0	tokens1:b19ff2c3974c
 ai_player	?aiBuildShip@@YIXPBVhero@@JJJ@Z	100.0000	100.0000	100.0000	0x30f80	tokens1:267b00060bc8
 ai_player	?aiChooseDestination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	84.5044	84.5044	84.5044	0x2e0b0	tokens1:a308d14dba21
