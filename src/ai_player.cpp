@@ -5635,17 +5635,20 @@ void aiSwapArtifacts(hero* source, hero* dest)
 }
 
 // Complete keeps the DC artifact-effect class boundaries but expands these
-// tiny construction helpers into initialize_artifact_effects. DC also proves
+// tiny construction helpers into initializeArtifactEffects. DC also proves
 // the explicit type_artifact_effect default constructor (line 5043); spelling
 // it here is byte-flat but preserves that real source/inliner boundary.
-// Retail retains type_combat_artifact at four later nested-base sites.
+// Retail writes the concrete vtable before the member stores for scouting,
+// school, antimagic, tome, income, and creature growth. Assigning those
+// members in the constructor bodies reproduces that order. The recovered
+// no-data necromancy base accounts for the two retained combat-base calls.
 inline type_artifact_effect::type_artifact_effect()
 {
 }
 
 inline type_scouting_artifact::type_scouting_artifact(long newBonus)
-    : m_bonus(newBonus)
 {
+    m_bonus = newBonus;
 }
 
 inline type_might_artifact::type_might_artifact(long newBonus)
@@ -5663,8 +5666,14 @@ inline type_knowledge_artifact::type_knowledge_artifact(long newBonus)
 {
 }
 
-inline type_necromancy_artifact::type_necromancy_artifact(long newBonus)
+inline type_base_necromancy_artifact::type_base_necromancy_artifact(
+    long newBonus)
     : type_combat_artifact(newBonus)
+{
+}
+
+inline type_necromancy_artifact::type_necromancy_artifact(long newBonus)
+    : type_base_necromancy_artifact(newBonus)
 {
 }
 
@@ -5695,13 +5704,14 @@ inline type_duration_artifact::type_duration_artifact(long newBonus)
 
 inline type_school_artifact::type_school_artifact(TSpellSchool newSchool,
                                                    long newBonus)
-    : type_power_artifact(newBonus), m_school(newSchool)
+    : type_power_artifact(newBonus)
 {
+    m_school = newSchool;
 }
 
 inline type_antimagic_artifact::type_antimagic_artifact(long maxLevel)
-    : m_bonus(maxLevel)
 {
+    m_bonus = maxLevel;
 }
 
 inline type_antimorale_artifact::type_antimorale_artifact()
@@ -5713,24 +5723,27 @@ inline type_antiluck_artifact::type_antiluck_artifact()
 }
 
 inline type_tome_artifact::type_tome_artifact(TSpellSchool newSchool)
-    : type_combat_artifact(0), m_school(newSchool)
+    : type_combat_artifact(0)
 {
+    m_school = newSchool;
 }
 
 inline type_income_artifact::type_income_artifact(
     long newAmount, EGameResource newResource)
-    : m_amount(newAmount), m_resource(newResource)
 {
+    m_amount = newAmount;
+    m_resource = newResource;
 }
 
 inline type_creature_growth_artifact::type_creature_growth_artifact(
     long newLevel, long newBonus)
-    : m_bonus(newLevel), m_growthBonus(newBonus)
 {
+    m_bonus = newLevel;
+    m_growthBonus = newBonus;
 }
 
 inline type_undead_king_cloak_artifact::type_undead_king_cloak_artifact()
-    : type_necromancy_artifact(30)
+    : type_base_necromancy_artifact(30)
 {
 }
 
@@ -5816,11 +5829,7 @@ void aiInitialize()
 // vector::clear before the inner loop; restoring that statement raises this
 // body from 86.90% to 91.95%. Flattening the helper into AI_initialize
 // measured 84.09% only because the old retail inventory incorrectly
-// coalesced both functions, and is the boundary negative control. The one
-// remaining extra CFG block is a retained type_combat_artifact call in our
-// necromancy arm; inline_depth(255) and force-inlining the outer constructor
-// were byte-flat, while inline-qualifying the shared base over-expanded later
-// retail call sites and fell to 76.42%, so no synthetic control is retained.
+// coalesced both functions, and is the boundary negative control.
 
 // 91.95 -> 95.16 (polish 49, lever A/C census): retail NEVER folds the two
 // stream reads of a two-argument arm into one pointer bump. The SCHOOL,
@@ -5833,12 +5842,15 @@ void aiInitialize()
 // `add esi,8` at +0x222/+0x2dd/+0x305. Naming the first read restores all
 // three sites and both esi bumps per arm.
 
-// Residual (95.16%): ONE swapped inline decision - retail CALLS
-// type_combat_artifact's ctor in the NECROMANCY arm (t+0x165) and expands
-// it in SHOOTER_BONUS (t+0x37d); we do the exact opposite (+0x38c call,
-// necromancy expanded). DURATION, SCHOOL and UNDEAD_KING_CLOAK keep their
-// calls on both sides, so this is a per-site /Ob2 budget boundary, not a
-// missing source element.
+// 95.16 -> 97.45: constructor-body assignments make six field/vtable blocks
+// exact. Restoring type_base_necromancy_artifact, a no-data base named by the
+// recovered Complete type inventory, makes both necromancy construction paths
+// retain the same type_combat_artifact call as retail. The remaining two CFG
+// blocks are the opposite decision in the Complete-only Angelic Alliance arm:
+// retail expands that nested base while VC6 gives the current natural source
+// 56 budget units for a 63-unit callee. In-class and ordinary constructor
+// definitions are byte-flat; inline_depth(255) is also flat. No synthetic
+// force-inline or pragma is retained.
 VA(0x00434100, 0x490)  // tail target/fresh frame + DC helper, dc 0x35f08
 static void initializeArtifactEffects()
 {

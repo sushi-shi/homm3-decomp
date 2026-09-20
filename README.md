@@ -12,7 +12,7 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable MAX: 96.85%** — MAX-weighted bytes over all 1,998,996 unfiltered bytes.
+**Executable MAX: 96.86%** — MAX-weighted bytes over all 1,998,996 unfiltered bytes.
 
 **Function exact MAX** — 4,226 / 4,766 current implementations (88.7%) have reached 100%.
 
