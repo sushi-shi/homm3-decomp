@@ -49,9 +49,7 @@ _IDENTIFIER = re.compile(r'\b[A-Za-z_]\w*\b')
 # These headers proved context-dependent or declaration-changing in the
 # all-TU compatibility census. They are not general parser-state inputs.
 UNSAFE_RANDOM_INCLUDE_HEADERS = frozenset({
-    "DC_input.h",
     "DC_precompiledheaders.h",
-    "ResSw.h",
     "ai_spellvalue.h",
     "ai_tactical.h",
     "army.h",

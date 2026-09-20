@@ -783,8 +783,8 @@ def write_readme(report: dict) -> None:
     pct = 100.0 * matched / denominator if denominator else 0.0
     pct_max = 100.0 * matched_max / denominator if denominator else 0.0
     block = [RM_START, "",
-             f"**Executable MAX: {exe_pct:.2f}%** — MAX-weighted "
-             f"bytes over all {unfiltered_bytes:,} unfiltered bytes.",
+             f"**Executable MAX: {exe_pct:.2f}%** — weighted by function size "
+             f"across {unfiltered_bytes:,} bytes of code included in matching.",
              "",
              f"**Function exact MAX** — {matched_max:,} / {denominator:,} "
              f"current implementations ({pct_max:.1f}%) have reached 100%.", "",

@@ -67,7 +67,7 @@ Selectors (any mix):
     NAME                     match a proc by (sub)name across all modules
     module.obj:0xOFF         one proc by DC offset
     0x5dda10                 a RETAIL VA - resolved through the `dc 0x...`
-                             tag on that address's VA()/DC_ONLY() claim in
+                             tag on that address's VA() claim in
                              src/<unit>.cpp
 
   python3 -m homm3.analysis.dc_srclines townmgr.obj:0x1793b4
@@ -95,7 +95,7 @@ SRC_DIR = common.HOMM3_DIR / "src"
 # `VA(0x005dda10, 0x145F)  // <evidence>, dc 0x17f54c`. Evidence may also
 # mention a Dreamcast byte size earlier on the same line; greedily consume the
 # comment so the final explicit `dc 0x...` identity wins.
-CLAIM_RE = re.compile(r"\b(?:VA|VA_COMPGEN|DC_ONLY)\s*\(\s*(0x[0-9a-fA-F]+)"
+CLAIM_RE = re.compile(r"\b(?:VA|VA_COMPGEN)\s*\(\s*(0x[0-9a-fA-F]+)"
                       r"[^)]*\)[^\n]*\bdc\s+(0x[0-9a-fA-F]+)")
 
 _srclines: dict[str, list[tuple[str, int, int]]] = {}

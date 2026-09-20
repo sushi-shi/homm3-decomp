@@ -839,7 +839,6 @@ unsigned char searchArray::validMoveAdjacent(const army* currentArmy,
     return 0;
 }
 
-
 // Retail hands FindCombatPath 1000 for BOTH limit and base_speed in
 // the placement phase, materialising the constant once; outside it,
 // base_speed falls back to the stack's own speed when the caller
@@ -1079,7 +1078,6 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 }
 
 // E:\gamedcs\findpath.cpp:1218
-
 // THE SIEGE-PRESSURE PREAMBLE is the only part of this body that is not
 // a plain Dijkstra. It fires only while a town is defending AND the
 // acting stack is computer-driven (is_computer_action, landed in
@@ -1347,17 +1345,6 @@ long searchArray::getTravelTime(const army* currentArmy, long hex) const
         turns = 1;
     return turns;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\findpath.cpp:79
-DC_ONLY(0xa115c, 0x50)
-void pathCell::pathCell()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA_COMPGEN(0x004b3f70, 0x2F3, VECTOR_INSERT, pathCell)
 

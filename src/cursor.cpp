@@ -24,7 +24,6 @@ DATA(0x0063d6dc) static const int g_scrollDelayValues[5] = { 100, 50, 50, 50, 10
 DATA(0x006968e8) unsigned char g_unnamed6968e8;
 
 // E:\gamedcs\cursor.cpp:52
-DC_ONLY(0x79a48, 0x3C)
 void advManager::startCursor(int direction)
 {
     m_cursorDirection = direction;
@@ -864,7 +863,6 @@ void advManager::onMoveHero(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1158
-DC_ONLY(0x7c2e0, 0x48)
 void advManager::onTeleportHero(CMapChange* mapChange)
 {
     CMCTeleportHero* change = static_cast<CMCTeleportHero*>(mapChange);
@@ -873,7 +871,6 @@ void advManager::onTeleportHero(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1167
-DC_ONLY(0x7c328, 0x68)
 void advManager::onClaimMine(CMapChange* mapChange)
 {
     CMCClaimMine* change = static_cast<CMCClaimMine*>(mapChange);
@@ -884,7 +881,6 @@ void advManager::onClaimMine(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1177
-DC_ONLY(0x7c390, 0x36)
 void advManager::onClaimTown(CMapChange* mapChange)
 {
     CMCClaimTown* change = static_cast<CMCClaimTown*>(mapChange);
@@ -894,7 +890,6 @@ void advManager::onClaimTown(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1186
-DC_ONLY(0x7c3c8, 0x58)
 void advManager::onBuildBoat(CMapChange* mapChange)
 {
     CMCBuildBoat* change = static_cast<CMCBuildBoat*>(mapChange);
@@ -905,7 +900,6 @@ void advManager::onBuildBoat(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1196
-DC_ONLY(0x7c420, 0x4E)
 void advManager::onEraseObject(CMapChange* mapChange)
 {
     CMCEraseObject* change = static_cast<CMCEraseObject*>(mapChange);
@@ -916,7 +910,6 @@ void advManager::onEraseObject(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1208
-DC_ONLY(0x7c470, 0xAC)
 void advManager::onDeadHero(CMapChange* mapChange)
 {
     CMCDeadHero* change = static_cast<CMCDeadHero*>(mapChange);
@@ -929,7 +922,6 @@ void advManager::onDeadHero(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1224
-DC_ONLY(0x7c51c, 0x66)
 void advManager::onRecruitHero(CMapChange* mapChange)
 {
     CMCRecruitHero* change = static_cast<CMCRecruitHero*>(mapChange);
@@ -951,7 +943,6 @@ void advManager::onRecruitHero(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1245
-DC_ONLY(0x7c584, 0x5C)
 void advManager::onDeadPlayer(CMapChange* mapChange)
 {
     CMCDeadPlayer* change = static_cast<CMCDeadPlayer*>(mapChange);
@@ -962,7 +953,6 @@ void advManager::onDeadPlayer(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1253
-DC_ONLY(0x7c5e0, 0x68)
 void advManager::onClaimGenerator(CMapChange* mapChange)
 {
     CMCClaimGenerator* change =
@@ -971,7 +961,6 @@ void advManager::onClaimGenerator(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1260
-DC_ONLY(0x7c648, 0x1A)
 void advManager::onClaimGarrison(CMapChange* mapChange)
 {
     CMCClaimGarrison* change =
@@ -980,7 +969,6 @@ void advManager::onClaimGarrison(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1267
-DC_ONLY(0x7c664, 0x24)
 void advManager::onClaimShipYard(CMapChange* mapChange)
 {
     CMCClaimShipYard* change =

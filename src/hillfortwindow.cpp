@@ -208,7 +208,6 @@ void THillFortWindow::doModal()
 }
 
 // E:\gamedcs\hillfortwindow.cpp:192
-DC_ONLY(0xd6bd4, 0x22)
 inline bool canAfford(const long* cost, const long* playerRes)
 {
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {

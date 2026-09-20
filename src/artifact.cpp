@@ -396,45 +396,6 @@ static void initializeArtifactTraits(int id,
     traits.m_givesSpells = 0;
 }
 
-#if 0  // @carcass: Dreamcast-only/out-of-line header and STL emissions
-
-// E:\gamedcs\artifact.cpp:33
-DC_ONLY(0x508bc, 0x8)
-void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr()
-{
-    // @stub
-}
-
-// E:\gamedcs\artifact.cpp:34
-DC_ONLY(0x508c4, 0x18)
-void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr()
-{
-    // @stub
-}
-
-// E:\gamedcs\artifact.cpp:36
-DC_ONLY(0x508dc, 0x4)
-void `anonymous namespace'::TAutoStrPtr::set(char* pStr)
-{
-    // @stub
-}
-
-// E:\gamedcs\artifact.cpp:38
-DC_ONLY(0x508e0, 0x4)
-char* `anonymous namespace'::TAutoStrPtr::get()
-{
-    // @stub
-}
-
-// E:\gamedcs\artifact.cpp:49
-DC_ONLY(0x508e4, 0x20)
-void TArtifactTraits::TArtifactTraits()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA_COMPGEN(0x0044D380, 0x60, BITSET_SET, Bitset19)
 
 VA_COMPGEN(0x0044d3e0, 0x17, BITSET_TIDY, Bitset19)

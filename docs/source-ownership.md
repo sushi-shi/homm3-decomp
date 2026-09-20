@@ -62,8 +62,7 @@ header emissions and concrete template instances can resolve to one canonical
 authored body with the proven owner and signature. Positively recovered inline
 origins are also listed. This compares source identities, not the number of
 functions emitted by different compilers: a helper expanded by retail still
-needs its canonical source body and callers. An inactive `DC_ONLY` carcass
-does not account for that body.
+needs its canonical source body and callers. An inactive reference stub does not account for that body.
 
 The statuses distinguish `matched`, `documented_dc_only`,
 `documented_win_only`, `missing_source`, `missing_dc`, and `invalid_source`.
@@ -125,14 +124,14 @@ The audit runs as a fatal gate in full builds. Its preprocessor undefines
 `__clang__` and sets `_MSC_VER=1200` so project definitions guarded for VC6
 remain visible; the private
 `HOMM3_SOURCE_OWNERSHIP` analysis define keeps VA metadata available in `va.h`.
-Editor-only alternatives are excluded, and ordinary inactive carcasses stay
-inactive. A compiler guard cannot exempt a written constructor, destructor or
+Editor-only alternatives and inactive code are excluded. A compiler guard cannot exempt a written constructor, destructor or
 template specialization from ownership review.
 An explicit `@stub` placeholder comment inside an active definition is also
 fatal (`ACTIVE-STUB`), including unannotated helpers and header bodies.
-Inactive reference stubs remain allowed. Literal strings containing the marker
-and real empty constructors are not placeholders. This catches an integrated
-carcass stub even when its name, signature and source owner are all correct.
+Literal strings containing the marker and real empty constructors are not
+placeholders. This catches an integrated stub even when its name, signature
+and source owner are all correct. Keep Dreamcast reference procedures in the
+debug corpus and reviewed exclusions in the TSVs, rather than source stubs.
 
 Clang skips body semantics so
 its handling of VC6 local-variable lookup cannot change the source inventory;
@@ -300,9 +299,8 @@ only at direct class scope; method-local enums, unproven nested classes and
 file-scope enums remain subject to the cleanliness gate.
 
 Collection covers admitted game translation units, their active project headers,
-and standalone project headers outside that include closure. Source files outside
-the manifest may hold empty DC_ONLY reference carcasses; implementation code
-there fails coverage. Formal CodeView argument types and member constness resolve
+and standalone project headers outside that include closure. Every C/C++ source file must be admitted in the manifest; files outside it
+fail coverage, including empty files. Formal CodeView argument types and member constness resolve
 overloads independently of optimized debug parameter records. Const conversion
 operators retain their member qualifier even though Clang reports them as
 conversion-function cursors rather than ordinary method cursors.

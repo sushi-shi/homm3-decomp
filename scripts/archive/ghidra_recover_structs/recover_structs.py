@@ -6,7 +6,7 @@
 It is deliberately parked under scripts/archive/ so nobody mistakes it for a live
 stage: it has no `homm3` CLI subcommand, no ninja edge, no gate, and nothing in the
 build graph depends on it. It was run once to produce the tables under
-`evidence/ghidra-structs/`; those tables are the deliverable. If a boundary or naming
+`build/ghidra-structs/`; those tables are the deliverable. If a boundary or naming
 input ever changes and the tables must be refreshed, run this file directly again
 (`python3 scripts/archive/ghidra_recover_structs/recover_structs.py`) from a dev shell
 that provides GHIDRA_INSTALL_DIR + pyghidra. Do not resurrect it as a pipeline stage.
@@ -59,7 +59,7 @@ INPUTS (all read-only)
   evidence/retail-game-tree.csv, evidence/ida/functions.csv    class attribution
   evidence/dreamcast/classes.csv, members.csv                  DC cross-check columns
 
-OUTPUTS (evidence/ghidra-structs/)
+OUTPUTS (build/ghidra-structs/)
   struct_layouts.csv      class,offset,width,n_methods,kind
   struct_summary.csv      per class: accessed_size (lower bound), ctor_size (oracle),
                           memset/new sizes, allocator, vtable_entries, DC size+base,
@@ -88,7 +88,7 @@ EXE = REPO / "build/orig/HEROES3.EXE"      # no env override, for the same reaso
 EXE_SHA = "057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274"
 PROJ_DIR = REPO / "build/ghidra"
 PROJ_NAME = "homm3-structs"
-OUT_DIR = REPO / "evidence/ghidra-structs"
+OUT_DIR = REPO / "build/ghidra-structs"
 TARGET_STAMP = PROJ_DIR / "target.sha256"
 
 IMAGE_BASE = 0x400000

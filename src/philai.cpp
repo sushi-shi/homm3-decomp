@@ -208,40 +208,12 @@ static void checkForTown(hero* currentHero)
 
 #if 0  // @carcass
 
-// E:\gamedcs\philai.cpp:207
-DC_ONLY(0x10d684, 0x132)
-void upgradeCreatures(hero* current_hero, const town* current_town)
-{
-    // @stub
-}
-
 // get_artifact_purchase_value promoted to a retail claim below. Its active
 // definition remains here in Dreamcast source order.
 
 // E:\gamedcs\philai.cpp:326
 // Retail claim promoted to the reconstructed body below; DC identity retained.
 void buyArtifacts(hero* current_hero, TArtifact* artifact_list, long market_count)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:370
-DC_ONLY(0x10dae8, 0x7C)
-long valueOfBlackMarket(const hero* current_hero, const NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:397
-DC_ONLY(0x10db74, 0x150)
-void buyArtifacts(hero* current_hero, town* current_town)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:583
-DC_ONLY(0x10e0f8, 0x20)
-void aiVisitWarFactory(hero* current_hero)
 {
     // @stub
 }
@@ -584,31 +556,6 @@ static void clearShipyards(playerData* player)
             player->m_shipyards[shipyardIndex].m_z)->m_canBuildShip = 0;
     }
 }
-
-#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
-
-// E:\gamedcs\philai.cpp:1770
-DC_ONLY(0x110018, 0x15A)
-void philAI::getTurnAIVars(int whichPlayer)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:1854
-DC_ONLY(0x110390, 0x34)
-int valueOfArena(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:1883
-DC_ONLY(0x110408, 0x16A)
-int valueOfMapArtifact(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // Source-order declarations for helpers whose retained Complete bodies live
 // later in retail RVA order.
@@ -2657,149 +2604,9 @@ void aiPurchaseCreatures(hero* currentHero, generator* currentGenerator)
 
 #if 0  // @carcass
 
-// E:\gamedcs\philai.cpp:1972
-DC_ONLY(0x1105d8, 0x230)
-int valueOfBlackBox(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2115
-DC_ONLY(0x1108e0, 0xD6)
-int valueOfCampfire(playerData* player, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2194
-DC_ONLY(0x110c58, 0x36)
-int valueOfDefenseTower(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2220
-DC_ONLY(0x110cf8, 0xBC)
-long valueOfGarrison(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2250
-DC_ONLY(0x110db4, 0x1D4)
-long valueOfIdol(const hero* current_hero, long move_cost)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2274
-DC_ONLY(0x110f88, 0x7C)
-int valueOfFlotsam(playerData* player)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2283
-DC_ONLY(0x111004, 0x24)
-int valueOfGarden(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2294
-DC_ONLY(0x111028, 0x32)
-int valueOfLeanTo(NewmapCell* cell, playerData* player)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2392
-DC_ONLY(0x111328, 0x1CC)
-long valueOfHeroEvent(const hero* current_hero, NewmapCell* cell, short x, short y, short z, short move_cost)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2465
-DC_ONLY(0x1114f4, 0x13A)
-long valueOfHillFort(const hero* current_hero, long move_cost)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:2513
 // Retail claim promoted to the reconstructed body below; DC identity retained.
 void aiVisitHillFort(hero* current_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2550
-DC_ONLY(0x11173c, 0x94)
-int valueOfLibrary(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2567
-DC_ONLY(0x1117d0, 0x36)
-int valueOfLighthouse(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2615
-DC_ONLY(0x1118f8, 0x78)
-int valueOfMercenaryCamp(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2692
-DC_ONLY(0x111b7c, 0xC6)
-int moraleIncreaseValue(const hero* current_hero, int value)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2728
-DC_ONLY(0x111c78, 0xF0)
-int luckIncreaseValue(const hero* current_hero, int value)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2775
-DC_ONLY(0x111e18, 0x1C)
-long valueOfMagusHut(long player_id)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2948
-DC_ONLY(0x112488, 0x88)
-int valueOfSkeleton(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2997
-DC_ONLY(0x1125ec, 0x1E)
-int valueOfShrine(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:3044
-DC_ONLY(0x1126d0, 0x9C)
-int valueOfSirens(const hero* current_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:3069
-DC_ONLY(0x11276c, 0xC4)
-int valueOfStables(const hero* current_hero, long* move_cost)
 {
     // @stub
 }
@@ -4258,24 +4065,6 @@ long aiValueOfEvent(const hero* currentHero, type_point point)
     long moveCost = 0;
     return aiValueOfEvent(currentHero, point, moveCost);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\philai.cpp:4204
-DC_ONLY(0x114adc, 0x68)
-void aiJoinDecision(hero* current_hero, TCreatureType creature, short amount)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:4217
-DC_ONLY(0x114b44, 0x44)
-long aiValueOfEvent(const hero* current_hero, type_point point)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // COMDAT pairing: std::_Unguarded_insert<type_creature_value, greater>. See
 // ai_player's unpredicated twin: `ret 0x10` against its `ret 0xc` is the

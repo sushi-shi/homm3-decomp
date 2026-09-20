@@ -383,7 +383,7 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
 // leaves the answer in EAX across all four exits and stores it ONCE,
 // where the same statements written out in the caller store to the
 // slot at every assignment.
-DC_ONLY(0x3d154, 0x8E)
+
 long type_AI_attack_hex_chooser::getAttackTime(const pathCell* cell) const
 {
     if (m_speed == 0)
@@ -625,7 +625,6 @@ void type_AI_spellcaster::initialize(combatManager* combat, long side)
 }
 
 // E:\gamedcs\ai_tactical.cpp:817
-DC_ONLY(0x3d6f0, 0x72)
 type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent,
                                                 combatManager* combat, long side,
                                                 unsigned char creatureSpell)
@@ -698,7 +697,7 @@ type_AI_spellcaster::~type_AI_spellcaster()
 // GetCurrentArmy, Is and IsIncapacitated calls remain canonical; VC6 expands
 // the helper naturally at its three callers. Absence of a retained retail
 // body does not justify an explicit inline keyword.
-DC_ONLY(0x3d7b0, 0x86)
+
 unsigned char type_AI_spellcaster::isLastAction() const
 {
     const army* current = g_combatManager->getCurrentArmy();
@@ -802,7 +801,7 @@ long type_AI_spellcaster::getDamageSpellValue(const army* enemy, type_enchant_da
 // the 16-state follow-up finds pointer/reference bindings exact, while the
 // inline address and a named damage result remain 98.1927. Mass-result
 // declaration/argument lifetimes do not change either outcome.
-DC_ONLY(0x3dabc, 0x6E)
+
 long type_AI_spellcaster::getGroupDamageValue(SpellID spell, long baseDamage,
                                                         long group, hero* targetHero) const
 {
@@ -858,7 +857,7 @@ long type_AI_spellcaster::getAreaEffectValue(SpellID spell, long baseDamage, TSk
 // column test, which is why retail emits a range guard the loop bound
 // already guarantees. DC1039/1042 name getMasteryValue and
 // InInvisibleColumn: retain those nested calls inside the ordinary helper.
-DC_ONLY(0x3dc50, 0x72)
+
 void type_AI_spellcaster::considerAreaEffect(type_spell_choice& choice) const
 {
     long baseDamage = g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power
@@ -2302,7 +2301,7 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice* choice) const
 // divided by the healed stack's own hit points.
 
 // The trailing `choice.field_20` block is the is_last_action test
-// (dc 0x3d6xx, DC_ONLY - it has no retail body because it is inlined at
+// (dc 0x3d6xx; it has no retail body because it is inlined at
 // every site): the choice is flagged when the healed stack IS the
 // acting stack, or when no OTHER stack on our side can still act. Its
 // scan is the same creatureId 0x200040 / disabled-triple / bit-26 walk
@@ -2682,7 +2681,7 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
 // E:\gamedcs\ai_tactical.cpp:3093
 // DC 0x41e5c and dispatcher line 3167 prove this ordinary helper boundary.
 // Line 3098 calls get_mastery_value; line 3107 writes cast_now after the split.
-DC_ONLY(0x41e5c, 0x78)
+
 void type_AI_spellcaster::considerSummon(type_spell_choice& choice) const
 {
     if (m_winLikely)
@@ -3021,7 +3020,7 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
 // vulnerable (creature bit 21 clear), still alive, and still able to
 // act (creature bit 6 clear). The walk is the TU's `count-- > 0`
 // pointer form, the same one consider_teleport carries.
-DC_ONLY(0x425a8, 0x68)
+
 void type_AI_spellcaster::checkSimulation()
 {
     const army* enemy = g_combatManager->m_armies[m_enemySide];
@@ -3047,7 +3046,7 @@ void type_AI_spellcaster::checkSimulation()
 // DC 0x42610 proves the const helper and early returns; cast_spell calls it
 // at line 3436. Complete also excludes Arrow Towers. Retail expands this
 // ordinary helper into 0x43c800; the bracket has no retained body for it.
-DC_ONLY(0x42610, 0xA0)
+
 unsigned char type_AI_spellcaster::spellsNotRequired() const
 {
     if (!m_winLikely)
@@ -3146,24 +3145,6 @@ unsigned char type_AI_spellcaster::castSpell(unsigned char retreating)
     }
     return 0;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\ai_tactical.cpp:807
-DC_ONLY(0x42a74, 0x34)
-void* type_AI_spellcaster::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_tactical.cpp:2183
-DC_ONLY(0x42aa8, 0x306)
-void army::army(const army* __that)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA_COMPGEN(0x0043cb10, 0xC, IMPLICIT_DTOR, TResourceHandle)
 

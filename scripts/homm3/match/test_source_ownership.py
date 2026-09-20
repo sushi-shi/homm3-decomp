@@ -929,13 +929,17 @@ enum Outside { OTHER = 503 };
         self.assertTrue(board._cpp_local_view_sites(source, {}))
 
 class CoverageTest(unittest.TestCase):
-    def test_reference_carcass_cannot_hide_implementation(self):
-        from homm3.match.source_ownership import reference_stubs_only
-        stub = '#include <va.h>\nDC_ONLY(0x1000, 8)\nvoid Reference() { /* @stub */ }\n'
-        self.assertTrue(reference_stubs_only(stub))
-        self.assertFalse(reference_stubs_only(stub.replace('/* @stub */', 'work();')))
-        self.assertFalse(reference_stubs_only(stub + 'void hidden() {}\n'))
-        self.assertFalse(reference_stubs_only('#define HIDDEN void hidden() {}\n'))
+    def test_unadmitted_sources_include_empty_and_inactive_files(self):
+        from homm3.match.source_ownership import unadmitted_sources
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'src').mkdir()
+            (root / 'src/active.cpp').write_text('void active() {}')
+            (root / 'src/empty.c').write_text('')
+            (root / 'src/reference.cxx').write_text('#if 0\nvoid stub() {}\n#endif\n')
+            (root / 'src/notes.md').write_text('reference notes')
+            self.assertEqual(unadmitted_sources(root, {'src/active.cpp'}),
+                             ['src/empty.c', 'src/reference.cxx'])
 
     def test_doubled_windows_path_separators(self):
         from homm3.match.source_ownership import source_file

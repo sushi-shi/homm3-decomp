@@ -729,10 +729,3 @@ void TSystemOptionsWindow::updateSystemOptions(unsigned char firstUpdate)
 }
 
 // E:\gamedcs\systemoptionswindow.cpp:194
-#if 0  // @carcass -- represented by VA_COMPGEN above
-DC_ONLY(0x160d90, 0x34)
-void* TSystemOptionsWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-#endif

@@ -204,10 +204,3 @@ void TQuickHeroWindow::quickWindowWait()
 }
 
 // E:\gamedcs\quickherowindow.cpp:209
-#if 0  // @carcass -- represented by VA_COMPGEN above
-DC_ONLY(0x117848, 0x34)
-void* TQuickHeroWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-#endif

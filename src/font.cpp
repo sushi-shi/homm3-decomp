@@ -18,7 +18,6 @@ font::font() : resource("", RESOURCE_TYPE_FONT), m_data(0)
 {
 }
 
-
 VA_COMPGEN(0x004b5040, 0x21, SCALAR_DELETING_DTOR, font)
 
 // The resource type is 0x50; the neighbouring proven values are
@@ -199,7 +198,6 @@ void font::drawString(const char* text, Bitmap16Bit* bitmap,
     drawStringExecute(text, strlen(text), bitmap, x, y, color,
                       0, 0, bitmap->getWidth(), bitmap->getHeight(), -1);
 }
-
 
 // The layout pass: split `str` into lines that fit boxWidth, place the
 // block vertically per the justification bits, and hand each line to
@@ -594,14 +592,3 @@ void font::fillLinesVector(const char* str, int boxWidth,
 // The vector<string> range erase `result.clear()` reaches, retained as a
 // font.obj COMDAT because this is the only TU that clears one.
 VA_COMPGEN(0x004B6010, 0x175, VECTOR_ERASE, string)
-
-#if 0  // @carcass
-
-// E:\gamedcs\font.cpp:35
-DC_ONLY(0xa27c4, 0x34)
-void* font::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

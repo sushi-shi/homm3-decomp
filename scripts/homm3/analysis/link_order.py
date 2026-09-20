@@ -75,11 +75,10 @@ _ORIGIN = re.compile(r"^//\s+(\S+?):(\d+)\s*$")
 # retail-only body: origin FILE proven, source line unknown (see above)
 _ORIGIN_FILE = re.compile(r"^//\s+([A-Za-z]:\\\S+\.(?:cpp|c|cxx|h|hpp))\s*$")
 _VA = re.compile(r"^VA\(\s*(0x[0-9a-fA-F]+)\s*,\s*(0x[0-9a-fA-F]+|\d+)")
-_DC_ONLY = re.compile(r"^DC_ONLY\(\s*(0x[0-9a-fA-F]+)\s*,\s*(0x[0-9a-fA-F]+|\d+)")
 
 
 def parse_unit(path: Path):
-    """[(origin_file, lineno, kind, addr, size)] for one carcass TU."""
+    """[(origin_file, lineno, kind, addr, size)] for one authored TU."""
     entries = []
     origin = None
     for line in path.read_text(errors="replace").splitlines():
@@ -95,12 +94,6 @@ def parse_unit(path: Path):
         m = _VA.match(line)
         if m and origin:
             entries.append((origin[0], origin[1], "VA",
-                            int(m.group(1), 16), int(m.group(2), 0)))
-            origin = None
-            continue
-        m = _DC_ONLY.match(line)
-        if m and origin:
-            entries.append((origin[0], origin[1], "DC_ONLY",
                             int(m.group(1), 16), int(m.group(2), 0)))
             origin = None
             continue

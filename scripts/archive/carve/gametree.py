@@ -20,9 +20,9 @@ UNMATCHED RESIDENT - Complete-era additions to that TU, named where our
 naming layer knows them. That block is the per-TU work list for the decomp.
 
 Outputs (GENERATED, regenerable):
-  evidence/game-tree/<source>.cpp.txt   one carcass per compiland
-  evidence/game-tree/INDEX.md           module -> extent/coverage table
-  evidence/retail-game-tree.csv         flat master: one row per DC proc
+  build/game-tree/<source>.cpp.txt   one carcass per compiland
+  build/game-tree/INDEX.md           module -> extent/coverage table
+  build/retail-game-tree.csv         flat master: one row per DC proc
 """
 from __future__ import annotations
 
@@ -36,8 +36,8 @@ from collections import Counter, defaultdict
 from homm3.carve import common
 from homm3.carve.names import DUMP, Dump
 
-TREE_DIR = common.EVIDENCE_DIR / "game-tree"
-CSV_OUT = common.EVIDENCE_DIR / "retail-game-tree.csv"
+TREE_DIR = common.HOMM3_DIR / "build/game-tree"
+CSV_OUT = common.HOMM3_DIR / "build/retail-game-tree.csv"
 DC_MAP = common.EVIDENCE_DIR / "retail-dc-name-map.csv"
 SYMBOLS = common.EVIDENCE_DIR / "retail-symbols.csv"
 IMAGE_BASE = 0x400000
@@ -199,7 +199,7 @@ def main(argv=None) -> int:
              "gametree`)", "",
              "One carcass file per Dreamcast compiland, in link order; "
              "retail ties from", "`evidence/retail-dc-name-map.csv`. "
-             "See `evidence/retail-game-tree.csv` for the flat table.", "",
+             "See `build/retail-game-tree.csv` for the flat table.", "",
              "| module | file | source | procs | tied | residents | "
              "retail extent |", "|---|---|---|---:|---:|---:|---|"]
     for module, stem, source, nprocs, ntied, nres, ext in index_rows:

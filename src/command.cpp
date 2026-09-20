@@ -524,35 +524,6 @@ void combatManager::setCombatDirections(int hex)
 
 VA_COMPGEN(0x0047a670, 0x11, TREE_BEGIN, int_set)
 
-#if 0  // @carcass
-
-// The DC modal SelectAttackDir/MoveToValidHex and cursor-navigation family
-// use inmenu/combat_pos/combat_row/defaultinput/no_scrolling at this+0x38..45,
-// plus ca_scroll_x/y at +0x13444/48. Complete removes those fields: its
-// netMsgHandlerPause is already at +0x38, and the archers follow the three
-// debug bytes without a scroll-origin pair (see cmbtmgr.h). ProcessCombatMsg
-// 0x474d80 instead consumes absolute mouse coordinates, calls GetGridIndex
-// and CheckSetMouseDirection (0x474a00), and dispatches keyboard shortcuts.
-// Its attack selection has no modal vector-of-hexes cursor loop. Exact
-// removed interfaces are documented in dc_only.tsv; generic highlight,
-// direction lookup and hex-center helpers remain ordinary source above/below.
-
-// E:\gamedcs\command.cpp:709
-DC_ONLY(0x6ba7c, 0x362)
-unsigned char combatManager::SelectAttackDir(int iGridIndex)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:872
-DC_ONLY(0x6be24, 0x50)
-int combatManager::MoveToValidHex(int from, int direction)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // Original: combatManager::HighlightHex; command.cpp:860, dc 0x6bde0.
 void combatManager::highlightHex(int hex)
 {
@@ -582,7 +553,7 @@ int combatManager::validAttackHex(int hex)
 // and its two-comparison body. Complete expands the helper into
 // ProcessCombatMsg and carries no out-of-line copy, so keep the source fact
 // as an inline definition rather than replacing it with caller longhand.
-DC_ONLY(0x6bea4, 0x18)
+
 inline int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 {
     if (inCombatCommand == COMBAT_COMMAND_VIEW_OTHER_HERO
@@ -1142,88 +1113,6 @@ int combatManager::processCombatMsg(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\command.cpp:1522
-DC_ONLY(0x6cb78, 0x108)
-unsigned char combatManager::DoKeyboardNavigation(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:1571
-DC_ONLY(0x6cc80, 0x40)
-void combatManager::InitMouse(unsigned char initfirst)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:1591
-DC_ONLY(0x6ccc0, 0x10C)
-void combatManager::MoveCursor(int x, int y, unsigned char abs, unsigned char clientcoords)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:1625
-DC_ONLY(0x6cdcc, 0x5E)
-void combatManager::MoveCursorCombatXY(int x, int y)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:1645
-DC_ONLY(0x6ce60, 0x84)
-int combatManager::MoveCursorTo(int gridIndex, unsigned char isdir)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:1676
-DC_ONLY(0x6cee4, 0x102)
-void combatManager::MoveCursorMenu(int x, int y)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:1724
-DC_ONLY(0x6cfe8, 0x1A)
-void combatManager::ClientToCombat(int* x, int* y)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:1732
-DC_ONLY(0x6d004, 0x5C)
-void combatManager::CombatToScreen(int* x, int* y)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:1746
-DC_ONLY(0x6d060, 0x268)
-void combatManager::resetRound()
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:1826
-DC_ONLY(0x6d2c8, 0x168)
-void combatManager::autoResolveCombat()
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:1861
-DC_ONLY(0x6d430, 0xD6)
-int combatManager::checkWin(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:1923
-#endif  // @carcass
-
 // E:\gamedcs\command.cpp:1746. The DC statement table supplies the
 // round/stack/obstacle loop spine; Complete's retail body inserts the
 // placement-phase handoff in front and widens the stack rows to the retail
@@ -1403,7 +1292,6 @@ unsigned char combatManager::validWallTarget(TWallTargetId wall)
 }
 
 // E:\gamedcs\command.cpp:1964
-
 // THE LADDER, in retail's own test order. -1 (no hex) answers 0. A
 // network game in which this side is not under interactive control
 // (field_132b4 clear) short-circuits the whole thing and answers the
@@ -2034,117 +1922,11 @@ long combatManager::getSurrenderCost()
                              * static_cast<float>(cost / 2));
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\command.cpp:2818
-DC_ONLY(0x6ea10, 0x108)
-void combatManager::checkChangeSelector()
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:2869
-DC_ONLY(0x6eb18, 0xA4)
-void combatManager::turnOffSelector(unsigned char draw_it)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:2894
-DC_ONLY(0x6ebbc, 0x15C)
-void combatManager::checkChangeHighlighter(int current_index)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:2964
-DC_ONLY(0x6ed18, 0xA4)
-void combatManager::turnOffHighlighter(unsigned char draw_it)
-{
-    // @stub
-}
-
-// DC CheckCastleAttack fires every surviving keep/tower once under the
-// CastleAttackDone latch, then advances a finished stack or calls DoSpellAI.
-// Complete Main (0x4740d0) instead treats CREATURE_ARROW_TOWER as the current
-// army: it tests that tower's wall, then schedules action12 or AutomateArcher.
-// The old all-towers volley is retired; the retained latch reset alone does
-// not establish a source call to this older procedure.
-
-// E:\gamedcs\command.cpp:2992
-DC_ONLY(0x6edbc, 0xA2)
-void combatManager::CheckCastleAttack()
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:3038
-DC_ONLY(0x6ee60, 0x338)
-void combatManager::checkGetAIMove()
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:3131
-DC_ONLY(0x6f198, 0x45C)
-void combatManager::getControl()
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:3320
-DC_ONLY(0x6f5f4, 0x70)
-void combatManager::resetMouse()
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:3365
-DC_ONLY(0x6f664, 0x1C0)
-unsigned char combatManager::processMoveThenAttack(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:3431
-DC_ONLY(0x6f824, 0x160)
-void combatManager::processFirstAid(army* current_army)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:3461 ProcessNextAction promoted to VA(0x00478d80)
-// at its RVA-ordered position below (between process_first_aid and
-// ResetCyclingCreatures).
-
-// E:\gamedcs\command.cpp:3742
-DC_ONLY(0x701b0, 0x10A)
-void combatManager::resetCyclingCreatures()
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:3790
-DC_ONLY(0x702bc, 0xDA)
-void combatManager::resetCycleTimers()
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:3836
-DC_ONLY(0x703c0, 0xB4)
-void combatManager::setCombatGrid(int bCombatShowEntireGrid, int bCombatShowMouseHex, int iCombatGridLevel, unsigned char draw_it_now)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // E:\gamedcs\command.cpp:2800. Keep the Dreamcast-proven helper boundary:
 // Complete expands this sole caller into ProcessCombatMsg and therefore has
 // no standalone retail body. Complete also omits the older port's FullUpdate
 // after the modal dialog, as it does in the neighbouring retreat path.
-DC_ONLY(0x6e990, 0x80)
+
 inline int combatManager::doSurrender()
 {
     g_surrenderCost695030 = getSurrenderCost();
@@ -3034,63 +2816,3 @@ unsigned char combatManager::handleCombatPlayerDrop(unsigned long dpid,
     checkWin(msg);
     return 1;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\command.cpp:3922
-DC_ONLY(0x70650, 0xC4)
-std::basic_string<char,std::char_traits<char>,std::allocator<char> combatManager::getTowerString(__$ReturnUdt, combatManager::TWallSection wall, long archers, long skill)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:3932
-DC_ONLY(0x70714, 0x10A)
-void combatManager::viewCastleBallista(int bIsQuickInfo)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:3953
-DC_ONLY(0x70820, 0xFE)
-unsigned char combatManager::handleCombatPlayerDrop(unsigned long dpid, message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:4001
-DC_ONLY(0x70920, 0x88)
-void combatManager::CheckAutoScrolling()
-{
-    // @stub
-}
-
-// E:\gamedcs\command.cpp:4023
-DC_ONLY(0x709a8, 0x68)
-void combatManager::ShiftXY(message* msg)
-{
-    // @stub
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#endif  // @carcass

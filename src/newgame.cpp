@@ -328,32 +328,3 @@ void game::getVictoryConditionText(char* text)
         strcpy(text, (*g_generalText)[235]);
     }
 }
-
-#if 0  // @carcass
-
-// Empty DC network hook. Complete initializes position names in
-// TSingleSelectionWindow::updatePlayerPositions0x588330; see dc_only.tsv.
-// E:\gamedcs\newgame.cpp:337
-DC_ONLY(0x1037f4, 0x4)
-void game::SetupNetPlayerNames()
-{
-    // @stub
-}
-
-// E:\gamedcs\newgame.cpp:668
-DC_ONLY(0x103a08, 0x5AC)
-void game::getVictoryConditionText(char* rText)
-{
-    // @stub
-}
-
-// Retired buffer-based scenario summary. Complete showScenInfo0x513740
-// constructs CScenarioInfoDlg and its per-player widgets; see dc_only.tsv.
-// E:\gamedcs\newgame.cpp:826
-DC_ONLY(0x103fb4, 0x244)
-int game::GetSideDesc(char* rText, int iStartPos, int iEndPos)
-{
-    // @stub
-}
-
-#endif  // @carcass

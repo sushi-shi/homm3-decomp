@@ -1416,28 +1416,8 @@ VA_COMPGEN(0x004276c0, 0x87, VECTOR_COPY_CTOR, type_monster_data)
 
 VA_COMPGEN(0x00427750, 0x21, VECTOR_SIZE, type_monster_data)
 
-#if 0  // @carcass
-
-// E:\gamedcs\ai_combat.cpp:1356. No retail slot was found; the previously
-// assigned 0x4276c0 body is the vector copy constructor above.
-DC_ONLY(0x2c6b4, 0x54)
-void type_AI_combat_data::type_AI_combat_data(const type_AI_combat_data* __that)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_combat.cpp:1356
-DC_ONLY(0x2c708, 0x18)
-void type_AI_combat_data::~type_AI_combat_data()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
-// The rows below are the DREAMCAST build's STLport instantiations and
-// stay DC_ONLY: retail links Dinkumware, so these particular symbols
-// have no retail counterpart at all (P2.3, answered 2026-08-07).
+// Dreamcast STLport instantiations have no retail counterpart: Complete
+// links Dinkumware. Their exclusions live in config/dc_only_generated.tsv.
 
 // push_back on the combat AI's monster table retains Dinkumware's
 // three-argument vector::insert specialization in ai_combat.obj. Byte-

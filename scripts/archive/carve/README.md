@@ -73,7 +73,7 @@ dcxref       the Dreamcast build's own xref graph (SH4 literal pools + BSR,
              cross-pressing caller-set check -> evidence/retail-dc-xref-check.csv
 gametree     materialize the game source tree (one carcass per Dreamcast
              compiland, retail VAs via the dcmap ties, per-TU unmatched
-             residents) -> evidence/game-tree/ + evidence/retail-game-tree.csv
+             residents) -> build/game-tree/ + build/retail-game-tree.csv
 carcass      ADMISSION: materialize src/ (one .cpp per game compiland,
              RVA()/DC_ONLY() annotations, src/rva.h) + include/ (per-TU
              prototype headers); hand-owned afterwards, refuses to overwrite
