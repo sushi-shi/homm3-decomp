@@ -865,7 +865,8 @@ def read_filter(path: Path, fields: tuple[str, ...]):
 
 
 def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
-            win_only: dict, *, symbols=None) -> tuple[list[str], dict]:
+            win_only: dict, dc_inlined: dict | None = None, *,
+            symbols=None) -> tuple[list[str], dict]:
     inline_errors = []
     if any(d.inline_origin for d in definitions):
         if symbols is None:
@@ -883,6 +884,8 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
     errors = inline_errors + [f'FILTER stale dc_only.tsv entry {key}'
                               for key in dc_only if key not in dc_keys]
     used_win = set()
+    dc_inlined = dc_inlined or {}
+    used_inlined = set()
     matches = []
     bindings = {}
     counts = Counter()
@@ -1000,6 +1003,15 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
                               'is compiler-generated; restore the implicit member or '
                               'review the Windows-specific definition')
                 counts['generated'] += 1
+            elif key in dc_inlined:
+                # The Dreamcast build inlined EVERY call to this helper, so its
+                # own procedure never reaches the CodeView roster - absence here
+                # is the expected shape, not a missing counterpart. The reviewed
+                # row must cite the caller-side residue that witnesses it
+                # (inlined bodies leave lexical scopes and per-width locals in
+                # their callers). See config/dc-inlined-helpers.tsv.
+                used_inlined.add(key)
+                counts['dc_inlined'] += 1
             else:
                 errors.append(f'WIN_ONLY {where} [{d.signature}]: no CodeView counterpart or reviewed exemption')
                 counts['unknown'] += 1
@@ -1049,6 +1061,8 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
             counts['same_file'] += 1
     for key in win_only.keys() - used_win:
         errors.append(f'FILTER stale win_only.tsv entry {key}')
+    for key in dc_inlined.keys() - used_inlined:
+        errors.append(f'FILTER stale dc-inlined-helpers.tsv entry {key}')
     previous = {}
     for d, file, dc_line in matches:
         # Ordinary retained .cpp bodies follow retail RVA order, checked by
@@ -1110,9 +1124,12 @@ def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False, *, origins=None
     errors.extend(failures)
     win_only, failures = read_filter(root / 'config/win_only.tsv', ('file', 'function', 'signature'))
     errors.extend(failures)
+    dc_inlined, failures = read_filter(root / 'config/dc-inlined-helpers.tsv',
+                                       ('file', 'function', 'signature'))
+    errors.extend(failures)
     violations, counts = compare(definitions,
                                  read_dc(root, include_declarations=True, project=project) if origins is None else origins,
-                                 dc_only, win_only,
+                                 dc_only, win_only, dc_inlined,
                                  symbols=inputs.dreamcast_symbols(project)
                                  if any(d.inline_origin for d in definitions) else None)
     errors.extend(violations)
@@ -1187,6 +1204,10 @@ def run_gate(*, origins=None) -> list[str]:
     if result['counts'].get('reviewed_unlocated'):
         print(f"[build] source-ownership: {result['counts']['reviewed_unlocated']} "
               "reviewed declaration-only bodies; source location/order remain unknown")
+    if result['counts'].get('dc_inlined'):
+        print(f"[build] source-ownership: {result['counts']['dc_inlined']} reviewed "
+              "DC-inlined helpers; the Dreamcast build inlined every call, so no "
+              "procedure reaches its roster")
     print(f"[build] source-ownership: {result['definitions']} canonical definitions; "
           f"{len(result['violations'])} violations")
     if result['unpaired_generated_claims']:

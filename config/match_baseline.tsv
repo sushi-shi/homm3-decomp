@@ -2283,7 +2283,7 @@ hero	?removeBackpackArtifact@hero@@QAEXF@Z	100.0000	100.0000	100.0000	0xe2d50	to
 hero	?restoreCell@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd76e0	tokens1:d841a0d1501f
 hero	?rotateBackpackLeft@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbdb0	tokens1:fbd5e3d6d1de
 hero	?rotateBackpackRight@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbe10	tokens1:cbf7e6f9703d
-hero	?save@hero@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xd80c0	tokens1:0aa61be91e59
+hero	?save@hero@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xd80c0	tokens1:04f6ad0a1e72
 hero	?save@type_obscuring_object@@QAE_NPAX@Z	100.0000	100.0000	100.0000	0xd77b0	tokens1:4fb6fe728a0b
 hero	?set@?$bitset@$0EG@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xe66f0	-
 hero	?setHotkey@button@@QAEXH@Z	100.0000	100.0000	100.0000	0xe1370	tokens1:641ea6ccd2e3
