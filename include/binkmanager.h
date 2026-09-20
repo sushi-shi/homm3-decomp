@@ -86,8 +86,9 @@ extern BINKSUMMARY g_binkSummary;
 // The binkw32 import surface (leading underscore, the RAD convention -
 // see smackmgr.h; smackmgr.cpp aliases the names back).
 extern "C" {
-__declspec(dllimport) int __stdcall _BinkPause(Bink* bnk, int pause);
-__declspec(dllimport) int __stdcall _BinkDDSurfaceType(IDirectDrawSurface* dds);
+// DC0x80190/0x80160 preserve the SDK signed-long and opaque-surface types.
+__declspec(dllimport) long __stdcall _BinkPause(Bink* bnk, long pause);
+__declspec(dllimport) long __stdcall _BinkDDSurfaceType(void* dds);
 // DC0x8016c and the RAD SDK both return signed long (s32).
 __declspec(dllimport) long __stdcall _BinkGetRects(Bink* bnk, unsigned long flags);
 __declspec(dllimport) int __stdcall _BinkGoto(Bink* bnk,
