@@ -9311,10 +9311,14 @@ unsigned char advManager::findAdjacentMonster(type_point point, type_point* resu
     int y;
     NewmapCell* mapCell;
 
-    rect.left = cppMax<int>(point.m_x - 1, 0);
-    rect.top = cppMax<int>(point.m_y - 1, 0);
-    rect.right = cppMin<int>(g_mapWidth, point.m_x + 2);
-    rect.bottom = cppMin<int>(g_mapHeight, point.m_y + 2);
+    // dc 0x1dc24 rows 11130-11133: max, max, min, min - the includes.h
+    // wrappers again. The bound leads in every call: retail compares
+    // `0 < m_x - 1` and branches `jg`, where `max(point.m_x - 1, 0)`
+    // compares the other way round and emits `jl`.
+    rect.left = max(0, point.m_x - 1);
+    rect.top = max(0, point.m_y - 1);
+    rect.right = min(g_mapWidth, point.m_x + 2);
+    rect.bottom = min(g_mapHeight, point.m_y + 2);
 
     mapCell = m_fullMap->cell(point.m_x, point.m_y, point.m_z);
     unsigned char centerIsWater = mapCell->m_groundSet == eTerrainWater;
@@ -9581,10 +9585,15 @@ int advManager::moreTreesNear(type_point point)
     int dead = 0;
     type_point pt;
 
+    // dc 0x1e86c rows 11452-11455 name the callees outright: `max`
+    // [dc 0x1ef28] and `min` [dc 0x2da4], the includes.h by-value int
+    // wrappers - not the const-ref cppMin/cppMax selectors. The wrapper
+    // copies its arguments and dereferences the selector's returned
+    // address, which is the extra move retail carries here.
     rect.top = max(point.m_y - radius, 0);
-    rect.bottom = cppMin(point.m_y + radius + 1, g_mapHeight);
+    rect.bottom = min(point.m_y + radius + 1, g_mapHeight);
     rect.left = max(point.m_x - radius, 0);
-    rect.right = cppMin(point.m_x + radius + 1, g_mapWidth);
+    rect.right = min(point.m_x + radius + 1, g_mapWidth);
 
     pt.m_z = point.m_z;
     for (pt.m_y = rect.top; pt.m_y < rect.bottom; pt.m_y++) {

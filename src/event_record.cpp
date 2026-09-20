@@ -1187,10 +1187,12 @@ void game::setVisibility(int startX, int startY, int z, int whichPlayer,
     double limit = range + 0.5;
     type_record_shroud* record = new type_record_shroud();
 
+    // dc rows 1152-1155 (and 1206-1209 in resetVisibility) call `max`
+    // [dc 0x1ef28] and `min` [dc 0x2da4] - the includes.h wrappers.
     int x0 = max(startX - range, 0);
-    int x1 = cppMin(startX + range + 1, g_mapWidth);
+    int x1 = min(startX + range + 1, g_mapWidth);
     int y0 = max(startY - range, 0);
-    int y1 = cppMin(startY + range + 1, g_mapHeight);
+    int y1 = min(startY + range + 1, g_mapHeight);
 
     for (int y = y0; y < y1; ++y) {
         int dy = startY - y;
@@ -1244,9 +1246,9 @@ void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
     type_record_shroud* record = new type_record_shroud();
 
     int x0 = max(startX - range, 0);
-    int x1 = cppMin(startX + range + 1, g_mapWidth);
+    int x1 = min(startX + range + 1, g_mapWidth);
     int y0 = max(startY - range, 0);
-    int y1 = cppMin(startY + range + 1, g_mapHeight);
+    int y1 = min(startY + range + 1, g_mapHeight);
 
     for (int y = y0; y < y1; ++y) {
         int dy = startY - y;

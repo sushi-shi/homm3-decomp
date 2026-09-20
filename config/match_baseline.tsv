@@ -109,7 +109,7 @@ advmgr	?drawShroud@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x12220	to
 advmgr	?drawUnderlay@advManager@@QAEXHHHHH@Z	86.9011	86.9011	92.7034	0x12470	tokens1:feef5987c6f0
 advmgr	?enableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a3a0	tokens1:d2ed635b8896
 advmgr	?exitDialog@CAdvPopup@@MAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1b190	tokens1:640041183b3c
-advmgr	?findAdjacentMonster@advManager@@QAEEUtype_point@@PAU2@0@Z	89.1299	89.1299	100.0000	0x1a460	tokens1:b750476860f3
+advmgr	?findAdjacentMonster@advManager@@QAEEUtype_point@@PAU2@0@Z	100.0000	100.0000	100.0000	0x1a460	tokens1:08c4833578d7
 advmgr	?forceNewHover@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19570	tokens1:504f64820d75
 advmgr	?garrisonQuickView@advManager@@AAEXHHH@Z	96.6429	96.6429	96.6429	0x16f80	tokens1:982b75444a8c
 advmgr	?getArmyHelpText@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmyGroup@@E@Z	93.2089	93.2089	93.2089	0xabe0	tokens1:5f2878a75560
@@ -140,7 +140,7 @@ advmgr	?main@advManager@@UAEHAAVmessage@@@Z	99.7919	100.0000	100.0000	0x87b0	tok
 advmgr	?mapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750	tokens1:ba344610793b
 advmgr	?mobilizeCurrHero@advManager@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x175e0	tokens1:6ed593358e2a
 advmgr	?monsterQuickView@advManager@@QAEXPBVNewmapCell@@HH@Z	100.0000	100.0000	100.0000	0x17150	tokens1:280fd169d6f3
-advmgr	?moreTreesNear@advManager@@QAEHUtype_point@@@Z	97.2966	97.2966	100.0000	0x1adb0	tokens1:1ab89da3712c
+advmgr	?moreTreesNear@advManager@@QAEHUtype_point@@@Z	100.0000	100.0000	100.0000	0x1adb0	tokens1:383a2378ed57
 advmgr	?open@advManager@@UAEHH@Z	97.9312	97.9312	97.9312	0x6fd0	tokens1:a9ebaf08ad76
 advmgr	?overrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.0000	100.0000	0x15d60	tokens1:05e1918bf47f
 advmgr	?popupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80	tokens1:d33a2b7d5f5a
@@ -1608,7 +1608,7 @@ event_record	?replay@type_record_show_hero@@UAEXE@Z	100.0000	100.0000	100.0000	0
 event_record	?replay@type_record_shroud@@UAEXE@Z	100.0000	100.0000	100.0000	0x9be60	tokens1:c8169759f714
 event_record	?replay@type_record_teleport@@UAEXE@Z	100.0000	100.0000	100.0000	0x9a9c0	tokens1:12041fa3133b
 event_record	?replayAvailable@game@@QBEEXZ	100.0000	100.0000	100.0000	0x9da70	tokens1:214b0e3807bd
-event_record	?resetVisibility@game@@QAEXHHHHH@Z	73.5674	73.5674	87.9349	0x9d3d0	tokens1:3eaaa2e51e80
+event_record	?resetVisibility@game@@QAEXHHHHH@Z	87.9349	87.9349	87.9349	0x9d3d0	tokens1:f8da50ce4c20
 event_record	?save@type_event_record@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x9a600	tokens1:52c4139e2b3e
 event_record	?save@type_record_claim_mine@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x9aaf0	tokens1:29292a71951a
 event_record	?save@type_record_erase@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x9b220	tokens1:7cc6f5007b89
@@ -1620,7 +1620,7 @@ event_record	?save@type_record_show_boat@@UAEEPAVTAbstractFile@@@Z	100.0000	100.
 event_record	?save@type_record_show_hero@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x9b760	tokens1:8f02a082b2c2
 event_record	?save@type_record_shroud@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x9bdf0	tokens1:bef200bdaf0a
 event_record	?saveRecordedEvents@game@@AAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x9dc60	tokens1:a80ff64ede74
-event_record	?setVisibility@game@@QAEXHHHHHE@Z	77.0276	77.0276	90.1797	0x9d160	tokens1:a15cf379ff6d
+event_record	?setVisibility@game@@QAEXHHHHHE@Z	90.1797	90.1797	90.1797	0x9d160	tokens1:fa19c2480058
 event_record	?undo@type_record_claim_mine@@UAEXXZ	100.0000	100.0000	100.0000	0x9abc0	tokens1:5e698408e061
 event_record	?undo@type_record_claim_town@@UAEXXZ	100.0000	100.0000	100.0000	0x9aca0	tokens1:57857ca74a87
 event_record	?undo@type_record_erase@@UAEXXZ	100.0000	100.0000	100.0000	0x9b370	tokens1:9876604f1b5d
@@ -1761,7 +1761,7 @@ findpath	??0searchArray@@QAE@XZ	100.0000	100.0000	100.0000	0xb1370	tokens1:b9544
 findpath	??1searchArray@@QAE@XZ	100.0000	100.0000	100.0000	0xb13e0	tokens1:06ad8c2d14d5
 findpath	?_Construct@std@@YIXPAUpathCell@@ABU2@@Z	100.0000	100.0000	100.0000	0xb42b0	-
 findpath	?_Ufill@?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@IAEXPAUpathCell@@IABU3@@Z	100.0000	100.0000	100.0000	0x34c30	-
-findpath	?calcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	97.6228	97.6228	100.0000	0xb1740	tokens1:6238392fd813
+findpath	?calcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000	100.0000	100.0000	0xb1740	tokens1:0a58b6c2456f
 findpath	?clear@searchArray@@AAEXJJJ@Z	100.0000	100.0000	100.0000	0xb1530	tokens1:460d40544e97
 findpath	?close@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1500	tokens1:daaac19b6389
 findpath	?copy@std@@YIPAUpathCell@@PAU2@00@Z	100.0000	100.0000	100.0000	0xb4270	-
