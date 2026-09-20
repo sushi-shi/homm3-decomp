@@ -1475,7 +1475,7 @@ bool combatManager::sodChooseFaerieDragonSpell(
 // The Archangel and the Pit Lord share one chooser and differ in three
 // places: the Pit Lord looks for ANIMATE-DEAD targets (and only DEAD
 // ones), and it prices the raise as DEMONS - which is what the scratch
-// `army temp` is for, built once outside the walk and valued instead of
+// `army demon_army` is for, built once outside the walk and valued instead of
 // the corpse. The Archangel prices the stack it is actually restoring.
 // Either way the value doubles while our side is already ahead on live
 // value and the odds have not turned.
@@ -1483,75 +1483,78 @@ bool combatManager::sodChooseFaerieDragonSpell(
 // EH-bearing (P2.2) and NOT blocked by it: the fs:[0] frame is the local
 // army's unwind scaffolding, one state.
 
-// Residual (95.8%): caller-saved register ties on the estimate->side and
-// live-value loads, plus ONE redundant `fstp/fld` pair our CL inserts on
-// the non-Pit-Lord arm of the value ternary where retail merges the two
-// arms in st(0). The single `__ftol` is what forces the ternary
-// spelling - two `static_cast<long>` arms emit two conversions, which
-// retail does not have.
+// DC's can_cast_resurrect/get_group helpers restore retail's caller-saved
+// register schedule, and Complete calls findDemonicResurrectionTarget for
+// both Pit Lord probes. Separate per-arm assignments preserve DC's branch
+// shape; VC6 merges their x87 results and emits retail's single __ftol.
 // E:\gamedcs\ai.cpp:1694
 VA(0x00421000, 0x275)  // anchor-callee, dc 0x26140
 unsigned char combatManager::chooseResurrectAction(const army* currentArmy, long* bestValue, type_AI_combat_parameters* estimate)
 {
-    long bestHex = -1;
-    if ((currentArmy->m_creatureType != CREATURE_ARCHANGEL
-            && currentArmy->m_creatureType != CREATURE_PIT_LORD)
-            || currentArmy->m_monInfo.m_hasSpell <= 0)
+    long bestTargetHex = -1;  // Original: best_target_hex.
+    if (!currentArmy->canCastResurrect())
         return 0;
-    army temp;
+    army demonArmy;  // Original: demon_army.
     if (currentArmy->m_creatureType == CREATURE_PIT_LORD)
-        temp.initialize(TCreatureType(CREATURE_DEMON), 1,
-                        m_heroes[estimate->m_ourGroup],
-                        estimate->m_ourGroup, 0, 0);
-    for (long i = m_numArmies[estimate->m_ourGroup]; i--; ) {
-        const army* target = &m_armies[estimate->m_ourGroup][i];
+        demonArmy.initialize(TCreatureType(CREATURE_DEMON), 1,
+                             m_heroes[estimate->getGroup()],
+                             estimate->getGroup(), 0, 0);
+    for (long i = m_numArmies[estimate->getGroup()]; i--; ) {
+        const army* target = &m_armies[estimate->getGroup()][i];
         if (target == currentArmy)
             continue;
         if (target->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
         long hex = target->m_gridIndex;
         if (currentArmy->m_creatureType == CREATURE_PIT_LORD) {
-            if (findAnimateDeadTarget(estimate->m_ourGroup, hex) != target) {
+            if (findDemonicResurrectionTarget(
+                    estimate->getGroup(), hex) != target) {
                 if ((target->m_monInfo.m_attributes & 1) == 0)
                     continue;
                 hex = target->getSecondGridIndex();
-                if (findAnimateDeadTarget(estimate->m_ourGroup, hex) != target)
+                if (findDemonicResurrectionTarget(
+                        estimate->getGroup(), hex) != target)
                     continue;
             }
             if ((target->is(1u << 21)) == 0)
                 continue;
         } else {
-            if (findResurrectionTarget(estimate->m_ourGroup, hex, 1) != target) {
+            if (findResurrectionTarget(
+                    estimate->getGroup(), hex, 1) != target) {
                 if ((target->m_monInfo.m_attributes & 1) == 0)
                     continue;
                 hex = target->getSecondGridIndex();
-                if (findResurrectionTarget(estimate->m_ourGroup, hex, 1) != target)
+                if (findResurrectionTarget(
+                        estimate->getGroup(), hex, 1) != target)
                     continue;
             }
         }
         long size = currentArmy->getResurrectionSize(target);
         if (size == 0)
             continue;
-        long value = static_cast<long>(
-                currentArmy->m_creatureType == CREATURE_PIT_LORD
-                ? temp.getUnitCombatValue(estimate->m_lowestAttack,
-                                             estimate->m_lowestDefense, 0, 0)
-                        * size
-                : target->getUnitCombatValue(estimate->m_lowestAttack,
-                                                estimate->m_lowestDefense,
-                                                target->canShoot(0), 0)
-                        * size);
+        long value;
+        if (currentArmy->m_creatureType == CREATURE_PIT_LORD)
+            value = static_cast<long>(demonArmy.getUnitCombatValue(
+                                          estimate->m_lowestAttack,
+                                          estimate->m_lowestDefense, 0, 0)
+                                      * size);
+        else
+            value = static_cast<long>(target->getUnitCombatValue(
+                                           estimate->m_lowestAttack,
+                                           estimate->m_lowestDefense,
+                                           target->canShoot(0), 0)
+                                       * size);
         if (estimate->m_awakeFriendlyValue > estimate->m_awakeEnemyValue
                 && estimate->m_roundsLeft <= 1)
             value += value;
         if (value > *bestValue) {
             *bestValue = value;
-            bestHex = hex;
+            bestTargetHex = hex;
         }
     }
-    if (bestHex < 0)
+    if (bestTargetHex < 0)
         return 0;
-    m_nextActionGridIndex = bestHex;
+    m_nextActionGridIndex = bestTargetHex;
     m_nextAction = 10;
     return 1;
 }
