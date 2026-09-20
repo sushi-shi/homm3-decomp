@@ -1905,3 +1905,36 @@ membership, so empty sets observed afterward do not mean no sharing occurred.
 The private capture/replay preserved all 77,868 object bytes outside the COFF
 timestamp, replayed overwritten instructions and flags, and restored its clean
 shim. This validates this observation, not a complete stack-allocator model.
+
+### Attribute register priorities to actual live ranges
+
+A passive trace of `rmgTerrainPainter::repairTerrainPoint` (0x5b5440)
+identifies the painter receiver as the priority-265 group assigned ESI.
+The priority-248 group assigned EDI is the final gap-painting direction
+(candidate +0x593..+0x5e3), not an early coordinate temporary. Earlier
+coordinate captures are separate priority-56 groups. Several distinct values
+therefore occupy the register opposite the painter; this is not one
+whole-function point variable whose declaration merely needs moving.
+
+At global assignment the painter is processed first, with zero costs for
+eligible callee-save registers, and takes ESI. The final direction then has
+ESI excluded and takes EDI. Accumulation tracing accounts for the painter's
+priority as 464 positive contributions minus 199 live-through penalties;
+the direction has 248 positive contributions and no such penalties. Loop
+weighting contributes to these costs. This supports investigating actual
+use/interference and helper boundaries, not renaming or padding locals.
+It does not establish the original retail compiler's intermediate state.
+
+The decision/rewrite sites are C2 RVAs 0x24754 and 0x32526; priority sites
+are 0x22d4c, 0x22d6b and 0x22d99. Capture/replay preserves all 77,868 object
+bytes outside the COFF timestamp and restores the private clean shim.
+The trace records 57 decisions, 302 rewrites and 1,237 priority events.
+It accounts for these two priorities and 48 of 57 groups overall; nine
+have intervening changes outside these sites, so this is not a complete
+allocator replay.
+
+A separate final painting iterator is neutral at MAX 99.1821%. Minimum-gap
+and paint-neighbour helpers, and borrowing the coordinate offset, all produce
+the same alternative function bytes at 98.2293%; they rotate final-block
+scratch registers without correcting the global ESI/EDI roles. Treat these
+as one backend outcome, not independent evidence for each source model.

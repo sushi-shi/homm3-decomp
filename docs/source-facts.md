@@ -1,5 +1,36 @@
 # Reviewing Dreamcast source facts
 
+## Retail body coverage is not method completeness
+
+Matching progress counts inventoried retail function bodies. Identical COMDAT
+folding can give distinct C++ methods the same address, and a body already
+matched under one name does not make its other source definitions complete.
+An empty unmatched-body list is therefore not proof that every required
+method, vtable definition or data object has been recovered. Compiling
+individual objects also permits unresolved references; it does not prove
+the candidate can link as a complete program.
+
+The RMG vtables provide concrete examples in the pinned Complete executable
+(slot numbers below are zero-based):
+
+| RMG use | Vtable / slot | Retail body | Existing matched name |
+| --- | --- | --- | --- |
+| `TRmgTableTerrainRule::isSpecialFrame(int)` | 0x642cb0 / 2 | 0x5543f0, false / ret 4 | `CChatEdit::ignoreKey` |
+| `type_object::unknownOperation()` | 0x640a74 / 1 | 0x5bc690, ret | `textWidget::dim` |
+| `type_object::isWritable()` | 0x640a74 / 2 | 0x484620, true / ret | `TCampaignBuildingBonus::isBuildingBonus` |
+| `type_treasure_def::isTerrainDependent()` | 0x640b64 / 2 | 0x484d50, false / ret | `TCampaignBonus::isBuildingBonus` |
+
+The creature, experience and gold quest vtables at 0x640c00, 0x640c0c and
+0x640c18, and key-tent vtable at 0x640c30, use the same true body in slot 2.
+These are verified shared addresses and behaviors; the method names come
+from the reconstructed interfaces. Sharing does not create additional unique
+retail bytes to match. Separately, the seven creature-reward dwords at
+0x6824e0 are data and fall outside the function denominator altogether.
+
+Source-definition and alias coverage need separate accounting from byte
+coverage. The current matching totals do not perform that completeness
+check, and Dreamcast coverage cannot fill the gap for Complete-only RMG.
+
 ## Member access and method properties
 
 ```sh
