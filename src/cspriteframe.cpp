@@ -1327,6 +1327,10 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
 // (three-bit control, five-bit count-minus-one) runs.  Control seven carries
 // literal palette indexes; control five optionally draws the caller's flag
 // colour, and the remaining controls are transparent in this renderer.
+// Dreamcast records only palette, cellsPerLine and aCellOffset and gives each
+// row loop one enclosing lifetime. Advancing lineDst directly by dpitch keeps
+// that source model and matches both retail direction arms exactly; rebuilding
+// it from rowBase plus an integer rowOffset measured 96.6247%.
 
 VA(0x0047d0a0, 0x44B) // retail packed-cell decoder + DC source identity
 void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
@@ -1364,10 +1368,7 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                     static_cast<unsigned char*>(static_cast<void*>(dst)) +
                     dy * dpitch + dx * 2));
 
-                unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-                int rowOffset = 0;
                 for (int y = sy; y < sy + sh; ++y) {
-                    lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase + rowOffset));
                     unsigned short* out = lineDst;
                     unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
                     const unsigned char* src =
@@ -1418,7 +1419,11 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                         ++src;
                     } while (remaining);
 
-                    rowOffset += dpitch;
+                    lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                            static_cast<unsigned char*>(
+                                static_cast<void*>(lineDst)) +
+                            dpitch));
                 }
             } else {
                 unsigned short* lineDst =
@@ -1426,10 +1431,7 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                     static_cast<unsigned char*>(static_cast<void*>(dst)) +
                     dy * dpitch + (dx + sw) * 2));
 
-                unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-                int rowOffset = 0;
                 for (int y = sy; y < sy + sh; ++y) {
-                    lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase + rowOffset));
                     unsigned short* out = lineDst;
                     unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
                     const unsigned char* src =
@@ -1480,7 +1482,11 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                         ++src;
                     } while (remaining);
 
-                    rowOffset += dpitch;
+                    lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                            static_cast<unsigned char*>(
+                                static_cast<void*>(lineDst)) +
+                            dpitch));
                 }
             }
         }
@@ -2336,7 +2342,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
 }
 
 // E:\gamedcs\cspriteframe.cpp:3365
-// The tileset shadow pass: same packed-cell walk as DrawTile above, with the
+// The tileset shadow pass: same packed-cell walk as DrawTile above, where the
 // palette write becomes a blend of what is already on the destination.
 // Nothing here reads `pal` - the parameter survives because CSprite's two
 // wrappers (0x47bfa0, 0x47bff0) pass it - and nothing reads the raw encoding
@@ -2350,22 +2356,23 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
 // The mask widths are read straight from the bytes - div4mask is ANDed as a
 // word and div2mask as a dword in all four arms.
 
-// Residual (99.93%): all 156 blocks EXACT, all 72 branches, all 4 returns.
-// What is left is the three-quarter blend's four sites, where retail computes
-// the div4mask term into the COPY register (`mov bx,ax / shr bx,2 / and
-// bx,word[div4mask]`) and this compile computes the div2mask term there,
-// emitting the same `add ebx,eax` and the same store. Source order is NOT the
-// lever - writing the div2mask term first is byte-flat to the digit, and so is
-// naming either term in its own local; VC6 canonicalises `+`. B-family homing.
-// WHAT DID MOVE, and it is the same line in two renderers here: the half blend
-// written `unsigned int color = out[-1]; --out; *out = (color >> 1) & mask;`
+// The single integral row cursor preserves the original codegen without
+// forming an out-of-bounds pointer after the last row. The former
+// row-base/offset spelling fell to 92.0317%; this restores 99.9308% with all
+// 156 blocks exact, all 72 branches and all 4 returns.
+//
+// The remaining difference is the three-quarter blend's four sites. Retail
+// computes the div4mask term into the COPY register (`mov bx,ax / shr bx,2 /
+// and bx,word[div4mask]`) while VC6 computes the div2mask term there,
+// emitting the same `add ebx,eax` and store. Source order is not the lever:
+// writing the div2mask term first and naming either term in a local are
+// byte-flat because VC6 canonicalises `+`. The half blend written
+// `unsigned int color = out[-1]; --out; *out = (color >> 1) & mask;`
 // emits a widening `xor eax,eax / mov ax,` pair retail does not have.
 // `--out; *out = (*out >> 1) & mask;` reads the same location AFTER the
 // decrement, which is what retail spells: 97.8963 -> 99.9300 here.
-// Row-boundary residual (92.0317%): visited pointers use integral
-// byte displacements; only the integer advances after the final row. The
-// earlier guarded/break form scored 82.7464%. DC decoder/helper scopes
-// and pixel arithmetic remain intact, including reverse/raw source walks.
+// DC decoder/helper scopes and pixel arithmetic remain intact, including
+// reverse/raw source walks.
 VA(0x0047e820, 0x740)  // anchor-callee (CSprite::DrawTileShadow/DrawShroudTile) + DC source identity
 void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                   unsigned short* dst, int dx, int dy, int dw,
@@ -2373,6 +2380,11 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                   unsigned char hflip,
                                   unsigned char vflip) const
 {
+    union TLineAddress {
+        unsigned short* pointer;
+        unsigned long address;
+    };
+
     static const unsigned char opaqueRunCode = 7;
 
     if (m_encodingMethod == eEncodeRaw)
@@ -2391,10 +2403,10 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                         static_cast<unsigned char*>(static_cast<void*>(dst)) +
                         dy * dpitch + dx * 2));
 
-                    unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-                    int rowOffset = 0;
+                    TLineAddress line;
+                    line.pointer = lineDst;
                     for (int y = sy; y < sy + sh; ++y) {
-                        lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase + rowOffset));
+                        lineDst = line.pointer;
                         unsigned short* out = lineDst;
                         const unsigned char* src = m_map + lineOffset[y];
                         unsigned int skipped = 0;
@@ -2460,7 +2472,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                             ++src;
                         } while (remaining);
 
-                        rowOffset += dpitch;
+                        line.address += dpitch;
                     }
                 } else {
                     unsigned short* lineDst =
@@ -2468,10 +2480,10 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                         static_cast<unsigned char*>(static_cast<void*>(dst)) +
                         dy * dpitch + (dx + sw) * 2));
 
-                    unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-                    int rowOffset = 0;
+                    TLineAddress line;
+                    line.pointer = lineDst;
                     for (int y = sy; y < sy + sh; ++y) {
-                        lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase + rowOffset));
+                        lineDst = line.pointer;
                         unsigned short* out = lineDst;
                         const unsigned char* src = m_map + lineOffset[y];
                         unsigned int skipped = 0;
@@ -2536,7 +2548,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                             ++src;
                         } while (remaining);
 
-                        rowOffset += dpitch;
+                        line.address += dpitch;
                     }
                 }
             } else {
@@ -2546,10 +2558,10 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                         static_cast<unsigned char*>(static_cast<void*>(dst)) +
                         (dy + sh - 1) * dpitch + dx * 2));
 
-                    unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-                    int rowOffset = 0;
+                    TLineAddress line;
+                    line.pointer = lineDst;
                     for (int y = sy; y < sy + sh; ++y) {
-                        lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase - rowOffset));
+                        lineDst = line.pointer;
                         unsigned short* out = lineDst;
                         const unsigned char* src = m_map + lineOffset[y];
                         unsigned int skipped = 0;
@@ -2615,7 +2627,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                             ++src;
                         } while (remaining);
 
-                        rowOffset += dpitch;
+                        line.address -= dpitch;
                     }
                 } else {
                     unsigned short* lineDst =
@@ -2623,10 +2635,10 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                         static_cast<unsigned char*>(static_cast<void*>(dst)) +
                         (dy + sh - 1) * dpitch + (dx + sw) * 2));
 
-                    unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-                    int rowOffset = 0;
+                    TLineAddress line;
+                    line.pointer = lineDst;
                     for (int y = sy; y < sy + sh; ++y) {
-                        lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase - rowOffset));
+                        lineDst = line.pointer;
                         unsigned short* out = lineDst;
                         const unsigned char* src = m_map + lineOffset[y];
                         unsigned int skipped = 0;
@@ -2691,7 +2703,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                             ++src;
                         } while (remaining);
 
-                        rowOffset += dpitch;
+                        line.address -= dpitch;
                     }
                 }
             }
