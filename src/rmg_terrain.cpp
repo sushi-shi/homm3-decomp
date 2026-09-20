@@ -1425,20 +1425,10 @@ void rmgTerrainPainter::buildNeighbourKinds(
     }
 }
 
-// Both diagonal residuals are the upper clamp comparison: retail uses
-// CMP value,maximum / JG, while canonical tLimit uses the reverse / JL.
-// Changing shared tLimit to value > maximum restores both callers, but loses
-// six exact rows: retained tLimit, heroQuickView, monsterQuickView, armyGroup
-// split, splitwindow and quicktowncenter. Keep its proven maximum < value
-// body; the identity of this Complete-only RMG clamp remains unresolved.
-// Both nesting orders of canonical min/max, with both argument orders and
-// standard reference selectors, lower both diagonals; no composition is adopted.
-// Explicit int/long selector specializations and signed conversion ownership
-// also preserve the same two residuals and comparison orientation.
-// Initialized result pointers and value/upper-bound snapshots, checked in all
-// 60 header consumers, do not unify the orientations. Standard comparator
-// controls also leave the split: both diagonals at 100% cost six other exact
-// bodies, including the retained clamp (96.1111%). No shared change is adopted.
+// Retail's upper clamp uses CMP value,maximum / JG. Canonical tLimit's
+// value > maximum spelling restores both diagonals without changing its
+// const-reference selection contract. Reversing that comparison leaves
+// 98.6070% / 99.1026%; min/max compositions do not recover these bodies.
 VA(0x005B6BA0, 0x24C)
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)

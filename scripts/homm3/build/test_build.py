@@ -114,7 +114,7 @@ class BuildModeTest(unittest.TestCase):
 
     def test_fast_build_preserves_targets_and_skips_checkpoint(self):
         self.assertEqual(build.main(["--fast", "cursor"]), 0)
-        self.assertEqual(self.events, ["configure", "compile", "normalize", "configure", "report"])
+        self.assertEqual(self.events, ["configure", "compile", "normalize", "configure", "report", "fingerprints"])
         self.mocks["compile"].assert_called_once_with("ninja", "cursor")
         self.assertEqual(self.target.read_bytes(), b"existing retail target")
         self.mocks["delink"].assert_not_called()

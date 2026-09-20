@@ -10,7 +10,7 @@ from unittest import mock
 from homm3.match.banked_rows import missing_rows, parse_history, selftest
 from homm3.match.status import (_canonical_definition_text, _definition_text,
                                 MatchRow, checkpoint_drops, cmd_check,
-                                seed_historical_maxima, update_rows)
+                                overall_line, projected_rows, seed_historical_maxima, update_rows)
 
 
 class UpdateRowsTest(unittest.TestCase):
@@ -36,6 +36,24 @@ class UpdateRowsTest(unittest.TestCase):
         self.assertEqual((rows[key].cur, rows[key].max, rows[key].hist),
                          (80.0, 98.0, 99.0))
         self.assertEqual(stats["reset"], 0)
+
+    def test_summary_uses_projected_max_without_writing_ledger(self):
+        report = {"units": [{"name": "unit", "functions": [
+            {"name": "held", "size": 10, "fuzzy_match_percent": 20},
+            {"name": "edited", "size": 30, "fuzzy_match_percent": 80},
+        ]}]}
+        old = {("unit", "held"): MatchRow(100, 100, 100, 1, "same"),
+               ("unit", "edited"): MatchRow(100, 100, 100, 2, "old")}
+        hashes = {("unit", "held"): "same", ("unit", "edited"): "new"}
+        with mock.patch("homm3.match.status.load_baseline", return_value=old), \
+                mock.patch("homm3.match.status.function_rvas", return_value={
+                    ("unit", "held"): 1, ("unit", "edited"): 2}), \
+                mock.patch("homm3.match.status.write_baseline") as write:
+            rows = projected_rows(report, fingerprint_pair=(hashes, {}))
+            self.assertEqual(overall_line(report, rows=rows),
+                             "MAX 1/2 functions exact (50.0%), 85.00% weighted MAX across 1 unit(s)")
+            write.assert_not_called()
+        self.assertEqual(old[("unit", "edited")].max, 100)
 
     def test_source_edit_resets_max_but_never_history(self):
         key = ("unit", "function")

@@ -8,7 +8,7 @@ import unittest
 
 from homm3.vc6.source_families import (
     Axis, Option, create_snapshot, identity_symbol, load_manifest, next_population, render,
-    projected_max_scores, select_elites,
+    format_max_summary, max_summary, projected_max_scores, rank, select_elites,
 )
 
 
@@ -102,6 +102,8 @@ class SourceFamiliesTests(unittest.TestCase):
             {"id": "c", "object_hash": "c", "scores": {"x": 60, "y": 100}},
             {"id": "d", "object_hash": "d", "scores": {"x": 99, "y": 90}},
         ]
+        for row in records:
+            row["max_scores"] = dict(row["scores"])
         elites = select_elites(records, 2)
         self.assertEqual({row["object_hash"] for row in elites}, {"a", "c"})
 
@@ -143,6 +145,27 @@ class SourceFamiliesTests(unittest.TestCase):
              "max_scores": {"held": 100, "x": 90, "y": 95}},
         ]
         self.assertEqual([row["id"] for row in select_elites(records, 2)], ["a", "c"])
+
+    def test_report_omits_held_max_dips_but_exposes_source_edit_losses(self):
+        from homm3.match.status import MatchRow
+
+        previous = {("u", name): MatchRow(value, value, value, index, "old")
+                    for index, (name, value) in enumerate(
+                        [("target", 90), ("held", 100), ("edited", 100)], 1)}
+        row = {"scores": {"u|target": 100, "u|held": 60, "u|edited": 95}}
+        hashes = {("u", "target"): "new", ("u", "held"): "old",
+                  ("u", "edited"): "new"}
+        row["max_scores"] = projected_max_scores(row, previous, hashes)
+        row["max_summary"] = max_summary(row, previous)
+        self.assertEqual(row["max_summary"], {
+            "gains": [{"function": "u|target", "before": 90, "after": 100}],
+            "losses": [{"function": "u|edited", "before": 100, "after": 95}],
+        })
+        self.assertEqual(format_max_summary(row), "projected MAX: 1 gain(s), 1 loss(es)")
+
+    def test_ranking_never_falls_back_to_current_scores(self):
+        with self.assertRaises(KeyError):
+            rank({"id": "unprojected", "scores": {"u|f": 100}})
 
 
 if __name__ == "__main__":

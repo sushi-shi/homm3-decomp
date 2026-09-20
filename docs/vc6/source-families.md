@@ -1067,6 +1067,10 @@ header bodies. Raw `scores`, `function_source_hashes`, and projected `max_scores
 are stored separately and verified during reproduction. This projection never
 writes the live ledger. Held-MAX CUR movement is omitted from the frontier's
 `changes` report, and progress output does not count preserved exact functions.
+Candidate and generation reports declare `objective: MAX`. Each candidate's
+`max_summary` lists projected MAX gains and losses against the starting ledger;
+the terminal prints these counts. The raw `scores` field is explicitly labelled
+diagnostic. Ranking requires `max_scores` and never falls back to raw scores.
 All projections use the baseline captured at search start. Frontier rows retain
 the raw-score `candidate` and separately name `low_max_candidate` and
 `high_max_candidate`, so a source-edit reset points to its actual witness.
