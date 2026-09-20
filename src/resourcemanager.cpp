@@ -130,6 +130,9 @@ void ResourceManager::setPixelFormat(unsigned long red_mask, unsigned long green
     // @stub
 }
 
+// Retired generic DATA resource family. All 23 Complete resource ctor
+// callers and the admitted resource vtables belong to the concrete typed
+// resource classes; see genericresource.cpp and the exact dc_only.tsv rows.
 // E:\gamedcs\resourcemanager.cpp:438
 DC_ONLY(0x121a2c, 0x9C)
 TGenericResource* ResourceManager::GetResource(const char* name)
@@ -228,9 +231,9 @@ VA(0x005594f0, 0x14)  // anchor-caller + emitted COFF public, retail-only
 void basic_ostringstream::`vbase destructor'();
 #endif
 
-DATA(0x00694d60) unsigned long g_colorMaskGreen;
-DATA(0x00694d64) unsigned long g_colorMaskRed;
-DATA(0x00694d68) unsigned long g_colorMaskBlue;
+DATA(0x00694d60) unsigned int Bitmap16Bit::s_greenMask;
+DATA(0x00694d64) unsigned int Bitmap16Bit::s_blueMask;
+DATA(0x00694d68) unsigned int Bitmap16Bit::s_redMask;
 DATA(0x0069cc60) unsigned int TPalette16::s_greenMask;
 DATA(0x0069cc64) unsigned int TPalette16::s_redMask;
 DATA(0x0069cc68) unsigned int TPalette16::s_blueMask;
@@ -719,15 +722,7 @@ bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
 VA(0x0055a550, 0x67)
 void ResourceManager::close()
 {
-    TCacheMap::iterator position = g_resourceCache.begin();
-    while (position != g_resourceCache.end()) {
-        resource* value = position->second;
-        if (value)
-            delete value;
-        ++position;
-    }
-
-    g_resourceCache.clear();
+    expunge();
 
     for (int i = 0; i < 8; ++i)
         g_resourceLodSlots[i].m_file.clear();
@@ -746,11 +741,8 @@ void ResourceManager::setPixelFormat(unsigned long redMask,
                                      unsigned long greenMask,
                                      unsigned long blueMask)
 {
-    CSpriteFrame::setPixelFormat(redMask, greenMask, blueMask);
-
-    g_colorMaskBlue = redMask;
-    g_colorMaskGreen = greenMask;
-    g_colorMaskRed = blueMask;
+    CSprite::setPixelFormat(redMask, greenMask, blueMask);
+    Bitmap16Bit::setPixelFormat(redMask, greenMask, blueMask);
     TPalette16::setPixelFormat(redMask, greenMask, blueMask);
     g_spriteMaskFirst = redMask;
     g_spriteMaskGreen = greenMask;
@@ -1591,6 +1583,10 @@ unsigned char ResourceManager::pointToSpriteResource(const char* name)
 }
 
 // E:\gamedcs\resourcemanager.cpp:2115
+// DC reads through the single global SpriteResourceFile. Complete removes
+// that implicit stream: getSprite (0x55c7b0) selects an archive with
+// pointToSpriteResource (0x55cf50), then reads the returned LODFile directly.
+// The old two-argument stateful read is retired; see config/dc_only.tsv.
 DC_ONLY(0x12249c, 0x18)
 int ResourceManager::ReadFromSpriteResource(void* data, int numBytes)
 {
@@ -1624,16 +1620,14 @@ int ResourceManager::getBitmapResourceSize(const char* name)
 // Complete routes disposal through the resource virtual method.
 void ResourceManager::dispose(resource* value) { value->dispose(); }
 
-#if 0  // @carcass
-
-// E:\gamedcs\resourcemanager.cpp:2196
-DC_ONLY(0x1225c0, 0x1C)
-void ResourceManager::dispose(sample* sam)
+// Original: ResourceManager::Dispose; resourcemanager.cpp:2196, dc 0x1225c0
+// DC releases a ds_engine sample-cache entry. Complete's sample owns its
+// sound data and inherits reference-counted resource disposal (0x55d0f0).
+void ResourceManager::dispose(sample* value)
 {
-    // @stub
+    if (value)
+        value->dispose();
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\resourcemanager.cpp:2204, dc 0x1225dc.
 // Complete routes disposal through the resource virtual method.
@@ -1645,16 +1639,19 @@ void ResourceManager::delSprFromCache()
 {
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\resourcemanager.cpp:2359
-DC_ONLY(0x1228ac, 0x7C)
-void ResourceManager::Expunge()
+// Original: ResourceManager::Expunge; resourcemanager.cpp:2359, dc 0x1228ac
+void ResourceManager::expunge()
 {
-    // @stub
-}
+    TCacheMap::iterator position = g_resourceCache.begin();
+    while (position != g_resourceCache.end()) {
+        resource* value = position->second;
+        if (value)
+            delete value;
+        ++position;
+    }
 
-#endif  // @carcass
+    g_resourceCache.clear();
+}
 
 // A cache hit adds a reference before returning the resource.
 resource* ResourceManager::getFromCache(const char* name)
@@ -1667,6 +1664,13 @@ resource* ResourceManager::getFromCache(const char* name)
     return value;
 }
 
+// Original: ResourceManager::Report; resourcemanager.cpp:2404, dc 0x1229f8
+// Optimized release hook: the executable body is only return true.
+unsigned char ResourceManager::report(const char* filename)
+{
+    return 1;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\resourcemanager.cpp:2397
@@ -1676,12 +1680,17 @@ void ResourceManager::addToCache(resource* r)
     // @stub
 }
 
-// E:\gamedcs\resourcemanager.cpp:2404
-DC_ONLY(0x1229f8, 0x68)
-unsigned char ResourceManager::Report(const char* filename)
-{
-    // @stub
-}
+
+
+
+
+
+
+
+
+
+
+
 
 // E:\gamedcs\resourcemanager.cpp:121
 DC_ONLY(0x122bd0, 0x28)
@@ -1845,6 +1854,26 @@ sample* ResourceManager::getSample(const char* name)
     if (loaded)
         addToCache(loaded);
     return loaded;
+}
+
+// Original: addPal16; csprite.cpp:978, dc 0x73b64.
+// Complete moved DEF parsing from CSprite::SpriteDataReload into getSprite.
+// This ordinary attachment helper moves with that operation; its expansion
+// retains deletion of the old palette and construction from the new value.
+// Complete's palette copy interface takes a pointer, where DC takes a ref.
+void addPal16(CSprite* sprite, const TPalette16* pal)
+{
+    if (sprite->m_p)
+        delete sprite->m_p;
+    sprite->m_p = new TPalette16(pal);
+}
+
+// Original: addPal24; csprite.cpp:986, dc 0x73bac.
+void addPal24(CSprite* sprite, const TPalette24* pal)
+{
+    if (sprite->m_p24)
+        delete sprite->m_p24;
+    sprite->m_p24 = new TPalette24(pal);
 }
 
 // Dreamcast GetSprite (dc 0x122320) proves GetFromCache, SpriteDefHeader
@@ -2016,13 +2045,8 @@ CSprite* ResourceManager::getSprite(const char* name)
         g_greenMaskBits, g_greenMaskShift,
         g_lastMaskBits, g_lastMaskShift);
 
-    if (sprite->m_p)
-        delete sprite->m_p;
-    sprite->m_p = new TPalette16(&palette16);
-
-    if (sprite->m_p24)
-        delete sprite->m_p24;
-    sprite->m_p24 = new TPalette24(&palette24);
+    addPal16(sprite, &palette16);
+    addPal24(sprite, &palette24);
 
     delete[] fileData;
     addToCache(sprite);

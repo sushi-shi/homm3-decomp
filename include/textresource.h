@@ -336,6 +336,8 @@ public:
     virtual ~TSpreadsheetResource();
     virtual unsigned int getSize() const;
     int getNumberOfRows() const { return m_spreadsheet.size(); }
+    // Original: TSpreadsheetResource::GetNumberOfColumns; TextResource.h:113, dc 0x162910.
+    int getNumberOfColumns(int row) const { return m_spreadsheet[row]->size(); }
     // DC TextResource.h:120/124 (text.obj:0x162934) returns const char* and
     // indexes the row and cell vectors directly. High-score defaults call
     // this accessor; their char* table entries require the explicit cast.

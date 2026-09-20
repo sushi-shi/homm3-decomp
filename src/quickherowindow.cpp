@@ -14,6 +14,7 @@
 #include "misc.h"
 #include "textwdgt.h"
 #include "widget.h"
+#include "winmgr.h"
 
 // DC includes.h:134 supplies the shared limit wrapper called at both
 // morale/luck sites; homm3_limit.h owns the integer reference selector.
@@ -195,17 +196,12 @@ TQuickHeroWindow::~TQuickHeroWindow()
 
 VA_COMPGEN(0x0052f440, 0x47, BASIC_IOS_INIT, char)
 
-// E:\gamedcs\quickherowindow.cpp:221
-// Retail folds this body with the identical quick-creature/quick-town
-// wrappers at 0x530d30. The shared representative belongs to the later
-// quicktownwindow span, so this TU has no distinct contribution to claim.
-#if 0  // @carcass
-DC_ONLY(0x117818, 0x30)
+// Original: TQuickHeroWindow::QuickWindowWait; quickherowindow.cpp:221, dc 0x117818.
+// Identical quick-window wrappers fold onto the retail 0x530d30 body.
 void TQuickHeroWindow::quickWindowWait()
 {
-    // @stub
+    g_windowManager->doQuickView(this);
 }
-#endif
 
 // E:\gamedcs\quickherowindow.cpp:209
 #if 0  // @carcass -- represented by VA_COMPGEN above

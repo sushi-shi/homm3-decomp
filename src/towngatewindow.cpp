@@ -276,6 +276,8 @@ static void townGateSliderCallback(int state, heroWindow* parentWindow)
 
 #if 0  // @carcass
 
+
+
 // E:\gamedcs\towngatewindow.cpp:98
 DC_ONLY(0x169c98, 0x34)
 void* TTownGateWindow::`scalar deleting destructor'(unsigned __flags)

@@ -2,6 +2,7 @@
 #include "textwdgt.h"
 #include "bitmap16.h"
 #include "bitmap816.h"
+#include "csprite.h"
 #include "message.h"
 #include "recruit.h"
 #include "resourcemanager.h"
@@ -10,13 +11,6 @@
 #include "includes.h"
 
 #if 0  // @carcass
-
-// E:\gamedcs\textwdgt.cpp:36
-DC_ONLY(0x164c14, 0x6C)
-void textWidget::textWidget()
-{
-    // @stub
-}
 
 // E:\gamedcs\textwdgt.cpp:62
 DC_ONLY(0x164c80, 0xA4)
@@ -28,6 +22,16 @@ void textWidget::textWidget(int textWidgetX, int textWidgetY, int textWidgetWidt
 // E:\gamedcs\textwdgt.cpp:95
 
 #endif  // @carcass
+
+// Original: textWidget::textWidget; textwdgt.cpp:36, dc 0x164c14.
+textWidget::textWidget() : widget(0, 0, 0, 0, 0, 0)
+{
+    m_font = 0;
+    m_color = font::PRIMARY;
+    m_backColor = 0;
+    m_justify = font::CENTER_JUSTIFIED;
+    m_style = 8;
+}
 
 VA_COMPGEN(0x005bc250, 0x21, SCALAR_DELETING_DTOR, textWidget)
 
@@ -79,13 +83,6 @@ textWidget::~textWidget()
 
 #if 0  // @carcass
 
-// E:\gamedcs\textwdgt.cpp:102
-DC_ONLY(0x164d68, 0x6C)
-void textWidget::initialize(int x, int y, int w, int h, int id, int style, const char* _text, const char* _font, font::TColor _color, unsigned _justify, unsigned char focusable)
-{
-    // @stub
-}
-
 // E:\gamedcs\textwdgt.cpp:120
 DC_ONLY(0x164dd4, 0x1A8)
 int textWidget::main(message& msg)
@@ -94,6 +91,23 @@ int textWidget::main(message& msg)
 }
 
 #endif  // @carcass
+
+// Original: textWidget::initialize; textwdgt.cpp:102, dc 0x164d68.
+// Complete has no widget::focusable member; the remaining fields and calls
+// are shared with the retained parameterized constructor.
+void textWidget::initialize(int x, int y, int w, int h, int id, int style,
+                             const char* text, const char* fontName,
+                             font::TColor color, unsigned int justify,
+                             unsigned char focusable)
+{
+    widget::initialize(x, y, w, h, id, style);
+    m_font = ResourceManager::getFont(fontName);
+    if (text) {
+        m_text = text;
+    }
+    m_justify = justify;
+    m_color = color;
+}
 
 // E:\gamedcs\textwdgt.cpp:120
 
@@ -219,41 +233,6 @@ void textWidget::dim() const
 
 #if 0  // @carcass
 
-// E:\gamedcs\textwdgt.cpp:266
-DC_ONLY(0x165038, 0x58)
-void iconBackedTextWidget::iconBackedTextWidget()
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:272
-DC_ONLY(0x165090, 0x7E)
-void iconBackedTextWidget::iconBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, font::TColor color, int id, unsigned justify, int style)
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:295
-DC_ONLY(0x165110, 0x4)
-void iconBackedTextWidget::zBufferDraw()
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:299
-DC_ONLY(0x165114, 0x6E)
-void iconBackedTextWidget::draw()
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:319
-DC_ONLY(0x165184, 0x54)
-void bitmapBackedTextWidget::bitmapBackedTextWidget()
-{
-    // @stub
-}
-
 // E:\gamedcs\textwdgt.cpp:325
 DC_ONLY(0x1651d8, 0x7A)
 void bitmapBackedTextWidget::bitmapBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, font::TColor color, int id, unsigned justify, int style)
@@ -297,6 +276,40 @@ void* bitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
 }
 
 #endif  // @carcass
+
+// Original: iconBackedTextWidget::iconBackedTextWidget; textwdgt.cpp:266, dc 0x165038.
+iconBackedTextWidget::iconBackedTextWidget()
+    : m_background(0), m_backgroundFrame(0)
+{
+}
+
+// Original: iconBackedTextWidget::iconBackedTextWidget; textwdgt.cpp:272, dc 0x165090.
+iconBackedTextWidget::iconBackedTextWidget(
+    int x, int y, int w, int h, const char* text, const char* fontName,
+    const char* backName, font::TColor color, int id, unsigned int justify,
+    int style)
+    : textWidget(x, y, w, h, text, fontName, color, id, justify, 0, style)
+{
+    m_background = ResourceManager::getSprite(backName);
+    m_backgroundFrame = 0;
+}
+
+// Original: iconBackedTextWidget::zBufferDraw; textwdgt.cpp:295, dc 0x165110.
+void iconBackedTextWidget::zBufferDraw(unsigned short* zBuffer, int id) const {}
+
+// Original: iconBackedTextWidget::Draw; textwdgt.cpp:299, dc 0x165114.
+void iconBackedTextWidget::draw() const
+{
+    int drawX = m_x + m_parentWindow->m_x;
+    int drawY = m_y + m_parentWindow->m_y;
+    m_background->drawInterface(m_backgroundFrame, 0, 0,
+        m_background->getWidth(), m_background->getHeight(),
+        g_windowManager->m_screenBitmap, drawX, drawY, 0);
+    textWidget::draw();
+}
+
+// Original: bitmapBackedTextWidget::bitmapBackedTextWidget; textwdgt.cpp:319, dc 0x165184.
+bitmapBackedTextWidget::bitmapBackedTextWidget() : m_image(0) {}
 
 VA_COMPGEN(0x005bc6a0, 0x21, SCALAR_DELETING_DTOR, bitmapBackedTextWidget)
 

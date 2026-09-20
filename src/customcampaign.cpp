@@ -150,8 +150,11 @@ int TStreamBufFile::write(const void* data, int size)
     return m_buffer->sputn(static_cast<const char*>(data), size);
 }
 
+// Original: hero_power; game.cpp:3275, dc 0xa8ba0
+// The primary-total plus 28 secondary-skill sum moved with campaign hero
+// sorting into this TU. Retail 0x483f50 retains the same hero-pointer helper.
 VA(0x00483f50, 0x26)
-int getCrossoverHeroValue(hero* candidate)
+int heroPower(hero* candidate)
 {
     int primary = candidate->getPrimarySkillTotal();
     int skills = 0;
@@ -164,11 +167,14 @@ struct CrossoverHeroStronger {
     bool operator()(hero& lhs, hero& rhs) const;
 };
 
+// DC compare_heroes (game.cpp:3288, dc 0xa8c6c) returns a signed qsort
+// difference after score and experience. Complete uses this bool predicate
+// on hero references and adds hero ID as the final tie-break for std::sort.
 VA(0x00483f80, 0x9B)  // retained written predicate; score/experience/hero-id ordering
 bool CrossoverHeroStronger::operator()(hero& lhs, hero& rhs) const
 {
-    int leftValue = getCrossoverHeroValue(&lhs);
-    int rightValue = getCrossoverHeroValue(&rhs);
+    int leftValue = heroPower(&lhs);
+    int rightValue = heroPower(&rhs);
     if (leftValue != rightValue)
         return leftValue > rightValue;
     leftValue += lhs.m_experience;
@@ -1897,6 +1903,12 @@ void InitCampaignMapTraits([]* map_traits)
     // @stub
 }
 
+// DC clear, dc 0x7d14c, resets the 0x70d4-byte SCampaign's fixed filename,
+// availability/progress arrays, map_traits[8][32] and both carry-over pools.
+// Complete's 0x7c-byte SCampaign constructor (0x489500) initializes scalar
+// defaults and its STL members; selectCampaign (0x489590) initializes dynamic
+// per-scenario progress from a loaded header. The removed fixed tables cannot
+// be recreated by a current clear() wrapper. Legacy saves are promoted by load.
 // E:\gamedcs\customcampaign.cpp:112
 DC_ONLY(0x7d14c, 0x9E)
 void SCampaign::clear()
@@ -1904,6 +1916,11 @@ void SCampaign::clear()
     // @stub
 }
 
+// DC clear_carryover_pool, dc 0x7d1ec, memsets one 0x23a0-byte hero[8]
+// pool at +0x2988 to -1, resets assigned_carryover[8] and zeros its count.
+// Complete owns vector<vector<hero> > and artifact vectors, whose constructors,
+// clear/erase and destructors manage live objects. The fixed two-pool sentinel
+// reset is retired; SCampaign::load (0x48a310) converts old packed pool records.
 // E:\gamedcs\customcampaign.cpp:140
 DC_ONLY(0x7d1ec, 0x40)
 void SCampaign::clear_carryover_pool(TCarryOverPoolNumber pool_num)
@@ -3130,6 +3147,12 @@ void SCampaign::applyBriefingChoice(int option)
 VA_COMPGEN(0x0048C500, 0xA3, VECTOR_ERASE, hero_vector)
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
+// DC give_custom_items, dc 0x7d420, dispatches on fixed campaign/map/briefing
+// choices and the old carryover_artifact requirement. Complete reads starting
+// options from each ScenarioStruct (0x487e40); the bonus factory (0x485190)
+// constructs types 0..7, and TCampaignStartBonusOption::apply (0x485380) invokes
+// the selected bonus's virtual apply(player). Those file-owned polymorphic
+// records replace this hard-coded nullary campaign interface.
 // E:\gamedcs\customcampaign.cpp:222
 DC_ONLY(0x7d420, 0x15E4)
 void SCampaign::give_custom_items()

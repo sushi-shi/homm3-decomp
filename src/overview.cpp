@@ -869,6 +869,9 @@ void game::setupNewOverviewType(int whichType, unsigned char update)
         g_overWin->drawWindow(update, 100, 999);
 }
 
+// Original: UpdateFlaggableIcon; overview.cpp:1254, dc 0x106d18.
+// Complete uses the incoming window receiver and its owned flaggable-item
+// array; the Dreamcast free function operates on the global overview window.
 VA(0x0051e670, 0x14D)  // dc 0x106d18
 void TOverviewWindow::updateFlaggableIcon(int i)
 {
@@ -904,6 +907,9 @@ void TOverviewWindow::updateFlaggableIcon(int i)
 
 // Complete refreshes seven items through this window; Dreamcast refreshes two
 // through the global overview-window pointer.
+// Original: UpdateFlaggableIcons; overview.cpp:1279, dc 0x106d98.
+// Complete uses the incoming window receiver and its owned flaggable-item
+// array; the Dreamcast free function operates on the global overview window.
 // E:\gamedcs\overview.cpp:1279, dc 0x106d98
 VA(0x0051e7c0, 0x2A)  // called by WindowHandler and DoFlaggableButtons
 void TOverviewWindow::updateFlaggableIcons()
@@ -913,6 +919,9 @@ void TOverviewWindow::updateFlaggableIcons()
     drawWindow(0, 0xffff0001, 0xffff);
 }
 
+// Original: DoFlaggableButtons; overview.cpp:1287, dc 0x106dcc.
+// Complete uses the incoming window receiver and its owned flaggable-item
+// array; the Dreamcast free function operates on the global overview window.
 VA(0x0051e7f0, 0xE0)  // dc 0x106dcc
 void TOverviewWindow::doFlaggableButtons(int which)
 {
@@ -1095,6 +1104,35 @@ void game::overview()
     g_buttonDynamic = 0;
     delete[] g_textButtonDynamic;
     g_textButtonDynamic = 0;
+}
+
+// Original: UpdateArtifacts; overview.cpp:1562, dc 0x1077e8.
+// The older two-page equipped-artifact refresh remains an ordinary helper.
+// Complete's page buttons rebuild the overview (SetupNewOverviewType) because
+// its third page contains the backpack; those callers do not use this path.
+static void updateArtifacts(int slot)
+{
+    int slotOff = slot * 200 + 200;
+    int heroNumber = g_overviewTop[g_overviewType] + slot;
+    hero* currHero = g_game->getHero(g_overviewHeroIds[heroNumber]);
+    message msg;
+    type_artifact artifact;
+    msg.m_id = MESSAGE_WIDGET;
+    for (int i = 0; i < 9; ++i) {
+        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.m_codeY = slotOff + 119 + i;
+        artifact = currHero->getArtifact(TArtifactSlot(
+            (g_overviewHeroArtifactPage[heroNumber] * 9 + i) % 18));
+        msg.m_extra = artifact.m_artifactId;
+        g_overWin->broadcastMessage(msg);
+        msg.m_codeX = artifact.m_artifactId == -1
+            ? widget::WIDGET_CLEAR_STATUS : widget::WIDGET_SET_STATUS;
+        msg.m_extra = widget::WIDGET_DRAWN;
+        g_overWin->broadcastMessage(msg);
+    }
+    g_overWin->drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    g_overWin->drawWindow(0, slotOff + 119, slotOff + 127);
+    g_windowManager->updateScreen(293, slot * 116 + 91, 428, 46);
 }
 
 // Dreamcast proves these as two ordinary static source helpers, each with the
@@ -2407,6 +2445,9 @@ void updateFlaggableIcon(int i)
     // @stub
 }
 
+// Original: UpdateFlaggableIcons; overview.cpp:1279, dc 0x106d98.
+// Complete uses the incoming window receiver and its owned flaggable-item
+// array; the Dreamcast free function operates on the global overview window.
 // E:\gamedcs\overview.cpp:1279
 DC_ONLY(0x106d98, 0x32)
 void updateFlaggableIcons()
@@ -2743,16 +2784,6 @@ void updateBackpack(int slot)
     g_windowManager->updateScreen(293, slot * 116 + 91, 428, 46);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\overview.cpp:1562
-DC_ONLY(0x1077e8, 0x100)
-void UpdateArtifacts(int iSlot)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x005225d0, 0x55)  // dc 0x1078e8
 static long getLastBackpackIndex(long heroNumber)

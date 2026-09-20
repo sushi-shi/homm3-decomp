@@ -32,11 +32,12 @@ import sys
 import time
 
 from homm3.core import common
+from homm3.core.project import Project
 from homm3.match import status
 from homm3.vc6 import tu_state_sweep as scoring
 from homm3.vc6._unit import flags_for_unit, source_for_unit
 
-VERSION = 7
+VERSION = 8
 
 
 @dataclass(frozen=True)
@@ -246,22 +247,14 @@ def next_population(axes, parents, seen, width, rng):
     return picked
 
 
-# Every candidate tree is compiled with HOMM3_DIR pointing at itself, so the
-# snapshot has to carry everything cc_wrap resolves from that root - not just
-# the sources the family edits. COPIED_TREES are edited per candidate and so
-# must be real copies; LINKED_TREES are read-only and are shared by symlink.
-COPIED_TREES = ("include", "src")
-LINKED_TREES = ("vendor", "config")
-
-
-def build_snapshot(root, snapshot):
-    """Freeze the trees a candidate compile reads, so no live file is touched."""
-    snapshot.mkdir(parents=True, exist_ok=True)
-    for name in COPIED_TREES:
-        shutil.copytree(root / name, snapshot / name, ignore=shutil.ignore_patterns("build"))
-    for name in LINKED_TREES:
-        (snapshot / name).symlink_to(root / name, target_is_directory=True)
-    return snapshot
+def create_snapshot(root, snapshot):
+    snapshot.mkdir()
+    shutil.copytree(root / "include", snapshot / "include")
+    shutil.copytree(root / "src", snapshot / "src", ignore=shutil.ignore_patterns("build"))
+    (snapshot / "config").mkdir()
+    for name in ("project.toml", "units.toml"):
+        shutil.copy2(root / "config" / name, snapshot / "config" / name)
+    (snapshot / "vendor").symlink_to(root / "vendor", target_is_directory=True)
 
 
 def compile_candidate(candidate_root, unit, output):
@@ -272,7 +265,8 @@ def compile_candidate(candidate_root, unit, output):
     output.mkdir(parents=True, exist_ok=True)
     obj = output / "candidate.obj"
     env = dict(os.environ, HOMM3_DIR=str(candidate_root),
-               PYTHONPATH=str(common.HOMM3_DIR / "scripts"))
+               PYTHONPATH=str(common.HOMM3_DIR / "scripts"),
+               MSVC_DIR=str(Project(common.HOMM3_DIR).toolchain))
     proc = subprocess.run([
         sys.executable, "-m", "homm3.core.cc_wrap", "--out", str(obj),
         "--src", str(candidate_root / source.relative_to(common.HOMM3_DIR)),
@@ -361,7 +355,7 @@ def main(argv=None):
     scoring._write_json(output / "input.json", payload)
     snapshot = output / "snapshot"
     if not snapshot.exists():
-        build_snapshot(root, snapshot)
+        create_snapshot(root, snapshot)
     rows = status.load_baseline()
     plans = []
     for unit, source in zip(units, sources):

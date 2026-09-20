@@ -91,13 +91,15 @@ def main(argv=None) -> int:
     # compares the rows that ARE in the baseline, this one asks whether a
     # row that used to be there still is. Clean ratchet + lost row is
     # exactly how army::can_shoot left the ledger green (2026-08-15).
-    from homm3.match import banked_rows, single_view, verify_va_claims, source_ownership
+    from homm3.match import banked_rows, single_view, verify_va_claims, source_ownership, source_inventory
     origins = None
-    for gate in (banked_rows, verify_va_claims, single_view, source_ownership):
+    for gate in (banked_rows, verify_va_claims, single_view, source_ownership, source_inventory):
         try:
             if gate is source_ownership:
                 origins = source_ownership.read_dc(include_declarations=True)
                 fatal = source_ownership.run_gate(origins=origins)
+            elif gate is source_inventory:
+                fatal = source_inventory.run_gate(origins=origins)
             elif gate is banked_rows:
                 fatal = banked_rows.run_gate(history_patch=history_patch)
             else:

@@ -17,17 +17,7 @@
 DATA(0x00694ce8)
 BINKSUMMARY g_binkSummary;
 
-#if 0  // @carcass
 
-// E:\gamedcs\binkmanager.cpp:123
-DC_ONLY(0x50a80, 0x4)
-void BinkManager::setPixelFormat()
-{
-    // @stub
-}
-
-// E:\gamedcs\binkmanager.cpp:232
-#endif  // @carcass
 
 // The constant OR'd into every _BinkOpen flag word here; it is Bink's
 // counterpart of smackmgr's SMACKOPEN_FROM_ARCHIVE and makes _BinkOpen take
@@ -88,6 +78,14 @@ BINK* BinkManager::getBinkFilePtr(const char* filename, int binkOptions)
         }
     }
     return 0;
+}
+
+// Original: BinkManager::SetPixelFormat; binkmanager.cpp:123, dc 0x50a80
+// The formal CodeView type retains the three masks; the release body is empty.
+void BinkManager::setPixelFormat(unsigned long redMask,
+                                 unsigned long greenMask,
+                                 unsigned long blueMask)
+{
 }
 
 VA(0x0044D830, 0x1A3)  // dc 0x50a84

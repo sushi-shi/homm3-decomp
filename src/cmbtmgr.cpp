@@ -13,12 +13,8 @@
 // `ret 0x2c` is eleven stack words plus this, and SetupCombat is the
 // compiland's only 12-parameter function.
 
-// DC rows proven bodyless in retail: CheckNativeTerrain (0x5e948),
-// CombineGroups (0x5f1d0), ComputeDamageModifier (0x6021c, four bytes
-// on SH4), ExperienceValueOfStack (0x60220 - single call site in
-// CalculateGainedExperience), TestRaiseDoor (0x610e0),
-// DoorCanBeLowered (0x63268), and FreeArmies
-// (0x5e3d8, whose only caller is Close).
+// Some DC helpers expand in the retained Complete callers; their canonical
+// ordinary definitions and source calls are kept below without duplicate RVAs.
 
 #include <math.h>
 #include <stdlib.h>
@@ -268,7 +264,7 @@ void combatManager::close()
     delete m_combatMouseBackground;
     if (m_combatWindow)
         g_windowManager->removeWindow(m_combatWindow);
-    g_soundManager->stopAllSamples(1);
+    freeArmies();
     freeIcons();
     if (m_combatWindow) {
         delete m_combatWindow;
@@ -497,21 +493,32 @@ void combatManager::loadArmies(unsigned char isSurrounded)
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\cmbtmgr.cpp:1151
-DC_ONLY(0x5e3d8, 0x8C)
-void combatManager::FreeArmies()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
-VA(0x004639e0, 0x0E)
-void combatManager::stopCombatSounds()
+// Original: combatManager::FreeArmies; cmbtmgr.cpp:1151, dc 0x5e3d8.
+// DC1152 stops samples, then DC1154..1157 frees each army's raw resource
+// pointers. Complete retains only the audio operation here (0x4639e0);
+// its army members are reference-counted handles whose destructor cleanup
+// is byte-proven at 0x43d400. DoVictory retains this call and Close expands
+// it. The earlier provisional name stopCombatSounds split this identity.
+VA(0x004639e0, 0x0E)  // dc 0x5e3d8
+void combatManager::freeArmies()
 {
     g_soundManager->stopAllSamples(1);
+}
+
+// Original: combatManager::CheckNativeTerrain; cmbtmgr.cpp:1498, dc 0x5e948.
+// SetupCombat expands this ordinary member after LoadArmies. Each side's
+// summary flag is set by the first native-terrain army in that group.
+void combatManager::checkNativeTerrain()
+{
+    for (int side = 0; side < 2; side++) {
+        m_onNativeTerrain[side] = 0;
+        for (int slot = 0; slot < m_numArmies[side]; slot++) {
+            if (m_armies[side][slot].m_onNativeTerrain) {
+                m_onNativeTerrain[side] = 1;
+                break;
+            }
+        }
+    }
 }
 
 VA(0x004639f0, 0x270)  // dc 0x5e464
@@ -699,27 +706,8 @@ void combatManager::initNonVisualVars()
     generateMap();
     loadArmies(m_isSurrounded);
 
-    for (int side = 0; side < 2; side++) {
-        m_onNativeTerrain[side] = 0;
-        for (int slot = 0; slot < m_numArmies[side]; slot++) {
-            if (m_armies[side][slot].m_onNativeTerrain) {
-                m_onNativeTerrain[side] = 1;
-                break;
-            }
-        }
-    }
+    checkNativeTerrain();
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\cmbtmgr.cpp:1498
-DC_ONLY(0x5e948, 0x64)
-void combatManager::CheckNativeTerrain()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x004640a0, 0x144)  // dc 0x5e9ac
 void combatManager::setupAdjacencyArray()
@@ -990,16 +978,33 @@ int combatManager::getGridIndex(int x, int y) const
     return row * 17 + col;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\cmbtmgr.cpp:1971
-DC_ONLY(0x5f1d0, 0xDE)
-void combatManager::CombineGroups(armyGroup* src, armyGroup* dest)
+// Original: combatManager::CombineGroups; cmbtmgr.cpp:1971, dc 0x5f1d0.
+// First merge matching creature stacks, then move the remaining stacks into
+// free destination slots. No retained Complete RVA is assigned to this member.
+void combatManager::combineGroups(armyGroup* src, armyGroup* dest)
 {
-    // @stub
-}
+    if (!src || !dest)
+        return;
 
-#endif  // @carcass
+    int i;
+    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        if (dest->isMember(src->m_armyTypes[i])) {
+            dest->add(src->m_armies[i], src->m_numTroops[i], -1);
+            src->dismiss(i);
+        }
+    }
+
+    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        if (src->m_armies[i] != CREATURE_NONE) {
+            for (int j = 0; j < armyGroup::ARMY_GROUP_SLOT_COUNT; ++j) {
+                if (dest->m_armies[j] == CREATURE_NONE) {
+                    dest->add(src->m_armies[i], src->m_numTroops[i], j);
+                    src->dismiss(i);
+                }
+            }
+        }
+    }
+}
 
 // and the creature-name lookup uses CreatureType.h's canonical helper.
 VA(0x00464920, 0x211)  // dc 0x5f2b0
@@ -1422,13 +1427,13 @@ unsigned char combatManager::isWinner(int thisSide) const
 }
 
 VA(0x00465970, 0x20)  // dc 0x5fcec
-int getTargetWallIndex(int gridIndex)
+TWallTargetId combatManager::getTargetWallIndex(int gridIndex)
 {
     for (int i = 0; i < 8; i++) {
         if (combatManager::s_wallTargets[i].m_targetHex == gridIndex)
-            return i;
+            return TWallTargetId(i);
     }
-    return -1;
+    return TWallTargetId(-1);
 }
 
 VA(0x00465990, 0x140)  // dc 0x5fd10
@@ -1629,16 +1634,13 @@ void combatManager::unnamed465f20()
     m_nextActionGridIndex = m_armies[0][target].m_gridIndex;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\cmbtmgr.cpp:2727
-DC_ONLY(0x6021c, 0x4)
-float combatManager::ComputeDamageModifier(int attack, int defense)
+// Original: combatManager::ComputeDamageModifier; cmbtmgr.cpp:2727, dc 0x6021c.
+// This static legacy interface returns 1.0: the entire SH4 body is rts/fldi1.
+// Complete's attack/defense scaling lives in army's damage bonus/reduction helpers.
+float combatManager::computeDamageModifier(int attack, int defense)
 {
-    // @stub
+    return 1.0f;
 }
-
-#endif  // @carcass
 
 // Dreamcast cmbtmgr.cpp:2738..2752. Complete expands this ordinary helper
 // into CalculateGainedExperience. The helper owns the stack loop, both
@@ -2207,13 +2209,13 @@ void combatManager::testRaiseDoor()
 }
 
 VA(0x00467460, 0x22)  // dc 0x61160
-unsigned char inCastle(int index)
+unsigned char combatManager::inCastle(int index)
 {
     return index >= g_castleWallColumns[index / 0x11];
 }
 
 VA(0x00467490, 0x22)  // dc 0x61180
-unsigned char leftOfMoat(int index)
+unsigned char combatManager::leftOfMoat(int index)
 {
     return index < g_moatColumns[index / 0x11];
 }
@@ -3228,7 +3230,7 @@ void combatManager::updateArmyLuckAndMorale()
 }
 
 VA(0x00469880, 0x190)  // dc 0x62fe4
-void getMissileStartingPosition(int armyType, int x, int y, int facing,
+void combatManager::getMissileStartingPosition(int armyType, int x, int y, int facing,
                                 int destX, int destY,
                                 const CSprite* missile, int* startX,
                                 int* startY, int* armyDir,
@@ -3602,6 +3604,15 @@ unsigned char combatManager::checkObstacleAttacks(army* thisArmy,
 }
 
 #if 0  // @carcass
+
+
+
+
+
+
+
+
+
 
 // E:\gamedcs\cmbtmgr.cpp:893
 DC_ONLY(0x63a88, 0x34)

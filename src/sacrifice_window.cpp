@@ -437,16 +437,6 @@ void type_sacrifice_window::handleWidgetHover(widget* current_widget)
     // @stub
 }
 
-// E:\gamedcs\sacrifice_window.cpp:1846
-// The retail row at 0x565430 between handle_widget_hover and the
-// transformer-slot rows is ExitDialog, not this. WindowHandler has no retail
-// row of its own in this bracket; ExitDialog is reconstructed below.
-DC_ONLY(0x127484, 0x36)
-int type_sacrifice_window::windowHandler(message& msg)
-{
-    // @stub
-}
-
 // E:\gamedcs\sacrifice_window.cpp:1859
 DC_ONLY(0x1274bc, 0x38)
 int type_sacrifice_window::exitDialog(message& msg)
@@ -482,13 +472,6 @@ void type_skeleton_window::~type_skeleton_window()
     // @stub
 }
 
-// E:\gamedcs\sacrifice_window.cpp:2144
-DC_ONLY(0x127a8c, 0x3E)
-void type_skeleton_window::unselect()
-{
-    // @stub
-}
-
 // E:\gamedcs\sacrifice_window.cpp:2157
 DC_ONLY(0x127acc, 0x9C)
 void type_skeleton_window::updateButtons()
@@ -513,13 +496,6 @@ void type_skeleton_window::creatureClick(long side, long slot, unsigned char rig
 // E:\gamedcs\sacrifice_window.cpp:2281
 DC_ONLY(0x128048, 0x36)
 int type_skeleton_window::windowHandler(message& msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\sacrifice_window.cpp:2293
-DC_ONLY(0x128080, 0x16)
-int type_skeleton_window::exitDialog(message& msg)
 {
     // @stub
 }
@@ -2214,6 +2190,19 @@ void type_sacrifice_window::handleWidgetHover(widget* currentWidget)
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
+// Original: type_sacrifice_window::WindowHandler; DC source line 1846.
+// Retail vtable 0x641620 slot 9 points to 0x5666f0, shared with the skeleton
+// window's identical override. Preserve both source methods and one RVA claim.
+int type_sacrifice_window::windowHandler(message& msg)
+{
+    int result = CAdvPopup::windowHandler(msg);
+    if (result)
+        return result;
+    if (msg.m_id == MESSAGE_MOUSE_MOVE)
+        return g_windowManager->convertToHover(msg);
+    return 0;
+}
+
 // E:\gamedcs\sacrifice_window.cpp:1859
 // Vtable 0x641620 slot 14 fixes the identity. Complete returns any held
 // artifact to its original equipped slot where possible, then tries an
@@ -2369,6 +2358,18 @@ type_skeleton_window::~type_skeleton_window()
     deleteWidgets();
 }
 
+// Original: type_skeleton_window::unselect; source line 2144, dc 0x127a8c.
+// CreatureClick also hides a border but interleaves update/hover operations;
+// neither its DC call sequence nor its retail body establishes a call here.
+void type_skeleton_window::unselect()
+{
+    if (m_selectedGroup < 0)
+        return;
+    m_selectBorder[m_selectedGroup][m_selectedIndex]->setVisible(0);
+    m_selectedGroup = -1;
+    m_selectedIndex = -1;
+}
+
 // E:\gamedcs\sacrifice_window.cpp:2157
 // All Complete callers inline this source helper. The DC call edges and the
 // repeated retail expansion prove the transformed-army scan and the two
@@ -2511,6 +2512,17 @@ int type_skeleton_window::windowHandler(message& msg)
     if (msg.m_id == MESSAGE_MOUSE_MOVE)
         return g_windowManager->convertToHover(msg);
     return 0;
+}
+
+// Original: type_skeleton_window::ExitDialog; source line 2293, dc 0x128080.
+// Retail vtable 0x641694 slot 14 points to 0x5f1180, the identical body claimed
+// by type_university_window::exitDialog. Both classes own this override.
+int type_skeleton_window::exitDialog(message& msg)
+{
+    msg.m_id = MESSAGE_WIDGET;
+    g_windowManager->m_dialogReturn = 0;
+    msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+    return MESSAGE_DISPATCH_FORWARD;
 }
 
 VA(0x00566720, 0x38)  // dc 0x128098

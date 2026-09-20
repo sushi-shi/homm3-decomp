@@ -20,4 +20,23 @@ public:
     virtual int write(const void* data, int size) = 0;
 };
 
+// Complete native serialization: the output-reference overload
+// reads one native scalar into caller-owned storage and preserves the actual
+// int byte count, including short reads and errors. The existing value reader
+// owns its local and intentionally discards that count. This inferred API
+// adds no virtual slot or conversion and claims no Dreamcast declaration.
+template <class T>
+int readValue(TAbstractFile* infile, T& value)
+{
+    return infile->read(&value, sizeof(value));
+}
+
+template <class T>
+T readValue(TAbstractFile* infile)
+{
+    T value;
+    readValue(infile, value);
+    return value;
+}
+
 #endif  /* HOMM3_ABSTRACTFILE_H */

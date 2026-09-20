@@ -26,6 +26,7 @@
 // are not claims of zero source differences.
 #include <va.h>
 #include "button.h"
+#include "sacrifice_window.h"
 #include "resourcemanager.h"
 #include "window.h"
 #include "winmgr.h"
@@ -409,19 +410,7 @@ void button::vslot12(int on)
     widget::vslot12(on);
 }
 
-#if 0  // @carcass
 
-// E:\gamedcs\button.cpp:487
-// Complete has no default-textButton constructor slot. Its vtable has only
-// two retail references: the fourteen-argument ctor 0x456a50 and destructor
-// 0x456bf0. No other constructor vptr store or gap body fits this overload.
-DC_ONLY(0x57a5c, 0x58)
-void textButton::textButton()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // E:\gamedcs\button.cpp:488 - textButton::`scalar deleting destructor'
 // (dc 0x57e14). Slot 0 of textButton's vtable 0x63bb88; the 33-byte
@@ -429,6 +418,11 @@ void textButton::textButton()
 VA_COMPGEN(0x00456a20, 0x21, SCALAR_DELETING_DTOR, textButton)
 
 // E:\gamedcs\button.cpp:508, dc 0x57ab4
+// Original: textButton::textButton; button.cpp:487, dc 0x57a5c.
+textButton::textButton() : button()
+{
+}
+
 VA(0x00456a50, 0x193)  // linkorder bracket; initialize/GetSprite/GetFont callees byte-proven, dc 0x57ab4
 textButton::textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor newColor)
     : button()
@@ -481,19 +475,15 @@ type_func_button::type_func_button(long x, long y, long w, long h, long id,
     m_handler = newHandler;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\button.cpp:565
-// Complete's type_func_button vtable has one retail reference, in the
-// nine-argument ctor 0x456d30. The definition-record overload has no vptr
-// store or unclaimed body slot in the fully accounted button band.
-DC_ONLY(0x57cdc, 0x6A)
-void type_func_button::type_func_button(const type_icon_definition* def, int _id, int (*)()* _handler)
+// Original: type_func_button::type_func_button; button.cpp:565, dc 0x57cdc
+type_func_button::type_func_button(const type_icon_definition& def, int id,
+                                   handler_type handler)
+    : button(def.m_x, def.m_y, def.m_width, def.m_height, id, def.m_image,
+             0, 1, 0, 0, 2)
 {
-    // @stub
+    m_handler = handler;
 }
 
-#endif  // @carcass
 
 // E:\gamedcs\button.cpp:559 - type_func_button::`scalar deleting
 // destructor' (dc 0x57e48). Slot 0 of type_func_button's vtable

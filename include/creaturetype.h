@@ -2,6 +2,7 @@
 #define HOMM3_CREATURETYPE_H
 
 #include "armygrp.h"
+#include "town.h"
 
 #include "creaturetype_fwd.h"
 
@@ -26,5 +27,7 @@ inline const char* getArmyName(int type, int count)
 #define isBaseElemental(type) \
     ((type) == CREATURE_AIR_ELEMENTAL || (type) == CREATURE_EARTH_ELEMENTAL \
         || (type) == CREATURE_FIRE_ELEMENTAL || (type) == CREATURE_WATER_ELEMENTAL)
+
+TCreatureType getBaseCreature(TTownType townType, int baseCreatureNbr);
 
 #endif  /* HOMM3_CREATURETYPE_H */

@@ -121,8 +121,7 @@ public:
 };
 SIZE(RandomDwellingData, 0x10);
 
-// The town-definition pool uses town.h's canonical TownExtra record.
-// readTownData and ProcessOnMapTowns share its 0x88-byte PC layout.
+
 
 class town;
 
@@ -467,6 +466,8 @@ public:
 SIZE(CMapHeaderData, 0x2d0);
 SIZE(CMapHeaderData::TPlayerSlotAttributes, 0x44);
 
+
+
 class NewSMapHeader : public CMapHeaderData {
 public:
     std::string m_mapName;
@@ -512,6 +513,7 @@ public:
     int readVictoryCondition(char type, TAbstractFile* infile);
     int readLossCondition(char type, TAbstractFile* infile);
     int saveVictoryCondition(char type, TAbstractFile* outfile);
+    int saveLossCondition(char type, TAbstractFile* outfile);
     // Complete's saved-header reader carries the save version as a third
     // argument so pre-25 campaign hero ids can be remapped.
     int loadVictoryCondition(char type, TAbstractFile* infile,
@@ -523,6 +525,34 @@ public:
     int get(const char* path, const char* filename, int saveVersion);
 };
 SIZE(NewSMapHeader, 0x304);
+
+// Game.h owns the town-definition record shared by map loading and towns.
+class TownExtra {
+public:
+    // Original: TownExtra::TownExtra; Game.h:377, dc 0xf4af0.
+    // DC clears its 13-byte name array at +0x55. Complete's readTownData
+    // (0x5019f0) constructs the replacement std::string and both spell
+    // bitsets as members of this 0x88-byte record.
+    TownExtra() {}
+    int m_objRef;
+    char m_playerOwner;
+    char m_customBuildings;
+    // Six bytes of stream reach each of these two; the record keeps eight.
+    __int64 m_buildingBuiltMask;
+    __int64 m_buildingDisabledMask;
+    char m_hasFort;
+    char m_customArmies;
+    armyGroup m_townArmy;
+    char m_customName;
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_name;
+    // A char in the Dreamcast record, a DWORD here: readTownData assigns it
+    // from CObjectType::extra and from setup.alignment[], both int.
+    int m_townType;
+    char m_isGrouped;
+    std::bitset<70> m_spells;
+    std::bitset<70> m_fixedSpells;
+};
+SIZE(TownExtra, 0x88);
 
 // `mine` and `generator`, two of the four object-pool element types.
 // The DC roster declares both in E:\gamedcs\Game.h, i.e. here.
@@ -564,13 +594,14 @@ public:
     // Dreamcast's generator-event xref records three calls to get_owner;
     // retail expands the signed owner-byte load and has no out-of-line row.
     inline long getOwner() const { return m_playerOwner; }
-    unsigned char load(TAbstractFile* infile);
+    // Raw DC publics for load/save return bool (QAA_N); Complete ports the file argument.
+    bool load(TAbstractFile* infile);
     // update_bonus's negative twin. Retail has no out-of-line row for it
     // (nothing fits between generator::save's end at 0x4b8791 and
     // update_bonus at 0x4b87a0), so it is inline-only - the same shape
     // set_owner below carries.
     inline void removeBonus();
-    unsigned char save(TAbstractFile* outfile);
+    bool save(TAbstractFile* outfile);
     inline void setOwner(long owner);
     void updateBonus();
     void grow(int unusedArg);
@@ -918,6 +949,7 @@ public:
     // is the include-set wall's own trigger shape (the townManager
     // precedent), and townmgr.cpp is the only live consumer.
     unsigned char addGarrisonHero(town* ourTown);
+    int buildingsOwned(int townType, int buildingId, int mageLevel);
     bool hasMobileHero();
     int nextHero();
     int nextTown();
@@ -927,7 +959,9 @@ public:
     // ?IsHuman@playerData@@QBA_NXZ / ?IsLocalHuman@playerData@@QBA_NXZ
     bool isLocalHuman() const;
     char* getName();
+    void setName(char* newName);
     void assignNetInfo(CNetPlayerInfo* netPlayerInfo);
+    void getNetInfo(CNetPlayerInfo* netPlayerInfo);
     void clearNetInfo();
     // 0x4b9f40 (claimed in src/game.cpp). town::can_build,
     // can_ever_build and get_buildable_mask all call it on
@@ -1158,6 +1192,9 @@ public:
     type_point gameFn004CEF10(int identifier);
     int getStartingHeroId(int alignment, int playerPos,
                           int mapPosition);  // 0x4bb400
+    int scan(signed char* whichList, int start, int length);
+    int randomScan(signed char* whichList, int start, int length,
+                   signed char scanValue);
     int getNewBoatId();  // 0x4bb170
     int createBoat(int x, int y, int z, int owner,
                    unsigned char remoteMove, signed char type);  // 0x4bb250
@@ -1176,15 +1213,23 @@ public:
     void setRandomHeroArmies(int heroId, int cheat,
                              unsigned char minimal);  // 0x4c9730
     TArtifact getRandomArtifactId(int artifactClass);  // 0x4c94d0
+    void setupTowns();
     void checkHeroConsistency();
+    int getRandomNumTroops(int whichMon);
     void setupDynamicStuff(int update, int forceUpdate);  // 0x51bd50
     void setupNewOverviewType(int whichType,
                               unsigned char update);  // 0x51e330
     int processIconSelect(int codeY, unsigned char rightMouse);  // 0x51ee50
     playerData* getLocalPlayer();
+    int getLastHuman() const;
     int getLocalPlayerGamePos() const;  // 0x4cea20
     SpellID getRandomSpell(std::bitset<5> spellLevels);  // 0x4c95a0
     boat* getHeroBoat(int id, unsigned char occupied);  // 0x4ce900
+    int getHeroId(type_point heroLocation);
+    int getMineId(int x, int y, int z);
+    int getGarrisonId(int x, int y, int z);
+    int heroIdToHeroPos(playerData* player, int id);
+    int townIdToTownPos(playerData* player, int id);
     int getTownId(int x, int y, int z);  // 0x4bb870
     int mineTypesOwned(int whichPlayer, int mineType);  // 0x4bae70
     int getGeneratorId(int x, int y, int z);  // 0x4bb900
@@ -1290,6 +1335,7 @@ public:
     void setMapSize(int width, int height);  // 0x4ccef0
     void checkForTimeEvent();  // 0x4cd910
     void giveTimeEventReward(const TTimedEvent* thisEvent);  // 0x4cd710
+    void giveTownEventReward(const TTownEvent& thisEvent);
     void checkForTownEvent();  // 0x4cda10
     bool isHuman(int gamePos) const;  // 0x4ce940
 
@@ -1302,6 +1348,10 @@ public:
 private:
     int loadGarrisonPool(TAbstractFile* infile, int saveVersion);
     int loadTownPool(TAbstractFile* infile, int saveVersion);
+    int loadPlayerData(TAbstractFile* infile, int saveVersion);
+    int loadHeroPool(TAbstractFile* infile, int saveVersion);
+    int savePlayerData(TAbstractFile* outfile);
+    int saveHeroPool(TAbstractFile* outfile);
 
 public:
     int loadGame(const char* filename, int isOrigData, int isQuickLoad);
@@ -1326,6 +1376,7 @@ private:
 public:
     // 0x4bf780 (dc 0xaa7e0).
     void validateVictoryLossConditions(unsigned char checkMapLocations);
+    void giveTroopsToNeutralTowns();
     void giveTroopsToNeutralTown(int townId);  // 0x4bf570
     void setupOrigData();
     void newMap(TAbstractFile* mapFile, int* playerHeroFaces,
@@ -1349,7 +1400,10 @@ private:
     void randomizeUniversity(NewmapCell* cell);
 
 public:
-    void setRecruits(int player);
+    void setRecruits();
+    void setWeeklyRecruits(int playerPos);
+    void clearRecruits(int* recruits);
+    void randomizeHeroPool();
     void replaceRecruit(int playerPos, long recruitSlot);
     bool growCoverOfDarkness();
     void initNewGame(int difficulty, int version,
@@ -1358,6 +1412,9 @@ public:
 
 private:
     int save(TAbstractFile* outfile);  // 0x4be3f0
+    void setMarketArtifacts();
+    void setSummoningGenerators();
+    void setupNewRumour();
     void setCannedRumour();
     void setMapRumour();
     void setSpecialRumour();
@@ -1391,6 +1448,7 @@ public:
                           int occupyingHero);  // 0x49c560
     void recordMove(hero* who, int direction,
                      type_point destination);  // 0x49cd50
+    void recordPlayerDeath(char playerId);
     void recordTeleport(hero* who, type_point destination);  // 0x49cf50
     void showLuckInfo(hero* who, int dialogType);
     void showMoraleInfo(hero* who, int dialogType);
@@ -1581,12 +1639,18 @@ public:
             return 0;
         return &m_towns[townId];
     }
+    // Original: game::GetTown; Game.h:1022, dc 0x169c60.
+    // The const overload indexes directly; the non-const overload above
+    // separately handles the -1 sentinel.
+    const town* getTown(int which) const { return &m_towns[which]; }
     town* getCurrTown()
     {
         if (g_currentPlayer->m_currTownId != -1)
             return &m_towns[g_currentPlayer->m_currTownId];
         return 0;
     }
+    // Original: game::GetCurrTownId; game.h:1024, dc 0x1ff98
+    int getCurrTownId() { return g_currentPlayer->m_currTownId; }
     bool townAlreadyBuiltOn(int townId) const;
     // DC `game::GetTownName` (?GetTownName@game@@QBAPBDH@Z), and another
     // inline-only member: retail has no out-of-line row and
@@ -1603,6 +1667,8 @@ public:
     {
         return m_towns[townId].m_name.c_str();
     }
+    // Original: game::GetMine; Game.h:1036, dc 0x9ca84.
+    mine* getMine(int which) { return &m_mines[which]; }
     // Game.h:1056. GetGarrison is expanded into both DispatchEvent and
     // philai's value_of_garrison; its nested vector access remains visible
     // so the recovered source hierarchy is not flattened again.
@@ -1630,6 +1696,8 @@ public:
     // retail expands the map's byte flag plus one at both cheat loops.
     // DC game.h:1405, dc 0x12cabc: const reference to the whirlpool list.
     // searchArray::enterTrigger passes its address to enterLith in retail.
+    inline const std::vector<type_point>& getLiths(long color) const;
+    inline const std::vector<type_point>& getLithExits(long color) const;
     inline const std::vector<type_point>& getWhirlpools() const;
     NewmapCell* getCell(type_point point);
     void getLossConditionText(char* text);
@@ -1878,7 +1946,10 @@ inline int SavedGameHeader::save(TAbstractFile* outfile)
 }
 
 // Complete reads versioned nested records through the abstract stream;
-// Dreamcast uses gzread directly.
+// Dreamcast uses gzread directly and records the checked ID-read count.
+// The six unchecked scalar reads use returned values rather than artificial
+// caller scopes. VC6 then matches all 62 retail blocks and 26 named calls,
+// including the shared failure cleanup; flattening those reads loses it.
 // E:\gamedcs\Game.h:1344, dc 0xbcfe4
 VA(0x004bc750, 0x3D5)  // dc 0xbcfe4
 inline int SavedGameHeader::load(TAbstractFile* infile)
@@ -1886,6 +1957,7 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
     std::string openedName;
     unsigned char inputWasProvided = infile != 0;
     std::auto_ptr<TAbstractFile> ownedInput;
+    int count;
 
     if (!inputWasProvided) {
         openedName = g_game->m_setup.m_filename;
@@ -1902,21 +1974,16 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
             return -1;
     }
 
-    if (infile->read(m_id, sizeof(m_id)) < sizeof(m_id))
+    count = infile->read(m_id, sizeof(m_id));
+    if (count < sizeof(m_id))
         return -1;
 
-    {
-        int buffer;
-        infile->read(&buffer, sizeof(buffer));
-        m_version = buffer;
-    }
+    m_version = readValue<int>(infile);
     if (m_version > 42)
         return -1;
 
     if (m_version >= 40) {
-        int buffer;
-        infile->read(&buffer, sizeof(buffer));
-        m_gameVersion = buffer;
+        m_gameVersion = readValue<int>(infile);
     } else {
         if (m_version < 25 && (m_version < 16 || m_version > 18))
             return -1;
@@ -1939,11 +2006,7 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
     if (m_mapSetup.load(infile, m_version) < 0)
         return -1;
 
-    {
-        short buffer;
-        infile->read(&buffer, sizeof(buffer));
-        m_campaignGame = buffer != 0;
-    }
+    m_campaignGame = readValue<short>(infile) != 0;
     if (m_campaignGame)
         m_campaign.load(infile, m_version);
 
@@ -1951,23 +2014,11 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
     infile->read(fileNameBuffer, sizeof(fileNameBuffer));
     m_fileName = fileNameBuffer;
 
-    {
-        short buffer;
-        infile->read(&buffer, sizeof(buffer));
-        m_difficultyRating = buffer;
-    }
-    {
-        char buffer;
-        infile->read(&buffer, sizeof(buffer));
-        m_numDeadPlayers = buffer;
-    }
+    m_difficultyRating = readValue<short>(infile);
+    m_numDeadPlayers = readValue<char>(infile);
     infile->read(m_deadPlayer, sizeof(m_deadPlayer));
     infile->read(m_humanPlayer, sizeof(m_humanPlayer));
-    {
-        int buffer;
-        infile->read(&buffer, sizeof(buffer));
-        m_currentPlayer = buffer;
-    }
+    m_currentPlayer = readValue<int>(infile);
 
     if (!inputWasProvided)
         strcpy(m_mapSetup.m_filename, openedName.c_str());
@@ -2016,6 +2067,18 @@ inline NewmapCell* game::getCell(type_point point)
 inline short game::getCurrentTurn() const
 {
     return (m_month * 4 + m_week - 5) * 7 + m_day;
+}
+
+// Original: game::get_liths; Game.h:1395, dc 0x12ca94.
+inline const std::vector<type_point>& game::getLiths(long color) const
+{
+    return m_lithPools[color];
+}
+
+// Original: game::get_lith_exits; Game.h:1400, dc 0x12caa8.
+inline const std::vector<type_point>& game::getLithExits(long color) const
+{
+    return m_lithExitPools[color];
 }
 
 // E:\gamedcs\Game.h:1405.

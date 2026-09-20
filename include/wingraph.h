@@ -90,7 +90,6 @@ IDirectDrawSurface* ddCreateSurface(unsigned long width,
 void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
             IDirectDrawSurface* srcSurface, const tagRECT& srcRect,
             unsigned long flags);
-void ddAppBlit(const tagRECT* region);                   // 0x5ffe70
 
 // The DirectDraw surface pair (Blt target and game draw surface).
 // Owner attribution: the DD lifecycle (DDCreatePrimary/DDCreateSurface

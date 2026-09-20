@@ -256,13 +256,6 @@ static TSecondarySkill g_magicSchools[4] = {
 
 // E:\gamedcs\hero.cpp:219 - promoted to a live claim (see below).
 
-// E:\gamedcs\hero.cpp:254
-DC_ONLY(0xca7c0, 0x12)
-const char* hero::GetSpecificAbilityText()
-{
-    // @stub
-}
-
 // E:\gamedcs\hero.cpp:259
 DC_ONLY(0xca7d4, 0x12)
 const char* hero::getSpecificAbilityTextShort()
@@ -317,6 +310,12 @@ unsigned char initializeHeroSpecificAbilitiesTable()
         g_heroSpecificAbilitiesImp[i - 2].m_longText = row[2];
     }
     return 1;
+}
+
+// Original: hero::GetSpecificAbilityText; hero.cpp:254, dc 0xca7c0
+const char* hero::getSpecificAbilityText()
+{
+    return g_heroSpecificAbilities[m_id].m_longText;
 }
 
 VA(0x004d7220, 0x11)  // dc 0xca7d4
@@ -403,16 +402,13 @@ type_obscuring_object::type_obscuring_object()
     initialize();
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:380
-DC_ONLY(0xcaac8, 0x3A)
-mine* type_obscuring_object::get_obscured_mine()
+// Original: type_obscuring_object::get_obscured_mine; hero.cpp:380, dc 0xcaac8
+mine* type_obscuring_object::getObscuredMine() const
 {
-    // @stub
+    if (m_valid && m_obscuredType == MINE && m_wasTrigger)
+        return &g_game->m_mines[m_extraInfo];
+    return 0;
 }
-
-#endif  // @carcass
 
 VA(0x004d7490, 0x35)  // dc 0xcab04
 town* type_obscuring_object::getObscuredTown() const
@@ -1111,8 +1107,11 @@ void hero::initialize(short index)
 // hero. Its single caller is inside game.obj (0x4cae10), which walks 156
 // records with `add ebx, 0x334` - which is what closes the record's size.
 
-// Dreamcast initialize_hero(hero*, const HeroExtra*) is a free function at
-// hero.cpp:1098, dc 0xb6c84; Complete implements it as this member.
+// Original: initialize_hero; game.cpp:9912, dc 0xb6c84
+// Complete moved map-hero setup from the game.cpp free function into this
+// hero member: retail 0x4d8b30 receives this in ECX and returns with ret 4.
+// The expanded HeroExtra adds primary skills, spells, custom name and sex;
+// fixed DC campaign-trait carryover is handled by Complete's campaign owner.
 // Keep basic_string::assign out of line at the customName assignment.
 
 // Residual (94.67%): register-homing only, and why-reg v2's model CAPS it -
@@ -1142,8 +1141,8 @@ void hero::initialize(short index)
 // argument order.  The SECOND memset of the second pair already agrees, so
 // it is a block-entry schedule and not the spelling: `&arr[0]` is byte-flat
 // and hoisting `skillCount = 0` above the pair costs 0.36.
-VA(0x004d8b30, 0x434)  // retail-only, hero member, ret 4
-void hero::heroFn004D8B30(const HeroExtra* setup)
+VA(0x004d8b30, 0x434)  // Complete member interface, ret 4
+void hero::initialize(const HeroExtra* setup)
 {
     m_order = setup->m_objRef;
     m_x = setup->m_location.m_x;
@@ -1615,6 +1614,42 @@ void hero::updateSpellList()
         }
         slot++;
     } while (--remaining);
+}
+
+// Original: THeroScreenWindow::HeroMessageUpdate; hero.cpp:1594, dc 0xcc49c
+void THeroScreenWindow::heroMessageUpdate(char* text)
+{
+    message msg;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    // Complete adds one equipped-artifact widget; the status ids move by one.
+    msg.m_codeY = STATUS_BAR_ID;
+    msg.m_extraText = text;
+    broadcastMessage(msg);
+    drawWindow(1, STATUS_BAR_BORDER_ID, STATUS_BAR_ID);
+}
+
+// Original: hero::HeroScreenUpdate; hero.cpp:1606, dc 0xcc4e0
+void hero::heroScreenUpdate()
+{
+    // DC1607 constructs this message before UpdateArmies at1609, although
+    // the following sends use the integer-payload overload.
+    message msg;
+    msg.m_id = MESSAGE_WIDGET;
+    updateArmies();
+    if (g_heroScreenArmySlot == THeroScreenWindow::HERO_SCREEN_NO_ARMY_SLOT) {
+        g_windowManager->broadcastMessage(
+            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+            THeroScreenWindow::MIXED_ARMY_ID,
+            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+    } else {
+        g_windowManager->broadcastMessage(
+            MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+            THeroScreenWindow::MIXED_ARMY_ID,
+            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+    }
+    g_heroScreenWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                                  WINDOW_ALL_WIDGETS_HIGH);
 }
 
 // E:\gamedcs\hero.cpp:1632
@@ -2804,17 +2839,7 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
     }
     }
 
-    message update;
-    update.m_qualifier = 0;
-    update.m_mouseX = 0;
-    update.m_mouseY = 0;
-    update.m_window = 0;
-    update.m_id = MESSAGE_WIDGET;
-    update.m_codeX = widget::WIDGET_SET_TEXT;
-    update.m_codeY = STATUS_BAR_ID;
-    update.m_extraText = g_text;
-    broadcastMessage(update);
-    drawWindow(1, STATUS_BAR_BORDER_ID, STATUS_BAR_ID);
+    heroMessageUpdate(g_text);
 }
 
 #if 0  // @carcass
@@ -3356,7 +3381,7 @@ void handleBackpackClick(long code, unsigned char right_mouse)
 // is `ret 4` returning 2 and it fills the pointed-to message with
 // {0x200, 10, 10}, matching `int ExitDialog(message*)`.
 // Retail emits it AFTER the two description bodies, where the DC source
-// has it before ShowWidgets; ShowWidgets itself has no retail row.
+// has it before the console-only ShowWidgets page switch (reviewed below).
 VA(0x004dd2a0, 0x2C)  // anchor-vtable (slot 14 of 0x63eae8), dc 0xcebe0
 int THeroScreenWindow::exitDialog(message& msg)
 {
@@ -3886,7 +3911,7 @@ int THeroScreenWindow::windowHandler(message& msg)
         case WIDGET_8B_ID:
             if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                 break;
-            strcpy(g_text, g_heroSpecificAbilities[g_currentHero->m_id].m_longText);
+            strcpy(g_text, g_currentHero->getSpecificAbilityText());
             normalDialog(g_text,
                          rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                      : hero::PRIMARY_STAT_DIALOG_TYPE,
@@ -3937,19 +3962,7 @@ int THeroScreenWindow::windowHandler(message& msg)
                     && g_heroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
                     if (g_currentHero->m_army.m_armies[slot] != CREATURE_NONE) {
                         g_heroScreenArmySlot = slot;
-                        g_currentHero->updateArmies();
-                        if (g_heroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
-                            g_windowManager->broadcastMessage(
-                                MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                                MIXED_ARMY_ID,
-                                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                        } else {
-                            g_windowManager->broadcastMessage(
-                                MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
-                                MIXED_ARMY_ID,
-                                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                        }
-                        g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
+                        g_currentHero->heroScreenUpdate();
                     }
                 } else if (rightMouse
                                ? g_currentHero->m_army.m_armies[slot]
@@ -3969,19 +3982,7 @@ int THeroScreenWindow::windowHandler(message& msg)
                 } else if (!rightMouse && g_unnamed6aa9d8) {
                     if (g_currentHero->m_army.m_armies[slot] != CREATURE_NONE) {
                         g_heroScreenArmySlot = slot;
-                        g_currentHero->updateArmies();
-                        if (g_heroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
-                            g_windowManager->broadcastMessage(
-                                MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                                MIXED_ARMY_ID,
-                                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                        } else {
-                            g_windowManager->broadcastMessage(
-                                MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
-                                MIXED_ARMY_ID,
-                                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                        }
-                        g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
+                        g_currentHero->heroScreenUpdate();
                     }
                 } else if (!rightMouse) {
                     if ((g_heroScreenArmyStripLive
@@ -4007,19 +4008,7 @@ int THeroScreenWindow::windowHandler(message& msg)
                                                  g_heroScreenArmySlot);
                     }
                     g_heroScreenArmySlot = HERO_SCREEN_NO_ARMY_SLOT;
-                    g_currentHero->updateArmies();
-                    if (g_heroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
-                        g_windowManager->broadcastMessage(
-                            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                            MIXED_ARMY_ID,
-                            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                    } else {
-                        g_windowManager->broadcastMessage(
-                            MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
-                            MIXED_ARMY_ID,
-                            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                    }
-                    g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
+                    g_currentHero->heroScreenUpdate();
                 }
                 if (!rightMouse) {
                     g_windowManager->m_lastHover = -1;
@@ -4152,6 +4141,18 @@ int THeroScreenWindow::windowHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
+// Dreamcast ShowWidgets (hero.cpp:3239, dc 0xcec1c) switches the two
+// hero pages using advManager::infoScreen at +0x39: background ids 0/1
+// alternate and whole army/artifact/skill widget groups hide or show.
+// Complete builds one 672x586 page below, with id0 as its sole background
+// and id1 as the hero's name. Its adventure manager drops infoScreen;
+// +0x38 is now the network-handler pointer, followed by FPS/debug bytes.
+// Dreamcast show_skills (hero.cpp:3421, dc 0xcf3ac) uses that manager's
+// scroll_offset+0x3c, clamps it to 0..2 and enables arrow widgets 141/142.
+// It displays four skills from index 2*scroll_offset in two rows. Complete
+// instead creates eight skill icon/name/mastery triples in four rows here;
+// setupHeroView (0x4e1a50) fills all eight without moving their positions.
+// Complete has no skill-scroll arrows or adventure-manager scroll_offset.
 VA(0x004de710, 0x2C52)  // dc 0xd0184
 THeroScreenWindow::THeroScreenWindow()
     : CAdvPopup(0x40, 7, 0x2a0, 0x24a, 0x12)
@@ -5260,9 +5261,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
 VA(0x004e2840, 0x1B5)  // retail-only, hero member, ret 8; size absorbs the
 unsigned char hero::heroFn004E2840(long artifact, long slot)
 {
-    const std::bitset<19>& allowable =
-        g_artifactSlotMasks[g_artifactTraits[artifact].m_allowableSlotMask];
-    if (!allowable.test(slot))
+    if (!artifactAllowedInSlot(TArtifact(artifact), TArtifactSlot(slot)))
         return 0;
 
     if (m_equipped[slot].m_artifactId == ARTIFACT_NONE)
@@ -5560,16 +5559,17 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
     return 1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:5064
-DC_ONLY(0xd3e40, 0x46)
-int hero::GiveRandomArtifact()
+// Original: hero::GiveRandomArtifact; hero.cpp:5064, dc 0xd3e40
+int hero::giveRandomArtifact()
 {
-    // @stub
+    type_artifact artifact;
+    artifact.m_artifactId = g_game->getRandomArtifactId(14);
+    if (artifact.m_artifactId == ARTIFACT_NONE)
+        giveResource(GOLD, 1000);
+    else
+        giveArtifact(&artifact, 1, 1);
+    return artifact.m_artifactId;
 }
-
-#endif  // @carcass
 
 VA(0x004e33b0, 0x24A)  // dc 0xd3e88
 int hero::giveExperience(int howMuch, int checkForLevelUp,
@@ -5968,16 +5968,18 @@ long hero::getNavigationFactor() const
     return movement;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:5758
-DC_ONLY(0xd4a40, 0x48)
-float hero::GetSorceryFactor()
+// Original: hero::GetSorceryFactor; hero.cpp:5758, dc 0xd4a40
+float hero::getSorceryFactor() const
 {
-    // @stub
+    float factor = g_sorceryFactors[m_skillLevel[eSecSkillSorcery]];
+    if (m_skillLevel[eSecSkillSorcery] > 0) {
+        const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
+        if (ability.m_type == eHeroAbilitySecondarySkill
+            && ability.m_skill == eSecSkillSorcery)
+            factor = (m_level * 0.05f + 1.0f) * factor;
+    }
+    return factor + 1.0f;
 }
-
-#endif  // @carcass
 
 VA(0x004e48b0, 0x66)  // dc 0xd4a88
 float hero::getIntelligenceFactor() const
@@ -6360,14 +6362,7 @@ long hero::modifySpellDamage(SpellID spell, int damage,
         || ((school & eSchoolFire) && isWieldingArtifact(ARTIFACT_ORB_OF_TEMPESTUOUS_FIRE))
         || ((school & eSchoolWater) && isWieldingArtifact(ARTIFACT_ORB_OF_DRIVING_RAIN)))
         value = value * 1.5f;
-    float factor = g_sorceryFactors[m_skillLevel[eSecSkillSorcery]];
-    if (m_skillLevel[eSecSkillSorcery] > 0) {
-        const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
-        if (ability.m_type == eHeroAbilitySecondarySkill
-            && ability.m_skill == eSecSkillSorcery)
-            factor = (m_level * 0.05f + 1.0f) * factor;
-    }
-    value = (factor + 1.0f) * value;
+    value = getSorceryFactor() * value;
     if (targetArmy)
         value = static_cast<float>(
                     getHeroSpellBonus(spell, targetArmy->m_monInfo.m_level,
@@ -6598,6 +6593,27 @@ void hero::heroFn004E6120(int creatureType,
     traits->m_hitPoints += getHitPointBonus(creatureType);
 }
 
+// Original: hero::reset_artifacts; hero.cpp:6493, dc 0xd5800
+void hero::resetArtifacts()
+{
+    type_artifact artifact;
+    // Complete adds the nineteenth equipped slot; use the owning array's
+    // extent while preserving DC's spellbook/catapult exceptions.
+    int slot;
+    for (slot = 0; slot < sizeof(m_equipped) / sizeof(m_equipped[0]); ++slot) {
+        artifact = m_equipped[slot];
+        if (artifact.m_artifactId != ARTIFACT_NONE
+            && artifact.m_artifactId != ARTIFACT_SPELLBOOK
+            && artifact.m_artifactId != ARTIFACT_CATAPULT)
+            removeArtifact(slot);
+    }
+    for (slot = HERO_BACKPACK_CAPACITY - 1; slot >= 0; --slot) {
+        artifact = m_backpack[slot];
+        if (artifact.m_artifactId != ARTIFACT_NONE)
+            removeBackpackArtifact(static_cast<short>(slot));
+    }
+}
+
 #if 0  // @carcass
 
 VA_COMPGEN(0x004e64c0, 0x1B, BITSET_ANY, Bitset144)
@@ -6635,12 +6651,10 @@ std::bitset<70>& std::bitset<70>::set(size_t _P, bool _X)
 VA(0x004e6750, 0x21)  // anchor-caller + reference ABI/body, dc 0x20d2c
 inline const int& tLimit(const int& minimum, const int& value, const int& maximum);
 
-// E:\gamedcs\hero.cpp:6493
-DC_ONLY(0xd5800, 0xCC)
-void hero::reset_artifacts()
-{
-    // @stub
-}
+
+
+
+
 
 // E:\gamedcs\hero.cpp:1226
 DC_ONLY(0xd59b8, 0x18)
