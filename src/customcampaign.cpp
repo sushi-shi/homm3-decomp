@@ -1248,7 +1248,9 @@ void hero::clearSpells()
 // Complete-only campaign carry-over expansion. Dreamcast's campaign path has
 // no counterpart, but its debug types still corroborate hero, army and
 // artifact source boundaries. Retail independently proves the ScenarioStruct
-// receiver (+0x44..+0xa4), HeroPlaceholderData argument, and source hero.
+// receiver (+0x44..+0xa4), HeroPlaceholderData argument, and source hero. Its
+// code also proves the pointer-end artifact fill, custom-name flag order,
+// guarded west-adjacent TOWN test, and the final hero-id value lifetime.
 VA(0x00486590, 0xA84)  // two calls from ScenarioStruct's 0x487290 map setup
 void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     HeroPlaceholderData* placeholder, hero* sourceHero)
@@ -1276,8 +1278,9 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
 
     if (m_retainPskills) {
         type_artifact savedArtifacts[g_crossoverPrimaryArtifactSlots];
-        for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot)
-            savedArtifacts[slot] = type_artifact();
+        std::fill(savedArtifacts,
+                  savedArtifacts + g_crossoverPrimaryArtifactSlots,
+                  type_artifact());
 
         for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
             type_artifact artifact = currentHero->getArtifact(TArtifactSlot(slot));
@@ -1423,8 +1426,8 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
 
     currentHero->m_sex = sourceHero->m_sex;
     if (sourceHero->m_hasCustomName) {
-        currentHero->m_customName = sourceHero->heroFn004D8FB0();
         currentHero->m_hasCustomName = 1;
+        currentHero->m_customName = sourceHero->heroFn004D8FB0();
     }
 
     currentHero->m_mana = static_cast<short>(currentHero->getMaxMana());
@@ -1433,9 +1436,11 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
 
     type_point heroLocation(currentHero->m_x, currentHero->m_y, currentHero->m_z);
     --heroLocation.m_x;
-    NewmapCell* cell = g_game->m_worldMap.cell(heroLocation);
-    if (cell->m_type == PRISON && cell->m_isTrigger)
-        --currentHero->m_x;
+    if (heroLocation.m_x >= 0) {
+        NewmapCell* cell = g_game->m_worldMap.cell(heroLocation);
+        if (cell->m_type == TOWN && cell->m_isTrigger)
+            --currentHero->m_x;
+    }
 
     g_game->m_players[currentHero->m_owner].m_heroes[
         g_game->m_players[currentHero->m_owner].m_numHeroes] = currentHero->m_id;
@@ -1445,7 +1450,8 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     g_game->m_heroPoolMap[currentHero->m_id].set(currentHero->m_owner);
     g_game->setVisibility(currentHero->m_x, currentHero->m_y, currentHero->m_z,
                           currentHero->m_owner, currentHero->getVisibility(), 1);
-    g_game->m_campaign.m_assignedCarryover.push_back(currentHero->m_id);
+    int heroId = currentHero->m_id;
+    g_game->m_campaign.m_assignedCarryover.push_back(heroId);
 }
 
 // Complete-only, and the sibling of InitializeCrossoverHero above: the map
