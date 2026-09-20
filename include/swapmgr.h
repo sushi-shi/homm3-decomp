@@ -268,6 +268,7 @@ public:
     inline bool isLeftHero();
     inline unsigned char isRightHero();
     inline hero* getOtherHero();
+    hero* getOurHero();
     void drawSelector();
     void sendHeroUpdate();
     int exitSwapManager(message& msg);

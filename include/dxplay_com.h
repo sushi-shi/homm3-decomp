@@ -68,6 +68,11 @@
 #define DPERR_NOTLOGGEDIN HOMM3_MAKE_DPLAY_ERROR(2070)
 #define DPERR_LOGONDENIED HOMM3_MAKE_DPLAY_ERROR(2080)
 
+// DPLobby message flags, preserved at the SDK boundary. DC Send/Receive
+// lobby-message bodies independently fix STANDARD=2 and SYSTEM=1.
+#define DPLMSG_SYSTEM 1
+#define DPLMSG_STANDARD 2
+
 // DirectPlay system-message discriminants. ReceiveSystemMsg reads dwType off the
 // leading DPMSG_GENERIC and dispatches to the matching SysMsg* handler.
 enum EDPlaySysMsgType {

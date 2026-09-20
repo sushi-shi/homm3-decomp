@@ -63,6 +63,8 @@ inline unsigned char File::exists(const char* filename)
     return _access(filename, 0) == 0;
 }
 
+// Original: File::Delete; winfile.cpp:77, dc 0x1984f0.
+// The semantic suffix avoids the C++ keyword delete after case normalization.
 VA(0x005ffb90, 0x24)  // dc 0x1984f0
 unsigned char File::deleteFile(const char* filename)
 {

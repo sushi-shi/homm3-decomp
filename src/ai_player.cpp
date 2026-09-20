@@ -54,6 +54,21 @@ const unsigned int g_ctaShooter = 0x4;
 // address, count and 16-byte stride to the vector-constructor iterator.
 DATA(0x00692e18)
 std::vector<type_artifact_effect*> g_constArtifactEffects[144];
+// DC source63 has the global initializer's generated call to its ordinary
+// constructor (0x37bbc). Retail startup entry0x428070 expands that body.
+class type_AI_initializer {
+public:
+    type_AI_initializer();
+};
+static type_AI_initializer g_aiInitializer;
+
+// Retail startup0x428070 clears 232 one-byte flags and232 long values.
+// Original visibility-array spelling: AI_event_visibility_values.
+DATA(0x00693718)
+unsigned char g_unnamed693718[232];
+DATA(0x006925ac)
+long g_aiEventVisibilityValues[232];
+
 // Retail and Dreamcast both make this an 8-byte strategy object: a
 // three-slot vptr followed by the current player id. start_turn inlines
 // both constructors and calls check_towns on one base and one derived
@@ -195,12 +210,6 @@ void type_town_threat_checker::markTowns(hero* enemy_hero, searchArray* search_a
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:179
-DC_ONLY(0x2dfa0, 0x4)
-unsigned char type_town_threat_checker::isMarked(const town* our_town)
-{
-    // @stub
-}
 
 // E:\gamedcs\ai_player.cpp:186
 DC_ONLY(0x2dfa4, 0x12)
@@ -216,19 +225,7 @@ void type_garrison_purchaser::type_garrison_purchaser(long new_player)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:202
-DC_ONLY(0x2dfec, 0x4)
-void type_garrison_purchaser::clearMarks()
-{
-    // @stub
-}
 
-// E:\gamedcs\ai_player.cpp:209
-DC_ONLY(0x2dff0, 0x4)
-unsigned char type_garrison_purchaser::isMarked(const town* our_town)
-{
-    // @stub
-}
 
 // E:\gamedcs\ai_player.cpp:217
 DC_ONLY(0x2dff4, 0xA0)
@@ -237,14 +234,16 @@ void type_garrison_purchaser::markTown(town* our_town)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:230
-DC_ONLY(0x2e094, 0xC8)
-long type_AI_player::getResourceValue(int* resources)
-{
-    // @stub
-}
 
 #endif  // @carcass
+
+// Original: type_town_threat_checker::is_marked; ai_player.cpp:179, dc 0x2dfa0.
+// Retail vtable0x63b670 slot1 points to the folded xor-al/ret4 body
+// 0x5543f0; DC independently returns false at source180.
+unsigned char type_town_threat_checker::isMarked(const town* ourTown) const
+{
+    return 0;
+}
 
 VA(0x00428570, 0x0D)  // dc 0x2dfa4
 void type_town_threat_checker::markTown(town* ourTown) const
@@ -261,6 +260,19 @@ public:
     virtual void markTown(town* ourTown) const;
 };
 
+// Original: type_garrison_purchaser::clear_marks; ai_player.cpp:202, dc 0x2dfec.
+// Retail vtable0x63b67c slot0 is the shared empty return0x5bc690.
+void type_garrison_purchaser::clearMarks() const
+{
+}
+
+// Original: type_garrison_purchaser::is_marked; ai_player.cpp:209, dc 0x2dff0.
+// Retail vtable0x63b67c slot1 shares the false/ret4 body0x5543f0.
+unsigned char type_garrison_purchaser::isMarked(const town* ourTown) const
+{
+    return 0;
+}
+
 VA(0x00428580, 0x121)  // dc 0x2dff4
 void type_garrison_purchaser::markTown(town* ourTown) const
 {
@@ -273,6 +285,18 @@ void type_garrison_purchaser::markTown(town* ourTown) const
 }
 
 VA_COMPGEN(0x004286e0, 0x26, IMPLICIT_DTOR, type_AI_creature_purchaser)
+
+// Original: type_AI_player::get_resource_value; ai_player.cpp:230, dc 0x2e094.
+// DC235/236 sums seven resources with conversion back to long each turn;
+// GetTotalValue calls it at DC1359. Retail0x42a150 expands this loop.
+long type_AI_player::getResourceValue(int* resources) const
+{
+    long value = 0;
+    for (int resource = 0; resource < 7; ++resource)
+        value = static_cast<long>(
+            value + resources[resource] * m_resourceValue[resource]);
+    return value;
+}
 
 VA(0x00428710, 0x2D)  // dc 0x2e15c
 float type_AI_player::getAttackBonus(short player)
@@ -903,10 +927,7 @@ long type_AI_player::getTotalValue(long basicValue, int* cost)
             return -1;
     }
 
-    long totalCost = 0;
-    for (int resource = 0; resource < 7; resource++)
-        totalCost = static_cast<long>(
-            totalCost + cost[resource] * m_resourceValue[resource]);
+    long totalCost = getResourceValue(cost);
     return basicValue * 1000 / totalCost;
 }
 
@@ -1801,12 +1822,6 @@ void type_AI_player::buyMageGuild(hero* currentHero, town* currentTown)
 
 #if 0  // @carcass
 
-// E:\gamedcs\ai_player.cpp:2022
-DC_ONLY(0x31514, 0xA8)
-void move_creatures(armyGroup* army, TCreatureType type, short amount)
-{
-    // @stub
-}
 
 // E:\gamedcs\ai_player.cpp:2061
 DC_ONLY(0x315bc, 0x1A)
@@ -1939,12 +1954,6 @@ void aiArrangeArmy(armyGroup& current_army)
 
 // split_armies (dc 0x32670) is claimed in retail-RVA order below.
 
-// E:\gamedcs\ai_player.cpp:2952
-DC_ONLY(0x3285c, 0x36)
-void AI_arrange_army_for_combat(hero* current_hero, const hero* enemy_hero, const armyGroup* enemy)
-{
-    // @stub
-}
 
 // mark_danger_zones (dc 0x32894) is claimed in retail-RVA order below.
 
@@ -1995,12 +2004,6 @@ int aiChooseDestination(hero* current_hero, long max_distance, HeroDestination* 
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:3813
-DC_ONLY(0x34164, 0x90)
-void considerHidingMouse(hero* current_hero, int direction)
-{
-    // @stub
-}
 
 // E:\gamedcs\ai_player.cpp:3832
 DC_ONLY(0x341f4, 0x1CE)
@@ -2264,12 +2267,6 @@ void aiSwapArtifacts(hero* source, hero* dest)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:6012
-DC_ONLY(0x37bbc, 0x7A)
-void type_AI_initializer::type_AI_initializer()
-{
-    // @stub
-}
 
 // E:\gamedcs\ai_player.cpp:6096
 DC_ONLY(0x37c38, 0x36)
@@ -2285,7 +2282,54 @@ void aiShutDown()
     // @stub
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #endif  // @carcass
+
+// Original: move_creatures; ai_player.cpp:2022, dc 0x31514.
+// AddCreatures calls this static ordinary helper at DC2086. Retail
+// 0x42c130 expands its add-or-replace search before dismissing the old slot.
+static void moveCreatures(armyGroup* army, TCreatureType type, short amount)
+{
+    if (!army)
+        return;
+    if (army->add(type, amount, -1))
+        return;
+    long weakestValue = -g_creatureTypeTraits[type].m_aiValue * amount;
+    short weakestSlot = -1;
+    for (short candidate = 0;
+         candidate < armyGroup::ARMY_GROUP_SLOT_COUNT; ++candidate) {
+        long value = -g_creatureTypeTraits[army->m_armyTypes[candidate]].m_aiValue
+            * army->m_numTroops[candidate];
+        if (value > weakestValue) {
+            weakestValue = value;
+            weakestSlot = candidate;
+        }
+    }
+    if (weakestSlot < 0)
+        return;
+    army->dismiss(weakestSlot);
+    army->add(type, amount, weakestSlot);
+}
 
 VA(0x0042c040, 0x15)  // dc 0x315bc
 type_AI_creature_swapper::type_AI_creature_swapper()
@@ -2336,27 +2380,7 @@ void type_AI_creature_swapper::addCreatures(
             * static_cast<short>(m_army->m_numTroops[slot]);
         short oldAmount = m_army->m_numTroops[slot];
 
-        armyGroup* destination = m_adjacentArmy;
-        if (destination && !destination->add(oldType, oldAmount, -1)) {
-            long weakestValue = -g_creatureTypeTraits[oldType].m_aiValue
-                * oldAmount;
-            short weakestSlot = -1;
-            for (short candidate = 0;
-                 candidate < armyGroup::ARMY_GROUP_SLOT_COUNT;
-                 ++candidate) {
-                long value = -g_creatureTypeTraits[
-                    destination->m_armyTypes[candidate]].m_aiValue
-                    * destination->m_numTroops[candidate];
-                if (value > weakestValue) {
-                    weakestValue = value;
-                    weakestSlot = candidate;
-                }
-            }
-            if (weakestSlot >= 0) {
-                destination->dismiss(weakestSlot);
-                destination->add(oldType, oldAmount, weakestSlot);
-            }
-        }
+        moveCreatures(m_adjacentArmy, oldType, oldAmount);
         m_army->dismiss(slot);
     }
     m_army->add(type, amount, slot);
@@ -3009,127 +3033,112 @@ void aiArrangeArmy(armyGroup& currentArmy)
 long splitArmy(armyGroup* currentArmy, short index, short limit,
                 short openSlots);
 
-// E:\gamedcs\ai_player.cpp:2817
-// Dreamcast proves the const armyGroup& enemy parameter, armyGroup&
-// current_army local, and long walker_count local. Retail's consolidation
-// prefix is the ordinary aiConsolidateArmy body expanded at this call site;
-// the canonical helper naturally inlines here, so no copied merge loop is
-// needed. Its retained body and other callers keep their own decisions.
-// The enemy counters precede the combat-value calls in DC lines 2832-2846
-// and retail. The first split loop exits immediately when no slots remain.
-// Recovering that order and exit reaches 86.50% from the old 83.62%.
-
-// Retail adds army arrangement to DC's early exits, sharing one exit block
-// for the guards and retaining a separate ordinary completion call. A scoped
-// do/while(0) calculation removes all six gotos and improves 97.7143% to
-// 98.8238%. Each split loop breaks on exhausted slots, then propagates that
-// real result to the enclosing calculation. Keeping the ordinary completion
-// call separate preserves retail's two arrangement paths.
-// Negative controls: one unconditional arrangement after the calculation
-// scores 94.3714%; nested positive guards remove four gotos but stay at
-// 97.7143%. Per-guard arrange/return copies previously scored 76.55%.
-// Residual: consolidation reload scheduling and final split-loop homing;
-// keep the canonical aiConsolidateArmy boundary and reference local.
-VA(0x0042db20, 0x249)  // retail callee set + arity, dc 0x32670
-void splitArmies(hero* currentHero, const hero* enemyHero,
-                  const armyGroup& enemy)
+// Original: split_armies; ai_player.cpp:2817, dc 0x32670.
+// This static ordinary helper owns only splitting and its early returns.
+// DC2820 binds current_army;2823 counts free slots;2880/2939 return when
+// the split loops exhaust those slots. Consolidation and final arrangement
+// belong to AI_arrange_army_for_combat below, whose retail body expands us.
+static void splitArmies(hero* currentHero, const hero* enemyHero,
+                        const armyGroup& enemy)
 {
     armyGroup& currentArmy = currentHero->m_army;
-    aiConsolidateArmy(currentArmy);
-
-    do {
-        int openSlots = 7 - currentArmy.getNumArmies();
-        if (openSlots <= 0) {
-            break;
-        }
-        int enemyShooterCount = 0;
-        int enemyShooterValue = 0;
-        int enemyMaxValue = 0;
-        float ratio;
-        if (enemyHero == 0)
-            ratio = 1.0f;
-        else
-            ratio = const_cast<hero*>(enemyHero)
-                        ->getCombatValueModifier();
-        ratio /= currentHero->getCombatValueModifier();
-
-        int k;
-        for (k = 0; k < 7; ++k) {
-            TCreatureType type = enemy.m_armyTypes[k];
-            if (type == CREATURE_NONE)
-                continue;
-            long value = static_cast<long>(
-                enemy.m_numTroops[k] * g_creatureTypeTraits[type].m_aiValue
-                * ratio);
-            if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter) {
-                ++enemyShooterCount;
-                enemyShooterValue += value;
-            }
-            if (value > enemyMaxValue)
-                enemyMaxValue = value;
-        }
-
-        int slot;
-        for (slot = 0; slot < 7; ++slot) {
-            TCreatureType type = currentArmy.m_armyTypes[slot];
-            if (type != CREATURE_NONE
-                && (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)) {
-                openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue * 5,
-                                         openSlots);
-                if (openSlots == 0) {
-                    break;
-                }
-            }
-        }
-
-        if (openSlots == 0)
-            break;
-        if (enemyShooterCount == 0) {
-            break;
-        }
-        long heroShooterValue = 0;
-        long walkerCount = 0;
-        int m;
-        for (m = 0; m < 7; ++m) {
-            TCreatureType type = currentArmy.m_armyTypes[m];
-            if (type == CREATURE_NONE)
-                continue;
-            if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
-                heroShooterValue += currentArmy.m_numTroops[m]
-                    * g_creatureTypeTraits[type].m_aiValue;
-            else
-                ++walkerCount;
-        }
-
-        if (heroShooterValue >= enemyShooterValue) {
-            break;
-        }
-        int splitsNeeded = (enemyShooterCount
-            - heroShooterValue * enemyShooterCount
-                / enemyShooterValue
-            + 1) / 2 - walkerCount;
-        if (splitsNeeded <= 0) {
-            break;
-        }
-        if (splitsNeeded < openSlots)
-            openSlots = splitsNeeded;
-        for (slot = 0; slot < 7; ++slot) {
-            TCreatureType type = currentArmy.m_armyTypes[slot];
-            if (type == CREATURE_NONE)
-                continue;
-            if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
-                continue;
-            openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue,
-                                   openSlots);
-            if (openSlots == 0)
-                break;
-        }
-        if (openSlots == 0)
-            break;
-        aiArrangeArmy(currentArmy);
+    int openSlots = 7 - currentArmy.getNumArmies();
+    if (openSlots <= 0) {
         return;
-    } while (0);
-    aiArrangeArmy(currentArmy);
+    }
+    int enemyShooterCount = 0;
+    int enemyShooterValue = 0;
+    int enemyMaxValue = 0;
+    float ratio;
+    if (enemyHero == 0)
+        ratio = 1.0f;
+    else
+        ratio = const_cast<hero*>(enemyHero)
+                    ->getCombatValueModifier();
+    ratio /= currentHero->getCombatValueModifier();
+
+    int k;
+    for (k = 0; k < 7; ++k) {
+        TCreatureType type = enemy.m_armyTypes[k];
+        if (type == CREATURE_NONE)
+            continue;
+        long value = static_cast<long>(
+            enemy.m_numTroops[k] * g_creatureTypeTraits[type].m_aiValue
+            * ratio);
+        if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter) {
+            ++enemyShooterCount;
+            enemyShooterValue += value;
+        }
+        if (value > enemyMaxValue)
+            enemyMaxValue = value;
+    }
+
+    int slot;
+    for (slot = 0; slot < 7; ++slot) {
+        TCreatureType type = currentArmy.m_armyTypes[slot];
+        if (type != CREATURE_NONE
+            && (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)) {
+            openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue * 5,
+                                     openSlots);
+            if (openSlots == 0) {
+                return;
+            }
+        }
+    }
+
+    if (enemyShooterCount == 0) {
+        return;
+    }
+    long heroShooterValue = 0;
+    long walkerCount = 0;
+    int m;
+    for (m = 0; m < 7; ++m) {
+        TCreatureType type = currentArmy.m_armyTypes[m];
+        if (type == CREATURE_NONE)
+            continue;
+        if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
+            heroShooterValue += currentArmy.m_numTroops[m]
+                * g_creatureTypeTraits[type].m_aiValue;
+        else
+            ++walkerCount;
+    }
+
+    if (heroShooterValue >= enemyShooterValue) {
+        return;
+    }
+    int splitsNeeded = (enemyShooterCount
+        - heroShooterValue * enemyShooterCount
+            / enemyShooterValue
+        + 1) / 2 - walkerCount;
+    if (splitsNeeded <= 0) {
+        return;
+    }
+    if (splitsNeeded < openSlots)
+        openSlots = splitsNeeded;
+    for (slot = 0; slot < 7; ++slot) {
+        TCreatureType type = currentArmy.m_armyTypes[slot];
+        if (type == CREATURE_NONE)
+            continue;
+        if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
+            continue;
+        openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue,
+                               openSlots);
+        if (openSlots == 0)
+            return;
+    }
+}
+
+// Original: AI_arrange_army_for_combat; ai_player.cpp:2952, dc 0x3285c.
+// DC2953..2955 calls consolidate, split_armies and arrange in this order.
+// Retail0x42db20 contains the first two expansions and final arrange calls;
+// events::DoCombat calls this wrapper, not its static splitting helper.
+VA(0x0042db20, 0x249)  // anchor-events DoCombat + canonical wrapper call sequence
+void aiArrangeArmyForCombat(hero* currentHero, const hero* enemyHero,
+                           const armyGroup& enemy)
+{
+    aiConsolidateArmy(currentHero->m_army);
+    splitArmies(currentHero, enemyHero, enemy);
+    aiArrangeArmy(currentHero->m_army);
 }
 
 VA(0x0042dd70, 0xdc)  // dc 0x325bc
@@ -3918,6 +3927,21 @@ static unsigned char attemptTeleport(hero* currentHero,
                                       std::vector<pathCell>& path,
                                       long step);
 
+// Original: ConsiderHidingMouse; ai_player.cpp:3813, dc 0x34164.
+// DC3815 calls IsVis/GetMoveShowIt;3819..3822 saves, enables, hides and
+// restores the drawing flag. AttemptStep calls this ordinary static helper
+// at DC3838; retail0x42fc50 expands it before reading the path-cell point.
+static void considerHidingMouse(hero* currentHero, int direction)
+{
+    if (g_mouseManager->isVis()
+        && g_advManager->considerHidingMouse(currentHero, direction)) {
+        int saveDraw = g_completeDrawEnabled;
+        g_completeDrawEnabled = 1;
+        g_mouseManager->hidePointer();
+        g_completeDrawEnabled = saveDraw;
+    }
+}
+
 // E:\gamedcs\ai_player.cpp:3832
 VA(0x0042fc50, 0x285)  // dc 0x341f4
 unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
@@ -3925,13 +3949,7 @@ unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
 {
     type_point triggerPoint;
     int direction = currentPathCell->m_direction;
-    if (g_mouseManager->m_hideCount == 0
-        && g_advManager->considerHidingMouse(currentHero, direction)) {
-        int saveDraw = g_completeDrawEnabled;
-        g_completeDrawEnabled = 1;
-        g_mouseManager->hidePointer();
-        g_completeDrawEnabled = saveDraw;
-    }
+    considerHidingMouse(currentHero, direction);
 
     triggerPoint = currentPathCell->m_point;
     NewmapCell* cell = g_game->getCell(triggerPoint);
@@ -5725,6 +5743,48 @@ inline type_statue_of_legion_artifact::type_statue_of_legion_artifact()
 }
 
 static void initializeArtifactEffects();
+
+// Original: type_AI_initializer::type_AI_initializer; ai_player.cpp:6012, dc 0x37bbc.
+// DC6014/6034/6039/6087..6090 and retail startup0x428070 prove the two
+// zero-fills and sentinel-table loops. Table contents come from the pinned
+// retail .data allocations0x660540/0x6605d8; bounds232 are the retail clear
+// extents. The one-use loop marks successive indices, as both images do.
+// The startup dispatcher is already admitted as cinit79; this constructor
+// has no separately claimed retained retail body.
+type_AI_initializer::type_AI_initializer()
+{
+    // Original: const_one_use_events.
+    static const int g_constOneUseEvents[] = {
+        5, 6, 9, 10, 12, 13, 16, 22, 24, 29, 37, 39,
+        42, 48, 53, 54, 55, 57, 58, 59, 60, 62, 63, 79,
+        80, 81, 82, 84, 85, 86, 93, 99, 101, 105, 108, 109,
+        112, 0
+    };
+    // Original: const_visibility_values; alternating event/value pairs.
+    static const int g_constVisibilityValues[] = {
+        2, 1, 4, 100, 5, 200, 6, 400, 8, 100, 10, 500,
+        11, 1, 12, 10, 13, 1000, 14, 1, 15, 1, 16, 10,
+        17, 10, 20, 10, 22, 1, 23, 100, 24, 10, 25, 10,
+        28, 1, 29, 5, 30, 1, 31, 1, 32, 100, 35, 1,
+        36, 1000, 37, 200, 38, 1, 39, 1, 41, 400, 42, 10,
+        43, 50, 45, 100, 47, 50, 48, 10, 49, 10, 51, 100,
+        52, 1, 53, 20, 55, 10, 56, 1, 57, 10, 58, 100,
+        60, 100, 61, 100, 62, 200, 63, 10, 64, 1, 78, 10,
+        79, 10, 81, 20, 82, 10, 83, 10, 84, 10, 85, 10,
+        86, 10, 88, 10, 89, 10, 90, 10, 93, 10, 94, 10,
+        96, 1, 98, 200, 100, 50, 101, 20, 102, 100, 104, 50,
+        105, 1, 106, 1, 107, 50, 108, 10, 109, 10, 110, 1,
+        111, 50, 112, 10, 113, 50, 0
+    };
+    memset(g_unnamed693718, 0, sizeof(g_unnamed693718));
+    for (int event = 0; g_constOneUseEvents[event]; ++event)
+        g_unnamed693718[event] = 1;
+    memset(g_aiEventVisibilityValues, 0, sizeof(g_aiEventVisibilityValues));
+    for (int i = 0; g_constVisibilityValues[i]; ++i) {
+        int event = g_constVisibilityValues[i++];
+        g_aiEventVisibilityValues[event] = g_constVisibilityValues[i];
+    }
+}
 
 VA(0x004340e0, 0x20)  // dc 0x37c38
 void aiInitialize()

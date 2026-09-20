@@ -37,8 +37,11 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
                           unsigned char exploreMode);
 void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
                     long& bestRawValue, unsigned char exploreMode);
-void moveHero(hero* currentHero, unsigned char isLastHero,
-               unsigned char& exploreMode);
+static void moveHero(hero* currentHero, unsigned char isLastHero,
+                     unsigned char& exploreMode);
+static void moveHero(hero* currentHero, long* dangerZones,
+                     unsigned char isLastHero, unsigned char& exploreMode);
+static hero* determineHeroToMove(int playerId, unsigned char* isLastHero);
 long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
                                  EGameResource* bestResource);
 TCreatureType siegeArtifactToCreature(TArtifact engine);
@@ -53,7 +56,7 @@ int aiResourceCost(long playerId, const int* resources);
 long valueOfUniversity(const hero* currentHero,
                          type_university* university,
                          unsigned char mustPay);
-void buySpecialBuilding(hero* currentHero, town* currentTown);
+void buyArtifacts(hero* currentHero, town* currentTown);
 void buySiegeEngine(hero* currentHero, town* currentTown,
                       type_building_id building, TArtifact engine);
 
@@ -118,16 +121,11 @@ void checkDoMain(int forceMouseCheck, int mouseOnly)
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\philai.cpp:102
-DC_ONLY(0x10d510, 0x4)
-void ShowStatus()
+// Original: ShowStatus; philai.cpp:102, dc 0x10d510.
+// The released DC hook is an empty return; it has no standalone retail claim.
+void showStatus()
 {
-    // @stub
 }
-
-#endif  // @carcass
 
 VA(0x00524360, 0x3)  // dc 0x10d514
 philAI::philAI()
@@ -164,20 +162,21 @@ void aiVisitBlackMarket(hero* currentHero, TBlackMarket* blackMarket)
 // E:\gamedcs\philai.cpp:123
 // Complete expands both known calls; the helper boundary is retained from
 // the Dreamcast source rather than flattening the phase adjustment twice.
-__forceinline void incrementHourGlass()
+static void incrementHourGlass()
 {
     int numHeroes = g_currentPlayer->m_numHeroes;
     ++g_curHourGlassPhase;
-    if (numHeroes == philAI::ONE_ACTIVE_HERO)
-        g_curHourGlassPhase += philAI::TWO_ACTIVE_HEROES;
-    else if (numHeroes == philAI::TWO_ACTIVE_HEROES) {
-        if (g_curHourGlassPhase != philAI::ONE_ACTIVE_HERO)
-            ++g_curHourGlassPhase;
-    } else if (numHeroes == philAI::THREE_ACTIVE_HEROES) {
-        if (g_curHourGlassPhase == philAI::THIRD_HOURGLASS_PHASE
-            || g_curHourGlassPhase == philAI::SIXTH_HOURGLASS_PHASE)
-            ++g_curHourGlassPhase;
+    if (numHeroes == philAI::ONE_ACTIVE_HERO) {
+        ++g_curHourGlassPhase;
+        ++g_curHourGlassPhase;
     }
+    if (numHeroes == philAI::TWO_ACTIVE_HEROES
+        && g_curHourGlassPhase != philAI::ONE_ACTIVE_HERO)
+        ++g_curHourGlassPhase;
+    if (numHeroes == philAI::THREE_ACTIVE_HEROES
+        && (g_curHourGlassPhase == philAI::THIRD_HOURGLASS_PHASE
+            || g_curHourGlassPhase == philAI::SIXTH_HOURGLASS_PHASE))
+        ++g_curHourGlassPhase;
     if (g_curHourGlassPhase > philAI::LAST_HOURGLASS_PHASE)
         g_curHourGlassPhase = philAI::LAST_HOURGLASS_PHASE;
 }
@@ -348,6 +347,97 @@ inline long valueOfBlackMarket(const hero* currentHero,
     return value;
 }
 
+// Original: buy_special_building; philai.cpp:445, dc 0x10dcc4.
+// Complete expands this ordinary static helper in aiEnterTown, including its
+// added Conflux university branch. The retained resource-cost calls use the
+// playerData overload after resolving the hero's owner.
+static void buySpecialBuilding(const hero* currentHero, town* currentTown)
+{
+    if (currentHero->m_owner == currentTown->m_owner
+        && !g_game->townAlreadyBuiltOn(currentTown->m_id)) {
+        switch (currentTown->m_type) {
+        case TOWN_TOWER: {
+            if (!currentTown->canBuild(EXTRA_2_ID))
+                break;
+            int* cost =
+                currentTown->getBuildCostArray(EXTRA_2_ID);
+            int value = currentHero->getValueOfKnowledge();
+            int owner = currentHero->m_owner;
+            if (value > aiResourceCost(
+                    &g_game->m_players[owner], cost))
+                currentTown->buyBuilding(EXTRA_2_ID);
+            break;
+        }
+        case TOWN_INFERNO: {
+            if (!currentTown->canBuild(EXTRA_2_ID))
+                break;
+            int* cost =
+                currentTown->getBuildCostArray(EXTRA_2_ID);
+            int value = currentHero->getValueOfPower();
+            int owner = currentHero->m_owner;
+            if (value > aiResourceCost(
+                    &g_game->m_players[owner], cost))
+                currentTown->buyBuilding(EXTRA_2_ID);
+            break;
+        }
+        case TOWN_DUNGEON: {
+            if (!currentTown->canBuild(EXTRA_2_ID))
+                break;
+            int* cost =
+                currentTown->getBuildCostArray(EXTRA_2_ID);
+            int owner = currentHero->m_owner;
+            int resourceCost = aiResourceCost(
+                &g_game->m_players[owner], cost);
+            if (currentHero->m_turnExperienceToRvRatio * 1000.0f
+                > resourceCost)
+                currentTown->buyBuilding(EXTRA_2_ID);
+            break;
+        }
+        case TOWN_STRONGHOLD: {
+            if (!currentTown->canBuild(EXTRA_2_ID))
+                break;
+            int* cost =
+                currentTown->getBuildCostArray(EXTRA_2_ID);
+            long experience = hero::getExperienceIncrement(
+                currentHero->m_level);
+            int resourceCost = aiResourceCost(
+                &g_game->m_players[currentHero->m_owner], cost);
+            if (static_cast<float>(experience)
+                * currentHero->m_turnExperienceToRvRatio
+                > resourceCost)
+                currentTown->buyBuilding(EXTRA_2_ID);
+            break;
+        }
+        case TOWN_FORTRESS: {
+            if (!currentTown->canBuild(SPECIAL_BUILDING_ID))
+                break;
+            int* cost = currentTown->getBuildCostArray(
+                SPECIAL_BUILDING_ID);
+            long experience = hero::getExperienceIncrement(
+                currentHero->m_level);
+            int resourceCost = aiResourceCost(
+                &g_game->m_players[currentHero->m_owner], cost);
+            if (static_cast<float>(experience)
+                * currentHero->m_turnExperienceToRvRatio
+                > resourceCost)
+                currentTown->buyBuilding(SPECIAL_BUILDING_ID);
+            break;
+        }
+        case TOWN_CONFLUX: {
+            if (!currentTown->canBuild(EXTRA_0_ID))
+                break;
+            type_university university;
+            university.initializeMagicSkills();
+            long value = valueOfUniversity(
+                currentHero, &university, 0);
+            if (value > 0)
+                currentTown->buyBuilding(EXTRA_0_ID);
+            break;
+        }
+        }
+    }
+}
+
 static long valueOfWarFactory(const hero* currentHero,
                                  TArtifact engine, long moveCost);
 
@@ -497,20 +587,6 @@ static void clearShipyards(playerData* player)
 
 #if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
-// E:\gamedcs\philai.cpp:1239
-DC_ONLY(0x10f0d0, 0x9C)
-void move_all_heroes(long player_id, long* danger_zones)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:1529
-DC_ONLY(0x10f94c, 0x136)
-long type_spellvalue::get_summoning_value(long damage, long times_castable)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:1770
 DC_ONLY(0x110018, 0x15A)
 void philAI::getTurnAIVars(int whichPlayer)
@@ -546,6 +622,262 @@ static long getArtifactPurchaseValue(
 long valueOfEnemyTown(const hero* currentHero, const town* enemyTown,
                          short moveCost, NewmapCell* cell);
 
+// Original: move_hero; philai.cpp:934, dc 0x10e9a8.
+// DC records both helpers as file-static with explore_mode by reference.
+static void moveHero(hero* currentHero, unsigned char isLastHero,
+                     unsigned char& exploreMode)
+{
+    HeroDestination destination;
+    type_point oldTarget = currentHero->getTarget();
+    long rawValue;
+    type_point originalDestination;
+    int rv;
+
+    long maximumDistance = 32000;
+    if (currentHero->m_pathTargetX < 0)
+        currentHero->m_targetIsCritical = 0;
+    destination.m_point.m_x = -1;
+    destination.m_isNearby = 0;
+    rawValue = 0;
+
+    long maxDistance = 1000;
+    if (currentHero->m_pathTargetX >= 0) {
+        maxDistance = max(
+            currentHero->m_movePoints
+                + static_cast<unsigned short>(currentHero->m_targetDistance)
+                + 200,
+            1000);
+    }
+    if (isLastHero)
+        maxDistance = 32000;
+
+    if (currentHero->m_patrolX != hero::kPatrolNone) {
+        maximumDistance = 200
+            * (abs(currentHero->m_x - currentHero->m_patrolX)
+               + abs(currentHero->m_y - currentHero->m_patrolY)
+               + currentHero->m_patrolRadius);
+        maxDistance = min(maxDistance, maximumDistance);
+    }
+
+    for (int attempt = 0; attempt < 5; ++attempt) {
+        rv = aiChooseDestination(currentHero, maxDistance, destination,
+                                   rawValue, 1, exploreMode);
+        if (!((destination.m_point.m_x < 0
+               || (rv < 0 && !destination.m_isCritical))
+              && g_searchArray->limitWasReached()
+              && maxDistance < maximumDistance))
+            break;
+        maxDistance = min(maxDistance * 2, maximumDistance);
+    }
+
+    if (currentHero->m_maxMovePoints == currentHero->m_movePoints)
+        incrementHourGlass();
+
+    if (destination.m_point.m_x < 0) {
+        currentHero->m_pathTargetX = -1;
+        currentHero->m_pathTargetY = -1;
+        currentHero->m_isSleeping = 1;
+        return;
+    }
+
+    originalDestination = destination.m_point;
+    unsigned char destinationWasUnvisited =
+        !(getMapExtra(originalDestination.m_x, originalDestination.m_y,
+                      originalDestination.m_z)
+          & g_unnamed69ccc4);
+    int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
+                                    currentHero->m_z);
+    if (townId != -1) {
+        g_game->getTown(townId);
+        if (rv < 75
+            && g_game->m_day == philAI::AI_HERO_MOVE_SLEEP_DAY) {
+            currentHero->m_isSleeping = 1;
+            return;
+        }
+    }
+
+    g_unnamed69ccd4 = 1;
+    aiAttemptMove(currentHero, destination, rawValue, exploreMode);
+
+    if (destinationWasUnvisited && exploreMode
+        && (getMapExtra(originalDestination.m_x, originalDestination.m_y,
+                        originalDestination.m_z)
+            & g_unnamed69ccc4)) {
+        g_aiPlayers[g_netLocalGamePos].resetMagusHutValue();
+        exploreMode = 0;
+        for (int i = 0; i < g_currentPlayer->m_numHeroes; ++i)
+            g_game->getHero(g_currentPlayer->m_heroes[i])->m_isSleeping = 0;
+    }
+}
+
+// Original: MoveHero; philai.cpp:1056, dc 0x10ec58.
+// DC records this helper as file-static with explore_mode by reference.
+// Keep the canonical definitions in DC source order; the VA declarations
+// below preserve the independently proven retail order.
+static void moveHero(hero* currentHero, long* dangerZones,
+                     unsigned char isLastHero, unsigned char& exploreMode)
+{
+    unsigned char mouseWasVisible = g_mouseManager->isVis();
+    playerData* player = &g_game->m_players[currentHero->m_owner];
+
+    checkForTown(currentHero);
+    if (currentHero->m_patrolX != hero::kPatrolNone
+        && currentHero->m_patrolRadius == 0) {
+        currentHero->m_movePoints = 0;
+        return;
+    }
+    if (g_gameOver)
+        return;
+
+    g_unnamed69ccd4 = 0;
+    g_advManager->m_advWindow->animateBottomView(0);
+    if (currentHero->m_movePoints > 0) {
+        if (!g_unnamed698790 && !g_videoPaused
+            && mapExtraPosAndAdjacentsSet(
+                currentHero->m_x, currentHero->m_y, currentHero->m_z,
+                g_mapVisibilityBit))
+            g_completeDrawEnabled = 1;
+        else
+            g_completeDrawEnabled = 0;
+
+        if (g_game->getCurrHero() == currentHero) {
+            isLastHero = 0;
+        } else {
+            g_advManager->demobilizeCurrHero(0, 1);
+            g_advManager->setHeroContext(currentHero->m_id, 1, 0, 1);
+            memset(dangerZones, 0,
+                   g_game->getNumMapLevels() * g_mapWidth * g_mapHeight
+                       * sizeof(long));
+            if (g_game->m_setup.m_difficulty > 0
+                || g_game->isHumanAlly(
+                    g_game->getTeam(g_netLocalGamePos)))
+                aiMarkDangerZones(currentHero, dangerZones);
+        }
+
+        markShipyards(player);
+        g_searchArray->setDangerZones(dangerZones);
+        moveHero(currentHero, isLastHero, exploreMode);
+        g_searchArray->setDangerZones(0);
+        clearShipyards(player);
+    }
+
+    if (currentHero->m_owner >= 0
+        && (currentHero->m_movePoints <= 0 || currentHero->m_isSleeping)) {
+        int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
+                                        currentHero->m_z);
+        if (townId >= 0) {
+            town* currentTown = g_game->getTown(townId);
+            g_advManager->demobilizeCurrHero(0, 1);
+            if (currentTown->m_owner == currentHero->m_owner) {
+                if (currentTown->m_garrisonHeroId < 0) {
+                    player->addGarrisonHero(currentTown);
+                } else {
+                    hero* garrisonHero = g_game->getHero(
+                        currentTown->m_garrisonHeroId);
+                    if ((garrisonHero->m_movePoints > 0
+                         && !garrisonHero->m_isSleeping)
+                        || (static_cast<const town*>(currentTown)
+                                    ->getArmy().getCreatureTotal() > 0
+                            && static_cast<const town*>(currentTown)
+                                       ->getArmy().getAIValue()
+                                   < currentHero->m_army.getAIValue()))
+                        currentTown->swapHeroes();
+                }
+            }
+        }
+    }
+
+    restoreMouse(mouseWasVisible);
+}
+
+// Original: DetermineHeroToMove; philai.cpp:1156, dc 0x10eeb0.
+// The file-static selector precedes move_all_heroes in the DC TU. Keep its one canonical
+// body visible there: Complete's second DoAI phase expands it, while the first
+// retains the call. Its retail enrollment remains at the link-order position.
+// DC records current_hero and skill_sum at procedure scope; town ID row 1210
+// precedes GetTown and agrees with retail's char-to-short-to-int conversion.
+static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
+{
+    hero* currentHero;
+    short skillSum;
+    hero* selectedHero = 0;
+    short lowestSum = 0;
+    playerData* player = &g_game->m_players[playerId];
+    *isLastHero = 1;
+
+    for (short heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
+        short heroId = player->m_heroes[heroIndex];
+        currentHero = &g_game->m_heroes[heroId];
+        if (currentHero->m_movePoints > 0 && !currentHero->m_isSleeping) {
+            if (selectedHero)
+                *isLastHero = 0;
+            skillSum = 0;
+            for (short skill = 0; skill < 4; ++skill) {
+                short skillValue = currentHero->getPrimarySkill(skill);
+                skillSum += skillValue;
+            }
+            if (selectedHero) {
+                if (currentHero->m_patrolX != hero::kPatrolNone
+                    && selectedHero->m_patrolX == hero::kPatrolNone)
+                    continue;
+                if (!(currentHero->m_patrolX == hero::kPatrolNone
+                      && selectedHero->m_patrolX != hero::kPatrolNone)
+                    && skillSum >= lowestSum)
+                    continue;
+            }
+            // DC assigns lowest_sum at1190 before selected_hero at1193.
+            // Complete's retained selector and its DoAI expansion both
+            // store selectedHero first; reversing these two stores is the
+            // sole remaining difference in the otherwise exact candidate.
+            selectedHero = currentHero;
+            lowestSum = skillSum;
+        }
+    }
+
+    if (selectedHero)
+        return selectedHero;
+    *isLastHero = 0;
+    g_advManager->demobilizeCurrHero(0, 1);
+    player->m_currHeroId = -1;
+    if (player->m_numHeroes < playerData::HERO_SLOT_COUNT) {
+        for (short townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
+            short townId = player->m_townIds[townIndex];
+            town* currentTown = g_game->getTown(townId);
+            short garrisonHeroId = currentTown->m_garrisonHeroId;
+            if (garrisonHeroId < 0 || currentTown->m_visitingHeroId >= 0)
+                continue;
+            currentHero = g_game->getHero(garrisonHeroId);
+            int creatureCount = currentHero->m_army.getCreatureTotal();
+            if (!creatureCount)
+                continue;
+            if (!currentHero->m_movePoints || currentHero->m_isSleeping)
+                continue;
+            currentTown->removeGarrisonHero();
+            selectedHero = currentHero;
+            break;
+        }
+    }
+    return selectedHero;
+}
+
+// Original: move_all_heroes; philai.cpp:1239, dc 0x10f0d0.
+// Each phase owns its own exploration/last-hero flags. Complete expands the
+// helper twice in doAI, with separate call/expansion decisions for its nested
+// determineHeroToMove calls; keep the selector's canonical definition.
+static void moveAllHeroes(long playerId, long* dangerZones)
+{
+    unsigned char isLastHero = 0;
+    unsigned char exploreMode = 1;
+    if (!g_game->m_setup.m_difficulty || !g_currentPlayer->m_numTowns)
+        exploreMode = 0;
+    while (hero* currentHero = determineHeroToMove(playerId, &isLastHero)) {
+        moveHero(currentHero, dangerZones, isLastHero, exploreMode);
+        if (g_gameOver)
+            break;
+    }
+    g_advManager->demobilizeCurrHero(0, 1);
+}
+
 int aiResourceCost(const playerData* player, const int* resources)
 {
     int value = 0;
@@ -557,6 +889,56 @@ int aiResourceCost(const playerData* player, const int* resources)
 int aiResourceCost(long playerId, const int* resources)
 {
     return aiResourceCost(&g_game->m_players[playerId], resources);
+}
+
+// The AI's spell-appraisal curve, one 32-byte row per "times castable"
+// step.  Retail reaches all four columns off the same 32-byte stride
+// (`row << 5` plus 0x640398 / +8 / +0x10 / +0x18), so it is ONE array of
+// four-double rows, not four arrays: get_damage_spell_value walks column
+// `threshold` to pick a row and then evaluates `slope * ratio +
+// intercept` out of that same row, while both it and the summoning arm
+// of get_raw_spell_value index column `cast_curve` by the (clamped)
+// cast count.  Rows 1..12 of the slope/intercept pair are continuous at
+// their own thresholds, which is what makes this a piecewise-linear
+// curve rather than four unrelated tables.
+DATA(0x00640398)
+static const struct {
+    double m_castCurve;
+    double m_threshold;
+    double m_slope;
+    double m_intercept;
+} g_spellValueCurve[14] = {
+    { 0.0,  4.8,   0.0,   4.0   },
+    { 0.83, 1.557, 0.5,   1.6   },
+    { 1.53, 0.752, 0.987, 0.842 },
+    { 2.11, 0.433, 1.452, 0.492 },
+    { 2.59, 0.275, 1.888, 0.303 },
+    { 2.99, 0.186, 2.291, 0.192 },
+    { 3.33, 0.131, 2.657, 0.124 },
+    { 3.6,  0.095, 2.986, 0.081 },
+    { 3.84, 0.071, 3.277, 0.053 },
+    { 4.03, 0.054, 3.353, 0.035 },
+    { 4.19, 0.041, 3.755, 0.023 },
+    { 4.33, 0.032, 3.947, 0.016 },
+    { 4.44, 0.025, 4.112, 0.01  },
+    { 4.53, 0.0,   4.53,  0.0 }
+};
+
+// Original: type_spellvalue::get_summoning_value; philai.cpp:1529, dc 0x10f94c.
+// Both builds cap the damage ratio, then the cast-count curve contribution.
+// Complete expands this ordinary helper in getRawSpellValue's summoning arm.
+long type_spellvalue::getSummoningValue(long damage, long timesCastable) const
+{
+    double damageRatio = static_cast<double>(damage * 10);
+    damageRatio /= static_cast<double>(m_stackValue);
+    if (damageRatio > 0.9)
+        damageRatio = 0.9;
+    if (timesCastable >= 14)
+        timesCastable = 13;
+    double knowledgeLimit = damageRatio * g_spellValueCurve[timesCastable].m_castCurve;
+    if (knowledgeLimit > 3.9)
+        knowledgeLimit = 3.9;
+    return static_cast<long>(static_cast<double>(m_stackValue) * knowledgeLimit);
 }
 
 // E:\\gamedcs\\philai.cpp:1610. Dreamcast preserves this helper boundary,
@@ -597,6 +979,21 @@ long type_spellvalue::getValueOfIncrease(long baseValue,
     m_duration -= durationChange;
     m_mana -= manaChange;
     return increased - baseValue;
+}
+
+// Original: ComputeUpgradeValue; philai.cpp:1833, dc 0x1102e4.
+// Complete expands this ordinary static helper into valueOfStables with the
+// Cavalier/Champion pair. The existing destination stack halves the award.
+static int computeUpgradeValue(hero* currentHero, int sourceType, int destType)
+{
+    int number = currentHero->creatureTypeCount(sourceType);
+    if (number == 0)
+        return 0;
+    int value = (g_creatureTypeTraits[destType].m_aiValue
+                 - g_creatureTypeTraits[sourceType].m_aiValue) * number;
+    if (currentHero->creatureTypeCount(destType) != 0)
+        value = static_cast<int>(value * 0.5);
+    return value;
 }
 
 // E:\\gamedcs\\philai.cpp:1854. Dreamcast preserves this source-real helper
@@ -1709,103 +2106,9 @@ void aiEnterTown(hero* currentHero, town* currentTown)
         && currentHero->m_owner == currentTown->m_owner) {
         upgradeCreatures(currentHero, currentTown);
 
-        if (currentHero->m_owner == currentTown->m_owner
-            && !g_game->m_towns[currentTown->m_id].m_builtThisTurn) {
-            switch (currentTown->m_type) {
-            case TOWN_TOWER: {
-                if (!currentTown->canBuild(EXTRA_2_ID))
-                    break;
-                int* cost =
-                    currentTown->getBuildCostArray(EXTRA_2_ID);
-                int value = currentHero->getValueOfKnowledge();
-                int owner = currentHero->m_owner;
-#pragma inline_depth(0)
-                if (value > aiResourceCost(
-                        &g_game->m_players[owner], cost))
-                    currentTown->buyBuilding(EXTRA_2_ID);
-#pragma inline_depth()
-                break;
-            }
-            case TOWN_INFERNO: {
-                if (!currentTown->canBuild(EXTRA_2_ID))
-                    break;
-                int* cost =
-                    currentTown->getBuildCostArray(EXTRA_2_ID);
-                int value = currentHero->getValueOfPower();
-                int owner = currentHero->m_owner;
-#pragma inline_depth(0)
-                if (value > aiResourceCost(
-                        &g_game->m_players[owner], cost))
-                    currentTown->buyBuilding(EXTRA_2_ID);
-#pragma inline_depth()
-                break;
-            }
-            case TOWN_DUNGEON: {
-                if (!currentTown->canBuild(EXTRA_2_ID))
-                    break;
-                int* cost =
-                    currentTown->getBuildCostArray(EXTRA_2_ID);
-                int owner = currentHero->m_owner;
-#pragma inline_depth(0)
-                int resourceCost = aiResourceCost(
-                    &g_game->m_players[owner], cost);
-#pragma inline_depth()
-                if (currentHero->m_turnExperienceToRvRatio * 1000.0f
-                    > resourceCost)
-                    currentTown->buyBuilding(EXTRA_2_ID);
-                break;
-            }
-            case TOWN_STRONGHOLD: {
-                if (!currentTown->canBuild(EXTRA_2_ID))
-                    break;
-                int* cost =
-                    currentTown->getBuildCostArray(EXTRA_2_ID);
-                long experience = hero::getExperienceIncrement(
-                    currentHero->m_level);
-#pragma inline_depth(0)
-                int resourceCost = aiResourceCost(
-                    &g_game->m_players[currentHero->m_owner], cost);
-#pragma inline_depth()
-                if (static_cast<float>(experience)
-                    * currentHero->m_turnExperienceToRvRatio
-                    > resourceCost)
-                    currentTown->buyBuilding(EXTRA_2_ID);
-                break;
-            }
-            case TOWN_FORTRESS: {
-                if (!currentTown->canBuild(SPECIAL_BUILDING_ID))
-                    break;
-                int* cost = currentTown->getBuildCostArray(
-                    SPECIAL_BUILDING_ID);
-                long experience = hero::getExperienceIncrement(
-                    currentHero->m_level);
-#pragma inline_depth(0)
-                int resourceCost = aiResourceCost(
-                    &g_game->m_players[currentHero->m_owner], cost);
-#pragma inline_depth()
-                if (static_cast<float>(experience)
-                    * currentHero->m_turnExperienceToRvRatio
-                    > resourceCost)
-                    currentTown->buyBuilding(SPECIAL_BUILDING_ID);
-                break;
-            }
-            case TOWN_CONFLUX: {
-                if (!currentTown->canBuild(EXTRA_0_ID))
-                    break;
-                type_university university;
-                university.initializeMagicSkills();
-#pragma inline_depth(0)
-                long value = valueOfUniversity(
-                    currentHero, &university, 0);
-#pragma inline_depth()
-                if (value > 0)
-                    currentTown->buyBuilding(EXTRA_0_ID);
-                break;
-            }
-            }
-        }
-
         buySpecialBuilding(currentHero, currentTown);
+
+        buyArtifacts(currentHero, currentTown);
 
         if (g_game->m_setup.m_difficulty) {
             if (garrisonHero) {
@@ -1843,7 +2146,7 @@ void aiEnterTown(hero* currentHero, town* currentTown)
 }
 
 VA(0x005259e0, 0x205)  // dc 0x10db74
-void buySpecialBuilding(hero* currentHero, town* currentTown)
+void buyArtifacts(hero* currentHero, town* currentTown)
 {
     if (currentTown->m_type != TOWN_TOWER
         && currentTown->m_type != TOWN_DUNGEON)
@@ -1973,381 +2276,47 @@ void aiFriendlyHeroMeeting(hero* currentHero, hero* secondHero)
     aiSwapArtifacts(secondHero, currentHero);
 }
 
-// E:\gamedcs\philai.cpp:1261.  Retail inlines the whole per-hero move loop
-// (move_all_heroes / DetermineHeroToMove path) into DoAI, so the body is ~4.5x
-// the DC size; identity is proven by the philai-unique start_turn/end_turn/
-// UpdBottomView edges, not by size.
-void moveHero(hero* currentHero, long* dangerZones,
-              unsigned char isLastHero, unsigned char* exploreMode);
-hero* determineHeroToMove(int playerId, unsigned char* isLastHero);
-
-// Residual (90.2542%): ONE inline decision, and the obvious repair is
-// MEASURED AND REJECTED.  Retail CALLS game::GetTown (+2a0) and game::GetHero
-// (+2c1) inside the expanded second selector; this compile expands both
-// game.h accessors in place, which is also where our two surplus branches
-// come from (44 against retail's 42 - the `cmp id,-1` arm of each accessor).
-// They sit at inline depth 2 in retail, inside an expanded
-// DetermineHeroToMove, and at depth 1 here because the helper's body is
-// written out below.  Restoring `DetermineHeroToMove(whichPlayer,
-// &is_last_hero)` as the call does NOT reproduce that: VC6 declines to expand
-// it at all once the hand-written mass leaves caller_cb, emitting a plain call
-// and taking the row to 25.9647% (20 branches against 42).  The expansion is
-// the mass that justifies its own inlining, so the two accessors cannot be
-// pushed to depth 2 by any statement in this body.
-// 2026-09-05, easy lane 3 - the census names it exactly: retail CALLS
-// game::GetTown at +0x2a0 and game::GetHero at +0x2c1 inside the second
-// hero-selection copy, where this compile expands both (16 calls same, 2
-// target-only, nothing base-only). That is the OVER-inline direction, so the
-// knob is caller_cb, not a pin. Measured and rejected: lifting the whole
-// garrison-promotion block (numHeroes guard + town sweep) into a
-// single-call-site file static - the dose OVERSHOOTS badly, 90.2542 ->
-// 79.4310, and the two calls do NOT come back out of line.
-// For the next lane: the DC roster has a static `move_all_heroes` (156 B, dc
-// 0x10f0d0) sitting immediately before DoAI, and DC's DoAI is only 192 B
-// against retail's 866. So retail's source almost certainly calls
-// move_all_heroes TWICE and /Ob2 expands it twice with different nested
-// decisions - which is exactly the note below about the selector being
-// retained in the first copy and expanded in the second. Reconstructing that
-// helper is the real fix, and it is a reconstruction job, not polish.
+// E:\gamedcs\philai.cpp:1261, dc 0x10f16c.
+// Keep the two movement phases, nested player guards, and canonical helper
+// chain. DC proves both moveHero helpers are file-static, take exploreMode
+// by reference, and precede the selector. Together with the selector's
+// separate priority rejections and staged values, this restores retail's
+// first selector call and second selector expansion, including retained
+// getTown/getHero calls, without inline controls.
 VA(0x00525e80, 0x362)  // anchor-callee, dc 0x10f16c
 void philAI::doAI(int whichPlayer)
 {
     pollSound();
     g_advManager->updBottomView(0, 1, 1);
-
-    if (!g_gameOver
-        && (!g_unnamed6994f0 || whichPlayer == g_unnamed6994f0)) {
-        long* dangerZones = new long[
-            g_mapWidth * g_mapHeight * g_game->m_worldMap.getNumLevels()];
-        type_AI_player* aiPlayer = &g_aiPlayers[whichPlayer];
-        aiPlayer->startTurn();
-        getTurnAIVars(whichPlayer);
-
-        incrementHourGlass();
-
-        unsigned char isLastHero = 0;
-        unsigned char exploreMode = 1;
-        if (!g_game->m_setup.m_difficulty || !g_currentPlayer->m_numTowns)
-            exploreMode = 0;
-
-        hero* currentHero =
-            determineHeroToMove(whichPlayer, &isLastHero);
-        while (currentHero) {
-            moveHero(currentHero, dangerZones, isLastHero,
-                     &exploreMode);
-            if (g_gameOver)
-                break;
-            currentHero =
-                determineHeroToMove(whichPlayer, &isLastHero);
+    if (!g_gameOver) {
+        if (!g_unnamed6994f0 || whichPlayer == g_unnamed6994f0) {
+            int mapSize = (g_mapWidth * g_mapHeight) * g_game->getNumMapLevels();
+            long* dangerZones = new long[mapSize];
+            g_aiPlayers[whichPlayer].startTurn();
+            getTurnAIVars(whichPlayer);
+            showStatus();
+            incrementHourGlass();
+            moveAllHeroes(whichPlayer, dangerZones);
+            g_aiPlayers[whichPlayer].endTurn();
+            moveAllHeroes(whichPlayer, dangerZones);
+            delete [] dangerZones;
         }
-        g_advManager->demobilizeCurrHero(0, 1);
-        aiPlayer->endTurn();
-
-        exploreMode = 1;
-        if (!g_game->m_setup.m_difficulty || !g_currentPlayer->m_numTowns)
-            exploreMode = 0;
-
-        // VC6 expands the selector into the second copy of the source helper,
-        // although it retains the selector call in the first copy above.
-        // Spell this call site out so that legitimate nested-inline decision
-        // remains visible without forcing DetermineHeroToMove everywhere.
-        for (;;) {
-            hero* selectedHero = 0;
-            short lowestSum = 0;
-            playerData* player = &g_game->m_players[whichPlayer];
-            unsigned char isLastHero = 1;
-
-            for (short heroIndex = 0;
-                 heroIndex < player->m_numHeroes; ++heroIndex) {
-                hero* currentHero = &g_game->m_heroes[
-                    static_cast<short>(player->m_heroes[heroIndex])];
-                if (currentHero->m_movePoints > 0
-                    && !currentHero->m_isSleeping) {
-                    if (selectedHero)
-                        isLastHero = 0;
-
-                    short skillSum = 0;
-                    for (short skill = 0; skill < 4; ++skill)
-                        skillSum += currentHero->getPrimarySkill(skill);
-
-                    if (!selectedHero
-                        || (!(currentHero->m_patrolX != hero::kPatrolNone
-                                 && selectedHero->m_patrolX
-                                        == hero::kPatrolNone)
-                            && ((currentHero->m_patrolX == hero::kPatrolNone
-                                     && selectedHero->m_patrolX
-                                            != hero::kPatrolNone)
-                                || skillSum < lowestSum))) {
-                        selectedHero = currentHero;
-                        lowestSum = skillSum;
-                    }
-                }
-            }
-
-            if (!selectedHero) {
-                isLastHero = 0;
-                g_advManager->demobilizeCurrHero(0, 1);
-                player->m_currHeroId = -1;
-                if (player->m_numHeroes < playerData::HERO_SLOT_COUNT) {
-                    for (short townIndex = 0;
-                         townIndex < player->m_numTowns; ++townIndex) {
-                        town* currentTown =
-                            g_game->getTown(player->m_townIds[townIndex]);
-                        short garrisonHeroId = static_cast<short>(
-                            currentTown->m_garrisonHeroId);
-                        if (garrisonHeroId >= 0
-                            && currentTown->m_visitingHeroId < 0) {
-                            hero* currentHero =
-                                g_game->getHero(garrisonHeroId);
-                            if (currentHero->m_army.getCreatureTotal()
-                                && currentHero->m_movePoints
-                                && !currentHero->m_isSleeping) {
-                                currentTown->removeGarrisonHero();
-                                selectedHero = currentHero;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!selectedHero)
-                break;
-            moveHero(selectedHero, dangerZones, isLastHero,
-                     &exploreMode);
-            if (g_gameOver)
-                break;
-        }
-        g_advManager->demobilizeCurrHero(0, 1);
-        delete [] dangerZones;
     }
-
     g_game->checkHeroConsistency();
     g_mouseManager->showPointer(1);
 }
 
 // E:\gamedcs\philai.cpp:1056
 VA(0x005261f0, 0x5ba)  // anchor-callee, dc 0x10ec58
-void moveHero(hero* currentHero, long* dangerZones, unsigned char isLastHero, unsigned char* exploreMode)
-{
-    unsigned char mouseWasVisible = g_mouseManager->isVis();
-    playerData* player = &g_game->m_players[currentHero->m_owner];
-
-    checkForTown(currentHero);
-    if (currentHero->m_patrolX != hero::kPatrolNone
-        && currentHero->m_patrolRadius == 0) {
-        currentHero->m_movePoints = 0;
-        return;
-    }
-    if (g_gameOver)
-        return;
-
-    g_unnamed69ccd4 = 0;
-    g_advManager->m_advWindow->animateBottomView(0);
-    if (currentHero->m_movePoints > 0) {
-        if (!g_unnamed698790 && !g_videoPaused
-            && mapExtraPosAndAdjacentsSet(
-                currentHero->m_x, currentHero->m_y, currentHero->m_z,
-                g_mapVisibilityBit))
-            g_completeDrawEnabled = 1;
-        else
-            g_completeDrawEnabled = 0;
-
-        if (g_game->getCurrHero() == currentHero) {
-            isLastHero = 0;
-        } else {
-            g_advManager->demobilizeCurrHero(0, 1);
-            g_advManager->setHeroContext(currentHero->m_id, 1, 0, 1);
-            memset(dangerZones, 0,
-                   g_game->getNumMapLevels() * g_mapWidth * g_mapHeight
-                       * sizeof(long));
-            if (g_game->m_setup.m_difficulty > 0
-                || g_game->isHumanAlly(
-                    g_game->getTeam(g_netLocalGamePos)))
-                aiMarkDangerZones(currentHero, dangerZones);
-        }
-
-        markShipyards(player);
-        g_searchArray->setDangerZones(dangerZones);
-        moveHero(currentHero, isLastHero, *exploreMode);
-        g_searchArray->setDangerZones(0);
-        clearShipyards(player);
-    }
-
-    if (currentHero->m_owner >= 0
-        && (currentHero->m_movePoints <= 0 || currentHero->m_isSleeping)) {
-        int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
-                                        currentHero->m_z);
-        if (townId >= 0) {
-            town* currentTown = g_game->getTown(townId);
-            g_advManager->demobilizeCurrHero(0, 1);
-            if (currentTown->m_owner == currentHero->m_owner) {
-                if (currentTown->m_garrisonHeroId < 0) {
-                    player->addGarrisonHero(currentTown);
-                } else {
-                    hero* garrisonHero = g_game->getHero(
-                        currentTown->m_garrisonHeroId);
-                    if ((garrisonHero->m_movePoints > 0
-                         && !garrisonHero->m_isSleeping)
-                        || (static_cast<const town*>(currentTown)
-                                    ->getArmy().getCreatureTotal() > 0
-                            && static_cast<const town*>(currentTown)
-                                       ->getArmy().getAIValue()
-                                   < currentHero->m_army.getAIValue()))
-                        currentTown->swapHeroes();
-                }
-            }
-        }
-    }
-
-    restoreMouse(mouseWasVisible);
-}
+static void moveHero(hero* currentHero, long* dangerZones,
+                     unsigned char isLastHero, unsigned char& exploreMode);
 
 VA(0x005267b0, 0x2da)  // dc 0x10e9a8
-void moveHero(hero* currentHero, unsigned char isLastHero,
-               unsigned char& exploreMode)
-{
-    HeroDestination destination;
-    type_point oldTarget = currentHero->getTarget();
-    long rawValue;
-    type_point originalDestination;
-    int rv;
-
-    long maximumDistance = 32000;
-    if (currentHero->m_pathTargetX < 0)
-        currentHero->m_targetIsCritical = 0;
-    destination.m_point.m_x = -1;
-    destination.m_isNearby = 0;
-    rawValue = 0;
-
-    long maxDistance = 1000;
-    if (currentHero->m_pathTargetX >= 0) {
-        maxDistance = max(
-            currentHero->m_movePoints
-                + static_cast<unsigned short>(currentHero->m_targetDistance)
-                + 200,
-            1000);
-    }
-    if (isLastHero)
-        maxDistance = 32000;
-
-    if (currentHero->m_patrolX != hero::kPatrolNone) {
-        maximumDistance = 200
-            * (abs(currentHero->m_x - currentHero->m_patrolX)
-               + abs(currentHero->m_y - currentHero->m_patrolY)
-               + currentHero->m_patrolRadius);
-        maxDistance = min(maxDistance, maximumDistance);
-    }
-
-    for (int attempt = 0; attempt < 5; ++attempt) {
-        rv = aiChooseDestination(currentHero, maxDistance, destination,
-                                   rawValue, 1, exploreMode);
-        if (!((destination.m_point.m_x < 0
-               || (rv < 0 && !destination.m_isCritical))
-              && g_searchArray->limitWasReached()
-              && maxDistance < maximumDistance))
-            break;
-        maxDistance = min(maxDistance * 2, maximumDistance);
-    }
-
-    if (currentHero->m_maxMovePoints == currentHero->m_movePoints)
-        incrementHourGlass();
-
-    if (destination.m_point.m_x < 0) {
-        currentHero->m_pathTargetX = -1;
-        currentHero->m_pathTargetY = -1;
-        currentHero->m_isSleeping = 1;
-        return;
-    }
-
-    originalDestination = destination.m_point;
-    unsigned char destinationWasUnvisited =
-        !(getMapExtra(originalDestination.m_x, originalDestination.m_y,
-                      originalDestination.m_z)
-          & g_unnamed69ccc4);
-    int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
-                                    currentHero->m_z);
-    if (townId != -1) {
-        g_game->getTown(townId);
-        if (rv < 75
-            && g_game->m_day == philAI::AI_HERO_MOVE_SLEEP_DAY) {
-            currentHero->m_isSleeping = 1;
-            return;
-        }
-    }
-
-    g_unnamed69ccd4 = 1;
-    aiAttemptMove(currentHero, destination, rawValue, exploreMode);
-
-    if (destinationWasUnvisited && exploreMode
-        && (getMapExtra(originalDestination.m_x, originalDestination.m_y,
-                        originalDestination.m_z)
-            & g_unnamed69ccc4)) {
-        g_aiPlayers[g_netLocalGamePos].resetMagusHutValue();
-        exploreMode = 0;
-        for (int i = 0; i < g_currentPlayer->m_numHeroes; ++i)
-            g_game->getHero(g_currentPlayer->m_heroes[i])->m_isSleeping = 0;
-    }
-}
+static void moveHero(hero* currentHero, unsigned char isLastHero,
+                     unsigned char& exploreMode);
 
 VA(0x00526a90, 0x1d4)  // dc 0x10eeb0
-hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
-{
-    hero* selectedHero = 0;
-    short lowestSum = 0;
-    playerData* player = &g_game->m_players[playerId];
-    *isLastHero = 1;
-
-    for (short heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
-        hero* currentHero =
-            &g_game->m_heroes[static_cast<short>(player->m_heroes[heroIndex])];
-        if (currentHero->m_movePoints > 0 && !currentHero->m_isSleeping) {
-            if (selectedHero)
-                *isLastHero = 0;
-
-            short skillSum = 0;
-            for (short skill = 0; skill < 4; ++skill)
-                skillSum += currentHero->getPrimarySkill(skill);
-
-            if (!selectedHero
-                || (!(currentHero->m_patrolX != hero::kPatrolNone
-                         && selectedHero->m_patrolX == hero::kPatrolNone)
-                    && ((currentHero->m_patrolX == hero::kPatrolNone
-                             && selectedHero->m_patrolX
-                                    != hero::kPatrolNone)
-                        || skillSum < lowestSum))) {
-                selectedHero = currentHero;
-                lowestSum = skillSum;
-            }
-        }
-    }
-
-    if (selectedHero)
-        return selectedHero;
-
-    *isLastHero = 0;
-    g_advManager->demobilizeCurrHero(0, 1);
-    player->m_currHeroId = -1;
-    if (player->m_numHeroes < playerData::HERO_SLOT_COUNT) {
-        for (short townIndex = 0; townIndex < player->m_numTowns;
-             ++townIndex) {
-            town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
-            short garrisonHeroId =
-                static_cast<short>(currentTown->m_garrisonHeroId);
-            if (garrisonHeroId >= 0 && currentTown->m_visitingHeroId < 0) {
-                hero* currentHero = g_game->getHero(garrisonHeroId);
-                if (currentHero->m_army.getCreatureTotal()
-                    && currentHero->m_movePoints
-                    && !currentHero->m_isSleeping) {
-                    currentTown->removeGarrisonHero();
-                    selectedHero = currentHero;
-                    break;
-                }
-            }
-        }
-    }
-    return selectedHero;
-}
+static hero* determineHeroToMove(int playerId, unsigned char* isLastHero);
 
 VA(0x00526c70, 0x48)  // dc 0x10f22c
 int aiResourceCost(const playerData* player, const int* resources);
@@ -2390,39 +2359,6 @@ type_spellvalue::type_spellvalue(const hero* newHero)
         fillCreatureValueList();
     }
 }
-
-// The AI's spell-appraisal curve, one 32-byte row per "times castable"
-// step.  Retail reaches all four columns off the same 32-byte stride
-// (`row << 5` plus 0x640398 / +8 / +0x10 / +0x18), so it is ONE array of
-// four-double rows, not four arrays: get_damage_spell_value walks column
-// `threshold` to pick a row and then evaluates `slope * ratio +
-// intercept` out of that same row, while both it and the summoning arm
-// of get_raw_spell_value index column `cast_curve` by the (clamped)
-// cast count.  Rows 1..12 of the slope/intercept pair are continuous at
-// their own thresholds, which is what makes this a piecewise-linear
-// curve rather than four unrelated tables.
-DATA(0x00640398)
-static const struct {
-    double m_castCurve;
-    double m_threshold;
-    double m_slope;
-    double m_intercept;
-} g_spellValueCurve[14] = {
-    { 0.0,  4.8,   0.0,   4.0   },
-    { 0.83, 1.557, 0.5,   1.6   },
-    { 1.53, 0.752, 0.987, 0.842 },
-    { 2.11, 0.433, 1.452, 0.492 },
-    { 2.59, 0.275, 1.888, 0.303 },
-    { 2.99, 0.186, 2.291, 0.192 },
-    { 3.33, 0.131, 2.657, 0.124 },
-    { 3.6,  0.095, 2.986, 0.081 },
-    { 3.84, 0.071, 3.277, 0.053 },
-    { 4.03, 0.054, 3.353, 0.035 },
-    { 4.19, 0.041, 3.755, 0.023 },
-    { 4.33, 0.032, 3.947, 0.016 },
-    { 4.44, 0.025, 4.112, 0.01  },
-    { 4.53, 0.0,   4.53,  0.0 }
-};
 
 VA(0x005270e0, 0xDF)  // dc 0x10f404
 long type_spellvalue::getDamageSpellValue(SpellID spell, TSkillMastery mastery,
@@ -2538,16 +2474,7 @@ long type_spellvalue::getRawSpellValue(SpellID spell) const
                                    timesCastable);
     case SPELL_VALUE_SUMMONING: {
         long damage = traits->m_masteryValues[mastery] * (m_power + mastery);
-        double damageTaken = static_cast<double>(damage * 10);
-        double ratio = damageTaken / static_cast<double>(m_stackValue);
-        if (ratio > 0.9)
-            ratio = 0.9;
-        if (timesCastable >= 14)
-            timesCastable = 13;
-        ratio *= g_spellValueCurve[timesCastable].m_castCurve;
-        if (ratio > 3.9)
-            ratio = 3.9;
-        return static_cast<long>(static_cast<double>(m_stackValue) * ratio);
+        return getSummoningValue(damage, timesCastable);
     }
     case SPELL_VALUE_SPECIAL:
         return static_cast<long>(
@@ -2701,6 +2628,9 @@ void philAI::getTurnAIVars(int whichPlayer)
     type_AI_player::setAttackBonuses(computerBonus, humanBonus);
 }
 
+// DC ValueOfSpell(const hero*, SpellID), philai.cpp:1945 (dc 0x110574),
+// becomes this const hero member in Complete. Retail 0x527aa0 takes the hero
+// in ECX, SpellID at [ebp+8], and returns with ret 4 on both exits.
 VA(0x00527aa0, 0x56)  // dc 0x110574
 int hero::valueOfSpell(SpellID spell) const
 {
@@ -2919,7 +2849,9 @@ TPrimarySkill aiChooseMagicSkill(hero* currentHero)
         ? ePriSkillKnowledge : ePriSkillPower;
 }
 
-// E:\gamedcs\philai.cpp:2692. Retail changes the DC helper's explicit
+// DC MoraleIncreaseValue(const hero*, int), philai.cpp:2692 (dc 0x111b7c),
+// becomes this hero member. Complete 0x527cf0 takes the hero in ECX and the
+// award at [ebp+8]; both exits use ret 4. Keep the changed owner/ABI explicit.
 VA(0x00527cf0, 0x89)  // dc 0x111b7c
 int hero::moraleIncreaseValue(int value)
 {
@@ -2932,6 +2864,9 @@ int hero::moraleIncreaseValue(int value)
     return static_cast<int>(valueAdded);
 }
 
+// DC LuckIncreaseValue(const hero*, int), philai.cpp:2728 (dc 0x111c78),
+// becomes this hero member. Complete 0x527d80 passes ECX to getLuck, reads
+// the award from [ebp+8], and returns with ret 4 on both exits.
 VA(0x00527d80, 0x90)  // dc 0x111c78
 int hero::luckIncreaseValue(int value)
 {
@@ -3854,15 +3789,8 @@ int valueOfStables(const hero* currentHero, long& moveCost)
         }
     }
 
-    int number = const_cast<hero*>(currentHero)->creatureTypeCount(10);
-    if (number == 0)
-        return value;
-
-    int upgradeValue = (g_creatureTypeTraits[11].m_aiValue
-            - g_creatureTypeTraits[10].m_aiValue) * number;
-    if (const_cast<hero*>(currentHero)->creatureTypeCount(11) != 0)
-        upgradeValue = static_cast<int>(upgradeValue * 0.5);
-    return upgradeValue + value;
+    return computeUpgradeValue(const_cast<hero*>(currentHero),
+                               CREATURE_CAVALIER, CREATURE_CHAMPION) + value;
 }
 
 // E:\gamedcs\philai.cpp's CodeView global record names this exact static

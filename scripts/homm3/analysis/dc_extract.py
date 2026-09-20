@@ -9,8 +9,8 @@ config `Release_with_debug` - an OPTIMIZED build with full symbols), i.e.
 ANOTHER PRESSING: names/types/layouts are reference evidence; addresses
 are DC .text offsets, never retail claims.
 
-Legacy corpus importer: pass an explicit cvdump text path with --dump PATH.
-Normal matching reads NB11 directly from the executable and does not use this importer.
+Regenerate functions.csv and variables.csv from verified NB11 with --functions.
+The other legacy CSVs can be imported from explicit cvdump text with --dump PATH.
 
 Outputs (evidence/dreamcast/):
   README.md        provenance, build-mode findings, inventory
@@ -35,7 +35,7 @@ import re
 import sys
 from collections import defaultdict
 
-from homm3.core import common
+from homm3.core import common, inputs
 
 OUT = common.EVIDENCE_DIR / "dreamcast"
 
@@ -62,7 +62,9 @@ README = """\
 Extracted from the NB11 symbols embedded in Dreamcast `H3.EXE` (SHA-256
 `cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736`).
 The matching tools read the embedded records directly from the initialized executable.
-These CSVs retain the previously decoded type corpus.
+Regenerate the procedure roster and its variables from verified NB11 with
+`python3 -m homm3.analysis.dc_extract --functions`.
+The other CSVs retain the previously decoded type corpus.
 The legacy importer accepts explicit cvdump text via
 `python3 -m homm3.analysis.dc_extract --dump /absolute/path/to/dump.txt`.
 
@@ -91,10 +93,77 @@ decompilation; retail claims still need the usual proof chain
 """
 
 
+
+FUNCTION_COLUMNS = ["offset", "cb", "kind", "name", "module", "file", "line",
+                    "debug_start", "debug_end", "params", "locals"]
+VARIABLE_COLUMNS = ["proc", "module", "kind", "sp_offset", "type", "name"]
+
+
+def corpus_type(index):
+    """Keep cvdump's primitive spellings without depending on a text dump."""
+    names = {0: "NOTYPE", 3: "VOID", 0x10: "CHAR", 0x11: "SHORT",
+             0x12: "LONG", 0x13: "QUAD", 0x20: "UCHAR", 0x21: "USHORT",
+             0x22: "ULONG", 0x40: "REAL32", 0x41: "REAL64", 0x70: "RCHAR",
+             0x74: "INT4", 0x75: "UINT4"}
+    name = names.get(index & 255)
+    if name is not None and index >> 8 in (0, 4):
+        return 'T_' + ('32P' if index >> 8 == 4 else '') + name + f'({index:04X})'
+    return f'0x{index:04X}'
+
+
+def variable_rows(symbols):
+    return [[proc.name, proc.module, var.kind, f'{reg}+0x{address:x}',
+             corpus_type(var.type_index), var.name]
+            for proc in symbols.procedures.values()
+            for var, (reg, address, _name) in zip(proc.variables, proc.locals, strict=True)]
+
+
+def function_rows(symbols):
+    """Use each procedure's module record, never inherit the last dump heading.
+
+    Source boundaries are exact address entries in that module's own line
+    table. Keep the first recorded boundary if several rows share an address;
+    do not borrow an adjacent procedure's row or another compiland's table.
+    """
+    boundaries = {}
+    for module, entries in symbols.source_lines.items():
+        for source, line, address in entries:
+            boundaries.setdefault((module, address), (source, line))
+    rows = []
+    for offset, proc in symbols.procedures.items():
+        source, line = boundaries.get((proc.module, offset), ("", ""))
+        rows.append([f"0x{offset:x}", proc.size, proc.linkage, proc.name,
+                     proc.module, source, line, proc.debug_start, proc.debug_end,
+                     sum(v.kind == "param" for v in proc.variables),
+                     sum(v.kind == "local" for v in proc.variables)])
+    return rows
+
+
+def write_functions(symbols, output: Path = OUT):
+    output.mkdir(parents=True, exist_ok=True)
+    for filename, columns, rows in (
+            ('functions.csv', FUNCTION_COLUMNS, function_rows(symbols)),
+            ('variables.csv', VARIABLE_COLUMNS, variable_rows(symbols))):
+        with (output / filename).open("w", newline="") as stream:
+            stream.write("# Dreamcast CodeView corpus - DC offsets, reference "
+                         "evidence (see README.md).\n")
+            writer = csv.writer(stream)
+            writer.writerow(columns)
+            writer.writerows(rows)
+        print(f"[dc extract] {filename}: {len(rows)} rows from embedded NB11")
+    (output / "README.md").write_text(README)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--dump", required=True, type=Path, help="explicit cvdump text input")
+    mode = ap.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--dump", type=Path, help="explicit legacy cvdump text input")
+    mode.add_argument("--functions", action="store_true",
+                      help="regenerate procedures and variables from verified embedded NB11")
     args = ap.parse_args(argv)
+    if args.functions:
+        write_functions(inputs.dreamcast_symbols())
+        return 0
     text = args.dump.read_text(errors="replace")
     sym_lo = text.index("*** SYMBOLS")
     sym_hi = text.index("*** Compacted")

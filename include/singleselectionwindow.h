@@ -388,8 +388,11 @@ public:
     CNetPlayerHandlerPlayer* getPlayer(unsigned long dpid);
     unsigned char isFaceTaken(int face, int exclude);
     unsigned char addNewPlayer(CNetPlayerInfo* netPlayer);
+    unsigned char playerExists(unsigned long dpid);
     unsigned char setNextPlayer(int pos);
+    unsigned char setComputer(int pos);
     int getUnassignedPlayerPos();
+    int getPlayerCount(unsigned char assignedOnly);
 };
 SIZE(CNetPlayerHandler, 0x7d0);
 
@@ -661,6 +664,7 @@ public:
     virtual int doModal(unsigned char fadeIn);
     void updatePlayerPositions(unsigned char updateCurPlayer);
     virtual int windowHandler(message& msg);  // slot 9
+    void onNameSlider(int newIndex);
     void onChatWindowSlider(int newIndex);
     void onDurationSlider(int newIndex);
     void onFileMenuSlider(int newIndex);
@@ -700,6 +704,7 @@ public:
     TTownType getDisplayTown(int gamePos);
     const char* getHeroName(int gamePos);
     void onNameChange(int gamePos, const char* newName);
+    void updateNames();
     unsigned char highlightFile(char* filename);
     void onNameClick(int pos);
     unsigned char isVersionCompatible(const char* otherVersion);

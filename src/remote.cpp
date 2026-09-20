@@ -35,6 +35,9 @@
 void startMouseThread();
 void stopMouseThread();
 
+DATA(0x0069d7b0) CChatManager g_chatMan(20);
+DATA(0x0069d630) CTurnDuration g_turnDuration69d630;
+
 DATA(0x0069d648) CLogFile g_logFile(
     DATA_COMPGEN(0x00682a3c, remoteGameLogName, "game.log"));
 VA_COMPGEN(0x00552260, 0x2A, STATIC_CTOR, g_logFile)
@@ -52,7 +55,7 @@ DATA(0x0069d814) static unsigned char g_inside;
 // helper; VC6 /Ob2 expands both retail call sites into InitConnection. The
 // three beeps, 200-byte local error buffer and recursion guard are visible in
 // both byte-identical expansions.
-inline void dpsd(int dpErr, char* file, int line)
+void dpsd(int dpErr, char* file, int line)
 {
     if (g_inside)
         return;
@@ -92,7 +95,7 @@ VA_COMPGEN(0x005522f0, 0x21, SCALAR_DELETING_DTOR, CDPlayHeroes)
 // deque from 0x28 to the VC6/Dinkumware 0x30 bytes and thereby fixes the PC
 // tail at +0x98/+0xe8/+0xec/+0xf0.  currMessageId is deliberately not
 // initialized: retail likewise leaves +0xec untouched.
-inline CDPlayHeroes::CDPlayHeroes()
+CDPlayHeroes::CDPlayHeroes()
 {
     m_localIpAddress[0] = 0;
     m_confirmId = 0;
@@ -106,7 +109,7 @@ inline CDPlayHeroes::CDPlayHeroes()
 // destructor is the decisive inline-budget input: with that complete base
 // contract, the original named helper call expands to the exact 0x205-byte
 // retail body (both deque walks included).
-inline void CDPlayHeroes::destroyMsgQueue()
+void CDPlayHeroes::destroyMsgQueue()
 {
     while (!m_msgQueue.empty()) {
         CNetMsg* netMsg = m_msgQueue.front();
@@ -128,10 +131,8 @@ unsigned char CDPlayHeroes::sysMsgHost(DPMSG_GENERIC* message,
     unsigned char wasHost = isHost();
     if (!CDPlay::sysMsgHost(message, toId))
         return 0;
-    if (!wasHost) {
-        CNetMsg msg(RS_SET_AS_HOST, sizeof(CNetMsg));
-        queueMsg(&msg);
-    }
+    if (!wasHost)
+        handleHostXFer();
     return 1;
 }
 
@@ -139,7 +140,7 @@ VA(0x00552740, 0x1DE)  // dc 0x11bb20
 unsigned char CDPlayHeroes::sysMsgSessionLost(DPMSG_GENERIC* message,
                                               unsigned long toId)
 {
-    CNetMsg msg(RS_SESSION_LOST, sizeof(CNetMsg));
+    CSessionLostMsg msg;
     queueMsg(&msg);
     return 1;
 }
@@ -342,12 +343,6 @@ CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* pNetMsg)
     // @stub
 }
 
-// E:\gamedcs\remote.cpp:463
-DC_ONLY(0x11bf40, 0xAC)
-CNetMsg* CDPlayHeroes::UncompressMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
 
 // E:\gamedcs\remote.cpp:496
 DC_ONLY(0x11bfec, 0x60)
@@ -363,12 +358,6 @@ unsigned char CDPlayHeroes::sendIt(CNetMsg* pMsg, unsigned long dpidTo, unsigned
     // @stub
 }
 
-// E:\gamedcs\remote.cpp:685
-DC_ONLY(0x11c1d8, 0x1E)
-void CDPlayHeroes::HandleHostXFer()
-{
-    // @stub
-}
 
 // E:\gamedcs\remote.cpp:690
 DC_ONLY(0x11c1f8, 0x30)
@@ -377,12 +366,6 @@ void CDPlayHeroes::handlePlayerDrop(unsigned long dpid)
     // @stub
 }
 
-// E:\gamedcs\remote.cpp:697
-DC_ONLY(0x11c228, 0x4)
-void CDPlayHeroes::HandleNewPlayer()
-{
-    // @stub
-}
 
 // E:\gamedcs\remote.cpp:702
 DC_ONLY(0x11c22c, 0x3A)
@@ -405,19 +388,7 @@ CNetMsgHandler* CDPlayHeroes::getNetMsgHandler()
     // @stub
 }
 
-// E:\gamedcs\remote.cpp:804
-DC_ONLY(0x11c298, 0x7C)
-void CChatManager::CChatManager(int maxChatLines)
-{
-    // @stub
-}
 
-// E:\gamedcs\remote.cpp:829
-DC_ONLY(0x11c314, 0x1C)
-void CChatManager::~CChatManager()
-{
-    // @stub
-}
 
 // E:\gamedcs\remote.cpp:835
 DC_ONLY(0x11c330, 0x42)
@@ -521,30 +492,13 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
     return 1;
 }
 
-// E:\gamedcs\remote.cpp:350. The queue reader, and CompressMsg's exact
-// mirror: take the front message, optionally unlink it, and if it carries an
-// original size that differs from its own, expand it into a fresh block with
-// the header copied verbatim and the payload run through zlib. field_10 is
-// what CompressMsg stamps with the ORIGINAL total size, so equal sizes mean
-// "was never compressed" and the message is handed back untouched.
-
-// The null test on the freshly allocated block sits AFTER the store into it,
-// which is retail's own order, not a scheduling artifact we could move.
-
-// The three "hand the queued message back" exits are ONE exit: retail's
-// null-front arm, its already-uncompressed arm and its uncompressed-block
-// arm all reach the same `mov eax,edi` epilogue, and the last of them gets
-// there by storing the new block into pNetMsg's own memory home
-// (`mov [ebp-8],ebx` / `mov edi,[ebp-8]`). So the body is one `if (pNetMsg)`
-// block over a single trailing `return pNetMsg;`, not three early returns -
-// spelling it that way took 80.8571 -> 86.2637 with branches, ret count and
-// block skeleton all clean (14/14 branches, 5/5 rets, 0 flow-kind).
-// Residual (86.26%): pNetMsg binds EBX here against retail's EDI and is not
-// memory-homed until later, which why-reg v2 places past the first-def slice
-// (bindings agree at every #0/#1/#2), plus one target-only call inside the
-// INLINED pop_front - retail keeps a deque helper out of line there and our
-// expansion takes it, inside Dinkumware's own template body which this TU
-// may not pin into.
+// Original: CDPlayHeroes::GetRemoteData; remote.cpp:350, dc 0x11bd5c
+// Retail expands IsCompressed and ordinary UncompressMsg. Restoring these
+// boundaries and DestroyMsg calls recovers the retained deque helper and
+// register homes: 86.26 -> 98.62%, with all nine named calls in order.
+// Assigning the result before setting wasCompressed recovers the remaining
+// four instruction differences and reaches 100%; the reversed ordering is
+// the 98.62% negative control. Both helper and caller boundaries stay natural.
 VA(0x00553040, 0x1D1)  // anchor-caller(the free GetRemoteData wrapper, CheckHandleNet) + dc-order-map, dc 0x11bd5c
 CNetMsg* CDPlayHeroes::getRemoteData(unsigned char removeFromQueue,
                                      unsigned char* wasCompressed)
@@ -561,36 +515,17 @@ CNetMsg* CDPlayHeroes::getRemoteData(unsigned char removeFromQueue,
         if (removeFromQueue)
             m_msgQueue.pop_front();
 
-        if (netMsg->m_uncompressedSize && netMsg->m_uncompressedSize != netMsg->m_size) {
-            unsigned long uncompressedSize =
-                netMsg->m_uncompressedSize + sizeof(CNetMsg);
-            void* storage = ::operator new(uncompressedSize);
-            CNetMsg* uncompressedMsg = static_cast<CNetMsg*>(storage);
-            memcpy(uncompressedMsg, netMsg, sizeof(CNetMsg));
-
-            uncompressedSize -= sizeof(CNetMsg);
-            if (uncompress(
-                    static_cast<unsigned char*>(storage) + sizeof(CNetMsg),
-                    &uncompressedSize,
-                    static_cast<const unsigned char*>(
-                        static_cast<const void*>(netMsg)) + sizeof(CNetMsg),
-                    netMsg->m_size - sizeof(CNetMsg))) {
-                ::operator delete(storage);
-                ::operator delete(netMsg);
-                return 0;
-            }
-
-            uncompressedMsg->m_size = uncompressedSize + sizeof(CNetMsg);
+        if (netMsg->isCompressed()) {
+            CNetMsg* uncompressedMsg = uncompressMsg(netMsg);
             if (!uncompressedMsg) {
-                ::operator delete(netMsg);
+                destroyMsg(netMsg);
                 return 0;
             }
-
             if (removeFromQueue)
-                ::operator delete(netMsg);
+                destroyMsg(netMsg);
+            netMsg = uncompressedMsg;
             if (wasCompressed)
                 *wasCompressed = 1;
-            netMsg = uncompressedMsg;
         }
     }
     return netMsg;
@@ -640,6 +575,25 @@ CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
         return 0;
     }
     return compressedMsg;
+}
+
+// Original: CDPlayHeroes::UncompressMsg; remote.cpp:463, dc 0x11bf40
+// GetRemoteData (0x553040) expands this header copy, zlib call and cleanup.
+CNetMsg* CDPlayHeroes::uncompressMsg(CNetMsg* netMsg)
+{
+    unsigned long destSize = netMsg->m_uncompressedSize + sizeof(CNetMsg);
+    CNetMsg* result = static_cast<CNetMsg*>(::operator new(destSize));
+    *result = *netMsg;
+    destSize -= sizeof(CNetMsg);
+    if (uncompress(static_cast<unsigned char*>(static_cast<void*>(result)) + sizeof(CNetMsg),
+                   &destSize,
+                   static_cast<const unsigned char*>(static_cast<const void*>(netMsg)) + sizeof(CNetMsg),
+                   netMsg->m_size - sizeof(CNetMsg))) {
+        destroyMsg(result);
+        return 0;
+    }
+    result->m_size = destSize + sizeof(CNetMsg);
+    return result;
 }
 
 VA(0x00553370, 0x5C)
@@ -748,6 +702,18 @@ bool CDPlayHeroes::sendIt(CNetMsg* msg, unsigned long dpidTo,
     return false;
 }
 
+// Original: CDPlayHeroes::HandleHostXFer; remote.cpp:685, dc 0x11c1d8
+void CDPlayHeroes::handleHostXFer()
+{
+    CSetAsHostMsg msg;
+    queueMsg(&msg);
+}
+
+// Original: CDPlayHeroes::HandleNewPlayer; remote.cpp:697, dc 0x11c228
+void CDPlayHeroes::handleNewPlayer(unsigned long, char*, void*, unsigned long)
+{
+}
+
 VA(0x00553580, 0x1F0)
 void CDPlayHeroes::handlePlayerDrop(unsigned long dpid)
 {
@@ -785,6 +751,38 @@ VA(0x005537a0, 0x7)  // dc 0x11c290
 CNetMsgHandler* CDPlayHeroes::getNetMsgHandler()
 {
     return m_netMsgHandler;
+}
+
+// Original: CChatManager::CChatManager; remote.cpp:804, dc 0x11c298
+// Retail initializer 0x5521c0 constructs g_chatMan with 20 lines. It adds
+// the Miles handle at +0x28 between isSysMsg and the five sample stores.
+CChatManager::CChatManager(int maxChatLines)
+{
+    m_currMsg = 0;
+    m_pauseTime = 0;
+    m_changed = 1;
+    m_lastWidget = 0;
+    m_maxLines = maxChatLines;
+    m_widgetText = 0;
+    m_msgArray = 0;
+    m_position = -1;
+    m_chatKilled = 0;
+    m_isSysMsg = 0;
+    m_chatMemSample = 0;
+    m_chatSample = 0;
+    m_playerDropSample = 0;
+    m_sysMsgSample = 0;
+    m_turnDurSample = 0;
+    m_playerEnterSample = 0;
+    setMaxLines(maxChatLines);
+}
+
+// Original: CChatManager::~CChatManager; remote.cpp:829, dc 0x11c314
+// Retail's registered cleanup 0x552240 deletes these two arrays in order.
+CChatManager::~CChatManager()
+{
+    delete[] m_widgetText;
+    delete[] m_msgArray;
 }
 
 VA(0x005537b0, 0x46)  // dc 0x11c330
@@ -1018,12 +1016,7 @@ VA(0x00553d00, 0xA1)  // dc 0x11c6bc
 void CChatManager::updateWidget(textWidget* widget, unsigned char killOld, int numLines)
 {
     if (m_pauseTime == 0) {
-        int msgNbr = m_currMsg;
-        for (int i = 0; i < m_msgCount; i++) {
-            if (m_msgArray[msgNbr].m_killTime == 0)
-                m_msgArray[msgNbr].m_killTime = GameTime::get();
-            msgNbr = (msgNbr + 1) % m_maxLines;
-        }
+        updateNewChat();
         if (killOld)
             killOldChat();
     }
@@ -1056,14 +1049,14 @@ int CChatManager::getNextMsgNbr(int msgNbr)
 // E:\gamedcs\remote.cpp:1060/1065. DC records these named source helpers.
 // AddChat uses the first canonical helper; retail /Ob2 also expands the
 // second at both surviving KillOldChat call sites.
-inline int CChatManager::getNextFreeMsgNbr()
+int CChatManager::getNextFreeMsgNbr()
 {
     return (m_currMsg + m_msgCount) % m_maxLines;
 }
 
 // E:\gamedcs\remote.cpp:1065.
 // Retail KillOldChat expands this helper at both surviving call sites.
-inline int CChatManager::getNextMsgNbr(int msgNbr)
+int CChatManager::getNextMsgNbr(int msgNbr)
 {
     return (msgNbr + 1) % m_maxLines;
 }
@@ -1109,16 +1102,17 @@ void CChatManager::killOldChat()
     }
 }
 
-// E:\gamedcs\remote.cpp:1115
-#if 0  // @carcass
-DC_ONLY(0x11c87c, 0x52)
-void CChatManager::UpdateNewChat()
-{
-    // @stub
-}
 
-// E:\gamedcs\remote.cpp:1128
-#endif  // @carcass
+// Original: CChatManager::UpdateNewChat; remote.cpp:1115, dc 0x11c87c
+void CChatManager::updateNewChat()
+{
+    int msgNbr = m_currMsg;
+    for (int i = 0; i < m_msgCount; ++i) {
+        if (m_msgArray[msgNbr].m_killTime == 0)
+            m_msgArray[msgNbr].m_killTime = GameTime::get();
+        msgNbr = getNextMsgNbr(msgNbr);
+    }
+}
 
 VA(0x00553ee0, 0x163)  // dc 0x11c8d0
 void CChatManager::updateWidgetText(int numLines, textWidget* widget)
@@ -1186,16 +1180,12 @@ void CChatManager::resumeTimeOuts()
     m_pauseTime = 0;
 }
 
-// E:\gamedcs\remote.cpp:1213
-#if 0  // @carcass
-DC_ONLY(0x11ca60, 0x10)
-unsigned char CChatManager::HasChat()
-{
-    // @stub
-}
 
-// E:\gamedcs\remote.cpp:1221
-#endif  // @carcass
+// Original: CChatManager::HasChat; remote.cpp:1213, dc 0x11ca60
+unsigned char CChatManager::hasChat()
+{
+    return m_msgCount > 0;
+}
 
 VA(0x005540b0, 0x20)  // dc 0x11ca70
 void CChatManager::clearChat()
@@ -1406,7 +1396,7 @@ void pollRemote()
         } else if (GameTime::elapsedSince(g_lastActiveUpdate)
                    > g_playerActiveUpdateInterval) {
             g_lastActiveUpdate = GameTime::get();
-            CNetMsg msg(RS_PLAYER_ACTIVE, sizeof(CNetMsg));
+            CPlayerActiveMsg msg;
             transmitRemoteDataDPID(&msg, 0, false, false);
         }
     } else {
@@ -3171,12 +3161,6 @@ CNetMsg* CNetMsgHandler::handleNetMsg(CNetMsg* pNetMsg)
     // @stub
 }
 
-// E:\gamedcs\remote.cpp:2912
-DC_ONLY(0x11f060, 0xE)
-void CTurnDuration::CTurnDuration()
-{
-    // @stub
-}
 
 // E:\gamedcs\remote.cpp:2920
 #endif  // @carcass
@@ -3254,6 +3238,16 @@ CNetMsg* CNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
     if (netMsg)
         destroyMsg(netMsg);
     return 0;
+}
+
+// Original: CTurnDuration::CTurnDuration; remote.cpp:2912, dc 0x11f060
+// Retail initializer 0x5522b0 leaves nextWarning untouched, as does DC.
+CTurnDuration::CTurnDuration()
+{
+    m_lastWarned = 0;
+    m_currDuration = 0;
+    m_turnStartTime = 0;
+    m_pauseTime = 0;
 }
 
 VA(0x00557a80, 0x15)  // dc 0x11f070
@@ -3415,16 +3409,13 @@ void CTurnDuration::start()
     }
 }
 
-// E:\gamedcs\remote.cpp:3070
-#if 0  // @carcass
-DC_ONLY(0x11f3ec, 0xE)
-void CTurnDuration::AddTime(unsigned long howMuch)
-{
-    // @stub
-}
 
-// E:\gamedcs\remote.cpp:3076
-#endif  // @carcass
+// Original: CTurnDuration::AddTime; remote.cpp:3070, dc 0x11f3ec
+void CTurnDuration::addTime(unsigned long howMuch)
+{
+    m_turnStartTime += howMuch;
+    m_lastWarned += howMuch;
+}
 
 VA(0x00557dd0, 0x14)  // dc 0x11f3fc
 void CTurnDuration::pause()
@@ -3440,8 +3431,7 @@ void CTurnDuration::resume()
     if (pausedAt != 0 && m_turnStartTime != 0) {
         unsigned long pausedFor = GameTime::get() - pausedAt;
         m_pauseTime = 0;
-        m_turnStartTime += pausedFor;
-        m_lastWarned += pausedFor;
+        addTime(pausedFor);
     }
 }
 
@@ -3512,7 +3502,7 @@ CHourGlass::~CHourGlass()
 // not. Stop deliberately leaves m_thread armed, so an explicit Stop and the
 // later destructor both stop the thread, exactly as retail does.
 
-inline void CHourGlass::stop()
+void CHourGlass::stop()
 {
     if (m_thread)
         stopMouseThread();
@@ -3520,12 +3510,27 @@ inline void CHourGlass::stop()
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 }
 
-inline void CHourGlass::start()
+void CHourGlass::start()
 {
     if (m_thread)
         startMouseThread();
     else
         g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+}
+
+// Original: GetQueueSize; remote.cpp:3142, dc 0x11f550
+unsigned char getQueueSize(int toWho, unsigned long& numMsgs,
+                           unsigned long& queueSize)
+{
+    if (!g_dPlay)
+        return 0;
+    unsigned long dpidTo = 0;
+    if (toWho != NET_MESSAGE_RECIPIENT_ALL)
+        dpidTo = g_game->m_players[toWho].m_dpid;
+    if (!g_dPlay->getSendQueueSize(g_thisNetPlayerInfo.m_dpid, dpidTo,
+                                 &numMsgs, &queueSize))
+        return 0;
+    return 1;
 }
 
 // COMDAT pairing: deque<CNetMsg*>'s own destructor, 160 B against
@@ -3574,12 +3579,25 @@ void CHourGlass::Start()
     // @stub
 }
 
-// E:\gamedcs\remote.cpp:3142
-DC_ONLY(0x11f550, 0x94)
-unsigned char GetQueueSize(int toWho, unsigned long* numMsgs, unsigned long* queueSize)
-{
-    // @stub
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // E:\gamedcs\remote.cpp:152
 DC_ONLY(0x11f814, 0x34)

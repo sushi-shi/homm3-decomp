@@ -341,11 +341,11 @@ unsigned char NewmapCell::cellIsTrigger() const
 {
     if (m_type == HERO) {
         hero* obscurer = g_game->getHero(m_extraInfo);
-        return obscurer->isOnMap() && obscurer->obscuredIsTrigger();
+        return obscurer->getObscuredTrigger();
     }
     if (m_type == BOAT) {
         boat* obscurer = &g_game->m_boats[m_extraInfo];
-        return obscurer->isOnMap() && obscurer->obscuredIsTrigger();
+        return obscurer->getObscuredTrigger();
     }
     return m_isTrigger;
 }
@@ -450,58 +450,26 @@ NewfullMap::NewfullMap()
 VA_COMPGEN(0x004fd1c0, 0x18, DEFAULT_CTOR_CLOSURE, CObjectType)
 
 // E:\gamedcs\mapcell.cpp:530
-// RECONSTRUCTED 2026-08-20. This is NewfullMap::Close's body inlined ahead
-// of the fourteen member destructions, which is what the note under Close
-// below already predicted.
-
-// Three things, in retail's order:
-//   * the cell array, freed through NewmapCell's `vector deleting
-//     destructor' at 0x4fd460 with flags 3 and then nulled;
-//   * every mapObjectData entry deleted through virtual slot zero (`push 1
-//     / call [edx]`, the scalar deleting destructor - the null test in
-//     front of it is `delete p`'s own, not a source guard), then the vector
-//     cleared through the out-of-line vector<CMapObjectData*>::clear COMDAT
-//     at 0x48b4a0 that Init already reaches;
-//   * every sprite disposed through virtual slot ONE - CSprite::Dispose,
-//     `call [edx+4]` with no argument, NOT a delete - then that vector
-//     cleared too. This one expands to `erase(begin(), end())` (0x54cdb0)
-//     rather than an out-of-line clear, which is VC6's own choice per
-//     instantiation and not a spelling difference.
-// Both loops re-read `size()` across the back edge, complete with
-// Dinkumware's `_First == 0` guard, exactly as Init's already-exact
-// mapObjectData sweep does. Do not hoist either bound.
-
-// Residual (95.8833%): ONE block, the `delete[]`. Retail emits
-// `push 3 / call ??_ENewmapCell` - the compiler-generated vector deleting
-// destructor at 0x4fd460 - and our CL expands it in place (array cookie,
-// `vector destructor iterator', operator delete). Every other row of the
-// diff is a reloc NAME on an unclaimed COMDAT, including two the retail
-// link FOLDED: ~vector<CSprite*> and ~vector<CObject*> both resolve to
-// 0x46a650, so one synth label answers for two of our symbols.
-
-// AND IT IS A BUDGET SEE-SAW, NOT A MISSING SPELLING - three ways measured,
-// all worse than leaving it:
-//   * `#pragma inline_depth(0)` on the `delete[]` statement DOES produce
-//     retail's `call ??_ENewmapCell` exactly, and still scores 89.2893,
-//     because the budget it frees is then spent over-inlining
-//     ~vector<BlackBoxData> (0x506350), which retail CALLS. predict-inline
-//     confirms the trade: 23 out-of-line calls on both sides, ours carrying
-//     one extra `operator delete`. Pinning an EARLY site enlarges
-//     budget/sites-remaining for the later ones - the documented rule that
-//     a LATER pin cannot shrink an earlier site's divisor does not run
-//     backwards.
-//   * a pin before the closing brace, to reach the fourteen implicit member
-//     destructions, de-inlines all fourteen: 46.6142.
-//   * writing the body as a single-call-site `closeMap(this)` helper - the
-//     readQuestGuardArm lever, and the shape NewfullMap::Close's note below
-//     predicts - scores 87.7157.
-VA(0x004fd1e0, 0x271)  // anchor-global, dc 0xec6a4
-NewfullMap::~NewfullMap()
+// Original: NewfullMap::Close; mapcell.cpp:537, dc 0xec724.
+// DC lines 539/541/542 own only the cell-array deletion and null assignment.
+// Complete expands this ordinary helper in the destructor and Init. Object
+// data and sprite cleanup below are Complete additions to the destructor.
+void NewfullMap::close()
 {
     if (m_cellData) {
         delete[] m_cellData;
         m_cellData = 0;
     }
+}
+
+// E:\gamedcs\mapcell.cpp:530. Member destruction follows the explicit cleanup.
+// Current residual (91.59%): Close now retains the correct NewmapCell vector
+// deleting-destructor call; the later vector<BlackBoxData> destructor expands
+// where retail retains it. The remaining folded container labels also differ.
+VA(0x004fd1e0, 0x271)  // anchor-global, dc 0xec6a4
+NewfullMap::~NewfullMap()
+{
+    close();
 
     unsigned int i;
     for (i = 0; i < m_mapObjectData.size(); ++i)
@@ -521,25 +489,9 @@ NewfullMap::~NewfullMap()
     m_sprites.clear();
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
+// Retail 0x4fd460 takes destructor flags and reads an array cookie: it is
+// NewmapCell's generated vector deleting destructor, not NewfullMap::Close.
 
-// E:\gamedcs\mapcell.cpp:537
-// NO RETAIL SLOT. The old VA claim at 0x4fd460 was false: retail takes a
-// destructor-flags argument, tests bits 1 and 2, reads the array cookie at
-// [this-4], calls NewmapCell::~NewmapCell (0x4fd4c0) through the vector
-// destructor iterator, and conditionally calls operator delete. It is the
-// compiler-generated NewmapCell deleting destructor, not this no-argument
-// Dreamcast method. Retail NewfullMap::~NewfullMap and Init inline Close.
-// The retail body is claimed below through the already-emitted ??_E public.
-void NewfullMap::Close()
-{
-    // @stub
-}
-
-// E:\gamedcs\mapcell.cpp:544 - moved here from DC tail position (dc 0xf4bdc):
-// retail places this COMDAT right after Close, which calls it and takes its
-// address for the `vector destructor iterator' (also address-taken in Init).
-#endif  // @carcass
 
 VA_COMPGEN(0x004fd460, 0x58, VECTOR_DELETING_DTOR, NewmapCell)
 
@@ -553,10 +505,7 @@ void NewfullMap::init(int size, unsigned char twoLayers)
     m_size = size;
     m_hasTwoLevels = twoLayers;
 
-    if (m_cellData) {
-        delete[] m_cellData;
-        m_cellData = 0;
-    }
+    close();
 
     for (unsigned int i = 0; i < m_mapObjectData.size(); ++i)
         delete m_mapObjectData[i];
@@ -621,11 +570,7 @@ int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
 
     soDTransformRandomDwellings();
 
-    unsigned int i;
-#pragma inline_depth(0)
-    for (i = 0; i < m_objects.size(); ++i)
-#pragma inline_depth()
-        placeObject(i, 1);
+    placeObjects();
 
     loadShipyards();
     return 0;
@@ -2021,16 +1966,21 @@ int NewfullMap::readEventData(TAbstractFile* infile, CObject* eventObject,
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\mapcell.cpp:2124
-DC_ONLY(0xef7c8, 0x3F0)
-int NewfullMap::readSeerData(void* infile, CObject* seerObject)
+// Original: NewfullMap::readSeerData; mapcell.cpp:2124, dc 0xef7c8.
+// Complete delegates quest/reward deserialization to TSeerHut::read instead of
+// filling the DC fixed quest fields here. This wrapper still owns the temporary,
+// pool insertion and map-object index, and now registers the polymorphic quest.
+int NewfullMap::readSeerData(TAbstractFile* infile, CObject* seerObject)
 {
-    // @stub
+    TSeerHut seerData;
+    seerData.read(infile);
+    m_seerHutList.push_back(seerData);
+    seerObject->m_extraInfo = m_seerHutList.size() - 1;
+    if (seerData.m_quest)
+        m_mapObjectData.push_back(static_cast<CMapObjectData*>(
+            static_cast<void*>(seerData.m_quest)));
+    return 0;
 }
-
-#endif  // @carcass
 
 // The random arms differ by lane.  A primary skill is a flat Random(0, 3),
 // but a secondary skill or a spell is drawn from a CANDIDATE LIST built on
@@ -3214,6 +3164,9 @@ void NewfullMap::soDTransformRandomDwellings()
 // versus direct two-argument insert at 60.0594%; no sibling score moves.
 // Both guard/data insertion workers still expand where retail calls the
 // two-argument bodies, so this does not close that native-vector frontier.
+// Current residual (59.40%): readSeerData expands with its owned temporary,
+// read and pool insertion. VC6 also expands the temporary TSeerHut constructor
+// that retail retains; other map-reader call/expansion differences remain.
 VA(0x00502e00, 0x832)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined, dc 0xf16c8
 int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
                            int mapVersion)
@@ -3332,21 +3285,9 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         readScholarData(infile, tempObject);
         break;
 
-    case SEER: {
-        TSeerHut tempHut;
-        tempHut.read(infile);
-        {
-            std::vector<TSeerHut>::iterator hutEnd = m_seerHutList.end();
-#pragma inline_depth(0)
-            m_seerHutList.insert(hutEnd, tempHut);
-#pragma inline_depth()
-        }
-        tempObject->m_extraInfo = m_seerHutList.size() - 1;
-        if (tempHut.m_quest)
-            m_mapObjectData.push_back(static_cast<CMapObjectData*>(
-                static_cast<void*>(tempHut.m_quest)));
+    case SEER:
+        readSeerData(infile, tempObject);
         break;
-    }
 
     case SHRINE1:
     case SHRINE2:
@@ -4616,14 +4557,23 @@ VA_COMPGEN(0x0050ac00, 0x188, VECTOR_COPY_ASSIGN, TArtifact)
 VA_COMPGEN(0x0050ad90, 0x13, VECTOR_CAPACITY, SecondarySkillData)
 VA_COMPGEN(0x0050adb0, 0x2B, STD_COPY, SecondarySkillData)
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\mapcell.cpp:4404
-DC_ONLY(0xf4740, 0x50)
+// Original: NewfullMap::placeObjects; mapcell.cpp:4404, dc 0xf4740.
+// Read's placement pass owns this ordinary helper; the int loop variable is
+// compared with vector::size() as recorded in the DC unsigned comparison.
 int NewfullMap::placeObjects()
 {
-    // @stub
+    for (int x = 0; x < m_objects.size(); ++x)
+        placeObject(x, 1);
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
+
+
+
+
+
+
 
 // NewmapCell::NewmapCell (dc 0xf49a4) moved up: claimed at VA 0x004fd650.
 
@@ -4633,6 +4583,8 @@ int NewfullMap::placeObjects()
 // type_obscuring_object::get_obscured_object (dc 0xf4a9c) moved to its
 // original inline definition in include/hero.h; retail emits no out-of-line
 // copy.
+
+
 
 // E:\gamedcs\mapcell.cpp:544
 DC_ONLY(0xf4b64, 0x78)

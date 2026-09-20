@@ -41,6 +41,7 @@ public:
 // No original name is known; retain the ordinal until source evidence exists.
 void unnamed526d20(int playerId, int* costs, int flag);
 
+void showStatus();
 long aiGetSpellValue(const hero* ourHero, SpellID spell);
 
 // Dreamcast line 3834 publishes the reference-qualified
@@ -83,8 +84,6 @@ __forceinline int valueOfLighthouse(NewmapCell* cell);
 int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell);
 __forceinline int valueOfMercenaryCamp(const hero* currentHero,
                                        NewmapCell* cell);
-int moraleIncreaseValue(const hero* currentHero, int value);
-int luckIncreaseValue(const hero* currentHero, int value);
 __forceinline long valueOfMagusHut(long playerId);
 int valueOfMine(const hero* currentHero, NewmapCell* cell);
 long valueOfMonsters(const hero* currentHero, NewmapCell* cell,

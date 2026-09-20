@@ -130,6 +130,11 @@ public:
             && m_minY <= limits.m_maxY
             && m_maxY >= limits.m_minY;
     }
+    // Original: SLimitData::Contains; struct.h:293, dc 0x639ec.
+    unsigned char contains(int x, int y) const
+    {
+        return x >= m_minX && x <= m_maxX && y >= m_minY && y <= m_maxY;
+    }
     bool isEmpty() const
     {
         return m_maxX < m_minX || m_maxY < m_minY;

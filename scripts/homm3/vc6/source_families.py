@@ -32,11 +32,12 @@ import sys
 import time
 
 from homm3.core import common
+from homm3.core.project import Project
 from homm3.match import status
 from homm3.vc6 import tu_state_sweep as scoring
 from homm3.vc6._unit import flags_for_unit, source_for_unit
 
-VERSION = 7
+VERSION = 8
 
 
 @dataclass(frozen=True)
@@ -246,6 +247,16 @@ def next_population(axes, parents, seen, width, rng):
     return picked
 
 
+def create_snapshot(root, snapshot):
+    snapshot.mkdir()
+    shutil.copytree(root / "include", snapshot / "include")
+    shutil.copytree(root / "src", snapshot / "src", ignore=shutil.ignore_patterns("build"))
+    (snapshot / "config").mkdir()
+    for name in ("project.toml", "units.toml"):
+        shutil.copy2(root / "config" / name, snapshot / "config" / name)
+    (snapshot / "vendor").symlink_to(root / "vendor", target_is_directory=True)
+
+
 def compile_candidate(candidate_root, unit, output):
     source = source_for_unit(unit)
     flags = flags_for_unit(unit)
@@ -254,7 +265,8 @@ def compile_candidate(candidate_root, unit, output):
     output.mkdir(parents=True, exist_ok=True)
     obj = output / "candidate.obj"
     env = dict(os.environ, HOMM3_DIR=str(candidate_root),
-               PYTHONPATH=str(common.HOMM3_DIR / "scripts"))
+               PYTHONPATH=str(common.HOMM3_DIR / "scripts"),
+               MSVC_DIR=str(Project(common.HOMM3_DIR).toolchain))
     proc = subprocess.run([
         sys.executable, "-m", "homm3.core.cc_wrap", "--out", str(obj),
         "--src", str(candidate_root / source.relative_to(common.HOMM3_DIR)),
@@ -343,10 +355,7 @@ def main(argv=None):
     scoring._write_json(output / "input.json", payload)
     snapshot = output / "snapshot"
     if not snapshot.exists():
-        snapshot.mkdir()
-        shutil.copytree(root / "include", snapshot / "include")
-        shutil.copytree(root / "src", snapshot / "src", ignore=shutil.ignore_patterns("build"))
-        (snapshot / "vendor").symlink_to(root / "vendor", target_is_directory=True)
+        create_snapshot(root, snapshot)
     rows = status.load_baseline()
     plans = []
     for unit, source in zip(units, sources):

@@ -53,6 +53,13 @@ enum TRleControlCode {
     eRleControlOutline7 = 7
 };
 
+// The packed tile/adventure RLE stores a three-bit tag and a five-bit
+// run length. Tag 7 introduces literal palette bytes; general RLE uses 255.
+enum TPackedRleControlCode {
+    ePackedRleLiteral = 7,
+    ePackedRleMaxRunLength = 32
+};
+
 // Duff-loop entry selected by a raw row's width modulo eight. A zero
 // remainder enters the full eight-pixel arm.
 enum TRawRowUnrollEntry {
@@ -68,12 +75,18 @@ enum TRawRowUnrollEntry {
 
 class CSpriteFrame : public resource {
 public:
+    CSpriteFrame();
+    CSpriteFrame(const char* name, unsigned char cropped);
     CSpriteFrame(const char* name, int w, int h, unsigned char* data,
                  int csize, TEncodingMethod encoding);
     CSpriteFrame(const char* name, int w, int h, unsigned char* data,
                  int csize, TEncodingMethod encoding,
                  int cw, int ch, int cx, int cy);
     virtual ~CSpriteFrame();
+    void clear();
+    unsigned char getPixel(int x, int y) const;
+    int crop();
+    void encode(TEncodingMethod method);
     static TBlendMask s_div2mask;
     static unsigned short s_div4mask;
 
@@ -116,6 +129,15 @@ public:
     {
         drawCreatureImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
                          pal, hflip, outcolor, 0);
+    }
+    // Original: CSpriteFrame::DrawCreatureAlpha; CSpriteFrame.h:152, dc 0x740d0.
+    void drawCreatureAlpha(int sx, int sy, int sw, int sh,
+                           unsigned short* dst, int dx, int dy, int dw, int dh,
+                           int dpitch, TPalette16& pal, unsigned char hflip,
+                           unsigned short outcolor) const
+    {
+        drawCreatureImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
+                         pal, hflip, outcolor, 1);
     }
     // DC CSpriteFrame.h:157..179 records each public forwarding boundary.
     // Retail CSprite 0x47bdc0..0x47c0d0 expands them and calls the private impls.
@@ -161,6 +183,32 @@ public:
                          unsigned short* dst, int dx, int dy, int dw, int dh,
                          int dpitch, TPalette16& pal, unsigned char hflip,
                          unsigned char alpha) const;
+    // Original: CSpriteFrame::DrawPointer; CSpriteFrame.h:182, dc 0x74314.
+    // Complete expands this whole-frame transparent draw in CSprite::drawPointer.
+    void drawPointer(unsigned short* dst, int dx, int dy, int dw, int dh,
+                     int dpitch, TPalette16& pal, unsigned char hflip) const
+    {
+        draw(0, 0, m_width, m_height, dst, dx, dy, dw, dh, dpitch,
+             pal, hflip, 1);
+    }
+    // Original: CSpriteFrame::DrawInterface; CSpriteFrame.h:187, dc 0x7437c.
+    void drawInterface(int sx, int sy, int sw, int sh, unsigned short* dst,
+                       int dx, int dy, int dw, int dh, int dpitch,
+                       TPalette16& pal, unsigned char hflip) const
+    {
+        draw(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 1);
+    }
+    // Original: CSpriteFrame::DrawShroudTile; CSpriteFrame.h:192, dc 0x743dc.
+    // Its palette/frame parameter lifetimes span both retained retail calls.
+    void drawShroudTile(int sx, int sy, int sw, int sh, unsigned short* dst,
+                        int dx, int dy, int dw, int dh, int dpitch,
+                        TPalette16& pal, unsigned char hflip,
+                        unsigned char vflip) const
+    {
+        drawTile(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, vflip);
+        drawTileShadow(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
+                       pal, hflip, vflip);
+    }
     // DC CSpriteFrame field list records these public const accessors;
     // CSprite::drawPointer expands the corresponding retail width/height loads.
     // Width loads in retail CSprite::drawPointer identify this field.
@@ -184,10 +232,37 @@ public:
         drawAdvObjWithFlagAlpha(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
                                 pal, 0, hflip);
     }
+    void drawAdvObjWithFlagScaled50(int sx, int sy, int sw, int sh,
+        unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
+        TPalette16& pal, unsigned short flagcolor) const;
+    void drawAdvObjWithFlagScaled25(int sx, int sy, int sw, int sh,
+        unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
+        TPalette16& pal, unsigned short flagcolor) const;
+    void drawAdvObjShadowScaled50(int sx, int sy, int sw, int sh,
+        unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
+        TPalette16& pal) const;
+    void drawAdvObjShadowScaled25(int sx, int sy, int sw, int sh,
+        unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
+        TPalette16& pal) const;
+    void drawTileScaled50(int sx, int sy, int sw, int sh,
+        unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
+        TPalette16& pal, unsigned char hflip, unsigned char vflip) const;
+    void drawTileScaled25(int sx, int sy, int sw, int sh,
+        unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
+        TPalette16& pal, unsigned char hflip, unsigned char vflip) const;
     static void setPixelFormat(unsigned rmask, unsigned gmask,
                                unsigned bmask);
 
 private:
+    int importPCXFile(const char* filename);
+    int importCroppedPCXFile(const char* filename);
+    void encodeGeneral();
+    void encodeTileset();
+    void encodeAdvObj();
+    void clipScaled25(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
+        int dw, int dh, unsigned char hflip, unsigned char vflip) const;
+    void clipScaled50(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
+        int dw, int dh, unsigned char hflip, unsigned char vflip) const;
     void drawCreatureImpl(int sx, int sy, int sw, int sh,
                           unsigned short* dst, int dx, int dy, int dw,
                           int dh, int dpitch, TPalette16& pal,

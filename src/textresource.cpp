@@ -2,6 +2,11 @@
 #include <string.h>
 #include "textresource.h"
 
+// Original: TTextResource::TTextResource; textresource.cpp:33, dc 0x163808.
+TTextResource::TTextResource() : resource(0, RESOURCE_TYPE_NONE), m_data(0)
+{
+}
+
 VA_COMPGEN(0x005bbb70, 0x21, SCALAR_DELETING_DTOR, TTextResource)
 
 VA(0x005bbba0, 0x227)  // dc 0x163858
@@ -72,6 +77,12 @@ VA(0x005bbe20, 0x1B)
 unsigned int TTextResource::getSize() const
 {
     return sizeof(*this) + m_text.size();
+}
+
+// Original: TSpreadsheetResource::TSpreadsheetResource; textresource.cpp:177, dc 0x1639ec.
+TSpreadsheetResource::TSpreadsheetResource()
+    : resource(0, RESOURCE_TYPE_NONE), m_data(0)
+{
 }
 
 VA_COMPGEN(0x005bbe40, 0x21, SCALAR_DELETING_DTOR, TSpreadsheetResource)
@@ -163,23 +174,7 @@ TSpreadsheetResource::~TSpreadsheetResource()
         delete m_data;
 }
 
-// The default constructors have no retail entries in the bounded contribution;
-// their only DC role was to create empty resource records.
 #if 0  // @carcass
-// E:\gamedcs\textresource.cpp:33
-DC_ONLY(0x163808, 0x50)
-TTextResource::TTextResource()
-{
-    // @stub
-}
-
-// E:\gamedcs\textresource.cpp:177
-DC_ONLY(0x1639ec, 0x84)
-TSpreadsheetResource::TSpreadsheetResource()
-{
-    // @stub
-}
-
 // E:\gamedcs\textresource.cpp:34
 DC_ONLY(0x163cf8, 0x34)
 void* TTextResource::`scalar deleting destructor'(unsigned __flags)

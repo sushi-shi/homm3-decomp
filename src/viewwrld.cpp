@@ -374,7 +374,7 @@ void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int 
             tilex + (2 - boatCellY) * 32,
             tiley - boatCellX * 32 + 32, tilew, tileh,
             g_memoryBuffer, 0, 0,
-            currBoat->m_facing > hero::kFacingS);
+            currBoat->getHflip());
     }
 
     m_boatIcons[currBoat->m_type]->drawHero(
@@ -383,7 +383,7 @@ void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int 
         tilex + (2 - boatCellY) * 32,
         tiley - boatCellX * 32 + 32, tilew, tileh,
         g_memoryBuffer, 0, 0,
-        currBoat->m_facing > hero::kFacingS);
+        currBoat->getHflip());
 }
 
 VA(0x005f7ef0, 0x1E1)  // dc 0x1938cc
@@ -403,7 +403,7 @@ void advManager::vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX
             tilex + (2 - boatCellY) * 32,
             tiley - boatCellX * 32 + 32, tilew, tileh,
             g_memoryBuffer, 0, 0,
-            currBoat->m_facing > hero::kFacingS);
+            currBoat->getHflip());
     }
 
     m_boatIcons[currBoat->m_type]->drawHeroShadow(
@@ -412,7 +412,7 @@ void advManager::vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX
         tilex + (2 - boatCellY) * 32,
         tiley - boatCellX * 32 + 32, tilew, tileh,
         g_memoryBuffer, 0, 0,
-        currBoat->m_facing > hero::kFacingS);
+        currBoat->getHflip());
 }
 
 // The dispatch is a jump table, so the emitted arm order IS the source case

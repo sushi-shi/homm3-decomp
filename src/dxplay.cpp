@@ -42,6 +42,28 @@ int __stdcall enumPlayersCallback(unsigned long, unsigned long, const DPNAME*, u
 // process the first time any DirectPlay object is built.
 static unsigned char g_coInitialized = 0;
 
+// E:\gamedcs\dxplay.cpp:66 - the CDPlay base ctor has no standalone retail body;
+// it is emitted only inlined into the CDPlayLobby (and CDPlayHeroes) ctors. The
+// process is CoInitialized once, guarded by a file-scope flag.
+CDPlay::CDPlay()
+{
+    m_dp = 0;
+    m_connected = 0;
+    m_inSession = 0;
+    m_isHost = 0;
+    m_res = 0;
+    m_guid = g_guidNull;
+    m_sessionArray = 0;
+    m_connectionArray = 0;
+    m_groupArray = 0;
+    m_playerArray = 0;
+    memset(m_caps, 0, sizeof(m_caps));
+    if (!g_coInitialized) {
+        CoInitialize(0);
+        g_coInitialized = 1;
+    }
+}
+
 VA_COMPGEN(0x00496ce0, 0x2F, SCALAR_DELETING_DTOR, CDPlay)
 
 VA(0x00496d10, 0x14)  // dc 0x8a0e4
@@ -382,11 +404,7 @@ VA(0x00497910, 0x180)  // dc 0x8a828
 unsigned char CDPlay::receiveSystemMsg(unsigned long toID, CDPlayMsg* msg)
 {
     DPMSG_GENERIC* generic = static_cast<DPMSG_GENERIC*>(static_cast<void*>(msg->m_data));
-    unsigned long messageType;
-    if (!generic)
-        messageType = 0xFFFFFFFF;
-    else
-        messageType = generic->m_type;
+    unsigned long messageType = msg->getId();
     switch (messageType) {
     case DPSYS_ADDGROUPTOGROUP:
         return sysMsgAddGroupToGroup(static_cast<DPMSG_ADDGROUPTOGROUP*>(static_cast<void*>(generic)), toID);
@@ -641,6 +659,15 @@ unsigned char CDPlay::sysMsgCreatePlayerOrGroup(DPMSG_CREATEPLAYERORGROUP* sysMs
     return 1;
 }
 
+// Original: CDPlay::SysMsgDestroyPlayerOrGroup; dxplay.cpp:890, dc 0x8af4c.
+// Both base/lobby vtables slot57 fold this ordinary return-true body to
+// the neighboring CreatePlayerOrGroup implementation0x4981e0.
+unsigned char CDPlay::sysMsgDestroyPlayerOrGroup(
+    DPMSG_DESTROYPLAYERORGROUP* sysMsg, unsigned long toID)
+{
+    return 1;
+}
+
 VA(0x004981f0, 0x24)  // dc 0x8af50
 unsigned char CDPlay::addPlayerToGroup(unsigned long groupId, unsigned long playerId)
 {
@@ -863,28 +890,6 @@ unsigned char CDPlay::getReceiveQueueSize(unsigned long from, unsigned long to, 
     unsigned char ok = m_res >= 0;
     return ok;
 }
-// E:\gamedcs\dxplay.cpp:66 - the CDPlay base ctor has no standalone retail body;
-// it is emitted only inlined into the CDPlayLobby (and CDPlayHeroes) ctors. The
-// process is CoInitialized once, guarded by a file-scope flag.
-CDPlay::CDPlay()
-{
-    m_dp = 0;
-    m_connected = 0;
-    m_inSession = 0;
-    m_isHost = 0;
-    m_res = 0;
-    m_guid = g_guidNull;
-    m_sessionArray = 0;
-    m_connectionArray = 0;
-    m_groupArray = 0;
-    m_playerArray = 0;
-    memset(m_caps, 0, sizeof(m_caps));
-    if (!g_coInitialized) {
-        CoInitialize(0);
-        g_coInitialized = 1;
-    }
-}
-
 VA(0x00498870, 0x82)  // dc 0x8b56c
 CDPlayLobby::CDPlayLobby()
 {
@@ -1057,6 +1062,57 @@ unsigned char CDPlayLobby::connect()
     return ok;
 }
 
+// Original: CDPlayLobby::SendStandardLobbyMsg; dxplay.cpp:1476, dc 0x8b808.
+// The ordinary lobby-message APIs use the same interface and HRESULT state
+// as Complete's retained connection-setting wrappers. DC1478/1479 proves
+// the null-lobby guard and SendLobbyMessage flags2. They have no separately
+// claimed retail entries or invented callers.
+unsigned char CDPlayLobby::sendStandardLobbyMsg(
+    unsigned long appId, void* data, unsigned long size)
+{
+    if (!m_lobby)
+        return 0;
+    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->SendLobbyMessage(
+        DPLMSG_STANDARD, appId, data, size);
+    if (m_res < 0)
+        return 0;
+    return 1;
+}
+
+// Original: CDPlayLobby::SendLobbyMsg; dxplay.cpp:1490, dc 0x8b864.
+unsigned char CDPlayLobby::sendLobbyMsg(
+    unsigned long appId, void* data, unsigned long size)
+{
+    if (!m_lobby)
+        return 0;
+    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->SendLobbyMessage(
+        0, appId, data, size);
+    if (m_res < 0)
+        return 0;
+    return 1;
+}
+
+// Original: CDPlayLobby::ReceiveLobbyMsg; dxplay.cpp:1503, dc 0x8b8a8.
+// DC1511..1521 retries after growing CDPlayMsg's buffer. DC1525/1526
+// dispatches SYSTEM/STANDARD messages and negates the handler result.
+unsigned char CDPlayLobby::receiveLobbyMsg(unsigned long appId, CDPlayMsg* msg)
+{
+    unsigned long flags;
+    if (!m_lobby)
+        return 0;
+    do {
+        m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->ReceiveLobbyMessage(
+            0, appId, &flags, msg->m_data, &msg->m_dataSize);
+        if (m_res == DPERR_BUFFERTOOSMALL)
+            msg->allocSize(msg->m_dataSize);
+        else if (m_res < 0)
+            return 0;
+    } while (m_res == DPERR_BUFFERTOOSMALL);
+    if (flags == DPLMSG_SYSTEM || flags == DPLMSG_STANDARD)
+        return !handleSystemLobbyMsg(appId, msg);
+    return 1;
+}
+
 VA(0x00498d80, 0x3C9)  // dc 0x8b950
 CDPlayConnection* CDPlayLobby::createTCPIPConnection(
     char* ipAddress, char* name, CDPlayConnection* append)
@@ -1201,6 +1257,14 @@ CDPlayConnection* CDPlayLobby::createSerialConnection(char* name, _DPCOMPORTADDR
     CDPlayConnection* conn = new CDPlayConnection(&g_spSerial, addressSize, address, name);
     ::operator delete(address);
     return conn;
+}
+
+// Original: CDPlayLobby::HandleSystemLobbyMsg; dxplay.cpp:1802, dc 0x8b960.
+// Complete's lobby vtable0x63dd20 slot71 folds this return-true default
+// into the identical ordinary body0x4981e0 (mov al,1; ret8).
+unsigned char CDPlayLobby::handleSystemLobbyMsg(unsigned long appId, CDPlayMsg* msg)
+{
+    return 1;
 }
 
 VA(0x00499900, 0x97)  // dc 0x8b964
@@ -1381,39 +1445,46 @@ void CDPlay::CDPlay()
     // @stub
 }
 
-// E:\gamedcs\dxplay.cpp:890
-DC_ONLY(0x8af4c, 0x4)
-unsigned char CDPlay::sysMsgDestroyPlayerOrGroup(DPMSG_DESTROYPLAYERORGROUP* pSysMsg, unsigned long toID)
+
+
+
+
+
+// C:\WCEDreamcast\inc\objbase.h:519
+DC_ONLY(0x8bc84, 0x1C)
+int operator==(const _GUID* guidOne, const _GUID* guidOther)
 {
     // @stub
 }
 
-// E:\gamedcs\dxplay.cpp:1476
-DC_ONLY(0x8b808, 0x5C)
-unsigned char CDPlayLobby::SendStandardLobbyMsg(unsigned long dwAppId, void* pData, unsigned long dwSize)
-{
-    // @stub
-}
 
-// E:\gamedcs\dxplay.cpp:1490
-DC_ONLY(0x8b864, 0x42)
-unsigned char CDPlayLobby::SendLobbyMsg(unsigned long dwAppId, void* pData, unsigned long dwSize)
-{
-    // @stub
-}
 
-// E:\gamedcs\dxplay.cpp:1503
-DC_ONLY(0x8b8a8, 0xA6)
-unsigned char CDPlayLobby::ReceiveLobbyMsg(unsigned long dwAppId, CDPlayMsg* pMsg)
-{
-    // @stub
-}
 
-// E:\gamedcs\dxplay.cpp:1802
-DC_ONLY(0x8b960, 0x4)
-unsigned char CDPlayLobby::handleSystemLobbyMsg(unsigned long dwAppId, CDPlayMsg* pMsg)
-{
-    // @stub
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #endif  // @carcass
