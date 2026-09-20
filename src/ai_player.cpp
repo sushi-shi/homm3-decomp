@@ -3052,6 +3052,7 @@ long splitArmy(armyGroup* currentArmy, short index, short limit,
 // DC2820 binds current_army;2823 counts free slots;2880/2939 return when
 // the split loops exhaust those slots. Consolidation and final arrangement
 // belong to AI_arrange_army_for_combat below, whose retail body expands us.
+// DC2832..2834 initializes max value, shooter count, then shooter value.
 static void splitArmies(hero* currentHero, const hero* enemyHero,
                         const armyGroup& enemy)
 {
@@ -3060,9 +3061,9 @@ static void splitArmies(hero* currentHero, const hero* enemyHero,
     if (openSlots <= 0) {
         return;
     }
+    int enemyMaxValue = 0;
     int enemyShooterCount = 0;
     int enemyShooterValue = 0;
-    int enemyMaxValue = 0;
     float ratio;
     if (enemyHero == 0)
         ratio = 1.0f;

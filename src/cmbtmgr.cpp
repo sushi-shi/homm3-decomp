@@ -3550,8 +3550,11 @@ bool combatManager::isQuickCombat() const
     if (g_game->m_isTutorial)
         return false;
     if (g_videoPaused && m_sideIsAi[0] && m_sideIsAi[1]) {
-        if (g_game->m_players[m_playerIds[0]].m_quickCombat
-                && g_game->m_players[m_playerIds[1]].m_quickCombat)
+        // Retail's three inlined missile callers retain both player aliases;
+        // this standalone body folds the same references into direct loads.
+        playerData& firstPlayer = g_game->m_players[m_playerIds[0]];
+        playerData& secondPlayer = g_game->m_players[m_playerIds[1]];
+        if (firstPlayer.m_quickCombat && secondPlayer.m_quickCombat)
             return true;
         return false;
     }
