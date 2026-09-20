@@ -105,7 +105,11 @@ def main():
     out.parent.mkdir(parents=True, exist_ok=True)
     if out.exists(): out.unlink()
     os.environ.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
-    if not Path(os.environ.get("WINEPREFIX", "")).is_dir():   # same anti-stale anchor
+    # Same anti-stale anchor. Test the string first: Path("") is PosixPath("."),
+    # whose is_dir() is True, so an ABSENT WINEPREFIX used to satisfy this guard
+    # and leave the compile on the shared ~/.wine prefix instead of this tree's.
+    _prefix = os.environ.get("WINEPREFIX", "")
+    if not (_prefix and Path(_prefix).is_dir()):
         os.environ["WINEPREFIX"] = str(HOMM3_DIR / "build/wineprefix")
     ensure_wineserver()
     from homm3.core.project import Project
