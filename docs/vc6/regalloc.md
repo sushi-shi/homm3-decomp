@@ -1925,12 +1925,20 @@ and branch structure agree; the measured match is 99.9779%. Strict relocation
 comparison still flags the pointer-vector insert versus retail's int-vector
 label, alongside data-label differences ignored by the score.
 
-This explains the residual, not the missing original source. Earlier pointer
+This explained the residual, not the missing original source. Earlier pointer
 declarations, existing origin accessors, equivalent clearing loops, index
 signedness and returned-coordinate ownership do not remove it. Do not add
 padding, artificial scopes or otherwise unnecessary references to change a
 bin's priority. Recover actual lifetimes and data flow; the sort is a diagnostic
 model, not a substitute for source evidence.
+
+Sharing `connectionIndex` across both zone passes resolves the tie and reaches
+100%. The second pass resets that same index, scans past connected records and
+resumes from the first unconnected record. The 24-state cursor/record-lifetime
+family reproduces the exact candidate independently; borrowed cell-record
+references do not help. A separate 30-state pass-cursor family confirms that
+splitting the map cursor or the object position does not fix this residual.
+No extra operation, artificial scope or compiler pin is needed.
 
 ### Attribute register priorities to actual live ranges
 

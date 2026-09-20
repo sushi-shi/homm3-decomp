@@ -3324,7 +3324,7 @@ rmg	?clearPlacementMarks@type_object@@QAEXXZ	100.0000	100.0000	100.0000	0x133150
 rmg	?clipRmgBoundaryPoint@@YI?AUTPoint@@ABUTRmgZoneBounds@@U1@1@Z	95.5399	100.0000	100.0000	0x13cac0	tokens1:20ed87e54142
 rmg	?commitTreasureGroup@type_random_map_generator@@QAEXPAUTRmgTreasureGroup@@UTRmgMapPosition@@@Z	93.3047	99.9141	99.9141	0x1469b0	tokens1:cda3f07dc179
 rmg	?connectJunctionEntrance@type_random_map_generator@@QAEXUTPoint@@0PAUTRmgZone@@@Z	99.5699	100.0000	100.0000	0x1443a0	tokens1:2c2431b6c239
-rmg	?connectZones@type_random_map_generator@@QAEXXZ	99.9779	99.9779	99.9779	0x143240	tokens1:d6a91cfdf82f
+rmg	?connectZones@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x143240	tokens1:03ba1a077a8f
 rmg	?copy@std@@YIPAHPAH00@Z	100.0000	100.0000	100.0000	0x1093c0	-
 rmg	?copy@std@@YIPAHPBH0PAH@Z	100.0000	100.0000	100.0000	0x14df40	-
 rmg	?copy@std@@YIPAUTRmgMapPosition@@PAU2@00@Z	100.0000	100.0000	100.0000	0x14d9e0	-

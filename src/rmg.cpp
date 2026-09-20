@@ -6745,17 +6745,16 @@ void TRmgZoneConnection::setConnected()
 // helpers, then repair every remaining non-water connection with shipyard
 // reachability and monolith placement.  Helper spellings are role-based until
 // their own bodies are admitted, but the calls and signatures are fixed by
-// this function's ABI and retail CFG. Shared zone/counterpart locals, one
-// resume cursor, connected-state queries and the returned water coordinate
-// reach 99.9779% while preserving the water-position fix. All 96 blocks and
-// instruction counts agree. Calls agree except the pointer-vector insert's
-// retail int-vector label; strict relocation comparison retains that warning.
-// The remaining scored difference swaps
-// mapItem (-0x20 versus retail -0x1c) and the allocator temporary byte
-// (-0x19 versus -0x1d). Passive C2 tracing gives both bins priority 3000:
-// twelve refs/four bytes versus three refs/one byte; see docs/vc6/regalloc.md.
-// Declaration moves, coordinate-return forms, clearing loops and signedness
-// controls leave that tie unresolved; no padding or dummy reference is added.
+// this function's ABI and retail CFG. Shared zone/counterpart locals,
+// connected-state queries and the returned water coordinate reach 100%.
+// Both zone passes reuse connectionIndex, including the second pass's
+// first-unconnected scan. Separate indices left 99.9779%: mapItem and the
+// allocator byte exchanged stack homes despite identical control flow.
+// See docs/vc6/regalloc.md for the compiler's equal-priority stack-bin sort.
+// The pointer-vector insert keeps retail's int-vector label in strict
+// relocation comparisons; its 436-byte retail span, relocation sites and
+// all five differently named leaf helpers agree with their retail bodies.
+// The shipyard path still floods the successful water coordinate.
 // Existing findConnection calls own both reverse-connection searches.
 VA(0x00543240, 0x797)
 void type_random_map_generator::connectZones()
@@ -6799,6 +6798,7 @@ void type_random_map_generator::connectZones()
     TRmgTownSlot* zoneTemplate;
     TRmgZone* destination;
     TRmgZoneConnection* oppositeConnection;
+    int connectionIndex;
     int zoneIndex;
     for (zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         zone = m_zones[zoneIndex];
@@ -6813,7 +6813,7 @@ void type_random_map_generator::connectZones()
              remaining--; ++mapItem)
             mapItem->m_tileData.m_connectionVisited = 0;
 
-        for (int connectionIndex = 0;
+        for (connectionIndex = 0;
              connectionIndex < zoneTemplate->m_connections.size();
              ++connectionIndex) {
             TRmgZoneConnection* connection =
@@ -6857,7 +6857,7 @@ void type_random_map_generator::connectZones()
         if (zone->getTerrain() == eTerrainWater)
             continue;
 
-        int connectionIndex = 0;
+        connectionIndex = 0;
         while (connectionIndex < zoneTemplate->m_connections.size()
                && zoneTemplate->m_connections[connectionIndex].isConnected())
             ++connectionIndex;
