@@ -560,7 +560,7 @@ army	?getAttackDirection@army@@QBEJJPBV1@J@Z	100.0000	100.0000	100.0000	0x45840	
 army	?getAttackModifier@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42550	tokens1:1698e4980768
 army	?getAverageDamage@army@@QBEJPBV1@EJEJ@Z	100.0000	100.0000	100.0000	0x42780	tokens1:7796e176e36f
 army	?getAverageDamage@army@@QBENXZ	100.0000	100.0000	100.0000	0x426f0	tokens1:427dd90c5ea9
-army	?getBerserkTargets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	94.1648	94.1648	94.1648	0x45490	tokens1:c39f73fe2fc0
+army	?getBerserkTargets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x45490	tokens1:865c6e1173f6
 army	?getController@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x42690	tokens1:6b458a256c56
 army	?getControllingSide@army@@QBEHXZ	100.0000	100.0000	100.0000	0x40140	tokens1:104f842bbe88
 army	?getDefenseModifier@army@@QBEJXZ	100.0000	100.0000	100.0000	0x42660	tokens1:2e7b0a8da6d7
