@@ -49,8 +49,7 @@ scores. Inspect a failing command's actual exit status and cause before continui
    bodies and caller expansions separately. Returned objects and temporary
    lifetimes can expose nested helpers; do not manufacture caller braces,
    false `inline`, alternate declarations, dummy operations or pragma pins to
-   force a score. Use `homm3 vc6 predict-inline <selector>` for inlining questions
-   and the Holista skill for difficult reconstruction plateaus.
+   force a score. Use `homm3 vc6 predict-inline <selector>` for inlining questions.
 
 Unreconstructed callees and EH frames are not automatic blockers to matching a
 caller. Distinguish missing evidence from a demonstrated compiler limitation.

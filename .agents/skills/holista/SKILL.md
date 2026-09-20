@@ -1,6 +1,6 @@
 ---
 name: holista
-description: Pair a primary matcher with Holista to reconstruct plausible original C++ from debug evidence, retail assembly, temporary lifetimes and shared helpers. Use for difficult matches or explicitly authorized sustained module-wide or whole-tree reconstruction.
+description: Pair a primary matcher with Holista to reconstruct plausible original C++ from debug evidence, retail assembly, temporary lifetimes and shared helpers. Use only for difficult matching plateaus after the ordinary matching loop has stalled, or when the user explicitly requests Holista.
 ---
 
 # Holista
@@ -9,6 +9,11 @@ Recover a coherent source model: what C++ would the original developers
 plausibly have written? Treat the current reconstruction, including its helper
 boundaries and interfaces, as a hypothesis. Follow the active repository's
 `AGENTS.md` and [matching workflow](../match/SKILL.md) for evidence and measurement.
+
+Use this skill for established hard residuals. A missing function, an initial
+non-exact score, or a module-wide assignment alone does not establish a plateau.
+Handle routine reconstruction with the matching skill; bring Holista in only
+for the targets that remain difficult.
 
 ## Two-worker collaboration
 
@@ -26,7 +31,7 @@ headers, builds or generated ledgers. Keep this a two-worker pattern unless the
 user asks for more. Holista sends a useful lead early; the primary returns
 measured instruction, call, lifetime and CFG differences so both can refine it.
 
-For an explicitly authorized module-wide or whole-tree campaign, Holista writes
+For an explicitly authorized campaign over difficult targets, Holista writes
 source batches rather than stopping at advice. Track owned files/functions, base
 commit, evidence, prepared changes and next steps in an ignored work area. Label
 unbuilt work as prepared, not measured. Hand batches to the primary for integration
