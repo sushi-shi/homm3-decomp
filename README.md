@@ -20,9 +20,10 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 | Module        | Units |  Function exact MAX | Functions exact CUR | Fuzzy MAX | Fuzzy CUR |
 | :------------ | ----: | ------------------: | ------------------: | --------: | --------: |
-| `game`        |   131 | 3858 / 4310 (89.5%) | 3800 / 4310 (88.2%) |    97.04% |    96.69% |
+| `game`        |   127 | 3824 / 4267 (89.6%) | 3766 / 4267 (88.3%) |    97.07% |    96.72% |
 | `rmg`         |     3 |   303 / 368 (82.3%) |   293 / 368 (79.6%) |    95.03% |    93.54% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
+| `codec`       |     4 |     34 / 43 (79.1%) |     34 / 43 (79.1%) |    93.75% |    93.75% |
 | `victor`      |     4 |      5 / 17 (29.4%) |      5 / 17 (29.4%) |    85.40% |    85.40% |
 | `(unmatched)` |     — |        0 / 2 (0.0%) |        0 / 2 (0.0%) |      0.0% |      0.0% |
 
@@ -38,8 +39,15 @@ _Excluded from the % above — generated/library code, not independent reconstru
 <!-- match-score:end -->
 
 Module membership is declared in `config/units.toml`: `rmg` groups the three
-random-map generator units, and `victor` groups the four reconstructed image-library
-units. Remaining project units are reported under `game`.
+random-map generator units, `codec` groups the game-owned DEF decoder and
+archive/compression readers, and `victor` groups the four reconstructed
+image-library units. Victor and zlib retain separate vendor-library rows.
+Remaining project units are reported under `game`.
+
+The [`codec` module](docs/codec-module.md) targets semantic input/output agreement,
+including complete installed-corpus comparisons and the existing independent
+Rust implementations. Its byte-match percentages remain diagnostics, not a
+requirement to reach 100%.
 
 The score ledger always keeps `CUR <= MAX <= HIST`. CUR is the latest full
 build; MAX is the best score observed for the function's current source hash;

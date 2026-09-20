@@ -33,13 +33,14 @@ class ReadmeUniverseTest(unittest.TestCase):
             {'unit': 'cursor', 'source': 'src/cursor.cpp'},
             {'unit': 'rmg', 'source': 'src/rmg.cpp', 'module': 'rmg'},
             {'unit': 'rmg_support', 'source': 'src/rmg_support.cpp', 'module': 'rmg'},
+            {'unit': 'cspriteframe', 'source': 'src/cspriteframe.cpp', 'module': 'codec'},
             {'unit': 'victor', 'source': 'src/victor.cpp', 'module': 'victor'},
             {'unit': 'adler32', 'source': 'vendor/zlib-1.1.3/adler32.c'},
         ]
         report = {'units': [{'name': u['unit'], 'functions': [
             {'name': 'f', 'size': 10, 'fuzzy_match_percent': 100}]} for u in units]}
         rvas = {(u['unit'], 'f'): 0x1000 + i * 16 for i, u in enumerate(units)}
-        summary = ({r: 'target' for r in rvas.values()}, {}, {'target': (5, 50)})
+        summary = ({r: 'target' for r in rvas.values()}, {}, {'target': (6, 60)})
         with tempfile.TemporaryDirectory() as tmp:
             readme = Path(tmp) / 'README.md'
             readme.write_text(status.RM_START + '\n' + status.RM_END + '\n')
@@ -55,9 +56,10 @@ class ReadmeUniverseTest(unittest.TestCase):
                     for line in text.splitlines() if line.startswith('| `')}
             self.assertEqual(rows['`game`'][0:2], ['1', '1 / 1 (100.0%)'])
             self.assertEqual(rows['`rmg`'][0:2], ['2', '2 / 2 (100.0%)'])
+            self.assertEqual(rows['`codec`'][0:2], ['1', '1 / 1 (100.0%)'])
             self.assertEqual(rows['`victor`'][0:2], ['1', '1 / 1 (100.0%)'])
             self.assertEqual(rows['`zlib-1.1.3`'][0:2], ['1', '1 / 1 (100.0%)'])
-            self.assertIn('5 / 5 functions exact', text)
+            self.assertIn('6 / 6 functions exact', text)
 
 
 class UpdateRowsTest(unittest.TestCase):

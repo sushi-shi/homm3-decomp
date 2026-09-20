@@ -513,6 +513,7 @@ flags = "game_o2_ml_gr_windows"
 
 [[unit]]
 unit = "lodfile"
+module = "codec"
 source = "src/lodfile.cpp"
 flags = "game_o2_ml_gr_windows"
 
@@ -568,6 +569,7 @@ flags = "game_o2_ml_gr_windows"
 
 [[unit]]
 unit = "cspriteframe"
+module = "codec"
 source = "src/cspriteframe.cpp"
 flags = "game_o2_ml_gr_windows"
 
@@ -891,11 +893,13 @@ flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "gzfile"
+module = "codec"
 source = "src/gzfile.cpp"
 flags = "game_o2_ml_gr_windows"
 
 [[unit]]
 unit = "gzinflatebuf"
+module = "codec"
 source = "src/gzinflatebuf.cpp"
 flags = "game_o2_mt_gr_windows"
 
