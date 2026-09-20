@@ -328,6 +328,8 @@ struct TRmgZoneConnection {
     unsigned char m_unguarded;               // +0x08
     unsigned char m_placeBorderObjects;      // +0x09
     unsigned char m_connected;               // +0x0a
+    unsigned char isConnected() const;
+    void setConnected();
     // Replaces synthetic opaque000b: +0x0b aligns four int limits.
     // Retail connection reader 0x5382c9..0x538304 parses spreadsheet
     // columns 81..84 into +0x0c/+0x10/+0x14/+0x18. At 0x538307..0x53832b

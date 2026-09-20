@@ -20,7 +20,7 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 | Module        | Units |  Function exact MAX | Functions exact CUR | Fuzzy MAX | Fuzzy CUR |
 | :------------ | ----: | ------------------: | ------------------: | --------: | --------: |
-| `game`        |   138 | 4152 / 4695 (88.4%) | 4082 / 4695 (86.9%) |    96.82% |    96.37% |
+| `game`        |   138 | 4152 / 4695 (88.4%) | 4082 / 4695 (86.9%) |    96.83% |    96.38% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
 | `(unmatched)` |     — |        0 / 2 (0.0%) |        0 / 2 (0.0%) |      0.0% |      0.0% |
 
