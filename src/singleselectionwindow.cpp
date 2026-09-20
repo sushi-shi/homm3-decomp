@@ -3247,8 +3247,7 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
                                  localHeader.m_description);
     g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
     g_game->m_setup.m_difficulty = static_cast<signed char>(g_lastDiff);
-    static_cast<CScrollTextWidget*>(m_descriptionWidget)
-        ->setText(localHeader.m_description);
+    m_descriptionWidget->setText(localHeader.m_description);
 
     for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
         m_players.m_humanPlayers[j].m_heroIndex = -1;
@@ -4106,8 +4105,7 @@ void TSingleSelectionWindow::updateGameVars()
                                      localHeader->m_description);
         g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
         g_game->m_setup.m_difficulty = static_cast<signed char>(g_lastDiff);
-        static_cast<CScrollTextWidget*>(m_descriptionWidget)
-            ->setText(localHeader->m_description);
+        m_descriptionWidget->setText(localHeader->m_description);
         return;
     }
 
@@ -4133,7 +4131,7 @@ void TSingleSelectionWindow::updateGameVars()
                                  selected.m_description);
     g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
     g_game->m_setup.m_difficulty = static_cast<signed char>(g_lastDiff);
-    static_cast<CScrollTextWidget*>(m_descriptionWidget)->setText(selected.m_description);
+    m_descriptionWidget->setText(selected.m_description);
 
     if (g_selectionCampaignMode)
         g_game->m_setup.m_turnDuration = 10;
@@ -4921,10 +4919,9 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
                 break;
             }
             broadcastMessage(msg);
-            static_cast<CScrollTextWidget*>(m_descriptionWidget)
-                ->setText(g_game->m_mapHeader.m_mapDescription.c_str());
+            m_descriptionWidget->setText(g_game->m_mapHeader.m_mapDescription.c_str());
         } else {
-            static_cast<CScrollTextWidget*>(m_descriptionWidget)->setText("");
+            m_descriptionWidget->setText("");
         }
     } else {
         if (m_randomMapSelected)
@@ -7726,8 +7723,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
                                      header->m_description);
         g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
         g_game->m_setup.m_difficulty = static_cast<signed char>(g_lastDiff);
-        static_cast<CScrollTextWidget*>(m_descriptionWidget)
-            ->setText(header->m_description);
+        m_descriptionWidget->setText(header->m_description);
     }
 
     if (!m_flag64 && g_game->m_mapHeader.m_version != MAP_FORMAT_SHADOW_OF_DEATH

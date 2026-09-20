@@ -821,8 +821,8 @@ bottomviewsubwindow	?uflow@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHXZ
 bottomviewsubwindow	?underflow@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x54070	-
 bottomviewsubwindow	?xsgetn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHPADH@Z	100.0000	100.0000	100.0000	0x540b0	-
 bottomviewsubwindow	?xsputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHPBDH@Z	100.0000	100.0000	100.0000	0x54150	-
-button	??0button@@QAE@HHHHHPBDHHEHH@Z	100.0000	100.0000	100.0000	0x55ef0	tokens1:5f3dcb5cb1ea
-button	??0textButton@@QAE@HHHHHPBD00HHEHHW4TColor@font@@@Z	100.0000	100.0000	100.0000	0x56a50	tokens1:5def40e5d89a
+button	??0button@@QAE@HHHHHPBDHH_NHH@Z	100.0000	100.0000	100.0000	0x55ef0	tokens1:3adc57bbca3c
+button	??0textButton@@QAE@HHHHHPBD00HH_NHHW4TColor@font@@@Z	100.0000	100.0000	100.0000	0x56a50	tokens1:5970fce43592
 button	??0type_func_button@@QAE@JJJJJPBDP6IHAAVmessage@@@ZHH@Z	100.0000	100.0000	100.0000	0x56d30	tokens1:2cafe7470823
 button	??1button@@UAE@XZ	100.0000	100.0000	100.0000	0x560f0	tokens1:2bd7c396cebc
 button	??1textButton@@UAE@XZ	100.0000	100.0000	100.0000	0x56bf0	tokens1:80b35d6c600d
@@ -3871,7 +3871,7 @@ singleselectionwindow	??0NewSMapHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0
 singleselectionwindow	??0SCampaign@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fc10	-
 singleselectionwindow	??0SavedGameHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x193f50	-
 singleselectionwindow	??0SavedGameHeader@@QAE@XZ	67.4607	67.4607	100.0000	0xbc0e0	tokens1:f3843088fab5
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	96.2895	96.2895	96.2895	0x179960	tokens1:04fe3a432e6f
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	96.4038	96.4038	96.4038	0x179960	tokens1:04fe3a432e6f
 singleselectionwindow	??0message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	tokens1:5b9404da14c9
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	tokens1:bb76c3485a66
 singleselectionwindow	??1?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x18ea70	-
@@ -4004,7 +4004,7 @@ singleselectionwindow	?lower_bound@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@s
 singleselectionwindow	?makeHeroFilter@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x183890	tokens1:2ab98750b2d2
 singleselectionwindow	?newPlayer@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x18a280	tokens1:81dec24c9ecc
 singleselectionwindow	?onBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18df50	tokens1:3b4415b6c652
-singleselectionwindow	?onBeginGame@TSingleSelectionWindow@@QAEEXZ	75.4086	75.4086	78.9055	0x18bce0	tokens1:7f2af7b1f8d8
+singleselectionwindow	?onBeginGame@TSingleSelectionWindow@@QAEEXZ	75.4086	75.4086	78.9055	0x18bce0	tokens1:67c67e921406
 singleselectionwindow	?onDeleteFile@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18dfb0	tokens1:5ec07b367ed0
 singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a440	tokens1:5716c03bed8f
 singleselectionwindow	?onGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	tokens1:b9f9c72a63cb
@@ -4030,12 +4030,12 @@ singleselectionwindow	?processMouse@@YGIPAX@Z	100.0000	100.0000	100.0000	0x17774
 singleselectionwindow	?processRightSelect@TSingleSelectionWindow@@EAEEH@Z	88.9040	88.9040	88.9695	0x1822d0	tokens1:c2c79d85325f
 singleselectionwindow	?read@CGameHeaderInfoMsg@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177880	tokens1:ec96da683eeb
 singleselectionwindow	?read@CNewMapHeaderInfoMsg@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177a10	tokens1:da9d90f3b76b
-singleselectionwindow	?rebuildFilteredPlayerSetup@TSingleSelectionWindow@@QAEXXZ	81.8719	81.8719	81.8719	0x180430	tokens1:dd7ec1749cb2
+singleselectionwindow	?rebuildFilteredPlayerSetup@TSingleSelectionWindow@@QAEXXZ	81.8719	81.8719	81.8719	0x180430	tokens1:aa75cc8bad1b
 singleselectionwindow	?receiveChat@TSingleSelectionWindow@@QAEXKPAD_N@Z	100.0000	100.0000	100.0000	0x18ae10	tokens1:8115f6bcb2bc
 singleselectionwindow	?saveValid@@YIEPBD@Z	100.0000	100.0000	100.0000	0x177360	tokens1:e514d1cc74a1
 singleselectionwindow	?sendChat@CSingleSelectionChatEdit@@UAEXPBDH@Z	100.0000	100.0000	100.0000	0x17cc00	tokens1:d8056321cbbd
 singleselectionwindow	?sendPlayerFaces@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18bc70	tokens1:bbb04ed2f37b
-singleselectionwindow	?setCurrentMap@TSingleSelectionWindow@@QAEXH_N@Z	100.0000	100.0000	100.0000	0x185500	tokens1:7bd1dcb2a23e
+singleselectionwindow	?setCurrentMap@TSingleSelectionWindow@@QAEXH_N@Z	100.0000	100.0000	100.0000	0x185500	tokens1:9eff27aae9b7
 singleselectionwindow	?setDifficultyHiLite@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x186060	tokens1:77f55059a4f6
 singleselectionwindow	?setFilter@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x185d90	tokens1:a10b858ed97c
 singleselectionwindow	?setHumanSlot@TSingleSelectionWindow@@QAEXXZ	91.0411	91.0411	91.0411	0x184c40	tokens1:2d57639c61a5
@@ -4069,7 +4069,7 @@ singleselectionwindow	?update@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x18
 singleselectionwindow	?update@TSingleSelectionWindow@@QAEHXZ	98.9811	98.9811	98.9811	0x184550	tokens1:3af6b2ab413c
 singleselectionwindow	?updateAllyEnemyFlags@TSingleSelectionWindow@@QAEX_N@Z	100.0000	100.0000	100.0000	0x185300	tokens1:174f4fa80563
 singleselectionwindow	?updateFilterWidgets@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x17ef70	tokens1:804cfc4fccc7
-singleselectionwindow	?updateGameVars@TSingleSelectionWindow@@QAEXXZ	34.0405	34.0405	67.9099	0x183580	tokens1:a4b357526283
+singleselectionwindow	?updateGameVars@TSingleSelectionWindow@@QAEXXZ	34.0405	34.0405	67.9099	0x183580	tokens1:e86274a93fa0
 singleselectionwindow	?updateMainWindow@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x17fb90	tokens1:148415434eac
 singleselectionwindow	?updateNameLists@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18c960	tokens1:ddc73046d53b
 singleselectionwindow	?updatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x188330	tokens1:8c0b99c3eaa4

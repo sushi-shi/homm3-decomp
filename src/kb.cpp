@@ -954,6 +954,10 @@ void showCredits()
 // A signed CampaignComplete index, suggested by DC's older scalar bound,
 // is byte-flat across all 64 header consumers and does not restore its
 // missing retained body. Complete's vector-bound counter type stays unresolved.
+// Moving the pure Complete query to an ordinary cpp definition restores its
+// exact 67-byte retained body and four calls here (81.4021%). That diagnostic
+// does not establish a source-location change from DC's substantive header
+// implementation; keep its positive ownership until stronger evidence emerges.
 
 VA(0x004ee3e0, 0x1C04)  // dc 0xe0158
 int oldmain()

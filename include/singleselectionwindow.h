@@ -192,6 +192,7 @@ class textEntryWidget;
 class CNewPlayerUpdateMan;
 class CChatWidget;
 class textWidget;
+class type_text_scroller;
 class textButton;
 class button;
 struct GameSelectionHeadersStruct;
@@ -660,7 +661,11 @@ public:
     // directly, never through GetWidget.
     // Role-derived: construction creates a CScrollTextWidget here;
     // updateGameVars (0x583580) fills it from the selected map description.
-    widget* m_descriptionWidget;  // 0x196c
+    // Retain the concrete type: ctor retail +0xb3c/+0xb3f binds the widget
+    // vector insert to a converted pointer temporary at EBP+8, not this
+    // member's address. All text accesses use this same scroller class.
+    // Complete-only type inference; the older DC class has no such member.
+    type_text_scroller* m_descriptionWidget;  // 0x196c
 
     TSingleSelectionWindow(int gameMode);
     virtual ~TSingleSelectionWindow();
