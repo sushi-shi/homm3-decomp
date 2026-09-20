@@ -943,9 +943,11 @@ int TRmgRoadMapAdapter::getOverlay(const TRmgGridPoint& point)
 
 // The two concrete adapter vtables share retail 0x532790. Keep both source
 // methods; the river method below owns their joint ICF representative.
+// VC6 accepts the temporary output at the non-const-reference slot; copy
+// its returned reference before the full expression ends, as in the painter.
 TRmgGridPoint TRmgRoadMapAdapter::getSize()
 {
-    return getRmgMapSize(m_map);
+    return m_map->getSize(TRmgGridPoint());
 }
 
 // The real road-painting stack construction at 0x548120 retains the
@@ -1031,7 +1033,7 @@ void TRmgMapAdapter::setOverlay(const TRmgGridPoint& point, int value)
 VA(0x00532790, 0x27) // vtable 0x640a3c slot 3, ICF with road slot 3
 TRmgGridPoint TRmgMapAdapter::getSize()
 {
-    return getRmgMapSize(m_map);
+    return m_map->getSize(TRmgGridPoint());
 }
 
 VA(0x005327C0, 0x63) // anchor-vtable + packed-field evidence; Complete-only

@@ -1115,17 +1115,6 @@ public:
     virtual int getOverlay(const TRmgGridPoint& point) = 0;
 };
 
-// Shared value query used by both adapters and the terrain painter. The
-// virtual result reference is consumed before the local output dies. The
-// Complete-only free-function boundary restores the painter constructor's
-// expanded vector insertion; member ownership retains that call instead.
-// The role/name and header ownership remain inferred from retail callers.
-static TRmgGridPoint getRmgMapSize(TRmgMapInterface* map)
-{
-    TRmgGridPoint size;
-    return map->getSize(size);
-}
-
 class TRmgMapAdapterInterface {
 public:
     virtual ~TRmgMapAdapterInterface();

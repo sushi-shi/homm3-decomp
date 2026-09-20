@@ -706,22 +706,21 @@ int __fastcall selectTerrainTransition(
     return 0;
 }
 
-// The shared free size query consumes the virtual output reference and
-// ends that output's lifetime before allocating the cache. It recovers the
-// expanded count-insert body (93.0418%); member query ownership remains at
-// 35.3347%. Both adapter bodies and all seven header consumers keep MAX.
-// The remaining differences are the cell-count register/size checks and the
-// shrinking path's extra retained size() call: the verified C2 trace leaves
-// budget 1 for size() at cost 42. Named return values/references lose the
-// insertion expansion; size snapshots, cache-value lifetimes and area/count
-// variants do not improve it. Preserve the virtual output ABI;
-// artificial caller scopes and a hidden-value virtual slot are not solutions.
+// The explicit output temporary uses VC6's non-const-reference binding
+// extension. The returned reference is copied before that temporary dies at
+// the full-expression boundary, matching retail's short output lifetime.
+// This preserves virtual slot 3's proven ABI and both exact adapter bodies.
+// All 621 bytes, 16 direct calls and virtual slot 3 reproduce; a default
+// output argument gives the same result. A separate value-query helper uses
+// inline budget and leaves the shrinking size() call retained (93.0418%).
+// No separate
+// convenience helper or artificial caller scope is needed.
 VA(0x005B45F0, 0x26D)
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
     : m_adapter(newAdapter), m_paintTerrain(terrain), m_transitionStrength(strength)
 {
-    m_size = getRmgMapSize(m_adapter);
+    m_size = m_adapter->getSize(TRmgGridPoint());
     m_packedCells.resize(getWidth() * getHeight(), TRmgPackedTerrainCell());
 }
 
