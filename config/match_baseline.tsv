@@ -212,8 +212,8 @@ ai	?chooseResurrectAction@combatManager@@AAEEPBVarmy@@PAJPAUtype_AI_combat_param
 ai	?chooseShooterAction@combatManager@@AAEXPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1f060	tokens1:120ee50c4907
 ai	?chooseShooterTarget@combatManager@@ABEJPBVarmy@@PAUtype_AI_combat_parameters@@PAJ@Z	100.0000	100.0000	100.0000	0x1eb80	tokens1:1d993d28eb05
 ai	?chooseSpellAction@combatManager@@AAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x21280	tokens1:8f58f6594242
-ai	?chooseToRun@combatManager@@AAEEPBVarmy@@PBJPBVsearchArray@@@Z	99.7424	99.7424	100.0000	0x208f0	tokens1:d27275572fc3
-ai	?computeFireShieldDamage@combatManager@@QBEJJPBVarmy@@0J@Z	99.8154	99.8154	100.0000	0x22440	tokens1:860c5d47a58a
+ai	?chooseToRun@combatManager@@AAEEPBVarmy@@PBJPBVsearchArray@@@Z	100.0000	100.0000	100.0000	0x208f0	tokens1:0eab7fd1b93e
+ai	?computeFireShieldDamage@combatManager@@QBEJJPBVarmy@@0J@Z	100.0000	100.0000	100.0000	0x22440	tokens1:4e487da60e5b
 ai	?doCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0	tokens1:5172070fd1a9
 ai	?doSpellAI@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x22da0	tokens1:0375ace08129
 ai	?failedSiege@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1e440	tokens1:109927bf5c32
@@ -232,13 +232,13 @@ ai	?markFirewalls@combatManager@@AAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@
 ai	?markFriendlyArmies@combatManager@@ABEXPBVarmy@@PAJJPBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1fb60	tokens1:78d577a71814
 ai	?markMoat@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x21590	tokens1:a8506ae65413
 ai	?markMultiheadedEnemy@combatManager@@ABEXPBVarmy@@0PAJJPAVsearchArray@@PAUtype_AI_combat_parameters@@@Z	94.5399	94.5399	94.5399	0x1fd60	tokens1:479bca5d2393
-ai	?moveToward@combatManager@@AAEEPBVarmy@@JPBJE@Z	99.4077	99.4077	100.0000	0x1f580	tokens1:d38618bec436
+ai	?moveToward@combatManager@@AAEEPBVarmy@@JPBJE@Z	100.0000	100.0000	100.0000	0x1f580	tokens1:fcdf41ba672b
 ai	?placeShooter@combatManager@@AAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0x22060	tokens1:5c6138fba52d
 ai	?shouldStayInCastle@combatManager@@AAEEPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x213f0	tokens1:ac72b1787ab0
 ai	?simulateActions@combatManager@@AAEJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@JJ@Z	100.0000	100.0000	100.0000	0x22880	tokens1:83201e3f8e03
 ai	?simulateCombat@combatManager@@QAEXJE@Z	100.0000	100.0000	100.0000	0x22a40	tokens1:a5c45d98ea4c
 ai	?simulateMeleeAttack@combatManager@@AAEXPAVarmy@@0J@Z	100.0000	100.0000	100.0000	0x227a0	tokens1:6894b80eb883
-ai	?simulateMeleeAttack@combatManager@@AAEXPAVarmy@@J0JJ@Z	99.9506	100.0000	100.0000	0x224e0	tokens1:b41cb90859c0
+ai	?simulateMeleeAttack@combatManager@@AAEXPAVarmy@@J0JJ@Z	100.0000	100.0000	100.0000	0x224e0	tokens1:b41cb90859c0
 ai	?size@?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x23110	-
 ai	?sodChooseFaerieDragonSpell@combatManager@@AAE_NPBVarmy@@AAJAAUtype_AI_combat_parameters@@@Z	94.5177	94.5177	94.5177	0x20f00	tokens1:98cd24d39547
 ai_combat	??0?$vector@Utype_monster_data@@V?$allocator@Utype_monster_data@@@std@@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x276c0	aaea26c81479
