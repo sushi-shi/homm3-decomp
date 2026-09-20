@@ -2929,12 +2929,15 @@ void combatManager::areaEffect(long targetCell, SpellID spellType,
 // are `level` and `power` - `level` is what indexes the spell's
 // mastery_bonus row, i.e. it is the mastery.
 
-// FOUR SEPARATE 2x21 SWEEPS, each `for (side) for (i < numArmies[side])`
+// FIVE SEPARATE 2x21 SWEEPS, each `for (side) for (i < numArmies[side])`
 // and each strength-reduced by our CL and by retail alike into three
 // parallel induction variables (armies by 0x6ee8, `effected` by 0x14,
 // numArmies by 4). They are not merged in retail and they are not
 // merged here: roll+damage, then set up each hit stack's wince/death
-// animation, then the frame loop, then the death sweep.
+// animation, advance those animations in the frame loop, clear their
+// effect flags, then process the dead stacks. One function-local `i` is
+// reused by every sweep; that is what gives all five retail loops the
+// same [ebp-8] counter home.
 
 // THE DAMAGE IS ComputeSpellDamage (0x5a7890) EXPANDED, not called -
 // its `mastery_bonus[level] + power_factor * power` body appears twice,
@@ -2951,50 +2954,32 @@ void combatManager::areaEffect(long targetCell, SpellID spellType,
 // clipped against what is left of the row or column. The 599 against a
 // 556-pixel clip is retail's own inconsistency; transcribed.
 
-// 88.72 -> 93.90, 2026-08-20 (cold-combatpath lane), three edits:
-//   * bDamageDone's zero moved AFTER the memset (+0.95): retail stores
-//     it from AL, sharing the memset expansion's xor eax,eax; written
-//     before the memset it is an immediate store.
-//   * iMaxFrames spelled if/else, not ternary (+1.34): retail assigns
-//     each arm straight into ESI where the ternary funnels through EAX
-//     (the DoBolt lever again).
-//   * the tile clips spelled `if (sh > 556 - dy) sh = 556 - dy;` (and
-//     800 - dx), with NO named remaining counters (+2.89): retail's
-//     `neg` runs are VC6 strength-reducing the inline subtraction onto
-//     a negated induction variable, which a named `remainingY -=
-//     theight` local never produces.
-// Residual (93.90%): the ComputeSpellDamage expansion's argument
-// scheduling - retail pushes 0/target/controller straight after
-// get_controller returns and computes the damage operand LAST, where
-// our CL hoists the akSpellTraits loads and the power_factor imul above
-// the pushes - plus the register renames cascading from it. why-reg v2:
-// bindings agree at every first def, so it is not the B1 minimum slice;
-// no creation-order edit is proposed. Scheduling verdicts are
-// provisional; if this reopens, look for a missing source element in
-// the damage argument first.
+// DC also preserves the original helper boundaries: ClearEffects,
+// SpellCastWorks, CSprite::DrawSpellEffect and TTextResource::operator[].
+// VC6 expands each one here. SpellCastWorks has no recorded local and one
+// body row, so its direct return expression is retained; the earlier named
+// `chance` changed this caller's allocation even though the helper itself was
+// byte-flat. The tile coordinates are the DC const locals `dy` and `sh`,
+// derived from the loop indices rather than maintained as running counters.
+// Finally, the named total damage sequences ComputeSpellDamage before the
+// text lookup, as retail does. Together these facts reproduce all 103 blocks,
+// 59 branches, 22 calls and 0x699 bytes exactly.
 
-// DC-local audit (2026-08-21): CodeView type 0x1F67 proves `spell_traits`
-// is an lvalue reference to const TSpellTraits, not a pointer; restoring that
-// source type is byte-flat and retained. Naming the damaged army plus its
-// controller regresses slightly to 93.8827%. Naming only the controller, or
-// naming both controller and current-side caster in source evaluation order,
-// is byte-flat at 93.9013%. C1 coalesces those handles before the scheduler,
-// so none moves the outstanding push/imul order.
+// CodeView type 0x1F67 proves `spell_traits` is an lvalue reference to const
+// TSpellTraits, not a pointer. The normalized source name is spellTraits.
 VA(0x005a4bc0, 0x699)  // order-map+arity, dc 0x153d2c
 void combatManager::armageddon(int level, int power)
 {
     const SSpellTraits& spellTraits = g_spellTraits[SPELL_ARMAGEDDON];
     unsigned char damageDone;
-    memset(m_effected, 0, sizeof(m_effected));
+    int i;
+    clearEffects();
     damageDone = 0;
 
     { for (int side = 0; side < 2; side++) {
-        { for (int i = 0; i < m_numArmies[side]; i++) {
-            if (random(1, 100)
-                <= static_cast<long>(
-                       spellCastWorkChance(SPELL_ARMAGEDDON, m_currentSide,
-                                           &m_armies[side][i], 0, 1, 0)
-                       * 100.0f)) {
+        { for (i = 0; i < m_numArmies[side]; i++) {
+            if (spellCastWorks(SPELL_ARMAGEDDON, m_currentSide,
+                               &m_armies[side][i], 0, 0)) {
                 m_armies[side][i].damage(computeSpellDamage(
                     SPELL_ARMAGEDDON, power, level, m_heroes[m_currentSide],
                     m_armies[side][i].getController(), &m_armies[side][i], 0));
@@ -3016,7 +3001,7 @@ void combatManager::armageddon(int level, int power)
         // death sequence, and the animation runs for however many frames
         // the LONGEST of them needs - the fire sheet included.
         { for (int side = 0; side < 2; side++) {
-            { for (int i = 0; i < m_numArmies[side]; i++) {
+            { for (i = 0; i < m_numArmies[side]; i++) {
                 army* currentArmy = &m_armies[side][i];
                 if (m_effected[side][i]) {
                     if (currentArmy->m_numTroops <= 0) {
@@ -3045,7 +3030,7 @@ void combatManager::armageddon(int level, int power)
         const int ytiles = (theight + 599) / theight;
         { for (int frame = 0; frame < maxFrames; frame++) {
             { for (int side = 0; side < 2; side++) {
-                { for (int i = 0; i < m_numArmies[side]; i++) {
+                { for (i = 0; i < m_numArmies[side]; i++) {
                     army* currentArmy = &m_armies[side][i];
                     if (m_effected[side][i]) {
                         // A wincing stack falls back to cs_wait once its
@@ -3064,26 +3049,18 @@ void combatManager::armageddon(int level, int power)
             } }
             drawFrame(0, 0, 0, 100, 1, 1);
             if (m_powSprite && frame < m_powSprite->getNumFrames(0)) {
-                int dy = 0;
                 { for (int ty = 0; ty < ytiles; ty++) {
-                    int sh = theight;
-                    if (sh > 556 - dy)
-                        sh = 556 - dy;
-                    long dx = 0;
+                    const int dy = ty * theight;
+                    const int sh = theight <= 556 - dy
+                        ? theight : 556 - dy;
                     { for (int tx = 0; tx < xtiles; tx++) {
-                        long sw = twidth;
-                        if (sw > 800 - dx)
-                            sw = 800 - dx;
-                        m_powSprite->draw(0, frame, 0, 0, sw, sh,
-                                        g_windowManager->m_screenBitmap->getMap(0, 0),
-                                        dx, dy,
-                                        g_windowManager->m_screenBitmap->getWidth(),
-                                        g_windowManager->m_screenBitmap->getHeight(),
-                                        g_windowManager->m_screenBitmap->getPitch(),
-                                        0, 0);
-                        dx += twidth;
+                        const int dx = tx * twidth;
+                        const int sw = twidth > 800 - dx
+                            ? 800 - dx : twidth;
+                        m_powSprite->drawSpellEffect(
+                            0, frame, 0, 0, sw, sh,
+                            g_windowManager->m_screenBitmap, dx, dy, 0, 0);
                     } }
-                    dy += theight;
                 } }
             }
             updateCombatArea();
@@ -3091,7 +3068,7 @@ void combatManager::armageddon(int level, int power)
     }
 
     { for (int side = 0; side < 2; side++) {
-        { for (int i = 0; i < m_numArmies[side]; i++)
+        { for (i = 0; i < m_numArmies[side]; i++)
             m_armies[side][i].m_showPowEffect = 0; }
     } }
 
@@ -3099,7 +3076,7 @@ void combatManager::armageddon(int level, int power)
     m_someCreaturesVanish = 0;
     unsigned char deaths = 0;
     { for (int side = 0; side < 2; side++) {
-        { for (int i = 0; i < m_numArmies[side]; i++) {
+        { for (i = 0; i < m_numArmies[side]; i++) {
             army* currentArmy = &m_armies[side][i];
             if (m_effected[side][i] && currentArmy->m_numTroops == 0) {
                 currentArmy->processDeath(0);
@@ -3124,9 +3101,9 @@ void combatManager::armageddon(int level, int power)
         makeCreaturesVanish();
     if (damageDone
         && !static_cast<const combatManager*>(this)->isQuickCombat()) {
-        sprintf(g_text, g_generalText->getText(89),
-                computeSpellDamage(SPELL_ARMAGEDDON, power, level, 0, 0, 0,
-                                   0));
+        long totalDamage = computeSpellDamage(
+            SPELL_ARMAGEDDON, power, level, 0, 0, 0, 0);
+        sprintf(g_text, (*g_generalText)[89], totalDamage);
         m_combatWindow->combatMessage(g_text, 1, 0);
     }
     checkRebirth();
@@ -4892,9 +4869,10 @@ unsigned char combatManager::spellCastWorks(SpellID spell, long side,
                                             unsigned char redirected,
                                             long creatureSpell) const
 {
-    int chance = spellCastWorkChance(spell, side, target, redirected, 1,
-                                     creatureSpell) * 100.0f;
-    return random(1, 100) <= chance;
+    return random(1, 100)
+        <= static_cast<long>(spellCastWorkChance(
+               spell, side, target, redirected, 1, creatureSpell)
+                             * 100.0f);
 }
 
 // The spell cursor's rollover line: what would this cast hit if it

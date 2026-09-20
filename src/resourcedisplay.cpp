@@ -171,7 +171,7 @@ void TResourceDisplay::update(bool drawRequested, bool update)
         m_resourceWidgets[i]->setText(g_text);
     }
 
-    TTextResource* labels = g_generalText;
+    const TTextResource* labels = g_generalText;
     sprintf(g_text, "%s: %d, %s: %d, %s: %d",
         (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_0],
         static_cast<unsigned short>(g_game->m_month),
@@ -191,7 +191,7 @@ void TResourceDisplay::clear()
     for (int i = 0; i < NUM_RESOURCES; ++i)
         m_resourceWidgets[i]->setText("");
 
-    TTextResource* labels = g_generalText;
+    const TTextResource* labels = g_generalText;
     sprintf(g_text, "%s: %d, %s: %d, %s: %d",
         (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_0],
         static_cast<unsigned short>(g_game->m_month),

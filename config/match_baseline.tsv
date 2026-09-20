@@ -3158,8 +3158,8 @@ resource	??_Gresource@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x158770	-
 resourcedisplay	??0TResourceDisplay@@QAE@PAVheroWindow@@_N@Z	100.0000	100.0000	100.0000	0x158ba0	tokens1:82f37ee6a919
 resourcedisplay	??1TResourceDisplay@@UAE@XZ	100.0000	100.0000	100.0000	0x158e80	tokens1:136ff31057f9
 resourcedisplay	??_GTResourceDisplay@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x158e50	-
-resourcedisplay	?clear@TResourceDisplay@@QAEXXZ	100.0000	100.0000	100.0000	0x159020	tokens1:c83835f56298
-resourcedisplay	?update@TResourceDisplay@@QAEX_N0@Z	100.0000	100.0000	100.0000	0x158f20	tokens1:bdf6ea13cdb4
+resourcedisplay	?clear@TResourceDisplay@@QAEXXZ	100.0000	100.0000	100.0000	0x159020	tokens1:117027578c10
+resourcedisplay	?update@TResourceDisplay@@QAEX_N0@Z	100.0000	100.0000	100.0000	0x158f20	tokens1:313e99b38e99
 resourcemanager	??0?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@H@Z	100.0000	100.0000	100.0000	0x15d410	-
 resourcemanager	??0?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@H@Z	100.0000	100.0000	100.0000	0x15e440	-
 resourcemanager	??0?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAE@ABU?$less@VTCacheMapKey@ResourceManager@@@1@ABV?$allocator@PAVresource@@@1@@Z	100.0000	100.0000	100.0000	0x15d2c0	-
@@ -4015,7 +4015,7 @@ singleselectionwindow	?lower_bound@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@s
 singleselectionwindow	?makeHeroFilter@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x183890	tokens1:2ab98750b2d2
 singleselectionwindow	?newPlayer@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x18a280	tokens1:81dec24c9ecc
 singleselectionwindow	?onBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18df50	tokens1:3b4415b6c652
-singleselectionwindow	?onBeginGame@TSingleSelectionWindow@@QAEEXZ	75.4086	75.4086	78.9055	0x18bce0	tokens1:67c67e921406
+singleselectionwindow	?onBeginGame@TSingleSelectionWindow@@QAEEXZ	79.4846	79.4846	79.4846	0x18bce0	tokens1:67c67e921406
 singleselectionwindow	?onDeleteFile@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18dfb0	tokens1:5ec07b367ed0
 singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a440	tokens1:5716c03bed8f
 singleselectionwindow	?onGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	tokens1:b9f9c72a63cb
@@ -4189,8 +4189,8 @@ spells	?_Insert@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$
 spells	?ableToSummonElemental@combatManager@@QAEEHJ@Z	100.0000	100.0000	100.0000	0x1a93a0	tokens1:01403a53f892
 spells	?addBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5a90	tokens1:768ad639df79
 spells	?areaEffect@combatManager@@QAEXJHJJ@Z	99.8565	99.8565	99.8565	0x1a4970	tokens1:c131e8a2484d
-spells	?armageddon@combatManager@@QAEXHH@Z	93.9013	93.9013	93.9013	0x1a4bc0	tokens1:99b464297d21
-spells	?castSpell@combatManager@@QAEXHHHHHJ@Z	93.9842	93.9842	93.9842	0x19fe30	tokens1:a1481524e830
+spells	?armageddon@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1a4bc0	tokens1:00300725d0a5
+spells	?castSpell@combatManager@@QAEXHHHHHJ@Z	94.1057	94.1057	94.1057	0x19fe30	tokens1:a1481524e830
 spells	?chainLightning@combatManager@@QAEXHHH@Z	95.5560	95.5560	96.1913	0x1a6360	tokens1:40bceef521f2
 spells	?checkFireWall@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fcd0	tokens1:5c0bd012899f
 spells	?checkLandmine@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fb40	tokens1:c382667e7bd0
@@ -4235,7 +4235,7 @@ spells	?setMassSpellInfluence@combatManager@@QAEXPBVhero@@HJJJJ@Z	100.0000	100.0
 spells	?showMassSpell@combatManager@@QAEXPAY0BE@$$CBEHE@Z	96.3708	96.3708	96.3708	0x1a67c0	tokens1:e263707d26b4
 spells	?showSpellMessage@combatManager@@QAEXHHPAVarmy@@@Z	98.7602	98.7602	100.0000	0x1a8950	tokens1:8f1644241273
 spells	?spellCastWorkChance@combatManager@@QBEMHJPBVarmy@@EEJ@Z	100.0000	100.0000	100.0000	0x1a8090	tokens1:1584d5cc48c3
-spells	?spellCastWorks@combatManager@@QBEEHJPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a8640	tokens1:1a11c4fa3484
+spells	?spellCastWorks@combatManager@@QBEEHJPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a8640	tokens1:18c89b19971f
 spells	?spellTargetMessage@combatManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x1a8690	tokens1:5bf5908137db
 spells	?summonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	99.0144	99.0144	99.0144	0x1a7080	tokens1:23d8fdaa1f91
 spells	?unnamed59FDE0@combatManager@@QAEXHHPAVarmy@@@Z	100.0000	100.0000	100.0000	0x19fde0	tokens1:18fb1aaf718f
