@@ -1,7 +1,7 @@
 """Reconcile every DC procedure with active authored C++ in both directions.
 
 This is source identity coverage, independent of byte-match scores. The only
-exemptions are exact, reviewed dc_only*.tsv / win_only.tsv rows.
+exemptions are exact, reviewed dc_only*.tsv / win_only*.tsv rows.
 Library and compiler-generated procedures remain
 visible until explicitly accounted for.
 """
@@ -172,7 +172,7 @@ def audit(root=common.HOMM3_DIR, *, modules=(), jobs=4, fresh=False, origins=Non
     errors.extend(validate_dc_roster(origins, symbols))
     dc_only, failures = ownership.read_dc_filters(root)
     errors.extend(failures)
-    win_only, failures = ownership.read_filter(root / 'config/win_only.tsv', ('file', 'function', 'signature'))
+    win_only, failures = ownership.read_win_filters(root)
     errors.extend(failures)
     rows, failures = reconcile(definitions, origins, dc_only, win_only,
                               symbols=symbols if any(d.inline_origin for d in definitions) else None)

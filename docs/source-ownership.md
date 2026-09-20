@@ -86,7 +86,11 @@ CodeView identities (source file, function, source line) with documented reasons
 The gates read their union and reject duplicate identities across the two files.
 An unreconstructed function is not automatically DC-only. `config/win_only.tsv` admits exact
 Windows definition identities (physical file, qualified function, signature)
-without a Dreamcast counterpart. It cannot waive a misplaced DC function.
+without a Dreamcast counterpart. `config/win_only_modules.tsv` separates whole
+Windows-only modules and library definitions, including RMG and Victor, from
+those individual interface reviews. Both Windows lists are checked together,
+including by the local-class ownership check. Neither can waive a misplaced DC
+function.
 Inferred helper boundaries without a proven DC declaration use that same
 `win_only.tsv` mechanism, with the caller evidence and uncertainty recorded in
 the reason. They remain visible as `documented_win_only`, not as proven DC

@@ -881,21 +881,31 @@ def read_filter(path: Path, fields: tuple[str, ...]):
 
 
 
-def read_dc_filters(root: Path):
-    """Read both DC exclusion lists without allowing identities to overlap."""
+def read_split_filters(root: Path, names: tuple[str, ...], fields: tuple[str, ...]):
+    """Read exclusion lists without allowing identities to overlap."""
     entries = {}
     errors = []
     owners = {}
-    for name in ('dc_only.tsv', 'dc_only_generated.tsv'):
-        rows, failures = read_filter(root / 'config' / name, ('file', 'function', 'line'))
+    for name in names:
+        rows, failures = read_filter(root / 'config' / name, fields)
         errors.extend(failures)
         for key, reason in rows.items():
             if key in entries:
-                errors.append(f'FILTER duplicate DC exclusion {key} in {owners[key]} and {name}')
+                errors.append(f'FILTER duplicate exclusion {key} in {owners[key]} and {name}')
             else:
                 entries[key] = reason
                 owners[key] = name
     return entries, errors
+
+
+def read_dc_filters(root: Path):
+    return read_split_filters(root, ('dc_only.tsv', 'dc_only_generated.tsv'),
+                              ('file', 'function', 'line'))
+
+
+def read_win_filters(root: Path):
+    return read_split_filters(root, ('win_only.tsv', 'win_only_modules.tsv'),
+                              ('file', 'function', 'signature'))
 
 
 def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
@@ -1131,7 +1141,7 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
         if matched_out is not None and len(errors) == errors_before:
             matched_out.append((d, tuple(candidates)))
     for key in win_only.keys() - used_win:
-        errors.append(f'FILTER stale win_only.tsv entry {key}')
+        errors.append(f'FILTER stale win_only.tsv/win_only_modules.tsv entry {key}')
     previous = {}
     for d, file, dc_line in matches:
         # Ordinary retained .cpp bodies follow retail RVA order, checked by
@@ -1191,7 +1201,7 @@ def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False, *, origins=None
     errors.extend(active_stub_definitions(definitions, root))
     dc_only, failures = read_dc_filters(root)
     errors.extend(failures)
-    win_only, failures = read_filter(root / 'config/win_only.tsv', ('file', 'function', 'signature'))
+    win_only, failures = read_win_filters(root)
     errors.extend(failures)
     violations, counts = compare(definitions,
                                  read_dc(root, include_declarations=True, project=project) if origins is None else origins,
