@@ -1041,8 +1041,8 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
     std::string rightText;
     TCreatureType creature;
 
-    for (int j = 0; j < 8; j++)
-        m_bonusCreatures[j] = CREATURE_NONE;
+    int j;
+    MEMSET(m_bonusCreatures, CREATURE_NONE, sizeof(m_bonusCreatures), j);
 
     for (int i = 0; i < TOWN_DWELLING_COUNT; i++) {
         if (currTown->hasBuilding(DWELLING_0_ID + i, 1)) {

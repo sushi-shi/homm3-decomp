@@ -14,8 +14,7 @@ CSequence::CSequence(int num)
     m_numFrames = 0;
     m_allocatedFrames = num;
     m_f = new CSpriteFrame*[num];
-    for (int i = 0; i < num; ++i)
-        m_f[i] = 0;
+    MEMSET_LOCAL(m_f, 0, num * sizeof(m_f[0]), num, i);
 }
 
 VA(0x0047b890, 0x0F)  // dc 0x71f60

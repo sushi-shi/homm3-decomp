@@ -1956,8 +1956,8 @@ void TCampaignBrief::ScenarioStruct::startScenario(
     g_game->m_players[position].m_isLocal = 1;
 
     int playerHeroFaces[8];
-    for (int i = 0; i < 8; i++)
-        playerHeroFaces[i] = -1;
+    int i;
+    MEMSET(playerHeroFaces, -1, sizeof(playerHeroFaces), i);
     playerHeroFaces[position] = m_options->slot7(option);
     g_game->setupFirstPlayer();
 

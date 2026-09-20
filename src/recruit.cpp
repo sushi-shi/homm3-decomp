@@ -65,9 +65,9 @@ void getUpgradeCost(TCreatureType creature, TCreatureType upgrade, long amount, 
 VA(0x0054e7c0, 0x31)  // dc 0x118b38
 void getMonsterCost(int monId, int* resCost)
 {
-    for (int resource = 0; resource < 7; resource++)
-        resCost[resource] =
-            g_creatureTypeTraits[monId].m_cost[resource];
+    int resource;
+    MEMCPY(resCost, g_creatureTypeTraits[monId].m_cost,
+           7 * sizeof(resCost[0]), resource);
 }
 
 // ---------------------------------------------------------------------

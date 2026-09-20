@@ -1056,8 +1056,7 @@ void hero::initialize(short index)
                 static_cast<float>(random(100, 125));
 
     m_equipped[16].m_artifactId = ARTIFACT_CATAPULT;
-    for (i = 0; i < 7; i++)
-        m_army.m_armies[i] = CREATURE_NONE;
+    MEMSET(m_army.m_armies, CREATURE_NONE, sizeof(m_army.m_armies), i);
     m_pathTargetY = -1;
     m_pathTargetX = -1;
     m_level = 1;
@@ -1169,8 +1168,8 @@ void hero::initialize(const HeroExtra* setup)
         m_portrait = setup->m_portraitNumber;
 
     if (setup->m_customPrimarySkills) {
-        for (int i = 0; i < 4; i++)
-            m_stats[i] = setup->m_primarySkills[i];
+        int i;
+        MEMCPY(m_stats, setup->m_primarySkills, sizeof(m_stats), i);
     }
 
     if (setup->m_customSecondarySkills) {

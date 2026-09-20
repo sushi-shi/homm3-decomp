@@ -464,8 +464,8 @@ town::town()
     m_mageLevel = 0;
     m_owner = -1;
     m_garrisonHeroId = -1;
-    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++)
-        m_garrison.m_armies[slot] = -1;
+    int slot;
+    MEMSET(m_garrison.m_armies, -1, sizeof(m_garrison.m_armies), slot);
     m_summoningType = CREATURE_NONE;
     m_builtThisTurn = 0;
     m_manaVortexFull = 1;
