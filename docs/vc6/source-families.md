@@ -6026,9 +6026,16 @@ functions use `YA` and globals use `3`, versus class-static `SA` and `2`.
 Restoring the namespace preserves all seven function bodies and their
 relocation targets across two reproduced states and four consuming TUs.
 Fresh delinking preserves all seven 100% scores and every current-source MAX.
-OpenBink's raw public encodes its final parameter as `_N` (bool); the
-dossier's byte rendering does not override that source fact. Restoring its
-Boolean interface requires a coupled review of the VideoOpen caller.
+OpenBink and VideoOpen raw publics encode their final flags as `_N`
+(bool), and both video-state queries return bool. Restore that coupled
+interface, including the Windows ShowVideo worker's byte-valued flags,
+and the three Bink Boolean globals. Raw GetBinkFilePtr also proves char*;
+its descriptor pointer fields follow that callee without a const-removing
+cast. Four Boolean states and two filename states reproduce across all
+72 consumers. Each complete correction preserves all 378 function sections
+and relocation graphs checked in the five direct consumers. ShowVideo's
+new source identity resets MAX to its unchanged 60.4981% CUR, retaining
+HIST 100%; no emitted instruction match is lost.
 Two full ownership checkpoints preserve every current score. Five function
 names migrate by retail RVA, preserving their historical peaks. Own-source
 hash changes reset the frame pump's and VideoClose's current-source MAX to

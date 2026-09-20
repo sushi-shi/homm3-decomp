@@ -2552,7 +2552,7 @@ unsigned char CSaveScreen::isSaved()
     return m_screenSaved;
 }
 
-void showVideo(int id, int x, int y, int w, int h, int a6, int a7, int a8);
+void showVideo(int id, int x, int y, int w, int h, int a6, bool a7, bool a8);
 void closeVideo();  // 0x599050
 
 VA(0x00557410, 0x1E)  // dc 0x11ec64

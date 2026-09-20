@@ -53,7 +53,7 @@ static const int g_smackOpenFromArchive = 0x1140;
 static const int g_smackTrackMask = 0xfe000;
 static const int g_smackOpenNoFrameSkip = 0x200;
 
-void showVideo(int id, int x, int y, int w, int h, int a6, int a7, int a8);
+void showVideo(int id, int x, int y, int w, int h, int a6, bool a7, bool a8);
 namespace SmackManager {
 void nextSmackerFrame();
 void closeSmacker();
@@ -239,7 +239,7 @@ int videoPlay(int id, int x, int y, int w, int h)
 }
 
 VA(0x00597570, 0x75)  // dc 0x14ac3c
-void videoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
+void videoOpen(int id, int x, int y, int w, int h, int a6, bool a7, bool a8)
 {
     if (id >= VIDEO_ID_FIRST_TABLED
         && (!g_videoDescriptors[id].m_useBink || !g_unnamed698758.m_binkVideo
@@ -340,7 +340,7 @@ void videoRestart()
 }
 
 VA(0x00597930, 0x5A)  // dc 0x14ac58
-unsigned char videoNeedsUpdate()
+bool videoNeedsUpdate()
 {
     if (g_smackVideo || g_smackVideo2)
         return g_smackDirty && !g_smackPaused;
@@ -350,7 +350,7 @@ unsigned char videoNeedsUpdate()
 }
 
 VA(0x00597990, 0x3F)  // dc 0x14ac5c
-unsigned char videoPlaying()
+bool videoPlaying()
 {
     if ((g_smackVideo || g_smackVideo2) && !g_smackPaused)
         return 1;
@@ -383,6 +383,10 @@ unsigned char videoPlaying()
 // failed to close the union-loop register homes and Bink induction base.
 // Keep the original update order: changing x/y before the extent compares
 // is retail behavior, even though it is not a general rectangle-union API.
+// Naming both incoming endpoints before the comparisons adds alternate
+// coordinate-reload branches, spills Bink x/y and advances ESI instead of
+// retail's ECX rectangle cursor. Both aggregate/scalar models failed the
+// predicted register and frame recovery; retain the ordered expressions.
 VA(0x005979d0, 0x294)  // anchor-global, dc 0x14ac60
 void videoDrawRects()
 {
@@ -785,8 +789,10 @@ void SmackManager::setPixelFormat(unsigned long redMask,
 }
 
 VA(0x00598af0, 0x385)
-void showVideo(int id, int x, int y, int w, int h, int loop, int autoDraw,
-               int advance)
+// VideoOpen's DC-proven Boolean flags pass unchanged into this Windows
+// opener. Retail reads autoDraw as a byte and widens advance's low byte.
+void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
+               bool advance)
 {
     if (g_unnamed699290 == 0 && g_soundManager->m_ds != 0
         && g_unnamed698758.m_soundVolume != 0)
@@ -807,7 +813,7 @@ void showVideo(int id, int x, int y, int w, int h, int loop, int autoDraw,
     g_smackVideo2 = 0;
     g_smackBufferFlags = (g_greenBits == VIDEO_PIXEL_FORMAT_RGB565)
                             ? g_smackBuffer565 : g_smackBuffer555;
-    g_smackAdvance = static_cast<unsigned char>(advance);
+    g_smackAdvance = advance;
 
     if (g_videoDescriptors[id].m_smkAudioStem != "") {
         g_smackVideo2 = openSmackerTrack(g_videoDescriptors[id].m_smkAudioStem,

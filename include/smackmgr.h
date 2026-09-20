@@ -63,8 +63,7 @@ struct Smack {
 
 // The smackw32 import surface (retail IAT: __imp___SmackToBuffer@28 -
 // RAD's own leading underscore, the same convention soundmgr.h
-// documents for Miles). smackmgr.cpp aliases the underscored names
-// back to the radlib spellings.
+// documents for Miles). Calls preserve these import names.
 extern "C" {
 __declspec(dllimport) void __stdcall _SmackToBuffer(Smack* smk, unsigned long left, unsigned long top, unsigned long pitch, unsigned long destheight, void* buf, unsigned long flags);
 __declspec(dllimport) unsigned long __stdcall _SmackToBufferRect(Smack* smk, unsigned long flags);
@@ -88,9 +87,12 @@ __declspec(dllimport) void __stdcall _SmackVolumePan(Smack* smk, unsigned long t
 // that selects the bink arm is at +8, not at +0. Names provisional;
 // owning TU unknown - declared with its known consumer until the
 // owner's TU lands.
+// Pointer qualification is inferred from the DC-proven char* interface of
+// BinkManager::GetBinkFilePtr; retail passes both fields directly. This does
+// not establish the descriptor's original name or owning translation unit.
 struct SVideoDescriptor {
-    const char* m_smkStem;        // +0   video track archive stem
-    const char* m_smkAudioStem;   // +4   audio-only track ("" = none)
+    char* m_smkStem;              // +0   video track archive stem
+    char* m_smkAudioStem;         // +4   audio-only track ("" = none)
     unsigned char m_useBink;      // +8
     // Role-derived: both frame pumps decode the second track and call
     // fadeScreen(0, 4, 0) when this byte is set at the track transition.
@@ -151,15 +153,16 @@ enum EVideoPixelFormat {
 void videoSoundOnOff(int on);  // 0x5971b0; Complete carries an unused flag
 void videoRealignBuffers();    // 0x5971f0
 int videoPlay(int id, int x, int y, int w, int h);   // 0x5972d0
-void videoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8);  // 0x597570
+void videoOpen(int id, int x, int y, int w, int h, int a6, bool a7, bool a8);  // 0x597570
 void videoClose();             // 0x5975f0
 void videoNextFrame();         // 0x5976e0
 void videoDrawCurrentFrame();  // 0x597740
 void videoPause();             // 0x5977a0
 void videoResume();            // 0x597850
 void videoRestart();           // 0x597900
-unsigned char videoNeedsUpdate();  // 0x597930
-unsigned char videoPlaying();      // 0x597990
+// DC VideoNeedsUpdate/VideoPlaying publics encode bool returns (`_N`).
+bool videoNeedsUpdate();  // 0x597930
+bool videoPlaying();      // 0x597990
 void videoDrawRects();         // 0x5979d0
 void videoShutDown();          // 0x597c70
 void deleteSoundHeaders();

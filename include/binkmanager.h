@@ -84,7 +84,7 @@ SIZE(BINKSUMMARY, 112);
 extern BINKSUMMARY g_binkSummary;
 
 // The binkw32 import surface (leading underscore, the RAD convention -
-// see smackmgr.h; smackmgr.cpp aliases the names back).
+// see smackmgr.h; calls preserve these import names).
 extern "C" {
 // DC0x80190/0x80160 preserve the SDK signed-long and opaque-surface types.
 __declspec(dllimport) long __stdcall _BinkPause(Bink* bnk, long pause);
@@ -131,18 +131,19 @@ namespace BinkManager {
     extern BinkManagerStruct g_playingBink;
     // DC SurfaceType, updateScreen, needsUpdate and PlayingBink.
     extern int g_surfaceType;
-    extern unsigned char g_updateScreen;
-    extern unsigned char g_needsUpdate;
-    extern unsigned char g_playingBinkActive;
+    extern bool g_updateScreen;
+    extern bool g_needsUpdate;
+    extern bool g_playingBinkActive;
 
-    BINK* getBinkFilePtr(const char* filename, int binkOptions);
+    // Raw DC GetBinkFilePtr public uses PAD (char*), matching its typed argument.
+    BINK* getBinkFilePtr(char* filename, int binkOptions);
     void setPixelFormat(unsigned long redMask,
                         unsigned long greenMask,
                         unsigned long blueMask);
-    // DC OpenBink's raw public encodes a final bool. This byte-shaped
-    // Windows interface awaits a separate caller-ABI review.
+    // Raw DC OpenBink public proves bool; VideoOpen forwards the same
+    // Boolean flag, and retail stores its low byte without normalization.
     void openBink(int id, int x, int y, int w, int h, int loop,
-                  unsigned char useDirtyRects);
+                  bool useDirtyRects);
     void drawCurrentBinkFrame();
     void restartBink();
     void nextBinkFrame();

@@ -18,18 +18,18 @@ DATA(0x00694ce8)
 BINKSUMMARY g_binkSummary;
 
 // DC namespace globals SurfaceType, updateScreen, needsUpdate and PlayingBink.
-// Raw public storage class `3` distinguishes these from class-static members.
+// Raw publics use namespace storage class `3` and `_N` for the three bools.
 // Retail stores the surface format at 0x694ca0, gates dirty-rectangle updates
 // with 0x694ca8, publishes frame changes through 0x694ce0, and gates active
 // playback with 0x694d5c. The latter is distinct from the playingBINK object.
 DATA(0x00694ca0)
 int BinkManager::g_surfaceType;
 DATA(0x00694ca8)
-unsigned char BinkManager::g_updateScreen;
+bool BinkManager::g_updateScreen;
 DATA(0x00694ce0)
-unsigned char BinkManager::g_needsUpdate;
+bool BinkManager::g_needsUpdate;
 DATA(0x00694d5c)
-unsigned char BinkManager::g_playingBinkActive;
+bool BinkManager::g_playingBinkActive;
 
 // DC file-static bBinkSound; retail openBink writes this sound-enable gate.
 DATA(0x00694d58)
@@ -66,7 +66,7 @@ static const int g_binkOpenFromArchive = 0x8000000;
 // Retail retains four serviceSounds calls. The Windows body is source-local
 // to soundmgr.cpp; its platform evidence comment explains that visibility.
 VA(0x0044d5a0, 0x283)  // dc 0x50a7c
-BINK* BinkManager::getBinkFilePtr(const char* filename, int binkOptions)
+BINK* BinkManager::getBinkFilePtr(char* filename, int binkOptions)
 {
     char name[40];
     int i;
@@ -123,7 +123,7 @@ BINK* BinkManager::getBinkFilePtr(const char* filename, int binkOptions)
 
 VA(0x0044D830, 0x1A3)  // dc 0x50a84
 void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
-                   unsigned char useDirtyRects)
+                   bool useDirtyRects)
 {
     if (g_unnamed699290 == 0 && g_soundManager->m_ds != 0
         && g_unnamed698758.m_soundVolume != 0)
