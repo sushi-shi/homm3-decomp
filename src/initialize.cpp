@@ -196,9 +196,9 @@ VA(0x004ebb70, 0xD8)  // dc 0xdc3cc
 static void createIncludedMask(const int* includeList, __int64* includedBuildings)
 {
     const int* const commonList = g_commonIncludeList;
-    for (int index = 0; index < TOWN_BUILDING_SLOTS; ++index) {
-        includedBuildings[index] = 0;
-    }
+    MEMSET_LOCAL(includedBuildings, 0,
+                 TOWN_BUILDING_SLOTS * sizeof(includedBuildings[0]),
+                 TOWN_BUILDING_SLOTS, index);
     addToIncludedMask(commonList, includedBuildings);
     addToIncludedMask(includeList, includedBuildings);
 }

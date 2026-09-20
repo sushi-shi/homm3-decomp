@@ -654,8 +654,7 @@ void game::calculateProduction()
         if (!m_playerDisabled[playerId]) {
             long (&production)[NUM_RESOURCES] =
                 m_players[playerId].m_ai.m_turnProductionResource;
-            for (i = 0; i < NUM_RESOURCES; ++i)
-                production[i] = 0;
+            MEMSET(production, 0, sizeof(production), i);
         }
     }
 
@@ -1141,8 +1140,8 @@ void playerData::init()
     m_recruits[1] = -1;
     m_personality = 0;
     memset(&m_ai, 0, sizeof(m_ai));
-    for (int heroIndex = 0; heroIndex < 8; heroIndex++)
-        m_heroes[heroIndex] = -1;
+    int heroIndex;
+    MEMSET(m_heroes, -1, sizeof(m_heroes), heroIndex);
     memset(m_townIds, 0xff, sizeof(m_townIds));
     m_isLocal = 0;
     m_isHuman = 0;
@@ -2666,10 +2665,8 @@ int game::load(TAbstractFile* infile)
 
     if (saved.m_version >= 29)
         infile->read(m_ssDisabled, sizeof(m_ssDisabled));
-    else {
-        for (i = 0; i < sizeof(m_ssDisabled); ++i)
-            m_ssDisabled[i] = 0;
-    }
+    else
+        MEMSET(m_ssDisabled, 0, sizeof(m_ssDisabled), i);
 
     if (loadRumours(infile) < 0)
         return -1;
@@ -3442,8 +3439,7 @@ void game::setupOrigData()
 
     strncpy(m_saveFileName, (*g_generalText)[12], sizeof(m_saveFileName));
     m_saveFileName[sizeof(m_saveFileName) - 1] = 0;
-    for (i = 0; i < 8; ++i)
-        m_playerDisabled[i] = 0;
+    MEMSET(m_playerDisabled, 0, sizeof(m_playerDisabled), i);
     memset(g_unnamed69fb24, -1, sizeof(g_unnamed69fb24));
 
     m_ultimateArtifactX = -1;
@@ -3461,8 +3457,7 @@ void game::setupOrigData()
     m_numObelisks = 0;
     advManager* manager = g_advManager;
     manager->m_curHeroMobile = 0;
-    for (i = 0; i < sizeof(m_heroAvailability); ++i)
-        m_heroAvailability[i] = -1;
+    MEMSET(m_heroAvailability, -1, sizeof(m_heroAvailability), i);
 
     std::bitset<8> allPlayers;
     allPlayers.set();
@@ -3474,14 +3469,10 @@ void game::setupOrigData()
         m_heroes[i].initialize(i);
     }
 
-    for (i = 0; i < sizeof(m_obeliskFlags); ++i)
-        m_obeliskFlags[i] = 0;
-    for (i = 0; i < sizeof(m_spellAllocInfo); ++i)
-        m_spellAllocInfo[i] = 0;
-    for (i = 0; i < sizeof(m_spellDisabledInfo); ++i)
-        m_spellDisabledInfo[i] = 0;
-    for (i = 0; i < sizeof(m_cartographerFlags); ++i)
-        m_cartographerFlags[i] = 0;
+    MEMSET(m_obeliskFlags, 0, sizeof(m_obeliskFlags), i);
+    MEMSET(m_spellAllocInfo, 0, sizeof(m_spellAllocInfo), i);
+    MEMSET(m_spellDisabledInfo, 0, sizeof(m_spellDisabledInfo), i);
+    MEMSET(m_cartographerFlags, 0, sizeof(m_cartographerFlags), i);
 }
 
 VA(0x004bf330, 0x23B)
@@ -10229,8 +10220,8 @@ void game::setCannedRumour()
     }
 
     if (!available) {
-        for (int rumourSlot = 0; rumourSlot < 0x100; rumourSlot++)
-        m_rumourState[rumourSlot] = 0;
+        int rumourSlot;
+        MEMSET(m_rumourState, 0, sizeof(m_rumourState), rumourSlot);
         available = 256;
     }
 
@@ -10635,7 +10626,8 @@ type_point game::getUndergroundGateExit(const NewmapCell* cell) const
 // heroPoolMap element is also byte-flat here and regresses game::Load from
 // 92.3721 to 92.2795. The implicit-member boundary is therefore bounded
 // without sacrificing an exact function.
-// The scalar array initialisations are counted loops, not memsets. Retail
+// The scalar array initialisations use MEMSET markers, which expand to counted
+// loops rather than CRT memset calls. Retail
 // sets EDI up before ECX at m_saveFileName, m_heroAvailability,
 // m_artifactUsed, m_artifactDisabled, m_obeliskFlags, m_currentRumour,
 // m_globalInfoFlags and m_rumourState, and ECX before EDI at m_setup: the
@@ -10654,26 +10646,26 @@ game::game()
 {
     m_difficultyRating = 0;
     m_newCampaignStarted = 0;
-    for (int nameByte = 0; nameByte < 0x15f; nameByte++)
-        m_saveFileName[nameByte] = 0;
+    int nameByte;
+    MEMSET(m_saveFileName, 0, sizeof(m_saveFileName), nameByte);
     memset(&m_setup, 0, sizeof(m_setup));
     memset(m_playerDisabled, 0, sizeof(m_playerDisabled));
     m_day = 0;
     m_week = 0;
     m_month = 0;
-    for (int heroSlot = 0; heroSlot < HERO_COUNT; heroSlot++)
-        m_heroAvailability[heroSlot] = -1;
+    int heroSlot;
+    MEMSET(m_heroAvailability, -1, sizeof(m_heroAvailability), heroSlot);
 
     std::bitset<8> allPlayers;
     allPlayers.set();
     for (int i = 0; i < HERO_COUNT; i++)
         m_heroPoolMap[i] = allPlayers;
-    for (int usedArt = 0; usedArt < 0x90; usedArt++)
-        m_artifactUsed[usedArt] = 0;
-    for (int disabledArt = 0; disabledArt < 0x90; disabledArt++)
-        m_artifactDisabled[disabledArt] = 0;
-    for (int obelisk = 0; obelisk < 0x30; obelisk++)
-        m_obeliskFlags[obelisk] = 0;
+    int usedArt;
+    MEMSET(m_artifactUsed, 0, sizeof(m_artifactUsed), usedArt);
+    int disabledArt;
+    MEMSET(m_artifactDisabled, 0, sizeof(m_artifactDisabled), disabledArt);
+    int obelisk;
+    MEMSET(m_obeliskFlags, 0, sizeof(m_obeliskFlags), obelisk);
     m_ultimateArtifactX = -1;
     m_ultimateArtifactY = -1;
     m_ultimateArtifactZ = -1;
@@ -10681,11 +10673,11 @@ game::game()
     m_ultimateArtifactPresent = 0;
     m_f1f698 = 0;
     m_isCheater = 0;
-    for (int rumourByte = 0; rumourByte < 0x12d; rumourByte++)
-        m_currentRumour[rumourByte] = 0;
+    int rumourByte;
+    MEMSET(m_currentRumour, 0, sizeof(m_currentRumour), rumourByte);
     m_numObelisks = 0;
-    for (int infoFlag = 0; infoFlag < 32; infoFlag++)
-        m_globalInfoFlags[infoFlag] = 0;
+    int infoFlag;
+    MEMSET(m_globalInfoFlags, 0, sizeof(m_globalInfoFlags), infoFlag);
     memset(m_borderTentVisitFlags, 0, sizeof(m_borderTentVisitFlags));
     m_cartographerMask[0] = 0x100;
     m_cartographerMask[1] = 0xbf;

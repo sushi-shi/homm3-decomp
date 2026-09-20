@@ -413,10 +413,10 @@ advManager::advManager()
         m_groundTileset[i] = 0;
         m_heroSamples[i] = 0;
     }
-    for (int river = 1; river < 5; river++)
-        m_riverTileset[river] = 0;
-    for (int road = 1; road < 4; road++)
-        m_roadTileset[road] = 0;
+    int river;
+    MEMSET(&m_riverTileset[1], 0, 4 * sizeof(m_riverTileset[0]), river);
+    int road;
+    MEMSET(&m_roadTileset[1], 0, 3 * sizeof(m_roadTileset[0]), road);
     m_borderTileset = 0;
     m_arrowTileset = 0;
     m_gemIcons[0] = 0;
@@ -430,13 +430,15 @@ advManager::advManager()
         m_boatIcons[boat] = 0;
         m_boatFrothIcons[boat] = 0;
     }
-    for (int flag = 0; flag < 8; flag++)
-        m_flagIcons[flag] = 0;
-    for (int boatType = 0; boatType < 3; boatType++)
-        for (int owner = 0; owner < 8; owner++)
-            m_boatFlagIcons[boatType][owner] = 0;
-    for (int looped = 0; looped < LOOPING_SOUND_COUNT; looped++)
-        m_loopedSample[looped] = 0;
+    int flag;
+    MEMSET(m_flagIcons, 0, sizeof(m_flagIcons), flag);
+    for (int boatType = 0; boatType < 3; boatType++) {
+        int owner;
+        MEMSET(m_boatFlagIcons[boatType], 0,
+               sizeof(m_boatFlagIcons[boatType]), owner);
+    }
+    int looped;
+    MEMSET(m_loopedSample, 0, sizeof(m_loopedSample), looped);
     m_radarIcons = 0;
     m_advWindow = 0;
     m_routeArray = 0;

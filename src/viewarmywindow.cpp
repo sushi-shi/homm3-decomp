@@ -374,8 +374,8 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
 
     createRolloverWidget();
 
-    for (int i = 0; i < 3; i++)
-        m_influence[i] = -1;
+    int i;
+    MEMSET(m_influence, -1, sizeof(m_influence), i);
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)

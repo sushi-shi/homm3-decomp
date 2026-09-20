@@ -2436,8 +2436,8 @@ static void sliderFileMenu(int state, heroWindow*)
 VA(0x0057C9B0, 0x12)  // dc 0x148678
 CNewPlayerUpdateMan::CNewPlayerUpdateMan()
 {
-    for (int i = 0; i < 8; ++i)
-        m_procs[i] = 0;
+    int i;
+    MEMSET(m_procs, 0, sizeof(m_procs), i);
 }
 
 VA(0x0057c9d0, 0x2A)  // dc 0x148ad8

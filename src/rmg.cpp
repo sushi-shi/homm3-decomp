@@ -9281,11 +9281,11 @@ unsigned char type_random_map_generator::generate()
     unsigned int selected = rand() % m_templates.size();
     m_templateName = m_templates[selected]->m_name;
     char humanSlots[8];
-    for (int humanSlotByte = 0; humanSlotByte < 8; ++humanSlotByte)
-        humanSlots[humanSlotByte] = 0;
+    int humanSlotByte;
+    MEMSET(humanSlots, 0, sizeof(humanSlots), humanSlotByte);
     char allSlots[8];
-    for (int allSlotByte = 0; allSlotByte < 8; ++allSlotByte)
-        allSlots[allSlotByte] = 0;
+    int allSlotByte;
+    MEMSET(allSlots, 0, sizeof(allSlots), allSlotByte);
     TRmgTemplate* mapTemplate = m_templates[selected];
     for (unsigned int zone = 0; zone < mapTemplate->m_zones.size(); ++zone) {
         TRmgTownSlot* slot = mapTemplate->m_zones[zone];
@@ -9296,8 +9296,8 @@ unsigned char type_random_map_generator::generate()
             allSlots[slot->m_playerIndex] = 1;
         }
     }
-    for (int mapIndex = 0; mapIndex < 9; ++mapIndex)
-        m_playerIndexMap[mapIndex] = -1;
+    int mapIndex;
+    MEMSET(m_playerIndexMap, -1, sizeof(m_playerIndexMap), mapIndex);
     int players[8];
     int count = 0;
     for (int player = 0; player < 8; ++player)

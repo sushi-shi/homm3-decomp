@@ -1777,8 +1777,8 @@ void combatManager::setupAndLoadObstacles()
         m_wallStrength[17] = 1;
         m_wallStrength[16] = 1;
         m_wallStrength[15] = 1;
-        for (int copy = 0; copy < 18; copy++)
-            m_wallStanding[copy] = m_wallStrength[copy];
+        int copy;
+        MEMCPY(m_wallStanding, m_wallStrength, sizeof(m_wallStanding), copy);
 
         if (m_fortificationLevel == COMBAT_FORTIFICATION_CASTLE) {
             m_wallStrength[6]++;

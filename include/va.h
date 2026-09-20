@@ -46,6 +46,13 @@
  *   HOMM3_RELEASE_VERIFY(expr)      release-form invariant carrier; the
  *                                  expression is evaluated, like VERIFY, and
  *                                  must be supported by source-shape evidence
+ *   MEMSET(dest, value, bytes, i)   counted fill retained for retail codegen;
+ *                                  searchable candidate for a future memset
+ *   MEMCPY(dest, src, bytes, i)     counted copy retained for retail codegen;
+ *                                  searchable candidate for a future memcpy
+ *   MEMSET_LOCAL(dest, value, bytes, count, i)
+ *                                  counted fill whose index declaration and
+ *                                  source bound must remain inside the loop
  *   OVERRIDE                       `override` under clang, nothing under VC6
  *   SIZE(type, bytes)              struct-size assertion (clang arm only)
  */
@@ -81,5 +88,29 @@
 #define SIZE(type, bytes)
 
 #endif
+
+// These intentionally expand to the authored counted loops.  The caller owns
+// the index variable so its type, scope and register lifetime remain visible
+// to the matching compiler.  The byte-count argument mirrors the CRT calls
+// that can replace these markers after exact matching is no longer required.
+#define MEMSET(destination, value, byteCount, index)                         \
+    for (index = 0;                                                         \
+         index < static_cast<int>((byteCount) / sizeof((destination)[0]));  \
+         ++index)                                                           \
+        (destination)[index] = (value)
+
+#define MEMCPY(destination, source, byteCount, index)                        \
+    for (index = 0;                                                         \
+         index < static_cast<int>((byteCount) / sizeof((destination)[0]));  \
+         ++index)                                                           \
+        (destination)[index] = (source)[index]
+
+// Some inlined loops are sensitive to the local declaration and to the exact
+// source spelling of a dynamic bound.  byteCount remains the eventual memset
+// operand; elementCount reproduces the authored loop until that migration.
+#define MEMSET_LOCAL(destination, value, byteCount, elementCount, index)     \
+    for (int index = 0; index < elementCount; ++index) {                    \
+        (destination)[index] = (value);                                     \
+    }
 
 #endif /* HOMM3_VA_H */

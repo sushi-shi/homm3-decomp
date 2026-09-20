@@ -973,8 +973,8 @@ void game::overview()
     g_advManager->demobilizeCurrHero(0, 1);
     g_windowManager->fadeScreen(1, 4, 1);
 
-    for (int titleSlot = 0; titleSlot < 3; titleSlot++)
-        g_textWidgetTitle[titleSlot] = 0;
+    int titleSlot;
+    MEMSET(g_textWidgetTitle, 0, sizeof(g_textWidgetTitle), titleSlot);
 
     g_textWidgetDynamic = new textWidget*[40 * 70];
     g_iconWidgetDynamic = new iconWidget*[40 * 70];
