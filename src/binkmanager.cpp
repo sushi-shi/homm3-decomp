@@ -17,18 +17,19 @@
 DATA(0x00694ce8)
 BINKSUMMARY g_binkSummary;
 
-// DC BinkManager::SurfaceType, updateScreen, needsUpdate and PlayingBink.
+// DC namespace globals SurfaceType, updateScreen, needsUpdate and PlayingBink.
+// Raw public storage class `3` distinguishes these from class-static members.
 // Retail stores the surface format at 0x694ca0, gates dirty-rectangle updates
 // with 0x694ca8, publishes frame changes through 0x694ce0, and gates active
 // playback with 0x694d5c. The latter is distinct from the playingBINK object.
 DATA(0x00694ca0)
-int BinkManager::s_surfaceType;
+int BinkManager::g_surfaceType;
 DATA(0x00694ca8)
-unsigned char BinkManager::s_updateScreen;
+unsigned char BinkManager::g_updateScreen;
 DATA(0x00694ce0)
-unsigned char BinkManager::s_needsUpdate;
+unsigned char BinkManager::g_needsUpdate;
 DATA(0x00694d5c)
-unsigned char BinkManager::s_playingBinkActive;
+unsigned char BinkManager::g_playingBinkActive;
 
 // DC file-static bBinkSound; retail openBink writes this sound-enable gate.
 DATA(0x00694d58)
@@ -36,7 +37,7 @@ static int g_binkSound;
 
 // Dreamcast BinkManager::playingBINK, type BinkManagerStruct (48 bytes).
 DATA(0x00694cb0)
-BinkManager::BinkManagerStruct BinkManager::s_playingBink;
+BinkManager::BinkManagerStruct BinkManager::g_playingBink;
 
 #if 0  // @carcass
 
@@ -131,71 +132,71 @@ void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
         g_binkSound = 0;
 
     videoClose();
-    s_surfaceType = _BinkDDSurfaceType(g_ddsBack);
-    s_playingBink.m_id = id;
-    s_playingBink.m_paused = 0;
+    g_surfaceType = _BinkDDSurfaceType(g_ddsBack);
+    g_playingBink.m_id = id;
+    g_playingBink.m_paused = 0;
 
     if (g_videoDescriptors[id].m_smkAudioStem != "") {
-        s_playingBink.m_bink2 = BinkManager::getBinkFilePtr(
+        g_playingBink.m_bink2 = BinkManager::getBinkFilePtr(
             g_videoDescriptors[id].m_smkAudioStem, 0x400000);
-        if (!s_playingBink.m_bink2) {
+        if (!g_playingBink.m_bink2) {
             BinkManager::closeBink();
             return;
         }
     }
 
-    s_playingBink.m_bink = BinkManager::getBinkFilePtr(
+    g_playingBink.m_bink = BinkManager::getBinkFilePtr(
         g_videoDescriptors[id].m_smkStem,
         g_videoDescriptors[id].m_noFrameSkip ? 0x400000 : 0);
-    if (!s_playingBink.m_bink) {
+    if (!g_playingBink.m_bink) {
         BinkManager::closeBink();
         return;
     }
 
-    s_updateScreen = useDirtyRects;
+    g_updateScreen = useDirtyRects;
     if (w <= 0)
-        w = s_playingBink.m_bink->m_width;
+        w = g_playingBink.m_bink->m_width;
     if (h <= 0)
-        h = s_playingBink.m_bink->m_height;
-    s_playingBink.m_loop = loop;
-    s_playingBink.m_x = x;
-    s_playingBink.m_y = y;
-    s_playingBink.m_w = w;
-    s_playingBink.m_h = h;
-    s_playingBink.m_screen = g_windowManager->m_screenBitmap->getMap(x, y);
-    s_playingBink.m_pitch = g_windowManager->m_screenBitmap->getPitch();
-    s_playingBink.m_height = g_windowManager->m_screenBitmap->getHeight();
-    s_playingBinkActive = 1;
+        h = g_playingBink.m_bink->m_height;
+    g_playingBink.m_loop = loop;
+    g_playingBink.m_x = x;
+    g_playingBink.m_y = y;
+    g_playingBink.m_w = w;
+    g_playingBink.m_h = h;
+    g_playingBink.m_screen = g_windowManager->m_screenBitmap->getMap(x, y);
+    g_playingBink.m_pitch = g_windowManager->m_screenBitmap->getPitch();
+    g_playingBink.m_height = g_windowManager->m_screenBitmap->getHeight();
+    g_playingBinkActive = 1;
 }
 
-// smackmgr.cpp's VideoDrawCurrentFrame calls this one by the static-member
+// smackmgr.cpp's VideoDrawCurrentFrame uses this namespace-qualified call.
 VA(0x0044d9e0, 0x6E)  // dc 0x50a88
 void BinkManager::drawCurrentBinkFrame()
 {
     Bink* video;
-    if (s_playingBink.m_bink && s_playingBinkActive) {
-        if (s_playingBink.m_bink->m_frameNum == 1)
-            _BinkDoFrame(s_playingBink.m_bink);
-        video = s_playingBink.m_bink;
-    } else if (s_playingBink.m_bink2 && s_playingBinkActive) {
-        if (s_playingBink.m_bink2->m_frameNum == 1)
-            _BinkDoFrame(s_playingBink.m_bink2);
-        video = s_playingBink.m_bink2;
+    if (g_playingBink.m_bink && g_playingBinkActive) {
+        if (g_playingBink.m_bink->m_frameNum == 1)
+            _BinkDoFrame(g_playingBink.m_bink);
+        video = g_playingBink.m_bink;
+    } else if (g_playingBink.m_bink2 && g_playingBinkActive) {
+        if (g_playingBink.m_bink2->m_frameNum == 1)
+            _BinkDoFrame(g_playingBink.m_bink2);
+        video = g_playingBink.m_bink2;
     } else {
         return;
     }
-    _BinkCopyToBuffer(video, s_playingBink.m_screen, s_playingBink.m_pitch, s_playingBink.m_height, 0, 0,
-                      s_surfaceType);
+    _BinkCopyToBuffer(video, g_playingBink.m_screen, g_playingBink.m_pitch, g_playingBink.m_height, 0, 0,
+                      g_surfaceType);
 }
 
 VA(0x0044da50, 0x4D)  // dc 0x50a8c
 void BinkManager::restartBink()
 {
-    if (s_playingBink.m_bink) {
-        _BinkGoto(s_playingBink.m_bink, 1, 1);
-        _BinkDoFrame(s_playingBink.m_bink);
-        _BinkCopyToBuffer(s_playingBink.m_bink, s_playingBink.m_screen, s_playingBink.m_pitch, s_playingBink.m_height,
-                          0, 0, s_surfaceType);
+    if (g_playingBink.m_bink) {
+        _BinkGoto(g_playingBink.m_bink, 1, 1);
+        _BinkDoFrame(g_playingBink.m_bink);
+        _BinkCopyToBuffer(g_playingBink.m_bink, g_playingBink.m_screen, g_playingBink.m_pitch, g_playingBink.m_height,
+                          0, 0, g_surfaceType);
     }
 }
 
@@ -207,32 +208,32 @@ void BinkManager::restartBink()
 VA(0x0044DAA0, 0x21A)  // dc-order-map + caller (smackmgr VideoNextFrame), dc 0x50a90
 void BinkManager::nextBinkFrame()
 {
-    Bink* video = s_playingBink.m_bink;
+    Bink* video = g_playingBink.m_bink;
     if (!video)
-        video = s_playingBink.m_bink2;
-    s_needsUpdate = video && s_playingBinkActive && !_BinkWait(video);
-    if (!s_needsUpdate)
+        video = g_playingBink.m_bink2;
+    g_needsUpdate = video && g_playingBinkActive && !_BinkWait(video);
+    if (!g_needsUpdate)
         return;
-    if (s_playingBink.m_paused)
+    if (g_playingBink.m_paused)
         return;
 
     _BinkDoFrame(video);
-    _BinkCopyToBuffer(video, s_playingBink.m_screen, s_playingBink.m_pitch, s_playingBink.m_height, 0, 0,
-                      s_surfaceType);
+    _BinkCopyToBuffer(video, g_playingBink.m_screen, g_playingBink.m_pitch, g_playingBink.m_height, 0, 0,
+                      g_surfaceType);
 
     if (video->m_frameNum == video->m_frames) {
-        if (s_playingBink.m_loop) {
-            if (s_playingBink.m_bink && s_playingBink.m_bink2) {
-                if (g_videoDescriptors[s_playingBink.m_id].m_fadeOnAbort)
+        if (g_playingBink.m_loop) {
+            if (g_playingBink.m_bink && g_playingBink.m_bink2) {
+                if (g_videoDescriptors[g_playingBink.m_id].m_fadeOnAbort)
                     g_windowManager->fadeScreen(1, 4, 0);
                 g_soundManager->serviceSounds();
-                _BinkClose(s_playingBink.m_bink);
-                s_playingBink.m_bink = 0;
-                video = s_playingBink.m_bink2;
-                if (g_videoDescriptors[s_playingBink.m_id].m_fadeInSecondTrack) {
+                _BinkClose(g_playingBink.m_bink);
+                g_playingBink.m_bink = 0;
+                video = g_playingBink.m_bink2;
+                if (g_videoDescriptors[g_playingBink.m_id].m_fadeInSecondTrack) {
                     _BinkDoFrame(video);
-                    _BinkCopyToBuffer(video, s_playingBink.m_screen, s_playingBink.m_pitch,
-                                      s_playingBink.m_height, 0, 0, s_surfaceType);
+                    _BinkCopyToBuffer(video, g_playingBink.m_screen, g_playingBink.m_pitch,
+                                      g_playingBink.m_height, 0, 0, g_surfaceType);
                     g_windowManager->fadeScreen(0, 4, 0);
                 }
             } else {
@@ -241,7 +242,7 @@ void BinkManager::nextBinkFrame()
         } else {
             _BinkGetSummary(video, &g_binkSummary);
             BinkManager::closeBink();
-            if (g_videoDescriptors[s_playingBink.m_id].m_fadeOnAbort)
+            if (g_videoDescriptors[g_playingBink.m_id].m_fadeOnAbort)
                 g_windowManager->fadeScreen(1, 4, 0);
             else
                 g_windowManager->updateScreen(0, 0, 800, 600);
@@ -250,27 +251,27 @@ void BinkManager::nextBinkFrame()
     } else {
         _BinkNextFrame(video);
     }
-    if (s_updateScreen)
+    if (g_updateScreen)
         videoDrawRects();
 }
 
-// E:\gamedcs\binkmanager.cpp:345 (dc 0x50a94) - the static-member spelling
+// E:\gamedcs\binkmanager.cpp:345 (dc 0x50a94) - namespace-qualified entry
 VA(0x0044dcc0, 0x60)  // dc 0x50a94
 void BinkManager::closeBink()
 {
-    if (s_playingBink.m_bink) {
-        _BinkPause(s_playingBink.m_bink, 1);
-        _BinkClose(s_playingBink.m_bink);
+    if (g_playingBink.m_bink) {
+        _BinkPause(g_playingBink.m_bink, 1);
+        _BinkClose(g_playingBink.m_bink);
     }
-    if (s_playingBink.m_bink2) {
-        _BinkPause(s_playingBink.m_bink2, 1);
-        _BinkClose(s_playingBink.m_bink2);
+    if (g_playingBink.m_bink2) {
+        _BinkPause(g_playingBink.m_bink2, 1);
+        _BinkClose(g_playingBink.m_bink2);
     }
-    s_playingBink.m_bink2 = 0;
-    s_playingBink.m_bink = 0;
-    s_playingBink.m_paused = 0;
-    s_playingBinkActive = 0;
-    s_needsUpdate = 0;
+    g_playingBink.m_bink2 = 0;
+    g_playingBink.m_bink = 0;
+    g_playingBink.m_paused = 0;
+    g_playingBinkActive = 0;
+    g_needsUpdate = 0;
 }
 
 // E:\gamedcs\binkmanager.cpp:376, dc 0x50a98 is a platform stub.
@@ -292,31 +293,31 @@ int BinkManager::playBink(int id, int x, int y, int w, int h)
     vh = h;
     vw = w;
     BinkManager::openBink(id, x, y, vw, vh, 0, 0);
-    if (!s_playingBink.m_bink) {
+    if (!g_playingBink.m_bink) {
         result = 0;
     } else {
         g_mouseManager->hidePointer();
         if (vw < 0)
-            vw = s_playingBink.m_bink->m_width;
+            vw = g_playingBink.m_bink->m_width;
         if (vh < 0)
-            vh = s_playingBink.m_bink->m_height;
+            vh = g_playingBink.m_bink->m_height;
         if (id != VIDEO_ID_OVERLAY_BLIT) {
-            s_playingBink.m_x = x + (vw - s_playingBink.m_bink->m_width) / 2;
-            s_playingBink.m_y = y + (vh - s_playingBink.m_bink->m_height) / 2;
-            updateX = s_playingBink.m_x;
-            updateY = s_playingBink.m_y;
+            g_playingBink.m_x = x + (vw - g_playingBink.m_bink->m_width) / 2;
+            g_playingBink.m_y = y + (vh - g_playingBink.m_bink->m_height) / 2;
+            updateX = g_playingBink.m_x;
+            updateY = g_playingBink.m_y;
         } else {
             updateX = 0;
             updateY = 0;
-            vw = s_playingBink.m_bink->m_width;
-            vh = s_playingBink.m_bink->m_height;
+            vw = g_playingBink.m_bink->m_width;
+            vh = g_playingBink.m_bink->m_height;
         }
-        s_playingBink.m_screen = g_windowManager->m_screenBitmap->getMap(
-            s_playingBink.m_x, s_playingBink.m_y);
+        g_playingBink.m_screen = g_windowManager->m_screenBitmap->getMap(
+            g_playingBink.m_x, g_playingBink.m_y);
         aborted = 0;
         g_inputManager->flush();
         while (1) {
-            if (s_playingBink.m_bink == 0)
+            if (g_playingBink.m_bink == 0)
                 break;
             pollSound();
             process1WindowsMessage();
@@ -347,7 +348,7 @@ int BinkManager::playBink(int id, int x, int y, int w, int h)
         g_mouseManager->showPointer(0);
         result = !aborted;
     }
-    s_playingBink.m_paused = 0;
-    s_playingBinkActive = 0;
+    g_playingBink.m_paused = 0;
+    g_playingBinkActive = 0;
     return result;
 }

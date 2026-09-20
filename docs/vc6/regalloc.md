@@ -1857,7 +1857,7 @@ labelled `const_23d6f4`; they do not represent different table elements.
 ## Recover shared state before treating register swaps as allocator noise
 
 `BinkManager::playBink` (`0x44dd20`) reaches 100% after restoring the
-48-byte `BinkManagerStruct`, its static `playingBINK` object, and its
+48-byte `BinkManagerStruct`, its namespace-global `playingBINK` object, and its
 `unsigned short* screen` member. Dreamcast's member/global records prove
 this layout; retail's field accesses and campaign-preview copies corroborate
 it. The reconstruction had represented the twelve members as separate

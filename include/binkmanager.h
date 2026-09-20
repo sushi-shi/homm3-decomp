@@ -106,10 +106,10 @@ __declspec(dllimport) void __stdcall _BinkGetSummary(Bink* bnk,
                                                      BINKSUMMARY* sum);
 }
 
-// Dreamcast proves these are static members (the `YA` decorated forms and
-// static data roster); retail supplies the full PC implementations.
-class BinkManager {
-public:
+// Raw DC publics encode namespace functions (`YA`) and globals (`3`),
+// unlike class-static `SA` functions and `2` data. The sole named type
+// is BinkManagerStruct, the namespace-owned 48-byte state type.
+namespace BinkManager {
     // DC BinkManagerStruct / playingBINK: members bink, bink2, screen,
     // pitch, height, x, y, w, h, id, loop, paused. Retail's 48-byte state
     // at 0x694cb0 has the same offsets; campaign previews copy all 12 words.
@@ -127,27 +127,27 @@ public:
         int m_loop;               // +0x28
         int m_paused;             // +0x2c
     };
-    static BinkManagerStruct s_playingBink;
+    extern BinkManagerStruct g_playingBink;
     // DC SurfaceType, updateScreen, needsUpdate and PlayingBink.
-    static int s_surfaceType;
-    static unsigned char s_updateScreen;
-    static unsigned char s_needsUpdate;
-    static unsigned char s_playingBinkActive;
+    extern int g_surfaceType;
+    extern unsigned char g_updateScreen;
+    extern unsigned char g_needsUpdate;
+    extern unsigned char g_playingBinkActive;
 
-    static BINK* getBinkFilePtr(const char* filename, int binkOptions);
-    static void setPixelFormat(unsigned long redMask,
-                               unsigned long greenMask,
-                               unsigned long blueMask);
-    // DC dc:0x50a84 gives six ints followed by unsigned char, not bool.
-    // Retail stores the final low byte in the dirty-rectangle flag.
-    static void openBink(int id, int x, int y, int w, int h, int loop,
-                         unsigned char useDirtyRects);
-    static void drawCurrentBinkFrame();
-    static void restartBink();
-    static void nextBinkFrame();
-    static void closeBink();
-    static int playBink(int id, int x, int y, int w, int h);
-};
+    BINK* getBinkFilePtr(const char* filename, int binkOptions);
+    void setPixelFormat(unsigned long redMask,
+                        unsigned long greenMask,
+                        unsigned long blueMask);
+    // DC OpenBink's raw public encodes a final bool. This byte-shaped
+    // Windows interface awaits a separate caller-ABI review.
+    void openBink(int id, int x, int y, int w, int h, int loop,
+                  unsigned char useDirtyRects);
+    void drawCurrentBinkFrame();
+    void restartBink();
+    void nextBinkFrame();
+    void closeBink();
+    int playBink(int id, int x, int y, int w, int h);
+} // namespace BinkManager
 SIZE(BinkManager::BinkManagerStruct, 48);
 
 #endif  /* HOMM3_BINKMANAGER_H */

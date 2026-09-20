@@ -6020,14 +6020,15 @@ queue remains open.
 
 ### Bink ownership and the misplaced obstacle-insert claim
 
-The Bink Dreamcast bodies are port stubs, but their static member declarations
-remain positive source evidence. The retained draw/advance/close/play bodies
-now use the existing `BinkManager` declarations; callers no longer refer to
-provisional free functions. The restart caller previously referenced an
-undefined free `restartBinkVideo`, despite the existing `restartBink` member.
-OpenBink's dossier (dc:0x50a84) gives six ints and an unsigned char, correcting
-the former bool class declaration. Its retained body and the forwarding
-VideoOpen caller remain exact after the member/signature restoration.
+The Bink Dreamcast bodies are port stubs, but their declarations remain
+positive source evidence. Raw publics establish namespace ownership: Bink
+functions use `YA` and globals use `3`, versus class-static `SA` and `2`.
+Restoring the namespace preserves all seven function bodies and their
+relocation targets across two reproduced states and four consuming TUs.
+Fresh delinking preserves all seven 100% scores and every current-source MAX.
+OpenBink's raw public encodes its final parameter as `_N` (bool); the
+dossier's byte rendering does not override that source fact. Restoring its
+Boolean interface requires a coupled review of the VideoOpen caller.
 Two full ownership checkpoints preserve every current score. Five function
 names migrate by retail RVA, preserving their historical peaks. Own-source
 hash changes reset the frame pump's and VideoClose's current-source MAX to
@@ -6036,7 +6037,7 @@ CUR; their historical 92.9245% and 100% peaks remain available.
 All seven admitted Bink functions now match retail. Restoring the canonical
 playback aggregate and operation order closes playBink; the reviewed Windows
 sound-service visibility restores getBinkFilePtr's retained calls. Publishing
-the readiness predicate in the actual `s_needsUpdate` byte closes nextBinkFrame's
+the readiness predicate in the actual `g_needsUpdate` byte closes nextBinkFrame's
 idle-return and shared-epilogue layout (see behavior-catalog D5). The pump
 search generator and disposable behavioral fixtures are retired; Git retains
 the earlier experiments. The unlocated three-argument DC `setPixelFormat`

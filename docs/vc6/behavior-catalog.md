@@ -904,7 +904,7 @@ returns or treating the epilogue as an allocator ceiling.
 
 
 The Bink sibling `BinkManager::nextBinkFrame` (0x44daa0) has the same state
-ownership: assign `s_needsUpdate` from the complete readiness predicate, then
+ownership: assign `g_needsUpdate` from the complete readiness predicate, then
 return if it is false. With the separately recovered Windows sound-service
 call boundary, this closes 92.9245% to 100%, including idle-clear placement and
 the final draw call/shared epilogue. Three source states produced two distinct
