@@ -334,11 +334,13 @@ VA(0x005f4210, 0x3C1)  // dc 0x19148c
 TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
                                  unsigned char showOk)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
+      // Retail initialises the creature type in the member list, before the
+      // widget run; assigning it in the body costs 94.4475 against 97.1745.
+      m_armyType(TCreatureType(armyType)),
       m_showingUpgradeButton(0),
       m_showingDismissButton(0),
       m_showingOkButton(showOk)
 {
-    m_armyType = TCreatureType(armyType);
     const TCreatureTypeTraits* traits = &g_creatureTypeTraits[armyType];
 
     m_widgets.reserve(NWIDGETS);
