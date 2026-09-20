@@ -199,9 +199,9 @@ int soundManager::open(int newPriority)
             g_unk698764 = 0;
         } else {
             if (g_soundManager->m_ds->lppdsb) {
-                AILPrimaryBuffer* buffer =
-                    static_cast<AILPrimaryBuffer*>(g_soundManager->m_ds->lppdsb);
-                buffer->m_vtable->m_setVolume(buffer, 0);
+                LPDIRECTSOUNDBUFFER buffer = static_cast<LPDIRECTSOUNDBUFFER>(
+                    g_soundManager->m_ds->lppdsb);
+                buffer->SetVolume(0);
             }
             SmackSoundUseMSS(g_soundManager->m_ds);
             BinkSoundUseMiles(g_soundManager->m_ds);

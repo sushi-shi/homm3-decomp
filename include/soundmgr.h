@@ -3,6 +3,7 @@
 
 #include <Mss.h>
 #include <bink.h>
+#include <dsound.h>
 #include <windows.h>
 #include "basemgr.h"
 #include "crt_process.h"
@@ -12,13 +13,6 @@ void pollSound();
 
 class sample;
 
-struct AILPrimaryBufferVtable {
-    void* m_methods[15];
-    long (__stdcall* m_setVolume)(void* self, long volume);
-};
-struct AILPrimaryBuffer {
-    AILPrimaryBufferVtable* m_vtable;
-};
 // DC-attested verbatim (LF_FIELDLIST 0x1c9c, Size = 8): the pair a
 // loaded-and-playing sample travels as. `playSample` is `void*` in the
 // Dreamcast record; retail hands it straight to AIL_sample_status /

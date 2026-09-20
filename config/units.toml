@@ -6,6 +6,7 @@ platform = "win32"
 includes = [
   "include",
   "vendor/bink-0.5a/include",
+  "vendor/ifc-2.0.3/include",
   "vendor/miles-5.0e/include",
   "vendor/smacker-3.2h/include",
   "vendor/zlib-1.1.3",

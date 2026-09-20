@@ -24,7 +24,6 @@
 #include "message.h"
 #include "inputmgr.h"
 #include "mousemgr.h"
-#include "../vendor/zlib-1.1.3/zlib.h"
 // gpWindowManager: CSaveScreen grabs and restores through the screen
 // bitmap, and hands the dirty rect back to the window manager.
 #include "winmgr.h"

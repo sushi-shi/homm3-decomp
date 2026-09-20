@@ -3,17 +3,8 @@
 
 #include <stdio.h>
 #include <vector>
+#include <zlib.h>
 #include "va.h"
-
-// zlib's uncompress, which LODFile::read calls on every packed entry
-// (retail 0x606be0, decorated @uncompress@16 - the vendored zlib TUs
-// compile /Gr, so it is fastcall like everything else here). The vendor
-// include directory is deliberately kept off the compiler's INCLUDE
-// path, so the single prototype lodfile.obj needs is spelled here
-// rather than by pulling zlib.h into the game headers.
-extern "C" int uncompress(unsigned char* dest, unsigned long* destLen,
-                          const unsigned char* source,
-                          unsigned long sourceLen);
 
 // The 32-byte archive-directory row. Retail Find's indexing uses a five-bit
 // shift, while open reads these same five fields from the on-disk table.

@@ -1808,7 +1808,7 @@ forcefeedback	??0const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosu
 forcefeedback	??0t_create_failure@t_enclosure@force_feedback@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0xb6c60	-
 forcefeedback	??0t_enclosure@force_feedback@@QAE@PBUtagRECT@@JKKEE@Z	100.0000	100.0000	100.0000	0xb6a50	tokens1:5bc9a9ff65ed
 forcefeedback	??0t_initialize_failure@t_initializer@?%C:\Dev\Heroes 3 Exp 2\Game\ForceFeedback.cpp210603558@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0xb6730	-
-forcefeedback	??0t_initializer@?%C:\Dev\Heroes 3 Exp 2\Game\ForceFeedback.cpp210603558@@QAE@PAX0@Z	100.0000	100.0000	100.0000	0xb6260	tokens1:ab52bac4bd7b
+forcefeedback	??0t_initializer@?%C:\Dev\Heroes 3 Exp 2\Game\ForceFeedback.cpp210603558@@QAE@PAX0@Z	100.0000	100.0000	100.0000	0xb6260	tokens1:6dcae3c83456
 forcefeedback	??1?$auto_ptr@D@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7040	-
 forcefeedback	??1?$auto_ptr@VCImmEnclosure@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7020	-
 forcefeedback	??1?$auto_ptr@VCImmProject@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7050	-
@@ -2312,9 +2312,9 @@ hero	?windowHandler@THeroScreenWindow@@UAEHAAVmessage@@@Z	77.9020	77.9020	78.939
 hero	std_vector_begin	0.0000	100.0000	100.0000	0xe64e0	tokens1:a9834228d38f
 hero	std_vector_end	0.0000	100.0000	100.0000	0xe64f0	tokens1:3d89f67f1437
 hero	std_vector_push_back	0.0000	100.0000	100.0000	0xe6500	tokens1:2e4b4e3a244d
-herodefs	?initializeHeroClassTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe6920	tokens1:5873aa761815
+herodefs	?initializeHeroClassTraitsTable@@YI_NXZ	100.0000	100.0000	100.0000	0xe6920	tokens1:2bb658a26c5a
 herodefs	?initializeHeroTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe67a0	tokens1:56946c3ebdd0
-herodefs	?initializeSSkillTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe6b10	tokens1:24228f006e89
+herodefs	?initializeSSkillTraitsTable@@YI_NXZ	100.0000	100.0000	100.0000	0xe6b10	tokens1:5467fee07029
 hexcell	??0hexcell@@QAE@XZ	100.0000	100.0000	100.0000	0xe7150	tokens1:aac89c38bb73
 hexcell	?getArmy@hexcell@@QBEPAVarmy@@XZ	100.0000	100.0000	100.0000	0xe7170	tokens1:9c8b9f2f636a
 hexcell	?getDeadArmy@hexcell@@QBEPAVarmy@@H@Z	100.0000	100.0000	100.0000	0xe71b0	tokens1:ff4fec5a7c24
@@ -2439,7 +2439,7 @@ kb	?memError@@YIXXZ	100.0000	100.0000	100.0000	0xf42c0	tokens1:9958d3815f4d
 kb	?normalDialog@@YIXPBDHHHHHHHHHHH@Z	93.6191	93.6191	93.6191	0xf6570	tokens1:2568459b16d1
 kb	?normalDialogHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf08d0	tokens1:eb4146632ee4
 kb	?normalDialogTimeOut@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6530	tokens1:ae15beacb170
-kb	?oldmain@@YIHXZ	76.4214	76.4214	78.9421	0xee3e0	tokens1:b71446852b48
+kb	?oldmain@@YIHXZ	76.4241	76.4241	78.9421	0xee3e0	tokens1:b71446852b48
 kb	?pickLoadGame@@YIHXZ	100.0000	100.0000	100.0000	0xf0610	tokens1:15aa7132e922
 kb	?playerDead@@YIXH@Z	100.0000	100.0000	100.0000	0xf11a0	tokens1:8abb52c78b4a
 kb	?pollSound@@YIXXZ	100.0000	100.0000	100.0000	0xed490	tokens1:fc6bab1d2d05
@@ -3993,9 +3993,9 @@ singleselectionwindow	?headerRequested@CNewPlayerUpdateMan@@QAEXKEH@Z	100.0000	1
 singleselectionwindow	?highlightFile@TSingleSelectionWindow@@QAEEPAD@Z	100.0000	100.0000	100.0000	0x18d3e0	tokens1:a307791556cc
 singleselectionwindow	?ignoreKey@CSaveGameEdit@@UAEEPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cfe0	tokens1:91ca60e2dac9
 singleselectionwindow	?ignoreKey@CSingleSelectionChatEdit@@UAEEPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cd00	tokens1:02e107e96eb0
-singleselectionwindow	?initializeLCDescriptions@@YIEXZ	100.0000	100.0000	100.0000	0x177a80	tokens1:4a4007d57e76
-singleselectionwindow	?initializeTurnDurationText@@YIEXZ	100.0000	100.0000	100.0000	0x177ab0	tokens1:3e24003e9b14
-singleselectionwindow	?initializeVCDescriptions@@YIEXZ	100.0000	100.0000	100.0000	0x177a50	tokens1:74f478a0aa77
+singleselectionwindow	?initializeLCDescriptions@@YI_NXZ	100.0000	100.0000	100.0000	0x177a80	tokens1:7abc27fbf328
+singleselectionwindow	?initializeTurnDurationText@@YI_NXZ	100.0000	100.0000	100.0000	0x177ab0	tokens1:d701b51abb47
+singleselectionwindow	?initializeVCDescriptions@@YI_NXZ	100.0000	100.0000	100.0000	0x177a50	tokens1:9f8645e1dcf2
 singleselectionwindow	?insert@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAEXPAUGameSelectionHeadersStruct@@IABU3@@Z	100.0000	100.0000	100.0000	0x18ebe0	-
 singleselectionwindow	?isFaceTaken@CNetPlayerHandler@@QAEEHH@Z	100.0000	100.0000	100.0000	0x177d10	tokens1:76017c7d0777
 singleselectionwindow	?isHost@TSingleSelectionWindow@@QAE_NXZ	100.0000	100.0000	100.0000	0x18adf0	tokens1:cac7a16fc552
@@ -4137,7 +4137,7 @@ soundmgr	?loadPlaySample@@YI?AUSAMPLE2@@PBD@Z	100.0000	100.0000	100.0000	0x19a47
 soundmgr	?memorySample@soundManager@@QAEPAVds_memsample@@PAVsample@@@Z	100.0000	100.0000	100.0000	0x19a210	tokens1:e545fa8f2afb
 soundmgr	?modifySample@soundManager@@QAEXPAVds_memsample@@FJ@Z	100.0000	100.0000	100.0000	0x199f40	tokens1:465b85ce3bd1
 soundmgr	?musicPlaying@soundManager@@QAEHXZ	100.0000	100.0000	100.0000	0x19a3f0	tokens1:895f1c37d370
-soundmgr	?open@soundManager@@UAEHH@Z	84.5280	84.5280	84.5280	0x1997d0	tokens1:ae041127fb4f
+soundmgr	?open@soundManager@@UAEHH@Z	84.5280	84.5280	84.5280	0x1997d0	tokens1:1a29e708d98b
 soundmgr	?pauseSamples@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x199c40	tokens1:b89e1721b150
 soundmgr	?processMP3Stop@@YAXPAX@Z	100.0000	100.0000	100.0000	0x19a830	tokens1:59ee6e13dc52
 soundmgr	?processStopAndPlayMP3@@YAXPAX@Z	100.0000	100.0000	100.0000	0x19a840	tokens1:4d2a463d549c
