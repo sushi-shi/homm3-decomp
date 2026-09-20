@@ -2413,7 +2413,7 @@ kb	?doNormalDialog@@YIXUTNormalDialogInfo@@@Z	100.0000	100.0000	100.0000	0xf6990
 kb	?doSinglePlayerWindow@@YIHXZ	99.1549	99.1549	99.1549	0xf0490	tokens1:32b54b4f8093
 kb	?draw@Bitmap16Bit@@QBEXHHHHPAV1@HH_N@Z	100.0000	100.0000	100.0000	0xf0010	tokens1:9d47bed3d147
 kb	?draw@CSprite@@QBEXHHHHHHPAVBitmap16Bit@@HH_N1@Z	100.0000	100.0000	100.0000	0xf0050	tokens1:4ce1fa236a75
-kb	?drawProgressCount@@YIXXZ	100.0000	100.0000	100.0000	0xed230	tokens1:6407c592273d
+kb	?drawProgressCount@@YIXXZ	100.0000	100.0000	100.0000	0xed230	tokens1:e326c6d5ce56
 kb	?earlySetup@@YIHXZ	99.5994	99.5994	99.5994	0xed650	tokens1:037a0f3da516
 kb	?eventWindowHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf0fc0	tokens1:6648e1538c97
 kb	?extendedDialog@@YIXPBDAAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@JJJ@Z	92.7911	92.7911	92.7911	0xf7690	tokens1:5a8d6a85eaf6
@@ -2430,7 +2430,7 @@ kb	?getTeamNames@@YIEHPAD@Z	100.0000	100.0000	100.0000	0xf1460	tokens1:c55106fa8
 kb	?handleAppSpecificMenuCommands@@YIHH@Z	100.0000	100.0000	100.0000	0xf4350	tokens1:c8990b10c266
 kb	?handleClick@type_normal_dialog_frame@@UAE_N_N0@Z	100.0000	100.0000	100.0000	0xf0b20	tokens1:e776826103c1
 kb	?handleRemoteDeadPlayerExit@@YIXHE@Z	100.0000	100.0000	100.0000	0xf4c00	tokens1:fcd85985efc4
-kb	?incProgressBar@@YIX_N@Z	100.0000	100.0000	100.0000	0xed2a0	tokens1:3c7932636da0
+kb	?incProgressBar@@YIX_N@Z	100.0000	100.0000	100.0000	0xed2a0	tokens1:fbd6296f33a6
 kb	?initMainClasses@@YIXXZ	100.0000	100.0000	100.0000	0xedb40	tokens1:cab8b801e722
 kb	?interpretCommandLine@@YIHXZ	99.6273	99.6273	99.6273	0xf0690	tokens1:8b2169d2ec3a
 kb	?kbFn004EE1B0@@YIXHPBD@Z	100.0000	100.0000	100.0000	0xee1b0	tokens1:a6549a424523
@@ -2439,7 +2439,7 @@ kb	?memError@@YIXXZ	100.0000	100.0000	100.0000	0xf42c0	tokens1:9958d3815f4d
 kb	?normalDialog@@YIXPBDHHHHHHHHHHH@Z	93.6191	93.6191	93.6191	0xf6570	tokens1:2568459b16d1
 kb	?normalDialogHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf08d0	tokens1:eb4146632ee4
 kb	?normalDialogTimeOut@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6530	tokens1:ae15beacb170
-kb	?oldmain@@YIHXZ	81.1882	81.1882	81.2096	0xee3e0	tokens1:e482bfd794eb
+kb	?oldmain@@YIHXZ	81.1882	81.1882	81.2096	0xee3e0	tokens1:28b71f0e09c8
 kb	?pickLoadGame@@YIHXZ	100.0000	100.0000	100.0000	0xf0610	tokens1:e6bf0ad066ce
 kb	?playerDead@@YIXH@Z	100.0000	100.0000	100.0000	0xf11a0	tokens1:8abb52c78b4a
 kb	?pollSound@@YIXXZ	100.0000	100.0000	100.0000	0xed490	tokens1:fc6bab1d2d05
@@ -2447,10 +2447,10 @@ kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4e
 kb	?showCongrats@@YIXH@Z	87.6938	87.6938	87.6938	0xf3f60	tokens1:0e42b4eab81b
 kb	?showLuckInfo@game@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xf3540	tokens1:83fd697d97a6
 kb	?showMoraleInfo@game@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xf32a0	tokens1:3a89e40e771a
-kb	?showProgressBar@@YIXXZ	100.0000	100.0000	100.0000	0xed350	tokens1:5f98ae53f48a
+kb	?showProgressBar@@YIXXZ	100.0000	100.0000	100.0000	0xed350	tokens1:d30e69e6cff4
 kb	?shutDown@@YIXPBD@Z	100.0000	100.0000	100.0000	0xf3690	tokens1:703109b12df8
 kb	?trueFalseDialogHandler@@YIHPAVmessage@@@Z	100.0000	100.0000	100.0000	0xf1190	tokens1:99ef3bd2e6ea
-kb	?unloadProgressBar@@YIXXZ	100.0000	100.0000	100.0000	0xed450	tokens1:517ff5648805
+kb	?unloadProgressBar@@YIXXZ	100.0000	100.0000	100.0000	0xed450	tokens1:d2175c4e553b
 kb	?waitHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf7620	tokens1:70697d84dfcb
 kbwin	?appAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140	tokens1:4e707bba9949
 kbwin	?appCommand@@YIJPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8060	tokens1:2ed6e4e86f78
@@ -4582,7 +4582,7 @@ trees	@set_data_type@4	100.0000	100.0000	100.0000	0x2086d0	-
 trees	@tr_static_init@0	100.0000	100.0000	100.0000	0x206e40	-
 u2dvers	??0TFileVersionInfo@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x1eeda0	tokens1:1afe63af8afc
 u2dvers	??1TFileVersionInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x1eedf0	tokens1:7dd45682c9f9
-u2dvers	?getVersionInfo@TFileVersionInfo@@ABEEPBDPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x1eee00	tokens1:7177777914b0
+u2dvers	?getVersionInfo@TFileVersionInfo@@ABE_NPBDPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x1eee00	tokens1:e8b4170db0ae
 uncompr	@uncompress@16	100.0000	100.0000	100.0000	0x206be0	-
 university_window	??0type_university_window@@QAE@PAVhero@@PBUtype_university@@E@Z	100.0000	100.0000	100.0000	0x1ef500	tokens1:ed9f00f2c3ed
 university_window	??_Gtype_university_skill_button@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1ef460	-

@@ -97,37 +97,40 @@ bool g_inShutDown;
 
 // The loading-screen progress bar, kb.obj's own .bss triple right below
 // PollSound's latch: the backdrop loadbar.pcx, the loadprog.def segment
-// sprite and the number of segments lit (capped at twenty). Names
-// PROVISIONAL - the Dreamcast keeps them file-static.
+// sprite and the number of segments lit (capped at twenty). DC's S_PUB32
+// names are loadBar, progDots and progressCount (data 0x137cc/0x137d0/0x137d4),
+// proving external identities, not the formerly inferred file-static ones.
+// Complete changes the backdrop from Bitmap816 to Bitmap16Bit. Restoring
+// names/linkage is byte-flat across the four helpers and oldmain.
 DATA(0x0069956c)
-static Bitmap16Bit* g_progressBarBack;
+Bitmap16Bit* g_loadBar;
 DATA(0x00699570)
-static CSprite* g_progressBarSprite;
+CSprite* g_progDots;
 DATA(0x00699574)
-static int g_progressBarCount;
+int g_progressCount;
 
 VA(0x004ed230, 0x6A)  // dc 0xdf160
 void drawProgressCount()
 {
-    if (!g_progressBarSprite)
+    if (!g_progDots)
         return;
-    for (int i = 0; i < g_progressBarCount; i++) {
-        g_progressBarSprite->draw(0, i, 0, 0,
-                                  g_progressBarSprite->getWidth(),
-                                  g_progressBarSprite->getHeight(),
-                                  g_windowManager->m_screenBitmap,
-                                  395 + i * 18, 548, 0, 0);
+    for (int i = 0; i < g_progressCount; i++) {
+        g_progDots->draw(0, i, 0, 0,
+                         g_progDots->getWidth(),
+                         g_progDots->getHeight(),
+                         g_windowManager->m_screenBitmap,
+                         395 + i * 18, 548, 0, 0);
     }
 }
 
 VA(0x004ed2a0, 0xA7)  // dc 0xdf1dc
 void incProgressBar(bool update)
 {
-    if (!g_progressBarSprite)
+    if (!g_progDots)
         return;
-    g_progressBarCount++;
-    if (g_progressBarCount > 20)
-        g_progressBarCount = 20;
+    g_progressCount++;
+    if (g_progressCount > 20)
+        g_progressCount = 20;
     drawProgressCount();
     if (update)
         g_windowManager->updateScreen(395, 548, 358, 16);
@@ -136,17 +139,17 @@ void incProgressBar(bool update)
 VA(0x004ed350, 0xF3)  // dc 0xdf228
 void showProgressBar()
 {
-    if (!g_progressBarBack) {
-        g_progressBarBack = ResourceManager::getBitmap16(
+    if (!g_loadBar) {
+        g_loadBar = ResourceManager::getBitmap16(
             DATA_COMPGEN(0x0067f5bc, progressBarBackName, "loadbar.pcx"));
-        g_progressBarSprite = ResourceManager::getSprite(
+        g_progDots = ResourceManager::getSprite(
             DATA_COMPGEN(0x0067f5ac, progressBarSpriteName, "loadprog.def"));
-        g_progressBarCount = 0;
+        g_progressCount = 0;
     }
-    if (g_progressBarBack) {
-        g_progressBarBack->draw(0, 0, g_progressBarBack->getWidth(),
-                                g_progressBarBack->getHeight(),
-                                g_windowManager->m_screenBitmap, 0, 0, 0);
+    if (g_loadBar) {
+        g_loadBar->draw(0, 0, g_loadBar->getWidth(),
+                        g_loadBar->getHeight(),
+                        g_windowManager->m_screenBitmap, 0, 0, 0);
         drawProgressCount();
         g_windowManager->updateScreen(0, 0, 800, 600);
     }
@@ -155,13 +158,13 @@ void showProgressBar()
 VA(0x004ed450, 0x3D)  // dc 0xdf2a4
 void unloadProgressBar()
 {
-    if (g_progressBarBack)
-        g_progressBarBack->dispose();
-    if (g_progressBarSprite)
-        g_progressBarSprite->dispose();
-    g_progressBarCount = 0;
-    g_progressBarSprite = 0;
-    g_progressBarBack = 0;
+    if (g_loadBar)
+        g_loadBar->dispose();
+    if (g_progDots)
+        g_progDots->dispose();
+    g_progressCount = 0;
+    g_progDots = 0;
+    g_loadBar = 0;
 }
 
 VA(0x004ed490, 0x1B5)  // dc 0xdf330
@@ -1244,7 +1247,7 @@ int oldmain()
             if (g_inCampaign
                 && g_game->m_campaign.m_mapScores[g_game->m_campaign.m_currentMap]
                        .m_completed) {
-                g_progressBarCount = 20;
+                g_progressCount = 20;
                 showProgressBar();
                 g_defeatedAllPlayers = g_gameResultCampaignMapScored;
                 unloadProgressBar();

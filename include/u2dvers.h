@@ -14,13 +14,15 @@ public:
     ~TFileVersionInfo();
     // DC's source-visible wrapper. Complete expands it at the selection
     // window call site into the ProductVersion GetVersionInfo call.
-    unsigned char getProductVersion(std::string* productVersion) const
+    // Both DC publics return native bool (QBA_N / ABA_N), despite their
+    // lowered unsigned-char debug records.
+    bool getProductVersion(std::string* productVersion) const
     {
         return getVersionInfo("ProductVersion", productVersion);
     }
 
 private:
-    unsigned char getVersionInfo(const char* name, std::string* buffer) const;
+    bool getVersionInfo(const char* name, std::string* buffer) const;
 };
 SIZE(TFileVersionInfo, 4);
 

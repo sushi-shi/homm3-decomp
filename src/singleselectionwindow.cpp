@@ -568,14 +568,18 @@ void stopMouseThread()
 // window constructor: the retail body has the same executable-path buffer,
 // TFileVersionInfo lifetime, ProductVersion query and empty-string fallback.
 // E:\gamedcs\singleselectionwindow.cpp:368
-static inline void getGameVersion(char* version)
+// Global linkage is DC-proven; the former static inline came from the
+// reconstruction, not an original declaration. Ordinary auto-inlining and
+// the native bool query chain preserve the caller's bytes and EH metadata.
+// Original locals: file_version_info and product_version.
+void getGameVersion(char* version)
 {
     char filename[351];
     GetModuleFileNameA(0, filename, sizeof(filename));
-    TFileVersionInfo fileInfo(filename);
-    std::string value;
-    if (fileInfo.getProductVersion(&value))
-        strcpy(version, value.c_str());
+    TFileVersionInfo fileVersionInfo(filename);
+    std::string productVersion;
+    if (fileVersionInfo.getProductVersion(&productVersion))
+        strcpy(version, productVersion.c_str());
     else
         version[0] = 0;
 }
