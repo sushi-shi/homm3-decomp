@@ -632,9 +632,15 @@ out-of-range exception semantics.
 
 Thus the accessor ladder also includes `at`; the earlier observation that
 subscript leaves no deeper spelling should not be generalized to other
-callers. Measure the actual overload and call site. This function still
-has separate artifact stack homes and the wrong first vector insertion
-boundary, so the remaining 0.59 points are not an established allocator wall.
+callers. Measure the actual overload and call site. Calling the same ordinary
+artifact collector used by `SCampaign::pruneCrossoverHeroes` subsequently
+restores the shared artifact stack home and the first `push_back`'s retained
+single-element insert wrapper. All 38 CFG blocks and instruction rows then
+agree. The 99.9872 report residual is the known ICF presentation: retail
+labels the signature-identical wrapper as
+`vector<type_dialog_resource>::insert`, while the candidate correctly names
+the `type_artifact` specialization. This is not evidence for changing the
+source element type.
 
 ### Constructed return values and local return objects differ after inlining
 

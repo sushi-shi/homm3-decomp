@@ -88,8 +88,6 @@ slider.obj	0x14a508	3d5058c1519f	10	Complete exact widget API symbol encodes mes
 smackmgr.obj	0x14ac3c	4d09cc013568	10	Complete exact VideoOpen symbol encodes eight int parameters; Dreamcast records the last two as unsigned char.
 spelldefs.obj	0x14e39c	37a632789123	8	TSpellTraits is the older nominal name of Complete's shared SSpellTraits model; a cosmetic local alias is not structural recovery.
 spells.obj	0x153d2c	bdf23f1dd15b	8	TSpellTraits is the older nominal name of Complete's shared SSpellTraits model; the recovered const-reference shape is already retained.
-spells.obj	0x153d2c	dcb74013b33f	10	Dreamcast marks sh const, but Complete's recovered edge-tiling loop mutates it.
-spells.obj	0x153d2c	ca8c1b91c341	10	Dreamcast marks dy const, but Complete's recovered edge-tiling loop mutates it.
 swapmgr.obj	0x15cd2c	06e5754fd35b	9	Dreamcast keeps a type_artifact local, while Complete's exact body immediately extracts and operates on the scalar artifact ID; this representation changed between versions.
 town.obj	0x168bb8	a6a00e7b7ca0	10	Const pointer return changes VC6's symbol to QBEQBDXZ; Complete exact retail identity is QBEPBDXZ.
 town.obj	0x165988	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.

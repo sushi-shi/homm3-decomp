@@ -269,7 +269,6 @@ public:
 class CNewPlayerUpdateProc {
 public:
     CNewPlayerUpdateProc(unsigned long dpid);
-    ~CNewPlayerUpdateProc();
     unsigned char isFinished();
     void headerRequested(unsigned char flag, int number);
     void headerConfirmed();
@@ -4255,12 +4254,11 @@ TSingleSelectionWindow::~TSingleSelectionWindow();
 // wrapper calls 0x583ef0 at 0x583ec6; PlayerDropped calls that same teardown
 // directly at 0x5894a3 before deleting the allocation. It destroys only
 // m_requests, whose pointer triple is at +0x10/+0x14/+0x18 in Complete.
+// Both binaries omit a CNewPlayerUpdateProc vptr reset; VC6's implicit
+// destructor reproduces that body, while an authored empty destructor adds it.
 
 VA_COMPGEN(0x00583EC0, 0x21, SCALAR_DELETING_DTOR, CNewPlayerUpdateProc)  // dc 0x1489f0
-VA(0x00583ef0, 0x26)  // anchor-callee: 0x583ec6 and PlayerDropped 0x5894a3, dc 0x148a28
-CNewPlayerUpdateProc::~CNewPlayerUpdateProc()
-{
-}
+VA_COMPGEN(0x00583ef0, 0x26, IMPLICIT_DTOR, CNewPlayerUpdateProc)  // anchor-callee: 0x583ec6 and PlayerDropped 0x5894a3, dc 0x148a28
 
 VA(0x00583f20, 0xEF)  // dc 0x139a20
 const char* TSingleSelectionWindow::getFileName(int which)

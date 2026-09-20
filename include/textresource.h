@@ -353,6 +353,7 @@ private:
 };
 SIZE(TSpreadsheetResource, 52);
 
-extern TTextResource* g_generalText;  // retail .data 0x6a5d5c
+// DC ?GameText@@3PBVTTextResource@@B proves a pointer-to-const resource.
+extern const TTextResource* g_generalText;  // retail .data 0x6a5d5c
 
 #endif  /* HOMM3_TEXTRESOURCE_H */

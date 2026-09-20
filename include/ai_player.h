@@ -355,7 +355,16 @@ public:
                            unsigned char exact) const;
 };
 
-class type_necromancy_artifact : public type_combat_artifact {
+// The recovered Complete type inventory names this no-data base. Retail's
+// initializer keeps the type_combat_artifact constructor call for both
+// necromancy branches; the extra inline layer reproduces those boundaries
+// without adding storage or a distinct vtable.
+class type_base_necromancy_artifact : public type_combat_artifact {
+public:
+    type_base_necromancy_artifact(long newBonus);
+};
+
+class type_necromancy_artifact : public type_base_necromancy_artifact {
 public:
     type_necromancy_artifact(long newBonus);
     virtual long getValue(const hero* owner, unsigned char equipped,
@@ -415,7 +424,8 @@ public:
     long m_growthBonus;
 };
 
-class type_undead_king_cloak_artifact : public type_necromancy_artifact {
+class type_undead_king_cloak_artifact
+    : public type_base_necromancy_artifact {
 public:
     type_undead_king_cloak_artifact();
     virtual long getValue(const hero* owner, unsigned char equipped,

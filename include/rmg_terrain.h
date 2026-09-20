@@ -182,7 +182,8 @@ public:
         unsigned char allowsSeparatedNeighbours, int defaultFrame,
         unsigned int entryCount, const TRmgTerrainPatternEntry* entries);
 
-    virtual ~TRmgPatternTerrainRule();
+    // Implicit destruction shares the base's retained cleanup at 0x5b3850;
+    // both concrete rule vtables use the deleting wrapper at 0x5b3a50.
     virtual unsigned char hasEntries();
     virtual unsigned char isSpecialFrame(int frame);
     virtual int getEntry(int index);

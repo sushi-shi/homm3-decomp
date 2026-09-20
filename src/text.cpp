@@ -49,7 +49,7 @@ DATA(0x006a5d4c)
 const char* g_abbSecondarySkillLevels[3];
 
 DATA(0x006a5d5c)
-TTextResource* g_generalText;
+const TTextResource* g_generalText;
 
 // 0x006a5d84 - datum claimed at src/townmgr.cpp:421
 const char* g_townCommand[35];
