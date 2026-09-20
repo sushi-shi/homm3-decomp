@@ -7,7 +7,7 @@
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 # zlib 1.1.3, statically linked, never reconstructed from src/
 # (vendored sources stay pristine): the reviewed rva->symbol map
-# promised by CLAUDE.md/P0.2. Raw symbol where the recompiled-
+# promised by AGENTS.md/P0.2. Raw symbol where the recompiled-
 # object channel proved it; working label for zlib's static
 # internals until matching completes them. `unit` = owning TU
 # (archive member stem), the file location the delinker mirrors.

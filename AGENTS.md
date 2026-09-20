@@ -127,7 +127,7 @@ Remove obsolete imports and command references with retired experiments.
 ## Holista for hard cases
 
 For difficult matching plateaus, use the repository's
-[Holista skill](.claude/skills/holista/SKILL.md). Pair the primary matcher, who
+[Holista skill](.agents/skills/holista/SKILL.md). Pair the primary matcher, who
 owns experiments and adoption, with a second worker named Holista, who proposes
 coherent C++ as the original developers might have written it. Look for expanded
 helper patterns and natural declaration, statement, loop, and lifetime structure.

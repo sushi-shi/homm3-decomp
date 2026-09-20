@@ -4,7 +4,7 @@
 `viewarmywindow:??0TViewArmyWindow@@QAE@HHHE@Z`.*
 
 The Dreamcast dump is usually consulted for **names, types and layouts**
-(`docs/…`, `CLAUDE.md`'s evidence ranking). It carries two more records that
+(`docs/…`, `AGENTS.md`'s evidence ranking). It carries two more records that
 nothing in this tree was using, and they are the only artefact here that
 speaks about the Dreamcast pressing's **source text**:
 

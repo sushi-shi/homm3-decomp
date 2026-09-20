@@ -25,6 +25,16 @@ public:
 // int byte count, including short reads and errors. The existing value reader
 // owns its local and intentionally discards that count. This inferred API
 // adds no virtual slot or conversion and claims no Dreamcast declaration.
+// A native range preserves the actual byte count and the caller's guards.
+// Deducing Count retains each serialized count's signed source type: char for
+// black markets and short for vectors. This interface is inferred; it adds no
+// stream virtual or special case.
+template <class T, class Count>
+int readValues(TAbstractFile* infile, T* values, Count count)
+{
+    return infile->read(values, count * sizeof(T));
+}
+
 template <class T>
 int readValue(TAbstractFile* infile, T& value)
 {
