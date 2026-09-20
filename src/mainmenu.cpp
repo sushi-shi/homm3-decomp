@@ -87,7 +87,7 @@ TMainMenu::TMainMenu()
             memError();
     }
 
-    if (g_dPlayReady) {
+    if (g_lobbyLaunched) {
         if (g_dPlay && g_dPlay->isHost()) {
             // DC mainmenu.cpp:102/103 calls widget::hide at both sites.
             getWidget(HIGH_SCORE_ID)->hide();
@@ -179,7 +179,7 @@ static int mainMenuHandler(message& msg)
             case TMainMenu::QUIT_ID: helpID = 4; break;
             default: helpID = -1; break;
             }
-            if (helpID >= 0 && !g_dPlayReady)
+            if (helpID >= 0 && !g_lobbyLaunched)
                 normalDialog(g_mainMenuHelp[helpID].m_text, 4, -1, -1,
                              -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -192,7 +192,7 @@ static int mainMenuHandler(message& msg)
             bool confirmed = 1;
             if (msg.m_codeY == TMainMenu::QUIT_ID) {
                 videoPause();
-                if (!g_dPlayReady) {
+                if (!g_lobbyLaunched) {
                     normalDialog((*g_generalText)[GENERAL_TEXT_QUIT],
                                  2, -1, -1, -1, 0, -1, 0,
                                  -1, 0, -1, 0);
@@ -235,7 +235,7 @@ static int mainMenuHandler(message& msg)
     }
 
     if (!updatePlease) {
-        if (g_dPlayReady) {
+        if (g_lobbyLaunched) {
             unsigned long lastCheck = g_lastDiskSpaceCheck;
             if (static_cast<long>(GameTime::get() - lastCheck) > 10000)
                 g_windowManager->m_dialogReturn = TMainMenu::NEW_GAME_ID;

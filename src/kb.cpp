@@ -941,7 +941,7 @@ void showCredits()
 // parameterized campaign operation at DC1732/1744 raises this body to 81.1882%.
 // A byte-formal trial reaches 83.3705% only with the briefing constructor's
 // obsolete byte signature; restoring its proven bool,bool removes that gain.
-// Retry-loop alternatives do not recover the missing expansions. All three
+// Earlier retry-loop alternatives did not resolve those expansions. All three
 // inherited DoLoadGame inline-depth pins are now removable without byte changes.
 // Their expansions still differ from retail; equal aggregate call counts
 // do not establish matching boundaries. The original DC video-mode dialog,
@@ -958,6 +958,10 @@ void showCredits()
 // exact 67-byte retained body and four calls here (81.4021%). That diagnostic
 // does not establish a source-location change from DC's substantive header
 // implementation; keep its positive ownership until stronger evidence emerges.
+// A condition-owned do/while retry makes DoCampaignWindow eligible and
+// recovers the 0x5d18 frame, but duplicates dialog blocks absent from retail
+// (81.1222%, or 80.6745% with a direct cancel return). Bool/byte formals
+// converge in those models; neither control form resolves the remaining CFG.
 
 VA(0x004ee3e0, 0x1C04)  // dc 0xe0158
 int oldmain()
@@ -994,8 +998,8 @@ int oldmain()
     for (int i = 0; i < 8; ++i)
         g_game->m_players[i].init();
 
-    g_dPlayReady = testIfLobbyLaunched();
-    if (g_dPlayReady) {
+    g_lobbyLaunched = testIfLobbyLaunched();
+    if (g_lobbyLaunched) {
         g_logFile.log(DATA_COMPGEN(
             0x0067f738, oldMainLobbyLaunchLog,
             "We were launched by a DirectPlay lobby!!!"));
@@ -1029,14 +1033,14 @@ int oldmain()
             && g_testRead < 10)
             g_unnamed698758.m_binkVideo = 1;
 
-        if (g_dPlayReady)
+        if (g_lobbyLaunched)
             writePrefs();
     }
 
     g_windowManager->m_screenBitmap->fillRect(0, 0, 800, 600, 0);
     g_windowManager->updateScreen(0, 0, 800, 600);
 
-    if (!g_dPlayReady) {
+    if (!g_lobbyLaunched) {
         g_mouseManager->hidePointer();
         if (g_showIntro || g_firstTimeThrough) {
             if (videoPlay(28, 0, 0, 800, 600)
@@ -1079,7 +1083,7 @@ int oldmain()
         if (g_gameCommand != TMainMenu::QUIT_ID)
             g_windowManager->m_colorCyclingOn = 1;
 
-        if (g_dPlayReady) {
+        if (g_lobbyLaunched) {
             g_unnamed699584 = 1;
             g_windowManager->updateScreen(0, 0, 800, 600);
             videoPause();
@@ -1294,7 +1298,7 @@ int oldmain()
 
                 if (g_gameCommand != TMainMenu::RESTART_ID)
                     remoteCleanup();
-                if (g_dPlayReady)
+                if (g_lobbyLaunched)
                     unused = 1;
             }
         }
@@ -1315,7 +1319,9 @@ int oldmain()
                     TCampaignBrief::CampaignHeaderStruct campaignBrief(
                         campaign.getCampaignFileName().c_str());
                     campaignBrief.load();
-                    campaign.completeCurrentMap(&campaignBrief);
+                    // Complete reloads gpGame here (+0x1572), after the
+                    // header load; the following epilogue keeps cached ESI.
+                    g_game->m_campaign.completeCurrentMap(&campaignBrief);
                     saveGame(1);
                     campaign.playScenarioEpilogue(&campaignBrief);
                     if ((campaign.m_currentCampaign == g_campaignOrdinal03

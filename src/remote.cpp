@@ -203,19 +203,20 @@ bool CDPlayHeroes::pollRemote()
     return true;
 }
 
-// DC names the network singleton pDPlay; retail references at 0x69d808 and
-// the adjacent readiness byte are rooted throughout the remote/front-end
-// call graph.
+// DC names the network singleton pDPlay; retail's remote/front-end call
+// graph locates the pointer at 0x69d808.
 DATA(0x0069d808) CDPlayHeroes* g_dPlay;
-// The adjacent PC bytes are the packed counterparts of Dreamcast's bool
+// Original public ?g_lobbyLaunched@@3_NA. Retail oldmain stores the native
+// TestIfLobbyLaunched result directly here; main-menu host handling agrees.
+DATA(0x0069d80c) bool g_lobbyLaunched;
+// These adjacent PC bytes are the packed counterparts of Dreamcast's bool
 // gbMPlayer/gbMPlayerHost pair. TestIfLobbyLaunched and HandleMPlayerLaunch
 // independently distinguish their roles.
-DATA(0x0069d80c) unsigned char g_dPlayReady;
 DATA(0x00699550) bool g_mPlayer;
+DATA(0x00699551) bool g_mPlayerHost;
 // Dreamcast publishes `bDefeatedAllPlayers` as a bool in remote.obj. Retail's
 // win/loss handlers independently locate the PC cell and store full dwords,
 // so the PC representation is int even though the role and owner transfer.
-DATA(0x00699551) bool g_mPlayerHost;
 DATA(0x00699510) int g_defeatedAllPlayers;
 // Dreamcast publishes gcTCPAddress as char[21]; retail's client launch arm
 // passes this exact cell both to the log formatter and InitConnection.
@@ -1012,8 +1013,10 @@ void __cdecl CChatManager::playerEnterMsg(const char* format, ...)
     m_isSysMsg = 0;
 }
 
+// DC's UpdateWidget public encodes native bool for killOld; the retained
+// PC body tests that byte, and all authored callers supply 0 or 1.
 VA(0x00553d00, 0xA1)  // dc 0x11c6bc
-void CChatManager::updateWidget(textWidget* widget, unsigned char killOld, int numLines)
+void CChatManager::updateWidget(textWidget* widget, bool killOld, int numLines)
 {
     if (m_pauseTime == 0) {
         updateNewChat();
@@ -1848,8 +1851,10 @@ void destroyMsg(CNetMsg* netMsg)
     delete netMsg;
 }
 
+// DC ?TestIfLobbyLaunched@@YA_NXZ proves the native bool return; retail
+// forwards the already-boolean TestLobbied result or returns 0/1.
 VA(0x00555920, 0x171)  // dc 0x11d900
-unsigned char testIfLobbyLaunched()
+bool testIfLobbyLaunched()
 {
     HKEY key;
     char appName[256];
@@ -2869,7 +2874,7 @@ void destroyMsg(CNetMsg* pNetMsg)
 
 // E:\gamedcs\remote.cpp:1916
 DC_ONLY(0x11d900, 0xAC)
-unsigned char testIfLobbyLaunched()
+bool testIfLobbyLaunched()
 {
     // @stub
 }

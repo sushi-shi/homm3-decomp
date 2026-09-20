@@ -9442,7 +9442,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     }
 
     bool useGuaranteed = false;
-    if (g_dPlayReady || g_mpNetProtocol == MP_TCP)
+    if (g_lobbyLaunched || g_mpNetProtocol == MP_TCP)
     {
         g_logFile.log(DATA_COMPGEN(0x00677f88, xferGuaranteedLog,
                                 "Using guaranteed!!"));

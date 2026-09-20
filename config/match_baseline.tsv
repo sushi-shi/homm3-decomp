@@ -2120,7 +2120,7 @@ game	?startAITheme@@YIXXZ	100.0000	100.0000	100.0000	0xc6f40	tokens1:9e431789d2b
 game	?test@?$bitset@$07@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfef0	-
 game	?test@?$bitset@$0IA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd4e50	-
 game	?test@?$bitset@$0JB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfad0	-
-game	?transmitSaveGame@game@@QAEHHHEE@Z	83.8044	83.8044	85.0958	0xcafd0	tokens1:38ce04d9e657
+game	?transmitSaveGame@game@@QAEHHHEE@Z	83.8044	83.8044	85.0958	0xcafd0	tokens1:f4e65031e50f
 game	?turnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	tokens1:09ac63bef778
 game	?turnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	tokens1:b9f191ddf209
 game	?updateBonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	tokens1:c82afc77e135
@@ -2439,7 +2439,7 @@ kb	?memError@@YIXXZ	100.0000	100.0000	100.0000	0xf42c0	tokens1:9958d3815f4d
 kb	?normalDialog@@YIXPBDHHHHHHHHHHH@Z	93.6191	93.6191	93.6191	0xf6570	tokens1:2568459b16d1
 kb	?normalDialogHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf08d0	tokens1:eb4146632ee4
 kb	?normalDialogTimeOut@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6530	tokens1:ae15beacb170
-kb	?oldmain@@YIHXZ	81.1882	81.1882	81.2096	0xee3e0	tokens1:28b71f0e09c8
+kb	?oldmain@@YIHXZ	81.4912	81.4912	81.4912	0xee3e0	tokens1:4dddb6cd548d
 kb	?pickLoadGame@@YIHXZ	100.0000	100.0000	100.0000	0xf0610	tokens1:e6bf0ad066ce
 kb	?playerDead@@YIXH@Z	100.0000	100.0000	100.0000	0xf11a0	tokens1:8abb52c78b4a
 kb	?pollSound@@YIXXZ	100.0000	100.0000	100.0000	0xed490	tokens1:fc6bab1d2d05
@@ -2477,11 +2477,11 @@ lodfile	?insert@?$vector@ULODEntry@@V?$allocator@ULODEntry@@@std@@@std@@QAEXPAUL
 lodfile	?open@LODFile@@QAEHPBDH@Z	100.0000	100.0000	100.0000	0xfa8a0	tokens1:25c1999f6cec
 lodfile	?pointAt@LODFile@@QAEEPBD@Z	100.0000	100.0000	100.0000	0xfaa70	tokens1:cda71b76fb52
 lodfile	?read@LODFile@@QAEHPAXH@Z	100.0000	100.0000	100.0000	0xfab20	tokens1:573f56681bee
-mainmenu	??0TMainMenu@@QAE@XZ	100.0000	100.0000	100.0000	0xfb2a0	tokens1:93be08754377
+mainmenu	??0TMainMenu@@QAE@XZ	100.0000	100.0000	100.0000	0xfb2a0	tokens1:384a505dcdf9
 mainmenu	??1TMainMenu@@UAE@XZ	100.0000	100.0000	100.0000	0xfb660	tokens1:611413673225
 mainmenu	??_GTMainMenu@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xfb630	-
 mainmenu	?doModal@TMainMenu@@QAEXXZ	100.0000	100.0000	100.0000	0xfb6e0	tokens1:fc35791ff738
-mainmenu	?mainMenuHandler@@YIHAAVmessage@@@Z	94.0704	94.0704	94.0845	0xfb710	tokens1:f6dd2d4e69be
+mainmenu	?mainMenuHandler@@YIHAAVmessage@@@Z	94.0704	94.0704	94.0845	0xfb710	tokens1:1c3f5899d818
 mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	61.0788	61.0788	62.3455	0x106080	tokens1:5ff11449a542
 mapcell	??0NewfullMap@@QAE@XZ	100.0000	100.0000	100.0000	0xfd060	tokens1:574a07e264d6
 mapcell	??0NewmapCell@@QAE@XZ	100.0000	100.0000	100.0000	0xfd650	tokens1:b1e785855074
@@ -2705,7 +2705,7 @@ multiplayerwindow	?onTCP@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0
 multiplayerwindow	?onWidgetDeselect@CHotSeatDlg@@UAEHHAA_N@Z	100.0000	100.0000	100.0000	0x112420	tokens1:72c4f34fd0a0
 multiplayerwindow	?onWidgetDeselect@CMPInputDlg@@UAEHHAA_N@Z	100.0000	100.0000	100.0000	0x1108f0	tokens1:0fd31c226d1c
 multiplayerwindow	?onWidgetDeselect@TMultiPlayerWindow@@UAEHHAA_N@Z	89.9891	98.1199	98.1199	0x10f4e0	tokens1:49250cb252d9
-multiplayerwindow	?setFocus@CMPEdit@@UAEXE@Z	100.0000	100.0000	100.0000	0x110890	tokens1:98e8a49bae36
+multiplayerwindow	?setFocus@CMPEdit@@UAEX_N@Z	100.0000	100.0000	100.0000	0x110890	tokens1:3beac8f1883f
 multiplayerwindow	?update@TMultiPlayerWindow@@QAEXXZ	98.0484	98.0484	99.2080	0x10f0f0	tokens1:7383dd2d5801
 multiplayerwindow	?updateOK@CMPInputDlg@@UAEXXZ	100.0000	100.0000	100.0000	0x110980	tokens1:ca7791d5522e
 multiplayerwindow	?windowHandler@TMultiPlayerWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x10f940	tokens1:cc15c1a61277
@@ -3137,7 +3137,7 @@ remote	?sysMsgDestroyPlayerOrGroup@CDPlayHeroes@@UAEEPAUDPMSG_DESTROYPLAYERORGRO
 remote	?sysMsgHost@CDPlayHeroes@@UAEEPAUDPMSG_GENERIC@@K@Z	100.0000	100.0000	100.0000	0x152530	tokens1:31e459eca69a
 remote	?sysMsgSessionLost@CDPlayHeroes@@UAEEPAUDPMSG_GENERIC@@K@Z	100.0000	100.0000	100.0000	0x152740	tokens1:59dce4e462a2
 remote	?systemMsg@CChatManager@@QAAXPBDZZ	100.0000	100.0000	100.0000	0x153aa0	tokens1:02352e202ba4
-remote	?testIfLobbyLaunched@@YIEXZ	100.0000	100.0000	100.0000	0x155920	tokens1:6b3221faa51b
+remote	?testIfLobbyLaunched@@YI_NXZ	100.0000	100.0000	100.0000	0x155920	tokens1:1300c748e7f9
 remote	?tickAnimation@CAnimatedDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x154e10	tokens1:9a8efa6c865e
 remote	?transmitRemoteData@@YIHPAVCNetMsg@@H_N1@Z	100.0000	100.0000	100.0000	0x1545f0	tokens1:72849a84c689
 remote	?transmitRemoteData@CDPlayHeroes@@QAE_NPAVCNetMsg@@H_N1@Z	100.0000	100.0000	100.0000	0x153220	tokens1:7fafa2aebcc8
@@ -3146,7 +3146,7 @@ remote	?transmitRemoteDataDPID@CDPlayHeroes@@QAE_NPAVCNetMsg@@K_N1@Z	100.0000	10
 remote	?turnDurationMsg@CChatManager@@QAAXPBDZZ	97.4000	97.4000	100.0000	0x153960	tokens1:d4ef6198dab3
 remote	?updateCurrentPlayers@@YIXXZ	100.0000	100.0000	100.0000	0x1562e0	tokens1:5e426a7e272c
 remote	?updateScreen@CChatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x154200	tokens1:6eb3400318cb
-remote	?updateWidget@CChatManager@@QAEXPAVtextWidget@@EH@Z	100.0000	100.0000	100.0000	0x153d00	tokens1:398ddd0b72b5
+remote	?updateWidget@CChatManager@@QAEXPAVtextWidget@@_NH@Z	100.0000	100.0000	100.0000	0x153d00	tokens1:3cfea6a46b25
 remote	?updateWidgetText@CChatManager@@IAEXHPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x153ee0	tokens1:cbf9984f39be
 remote	?wait@CWaitForRemoteBattleDlg@@QAEXH@Z	100.0000	100.0000	100.0000	0x157090	tokens1:9f2e1f6909a7
 remote	?waitForLevels@CLevelPickWaitDlg@@QAEXH@Z	100.0000	100.0000	100.0000	0x156ba0	tokens1:9a7ecca92764
@@ -3871,7 +3871,7 @@ singleselectionwindow	??0NewSMapHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0
 singleselectionwindow	??0SCampaign@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fc10	-
 singleselectionwindow	??0SavedGameHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x193f50	-
 singleselectionwindow	??0SavedGameHeader@@QAE@XZ	67.4607	67.4607	100.0000	0xbc0e0	tokens1:f3843088fab5
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	96.4038	96.4038	96.4038	0x179960	tokens1:04fe3a432e6f
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	96.4352	96.4352	96.4352	0x179960	tokens1:04fe3a432e6f
 singleselectionwindow	??0message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	tokens1:5b9404da14c9
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	tokens1:bb76c3485a66
 singleselectionwindow	??1?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x18ea70	-
@@ -4316,7 +4316,7 @@ textntry	?onKillFocus@textEntryWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bba6
 textntry	?onSetFocus@textEntryWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bba50	tokens1:67ed56adc07f
 textntry	?saveBackground@textEntryWidget@@MBEXXZ	100.0000	100.0000	100.0000	0x1bba70	tokens1:f2772fc6d836
 textntry	?setAutoDraw@textEntryWidget@@UAEXE@Z	100.0000	100.0000	100.0000	0x1bbac0	tokens1:0a58b401a5ef
-textntry	?setFocus@textEntryWidget@@UAEXE@Z	100.0000	100.0000	100.0000	0x1bab50	tokens1:01a241daae9b
+textntry	?setFocus@textEntryWidget@@UAEX_N@Z	100.0000	100.0000	100.0000	0x1bab50	tokens1:f866f28bdfbe
 textntry	?setText@textEntryWidget@@UAEXPBD@Z	100.0000	100.0000	100.0000	0x1bb950	tokens1:5fcad0089435
 textntry	?setupDisplayString@textEntryWidget@@QAEXPADG@Z	100.0000	100.0000	100.0000	0x1bb660	tokens1:ad473534b1cb
 textresource	??0TSpreadsheetResource@@QAE@PBDH0@Z	100.0000	100.0000	100.0000	0x1bbe70	tokens1:b7d27b02ef60

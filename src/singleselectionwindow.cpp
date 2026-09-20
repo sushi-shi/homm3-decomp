@@ -1702,7 +1702,12 @@ public:
     class CChatSave : public Bitmap16Bit {
     public:
         unsigned char m_saved;  // +0x38
-        CChatSave(int w, int h) : Bitmap16Bit(w, h), m_saved(0) {}
+        // DC1618 constructs the base; DC1621 assigns the flag in the body.
+        // Retail's expansion likewise writes the derived vptr before saved.
+        CChatSave(int w, int h) : Bitmap16Bit(w, h)
+        {
+            m_saved = 0;
+        }
         // Original: CChatWidget::CChatSave::Save;
         // singleselectionwindow.cpp:1625, dc 0x148c50. DC1626 sets the
         // flag before DC1627 calls Bitmap16Bit's bitmap overload.

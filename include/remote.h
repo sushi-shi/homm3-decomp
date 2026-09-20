@@ -133,7 +133,7 @@ protected:
 SIZE(CDPlayHeroes, 0xf4);
 
 extern CDPlayHeroes* g_dPlay;
-extern unsigned char g_dPlayReady;
+extern bool g_lobbyLaunched;
 extern bool g_mPlayer;
 extern bool g_mPlayerHost;
 extern char g_tcpAddress[21];
@@ -212,7 +212,7 @@ public:
     // The sample pointer at +0x30 requires these three alignment bytes.
     char m_paddingBeforeChatSample[3];
 
-    void updateWidget(textWidget* widget, unsigned char killOld, int numLines);
+    void updateWidget(textWidget* widget, bool killOld, int numLines);
     void pauseTimeOuts();
     void resumeTimeOuts();
     void clearChat();
@@ -548,7 +548,7 @@ unsigned char lobbyLaunchConnect();
 // Dreamcast names this network-launch state directly; retail oldmain tests
 // it only while handling the missing-CD startup result.
 extern int g_tcpHostStatus;
-unsigned char testIfLobbyLaunched();
+bool testIfLobbyLaunched();
 // Dreamcast publishes the owning remote.obj buffer and Complete's tutorial
 // setup copies its selected filename here before loading the map header.
 extern char g_mapName[260];

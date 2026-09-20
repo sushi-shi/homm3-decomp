@@ -562,7 +562,7 @@ private:
     slider* m_fileSlider;  // 0x183c
     slider* m_durationSlider;  // 0x1840
     slider* m_nameSlider;  // 0x1844
-    CChatWidget* m_chatWidget;  // 0x1848 (DC chatWidget)
+    textWidget* m_chatWidget;  // 0x1848 (DC chatWidget: textWidget*)
     // The DC chatWidget..flagBack member run (dc 2848..2888) maps onto
     // retail 0x1848..0x1870 LINEARLY (constant delta 3368, every
     // already-proven anchor agrees: chatShowing 2877->0x1865, chatToggle
@@ -583,9 +583,9 @@ public:
     char m_paddingBeforeChatEdit[0x1858 - 0x1856];
 
 private:
-    // DC chatEdit (a CCombatChatEdit there): TurnChatOn (0x58ca80)
-    // focuses its id on chat-open. Base-typed until its widget lands.
-    textEntryWidget* m_chatEdit;  // 0x1858
+    // DC chatEdit is CChatEdit*: TurnChatOn (0x58ca80) focuses its id.
+    // Complete constructs CSingleSelectionChatEdit through the same base.
+    CChatEdit* m_chatEdit;  // 0x1858
     int m_sortWhich;  // 0x185c
 
 public:
