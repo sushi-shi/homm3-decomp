@@ -1309,7 +1309,7 @@ customcampaign	?getTotalTime@SCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x8b28
 customcampaign	?getloc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAE?AVlocale@2@XZ	100.0000	100.0000	100.0000	0x8d820	-
 customcampaign	?giveCrossoverArtifacts@ScenarioStruct@TCampaignBrief@@QAEXXZ	99.9872	99.9872	99.9872	0x87900	tokens1:a36466e831bc
 customcampaign	?heroPower@@YIHPAVhero@@@Z	100.0000	100.0000	100.0000	0x83f50	tokens1:58bb2e6f262b
-customcampaign	?initializeCrossoverHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlaceholderData@@PAVhero@@@Z	90.9201	90.9201	90.9201	0x86590	tokens1:2f22efdf46d7
+customcampaign	?initializeCrossoverHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlaceholderData@@PAVhero@@@Z	94.7330	94.7330	94.7330	0x86590	tokens1:28732d7e69f3
 customcampaign	?insert@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QAEXPAUCampaignScenarioInfo@@IABU3@@Z	100.0000	100.0000	100.0000	0x8cae0	-
 customcampaign	?insert@?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@QAEXPAUtype_artifact@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d330	-
 customcampaign	?insert@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@QAEPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@PAV32@ABV32@@Z	100.0000	100.0000	100.0000	0x8c610	-
