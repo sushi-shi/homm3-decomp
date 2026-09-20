@@ -356,6 +356,14 @@ class CTurnDuration {
 public:
     CTurnDuration();
     void addTime(unsigned long howMuch);
+    // The retail source-level IsOn boundary is inlined into IsClose, so the
+    // predicate has to be spellable separately from the byte-tuned out-of-line
+    // IsOn body: calling that one instead costs 92.9487.
+    unsigned char isOnInline()
+    {
+        return m_currDuration != 0 && !g_unk69774c;
+    }
+
     unsigned char isOn();
     unsigned char isExpired();
     unsigned char isClose(unsigned long howClose);

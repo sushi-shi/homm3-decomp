@@ -288,15 +288,12 @@ void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
         for (int x = 0; x < width; x += 32) {
             if (*sourceBlock)
                 *destinationBlock = 0;
-            if (x + 32 < width)
-                sourceBlock += 32;
+            sourceBlock += 32;
             ++destinationBlock;
         }
 
-        if (y + 32 < height) {
-            destination += 19;
-            source += m_pitch * 32;
-        }
+        destination += 19;
+        source += m_pitch * 32;
     }
 }
 

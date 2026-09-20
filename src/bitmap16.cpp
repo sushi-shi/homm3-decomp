@@ -357,10 +357,9 @@ void Bitmap16Bit::fillRect(int x, int y, int w, int h, unsigned short color)
         Bitmap16MapPointer dst;
         dst.m_pixels = getMap(x, y);
         for (int row = 0; row < h; ++row) {
-            if (row)
-                dst.m_bytes += m_pitch;
             for (int col = 0; col < w; ++col)
                 dst.m_pixels[col] = color;
+            dst.m_bytes += m_pitch;
         }
     }
 }

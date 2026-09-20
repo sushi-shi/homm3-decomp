@@ -3372,7 +3372,7 @@ void CTurnDuration::checkForWarning()
 VA(0x00557d00, 0x55)  // dc 0x11f2fc
 unsigned char CTurnDuration::isClose(unsigned long howClose)
 {
-    if (!isOn())
+    if (!isOnInline())
         return 0;
     if (m_turnStartTime == 0)
         return 0;
