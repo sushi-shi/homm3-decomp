@@ -59,9 +59,12 @@ void nextSmackerFrame();
 void closeSmacker();
 }
 
-// smackmgr.obj .bss cluster 0x69fdf5..0x69fe5c (names provisional;
-// the unreferenced gaps belong to members only the 0x198xxx TU
-// touches).
+// smackmgr.obj .bss cluster 0x69fdf5..0x69fe5c. Raw DC file-static
+// records prove Red/Green/BlueBits/Shift, bSmackSound, insideNextFrame and
+// bSmackNum. The retail bindings follow their mask-counting, audio-gating,
+// reentry and descriptor-index roles; all observed retail references stay
+// inside SmackMgr. bSmackNum is unsigned char in DC and retail consumes only
+// its low byte, though the specific Windows address remains role-correlated.
 // Raw DC namespace globals updateScreen, needsUpdate and PlayingSmacker
 // are bool. Their Windows addresses below are inferred from the matching
 // auto-draw, pending-frame and active-playback roles, parallel to Bink;
@@ -79,27 +82,24 @@ DATA(0x0069fe08) int g_smackReqWidth;               // ShowVideo arg 4
 DATA(0x0069fe0c) int g_smackReqHeight;              // ShowVideo arg 5
 DATA(0x0069fe10) int g_smackVideoId;                // ShowVideo arg 1
 DATA(0x0069fe14) int g_smackLoop;                   // ShowVideo arg 6
-// The descriptor row ShowVideo takes its audio-track flag from, which is
-// NOT the id it is opening (that goes to gSmackVideoId above). Provisional.
 DATA(0x0069fe1c) int g_smackAdvance;                // ShowVideo arg 8 (byte-narrowed on the way in)
-// Nonzero once ShowVideo has decided the Miles driver is live and the user
-// has sound turned up; it is what selects the 0xfe000 track mask on both
-// SmackOpen calls. Provisional.
-DATA(0x0069fdec) int g_videoDescriptorIndex;
-// Entry counts, one per archive directory; each is the dword LoadAnimHeaders
-// reads before sizing its (count + 2) allocation.
-DATA(0x0069fe58) int g_videoSoundReady;
+// DC bSmackNum. ShowVideo uses this descriptor row's audio-track flag; it is
+// distinct from the video id latched above.
+DATA(0x0069fdec) static unsigned char g_smackNum;
+// DC bSmackSound. ShowVideo publishes whether Miles and user sound are live,
+// then uses it to select the 0xfe000 Smacker track mask.
+DATA(0x0069fe58) static int g_smackSound;
 DATA(0x0069fde4) int g_videoCount1;
 DATA(0x0069fe34) int g_videoCount2;
 DATA(0x0069fe3c) int g_videoCount3;
 DATA(0x0069fe18) int g_smackPaused;
 DATA(0x0069fe20) unsigned long g_smackBufferFlags;  // g_smackBuffer555/565
-DATA(0x0069fddc) int g_redShift;
-DATA(0x0069fdd8) int g_redBits;
-DATA(0x0069fe40) int g_greenShift;
-DATA(0x0069fe30) int g_greenBits;
-DATA(0x0069fde8) int g_blueShift;
-DATA(0x0069fe38) int g_blueBits;
+DATA(0x0069fddc) static int g_redShift;
+DATA(0x0069fdd8) static int g_redBits;
+DATA(0x0069fe40) static int g_greenShift;
+DATA(0x0069fe30) static int g_greenBits;
+DATA(0x0069fde8) static int g_blueShift;
+DATA(0x0069fe38) static int g_blueBits;
 DATA(0x0069fe44) int g_videoPauseCount;
 DATA(0x0069fe48) HANDLE g_videoFile1;               // VideoShutDown's CloseHandle trio
 DATA(0x0069fe4c) HANDLE g_videoFile2;
@@ -112,7 +112,7 @@ DATA(0x0069fe50) HANDLE g_videoFile3;
 DATA(0x0069fde0) VideoHeaderStruct* g_videoHeader2;
 DATA(0x0069fe28) VideoHeaderStruct* g_videoHeader1;
 DATA(0x0069fe2c) VideoHeaderStruct* g_videoHeader3;
-DATA(0x0069fe54) int g_inVideoNextFrame;            // reentry latch
+DATA(0x0069fe54) static int g_insideNextFrame;       // DC insideNextFrame: reentry latch
 DATA(0x0069fe5c) bool SmackManager::g_playingSmacker;   // SmackDoFrame is allowed
 
 // Dreamcast proves the first two file/header pairs and their types in
@@ -270,9 +270,9 @@ void videoClose()
 VA(0x005976e0, 0x5E)  // dc 0x14ac44
 void videoNextFrame()
 {
-    if (g_inVideoNextFrame)
+    if (g_insideNextFrame)
         return;
-    g_inVideoNextFrame = 1;
+    g_insideNextFrame = 1;
     if (g_smackVideo || g_smackVideo2) {
         if (!g_smackPaused)
             SmackManager::nextSmackerFrame();
@@ -281,7 +281,7 @@ void videoNextFrame()
         if (!BinkManager::g_playingBink.m_paused)
             BinkManager::nextBinkFrame();
     }
-    g_inVideoNextFrame = 0;
+    g_insideNextFrame = 0;
 }
 
 VA(0x00597740, 0x53)  // dc 0x14ac48
@@ -391,6 +391,8 @@ bool videoPlaying()
 // coordinate-reload branches, spills Bink x/y and advances ESI instead of
 // retail's ECX rectangle cursor. Both aggregate/scalar models failed the
 // predicted register and frame recovery; retain the ordered expressions.
+// Separate arm-local signed scalars likewise preserve the CFG/calls but fall
+// to 89.6347%, so the shared SDK rectangle remains the strongest model.
 VA(0x005979d0, 0x294)  // anchor-global, dc 0x14ac60
 void videoDrawRects()
 {
@@ -795,21 +797,25 @@ void SmackManager::setPixelFormat(unsigned long redMask,
 VA(0x00598af0, 0x385)
 // VideoOpen's DC-proven Boolean flags pass unchanged into this Windows
 // opener. Retail reads autoDraw as a byte and widens advance's low byte.
+// Retail also computes the id-selected descriptor row once and carries it
+// across both track opens; the const reference recovers that lifetime and
+// raises this body from 60.4981% to 76.2394%. Rechecking if/logical sound
+// publication and conditional/zero-then-if SDK masks adds no further gain.
 void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
                bool advance)
 {
     if (g_unnamed699290 == 0 && g_soundManager->m_ds != 0
         && g_unnamed698758.m_soundVolume != 0)
-        g_videoSoundReady = 1;
+        g_smackSound = 1;
     else
-        g_videoSoundReady = 0;
+        g_smackSound = 0;
 
     videoClose();
     _SmackUseMMX(1);
 
-    unsigned long trackMask = g_videoSoundReady ? g_smackTrackMask : 0;
+    unsigned long trackMask = g_smackSound ? g_smackTrackMask : 0;
     unsigned long videoMode =
-        g_videoDescriptors[static_cast<unsigned char>(g_videoDescriptorIndex)].m_noFrameSkip
+        g_videoDescriptors[g_smackNum].m_noFrameSkip
             ? g_smackOpenNoFrameSkip : 0;
 
     g_smackVideoId = id;
@@ -819,8 +825,9 @@ void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
                             ? g_smackBuffer565 : g_smackBuffer555;
     g_smackAdvance = advance;
 
-    if (g_videoDescriptors[id].m_smkAudioStem != "") {
-        g_smackVideo2 = openSmackerTrack(g_videoDescriptors[id].m_smkAudioStem,
+    const SVideoDescriptor& descriptor = g_videoDescriptors[id];
+    if (descriptor.m_smkAudioStem != "") {
+        g_smackVideo2 = openSmackerTrack(descriptor.m_smkAudioStem,
             trackMask, g_smackOpenNoFrameSkip);
         if (!g_smackVideo2) {
             videoClose();
@@ -834,7 +841,7 @@ void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
             g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
     }
 
-    g_smackVideo = openSmackerTrack(g_videoDescriptors[id].m_smkStem,
+    g_smackVideo = openSmackerTrack(descriptor.m_smkStem,
         trackMask, videoMode);
     if (!g_smackVideo) {
         videoClose();

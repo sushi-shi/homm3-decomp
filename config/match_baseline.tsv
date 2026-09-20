@@ -4109,12 +4109,12 @@ smackmgr	?loadSoundHeaders@@YIEXZ	100.0000	100.0000	100.0000	0x1984a0	tokens1:18
 smackmgr	?nextSmackerFrame@SmackManager@@YIXXZ	100.0000	100.0000	100.0000	0x198eb0	tokens1:c1bb293ee743
 smackmgr	?openSmackerTrack@@YIPAUSmackTag@@PBDKK@Z	100.0000	100.0000	100.0000	0x198790	tokens1:94b3d803e252
 smackmgr	?setPixelFormat@SmackManager@@YIXKKK@Z	100.0000	100.0000	100.0000	0x198a40	tokens1:98d2a337f337
-smackmgr	?showVideo@@YIXHHHHHH_N0@Z	60.4981	60.4981	100.0000	0x198af0	tokens1:402ee8340c89
+smackmgr	?showVideo@@YIXHHHHHH_N0@Z	76.2394	76.2394	100.0000	0x198af0	tokens1:da8228779c38
 smackmgr	?videoClose@@YIXXZ	100.0000	100.0000	100.0000	0x1975f0	tokens1:461b54177bce
 smackmgr	?videoDrawCurrentFrame@@YIXXZ	100.0000	100.0000	100.0000	0x197740	tokens1:fea1d2d9569e
 smackmgr	?videoDrawRects@@YIXXZ	90.3379	90.3379	90.3379	0x1979d0	tokens1:eaf7b9d20af9
 smackmgr	?videoNeedsUpdate@@YI_NXZ	100.0000	100.0000	100.0000	0x197930	tokens1:9c21148b5c8d
-smackmgr	?videoNextFrame@@YIXXZ	100.0000	100.0000	100.0000	0x1976e0	tokens1:d1c0a44ece34
+smackmgr	?videoNextFrame@@YIXXZ	100.0000	100.0000	100.0000	0x1976e0	tokens1:433117730b02
 smackmgr	?videoOpen@@YIXHHHHHH_N0@Z	100.0000	100.0000	100.0000	0x197570	tokens1:1178ca00589f
 smackmgr	?videoPause@@YIXXZ	100.0000	100.0000	100.0000	0x1977a0	tokens1:653c684130f9
 smackmgr	?videoPlay@@YIHHHHHH@Z	100.0000	100.0000	100.0000	0x1972d0	tokens1:f7d5ef15f803
