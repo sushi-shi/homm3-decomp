@@ -304,7 +304,7 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
     if (m_dangerZones != 0) {
         danger = *getDangerCell(m_dangerZones, point.m_point);
         if (cost > m_thisTurnsMovement) {
-            danger = cppMin(oldCell.m_dangerValue, danger);
+            danger = min(oldCell.m_dangerValue, danger);
             // The "unreachable" sentinel the danger map carries; every
             // producer that vetoes a square outright writes a value at or
             // below it. Spelled as the literal retail compares against.

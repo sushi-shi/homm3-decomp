@@ -354,7 +354,7 @@ void type_AI_player::calculateDemand()
                     type_building_id(building));
                 int buildResource;
                 for (buildResource = 0; buildResource < 7; buildResource++)
-                    m_resourceDemand[buildResource] = cppMax(
+                    m_resourceDemand[buildResource] = max(
                         m_resourceDemand[buildResource],
                         static_cast<long>(buildCost[buildResource]));
             }
@@ -1137,7 +1137,7 @@ void type_AI_player::doResourceTrade(int* supply)
             ++marketCount;
     }
 
-    marketCount = cppMin(marketCount, 10);
+    marketCount = min(marketCount, 10);
     if (marketCount == 0)
         return;
 

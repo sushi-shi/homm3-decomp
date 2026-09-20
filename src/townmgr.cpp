@@ -3803,7 +3803,7 @@ int TBlacksmithWindow::windowHandler(message& msg)
                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
     if (elapsed >= 0) {
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-            cppMax(100L, elapsed);
+            max(100, elapsed);
         m_machineIcon->setIconFrame(m_machineIcon->m_frame + 1);
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     }
@@ -4010,7 +4010,7 @@ int TShipWindow::windowHandler(message& msg)
                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
     if (elapsed >= 0) {
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-            cppMax(100L, elapsed);
+            max(100, elapsed);
         m_boatFrame++;
         if (m_boatFrame >= m_boatIcon->m_sprite->getNumFrames(7))
             m_boatFrame = 0;
@@ -5808,10 +5808,10 @@ void townManager::buildObj(int buildingId)
 
         townObject* hall = m_townObjects[builtIndex];
         townObject* extra = m_townObjects[extraIndex];
-        int boxX = cppMin(hall->m_x, extra->m_x);
-        int boxY = cppMin(hall->m_y, extra->m_y);
-        int boxW = cppMax(hall->m_x + hall->m_w, extra->m_x + extra->m_w) - boxX;
-        int boxH = cppMax(hall->m_y + hall->m_h, extra->m_y + extra->m_h) - boxY;
+        int boxX = min(hall->m_x, extra->m_x);
+        int boxY = min(hall->m_y, extra->m_y);
+        int boxW = max(hall->m_x + hall->m_w, extra->m_x + extra->m_w) - boxX;
+        int boxH = max(hall->m_y + hall->m_h, extra->m_y + extra->m_h) - boxY;
         g_windowManager->saveFizzleSourceX(boxX, boxY, boxW, boxH);
 
         memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
