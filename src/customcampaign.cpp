@@ -2549,6 +2549,60 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
     pruneCrossoverHeroes(campaignHeader);
 }
 
+// These five ordinary Complete-only helpers recover the source boundaries
+// visible in pruneCrossoverHeroes. VC6 expands them into that caller: the
+// header pass retains its vector size calls, the scenario queries preserve
+// their temporary homes, and the collector owns one hero receiver across the
+// two artifact loops. The flattened spelling has 91 CFG blocks against
+// retail's 62; these calls restore the retail source shape.
+static void collectCrossoverArtifacts(const hero& sourceHero, std::vector<type_artifact>& artifacts)
+{
+    type_artifact artifact;
+    int slot;
+    for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
+        artifact = sourceHero.getArtifact(TArtifactSlot(slot));
+        if (artifact.m_artifactId != ARTIFACT_NONE)
+            artifacts.push_back(artifact);
+    }
+    for (slot = 0; slot < g_crossoverBackpackSlots; ++slot) {
+        artifact = sourceHero.getBackpack(slot);
+        if (artifact.m_artifactId != ARTIFACT_NONE)
+            artifacts.push_back(artifact);
+    }
+}
+
+static int getCampaignScenarioCount(TCampaignBrief::CampaignHeaderStruct& header)
+{
+    return header.m_scenarios.size();
+}
+
+static void markRequiredCampaignHeroes(TCampaignBrief::CampaignHeaderStruct& header, unsigned char* wanted)
+{
+    for (unsigned int mapIndex = 0; mapIndex < header.m_scenarios.size(); ++mapIndex) {
+        if (!g_game->m_campaign.m_mapScores[mapIndex].m_completed)
+            header.m_scenarios[mapIndex]->markCrossoverHeroes(wanted);
+    }
+}
+
+static bool usesCrossoverPool(TCampaignBrief::ScenarioStruct& scenario, int pool)
+{
+    return scenario.m_inflatedSize > 0
+        && scenario.m_options->slot12(&scenario, pool);
+}
+
+static int getMaxCrossoverHeroes(TCampaignBrief::ScenarioStruct& scenario)
+{
+    int best = 0;
+    if (scenario.m_inflatedSize > 0) {
+        if (scenario.m_options->getCount() == 0)
+            best = scenario.m_heroesStatus[scenario.m_options->getPlayer(-1)];
+        else
+            for (int option = scenario.m_options->getCount(); option--;)
+                best = max(best, scenario.m_heroesStatus[scenario.m_options->getPlayer(option)]);
+    }
+    return best;
+}
+
 // CompleteCurrentMap's tail call flags heroes requested by unfinished
 // scenarios, keeps those heroes plus each pool's strongest permitted ones,
 // gathers the leftovers' artifacts, then replaces the pool with its keep list.
@@ -2570,10 +2624,7 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
     unsigned char wanted[game::HERO_COUNT];
     memset(wanted, 0, sizeof wanted);
 
-    for (unsigned int mapIndex = 0; mapIndex < header->m_scenarios.size(); ++mapIndex) {
-        if (!g_game->m_campaign.m_mapScores[mapIndex].m_completed)
-            header->m_scenarios[mapIndex]->markCrossoverHeroes(wanted);
-    }
+    markRequiredCampaignHeroes(*header, wanted);
 
     for (int pool = m_carryOverHeroes.size(); pool--;) {
         std::vector<hero>& pooled = m_carryOverHeroes[pool];
@@ -2588,23 +2639,12 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
 
         int keepCount = 0;
         for (int scenarioIndex = 0;
-             scenarioIndex < static_cast<int>(header->m_scenarios.size());
+             scenarioIndex < getCampaignScenarioCount(*header);
              ++scenarioIndex) {
             TCampaignBrief::ScenarioStruct* scenario =
                 header->m_scenarios[scenarioIndex];
-            if (!m_mapScores[scenarioIndex].m_completed
-                && scenario->m_inflatedSize > 0
-                && scenario->m_options->slot12(scenario, pool)) {
-                int best = 0;
-                if (scenario->m_inflatedSize > 0) {
-                    if (scenario->m_options->getCount() == 0)
-                        best = scenario->m_heroesStatus[scenario->m_options->getPlayer(-1)];
-                    else
-                        for (int option = scenario->m_options->getCount(); option--;)
-                            best = max(best, scenario->m_heroesStatus[scenario->m_options->getPlayer(option)]);
-                }
-                keepCount = max(keepCount, best);
-            }
+            if (!m_mapScores[scenarioIndex].m_completed && usesCrossoverPool(*scenario, pool))
+                keepCount = max(keepCount, getMaxCrossoverHeroes(*scenario));
         }
 
         std::sort(pooled.begin(), pooled.end(), CrossoverHeroStronger());
@@ -2618,19 +2658,7 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
 
         for (unsigned int rest = pooled.size(); rest--;) {
             std::vector<type_artifact>& pooledArtifacts = m_carryoverArtifact[pool];
-            const hero& sourceHero = pooled[rest];
-            type_artifact artifact;
-            int slot;
-            for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
-                artifact = sourceHero.getArtifact(TArtifactSlot(slot));
-                if (artifact.m_artifactId != ARTIFACT_NONE)
-                    pooledArtifacts.push_back(artifact);
-            }
-            for (slot = 0; slot < g_crossoverBackpackSlots; ++slot) {
-                artifact = sourceHero.getBackpack(slot);
-                if (artifact.m_artifactId != ARTIFACT_NONE)
-                    pooledArtifacts.push_back(artifact);
-            }
+            collectCrossoverArtifacts(pooled[rest], pooledArtifacts);
         }
 
         std::sort(kept.begin(), kept.end(), CrossoverHeroStronger());
