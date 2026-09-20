@@ -3871,7 +3871,7 @@ singleselectionwindow	??0NewSMapHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0
 singleselectionwindow	??0SCampaign@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fc10	-
 singleselectionwindow	??0SavedGameHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x193f50	-
 singleselectionwindow	??0SavedGameHeader@@QAE@XZ	67.4607	67.4607	100.0000	0xbc0e0	tokens1:f3843088fab5
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	96.4352	96.4352	96.4352	0x179960	tokens1:04fe3a432e6f
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	96.4352	96.4352	96.4352	0x179960	tokens1:1793acc9d831
 singleselectionwindow	??0message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	tokens1:5b9404da14c9
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	tokens1:bb76c3485a66
 singleselectionwindow	??1?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x18ea70	-
@@ -4079,7 +4079,7 @@ singleselectionwindow	?windowHandler@TSingleSelectionWindow@@UAEHAAVmessage@@@Z	
 singleselectionwindow	?write@CGameHeaderInfoMsg@@UBEEPAVTAbstractFile@@@Z	0.0000	100.0000	100.0000	0x177950	tokens1:36cbd4d907f2
 singleselectionwindow	?write@CNewMapHeaderInfoMsg@@UBEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177a30	tokens1:64c7b897d538
 singleselectionwindow	std_copy	0.0000	100.0000	100.0000	0x8e220	tokens1:a5d3472fc56f
-slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0	tokens1:d681d6fa0231
+slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@H_N@Z	100.0000	100.0000	100.0000	0x1960d0	tokens1:b27ce29f7ba2
 slider	??1slider@@UAE@XZ	100.0000	100.0000	100.0000	0x196180	tokens1:98939cae244a
 slider	??_Gslider@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x196020	-
 slider	?deselect@slider@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x196af0	tokens1:4673aa7f6d43

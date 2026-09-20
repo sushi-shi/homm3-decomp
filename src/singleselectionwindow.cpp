@@ -1785,9 +1785,11 @@ public:
 // out of line (dc 0x149238).
 class CEnterNameEdit : public textEntryWidget {
 public:
+    // DC1805's public proves EJustify here; the base independently takes
+    // unsigned justification. Preserve that ordinary enum conversion.
     CEnterNameEdit(int x, int y, int w, int h, int textSize,
                    const char* text, const char* fontName,
-                   font::TColor color, unsigned justification,
+                   font::TColor color, font::EJustify justification,
                    const char* backgroundIcon, int backgroundFrame, int id,
                    int style, int readType, int insetX, int insetY)
         : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
@@ -1993,40 +1995,44 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     m_widgets.reserve(111);
 
     sprintf(g_text, "gamselb%d.pcx", random(1, 100) < 51);
-    bitmapBorder16* tempBack = new bitmapBorder16(
+    // Complete's separate 16-bit backdrop has no recorded DC local name.
+    bitmapBorder16* tempBack16 = new bitmapBorder16(
         0, 0, 800, 600, 100, g_text, 0x800);
+    m_widgets.push_back(tempBack16);
+    tempBack16->m_image->draw(0, 0, tempBack16->m_image->getWidth(),
+        tempBack16->m_image->getHeight(), g_windowManager->m_screenBitmap,
+        tempBack16->m_x + m_x, tempBack16->m_y + m_y, 0);
+
+    // DC2072..2095 reuses bitmapBorder* tempBack for drawn AND hidden
+    // backgrounds. Its stored owner is distinct from the handicap widget w.
+    bitmapBorder* tempBack = new bitmapBorder(
+        396, 6, 370, 585, 100, "GSelPop1.pcx", 0x800);
+    // DC2073 names push_back; retain the canonical append rather than the
+    // earlier insert(end(), ...) spelling chosen only for its inline depth.
     m_widgets.push_back(tempBack);
     tempBack->m_image->draw(0, 0, tempBack->m_image->getWidth(),
         tempBack->m_image->getHeight(), g_windowManager->m_screenBitmap,
         tempBack->m_x + m_x, tempBack->m_y + m_y, 0);
 
-    bitmapBorder* w = new bitmapBorder(
-        396, 6, 370, 585, 100, "GSelPop1.pcx", 0x800);
-    // DC2073 names push_back; retain the canonical append rather than the
-    // earlier insert(end(), ...) spelling chosen only for its inline depth.
-    m_widgets.push_back(w);
-    w->m_image->draw(0, 0, w->m_image->getWidth(), w->m_image->getHeight(),
-        g_windowManager->m_screenBitmap, w->m_x + m_x, w->m_y + m_y, 0);
-
-    w = new bitmapBorder(3, 6, 575, 585, 101,
-                         "SCSelBck.pcx", 0x800);
-    w->hide();
-    m_widgets.push_back(w);
+    tempBack = new bitmapBorder(3, 6, 575, 585, 101,
+                               "SCSelBck.pcx", 0x800);
+    tempBack->hide();
+    m_widgets.push_back(tempBack);
 
     m_widgets.push_back(new textWidget(
         25, 23, 367, 23, g_unnamed6a8098[m_flag65 ? 2 : (m_flag64 ? 1 : 0)],
         "medfont.fnt", font::HEADING_HIGHLIGHT, 361, 5, 0, 8));
 
     if ((!m_flag64 && !m_flag65) || (m_flag64 && isMultiPlayer())) {
-        w = new bitmapBorder(3, 6, 557, 585, 102,
-                             "AdvOptBk.pcx", 0x800);
-        w->hide();
-        m_widgets.push_back(w);
+        tempBack = new bitmapBorder(3, 6, 557, 585, 102,
+                                   "AdvOptBk.pcx", 0x800);
+        tempBack->hide();
+        m_widgets.push_back(tempBack);
 
-        w = new bitmapBorder(3, 6, 557, 585, 103,
-                             "RanMapBk.pcx", 0x800);
-        w->hide();
-        m_widgets.push_back(w);
+        tempBack = new bitmapBorder(3, 6, 557, 585, 103,
+                                   "RanMapBk.pcx", 0x800);
+        tempBack->hide();
+        m_widgets.push_back(tempBack);
     }
 
     sprintf(g_text, "%s:", g_generalText->getText(493));
@@ -2168,7 +2174,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     m_fileSlider->hide();
     m_widgets.push_back(m_fileSlider);
 
-    widget* handicapButton;
+    widget* w;
     char flagName[256];
     char tempName[100];
     char flagColors[] = "RBYGOPTS";
@@ -2193,16 +2199,16 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
             sprintf(tempName, "adopb2%c.def", "rbygopts"[i]);
             if (isMultiPlayer()) {
-                handicapButton = new textButton(
+                w = new textButton(
                     110, (133 + i * 50) + 18, 50, 24, 207 + i,
                     tempName, g_unnamed6a7800[0], "tiny.fnt",
                     0, 1, 0, 0, 2, font::WHITE);
             } else {
-                handicapButton = new button(
+                w = new button(
                     110, (133 + i * 50) + 18, 50, 24, 207 + i,
                     tempName, 0, 1, 0, 0, 2);
             }
-            m_widgets.push_back(handicapButton);
+            m_widgets.push_back(w);
 
             m_widgets.push_back(new button(
                 164, (133 + i * 50), 11, 24, 215 + i,

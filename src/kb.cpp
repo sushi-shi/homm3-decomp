@@ -962,6 +962,10 @@ void showCredits()
 // recovers the 0x5d18 frame, but duplicates dialog blocks absent from retail
 // (81.1222%, or 80.6745% with a direct cancel return). Bool/byte formals
 // converge in those models; neither control form resolves the remaining CFG.
+// Separate nested multiplayer/single-player guards at DC1896/1898 and
+// DC2110/2112 are byte-identical to the current short-circuit conditions,
+// including all kb bodies and EH/relocation graphs. They do not repair the
+// misplaced DoMultiPlayerWindow expansion in the new-game arm.
 
 VA(0x004ee3e0, 0x1C04)  // dc 0xe0158
 int oldmain()
