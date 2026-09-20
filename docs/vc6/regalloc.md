@@ -1872,3 +1872,36 @@ their scores. The four differently named folded STL callees also match their
 retail bodies. This explains the temporary lifetime without a caller block
 or a separate convenience helper. It does not prove whether the original
 source supplied the temporary explicitly or through a default argument.
+
+### Stack-slot sharing has a separate interference graph
+
+<!-- c2-role: function 0x31ef3 ColorStackLocals -->
+<!-- c2-role: function 0x322b9 IndexStackLocals -->
+<!-- c2-role: function 0x49846 AssignStackBins -->
+<!-- c2-role: function 0x49d15 FindOrCreateStackBin -->
+
+These are inferred roles in the pinned SP3 binary, not recovered compiler
+symbol names. `ColorStackLocals` collects stack-resident values, builds their
+interference sets, and calls `AssignStackBins`. The general bin search checks
+size and interference before combining values into shared storage. This is a
+separate operation from choosing EAX/ECX/EDX/ESI/EDI for register live ranges;
+register-assignment traces alone cannot explain a frame-size difference.
+
+A passive trace of `refreshRmgLinePoint` (0x4f9f00) observes 13 stack values
+placed in 12 bins. Caller `oldType` and the inlined selector's `pattern` are
+both four-byte values; the compiler puts them in one bin and assigns each
+owner offset -0xc. Every other bin has one member. Retail keeps the terrain
+at -0xc and the selector output at -0x10, accounting for the 0x58 versus
+0x5c frame. The scalar-return reconstruction therefore has an actual sharing
+difference, rather than an unexplained padding requirement. Caller const/ref
+bindings and an ordinary output-reference terrain getter do not resolve it.
+
+Three passive sites expose the stages: 0x31f24 after indexing, 0x49a44 before
+assigning homes, and 0x32014 before freeing the temporary sets. Their pinned
+bytes are `8bd8a16cc07a10`, `8b44241c85c0`, and `a10cf27910`. Variable records
+are indexed through 0x9f218, with count at 0x9f20c; bin records are five dwords
+under 0x9f228, with count at 0x9f224. The final assignment walk consumes bin
+membership, so empty sets observed afterward do not mean no sharing occurred.
+The private capture/replay preserved all 77,868 object bytes outside the COFF
+timestamp, replayed overwritten instructions and flags, and restored its clean
+shim. This validates this observation, not a complete stack-allocator model.
