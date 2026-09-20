@@ -1643,6 +1643,25 @@ void TCampaignBrief::ScenarioStruct::placeCrossoverHeroes()
         placeStartingHero(placeholder);
 }
 
+// Complete-only helper shared by the scenario handoff and campaign pool
+// pruning. One receiver and one artifact temporary span both artifact loops.
+static void collectCrossoverArtifacts(const hero& sourceHero,
+                                      std::vector<type_artifact>& artifacts)
+{
+    type_artifact artifact;
+    int slot;
+    for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
+        artifact = sourceHero.getArtifact(TArtifactSlot(slot));
+        if (artifact.m_artifactId != ARTIFACT_NONE)
+            artifacts.push_back(artifact);
+    }
+    for (slot = 0; slot < g_crossoverBackpackSlots; ++slot) {
+        artifact = sourceHero.getBackpack(slot);
+        if (artifact.m_artifactId != ARTIFACT_NONE)
+            artifacts.push_back(artifact);
+    }
+}
+
 // Complete-only, and game::NewMap's third campaign callee. The crossover
 // slot's own artifact pool is copied out of the campaign and every artifact
 // still equipped or carried by a pool hero that has NOT been placed on this
@@ -1652,19 +1671,14 @@ void TCampaignBrief::ScenarioStruct::placeCrossoverHeroes()
 // start option's own Apply runs last, on every path.
 
 // Retail snapshots the selected hero pool before allocating the artifact
-// vector, and snapshots the recipient player across GiveArtifact calls.
-// Restoring those lifetimes and per-loop artifact copies raises 73.00 to
-// 94.50. bitset::at then restores the retained string constructor in the
-// range-error path and EDI's shared zero, reaching 99.41 (2026-09-06).
-
-// Residual: retail's first append retains single-element vector::insert;
-// ours expands it to the count overload. Retail shares one 8-byte stack
-// home between both inner copies; ours reserves two (frame 0x6c vs 0x64)
-// and places the later offered artifact and exception string differently.
-// Explicit insert(end(), value), const copies, per-loop default/assignment,
-// and a provisional by-value append helper are byte-flat controls. A shared
-// default-constructed inner artifact recovers the smaller frame but adds
-// retail-absent -1 stores and changes copy scheduling; it is not retained.
+// vector, and snapshots the recipient player across giveArtifact calls.
+// The canonical collector shared with pruneCrossoverHeroes owns one artifact
+// temporary across both inner loops. Its expansion restores retail's 0x64
+// frame, shared stack home, and the first push_back's retained single-element
+// insert wrapper. All 38 CFG blocks and instruction rows then agree. The
+// 99.9872 report residual is solely retail's ICF label for that wrapper:
+// vector<type_dialog_resource>::insert has the same signature-shaped body as
+// the source-correct vector<type_artifact> specialization.
 VA(0x00487900, 0x2CD)  // anchor-caller(game::NewMap +0x5cb), retail-only
 void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
 {
@@ -1683,18 +1697,7 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
             if (g_game->m_heroAvailability[carried.m_id]
                 != hero::HERO_AVAILABILITY_TAVERN_POOL)
                 continue;
-            int slotIndex;
-            for (slotIndex = 0; slotIndex < g_crossoverEquippedArtifactSlots;
-                 ++slotIndex) {
-                type_artifact heroArtifact = carried.getArtifact(TArtifactSlot(slotIndex));
-                if (heroArtifact.m_artifactId != ARTIFACT_NONE)
-                    artifacts.push_back(heroArtifact);
-            }
-            for (slotIndex = 0; slotIndex < HERO_BACKPACK_CAPACITY; ++slotIndex) {
-                type_artifact heroArtifact = carried.getBackpack(slotIndex);
-                if (heroArtifact.m_artifactId != ARTIFACT_NONE)
-                    artifacts.push_back(heroArtifact);
-            }
+            collectCrossoverArtifacts(carried, artifacts);
         }
 
         for (unsigned int artifactIndex = 0; artifactIndex < artifacts.size();
@@ -2570,28 +2573,12 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
     pruneCrossoverHeroes(campaignHeader);
 }
 
-// These five ordinary Complete-only helpers recover the source boundaries
-// visible in pruneCrossoverHeroes. VC6 expands them into that caller: the
-// header pass retains its vector size calls, the scenario queries preserve
-// their temporary homes, and the collector owns one hero receiver across the
-// two artifact loops. The flattened spelling has 91 CFG blocks against
-// retail's 62; these calls restore the retail source shape.
-static void collectCrossoverArtifacts(const hero& sourceHero, std::vector<type_artifact>& artifacts)
-{
-    type_artifact artifact;
-    int slot;
-    for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
-        artifact = sourceHero.getArtifact(TArtifactSlot(slot));
-        if (artifact.m_artifactId != ARTIFACT_NONE)
-            artifacts.push_back(artifact);
-    }
-    for (slot = 0; slot < g_crossoverBackpackSlots; ++slot) {
-        artifact = sourceHero.getBackpack(slot);
-        if (artifact.m_artifactId != ARTIFACT_NONE)
-            artifacts.push_back(artifact);
-    }
-}
-
+// This helper and the four ordinary Complete-only helpers below recover the
+// source boundaries visible in pruneCrossoverHeroes. VC6 expands them into
+// that caller: the header pass retains its vector size calls, the scenario
+// queries preserve their temporary homes, and the collector owns one hero
+// receiver across the two artifact loops. The flattened spelling has 91 CFG
+// blocks against retail's 62; these calls restore the retail source shape.
 static int getCampaignScenarioCount(TCampaignBrief::CampaignHeaderStruct& header)
 {
     return header.m_scenarios.size();

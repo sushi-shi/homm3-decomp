@@ -382,26 +382,17 @@ void TCampaignBrief::addBonusIcons()
 // bitmap or the sprite form of the bonus with its help text, and the
 // frames past the count are hidden.
 
-// Residual (95.44%): 34 blocks against retail's 34, all 16 branches and the
-// single return agree, 32 blocks byte-exact. 2026-09-06, polish lane 35: the
-// status send_message was a TERNARY ARGUMENT over two commands one apart in
-// value, and VC6 folds such a pair branchlessly (`xor ecx,ecx / cmp edi,[..] /
-// setne cl / add ecx,K`) where retail branches and cross-jumps the shared call
-// (`jne / push SET / jmp / push CLEAR / call`). Writing it as an if/else over
-// two send_message calls recovers retail's shape - 31 blocks -> 34, three
-// flow-kind divergences -> none, 95.3700 -> 95.4400. What is left is one
-// register transposition in the `campaign->scenarios[selected_scenario]`
-// chain (retail `[ecx + 4*eax]`, ours `[eax + 4*ecx]`) plus retail loading
-// briefingChoice into EAX before the compare where we compare against memory.
-// Measured and rejected: naming the choice in an `int choice` local inside the
-// loop (byte-flat, 95.4400); naming the receiver widget (91.90, and it costs
-// the whole block agreement); both together (91.90); and swapping the
-// `scenario` / `int i` declaration order (byte-flat) - the SIB flip is not
-// reachable from this loop's index scope because the third loop consumes `i`.
+// Dreamcast's named `bmapNames` and `help_id` locals serve its fixed three-slot
+// GetWidget path. Complete directly owns the widened widget arrays instead.
+// Retail snapshots the selected scenario index before the vector lookup, uses
+// branch-local border receivers for the status update, and snapshots the live
+// campaign pointer at the following virtual call. Those lifetimes reproduce
+// all 34 CFG blocks, 16 branches, 24 calls, and every instruction row.
 VA(0x00458d40, 0x297)  // Select callee, dc-order-map after AddBonusIcons, dc 0x58c00
 void TCampaignBrief::updateBonusIcons()
 {
-    ScenarioStruct* scenario = m_campaign->m_scenarios[m_selectedScenario];
+    int selectedScenario = m_selectedScenario;
+    ScenarioStruct* scenario = m_campaign->m_scenarios[selectedScenario];
     int i;
 
     if (scenario->m_options->getCount() == TCampaignStartOption::CHOICE_COUNT_PAIR) {
@@ -418,12 +409,15 @@ void TCampaignBrief::updateBonusIcons()
 
     for (i = 0; i < scenario->m_options->getCount(); i++) {
         m_startBonusBorders[i]->show();
-        if (i == g_game->m_campaign.m_briefingChoice)
-            m_startBonusBorders[i]->sendMessage(widget::WIDGET_SET_STATUS, 4);
-        else
-            m_startBonusBorders[i]->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                                 4);
-        const char* name = scenario->m_options->getIconDefName(&g_game->m_campaign, i);
+        if (i == g_game->m_campaign.m_briefingChoice) {
+            coloredBorderFrame* border = m_startBonusBorders[i];
+            border->sendMessage(widget::WIDGET_SET_STATUS, 4);
+        } else {
+            coloredBorderFrame* border = m_startBonusBorders[i];
+            border->sendMessage(widget::WIDGET_CLEAR_STATUS, 4);
+        }
+        SCampaign* activeCampaign = &g_game->m_campaign;
+        const char* name = scenario->m_options->getIconDefName(activeCampaign, i);
         if (scenario->m_options->isBuildingBonus(i)) {
             m_bitmapBonusImages[i]->show();
             m_bitmapBonusImages[i]->setImage(name);
