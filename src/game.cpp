@@ -1086,11 +1086,11 @@ DC_ONLY(0xa4c08, 0x5E)
 int game::loadObeliskPool(TAbstractFile* infile)
 {
     char charBuffer;
-    int count = infile->read(&charBuffer, sizeof(charBuffer));
+    int count = readValue(infile, charBuffer);
     if (count < sizeof(charBuffer))
         return -1;
     m_numObelisks = charBuffer;
-    count = infile->read(m_obeliskFlags, sizeof(m_obeliskFlags));
+    count = readValue(infile, m_obeliskFlags);
     if (count < sizeof(m_obeliskFlags))
         return -1;
     return 0;
@@ -1546,7 +1546,7 @@ DC_ONLY(0xa5a40, 0xB6)
 int game::loadTownPool(TAbstractFile* infile, int saveVersion)
 {
     unsigned char townCount;
-    int count = infile->read(&townCount, sizeof(townCount));
+    int count = readValue(infile, townCount);
     if (count < sizeof(townCount))
         return -1;
     m_towns.resize(townCount);
@@ -2431,11 +2431,11 @@ int game::loadBlackMarkets(TAbstractFile* infile)
 {
     m_blackMarkets.clear();
     char blackMarketListSize;
-    int count = infile->read(&blackMarketListSize, sizeof(blackMarketListSize));
+    int count = readValue(infile, blackMarketListSize);
     if (count < sizeof(blackMarketListSize))
         return -1;
     m_blackMarkets.resize(blackMarketListSize);
-    count = infile->read(&m_blackMarkets[0], blackMarketListSize * sizeof(TBlackMarket));
+    count = readValues(infile, &m_blackMarkets[0], blackMarketListSize);
     if (count < blackMarketListSize * sizeof(TBlackMarket))
         return -1;
     return 0;
@@ -2461,7 +2461,7 @@ bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
     if (readValue(infile, count) < sizeof(count))
         return false;
     destVector.resize(count);
-    if (infile->read(&destVector[0], count * sizeof(T)) < count * sizeof(T))
+    if (readValues(infile, &destVector[0], count) < count * sizeof(T))
         return false;
     return true;
 }
@@ -2623,12 +2623,12 @@ void decodePackedBits(const unsigned char* packed, std::bitset<N>& result)
 // Keep the pool loaders canonical and the packed-byte scratch buffer inside
 // its hero loop. Default bitset construction reproduces more of the retained
 // calls than the unsigned-long constructor; neither requires inline controls.
-// At 98.1693%, the prefix, packed proxy, scalar slots and cleanup match.
-// The remaining difference is loadVector<type_university> staying out of line;
-// retail expands it. Broader scalar/range readers can expand that call but
-// then retain the final failure destructor or expand isLocalHuman incorrectly.
-// Named vector fill temporaries also change the otherwise matching lifetimes.
-// No inline-control pragma or release assertion is needed by this model.
+// The native range reader deduces the serialized count type. Its char instance
+// preserves loadBlackMarkets, while its short instances reproduce the register
+// allocation of every expanded loadVector call. Together with the counted
+// disabled-skill clear and native packed-byte read, game::load matches all
+// 139 retail blocks exactly. No inline-control pragma or release assertion is
+// needed by this model.
 VA(0x004bcda0, 0xEC2)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
 int game::load(TAbstractFile* infile)
 {
@@ -2643,6 +2643,7 @@ int game::load(TAbstractFile* infile)
     unsigned short extraShortValue;
     int zero;
     int count;
+    int i;
 
     clearEventRecords();
     // Complete expands SetMapSize at +0x1cc..+0x1e7, before the pool reads.
@@ -2666,8 +2667,8 @@ int game::load(TAbstractFile* infile)
     if (saved.m_version >= 29)
         infile->read(m_ssDisabled, sizeof(m_ssDisabled));
     else {
-        char* disabledSkills = m_ssDisabled;
-        memset(disabledSkills, 0, sizeof(m_ssDisabled));
+        for (i = 0; i < sizeof(m_ssDisabled); ++i)
+            m_ssDisabled[i] = 0;
     }
 
     if (loadRumours(infile) < 0)
@@ -2687,7 +2688,6 @@ int game::load(TAbstractFile* infile)
     if (!loadObjectVector(infile, m_generators))
         return -1;
 
-    int i;
     if (loadGarrisonPool(infile, saved.m_version) < 0)
         return -1;
     if (loadBoatPool(infile) < 0)
@@ -2737,7 +2737,7 @@ int game::load(TAbstractFile* infile)
         for (i = 0; i < HERO_COUNT; ++i) {
             std::bitset<8> poolMap;
             unsigned char poolBits[1];
-            infile->read(poolBits, sizeof(poolBits));
+            readValue(infile, poolBits);
             decodePackedBits(poolBits, poolMap);
             m_heroPoolMap[i] = poolMap;
         }

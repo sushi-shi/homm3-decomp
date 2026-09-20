@@ -1080,7 +1080,7 @@ command	?checkWin@combatManager@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0
 command	?doAnimations@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x74040	tokens1:e096f4ed8746
 command	?doCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0	tokens1:1a1a5c3c607e
 command	?doVictory@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77470	tokens1:bc98aced8b4f
-command	?getCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490	tokens1:d96acd356ff2
+command	?getCommand@combatManager@@QAEHH@Z	92.5357	92.5714	92.5714	0x76490	tokens1:d96acd356ff2
 command	?getControl@combatManager@@QAEXXZ	98.2830	98.2830	98.2830	0x782d0	tokens1:fdc6faca72ee
 command	?getSurrenderCost@combatManager@@AAEJXZ	100.0000	100.0000	100.0000	0x77a00	tokens1:5287ef531a98
 command	?getTowerString@combatManager@@ABE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TWallSection@1@JJ@Z	100.0000	100.0000	100.0000	0x7a2d0	tokens1:a462065bc26d
@@ -1907,10 +1907,12 @@ game	?_Tidy@?$bitset@$07@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xcff30	-
 game	?_Tidy@?$bitset@$0JA@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x8c0b0	-
 game	?_Tidy@?$bitset@$0JB@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x8d480	-
 game	?_Ucopy@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@IAEPAUTBlackMarket@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x14d920	-
+game	?_Ucopy@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@IAEPAUtype_university@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x34c70	-
 game	?_Ucopy@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@IAEPAVboat@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd2210	-
 game	?_Ucopy@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@IAEPAVgenerator@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd4f80	-
 game	?_Ucopy@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEPAVtown@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd21a0	-
 game	?_Ufill@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@IAEXPAUTBlackMarket@@IABU3@@Z	100.0000	100.0000	100.0000	0xd2160	-
+game	?_Ufill@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@IAEXPAUtype_university@@IABU3@@Z	100.0000	100.0000	100.0000	0xd4a60	-
 game	?_Ufill@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@IAEXPAVboat@@IABV3@@Z	100.0000	100.0000	100.0000	0xd2250	-
 game	?_Ufill@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@IAEXPAVgenerator@@IABV3@@Z	100.0000	100.0000	100.0000	0xd4fc0	-
 game	?_Ufill@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEXPAVtown@@IABV3@@Z	100.0000	100.0000	100.0000	0xd21e0	-
@@ -2020,7 +2022,7 @@ game	?isMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90	tokens1:78f
 game	?load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	90.8783	90.8783	92.6763	0xc5630	tokens1:452e7ec61cb7
 game	?load@SGameSetupOptions@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xbe260	tokens1:44422249efa4
 game	?load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc750	tokens1:16dd299862ff
-game	?load@game@@AAEHPAVTAbstractFile@@@Z	98.1693	98.1693	98.1693	0xbcda0	tokens1:3325bebf5762
+game	?load@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbcda0	tokens1:56fc7c630d4d
 game	?load@generator@@QAE_NPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85a0	tokens1:33dad54534a7
 game	?load@playerData@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba260	tokens1:321b9cd1515b
 game	?loadBoatPool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9a00	tokens1:38293cd45fcd
@@ -2068,6 +2070,7 @@ game	?resetAllPlayerVisibility@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7c50	t
 game	?resetGame@game@@QAEXHHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0xcecb0	tokens1:6800aae9d0eb
 game	?resize@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@QAEXIABUTBlackMarket@@@Z	100.0000	100.0000	100.0000	0xcf0f0	-
 game	?resize@?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@QAEXIABUtype_point@@@Z	100.0000	100.0000	100.0000	0xd4aa0	-
+game	?resize@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@QAEXIABUtype_university@@@Z	100.0000	100.0000	100.0000	0xd4800	-
 game	?resize@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QAEXIABVgenerator@@@Z	100.0000	100.0000	100.0000	0xd4500	-
 game	?resize@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAEXIABVtown@@@Z	100.0000	100.0000	100.0000	0xcf410	-
 game	?save@NewSMapHeader@@QAEHPAVTAbstractFile@@@Z	89.9519	89.9519	89.9519	0xc4f10	tokens1:e7082b655e8c
@@ -2131,9 +2134,6 @@ game	__h3cg$game$bitset_tidy$Bitset28	0.0000	100.0000	100.0000	0xd1830	-
 game	__h3cg$game$bitset_tidy$Bitset5	0.0000	100.0000	100.0000	0xd1790	-
 game	__h3cg$game$std_copy$type_map_hero_identity	0.0000	0.0000	100.0000	0xd2e50	-
 game	__h3cg$game$vector_capacity$type_university	0.0000	100.0000	100.0000	0xcfa40	-
-game	__h3cg$game$vector_resize$type_university	0.0000	100.0000	100.0000	0xd4800	-
-game	__h3cg$game$vector_ucopy$type_university	0.0000	100.0000	100.0000	0x34c70	-
-game	__h3cg$game$vector_ufill$type_university	0.0000	100.0000	100.0000	0xd4a60	-
 gamecontext	?set@?$bitset@$03@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xecde0	-
 gametypewindow	??0TGameTypeWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0xd54c0	tokens1:ed5106ea2077
 gametypewindow	??1TGameTypeWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xd5890	tokens1:c326cfa86934
@@ -2378,7 +2378,7 @@ infutil	@inflate_flush@12	100.0000	100.0000	100.0000	0x20a620	-
 initialize	?addToIncludedMask@@YIXPBHPA_J@Z	100.0000	100.0000	100.0000	0xebb10	tokens1:e240af918e6a
 initialize	?createIncludedMask@@YIXPBHPA_J@Z	100.0000	100.0000	100.0000	0xebb70	tokens1:c55d802ed6b6
 initialize	?createRequirementMasks@@YIXPBHPA_JAA_J@Z	100.0000	100.0000	100.0000	0xebc50	tokens1:4fa0b85cb996
-initialize	?initializeGameData@@YIXXZ	96.0880	100.0000	100.0000	0xeb730	tokens1:baacd75a10dc
+initialize	?initializeGameData@@YIXXZ	90.1620	100.0000	100.0000	0xeb730	tokens1:baacd75a10dc
 inputmgr	??0inputManager@@QAE@XZ	100.0000	100.0000	100.0000	0xec460	tokens1:ea74871981e6
 inputmgr	?asciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0	tokens1:0d18e2d3c1d6
 inputmgr	?close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540	tokens1:3b1bc89dd9af
