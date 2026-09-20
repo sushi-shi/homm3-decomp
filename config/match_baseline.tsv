@@ -1149,7 +1149,7 @@ cspriteframe	??0CSpriteFrame@@QAE@PBDHHPAEHW4TEncodingMethod@@@Z	100.0000	100.00
 cspriteframe	??0CSpriteFrame@@QAE@PBDHHPAEHW4TEncodingMethod@@HHHH@Z	100.0000	100.0000	100.0000	0x7c360	tokens1:a652e641b93f
 cspriteframe	??1CSpriteFrame@@UAE@XZ	100.0000	100.0000	100.0000	0x7c430	tokens1:c5a7877fa675
 cspriteframe	??_GCSpriteFrame@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x7c280	-
-cspriteframe	?draw@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	98.6225	98.6225	100.0000	0x7c570	tokens1:46f6b732818c
+cspriteframe	?draw@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	100.0000	100.0000	100.0000	0x7c570	tokens1:b6681d5e0d80
 cspriteframe	?drawAdvObjImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@EG@Z	96.6247	96.6247	100.0000	0x7d0a0	tokens1:52ae3ef9629c
 cspriteframe	?drawAdvObjShadowImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@E@Z	94.3325	94.3325	99.9404	0x7d930	tokens1:303f48623c97
 cspriteframe	?drawAdvObjWithFlagAlpha@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@GE@Z	94.5249	94.5249	98.0000	0x7d4f0	tokens1:74769d598f84
