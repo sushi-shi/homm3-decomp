@@ -1137,9 +1137,11 @@ std::string readLengthPrefixedString(TAbstractFile* infile)
 // After the caller's pointer/lifetime corrections, default zero construction
 // reaches 83.29%; the unsigned-long(0) constructor is the 80.95% control.
 // Direct proxy assignment plus an explicit prerequisite-loop body scope
-// raises the caller to 84.92324%. Either change alone is byte-flat at 83.29%.
-// A named reference keeps the same public bitset operation but changes VC6's
-// nested decisions; neither form retains all four retail proxy assignments.
+// originally raised the caller to 84.92324%. After restoring its text-reader
+// and scalar lifetimes, naming the proxy changes VC6's nested scheduling and
+// raises 87.4222 -> 89.4456 without changing any other customcampaign score.
+// The three loops still call bitset::set rather than retail's proxy assignment;
+// naming only the Boolean value is byte-flat.
 template <size_t N>
 std::bitset<N> readPackedCampaignBits(TAbstractFile* infile)
 {
@@ -1147,7 +1149,8 @@ std::bitset<N> readPackedCampaignBits(TAbstractFile* infile)
     unsigned char packed[(N + 7) / 8];
     infile->read(packed, sizeof(packed));
     for (unsigned int index = 0; index < N; ++index) {
-        result[index] = (packed[index >> 3] & (1 << (index & 7))) != 0;
+        typename std::bitset<N>::reference bit = result[index];
+        bit = (packed[index >> 3] & (1 << (index & 7))) != 0;
     }
     return result;
 }
@@ -1778,6 +1781,9 @@ void TCampaignBrief::ScenarioStruct::markCrossoverHeroes(unsigned char* wanted)
 // virtual reads, contradicting retail, and is not retained.
 // Keeping inflated-size's temporary in the function scope gives it retail's
 // local home instead of reusing the infile parameter slot (86.4073 -> 87.4222).
+// A named proxy in readPackedCampaignBits changes the nested code generation
+// in all three expansions (87.4222 -> 89.4456); the proxy-call boundary itself
+// remains unfinished.
 void TCampaignBrief::MapTextStruct::read(TAbstractFile* infile)
 {
     unsigned char value;

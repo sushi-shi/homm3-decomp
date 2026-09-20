@@ -1335,7 +1335,7 @@ customcampaign	?play@MapTextStruct@TCampaignBrief@@QAEXXZ	86.1889	86.1889	86.188
 customcampaign	?playScenarioEpilogue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a2a0	tokens1:edc65a411df2
 customcampaign	?playScenarioPrologue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a270	tokens1:1de34d8d2b74
 customcampaign	?pruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	99.9223	99.9223	99.9223	0x89e20	tokens1:3f50b40e1748
-customcampaign	?read@ScenarioStruct@TCampaignBrief@@QAEXPAVTAbstractFile@@HH@Z	87.4222	87.4222	87.4222	0x87e40	tokens1:7a3977eb3961
+customcampaign	?read@ScenarioStruct@TCampaignBrief@@QAEXPAVTAbstractFile@@HH@Z	89.4456	89.4456	89.4456	0x87e40	tokens1:7a3977eb3961
 customcampaign	?read@TCampaignArtifactBonus@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x848a0	tokens1:af873e355633
 customcampaign	?read@TCampaignBuildingBonus@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x845f0	tokens1:bb7ac93deef5
 customcampaign	?read@TCampaignCreatureBonus@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x844f0	tokens1:aa0c9a428148
