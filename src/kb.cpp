@@ -945,6 +945,9 @@ void showCredits()
 // 8-bit startup graphics and fixed-array campaign setup are port differences:
 // Complete's startup, 16-bit graphics and dynamic campaign header are proved
 // by its retail calls, not substitutions to satisfy the DC helper audit.
+// DC1462..1538 orders restart before high scores/credits. Moving those whole
+// arms in Complete scores 75.4381% and retains the campaign/progress inline
+// differences; retail's machine order supports the current arm order.
 
 VA(0x004ee3e0, 0x1C04)  // dc 0xe0158
 int oldmain()

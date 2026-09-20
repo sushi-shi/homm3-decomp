@@ -1892,7 +1892,8 @@ CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
 // DC and retail reuse tempName[100] for handicap, panel and flag filenames;
 // the earlier separate tempStr[256] was not DC's wide temp_str. Those source
 // facts restore retail's 0x314 frame. The shared index and distinct final
-// loop index recover NB11's two named owners and reproduce 95.0576%; null
+// loop index recover NB11's two named owners. The root handicap widget owner
+// (DC w at sp+0xbc, stores 0x1333ac/0x13346c) reproduces 95.0633%; null
 // text still changes register homes compared with the former 95.5273% body.
 // Remaining: StartMouseThread expands ServiceSounds where retail calls it
 // (verified C2 cost 90 / nested budget 128), plus stack/register allocation.
@@ -2151,6 +2152,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     m_fileSlider->hide();
     m_widgets.push_back(m_fileSlider);
 
+    widget* handicapButton;
     char flagName[256];
     char tempName[100];
     char flagColors[] = "RBYGOPTS";
@@ -2175,7 +2177,6 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
                 0, 8));
 
             sprintf(tempName, "adopb2%c.def", "rbygopts"[i]);
-            widget* handicapButton;
             if (isMultiPlayer()) {
                 handicapButton = new textButton(
                     110, rowY + 18, 50, 24, 207 + i,
