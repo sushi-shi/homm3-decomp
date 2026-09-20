@@ -343,7 +343,9 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
             return 1;
         if (!guard->m_quest->isSatisfied(const_cast<hero*>(currentHero)))
             return 0;
-        cell->m_barrierValue -= guard->m_quest->getAIValue(currentHero->m_owner);
+        type_quest* quest = guard->m_quest;
+        int player = currentHero->m_owner;
+        cell->m_barrierValue -= quest->getAIValue(player);
         return 1;
     }
     case HERO:
@@ -352,13 +354,20 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
             return 0;
         if (searchType == const_AI_enemy_search)
             return 1;
-        return searchType >= const_AI_search;
-    case GARRISON:
-        if (g_game->onSameTeam(g_game->m_garrisons[mapCell->m_extraInfo].m_playerOwner,
+        if (searchType >= const_AI_search)
+            return 1;
+        return 0;
+    case GARRISON: {
+        garrison* currentGarrison =
+            g_game->getGarrison(mapCell->m_extraInfo);
+        if (g_game->onSameTeam(currentGarrison->m_playerOwner,
                                currentHero->m_owner))
             return 1;
+    }
     case MONSTER:
-        return searchType >= const_AI_search;
+        if (searchType >= const_AI_search)
+            return 1;
+        return 0;
     case BOAT:
         if (cell->m_inBoat)
             return 0;
