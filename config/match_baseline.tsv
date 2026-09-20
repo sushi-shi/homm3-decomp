@@ -3891,7 +3891,7 @@ singleselectionwindow	??1CChatWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x17cba0
 singleselectionwindow	??1CGameHeaderInfoMsg@@QAE@XZ	100.0000	100.0000	100.0000	0x178760	-
 singleselectionwindow	??1CHostWaitDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x189230	d92e236478cf
 singleselectionwindow	??1CNewMapHeaderInfoMsg@@QAE@XZ	100.0000	100.0000	100.0000	0x18a300	b61fdfca3e91
-singleselectionwindow	??1CNewPlayerUpdateProc@@QAE@XZ	93.6111	93.6111	100.0000	0x183ef0	tokens1:3aecd9205074
+singleselectionwindow	??1CNewPlayerUpdateProc@@QAE@XZ	100.0000	100.0000	100.0000	0x183ef0	tokens1:3aecd9205074
 singleselectionwindow	??1GameSelectionHeadersStruct@@QAE@XZ	100.0000	100.0000	100.0000	0x178290	-
 singleselectionwindow	??1TSingleSelectionWindow@@UAE@XZ	86.6265	100.0000	100.0000	0x183b40	tokens1:bd5993945267
 singleselectionwindow	??4?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x18eb10	-
