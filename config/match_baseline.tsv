@@ -1307,7 +1307,7 @@ customcampaign	?getText@TCampaignStartCrossoverOption@@UBE?AV?$basic_string@DU?$
 customcampaign	?getText@TCampaignStartHeroOption@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAXH@Z	100.0000	100.0000	100.0000	0x85a90	tokens1:f6a997fa1af6
 customcampaign	?getTotalTime@SCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x8b280	tokens1:8630de09c95d
 customcampaign	?getloc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAE?AVlocale@2@XZ	100.0000	100.0000	100.0000	0x8d820	-
-customcampaign	?giveCrossoverArtifacts@ScenarioStruct@TCampaignBrief@@QAEXXZ	99.9872	99.9872	99.9872	0x87900	tokens1:a36466e831bc
+customcampaign	?giveCrossoverArtifacts@ScenarioStruct@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x87900	tokens1:668221dd24c8
 customcampaign	?heroPower@@YIHPAVhero@@@Z	100.0000	100.0000	100.0000	0x83f50	tokens1:58bb2e6f262b
 customcampaign	?initializeCrossoverHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlaceholderData@@PAVhero@@@Z	94.7330	94.7330	94.7330	0x86590	tokens1:28732d7e69f3
 customcampaign	?insert@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QAEXPAUCampaignScenarioInfo@@IABU3@@Z	100.0000	100.0000	100.0000	0x8cae0	-
@@ -3016,7 +3016,7 @@ recruit	?quickViewRecruit@@YIXPAVtown@@H@Z	100.0000	100.0000	100.0000	0x151750	t
 recruit	?quickViewRecruit@@YIXW4TCreatureType@@PAF@Z	100.0000	100.0000	100.0000	0x151780	tokens1:4e8b6965c245
 recruit	?recruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x14e800	tokens1:0a78aaf337d9
 recruit	?siegeArtifactToCreature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360	tokens1:ca8b074685ad
-recruit	?update@recruitUnit@@QAEXEJ@Z	99.9898	99.9898	99.9898	0x1503a0	tokens1:cff642b61cf5
+recruit	?update@recruitUnit@@QAEXEJ@Z	99.9898	99.9898	99.9898	0x1503a0	tokens1:ebd9408697b1
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50	tokens1:9cb7f65c769c
 remote	??0CChatEdit@@QAE@HHHHHPAD0W4TColor@font@@W4EJustify@2@0HHHHHH@Z	100.0000	100.0000	100.0000	0x1541a0	tokens1:014d0118749d
 remote	??0CGameTransferDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x157720	tokens1:b63d1ed9b628
@@ -3626,7 +3626,7 @@ sacrifice_window	?allCreatures@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000	
 sacrifice_window	?artifactClick@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1632a0	tokens1:bd63f2d8458f
 sacrifice_window	?backpackClick@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1636c0	tokens1:36487fe7fbbc
 sacrifice_window	?convertWithCommas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660	tokens1:0bb4a7234f40
-sacrifice_window	?createArtifactWidgets@type_sacrifice_window@@AAEXAAJH@Z	99.9983	99.9983	100.0000	0x160380	tokens1:7c41e46d0aa2
+sacrifice_window	?createArtifactWidgets@type_sacrifice_window@@AAEXAAJH@Z	99.9983	99.9983	100.0000	0x160380	tokens1:56a3e0149c09
 sacrifice_window	?createCreatureIcons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z	100.0000	100.0000	100.0000	0x161f70	tokens1:b3fc8404c642
 sacrifice_window	?createCreatureIcons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	32.7974	32.7974	100.0000	0x166760	tokens1:cdf53aa643b1
 sacrifice_window	?createCreatureWidgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x1610f0	tokens1:3422e6c5f07b

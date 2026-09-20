@@ -524,6 +524,10 @@ TCreatureType siegeArtifactToCreature(TArtifact engine)
 }
 
 // E:\gamedcs\recruit.cpp:511
+// Residual (99.9898%): the CFG, calls, and instruction sequence agree. Two
+// multiply instructions encode their commutative register operands in the
+// opposite order; natural declaration and expression variants retain VC6's
+// current allocation.
 
 VA(0x005503a0, 0x594)  // anchor-global, dc 0x119dcc
 void recruitUnit::update(unsigned char newMonster, long slot)
@@ -569,8 +573,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     }
     if (m_maxAvail > *m_numAvail)
         m_maxAvail = *m_numAvail;
-    long maxBuy = m_maxAvail;
-    m_numberToBuy = std::_MIN<long>(m_numberToBuy, maxBuy);
+    m_numberToBuy = min(m_numberToBuy, m_maxAvail);
 
     // NAME CONTRADICTED, storage correct: 0x69954c is declared
     // `bVideoPaused` in kbwin.h, which flags all of its .bss names as

@@ -1681,10 +1681,10 @@ static void collectCrossoverArtifacts(const hero& sourceHero,
 // The canonical collector shared with pruneCrossoverHeroes owns one artifact
 // temporary across both inner loops. Its expansion restores retail's 0x64
 // frame, shared stack home, and the first push_back's retained single-element
-// insert wrapper. All 38 CFG blocks and instruction rows then agree. The
-// 99.9872 report residual is solely retail's ICF label for that wrapper:
-// vector<type_dialog_resource>::insert has the same signature-shaped body as
-// the source-correct vector<type_artifact> specialization.
+// insert wrapper. The two outer loops also reuse one index, restoring the
+// retail -0x14 home. All 38 CFG blocks and instruction rows agree. Retail's
+// ICF label names vector<type_dialog_resource>::insert at the wrapper address;
+// the source-correct vector<type_artifact> specialization resolves there too.
 VA(0x00487900, 0x2CD)  // anchor-caller(game::NewMap +0x5cb), retail-only
 void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
 {
@@ -1697,18 +1697,17 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
         type_artifact artifact;
         std::vector<type_artifact> artifacts = campaign->m_carryoverArtifact[slot];
 
-        for (unsigned int heroIndex = 0;
-             heroIndex < heroes.size(); ++heroIndex) {
-            hero& carried = heroes[heroIndex];
+        unsigned int itemIndex;
+        for (itemIndex = 0; itemIndex < heroes.size(); ++itemIndex) {
+            hero& carried = heroes[itemIndex];
             if (g_game->m_heroAvailability[carried.m_id]
                 != hero::HERO_AVAILABILITY_TAVERN_POOL)
                 continue;
             collectCrossoverArtifacts(carried, artifacts);
         }
 
-        for (unsigned int artifactIndex = 0; artifactIndex < artifacts.size();
-             ++artifactIndex) {
-            artifact = artifacts[artifactIndex];
+        for (itemIndex = 0; itemIndex < artifacts.size(); ++itemIndex) {
+            artifact = artifacts[itemIndex];
             if (artifact.m_artifactId == ARTIFACT_NONE)
                 continue;
             if (!m_crossoverArtifacts.at(artifact.m_artifactId))
