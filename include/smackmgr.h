@@ -2,6 +2,10 @@
 #define HOMM3_SMACKMGR_H
 
 namespace SmackManager {
+// DC namespace globals; Windows VA mappings are documented at definitions.
+extern bool g_updateScreen;
+extern bool g_needsUpdate;
+extern bool g_playingSmacker;
 void closeSmacker();                                     // 0x599050
 void setPixelFormat(unsigned long redMask, unsigned long greenMask,
                     unsigned long blueMask);             // 0x598a40
@@ -27,11 +31,10 @@ struct VideoHeaderStruct {
     unsigned long m_offset;
 };
 
-// Partial view of the Smacker handle using the Dreamcast SmackTag prefix.
-// Retail confirms unsigned Width/Height (VideoPlay centers with shr);
-// the LastRect
-// quartet compares signed in VideoDrawRects (jge/jle).
-struct Smack {
+// DC's 944-byte SmackTag agrees with the nearby Smacker 3.2 SDK layout.
+// Retail confirms the consumed prefix, including unsigned dimensions and
+// signed LastRect fields; the unconsumed tail remains DC/SDK type evidence.
+struct SmackTag {
     unsigned long m_version;   // +0x000
     unsigned long m_width;     // +0x004
     unsigned long m_height;    // +0x008
@@ -59,13 +62,26 @@ struct Smack {
     long m_lastRecty;          // +0x384
     long m_lastRectw;          // +0x388
     long m_lastRecth;          // +0x38c
+    // DC/SDK names: OpenFlags, LeftOfs, TopOfs, LargestFrameSize,
+    // Highest1SecRate, Highest1SecFrame, ReadError, addr32.
+    unsigned long m_openFlags;        // +0x390
+    unsigned long m_leftOfs;          // +0x394
+    unsigned long m_topOfs;           // +0x398
+    unsigned long m_largestFrameSize; // +0x39c
+    unsigned long m_highest1SecRate;  // +0x3a0
+    unsigned long m_highest1SecFrame; // +0x3a4
+    unsigned long m_readError;        // +0x3a8
+    unsigned long m_addr32;           // +0x3ac
 };
+typedef SmackTag Smack;
+SIZE(SmackTag, 944);
 
 // The smackw32 import surface (retail IAT: __imp___SmackToBuffer@28 -
 // RAD's own leading underscore, the same convention soundmgr.h
 // documents for Miles). Calls preserve these import names.
 extern "C" {
-__declspec(dllimport) void __stdcall _SmackToBuffer(Smack* smk, unsigned long left, unsigned long top, unsigned long pitch, unsigned long destheight, void* buf, unsigned long flags);
+// DC0x80164 and the Smacker SDK declare the destination const void*.
+__declspec(dllimport) void __stdcall _SmackToBuffer(Smack* smk, unsigned long left, unsigned long top, unsigned long pitch, unsigned long destheight, const void* buf, unsigned long flags);
 __declspec(dllimport) unsigned long __stdcall _SmackToBufferRect(Smack* smk, unsigned long flags);
 __declspec(dllimport) unsigned long __stdcall _SmackDoFrame(Smack* smk);
 __declspec(dllimport) void __stdcall _SmackGoto(Smack* smk, unsigned long frame);
@@ -74,8 +90,11 @@ __declspec(dllimport) void __stdcall _SmackClose(Smack* smk);
 // per-frame pump's wait/advance pair and ShowVideo's open path.
 __declspec(dllimport) unsigned long __stdcall _SmackWait(Smack* smk);
 __declspec(dllimport) void __stdcall _SmackNextFrame(Smack* smk);
-__declspec(dllimport) Smack* __stdcall _SmackOpen(void* handle, unsigned long flags, long extra);
-__declspec(dllimport) void __stdcall _SmackUseMMX(unsigned long on);
+// DC0x80170 and the SDK: name also carries a HANDLE under SMACKFILEHANDLE;
+// extrabuf is unsigned long (SMACKAUTOEXTRA is 0xffffffff).
+__declspec(dllimport) Smack* __stdcall _SmackOpen(const char* name, unsigned long flags, unsigned long extra);
+// DC0x80174 and the SDK return unsigned long even when the caller ignores it.
+__declspec(dllimport) unsigned long __stdcall _SmackUseMMX(unsigned long on);
 __declspec(dllimport) void __stdcall _SmackVolumePan(Smack* smk, unsigned long trackFlags, unsigned long volume, unsigned long pan);
 }
 

@@ -1,8 +1,8 @@
 // 21 functions in link order.
 
-// Retail dropped DC's SmackManager object for a flat global scheme:
-// two Smacker handles (a video track and a separate audio-only track)
-// plus a mirrored pair of Bink handles owned by the 0x44dxxx bink TU.
+// DC publics identify SmackManager as a namespace. Windows uses two
+// Smacker handles (video and audio-only tracks); Bink's parallel state
+// belongs to the binkmanager.cpp namespace.
 // The smackw32/binkw32 imports carry their own leading underscore
 // (retail IAT: __imp___SmackToBuffer@28), the same RAD convention
 // soundmgr.h documents for Miles (_AIL_*).
@@ -62,8 +62,12 @@ void closeSmacker();
 // smackmgr.obj .bss cluster 0x69fdf5..0x69fe5c (names provisional;
 // the unreferenced gaps belong to members only the 0x198xxx TU
 // touches).
-DATA(0x0069fdf4) unsigned char g_smackAutoDraw;     // ShowVideo arg 7: pump its own VideoDrawRects
-DATA(0x0069fdf5) unsigned char g_smackDirty;        // decoded frame awaits a blit
+// Raw DC namespace globals updateScreen, needsUpdate and PlayingSmacker
+// are bool. Their Windows addresses below are inferred from the matching
+// auto-draw, pending-frame and active-playback roles, parallel to Bink;
+// the CE stubs contain no data accesses that could prove these VA bindings.
+DATA(0x0069fdf4) bool SmackManager::g_updateScreen;     // ShowVideo arg 7: pump its own VideoDrawRects
+DATA(0x0069fdf5) bool SmackManager::g_needsUpdate;        // decoded frame awaits a blit
 DATA(0x0069fdf8) Smack* g_smackVideo;               // video track handle
 DATA(0x0069fdfc) Smack* g_smackVideo2;              // audio-only track handle
 DATA(0x0069fe00) int g_smackX;                      // blit origin on the screen bitmap
@@ -109,7 +113,7 @@ DATA(0x0069fde0) VideoHeaderStruct* g_videoHeader2;
 DATA(0x0069fe28) VideoHeaderStruct* g_videoHeader1;
 DATA(0x0069fe2c) VideoHeaderStruct* g_videoHeader3;
 DATA(0x0069fe54) int g_inVideoNextFrame;            // reentry latch
-DATA(0x0069fe5c) unsigned char g_smackFrameReady;   // SmackDoFrame is allowed
+DATA(0x0069fe5c) bool SmackManager::g_playingSmacker;   // SmackDoFrame is allowed
 
 // Dreamcast proves the first two file/header pairs and their types in
 // DeleteSoundHeaders (dc 0x14acc8). Complete's retail loader at 0x5984a0
@@ -232,7 +236,7 @@ int videoPlay(int id, int x, int y, int w, int h)
             result = !aborted;
         }
         g_smackPaused = 0;
-        g_smackFrameReady = 0;
+        SmackManager::g_playingSmacker = 0;
         return result;
     }
     return BinkManager::playBink(id, x, y, w, h);
@@ -284,7 +288,7 @@ VA(0x00597740, 0x53)  // dc 0x14ac48
 void videoDrawCurrentFrame()
 {
     if (g_smackVideo || g_smackVideo2) {
-        if (!g_smackPaused && g_smackVideo && g_smackFrameReady)
+        if (!g_smackPaused && g_smackVideo && SmackManager::g_playingSmacker)
             _SmackDoFrame(g_smackVideo);
     }
     if (BinkManager::g_playingBink.m_bink || BinkManager::g_playingBink.m_bink2) {
@@ -343,7 +347,7 @@ VA(0x00597930, 0x5A)  // dc 0x14ac58
 bool videoNeedsUpdate()
 {
     if (g_smackVideo || g_smackVideo2)
-        return g_smackDirty && !g_smackPaused;
+        return SmackManager::g_needsUpdate && !g_smackPaused;
     else if (BinkManager::g_playingBink.m_bink || BinkManager::g_playingBink.m_bink2)
         return BinkManager::g_needsUpdate && !BinkManager::g_playingBink.m_paused;
     return 0;
@@ -473,7 +477,7 @@ void videoDrawRects()
         }
     }
     BinkManager::g_needsUpdate = 0;
-    g_smackDirty = 0;
+    SmackManager::g_needsUpdate = 0;
 }
 
 VA(0x00597c70, 0x84)  // dc 0x14ac64
@@ -708,7 +712,7 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
                 g_soundManager->serviceSounds();
                 SetFilePointer(g_videoFile1, g_videoHeader1[i].m_offset, 0,
                     FILE_BEGIN);
-                return _SmackOpen(g_videoFile1,
+                return _SmackOpen(static_cast<const char*>(g_videoFile1),
                     flags | extraFlags | g_smackOpenFromArchive, -1);
             }
         }
@@ -718,7 +722,7 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
         if (_strcmpi(g_videoHeader2[i].m_name, name) == 0) {
             g_soundManager->serviceSounds();
             SetFilePointer(g_videoFile2, g_videoHeader2[i].m_offset, 0, FILE_BEGIN);
-            return _SmackOpen(g_videoFile2,
+            return _SmackOpen(static_cast<const char*>(g_videoFile2),
                 flags | extraFlags | g_smackOpenFromArchive, -1);
         }
     }
@@ -729,7 +733,7 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
                 g_soundManager->serviceSounds();
                 SetFilePointer(g_videoFile3, g_videoHeader3[i].m_offset, 0,
                     FILE_BEGIN);
-                return _SmackOpen(g_videoFile3,
+                return _SmackOpen(static_cast<const char*>(g_videoFile3),
                     flags | extraFlags | g_smackOpenFromArchive, -1);
             }
         }
@@ -741,7 +745,7 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
                 g_soundManager->serviceSounds();
                 SetFilePointer(g_videoFile1, g_videoHeader1[i].m_offset, 0,
                     FILE_BEGIN);
-                return _SmackOpen(g_videoFile1,
+                return _SmackOpen(static_cast<const char*>(g_videoFile1),
                     flags | extraFlags | g_smackOpenFromArchive, -1);
             }
         }
@@ -837,7 +841,7 @@ void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
         return;
     }
 
-    g_smackAutoDraw = autoDraw;
+    SmackManager::g_updateScreen = autoDraw;
     if (w <= 0)
         w = g_smackVideo->m_width;
     if (h <= 0)
@@ -858,21 +862,19 @@ void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
             g_windowManager->m_screenBitmap->getPitch(),
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
-    g_smackFrameReady = 1;
+    SmackManager::g_playingSmacker = 1;
 }
 
-// The three flat Smacker-track wrappers that close out smackmgr.obj.
-// Complete's smack layer is a pair of module globals rather than the
-// Dreamcast's SmackManager object, so these keep the DC compiland's
-// namespace spelling. Retail's own VideoDrawCurrentFrame (0x597740)
-// and VideoClose (0x5975f0) expand the first and third bodies inline,
-// which is what proves the guard order and the store order here.
+// SmackManager is a namespace in DC's raw publics (YA functions, 3 globals).
+// Retail VideoDrawCurrentFrame (0x597740) and VideoClose (0x5975f0)
+// expand the draw/close helpers; those bytes prove their Windows guard
+// and store order. The CE CloseSmacker body itself is only rts/nop.
 namespace SmackManager {
 
 VA(0x00598e80, 0x25)
 void drawSmackerFrame()
 {
-    if (g_smackVideo && g_smackFrameReady && !g_smackPaused)
+    if (g_smackVideo && SmackManager::g_playingSmacker && !g_smackPaused)
         _SmackDoFrame(g_smackVideo);
 }
 
@@ -882,8 +884,8 @@ void nextSmackerFrame()
     Smack* smk = g_smackVideo;
     if (!smk)
         smk = g_smackVideo2;
-    g_smackDirty = smk && g_smackFrameReady && !_SmackWait(smk) && g_smackAdvance;
-    if (!g_smackDirty)
+    SmackManager::g_needsUpdate = smk && SmackManager::g_playingSmacker && !_SmackWait(smk) && g_smackAdvance;
+    if (!SmackManager::g_needsUpdate)
         return;
     if (g_smackPaused)
         return;
@@ -912,15 +914,15 @@ void nextSmackerFrame()
         g_smackVideo2 = 0;
         g_smackVideo = 0;
         g_smackPaused = 0;
-        g_smackFrameReady = 0;
-        g_smackDirty = 0;
+        SmackManager::g_playingSmacker = 0;
+        SmackManager::g_needsUpdate = 0;
         if (g_videoDescriptors[g_smackVideoId].m_fadeOnAbort)
             g_windowManager->fadeScreen(1, 4, 0);
         else
             g_windowManager->updateScreen(0, 0, 0x320, 0x258);
         return;
     }
-    if (g_smackAutoDraw)
+    if (SmackManager::g_updateScreen)
         videoDrawRects();
 }
 
@@ -934,14 +936,14 @@ void closeSmacker()
     g_smackVideo2 = 0;
     g_smackVideo = 0;
     g_smackPaused = 0;
-    g_smackFrameReady = 0;
-    g_smackDirty = 0;
+    SmackManager::g_playingSmacker = 0;
+    SmackManager::g_needsUpdate = 0;
 }
 
 VA(0x005990a0, 0x1C)
 void gotoSmackerFrame(unsigned long frame)
 {
-    if (g_smackVideo && g_smackFrameReady)
+    if (g_smackVideo && SmackManager::g_playingSmacker)
         _SmackGoto(g_smackVideo, frame);
 }
 
