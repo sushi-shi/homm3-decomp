@@ -501,7 +501,7 @@ ai_tactical	?getSpeedValue@type_AI_spellcaster@@IBEJPBVarmy@@JJ@Z	100.0000	100.0
 ai_tactical	?getToughSkinValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38d90	tokens1:2cae5e0b9b39
 ai_tactical	?getTraitorValue@type_AI_spellcaster@@IBEJPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x3a340	tokens1:ab865e3bed59
 ai_tactical	?getWaterProtectionValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39a40	tokens1:200767c55d65
-ai_tactical	?getWeaknessValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	74.5614	74.5614	100.0000	0x38ed0	tokens1:01a0c0b091d2
+ai_tactical	?getWeaknessValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38ed0	tokens1:01f8e6dd10a7
 ai_tactical	?push_back@?$deque@HV?$allocator@H@std@@@std@@QAEXABH@Z	100.0000	100.0000	100.0000	0x3cb20	-
 ai_tactical	?setMeleeEnemies@type_AI_spellcaster@@IAEXXZ	91.3222	91.3222	95.2778	0x3bf20	tokens1:74286da18559
 ai_tactical	?shouldAttackNow@type_AI_spellcaster@@IBEEABVarmy@@@Z	100.0000	100.0000	100.0000	0x36c60	tokens1:4b8d109518c1

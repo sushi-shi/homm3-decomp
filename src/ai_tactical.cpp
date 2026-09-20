@@ -1385,8 +1385,13 @@ long type_AI_spellcaster::getWeaknessValue(const army* enemy, type_enchant_data 
         const army* target = enemy->getAITarget();
         if (target != 0
                 && enemy->getAITargetTime(enemy->getSpeed()) <= 1) {
-            long capped = cppMin(g_spellTraits[SPELL_WEAKNESS].m_masteryBonus[caster.m_mastery],
-                                   enemy->m_monInfo.m_attackSkill);
+            // Complete homes both operands before selecting their address.
+            // That is includes.h's by-value int wrapper around the
+            // reference-returning selector, rather than cppMin directly.
+            long capped = min(
+                static_cast<int>(g_spellTraits[SPELL_WEAKNESS]
+                                     .m_masteryBonus[caster.m_mastery]),
+                static_cast<int>(enemy->m_monInfo.m_attackSkill));
             return getAttackSkillValue(enemy, target, caster.m_duration, capped);
         }
     }
