@@ -3205,7 +3205,7 @@ resourcemanager	?insert@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCac
 resourcemanager	?loadBitmap16@ResourceManager@@YIPAVBitmap16Bit@@PBD@Z	100.0000	100.0000	100.0000	0x15ac40	tokens1:aeb92d8017e9
 resourcemanager	?loadFont@ResourceManager@@YIPAVfont@@PBD@Z	92.5786	92.5786	100.0000	0x15b8d0	tokens1:de7f4b0275da
 resourcemanager	?loadFontData@ResourceManager@@YIPAVfont@@PBDPAVTAbstractFile@@H@Z	93.6692	100.0000	100.0000	0x15b750	tokens1:de5e0f9d0ec1
-resourcemanager	?loadPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	95.6920	95.6920	95.6920	0x15b060	tokens1:60d9463811c1
+resourcemanager	?loadPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	94.8935	94.8935	95.6920	0x15b060	tokens1:7230317a8b8c
 resourcemanager	?loadSample@ResourceManager@@YIPAVsample@@PBD@Z	83.0246	83.0246	100.0000	0x15c3c0	tokens1:8e098461495c
 resourcemanager	?loadSpreadsheet@ResourceManager@@YIPAVTSpreadsheetResource@@PBD@Z	100.0000	100.0000	100.0000	0x15be60	tokens1:234bf03a2921
 resourcemanager	?loadText@ResourceManager@@YIPAVTTextResource@@PBD@Z	100.0000	100.0000	100.0000	0x15bb90	tokens1:50ad00a4ca30

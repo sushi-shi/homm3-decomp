@@ -794,6 +794,16 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
     if (cached)
         return cached;
 
+    // The concatenation is a temporary, destroyed right after fopen: retail's
+    // `lea ecx,[ebp-0x30] / push 1 / call _Tidy` is that teardown one level
+    // deep. Ours expands _Tidy as well and gains the guard branch, which is
+    // the whole remaining residual (29 blocks against retail's 24, 17 branches
+    // against 14) now that the head matches. This line used to carry
+    // `#pragma inline_depth(0)`, which bought 0.80 by suppressing BOTH that
+    // over-inline and the c_str() null fallback retail does inline - the
+    // `mov eax,[eax+4] / cmp eax,<zero> / mov eax,_Nullstr` run before the
+    // push. Removing the pin recovers the fallback exactly and makes the call
+    // multiset agree; the destructor depth is the real boundary left.
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
 
     Bitmap816* result;
@@ -1055,9 +1065,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
 {
     char header[24];
     TRGBA paletteData[256];
-#pragma inline_depth(0)
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
-#pragma inline_depth()
 
     if (file) {
         try {
