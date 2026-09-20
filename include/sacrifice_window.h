@@ -198,7 +198,7 @@ public:
     void offeringClick(long slot, unsigned char rightClick);
 
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
-    virtual int doModal(unsigned char fadeIn);                 // slot 6
+    virtual void doModal(bool fadeIn);                        // slot 6
     virtual int windowHandler(message& msg);                   // slot 9
     virtual int exitDialog(message& msg);                      // slot 14
 

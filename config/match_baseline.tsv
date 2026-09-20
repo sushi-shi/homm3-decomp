@@ -854,7 +854,7 @@ campaignbrief	??0CampaignHeaderStruct@TCampaignBrief@@QAE@PBD@Z	100.0000	100.000
 campaignbrief	??0LossConditionStruct@@QAE@XZ	100.0000	100.0000	100.0000	0x5bac0	tokens1:ddb69485cbe9
 campaignbrief	??0NewSMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0x5a7a0	tokens1:6a1c8c81cc28
 campaignbrief	??0SGameSetupOptions@@QAE@XZ	100.0000	100.0000	100.0000	0x5ac20	tokens1:f89004b5f627
-campaignbrief	??0TCampaignBrief@@QAE@EE@Z	85.2900	85.2900	91.1880	0x590c0	tokens1:9832bb3b7bd3
+campaignbrief	??0TCampaignBrief@@QAE@_N0@Z	85.2900	85.2900	91.1880	0x590c0	tokens1:8e1ea59a70ff
 campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x5da70	-
 campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5a950	tokens1:b272eba2a990
 campaignbrief	??1?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x5b140	-
@@ -2439,7 +2439,7 @@ kb	?memError@@YIXXZ	100.0000	100.0000	100.0000	0xf42c0	tokens1:9958d3815f4d
 kb	?normalDialog@@YIXPBDHHHHHHHHHHH@Z	93.6191	93.6191	93.6191	0xf6570	tokens1:2568459b16d1
 kb	?normalDialogHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf08d0	tokens1:eb4146632ee4
 kb	?normalDialogTimeOut@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6530	tokens1:ae15beacb170
-kb	?oldmain@@YIHXZ	81.0568	81.0568	81.2096	0xee3e0	tokens1:75d498349ba0
+kb	?oldmain@@YIHXZ	81.1882	81.1882	81.2096	0xee3e0	tokens1:e482bfd794eb
 kb	?pickLoadGame@@YIHXZ	100.0000	100.0000	100.0000	0xf0610	tokens1:e6bf0ad066ce
 kb	?playerDead@@YIXH@Z	100.0000	100.0000	100.0000	0xf11a0	tokens1:8abb52c78b4a
 kb	?pollSound@@YIXXZ	100.0000	100.0000	100.0000	0xed490	tokens1:fc6bab1d2d05
@@ -3622,7 +3622,7 @@ sacrifice_window	?createCreatureWidgets@type_sacrifice_window@@AAEXAAJH@Z	100.00
 sacrifice_window	?creatureClick@type_sacrifice_window@@QAEXJEE@Z	100.0000	100.0000	100.0000	0x164fe0	tokens1:34b3af3c3f9b
 sacrifice_window	?creatureClick@type_skeleton_window@@QAEXJJE@Z	100.0000	100.0000	100.0000	0x166490	tokens1:1768db45184a
 sacrifice_window	?creatureSliderChange@type_sacrifice_window@@CIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x165380	tokens1:9f6305ff925a
-sacrifice_window	?doModal@type_sacrifice_window@@UAEHE@Z	100.0000	100.0000	100.0000	0x1653b0	tokens1:8f8070ca7618
+sacrifice_window	?doModal@type_sacrifice_window@@UAEX_N@Z	100.0000	100.0000	100.0000	0x1653b0	tokens1:48b985044a7a
 sacrifice_window	?emptyBackpack@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164060	tokens1:072b46cf16ea
 sacrifice_window	?exitClick@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164a80	tokens1:5649ad642c3f
 sacrifice_window	?exitClick@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x166b30	tokens1:abd6835e0f43
@@ -3871,7 +3871,7 @@ singleselectionwindow	??0NewSMapHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0
 singleselectionwindow	??0SCampaign@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fc10	-
 singleselectionwindow	??0SavedGameHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x193f50	-
 singleselectionwindow	??0SavedGameHeader@@QAE@XZ	67.4607	67.4607	100.0000	0xbc0e0	tokens1:f3843088fab5
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	95.5273	95.5273	95.8142	0x179960	tokens1:b309ba0d3ae9
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	95.5273	95.5273	95.8142	0x179960	tokens1:ef053140fbe4
 singleselectionwindow	??0message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	tokens1:5b9404da14c9
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	tokens1:bb76c3485a66
 singleselectionwindow	??1?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x18ea70	-
@@ -3957,7 +3957,7 @@ singleselectionwindow	?copy_backward@std@@YIPAUGameSelectionHeadersStruct@@PAU2@
 singleselectionwindow	?createFilterWidgets@TSingleSelectionWindow@@QAEXXZ	92.9883	92.9883	100.0000	0x17d170	tokens1:1e63b3899007
 singleselectionwindow	?deletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.0000	100.0000	0x177c90	tokens1:efedee50fc4b
 singleselectionwindow	?displayChat@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18ae80	tokens1:8448feceba18
-singleselectionwindow	?doModal@TSingleSelectionWindow@@UAEHE@Z	100.0000	100.0000	100.0000	0x184bf0	tokens1:592afc58b039
+singleselectionwindow	?doModal@TSingleSelectionWindow@@UAEX_N@Z	100.0000	100.0000	100.0000	0x184bf0	tokens1:71aa190c61db
 singleselectionwindow	?draw@CChatWidget@@UBEXXZ	100.0000	100.0000	100.0000	0x17ca90	tokens1:be7ae9ac5f2a
 singleselectionwindow	?drawBasicMapInfo@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1840f0	tokens1:b885786cc2e6
 singleselectionwindow	?drawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	91.4350	91.4350	91.4350	0x18d510	tokens1:f0c0c119cc1f
@@ -4588,7 +4588,7 @@ university_window	??0type_university_window@@QAE@PAVhero@@PBUtype_university@@E@
 university_window	??_Gtype_university_skill_button@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1ef460	-
 university_window	??_Gtype_university_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f0760	-
 university_window	?cancelClick@type_university_window@@KIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1f0e00	tokens1:e98c32f67ba3
-university_window	?doModal@type_university_window@@UAEHE@Z	100.0000	100.0000	100.0000	0x1f0a20	tokens1:3805f239722d
+university_window	?doModal@type_university_window@@UAEX_N@Z	100.0000	100.0000	100.0000	0x1f0a20	tokens1:4af09bb52a24
 university_window	?exitClick@type_university_window@@KIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1f0ef0	tokens1:87fb36b27da0
 university_window	?exitDialog@type_university_window@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1f1180	tokens1:bd26a54d2100
 university_window	?handleClick@type_university_skill_button@@UAE_N_N0@Z	100.0000	100.0000	100.0000	0x1ef490	tokens1:715aa69ce923
@@ -4707,7 +4707,7 @@ window	?broadcastMessage@heroWindow@@QAEHHHHH@Z	100.0000	100.0000	100.0000	0x1fe
 window	?centerWindow@heroWindow@@QAEXHH@Z	92.8767	92.8767	92.8767	0x1ff240	tokens1:a428000a59b5
 window	?close@heroWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x1fec60	tokens1:75832717ae48
 window	?deleteWidgets@heroWindow@@IAEXXZ	100.0000	100.0000	100.0000	0x1ff510	tokens1:2c1c917dbf23
-window	?doModal@heroWindow@@UAEHE@Z	100.0000	100.0000	100.0000	0x1ff460	tokens1:a039b6b45a96
+window	?doModal@heroWindow@@UAEX_N@Z	100.0000	100.0000	100.0000	0x1ff460	tokens1:503ad19bad9f
 window	?drawWindow@heroWindow@@UAEXEHH@Z	100.0000	100.0000	100.0000	0x1ff020	tokens1:4bf04fcf893d
 window	?findWidget@heroWindow@@QBEHHH@Z	100.0000	100.0000	100.0000	0x1ff3b0	tokens1:c5d3c7a36fa3
 window	?findWidgetPtr@heroWindow@@QBEPAVwidget@@HH@Z	100.0000	100.0000	100.0000	0x1ff3e0	tokens1:ba880ca73435

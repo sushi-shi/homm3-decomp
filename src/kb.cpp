@@ -896,6 +896,7 @@ void showCongrats(int hsType);
 
 static int doNewGame();
 static unsigned char doCampaignWindow();
+static int doCampaignWindow(bool newGame, int campaignSet);
 static int doSinglePlayerWindow();
 static int doMultiPlayerWindow();
 static int doLoadGame();
@@ -932,7 +933,13 @@ void showCredits()
 // maximum player count. Retail +0x679/+0x743 accepts only OK and reads the
 // minimum count, exactly as canonical DoSinglePlayerWindow does.
 // Remaining inline-boundary leads: DoNewGame's multiplayer helper,
-// DoLoadGame's campaign picker, restart progress drawing, CampaignComplete.
+// restart progress drawing and CampaignComplete. The explicit PickLoadGame
+// return guards recover its campaign-arm boundary. Restoring the original
+// parameterized campaign operation at DC1732/1744 raises this body to 81.1882%.
+// A byte-formal trial reaches 83.3705% only with the briefing constructor's
+// obsolete byte signature; restoring its proven bool,bool removes that gain.
+// Retry-loop alternatives do not recover the missing expansions. All three
+// inherited DoLoadGame inline-depth pins are now removable without byte changes.
 // Their expansions still differ from retail; equal aggregate call counts
 // do not establish matching boundaries. The original DC video-mode dialog,
 // 8-bit startup graphics and fixed-array campaign setup are port differences:
@@ -1334,28 +1341,7 @@ int oldmain()
                         g_highScoreManager->viewHiScore();
                     }
                     if (campaign.m_currentCampaign != g_campaignOrdinalLast) {
-                        g_inCampaign = 1;
-                        while (1) {
-                            {
-                                TCampaignWindow campaignWindow(
-                                    0, nextCampaign);
-                                campaignWindow.doModal();
-                            }
-                            videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
-                            videoPause();
-                            if (g_windowManager->m_dialogReturn
-                                == DIALOG_RETURN_CANCEL)
-                                break;
-                            {
-                                TCampaignBrief campaignBriefWindow(0, 0);
-                                campaignBriefWindow.doModal();
-                            }
-                            if (g_windowManager->m_dialogReturn
-                                != DIALOG_RETURN_CANCEL)
-                                break;
-                        }
-                        if (g_windowManager->m_dialogReturn
-                            != DIALOG_RETURN_CANCEL) {
+                        if (doCampaignWindow(false, nextCampaign)) {
                             g_gameOver = 0;
                             g_unnamed699584 = 1;
                             goto runGame;
@@ -1365,26 +1351,7 @@ int oldmain()
                                == g_gameResultCampaignMapScored
                            && campaign.campaignComplete()) {
                     if (campaign.m_currentCampaign != g_campaignOrdinalLast) {
-                        g_inCampaign = 1;
-                        while (1) {
-                            {
-                                TCampaignWindow campaignWindow(
-                                    0, nextCampaign);
-                                campaignWindow.doModal();
-                            }
-                            videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
-                            videoPause();
-                            if (g_windowManager->m_dialogReturn
-                                == DIALOG_RETURN_CANCEL)
-                                break;
-                            {
-                                TCampaignBrief campaignBriefWindow(0, 0);
-                                campaignBriefWindow.doModal();
-                            }
-                            if (g_windowManager->m_dialogReturn
-                                != DIALOG_RETURN_CANCEL)
-                                break;
-                        }
+                        doCampaignWindow(false, nextCampaign);
                     }
                 } else {
                     TCampaignBrief campaignBriefWindow(0, 0);
@@ -1546,12 +1513,40 @@ static int doNewGame()
     return g_windowManager->m_dialogReturn != TGameTypeWindow::QUIT_ID;
 }
 
-// E:\gamedcs\kb.cpp:1962. Dreamcast proves the helper boundary and nested
-// TCampaignWindow/TCampaignBrief lifetimes. Complete adds the campaign-set
-// and custom-campaign chooser branches; retail oldmain+0x91c performs a bare
-// call and 0x4f00a0 materializes newGame=1 internally, proving that Complete
-// removed Dreamcast's unsigned-char parameter. The helper remains
-// source-static and out of line in Complete.
+// Original DoCampaignWindow, DC kb.cpp:1962, dc 0xe15b0. DC proves the int
+// return and records a lowered byte newGame; semantic bool here is inferred.
+// Oldmain1732/1744 call this operation: the first tests its int result,
+// the second discards it. Complete expands both calls and adds a campaign
+// set to the window constructor; the overload's second parameter is inferred
+// from those retail arguments. Keep the two modal-object lifetimes here.
+static int doCampaignWindow(bool newGame, int campaignSet)
+{
+    g_inCampaign = 1;
+    while (1) {
+        {
+            TCampaignWindow campaignWindow(newGame, campaignSet);
+            campaignWindow.doModal();
+        }
+        videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+        videoPause();
+        if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
+            break;
+        {
+            TCampaignBrief campaignBrief(newGame, false);
+            campaignBrief.doModal();
+        }
+        if (g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL)
+            break;
+    }
+    return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL;
+}
+
+// Complete's separate campaign-set/custom-campaign front end. Retail
+// oldmain+0x91c proves this zero-argument entry, not removal of the older
+// parameterized operation above. Its three new-game retry loops include an
+// additional cancel reopen. Sharing the older operation at these inferred
+// sites changes the retained call/expansion pattern; their ownership remains
+// unresolved, unlike oldmain's two positively identified calls.
 // Residual (99.8872%): all 30 blocks, 15 branches, 44 calls and opcodes are
 // exact. Retail leaves one four-byte allocator hole between exitCampaigns
 // (the exact byte at [ebp-0xd]) and the first 0x4c-byte TCampaignSetWindow,
@@ -1771,22 +1766,14 @@ static int doLoadGame()
 
         switch (static_cast<short>(g_windowManager->m_dialogReturn)) {
         case TGameTypeWindow::SINGLE_ID:
-            // INLINE BOUNDARY: DoLoadGame -> PickLoadGame. Dreamcast
-            // kb.cpp:2096 and retail oldmain+0xc68 retain the call;
-            // ordinary depth expands the modal object into oldmain.
-#pragma inline_depth(0)
+            // DC2096 and retail oldmain+0xc68 retain PickLoadGame.
+            // The recovered helper/control flow needs no compiler pin.
             if (pickLoadGame())
                 exitLoadGame = 1;
-#pragma inline_depth()
             break;
 
         case TGameTypeWindow::CAMPAIGN_ID:
             // Same proven PickLoadGame boundary, retail oldmain+0xc54.
-            // Unpinned: removing this one alone is oldmain 77.56300 ->
-            // 77.93137 and it combines with DoNewGame's for 78.01930. The
-            // SINGLE_ID, MULTIPLAYER_ID and TUTORIAL_ID siblings below stay
-            // pinned - every subset that also drops one of those is worse
-            // (2026-09-06, polish lane 50).
             if (pickLoadGame()) {
                 g_inCampaign = 1;
                 exitLoadGame = 1;
@@ -1794,26 +1781,16 @@ static int doLoadGame()
             break;
 
         case TGameTypeWindow::MULTIPLAYER_ID:
-            // INLINE BOUNDARY: DoLoadGame -> DoMultiPlayerWindow and
-            // PickLoadGame. Dreamcast kb.cpp:2110/2112 and retail
-            // oldmain+0xc5f/+0xc68 retain both calls. Ordinary depth expands
-            // both modal objects and destroys the retail call sequence.
-#pragma inline_depth(0)
+            // DC2110/2112 and retail oldmain+0xc5f/+0xc68 retain both calls.
             if (doMultiPlayerWindow() && pickLoadGame())
                 exitLoadGame = 1;
-#pragma inline_depth()
             break;
 
         case TGameTypeWindow::TUTORIAL_ID:
             g_game->m_isTutorial = 1;
-            // INLINE BOUNDARY: DoLoadGame -> PickLoadGame. Dreamcast
-            // kb.cpp:2122 names the call and retail oldmain's tutorial-load
-            // arm retains it. Negative control: ordinary depth expands the
-            // selection-window ctor/modal/dtor into oldmain.
-#pragma inline_depth(0)
+            // DC2122 and retail's tutorial-load arm retain PickLoadGame.
             if (pickLoadGame())
                 exitLoadGame = 1;
-#pragma inline_depth()
             break;
 
         case TGameTypeWindow::QUIT_ID:

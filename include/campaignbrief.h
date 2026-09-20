@@ -365,7 +365,7 @@ public:
     type_func_button* m_difficultyIncrButton;
     type_text_scroller* m_scroller;
 
-    TCampaignBrief(unsigned char newCampaign, unsigned char viewFromGame);
+    TCampaignBrief(bool newCampaign, bool viewFromGame);
     virtual ~TCampaignBrief();
     void addBonusIcons();
     void updateBonusIcons();

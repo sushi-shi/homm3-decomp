@@ -664,7 +664,7 @@ public:
 
     TSingleSelectionWindow(int gameMode);
     virtual ~TSingleSelectionWindow();
-    virtual int doModal(unsigned char fadeIn);
+    virtual void doModal(bool fadeIn);
     void updatePlayerPositions(unsigned char updateCurPlayer);
     virtual int windowHandler(message& msg);  // slot 9
     void onNameSlider(int newIndex);
@@ -800,7 +800,7 @@ public:
     unsigned char sendSetupInfo(unsigned long dpid);
     bool isHost();
     void sendPlayerFaces();
-    unsigned char isMultiPlayer();
+    bool isMultiPlayer();
     void showWidget(int id);
     void turnOffFilterOptions();
     int calcPosition(int playerPos);

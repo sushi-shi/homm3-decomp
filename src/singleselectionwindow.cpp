@@ -1881,6 +1881,9 @@ CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
 // seat-array stores, those source facts recover 95.5273%. A 48-state family
 // reproduces these bindings and shows the thread helper's early-return forms
 // are byte-flat. The later four ownership models do not improve this body.
+// Restoring DC's headerFont local is byte-flat, including the combined widget
+// ownership models. In-class/out-of-class sound-service definitions likewise
+// retain this boundary across all 51 consumers; no declaration move is kept.
 // Remaining: StartMouseThread expands ServiceSounds where retail calls it
 // (verified C2 cost 90 / nested budget 128), plus stack/register allocation.
 VA(0x00579960, 0x2d63)  // anchor-callee CAdvPopup base ctor + embedded header/player/net-handler construction; tail proven by the retail preload/setup call run at +0x2a56..+0x2d45; dc 0x1309f0
@@ -1941,6 +1944,8 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     m_durationIndex = g_game->m_setup.m_turnDuration;
 
     m_flagBack = new CSaveScreen(310, 25);
+    // DC2033: the named heading color precedes GetGameVersion.
+    font::TColor headerFont = font::PRIMARY_HIGHLIGHT;
     getGameVersion(m_gameVersion);
 
     m_inAdvancedOptions = 0;
@@ -1996,22 +2001,22 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     sprintf(g_text, "%s:", g_generalText->getText(493));
     m_widgets.push_back(new textWidget(
-        414, 435, 334, 19, g_text, "smalfont.fnt", font::PRIMARY_HIGHLIGHT,
+        414, 435, 334, 19, g_text, "smalfont.fnt", headerFont,
         132, font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     sprintf(g_text, "%s:", g_generalText->getText(219));
     m_widgets.push_back(new textWidget(
-        665, 435, 84, 19, g_text, "smalfont.fnt", font::PRIMARY_HIGHLIGHT,
+        665, 435, 84, 19, g_text, "smalfont.fnt", headerFont,
         133, font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
         414, 435, 90, 19, g_generalText->getText(495), "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 134,
+        headerFont, 134,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
         422, 27, 278, 18, g_generalText->getText(496), "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
+        headerFont, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
         422, 137, 278, 18, g_generalText->getText(497), "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 105, font::VERT_CENTER_JUSTIFIED, 0, 8));
+        headerFont, 105, font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     m_descriptionWidget = new CScrollTextWidget(
         g_emptyRolloverText, 422, 155, 319, 115, "smalfont.fnt",
@@ -2020,10 +2025,10 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     m_widgets.push_back(new textWidget(
         422, 288, 278, 18, g_generalText->getText(498), "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
+        headerFont, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
         422, 344, 278, 18, g_generalText->getText(499), "smalfont.fnt",
-        font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
+        headerFont, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     if (g_videoPaused && !m_flag65) {
         m_chatToggle = new textButton(
@@ -2210,23 +2215,23 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
         m_widgets.push_back(new textWidget(
             58, 90, 104, 36, g_generalText->getText(518),
-            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 339,
+            "smalfont.fnt", headerFont, 339,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
         m_widgets.push_back(new textWidget(
             163, 90, 75, 36, g_generalText->getText(519),
-            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, m_townHeadingId,
+            "smalfont.fnt", headerFont, m_townHeadingId,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
         m_widgets.push_back(new textWidget(
             239, 90, 75, 36, g_generalText->getText(520),
-            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 343,
+            "smalfont.fnt", headerFont, 343,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
         m_widgets.push_back(new textWidget(
             315, 90, 75, 36, g_generalText->getText(521),
-            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 344,
+            "smalfont.fnt", headerFont, 344,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
         m_widgets.push_back(new textWidget(
             58, 534, 334, 20, g_generalText->getText(522),
-            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 340,
+            "smalfont.fnt", headerFont, 340,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
         if (g_videoPaused && !m_flag65) {
@@ -4533,14 +4538,14 @@ int TSingleSelectionWindow::update()
 }
 
 VA(0x00584bf0, 0x50)  // dc 0x13b104
-int TSingleSelectionWindow::doModal(unsigned char fade)
+void TSingleSelectionWindow::doModal(bool fade)
 {
+    // DC4425 calls the ordinary IsMultiPlayer helper; its retail expansion
+    // is the two-global test, not a separate caller-owned predicate.
     if ((m_flag64 == 0 && m_flag65 == 0)
-            || (m_flag64 != 0
-                && (g_videoPaused != 0
-                    || g_unnamed6989f0 == WINDOW_MODE_6989F0_3)))
+            || (m_flag64 != 0 && isMultiPlayer()))
         m_durationSlider->setState(11);
-    return g_windowManager->doDialogDraw(this,
+    g_windowManager->doDialogDraw(this,
         heroWindow::heroWindowHandler, ::update, 0);
 }
 
@@ -7908,7 +7913,8 @@ bool TSingleSelectionWindow::beginNewGame()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7889
-unsigned char TSingleSelectionWindow::isMultiPlayer()
+// Original public ?IsMultiPlayer@TSingleSelectionWindow@@QAA_NXZ.
+bool TSingleSelectionWindow::isMultiPlayer()
 {
     if (g_videoPaused)
         return 1;

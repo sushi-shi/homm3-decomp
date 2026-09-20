@@ -82,7 +82,7 @@ public:
     // gates one extra 0x48-byte widget on it.
     type_university_window(hero* newHero, const type_university* university,
                            unsigned char townUniversity);
-    virtual int doModal(unsigned char fade);  // slot 6
+    virtual void doModal(bool fade);  // slot 6
 
     // DC message-reference override; retail slot 9 folds at 0x5666f0.
     virtual int windowHandler(message& msg);
