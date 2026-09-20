@@ -3583,9 +3583,9 @@ rmg_terrain	?hasEntries@TRmgTableTerrainRule@@UAEEXZ	100.0000	100.0000	100.0000	
 rmg_terrain	?hasSeparatedNeighbours@rmgTerrainPainter@@QAEEABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x1b6810	tokens1:0e2bb14837f7
 rmg_terrain	?initializePackedCell@rmgTerrainPainter@@QAEXABU?$TRmgCoordinatePoint@I@@I@Z	100.0000	100.0000	100.0000	0x1b3dd0	tokens1:fec7ebacb513
 rmg_terrain	?insert@?$_Tree@U?$TRmgCoordinatePoint@I@@U1@U_Kfn@?$set@U?$TRmgCoordinatePoint@I@@U?$less@U?$TRmgCoordinatePoint@I@@@std@@V?$allocator@U?$TRmgCoordinatePoint@I@@@3@@std@@U?$less@U?$TRmgCoordinatePoint@I@@@4@V?$allocator@U?$TRmgCoordinatePoint@I@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@U?$TRmgCoordinatePoint@I@@U1@U_Kfn@?$set@U?$TRmgCoordinatePoint@I@@U?$less@U?$TRmgCoordinatePoint@I@@@std@@V?$allocator@U?$TRmgCoordinatePoint@I@@@3@@std@@U?$less@U?$TRmgCoordinatePoint@I@@@4@V?$allocator@U?$TRmgCoordinatePoint@I@@@4@@std@@_N@2@ABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x1b7cd0	-
-rmg_terrain	?isHorizontalGap@rmgTerrainPainter@@QAEEABU?$TRmgCoordinatePoint@I@@H@Z	100.0000	100.0000	100.0000	0x1b6320	tokens1:7e4c45ab27d1
+rmg_terrain	?isHorizontalGap@rmgTerrainPainter@@QAEEABU?$TRmgCoordinatePoint@I@@H@Z	100.0000	100.0000	100.0000	0x1b6320	tokens1:e4ca25f3e438
 rmg_terrain	?isSpecialFrame@TRmgPatternTerrainRule@@UAEEH@Z	100.0000	100.0000	100.0000	0x1b3860	tokens1:d5d234e62263
-rmg_terrain	?isVerticalGap@rmgTerrainPainter@@QAEEABU?$TRmgCoordinatePoint@I@@H@Z	100.0000	100.0000	100.0000	0x1b6430	tokens1:8e109c55af62
+rmg_terrain	?isVerticalGap@rmgTerrainPainter@@QAEEABU?$TRmgCoordinatePoint@I@@H@Z	100.0000	100.0000	100.0000	0x1b6430	tokens1:ca493b8a1659
 rmg_terrain	?lower_bound@?$_Tree@U?$TRmgCoordinatePoint@I@@U1@U_Kfn@?$set@U?$TRmgCoordinatePoint@I@@U?$less@U?$TRmgCoordinatePoint@I@@@std@@V?$allocator@U?$TRmgCoordinatePoint@I@@@3@@std@@U?$less@U?$TRmgCoordinatePoint@I@@@4@V?$allocator@U?$TRmgCoordinatePoint@I@@@4@@std@@QAE?AViterator@12@ABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x1b85a0	-
 rmg_terrain	?paintPoint@TRmgLineWalker@@QAEXABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0xfa3c0	tokens1:23b5cd403026
 rmg_terrain	?paintPoint@rmgTerrainPainter@@QAEXABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x1b4b20	tokens1:d4b61205f922
@@ -3593,8 +3593,8 @@ rmg_terrain	?paintRectangle@TRmgTerrainBrush@@QAEXIIII@Z	100.0000	100.0000	100.0
 rmg_terrain	?paintRectangle@rmgTerrainPainter@@QAEXIIII@Z	100.0000	100.0000	100.0000	0x1b4960	tokens1:fbc25b5bd6ca
 rmg_terrain	?paintTransitions@rmgTerrainPainter@@QAEXXZ	100.0000	100.0000	100.0000	0x1b5a70	tokens1:66c8de95935c
 rmg_terrain	?queueOtherTerrainNeighbours@rmgTerrainPainter@@QAEXABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x1b50f0	tokens1:406dbfe25530
-rmg_terrain	?refreshRmgLinePoint@@YIXPAVTRmgLinePainterInterface@@ABU?$TRmgCoordinatePoint@I@@@Z	97.3461	97.3461	97.3461	0xf9f00	tokens1:4485366c1d6e
-rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABU?$TRmgCoordinatePoint@I@@@Z	93.6307	93.6307	93.6307	0x1b5440	tokens1:48280769fd50
+rmg_terrain	?refreshRmgLinePoint@@YIXPAVTRmgLinePainterInterface@@ABU?$TRmgCoordinatePoint@I@@@Z	99.7462	99.7462	99.7462	0xf9f00	tokens1:ef09f83e1f9d
+rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABU?$TRmgCoordinatePoint@I@@@Z	99.1821	99.1821	99.1821	0x1b5440	tokens1:48280769fd50
 rmg_terrain	?selectBaseFrame@TRmgPatternTerrainRule@@UAEHHH@Z	100.0000	100.0000	100.0000	0x1b3890	tokens1:d22017d7d9a8
 rmg_terrain	?selectBaseFrame@TRmgTableTerrainRule@@UAEHHH@Z	100.0000	100.0000	100.0000	0x1b3aa0	tokens1:475480198a2e
 rmg_terrain	?selectTerrainTransition@@YIHPBHPAUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b3e80	tokens1:8d953e70e6b9

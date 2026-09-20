@@ -12,7 +12,7 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable MAX: 96.51%** — MAX-weighted bytes over all 1,998,996 unfiltered bytes.
+**Executable MAX: 96.52%** — MAX-weighted bytes over all 1,998,996 unfiltered bytes.
 
 **Function exact MAX** — 4,192 / 4,766 current implementations (88.0%) have reached 100%.
 
@@ -20,7 +20,7 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 | Module       | Units |  Function exact MAX | Functions exact CUR | Fuzzy MAX | Fuzzy CUR |
 | :----------- | ----: | ------------------: | ------------------: | --------: | --------: |
-| `game`       |   138 | 4123 / 4697 (87.8%) | 4052 / 4697 (86.3%) |    96.47% |    95.94% |
+| `game`       |   138 | 4123 / 4697 (87.8%) | 4052 / 4697 (86.3%) |    96.48% |    95.94% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
