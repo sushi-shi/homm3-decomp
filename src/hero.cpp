@@ -744,6 +744,47 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     return 0;
 }
 
+// The record serialiser's field writers. Each takes its value BY VALUE, so
+// the parameter itself is the stack temp whose address Write() receives, and
+// the PARAMETER's type - not the member's - fixes the width, which is what
+// makes the write widths independent of the member widths. Inlined at every
+// call, they coalesce into retail's 0x8 frame; six hand-written function-scope
+// buffers cannot coalesce and cost 0x1c with seven slots (99.2181).
+// Dreamcast records exactly one local per width in hero::save - char, uchar,
+// short, ushort, int and uint buffers - and 57 nested lexical-scope pairs, one
+// per write site. That is the residue of these bodies inlined at every call,
+// which is also why no standalone procedure for them survives in the DC
+// roster: a helper inlined everywhere emits none.
+inline void writeField(TAbstractFile* outfile, char value)
+{
+    outfile->write(&value, sizeof(value));
+}
+
+inline void writeField(TAbstractFile* outfile, unsigned char value)
+{
+    outfile->write(&value, sizeof(value));
+}
+
+inline void writeField(TAbstractFile* outfile, short value)
+{
+    outfile->write(&value, sizeof(value));
+}
+
+inline void writeField(TAbstractFile* outfile, unsigned short value)
+{
+    outfile->write(&value, sizeof(value));
+}
+
+inline void writeField(TAbstractFile* outfile, int value)
+{
+    outfile->write(&value, sizeof(value));
+}
+
+inline void writeField(TAbstractFile* outfile, unsigned int value)
+{
+    outfile->write(&value, sizeof(value));
+}
+
 // E:\gamedcs\hero.cpp:914
 // The record serialiser. Typed scratch locals carry every scalar into
 // the stream - retail copies each field into a stack temp and hands
@@ -763,117 +804,62 @@ int hero::load(TAbstractFile* infile, int saveVersion)
 VA(0x004d80c0, 0x526)  // dc 0xcb698
 int hero::save(TAbstractFile* outfile)
 {
-    unsigned int uintBuffer;
-    unsigned short ushortBuffer;
-    int intBuffer;
-    short shortBuffer;
-    unsigned char ucharBuffer;
-    char charBuffer;
-
     if (!type_obscuring_object::save(outfile))
         return -1;
 
-    charBuffer = static_cast<char>(m_sex);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_hasCustomName);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    writeField(outfile, static_cast<char>(m_sex));
+    writeField(outfile, static_cast<unsigned char>(m_hasCustomName));
 
-    uintBuffer = static_cast<unsigned int>(m_customName.length());
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    writeField(outfile, static_cast<unsigned int>(m_customName.length()));
     outfile->write(m_customName.c_str(), m_customName.length());
 
-    charBuffer = static_cast<char>(m_owner);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_patrolRadius);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_moraleBonus);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_luckBonus);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_backpackCount);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_disguiseLevel);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_flightLevel);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_waterWalkLevel);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_dWalkSpellsCast);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_visionsPower);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_id);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_heroClass);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_portrait);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_patrolX);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_patrolY);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_facing);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_formation);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_levelSeed);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_lastWisdom);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    writeField(outfile, static_cast<char>(m_owner));
+    writeField(outfile, static_cast<char>(m_patrolRadius));
+    writeField(outfile, static_cast<char>(m_moraleBonus));
+    writeField(outfile, static_cast<char>(m_luckBonus));
+    writeField(outfile, static_cast<char>(m_backpackCount));
+    writeField(outfile, static_cast<char>(m_disguiseLevel));
+    writeField(outfile, static_cast<char>(m_flightLevel));
+    writeField(outfile, static_cast<char>(m_waterWalkLevel));
+    writeField(outfile, static_cast<char>(m_dWalkSpellsCast));
+    writeField(outfile, static_cast<char>(m_visionsPower));
+    writeField(outfile, static_cast<char>(m_id));
+    writeField(outfile, static_cast<char>(m_heroClass));
+    writeField(outfile, static_cast<unsigned char>(m_portrait));
+    writeField(outfile, static_cast<unsigned char>(m_patrolX));
+    writeField(outfile, static_cast<unsigned char>(m_patrolY));
+    writeField(outfile, static_cast<unsigned char>(m_facing));
+    writeField(outfile, static_cast<unsigned char>(m_formation));
+    writeField(outfile, static_cast<unsigned char>(m_levelSeed));
+    writeField(outfile, static_cast<unsigned char>(m_lastWisdom));
 
-    intBuffer = static_cast<int>(m_pathTargetX);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    intBuffer = static_cast<int>(m_pathTargetY);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    shortBuffer = static_cast<short>(m_pathTargetZ);
-    outfile->write(&shortBuffer, sizeof(shortBuffer));
-    shortBuffer = static_cast<short>(m_lastMagicSchoolLevel);
-    outfile->write(&shortBuffer, sizeof(shortBuffer));
-    intBuffer = static_cast<int>(m_maxMovePoints);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    intBuffer = static_cast<int>(m_movePoints);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    intBuffer = static_cast<int>(m_experience);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    intBuffer = static_cast<int>(m_skillCount);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    shortBuffer = static_cast<short>(m_mana);
-    outfile->write(&shortBuffer, sizeof(shortBuffer));
-    shortBuffer = static_cast<short>(m_level);
-    outfile->write(&shortBuffer, sizeof(shortBuffer));
-    ushortBuffer = static_cast<unsigned short>(m_targetDistance);
-    outfile->write(&ushortBuffer, sizeof(ushortBuffer));
+    writeField(outfile, static_cast<int>(m_pathTargetX));
+    writeField(outfile, static_cast<int>(m_pathTargetY));
+    writeField(outfile, static_cast<short>(m_pathTargetZ));
+    writeField(outfile, static_cast<short>(m_lastMagicSchoolLevel));
+    writeField(outfile, static_cast<int>(m_maxMovePoints));
+    writeField(outfile, static_cast<int>(m_movePoints));
+    writeField(outfile, static_cast<int>(m_experience));
+    writeField(outfile, static_cast<int>(m_skillCount));
+    writeField(outfile, static_cast<short>(m_mana));
+    writeField(outfile, static_cast<short>(m_level));
+    writeField(outfile, static_cast<unsigned short>(m_targetDistance));
 
-    uintBuffer = static_cast<unsigned int>(m_trainingGroundsFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_defenseTowerFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_gardenOfRevelationFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_mercCampFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_powerSchoolFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_treeOfKnowledgeFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_libraryFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_arenaFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_magicSchoolFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_warSchoolFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_universityFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_shrine1Flags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_shrine2Flags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_shrine3Flags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_flags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    writeField(outfile, static_cast<unsigned int>(m_trainingGroundsFlags));
+    writeField(outfile, static_cast<unsigned int>(m_defenseTowerFlags));
+    writeField(outfile, static_cast<unsigned int>(m_gardenOfRevelationFlags));
+    writeField(outfile, static_cast<unsigned int>(m_mercCampFlags));
+    writeField(outfile, static_cast<unsigned int>(m_powerSchoolFlags));
+    writeField(outfile, static_cast<unsigned int>(m_treeOfKnowledgeFlags));
+    writeField(outfile, static_cast<unsigned int>(m_libraryFlags));
+    writeField(outfile, static_cast<unsigned int>(m_arenaFlags));
+    writeField(outfile, static_cast<unsigned int>(m_magicSchoolFlags));
+    writeField(outfile, static_cast<unsigned int>(m_warSchoolFlags));
+    writeField(outfile, static_cast<unsigned int>(m_universityFlags));
+    writeField(outfile, static_cast<unsigned int>(m_shrine1Flags));
+    writeField(outfile, static_cast<unsigned int>(m_shrine2Flags));
+    writeField(outfile, static_cast<unsigned int>(m_shrine3Flags));
+    writeField(outfile, static_cast<unsigned int>(m_flags));
 
     m_army.save(outfile);
 
@@ -887,8 +873,7 @@ int hero::save(TAbstractFile* outfile)
     outfile->write(m_backpack, sizeof(m_backpack));
     outfile->write(m_artifactSlotCounts, sizeof(m_artifactSlotCounts));
 
-    ucharBuffer = static_cast<unsigned char>(m_isSleeping);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    writeField(outfile, static_cast<unsigned char>(m_isSleeping));
 
     const std::bitset<48>& granted = m_townSpecialGrantedMask;
     unsigned char outBuf[6];
@@ -1433,6 +1418,23 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
 }
 
 // E:\gamedcs\hero.cpp:1466
+// Residual (96.5278%): 11 of 11 blocks, both branch targets, the jump table's
+// four arms in source order and the equipped-slot walk are exact. Eight bytes
+// differ, all one decision: retail loads the parameter into EAX, consumes it in
+// place (`add eax,-0x91`) for the switch index, and RELOADS `[ebp+8]` in the
+// not-matched arm; ours keeps the load in EDX (`lea eax,[edx-0x91]`) and reuses
+// it (`mov esi,edx`), i.e. VC6 CSEs the two parameter reads for us and did not
+// for retail. Measured byte-flat: default arm first/last, dropping its `break`,
+// moving the CATAPULT arm last, `long`/`TArtifact` artifact, switching on a copy
+// of the parameter, declaring `slot` outside the loop, `long slot`, and the
+// while form - and EXHAUSTIVELY so: a 64-member source family over the switch
+// head, the default arm and the loop form produced ONE object for all 64
+// combinations, so nothing in this body reaches the residual. Measured WORSE:
+// reassigning the parameter in the arms and dropping
+// the default (89.86 - VC6 then enregisters the parameter at entry and the
+// not-matched block disappears entirely), initialising `artifact` from the
+// parameter before the switch (89.86, same cause), and reversing the equipped
+// compare (96.25). DC records no locals for this body.
 VA(0x004d9260, 0x68)  // dc-bracket forced, dc 0xcc2a8
 void hero::destroySiegeWeaponArtifact(int creatureType)
 {

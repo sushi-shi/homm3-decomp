@@ -1,0 +1,19 @@
+# MANUALLY MANAGED - reviewed helpers the DREAMCAST build inlined at every call.
+#
+# A helper inlined at all of its call sites emits no procedure of its own, so
+# it never reaches the CodeView roster. Its absence there is therefore the
+# EXPECTED shape, not a missing counterpart, and win_only.tsv is the wrong
+# list: these are not Complete-only definitions. Each row must cite the
+# caller-side residue that witnesses the inlining - an inlined body leaves
+# lexical scopes and its by-value parameters behind in the caller, which is
+# what `homm3 dreamcast show <caller>` reports as "Lexical scopes" and
+# "Locals". A row with no such witness does not belong here.
+#
+# Stale rows fail the build, same as win_only.tsv.
+file	function	signature	reason
+src/hero.cpp	writeField	void (TAbstractFile *, char) __attribute__((fastcall))	hero::save dc 0xcb698 records 57 nested depth-0/depth-1 lexical-scope pairs, one per write site, and exactly one local per width (char/uchar/short/ushort/int/uint buffers) - the by-value parameters of these six overloads, left behind by inlining. Retail's 0x8 frame needs that coalescing; six function-scope buffers cost 0x1c and 99.2181.
+src/hero.cpp	writeField	void (TAbstractFile *, unsigned char) __attribute__((fastcall))	As above; the uchar_buffer local at dc 0xcb698 is this overload's parameter.
+src/hero.cpp	writeField	void (TAbstractFile *, short) __attribute__((fastcall))	As above; the short_buffer local at dc 0xcb698 is this overload's parameter.
+src/hero.cpp	writeField	void (TAbstractFile *, unsigned short) __attribute__((fastcall))	As above; the ushort_buffer local at dc 0xcb698 is this overload's parameter.
+src/hero.cpp	writeField	void (TAbstractFile *, int) __attribute__((fastcall))	As above; the int_buffer local at dc 0xcb698 is this overload's parameter.
+src/hero.cpp	writeField	void (TAbstractFile *, unsigned int) __attribute__((fastcall))	As above; the uint_buffer local at dc 0xcb698 is this overload's parameter.
