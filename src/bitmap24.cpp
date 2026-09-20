@@ -353,10 +353,7 @@ void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
         std::numeric_limits<int>::max() / 255;
 
     unsigned char* src = m_data + y * getPitch() + x * 3;
-    unsigned char* srcRowBase = src;
-    int srcRowOffset = 0;
     for (int row = 0; row < h; ++row) {
-        src = srcRowBase + srcRowOffset;
         unsigned char* pixel = src;
         for (int column = 0; column < w; ++column) {
             unsigned int r = pixel[2] * redNorm;
@@ -408,7 +405,7 @@ void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
             pixel += 3;
         }
 
-        srcRowOffset += getPitch();
+        src += getPitch();
     }
 }
 
