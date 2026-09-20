@@ -392,7 +392,7 @@ ai_player	?getValue@type_tome_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.
 ai_player	?getValue@type_undead_king_cloak_artifact@@UBEJPBVhero@@EE@Z	93.5778	93.5778	96.7778	0x333a0	tokens1:f4ba6f31f2b9
 ai_player	?hasBuilding@town@@QBE_NH_N@Z	100.0000	100.0000	100.0000	0x305a0	tokens1:37a298d450ce
 ai_player	?hireHeroes@type_AI_player@@QAE_NXZ	100.0000	100.0000	100.0000	0x31360	tokens1:affdde797775
-ai_player	?initializeArtifactEffects@@YIXXZ	95.1622	95.1622	95.1622	0x34100	tokens1:7a8c9bae5473
+ai_player	?initializeArtifactEffects@@YIXXZ	97.4454	97.4454	97.4454	0x34100	tokens1:7a8c9bae5473
 ai_player	?makeGift@type_AI_player@@IAEXJ@Z	86.5174	86.5174	86.5174	0x29110	tokens1:6176af6c01dc
 ai_player	?markDestinations@@YIJPAVhero@@JPAVsearchArray@@PAGW4type_search_type@@@Z	91.1693	91.1693	91.6997	0x2f570	tokens1:1bbc0e48b791
 ai_player	?markTown@type_garrison_purchaser@@UBEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28580	tokens1:46e13fe43707
