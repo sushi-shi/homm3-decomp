@@ -32,6 +32,15 @@
 #include "textresource.h"
 #include "town.h"
 
+// Complete-only shared land predicate; original name is unknown. Nine
+// placement/decoration sites use this same road-passable, non-rock test.
+// Keeping its ordinary helper boundary restores decorateMap's retail branch
+// layout (409 bytes exact); spelling the two field tests in the caller does not.
+unsigned char TRmgMapItem::isPassableLand() const
+{
+    return m_tileData.m_roadPassable && m_tile.m_landType != eTerrainRock;
+}
+
 typedef std::set<TPoint> TRmgPointSet;
 
 // Retail constructor defaults and overrides; 0x546257 compares map counts,
@@ -636,14 +645,14 @@ unsigned char type_random_map::isPlacementBlocked(
             TRmgGridPoint maskPoint(x, y);
             TRmgMapItem* item = getMapItem(nearby);
             if (prototype.m_triggerMask.test(CObjectType::getBitPos(maskPoint.m_x, maskPoint.m_y))) {
-                if (!item->m_tileData.m_roadPassable || item->m_tile.m_landType == eTerrainRock
+                if (!item->isPassableLand()
                     || item->isRoadEntrance() || item->m_zoneState.m_zone != zoneIndex)
                     return 1;
                 if (rejectBorder && item->hasBorderObject())
                     return 1;
             }
             if (!prototype.m_passableMask.test(CObjectType::getBitPos(maskPoint.m_x, maskPoint.m_y))) {
-                if (!item->m_tileData.m_roadPassable || item->m_tile.m_landType == eTerrainRock
+                if (!item->isPassableLand()
                     || item->isRoadEntrance() || item->m_zoneState.m_zone != zoneIndex)
                     return 1;
                 if (item->m_tile.m_landType == eTerrainWater) {
@@ -712,14 +721,14 @@ void type_random_map::markBorderPatch(TRmgMapPosition position)
 // The footprint/outline helper calls are retained, followed by an expanded
 // entrance lookup one row below the trigger. Retail checks a negative zone
 // separately from a different zone, then compares water membership as ints.
-// Scalar trigger coordinates and a named byte result reach 61.5761%; a
-// prototype reference and separate passability/rock guards reach 86.6848%.
-// Moving coordinate snapshots to function entry does not recover retail's
-// EDI/EBX homes across the helper calls; terrain snapshots also remain lower.
-// Translating a copied entrance with the existing position operator-= and
-// a canonical TPoint preserves all three retained calls, but enlarges the
-// frame from 0xc to 0x14 and scores 79.2065%. The distinct prototype point
-// was explicitly converted; no new helper or interface was inferred.
+// Residual 98.8207%: the ordinary land predicate removes a duplicated
+// failure epilogue (91.1848 -> 95.3152%). Assigned entrance coordinates,
+// Y before X, recover retail's EDI/EBX homes across all three helper calls;
+// comparing the cell's water membership first restores the final compare.
+// Only the trigger-coordinate load/subtract schedule remains. Value/reference
+// trigger snapshots, named scalars, and two-coordinate point/array models
+// reproduce this peak but do not close it. Parameter mutation or a whole
+// position copy changes the frame/register homes and loses the retail shape.
 VA(0x00531CF0, 0x1A5) // anchor-callee 0x541c73; thiscall, ret 0x14; retail-only
 unsigned char type_random_map::canPlaceObject(
     TRmgObjectPropertiesRef* properties, TRmgMapPosition position, TRmgZone* zone)
@@ -736,16 +745,15 @@ unsigned char type_random_map::canPlaceObject(
         return 0;
     if (!prototype.m_hasTrigger)
         return 1;
-    int x = position.m_x - prototype.m_triggerCell.m_x;
-    int y = position.m_y - prototype.m_triggerCell.m_y;
-    ++y;
-    TRmgMapPosition entrance(x, y, position.m_z);
-    if (y >= m_mapHeight)
+    TRmgMapPosition entrance;
+    entrance.m_y = position.m_y - prototype.m_triggerCell.m_y;
+    entrance.m_x = position.m_x - prototype.m_triggerCell.m_x;
+    ++entrance.m_y;
+    entrance.m_z = position.m_z;
+    if (entrance.m_y >= m_mapHeight)
         return 0;
     TRmgMapItem* item = getMapItem(entrance);
-    if (!item->m_tileData.m_roadPassable)
-        return 0;
-    if (item->m_tile.m_landType == eTerrainRock)
+    if (!item->isPassableLand())
         return 0;
     if (item->m_zoneState.m_zone < 0)
         return 0;
@@ -756,7 +764,7 @@ unsigned char type_random_map::canPlaceObject(
         if (!g_adventureObjectLandBlocked[entranceType][2])
             return 0;
     }
-    unsigned char result = (zone->m_terrain == eTerrainWater) == (item->m_tile.m_landType == eTerrainWater);
+    unsigned char result = (item->m_tile.m_landType == eTerrainWater) == (zone->m_terrain == eTerrainWater);
     return result;
 }
 
@@ -935,9 +943,11 @@ int TRmgRoadMapAdapter::getOverlay(const TRmgGridPoint& point)
 
 // The two concrete adapter vtables share retail 0x532790. Keep both source
 // methods; the river method below owns their joint ICF representative.
+// VC6 accepts the temporary output at the non-const-reference slot; copy
+// its returned reference before the full expression ends, as in the painter.
 TRmgGridPoint TRmgRoadMapAdapter::getSize()
 {
-    return m_map->getSize();
+    return m_map->getSize(TRmgGridPoint());
 }
 
 // The real road-painting stack construction at 0x548120 retains the
@@ -1023,7 +1033,7 @@ void TRmgMapAdapter::setOverlay(const TRmgGridPoint& point, int value)
 VA(0x00532790, 0x27) // vtable 0x640a3c slot 3, ICF with road slot 3
 TRmgGridPoint TRmgMapAdapter::getSize()
 {
-    return m_map->getSize();
+    return m_map->getSize(TRmgGridPoint());
 }
 
 VA(0x005327C0, 0x63) // anchor-vtable + packed-field evidence; Complete-only
@@ -1162,12 +1172,26 @@ TRmgZone::~TRmgZone()
 {
 }
 
+// Provisional Complete-only bookkeeping boundary, inferred from the
+// expansion in removeObject (0x54bc50); no separate retained body is known.
+void TRmgZone::decrementObjectCount(TAdventureObjectType objectType)
+{
+    --m_objectCountByType[objectType];
+}
+
 // Both the level-occupancy pass and the bounds pass in FilterZonePositions
 // copy the whole coordinate before selecting a component. That retained
 // value-copy shape motivates this ordinary accessor; no DC name is known.
+// Keep an owned result before returning it. Together with assigned caller
+// snapshots this retains both single-position insert calls in positionZone
+// (0x53b970) and both vector destructor expansions in buildZoneBoundaries
+// (0x53e050). Direct member return loses the former; changing only this
+// getter loses the latter. The source boundary remains a retail inference.
 TRmgMapPosition TRmgZone::getLevelPosition() const
 {
-    return m_levelPosition;
+    TRmgMapPosition result;
+    result = m_levelPosition;
+    return result;
 }
 
 // Candidate placement loads all three coordinates before writing the zone,
@@ -1203,6 +1227,9 @@ void TRmgZone::setLevelPosition(TRmgMapPosition position)
 // length body adds a call absent here; exposing it removes six retail calls
 // across five other callers, including three exact functions. Arithmetic
 // local variants do not restore those boundaries. Keep one support-TU body.
+// Earlier size declarations and a two-element size array also leave 96.4286%.
+// Binding either template owner by pointer/reference, with or without named
+// scalar sizes, does not improve the remaining register assignment.
 VA(0x00532BD0, 0xA8) // anchor-callee 0x53b4b7/0x53b5ae; thiscall, ret 4
 unsigned char TRmgZone::canConnect(const TRmgZone* other) const
 {
@@ -1802,7 +1829,7 @@ void rmgSeerHutObject::write(TAbstractFile* outfile, int version)
 // construction. Vtable 0x640b14 slot 1 clears that byte when the reservation
 // is released.
 rmgHeroObject::rmgHeroObject(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, int objectId, int heroIndex,
+    type_random_map_generator* generator, const int& objectId, int heroIndex,
     int experience)
     : type_object(properties)
 {
@@ -2129,15 +2156,10 @@ type_object* type_resource_lump_def::generate(TRmgObjectPropertiesRef* propertie
 // a hero, returns null on exhaustion, and expands the 0x2c-byte object's
 // constructor with the definition's experience and the next generator id.
 // Complete-only: no Dreamcast counterpart; constructor spelling provisional.
-// Residual (95.1754%): the selector's nested decrement/test retains retail's
-// call at 0x5348dc naturally, while its standalone body remains exact.
-// The combined && form expands it and gives 9.0702%; nested/continue forms
-// give 63.7193% before constructor refinement. Assigning heroIndex before
-// objectId recovers the base-position stores and derived-vptr ordering.
-// The 16 initializer/body combinations peak at 94.6316%; 30 constructor
-// assignment-order forms peak here, and all six integer-parameter orders
-// are flat. Retail still loads experience later and stores the first
-// placement byte before the position fields. No other RMG scores changed.
+// Passing the post-incremented object id by const reference keeps its
+// temporary alive through construction and reproduces all 147 retail bytes.
+// The eight value/reference combinations confirm that experience remains a
+// value; the hero index is neutral. A value id leaves 95.1754%.
 VA(0x005348D0, 0x93) // anchor-definition/object vtables + selectPrisonHero
 type_object* type_prison_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)
@@ -2420,7 +2442,7 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
         point.m_x = guardPosition.m_x + g_rmgDirections[direction].m_x;
         point.m_y = guardPosition.m_y + g_rmgDirections[direction].m_y;
         TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, 0);
-        if (!item->m_tileData.m_roadPassable || item->m_tile.m_landType == eTerrainRock)
+        if (!item->isPassableLand())
             continue;
         if (guardType == BORDER_GUARD && item->hasBorderObject())
             continue;
@@ -2630,7 +2652,7 @@ void TRmgTreasureGroup::updateBounds()
     TRmgMapItem* item = m_map.m_mapItems;
     for (int y = 0; y < m_map.m_mapHeight; ++y) {
         for (int x = 0; x < m_map.m_mapWidth; ++x, ++item) {
-            if (!item->m_tileData.m_roadPassable || item->m_tile.m_landType == eTerrainRock
+            if (!item->isPassableLand()
                 || item->isRoadEntrance() || !item->hasSubterraneanGate()) {
                 m_bounds.m_minimumX = std::_cpp_min<long>(m_bounds.m_minimumX, x);
                 m_bounds.m_maximumX = std::_cpp_max<long>(m_bounds.m_maximumX, x + 1);
@@ -2647,16 +2669,15 @@ void TRmgTreasureGroup::updateBounds()
 // 0x536000, including the byte-return entrance/gate queries. Like the
 // prototype's buildOutline, reverse direction after each accepted step and
 // stop before duplicating the first point.
-// Residual (95.1849%): all 32 blocks align; the perimeter walk agrees,
-// while the initial map scan differs in register homes and inner back-edge
-// polarity. Separate coordinate initialization is flat at 95.1644%; explicit
-// cached height/per-row width restores one addressing detail to 95.1849%.
-// Two generated 60-state populations preserve that peak (38/40 distinct
-// code+relocation results). Five scan loops x six point initializations x
-// two dimension lifetimes reach 89.2123..95.1849%; the ten reproduced
-// parents x six perimeter-start lifetimes reach 95.0137..95.1849%.
-// No variant is adopted. Native rectangle/flag/query/cache controls cover
-// all 360 scan/start combinations, including retail's zero-height quirk.
+// The shared land predicate restores the scan's branch polarity; direct
+// map dimensions then restore initialization/reload scheduling. All 399 bytes
+// and 32 blocks reproduce. A 41-state family tested initialized/assigned
+// points, cached/direct bounds, and the predicate at the perimeter query;
+// no other RMG score changed. Keep x == width after the scan, including the
+// retail zero-height behavior; it is not a y == height exhaustion test.
+// The retained vector<TPoint>::insert matches all 582 bytes of the folded
+// vector<type_artifact> body at 0x54d330, with identical new/delete calls.
+// Direction-table references resolve to g_rmgDirections (0x69cdc0) and +4.
 VA(0x00535EE0, 0x18F) // anchor-callee 0x5468ea/0x53511b; thiscall, ret 0
 void TRmgTreasureGroup::traceOutline()
 {
@@ -2664,16 +2685,13 @@ void TRmgTreasureGroup::traceOutline()
         return;
     TPoint position;
     position.m_x = 0;
-    int height = m_map.m_mapHeight;
-    for (position.m_y = 0; position.m_y < height; ++position.m_y) {
-        int width = m_map.m_mapWidth;
-        for (position.m_x = 0; position.m_x < width; ++position.m_x) {
+    for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
+        for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x) {
             TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, 0);
-            if (item->isRoadEntrance() || !item->m_tileData.m_roadPassable
-                || item->m_tile.m_landType == eTerrainRock || !item->hasSubterraneanGate())
+            if (item->isRoadEntrance() || !item->isPassableLand() || !item->hasSubterraneanGate())
                 break;
         }
-        if (position.m_x < width)
+        if (position.m_x < m_map.m_mapWidth)
             break;
     }
     if (position.m_x == m_map.m_mapWidth)
@@ -2692,8 +2710,7 @@ void TRmgTreasureGroup::traceOutline()
                 || nearby.m_y < 0 || nearby.m_y >= m_map.m_mapHeight)
                 break;
             TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
-            if (!item->isRoadEntrance() && item->m_tileData.m_roadPassable
-                && item->m_tile.m_landType != eTerrainRock && item->hasSubterraneanGate())
+            if (!item->isRoadEntrance() && item->isPassableLand() && item->hasSubterraneanGate())
                 break;
         } while (++attempts < 4);
         position = position + TRmgVector(g_rmgDirections[direction].m_x, g_rmgDirections[direction].m_y);
@@ -3065,7 +3082,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
         if (m_progress)
             m_progress->advance(progressSteps);
         TRmgMapItem* item = m_map.getMapItem(position);
-        if (!item->m_tileData.m_roadPassable || item->m_tile.m_landType == eTerrainRock)
+        if (!item->isPassableLand())
             continue;
         int terrain = item->m_tile.m_landType;
         std::vector<TRmgObjectPropertiesRef*> candidates;
@@ -3158,10 +3175,14 @@ TRmgMapItem* type_random_map::getMapItem(TRmgMapPosition point)
 // Retail 0x549c91 calls this base-prefix pass after coastal marking.
 // Keep the canonical tile-field names: bits 26/27 and 25 are observed here,
 // regardless of their additional roles in zone connection and road routing.
-// Partial 91.13%: one shared position value preserves all three scans and
-// removes the extra position constructor (separate scalar loops: 71.91%).
-// Progress/placement branch order remains reversed; positive/negative first
-// arms and an explicit skip-to-next-cell continue are byte-neutral.
+// One shared position value preserves all three scans and avoids an extra
+// position constructor. The ordinary isPassableLand predicate recovers the
+// progress/placement branch layout and all 409 retail bytes. Member/free and
+// positive/negative predicate controls all reproduce the same exact caller.
+// In-caller field tests stay at 91.1321%; flattened dispatch and a named
+// eligibility value reach only 98.0818%. A shared progress notifier is flat.
+// All seven header consumers were measured. decorateMapCell's expansion
+// shifts from 82.4467% to 82.1950%; all other scores remain unchanged.
 VA(0x00537970, 0x199)
 void TRmgGeneratorBase::decorateMap()
 {
@@ -3181,7 +3202,7 @@ void TRmgGeneratorBase::decorateMap()
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
                 if (item->hasBorderObject()) {
-                    if (!item->m_tileData.m_roadPassable || item->m_tile.m_landType == eTerrainRock) {
+                    if (!item->isPassableLand()) {
                         if (m_progress)
                             m_progress->advance(progressSteps);
                         continue;
@@ -3701,6 +3722,9 @@ void type_random_map_generator::initializeObjectGenerators()
 // forms plus the unchanged control give six more (81.91..98.04%). Neither
 // family raises any tracked score. All 104 distinct bodies preserve the
 // bounded integer-distance/ordered-sqrt oracle; the scalar source stays put.
+// Exposing the canonical squared-distance helper and calling it with two
+// point values, direct or named, leaves this body at 98.0374%; its retained
+// support callers keep their calls. This does not explain the extra retail move.
 VA(0x0053AD60, 0x113) // anchor-callee 0x53e2ea/0x53af04; thiscall, ret 4
 unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
 {
@@ -3937,18 +3961,15 @@ void type_random_map_generator::filterZonePositions(
 // falling back to all placed zones before applying the shared filter.
 // Retail retains the candidate append/filter calls and chooses an unsigned
 // vector index with rand() % size(). Role-derived name, no DC counterpart.
-// Residual (96.8731%): preserving the destination slot pointer restores
-// the connection-loop CFG (89.72 -> 92.86%); separate count/index locals
-// restore the entire final random-selection sequence. The remaining real
-// delta is the two single-element vector insert calls: VC6 expands their
-// wrapper and calls count-insert, whereas retail retains the 540-byte
-// single-insert body at 0x54c3f0. A depth-1 `insert(end(), x)` wrapper is
-// always expanded by the /Ob2 size test, so retail's call needs the wrapper
-// nested inside push_back; spelled that way (2026-09-11) the two sites get
-// nested budgets of 64 and 70 (907/14 and 843/12), still one and seven units
-// past the wrapper's cost of 64, so both remain expanded. Two more candidate
-// sites after the first push, or 11 more units spent before it, would refuse
-// them; neither has a source correlate yet.
+// Exact 562-byte body: preserve the destination slot, separate unsigned
+// count/index locals, and an owned snapshot of the selected coordinate.
+// The shared getter's owned return result restores the two retained
+// single-position vector insert calls at 0x54c3f0. The direct-member-return
+// control is 97.4061% with the same selection snapshot; naming only the
+// getter result without that snapshot is also incomplete. All eight call
+// relocations, the unwind reference and every non-relocation byte agree.
+// Related assigned snapshots keep the boundary builder exact and preserve
+// the fill caller's established insertion/erasure boundaries.
 VA(0x0053B970, 0x232) // anchor-callee 0x53bde2/0x53be39; thiscall, ret 8
 void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
 {
@@ -3980,7 +4001,9 @@ void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
     }
     unsigned int count = candidates.size();
     unsigned int selected = rand() % count;
-    zone->setLevelPosition(candidates[selected]);
+    TRmgMapPosition selectedPosition;
+    selectedPosition = candidates[selected];
+    zone->setLevelPosition(selectedPosition);
 }
 
 VA(0x0053BBB0, 0xFD)
@@ -4417,22 +4440,17 @@ void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
 
 // Terrain painting replaces the zone center with the average coordinates
 // of its assigned cells, retaining its level. Provisional Complete-only role.
-// Residual (95.5000%): reading the level position before the zone index
-// restores the copy's EBX loads (95.3043%). A three-coordinate centroid
-// retains that level through the setter and restores retail's 0x34 frame
-// and every scan/output stack home. Entry copy/zero scheduling still differs.
-// Four 60-state families measured coordinate snapshots, accumulator kinds,
-// counter lifetimes, full-coordinate copies and all six field-store orders.
-// Copies and counter movement do not improve the peak; scalar/TPoint sums
-// leave a four-byte frame deficit. All 339 other RMG scores stay unchanged.
-// The canonical accessors and coordinate constructors remain unchanged.
-// Two later 60-state populations test slot/index bindings and returned-value
-// capture, then move the independent centroid X/Y initialization earlier.
-// Both produce 36 code identities and ten reproduced finalists; neither
-// exceeds 95.5000%. Retail still reads the slot index before completing the
-// coordinate copy and uses separate XORs for count and accumulator zeroes.
-// The tested bindings/lifetimes do not recover that entry sequence; some
-// alternatives also lower the unchanged-source header writer to 77.8952%.
+// Residual 95.5000%: the three-coordinate total preserves retail's 0x34 frame
+// and scan/output homes. The entry still needs its index lookup interleaved
+// with the position copy, and separate zero registers for count and totals.
+// Scalar/TPoint totals lose four frame bytes; coordinate arrays including Z
+// preserve the peak. Copy, declaration, zero/store order and counter lifetime
+// families do not close the entry. The bounds accessor is neutral. An ordinary
+// zone-index accessor before the position copy recovers its pointer chain but
+// moves the copy to ECX and saves row Y too early (89.1196%). TPoint/three-axis
+// scans and reuse of the position do not repair that combined model. Keep the
+// existing accessor contracts and the three-coordinate total; no index helper
+// or accumulator/scan rewrite is supported by these measurements.
 VA(0x0053D0D0, 0xE3) // anchor-callee 0x53e6e8; thiscall, ret 4
 void type_random_map_generator::recenterZone(TRmgZone* zone)
 {
@@ -4508,6 +4526,8 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
 // one-element range (89.9385% versus pop_back's 53.5287%). Keeping the upper
 // and lower span seeds at function scope reaches 90.0984%; nine bounds/span
 // lifetime forms find no further gain, with no other RMG score changes.
+// Assign the initial position from the shared owned-result getter; direct
+// copy-initialization changes the insertion/erasure expansion (52.8361%).
 // Retail retains copy and _Destroy inside seed erasure; VC6 expands them
 // and retains an extra size call in the final lower-span insertion.
 // Isolated erase inline_depth(1) is flat; depth zero retains the wrong outer
@@ -4520,7 +4540,8 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgBoundaryVertex*
 {
     int zoneIndex = zone->m_slot->m_zoneIndex;
     std::vector<TRmgMapPosition> pending;
-    TRmgMapPosition position = zone->getLevelPosition();
+    TRmgMapPosition position;
+    position = zone->getLevelPosition();
     TRmgMapPosition upper;
     TRmgMapPosition lower;
     if (position.m_x < 0 || position.m_x >= m_map.m_mapWidth
@@ -4776,8 +4797,10 @@ VA_COMPGEN(0x0054DE90, 0x14, STD_CONSTRUCT, TRmgZoneConnection)
 // Bound temporaries live inside their guards, matching retail's x87 stores.
 // Retail reuses one counter home across the initial, radial and final loops;
 // shadowing it in the radial loop adds a stack home (99.8364%). Reusing it
-// completes the exact body. Combined ownership/construction families and an
-// independent radial-site/event oracle cover these boundaries and lifetimes.
+// completes the exact body. With the getter owning its returned coordinate,
+// assign each radial center to its own value before scaling. Copy-initialized
+// centers leave two vector destructors out of line (97.3085%); assignment
+// preserves all 1613 retail bytes, including the original cleanup sequence.
 VA(0x0053E050, 0x64D) // anchor-callee 0x549af9; thiscall, ret 8
 void type_random_map_generator::buildZoneBoundaries(
     TRmgTemplate* mapTemplate, int level)
@@ -4806,10 +4829,12 @@ void type_random_map_generator::buildZoneBoundaries(
             testSlot.m_size = radius;
             TRmgMapPosition position = current->getLevelPosition();
             for (int direction = 0; direction < 32; direction += 4) {
-                TRmgMapPosition horizontalCenter = current->getLevelPosition();
+                TRmgMapPosition horizontalCenter;
+                horizontalCenter = current->getLevelPosition();
                 double dx = radius * g_rmgDirectionCosines[direction];
                 position.m_x = static_cast<int>(horizontalCenter.m_x + dx * 2);
-                TRmgMapPosition verticalCenter = current->getLevelPosition();
+                TRmgMapPosition verticalCenter;
+                verticalCenter = current->getLevelPosition();
                 double dy = radius * g_rmgDirectionSines[direction];
                 position.m_y = static_cast<int>(verticalCenter.m_y + dy * 2);
                 if (position.m_x < 0 && position.m_x < dx)
@@ -4934,31 +4959,26 @@ void type_random_map_generator::paintZoneTerrain()
 
 // The midpoint-noise generator passes its work vector in ECX, center sample
 // in EDX, then the complete nine-dword region and four edge midpoints by
-// value. Each nondegenerate quadrant preserves the original variation.
+// value. Center is last in the source signature; putting it before the
+// records preserves this ABI/body but changes the caller's argument setup.
+// Each nondegenerate quadrant preserves the original variation.
 // Retail 0x53ed00 consumes these records as a stack and clamps final samples
 // to bytes; the terrain painter at 0x53efa0 consumes the resulting noise.
-// Residual 99.9545%: Y-before-X reproduces the operation schedule; the three
-// center/X/Y stack homes are permuted. The 24 midpoint-order/operand probes
-// improve the initial 99.6818%, but 49 center-snapshot/lifetime probes are
-// flat at that peak. All 32 CFG blocks and insertion decisions agree.
-// A separate 3,136-case coverage/corner invariant check includes negative
-// origins and degenerate bounds; every child preserves the sample meanings.
-// Sixty midpoint-point/scalar, region-copy and center-sample lifetime forms
-// produce 16 distinct objects, with ten reproduced elites and no improvement.
-// Every form passes a 3x3 sample-lattice oracle plus four negative controls;
-// retain the scalar midpoint source until its permuted homes are recovered.
-// Twelve further midpoint/quadrant-ownership forms test separate scoped or
-// function-scope records. Scoped records preserve this same residual; named
-// function-scope records are worse. The same lattice oracle accepts all twelve.
+// Exact 798-byte body: a Y/X midpoint array restores all three scalar stack
+// homes and preserves the Y-before-X evaluation. Separate coordinates leave
+// 99.9545%; TPoint and quadrant-lifetime alternatives do not close that gap.
+// All 32 blocks reproduce. The vector's empty _Destroy is folded with the
+// artifact-vector representative at 0x404140; both retained bodies are ret 8.
 VA(0x0053E9E0, 0x31E) // anchor-callee 0x53ed91; Complete-only, fastcall ret 0x34
 void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
-    int centerValue, TRmgNoiseRegion region, TRmgNoiseMidpoints midpoints)
+    TRmgNoiseRegion region,
+    TRmgNoiseMidpoints midpoints,
+    int centerValue)
 {
-    int middleY = (region.m_bounds.m_minimumY + region.m_bounds.m_maximumY) / 2;
-    int middleX = (region.m_bounds.m_minimumX + region.m_bounds.m_maximumX) / 2;
+    int middle[2] = { (region.m_bounds.m_minimumY + region.m_bounds.m_maximumY) / 2, (region.m_bounds.m_minimumX + region.m_bounds.m_maximumX) / 2 };
     TRmgNoiseRegion part = region;
-    part.m_bounds.m_minimumX = middleX;
-    part.m_bounds.m_minimumY = middleY;
+    part.m_bounds.m_minimumX = middle[1];
+    part.m_bounds.m_minimumY = middle[0];
     part.m_corners[0] = centerValue;
     part.m_corners[1] = midpoints.m_maxYValue;
     part.m_corners[2] = midpoints.m_maxXValue;
@@ -4967,8 +4987,8 @@ void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
         pending.push_back(part);
 
     part = region;
-    part.m_bounds.m_minimumX = middleX;
-    part.m_bounds.m_maximumY = middleY;
+    part.m_bounds.m_minimumX = middle[1];
+    part.m_bounds.m_maximumY = middle[0];
     part.m_corners[0] = midpoints.m_minYValue;
     part.m_corners[1] = centerValue;
     part.m_corners[3] = midpoints.m_maxXValue;
@@ -4977,8 +4997,8 @@ void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
         pending.push_back(part);
 
     part = region;
-    part.m_bounds.m_maximumX = middleX;
-    part.m_bounds.m_minimumY = middleY;
+    part.m_bounds.m_maximumX = middle[1];
+    part.m_bounds.m_minimumY = middle[0];
     part.m_corners[0] = midpoints.m_minXValue;
     part.m_corners[2] = centerValue;
     part.m_corners[3] = midpoints.m_maxYValue;
@@ -4987,8 +5007,8 @@ void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
         pending.push_back(part);
 
     part = region;
-    part.m_bounds.m_maximumX = middleX;
-    part.m_bounds.m_maximumY = middleY;
+    part.m_bounds.m_maximumX = middle[1];
+    part.m_bounds.m_maximumY = middle[0];
     part.m_corners[1] = midpoints.m_minXValue;
     part.m_corners[2] = midpoints.m_minYValue;
     part.m_corners[3] = centerValue;
@@ -5021,22 +5041,27 @@ TRmgZoneConnection* TRmgTownSlot::findConnection(int destinationZone)
 // Retail 0x53f048 passes the byte mask in ECX, width in EDX and height
 // on the stack. This free fastcall boundary has no Dreamcast counterpart.
 void __fastcall generateRmgIslandMask(unsigned char* mask, int width, int height);
-// First reconstruction: 82.2075%. All 28 CFG blocks agree. Four blocks
-// differ in size, including root initialization and the common subdivision
-// call; preserve the nine-dword work item and four-edge by-value boundary.
+// Exact 667-byte body. The subdivision's center is the last source argument:
+// fastcall still passes it in EDX, but VC6 prepares it before copying the two
+// records and shares the complete argument-pack tail between both calls.
+// Center-before-records leaves 88.4813%; center-last reaches 99.9585%.
+// Initializing the Y edge pair before X restores the last two zero-register
+// choices. Both separate stores and the equivalent assignment chain match.
+// Keep each random displacement's range / 2 expression: naming a shared half
+// changes its register lifetime. The 798-byte subdivision remains exact.
 VA(0x0053ED00, 0x29B)
 void __fastcall generateRmgIslandMask(unsigned char* mask, int width, int height)
 {
     std::vector<TRmgNoiseRegion> patches;
-    TRmgNoiseRegion patch;
-    patch.m_bounds.m_minimumX = 0;
-    patch.m_bounds.m_minimumY = 0;
-    patch.m_bounds.m_maximumX = height;
-    patch.m_bounds.m_maximumY = width;
-    patch.m_corners[0] = patch.m_corners[1] = patch.m_corners[2] = patch.m_corners[3] = 0;
-    patch.m_variation = (height + width) / 4 + 1;
-    TRmgNoiseMidpoints edges = { 0, 0, 0, 0 };
-    subdivideRmgNoiseRegion(patches, patch.m_variation / 2, patch, edges);
+    TRmgNoiseRegion patch = {
+        { 0, 0, height, width }, { 0, 0, 0, 0 }, (height + width) / 4 + 1
+    };
+    TRmgNoiseMidpoints edges;
+    edges.m_minYValue = 0;
+    edges.m_maxYValue = 0;
+    edges.m_minXValue = 0;
+    edges.m_maxXValue = 0;
+    subdivideRmgNoiseRegion(patches, patch, edges, patch.m_variation / 2);
     while (patches.size()) {
         patch = patches.back();
         patches.erase(patches.end() - 1);
@@ -5060,15 +5085,14 @@ void __fastcall generateRmgIslandMask(unsigned char* mask, int width, int height
             + patch.m_corners[1] + patch.m_corners[0]) / 4;
         int range = patch.m_variation;
         if (range > 1) {
-            int half = range / 2;
-            edges.m_minXValue += rand() % range - half;
-            edges.m_minYValue += rand() % range - half;
-            edges.m_maxXValue += rand() % range - half;
-            edges.m_maxYValue += rand() % range - half;
-            center += rand() % range - half;
+            edges.m_minXValue += rand() % range - range / 2;
+            edges.m_minYValue += rand() % range - range / 2;
+            edges.m_maxXValue += rand() % range - range / 2;
+            edges.m_maxYValue += rand() % range - range / 2;
+            center += rand() % range - range / 2;
         }
         patch.m_variation = (range - 1) / 2 + 1;
-        subdivideRmgNoiseRegion(patches, center, patch, edges);
+        subdivideRmgNoiseRegion(patches, patch, edges, center);
     }
 }
 
@@ -5567,6 +5591,8 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
 // canonical getBounds/getLevelPosition results at both observed snapshot
 // times and a constructed seed; all eight reproduced states give their
 // parent's caller instruction/relocation stream. None explains EDI or the latch.
+// Success-flag types and row-loop exits, crossed with unsigned extraction,
+// also leave the current peak; the correct mask still needs caller recovery.
 // The frame is 0x4c and the three flood/path/flood calls agree throughout;
 // these differences do not come from an extra retained helper. Native checks
 // include opaque zone mutation to enforce pre-flood bounds and post-flood
@@ -5711,12 +5737,13 @@ void type_random_map_generator::openConnectionPath(
 // slot 117 in the RoE exclusion or require a prototype in the eligibility
 // count: neither extra check occurs in the retail body. The two variation
 // draws are ordered; the first remainder is reduced by the second.
-// Source-family residual (95.6907%): predecrement restores 30 retail CFG
-// blocks, with 27 exact shapes and all four calls. Assigning the version
-// limit before exclusion and writing derived fields in the constructor body
-// restores the corresponding lifetimes; the limit setup, count spill and
-// constructor store scheduling remain different. Local/parameter count and
-// paired/delta draws were measured; keeping the real intermediate is best.
+// Exact 576-byte body: exclusion and eligibility share the creature counter.
+// The RoE exclusion ends at 117; the next predecrement begins eligibility at
+// 116 without clearing slot 117. A separate limit leaves setup moves reordered.
+// The compound random-difference expression reproduces the count spill and
+// first-draw-minus-second-draw sequence. Named delta statements leave 96.5155%;
+// a separate reverse pointer/count exclusion reaches 99.9381%. Constructor
+// value/reference combinations are neutral; keep its value arguments.
 VA(0x00540B20, 0x240) // anchor-callee 0x54203b; thiscall, ret 8; retail-only
 type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
 {
@@ -5734,14 +5761,12 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
         prototypeIndices[properties->m_prototype->m_subtype] = index;
     }
     int eligibleCount = 0;
-    int creatureLimit = RMG_GUARD_CREATURE_COUNT;
+    int creature = RMG_GUARD_CREATURE_COUNT;
     if (m_mapVersion < RMG_MAP_ARMAGEDDONS_BLADE) {
-        creatureLimit = RMG_GUARD_ROE_CREATURE_LIMIT;
-        for (int creature = RMG_GUARD_CREATURE_COUNT - 1;
-             creature >= RMG_GUARD_ROE_EXCLUDED_FIRST; --creature)
+        while (--creature >= RMG_GUARD_ROE_EXCLUDED_FIRST)
             prototypeIndices[creature] = -1;
     }
-    for (int creature = creatureLimit; --creature >= 0;) {
+    for (--creature; creature >= 0; --creature) {
         const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
         if ((traits.m_wanderingHigh + traits.m_wanderingLow) / 2 * traits.m_aiValue <= value
             && value <= traits.m_aiValue * RMG_GUARD_MAXIMUM_COUNT
@@ -5763,9 +5788,7 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
     int count = (value + aiValue / 2) / aiValue;
     int variation = count / 4 + 1;
     if (variation > 1) {
-        int delta = rand() % variation;
-        delta -= rand() % variation;
-        count += delta;
+        count = count + (rand() % variation - rand() % variation);
     }
     return new rmgMonsterObject(properties, m_nextObjectId++, count);
 }
@@ -5883,6 +5906,8 @@ TRmgMapPosition TRmgMapPosition::operator+(TPoint offset) const
     return TRmgMapPosition(m_x + offset.m_x, m_y + offset.m_y, m_z);
 }
 
+// Y-before-X alters the exact fillIslandInterior expansion while leaving the
+// shipyard residual. Explicit sum operands are neutral; keep X-before-Y.
 TRmgMapPosition& TRmgMapPosition::operator+=(const TPoint& offset)
 {
     m_x += offset.m_x;
@@ -6030,15 +6055,15 @@ unsigned char type_random_map_generator::createGroundConnection(
     return 1;
 }
 
-// Retail uses a LIFO vector of three-dword positions and walks cardinal
-// directions 0/2/4/6 with signed induction. Mark each admitted neighbour
-// visited, but enqueue only water; gate-marked water cells are traversable.
-// Byte extractions at +0x11c/+0x125 and the two terrain tests fix the narrow
-// predicate values. Preserve the ordinary map and point helper boundaries.
-// Source-family result: a value insert at the neighbour site restores the
-// retained copy/_Destroy pair in pop_back (71.4786 -> 84.8000). Assigning
-// rather than copy-initializing nearby reaches the same island. Keep the
-// public STL calls; the seed insert still expands one level past retail.
+// Retail uses a LIFO vector of three-dword positions and cardinal directions
+// 0/2/4/6. Mark admitted neighbours visited, but enqueue only water; gate-marked
+// water cells are traversable. RMG has no Dreamcast counterpart.
+// Exact with the canonical returned-position addition and integer land-kind
+// accessor/snapshots. Copy then += changes the coordinate homes (92.05%);
+// narrowing terrain to a byte adds sign-extension shifts (97.7143%). Direct
+// integer field reads over-expand the seed insertion (99.25%), while retaining
+// the ordinary accessor restores both distinct retail insert boundaries.
+// The empty _Destroy body is folded with vector<type_artifact> (ret 8).
 VA(0x00541780, 0x18D) // anchor-callee 0x541f1f; thiscall, ret 0x0c
 void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
 {
@@ -6049,8 +6074,7 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
         position = openPositions.back();
         openPositions.pop_back();
         for (int direction = 0; direction < 8; direction += 2) {
-            TRmgMapPosition nearby = position;
-            nearby += g_rmgDirections[direction];
+            TRmgMapPosition nearby = position + g_rmgDirections[direction];
             if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth
                 || nearby.m_y < 0 || nearby.m_y >= m_map.m_mapHeight)
                 continue;
@@ -6059,12 +6083,12 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
             if (visited)
                 continue;
             if (!item->hasSubterraneanGate()) {
-                unsigned char terrain = item->getLandType();
+                int terrain = item->getLandType();
                 if (terrain == eTerrainWater)
                     continue;
             }
             item->setConnectionVisited();
-            unsigned char terrain = item->getLandType();
+            int terrain = item->getLandType();
             if (terrain == eTerrainWater)
                 openPositions.insert(openPositions.end(), nearby);
         }
@@ -6082,6 +6106,11 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
 // enum snapshots instead fold to and/cmp byte. A conditional opposite-x is
 // byte-neutral. Returned-point translation and keeping only the old z do
 // not recover the remaining coordinate homes/registers or side-branch shape.
+// Named row bounds and origin snapshots do not improve this. A TPoint cursor
+// with positive-default opposite-side selection recovers all 25 branch blocks,
+// but loses stack stores and leaves four block sizes different (89.7970%).
+// Mutating the by-value parameter behind a saved origin is lower still.
+// Existing terrain/entrance accessors and scalar lookup forms do not improve it.
 VA(0x00541960, 0x16C) // anchor-callee 0x541c94; thiscall, ret 0x0c
 unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition position)
 {
@@ -6493,11 +6522,12 @@ unsigned char type_random_map_generator::createSubterraneanGate(
 // minimum x/y by the prototype footprint minus one, and walks y then x.
 // The chosen candidate is assigned back to that coordinate before the
 // virtual call; keep both the real coordinate copy and the placement helper.
-// The source family recovers retail's height-before-width adjustment and
-// keeps an assigned loop coordinate (93.5774%). All 15 blocks and six calls
-// agree in shape/order; the final success block remains one instruction
-// short. Direct/copy-selected arguments lose its duplicate homes; public
-// vector insertion alternatives do not resolve that retained copy either.
+// A named unsigned random index restores the selected coordinate's duplicate
+// homes and the final success block (99.9286%). All six calls agree. Only
+// the independent minimum-X/maximum-Y loads at +0x10c/+0x10f are reversed.
+// Loop forms, snapshot/declaration lifetimes, public vector insertion and
+// allocator ownership do not resolve that scheduling difference. Named cell
+// and predicate values, nested conditions and continue guards also stay flat.
 VA(0x00542930, 0x1C6) // anchor-callee 0x540e81; thiscall, ret 8; retail-only
 unsigned char type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* zone)
 {
@@ -6519,7 +6549,8 @@ unsigned char type_random_map_generator::placeObjectInZone(type_object* object, 
     }
     if (!candidates.size())
         return 0;
-    position = candidates[rand() % candidates.size()];
+    unsigned int selected = rand() % candidates.size();
+    position = candidates[selected];
     addObject(object, position);
     return 1;
 }
@@ -6528,12 +6559,13 @@ unsigned char type_random_map_generator::placeObjectInZone(type_object* object, 
 // cover the entrance's lower and side neighbors. A reachable positive-cost
 // cell uses its path predecessor; a zero-cost cell selects a same-zone open
 // neighbor, falling back to the cell directly below. All names are provisional.
-// Residual (68.4070%): both retained calls and all nine branch tests agree;
-// coordinate/register lifetimes grow the frame from 0x3c to 0x40 and spill
-// the zone index. The offset array's initialization instructions agree.
-// A named unsigned movement cost and all eight value/scalar map-access
-// combinations are byte-flat; a signed cost scores 66.0465%. Keep the
-// canonical map-position calls and the array-derived neighbor count.
+// Exact with canonical position addition at the search, fallback and marking
+// sites, a copied marking offset, and the byte-valued gate query. The initial
+// scalar lookup and named unsigned movement cost recover the level/zone homes.
+// Copy then += peaks at 68.4070%; returned additions reach 92.1453%, the query
+// boundaries 96.7907%, and the translated fallback 99.8953%. Declaring the
+// result coordinate beside the offsets restores the final three-load order.
+// Both retained calls, all 466 bytes, and the five local offsets reproduce.
 VA(0x00542B00, 0x1D2) // anchor-callers 0x542ec5/0x54304f; Complete-only, ret 0x10
 unsigned char type_random_map_generator::placeMonolithBorder(
     TRmgMapPosition position, TRmgZone* zone)
@@ -6541,35 +6573,34 @@ unsigned char type_random_map_generator::placeMonolithBorder(
     TPoint offsets[5] = {
         TPoint(0, 1), TPoint(1, 0), TPoint(-1, 0), TPoint(1, 1), TPoint(-1, 1)
     };
+    TRmgMapPosition borderPosition;
     const int directionCount = sizeof(offsets) / sizeof(offsets[0]);
     buildZoneConnectionPaths();
-    TRmgMapItem* item = m_map.getMapItem(position);
+    TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
     int zoneIndex = item->m_zoneState.m_zone;
-    if (item->m_movement.m_cost >= 30000)
+    unsigned movementCost = item->m_movement.m_cost;
+    if (movementCost >= 30000)
         return 0;
-    TRmgMapPosition borderPosition;
-    if (item->m_movement.m_cost > 0) {
+    if (movementCost > 0) {
         borderPosition = item->m_previousTile;
     } else {
         int direction;
         for (direction = 0; direction < directionCount; ++direction) {
-            borderPosition = position;
-            borderPosition += offsets[direction];
+            borderPosition = position + offsets[direction];
             TRmgMapItem* nearby = m_map.getMapItem(borderPosition);
             if (nearby->m_zoneState.m_zone == zoneIndex
-                && nearby->m_tileData.m_subterraneanGate)
+                && nearby->hasSubterraneanGate())
                 break;
         }
         if (direction == directionCount) {
-            borderPosition = position;
-            ++borderPosition.m_y;
+            borderPosition = position + TPoint(0, 1);
         }
     }
     int border = placeBorderObject(borderPosition, 1, zone);
     if (border >= 0) {
         for (int direction = 0; direction < directionCount; ++direction) {
-            TRmgMapPosition nearby = position;
-            nearby += offsets[direction];
+            TPoint offset = offsets[direction];
+            TRmgMapPosition nearby = position + offset;
             TRmgMapItem* neighbor = m_map.getMapItem(nearby);
             if (!neighbor->m_connection.m_present) {
                 neighbor->m_tileData.m_subterraneanGate = 0;
@@ -6903,6 +6934,8 @@ void type_random_map_generator::connectZones()
 // 96.1514% with that same constructor; all four causal controls reproduce.
 // Sixty caller and sixty origin forms plus 61 shared-constructor combinations
 // preserve the real brush/map scopes and predicates. No inline pin is used.
+// Borrowed-constructor value/reference arguments and plain dimension arrays
+// do not close the entry schedule; retain the existing value contract.
 VA(0x005439E0, 0x283)
 void type_random_map_generator::decorateUnderground()
 {
@@ -6969,6 +7002,8 @@ void type_random_map_generator::decorateUnderground()
 // Neither improves 99.8683%. At +0x161 the independent error/from.x reloads
 // remain reversed. All 120 forms pass 17,150 closed-form lattice cases each,
 // with four negative controls; no speculative source change is retained.
+// Scalar map queries, two-coordinate owners and XY/YX arrays (16 states,
+// eight objects) also leave the two independent reloads reversed.
 VA(0x00543C70, 0x1A2) // anchor-callee 0x544226; Complete-only, hidden result, ret 0x18
 TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, int level)
 {
@@ -7338,9 +7373,12 @@ void type_random_map_generator::placePrimaryTown(TRmgZone* zone)
 // nonempty fixed-count category therefore skips one placement. Density
 // placement balances four weighted counters until every category fails.
 // Complete-only role names; count/density offsets and call order are retail facts.
-// First reconstruction: 93.0076%. The fixed-count loop layout differs first;
-// candidate CFG has 45 blocks versus retail's 49. Preserve all eight placement
-// call sites and the category-specific failure flags while resolving that layout.
+// Exact 688-byte body: explicit primary-skip initialization restores all
+// four fixed-count loops. Starting the density sum/product before the two
+// input arrays restores the scheduler's stack homes and register allocation.
+// Delaying those accumulators leaves 95.8441%; conditional-expression starts
+// leave 93.0076%. Reusing sum as spacing and shared density helpers are neutral.
+// All 49 blocks and the complete instruction/relocation stream reproduce.
 VA(0x00544AE0, 0x2B0)
 void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
 {
@@ -7349,39 +7387,51 @@ void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
     int player = m_playerIndexMap[slot->m_playerIndex + 1];
     unsigned char skipPrimary = 1;
     if (slot->m_parameters0020[1] > 0) {
-        for (int i = 1; i < slot->m_parameters0020[1]; ++i)
+        int i = 0;
+        if (skipPrimary)
+            i = 1;
+        for (; i < slot->m_parameters0020[1]; ++i)
             tryPlaceAdditionalTown(zone, alignment, player, 1, 0);
         skipPrimary = 0;
     }
     if (slot->m_parameters0020[0] > 0) {
-        for (int i = skipPrimary ? 1 : 0; i < slot->m_parameters0020[0]; ++i)
+        int i = 0;
+        if (skipPrimary)
+            i = 1;
+        for (; i < slot->m_parameters0020[0]; ++i)
             tryPlaceAdditionalTown(zone, alignment, player, 0, 0);
         skipPrimary = 0;
     }
     if (slot->m_parameters0020[5] > 0) {
-        for (int i = skipPrimary ? 1 : 0; i < slot->m_parameters0020[5]; ++i)
+        int i = 0;
+        if (skipPrimary)
+            i = 1;
+        for (; i < slot->m_parameters0020[5]; ++i)
             tryPlaceAdditionalTown(zone, alignment, -1, 1, 0);
         skipPrimary = 0;
     }
     if (slot->m_parameters0020[4] > 0) {
-        for (int i = skipPrimary ? 1 : 0; i < slot->m_parameters0020[4]; ++i)
+        int i = 0;
+        if (skipPrimary)
+            i = 1;
+        for (; i < slot->m_parameters0020[4]; ++i)
             tryPlaceAdditionalTown(zone, alignment, -1, 0, 0);
     }
+    int totalDensity = 0;
+    int product = 1;
     int densities[4] = { slot->m_parameters0020[3], slot->m_parameters0020[2],
         slot->m_parameters0020[7], slot->m_parameters0020[6] };
     int counts[4] = { slot->m_parameters0020[1], slot->m_parameters0020[0],
         slot->m_parameters0020[5], slot->m_parameters0020[4] };
     int steps[4];
     unsigned char finished[4];
-    int totalDensity = 0;
-    int product = 1;
     for (int category = 0; category < 4; ++category) {
         if (densities[category] <= 0) {
             finished[category] = 1;
         } else {
             totalDensity += densities[category];
-            product *= densities[category];
             finished[category] = 0;
+            product *= densities[category];
         }
     }
     if (!totalDensity)
@@ -7522,9 +7572,14 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
 // Direct caller 0x544a50 proves four stack arguments and byte success.
 // Retail rejects alignment -1, selects a town prototype, tests placement,
 // constructs a 0x28-byte object and sets the zone's primary town position.
-// First reconstruction: 76.3310%. Candidate has three extra CFG blocks;
-// inspect vector cleanup and the selected-position copy before changing
-// the nearest-site rule or the verified town construction boundary.
+// Partial 92.0724%: canonical trigger subtraction restores the retained
+// type_object constructor; a named unsigned selection restores the chosen
+// coordinate copy, and Y-before-X locals recover the distance calculation.
+// clear() still expands erase into copy/_Destroy; retail retains the folded
+// range-erase body. Direct erase loses the constructor boundary; resize(0)
+// retains erase but adds a size call and conditional absent from retail.
+// Initial zone/prototype snapshots remain differently scheduled. Value,
+// assignment, getter and scalar-lookup controls do not settle those homes.
 VA(0x00545250, 0x324)
 unsigned char type_random_map_generator::tryPlacePrimaryTown(
     TRmgZone* zone, int alignment, int player, unsigned char townOption)
@@ -7544,13 +7599,13 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
         for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
             if (m_map.getMapItem(nearby)->m_zoneState.m_zone != zoneIndex)
                 continue;
-            int dx = nearby.m_x - position.m_x;
             int dy = nearby.m_y - position.m_y;
+            int dx = nearby.m_x - position.m_x;
             int distance = dx * dx + dy * dy;
             if (distance <= bestDistance && m_map.canPlaceObject(properties, nearby, zone)) {
                 if (distance < bestDistance) {
                     bestDistance = distance;
-                    candidates.erase(candidates.begin(), candidates.end());
+                    candidates.clear();
                 }
                 candidates.push_back(nearby);
             }
@@ -7559,10 +7614,11 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
     if (!candidates.size())
         return 0;
     rmgTownObject* town = new rmgTownObject(properties, m_nextObjectId++, player, townOption);
-    position = candidates[rand() % candidates.size()];
+    unsigned int selected = rand() % candidates.size();
+    position = candidates[selected];
     addObject(town, position);
-    position.m_x -= prototype->m_triggerCell.m_x;
-    position.m_y -= prototype->m_triggerCell.m_y;
+    position -= TPoint(prototype->m_triggerCell.m_x,
+        prototype->m_triggerCell.m_y);
     zone->m_position = position;
     zone->m_active = 1;
     m_roadTargets.push_back(position);
@@ -7576,8 +7632,15 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
 }
 
 // Site selector called at 0x545aee. Complete-only names are provisional.
-// First reconstruction: 84.2575%. Preserve the ordered distance, border
-// count and score filters, including their separate candidate resets.
+// Partial 99.5863%: clear() restores all three candidate-reset boundaries;
+// canonical town translation, an outline-point snapshot and a named unsigned
+// selection recover their value lifetimes. Y-before-X distance locals and
+// bounds-before-ranking initialization restore the arithmetic and zero store.
+// Preserve the ordered distance, border-count and score filters. Only the
+// position-copy/buildOutline receiver and first map receiver are scheduled
+// differently. Position lifetimes, coordinate helpers, footprint arithmetic,
+// branch forms and allocator controls leave those two groups unresolved.
+// The three _Destroy calls fold to the retail artifact-vector ret-8 body.
 VA(0x00545580, 0x401)
 unsigned char type_random_map_generator::placeMineSite(type_object* object,
     TRmgZone* zone, unsigned char startingMine, int spacing)
@@ -7585,15 +7648,14 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
     TRmgObjectPropertiesRef* properties = object->m_properties;
     TObjectType* prototype = properties->m_prototype;
     std::vector<TRmgMapPosition> candidates;
+    TRmgZoneBounds bounds = zone->m_bounds;
     int bestBorderCount = 0;
     int bestDistance = 40000;
-    TRmgZoneBounds bounds = zone->m_bounds;
     int zoneIndex = zone->m_slot->m_zoneIndex;
     TRmgMapPosition townPosition;
     if (startingMine) {
         townPosition = zone->m_position;
-        townPosition.m_x += prototype->m_triggerCell.m_x;
-        townPosition.m_y += prototype->m_triggerCell.m_y;
+        townPosition += TPoint(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
     }
     bounds.m_minimumY += prototype->getHeight() - 1;
     bounds.m_minimumX += prototype->getWidth() - 1;
@@ -7605,8 +7667,8 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
             if (item->m_zoneState.m_zone != zoneIndex || !m_map.canPlaceObject(properties, position, zone))
                 continue;
             if (startingMine) {
-                int dx = position.m_x - townPosition.m_x;
                 int dy = position.m_y - townPosition.m_y;
+                int dx = position.m_x - townPosition.m_x;
                 int distance = dx * dx + dy * dy;
                 if (distance > bestDistance || distance < 16)
                     continue;
@@ -7616,7 +7678,7 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
                     bestDistance = distance;
                     bestBorderCount = 0;
                     spacing = 0;
-                    candidates.erase(candidates.begin(), candidates.end());
+                    candidates.clear();
                 }
             }
             int score = item->m_zoneState.m_score;
@@ -7624,8 +7686,9 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
                 continue;
             int borderCount = 0;
             for (unsigned int i = 0; i < properties->m_outline.size(); ++i) {
-                int x = position.m_x + properties->m_outline[i].m_x;
-                int y = position.m_y + properties->m_outline[i].m_y;
+                TPoint offset = properties->m_outline[i];
+                int x = position.m_x + offset.m_x;
+                int y = position.m_y + offset.m_y;
                 if (x < 0 || x >= m_map.m_mapWidth || y < 0 || y >= m_map.m_mapHeight || y > position.m_y)
                     continue;
                 TRmgMapItem* nearby = m_map.getMapItem(x, y, position.m_z);
@@ -7638,19 +7701,20 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
             if (borderCount < bestBorderCount)
                 continue;
             if (borderCount > bestBorderCount) {
-                candidates.erase(candidates.begin(), candidates.end());
+                candidates.clear();
                 bestBorderCount = borderCount;
             }
             if (score > spacing) {
                 spacing = score;
-                candidates.erase(candidates.begin(), candidates.end());
+                candidates.clear();
             }
             candidates.push_back(position);
         }
     }
     if (!candidates.size())
         return 0;
-    position = candidates[rand() % candidates.size()];
+    unsigned int selected = rand() % candidates.size();
+    position = candidates[selected];
     addObject(object, position);
     return 1;
 }
@@ -8008,6 +8072,10 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
 // vector<type_object*>::insert matches retail 0x54d120's 521 bytes after
 // masking its two call operands, and both operator new/delete targets agree.
 // The retail label names vector<widget*>; keep the real source element type.
+// Public single insertion and an earlier named insertion iterator do not
+// recover the centering loads, including a separately bound object vector.
+// Signed/unsigned coordinate arrays and a TPoint center also leave 97.8371%;
+// separating the sums from division instead over-expands vector insertion.
 VA(0x00546520, 0x1B6) // anchor-callee 0x54678a; thiscall, ret 0x10
 int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
     TRmgTreasureGroup* group, unsigned char alternate, int value)
@@ -8213,6 +8281,10 @@ VA_COMPGEN(0x0054df40, 0x25, STD_COPY, const_int)
 // live object-vector bounds and mutable virtual queries; wrong policies fail.
 // Preserve the canonical lookups and retained position constructor. The
 // multiply alone does not justify flattening or moving either helper.
+// That peak predates exposing the ordinary position constructor in this TU.
+// Current 93.3047% expands the constructor retained at retail +0x132. Calling
+// the canonical position-plus-point operation reaches 93.3242%, still without
+// that call; the older four-byte residual is not the current stopping point.
 // Canonical-accessor control: 60 row/index lifetime, arithmetic-operand and
 // result-binding forms produce 11 distinct objects, with ten reproduced
 // retained candidates. Every form keeps this same four-byte mismatch.
@@ -8314,6 +8386,10 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 // A separate blocked-entrance result reaches 98.2893%; head-tested scans
 // whose exhaustion arm owns the guard-policy assignment reach 99.2993%
 // with for/while/do headers. Both remain below 99.9850%.
+// These peaks precede the constructor visibility recovery. Current 96.8953%
+// expands the constructor retained at retail +0xbd (live C2 cost 47 versus
+// direct-site budget 2404). Position-plus-guard-point reaches 96.9476% but
+// still expands it; restoring the call must precede the old stack-home work.
 VA(0x00546C70, 0x452) // anchor-callee 0x54721c; thiscall, ret 0x14
 unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition position, TRmgZone* zone)
@@ -8754,30 +8830,23 @@ unsigned char type_random_map_generator::paintRoad(TRmgMapPosition position, int
     }
 }
 
-// CreateRiver and the retail route at 0x548500 share this constructor,
-// GetMapItem(0, 0), and whole-map predecessor/cost reset sequence. Keeping
-// that common pass as an ordinary generator helper recovers all six seed
-// insert calls, both popped-element erase calls, and the range erase in
-// CreateRiver (75.23%, versus 71.47% with the pass flattened there).
-// Dreamcast has no RMG compiland; the role name/linkage remain provisional.
-// Unsigned width/height values passed through the recovered grid constructor
-// restore all 90 raw bytes at CreateRiver +0x42..+0x9c: the height temporary,
-// volume calculation and by-value predecessor copy. Scalar products/getters
-// and signed TPoint size queries lose those homes. Direct grid construction
-// from the signed fields instead spills width; naming height before width
-// also reverses the retail dimension loads. The loop retains its 0xbc frame.
-// CreateRiver reaches 85.96%; early vector _Destroy calls still over-expand.
-// Its final empty-vector cleanup now has separate returns where retail shares
-// the final delete epilogue. Preserve the exact reset sequence through that
-// remaining caller cleanup work.
+// The river and road callers share the invalid-predecessor constructor,
+// GetMapItem(0, 0), and whole-map cost reset. This ordinary helper preserves
+// those source calls; retail expands both in createRoads but retains them at
+// createRiverToObject +0x2f/+0x3d. RMG has no Dreamcast counterpart, so the
+// role name and linkage remain inferred from retail callers.
+// A separate signed row count recovers the levels-before-height products in
+// both road resets. All six unbroken product permutations emit height first
+// (99.9816%); a signed width*levels intermediate also reproduces the exact
+// result. The older unsigned grid-size temporary matched one river prefix,
+// but the scalar model matches the entire road caller and improves both
+// current river callers. Their constructor/cleanup inlining remains open.
 void type_random_map_generator::resetMovementCosts()
 {
     TRmgMapPosition resetPosition(-1, -1, -1);
     TRmgMapItem* mapItem = m_map.getMapItem(0, 0);
-    unsigned width = m_map.m_mapWidth;
-    unsigned height = m_map.m_mapHeight;
-    TRmgGridPoint mapSize(width, height);
-    int mapItemCount = mapSize.m_x * mapSize.m_y * m_map.m_numberLevels;
+    int rowCount = m_map.m_numberLevels * m_map.m_mapHeight;
+    int mapItemCount = rowCount * m_map.m_mapWidth;
     while (mapItemCount--) {
         mapItem->resetMovement(resetPosition);
         ++mapItem;
@@ -8786,9 +8855,8 @@ void type_random_map_generator::resetMovementCosts()
 
 // Retail 0x549c98 connects every ordered target pair using one random road
 // style. A successful draw changes traversal costs for subsequent targets.
-// Partial 71.72%: resetMovementCosts retains its position constructor and
-// two-coordinate map lookup at each call; retail expands both. Keep the
-// canonical shared reset rather than copying its body into this caller.
+// Exact with a copied destination and the shared scalar-volume reset.
+// A destination reference leaves different register homes (99.8341%).
 VA(0x00548290, 0x26E)
 void type_random_map_generator::createRoads()
 {
@@ -8798,8 +8866,9 @@ void type_random_map_generator::createRoads()
         resetMovementCosts();
         buildRoadCostMap(source);
         for (unsigned int second = first + 1; second < m_roadTargets.size(); ++second) {
-            if (m_map.getMapItem(m_roadTargets[second])->m_movement.m_cost <= 30000
-                && paintRoad(m_roadTargets[second], roadType)
+            TRmgMapPosition destination = m_roadTargets[second];
+            if (m_map.getMapItem(destination)->m_movement.m_cost <= 30000
+                && paintRoad(destination, roadType)
                 && second < m_roadTargets.size() - 1) {
                 resetMovementCosts();
                 buildRoadCostMap(source);
@@ -9196,8 +9265,13 @@ void type_random_map_generator::createRivers()
 // A further 60 states cross paired record/two-row/separate slot arrays with
 // initialization and selection lifetimes. Two ordinary byte-fill loops restore
 // both retail human/computer count-load orders; aggregate ownership is neutral.
+// String assignment/receiver APIs and shared or typed slot-zeroing loops
+// also fail to settle the selected-index register; keep the current source.
 // All 69 blocks, 39 branches and ordered calls agree; only four selected-index
-// instructions differ. The 116-form native oracle preserves player mapping,
+// instructions differ. Named random/count values and a template-name owner
+// (21 states, 12 objects) leave 99.9357% as the peak. Reusing the selected
+// index for later zone loops also emits the same object.
+// The 116-form native oracle preserves player mapping,
 // ordered callbacks and callback mutations, rejecting seven negative controls.
 VA(0x00549930, 0x37B)
 unsigned char type_random_map_generator::generate()
@@ -9777,6 +9851,8 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile*, TObjectType*);
 // 95.5687..99.4123%, with every sibling unchanged. Neither closes the bias.
 // The native oracle also appends prototypes during serialization and rejects
 // cached loop sizes, so those per-iteration size queries must remain live.
+// Explicit bucket cursors with indexed, countdown or end-pointer bounds
+// do not recover the receiver bias; no vector-layout access is introduced.
 VA(0x0054ABF0, 0x235) // anchor-callee 0x54c05b + WriteMapHeader and map loops; retail-only
 unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
 {
@@ -9962,6 +10038,12 @@ static void insertRmgWorkItem(std::vector<TRmgZone*>& zones, TRmgZone* zone)
 // versus insert is flat; pop_back lowers to 69.3008% before that refinement.
 // Single/count insertion in the shared helper is flat. Retail retains
 // the seed-insert and erase wrappers that this compile expands.
+// A joint public seed/pop/emptiness family, including the existing sorted
+// insertion helper at the seed, does not improve those retained boundaries.
+// Live C2 tracing gives seed insert budget 907 against cost 64 and erase
+// budget 801 against cost 70. Separate initialization and extraction helpers,
+// including extraction with its empty test, peak at 84.9925% but still expand
+// both retail-retained wrappers. No speculative worklist wrapper is retained.
 VA(0x0054B180, 0x174) // anchor-callee + zone/template layouts; retail-only
 void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
 {
@@ -10184,25 +10266,11 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
 // Complete-only removal helper; callers retain ownership of the object.
 // Both retail find loops test the returned iterator against null, including
 // the end-iterator path (0x54bc95 and 0x54be6d). Preserve that observed test.
-// Unsigned grid indices and a full destination position restore retail's
-// 0x2c frame, coordinate homes and complete footprint-loop instruction stream.
-// The 60-state coordinate and finite 41-state level families reproduce
-// 95.6800% without sibling movement. Retain the real position accessor.
-// Residual: the zone count still expands to load/decrement/store instead
-// of retail's memory decrement; entrance arithmetic and color registers
-// differ. Sixty counter-spelling/type-cache probes are neutral per parent.
-// Sixty zone-type/item/owner probes reach 95.7022% only through different
-// color registers, not the missing counter sequence; no such edit adopted.
-// Earlier scalar controls: positive bounds and iterator scope are neutral;
-// shared mask index 77.3911%, entrance position/accessor 85.0578%.
-// See generate-rmg-object-removal-family.py and its independent cell oracle.
-// Snapshotting the object kind and nested trigger point before the map query
-// raises matching to 95.7733%. Keep the existing direct per-zone decrement;
-// the separate inferred decrement helper from the old branch is not needed.
-// A two-state joint test of an ordinary int& zone-count accessor at all three
-// increment/decrement/limit consumers reproduces identical caller bytes.
-// The accessor fully expands; its returned lvalue does not recover memory DEC
-// or alter the entrance/color homes. Fixed-array storage stays unchanged.
+// Grid coordinates and the prototype snapshots preserve the footprint walk.
+// The ordinary zone bookkeeping helper expands to retail's indexed
+// memory DEC; flattening it splits the update and leaves 95.7733%.
+// Current VC6 reproduces all 686 bytes with enum/int value or enum-reference
+// parameters; int-reference leaves 97.3733%. Keep the existing enum domain.
 VA(0x0054BC50, 0x2AE) // anchor-callee 0x5338e0/0x54b490; retail-only
 void type_random_map_generator::removeObject(type_object* object)
 {
@@ -10218,7 +10286,7 @@ void type_random_map_generator::removeObject(type_object* object)
         int zone = m_map.getMapItem(position.m_x - trigger.m_x,
             position.m_y - trigger.m_y, position.m_z)->m_zoneState.m_zone;
         if (zone >= 0) {
-            --m_zones[zone]->m_objectCountByType[objectType];
+            m_zones[zone]->decrementObjectCount(objectType);
         }
     }
     if (prototype->m_objectType == BORDER_GUARD) {
@@ -10384,6 +10452,8 @@ static TPoint computeRmgCircumcenter(TPoint third, TPoint origin, TPoint second)
 // parent/result lifetimes and canonical arithmetic bodies. Native triangle/
 // ring checks preserve integer division, all three position/flag writes,
 // inactive edges and graph links.
+// All six parameter orders under the current member-dot model also retain
+// this peak; the helper's argument order does not explain the remaining loads.
 VA(0x005FDB40, 0x16E) // anchor-caller 0x53e050; Complete-only, thiscall ret 0
 void TRmgVoronoi::buildVertices()
 {
