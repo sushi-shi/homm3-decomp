@@ -7076,6 +7076,10 @@ TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, int level)
 // The shared guarded cell-setter model reaches 92.475%, but its joint runtime
 // transfer caller still loses MAX (commitTreasureGroup 99.9141% -> 82.6016%).
 // Keep that as a source-model lead requiring caller recovery, not an inline pin.
+// Direct point inequality and named/constructed results in the four canonical
+// point/vector operators do not resolve these boundaries. Class-body versus
+// ordinary cell setters is byte-neutral here; their runtime transfer caller
+// still needs the retained three-coordinate constructor and its live snapshots.
 VA(0x00543E20, 0x574) // anchor-callee 0x544920; Complete-only, thiscall, no arguments
 void type_random_map_generator::carveBranchingPaths()
 {
@@ -7739,6 +7743,10 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
 // A shared zone-adjusted value helper plus the proxy query reaches 90.3657%,
 // but the joint treasure caller then loses MAX (77.0873% -> 63.2664%).
 // Its disabled/explicit-result variants do not yet recover that caller.
+// Free overloads taking zone or scalar strengths reproduce that same tradeoff.
+// Cell zone/count queries and a reference-returning position accessor leave
+// this caller unchanged. Direct mutable bitset indexing loses the outer query
+// boundary; keep the prototype query while recovering the remaining helpers.
 VA(0x00545990, 0x466)
 unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     int resource, unsigned char startingMine, int spacing)
