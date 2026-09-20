@@ -3890,7 +3890,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 
     m_objectTypes.resize(count);
 
-    long i;
+    int i;
     for (i = 0; i < m_objectTypes.size(); ++i) {
         int status = readObjectType(infile, m_objectTypes[i]);
         if (status < 0)
