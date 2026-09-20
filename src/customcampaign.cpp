@@ -2688,6 +2688,49 @@ void SCampaign::playScenarioEpilogue(void* campaignHeader)
 // The earlier typed-header checkpoint was 70.3423%, with 79.2531%
 // retained in HIST (2026-09-08); no new byte-score claim follows this move.
 
+// The pre-v28 record's per-hero conversion. A `static` with a single call
+// site leaves no out-of-line copy, so its absence from the image argues for
+// the boundary rather than against it - the findAttackHexes precedent above.
+// Holding it here keeps SCampaign::load's own caller_cb down, which is what
+// leaves the vector size()/_Destroy expansions starved as retail's bytes show.
+static void convertLegacyCampaignHero(hero& newHero,
+                                      const LegacyCampaignHero& oldHero)
+{
+    newHero.m_id = oldHero.m_id;
+    newHero.m_owner = oldHero.m_owner;
+    strcpy(newHero.m_name, oldHero.m_name);
+    newHero.m_heroClass = oldHero.m_heroClass;
+    newHero.m_portrait = oldHero.m_portrait;
+    newHero.m_lastMagicSchoolLevel = oldHero.m_lastMagicSchoolLevel;
+    newHero.m_experience = oldHero.m_experience;
+    newHero.m_level = oldHero.m_level;
+    newHero.m_levelSeed = oldHero.m_levelSeed;
+    newHero.m_lastWisdom = oldHero.m_lastWisdom;
+    newHero.m_army = oldHero.m_army;
+    memcpy(newHero.m_skillLevel, oldHero.m_skillLevel,
+           sizeof(newHero.m_skillLevel));
+    memcpy(newHero.m_skillOrder, oldHero.m_skillOrder,
+           sizeof(newHero.m_skillOrder));
+    newHero.m_skillCount = oldHero.m_skillCount;
+
+    for (int equippedSlot = 0; equippedSlot < 19; ++equippedSlot) {
+        type_artifact artifact = oldHero.m_equipped[equippedSlot];
+        if (artifact.m_artifactId != ARTIFACT_NONE)
+            newHero.equipArtifact(&artifact, equippedSlot);
+    }
+    for (int backpackSlot = 0; backpackSlot < 64; ++backpackSlot) {
+        type_artifact artifact = oldHero.m_backpack[backpackSlot];
+        if (artifact.m_artifactId != ARTIFACT_NONE)
+            newHero.addToBackpack(&artifact, backpackSlot);
+    }
+    for (int spell = 0; spell < 70; ++spell) {
+        if (oldHero.m_inSpellbook[spell])
+            newHero.addSpell(spell);
+    }
+    for (int stat = 0; stat < 4; ++stat)
+        newHero.setPrimarySkill(stat, oldHero.m_stats[stat]);
+}
+
 // Controlled recovery (2026-09-09): the 64 combinations of six widened,
 // masked read buffers produce two emitted identities but no score change.
 // Thus retail's dword-and-mask instructions do not prove an int source
@@ -2754,42 +2797,7 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
                     saved.m_carryOverHeroes[pool][whichHero];
                 hero& newHero = heroPool[whichHero];
 
-                newHero.m_id = oldHero.m_id;
-                newHero.m_owner = oldHero.m_owner;
-                strcpy(newHero.m_name, oldHero.m_name);
-                newHero.m_heroClass = oldHero.m_heroClass;
-                newHero.m_portrait = oldHero.m_portrait;
-                newHero.m_lastMagicSchoolLevel =
-                    oldHero.m_lastMagicSchoolLevel;
-                newHero.m_experience = oldHero.m_experience;
-                newHero.m_level = oldHero.m_level;
-                newHero.m_levelSeed = oldHero.m_levelSeed;
-                newHero.m_lastWisdom = oldHero.m_lastWisdom;
-                newHero.m_army = oldHero.m_army;
-                memcpy(newHero.m_skillLevel, oldHero.m_skillLevel,
-                       sizeof(newHero.m_skillLevel));
-                memcpy(newHero.m_skillOrder, oldHero.m_skillOrder,
-                       sizeof(newHero.m_skillOrder));
-                newHero.m_skillCount = oldHero.m_skillCount;
-
-                for (int equippedSlot = 0; equippedSlot < 19;
-                     ++equippedSlot) {
-                    type_artifact artifact = oldHero.m_equipped[equippedSlot];
-                    if (artifact.m_artifactId != ARTIFACT_NONE)
-                        newHero.equipArtifact(&artifact, equippedSlot);
-                }
-                for (int backpackSlot = 0; backpackSlot < 64;
-                     ++backpackSlot) {
-                    type_artifact artifact = oldHero.m_backpack[backpackSlot];
-                    if (artifact.m_artifactId != ARTIFACT_NONE)
-                        newHero.addToBackpack(&artifact, backpackSlot);
-                }
-                for (int spell = 0; spell < 70; ++spell) {
-                    if (oldHero.m_inSpellbook[spell])
-                        newHero.addSpell(spell);
-                }
-                for (int stat = 0; stat < 4; ++stat)
-                    newHero.setPrimarySkill(stat, oldHero.m_stats[stat]);
+                convertLegacyCampaignHero(newHero, oldHero);
             }
         }
         return;
@@ -2797,9 +2805,7 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
 
     m_isCheater = readValue<unsigned char>(infile) != 0;
     if (saveVersion >= 26) {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        m_secretActive = value != 0;
+        m_secretActive = readValue<unsigned char>(infile) != 0;
     } else {
         m_secretActive = false;
     }

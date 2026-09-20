@@ -1323,7 +1323,7 @@ customcampaign	?isBuildingBonus@TCampaignBuildingBonus@@UBE_NXZ	100.0000	100.000
 customcampaign	?isBuildingBonus@TCampaignStartBonusOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85430	tokens1:8b6a1ee6fc7e
 customcampaign	?isBuildingBonus@TCampaignStartCrossoverOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85a30	tokens1:28de21c0102a
 customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	53.9715	53.9868	80.9474	0x88880	tokens1:68425173baf1
-customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	69.5768	69.5768	79.2531	0x8a310	tokens1:86cef2a14e4d
+customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	93.7656	93.7656	93.7656	0x8a310	tokens1:282ef96ab96e
 customcampaign	?loadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	tokens1:308273d46565
 customcampaign	?loadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	tokens1:31457f8c8102
 customcampaign	?markCrossoverHeroes@ScenarioStruct@TCampaignBrief@@QAEXPAE@Z	100.0000	100.0000	100.0000	0x87e10	tokens1:c8a3ed26a8f8
