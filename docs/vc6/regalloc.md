@@ -1872,3 +1872,23 @@ their scores. The four differently named folded STL callees also match their
 retail bodies. This explains the temporary lifetime without a caller block
 or a separate convenience helper. It does not prove whether the original
 source supplied the temporary explicitly or through a default argument.
+
+## Recover shared state before treating register swaps as allocator noise
+
+`BinkManager::playBink` (`0x44dd20`) reaches 100% after restoring the
+48-byte `BinkManagerStruct`, its namespace-global `playingBINK` object, and its
+`unsigned short* screen` member. Dreamcast's member/global records prove
+this layout; retail's field accesses and campaign-preview copies corroborate
+it. The reconstruction had represented the twelve members as separate
+extern globals and the screen as a byte pointer.
+
+With sound enabled before dimension snapshots and global coordinates stored
+before redraw locals, the fragmented model reaches 98.3721%. Both setup
+branches keep X/Y in the opposite EAX/ECX roles from retail, and the final
+bitmap-address additions differ. Scalar/POINT positions, named byte offsets,
+canonical bitmap accessor variants and message lifetimes do not close that
+gap. The combined canonical aggregate and typed `getMap` assignment do:
+all 30 playback blocks and 15 calls agree after fresh delinking. This is a
+measured combined source model, not an isolated claim about which type or
+alias-analysis rule decides register allocation. Preserve the same aggregate
+in consumers and saved state instead of introducing aliases to its fields.

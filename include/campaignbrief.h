@@ -79,6 +79,7 @@ public:
         // Retail 0x488fb0, the thiscall SCampaign::PlayScenarioPrologue
         // makes on a scenario's prologue record (name provisional).
         void play();
+        void read(TAbstractFile* infile);
     };
 
     // The empty NewMapCampaignContext base is how game::NewMap receives the
@@ -204,6 +205,15 @@ public:
         void startScenario(int which, int option);
         void freeData();
         int getNumMaps() const;
+        // Complete expands this shared cleanup in both load and the destructor.
+        void clearScenarios()
+        {
+            for (unsigned int scenarioIndex = 0;
+                 scenarioIndex < m_scenarios.size(); ++scenarioIndex)
+                delete m_scenarios[scenarioIndex];
+            m_scenarios.clear();
+            freeData();
+        }
     };
 
     // Dreamcast's LF_FIELDLIST preserves this complete nested enum.  The

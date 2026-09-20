@@ -253,13 +253,13 @@ int interpretCommandLine();
 bool initializeAdventureEventText();
 unsigned char initializeSpellTraitsTable();
 unsigned char initializeHeroTraitsTable();
-unsigned char initializeHeroClassTraitsTable();
+bool initializeHeroClassTraitsTable();
 unsigned char initializeBallisticsTable();
-unsigned char initializeSSkillTraitsTable();
-unsigned char initializeArtifactTraitsTable();
-unsigned char initializeVCDescriptions();
-unsigned char initializeLCDescriptions();
-unsigned char initializeTurnDurationText();
+bool initializeSSkillTraitsTable();
+bool initializeArtifactTraitsTable();
+bool initializeVCDescriptions();
+bool initializeLCDescriptions();
+bool initializeTurnDurationText();
 unsigned char initializeCreatureAnimationTraitsTable();
 bool initializeArtifactEventText();
 bool initializeRandomSignText();
@@ -995,18 +995,18 @@ int oldmain()
         videoPlay(27, 0, 0, 800, 600);
 
         g_testDecomp = static_cast<int>(
-            static_cast<float>(g_binkSummary.m_totalDecompTime * 100)
-            / static_cast<float>(g_binkSummary.m_totalTime));
+            static_cast<float>(g_binkSummary.TotalDecompTime * 100)
+            / static_cast<float>(g_binkSummary.TotalTime));
         g_testBlit = static_cast<int>(
-            static_cast<float>(g_binkSummary.m_totalBlitTime * 100)
-            / static_cast<float>(g_binkSummary.m_totalTime));
+            static_cast<float>(g_binkSummary.TotalBlitTime * 100)
+            / static_cast<float>(g_binkSummary.TotalTime));
         g_testRead = static_cast<int>(
-            static_cast<float>(g_binkSummary.m_totalReadTime * 100)
-            / static_cast<float>(g_binkSummary.m_totalTime));
+            static_cast<float>(g_binkSummary.TotalReadTime * 100)
+            / static_cast<float>(g_binkSummary.TotalTime));
 
-        if (static_cast<float>(g_binkSummary.m_totalTime)
+        if (static_cast<float>(g_binkSummary.TotalTime)
                 <= static_cast<float>(
-                    1000 * (g_binkSummary.m_totalFrames / g_binkSummary.m_frameRate)
+                    1000 * (g_binkSummary.TotalFrames / g_binkSummary.FrameRate)
                     + 500)
             && g_testDecomp < 40
             && g_testBlit < 25

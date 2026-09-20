@@ -364,6 +364,10 @@ static unsigned char initializeMoveConstants()
 }
 
 VA(0x004d7240, 0x223)  // dc 0xca984
+// DC public ?initialize_ballistics_table@@YA_NXZ is bool, but its
+// initialize_move_constants callee returns unsigned char. VC6 normalizes that
+// tail call for bool; Complete forwards the byte unchanged, proving the
+// Windows interface changed to unsigned char.
 unsigned char initializeBallisticsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(

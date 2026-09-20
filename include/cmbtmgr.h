@@ -8,6 +8,7 @@
 #include "basemgr.h"
 #include "hexcell.h"
 #include "struct.h"
+#include "winmgr.h"
 
 class Bitmap16Bit;
 class CNetMsgHandlerPause;
@@ -1188,14 +1189,11 @@ public:
     void updateMouseGrid(int gridIndex, std::vector<long>& hexes,
                          unsigned char forceUpdate);
     void updateMouseGrid(int gridIndex, int allowDuringAction);
-    // drawing.cpp:513, DC 0x83ec0. DC's body takes the extent by value;
-    // Complete has no out-of-line copy, and the exact retail expansion in
-    // UpdateMouseGrid proves its const-reference form here.
-    void updateCombatArea(const SLimitData& area);
-    // Fly's two Complete-era header folds. The retail viewport never scrolls,
-    // so ScrollTo is supplied as a TU inline there; UpdateCombatArea expands
-    // to UpdateScreen, matching drawing.cpp's retained inline copy.
-    // DC drawing.cpp:679/680 preserves the coordinate facade.
+    // Preserve DC UpdateCombatArea's by-value extent and coordinate facade.
+    // The Windows fixed-viewport definitions and their platform evidence are
+    // below. The coordinate ScrollTo facade remains ordinary in drawing.cpp.
+    void updateCombatArea(SLimitData area);
+    void updateCombatArea(int x, int y, int width, int height);
     bool scrollTo(int x, int y, int width, int height, bool draw,
                   bool doscrollX, bool doscrollY);
     bool scrollTo(SLimitData extent, bool draw,
@@ -2118,5 +2116,32 @@ extern const unsigned char g_outerMoatColumns[];
 extern const long g_castleWallGateTargets[5];   // 0x63abe0
 extern const long g_castleWallGateTargetsEnd[]; // 0x63abf4, one past
 
+
+// Windows fixed-viewport implementations. CE drawing.cpp:513/514 forwards
+// a by-value extent to the four-int UpdateCombatArea (dc 0x83ec0/0x83ee8).
+// Preserve that call and inclusive dimensions. The CE leaf clips/translates
+// viewport offsets, calls six-int Window::UpdateScreen and redraws a combat
+// window; retail Fly instead calls four-int updateScreen at 0x4b4df3.
+// Likewise CE ScrollTo (drawing.cpp:598, dc 0x8405c) moves/redraws a viewport;
+// retail Fly has neither its scrolling work nor a scrolled-result branch.
+// One shared Windows definition accounts for those cross-TU expansions.
+// Header placement is a platform visibility inference, not recovered lexical
+// source. dc_only.tsv retains the CE origins separately. The by-value helper
+// chain reproduces all 1102 Fly bytes; an inlined copy does not prove a
+// const-reference parameter. The coordinate ScrollTo facade stays in drawing.cpp.
+inline void combatManager::updateCombatArea(int x, int y, int width, int height)
+{
+    g_windowManager->updateScreen(x, y, width, height);
+}
+
+inline void combatManager::updateCombatArea(SLimitData area)
+{
+    updateCombatArea(area.m_minX, area.m_minY, area.width(), area.height());
+}
+
+inline bool combatManager::scrollTo(SLimitData, bool, bool, bool)
+{
+    return false;
+}
 
 #endif  /* HOMM3_CMBTMGR_H */

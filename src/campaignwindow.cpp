@@ -20,7 +20,7 @@ DATA(0x00694e2c) static TCampaignWindow* g_campaignWindow;
 
 // Complete-only campaign-preview table at retail 0x66c498. Each 0x50-byte
 // row has eight descriptor dwords followed by a 12-dword snapshot of the
-// consecutive Bink state beginning at gBinkVideo. The constructor/helper own
+// BinkManager::playingBINK aggregate. The constructor/helper own
 // the initialized rows; this TU view intentionally makes no DATA claim yet.
 // The row type and the caption block live in campaignwindow.h.
 
@@ -44,8 +44,8 @@ void TCampaignWindow::hideText()
 }
 
 // One preview row's video: open it at the row's own position, pause the
-// track, snapshot the twelve consecutive Bink globals into the row and clear
-// gBinkVideo so the next row opens a fresh one, then hang the row's still on
+// track, snapshot the Bink playback state into the row and clear
+// its first track so the next row opens a fresh one, then hang the row's still on
 // the window. The destructor and the hover handler restore that snapshot.
 VA(0x0045e7c0, 0x27A)
 void TCampaignWindow::openPreview(int campaignIndex)
@@ -54,10 +54,11 @@ void TCampaignWindow::openPreview(int campaignIndex)
 
     videoOpen(preview->m_video, preview->m_x, preview->m_y, PREVIEW_WIDTH,
               PREVIEW_HEIGHT, 1, 0, 1);
-    g_binkPaused = 0;
-    _BinkPause(g_binkVideo, 0);
-    memcpy(preview->m_binkState, &g_binkVideo, 12 * sizeof(int));
-    g_binkVideo = 0;
+    BinkManager::g_playingBink.m_paused = 0;
+    BinkPause(BinkManager::g_playingBink.m_bink, 0);
+    memcpy(&preview->m_binkState, &BinkManager::g_playingBink,
+        sizeof(BinkManager::g_playingBink));
+    BinkManager::g_playingBink.m_bink = 0;
 
     m_widgets.push_back(new bitmapBorder16(preview->m_x, preview->m_y,
         PREVIEW_WIDTH, PREVIEW_HEIGHT, preview->m_widgetId, preview->m_image,
@@ -252,14 +253,17 @@ VA(0x0045f210, 0xAE)  // dc 0x5bd00
 TCampaignWindow::~TCampaignWindow()
 {
     // Six Complete campaign previews retain independent copies of the Bink
-    // globals. Restore each live copy, close it, then preserve the cleared
+    // playback state. Restore each live copy, close it, then preserve the cleared
     // state back into its row.
     for (int preview = 0; preview < 6; ++preview) {
-        int* savedBinkState = g_campaignPreviews[preview].m_binkState;
-        if (*savedBinkState) {
-            memcpy(&g_binkVideo, savedBinkState, 12 * sizeof(int));
+        BinkManager::BinkManagerStruct* savedBinkState =
+            &g_campaignPreviews[preview].m_binkState;
+        if (savedBinkState->m_bink) {
+            memcpy(&BinkManager::g_playingBink, savedBinkState,
+                sizeof(BinkManager::g_playingBink));
             BinkManager::closeBink();
-            memcpy(savedBinkState, &g_binkVideo, 12 * sizeof(int));
+            memcpy(savedBinkState, &BinkManager::g_playingBink,
+                sizeof(BinkManager::g_playingBink));
         }
     }
 
@@ -289,10 +293,10 @@ int campaignWindowHandler(message& msg)
 {
     int exitFlag = 0;
 
-    if (g_binkDirty) {
+    if (BinkManager::g_needsUpdate) {
         g_campaignWindow->drawWindow(0, 0x80, 0x86);
-        g_windowManager->updateScreen(g_binkX, g_binkY,
-            g_binkUpdateWidth, g_binkUpdateHeight);
+        g_windowManager->updateScreen(BinkManager::g_playingBink.m_x, BinkManager::g_playingBink.m_y,
+            BinkManager::g_playingBink.m_w, BinkManager::g_playingBink.m_h);
     }
     if (msg.m_id == MESSAGE_WIDGET) {
         if (msg.m_codeX == widget::WIDGET_DESELECT) {
@@ -322,8 +326,8 @@ int campaignWindowHandler(message& msg)
                     id - TCampaignWindow::CAMPAIGN_FIRST_ID,
                     g_campaignFileNames[
                         id - TCampaignWindow::CAMPAIGN_FIRST_ID]);
-                g_binkPaused = 1;
-                _BinkPause(g_binkVideo, 1);
+                BinkManager::g_playingBink.m_paused = 1;
+                BinkPause(BinkManager::g_playingBink.m_bink, 1);
                 // Fall through: selection and cancel both close the dialog.
             case DIALOG_RETURN_CANCEL:
                 exitFlag = 1;
@@ -356,13 +360,14 @@ int campaignWindowHandler(message& msg)
                 g_campaignWindow->hideText();
                 g_campaignWindow->getWidget(hoverID
                         - g_campaignWindow->m_firstCampaign - 7)->show();
-                memcpy(&g_binkVideo, preview->m_binkState, 12 * sizeof(int));
-                g_binkPaused = 0;
-                _BinkPause(g_binkVideo, 0);
+                memcpy(&BinkManager::g_playingBink, &preview->m_binkState,
+                    sizeof(BinkManager::g_playingBink));
+                BinkManager::g_playingBink.m_paused = 0;
+                BinkPause(BinkManager::g_playingBink.m_bink, 0);
                 BinkManager::restartBink();
             } else {
-                g_binkPaused = 1;
-                _BinkPause(g_binkVideo, 1);
+                BinkManager::g_playingBink.m_paused = 1;
+                BinkPause(BinkManager::g_playingBink.m_bink, 1);
                 g_campaignWindow->hideText();
             }
 

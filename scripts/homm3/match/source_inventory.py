@@ -130,10 +130,10 @@ def reconcile(definitions, origins, dc_only, win_only, dc_inlined=None, *, symbo
                            else definition.file), source_file=definition.file,
                    source_line=definition.line, source_name=definition.name,
                    signature=definition.signature)
-        if key in win_only:
-            row.update(status='documented_win_only', reason=win_only[key])
-        elif key in dc_inlined:
+        if key in dc_inlined:
             row.update(status='documented_dc_inlined', reason=dc_inlined[key])
+        elif key in win_only:
+            row.update(status='documented_win_only', reason=win_only[key])
         else:
             has_identity = (ownership.procedure_name(definition.original_name or definition.name)
                             in origin_names or definition.dc_offset in origin_offsets)
