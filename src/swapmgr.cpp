@@ -1989,6 +1989,8 @@ int swapManager::main(message& msg)
 // admitted case range independently. GetArmyName, get_artifact/get_backpack,
 // GetNthSS and get_rollover_text retain their recovered source boundaries;
 // Complete /Ob2 expands the first three where the x86 body proves it.
+// Dreamcast attributes the hero-heading format lookup to
+// TTextResource::operator[]; getText() is the readable byte-identical wrapper.
 // Residual (99.9787%): all 45 CFG blocks, sizes, branches and instruction
 // counts are exact. Two primary-stat loads differ only in relocation naming
 // (gPrimarySkillNames plus a negative addend versus retail's biased effective

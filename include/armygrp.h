@@ -5,6 +5,7 @@
 
 #include "abstractfile.h"
 #include "artifact_type.h"
+#include "creature_flags.h"
 #include "spellschool.h"
 #include "struct.h"
 #include "terrain_type.h"

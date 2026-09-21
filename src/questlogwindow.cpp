@@ -186,9 +186,3 @@ void doQuestLog(int player)
     g_questLogWindow->doModal(0);
     delete g_questLogWindow;
 }
-
-VA(0x0052e6b0, 0x2E)
-const std::string* type_quest::questTextRow()
-{
-    return m_seerHut ? g_questTextA[m_textVariant] : g_questTextB[m_textVariant];
-}

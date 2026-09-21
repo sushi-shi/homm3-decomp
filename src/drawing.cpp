@@ -243,11 +243,11 @@ bool combatManager::showCreatureSpellError(
         if (targetArmy->getOwningSide() != m_currentSide) {
             return false;
         }
-        if ((targetArmy->is(1u << 21))
+        if ((targetArmy->is(creatureImmobilized))
                 && currentArmy->m_creatureType == CREATURE_OGRE_MAGE) {
             return false;
         }
-        if (!(targetArmy->is(1u << 21))
+        if (!(targetArmy->is(creatureImmobilized))
                 && currentArmy->m_creatureType == army::ARMY_CREATURE_PIT_LORD) {
             return false;
         }
@@ -293,7 +293,7 @@ bool combatManager::showCreatureSpellError(
         }
 
         case army::ARMY_CREATURE_PIT_LORD: {
-            if (!(targetArmy->is(1u << 4))) {
+            if (!(targetArmy->is(creatureAlive))) {
                 sprintf(buffer, (*g_generalText)[702],
                         getArmyName(army::ARMY_CREATURE_DEMON, 2));
                 return true;
@@ -315,7 +315,7 @@ bool combatManager::showCreatureSpellError(
             if (targetArmy->m_origNumTroops <= targetArmy->m_numTroops) {
                 break;
             }
-            if (!(targetArmy->is(1u << 4))) {
+            if (!(targetArmy->is(creatureAlive))) {
                 strcpy(buffer, (*g_generalText)[705]);
                 return true;
             }
@@ -355,7 +355,7 @@ void combatManager::combatMessage(int command)
     long distance;
     switch (command) {
     case COMBAT_COMMAND_NONE:
-        if (currentArmy->is(1u << 2) && currentArmy->m_monInfo.m_numShots == 0
+        if (currentArmy->is(creatureShootingArmy) && currentArmy->m_monInfo.m_numShots == 0
                 && targetArmy)
             strcpy(g_text, (*g_generalText)[299]);
         else
@@ -648,7 +648,7 @@ void combatManager::setupGridForArmy(const army* thisArmy)
     for (int i = 0; i < COMBAT_GRID_CELLS; i++) {
         if (i == thisArmy->m_gridIndex) {
             m_curDrawGridShade[i] = 1;
-        } else if (thisArmy->is(1u << 0)
+        } else if (thisArmy->is(creatureDoubleWide)
                    && i == thisArmy->m_gridIndex
                        + thisArmy->offsetToFront(-1)) {
             m_curDrawGridShade[i] = 1;
@@ -1346,7 +1346,7 @@ void combatManager::drawOccupant(int index, int drawPriority,
             || (m_moatIsWide && index == g_outerMoatColumns[row]))
         drawMoatOverlay(index);
 
-    if (occupant->is(1u << 0)) {
+    if (occupant->is(creatureDoubleWide)) {
         int front = index + occupant->offsetToFront(-1);
         if (front == g_moatColumns[row]
                 || (m_moatIsWide && front == g_outerMoatColumns[row]))
@@ -1820,7 +1820,7 @@ void combatManager::cycleCombatScreen()
     for (side = 0; side < 2; side++) {
         for (int slot = 0; slot < m_numArmies[side]; slot++) {
             army* stack = &m_armies[side][slot];
-            if (!(stack->is(1u << 21))
+            if (!(stack->is(creatureImmobilized))
                     && !stack->isIncapacitated()
                     && stack->m_creatureType != army::ARMY_CREATURE_ARROW_TOWER
                     && (stack->m_currFrameType == cs_fidget

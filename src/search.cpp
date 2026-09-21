@@ -340,7 +340,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
             &g_game->m_worldMap.m_questGuardList[mapCell->m_extraInfo];
         if (!guard->m_quest || guard->m_quest->hasExpired())
             return 0;
-        if (!(guard->m_visitedPlayers & (1 << currentHero->m_owner)))
+        if (!guard->playerHasInfo(currentHero->m_owner))
             return 1;
         if (!guard->m_quest->isSatisfied(const_cast<hero*>(currentHero)))
             return 0;

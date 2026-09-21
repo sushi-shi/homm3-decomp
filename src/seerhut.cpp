@@ -1398,20 +1398,18 @@ void type_creature_quest::loadFromMap(TAbstractFile* file)
     type_quest::loadFromMap(file);
 }
 
+// Complete-only: the Dreamcast procedure roster has no creature-quest save
+// body. Retail's one-slot frame and reuse of the file parameter home for the
+// integer count identify the canonical by-value writeValue boundary; direct
+// staging used two frame slots and stopped at 99.4853%.
 VA(0x00571280, 0x137)
 void type_creature_quest::save(TAbstractFile* file)
 {
     unsigned char count = static_cast<unsigned char>(m_types.size());
     file->write(&count, sizeof(count));
     for (unsigned int i = 0; i < m_types.size(); i++) {
-        {
-            short value = m_types[i];
-            file->write(&value, sizeof(value));
-        }
-        {
-            int value = m_counts[i];
-            file->write(&value, sizeof(value));
-        }
+        writeValue<short>(file, m_types[i]);
+        writeValue<int>(file, m_counts[i]);
     }
 
     {
@@ -1843,7 +1841,7 @@ void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
     }
 
     if (humanPlayer) {
-        if (!(m_visitedPlayers & (1 << currentHero->m_owner)))
+        if (!playerHasInfo(currentHero->m_owner))
             m_quest->doProgressDialog();
         else if (!m_quest->isSatisfied(currentHero))
             m_quest->doProposalDialog(currentHero);
@@ -1886,7 +1884,7 @@ std::string TQuestGuard::questGuardFn00572E40(int player)
     std::string text;
     text = g_questGuardName;
 
-    if ((m_visitedPlayers & (1 << static_cast<unsigned char>(player))) && m_quest) {
+    if (playerHasInfo(player) && m_quest) {
         text += DATA_COMPGEN(0x006603b0, questGuardQuickInfoSeparator, "\n\n");
         text += m_quest->getQuestDescription();
     }
@@ -1900,7 +1898,7 @@ std::string TQuestGuard::questGuardFn00573040(int player)
     std::string text;
     text = g_questGuardName;
 
-    if ((m_visitedPlayers & (1 << static_cast<unsigned char>(player))) && m_quest) {
+    if (playerHasInfo(player) && m_quest) {
         text += DATA_COMPGEN(0x00660330, questGuardRolloverSeparator, " ");
         text += m_quest->getQuestDescription();
     }
@@ -2088,8 +2086,10 @@ int TSeerHut::getValue(hero* currentHero)
 {
     int value = m_reward.getValue(currentHero);
 
-    if (!(m_visitedPlayers & (1 << currentHero->m_owner)))
-        return cppMax(value, 20);
+    // The by-value max wrapper owns its argument temporaries only in this
+    // arm; retail reuses that stack slot for the active quest below.
+    if (!playerHasInfo(currentHero->m_owner))
+        return ::max(value, 20);
 
     if (m_quest && !m_quest->hasExpired()
         && m_quest->isSatisfied(currentHero))
@@ -2131,8 +2131,7 @@ void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
             doEmptyDialog();
     } else {
         if (humanPlayer) {
-            if (!(m_visitedPlayers
-                  & (1 << static_cast<unsigned char>(g_netLocalGamePos))))
+            if (!playerHasInfo(g_netLocalGamePos))
                 m_quest->doProgressDialog();
             else if (!m_quest->isSatisfied(currentHero))
                 m_quest->doProposalDialog(currentHero);

@@ -819,7 +819,7 @@ unsigned char searchArray::validMoveAdjacent(const army* currentArmy, int hex)
             && g_combatManager->m_cells[adjacent].m_validMove
             && !m_isMoatSlowed[adjacent])
             return 1;
-        if (currentArmy->is(1)) {
+        if (currentArmy->is(creatureDoubleWide)) {
             adjacent -= currentArmy->offsetToFront(-1);
             if (combatManager::validHex(adjacent)
                 && g_combatManager->m_cells[adjacent].m_validMove
@@ -836,7 +836,7 @@ unsigned char searchArray::validMoveAdjacent(const army* currentArmy,
 {
     if (validMoveAdjacent(currentArmy, enemy.m_gridIndex))
         return 1;
-    if (enemy.is(1)
+    if (enemy.is(creatureDoubleWide)
         && validMoveAdjacent(currentArmy, enemy.getSecondGridIndex()))
         return 1;
     return 0;
@@ -872,9 +872,7 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
                     || !g_combatManager->isOutsidePlacementBoundry(
                             currentGroup, i))) {
             g_combatManager->m_cells[i].m_validMove = 1;
-            if ((thisArmy->m_monInfo.m_attributes & 1)
-                    && (static_cast<unsigned char>(static_cast<unsigned>(
-                            thisArmy->m_monInfo.m_attributes) >> 6) & 1) == 0) {
+            if (thisArmy->is(creatureDoubleWide) && !thisArmy->is(creatureSiegeWeapon)) {
                 long second = i + (thisArmy->m_facing != 0 ? 1 : -1);
                 if (second < 0 || second >= COMBAT_GRID_CELLS
                         || (second % COMBAT_GRID_ROW_STRIDE != 0
@@ -896,11 +894,10 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
         long other = 1 - currentGroup;
         const army* enemy = g_combatManager->m_armies[other];
         for (long j = 0; j < g_combatManager->m_numArmies[other]; j++, enemy++) {
-            if ((static_cast<unsigned char>(static_cast<unsigned>(
-                        enemy->m_monInfo.m_attributes) >> 21) & 1) == 0
+            if (!enemy->is(creatureImmobilized)
                     && enemy->m_creatureType != CREATURE_ARROW_TOWER) {
                 g_combatManager->m_cells[enemy->m_gridIndex].m_validMove = 1;
-                if (enemy->m_monInfo.m_attributes & 1)
+                if (enemy->is(creatureDoubleWide))
                     g_combatManager->m_cells[enemy->getSecondGridIndex()]
                             .m_validMove = 1;
             }
@@ -939,14 +936,11 @@ void searchArray::markTeleport(const army* currentArmy, long currentGroup)
                 enemyIndex < g_combatManager->m_numArmies[otherGroup];
                 ++enemyIndex, ++enemy) {
             if (enemy == currentArmy
-                    || (static_cast<unsigned char>(static_cast<unsigned>(
-                            enemy->m_monInfo.m_attributes) >> 21) & 1)
+                    || enemy->is(creatureImmobilized)
                     || enemy->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
 
-            long direction =
-                (static_cast<unsigned char>(static_cast<unsigned>(
-                    enemy->m_monInfo.m_attributes)) & 1) ? 8 : 6;
+            long direction = enemy->is(creatureDoubleWide) ? 8 : 6;
             while (direction-- > 0) {
                 long adjacent = enemy->getAdjacentHex(enemy->m_gridIndex,
                                                         direction);
@@ -962,8 +956,7 @@ void searchArray::markTeleport(const army* currentArmy, long currentGroup)
 
             markEnemy(enemy->m_gridIndex, 1);
 
-            if (static_cast<unsigned char>(static_cast<unsigned>(
-                    enemy->m_monInfo.m_attributes)) & 1)
+            if (enemy->is(creatureDoubleWide))
                 markEnemy(enemy->m_gridIndex, 1);
         }
     }
@@ -987,8 +980,7 @@ VA(0x004b3290, 0x16F)  // dc 0xa0804
 void searchArray::setMoat(const army* currentArmy)
 {
     memset(m_isMoatSlowed, 0, 187);
-    unsigned char flying = static_cast<unsigned char>(static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 1);
-    if (flying & 1)
+    if (currentArmy->is(creatureFlyingArmy))
         return;
     if (currentArmy->m_creatureType == CREATURE_ARCH_DEVIL)
         return;
@@ -1017,7 +1009,7 @@ void searchArray::setMoat(const army* currentArmy)
         }
     } }
     m_isMoatSlowed[currentArmy->m_gridIndex] = 0;
-    if (currentArmy->m_monInfo.m_attributes & 1)
+    if (currentArmy->is(creatureDoubleWide))
         m_isMoatSlowed[currentArmy->getSecondGridIndex()] = 0;
 }
 
@@ -1075,7 +1067,7 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
         return 0;
 
     markEnemy(enemy->m_gridIndex, cost);
-    if (enemy->is(1))
+    if (enemy->is(creatureDoubleWide))
         markEnemy(enemy->getSecondGridIndex(), cost);
     return hex == destination;
 }
@@ -1216,7 +1208,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
 
             int flightCost = 0;
             unsigned char moat = 0;
-            if (!(currentArmy->is(1))) {
+            if (!currentArmy->is(creatureDoubleWide)) {
                 moat = isMoat(adjacent);
             } else {
                 long sideStep = currentArmy->offsetToFront(-1);
@@ -1240,7 +1232,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
                 if (limit <= baseSpeed) {
                     if (isMoat(hex))
                         blocked = 1;
-                    if ((currentArmy->is(1))
+                    if (currentArmy->is(creatureDoubleWide)
                             && isMoat(static_cast<short>(
                                     pc.m_point.m_x
                                     + (currentArmy->offsetToFront(-1)))))
@@ -1250,7 +1242,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
                     if (checkEnemyArmies(adjacent, enemyCost, currentGroup,
                                            destination))
                         break;
-                    if (currentArmy->is(1)) {
+                    if (currentArmy->is(creatureDoubleWide)) {
                         long tail = adjacent
                             + (currentArmy->offsetToFront(-1));
                         if (checkEnemyArmies(tail, enemyCost,
@@ -1258,7 +1250,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
                             break;
                     }
                 }
-                if (!(currentArmy->is(2)
+                if (!(currentArmy->is(creatureFlyingArmy)
                         || currentArmy->m_creatureType == CREATURE_DEVIL
                         || currentArmy->m_creatureType == CREATURE_ARCH_DEVIL))
                     continue;

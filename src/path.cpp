@@ -42,7 +42,7 @@ VA(0x00523b20, 0x89)  // dc 0x10c9ec
 unsigned army::getAttackMask(int currIndex, int criteria, int literalTargetIndex) const
 {
     int testCellIndex;
-    unsigned char twoHex = static_cast<unsigned char>(m_monInfo.m_attributes & 1);
+    unsigned char twoHex = static_cast<unsigned char>(is(creatureDoubleWide));
     unsigned bit = 1;
     unsigned mask = twoHex ? 0 : 0xc0;
     int dirs = twoHex ? 8 : 6;
@@ -60,7 +60,7 @@ int army::validAttack(int currIndex, int direction, int criteria, int literalInd
     if (!combatManager::validHex(currIndex))
         return 0;
     int other = currIndex;
-    if (m_monInfo.m_attributes & 1) {
+    if (is(creatureDoubleWide)) {
         if (direction == COMBAT_DIRECTION_WIDE_UPPER) {
             *testCellIndex = getAdjacentCellIndex(currIndex, m_facing ? 0 : 5);
         } else if (direction == COMBAT_DIRECTION_WIDE_LOWER) {
@@ -120,7 +120,7 @@ int army::getAdjacentCellIndex(int currIndex, int direction) const
 VA(0x00523df0, 0x86)  // dc 0x10cc80
 long army::getAdjacentHex(long hex, long direction) const
 {
-    if (m_monInfo.m_attributes & 1) {
+    if (is(creatureDoubleWide)) {
         if (m_facing == 0) {
             if (direction >= 3)
                 hex--;
