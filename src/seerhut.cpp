@@ -1301,49 +1301,49 @@ void type_creature_quest::doProposalDialog(hero* currentHero)
 // in the joined stack list; otherwise it uses the base's dated proposal-text
 // getter. Picture qualifiers use the same unsigned 16|16 packing as slot 4.
 
-// The vectors need their own inner scope so their cleanup precedes the final
-// text cleanup. Retail retains the element destructor and expands the final
-// string destructor; the unpinned compiler currently makes the opposite pair
-// of inline decisions. The former end-of-scope inline-depth diagnostic is not
-// source evidence and has been removed.
+// Computing the five-column quest group through questTexts() restores retail's
+// questType/questTextRow call order. Keeping text and both vectors in their
+// natural declaration scope also reproduces every block through extendedDialog.
+// The residual is confined to implicit cleanup: retail calls the vector
+// element destructor and then expands text's destructor to _Tidy, while this
+// compiler invocation expands both one level deeper. Lifetime, condition and
+// alias spelling families did not change that boundary; no inline pragma is
+// retained.
 // E:\gamedcs\seerhut.cpp
 VA(0x00570b80, 0x2D5)  // anchor-vtable 0x6418b4 slot 5 + creature picture class, retail-only
 void type_creature_quest::doProgressDialog()
 {
     std::string text;
-    {
-        std::vector<std::string> requirements;
-        std::vector<type_dialog_resource> dialogResources;
-        type_dialog_resource resource;
+    std::vector<std::string> requirements;
+    std::vector<type_dialog_resource> dialogResources;
+    type_dialog_resource resource;
 
-        for (unsigned i = 0; i < m_types.size(); ++i) {
-            text = formatString(
-                DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
-                m_counts[i], getArmyName(m_types[i], m_counts[i]));
-            requirements.push_back(text);
+    for (unsigned i = 0; i < m_types.size(); ++i) {
+        text = formatString(
+            DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
+            m_counts[i], getArmyName(m_types[i], m_counts[i]));
+        requirements.push_back(text);
 
-            resource.m_resource = 0x15;
-            resource.m_qualifier =
-                (static_cast<unsigned long>(
-                    static_cast<unsigned short>(m_counts[i])) << 16)
-                | static_cast<unsigned short>(m_types[i]);
-            dialogResources.push_back(resource);
-        }
-
-        if (m_proposalText.length() == 0) {
-            std::string textFormat =
-                questTextRow()[QUEST_TEXT_COLUMNS * questType()
-                                 + QUEST_TEXT_PROPOSAL];
-            if (m_limit >= 0)
-                textFormat += getTimeLimitText();
-            text = formatString(
-                textFormat.c_str(),
-                joinTextList(requirements).c_str());
-        } else {
-            text = getProgressDialogText();
-        }
-        extendedDialog(text.c_str(), dialogResources, -1, -1, 0);
+        resource.m_resource = 0x15;
+        resource.m_qualifier =
+            (static_cast<unsigned long>(
+                static_cast<unsigned short>(m_counts[i])) << 16)
+            | static_cast<unsigned short>(m_types[i]);
+        dialogResources.push_back(resource);
     }
+
+    if (m_proposalText.length() == 0) {
+        const std::string* texts = questTexts();
+        std::string textFormat = texts[QUEST_TEXT_PROPOSAL];
+        if (m_limit >= 0)
+            textFormat += getTimeLimitText();
+        text = formatString(
+            textFormat.c_str(),
+            joinTextList(requirements).c_str());
+    } else {
+        text = getProgressDialogText();
+    }
+    extendedDialog(text.c_str(), dialogResources, -1, -1, 0);
 }
 
 VA(0x00570e60, 0x208)
