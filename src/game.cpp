@@ -7388,7 +7388,7 @@ VA(0x004c8780, 0x7B7)  // PerDay/PerMonth bracket + dc lines/callees, dc 0xb41e0
 void game::perWeek()
 {
     hero* obscuringHero;
-    int align;
+    H3_ENUM_STORAGE_STEPPED(TCreatureType, int) align;
     TCreatureType alternateBonus;
     long bonusAmount;
     int x;
@@ -7415,32 +7415,32 @@ void game::perWeek()
         g_weekType = g_weekTypeCreature;
 
         for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
-             align--;) {
+             H3_IDX(align--);) {
             if ((m_gameVersion
                  || !isBaseElemental(align))
-                && g_creatureTypeTraits[align].m_townType != -1
-                && g_creatureTypeTraits[align].m_level >= 0)
+                && H3_AT(g_creatureTypeTraits, align).m_townType != -1
+                && H3_AT(g_creatureTypeTraits, align).m_level >= 0)
                 ++i;
         }
 
         i = rand() % i;
         for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
-             align--;) {
+             H3_IDX(align--);) {
             if ((m_gameVersion
                  || !isBaseElemental(align))
-                && g_creatureTypeTraits[align].m_townType != -1
-                && g_creatureTypeTraits[align].m_level >= 0) {
+                && H3_AT(g_creatureTypeTraits, align).m_townType != -1
+                && H3_AT(g_creatureTypeTraits, align).m_level >= 0) {
                 if ((m_gameVersion
                      || align == CREATURE_AIR_ELEMENTAL
                      || align == CREATURE_EARTH_ELEMENTAL
                      || align == CREATURE_FIRE_ELEMENTAL
                      || align == CREATURE_WATER_ELEMENTAL
-                     || g_creatureTypeTraits[align].m_townType != TOWN_CONFLUX)
+                     || H3_AT(g_creatureTypeTraits, align).m_townType != TOWN_CONFLUX)
                     && i-- <= 0)
                     break;
             }
         }
-        g_weekTypeExtra = align;
+        g_weekTypeExtra = H3_IDX(align);
         {
             bonusCreature = TCreatureType(align);
         }

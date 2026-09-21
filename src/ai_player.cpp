@@ -436,9 +436,10 @@ void type_AI_player::calculateDemand()
         }
     }
 
-    std::vector<type_creature_value> creatures(145);
+    std::vector<type_creature_value> creatures(H3_IDX(CREATURE_CATAPULT));
     int creatureIndex;
-    for (creatureIndex = 0; creatureIndex < 145; creatureIndex++) {
+    for (creatureIndex = 0;
+         creatureIndex < H3_IDX(CREATURE_CATAPULT); creatureIndex++) {
         {
             int value = creatureIndex;
             memcpy(&creatures[creatureIndex].m_type, &value,
@@ -468,7 +469,8 @@ void type_AI_player::calculateDemand()
     }
 
     int valueCreature;
-    for (valueCreature = 0; valueCreature < 145; valueCreature++)
+    for (valueCreature = 0;
+         valueCreature < H3_IDX(CREATURE_CATAPULT); valueCreature++)
         creatures[valueCreature].m_value = creatures[valueCreature].m_amount
             * g_creatureTypeTraits[valueCreature].m_aiValue;
 
@@ -924,7 +926,7 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
         }
     }
 
-    for (int creature = 0; creature < 145; ++creature) {
+    for (int creature = 0; creature < H3_IDX(CREATURE_CATAPULT); ++creature) {
         prohibited[creature] = 0;
         getMonsterCost(creature, resources);
         for (short resource = 0; resource < 6; ++resource) {
@@ -1711,7 +1713,7 @@ static int __cdecl maxBuyableCreatures(
 
 void type_AI_player::purchaseBuildings()
 {
-    unsigned char prohibitedCreatures[145];
+    unsigned char prohibitedCreatures[H3_IDX(CREATURE_CATAPULT)];
     fillProhibitedArray(&g_game->m_players[m_team], prohibitedCreatures);
     while (purchaseBuilding(prohibitedCreatures)) {
     }

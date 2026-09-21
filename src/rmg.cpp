@@ -1429,7 +1429,7 @@ rmgWitchHutObject::rmgWitchHutObject(TRmgObjectPropertiesRef* properties)
 rmgBlackBoxObject::rmgBlackBoxObject(TRmgObjectPropertiesRef* properties)
     : type_object(properties)
 {
-    m_creatureType = -1;
+    m_creatureType = CREATURE_NONE;
     m_creatureCount = 0;
     m_experience = 0;
     memset(m_resources, 0, sizeof(m_resources));
@@ -1585,7 +1585,7 @@ rmgSeerHutObject::rmgSeerHutObject(TRmgObjectPropertiesRef* properties)
     m_artifact = -1;
     m_resourceType = 6;
     m_resourceCount = 0;
-    m_creatureType = -1;
+    m_creatureType = CREATURE_NONE;
     m_creatureCount = 0;
 }
 
@@ -1682,7 +1682,7 @@ void rmgBlackBoxObject::write(TAbstractFile* outfile, int version)
         char spell = m_spells[i];
         outfile->write(&spell, sizeof(spell));
     }
-    if (m_creatureType == -1) {
+    if (m_creatureType == CREATURE_NONE) {
         char creatureCount = 0;
         outfile->write(&creatureCount, sizeof(creatureCount));
     } else {
@@ -1691,10 +1691,10 @@ void rmgBlackBoxObject::write(TAbstractFile* outfile, int version)
             outfile->write(&creatureCount, sizeof(creatureCount));
         }
         if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
-            short creatureType = m_creatureType;
+            short creatureType = H3_IDX(m_creatureType);
             outfile->write(&creatureType, sizeof(creatureType));
         } else {
-            char creatureType = m_creatureType;
+            char creatureType = H3_IDX(m_creatureType);
             outfile->write(&creatureType, sizeof(creatureType));
         }
         {
@@ -1815,16 +1815,16 @@ void rmgSeerHutObject::write(TAbstractFile* outfile, int version)
             int experience = m_experience;
             outfile->write(&experience, sizeof(experience));
         }
-    } else if (m_creatureType != -1) {
+    } else if (m_creatureType != CREATURE_NONE) {
         {
             char rewardKind = 10;
             outfile->write(&rewardKind, sizeof(rewardKind));
         }
         if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
-            short creature = m_creatureType;
+            short creature = H3_IDX(m_creatureType);
             outfile->write(&creature, sizeof(creature));
         } else {
-            char creature = m_creatureType;
+            char creature = H3_IDX(m_creatureType);
             outfile->write(&creature, sizeof(creature));
         }
         {
@@ -2062,13 +2062,14 @@ type_object* type_artifact_def::generate(TRmgObjectPropertiesRef* properties,
 }
 
 VA(0x00534250, 0xB5)
-type_black_box_creature_def::type_black_box_creature_def(int newCreatureType)
+type_black_box_creature_def::type_black_box_creature_def(
+    H3_ENUM_PARAM(TCreatureType, int) newCreatureType)
     : type_treasure_def(6, 0, -1, 3),
       m_creatureType(newCreatureType)
 {
     m_adjustedValue =
-        g_rmgCreatureValueByLevel[g_creatureTypeTraits[newCreatureType].m_level]
-        / g_creatureTypeTraits[newCreatureType].m_aiValue;
+        g_rmgCreatureValueByLevel[H3_AT(g_creatureTypeTraits, newCreatureType).m_level]
+        / H3_AT(g_creatureTypeTraits, newCreatureType).m_aiValue;
 
     if (m_adjustedValue > 50)
         m_adjustedValue = ((m_adjustedValue + 5) / 10) * 10;
@@ -2085,10 +2086,11 @@ VA(0x00534310, 0x64)
 int type_black_box_creature_def::getValue(
     TRmgZone* zone, type_random_map_generator* generator)
 {
-    int alignment = g_creatureTypeTraits[m_creatureType].m_townType;
+    int alignment = H3_AT(g_creatureTypeTraits, m_creatureType).m_townType;
     if (alignment != zone->m_townType2)
         return -1;
-    int value = g_creatureTypeTraits[m_creatureType].m_aiValue * m_adjustedValue;
+    int value = H3_AT(g_creatureTypeTraits, m_creatureType).m_aiValue
+        * m_adjustedValue;
     int alignmentCount = 0;
     if (alignment != -1)
         alignmentCount = generator->m_activeZoneCountsByAlignment[alignment];
@@ -3561,9 +3563,13 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_treasure_def(4, 0, 3000, 50));
 
     {
-        int creatureCount = m_mapVersion >= 1 ? 145 : 118;
-        for (int creature = creatureCount; creature--;) {
-            if (g_creatureTypeTraits[creature].m_level >= 0)
+        // The exclusive bounds are the first expansion creature (Pixie) and
+        // the first war machine (Catapult).
+        H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creatureCount =
+            m_mapVersion >= 1 ? CREATURE_CATAPULT : CREATURE_PIXIE;
+        for (H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creature = creatureCount;
+             H3_IDX(creature--);) {
+            if (H3_AT(g_creatureTypeTraits, creature).m_level >= 0)
                 m_objectGenerators.push_back(
                     new type_black_box_creature_def(creature));
         }
@@ -3680,9 +3686,12 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_treasure_def(82, 0, 1500, 500));
 
     for (int quest = 0; quest < m_objectPrototypes[83].size(); ++quest) {
-        int creatureCount = m_mapVersion >= 1 ? 145 : 118;
-        for (int creature = creatureCount; creature--;) {
-            if (g_creatureTypeTraits[creature].m_level >= 0)
+        // Same creature-domain bounds as the black-box generator scan above.
+        H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creatureCount =
+            m_mapVersion >= 1 ? CREATURE_CATAPULT : CREATURE_PIXIE;
+        for (H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creature = creatureCount;
+             H3_IDX(creature--);) {
+            if (H3_AT(g_creatureTypeTraits, creature).m_level >= 0)
                 m_objectGenerators.push_back(
                     new type_quest_creature_def(creature, quest));
         }

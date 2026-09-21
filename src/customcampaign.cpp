@@ -138,7 +138,6 @@ DATA(0x0063d8c8) static int g_legacyCampaignScenarioIndices[7][4];
 // widened from 129 bits to 144; ScenarioStruct::Read still reads and widens
 // the narrow plane below it.
 static const int g_campaignVersionWideArtifacts = 6;
-static const int g_crossoverCreatureBits = 145;
 static const int g_crossoverArtifactBits = 144;
 static const int g_crossoverLegacyArtifactBits = 129;
 
@@ -1922,7 +1921,8 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
         m_retainArtifacts = (flags >> 4) & 1;
     }
 
-    m_crossoverCreatures = readPackedBits<g_crossoverCreatureBits>(infile);
+    m_crossoverCreatures =
+        readPackedBits<CAMPAIGN_CROSSOVER_CREATURE_BITS>(infile);
 
     if (campaignVersion >= g_campaignVersionWideArtifacts) {
         m_crossoverArtifacts = readPackedBits<g_crossoverArtifactBits>(infile);

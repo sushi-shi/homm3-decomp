@@ -38,6 +38,10 @@ enum EMapSize {
     MAP_SIZE_EXTRA_LARGE = 144
 };
 
+enum ECampaignCrossoverConstants {
+    CAMPAIGN_CROSSOVER_CREATURE_BITS = 145
+};
+
 // The scenario's "starting options" chooser, and it is a HIERARCHY: three
 // concrete 13-slot vftables (0x63d98c, 0x63dad8, 0x63db0c) sit under an
 // abstract root at 0x63d958 whose six unimplemented slots are __purecall
@@ -114,7 +118,7 @@ public:
         char m_paddingBeforeHeroesStatus[3];
         int m_heroesStatus[8];
         std::vector<int> m_heroPlaceholders;
-        std::bitset<145> m_crossoverCreatures;
+        std::bitset<CAMPAIGN_CROSSOVER_CREATURE_BITS> m_crossoverCreatures;
         std::bitset<144> m_crossoverArtifacts;
         TCampaignStartOption* m_options;
 

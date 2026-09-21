@@ -100,26 +100,26 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
     }
 
     if (viewLevel >= ViewSome && thisHero->m_army.getNumArmies() > 0) {
-        int disguiseCreature = CREATURE_NONE;
+        H3_ENUM_STORAGE(TCreatureType, int) disguiseCreature = CREATURE_NONE;
         if (thisHero->m_disguiseLevel != TQuickHeroWindow::DisguiseInvalid &&
             thisHero->m_disguiseLevel <= TQuickHeroWindow::DisguiseAdvanced) {
-            const int* currentArmy = thisHero->m_army.m_armies;
+            const TCreatureType* currentArmy = thisHero->m_army.m_armyTypes;
             for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
                  ++slot, ++currentArmy) {
-                int creature = *currentArmy;
+                H3_ENUM_STORAGE(TCreatureType, int) creature = *currentArmy;
                 // Retail compares the slot ordinal, not the creature loaded just
                 // above.  Preserve that byte-proven source-level wart.
-                if (slot != CREATURE_NONE &&
+                if (slot != H3_IDX(CREATURE_NONE) &&
                     (disguiseCreature == CREATURE_NONE ||
-                     g_creatureTypeTraits[creature].m_aiValue >
-                         g_creatureTypeTraits[disguiseCreature].m_aiValue))
+                     H3_AT(g_creatureTypeTraits, creature).m_aiValue >
+                         H3_AT(g_creatureTypeTraits, disguiseCreature).m_aiValue))
                     disguiseCreature = creature;
             }
         } else if (thisHero->m_disguiseLevel == TQuickHeroWindow::DisguiseExpert) {
-            int creature =
+            H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creature =
                 g_game->m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
             int owner = thisHero->m_owner;
-            while (creature--) {
+            while (H3_IDX(creature--)) {
                 int townType = g_game->getAlignment(creature);
 
                 int alignment = owner >= 0
@@ -127,8 +127,8 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
                     : -1;
                 if (townType == alignment &&
                     (disguiseCreature == CREATURE_NONE ||
-                     g_creatureTypeTraits[creature].m_aiValue >
-                         g_creatureTypeTraits[disguiseCreature].m_aiValue))
+                     H3_AT(g_creatureTypeTraits, creature).m_aiValue >
+                         H3_AT(g_creatureTypeTraits, disguiseCreature).m_aiValue))
                     disguiseCreature = creature;
             }
         }
@@ -139,7 +139,8 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
         // out of the neighboring numTroops member.
         int displaySlot = 0;
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-            int creature = thisHero->m_army.m_armies[slot];
+            H3_ENUM_STORAGE(TCreatureType, int) creature =
+                thisHero->m_army.m_armyTypes[slot];
             if (creature == CREATURE_NONE)
                 continue;
             if (disguiseCreature != CREATURE_NONE)
@@ -148,7 +149,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
             widgets.push_back(new iconWidget(
                 g_armyPos[displaySlot][0],
                 g_armyPos[displaySlot][1], 32, 32, widgetId++,
-                "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
+                "cprsmall.def", H3_IDX(creature) + 2, 0, 0, 0, 0x10));
 
             int count;
             if (thisHero->m_disguiseLevel >= DisguiseAdvanced)

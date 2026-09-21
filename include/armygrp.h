@@ -6,6 +6,7 @@
 #include "abstractfile.h"
 #include "artifact_type.h"
 #include "creature_flags.h"
+#include "domains.h"
 #include "spellschool.h"
 #include "struct.h"
 #include "terrain_type.h"
@@ -20,7 +21,7 @@ template<class E, class Tr, class A> class basic_string;
 // roster gets its own header when a consumer needs the values.
 // (Dreamcast CodeView types armies[] and IsMember's parameter as
 // TCreatureType; retail compares slots against -1.)
-enum TCreatureType {
+H3_ENUM_BEGIN_SPLIT(TCreatureType, int)
     CREATURE_NONE = -1,
     // Original TCreatureType::Pikeman, ordinal zero; GetBaseCreature
     // returns this value on its out-of-range dwelling arm.
@@ -270,7 +271,8 @@ enum TCreatureType {
     // penalty, terrain 1 is Sand (terrain.h's ten-mask permutation),
     // and Nomads are the creature that cancels the sand penalty.
     CREATURE_NOMAD = 0x8e
-};
+H3_ENUM_END_SPLIT(TCreatureType, int)
+H3_ENUM_STEPPED(TCreatureType)
 
 // The spell-id domain (the full roster gets its own header when spell
 // work begins in earnest); DC CodeView types the parameters SpellID.
