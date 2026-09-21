@@ -1,4 +1,5 @@
 #include "va.h"
+#include "includes.h"
 
 #include <bitset>
 #include <stdio.h>
@@ -557,12 +558,10 @@ type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
                     firstY = y;
                     found = 1;
                 }
-                int curX = x;
-                int curY = y;
-                minX = std::_cpp_min<long>(minX, curX);
-                minY = std::_cpp_min<long>(minY, curY);
-                maxX = std::_cpp_max<long>(maxX, curX + 1);
-                maxY = std::_cpp_max<long>(maxY, curY + 1);
+                minX = ::min(minX, x);
+                maxX = ::max(maxX, x + 1);
+                minY = ::min(minY, y);
+                maxY = ::max(maxY, y + 1);
             }
         }
     }
@@ -573,16 +572,14 @@ type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
     int ties = 0;
     int best = 0;
 
-    int spanX = std::_cpp_max<long>(firstX - 9, firstX - minX);
-    int startX = std::_cpp_max<long>(spanX, 0);
-    int limitX = std::_cpp_min<long>(g_mapWidth - maxX + firstX,
-                                g_mapWidth + firstX - 9);
-    int endX = std::_cpp_min<long>(g_mapWidth, limitX);
-    int spanY = std::_cpp_max<long>(firstY - 8, firstY - minY);
-    int startY = std::_cpp_max<long>(spanY, 0);
-    int limitY = std::_cpp_min<long>(g_mapWidth - maxY + firstY,
-                                g_mapHeight + firstY - 8);
-    int endY = std::_cpp_min<long>(g_mapHeight, limitY);
+    int spanX = ::max(firstX - 9, firstX - minX);
+    int startX = ::max(spanX, 0);
+    int limitX = ::min(g_mapWidth - maxX + firstX, g_mapWidth + firstX - 9);
+    int endX = ::min(g_mapWidth, limitX);
+    int spanY = ::max(firstY - 8, firstY - minY);
+    int startY = ::max(spanY, 0);
+    int limitY = ::min(g_mapWidth - maxY + firstY, g_mapHeight + firstY - 8);
+    int endY = ::min(g_mapHeight, limitY);
 
     type_point scan;
     for (scan.m_z = 0; scan.m_z < g_game->m_worldMap.getNumLevels(); ++scan.m_z) {

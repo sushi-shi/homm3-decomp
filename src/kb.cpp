@@ -3790,19 +3790,20 @@ int getNextHumanPlayer(int start)
     // Earlier controls: 33 loop/initialization/shared-exit states and 30
     // counter-width/parameter-hint combinations never exceed 95.1191%.
     int checked = 0;
-    int player = (start + 1) % 8;
+    int startPlayer = start;
 
-    while (!g_game->isHuman(player) || g_game->m_playerDisabled[player]) {
-        player = (player + 1) % 8;
+    start = (start + 1) % 8;
+    while (!g_game->isHuman(start) || g_game->m_playerDisabled[start]) {
+        start = (start + 1) % 8;
         ++checked;
         if (checked >= 8) {
             return -1;
         }
     }
-    if (player == start) {
+    if (start == startPlayer) {
         return -1;
     }
-    return player;
+    return start;
 }
 
 VA(0x004f4c00, 0x2AA)  // dc 0xe5214

@@ -171,16 +171,6 @@ void army::stopSample(army::TSampleID id)
 // register - that slot is then reused for the two dead erase
 // iterators at the bottom.
 
-// Retail calls vector<SpellID>::erase at both clear sites. Keep begin() and
-// end() outside the pinned erase statement.
-
-// Residual (92.6261%): the register-homing family. Retail fills the
-// two by-value iterator temps through EDI as scratch with EAX/EDX
-// holding the slot pointers; ours picks the mirror assignment, and the
-// begin/end declaration-order swap is byte-inert (measured both ways,
-// 92.6261 exactly). The GameTime store schedules one slot later than
-// retail's and the dispose vtable call uses EDX where retail uses EAX
-// - all downstream of the same homing choice, no spelling reaches it.
 VA(0x0043d5c0, 0x166)  // anchor-bracket + arity, dc 0x438e8
 void army::initClean()
 {
@@ -192,19 +182,7 @@ void army::initClean()
     m_roundsLeftBeforeVanish = -1;
     m_numSpellInfluences = 0;
     memset(m_spellInfluence, 0, sizeof(m_spellInfluence));
-    {
-        // clear() spelled through its own body with the erase pinned:
-        // retail expands clear and CALLS deque::erase (0x448db0), and
-        // our CL - the InitClean residual note below - inlines erase
-        // and starves. The statement-scoped depth(0) reproduces the
-        // rejection; begin()/end() build their 16-byte temps inline in
-        // the two unpinned statements exactly as retail does.
-        TSpellQueue::iterator queueEnd = m_spellInfluenceQueue.end();
-        TSpellQueue::iterator queueBegin = m_spellInfluenceQueue.begin();
-#pragma inline_depth(0)
-        m_spellInfluenceQueue.erase(queueBegin, queueEnd);
-#pragma inline_depth()
-    }
+    m_spellInfluenceQueue.clear();
     m_lastFidgetTime = GameTime::get();
     if (m_stdIcon)
         m_stdIcon->dispose();

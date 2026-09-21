@@ -2041,6 +2041,15 @@ int TQuestGuard::save(TAbstractFile* outfile)
     }
 }
 
+VA(0x00573580, 0x13)
+TSeerHut::TSeerHut()
+{
+    m_quest = 0;
+    m_visitedPlayers = 0;
+    m_nameIndex = 0;
+    m_completedByPlayer = 0;
+}
+
 // Original: TSeerHut::SetRandomName; seerhut.cpp:139, dc 0x12d084
 // DC uses one static TPickANumber(0,47). Complete read0x574610 expands
 // the same static reference interface with the revised dynamic name table:

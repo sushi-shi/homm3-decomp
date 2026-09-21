@@ -533,14 +533,10 @@ int advManager::open(int newPriority)
                       DATA_COMPGEN(0x00660328, defExtensionReversed, "fed"),
                       3) == 0) {
             resource* graphic = ResourceManager::getSprite(g_advCachedGraphicNames[cached]);
-#pragma inline_depth(0)
             m_cachedGraphics.push_back(graphic);
-#pragma inline_depth()
         } else {
             resource* graphic = ResourceManager::getBitmap816(g_advCachedGraphicNames[cached]);
-#pragma inline_depth(0)
             m_cachedGraphics.push_back(graphic);
-#pragma inline_depth()
         }
         if (cached == CACHED_GRAPHIC_TICK)
             incProgressBar(1);
@@ -648,8 +644,7 @@ int advManager::open(int newPriority)
         g_windowManager->m_isWaitingForFadeIn = 0;
         g_game->waitForPlayer(text, g_netLocalGamePos);
         redrawAdvScreen(1, 0);
-        m_bottomViewOverride = BOTTOM_VIEW_1;
-        m_bottomViewDeadline = GameTime::get() + 3000;
+        overrideBottomView(BOTTOM_VIEW_1, -1);
     }
     if (g_mpNetProtocol != MP_HOTSEAT)
         g_windowManager->fadeScreen(0, 4, 0);
@@ -2427,14 +2422,6 @@ type_cell_adjuster::type_cell_adjuster()
 // slot. Its caller set is the creature-bank help group and QuickInfo; no
 // Dreamcast standalone copy survives, so the name is role-derived.
 
-// Both creature-name sites go through the TU's own GetArmyName helper and
-// pass the REAL count - numTroops[i] in the detailed list, the consolidated
-// total in the approximate form - so a stack of one takes the singular name.
-// Writing the bounds guard longhand against m_plural_name instead cost 28
-// points (64.73 against 93.21): it duplicated a guard retail shares and
-// dropped the count test retail folds, which is what put our body at 57
-// blocks / 32 branches against retail's 42 / 23.
-
 // THE PREFIX ASSIGNS, IT DOES NOT APPEND (byte-flat, 2026-09-06, reloc
 // census). Retail's call at fn+0x8a is basic_string::assign(const char*,
 // size_type) where ours was append(const char*, size_type); the inlined
@@ -2468,14 +2455,13 @@ std::string getArmyHelpText(const armyGroup* source,
             result += armyGroup::getArmySizeName(
                 consolidatedArmy.m_numTroops[i], 2);
             result += " ";
-            result += getArmyName(consolidatedArmy.m_armies[i],
-                                  consolidatedArmy.m_numTroops[i]);
+            result += getArmyName(consolidatedArmy.m_armies[i], 2);
         }
     } else {
         int amount = consolidatedArmy.getCreatureTotal();
         const char* armyName;
         if (consolidatedArmy.m_armies[1] == CREATURE_NONE) {
-            armyName = getArmyName(consolidatedArmy.m_armies[0], amount);
+            armyName = getArmyName(consolidatedArmy.m_armies[0], 2);
         } else {
             armyName = g_generalText->getText(GENERAL_TEXT_MIXED_ARMY);
         }
@@ -4881,7 +4867,7 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 signed char bitY = bitOffsets >> 4;
                 bitOffsets <<= 4;
                 signed char bitX = bitOffsets >> 4;
-                int bit = 47 - bitY * 8 - bitX;
+                int bit = CObjectType::getBitPos(bitX, bitY);
                 if (!objType->m_drawCells[bit] || objType->m_suppressDraw)
                     continue;
 
@@ -5113,15 +5099,7 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    type_point point;
-    point = type_point(srcX, srcY, z);
-    NewmapCell* thisCell;
-    unsigned char valid = point.isValid();
-    NewfullMap* map = m_fullMap;
-    if (!valid)
-        thisCell = map->cell(0, 0, 0);
-    else
-        thisCell = map->cell(point.m_x, point.m_y, point.m_z);
+    NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
 
     int baseX = m_scrollX + destX * 32;
     int baseY = m_scrollY + destY * 32;
@@ -5176,7 +5154,7 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
         signed char yOffset = offsets >> 4;
         offsets <<= 4;
         signed char xOffset = offsets >> 4;
-        int bit = -yOffset * 8 - xOffset + 47;
+        int bit = CObjectType::getBitPos(xOffset, yOffset);
         if (!objType->m_shadowCells[bit] || objType->m_suppressDraw)
             continue;
 
@@ -7325,8 +7303,7 @@ void advManager::bvMessage(const char* msg)
     // MEASURED NEGATIVE, do not retry: same pin as BVResMsg above, same
     // reason - it costs 92.68 -> 21.28 here.
     m_bottomViewMessage = msg;
-    m_bottomViewOverride = BOTTOM_VIEW_7;
-    m_bottomViewDeadline = GameTime::get() - 1;
+    overrideBottomView(BOTTOM_VIEW_7, -1);
     g_advManager->updBottomView(1, 1, 1);
 }
 

@@ -2276,16 +2276,16 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const arm
         if (!g_combatManager->validSpellTargetArmy(choice.m_spell, m_side, victim, 0,
                                              creatureCast))
             continue;
-        long resurrected = (g_spellTraits[choice.m_spell].m_masteryBonus[choice.m_mastery]
+        int resurrected = (g_spellTraits[choice.m_spell].m_masteryBonus[choice.m_mastery]
                             + g_creatureTypeTraits[victim->m_creatureType].m_hitPoints
                             + choice.m_power)
                            * victim->m_numTroops / healedArmy->m_monInfo.m_hitPoints;
-        long missing = healedArmy->m_origNumTroops - healedArmy->m_numTroops;
+        int missing = healedArmy->m_origNumTroops - healedArmy->m_numTroops;
         if (resurrected > missing
                 && missing < healedArmy->m_origNumTroops * 3 / 4
                 && !m_winLikely)
             continue;
-        long healed = cppMin(resurrected, missing);
+        long healed = ::min(resurrected, missing);
         if (healed < 1)
             continue;
         long value = static_cast<long>(

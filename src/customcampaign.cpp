@@ -2103,12 +2103,12 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
     int mapOffset = m_stream->pubseekoff(0, std::ios::cur, std::ios::in);
     NewSMapHeader mapHeader;
     for (int scenario2 = 0; scenario2 < numScenarios; ++scenario2) {
-        ScenarioStruct* scenario = m_scenarios[scenario2];
-        scenario->m_offset = mapOffset;
-        if (scenario->m_inflatedSize > 0) {
-            mapOffset += scenario->m_inflatedSize;
-            scenario->loadMapHeader(m_stream, &mapHeader, scenario2);
-            applyCampaignMapHeader(*scenario, mapHeader);
+        m_scenarios[scenario2]->m_offset = mapOffset;
+        if (m_scenarios[scenario2]->m_inflatedSize > 0) {
+            mapOffset += m_scenarios[scenario2]->m_inflatedSize;
+            m_scenarios[scenario2]->loadMapHeader(m_stream, &mapHeader,
+                                                 scenario2);
+            applyCampaignMapHeader(*m_scenarios[scenario2], mapHeader);
         }
     }
     return true;
@@ -2361,6 +2361,19 @@ void TCampaignBrief::CampaignHeaderStruct::startScenario(
     m_scenarios[which]->startScenario(m_stream, option);
 }
 
+VA(0x00489500, 0x88)
+SCampaign::SCampaign()
+{
+    m_isCheater = 0;
+    m_secretActive = 0;
+    m_currentMap = -1;
+    m_numMapRegions = -1;
+    m_briefingChoice = -1;
+    m_crossoverArrayIndex = -1;
+    m_currentCampaign = CAMPAIGN_NONE;
+    memset(m_campaignCompleted, 0, sizeof(m_campaignCompleted));
+}
+
 VA(0x00489590, 0x233)
 void SCampaign::selectCampaign(int campaignIndex, const char* filename)
 {
@@ -2377,6 +2390,16 @@ void SCampaign::selectCampaign(int campaignIndex, const char* filename)
     CampaignScenarioInfo blank;
     for (int scenarioIndex = 0; scenarioIndex < count; ++scenarioIndex)
         m_mapScores.push_back(blank);
+}
+
+VA(0x004897d0, 0x43)
+bool SCampaign::campaignComplete()
+{
+    for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
+        if (!m_mapScores[i].m_completed)
+            return 0;
+    }
+    return 1;
 }
 
 // The campaign and map ordinals retail's end-of-map bookkeeping compares
