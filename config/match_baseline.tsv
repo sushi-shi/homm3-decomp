@@ -2058,8 +2058,8 @@ game	?randomizeUniversity@game@@AAEXPAVNewmapCell@@@Z	99.7464	99.7464	99.7464	0x
 game	?read@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	91.5614	91.5614	91.5614	0xc4390	tokens1:7b443167be42
 game	?readHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba1c0	tokens1:b81ecbb7571d
 game	?readLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc3c80	tokens1:4d30dbbcaa21
-game	?readMapHeroSetups@game@@QAEXPAVTAbstractFile@@H@Z	52.0030	52.0030	86.0884	0xc2ce0	tokens1:f258c28632db
-game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	56.3286	56.3286	95.7136	0xc3ef0	tokens1:9d35f4867d12
+game	?readMapHeroSetups@game@@QAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xc2ce0	tokens1:bcc6e9de00bb
+game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	59.0845	59.0845	95.7136	0xc3ef0	tokens1:7cac215b1316
 game	?readString@NewSMapHeader@@SIHPAVTAbstractFile@@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xc6010	tokens1:ff6698c8d216
 game	?readVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc3200	tokens1:e3922c9df6c0
 game	?receiveSaveGame@game@@QAEHHHHEE@Z	99.2213	99.2213	99.2213	0xcbd40	tokens1:5c81a911dc77

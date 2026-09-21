@@ -485,6 +485,22 @@ always counts `call` + tail `jmp`.
 
 ## 6b. The library-accessor DEPTH lever (measured 2026-09-06, polish 29)
 
+### The depth-one budget floor
+
+`clamp(2 * caller_cb, 1000, 35000)` has a floor. A depth-one callee whose
+cost is below 1000 cannot be refused by shrinking its caller. The trace for
+`game::readMapHeroSetups` records caller cb 607, initial budget 1214, and:
+
+    depth 1  budget 1214  cb 307  ->  basic_string::assign(str, pos, n)  ALLOWED
+
+Retail calls that assign at 0x4c2eac. A named file-scope assignment helper
+moves the same callee to depth two, where the reduced budget refuses it, and
+the caller reaches 100% without an inline pragma. Staging the scalar reads
+through `readValue<T>(file)` first reduces the caller from 52.0030% to
+71.3149%; together the two source boundaries produce the exact 40-block
+function. This is a structural limit: no further caller-side cb reduction can
+move a sub-1000 depth-one callee across the 1000-unit floor.
+
 The `/Ob2` budget is spent per call site, so the SPELLING of a library
 accessor - which is to say how many inline levels stand between the caller's
 statement and the leaf the budget runs out on - is a source lever with no
