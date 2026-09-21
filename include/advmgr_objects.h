@@ -4,6 +4,7 @@
 #include <bitset>
 #include <string>
 #include <vector>
+
 #include "armygrp.h"
 #include "mapcell.h"
 #include "objecttype.h"

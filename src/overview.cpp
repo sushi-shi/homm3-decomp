@@ -1,23 +1,26 @@
-#include <va.h>
-#include <windows.h>
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
-#include "army.h"
+#include <windows.h>
+
+#include "overview.h"
+
 #include "advmgr.h"
+#include "army.h"
 #include "border.h"
 #include "button.h"
 #include "creaturetype.h"
 #include "exec.h"
+#include "game.h"
 #include "herospec.h"
 #include "iconwdgt.h"
-#include "overview.h"
-#include "game.h"
 #include "kb.h"
 #include "message.h"
 #include "misc.h"
 #include "mousemgr.h"
-#include "recruit.h"
 #include "quicktownwindow.h"
+#include "recruit.h"
 #include "resourcedisplay.h"
 #include "resourcemanager.h"
 #include "slider.h"

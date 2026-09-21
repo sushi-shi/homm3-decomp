@@ -1,6 +1,8 @@
-#include <va.h>
-#include <string.h>
+#include "va.h"
+
 #include <stdlib.h>
+#include <string.h>
+
 #include "lodfile.h"
 
 VA(0x004fa590, 0x77)  // dc 0xe908c
@@ -178,7 +180,7 @@ int LODFile::open(const char* filename, int flags)
 // Complete's LODFile is 0x18c bytes, with its Dinkumware vector occupying
 // +0x17c..+0x18b and no mapping/tempoff tail. Its open/read bodies at
 // 0x4fa8a0/0x4fab20 use fopen/fseek/fread and a decompression buffer.
-// The two backend operations are reviewed in config/dc_only.tsv.
+// The two backend operations are reviewed in config/source/dc_only.tsv.
 
 // Original: compare; lodfile.cpp:393, dc 0xe9654
 int __cdecl compare(const void* arg1, const void* arg2)

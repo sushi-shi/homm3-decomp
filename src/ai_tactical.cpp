@@ -1,22 +1,17 @@
-#include <va.h>
+#include "va.h"
+#include "includes.h"
+
 #include <math.h>
 #include <string.h>
+
 #include "ai_tactical.h"
+
+#include "csprite.h"
 #include "findpath.h"
 #include "game.h"
-// consider_spell's summon arm asks get_elemental_type which creature
-// the spell would put on the field.
-#include "spells.h"
-// cast_spell jitters the chosen spell's value through Random().
 #include "misc.h"
-// The compiler-generated army copy constructor the retail link parked in
-// this compiland (0x437a00) instantiates TResourceHandle<CSprite> and
-// TResourceHandle<sample>, whose refcounting copy reaches
-// resource::ReferenceCount - so both resource types have to be COMPLETE
-// here. No other TU in the tree copies an `army`.
-#include "csprite.h"
 #include "sample.h"
-#include "includes.h"
+#include "spells.h"
 
 // The reference-returning min/max this TU's call sites were compiled
 // against. They resemble <xutility>'s `_cpp_min`/`_cpp_max` (the

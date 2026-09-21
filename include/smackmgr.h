@@ -1,6 +1,8 @@
 #ifndef HOMM3_SMACKMGR_H
 #define HOMM3_SMACKMGR_H
 
+#include "va.h"
+
 #include <SMACK.H>
 
 // DC CodeView independently proves the complete SDK record extent; retail

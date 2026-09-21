@@ -1,10 +1,13 @@
+#include "va.h"
 #include "includes.h"
-#include <va.h>
-#include <windows.h>
+
 #include <stdio.h>
 #include <string>
 #include <strstream>
+#include <windows.h>
+
 #include "quickherowindow.h"
+
 #include "armygrp.h"
 #include "border.h"
 #include "game.h"

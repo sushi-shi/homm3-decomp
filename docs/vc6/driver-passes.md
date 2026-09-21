@@ -11,7 +11,7 @@ flags are injected straight into C2).
 
 Tools: **`homm3 vc6 argv`** (`--flags` / `--unit` / `--pass` / `--json` /
 `--verify`), reusable `homm3.vc6.argv.decode_table()` / `expand()`, and the
-generated table `evidence/vc6/cl-option-spec.tsv`
+generated table `build/vc6/cl-option-spec.tsv`
 (regenerate: `python3 -m homm3.vc6.argv`).
 
 Method note (provenance hygiene): everything here comes from two admissible

@@ -1,10 +1,11 @@
 #ifndef HOMM3_LODFILE_H
 #define HOMM3_LODFILE_H
 
+#include "va.h"
+
 #include <stdio.h>
 #include <vector>
 #include <zlib.h>
-#include "va.h"
 
 // The 32-byte archive-directory row. Retail Find's indexing uses a five-bit
 // shift, while open reads these same five fields from the on-disk table.

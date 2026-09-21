@@ -2,7 +2,7 @@
 #define HOMM3_PHILAI_H
 
 #include "armygrp.h"
-#include "herospec.h"  // TSecondarySkill, the appraisals' skill parameter
+#include "herospec.h"
 
 class hero;
 class town;

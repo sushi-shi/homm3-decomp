@@ -20,7 +20,7 @@ Subcommands
         Ground-truth runner: compile a probe with the real compiler, read
         back the fact the model predicts.
   atlas --regen                                         (phase 2)
-        Headless-Ghidra C2 TU/globals map -> evidence/vc6/.
+        Headless-Ghidra C2 TU/globals map -> build/vc6/.
   tryblocks
         Retail's CATCH-SCOPE census, read straight off the image's
         `_s_FuncInfo` records: every function with nTryBlocks > 0, each try
@@ -120,7 +120,7 @@ def _build_parser() -> argparse.ArgumentParser:
     po.add_argument("--all", action="store_true")
     po.add_argument("--json", action="store_true")
 
-    pt = ss.add_parser("atlas", help="headless-Ghidra C2 map -> evidence/vc6")
+    pt = ss.add_parser("atlas", help="headless-Ghidra C2 map -> build/vc6")
     pt.add_argument("--regen", action="store_true")
 
     pa = ss.add_parser("disasm", help="labeled pinned C2.DLL assembly and references")
@@ -144,7 +144,7 @@ def _build_parser() -> argparse.ArgumentParser:
     pd.add_argument("--json", action="store_true")
 
     pr = ss.add_parser("report", help="per-plateau markdown table -> "
-                       "evidence/vc6/plateau-diagnosis.md")
+                       "build/vc6/plateau-diagnosis.md")
     pr.add_argument("--lo", type=float, default=50.0)
     pr.add_argument("--unit")
     pr.add_argument("--limit", type=int)

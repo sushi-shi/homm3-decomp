@@ -1,22 +1,25 @@
-#include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
-#include "creaturetype.h"
-#include "terrain.h"
-#include <va.h>
+#include "va.h"
+
 #include <algorithm>
 #include <stdlib.h>
 #include <string.h>
+
+#include "town.h"
+
 #include "advmgr.h"
+#include "creaturetype.h"
 #include "cursor.h"
+#include "events.h"
 #include "exec.h"
 #include "game.h"
-#include "events.h"
+#include "herospec.h"
 #include "kb.h"
-#include "misc.h"
 #include "mapcell.h"
-#include "resourcemanager.h"
-#include "textresource.h"
-#include "town.h"
+#include "misc.h"
 #include "philai.h"
+#include "resourcemanager.h"
+#include "terrain.h"
+#include "textresource.h"
 #include "townmgr.h"
 
 // Narrow town.obj-only globals reached by town::View. Their owning

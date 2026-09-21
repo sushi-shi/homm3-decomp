@@ -1,13 +1,15 @@
-#include <va.h>
+#include "va.h"
+#include "homm3_minmax.h"
+
 #include "combatcontrolsubwindow.h"
+
 #include "border.h"
 #include "button.h"
-#include "combatwindow.h"
 #include "cmbtmgr.h"
+#include "combatwindow.h"
 #include "game.h"
 #include "iconwdgt.h"
 #include "inputmgr.h"
-#include "homm3_minmax.h"
 #include "kb.h"
 #include "textresource.h"
 #include "textwdgt.h"

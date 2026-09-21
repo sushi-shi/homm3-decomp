@@ -24,7 +24,7 @@ the manifest only assigns ownership/extent/topology):
       against; emitted empty-with-header now (lesson 1: the machinery
       exists before its first user).
 
-config/delink-reloc-aliases.tsv (--reloc-alias-manifest, header
+config/retail/reloc-aliases.tsv (--reloc-alias-manifest, header
 `function_rva target_rva site_rva owner addend occurrences`,
 src/reloc_alias_manifest.rs) is hand-owned/reviewed; this stage creates it
 once if absent and never rewrites it.
@@ -40,8 +40,8 @@ from homm3.core import common
 DATA_OUT = common.HOMM3_DIR / "build/gen/delink_data_manifest.tsv"
 SECTIONS_OUT = common.HOMM3_DIR / "build/gen/delink_data_sections.tsv"
 BINDINGS_OUT = common.HOMM3_DIR / "build/gen/delink_data_bindings.tsv"
-ALIASES = common.HOMM3_DIR / "config/delink-reloc-aliases.tsv"
-VTABLES = common.HOMM3_DIR / "config/retail-vtables.tsv"
+ALIASES = common.HOMM3_DIR / "config/retail/reloc-aliases.tsv"
+VTABLES = common.HOMM3_DIR / "config/retail/vtables.tsv"
 
 # byte-exact vostok 1393e24 headers
 DATA_HEADER = ("object\trva\tsize\tstorage\talignment\t"

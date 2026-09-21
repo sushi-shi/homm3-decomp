@@ -2,9 +2,10 @@
 #ifndef HOMM3_RMG_TERRAIN_H
 #define HOMM3_RMG_TERRAIN_H
 
-#include <set>
 #include <memory>
+#include <set>
 #include <vector>
+
 #include "rmg.h"
 
 // Grid points add tile directions through the signed TPoint: refresh and

@@ -21,8 +21,8 @@ from homm3.core import common
 from homm3.sema._common import die
 
 SYMCSV = common.HOMM3_DIR / "build/gen/symbol_names.csv"
-RELOCS = common.HOMM3_DIR / "config/retail-relocs.tsv"
-VTABLES = common.HOMM3_DIR / "config/retail-vtables.tsv"
+RELOCS = common.HOMM3_DIR / "config/retail/relocs.tsv"
+VTABLES = common.HOMM3_DIR / "config/retail/vtables.tsv"
 REPORT = common.HOMM3_DIR / "build/objdiff/report.json"
 
 
@@ -66,7 +66,7 @@ class SymbolDb:
 
     def owner(self, rva: int) -> int | None:
         """The function CONTAINING rva, or None. Sizes are complete
-        (config/retail-functions.tsv), so a miss means padding/data."""
+        (config/retail/functions.tsv), so a miss means padding/data."""
         k = bisect.bisect_right(self.starts, rva) - 1
         if k < 0:
             return None
@@ -238,7 +238,7 @@ class Context:
 
     @property
     def vtables(self):
-        """[(rva, slot_count)] from config/retail-vtables.tsv, sorted."""
+        """[(rva, slot_count)] from config/retail/vtables.tsv, sorted."""
         if self._vtables is None:
             rows = []
             for line in VTABLES.open():

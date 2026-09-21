@@ -1,7 +1,7 @@
 #ifndef HOMM3_CASTLE_H
 #define HOMM3_CASTLE_H
 
-#include <va.h>
+#include "va.h"
 
 class town;
 

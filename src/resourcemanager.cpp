@@ -1,31 +1,34 @@
-#include <va.h>
-#include <yvals.h>
-#include <stdio.h>
-#include <string.h>
+#include "va.h"
+
 #include <map>
+#include <memory>
+#include <sstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <string.h>
 #include <utility>
-#include "resource.h"
+#include <windows.h>
+#include <yvals.h>
+
 #include "resourcemanager.h"
-#include "resourcemanager_archive.h"
+
 #include "abstractfile.h"
-#include "resourcemanager_sprite_headers.h"
-#include "textresource.h"
-#include "lodfile.h"
 #include "bitmap16.h"
 #include "bitmap24.h"
 #include "bitmap816.h"
 #include "csprite.h"
 #include "cspriteframe.h"
 #include "font.h"
+#include "lodfile.h"
 #include "ownership.h"
 #include "palette.h"
-#include <memory>
-#include <stdlib.h>
-#include <string>
-#include <windows.h>
-#include <sstream>
+#include "resource.h"
+#include "resourcemanager_archive.h"
+#include "resourcemanager_sprite_headers.h"
 #include "sample.h"
 #include "smackmgr.h"
+#include "textresource.h"
 
 class LODFile;
 

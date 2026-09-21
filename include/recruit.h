@@ -1,12 +1,14 @@
 #ifndef HOMM3_RECRUIT_H
 #define HOMM3_RECRUIT_H
 
+#include "va.h"
+
 #include <string.h>
-#include <va.h>
+
 #include "basemgr.h"
+#include "palette.h"
 #include "slider.h"
 #include "window.h"
-#include "palette.h"
 
 class armyGroup;
 class button;

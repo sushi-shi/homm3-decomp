@@ -1,6 +1,8 @@
-#include <va.h>
-#include "border.h"
+#include "va.h"
+
 #include "dialogbox.h"
+
+#include "border.h"
 #include "font.h"
 #include "iconwdgt.h"
 #include "kb.h"

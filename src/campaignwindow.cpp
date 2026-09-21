@@ -1,9 +1,12 @@
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
+#include "campaignwindow.h"
+
 #include "binkmanager.h"
 #include "border.h"
 #include "button.h"
-#include "campaignwindow.h"
 #include "font.h"
 #include "game.h"
 #include "kb.h"

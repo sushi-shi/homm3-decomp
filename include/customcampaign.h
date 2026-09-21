@@ -4,10 +4,11 @@
 #define HOMM3_CUSTOMCAMPAIGN_H
 
 #include <string>
-#include <vector>
 #include <string.h>
-#include "hero.h"
+#include <vector>
+
 #include "campaignmusic.h"
+#include "hero.h"
 
 class CMapHeaderData;
 
@@ -61,7 +62,7 @@ SIZE(CampaignScenarioInfo, 0x14);
 // wrote three fixed progress arrays. Complete's SCampaign::completeCurrentMap
 // (0x489820) owns the dynamic scenario record, completion order and crossover
 // pools, and is called directly by oldmain. These retired interfaces are
-// recorded individually in config/dc_only.tsv.
+// recorded individually in config/source/dc_only.tsv.
 
 class SCampaign {
 public:

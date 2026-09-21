@@ -22,6 +22,8 @@ enum TArtifact {
     // because what distinguishes two scrolls is the `spell` dword, not
     // the artifact id. DC spelling eArtifactSpellScroll.
     ARTIFACT_SPELL_SCROLL = 1,
+    // Dreamcast names the four war machines; retail siege_artifact_to_creature
+    // (0x550360) and hero artifact tallies (0x4d9070 / 0x4d90c0) prove IDs 3-6.
     ARTIFACT_CATAPULT = 3,
     ARTIFACT_BALLISTA = 4,
     ARTIFACT_AMMO_CART = 5,

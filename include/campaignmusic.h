@@ -8,7 +8,7 @@
 #ifndef HOMM3_CAMPAIGNMUSIC_H
 #define HOMM3_CAMPAIGNMUSIC_H
 
-#include <va.h>
+#include "va.h"
 
 // One row of the game's music-cue table: the cue's engine name and the track
 // name CmpMusic.txt supplies for it. Retail .data 0x66c090, forty-nine

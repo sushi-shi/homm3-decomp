@@ -13,10 +13,10 @@ cross-architecture build, so a divergence is a lead to check against retail,
 not a proof.  The "introducing" vtable split is a slot-layout fact, not a C++
 keyword, so it is displayed but folded into the virtual family for the verdict.
 
-    PYTHONPATH=scripts python scripts/experiments/verify-access-adherence.py
-    PYTHONPATH=scripts python scripts/experiments/verify-access-adherence.py \
+    PYTHONPATH=scripts python -m homm3.analysis.access_facts
+    PYTHONPATH=scripts python -m homm3.analysis.access_facts \
         --module herowindow --module adventuremapwindow
-    PYTHONPATH=scripts python scripts/experiments/verify-access-adherence.py --all --json
+    PYTHONPATH=scripts python -m homm3.analysis.access_facts --all --json
 
 Name correlation uses the project's naming convention, with exact names and
 legacy owning aliases first. Overloads retain their signature/cv alternatives.

@@ -1,8 +1,9 @@
 #ifndef HOMM3_EVENTS_H
 #define HOMM3_EVENTS_H
 
-#include <va.h>
-#include "armygrp.h"  // SpellID, used by spell_level_order
+#include "va.h"
+
+#include "armygrp.h"
 
 class garrison;
 class hero;
@@ -496,7 +497,7 @@ enum EFountainLuck {
 // award, which is why the count enumerator has no arm of its own.
 
 // The sea chest's reward selector, enumerator NAMES the Dreamcast's own
-// (evidence/dreamcast/enums.csv, enum SeaChestRewardTypes). The domain is
+// (NB11 enum records, enum SeaChestRewardTypes). The domain is
 // closed by construction: DoEventSeaChest (0x4a5030) switches over it with
 // the decrement chain and sends anything else straight to the pick-up.
 enum SeaChestRewardTypes {

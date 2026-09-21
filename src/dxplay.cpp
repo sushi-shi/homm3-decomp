@@ -1,5 +1,5 @@
 // Retail emits this TU in the drawing->event_record gap (0x96c50..0x9a1e0,
-// bracket from evidence/link-order/gaps.tsv); ds_engine, the other alphabetical
+// retail address bracket); ds_engine, the other alphabetical
 // candidate for that gap, is NOT resident here - GetErrorDesc's DPERR switch,
 // the CDPlay/CDPlayLobby/CAutoArray vtables and the cinit tail all place the
 // whole gap in dxplay. Header-inline virtuals retain their canonical bodies
@@ -13,10 +13,12 @@
 // compiled bodies).  Non-virtual Create*Connection are dispatched from one
 // remote-side caller (0x1556e0) in source order; the two CDPlayLobby ctor/dtor
 // rows are proven by their dual base+derived vtable stores.
-#include <va.h>
 // dxplay.cpp is the DirectPlay TU: it sees the complete DP6 value structures and
 // the lobby non-virtual member set, exactly as retail did.
+#include "va.h"
+
 #include "dxplay.h"
+
 #include "dxplay_com.h"
 #include "exceptions.h"
 

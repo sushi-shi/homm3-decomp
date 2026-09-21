@@ -3,7 +3,8 @@
 #ifndef HOMM3_HEROSPEC_H
 #define HOMM3_HEROSPEC_H
 
-#include <va.h>
+#include "va.h"
+
 #include "secondaryskill.h"
 
 // Five TSecondarySkill values are independently retail-proven here:

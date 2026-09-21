@@ -1,37 +1,40 @@
-#include <va.h>
-#include <windows.h>
+#include "va.h"
+#include "homm3_minmax.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
+
 #include "kb.h"
-#include "seerhut.h"
-#include "game.h"
-#include "textresource.h"
+
 #include "advmgr.h"
 #include "artifact.h"
 #include "binkmanager.h"
 #include "bitmap16.h"
 #include "border.h"
 #include "button.h"
-#include "campaignbrief.h"
 #include "campaign.h"
+#include "campaignbrief.h"
 #include "campaignwindow.h"
 #include "castle.h"
-#include "command.h"
 #include "cmbtmgr.h"
+#include "command.h"
 #include "creaturetype.h"
 #include "csprite.h"
 #include "cursor.h"
 #include "customcampaign.h"
 #include "customcampaignwindow.h"
 #include "dialogbox.h"
-#include "kbwin.h"
 #include "exec.h"
+#include "findpath.h"
 #include "font.h"
+#include "game.h"
 #include "gametypewindow.h"
 #include "hiscore.h"
 #include "iconwdgt.h"
 #include "inputmgr.h"
+#include "kbwin.h"
 #include "mainmenu.h"
 #include "message.h"
 #include "misc.h"
@@ -42,28 +45,21 @@
 #include "prefs.h"
 #include "remote.h"
 #include "resourcemanager.h"
+#include "sample.h"
 #include "savegame.h"
+#include "seerhut.h"
 #include "singleselectionwindow.h"
 #include "smackmgr.h"
-#include "sample.h"    // TResourceHandle<sample>::~TResourceHandle calls resource::Dispose
 #include "soundmgr.h"
 #include "sskilltraits.h"
-#include "timer.h"
 #include "text.h"
-#include "textwdgt.h"
+#include "textresource.h"
 #include "textscroller.h"
-#include "winmgr.h"
-#include "wingraph.h"
-#include "findpath.h"
-// GameUnsaved polls the town manager's baseManager status, so kb.obj is
-// one of the consumers that needs townmgr.h's guarded class prefix.
+#include "textwdgt.h"
+#include "timer.h"
 #include "townmgr.h"
-
-// E:\gamedcs\includes.h:97,114. Dreamcast retains calls to these two
-// by-value wrappers from type_dialog_icon::set. Retail expands them and
-// selects an operand address before loading the result, proving the nested
-// reference-returning VC6 helper rather than a plain ternary or Win32 macro.
-#include "homm3_minmax.h"
+#include "wingraph.h"
+#include "winmgr.h"
 
 // type_dialog_icon::set's two Dreamcast min calls and retail's equality exit
 // use the same text-column clamp.

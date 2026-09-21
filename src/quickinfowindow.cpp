@@ -1,9 +1,12 @@
 // 4 functions in link order.
-#include <va.h>
-#include "creaturetype.h"
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
+
 #include "quickinfowindow.h"
+
+#include "creaturetype.h"
 #include "exec.h"
 #include "iconwdgt.h"
 #include "kb.h"

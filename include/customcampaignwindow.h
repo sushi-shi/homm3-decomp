@@ -2,9 +2,9 @@
 #ifndef HOMM3_CUSTOMCAMPAIGNWINDOW_H
 #define HOMM3_CUSTOMCAMPAIGNWINDOW_H
 
-#include "customcampaign.h"
 #include "campaignbrief.h"
 #include "campaignmusic.h"
+#include "customcampaign.h"
 #include "window.h"
 
 class slider;

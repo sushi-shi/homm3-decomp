@@ -1,13 +1,16 @@
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
 #include "inputmgr.h"
-#include "message.h"
-#include "kbwin.h"
-#include "mousemgr.h"
+
 #include "advmgr.h"
+#include "kbwin.h"
+#include "message.h"
+#include "mousemgr.h"
+#include "soundmgr.h"
 #include "textntry.h"
 #include "winmgr.h"
-#include "soundmgr.h"
 
 VA(0x004ec0e0, 0x1AB)  // dc 0xdc894
 int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long longParam)

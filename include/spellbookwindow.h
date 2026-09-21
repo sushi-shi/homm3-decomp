@@ -2,9 +2,8 @@
 #define HOMM3_SPELLBOOKWINDOW_H
 
 #include "advmgr_popup.h"
-#include "spellschool.h"
-
 #include "herospec.h"
+#include "spellschool.h"
 class armyGroup;
 class bitmapBackedTextWidget;
 class bitmapBorder;

@@ -1,40 +1,33 @@
+#include "va.h"
 #include "includes.h"
-#include <va.h>
+
 #include <algorithm>
+#include <bitset>
 #include <stdlib.h>
 #include <string.h>
-// VC6's own shipped Dinkumware <bitset> - retail links Dinkumware, NOT
-// STLport (P2.3, byte-proven by hero.obj's COMDAT tail and again here:
-// GetMorale's four helper calls are Dinkumware bitset members to the
-// instruction).
-#include <bitset>
-// get_luck_description's Rampart/Fountain-of-Fortune gate calls
-// town::HasBuilding (dc 0x4fab4 line 1499, `mov #21,r5 / mov #1,r6`);
-// see town.h for why the inline's visibility is scoped.
+
 #include "armygrp.h"
-#include "townmgr.h"
-#include "spelldefs.h"
-#include "creaturetype.h"
-#include "game.h"
-#include "hero.h"
-#include "town.h"
+
 #include "advmgr.h"
-#include "castle.h"
+#include "armygrp_split.h"
 #include "border.h"
 #include "button.h"
+#include "castle.h"
+#include "creaturetype.h"
+#include "exec.h"
+#include "game.h"
+#include "hero.h"
 #include "iconwdgt.h"
-#include "widget.h"
+#include "kb.h"
+#include "message.h"
+#include "misc.h"
+#include "spelldefs.h"
 #include "textntry.h"
 #include "textwdgt.h"
-#include "message.h"
-#include "kb.h"
+#include "town.h"
+#include "townmgr.h"
+#include "widget.h"
 #include "winmgr.h"
-#include "exec.h"
-#include "misc.h"
-#include "armygrp_split.h"
-
-// DC includes.h:134 names limit at the split-window and army-rating
-// sites below. homm3_limit.h owns its shared reference-selector chain.
 
 DATA(0x00693878)
 static TSplitWindow* g_splitWindow;
@@ -1431,6 +1424,8 @@ std::string armyGroup::getMoraleDescription(
 // conditional branches and symbolic branch targets. A generated one-line
 // town-type accessor reaches the same bytes, but no such accessor is attested
 // in the Dreamcast class record; the ordinary local is retained instead.
+// Dreamcast 0x4fab4:1499 calls town::HasBuilding for the Rampart
+// Fountain of Fortune check (building 21, built-only flag 1).
 VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
 std::string armyGroup::getLuckDescription(
     TCreatureType creature, int luck, const hero* ourHero,

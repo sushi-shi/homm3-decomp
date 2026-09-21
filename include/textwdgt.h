@@ -3,9 +3,10 @@
 
 #include <string>
 #include <vector>
-#include "widget.h"
+
 #include "font.h"
 #include "slider.h"
+#include "widget.h"
 
 // Dreamcast roster with the STLport->VC6 string shift: Text@0x30
 // (16 B), Font@0x40, Color@0x44, BackColor@0x48, Justify@0x4c - total

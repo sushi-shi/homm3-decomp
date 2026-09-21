@@ -3,8 +3,9 @@
 
 #include <string>
 #include <vector>
-#include "resource.h"
+
 #include "palette.h"
+#include "resource.h"
 
 class Bitmap16Bit;
 

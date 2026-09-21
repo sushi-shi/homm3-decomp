@@ -1,9 +1,12 @@
 // 15 functions in link order.
-#include <va.h>
+#include "va.h"
+
 #include <limits>
 #include <math.h>
 #include <string.h>
+
 #include "bitmap24.h"
+
 #include "bitmap16.h"
 #include "hsv.h"
 #include "pcx.h"

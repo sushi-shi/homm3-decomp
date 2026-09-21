@@ -1,11 +1,14 @@
 // 13 functions in link order.
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
 #include "widget.h"
+
+#include "bitmap16.h"
 #include "message.h"
 #include "window.h"
 #include "winmgr.h"
-#include "bitmap16.h"
 
 VA(0x005fe340, 0x62)  // dc 0x196b4c
 widget::widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle)

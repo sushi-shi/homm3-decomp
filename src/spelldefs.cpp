@@ -1,9 +1,12 @@
-#include <va.h>
+#include "va.h"
+
 #include <stdlib.h>
 #include <string.h>
+
 #include "spelldefs.h"
-#include "resourcemanager.h"
+
 #include "resource.h"
+#include "resourcemanager.h"
 #include "textresource.h"
 
 static void initializeSpellTraits(

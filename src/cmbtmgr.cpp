@@ -16,46 +16,42 @@
 // Some DC helpers expand in the retained Complete callers; their canonical
 // ordinary definitions and source calls are kept below without duplicate RVAs.
 
+#include "va.h"
+#include "DC_precompiledheaders.h"
+
 #include <math.h>
 #include <stdlib.h>
 
-#include <va.h>
-#include "DC_precompiledheaders.h"  // canonical reference selectors
-// PowEffect's own surface: its declarator and TSpellEffectID from
-// cmbtmgr.h, the five animation-state bytes plus iPostPowSpellToCast
-// and bPowSequenceComplete from army.h, the death sequence from
-// csprite.h and the Immersion hook from game.h.
-#include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
-#include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
-#include "bitmap816.h"
-                                     // it in InitNonVisualVars' siege arms
 #include "cmbtmgr.h"
-#include "combatwindow.h"
+
+#include "advmgr.h"
+#include "bitmap816.h"
 #include "combatoptionswindow.h"
-#include "creaturetype.h" // UpgradedCreatureType, for RaiseSkeletons
-#include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
-#include "drawing.h"  // gCombatAreaLimits / gCombatSpeedFactors, for the
-                      // missile animators
-#include "game.h"     // gpGame ruleset gate, for RaiseSkeletons
-#include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
-#include "findpath.h" // searchArray::lower_door, for LowerDoor
-#include "kb.h"   // gText, the shared combat-message scratch buffer
-#include "kbwin.h"  // bVideoPaused storage, the network-game gate here
-#include "inputmgr.h" // gpInputManager, for Open
-#include "misc.h"   // TPickANumber, for PlaceAllObstacles
-#include "monframeinfo.h" // gMonFrameInfo, the shot table KeepAttack times from
-#include "prefs.h"  // the local quick-combat preference
+#include "combatwindow.h"
+#include "creaturetype.h"
+#include "csprite.h"
+#include "drawing.h"
+#include "findpath.h"
+#include "game.h"
+#include "hero.h"
+#include "herospec.h"
+#include "inputmgr.h"
+#include "kb.h"
+#include "kbwin.h"
 #include "mapcell.h"
-#include "resourcemanager.h"
-#include "sample.h"   // TResourceHandle<sample>::~TResourceHandle calls resource::Dispose
-#include "soundmgr.h" // SAMPLE2 / LoadPlaySample / WaitEndSample
-#include "mousemgr.h" // gpMouseManager / SetPointer / ShowPointer, for Open
+#include "misc.h"
+#include "monframeinfo.h"
+#include "mousemgr.h"
+#include "prefs.h"
 #include "remote.h"
-#include "remotedlg.h" // CNetMsgHandlerPause, the pause handler Open installs
+#include "remotedlg.h"
+#include "resourcemanager.h"
+#include "sample.h"
+#include "soundmgr.h"
 #include "textresource.h"
-#include "town.h"   // TTownType, for IsInMoat's Fortress row
+#include "town.h"
 #include "viewarmywindow.h"
-#include "widget.h"  // WIDGET_DIMMED / WIDGET_UPDATE, for Open
+#include "widget.h"
 #include "winmgr.h"
 
 VA(0x00462760, 0x127)  // dc 0x5d3e0
@@ -2616,7 +2612,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 
 // E:\gamedcs\cmbtmgr.cpp:3902
 // RECONSTRUCTED 2026-08-20. Local names are DC's own
-// (evidence/dreamcast/variables.csv): deltaX/deltaY, addX/addY,
+// (NB11 local records): deltaX/deltaY, addX/addY,
 // nframes, flipped, saved, frame, next_frame_time, ARROW_DELAY, and
 // update_area for the four running limits - which is why update_area is
 // spelled as ONE four-int aggregate rather than four scalars: the

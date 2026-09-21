@@ -2,18 +2,15 @@
 #define HOMM3_ADVMGR_H
 
 #include "basemgr.h"
-#include "sskilltraits.h"
+#include "herospec.h"
+#include "kb.h"
+#include "mapcell.h"
 #include "primaryskill.h"
 #include "secondaryskill.h"
-#include "herospec.h"
+#include "sskilltraits.h"
 #include "struct.h"
-#include "mapcell.h"
-// EGameResource: ExtraInfoUnion's windmill/wagon/garden arms carry
-// `EGameResource resource : N` BITFIELDS, and a bitfield's enum type
-// must be complete - a forward declaration is not enough (C2150).
 #include "town.h"
 #include "window.h"
-#include "kb.h"  // ordinary three-coordinate GetMapExtra declaration
 
 class BlackBoxData;
 class CNetMsgHandler;
@@ -279,7 +276,7 @@ DATA(0x00698790) extern int g_unnamed698790;
 // position it handed over", and every consumer tests them together as
 // `gUnnamed691209 && gNetLocalGamePos == gUnnamed69120c`. Main reads that
 // conjunction FOUR times without caching it, reloading both globals each
-// time. NAMES REMAIN ORDINAL: evidence/ida/names.csv does carry
+// time. NAMES REMAIN ORDINAL: the historical external IDA corpus carried
 // ?gbGoSolo@@3_NA / ?giSoloPos@@3HA, but it puts them at 0x691259 and
 // 0x69125c, a different pair fifty bytes up, so the mangled spellings are
 // NOT evidence for these two addresses and are recorded, not adopted.

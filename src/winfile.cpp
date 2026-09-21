@@ -21,8 +21,10 @@
 // FindFirstFileA/FindNextFileA/FindClose callers in the image are the
 // CRT _find* trio at 0x618113/0x6181df/0x618297.
 
-#include <va.h>
+#include "va.h"
+
 #include <io.h>
+
 #include "winfile.h"
 
 VA(0x005ffb20, 0x14)  // dc 0x198434

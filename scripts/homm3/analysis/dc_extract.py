@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """homm3.analysis.dc_extract - extract the Dreamcast CodeView stream into a
-browsable reference corpus under evidence/dreamcast/.
+browsable reference corpus under build/dreamcast/.
 
 The vostok-project pattern (pdb_parser's "structure"): debug symbols are
 worth more as a greppable materialized corpus than as a 26 MB dump. This
@@ -12,7 +12,7 @@ are DC .text offsets, never retail claims.
 Regenerate functions.csv and variables.csv from verified NB11 with --functions.
 The other legacy CSVs can be imported from explicit cvdump text with --dump PATH.
 
-Outputs (evidence/dreamcast/):
+Outputs (build/dreamcast/):
   README.md        provenance, build-mode findings, inventory
   functions.csv    offset, cb, kind, name, module, file, line,
                    debug_start, debug_end, params, locals
@@ -37,7 +37,7 @@ from collections import defaultdict
 
 from homm3.core import common, inputs
 
-OUT = common.EVIDENCE_DIR / "dreamcast"
+OUT = common.HOMM3_DIR / "build/dreamcast"
 
 PROC_RE = re.compile(r"S_([GL])PROC32: \[0001:([0-9A-F]{8})\], "
                      r"Cb: ([0-9A-F]{8}), Type:\s+\S+, (.+)$")
@@ -77,8 +77,8 @@ info**, not a debug build.
 
 **Addresses are DC `.text` offsets** of another pressing. Names, types,
 layouts, parameters, and locals are reference evidence for the retail
-decompilation; retail claims still need the usual proof chain
-(`evidence/retail-dc-name-map.csv` is the bridge where it exists).
+decompilation; retail identities come from source claims and still need
+retail byte evidence. Historical link-order guesses are not lookup inputs.
 
 | file | contents |
 |---|---|
@@ -137,6 +137,18 @@ def function_rows(symbols):
                      sum(v.kind == "param" for v in proc.variables),
                      sum(v.kind == "local" for v in proc.variables)])
     return rows
+
+
+def corpus_rows(symbols=None):
+    """Build browsing indexes directly from the verified embedded records."""
+    if symbols is None:
+        symbols = inputs.dreamcast_symbols()
+
+    def records(columns, rows):
+        return [dict(zip(columns, map(str, row), strict=True)) for row in rows]
+
+    return (records(FUNCTION_COLUMNS, function_rows(symbols)),
+            records(VARIABLE_COLUMNS, variable_rows(symbols)))
 
 
 def write_functions(symbols, output: Path = OUT):

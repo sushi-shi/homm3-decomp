@@ -1,9 +1,10 @@
 #ifndef HOMM3_TEXTRESOURCE_H
 #define HOMM3_TEXTRESOURCE_H
 
+#include "va.h"
+
 #include <vector>
 
-#include <va.h>
 #include "resource.h"
 
 // Named indices into genrltxt.txt. Every value is retail-byte-proven by the

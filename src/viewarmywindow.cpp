@@ -1,31 +1,34 @@
-#include <va.h>
+#include "va.h"
+#include "includes.h"
+
 #include <stdio.h>
+
 #include "viewarmywindow.h"
-#include "border.h"
-#include "button.h"
-#include "exec.h"
-#include "widget.h"
-#include "game.h"
-#include "kb.h"
-#include "kbwin.h"
-#include "textwdgt.h"
+
 #include "army.h"
 #include "armygrp.h"
+#include "border.h"
+#include "button.h"
 #include "cmbtmgr.h"
+#include "creaturetype.h"
+#include "exec.h"
+#include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
-#include "recruit.h"
+#include "kb.h"
+#include "kbwin.h"
 #include "message.h"
-#include "mousemgr.h"
-#include "winmgr.h"
-#include "creaturetype.h"
-#include "soundmgr.h"
 #include "misc.h"
-#include "includes.h"
+#include "mousemgr.h"
+#include "recruit.h"
+#include "soundmgr.h"
+#include "textwdgt.h"
+#include "widget.h"
+#include "winmgr.h"
 
 // The Faerie Dragon's in-combat cast button handler, retail 0x5f5030:
 // 48 bytes sitting in this TU's own band that
-// config/retail-functions.tsv has NO row for (the 0x5f4850 row's 2007
+// config/retail/functions.tsv has NO row for (the 0x5f4850 row's 2007
 // bytes end at 0x5f5027 and the next row is 0x5f5060 - a carve defect,
 // reported not fixed). The body is
 // `if (msg->codeX == 13 && !(msg->qualifier & 0x200)) { msg->id =

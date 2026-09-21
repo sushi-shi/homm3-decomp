@@ -13,7 +13,7 @@
 #ifndef HOMM3_PREFS_H
 #define HOMM3_PREFS_H
 
-#include <va.h>
+#include "va.h"
 
 // Extent is byte-proven by ReadPrefs' own `mov ecx,0x35 / xor eax,eax /
 // rep stosd` at 0x698758: 53 dwords = 212 bytes, so

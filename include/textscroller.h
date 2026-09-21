@@ -13,6 +13,7 @@
 
 #include <string>
 #include <vector>
+
 #include "slider.h"
 #include "textwdgt.h"
 

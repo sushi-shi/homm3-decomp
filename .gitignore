@@ -1,8 +1,6 @@
 /build/
 /compile_commands.json
 /.cache/
-# Reproducible, verbose NB11 C++/JSON browsing tree.
-/evidence/dreamcast/structure/
 /.nix-gc-roots/
 # Per-lane matcher scratch dirs. Twice now a `git add -A` has swept these
 # into a lane commit (69k lines the second time), so they are ignored

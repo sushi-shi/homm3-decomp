@@ -1,9 +1,9 @@
 #ifndef HOMM3_TRADPOST_H
 #define HOMM3_TRADPOST_H
 
-#include "town.h"
-#include "artifact.h"
 #include "advmgr_popup.h"
+#include "artifact.h"
+#include "town.h"
 
 // The gMarketWindow selector DoMarket dispatches on: the five dialog panes in
 // the order the classes are declared. Byte-proven by DoMarket's jump table and

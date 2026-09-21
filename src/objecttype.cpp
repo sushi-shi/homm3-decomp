@@ -3,18 +3,19 @@
 // This compiland is absent from the Dreamcast roster. Retail groups
 // TObjectType::setImageName, TObjectTypeTable::load and the global image-name
 // registry here; the registry's tree nodes hold a VC6 std::string at +0x0c.
-#include <stdlib.h>
+#include "va.h"
 
-#include <va.h>
-#include <yvals.h>
 #include <map>
+#include <stdlib.h>
 #include <string>
 #include <strstream>
 #include <vector>
+#include <yvals.h>
+
+#include "objecttype.h"
 
 #include "advmgr_objects.h"
 #include "exceptions.h"
-#include "objecttype.h"
 #include "resourcemanager.h"
 #include "textresource.h"
 

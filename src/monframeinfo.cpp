@@ -1,10 +1,13 @@
 // 2 functions in link order.
-#include <va.h>
+#include "va.h"
+
 #include <stdlib.h>
 #include <vector>
+
 #include "monframeinfo.h"
-#include "textresource.h"
+
 #include "resourcemanager.h"
+#include "textresource.h"
 
 static void initializeCreatureAnimationTraits(int id,
     const std::vector<char*, std::allocator<char*> >& row);

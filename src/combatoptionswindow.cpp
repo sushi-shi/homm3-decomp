@@ -1,5 +1,7 @@
-#include <va.h>
+#include "va.h"
+
 #include "combatoptionswindow.h"
+
 #include "border.h"
 #include "button.h"
 #include "cmbtmgr.h"

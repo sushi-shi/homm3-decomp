@@ -1,8 +1,8 @@
 #ifndef HOMM3_ICONWDGT_H
 #define HOMM3_ICONWDGT_H
 
-#include "widget.h"
 #include "csprite.h"
+#include "widget.h"
 
 // Dreamcast roster shifted by the retail widget base (48): Sprite@0x30,
 // Frame@0x34, seqId@0x38, IsFlipped@0x3c, PostPostWalkSequence@0x40,
@@ -25,8 +25,7 @@ public:
     };
 
     // The EResourceType values Draw's two jump tables span: DC
-    // RType_sprite..RType_combat_hero, 64..73 (evidence/dreamcast/
-    // enums.csv), byte-proven contiguous by those tables' `resType - 64`
+    // RType_sprite..RType_combat_hero, 64..73 (NB11 enum records), byte-proven contiguous by those tables' `resType - 64`
     // bound of 9 and by each arm calling the CSprite entry point its
     // type is named after. SPRITEDEF (65) and SPRITEFRAME (72) are the
     // two that fall to the default, which is why both tables carry a

@@ -269,7 +269,7 @@ target, not a measured fact.
 
 ## 6. Boundary to the deeper reader.c RE
 
-The atlas (`evidence/vc6/c2-tu-map.tsv`) places C2's IL reader: the pure
+The atlas (`build/vc6/c2-tu-map.tsv`) places C2's IL reader: the pure
 `reader.c` block is RVA **0x84d9b..0x864ce** (17 functions, 5 ICE-string
 anchors: 0x84d9b/0x8502d/0x8563c/0x85bd6/0x864bc), with ambiguous flanks
 `p2symtab.c|reader.c` (0x8411f, 0x84258), `reader.c|ehexcept.c`

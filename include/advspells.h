@@ -1,7 +1,8 @@
 #ifndef HOMM3_ADVSPELLS_H
 #define HOMM3_ADVSPELLS_H
 
-#include <va.h>
+#include "va.h"
+
 #include "struct.h"
 
 // Retail .data 0x691250, the adventure map's on-screen viewport rectangle -

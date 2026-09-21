@@ -1,5 +1,7 @@
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
 #include "textresource.h"
 
 // Original: TTextResource::TTextResource; textresource.cpp:33, dc 0x163808.

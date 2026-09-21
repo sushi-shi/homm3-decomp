@@ -3,7 +3,7 @@
 
 Source is the authority for names, which makes the `VA(0xADDR, size)`
 claims in src/ + include/ the contract this gate enforces against the
-admitted retail inventory (config/retail-functions.tsv) and the universe
+admitted retail inventory (config/retail/functions.tsv) and the universe
 classifier. Three checks, all fatal in the `homm3 build` tail (never in
 `--fast` - the gates belong to the orchestrator's loop, not the
 matcher's inner loop):
@@ -28,7 +28,7 @@ matcher's inner loop):
 
 Known-backlog ratchet (the gruntz single_view shape): the violations
 that existed when the gate landed are frozen in
-config/va-claims-baseline.tsv - reported as standing debt, drained in
+config/source/va-claims-baseline.tsv - reported as standing debt, drained in
 explicit claim-review sessions, never silently re-blessed - and any
 violation NOT in that file is fatal. `--write-baseline` re-freezes
 (only ever after a review). The 2026-08-04 backlog is 11 CLASS rows:
@@ -49,8 +49,8 @@ from pathlib import Path
 
 from homm3.core import common
 
-FUNCTIONS = common.HOMM3_DIR / "config/retail-functions.tsv"
-BASELINE = common.HOMM3_DIR / "config/va-claims-baseline.tsv"
+FUNCTIONS = common.HOMM3_DIR / "config/retail/functions.tsv"
+BASELINE = common.HOMM3_DIR / "config/source/va-claims-baseline.tsv"
 ROOTS = ("src", "include")
 EXTS = {".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".inl"}
 
@@ -110,7 +110,7 @@ def check(claims_by_file: dict, functions: dict, classes: dict,
                     "UNKNOWN", va,
                     f"UNKNOWN VA: {where} claims 0x{va:08x} but rva "
                     f"0x{rva:x} is not a carved function entry "
-                    "(config/retail-functions.tsv)"))
+                    "(config/retail/functions.tsv)"))
             elif size != admitted:
                 violations.append((
                     "SIZE", va,

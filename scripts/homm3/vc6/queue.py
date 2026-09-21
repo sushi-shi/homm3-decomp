@@ -169,8 +169,7 @@ def _targets(maxima):
     return _partition_targets(data, maxima, _compiled_functions(data))
 
 
-def _admission_rows_from_text(data, baseline_text, link_order_text,
-                              category, sizes):
+def _admission_rows_from_text(data, baseline_text, category, sizes):
     """Return every target RVA without a diffable compiled source body.
 
     A report row is admitted when objdiff scores it. A scoreless mangled row
@@ -207,29 +206,12 @@ def _admission_rows_from_text(data, baseline_text, link_order_text,
         rva_states[rva] = rva_states.get(rva, False) or report_state[identity]
         rva_report.setdefault(rva, (p[0], p[1]))
 
-    link_rows = {}
-    header = None
-    for line in link_order_text.splitlines():
-        if line.startswith("#") or not line.strip():
-            continue
-        p = line.split("\t")
-        if header is None:
-            header = p
-            continue
-        row = dict(zip(header, p))
-        try:
-            link_rows[int(row["rva"], 16)] = row
-        except (KeyError, ValueError):
-            continue
-
     rows = []
     for rva, size in sizes.items():
         if category.get(rva) != "target" or rva_states.get(rva, False):
             continue
-        link = link_rows.get(rva, {})
-        relation = link.get("relation", "unmapped")
-        owner = link.get("owner_or_bracket", "")
-        candidates = link.get("candidates", "")
+        relation = "unmapped"
+        owner = candidates = ""
         report_unit, report_name = rva_report.get(rva, ("", ""))
         if rva in rva_report:
             state = "carcass"
@@ -237,17 +219,9 @@ def _admission_rows_from_text(data, baseline_text, link_order_text,
             candidates = report_unit
             label = report_name
             action = "enable the existing VA claim and reconstruct its body"
-        elif relation == "in-span":
-            state = "unclaimed-in-span"
-            label = link.get("label", "")
-            action = f"add a VA claim and body to {owner}"
-        elif relation == "bracketed":
-            state = "bracketed"
-            label = link.get("label", "")
-            action = "resolve the owner, then add its VA claim and body"
         else:
             state = "unmapped"
-            label = link.get("label", "")
+            label = ""
             action = "locate the owning TU, then add its VA claim and body"
         rows.append({
             "state": state, "size": size, "rva": rva,
@@ -262,7 +236,6 @@ def _admission_rows_from_text(data, baseline_text, link_order_text,
 def _admission_rows(image=None):
     report = _common.REPO / "build/objdiff/report.json"
     baseline = _common.REPO / "config/match_baseline.tsv"
-    links = _common.REPO / "evidence/link-order/functions.tsv"
     if not report.is_file():
         _common.die("no build/objdiff/report.json - run `homm3 build` first")
     if not baseline.is_file():
@@ -271,7 +244,7 @@ def _admission_rows(image=None):
     category, sizes = universe.classify(image)
     return _admission_rows_from_text(
         json.loads(report.read_text()), baseline.read_text(),
-        links.read_text() if links.is_file() else "", category, sizes)
+        category, sizes)
 
 
 def _run_admission(args) -> int:
@@ -282,7 +255,7 @@ def _run_admission(args) -> int:
         rows = [r for r in rows if r["owner"] in only or
                 any(c in only for c in r["candidates"].split(",") if c)]
 
-    out = _common.REPO / "evidence/admission-queue.tsv"
+    out = _common.REPO / "build/reports/admission-queue.tsv"
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w") as fh:
         fh.write("# GENERATED: homm3 vc6 queue --admission - regenerate, never hand-edit.\n")
@@ -317,8 +290,7 @@ def _run_smallest(args) -> int:
 
     report_path = _common.REPO / "build/objdiff/report.json"
     baseline_path = _common.REPO / "config/match_baseline.tsv"
-    links_path = _common.REPO / "evidence/link-order/functions.tsv"
-    parked_path = _common.REPO / "config/simple-match-parked.tsv"
+    parked_path = _common.REPO / "config/matching/parked.tsv"
     if not report_path.is_file():
         _common.die("no build/objdiff/report.json - run `homm3 build` first")
 
@@ -328,7 +300,6 @@ def _run_smallest(args) -> int:
     categories, sizes = universe.classify(image)
     admission = _admission_rows_from_text(
         data, baseline_path.read_text(),
-        links_path.read_text() if links_path.is_file() else "",
         categories, sizes)
     parked = _parked_rvas_from_text(
         parked_path.read_text() if parked_path.is_file() else "")
@@ -342,7 +313,7 @@ def _run_smallest(args) -> int:
                 any(candidate in only for candidate in
                     row["candidates"].split(",") if candidate)]
 
-    out = _common.REPO / "evidence/smallest-match-queue.tsv"
+    out = _common.REPO / "build/reports/smallest-match-queue.tsv"
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w") as stream:
         stream.write("# GENERATED: homm3 vc6 queue --smallest - regenerate, never hand-edit.\n")
@@ -416,7 +387,7 @@ def _run_polish(args) -> int:
 
     # Hardest first: ascending banked MAX. Size only breaks score ties.
     rows.sort(key=lambda r: (r["max_fuzzy"], -r["size"], r["unit"], r["fn"]))
-    out = _common.REPO / "evidence/wall-census.tsv"
+    out = _common.REPO / "build/reports/wall-census.tsv"
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w") as fh:
         command = "homm3 vc6 queue" + (" --diagnose" if getattr(args, "diagnose", False) else "")

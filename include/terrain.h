@@ -10,8 +10,7 @@
 // twenty static-initializer funclets in each of 78 game compilands to
 // `E:\gamedcs\terrain.h` lines 70-79 - ten file-scope objects with
 // dynamic initializers, one pair of funclets each, duplicated per TU
-// (`awk -F, 'tolower($6) ~ /terrain\.h/' evidence/dreamcast/
-// functions.csv`). Retail carries exactly that: every game obj ends in
+// (NB11 procedure/line records). Retail carries exactly that: every game obj ends in
 // a cinit tail of ten near-identical ~95 B funclets, e.g. iconwdgt at
 // 0xeb360..0xeb72f and initialize at 0xebd10..0xec0de.
 
@@ -38,8 +37,8 @@
 // WHAT THEY ARE CALLED, AND WHICH K IS WHICH (proven, not assumed).
 // The DC corpus names ten per-module statics of type 0x2D65 =
 // `std::bitset<10,unsigned long>`: k{Dirt,Sand,Grass,Snow,Swamp,Rough,
-// Subterranean,Lava,Water,Rock}Mask (`grep Mask evidence/dreamcast/
-// globals.csv`). Their DC .data emission order is identical in every
+// Subterranean,Lava,Water,Rock}Mask (NB11 global records).
+// Their DC .data emission order is identical in every
 // module that carries them (ai.obj 0x20260, ai_combat.obj 0x20288,
 // adventuremapwindow.obj 0x1fff4, remote.obj):
 //     Lava, Rock, Dirt, Snow, Rough, Swamp, Subterranean, Water,
@@ -68,7 +67,7 @@
 // claimed as functions either.
 
 // WHICH TUs GET THIS HEADER - decided by retail bytes, not by the DC
-// file column. Scanning config/retail-functions.tsv for the size run
+// file column. Scanning config/retail/functions.tsv for the size run
 // [89, 96, 97, 95, 95, 95, 95, 95, 95, 95] finds the ten-funclet tail in
 // 89 places in the image; 72 of those are immediately preceded by a
 // 32-byte row, the ctype<wchar_t>::id guard. A TU whose tail is guard-
@@ -96,7 +95,7 @@
 #ifndef HOMM3_TERRAIN_H
 #define HOMM3_TERRAIN_H
 
-#include <va.h>
+#include "va.h"
 
 #include <bitset>
 

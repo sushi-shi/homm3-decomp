@@ -30,22 +30,24 @@
 // and the per-widget temp to esi where our CL binds them the other way, a swap
 // the vc6 catalog reports as not source-addressable. CHeroDlg and CTownDlg
 // remain @stub; CTeamAlignmentDlg is reconstructed below.
+#include "va.h"
 #include "includes.h"
-#include <va.h>
+
 #include "singleselectionpopups.h"
-#include "bitmap816.h"
+
 #include "bitmap16.h"
+#include "bitmap816.h"
 #include "csprite.h"
-#include "winmgr.h"
-#include "remote.h"
-#include "kbwin.h"
+#include "font.h"
 #include "game.h"
 #include "iconwdgt.h"
+#include "kb.h"
+#include "kbwin.h"
+#include "remote.h"
+#include "resourcemanager.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "kb.h"
-#include "resourcemanager.h"
-#include "font.h"
+#include "winmgr.h"
 
 // ============================================================================
 // CHotspotWidget - a bare rectangular click target.
@@ -510,7 +512,7 @@ const char* getStartingResourceDescription(int town)
 // Complete adds this random-map generation window. The Dreamcast popup
 // procedure inventory ends with the team-alignment dialog, and its full
 // CodeView class field lists contain no RMG/progress class. The five exact
-// Windows-only method identities are reviewed in config/win_only.tsv.
+// Windows-only method identities are reviewed in config/source/win_only.tsv.
 // The whole family is vtable-proven: 0x641b14 slot 0 is the scalar deleting
 // destructor 0x577090, slot 1 the SetTotal override 0x577300 and slot 2 the
 // Advance override 0x577320, and 0x576f00 is the only body that stores that

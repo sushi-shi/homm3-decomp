@@ -1,57 +1,40 @@
+#include "va.h"
+#include "includes.h"
+
 #include <algorithm>
 #include <math.h>
 #include <stdlib.h>
 
-#include <va.h>
-// army::get_clockwise / get_counter_clockwise and the two direction
-// tables they index: army.cpp is their only consumer, and declaring
-// them to every consumer of army.h costs command.obj's GetCommand
-// 92.5714 -> 92.5357 (measured 2026-08-14, include-set class).
-// The three creature ids ComputeAttackerDamageReduction's two elemental
-// rules name are scoped the same way and for the same reason: declaring
-// those ENUMERATORS to every consumer costs the same 0.0357 on the same
-// function (measured 2026-08-14, bisected against the field slicing in
-// the same change, which is innocent).
-#include "creaturetype.h"
 #include "army.h"
-// ai.h: the narrow EAreaAttackCreature roster - LoadResources' missile
-// switch needs its ARCHER/MAGOG/POWER_LICH, which deliberately live
-// there rather than in armygrp.h's wide enum (see ai.h's own note).
-// Include-set canaries measured after this edge was added: initialize/
-// events/recruit all unmoved.
+
 #include "ai.h"
-// SSpellTraits' m_sample slice: army.cpp is its only consumer and this
-// header sits inside initialize.cpp's include closure (see the field).
 #include "armygrp.h"
-#include "townmgr.h"
 #include "bitmap16.h"
 #include "cmbtmgr.h"
 #include "combatwindow.h"
+#include "creaturetype.h"
 #include "csprite.h"
-#include "cspriteframe.h"   // CroppedY for LoadResources' image_height
+#include "cspriteframe.h"
 #include "drawing.h"
-// get_berserk_targets (0x445490) seeds the combat search and then reads
-// the cost back out of cellData by hand; includes are TU-local and cost
-// nothing to the include-set canaries.
 #include "findpath.h"
-#include "font.h"   // gpTinyFont's DrawBoundedString, for the count box
-#include "game.h"   // gpGame->f_1f698, initialize's elemental-town gate
+#include "font.h"
+#include "game.h"
 #include "hero.h"
 #include "herospec.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
-#include "monframeinfo.h"   // gMonFrameInfo for LoadResources' traits copy
-#include "palette.h"        // TPalette16, for DrawToBuffer's tint arms
-#include "path.h"           // GetAdjacentCellIndexNoArmy for the splash loops
+#include "monframeinfo.h"
+#include "palette.h"
+#include "path.h"
 #include "prefs.h"
-#include "resourcemanager.h"   // GetSprite for attack_wall's explosion
+#include "resourcemanager.h"
 #include "sample.h"
 #include "soundmgr.h"
 #include "textresource.h"
 #include "town.h"
+#include "townmgr.h"
 #include "winmgr.h"
-#include "includes.h"
 
 #ifdef min
 #undef min

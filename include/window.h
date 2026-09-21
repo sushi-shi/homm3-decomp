@@ -1,8 +1,9 @@
 #ifndef HOMM3_WINDOW_H
 #define HOMM3_WINDOW_H
 
-#include <vector>
 #include "va.h"
+
+#include <vector>
 
 class widget;
 class textWidget;
@@ -72,8 +73,8 @@ enum EWindowMetrics {
 // virtual slot 8). Total 0x4c.
 
 // Virtual roster BYTE-PROVEN by the retail heroWindow vtable 0x243cc4
-// (config/retail-vtables.tsv: 9 slots; every slot's target is in
-// config/retail-reloc-evidence.tsv 0x243cc4..0x243ce4):
+// (config/retail/vtables.tsv: 9 slots; every slot's target is in
+// config/retail/reloc-evidence.tsv 0x243cc4..0x243ce4):
 //   0  sdd 0x5fea50 (~heroWindow 0x5fea80)   1  Open 0x5feae0
 //   2  Close 0x5fec60                        3  handle_message 0x4ec560
 //   4  handle_widget_hover 0x485d80 - the ICF-folded `ret 4`, so it
@@ -169,7 +170,7 @@ public:
 // dword, [+0x4c] = -1. Total 0x50.
 
 // Virtual roster BYTE-PROVEN by vtable 0x243ce8 (14 slots,
-// config/retail-vtables.tsv; targets in retail-reloc-evidence.tsv
+// config/retail/vtables.tsv; targets in reloc-evidence.tsv
 // 0x243ce8..0x243d1c): slots 0-8 are heroWindow's, with slot 0 the
 // class's own sdd 0x5ff6b0 and slot 3 overridden at 0x405680; then
 //   9   WindowHandler       0x5ff820  (ret 4 - one message*)

@@ -1,7 +1,10 @@
 // 18 functions in link order.
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
 #include "font.h"
+
 #include "bitmap16.h"
 
 // The sample.obj lever (src/sample.cpp), needed here for the opposite

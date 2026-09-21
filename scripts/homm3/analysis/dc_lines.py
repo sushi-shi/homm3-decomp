@@ -2,7 +2,7 @@
 """homm3.analysis.dc_lines - read retail's SOURCE STATEMENT LAYOUT off the
 Dreamcast build.
 
-The instrument `docs/dc-line-tables.md` describes, made repeatable. It joins
+The instrument `docs/matching/dc-line-tables.md` describes, made repeatable. It joins
 three records that nothing else in this tree combines:
 
   * the CodeView **line/addr table** for the compiland - which SOURCE LINE
@@ -16,7 +16,7 @@ three records that nothing else in this tree combines:
 The result is a statement-by-statement listing of the compiland the
 Dreamcast build was made from. The Dreamcast source is an OLDER REVISION of
 the same file, which is what makes the two directions asymmetric and both
-useful (docs/dc-line-tables.md):
+useful (docs/matching/dc-line-tables.md):
 
   * DC has a structure and retail's bytes agree with it  -> that is retail's
     spelling too;
