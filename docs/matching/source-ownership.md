@@ -78,14 +78,14 @@ rows fail. Regenerate it with
 CSV. This path reads module ownership directly from NB11 and avoids the legacy
 text importer's inherited-module error for CRT library members.
 
-`config/dc_only.tsv` contains game-source exclusions for focused review.
-`config/dc_only_generated.tsv` holds compiler-generated and external-library
+`config/source/dc_only.tsv` contains game-source exclusions for focused review.
+`config/source/dc_only_generated.tsv` holds compiler-generated and external-library
 exclusions, including STLport and SDK/runtime bodies. Both lists exclude exact
 CodeView identities (source file, function, source line) with documented reasons.
 The gates read their union and reject duplicate identities across the two files.
-An unreconstructed function is not automatically DC-only. `config/win_only.tsv` admits exact
+An unreconstructed function is not automatically DC-only. `config/source/win_only.tsv` admits exact
 Windows definition identities (physical file, qualified function, signature)
-without a Dreamcast counterpart. `config/win_only_modules.tsv` separates whole
+without a Dreamcast counterpart. `config/source/win_only_modules.tsv` separates whole
 Windows-only modules and library definitions, including RMG and Victor, from
 those individual interface reviews. Both Windows lists are checked together,
 including by the local-class ownership check. Neither can waive a misplaced DC

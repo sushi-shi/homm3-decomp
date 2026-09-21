@@ -24,8 +24,8 @@ class AnonymousNamespacePathsTest(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        (self.root / "config").mkdir()
-        self.table = self.root / "config/retail-anon-ns-paths.tsv"
+        (self.root / "config/retail").mkdir(parents=True)
+        self.table = self.root / "config/retail/anon-ns-paths.tsv"
         self.write_table(CANONICAL)
         self.root_patch = patch.object(common, "HOMM3_DIR", self.root)
         self.root_patch.start()

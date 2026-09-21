@@ -202,7 +202,7 @@ def carved_functions():
     """[(rva, size)] from the admitted carve, ascending."""
     rows = []
     header = None
-    path = common.HOMM3_DIR / "config/retail-functions.tsv"
+    path = common.HOMM3_DIR / "config/retail/functions.tsv"
     for line in path.read_text().splitlines():
         if line.startswith("#") or not line.strip():
             continue

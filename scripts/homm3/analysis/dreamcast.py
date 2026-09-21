@@ -1334,8 +1334,8 @@ def _build_parser() -> argparse.ArgumentParser:
     suppression_group = audit.add_mutually_exclusive_group()
     suppression_group.add_argument(
         "--suppressions", type=Path,
-        default=common.HOMM3_DIR / "config/dreamcast-audit-suppressions.tsv",
-        help="reviewed finding suppressions TSV (default config/dreamcast-audit-suppressions.tsv)")
+        default=common.HOMM3_DIR / "config/source/dreamcast-audit-suppressions.tsv",
+        help="reviewed finding suppressions TSV (default config/source/dreamcast-audit-suppressions.tsv)")
     suppression_group.add_argument(
         "--no-suppressions", action="store_const", dest="suppressions", const=None,
         help="show the raw audit without reviewed suppressions")

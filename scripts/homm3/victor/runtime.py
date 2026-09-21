@@ -13,7 +13,7 @@ UNITS = ('victor', 'victor_flip', 'victor_loadpcx', 'victor_pcx_kernels')
 
 def resolve(paths):
     # Only CRT memory services and SEH are external. No Victor code or data
-    # is admitted. Memory addresses come from config/retail-runtime-map.tsv;
+    # is admitted. Memory addresses come from config/retail/runtime-map.tsv;
     # SEH handler is the same CRT entry documented in the RMG oracle.
     runtime = {'_malloc': 0x61a405, '_calloc': 0x61a491, '_free': 0x6195e0,
                '__except_handler3': 0x61a528, '__except_list': 0}

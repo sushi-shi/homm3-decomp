@@ -290,7 +290,7 @@ def _run_smallest(args) -> int:
 
     report_path = _common.REPO / "build/objdiff/report.json"
     baseline_path = _common.REPO / "config/match_baseline.tsv"
-    parked_path = _common.REPO / "config/simple-match-parked.tsv"
+    parked_path = _common.REPO / "config/matching/parked.tsv"
     if not report_path.is_file():
         _common.die("no build/objdiff/report.json - run `homm3 build` first")
 

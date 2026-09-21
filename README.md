@@ -28,7 +28,7 @@ _Excluded from the % above — generated/library code, not independent reconstru
 | Category              | Functions | Code (B) | Why excluded                                                       |
 | :-------------------- | --------: | -------: | :----------------------------------------------------------------- |
 | `EH unwind funclets`  |     5,125 |   53,151 | compiler EH unwind funclets; match with their parent function      |
-| `CRT/C++ runtime`     |       913 |  110,536 | CRT/C++ runtime, named not matched (config/retail-runtime-map.tsv) |
+| `CRT/C++ runtime`     |       913 |  110,536 | CRT/C++ runtime, named not matched (config/retail/runtime-map.tsv) |
 | `init/cleanup thunks` |     1,119 |   94,433 | .CRT$XCU dynamic-initializer bodies (compiler-generated)           |
 | `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
 

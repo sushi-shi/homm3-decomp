@@ -10,7 +10,7 @@
 rva	parent_rva	state
 # RETIRED 2026-09-06: 0xe29dc was HeroFn_004E2840's `catch (...)` handler -
 # named by its TryBlockMap HandlerType, NOT an unwind-map action - carried
-# here while the carve held it as its own row. retail-functions.tsv now
+# here while the carve held it as its own row. functions.tsv now
 # absorbs it into the parent (412 -> 437), so it is no longer a function row
 # to classify and this inventory must not name it. The parent's real unwind
 # funclets, 0x22d1e0 and 0x22d1e8, are listed below in rva order.

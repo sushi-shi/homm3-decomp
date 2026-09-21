@@ -25,7 +25,7 @@
 
 // The Faerie Dragon's in-combat cast button handler, retail 0x5f5030:
 // 48 bytes sitting in this TU's own band that
-// config/retail-functions.tsv has NO row for (the 0x5f4850 row's 2007
+// config/retail/functions.tsv has NO row for (the 0x5f4850 row's 2007
 // bytes end at 0x5f5027 and the next row is 0x5f5060 - a carve defect,
 // reported not fixed). The body is
 // `if (msg->codeX == 13 && !(msg->qualifier & 0x200)) { msg->id =

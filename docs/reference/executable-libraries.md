@@ -1,7 +1,7 @@
 # Executable libraries and external reference provenance
 
 The original discovery reports have been retired. Reviewed retail identities
-live in `config/retail-runtime-map.tsv`, `config/retail-zlib-map.tsv` and source
+live in `config/retail/runtime-map.tsv`, `config/retail/zlib-map.tsv` and source
 annotations. The findings below describe the pinned executable; historical
 attribution counts are not current matching coverage.
 

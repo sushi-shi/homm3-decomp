@@ -27,7 +27,7 @@ scores. Inspect a failing command's actual exit status and cause before continui
 1. **Locate and claim when needed.** Use the DC roster and source order to form
    hypotheses, then corroborate identity with retail bodies, strings, imports,
    named callees, address-takes or vtables. NH3API addresses are not location
-   evidence. Read sizes from `config/retail-functions.tsv`, never from DC.
+   evidence. Read sizes from `config/retail/functions.tsv`, never from DC.
    `DC_ONLY` means a retail counterpart is unproven, not necessarily absent.
    Follow the annotation contracts in `include/va.h`; keep unreconstructed
    bodies inside the carcass of compiled TUs. Reconcile declarations and ABI
