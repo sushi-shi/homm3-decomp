@@ -20,6 +20,7 @@
 #include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"
+#include "includes.h"
 
 // Retail coordinates occupy nine 192-byte rows: 48 X words then 48 Y
 // words; the old g_puzzlePieceY symbol was a +0x60 view of the same array.
@@ -548,105 +549,45 @@ static long checkMatch(long player, long firstX, long firstY,
 // of line, called from AI_attempt_puzzle_guess above; the declaration lives
 // in puzzlewindow.h so both sides of that call agree.
 
-// Three phases. First a bounding-box sweep of the uncovered puzzle tiles that
-// also remembers the FIRST visible one in row-major order - `found` is a
-// separate latch because first_x/first_y are the scan's anchor, not the box's
-// corner. Then the scan window, four nested _cpp_min/_cpp_max pairs whose
-// const-reference temporaries are what put every operand in its own stack
-// slot; the +9/+8 biases are the same puzzle-centre offsets
-// AI_attempt_puzzle_guess re-applies to the answer. Finally the map sweep:
-// every (x, y, z) the anchor could sit on is scored by check_match, the best
-// score wins, and a tie count above two answers (-1,-1,-1) - retail builds
-// that refusal in the dead `puzzle_map` parameter home rather than reusing
-// `result`.
-
-// The MAP_WIDTH in the Y window's first bound is retail's own: the second
-// operand of that pair reads MAP_HEIGHT, and the two globals are loaded
-// separately, so no CSE could have produced it. Transcribed as found.
-
-// Residual (79.1843%): ONE structural fact, and everything else is its
-// shift. Retail strength-reduces the bounding-box sweep's inner subscript
-// into a running pointer - `[ebp-8] = puzzle_map + x*0x110 + 0xc`, then
-// `add edi,0x10` per column - so its inner-loop head is a single block that
-// the outer head falls into. Ours keeps `x*17` in a slot and rebuilds
-// `(that + y) << 4` every iteration, which needs a rotated entry (`jmp`
-// past the reload) and puts our whole block list one ahead of retail's from
-// B1 on; 49 of the 70 blocks then pair as flow-kind mismatches purely from
-// that offset. The blocker is that our `_cpp_min`/`_cpp_max` calls bind
-// their const references DIRECTLY to `x`, `y` and the four accumulators -
-// `lea ecx,[ebp-0x24]` on the counter's own home - which takes the
-// induction variable's address and forbids the rewrite, while retail copies
-// every operand into the same two temporaries ([ebp-0x30]/[ebp-0x2c]).
-
-// 79.1843 -> 85.9430 (2026-09-05), and the note above named the answer
-// without reaching it: the operand form IS the lever, and the spelling that
-// supplies it is a NAMED LOCAL, not a cast.
-//  - `int cur_x = x; int cur_y = y;` inside the visible arm, with the four
-//    reducers reading those instead of the induction variables: 79.1843 ->
-//    82.6674, and the block skeleton goes from ZERO exact blocks to 57 of
-//    70 with flow-kind and target-shift both at 0. Copying only x (77.12)
-//    or only y (82.22) is worse than copying both; copying the four
-//    accumulators as well is worse again (80.76); naming `x + 1` / `y + 1`
-//    costs 2.9. `x + 0` scores 82.78 and is not shipped - it is an invented
-//    token for the same effect the local gets honestly.
-//  - the two window bounds are then NESTED reducer calls whose INNER result
-//    retail lands in a temp of its own: `int span_x = _cpp_max(first_x - 9,
-//    first_x - min_x); int start_x = _cpp_max(span_x, 0);` and the same for
-//    limit_x/end_x/span_y/limit_y. Naming the two start bounds' inners is
-//    +2.16, naming all four is +2.99 (-> 85.6551), and it retires the last
-//    two branch-polarity flips: branches now AGREE 40 = 40.
-//  - the four reducers are then emitted MINS FIRST: min_x, min_y, max_x,
-//    max_y is 85.9430 against 85.6551 for the x-then-y pairing, 85.81 for
-//    two per-axis blocks, 85.68 for maxes first and 85.17 for interleaved.
-
-// 85.9430 -> 92.4118 (2026-09-06), and again the note below named the answer
-// without reaching it. "Retail runs every reducer operand through ONE pair of
-// temporaries" is what VC6 emits when BOTH const-reference arguments need a
-// CONVERSION - an `int` lvalue pair binds directly and copies nothing, however
-// it is spelled. The explicit `long` template argument supplies the conversion
-// on both sides: `std::_cpp_min<long>` / `std::_cpp_max<long>` at the four
-// reducers and the four window bounds takes the skeleton to 70 = 70 blocks
-// with 64 exact, 0 flow-kind, 0 target-shift, branches 40 = 40 and calls
-// agreeing. Swapping the two min reducers' argument order is worth a further
-// 0.02 (92.3936 -> 92.4118) and is kept because it also puts retail's
-// `cmp _Y,_X` operand order back; swapping the maxes as well loses 0.01.
-
-// Residual (92.41%): 6 size-only blocks, all of it slot layout - retail's
-// frame is 0x80 against our 0x84 and it memory-homes `min_x` at [ebp-0x80],
-// re-reading it per iteration, where we spread the copies over four slots and keep
-// min_x in ESI. Our frame is 0x84 against retail's 0x80 for that reason.
+// DC puzzlewindow.cpp:523-579 names first, result, point, and the two RECT
+// locals extents/rect. Lines 547-550 update left/right/top/bottom in that
+// order; lines 560-577 clamp each rect member through the shared min/max
+// wrappers. Their by-value operands explain retail's temporary copies.
+// Complete scans 19x17 cells instead of DC's 13x12. Retail and DC both use
+// map width in the Y window's first upper bound; preserve that asymmetry.
+// Restoring the rectangles, point constructors and map-level accessor gives
+// 95.3093%, from 92.4089% with scalar carriers and explicit long selectors.
+// Omitting DC's unused first-tile snapshot gives the same score. The remaining
+// differences are four size-only blocks with matching branch/call structure.
+// VC6 resolves the RECT LONG/LONG min calls to the integer wrapper; Clang
+// considers the integer/double overloads ambiguous, leaving an audit gap.
 VA(0x0052cf10, 0x5B4)  // anchor-caller AI_attempt_puzzle_guess +0x39d, dc 0x115be8
 type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
 {
-    type_point result;
-    result.m_x = -1;
-    result.m_y = -1;
-    result.m_z = -1;
-
+    type_AI_puzzle_tile first;
     unsigned char found = 0;
+    type_point result(-1, -1, -1);
     int firstX;
     int firstY;
-    int minX = 19;
-    int maxX = 0;
-    int minY = 17;
-    int maxY = 0;
+    RECT extents;
+    extents.left = 19;
+    extents.right = 0;
+    extents.top = 17;
+    extents.bottom = 0;
 
-    // MAX 92.4725 was measured with `x != 19` - an unnamed domain compare
-    // that fails the cleanliness floor (docs/vc6/behavior-catalog.md D24).
     for (int x = 0; x < 19; ++x) {
         for (int y = 0; y < 17; ++y) {
             if (puzzleMap[x][y].m_visible) {
                 if (!found) {
+                    first = puzzleMap[x][y];
                     firstX = x;
                     firstY = y;
                     found = 1;
                 }
-                int curX = x;
-                int curY = y;
-                minX = std::_cpp_min<long>(minX, curX);
-                minY = std::_cpp_min<long>(minY, curY);
-                maxX = std::_cpp_max<long>(maxX, curX + 1);
-                maxY = std::_cpp_max<long>(maxY, curY + 1);
+                extents.left = min(extents.left, x);
+                extents.right = max(extents.right, x + 1);
+                extents.top = min(extents.top, y);
+                extents.bottom = max(extents.bottom, y + 1);
             }
         }
     }
@@ -654,48 +595,46 @@ type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
     if (!found)
         return result;
 
+    type_point point;
     int ties = 0;
     int best = 0;
 
-    int spanX = std::_cpp_max<long>(firstX - 9, firstX - minX);
-    int startX = std::_cpp_max<long>(spanX, 0);
-    int limitX = std::_cpp_min<long>(g_mapWidth - maxX + firstX,
-                                g_mapWidth + firstX - 9);
-    int endX = std::_cpp_min<long>(g_mapWidth, limitX);
-    int spanY = std::_cpp_max<long>(firstY - 8, firstY - minY);
-    int startY = std::_cpp_max<long>(spanY, 0);
-    int limitY = std::_cpp_min<long>(g_mapWidth - maxY + firstY,
-                                g_mapHeight + firstY - 8);
-    int endY = std::_cpp_min<long>(g_mapHeight, limitY);
+    RECT rect;
+    rect.left = firstX - 9;
+    rect.left = max(rect.left, firstX - extents.left);
+    rect.left = max(rect.left, 0);
+    rect.right = g_mapWidth + firstX - 9;
+    rect.right = min(rect.right, g_mapWidth - extents.right + firstX);
+    rect.right = min(rect.right, g_mapWidth);
+    rect.top = firstY - 8;
+    rect.top = max(rect.top, firstY - extents.top);
+    rect.top = max(rect.top, 0);
+    rect.bottom = g_mapHeight + firstY - 8;
+    rect.bottom = min(rect.bottom, g_mapWidth - extents.bottom + firstY);
+    rect.bottom = min(rect.bottom, g_mapHeight);
 
-    type_point scan;
-    for (scan.m_z = 0; scan.m_z < g_game->m_worldMap.getNumLevels(); ++scan.m_z) {
-        for (scan.m_y = startY; scan.m_y < endY; ++scan.m_y) {
-            for (scan.m_x = startX; scan.m_x < endX; ++scan.m_x) {
+    for (point.m_z = 0; point.m_z < g_game->getNumMapLevels(); ++point.m_z) {
+        for (point.m_y = rect.top; point.m_y < rect.bottom; ++point.m_y) {
+            for (point.m_x = rect.left; point.m_x < rect.right; ++point.m_x) {
                 int count =
-                    checkMatch(player, firstX, firstY, scan, puzzleMap);
+                    checkMatch(player, firstX, firstY, point, puzzleMap);
                 if (count != 0 && count >= best && count * 2 >= best) {
                     ++ties;
                     if (count > best) {
                         if (count > best * 2)
                             ties = 1;
                         best = count;
-                        result.m_x = scan.m_x - firstX + 9;
-                        result.m_y = scan.m_y - firstY + 8;
-                        result.m_z = scan.m_z;
+                        result.m_x = point.m_x - firstX + 9;
+                        result.m_y = point.m_y - firstY + 8;
+                        result.m_z = point.m_z;
                     }
                 }
             }
         }
     }
 
-    if (ties > 2) {
-        type_point ambiguous;
-        ambiguous.m_x = -1;
-        ambiguous.m_y = -1;
-        ambiguous.m_z = -1;
-        return ambiguous;
-    }
+    if (ties > 2)
+        return type_point(-1, -1, -1);
     return result;
 }
 

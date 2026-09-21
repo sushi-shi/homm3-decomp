@@ -1745,6 +1745,11 @@ void combatManager::showLootedArtifacts(
     }
 }
 
+// DC command.cpp:2624 assigns min directly to the defender's mana. Keeping
+// that expression recovers the retail operand homes; separate mana/cap
+// snapshots leave 99.8293% despite an otherwise identical call sequence.
+// Complete darkens the screen after freeArmies; the older port's earlier
+// text drawing and extra results-dialog fade/surface setup are absent.
 VA(0x00477470, 0x58C)  // dc 0x6e1c8
 void combatManager::doVictory(int winningGroup)
 {
@@ -1824,10 +1829,7 @@ void combatManager::doVictory(int winningGroup)
         m_heroes[1]->setPrimarySkill(1, m_originalDefenseSkill);
         m_heroes[1]->setPrimarySkill(2, m_originalPowerSkill);
         if (m_defendingTown) {
-            int currentMana = m_heroes[1]->m_mana;
-            int manaCap = m_originalMana;
-            int newMana = std::_cpp_min(manaCap, currentMana);
-            m_heroes[1]->m_mana = newMana;
+            m_heroes[1]->m_mana = min(m_originalMana, m_heroes[1]->m_mana);
         }
     }
 
@@ -2052,8 +2054,10 @@ void combatManager::turnOffHighlighter(unsigned char drawIt)
 // the two twenty-stack value loops; retail homes one extra four-byte scratch
 // and binds the row walk to EDI/ECX where this build uses EDX/EDI. A named
 // side is codegen-inert; explicit current-hero locals score 87.19%/80.53%;
-// and spelling the DC-attested IsActive call directly scores 84.86% because
-// it consumes an inline-budget slot and leaves a second string _Tidy call.
+// and an earlier IsActive-call probe scored 84.86%. The current source keeps
+// IsActive (DC line 3085); the text lookups at 3058/3105 use the underlying
+// getText accessor here. FullUpdate after each dialog is DC-only here:
+// retail continues directly to the response checks without that redraw.
 // Keeping a named army-row base is the best measured natural spelling.
 // Countdown sweep 2026-09-06: retail computes ONE `&armies[currentSide][0]
 // .numTroops` (edi at fn+0x4b2, disp 0x5518 folded into the lea) and shares
@@ -2097,8 +2101,7 @@ void combatManager::checkGetAIMove()
                 army* currentArmies = m_armies[m_currentSide];
                 for (int slot = 0; slot < 20; ++slot) {
                     army* currentArmy = &currentArmies[slot];
-                    if (currentArmy->m_creatureType >= 0
-                            && currentArmy->m_numTroops > 0) {
+                    if (currentArmy->isActive()) {
                         combatValue +=
                             g_creatureTypeTraits[currentArmy->m_creatureType].m_cost[6]
                             * currentArmy->m_numTroops;
@@ -2345,7 +2348,7 @@ void combatManager::processFirstAid(army* currentArmy)
                    currentArmy->getController()->getFirstAidFactor()
                    * 100.0f));
         int result = targetArmy->m_topCreatureDamage;
-        result = std::_cpp_min(maximum, result);
+        result = min(maximum, result);
         targetArmy->m_topCreatureDamage -= result;
         currentArmy->m_monInfo.m_attributes |= creatureDone;
 
@@ -2367,12 +2370,12 @@ void combatManager::processFirstAid(army* currentArmy)
 // switch domain and source calls. Retail independently fixes all twelve
 // pending-action arms and shows that VC6 expanded ResetMouse,
 // ResetCycleTimers and CheckChangeSelector into this body.
-// Exact with every GetName -> GetArmyName and timer/selector boundary intact.
-// The canonical name lookup's conditional return inside the existing else
-// recovers all4180 retail bytes and all163 relocation positions; the prior
-// explicit inner if/else left99.7272%. Removing the outer else changes other
-// callers' inline decisions, so retain that source scope. No inline-depth pin
-// or copied helper body is needed.
+// Keep GetName -> GetArmyName, timer/selector calls, DC3653's max and the
+// text-resource getters. Residual 99.7272%: the wait-arm string constructor
+// retains _Tidy where retail expands it. Naming the defend-bonus result is
+// flat; naming its percentage input is worse. Neither justifies flattening
+// max or changing the DC string lifetimes.
+// DC3625's extra FullUpdate in the surrender-error arm is absent in retail.
 VA(0x00478d80, 0x1054)  // anchor-callee exhaustive + single-fn gap, dc 0x6f984
 int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
 {
@@ -2524,7 +2527,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
             if (!m_creaturePlacement && !currentArmy->is(creatureSiegeWeapon)) {
                 std::string message;
                 currentArmy->m_monInfo.m_attributes |= creatureDefending;
-                currentArmy->m_defendBonus = std::_cpp_max(
+                currentArmy->m_defendBonus = max(
                     currentArmy->m_monInfo.m_defenseSkill * 20 / 100, 1);
 
                 if (currentArmy->m_numTroops == 1)

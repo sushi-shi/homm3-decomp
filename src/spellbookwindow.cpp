@@ -388,6 +388,11 @@ void TSpellbookWindow::close(unsigned char update)
     heroWindow::close(update);
 }
 
+// DC uses push_back for the available-spell entry. Restoring that wrapper
+// leaves sort's _Unguarded_insert retained where retail expands it (88.8745%,
+// formerly exact with direct insert). Conditional or single-value school
+// selection does not recover it. Retail retains getSpellLevel here; DC's
+// older caller uses GetSpellSchoolLevel, so keep Complete's spell-id contract.
 VA(0x0059c9a0, 0x691)  // dc 0x14c904
 void TSpellbookWindow::gotoPage(int page)
 {
@@ -410,8 +415,7 @@ void TSpellbookWindow::gotoPage(int page)
                 school = highestSchool;
             TSkillMastery mastery = m_hero->getSpellLevel(
                 spell, m_onMagicPlains);
-            availableSpells.insert(availableSpells.end(),
-                          TSpellbookEntry(spell, school, mastery));
+            availableSpells.push_back(TSpellbookEntry(spell, school, mastery));
         }
     }
 

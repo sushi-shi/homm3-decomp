@@ -257,28 +257,18 @@ int getTerrainCost(hero* currentHero, type_point start, int direction, int moveL
 // adjusted_cost, pCell, move_cost, barrier_value, delta_x and delta_y.
 // The queue orders barrier plus danger after this turn's movement, with
 // adjusted cost breaking ties. Only after queue/visited insertion is the
-// point copied to its grid cell. Retail's dead erase copy loop requires
-// erase(end()-1) for the 500-entry cap; DC line 396 instead calls pop_back.
+// point copied to its grid cell. DC line 396 calls pop_back for the
+// 500-entry cap; keep that source operation instead of a library expansion.
 
 // Removed the old terrainForbidsMagic, findQueueSlot and fillPathCell
 // compiler-budget probes and the tail-insert inline_depth(0) pin. Their
 // prior 87.5488% peak is superseded; none had source-boundary evidence.
 // The real game::get_cell accessor remains a canonical game.h inline.
 
-// 2026-09-08: 72 public vector-overload/arm-order/midpoint-lifetime
-// hypotheses recover 97.8175% with DC's push_back/insert/push_back sequence.
-// Retail also supports the explicit three-way key comparison, rather than
-// the probe's combined Boolean test. Computing the first midpoint before
-// the loop and updating it after each bound recovers retail's loop layout;
-// the equivalent top-tested loop is 94.3098%. All 72 candidates pass an
-// independent linear-order oracle across 12,800 cap/tie/cost/alias cases.
-// A further 24 declaration/scope/erase-iterator controls reach 98.2622%
-// by initializing cheaper before the key comparison, as retail does.
-// Hoisting upper/lower or adding visited-branch braces is byte-flat;
-// a named erase iterator falls to 98.1234%. No other TU score falls.
-// Residual: stack homes, the folded erase iterator and pointer-vector
-// _Destroy retention in visitedPoints' grow arm. All interior queue-insert
-// calls, including the retained _Construct<pathCell>, now agree naturally.
+// Retail reuses one comparison-key stack home in the visited-cell check and
+// queue search. One local for that shared role, together with pop_back,
+// reproduces the retained body. Separate cell/entry locals leave six stack
+// homes permuted (99.9640%); the original local name is not recorded.
 VA(0x004b1a70, 0x88D)  // anchor-bracket, dc 0x9f2a4
 void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
                             int direction, int moveCost, int limit,
@@ -318,7 +308,7 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
 
     long danger = 0;
     if (m_dangerZones != 0) {
-        danger = *getDangerCell(m_dangerZones, point.m_point);
+        danger = getDangerCell(m_dangerZones, point.m_point);
         if (cost > m_thisTurnsMovement) {
             danger = min(oldCell.m_dangerValue, danger);
             // The "unreachable" sentinel the danger map carries; every
@@ -333,16 +323,17 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
 
     unsigned char cheaper = 0;
     long key = barrierValue;
+    long comparisonKey;
     if (cost > m_thisTurnsMovement)
         key = danger + barrierValue;
 
     if (cell->m_visited) {
-        long cellKey = cell->m_barrierValue;
+        comparisonKey = cell->m_barrierValue;
         if (cell->m_cost > m_thisTurnsMovement)
-            cellKey += cell->m_dangerValue;
-        if (cellKey > key)
+            comparisonKey += cell->m_dangerValue;
+        if (comparisonKey > key)
             return;
-        if (cellKey < key)
+        if (comparisonKey < key)
             cheaper = 1;
         else if (adjustedCost >= cell->m_adjustedCost)
             return;
@@ -367,18 +358,18 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
     }
 
     if (m_queue.size() >= 500)
-        m_queue.erase(m_queue.end() - 1);
+        m_queue.pop_back();
 
     int upper = m_queue.size();
     int lower = 0;
     int middle = (upper + lower) >> 1;
     while (upper > lower) {
-        long entryKey = m_queue[middle].m_barrierValue;
+        comparisonKey = m_queue[middle].m_barrierValue;
         if (m_queue[middle].m_cost > m_thisTurnsMovement)
-            entryKey += m_queue[middle].m_dangerValue;
-        if (entryKey < key)
+            comparisonKey += m_queue[middle].m_dangerValue;
+        if (comparisonKey < key)
             lower = middle + 1;
-        else if (entryKey > key)
+        else if (comparisonKey > key)
             upper = middle;
         else if (adjustedCost < m_queue[middle].m_adjustedCost)
             lower = middle + 1;

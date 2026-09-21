@@ -1617,38 +1617,10 @@ void overviewSliderCallback(int state, heroWindow* parentWindow)
 // vtable store, exact following destructor and address-taken slider callback
 // jointly fix this identity and extent.
 // E:\gamedcs\overview.cpp:2017
-// DIAGNOSED 2026-09-06, and it is NOT missing source mass: this compile
-// emits MORE than retail, not less - 268 blocks against 241, 127 branches
-// against 108, and ELEVEN base-only calls, every one of them the guts of
-// `vector<overview_item_record>::insert` (_Ufill, _Ucopy x2, _Destroy,
-// operator new/delete) plus five out-of-line `_Construct`.  Retail CALLS
-// insert at all six append sites (its first one pairs with ours at fn+0xfdc)
-// and INLINES `_Construct`; we do the exact inverse at five of the six,
-// which is one /Ob2 budget decision showing up in both directions at once -
-// expanding insert spends the budget, and the later `_Construct` sites are
-// then starved out of line.  27 blocks / 6 sites is one insert expansion
-// each, so the whole structural deficit is that decision.
-// THE LADDER IS PER-SITE HERE, AND THAT IS THE WHOLE FIX (polish 31,
-// 2026-09-06).  Every BULK dose of `insert(end(), x)` loses - all six
-// item-record appends 80.9765, all forty-two appends in the body 79.1932,
-// both against 82.7097 - which is what the 2026-09-06 note above concluded
-// from.  Titrating all 42 sites ONE AT A TIME instead: forty are flat or
-// worse and exactly two pay, the shipyard 'W' record append (+6.89) and the
-// per-player flag label `Widgets.push_back(field_70.back())` (+0.60 on top),
-// 82.7097 -> 89.6021 -> 90.2053.  A third greedy round over the remaining
-// forty markers finds nothing, so this pair is the peak.  Read the earlier
-// paragraph's census with that in mind: retail calls `insert` at all six
-// item-record sites, but only ONE of them is the site whose budget decides
-// the rest.  The lever the doctrine names for
-// an OVER-inline this size is caller-shrink, but the six item-record search
-// loops are identical enough to fold into one helper and the Dreamcast
-// overview.obj roster names no such function (its own ctor is a different,
-// 2692 B revision), so that helper would be invented source.
-// Also measured and rejected 2026-09-06: declaring all six `record`
-// temporaries `const` is BYTE-FLAT (82.7097, 268 blocks unchanged), so the
-// argument's constness does not reach push_back's expansion decision either.
-// Both library-level spellings the doctrine offers are therefore bounded,
-// and the site is a /Ob2 quotient with no admissible source lever.
+// Retail retains vector::insert beneath the item-record push_back calls;
+// our current VC6 context expands several of those workers. Direct insert
+// spellings and a shipyard-vector alias previously hid part of this residual.
+// Keep the canonical appends while recovering the remaining inline decisions.
 VA(0x0051fa40, 0x1311)  // exhaustive ctor/callback/dtor identity, dc 0x1084f0
 TOverviewWindow::TOverviewWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
@@ -1686,7 +1658,7 @@ TOverviewWindow::TOverviewWindow()
             739, i * 57 + 81, 50, 16, "",
             "smalfont.fnt", font::PRIMARY, -1,
             font::RIGHT_JUSTIFIED, 0, 8));
-        m_widgets.insert(m_widgets.end(), m_flaggableCountWidgets.back());
+        m_widgets.push_back(m_flaggableCountWidgets.back());
     }
 
     // SEVEN resource icons, not six (found 2026-09-05 by the tree-wide
@@ -1793,12 +1765,6 @@ TOverviewWindow::TOverviewWindow()
             }
             if (item < 0) {
                 item = m_flaggableItems.size();
-                // The mine arm's append is `push_back`, not a pinned
-                // `insert(end(), record)`: the pin was worth +1.82 when it
-                // was written and is worth -0.65 now (78.9297 unpinned
-                // against 78.2776 pinned, both under the 80.0954 the row
-                // banked in an older delink generation), so the debt buys
-                // nothing and goes.
                 overview_item_record record = { 'U', 0 };
                 m_flaggableItems.push_back(record);
             }
@@ -1882,16 +1848,7 @@ TOverviewWindow::TOverviewWindow()
         if (item < 0) {
             item = m_flaggableItems.size();
             overview_item_record record = { 'W', 0 };
-            // See the constructor's ladder note: this append and the flag-label
-        // one are the only two of the 42 whose `insert(end(), x)` spelling
-        // pays (+6.89 here).  NAMING THE VECTOR on top of it is another
-        // +0.24 (90.2053 -> 90.4407): retail reads `_Last` through the
-        // vector's own address instead of folding the member offset off
-        // `this`, and it is one of the two frame dwords this body is short.
-        // The same reference on the flag-label append LOSES 0.60, and both
-        // together 0.61 - per-site, like everything else about this lever.
-        std::vector<overview_item_record>& items = m_flaggableItems;
-        items.insert(items.end(), record);
+            m_flaggableItems.push_back(record);
         }
         ++m_flaggableItems[item].m_count;
     }

@@ -2767,9 +2767,9 @@ static void markDangerZones(const hero* ourHero, hero* enemyHero,
              visitedIndex--;) {
             const type_point& point = g_searchArray->getVisitedCell(visitedIndex)->m_point;
             if (value >= -500000000) {
-                *getDangerCell(dangerZones, point) += value;
+                getDangerCell(dangerZones, point) += value;
             } else {
-                *getDangerCell(dangerZones, point) =
+                getDangerCell(dangerZones, point) =
                     -1000000000;
             }
         }
@@ -3443,7 +3443,7 @@ int netValueOfLocation(hero* currentHero, HeroDestination* destination,
         }
     }
 
-    long value = *getDangerCell(strategicMap, point)
+    long value = getDangerCell(strategicMap, point)
         + currentPathCell->m_barrierValue;
     if (currentPathCell->m_dangerValue <= -500000000 && value >= 1968)
         currentPathCell->m_dangerValue = -2500000;

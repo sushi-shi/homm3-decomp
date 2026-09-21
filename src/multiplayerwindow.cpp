@@ -497,7 +497,7 @@ TMultiPlayerWindow::TMultiPlayerWindow()
 
     int sessionRowY = 112;
     for (int i = 0; sessionRowY < 412; sessionRowY += 25, i++)
-        m_widgets.insert(m_widgets.end(),
+        m_widgets.push_back(
                        new textWidget(18, sessionRowY, 317, 22, 0,
                                       "smalfont.fnt", font::PRIMARY, 110 + i, 1,
                                       0, 8));
