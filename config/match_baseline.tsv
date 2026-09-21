@@ -1466,7 +1466,7 @@ drawing	?updateMouseGrid@combatManager@@QAEXHAAV?$vector@JV?$allocator@J@std@@@s
 drawing	?updateMouseGrid@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x94390	tokens1:c89f7e107edc
 drawing	__h3cg$drawing$static_dtor$oldHexes	100.0000	100.0000	100.0000	0x94370	-
 dxplay	??0CDPlayLobby@@QAE@XZ	100.0000	100.0000	100.0000	0x98870	tokens1:194ce54e4405
-dxplay	??0TRuntimeError@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x9a0c0	tokens1:25e93ab95fcc
+dxplay	??0TRuntimeError@@QAE@PBD@Z	91.9130	100.0000	100.0000	0x9a0c0	tokens1:25e93ab95fcc
 dxplay	??1?$CAutoArray@VCDPlayAddressElement@@@@UAE@XZ	100.0000	100.0000	100.0000	0x99f00	tokens1:a7070c64716c
 dxplay	??1CDPlay@@UAE@XZ	100.0000	100.0000	100.0000	0x96d10	tokens1:be958c6d910b
 dxplay	??1CDPlayLobby@@UAE@XZ	100.0000	100.0000	100.0000	0x98930	tokens1:51a4ebfe1014
@@ -2817,7 +2817,7 @@ objecttype	?insert@?$vector@UTImageInfo@TObjectType@@V?$allocator@UTImageInfo@TO
 objecttype	?insert@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@@QAEXPAUTObjectType@@IABU3@@Z	100.0000	100.0000	100.0000	0x1167a0	-
 objecttype	?ipfx@?$basic_istream@DU?$char_traits@D@std@@@std@@QAE_N_N@Z	100.0000	100.0000	100.0000	0x115ca0	-
 objecttype	?is@?$ctype@D@std@@QBE_NFD@Z	100.0000	100.0000	100.0000	0x119500	-
-objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	73.0105	73.3263	82.2717	0x114d80	tokens1:ce5e28590827
+objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	73.3263	73.3263	82.2717	0x114d80	tokens1:ce5e28590827
 objecttype	?replace@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@IIPBDI@Z	100.0000	100.0000	100.0000	0x115a80	-
 objecttype	?rfind@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEIPBDII@Z	100.0000	100.0000	100.0000	0x115c20	-
 objecttype	?sbumpc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHXZ	100.0000	100.0000	100.0000	0x117b10	-
@@ -2830,7 +2830,7 @@ objecttype	?size@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@@Q
 objecttype	?use_facet@std@@YAABV?$ctype@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	100.0000	100.0000	0x11a990	-
 objecttype	?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	100.0000	100.0000	0x11ab90	-
 objnames	??1?$TResourcePtr@VTTextResource@@@@QAE@XZ	100.0000	100.0000	100.0000	0x1bd90	tokens1:7135c54fe758
-objnames	?initializeAdventureObjectNames@@YIXXZ	97.9798	97.9798	100.0000	0x1b500	tokens1:58eb010a437f
+objnames	?initializeAdventureObjectNames@@YIXXZ	100.0000	100.0000	100.0000	0x1b500	tokens1:58eb010a437f
 overview	??0TOverviewWindow@@QAE@XZ	90.4407	90.4407	90.4407	0x11fa40	tokens1:5c0db7c53df2
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	tokens1:2510f0c1a9f1
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
