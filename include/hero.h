@@ -129,7 +129,7 @@ public:
     // E:\\gamedcs\\Hero.h:145.  The DC tiny helper is the validity byte;
     // retail folds it into unblock_lith before temporarily restoring the
     // hero's underlying map cell.
-    bool isOnMap() const { return m_valid != 0; }
+    unsigned char isOnMap() const { return m_valid; }
     // E:\gamedcs\Hero.h:150. Dreamcast retains an out-of-line copy, while
     // retail expands the validity test at every admitted Windows caller.
     TAdventureObjectType getObscuredObject() const

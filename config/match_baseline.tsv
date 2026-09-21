@@ -315,7 +315,7 @@ ai_player	?aiArrangeArmy@@YIXAAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d8e0
 ai_player	?aiArrangeArmyForCombat@@YIXPAVhero@@PBV1@ABVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2db20	tokens1:6e5b88463b94
 ai_player	?aiAttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	84.7895	86.5842	86.5842	0x2fee0	tokens1:b19ff2c3974c
 ai_player	?aiBuildShip@@YIXPBVhero@@JJJ@Z	100.0000	100.0000	100.0000	0x30f80	tokens1:267b00060bc8
-ai_player	?aiChooseDestination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	84.5044	84.5044	84.5044	0x2e0b0	tokens1:a308d14dba21
+ai_player	?aiChooseDestination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	84.6518	84.6518	84.6518	0x2e0b0	tokens1:a308d14dba21
 ai_player	?aiConsolidateArmy@@YIXAAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d870	tokens1:5217661c00bf
 ai_player	?aiEquipArtifacts@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x33b40	tokens1:507b627b5176
 ai_player	?aiGetEquipValue@@YIJUtype_artifact@@PBVhero@@E@Z	100.0000	100.0000	100.0000	0x339e0	tokens1:1cfb3363c6e6
@@ -1627,7 +1627,7 @@ event_record	?undo@type_record_claim_town@@UAEXXZ	100.0000	100.0000	100.0000	0x9
 event_record	?undo@type_record_erase@@UAEXXZ	100.0000	100.0000	100.0000	0x9b370	tokens1:9876604f1b5d
 event_record	?undo@type_record_hide_boat@@UAEXXZ	100.0000	100.0000	100.0000	0x9aed0	tokens1:8a2b52a7d336
 event_record	?undo@type_record_hide_hero@@UAEXXZ	100.0000	100.0000	100.0000	0x9b680	tokens1:dfbf58b505fc
-event_record	?undo@type_record_move_hero@@UAEXXZ	93.9706	93.9706	100.0000	0x9a910	tokens1:b81713adafb0
+event_record	?undo@type_record_move_hero@@UAEXXZ	100.0000	100.0000	100.0000	0x9a910	tokens1:b81713adafb0
 event_record	?undo@type_record_show_boat@@UAEXXZ	100.0000	100.0000	100.0000	0x9b100	tokens1:a7dd3c35765b
 event_record	?undo@type_record_show_hero@@UAEXXZ	100.0000	100.0000	100.0000	0x9b960	tokens1:3799702e7706
 event_record	?undo@type_record_shroud@@UAEXXZ	100.0000	100.0000	100.0000	0x9bf20	tokens1:355cbe63b71d
@@ -3691,7 +3691,7 @@ search	?enterLith@searchArray@@AAEXPBVhero@@PBV?$vector@Utype_point@@V?$allocato
 search	?enterTown@searchArray@@AAEXPBVhero@@JPBUpathCell@@JW4type_search_type@@@Z	100.0000	100.0000	100.0000	0x16a850	tokens1:c8cd226645af
 search	?enterTrigger@searchArray@@AAEEPBVhero@@PAUpathCell@@JW4type_search_type@@@Z	99.9697	99.9697	99.9697	0x16ab40	tokens1:6985c18865c7
 search	?erase@?$vector@PAUpathCell@@V?$allocator@PAUpathCell@@@std@@@std@@QAEPAPAUpathCell@@PAPAU3@0@Z	100.0000	100.0000	100.0000	0x16bd30	-
-search	?seedPosition@searchArray@@QAEXPAVhero@@Utype_point@@1HEW4type_search_type@@HE@Z	93.5652	93.5652	94.8152	0x16b440	tokens1:8fec40ecf457
+search	?seedPosition@searchArray@@QAEXPAVhero@@Utype_point@@1HEW4type_search_type@@HE@Z	94.8152	94.8152	94.8152	0x16b440	tokens1:8fec40ecf457
 seerhut	??0TQuestGuard@@QAE@XZ	100.0000	100.0000	100.0000	0x172b50	tokens1:474ccb7c925d
 seerhut	??0TSeerHut@@QAE@XZ	0.0000	0.0000	100.0000	0x173580	tokens1:85d8292ff75b
 seerhut	??0type_quest@@QAE@E@Z	100.0000	100.0000	100.0000	0x16cb80	tokens1:5a11197706fc
