@@ -2008,8 +2008,7 @@ void type_skeleton_window::createCreatureIcons(
                 widgetId++, "TwCrPort.def");
             m_widgets.push_back(selectionWidgets[count]);
             selectionWidgets[count]->setIconFrame(1);
-            selectionWidgets[count]->sendMessage(
-                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+            selectionWidgets[count]->setVisible(0);
 
             ++count;
             textX += 83;

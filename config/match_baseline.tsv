@@ -3631,7 +3631,7 @@ sacrifice_window	?backpackClick@type_sacrifice_window@@QAEXJE@Z	100.0000	100.000
 sacrifice_window	?convertWithCommas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660	tokens1:0bb4a7234f40
 sacrifice_window	?createArtifactWidgets@type_sacrifice_window@@AAEXAAJH@Z	99.9983	99.9983	100.0000	0x160380	tokens1:56a3e0149c09
 sacrifice_window	?createCreatureIcons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z	100.0000	100.0000	100.0000	0x161f70	tokens1:b3fc8404c642
-sacrifice_window	?createCreatureIcons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	32.7974	32.7974	100.0000	0x166760	tokens1:cdf53aa643b1
+sacrifice_window	?createCreatureIcons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x166760	tokens1:3153f796ee1d
 sacrifice_window	?createCreatureWidgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x1610f0	tokens1:3422e6c5f07b
 sacrifice_window	?creatureClick@type_sacrifice_window@@QAEXJEE@Z	100.0000	100.0000	100.0000	0x164fe0	tokens1:34b3af3c3f9b
 sacrifice_window	?creatureClick@type_skeleton_window@@QAEXJJE@Z	100.0000	100.0000	100.0000	0x166490	tokens1:1768db45184a
