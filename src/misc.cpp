@@ -733,7 +733,7 @@ void writePrefs()
 // DC IsCDDrive (misc.cpp:603, 0xfe060) accepts every drive; its
 // caller SetupCDDrive returns a fixed 7 as well. Complete 0x50c1c0
 // retains that fixed result, so no drive-enumeration/classification
-// expression survives in this pinned executable. See config/dc_only.tsv.
+// expression survives in this pinned executable. See config/source/dc_only.tsv.
 VA(0x0050c1c0, 0x6)  // dc 0xfe064
 int setupCDDrive()
 {
@@ -761,7 +761,7 @@ static char g_formatStringBuffer[512];
 
 // The seed SRand records before handing it to the CRT. Retail .data
 // 0x67fb94, and the store below is its ONLY reference in the whole
-// image (one row in config/retail-reloc-evidence.tsv), so nothing
+// image (one row in config/retail/reloc-evidence.tsv), so nothing
 // attests a name or a linkage - house ordinal placeholder, filed
 // static in the one TU that touches it.
 DATA(0x0067fb94)

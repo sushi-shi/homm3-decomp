@@ -9577,7 +9577,7 @@ VA_COMPGEN(0x0041b110, 0x5, IMPLICIT_DTOR, CHeroWindowEx)
 
 // CodeView marks dc 0x34c8 compiler-generated (compgenx): only the
 // CHeroWindowEx base teardown runs there. The exact Windows-only source
-// exception is reviewed in config/win_only.tsv.
+// exception is reviewed in config/source/win_only.tsv.
 VA(0x0041b120, 0x67)  // dc 0x34c8
 CAdvPopup::~CAdvPopup()
 {

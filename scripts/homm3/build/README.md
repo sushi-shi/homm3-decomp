@@ -17,7 +17,7 @@ synth_pdb    symbol_names.csv + pinned exe -> PDB-YAML -> llvm-pdbutil
 data_manifest vostok's data-side tsvs at the PINNED schemas (1393e24):
              build/gen/delink_data_manifest.tsv (+ sections header,
              + the canonicalizer's DATA_COMPGEN bindings table,
-             + hand-owned config/delink-reloc-aliases.tsv once)
+             + hand-owned config/retail/reloc-aliases.tsv once)
 canonicalize_data_symbols
              transform-before-compare (ported from homm2): volatile
              $SG/$T/$S<n>/$E<n> -> content-derived names; DATA_COMPGEN

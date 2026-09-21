@@ -863,7 +863,7 @@ def read_split_filters(root: Path, names: tuple[str, ...], fields: tuple[str, ..
     errors = []
     owners = {}
     for name in names:
-        rows, failures = read_filter(root / 'config' / name, fields)
+        rows, failures = read_filter(root / 'config/source' / name, fields)
         errors.extend(failures)
         for key, reason in rows.items():
             if key in entries:

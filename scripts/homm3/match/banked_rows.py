@@ -29,7 +29,7 @@ every retail RVA that has ever carried a positive banked score, and
 fails when one of them is no longer represented by ANY row in the
 current baseline. A deliberate withdrawal - a claim proven wrong, an
 address corrected - is admitted by hand in
-`config/match-banked-waivers.tsv` with its reason, the same shape as the
+`config/matching/banked-waivers.tsv` with its reason, the same shape as the
 VA-claim backlog.
 
 Runs its embedded negative control on every invocation: the gate proves
@@ -42,7 +42,7 @@ import sys
 from homm3.core import common
 from homm3.match.status import MatchRow, load_baseline, baseline_history
 
-WAIVERS = common.HOMM3_DIR / "config/match-banked-waivers.tsv"
+WAIVERS = common.HOMM3_DIR / "config/matching/banked-waivers.tsv"
 
 
 def parse_history(patch_text: str) -> dict[int, tuple[float, str, str]]:

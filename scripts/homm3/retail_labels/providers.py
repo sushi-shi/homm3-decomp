@@ -16,10 +16,10 @@ from homm3.core import common
 from homm3.core.tsv import read as read_tsv
 from homm3.retail_labels import Claim
 
-ZLIB_MAP = common.HOMM3_DIR / "config/retail-zlib-map.tsv"
-RUNTIME_MAP = common.HOMM3_DIR / "config/retail-runtime-map.tsv"
-RELOC_ALIASES = common.HOMM3_DIR / "config/delink-reloc-aliases.tsv"
-RELOC_EVIDENCE = common.HOMM3_DIR / "config/retail-reloc-evidence.tsv"
+ZLIB_MAP = common.HOMM3_DIR / "config/retail/zlib-map.tsv"
+RUNTIME_MAP = common.HOMM3_DIR / "config/retail/runtime-map.tsv"
+RELOC_ALIASES = common.HOMM3_DIR / "config/retail/reloc-aliases.tsv"
+RELOC_EVIDENCE = common.HOMM3_DIR / "config/retail/reloc-evidence.tsv"
 
 
 def zlib_map(path: Path | None = None) -> list[Claim]:

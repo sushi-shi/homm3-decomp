@@ -190,4 +190,4 @@ remains possible. Preserve required external ABI spellings at their boundaries.
 Source annotations own names; build regenerates labels. Do not maintain a second
 symbol ledger. `config/` contains hand-admitted retail inventories and manifests.
 Keep `vendor/` pristine; zlib's address-to-symbol mapping belongs in
-`config/retail-zlib-map.tsv`.
+`config/retail/zlib-map.tsv`.

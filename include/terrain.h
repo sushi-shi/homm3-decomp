@@ -67,7 +67,7 @@
 // claimed as functions either.
 
 // WHICH TUs GET THIS HEADER - decided by retail bytes, not by the DC
-// file column. Scanning config/retail-functions.tsv for the size run
+// file column. Scanning config/retail/functions.tsv for the size run
 // [89, 96, 97, 95, 95, 95, 95, 95, 95, 95] finds the ten-funclet tail in
 // 89 places in the image; 72 of those are immediately preceded by a
 // 32-byte row, the ctype<wchar_t>::id guard. A TU whose tail is guard-

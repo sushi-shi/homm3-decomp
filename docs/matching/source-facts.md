@@ -265,7 +265,7 @@ Do not infer every byte field is bool from its name or zero/one values.
 Each JSON finding has an ID derived from its kind, subject and compared facts.
 The report also carries source identity, source hash, checked categories and
 coverage gaps. Reviewed older-version or retail-ABI exceptions live in
-`config/dreamcast-audit-suppressions.tsv`, keyed by module, Dreamcast function
+`config/source/dreamcast-audit-suppressions.tsv`, keyed by module, Dreamcast function
 offset and finding ID. The default audit moves matching rows from `findings` to
 `suppressed_findings`; `--no-suppressions` restores the raw report. A suppression
 for a selected function that no longer matches is stale and makes the audit

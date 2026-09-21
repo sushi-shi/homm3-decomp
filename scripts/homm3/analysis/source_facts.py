@@ -23,7 +23,7 @@ from homm3.core.project import Project
 from homm3.vc6 import _source
 
 SCHEMA = "homm3.source-facts.v1"
-DEFAULT_SUPPRESSIONS = common.HOMM3_DIR / "config/dreamcast-audit-suppressions.tsv"
+DEFAULT_SUPPRESSIONS = common.HOMM3_DIR / "config/source/dreamcast-audit-suppressions.tsv"
 SUPPRESSION_COLUMNS = ("module", "dc_offset", "finding_id", "confidence", "reason")
 CAUTION = (
     "Review leads from positive Dreamcast records, not retail-source verdicts. "

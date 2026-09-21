@@ -91,7 +91,7 @@ game_o2_ml_gr_windows = [
 #
 # SYSTEMATIC SWEEP 2026-09-05. Retail .text was scanned for every E8 rel32
 # landing on ??0_Lockit (0x20b598) or ??1_Lockit (0x20b634); each call site
-# was mapped through config/retail-functions.tsv to its owning carve row and
+# was mapped through config/retail/functions.tsv to its owning carve row and
 # through config/match_baseline.tsv to its unit. 341 of the 662 sites sit in
 # the game band, and they resolve to exactly eleven compilands:
 #   objecttype 106, game 75, resourcemanager 43, bottomviewsubwindow 42,
